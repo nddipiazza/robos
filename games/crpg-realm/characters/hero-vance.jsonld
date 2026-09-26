@@ -71,6 +71,22 @@
   "cloak": "travelers-cloak",
   "robos:quickItems": "torch",
   "quickItems": "torch",
+  "robos:inventory": [
+    { "slug": "potion-healing", "quantity": 3, "slot": 0 },
+    { "slug": "herb", "quantity": 2, "slot": 1 },
+    { "slug": "torch", "quantity": 2, "slot": 2 },
+    { "slug": "magic-key", "quantity": 1, "slot": 3 },
+    { "slug": "leather-boots", "quantity": 1, "slot": 4 },
+    { "slug": "copper-sword", "quantity": 1, "slot": 5 }
+  ],
+  "inventory": [
+    { "slug": "potion-healing", "quantity": 3, "slot": 0 },
+    { "slug": "herb", "quantity": 2, "slot": 1 },
+    { "slug": "torch", "quantity": 2, "slot": 2 },
+    { "slug": "magic-key", "quantity": 1, "slot": 3 },
+    { "slug": "leather-boots", "quantity": 1, "slot": 4 },
+    { "slug": "copper-sword", "quantity": 1, "slot": 5 }
+  ],
   "robos:preparedSpells": [
     "fireball",
     "magic-missile"

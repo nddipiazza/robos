@@ -341,6 +341,7 @@ let canvasRenderer = null;
 // ========================================================
 document.addEventListener('DOMContentLoaded', async () => {
   setupNavigation();
+  setupSplitDividers();
   setupCampaignHandlers();
   setupCharacterHandlers();
   setupItemHandlers();
@@ -348,6 +349,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupAbilityHandlers();
   setupTacticsSimHandlers();
   setupInventoryHandlers();
+  setupDragAndDrop();
   setupBlockmapHandlers();
 
   // Initialize Canvas Renderer
@@ -756,6 +758,20 @@ function getGameState() {
 
 function getHeroes() {
   if (state.activeCampaignData && Array.isArray(state.activeCampaignData['robos:heroes']) && state.activeCampaignData['robos:heroes'].length > 0) {
+    state.activeCampaignData['robos:heroes'].forEach(h => {
+      const match = (state.characters || []).find(c => c.slug === h.slug || c.id === h.id || c.name === h.name);
+      if (match) {
+        if (!h['robos:inventory'] || (Array.isArray(h['robos:inventory']) && h['robos:inventory'].length === 0)) {
+          if (match['robos:inventory'] && match['robos:inventory'].length > 0) {
+            h['robos:inventory'] = [...match['robos:inventory']];
+            h.inventory = h['robos:inventory'];
+          } else if (match.inventory && match.inventory.length > 0) {
+            h['robos:inventory'] = [...match.inventory];
+            h.inventory = h['robos:inventory'];
+          }
+        }
+      }
+    });
     return state.activeCampaignData['robos:heroes'];
   }
   if (state.activeCampaignData) {
@@ -2547,6 +2563,10 @@ async function loadCharacterSheet(slug) {
       // Equipment slots & encumbrance meter for Character Sheet
       populateCharSheetEquipmentDropdowns(data);
       updateCharSheetEncumbranceMeter();
+      renderPaperdollSlots(data, 'cs');
+      renderQuickItemSlots(data, 'cs');
+      renderCharacterBag(data, 'char-sheet');
+      populateBagPickers();
 
       // Update active highlight in sidebar list
       document.querySelectorAll('#heroes-list .hero-list-item').forEach(el => {
@@ -2713,6 +2733,10 @@ async function saveCurrentCharacter() {
   const directive = saveCharDirectiveUI();
   charData['robos:directive'] = directive;
   charData.directive = directive;
+
+  const charBag = getCharacterBag(state.activeCharacterData);
+  charData['robos:inventory'] = charBag;
+  charData.inventory = charBag;
 
   try {
     setStatus(`Saving character ${slug}...`);
@@ -3225,7 +3249,60 @@ function renderQuickItemPills(containerId, selectId, onRemoveCallback) {
 function populateEquipmentSelectElement(selectEl, categories, slots, currentVal) {
   if (!selectEl) return;
   const allItems = state.items || [];
-  let html = '<option value="">(Empty)</option>';
+  let html = '<option value="">(Empty / None)</option>';
+
+  // If this is a quick-items select, prioritize compatible items from the active character's bag
+  if (selectEl.id === 'equip-quickitems' || selectEl.id === 'char-equip-quickitems') {
+    const activeHero = selectEl.id === 'equip-quickitems'
+      ? (findCharacterById(state.activeEquipHeroId) || state.activeCharacterData)
+      : (state.activeCharacterData || findCharacterById(state.activeEquipHeroId));
+
+    const bagItems = getCharacterBag(activeHero);
+    const compatibleBagItems = [];
+    bagItems.forEach(it => {
+      const slug = typeof it === 'object' && it !== null ? (it.slug || it.id) : it;
+      const entity = allItems.find(x => x.slug === slug);
+      if (slug && isQuickItemCompatible(entity, slug) && !compatibleBagItems.some(c => c.slug === slug)) {
+        compatibleBagItems.push({
+          slug,
+          name: typeof it === 'object' ? (it.name || entity?.['dcterms:title'] || entity?.title || slug) : (entity?.['dcterms:title'] || slug),
+          icon: typeof it === 'object' ? (it.icon || entity?.['robos:icon'] || '🧪') : (entity?.['robos:icon'] || '🧪'),
+          qty: typeof it === 'object' ? (it.quantity || 1) : 1
+        });
+      }
+    });
+
+    if (compatibleBagItems.length > 0) {
+      html += '<optgroup label="Compatible Items in Personal Bag">';
+      compatibleBagItems.forEach(it => {
+        html += `<option value="${it.slug}">${it.icon} ${it.name} (x${it.qty} in Bag)</option>`;
+      });
+      html += '</optgroup>';
+    }
+
+    const otherConsumables = allItems.filter(it => {
+      const slug = it.slug || it['dcterms:identifier'];
+      return isQuickItemCompatible(it, slug) && !compatibleBagItems.some(c => c.slug === slug);
+    });
+
+    if (otherConsumables.length > 0) {
+      html += '<optgroup label="Other Compatible Consumables (Item Catalog)">';
+      otherConsumables.forEach(it => {
+        const slug = it.slug || it['dcterms:identifier'];
+        const title = it['dcterms:title'] || it.title || it.name || slug;
+        const icon = it['robos:icon'] || it.icon || '🧪';
+        html += `<option value="${slug}">${icon} ${title}</option>`;
+      });
+      html += '</optgroup>';
+    }
+
+    selectEl.innerHTML = html;
+    if (currentVal !== undefined && currentVal !== null) {
+      const slugs = parseQuickItemsList(currentVal);
+      setMultiSelectValues(selectEl, slugs);
+    }
+    return;
+  }
 
   const matching = allItems.filter(it => {
     const cat = (it['robos:itemCategory'] || it.category || '').toLowerCase();
@@ -3390,6 +3467,49 @@ function setupInventoryHandlers() {
 
   document.getElementById('btn-add-stash-item')?.addEventListener('click', addStashItem);
 
+  // Stash view toggle (Grid vs Table)
+  document.getElementById('btn-stash-view-grid')?.addEventListener('click', () => {
+    document.getElementById('stash-view-grid')?.classList.remove('hidden');
+    document.getElementById('stash-view-table')?.classList.add('hidden');
+    document.getElementById('btn-stash-view-grid')?.classList.add('active');
+    document.getElementById('btn-stash-view-table')?.classList.remove('active');
+    renderGraphicalStash();
+  });
+  document.getElementById('btn-stash-view-table')?.addEventListener('click', () => {
+    document.getElementById('stash-view-table')?.classList.remove('hidden');
+    document.getElementById('stash-view-grid')?.classList.add('hidden');
+    document.getElementById('btn-stash-view-table')?.classList.add('active');
+    document.getElementById('btn-stash-view-grid')?.classList.remove('active');
+    renderStashTable();
+  });
+
+  // Bag item adders
+  document.getElementById('btn-add-item-to-bag')?.addEventListener('click', () => {
+    const picker = document.getElementById('bag-item-picker');
+    if (!picker || !picker.value || !state.activeEquipHeroId) return;
+    const hero = findCharacterById(state.activeEquipHeroId);
+    if (!hero) return;
+    addItemToCharacterBag(hero, picker.value, 1);
+    picker.value = '';
+    renderCharacterBag(hero, 'camp');
+    renderPaperdollSlots(hero, 'camp');
+    renderQuickItemSlots(hero, 'camp');
+    populateEquipmentDropdowns();
+    updateCampaignEncumbranceMeter(hero);
+  });
+
+  document.getElementById('btn-char-sheet-add-item')?.addEventListener('click', () => {
+    const picker = document.getElementById('char-sheet-bag-picker');
+    if (!picker || !picker.value || !state.activeCharacterData) return;
+    addItemToCharacterBag(state.activeCharacterData, picker.value, 1);
+    picker.value = '';
+    renderCharacterBag(state.activeCharacterData, 'char-sheet');
+    renderPaperdollSlots(state.activeCharacterData, 'cs');
+    renderQuickItemSlots(state.activeCharacterData, 'cs');
+    populateCharSheetEquipmentDropdowns(state.activeCharacterData);
+    updateCharSheetEncumbranceMeter();
+  });
+
   document.querySelectorAll('.equip-slot-select').forEach(sel => {
     sel.addEventListener('change', () => {
       persistEquipSlotsToHero();
@@ -3460,6 +3580,8 @@ function renderInventoryViews() {
 
   populateStashItemPicker();
   renderStashTable();
+  renderGraphicalStash();
+  populateBagPickers();
 
   // 4. Character Equipment Dropdown (Player Characters AND NPCs) & Slot Selects
   populateEquipmentDropdowns();
@@ -3562,6 +3684,887 @@ function setSelectValue(selectEl, val) {
   }
 }
 
+// ========================================================
+// RESIZABLE SPLIT DIVIDERS
+// ========================================================
+function setupSplitDividers() {
+  const dividers = document.querySelectorAll('.split-divider');
+  dividers.forEach(divider => {
+    let isDragging = false;
+    let startX = 0;
+    let startY = 0;
+    let startPrevSize = 0;
+    let startNextSize = 0;
+    const targetDirection = divider.getAttribute('data-target') || 'prev';
+    const isCol = divider.classList.contains('col-resize');
+    const minSize = parseInt(divider.getAttribute('data-min') || '160', 10);
+    const maxSize = parseInt(divider.getAttribute('data-max') || '850', 10);
+
+    const onPointerDown = (e) => {
+      isDragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      try {
+        divider.setPointerCapture(e.pointerId);
+      } catch (err) {}
+      divider.classList.add('active');
+      document.body.classList.add('resizing');
+
+      const prevEl = divider.previousElementSibling;
+      const nextEl = divider.nextElementSibling;
+      if (prevEl) {
+        startPrevSize = isCol ? prevEl.getBoundingClientRect().width : prevEl.getBoundingClientRect().height;
+      }
+      if (nextEl) {
+        startNextSize = isCol ? nextEl.getBoundingClientRect().width : nextEl.getBoundingClientRect().height;
+      }
+      e.preventDefault();
+    };
+
+    const onPointerMove = (e) => {
+      if (!isDragging) return;
+      const deltaX = e.clientX - startX;
+      const deltaY = e.clientY - startY;
+      const delta = isCol ? deltaX : deltaY;
+
+      const prevEl = divider.previousElementSibling;
+      const nextEl = divider.nextElementSibling;
+
+      if (targetDirection === 'prev' && prevEl) {
+        let newSize = Math.max(minSize, Math.min(maxSize, startPrevSize + delta));
+        if (isCol) {
+          prevEl.style.width = `${newSize}px`;
+          prevEl.style.flex = `0 0 ${newSize}px`;
+        } else {
+          prevEl.style.height = `${newSize}px`;
+          prevEl.style.flex = `0 0 ${newSize}px`;
+        }
+      } else if (targetDirection === 'next' && nextEl) {
+        let newSize = Math.max(minSize, Math.min(maxSize, startNextSize - delta));
+        if (isCol) {
+          nextEl.style.width = `${newSize}px`;
+          nextEl.style.flex = `0 0 ${newSize}px`;
+        } else {
+          nextEl.style.height = `${newSize}px`;
+          nextEl.style.flex = `0 0 ${newSize}px`;
+        }
+      }
+    };
+
+    const onPointerUp = (e) => {
+      if (!isDragging) return;
+      isDragging = false;
+      try {
+        divider.releasePointerCapture(e.pointerId);
+      } catch (err) {}
+      divider.classList.remove('active');
+      document.body.classList.remove('resizing');
+    };
+
+    divider.addEventListener('pointerdown', onPointerDown);
+    divider.addEventListener('pointermove', onPointerMove);
+    divider.addEventListener('pointerup', onPointerUp);
+    divider.addEventListener('pointercancel', onPointerUp);
+  });
+}
+
+// ========================================================
+// GRAPHICAL BAG & PAPERDOLL INVENTORY HELPERS
+// ========================================================
+function getCharacterBag(hero) {
+  if (!hero) return [];
+  let bag = hero['robos:inventory'] || hero.inventory;
+  if (!Array.isArray(bag)) {
+    bag = [];
+    hero['robos:inventory'] = bag;
+    hero.inventory = bag;
+  }
+  return bag;
+}
+
+function normalizeCharacterBag(hero) {
+  const bag = getCharacterBag(hero);
+  const slots = new Array(16).fill(null);
+  bag.forEach((it, idx) => {
+    if (!it) return;
+    const isObj = typeof it === 'object' && it !== null;
+    const slug = isObj ? (it.slug || it.id || '') : it;
+    if (!slug) return;
+    const slotIdx = isObj && typeof it.slot === 'number' && it.slot >= 0 && it.slot < 16 ? it.slot : idx;
+    const itemEntity = (state.items || []).find(x => x.slug === slug);
+    const itemObj = {
+      slot: slotIdx,
+      slug: slug,
+      name: isObj ? (it.name || it.title || slug) : (itemEntity ? (itemEntity['dcterms:title'] || itemEntity.title) : slug),
+      icon: isObj ? (it.icon || '📦') : (itemEntity ? (itemEntity['robos:icon'] || itemEntity.icon || '📦') : '📦'),
+      category: isObj ? (it.category || 'misc') : (itemEntity ? (itemEntity['robos:itemCategory'] || itemEntity.category || 'misc') : 'misc'),
+      quantity: isObj ? (it.quantity || 1) : 1,
+      weight: itemEntity ? (itemEntity['robos:weightLbs'] || itemEntity.weightLbs || itemEntity['robos:weight'] || itemEntity.weight || 1) : 1
+    };
+    if (slotIdx >= 0 && slotIdx < 16 && !slots[slotIdx]) {
+      slots[slotIdx] = itemObj;
+    } else {
+      const freeIdx = slots.findIndex(s => s === null);
+      if (freeIdx !== -1) {
+        itemObj.slot = freeIdx;
+        slots[freeIdx] = itemObj;
+      }
+    }
+  });
+  return slots;
+}
+
+function syncCharacterBagBack(hero, slots) {
+  if (!hero) return [];
+  const cleanBag = slots.filter(Boolean).map((it, idx) => ({
+    ...it,
+    slot: it.slot !== undefined ? it.slot : idx
+  }));
+  hero['robos:inventory'] = cleanBag;
+  hero.inventory = cleanBag;
+  return cleanBag;
+}
+
+function isQuickItemCompatible(itemEntity, slug) {
+  if (!itemEntity && !slug) return false;
+  const cat = (itemEntity?.['robos:itemCategory'] || itemEntity?.category || '').toLowerCase();
+  const eqSlot = (itemEntity?.['robos:equipSlot'] || itemEntity?.equipSlot || '').toLowerCase();
+  const title = (itemEntity?.['dcterms:title'] || itemEntity?.title || slug || '').toLowerCase();
+  const s = (slug || '').toLowerCase();
+
+  if (eqSlot === 'quick_item' || cat === 'consumable' || cat === 'potion' || cat === 'scroll' || cat === 'wand' || cat === 'herb') {
+    return true;
+  }
+  const keywords = ['potion', 'scroll', 'herb', 'salve', 'elixir', 'flask', 'torch', 'remedy', 'heal', 'antidote', 'fairy_water', 'bomb', 'draught'];
+  return keywords.some(k => s.includes(k) || title.includes(k));
+}
+
+function isPaperdollSlotCompatible(slotName, itemEntity, slug) {
+  if (!itemEntity && !slug) return false;
+  const cat = (itemEntity?.['robos:itemCategory'] || itemEntity?.category || '').toLowerCase();
+  const eq = (itemEntity?.['robos:equipSlot'] || itemEntity?.equipSlot || '').toLowerCase();
+  const s = (slug || '').toLowerCase();
+
+  switch (slotName) {
+    case 'mainhand':
+      return eq === 'main_hand' || eq === 'two_hand' || eq === 'versatile' || cat === 'weapon' || s.includes('sword') || s.includes('staff') || s.includes('blade') || s.includes('bow') || s.includes('dagger') || s.includes('axe') || s.includes('club');
+    case 'offhand':
+      return eq === 'off_hand' || eq === 'shield' || cat === 'shield' || s.includes('shield') || s.includes('buckler') || (cat === 'weapon' && (s.includes('dagger') || s.includes('shortsword')));
+    case 'armor':
+      return eq === 'armor' || cat === 'armor' || s.includes('mail') || s.includes('plate') || s.includes('leather') || s.includes('robe') || s.includes('armor');
+    case 'helmet':
+      return eq === 'helmet' || cat === 'helmet' || s.includes('helm') || s.includes('hat') || s.includes('cap') || s.includes('crown') || s.includes('circlet');
+    case 'cloak':
+      return eq === 'cloak' || cat === 'cloak' || s.includes('cloak') || s.includes('cape') || s.includes('mantle');
+    case 'boots':
+      return eq === 'boots' || cat === 'boots' || s.includes('boots') || s.includes('greaves') || s.includes('shoes') || s.includes('treads');
+    case 'ring1':
+      return eq === 'ring1' || eq === 'ring' || eq === 'accessory' || cat === 'accessory' || cat === 'ring' || s.includes('ring') || s.includes('amulet') || s.includes('pendant') || s.includes('token');
+    default:
+      return true;
+  }
+}
+
+function getHeroEquipSlotValue(hero, slotKey) {
+  if (!hero) return '';
+  switch (slotKey) {
+    case 'mainhand': return hero['robos:mainHand'] || hero.mainHand || '';
+    case 'offhand': return hero['robos:offHand'] || hero.offHand || '';
+    case 'armor': return hero['robos:armor'] || hero.armor || '';
+    case 'helmet': return hero['robos:helmet'] || hero.helmet || '';
+    case 'cloak': return hero['robos:cloak'] || hero.cloak || '';
+    case 'boots': return hero['robos:boots'] || hero.boots || '';
+    case 'ring1': return hero['robos:ring1'] || hero.ring1 || '';
+    default: return '';
+  }
+}
+
+function setHeroEquipSlotValue(hero, slotKey, val) {
+  if (!hero) return;
+  const v = val || '';
+  switch (slotKey) {
+    case 'mainhand': hero['robos:mainHand'] = v; hero.mainHand = v; break;
+    case 'offhand': hero['robos:offHand'] = v; hero.offHand = v; break;
+    case 'armor': hero['robos:armor'] = v; hero.armor = v; break;
+    case 'helmet': hero['robos:helmet'] = v; hero.helmet = v; break;
+    case 'cloak': hero['robos:cloak'] = v; hero.cloak = v; break;
+    case 'boots': hero['robos:boots'] = v; hero.boots = v; break;
+    case 'ring1': hero['robos:ring1'] = v; hero.ring1 = v; break;
+  }
+  const campSel = document.getElementById(`equip-${slotKey}`);
+  if (campSel) campSel.value = v;
+  const csSel = document.getElementById(`char-equip-${slotKey}`);
+  if (csSel) csSel.value = v;
+}
+
+function addItemToCharacterBag(hero, slug, qty = 1) {
+  if (!hero || !slug) return false;
+  const slots = normalizeCharacterBag(hero);
+  const itemEntity = (state.items || []).find(x => x.slug === slug);
+  const name = itemEntity ? (itemEntity['dcterms:title'] || itemEntity.title || slug) : slug;
+  const icon = itemEntity ? (itemEntity['robos:icon'] || itemEntity.icon || '📦') : '📦';
+  const category = itemEntity ? (itemEntity['robos:itemCategory'] || itemEntity.category || 'misc') : 'misc';
+  const weight = itemEntity ? (itemEntity['robos:weightLbs'] || itemEntity.weightLbs || itemEntity['robos:weight'] || 1) : 1;
+
+  // Check stackable item in existing slot
+  const isStackable = category === 'consumable' || category === 'potion' || category === 'herb' || category === 'scroll' || category === 'ammo';
+  if (isStackable) {
+    const existing = slots.find(s => s && s.slug === slug);
+    if (existing) {
+      existing.quantity = (existing.quantity || 1) + qty;
+      syncCharacterBagBack(hero, slots);
+      return true;
+    }
+  }
+
+  // Find first empty slot
+  const freeIdx = slots.findIndex(s => s === null);
+  if (freeIdx === -1) {
+    setStatus(`⚠️ Inventory Bag Full (16/16 slots). Cannot add ${name}.`);
+    return false;
+  }
+
+  slots[freeIdx] = {
+    slot: freeIdx,
+    slug,
+    name,
+    icon,
+    category,
+    quantity: qty,
+    weight
+  };
+  syncCharacterBagBack(hero, slots);
+  return true;
+}
+
+function removeItemFromCharacterBag(hero, slotIndex, qty = 1) {
+  if (!hero || slotIndex < 0 || slotIndex >= 16) return null;
+  const slots = normalizeCharacterBag(hero);
+  const it = slots[slotIndex];
+  if (!it) return null;
+
+  let removedItem = null;
+  if ((it.quantity || 1) <= qty) {
+    removedItem = { ...it };
+    slots[slotIndex] = null;
+  } else {
+    it.quantity -= qty;
+    removedItem = { ...it, quantity: qty };
+  }
+  syncCharacterBagBack(hero, slots);
+  return removedItem;
+}
+
+function moveItemFromBagToStash(hero, slotIndex) {
+  if (!hero) return;
+  const removed = removeItemFromCharacterBag(hero, slotIndex);
+  if (!removed) return;
+
+  const gs = getGameState();
+  if (!gs['robos:sharedInventory']) gs['robos:sharedInventory'] = { gold: 0, silver: 0, copper: 0, items: [] };
+  if (!Array.isArray(gs['robos:sharedInventory'].items)) gs['robos:sharedInventory'].items = [];
+
+  const items = gs['robos:sharedInventory'].items;
+  const existing = items.find(x => typeof x === 'object' && x !== null && x.slug === removed.slug);
+  if (existing) {
+    existing.quantity = (existing.quantity || 1) + (removed.quantity || 1);
+  } else {
+    items.push({
+      slug: removed.slug,
+      name: removed.name,
+      icon: removed.icon,
+      category: removed.category,
+      quantity: removed.quantity || 1
+    });
+  }
+
+  renderGraphicalStash();
+  renderStashTable();
+  renderCharacterBag(hero, 'camp');
+  renderCharacterBag(hero, 'char-sheet');
+  updateCampaignEncumbranceMeter(hero);
+  updateCharSheetEncumbranceMeter();
+  persistInventoryFromUI();
+  setStatus(`Moved ${removed.name} from bag to party stash.`);
+}
+
+function moveItemFromStashToBag(stashIndex, hero, targetSlotIndex) {
+  if (!hero) return;
+  const gs = getGameState();
+  const items = gs['robos:sharedInventory']?.items || [];
+  if (stashIndex < 0 || stashIndex >= items.length) return;
+
+  const stashItem = items[stashIndex];
+  const isObj = typeof stashItem === 'object' && stashItem !== null;
+  const slug = isObj ? (stashItem.slug || stashItem.id) : stashItem;
+  if (!slug) return;
+
+  const added = addItemToCharacterBag(hero, slug, 1);
+  if (!added) return;
+
+  if (isObj && (stashItem.quantity || 1) > 1) {
+    stashItem.quantity -= 1;
+  } else {
+    items.splice(stashIndex, 1);
+  }
+
+  renderGraphicalStash();
+  renderStashTable();
+  renderCharacterBag(hero, 'camp');
+  renderCharacterBag(hero, 'char-sheet');
+  updateCampaignEncumbranceMeter(hero);
+  updateCharSheetEncumbranceMeter();
+  persistInventoryFromUI();
+  setStatus(`Moved item from party stash to ${hero.name}'s bag.`);
+}
+
+function equipItemFromBag(hero, slotKey, bagSlotIndex) {
+  if (!hero) return;
+  const slots = normalizeCharacterBag(hero);
+  const bagItem = slots[bagSlotIndex];
+  if (!bagItem) return;
+
+  const itemEntity = (state.items || []).find(x => x.slug === bagItem.slug);
+  if (!isPaperdollSlotCompatible(slotKey, itemEntity, bagItem.slug)) {
+    setStatus(`⚠️ Cannot equip ${bagItem.name} in ${slotKey} (Incompatible slot).`);
+    return;
+  }
+
+  const currentEquippedSlug = getHeroEquipSlotValue(hero, slotKey);
+
+  // Equip new item
+  setHeroEquipSlotValue(hero, slotKey, bagItem.slug);
+
+  // If slot already had an item, swap it back to the bag
+  if (currentEquippedSlug) {
+    const curEntity = (state.items || []).find(x => x.slug === currentEquippedSlug);
+    slots[bagSlotIndex] = {
+      slot: bagSlotIndex,
+      slug: currentEquippedSlug,
+      name: curEntity ? (curEntity['dcterms:title'] || curEntity.title || currentEquippedSlug) : currentEquippedSlug,
+      icon: curEntity ? (curEntity['robos:icon'] || curEntity.icon || '📦') : '📦',
+      category: curEntity ? (curEntity['robos:itemCategory'] || curEntity.category || 'misc') : 'misc',
+      quantity: 1,
+      weight: curEntity ? (curEntity['robos:weightLbs'] || curEntity.weightLbs || 1) : 1
+    };
+  } else {
+    slots[bagSlotIndex] = null;
+  }
+
+  syncCharacterBagBack(hero, slots);
+  renderPaperdollSlots(hero, 'camp');
+  renderPaperdollSlots(hero, 'cs');
+  renderCharacterBag(hero, 'camp');
+  renderCharacterBag(hero, 'char-sheet');
+  updateCampaignEncumbranceMeter(hero);
+  updateCharSheetEncumbranceMeter();
+  persistInventoryFromUI();
+  setStatus(`Equipped ${bagItem.name} in ${slotKey}.`);
+}
+
+function unequipItemToBag(hero, slotKey) {
+  if (!hero) return;
+  const currentSlug = getHeroEquipSlotValue(hero, slotKey);
+  if (!currentSlug) return;
+
+  const added = addItemToCharacterBag(hero, currentSlug, 1);
+  if (!added) {
+    setStatus(`⚠️ Cannot unequip: Inventory bag is full! Free a slot first.`);
+    return;
+  }
+
+  setHeroEquipSlotValue(hero, slotKey, '');
+  renderPaperdollSlots(hero, 'camp');
+  renderPaperdollSlots(hero, 'cs');
+  renderCharacterBag(hero, 'camp');
+  renderCharacterBag(hero, 'char-sheet');
+  updateCampaignEncumbranceMeter(hero);
+  updateCharSheetEncumbranceMeter();
+  persistInventoryFromUI();
+  setStatus(`Unequipped ${currentSlug} to bag.`);
+}
+
+function equipQuickItemFromBag(hero, quickIndex, slug) {
+  if (!hero || !slug || quickIndex < 0 || quickIndex >= 3) return;
+  const itemEntity = (state.items || []).find(x => x.slug === slug);
+  if (!isQuickItemCompatible(itemEntity, slug)) {
+    setStatus(`⚠️ Incompatible quick item: ${slug} is not a potion, scroll, herb or consumable.`);
+    return;
+  }
+
+  let quickItems = parseQuickItemsList(hero['robos:quickItems'] || hero.quickItems || '');
+  while (quickItems.length <= quickIndex) quickItems.push('');
+  quickItems[quickIndex] = slug;
+
+  hero['robos:quickItems'] = quickItems;
+  hero.quickItems = quickItems;
+
+  const qSel = document.getElementById('equip-quickitems');
+  if (qSel) setMultiSelectValues(qSel, quickItems);
+  const csQSel = document.getElementById('char-equip-quickitems');
+  if (csQSel) setMultiSelectValues(csQSel, quickItems);
+
+  renderQuickItemSlots(hero, 'camp');
+  renderQuickItemSlots(hero, 'cs');
+  persistInventoryFromUI();
+  setStatus(`Set Quick Slot ${quickIndex + 1} to ${itemEntity?.title || slug}.`);
+}
+
+function removeQuickItemAtIndex(hero, quickIndex) {
+  if (!hero || quickIndex < 0) return;
+  let quickItems = parseQuickItemsList(hero['robos:quickItems'] || hero.quickItems || '');
+  if (quickIndex < quickItems.length) {
+    quickItems[quickIndex] = '';
+  }
+  quickItems = quickItems.filter(Boolean);
+  hero['robos:quickItems'] = quickItems;
+  hero.quickItems = quickItems;
+
+  const qSel = document.getElementById('equip-quickitems');
+  if (qSel) setMultiSelectValues(qSel, quickItems);
+  const csQSel = document.getElementById('char-equip-quickitems');
+  if (csQSel) setMultiSelectValues(csQSel, quickItems);
+
+  renderQuickItemSlots(hero, 'camp');
+  renderQuickItemSlots(hero, 'cs');
+  persistInventoryFromUI();
+  setStatus(`Cleared Quick Slot ${quickIndex + 1}.`);
+}
+
+// ========================================================
+// RENDERERS FOR GRAPHICAL STASH, BAG, PAPERDOLL & QUICK SLOTS
+// ========================================================
+function renderGraphicalStash() {
+  const container = document.getElementById('stash-items-grid');
+  if (!container) return;
+
+  const gs = getGameState();
+  if (!gs['robos:sharedInventory']) gs['robos:sharedInventory'] = { gold: 0, silver: 0, copper: 0, items: [] };
+  const items = gs['robos:sharedInventory'].items || [];
+
+  if (items.length === 0) {
+    container.innerHTML = '<div style="grid-column: 1 / -1; text-align:center; color:var(--text-muted); font-size:11px; padding:20px;">Party stash is empty. Drag items from bags or drop items here.</div>';
+    return;
+  }
+
+  container.innerHTML = items.map((it, idx) => {
+    const isObj = typeof it === 'object' && it !== null;
+    const slug = isObj ? (it.slug || it.id || '') : it;
+    const itemEntity = (state.items || []).find(x => x.slug === slug);
+    const name = isObj ? (it.name || it.title || slug) : (itemEntity ? (itemEntity['dcterms:title'] || itemEntity.title) : slug);
+    const icon = isObj ? (it.icon || '📦') : (itemEntity ? (itemEntity['robos:icon'] || itemEntity.icon || '📦') : '📦');
+    const qty = isObj ? (it.quantity || 1) : 1;
+    const weight = itemEntity ? (itemEntity['robos:weightLbs'] || itemEntity.weightLbs || itemEntity['robos:weight'] || 1) : 1;
+
+    return `
+      <div class="inventory-slot" data-stash-idx="${idx}" data-slug="${slug}">
+        <div class="item-tile" draggable="true" data-stash-idx="${idx}" data-slug="${slug}" title="${name} (${qty}) • ${weight} lbs">
+          <span class="item-tile-weight">${weight}#</span>
+          <span class="item-tile-icon">${icon}</span>
+          <span class="item-tile-name">${name}</span>
+          ${qty > 1 ? `<span class="item-tile-qty">x${qty}</span>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Dragstart from stash
+  container.querySelectorAll('.item-tile').forEach(tile => {
+    tile.addEventListener('dragstart', (e) => {
+      const idx = parseInt(tile.getAttribute('data-stash-idx'), 10);
+      const slug = tile.getAttribute('data-slug');
+      e.dataTransfer.setData('application/json', JSON.stringify({
+        source: 'stash',
+        stashIndex: idx,
+        slug
+      }));
+      e.dataTransfer.effectAllowed = 'move';
+      tile.classList.add('dragging');
+    });
+    tile.addEventListener('dragend', () => {
+      tile.classList.remove('dragging');
+    });
+  });
+
+  // Stash accepts drops from bags or paperdoll
+  container.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    container.classList.add('drag-over');
+  });
+  container.addEventListener('dragleave', () => {
+    container.classList.remove('drag-over');
+  });
+  container.addEventListener('drop', (e) => {
+    e.preventDefault();
+    container.classList.remove('drag-over');
+    try {
+      const data = JSON.parse(e.dataTransfer.getData('application/json'));
+      if (data.source === 'bag') {
+        const hero = (state.activeEquipHeroId ? findCharacterById(state.activeEquipHeroId) : null) || state.activeCharacterData;
+        if (hero) moveItemFromBagToStash(hero, data.slotIndex);
+      } else if (data.source === 'equip') {
+        const hero = (state.activeEquipHeroId ? findCharacterById(state.activeEquipHeroId) : null) || state.activeCharacterData;
+        if (hero) {
+          const slug = getHeroEquipSlotValue(hero, data.slotKey);
+          if (slug) {
+            setHeroEquipSlotValue(hero, data.slotKey, '');
+            const gs = getGameState();
+            if (!gs['robos:sharedInventory']) gs['robos:sharedInventory'] = { gold: 0, silver: 0, copper: 0, items: [] };
+            gs['robos:sharedInventory'].items.push({ slug, quantity: 1 });
+            renderGraphicalStash();
+            renderStashTable();
+            renderPaperdollSlots(hero, 'camp');
+            renderPaperdollSlots(hero, 'cs');
+            updateCampaignEncumbranceMeter(hero);
+            updateCharSheetEncumbranceMeter();
+            persistInventoryFromUI();
+          }
+        }
+      } else if (data.source === 'item-catalog') {
+        const gs = getGameState();
+        if (!gs['robos:sharedInventory']) gs['robos:sharedInventory'] = { gold: 0, silver: 0, copper: 0, items: [] };
+        gs['robos:sharedInventory'].items.push({ slug: data.slug, quantity: 1 });
+        renderGraphicalStash();
+        renderStashTable();
+        persistInventoryFromUI();
+      }
+    } catch (err) {
+      console.warn('Error handling drop on stash grid:', err);
+    }
+  });
+}
+
+function renderCharacterBag(hero, prefix = 'camp') {
+  const gridId = prefix === 'char-sheet' ? 'char-sheet-bag-grid' : 'camp-char-bag-grid';
+  const titleId = prefix === 'char-sheet' ? 'char-sheet-bag-title' : 'camp-bag-title';
+  const countId = prefix === 'char-sheet' ? 'char-sheet-bag-count' : 'camp-bag-count';
+  const grid = document.getElementById(gridId);
+  if (!grid) return;
+
+  if (!hero) {
+    grid.innerHTML = '<div style="grid-column: 1 / -1; text-align:center; color:var(--text-muted); font-size:11px; padding:20px;">Select a character to view inventory bag.</div>';
+    const countEl = document.getElementById(countId);
+    if (countEl) countEl.textContent = '0 / 16';
+    return;
+  }
+
+  const slots = normalizeCharacterBag(hero);
+  const filledCount = slots.filter(Boolean).length;
+
+  const titleEl = document.getElementById(titleId);
+  if (titleEl) titleEl.textContent = `🎒 ${hero.name || 'Character'}'s Inventory Bag (16 Slots)`;
+
+  const countEl = document.getElementById(countId);
+  if (countEl) {
+    countEl.textContent = `${filledCount} / 16`;
+    countEl.className = filledCount >= 16 ? 'counter-badge danger' : 'counter-badge';
+  }
+
+  grid.innerHTML = slots.map((it, idx) => {
+    if (!it) {
+      return `
+        <div class="inventory-slot empty" data-slot-idx="${idx}">
+          <span class="slot-number">${idx + 1}</span>
+        </div>
+      `;
+    }
+    return `
+      <div class="inventory-slot" data-slot-idx="${idx}" data-slug="${it.slug}">
+        <div class="item-tile" draggable="true" data-slot-idx="${idx}" data-slug="${it.slug}" title="${it.name} (${it.quantity}) • ${it.weight} lbs\nClick/Drag to equip, swap or transfer">
+          <span class="item-tile-weight">${it.weight}#</span>
+          <span class="item-tile-icon">${it.icon}</span>
+          <span class="item-tile-name">${it.name}</span>
+          ${it.quantity > 1 ? `<span class="item-tile-qty">x${it.quantity}</span>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Wire drag & drop on bag slots
+  grid.querySelectorAll('.inventory-slot').forEach(slotEl => {
+    const slotIdx = parseInt(slotEl.getAttribute('data-slot-idx'), 10);
+    const tile = slotEl.querySelector('.item-tile');
+
+    if (tile) {
+      tile.addEventListener('dragstart', (e) => {
+        const slug = tile.getAttribute('data-slug');
+        e.dataTransfer.setData('application/json', JSON.stringify({
+          source: 'bag',
+          slotIndex: slotIdx,
+          slug,
+          heroId: hero.id || hero.slug
+        }));
+        e.dataTransfer.effectAllowed = 'move';
+        tile.classList.add('dragging');
+      });
+      tile.addEventListener('dragend', () => {
+        tile.classList.remove('dragging');
+      });
+    }
+
+    slotEl.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      slotEl.classList.add('drag-over');
+    });
+
+    slotEl.addEventListener('dragleave', () => {
+      slotEl.classList.remove('drag-over');
+    });
+
+    slotEl.addEventListener('drop', (e) => {
+      e.preventDefault();
+      slotEl.classList.remove('drag-over');
+      try {
+        const data = JSON.parse(e.dataTransfer.getData('application/json'));
+        if (data.source === 'stash') {
+          moveItemFromStashToBag(data.stashIndex, hero, slotIdx);
+        } else if (data.source === 'bag') {
+          // Swap or move within bag
+          if (data.slotIndex !== slotIdx) {
+            const currentSlots = normalizeCharacterBag(hero);
+            const temp = currentSlots[slotIdx];
+            currentSlots[slotIdx] = currentSlots[data.slotIndex];
+            currentSlots[data.slotIndex] = temp;
+            if (currentSlots[slotIdx]) currentSlots[slotIdx].slot = slotIdx;
+            if (currentSlots[data.slotIndex]) currentSlots[data.slotIndex].slot = data.slotIndex;
+            syncCharacterBagBack(hero, currentSlots);
+            renderCharacterBag(hero, prefix);
+            updateCampaignEncumbranceMeter(hero);
+            updateCharSheetEncumbranceMeter();
+            persistInventoryFromUI();
+          }
+        } else if (data.source === 'equip') {
+          unequipItemToBag(hero, data.slotKey);
+        } else if (data.source === 'item-catalog') {
+          addItemToCharacterBag(hero, data.slug, 1);
+          renderCharacterBag(hero, prefix);
+          updateCampaignEncumbranceMeter(hero);
+          updateCharSheetEncumbranceMeter();
+          persistInventoryFromUI();
+        }
+      } catch (err) {
+        console.warn('Error dropping on bag slot:', err);
+      }
+    });
+  });
+}
+
+function renderPaperdollSlots(hero, prefix = 'camp') {
+  const slotKeys = ['helmet', 'cloak', 'mainhand', 'armor', 'offhand', 'ring1', 'boots'];
+  const prefixId = prefix === 'cs' ? 'cs-pd-drop-' : 'pd-drop-';
+
+  slotKeys.forEach(slotKey => {
+    const dropzone = document.getElementById(`${prefixId}${slotKey}`);
+    if (!dropzone) return;
+
+    const currentSlug = getHeroEquipSlotValue(hero, slotKey);
+    const itemEntity = currentSlug ? (state.items || []).find(x => x.slug === currentSlug) : null;
+
+    if (currentSlug) {
+      const name = itemEntity ? (itemEntity['dcterms:title'] || itemEntity.title || currentSlug) : currentSlug;
+      const icon = itemEntity ? (itemEntity['robos:icon'] || itemEntity.icon || '📦') : '📦';
+      dropzone.innerHTML = `
+        <div class="equipped-item-chip" draggable="true" data-slot="${slotKey}" data-slug="${currentSlug}" title="${name}\nDrag to unequip or move to bag">
+          <span>${icon} ${name}</span>
+          <button type="button" class="equipped-item-unequip-btn" data-slot="${slotKey}" title="Unequip">×</button>
+        </div>
+      `;
+      const chip = dropzone.querySelector('.equipped-item-chip');
+      chip?.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('application/json', JSON.stringify({
+          source: 'equip',
+          slotKey,
+          slug: currentSlug
+        }));
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      dropzone.querySelector('.equipped-item-unequip-btn')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        unequipItemToBag(hero, slotKey);
+      });
+    } else {
+      dropzone.innerHTML = `<span class="slot-empty-placeholder">Empty</span>`;
+    }
+
+    // Dropzone listeners
+    dropzone.ondragover = (e) => {
+      e.preventDefault();
+      dropzone.parentElement.classList.add('drag-over');
+    };
+    dropzone.ondragleave = () => {
+      dropzone.parentElement.classList.remove('drag-over', 'drag-invalid');
+    };
+    dropzone.ondrop = (e) => {
+      e.preventDefault();
+      dropzone.parentElement.classList.remove('drag-over', 'drag-invalid');
+      try {
+        const data = JSON.parse(e.dataTransfer.getData('application/json'));
+        if (data.source === 'bag') {
+          equipItemFromBag(hero, slotKey, data.slotIndex);
+        } else if (data.source === 'item-catalog') {
+          const it = (state.items || []).find(x => x.slug === data.slug);
+          if (isPaperdollSlotCompatible(slotKey, it, data.slug)) {
+            setHeroEquipSlotValue(hero, slotKey, data.slug);
+            renderPaperdollSlots(hero, prefix);
+            updateCampaignEncumbranceMeter(hero);
+            updateCharSheetEncumbranceMeter();
+            persistInventoryFromUI();
+          } else {
+            setStatus(`⚠️ ${data.slug} is incompatible with ${slotKey}.`);
+          }
+        }
+      } catch (err) {
+        console.warn('Error dropping on paperdoll slot:', err);
+      }
+    };
+  });
+}
+
+function renderQuickItemSlots(hero, prefix = 'camp') {
+  const prefixDrop = prefix === 'cs' ? 'cs-quick-drop-' : 'camp-quick-drop-';
+  const quickItems = parseQuickItemsList(hero?.['robos:quickItems'] || hero?.quickItems || '');
+
+  [0, 1, 2].forEach(slotIdx => {
+    const dropzone = document.getElementById(`${prefixDrop}${slotIdx}`);
+    if (!dropzone) return;
+
+    const slug = quickItems[slotIdx] || '';
+    const itemEntity = slug ? (state.items || []).find(x => x.slug === slug) : null;
+
+    if (slug) {
+      const name = itemEntity ? (itemEntity['dcterms:title'] || itemEntity.title || slug) : slug;
+      const icon = itemEntity ? (itemEntity['robos:icon'] || itemEntity.icon || '🧪') : '🧪';
+      dropzone.innerHTML = `
+        <div class="equipped-item-chip" draggable="true" data-quick-slot="${slotIdx}" data-slug="${slug}" title="${name}\nClick × to remove">
+          <span>${icon} ${name}</span>
+          <button type="button" class="equipped-item-unequip-btn" data-quick-slot="${slotIdx}" title="Clear Quick Slot">×</button>
+        </div>
+      `;
+      dropzone.querySelector('.equipped-item-unequip-btn')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        removeQuickItemAtIndex(hero, slotIdx);
+      });
+    } else {
+      dropzone.innerHTML = `<span class="slot-empty-placeholder">+ Drop Potion/Scroll</span>`;
+    }
+
+    // Dropzone listeners
+    dropzone.ondragover = (e) => {
+      e.preventDefault();
+      dropzone.parentElement.classList.add('drag-over');
+    };
+    dropzone.ondragleave = () => {
+      dropzone.parentElement.classList.remove('drag-over', 'drag-invalid');
+    };
+    dropzone.ondrop = (e) => {
+      e.preventDefault();
+      dropzone.parentElement.classList.remove('drag-over', 'drag-invalid');
+      try {
+        const data = JSON.parse(e.dataTransfer.getData('application/json'));
+        if (data.slug) {
+          equipQuickItemFromBag(hero, slotIdx, data.slug);
+        }
+      } catch (err) {
+        console.warn('Error dropping on quick slot:', err);
+      }
+    };
+  });
+}
+
+function populateBagPickers() {
+  const pickers = [
+    document.getElementById('bag-item-picker'),
+    document.getElementById('char-sheet-bag-picker')
+  ];
+
+  const items = state.items || [];
+  let html = '<option value="">(Add item directly to bag...)</option>';
+  items.forEach(it => {
+    const slug = it.slug || it['dcterms:identifier'];
+    const title = it['dcterms:title'] || it.title || it.name || slug;
+    const cat = it['robos:itemCategory'] || it.category || 'misc';
+    const icon = it['robos:icon'] || it.icon || '📦';
+    const weight = it['robos:weightLbs'] || it.weightLbs || it['robos:weight'] || 1;
+    html += `<option value="${slug}">${icon} ${title} (${cat}, ${weight} lbs)</option>`;
+  });
+
+  pickers.forEach(picker => {
+    if (picker) {
+      const cur = picker.value;
+      picker.innerHTML = html;
+      if (cur) picker.value = cur;
+    }
+  });
+}
+
+function addSpellToActiveCharacter(spellSlug) {
+  if (!spellSlug) return;
+  if (!state.activeCharPreparedSpells) state.activeCharPreparedSpells = [];
+  if (!state.activeCharPreparedSpells.includes(spellSlug)) {
+    state.activeCharPreparedSpells.push(spellSlug);
+    renderCharSpellChips();
+    updateCharSpellStats();
+  }
+}
+
+function addAbilityToActiveCharacter(abilitySlug) {
+  if (!abilitySlug) return;
+  if (!state.activeCharAssignedAbilities) state.activeCharAssignedAbilities = [];
+  if (!state.activeCharAssignedAbilities.includes(abilitySlug)) {
+    state.activeCharAssignedAbilities.push(abilitySlug);
+    renderCharAbilityChips();
+  }
+}
+
+function setupDragAndDrop() {
+  // Setup spell chips and ability chips dropzones for character sheet
+  const spellChipsContainer = document.getElementById('char-spells-chips');
+  if (spellChipsContainer) {
+    spellChipsContainer.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+      spellChipsContainer.classList.add('drag-over');
+    });
+    spellChipsContainer.addEventListener('dragleave', () => {
+      spellChipsContainer.classList.remove('drag-over');
+    });
+    spellChipsContainer.addEventListener('drop', (e) => {
+      e.preventDefault();
+      spellChipsContainer.classList.remove('drag-over');
+      try {
+        const data = JSON.parse(e.dataTransfer.getData('application/json'));
+        if (data.source === 'spell' && data.slug) {
+          addSpellToActiveCharacter(data.slug);
+        }
+      } catch (err) {}
+    });
+  }
+
+  const abilityChipsContainer = document.getElementById('char-abilities-chips');
+  if (abilityChipsContainer) {
+    abilityChipsContainer.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+      abilityChipsContainer.classList.add('drag-over');
+    });
+    abilityChipsContainer.addEventListener('dragleave', () => {
+      abilityChipsContainer.classList.remove('drag-over');
+    });
+    abilityChipsContainer.addEventListener('drop', (e) => {
+      e.preventDefault();
+      abilityChipsContainer.classList.remove('drag-over');
+      try {
+        const data = JSON.parse(e.dataTransfer.getData('application/json'));
+        if (data.source === 'ability' && data.slug) {
+          addAbilityToActiveCharacter(data.slug);
+        }
+      } catch (err) {}
+    });
+  }
+}
+
 function loadEquipSlotsForHero(heroId) {
   const hero = findCharacterById(heroId);
   if (!hero) {
@@ -3574,6 +4577,9 @@ function loadEquipSlotsForHero(heroId) {
       for (const opt of qSel.options) opt.selected = false;
     }
     renderQuickItemPills('equip-quickitems-pills', 'equip-quickitems', null);
+    renderPaperdollSlots(null, 'camp');
+    renderQuickItemSlots(null, 'camp');
+    renderCharacterBag(null, 'camp');
     updateCampaignEncumbranceMeter(null);
     return;
   }
@@ -3593,6 +4599,11 @@ function loadEquipSlotsForHero(heroId) {
   renderQuickItemPills('equip-quickitems-pills', 'equip-quickitems', () => {
     persistEquipSlotsToHero();
   });
+
+  renderPaperdollSlots(hero, 'camp');
+  renderQuickItemSlots(hero, 'camp');
+  renderCharacterBag(hero, 'camp');
+  populateBagPickers();
 
   updateCampaignEncumbranceMeter(hero);
 }
@@ -3715,6 +4726,7 @@ function renderStashTable() {
       if (!isNaN(idx) && idx >= 0 && idx < items.length) {
         items.splice(idx, 1);
         renderStashTable();
+        renderGraphicalStash();
         persistInventoryFromUI();
       }
     });
@@ -3755,6 +4767,7 @@ function addStashItem() {
   picker.value = '';
   if (qtyInput) qtyInput.value = '1';
   renderStashTable();
+  renderGraphicalStash();
   persistInventoryFromUI();
 }
 
@@ -3805,6 +4818,8 @@ async function saveInventory() {
           'robos:boots': hero.boots || '',
           'robos:ring1': hero.ring1 || '',
           'robos:quickItems': hero.quickItems || '',
+          'robos:inventory': getCharacterBag(hero),
+          inventory: getCharacterBag(hero),
         };
         const resChar = await window.robos.saveCharacter({ slug: hero.slug, data: charPayload });
         if (!resChar.success) {
@@ -4012,7 +5027,7 @@ function renderItemsList() {
     const isSelected = slug === state.activeItemSlug;
 
     return `
-      <div class="item-list-item ${isSelected ? 'active' : ''}" data-slug="${slug}">
+      <div class="item-list-item ${isSelected ? 'active' : ''}" data-slug="${slug}" draggable="true">
         <span class="item-list-icon">${icon}</span>
         <div class="item-list-meta">
           <div class="item-list-title">${title}</div>
@@ -4026,6 +5041,22 @@ function renderItemsList() {
   }).join('');
 
   listEl.querySelectorAll('.item-list-item').forEach(itemEl => {
+    itemEl.addEventListener('dragstart', (e) => {
+      const slug = itemEl.getAttribute('data-slug');
+      const itemEntity = (state.items || []).find(x => x.slug === slug);
+      e.dataTransfer.setData('application/json', JSON.stringify({
+        source: 'item-catalog',
+        slug,
+        name: itemEntity?.['dcterms:title'] || itemEntity?.title || slug,
+        icon: itemEntity?.['robos:icon'] || itemEntity?.icon || '📦',
+        category: itemEntity?.['robos:itemCategory'] || itemEntity?.category || 'misc'
+      }));
+      e.dataTransfer.effectAllowed = 'copy';
+      itemEl.classList.add('dragging');
+    });
+    itemEl.addEventListener('dragend', () => {
+      itemEl.classList.remove('dragging');
+    });
     itemEl.addEventListener('click', () => {
       const slug = itemEl.getAttribute('data-slug');
       loadItemForm(slug);
@@ -4572,7 +5603,7 @@ function renderSpellsList() {
     const levelLabel = s.level === 0 ? 'Cantrip' : `Level ${s.level}`;
     const schoolClass = (s.school || 'evocation').toLowerCase();
     return `
-      <div class="spell-list-item ${isActive ? 'active' : ''}" data-slug="${s.slug}">
+      <div class="spell-list-item ${isActive ? 'active' : ''}" data-slug="${s.slug}" draggable="true">
         <div class="spell-item-icon">${s.icon || '✨'}</div>
         <div class="spell-item-info">
           <div class="spell-item-name">${s.name || s.slug}</div>
@@ -4587,6 +5618,21 @@ function renderSpellsList() {
   }).join('');
 
   container.querySelectorAll('.spell-list-item').forEach(el => {
+    el.addEventListener('dragstart', (e) => {
+      const slug = el.getAttribute('data-slug');
+      const spell = state.spells.find(x => x.slug === slug);
+      e.dataTransfer.setData('application/json', JSON.stringify({
+        source: 'spell',
+        slug: slug,
+        name: spell?.name || slug,
+        icon: spell?.icon || '✨'
+      }));
+      e.dataTransfer.effectAllowed = 'copy';
+      el.classList.add('dragging');
+    });
+    el.addEventListener('dragend', () => {
+      el.classList.remove('dragging');
+    });
     el.addEventListener('click', () => {
       const slug = el.getAttribute('data-slug');
       loadSpellForm(slug);
@@ -4921,7 +5967,7 @@ function renderAbilitiesList() {
     const isActive = state.activeAbilitySlug === a.slug;
     const actionType = a.actionType || 'action';
     return `
-      <div class="ability-list-item ${isActive ? 'active' : ''}" data-slug="${a.slug}">
+      <div class="ability-list-item ${isActive ? 'active' : ''}" data-slug="${a.slug}" draggable="true">
         <div class="ability-item-icon">${a.icon || '⚡'}</div>
         <div class="ability-item-info">
           <div class="ability-item-name">${a.name || a.slug}</div>
@@ -4936,6 +5982,21 @@ function renderAbilitiesList() {
   }).join('');
 
   container.querySelectorAll('.ability-list-item').forEach(el => {
+    el.addEventListener('dragstart', (e) => {
+      const slug = el.getAttribute('data-slug');
+      const ability = state.abilities.find(x => x.slug === slug);
+      e.dataTransfer.setData('application/json', JSON.stringify({
+        source: 'ability',
+        slug: slug,
+        name: ability?.name || slug,
+        icon: ability?.icon || '⚡'
+      }));
+      e.dataTransfer.effectAllowed = 'copy';
+      el.classList.add('dragging');
+    });
+    el.addEventListener('dragend', () => {
+      el.classList.remove('dragging');
+    });
     el.addEventListener('click', () => {
       const slug = el.getAttribute('data-slug');
       loadAbilityForm(slug);

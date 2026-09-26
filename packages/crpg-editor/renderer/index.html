@@ -410,6 +410,9 @@
                 </div>
               </div>
 
+              <!-- Resizer Divider 1 -->
+              <div class="split-divider col-resize" id="resizer-tree-1" data-target="prev" data-min="200" data-max="450" title="Drag to resize Story Outline"></div>
+
               <!-- Center: Visual Interactive Tree Canvas -->
               <div class="quest-tree-canvas-panel panel">
                 <div class="canvas-header-bar">
@@ -434,6 +437,9 @@
                   </div>
                 </div>
               </div>
+
+              <!-- Resizer Divider 2 -->
+              <div class="split-divider col-resize" id="resizer-tree-2" data-target="next" data-min="280" data-max="600" title="Drag to resize Node Inspector"></div>
 
               <!-- Right Sidebar: Selected Node Property Inspector -->
               <div class="quest-node-inspector panel">
@@ -612,13 +618,15 @@
         <div id="subpane-camp-inventory" class="campaign-subpane hidden">
           <div class="inventory-header-bar">
             <h2>🎒 Party Inventory, Currency & Equipment</h2>
-            <button id="btn-save-inventory" class="btn btn-primary" title="Save Inventory, Party & Equipment">
-              <span>💾 Save Inventory</span>
-            </button>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <button id="btn-save-inventory" class="btn btn-primary" title="Save Inventory, Party & Equipment">
+                <span>💾 Save Inventory</span>
+              </button>
+            </div>
           </div>
-          <div class="inventory-layout">
+          <div class="inventory-layout" id="camp-inventory-layout">
             <!-- Column 1: Active Party & Formations -->
-            <div class="panel">
+            <div class="panel inventory-col-party" id="inv-col-party">
               <div class="panel-header">
                 <h2>Active Party Configuration</h2>
               </div>
@@ -655,10 +663,17 @@
               </div>
             </div>
 
+            <!-- Resizer Divider 1 -->
+            <div class="split-divider col-resize" id="resizer-inv-1" data-target="prev" data-min="240" data-max="450" title="Drag to resize Party column"></div>
+
             <!-- Column 2: Party Shared Stash & Currency -->
-            <div class="panel">
-              <div class="panel-header">
+            <div class="panel inventory-col-stash" id="inv-col-stash">
+              <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
                 <h2>Party Purse & Shared Stash</h2>
+                <div class="stash-view-toggles" style="display: flex; gap: 4px;">
+                  <button type="button" id="btn-stash-view-grid" class="btn btn-sm btn-secondary active" title="Graphical Stash Grid">🎒 Grid</button>
+                  <button type="button" id="btn-stash-view-table" class="btn btn-sm btn-secondary" title="Table View">📋 Table</button>
+                </div>
               </div>
               <div class="panel-body">
                 <div class="currency-cards-grid">
@@ -676,9 +691,12 @@
                   </div>
                 </div>
 
-                <!-- Structured Item Stash -->
+                <!-- Stash Add Row & Quick Search -->
                 <div class="form-group" style="margin-top: 14px;">
-                  <label style="display: block; margin-bottom: 6px;">Campaign Shared Stash</label>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <label style="font-weight: 600;">Campaign Shared Stash</label>
+                    <span style="font-size: 11px; color: var(--text-muted);">Drag items to/from party bags</span>
+                  </div>
                   <div class="stash-add-row">
                     <select id="stash-item-picker" class="dropdown-select">
                       <option value="">(Select item to add...)</option>
@@ -686,7 +704,16 @@
                     <input type="number" id="stash-item-qty" class="input-number" min="1" value="1" title="Quantity">
                     <button id="btn-add-stash-item" class="btn btn-secondary btn-sm" type="button">+ Add</button>
                   </div>
-                  <div class="stash-table-box">
+
+                  <!-- Graphical Stash Grid (Drag-and-Drop enabled) -->
+                  <div id="stash-grid-view" class="stash-grid-container">
+                    <div id="stash-items-grid" class="inventory-bag-grid stash-bag-grid">
+                      <!-- Slot tiles rendered via JS -->
+                    </div>
+                  </div>
+
+                  <!-- Structured Item Stash Table View (toggleable) -->
+                  <div id="stash-table-view" class="stash-table-box hidden">
                     <table id="stash-items-table" class="stash-table">
                       <thead>
                         <tr>
@@ -708,10 +735,13 @@
               </div>
             </div>
 
-            <!-- Column 3: Character & NPC Equipment Slots -->
-            <div class="panel">
+            <!-- Resizer Divider 2 -->
+            <div class="split-divider col-resize" id="resizer-inv-2" data-target="next" data-min="380" data-max="750" title="Drag to resize Character Equipment & Bag column"></div>
+
+            <!-- Column 3: Character Paperdoll, Quick Items & Personal Inventory Bag -->
+            <div class="panel inventory-col-character" id="inv-col-character">
               <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-                <h2 style="white-space: nowrap;">Equipment Slots Inspector</h2>
+                <h2 style="white-space: nowrap;">Character Inventory & Equipment</h2>
                 <div style="display: flex; align-items: center; gap: 6px; min-width: 0;">
                   <label for="equip-hero-select" style="font-size: 11px; color: var(--text-muted); white-space: nowrap;">Character:</label>
                   <select id="equip-hero-select" class="dropdown-select" style="max-width: 190px; min-width: 120px;">
@@ -736,59 +766,98 @@
                   </div>
                 </div>
 
-                <div class="equipment-slots-grid">
-                  <div class="equip-slot-item">
-                    <label for="equip-mainhand">Main Hand (Weapon)</label>
-                    <select id="equip-mainhand" class="dropdown-select equip-slot-select full-width">
-                      <option value="">(Empty)</option>
-                    </select>
+                <!-- Graphical Paperdoll Equipment Slots -->
+                <div class="paperdoll-studio-section">
+                  <div class="section-subheading">
+                    <span>🥋 Paperdoll Equipment Slots</span>
+                    <span style="font-size: 10px; color: var(--text-muted);">Drag compatible items from bag to equip</span>
                   </div>
-                  <div class="equip-slot-item">
-                    <label for="equip-offhand">Off Hand (Shield)</label>
-                    <select id="equip-offhand" class="dropdown-select equip-slot-select full-width">
-                      <option value="">(Empty)</option>
-                    </select>
-                  </div>
-                  <div class="equip-slot-item">
-                    <label for="equip-armor">Armor / Body</label>
-                    <select id="equip-armor" class="dropdown-select equip-slot-select full-width">
-                      <option value="">(Empty)</option>
-                    </select>
-                  </div>
-                  <div class="equip-slot-item">
-                    <label for="equip-helmet">Helmet / Head</label>
-                    <select id="equip-helmet" class="dropdown-select equip-slot-select full-width">
-                      <option value="">(Empty)</option>
-                    </select>
-                  </div>
-                  <div class="equip-slot-item">
-                    <label for="equip-cloak">Cloak / Shoulders</label>
-                    <select id="equip-cloak" class="dropdown-select equip-slot-select full-width">
-                      <option value="">(Empty)</option>
-                    </select>
-                  </div>
-                  <div class="equip-slot-item">
-                    <label for="equip-boots">Boots / Feet</label>
-                    <select id="equip-boots" class="dropdown-select equip-slot-select full-width">
-                      <option value="">(Empty)</option>
-                    </select>
-                  </div>
-                  <div class="equip-slot-item col-span-2">
-                    <label for="equip-ring1">Ring / Accessory</label>
-                    <select id="equip-ring1" class="dropdown-select equip-slot-select full-width">
-                      <option value="">(Empty)</option>
-                    </select>
-                  </div>
-                  <div class="equip-slot-item col-span-2">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-                      <label for="equip-quickitems">🧪 Quick Items / Potions (Multi-Select)</label>
-                      <span style="font-size: 10px; color: var(--text-muted);">(Ctrl+Click for multiple)</span>
+                  <div class="paperdoll-layout-grid" id="camp-paperdoll-grid">
+                    <!-- Helmet & Cloak Top Row -->
+                    <div class="paperdoll-slot" data-slot="helmet" id="pd-slot-helmet">
+                      <div class="slot-header"><span class="slot-icon">🪖</span><span class="slot-title">Head</span></div>
+                      <div class="slot-dropzone" id="pd-drop-helmet"></div>
                     </div>
-                    <select id="equip-quickitems" class="quickitems-multiselect full-width" multiple size="4">
-                      <option value="">(Empty)</option>
-                    </select>
-                    <div id="equip-quickitems-pills" class="quickitems-pills-row" style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px;"></div>
+                    <div class="paperdoll-slot" data-slot="cloak" id="pd-slot-cloak">
+                      <div class="slot-header"><span class="slot-icon">🧥</span><span class="slot-title">Cloak</span></div>
+                      <div class="slot-dropzone" id="pd-drop-cloak"></div>
+                    </div>
+                    <!-- Weapons & Armor Mid Row -->
+                    <div class="paperdoll-slot" data-slot="mainhand" id="pd-slot-mainhand">
+                      <div class="slot-header"><span class="slot-icon">⚔️</span><span class="slot-title">Main Hand</span></div>
+                      <div class="slot-dropzone" id="pd-drop-mainhand"></div>
+                    </div>
+                    <div class="paperdoll-slot" data-slot="armor" id="pd-slot-armor">
+                      <div class="slot-header"><span class="slot-icon">🥋</span><span class="slot-title">Body Armor</span></div>
+                      <div class="slot-dropzone" id="pd-drop-armor"></div>
+                    </div>
+                    <div class="paperdoll-slot" data-slot="offhand" id="pd-slot-offhand">
+                      <div class="slot-header"><span class="slot-icon">🛡️</span><span class="slot-title">Off Hand</span></div>
+                      <div class="slot-dropzone" id="pd-drop-offhand"></div>
+                    </div>
+                    <!-- Ring & Boots Bottom Row -->
+                    <div class="paperdoll-slot" data-slot="ring1" id="pd-slot-ring1">
+                      <div class="slot-header"><span class="slot-icon">💍</span><span class="slot-title">Ring</span></div>
+                      <div class="slot-dropzone" id="pd-drop-ring1"></div>
+                    </div>
+                    <div class="paperdoll-slot" data-slot="boots" id="pd-slot-boots">
+                      <div class="slot-header"><span class="slot-icon">👢</span><span class="slot-title">Boots</span></div>
+                      <div class="slot-dropzone" id="pd-drop-boots"></div>
+                    </div>
                   </div>
+                </div>
+
+                <!-- Graphical Quick Item Slots (3 slots) -->
+                <div class="quick-slots-studio-section">
+                  <div class="section-subheading">
+                    <span>🧪 Quick Items & Potions (3 Slots)</span>
+                    <span style="font-size: 10px; color: #4caf50;">Only compatible potions, scrolls & herbs from bag</span>
+                  </div>
+                  <div class="quick-slots-grid" id="camp-quick-slots-grid">
+                    <div class="quick-slot-box" data-quick-slot="0" id="camp-quick-slot-0">
+                      <div class="quick-slot-num">Q1</div>
+                      <div class="slot-dropzone" id="camp-quick-drop-0"></div>
+                    </div>
+                    <div class="quick-slot-box" data-quick-slot="1" id="camp-quick-slot-1">
+                      <div class="quick-slot-num">Q2</div>
+                      <div class="slot-dropzone" id="camp-quick-drop-1"></div>
+                    </div>
+                    <div class="quick-slot-box" data-quick-slot="2" id="camp-quick-slot-2">
+                      <div class="quick-slot-num">Q3</div>
+                      <div class="slot-dropzone" id="camp-quick-drop-2"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Baldur's Gate 1-style Personal Inventory Bag (16 Slots, 4x4 Grid) -->
+                <div class="char-bag-studio-section">
+                  <div class="section-subheading" style="justify-content: space-between;">
+                    <span id="camp-bag-title">🎒 Personal Inventory Bag (16 Slots)</span>
+                    <span id="camp-bag-count" class="counter-badge">0 / 16</span>
+                  </div>
+                  <!-- Quick Add Item to Bag row -->
+                  <div class="bag-add-row" style="display: flex; gap: 6px; margin-bottom: 8px;">
+                    <select id="bag-item-picker" class="dropdown-select" style="flex: 1; font-size: 12px;">
+                      <option value="">(Add item directly to bag...)</option>
+                    </select>
+                    <button type="button" id="btn-add-item-to-bag" class="btn btn-secondary btn-sm">+ Bag</button>
+                  </div>
+                  <div class="inventory-bag-grid char-16-slot-grid" id="camp-char-bag-grid">
+                    <!-- 16 graphical slots rendered via JS -->
+                  </div>
+                </div>
+
+                <!-- Hidden inputs / selects for backward compatibility -->
+                <div class="hidden">
+                  <select id="equip-mainhand"><option value=""></option></select>
+                  <select id="equip-offhand"><option value=""></option></select>
+                  <select id="equip-armor"><option value=""></option></select>
+                  <select id="equip-helmet"><option value=""></option></select>
+                  <select id="equip-cloak"><option value=""></option></select>
+                  <select id="equip-boots"><option value=""></option></select>
+                  <select id="equip-ring1"><option value=""></option></select>
+                  <select id="equip-quickitems" multiple><option value=""></option></select>
+                  <div id="equip-quickitems-pills"></div>
                 </div>
               </div>
             </div>
@@ -904,6 +973,9 @@
               <!-- Populated via JS -->
             </div>
           </aside>
+
+          <!-- Resizable Divider -->
+          <div class="split-divider col-resize" id="resizer-char-1" data-target="prev" data-min="240" data-max="500" title="Drag to resize Character Roster"></div>
 
           <!-- Right: Character & NPC Sheet Editor -->
           <main class="character-sheet-area">
@@ -1320,43 +1392,96 @@
               </div>
             </div>
 
-            <!-- Equipment slots for this character / NPC -->
-            <div class="equipment-slots-grid">
-              <div class="equip-slot-item">
-                <label for="char-equip-mainhand">Main Hand (Weapon)</label>
-                <select id="char-equip-mainhand" class="dropdown-select equip-slot-select full-width">
-                  <option value="">(Empty)</option>
-                </select>
+            <!-- Graphical Paperdoll Equipment Slots -->
+            <div class="paperdoll-studio-section" style="margin-bottom: 14px;">
+              <div class="section-subheading">
+                <span>🥋 Paperdoll Equipment Slots</span>
+                <span style="font-size: 10px; color: var(--text-muted);">Drag compatible items from bag to equip</span>
               </div>
-              <div class="equip-slot-item">
-                <label for="char-equip-offhand">Off Hand (Shield)</label>
-                <select id="char-equip-offhand" class="dropdown-select equip-slot-select full-width">
-                  <option value="">(Empty)</option>
-                </select>
-              </div>
-              <div class="equip-slot-item">
-                <label for="char-equip-armor">Armor / Body</label>
-                <select id="char-equip-armor" class="dropdown-select equip-slot-select full-width">
-                  <option value="">(Empty)</option>
-                </select>
-              </div>
-              <div class="equip-slot-item">
-                <label for="char-equip-cloak">Cloak / Shoulders</label>
-                <select id="char-equip-cloak" class="dropdown-select equip-slot-select full-width">
-                  <option value="">(Empty)</option>
-                </select>
-              </div>
-              <div class="equip-slot-item col-span-2">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-                  <label for="char-equip-quickitems">🧪 Quick Items / Potions (Multi-Select)</label>
-                  <span style="font-size: 10px; color: var(--text-muted);">(Ctrl+Click for multiple)</span>
+              <div class="paperdoll-layout-grid" id="char-sheet-paperdoll-grid">
+                <!-- Helmet & Cloak Top Row -->
+                <div class="paperdoll-slot" data-slot="helmet" id="cs-pd-slot-helmet">
+                  <div class="slot-header"><span class="slot-icon">🪖</span><span class="slot-title">Head</span></div>
+                  <div class="slot-dropzone" id="cs-pd-drop-helmet"></div>
                 </div>
-                <select id="char-equip-quickitems" class="quickitems-multiselect full-width" multiple size="4">
-                  <option value="">(Empty)</option>
-                </select>
-                <div id="char-equip-quickitems-pills" class="quickitems-pills-row" style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px;"></div>
+                <div class="paperdoll-slot" data-slot="cloak" id="cs-pd-slot-cloak">
+                  <div class="slot-header"><span class="slot-icon">🧥</span><span class="slot-title">Cloak</span></div>
+                  <div class="slot-dropzone" id="cs-pd-drop-cloak"></div>
+                </div>
+                <!-- Weapons & Armor Mid Row -->
+                <div class="paperdoll-slot" data-slot="mainhand" id="cs-pd-slot-mainhand">
+                  <div class="slot-header"><span class="slot-icon">⚔️</span><span class="slot-title">Main Hand</span></div>
+                  <div class="slot-dropzone" id="cs-pd-drop-mainhand"></div>
+                </div>
+                <div class="paperdoll-slot" data-slot="armor" id="cs-pd-slot-armor">
+                  <div class="slot-header"><span class="slot-icon">🥋</span><span class="slot-title">Body Armor</span></div>
+                  <div class="slot-dropzone" id="cs-pd-drop-armor"></div>
+                </div>
+                <div class="paperdoll-slot" data-slot="offhand" id="cs-pd-slot-offhand">
+                  <div class="slot-header"><span class="slot-icon">🛡️</span><span class="slot-title">Off Hand</span></div>
+                  <div class="slot-dropzone" id="cs-pd-drop-offhand"></div>
+                </div>
+                <!-- Ring & Boots Bottom Row -->
+                <div class="paperdoll-slot" data-slot="ring1" id="cs-pd-slot-ring1">
+                  <div class="slot-header"><span class="slot-icon">💍</span><span class="slot-title">Ring</span></div>
+                  <div class="slot-dropzone" id="cs-pd-drop-ring1"></div>
+                </div>
+                <div class="paperdoll-slot" data-slot="boots" id="cs-pd-slot-boots">
+                  <div class="slot-header"><span class="slot-icon">👢</span><span class="slot-title">Boots</span></div>
+                  <div class="slot-dropzone" id="cs-pd-drop-boots"></div>
+                </div>
               </div>
             </div>
+
+            <!-- Graphical Quick Item Slots (3 slots) -->
+            <div class="quick-slots-studio-section" style="margin-bottom: 14px;">
+              <div class="section-subheading">
+                <span>🧪 Quick Items & Potions (3 Slots)</span>
+                <span style="font-size: 10px; color: #4caf50;">Only compatible potions, scrolls & herbs from bag</span>
+              </div>
+              <div class="quick-slots-grid" id="char-sheet-quick-slots-grid">
+                <div class="quick-slot-box" data-quick-slot="0" id="cs-quick-slot-0">
+                  <div class="quick-slot-num">Q1</div>
+                  <div class="slot-dropzone" id="cs-quick-drop-0"></div>
+                </div>
+                <div class="quick-slot-box" data-quick-slot="1" id="cs-quick-slot-1">
+                  <div class="quick-slot-num">Q2</div>
+                  <div class="slot-dropzone" id="cs-quick-drop-1"></div>
+                </div>
+                <div class="quick-slot-box" data-quick-slot="2" id="cs-quick-slot-2">
+                  <div class="quick-slot-num">Q3</div>
+                  <div class="slot-dropzone" id="cs-quick-drop-2"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Baldur's Gate 1-style Personal Inventory Bag (16 Slots, 4x4 Grid) -->
+            <div class="char-bag-studio-section" style="margin-bottom: 14px;">
+              <div class="section-subheading" style="justify-content: space-between;">
+                <span id="char-sheet-bag-title">🎒 Personal Inventory Bag (16 Slots)</span>
+                <span id="char-sheet-bag-count" class="counter-badge">0 / 16</span>
+              </div>
+              <div class="bag-add-row" style="display: flex; gap: 6px; margin-bottom: 8px;">
+                <select id="char-sheet-bag-picker" class="dropdown-select" style="flex: 1; font-size: 12px;">
+                  <option value="">(Add item directly to bag...)</option>
+                </select>
+                <button type="button" id="btn-char-sheet-add-item" class="btn btn-secondary btn-sm">+ Bag</button>
+              </div>
+              <div class="inventory-bag-grid char-16-slot-grid" id="char-sheet-bag-grid">
+                <!-- 16 graphical slots rendered via JS -->
+              </div>
+            </div>
+
+            <!-- Legacy fallback dropdowns for compatibility -->
+            <div class="hidden">
+              <select id="char-equip-mainhand"><option value=""></option></select>
+              <select id="char-equip-offhand"><option value=""></option></select>
+              <select id="char-equip-armor"><option value=""></option></select>
+              <select id="char-equip-cloak"><option value=""></option></select>
+              <select id="char-equip-quickitems" multiple><option value=""></option></select>
+              <div id="char-equip-quickitems-pills"></div>
+            </div>
+          </div>
           <!-- Lore, Backstory & Notes Section (Shared) -->
           <div class="sheet-section">
             <h3>Character Lore, Backstory & Notes</h3>
@@ -1398,6 +1523,9 @@
               <!-- Item cards rendered via JS -->
             </div>
           </aside>
+
+          <!-- Resizable Divider -->
+          <div class="split-divider col-resize" id="resizer-items-1" data-target="prev" data-min="240" data-max="500" title="Drag to resize Item Library"></div>
 
           <!-- Right Column: Item Blueprint Editor -->
           <main class="item-editor-content">
@@ -1564,6 +1692,9 @@
             </div>
           </aside>
 
+          <!-- Resizable Divider -->
+          <div class="split-divider col-resize" id="resizer-spells-1" data-target="prev" data-min="240" data-max="500" title="Drag to resize Spellbook Library"></div>
+
           <!-- Right Column: Spell Blueprint Editor -->
           <main class="spell-editor-content">
             <!-- Empty State -->
@@ -1725,6 +1856,9 @@
               <!-- Ability cards rendered via JS -->
             </div>
           </aside>
+
+          <!-- Resizable Divider -->
+          <div class="split-divider col-resize" id="resizer-abilities-1" data-target="prev" data-min="240" data-max="500" title="Drag to resize Abilities Library"></div>
 
           <!-- Right Column: Ability Blueprint Editor -->
           <main class="ability-editor-content">
@@ -2037,6 +2171,9 @@
               </div>
             </div>
           </aside>
+
+          <!-- Resizable Divider -->
+          <div class="split-divider col-resize" id="resizer-maps-1" data-target="prev" data-min="240" data-max="500" title="Drag to resize Map Settings"></div>
 
           <!-- Center: Canvas Viewport -->
           <div class="canvas-viewport-container">

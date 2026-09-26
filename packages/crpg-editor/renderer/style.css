@@ -332,11 +332,13 @@ body {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  padding: 24px;
+  padding: 20px;
   width: 100%;
-  max-width: 1600px;
-  margin: 0 auto;
+  max-width: 100%;
+  margin: 0;
   box-sizing: border-box;
+  flex: 1;
+  min-height: 0;
 }
 
 .campaign-grid-top {
@@ -750,17 +752,41 @@ textarea {
 }
 
 .inventory-layout {
-  display: grid;
-  grid-template-columns: minmax(300px, 1fr) minmax(360px, 1.2fr) minmax(420px, 1.6fr);
-  gap: 20px;
-  padding: 24px;
+  display: flex;
+  flex-direction: row;
   width: 100%;
-  max-width: 1700px;
-  margin: 0 auto;
+  max-width: 100%;
+  margin: 0;
   box-sizing: border-box;
   flex: 1;
   min-height: 0;
+  overflow: hidden;
+  padding: 12px;
+  gap: 0;
+}
+
+.inventory-col-party {
+  width: 310px;
+  flex-shrink: 0;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.inventory-col-stash {
+  flex: 1;
+  min-width: 320px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.inventory-col-character {
+  width: 500px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .party-checklist-box {
@@ -2368,15 +2394,20 @@ textarea {
 }
 
 .quest-tree-grid {
-  display: grid;
-  grid-template-columns: 260px 1fr 360px;
-  gap: 10px;
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 100%;
   flex: 1;
   min-height: 0;
+  gap: 0;
+  overflow: hidden;
 }
 
 /* Left Sidebar: Outline */
 .quest-tree-sidebar {
+  width: 260px;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -2839,6 +2870,8 @@ textarea {
 
 /* Right Sidebar: Node Inspector */
 .quest-node-inspector {
+  width: 360px;
+  flex-shrink: 0;
   overflow-y: auto;
   max-height: 100%;
 }
@@ -2882,6 +2915,393 @@ textarea {
   to { opacity: 1; transform: scale(1); }
 }
 
+/* ========================================================
+   UNIVERSAL RESIZABLE SPLIT DIVIDERS
+   ======================================================== */
+.split-divider {
+  position: relative;
+  width: 8px;
+  min-width: 8px;
+  background: transparent;
+  cursor: col-resize;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  touch-action: none;
+  transition: background 0.15s ease;
+  flex-shrink: 0;
+}
 
+.split-divider::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--border);
+  transition: all 0.15s ease;
+}
 
+.split-divider:hover::after,
+.split-divider.active::after {
+  background: var(--accent);
+  width: 4px;
+  box-shadow: 0 0 8px rgba(0, 188, 212, 0.7);
+}
 
+body.resizing,
+body.resizing * {
+  user-select: none !important;
+  cursor: col-resize !important;
+}
+
+/* ========================================================
+   BALDUR'S GATE 1 GRAPHICAL INVENTORY BAG & EQUIPMENT
+   ======================================================== */
+.char-bag-studio-section {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inventory-bag-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-light);
+  box-sizing: border-box;
+}
+
+.char-16-slot-grid {
+  grid-template-columns: repeat(4, minmax(68px, 84px));
+  max-width: fit-content;
+  justify-content: start;
+}
+
+.stash-bag-grid {
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+.inventory-slot {
+  aspect-ratio: 1;
+  min-height: 64px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  user-select: none;
+  box-sizing: border-box;
+  padding: 4px;
+}
+
+.inventory-slot.empty {
+  border-style: dashed;
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(13, 17, 23, 0.6);
+}
+
+.inventory-slot.empty:hover {
+  border-color: var(--accent);
+  background: rgba(0, 188, 212, 0.08);
+}
+
+.inventory-slot .slot-number {
+  position: absolute;
+  top: 3px;
+  left: 5px;
+  font-size: 9px;
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+
+.inventory-slot.drag-over {
+  border-color: var(--accent) !important;
+  background: rgba(0, 188, 212, 0.25) !important;
+  box-shadow: 0 0 10px rgba(0, 188, 212, 0.5) inset;
+}
+
+.inventory-slot.drag-invalid {
+  border-color: var(--danger) !important;
+  background: rgba(248, 81, 73, 0.25) !important;
+  box-shadow: 0 0 10px rgba(248, 81, 73, 0.5) inset;
+}
+
+/* Item Tiles inside Slots */
+.item-tile {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  position: relative;
+  text-align: center;
+  border-radius: var(--radius-sm);
+}
+
+.item-tile:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.item-tile:active {
+  cursor: grabbing;
+}
+
+.item-tile.dragging {
+  opacity: 0.35;
+}
+
+.item-tile-icon {
+  font-size: 24px;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.item-tile-name {
+  font-size: 9.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.item-tile-qty {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  font-size: 9px;
+  font-weight: 700;
+  color: #4caf50;
+  background: rgba(0, 0, 0, 0.75);
+  padding: 1px 4px;
+  border-radius: 3px;
+  border: 1px solid rgba(76, 175, 80, 0.4);
+}
+
+.item-tile-weight {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 8px;
+  color: var(--text-muted);
+}
+
+/* Paperdoll Equipment Slots */
+.paperdoll-studio-section {
+  margin-bottom: 14px;
+}
+
+.section-subheading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-bright);
+  margin-bottom: 6px;
+  letter-spacing: 0.2px;
+}
+
+.paperdoll-layout-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-light);
+  max-width: 540px;
+}
+
+.paperdoll-slot {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px;
+  min-height: 64px;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+}
+
+.paperdoll-slot:hover {
+  border-color: rgba(0, 188, 212, 0.4);
+}
+
+.paperdoll-slot.drag-over {
+  border-color: var(--accent) !important;
+  background: rgba(0, 188, 212, 0.2) !important;
+  box-shadow: 0 0 10px rgba(0, 188, 212, 0.5);
+}
+
+.paperdoll-slot.drag-invalid {
+  border-color: var(--danger) !important;
+  background: rgba(248, 81, 73, 0.2) !important;
+}
+
+.paperdoll-slot .slot-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.paperdoll-slot .slot-dropzone {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+}
+
+.slot-empty-placeholder {
+  font-size: 10px;
+  color: var(--text-muted);
+  opacity: 0.55;
+  font-style: italic;
+}
+
+.equipped-item-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 4px;
+  background: rgba(0, 188, 212, 0.12);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  padding: 3px 6px;
+  font-size: 11px;
+}
+
+.equipped-item-unequip-btn {
+  background: transparent;
+  border: none;
+  color: var(--danger);
+  font-weight: bold;
+  cursor: pointer;
+  padding: 0 2px;
+  font-size: 13px;
+  line-height: 1;
+}
+
+/* Quick Slots */
+.quick-slots-studio-section {
+  margin-bottom: 14px;
+}
+
+.quick-slots-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  max-width: 540px;
+}
+
+.quick-slot-box {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px dashed rgba(76, 175, 80, 0.45);
+  border-radius: var(--radius-sm);
+  padding: 6px;
+  min-height: 60px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.15s ease;
+}
+
+.quick-slot-box:hover {
+  border-color: #4caf50;
+  background: rgba(76, 175, 80, 0.08);
+}
+
+.quick-slot-box.drag-over {
+  border-color: #4caf50 !important;
+  background: rgba(76, 175, 80, 0.25) !important;
+  box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+}
+
+.quick-slot-box.drag-invalid {
+  border-color: var(--danger) !important;
+  background: rgba(248, 81, 73, 0.25) !important;
+}
+
+.quick-slot-num {
+  font-size: 10px;
+  font-weight: 700;
+  color: #4caf50;
+  margin-bottom: 4px;
+}
+
+.quick-slot-box .slot-dropzone {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Graphical Spell & Ability Chips / Dropzones */
+.spellbook-slots-grid,
+.ability-slots-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 48px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  transition: all 0.15s ease;
+}
+
+.spellbook-slots-grid.drag-over,
+.ability-slots-grid.drag-over {
+  border-color: var(--accent) !important;
+  background: rgba(0, 188, 212, 0.15) !important;
+}
+
+.spell-card-tile,
+.ability-card-tile {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  font-size: 11px;
+  cursor: grab;
+  user-select: none;
+  transition: all 0.15s ease;
+}
+
+.spell-card-tile:hover,
+.ability-card-tile:hover {
+  border-color: var(--accent);
+  background: rgba(0, 188, 212, 0.08);
+}
+
+.spell-card-tile:active,
+.ability-card-tile:active {
+  cursor: grabbing;
+}

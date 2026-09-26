@@ -59,5 +59,23 @@
   "robos:prof": 2,
   "prof": 2,
   "robos:spells": "",
-  "spells": ""
+  "spells": "",
+  "robos:mainHand": "copper-sword",
+  "mainHand": "copper-sword",
+  "robos:armor": "clothes",
+  "armor": "clothes",
+  "robos:quickItems": "herb",
+  "quickItems": "herb",
+  "robos:inventory": [
+    { "slug": "herb", "quantity": 2, "slot": 0 },
+    { "slug": "torch", "quantity": 1, "slot": 1 },
+    { "slug": "magic-key", "quantity": 1, "slot": 2 },
+    { "slug": "bamboo-pole", "quantity": 1, "slot": 3 }
+  ],
+  "inventory": [
+    { "slug": "herb", "quantity": 2, "slot": 0 },
+    { "slug": "torch", "quantity": 1, "slot": 1 },
+    { "slug": "magic-key", "quantity": 1, "slot": 2 },
+    { "slug": "bamboo-pole", "quantity": 1, "slot": 3 }
+  ]
 }

@@ -423,6 +423,8 @@ function setupIpcHandlers() {
             boots: data['robos:boots'] || data.boots || '',
             ring1: data['robos:ring1'] || data.ring1 || '',
             quickItems: data['robos:quickItems'] || data.quickItems || '',
+            inventory: data['robos:inventory'] || data.inventory || [],
+            'robos:inventory': data['robos:inventory'] || data.inventory || [],
             raw: data,
           });
         } catch (e) {
