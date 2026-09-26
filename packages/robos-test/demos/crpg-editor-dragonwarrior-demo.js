@@ -1021,7 +1021,7 @@ const SCRIPT = [
     narration: "We equip the Hero of Alefgard using real item entity selectors: Bamboo Pole weapon, Clothes armor, Traveler's Cloak, Leather Boots, and Herb quick item.",
     target: ".equipment-slots-grid",
     action: "hover",
-    callout: "Equip Hero with Real Item Entity Dropdowns",
+    callout: "Equip Player Character with Real Item Entity Dropdowns",
     js: `(() => {
       const equipHeroSelect = document.getElementById('equip-hero-select');
       if (equipHeroSelect && equipHeroSelect.options.length > 0) {
@@ -1044,10 +1044,10 @@ const SCRIPT = [
     minHold: 4500,
   },
   {
-    narration: "We click 'Save Inventory' to persist the party configuration, purse, stash, and Hero equipment directly to the Knowledge Graph.",
+    narration: "We click 'Save Inventory' to persist the party configuration, purse, stash, and Player Character equipment directly to the Knowledge Graph.",
     target: "#btn-save-inventory",
     action: "click",
-    callout: "Save Party Inventory & Hero Equipment JSON-LD",
+    callout: "Save Party Inventory & Player Character Equipment JSON-LD",
     js: `(async () => {
       await saveInventory();
       await new Promise(r => setTimeout(r, 800));
