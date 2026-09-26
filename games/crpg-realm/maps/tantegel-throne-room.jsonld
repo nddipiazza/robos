@@ -29,7 +29,7 @@
         12,
         6
       ],
-      "dcterms:title": "King Loric's Throne Dais",
+      "dcterms:title": "King Lorik's Throne Dais",
       "id": "throne-dais",
       "type": "wall",
       "shape": "rect",
@@ -43,8 +43,38 @@
       "collision": "blocked",
       "opacity": "opaque",
       "height": 6,
-      "label": "King Loric's Throne Dais",
-      "notes": "Elevated throne where King Loric sits with Imperial Scrolls"
+      "label": "King Lorik's Throne Dais",
+      "notes": "Elevated throne where King Lorik sits with Imperial Scrolls"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "king-throne",
+      "robos:objectType": "altar",
+      "robos:shape": "rect",
+      "robos:position": [
+        28,
+        8
+      ],
+      "robos:size": [
+        4,
+        3
+      ],
+      "dcterms:title": "King's Royal Throne",
+      "id": "king-throne",
+      "type": "altar",
+      "shape": "rect",
+      "x": 28,
+      "y": 8,
+      "w": 4,
+      "h": 3,
+      "rot": 0,
+      "stroke": "#ffd700",
+      "fill": "#ffd700",
+      "collision": "blocked",
+      "opacity": "transparent",
+      "height": 4,
+      "label": "King's Royal Throne",
+      "notes": "Gilded seat of the monarch of Alefgard"
     },
     {
       "@type": "robos:CRPGMapObject",
@@ -102,33 +132,153 @@
     },
     {
       "@type": "robos:CRPGMapObject",
-      "robos:objectId": "chest-gold",
+      "robos:objectId": "chest-120g",
       "robos:objectType": "chest",
       "robos:shape": "rect",
       "robos:position": [
-        38,
-        6
+        18,
+        10
       ],
       "robos:size": [
         3,
         3
       ],
-      "dcterms:title": "Chest (120 Gold)",
-      "id": "chest-gold",
+      "dcterms:title": "Treasure Chest (120 Gold)",
+      "id": "chest-120g",
       "type": "chest",
       "shape": "rect",
-      "x": 38,
-      "y": 6,
+      "x": 18,
+      "y": 10,
       "w": 3,
       "h": 3,
       "rot": 0,
       "stroke": "#ffd700",
-      "fill": "#8b4513",
+      "fill": "#eab308",
       "collision": "blocked",
       "opacity": "transparent",
       "height": 3,
-      "label": "Chest (120 Gold)",
-      "notes": "Contains 120 G granted by King Loric"
+      "label": "Treasure Chest (120 Gold)",
+      "notes": "Contains 120 G granted by King Lorik for the quest"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "chest-torch",
+      "robos:objectType": "chest",
+      "robos:shape": "rect",
+      "robos:position": [
+        24,
+        10
+      ],
+      "robos:size": [
+        3,
+        3
+      ],
+      "dcterms:title": "Treasure Chest (Torch)",
+      "id": "chest-torch",
+      "type": "chest",
+      "shape": "rect",
+      "x": 24,
+      "y": 10,
+      "w": 3,
+      "h": 3,
+      "rot": 0,
+      "stroke": "#ffd700",
+      "fill": "#eab308",
+      "collision": "blocked",
+      "opacity": "transparent",
+      "height": 3,
+      "label": "Treasure Chest (Torch)",
+      "notes": "Contains a Torch for illuminating dungeons and caves"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "chest-magic-key",
+      "robos:objectType": "chest",
+      "robos:shape": "rect",
+      "robos:position": [
+        38,
+        10
+      ],
+      "robos:size": [
+        3,
+        3
+      ],
+      "dcterms:title": "Treasure Chest (Magic Key)",
+      "id": "chest-magic-key",
+      "type": "chest",
+      "shape": "rect",
+      "x": 38,
+      "y": 10,
+      "w": 3,
+      "h": 3,
+      "rot": 0,
+      "stroke": "#ffd700",
+      "fill": "#eab308",
+      "collision": "blocked",
+      "opacity": "transparent",
+      "height": 3,
+      "label": "Treasure Chest (Magic Key)",
+      "notes": "Contains a single-use Magic Key that opens royal doors"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "royal-door",
+      "robos:objectType": "door",
+      "robos:shape": "rect",
+      "robos:position": [
+        27,
+        36
+      ],
+      "robos:size": [
+        6,
+        2
+      ],
+      "dcterms:title": "Royal Locked Door",
+      "id": "royal-door",
+      "type": "door",
+      "shape": "rect",
+      "x": 27,
+      "y": 36,
+      "w": 6,
+      "h": 2,
+      "rot": 0,
+      "stroke": "#06b6d4",
+      "fill": "#0891b2",
+      "collision": "blocked",
+      "opacity": "transparent",
+      "height": 8,
+      "label": "Royal Locked Door",
+      "notes": "Requires a Magic Key to pass through to the stairs"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "stairs-down",
+      "robos:objectType": "stairs",
+      "robos:shape": "rect",
+      "robos:position": [
+        48,
+        30
+      ],
+      "robos:size": [
+        6,
+        6
+      ],
+      "dcterms:title": "Stairs Down to Castle 1F",
+      "id": "stairs-down",
+      "type": "stairs",
+      "shape": "rect",
+      "x": 48,
+      "y": 30,
+      "w": 6,
+      "h": 6,
+      "rot": 0,
+      "stroke": "#94a3b8",
+      "fill": "#475569",
+      "collision": "open",
+      "opacity": "transparent",
+      "height": 0,
+      "label": "Stairs Down to Castle 1F",
+      "notes": "Descends to Tantegel Castle 1F Courtyard"
     }
   ],
   "robos:blockout": {
@@ -141,6 +291,10 @@
         3
       ],
       [
+        3,
+        2
+      ],
+      [
         4,
         1
       ],
@@ -157,12 +311,20 @@
         2
       ],
       [
+        5,
+        7
+      ],
+      [
         6,
         1
       ],
       [
         6,
         2
+      ],
+      [
+        6,
+        7
       ],
       [
         7,
@@ -174,7 +336,7 @@
       ],
       [
         8,
-        1
+        2
       ],
       [
         8,
@@ -203,12 +365,20 @@
         2
       ],
       [
+        5,
+        7
+      ],
+      [
         6,
         1
       ],
       [
         6,
         2
+      ],
+      [
+        6,
+        7
       ],
       [
         7,
@@ -223,21 +393,62 @@
         3
       ]
     ],
-    "difficult": [],
+    "difficult": [
+      [
+        9,
+        6
+      ],
+      [
+        9,
+        7
+      ],
+      [
+        10,
+        6
+      ],
+      [
+        10,
+        7
+      ]
+    ],
     "cover": {
       "half": [
         [
-          7,
+          3,
+          2
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          5,
           1
         ],
         [
-          8,
+          5,
+          2
+        ],
+        [
+          6,
           1
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          8,
+          2
         ]
       ],
       "three-quarters": []
     },
-    "objectsHash": "309853ebe3341821",
+    "objectsHash": "040609d4884e87c7",
     "image": "res://assets/blockouts/tantegel-throne-room.png",
     "imagePxPerFoot": 16
   }

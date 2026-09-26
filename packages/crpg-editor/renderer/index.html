@@ -77,12 +77,40 @@
 
         <!-- Maps Context Controls -->
         <div id="maps-header-controls" class="context-selector-group hidden">
+          <!-- File Menu Dropdown -->
+          <div class="menu-dropdown-container">
+            <button id="btn-map-file-menu" class="btn btn-secondary" title="File Menu">
+              <span>File ▾</span>
+            </button>
+            <div id="menu-map-file-dropdown" class="menu-dropdown-content hidden">
+              <button id="menu-item-new-map" class="menu-item">
+                <span>➕ New Map</span>
+              </button>
+              <button id="menu-item-open-map" class="menu-item">
+                <span>📂 Open Map...</span>
+              </button>
+              <button id="menu-item-save-map" class="menu-item">
+                <span>💾 Save Map</span>
+              </button>
+              <div class="menu-divider"></div>
+              <button id="menu-item-close-map" class="menu-item">
+                <span>✖ Close Map</span>
+              </button>
+            </div>
+          </div>
+
           <span class="context-label">Map:</span>
           <select id="map-select" class="dropdown-select">
-            <option value="">(Loading maps...)</option>
+            <option value="">(No map open)</option>
           </select>
           <button id="btn-new-map" class="btn btn-secondary" title="Create a new map blueprint">
-            <span>+ New Map</span>
+            <span>+ New</span>
+          </button>
+          <button id="btn-open-map" class="btn btn-secondary" title="Open an existing battle map blueprint">
+            <span>📂 Open</span>
+          </button>
+          <button id="btn-close-map" class="btn btn-secondary" title="Close current map and return to empty editor">
+            <span>✖ Close</span>
           </button>
           <button id="btn-save-map" class="btn btn-primary" title="Save map JSON-LD">
             <span>💾 Save</span>
@@ -962,6 +990,19 @@
               <img id="img-compiled-png" alt="Compiled Static Map PNG">
             </div>
 
+            <!-- Empty Editor Overlay State -->
+            <div id="map-empty-state" class="map-empty-overlay hidden">
+              <div class="empty-state-card">
+                <div class="empty-state-icon">🗺️</div>
+                <h3>No Map Open</h3>
+                <p>Create a new tactical battle map or open an existing blueprint from the library.</p>
+                <div class="empty-state-actions">
+                  <button id="btn-empty-new-map" class="btn btn-primary">➕ Create New Map</button>
+                  <button id="btn-empty-open-map" class="btn btn-secondary">📂 Open Map...</button>
+                </div>
+              </div>
+            </div>
+
             <!-- Coordinate HUD -->
             <div class="coord-hud">
               <span>Pos: <strong id="hud-pos" class="coord-hud-val">0 ft, 0 ft</strong></span>
@@ -1023,6 +1064,77 @@
         <span class="shortcut-hint"><kbd>Ctrl+S</kbd> Save</span>
       </div>
     </footer>
+  </div>
+
+  <!-- Modal: Open Map with Tree & Search -->
+  <div id="modal-open-map" class="modal-backdrop hidden">
+    <div class="modal-dialog map-picker-dialog">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-icon">📂</span>
+          <h2 class="modal-title">Open Battle Map Blueprint</h2>
+        </div>
+        <button id="btn-close-modal-map" class="btn-icon-close" title="Close">✕</button>
+      </div>
+
+      <div class="map-picker-search-bar">
+        <input type="text" id="map-search-input" class="input-text" placeholder="🔍 Search maps by name, slug, or terrain (e.g. tantegel, stone, candlekeep)..." autofocus>
+      </div>
+
+      <div class="map-picker-body">
+        <!-- Tree View Container -->
+        <div class="map-picker-tree-col">
+          <div class="tree-header">
+            <span>Map Library (Tree Navigation)</span>
+            <span id="map-tree-count" class="badge" style="font-size: 11px; background: rgba(0, 188, 212, 0.15); color: var(--accent); padding: 2px 6px; border-radius: 4px;">0</span>
+          </div>
+          <div id="map-tree-container" class="map-tree-container">
+            <!-- Rendered by JS: categories and map items -->
+          </div>
+        </div>
+
+        <!-- Selected Map Preview Panel -->
+        <div class="map-picker-preview-col">
+          <div id="map-preview-empty" class="preview-empty">
+            <span>Select a map blueprint from the tree to preview details</span>
+          </div>
+          <div id="map-preview-content" class="preview-content hidden">
+            <h3 id="preview-map-title">Map Title</h3>
+            <div id="preview-map-slug" class="preview-slug">map-slug</div>
+            
+            <div class="preview-meta-grid">
+              <div class="meta-item">
+                <span class="meta-label">Terrain</span>
+                <span id="preview-map-terrain" class="meta-val">STONE</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Dimensions</span>
+                <span id="preview-map-dimensions" class="meta-val">120×80 ft</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Objects</span>
+                <span id="preview-map-objects" class="meta-val">0</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Format</span>
+                <span class="meta-val" style="color: var(--accent);">JSON-LD</span>
+              </div>
+            </div>
+
+            <div class="preview-thumbnail-container">
+              <div class="thumbnail-label">Static Blockout Artwork Preview:</div>
+              <img id="preview-map-thumbnail" class="preview-thumbnail hidden" alt="Blockout Preview">
+              <div id="preview-no-thumbnail" class="thumbnail-placeholder">No PNG blockout compiled yet</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="btn-cancel-open-map" class="btn btn-secondary">Cancel</button>
+        <button id="btn-confirm-open-map" class="btn btn-primary" disabled>Open Selected Map</button>
+      </div>
+    </div>
   </div>
 
   <script src="canvas-renderer.js"></script>

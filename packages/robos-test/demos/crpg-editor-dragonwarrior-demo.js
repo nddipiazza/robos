@@ -8,17 +8,14 @@ const { runDemo } = require("../lib/demo-runner");
 const SLUG = "crpg-editor-dragonwarrior";
 const PERSIST_DIR = path.join(process.env.HOME || "/home/ndipiazza", ".robos", "development", "walkthroughs", SLUG);
 const BRAIN_DIR = "/home/ndipiazza/.gemini/antigravity/brain/378ca830-4ff9-41ba-a48b-b56c4dd0a48f";
+const ROBOS_ROOT = "/home/ndipiazza/source/robos";
+
+const MAP_PATH = path.join(ROBOS_ROOT, "games", "crpg-realm", "maps", "tantegel-throne-room.jsonld");
+const PNG_PATH = path.join(ROBOS_ROOT, "games", "crpg-realm", "assets", "blockouts", "tantegel-throne-room.png");
 
 const SCRIPT = [
   {
-    narration: "RobOS cRPG Editor consolidates Campaigns, independent Characters & NPCs, Party Inventory, and Tactical Maps into a unified studio.",
-    target: ".top-header",
-    action: "hover",
-    callout: "RobOS cRPG Editor — Unified Studio Overview",
-    minHold: 4000,
-  },
-  {
-    narration: "We switch to the Tactical Maps Studio to create the starting battle arena for Dragon Warrior 1.",
+    narration: "Starting with a blank sandboxed RobOS cRPG Editor, we switch to the Tactical Maps Studio.",
     target: ".nav-tab-btn[data-pane='pane-maps']",
     action: "click",
     callout: "Switch to Tactical Maps Studio",
@@ -26,22 +23,61 @@ const SCRIPT = [
       const btn = document.querySelector(".nav-tab-btn[data-pane='pane-maps']");
       if (btn) btn.click();
     })()`,
-    minHold: 4000,
+    minHold: 3500,
   },
   {
-    narration: "We create the independent battle map 'tantegel-throne-room' with 60x40 ft stone floor, King Loric's throne dais, royal stone pillars, and treasure chest.",
+    narration: "The editor starts in a clean empty state with no pre-loaded map, displaying the blueprint creation options.",
+    target: "#map-empty-state",
+    action: "hover",
+    callout: "Verify Clean Empty Editor State",
+    js: `(() => {
+      const emptyState = document.getElementById('map-empty-state');
+      if (emptyState.classList.contains('hidden')) {
+        throw new Error('Assertion failed: Editor did not start in empty state!');
+      }
+      if (state.activeMapData !== null) {
+        throw new Error('Assertion failed: state.activeMapData is not null on start!');
+      }
+      console.log('✔ Verified: Editor started in clean empty state.');
+    })()`,
+    minHold: 3500,
+  },
+  {
+    narration: "We click '+ New' to initialize a fresh, blank tactical battle map blueprint template.",
     target: "#btn-new-map",
     action: "click",
-    callout: "Create Map: Tantegel Castle Throne Room (2F)",
+    callout: "File -> New Map Blueprint",
     js: `(() => {
       document.getElementById('btn-new-map')?.click();
+      const emptyState = document.getElementById('map-empty-state');
+      if (!emptyState.classList.contains('hidden')) {
+        throw new Error('Assertion failed: Empty state was not dismissed on New Map!');
+      }
+      console.log('✔ Initialized new map blueprint template.');
+    })()`,
+    minHold: 3500,
+  },
+  {
+    narration: "We configure the map properties: slug 'tantegel-throne-room', title 'Tantegel Castle - Throne Room (2F)', 60x40 ft dimensions, and stone floor terrain.",
+    target: "#map-title",
+    action: "hover",
+    callout: "Configure Map Properties: 60x40 ft Stone Arena",
+    js: `(() => {
       document.getElementById('map-slug').value = 'tantegel-throne-room';
       document.getElementById('map-title').value = 'Tantegel Castle - Throne Room (2F)';
       document.getElementById('map-terrain').value = 'stone';
       document.getElementById('map-width').value = '60';
       document.getElementById('map-height').value = '40';
       if (typeof updateMapDimensionsFromForm === 'function') updateMapDimensionsFromForm();
-
+    })()`,
+    minHold: 4500,
+  },
+  {
+    narration: "We populate the map objects for Dragon Warrior 1: King Lorik's throne dais, royal throne, two stone pillars, three treasure chests, royal door, and stairwell.",
+    target: "#map-canvas",
+    action: "hover",
+    callout: "Place Map Objects & Collision Matrix",
+    js: `(() => {
       state.activeMapData['@id'] = 'urn:robos:crpg:battle-map:tantegel-throne-room';
       state.activeMapData['robos:mapObjects'] = [
         {
@@ -51,7 +87,7 @@ const SCRIPT = [
           'robos:shape': 'rect',
           'robos:position': [24, 6],
           'robos:size': [12, 6],
-          'dcterms:title': "King Loric's Throne Dais",
+          'dcterms:title': "King Lorik's Throne Dais",
           id: 'throne-dais',
           type: 'wall',
           shape: 'rect',
@@ -65,8 +101,32 @@ const SCRIPT = [
           collision: 'blocked',
           opacity: 'opaque',
           height: 6,
-          label: "King Loric's Throne Dais",
-          notes: "Elevated throne where King Loric sits with Imperial Scrolls"
+          label: "King Lorik's Throne Dais",
+          notes: "Elevated throne where King Lorik sits with Imperial Scrolls"
+        },
+        {
+          '@type': 'robos:CRPGMapObject',
+          'robos:objectId': 'king-throne',
+          'robos:objectType': 'altar',
+          'robos:shape': 'rect',
+          'robos:position': [28, 8],
+          'robos:size': [4, 3],
+          'dcterms:title': "King's Royal Throne",
+          id: 'king-throne',
+          type: 'altar',
+          shape: 'rect',
+          x: 28,
+          y: 8,
+          w: 4,
+          h: 3,
+          rot: 0,
+          stroke: '#ffd700',
+          fill: '#ffd700',
+          collision: 'blocked',
+          opacity: 'transparent',
+          height: 4,
+          label: "King's Royal Throne",
+          notes: "Gilded seat of the monarch of Alefgard"
         },
         {
           '@type': 'robos:CRPGMapObject',
@@ -118,27 +178,123 @@ const SCRIPT = [
         },
         {
           '@type': 'robos:CRPGMapObject',
-          'robos:objectId': 'chest-gold',
+          'robos:objectId': 'chest-120g',
           'robos:objectType': 'chest',
           'robos:shape': 'rect',
-          'robos:position': [38, 6],
+          'robos:position': [18, 10],
           'robos:size': [3, 3],
-          'dcterms:title': 'Chest (120 Gold)',
-          id: 'chest-gold',
+          'dcterms:title': 'Treasure Chest (120 Gold)',
+          id: 'chest-120g',
           type: 'chest',
           shape: 'rect',
-          x: 38,
-          y: 6,
+          x: 18,
+          y: 10,
           w: 3,
           h: 3,
           rot: 0,
           stroke: '#ffd700',
-          fill: '#8b4513',
+          fill: '#eab308',
           collision: 'blocked',
           opacity: 'transparent',
           height: 3,
-          label: 'Chest (120 Gold)',
-          notes: 'Contains 120 G granted by King Loric'
+          label: 'Treasure Chest (120 Gold)',
+          notes: 'Contains 120 G granted by King Lorik for the quest'
+        },
+        {
+          '@type': 'robos:CRPGMapObject',
+          'robos:objectId': 'chest-torch',
+          'robos:objectType': 'chest',
+          'robos:shape': 'rect',
+          'robos:position': [24, 10],
+          'robos:size': [3, 3],
+          'dcterms:title': 'Treasure Chest (Torch)',
+          id: 'chest-torch',
+          type: 'chest',
+          shape: 'rect',
+          x: 24,
+          y: 10,
+          w: 3,
+          h: 3,
+          rot: 0,
+          stroke: '#ffd700',
+          fill: '#eab308',
+          collision: 'blocked',
+          opacity: 'transparent',
+          height: 3,
+          label: 'Treasure Chest (Torch)',
+          notes: 'Contains a Torch for illuminating dungeons and caves'
+        },
+        {
+          '@type': 'robos:CRPGMapObject',
+          'robos:objectId': 'chest-magic-key',
+          'robos:objectType': 'chest',
+          'robos:shape': 'rect',
+          'robos:position': [38, 10],
+          'robos:size': [3, 3],
+          'dcterms:title': 'Treasure Chest (Magic Key)',
+          id: 'chest-magic-key',
+          type: 'chest',
+          shape: 'rect',
+          x: 38,
+          y: 10,
+          w: 3,
+          h: 3,
+          rot: 0,
+          stroke: '#ffd700',
+          fill: '#eab308',
+          collision: 'blocked',
+          opacity: 'transparent',
+          height: 3,
+          label: 'Treasure Chest (Magic Key)',
+          notes: 'Contains a single-use Magic Key that opens royal doors'
+        },
+        {
+          '@type': 'robos:CRPGMapObject',
+          'robos:objectId': 'royal-door',
+          'robos:objectType': 'door',
+          'robos:shape': 'rect',
+          'robos:position': [27, 36],
+          'robos:size': [6, 2],
+          'dcterms:title': 'Royal Locked Door',
+          id: 'royal-door',
+          type: 'door',
+          shape: 'rect',
+          x: 27,
+          y: 36,
+          w: 6,
+          h: 2,
+          rot: 0,
+          stroke: '#06b6d4',
+          fill: '#0891b2',
+          collision: 'blocked',
+          opacity: 'transparent',
+          height: 8,
+          label: 'Royal Locked Door',
+          notes: 'Requires a Magic Key to pass through to the stairs'
+        },
+        {
+          '@type': 'robos:CRPGMapObject',
+          'robos:objectId': 'stairs-down',
+          'robos:objectType': 'stairs',
+          'robos:shape': 'rect',
+          'robos:position': [48, 30],
+          'robos:size': [6, 6],
+          'dcterms:title': 'Stairs Down to Castle 1F',
+          id: 'stairs-down',
+          type: 'stairs',
+          shape: 'rect',
+          x: 48,
+          y: 30,
+          w: 6,
+          h: 6,
+          rot: 0,
+          stroke: '#94a3b8',
+          fill: '#475569',
+          collision: 'open',
+          opacity: 'transparent',
+          height: 0,
+          label: 'Stairs Down to Castle 1F',
+          notes: 'Descends to Tantegel Castle 1F Courtyard'
         }
       ];
 
@@ -152,296 +308,141 @@ const SCRIPT = [
     minHold: 5000,
   },
   {
-    narration: "We save the map and trigger the automated build pipeline to compile the static PNG and 5-foot collision grid.",
+    narration: "We click 'Save Map' to persist Tantegel Throne Room JSON-LD to the Knowledge Graph.",
     target: "#btn-save-map",
     action: "click",
-    callout: "Save Map & Compile 5-ft Blockout PNG",
-    js: `(() => {
-      document.getElementById('btn-save-map')?.click();
-      setTimeout(() => {
-        document.getElementById('btn-build-map')?.click();
-      }, 1000);
-    })()`,
-    minHold: 6000,
-  },
-  {
-    narration: "We switch to the Characters & NPCs Studio to manage heroes and NPCs as independent linked entities.",
-    target: ".nav-tab-btn[data-pane='pane-characters']",
-    action: "click",
-    callout: "Switch to Characters & NPCs Studio",
-    js: `(() => {
-      const btn = document.querySelector(".nav-tab-btn[data-pane='pane-characters']");
-      if (btn) btn.click();
-    })()`,
-    minHold: 4000,
-  },
-  {
-    narration: "We click '+ Hero' to scaffold the Hero of Alefgard with D&D 5e Fighter heritage and Erdrick's bloodline.",
-    target: "#btn-add-hero",
-    action: "click",
-    callout: "Author Hero: Hero of Alefgard",
-    js: `(() => {
-      document.getElementById('btn-add-hero')?.click();
-      document.getElementById('hero-name').value = 'Hero of Alefgard';
-      document.getElementById('hero-slug').value = 'hero-of-alefgard';
-      document.getElementById('hero-portrait').value = '⚔️';
-      document.getElementById('hero-race').value = 'Human';
-      document.getElementById('hero-class').value = 'Fighter';
-      document.getElementById('hero-subclass').value = 'Descendant of Erdrick';
-      document.getElementById('hero-background').value = 'Erdrick Bloodline';
-      document.getElementById('hero-alignment').value = 'Lawful Good';
-      document.getElementById('hero-level').value = '1';
-      document.getElementById('hero-xp').value = '0';
-
-      document.getElementById('attr-str').value = '16';
-      if (typeof updateAbilityModifier === 'function') updateAbilityModifier('str', 16);
-      document.getElementById('attr-dex').value = '14';
-      if (typeof updateAbilityModifier === 'function') updateAbilityModifier('dex', 14);
-      document.getElementById('attr-con').value = '15';
-      if (typeof updateAbilityModifier === 'function') updateAbilityModifier('con', 15);
-      document.getElementById('attr-int').value = '11';
-      if (typeof updateAbilityModifier === 'function') updateAbilityModifier('int', 11);
-      document.getElementById('attr-wis').value = '12';
-      if (typeof updateAbilityModifier === 'function') updateAbilityModifier('wis', 12);
-      document.getElementById('attr-cha').value = '13';
-      if (typeof updateAbilityModifier === 'function') updateAbilityModifier('cha', 13);
-
-      document.getElementById('vital-ac').value = '12';
-      document.getElementById('vital-hp-max').value = '15';
-      document.getElementById('vital-hp-cur').value = '15';
-      document.getElementById('vital-speed').value = '30';
-      document.getElementById('vital-init').value = '2';
-      document.getElementById('vital-prof').value = '2';
-
-      document.getElementById('hero-spells').value = 'HEAL (Cantrip: 3-5 HP), SIZZ (Fire Spell, 2 MP)';
-      document.getElementById('hero-backstory').value = 'Direct bloodline descendant of legendary hero Erdrick. Answering King Lorics summons in Alefgard to defeat the Dragonlord and reclaim the Ball of Light.';
-
-      const avatar = document.getElementById('hero-avatar-display');
-      if (avatar) avatar.textContent = '⚔️';
-      const titleEl = document.getElementById('sheet-hero-title');
-      if (titleEl) titleEl.textContent = 'Hero of Alefgard (Hero)';
-    })()`,
-    minHold: 5500,
-  },
-  {
-    narration: "We click 'Save Character' to persist the Hero of Alefgard as an independent JSON-LD entity.",
-    target: "#btn-save-character",
-    action: "click",
-    callout: "Save Hero Character Entity",
-    js: `(() => {
-      document.getElementById('btn-save-character')?.click();
-    })()`,
-    minHold: 4500,
-  },
-  {
-    narration: "We click '+ NPC' to author King Loric with save-game interaction, Tantegel Castle placement, and royal dialogue.",
-    target: "#btn-add-npc",
-    action: "click",
-    callout: "Author NPC: King Loric (Monarch of Tantegel)",
-    js: `(() => {
-      document.getElementById('btn-add-npc')?.click();
-      document.getElementById('hero-name').value = 'King Loric';
-      document.getElementById('hero-slug').value = 'npc-king-loric';
-      document.getElementById('hero-portrait').value = '👑';
-      document.getElementById('hero-alignment').value = 'Lawful Good';
-      document.getElementById('npc-role').value = 'king';
-      document.getElementById('npc-interaction').value = 'save';
-      document.getElementById('npc-location').value = 'tantegel-throne-room';
-      document.getElementById('npc-facing').value = 'down';
-      document.getElementById('npc-col').value = '4';
-      document.getElementById('npc-row').value = '4';
-      document.getElementById('npc-dialogue').value = 'Descendant of Erdrick, listen now to my words. It is told that in ages past Erdrick fought demons with a Ball of Light.\\n\\nThen came the Dragonlord who stole the precious globe and hid it in the darkness.\\n\\nNow, Hero, thou must help us recover the Ball of Light and restore peace to our land. Take now whatever thou may find in these Treasure Chests.\\n\\nMay the light shine upon thee, Hero.';
-      document.getElementById('hero-backstory').value = 'Monarch of Tantegel Castle who chronicles deeds of valor on the Imperial Scrolls of Honor.';
-
-      const avatar = document.getElementById('hero-avatar-display');
-      if (avatar) avatar.textContent = '👑';
-      const titleEl = document.getElementById('sheet-hero-title');
-      if (titleEl) titleEl.textContent = 'King Loric (NPC)';
-    })()`,
-    minHold: 5500,
-  },
-  {
-    narration: "We save King Loric as an independent NPC entity in the Knowledge Graph.",
-    target: "#btn-save-character",
-    action: "click",
-    callout: "Save King Loric NPC Entity",
-    js: `(() => {
-      document.getElementById('btn-save-character')?.click();
-    })()`,
-    minHold: 4500,
-  },
-  {
-    narration: "We click '+ NPC' to create Princess Gwaelin, assigning role 'princess' and her authentic dialogue script.",
-    target: "#btn-add-npc",
-    action: "click",
-    callout: "Author NPC: Princess Gwaelin",
-    js: `(() => {
-      document.getElementById('btn-add-npc')?.click();
-      document.getElementById('hero-name').value = 'Princess Gwaelin';
-      document.getElementById('hero-slug').value = 'npc-princess-gwaelin';
-      document.getElementById('hero-portrait').value = '👸';
-      document.getElementById('hero-alignment').value = 'Neutral Good';
-      document.getElementById('npc-role').value = 'princess';
-      document.getElementById('npc-interaction').value = 'talk';
-      document.getElementById('npc-location').value = 'tantegel-throne-room';
-      document.getElementById('npc-facing').value = 'down';
-      document.getElementById('npc-col').value = '6';
-      document.getElementById('npc-row').value = '19';
-      document.getElementById('npc-dialogue').value = 'I have waited so long for thee, brave Hero. I knew the bloodline of Erdrick would save our realm.\\n\\nWilt thou take me back to Tantegel Castle?';
-      document.getElementById('hero-backstory').value = 'Beloved princess of Alefgard kidnapped by the Dragonlord in a swamp cave.';
-
-      const avatar = document.getElementById('hero-avatar-display');
-      if (avatar) avatar.textContent = '👸';
-      const titleEl = document.getElementById('sheet-hero-title');
-      if (titleEl) titleEl.textContent = 'Princess Gwaelin (NPC)';
-    })()`,
-    minHold: 5500,
-  },
-  {
-    narration: "We save Princess Gwaelin and demonstrate the responsive Hero vs NPC classification filters.",
-    target: "#btn-save-character",
-    action: "click",
-    callout: "Save Princess Gwaelin & Test Roster Filters",
-    js: `(() => {
-      document.getElementById('btn-save-character')?.click();
-      setTimeout(() => {
-        document.getElementById('pill-filter-heroes')?.click();
-      }, 1500);
-      setTimeout(() => {
-        document.getElementById('pill-filter-npcs')?.click();
-      }, 3000);
-      setTimeout(() => {
-        document.getElementById('pill-filter-all')?.click();
-      }, 4500);
-    })()`,
-    minHold: 6000,
-  },
-  {
-    narration: "We switch to the Campaign module to compose the maps, heroes, NPCs, and quests into Dragon Warrior 1 USA.",
-    target: ".nav-tab-btn[data-pane='pane-campaign']",
-    action: "click",
-    callout: "Switch to Campaign Management",
-    js: `(() => {
-      const btn = document.querySelector(".nav-tab-btn[data-pane='pane-campaign']");
-      if (btn) btn.click();
-    })()`,
-    minHold: 4000,
-  },
-  {
-    narration: "We author the campaign metadata, select 'tantegel-throne-room' as primary starting map, link characters, and log quests.",
-    target: "#btn-new-campaign",
-    action: "click",
-    callout: "Author Campaign: Dragon Warrior (USA)",
-    js: `(() => {
-      document.getElementById('btn-new-campaign')?.click();
-      document.getElementById('camp-title').value = 'Dragon Warrior (USA)';
-      document.getElementById('camp-slug').value = 'dragonwarrior-1-usa';
-      document.getElementById('camp-setting').value = 'Alefgard (NES / Chunsoft)';
-      document.getElementById('camp-ruleset').value = 'D&D 5e SRD';
-      document.getElementById('camp-difficulty').value = 'Core Rules';
-      document.getElementById('camp-desc').value = 'Darkness enshrouds the realm of Alefgard after the sinister Dragonlord plundered the sacred Ball of Light. King Loric summons the last descendant of Erdrick to embark on the quest.';
-
-      // Select starting map
-      const startMapSelect = document.getElementById('camp-starting-map');
-      if (startMapSelect) startMapSelect.value = 'tantegel-throne-room';
-
-      // Check Maps
-      document.querySelectorAll('#camp-maps-checklist .camp-map-chk').forEach(chk => {
-        chk.checked = (chk.getAttribute('data-slug') === 'tantegel-throne-room');
-      });
-      if (typeof updateCampaignMapsFromChecklist === 'function') updateCampaignMapsFromChecklist();
-
-      // Check Characters
-      document.querySelectorAll('#camp-characters-checklist .camp-char-chk').forEach(chk => {
-        const slug = chk.getAttribute('data-slug');
-        chk.checked = ['hero-of-alefgard', 'npc-king-loric', 'npc-princess-gwaelin'].includes(slug);
-      });
-      if (typeof updateCampaignCharactersFromChecklist === 'function') updateCampaignCharactersFromChecklist();
-
-      // Add Quests
-      const gs = getGameState();
-      gs['robos:questLog'] = [
-        {
-          id: 'quest-defeat-dragonlord',
-          title: 'Defeat the Dragonlord',
-          status: 'active',
-          description: 'Journey across Alefgard, breach Charlock Castle, and vanquish the Dragonlord.',
-          reward: 'Ball of Light, Peace in Alefgard'
-        },
-        {
-          id: 'quest-rescue-gwaelin',
-          title: 'Rescue Princess Gwaelin',
-          status: 'active',
-          description: 'Search the swamp cave south of Tantegel Castle and defeat the Green Dragon to free Princess Gwaelin.',
-          reward: "Princess Gwaelin's Love, 100 XP"
-        }
-      ];
-      if (typeof renderQuestLog === 'function') renderQuestLog();
-
-      // Add Story Flags
-      gs['robos:worldFlags'] = {
-        ball_of_light_stolen: true,
-        dragonlord_threat: true,
-        princess_rescued: false
-      };
-      if (typeof renderStoryFlags === 'function') renderStoryFlags();
-      if (typeof updateCampaignSummaryStats === 'function') updateCampaignSummaryStats();
-    })()`,
-    minHold: 6000,
-  },
-  {
-    narration: "We click 'Save Campaign' to persist the campaign and its compositional relations in the Knowledge Graph.",
-    target: "#btn-save-campaign",
-    action: "click",
-    callout: "Save Campaign & Link KGraph Relations",
-    js: `(() => {
-      document.getElementById('btn-save-campaign')?.click();
+    callout: "Save Map: Tantegel Throne Room JSON-LD",
+    js: `(async () => {
+      const res = await saveCurrentMap();
+      console.log('E2E saveCurrentMap result:', JSON.stringify(res));
+      return res;
     })()`,
     minHold: 5000,
   },
   {
-    narration: "We switch to the Inventory Editor to equip the Hero of Alefgard with starting gear and 120 Gold from the King's chests.",
-    target: ".nav-tab-btn[data-pane='pane-inventory']",
+    narration: "We click 'Build PNG & Grid' to invoke the headless Python compiler and generate the 5-ft cell collision matrix and static background artwork.",
+    target: "#btn-build-map",
     action: "click",
-    callout: "Equip Hero & Set Starting Party Gold",
-    js: `(() => {
-      const btn = document.querySelector(".nav-tab-btn[data-pane='pane-inventory']");
-      if (btn) btn.click();
-      setTimeout(() => {
-        document.getElementById('gold-gp').value = '120';
-        document.getElementById('equip-mainhand').value = 'Bamboo Pole (Club 1d4)';
-        document.getElementById('equip-offhand').value = 'Small Shield (+1 AC)';
-        document.getElementById('equip-armor').value = 'Clothes (AC 10+DEX)';
-        document.getElementById('equip-quickitems').value = 'Herb, Torch, Magic Key';
-        document.getElementById('shared-items-textarea').value = 'Herb (Restores 20-35 HP)\\nTorch (Lights Dungeons 3x3)\\nMagic Key (Opens Royal Doors)';
-
-        const firstHeroCheck = document.querySelector('#party-checklist .party-check-input');
-        if (firstHeroCheck) firstHeroCheck.checked = true;
-      }, 500);
+    callout: "Build PNG & 5-ft Collision Grid",
+    js: `(async () => {
+      const res = await buildMapBlockout();
+      console.log('E2E buildMapBlockout result:', JSON.stringify(res));
+      return res;
     })()`,
-    minHold: 5500,
+    minHold: 6000,
   },
   {
-    narration: "We return to the Campaign module to review the verified summary stats: 1 Hero roster, 1 Active Party member, 2 Quests, and 120 GP purse.",
-    target: ".nav-tab-btn[data-pane='pane-campaign']",
+    narration: "Next, we test 'File -> Close' to close the active map and confirm the editor cleanly returns to the empty state.",
+    target: "#btn-close-map",
     action: "click",
-    callout: "Review Verified Campaign Summary Stats",
+    callout: "File -> Close Map",
     js: `(() => {
-      const btn = document.querySelector(".nav-tab-btn[data-pane='pane-campaign']");
-      if (btn) btn.click();
-      setTimeout(() => {
-        document.getElementById('btn-save-campaign')?.click();
-      }, 1000);
+      document.getElementById('btn-close-map')?.click();
+      const emptyState = document.getElementById('map-empty-state');
+      if (emptyState.classList.contains('hidden')) {
+        throw new Error('Assertion failed: Empty state was not shown after Close Map!');
+      }
+      if (state.activeMapData !== null || state.activeMapSlug !== null) {
+        throw new Error('Assertion failed: Active map data was not cleared on close!');
+      }
+      console.log('✔ Verified: File Close successfully returned editor to empty state.');
     })()`,
-    minHold: 5000,
+    minHold: 4000,
+  },
+  {
+    narration: "We click 'File -> Open' to test loading our saved map from the blueprint library with tree navigation and real-time search.",
+    target: "#btn-open-map",
+    action: "click",
+    callout: "File -> Open Map...",
+    js: `(() => {
+      document.getElementById('btn-open-map')?.click();
+      const modal = document.getElementById('modal-open-map');
+      if (modal.classList.contains('hidden')) {
+        throw new Error('Assertion failed: Open map modal did not open!');
+      }
+      console.log('✔ Open map picker modal opened.');
+    })()`,
+    minHold: 3500,
+  },
+  {
+    narration: "In the Open Map dialog, we search for 'tantegel' to instantly filter the tree down to Tantegel Castle Throne Room.",
+    target: "#map-search-input",
+    action: "hover",
+    callout: "Search 'tantegel' in Map Tree",
+    js: `(() => {
+      const searchInput = document.getElementById('map-search-input');
+      searchInput.value = 'tantegel';
+      renderMapModalTree('tantegel');
+      console.log('✔ Filtered tree view by search query "tantegel".');
+    })()`,
+    minHold: 3500,
+  },
+  {
+    narration: "We select 'Tantegel Castle - Throne Room (2F)' from the tree and click 'Open Selected Map' to reload and render it.",
+    target: "#btn-confirm-open-map",
+    action: "click",
+    callout: "Select from Tree & Open Map",
+    js: `(async () => {
+      const itemEl = document.querySelector('.tree-item[data-slug="tantegel-throne-room"]');
+      if (!itemEl) {
+        throw new Error('Assertion failed: Tree item for tantegel-throne-room not found!');
+      }
+      itemEl.click();
+      const confirmBtn = document.getElementById('btn-confirm-open-map');
+      if (confirmBtn.disabled) {
+        throw new Error('Assertion failed: Confirm button not enabled after item selection!');
+      }
+      confirmBtn.click();
+
+      // Wait briefly for loadMap to complete
+      await new Promise(r => setTimeout(r, 600));
+
+      const emptyState = document.getElementById('map-empty-state');
+      if (!emptyState.classList.contains('hidden')) {
+        throw new Error('Assertion failed: Empty state overlay visible after opening map!');
+      }
+      if (state.activeMapSlug !== 'tantegel-throne-room') {
+        throw new Error('Assertion failed: Active slug is ' + state.activeMapSlug);
+      }
+      console.log('✔ Successfully re-opened Tantegel Throne Room from tree picker.');
+    })()`,
+    minHold: 4500,
+  },
+  {
+    narration: "The Tantegel Throne Room battle map is reloaded into the editor with all 9 objects, 60x40 ft dimensions, and compiled blockout artwork.",
+    target: "#blockout-status-box",
+    action: "hover",
+    callout: "Map Reloaded & Lifecycle Verified",
+    js: `(() => {
+      const title = document.getElementById('map-title').value;
+      const width = document.getElementById('map-width').value;
+      const height = document.getElementById('map-height').value;
+      const objCount = (state.activeMapData['robos:mapObjects'] || []).length;
+      if (title !== 'Tantegel Castle - Throne Room (2F)') throw new Error('Title mismatch: ' + title);
+      if (width !== '60' || height !== '40') throw new Error('Dimensions mismatch: ' + width + 'x' + height);
+      if (objCount !== 9) throw new Error('Object count mismatch: ' + objCount);
+      console.log('✔ Map state fully verified in DOM: 9 objects, 60x40 ft.');
+    })()`,
+    minHold: 4500,
   },
 ];
 
 async function main() {
-  const display = process.env.DISPLAY || ":99";
-  const binDir = path.join(process.env.HOME || "/home/ndipiazza", ".local", "bin");
+  console.log("=== RobOS cRPG Editor E2E: Screen 1 - Tantegel Throne Room Map ===");
 
-  runDemo({
+  // 1. Pre-test cleanup: Guarantee blank sandboxed state
+  console.log("Pre-test sandboxing: Cleaning any existing Tantegel map files...");
+  if (fs.existsSync(MAP_PATH)) {
+    fs.unlinkSync(MAP_PATH);
+    console.log(`Removed pre-existing map: ${MAP_PATH}`);
+  }
+  if (fs.existsSync(PNG_PATH)) {
+    fs.unlinkSync(PNG_PATH);
+    console.log(`Removed pre-existing blockout PNG: ${PNG_PATH}`);
+  }
+
+  // 2. Run the E2E Demo via runDemo
+  await runDemo({
     slug: SLUG,
     appId: "crpg-editor",
     windowTitle: "RobOS cRPG Editor — Campaign, Character, Inventory & Maps Studio",
@@ -449,49 +450,121 @@ async function main() {
       ...scenarios["all-good"],
       useRealBinaries: true,
     },
-    audio: false,
-    env: {
-      ROBOS_DEMO_SHOW: "1",
-      ROBOS_REAL_BINARIES: "1",
-      PATH: `${binDir}:${process.env.PATH}`,
+    prelaunch: async () => {
+      console.log("Prelaunch hook: Ensuring pristine workspace for crpg-editor...");
     },
     script: SCRIPT,
-    prelaunch: async (app) => {
-      try {
-        execSync(`wmctrl -r "RobOS cRPG Editor" -e 0,180,80,1560,920`, { env: { ...process.env, DISPLAY: display } });
-      } catch (_) {}
-    },
-  }).then(async () => {
-    const videoPath = path.join(PERSIST_DIR, `${SLUG}-final.webm`);
-    const vttPath = path.join(PERSIST_DIR, `${SLUG}.vtt`);
+    audio: false,
+  });
 
-    if (!fs.existsSync(BRAIN_DIR)) {
-      fs.mkdirSync(BRAIN_DIR, { recursive: true });
+  console.log("\n=== E2E Run Complete: Running Assertions ===");
+
+  // Assertion 1: Map JSON-LD file exists
+  if (!fs.existsSync(MAP_PATH)) {
+    throw new Error(`Assertion failed: Map file does not exist at ${MAP_PATH}`);
+  }
+  console.log("✔ Assertion 1 Passed: Map file exists at", MAP_PATH);
+
+  // Assertion 2: Validate JSON-LD contents
+  const rawJson = fs.readFileSync(MAP_PATH, "utf8");
+  const mapData = JSON.parse(rawJson);
+
+  if (mapData["@id"] !== "urn:robos:crpg:battle-map:tantegel-throne-room") {
+    throw new Error(`Assertion failed: Unexpected @id: ${mapData["@id"]}`);
+  }
+  if (mapData["dcterms:title"] !== "Tantegel Castle - Throne Room (2F)") {
+    throw new Error(`Assertion failed: Unexpected title: ${mapData["dcterms:title"]}`);
+  }
+  if (mapData["robos:terrain"] !== "stone") {
+    throw new Error(`Assertion failed: Unexpected terrain: ${mapData["robos:terrain"]}`);
+  }
+  if (Number(mapData["robos:width"]) !== 60 || Number(mapData["robos:height"]) !== 40) {
+    throw new Error(`Assertion failed: Unexpected dimensions: ${mapData["robos:width"]}x${mapData["robos:height"]}`);
+  }
+  console.log("✔ Assertion 2 Passed: Map metadata validated (60x40 ft stone arena)");
+
+  // Assertion 3: Validate Map Objects
+  const objects = mapData["robos:mapObjects"] || [];
+  const expectedObjects = [
+    "throne-dais",
+    "king-throne",
+    "pillar-west",
+    "pillar-east",
+    "chest-120g",
+    "chest-torch",
+    "chest-magic-key",
+    "royal-door",
+    "stairs-down"
+  ];
+  for (const objId of expectedObjects) {
+    const found = objects.some(o => (o["robos:objectId"] || o.id) === objId);
+    if (!found) {
+      throw new Error(`Assertion failed: Required map object '${objId}' not found in mapObjects`);
     }
+  }
+  console.log(`✔ Assertion 3 Passed: All ${expectedObjects.length} Dragon Warrior 1 map objects verified`);
 
-    // Extract key frames for walkthrough verification
+  // Assertion 4: Blockout PNG exists and is valid
+  if (!fs.existsSync(PNG_PATH)) {
+    throw new Error(`Assertion failed: Blockout PNG does not exist at ${PNG_PATH}`);
+  }
+  const stat = fs.statSync(PNG_PATH);
+  if (stat.size < 1000) {
+    throw new Error(`Assertion failed: Blockout PNG is suspiciously small: ${stat.size} bytes`);
+  }
+  console.log(`✔ Assertion 4 Passed: Blockout PNG exists (${stat.size} bytes)`);
+
+  // Assertion 5: Headless Python Compiler verification
+  console.log("Running Python blockout compiler verification on generated map...");
+  const buildOutput = execSync(`python3 -m robos_crpg_blockout build "${MAP_PATH}"`, {
+    encoding: "utf8",
+    cwd: ROBOS_ROOT,
+    env: { ...process.env, PYTHONPATH: path.join(ROBOS_ROOT, "packages", "robos-crpg-blockout") },
+  });
+  console.log("Compiler output:\n" + buildOutput.trim());
+  console.log("✔ Assertion 5 Passed: Python blockout compiler validated map successfully");
+
+  // 3. Copy artifacts to persistent walkthrough and brain directories
+  fs.mkdirSync(PERSIST_DIR, { recursive: true });
+  fs.mkdirSync(BRAIN_DIR, { recursive: true });
+
+  const srcVideo = path.join(ROBOS_ROOT, "packages", "robos-test", "run", "demos", SLUG, `${SLUG}.webm`);
+  const srcVtt = path.join(ROBOS_ROOT, "packages", "robos-test", "run", "demos", SLUG, `${SLUG}.vtt`);
+
+  if (fs.existsSync(srcVideo)) {
+    const finalVideo = path.join(PERSIST_DIR, `${SLUG}-final.webm`);
+    fs.copyFileSync(srcVideo, finalVideo);
+    fs.copyFileSync(srcVideo, path.join(BRAIN_DIR, `${SLUG}-final.webm`));
+    console.log(`Archived video: ${finalVideo}`);
+
+    // Extract high-resolution review frames
+    const frameEmptyPath = path.join(BRAIN_DIR, "crpg_editor_empty_state.png");
+    const frameModalPath = path.join(BRAIN_DIR, "crpg_editor_open_tree_modal.png");
+    const framePath = path.join(BRAIN_DIR, "crpg_editor_tantegel_map_screen.png");
+
     try {
-      execSync(`ffmpeg -y -ss 00:00:03 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/crpg_editor_overview_frame.png`, { stdio: "ignore" });
-      execSync(`ffmpeg -y -ss 00:00:12 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/crpg_editor_tantegel_map_frame.png`, { stdio: "ignore" });
-      execSync(`ffmpeg -y -ss 00:00:23 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/crpg_editor_hero_alefgard_frame.png`, { stdio: "ignore" });
-      execSync(`ffmpeg -y -ss 00:00:33 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/crpg_editor_king_loric_npc_frame.png`, { stdio: "ignore" });
-      execSync(`ffmpeg -y -ss 00:00:43 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/crpg_editor_princess_gwaelin_frame.png`, { stdio: "ignore" });
-      execSync(`ffmpeg -y -ss 00:00:54 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/crpg_editor_campaign_dragonwarrior_frame.png`, { stdio: "ignore" });
-      execSync(`ffmpeg -y -ss 00:01:05 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/crpg_editor_inventory_equipped_frame.png`, { stdio: "ignore" });
-      execSync(`ffmpeg -y -ss 00:01:12 -i "${videoPath}" -vframes 1 ${BRAIN_DIR}/crpg_editor_final_summary_frame.png`, { stdio: "ignore" });
-
-      fs.copyFileSync(videoPath, `${BRAIN_DIR}/${SLUG}-final.webm`);
-      fs.copyFileSync(vttPath, `${BRAIN_DIR}/${SLUG}.vtt`);
+      execSync(`ffmpeg -y -ss 00:00:04 -i "${finalVideo}" -vframes 1 "${frameEmptyPath}"`, { stdio: "ignore" });
+      execSync(`ffmpeg -y -ss 00:00:30 -i "${finalVideo}" -vframes 1 "${frameModalPath}"`, { stdio: "ignore" });
+      execSync(`ffmpeg -y -ss 00:00:38 -i "${finalVideo}" -vframes 1 "${framePath}"`, { stdio: "ignore" });
+      console.log(`Extracted review frames:\n  - ${frameEmptyPath}\n  - ${frameModalPath}\n  - ${framePath}`);
     } catch (err) {
-      console.warn("Frame extraction warning:", err.message);
+      console.warn("Could not extract frames:", err.message);
     }
+  }
 
-    console.log("✓ Dragon Warrior 1 (USA) Full E2E Demo Finished Successfully!");
-    process.exit(0);
-  }).catch(async (err) => {
-    console.error(err);
+  if (fs.existsSync(srcVtt)) {
+    fs.copyFileSync(srcVtt, path.join(PERSIST_DIR, `${SLUG}.vtt`));
+    fs.copyFileSync(srcVtt, path.join(BRAIN_DIR, `${SLUG}.vtt`));
+  }
+
+  console.log("\n=======================================================");
+  console.log("🎉 SCREEN 1 (MAP) CREATED, SAVED, AND ASSERTED SUCCESSFULLY!");
+  console.log("=======================================================");
+}
+
+if (require.main === module) {
+  main().catch((err) => {
+    console.error("FATAL ERROR in E2E Map Test:", err);
     process.exit(1);
   });
 }
-
-main();
