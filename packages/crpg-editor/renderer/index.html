@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RobOS cRPG Editor — Campaign, Character, Inventory & Blockmap Studio</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Header -->
+    <header class="top-header">
+      <div class="header-left">
+        <div class="app-brand">
+          <svg class="brand-icon" viewBox="0 0 48 48" fill="none" stroke="#00bcd4" stroke-width="2">
+            <rect x="6" y="6" width="36" height="36" rx="4" />
+            <line x1="18" y1="6" x2="18" y2="42" stroke-dasharray="2 2" stroke-opacity="0.6" />
+            <line x1="6" y1="18" x2="42" y2="18" stroke-dasharray="2 2" stroke-opacity="0.6" />
+            <rect x="10" y="10" width="14" height="12" fill="#00bcd4" fill-opacity="0.2" />
+            <circle cx="34" cy="14" r="3.5" fill="#00bcd4" fill-opacity="0.2" />
+          </svg>
+          <div class="brand-text">
+            <span class="brand-title">RobOS cRPG Editor</span>
+            <span class="brand-subtitle">Campaign, Character, Inventory & Blockmap Studio</span>
+          </div>
+        </div>
+
+        <!-- Consolidated Module Switcher -->
+        <nav class="header-nav">
+          <button id="nav-campaign" class="nav-tab-btn active" data-pane="pane-campaign">
+            <span>📜 Campaign</span>
+          </button>
+          <button id="nav-characters" class="nav-tab-btn" data-pane="pane-characters">
+            <span>👤 Character Editor</span>
+          </button>
+          <button id="nav-inventory" class="nav-tab-btn" data-pane="pane-inventory">
+            <span>🎒 Inventory Editor</span>
+          </button>
+          <button id="nav-blockmap" class="nav-tab-btn" data-pane="pane-blockmap">
+            <span>🗺️ Blockmap Editor</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Contextual Action Header Controls -->
+      <div class="header-actions">
+        <!-- Campaign Context Controls -->
+        <div id="campaign-header-controls" class="context-selector-group">
+          <span class="context-label">Campaign:</span>
+          <select id="campaign-select" class="dropdown-select">
+            <option value="">(Loading campaigns...)</option>
+          </select>
+          <button id="btn-new-campaign" class="btn btn-secondary" title="Create a new campaign">
+            <span>+ New</span>
+          </button>
+          <button id="btn-save-campaign" class="btn btn-primary" title="Save campaign JSON-LD">
+            <span>💾 Save</span>
+          </button>
+          <button id="btn-delete-campaign" class="btn btn-danger btn-sm" title="Delete current campaign">
+            <span>🗑</span>
+          </button>
+        </div>
+
+        <!-- Blockmap Context Controls -->
+        <div id="blockmap-header-controls" class="context-selector-group hidden">
+          <span class="context-label">Map:</span>
+          <select id="map-select" class="dropdown-select">
+            <option value="">(Loading maps...)</option>
+          </select>
+          <button id="btn-new-map" class="btn btn-secondary" title="Create a new map blueprint">
+            <span>+ New Map</span>
+          </button>
+          <button id="btn-save-map" class="btn btn-primary" title="Save map JSON-LD">
+            <span>💾 Save</span>
+          </button>
+          <button id="btn-build-map" class="btn btn-accent" title="Compile static PNG image and 5-ft collision grid">
+            <span>⚡ Build PNG & Grid</span>
+          </button>
+          <button id="btn-export-png" class="btn btn-secondary" title="Export PNG image copy">
+            <span>📥 Export PNG</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="main-workspace">
+      <!-- ========================================================
+           PANE 1: cRPG CAMPAIGN
+           ======================================================== -->
+      <section id="pane-campaign" class="module-pane active">
+        <div class="campaign-layout">
+          <!-- Top Section: Metadata & Summary -->
+          <div class="campaign-grid-top">
+            <div class="panel">
+              <div class="panel-header">
+                <h2>Campaign Metadata & World Setup</h2>
+              </div>
+              <div class="panel-body form-grid">
+                <div class="form-group col-span-2">
+                  <label for="camp-title">Campaign Title</label>
+                  <input type="text" id="camp-title" class="input-text" placeholder="e.g. Candlekeep: The Prophecy Begins">
+                </div>
+                <div class="form-group">
+                  <label for="camp-slug">Unique Slug</label>
+                  <input type="text" id="camp-slug" class="input-text" placeholder="e.g. candlekeep-prologue">
+                </div>
+                <div class="form-group">
+                  <label for="camp-setting">World Setting</label>
+                  <input type="text" id="camp-setting" class="input-text" value="Sword Coast / Forgotten Realms">
+                </div>
+                <div class="form-group">
+                  <label for="camp-ruleset">Rule System</label>
+                  <select id="camp-ruleset" class="dropdown-select">
+                    <option value="D&D 5e SRD">D&D 5e SRD (Tactical Turn-Based)</option>
+                    <option value="Advanced 5e">Advanced 5e SRD</option>
+                    <option value="RobOS Tactical">RobOS Tactical SRD</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="camp-difficulty">Difficulty Mode</label>
+                  <select id="camp-difficulty" class="dropdown-select">
+                    <option value="Core Rules">Core Rules (Standard 5e)</option>
+                    <option value="Story Mode">Story Mode (Casual)</option>
+                    <option value="Tactician">Tactician (Hardcore AI)</option>
+                    <option value="Ironman">Ironman (Permadeath)</option>
+                  </select>
+                </div>
+                <div class="form-group col-span-2">
+                  <label for="camp-starting-scene">Starting Scene</label>
+                  <select id="camp-starting-scene" class="dropdown-select">
+                    <option value="candlekeep-exterior">candlekeep-exterior</option>
+                  </select>
+                </div>
+                <div class="form-group col-span-2">
+                  <label for="camp-desc">Prologue / Story Synopsis</label>
+                  <textarea id="camp-desc" rows="4" placeholder="Describe the opening premise, narrative stakes, and setting..."></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Campaign Summary Stats -->
+            <div class="panel">
+              <div class="panel-header">
+                <h2>Campaign Summary</h2>
+              </div>
+              <div class="panel-body">
+                <div class="stats-cards-grid">
+                  <div class="stat-card">
+                    <span class="stat-val" id="stat-heroes-count">0</span>
+                    <span class="stat-lbl">Hero Roster</span>
+                  </div>
+                  <div class="stat-card">
+                    <span class="stat-val" id="stat-party-count">0</span>
+                    <span class="stat-lbl">Active Party</span>
+                  </div>
+                  <div class="stat-card">
+                    <span class="stat-val" id="stat-quests-count">0</span>
+                    <span class="stat-lbl">Quests</span>
+                  </div>
+                  <div class="stat-card">
+                    <span class="stat-val" id="stat-gold-count">0 gp</span>
+                    <span class="stat-lbl">Party Purse</span>
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 10px;">
+                  <button id="btn-scaffold-party" class="btn btn-secondary full-width" style="margin-bottom: 8px;">
+                    ⚔️ Scaffold Standard 6-Hero Party
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Section: Quests and Story Flags -->
+          <div class="campaign-grid-bottom">
+            <!-- Quest Journal -->
+            <div class="panel">
+              <div class="panel-header">
+                <h2>Quest Journal (<span id="quest-count">0</span>)</h2>
+                <button id="btn-add-quest" class="btn btn-sm btn-primary">+ Add Quest</button>
+              </div>
+              <div class="panel-body">
+                <div id="quest-cards-list" class="quest-cards-list">
+                  <!-- Populated via JS -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Story Flags Table -->
+            <div class="panel">
+              <div class="panel-header">
+                <h2>World & Story Flags</h2>
+                <button id="btn-add-flag" class="btn btn-sm btn-primary">+ Add Flag</button>
+              </div>
+              <div class="panel-body">
+                <table class="flags-table">
+                  <thead>
+                    <tr>
+                      <th>Flag Key</th>
+                      <th>Value</th>
+                      <th style="width: 50px;">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="flags-table-body">
+                    <!-- Populated via JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================
+           PANE 2: cRPG CHARACTER EDITOR
+           ======================================================== -->
+      <section id="pane-characters" class="module-pane">
+        <div class="characters-layout">
+          <!-- Left Sidebar: Hero Roster -->
+          <aside class="heroes-sidebar">
+            <div class="panel-header">
+              <h2>Heroes (<span id="roster-count">0</span>)</h2>
+              <button id="btn-add-hero" class="btn btn-sm btn-primary">+ Hero</button>
+            </div>
+            <div style="padding: 8px; border-bottom: 1px solid var(--border-light);">
+              <select id="archetype-select" class="dropdown-select" style="width: 100%;">
+                <option value="">+ Add Pre-Rolled Archetype...</option>
+                <option value="fighter">Human Fighter (Vance)</option>
+                <option value="rogue">Human Rogue (Imoen)</option>
+                <option value="wizard">High Elf Wizard (Ignis)</option>
+                <option value="cleric">Dwarf Life Cleric (Thrumbar)</option>
+                <option value="ranger">Wood Elf Ranger (Elora)</option>
+                <option value="paladin">Half-Elf Paladin (Faerûn)</option>
+              </select>
+            </div>
+            <div id="heroes-list" class="heroes-list">
+              <!-- Populated via JS -->
+            </div>
+          </aside>
+
+          <!-- Right: Character Sheet Editor -->
+          <main class="character-sheet-area">
+            <!-- Identity Section -->
+            <div class="sheet-section">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h3 id="sheet-hero-title">Hero Character Sheet</h3>
+                <div style="display: flex; gap: 8px;">
+                  <button id="btn-clone-hero" class="btn btn-sm btn-secondary">Duplicate</button>
+                  <button id="btn-delete-hero" class="btn btn-sm btn-danger">Remove</button>
+                </div>
+              </div>
+
+              <div class="identity-header-grid">
+                <div class="portrait-preview-box" id="hero-avatar-display">👤</div>
+                <div class="form-grid" style="flex: 1;">
+                  <div class="form-group col-span-2">
+                    <label for="hero-name">Hero Name</label>
+                    <input type="text" id="hero-name" class="input-text">
+                  </div>
+                  <div class="form-group">
+                    <label for="hero-portrait">Portrait / Emoji</label>
+                    <input type="text" id="hero-portrait" class="input-text" placeholder="Emoji or file path">
+                  </div>
+                  <div class="form-group">
+                    <label for="hero-level">Level</label>
+                    <input type="number" id="hero-level" class="input-number" min="1" max="20" value="1">
+                  </div>
+                  <div class="form-group">
+                    <label for="hero-race">Race / Ancestry</label>
+                    <select id="hero-race" class="dropdown-select">
+                      <option value="Human">Human</option>
+                      <option value="High Elf">High Elf</option>
+                      <option value="Wood Elf">Wood Elf</option>
+                      <option value="Shield Dwarf">Shield Dwarf</option>
+                      <option value="Lightfoot Halfling">Lightfoot Halfling</option>
+                      <option value="Half-Elf">Half-Elf</option>
+                      <option value="Rock Gnome">Rock Gnome</option>
+                      <option value="Dragonborn">Dragonborn</option>
+                      <option value="Tiefling">Tiefling</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="hero-class">Class</label>
+                    <select id="hero-class" class="dropdown-select">
+                      <option value="Fighter">Fighter</option>
+                      <option value="Rogue">Rogue</option>
+                      <option value="Wizard">Wizard</option>
+                      <option value="Cleric">Cleric</option>
+                      <option value="Ranger">Ranger</option>
+                      <option value="Paladin">Paladin</option>
+                      <option value="Barbarian">Barbarian</option>
+                      <option value="Bard">Bard</option>
+                      <option value="Druid">Druid</option>
+                      <option value="Monk">Monk</option>
+                      <option value="Sorcerer">Sorcerer</option>
+                      <option value="Warlock">Warlock</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="hero-subclass">Subclass</label>
+                    <input type="text" id="hero-subclass" class="input-text" placeholder="e.g. Champion, Evoker">
+                  </div>
+                  <div class="form-group">
+                    <label for="hero-background">Background</label>
+                    <input type="text" id="hero-background" class="input-text" placeholder="e.g. Ward of Gorion">
+                  </div>
+                  <div class="form-group">
+                    <label for="hero-alignment">Alignment</label>
+                    <select id="hero-alignment" class="dropdown-select">
+                      <option value="Neutral Good">Neutral Good</option>
+                      <option value="Lawful Good">Lawful Good</option>
+                      <option value="Chaotic Good">Chaotic Good</option>
+                      <option value="True Neutral">True Neutral</option>
+                      <option value="Lawful Neutral">Lawful Neutral</option>
+                      <option value="Chaotic Neutral">Chaotic Neutral</option>
+                      <option value="Lawful Evil">Lawful Evil</option>
+                      <option value="Neutral Evil">Neutral Evil</option>
+                      <option value="Chaotic Evil">Chaotic Evil</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="hero-xp">Experience (XP)</label>
+                    <input type="number" id="hero-xp" class="input-number" min="0" value="0">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Ability Scores Section -->
+            <div class="sheet-section">
+              <h3>D&D 5e Ability Scores & Modifiers</h3>
+              <div class="attributes-grid">
+                <div class="attr-card">
+                  <span class="attr-title">STR</span>
+                  <input type="number" id="attr-str" class="attr-input" min="1" max="30" value="16">
+                  <span id="mod-str" class="attr-mod">+3</span>
+                </div>
+                <div class="attr-card">
+                  <span class="attr-title">DEX</span>
+                  <input type="number" id="attr-dex" class="attr-input" min="1" max="30" value="14">
+                  <span id="mod-dex" class="attr-mod">+2</span>
+                </div>
+                <div class="attr-card">
+                  <span class="attr-title">CON</span>
+                  <input type="number" id="attr-con" class="attr-input" min="1" max="30" value="15">
+                  <span id="mod-con" class="attr-mod">+2</span>
+                </div>
+                <div class="attr-card">
+                  <span class="attr-title">INT</span>
+                  <input type="number" id="attr-int" class="attr-input" min="1" max="30" value="10">
+                  <span id="mod-int" class="attr-mod">+0</span>
+                </div>
+                <div class="attr-card">
+                  <span class="attr-title">WIS</span>
+                  <input type="number" id="attr-wis" class="attr-input" min="1" max="30" value="12">
+                  <span id="mod-wis" class="attr-mod">+1</span>
+                </div>
+                <div class="attr-card">
+                  <span class="attr-title">CHA</span>
+                  <input type="number" id="attr-cha" class="attr-input" min="1" max="30" value="8">
+                  <span id="mod-cha" class="attr-mod">-1</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Combat Vitals Section -->
+            <div class="sheet-section">
+              <h3>Combat Vitals & Metrics</h3>
+              <div class="vitals-grid">
+                <div class="vital-card">
+                  <label for="vital-ac">Armor Class</label>
+                  <input type="number" id="vital-ac" min="1" value="16">
+                </div>
+                <div class="vital-card">
+                  <label for="vital-hp-max">Max HP</label>
+                  <input type="number" id="vital-hp-max" min="1" value="12">
+                </div>
+                <div class="vital-card">
+                  <label for="vital-hp-cur">Current HP</label>
+                  <input type="number" id="vital-hp-cur" min="0" value="12">
+                </div>
+                <div class="vital-card">
+                  <label for="vital-speed">Speed (ft)</label>
+                  <input type="number" id="vital-speed" min="5" step="5" value="30">
+                </div>
+                <div class="vital-card">
+                  <label for="vital-init">Initiative Mod</label>
+                  <input type="number" id="vital-init" value="2">
+                </div>
+                <div class="vital-card">
+                  <label for="vital-prof">Proficiency</label>
+                  <input type="number" id="vital-prof" value="2">
+                </div>
+              </div>
+            </div>
+
+            <!-- Spells and Backstory Section -->
+            <div class="sheet-section">
+              <h3>Spells, Special Abilities & Backstory</h3>
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label for="hero-spells">Prepared Spells / Actions</label>
+                <textarea id="hero-spells" rows="2" placeholder="Second Wind, Action Surge, Magic Missile..."></textarea>
+              </div>
+              <div class="form-group">
+                <label for="hero-backstory">Character Backstory & Personality</label>
+                <textarea id="hero-backstory" rows="3" placeholder="Background details, ties to the party or setting..."></textarea>
+              </div>
+            </div>
+          </main>
+        </div>
+      </section>
+
+      <!-- ========================================================
+           PANE 3: cRPG INVENTORY EDITOR
+           ======================================================== -->
+      <section id="pane-inventory" class="module-pane">
+        <div class="inventory-layout">
+          <!-- Column 1: Active Party & Formations -->
+          <div class="panel">
+            <div class="panel-header">
+              <h2>Active Party Configuration</h2>
+            </div>
+            <div class="panel-body">
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label>Select Active Party Members (up to 6):</label>
+                <div id="party-checklist" class="party-checklist-box">
+                  <!-- Checkbox items rendered via JS -->
+                </div>
+              </div>
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label for="party-leader-select">Party Leader</label>
+                <select id="party-leader-select" class="dropdown-select full-width">
+                  <!-- Populated from active heroes -->
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label for="party-formation-select">Tactical Party Formation</label>
+                <select id="party-formation-select" class="dropdown-select full-width">
+                  <option value="rank">Rank (2x3 Grid Formation)</option>
+                  <option value="wedge">Wedge (V-Formation Point)</option>
+                  <option value="line">Line (Side by Side Wall)</option>
+                  <option value="column">Column (Single File March)</option>
+                  <option value="square">Square (Defensive Box)</option>
+                  <option value="scatter">Scatter (Skirmish Stance)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="inventory-scene-select">Current Scene</label>
+                <select id="inventory-scene-select" class="dropdown-select full-width">
+                  <option value="candlekeep-exterior">candlekeep-exterior</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 2: Party Shared Stash & Currency -->
+          <div class="panel">
+            <div class="panel-header">
+              <h2>Party Purse & Shared Stash</h2>
+            </div>
+            <div class="panel-body">
+              <div class="currency-cards-grid">
+                <div class="currency-card gp">
+                  <label for="gold-gp">Gold (GP)</label>
+                  <input type="number" id="gold-gp" class="input-number" min="0" value="150">
+                </div>
+                <div class="currency-card sp">
+                  <label for="gold-sp">Silver (SP)</label>
+                  <input type="number" id="gold-sp" class="input-number" min="0" value="40">
+                </div>
+                <div class="currency-card cp">
+                  <label for="gold-cp">Copper (CP)</label>
+                  <input type="number" id="gold-cp" class="input-number" min="0" value="120">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="shared-items-textarea">Shared Stash Items (one per line)</label>
+                <textarea id="shared-items-textarea" rows="10" placeholder="Potion of Healing (x4)&#10;Silk Rope (50 ft)&#10;Thieves' Tools&#10;Torch (x3)&#10;Rations (x10)"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 3: Per-Hero Equipment Slots -->
+          <div class="panel">
+            <div class="panel-header">
+              <h2>Equipment Slots Inspector</h2>
+              <select id="equip-hero-select" class="dropdown-select">
+                <!-- Populated from heroes -->
+              </select>
+            </div>
+            <div class="panel-body">
+              <div class="equipment-slots-grid">
+                <div class="equip-slot-item">
+                  <label for="equip-mainhand">Main Hand (Weapon)</label>
+                  <input type="text" id="equip-mainhand" class="input-text" placeholder="Longsword">
+                </div>
+                <div class="equip-slot-item">
+                  <label for="equip-offhand">Off Hand (Shield)</label>
+                  <input type="text" id="equip-offhand" class="input-text" placeholder="Steel Shield">
+                </div>
+                <div class="equip-slot-item">
+                  <label for="equip-armor">Armor / Body</label>
+                  <input type="text" id="equip-armor" class="input-text" placeholder="Chain Mail">
+                </div>
+                <div class="equip-slot-item">
+                  <label for="equip-helmet">Helmet / Head</label>
+                  <input type="text" id="equip-helmet" class="input-text" placeholder="Iron Helm">
+                </div>
+                <div class="equip-slot-item">
+                  <label for="equip-cloak">Cloak / Shoulders</label>
+                  <input type="text" id="equip-cloak" class="input-text" placeholder="Traveler's Cloak">
+                </div>
+                <div class="equip-slot-item">
+                  <label for="equip-boots">Boots / Feet</label>
+                  <input type="text" id="equip-boots" class="input-text" placeholder="Stout Boots">
+                </div>
+                <div class="equip-slot-item">
+                  <label for="equip-ring1">Ring / Accessory</label>
+                  <input type="text" id="equip-ring1" class="input-text" placeholder="Ring of Protection">
+                </div>
+                <div class="equip-slot-item">
+                  <label for="equip-quickitems">Quick Items / Potions</label>
+                  <input type="text" id="equip-quickitems" class="input-text" placeholder="2x Healing Potion">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================
+           PANE 4: cRPG BLOCKMAP EDITOR
+           ======================================================== -->
+      <section id="pane-blockmap" class="module-pane">
+        <div class="blockmap-layout">
+          <!-- Left Sidebar: Map Settings & Map Object Forms -->
+          <aside class="blockmap-sidebar">
+            <div class="sidebar-tab-bar">
+              <button id="subtab-map-settings" class="subtab-btn active">🗺 Map Settings</button>
+              <button id="subtab-map-objects" class="subtab-btn">📐 Map Object</button>
+            </div>
+
+            <!-- Subtab 1: Map Dimensions & Base Terrain -->
+            <div id="content-map-settings" class="sidebar-scroll-content">
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label for="map-slug">Map ID (Slug)</label>
+                <input type="text" id="map-slug" class="input-text" placeholder="candlekeep">
+              </div>
+
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label for="map-title">Display Title</label>
+                <input type="text" id="map-title" class="input-text" placeholder="Candlekeep Exterior">
+              </div>
+
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label for="map-terrain">Base Terrain (Floor)</label>
+                <select id="map-terrain" class="dropdown-select">
+                  <option value="stone">Stone Floor / Dungeon (Grey)</option>
+                  <option value="grass">Grass / Meadow (Forest Green)</option>
+                  <option value="dirt">Dirt / Earth (Brown)</option>
+                  <option value="wood">Wood Planks / Manor (Warm Brown)</option>
+                  <option value="sand">Sand / Desert (Golden Sand)</option>
+                  <option value="snow">Snow / Ice (Pale White/Blue)</option>
+                  <option value="cave">Cave / Catacomb (Dark Charcoal)</option>
+                </select>
+              </div>
+
+              <div class="form-grid" style="margin-bottom: 12px;">
+                <div class="form-group">
+                  <label for="map-width">Width (ft)</label>
+                  <input type="number" id="map-width" class="input-number" min="10" max="600" step="5" value="120">
+                </div>
+                <div class="form-group">
+                  <label for="map-height">Height (ft)</label>
+                  <input type="number" id="map-height" class="input-number" min="10" max="600" step="5" value="80">
+                </div>
+              </div>
+
+              <!-- Calculated Dimensions Badges -->
+              <div class="stat-card" style="margin-bottom: 12px; text-align: left;">
+                <div style="font-size: 11px; color: var(--text-muted);">Calculated Grid: <strong id="lbl-grid-cells" style="color: var(--accent);">24 × 16 cells (5 ft)</strong></div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">PNG Resolution: <strong id="lbl-png-res" style="color: var(--accent);">1920 × 1280 px</strong></div>
+              </div>
+
+              <!-- Presets -->
+              <div class="form-group" style="margin-bottom: 14px;">
+                <label>Dimensions Presets:</label>
+                <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                  <button class="btn btn-secondary btn-sm btn-preset" data-w="60" data-h="40">60×40</button>
+                  <button class="btn btn-secondary btn-sm btn-preset" data-w="120" data-h="80">120×80</button>
+                  <button class="btn btn-secondary btn-sm btn-preset" data-w="160" data-h="100">160×100</button>
+                  <button class="btn btn-secondary btn-sm btn-preset" data-w="320" data-h="240">320×240</button>
+                </div>
+              </div>
+
+              <!-- Background Artwork Underlay Image -->
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label for="map-bg-image">Background Artwork Underlay Image</label>
+                <input type="text" id="map-bg-image" class="input-text" placeholder="assets/maps/candlekeep_bg.jpg">
+              </div>
+
+              <div class="form-group">
+                <div style="display: flex; justify-content: space-between;">
+                  <label for="map-bg-opacity">Artwork Opacity</label>
+                  <span id="lbl-bg-opacity" style="font-size: 11px; color: var(--accent); font-weight: 600;">100%</span>
+                </div>
+                <input type="range" id="map-bg-opacity" min="0" max="100" value="100" style="accent-color: var(--accent);">
+              </div>
+            </div>
+
+            <!-- Subtab 2: Map Object Form -->
+            <div id="content-map-objects" class="sidebar-scroll-content hidden">
+              <div class="form-group" style="margin-bottom: 10px;">
+                <label for="obj-id">Object ID</label>
+                <input type="text" id="obj-id" class="input-text" placeholder="e.g. wall_north, tree_1">
+              </div>
+
+              <div class="form-group" style="margin-bottom: 10px;">
+                <label for="obj-type">Object Type</label>
+                <select id="obj-type" class="dropdown-select">
+                  <optgroup label="Solid Structures (Blocks Movement & Sight)">
+                    <option value="wall">Wall (Solid wall)</option>
+                    <option value="building">Building (Footprint)</option>
+                    <option value="door">Door (Passage)</option>
+                    <option value="pillar">Pillar</option>
+                  </optgroup>
+                  <optgroup label="Obstacles & Half-Cover">
+                    <option value="tree">Tree</option>
+                    <option value="rock">Rock / Boulder</option>
+                    <option value="statue">Statue</option>
+                    <option value="crate">Crate</option>
+                    <option value="barrel">Barrel</option>
+                    <option value="table">Table</option>
+                    <option value="altar">Altar</option>
+                    <option value="bed">Bed</option>
+                    <option value="chest">Treasure Chest</option>
+                    <option value="fence">Fence</option>
+                    <option value="pit">Pit / Chasm</option>
+                  </optgroup>
+                  <optgroup label="Difficult Terrain">
+                    <option value="water">Water / Pond</option>
+                    <option value="bush">Bush / Briar</option>
+                    <option value="rubble">Rubble</option>
+                    <option value="stairs">Stairs</option>
+                  </optgroup>
+                  <optgroup label="Decorations & Zones">
+                    <option value="road">Road / Path</option>
+                    <option value="bridge">Bridge</option>
+                    <option value="rug">Rug / Carpet</option>
+                    <option value="zone">Trigger Zone</option>
+                  </optgroup>
+                </select>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 10px;">
+                <label>Geometry Shape</label>
+                <div style="display: flex; gap: 12px;">
+                  <label><input type="radio" name="obj-shape" value="rect" checked> Rect</label>
+                  <label><input type="radio" name="obj-shape" value="circle"> Circle</label>
+                  <label><input type="radio" name="obj-shape" value="line"> Line</label>
+                </div>
+              </div>
+
+              <!-- Shape Rect Coordinates -->
+              <div id="shape-rect-fields">
+                <div class="form-grid" style="margin-bottom: 10px;">
+                  <div class="form-group">
+                    <label for="obj-x">X Pos (ft)</label>
+                    <input type="number" id="obj-x" class="input-number" step="5" value="10">
+                  </div>
+                  <div class="form-group">
+                    <label for="obj-y">Y Pos (ft)</label>
+                    <input type="number" id="obj-y" class="input-number" step="5" value="10">
+                  </div>
+                  <div class="form-group">
+                    <label for="obj-w">Width (ft)</label>
+                    <input type="number" id="obj-w" class="input-number" step="5" value="20">
+                  </div>
+                  <div class="form-group">
+                    <label for="obj-h">Height (ft)</label>
+                    <input type="number" id="obj-h" class="input-number" step="5" value="15">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Shape Circle Coordinates -->
+              <div id="shape-circle-fields" class="hidden">
+                <div class="form-grid" style="margin-bottom: 10px;">
+                  <div class="form-group">
+                    <label for="obj-cx">Center X (ft)</label>
+                    <input type="number" id="obj-cx" class="input-number" step="5" value="30">
+                  </div>
+                  <div class="form-group">
+                    <label for="obj-cy">Center Y (ft)</label>
+                    <input type="number" id="obj-cy" class="input-number" step="5" value="30">
+                  </div>
+                  <div class="form-group col-span-2">
+                    <label for="obj-radius">Radius (ft)</label>
+                    <input type="number" id="obj-radius" class="input-number" step="2.5" value="5">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Shape Line Coordinates -->
+              <div id="shape-line-fields" class="hidden">
+                <div class="form-grid" style="margin-bottom: 10px;">
+                  <div class="form-group">
+                    <label for="obj-lx1">X1 (ft)</label>
+                    <input type="number" id="obj-lx1" class="input-number" step="5" value="0">
+                  </div>
+                  <div class="form-group">
+                    <label for="obj-ly1">Y1 (ft)</label>
+                    <input type="number" id="obj-ly1" class="input-number" step="5" value="20">
+                  </div>
+                  <div class="form-group">
+                    <label for="obj-lx2">X2 (ft)</label>
+                    <input type="number" id="obj-lx2" class="input-number" step="5" value="60">
+                  </div>
+                  <div class="form-group">
+                    <label for="obj-ly2">Y2 (ft)</label>
+                    <input type="number" id="obj-ly2" class="input-number" step="5" value="20">
+                  </div>
+                  <div class="form-group col-span-2">
+                    <label for="obj-thick">Thickness (ft)</label>
+                    <input type="number" id="obj-thick" class="input-number" step="5" value="5">
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 10px;">
+                <label for="obj-label">Display Label</label>
+                <input type="text" id="obj-label" class="input-text" placeholder="e.g. Brand's Forge">
+              </div>
+
+              <!-- Object Actions -->
+              <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 14px;">
+                <button id="btn-apply-obj" class="btn btn-primary full-width">➕ Add / Update Object</button>
+                <div style="display: flex; gap: 6px;">
+                  <button id="btn-duplicate-obj" class="btn btn-secondary flex-1" disabled>Duplicate</button>
+                  <button id="btn-delete-obj" class="btn btn-danger flex-1" disabled>Delete</button>
+                </div>
+                <button id="btn-deselect-obj" class="btn btn-secondary full-width">Deselect (New)</button>
+              </div>
+            </div>
+          </aside>
+
+          <!-- Center: Canvas Viewport -->
+          <div class="canvas-viewport-container">
+            <!-- Canvas Floating Toolbar -->
+            <div class="canvas-toolbar">
+              <div class="tool-btn-group">
+                <button id="tool-select" class="tool-btn active">↖ Select</button>
+                <button id="tool-place" class="tool-btn">➕ Place</button>
+                <button id="tool-pan" class="tool-btn">✋ Pan</button>
+              </div>
+
+              <div class="tool-btn-group">
+                <button id="btn-zoom-out" class="tool-btn">−</button>
+                <span id="lbl-zoom-level" style="font-size: 11px; padding: 4px; color: var(--accent);">100%</span>
+                <button id="btn-zoom-in" class="tool-btn">+</button>
+                <button id="btn-zoom-reset" class="tool-btn">⊡ Fit</button>
+              </div>
+
+              <div style="display: flex; align-items: center; gap: 10px; font-size: 11px;">
+                <label><input type="checkbox" id="chk-snap-grid" checked> Snap 5-ft</label>
+                <label><input type="checkbox" id="chk-show-grid" checked> Grid</label>
+                <label><input type="checkbox" id="chk-show-labels" checked> Labels</label>
+                <label><input type="checkbox" id="chk-debug-collision"> Collision</label>
+                <label><input type="checkbox" id="chk-show-art" checked> Art</label>
+              </div>
+
+              <div class="tool-btn-group">
+                <button id="btn-toggle-canvas" class="tool-btn active">🎨 Canvas</button>
+                <button id="btn-toggle-png" class="tool-btn">🖼 PNG View</button>
+              </div>
+            </div>
+
+            <!-- Canvas Element -->
+            <canvas id="blockmap-canvas" class="canvas-element"></canvas>
+
+            <!-- Compiled PNG Preview Overlay -->
+            <div id="png-view-overlay" class="png-preview-overlay hidden">
+              <img id="img-compiled-png" alt="Compiled Static Map PNG">
+            </div>
+
+            <!-- Coordinate HUD -->
+            <div class="coord-hud">
+              <span>Pos: <strong id="hud-pos" class="coord-hud-val">0 ft, 0 ft</strong></span>
+              <span>Cell: <strong id="hud-cell" class="coord-hud-val">(0, 0)</strong></span>
+              <span>Terrain: <strong id="hud-terrain" class="coord-hud-val">stone</strong></span>
+            </div>
+          </div>
+
+          <!-- Right Sidebar: Object Hierarchy & Collision Stats -->
+          <aside class="blockmap-sidebar-right">
+            <div class="panel-header">
+              <h2>Map Objects (<span id="lbl-map-obj-count">0</span>)</h2>
+            </div>
+            <div style="padding: 6px 8px; border-bottom: 1px solid var(--border-light);">
+              <input type="text" id="filter-map-objects" class="input-text" style="width: 100%; font-size: 11px;" placeholder="Filter objects...">
+            </div>
+            <div id="map-objects-list" class="object-tree-list">
+              <!-- Populated via JS -->
+            </div>
+
+            <!-- Collision Stats -->
+            <div style="padding: 12px; border-top: 1px solid var(--border); background-color: rgba(255, 255, 255, 0.01);">
+              <div style="font-size: 11px; font-weight: 700; color: var(--text-bright); margin-bottom: 8px;">Blockout Collision Stats</div>
+              <div class="stats-cards-grid" style="margin-bottom: 0;">
+                <div class="stat-card">
+                  <span id="stat-total-cells" class="stat-val">0</span>
+                  <span class="stat-lbl">Total Cells</span>
+                </div>
+                <div class="stat-card">
+                  <span id="stat-blocked-cells" class="stat-val" style="color: var(--danger);">0</span>
+                  <span class="stat-lbl">Blocked</span>
+                </div>
+                <div class="stat-card">
+                  <span id="stat-opaque-cells" class="stat-val" style="color: #a371f7;">0</span>
+                  <span class="stat-lbl">Opaque</span>
+                </div>
+                <div class="stat-card">
+                  <span id="stat-diff-cells" class="stat-val" style="color: var(--warning);">0</span>
+                  <span class="stat-lbl">Difficult</span>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Status Bar -->
+    <footer class="status-bar">
+      <div class="status-left">
+        <span class="status-dot"></span>
+        <span id="status-message">Ready.</span>
+        <span id="status-filepath" class="status-filepath"></span>
+      </div>
+      <div class="status-right">
+        <span class="shortcut-hint"><kbd>V</kbd> Select</span>
+        <span class="shortcut-hint"><kbd>P</kbd> Place</span>
+        <span class="shortcut-hint"><kbd>H</kbd> Pan</span>
+        <span class="shortcut-hint"><kbd>Ctrl+S</kbd> Save</span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="canvas-renderer.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

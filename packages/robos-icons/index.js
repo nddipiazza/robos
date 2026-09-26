@@ -61,10 +61,10 @@ const BUILTIN_APPS = [
     iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>'
   },
   {
-    appId: 'crpg-maker',
-    label: 'RobOS cRPG Maker',
+    appId: 'crpg-editor',
+    label: 'RobOS cRPG Editor',
     category: 'Game Development',
-    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="8" width="36" height="32" rx="3" ry="3" /><line x1="18" y1="8" x2="18" y2="40" stroke-dasharray="2 2" stroke-opacity="0.6" /><line x1="30" y1="8" x2="30" y2="40" stroke-dasharray="2 2" stroke-opacity="0.6" /><line x1="6" y1="18" x2="42" y2="18" stroke-dasharray="2 2" stroke-opacity="0.6" /><line x1="6" y1="30" x2="42" y2="30" stroke-dasharray="2 2" stroke-opacity="0.6" /><rect x="10" y="12" width="14" height="12" fill="#00bcd4" fill-opacity="0.15" stroke-width="1.8" /><line x1="15" y1="24" x2="19" y2="24" stroke="#00bcd4" stroke-width="2.5" /><circle cx="34" cy="16" r="4.5" fill="#00bcd4" fill-opacity="0.2" /><circle cx="34" cy="16" r="1.5" fill="#00bcd4" /><polyline points="24,34 32,34 38,34" stroke-width="2.2" /><polygon points="26,22 36,32 32,36 22,26" fill="#0d1117" stroke="#00bcd4" stroke-width="1.5" /><polygon points="22,26 21,30 25,29" fill="#00bcd4" stroke="#00bcd4" /></svg>'
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="36" height="36" rx="4" stroke="#00bcd4" stroke-width="2"/><line x1="18" y1="6" x2="18" y2="42" stroke="#00bcd4" stroke-width="1.5" stroke-dasharray="2 2" stroke-opacity="0.6"/><line x1="6" y1="18" x2="42" y2="18" stroke="#00bcd4" stroke-width="1.5" stroke-dasharray="2 2" stroke-opacity="0.6"/><circle cx="12" cy="11" r="2.5" fill="#00bcd4" fill-opacity="0.3" stroke="#00bcd4" stroke-width="1.2"/><path d="M8.5 16c0-1.8 1.5-3 3.5-3s3.5 1.2 3.5 3" stroke="#00bcd4" stroke-width="1.2"/><path d="M26 10h8v6h-8z" fill="#00bcd4" fill-opacity="0.2" stroke="#00bcd4" stroke-width="1.2"/><path d="M28 10V8a2 2 0 0 1 4 0v2" stroke="#00bcd4" stroke-width="1.2"/><path d="M9 25h6a2 2 0 0 1 2 2v10a2 2 0 0 1-2-2H9" stroke="#00bcd4" stroke-width="1.4"/><line x1="11" y1="28" x2="15" y2="28" stroke="#00bcd4" stroke-width="1.2"/><line x1="11" y1="32" x2="15" y2="32" stroke="#00bcd4" stroke-width="1.2"/><rect x="23" y="23" width="14" height="14" rx="2" fill="#00bcd4" fill-opacity="0.15" stroke="#00bcd4" stroke-width="1.5"/><line x1="30" y1="23" x2="30" y2="37" stroke="#00bcd4" stroke-width="1" stroke-dasharray="2 2"/><line x1="23" y1="30" x2="37" y2="30" stroke="#00bcd4" stroke-width="1" stroke-dasharray="2 2"/><circle cx="30" cy="30" r="1.5" fill="#00bcd4"/></svg>'
   },
   {
     appId: 'context-manager',
@@ -311,25 +311,7 @@ const BUILTIN_APPS = [
     label: 'KGraph Parse Portal',
     category: 'Development',
     iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><circle cx="8" cy="10" r="1.5"/><circle cx="16" cy="10" r="1.5"/><circle cx="12" cy="17" r="1.5"/><line x1="12" y1="9" x2="12" y2="3"/><line x1="12" y1="15" x2="12" y2="21"/><line x1="8" y1="10" x2="12" y2="12"/><line x1="16" y1="10" x2="12" y2="12"/><line x1="12" y1="12" x2="12" y2="17"/></svg>'
-  },
-  {
-    appId: 'crpg-maker',
-    label: 'cRPG Maker',
-    category: 'Development',
-    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>'
-  },
-  {
-    appId: 'crpg-campaign',
-    label: 'cRPG Campaign',
-    category: 'Development',
-    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><circle cx="12" cy="8" r="2"/><path d="M12 10v4"/><path d="M10 12h4"/><path d="M10 16h4"/></svg>'
-  },
-  {
-    appId: 'crpg-scene-studio',
-    label: 'cRPG Scene Studio',
-    category: 'Development',
-    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>'
-  },
+  }
 ];
 
 function getIcon(appId) {
