@@ -669,6 +669,26 @@ function startApiServer(overridePort) {
         }
       }
 
+      if (pathname === '/screenshot' && method === 'GET') {
+        const targetWin = (mainWindow && !mainWindow.isDestroyed()) ? mainWindow : hudWindow;
+        if (!targetWin || targetWin.isDestroyed()) {
+          res.writeHead(503, { 'Content-Type': 'application/json' });
+          return res.end(JSON.stringify({ error: 'No active window to capture' }));
+        }
+        try {
+          const image = await targetWin.webContents.capturePage();
+          const pngBuffer = image.toPNG();
+          res.writeHead(200, {
+            'Content-Type': 'image/png',
+            'Content-Length': pngBuffer.length,
+          });
+          return res.end(pngBuffer);
+        } catch (err) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          return res.end(JSON.stringify({ error: err.message }));
+        }
+      }
+
       if (pathname === '/health' && method === 'GET') {
         if (!mainWindow || mainWindow.isDestroyed() || !mainWindow.webContents || mainWindow.webContents.isLoading()) {
           res.writeHead(503, { 'Content-Type': 'application/json' });
