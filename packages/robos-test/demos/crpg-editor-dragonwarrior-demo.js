@@ -16,6 +16,7 @@ const PNG_PATH = path.join(SANDBOX_DIR, "assets", "blockouts", "tantegel-throne-
 const HERO_PATH = path.join(SANDBOX_DIR, "characters", "hero-of-alefgard.jsonld");
 const NPC_PATH = path.join(SANDBOX_DIR, "characters", "npc-king-loric.jsonld");
 const GWAELIN_PATH = path.join(SANDBOX_DIR, "characters", "npc-princess-gwaelin.jsonld");
+const CAMPAIGN_PATH = path.join(SANDBOX_DIR, "campaigns", "dragonwarrior-1-usa.jsonld");
 
 const SCRIPT = [
   {
@@ -718,10 +719,180 @@ const SCRIPT = [
     })()`,
     minHold: 4500,
   },
+  {
+    narration: "Next, we move to Screen 3: authoring the Dragon Warrior starting inventory, purse, formation, and equipment in the Inventory Editor.",
+    target: ".nav-tab-btn[data-pane='pane-inventory']",
+    action: "click",
+    callout: "Switch to Inventory Studio",
+    js: `(() => {
+      document.querySelector(".nav-tab-btn[data-pane='pane-inventory']")?.click();
+    })()`,
+    minHold: 3500,
+  },
+  {
+    narration: "The Inventory Studio opens with the newly authored Hero of Alefgard available in the roster, 0 GP in the purse, and empty equipment slots.",
+    target: "#party-checklist",
+    action: "hover",
+    callout: "Verify Initial Inventory State",
+    js: `(() => {
+      const checklistItems = document.querySelectorAll('#party-checklist .party-check-input');
+      if (checklistItems.length === 0) {
+        throw new Error('Hero of Alefgard is not present in party checklist!');
+      }
+      const gold = document.getElementById('gold-gp')?.value;
+      if (gold !== '0') {
+        throw new Error('Gold should initially be 0, found: ' + gold);
+      }
+      const sharedText = document.getElementById('shared-items-textarea')?.value;
+      if (sharedText && sharedText.trim() !== '') {
+        throw new Error('Shared stash items should initially be empty, found: ' + sharedText);
+      }
+      console.log('✔ Initial inventory state verified: 1 player character available, 0 GP purse, empty shared stash.');
+    })()`,
+    minHold: 3500,
+  },
+  {
+    narration: "We assign the Hero of Alefgard as the active party leader in Wedge formation, embarking from the Tantegel Castle Throne Room scene.",
+    target: "#party-leader-select",
+    action: "hover",
+    callout: "Configure Party: Hero of Alefgard, Wedge Formation",
+    js: `(() => {
+      state.activeCampaignSlug = 'dragonwarrior-1-usa';
+      const campSlugEl = document.getElementById('camp-slug');
+      if (campSlugEl) campSlugEl.value = 'dragonwarrior-1-usa';
+      const campTitleEl = document.getElementById('camp-title');
+      if (campTitleEl) campTitleEl.value = 'Dragon Warrior (USA)';
+      const campSettingEl = document.getElementById('camp-setting');
+      if (campSettingEl) campSettingEl.value = 'Alefgard (NES / Chunsoft)';
+
+      const heroCheck = document.querySelector('#party-checklist .party-check-input');
+      if (heroCheck && !heroCheck.checked) {
+        heroCheck.checked = true;
+        heroCheck.dispatchEvent(new Event('change'));
+      }
+      const leaderSel = document.getElementById('party-leader-select');
+      if (leaderSel && leaderSel.options.length > 0) {
+        leaderSel.selectedIndex = 0;
+        leaderSel.dispatchEvent(new Event('change'));
+      }
+      const formSel = document.getElementById('party-formation-select');
+      if (formSel) {
+        formSel.value = 'wedge';
+        formSel.dispatchEvent(new Event('change'));
+      }
+      const sceneSel = document.getElementById('inventory-scene-select');
+      if (sceneSel && Array.from(sceneSel.options).some(o => o.value === 'tantegel-throne-room')) {
+        sceneSel.value = 'tantegel-throne-room';
+        sceneSel.dispatchEvent(new Event('change'));
+      }
+      console.log('✔ Active party configured: 1 member, Wedge formation, Tantegel Throne Room scene.');
+    })()`,
+    minHold: 4500,
+  },
+  {
+    narration: "King Loric grants 120 Gold from the royal treasury to aid in our quest. We input 120 GP into the party purse.",
+    target: "#gold-gp",
+    action: "hover",
+    callout: "Grant Royal Treasury: 120 GP",
+    js: `(() => {
+      const gp = document.getElementById('gold-gp');
+      if (gp) {
+        gp.value = 120;
+        gp.dispatchEvent(new Event('input'));
+      }
+      const sp = document.getElementById('gold-sp');
+      if (sp) sp.value = 0;
+      const cp = document.getElementById('gold-cp');
+      if (cp) cp.value = 0;
+      console.log('✔ Party purse funded with 120 GP.');
+    })()`,
+    minHold: 3500,
+  },
+  {
+    narration: "From the three royal chests in Tantegel Castle, we add the starting items: Torch, Magic Key, and Herb.",
+    target: "#shared-items-textarea",
+    action: "hover",
+    callout: "Add Starting Chest Items: Torch, Magic Key, Herb",
+    js: `(() => {
+      const stash = document.getElementById('shared-items-textarea');
+      if (stash) {
+        stash.value = "Torch (x1)\\nMagic Key (x1)\\nHerb (x1)";
+        stash.dispatchEvent(new Event('input'));
+      }
+      console.log('✔ Shared stash populated with starting items.');
+    })()`,
+    minHold: 4000,
+  },
+  {
+    narration: "We equip the Hero of Alefgard with his starting gear: Bamboo Pole weapon, Clothes armor, Traveler's Cloak, Leather Boots, and a quick-slot Herb.",
+    target: ".equipment-slots-grid",
+    action: "hover",
+    callout: "Equip Hero of Alefgard: Bamboo Pole & Clothes",
+    js: `(() => {
+      const equipHeroSelect = document.getElementById('equip-hero-select');
+      if (equipHeroSelect && equipHeroSelect.options.length > 0) {
+        equipHeroSelect.selectedIndex = 0;
+        equipHeroSelect.dispatchEvent(new Event('change'));
+      }
+      document.getElementById('equip-mainhand').value = 'Bamboo Pole';
+      document.getElementById('equip-offhand').value = '';
+      document.getElementById('equip-armor').value = 'Clothes';
+      document.getElementById('equip-helmet').value = '';
+      document.getElementById('equip-cloak').value = "Traveler's Cloak";
+      document.getElementById('equip-boots').value = 'Leather Boots';
+      document.getElementById('equip-ring1').value = '';
+      document.getElementById('equip-quickitems').value = 'Herb (x1)';
+      persistEquipSlotsToHero();
+      console.log('✔ Hero of Alefgard equipped with Bamboo Pole, Clothes, Cloak, Boots, Herb.');
+    })()`,
+    minHold: 4500,
+  },
+  {
+    narration: "We click 'Save Inventory' to persist the party configuration, purse, stash, and Hero equipment directly to the Knowledge Graph.",
+    target: "#btn-save-inventory",
+    action: "click",
+    callout: "Save Party Inventory & Hero Equipment JSON-LD",
+    js: `(async () => {
+      await saveInventory();
+      await new Promise(r => setTimeout(r, 800));
+      console.log('✔ Inventory saved successfully.');
+    })()`,
+    minHold: 4500,
+  },
+  {
+    narration: "Switching back to the Campaign tab, the live stat cards reflect 1 Active Party Member, 1 Player Character, and 120 GP in the treasury.",
+    target: ".nav-tab-btn[data-pane='pane-campaign']",
+    action: "click",
+    callout: "Verify Campaign Stats: 120 GP, 1 Party Member",
+    js: `(async () => {
+      document.querySelector(".nav-tab-btn[data-pane='pane-campaign']")?.click();
+      const gold = document.getElementById('stat-gold-count')?.textContent;
+      const party = document.getElementById('stat-party-count')?.textContent;
+      const heroes = document.getElementById('stat-heroes-count')?.textContent;
+
+      if (gold !== '120 gp') {
+        throw new Error('Assertion failed: Campaign stat-gold-count is ' + gold + ' instead of 120 gp');
+      }
+      if (party !== '1') {
+        throw new Error('Assertion failed: Campaign stat-party-count is ' + party + ' instead of 1');
+      }
+      if (heroes !== '1') {
+        throw new Error('Assertion failed: Campaign stat-heroes-count is ' + heroes + ' instead of 1');
+      }
+
+      // Also ensure campaign fields and persist
+      document.getElementById('camp-slug').value = 'dragonwarrior-1-usa';
+      document.getElementById('camp-title').value = 'Dragon Warrior (USA)';
+      document.getElementById('camp-setting').value = 'Alefgard (NES / Chunsoft)';
+      await saveCurrentCampaign();
+      console.log('✔ Campaign stats validated in DOM: 120 gp, 1 active party member, 1 player character.');
+    })()`,
+    minHold: 4500,
+  },
 ];
 
 async function main() {
-  console.log("=== RobOS cRPG Editor E2E: Screens 1 & 2 - Map & Characters ===");
+  console.log("=== RobOS cRPG Editor E2E: Screens 1, 2 & 3 - Map, Characters & Inventory ===");
 
   // 1. Pre-test cleanup: Guarantee blank sandboxed state
   console.log(`Pre-test sandboxing: Ensuring clean isolated directory at ${SANDBOX_DIR}...`);
@@ -880,6 +1051,50 @@ async function main() {
   }
   console.log("✔ Assertion 9 Passed: King Loric NPC JSON-LD, map link, and dialogue verified");
 
+  // ==========================================
+  // SCREEN 3 ASSERTIONS: INVENTORY & EQUIPMENT
+  // ==========================================
+  // Assertion 10: Validate Hero of Alefgard Equipment slots saved on disk
+  const reloadedHeroData = JSON.parse(fs.readFileSync(HERO_PATH, "utf8"));
+  if (reloadedHeroData.mainHand !== "Bamboo Pole" && reloadedHeroData["robos:mainHand"] !== "Bamboo Pole") {
+    throw new Error(`Assertion failed: Hero mainHand weapon mismatch: ${reloadedHeroData.mainHand}`);
+  }
+  if (reloadedHeroData.armor !== "Clothes" && reloadedHeroData["robos:armor"] !== "Clothes") {
+    throw new Error(`Assertion failed: Hero armor mismatch: ${reloadedHeroData.armor}`);
+  }
+  if (reloadedHeroData.quickItems !== "Herb (x1)" && reloadedHeroData["robos:quickItems"] !== "Herb (x1)") {
+    throw new Error(`Assertion failed: Hero quickItems mismatch: ${reloadedHeroData.quickItems}`);
+  }
+  console.log("✔ Assertion 10 Passed: Hero of Alefgard equipment slots verified on disk (Bamboo Pole, Clothes, Herb)");
+
+  // Assertion 11: Validate Campaign Shared Inventory & Party
+  if (!fs.existsSync(CAMPAIGN_PATH)) {
+    throw new Error(`Assertion failed: Campaign file does not exist at ${CAMPAIGN_PATH}`);
+  }
+  console.log("✔ Assertion 11 Passed: Campaign file exists at", CAMPAIGN_PATH);
+
+  const campaignData = JSON.parse(fs.readFileSync(CAMPAIGN_PATH, "utf8"));
+  const gsData = campaignData["robos:gameState"] || campaignData.gameState;
+  if (!gsData) {
+    throw new Error("Assertion failed: Campaign missing robos:gameState");
+  }
+  const sharedInv = gsData["robos:sharedInventory"] || gsData.sharedInventory;
+  if (!sharedInv || Number(sharedInv.gold) !== 120) {
+    throw new Error(`Assertion failed: Shared inventory gold mismatch: ${sharedInv ? sharedInv.gold : "missing"}`);
+  }
+  const items = sharedInv.items || [];
+  if (!items.includes("Torch (x1)") || !items.includes("Magic Key (x1)") || !items.includes("Herb (x1)")) {
+    throw new Error(`Assertion failed: Shared items missing starting chest items: ${JSON.stringify(items)}`);
+  }
+  if (gsData["robos:partyFormation"] !== "wedge") {
+    throw new Error(`Assertion failed: Party formation mismatch: ${gsData["robos:partyFormation"]}`);
+  }
+  const activeParty = gsData["robos:activeParty"] || [];
+  if (activeParty.length !== 1 || !activeParty[0].includes("hero-of-alefgard")) {
+    throw new Error(`Assertion failed: Active party mismatch: ${JSON.stringify(activeParty)}`);
+  }
+  console.log("✔ Assertion 12 Passed: Campaign shared inventory (120 GP, Torch, Magic Key, Herb) & Wedge formation verified");
+
   // 3. Copy artifacts to persistent walkthrough and brain directories
   fs.mkdirSync(PERSIST_DIR, { recursive: true });
   fs.mkdirSync(BRAIN_DIR, { recursive: true });
@@ -901,6 +1116,8 @@ async function main() {
     const frameHeroPath = path.join(BRAIN_DIR, "crpg_editor_hero_alefgard_authored.png");
     const frameKingPath = path.join(BRAIN_DIR, "crpg_editor_king_loric_authored.png");
     const frameCharSearchPath = path.join(BRAIN_DIR, "crpg_editor_char_search_filter.png");
+    const frameInvPath = path.join(BRAIN_DIR, "crpg_editor_inventory_screen.png");
+    const frameCampPath = path.join(BRAIN_DIR, "crpg_editor_campaign_overview_with_party.png");
 
     try {
       execSync(`ffmpeg -y -ss 00:00:03 -i "${finalVideo}" -vframes 1 "${frameEmptyPath}"`, { stdio: "ignore" });
@@ -910,7 +1127,9 @@ async function main() {
       execSync(`ffmpeg -y -ss 00:01:18 -i "${finalVideo}" -vframes 1 "${frameHeroPath}"`, { stdio: "ignore" });
       execSync(`ffmpeg -y -ss 00:01:33 -i "${finalVideo}" -vframes 1 "${frameKingPath}"`, { stdio: "ignore" });
       execSync(`ffmpeg -y -ss 00:01:43 -i "${finalVideo}" -vframes 1 "${frameCharSearchPath}"`, { stdio: "ignore" });
-      console.log(`Extracted review frames:\n  - ${frameEmptyPath}\n  - ${frameModalPath}\n  - ${frameMapPath}\n  - ${frameCharEmptyPath}\n  - ${frameHeroPath}\n  - ${frameKingPath}\n  - ${frameCharSearchPath}`);
+      execSync(`ffmpeg -y -ss 00:02:18 -i "${finalVideo}" -vframes 1 "${frameInvPath}"`, { stdio: "ignore" });
+      execSync(`ffmpeg -y -ss 00:02:34 -i "${finalVideo}" -vframes 1 "${frameCampPath}"`, { stdio: "ignore" });
+      console.log(`Extracted review frames:\n  - ${frameEmptyPath}\n  - ${frameModalPath}\n  - ${frameMapPath}\n  - ${frameCharEmptyPath}\n  - ${frameHeroPath}\n  - ${frameKingPath}\n  - ${frameCharSearchPath}\n  - ${frameInvPath}\n  - ${frameCampPath}`);
     } catch (err) {
       console.warn("Could not extract frames:", err.message);
     }
@@ -922,7 +1141,7 @@ async function main() {
   }
 
   console.log("\n=======================================================");
-  console.log("🎉 SCREENS 1 & 2 (MAP & CHARACTERS) CREATED, SAVED, AND ASSERTED SUCCESSFULLY!");
+  console.log("🎉 SCREENS 1, 2 & 3 (MAP, CHARACTERS, INVENTORY) CREATED, SAVED, AND ASSERTED SUCCESSFULLY!");
   console.log("=======================================================");
 }
 
