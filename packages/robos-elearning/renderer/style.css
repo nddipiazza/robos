@@ -281,11 +281,13 @@ body { background: var(--bg-primary); color: var(--text); height: 100vh; display
 .lab-checkbox { margin-top: 3px; cursor: pointer; }
 .lab-step-text { font-size: 13px; line-height: 1.5; }
 .quiz-section { background: #0d1117; border: 1px solid var(--border); border-radius: 6px; padding: 20px; }
+.quiz-item { margin-bottom: 24px; }
+.quiz-item:last-child { margin-bottom: 0; }
 .quiz-q { font-size: 14px; font-weight: 600; color: var(--text-bright); margin-bottom: 12px; }
 .quiz-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
 .quiz-opt { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; font-size: 13px; }
 .quiz-opt:hover { border-color: var(--accent); }
-.quiz-feedback { margin-top: 10px; padding: 8px 12px; border-radius: 4px; font-size: 12px; font-weight: 500; display: none; }
+.quiz-feedback { margin-top: 10px; margin-bottom: 20px; padding: 12px 16px 14px 16px; border-radius: 6px; font-size: 13px; line-height: 1.5; font-weight: 500; display: none; }
 .quiz-feedback.pass { background: rgba(46, 160, 67, 0.15); color: #3fb950; border: 1px solid rgba(46, 160, 67, 0.3); display: block; }
 .quiz-feedback.fail { background: rgba(248, 81, 73, 0.15); color: #f85149; border: 1px solid rgba(248, 81, 73, 0.3); display: block; }
 .btn { padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; }

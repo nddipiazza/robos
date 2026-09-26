@@ -315,16 +315,18 @@ function renderModule(idx) {
         <div class="section-title">📝 Module Knowledge Check</div>
         <div class="quiz-section">
           ${m.quiz.map((q, qIdx) => `
-            <div class="quiz-q">Question: ${q.question}</div>
-            <div class="quiz-options">
-              ${(q.options || [q.answer, 'Alternative incorrect choice A', 'Alternative incorrect choice B']).map((opt) => `
-                <label class="quiz-opt">
-                  <input type="radio" name="quiz-${idx}-${qIdx}" value="${opt.replace(/"/g, '&quot;')}" onchange="checkQuiz(${idx}, ${qIdx}, this.value, '${q.answer.replace(/"/g, '&quot;')}')">
-                  <span>${opt}</span>
-                </label>
-              `).join('')}
+            <div class="quiz-item">
+              <div class="quiz-q">Question: ${q.question}</div>
+              <div class="quiz-options">
+                ${(q.options || [q.answer, 'Alternative incorrect choice A', 'Alternative incorrect choice B']).map((opt) => `
+                  <label class="quiz-opt">
+                    <input type="radio" name="quiz-${idx}-${qIdx}" value="${opt.replace(/"/g, '&quot;')}" onchange="checkQuiz(${idx}, ${qIdx}, this.value, '${q.answer.replace(/"/g, '&quot;')}')">
+                    <span>${opt}</span>
+                  </label>
+                `).join('')}
+              </div>
+              <div class="quiz-feedback" id="feedback-${idx}-${qIdx}"></div>
             </div>
-            <div class="quiz-feedback" id="feedback-${idx}-${qIdx}"></div>
           `).join('')}
         </div>
       ` : ''}

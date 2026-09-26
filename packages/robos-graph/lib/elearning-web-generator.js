@@ -961,9 +961,11 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
     }
     .quiz-feedback {
       margin-top: 10px;
-      padding: 10px 14px;
+      margin-bottom: 20px;
+      padding: 12px 16px 14px 16px;
       border-radius: var(--radius-sm);
-      font-size: 12px;
+      font-size: 13px;
+      line-height: 1.5;
       display: none;
     }
     .quiz-feedback.pass {

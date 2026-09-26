@@ -840,9 +840,11 @@ body {
 .quiz-option-label:hover { border-color: var(--accent); }
 .quiz-feedback {
   margin-top: 10px;
-  padding: 8px 12px;
-  border-radius: 4px;
-  font-size: 12px;
+  margin-bottom: 20px;
+  padding: 12px 16px 14px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.5;
   font-weight: 500;
   display: none;
 }
