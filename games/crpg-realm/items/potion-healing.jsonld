@@ -1,0 +1,40 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:item:potion-healing",
+  "@type": [
+    "robos:CRPGItem",
+    "schema:Product",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Potion of Healing",
+  "schema:name": "Potion of Healing",
+  "robos:slug": "potion-healing",
+  "slug": "potion-healing",
+  "robos:itemCategory": "consumable",
+  "itemCategory": "consumable",
+  "robos:equipSlot": "quick_item",
+  "equipSlot": "quick_item",
+  "robos:cost": 50,
+  "cost": 50,
+  "robos:weight": 0.5,
+  "weight": 0.5,
+  "robos:rarity": "common",
+  "rarity": "common",
+  "robos:icon": "🧪",
+  "icon": "🧪",
+  "robos:damageDice": "",
+  "damageDice": "",
+  "robos:damageType": "",
+  "damageType": "",
+  "robos:acBonus": 0,
+  "acBonus": 0,
+  "robos:effect": "Restores 2d4+2 HP",
+  "effect": "Restores 2d4+2 HP",
+  "dcterms:description": "Standard red restorative brew.",
+  "description": "Standard red restorative brew."
+}

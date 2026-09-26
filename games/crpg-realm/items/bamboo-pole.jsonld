@@ -1,0 +1,40 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:item:bamboo-pole",
+  "@type": [
+    "robos:CRPGItem",
+    "schema:Product",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Bamboo Pole",
+  "schema:name": "Bamboo Pole",
+  "robos:slug": "bamboo-pole",
+  "slug": "bamboo-pole",
+  "robos:itemCategory": "weapon",
+  "itemCategory": "weapon",
+  "robos:equipSlot": "main_hand",
+  "equipSlot": "main_hand",
+  "robos:cost": 10,
+  "cost": 10,
+  "robos:weight": 2,
+  "weight": 2,
+  "robos:rarity": "common",
+  "rarity": "common",
+  "robos:icon": "🎋",
+  "icon": "🎋",
+  "robos:damageDice": "1d4-1",
+  "damageDice": "1d4-1",
+  "robos:damageType": "bludgeoning",
+  "damageType": "bludgeoning",
+  "robos:acBonus": 0,
+  "acBonus": 0,
+  "robos:effect": "+1 ATK",
+  "effect": "+1 ATK",
+  "dcterms:description": "A basic walking pole crafted from hardened bamboo.",
+  "description": "A basic walking pole crafted from hardened bamboo."
+}

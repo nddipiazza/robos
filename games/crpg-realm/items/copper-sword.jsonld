@@ -1,0 +1,40 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:item:copper-sword",
+  "@type": [
+    "robos:CRPGItem",
+    "schema:Product",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Copper Sword",
+  "schema:name": "Copper Sword",
+  "robos:slug": "copper-sword",
+  "slug": "copper-sword",
+  "robos:itemCategory": "weapon",
+  "itemCategory": "weapon",
+  "robos:equipSlot": "main_hand",
+  "equipSlot": "main_hand",
+  "robos:cost": 180,
+  "cost": 180,
+  "robos:weight": 5,
+  "weight": 5,
+  "robos:rarity": "common",
+  "rarity": "common",
+  "robos:icon": "🗡️",
+  "icon": "🗡️",
+  "robos:damageDice": "1d6",
+  "damageDice": "1d6",
+  "robos:damageType": "slashing",
+  "damageType": "slashing",
+  "robos:acBonus": 0,
+  "acBonus": 0,
+  "robos:effect": "+2 ATK",
+  "effect": "+2 ATK",
+  "dcterms:description": "A sturdy forged copper blade.",
+  "description": "A sturdy forged copper blade."
+}

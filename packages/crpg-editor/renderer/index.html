@@ -266,10 +266,10 @@
           </div>
 
           <!-- Middle Section: Independent Maps & Characters Composition -->
-          <div class="campaign-grid-middle" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+          <div class="campaign-grid-middle">
             <!-- Maps Selection -->
             <div class="panel">
-              <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+              <div class="panel-header">
                 <h2>Campaign Maps (<span id="camp-maps-count">0</span>)</h2>
                 <div style="display: flex; gap: 6px;">
                   <button id="btn-select-all-maps" class="btn btn-sm btn-secondary">Select All</button>
@@ -292,7 +292,7 @@
 
             <!-- Characters Selection -->
             <div class="panel">
-              <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+              <div class="panel-header">
                 <h2>Campaign Characters (<span id="camp-chars-count">0</span>)</h2>
                 <div style="display: flex; gap: 6px;">
                   <button id="btn-select-all-heroes" class="btn btn-sm btn-secondary">All Player Characters</button>
@@ -330,18 +330,20 @@
                 <button id="btn-add-flag" class="btn btn-sm btn-primary">+ Add Flag</button>
               </div>
               <div class="panel-body">
-                <table class="flags-table">
-                  <thead>
-                    <tr>
-                      <th>Flag Key</th>
-                      <th>Value</th>
-                      <th style="width: 50px;">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody id="flags-table-body">
-                    <!-- Populated via JS -->
-                  </tbody>
-                </table>
+                <div class="flags-table-container">
+                  <table class="flags-table">
+                    <thead>
+                      <tr>
+                        <th>Flag Key</th>
+                        <th>Value</th>
+                        <th style="width: 50px;">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody id="flags-table-body">
+                      <!-- Populated via JS -->
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
@@ -419,11 +421,11 @@
                 <!-- Structured Item Stash -->
                 <div class="form-group" style="margin-top: 14px;">
                   <label style="display: block; margin-bottom: 6px;">Campaign Shared Stash</label>
-                  <div class="stash-add-row" style="display: flex; gap: 8px; margin-bottom: 10px;">
-                    <select id="stash-item-picker" class="dropdown-select" style="flex: 1;">
+                  <div class="stash-add-row">
+                    <select id="stash-item-picker" class="dropdown-select">
                       <option value="">(Select item to add...)</option>
                     </select>
-                    <input type="number" id="stash-item-qty" class="input-number" min="1" value="1" style="width: 70px;" title="Quantity">
+                    <input type="number" id="stash-item-qty" class="input-number" min="1" value="1" title="Quantity">
                     <button id="btn-add-stash-item" class="btn btn-secondary btn-sm" type="button">+ Add</button>
                   </div>
                   <div class="stash-table-box">
@@ -432,7 +434,7 @@
                         <tr>
                           <th style="width: 28px;"></th>
                           <th>Item Name</th>
-                          <th style="width: 80px;">Category</th>
+                          <th style="width: 90px;">Category</th>
                           <th style="width: 50px; text-align: center;">Qty</th>
                           <th style="width: 40px; text-align: center;"></th>
                         </tr>
@@ -448,15 +450,34 @@
               </div>
             </div>
 
-            <!-- Column 3: Per-Hero Equipment Slots -->
+            <!-- Column 3: Character & NPC Equipment Slots -->
             <div class="panel">
-              <div class="panel-header">
-                <h2>Equipment Slots Inspector</h2>
-                <select id="equip-hero-select" class="dropdown-select">
-                  <!-- Populated from heroes -->
-                </select>
+              <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                <h2 style="white-space: nowrap;">Equipment Slots Inspector</h2>
+                <div style="display: flex; align-items: center; gap: 6px; min-width: 0;">
+                  <label for="equip-hero-select" style="font-size: 11px; color: var(--text-muted); white-space: nowrap;">Character:</label>
+                  <select id="equip-hero-select" class="dropdown-select" style="max-width: 190px; min-width: 120px;">
+                    <!-- Populated with PCs and NPCs -->
+                  </select>
+                </div>
               </div>
               <div class="panel-body">
+                <!-- Infinity Engine Weight & Encumbrance Meter -->
+                <div class="encumbrance-meter-box" id="campaign-encumbrance-box">
+                  <div class="encumbrance-header">
+                    <span class="encumbrance-title">⚖️ Carrying Capacity & Weight:</span>
+                    <span class="encumbrance-weight" id="encumb-weight-display">0.0 / 200.0 lbs</span>
+                    <span class="encumbrance-badge normal" id="encumb-badge-display">Normal</span>
+                  </div>
+                  <div class="encumbrance-bar-track">
+                    <div class="encumbrance-bar-fill normal" id="encumb-bar-fill" style="width: 0%;"></div>
+                  </div>
+                  <div class="encumbrance-footer">
+                    <span id="encumb-str-desc">STR 16 (Infinity Engine Capacity: 200 lbs)</span>
+                    <span id="encumb-penalty-desc">Normal Movement Speed</span>
+                  </div>
+                </div>
+
                 <div class="equipment-slots-grid">
                   <div class="equip-slot-item">
                     <label for="equip-mainhand">Main Hand (Weapon)</label>
@@ -494,17 +515,21 @@
                       <option value="">(Empty)</option>
                     </select>
                   </div>
-                  <div class="equip-slot-item">
+                  <div class="equip-slot-item col-span-2">
                     <label for="equip-ring1">Ring / Accessory</label>
                     <select id="equip-ring1" class="dropdown-select equip-slot-select full-width">
                       <option value="">(Empty)</option>
                     </select>
                   </div>
-                  <div class="equip-slot-item">
-                    <label for="equip-quickitems">Quick Items / Potions</label>
-                    <select id="equip-quickitems" class="dropdown-select equip-slot-select full-width">
+                  <div class="equip-slot-item col-span-2">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                      <label for="equip-quickitems">🧪 Quick Items / Potions (Multi-Select)</label>
+                      <span style="font-size: 10px; color: var(--text-muted);">(Ctrl+Click for multiple)</span>
+                    </div>
+                    <select id="equip-quickitems" class="quickitems-multiselect full-width" multiple size="4">
                       <option value="">(Empty)</option>
                     </select>
+                    <div id="equip-quickitems-pills" class="quickitems-pills-row" style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px;"></div>
                   </div>
                 </div>
               </div>
@@ -695,6 +720,10 @@
                   <label for="npc-row">Grid Row (Row)</label>
                   <input type="number" id="npc-row" class="input-number" min="0" value="0">
                 </div>
+                <div class="form-group">
+                  <label for="npc-str">Strength (STR - Carrying Capacity)</label>
+                  <input type="number" id="npc-str" class="input-number" min="1" max="30" value="10">
+                </div>
               </div>
               <div class="form-group">
                 <label for="npc-dialogue">Dialogue Script & Pages (Lines spoken by this NPC)</label>
@@ -836,6 +865,66 @@
             </div>
           </div> <!-- End #section-hero-details -->
 
+          <!-- Character Equipment & Infinity Engine Encumbrance Section (Shared for PCs and NPCs) -->
+          <div class="sheet-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <h3>Equipped Items & Infinity Engine Carrying Capacity</h3>
+              <span class="encumbrance-badge normal" id="char-sheet-encumb-badge">Normal</span>
+            </div>
+
+            <!-- Encumbrance Meter on Character Sheet -->
+            <div class="encumbrance-meter-box" style="margin-bottom: 14px;">
+              <div class="encumbrance-header">
+                <span class="encumbrance-title">⚖️ Carried Weight:</span>
+                <span class="encumbrance-weight" id="char-sheet-encumb-weight">0.0 / 200.0 lbs</span>
+                <span style="font-size: 11px; color: var(--text-muted);" id="char-sheet-encumb-str">STR 16 (Infinity Engine Capacity: 200 lbs)</span>
+              </div>
+              <div class="encumbrance-bar-track">
+                <div class="encumbrance-bar-fill normal" id="char-sheet-encumb-bar-fill" style="width: 0%;"></div>
+              </div>
+              <div class="encumbrance-footer">
+                <span id="char-sheet-encumb-status">🟢 Normal (Unencumbered)</span>
+                <span id="char-sheet-encumb-penalty">Full movement speed</span>
+              </div>
+            </div>
+
+            <!-- Equipment slots for this character / NPC -->
+            <div class="equipment-slots-grid">
+              <div class="equip-slot-item">
+                <label for="char-equip-mainhand">Main Hand (Weapon)</label>
+                <select id="char-equip-mainhand" class="dropdown-select equip-slot-select full-width">
+                  <option value="">(Empty)</option>
+                </select>
+              </div>
+              <div class="equip-slot-item">
+                <label for="char-equip-offhand">Off Hand (Shield)</label>
+                <select id="char-equip-offhand" class="dropdown-select equip-slot-select full-width">
+                  <option value="">(Empty)</option>
+                </select>
+              </div>
+              <div class="equip-slot-item">
+                <label for="char-equip-armor">Armor / Body</label>
+                <select id="char-equip-armor" class="dropdown-select equip-slot-select full-width">
+                  <option value="">(Empty)</option>
+                </select>
+              </div>
+              <div class="equip-slot-item">
+                <label for="char-equip-cloak">Cloak / Shoulders</label>
+                <select id="char-equip-cloak" class="dropdown-select equip-slot-select full-width">
+                  <option value="">(Empty)</option>
+                </select>
+              </div>
+              <div class="equip-slot-item col-span-2">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                  <label for="char-equip-quickitems">🧪 Quick Items / Potions (Multi-Select)</label>
+                  <span style="font-size: 10px; color: var(--text-muted);">(Ctrl+Click for multiple)</span>
+                </div>
+                <select id="char-equip-quickitems" class="quickitems-multiselect full-width" multiple size="4">
+                  <option value="">(Empty)</option>
+                </select>
+                <div id="char-equip-quickitems-pills" class="quickitems-pills-row" style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px;"></div>
+              </div>
+            </div>
           <!-- Lore, Backstory & Notes Section (Shared) -->
           <div class="sheet-section">
             <h3>Character Lore, Backstory & Notes</h3>

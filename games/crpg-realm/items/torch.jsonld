@@ -1,0 +1,40 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:item:torch",
+  "@type": [
+    "robos:CRPGItem",
+    "schema:Product",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Torch",
+  "schema:name": "Torch",
+  "robos:slug": "torch",
+  "slug": "torch",
+  "robos:itemCategory": "tool",
+  "itemCategory": "tool",
+  "robos:equipSlot": "quick_item",
+  "equipSlot": "quick_item",
+  "robos:cost": 8,
+  "cost": 8,
+  "robos:weight": 1,
+  "weight": 1,
+  "robos:rarity": "common",
+  "rarity": "common",
+  "robos:icon": "🔥",
+  "icon": "🔥",
+  "robos:damageDice": "",
+  "damageDice": "",
+  "robos:damageType": "",
+  "damageType": "",
+  "robos:acBonus": 0,
+  "acBonus": 0,
+  "robos:effect": "Illuminates caves 3x3",
+  "effect": "Illuminates caves 3x3",
+  "dcterms:description": "A wooden torch dipped in pitch.",
+  "description": "A wooden torch dipped in pitch."
+}

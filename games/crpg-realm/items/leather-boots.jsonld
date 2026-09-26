@@ -1,0 +1,40 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:item:leather-boots",
+  "@type": [
+    "robos:CRPGItem",
+    "schema:Product",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Leather Boots",
+  "schema:name": "Leather Boots",
+  "robos:slug": "leather-boots",
+  "slug": "leather-boots",
+  "robos:itemCategory": "accessory",
+  "itemCategory": "accessory",
+  "robos:equipSlot": "boots",
+  "equipSlot": "boots",
+  "robos:cost": 15,
+  "cost": 15,
+  "robos:weight": 3,
+  "weight": 3,
+  "robos:rarity": "common",
+  "rarity": "common",
+  "robos:icon": "🥾",
+  "icon": "🥾",
+  "robos:damageDice": "",
+  "damageDice": "",
+  "robos:damageType": "",
+  "damageType": "",
+  "robos:acBonus": 0,
+  "acBonus": 0,
+  "robos:effect": "Normal terrain traction",
+  "effect": "Normal terrain traction",
+  "dcterms:description": "Durable reinforced boots.",
+  "description": "Durable reinforced boots."
+}

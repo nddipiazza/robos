@@ -548,6 +548,25 @@ function setupCampaignHandlers() {
     gs['robos:worldFlags'][key] = true;
     renderStoryFlags();
   });
+
+  const updateCampSelectDraftText = () => {
+    const select = document.getElementById('campaign-select');
+    if (!select) return;
+    const currentSlug = document.getElementById('camp-slug')?.value.trim() || state.activeCampaignSlug;
+    const currentTitle = document.getElementById('camp-title')?.value.trim() || 'New Campaign';
+    let opt = select.querySelector(`option[value="${currentSlug}"]`);
+    if (!opt && currentSlug) {
+      opt = document.createElement('option');
+      opt.value = currentSlug;
+      select.insertBefore(opt, select.firstChild);
+      select.value = currentSlug;
+    }
+    if (opt) {
+      opt.textContent = `✨ ${currentTitle} (${currentSlug})`;
+    }
+  };
+  document.getElementById('camp-title')?.addEventListener('input', updateCampSelectDraftText);
+  document.getElementById('camp-slug')?.addEventListener('input', updateCampSelectDraftText);
 }
 
 function switchCampaignSubpane(subpaneId) {
@@ -564,7 +583,7 @@ function switchCampaignSubpane(subpaneId) {
   }
 }
 
-async function loadCampaignsList() {
+async function loadCampaignsList(preferredSlug) {
   try {
     const res = await window.robos.listCampaigns();
     if (res.success) {
@@ -577,7 +596,12 @@ async function loadCampaignsList() {
       }
 
       if (state.campaigns.length > 0) {
-        await loadCampaign(state.campaigns[0].slug);
+        const targetSlug = preferredSlug && state.campaigns.some(c => c.slug === preferredSlug)
+          ? preferredSlug
+          : (state.activeCampaignSlug && state.campaigns.some(c => c.slug === state.activeCampaignSlug)
+            ? state.activeCampaignSlug
+            : state.campaigns[0].slug);
+        await loadCampaign(targetSlug);
       } else {
         createNewCampaign();
       }
@@ -734,6 +758,19 @@ function createNewCampaign() {
   populateCampStartingMapDropdown();
   renderCampaignMapsChecklist();
   renderCampaignCharactersChecklist();
+
+  // Populate / select in campaign dropdown immediately
+  const campSelect = document.getElementById('campaign-select');
+  if (campSelect) {
+    let opt = campSelect.querySelector(`option[value="${safeSlug}"]`);
+    if (!opt) {
+      opt = document.createElement('option');
+      opt.value = safeSlug;
+      campSelect.insertBefore(opt, campSelect.firstChild);
+    }
+    opt.textContent = `✨ New Campaign (${safeSlug})`;
+    campSelect.value = safeSlug;
+  }
 
   state.activeHeroId = null;
   state.activeEquipHeroId = null;
@@ -928,7 +965,7 @@ async function saveCurrentCampaign() {
     if (res.success) {
       state.activeCampaignSlug = res.slug;
       setStatus(`Saved campaign successfully!`, res.filePath);
-      await loadCampaignsList();
+      await loadCampaignsList(res.slug);
       const select = document.getElementById('campaign-select');
       if (select) select.value = res.slug;
     } else {
@@ -1201,6 +1238,29 @@ function setupCharacterHandlers() {
     const titleEl = document.getElementById('sheet-hero-title');
     if (titleEl) titleEl.textContent = `${e.target.value || 'Character'} (${isNpc ? 'NPC' : 'Player Character'})`;
   });
+
+  // Character Sheet Equipment & Strength Encumbrance Listeners
+  ['char-equip-mainhand', 'char-equip-offhand', 'char-equip-armor', 'char-equip-cloak'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', () => {
+      updateCharSheetEncumbranceMeter();
+    });
+  });
+
+  const csQuickSel = document.getElementById('char-equip-quickitems');
+  csQuickSel?.addEventListener('change', () => {
+    renderQuickItemPills('char-equip-quickitems-pills', 'char-equip-quickitems', () => {
+      updateCharSheetEncumbranceMeter();
+    });
+    updateCharSheetEncumbranceMeter();
+  });
+
+  document.getElementById('attr-str')?.addEventListener('input', () => {
+    updateCharSheetEncumbranceMeter();
+  });
+
+  document.getElementById('npc-str')?.addEventListener('input', () => {
+    updateCharSheetEncumbranceMeter();
+  });
 }
 
 function showEmptyCharacterState() {
@@ -1401,6 +1461,8 @@ async function loadCharacterSheet(slug) {
       document.getElementById('npc-facing').value = data['robos:facing'] || data.facing || 'down';
       document.getElementById('npc-col').value = data['robos:col'] ?? data.col ?? 0;
       document.getElementById('npc-row').value = data['robos:row'] ?? data.row ?? 0;
+      const npcStrInput = document.getElementById('npc-str');
+      if (npcStrInput) npcStrInput.value = data['robos:str'] || data.str || 10;
 
       const dialogue = data['robos:dialogue'] || data.dialogue || '';
       document.getElementById('npc-dialogue').value = Array.isArray(dialogue) ? dialogue.join('\n\n') : dialogue;
@@ -1429,6 +1491,10 @@ async function loadCharacterSheet(slug) {
 
       document.getElementById('hero-spells').value = data['robos:spells'] || data.spells || '';
       document.getElementById('hero-backstory').value = data['robos:backstory'] || data.backstory || '';
+
+      // Equipment slots & encumbrance meter for Character Sheet
+      populateCharSheetEquipmentDropdowns(data);
+      updateCharSheetEncumbranceMeter();
 
       // Update active highlight in sidebar list
       document.querySelectorAll('#heroes-list .hero-list-item').forEach(el => {
@@ -1489,6 +1555,7 @@ async function saveCurrentCharacter() {
     const facing = document.getElementById('npc-facing').value;
     const col = Number(document.getElementById('npc-col').value || 0);
     const row = Number(document.getElementById('npc-row').value || 0);
+    const npcStr = Number(document.getElementById('npc-str')?.value || 10);
     const rawDialogue = document.getElementById('npc-dialogue').value.trim();
     const dialogue = rawDialogue ? rawDialogue.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean) : [];
 
@@ -1504,6 +1571,8 @@ async function saveCurrentCharacter() {
     charData.col = col;
     charData['robos:row'] = row;
     charData.row = row;
+    charData['robos:str'] = npcStr;
+    charData.str = npcStr;
     charData['robos:dialogue'] = dialogue.length > 0 ? dialogue : [rawDialogue];
     charData.dialogue = charData['robos:dialogue'];
   } else {
@@ -1557,6 +1626,26 @@ async function saveCurrentCharacter() {
     charData['robos:spells'] = spells;
     charData.spells = spells;
   }
+
+  // Equipment slots for character (PCs and NPCs)
+  const csMainHand = document.getElementById('char-equip-mainhand')?.value || '';
+  const csOffHand = document.getElementById('char-equip-offhand')?.value || '';
+  const csArmor = document.getElementById('char-equip-armor')?.value || '';
+  const csCloak = document.getElementById('char-equip-cloak')?.value || '';
+  const csQuickSelect = document.getElementById('char-equip-quickitems');
+  const csQuickItems = getMultiSelectValues(csQuickSelect);
+  const csQuickVal = csQuickItems.length <= 1 ? (csQuickItems[0] || '') : csQuickItems;
+
+  charData['robos:mainHand'] = csMainHand;
+  charData.mainHand = csMainHand;
+  charData['robos:offHand'] = csOffHand;
+  charData.offHand = csOffHand;
+  charData['robos:armor'] = csArmor;
+  charData.armor = csArmor;
+  charData['robos:cloak'] = csCloak;
+  charData.cloak = csCloak;
+  charData['robos:quickItems'] = csQuickVal;
+  charData.quickItems = csQuickVal;
 
   try {
     setStatus(`Saving character ${slug}...`);
@@ -1618,6 +1707,9 @@ function addNewHero() {
   document.getElementById('hero-spells').value = '';
   document.getElementById('hero-backstory').value = 'A brave adventurer setting forth on a quest.';
 
+  populateCharSheetEquipmentDropdowns(null);
+  updateCharSheetEncumbranceMeter();
+
   setStatus(`Ready to configure new player character: ${safeSlug}`);
 }
 
@@ -1651,8 +1743,13 @@ function addNewNpc() {
   document.getElementById('npc-facing').value = 'down';
   document.getElementById('npc-col').value = 5;
   document.getElementById('npc-row').value = 5;
+  const npcStrInput = document.getElementById('npc-str');
+  if (npcStrInput) npcStrInput.value = 10;
   document.getElementById('npc-dialogue').value = 'Greetings, traveler. Safe journeys ahead.';
   document.getElementById('hero-backstory').value = 'A resident of the realm.';
+
+  populateCharSheetEquipmentDropdowns(null);
+  updateCharSheetEncumbranceMeter();
 
   setStatus(`Ready to configure new NPC: ${safeSlug}`);
 }
@@ -1717,6 +1814,8 @@ function applyArchetype(arch, archKey) {
     document.getElementById('npc-facing').value = arch.facing || 'down';
     document.getElementById('npc-col').value = arch.col ?? 0;
     document.getElementById('npc-row').value = arch.row ?? 0;
+    const npcStrInput = document.getElementById('npc-str');
+    if (npcStrInput) npcStrInput.value = arch.str || 10;
     document.getElementById('npc-dialogue').value = arch.dialogue || '';
   } else {
     document.getElementById('hero-level').value = arch.level || 1;
@@ -1742,8 +1841,420 @@ function applyArchetype(arch, archKey) {
     document.getElementById('hero-spells').value = arch.spells || '';
   }
 
+  populateCharSheetEquipmentDropdowns(arch);
+  updateCharSheetEncumbranceMeter();
+
   state.activeCharacterSlug = safeSlug;
   saveCurrentCharacter();
+}
+
+// ========================================================
+// INFINITY ENGINE ENCUMBRANCE & CARRYING CAPACITY ENGINE
+// ========================================================
+const INFINITY_ENGINE_ENCUMBRANCE_TABLE = {
+  1: 1, 2: 5, 3: 10, 4: 20, 5: 30, 6: 40, 7: 50, 8: 60, 9: 70, 10: 90,
+  11: 110, 12: 120, 13: 140, 14: 160, 15: 180, 16: 200, 17: 230, 18: 270,
+  19: 500, 20: 600, 21: 700, 22: 800, 23: 1000, 24: 1440, 25: 1600
+};
+
+function getCarryingCapacity(strScore) {
+  const s = Math.round(Number(strScore) || 10);
+  if (s in INFINITY_ENGINE_ENCUMBRANCE_TABLE) return INFINITY_ENGINE_ENCUMBRANCE_TABLE[s];
+  if (s < 1) return 1;
+  return Math.max(1, s * 15);
+}
+
+function getItemWeight(itemSlugOrObj) {
+  if (!itemSlugOrObj) return 0;
+  if (typeof itemSlugOrObj === 'object') {
+    if (itemSlugOrObj['robos:weight'] !== undefined) return Number(itemSlugOrObj['robos:weight']) || 0;
+    if (itemSlugOrObj.weight !== undefined) return Number(itemSlugOrObj.weight) || 0;
+    const s = itemSlugOrObj.slug || itemSlugOrObj.id;
+    if (s) return getItemWeight(s);
+    return 0;
+  }
+  const rawStr = String(itemSlugOrObj).trim();
+  if (!rawStr) return 0;
+
+  const items = state.items || [];
+  // 1. Direct match on slug / id / identifier
+  let it = items.find(x => x.slug === rawStr || x.id === rawStr || x['@id'] === rawStr || x['dcterms:identifier'] === rawStr);
+  if (it) return Number(it['robos:weight'] ?? it.weight ?? 0);
+
+  // 2. Case-insensitive slug match
+  const lower = rawStr.toLowerCase();
+  it = items.find(x => (x.slug || '').toLowerCase() === lower);
+  if (it) return Number(it['robos:weight'] ?? it.weight ?? 0);
+
+  // 3. Exact title match
+  it = items.find(x => (x['dcterms:title'] || x.title || '').toLowerCase() === lower);
+  if (it) return Number(it['robos:weight'] ?? it.weight ?? 0);
+
+  // 4. Fuzzy title match (e.g. "Bamboo Pole (Club 1d4)" matches "Bamboo Pole", "Medicinal Herb (0.2 lbs)" matches "Medicinal Herb")
+  it = items.find(x => {
+    const t = (x['dcterms:title'] || x.title || '').toLowerCase();
+    const s = (x.slug || '').toLowerCase();
+    return (t && (lower.startsWith(t) || lower.includes(t))) || (s && lower.includes(s));
+  });
+  if (it) return Number(it['robos:weight'] ?? it.weight ?? 0);
+
+  // 5. Look for embedded weight annotation in parentheses, e.g. "Traveler's Cloak (2 lbs)" or "(0.5 lbs)"
+  const m = rawStr.match(/\((\d+(?:\.\d+)?)\s*lbs?\)/i);
+  if (m) {
+    const parsed = parseFloat(m[1]);
+    if (!isNaN(parsed)) return parsed;
+  }
+
+  return 0;
+}
+
+function parseQuickItemsList(val) {
+  if (!val) return [];
+  if (Array.isArray(val)) {
+    return val.map(x => (typeof x === 'object' && x !== null) ? (x.slug || x.id || '') : String(x).trim()).filter(Boolean);
+  }
+  if (typeof val === 'string') {
+    return val.split(',').map(s => s.trim()).filter(Boolean);
+  }
+  return [];
+}
+
+function calculateCharacterEncumbrance(charOrHero) {
+  if (!charOrHero) {
+    return {
+      str: 10,
+      carriedWeight: 0,
+      maxCapacity: 90,
+      ratio: 0,
+      percent: 0,
+      status: 'normal',
+      badgeClass: 'normal',
+      label: 'Normal',
+      penalty: 'Normal Movement'
+    };
+  }
+
+  // Get Strength (PC or NPC)
+  const isNpc = charOrHero.characterType === 'npc' || charOrHero.characterType === 'robos:CRPGNPC' || !!charOrHero.role || (Array.isArray(charOrHero['@type']) && charOrHero['@type'].includes('robos:CRPGNPC'));
+  const isEditingInCharSheet = state.activeCharacterSlug && (charOrHero.slug === state.activeCharacterSlug || charOrHero.id === state.activeCharacterSlug);
+  
+  let str = Number(charOrHero['robos:str'] ?? charOrHero.str);
+  if (isNaN(str) || str <= 0) {
+    if (isEditingInCharSheet) {
+      str = Number((isNpc ? document.getElementById('npc-str')?.value : document.getElementById('attr-str')?.value) || 10);
+    } else {
+      str = 10;
+    }
+  }
+
+  const maxCapacity = getCarryingCapacity(str);
+
+  // Sum weights from equipment slots
+  const slots = ['mainHand', 'offHand', 'armor', 'helmet', 'cloak', 'boots', 'ring1'];
+  let totalWeight = 0;
+
+  slots.forEach(slotKey => {
+    const robosKey = `robos:${slotKey}`;
+    const slug = charOrHero[robosKey] || charOrHero[slotKey];
+    if (slug) {
+      totalWeight += getItemWeight(slug);
+    }
+  });
+
+  // Quick items
+  const qItems = charOrHero['robos:quickItems'] || charOrHero.quickItems;
+  const qList = parseQuickItemsList(qItems);
+  qList.forEach(qSlug => {
+    totalWeight += getItemWeight(qSlug);
+  });
+
+  // Personal inventory if present
+  const personalItems = charOrHero.items || charOrHero['robos:inventory'] || [];
+  if (Array.isArray(personalItems)) {
+    personalItems.forEach(pIt => {
+      const w = getItemWeight(pIt);
+      const qty = (typeof pIt === 'object' && pIt !== null) ? (pIt.quantity || 1) : 1;
+      totalWeight += w * qty;
+    });
+  }
+
+  const carriedWeight = Math.round(totalWeight * 10) / 10;
+  const ratio = maxCapacity > 0 ? (carriedWeight / maxCapacity) : 0;
+  const percent = Math.min(100, Math.round(ratio * 100));
+
+  let status = 'normal';
+  let badgeClass = 'normal';
+  let label = 'Normal';
+  let penalty = `Strength ${str} (Max ${maxCapacity} lbs) • Full Movement Speed`;
+
+  if (ratio > 1.0) {
+    status = 'overburdened';
+    badgeClass = 'overburdened';
+    label = 'Overburdened';
+    penalty = `Strength ${str} (Max ${maxCapacity} lbs) • Speed 0 ft (Immobilized)`;
+  } else if (ratio > 0.70) {
+    status = 'heavy';
+    badgeClass = 'heavy';
+    label = 'Heavily Encumbered';
+    penalty = `Strength ${str} (Max ${maxCapacity} lbs) • Speed -20 ft, Disadvantage on checks`;
+  } else if (ratio > 0.35) {
+    status = 'light';
+    badgeClass = 'light';
+    label = 'Light Encumbrance';
+    penalty = `Strength ${str} (Max ${maxCapacity} lbs) • Speed -10 ft`;
+  }
+
+  return {
+    str,
+    carriedWeight,
+    maxCapacity,
+    ratio,
+    percent,
+    status,
+    badgeClass,
+    label,
+    penalty
+  };
+}
+
+function updateCampaignEncumbranceMeter(heroOrChar) {
+  const enc = calculateCharacterEncumbrance(heroOrChar);
+  const weightDisplay = document.getElementById('encumb-weight-display');
+  const barFill = document.getElementById('encumb-bar-fill');
+  const badge = document.getElementById('encumb-badge-display') || document.getElementById('encumb-status-badge');
+  const strDesc = document.getElementById('encumb-str-desc');
+  const penalty = document.getElementById('encumb-penalty-desc') || document.getElementById('encumb-penalty-text');
+
+  if (weightDisplay) weightDisplay.textContent = `${enc.carriedWeight.toFixed(1)} / ${enc.maxCapacity.toFixed(1)} lbs`;
+  if (barFill) {
+    barFill.style.width = `${Math.min(100, enc.percent)}%`;
+    barFill.className = `encumbrance-bar-fill ${enc.badgeClass}`;
+  }
+  if (badge) {
+    badge.textContent = enc.label;
+    badge.className = `encumbrance-badge ${enc.badgeClass}`;
+  }
+  if (strDesc) {
+    strDesc.textContent = `STR ${enc.str} (Infinity Engine Capacity: ${enc.maxCapacity} lbs)`;
+  }
+  if (penalty) {
+    penalty.textContent = enc.penalty;
+  }
+}
+
+function findCharacterById(charId) {
+  if (!charId) return null;
+  const cleanId = String(charId).replace(/^urn:robos:crpg:character:/, '');
+  const heroes = getHeroes();
+  let found = heroes.find(h => (h.id || h['@id'] || `urn:robos:crpg:character:${h.slug}`) === charId || h.slug === cleanId || h.id === cleanId);
+  if (found) return found;
+  return (state.characters || []).find(c => (c.id || c['@id'] || `urn:robos:crpg:character:${c.slug}`) === charId || c.slug === cleanId || c.id === cleanId);
+}
+
+function setMultiSelectValues(selectEl, values) {
+  if (!selectEl) return;
+  const valList = (values || []).map(v => String(v).trim().toLowerCase()).filter(Boolean);
+  for (const opt of selectEl.options) {
+    if (!opt.value) {
+      opt.selected = false;
+      continue;
+    }
+    const optVal = opt.value.toLowerCase();
+    const optText = (opt.textContent || '').trim().toLowerCase();
+    const matched = valList.some(v => 
+      v === optVal || 
+      v === optText || 
+      optVal.includes(v) || 
+      optText.includes(v) || 
+      v.includes(optVal)
+    );
+    opt.selected = matched;
+  }
+}
+
+function getMultiSelectValues(selectEl) {
+  if (!selectEl) return [];
+  const selected = [];
+  for (const opt of selectEl.options) {
+    if (opt.selected && opt.value) {
+      selected.push(opt.value);
+    }
+  }
+  return selected;
+}
+
+function renderQuickItemPills(containerId, selectId, onRemoveCallback) {
+  const container = document.getElementById(containerId);
+  const select = document.getElementById(selectId);
+  if (!container || !select) return;
+
+  const selectedSlugs = getMultiSelectValues(select);
+  if (selectedSlugs.length === 0) {
+    container.innerHTML = '<span style="font-size:10px; color:var(--text-muted); font-style:italic;">No quick items equipped</span>';
+    return;
+  }
+
+  container.innerHTML = selectedSlugs.map(slug => {
+    const it = (state.items || []).find(x => x.slug === slug);
+    const title = it ? (it['dcterms:title'] || it.title || slug) : slug;
+    const icon = it ? (it['robos:icon'] || it.icon || '🧪') : '🧪';
+    const weight = it ? (it['robos:weight'] ?? it.weight ?? 0) : 0;
+    return `
+      <span class="quickitem-pill">
+        <span>${icon} ${title} (${weight} lbs)</span>
+        <span class="quickitem-pill-remove" data-slug="${slug}" title="Remove">&times;</span>
+      </span>
+    `;
+  }).join('');
+
+  container.querySelectorAll('.quickitem-pill-remove').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const slugToRemove = btn.getAttribute('data-slug');
+      for (const opt of select.options) {
+        if (opt.value === slugToRemove) {
+          opt.selected = false;
+        }
+      }
+      renderQuickItemPills(containerId, selectId, onRemoveCallback);
+      if (onRemoveCallback) onRemoveCallback();
+    });
+  });
+}
+
+function populateEquipmentSelectElement(selectEl, categories, slots, currentVal) {
+  if (!selectEl) return;
+  const allItems = state.items || [];
+  let html = '<option value="">(Empty)</option>';
+
+  const matching = allItems.filter(it => {
+    const cat = (it['robos:itemCategory'] || it.category || '').toLowerCase();
+    const slot = (it['robos:equipSlot'] || it.equipSlot || '').toLowerCase();
+    return categories.some(c => cat.includes(c)) || slots.some(s => slot.includes(s));
+  });
+  const others = allItems.filter(it => !matching.includes(it));
+
+  if (matching.length > 0) {
+    html += '<optgroup label="Compatible Items">';
+    matching.forEach(it => {
+      const slug = it.slug || it['dcterms:identifier'];
+      const title = it['dcterms:title'] || it.title || it.name || slug;
+      const icon = it['robos:icon'] || it.icon || '📦';
+      const weight = it['robos:weight'] ?? it.weight ?? 0;
+      html += `<option value="${slug}">${icon} ${title} (${weight} lbs)</option>`;
+    });
+    html += '</optgroup>';
+  }
+
+  if (others.length > 0) {
+    html += '<optgroup label="Other Items">';
+    others.forEach(it => {
+      const slug = it.slug || it['dcterms:identifier'];
+      const title = it['dcterms:title'] || it.title || it.name || slug;
+      const icon = it['robos:icon'] || it.icon || '📦';
+      const weight = it['robos:weight'] ?? it.weight ?? 0;
+      html += `<option value="${slug}">${icon} ${title} (${weight} lbs)</option>`;
+    });
+    html += '</optgroup>';
+  }
+
+  selectEl.innerHTML = html;
+  if (currentVal !== undefined && currentVal !== null) {
+    if (selectEl.multiple) {
+      const slugs = parseQuickItemsList(currentVal);
+      setMultiSelectValues(selectEl, slugs);
+    } else {
+      setSelectValue(selectEl, currentVal);
+    }
+  }
+}
+
+function populateEquipmentDropdowns() {
+  const slotConfigs = [
+    { id: 'equip-mainhand', categories: ['weapon'], slots: ['main_hand'] },
+    { id: 'equip-offhand', categories: ['shield', 'weapon'], slots: ['off_hand'] },
+    { id: 'equip-armor', categories: ['armor'], slots: ['armor'] },
+    { id: 'equip-helmet', categories: ['armor'], slots: ['helmet'] },
+    { id: 'equip-cloak', categories: ['accessory'], slots: ['cloak'] },
+    { id: 'equip-boots', categories: ['accessory', 'armor'], slots: ['boots'] },
+    { id: 'equip-ring1', categories: ['accessory'], slots: ['ring'] },
+    { id: 'equip-quickitems', categories: ['consumable', 'tool'], slots: ['quick_item'] }
+  ];
+
+  slotConfigs.forEach(({ id, categories, slots }) => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const currentVal = sel.multiple ? getMultiSelectValues(sel) : sel.value;
+    populateEquipmentSelectElement(sel, categories, slots, currentVal);
+  });
+}
+
+function populateCharSheetEquipmentDropdowns(charData) {
+  const slotConfigs = [
+    { id: 'char-equip-mainhand', categories: ['weapon'], slots: ['main_hand'], val: charData?.['robos:mainHand'] || charData?.mainHand || '' },
+    { id: 'char-equip-offhand', categories: ['shield', 'weapon'], slots: ['off_hand'], val: charData?.['robos:offHand'] || charData?.offHand || '' },
+    { id: 'char-equip-armor', categories: ['armor'], slots: ['armor'], val: charData?.['robos:armor'] || charData?.armor || '' },
+    { id: 'char-equip-cloak', categories: ['accessory'], slots: ['cloak'], val: charData?.['robos:cloak'] || charData?.cloak || '' },
+    { id: 'char-equip-quickitems', categories: ['consumable', 'tool'], slots: ['quick_item'], val: charData?.['robos:quickItems'] || charData?.quickItems || [] }
+  ];
+
+  slotConfigs.forEach(({ id, categories, slots, val }) => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    populateEquipmentSelectElement(sel, categories, slots, val);
+  });
+
+  renderQuickItemPills('char-equip-quickitems-pills', 'char-equip-quickitems', () => {
+    updateCharSheetEncumbranceMeter();
+  });
+}
+
+function updateCharSheetEncumbranceMeter() {
+  const isNpc = document.getElementById('radio-type-npc')?.checked;
+  const strVal = isNpc
+    ? Number(document.getElementById('npc-str')?.value || 10)
+    : Number(document.getElementById('attr-str')?.value || 10);
+
+  const mainHand = document.getElementById('char-equip-mainhand')?.value || '';
+  const offHand = document.getElementById('char-equip-offhand')?.value || '';
+  const armor = document.getElementById('char-equip-armor')?.value || '';
+  const cloak = document.getElementById('char-equip-cloak')?.value || '';
+  const quickItems = getMultiSelectValues(document.getElementById('char-equip-quickitems'));
+
+  const tempChar = {
+    str: strVal,
+    'robos:str': strVal,
+    mainHand,
+    offHand,
+    armor,
+    cloak,
+    quickItems
+  };
+
+  const enc = calculateCharacterEncumbrance(tempChar);
+
+  const weightDisplay = document.getElementById('char-sheet-encumb-weight');
+  const strDisplay = document.getElementById('char-sheet-encumb-str');
+  const barFill = document.getElementById('char-sheet-encumb-bar-fill');
+  const badge = document.getElementById('char-sheet-encumb-badge');
+  const statusEl = document.getElementById('char-sheet-encumb-status');
+  const penaltyEl = document.getElementById('char-sheet-encumb-penalty');
+
+  if (weightDisplay) weightDisplay.textContent = `${enc.carriedWeight.toFixed(1)} / ${enc.maxCapacity.toFixed(1)} lbs`;
+  if (strDisplay) strDisplay.textContent = `STR ${strVal} (Infinity Engine Max: ${enc.maxCapacity} lbs)`;
+  if (barFill) {
+    barFill.style.width = `${Math.min(100, enc.percent)}%`;
+    barFill.className = `encumbrance-bar-fill ${enc.badgeClass}`;
+  }
+  if (badge) {
+    badge.textContent = enc.label;
+    badge.className = `encumbrance-badge ${enc.badgeClass}`;
+  }
+  if (statusEl) {
+    const icons = { normal: '🟢', light: '🟡', heavy: '🟠', overburdened: '🔴' };
+    statusEl.textContent = `${icons[enc.status] || '🟢'} ${enc.label}`;
+  }
+  if (penaltyEl) penaltyEl.textContent = enc.penalty;
 }
 
 // ========================================================
@@ -1782,6 +2293,11 @@ function setupInventoryHandlers() {
   document.querySelectorAll('.equip-slot-select').forEach(sel => {
     sel.addEventListener('change', () => {
       persistEquipSlotsToHero();
+      if (sel.id === 'equip-quickitems') {
+        renderQuickItemPills('equip-quickitems-pills', 'equip-quickitems', () => {
+          persistEquipSlotsToHero();
+        });
+      }
     });
   });
 
@@ -1845,22 +2361,43 @@ function renderInventoryViews() {
   populateStashItemPicker();
   renderStashTable();
 
-  // 4. Hero Equipment Dropdown & Slot Selects
+  // 4. Character Equipment Dropdown (Player Characters AND NPCs) & Slot Selects
   populateEquipmentDropdowns();
   const equipHeroSelect = document.getElementById('equip-hero-select');
   if (equipHeroSelect) {
-    if (heroes.length === 0) {
-      equipHeroSelect.innerHTML = '<option value="">(No player characters available)</option>';
+    const allChars = state.characters || [];
+    const npcs = allChars.filter(c => {
+      return c.characterType === 'npc' || c.characterType === 'robos:CRPGNPC' || !!c.role || (Array.isArray(c['@type']) && c['@type'].includes('robos:CRPGNPC'));
+    });
+    const totalChars = [...heroes, ...npcs];
+
+    if (totalChars.length === 0) {
+      equipHeroSelect.innerHTML = '<option value="">(No characters available)</option>';
       state.activeEquipHeroId = null;
       loadEquipSlotsForHero(null);
     } else {
-      equipHeroSelect.innerHTML = heroes.map(h => {
-        const id = h.id || h['@id'] || `urn:robos:crpg:character:${h.slug}`;
-        return `<option value="${id}">${h.portrait || '👤'} ${h.name}</option>`;
-      }).join('');
+      let html = '';
+      if (heroes.length > 0) {
+        html += '<optgroup label="Player Characters">';
+        heroes.forEach(h => {
+          const id = h.id || h['@id'] || `urn:robos:crpg:character:${h.slug}`;
+          html += `<option value="${id}">${h.portrait || '👤'} ${h.name || h.slug}</option>`;
+        });
+        html += '</optgroup>';
+      }
+      if (npcs.length > 0) {
+        html += '<optgroup label="NPCs & Companions">';
+        npcs.forEach(n => {
+          const id = n.id || n['@id'] || `urn:robos:crpg:character:${n.slug}`;
+          html += `<option value="${id}">${n.portrait || '👑'} ${n.name || n.slug} (${n.role || 'NPC'})</option>`;
+        });
+        html += '</optgroup>';
+      }
+      equipHeroSelect.innerHTML = html;
 
-      if (!state.activeEquipHeroId || !heroes.some(h => (h.id || h['@id'] || `urn:robos:crpg:character:${h.slug}`) === state.activeEquipHeroId)) {
-        state.activeEquipHeroId = heroes[0].id || heroes[0]['@id'] || `urn:robos:crpg:character:${heroes[0].slug}`;
+      if (!state.activeEquipHeroId || !totalChars.some(c => (c.id || c['@id'] || `urn:robos:crpg:character:${c.slug}` || c.slug) === state.activeEquipHeroId)) {
+        const first = totalChars[0];
+        state.activeEquipHeroId = first.id || first['@id'] || `urn:robos:crpg:character:${first.slug}` || first.slug;
       }
       equipHeroSelect.value = state.activeEquipHeroId;
       loadEquipSlotsForHero(state.activeEquipHeroId);
@@ -1925,73 +2462,19 @@ function setSelectValue(selectEl, val) {
   }
 }
 
-function populateEquipmentDropdowns() {
-  const slotConfigs = [
-    { id: 'equip-mainhand', categories: ['weapon'], slots: ['main_hand'] },
-    { id: 'equip-offhand', categories: ['shield', 'weapon'], slots: ['off_hand'] },
-    { id: 'equip-armor', categories: ['armor'], slots: ['armor'] },
-    { id: 'equip-helmet', categories: ['armor'], slots: ['helmet'] },
-    { id: 'equip-cloak', categories: ['accessory'], slots: ['cloak'] },
-    { id: 'equip-boots', categories: ['accessory', 'armor'], slots: ['boots'] },
-    { id: 'equip-ring1', categories: ['accessory'], slots: ['ring'] },
-    { id: 'equip-quickitems', categories: ['consumable', 'tool'], slots: ['quick_item'] }
-  ];
-
-  const allItems = state.items || [];
-
-  slotConfigs.forEach(({ id, categories, slots }) => {
-    const sel = document.getElementById(id);
-    if (!sel) return;
-    const currentVal = sel.value;
-
-    let html = '<option value="">(Empty)</option>';
-
-    const matching = allItems.filter(it => {
-      const cat = (it['robos:itemCategory'] || it.category || '').toLowerCase();
-      const slot = (it['robos:equipSlot'] || it.equipSlot || '').toLowerCase();
-      return categories.includes(cat) || slots.includes(slot);
-    });
-
-    const others = allItems.filter(it => !matching.includes(it));
-
-    if (matching.length > 0) {
-      html += '<optgroup label="Compatible Items">';
-      matching.forEach(it => {
-        const slug = it.slug || it['dcterms:identifier'];
-        const title = it['dcterms:title'] || it.title || it.name || slug;
-        const icon = it['robos:icon'] || it.icon || '📦';
-        html += `<option value="${slug}">${icon} ${title}</option>`;
-      });
-      html += '</optgroup>';
-    }
-
-    if (others.length > 0) {
-      html += '<optgroup label="Other Items">';
-      others.forEach(it => {
-        const slug = it.slug || it['dcterms:identifier'];
-        const title = it['dcterms:title'] || it.title || it.name || slug;
-        const icon = it['robos:icon'] || it.icon || '📦';
-        html += `<option value="${slug}">${icon} ${title}</option>`;
-      });
-      html += '</optgroup>';
-    }
-
-    sel.innerHTML = html;
-    if (currentVal) {
-      setSelectValue(sel, currentVal);
-    }
-  });
-}
-
 function loadEquipSlotsForHero(heroId) {
-  const heroes = getHeroes();
-  const hero = heroes.find(h => (h.id || h['@id'] || `urn:robos:crpg:character:${h.slug}` || h.slug) === heroId) ||
-               (state.characters || []).find(c => (c.id || c['@id'] || `urn:robos:crpg:character:${c.slug}` || c.slug) === heroId);
+  const hero = findCharacterById(heroId);
   if (!hero) {
-    ['equip-mainhand', 'equip-offhand', 'equip-armor', 'equip-helmet', 'equip-cloak', 'equip-boots', 'equip-ring1', 'equip-quickitems'].forEach(id => {
+    ['equip-mainhand', 'equip-offhand', 'equip-armor', 'equip-helmet', 'equip-cloak', 'equip-boots', 'equip-ring1'].forEach(id => {
       const sel = document.getElementById(id);
       if (sel) sel.value = '';
     });
+    const qSel = document.getElementById('equip-quickitems');
+    if (qSel) {
+      for (const opt of qSel.options) opt.selected = false;
+    }
+    renderQuickItemPills('equip-quickitems-pills', 'equip-quickitems', null);
+    updateCampaignEncumbranceMeter(null);
     return;
   }
 
@@ -2002,14 +2485,21 @@ function loadEquipSlotsForHero(heroId) {
   setSelectValue(document.getElementById('equip-cloak'), hero['robos:cloak'] || hero.cloak || '');
   setSelectValue(document.getElementById('equip-boots'), hero['robos:boots'] || hero.boots || '');
   setSelectValue(document.getElementById('equip-ring1'), hero['robos:ring1'] || hero.ring1 || '');
-  setSelectValue(document.getElementById('equip-quickitems'), hero['robos:quickItems'] || hero.quickItems || '');
+
+  const qItems = parseQuickItemsList(hero['robos:quickItems'] || hero.quickItems || '');
+  const qSel = document.getElementById('equip-quickitems');
+  setMultiSelectValues(qSel, qItems);
+
+  renderQuickItemPills('equip-quickitems-pills', 'equip-quickitems', () => {
+    persistEquipSlotsToHero();
+  });
+
+  updateCampaignEncumbranceMeter(hero);
 }
 
 function persistEquipSlotsToHero() {
   if (!state.activeEquipHeroId) return;
-  const heroes = getHeroes();
-  const hero = heroes.find(h => (h.id || h['@id'] || `urn:robos:crpg:character:${h.slug}` || h.slug) === state.activeEquipHeroId) ||
-               (state.characters || []).find(c => (c.id || c['@id'] || `urn:robos:crpg:character:${c.slug}` || c.slug) === state.activeEquipHeroId);
+  const hero = findCharacterById(state.activeEquipHeroId);
   if (!hero) return;
 
   const mainHand = document.getElementById('equip-mainhand')?.value || '';
@@ -2019,7 +2509,10 @@ function persistEquipSlotsToHero() {
   const cloak = document.getElementById('equip-cloak')?.value || '';
   const boots = document.getElementById('equip-boots')?.value || '';
   const ring1 = document.getElementById('equip-ring1')?.value || '';
-  const quickItems = document.getElementById('equip-quickitems')?.value || '';
+
+  const quickSelect = document.getElementById('equip-quickitems');
+  const quickItems = getMultiSelectValues(quickSelect);
+  const quickVal = quickItems.length <= 1 ? (quickItems[0] || '') : quickItems;
 
   hero.mainHand = mainHand;
   hero.offHand = offHand;
@@ -2028,7 +2521,7 @@ function persistEquipSlotsToHero() {
   hero.cloak = cloak;
   hero.boots = boots;
   hero.ring1 = ring1;
-  hero.quickItems = quickItems;
+  hero.quickItems = quickVal;
 
   hero['robos:mainHand'] = mainHand;
   hero['robos:offHand'] = offHand;
@@ -2037,7 +2530,7 @@ function persistEquipSlotsToHero() {
   hero['robos:cloak'] = cloak;
   hero['robos:boots'] = boots;
   hero['robos:ring1'] = ring1;
-  hero['robos:quickItems'] = quickItems;
+  hero['robos:quickItems'] = quickVal;
 
   const char = (state.characters || []).find(c => (c.id || c['@id'] || `urn:robos:crpg:character:${c.slug}` || c.slug) === state.activeEquipHeroId);
   if (char && char !== hero) {
@@ -2048,7 +2541,7 @@ function persistEquipSlotsToHero() {
     char.cloak = cloak;
     char.boots = boots;
     char.ring1 = ring1;
-    char.quickItems = quickItems;
+    char.quickItems = quickVal;
     char['robos:mainHand'] = mainHand;
     char['robos:offHand'] = offHand;
     char['robos:armor'] = armor;
@@ -2056,8 +2549,14 @@ function persistEquipSlotsToHero() {
     char['robos:cloak'] = cloak;
     char['robos:boots'] = boots;
     char['robos:ring1'] = ring1;
-    char['robos:quickItems'] = quickItems;
+    char['robos:quickItems'] = quickVal;
   }
+
+  renderQuickItemPills('equip-quickitems-pills', 'equip-quickitems', () => {
+    persistEquipSlotsToHero();
+  });
+
+  updateCampaignEncumbranceMeter(hero);
 }
 
 function populateStashItemPicker() {
@@ -2345,6 +2844,13 @@ async function loadAllItems() {
       renderItemsList();
       populateEquipmentDropdowns();
       populateStashItemPicker();
+      if (state.activeEquipHeroId) {
+        loadEquipSlotsForHero(state.activeEquipHeroId);
+      }
+      if (state.activeCharacterData) {
+        populateCharSheetEquipmentDropdowns(state.activeCharacterData);
+        updateCharSheetEncumbranceMeter();
+      }
     }
   } catch (err) {
     console.error('Error loading items list:', err);

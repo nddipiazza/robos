@@ -1,0 +1,40 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:item:clothes",
+  "@type": [
+    "robos:CRPGItem",
+    "schema:Product",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Plain Clothes",
+  "schema:name": "Plain Clothes",
+  "robos:slug": "clothes",
+  "slug": "clothes",
+  "robos:itemCategory": "armor",
+  "itemCategory": "armor",
+  "robos:equipSlot": "armor",
+  "equipSlot": "armor",
+  "robos:cost": 20,
+  "cost": 20,
+  "robos:weight": 3,
+  "weight": 3,
+  "robos:rarity": "common",
+  "rarity": "common",
+  "robos:icon": "🥋",
+  "icon": "🥋",
+  "robos:damageDice": "",
+  "damageDice": "",
+  "robos:damageType": "",
+  "damageType": "",
+  "robos:acBonus": 1,
+  "acBonus": 1,
+  "robos:effect": "",
+  "effect": "",
+  "dcterms:description": "Simple traveler clothes made of spun linen.",
+  "description": "Simple traveler clothes made of spun linen."
+}

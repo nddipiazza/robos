@@ -1,0 +1,40 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:item:travelers-cloak",
+  "@type": [
+    "robos:CRPGItem",
+    "schema:Product",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Traveler's Cloak",
+  "schema:name": "Traveler's Cloak",
+  "robos:slug": "travelers-cloak",
+  "slug": "travelers-cloak",
+  "robos:itemCategory": "accessory",
+  "itemCategory": "accessory",
+  "robos:equipSlot": "cloak",
+  "equipSlot": "cloak",
+  "robos:cost": 35,
+  "cost": 35,
+  "robos:weight": 2,
+  "weight": 2,
+  "robos:rarity": "common",
+  "rarity": "common",
+  "robos:icon": "🧥",
+  "icon": "🧥",
+  "robos:damageDice": "",
+  "damageDice": "",
+  "robos:damageType": "",
+  "damageType": "",
+  "robos:acBonus": 0,
+  "acBonus": 0,
+  "robos:effect": "+1 Save vs Cold",
+  "effect": "+1 Save vs Cold",
+  "dcterms:description": "Heavy wool mantle.",
+  "description": "Heavy wool mantle."
+}

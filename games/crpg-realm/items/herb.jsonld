@@ -1,0 +1,40 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:item:herb",
+  "@type": [
+    "robos:CRPGItem",
+    "schema:Product",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Medicinal Herb",
+  "schema:name": "Medicinal Herb",
+  "robos:slug": "herb",
+  "slug": "herb",
+  "robos:itemCategory": "consumable",
+  "itemCategory": "consumable",
+  "robos:equipSlot": "quick_item",
+  "equipSlot": "quick_item",
+  "robos:cost": 24,
+  "cost": 24,
+  "robos:weight": 0.2,
+  "weight": 0.2,
+  "robos:rarity": "common",
+  "rarity": "common",
+  "robos:icon": "🌿",
+  "icon": "🌿",
+  "robos:damageDice": "",
+  "damageDice": "",
+  "robos:damageType": "",
+  "damageType": "",
+  "robos:acBonus": 0,
+  "acBonus": 0,
+  "robos:effect": "Restores 20-35 HP",
+  "effect": "Restores 20-35 HP",
+  "dcterms:description": "Fragrant healing plant.",
+  "description": "Fragrant healing plant."
+}

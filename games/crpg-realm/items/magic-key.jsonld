@@ -1,0 +1,40 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:item:magic-key",
+  "@type": [
+    "robos:CRPGItem",
+    "schema:Product",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Magic Key",
+  "schema:name": "Magic Key",
+  "robos:slug": "magic-key",
+  "slug": "magic-key",
+  "robos:itemCategory": "quest",
+  "itemCategory": "quest",
+  "robos:equipSlot": "quick_item",
+  "equipSlot": "quick_item",
+  "robos:cost": 25,
+  "cost": 25,
+  "robos:weight": 0.5,
+  "weight": 0.5,
+  "robos:rarity": "uncommon",
+  "rarity": "uncommon",
+  "robos:icon": "🗝️",
+  "icon": "🗝️",
+  "robos:damageDice": "",
+  "damageDice": "",
+  "robos:damageType": "",
+  "damageType": "",
+  "robos:acBonus": 0,
+  "acBonus": 0,
+  "robos:effect": "Unlocks royal doors",
+  "effect": "Unlocks royal doors",
+  "dcterms:description": "A magic key that dissolves in the lock.",
+  "description": "A magic key that dissolves in the lock."
+}
