@@ -415,6 +415,13 @@ function populateSceneDropdowns() {
   const campSelect = document.getElementById('camp-starting-scene');
   const invSelect = document.getElementById('inventory-scene-select');
 
+  if (state.scenes.length === 0) {
+    const emptyHtml = '<option value="">(No scenes available)</option>';
+    if (campSelect) campSelect.innerHTML = emptyHtml;
+    if (invSelect) invSelect.innerHTML = emptyHtml;
+    return;
+  }
+
   const optionsHtml = state.scenes.map(s => `<option value="${s.slug}">${s.title || s.slug}</option>`).join('');
   if (campSelect) campSelect.innerHTML = optionsHtml;
   if (invSelect) invSelect.innerHTML = optionsHtml;
@@ -538,13 +545,13 @@ async function loadCampaign(slug) {
       // Populate Campaign Overview
       document.getElementById('camp-title').value = res.data['dcterms:title'] || res.data.title || slug;
       document.getElementById('camp-slug').value = slug;
-      document.getElementById('camp-setting').value = res.data['robos:setting'] || res.data.setting || 'Sword Coast';
+      document.getElementById('camp-setting').value = res.data['robos:setting'] || res.data.setting || '';
       document.getElementById('camp-ruleset').value = res.data['robos:ruleSet'] || res.data.ruleSet || 'D&D 5e SRD';
       document.getElementById('camp-difficulty').value = res.data['robos:difficulty'] || res.data.difficulty || 'Core Rules';
       document.getElementById('camp-desc').value = res.data['dcterms:description'] || res.data.description || '';
 
       const gs = getGameState();
-      const currentScene = gs['robos:currentScene'] || gs.currentScene || 'candlekeep-exterior';
+      const currentScene = gs['robos:currentScene'] || gs.currentScene || '';
       const sceneSelect = document.getElementById('camp-starting-scene');
       if (sceneSelect) sceneSelect.value = currentScene;
 
@@ -580,11 +587,11 @@ function getGameState() {
   if (!state.activeCampaignData) return {};
   if (!state.activeCampaignData['robos:gameState']) {
     state.activeCampaignData['robos:gameState'] = {
-      'robos:currentScene': 'candlekeep-exterior',
+      'robos:currentScene': '',
       'robos:activeParty': [],
       'robos:partyLeaderIndex': 0,
       'robos:partyFormation': 'rank',
-      'robos:sharedInventory': { gold: 150, silver: 40, copper: 120, items: [] },
+      'robos:sharedInventory': { gold: 0, silver: 0, copper: 0, items: [] },
       'robos:questLog': [],
       'robos:worldFlags': {},
     };
@@ -599,13 +606,15 @@ function getHeroes() {
     const campaignCharIds = (state.activeCampaignData['robos:characters'] || []).map(id => 
       typeof id === 'string' ? id.replace(/^urn:robos:crpg:character:/, '') : (id.slug || id.id)
     );
-    const matched = state.characters.filter(c => {
-      const isHero = c.characterType !== 'npc' && c.characterType !== 'robos:CRPGNPC' && !c.role;
-      if (!isHero) return false;
-      return campaignCharIds.length === 0 || campaignCharIds.includes(c.slug) || campaignCharIds.includes(c.id);
-    });
-    if (matched.length > 0) {
-      state.activeCampaignData['robos:heroes'] = matched;
+    if (campaignCharIds.length > 0) {
+      const matched = state.characters.filter(c => {
+        const isHero = c.characterType !== 'npc' && c.characterType !== 'robos:CRPGNPC' && !c.role;
+        if (!isHero) return false;
+        return campaignCharIds.includes(c.slug) || campaignCharIds.includes(c.id);
+      });
+      if (matched.length > 0) {
+        state.activeCampaignData['robos:heroes'] = matched;
+      }
     }
   }
   return state.activeCampaignData['robos:heroes'] || [];
@@ -616,7 +625,7 @@ function updateCampaignSummaryStats() {
   const gs = getGameState();
   const activeParty = gs['robos:activeParty'] || [];
   const quests = gs['robos:questLog'] || [];
-  const gold = gs['robos:sharedInventory']?.gold ?? 150;
+  const gold = gs['robos:sharedInventory']?.gold ?? 0;
 
   document.getElementById('stat-heroes-count').textContent = heroes.length;
   document.getElementById('stat-party-count').textContent = activeParty.length;
@@ -631,9 +640,9 @@ function createNewCampaign() {
     '@context': { robos: 'urn:robos:', dcterms: 'http://purl.org/dc/terms/' },
     '@type': 'robos:CRPGCampaign',
     '@id': `urn:robos:crpg:campaign:${safeSlug}`,
-    'dcterms:title': 'New Epic Campaign',
-    'dcterms:description': 'A new journey begins along the Sword Coast.',
-    'robos:setting': 'Sword Coast / Forgotten Realms',
+    'dcterms:title': 'New Campaign',
+    'dcterms:description': '',
+    'robos:setting': '',
     'robos:ruleSet': 'D&D 5e SRD',
     'robos:difficulty': 'Core Rules',
     'robos:maps': [],
@@ -641,13 +650,13 @@ function createNewCampaign() {
     'robos:startingMap': '',
     'robos:heroes': [],
     'robos:gameState': {
-      'robos:currentScene': 'candlekeep-exterior',
+      'robos:currentScene': '',
       'robos:activeParty': [],
       'robos:partyLeaderIndex': 0,
       'robos:partyFormation': 'rank',
-      'robos:sharedInventory': { gold: 150, silver: 40, copper: 120, items: [] },
+      'robos:sharedInventory': { gold: 0, silver: 0, copper: 0, items: [] },
       'robos:questLog': [],
-      'robos:worldFlags': { prologue_active: true },
+      'robos:worldFlags': {},
     }
   };
 
@@ -716,7 +725,7 @@ function renderCampaignMapsChecklist() {
 
   let checkedCount = 0;
   container.innerHTML = state.maps.map(m => {
-    const isChecked = mapIds.includes(m.slug) || mapIds.length === 0;
+    const isChecked = mapIds.includes(m.slug);
     if (isChecked) checkedCount++;
     return `
       <label class="camp-check-item">
@@ -765,7 +774,7 @@ function renderCampaignCharactersChecklist() {
   let checkedCount = 0;
   container.innerHTML = state.characters.map(c => {
     const isNpc = c.characterType === 'npc' || c.characterType === 'robos:CRPGNPC' || !!c.role;
-    const isChecked = charIds.includes(c.slug) || (charIds.length === 0 && !isNpc);
+    const isChecked = charIds.includes(c.slug);
     if (isChecked) checkedCount++;
     return `
       <label class="camp-check-item">
@@ -1238,7 +1247,10 @@ function renderCharactersList() {
   if (countEl) countEl.textContent = filtered.length;
 
   if (filtered.length === 0) {
-    listEl.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px;">No characters found matching search filter. Click + Hero or + NPC.</div>';
+    const msg = characterSearchQuery
+      ? 'No characters found matching search filter.'
+      : 'No characters in workspace. Click + Hero or + NPC to create one.';
+    listEl.innerHTML = `<div style="color:var(--text-muted);font-size:12px;padding:8px;">${msg}</div>`;
     return;
   }
 
@@ -1732,31 +1744,37 @@ function renderInventoryViews() {
   if (formSel) formSel.value = gs['robos:partyFormation'] || 'rank';
 
   const sceneSel = document.getElementById('inventory-scene-select');
-  if (sceneSel) sceneSel.value = gs['robos:currentScene'] || 'candlekeep-exterior';
+  if (sceneSel) sceneSel.value = gs['robos:currentScene'] || '';
 
   // 3. Currency & Shared Stash
-  const sharedInv = gs['robos:sharedInventory'] || { gold: 150, silver: 40, copper: 120, items: [] };
-  document.getElementById('gold-gp').value = sharedInv.gold ?? 150;
-  document.getElementById('gold-sp').value = sharedInv.silver ?? 40;
-  document.getElementById('gold-cp').value = sharedInv.copper ?? 120;
+  const sharedInv = gs['robos:sharedInventory'] || { gold: 0, silver: 0, copper: 0, items: [] };
+  document.getElementById('gold-gp').value = sharedInv.gold ?? 0;
+  document.getElementById('gold-sp').value = sharedInv.silver ?? 0;
+  document.getElementById('gold-cp').value = sharedInv.copper ?? 0;
 
   const itemsArr = Array.isArray(sharedInv.items) ? sharedInv.items : [];
   const itemsText = itemsArr.map(it => typeof it === 'string' ? it : (it.name || it.id)).join('\n');
-  document.getElementById('shared-items-textarea').value = itemsText || "Potion of Healing (x4)\nSilk Rope (50 ft)\nThieves' Tools\nTorches (x3)\nRations (x10)";
+  document.getElementById('shared-items-textarea').value = itemsText || '';
 
   // 4. Hero Equipment Dropdown
   const equipHeroSelect = document.getElementById('equip-hero-select');
   if (equipHeroSelect) {
-    equipHeroSelect.innerHTML = heroes.map(h => {
-      const id = h.id || h['@id'];
-      return `<option value="${id}">${h.portrait || '👤'} ${h.name}</option>`;
-    }).join('');
+    if (heroes.length === 0) {
+      equipHeroSelect.innerHTML = '<option value="">(No heroes available)</option>';
+      state.activeEquipHeroId = null;
+      loadEquipSlotsForHero(null);
+    } else {
+      equipHeroSelect.innerHTML = heroes.map(h => {
+        const id = h.id || h['@id'];
+        return `<option value="${id}">${h.portrait || '👤'} ${h.name}</option>`;
+      }).join('');
 
-    if (!state.activeEquipHeroId && heroes.length > 0) {
-      state.activeEquipHeroId = heroes[0].id || heroes[0]['@id'];
+      if (!state.activeEquipHeroId || !heroes.some(h => (h.id || h['@id']) === state.activeEquipHeroId)) {
+        state.activeEquipHeroId = heroes[0].id || heroes[0]['@id'];
+      }
+      equipHeroSelect.value = state.activeEquipHeroId;
+      loadEquipSlotsForHero(state.activeEquipHeroId);
     }
-    equipHeroSelect.value = state.activeEquipHeroId;
-    loadEquipSlotsForHero(state.activeEquipHeroId);
   }
 }
 
@@ -1790,7 +1808,17 @@ function updateLeaderDropdown() {
 function loadEquipSlotsForHero(heroId) {
   const heroes = getHeroes();
   const hero = heroes.find(h => (h.id || h['@id']) === heroId);
-  if (!hero) return;
+  if (!hero) {
+    document.getElementById('equip-mainhand').value = '';
+    document.getElementById('equip-offhand').value = '';
+    document.getElementById('equip-armor').value = '';
+    document.getElementById('equip-helmet').value = '';
+    document.getElementById('equip-cloak').value = '';
+    document.getElementById('equip-boots').value = '';
+    document.getElementById('equip-ring1').value = '';
+    document.getElementById('equip-quickitems').value = '';
+    return;
+  }
 
   document.getElementById('equip-mainhand').value = hero.mainHand || '';
   document.getElementById('equip-offhand').value = hero.offHand || '';
@@ -2138,9 +2166,12 @@ function renderMapModalTree(filterText = '') {
   if (countBadge) countBadge.textContent = matchCount;
 
   if (matchCount === 0) {
+    const msg = filterText
+      ? `No maps found matching "${escapeHtml(filterText)}".`
+      : 'No maps available in workspace. Click "+ New" to create a map blueprint.';
     container.innerHTML = `
       <div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 12px;">
-        No maps found matching "${escapeHtml(filterText)}".
+        ${msg}
       </div>
     `;
     return;
