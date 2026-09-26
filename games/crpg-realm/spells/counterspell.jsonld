@@ -1,0 +1,54 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:spell:counterspell",
+  "@type": [
+    "robos:CRPGSpell",
+    "schema:Action",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Counterspell",
+  "schema:name": "Counterspell",
+  "robos:slug": "counterspell",
+  "slug": "counterspell",
+  "robos:spellLevel": 3,
+  "spellLevel": 3,
+  "robos:magicSchool": "Abjuration",
+  "magicSchool": "Abjuration",
+  "robos:castingTime": "1 reaction",
+  "castingTime": "1 reaction",
+  "robos:range": "60 feet",
+  "range": "60 feet",
+  "robos:damageFormula": "",
+  "damageFormula": "",
+  "robos:damageType": "",
+  "damageType": "",
+  "robos:icon": "🛡️",
+  "icon": "🛡️",
+  "robos:duration": "1 round",
+  "duration": "1 round",
+  "robos:components": "V, S, M",
+  "components": "V, S, M",
+  "robos:savingThrow": "None",
+  "savingThrow": "None",
+  "robos:mechanics": {
+    "kind": "counter",
+    "target": "creature",
+    "range": 60,
+    "reaction": "when_enemy_casts",
+    "autoCounterUpToLevel": 3
+  },
+  "mechanics": {
+    "kind": "counter",
+    "target": "creature",
+    "range": 60,
+    "reaction": "when_enemy_casts",
+    "autoCounterUpToLevel": 3
+  },
+  "dcterms:description": "You attempt to interrupt a creature in the process of casting a spell, causing the spell to fail.",
+  "description": "You attempt to interrupt a creature in the process of casting a spell, causing the spell to fail."
+}

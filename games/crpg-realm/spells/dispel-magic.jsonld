@@ -1,0 +1,58 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:spell:dispel-magic",
+  "@type": [
+    "robos:CRPGSpell",
+    "schema:Action",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Dispel Magic",
+  "schema:name": "Dispel Magic",
+  "robos:slug": "dispel-magic",
+  "slug": "dispel-magic",
+  "robos:spellLevel": 3,
+  "spellLevel": 3,
+  "robos:magicSchool": "Abjuration",
+  "magicSchool": "Abjuration",
+  "robos:castingTime": "1 action",
+  "castingTime": "1 action",
+  "robos:range": "120 feet",
+  "range": "120 feet",
+  "robos:damageFormula": "",
+  "damageFormula": "",
+  "robos:damageType": "",
+  "damageType": "",
+  "robos:icon": "🛡️",
+  "icon": "🛡️",
+  "robos:duration": "Instantaneous",
+  "duration": "Instantaneous",
+  "robos:components": "V, S, M",
+  "components": "V, S, M",
+  "robos:savingThrow": "None",
+  "savingThrow": "None",
+  "robos:mechanics": {
+    "kind": "dispel",
+    "target": "point",
+    "range": 120,
+    "area": {
+      "shape": "sphere",
+      "size": 20
+    }
+  },
+  "mechanics": {
+    "kind": "dispel",
+    "target": "point",
+    "range": 120,
+    "area": {
+      "shape": "sphere",
+      "size": 20
+    }
+  },
+  "dcterms:description": "Choose any creature, object, or magical effect within range. Any active spell or magical condition on the target ends.",
+  "description": "Choose any creature, object, or magical effect within range. Any active spell or magical condition on the target ends."
+}

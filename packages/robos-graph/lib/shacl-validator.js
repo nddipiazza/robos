@@ -2561,6 +2561,33 @@ const BUILTIN_SHACL_SHAPES = [
     "domainStandard": "https://robos.dev/ns/crpg#PlayerInput"
   },
   {
+    "shapeId": "urn:robos:shape:CRPGAbilityShape",
+    "targetClass": "robos:CRPGAbility",
+    "targetClasses": [
+      "robos:CRPGAbility"
+    ],
+    "properties": [
+      {
+        "path": "dcterms:title",
+        "minCount": 1,
+        "message": "cRPG Ability must have a title."
+      },
+      {
+        "path": "robos:actionType",
+        "minCount": 1,
+        "message": "cRPG Ability must declare an actionType (action, bonus_action, reaction, passive, free_action)."
+      },
+      {
+        "path": "robos:recharge",
+        "minCount": 1,
+        "message": "cRPG Ability must declare a recharge rate (short_rest, long_rest, at_will, special)."
+      }
+    ],
+    "refersFrom": "https://schema.org/Action",
+    "schemaOrgType": "https://schema.org/Action",
+    "domainStandard": "https://robos.dev/ns/crpg#Ability"
+  },
+  {
     "shapeId": "urn:robos:shape:WebRouteShape",
     "targetClass": "robos:WebRoute",
     "properties": [

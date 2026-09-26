@@ -1,0 +1,56 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:spell:spiritual-weapon",
+  "@type": [
+    "robos:CRPGSpell",
+    "schema:Action",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Spiritual Weapon",
+  "schema:name": "Spiritual Weapon",
+  "robos:slug": "spiritual-weapon",
+  "slug": "spiritual-weapon",
+  "robos:spellLevel": 2,
+  "spellLevel": 2,
+  "robos:magicSchool": "Evocation",
+  "magicSchool": "Evocation",
+  "robos:castingTime": "1 bonus action",
+  "castingTime": "1 bonus action",
+  "robos:range": "60 feet",
+  "range": "60 feet",
+  "robos:damageFormula": "1d8+WIS",
+  "damageFormula": "1d8+WIS",
+  "robos:damageType": "force",
+  "damageType": "force",
+  "robos:icon": "🔥",
+  "icon": "🔥",
+  "robos:duration": "Instantaneous",
+  "duration": "Instantaneous",
+  "robos:components": "V, S, M",
+  "components": "V, S, M",
+  "robos:savingThrow": "None",
+  "savingThrow": "None",
+  "robos:mechanics": {
+    "kind": "spell_attack",
+    "target": "creature",
+    "range": 60,
+    "damage": "1d8+MOD",
+    "damageType": "force",
+    "bonusAction": true
+  },
+  "mechanics": {
+    "kind": "spell_attack",
+    "target": "creature",
+    "range": 60,
+    "damage": "1d8+MOD",
+    "damageType": "force",
+    "bonusAction": true
+  },
+  "dcterms:description": "You create a floating, spectral weapon within range that strikes foes for 1d8 + Wisdom modifier force damage.",
+  "description": "You create a floating, spectral weapon within range that strikes foes for 1d8 + Wisdom modifier force damage."
+}

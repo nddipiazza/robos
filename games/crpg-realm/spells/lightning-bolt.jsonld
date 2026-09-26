@@ -1,0 +1,70 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:spell:lightning-bolt",
+  "@type": [
+    "robos:CRPGSpell",
+    "schema:Action",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Lightning Bolt",
+  "schema:name": "Lightning Bolt",
+  "robos:slug": "lightning-bolt",
+  "slug": "lightning-bolt",
+  "robos:spellLevel": 3,
+  "spellLevel": 3,
+  "robos:magicSchool": "Evocation",
+  "magicSchool": "Evocation",
+  "robos:castingTime": "1 action",
+  "castingTime": "1 action",
+  "robos:range": "100-foot line",
+  "range": "100-foot line",
+  "robos:damageFormula": "8d6",
+  "damageFormula": "8d6",
+  "robos:damageType": "lightning",
+  "damageType": "lightning",
+  "robos:icon": "🔥",
+  "icon": "🔥",
+  "robos:duration": "Instantaneous",
+  "duration": "Instantaneous",
+  "robos:components": "V, S, M",
+  "components": "V, S, M",
+  "robos:savingThrow": "DEX",
+  "savingThrow": "DEX",
+  "robos:mechanics": {
+    "kind": "save_damage",
+    "target": "point",
+    "origin": "self",
+    "range": 100,
+    "area": {
+      "shape": "line",
+      "size": 100,
+      "width": 5
+    },
+    "save": "DEX",
+    "onSave": "half",
+    "damage": "8d6",
+    "damageType": "lightning"
+  },
+  "mechanics": {
+    "kind": "save_damage",
+    "target": "point",
+    "origin": "self",
+    "range": 100,
+    "area": {
+      "shape": "line",
+      "size": 100,
+      "width": 5
+    },
+    "save": "DEX",
+    "onSave": "half",
+    "damage": "8d6",
+    "damageType": "lightning"
+  },
+  "dcterms:description": "A stroke of lightning forming a line 100 feet long blasts out from you in a direction you choose, dealing 8d6 lightning damage.",
+  "description": "A stroke of lightning forming a line 100 feet long blasts out from you in a direction you choose, dealing 8d6 lightning damage."
+}

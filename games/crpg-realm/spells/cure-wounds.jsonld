@@ -1,0 +1,52 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:spell:cure-wounds",
+  "@type": [
+    "robos:CRPGSpell",
+    "schema:Action",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Cure Wounds",
+  "schema:name": "Cure Wounds",
+  "robos:slug": "cure-wounds",
+  "slug": "cure-wounds",
+  "robos:spellLevel": 1,
+  "spellLevel": 1,
+  "robos:magicSchool": "Evocation",
+  "magicSchool": "Evocation",
+  "robos:castingTime": "1 action",
+  "castingTime": "1 action",
+  "robos:range": "Touch",
+  "range": "Touch",
+  "robos:damageFormula": "1d8+WIS",
+  "damageFormula": "1d8+WIS",
+  "robos:damageType": "healing",
+  "damageType": "healing",
+  "robos:icon": "🔥",
+  "icon": "🔥",
+  "robos:duration": "Instantaneous",
+  "duration": "Instantaneous",
+  "robos:components": "V, S, M",
+  "components": "V, S, M",
+  "robos:savingThrow": "None",
+  "savingThrow": "None",
+  "robos:mechanics": {
+    "kind": "heal",
+    "target": "ally",
+    "range": 5,
+    "heal": "1d8+MOD"
+  },
+  "mechanics": {
+    "kind": "heal",
+    "target": "ally",
+    "range": 5,
+    "heal": "1d8+MOD"
+  },
+  "dcterms:description": "A creature you touch regains hit points equal to 1d8 + your spellcasting ability modifier.",
+  "description": "A creature you touch regains hit points equal to 1d8 + your spellcasting ability modifier."
+}

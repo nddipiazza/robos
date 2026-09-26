@@ -1,0 +1,50 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:ability:sneak-attack",
+  "@type": [
+    "robos:CRPGAbility",
+    "schema:Action",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Sneak Attack",
+  "schema:name": "Sneak Attack",
+  "robos:slug": "sneak-attack",
+  "slug": "sneak-attack",
+  "robos:category": "class_feature",
+  "category": "class_feature",
+  "robos:actionType": "passive",
+  "actionType": "passive",
+  "robos:recharge": "at_will",
+  "recharge": "at_will",
+  "robos:resourceCost": "None",
+  "resourceCost": "None",
+  "robos:range": "Weapon Range",
+  "range": "Weapon Range",
+  "robos:duration": "Instantaneous",
+  "duration": "Instantaneous",
+  "robos:icon": "🗡️",
+  "icon": "🗡️",
+  "robos:prerequisites": "Rogue Level 1",
+  "prerequisites": "Rogue Level 1",
+  "robos:effectFormula": "1d6 (scales with level)",
+  "effectFormula": "1d6 (scales with level)",
+  "robos:mechanics": {
+    "kind": "extra_damage",
+    "target": "target",
+    "damageDice": "1d6",
+    "condition": "advantage_or_adjacent_ally"
+  },
+  "mechanics": {
+    "kind": "extra_damage",
+    "target": "target",
+    "damageDice": "1d6",
+    "condition": "advantage_or_adjacent_ally"
+  },
+  "dcterms:description": "Beginning at 1st level, you know how to strike subtly and exploit a foe's distraction. Once per turn, you can deal an extra 1d6 damage to one creature you hit with an attack if you have advantage or an ally is adjacent.",
+  "description": "Beginning at 1st level, you know how to strike subtly and exploit a foe's distraction. Once per turn, you can deal an extra 1d6 damage to one creature you hit with an attack if you have advantage or an ally is adjacent."
+}

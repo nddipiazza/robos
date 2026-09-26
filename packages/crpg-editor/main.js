@@ -22,6 +22,8 @@ function getPaths() {
   const campaignsDir = path.join(baseDir, 'campaigns');
   const charactersDir = path.join(baseDir, 'characters');
   const itemsDir = path.join(baseDir, 'items');
+  const spellsDir = path.join(baseDir, 'spells');
+  const abilitiesDir = path.join(baseDir, 'abilities');
   const mapsDir = path.join(baseDir, 'maps');
   const scenesDir = path.join(baseDir, 'scenes');
   const blockoutsDir = path.join(baseDir, 'assets/blockouts');
@@ -33,6 +35,8 @@ function getPaths() {
     campaignsDir,
     charactersDir,
     itemsDir,
+    spellsDir,
+    abilitiesDir,
     mapsDir,
     scenesDir,
     blockoutsDir,
@@ -46,6 +50,8 @@ function ensureWorkspaceDirs(paths) {
     paths.campaignsDir,
     paths.charactersDir,
     paths.itemsDir,
+    paths.spellsDir,
+    paths.abilitiesDir,
     paths.mapsDir,
     paths.scenesDir,
     paths.blockoutsDir,
@@ -806,6 +812,283 @@ function setupIpcHandlers() {
   ipcMain.handle('items:delete', async (_event, slug) => {
     try {
       const filePath = path.join(paths.itemsDir, `${slug}.jsonld`);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  // 6. Spells API
+  ipcMain.handle('spells:list', async () => {
+    try {
+      if (!fs.existsSync(paths.spellsDir)) {
+        fs.mkdirSync(paths.spellsDir, { recursive: true });
+      }
+      const files = fs.readdirSync(paths.spellsDir).filter(f => f.endsWith('.jsonld'));
+      const spells = [];
+
+      for (const file of files) {
+        const slug = file.replace(/\.jsonld$/, '');
+        const fullPath = path.join(paths.spellsDir, file);
+        try {
+          const raw = fs.readFileSync(fullPath, 'utf8');
+          const data = JSON.parse(raw);
+          spells.push({
+            slug,
+            fileName: file,
+            path: fullPath,
+            id: data['@id'] || `urn:robos:crpg:spell:${slug}`,
+            name: data['dcterms:title'] || data['schema:name'] || data.name || slug,
+            title: data['dcterms:title'] || data['schema:name'] || data.title || slug,
+            level: Number(data['robos:spellLevel'] ?? data.spellLevel ?? data.level ?? 0),
+            spellLevel: Number(data['robos:spellLevel'] ?? data.spellLevel ?? data.level ?? 0),
+            school: data['robos:magicSchool'] || data.magicSchool || data.school || 'Evocation',
+            magicSchool: data['robos:magicSchool'] || data.magicSchool || data.school || 'Evocation',
+            castingTime: data['robos:castingTime'] || data.castingTime || '1 action',
+            range: data['robos:range'] || data.range || 'Touch',
+            damageFormula: data['robos:damageFormula'] || data.damageFormula || '',
+            damageType: data['robos:damageType'] || data.damageType || '',
+            duration: data['robos:duration'] || data.duration || 'Instantaneous',
+            components: data['robos:components'] || data.components || 'V, S',
+            savingThrow: data['robos:savingThrow'] || data.savingThrow || 'None',
+            icon: data['robos:icon'] || data.icon || '✨',
+            description: data['dcterms:description'] || data.description || '',
+            mechanics: data['robos:mechanics'] || data.mechanics || {},
+            raw: data,
+          });
+        } catch (e) {
+          spells.push({ slug, fileName: file, path: fullPath, title: slug, error: e.message });
+        }
+      }
+      // Sort by level then name
+      spells.sort((a, b) => (a.level - b.level) || a.title.localeCompare(b.title));
+      return { success: true, spells };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('spells:load', async (_event, slug) => {
+    try {
+      const filePath = path.join(paths.spellsDir, `${slug}.jsonld`);
+      if (!fs.existsSync(filePath)) {
+        throw new Error(`Spell file not found: ${filePath}`);
+      }
+      const raw = fs.readFileSync(filePath, 'utf8');
+      const data = JSON.parse(raw);
+      return { success: true, slug, filePath, data };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('spells:save', async (_event, { slug, data }) => {
+    try {
+      if (!slug) throw new Error('Spell slug is required');
+      const safeSlug = slug.toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+      const filePath = path.join(paths.spellsDir, `${safeSlug}.jsonld`);
+
+      const formatted = {
+        '@context': {
+          robos: 'https://robos.dev/ns/sdlc#',
+          dcterms: 'http://purl.org/dc/terms/',
+          schema: 'https://schema.org/',
+          xsd: 'http://www.w3.org/2001/XMLSchema#',
+        },
+        '@id': data['@id'] || `urn:robos:crpg:spell:${safeSlug}`,
+        '@type': [
+          'robos:CRPGSpell',
+          'schema:Action',
+          'oslc_am:Resource',
+        ],
+        'dcterms:title': data.title || data.name || data['dcterms:title'] || safeSlug,
+        'schema:name': data.title || data.name || data['dcterms:title'] || safeSlug,
+        'robos:slug': safeSlug,
+        slug: safeSlug,
+        'robos:spellLevel': Number(data.level ?? data.spellLevel ?? data['robos:spellLevel'] ?? 0),
+        spellLevel: Number(data.level ?? data.spellLevel ?? data['robos:spellLevel'] ?? 0),
+        'robos:magicSchool': data.school || data.magicSchool || data['robos:magicSchool'] || 'Evocation',
+        magicSchool: data.school || data.magicSchool || data['robos:magicSchool'] || 'Evocation',
+        'robos:castingTime': data.castingTime || data['robos:castingTime'] || '1 action',
+        castingTime: data.castingTime || data['robos:castingTime'] || '1 action',
+        'robos:range': data.range || data['robos:range'] || 'Touch',
+        range: data.range || data['robos:range'] || 'Touch',
+        'robos:damageFormula': data.damageFormula || data['robos:damageFormula'] || '',
+        damageFormula: data.damageFormula || data['robos:damageFormula'] || '',
+        'robos:damageType': data.damageType || data['robos:damageType'] || '',
+        damageType: data.damageType || data['robos:damageType'] || '',
+        'robos:icon': data.icon || data['robos:icon'] || '✨',
+        icon: data.icon || data['robos:icon'] || '✨',
+        'robos:duration': data.duration || data['robos:duration'] || 'Instantaneous',
+        duration: data.duration || data['robos:duration'] || 'Instantaneous',
+        'robos:components': data.components || data['robos:components'] || 'V, S',
+        components: data.components || data['robos:components'] || 'V, S',
+        'robos:savingThrow': data.savingThrow || data['robos:savingThrow'] || 'None',
+        savingThrow: data.savingThrow || data['robos:savingThrow'] || 'None',
+        'robos:mechanics': data.mechanics || data['robos:mechanics'] || {},
+        mechanics: data.mechanics || data['robos:mechanics'] || {},
+        'dcterms:description': data.description || data['dcterms:description'] || '',
+        description: data.description || data['dcterms:description'] || '',
+      };
+
+      if (!fs.existsSync(paths.spellsDir)) {
+        fs.mkdirSync(paths.spellsDir, { recursive: true });
+      }
+      fs.writeFileSync(filePath, JSON.stringify(formatted, null, 2) + '\n', 'utf8');
+
+      return {
+        success: true,
+        slug: safeSlug,
+        filePath,
+        savedAt: new Date().toISOString(),
+      };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('spells:delete', async (_event, slug) => {
+    try {
+      const filePath = path.join(paths.spellsDir, `${slug}.jsonld`);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  // 7. Abilities API
+  ipcMain.handle('abilities:list', async () => {
+    try {
+      if (!fs.existsSync(paths.abilitiesDir)) {
+        fs.mkdirSync(paths.abilitiesDir, { recursive: true });
+      }
+      const files = fs.readdirSync(paths.abilitiesDir).filter(f => f.endsWith('.jsonld'));
+      const abilities = [];
+
+      for (const file of files) {
+        const slug = file.replace(/\.jsonld$/, '');
+        const fullPath = path.join(paths.abilitiesDir, file);
+        try {
+          const raw = fs.readFileSync(fullPath, 'utf8');
+          const data = JSON.parse(raw);
+          abilities.push({
+            slug,
+            fileName: file,
+            path: fullPath,
+            id: data['@id'] || `urn:robos:crpg:ability:${slug}`,
+            name: data['dcterms:title'] || data['schema:name'] || data.name || slug,
+            title: data['dcterms:title'] || data['schema:name'] || data.title || slug,
+            category: data['robos:category'] || data.category || 'class_feature',
+            actionType: data['robos:actionType'] || data.actionType || 'action',
+            recharge: data['robos:recharge'] || data.recharge || 'short_rest',
+            resourceCost: data['robos:resourceCost'] || data.resourceCost || 'None',
+            range: data['robos:range'] || data.range || 'Self',
+            duration: data['robos:duration'] || data.duration || 'Instantaneous',
+            icon: data['robos:icon'] || data.icon || '⚡',
+            prerequisites: data['robos:prerequisites'] || data.prerequisites || '',
+            effectFormula: data['robos:effectFormula'] || data.effectFormula || '',
+            description: data['dcterms:description'] || data.description || '',
+            mechanics: data['robos:mechanics'] || data.mechanics || {},
+            raw: data,
+          });
+        } catch (e) {
+          abilities.push({ slug, fileName: file, path: fullPath, title: slug, error: e.message });
+        }
+      }
+      // Sort by category then title
+      abilities.sort((a, b) => a.category.localeCompare(b.category) || a.title.localeCompare(b.title));
+      return { success: true, abilities };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('abilities:load', async (_event, slug) => {
+    try {
+      const filePath = path.join(paths.abilitiesDir, `${slug}.jsonld`);
+      if (!fs.existsSync(filePath)) {
+        throw new Error(`Ability file not found: ${filePath}`);
+      }
+      const raw = fs.readFileSync(filePath, 'utf8');
+      const data = JSON.parse(raw);
+      return { success: true, slug, filePath, data };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('abilities:save', async (_event, { slug, data }) => {
+    try {
+      if (!slug) throw new Error('Ability slug is required');
+      const safeSlug = slug.toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+      const filePath = path.join(paths.abilitiesDir, `${safeSlug}.jsonld`);
+
+      const formatted = {
+        '@context': {
+          robos: 'https://robos.dev/ns/sdlc#',
+          dcterms: 'http://purl.org/dc/terms/',
+          schema: 'https://schema.org/',
+          xsd: 'http://www.w3.org/2001/XMLSchema#',
+        },
+        '@id': data['@id'] || `urn:robos:crpg:ability:${safeSlug}`,
+        '@type': [
+          'robos:CRPGAbility',
+          'schema:Action',
+          'oslc_am:Resource',
+        ],
+        'dcterms:title': data.title || data.name || data['dcterms:title'] || safeSlug,
+        'schema:name': data.title || data.name || data['dcterms:title'] || safeSlug,
+        'robos:slug': safeSlug,
+        slug: safeSlug,
+        'robos:category': data.category || data['robos:category'] || 'class_feature',
+        category: data.category || data['robos:category'] || 'class_feature',
+        'robos:actionType': data.actionType || data['robos:actionType'] || 'action',
+        actionType: data.actionType || data['robos:actionType'] || 'action',
+        'robos:recharge': data.recharge || data['robos:recharge'] || 'short_rest',
+        recharge: data.recharge || data['robos:recharge'] || 'short_rest',
+        'robos:resourceCost': data.resourceCost || data['robos:resourceCost'] || 'None',
+        resourceCost: data.resourceCost || data['robos:resourceCost'] || 'None',
+        'robos:range': data.range || data['robos:range'] || 'Self',
+        range: data.range || data['robos:range'] || 'Self',
+        'robos:duration': data.duration || data['robos:duration'] || 'Instantaneous',
+        duration: data.duration || data['robos:duration'] || 'Instantaneous',
+        'robos:icon': data.icon || data['robos:icon'] || '⚡',
+        icon: data.icon || data['robos:icon'] || '⚡',
+        'robos:prerequisites': data.prerequisites || data['robos:prerequisites'] || '',
+        prerequisites: data.prerequisites || data['robos:prerequisites'] || '',
+        'robos:effectFormula': data.effectFormula || data['robos:effectFormula'] || '',
+        effectFormula: data.effectFormula || data['robos:effectFormula'] || '',
+        'robos:mechanics': data.mechanics || data['robos:mechanics'] || {},
+        mechanics: data.mechanics || data['robos:mechanics'] || {},
+        'dcterms:description': data.description || data['dcterms:description'] || '',
+        description: data.description || data['dcterms:description'] || '',
+      };
+
+      if (!fs.existsSync(paths.abilitiesDir)) {
+        fs.mkdirSync(paths.abilitiesDir, { recursive: true });
+      }
+      fs.writeFileSync(filePath, JSON.stringify(formatted, null, 2) + '\n', 'utf8');
+
+      return {
+        success: true,
+        slug: safeSlug,
+        filePath,
+        savedAt: new Date().toISOString(),
+      };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('abilities:delete', async (_event, slug) => {
+    try {
+      const filePath = path.join(paths.abilitiesDir, `${slug}.jsonld`);
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
       }

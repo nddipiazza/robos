@@ -36,6 +36,12 @@
           <button id="nav-items" class="nav-tab-btn" data-pane="pane-items">
             <span>📦 Items</span>
           </button>
+          <button id="nav-spells" class="nav-tab-btn" data-pane="pane-spells">
+            <span>✨ Spells</span>
+          </button>
+          <button id="nav-abilities" class="nav-tab-btn" data-pane="pane-abilities">
+            <span>⚡ Abilities</span>
+          </button>
           <button id="nav-maps" class="nav-tab-btn" data-pane="pane-maps">
             <span>🗺️ Maps</span>
           </button>
@@ -111,6 +117,30 @@
           <button id="btn-header-delete-item" class="btn btn-danger btn-sm" title="Delete current item">🗑</button>
         </div>
 
+        <!-- Spells Context Controls -->
+        <div id="spells-header-controls" class="context-selector-group hidden">
+          <span class="context-label">Spell:</span>
+          <select id="header-spell-select" class="dropdown-select">
+            <option value="">(No spell selected)</option>
+          </select>
+          <button id="btn-header-new-spell" class="btn btn-secondary" title="Create a new spell">+ New Spell</button>
+          <button id="btn-header-close-spell" class="btn btn-secondary" title="Close active spell">✖ Close</button>
+          <button id="btn-header-save-spell" class="btn btn-primary" title="Save spell JSON-LD">💾 Save</button>
+          <button id="btn-header-delete-spell" class="btn btn-danger btn-sm" title="Delete current spell">🗑</button>
+        </div>
+
+        <!-- Abilities Context Controls -->
+        <div id="abilities-header-controls" class="context-selector-group hidden">
+          <span class="context-label">Ability:</span>
+          <select id="header-ability-select" class="dropdown-select">
+            <option value="">(No ability selected)</option>
+          </select>
+          <button id="btn-header-new-ability" class="btn btn-secondary" title="Create a new ability">+ New Ability</button>
+          <button id="btn-header-close-ability" class="btn btn-secondary" title="Close active ability">✖ Close</button>
+          <button id="btn-header-save-ability" class="btn btn-primary" title="Save ability JSON-LD">💾 Save</button>
+          <button id="btn-header-delete-ability" class="btn btn-danger btn-sm" title="Delete current ability">🗑</button>
+        </div>
+
         <!-- Maps Context Controls -->
         <div id="maps-header-controls" class="context-selector-group hidden">
           <!-- File Menu Dropdown -->
@@ -176,6 +206,9 @@
           </button>
           <button id="tab-camp-inventory" class="campaign-subtab-btn" data-subpane="subpane-camp-inventory">
             <span>🎒 Party & Inventory</span>
+          </button>
+          <button id="tab-camp-tactics" class="campaign-subtab-btn" data-subpane="subpane-camp-tactics">
+            <span>⚔️ Infinity AI Tactics & Arena</span>
           </button>
         </div>
 
@@ -536,6 +569,64 @@
             </div>
           </div>
         </div> <!-- End #subpane-camp-inventory -->
+
+        <!-- Subpane 3: Infinity AI Tactics & Arena -->
+        <div id="subpane-camp-tactics" class="campaign-subpane hidden">
+          <div class="campaign-layout" style="display: flex; flex-direction: column; gap: 20px;">
+            <!-- Party Combat Formations & Directives Overview -->
+            <div class="panel">
+              <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h2>⚔️ Active Party Tactical Roster & Directives</h2>
+                <span class="encumbrance-badge normal" id="camp-party-tactics-badge">Tactical Readiness: Optimal</span>
+              </div>
+              <div class="panel-body">
+                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">
+                  Overview of party members, their configured autonomous Infinity AI roles, target priorities, movement stances, and prepared combat spells/abilities.
+                </p>
+                <div id="camp-tactics-roster-grid" class="tactics-roster-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px;">
+                  <!-- Dynamically populated party tactical cards -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Infinity AI Battle Simulator / Encounter Tester -->
+            <div class="panel">
+              <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h2>🎮 Infinity AI Combat Arena & Turn Simulator</h2>
+                <div style="display: flex; gap: 8px;">
+                  <select id="sim-scenario-select" class="dropdown-select" style="min-width: 200px;">
+                    <option value="crypt-skeleton-patrol">Catacomb Patrol (Skeletons)</option>
+                    <option value="homestead-hound-pack">Homestead Pack (Corrupted Hounds)</option>
+                    <option value="golem-attrition">Golem Vault (Iron Golem)</option>
+                  </select>
+                  <button id="btn-run-sim-round" class="btn btn-secondary btn-sm">▶ Step 1 Round</button>
+                  <button id="btn-run-sim-battle" class="btn btn-primary btn-sm">⚔️ Simulate Full Battle</button>
+                  <button id="btn-reset-sim" class="btn btn-secondary btn-sm">↺ Reset</button>
+                </div>
+              </div>
+              <div class="panel-body">
+                <div class="simulation-dashboard" style="display: grid; grid-template-columns: 320px 1fr; gap: 16px;">
+                  <div class="sim-status-box panel" style="background: rgba(0,0,0,0.2); padding: 14px; border-radius: 6px;">
+                    <h3 style="font-size: 13px; margin-bottom: 10px; color: var(--cyan-accent);">Battle Status</h3>
+                    <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12px;">
+                      <div>Round: <strong id="sim-round-count">0 / 25</strong></div>
+                      <div>Party Living: <strong id="sim-party-alive" style="color: #4caf50;">4</strong></div>
+                      <div>Enemies Remaining: <strong id="sim-enemies-alive" style="color: #f44336;">3</strong></div>
+                      <div>Combat Outcome: <span id="sim-outcome-badge" class="item-badge-pill" style="background: #37474f;">Ready</span></div>
+                      <div>Engine Audit: <strong id="sim-audit-status" style="color: #00bcd4;">✔ Clean</strong></div>
+                    </div>
+                  </div>
+                  <div class="sim-log-box panel" style="background: rgba(0,0,0,0.3); padding: 14px; border-radius: 6px; max-height: 300px; overflow-y: auto;">
+                    <h3 style="font-size: 13px; margin-bottom: 10px; color: var(--cyan-accent);">🎮 Infinity AI Action Stream</h3>
+                    <div id="sim-log-entries" style="font-family: monospace; font-size: 11px; line-height: 1.6; color: #cfd8dc;">
+                      <div style="color: var(--text-muted); font-style: italic;">Press "Step 1 Round" or "Simulate Full Battle" to execute autonomous Infinity AI combat decisions.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- ========================================================
@@ -855,12 +946,128 @@
               </div>
             </div>
 
-            <!-- Spells Section -->
-            <div class="sheet-section">
-              <h3>Spells & Special Abilities</h3>
-              <div class="form-group">
-                <label for="hero-spells">Prepared Spells / Actions</label>
-                <textarea id="hero-spells" rows="2" placeholder="Second Wind, Action Surge, Magic Missile..."></textarea>
+            <!-- Spellbook & Prepared Spells Section -->
+            <div class="sheet-section" id="section-char-spellbook">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <h3>✨ Spellbook & Prepared Spells</h3>
+                <div class="spell-stats-summary" style="display: flex; gap: 12px; font-size: 11px;">
+                  <span>Spell DC: <strong id="char-spell-dc" style="color: #00bcd4;">13</strong></span>
+                  <span>Spell Attack: <strong id="char-spell-attack" style="color: #00bcd4;">+5</strong></span>
+                  <span>Prepared: <strong id="char-spell-count" style="color: #4caf50;">0</strong></span>
+                </div>
+              </div>
+              <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                <select id="char-spells-select" class="dropdown-select full-width">
+                  <option value="">(Select a spell to prepare...)</option>
+                </select>
+                <button type="button" id="btn-char-add-spell" class="btn btn-secondary btn-sm" style="white-space: nowrap;">+ Prepare Spell</button>
+              </div>
+              <div id="char-spells-chips" class="spell-chips-container" style="display: flex; flex-wrap: wrap; gap: 6px; min-height: 38px; padding: 6px; background: rgba(0,0,0,0.2); border-radius: 4px; border: 1px dashed var(--border-light);">
+                <span style="color: var(--text-muted); font-size: 11px;">No spells prepared in spellbook.</span>
+              </div>
+              <!-- Hidden compatibility field for legacy hero-spells -->
+              <textarea id="hero-spells" class="hidden" rows="1"></textarea>
+            </div>
+
+            <!-- Special Abilities, Feats & Class Features Section -->
+            <div class="sheet-section" id="section-char-abilities">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <h3>⚡ Special Abilities & Feats</h3>
+                <span style="font-size: 11px; color: var(--text-muted);">Assigned: <strong id="char-ability-count" style="color: #ff9800;">0</strong></span>
+              </div>
+              <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                <select id="char-abilities-select" class="dropdown-select full-width">
+                  <option value="">(Select an ability or feat...)</option>
+                </select>
+                <button type="button" id="btn-char-add-ability" class="btn btn-secondary btn-sm" style="white-space: nowrap;">+ Add Ability</button>
+              </div>
+              <div id="char-abilities-chips" class="ability-chips-container" style="display: flex; flex-wrap: wrap; gap: 6px; min-height: 38px; padding: 6px; background: rgba(0,0,0,0.2); border-radius: 4px; border: 1px dashed var(--border-light);">
+                <span style="color: var(--text-muted); font-size: 11px;">No special abilities assigned.</span>
+              </div>
+            </div>
+
+            <!-- Infinity AI Directives & Combat Tactics Section -->
+            <div class="sheet-section" id="section-char-ai-tactics">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <h3>⚔️ Infinity AI Directives & Combat Tactics</h3>
+                <span class="ai-role-badge striker" id="char-ai-role-badge">Striker</span>
+              </div>
+              <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">
+                Configure how the autonomous Infinity AI plays this character during automated combat and headless verification.
+              </p>
+              <div class="form-grid" style="gap: 10px;">
+                <div class="form-group">
+                  <label for="char-ai-controller">Controller Engine</label>
+                  <select id="char-ai-controller" class="dropdown-select">
+                    <option value="infinity_ai">Infinity AI (Autonomous Decisions)</option>
+                    <option value="scripted">Scripted (Sequential Inputs)</option>
+                    <option value="idle">Idle (Hold & Do Not Act)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="char-ai-role">Combat Role & Style</label>
+                  <select id="char-ai-role" class="dropdown-select">
+                    <option value="striker">Striker (High DPS / Burst)</option>
+                    <option value="tank">Tank (Frontline / Guard Allies)</option>
+                    <option value="caster">Caster (Ranged Spells & AoE)</option>
+                    <option value="healer">Healer / Support (Sustain & Buffs)</option>
+                    <option value="skirmisher">Skirmisher (Flank & Kite)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="char-ai-priority">Target Priority</label>
+                  <select id="char-ai-priority" class="dropdown-select">
+                    <option value="nearest">Nearest Foe (Default)</option>
+                    <option value="lowest_hp">Lowest HP (Focus Fire Finish)</option>
+                    <option value="highest_hp">Highest HP (Brute Control)</option>
+                    <option value="weakest_ac">Weakest AC (Easy Hits)</option>
+                    <option value="spellcaster">Spellcaster (Disrupt Magic)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="char-ai-movement">Tactical Movement Stance</label>
+                  <select id="char-ai-movement" class="dropdown-select">
+                    <option value="advance">Advance (Close In Aggressively)</option>
+                    <option value="hold">Hold Ground (Melee Guard Stance)</option>
+                    <option value="kite">Kite (Maintain Distance / Range)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="char-ai-heal-threshold">Heal Ally Threshold (% HP)</label>
+                  <div style="display: flex; gap: 8px; align-items: center;">
+                    <input type="range" id="char-ai-heal-slider" min="10" max="90" step="5" value="50" style="flex: 1;">
+                    <span id="char-ai-heal-val" style="font-size: 12px; font-weight: 600; width: 40px; color: #4caf50;">50%</span>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="char-ai-potion-threshold">Potion Brew Threshold (% HP)</label>
+                  <div style="display: flex; gap: 8px; align-items: center;">
+                    <input type="range" id="char-ai-potion-slider" min="10" max="90" step="5" value="40" style="flex: 1;">
+                    <span id="char-ai-potion-val" style="font-size: 12px; font-weight: 600; width: 40px; color: #ff9800;">40%</span>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                    <input type="checkbox" id="char-ai-use-spells" checked>
+                    <span>Enable Spellcasting in Combat</span>
+                  </label>
+                </div>
+                <div class="form-group">
+                  <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                    <input type="checkbox" id="char-ai-friendly-fire">
+                    <span>Allow Friendly Fire (AoE spells)</span>
+                  </label>
+                </div>
+                <div class="form-group col-span-2">
+                  <label>Reaction Triggers</label>
+                  <div style="display: flex; flex-wrap: wrap; gap: 12px; font-size: 11px; margin-top: 4px;">
+                    <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" id="rx-shield" checked> Shield (+5 AC on hit)</label>
+                    <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" id="rx-opportunity" checked> Opportunity Attack</label>
+                    <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" id="rx-counterspell"> Counterspell</label>
+                    <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" id="rx-uncanny-dodge"> Uncanny Dodge</label>
+                    <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" id="rx-defensive-flurry"> Defensive Flurry</label>
+                  </div>
+                </div>
               </div>
             </div>
           </div> <!-- End #section-hero-details -->
@@ -1093,7 +1300,305 @@
       </section>
 
       <!-- ========================================================
-           PANE 4: cRPG MAPS & BLOCKMAP STUDIO
+           PANE 4: cRPG SPELLS STUDIO
+           ======================================================== -->
+      <section id="pane-spells" class="module-pane">
+        <div class="spells-layout">
+          <!-- Left Column: Spell Catalog & Filters -->
+          <aside class="spells-sidebar">
+            <div class="sidebar-header">
+              <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px;">
+                <h2>Spellbook Library (<span id="spells-count">0</span>)</h2>
+                <button id="btn-sidebar-new-spell" class="btn btn-sm btn-primary">➕ New Spell</button>
+              </div>
+              <div class="search-box" style="padding: 0 16px 8px 16px;">
+                <input type="text" id="spell-search-input" class="search-input full-width" placeholder="🔍 Search spells by name, school, formula...">
+              </div>
+              <!-- School Filters -->
+              <div class="filter-pills-row" id="spell-school-filters" style="display: flex; gap: 6px; padding: 0 16px 8px 16px; overflow-x: auto;">
+                <button class="filter-pill active" data-school="all">All Schools</button>
+                <button class="filter-pill" data-school="Evocation">Evocation</button>
+                <button class="filter-pill" data-school="Abjuration">Abjuration</button>
+                <button class="filter-pill" data-school="Enchantment">Enchantment</button>
+                <button class="filter-pill" data-school="Illusion">Illusion</button>
+                <button class="filter-pill" data-school="Transmutation">Transmutation</button>
+                <button class="filter-pill" data-school="Divination">Divination</button>
+                <button class="filter-pill" data-school="Conjuration">Conjuration</button>
+              </div>
+              <!-- Level Filters -->
+              <div class="filter-pills-row" id="spell-level-filters" style="display: flex; gap: 6px; padding: 0 16px 12px 16px; overflow-x: auto;">
+                <button class="filter-pill active" data-level="all">All Levels</button>
+                <button class="filter-pill" data-level="0">Cantrip</button>
+                <button class="filter-pill" data-level="1">1st Level</button>
+                <button class="filter-pill" data-level="2">2nd Level</button>
+                <button class="filter-pill" data-level="3">3rd Level</button>
+              </div>
+            </div>
+            <div id="spells-list" class="spells-list-container">
+              <!-- Spell cards rendered via JS -->
+            </div>
+          </aside>
+
+          <!-- Right Column: Spell Blueprint Editor -->
+          <main class="spell-editor-content">
+            <!-- Empty State -->
+            <div id="spell-empty-state" class="empty-state-card">
+              <div class="empty-state-icon">✨</div>
+              <h3>Spells & Weave Studio</h3>
+              <p>Select a spell from the library on the left, or compose a new spell blueprint.</p>
+              <button id="btn-empty-new-spell" class="btn btn-primary" style="margin-top: 14px;">➕ Create Spell Blueprint</button>
+            </div>
+
+            <!-- Spell Form Panel -->
+            <div id="spell-form-container" class="spell-form-panel hidden">
+              <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); padding: 14px 20px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <span id="spell-form-icon" style="font-size: 20px;">✨</span>
+                  <h2 id="spell-form-title">Spell Blueprint</h2>
+                  <span id="spell-form-school-badge" class="spell-school-badge evocation">Evocation</span>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                  <button id="btn-close-spell" class="btn btn-secondary btn-sm" title="Close spell">✖ Close</button>
+                  <button id="btn-save-spell" class="btn btn-primary btn-sm" title="Save spell JSON-LD">💾 Save Spell</button>
+                  <button id="btn-delete-spell" class="btn btn-danger btn-sm" title="Delete spell">🗑</button>
+                </div>
+              </div>
+              <div class="panel-body form-grid" style="padding: 20px;">
+                <div class="form-group col-span-2">
+                  <label for="spell-name">Spell Name</label>
+                  <input type="text" id="spell-name" class="input-text" placeholder="e.g. Magic Missile">
+                </div>
+                <div class="form-group">
+                  <label for="spell-slug">Unique Slug</label>
+                  <input type="text" id="spell-slug" class="input-text" placeholder="e.g. magic-missile">
+                </div>
+                <div class="form-group">
+                  <label for="spell-icon">Icon / Emoji</label>
+                  <input type="text" id="spell-icon" class="input-text" value="✨" maxlength="4">
+                </div>
+                <div class="form-group">
+                  <label for="spell-school">Magic School</label>
+                  <select id="spell-school" class="dropdown-select">
+                    <option value="Evocation">Evocation</option>
+                    <option value="Abjuration">Abjuration</option>
+                    <option value="Enchantment">Enchantment</option>
+                    <option value="Illusion">Illusion</option>
+                    <option value="Transmutation">Transmutation</option>
+                    <option value="Divination">Divination</option>
+                    <option value="Conjuration">Conjuration</option>
+                    <option value="Necromancy">Necromancy</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="spell-level">Spell Level</label>
+                  <select id="spell-level" class="dropdown-select">
+                    <option value="0">Cantrip (0th Level)</option>
+                    <option value="1">1st Level</option>
+                    <option value="2">2nd Level</option>
+                    <option value="3">3rd Level</option>
+                    <option value="4">4th Level</option>
+                    <option value="5">5th Level</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="spell-casting-time">Casting Time</label>
+                  <select id="spell-casting-time" class="dropdown-select">
+                    <option value="1 action">1 action</option>
+                    <option value="1 bonus action">1 bonus action</option>
+                    <option value="1 reaction">1 reaction</option>
+                    <option value="1 minute">1 minute</option>
+                    <option value="10 minutes">10 minutes</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="spell-range">Range</label>
+                  <input type="text" id="spell-range" class="input-text" placeholder="e.g. 120 feet, Touch, Self">
+                </div>
+                <div class="form-group">
+                  <label for="spell-duration">Duration</label>
+                  <input type="text" id="spell-duration" class="input-text" placeholder="e.g. Instantaneous, 1 minute">
+                </div>
+                <div class="form-group">
+                  <label for="spell-components">Components</label>
+                  <input type="text" id="spell-components" class="input-text" placeholder="e.g. V, S, M (a tiny crystal)">
+                </div>
+                <div class="form-group">
+                  <label for="spell-damage">Damage / Healing Formula</label>
+                  <input type="text" id="spell-damage" class="input-text" placeholder="e.g. 3d4+3, 8d6, 1d8+WIS">
+                </div>
+                <div class="form-group">
+                  <label for="spell-damage-type">Damage / Effect Type</label>
+                  <select id="spell-damage-type" class="dropdown-select">
+                    <option value="force">Force</option>
+                    <option value="healing">Healing</option>
+                    <option value="fire">Fire</option>
+                    <option value="cold">Cold</option>
+                    <option value="lightning">Lightning</option>
+                    <option value="thunder">Thunder</option>
+                    <option value="radiant">Radiant</option>
+                    <option value="necrotic">Necrotic</option>
+                    <option value="psychic">Psychic</option>
+                    <option value="buff">Buff / Utility</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="spell-saving-throw">Saving Throw</label>
+                  <select id="spell-saving-throw" class="dropdown-select">
+                    <option value="None">None (Auto-hit / Attack Roll / Buff)</option>
+                    <option value="DEX">DEX Save (Reflex)</option>
+                    <option value="CON">CON Save (Fortitude)</option>
+                    <option value="WIS">WIS Save (Willpower)</option>
+                    <option value="INT">INT Save (Mental)</option>
+                    <option value="STR">STR Save (Physical)</option>
+                    <option value="CHA">CHA Save (Charisma)</option>
+                  </select>
+                </div>
+                <div class="form-group col-span-2">
+                  <label for="spell-desc">Spell Rules & Lore Description</label>
+                  <textarea id="spell-desc" rows="3" placeholder="Enter spell description, targeting parameters, and in-game mechanics..."></textarea>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+      </section>
+
+      <!-- ========================================================
+           PANE 5: cRPG ABILITIES STUDIO
+           ======================================================== -->
+      <section id="pane-abilities" class="module-pane">
+        <div class="abilities-layout">
+          <!-- Left Column: Abilities Catalog & Filters -->
+          <aside class="abilities-sidebar">
+            <div class="sidebar-header">
+              <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px;">
+                <h2>Abilities & Feats (<span id="abilities-count">0</span>)</h2>
+                <button id="btn-sidebar-new-ability" class="btn btn-sm btn-primary">➕ New Ability</button>
+              </div>
+              <div class="search-box" style="padding: 0 16px 8px 16px;">
+                <input type="text" id="ability-search-input" class="search-input full-width" placeholder="🔍 Search abilities by name, category, action...">
+              </div>
+              <!-- Category Filters -->
+              <div class="filter-pills-row" id="ability-category-filters" style="display: flex; gap: 6px; padding: 0 16px 8px 16px; overflow-x: auto;">
+                <button class="filter-pill active" data-category="all">All Categories</button>
+                <button class="filter-pill" data-category="class_feature">Class Features</button>
+                <button class="filter-pill" data-category="combat_maneuver">Combat Maneuvers</button>
+                <button class="filter-pill" data-category="feat">Feats</button>
+                <button class="filter-pill" data-category="racial_trait">Racial Traits</button>
+              </div>
+              <!-- Action Type Filters -->
+              <div class="filter-pills-row" id="ability-action-filters" style="display: flex; gap: 6px; padding: 0 16px 12px 16px; overflow-x: auto;">
+                <button class="filter-pill active" data-action="all">All Actions</button>
+                <button class="filter-pill" data-action="action">Action</button>
+                <button class="filter-pill" data-action="bonus_action">Bonus Action</button>
+                <button class="filter-pill" data-action="reaction">Reaction</button>
+                <button class="filter-pill" data-action="passive">Passive</button>
+                <button class="filter-pill" data-action="free_action">Free Action</button>
+              </div>
+            </div>
+            <div id="abilities-list" class="abilities-list-container">
+              <!-- Ability cards rendered via JS -->
+            </div>
+          </aside>
+
+          <!-- Right Column: Ability Blueprint Editor -->
+          <main class="ability-editor-content">
+            <!-- Empty State -->
+            <div id="ability-empty-state" class="empty-state-card">
+              <div class="empty-state-icon">⚡</div>
+              <h3>Abilities & Feats Studio</h3>
+              <p>Select an ability from the library on the left, or create a new class feature or combat maneuver.</p>
+              <button id="btn-empty-new-ability" class="btn btn-primary" style="margin-top: 14px;">➕ Create Ability Blueprint</button>
+            </div>
+
+            <!-- Ability Form Panel -->
+            <div id="ability-form-container" class="ability-form-panel hidden">
+              <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); padding: 14px 20px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <span id="ability-form-icon" style="font-size: 20px;">⚡</span>
+                  <h2 id="ability-form-title">Ability Blueprint</h2>
+                  <span id="ability-form-action-badge" class="action-type-badge action">Action</span>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                  <button id="btn-close-ability" class="btn btn-secondary btn-sm" title="Close ability">✖ Close</button>
+                  <button id="btn-save-ability" class="btn btn-primary btn-sm" title="Save ability JSON-LD">💾 Save Ability</button>
+                  <button id="btn-delete-ability" class="btn btn-danger btn-sm" title="Delete ability">🗑</button>
+                </div>
+              </div>
+              <div class="panel-body form-grid" style="padding: 20px;">
+                <div class="form-group col-span-2">
+                  <label for="ability-name">Ability Name</label>
+                  <input type="text" id="ability-name" class="input-text" placeholder="e.g. Second Wind">
+                </div>
+                <div class="form-group">
+                  <label for="ability-slug">Unique Slug</label>
+                  <input type="text" id="ability-slug" class="input-text" placeholder="e.g. second-wind">
+                </div>
+                <div class="form-group">
+                  <label for="ability-icon">Icon / Emoji</label>
+                  <input type="text" id="ability-icon" class="input-text" value="⚡" maxlength="4">
+                </div>
+                <div class="form-group">
+                  <label for="ability-category">Category</label>
+                  <select id="ability-category" class="dropdown-select">
+                    <option value="class_feature">Class Feature</option>
+                    <option value="combat_maneuver">Combat Maneuver</option>
+                    <option value="feat">Feat</option>
+                    <option value="racial_trait">Racial Trait</option>
+                    <option value="monster_trait">Monster Trait</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="ability-action-type">Action Type</label>
+                  <select id="ability-action-type" class="dropdown-select">
+                    <option value="action">Action</option>
+                    <option value="bonus_action">Bonus Action</option>
+                    <option value="reaction">Reaction</option>
+                    <option value="passive">Passive</option>
+                    <option value="free_action">Free Action</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="ability-recharge">Recharge Rate</label>
+                  <select id="ability-recharge" class="dropdown-select">
+                    <option value="short_rest">Short Rest</option>
+                    <option value="long_rest">Long Rest</option>
+                    <option value="at_will">At Will</option>
+                    <option value="special">Special Charges</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="ability-resource-cost">Resource Cost</label>
+                  <input type="text" id="ability-resource-cost" class="input-text" placeholder="e.g. 1 use, 1 Superiority Die, 1 Rage">
+                </div>
+                <div class="form-group">
+                  <label for="ability-range">Range</label>
+                  <input type="text" id="ability-range" class="input-text" placeholder="e.g. Self, 30 feet, Melee Reach">
+                </div>
+                <div class="form-group">
+                  <label for="ability-duration">Duration</label>
+                  <input type="text" id="ability-duration" class="input-text" placeholder="e.g. Instantaneous, 1 minute (10 rounds)">
+                </div>
+                <div class="form-group">
+                  <label for="ability-prereq">Prerequisites</label>
+                  <input type="text" id="ability-prereq" class="input-text" placeholder="e.g. Fighter Level 1, STR 13">
+                </div>
+                <div class="form-group">
+                  <label for="ability-effect-formula">Effect Formula / Summary</label>
+                  <input type="text" id="ability-effect-formula" class="input-text" placeholder="e.g. 1d10 + Fighter Level HP">
+                </div>
+                <div class="form-group col-span-2">
+                  <label for="ability-desc">Rules & Lore Description</label>
+                  <textarea id="ability-desc" rows="3" placeholder="Enter in-game ability mechanics, trigger conditions, and lore text..."></textarea>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+      </section>
+
+      <!-- ========================================================
+           PANE 6: cRPG MAPS & BLOCKMAP STUDIO
            ======================================================== -->
       <section id="pane-maps" class="module-pane">
         <div class="blockmap-layout">

@@ -1,0 +1,50 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:ability:second-wind",
+  "@type": [
+    "robos:CRPGAbility",
+    "schema:Action",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Second Wind",
+  "schema:name": "Second Wind",
+  "robos:slug": "second-wind",
+  "slug": "second-wind",
+  "robos:category": "class_feature",
+  "category": "class_feature",
+  "robos:actionType": "bonus_action",
+  "actionType": "bonus_action",
+  "robos:recharge": "short_rest",
+  "recharge": "short_rest",
+  "robos:resourceCost": "1 use",
+  "resourceCost": "1 use",
+  "robos:range": "Self",
+  "range": "Self",
+  "robos:duration": "Instantaneous",
+  "duration": "Instantaneous",
+  "robos:icon": "💨",
+  "icon": "💨",
+  "robos:prerequisites": "Fighter Level 1",
+  "prerequisites": "Fighter Level 1",
+  "robos:effectFormula": "1d10 + Fighter Level HP",
+  "effectFormula": "1d10 + Fighter Level HP",
+  "robos:mechanics": {
+    "kind": "heal",
+    "target": "self",
+    "heal": "1d10+LEVEL",
+    "bonusAction": true
+  },
+  "mechanics": {
+    "kind": "heal",
+    "target": "self",
+    "heal": "1d10+LEVEL",
+    "bonusAction": true
+  },
+  "dcterms:description": "You have a limited well of stamina that you can draw on to protect yourself from harm. On your turn, you can use a bonus action to regain hit points equal to 1d10 + your fighter level.",
+  "description": "You have a limited well of stamina that you can draw on to protect yourself from harm. On your turn, you can use a bonus action to regain hit points equal to 1d10 + your fighter level."
+}

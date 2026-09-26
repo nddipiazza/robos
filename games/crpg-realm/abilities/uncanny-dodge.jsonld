@@ -1,0 +1,46 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:ability:uncanny-dodge",
+  "@type": [
+    "robos:CRPGAbility",
+    "schema:Action",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Uncanny Dodge",
+  "schema:name": "Uncanny Dodge",
+  "robos:slug": "uncanny-dodge",
+  "slug": "uncanny-dodge",
+  "robos:category": "class_feature",
+  "category": "class_feature",
+  "robos:actionType": "reaction",
+  "actionType": "reaction",
+  "robos:recharge": "at_will",
+  "recharge": "at_will",
+  "robos:resourceCost": "None",
+  "resourceCost": "None",
+  "robos:range": "Self",
+  "range": "Self",
+  "robos:duration": "1 attack",
+  "duration": "1 attack",
+  "robos:icon": "🤺",
+  "icon": "🤺",
+  "robos:prerequisites": "Rogue Level 5",
+  "prerequisites": "Rogue Level 5",
+  "robos:effectFormula": "Halve incoming attack damage",
+  "effectFormula": "Halve incoming attack damage",
+  "robos:mechanics": {
+    "kind": "reaction_damage_halving",
+    "trigger": "when_hit_visible"
+  },
+  "mechanics": {
+    "kind": "reaction_damage_halving",
+    "trigger": "when_hit_visible"
+  },
+  "dcterms:description": "Starting at 5th level, when an attacker that you can see hits you with an attack, you can use your reaction to halve the attack's damage against you.",
+  "description": "Starting at 5th level, when an attacker that you can see hits you with an attack, you can use your reaction to halve the attack's damage against you."
+}

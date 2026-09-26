@@ -1,0 +1,68 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:spell:burning-hands",
+  "@type": [
+    "robos:CRPGSpell",
+    "schema:Action",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Burning Hands",
+  "schema:name": "Burning Hands",
+  "robos:slug": "burning-hands",
+  "slug": "burning-hands",
+  "robos:spellLevel": 1,
+  "spellLevel": 1,
+  "robos:magicSchool": "Evocation",
+  "magicSchool": "Evocation",
+  "robos:castingTime": "1 action",
+  "castingTime": "1 action",
+  "robos:range": "15 feet cone",
+  "range": "15 feet cone",
+  "robos:damageFormula": "3d6",
+  "damageFormula": "3d6",
+  "robos:damageType": "fire",
+  "damageType": "fire",
+  "robos:icon": "🔥",
+  "icon": "🔥",
+  "robos:duration": "Instantaneous",
+  "duration": "Instantaneous",
+  "robos:components": "V, S, M",
+  "components": "V, S, M",
+  "robos:savingThrow": "DEX",
+  "savingThrow": "DEX",
+  "robos:mechanics": {
+    "kind": "save_damage",
+    "target": "point",
+    "origin": "self",
+    "range": 15,
+    "area": {
+      "shape": "cone",
+      "size": 15
+    },
+    "save": "DEX",
+    "onSave": "half",
+    "damage": "3d6",
+    "damageType": "fire"
+  },
+  "mechanics": {
+    "kind": "save_damage",
+    "target": "point",
+    "origin": "self",
+    "range": 15,
+    "area": {
+      "shape": "cone",
+      "size": 15
+    },
+    "save": "DEX",
+    "onSave": "half",
+    "damage": "3d6",
+    "damageType": "fire"
+  },
+  "dcterms:description": "A thin sheet of flames shoots forth from your outstretched fingertips, dealing 3d6 fire damage on a failed Dex save.",
+  "description": "A thin sheet of flames shoots forth from your outstretched fingertips, dealing 3d6 fire damage on a failed Dex save."
+}

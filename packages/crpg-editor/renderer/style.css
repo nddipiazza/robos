@@ -2100,5 +2100,237 @@ textarea {
   }
 }
 
+/* ==========================================================================
+   SPELLS & ABILITIES STUDIOS (Two-Column Layout)
+   ========================================================================== */
+.spells-layout,
+.abilities-layout {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+.spells-sidebar,
+.abilities-sidebar {
+  width: 320px;
+  min-width: 280px;
+  max-width: 360px;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-surface);
+}
+
+.spells-list-container,
+.abilities-list-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.spell-list-item,
+.ability-list-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.spell-list-item:hover,
+.ability-list-item:hover {
+  border-color: var(--cyan-accent);
+  background: rgba(0, 188, 212, 0.05);
+}
+
+.spell-list-item.active,
+.ability-list-item.active {
+  border-color: var(--cyan-accent);
+  background: rgba(0, 188, 212, 0.12);
+  box-shadow: 0 0 10px rgba(0, 188, 212, 0.2);
+}
+
+.spell-list-icon,
+.ability-list-icon {
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.spell-list-meta,
+.ability-list-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.spell-list-title,
+.ability-list-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-bright);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.spell-list-sub,
+.ability-list-sub {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.spell-editor-content,
+.ability-editor-content {
+  flex: 1;
+  overflow-y: auto;
+  background-color: var(--bg-dark);
+}
+
+.spell-form-panel,
+.ability-form-panel {
+  max-width: 860px;
+  margin: 20px auto;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+/* Badges for Spell Schools */
+.spell-school-badge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid var(--border-light);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-bright);
+}
+
+.spell-school-badge.evocation { border-color: #ff5722; background: rgba(255, 87, 34, 0.15); color: #ff8a65; }
+.spell-school-badge.abjuration { border-color: #2196f3; background: rgba(33, 150, 243, 0.15); color: #64b5f6; }
+.spell-school-badge.enchantment { border-color: #e91e63; background: rgba(233, 30, 99, 0.15); color: #f06292; }
+.spell-school-badge.illusion { border-color: #9c27b0; background: rgba(156, 39, 176, 0.15); color: #ba68c8; }
+.spell-school-badge.transmutation { border-color: #4caf50; background: rgba(76, 175, 80, 0.15); color: #81c784; }
+.spell-school-badge.divination { border-color: #00bcd4; background: rgba(0, 188, 212, 0.15); color: #4dd0e1; }
+.spell-school-badge.conjuration { border-color: #ff9800; background: rgba(255, 152, 0, 0.15); color: #ffb74d; }
+.spell-school-badge.necromancy { border-color: #673ab7; background: rgba(103, 58, 183, 0.15); color: #9575cd; }
+
+/* Badges for Action Types */
+.action-type-badge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid var(--border-light);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.action-type-badge.action { border-color: #4caf50; background: rgba(76, 175, 80, 0.15); color: #81c784; }
+.action-type-badge.bonus_action { border-color: #ff9800; background: rgba(255, 152, 0, 0.15); color: #ffb74d; }
+.action-type-badge.reaction { border-color: #00bcd4; background: rgba(0, 188, 212, 0.15); color: #4dd0e1; }
+.action-type-badge.passive { border-color: #78909c; background: rgba(120, 144, 156, 0.15); color: #b0bec5; }
+.action-type-badge.free_action { border-color: #ab47bc; background: rgba(171, 71, 188, 0.15); color: #ce93d8; }
+
+/* Badges for Infinity AI Roles */
+.ai-role-badge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border-light);
+}
+
+.ai-role-badge.striker { border-color: #f44336; background: rgba(244, 67, 54, 0.15); color: #e57373; }
+.ai-role-badge.tank { border-color: #2196f3; background: rgba(33, 150, 243, 0.15); color: #64b5f6; }
+.ai-role-badge.caster { border-color: #ab47bc; background: rgba(171, 71, 188, 0.15); color: #ba68c8; }
+.ai-role-badge.healer { border-color: #4caf50; background: rgba(76, 175, 80, 0.15); color: #81c784; }
+.ai-role-badge.skirmisher { border-color: #ff9800; background: rgba(255, 152, 0, 0.15); color: #ffb74d; }
+
+/* Chips in Character Sheet */
+.spell-chip,
+.ability-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+  color: var(--text-bright);
+}
+
+.chip-remove-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0 2px;
+  font-size: 13px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+}
+
+.chip-remove-btn:hover {
+  color: var(--red-danger);
+}
+
+/* Tactics Roster Cards */
+.tactics-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tactics-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tactics-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tactics-card-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+
 
 

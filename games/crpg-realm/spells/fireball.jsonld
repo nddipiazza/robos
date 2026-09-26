@@ -1,0 +1,66 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:spell:fireball",
+  "@type": [
+    "robos:CRPGSpell",
+    "schema:Action",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Fireball",
+  "schema:name": "Fireball",
+  "robos:slug": "fireball",
+  "slug": "fireball",
+  "robos:spellLevel": 3,
+  "spellLevel": 3,
+  "robos:magicSchool": "Evocation",
+  "magicSchool": "Evocation",
+  "robos:castingTime": "1 action",
+  "castingTime": "1 action",
+  "robos:range": "150 feet",
+  "range": "150 feet",
+  "robos:damageFormula": "8d6",
+  "damageFormula": "8d6",
+  "robos:damageType": "fire",
+  "damageType": "fire",
+  "robos:icon": "🔥",
+  "icon": "🔥",
+  "robos:duration": "Instantaneous",
+  "duration": "Instantaneous",
+  "robos:components": "V, S, M",
+  "components": "V, S, M",
+  "robos:savingThrow": "DEX",
+  "savingThrow": "DEX",
+  "robos:mechanics": {
+    "kind": "save_damage",
+    "target": "point",
+    "range": 150,
+    "area": {
+      "shape": "sphere",
+      "size": 20
+    },
+    "save": "DEX",
+    "onSave": "half",
+    "damage": "8d6",
+    "damageType": "fire"
+  },
+  "mechanics": {
+    "kind": "save_damage",
+    "target": "point",
+    "range": 150,
+    "area": {
+      "shape": "sphere",
+      "size": 20
+    },
+    "save": "DEX",
+    "onSave": "half",
+    "damage": "8d6",
+    "damageType": "fire"
+  },
+  "dcterms:description": "A bright streak flashes to a chosen point and blossoms into an enormous roar of flame, dealing 8d6 fire damage.",
+  "description": "A bright streak flashes to a chosen point and blossoms into an enormous roar of flame, dealing 8d6 fire damage."
+}

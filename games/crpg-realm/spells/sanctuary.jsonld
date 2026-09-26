@@ -1,0 +1,56 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:spell:sanctuary",
+  "@type": [
+    "robos:CRPGSpell",
+    "schema:Action",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Sanctuary",
+  "schema:name": "Sanctuary",
+  "robos:slug": "sanctuary",
+  "slug": "sanctuary",
+  "robos:spellLevel": 1,
+  "spellLevel": 1,
+  "robos:magicSchool": "Abjuration",
+  "magicSchool": "Abjuration",
+  "robos:castingTime": "1 bonus action",
+  "castingTime": "1 bonus action",
+  "robos:range": "30 feet",
+  "range": "30 feet",
+  "robos:damageFormula": "",
+  "damageFormula": "",
+  "robos:damageType": "",
+  "damageType": "",
+  "robos:icon": "🛡️",
+  "icon": "🛡️",
+  "robos:duration": "10 rounds",
+  "duration": "10 rounds",
+  "robos:components": "V, S, M",
+  "components": "V, S, M",
+  "robos:savingThrow": "None",
+  "savingThrow": "None",
+  "robos:mechanics": {
+    "kind": "buff",
+    "target": "ally",
+    "range": 30,
+    "condition": "sanctuary",
+    "duration": 10,
+    "wardSave": "WIS"
+  },
+  "mechanics": {
+    "kind": "buff",
+    "target": "ally",
+    "range": 30,
+    "condition": "sanctuary",
+    "duration": 10,
+    "wardSave": "WIS"
+  },
+  "dcterms:description": "You ward a creature within range against attack. Until the spell ends, any creature who targets the warded creature with an attack or a harmful spell cannot target it. The ward ends if the warded creature attacks.",
+  "description": "You ward a creature within range against attack. Until the spell ends, any creature who targets the warded creature with an attack or a harmful spell cannot target it. The ward ends if the warded creature attacks."
+}

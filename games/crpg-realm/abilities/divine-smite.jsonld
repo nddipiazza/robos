@@ -1,0 +1,50 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:ability:divine-smite",
+  "@type": [
+    "robos:CRPGAbility",
+    "schema:Action",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Divine Smite",
+  "schema:name": "Divine Smite",
+  "robos:slug": "divine-smite",
+  "slug": "divine-smite",
+  "robos:category": "class_feature",
+  "category": "class_feature",
+  "robos:actionType": "free_action",
+  "actionType": "free_action",
+  "robos:recharge": "at_will",
+  "recharge": "at_will",
+  "robos:resourceCost": "1 Spell Slot",
+  "resourceCost": "1 Spell Slot",
+  "robos:range": "Melee Reach",
+  "range": "Melee Reach",
+  "robos:duration": "Instantaneous",
+  "duration": "Instantaneous",
+  "robos:icon": "⚔️",
+  "icon": "⚔️",
+  "robos:prerequisites": "Paladin Level 2",
+  "prerequisites": "Paladin Level 2",
+  "robos:effectFormula": "2d8 + 1d8/slot level Radiant Damage",
+  "effectFormula": "2d8 + 1d8/slot level Radiant Damage",
+  "robos:mechanics": {
+    "kind": "smite",
+    "damageType": "radiant",
+    "baseDamage": "2d8",
+    "slotScale": "1d8"
+  },
+  "mechanics": {
+    "kind": "smite",
+    "damageType": "radiant",
+    "baseDamage": "2d8",
+    "slotScale": "1d8"
+  },
+  "dcterms:description": "Starting at 2nd level, when you hit a creature with a melee weapon attack, you can expend one spell slot to deal radiant damage to the target in addition to weapon damage.",
+  "description": "Starting at 2nd level, when you hit a creature with a melee weapon attack, you can expend one spell slot to deal radiant damage to the target in addition to weapon damage."
+}

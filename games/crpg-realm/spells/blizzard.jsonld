@@ -1,0 +1,70 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:spell:blizzard",
+  "@type": [
+    "robos:CRPGSpell",
+    "schema:Action",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Blizzard",
+  "schema:name": "Blizzard",
+  "robos:slug": "blizzard",
+  "slug": "blizzard",
+  "robos:spellLevel": 3,
+  "spellLevel": 3,
+  "robos:magicSchool": "Evocation",
+  "magicSchool": "Evocation",
+  "robos:castingTime": "1 action",
+  "castingTime": "1 action",
+  "robos:range": "150 feet",
+  "range": "150 feet",
+  "robos:damageFormula": "6d6",
+  "damageFormula": "6d6",
+  "robos:damageType": "cold",
+  "damageType": "cold",
+  "robos:icon": "🔥",
+  "icon": "🔥",
+  "robos:duration": "1 rounds",
+  "duration": "1 rounds",
+  "robos:components": "V, S, M",
+  "components": "V, S, M",
+  "robos:savingThrow": "DEX",
+  "savingThrow": "DEX",
+  "robos:mechanics": {
+    "kind": "save_damage",
+    "target": "point",
+    "range": 150,
+    "area": {
+      "shape": "sphere",
+      "size": 20
+    },
+    "save": "DEX",
+    "onSave": "half",
+    "damage": "6d6",
+    "damageType": "cold",
+    "conditionOnFail": "prone",
+    "duration": 1
+  },
+  "mechanics": {
+    "kind": "save_damage",
+    "target": "point",
+    "range": 150,
+    "area": {
+      "shape": "sphere",
+      "size": 20
+    },
+    "save": "DEX",
+    "onSave": "half",
+    "damage": "6d6",
+    "damageType": "cold",
+    "conditionOnFail": "prone",
+    "duration": 1
+  },
+  "dcterms:description": "A howling localized tempest of sleet and freezing winds blankets the target area, dealing 6d6 cold damage to all creatures caught within and leaving behind a treacherously slippery sheet of ice.",
+  "description": "A howling localized tempest of sleet and freezing winds blankets the target area, dealing 6d6 cold damage to all creatures caught within and leaving behind a treacherously slippery sheet of ice."
+}

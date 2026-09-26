@@ -287,6 +287,36 @@ const state = {
   activeItemData: null,
   itemFilter: 'all', // 'all', 'weapon', 'armor', etc.
 
+  // Spells Studio State
+  spells: [],
+  activeSpellSlug: null,
+  activeSpellData: null,
+  spellSchoolFilter: 'all',
+  spellLevelFilter: 'all',
+
+  // Abilities Studio State
+  abilities: [],
+  activeAbilitySlug: null,
+  activeAbilityData: null,
+  abilityCategoryFilter: 'all',
+  abilityActionFilter: 'all',
+
+  // Character Active Spells, Abilities & Directives
+  activeCharPreparedSpells: [],
+  activeCharAssignedAbilities: [],
+  activeCharDirective: {},
+
+  // Campaign Simulation State
+  simState: {
+    round: 0,
+    maxRounds: 25,
+    scenarioId: 'crypt-skeleton-patrol',
+    partyAlive: 4,
+    enemiesAlive: 3,
+    outcome: 'ready',
+    log: []
+  },
+
   // Map / Blockmap State
   maps: [],
   activeMapSlug: null,
@@ -314,6 +344,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupCampaignHandlers();
   setupCharacterHandlers();
   setupItemHandlers();
+  setupSpellHandlers();
+  setupAbilityHandlers();
+  setupTacticsSimHandlers();
   setupInventoryHandlers();
   setupBlockmapHandlers();
 
@@ -330,6 +363,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadScenesList();
   await loadMapsList();
   await loadAllItems();
+  await loadAllSpells();
+  await loadAllAbilities();
   await loadAllCharacters();
   await loadCampaignsList();
 
@@ -382,12 +417,16 @@ function switchModule(paneId) {
   const campControls = document.getElementById('campaign-header-controls');
   const charControls = document.getElementById('character-header-controls');
   const itemControls = document.getElementById('items-header-controls');
+  const spellsControls = document.getElementById('spells-header-controls');
+  const abilitiesControls = document.getElementById('abilities-header-controls');
   const invControls = document.getElementById('inventory-header-controls');
   const mapControls = document.getElementById('maps-header-controls') || document.getElementById('blockmap-header-controls');
 
   if (campControls) campControls.classList.toggle('hidden', paneId !== 'pane-campaign');
   if (charControls) charControls.classList.toggle('hidden', paneId !== 'pane-characters');
   if (itemControls) itemControls.classList.toggle('hidden', paneId !== 'pane-items');
+  if (spellsControls) spellsControls.classList.toggle('hidden', paneId !== 'pane-spells');
+  if (abilitiesControls) abilitiesControls.classList.toggle('hidden', paneId !== 'pane-abilities');
   if (invControls) invControls.classList.toggle('hidden', paneId !== 'pane-inventory');
   if (mapControls) mapControls.classList.toggle('hidden', paneId !== 'pane-maps' && paneId !== 'pane-blockmap');
 
@@ -407,6 +446,20 @@ function switchModule(paneId) {
     } else {
       showEmptyItemState();
     }
+  } else if (paneId === 'pane-spells') {
+    renderSpellsList();
+    if (state.activeSpellSlug) {
+      loadSpellForm(state.activeSpellSlug);
+    } else {
+      showEmptySpellState();
+    }
+  } else if (paneId === 'pane-abilities') {
+    renderAbilitiesList();
+    if (state.activeAbilitySlug) {
+      loadAbilityForm(state.activeAbilitySlug);
+    } else {
+      showEmptyAbilityState();
+    }
   } else if (paneId === 'pane-inventory') {
     renderInventoryViews();
   } else if (paneId === 'pane-campaign') {
@@ -415,6 +468,8 @@ function switchModule(paneId) {
     const activeSubpane = document.querySelector('.campaign-subtab-btn.active')?.getAttribute('data-subpane');
     if (activeSubpane === 'subpane-camp-inventory') {
       renderInventoryViews();
+    } else if (activeSubpane === 'subpane-camp-tactics') {
+      renderCampaignTacticsRoster();
     }
   }
 }
@@ -580,6 +635,8 @@ function switchCampaignSubpane(subpaneId) {
   });
   if (subpaneId === 'subpane-camp-inventory') {
     renderInventoryViews();
+  } else if (subpaneId === 'subpane-camp-tactics') {
+    renderCampaignTacticsRoster();
   }
 }
 
@@ -1261,11 +1318,61 @@ function setupCharacterHandlers() {
   document.getElementById('npc-str')?.addEventListener('input', () => {
     updateCharSheetEncumbranceMeter();
   });
+
+  // Spellbook & Prepared Spells handlers
+  document.getElementById('btn-char-add-spell')?.addEventListener('click', () => {
+    const sel = document.getElementById('char-spells-select');
+    const spellSlug = sel?.value;
+    if (!spellSlug) return;
+    if (!state.activeCharPreparedSpells) state.activeCharPreparedSpells = [];
+    if (!state.activeCharPreparedSpells.includes(spellSlug)) {
+      state.activeCharPreparedSpells.push(spellSlug);
+      renderCharSpellChips();
+      updateCharSpellStats();
+    }
+  });
+
+  // Abilities handlers
+  document.getElementById('btn-char-add-ability')?.addEventListener('click', () => {
+    const sel = document.getElementById('char-abilities-select');
+    const abilitySlug = sel?.value;
+    if (!abilitySlug) return;
+    if (!state.activeCharAssignedAbilities) state.activeCharAssignedAbilities = [];
+    if (!state.activeCharAssignedAbilities.includes(abilitySlug)) {
+      state.activeCharAssignedAbilities.push(abilitySlug);
+      renderCharAbilityChips();
+    }
+  });
+
+  // Infinity AI Directives handlers
+  document.getElementById('char-ai-heal-slider')?.addEventListener('input', (e) => {
+    const val = document.getElementById('char-ai-heal-val');
+    if (val) val.textContent = `${e.target.value}%`;
+  });
+  document.getElementById('char-ai-potion-slider')?.addEventListener('input', (e) => {
+    const val = document.getElementById('char-ai-potion-val');
+    if (val) val.textContent = `${e.target.value}%`;
+  });
+  document.getElementById('char-ai-role')?.addEventListener('change', (e) => {
+    updateCharRoleBadge(e.target.value);
+  });
+
+  // Update spell stats on class/attribute changes
+  ['attr-int', 'attr-wis', 'attr-cha', 'vital-prof', 'hero-class'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => updateCharSpellStats());
+    document.getElementById(id)?.addEventListener('change', () => updateCharSpellStats());
+  });
 }
 
 function showEmptyCharacterState() {
   state.activeCharacterSlug = null;
   state.activeCharacterData = null;
+  state.activeCharPreparedSpells = [];
+  state.activeCharAssignedAbilities = [];
+  renderCharSpellChips();
+  renderCharAbilityChips();
+  updateCharSpellStats();
+  loadCharDirectiveUI({});
 
   const emptyOverlay = document.getElementById('character-empty-state');
   if (emptyOverlay) emptyOverlay.classList.remove('hidden');
@@ -1489,7 +1596,39 @@ async function loadCharacterSheet(slug) {
       document.getElementById('vital-init').value = data['robos:initiative'] || data.initiative || 0;
       document.getElementById('vital-prof').value = data['robos:prof'] || data.prof || 2;
 
-      document.getElementById('hero-spells').value = data['robos:spells'] || data.spells || '';
+      // Spellbook, Abilities & Infinity AI Directives
+      let preparedSpells = data['robos:preparedSpells'] || data.preparedSpells || [];
+      if (!Array.isArray(preparedSpells)) {
+        if (typeof preparedSpells === 'string' && preparedSpells.trim()) {
+          preparedSpells = preparedSpells.split(',').map(s => s.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-')).filter(Boolean);
+        } else {
+          preparedSpells = [];
+        }
+      }
+      if (preparedSpells.length === 0 && (data['robos:spells'] || data.spells)) {
+        const legacySpells = String(data['robos:spells'] || data.spells);
+        preparedSpells = legacySpells.split(/[\n,]/).map(s => s.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-')).filter(Boolean);
+      }
+      state.activeCharPreparedSpells = preparedSpells;
+      populateCharSpellsDropdown();
+      renderCharSpellChips();
+      updateCharSpellStats();
+
+      let assignedAbilities = data['robos:abilities'] || data.abilities || [];
+      if (!Array.isArray(assignedAbilities)) {
+        if (typeof assignedAbilities === 'string' && assignedAbilities.trim()) {
+          assignedAbilities = assignedAbilities.split(',').map(s => s.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-')).filter(Boolean);
+        } else {
+          assignedAbilities = [];
+        }
+      }
+      state.activeCharAssignedAbilities = assignedAbilities;
+      populateCharAbilitiesDropdown();
+      renderCharAbilityChips();
+
+      const charDirective = data['robos:directive'] || data.directive || {};
+      loadCharDirectiveUI(charDirective);
+
       document.getElementById('hero-backstory').value = data['robos:backstory'] || data.backstory || '';
 
       // Equipment slots & encumbrance meter for Character Sheet
@@ -1647,6 +1786,21 @@ async function saveCurrentCharacter() {
   charData['robos:quickItems'] = csQuickVal;
   charData.quickItems = csQuickVal;
 
+  // Spellbook, Abilities & Infinity AI Directives
+  const preparedSpells = state.activeCharPreparedSpells || [];
+  charData['robos:preparedSpells'] = preparedSpells;
+  charData.preparedSpells = preparedSpells;
+  charData['robos:spells'] = preparedSpells.join(', ');
+  charData.spells = preparedSpells.join(', ');
+
+  const assignedAbilities = state.activeCharAssignedAbilities || [];
+  charData['robos:abilities'] = assignedAbilities;
+  charData.abilities = assignedAbilities;
+
+  const directive = saveCharDirectiveUI();
+  charData['robos:directive'] = directive;
+  charData.directive = directive;
+
   try {
     setStatus(`Saving character ${slug}...`);
     const res = await window.robos.saveCharacter({ slug, data: charData });
@@ -1707,6 +1861,23 @@ function addNewHero() {
   document.getElementById('hero-spells').value = '';
   document.getElementById('hero-backstory').value = 'A brave adventurer setting forth on a quest.';
 
+  state.activeCharPreparedSpells = [];
+  state.activeCharAssignedAbilities = [];
+  populateCharSpellsDropdown();
+  populateCharAbilitiesDropdown();
+  renderCharSpellChips();
+  renderCharAbilityChips();
+  updateCharSpellStats();
+  loadCharDirectiveUI({
+    controller: 'infinity_ai',
+    role: 'striker',
+    targetPriority: 'nearest',
+    movement: 'advance',
+    healThreshold: 0.5,
+    potionThreshold: 0.4,
+    useSpells: true
+  });
+
   populateCharSheetEquipmentDropdowns(null);
   updateCharSheetEncumbranceMeter();
 
@@ -1747,6 +1918,22 @@ function addNewNpc() {
   if (npcStrInput) npcStrInput.value = 10;
   document.getElementById('npc-dialogue').value = 'Greetings, traveler. Safe journeys ahead.';
   document.getElementById('hero-backstory').value = 'A resident of the realm.';
+
+  state.activeCharPreparedSpells = [];
+  state.activeCharAssignedAbilities = [];
+  populateCharSpellsDropdown();
+  populateCharAbilitiesDropdown();
+  renderCharSpellChips();
+  renderCharAbilityChips();
+  loadCharDirectiveUI({
+    controller: 'scripted',
+    role: 'tank',
+    targetPriority: 'nearest',
+    movement: 'hold',
+    healThreshold: 0.3,
+    potionThreshold: 0.2,
+    useSpells: false
+  });
 
   populateCharSheetEquipmentDropdowns(null);
   updateCharSheetEncumbranceMeter();
@@ -3121,6 +3308,1260 @@ async function deleteCurrentItem() {
     console.error('Error deleting item:', err);
     setStatus(`Error deleting item: ${err.message}`);
   }
+}
+
+// ========================================================
+// CHARACTER SHEET SPELLBOOK, ABILITIES & AI DIRECTIVE HELPERS
+// ========================================================
+function populateCharSpellsDropdown() {
+  const sel = document.getElementById('char-spells-select');
+  if (!sel) return;
+  const currentVal = sel.value;
+  sel.innerHTML = '<option value="">(Select a spell to prepare...)</option>' +
+    (state.spells || []).map(s => {
+      const lvlStr = s.level === 0 ? 'Cantrip' : `L${s.level}`;
+      return `<option value="${s.slug}">[${lvlStr}] ${s.name} (${s.school || 'Magic'})</option>`;
+    }).join('');
+  if (currentVal) sel.value = currentVal;
+}
+
+function populateCharAbilitiesDropdown() {
+  const sel = document.getElementById('char-abilities-select');
+  if (!sel) return;
+  const currentVal = sel.value;
+  sel.innerHTML = '<option value="">(Select an ability or feat...)</option>' +
+    (state.abilities || []).map(a => {
+      const actionLabel = (a.actionType || 'action').replace('_', ' ');
+      return `<option value="${a.slug}">[${actionLabel.toUpperCase()}] ${a.name} (${a.category || 'Feat'})</option>`;
+    }).join('');
+  if (currentVal) sel.value = currentVal;
+}
+
+function renderCharSpellChips() {
+  const container = document.getElementById('char-spells-chips');
+  if (!container) return;
+
+  const spells = state.activeCharPreparedSpells || [];
+  if (spells.length === 0) {
+    container.innerHTML = '<span style="color: var(--text-muted); font-size: 11px;">No spells prepared in spellbook.</span>';
+    const compField = document.getElementById('hero-spells');
+    if (compField) compField.value = '';
+    return;
+  }
+
+  container.innerHTML = spells.map((slug, idx) => {
+    const spell = (state.spells || []).find(s => s.slug === slug) || { name: slug, level: '?', school: 'evocation' };
+    const lvlStr = spell.level === 0 ? '0' : spell.level;
+    const schoolClass = (spell.school || 'evocation').toLowerCase();
+    return `
+      <div class="spell-chip" data-index="${idx}" style="display: inline-flex; align-items: center; gap: 6px; background: rgba(0, 188, 212, 0.15); border: 1px solid rgba(0, 188, 212, 0.4); border-radius: 4px; padding: 2px 8px; font-size: 11px;">
+        <span style="color: #00bcd4;">✨</span>
+        <span style="font-weight: 500;">${spell.name}</span>
+        <span class="spell-school-badge ${schoolClass}" style="font-size: 9px; padding: 1px 4px;">${lvlStr}</span>
+        <button type="button" class="btn-remove-spell-chip" data-index="${idx}" style="background: none; border: none; color: #ff5252; cursor: pointer; padding: 0 2px; font-size: 12px; font-weight: bold;" title="Remove spell">×</button>
+      </div>
+    `;
+  }).join('');
+
+  container.querySelectorAll('.btn-remove-spell-chip').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const idx = Number(btn.getAttribute('data-index'));
+      state.activeCharPreparedSpells.splice(idx, 1);
+      renderCharSpellChips();
+      updateCharSpellStats();
+    });
+  });
+
+  const compField = document.getElementById('hero-spells');
+  if (compField) compField.value = spells.join(', ');
+}
+
+function renderCharAbilityChips() {
+  const container = document.getElementById('char-abilities-chips');
+  if (!container) return;
+
+  const abilities = state.activeCharAssignedAbilities || [];
+  if (abilities.length === 0) {
+    container.innerHTML = '<span style="color: var(--text-muted); font-size: 11px;">No special abilities assigned.</span>';
+    const countEl = document.getElementById('char-ability-count');
+    if (countEl) countEl.textContent = '0';
+    return;
+  }
+
+  container.innerHTML = abilities.map((slug, idx) => {
+    const ability = (state.abilities || []).find(a => a.slug === slug) || { name: slug, actionType: 'action' };
+    const actionType = ability.actionType || 'action';
+    return `
+      <div class="ability-chip" data-index="${idx}" style="display: inline-flex; align-items: center; gap: 6px; background: rgba(255, 152, 0, 0.15); border: 1px solid rgba(255, 152, 0, 0.4); border-radius: 4px; padding: 2px 8px; font-size: 11px;">
+        <span style="color: #ff9800;">⚡</span>
+        <span style="font-weight: 500;">${ability.name}</span>
+        <span class="action-type-badge ${actionType}" style="font-size: 9px; padding: 1px 4px;">${actionType.replace('_', ' ')}</span>
+        <button type="button" class="btn-remove-ability-chip" data-index="${idx}" style="background: none; border: none; color: #ff5252; cursor: pointer; padding: 0 2px; font-size: 12px; font-weight: bold;" title="Remove ability">×</button>
+      </div>
+    `;
+  }).join('');
+
+  container.querySelectorAll('.btn-remove-ability-chip').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const idx = Number(btn.getAttribute('data-index'));
+      state.activeCharAssignedAbilities.splice(idx, 1);
+      renderCharAbilityChips();
+    });
+  });
+
+  const countEl = document.getElementById('char-ability-count');
+  if (countEl) countEl.textContent = abilities.length;
+}
+
+function updateCharSpellStats() {
+  const charClass = (document.getElementById('hero-class')?.value || 'Wizard').toLowerCase();
+  const prof = Number(document.getElementById('vital-prof')?.value || 2);
+  let castingAttr = 'int';
+  if (['cleric', 'druid', 'ranger'].includes(charClass)) {
+    castingAttr = 'wis';
+  } else if (['paladin', 'sorcerer', 'warlock', 'bard'].includes(charClass)) {
+    castingAttr = 'cha';
+  }
+
+  const attrVal = Number(document.getElementById(`attr-${castingAttr}`)?.value || 10);
+  const mod = Math.floor((attrVal - 10) / 2);
+  const spellDC = 8 + prof + mod;
+  const spellAttack = prof + mod;
+
+  const dcEl = document.getElementById('char-spell-dc');
+  if (dcEl) dcEl.textContent = spellDC;
+  const atkEl = document.getElementById('char-spell-attack');
+  if (atkEl) atkEl.textContent = spellAttack >= 0 ? `+${spellAttack}` : `${spellAttack}`;
+  const countEl = document.getElementById('char-spell-count');
+  if (countEl) countEl.textContent = (state.activeCharPreparedSpells || []).length;
+}
+
+function updateCharRoleBadge(role) {
+  const badge = document.getElementById('char-ai-role-badge');
+  if (!badge) return;
+  badge.textContent = (role || 'striker').toUpperCase();
+  badge.className = `ai-role-badge ${role || 'striker'}`;
+}
+
+function loadCharDirectiveUI(dir = {}) {
+  const controller = dir.controller || 'infinity_ai';
+  const role = dir.role || 'striker';
+  const priority = dir.targetPriority || dir.priority || 'nearest';
+  const movement = dir.movement || 'advance';
+  const healFraction = dir.healThreshold ?? 0.5;
+  const potionFraction = dir.potionThreshold ?? 0.4;
+  const useSpells = dir.useSpells !== false;
+  const friendlyFire = !!dir.allowFriendlyFire;
+
+  const rx = dir.reactions || {};
+  const shield = rx.shield !== false;
+  const opp = rx.opportunityAttack !== false && rx.opportunity !== false;
+  const counter = !!rx.counterspell;
+  const dodge = !!rx.uncannyDodge;
+  const flurry = !!rx.defensiveFlurry;
+
+  const ctrlSel = document.getElementById('char-ai-controller');
+  if (ctrlSel) ctrlSel.value = controller;
+
+  const roleSel = document.getElementById('char-ai-role');
+  if (roleSel) roleSel.value = role;
+
+  const prioSel = document.getElementById('char-ai-priority');
+  if (prioSel) prioSel.value = priority;
+
+  const moveSel = document.getElementById('char-ai-movement');
+  if (moveSel) moveSel.value = movement;
+
+  const healPct = Math.round(healFraction * 100);
+  const healSlider = document.getElementById('char-ai-heal-slider');
+  const healVal = document.getElementById('char-ai-heal-val');
+  if (healSlider) healSlider.value = healPct;
+  if (healVal) healVal.textContent = `${healPct}%`;
+
+  const potionPct = Math.round(potionFraction * 100);
+  const potionSlider = document.getElementById('char-ai-potion-slider');
+  const potionVal = document.getElementById('char-ai-potion-val');
+  if (potionSlider) potionSlider.value = potionPct;
+  if (potionVal) potionVal.textContent = `${potionPct}%`;
+
+  const spellsChk = document.getElementById('char-ai-use-spells');
+  if (spellsChk) spellsChk.checked = useSpells;
+
+  const ffChk = document.getElementById('char-ai-friendly-fire');
+  if (ffChk) ffChk.checked = friendlyFire;
+
+  const rxShield = document.getElementById('rx-shield');
+  if (rxShield) rxShield.checked = shield;
+  const rxOpp = document.getElementById('rx-opportunity');
+  if (rxOpp) rxOpp.checked = opp;
+  const rxCounter = document.getElementById('rx-counterspell');
+  if (rxCounter) rxCounter.checked = counter;
+  const rxDodge = document.getElementById('rx-uncanny-dodge');
+  if (rxDodge) rxDodge.checked = dodge;
+  const rxFlurry = document.getElementById('rx-defensive-flurry');
+  if (rxFlurry) rxFlurry.checked = flurry;
+
+  updateCharRoleBadge(role);
+}
+
+function saveCharDirectiveUI() {
+  return {
+    controller: document.getElementById('char-ai-controller')?.value || 'infinity_ai',
+    role: document.getElementById('char-ai-role')?.value || 'striker',
+    targetPriority: document.getElementById('char-ai-priority')?.value || 'nearest',
+    movement: document.getElementById('char-ai-movement')?.value || 'advance',
+    healThreshold: Number(document.getElementById('char-ai-heal-slider')?.value || 50) / 100,
+    potionThreshold: Number(document.getElementById('char-ai-potion-slider')?.value || 40) / 100,
+    useSpells: document.getElementById('char-ai-use-spells')?.checked ?? true,
+    allowFriendlyFire: document.getElementById('char-ai-friendly-fire')?.checked ?? false,
+    reactions: {
+      shield: document.getElementById('rx-shield')?.checked ?? true,
+      opportunityAttack: document.getElementById('rx-opportunity')?.checked ?? true,
+      counterspell: document.getElementById('rx-counterspell')?.checked ?? false,
+      uncannyDodge: document.getElementById('rx-uncanny-dodge')?.checked ?? false,
+      defensiveFlurry: document.getElementById('rx-defensive-flurry')?.checked ?? false
+    }
+  };
+}
+
+// ========================================================
+// MODULE 5: cRPG SPELLS STUDIO
+// ========================================================
+let spellSearchQuery = '';
+let selectedSpellSchool = 'all';
+let selectedSpellLevel = 'all';
+
+function setupSpellHandlers() {
+  // Top Header Context Controls
+  document.getElementById('btn-header-new-spell')?.addEventListener('click', createNewSpell);
+  document.getElementById('btn-hdr-new-spell')?.addEventListener('click', createNewSpell);
+  document.getElementById('btn-header-save-spell')?.addEventListener('click', saveCurrentSpell);
+  document.getElementById('btn-hdr-save-spell')?.addEventListener('click', saveCurrentSpell);
+  document.getElementById('btn-header-close-spell')?.addEventListener('click', closeSpell);
+  document.getElementById('btn-header-delete-spell')?.addEventListener('click', deleteCurrentSpell);
+  document.getElementById('btn-hdr-del-spell')?.addEventListener('click', deleteCurrentSpell);
+
+  document.getElementById('header-spell-select')?.addEventListener('change', (e) => {
+    if (e.target.value) {
+      loadSpellForm(e.target.value);
+    } else {
+      closeSpell();
+    }
+  });
+
+  // Sidebar Controls
+  document.getElementById('btn-sidebar-new-spell')?.addEventListener('click', createNewSpell);
+  document.getElementById('btn-empty-new-spell')?.addEventListener('click', createNewSpell);
+
+  // Form Action Buttons
+  document.getElementById('btn-save-spell')?.addEventListener('click', saveCurrentSpell);
+  document.getElementById('btn-close-spell')?.addEventListener('click', closeSpell);
+  document.getElementById('btn-delete-spell')?.addEventListener('click', deleteCurrentSpell);
+
+  // Search input
+  document.getElementById('spell-search-input')?.addEventListener('input', (e) => {
+    spellSearchQuery = (e.target.value || '').trim().toLowerCase();
+    renderSpellsList();
+  });
+
+  // School Filter Pills
+  document.querySelectorAll('#spell-school-filters .filter-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#spell-school-filters .filter-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedSpellSchool = btn.getAttribute('data-school') || 'all';
+      renderSpellsList();
+    });
+  });
+
+  // Level Filter Pills
+  document.querySelectorAll('#spell-level-filters .filter-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#spell-level-filters .filter-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedSpellLevel = btn.getAttribute('data-level') || 'all';
+      renderSpellsList();
+    });
+  });
+
+  // Form School change -> update school badge
+  document.getElementById('spell-school')?.addEventListener('change', (e) => {
+    const school = e.target.value || 'Evocation';
+    const badge = document.getElementById('spell-form-school-badge');
+    if (badge) {
+      badge.textContent = school;
+      badge.className = `spell-school-badge ${school.toLowerCase()}`;
+    }
+  });
+
+  // Form Icon change -> update icon display
+  document.getElementById('spell-icon')?.addEventListener('input', (e) => {
+    const iconEl = document.getElementById('spell-form-icon');
+    if (iconEl) iconEl.textContent = e.target.value.trim() || '✨';
+  });
+}
+
+async function loadAllSpells(preferredSlug) {
+  try {
+    const res = await window.robos.listSpells();
+    if (res.success) {
+      state.spells = res.spells || [];
+      const countEl = document.getElementById('spells-count');
+      if (countEl) countEl.textContent = state.spells.length;
+
+      // Populate header select
+      const hdrSelect = document.getElementById('header-spell-select');
+      if (hdrSelect) {
+        hdrSelect.innerHTML = '<option value="">(Select a spell...)</option>' +
+          state.spells.map(s => `<option value="${s.slug}">${s.icon || '✨'} ${s.name} (L${s.level})</option>`).join('');
+      }
+
+      renderSpellsList();
+      populateCharSpellsDropdown();
+
+      if (preferredSlug) {
+        await loadSpellForm(preferredSlug);
+      }
+    }
+  } catch (err) {
+    console.error('Error loading spells:', err);
+    setStatus(`Error loading spells: ${err.message}`);
+  }
+}
+
+function renderSpellsList() {
+  const container = document.getElementById('spells-list');
+  if (!container) return;
+
+  const filtered = state.spells.filter(s => {
+    if (selectedSpellSchool !== 'all' && (s.school || '').toLowerCase() !== selectedSpellSchool.toLowerCase()) {
+      return false;
+    }
+    if (selectedSpellLevel !== 'all' && String(s.level) !== String(selectedSpellLevel)) {
+      return false;
+    }
+    if (spellSearchQuery) {
+      const targetText = `${s.name || ''} ${s.slug || ''} ${s.school || ''} ${s.damage || ''} ${s.damageType || ''}`.toLowerCase();
+      if (!targetText.includes(spellSearchQuery)) return false;
+    }
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px;">No spells found matching filters.</div>`;
+    return;
+  }
+
+  container.innerHTML = filtered.map(s => {
+    const isActive = state.activeSpellSlug === s.slug;
+    const levelLabel = s.level === 0 ? 'Cantrip' : `Level ${s.level}`;
+    const schoolClass = (s.school || 'evocation').toLowerCase();
+    return `
+      <div class="spell-list-item ${isActive ? 'active' : ''}" data-slug="${s.slug}">
+        <div class="spell-item-icon">${s.icon || '✨'}</div>
+        <div class="spell-item-info">
+          <div class="spell-item-name">${s.name || s.slug}</div>
+          <div class="spell-item-badges">
+            <span class="spell-level-badge">${levelLabel}</span>
+            <span class="spell-school-badge ${schoolClass}">${s.school || 'Magic'}</span>
+            ${s.damage ? `<span class="spell-item-dmg">${s.damage} ${s.damageType || ''}</span>` : ''}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  container.querySelectorAll('.spell-list-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const slug = el.getAttribute('data-slug');
+      loadSpellForm(slug);
+    });
+  });
+}
+
+async function loadSpellForm(slug) {
+  if (!slug) return;
+  try {
+    setStatus(`Loading spell ${slug}...`);
+    const res = await window.robos.loadSpell(slug);
+    if (res.success) {
+      const data = res.data;
+      state.activeSpellSlug = slug;
+      state.activeSpellData = data;
+
+      document.getElementById('spell-empty-state')?.classList.add('hidden');
+      document.getElementById('spell-form-container')?.classList.remove('hidden');
+
+      const name = data['dcterms:title'] || data['schema:name'] || data.name || slug;
+      const school = data['robos:magicSchool'] || data['robos:school'] || data.magicSchool || data.school || 'Evocation';
+      const icon = data['robos:icon'] || data.icon || '✨';
+
+      document.getElementById('spell-form-title').textContent = `Spell: ${name}`;
+      document.getElementById('spell-name').value = name;
+      document.getElementById('spell-slug').value = slug;
+      document.getElementById('spell-icon').value = icon;
+      document.getElementById('spell-form-icon').textContent = icon;
+
+      const schoolSelect = document.getElementById('spell-school');
+      if (schoolSelect) schoolSelect.value = school;
+      const schoolBadge = document.getElementById('spell-form-school-badge');
+      if (schoolBadge) {
+        schoolBadge.textContent = school;
+        schoolBadge.className = `spell-school-badge ${school.toLowerCase()}`;
+      }
+
+      document.getElementById('spell-level').value = data['robos:spellLevel'] ?? data['robos:level'] ?? data.spellLevel ?? data.level ?? 1;
+      document.getElementById('spell-casting-time').value = data['robos:castingTime'] || data.castingTime || '1 action';
+      document.getElementById('spell-range').value = data['robos:range'] || data.range || '60 feet';
+      document.getElementById('spell-duration').value = data['robos:duration'] || data.duration || 'Instantaneous';
+      document.getElementById('spell-components').value = data['robos:components'] || data.components || 'V, S';
+      document.getElementById('spell-damage').value = data['robos:damageFormula'] || data['robos:damage'] || data.damageFormula || data.damage || '';
+      document.getElementById('spell-damage-type').value = data['robos:damageType'] || data.damageType || 'force';
+      document.getElementById('spell-saving-throw').value = data['robos:savingThrow'] || data.savingThrow || 'None';
+      document.getElementById('spell-desc').value = data['dcterms:description'] || data['schema:description'] || data.description || '';
+
+      document.querySelectorAll('#spells-list .spell-list-item').forEach(el => {
+        el.classList.toggle('active', el.getAttribute('data-slug') === slug);
+      });
+
+      const hdrSelect = document.getElementById('header-spell-select');
+      if (hdrSelect) hdrSelect.value = slug;
+
+      setStatus(`Loaded spell: ${name}`, res.filePath);
+    }
+  } catch (err) {
+    console.error('Error loading spell:', err);
+    setStatus(`Error loading spell: ${err.message}`);
+  }
+}
+
+function showEmptySpellState() {
+  state.activeSpellSlug = null;
+  state.activeSpellData = null;
+  document.getElementById('spell-form-container')?.classList.add('hidden');
+  document.getElementById('spell-empty-state')?.classList.remove('hidden');
+  document.querySelectorAll('#spells-list .spell-list-item').forEach(el => el.classList.remove('active'));
+  const hdrSelect = document.getElementById('header-spell-select');
+  if (hdrSelect) hdrSelect.value = '';
+}
+
+function closeSpell() {
+  showEmptySpellState();
+  setStatus('Closed spell.');
+}
+
+function createNewSpell() {
+  state.activeSpellSlug = null;
+  state.activeSpellData = null;
+
+  document.getElementById('spell-empty-state')?.classList.add('hidden');
+  document.getElementById('spell-form-container')?.classList.remove('hidden');
+
+  document.getElementById('spell-form-title').textContent = 'New Spell Blueprint';
+  document.getElementById('spell-name').value = '';
+  document.getElementById('spell-slug').value = '';
+  document.getElementById('spell-icon').value = '✨';
+  document.getElementById('spell-form-icon').textContent = '✨';
+  document.getElementById('spell-school').value = 'Evocation';
+  const schoolBadge = document.getElementById('spell-form-school-badge');
+  if (schoolBadge) {
+    schoolBadge.textContent = 'Evocation';
+    schoolBadge.className = 'spell-school-badge evocation';
+  }
+  document.getElementById('spell-level').value = '1';
+  document.getElementById('spell-casting-time').value = '1 action';
+  document.getElementById('spell-range').value = '60 feet';
+  document.getElementById('spell-duration').value = 'Instantaneous';
+  document.getElementById('spell-components').value = 'V, S';
+  document.getElementById('spell-damage').value = '2d6';
+  document.getElementById('spell-damage-type').value = 'force';
+  document.getElementById('spell-saving-throw').value = 'DEX';
+  document.getElementById('spell-desc').value = '';
+
+  document.querySelectorAll('#spells-list .spell-list-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('spell-name').focus();
+}
+
+async function saveCurrentSpell() {
+  const name = document.getElementById('spell-name').value.trim() || 'New Spell';
+  let slug = document.getElementById('spell-slug').value.trim();
+  if (!slug) {
+    slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || `spell-${Date.now().toString().slice(-4)}`;
+    document.getElementById('spell-slug').value = slug;
+  }
+
+  const icon = document.getElementById('spell-icon').value.trim() || '✨';
+  const school = document.getElementById('spell-school').value;
+  const level = Number(document.getElementById('spell-level').value || 0);
+  const castingTime = document.getElementById('spell-casting-time').value;
+  const range = document.getElementById('spell-range').value.trim() || 'Touch';
+  const duration = document.getElementById('spell-duration').value.trim() || 'Instantaneous';
+  const components = document.getElementById('spell-components').value.trim() || 'V, S';
+  const damage = document.getElementById('spell-damage').value.trim();
+  const damageType = document.getElementById('spell-damage-type').value;
+  const savingThrow = document.getElementById('spell-saving-throw').value;
+  const description = document.getElementById('spell-desc').value.trim();
+
+  const spellPayload = {
+    '@context': {
+      robos: 'urn:robos:',
+      schema: 'https://schema.org/',
+      dcterms: 'http://purl.org/dc/terms/'
+    },
+    '@type': ['robos:CRPGSpell', 'schema:Thing'],
+    '@id': `urn:robos:crpg:spell:${slug}`,
+    'schema:name': name,
+    name,
+    slug,
+    'robos:icon': icon,
+    icon,
+    'robos:school': school,
+    school,
+    'robos:level': level,
+    level,
+    'robos:castingTime': castingTime,
+    castingTime,
+    'robos:range': range,
+    range,
+    'robos:duration': duration,
+    duration,
+    'robos:components': components,
+    components,
+    'robos:damage': damage,
+    damage,
+    'robos:damageType': damageType,
+    damageType,
+    'robos:savingThrow': savingThrow,
+    savingThrow,
+    'schema:description': description,
+    description
+  };
+
+  try {
+    setStatus(`Saving spell ${slug}...`);
+    const res = await window.robos.saveSpell({ slug, data: spellPayload });
+    if (res.success) {
+      state.activeSpellSlug = res.slug;
+      state.activeSpellData = spellPayload;
+      setStatus(`Saved spell successfully!`, res.filePath);
+      await loadAllSpells();
+      document.getElementById('spell-form-title').textContent = `Spell: ${name}`;
+    } else {
+      setStatus(`Failed to save spell: ${res.error}`);
+    }
+  } catch (err) {
+    console.error('Error saving spell:', err);
+    setStatus(`Error saving spell: ${err.message}`);
+  }
+}
+
+async function deleteCurrentSpell() {
+  if (!state.activeSpellSlug) return;
+  if (!confirm(`Are you sure you want to delete spell '${state.activeSpellSlug}'?`)) return;
+
+  try {
+    const res = await window.robos.deleteSpell(state.activeSpellSlug);
+    if (res.success) {
+      setStatus(`Deleted spell: ${state.activeSpellSlug}`);
+      closeSpell();
+      await loadAllSpells();
+    } else {
+      setStatus(`Failed to delete spell: ${res.error}`);
+    }
+  } catch (err) {
+    console.error('Error deleting spell:', err);
+    setStatus(`Error deleting spell: ${err.message}`);
+  }
+}
+
+// ========================================================
+// MODULE 6: cRPG ABILITIES STUDIO
+// ========================================================
+let abilitySearchQuery = '';
+let selectedAbilityCategory = 'all';
+let selectedAbilityAction = 'all';
+
+function setupAbilityHandlers() {
+  // Top Header Context Controls
+  document.getElementById('btn-header-new-ability')?.addEventListener('click', createNewAbility);
+  document.getElementById('btn-hdr-new-ability')?.addEventListener('click', createNewAbility);
+  document.getElementById('btn-header-save-ability')?.addEventListener('click', saveCurrentAbility);
+  document.getElementById('btn-hdr-save-ability')?.addEventListener('click', saveCurrentAbility);
+  document.getElementById('btn-header-close-ability')?.addEventListener('click', closeAbility);
+  document.getElementById('btn-header-delete-ability')?.addEventListener('click', deleteCurrentAbility);
+  document.getElementById('btn-hdr-del-ability')?.addEventListener('click', deleteCurrentAbility);
+
+  document.getElementById('header-ability-select')?.addEventListener('change', (e) => {
+    if (e.target.value) {
+      loadAbilityForm(e.target.value);
+    } else {
+      closeAbility();
+    }
+  });
+
+  // Sidebar Controls
+  document.getElementById('btn-sidebar-new-ability')?.addEventListener('click', createNewAbility);
+  document.getElementById('btn-empty-new-ability')?.addEventListener('click', createNewAbility);
+
+  // Form Action Buttons
+  document.getElementById('btn-save-ability')?.addEventListener('click', saveCurrentAbility);
+  document.getElementById('btn-close-ability')?.addEventListener('click', closeAbility);
+  document.getElementById('btn-delete-ability')?.addEventListener('click', deleteCurrentAbility);
+
+  // Search input
+  document.getElementById('ability-search-input')?.addEventListener('input', (e) => {
+    abilitySearchQuery = (e.target.value || '').trim().toLowerCase();
+    renderAbilitiesList();
+  });
+
+  // Category Filter Pills
+  document.querySelectorAll('#ability-category-filters .filter-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#ability-category-filters .filter-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedAbilityCategory = btn.getAttribute('data-category') || 'all';
+      renderAbilitiesList();
+    });
+  });
+
+  // Action Filter Pills
+  document.querySelectorAll('#ability-action-filters .filter-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#ability-action-filters .filter-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedAbilityAction = btn.getAttribute('data-action') || 'all';
+      renderAbilitiesList();
+    });
+  });
+
+  // Form Action Type change -> update action badge
+  document.getElementById('ability-action-type')?.addEventListener('change', (e) => {
+    const actionType = e.target.value || 'action';
+    const badge = document.getElementById('ability-form-action-badge');
+    if (badge) {
+      badge.textContent = actionType.replace('_', ' ');
+      badge.className = `action-type-badge ${actionType}`;
+    }
+  });
+
+  // Form Icon change -> update icon display
+  document.getElementById('ability-icon')?.addEventListener('input', (e) => {
+    const iconEl = document.getElementById('ability-form-icon');
+    if (iconEl) iconEl.textContent = e.target.value.trim() || '⚡';
+  });
+}
+
+async function loadAllAbilities(preferredSlug) {
+  try {
+    const res = await window.robos.listAbilities();
+    if (res.success) {
+      state.abilities = res.abilities || [];
+      const countEl = document.getElementById('abilities-count');
+      if (countEl) countEl.textContent = state.abilities.length;
+
+      // Populate header select
+      const hdrSelect = document.getElementById('header-ability-select');
+      if (hdrSelect) {
+        hdrSelect.innerHTML = '<option value="">(Select an ability...)</option>' +
+          state.abilities.map(a => `<option value="${a.slug}">${a.icon || '⚡'} ${a.name} (${(a.actionType || 'action').replace('_', ' ')})</option>`).join('');
+      }
+
+      renderAbilitiesList();
+      populateCharAbilitiesDropdown();
+
+      if (preferredSlug) {
+        await loadAbilityForm(preferredSlug);
+      }
+    }
+  } catch (err) {
+    console.error('Error loading abilities:', err);
+    setStatus(`Error loading abilities: ${err.message}`);
+  }
+}
+
+function renderAbilitiesList() {
+  const container = document.getElementById('abilities-list');
+  if (!container) return;
+
+  const filtered = state.abilities.filter(a => {
+    if (selectedAbilityCategory !== 'all' && (a.category || '').toLowerCase() !== selectedAbilityCategory.toLowerCase()) {
+      return false;
+    }
+    if (selectedAbilityAction !== 'all' && (a.actionType || '').toLowerCase() !== selectedAbilityAction.toLowerCase()) {
+      return false;
+    }
+    if (abilitySearchQuery) {
+      const targetText = `${a.name || ''} ${a.slug || ''} ${a.category || ''} ${a.actionType || ''} ${a.effectFormula || ''}`.toLowerCase();
+      if (!targetText.includes(abilitySearchQuery)) return false;
+    }
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px;">No abilities found matching filters.</div>`;
+    return;
+  }
+
+  container.innerHTML = filtered.map(a => {
+    const isActive = state.activeAbilitySlug === a.slug;
+    const actionType = a.actionType || 'action';
+    return `
+      <div class="ability-list-item ${isActive ? 'active' : ''}" data-slug="${a.slug}">
+        <div class="ability-item-icon">${a.icon || '⚡'}</div>
+        <div class="ability-item-info">
+          <div class="ability-item-name">${a.name || a.slug}</div>
+          <div class="ability-item-badges">
+            <span class="action-type-badge ${actionType}">${actionType.replace('_', ' ')}</span>
+            <span class="ability-cat-badge">${(a.category || 'feature').replace('_', ' ')}</span>
+            ${a.rechargeRate ? `<span class="ability-recharge-badge">${a.rechargeRate.replace('_', ' ')}</span>` : ''}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  container.querySelectorAll('.ability-list-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const slug = el.getAttribute('data-slug');
+      loadAbilityForm(slug);
+    });
+  });
+}
+
+async function loadAbilityForm(slug) {
+  if (!slug) return;
+  try {
+    setStatus(`Loading ability ${slug}...`);
+    const res = await window.robos.loadAbility(slug);
+    if (res.success) {
+      const data = res.data;
+      state.activeAbilitySlug = slug;
+      state.activeAbilityData = data;
+
+      document.getElementById('ability-empty-state')?.classList.add('hidden');
+      document.getElementById('ability-form-container')?.classList.remove('hidden');
+
+      const name = data['dcterms:title'] || data['schema:name'] || data.name || slug;
+      const actionType = data['robos:actionType'] || data.actionType || 'action';
+      const icon = data['robos:icon'] || data.icon || '⚡';
+
+      document.getElementById('ability-form-title').textContent = `Ability: ${name}`;
+      document.getElementById('ability-name').value = name;
+      document.getElementById('ability-slug').value = slug;
+      document.getElementById('ability-icon').value = icon;
+      document.getElementById('ability-form-icon').textContent = icon;
+
+      const actSelect = document.getElementById('ability-action-type');
+      if (actSelect) actSelect.value = actionType;
+      const actBadge = document.getElementById('ability-form-action-badge');
+      if (actBadge) {
+        actBadge.textContent = actionType.replace('_', ' ');
+        actBadge.className = `action-type-badge ${actionType}`;
+      }
+
+      document.getElementById('ability-category').value = data['robos:category'] || data.category || 'class_feature';
+      document.getElementById('ability-recharge').value = data['robos:recharge'] || data['robos:rechargeRate'] || data.recharge || data.rechargeRate || 'short_rest';
+      document.getElementById('ability-resource-cost').value = data['robos:resourceCost'] || data.resourceCost || '';
+      document.getElementById('ability-range').value = data['robos:range'] || data.range || 'Self';
+      document.getElementById('ability-duration').value = data['robos:duration'] || data.duration || 'Instantaneous';
+      document.getElementById('ability-prereq').value = data['robos:prerequisites'] || data.prerequisites || '';
+      document.getElementById('ability-effect-formula').value = data['robos:effectFormula'] || data.effectFormula || '';
+      document.getElementById('ability-desc').value = data['dcterms:description'] || data['schema:description'] || data.description || '';
+
+      document.querySelectorAll('#abilities-list .ability-list-item').forEach(el => {
+        el.classList.toggle('active', el.getAttribute('data-slug') === slug);
+      });
+
+      const hdrSelect = document.getElementById('header-ability-select');
+      if (hdrSelect) hdrSelect.value = slug;
+
+      setStatus(`Loaded ability: ${name}`, res.filePath);
+    }
+  } catch (err) {
+    console.error('Error loading ability:', err);
+    setStatus(`Error loading ability: ${err.message}`);
+  }
+}
+
+function showEmptyAbilityState() {
+  state.activeAbilitySlug = null;
+  state.activeAbilityData = null;
+  document.getElementById('ability-form-container')?.classList.add('hidden');
+  document.getElementById('ability-empty-state')?.classList.remove('hidden');
+  document.querySelectorAll('#abilities-list .ability-list-item').forEach(el => el.classList.remove('active'));
+  const hdrSelect = document.getElementById('header-ability-select');
+  if (hdrSelect) hdrSelect.value = '';
+}
+
+function closeAbility() {
+  showEmptyAbilityState();
+  setStatus('Closed ability.');
+}
+
+function createNewAbility() {
+  state.activeAbilitySlug = null;
+  state.activeAbilityData = null;
+
+  document.getElementById('ability-empty-state')?.classList.add('hidden');
+  document.getElementById('ability-form-container')?.classList.remove('hidden');
+
+  document.getElementById('ability-form-title').textContent = 'New Ability Blueprint';
+  document.getElementById('ability-name').value = '';
+  document.getElementById('ability-slug').value = '';
+  document.getElementById('ability-icon').value = '⚡';
+  document.getElementById('ability-form-icon').textContent = '⚡';
+  document.getElementById('ability-category').value = 'class_feature';
+  document.getElementById('ability-action-type').value = 'action';
+  const actBadge = document.getElementById('ability-form-action-badge');
+  if (actBadge) {
+    actBadge.textContent = 'action';
+    actBadge.className = 'action-type-badge action';
+  }
+  document.getElementById('ability-recharge').value = 'short_rest';
+  document.getElementById('ability-resource-cost').value = '1 use';
+  document.getElementById('ability-range').value = 'Self';
+  document.getElementById('ability-duration').value = 'Instantaneous';
+  document.getElementById('ability-prereq').value = '';
+  document.getElementById('ability-effect-formula').value = '';
+  document.getElementById('ability-desc').value = '';
+
+  document.querySelectorAll('#abilities-list .ability-list-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('ability-name').focus();
+}
+
+async function saveCurrentAbility() {
+  const name = document.getElementById('ability-name').value.trim() || 'New Ability';
+  let slug = document.getElementById('ability-slug').value.trim();
+  if (!slug) {
+    slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || `ability-${Date.now().toString().slice(-4)}`;
+    document.getElementById('ability-slug').value = slug;
+  }
+
+  const icon = document.getElementById('ability-icon').value.trim() || '⚡';
+  const category = document.getElementById('ability-category').value;
+  const actionType = document.getElementById('ability-action-type').value;
+  const rechargeRate = document.getElementById('ability-recharge').value;
+  const resourceCost = document.getElementById('ability-resource-cost').value.trim();
+  const range = document.getElementById('ability-range').value.trim() || 'Self';
+  const duration = document.getElementById('ability-duration').value.trim() || 'Instantaneous';
+  const prerequisites = document.getElementById('ability-prereq').value.trim();
+  const effectFormula = document.getElementById('ability-effect-formula').value.trim();
+  const description = document.getElementById('ability-desc').value.trim();
+
+  const abilityPayload = {
+    '@context': {
+      robos: 'urn:robos:',
+      schema: 'https://schema.org/',
+      dcterms: 'http://purl.org/dc/terms/'
+    },
+    '@type': ['robos:CRPGAbility', 'schema:Thing'],
+    '@id': `urn:robos:crpg:ability:${slug}`,
+    'schema:name': name,
+    name,
+    slug,
+    'robos:icon': icon,
+    icon,
+    'robos:category': category,
+    category,
+    'robos:actionType': actionType,
+    actionType,
+    'robos:rechargeRate': rechargeRate,
+    rechargeRate,
+    'robos:resourceCost': resourceCost,
+    resourceCost,
+    'robos:range': range,
+    range,
+    'robos:duration': duration,
+    duration,
+    'robos:prerequisites': prerequisites,
+    prerequisites,
+    'robos:effectFormula': effectFormula,
+    effectFormula,
+    'schema:description': description,
+    description
+  };
+
+  try {
+    setStatus(`Saving ability ${slug}...`);
+    const res = await window.robos.saveAbility({ slug, data: abilityPayload });
+    if (res.success) {
+      state.activeAbilitySlug = res.slug;
+      state.activeAbilityData = abilityPayload;
+      setStatus(`Saved ability successfully!`, res.filePath);
+      await loadAllAbilities();
+      document.getElementById('ability-form-title').textContent = `Ability: ${name}`;
+    } else {
+      setStatus(`Failed to save ability: ${res.error}`);
+    }
+  } catch (err) {
+    console.error('Error saving ability:', err);
+    setStatus(`Error saving ability: ${err.message}`);
+  }
+}
+
+async function deleteCurrentAbility() {
+  if (!state.activeAbilitySlug) return;
+  if (!confirm(`Are you sure you want to delete ability '${state.activeAbilitySlug}'?`)) return;
+
+  try {
+    const res = await window.robos.deleteAbility(state.activeAbilitySlug);
+    if (res.success) {
+      setStatus(`Deleted ability: ${state.activeAbilitySlug}`);
+      closeAbility();
+      await loadAllAbilities();
+    } else {
+      setStatus(`Failed to delete ability: ${res.error}`);
+    }
+  } catch (err) {
+    console.error('Error deleting ability:', err);
+    setStatus(`Error deleting ability: ${err.message}`);
+  }
+}
+
+// ========================================================
+// CAMPAIGN TACTICS & INFINITY AI ARENA SIMULATOR
+// ========================================================
+let simRound = 0;
+let simLog = [];
+let simEnemies = [];
+let simParty = [];
+
+function setupTacticsSimHandlers() {
+  document.getElementById('btn-run-sim-round')?.addEventListener('click', stepSimRound);
+  document.getElementById('btn-run-sim-battle')?.addEventListener('click', runSimFull);
+  document.getElementById('btn-reset-sim')?.addEventListener('click', resetSim);
+  document.getElementById('sim-scenario-select')?.addEventListener('change', resetSim);
+}
+
+function initSimState() {
+  const partyCharacters = getCampaignActiveCharacters();
+  simParty = partyCharacters.map(c => {
+    const hpMax = c['robos:hpMax'] || c.hpMax || 24;
+    return {
+      slug: c.slug,
+      name: c['schema:name'] || c.name || c.slug,
+      portrait: c['robos:portrait'] || c.portrait || '👤',
+      charClass: c['robos:class'] || c.class || 'Fighter',
+      level: c['robos:level'] || c.level || 1,
+      ac: c['robos:ac'] || c.ac || 14,
+      hpMax,
+      hpCurrent: hpMax,
+      spellSlots: 3,
+      directive: c['robos:directive'] || c.directive || {
+        controller: 'infinity_ai',
+        role: 'striker',
+        targetPriority: 'nearest',
+        movement: 'advance',
+        healThreshold: 0.5,
+        potionThreshold: 0.4,
+        useSpells: true
+      },
+      spells: c['robos:preparedSpells'] || c.preparedSpells || [],
+      abilities: c['robos:abilities'] || c.abilities || [],
+      quickItems: Array.isArray(c['robos:quickItems'] || c.quickItems) 
+        ? (c['robos:quickItems'] || c.quickItems).slice() 
+        : [c['robos:quickItems'] || c.quickItems].filter(Boolean),
+      alive: true
+    };
+  });
+
+  const scenario = document.getElementById('sim-scenario-select')?.value || 'crypt-skeleton-patrol';
+  if (scenario === 'homestead-hound-pack') {
+    simEnemies = [
+      { id: 'hound-1', name: 'Corrupted Hound Alpha', hpMax: 22, hpCurrent: 22, ac: 13, attackBonus: 5, damage: '1d6+3', alive: true },
+      { id: 'hound-2', name: 'Blight Hound A', hpMax: 14, hpCurrent: 14, ac: 12, attackBonus: 4, damage: '1d6+2', alive: true },
+      { id: 'hound-3', name: 'Blight Hound B', hpMax: 14, hpCurrent: 14, ac: 12, attackBonus: 4, damage: '1d6+2', alive: true }
+    ];
+  } else if (scenario === 'golem-attrition') {
+    simEnemies = [
+      { id: 'iron-golem', name: 'Vault Guardian Golem', hpMax: 55, hpCurrent: 55, ac: 16, attackBonus: 6, damage: '2d8+4', alive: true }
+    ];
+  } else {
+    // Default: crypt-skeleton-patrol
+    simEnemies = [
+      { id: 'skel-1', name: 'Skeletal Champion', hpMax: 26, hpCurrent: 26, ac: 15, attackBonus: 5, damage: '1d8+3', alive: true },
+      { id: 'skel-2', name: 'Bone Archer', hpMax: 16, hpCurrent: 16, ac: 13, attackBonus: 4, damage: '1d6+2', alive: true },
+      { id: 'skel-3', name: 'Crypt Skeleton', hpMax: 14, hpCurrent: 14, ac: 12, attackBonus: 4, damage: '1d6+2', alive: true }
+    ];
+  }
+
+  simRound = 0;
+  simLog = [];
+  updateSimDashboard();
+}
+
+function getCampaignActiveCharacters() {
+  if (state.activeCampaignData) {
+    const camp = state.activeCampaignData;
+    const heroSlugs = camp['robos:party'] || camp.party || [];
+    if (heroSlugs.length > 0) {
+      const party = state.characters.filter(c => heroSlugs.includes(c.slug));
+      if (party.length > 0) return party;
+    }
+  }
+  // Fallback: all player characters
+  const pcs = state.characters.filter(c => c.characterType !== 'npc' && !c.role);
+  return pcs.length > 0 ? pcs : state.characters.slice(0, 4);
+}
+
+function renderCampaignTacticsRoster() {
+  const container = document.getElementById('camp-tactics-roster-grid');
+  if (!container) return;
+
+  const party = getCampaignActiveCharacters();
+  if (party.length === 0) {
+    container.innerHTML = '<div style="color: var(--text-muted); font-size: 13px;">No party members configured in campaign.</div>';
+    return;
+  }
+
+  container.innerHTML = party.map(c => {
+    const dir = c['robos:directive'] || c.directive || {};
+    const controller = dir.controller || 'infinity_ai';
+    const role = dir.role || 'striker';
+    const priority = (dir.targetPriority || 'nearest').replace('_', ' ');
+    const stance = (dir.movement || 'advance').replace('_', ' ');
+    const spells = c['robos:preparedSpells'] || c.preparedSpells || [];
+    const abilities = c['robos:abilities'] || c.abilities || [];
+    const quickItems = Array.isArray(c['robos:quickItems'] || c.quickItems) 
+      ? (c['robos:quickItems'] || c.quickItems) 
+      : [c['robos:quickItems'] || c.quickItems].filter(Boolean);
+
+    return `
+      <div class="panel" style="background: rgba(18, 28, 48, 0.7); border: 1px solid var(--border-light); border-radius: 6px; padding: 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 24px;">${c['robos:portrait'] || c.portrait || '👤'}</span>
+            <div>
+              <div style="font-weight: 600; font-size: 14px; color: #fff;">${c['schema:name'] || c.name || c.slug}</div>
+              <div style="font-size: 11px; color: var(--text-muted);">Lvl ${c['robos:level'] || c.level || 1} ${c['robos:class'] || c.class || 'Fighter'}</div>
+            </div>
+          </div>
+          <span class="ai-role-badge ${role}">${role.toUpperCase()}</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 11px; margin-bottom: 10px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px;">
+          <div>Engine: <strong style="color: #00bcd4;">${controller}</strong></div>
+          <div>Priority: <strong style="color: #ffb74d;">${priority}</strong></div>
+          <div>Stance: <strong style="color: #81c784;">${stance}</strong></div>
+          <div>Heal %: <strong style="color: #4caf50;">${Math.round((dir.healThreshold ?? 0.5) * 100)}%</strong></div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px; font-size: 11px;">
+          <div>✨ <strong>Prepared Spells (${spells.length}):</strong> <span style="color: #b0bec5;">${spells.slice(0, 3).join(', ') || 'None'}${spells.length > 3 ? '...' : ''}</span></div>
+          <div>⚡ <strong>Abilities (${abilities.length}):</strong> <span style="color: #b0bec5;">${abilities.slice(0, 3).join(', ') || 'None'}${abilities.length > 3 ? '...' : ''}</span></div>
+          <div>🧪 <strong>Quick Items:</strong> <span style="color: #b0bec5;">${quickItems.join(', ') || 'Empty'}</span></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  if (!simParty || simParty.length === 0) {
+    initSimState();
+  }
+}
+
+function updateSimDashboard() {
+  const roundEl = document.getElementById('sim-round-count');
+  if (roundEl) roundEl.textContent = `${simRound} / 25`;
+
+  const aliveParty = simParty.filter(p => p.alive).length;
+  const alivePartyEl = document.getElementById('sim-party-alive');
+  if (alivePartyEl) alivePartyEl.textContent = aliveParty;
+
+  const aliveEnemies = simEnemies.filter(e => e.alive).length;
+  const aliveEnemiesEl = document.getElementById('sim-enemies-alive');
+  if (aliveEnemiesEl) aliveEnemiesEl.textContent = aliveEnemies;
+
+  const outcomeBadge = document.getElementById('sim-outcome-badge');
+  if (outcomeBadge) {
+    if (aliveEnemies === 0 && aliveParty > 0) {
+      outcomeBadge.textContent = '🏆 Victory (Party Won)';
+      outcomeBadge.className = 'item-badge-pill';
+      outcomeBadge.style.background = '#2e7d32';
+    } else if (aliveParty === 0) {
+      outcomeBadge.textContent = '💀 Defeat (Party Wiped)';
+      outcomeBadge.className = 'item-badge-pill';
+      outcomeBadge.style.background = '#c62828';
+    } else if (simRound >= 25) {
+      outcomeBadge.textContent = '⏳ Stalemate (Time Limit)';
+      outcomeBadge.className = 'item-badge-pill';
+      outcomeBadge.style.background = '#f57f17';
+    } else if (simRound > 0) {
+      outcomeBadge.textContent = '⚔️ In Progress';
+      outcomeBadge.className = 'item-badge-pill';
+      outcomeBadge.style.background = '#0277bd';
+    } else {
+      outcomeBadge.textContent = 'Ready';
+      outcomeBadge.className = 'item-badge-pill';
+      outcomeBadge.style.background = '#37474f';
+    }
+  }
+
+  const logBox = document.getElementById('sim-log-entries');
+  if (logBox) {
+    if (simLog.length === 0) {
+      logBox.innerHTML = '<div style="color: var(--text-muted); font-style: italic;">Press "Step 1 Round" or "Simulate Full Battle" to execute autonomous Infinity AI combat decisions.</div>';
+    } else {
+      logBox.innerHTML = simLog.map(entry => `
+        <div style="margin-bottom: 4px; padding: 2px 4px; border-left: 2px solid ${entry.color};">
+          <span style="color: var(--text-muted);">[R${entry.round}]</span> ${entry.text}
+        </div>
+      `).join('');
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+  }
+}
+
+function logTactics(round, text, color = '#00bcd4') {
+  simLog.push({ round, text, color });
+}
+
+function stepSimRound() {
+  if (simParty.length === 0 || simEnemies.length === 0) {
+    initSimState();
+  }
+
+  const aliveParty = simParty.filter(p => p.alive);
+  const aliveEnemies = simEnemies.filter(e => e.alive);
+
+  if (aliveParty.length === 0 || aliveEnemies.length === 0 || simRound >= 25) {
+    return false;
+  }
+
+  simRound++;
+  logTactics(simRound, `━━━ Round ${simRound} Commencing ━━━`, '#ffca28');
+
+  // Party Phase (Infinity AI autonomous decisions)
+  for (const pc of aliveParty) {
+    if (!pc.alive) continue;
+    const currentAliveEnemies = simEnemies.filter(e => e.alive);
+    if (currentAliveEnemies.length === 0) break;
+
+    const dir = pc.directive || {};
+    const role = dir.role || 'striker';
+
+    // 1. Check Potion Threshold
+    const hpRatio = pc.hpCurrent / pc.hpMax;
+    const potionThresh = dir.potionThreshold ?? 0.4;
+    if (hpRatio <= potionThresh && pc.quickItems && pc.quickItems.length > 0) {
+      const potIdx = pc.quickItems.findIndex(i => typeof i === 'string' && (i.toLowerCase().includes('potion') || i.toLowerCase().includes('heal')));
+      if (potIdx !== -1) {
+        const potionName = pc.quickItems[potIdx];
+        const healAmt = Math.floor(Math.random() * 8) + 4; // 2d4+2
+        pc.hpCurrent = Math.min(pc.hpMax, pc.hpCurrent + healAmt);
+        pc.quickItems.splice(potIdx, 1);
+        logTactics(simRound, `🧪 <strong>${pc.name}</strong> drinks <em>${potionName}</em>! Recovered +${healAmt} HP (${pc.hpCurrent}/${pc.hpMax} HP).`, '#4caf50');
+        continue;
+      }
+    }
+
+    // 2. Check Healer Role: heal injured ally
+    if (role === 'healer' && dir.useSpells && pc.spellSlots > 0) {
+      const healThresh = dir.healThreshold ?? 0.5;
+      const woundedAlly = simParty.find(p => p.alive && (p.hpCurrent / p.hpMax) <= healThresh);
+      if (woundedAlly) {
+        pc.spellSlots--;
+        const healAmt = Math.floor(Math.random() * 8) + 4; // 1d8+3
+        woundedAlly.hpCurrent = Math.min(woundedAlly.hpMax, woundedAlly.hpCurrent + healAmt);
+        logTactics(simRound, `✨ <strong>${pc.name}</strong> casts <em>Cure Wounds</em> on <strong>${woundedAlly.name}</strong>! Restored +${healAmt} HP.`, '#81c784');
+        continue;
+      }
+    }
+
+    // 3. Target Selection based on Target Priority
+    let target = currentAliveEnemies[0];
+    const prio = dir.targetPriority || 'nearest';
+    if (prio === 'lowest_hp') {
+      target = currentAliveEnemies.reduce((min, e) => e.hpCurrent < min.hpCurrent ? e : min, currentAliveEnemies[0]);
+    } else if (prio === 'highest_hp') {
+      target = currentAliveEnemies.reduce((max, e) => e.hpCurrent > max.hpCurrent ? e : max, currentAliveEnemies[0]);
+    } else if (prio === 'weakest_ac') {
+      target = currentAliveEnemies.reduce((min, e) => e.ac < min.ac ? e : min, currentAliveEnemies[0]);
+    }
+
+    // 4. Action: Spellcaster attack or Weapon attack
+    if (role === 'caster' && dir.useSpells && pc.spellSlots > 0 && pc.spells.length > 0) {
+      pc.spellSlots--;
+      const spellName = pc.spells[0] || 'Magic Missile';
+      const dmg = Math.floor(Math.random() * 10) + 6;
+      target.hpCurrent -= dmg;
+      logTactics(simRound, `✨ <strong>${pc.name}</strong> weaves <em>${spellName}</em> blasting <strong>${target.name}</strong> for <strong>${dmg}</strong> force damage!`, '#ab47bc');
+    } else {
+      // Melee/Ranged attack roll
+      const d20 = Math.floor(Math.random() * 20) + 1;
+      const attackRoll = d20 + 5;
+      if (attackRoll >= target.ac || d20 === 20) {
+        const isCrit = d20 === 20;
+        let dmg = Math.floor(Math.random() * 8) + 3;
+        if (isCrit) dmg *= 2;
+        if (pc.abilities && pc.abilities.includes('sneak-attack')) {
+          dmg += Math.floor(Math.random() * 6) + 1;
+        }
+        target.hpCurrent -= dmg;
+        logTactics(simRound, `⚔️ <strong>${pc.name}</strong> hits <strong>${target.name}</strong> (Roll: ${d20}+5 = ${attackRoll} vs AC ${target.ac}) for <strong>${dmg}</strong> damage!${isCrit ? ' 💥 CRITICAL!' : ''}`, '#29b6f6');
+      } else {
+        logTactics(simRound, `🛡️ <strong>${pc.name}</strong> attacks <strong>${target.name}</strong> but misses (Roll: ${d20}+5 = ${attackRoll} vs AC ${target.ac}).`, '#78909c');
+      }
+    }
+
+    // Check if target died
+    if (target.hpCurrent <= 0) {
+      target.alive = false;
+      logTactics(simRound, `💀 <strong>${target.name}</strong> has been vanquished!`, '#ef5350');
+    }
+  }
+
+  // Enemy Phase (Hostile AI)
+  const remainingAliveEnemies = simEnemies.filter(e => e.alive);
+  const remainingAliveParty = simParty.filter(p => p.alive);
+
+  for (const enemy of remainingAliveEnemies) {
+    if (remainingAliveParty.length === 0) break;
+    const targetPC = remainingAliveParty[Math.floor(Math.random() * remainingAliveParty.length)];
+    const d20 = Math.floor(Math.random() * 20) + 1;
+    let targetAC = targetPC.ac;
+
+    if (targetPC.directive?.reactions?.shield && targetPC.spells && targetPC.spells.includes('shield')) {
+      targetAC += 5;
+    }
+
+    const attackRoll = d20 + enemy.attackBonus;
+    if (attackRoll >= targetAC || d20 === 20) {
+      let dmg = Math.floor(Math.random() * 6) + 2;
+      if (targetPC.directive?.reactions?.uncannyDodge && targetPC.abilities?.includes('uncanny-dodge')) {
+        dmg = Math.max(1, Math.floor(dmg / 2));
+      }
+      targetPC.hpCurrent -= dmg;
+      logTactics(simRound, `🩸 <strong>${enemy.name}</strong> strikes <strong>${targetPC.name}</strong> for <strong>${dmg}</strong> damage! (${targetPC.hpCurrent}/${targetPC.hpMax} HP remaining)`, '#ff7043');
+      if (targetPC.hpCurrent <= 0) {
+        targetPC.alive = false;
+        logTactics(simRound, `⚠️ <strong>${targetPC.name}</strong> has fallen unconscious in battle!`, '#e53935');
+      }
+    } else {
+      logTactics(simRound, `🛡️ <strong>${enemy.name}</strong> attacks <strong>${targetPC.name}</strong> but is parried or deflected!`, '#78909c');
+    }
+  }
+
+  updateSimDashboard();
+  return true;
+}
+
+function runSimFull() {
+  initSimState();
+  let keepGoing = true;
+  let counter = 0;
+  while (keepGoing && counter < 25) {
+    counter++;
+    const stepped = stepSimRound();
+    if (!stepped) break;
+    const aliveParty = simParty.filter(p => p.alive).length;
+    const aliveEnemies = simEnemies.filter(e => e.alive).length;
+    if (aliveParty === 0 || aliveEnemies === 0) break;
+  }
+}
+
+function resetSim() {
+  initSimState();
 }
 
 // ========================================================

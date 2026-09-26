@@ -1,0 +1,54 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:ability:turn-undead",
+  "@type": [
+    "robos:CRPGAbility",
+    "schema:Action",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Turn Undead",
+  "schema:name": "Turn Undead",
+  "robos:slug": "turn-undead",
+  "slug": "turn-undead",
+  "robos:category": "class_feature",
+  "category": "class_feature",
+  "robos:actionType": "action",
+  "actionType": "action",
+  "robos:recharge": "short_rest",
+  "recharge": "short_rest",
+  "robos:resourceCost": "1 Channel Divinity",
+  "resourceCost": "1 Channel Divinity",
+  "robos:range": "30 feet",
+  "range": "30 feet",
+  "robos:duration": "10 rounds",
+  "duration": "10 rounds",
+  "robos:icon": "✝️",
+  "icon": "✝️",
+  "robos:prerequisites": "Cleric Level 2",
+  "prerequisites": "Cleric Level 2",
+  "robos:effectFormula": "WIS Save or Flee for 1 minute",
+  "effectFormula": "WIS Save or Flee for 1 minute",
+  "robos:mechanics": {
+    "kind": "crowd_control",
+    "target": "undead_area",
+    "range": 30,
+    "save": "WIS",
+    "condition": "fleeing",
+    "duration": 10
+  },
+  "mechanics": {
+    "kind": "crowd_control",
+    "target": "undead_area",
+    "range": 30,
+    "save": "WIS",
+    "condition": "fleeing",
+    "duration": 10
+  },
+  "dcterms:description": "As an action, you present your holy symbol and speak a prayer censuring the undead. Each undead within 30 feet that can see or hear you must make a Wisdom saving throw or be turned for 1 minute.",
+  "description": "As an action, you present your holy symbol and speak a prayer censuring the undead. Each undead within 30 feet that can see or hear you must make a Wisdom saving throw or be turned for 1 minute."
+}

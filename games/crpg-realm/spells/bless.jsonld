@@ -1,0 +1,58 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:spell:bless",
+  "@type": [
+    "robos:CRPGSpell",
+    "schema:Action",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Bless",
+  "schema:name": "Bless",
+  "robos:slug": "bless",
+  "slug": "bless",
+  "robos:spellLevel": 1,
+  "spellLevel": 1,
+  "robos:magicSchool": "Enchantment",
+  "magicSchool": "Enchantment",
+  "robos:castingTime": "1 action",
+  "castingTime": "1 action",
+  "robos:range": "30 feet",
+  "range": "30 feet",
+  "robos:damageFormula": "1d4",
+  "damageFormula": "1d4",
+  "robos:damageType": "",
+  "damageType": "",
+  "robos:icon": "💫",
+  "icon": "💫",
+  "robos:duration": "10 rounds",
+  "duration": "10 rounds",
+  "robos:components": "V, S, M",
+  "components": "V, S, M",
+  "robos:savingThrow": "None",
+  "savingThrow": "None",
+  "robos:mechanics": {
+    "kind": "buff",
+    "target": "allies",
+    "range": 30,
+    "maxTargets": 3,
+    "condition": "blessed",
+    "duration": 10,
+    "concentration": true
+  },
+  "mechanics": {
+    "kind": "buff",
+    "target": "allies",
+    "range": 30,
+    "maxTargets": 3,
+    "condition": "blessed",
+    "duration": 10,
+    "concentration": true
+  },
+  "dcterms:description": "You bless up to three creatures. Whenever a target makes an attack roll or saving throw, they add a d4 to the roll.",
+  "description": "You bless up to three creatures. Whenever a target makes an attack roll or saving throw, they add a d4 to the roll."
+}

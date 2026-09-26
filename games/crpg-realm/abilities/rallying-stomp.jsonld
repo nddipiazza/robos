@@ -1,0 +1,52 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:ability:rallying-stomp",
+  "@type": [
+    "robos:CRPGAbility",
+    "schema:Action",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Rallying Stomp",
+  "schema:name": "Rallying Stomp",
+  "robos:slug": "rallying-stomp",
+  "slug": "rallying-stomp",
+  "robos:category": "combat_maneuver",
+  "category": "combat_maneuver",
+  "robos:actionType": "bonus_action",
+  "actionType": "bonus_action",
+  "robos:recharge": "short_rest",
+  "recharge": "short_rest",
+  "robos:resourceCost": "1 use",
+  "resourceCost": "1 use",
+  "robos:range": "30 feet",
+  "range": "30 feet",
+  "robos:duration": "10 rounds",
+  "duration": "10 rounds",
+  "robos:icon": "📣",
+  "icon": "📣",
+  "robos:prerequisites": "Warrior Level 1",
+  "prerequisites": "Warrior Level 1",
+  "robos:effectFormula": "10 Temporary HP to Party",
+  "effectFormula": "10 Temporary HP to Party",
+  "robos:mechanics": {
+    "kind": "temp_hp_aura",
+    "target": "allies",
+    "range": 30,
+    "tempHp": 10,
+    "bonusAction": true
+  },
+  "mechanics": {
+    "kind": "temp_hp_aura",
+    "target": "allies",
+    "range": 30,
+    "tempHp": 10,
+    "bonusAction": true
+  },
+  "dcterms:description": "You plant your feet and let out a resounding battle cry, granting all allies within 30 feet 10 temporary hit points.",
+  "description": "You plant your feet and let out a resounding battle cry, granting all allies within 30 feet 10 temporary hit points."
+}

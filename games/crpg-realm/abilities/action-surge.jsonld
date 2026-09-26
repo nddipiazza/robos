@@ -1,0 +1,46 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:ability:action-surge",
+  "@type": [
+    "robos:CRPGAbility",
+    "schema:Action",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Action Surge",
+  "schema:name": "Action Surge",
+  "robos:slug": "action-surge",
+  "slug": "action-surge",
+  "robos:category": "class_feature",
+  "category": "class_feature",
+  "robos:actionType": "free_action",
+  "actionType": "free_action",
+  "robos:recharge": "short_rest",
+  "recharge": "short_rest",
+  "robos:resourceCost": "1 use",
+  "resourceCost": "1 use",
+  "robos:range": "Self",
+  "range": "Self",
+  "robos:duration": "1 turn",
+  "duration": "1 turn",
+  "robos:icon": "⚡",
+  "icon": "⚡",
+  "robos:prerequisites": "Fighter Level 2",
+  "prerequisites": "Fighter Level 2",
+  "robos:effectFormula": "+1 Action this turn",
+  "effectFormula": "+1 Action this turn",
+  "robos:mechanics": {
+    "kind": "extra_action",
+    "target": "self"
+  },
+  "mechanics": {
+    "kind": "extra_action",
+    "target": "self"
+  },
+  "dcterms:description": "You can push yourself beyond your normal limits for a moment. On your turn, you can take one additional action on top of your regular action and possible bonus action.",
+  "description": "You can push yourself beyond your normal limits for a moment. On your turn, you can take one additional action on top of your regular action and possible bonus action."
+}

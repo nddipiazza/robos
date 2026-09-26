@@ -1,0 +1,46 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:ability:flank-advantage",
+  "@type": [
+    "robos:CRPGAbility",
+    "schema:Action",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Flanking Tactician",
+  "schema:name": "Flanking Tactician",
+  "robos:slug": "flank-advantage",
+  "slug": "flank-advantage",
+  "robos:category": "combat_maneuver",
+  "category": "combat_maneuver",
+  "robos:actionType": "passive",
+  "actionType": "passive",
+  "robos:recharge": "at_will",
+  "recharge": "at_will",
+  "robos:resourceCost": "None",
+  "resourceCost": "None",
+  "robos:range": "5 feet",
+  "range": "5 feet",
+  "robos:duration": "Continuous",
+  "duration": "Continuous",
+  "robos:icon": "🎯",
+  "icon": "🎯",
+  "robos:prerequisites": "Martial Proficiency",
+  "prerequisites": "Martial Proficiency",
+  "robos:effectFormula": "Advantage on Melee Attacks",
+  "effectFormula": "Advantage on Melee Attacks",
+  "robos:mechanics": {
+    "kind": "flanking_advantage",
+    "trigger": "adjacent_ally"
+  },
+  "mechanics": {
+    "kind": "flanking_advantage",
+    "trigger": "adjacent_ally"
+  },
+  "dcterms:description": "When making a melee attack against a creature, you gain Advantage if at least one ally is within 5 feet of the target and not incapacitated.",
+  "description": "When making a melee attack against a creature, you gain Advantage if at least one ally is within 5 feet of the target and not incapacitated."
+}

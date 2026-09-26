@@ -1,0 +1,48 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:ability:defensive-flurry",
+  "@type": [
+    "robos:CRPGAbility",
+    "schema:Action",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Defensive Flurry",
+  "schema:name": "Defensive Flurry",
+  "robos:slug": "defensive-flurry",
+  "slug": "defensive-flurry",
+  "robos:category": "combat_maneuver",
+  "category": "combat_maneuver",
+  "robos:actionType": "reaction",
+  "actionType": "reaction",
+  "robos:recharge": "short_rest",
+  "recharge": "short_rest",
+  "robos:resourceCost": "1 Superiority Die",
+  "resourceCost": "1 Superiority Die",
+  "robos:range": "Self",
+  "range": "Self",
+  "robos:duration": "1 attack",
+  "duration": "1 attack",
+  "robos:icon": "🛡️",
+  "icon": "🛡️",
+  "robos:prerequisites": "Battle Master Fighter",
+  "prerequisites": "Battle Master Fighter",
+  "robos:effectFormula": "+1d8 to AC vs 1 attack",
+  "effectFormula": "+1d8 to AC vs 1 attack",
+  "robos:mechanics": {
+    "kind": "reaction_defense",
+    "trigger": "when_hit_melee",
+    "acBonusDie": "1d8"
+  },
+  "mechanics": {
+    "kind": "reaction_defense",
+    "trigger": "when_hit_melee",
+    "acBonusDie": "1d8"
+  },
+  "dcterms:description": "When another creature hits you with a melee attack, you can use your reaction to expend one superiority die, adding the roll to your AC against that attack.",
+  "description": "When another creature hits you with a melee attack, you can use your reaction to expend one superiority die, adding the roll to your AC against that attack."
+}

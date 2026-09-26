@@ -1,0 +1,74 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:spell:sleep",
+  "@type": [
+    "robos:CRPGSpell",
+    "schema:Action",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Sleep",
+  "schema:name": "Sleep",
+  "robos:slug": "sleep",
+  "slug": "sleep",
+  "robos:spellLevel": 1,
+  "spellLevel": 1,
+  "robos:magicSchool": "Enchantment",
+  "magicSchool": "Enchantment",
+  "robos:castingTime": "1 action",
+  "castingTime": "1 action",
+  "robos:range": "90 feet",
+  "range": "90 feet",
+  "robos:damageFormula": "5d8",
+  "damageFormula": "5d8",
+  "robos:damageType": "",
+  "damageType": "",
+  "robos:icon": "💫",
+  "icon": "💫",
+  "robos:duration": "10 rounds",
+  "duration": "10 rounds",
+  "robos:components": "V, S, M",
+  "components": "V, S, M",
+  "robos:savingThrow": "None",
+  "savingThrow": "None",
+  "robos:mechanics": {
+    "kind": "hp_pool",
+    "target": "point",
+    "range": 90,
+    "area": {
+      "shape": "sphere",
+      "size": 20
+    },
+    "pool": "5d8",
+    "condition": "unconscious",
+    "duration": 10,
+    "endsOnDamage": true,
+    "immuneCreatureTypes": [
+      "undead",
+      "construct"
+    ]
+  },
+  "mechanics": {
+    "kind": "hp_pool",
+    "target": "point",
+    "range": 90,
+    "area": {
+      "shape": "sphere",
+      "size": 20
+    },
+    "pool": "5d8",
+    "condition": "unconscious",
+    "duration": 10,
+    "endsOnDamage": true,
+    "immuneCreatureTypes": [
+      "undead",
+      "construct"
+    ]
+  },
+  "dcterms:description": "This spell sends creatures into a magical slumber. Roll 5d8; the total is how many hit points of creatures this spell can affect.",
+  "description": "This spell sends creatures into a magical slumber. Roll 5d8; the total is how many hit points of creatures this spell can affect."
+}

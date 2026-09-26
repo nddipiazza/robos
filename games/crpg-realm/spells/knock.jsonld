@@ -1,0 +1,50 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:spell:knock",
+  "@type": [
+    "robos:CRPGSpell",
+    "schema:Action",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Knock",
+  "schema:name": "Knock",
+  "robos:slug": "knock",
+  "slug": "knock",
+  "robos:spellLevel": 2,
+  "spellLevel": 2,
+  "robos:magicSchool": "Transmutation",
+  "magicSchool": "Transmutation",
+  "robos:castingTime": "1 action",
+  "castingTime": "1 action",
+  "robos:range": "60 feet",
+  "range": "60 feet",
+  "robos:damageFormula": "",
+  "damageFormula": "",
+  "robos:damageType": "utility",
+  "damageType": "utility",
+  "robos:icon": "⏳",
+  "icon": "⏳",
+  "robos:duration": "Instantaneous",
+  "duration": "Instantaneous",
+  "robos:components": "V, S, M",
+  "components": "V, S, M",
+  "robos:savingThrow": "None",
+  "savingThrow": "None",
+  "robos:mechanics": {
+    "kind": "utility",
+    "target": "point",
+    "range": 60
+  },
+  "mechanics": {
+    "kind": "utility",
+    "target": "point",
+    "range": 60
+  },
+  "dcterms:description": "A loud mechanical resonance unlocks a target door or chest, or safely suppresses and disarms a trigger mechanism.",
+  "description": "A loud mechanical resonance unlocks a target door or chest, or safely suppresses and disarms a trigger mechanism."
+}

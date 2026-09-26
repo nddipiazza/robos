@@ -1,0 +1,54 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:spell:see-invisibility",
+  "@type": [
+    "robos:CRPGSpell",
+    "schema:Action",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "See Invisibility",
+  "schema:name": "See Invisibility",
+  "robos:slug": "see-invisibility",
+  "slug": "see-invisibility",
+  "robos:spellLevel": 2,
+  "spellLevel": 2,
+  "robos:magicSchool": "Divination",
+  "magicSchool": "Divination",
+  "robos:castingTime": "1 action",
+  "castingTime": "1 action",
+  "robos:range": "Self",
+  "range": "Self",
+  "robos:damageFormula": "",
+  "damageFormula": "",
+  "robos:damageType": "",
+  "damageType": "",
+  "robos:icon": "🔮",
+  "icon": "🔮",
+  "robos:duration": "600 rounds",
+  "duration": "600 rounds",
+  "robos:components": "V, S, M",
+  "components": "V, S, M",
+  "robos:savingThrow": "None",
+  "savingThrow": "None",
+  "robos:mechanics": {
+    "kind": "buff",
+    "target": "self",
+    "range": 0,
+    "condition": "see_invisibility",
+    "duration": 600
+  },
+  "mechanics": {
+    "kind": "buff",
+    "target": "self",
+    "range": 0,
+    "condition": "see_invisibility",
+    "duration": 600
+  },
+  "dcterms:description": "For the duration, you see invisible creatures and objects as if they were visible, with a luminous ethereal outline.",
+  "description": "For the duration, you see invisible creatures and objects as if they were visible, with a luminous ethereal outline."
+}

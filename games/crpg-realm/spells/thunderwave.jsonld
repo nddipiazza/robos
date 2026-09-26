@@ -1,0 +1,70 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:spell:thunderwave",
+  "@type": [
+    "robos:CRPGSpell",
+    "schema:Action",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Thunderwave",
+  "schema:name": "Thunderwave",
+  "robos:slug": "thunderwave",
+  "slug": "thunderwave",
+  "robos:spellLevel": 1,
+  "spellLevel": 1,
+  "robos:magicSchool": "Evocation",
+  "magicSchool": "Evocation",
+  "robos:castingTime": "1 action",
+  "castingTime": "1 action",
+  "robos:range": "15-foot cube",
+  "range": "15-foot cube",
+  "robos:damageFormula": "2d8",
+  "damageFormula": "2d8",
+  "robos:damageType": "thunder",
+  "damageType": "thunder",
+  "robos:icon": "🔥",
+  "icon": "🔥",
+  "robos:duration": "Instantaneous",
+  "duration": "Instantaneous",
+  "robos:components": "V, S, M",
+  "components": "V, S, M",
+  "robos:savingThrow": "CON",
+  "savingThrow": "CON",
+  "robos:mechanics": {
+    "kind": "save_damage",
+    "target": "self",
+    "origin": "self",
+    "range": 0,
+    "area": {
+      "shape": "cube",
+      "size": 15
+    },
+    "save": "CON",
+    "onSave": "half",
+    "damage": "2d8",
+    "damageType": "thunder",
+    "pushOnFail": 10
+  },
+  "mechanics": {
+    "kind": "save_damage",
+    "target": "self",
+    "origin": "self",
+    "range": 0,
+    "area": {
+      "shape": "cube",
+      "size": 15
+    },
+    "save": "CON",
+    "onSave": "half",
+    "damage": "2d8",
+    "damageType": "thunder",
+    "pushOnFail": 10
+  },
+  "dcterms:description": "A wave of thunderous force sweeps out from you, dealing 2d8 thunder damage and pushing creatures away.",
+  "description": "A wave of thunderous force sweeps out from you, dealing 2d8 thunder damage and pushing creatures away."
+}

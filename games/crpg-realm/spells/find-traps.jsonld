@@ -1,0 +1,50 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:spell:find-traps",
+  "@type": [
+    "robos:CRPGSpell",
+    "schema:Action",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Find Traps",
+  "schema:name": "Find Traps",
+  "robos:slug": "find-traps",
+  "slug": "find-traps",
+  "robos:spellLevel": 2,
+  "spellLevel": 2,
+  "robos:magicSchool": "Divination",
+  "magicSchool": "Divination",
+  "robos:castingTime": "1 action",
+  "castingTime": "1 action",
+  "robos:range": "120 feet",
+  "range": "120 feet",
+  "robos:damageFormula": "",
+  "damageFormula": "",
+  "robos:damageType": "divination",
+  "damageType": "divination",
+  "robos:icon": "🔮",
+  "icon": "🔮",
+  "robos:duration": "Instantaneous",
+  "duration": "Instantaneous",
+  "robos:components": "V, S, M",
+  "components": "V, S, M",
+  "robos:savingThrow": "None",
+  "savingThrow": "None",
+  "robos:mechanics": {
+    "kind": "detect_traps",
+    "target": "self",
+    "range": 120
+  },
+  "mechanics": {
+    "kind": "detect_traps",
+    "target": "self",
+    "range": 120
+  },
+  "dcterms:description": "You sense the presence of any trap within range. Concealed magical and mechanical hazards in the area are illuminated in bright red divination runes.",
+  "description": "You sense the presence of any trap within range. Concealed magical and mechanical hazards in the area are illuminated in bright red divination runes."
+}

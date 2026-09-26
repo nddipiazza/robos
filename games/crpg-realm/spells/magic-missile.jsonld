@@ -1,0 +1,58 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:spell:magic-missile",
+  "@type": [
+    "robos:CRPGSpell",
+    "schema:Action",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Magic Missile",
+  "schema:name": "Magic Missile",
+  "robos:slug": "magic-missile",
+  "slug": "magic-missile",
+  "robos:spellLevel": 1,
+  "spellLevel": 1,
+  "robos:magicSchool": "Evocation",
+  "magicSchool": "Evocation",
+  "robos:castingTime": "1 action",
+  "castingTime": "1 action",
+  "robos:range": "120 feet",
+  "range": "120 feet",
+  "robos:damageFormula": "3d4+3",
+  "damageFormula": "3d4+3",
+  "robos:damageType": "force",
+  "damageType": "force",
+  "robos:icon": "🔥",
+  "icon": "🔥",
+  "robos:duration": "Instantaneous",
+  "duration": "Instantaneous",
+  "robos:components": "V, S, M",
+  "components": "V, S, M",
+  "robos:savingThrow": "None",
+  "savingThrow": "None",
+  "robos:mechanics": {
+    "kind": "auto_damage",
+    "target": "creature",
+    "range": 120,
+    "darts": 3,
+    "dartDamage": "1d4+1",
+    "damageType": "force",
+    "blockedByCondition": "shielded"
+  },
+  "mechanics": {
+    "kind": "auto_damage",
+    "target": "creature",
+    "range": 120,
+    "darts": 3,
+    "dartDamage": "1d4+1",
+    "damageType": "force",
+    "blockedByCondition": "shielded"
+  },
+  "dcterms:description": "You create three glowing darts of magical force. Each dart hits a creature of your choice that you can see, dealing 1d4 + 1 force damage.",
+  "description": "You create three glowing darts of magical force. Each dart hits a creature of your choice that you can see, dealing 1d4 + 1 force damage."
+}

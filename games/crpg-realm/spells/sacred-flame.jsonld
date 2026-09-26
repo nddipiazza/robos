@@ -1,0 +1,56 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:spell:sacred-flame",
+  "@type": [
+    "robos:CRPGSpell",
+    "schema:Action",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Sacred Flame",
+  "schema:name": "Sacred Flame",
+  "robos:slug": "sacred-flame",
+  "slug": "sacred-flame",
+  "robos:spellLevel": 0,
+  "spellLevel": 0,
+  "robos:magicSchool": "Evocation",
+  "magicSchool": "Evocation",
+  "robos:castingTime": "1 action",
+  "castingTime": "1 action",
+  "robos:range": "60 feet",
+  "range": "60 feet",
+  "robos:damageFormula": "1d8",
+  "damageFormula": "1d8",
+  "robos:damageType": "radiant",
+  "damageType": "radiant",
+  "robos:icon": "✨",
+  "icon": "✨",
+  "robos:duration": "Instantaneous",
+  "duration": "Instantaneous",
+  "robos:components": "V, S",
+  "components": "V, S",
+  "robos:savingThrow": "DEX",
+  "savingThrow": "DEX",
+  "robos:mechanics": {
+    "kind": "save_damage",
+    "target": "creature",
+    "range": 60,
+    "save": "DEX",
+    "damage": "1d8",
+    "damageType": "radiant"
+  },
+  "mechanics": {
+    "kind": "save_damage",
+    "target": "creature",
+    "range": 60,
+    "save": "DEX",
+    "damage": "1d8",
+    "damageType": "radiant"
+  },
+  "dcterms:description": "Flame-like radiance descends on a creature that you can see within range. The target must succeed on a Dex save or take 1d8 radiant damage.",
+  "description": "Flame-like radiance descends on a creature that you can see within range. The target must succeed on a Dex save or take 1d8 radiant damage."
+}

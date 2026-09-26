@@ -1,0 +1,70 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:spell:stinking-cloud",
+  "@type": [
+    "robos:CRPGSpell",
+    "schema:Action",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Stinking Cloud",
+  "schema:name": "Stinking Cloud",
+  "robos:slug": "stinking-cloud",
+  "slug": "stinking-cloud",
+  "robos:spellLevel": 3,
+  "spellLevel": 3,
+  "robos:magicSchool": "Conjuration",
+  "magicSchool": "Conjuration",
+  "robos:castingTime": "1 action",
+  "castingTime": "1 action",
+  "robos:range": "90 feet",
+  "range": "90 feet",
+  "robos:damageFormula": "4d6",
+  "damageFormula": "4d6",
+  "robos:damageType": "poison",
+  "damageType": "poison",
+  "robos:icon": "☁️",
+  "icon": "☁️",
+  "robos:duration": "2 rounds",
+  "duration": "2 rounds",
+  "robos:components": "V, S, M",
+  "components": "V, S, M",
+  "robos:savingThrow": "CON",
+  "savingThrow": "CON",
+  "robos:mechanics": {
+    "kind": "save_damage",
+    "target": "point",
+    "range": 90,
+    "area": {
+      "shape": "sphere",
+      "size": 20
+    },
+    "save": "CON",
+    "onSave": "none",
+    "damage": "4d6",
+    "damageType": "poison",
+    "conditionOnFail": "poisoned",
+    "duration": 2
+  },
+  "mechanics": {
+    "kind": "save_damage",
+    "target": "point",
+    "range": 90,
+    "area": {
+      "shape": "sphere",
+      "size": 20
+    },
+    "save": "CON",
+    "onSave": "none",
+    "damage": "4d6",
+    "damageType": "poison",
+    "conditionOnFail": "poisoned",
+    "duration": 2
+  },
+  "dcterms:description": "You create a 20-foot-radius sphere of yellow, nauseating toxic gas centered on a chosen point. The billowing vapors deal 4d6 poison damage and overcome creatures within, forcing them to spend their turn retching and reeling on the ground.",
+  "description": "You create a 20-foot-radius sphere of yellow, nauseating toxic gas centered on a chosen point. The billowing vapors deal 4d6 poison damage and overcome creatures within, forcing them to spend their turn retching and reeling on the ground."
+}

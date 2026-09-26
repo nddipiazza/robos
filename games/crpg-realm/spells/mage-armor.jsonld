@@ -1,0 +1,56 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:spell:mage-armor",
+  "@type": [
+    "robos:CRPGSpell",
+    "schema:Action",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Mage Armor",
+  "schema:name": "Mage Armor",
+  "robos:slug": "mage-armor",
+  "slug": "mage-armor",
+  "robos:spellLevel": 1,
+  "spellLevel": 1,
+  "robos:magicSchool": "Abjuration",
+  "magicSchool": "Abjuration",
+  "robos:castingTime": "1 action",
+  "castingTime": "1 action",
+  "robos:range": "Touch",
+  "range": "Touch",
+  "robos:damageFormula": "",
+  "damageFormula": "",
+  "robos:damageType": "",
+  "damageType": "",
+  "robos:icon": "🛡️",
+  "icon": "🛡️",
+  "robos:duration": "600 rounds",
+  "duration": "600 rounds",
+  "robos:components": "V, S, M",
+  "components": "V, S, M",
+  "robos:savingThrow": "None",
+  "savingThrow": "None",
+  "robos:mechanics": {
+    "kind": "buff",
+    "target": "ally",
+    "range": 5,
+    "condition": "mage_armor",
+    "duration": 600,
+    "baseAc": 13
+  },
+  "mechanics": {
+    "kind": "buff",
+    "target": "ally",
+    "range": 5,
+    "condition": "mage_armor",
+    "duration": 600,
+    "baseAc": 13
+  },
+  "dcterms:description": "You touch a willing creature who isn't wearing armor. The target's base AC becomes 13 + its Dexterity modifier.",
+  "description": "You touch a willing creature who isn't wearing armor. The target's base AC becomes 13 + its Dexterity modifier."
+}

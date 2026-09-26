@@ -1,0 +1,58 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:spell:haste",
+  "@type": [
+    "robos:CRPGSpell",
+    "schema:Action",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Haste",
+  "schema:name": "Haste",
+  "robos:slug": "haste",
+  "slug": "haste",
+  "robos:spellLevel": 3,
+  "spellLevel": 3,
+  "robos:magicSchool": "Transmutation",
+  "magicSchool": "Transmutation",
+  "robos:castingTime": "1 action",
+  "castingTime": "1 action",
+  "robos:range": "30 feet",
+  "range": "30 feet",
+  "robos:damageFormula": "",
+  "damageFormula": "",
+  "robos:damageType": "",
+  "damageType": "",
+  "robos:icon": "⏳",
+  "icon": "⏳",
+  "robos:duration": "10 rounds",
+  "duration": "10 rounds",
+  "robos:components": "V, S, M",
+  "components": "V, S, M",
+  "robos:savingThrow": "None",
+  "savingThrow": "None",
+  "robos:mechanics": {
+    "kind": "buff",
+    "target": "ally",
+    "range": 30,
+    "condition": "hasted",
+    "duration": 10,
+    "acBonus": 2,
+    "concentration": true
+  },
+  "mechanics": {
+    "kind": "buff",
+    "target": "ally",
+    "range": 30,
+    "condition": "hasted",
+    "duration": 10,
+    "acBonus": 2,
+    "concentration": true
+  },
+  "dcterms:description": "Choose a willing creature within range. Its speed is doubled, it gains a +2 bonus to AC, and it gains an additional action.",
+  "description": "Choose a willing creature within range. Its speed is doubled, it gains a +2 bonus to AC, and it gains an additional action."
+}

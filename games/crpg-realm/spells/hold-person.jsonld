@@ -1,0 +1,62 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:spell:hold-person",
+  "@type": [
+    "robos:CRPGSpell",
+    "schema:Action",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Hold Person",
+  "schema:name": "Hold Person",
+  "robos:slug": "hold-person",
+  "slug": "hold-person",
+  "robos:spellLevel": 2,
+  "spellLevel": 2,
+  "robos:magicSchool": "Enchantment",
+  "magicSchool": "Enchantment",
+  "robos:castingTime": "1 action",
+  "castingTime": "1 action",
+  "robos:range": "60 feet",
+  "range": "60 feet",
+  "robos:damageFormula": "",
+  "damageFormula": "",
+  "robos:damageType": "",
+  "damageType": "",
+  "robos:icon": "💫",
+  "icon": "💫",
+  "robos:duration": "10 rounds",
+  "duration": "10 rounds",
+  "robos:components": "V, S, M",
+  "components": "V, S, M",
+  "robos:savingThrow": "WIS",
+  "savingThrow": "WIS",
+  "robos:mechanics": {
+    "kind": "save_condition",
+    "target": "creature",
+    "range": 60,
+    "save": "WIS",
+    "condition": "paralyzed",
+    "duration": 10,
+    "repeatSave": true,
+    "requiresCreatureType": "humanoid",
+    "concentration": true
+  },
+  "mechanics": {
+    "kind": "save_condition",
+    "target": "creature",
+    "range": 60,
+    "save": "WIS",
+    "condition": "paralyzed",
+    "duration": 10,
+    "repeatSave": true,
+    "requiresCreatureType": "humanoid",
+    "concentration": true
+  },
+  "dcterms:description": "Choose a humanoid that you can see within range. The target must succeed on a Wisdom saving throw or become paralyzed.",
+  "description": "Choose a humanoid that you can see within range. The target must succeed on a Wisdom saving throw or become paralyzed."
+}

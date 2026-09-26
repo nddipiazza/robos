@@ -1,0 +1,54 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:spell:fire-bolt",
+  "@type": [
+    "robos:CRPGSpell",
+    "schema:Action",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Fire Bolt",
+  "schema:name": "Fire Bolt",
+  "robos:slug": "fire-bolt",
+  "slug": "fire-bolt",
+  "robos:spellLevel": 0,
+  "spellLevel": 0,
+  "robos:magicSchool": "Evocation",
+  "magicSchool": "Evocation",
+  "robos:castingTime": "1 action",
+  "castingTime": "1 action",
+  "robos:range": "120 feet",
+  "range": "120 feet",
+  "robos:damageFormula": "1d10",
+  "damageFormula": "1d10",
+  "robos:damageType": "fire",
+  "damageType": "fire",
+  "robos:icon": "🔥",
+  "icon": "🔥",
+  "robos:duration": "Instantaneous",
+  "duration": "Instantaneous",
+  "robos:components": "V, S",
+  "components": "V, S",
+  "robos:savingThrow": "None",
+  "savingThrow": "None",
+  "robos:mechanics": {
+    "kind": "attack_damage",
+    "target": "creature",
+    "range": 120,
+    "damage": "1d10",
+    "damageType": "fire"
+  },
+  "mechanics": {
+    "kind": "attack_damage",
+    "target": "creature",
+    "range": 120,
+    "damage": "1d10",
+    "damageType": "fire"
+  },
+  "dcterms:description": "You hurl a mote of fire at a creature or object within range. Make a ranged spell attack. On a hit, the target takes 1d10 fire damage.",
+  "description": "You hurl a mote of fire at a creature or object within range. Make a ranged spell attack. On a hit, the target takes 1d10 fire damage."
+}

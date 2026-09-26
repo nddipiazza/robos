@@ -1,0 +1,50 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:ability:trip-attack",
+  "@type": [
+    "robos:CRPGAbility",
+    "schema:Action",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Trip Attack",
+  "schema:name": "Trip Attack",
+  "robos:slug": "trip-attack",
+  "slug": "trip-attack",
+  "robos:category": "combat_maneuver",
+  "category": "combat_maneuver",
+  "robos:actionType": "action",
+  "actionType": "action",
+  "robos:recharge": "short_rest",
+  "recharge": "short_rest",
+  "robos:resourceCost": "1 Superiority Die",
+  "resourceCost": "1 Superiority Die",
+  "robos:range": "Weapon Range",
+  "range": "Weapon Range",
+  "robos:duration": "Instantaneous",
+  "duration": "Instantaneous",
+  "robos:icon": "🤼",
+  "icon": "🤼",
+  "robos:prerequisites": "Battle Master Fighter",
+  "prerequisites": "Battle Master Fighter",
+  "robos:effectFormula": "Weapon Damage + 1d8 + STR Save vs Prone",
+  "effectFormula": "Weapon Damage + 1d8 + STR Save vs Prone",
+  "robos:mechanics": {
+    "kind": "maneuver_damage_and_effect",
+    "bonusDamageDie": "1d8",
+    "save": "STR",
+    "conditionOnFail": "prone"
+  },
+  "mechanics": {
+    "kind": "maneuver_damage_and_effect",
+    "bonusDamageDie": "1d8",
+    "save": "STR",
+    "conditionOnFail": "prone"
+  },
+  "dcterms:description": "When you hit a creature with a weapon attack, you can expend one superiority die to add 1d8 to the damage roll, and if the target is Large or smaller, it must make a Strength saving throw or be knocked prone.",
+  "description": "When you hit a creature with a weapon attack, you can expend one superiority die to add 1d8 to the damage roll, and if the target is Large or smaller, it must make a Strength saving throw or be knocked prone."
+}

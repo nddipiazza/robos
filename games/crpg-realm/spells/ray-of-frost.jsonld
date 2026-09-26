@@ -1,0 +1,56 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:spell:ray-of-frost",
+  "@type": [
+    "robos:CRPGSpell",
+    "schema:Action",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Ray of Frost",
+  "schema:name": "Ray of Frost",
+  "robos:slug": "ray-of-frost",
+  "slug": "ray-of-frost",
+  "robos:spellLevel": 0,
+  "spellLevel": 0,
+  "robos:magicSchool": "Evocation",
+  "magicSchool": "Evocation",
+  "robos:castingTime": "1 action",
+  "castingTime": "1 action",
+  "robos:range": "60 feet",
+  "range": "60 feet",
+  "robos:damageFormula": "1d8",
+  "damageFormula": "1d8",
+  "robos:damageType": "cold",
+  "damageType": "cold",
+  "robos:icon": "❄️",
+  "icon": "❄️",
+  "robos:duration": "Instantaneous",
+  "duration": "Instantaneous",
+  "robos:components": "V, S",
+  "components": "V, S",
+  "robos:savingThrow": "None",
+  "savingThrow": "None",
+  "robos:mechanics": {
+    "kind": "attack_damage",
+    "target": "creature",
+    "range": 60,
+    "damage": "1d8",
+    "damageType": "cold",
+    "condition": "slowed"
+  },
+  "mechanics": {
+    "kind": "attack_damage",
+    "target": "creature",
+    "range": 60,
+    "damage": "1d8",
+    "damageType": "cold",
+    "condition": "slowed"
+  },
+  "dcterms:description": "A frigid beam of blue-white light streaks toward a creature within range. On a hit, it takes 1d8 cold damage and its speed is reduced by 10 feet.",
+  "description": "A frigid beam of blue-white light streaks toward a creature within range. On a hit, it takes 1d8 cold damage and its speed is reduced by 10 feet."
+}

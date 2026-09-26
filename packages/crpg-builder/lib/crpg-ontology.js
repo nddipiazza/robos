@@ -77,6 +77,17 @@ const CRPG_SHACL_SHAPES = [
     ]
   },
   {
+    shapeId: 'urn:robos:shape:CRPGAbilityShape',
+    targetClass: 'robos:CRPGAbility',
+    refersFrom: 'https://schema.org/Action',
+    domainStandard: 'https://robos.dev/ns/crpg#Ability',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Ability must have a name.' },
+      { path: 'robos:actionType', minCount: 1, message: 'Ability must specify action type (action, bonus_action, reaction, passive, free_action).' },
+      { path: 'robos:recharge', minCount: 1, message: 'Ability must specify recharge rate (short_rest, long_rest, at_will, special).' }
+    ]
+  },
+  {
     shapeId: 'urn:robos:shape:CRPGItemShape',
     targetClass: 'robos:CRPGItem',
     refersFrom: 'https://schema.org/Product',

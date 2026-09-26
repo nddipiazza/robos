@@ -1,0 +1,54 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:ability:cunning-action",
+  "@type": [
+    "robos:CRPGAbility",
+    "schema:Action",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Cunning Action",
+  "schema:name": "Cunning Action",
+  "robos:slug": "cunning-action",
+  "slug": "cunning-action",
+  "robos:category": "class_feature",
+  "category": "class_feature",
+  "robos:actionType": "bonus_action",
+  "actionType": "bonus_action",
+  "robos:recharge": "at_will",
+  "recharge": "at_will",
+  "robos:resourceCost": "None",
+  "resourceCost": "None",
+  "robos:range": "Self",
+  "range": "Self",
+  "robos:duration": "Instantaneous",
+  "duration": "Instantaneous",
+  "robos:icon": "👟",
+  "icon": "👟",
+  "robos:prerequisites": "Rogue Level 2",
+  "prerequisites": "Rogue Level 2",
+  "robos:effectFormula": "Dash, Disengage, or Hide as Bonus Action",
+  "effectFormula": "Dash, Disengage, or Hide as Bonus Action",
+  "robos:mechanics": {
+    "kind": "bonus_action_utility",
+    "options": [
+      "dash",
+      "disengage",
+      "hide"
+    ]
+  },
+  "mechanics": {
+    "kind": "bonus_action_utility",
+    "options": [
+      "dash",
+      "disengage",
+      "hide"
+    ]
+  },
+  "dcterms:description": "Your quick thinking and agility allow you to move and act quickly. You can take a bonus action on each of your turns in combat to take the Dash, Disengage, or Hide action.",
+  "description": "Your quick thinking and agility allow you to move and act quickly. You can take a bonus action on each of your turns in combat to take the Dash, Disengage, or Hide action."
+}

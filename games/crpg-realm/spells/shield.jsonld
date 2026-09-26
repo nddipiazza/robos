@@ -1,0 +1,58 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:spell:shield",
+  "@type": [
+    "robos:CRPGSpell",
+    "schema:Action",
+    "oslc_am:Resource"
+  ],
+  "dcterms:title": "Shield",
+  "schema:name": "Shield",
+  "robos:slug": "shield",
+  "slug": "shield",
+  "robos:spellLevel": 1,
+  "spellLevel": 1,
+  "robos:magicSchool": "Abjuration",
+  "magicSchool": "Abjuration",
+  "robos:castingTime": "1 reaction",
+  "castingTime": "1 reaction",
+  "robos:range": "Self",
+  "range": "Self",
+  "robos:damageFormula": "",
+  "damageFormula": "",
+  "robos:damageType": "",
+  "damageType": "",
+  "robos:icon": "🛡️",
+  "icon": "🛡️",
+  "robos:duration": "1 rounds",
+  "duration": "1 rounds",
+  "robos:components": "V, S, M",
+  "components": "V, S, M",
+  "robos:savingThrow": "None",
+  "savingThrow": "None",
+  "robos:mechanics": {
+    "kind": "buff",
+    "target": "self",
+    "range": 0,
+    "condition": "shielded",
+    "duration": 1,
+    "acBonus": 5,
+    "reaction": "when_hit"
+  },
+  "mechanics": {
+    "kind": "buff",
+    "target": "self",
+    "range": 0,
+    "condition": "shielded",
+    "duration": 1,
+    "acBonus": 5,
+    "reaction": "when_hit"
+  },
+  "dcterms:description": "An invisible barrier of magical force appears and protects you, granting a +5 bonus to AC until the start of your next turn.",
+  "description": "An invisible barrier of magical force appears and protects you, granting a +5 bonus to AC until the start of your next turn."
+}
