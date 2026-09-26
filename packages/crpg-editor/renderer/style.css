@@ -632,6 +632,27 @@ textarea {
 /* ========================================================
    MODULE 3: INVENTORY EDITOR PANE
    ======================================================== */
+#pane-inventory {
+  flex-direction: column;
+}
+
+.inventory-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px 0 20px;
+}
+
+.inventory-header-bar h2 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--accent);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .inventory-layout {
   display: grid;
   grid-template-columns: 1fr 1fr 1.2fr;

@@ -373,10 +373,12 @@ function switchModule(paneId) {
   // Toggle contextual header controls
   const campControls = document.getElementById('campaign-header-controls');
   const charControls = document.getElementById('character-header-controls');
+  const invControls = document.getElementById('inventory-header-controls');
   const mapControls = document.getElementById('maps-header-controls') || document.getElementById('blockmap-header-controls');
 
   if (campControls) campControls.classList.toggle('hidden', paneId !== 'pane-campaign');
   if (charControls) charControls.classList.toggle('hidden', paneId !== 'pane-characters');
+  if (invControls) invControls.classList.toggle('hidden', paneId !== 'pane-inventory');
   if (mapControls) mapControls.classList.toggle('hidden', paneId !== 'pane-maps' && paneId !== 'pane-blockmap');
 
   if (paneId === 'pane-maps' || paneId === 'pane-blockmap') {
@@ -415,14 +417,26 @@ function populateSceneDropdowns() {
   const campSelect = document.getElementById('camp-starting-scene');
   const invSelect = document.getElementById('inventory-scene-select');
 
-  if (state.scenes.length === 0) {
+  const options = [];
+  if (Array.isArray(state.scenes) && state.scenes.length > 0) {
+    state.scenes.forEach(s => options.push({ slug: s.slug, title: s.title || s.slug }));
+  }
+  if (Array.isArray(state.maps) && state.maps.length > 0) {
+    state.maps.forEach(m => {
+      if (!options.some(o => o.slug === m.slug)) {
+        options.push({ slug: m.slug, title: m.title ? `${m.title}` : m.slug });
+      }
+    });
+  }
+
+  if (options.length === 0) {
     const emptyHtml = '<option value="">(No scenes available)</option>';
     if (campSelect) campSelect.innerHTML = emptyHtml;
     if (invSelect) invSelect.innerHTML = emptyHtml;
     return;
   }
 
-  const optionsHtml = state.scenes.map(s => `<option value="${s.slug}">${s.title || s.slug}</option>`).join('');
+  const optionsHtml = options.map(s => `<option value="${s.slug}">${s.title}</option>`).join('');
   if (campSelect) campSelect.innerHTML = optionsHtml;
   if (invSelect) invSelect.innerHTML = optionsHtml;
 }
@@ -571,7 +585,7 @@ async function loadCampaign(slug) {
 
       renderQuestLog();
       renderStoryFlags();
-      renderHeroesList();
+      renderCharactersList();
       renderInventoryViews();
       updateCampaignSummaryStats();
 
@@ -600,24 +614,31 @@ function getGameState() {
 }
 
 function getHeroes() {
-  if (!state.activeCampaignData) return [];
-  if (!state.activeCampaignData['robos:heroes'] || state.activeCampaignData['robos:heroes'].length === 0) {
+  if (state.activeCampaignData && Array.isArray(state.activeCampaignData['robos:heroes']) && state.activeCampaignData['robos:heroes'].length > 0) {
+    return state.activeCampaignData['robos:heroes'];
+  }
+  if (state.activeCampaignData) {
     // If campaign has robos:characters, find matching heroes in state.characters
     const campaignCharIds = (state.activeCampaignData['robos:characters'] || []).map(id => 
       typeof id === 'string' ? id.replace(/^urn:robos:crpg:character:/, '') : (id.slug || id.id)
     );
     if (campaignCharIds.length > 0) {
-      const matched = state.characters.filter(c => {
+      const matched = (state.characters || []).filter(c => {
         const isHero = c.characterType !== 'npc' && c.characterType !== 'robos:CRPGNPC' && !c.role;
         if (!isHero) return false;
         return campaignCharIds.includes(c.slug) || campaignCharIds.includes(c.id);
       });
       if (matched.length > 0) {
         state.activeCampaignData['robos:heroes'] = matched;
+        return matched;
       }
     }
   }
-  return state.activeCampaignData['robos:heroes'] || [];
+  // Otherwise, return all Player Characters authored in workspace state.characters
+  return (state.characters || []).filter(c => {
+    const isHero = c.characterType !== 'npc' && c.characterType !== 'robos:CRPGNPC' && !c.role;
+    return isHero;
+  });
 }
 
 function updateCampaignSummaryStats() {
@@ -676,7 +697,7 @@ function createNewCampaign() {
 
   renderQuestLog();
   renderStoryFlags();
-  renderHeroesList();
+  renderCharactersList();
   renderInventoryViews();
   updateCampaignSummaryStats();
 
@@ -910,8 +931,10 @@ function scaffoldStandardParty() {
   state.activeHeroId = heroes[0].id;
   state.activeEquipHeroId = heroes[0].id;
 
-  renderHeroesList();
-  loadHeroSheet(state.activeHeroId);
+  renderCharactersList();
+  if (state.characters && state.characters.length > 0) {
+    loadCharacterSheet(state.characters[0].slug || state.characters[0].id);
+  }
   renderInventoryViews();
   updateCampaignSummaryStats();
   setStatus('Scaffolded standard 6-PC party.');
@@ -1702,6 +1725,15 @@ function setupInventoryHandlers() {
     const gs = getGameState();
     gs['robos:partyFormation'] = e.target.value;
   });
+
+  const sceneSelect = document.getElementById('inventory-scene-select');
+  sceneSelect?.addEventListener('change', (e) => {
+    const gs = getGameState();
+    gs['robos:currentScene'] = e.target.value;
+  });
+
+  document.getElementById('btn-save-inventory')?.addEventListener('click', saveInventory);
+  document.getElementById('btn-hdr-save-inventory')?.addEventListener('click', saveInventory);
 }
 
 function renderInventoryViews() {
@@ -1713,15 +1745,15 @@ function renderInventoryViews() {
   const checklist = document.getElementById('party-checklist');
   if (checklist) {
     if (heroes.length === 0) {
-      checklist.innerHTML = '<div style="color:var(--text-muted);font-size:11px;">No heroes created.</div>';
+      checklist.innerHTML = '<div style="color:var(--text-muted);font-size:11px;">No player characters created.</div>';
     } else {
       checklist.innerHTML = heroes.map(h => {
-        const id = h.id || h['@id'];
+        const id = h.id || h['@id'] || `urn:robos:crpg:character:${h.slug}`;
         const checked = activeParty.has(id) ? 'checked' : '';
         return `
           <label class="party-checklist-item">
             <input type="checkbox" class="party-check-input" data-id="${id}" ${checked}>
-            <span>${h.portrait || '👤'} ${h.name} (${h.class})</span>
+            <span>${h.portrait || '👤'} ${h.name} (${h.class || 'Adventurer'})</span>
           </label>
         `;
       }).join('');
@@ -1767,12 +1799,12 @@ function renderInventoryViews() {
       loadEquipSlotsForHero(null);
     } else {
       equipHeroSelect.innerHTML = heroes.map(h => {
-        const id = h.id || h['@id'];
+        const id = h.id || h['@id'] || `urn:robos:crpg:character:${h.slug}`;
         return `<option value="${id}">${h.portrait || '👤'} ${h.name}</option>`;
       }).join('');
 
-      if (!state.activeEquipHeroId || !heroes.some(h => (h.id || h['@id']) === state.activeEquipHeroId)) {
-        state.activeEquipHeroId = heroes[0].id || heroes[0]['@id'];
+      if (!state.activeEquipHeroId || !heroes.some(h => (h.id || h['@id'] || `urn:robos:crpg:character:${h.slug}`) === state.activeEquipHeroId)) {
+        state.activeEquipHeroId = heroes[0].id || heroes[0]['@id'] || `urn:robos:crpg:character:${heroes[0].slug}`;
       }
       equipHeroSelect.value = state.activeEquipHeroId;
       loadEquipSlotsForHero(state.activeEquipHeroId);
@@ -1787,29 +1819,31 @@ function updateLeaderDropdown() {
   const leaderSelect = document.getElementById('party-leader-select');
   if (!leaderSelect) return;
 
-  const activeHeroes = heroes.filter(h => activeParty.has(h.id || h['@id']));
+  const activeHeroes = heroes.filter(h => activeParty.has(h.id || h['@id'] || `urn:robos:crpg:character:${h.slug}`));
   if (activeHeroes.length === 0) {
     leaderSelect.innerHTML = '<option value="">(No active party members)</option>';
     return;
   }
 
   leaderSelect.innerHTML = activeHeroes.map(h => {
-    const id = h.id || h['@id'];
+    const id = h.id || h['@id'] || `urn:robos:crpg:character:${h.slug}`;
     return `<option value="${id}">${h.portrait || '👤'} ${h.name}</option>`;
   }).join('');
 
   const leaderIdx = gs['robos:partyLeaderIndex'] || 0;
   const currentLeader = heroes[leaderIdx];
-  if (currentLeader && activeParty.has(currentLeader.id || currentLeader['@id'])) {
-    leaderSelect.value = currentLeader.id || currentLeader['@id'];
+  const currentLeaderId = currentLeader ? (currentLeader.id || currentLeader['@id'] || `urn:robos:crpg:character:${currentLeader.slug}`) : null;
+  if (currentLeaderId && activeParty.has(currentLeaderId)) {
+    leaderSelect.value = currentLeaderId;
   } else if (activeHeroes.length > 0) {
-    leaderSelect.value = activeHeroes[0].id || activeHeroes[0]['@id'];
+    leaderSelect.value = activeHeroes[0].id || activeHeroes[0]['@id'] || `urn:robos:crpg:character:${activeHeroes[0].slug}`;
   }
 }
 
 function loadEquipSlotsForHero(heroId) {
   const heroes = getHeroes();
-  const hero = heroes.find(h => (h.id || h['@id']) === heroId);
+  const hero = heroes.find(h => (h.id || h['@id'] || `urn:robos:crpg:character:${h.slug}` || h.slug) === heroId) ||
+               (state.characters || []).find(c => (c.id || c['@id'] || `urn:robos:crpg:character:${c.slug}` || c.slug) === heroId);
   if (!hero) {
     document.getElementById('equip-mainhand').value = '';
     document.getElementById('equip-offhand').value = '';
@@ -1822,30 +1856,69 @@ function loadEquipSlotsForHero(heroId) {
     return;
   }
 
-  document.getElementById('equip-mainhand').value = hero.mainHand || '';
-  document.getElementById('equip-offhand').value = hero.offHand || '';
-  document.getElementById('equip-armor').value = hero.armor || '';
-  document.getElementById('equip-helmet').value = hero.helmet || '';
-  document.getElementById('equip-cloak').value = hero.cloak || '';
-  document.getElementById('equip-boots').value = hero.boots || '';
-  document.getElementById('equip-ring1').value = hero.ring1 || '';
-  document.getElementById('equip-quickitems').value = hero.quickItems || '';
+  document.getElementById('equip-mainhand').value = hero['robos:mainHand'] || hero.mainHand || '';
+  document.getElementById('equip-offhand').value = hero['robos:offHand'] || hero.offHand || '';
+  document.getElementById('equip-armor').value = hero['robos:armor'] || hero.armor || '';
+  document.getElementById('equip-helmet').value = hero['robos:helmet'] || hero.helmet || '';
+  document.getElementById('equip-cloak').value = hero['robos:cloak'] || hero.cloak || '';
+  document.getElementById('equip-boots').value = hero['robos:boots'] || hero.boots || '';
+  document.getElementById('equip-ring1').value = hero['robos:ring1'] || hero.ring1 || '';
+  document.getElementById('equip-quickitems').value = hero['robos:quickItems'] || hero.quickItems || '';
 }
 
 function persistEquipSlotsToHero() {
   if (!state.activeEquipHeroId) return;
   const heroes = getHeroes();
-  const hero = heroes.find(h => (h.id || h['@id']) === state.activeEquipHeroId);
+  const hero = heroes.find(h => (h.id || h['@id'] || `urn:robos:crpg:character:${h.slug}` || h.slug) === state.activeEquipHeroId) ||
+               (state.characters || []).find(c => (c.id || c['@id'] || `urn:robos:crpg:character:${c.slug}` || c.slug) === state.activeEquipHeroId);
   if (!hero) return;
 
-  hero.mainHand = document.getElementById('equip-mainhand').value.trim();
-  hero.offHand = document.getElementById('equip-offhand').value.trim();
-  hero.armor = document.getElementById('equip-armor').value.trim();
-  hero.helmet = document.getElementById('equip-helmet').value.trim();
-  hero.cloak = document.getElementById('equip-cloak').value.trim();
-  hero.boots = document.getElementById('equip-boots').value.trim();
-  hero.ring1 = document.getElementById('equip-ring1').value.trim();
-  hero.quickItems = document.getElementById('equip-quickitems').value.trim();
+  const mainHand = document.getElementById('equip-mainhand').value.trim();
+  const offHand = document.getElementById('equip-offhand').value.trim();
+  const armor = document.getElementById('equip-armor').value.trim();
+  const helmet = document.getElementById('equip-helmet').value.trim();
+  const cloak = document.getElementById('equip-cloak').value.trim();
+  const boots = document.getElementById('equip-boots').value.trim();
+  const ring1 = document.getElementById('equip-ring1').value.trim();
+  const quickItems = document.getElementById('equip-quickitems').value.trim();
+
+  hero.mainHand = mainHand;
+  hero.offHand = offHand;
+  hero.armor = armor;
+  hero.helmet = helmet;
+  hero.cloak = cloak;
+  hero.boots = boots;
+  hero.ring1 = ring1;
+  hero.quickItems = quickItems;
+
+  hero['robos:mainHand'] = mainHand;
+  hero['robos:offHand'] = offHand;
+  hero['robos:armor'] = armor;
+  hero['robos:helmet'] = helmet;
+  hero['robos:cloak'] = cloak;
+  hero['robos:boots'] = boots;
+  hero['robos:ring1'] = ring1;
+  hero['robos:quickItems'] = quickItems;
+
+  const char = (state.characters || []).find(c => (c.id || c['@id'] || `urn:robos:crpg:character:${c.slug}` || c.slug) === state.activeEquipHeroId);
+  if (char && char !== hero) {
+    char.mainHand = mainHand;
+    char.offHand = offHand;
+    char.armor = armor;
+    char.helmet = helmet;
+    char.cloak = cloak;
+    char.boots = boots;
+    char.ring1 = ring1;
+    char.quickItems = quickItems;
+    char['robos:mainHand'] = mainHand;
+    char['robos:offHand'] = offHand;
+    char['robos:armor'] = armor;
+    char['robos:helmet'] = helmet;
+    char['robos:cloak'] = cloak;
+    char['robos:boots'] = boots;
+    char['robos:ring1'] = ring1;
+    char['robos:quickItems'] = quickItems;
+  }
 }
 
 function persistInventoryFromUI() {
@@ -1859,6 +1932,83 @@ function persistInventoryFromUI() {
   gs['robos:sharedInventory'].items = rawItems.split('\n').map(s => s.trim()).filter(Boolean);
 
   persistEquipSlotsToHero();
+}
+
+async function saveInventory() {
+  try {
+    setStatus('Saving party inventory and equipment...');
+    persistInventoryFromUI();
+
+    // 1. Persist active player character equipment slots to disk
+    if (state.activeEquipHeroId) {
+      const hero = (state.characters || []).find(c => (c.id || c['@id'] || `urn:robos:crpg:character:${c.slug}` || c.slug) === state.activeEquipHeroId) ||
+                   getHeroes().find(h => (h.id || h['@id'] || `urn:robos:crpg:character:${h.slug}` || h.slug) === state.activeEquipHeroId);
+      if (hero && hero.slug) {
+        const charPayload = {
+          ...(hero.raw || {}),
+          ...hero,
+          mainHand: hero.mainHand || '',
+          offHand: hero.offHand || '',
+          armor: hero.armor || '',
+          helmet: hero.helmet || '',
+          cloak: hero.cloak || '',
+          boots: hero.boots || '',
+          ring1: hero.ring1 || '',
+          quickItems: hero.quickItems || '',
+          'robos:mainHand': hero.mainHand || '',
+          'robos:offHand': hero.offHand || '',
+          'robos:armor': hero.armor || '',
+          'robos:helmet': hero.helmet || '',
+          'robos:cloak': hero.cloak || '',
+          'robos:boots': hero.boots || '',
+          'robos:ring1': hero.ring1 || '',
+          'robos:quickItems': hero.quickItems || '',
+        };
+        const resChar = await window.robos.saveCharacter({ slug: hero.slug, data: charPayload });
+        if (!resChar.success) {
+          console.warn('Could not save character equipment:', resChar.error);
+        }
+      }
+    }
+
+    // 2. Persist shared inventory, currency, party formation & scene to campaign
+    const campSlug = state.activeCampaignSlug || document.getElementById('camp-slug')?.value?.trim() || 'campaign';
+    const gs = getGameState();
+    const campData = state.activeCampaignData || {
+      '@type': ['robos:CRPGCampaign', 'schema:CreativeWork'],
+      'dcterms:title': document.getElementById('camp-title')?.value?.trim() || 'New Campaign',
+      'dcterms:description': document.getElementById('camp-desc')?.value?.trim() || '',
+      'robos:setting': document.getElementById('camp-setting')?.value?.trim() || '',
+      'robos:ruleSet': document.getElementById('camp-ruleset')?.value || 'D&D 5e SRD',
+      'robos:difficulty': document.getElementById('camp-difficulty')?.value || 'Core Rules',
+      'robos:startingMap': document.getElementById('camp-starting-scene')?.value || '',
+      'robos:maps': (state.maps || []).map(m => m.id || `urn:robos:crpg:battle-map:${m.slug}`),
+      'robos:characters': (state.characters || []).map(c => c.id || `urn:robos:crpg:character:${c.slug}`),
+    };
+    campData.gameState = gs;
+    campData['robos:gameState'] = gs;
+    campData['robos:heroes'] = getHeroes();
+
+    const resCamp = await window.robos.saveCampaign({
+      slug: campSlug,
+      data: campData
+    });
+
+    if (resCamp.success) {
+      state.activeCampaignSlug = campSlug;
+      state.activeCampaignData = campData;
+      updateCampaignSummaryStats();
+      setStatus('Saved inventory, party configuration & equipment!', resCamp.filePath);
+      return { success: true };
+    } else {
+      setStatus(`Failed to save inventory: ${resCamp.error}`);
+      return { success: false, error: resCamp.error };
+    }
+  } catch (err) {
+    console.error('Error saving inventory:', err);
+    setStatus(`Error saving inventory: ${err.message}`);
+    return { success: false, error: err.message };
+  }
 }
 
 // ========================================================

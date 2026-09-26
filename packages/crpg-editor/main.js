@@ -406,6 +406,14 @@ function setupIpcHandlers() {
             row: data['robos:row'] ?? data.row ?? 0,
             facing: data['robos:facing'] || data.facing || 'down',
             dialogue: data['robos:dialogue'] || data.dialogue || [],
+            mainHand: data['robos:mainHand'] || data.mainHand || '',
+            offHand: data['robos:offHand'] || data.offHand || '',
+            armor: data['robos:armor'] || data.armor || '',
+            helmet: data['robos:helmet'] || data.helmet || '',
+            cloak: data['robos:cloak'] || data.cloak || '',
+            boots: data['robos:boots'] || data.boots || '',
+            ring1: data['robos:ring1'] || data.ring1 || '',
+            quickItems: data['robos:quickItems'] || data.quickItems || '',
             raw: data,
           });
         } catch (e) {

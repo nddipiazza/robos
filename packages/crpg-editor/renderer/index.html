@@ -98,6 +98,13 @@
           <button id="btn-header-delete-char" class="btn btn-danger btn-sm" title="Delete current character">🗑</button>
         </div>
 
+        <!-- Inventory Context Controls -->
+        <div id="inventory-header-controls" class="context-selector-group hidden">
+          <button id="btn-hdr-save-inventory" class="btn btn-primary" title="Save Inventory, Party & Equipment">
+            <span>💾 Save Inventory</span>
+          </button>
+        </div>
+
         <!-- Maps Context Controls -->
         <div id="maps-header-controls" class="context-selector-group hidden">
           <!-- File Menu Dropdown -->
@@ -663,6 +670,12 @@
            PANE 3: cRPG INVENTORY EDITOR
            ======================================================== -->
       <section id="pane-inventory" class="module-pane">
+        <div class="inventory-header-bar">
+          <h2>🎒 Party Inventory, Currency & Equipment</h2>
+          <button id="btn-save-inventory" class="btn btn-primary" title="Save Inventory, Party & Equipment">
+            <span>💾 Save Inventory</span>
+          </button>
+        </div>
         <div class="inventory-layout">
           <!-- Column 1: Active Party & Formations -->
           <div class="panel">
