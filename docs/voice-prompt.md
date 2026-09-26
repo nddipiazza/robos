@@ -139,7 +139,119 @@ The **RobOS Desktop Assistant** (`lib/desktop-assistant.js`) provides hands-free
 
 ---
 
-## 6. RobOS Voice Library (`packages/robos-lib/voice.js`)
+## 6. Voice Activated Commands & Knowledge Graph Integration
+
+RobOS Voice bridges hands-free speech dictation directly to autonomous SDLC actions through the **Voice Activated Commands** engine (`lib/voice-commands-registry.js`). Every skill across the RobOS skills catalog and every application across the desktop suite can expose voice activated commands that are automatically matched when developer speech settles.
+
+### 6.1 Knowledge Graph SHACL Shape: `robos:VoiceCommand`
+
+Voice commands are registered as first-class, optional semantic entities in the RobOS Dual-State Knowledge Graph conforming to the W3C SHACL shape `urn:robos:shape:VoiceCommandShape` (derived from Schema.org `schema:ControlAction`):
+
+```turtle
+# W3C SHACL Shape Definition
+urn:robos:shape:VoiceCommandShape a sh:NodeShape ;
+    sh:targetClass robos:VoiceCommand ;
+    rdfs:isDefinedBy <https://schema.org/ControlAction> ;
+    sh:property [
+        sh:path dcterms:title ;
+        sh:minCount 1 ;
+        sh:message "Voice command must have a title." ;
+    ] ;
+    sh:property [
+        sh:path robos:commandMatcher ;
+        sh:minCount 1 ;
+        sh:message "Voice command must have at least one command matcher phrase." ;
+    ] ;
+    sh:property [
+        sh:path robos:targetType ;
+        sh:minCount 1 ;
+        sh:message "Voice command must specify target type (app or skill)." ;
+    ] ;
+    sh:property [
+        sh:path robos:targetId ;
+        sh:minCount 1 ;
+        sh:message "Voice command must specify a target application or skill ID." ;
+    ] .
+```
+
+Applications and skills declare their voice commands via the `robos:hasVoiceCommand` relationship in their respective modular package definitions (such as `.robos/kgraphs/applications/package.jsonld`).
+
+### 6.2 Command Matching & Execution Pipeline
+
+```mermaid
+flowchart TD
+    Speech[Recognized Speech Stream] --> Settle["Settle Debounce Window\n(650ms Quiet Period)"]
+    Settle --> Matcher{"Voice Command Matcher\nExact • Wildcard • Prefix Strip"}
+    Matcher -->|No Match| Bubble[Standard Speech Bubble]
+    Matcher -->|Matched Command| Bounce["HUD Bubble Bounce Effect\n@keyframes commandBounce"]
+    Bounce --> Card[Format Bubble with Command Card]
+    Card --> Dispatch{Target Type Dispatch}
+    Dispatch -->|Skill| MCP["Execute Skill / MCP Tool Action\n(SkillsExecutor)"]
+    Dispatch -->|App| IPC["Launch / Focus App\n(Electron Desktop IPC)"]
+    MCP --> Result["Update Status Badge (Done / Error)\nand Render Result Output"]
+    IPC --> Result
+```
+
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/voice-commands-architecture.jpg' | relative_url }}" alt="RobOS Voice Activated Commands & Knowledge Graph Pipeline Architecture Diagram" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>RobOS Voice Activated Commands Architecture</strong>: End-to-end schematic connecting audio stream transcription, settle debounce gating, multi-token matching engine, W3C SHACL shape validation in the Dual-State Knowledge Graph, action dispatch to skills and apps, and real-time HUD bubble bounce status formatting. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
+
+---
+
+## 7. Floating HUD & In-App Configuration Modal
+
+RobOS Voice features a discreet, semi-transparent floating desktop HUD positioned at the corner of your screen (customizable to Bottom-Right, Top-Right, Bottom-Left, or Top-Left).
+
+### 7.1 Speech Bubble Settle Window & Bounce Animation
+
+As speech is dictated, words appear live in real-time bubbles:
+
+1. **Settle Debounce (650ms)**: When the developer pauses speaking, the bubble enters a 650ms settle window. If no new words arrive, the finalized text is evaluated against the voice commands matching engine.
+2. **Bounce Animation Effect**: When a command matches, the dialog bubble triggers a `@keyframes commandBounce` animation, dynamically scaling and pulsing with a glowing cyan accent.
+3. **Execution Card**: The bubble automatically formats to display an execution card featuring:
+   - Target category badge (`App` or `Skill`) with lightning icon.
+   - Command title and live status indicator (`Executing` $\to$ `✓ Done` or `✕ Error`).
+   - Detailed execution feedback (e.g., Knowledge Graph SHACL validation report or app launch confirmation).
+
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/screenshots/robos-voice-hud-bubble-command.png' | relative_url }}" alt="RobOS Voice HUD with Matched Voice Command and Formatted Status Card" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>RobOS Voice Floating HUD</strong>: Real-time dictation feed displaying finalized speech bubbles, matched app and skill execution cards with live status badges, copy-to-clipboard buttons, and active stream listening.
+  </div>
+</div>
+
+### 7.2 In-App Voice Activated Commands Configuration Modal
+
+Clicking the terminal icon button (`>_`) in the HUD header opens the interactive **Voice Activated Commands** configuration modal:
+
+- **Command Count Badge**: Displays the total count of registered voice commands across all active skills and desktop apps.
+- **Instant Search Filter**: Filter commands in real time by title, description, target identifier, or trigger phrases.
+- **Category Filter Tabs**: Switch between **All**, **Apps**, and **Skills** to isolate specific workflows.
+- **Clickable Trigger Phrase Badges**: Each command displays its supported spoken trigger phrases (e.g., `“open git projects”`, `“validate knowledge graph”`). Clicking any badge immediately runs that phrase as test dictation.
+- **Direct Test Runner**: Each card includes a `Test` button to trigger immediate execution without speaking.
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin: 2rem 0;">
+  <div style="border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+    <img src="{{ '/assets/images/screenshots/robos-voice-commands-modal.png' | relative_url }}" alt="RobOS Voice Commands Configuration Catalog Modal" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+    <div style="padding: 0.75rem 1rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+      <strong>Voice Commands Configuration Modal</strong>: Searchable directory of voice-activated skills and apps with trigger pills and test buttons.
+    </div>
+  </div>
+
+  <div style="border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+    <img src="{{ '/assets/images/screenshots/robos-voice-commands-search.png' | relative_url }}" alt="RobOS Voice Commands Search Filter" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+    <div style="padding: 0.75rem 1rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+      <strong>Live Search Filter</strong>: Rapid keyword search isolating Knowledge Graph validation, search, impact analysis, and export skills.
+    </div>
+  </div>
+</div>
+
+---
+
+## 8. RobOS Voice Library (`packages/robos-lib/voice.js`)
 
 Other RobOS Electron applications, CLI scripts, and AI agent skills can interact with the voice engine via the JavaScript client library:
 
@@ -163,7 +275,7 @@ await voice.startBackgroundStream();
 
 ---
 
-## 7. CLI Workflows (`robos-voice`)
+## 9. CLI Workflows (`robos-voice`)
 
 The `robos-voice` CLI tool provides complete terminal control:
 
@@ -196,12 +308,16 @@ robos-voice list --limit 5
 
 ---
 
-## 8. REST API Reference (`:19188`)
+## 10. REST API Reference (`:19188`)
 
 RobOS Voice exposes an HTTP REST server on port `19188`:
 
 | Method | Endpoint | Description |
 |---|---|---|
+| `GET` | `/api/voice-commands` | List all discovered voice commands (`?q=&category=all\|apps\|skills`) |
+| `POST` | `/api/voice-commands/match` | Evaluate text against command matchers (`{ text }`) |
+| `POST` | `/api/voice-commands/execute` | Execute a voice command with arguments (`{ commandId, args, text }`) |
+| `GET` | `/screenshot` | Capture high-resolution PNG screenshot of the active HUD window |
 | `POST` | `/api/speak` | Synthesize and speak text out loud (`{ text, engine, voice, rate, pitch }`) |
 | `POST` | `/api/stop-speaking` | Stop all active audio playback |
 | `GET` | `/api/voices` | List all discovered TTS voices grouped by engine |
@@ -222,16 +338,18 @@ RobOS Voice exposes an HTTP REST server on port `19188`:
 
 ---
 
-## 9. Verification & Testing
+## 11. Verification & Testing
 
-RobOS Voice includes full test coverage for TTS, background streaming, wake-word detection, and assistant workflows:
+RobOS Voice includes full test coverage for TTS, background streaming, wake-word detection, voice commands, and assistant workflows:
 
 ```bash
-# Run all voice-prompt tests
-node --test packages/robos-test/tests/voice-prompt/tts.test.js
-node --test packages/robos-test/tests/voice-prompt/stream-assistant.test.js
+# Run voice command and unit tests
+node --test packages/robos-test/tests/voice-prompt/voice-commands.test.js
 node --test packages/robos-test/tests/voice-prompt/unit.test.js
-node --test packages/robos-test/tests/voice-prompt/agent-streaming.test.js
+node --test packages/robos-test/tests/voice-prompt/skills-voice.test.js
+
+# Verify W3C SHACL validation conformance across all packages
+node packages/robos-graph/bin/kgraph-cli.js validate
 ```
 
 ---
