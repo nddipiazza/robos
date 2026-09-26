@@ -432,7 +432,7 @@ if (typeof document !== 'undefined') {
           const interimText = currentInterimBubble.querySelector('.bubble-text')?.textContent || '';
           if (interimText.trim()) finalizeBubble(interimText);
         }
-      }, 1800);
+      }, 12000);
     });
 
     // 2. Finalized speech stream
