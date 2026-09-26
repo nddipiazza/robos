@@ -158,5 +158,149 @@
       "princess_rescued": false
     }
   },
+  "robos:storyFlow": {
+    "@type": "robos:CRPGStoryFlow",
+    "@id": "urn:robos:crpg:storyflow:dragonwarrior-1-usa",
+    "dcterms:title": "The Quest for the Ball of Light",
+    "robos:rootNodeId": "node-dw-throne-room",
+    "robos:storyNodes": [
+      {
+        "@type": "robos:CRPGStoryNode",
+        "id": "node-dw-throne-room",
+        "dcterms:title": "The Royal Decree of Tantegel",
+        "robos:nodeType": "game_start",
+        "robos:act": "Prologue",
+        "robos:location": "tantegel-throne-room",
+        "robos:giver": "King Loric",
+        "robos:summary": "King Loric greets the descendant of Erdrick in Tantegel Throne Room. The Ball of Light has been stolen by the Dragonlord, plunging Alefgard into darkness.",
+        "robos:choices": [
+          {
+            "targetNodeId": "node-dw-brecconary",
+            "label": "Take the royal treasure chests and depart for Brecconary Town",
+            "setFlags": { "received_royal_blessing": true, "spoke_to_king_loric": true }
+          }
+        ]
+      },
+      {
+        "@type": "robos:CRPGStoryNode",
+        "id": "node-dw-brecconary",
+        "dcterms:title": "The Town of Brecconary",
+        "robos:nodeType": "quest_stage",
+        "robos:act": "Chapter 1",
+        "robos:location": "tantegel-throne-room",
+        "robos:giver": "Brecconary Merchant",
+        "robos:summary": "In Brecconary, townspeople whisper of Princess Gwaelin's abduction and an ancient inscription left by Erdrick concerning the three sacred relics.",
+        "robos:choices": [
+          {
+            "targetNodeId": "node-dw-quagmire",
+            "label": "Descend into the swamp cave to rescue Princess Gwaelin",
+            "setFlags": { "discovered_swamp_cave": true }
+          },
+          {
+            "targetNodeId": "node-dw-rainbow-drop",
+            "label": "Seek the sacred relics across Rimuldar and Cantlin first",
+            "setFlags": { "quest_for_relics": true }
+          }
+        ]
+      },
+      {
+        "@type": "robos:CRPGStoryNode",
+        "id": "node-dw-quagmire",
+        "dcterms:title": "The Swamp Cave & The Green Dragon",
+        "robos:nodeType": "combat_trial",
+        "robos:act": "Chapter 1",
+        "robos:location": "tantegel-throne-room",
+        "robos:giver": "Princess Gwaelin",
+        "robos:summary": "Deep within the noxious swamp cave, a fierce Green Dragon guards Princess Gwaelin's cage.",
+        "robos:choices": [
+          {
+            "targetNodeId": "node-dw-rainbow-drop",
+            "label": "Slay the Green Dragon, rescue the Princess, and carry her to Tantegel",
+            "setFlags": { "green_dragon_slain": true, "princess_rescued": true }
+          }
+        ]
+      },
+      {
+        "@type": "robos:CRPGStoryNode",
+        "id": "node-dw-rainbow-drop",
+        "dcterms:title": "The Rainbow Bridge",
+        "robos:nodeType": "act_chapter",
+        "robos:act": "Chapter 2",
+        "robos:location": "tantegel-throne-room",
+        "robos:giver": "Old Man of Kol",
+        "robos:summary": "Combining the Staff of Rain and Sunstone at the sacred shrine creates the Rainbow Drop, spanning a luminous bridge across the sea to Charlock Castle.",
+        "robos:choices": [
+          {
+            "targetNodeId": "node-dw-charlock",
+            "label": "Cross the Rainbow Bridge into Castle Charlock",
+            "setFlags": { "rainbow_bridge_created": true }
+          }
+        ]
+      },
+      {
+        "@type": "robos:CRPGStoryNode",
+        "id": "node-dw-charlock",
+        "dcterms:title": "Throne of the Dragonlord",
+        "robos:nodeType": "decision_branch",
+        "robos:act": "Finale",
+        "robos:location": "tantegel-throne-room",
+        "robos:giver": "Dragonlord",
+        "robos:summary": "Reaching the infernal throne at the base of Charlock Castle, the Dragonlord sneers: 'Welcome, Erdrick's blood. Will thou join me and rule half the world in shadows?'",
+        "robos:choices": [
+          {
+            "targetNodeId": "node-dw-ending-savior",
+            "label": "Refuse the evil bargain! Draw Erdrick's Sword and strike him down",
+            "setFlags": { "dragonlord_slain": true, "ball_of_light_restored": true }
+          },
+          {
+            "targetNodeId": "node-dw-ending-dark-pact",
+            "label": "Accept the dark pact and kneel before the Dragonlord",
+            "setFlags": { "dark_pact_accepted": true }
+          },
+          {
+            "targetNodeId": "node-dw-ending-defeat",
+            "label": "Waver in hesitation as the Dragonlord unleashes searing flames",
+            "setFlags": { "hero_slain_charlock": true }
+          }
+        ]
+      },
+      {
+        "@type": "robos:CRPGStoryNode",
+        "id": "node-dw-ending-savior",
+        "dcterms:title": "Ending A: The Ball of Light & The Royal Wedding",
+        "robos:nodeType": "end_game_state",
+        "robos:act": "Epilogue",
+        "robos:endingType": "triumph_good",
+        "robos:victoryStatus": "victory",
+        "robos:summary": "The Dragonlord is vanquished and the Ball of Light banishes all monsters.",
+        "robos:epilogueText": "Holding high the radiant Ball of Light, sunlight pierces the dark clouds over Alefgard for the first time in an age. King Loric steps down from his throne, and Princess Gwaelin takes your hand in marriage as you set sail to found a prosperous new kingdom across the ocean.",
+        "robos:choices": []
+      },
+      {
+        "@type": "robos:CRPGStoryNode",
+        "id": "node-dw-ending-dark-pact",
+        "dcterms:title": "Ending B: Reign of the Shadow Sovereign",
+        "robos:nodeType": "end_game_state",
+        "robos:act": "Epilogue",
+        "robos:endingType": "tyrant_evil",
+        "robos:victoryStatus": "victory",
+        "robos:summary": "You betray King Loric and rule Alefgard as the Dragonlord's dark champion.",
+        "robos:epilogueText": "Seduced by promises of absolute dominion, you take the Dragonlord's outstretched claw. Tantegel Castle falls to your combined legions, and Alefgard is carved into two dark realms ruled by terror and draconic flame.",
+        "robos:choices": []
+      },
+      {
+        "@type": "robos:CRPGStoryNode",
+        "id": "node-dw-ending-defeat",
+        "dcterms:title": "Ending C: Ashes in Charlock",
+        "robos:nodeType": "end_game_state",
+        "robos:act": "Epilogue",
+        "robos:endingType": "game_over_defeat",
+        "robos:victoryStatus": "defeat",
+        "robos:summary": "The descendant of Erdrick falls in the depths of Charlock Castle.",
+        "robos:epilogueText": "The Dragonlord's infernal breath incinerates the halls of Charlock. With the last hero slain, King Loric watches helplessly from Tantegel as darkness consumes the realm of Alefgard.",
+        "robos:choices": []
+      }
+    ]
+  },
   "robos:scenes": []
 }

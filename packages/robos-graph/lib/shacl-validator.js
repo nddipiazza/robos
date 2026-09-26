@@ -2588,6 +2588,55 @@ const BUILTIN_SHACL_SHAPES = [
     "domainStandard": "https://robos.dev/ns/crpg#Ability"
   },
   {
+    "shapeId": "urn:robos:shape:CRPGStoryFlowShape",
+    "targetClass": "robos:CRPGStoryFlow",
+    "targetClasses": [
+      "robos:CRPGStoryFlow"
+    ],
+    "properties": [
+      {
+        "path": "robos:rootNodeId",
+        "minCount": 1,
+        "message": "Story flow must declare a root entry node ID."
+      },
+      {
+        "path": "robos:storyNodes",
+        "minCount": 1,
+        "message": "Story flow must declare story nodes."
+      }
+    ],
+    "refersFrom": "https://schema.org/CreativeWork",
+    "schemaOrgType": "https://schema.org/CreativeWork",
+    "domainStandard": "https://schema.org/CreativeWork"
+  },
+  {
+    "shapeId": "urn:robos:shape:CRPGStoryNodeShape",
+    "targetClass": "robos:CRPGStoryNode",
+    "targetClasses": [
+      "robos:CRPGStoryNode"
+    ],
+    "properties": [
+      {
+        "path": "dcterms:title",
+        "minCount": 1,
+        "message": "Story node must have a title."
+      },
+      {
+        "path": "robos:nodeType",
+        "minCount": 1,
+        "message": "Story node must specify node type (game_start, act_chapter, quest_stage, decision_branch, combat_trial, end_game_state)."
+      },
+      {
+        "path": "robos:act",
+        "minCount": 1,
+        "message": "Story node must specify narrative act or chapter."
+      }
+    ],
+    "refersFrom": "http://open-services.net/ns/cm#ChangeRequest",
+    "schemaOrgType": "http://open-services.net/ns/cm#ChangeRequest",
+    "domainStandard": "http://open-services.net/ns/cm#ChangeRequest"
+  },
+  {
     "shapeId": "urn:robos:shape:WebRouteShape",
     "targetClass": "robos:WebRoute",
     "properties": [

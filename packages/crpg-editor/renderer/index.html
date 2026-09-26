@@ -202,7 +202,16 @@
         <!-- Campaign Sub-navigation Bar -->
         <div class="campaign-subnav-bar">
           <button id="tab-camp-overview" class="campaign-subtab-btn active" data-subpane="subpane-camp-overview">
-            <span>📋 Overview & Story</span>
+            <span>📋 Overview & Settings</span>
+          </button>
+          <button id="tab-camp-quests" class="campaign-subtab-btn" data-subpane="subpane-camp-quests">
+            <span>🌳 Quest & Scenario Tree</span>
+          </button>
+          <button id="tab-camp-maps" class="campaign-subtab-btn" data-subpane="subpane-camp-maps">
+            <span>🗺️ Maps & Scenes</span>
+          </button>
+          <button id="tab-camp-roster" class="campaign-subtab-btn" data-subpane="subpane-camp-roster">
+            <span>👥 Characters & NPCs</span>
           </button>
           <button id="tab-camp-inventory" class="campaign-subtab-btn" data-subpane="subpane-camp-inventory">
             <span>🎒 Party & Inventory</span>
@@ -210,97 +219,317 @@
           <button id="tab-camp-tactics" class="campaign-subtab-btn" data-subpane="subpane-camp-tactics">
             <span>⚔️ Infinity AI Tactics & Arena</span>
           </button>
+          <button id="tab-camp-flags" class="campaign-subtab-btn" data-subpane="subpane-camp-flags">
+            <span>🚩 Story Flags</span>
+          </button>
         </div>
 
-        <!-- Subpane 1: Overview & Story -->
+        <!-- Subpane 1: Overview & Settings -->
         <div id="subpane-camp-overview" class="campaign-subpane active">
           <div class="campaign-layout">
-          <!-- Top Section: Metadata & Summary -->
-          <div class="campaign-grid-top">
-            <div class="panel">
-              <div class="panel-header">
-                <h2>Campaign Metadata & World Setup</h2>
+            <div class="campaign-grid-top">
+              <div class="panel">
+                <div class="panel-header">
+                  <h2>Campaign Metadata & World Setup</h2>
+                </div>
+                <div class="panel-body form-grid">
+                  <div class="form-group col-span-2">
+                    <label for="camp-title">Campaign Title</label>
+                    <input type="text" id="camp-title" class="input-text" placeholder="e.g. The Grand Adventure">
+                  </div>
+                  <div class="form-group">
+                    <label for="camp-slug">Unique Slug</label>
+                    <input type="text" id="camp-slug" class="input-text" placeholder="e.g. campaign-slug">
+                  </div>
+                  <div class="form-group">
+                    <label for="camp-setting">World Setting</label>
+                    <input type="text" id="camp-setting" class="input-text" placeholder="e.g. High Fantasy Kingdom">
+                  </div>
+                  <div class="form-group">
+                    <label for="camp-ruleset">Rule System</label>
+                    <select id="camp-ruleset" class="dropdown-select">
+                      <option value="D&D 5e SRD">D&D 5e SRD (Tactical Turn-Based)</option>
+                      <option value="Advanced 5e">Advanced 5e SRD</option>
+                      <option value="RobOS Tactical">RobOS Tactical SRD</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="camp-difficulty">Difficulty Mode</label>
+                    <select id="camp-difficulty" class="dropdown-select">
+                      <option value="Core Rules">Core Rules (Standard 5e)</option>
+                      <option value="Story Mode">Story Mode (Casual)</option>
+                      <option value="Tactician">Tactician (Hardcore AI)</option>
+                      <option value="Ironman">Ironman (Permadeath)</option>
+                    </select>
+                  </div>
+                  <div class="form-group col-span-2">
+                    <label for="camp-starting-scene">Starting Scene</label>
+                    <select id="camp-starting-scene" class="dropdown-select">
+                      <option value="">(No scenes)</option>
+                    </select>
+                  </div>
+                  <div class="form-group col-span-2">
+                    <label for="camp-desc">Prologue / Story Synopsis</label>
+                    <textarea id="camp-desc" rows="4" placeholder="Describe the opening premise, narrative stakes, and setting..."></textarea>
+                  </div>
+                </div>
               </div>
-              <div class="panel-body form-grid">
-                <div class="form-group col-span-2">
-                  <label for="camp-title">Campaign Title</label>
-                  <input type="text" id="camp-title" class="input-text" placeholder="e.g. The Grand Adventure">
-                </div>
-                <div class="form-group">
-                  <label for="camp-slug">Unique Slug</label>
-                  <input type="text" id="camp-slug" class="input-text" placeholder="e.g. campaign-slug">
-                </div>
-                <div class="form-group">
-                  <label for="camp-setting">World Setting</label>
-                  <input type="text" id="camp-setting" class="input-text" placeholder="e.g. High Fantasy Kingdom">
-                </div>
-                <div class="form-group">
-                  <label for="camp-ruleset">Rule System</label>
-                  <select id="camp-ruleset" class="dropdown-select">
-                    <option value="D&D 5e SRD">D&D 5e SRD (Tactical Turn-Based)</option>
-                    <option value="Advanced 5e">Advanced 5e SRD</option>
-                    <option value="RobOS Tactical">RobOS Tactical SRD</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label for="camp-difficulty">Difficulty Mode</label>
-                  <select id="camp-difficulty" class="dropdown-select">
-                    <option value="Core Rules">Core Rules (Standard 5e)</option>
-                    <option value="Story Mode">Story Mode (Casual)</option>
-                    <option value="Tactician">Tactician (Hardcore AI)</option>
-                    <option value="Ironman">Ironman (Permadeath)</option>
-                  </select>
-                </div>
-                <div class="form-group col-span-2">
-                  <label for="camp-starting-scene">Starting Scene</label>
-                  <select id="camp-starting-scene" class="dropdown-select">
-                    <option value="">(No scenes)</option>
-                  </select>
-                </div>
-                <div class="form-group col-span-2">
-                  <label for="camp-desc">Prologue / Story Synopsis</label>
-                  <textarea id="camp-desc" rows="4" placeholder="Describe the opening premise, narrative stakes, and setting..."></textarea>
-                </div>
-              </div>
-            </div>
 
-            <!-- Campaign Summary Stats -->
-            <div class="panel">
-              <div class="panel-header">
-                <h2>Campaign Summary</h2>
-              </div>
-              <div class="panel-body">
-                <div class="stats-cards-grid">
-                  <div class="stat-card">
-                    <span class="stat-val" id="stat-heroes-count">0</span>
-                    <span class="stat-lbl">Player Characters</span>
-                  </div>
-                  <div class="stat-card">
-                    <span class="stat-val" id="stat-party-count">0</span>
-                    <span class="stat-lbl">Active Party</span>
-                  </div>
-                  <div class="stat-card">
-                    <span class="stat-val" id="stat-quests-count">0</span>
-                    <span class="stat-lbl">Quests</span>
-                  </div>
-                  <div class="stat-card">
-                    <span class="stat-val" id="stat-gold-count">0 gp</span>
-                    <span class="stat-lbl">Party Purse</span>
-                  </div>
+              <!-- Campaign Summary Stats -->
+              <div class="panel">
+                <div class="panel-header">
+                  <h2>Campaign Summary & Metrics</h2>
                 </div>
+                <div class="panel-body">
+                  <div class="stats-cards-grid">
+                    <div class="stat-card">
+                      <span class="stat-val" id="stat-heroes-count">0</span>
+                      <span class="stat-lbl">Player Characters</span>
+                    </div>
+                    <div class="stat-card">
+                      <span class="stat-val" id="stat-party-count">0</span>
+                      <span class="stat-lbl">Active Party</span>
+                    </div>
+                    <div class="stat-card">
+                      <span class="stat-val" id="stat-quests-count">0</span>
+                      <span class="stat-lbl">Story Nodes</span>
+                    </div>
+                    <div class="stat-card">
+                      <span class="stat-val" id="stat-gold-count">0 gp</span>
+                      <span class="stat-lbl">Party Purse</span>
+                    </div>
+                  </div>
 
-                <div class="form-group" style="margin-top: 10px;">
-                  <button id="btn-scaffold-party" class="btn btn-secondary full-width" style="margin-bottom: 8px;">
-                    ⚔️ Scaffold Standard 6-PC Party
-                  </button>
+                  <div class="campaign-quick-links panel" style="margin-top: 16px; padding: 12px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 4px;">
+                    <div style="font-weight: 600; font-size: 13px; margin-bottom: 8px; color: var(--accent-cyan);">🚀 Quick Sub-Navigation</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                      <button type="button" class="btn btn-secondary btn-sm" onclick="switchCampaignSubpane('subpane-camp-quests')">🌳 Quest Tree</button>
+                      <button type="button" class="btn btn-secondary btn-sm" onclick="switchCampaignSubpane('subpane-camp-inventory')">🎒 Party & Stash</button>
+                      <button type="button" class="btn btn-secondary btn-sm" onclick="switchCampaignSubpane('subpane-camp-tactics')">⚔️ Battle Arena</button>
+                      <button type="button" class="btn btn-secondary btn-sm" onclick="switchCampaignSubpane('subpane-camp-maps')">🗺️ Maps Roster</button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- Middle Section: Independent Maps & Characters Composition -->
-          <div class="campaign-grid-middle">
-            <!-- Maps Selection -->
+        <!-- Subpane 2: Quest & Scenario Tree (First-Class Narrative Graph Editor) -->
+        <div id="subpane-camp-quests" class="campaign-subpane hidden">
+          <div class="quest-tree-workspace">
+            <!-- Toolbar / Control Bar -->
+            <div class="quest-tree-toolbar">
+              <div class="tree-toolbar-left">
+                <span class="toolbar-title">🌳 CRPG Story & Scenario Tree</span>
+                <span id="story-arc-badge" class="badge-pill badge-primary">Main Questline</span>
+                <select id="story-act-filter" class="dropdown-select">
+                  <option value="all">All Acts & Chapters</option>
+                  <option value="Prologue">Prologue</option>
+                  <option value="Chapter 1">Chapter 1</option>
+                  <option value="Chapter 2">Chapter 2</option>
+                  <option value="Finale">Finale</option>
+                  <option value="Epilogue">Epilogue & Endings</option>
+                </select>
+              </div>
+              <div class="tree-toolbar-actions">
+                <button id="btn-add-story-node" class="btn btn-secondary btn-sm" title="Add a new story/quest node">
+                  <span>➕ Add Story Node</span>
+                </button>
+                <button id="btn-add-story-branch" class="btn btn-secondary btn-sm" title="Add a branching choice from selected node">
+                  <span>🔀 Add Branch Choice</span>
+                </button>
+                <button id="btn-play-story-tree" class="btn btn-primary btn-sm" title="Simulate walking through the story from Game Start">
+                  <span>🎮 Walkthrough Simulator</span>
+                </button>
+                <button id="btn-reset-story-walkthrough" class="btn btn-secondary btn-sm" title="Reset walkthrough to Game Start">
+                  <span>↺ Reset</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Interactive Walkthrough HUD (visible when playing walkthrough) -->
+            <div id="story-walkthrough-hud" class="story-walkthrough-hud hidden">
+              <div class="hud-header">
+                <div class="hud-node-indicator">
+                  <span id="hud-node-type-icon">🚩</span>
+                  <span id="hud-node-title" class="hud-title">Awakening in Candlekeep</span>
+                  <span id="hud-act-tag" class="hud-tag">Prologue</span>
+                </div>
+                <div class="hud-meta">
+                  <span id="hud-location-tag" class="hud-meta-item">📍 candlekeep-exterior</span>
+                  <span id="hud-giver-tag" class="hud-meta-item">👑 Gorion</span>
+                  <button id="btn-close-walkthrough-hud" class="btn-icon-close" title="Exit Walkthrough">✕</button>
+                </div>
+              </div>
+              <div class="hud-body">
+                <p id="hud-narrative-text" class="hud-narrative"></p>
+                <div class="hud-choices-section">
+                  <span class="hud-choices-label">Choose Next Action / Path:</span>
+                  <div id="hud-choices-list" class="hud-choices-buttons"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Epilogue Modal / Overlay for End Game States -->
+            <div id="story-epilogue-overlay" class="story-epilogue-overlay hidden">
+              <div class="epilogue-scroll-container">
+                <div class="epilogue-scroll-header">
+                  <span id="epilogue-badge" class="epilogue-badge">🏆 VICTORY</span>
+                  <h2 id="epilogue-title" class="epilogue-title">Ending A: The Guardian of Candlekeep</h2>
+                  <span id="epilogue-ending-type" class="epilogue-subtitle">Heroic Triumph Ending</span>
+                </div>
+                <div class="epilogue-scroll-body">
+                  <div class="epilogue-divider">❖ ❖ ❖</div>
+                  <p id="epilogue-narrative-text" class="epilogue-text"></p>
+                  <div class="epilogue-divider">❖ ❖ ❖</div>
+                  <div class="epilogue-world-summary">
+                    <h3>Realm & Narrative Legacy</h3>
+                    <div id="epilogue-flags-summary" class="epilogue-flags-pills"></div>
+                  </div>
+                </div>
+                <div class="epilogue-scroll-footer">
+                  <button id="btn-close-epilogue" class="btn btn-primary">Continue Exploring Story Tree</button>
+                  <button id="btn-restart-from-epilogue" class="btn btn-secondary">↺ Restart from Game Start</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Main Tree Workspace Grid (Left: Hierarchy/List, Center: Visual Graph Canvas, Right: Node Inspector) -->
+            <div class="quest-tree-grid">
+              <!-- Left Sidebar: Story Outline & Endings Index -->
+              <div class="quest-tree-sidebar panel">
+                <div class="panel-header">
+                  <h3>Story Outline & Endings</h3>
+                  <span id="story-node-count-badge" class="counter-badge">0 nodes</span>
+                </div>
+                <div class="panel-body quest-outline-body">
+                  <div id="story-tree-outline" class="story-outline-list">
+                    <!-- Populated by JS -->
+                  </div>
+                </div>
+              </div>
+
+              <!-- Center: Visual Interactive Tree Canvas -->
+              <div class="quest-tree-canvas-panel panel">
+                <div class="canvas-header-bar">
+                  <div class="canvas-legend">
+                    <span class="legend-item"><span class="legend-dot game-start"></span>Game Start</span>
+                    <span class="legend-item"><span class="legend-dot act-chapter"></span>Chapter</span>
+                    <span class="legend-item"><span class="legend-dot quest-stage"></span>Quest Stage</span>
+                    <span class="legend-item"><span class="legend-dot decision-branch"></span>Decision</span>
+                    <span class="legend-item"><span class="legend-dot combat-trial"></span>Combat</span>
+                    <span class="legend-item"><span class="legend-dot end-game-state"></span>End Game State</span>
+                  </div>
+                  <div class="canvas-zoom-controls">
+                    <button id="btn-tree-zoom-in" class="btn btn-sm btn-secondary" title="Zoom In">🔍+</button>
+                    <button id="btn-tree-zoom-out" class="btn btn-sm btn-secondary" title="Zoom Out">🔍-</button>
+                    <button id="btn-tree-fit" class="btn btn-sm btn-secondary" title="Fit to Screen">⛶ Fit</button>
+                  </div>
+                </div>
+                <div id="quest-tree-canvas-container" class="quest-tree-canvas-container">
+                  <svg id="quest-tree-svg" class="quest-tree-svg"></svg>
+                  <div id="quest-tree-nodes-layer" class="quest-tree-nodes-layer">
+                    <!-- Story node cards positioned via JS -->
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Sidebar: Selected Node Property Inspector -->
+              <div class="quest-node-inspector panel">
+                <div class="panel-header">
+                  <h3 id="inspector-header-title">Node Inspector</h3>
+                  <button id="btn-delete-story-node" class="btn btn-danger btn-sm" title="Delete this story node">🗑</button>
+                </div>
+                <div class="panel-body form-grid">
+                  <div class="form-group col-span-2">
+                    <label for="node-edit-title">Node Title</label>
+                    <input type="text" id="node-edit-title" class="input-text">
+                  </div>
+                  <div class="form-group">
+                    <label for="node-edit-id">Node ID</label>
+                    <input type="text" id="node-edit-id" class="input-text" readonly>
+                  </div>
+                  <div class="form-group">
+                    <label for="node-edit-type">Node Type</label>
+                    <select id="node-edit-type" class="dropdown-select">
+                      <option value="game_start">🚩 Game Start (Entry Point)</option>
+                      <option value="act_chapter">📖 Chapter / Milestone</option>
+                      <option value="quest_stage">📜 Quest Objective Stage</option>
+                      <option value="decision_branch">🔀 Decision / Branching Choice</option>
+                      <option value="combat_trial">⚔️ Combat Encounter Trial</option>
+                      <option value="end_game_state">🏆 End Game State (Conclusion)</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="node-edit-act">Act / Chapter</label>
+                    <input type="text" id="node-edit-act" class="input-text" placeholder="e.g. Prologue, Act I, Finale">
+                  </div>
+                  <div class="form-group">
+                    <label for="node-edit-location">Scene / Location</label>
+                    <select id="node-edit-location" class="dropdown-select">
+                      <!-- Populated from campaign maps/scenes -->
+                    </select>
+                  </div>
+                  <div class="form-group col-span-2">
+                    <label for="node-edit-giver">NPC / Key Entity</label>
+                    <select id="node-edit-giver" class="dropdown-select">
+                      <!-- Populated from campaign characters -->
+                    </select>
+                  </div>
+                  <div class="form-group col-span-2">
+                    <label for="node-edit-summary">Narrative Text & Journal Entry</label>
+                    <textarea id="node-edit-summary" rows="3" placeholder="Narrative text shown to player in journal..."></textarea>
+                  </div>
+
+                  <!-- End Game State Specific Section (shown if nodeType === 'end_game_state') -->
+                  <div id="node-ending-fields" class="col-span-2 panel hidden" style="background:var(--bg-card);border:1px solid var(--border-color);padding:8px;border-radius:4px;margin-bottom:6px;">
+                    <div style="font-weight:600;font-size:12px;margin-bottom:6px;color:#f59e0b;">👑 End Game State Configuration</div>
+                    <div class="form-grid">
+                      <div class="form-group">
+                        <label for="node-edit-ending-type">Ending Archetype</label>
+                        <select id="node-edit-ending-type" class="dropdown-select">
+                          <option value="triumph_good">🏆 Heroic Triumph (Good Ending)</option>
+                          <option value="tyrant_evil">👑 Tyrant Ascension (Dark Ending)</option>
+                          <option value="tragic_sacrifice">🕊️ Sacrificial Martyr (Bittersweet)</option>
+                          <option value="neutral_wanderer">🌲 Exile / Wandering (Neutral)</option>
+                          <option value="game_over_defeat">💀 Game Over / Extinction (Defeat)</option>
+                        </select>
+                      </div>
+                      <div class="form-group">
+                        <label for="node-edit-victory-status">Game Outcome</label>
+                        <select id="node-edit-victory-status" class="dropdown-select">
+                          <option value="victory">Victory</option>
+                          <option value="defeat">Defeat</option>
+                          <option value="truce">Truce / Resolved</option>
+                        </select>
+                      </div>
+                      <div class="form-group col-span-2">
+                        <label for="node-edit-epilogue-text">Epilogue Scroll Text</label>
+                        <textarea id="node-edit-epilogue-text" rows="4" placeholder="Rich narrative epilogue describing the consequences of this ending..."></textarea>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Outgoing Branch Choices Section -->
+                  <div class="col-span-2">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                      <label style="margin:0;font-weight:600;">Branching Outgoing Choices (<span id="inspector-choices-count">0</span>)</label>
+                      <button id="btn-add-choice-item" class="btn btn-sm btn-secondary">+ Add Choice</button>
+                    </div>
+                    <div id="inspector-choices-list" class="inspector-choices-list">
+                      <!-- Rendered by JS -->
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Subpane 3: Maps & Scenes -->
+        <div id="subpane-camp-maps" class="campaign-subpane hidden">
+          <div class="campaign-layout">
             <div class="panel">
               <div class="panel-header">
                 <h2>Campaign Maps (<span id="camp-maps-count">0</span>)</h2>
@@ -322,8 +551,12 @@
                 </div>
               </div>
             </div>
+          </div>
+        </div>
 
-            <!-- Characters Selection -->
+        <!-- Subpane 4: Characters & NPCs -->
+        <div id="subpane-camp-roster" class="campaign-subpane hidden">
+          <div class="campaign-layout">
             <div class="panel">
               <div class="panel-header">
                 <h2>Campaign Characters (<span id="camp-chars-count">0</span>)</h2>
@@ -333,6 +566,11 @@
                 </div>
               </div>
               <div class="panel-body">
+                <div class="form-group" style="margin-bottom: 12px;">
+                  <button id="btn-scaffold-party" class="btn btn-secondary full-width" style="margin-bottom: 8px;">
+                    ⚔️ Scaffold Standard 6-PC Party
+                  </button>
+                </div>
                 <label style="display: block; margin-bottom: 4px;">Included Player Characters & NPCs:</label>
                 <div id="camp-characters-checklist" class="camp-checklist-box">
                   <!-- Rendered via JS -->
@@ -340,23 +578,11 @@
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- Bottom Section: Quests and Story Flags -->
-          <div class="campaign-grid-bottom">
-            <!-- Quest Journal -->
-            <div class="panel">
-              <div class="panel-header">
-                <h2>Quest Journal (<span id="quest-count">0</span>)</h2>
-                <button id="btn-add-quest" class="btn btn-sm btn-primary">+ Add Quest</button>
-              </div>
-              <div class="panel-body">
-                <div id="quest-cards-list" class="quest-cards-list">
-                  <!-- Populated via JS -->
-                </div>
-              </div>
-            </div>
-
-            <!-- Story Flags Table -->
+        <!-- Subpane 7: Story Flags -->
+        <div id="subpane-camp-flags" class="campaign-subpane hidden">
+          <div class="campaign-layout">
             <div class="panel">
               <div class="panel-header">
                 <h2>World & Story Flags</h2>
@@ -381,7 +607,6 @@
             </div>
           </div>
         </div>
-        </div> <!-- End #subpane-camp-overview -->
 
         <!-- Subpane 2: Party & Inventory -->
         <div id="subpane-camp-inventory" class="campaign-subpane hidden">

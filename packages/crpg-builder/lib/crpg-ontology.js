@@ -149,6 +149,27 @@ const CRPG_SHACL_SHAPES = [
     properties: [
       { path: 'dcterms:title', minCount: 1, message: 'Faction must have a title.' }
     ]
+  },
+  {
+    shapeId: 'urn:robos:shape:CRPGStoryFlowShape',
+    targetClass: 'robos:CRPGStoryFlow',
+    refersFrom: 'https://schema.org/CreativeWork',
+    domainStandard: 'https://schema.org/CreativeWork',
+    properties: [
+      { path: 'robos:rootNodeId', minCount: 1, message: 'Story flow must declare a root entry node ID.' },
+      { path: 'robos:storyNodes', minCount: 1, message: 'Story flow must declare story nodes.' }
+    ]
+  },
+  {
+    shapeId: 'urn:robos:shape:CRPGStoryNodeShape',
+    targetClass: 'robos:CRPGStoryNode',
+    refersFrom: 'http://open-services.net/ns/cm#ChangeRequest',
+    domainStandard: 'http://open-services.net/ns/cm#ChangeRequest',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Story node must have a title.' },
+      { path: 'robos:nodeType', minCount: 1, message: 'Story node must specify node type.' },
+      { path: 'robos:act', minCount: 1, message: 'Story node must specify narrative act or chapter.' }
+    ]
   }
 ];
 

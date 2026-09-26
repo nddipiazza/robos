@@ -622,6 +622,8 @@ function setupCampaignHandlers() {
   };
   document.getElementById('camp-title')?.addEventListener('input', updateCampSelectDraftText);
   document.getElementById('camp-slug')?.addEventListener('input', updateCampSelectDraftText);
+
+  setupStoryTreeHandlers();
 }
 
 function switchCampaignSubpane(subpaneId) {
@@ -637,8 +639,17 @@ function switchCampaignSubpane(subpaneId) {
     renderInventoryViews();
   } else if (subpaneId === 'subpane-camp-tactics') {
     renderCampaignTacticsRoster();
+  } else if (subpaneId === 'subpane-camp-quests') {
+    renderQuestScenarioTree();
+  } else if (subpaneId === 'subpane-camp-maps') {
+    renderCampaignMapsChecklist();
+  } else if (subpaneId === 'subpane-camp-roster') {
+    renderCampaignCharactersChecklist();
+  } else if (subpaneId === 'subpane-camp-flags') {
+    renderStoryFlags();
   }
 }
+window.switchCampaignSubpane = switchCampaignSubpane;
 
 async function loadCampaignsList(preferredSlug) {
   try {
@@ -707,7 +718,13 @@ async function loadCampaign(slug) {
       state.activeHeroId = heroes.length > 0 ? (heroes[0].id || heroes[0]['@id'] || heroes[0].slug) : null;
       state.activeEquipHeroId = state.activeHeroId;
 
+      state.selectedStoryNodeId = null;
+      state.storyWalkthrough = { active: false, currentNodeId: null, visitedNodeIds: [] };
+      document.getElementById('story-walkthrough-hud')?.classList.add('hidden');
+      document.getElementById('story-epilogue-overlay')?.classList.add('hidden');
+
       renderQuestLog();
+      renderQuestScenarioTree();
       renderStoryFlags();
       renderCharactersList();
       renderInventoryViews();
@@ -769,13 +786,19 @@ function updateCampaignSummaryStats() {
   const heroes = getHeroes();
   const gs = getGameState();
   const activeParty = gs['robos:activeParty'] || [];
-  const quests = gs['robos:questLog'] || [];
+  const storyFlow = getStoryFlow();
+  const storyNodes = storyFlow['robos:storyNodes'] || [];
+  const nodeCount = storyNodes.length > 0 ? storyNodes.length : (gs['robos:questLog'] || []).length;
   const gold = gs['robos:sharedInventory']?.gold ?? 0;
 
-  document.getElementById('stat-heroes-count').textContent = heroes.length;
-  document.getElementById('stat-party-count').textContent = activeParty.length;
-  document.getElementById('stat-quests-count').textContent = quests.length;
-  document.getElementById('stat-gold-count').textContent = `${gold} gp`;
+  const heroesEl = document.getElementById('stat-heroes-count');
+  if (heroesEl) heroesEl.textContent = heroes.length;
+  const partyEl = document.getElementById('stat-party-count');
+  if (partyEl) partyEl.textContent = activeParty.length;
+  const questsEl = document.getElementById('stat-quests-count');
+  if (questsEl) questsEl.textContent = nodeCount;
+  const goldEl = document.getElementById('stat-gold-count');
+  if (goldEl) goldEl.textContent = `${gold} gp`;
 }
 
 function createNewCampaign() {
@@ -1134,6 +1157,896 @@ function renderQuestLog() {
     });
   });
 }
+
+// ==========================================================================
+// QUEST & SCENARIO TREE EDITOR & WALKTHROUGH SIMULATOR
+// ==========================================================================
+state.selectedStoryNodeId = null;
+state.storyWalkthrough = { active: false, currentNodeId: null, visitedNodeIds: [] };
+state.storyTreeZoom = 1.0;
+
+function escapeXml(unsafe) {
+  if (!unsafe) return '';
+  return String(unsafe).replace(/[<>&'"]/g, c => {
+    switch (c) {
+      case '<': return '&lt;';
+      case '>': return '&gt;';
+      case '&': return '&amp;';
+      case '\'': return '&apos;';
+      case '"': return '&quot;';
+      default: return c;
+    }
+  });
+}
+
+function getNodeTypeIcon(type) {
+  switch (type) {
+    case 'game_start': return '🚩';
+    case 'act_chapter': return '📖';
+    case 'quest_stage': return '📜';
+    case 'decision_branch': return '🔀';
+    case 'combat_trial': return '⚔️';
+    case 'end_game_state': return '🏆';
+    default: return '📜';
+  }
+}
+
+function getNodeTypeLabel(type) {
+  switch (type) {
+    case 'game_start': return 'Game Start';
+    case 'act_chapter': return 'Chapter';
+    case 'quest_stage': return 'Quest Stage';
+    case 'decision_branch': return 'Decision';
+    case 'combat_trial': return 'Combat';
+    case 'end_game_state': return 'End Game';
+    default: return 'Story Node';
+  }
+}
+
+function getStoryFlow() {
+  if (!state.activeCampaignData) return { 'robos:rootNodeId': '', 'robos:storyNodes': [] };
+  if (!state.activeCampaignData['robos:storyFlow']) {
+    state.activeCampaignData['robos:storyFlow'] = {
+      '@type': 'robos:CRPGStoryFlow',
+      '@id': `urn:robos:crpg:storyflow:${state.activeCampaignSlug || 'campaign'}`,
+      'dcterms:title': `${state.activeCampaignData['dcterms:title'] || 'Campaign'} Quest & Story Tree`,
+      'robos:rootNodeId': 'node-start',
+      'robos:storyNodes': [
+        {
+          '@type': 'robos:CRPGStoryNode',
+          id: 'node-start',
+          'dcterms:title': 'Campaign Beginning',
+          'robos:nodeType': 'game_start',
+          'robos:act': 'Prologue',
+          'robos:location': state.activeCampaignData['robos:startingMap'] || '',
+          'robos:giver': '',
+          'robos:summary': 'The adventure begins as the party prepares to face the perils of the realm.',
+          'robos:choices': [
+            {
+              targetNodeId: 'node-first-quest',
+              label: 'Embark on the journey',
+              setFlags: { 'journey_started': true }
+            }
+          ]
+        },
+        {
+          '@type': 'robos:CRPGStoryNode',
+          id: 'node-first-quest',
+          'dcterms:title': 'The First Trial',
+          'robos:nodeType': 'quest_stage',
+          'robos:act': 'Chapter 1',
+          'robos:location': '',
+          'robos:giver': '',
+          'robos:summary': 'Overcome initial trials and make pivotal decisions for the fate of the land.',
+          'robos:choices': [
+            {
+              targetNodeId: 'node-ending-triumph',
+              label: 'Triumph over evil and restore peace',
+              setFlags: { 'realm_saved': true }
+            },
+            {
+              targetNodeId: 'node-ending-dark',
+              label: 'Seize dark power and rule the shadows',
+              setFlags: { 'dark_reign': true }
+            }
+          ]
+        },
+        {
+          '@type': 'robos:CRPGStoryNode',
+          id: 'node-ending-triumph',
+          'dcterms:title': 'Ending A: Heroic Triumph',
+          'robos:nodeType': 'end_game_state',
+          'robos:act': 'Epilogue',
+          'robos:endingType': 'triumph_good',
+          'robos:victoryStatus': 'victory',
+          'robos:summary': 'Peace is restored to the realm through steadfast bravery.',
+          'robos:epilogueText': 'Your valor is etched onto the pillars of the realm, remembered by all...',
+          'robos:choices': []
+        },
+        {
+          '@type': 'robos:CRPGStoryNode',
+          id: 'node-ending-dark',
+          'dcterms:title': 'Ending B: Reign of Shadows',
+          'robos:nodeType': 'end_game_state',
+          'robos:act': 'Epilogue',
+          'robos:endingType': 'tyrant_evil',
+          'robos:victoryStatus': 'victory',
+          'robos:summary': 'You claim the realm for yourself with an iron fist.',
+          'robos:epilogueText': 'The realm bends the knee before your terrifying might...',
+          'robos:choices': []
+        }
+      ]
+    };
+  }
+  return state.activeCampaignData['robos:storyFlow'];
+}
+
+function setupStoryTreeHandlers() {
+  const btnAddNode = document.getElementById('btn-add-story-node');
+  const btnAddBranch = document.getElementById('btn-add-story-branch');
+  const btnPlayWalkthrough = document.getElementById('btn-play-story-tree');
+  const btnResetWalkthrough = document.getElementById('btn-reset-story-walkthrough');
+  const actFilter = document.getElementById('story-act-filter');
+  const btnCloseHud = document.getElementById('btn-close-walkthrough-hud');
+  const btnCloseEpilogue = document.getElementById('btn-close-epilogue');
+  const btnRestartEpilogue = document.getElementById('btn-restart-from-epilogue');
+  const btnDeleteNode = document.getElementById('btn-delete-story-node');
+  const btnAddChoiceItem = document.getElementById('btn-add-choice-item');
+
+  const btnZoomIn = document.getElementById('btn-tree-zoom-in');
+  const btnZoomOut = document.getElementById('btn-tree-zoom-out');
+  const btnFit = document.getElementById('btn-tree-fit');
+
+  btnAddNode?.addEventListener('click', () => {
+    createStoryNode();
+  });
+
+  btnAddBranch?.addEventListener('click', () => {
+    addChoiceToSelectedNode();
+  });
+
+  btnPlayWalkthrough?.addEventListener('click', () => {
+    toggleStoryWalkthrough();
+  });
+
+  btnResetWalkthrough?.addEventListener('click', () => {
+    resetStoryWalkthrough();
+  });
+
+  actFilter?.addEventListener('change', () => {
+    renderQuestScenarioTree();
+  });
+
+  btnCloseHud?.addEventListener('click', () => {
+    state.storyWalkthrough.active = false;
+    document.getElementById('story-walkthrough-hud')?.classList.add('hidden');
+    renderQuestScenarioTree();
+  });
+
+  btnCloseEpilogue?.addEventListener('click', () => {
+    document.getElementById('story-epilogue-overlay')?.classList.add('hidden');
+  });
+
+  btnRestartEpilogue?.addEventListener('click', () => {
+    document.getElementById('story-epilogue-overlay')?.classList.add('hidden');
+    resetStoryWalkthrough();
+    startStoryWalkthrough();
+  });
+
+  btnDeleteNode?.addEventListener('click', () => {
+    if (!state.selectedStoryNodeId) return;
+    deleteStoryNode(state.selectedStoryNodeId);
+  });
+
+  btnAddChoiceItem?.addEventListener('click', () => {
+    addChoiceToSelectedNode();
+  });
+
+  btnZoomIn?.addEventListener('click', () => {
+    state.storyTreeZoom = Math.min(1.8, state.storyTreeZoom + 0.15);
+    applyTreeZoom();
+  });
+  btnZoomOut?.addEventListener('click', () => {
+    state.storyTreeZoom = Math.max(0.5, state.storyTreeZoom - 0.15);
+    applyTreeZoom();
+  });
+  btnFit?.addEventListener('click', () => {
+    state.storyTreeZoom = 1.0;
+    applyTreeZoom();
+  });
+
+  // Node Inspector input bindings
+  const titleInp = document.getElementById('node-edit-title');
+  const typeSelect = document.getElementById('node-edit-type');
+  const actInp = document.getElementById('node-edit-act');
+  const locSelect = document.getElementById('node-edit-location');
+  const giverSelect = document.getElementById('node-edit-giver');
+  const summaryInp = document.getElementById('node-edit-summary');
+  const endingTypeSelect = document.getElementById('node-edit-ending-type');
+  const victorySelect = document.getElementById('node-edit-victory-status');
+  const epilogueInp = document.getElementById('node-edit-epilogue-text');
+
+  const onInspectorChange = () => {
+    if (!state.selectedStoryNodeId) return;
+    const flow = getStoryFlow();
+    const node = (flow['robos:storyNodes'] || []).find(n => n.id === state.selectedStoryNodeId);
+    if (!node) return;
+
+    node['dcterms:title'] = titleInp.value.trim();
+    node.title = titleInp.value.trim();
+    node['robos:nodeType'] = typeSelect.value;
+    node.type = typeSelect.value;
+    node['robos:act'] = actInp.value.trim();
+    node.act = actInp.value.trim();
+    node['robos:location'] = locSelect.value;
+    node.location = locSelect.value;
+    node['robos:giver'] = giverSelect.value;
+    node.giver = giverSelect.value;
+    node['robos:summary'] = summaryInp.value.trim();
+    node.summary = summaryInp.value.trim();
+
+    if (typeSelect.value === 'end_game_state') {
+      node['robos:endingType'] = endingTypeSelect.value;
+      node.endingType = endingTypeSelect.value;
+      node['robos:victoryStatus'] = victorySelect.value;
+      node.victoryStatus = victorySelect.value;
+      node['robos:epilogueText'] = epilogueInp.value.trim();
+      node.epilogueText = epilogueInp.value.trim();
+      document.getElementById('node-ending-fields')?.classList.remove('hidden');
+    } else {
+      document.getElementById('node-ending-fields')?.classList.add('hidden');
+    }
+
+    renderQuestScenarioTree(true);
+  };
+
+  titleInp?.addEventListener('input', onInspectorChange);
+  typeSelect?.addEventListener('change', onInspectorChange);
+  actInp?.addEventListener('input', onInspectorChange);
+  locSelect?.addEventListener('change', onInspectorChange);
+  giverSelect?.addEventListener('change', onInspectorChange);
+  summaryInp?.addEventListener('input', onInspectorChange);
+  endingTypeSelect?.addEventListener('change', onInspectorChange);
+  victorySelect?.addEventListener('change', onInspectorChange);
+  epilogueInp?.addEventListener('input', onInspectorChange);
+}
+
+function applyTreeZoom() {
+  const layer = document.getElementById('quest-tree-nodes-layer');
+  const svg = document.getElementById('quest-tree-svg');
+  if (layer) {
+    layer.style.transform = `scale(${state.storyTreeZoom})`;
+    layer.style.transformOrigin = '0 0';
+  }
+  if (svg) {
+    svg.style.transform = `scale(${state.storyTreeZoom})`;
+    svg.style.transformOrigin = '0 0';
+  }
+}
+
+function populateStoryInspectorDropdowns() {
+  const locSelect = document.getElementById('node-edit-location');
+  if (locSelect) {
+    const curLoc = locSelect.value;
+    locSelect.innerHTML = '<option value="">(None / World General)</option>' +
+      (state.maps || []).map(m => `<option value="${m.slug}">📍 ${m.title || m.slug}</option>`).join('');
+    if (curLoc) locSelect.value = curLoc;
+  }
+
+  const giverSelect = document.getElementById('node-edit-giver');
+  if (giverSelect) {
+    const curGiver = giverSelect.value;
+    giverSelect.innerHTML = '<option value="">(None / Narrator)</option>' +
+      (state.characters || []).map(c => `<option value="${c.name || c.slug}">👑 ${c.name || c.slug}</option>`).join('');
+    if (curGiver) giverSelect.value = curGiver;
+  }
+}
+
+function renderQuestScenarioTree(keepInspector = false) {
+  const flow = getStoryFlow();
+  let nodes = flow['robos:storyNodes'] || [];
+  const filterAct = document.getElementById('story-act-filter')?.value || 'all';
+
+  const badgeEl = document.getElementById('story-node-count-badge');
+  if (badgeEl) badgeEl.textContent = `${nodes.length} nodes`;
+
+  populateStoryInspectorDropdowns();
+
+  if ((!state.selectedStoryNodeId || !nodes.some(n => n.id === state.selectedStoryNodeId)) && nodes.length > 0) {
+    state.selectedStoryNodeId = flow['robos:rootNodeId'] || nodes[0].id;
+  }
+
+  // 1. Render Left Sidebar Outline
+  renderStoryTreeOutline(nodes, filterAct);
+
+  // 2. Compute DAG Coordinates and Render Canvas & SVG Connections
+  renderStoryTreeCanvas(nodes, filterAct);
+
+  // 3. Render Inspector
+  if (!keepInspector && state.selectedStoryNodeId) {
+    loadStoryNodeInspector(state.selectedStoryNodeId);
+  }
+
+  // 4. Update Walkthrough HUD if active
+  if (state.storyWalkthrough.active) {
+    renderStoryWalkthroughHUD();
+  }
+}
+
+function renderStoryTreeOutline(nodes, filterAct) {
+  const container = document.getElementById('story-tree-outline');
+  if (!container) return;
+
+  const acts = {};
+  nodes.forEach(n => {
+    const act = n['robos:act'] || n.act || 'Prologue';
+    if (!acts[act]) acts[act] = [];
+    acts[act].push(n);
+  });
+
+  const actKeys = Object.keys(acts);
+  if (actKeys.length === 0) {
+    container.innerHTML = '<div style="color:var(--text-muted);font-size:11px;padding:8px;">No story nodes. Click + Add Story Node.</div>';
+    return;
+  }
+
+  container.innerHTML = actKeys.map(act => {
+    if (filterAct !== 'all' && act.toLowerCase() !== filterAct.toLowerCase()) return '';
+    return `
+      <div class="story-outline-act-group">
+        <div class="story-outline-act-header">${act}</div>
+        ${acts[act].map(n => {
+          const type = n['robos:nodeType'] || n.type || 'quest_stage';
+          const icon = getNodeTypeIcon(type);
+          const title = n['dcterms:title'] || n.title || n.id;
+          const isSelected = n.id === state.selectedStoryNodeId;
+          const isWalkthrough = n.id === state.storyWalkthrough.currentNodeId;
+          return `
+            <div class="story-outline-item ${isSelected ? 'selected' : ''} ${isWalkthrough ? 'active-walkthrough' : ''}" data-id="${n.id}">
+              <span>${icon}</span>
+              <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">${title}</span>
+              ${type === 'end_game_state' ? '<span style="font-size:10px;color:#c084fc;">🏆</span>' : ''}
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }).join('');
+
+  container.querySelectorAll('.story-outline-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const id = item.getAttribute('data-id');
+      selectStoryNode(id);
+    });
+  });
+}
+
+function renderStoryTreeCanvas(nodes, filterAct) {
+  const svgEl = document.getElementById('quest-tree-svg');
+  const layerEl = document.getElementById('quest-tree-nodes-layer');
+  if (!svgEl || !layerEl) return;
+
+  const visibleNodes = filterAct === 'all'
+    ? nodes
+    : nodes.filter(n => (n['robos:act'] || n.act || 'Prologue').toLowerCase() === filterAct.toLowerCase());
+
+  const ACT_COLS = {
+    'prologue': 0,
+    'chapter 1': 1,
+    'act 1': 1,
+    'act i': 1,
+    'chapter 2': 2,
+    'act 2': 2,
+    'act ii': 2,
+    'chapter 3': 3,
+    'act 3': 3,
+    'act iii': 3,
+    'finale': 3,
+    'epilogue': 4,
+    'endings': 4
+  };
+
+  const colGroups = {};
+  visibleNodes.forEach(node => {
+    const actStr = (node['robos:act'] || node.act || 'Prologue').toLowerCase().trim();
+    let col = ACT_COLS[actStr];
+    if (col === undefined) {
+      if (node['robos:nodeType'] === 'game_start' || node.type === 'game_start') col = 0;
+      else if (node['robos:nodeType'] === 'end_game_state' || node.type === 'end_game_state') col = 4;
+      else col = 1;
+    }
+    if (!colGroups[col]) colGroups[col] = [];
+    colGroups[col].push(node);
+  });
+
+  const colWidth = 320;
+  const rowHeight = 175;
+  const x0 = 40;
+  const y0 = 40;
+
+  Object.keys(colGroups).forEach(colKey => {
+    const colIdx = Number(colKey);
+    colGroups[colKey].forEach((node, rowIdx) => {
+      node._x = x0 + colIdx * colWidth;
+      node._y = y0 + rowIdx * rowHeight;
+    });
+  });
+
+  // 1. Render SVG Connection Curves
+  let svgPaths = '';
+  visibleNodes.forEach(node => {
+    const choices = node['robos:choices'] || node.choices || [];
+    choices.forEach(ch => {
+      const targetNode = visibleNodes.find(n => n.id === ch.targetNodeId);
+      if (targetNode && node._x !== undefined && targetNode._x !== undefined) {
+        const x1 = node._x + 230;
+        const y1 = node._y + 40;
+        const x2 = targetNode._x;
+        const y2 = targetNode._y + 40;
+        const dx = Math.max(50, Math.abs(x2 - x1) * 0.45);
+        const pathData = `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
+
+        const isVisited = state.storyWalkthrough.visitedNodeIds.includes(node.id) &&
+                          state.storyWalkthrough.visitedNodeIds.includes(targetNode.id);
+        const isEndNode = targetNode['robos:nodeType'] === 'end_game_state' || targetNode.type === 'end_game_state';
+        const strokeColor = isVisited ? '#10b981' : (isEndNode ? '#a855f7' : '#0ea5e9');
+        const strokeWidth = isVisited ? 3 : 2;
+
+        svgPaths += `<path d="${pathData}" fill="none" stroke="${strokeColor}" stroke-width="${strokeWidth}" stroke-opacity="${isVisited ? 1 : 0.6}" ${isVisited ? '' : 'stroke-dasharray="4,3"'}/>`;
+
+        if (ch.label) {
+          const mx = (x1 + x2) / 2;
+          const my = (y1 + y2) / 2;
+          const truncatedLabel = ch.label.length > 20 ? ch.label.slice(0, 18) + '…' : ch.label;
+          svgPaths += `
+            <g transform="translate(${mx}, ${my})">
+              <rect x="-65" y="-10" width="130" height="18" rx="4" fill="#0f172a" stroke="${strokeColor}" stroke-width="1" opacity="0.9"/>
+              <text x="0" y="2" fill="#e2e8f0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle" dominant-baseline="middle">${escapeXml(truncatedLabel)}</text>
+            </g>
+          `;
+        }
+      }
+    });
+  });
+  svgEl.innerHTML = svgPaths;
+
+  // 2. Render Node Cards
+  layerEl.innerHTML = visibleNodes.map(node => {
+    const isSelected = node.id === state.selectedStoryNodeId;
+    const isWalkthrough = node.id === state.storyWalkthrough.currentNodeId;
+    const nodeType = node['robos:nodeType'] || node.type || 'quest_stage';
+    const icon = getNodeTypeIcon(nodeType);
+    const typeLabel = getNodeTypeLabel(nodeType);
+    const act = node['robos:act'] || node.act || 'Prologue';
+    const title = node['dcterms:title'] || node.title || node.id;
+    const location = node['robos:location'] || node.location || '';
+    const giver = node['robos:giver'] || node.giver || '';
+    const choices = node['robos:choices'] || node.choices || [];
+
+    const choicesHtml = choices.length > 0 ? `
+      <div class="story-node-choices">
+        ${choices.map(c => `
+          <div class="node-choice-pill" title="${c.label || ''}">
+            <span>↳</span>
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.label || c.targetNodeId}</span>
+          </div>
+        `).join('')}
+      </div>
+    ` : (nodeType === 'end_game_state' ? `
+      <div class="story-node-choices">
+        <div class="node-choice-pill" style="border-color:#a855f7;color:#d8b4fe;">
+          <span>🏆</span>
+          <span>End Game Conclusion</span>
+        </div>
+      </div>
+    ` : '');
+
+    return `
+      <div class="story-node-card ${nodeType.replace(/_/g, '-')} ${isSelected ? 'selected' : ''} ${isWalkthrough ? 'active-walkthrough' : ''}"
+           data-id="${node.id}" style="left: ${node._x}px; top: ${node._y}px;">
+        <div class="story-node-header">
+          <span>${icon} ${typeLabel}</span>
+          <span>${act}</span>
+        </div>
+        <div class="story-node-body">
+          <div class="story-node-title">${title}</div>
+          <div class="story-node-meta">
+            ${location ? `<span class="story-node-tag">📍 ${location}</span>` : ''}
+            ${giver ? `<span class="story-node-tag">👑 ${giver}</span>` : ''}
+          </div>
+          ${choicesHtml}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  layerEl.querySelectorAll('.story-node-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = card.getAttribute('data-id');
+      selectStoryNode(id);
+    });
+  });
+}
+
+function selectStoryNode(nodeId) {
+  state.selectedStoryNodeId = nodeId;
+  loadStoryNodeInspector(nodeId);
+
+  // Update selection highlights in outline and canvas
+  document.querySelectorAll('.story-outline-item').forEach(item => {
+    item.classList.toggle('selected', item.getAttribute('data-id') === nodeId);
+  });
+  document.querySelectorAll('.story-node-card').forEach(card => {
+    card.classList.toggle('selected', card.getAttribute('data-id') === nodeId);
+  });
+}
+
+function loadStoryNodeInspector(nodeId) {
+  const flow = getStoryFlow();
+  const node = (flow['robos:storyNodes'] || []).find(n => n.id === nodeId);
+  if (!node) return;
+
+  const headerTitle = document.getElementById('inspector-header-title');
+  if (headerTitle) headerTitle.textContent = `Node: ${node['dcterms:title'] || node.title || node.id}`;
+
+  const titleInp = document.getElementById('node-edit-title');
+  const idInp = document.getElementById('node-edit-id');
+  const typeSelect = document.getElementById('node-edit-type');
+  const actInp = document.getElementById('node-edit-act');
+  const locSelect = document.getElementById('node-edit-location');
+  const giverSelect = document.getElementById('node-edit-giver');
+  const summaryInp = document.getElementById('node-edit-summary');
+
+  if (titleInp) titleInp.value = node['dcterms:title'] || node.title || '';
+  if (idInp) idInp.value = node.id || '';
+  if (typeSelect) typeSelect.value = node['robos:nodeType'] || node.type || 'quest_stage';
+  if (actInp) actInp.value = node['robos:act'] || node.act || 'Prologue';
+  if (locSelect) locSelect.value = node['robos:location'] || node.location || '';
+  if (giverSelect) giverSelect.value = node['robos:giver'] || node.giver || '';
+  if (summaryInp) summaryInp.value = node['robos:summary'] || node.summary || '';
+
+  const endingFields = document.getElementById('node-ending-fields');
+  const endingTypeSelect = document.getElementById('node-edit-ending-type');
+  const victorySelect = document.getElementById('node-edit-victory-status');
+  const epilogueInp = document.getElementById('node-edit-epilogue-text');
+
+  const nodeType = node['robos:nodeType'] || node.type;
+  if (nodeType === 'end_game_state') {
+    endingFields?.classList.remove('hidden');
+    if (endingTypeSelect) endingTypeSelect.value = node['robos:endingType'] || node.endingType || 'triumph_good';
+    if (victorySelect) victorySelect.value = node['robos:victoryStatus'] || node.victoryStatus || 'victory';
+    if (epilogueInp) epilogueInp.value = node['robos:epilogueText'] || node.epilogueText || '';
+  } else {
+    endingFields?.classList.add('hidden');
+  }
+
+  renderStoryNodeChoices(node);
+}
+
+function renderStoryNodeChoices(node) {
+  const container = document.getElementById('inspector-choices-list');
+  const countBadge = document.getElementById('inspector-choices-count');
+  if (!container) return;
+
+  const choices = node['robos:choices'] || node.choices || [];
+  if (countBadge) countBadge.textContent = choices.length;
+
+  const flow = getStoryFlow();
+  const allNodes = flow['robos:storyNodes'] || [];
+
+  if (choices.length === 0) {
+    container.innerHTML = '<div style="color:var(--text-muted);font-size:11px;padding:4px;">No outgoing choices. Click + Add Choice.</div>';
+    return;
+  }
+
+  container.innerHTML = choices.map((ch, idx) => `
+    <div class="choice-edit-item" data-idx="${idx}">
+      <div class="choice-edit-header">
+        <span>Choice #${idx + 1}</span>
+        <button class="btn btn-danger btn-sm btn-del-choice" data-idx="${idx}" style="padding:1px 6px;">✕</button>
+      </div>
+      <div class="form-group" style="margin-bottom:4px;">
+        <label style="font-size:10px;">Player Choice Label</label>
+        <input type="text" class="input-text choice-label-inp" value="${ch.label || ''}" placeholder="e.g. Draw weapon and attack">
+      </div>
+      <div class="choice-edit-grid">
+        <div class="form-group">
+          <label style="font-size:10px;">Target Node</label>
+          <select class="dropdown-select choice-target-select">
+            ${allNodes.filter(n => n.id !== node.id).map(n => `
+              <option value="${n.id}" ${n.id === ch.targetNodeId ? 'selected' : ''}>${getNodeTypeIcon(n['robos:nodeType'] || n.type)} ${n['dcterms:title'] || n.title || n.id}</option>
+            `).join('')}
+          </select>
+        </div>
+        <div class="form-group">
+          <label style="font-size:10px;">Required Flag (Prerequisite)</label>
+          <input type="text" class="input-text choice-req-flag-inp" value="${ch.requiredFlag || ''}" placeholder="e.g. spoke_to_gorion">
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  container.querySelectorAll('.choice-label-inp').forEach(inp => {
+    inp.addEventListener('input', (e) => {
+      const idx = e.target.closest('.choice-edit-item').getAttribute('data-idx');
+      choices[idx].label = e.target.value.trim();
+      renderQuestScenarioTree(true);
+    });
+  });
+
+  container.querySelectorAll('.choice-target-select').forEach(sel => {
+    sel.addEventListener('change', (e) => {
+      const idx = e.target.closest('.choice-edit-item').getAttribute('data-idx');
+      choices[idx].targetNodeId = e.target.value;
+      renderQuestScenarioTree(true);
+    });
+  });
+
+  container.querySelectorAll('.choice-req-flag-inp').forEach(inp => {
+    inp.addEventListener('input', (e) => {
+      const idx = e.target.closest('.choice-edit-item').getAttribute('data-idx');
+      choices[idx].requiredFlag = e.target.value.trim();
+    });
+  });
+
+  container.querySelectorAll('.btn-del-choice').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const idx = Number(btn.getAttribute('data-idx'));
+      choices.splice(idx, 1);
+      renderStoryNodeChoices(node);
+      renderQuestScenarioTree(true);
+    });
+  });
+}
+
+function createStoryNode() {
+  const flow = getStoryFlow();
+  if (!Array.isArray(flow['robos:storyNodes'])) flow['robos:storyNodes'] = [];
+
+  const safeId = `node-story-${Date.now().toString().slice(-4)}`;
+  const newNode = {
+    '@type': 'robos:CRPGStoryNode',
+    id: safeId,
+    'dcterms:title': 'New Story Node',
+    title: 'New Story Node',
+    'robos:nodeType': 'quest_stage',
+    type: 'quest_stage',
+    'robos:act': 'Chapter 1',
+    act: 'Chapter 1',
+    'robos:location': '',
+    'robos:giver': '',
+    'robos:summary': 'Narrative journal entry and scene description...',
+    'robos:choices': []
+  };
+
+  flow['robos:storyNodes'].push(newNode);
+  state.selectedStoryNodeId = safeId;
+  renderQuestScenarioTree();
+  updateCampaignSummaryStats();
+  setStatus(`Created new story node: ${safeId}`);
+}
+
+function deleteStoryNode(nodeId) {
+  const flow = getStoryFlow();
+  const nodes = flow['robos:storyNodes'] || [];
+  const idx = nodes.findIndex(n => n.id === nodeId);
+  if (idx === -1) return;
+
+  if (nodeId === flow['robos:rootNodeId']) {
+    alert('Cannot delete the root Game Start node of this story tree.');
+    return;
+  }
+
+  nodes.splice(idx, 1);
+  nodes.forEach(n => {
+    const chs = n['robos:choices'] || n.choices || [];
+    const filtered = chs.filter(c => c.targetNodeId !== nodeId);
+    n['robos:choices'] = filtered;
+    n.choices = filtered;
+  });
+
+  state.selectedStoryNodeId = nodes[0]?.id || null;
+  renderQuestScenarioTree();
+  updateCampaignSummaryStats();
+  setStatus(`Deleted story node: ${nodeId}`);
+}
+
+function addChoiceToSelectedNode() {
+  if (!state.selectedStoryNodeId) return;
+  const flow = getStoryFlow();
+  const node = (flow['robos:storyNodes'] || []).find(n => n.id === state.selectedStoryNodeId);
+  if (!node) return;
+
+  if (!Array.isArray(node['robos:choices'])) node['robos:choices'] = [];
+  const otherNodes = (flow['robos:storyNodes'] || []).filter(n => n.id !== node.id);
+  const targetId = otherNodes[0]?.id || '';
+
+  node['robos:choices'].push({
+    targetNodeId: targetId,
+    label: 'Next action / choice',
+    requiredFlag: '',
+    setFlags: {}
+  });
+  node.choices = node['robos:choices'];
+
+  renderStoryNodeChoices(node);
+  renderQuestScenarioTree(true);
+}
+
+// ── Interactive Story Walkthrough Engine ─────────────────────────────────
+function toggleStoryWalkthrough() {
+  if (state.storyWalkthrough.active) {
+    state.storyWalkthrough.active = false;
+    document.getElementById('story-walkthrough-hud')?.classList.add('hidden');
+    renderQuestScenarioTree();
+  } else {
+    startStoryWalkthrough();
+  }
+}
+
+function startStoryWalkthrough() {
+  const flow = getStoryFlow();
+  const nodes = flow['robos:storyNodes'] || [];
+  if (nodes.length === 0) return;
+
+  const rootId = flow['robos:rootNodeId'] || nodes[0].id;
+  state.storyWalkthrough.active = true;
+  state.storyWalkthrough.currentNodeId = rootId;
+  state.storyWalkthrough.visitedNodeIds = [rootId];
+
+  renderStoryWalkthroughHUD();
+  renderQuestScenarioTree();
+  setStatus('Started Interactive Story Walkthrough.');
+}
+
+function resetStoryWalkthrough() {
+  const flow = getStoryFlow();
+  const rootId = flow['robos:rootNodeId'] || (flow['robos:storyNodes'] || [])[0]?.id;
+  state.storyWalkthrough.currentNodeId = rootId;
+  state.storyWalkthrough.visitedNodeIds = rootId ? [rootId] : [];
+  document.getElementById('story-epilogue-overlay')?.classList.add('hidden');
+  renderStoryWalkthroughHUD();
+  renderQuestScenarioTree();
+}
+
+function renderStoryWalkthroughHUD() {
+  const hud = document.getElementById('story-walkthrough-hud');
+  if (!hud) return;
+
+  if (!state.storyWalkthrough.active) {
+    hud.classList.add('hidden');
+    return;
+  }
+  hud.classList.remove('hidden');
+
+  const flow = getStoryFlow();
+  const node = (flow['robos:storyNodes'] || []).find(n => n.id === state.storyWalkthrough.currentNodeId);
+  if (!node) return;
+
+  const iconEl = document.getElementById('hud-node-type-icon');
+  const titleEl = document.getElementById('hud-node-title');
+  const actEl = document.getElementById('hud-act-tag');
+  const locEl = document.getElementById('hud-location-tag');
+  const giverEl = document.getElementById('hud-giver-tag');
+  const narrativeEl = document.getElementById('hud-narrative-text');
+  const choicesListEl = document.getElementById('hud-choices-list');
+
+  const type = node['robos:nodeType'] || node.type || 'quest_stage';
+  if (iconEl) iconEl.textContent = getNodeTypeIcon(type);
+  if (titleEl) titleEl.textContent = node['dcterms:title'] || node.title || node.id;
+  if (actEl) actEl.textContent = node['robos:act'] || node.act || 'Prologue';
+  if (locEl) locEl.textContent = `📍 ${node['robos:location'] || node.location || 'World General'}`;
+  if (giverEl) giverEl.textContent = `👑 ${node['robos:giver'] || node.giver || 'Narrator'}`;
+  if (narrativeEl) narrativeEl.textContent = node['robos:summary'] || node.summary || 'No narrative description provided.';
+
+  // If node is an end game state, automatically display the Epilogue Modal!
+  if (type === 'end_game_state') {
+    showEpilogueModal(node);
+  }
+
+  // Render choice action buttons
+  const choices = node['robos:choices'] || node.choices || [];
+  const gs = getGameState();
+  const flags = gs['robos:worldFlags'] || {};
+
+  if (choices.length === 0) {
+    choicesListEl.innerHTML = `
+      <div style="font-size:12px;color:#c084fc;font-weight:600;display:flex;align-items:center;gap:6px;">
+        <span>🏆 You have reached a Campaign Conclusion / End Game State.</span>
+        <button class="btn btn-secondary btn-sm" onclick="showEpilogueModal(state.activeCampaignData['robos:storyFlow']['robos:storyNodes'].find(n => n.id === '${node.id}'))">📜 Read Epilogue Scroll</button>
+      </div>
+    `;
+    return;
+  }
+
+  choicesListEl.innerHTML = choices.map((ch, idx) => {
+    let isLocked = false;
+    let lockReason = '';
+    if (ch.requiredFlag && !flags[ch.requiredFlag]) {
+      isLocked = true;
+      lockReason = ` (Requires: ${ch.requiredFlag})`;
+    }
+    return `
+      <button class="hud-choice-btn ${isLocked ? 'disabled' : ''}" data-target="${ch.targetNodeId}" data-idx="${idx}" ${isLocked ? 'disabled title="Prerequisite flag not met"' : ''}>
+        <span>${isLocked ? '🔒' : '⚔️'}</span>
+        <span>${ch.label || 'Advance to next stage'}${lockReason}</span>
+      </button>
+    `;
+  }).join('');
+
+  choicesListEl.querySelectorAll('.hud-choice-btn:not([disabled])').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetId = btn.getAttribute('data-target');
+      const idx = Number(btn.getAttribute('data-idx'));
+      const choice = choices[idx];
+
+      // Apply any setFlags
+      if (choice.setFlags && typeof choice.setFlags === 'object') {
+        Object.assign(flags, choice.setFlags);
+        renderStoryFlags();
+      }
+
+      state.storyWalkthrough.currentNodeId = targetId;
+      if (!state.storyWalkthrough.visitedNodeIds.includes(targetId)) {
+        state.storyWalkthrough.visitedNodeIds.push(targetId);
+      }
+      state.selectedStoryNodeId = targetId;
+
+      renderStoryWalkthroughHUD();
+      renderQuestScenarioTree();
+    });
+  });
+}
+
+function showEpilogueModal(node) {
+  const overlay = document.getElementById('story-epilogue-overlay');
+  if (!overlay) return;
+
+  const badgeEl = document.getElementById('epilogue-badge');
+  const titleEl = document.getElementById('epilogue-title');
+  const subtitleEl = document.getElementById('epilogue-ending-type');
+  const textEl = document.getElementById('epilogue-narrative-text');
+  const flagsSummaryEl = document.getElementById('epilogue-flags-summary');
+
+  const victoryStatus = (node['robos:victoryStatus'] || node.victoryStatus || 'victory').toUpperCase();
+  const endingType = node['robos:endingType'] || node.endingType || 'triumph_good';
+
+  if (badgeEl) {
+    badgeEl.textContent = `${victoryStatus === 'VICTORY' ? '🏆 VICTORY' : (victoryStatus === 'DEFEAT' ? '💀 DEFEAT' : '🕊️ RESOLVED')}`;
+    badgeEl.style.background = victoryStatus === 'VICTORY' ? '#eab308' : (victoryStatus === 'DEFEAT' ? '#ef4444' : '#38bdf8');
+  }
+
+  if (titleEl) titleEl.textContent = node['dcterms:title'] || node.title || 'Campaign Ending';
+  if (subtitleEl) {
+    switch (endingType) {
+      case 'triumph_good': subtitleEl.textContent = '🌟 Heroic Triumph Ending — Savior of the Realm'; break;
+      case 'tyrant_evil': subtitleEl.textContent = '👑 Dark Ascension Ending — The Reign of Terror'; break;
+      case 'tragic_sacrifice': subtitleEl.textContent = '🕊️ Bittersweet Sacrifice Ending — The Martyr\'s Light'; break;
+      case 'neutral_wanderer': subtitleEl.textContent = '🌲 The Wanderer\'s Exile — Beyond the Edge of Maps'; break;
+      case 'game_over_defeat': subtitleEl.textContent = '💀 Total Defeat — Shadows Consume All'; break;
+      default: subtitleEl.textContent = 'Campaign Resolution'; break;
+    }
+  }
+
+  if (textEl) {
+    textEl.textContent = node['robos:epilogueText'] || node.epilogueText || node['robos:summary'] || node.summary || 'Your campaign concludes here.';
+  }
+
+  if (flagsSummaryEl) {
+    const gs = getGameState();
+    const flags = gs['robos:worldFlags'] || {};
+    const activeFlags = Object.keys(flags).filter(k => flags[k] === true);
+    if (activeFlags.length > 0) {
+      flagsSummaryEl.innerHTML = activeFlags.map(f => `<span class="epilogue-flag-pill">✔ ${f}</span>`).join('');
+    } else {
+      flagsSummaryEl.innerHTML = '<span style="font-size:11px;color:#94a3b8;">No critical narrative flags recorded.</span>';
+    }
+  }
+
+  overlay.classList.remove('hidden');
+}
+window.showEpilogueModal = showEpilogueModal;
 
 function renderStoryFlags() {
   const tbody = document.getElementById('flags-table-body');

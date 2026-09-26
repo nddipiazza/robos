@@ -327,6 +327,202 @@
       "gate_unlocked": false
     }
   },
+  "robos:storyFlow": {
+    "@type": "robos:CRPGStoryFlow",
+    "@id": "urn:robos:crpg:storyflow:candlekeep-prologue",
+    "dcterms:title": "The Prophecy of the Bhaalspawn",
+    "robos:rootNodeId": "node-prologue-start",
+    "robos:storyNodes": [
+      {
+        "@type": "robos:CRPGStoryNode",
+        "id": "node-prologue-start",
+        "dcterms:title": "Awakening in Candlekeep",
+        "robos:nodeType": "game_start",
+        "robos:act": "Prologue",
+        "robos:location": "candlekeep-exterior",
+        "robos:giver": "Gorion",
+        "robos:summary": "Gorion summons his ward to the library steps with urgent warnings. Mysterious iron shortages grip the Coast and rumors spread of hunters seeking your blood.",
+        "robos:choices": [
+          {
+            "targetNodeId": "node-prep-supplies",
+            "label": "Gather equipment and speak to Winthrop at the inn",
+            "setFlags": { "spoke_to_gorion": true }
+          }
+        ]
+      },
+      {
+        "@type": "robos:CRPGStoryNode",
+        "id": "node-prep-supplies",
+        "dcterms:title": "Preparations & Whispers",
+        "robos:nodeType": "quest_stage",
+        "robos:act": "Prologue",
+        "robos:location": "candlekeep-inn-interior",
+        "robos:giver": "Winthrop",
+        "robos:summary": "Winthrop offers travel rations while Firebead and Hull share ominous warnings about cloaked strangers outside the monastery gates.",
+        "robos:choices": [
+          {
+            "targetNodeId": "node-assassin-ambush",
+            "label": "Search the bunkhouse and storehouse for supplies",
+            "setFlags": { "spoke_to_winthrop": true }
+          },
+          {
+            "targetNodeId": "node-departure-steps",
+            "label": "Head directly to Gorion without lingering",
+            "setFlags": { "hasty_departure": true }
+          }
+        ]
+      },
+      {
+        "@type": "robos:CRPGStoryNode",
+        "id": "node-assassin-ambush",
+        "dcterms:title": "Sanctuary Ambush",
+        "robos:nodeType": "combat_trial",
+        "robos:act": "Prologue",
+        "robos:location": "candlekeep-barracks",
+        "robos:giver": "Shank & Carbos",
+        "robos:summary": "Two ruthless cutthroats corner you in the dark storehouse, seeking the assassin bounty on your head.",
+        "robos:choices": [
+          {
+            "targetNodeId": "node-departure-steps",
+            "label": "Defeat the cutthroats and recover the assassin bounty scroll",
+            "setFlags": { "shank_defeated": true, "carbos_defeated": true, "bounty_scroll_found": true }
+          }
+        ]
+      },
+      {
+        "@type": "robos:CRPGStoryNode",
+        "id": "node-departure-steps",
+        "dcterms:title": "The Gates Close Behind",
+        "robos:nodeType": "act_chapter",
+        "robos:act": "Chapter 1",
+        "robos:location": "candlekeep-exterior",
+        "robos:giver": "Gorion",
+        "robos:summary": "Night descends as you meet Gorion at the gatehouse. The iron gates clang shut behind you forever as you step onto the Coast Way road.",
+        "robos:choices": [
+          {
+            "targetNodeId": "node-coastway-ambush",
+            "label": "Travel into the Lion's Way under cover of fog",
+            "setFlags": { "gate_unlocked": true, "departed_candlekeep": true }
+          }
+        ]
+      },
+      {
+        "@type": "robos:CRPGStoryNode",
+        "id": "node-coastway-ambush",
+        "dcterms:title": "Ambush on the Coast Way",
+        "robos:nodeType": "decision_branch",
+        "robos:act": "Chapter 1",
+        "robos:location": "candlekeep-exterior",
+        "robos:giver": "Armored Figure",
+        "robos:summary": "A towering armored figure clad in spiked black steel and two ogres ambush your path, demanding that Gorion surrender the ward.",
+        "robos:choices": [
+          {
+            "targetNodeId": "node-stand-and-fight",
+            "label": "Refuse to abandon Gorion; unleash spells and stand your ground",
+            "setFlags": { "stood_with_gorion": true }
+          },
+          {
+            "targetNodeId": "node-flee-wilderness",
+            "label": "Obey Gorion's desperate shout and flee into the dark forest",
+            "setFlags": { "fled_into_woods": true }
+          }
+        ]
+      },
+      {
+        "@type": "robos:CRPGStoryNode",
+        "id": "node-stand-and-fight",
+        "dcterms:title": "The Valorous Stand",
+        "robos:nodeType": "combat_trial",
+        "robos:act": "Finale",
+        "robos:location": "candlekeep-exterior",
+        "robos:giver": "Sarevok",
+        "robos:summary": "You fight side by side with your mentor in a cataclysm of fire and steel against Sarevok's elite mercenaries.",
+        "robos:choices": [
+          {
+            "targetNodeId": "node-ending-guardian",
+            "label": "Shatter the armored warlord's blade and preserve the Coast",
+            "requiredFlag": "stood_with_gorion",
+            "setFlags": { "sarevok_vanquished": true, "realm_saved": true }
+          },
+          {
+            "targetNodeId": "node-ending-martyr",
+            "label": "Shield Gorion from the fatal blow, taking the dark spear yourself",
+            "setFlags": { "sacrificed_for_gorion": true }
+          }
+        ]
+      },
+      {
+        "@type": "robos:CRPGStoryNode",
+        "id": "node-flee-wilderness",
+        "dcterms:title": "The Orphan of the Wilds",
+        "robos:nodeType": "decision_branch",
+        "robos:act": "Finale",
+        "robos:location": "candlekeep-exterior",
+        "robos:giver": "Imoen",
+        "robos:summary": "Gorion falls holding off the mercenaries. Rejoined by Imoen at dawn, you uncover the truth of your divine heritage.",
+        "robos:choices": [
+          {
+            "targetNodeId": "node-ending-lord-of-murder",
+            "label": "Embrace the bloodline's dark power to claim absolute dominion",
+            "setFlags": { "embraced_dark_heritage": true, "tyrant_ascension": true }
+          },
+          {
+            "targetNodeId": "node-ending-defeat",
+            "label": "Succumb to despair without guidance, hunted in the wilderness",
+            "setFlags": { "lost_in_wilds": true }
+          }
+        ]
+      },
+      {
+        "@type": "robos:CRPGStoryNode",
+        "id": "node-ending-guardian",
+        "dcterms:title": "Ending A: The Guardian of Candlekeep",
+        "robos:nodeType": "end_game_state",
+        "robos:act": "Epilogue",
+        "robos:endingType": "triumph_good",
+        "robos:victoryStatus": "victory",
+        "robos:summary": "The mercenary conspiracy is broken and the iron shortage ends.",
+        "robos:epilogueText": "With Sarevok vanquished, your steadfast courage is celebrated throughout Baldur's Gate and Candlekeep. You forge your own destiny free of divine curse, remembered for generations as the Savior of the Sword Coast.",
+        "robos:choices": []
+      },
+      {
+        "@type": "robos:CRPGStoryNode",
+        "id": "node-ending-lord-of-murder",
+        "dcterms:title": "Ending B: Lord of the Iron Throne",
+        "robos:nodeType": "end_game_state",
+        "robos:act": "Epilogue",
+        "robos:endingType": "tyrant_evil",
+        "robos:victoryStatus": "victory",
+        "robos:summary": "You seize control of the Iron Throne syndicate and rule with an iron grip.",
+        "robos:epilogueText": "Drawing upon the dormant divine spark within your blood, you crush both Sarevok and the Grand Dukes. The Iron Throne bends to your commands, and the Sword Coast enters a terrifying new epoch ruled by your merciless dominion.",
+        "robos:choices": []
+      },
+      {
+        "@type": "robos:CRPGStoryNode",
+        "id": "node-ending-martyr",
+        "dcterms:title": "Ending C: The Martyr's Sacrifice",
+        "robos:nodeType": "end_game_state",
+        "robos:act": "Epilogue",
+        "robos:endingType": "tragic_sacrifice",
+        "robos:victoryStatus": "truce",
+        "robos:summary": "Gorion survives as you sacrifice your life to shield him from the killing blow.",
+        "robos:epilogueText": "Though your physical journey ends here, your heroic selflessness shatters the dark prophecy. Gorion weeps upon the Coast Way stone and inters your remains in Candlekeep's sacred crypts, where eternal candles burn in honor of your soul.",
+        "robos:choices": []
+      },
+      {
+        "@type": "robos:CRPGStoryNode",
+        "id": "node-ending-defeat",
+        "dcterms:title": "Ending D: Consumed by Shadows",
+        "robos:nodeType": "end_game_state",
+        "robos:act": "Epilogue",
+        "robos:endingType": "game_over_defeat",
+        "robos:victoryStatus": "defeat",
+        "robos:summary": "The shadows of the Sword Coast claim another unprepared soul.",
+        "robos:epilogueText": "Overwhelmed by ruthless bounty hunters without Gorion's wise counsel, your tale ends in the brambled hollows of the Coast Way. The prophecy goes unfulfilled, waiting for another dawn.",
+        "robos:choices": []
+      }
+    ]
+  },
   "robos:scenes": [
     "candlekeep-exterior",
     "candlekeep-inn-interior",
