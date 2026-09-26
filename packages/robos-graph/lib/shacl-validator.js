@@ -3025,6 +3025,35 @@ const BUILTIN_SHACL_SHAPES = [
     "refersFrom": "https://schema.org/MediaObject",
     "schemaOrgType": "https://schema.org/MediaObject",
     "domainStandard": "http://open-services.net/ns/core#Attachment"
+  },
+  {
+    "shapeId": "urn:robos:shape:VoiceCommandShape",
+    "targetClass": "robos:VoiceCommand",
+    "properties": [
+      {
+        "path": "dcterms:title",
+        "minCount": 1,
+        "message": "Voice command must have a title."
+      },
+      {
+        "path": "robos:commandMatcher",
+        "minCount": 1,
+        "message": "Voice command must have at least one command matcher phrase."
+      },
+      {
+        "path": "robos:targetType",
+        "minCount": 1,
+        "message": "Voice command must specify target type (app or skill)."
+      },
+      {
+        "path": "robos:targetId",
+        "minCount": 1,
+        "message": "Voice command must specify a target application or skill ID."
+      }
+    ],
+    "refersFrom": "https://schema.org/ControlAction",
+    "schemaOrgType": "https://schema.org/ControlAction",
+    "domainStandard": "https://schema.org/ControlAction"
   }
 ];
 

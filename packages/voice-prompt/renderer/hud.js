@@ -89,6 +89,17 @@ if (typeof document !== 'undefined') {
   const btnPosCycle = document.getElementById('btn-pos-cycle');
   const posLabel = document.getElementById('pos-label');
   const btnCloseHud = document.getElementById('btn-close-hud');
+  const btnVoiceCommands = document.getElementById('btn-voice-commands');
+  const voiceCommandsModal = document.getElementById('voice-commands-modal');
+  const btnCloseCommandsModal = document.getElementById('btn-close-commands-modal');
+  const commandsSearchInput = document.getElementById('commands-search-input');
+  const btnClearCommandsSearch = document.getElementById('btn-clear-commands-search');
+  const commandsCountBadge = document.getElementById('commands-count-badge');
+  const commandsListContainer = document.getElementById('commands-list-container');
+  const filterTabBtns = document.querySelectorAll('.commands-tab-btn');
+
+  let cachedCommands = [];
+  let currentFilterTab = 'all';
 
   const positions = ['bottom-right', 'bottom-left', 'top-left', 'top-right'];
   const posShort = {
@@ -254,6 +265,90 @@ if (typeof document !== 'undefined') {
     scrollToBottom();
   }
 
+  function scheduleBubbleSettle(bubbleEl, text) {
+    if (!bubbleEl) return;
+    if (bubbleEl._settleTimer) {
+      clearTimeout(bubbleEl._settleTimer);
+    }
+    bubbleEl._settleTimer = setTimeout(() => {
+      bubbleEl._settleTimer = null;
+      checkAndExecuteVoiceCommand(bubbleEl, text);
+    }, 650);
+  }
+
+  async function checkAndExecuteVoiceCommand(bubbleEl, text) {
+    if (!bubbleEl || bubbleEl._commandMatched) return;
+    if (!window.robosVoiceHud || typeof window.robosVoiceHud.matchVoiceCommand !== 'function') return;
+
+    const currentText = bubbleEl.querySelector('.bubble-text')?.textContent || text || '';
+    if (!currentText.trim()) return;
+
+    try {
+      const match = await window.robosVoiceHud.matchVoiceCommand(currentText);
+      if (!match || !match.matched || !match.command) {
+        return;
+      }
+
+      bubbleEl._commandMatched = true;
+      const cmd = match.command;
+
+      // 1. Play bounce effect
+      bubbleEl.classList.remove('command-matched-bounce');
+      void bubbleEl.offsetWidth; // Force reflow to replay bounce animation
+      bubbleEl.classList.add('command-matched-bounce');
+
+      // 2. Format dialog bubble showing what command ran
+      const typeLabel = cmd.targetType === 'app' ? 'App' : 'Skill';
+      const typeClass = cmd.targetType === 'app' ? 'app' : 'skill';
+      const cardEl = document.createElement('div');
+      cardEl.className = 'bubble-command-card';
+      cardEl.innerHTML = `
+        <div class="command-card-header">
+          <div class="command-card-title-group">
+            <span class="command-card-icon">⚡</span>
+            <span class="command-type-badge ${typeClass}">${typeLabel}</span>
+            <span class="command-card-title" title="${escapeHtml(cmd.title)}">${escapeHtml(cmd.title)}</span>
+          </div>
+          <span class="command-status-badge running">
+            <span class="live-dot"></span>
+            <span>Executing</span>
+          </span>
+        </div>
+        <div class="command-card-result">Executing <strong>${escapeHtml(cmd.title)}</strong>...</div>
+      `;
+      bubbleEl.appendChild(cardEl);
+      scrollToBottom();
+
+      // 3. Execute the command
+      if (typeof window.robosVoiceHud.executeVoiceCommand === 'function') {
+        const result = await window.robosVoiceHud.executeVoiceCommand(cmd.id, match.args, currentText);
+        const statusBadge = cardEl.querySelector('.command-status-badge');
+        const resultText = cardEl.querySelector('.command-card-result');
+
+        if (result && result.ok) {
+          if (statusBadge) {
+            statusBadge.className = 'command-status-badge done';
+            statusBadge.textContent = '✓ Done';
+          }
+          if (resultText) {
+            resultText.innerHTML = escapeHtml(result.actionDone || result.response || `Successfully executed ${cmd.title}`);
+          }
+        } else {
+          if (statusBadge) {
+            statusBadge.className = 'command-status-badge failed';
+            statusBadge.textContent = '✕ Error';
+          }
+          if (resultText) {
+            resultText.textContent = (result && result.error) || 'Command failed or encountered an error';
+          }
+        }
+        scrollToBottom();
+      }
+    } catch (err) {
+      console.warn('Error checking voice command:', err);
+    }
+  }
+
   // Finalize an interim bubble into a permanent bubble with timestamp & copy button
   function finalizeBubble(text, time = new Date()) {
     const cleanText = (text || '').trim();
@@ -282,6 +377,10 @@ if (typeof document !== 'undefined') {
         lastFinal.ts = now;
         const lastEl = chatFeed.querySelector(`[data-id="${lastFinal.id}"] .bubble-text`);
         if (lastEl) lastEl.textContent = merge.text;
+        const lastBubble = chatFeed.querySelector(`[data-id="${lastFinal.id}"]`);
+        if (lastBubble) {
+          scheduleBubbleSettle(lastBubble, merge.text);
+        }
         if (currentInterimBubble) {
           currentInterimBubble.remove();
           currentInterimBubble = null;
@@ -336,6 +435,7 @@ if (typeof document !== 'undefined') {
       }
     });
 
+    scheduleBubbleSettle(bubbleEl, cleanText);
     scrollToBottom();
   }
 
@@ -417,6 +517,152 @@ if (typeof document !== 'undefined') {
       await window.robosVoiceHud.hideHud();
     }
   });
+
+  // ── Voice Activated Commands Configuration Modal ──────────────────────────────
+  async function loadVoiceCommands() {
+    if (window.robosVoiceHud && typeof window.robosVoiceHud.getVoiceCommands === 'function') {
+      try {
+        cachedCommands = await window.robosVoiceHud.getVoiceCommands();
+      } catch (err) {
+        console.warn('Failed to load voice commands:', err);
+      }
+    }
+    if (commandsCountBadge) {
+      commandsCountBadge.textContent = cachedCommands.length;
+    }
+  }
+
+  function renderVoiceCommandsList() {
+    if (!commandsListContainer) return;
+    const query = normalize(commandsSearchInput?.value || '');
+
+    let list = cachedCommands;
+    if (currentFilterTab === 'apps') {
+      list = list.filter(c => c.targetType === 'app');
+    } else if (currentFilterTab === 'skills') {
+      list = list.filter(c => c.targetType === 'skill');
+    }
+
+    if (query) {
+      list = list.filter(c => {
+        if (normalize(c.title).includes(query)) return true;
+        if (normalize(c.description).includes(query)) return true;
+        if (normalize(c.targetId).includes(query)) return true;
+        return Array.isArray(c.matchers) && c.matchers.some(m => normalize(m).includes(query));
+      });
+    }
+
+    if (list.length === 0) {
+      commandsListContainer.innerHTML = `
+        <div class="commands-empty-state">
+          No voice commands matching "${escapeHtml(commandsSearchInput?.value || '')}"
+        </div>`;
+      return;
+    }
+
+    commandsListContainer.innerHTML = '';
+    list.forEach(cmd => {
+      const card = document.createElement('div');
+      card.className = 'command-item-card';
+
+      const typeLabel = cmd.targetType === 'app' ? 'App' : 'Skill';
+      const typeClass = cmd.targetType === 'app' ? 'app' : 'skill';
+
+      const phrasesHtml = (cmd.matchers || []).slice(0, 4).map(p =>
+        `<span class="cmd-phrase-badge" data-phrase="${escapeHtml(p)}" title="Click to dictate: &quot;${escapeHtml(p)}&quot;">&ldquo;${escapeHtml(p)}&rdquo;</span>`
+      ).join('');
+
+      card.innerHTML = `
+        <div class="command-item-top">
+          <div class="command-item-title-wrap">
+            <span class="command-type-badge ${typeClass}">${typeLabel}</span>
+            <span class="command-item-title">${escapeHtml(cmd.title)}</span>
+          </div>
+          <button type="button" class="btn-test-cmd" data-phrase="${escapeHtml(cmd.matchers?.[0] || cmd.title)}">Test</button>
+        </div>
+        <div class="command-item-desc">${escapeHtml(cmd.description || '')}</div>
+        <div class="command-item-phrases">${phrasesHtml}</div>
+      `;
+
+      card.querySelector('.btn-test-cmd')?.addEventListener('click', (e) => {
+        const phrase = e.currentTarget.getAttribute('data-phrase');
+        testCommandPhrase(phrase);
+      });
+
+      card.querySelectorAll('.cmd-phrase-badge').forEach(badge => {
+        badge.addEventListener('click', (e) => {
+          const phrase = e.currentTarget.getAttribute('data-phrase');
+          testCommandPhrase(phrase);
+        });
+      });
+
+      commandsListContainer.appendChild(card);
+    });
+  }
+
+  function testCommandPhrase(phrase) {
+    if (!phrase) return;
+    if (voiceCommandsModal) {
+      voiceCommandsModal.classList.add('hidden');
+    }
+    btnVoiceCommands?.classList.remove('active');
+    finalizeBubble(phrase);
+  }
+
+  btnVoiceCommands?.addEventListener('click', async () => {
+    if (!voiceCommandsModal) return;
+    const isHidden = voiceCommandsModal.classList.contains('hidden');
+    if (isHidden) {
+      voiceCommandsModal.classList.remove('hidden');
+      btnVoiceCommands.classList.add('active');
+      if (cachedCommands.length === 0) {
+        await loadVoiceCommands();
+      }
+      renderVoiceCommandsList();
+      commandsSearchInput?.focus();
+    } else {
+      voiceCommandsModal.classList.add('hidden');
+      btnVoiceCommands.classList.remove('active');
+    }
+  });
+
+  btnCloseCommandsModal?.addEventListener('click', () => {
+    voiceCommandsModal?.classList.add('hidden');
+    btnVoiceCommands?.classList.remove('active');
+  });
+
+  commandsSearchInput?.addEventListener('input', () => {
+    const val = commandsSearchInput.value || '';
+    if (btnClearCommandsSearch) {
+      if (val.trim()) {
+        btnClearCommandsSearch.classList.remove('hidden');
+      } else {
+        btnClearCommandsSearch.classList.add('hidden');
+      }
+    }
+    renderVoiceCommandsList();
+  });
+
+  btnClearCommandsSearch?.addEventListener('click', () => {
+    if (commandsSearchInput) {
+      commandsSearchInput.value = '';
+      commandsSearchInput.focus();
+    }
+    btnClearCommandsSearch.classList.add('hidden');
+    renderVoiceCommandsList();
+  });
+
+  filterTabBtns.forEach(tabBtn => {
+    tabBtn.addEventListener('click', () => {
+      filterTabBtns.forEach(b => b.classList.remove('active'));
+      tabBtn.classList.add('active');
+      currentFilterTab = tabBtn.getAttribute('data-tab') || 'all';
+      renderVoiceCommandsList();
+    });
+  });
+
+  // Preload voice commands on startup
+  loadVoiceCommands();
 
   // IPC Event Listeners from Main Process
   if (window.robosVoiceHud) {

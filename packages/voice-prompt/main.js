@@ -25,6 +25,7 @@ const { STTEngine } = require('./lib/stt-engine');
 const { TTSEngine } = require('./lib/tts-engine');
 const { WakeWordDetector } = require('./lib/wake-word');
 const { DesktopAssistant } = require('./lib/desktop-assistant');
+const { defaultRegistry: voiceCommandsRegistry } = require('./lib/voice-commands-registry');
 
 function getAppIcon() {
   const iconPng = path.join(__dirname, 'icon.png');
@@ -302,6 +303,25 @@ async function handleAgentStream(payload = {}) {
   }
 
   return { ok: true, agentId: usedAgent, text, response: agentResponseText, context };
+}
+
+/**
+ * Handle executing a matched voice command
+ */
+async function handleExecuteVoiceCommand(commandId, args = '', text = '') {
+  const cmd = voiceCommandsRegistry.getCommand(commandId);
+  if (!cmd) {
+    return { ok: false, error: `Command not found: ${commandId}` };
+  }
+
+  const context = await contextProvider.getAggregatedContext();
+
+  if (cmd.targetType === 'app') {
+    return desktopAssistant.skillsExecutor.executeOpenApp(cmd.targetId);
+  }
+
+  const query = args ? `${cmd.matchers[0]} ${args}` : (text || cmd.matchers[0]);
+  return desktopAssistant.skillsExecutor.executeCommand(query, context, { ttsEngine });
 }
 
 /**
@@ -599,6 +619,33 @@ function startApiServer(overridePort) {
         const command = typeof body === 'string' ? body : (body.command || body.query || body.message || '');
         const context = await contextProvider.getAggregatedContext();
         const result = await desktopAssistant.skillsExecutor.executeCommand(command, context, typeof body === 'object' ? body : {});
+        res.writeHead(result.ok ? 200 : 400);
+        return res.end(JSON.stringify(result));
+      }
+
+      // 10.11 Voice Activated Commands endpoints
+      if (pathname === '/api/voice-commands' && method === 'GET') {
+        const q = urlObj.searchParams.get('q') || '';
+        const category = urlObj.searchParams.get('category') || 'all';
+        const commands = voiceCommandsRegistry.searchCommands(q, category);
+        res.writeHead(200);
+        return res.end(JSON.stringify({ ok: true, count: commands.length, commands }));
+      }
+
+      if (pathname === '/api/voice-commands/match' && method === 'POST') {
+        const body = await parseBody(req);
+        const matchText = typeof body === 'string' ? body : (body.text || body.query || '');
+        const match = voiceCommandsRegistry.matchCommand(matchText);
+        res.writeHead(200);
+        return res.end(JSON.stringify({ ok: true, ...match }));
+      }
+
+      if (pathname === '/api/voice-commands/execute' && method === 'POST') {
+        const body = await parseBody(req);
+        const commandId = typeof body === 'object' ? body.commandId : null;
+        const args = typeof body === 'object' ? (body.args || '') : '';
+        const rawText = typeof body === 'object' ? (body.text || '') : '';
+        const result = await handleExecuteVoiceCommand(commandId, args, rawText);
         res.writeHead(result.ok ? 200 : 400);
         return res.end(JSON.stringify(result));
       }
@@ -979,6 +1026,18 @@ ipcMain.handle('vp-skills-execute', async (_e, command, options) => {
   return desktopAssistant.skillsExecutor.executeCommand(command, context, options || {});
 });
 
+ipcMain.handle('vp-voice-commands-list', (_e, { query, category } = {}) => {
+  return voiceCommandsRegistry.searchCommands(query || '', category || 'all');
+});
+
+ipcMain.handle('vp-voice-command-match', (_e, text) => {
+  return voiceCommandsRegistry.matchCommand(text);
+});
+
+ipcMain.handle('vp-voice-command-execute', async (_e, { commandId, args, text } = {}) => {
+  return handleExecuteVoiceCommand(commandId, args, text);
+});
+
 // Floating HUD IPC Handlers
 ipcMain.handle('vp-hud-show', () => {
   showHudWindow();
@@ -1041,4 +1100,6 @@ module.exports = {
   hideHudWindow,
   getHudBounds,
   repositionHudWindow,
+  voiceCommandsRegistry,
+  handleExecuteVoiceCommand,
 };
