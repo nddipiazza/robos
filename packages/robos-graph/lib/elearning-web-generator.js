@@ -634,6 +634,46 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
       align-items: center;
       gap: 10px;
     }
+    .copy-tab-path-link {
+      font-size: 11px;
+      color: var(--accent);
+      text-decoration: none;
+      background: rgba(0, 188, 212, 0.1);
+      border: 1px solid rgba(0, 188, 212, 0.3);
+      padding: 2px 7px;
+      border-radius: var(--radius-sm);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+    .copy-tab-path-link:hover {
+      background: rgba(0, 188, 212, 0.25);
+      border-color: var(--accent);
+      color: var(--text-bright);
+      text-decoration: none;
+    }
+    .btn-copy-tab-path {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--accent);
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s ease;
+    }
+    .btn-copy-tab-path:hover {
+      border-color: var(--accent);
+      background: rgba(0, 188, 212, 0.1);
+      color: var(--text-bright);
+    }
     .slide-menu-container {
       position: relative;
       display: inline-block;
@@ -1317,6 +1357,7 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
                 <span>⏱️ ${m.durationMinutes || 15} mins</span>
                 <span>🧪 ${(m.labSteps || []).length} labs</span>
                 <span>📝 ${(m.quiz || []).length} quiz</span>
+                <span class="copy-tab-path-link" onclick="copyTabPath(event, ${idx})" role="button" tabindex="0" title="Copy file system path for AI agents">📋 Copy as Path</span>
               </div>
             </button>
           </li>
@@ -2513,6 +2554,9 @@ flowchart LR
               </div>
             </div>
             <div class="slide-header-actions">
+              <button class="btn-copy-tab-path" onclick="copySlidePath(\${currentModIdx})" title="Copy file system path for AI agents">
+                📋 Copy as Path
+              </button>
               <span class="badge badge-duration">⏱️ \${m.durationMinutes || 15} mins</span>
               <div class="slide-menu-container">
                 <button class="btn-slide-menu" onclick="toggleSlideMenu(event, \${currentModIdx})" title="Slide Actions & Exports">
@@ -2700,6 +2744,14 @@ flowchart LR
     window.addEventListener('click', () => {
       document.querySelectorAll('.slide-dropdown-menu').forEach(el => el.classList.add('hidden'));
     });
+
+    async function copyTabPath(event, idx) {
+      if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+      }
+      return await copySlidePath(idx);
+    }
 
     async function copySlidePath(idx) {
       document.querySelectorAll('.slide-dropdown-menu').forEach(el => el.classList.add('hidden'));

@@ -99,8 +99,21 @@ function renderModuleNav() {
   (activeCourse['robos:modules'] || []).forEach((m, idx) => {
     const li = document.createElement('li');
     li.className = 'module-item ' + (idx === currentModIdx ? 'active' : '') + (isModuleComplete(idx) ? ' completed' : '');
-    li.innerHTML = '<strong>' + (m.title || 'Module ' + (idx + 1)) + '</strong><br><small style="color:var(--text-muted);">' + (m.durationMinutes || 15) + ' mins</small>';
-    li.onclick = () => renderModule(idx);
+    li.innerHTML = `
+      <div class="module-item-title-row">
+        <strong>${escapeHtml(m.title || 'Module ' + (idx + 1))}</strong>
+      </div>
+      <div class="module-item-footer">
+        <small class="module-item-duration" style="color:var(--text-muted);">${m.durationMinutes || 15} mins</small>
+        <a href="#" class="copy-tab-path-link" onclick="window.copyTabPath(event, ${idx})" title="Copy file system path for AI agents (e.g. Claude Code, Antigravity, Copilot)">
+          📋 Copy as Path
+        </a>
+      </div>
+    `;
+    li.onclick = (e) => {
+      if (e.target.closest('.copy-tab-path-link')) return;
+      renderModule(idx);
+    };
     list.appendChild(li);
   });
 }
@@ -127,6 +140,9 @@ function renderModule(idx) {
           </div>
         </div>
         <div class="slide-header-actions">
+          <button class="btn btn-outline btn-xs btn-copy-tab-path" onclick="window.copySlidePath(${idx})" title="Copy file system path for AI agents">
+            📋 Copy as Path
+          </button>
           <span class="badge badge-duration">⏱️ ${m.durationMinutes || 15} mins</span>
           <div class="slide-menu-container">
             <button class="btn-slide-menu" onclick="window.toggleSlideMenu(event, ${idx})" title="Slide Actions & Exports">
@@ -527,15 +543,57 @@ window.toggleSlideMenu = function(event, idx) {
   }
 };
 
+window.getSlidePath = function(idx) {
+  if (!activeCourse) return '';
+  const m = (activeCourse['robos:modules'] || [])[idx];
+  const repoRoot = (sourceInfo && sourceInfo.repoRoot) || '/home/ndipiazza/source/robos';
+  let gitopsPath = (sourceInfo && sourceInfo.gitopsPath) || `${repoRoot}/.robos/elearning.yaml`;
+  if (activeCourse && (activeCourse['robos:gitopsFile'] || activeCourse.gitopsFile)) {
+    const customFile = activeCourse['robos:gitopsFile'] || activeCourse.gitopsFile;
+    if (customFile.startsWith('/')) {
+      gitopsPath = customFile;
+    } else {
+      gitopsPath = `${repoRoot}/${customFile.replace(/^\.?\//, '')}`;
+    }
+  }
+  const slideId = (m && (m.id || m['@id'] || m.slideId)) || ('slide-' + (idx + 1));
+  return `${gitopsPath}#${slideId}`;
+};
+
+window.copyTabPath = async function(event, idx) {
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+  return await window.copySlidePath(idx);
+};
+
 window.copySlidePath = async function(idx) {
   document.querySelectorAll('.slide-dropdown-menu').forEach(el => el.classList.add('hidden'));
-  if (!activeCourse) return;
-  const m = (activeCourse['robos:modules'] || [])[idx];
-  const gitopsPath = (sourceInfo && sourceInfo.gitopsPath) || '/home/ndipiazza/source/robos/.robos/elearning.yaml';
-  const slideId = (m && m.id) || ('slide-' + (idx + 1));
-  const fullPath = `${gitopsPath}#${slideId}`;
+  if (!activeCourse) return '';
+  const fullPath = window.getSlidePath(idx);
   await copyToClipboardText(fullPath);
   window.showToast(`📋 Copied file system path: ${fullPath}`, 'success');
+  return fullPath;
+};
+
+window.copyCoursePath = async function() {
+  if (!activeCourse) return '';
+  const repoRoot = (sourceInfo && sourceInfo.repoRoot) || '/home/ndipiazza/source/robos';
+  let gitopsPath = (sourceInfo && sourceInfo.gitopsPath) || `${repoRoot}/.robos/elearning.yaml`;
+  if (activeCourse && (activeCourse['robos:gitopsFile'] || activeCourse.gitopsFile)) {
+    const customFile = activeCourse['robos:gitopsFile'] || activeCourse.gitopsFile;
+    if (customFile.startsWith('/')) {
+      gitopsPath = customFile;
+    } else {
+      gitopsPath = `${repoRoot}/${customFile.replace(/^\.?\//, '')}`;
+    }
+  }
+  const courseId = activeCourse.id || (activeCourse['@id'] || '').replace('urn:robos:elearning:', '').replace('urn:robos:course:', '') || 'course';
+  const fullPath = `${gitopsPath}#${courseId}`;
+  await copyToClipboardText(fullPath);
+  window.showToast(`📋 Copied course file system path: ${fullPath}`, 'success');
+  return fullPath;
 };
 
 window.copySlideGitUrl = async function(idx) {

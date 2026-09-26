@@ -123,6 +123,7 @@ describe('RobOS eLearning Slide Action Menu, Git URLs & Offline Zip Export', () 
     // index.html checks
     assert.ok(html.includes('btn-toggle-editor'), 'HTML must have editor mode toggle');
     assert.ok(html.includes('btn-save-course'), 'HTML must have save course button');
+    assert.ok(html.includes('btn-copy-course-path'), 'HTML must have copy course path button');
     assert.ok(html.includes('slide-editor-modal'), 'HTML must contain slide editor modal');
     assert.ok(html.includes('toast-notice'), 'HTML must contain toast notice element');
 
@@ -131,10 +132,17 @@ describe('RobOS eLearning Slide Action Menu, Git URLs & Offline Zip Export', () 
     assert.ok(css.includes('.slide-menu-container'), 'CSS must define slide-menu-container');
     assert.ok(css.includes('.slide-dropdown-menu'), 'CSS must define slide-dropdown-menu');
     assert.ok(css.includes('.toast-notice'), 'CSS must define toast-notice');
+    assert.ok(css.includes('.copy-tab-path-link'), 'CSS must define copy-tab-path-link');
+    assert.ok(css.includes('.module-item-footer'), 'CSS must define module-item-footer');
 
     // app.js checks
     assert.ok(js.includes('toggleSlideMenu'), 'app.js must define toggleSlideMenu');
     assert.ok(js.includes('copySlidePath'), 'app.js must define copySlidePath');
+    assert.ok(js.includes('copyTabPath'), 'app.js must define copyTabPath');
+    assert.ok(js.includes('copyCoursePath'), 'app.js must define copyCoursePath');
+    assert.ok(js.includes('getSlidePath'), 'app.js must define getSlidePath');
+    assert.ok(js.includes('copy-tab-path-link'), 'app.js must render copy-tab-path-link on module tabs');
+    assert.ok(js.includes('Copy as Path'), 'app.js must display Copy as Path text');
     assert.ok(js.includes('copySlideGitUrl'), 'app.js must define copySlideGitUrl');
     assert.ok(js.includes('exportSlideAsZip'), 'app.js must define exportSlideAsZip');
     assert.ok(js.includes('copySlideMarkdown'), 'app.js must define copySlideMarkdown');
@@ -142,16 +150,29 @@ describe('RobOS eLearning Slide Action Menu, Git URLs & Offline Zip Export', () 
     assert.ok(js.includes('openSlideEditor'), 'app.js must define openSlideEditor');
   });
 
-  it('5. Web generator includes slide menu, git copying and pure-JS zip exporter', () => {
+  it('5. Web generator includes slide menu, git copying, copy as path tabs, and pure-JS zip exporter', () => {
     const webGenPath = path.join(rootRepo, 'docs', 'projects', 'crpg-realm', 'elearning', 'index.html');
     assert.ok(fs.existsSync(webGenPath), 'Generated web index.html must exist');
 
     const content = fs.readFileSync(webGenPath, 'utf8');
     assert.ok(content.includes('slide-header-actions'), 'Generated HTML must include slide-header-actions');
     assert.ok(content.includes('Copy Path on File System'), 'Generated HTML must include Copy Path on File System');
+    assert.ok(content.includes('copy-tab-path-link'), 'Generated HTML must include copy-tab-path-link on tabs');
+    assert.ok(content.includes('Copy as Path'), 'Generated HTML must include Copy as Path on tabs');
+    assert.ok(content.includes('function copyTabPath'), 'Generated script must include copyTabPath');
     assert.ok(content.includes('Copy Git URL Path'), 'Generated HTML must include Copy Git URL Path');
     assert.ok(content.includes('Export as HTML Zip'), 'Generated HTML must include Export as HTML Zip');
     assert.ok(content.includes('function createZipBlob'), 'Generated script must include pure-JS createZipBlob');
     assert.ok(content.includes('function exportSlideAsZip'), 'Generated script must include exportSlideAsZip');
+  });
+
+  it('6. Copy as Path format resolves valid file system paths for AI agent consumption', () => {
+    const gitInfo = getGitInfo();
+    const mockSlide = { id: 'mod-01-architecture', title: 'Architecture Rationale' };
+    const resolvedPath = `${gitInfo.gitopsPath}#${mockSlide.id}`;
+
+    assert.ok(resolvedPath.startsWith('/'), 'Resolved path must be an absolute path');
+    assert.ok(resolvedPath.includes('.robos/elearning.yaml'), 'Resolved path must point to elearning.yaml');
+    assert.ok(resolvedPath.endsWith('#mod-01-architecture'), 'Resolved path must end with module anchor ID');
   });
 });
