@@ -1728,18 +1728,85 @@ function persistInventoryFromUI() {
 function setupBlockmapHandlers() {
   const mapSelect = document.getElementById('map-select');
   const btnNewMap = document.getElementById('btn-new-map');
+  const btnOpenMap = document.getElementById('btn-open-map');
+  const btnCloseMap = document.getElementById('btn-close-map');
   const btnSaveMap = document.getElementById('btn-save-map');
   const btnBuildMap = document.getElementById('btn-build-map');
   const btnExportPng = document.getElementById('btn-export-png');
 
   mapSelect?.addEventListener('change', (e) => {
-    if (e.target.value) loadMap(e.target.value);
+    if (e.target.value) {
+      loadMap(e.target.value);
+    } else {
+      closeCurrentMap();
+    }
   });
 
   btnNewMap?.addEventListener('click', createNewMap);
+  btnOpenMap?.addEventListener('click', openMapModal);
+  btnCloseMap?.addEventListener('click', closeCurrentMap);
   btnSaveMap?.addEventListener('click', saveCurrentMap);
   btnBuildMap?.addEventListener('click', buildMapBlockout);
   btnExportPng?.addEventListener('click', exportMapPng);
+
+  // Empty state overlay buttons
+  document.getElementById('btn-empty-new-map')?.addEventListener('click', createNewMap);
+  document.getElementById('btn-empty-open-map')?.addEventListener('click', openMapModal);
+
+  // File menu dropdown
+  const btnFileMenu = document.getElementById('btn-map-file-menu');
+  const fileDropdown = document.getElementById('menu-map-file-dropdown');
+
+  btnFileMenu?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    fileDropdown?.classList.toggle('hidden');
+  });
+
+  document.addEventListener('click', (e) => {
+    if (fileDropdown && !fileDropdown.contains(e.target) && e.target !== btnFileMenu) {
+      fileDropdown.classList.add('hidden');
+    }
+  });
+
+  document.getElementById('menu-item-new-map')?.addEventListener('click', () => {
+    fileDropdown?.classList.add('hidden');
+    createNewMap();
+  });
+  document.getElementById('menu-item-open-map')?.addEventListener('click', () => {
+    fileDropdown?.classList.add('hidden');
+    openMapModal();
+  });
+  document.getElementById('menu-item-save-map')?.addEventListener('click', () => {
+    fileDropdown?.classList.add('hidden');
+    saveCurrentMap();
+  });
+  document.getElementById('menu-item-close-map')?.addEventListener('click', () => {
+    fileDropdown?.classList.add('hidden');
+    closeCurrentMap();
+  });
+
+  // Modal Open Map Controls
+  document.getElementById('btn-close-modal-map')?.addEventListener('click', closeMapModal);
+  document.getElementById('btn-cancel-open-map')?.addEventListener('click', closeMapModal);
+  document.getElementById('btn-confirm-open-map')?.addEventListener('click', async () => {
+    if (selectedModalMapSlug) {
+      const slug = selectedModalMapSlug;
+      closeMapModal();
+      await loadMap(slug);
+    }
+  });
+
+  document.getElementById('map-search-input')?.addEventListener('input', (e) => {
+    renderMapModalTree(e.target.value);
+  });
+
+  // Global keydown for Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeMapModal();
+      fileDropdown?.classList.add('hidden');
+    }
+  });
 
   // Subtabs in left sidebar (Map Settings vs Map Object)
   document.getElementById('subtab-map-settings')?.addEventListener('click', () => {
@@ -1814,6 +1881,11 @@ function setupBlockmapHandlers() {
   });
 }
 
+function escapeHtml(str) {
+  if (typeof str !== 'string') return String(str || '');
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 function updateShapeCoordinateInputs(shape) {
   document.getElementById('shape-rect-fields').classList.toggle('hidden', shape !== 'rect');
   document.getElementById('shape-circle-fields').classList.toggle('hidden', shape !== 'circle');
@@ -1838,14 +1910,235 @@ function updateMapDimensionsFromForm() {
   }
 }
 
-async function loadMapsList() {
+let selectedModalMapSlug = null;
+
+function showEmptyMapState() {
+  state.activeMapSlug = null;
+  state.activeMapData = null;
+
+  const emptyOverlay = document.getElementById('map-empty-state');
+  if (emptyOverlay) emptyOverlay.classList.remove('hidden');
+
+  const select = document.getElementById('map-select');
+  if (select) select.value = '';
+
+  // Clear Form Fields
+  const slugInput = document.getElementById('map-slug');
+  if (slugInput) slugInput.value = '';
+  const titleInput = document.getElementById('map-title');
+  if (titleInput) titleInput.value = '';
+  const terrainInput = document.getElementById('map-terrain');
+  if (terrainInput) terrainInput.value = 'stone';
+  const widthInput = document.getElementById('map-width');
+  if (widthInput) widthInput.value = 120;
+  const heightInput = document.getElementById('map-height');
+  if (heightInput) heightInput.value = 80;
+  const bgImgInput = document.getElementById('map-bg-image');
+  if (bgImgInput) bgImgInput.value = '';
+
+  // Clear Objects List
+  const objectsList = document.getElementById('map-objects-list');
+  if (objectsList) {
+    objectsList.innerHTML = '<div style="padding: 16px; color: var(--text-muted); font-size: 11px; text-align: center;">No map open.</div>';
+  }
+  const objCount = document.getElementById('lbl-map-obj-count');
+  if (objCount) objCount.textContent = '0';
+
+  updateCollisionStats();
+
+  // Reset Canvas
+  if (canvasRenderer) {
+    canvasRenderer.setMapData(null);
+  }
+
+  // Clear PNG preview
+  const pngImg = document.getElementById('img-compiled-png');
+  if (pngImg) pngImg.src = '';
+
+  setStatus('No map open.');
+}
+
+function closeCurrentMap() {
+  showEmptyMapState();
+  setStatus('Map closed.');
+}
+
+function openMapModal() {
+  const modal = document.getElementById('modal-open-map');
+  if (!modal) return;
+  selectedModalMapSlug = null;
+  const confirmBtn = document.getElementById('btn-confirm-open-map');
+  if (confirmBtn) confirmBtn.disabled = true;
+
+  const searchInput = document.getElementById('map-search-input');
+  if (searchInput) {
+    searchInput.value = '';
+    setTimeout(() => searchInput.focus(), 60);
+  }
+
+  renderMapModalTree('');
+  updateModalPreview(null);
+  modal.classList.remove('hidden');
+}
+
+function closeMapModal() {
+  const modal = document.getElementById('modal-open-map');
+  if (modal) modal.classList.add('hidden');
+  selectedModalMapSlug = null;
+}
+
+function renderMapModalTree(filterText = '') {
+  const container = document.getElementById('map-tree-container');
+  const countBadge = document.getElementById('map-tree-count');
+  if (!container) return;
+
+  const query = (filterText || '').trim().toLowerCase();
+  const maps = state.maps || [];
+
+  // Categorize maps
+  const categories = {
+    castles: { title: 'Castles & Keeps', icon: '🏰', items: [] },
+    wilderness: { title: 'Wilderness & Overland', icon: '🌲', items: [] },
+    dungeons: { title: 'Dungeons & Catacombs', icon: '🕳️', items: [] },
+    other: { title: 'General & Custom', icon: '🗺️', items: [] },
+  };
+
+  let matchCount = 0;
+
+  maps.forEach(m => {
+    const title = (m.title || m.slug).toLowerCase();
+    const slug = m.slug.toLowerCase();
+    const terrain = (m.terrain || 'stone').toLowerCase();
+
+    if (query && !title.includes(query) && !slug.includes(query) && !terrain.includes(query)) {
+      return;
+    }
+
+    matchCount++;
+    if (terrain === 'stone' || terrain === 'wood') {
+      categories.castles.items.push(m);
+    } else if (terrain === 'grass' || terrain === 'dirt' || terrain === 'sand' || terrain === 'snow') {
+      categories.wilderness.items.push(m);
+    } else if (terrain === 'cave') {
+      categories.dungeons.items.push(m);
+    } else {
+      categories.other.items.push(m);
+    }
+  });
+
+  if (countBadge) countBadge.textContent = matchCount;
+
+  if (matchCount === 0) {
+    container.innerHTML = `
+      <div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 12px;">
+        No maps found matching "${escapeHtml(filterText)}".
+      </div>
+    `;
+    return;
+  }
+
+  let html = '';
+  for (const [key, cat] of Object.entries(categories)) {
+    if (cat.items.length === 0) continue;
+    html += `
+      <div class="tree-folder open" data-cat="${key}">
+        <div class="tree-folder-header">
+          <span class="tree-arrow">▼</span>
+          <span class="tree-folder-icon">${cat.icon}</span>
+          <span class="tree-folder-name">${cat.title}</span>
+          <span class="tree-folder-count" style="font-size: 11px; color: var(--text-muted); margin-left: auto;">(${cat.items.length})</span>
+        </div>
+        <div class="tree-folder-children">
+          ${cat.items.map(item => `
+            <div class="tree-item ${selectedModalMapSlug === item.slug ? 'selected' : ''}" data-slug="${escapeHtml(item.slug)}">
+              <span class="tree-item-icon">🗺️</span>
+              <div class="tree-item-info">
+                <span class="tree-item-title">${escapeHtml(item.title || item.slug)}</span>
+                <span class="tree-item-slug">${escapeHtml(item.slug)}</span>
+              </div>
+              <span class="tree-item-badge">${item.width || 120}×${item.height || 80}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  container.innerHTML = html;
+
+  container.querySelectorAll('.tree-folder-header').forEach(header => {
+    header.addEventListener('click', () => {
+      const folder = header.closest('.tree-folder');
+      if (folder) folder.classList.toggle('collapsed');
+    });
+  });
+
+  container.querySelectorAll('.tree-item').forEach(itemEl => {
+    itemEl.addEventListener('click', () => {
+      container.querySelectorAll('.tree-item').forEach(el => el.classList.remove('selected'));
+      itemEl.classList.add('selected');
+      const slug = itemEl.getAttribute('data-slug');
+      selectedModalMapSlug = slug;
+      const confirmBtn = document.getElementById('btn-confirm-open-map');
+      if (confirmBtn) confirmBtn.disabled = false;
+      const mapObj = maps.find(m => m.slug === slug);
+      updateModalPreview(mapObj);
+    });
+
+    itemEl.addEventListener('dblclick', async () => {
+      const slug = itemEl.getAttribute('data-slug');
+      closeMapModal();
+      await loadMap(slug);
+    });
+  });
+}
+
+function updateModalPreview(mapObj) {
+  const emptyEl = document.getElementById('map-preview-empty');
+  const contentEl = document.getElementById('map-preview-content');
+  if (!mapObj) {
+    if (emptyEl) emptyEl.classList.remove('hidden');
+    if (contentEl) contentEl.classList.add('hidden');
+    return;
+  }
+
+  if (emptyEl) emptyEl.classList.add('hidden');
+  if (contentEl) contentEl.classList.remove('hidden');
+
+  document.getElementById('preview-map-title').textContent = mapObj.title || mapObj.slug;
+  document.getElementById('preview-map-slug').textContent = mapObj.slug;
+  document.getElementById('preview-map-terrain').textContent = (mapObj.terrain || 'stone').toUpperCase();
+  document.getElementById('preview-map-dimensions').textContent = `${mapObj.width || 120}×${mapObj.height || 80} ft`;
+  document.getElementById('preview-map-objects').textContent = mapObj.objectCount || 0;
+
+  const thumbnailImg = document.getElementById('preview-map-thumbnail');
+  const noThumbnail = document.getElementById('preview-no-thumbnail');
+  const pngPath = `../../games/crpg-realm/assets/blockouts/${mapObj.slug}.png?t=${Date.now()}`;
+
+  const testImg = new Image();
+  testImg.onload = () => {
+    if (thumbnailImg) {
+      thumbnailImg.src = pngPath;
+      thumbnailImg.classList.remove('hidden');
+    }
+    if (noThumbnail) noThumbnail.classList.add('hidden');
+  };
+  testImg.onerror = () => {
+    if (thumbnailImg) thumbnailImg.classList.add('hidden');
+    if (noThumbnail) noThumbnail.classList.remove('hidden');
+  };
+  testImg.src = pngPath;
+}
+
+async function loadMapsList(options = {}) {
+  const { autoSelect = false, targetSlug = null } = options;
   try {
     const res = await window.robos.listMaps();
     if (res.success) {
       state.maps = res.maps;
       const select = document.getElementById('map-select');
       if (select) {
-        select.innerHTML = state.maps.map(m => 
+        select.innerHTML = '<option value="">(No map open)</option>' + state.maps.map(m => 
           `<option value="${m.slug}">${m.title || m.slug}</option>`
         ).join('');
       }
@@ -1854,10 +2147,16 @@ async function loadMapsList() {
       populateNpcLocationDropdown();
       renderCampaignMapsChecklist();
 
-      if (state.maps.length > 0) {
+      if (targetSlug && state.maps.some(m => m.slug === targetSlug)) {
+        if (select) select.value = targetSlug;
+        await loadMap(targetSlug);
+      } else if (state.activeMapSlug && state.maps.some(m => m.slug === state.activeMapSlug)) {
+        if (select) select.value = state.activeMapSlug;
+        await loadMap(state.activeMapSlug);
+      } else if (autoSelect && state.maps.length > 0) {
         await loadMap(state.maps[0].slug);
-      } else {
-        createNewMap();
+      } else if (!state.activeMapData) {
+        showEmptyMapState();
       }
     }
   } catch (err) {
@@ -1866,10 +2165,14 @@ async function loadMapsList() {
 }
 
 async function loadMap(slug) {
+  if (!slug) return;
   try {
     setStatus(`Loading map ${slug}...`);
     const res = await window.robos.loadMap(slug);
     if (res.success) {
+      const emptyOverlay = document.getElementById('map-empty-state');
+      if (emptyOverlay) emptyOverlay.classList.add('hidden');
+
       state.activeMapSlug = slug;
       state.activeMapData = res.data;
 
@@ -1910,6 +2213,9 @@ async function loadMap(slug) {
 }
 
 function createNewMap() {
+  const emptyOverlay = document.getElementById('map-empty-state');
+  if (emptyOverlay) emptyOverlay.classList.add('hidden');
+
   const safeSlug = `map-${Date.now().toString().slice(-4)}`;
   state.activeMapSlug = safeSlug;
   state.activeMapData = {
@@ -1925,12 +2231,21 @@ function createNewMap() {
     'robos:mapObjects': [],
   };
 
-  document.getElementById('map-slug').value = safeSlug;
-  document.getElementById('map-title').value = state.activeMapData['dcterms:title'];
-  document.getElementById('map-terrain').value = 'stone';
-  document.getElementById('map-width').value = 120;
-  document.getElementById('map-height').value = 80;
-  document.getElementById('map-bg-image').value = '';
+  const slugInput = document.getElementById('map-slug');
+  if (slugInput) slugInput.value = safeSlug;
+  const titleInput = document.getElementById('map-title');
+  if (titleInput) titleInput.value = state.activeMapData['dcterms:title'];
+  const terrainInput = document.getElementById('map-terrain');
+  if (terrainInput) terrainInput.value = 'stone';
+  const widthInput = document.getElementById('map-width');
+  if (widthInput) widthInput.value = 120;
+  const heightInput = document.getElementById('map-height');
+  if (heightInput) heightInput.value = 80;
+  const bgImgInput = document.getElementById('map-bg-image');
+  if (bgImgInput) bgImgInput.value = '';
+
+  const select = document.getElementById('map-select');
+  if (select) select.value = '';
 
   updateMapDimensionsFromForm();
   renderMapObjectsHierarchy();
@@ -1941,7 +2256,7 @@ function createNewMap() {
     canvasRenderer.resetView(120, 80);
   }
 
-  setStatus(`Created new battle map: ${safeSlug}`);
+  setStatus(`Created new battle map template: ${safeSlug}`);
 }
 
 async function saveCurrentMap() {
@@ -1961,20 +2276,24 @@ async function saveCurrentMap() {
     if (res.success) {
       state.activeMapSlug = res.slug;
       setStatus(`Saved map successfully!`, res.filePath);
-      await loadMapsList();
+      await loadMapsList({ targetSlug: res.slug });
       const select = document.getElementById('map-select');
       if (select) select.value = res.slug;
     } else {
       setStatus(`Failed to save map: ${res.error}`);
     }
+    return res;
   } catch (err) {
     console.error('Error saving map:', err);
     setStatus(`Error saving map: ${err.message}`);
+    return { success: false, error: err.message };
   }
 }
 
 async function buildMapBlockout() {
-  if (!state.activeMapSlug) return;
+  const inputSlug = document.getElementById('map-slug')?.value.trim();
+  if (inputSlug) state.activeMapSlug = inputSlug;
+  if (!state.activeMapSlug) return { success: false, error: 'No active map slug' };
   await saveCurrentMap();
 
   try {
@@ -1990,9 +2309,11 @@ async function buildMapBlockout() {
     } else {
       setStatus(`Blockout build failed: ${res.error}`);
     }
+    return res;
   } catch (err) {
     console.error('Error building blockout:', err);
     setStatus(`Build error: ${err.message}`);
+    return { success: false, error: err.message };
   }
 }
 

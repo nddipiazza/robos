@@ -170,43 +170,6 @@ function ensureSeedCharacters(charactersDir) {
         backstory: 'Apprentice archivist studying under Firebead Elfmirk. Fascinated by the weave of destructive magic.'
       },
       {
-        slug: 'npc-king-loric',
-        characterType: 'npc',
-        name: 'King Loric',
-        role: 'king',
-        alignment: 'Lawful Good',
-        portrait: '👑',
-        interactionType: 'save',
-        location: 'tantegel-throne-room',
-        facing: 'down',
-        col: 8,
-        row: 4,
-        dialogue: [
-          'Descendant of Erdrick, listen now to my words. It is told that in ages past Erdrick fought demons with a Ball of Light.',
-          'Then came the Dragonlord who stole the precious globe and hid it in the darkness.',
-          'Now, Hero, thou must help us recover the Ball of Light and restore peace to our land. The Dragonlord must be defeated.'
-        ],
-        backstory: 'Monarch of Tantegel Castle, guardian of Alefgard, who preserves deeds in the Imperial Scrolls of Honor.'
-      },
-      {
-        slug: 'npc-princess-gwaelin',
-        characterType: 'npc',
-        name: 'Princess Gwaelin',
-        role: 'princess',
-        alignment: 'Neutral Good',
-        portrait: '👸',
-        interactionType: 'talk',
-        location: 'tantegel-throne-room',
-        facing: 'down',
-        col: 9,
-        row: 4,
-        dialogue: [
-          'Please save our kingdom from the Dragonlord, brave hero.',
-          'I have faith that the bloodline of Erdrick will prevail!'
-        ],
-        backstory: 'Beloved princess of Tantegel Castle, held captive by the Dragonlord in a distant swamp cave.'
-      },
-      {
         slug: 'npc-elora',
         characterType: 'npc',
         name: 'Elora',
@@ -611,8 +574,14 @@ function setupIpcHandlers() {
 
       const flags = debugCollision ? '--debug-collision' : '';
       const cmd = `python3 -m robos_crpg_blockout build "${mapPath}" ${flags}`;
+      console.log(`[maps:build] Executing: ${cmd}`);
 
-      const { stdout, stderr } = await execPromise(cmd, { cwd: paths.blockoutPackageDir });
+      const { stdout, stderr } = await execPromise(cmd, {
+        cwd: paths.blockoutPackageDir,
+        env: { ...process.env, PYTHONPATH: paths.blockoutPackageDir },
+      });
+      console.log(`[maps:build] Output:\n${stdout}`);
+      if (stderr) console.warn(`[maps:build] Stderr:\n${stderr}`);
 
       const raw = fs.readFileSync(mapPath, 'utf8');
       const updatedData = JSON.parse(raw);
@@ -635,6 +604,7 @@ function setupIpcHandlers() {
         stderr,
       };
     } catch (err) {
+      console.error(`[maps:build] Error:`, err);
       return { success: false, error: err.message };
     }
   });
