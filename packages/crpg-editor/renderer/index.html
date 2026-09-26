@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RobOS cRPG Editor — Campaign, Character, Inventory & Blockmap Studio</title>
+  <title>RobOS cRPG Editor — Campaign, Character, Inventory & Maps Studio</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -31,14 +31,16 @@
             <span>📜 Campaign</span>
           </button>
           <button id="nav-characters" class="nav-tab-btn" data-pane="pane-characters">
-            <span>👤 Character Editor</span>
+            <span>👤 Characters & NPCs</span>
           </button>
           <button id="nav-inventory" class="nav-tab-btn" data-pane="pane-inventory">
             <span>🎒 Inventory Editor</span>
           </button>
-          <button id="nav-blockmap" class="nav-tab-btn" data-pane="pane-blockmap">
-            <span>🗺️ Blockmap Editor</span>
+          <button id="nav-maps" class="nav-tab-btn" data-pane="pane-maps">
+            <span>🗺️ Maps</span>
           </button>
+          <!-- Hidden compatibility alias for nav-blockmap -->
+          <button id="nav-blockmap" class="hidden" data-pane="pane-maps"></button>
         </nav>
       </div>
 
@@ -61,8 +63,20 @@
           </button>
         </div>
 
-        <!-- Blockmap Context Controls -->
-        <div id="blockmap-header-controls" class="context-selector-group hidden">
+        <!-- Characters Context Controls -->
+        <div id="character-header-controls" class="context-selector-group hidden">
+          <span class="context-label">Character:</span>
+          <select id="header-char-select" class="dropdown-select">
+            <option value="">(Select character...)</option>
+          </select>
+          <button id="btn-header-new-hero" class="btn btn-secondary" title="Create a new Hero">+ Hero</button>
+          <button id="btn-header-new-npc" class="btn btn-accent" title="Create a new NPC">+ NPC</button>
+          <button id="btn-header-save-char" class="btn btn-primary" title="Save character JSON-LD">💾 Save</button>
+          <button id="btn-header-delete-char" class="btn btn-danger btn-sm" title="Delete current character">🗑</button>
+        </div>
+
+        <!-- Maps Context Controls -->
+        <div id="maps-header-controls" class="context-selector-group hidden">
           <span class="context-label">Map:</span>
           <select id="map-select" class="dropdown-select">
             <option value="">(Loading maps...)</option>
@@ -80,6 +94,8 @@
             <span>📥 Export PNG</span>
           </button>
         </div>
+        <!-- Alias container for backwards compatibility -->
+        <div id="blockmap-header-controls" class="hidden"></div>
       </div>
     </header>
 
@@ -173,6 +189,49 @@
             </div>
           </div>
 
+          <!-- Middle Section: Independent Maps & Characters Composition -->
+          <div class="campaign-grid-middle" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+            <!-- Maps Selection -->
+            <div class="panel">
+              <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h2>Campaign Maps (<span id="camp-maps-count">0</span>)</h2>
+                <div style="display: flex; gap: 6px;">
+                  <button id="btn-select-all-maps" class="btn btn-sm btn-secondary">Select All</button>
+                  <button id="btn-clear-maps" class="btn btn-sm btn-secondary">Clear</button>
+                </div>
+              </div>
+              <div class="panel-body">
+                <div style="margin-bottom: 10px;">
+                  <label for="camp-starting-map" style="display: block; margin-bottom: 4px;">Primary Starting Map:</label>
+                  <select id="camp-starting-map" class="dropdown-select full-width">
+                    <option value="">(Select starting map...)</option>
+                  </select>
+                </div>
+                <label style="display: block; margin-bottom: 4px;">Included Independent Maps:</label>
+                <div id="camp-maps-checklist" class="camp-checklist-box">
+                  <!-- Rendered via JS -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Characters Selection -->
+            <div class="panel">
+              <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h2>Campaign Characters (<span id="camp-chars-count">0</span>)</h2>
+                <div style="display: flex; gap: 6px;">
+                  <button id="btn-select-all-heroes" class="btn btn-sm btn-secondary">All Heroes</button>
+                  <button id="btn-select-all-npcs" class="btn btn-sm btn-secondary">All NPCs</button>
+                </div>
+              </div>
+              <div class="panel-body">
+                <label style="display: block; margin-bottom: 4px;">Included Heroes & NPCs:</label>
+                <div id="camp-characters-checklist" class="camp-checklist-box">
+                  <!-- Rendered via JS -->
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Bottom Section: Quests and Story Flags -->
           <div class="campaign-grid-bottom">
             <!-- Quest Journal -->
@@ -214,25 +273,45 @@
       </section>
 
       <!-- ========================================================
-           PANE 2: cRPG CHARACTER EDITOR
+           PANE 2: cRPG CHARACTER EDITOR & NPC STUDIO
            ======================================================== -->
       <section id="pane-characters" class="module-pane">
         <div class="characters-layout">
-          <!-- Left Sidebar: Hero Roster -->
+          <!-- Left Sidebar: Character & NPC Roster -->
           <aside class="heroes-sidebar">
-            <div class="panel-header">
-              <h2>Heroes (<span id="roster-count">0</span>)</h2>
-              <button id="btn-add-hero" class="btn btn-sm btn-primary">+ Hero</button>
+            <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+              <h2>Characters (<span id="roster-count">0</span>)</h2>
+              <div style="display: flex; gap: 4px;">
+                <button id="btn-add-hero" class="btn btn-sm btn-primary">+ Hero</button>
+                <button id="btn-add-npc" class="btn btn-sm btn-accent">+ NPC</button>
+              </div>
+            </div>
+            <!-- Filter Pills Bar -->
+            <div class="filter-pills-bar">
+              <button id="pill-filter-all" class="filter-pill active" data-filter="all">All</button>
+              <button id="pill-filter-heroes" class="filter-pill" data-filter="hero">Heroes</button>
+              <button id="pill-filter-npcs" class="filter-pill" data-filter="npc">NPCs</button>
             </div>
             <div style="padding: 8px; border-bottom: 1px solid var(--border-light);">
               <select id="archetype-select" class="dropdown-select" style="width: 100%;">
-                <option value="">+ Add Pre-Rolled Archetype...</option>
-                <option value="fighter">Human Fighter (Vance)</option>
-                <option value="rogue">Human Rogue (Imoen)</option>
-                <option value="wizard">High Elf Wizard (Ignis)</option>
-                <option value="cleric">Dwarf Life Cleric (Thrumbar)</option>
-                <option value="ranger">Wood Elf Ranger (Elora)</option>
-                <option value="paladin">Half-Elf Paladin (Faerûn)</option>
+                <option value="">+ Add Pre-Rolled Hero / NPC...</option>
+                <optgroup label="Heroes (D&D 5e)">
+                  <option value="fighter">Human Fighter (Vance)</option>
+                  <option value="rogue">Human Rogue (Imoen)</option>
+                  <option value="wizard">High Elf Wizard (Ignis)</option>
+                  <option value="cleric">Dwarf Life Cleric (Thrumbar)</option>
+                  <option value="ranger">Wood Elf Ranger (Elora)</option>
+                  <option value="paladin">Half-Elf Paladin (Faerûn)</option>
+                </optgroup>
+                <optgroup label="NPC Roles & Archetypes">
+                  <option value="npc_king">King / Monarch (e.g. King Loric)</option>
+                  <option value="npc_princess">Princess / Royal (e.g. Princess Gwaelin)</option>
+                  <option value="npc_guard">Castle Guard (e.g. Tantegel Sentry)</option>
+                  <option value="npc_merchant">Merchant / Shopkeeper</option>
+                  <option value="npc_sage">Sage / Healer (MP / Curse)</option>
+                  <option value="npc_innkeeper">Innkeeper</option>
+                  <option value="npc_villager">Town Villager</option>
+                </optgroup>
               </select>
             </div>
             <div id="heroes-list" class="heroes-list">
@@ -240,29 +319,135 @@
             </div>
           </aside>
 
-          <!-- Right: Character Sheet Editor -->
+          <!-- Right: Character & NPC Sheet Editor -->
           <main class="character-sheet-area">
-            <!-- Identity Section -->
-            <div class="sheet-section">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <h3 id="sheet-hero-title">Hero Character Sheet</h3>
+            <!-- Sheet Header -->
+            <div class="sheet-section" style="padding-bottom: 8px; margin-bottom: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3 id="sheet-hero-title">Character & NPC Sheet</h3>
                 <div style="display: flex; gap: 8px;">
+                  <button id="btn-save-character" class="btn btn-sm btn-primary">💾 Save Character</button>
                   <button id="btn-clone-hero" class="btn btn-sm btn-secondary">Duplicate</button>
                   <button id="btn-delete-hero" class="btn btn-sm btn-danger">Remove</button>
                 </div>
               </div>
 
+              <!-- Entity Type Selector Bar -->
+              <div class="entity-type-selector-bar">
+                <span style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Entity Classification:</span>
+                <label class="radio-label">
+                  <input type="radio" name="char-type-radio" id="radio-type-hero" value="hero" checked>
+                  <span>Hero / Party Member</span>
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="char-type-radio" id="radio-type-npc" value="npc">
+                  <span>NPC / Non-Player Character</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Identity Section -->
+            <div class="sheet-section">
               <div class="identity-header-grid">
                 <div class="portrait-preview-box" id="hero-avatar-display">👤</div>
                 <div class="form-grid" style="flex: 1;">
-                  <div class="form-group col-span-2">
-                    <label for="hero-name">Hero Name</label>
-                    <input type="text" id="hero-name" class="input-text">
+                  <div class="form-group">
+                    <label for="hero-name">Character Name</label>
+                    <input type="text" id="hero-name" class="input-text" placeholder="e.g. King Loric, Vance">
+                  </div>
+                  <div class="form-group">
+                    <label for="hero-slug">Entity Slug (Unique ID)</label>
+                    <input type="text" id="hero-slug" class="input-text" placeholder="e.g. king-loric, hero-vance">
                   </div>
                   <div class="form-group">
                     <label for="hero-portrait">Portrait / Emoji</label>
                     <input type="text" id="hero-portrait" class="input-text" placeholder="Emoji or file path">
                   </div>
+                  <div class="form-group">
+                    <label for="hero-alignment">Alignment</label>
+                    <select id="hero-alignment" class="dropdown-select">
+                      <option value="Lawful Good">Lawful Good</option>
+                      <option value="Neutral Good">Neutral Good</option>
+                      <option value="Chaotic Good">Chaotic Good</option>
+                      <option value="True Neutral">True Neutral</option>
+                      <option value="Lawful Neutral">Lawful Neutral</option>
+                      <option value="Chaotic Neutral">Chaotic Neutral</option>
+                      <option value="Lawful Evil">Lawful Evil</option>
+                      <option value="Neutral Evil">Neutral Evil</option>
+                      <option value="Chaotic Evil">Chaotic Evil</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- NPC Details Section -->
+            <div id="section-npc-details" class="sheet-section hidden">
+              <h3>NPC Configuration & Dialogue</h3>
+              <div class="form-grid" style="margin-bottom: 12px;">
+                <div class="form-group">
+                  <label for="npc-role">NPC Role</label>
+                  <select id="npc-role" class="dropdown-select">
+                    <option value="king">King / Monarch</option>
+                    <option value="princess">Princess / Royal</option>
+                    <option value="guard">Guard / Sentry</option>
+                    <option value="red_guard">Red Guard</option>
+                    <option value="merchant">Merchant / Shopkeeper</option>
+                    <option value="sage">Sage / Healer</option>
+                    <option value="innkeeper">Innkeeper</option>
+                    <option value="partner">Partner / Companion</option>
+                    <option value="villager">Town Villager</option>
+                    <option value="monster">Monster / Boss</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="npc-interaction">Interaction Type</label>
+                  <select id="npc-interaction" class="dropdown-select">
+                    <option value="talk">Talk (Dialogue Only)</option>
+                    <option value="save">Save Game (Imperial Scrolls)</option>
+                    <option value="shop">Shop (Buy & Sell Equipment)</option>
+                    <option value="inn">Inn (Rest & Restore HP/MP)</option>
+                    <option value="rest">Healer (MP / Status Restore)</option>
+                    <option value="curse_removal">Curse Removal</option>
+                    <option value="combat">Combat Encounter</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="npc-location">Assigned Map / Location</label>
+                  <select id="npc-location" class="dropdown-select">
+                    <option value="">(Select map placement...)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="npc-facing">Facing Direction</label>
+                  <select id="npc-facing" class="dropdown-select">
+                    <option value="down">Down (South)</option>
+                    <option value="up">Up (North)</option>
+                    <option value="left">Left (West)</option>
+                    <option value="right">Right (East)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="npc-col">Grid Column (Col)</label>
+                  <input type="number" id="npc-col" class="input-number" min="0" value="0">
+                </div>
+                <div class="form-group">
+                  <label for="npc-row">Grid Row (Row)</label>
+                  <input type="number" id="npc-row" class="input-number" min="0" value="0">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="npc-dialogue">Dialogue Script & Pages (Lines spoken by this NPC)</label>
+                <textarea id="npc-dialogue" rows="5" placeholder="Enter dialogue lines or pages spoken by this NPC..."></textarea>
+              </div>
+            </div>
+
+            <!-- Hero Details Wrapper -->
+            <div id="section-hero-details">
+              <!-- Hero 5e Attributes -->
+              <div class="sheet-section">
+                <h3>D&D 5e Class, Heritage & Level</h3>
+                <div class="form-grid">
                   <div class="form-group">
                     <label for="hero-level">Level</label>
                     <input type="number" id="hero-level" class="input-number" min="1" max="20" value="1">
@@ -307,26 +492,11 @@
                     <input type="text" id="hero-background" class="input-text" placeholder="e.g. Ward of Gorion">
                   </div>
                   <div class="form-group">
-                    <label for="hero-alignment">Alignment</label>
-                    <select id="hero-alignment" class="dropdown-select">
-                      <option value="Neutral Good">Neutral Good</option>
-                      <option value="Lawful Good">Lawful Good</option>
-                      <option value="Chaotic Good">Chaotic Good</option>
-                      <option value="True Neutral">True Neutral</option>
-                      <option value="Lawful Neutral">Lawful Neutral</option>
-                      <option value="Chaotic Neutral">Chaotic Neutral</option>
-                      <option value="Lawful Evil">Lawful Evil</option>
-                      <option value="Neutral Evil">Neutral Evil</option>
-                      <option value="Chaotic Evil">Chaotic Evil</option>
-                    </select>
-                  </div>
-                  <div class="form-group">
                     <label for="hero-xp">Experience (XP)</label>
                     <input type="number" id="hero-xp" class="input-number" min="0" value="0">
                   </div>
                 </div>
               </div>
-            </div>
 
             <!-- Ability Scores Section -->
             <div class="sheet-section">
@@ -396,18 +566,24 @@
               </div>
             </div>
 
-            <!-- Spells and Backstory Section -->
+            <!-- Spells Section -->
             <div class="sheet-section">
-              <h3>Spells, Special Abilities & Backstory</h3>
-              <div class="form-group" style="margin-bottom: 12px;">
+              <h3>Spells & Special Abilities</h3>
+              <div class="form-group">
                 <label for="hero-spells">Prepared Spells / Actions</label>
                 <textarea id="hero-spells" rows="2" placeholder="Second Wind, Action Surge, Magic Missile..."></textarea>
               </div>
-              <div class="form-group">
-                <label for="hero-backstory">Character Backstory & Personality</label>
-                <textarea id="hero-backstory" rows="3" placeholder="Background details, ties to the party or setting..."></textarea>
-              </div>
             </div>
+          </div> <!-- End #section-hero-details -->
+
+          <!-- Lore, Backstory & Notes Section (Shared) -->
+          <div class="sheet-section">
+            <h3>Character Lore, Backstory & Notes</h3>
+            <div class="form-group">
+              <label for="hero-backstory">Biography / Background Description</label>
+              <textarea id="hero-backstory" rows="3" placeholder="Background details, ties to the party, lore or setting..."></textarea>
+            </div>
+          </div>
           </main>
         </div>
       </section>
@@ -532,9 +708,9 @@
       </section>
 
       <!-- ========================================================
-           PANE 4: cRPG BLOCKMAP EDITOR
+           PANE 4: cRPG MAPS & BLOCKMAP STUDIO
            ======================================================== -->
-      <section id="pane-blockmap" class="module-pane">
+      <section id="pane-maps" class="module-pane">
         <div class="blockmap-layout">
           <!-- Left Sidebar: Map Settings & Map Object Forms -->
           <aside class="blockmap-sidebar">

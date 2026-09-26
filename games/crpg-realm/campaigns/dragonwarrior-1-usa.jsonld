@@ -1,0 +1,162 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:campaign:dragonwarrior-1-usa",
+  "@type": [
+    "robos:CRPGCampaign",
+    "schema:CreativeWork"
+  ],
+  "dcterms:title": "Dragon Warrior (USA)",
+  "dcterms:description": "Darkness enshrouds the realm of Alefgard after the sinister Dragonlord plundered the sacred Ball of Light. King Loric summons the last descendant of Erdrick to embark on the quest.",
+  "robos:setting": "Alefgard (NES / Chunsoft)",
+  "robos:ruleSet": "D&D 5e SRD",
+  "robos:difficulty": "Core Rules",
+  "robos:startingMap": "tantegel-throne-room",
+  "robos:maps": [
+    "urn:robos:crpg:battle-map:tantegel-throne-room"
+  ],
+  "robos:characters": [
+    "urn:robos:crpg:character:hero-of-alefgard",
+    "urn:robos:crpg:character:npc-king-loric",
+    "urn:robos:crpg:character:npc-princess-gwaelin"
+  ],
+  "robos:heroes": [
+    {
+      "slug": "hero-of-alefgard",
+      "fileName": "hero-of-alefgard.jsonld",
+      "path": "/home/ndipiazza/source/robos/games/crpg-realm/characters/hero-of-alefgard.jsonld",
+      "id": "urn:robos:crpg:character:hero-of-alefgard",
+      "name": "Hero of Alefgard",
+      "characterType": "hero",
+      "role": "",
+      "class": "Fighter",
+      "subclass": "Descendant of Erdrick",
+      "race": "Human",
+      "background": "Erdrick Bloodline",
+      "level": 1,
+      "alignment": "Lawful Good",
+      "portrait": "⚔️",
+      "interactionType": "talk",
+      "location": "",
+      "col": 0,
+      "row": 0,
+      "facing": "down",
+      "dialogue": [],
+      "raw": {
+        "@context": {
+          "robos": "urn:robos:",
+          "schema": "https://schema.org/",
+          "dcterms": "http://purl.org/dc/terms/"
+        },
+        "@id": "urn:robos:crpg:character:hero-of-alefgard",
+        "@type": [
+          "robos:CRPGCharacter",
+          "robos:CRPGHero",
+          "schema:Person"
+        ],
+        "dcterms:title": "Hero of Alefgard",
+        "robos:characterType": "hero",
+        "schema:name": "Hero of Alefgard",
+        "name": "Hero of Alefgard",
+        "slug": "hero-of-alefgard",
+        "characterType": "hero",
+        "robos:portrait": "⚔️",
+        "portrait": "⚔️",
+        "robos:alignment": "Lawful Good",
+        "alignment": "Lawful Good",
+        "robos:backstory": "Direct bloodline descendant of legendary hero Erdrick. Answering King Lorics summons in Alefgard to defeat the Dragonlord and reclaim the Ball of Light.",
+        "backstory": "Direct bloodline descendant of legendary hero Erdrick. Answering King Lorics summons in Alefgard to defeat the Dragonlord and reclaim the Ball of Light.",
+        "robos:level": 1,
+        "level": 1,
+        "robos:race": "Human",
+        "race": "Human",
+        "robos:class": "Fighter",
+        "class": "Fighter",
+        "robos:subclass": "Descendant of Erdrick",
+        "subclass": "Descendant of Erdrick",
+        "robos:background": "Erdrick Bloodline",
+        "background": "Erdrick Bloodline",
+        "robos:xp": 0,
+        "xp": 0,
+        "robos:str": 16,
+        "str": 16,
+        "robos:dex": 14,
+        "dex": 14,
+        "robos:con": 15,
+        "con": 15,
+        "robos:int": 11,
+        "int": 11,
+        "robos:wis": 12,
+        "wis": 12,
+        "robos:cha": 13,
+        "cha": 13,
+        "robos:ac": 12,
+        "ac": 12,
+        "robos:hpMax": 15,
+        "hpMax": 15,
+        "robos:hpCurrent": 15,
+        "hpCurrent": 15,
+        "robos:speed": 30,
+        "speed": 30,
+        "robos:initiative": 2,
+        "initiative": 2,
+        "robos:prof": 2,
+        "prof": 2,
+        "robos:spells": "HEAL (Cantrip: 3-5 HP), SIZZ (Fire Spell, 2 MP)",
+        "spells": "HEAL (Cantrip: 3-5 HP), SIZZ (Fire Spell, 2 MP)"
+      },
+      "mainHand": "",
+      "offHand": "",
+      "armor": "",
+      "helmet": "",
+      "cloak": "",
+      "boots": "",
+      "ring1": "",
+      "quickItems": ""
+    }
+  ],
+  "robos:gameState": {
+    "robos:currentScene": "candlekeep-exterior",
+    "robos:activeParty": [],
+    "robos:partyLeaderIndex": 0,
+    "robos:partyFormation": "rank",
+    "robos:sharedInventory": {
+      "gold": 150,
+      "silver": 40,
+      "copper": 120,
+      "items": [
+        "Potion of Healing (x4)",
+        "Silk Rope (50 ft)",
+        "Thieves' Tools",
+        "Torches (x3)",
+        "Rations (x10)"
+      ]
+    },
+    "robos:questLog": [
+      {
+        "id": "quest-defeat-dragonlord",
+        "title": "Defeat the Dragonlord",
+        "status": "active",
+        "description": "Journey across Alefgard, breach Charlock Castle, and vanquish the Dragonlord.",
+        "reward": "Ball of Light, Peace in Alefgard"
+      },
+      {
+        "id": "quest-rescue-gwaelin",
+        "title": "Rescue Princess Gwaelin",
+        "status": "active",
+        "description": "Search the swamp cave south of Tantegel Castle and defeat the Green Dragon to free Princess Gwaelin.",
+        "reward": "Princess Gwaelin's Love, 100 XP"
+      }
+    ],
+    "robos:worldFlags": {
+      "ball_of_light_stolen": true,
+      "dragonlord_threat": true,
+      "princess_rescued": false
+    }
+  },
+  "robos:scenes": []
+}

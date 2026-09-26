@@ -102,6 +102,7 @@ const PORT_MAP = {
   'robos-elearning': 19185,
   'voice-prompt': 19188,
   'kgraph-parse-portal': 19192,
+  'crpg-editor': 19194,
 };
 
 

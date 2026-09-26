@@ -1,0 +1,31 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/"
+  },
+  "@id": "urn:robos:crpg:character:npc-elora",
+  "@type": [
+    "robos:CRPGCharacter",
+    "robos:CRPGNPC",
+    "schema:Person"
+  ],
+  "dcterms:title": "Elora",
+  "robos:characterType": "npc",
+  "robos:name": "Elora",
+  "slug": "npc-elora",
+  "characterType": "npc",
+  "name": "Elora",
+  "role": "partner",
+  "alignment": "Chaotic Good",
+  "portrait": "🌲",
+  "interactionType": "talk",
+  "location": "homestead",
+  "facing": "down",
+  "col": 6,
+  "row": 5,
+  "dialogue": [
+    "You finally woke up. We need to prepare before venturing out towards the village square."
+  ],
+  "backstory": "Trusted companion and scout at the homestead."
+}
