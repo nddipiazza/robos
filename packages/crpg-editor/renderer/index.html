@@ -65,12 +65,35 @@
 
         <!-- Characters Context Controls -->
         <div id="character-header-controls" class="context-selector-group hidden">
+          <!-- File Menu Dropdown -->
+          <div class="menu-dropdown-container">
+            <button id="btn-char-file-menu" class="btn btn-secondary" title="File Menu">
+              <span>File ▾</span>
+            </button>
+            <div id="menu-char-file-dropdown" class="menu-dropdown-content hidden">
+              <button id="menu-item-new-hero" class="menu-item">
+                <span>➕ New Hero</span>
+              </button>
+              <button id="menu-item-new-npc" class="menu-item">
+                <span>👑 New NPC</span>
+              </button>
+              <button id="menu-item-save-char" class="menu-item">
+                <span>💾 Save Character</span>
+              </button>
+              <div class="menu-divider"></div>
+              <button id="menu-item-close-char" class="menu-item">
+                <span>✖ Close Character</span>
+              </button>
+            </div>
+          </div>
+
           <span class="context-label">Character:</span>
           <select id="header-char-select" class="dropdown-select">
-            <option value="">(Select character...)</option>
+            <option value="">(No character selected)</option>
           </select>
           <button id="btn-header-new-hero" class="btn btn-secondary" title="Create a new Hero">+ Hero</button>
           <button id="btn-header-new-npc" class="btn btn-accent" title="Create a new NPC">+ NPC</button>
+          <button id="btn-header-close-char" class="btn btn-secondary" title="Close active character">✖ Close</button>
           <button id="btn-header-save-char" class="btn btn-primary" title="Save character JSON-LD">💾 Save</button>
           <button id="btn-header-delete-char" class="btn btn-danger btn-sm" title="Delete current character">🗑</button>
         </div>
@@ -320,6 +343,10 @@
               <button id="pill-filter-heroes" class="filter-pill" data-filter="hero">Heroes</button>
               <button id="pill-filter-npcs" class="filter-pill" data-filter="npc">NPCs</button>
             </div>
+            <!-- Live Search Bar -->
+            <div style="padding: 6px 8px; border-bottom: 1px solid var(--border-light);">
+              <input type="text" id="character-search-input" class="input-text" style="width: 100%; font-size: 11px;" placeholder="🔍 Filter characters by name, role, class...">
+            </div>
             <div style="padding: 8px; border-bottom: 1px solid var(--border-light);">
               <select id="archetype-select" class="dropdown-select" style="width: 100%;">
                 <option value="">+ Add Pre-Rolled Hero / NPC...</option>
@@ -349,16 +376,31 @@
 
           <!-- Right: Character & NPC Sheet Editor -->
           <main class="character-sheet-area">
-            <!-- Sheet Header -->
-            <div class="sheet-section" style="padding-bottom: 8px; margin-bottom: 8px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <h3 id="sheet-hero-title">Character & NPC Sheet</h3>
-                <div style="display: flex; gap: 8px;">
-                  <button id="btn-save-character" class="btn btn-sm btn-primary">💾 Save Character</button>
-                  <button id="btn-clone-hero" class="btn btn-sm btn-secondary">Duplicate</button>
-                  <button id="btn-delete-hero" class="btn btn-sm btn-danger">Remove</button>
+            <!-- Empty Character State Overlay -->
+            <div id="character-empty-state" class="character-empty-overlay">
+              <div class="empty-state-card">
+                <div class="empty-state-icon">👤</div>
+                <h3>No Character Selected</h3>
+                <p>Select a hero or NPC from the roster on the left, or create a brand new character blueprint.</p>
+                <div class="empty-state-actions">
+                  <button id="btn-empty-new-hero" class="btn btn-primary">➕ Create Hero</button>
+                  <button id="btn-empty-new-npc" class="btn btn-accent">👑 Create NPC</button>
                 </div>
               </div>
+            </div>
+
+            <div id="character-sheet-form-container" class="hidden">
+              <!-- Sheet Header -->
+              <div class="sheet-section" style="padding-bottom: 8px; margin-bottom: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                  <h3 id="sheet-hero-title">Character & NPC Sheet</h3>
+                  <div style="display: flex; gap: 8px;">
+                    <button id="btn-save-character" class="btn btn-sm btn-primary">💾 Save Character</button>
+                    <button id="btn-close-character" class="btn btn-sm btn-secondary">✖ Close</button>
+                    <button id="btn-clone-hero" class="btn btn-sm btn-secondary">Duplicate</button>
+                    <button id="btn-delete-hero" class="btn btn-sm btn-danger">Remove</button>
+                  </div>
+                </div>
 
               <!-- Entity Type Selector Bar -->
               <div class="entity-type-selector-bar">
@@ -612,6 +654,7 @@
               <textarea id="hero-backstory" rows="3" placeholder="Background details, ties to the party, lore or setting..."></textarea>
             </div>
           </div>
+          </div> <!-- End #character-sheet-form-container -->
           </main>
         </div>
       </section>

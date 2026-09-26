@@ -1525,3 +1525,17 @@ textarea {
   background-color: rgba(255, 255, 255, 0.02);
 }
 
+/* Character Empty State Overlay */
+.character-empty-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 420px;
+}
+
+.character-empty-overlay.hidden {
+  display: none;
+}
+
+
