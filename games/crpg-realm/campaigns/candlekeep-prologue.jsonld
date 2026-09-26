@@ -332,6 +332,32 @@
     "@id": "urn:robos:crpg:storyflow:candlekeep-prologue",
     "dcterms:title": "The Prophecy of the Bhaalspawn",
     "robos:rootNodeId": "node-prologue-start",
+    "robos:flowPages": [
+      {
+        "id": "page-prologue",
+        "name": "Page 1: Prologue — Candlekeep & Preparations",
+        "act": "Prologue",
+        "summary": "Gorion summons his ward, preparations at the inn, and dealing with assassins."
+      },
+      {
+        "id": "page-ch1",
+        "name": "Page 2: Chapter 1 — The Coast Way Ambush",
+        "act": "Chapter 1",
+        "summary": "Departure into the night and confrontation on the Coast Way."
+      },
+      {
+        "id": "page-finale",
+        "name": "Page 3: Finale — The Climax & Wilds",
+        "act": "Finale",
+        "summary": "The valorous stand against Sarevok or fleeing into the wilderness with Imoen."
+      },
+      {
+        "id": "page-epilogue",
+        "name": "Page 4: Epilogue — End Game Resolutions",
+        "act": "Epilogue",
+        "summary": "Heroic triumph, dark tyrant ascension, martyr sacrifice, or tragic defeat."
+      }
+    ],
     "robos:storyNodes": [
       {
         "@type": "robos:CRPGStoryNode",
@@ -339,6 +365,7 @@
         "dcterms:title": "Awakening in Candlekeep",
         "robos:nodeType": "game_start",
         "robos:act": "Prologue",
+        "robos:flowPage": "page-prologue",
         "robos:location": "candlekeep-exterior",
         "robos:giver": "Gorion",
         "robos:summary": "Gorion summons his ward to the library steps with urgent warnings. Mysterious iron shortages grip the Coast and rumors spread of hunters seeking your blood.",
@@ -356,6 +383,7 @@
         "dcterms:title": "Preparations & Whispers",
         "robos:nodeType": "quest_stage",
         "robos:act": "Prologue",
+        "robos:flowPage": "page-prologue",
         "robos:location": "candlekeep-inn-interior",
         "robos:giver": "Winthrop",
         "robos:summary": "Winthrop offers travel rations while Firebead and Hull share ominous warnings about cloaked strangers outside the monastery gates.",
@@ -378,6 +406,7 @@
         "dcterms:title": "Sanctuary Ambush",
         "robos:nodeType": "combat_trial",
         "robos:act": "Prologue",
+        "robos:flowPage": "page-prologue",
         "robos:location": "candlekeep-barracks",
         "robos:giver": "Shank & Carbos",
         "robos:summary": "Two ruthless cutthroats corner you in the dark storehouse, seeking the assassin bounty on your head.",
@@ -395,6 +424,7 @@
         "dcterms:title": "The Gates Close Behind",
         "robos:nodeType": "act_chapter",
         "robos:act": "Chapter 1",
+        "robos:flowPage": "page-ch1",
         "robos:location": "candlekeep-exterior",
         "robos:giver": "Gorion",
         "robos:summary": "Night descends as you meet Gorion at the gatehouse. The iron gates clang shut behind you forever as you step onto the Coast Way road.",
@@ -412,6 +442,7 @@
         "dcterms:title": "Ambush on the Coast Way",
         "robos:nodeType": "decision_branch",
         "robos:act": "Chapter 1",
+        "robos:flowPage": "page-ch1",
         "robos:location": "candlekeep-exterior",
         "robos:giver": "Armored Figure",
         "robos:summary": "A towering armored figure clad in spiked black steel and two ogres ambush your path, demanding that Gorion surrender the ward.",
@@ -434,6 +465,7 @@
         "dcterms:title": "The Valorous Stand",
         "robos:nodeType": "combat_trial",
         "robos:act": "Finale",
+        "robos:flowPage": "page-finale",
         "robos:location": "candlekeep-exterior",
         "robos:giver": "Sarevok",
         "robos:summary": "You fight side by side with your mentor in a cataclysm of fire and steel against Sarevok's elite mercenaries.",
@@ -457,6 +489,7 @@
         "dcterms:title": "The Orphan of the Wilds",
         "robos:nodeType": "decision_branch",
         "robos:act": "Finale",
+        "robos:flowPage": "page-finale",
         "robos:location": "candlekeep-exterior",
         "robos:giver": "Imoen",
         "robos:summary": "Gorion falls holding off the mercenaries. Rejoined by Imoen at dawn, you uncover the truth of your divine heritage.",
@@ -479,6 +512,7 @@
         "dcterms:title": "Ending A: The Guardian of Candlekeep",
         "robos:nodeType": "end_game_state",
         "robos:act": "Epilogue",
+        "robos:flowPage": "page-epilogue",
         "robos:endingType": "triumph_good",
         "robos:victoryStatus": "victory",
         "robos:summary": "The mercenary conspiracy is broken and the iron shortage ends.",
@@ -491,6 +525,7 @@
         "dcterms:title": "Ending B: Lord of the Iron Throne",
         "robos:nodeType": "end_game_state",
         "robos:act": "Epilogue",
+        "robos:flowPage": "page-epilogue",
         "robos:endingType": "tyrant_evil",
         "robos:victoryStatus": "victory",
         "robos:summary": "You seize control of the Iron Throne syndicate and rule with an iron grip.",
@@ -503,6 +538,7 @@
         "dcterms:title": "Ending C: The Martyr's Sacrifice",
         "robos:nodeType": "end_game_state",
         "robos:act": "Epilogue",
+        "robos:flowPage": "page-epilogue",
         "robos:endingType": "tragic_sacrifice",
         "robos:victoryStatus": "truce",
         "robos:summary": "Gorion survives as you sacrifice your life to shield him from the killing blow.",
@@ -515,6 +551,7 @@
         "dcterms:title": "Ending D: Consumed by Shadows",
         "robos:nodeType": "end_game_state",
         "robos:act": "Epilogue",
+        "robos:flowPage": "page-epilogue",
         "robos:endingType": "game_over_defeat",
         "robos:victoryStatus": "defeat",
         "robos:summary": "The shadows of the Sword Coast claim another unprepared soul.",

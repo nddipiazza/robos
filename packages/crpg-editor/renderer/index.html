@@ -348,6 +348,26 @@
               </div>
             </div>
 
+            <!-- Flow Pages Navigation Bar: Story Chapters & Pages of Flow -->
+            <div class="quest-flow-pages-bar">
+              <div class="flow-pages-bar-left">
+                <span class="flow-pages-label">📄 Flow Pages:</span>
+                <div id="quest-flow-page-tabs" class="flow-page-tabs">
+                  <!-- Populated by JS -->
+                </div>
+                <button id="btn-add-flow-page" class="btn btn-secondary btn-xs" title="Create a new Story Flow Page">
+                  <span>➕ New Page</span>
+                </button>
+              </div>
+              <div class="flow-pages-bar-right">
+                <button id="btn-flow-prev-page" class="btn btn-secondary btn-xs" title="Previous Flow Page">◀ Prev</button>
+                <span id="flow-page-indicator" class="flow-page-indicator">Page 1 of 4</span>
+                <button id="btn-flow-next-page" class="btn btn-secondary btn-xs" title="Next Flow Page">Next ▶</button>
+                <button id="btn-edit-flow-page" class="btn btn-secondary btn-xs" title="Edit current Flow Page title and details">✏️ Edit Page</button>
+                <button id="btn-delete-flow-page" class="btn btn-secondary btn-xs" title="Delete current Flow Page and reassign nodes">🗑️</button>
+              </div>
+            </div>
+
             <!-- Interactive Walkthrough HUD (visible when playing walkthrough) -->
             <div id="story-walkthrough-hud" class="story-walkthrough-hud hidden">
               <div class="hud-header">
@@ -391,6 +411,41 @@
                 <div class="epilogue-scroll-footer">
                   <button id="btn-close-epilogue" class="btn btn-primary">Continue Exploring Story Tree</button>
                   <button id="btn-restart-from-epilogue" class="btn btn-secondary">↺ Restart from Game Start</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Flow Page Modal (Create / Edit Flow Page) -->
+            <div id="flow-page-modal" class="story-epilogue-overlay hidden">
+              <div class="epilogue-scroll-container" style="max-width: 520px;">
+                <div class="epilogue-scroll-header">
+                  <span class="epilogue-badge" style="background:#0ea5e9;">📄 FLOW PAGE</span>
+                  <h2 id="flow-page-modal-title" class="epilogue-title">Create Story Flow Page</h2>
+                  <span class="epilogue-subtitle">Segment large narrative trees into organized pages of flow</span>
+                </div>
+                <div class="epilogue-scroll-body" style="padding: 16px 20px;">
+                  <div class="form-grid">
+                    <div class="form-group col-span-2">
+                      <label for="modal-flow-page-title">Page Title</label>
+                      <input type="text" id="modal-flow-page-title" class="input-text" placeholder="e.g. Page 2: Chapter 1 — The Coast Way">
+                    </div>
+                    <div class="form-group">
+                      <label for="modal-flow-page-id">Page ID</label>
+                      <input type="text" id="modal-flow-page-id" class="input-text" placeholder="e.g. page-ch1">
+                    </div>
+                    <div class="form-group">
+                      <label for="modal-flow-page-act">Act / Chapter</label>
+                      <input type="text" id="modal-flow-page-act" class="input-text" placeholder="e.g. Chapter 1">
+                    </div>
+                    <div class="form-group col-span-2">
+                      <label for="modal-flow-page-summary">Page Summary & Story Notes</label>
+                      <textarea id="modal-flow-page-summary" rows="3" placeholder="Summary of events, encounters, and choices on this flow page..."></textarea>
+                    </div>
+                  </div>
+                </div>
+                <div class="epilogue-scroll-footer">
+                  <button id="btn-save-flow-page-modal" class="btn btn-primary">Save Flow Page</button>
+                  <button id="btn-close-flow-page-modal" class="btn btn-secondary">Cancel</button>
                 </div>
               </div>
             </div>
@@ -470,6 +525,12 @@
                   <div class="form-group">
                     <label for="node-edit-act">Act / Chapter</label>
                     <input type="text" id="node-edit-act" class="input-text" placeholder="e.g. Prologue, Act I, Finale">
+                  </div>
+                  <div class="form-group">
+                    <label for="node-edit-flow-page">Flow Page</label>
+                    <select id="node-edit-flow-page" class="dropdown-select">
+                      <!-- Populated by JS -->
+                    </select>
                   </div>
                   <div class="form-group">
                     <label for="node-edit-location">Scene / Location</label>

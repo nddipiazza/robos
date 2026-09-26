@@ -722,8 +722,12 @@ async function loadCampaign(slug) {
 
       state.selectedStoryNodeId = null;
       state.storyWalkthrough = { active: false, currentNodeId: null, visitedNodeIds: [] };
+      const flow = getStoryFlow();
+      const pages = ensureFlowPages(flow);
+      state.activeFlowPageId = pages[0]?.id || 'page-1';
       document.getElementById('story-walkthrough-hud')?.classList.add('hidden');
       document.getElementById('story-epilogue-overlay')?.classList.add('hidden');
+      document.getElementById('flow-page-modal')?.classList.add('hidden');
 
       renderQuestLog();
       renderQuestScenarioTree();
@@ -1180,6 +1184,7 @@ function renderQuestLog() {
 state.selectedStoryNodeId = null;
 state.storyWalkthrough = { active: false, currentNodeId: null, visitedNodeIds: [] };
 state.storyTreeZoom = 1.0;
+state.activeFlowPageId = 'page-1';
 
 function escapeXml(unsafe) {
   if (!unsafe) return '';
@@ -1219,14 +1224,79 @@ function getNodeTypeLabel(type) {
   }
 }
 
+function ensureFlowPages(flow) {
+  if (!flow) return [];
+  if (!Array.isArray(flow['robos:flowPages']) || flow['robos:flowPages'].length === 0) {
+    // Generate flow pages from existing nodes' acts
+    const nodes = flow['robos:storyNodes'] || [];
+    const actMap = new Map();
+    nodes.forEach(n => {
+      const act = n['robos:act'] || n.act || 'Prologue';
+      if (!actMap.has(act)) actMap.set(act, []);
+      actMap.get(act).push(n);
+    });
+
+    if (actMap.size === 0) {
+      flow['robos:flowPages'] = [
+        { id: 'page-1', name: 'Page 1: Main Story Flow', act: 'Prologue', summary: 'Main story questline and events' }
+      ];
+    } else {
+      let pageIdx = 1;
+      const pages = [];
+      for (const [act, actNodes] of actMap.entries()) {
+        const slug = act.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || `page-${pageIdx}`;
+        const pageId = `page-${slug}`;
+        pages.push({
+          id: pageId,
+          name: `Page ${pageIdx}: ${act}`,
+          act: act,
+          summary: `${act} storyline and scenarios (${actNodes.length} nodes)`
+        });
+        actNodes.forEach(node => {
+          if (!node['robos:flowPage'] && !node.flowPage) {
+            node['robos:flowPage'] = pageId;
+          }
+        });
+        pageIdx++;
+      }
+      flow['robos:flowPages'] = pages;
+    }
+  }
+
+  // Ensure every node has a valid robos:flowPage
+  const pages = flow['robos:flowPages'];
+  const firstPageId = pages[0]?.id || 'page-1';
+  const nodes = flow['robos:storyNodes'] || [];
+  nodes.forEach(node => {
+    let pId = node['robos:flowPage'] || node.flowPage;
+    if (!pId || !pages.some(p => p.id === pId)) {
+      const act = (node['robos:act'] || node.act || '').toLowerCase();
+      const match = pages.find(p => (p.act || '').toLowerCase() === act);
+      node['robos:flowPage'] = match ? match.id : firstPageId;
+    }
+  });
+
+  return pages;
+}
+
+function getStoryFlowPages() {
+  const flow = getStoryFlow();
+  return ensureFlowPages(flow);
+}
+
 function getStoryFlow() {
-  if (!state.activeCampaignData) return { 'robos:rootNodeId': '', 'robos:storyNodes': [] };
+  if (!state.activeCampaignData) return { 'robos:rootNodeId': '', 'robos:storyNodes': [], 'robos:flowPages': [] };
   if (!state.activeCampaignData['robos:storyFlow']) {
     state.activeCampaignData['robos:storyFlow'] = {
       '@type': 'robos:CRPGStoryFlow',
       '@id': `urn:robos:crpg:storyflow:${state.activeCampaignSlug || 'campaign'}`,
       'dcterms:title': `${state.activeCampaignData['dcterms:title'] || 'Campaign'} Quest & Story Tree`,
       'robos:rootNodeId': 'node-start',
+      'robos:flowPages': [
+        { id: 'page-1', name: 'Page 1: Prologue — Awakening', act: 'Prologue', summary: 'Beginning of the adventure' },
+        { id: 'page-2', name: 'Page 2: Chapter 1 — Trials', act: 'Chapter 1', summary: 'Initial trials and quests' },
+        { id: 'page-3', name: 'Page 3: Finale & Endings', act: 'Epilogue', summary: 'Climactic decisions and resolutions' }
+      ],
       'robos:storyNodes': [
         {
           '@type': 'robos:CRPGStoryNode',
@@ -1234,6 +1304,7 @@ function getStoryFlow() {
           'dcterms:title': 'Campaign Beginning',
           'robos:nodeType': 'game_start',
           'robos:act': 'Prologue',
+          'robos:flowPage': 'page-1',
           'robos:location': state.activeCampaignData['robos:startingMap'] || '',
           'robos:giver': '',
           'robos:summary': 'The adventure begins as the party prepares to face the perils of the realm.',
@@ -1251,6 +1322,7 @@ function getStoryFlow() {
           'dcterms:title': 'The First Trial',
           'robos:nodeType': 'quest_stage',
           'robos:act': 'Chapter 1',
+          'robos:flowPage': 'page-2',
           'robos:location': '',
           'robos:giver': '',
           'robos:summary': 'Overcome initial trials and make pivotal decisions for the fate of the land.',
@@ -1273,6 +1345,7 @@ function getStoryFlow() {
           'dcterms:title': 'Ending A: Heroic Triumph',
           'robos:nodeType': 'end_game_state',
           'robos:act': 'Epilogue',
+          'robos:flowPage': 'page-3',
           'robos:endingType': 'triumph_good',
           'robos:victoryStatus': 'victory',
           'robos:summary': 'Peace is restored to the realm through steadfast bravery.',
@@ -1285,6 +1358,7 @@ function getStoryFlow() {
           'dcterms:title': 'Ending B: Reign of Shadows',
           'robos:nodeType': 'end_game_state',
           'robos:act': 'Epilogue',
+          'robos:flowPage': 'page-3',
           'robos:endingType': 'tyrant_evil',
           'robos:victoryStatus': 'victory',
           'robos:summary': 'You claim the realm for yourself with an iron fist.',
@@ -1294,7 +1368,243 @@ function getStoryFlow() {
       ]
     };
   }
-  return state.activeCampaignData['robos:storyFlow'];
+  const flow = state.activeCampaignData['robos:storyFlow'];
+  ensureFlowPages(flow);
+  return flow;
+}
+
+function renderFlowPageTabs() {
+  const container = document.getElementById('quest-flow-page-tabs');
+  const indicator = document.getElementById('flow-page-indicator');
+  const btnPrev = document.getElementById('btn-flow-prev-page');
+  const btnNext = document.getElementById('btn-flow-next-page');
+  if (!container) return;
+
+  const flow = getStoryFlow();
+  const pages = ensureFlowPages(flow);
+  const nodes = flow['robos:storyNodes'] || [];
+
+  if (!state.activeFlowPageId || (state.activeFlowPageId !== 'all' && !pages.some(p => p.id === state.activeFlowPageId))) {
+    state.activeFlowPageId = pages[0]?.id || 'page-1';
+  }
+
+  const curIdx = pages.findIndex(p => p.id === state.activeFlowPageId);
+
+  // Flow Page Tabs HTML
+  let tabsHtml = pages.map((page, idx) => {
+    const isActive = state.activeFlowPageId === page.id;
+    const pageNodes = nodes.filter(n => (n['robos:flowPage'] || n.flowPage) === page.id);
+    return `
+      <div class="flow-page-tab ${isActive ? 'active' : ''}" data-page-id="${page.id}" title="${escapeXml(page.summary || page.name)}">
+        <span>📄</span>
+        <span>${escapeXml(page.name)}</span>
+        <span class="flow-page-node-count">${pageNodes.length}</span>
+      </div>
+    `;
+  }).join('');
+
+  // All Flow Overview Tab
+  const isAllActive = state.activeFlowPageId === 'all';
+  tabsHtml += `
+    <div class="flow-page-tab ${isAllActive ? 'active' : ''}" data-page-id="all" title="View all story flow pages together in macro overview">
+      <span>🌐</span>
+      <span>All Flow (Overview)</span>
+      <span class="flow-page-node-count">${nodes.length}</span>
+    </div>
+  `;
+
+  container.innerHTML = tabsHtml;
+
+  // Add click listeners
+  container.querySelectorAll('.flow-page-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const pageId = tab.getAttribute('data-page-id');
+      switchFlowPage(pageId);
+    });
+  });
+
+  // Update Indicator
+  if (indicator) {
+    if (state.activeFlowPageId === 'all') {
+      indicator.textContent = `All Flow (${pages.length} Pages, ${nodes.length} Nodes)`;
+    } else {
+      indicator.textContent = `Page ${curIdx >= 0 ? curIdx + 1 : 1} of ${pages.length}`;
+    }
+  }
+
+  // Update Prev / Next buttons
+  if (btnPrev) {
+    btnPrev.disabled = state.activeFlowPageId === 'all' || curIdx <= 0;
+    btnPrev.style.opacity = btnPrev.disabled ? '0.4' : '1';
+  }
+  if (btnNext) {
+    btnNext.disabled = state.activeFlowPageId === 'all' || curIdx >= pages.length - 1;
+    btnNext.style.opacity = btnNext.disabled ? '0.4' : '1';
+  }
+}
+
+function switchFlowPage(pageId) {
+  state.activeFlowPageId = pageId;
+  const flow = getStoryFlow();
+  const pages = ensureFlowPages(flow);
+  const nodes = flow['robos:storyNodes'] || [];
+
+  // If selected node is not on the new page, select the first node of this page
+  if (pageId !== 'all') {
+    const pageNodes = nodes.filter(n => (n['robos:flowPage'] || n.flowPage) === pageId);
+    if (pageNodes.length > 0 && !pageNodes.some(n => n.id === state.selectedStoryNodeId)) {
+      state.selectedStoryNodeId = pageNodes[0].id;
+    }
+  }
+
+  renderQuestScenarioTree();
+}
+
+function prevFlowPage() {
+  const pages = getStoryFlowPages();
+  const curIdx = pages.findIndex(p => p.id === state.activeFlowPageId);
+  if (curIdx > 0) {
+    switchFlowPage(pages[curIdx - 1].id);
+  }
+}
+
+function nextFlowPage() {
+  const pages = getStoryFlowPages();
+  const curIdx = pages.findIndex(p => p.id === state.activeFlowPageId);
+  if (curIdx >= 0 && curIdx < pages.length - 1) {
+    switchFlowPage(pages[curIdx + 1].id);
+  }
+}
+
+let editingFlowPageId = null;
+
+function showCreateFlowPageModal() {
+  editingFlowPageId = null;
+  const modal = document.getElementById('flow-page-modal');
+  const titleEl = document.getElementById('flow-page-modal-title');
+  const nameInp = document.getElementById('modal-flow-page-title');
+  const idInp = document.getElementById('modal-flow-page-id');
+  const actInp = document.getElementById('modal-flow-page-act');
+  const summaryInp = document.getElementById('modal-flow-page-summary');
+
+  if (titleEl) titleEl.textContent = 'Create Story Flow Page';
+  const pages = getStoryFlowPages();
+  const nextNum = pages.length + 1;
+  if (nameInp) nameInp.value = `Page ${nextNum}: New Flow Chapter`;
+  if (idInp) {
+    idInp.value = `page-${nextNum}`;
+    idInp.readOnly = false;
+  }
+  if (actInp) actInp.value = `Chapter ${nextNum - 1 > 0 ? nextNum - 1 : 1}`;
+  if (summaryInp) summaryInp.value = '';
+
+  modal?.classList.remove('hidden');
+}
+
+function showEditFlowPageModal() {
+  const pages = getStoryFlowPages();
+  let page = pages.find(p => p.id === state.activeFlowPageId);
+  if (!page) {
+    if (pages.length > 0) page = pages[0];
+    else return;
+  }
+  editingFlowPageId = page.id;
+
+  const modal = document.getElementById('flow-page-modal');
+  const titleEl = document.getElementById('flow-page-modal-title');
+  const nameInp = document.getElementById('modal-flow-page-title');
+  const idInp = document.getElementById('modal-flow-page-id');
+  const actInp = document.getElementById('modal-flow-page-act');
+  const summaryInp = document.getElementById('modal-flow-page-summary');
+
+  if (titleEl) titleEl.textContent = `Edit Flow Page: ${page.name}`;
+  if (nameInp) nameInp.value = page.name || '';
+  if (idInp) {
+    idInp.value = page.id;
+    idInp.readOnly = true;
+  }
+  if (actInp) actInp.value = page.act || '';
+  if (summaryInp) summaryInp.value = page.summary || '';
+
+  modal?.classList.remove('hidden');
+}
+
+function saveFlowPageFromModal() {
+  const nameInp = document.getElementById('modal-flow-page-title');
+  const idInp = document.getElementById('modal-flow-page-id');
+  const actInp = document.getElementById('modal-flow-page-act');
+  const summaryInp = document.getElementById('modal-flow-page-summary');
+
+  const title = nameInp?.value.trim();
+  const id = idInp?.value.trim();
+  const act = actInp?.value.trim() || 'Prologue';
+  const summary = summaryInp?.value.trim() || '';
+
+  if (!title || !id) {
+    alert('Page Title and Page ID are required.');
+    return;
+  }
+
+  const flow = getStoryFlow();
+  const pages = ensureFlowPages(flow);
+
+  if (editingFlowPageId) {
+    const page = pages.find(p => p.id === editingFlowPageId);
+    if (page) {
+      page.name = title;
+      page.act = act;
+      page.summary = summary;
+    }
+  } else {
+    if (pages.some(p => p.id === id)) {
+      alert(`A flow page with ID "${id}" already exists.`);
+      return;
+    }
+    const newPage = { id, name: title, act, summary };
+    pages.push(newPage);
+    state.activeFlowPageId = id;
+  }
+
+  document.getElementById('flow-page-modal')?.classList.add('hidden');
+  saveCampaignJson();
+  renderQuestScenarioTree();
+  setStatus(`Flow Page "${title}" saved successfully.`);
+}
+
+function deleteCurrentFlowPage() {
+  const pages = getStoryFlowPages();
+  if (pages.length <= 1) {
+    alert('Cannot delete the only Flow Page in the campaign.');
+    return;
+  }
+  const curPage = pages.find(p => p.id === state.activeFlowPageId);
+  if (!curPage) {
+    alert('Select a specific Flow Page to delete.');
+    return;
+  }
+
+  if (!confirm(`Are you sure you want to delete "${curPage.name}"? Any nodes on this page will be reassigned to the first Flow Page.`)) {
+    return;
+  }
+
+  const flow = getStoryFlow();
+  const pageIdx = flow['robos:flowPages'].findIndex(p => p.id === curPage.id);
+  if (pageIdx !== -1) {
+    flow['robos:flowPages'].splice(pageIdx, 1);
+  }
+  const fallbackPageId = flow['robos:flowPages'][0]?.id || 'page-1';
+
+  // Reassign nodes
+  (flow['robos:storyNodes'] || []).forEach(node => {
+    if ((node['robos:flowPage'] || node.flowPage) === curPage.id) {
+      node['robos:flowPage'] = fallbackPageId;
+    }
+  });
+
+  state.activeFlowPageId = fallbackPageId;
+  saveCampaignJson();
+  renderQuestScenarioTree();
+  setStatus(`Deleted Flow Page "${curPage.name}". Nodes reassigned.`);
 }
 
 function setupStoryTreeHandlers() {
@@ -1308,6 +1618,15 @@ function setupStoryTreeHandlers() {
   const btnRestartEpilogue = document.getElementById('btn-restart-from-epilogue');
   const btnDeleteNode = document.getElementById('btn-delete-story-node');
   const btnAddChoiceItem = document.getElementById('btn-add-choice-item');
+
+  // Flow Page bar buttons
+  const btnAddPage = document.getElementById('btn-add-flow-page');
+  const btnEditPage = document.getElementById('btn-edit-flow-page');
+  const btnDeletePage = document.getElementById('btn-delete-flow-page');
+  const btnPrevPage = document.getElementById('btn-flow-prev-page');
+  const btnNextPage = document.getElementById('btn-flow-next-page');
+  const btnSavePageModal = document.getElementById('btn-save-flow-page-modal');
+  const btnClosePageModal = document.getElementById('btn-close-flow-page-modal');
 
   const btnZoomIn = document.getElementById('btn-tree-zoom-in');
   const btnZoomOut = document.getElementById('btn-tree-zoom-out');
@@ -1331,6 +1650,34 @@ function setupStoryTreeHandlers() {
 
   actFilter?.addEventListener('change', () => {
     renderQuestScenarioTree();
+  });
+
+  btnAddPage?.addEventListener('click', () => {
+    showCreateFlowPageModal();
+  });
+
+  btnEditPage?.addEventListener('click', () => {
+    showEditFlowPageModal();
+  });
+
+  btnDeletePage?.addEventListener('click', () => {
+    deleteCurrentFlowPage();
+  });
+
+  btnPrevPage?.addEventListener('click', () => {
+    prevFlowPage();
+  });
+
+  btnNextPage?.addEventListener('click', () => {
+    nextFlowPage();
+  });
+
+  btnSavePageModal?.addEventListener('click', () => {
+    saveFlowPageFromModal();
+  });
+
+  btnClosePageModal?.addEventListener('click', () => {
+    document.getElementById('flow-page-modal')?.classList.add('hidden');
   });
 
   btnCloseHud?.addEventListener('click', () => {
@@ -1375,6 +1722,7 @@ function setupStoryTreeHandlers() {
   const titleInp = document.getElementById('node-edit-title');
   const typeSelect = document.getElementById('node-edit-type');
   const actInp = document.getElementById('node-edit-act');
+  const flowPageSelect = document.getElementById('node-edit-flow-page');
   const locSelect = document.getElementById('node-edit-location');
   const giverSelect = document.getElementById('node-edit-giver');
   const summaryInp = document.getElementById('node-edit-summary');
@@ -1394,6 +1742,17 @@ function setupStoryTreeHandlers() {
     node.type = typeSelect.value;
     node['robos:act'] = actInp.value.trim();
     node.act = actInp.value.trim();
+
+    let pageChanged = false;
+    if (flowPageSelect && flowPageSelect.value) {
+      const prevPage = node['robos:flowPage'] || node.flowPage;
+      node['robos:flowPage'] = flowPageSelect.value;
+      node.flowPage = flowPageSelect.value;
+      if (prevPage !== flowPageSelect.value) {
+        pageChanged = true;
+      }
+    }
+
     node['robos:location'] = locSelect.value;
     node.location = locSelect.value;
     node['robos:giver'] = giverSelect.value;
@@ -1413,12 +1772,14 @@ function setupStoryTreeHandlers() {
       document.getElementById('node-ending-fields')?.classList.add('hidden');
     }
 
-    renderQuestScenarioTree(true);
+    saveCampaignJson();
+    renderQuestScenarioTree(!pageChanged);
   };
 
   titleInp?.addEventListener('input', onInspectorChange);
   typeSelect?.addEventListener('change', onInspectorChange);
   actInp?.addEventListener('input', onInspectorChange);
+  flowPageSelect?.addEventListener('change', onInspectorChange);
   locSelect?.addEventListener('change', onInspectorChange);
   giverSelect?.addEventListener('change', onInspectorChange);
   summaryInp?.addEventListener('input', onInspectorChange);
@@ -1456,20 +1817,37 @@ function populateStoryInspectorDropdowns() {
       (state.characters || []).map(c => `<option value="${c.name || c.slug}">👑 ${c.name || c.slug}</option>`).join('');
     if (curGiver) giverSelect.value = curGiver;
   }
+
+  const flowPageSelect = document.getElementById('node-edit-flow-page');
+  if (flowPageSelect) {
+    const curPage = flowPageSelect.value;
+    const pages = getStoryFlowPages();
+    flowPageSelect.innerHTML = pages.map(p => `<option value="${p.id}">📄 ${escapeXml(p.name)}</option>`).join('');
+    if (curPage) flowPageSelect.value = curPage;
+  }
 }
 
 function renderQuestScenarioTree(keepInspector = false) {
   const flow = getStoryFlow();
+  const pages = ensureFlowPages(flow);
   let nodes = flow['robos:storyNodes'] || [];
   const filterAct = document.getElementById('story-act-filter')?.value || 'all';
 
   const badgeEl = document.getElementById('story-node-count-badge');
-  if (badgeEl) badgeEl.textContent = `${nodes.length} nodes`;
+  if (badgeEl) badgeEl.textContent = `${nodes.length} nodes (${pages.length} pages)`;
+
+  // Render Flow Page tabs
+  renderFlowPageTabs();
 
   populateStoryInspectorDropdowns();
 
   if ((!state.selectedStoryNodeId || !nodes.some(n => n.id === state.selectedStoryNodeId)) && nodes.length > 0) {
-    state.selectedStoryNodeId = flow['robos:rootNodeId'] || nodes[0].id;
+    if (state.activeFlowPageId !== 'all') {
+      const pageNodes = nodes.filter(n => (n['robos:flowPage'] || n.flowPage) === state.activeFlowPageId);
+      state.selectedStoryNodeId = pageNodes[0]?.id || flow['robos:rootNodeId'] || nodes[0].id;
+    } else {
+      state.selectedStoryNodeId = flow['robos:rootNodeId'] || nodes[0].id;
+    }
   }
 
   // 1. Render Left Sidebar Outline
@@ -1493,34 +1871,43 @@ function renderStoryTreeOutline(nodes, filterAct) {
   const container = document.getElementById('story-tree-outline');
   if (!container) return;
 
-  const acts = {};
+  const flow = getStoryFlow();
+  const pages = ensureFlowPages(flow);
+
+  // Group nodes by Flow Page
+  const pageGroups = {};
+  pages.forEach(p => { pageGroups[p.id] = []; });
   nodes.forEach(n => {
-    const act = n['robos:act'] || n.act || 'Prologue';
-    if (!acts[act]) acts[act] = [];
-    acts[act].push(n);
+    const pId = n['robos:flowPage'] || n.flowPage || pages[0]?.id || 'page-1';
+    if (!pageGroups[pId]) pageGroups[pId] = [];
+    pageGroups[pId].push(n);
   });
 
-  const actKeys = Object.keys(acts);
-  if (actKeys.length === 0) {
+  if (pages.length === 0 || nodes.length === 0) {
     container.innerHTML = '<div style="color:var(--text-muted);font-size:11px;padding:8px;">No story nodes. Click + Add Story Node.</div>';
     return;
   }
 
-  container.innerHTML = actKeys.map(act => {
-    if (filterAct !== 'all' && act.toLowerCase() !== filterAct.toLowerCase()) return '';
+  container.innerHTML = pages.map(page => {
+    const pageNodes = pageGroups[page.id] || [];
+    const isCurrentPage = state.activeFlowPageId === page.id;
     return `
-      <div class="story-outline-act-group">
-        <div class="story-outline-act-header">${act}</div>
-        ${acts[act].map(n => {
+      <div class="story-outline-act-group" style="${isCurrentPage ? 'border-left: 2px solid #0ea5e9; padding-left: 4px;' : ''}">
+        <div class="story-outline-act-header" data-page-id="${page.id}" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;" title="Click to view ${escapeXml(page.name)}">
+          <span>📄 ${escapeXml(page.name)}</span>
+          <span style="font-size:9px;opacity:0.7;">(${pageNodes.length})</span>
+        </div>
+        ${pageNodes.map(n => {
+          if (filterAct !== 'all' && (n['robos:act'] || n.act || 'Prologue').toLowerCase() !== filterAct.toLowerCase()) return '';
           const type = n['robos:nodeType'] || n.type || 'quest_stage';
           const icon = getNodeTypeIcon(type);
           const title = n['dcterms:title'] || n.title || n.id;
           const isSelected = n.id === state.selectedStoryNodeId;
           const isWalkthrough = n.id === state.storyWalkthrough.currentNodeId;
           return `
-            <div class="story-outline-item ${isSelected ? 'selected' : ''} ${isWalkthrough ? 'active-walkthrough' : ''}" data-id="${n.id}">
+            <div class="story-outline-item ${isSelected ? 'selected' : ''} ${isWalkthrough ? 'active-walkthrough' : ''}" data-id="${n.id}" data-page="${page.id}">
               <span>${icon}</span>
-              <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">${title}</span>
+              <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">${escapeXml(title)}</span>
               ${type === 'end_game_state' ? '<span style="font-size:10px;color:#c084fc;">🏆</span>' : ''}
             </div>
           `;
@@ -1529,10 +1916,22 @@ function renderStoryTreeOutline(nodes, filterAct) {
     `;
   }).join('');
 
+  container.querySelectorAll('.story-outline-act-header').forEach(header => {
+    header.addEventListener('click', () => {
+      const pageId = header.getAttribute('data-page-id');
+      if (pageId) switchFlowPage(pageId);
+    });
+  });
+
   container.querySelectorAll('.story-outline-item').forEach(item => {
     item.addEventListener('click', () => {
       const id = item.getAttribute('data-id');
+      const pageId = item.getAttribute('data-page');
+      if (state.activeFlowPageId !== 'all' && state.activeFlowPageId !== pageId) {
+        state.activeFlowPageId = pageId;
+      }
       selectStoryNode(id);
+      renderQuestScenarioTree();
     });
   });
 }
@@ -1540,53 +1939,103 @@ function renderStoryTreeOutline(nodes, filterAct) {
 function renderStoryTreeCanvas(nodes, filterAct) {
   const svgEl = document.getElementById('quest-tree-svg');
   const layerEl = document.getElementById('quest-tree-nodes-layer');
-  if (!svgEl || !layerEl) return;
+  const container = document.getElementById('quest-tree-canvas-container');
+  if (!svgEl || !layerEl || !container) return;
 
-  const visibleNodes = filterAct === 'all'
-    ? nodes
-    : nodes.filter(n => (n['robos:act'] || n.act || 'Prologue').toLowerCase() === filterAct.toLowerCase());
+  const flow = getStoryFlow();
+  const pages = ensureFlowPages(flow);
 
-  const ACT_COLS = {
-    'prologue': 0,
-    'chapter 1': 1,
-    'act 1': 1,
-    'act i': 1,
-    'chapter 2': 2,
-    'act 2': 2,
-    'act ii': 2,
-    'chapter 3': 3,
-    'act 3': 3,
-    'act iii': 3,
-    'finale': 3,
-    'epilogue': 4,
-    'endings': 4
-  };
+  // Determine which nodes to display based on active flow page
+  let visibleNodes = [];
+  if (state.activeFlowPageId === 'all') {
+    visibleNodes = nodes;
+  } else {
+    visibleNodes = nodes.filter(n => (n['robos:flowPage'] || n.flowPage) === state.activeFlowPageId);
+  }
 
-  const colGroups = {};
-  visibleNodes.forEach(node => {
-    const actStr = (node['robos:act'] || node.act || 'Prologue').toLowerCase().trim();
-    let col = ACT_COLS[actStr];
-    if (col === undefined) {
-      if (node['robos:nodeType'] === 'game_start' || node.type === 'game_start') col = 0;
-      else if (node['robos:nodeType'] === 'end_game_state' || node.type === 'end_game_state') col = 4;
-      else col = 1;
-    }
-    if (!colGroups[col]) colGroups[col] = [];
-    colGroups[col].push(node);
-  });
+  // Act filter on top if specified
+  if (filterAct !== 'all') {
+    visibleNodes = visibleNodes.filter(n => (n['robos:act'] || n.act || 'Prologue').toLowerCase() === filterAct.toLowerCase());
+  }
+
+  // Clean empty state
+  if (visibleNodes.length === 0) {
+    svgEl.innerHTML = '';
+    layerEl.innerHTML = `
+      <div style="padding: 60px 40px; color: var(--text-muted); font-size: 13px;">
+        <p>No story nodes on this Flow Page.</p>
+        <button class="btn btn-primary btn-sm" style="margin-top: 10px;" onclick="createStoryNode()">➕ Add Story Node to this Page</button>
+      </div>
+    `;
+    return;
+  }
 
   const colWidth = 320;
-  const rowHeight = 175;
+  const rowHeight = 185;
   const x0 = 40;
-  const y0 = 40;
+  const y0 = 50;
 
-  Object.keys(colGroups).forEach(colKey => {
-    const colIdx = Number(colKey);
-    colGroups[colKey].forEach((node, rowIdx) => {
-      node._x = x0 + colIdx * colWidth;
-      node._y = y0 + rowIdx * rowHeight;
+  if (state.activeFlowPageId === 'all') {
+    // Macro view: group nodes by flow page index
+    const pageIndexMap = {};
+    pages.forEach((p, idx) => { pageIndexMap[p.id] = idx; });
+
+    const pageColGroups = {};
+    visibleNodes.forEach(node => {
+      const pId = node['robos:flowPage'] || node.flowPage || pages[0]?.id;
+      const pIdx = pageIndexMap[pId] !== undefined ? pageIndexMap[pId] : 0;
+      if (!pageColGroups[pIdx]) pageColGroups[pIdx] = [];
+      pageColGroups[pIdx].push(node);
     });
-  });
+
+    let bannersHtml = '';
+    Object.keys(pageColGroups).forEach(colKey => {
+      const colIdx = Number(colKey);
+      const pageObj = pages[colIdx] || { name: `Page ${colIdx + 1}` };
+      const colLeft = x0 + colIdx * (colWidth + 40);
+
+      bannersHtml += `
+        <div class="flow-page-boundary-label" style="left: ${colLeft}px; top: 15px;">
+          📄 ${escapeXml(pageObj.name)}
+        </div>
+      `;
+
+      pageColGroups[colKey].forEach((node, rowIdx) => {
+        node._x = colLeft;
+        node._y = y0 + 30 + rowIdx * rowHeight;
+      });
+    });
+
+    layerEl.innerHTML = bannersHtml;
+  } else {
+    // Single page view: arrange topologically by node type
+    const typeOrder = {
+      'game_start': 0,
+      'act_chapter': 0,
+      'quest_stage': 1,
+      'combat_trial': 2,
+      'decision_branch': 2,
+      'end_game_state': 3
+    };
+
+    const colGroups = {};
+    visibleNodes.forEach(node => {
+      const type = node['robos:nodeType'] || node.type || 'quest_stage';
+      let col = typeOrder[type] !== undefined ? typeOrder[type] : 1;
+      if (!colGroups[col]) colGroups[col] = [];
+      colGroups[col].push(node);
+    });
+
+    Object.keys(colGroups).forEach(colKey => {
+      const colIdx = Number(colKey);
+      colGroups[colKey].forEach((node, rowIdx) => {
+        node._x = x0 + colIdx * colWidth;
+        node._y = y0 + rowIdx * rowHeight;
+      });
+    });
+
+    layerEl.innerHTML = '';
+  }
 
   // 1. Render SVG Connection Curves
   let svgPaths = '';
@@ -1613,10 +2062,10 @@ function renderStoryTreeCanvas(nodes, filterAct) {
         if (ch.label) {
           const mx = (x1 + x2) / 2;
           const my = (y1 + y2) / 2;
-          const truncatedLabel = ch.label.length > 20 ? ch.label.slice(0, 18) + '…' : ch.label;
+          const truncatedLabel = ch.label.length > 22 ? ch.label.slice(0, 20) + '…' : ch.label;
           svgPaths += `
             <g transform="translate(${mx}, ${my})">
-              <rect x="-65" y="-10" width="130" height="18" rx="4" fill="#0f172a" stroke="${strokeColor}" stroke-width="1" opacity="0.9"/>
+              <rect x="-70" y="-10" width="140" height="18" rx="4" fill="#0f172a" stroke="${strokeColor}" stroke-width="1" opacity="0.9"/>
               <text x="0" y="2" fill="#e2e8f0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle" dominant-baseline="middle">${escapeXml(truncatedLabel)}</text>
             </g>
           `;
@@ -1626,8 +2075,8 @@ function renderStoryTreeCanvas(nodes, filterAct) {
   });
   svgEl.innerHTML = svgPaths;
 
-  // 2. Render Node Cards
-  layerEl.innerHTML = visibleNodes.map(node => {
+  // 2. Render Node Cards with Inbound/Outbound Cross-Page Jump Ports
+  const nodeCardsHtml = visibleNodes.map(node => {
     const isSelected = node.id === state.selectedStoryNodeId;
     const isWalkthrough = node.id === state.storyWalkthrough.currentNodeId;
     const nodeType = node['robos:nodeType'] || node.type || 'quest_stage';
@@ -1639,14 +2088,47 @@ function renderStoryTreeCanvas(nodes, filterAct) {
     const giver = node['robos:giver'] || node.giver || '';
     const choices = node['robos:choices'] || node.choices || [];
 
+    // Find any inbound cross-page connections
+    let inboundHtml = '';
+    if (state.activeFlowPageId !== 'all') {
+      const inboundNodes = nodes.filter(other => {
+        const otherPage = other['robos:flowPage'] || other.flowPage;
+        if (otherPage === state.activeFlowPageId) return false;
+        const otherChoices = other['robos:choices'] || other.choices || [];
+        return otherChoices.some(ch => ch.targetNodeId === node.id);
+      });
+      if (inboundNodes.length > 0) {
+        inboundHtml = inboundNodes.map(src => {
+          const srcPage = pages.find(p => p.id === (src['robos:flowPage'] || src.flowPage));
+          const pageShort = srcPage ? srcPage.name.split(':')[0] : 'Page';
+          return `<div class="inbound-page-badge" title="Incoming story connection from ${srcPage ? srcPage.name : 'previous page'}">↰ From ${pageShort}: ${escapeXml(src['dcterms:title'] || src.id)}</div>`;
+        }).join('');
+      }
+    }
+
+    // Choices and Outbound Cross-Page Jump Ports
     const choicesHtml = choices.length > 0 ? `
       <div class="story-node-choices">
-        ${choices.map(c => `
-          <div class="node-choice-pill" title="${c.label || ''}">
-            <span>↳</span>
-            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.label || c.targetNodeId}</span>
-          </div>
-        `).join('')}
+        ${choices.map(c => {
+          const targetNode = nodes.find(n => n.id === c.targetNodeId);
+          const isCrossPage = targetNode && state.activeFlowPageId !== 'all' && (targetNode['robos:flowPage'] || targetNode.flowPage) !== state.activeFlowPageId;
+          const targetPage = isCrossPage ? pages.find(p => p.id === (targetNode['robos:flowPage'] || targetNode.flowPage)) : null;
+
+          if (isCrossPage && targetPage) {
+            return `
+              <div class="cross-page-jump-pill" data-target-page="${targetPage.id}" data-target-node="${targetNode.id}" title="Branch leads to ${escapeXml(targetPage.name)} — click to navigate">
+                <span>↳ 📄 ${targetPage.name.split(':')[0]}: ${escapeXml(targetNode['dcterms:title'] || targetNode.id)}</span>
+                <span>↗</span>
+              </div>
+            `;
+          }
+          return `
+            <div class="node-choice-pill" title="${escapeXml(c.label || '')}">
+              <span>↳</span>
+              <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeXml(c.label || c.targetNodeId)}</span>
+            </div>
+          `;
+        }).join('')}
       </div>
     ` : (nodeType === 'end_game_state' ? `
       <div class="story-node-choices">
@@ -1665,10 +2147,11 @@ function renderStoryTreeCanvas(nodes, filterAct) {
           <span>${act}</span>
         </div>
         <div class="story-node-body">
-          <div class="story-node-title">${title}</div>
+          ${inboundHtml}
+          <div class="story-node-title">${escapeXml(title)}</div>
           <div class="story-node-meta">
-            ${location ? `<span class="story-node-tag">📍 ${location}</span>` : ''}
-            ${giver ? `<span class="story-node-tag">👑 ${giver}</span>` : ''}
+            ${location ? `<span class="story-node-tag">📍 ${escapeXml(location)}</span>` : ''}
+            ${giver ? `<span class="story-node-tag">👑 ${escapeXml(giver)}</span>` : ''}
           </div>
           ${choicesHtml}
         </div>
@@ -1676,6 +2159,20 @@ function renderStoryTreeCanvas(nodes, filterAct) {
     `;
   }).join('');
 
+  layerEl.innerHTML += nodeCardsHtml;
+
+  // Add click handlers on cross-page jump pills
+  layerEl.querySelectorAll('.cross-page-jump-pill').forEach(pill => {
+    pill.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const pId = pill.getAttribute('data-target-page');
+      const nId = pill.getAttribute('data-target-node');
+      if (pId) switchFlowPage(pId);
+      if (nId) selectStoryNode(nId);
+    });
+  });
+
+  // Add click handlers on node cards
   layerEl.querySelectorAll('.story-node-card').forEach(card => {
     card.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -1683,6 +2180,21 @@ function renderStoryTreeCanvas(nodes, filterAct) {
       selectStoryNode(id);
     });
   });
+
+  // 3. Dynamic Canvas / SVG sizing so nothing clips and fills width
+  const maxNodeX = Math.max(...visibleNodes.map(n => (n._x || 0) + 260), 0);
+  const maxNodeY = Math.max(...visibleNodes.map(n => (n._y || 0) + 200), 0);
+  const containerW = container.clientWidth || 1600;
+  const containerH = container.clientHeight || 900;
+  const fullW = Math.max(maxNodeX + 120, containerW);
+  const fullH = Math.max(maxNodeY + 120, containerH);
+
+  svgEl.style.width = fullW + 'px';
+  svgEl.style.height = fullH + 'px';
+  svgEl.setAttribute('width', fullW);
+  svgEl.setAttribute('height', fullH);
+  layerEl.style.width = fullW + 'px';
+  layerEl.style.height = fullH + 'px';
 }
 
 function selectStoryNode(nodeId) {
@@ -1710,6 +2222,7 @@ function loadStoryNodeInspector(nodeId) {
   const idInp = document.getElementById('node-edit-id');
   const typeSelect = document.getElementById('node-edit-type');
   const actInp = document.getElementById('node-edit-act');
+  const flowPageSelect = document.getElementById('node-edit-flow-page');
   const locSelect = document.getElementById('node-edit-location');
   const giverSelect = document.getElementById('node-edit-giver');
   const summaryInp = document.getElementById('node-edit-summary');
@@ -1718,6 +2231,7 @@ function loadStoryNodeInspector(nodeId) {
   if (idInp) idInp.value = node.id || '';
   if (typeSelect) typeSelect.value = node['robos:nodeType'] || node.type || 'quest_stage';
   if (actInp) actInp.value = node['robos:act'] || node.act || 'Prologue';
+  if (flowPageSelect) flowPageSelect.value = node['robos:flowPage'] || node.flowPage || '';
   if (locSelect) locSelect.value = node['robos:location'] || node.location || '';
   if (giverSelect) giverSelect.value = node['robos:giver'] || node.giver || '';
   if (summaryInp) summaryInp.value = node['robos:summary'] || node.summary || '';
@@ -1818,7 +2332,13 @@ function renderStoryNodeChoices(node) {
 
 function createStoryNode() {
   const flow = getStoryFlow();
+  const pages = ensureFlowPages(flow);
   if (!Array.isArray(flow['robos:storyNodes'])) flow['robos:storyNodes'] = [];
+
+  const targetPageId = (state.activeFlowPageId && state.activeFlowPageId !== 'all')
+    ? state.activeFlowPageId
+    : (pages[0]?.id || 'page-1');
+  const targetPage = pages.find(p => p.id === targetPageId);
 
   const safeId = `node-story-${Date.now().toString().slice(-4)}`;
   const newNode = {
@@ -1828,8 +2348,10 @@ function createStoryNode() {
     title: 'New Story Node',
     'robos:nodeType': 'quest_stage',
     type: 'quest_stage',
-    'robos:act': 'Chapter 1',
-    act: 'Chapter 1',
+    'robos:act': targetPage?.act || 'Chapter 1',
+    act: targetPage?.act || 'Chapter 1',
+    'robos:flowPage': targetPageId,
+    flowPage: targetPageId,
     'robos:location': '',
     'robos:giver': '',
     'robos:summary': 'Narrative journal entry and scene description...',
@@ -1838,9 +2360,10 @@ function createStoryNode() {
 
   flow['robos:storyNodes'].push(newNode);
   state.selectedStoryNodeId = safeId;
+  saveCampaignJson();
   renderQuestScenarioTree();
   updateCampaignSummaryStats();
-  setStatus(`Created new story node: ${safeId}`);
+  setStatus(`Created new story node: ${safeId} on ${targetPage?.name || targetPageId}`);
 }
 
 function deleteStoryNode(nodeId) {
@@ -2008,6 +2531,15 @@ function renderStoryWalkthroughHUD() {
         state.storyWalkthrough.visitedNodeIds.push(targetId);
       }
       state.selectedStoryNodeId = targetId;
+
+      // Auto-turn Flow Page if target is on a different page!
+      const targetNode = (flow['robos:storyNodes'] || []).find(n => n.id === targetId);
+      if (targetNode) {
+        const targetPage = targetNode['robos:flowPage'] || targetNode.flowPage;
+        if (targetPage && state.activeFlowPageId !== 'all' && state.activeFlowPageId !== targetPage) {
+          state.activeFlowPageId = targetPage;
+        }
+      }
 
       renderStoryWalkthroughHUD();
       renderQuestScenarioTree();

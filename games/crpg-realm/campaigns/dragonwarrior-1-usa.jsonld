@@ -163,6 +163,32 @@
     "@id": "urn:robos:crpg:storyflow:dragonwarrior-1-usa",
     "dcterms:title": "The Quest for the Ball of Light",
     "robos:rootNodeId": "node-dw-throne-room",
+    "robos:flowPages": [
+      {
+        "id": "page-dw-p1",
+        "name": "Page 1: Tantegel & Early Trials",
+        "act": "Prologue",
+        "summary": "King Loric's decree and preparing in Tantegel Castle."
+      },
+      {
+        "id": "page-dw-p2",
+        "name": "Page 2: Chapter 1 — Brecconary & Swamp Cave",
+        "act": "Chapter 1",
+        "summary": "Rescuing Princess Gwaelin from the Green Dragon."
+      },
+      {
+        "id": "page-dw-p3",
+        "name": "Page 3: Chapter 2 — The Rainbow Bridge",
+        "act": "Chapter 2",
+        "summary": "Forging the Rainbow Drop and crossing the sea."
+      },
+      {
+        "id": "page-dw-p4",
+        "name": "Page 4: Finale & Epilogue — Throne of Charlock",
+        "act": "Finale",
+        "summary": "Confronting the Dragonlord and determining the fate of Alefgard."
+      }
+    ],
     "robos:storyNodes": [
       {
         "@type": "robos:CRPGStoryNode",
@@ -170,6 +196,7 @@
         "dcterms:title": "The Royal Decree of Tantegel",
         "robos:nodeType": "game_start",
         "robos:act": "Prologue",
+        "robos:flowPage": "page-dw-p1",
         "robos:location": "tantegel-throne-room",
         "robos:giver": "King Loric",
         "robos:summary": "King Loric greets the descendant of Erdrick in Tantegel Throne Room. The Ball of Light has been stolen by the Dragonlord, plunging Alefgard into darkness.",
@@ -187,6 +214,7 @@
         "dcterms:title": "The Town of Brecconary",
         "robos:nodeType": "quest_stage",
         "robos:act": "Chapter 1",
+        "robos:flowPage": "page-dw-p2",
         "robos:location": "tantegel-throne-room",
         "robos:giver": "Brecconary Merchant",
         "robos:summary": "In Brecconary, townspeople whisper of Princess Gwaelin's abduction and an ancient inscription left by Erdrick concerning the three sacred relics.",
@@ -209,6 +237,7 @@
         "dcterms:title": "The Swamp Cave & The Green Dragon",
         "robos:nodeType": "combat_trial",
         "robos:act": "Chapter 1",
+        "robos:flowPage": "page-dw-p2",
         "robos:location": "tantegel-throne-room",
         "robos:giver": "Princess Gwaelin",
         "robos:summary": "Deep within the noxious swamp cave, a fierce Green Dragon guards Princess Gwaelin's cage.",
@@ -226,6 +255,7 @@
         "dcterms:title": "The Rainbow Bridge",
         "robos:nodeType": "act_chapter",
         "robos:act": "Chapter 2",
+        "robos:flowPage": "page-dw-p3",
         "robos:location": "tantegel-throne-room",
         "robos:giver": "Old Man of Kol",
         "robos:summary": "Combining the Staff of Rain and Sunstone at the sacred shrine creates the Rainbow Drop, spanning a luminous bridge across the sea to Charlock Castle.",
@@ -243,6 +273,7 @@
         "dcterms:title": "Throne of the Dragonlord",
         "robos:nodeType": "decision_branch",
         "robos:act": "Finale",
+        "robos:flowPage": "page-dw-p4",
         "robos:location": "tantegel-throne-room",
         "robos:giver": "Dragonlord",
         "robos:summary": "Reaching the infernal throne at the base of Charlock Castle, the Dragonlord sneers: 'Welcome, Erdrick's blood. Will thou join me and rule half the world in shadows?'",
@@ -270,6 +301,7 @@
         "dcterms:title": "Ending A: The Ball of Light & The Royal Wedding",
         "robos:nodeType": "end_game_state",
         "robos:act": "Epilogue",
+        "robos:flowPage": "page-dw-p4",
         "robos:endingType": "triumph_good",
         "robos:victoryStatus": "victory",
         "robos:summary": "The Dragonlord is vanquished and the Ball of Light banishes all monsters.",
@@ -282,6 +314,7 @@
         "dcterms:title": "Ending B: Reign of the Shadow Sovereign",
         "robos:nodeType": "end_game_state",
         "robos:act": "Epilogue",
+        "robos:flowPage": "page-dw-p4",
         "robos:endingType": "tyrant_evil",
         "robos:victoryStatus": "victory",
         "robos:summary": "You betray King Loric and rule Alefgard as the Dragonlord's dark champion.",
@@ -294,6 +327,7 @@
         "dcterms:title": "Ending C: Ashes in Charlock",
         "robos:nodeType": "end_game_state",
         "robos:act": "Epilogue",
+        "robos:flowPage": "page-dw-p4",
         "robos:endingType": "game_over_defeat",
         "robos:victoryStatus": "defeat",
         "robos:summary": "The descendant of Erdrick falls in the depths of Charlock Castle.",

@@ -1,59 +1,182 @@
 {
   "@context": {
-    "robos": "https://robos.dev/ns/sdlc#",
-    "dcterms": "http://purl.org/dc/terms/",
-    "schema": "https://schema.org/"
+    "robos": "urn:robos:",
+    "schema": "https://schema.org/",
+    "dcterms": "http://purl.org/dc/terms/"
   },
   "@id": "urn:robos:crpg:character:hero-imoen",
   "@type": [
     "robos:CRPGCharacter",
+    "robos:CRPGPlayerCharacter",
     "robos:CRPGHero",
     "schema:Person"
   ],
   "dcterms:title": "Imoen",
   "robos:characterType": "hero",
-  "robos:name": "Imoen",
+  "schema:name": "Imoen",
+  "name": "Imoen",
   "slug": "hero-imoen",
   "characterType": "hero",
-  "name": "Imoen",
-  "race": "Human",
-  "class": "Rogue",
-  "subclass": "Thief",
-  "background": "Candlekeep Mischief",
-  "alignment": "Neutral Good",
-  "level": 1,
-  "xp": 0,
+  "robos:portrait": "🏹",
   "portrait": "🏹",
+  "robos:alignment": "Neutral Good",
+  "alignment": "Neutral Good",
+  "robos:backstory": "Childhood companion and foster sister in Candlekeep, always picking locks and following along on adventures.",
+  "backstory": "Childhood companion and foster sister in Candlekeep, always picking locks and following along on adventures.",
+  "robos:level": 1,
+  "level": 1,
+  "robos:race": "Human",
+  "race": "Human",
+  "robos:class": "Rogue",
+  "class": "Rogue",
+  "robos:subclass": "Thief",
+  "subclass": "Thief",
+  "robos:background": "Candlekeep Mischief",
+  "background": "Candlekeep Mischief",
+  "robos:xp": 0,
+  "xp": 0,
+  "robos:str": 9,
   "str": 9,
+  "robos:dex": 18,
   "dex": 18,
+  "robos:con": 16,
   "con": 16,
+  "robos:int": 12,
   "int": 12,
+  "robos:wis": 11,
   "wis": 11,
+  "robos:cha": 16,
   "cha": 16,
+  "robos:ac": 15,
   "ac": 15,
+  "robos:hpMax": 10,
   "hpMax": 10,
+  "robos:hpCurrent": 10,
   "hpCurrent": 10,
+  "robos:speed": 30,
   "speed": 30,
+  "robos:initiative": 4,
   "initiative": 4,
+  "robos:prof": 2,
   "prof": 2,
+  "robos:spells": "sneak-attack-1d6-, cunning-action",
+  "spells": "sneak-attack-1d6-, cunning-action",
+  "robos:mainHand": "Shortbow (+6 to hit, 1d6+4 pierc)",
   "mainHand": "Shortbow (+6 to hit, 1d6+4 pierc)",
+  "robos:offHand": "Dagger (+6 to hit, 1d4+4)",
   "offHand": "Dagger (+6 to hit, 1d4+4)",
+  "robos:armor": "Studded Leather Armor (AC 12+DEX)",
   "armor": "Studded Leather Armor (AC 12+DEX)",
-  "helmet": "Leather Cap",
+  "robos:cloak": "Cloak of Elvenkind",
   "cloak": "Cloak of Elvenkind",
-  "boots": "Soft Leather Boots",
-  "ring1": "Ring of Lockpicking",
-  "quickItems": "potion-healing",
-  "spells": "Sneak Attack (1d6), Cunning Action",
+  "robos:quickItems": [
+    "potion-healing",
+    "torch"
+  ],
+  "quickItems": [
+    "potion-healing",
+    "torch"
+  ],
+  "robos:preparedSpells": [
+    "sneak-attack-1d6-",
+    "cunning-action"
+  ],
+  "preparedSpells": [
+    "sneak-attack-1d6-",
+    "cunning-action"
+  ],
+  "robos:abilities": [],
+  "abilities": [],
+  "robos:directive": {
+    "controller": "infinity_ai",
+    "role": "striker",
+    "targetPriority": "nearest",
+    "movement": "advance",
+    "healThreshold": 0.5,
+    "potionThreshold": 0.4,
+    "useSpells": true,
+    "allowFriendlyFire": false,
+    "reactions": {
+      "shield": true,
+      "opportunityAttack": true,
+      "counterspell": false,
+      "uncannyDodge": false,
+      "defensiveFlurry": false
+    }
+  },
+  "directive": {
+    "controller": "infinity_ai",
+    "role": "striker",
+    "targetPriority": "nearest",
+    "movement": "advance",
+    "healThreshold": 0.5,
+    "potionThreshold": 0.4,
+    "useSpells": true,
+    "allowFriendlyFire": false,
+    "reactions": {
+      "shield": true,
+      "opportunityAttack": true,
+      "counterspell": false,
+      "uncannyDodge": false,
+      "defensiveFlurry": false
+    }
+  },
   "robos:inventory": [
-    { "slug": "potion-healing", "quantity": 2, "slot": 0 },
-    { "slug": "torch", "quantity": 1, "slot": 1 },
-    { "slug": "leather-boots", "quantity": 1, "slot": 2 }
+    {
+      "slot": 0,
+      "slug": "potion-healing",
+      "name": "potion-healing",
+      "icon": "📦",
+      "category": "misc",
+      "quantity": 2,
+      "weight": 0.5
+    },
+    {
+      "slot": 1,
+      "slug": "torch",
+      "name": "torch",
+      "icon": "📦",
+      "category": "misc",
+      "quantity": 1,
+      "weight": 1
+    },
+    {
+      "slot": 2,
+      "slug": "leather-boots",
+      "name": "leather-boots",
+      "icon": "📦",
+      "category": "misc",
+      "quantity": 1,
+      "weight": 3
+    }
   ],
   "inventory": [
-    { "slug": "potion-healing", "quantity": 2, "slot": 0 },
-    { "slug": "torch", "quantity": 1, "slot": 1 },
-    { "slug": "leather-boots", "quantity": 1, "slot": 2 }
-  ],
-  "backstory": "Childhood companion and foster sister in Candlekeep, always picking locks and following along on adventures."
+    {
+      "slot": 0,
+      "slug": "potion-healing",
+      "name": "potion-healing",
+      "icon": "📦",
+      "category": "misc",
+      "quantity": 2,
+      "weight": 0.5
+    },
+    {
+      "slot": 1,
+      "slug": "torch",
+      "name": "torch",
+      "icon": "📦",
+      "category": "misc",
+      "quantity": 1,
+      "weight": 1
+    },
+    {
+      "slot": 2,
+      "slug": "leather-boots",
+      "name": "leather-boots",
+      "icon": "📦",
+      "category": "misc",
+      "quantity": 1,
+      "weight": 3
+    }
+  ]
 }
