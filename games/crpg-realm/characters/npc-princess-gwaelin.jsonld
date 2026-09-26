@@ -1,0 +1,45 @@
+{
+  "@context": {
+    "robos": "urn:robos:",
+    "schema": "https://schema.org/",
+    "dcterms": "http://purl.org/dc/terms/"
+  },
+  "@id": "urn:robos:crpg:character:npc-princess-gwaelin",
+  "@type": [
+    "robos:CRPGCharacter",
+    "robos:CRPGNPC",
+    "schema:Person"
+  ],
+  "dcterms:title": "Princess Gwaelin",
+  "robos:characterType": "npc",
+  "schema:name": "Princess Gwaelin",
+  "name": "Princess Gwaelin",
+  "slug": "npc-princess-gwaelin",
+  "characterType": "npc",
+  "robos:portrait": "👸",
+  "portrait": "👸",
+  "robos:alignment": "Neutral Good",
+  "alignment": "Neutral Good",
+  "robos:backstory": "Beloved princess of Alefgard kidnapped by the Dragonlord in a swamp cave.",
+  "backstory": "Beloved princess of Alefgard kidnapped by the Dragonlord in a swamp cave.",
+  "robos:npcRole": "princess",
+  "role": "princess",
+  "robos:interactionType": "talk",
+  "interactionType": "talk",
+  "robos:location": "tantegel-throne-room",
+  "location": "tantegel-throne-room",
+  "robos:facing": "down",
+  "facing": "down",
+  "robos:col": 6,
+  "col": 6,
+  "robos:row": 19,
+  "row": 19,
+  "robos:dialogue": [
+    "I have waited so long for thee, brave Hero. I knew the bloodline of Erdrick would save our realm.",
+    "Wilt thou take me back to Tantegel Castle?"
+  ],
+  "dialogue": [
+    "I have waited so long for thee, brave Hero. I knew the bloodline of Erdrick would save our realm.",
+    "Wilt thou take me back to Tantegel Castle?"
+  ]
+}

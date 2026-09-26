@@ -10,9 +10,11 @@
     "schema:Place"
   ],
   "dcterms:title": "Candlekeep AR2600 — Citadel & Library Fortress (80x60 tiles, 5120x3840 px)",
-  "robos:width": 320.0,
-  "robos:height": 240.0,
+  "robos:width": 320,
+  "robos:height": 240,
   "robos:terrain": "grass",
+  "robos:backgroundImage": "res://assets/blockouts/candlekeep.png",
+  "robos:backgroundOpacity": 1,
   "robos:mapObjects": [
     {
       "@type": "robos:CRPGMapObject",
@@ -87,7 +89,7 @@
         14,
         14
       ],
-      "robos:radius": 4.0,
+      "robos:radius": 4,
       "dcterms:title": "Sea Cliff Crags"
     },
     {
@@ -99,7 +101,7 @@
         12,
         60
       ],
-      "robos:radius": 4.0,
+      "robos:radius": 4,
       "dcterms:title": "Sea Cliff Crags"
     },
     {
@@ -111,7 +113,7 @@
         12,
         120
       ],
-      "robos:radius": 4.0,
+      "robos:radius": 4,
       "dcterms:title": "Sea Cliff Crags"
     },
     {
@@ -123,7 +125,7 @@
         14,
         180
       ],
-      "robos:radius": 4.0,
+      "robos:radius": 4,
       "dcterms:title": "Sea Cliff Crags"
     },
     {
@@ -135,7 +137,7 @@
         16,
         224
       ],
-      "robos:radius": 4.0,
+      "robos:radius": 4,
       "dcterms:title": "Sea Cliff Crags"
     },
     {
@@ -147,7 +149,7 @@
         70,
         12
       ],
-      "robos:radius": 4.0,
+      "robos:radius": 4,
       "dcterms:title": "Sea Cliff Crags"
     },
     {
@@ -159,7 +161,7 @@
         140,
         12
       ],
-      "robos:radius": 4.0,
+      "robos:radius": 4,
       "dcterms:title": "Sea Cliff Crags"
     },
     {
@@ -171,7 +173,7 @@
         210,
         12
       ],
-      "robos:radius": 4.0,
+      "robos:radius": 4,
       "dcterms:title": "Sea Cliff Crags"
     },
     {
@@ -183,7 +185,7 @@
         280,
         12
       ],
-      "robos:radius": 4.0,
+      "robos:radius": 4,
       "dcterms:title": "Sea Cliff Crags"
     },
     {
@@ -195,7 +197,7 @@
         70,
         228
       ],
-      "robos:radius": 4.0,
+      "robos:radius": 4,
       "dcterms:title": "Sea Cliff Crags"
     },
     {
@@ -207,7 +209,7 @@
         140,
         228
       ],
-      "robos:radius": 4.0,
+      "robos:radius": 4,
       "dcterms:title": "Sea Cliff Crags"
     },
     {
@@ -219,7 +221,7 @@
         210,
         228
       ],
-      "robos:radius": 4.0,
+      "robos:radius": 4,
       "dcterms:title": "Sea Cliff Crags"
     },
     {
@@ -231,7 +233,7 @@
         280,
         228
       ],
-      "robos:radius": 4.0,
+      "robos:radius": 4,
       "dcterms:title": "Sea Cliff Crags"
     },
     {
@@ -243,7 +245,7 @@
         306,
         40
       ],
-      "robos:radius": 4.0,
+      "robos:radius": 4,
       "dcterms:title": "Sea Cliff Crags"
     },
     {
@@ -255,7 +257,7 @@
         306,
         200
       ],
-      "robos:radius": 4.0,
+      "robos:radius": 4,
       "dcterms:title": "Sea Cliff Crags"
     },
     {
@@ -347,7 +349,7 @@
         18,
         14
       ],
-      "robos:radius": 5.0,
+      "robos:radius": 5,
       "dcterms:title": "Bastion Watchtower (tower_nw)"
     },
     {
@@ -359,7 +361,7 @@
         290,
         14
       ],
-      "robos:radius": 5.0,
+      "robos:radius": 5,
       "dcterms:title": "Bastion Watchtower (tower_ne)"
     },
     {
@@ -371,7 +373,7 @@
         18,
         226
       ],
-      "robos:radius": 5.0,
+      "robos:radius": 5,
       "dcterms:title": "Bastion Watchtower (tower_sw)"
     },
     {
@@ -383,7 +385,7 @@
         290,
         226
       ],
-      "robos:radius": 5.0,
+      "robos:radius": 5,
       "dcterms:title": "Bastion Watchtower (tower_se)"
     },
     {
@@ -395,7 +397,7 @@
         290,
         84
       ],
-      "robos:radius": 5.0,
+      "robos:radius": 5,
       "dcterms:title": "Bastion Watchtower (tower_gate_n)"
     },
     {
@@ -407,7 +409,7 @@
         290,
         108
       ],
-      "robos:radius": 5.0,
+      "robos:radius": 5,
       "dcterms:title": "Bastion Watchtower (tower_gate_s)"
     },
     {
@@ -463,7 +465,7 @@
       "robos:shape": "rect",
       "robos:position": [
         271.3,
-        94.0
+        94
       ],
       "robos:size": [
         6,
@@ -478,7 +480,7 @@
       "robos:objectType": "zone",
       "robos:shape": "rect",
       "robos:position": [
-        278.0,
+        278,
         80.7
       ],
       "robos:size": [
@@ -494,12 +496,12 @@
       "robos:objectType": "building",
       "robos:shape": "rect",
       "robos:position": [
-        42.0,
-        16.0
+        42,
+        16
       ],
       "robos:size": [
-        36.0,
-        26.0
+        36,
+        26
       ],
       "dcterms:title": "Candlekeep Inn (Winthrop's Tavern & Hostel AR2616)"
     },
@@ -509,12 +511,12 @@
       "robos:objectType": "zone",
       "robos:shape": "rect",
       "robos:position": [
-        64.0,
-        36.0
+        64,
+        36
       ],
       "robos:size": [
-        14.0,
-        8.0
+        14,
+        8
       ],
       "dcterms:title": "Inn Wooden Porch & Veranda"
     },
@@ -528,8 +530,8 @@
         37.5
       ],
       "robos:size": [
-        6.0,
-        5.0
+        6,
+        5
       ],
       "dcterms:title": "Candlekeep Inn Front Entrance Door (AR2616)",
       "robos:open": true
@@ -541,11 +543,11 @@
       "robos:shape": "rect",
       "robos:position": [
         69.4,
-        40.0
+        40
       ],
       "robos:size": [
-        6.0,
-        6.0
+        6,
+        6
       ],
       "dcterms:title": "Player Start Location (AR2600 1110.600)",
       "robos:markerNumber": 1
@@ -556,12 +558,12 @@
       "robos:objectType": "zone",
       "robos:shape": "rect",
       "robos:position": [
-        52.0,
-        24.0
+        52,
+        24
       ],
       "robos:size": [
-        6.0,
-        6.0
+        6,
+        6
       ],
       "dcterms:title": "Winthrop (Jovial Innkeeper — 'Clean as an elven arse!')",
       "robos:markerNumber": 2
@@ -572,12 +574,12 @@
       "robos:objectType": "zone",
       "robos:shape": "rect",
       "robos:position": [
-        60.0,
-        24.0
+        60,
+        24
       ],
       "robos:size": [
-        6.0,
-        6.0
+        6,
+        6
       ],
       "dcterms:title": "Firebead Elvenhair (Visiting Mage — Scroll of Identify)",
       "robos:markerNumber": 2
@@ -588,12 +590,12 @@
       "robos:objectType": "building",
       "robos:shape": "rect",
       "robos:position": [
-        18.0,
-        18.0
+        18,
+        18
       ],
       "robos:size": [
-        20.0,
-        18.0
+        20,
+        18
       ],
       "dcterms:title": "Storehouse (Reevor's Rats AR2606)"
     },
@@ -603,12 +605,12 @@
       "robos:objectType": "door",
       "robos:shape": "rect",
       "robos:position": [
-        33.0,
-        25.0
+        33,
+        25
       ],
       "robos:size": [
-        5.0,
-        5.0
+        5,
+        5
       ],
       "dcterms:title": "Storehouse Heavy Wooden Door",
       "robos:open": false
@@ -619,12 +621,12 @@
       "robos:objectType": "zone",
       "robos:shape": "rect",
       "robos:position": [
-        30.0,
+        30,
         26.3
       ],
       "robos:size": [
-        5.0,
-        5.0
+        5,
+        5
       ],
       "dcterms:title": "Reevor (Grumbling Storehouse Keeper — Exterminate Rats)",
       "robos:markerNumber": 9
@@ -638,7 +640,7 @@
         22,
         22
       ],
-      "robos:radius": 2.0,
+      "robos:radius": 2,
       "dcterms:title": "Ale & Grain Barrel"
     },
     {
@@ -650,7 +652,7 @@
         24,
         25
       ],
-      "robos:radius": 2.0,
+      "robos:radius": 2,
       "dcterms:title": "Ale & Grain Barrel"
     },
     {
@@ -663,8 +665,8 @@
         16.7
       ],
       "robos:size": [
-        6.0,
-        6.0
+        6,
+        6
       ],
       "dcterms:title": "Phlydia (Absent-Minded Monk — Lost History of Halruaa)",
       "robos:markerNumber": 3
@@ -675,12 +677,12 @@
       "robos:objectType": "fence",
       "robos:shape": "line",
       "robos:position": [
-        170.0,
-        14.0
+        170,
+        14
       ],
       "robos:to": [
-        214.0,
-        14.0
+        214,
+        14
       ],
       "dcterms:title": "Cow Pasture Rail Fence (North)"
     },
@@ -690,12 +692,12 @@
       "robos:objectType": "fence",
       "robos:shape": "line",
       "robos:position": [
-        170.0,
-        32.0
+        170,
+        32
       ],
       "robos:to": [
-        214.0,
-        32.0
+        214,
+        32
       ],
       "dcterms:title": "Cow Pasture Rail Fence (South)"
     },
@@ -705,12 +707,12 @@
       "robos:objectType": "fence",
       "robos:shape": "line",
       "robos:position": [
-        170.0,
-        14.0
+        170,
+        14
       ],
       "robos:to": [
-        170.0,
-        32.0
+        170,
+        32
       ],
       "dcterms:title": "Cow Pasture Rail Fence (West)"
     },
@@ -724,8 +726,8 @@
         19.3
       ],
       "robos:size": [
-        6.0,
-        6.0
+        6,
+        6
       ],
       "dcterms:title": "Dreppin (Farmhand — Sick Cow Nessa & Antidote Quest)",
       "robos:markerNumber": 5
@@ -736,12 +738,12 @@
       "robos:objectType": "zone",
       "robos:shape": "rect",
       "robos:position": [
-        190.0,
-        20.0
+        190,
+        20
       ],
       "robos:size": [
-        8.0,
-        6.0
+        8,
+        6
       ],
       "dcterms:title": "Nessa the Cow"
     },
@@ -755,8 +757,8 @@
         17.9
       ],
       "robos:size": [
-        7.0,
-        7.0
+        7,
+        7
       ],
       "dcterms:title": "Haystack (Hides Phlydia's History of Halruaa)",
       "robos:markerNumber": 6
@@ -767,12 +769,12 @@
       "robos:objectType": "building",
       "robos:shape": "rect",
       "robos:position": [
-        238.0,
-        16.0
+        238,
+        16
       ],
       "robos:size": [
-        36.0,
-        26.0
+        36,
+        26
       ],
       "dcterms:title": "Temple of Oghma (Lord of Knowledge & Scroll Sanctum)"
     },
@@ -782,12 +784,12 @@
       "robos:objectType": "door",
       "robos:shape": "rect",
       "robos:position": [
-        253.0,
+        253,
         34.2
       ],
       "robos:size": [
-        7.0,
-        5.0
+        7,
+        5
       ],
       "dcterms:title": "Temple Grand Ornate Portal",
       "robos:open": true
@@ -798,12 +800,12 @@
       "robos:objectType": "zone",
       "robos:shape": "rect",
       "robos:position": [
-        253.0,
-        24.0
+        253,
+        24
       ],
       "robos:size": [
-        6.0,
-        6.0
+        6,
+        6
       ],
       "dcterms:title": "Priest of Oghma (Clerical Healing, Potions & Identification)",
       "robos:markerNumber": 7
@@ -814,12 +816,12 @@
       "robos:objectType": "altar",
       "robos:shape": "rect",
       "robos:position": [
-        252.0,
-        20.0
+        252,
+        20
       ],
       "robos:size": [
-        8.0,
-        4.0
+        8,
+        4
       ],
       "dcterms:title": "Altar of Oghma the Binder"
     },
@@ -829,12 +831,12 @@
       "robos:objectType": "building",
       "robos:shape": "rect",
       "robos:position": [
-        66.0,
-        78.0
+        66,
+        78
       ],
       "robos:size": [
-        28.0,
-        22.0
+        28,
+        22
       ],
       "dcterms:title": "Infirmary & Hospital (AR2605)"
     },
@@ -848,8 +850,8 @@
         90.7
       ],
       "robos:size": [
-        5.0,
-        5.0
+        5,
+        5
       ],
       "dcterms:title": "Infirmary Door",
       "robos:open": true
@@ -860,12 +862,12 @@
       "robos:objectType": "zone",
       "robos:shape": "rect",
       "robos:position": [
-        76.0,
-        85.0
+        76,
+        85
       ],
       "robos:size": [
-        6.0,
-        6.0
+        6,
+        6
       ],
       "dcterms:title": "Priest of Oghma (Infirmary Healer — Free Healing Potion)",
       "robos:markerNumber": 12
@@ -876,12 +878,12 @@
       "robos:objectType": "building",
       "robos:shape": "rect",
       "robos:position": [
-        80.0,
-        134.0
+        80,
+        134
       ],
       "robos:size": [
-        26.0,
-        20.0
+        26,
+        20
       ],
       "dcterms:title": "Priest's Quarters (AR2602)"
     },
@@ -892,11 +894,11 @@
       "robos:shape": "rect",
       "robos:position": [
         97.3,
-        144.0
+        144
       ],
       "robos:size": [
-        5.0,
-        5.0
+        5,
+        5
       ],
       "dcterms:title": "Priest's Quarters Sturdy Door",
       "robos:open": false
@@ -907,12 +909,12 @@
       "robos:objectType": "zone",
       "robos:shape": "rect",
       "robos:position": [
-        90.0,
-        140.0
+        90,
+        140
       ],
       "robos:size": [
-        6.0,
-        6.0
+        6,
+        6
       ],
       "dcterms:title": "Shank (Dagger Assassin — 'You'll die quietly!')",
       "robos:markerNumber": 4
@@ -923,12 +925,12 @@
       "robos:objectType": "zone",
       "robos:shape": "rect",
       "robos:position": [
-        100.0,
-        146.0
+        100,
+        146
       ],
       "robos:size": [
-        6.0,
-        6.0
+        6,
+        6
       ],
       "dcterms:title": "Parda (Concerned Monk Warning of Danger)"
     },
@@ -938,12 +940,12 @@
       "robos:objectType": "building",
       "robos:shape": "rect",
       "robos:position": [
-        114.0,
-        144.0
+        114,
+        144
       ],
       "robos:size": [
-        26.0,
-        20.0
+        26,
+        20
       ],
       "dcterms:title": "Servants' Bunkhouse (AR2607)"
     },
@@ -957,8 +959,8 @@
         154.7
       ],
       "robos:size": [
-        5.0,
-        5.0
+        5,
+        5
       ],
       "dcterms:title": "Bunkhouse Door",
       "robos:open": false
@@ -969,12 +971,12 @@
       "robos:objectType": "zone",
       "robos:shape": "rect",
       "robos:position": [
-        122.0,
-        150.0
+        122,
+        150
       ],
       "robos:size": [
-        6.0,
-        6.0
+        6,
+        6
       ],
       "dcterms:title": "Carbos (Assassin — 'I have a contract on your head!')",
       "robos:markerNumber": 14
@@ -985,12 +987,12 @@
       "robos:objectType": "zone",
       "robos:shape": "rect",
       "robos:position": [
-        132.0,
-        156.0
+        132,
+        156
       ],
       "robos:size": [
-        6.0,
-        6.0
+        6,
+        6
       ],
       "dcterms:title": "Karan (Concerned Elder Monk)"
     },
@@ -1000,12 +1002,12 @@
       "robos:objectType": "building",
       "robos:shape": "rect",
       "robos:position": [
-        140.0,
-        64.0
+        140,
+        64
       ],
       "robos:size": [
-        64.0,
-        46.0
+        64,
+        46
       ],
       "dcterms:title": "Candlekeep Central Citadel & Great Library of Knowledge (AR2626)"
     },
@@ -1063,12 +1065,12 @@
       "robos:objectType": "stairs",
       "robos:shape": "rect",
       "robos:position": [
-        164.0,
-        106.0
+        164,
+        106
       ],
       "robos:size": [
-        16.0,
-        6.0
+        16,
+        6
       ],
       "dcterms:title": "Great Library Stone Steps of Enlightenment"
     },
@@ -1078,12 +1080,12 @@
       "robos:objectType": "door",
       "robos:shape": "rect",
       "robos:position": [
-        168.0,
-        108.0
+        168,
+        108
       ],
       "robos:size": [
-        8.0,
-        4.0
+        8,
+        4
       ],
       "dcterms:title": "Great Library Massive Wrought-Iron Portals",
       "robos:open": false
@@ -1095,11 +1097,11 @@
       "robos:shape": "rect",
       "robos:position": [
         168.75,
-        110.0
+        110
       ],
       "robos:size": [
-        7.0,
-        7.0
+        7,
+        7
       ],
       "dcterms:title": "Gorion (Foster Father & Guardian Mage — Departure with Charname)",
       "robos:markerNumber": 18
@@ -1110,12 +1112,12 @@
       "robos:objectType": "zone",
       "robos:shape": "rect",
       "robos:position": [
-        184.0,
-        122.0
+        184,
+        122
       ],
       "robos:size": [
-        6.0,
-        6.0
+        6,
+        6
       ],
       "dcterms:title": "Tethtoril (First Reader of Candlekeep — Circling Courtyard)",
       "robos:markerNumber": 17
@@ -1126,12 +1128,12 @@
       "robos:objectType": "zone",
       "robos:shape": "rect",
       "robos:position": [
-        148.0,
-        116.0
+        148,
+        116
       ],
       "robos:size": [
-        28.0,
-        16.0
+        28,
+        16
       ],
       "dcterms:title": "Chanter's Inner Bailey Garden (Prophecies of Alaundo)"
     },
@@ -1141,12 +1143,12 @@
       "robos:objectType": "wall",
       "robos:shape": "line",
       "robos:position": [
-        136.0,
-        60.0
+        136,
+        60
       ],
       "robos:to": [
-        136.0,
-        136.0
+        136,
+        136
       ],
       "robos:thickness": 3.5,
       "dcterms:title": "Citadel Inner Curtain Wall (West)"
@@ -1157,12 +1159,12 @@
       "robos:objectType": "wall",
       "robos:shape": "line",
       "robos:position": [
-        136.0,
-        136.0
+        136,
+        136
       ],
       "robos:to": [
-        208.0,
-        136.0
+        208,
+        136
       ],
       "robos:thickness": 3.5,
       "dcterms:title": "Citadel Inner Curtain Wall (South)"
@@ -1173,12 +1175,12 @@
       "robos:objectType": "door",
       "robos:shape": "rect",
       "robos:position": [
-        174.0,
-        134.0
+        174,
+        134
       ],
       "robos:size": [
-        8.0,
-        4.0
+        8,
+        4
       ],
       "dcterms:title": "Inner Citadel Portcullis Arch",
       "robos:open": true
@@ -1189,12 +1191,12 @@
       "robos:objectType": "zone",
       "robos:shape": "rect",
       "robos:position": [
-        220.0,
-        136.0
+        220,
+        136
       ],
       "robos:size": [
-        28.0,
-        24.0
+        28,
+        24
       ],
       "dcterms:title": "Martial Combat Practice Yard"
     },
@@ -1204,12 +1206,12 @@
       "robos:objectType": "zone",
       "robos:shape": "rect",
       "robos:position": [
-        228.0,
+        228,
         148.7
       ],
       "robos:size": [
-        6.0,
-        6.0
+        6,
+        6
       ],
       "dcterms:title": "Jondalar (Weapon Master & Combat Instructor)",
       "robos:markerNumber": 8
@@ -1220,12 +1222,12 @@
       "robos:objectType": "zone",
       "robos:shape": "rect",
       "robos:position": [
-        236.0,
-        142.0
+        236,
+        142
       ],
       "robos:size": [
-        6.0,
-        6.0
+        6,
+        6
       ],
       "dcterms:title": "Erik (Skilled Archer Companion)"
     },
@@ -1238,7 +1240,7 @@
         224,
         140
       ],
-      "robos:radius": 2.0,
+      "robos:radius": 2,
       "dcterms:title": "Straw Combat Target Dummy"
     },
     {
@@ -1250,7 +1252,7 @@
         224,
         152
       ],
-      "robos:radius": 2.0,
+      "robos:radius": 2,
       "dcterms:title": "Straw Combat Target Dummy"
     },
     {
@@ -1259,12 +1261,12 @@
       "robos:objectType": "building",
       "robos:shape": "rect",
       "robos:position": [
-        214.0,
-        172.0
+        214,
+        172
       ],
       "robos:size": [
-        32.0,
-        22.0
+        32,
+        22
       ],
       "dcterms:title": "Candlekeep Guard Barracks (AR2618)"
     },
@@ -1278,8 +1280,8 @@
         183.3
       ],
       "robos:size": [
-        5.0,
-        5.0
+        5,
+        5
       ],
       "dcterms:title": "Barracks Heavy Oak Door",
       "robos:open": true
@@ -1290,12 +1292,12 @@
       "robos:objectType": "zone",
       "robos:shape": "rect",
       "robos:position": [
-        222.0,
-        178.0
+        222,
+        178
       ],
       "robos:size": [
-        6.0,
-        6.0
+        6,
+        6
       ],
       "dcterms:title": "Fuller (Barracks Guard — Wants Crossbow Bolts, Dagger +1)",
       "robos:markerNumber": 15
@@ -1306,12 +1308,12 @@
       "robos:objectType": "chest",
       "robos:shape": "rect",
       "robos:position": [
-        232.0,
-        176.0
+        232,
+        176
       ],
       "robos:size": [
-        4.0,
-        3.0
+        4,
+        3
       ],
       "dcterms:title": "Northeast Footlocker (Hull's Long Sword & Dreppin's Antidote)"
     },
@@ -1321,12 +1323,12 @@
       "robos:objectType": "building",
       "robos:shape": "rect",
       "robos:position": [
-        178.0,
-        180.0
+        178,
+        180
       ],
       "robos:size": [
-        26.0,
-        20.0
+        26,
+        20
       ],
       "dcterms:title": "Storehouse Cellars (Training Arena AR2643)"
     },
@@ -1340,8 +1342,8 @@
         191.3
       ],
       "robos:size": [
-        6.0,
-        5.0
+        6,
+        5
       ],
       "dcterms:title": "Cellars Vault Entrance",
       "robos:open": false
@@ -1353,11 +1355,11 @@
       "robos:shape": "rect",
       "robos:position": [
         190.7,
-        195.0
+        195
       ],
       "robos:size": [
-        6.0,
-        6.0
+        6,
+        6
       ],
       "dcterms:title": "The Gatewarden (Directs to Obe for 6-Member Combat Drill)",
       "robos:markerNumber": 10
@@ -1368,12 +1370,12 @@
       "robos:objectType": "zone",
       "robos:shape": "rect",
       "robos:position": [
-        184.0,
-        186.0
+        184,
+        186
       ],
       "robos:size": [
-        6.0,
-        6.0
+        6,
+        6
       ],
       "dcterms:title": "Obe the Illusionist (Summons Practice Monsters: Gibberlings & Kobolds)",
       "robos:markerNumber": 13
@@ -1384,12 +1386,12 @@
       "robos:objectType": "road",
       "robos:shape": "rect",
       "robos:position": [
-        208.0,
-        92.0
+        208,
+        92
       ],
       "robos:size": [
-        78.0,
-        8.0
+        78,
+        8
       ],
       "dcterms:title": "Great Citadel Cobblestone Road (East Gate to Bailey)"
     },
@@ -1399,12 +1401,12 @@
       "robos:objectType": "road",
       "robos:shape": "rect",
       "robos:position": [
-        232.0,
-        42.0
+        232,
+        42
       ],
       "robos:size": [
-        8.0,
-        52.0
+        8,
+        52
       ],
       "dcterms:title": "Temple Way (North Branch to Temple of Oghma)"
     },
@@ -1414,12 +1416,12 @@
       "robos:objectType": "road",
       "robos:shape": "rect",
       "robos:position": [
-        66.0,
-        44.0
+        66,
+        44
       ],
       "robos:size": [
-        74.0,
-        8.0
+        74,
+        8
       ],
       "dcterms:title": "Inn Way (Cobblestone Path from Inn to Library)"
     },
@@ -1429,12 +1431,12 @@
       "robos:objectType": "road",
       "robos:shape": "rect",
       "robos:position": [
-        216.0,
-        98.0
+        216,
+        98
       ],
       "robos:size": [
-        8.0,
-        76.0
+        8,
+        76
       ],
       "dcterms:title": "Garrison Way (South Branch to Barracks & Drill Ground)"
     },
@@ -1444,12 +1446,12 @@
       "robos:objectType": "road",
       "robos:shape": "rect",
       "robos:position": [
-        90.0,
-        96.0
+        90,
+        96
       ],
       "robos:size": [
-        8.0,
-        50.0
+        8,
+        50
       ],
       "dcterms:title": "Acolyte's Walk (Path to Infirmary & Priest's Quarters)"
     },
@@ -1459,12 +1461,12 @@
       "robos:objectType": "road",
       "robos:shape": "rect",
       "robos:position": [
-        96.0,
-        144.0
+        96,
+        144
       ],
       "robos:size": [
-        36.0,
-        8.0
+        36,
+        8
       ],
       "dcterms:title": "Bunkhouse Crossroad"
     },
@@ -1666,10 +1668,10 @@
       "robos:objectType": "statue",
       "robos:shape": "circle",
       "robos:position": [
-        168.0,
-        128.0
+        168,
+        128
       ],
-      "robos:radius": 3.0,
+      "robos:radius": 3,
       "dcterms:title": "Heroic Marble Statue of Alaundo the Seer"
     },
     {
@@ -1678,10 +1680,10 @@
       "robos:objectType": "statue",
       "robos:shape": "circle",
       "robos:position": [
-        232.0,
-        34.0
+        232,
+        34
       ],
-      "robos:radius": 3.0,
+      "robos:radius": 3,
       "dcterms:title": "Sacred Stone Monument to Oghma"
     }
   ],
@@ -9164,7 +9166,5 @@
     "objectsHash": "864283142ae923d4",
     "image": "res://assets/blockouts/candlekeep.png",
     "imagePxPerFoot": 16
-  },
-  "robos:backgroundImage": "res://assets/blockouts/candlekeep.png",
-  "robos:backgroundOpacity": 1.0
+  }
 }

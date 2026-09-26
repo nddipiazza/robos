@@ -17,6 +17,7 @@ let mainWindow = null;
 function getPaths() {
   const repoRoot = path.resolve(__dirname, '../..');
   const campaignsDir = path.join(repoRoot, 'games/crpg-realm/campaigns');
+  const charactersDir = path.join(repoRoot, 'games/crpg-realm/characters');
   const mapsDir = path.join(repoRoot, 'games/crpg-realm/maps');
   const scenesDir = path.join(repoRoot, 'games/crpg-realm/scenes');
   const blockoutsDir = path.join(repoRoot, 'games/crpg-realm/assets/blockouts');
@@ -25,6 +26,7 @@ function getPaths() {
   return {
     repoRoot,
     campaignsDir,
+    charactersDir,
     mapsDir,
     scenesDir,
     blockoutsDir,
@@ -40,7 +42,7 @@ function createWindow() {
     minWidth: 1100,
     minHeight: 740,
     backgroundColor: '#0d1117',
-    title: 'RobOS cRPG Editor — Campaign, Character, Inventory & Blockmap Studio',
+    title: 'RobOS cRPG Editor — Campaign, Character, Inventory & Maps Studio',
     icon: path.join(__dirname, 'icon.svg'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -82,9 +84,174 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
 
+// Helper to seed initial character entities if charactersDir is empty
+function ensureSeedCharacters(charactersDir) {
+  try {
+    if (!fs.existsSync(charactersDir)) {
+      fs.mkdirSync(charactersDir, { recursive: true });
+    }
+    const existing = fs.readdirSync(charactersDir).filter(f => f.endsWith('.jsonld'));
+    if (existing.length > 0) return;
+
+    const seedList = [
+      {
+        slug: 'hero-vance',
+        characterType: 'hero',
+        name: 'Vance',
+        race: 'Human',
+        class: 'Fighter',
+        subclass: 'Champion',
+        background: 'Ward of Gorion',
+        alignment: 'Neutral Good',
+        level: 1,
+        xp: 0,
+        portrait: '⚔️',
+        str: 16, dex: 14, con: 15, int: 10, wis: 12, cha: 8,
+        ac: 16, hpMax: 12, hpCurrent: 12, speed: 30, initiative: 2, prof: 2,
+        mainHand: 'Longsword (+5 to hit, 1d8+3 sl)',
+        offHand: 'Steel Shield (+2 AC)',
+        armor: 'Chain Mail (AC 16)',
+        helmet: 'Iron Bascinet',
+        cloak: "Traveler's Cloak",
+        boots: 'Stout Boots',
+        ring1: 'Ring of Princes (+1 AC/Saves)',
+        quickItems: '2x Potion of Healing, Torch',
+        spells: 'Second Wind (1d10+1 hp/rest)',
+        backstory: 'Raised within the fortified monastery of Candlekeep by the sage Gorion. Trained in bladecraft by the Watchers.'
+      },
+      {
+        slug: 'hero-imoen',
+        characterType: 'hero',
+        name: 'Imoen',
+        race: 'Human',
+        class: 'Rogue',
+        subclass: 'Thief',
+        background: 'Candlekeep Mischief',
+        alignment: 'Neutral Good',
+        level: 1,
+        xp: 0,
+        portrait: '🏹',
+        str: 9, dex: 18, con: 16, int: 12, wis: 11, cha: 16,
+        ac: 15, hpMax: 10, hpCurrent: 10, speed: 30, initiative: 4, prof: 2,
+        mainHand: 'Shortbow (+6 to hit, 1d6+4 pierc)',
+        offHand: 'Dagger (+6 to hit, 1d4+4)',
+        armor: 'Studded Leather Armor (AC 12+DEX)',
+        helmet: 'Leather Cap',
+        cloak: 'Cloak of Elvenkind',
+        boots: 'Soft Leather Boots',
+        ring1: 'Ring of Lockpicking',
+        quickItems: "Thieves' Tools, 20x Arrows, Potion of Speed",
+        spells: 'Sneak Attack (1d6), Cunning Action',
+        backstory: 'Childhood companion and foster sister in Candlekeep, always picking locks and following along on adventures.'
+      },
+      {
+        slug: 'hero-ignis',
+        characterType: 'hero',
+        name: 'Ignis',
+        race: 'High Elf',
+        class: 'Wizard',
+        subclass: 'Evoker',
+        background: 'Scholar of Candlekeep',
+        alignment: 'True Neutral',
+        level: 1,
+        xp: 0,
+        portrait: '🔮',
+        str: 8, dex: 15, con: 13, int: 17, wis: 12, cha: 10,
+        ac: 12, hpMax: 7, hpCurrent: 7, speed: 30, initiative: 2, prof: 2,
+        mainHand: 'Quarterstaff (+1 to hit, 1d6 blud)',
+        offHand: 'Spell Component Pouch',
+        armor: 'Mage Robes',
+        helmet: 'Circlet of Focus',
+        cloak: "Scholar's Mantle",
+        boots: 'Cloth Slippers',
+        ring1: 'Ring of Wizardry',
+        quickItems: 'Scroll of Magic Missile, Wand of Frost (3 ch)',
+        spells: 'Cantrips: Fire Bolt, Light, Prestidigitation. Spells: Magic Missile, Shield, Mage Armor, Burning Hands',
+        backstory: 'Apprentice archivist studying under Firebead Elfmirk. Fascinated by the weave of destructive magic.'
+      },
+      {
+        slug: 'npc-king-loric',
+        characterType: 'npc',
+        name: 'King Loric',
+        role: 'king',
+        alignment: 'Lawful Good',
+        portrait: '👑',
+        interactionType: 'save',
+        location: 'tantegel-throne-room',
+        facing: 'down',
+        col: 8,
+        row: 4,
+        dialogue: [
+          'Descendant of Erdrick, listen now to my words. It is told that in ages past Erdrick fought demons with a Ball of Light.',
+          'Then came the Dragonlord who stole the precious globe and hid it in the darkness.',
+          'Now, Hero, thou must help us recover the Ball of Light and restore peace to our land. The Dragonlord must be defeated.'
+        ],
+        backstory: 'Monarch of Tantegel Castle, guardian of Alefgard, who preserves deeds in the Imperial Scrolls of Honor.'
+      },
+      {
+        slug: 'npc-princess-gwaelin',
+        characterType: 'npc',
+        name: 'Princess Gwaelin',
+        role: 'princess',
+        alignment: 'Neutral Good',
+        portrait: '👸',
+        interactionType: 'talk',
+        location: 'tantegel-throne-room',
+        facing: 'down',
+        col: 9,
+        row: 4,
+        dialogue: [
+          'Please save our kingdom from the Dragonlord, brave hero.',
+          'I have faith that the bloodline of Erdrick will prevail!'
+        ],
+        backstory: 'Beloved princess of Tantegel Castle, held captive by the Dragonlord in a distant swamp cave.'
+      },
+      {
+        slug: 'npc-elora',
+        characterType: 'npc',
+        name: 'Elora',
+        role: 'partner',
+        alignment: 'Chaotic Good',
+        portrait: '🌲',
+        interactionType: 'talk',
+        location: 'homestead',
+        facing: 'down',
+        col: 6,
+        row: 5,
+        dialogue: [
+          'You finally woke up. We need to prepare before venturing out towards the village square.'
+        ],
+        backstory: 'Trusted companion and scout at the homestead.'
+      }
+    ];
+
+    for (const char of seedList) {
+      const slug = char.slug;
+      const isNpc = char.characterType === 'npc';
+      const jsonld = {
+        '@context': {
+          robos: 'https://robos.dev/ns/sdlc#',
+          dcterms: 'http://purl.org/dc/terms/',
+          schema: 'https://schema.org/',
+        },
+        '@id': `urn:robos:crpg:character:${slug}`,
+        '@type': ['robos:CRPGCharacter', isNpc ? 'robos:CRPGNPC' : 'robos:CRPGHero', 'schema:Person'],
+        'dcterms:title': char.name,
+        'robos:characterType': char.characterType,
+        'robos:name': char.name,
+        ...char,
+      };
+      fs.writeFileSync(path.join(charactersDir, `${slug}.jsonld`), JSON.stringify(jsonld, null, 2) + '\n', 'utf8');
+    }
+  } catch (err) {
+    console.warn('Could not seed default characters:', err.message);
+  }
+}
+
 // IPC Handler Registrations
 function setupIpcHandlers() {
   const paths = getPaths();
+  ensureSeedCharacters(paths.charactersDir);
 
   // 1. Environment Paths
   ipcMain.handle('app:get-paths', async () => paths);
@@ -107,6 +274,8 @@ function setupIpcHandlers() {
           const gs = data['robos:gameState'] || data.gameState || {};
           const heroes = Array.isArray(data['robos:heroes']) ? data['robos:heroes'] : (Array.isArray(data.heroes) ? data.heroes : []);
           const quests = Array.isArray(gs['robos:questLog']) ? gs['robos:questLog'] : (Array.isArray(gs.questLog) ? gs.questLog : []);
+          const maps = Array.isArray(data['robos:maps']) ? data['robos:maps'] : (Array.isArray(data.maps) ? data.maps : []);
+          const characters = Array.isArray(data['robos:characters']) ? data['robos:characters'] : (Array.isArray(data.characters) ? data.characters : []);
 
           campaigns.push({
             slug,
@@ -118,8 +287,11 @@ function setupIpcHandlers() {
             setting: data['robos:setting'] || data.setting || 'Sword Coast',
             ruleSet: data['robos:ruleSet'] || data.ruleSet || 'D&D 5e SRD',
             difficulty: data['robos:difficulty'] || data.difficulty || 'Core Rules',
+            startingMap: data['robos:startingMap'] || data.startingMap || gs['robos:currentScene'] || gs.currentScene || data.currentScene || '',
             currentScene: gs['robos:currentScene'] || gs.currentScene || data.currentScene || '',
             heroCount: heroes.length,
+            mapCount: maps.length,
+            characterCount: characters.length,
             questCount: quests.length,
             partyGold: gs['robos:sharedInventory']?.gold ?? gs.sharedInventory?.gold ?? 0,
           });
@@ -155,20 +327,24 @@ function setupIpcHandlers() {
 
       const formatted = {
         '@context': {
-          robos: 'urn:robos:',
+          robos: 'https://robos.dev/ns/sdlc#',
           dcterms: 'http://purl.org/dc/terms/',
+          schema: 'https://schema.org/',
           xsd: 'http://www.w3.org/2001/XMLSchema#',
         },
-        '@id': data['@id'] || `urn:robos:crpg:campaign:${safeSlug}`,
-        '@type': 'robos:CRPGCampaign',
+        '@id': `urn:robos:crpg:campaign:${safeSlug}`,
+        '@type': ['robos:CRPGCampaign', 'schema:CreativeWork'],
         'dcterms:title': data.title || data['dcterms:title'] || safeSlug,
         'dcterms:description': data.description || data['dcterms:description'] || '',
         'robos:setting': data.setting || data['robos:setting'] || 'Sword Coast',
         'robos:ruleSet': data.ruleSet || data['robos:ruleSet'] || 'D&D 5e SRD',
         'robos:difficulty': data.difficulty || data['robos:difficulty'] || 'Core Rules',
+        'robos:startingMap': data.startingMap || data['robos:startingMap'] || data.currentScene || '',
+        'robos:maps': Array.isArray(data.maps) ? data.maps : (Array.isArray(data['robos:maps']) ? data['robos:maps'] : []),
+        'robos:characters': Array.isArray(data.characters) ? data.characters : (Array.isArray(data['robos:characters']) ? data['robos:characters'] : []),
         'robos:heroes': data.heroes || data['robos:heroes'] || [],
         'robos:gameState': data.gameState || data['robos:gameState'] || {
-          'robos:currentScene': 'candlekeep-exterior',
+          'robos:currentScene': data.startingMap || 'candlekeep-exterior',
           'robos:activeParty': [],
           'robos:partyLeaderIndex': 0,
           'robos:partyFormation': 'rank',
@@ -198,6 +374,121 @@ function setupIpcHandlers() {
   ipcMain.handle('campaigns:delete', async (_event, slug) => {
     try {
       const filePath = path.join(paths.campaignsDir, `${slug}.jsonld`);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  // 2b. Character & NPC APIs
+  ipcMain.handle('characters:list', async () => {
+    try {
+      ensureSeedCharacters(paths.charactersDir);
+      const files = fs.readdirSync(paths.charactersDir).filter(f => f.endsWith('.jsonld'));
+      const characters = [];
+
+      for (const file of files) {
+        const slug = file.replace(/\.jsonld$/, '');
+        const fullPath = path.join(paths.charactersDir, file);
+        try {
+          const raw = fs.readFileSync(fullPath, 'utf8');
+          const data = JSON.parse(raw);
+          const charType = data['robos:characterType'] || data.characterType || (data['@type']?.includes('robos:CRPGNPC') ? 'npc' : 'hero');
+          characters.push({
+            slug,
+            fileName: file,
+            path: fullPath,
+            id: data['@id'] || `urn:robos:crpg:character:${slug}`,
+            name: data['dcterms:title'] || data['robos:name'] || data.name || slug,
+            characterType: charType,
+            role: data['robos:role'] || data.role || (charType === 'npc' ? 'villager' : ''),
+            class: data['robos:class'] || data.class || '',
+            subclass: data['robos:subclass'] || data.subclass || '',
+            race: data['robos:race'] || data.race || 'Human',
+            background: data['robos:background'] || data.background || '',
+            level: data['robos:level'] || data.level || 1,
+            alignment: data['robos:alignment'] || data.alignment || 'True Neutral',
+            portrait: data['robos:portrait'] || data.portrait || (charType === 'npc' ? '👤' : '⚔️'),
+            interactionType: data['robos:interactionType'] || data.interactionType || 'talk',
+            location: data['robos:location'] || data.location || '',
+            col: data['robos:col'] ?? data.col ?? 0,
+            row: data['robos:row'] ?? data.row ?? 0,
+            facing: data['robos:facing'] || data.facing || 'down',
+            dialogue: data['robos:dialogue'] || data.dialogue || [],
+            raw: data,
+          });
+        } catch (e) {
+          characters.push({ slug, fileName: file, path: fullPath, name: slug, error: e.message });
+        }
+      }
+      return { success: true, characters };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('characters:load', async (_event, slug) => {
+    try {
+      const filePath = path.join(paths.charactersDir, `${slug}.jsonld`);
+      if (!fs.existsSync(filePath)) {
+        throw new Error(`Character file not found: ${filePath}`);
+      }
+      const raw = fs.readFileSync(filePath, 'utf8');
+      const data = JSON.parse(raw);
+      return { success: true, slug, filePath, data };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('characters:save', async (_event, { slug, data }) => {
+    try {
+      if (!slug) throw new Error('Character slug is required');
+      const safeSlug = slug.toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+      const filePath = path.join(paths.charactersDir, `${safeSlug}.jsonld`);
+      const charType = data.characterType || (data['@type']?.includes('robos:CRPGNPC') ? 'npc' : 'hero');
+      const isNpc = charType === 'npc';
+
+      const formatted = {
+        '@context': {
+          robos: 'https://robos.dev/ns/sdlc#',
+          dcterms: 'http://purl.org/dc/terms/',
+          schema: 'https://schema.org/',
+        },
+        '@id': data['@id'] || `urn:robos:crpg:character:${safeSlug}`,
+        '@type': [
+          'robos:CRPGCharacter',
+          isNpc ? 'robos:CRPGNPC' : 'robos:CRPGHero',
+          'schema:Person',
+        ],
+        'dcterms:title': data.name || data['dcterms:title'] || safeSlug,
+        'robos:characterType': charType,
+        ...data,
+        slug: safeSlug,
+      };
+
+      if (!fs.existsSync(paths.charactersDir)) {
+        fs.mkdirSync(paths.charactersDir, { recursive: true });
+      }
+      fs.writeFileSync(filePath, JSON.stringify(formatted, null, 2) + '\n', 'utf8');
+
+      return {
+        success: true,
+        slug: safeSlug,
+        filePath,
+        savedAt: new Date().toISOString(),
+      };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('characters:delete', async (_event, slug) => {
+    try {
+      const filePath = path.join(paths.charactersDir, `${slug}.jsonld`);
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
       }
@@ -285,7 +576,7 @@ function setupIpcHandlers() {
           dcterms: 'http://purl.org/dc/terms/',
           schema: 'https://schema.org/',
         },
-        '@id': data['@id'] || `urn:robos:crpg:battle-map:${safeSlug}`,
+        '@id': `urn:robos:crpg:battle-map:${safeSlug}`,
         '@type': ['robos:CRPGBattleMap', 'schema:Place'],
         'dcterms:title': data['dcterms:title'] || data.title || safeSlug,
         'robos:width': Number(data['robos:width'] || data.width || 120),

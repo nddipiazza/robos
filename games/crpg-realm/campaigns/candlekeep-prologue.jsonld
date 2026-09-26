@@ -1,16 +1,40 @@
 {
   "@context": {
-    "robos": "urn:robos:",
+    "robos": "https://robos.dev/ns/sdlc#",
     "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
     "xsd": "http://www.w3.org/2001/XMLSchema#"
   },
   "@id": "urn:robos:crpg:campaign:candlekeep-prologue",
-  "@type": "robos:CRPGCampaign",
+  "@type": [
+    "robos:CRPGCampaign",
+    "schema:CreativeWork"
+  ],
   "dcterms:title": "Candlekeep: The Prophecy Begins",
   "dcterms:description": "The ward of Gorion prepares to leave Candlekeep monastery amidst iron shortages, bounty hunter ambushes, and prophetic whispers along the Sword Coast.",
   "robos:setting": "Sword Coast / Forgotten Realms",
   "robos:ruleSet": "D&D 5e SRD",
   "robos:difficulty": "Core Rules",
+  "robos:startingMap": "tantegel-throne-room",
+  "robos:maps": [
+    "urn:robos:crpg:battle-map:candlekeep",
+    "urn:robos:crpg:battle-map:catacomb-antechamber",
+    "urn:robos:crpg:battle-map:catacomb-corridor",
+    "urn:robos:crpg:battle-map:cavern-depths",
+    "urn:robos:crpg:battle-map:dungeon-crypt-vault",
+    "urn:robos:crpg:battle-map:garrison-war-room",
+    "urn:robos:crpg:battle-map:golem-vault",
+    "urn:robos:crpg:battle-map:homestead-yard",
+    "urn:robos:crpg:battle-map:tantegel-throne-room",
+    "urn:robos:crpg:battle-map:test-doors",
+    "urn:robos:crpg:battle-map:test-wall-room"
+  ],
+  "robos:characters": [
+    "urn:robos:crpg:character:hero-ignis",
+    "urn:robos:crpg:character:hero-imoen",
+    "urn:robos:crpg:character:hero-of-alefgard",
+    "urn:robos:crpg:character:hero-vance"
+  ],
   "robos:heroes": [
     {
       "id": "hero-vance",
@@ -35,14 +59,14 @@
       "speed": 30,
       "initiative": 2,
       "prof": 2,
-      "mainHand": "Longsword (+5 to hit, 1d8+3 sl)",
-      "offHand": "Steel Shield (+2 AC)",
-      "armor": "Chain Mail (AC 16)",
+      "mainHand": "Bamboo Pole (Club 1d4)",
+      "offHand": "Small Shield (+1 AC)",
+      "armor": "Clothes (AC 10+DEX)",
       "helmet": "Iron Bascinet",
       "cloak": "Traveler's Cloak",
       "boots": "Stout Boots",
       "ring1": "Ring of Princes (+1 AC/Saves)",
-      "quickItems": "2x Potion of Healing, Torch",
+      "quickItems": "Herb, Torch, Magic Key",
       "spells": "Second Wind (1d10+1 hp/rest)",
       "backstory": "Raised within the fortified monastery of Candlekeep by the sage Gorion. Trained in bladecraft by the Watchers."
     },
@@ -230,16 +254,16 @@
     "robos:partyLeaderIndex": 0,
     "robos:partyFormation": "rank",
     "robos:sharedInventory": {
-      "gold": 150,
+      "gold": 120,
       "sp": 40,
       "cp": 120,
       "items": [
-        "Potion of Healing (x4)",
-        "Thieves' Tools (Fine)",
-        "Scroll of Armor of Agathys",
-        "Rope (50 ft, silk)",
-        "Tinderbox and 4 Torches"
-      ]
+        "Herb (Restores 20-35 HP)",
+        "Torch (Lights Dungeons 3x3)",
+        "Magic Key (Opens Royal Doors)"
+      ],
+      "silver": 40,
+      "copper": 120
     },
     "robos:questLog": [
       {

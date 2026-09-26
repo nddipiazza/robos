@@ -148,6 +148,119 @@ const ARCHETYPES = {
     quickItems: "2x Healing Potion, Holy Relic",
     spells: "Divine Smite, Lay on Hands (5 hp), Bless",
     backstory: "Sworn champion dispatched to ensure safe passage across the Sword Coast."
+  },
+  // NPC Archetypes & Roles
+  npc_king: {
+    id: "npc-king-loric",
+    slug: "king-loric",
+    name: "King Loric",
+    characterType: "npc",
+    role: "king",
+    alignment: "Lawful Good",
+    portrait: "👑",
+    interactionType: "save",
+    location: "tantegel-throne-room",
+    col: 8,
+    row: 4,
+    facing: "down",
+    dialogue: "Descendant of Erdrick, listen now to my words. Recover the Ball of Light and restore peace to Alefgard!\nTake now whatever thou may find in these Treasure Chests to aid thee in thy quest.",
+    backstory: "Monarch of Tantegel Castle who records heroic deeds on the Imperial Scrolls of Honor."
+  },
+  npc_princess: {
+    id: "npc-princess-gwaelin",
+    slug: "princess-gwaelin",
+    name: "Princess Gwaelin",
+    characterType: "npc",
+    role: "princess",
+    alignment: "Neutral Good",
+    portrait: "👸",
+    interactionType: "talk",
+    location: "tantegel-throne-room",
+    col: 9,
+    row: 4,
+    facing: "down",
+    dialogue: "Please save our kingdom from the Dragonlord, brave hero.\nI have faith that the bloodline of Erdrick will prevail!",
+    backstory: "Beloved princess of Tantegel Castle, held captive by the Dragonlord in a swamp cave."
+  },
+  npc_guard: {
+    id: "npc-tantegel-guard",
+    slug: "tantegel-guard",
+    name: "Tantegel Guard",
+    characterType: "npc",
+    role: "guard",
+    alignment: "Lawful Neutral",
+    portrait: "🛡️",
+    interactionType: "talk",
+    location: "tantegel-throne-room",
+    col: 4,
+    row: 8,
+    facing: "down",
+    dialogue: "Welcome to Tantegel Castle. King Loric awaits thee in the throne room.",
+    backstory: "Royal guard protecting the castle gates and throne dais."
+  },
+  npc_merchant: {
+    id: "npc-brecconary-merchant",
+    slug: "brecconary-merchant",
+    name: "Brecconary Merchant",
+    characterType: "npc",
+    role: "merchant",
+    alignment: "Neutral Good",
+    portrait: "💰",
+    interactionType: "shop",
+    location: "brecconary-town",
+    col: 10,
+    row: 12,
+    facing: "down",
+    dialogue: "Welcome! We have weapons and armor for brave adventurers.",
+    backstory: "Trading weapons, copper swords, and herbs in Brecconary town."
+  },
+  npc_sage: {
+    id: "npc-old-man-healer",
+    slug: "old-man-healer",
+    name: "Old Man Healer",
+    characterType: "npc",
+    role: "sage",
+    alignment: "Neutral Good",
+    portrait: "✨",
+    interactionType: "rest",
+    location: "tantegel-throne-room",
+    col: 14,
+    row: 4,
+    facing: "down",
+    dialogue: "When thy Magic Points are low, come back to me. I shall restore them for free.",
+    backstory: "Mystic elder residing in Tantegel Castle capable of replenishing magical reserves."
+  },
+  npc_innkeeper: {
+    id: "npc-brecconary-innkeeper",
+    slug: "brecconary-innkeeper",
+    name: "Corwin the Innkeeper",
+    characterType: "npc",
+    role: "innkeeper",
+    alignment: "True Neutral",
+    portrait: "🍺",
+    interactionType: "inn",
+    location: "brecconary-town",
+    col: 18,
+    row: 8,
+    facing: "down",
+    dialogue: "Good day! A night's rest at our inn costs 6 Gold. It restores all HP and MP.",
+    backstory: "Warm-hearted innkeeper hosting weary wanderers."
+  },
+  npc_villager: {
+    id: "npc-town-villager",
+    slug: "town-villager",
+    name: "Town Villager",
+    characterType: "npc",
+    role: "villager",
+    alignment: "Neutral Good",
+    portrait: "🧑",
+    interactionType: "talk",
+    location: "brecconary-town",
+    col: 6,
+    row: 14,
+    facing: "right",
+    dialogue: "East of this castle is a town where armor and weapons may be purchased. Return to the inn if thou art wounded.",
+    backstory: "Resident of the town surrounding Tantegel Castle."
   }
 };
 
@@ -162,6 +275,12 @@ const state = {
   activeHeroId: null,
   activeEquipHeroId: null,
   
+  // Independent Characters & NPCs State
+  characters: [],
+  activeCharacterSlug: null,
+  activeCharacterData: null,
+  characterFilter: 'all', // 'all', 'hero', 'npc'
+
   // Map / Blockmap State
   maps: [],
   activeMapSlug: null,
@@ -202,8 +321,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Load initial data via IPC
   await loadScenesList();
-  await loadCampaignsList();
   await loadMapsList();
+  await loadAllCharacters();
+  await loadCampaignsList();
 
   setStatus('RobOS cRPG Editor ready.');
 });
@@ -229,38 +349,48 @@ function setupNavigation() {
 }
 
 function switchModule(paneId) {
+  // Alias support for maps pane
+  if (paneId === 'pane-blockmap') paneId = 'pane-maps';
   state.activeModule = paneId;
 
   // Update nav buttons
   document.querySelectorAll('.nav-tab-btn').forEach(b => {
-    b.classList.toggle('active', b.getAttribute('data-pane') === paneId);
+    const targetPane = b.getAttribute('data-pane');
+    const isMatch = targetPane === paneId || 
+                    (targetPane === 'pane-blockmap' && paneId === 'pane-maps') ||
+                    (targetPane === 'pane-maps' && paneId === 'pane-blockmap');
+    b.classList.toggle('active', isMatch);
   });
 
   // Update panes
   document.querySelectorAll('.module-pane').forEach(p => {
-    p.classList.toggle('active', p.id === paneId);
+    const isMatch = p.id === paneId ||
+                    (p.id === 'pane-blockmap' && paneId === 'pane-maps') ||
+                    (p.id === 'pane-maps' && paneId === 'pane-blockmap');
+    p.classList.toggle('active', isMatch);
   });
 
   // Toggle contextual header controls
   const campControls = document.getElementById('campaign-header-controls');
-  const mapControls = document.getElementById('blockmap-header-controls');
+  const charControls = document.getElementById('character-header-controls');
+  const mapControls = document.getElementById('maps-header-controls') || document.getElementById('blockmap-header-controls');
 
-  if (paneId === 'pane-blockmap') {
-    if (campControls) campControls.classList.add('hidden');
-    if (mapControls) mapControls.classList.remove('hidden');
-    // Ensure canvas dimensions are refreshed
+  if (campControls) campControls.classList.toggle('hidden', paneId !== 'pane-campaign');
+  if (charControls) charControls.classList.toggle('hidden', paneId !== 'pane-characters');
+  if (mapControls) mapControls.classList.toggle('hidden', paneId !== 'pane-maps' && paneId !== 'pane-blockmap');
+
+  if (paneId === 'pane-maps' || paneId === 'pane-blockmap') {
     setTimeout(handleCanvasResize, 50);
-  } else {
-    if (campControls) campControls.classList.remove('hidden');
-    if (mapControls) mapControls.classList.add('hidden');
-  }
-
-  // If entering character or inventory, ensure hero view is populated
-  if (paneId === 'pane-characters') {
-    renderHeroesList();
-    loadHeroSheet(state.activeHeroId);
+  } else if (paneId === 'pane-characters') {
+    renderCharactersList();
+    if (state.activeCharacterSlug) {
+      loadCharacterSheet(state.activeCharacterSlug);
+    }
   } else if (paneId === 'pane-inventory') {
     renderInventoryViews();
+  } else if (paneId === 'pane-campaign') {
+    renderCampaignMapsChecklist();
+    renderCampaignCharactersChecklist();
   }
 }
 
@@ -300,6 +430,12 @@ function setupCampaignHandlers() {
   const btnAddQuest = document.getElementById('btn-add-quest');
   const btnAddFlag = document.getElementById('btn-add-flag');
 
+  const btnSelectAllMaps = document.getElementById('btn-select-all-maps');
+  const btnClearMaps = document.getElementById('btn-clear-maps');
+  const campStartMap = document.getElementById('camp-starting-map');
+  const btnSelectAllHeroes = document.getElementById('btn-select-all-heroes');
+  const btnSelectAllNpcs = document.getElementById('btn-select-all-npcs');
+
   campSelect?.addEventListener('change', (e) => {
     if (e.target.value) loadCampaign(e.target.value);
   });
@@ -308,6 +444,34 @@ function setupCampaignHandlers() {
   btnSave?.addEventListener('click', saveCurrentCampaign);
   btnDelete?.addEventListener('click', deleteCurrentCampaign);
   btnScaffold?.addEventListener('click', scaffoldStandardParty);
+
+  btnSelectAllMaps?.addEventListener('click', () => {
+    document.querySelectorAll('#camp-maps-checklist .camp-map-chk').forEach(c => c.checked = true);
+    updateCampaignMapsFromChecklist();
+  });
+
+  btnClearMaps?.addEventListener('click', () => {
+    document.querySelectorAll('#camp-maps-checklist .camp-map-chk').forEach(c => c.checked = false);
+    updateCampaignMapsFromChecklist();
+  });
+
+  campStartMap?.addEventListener('change', (e) => {
+    if (state.activeCampaignData) state.activeCampaignData['robos:startingMap'] = e.target.value;
+  });
+
+  btnSelectAllHeroes?.addEventListener('click', () => {
+    document.querySelectorAll('#camp-characters-checklist .camp-char-chk').forEach(c => {
+      if (c.getAttribute('data-is-npc') !== 'true') c.checked = true;
+    });
+    updateCampaignCharactersFromChecklist();
+  });
+
+  btnSelectAllNpcs?.addEventListener('click', () => {
+    document.querySelectorAll('#camp-characters-checklist .camp-char-chk').forEach(c => {
+      if (c.getAttribute('data-is-npc') === 'true') c.checked = true;
+    });
+    updateCampaignCharactersFromChecklist();
+  });
 
   btnAddQuest?.addEventListener('click', () => {
     if (!state.activeCampaignData) return;
@@ -382,9 +546,18 @@ async function loadCampaign(slug) {
       const sceneSelect = document.getElementById('camp-starting-scene');
       if (sceneSelect) sceneSelect.value = currentScene;
 
+      // Starting Map & Checklists
+      populateCampStartingMapDropdown();
+      const startingMap = res.data['robos:startingMap'] || '';
+      const startMapSelect = document.getElementById('camp-starting-map');
+      if (startMapSelect && startingMap) startMapSelect.value = startingMap;
+
+      renderCampaignMapsChecklist();
+      renderCampaignCharactersChecklist();
+
       // Set initial active hero if present
       const heroes = getHeroes();
-      state.activeHeroId = heroes.length > 0 ? (heroes[0].id || heroes[0]['@id']) : null;
+      state.activeHeroId = heroes.length > 0 ? (heroes[0].id || heroes[0]['@id'] || heroes[0].slug) : null;
       state.activeEquipHeroId = state.activeHeroId;
 
       renderQuestLog();
@@ -419,10 +592,21 @@ function getGameState() {
 
 function getHeroes() {
   if (!state.activeCampaignData) return [];
-  if (!state.activeCampaignData['robos:heroes']) {
-    state.activeCampaignData['robos:heroes'] = [];
+  if (!state.activeCampaignData['robos:heroes'] || state.activeCampaignData['robos:heroes'].length === 0) {
+    // If campaign has robos:characters, find matching heroes in state.characters
+    const campaignCharIds = (state.activeCampaignData['robos:characters'] || []).map(id => 
+      typeof id === 'string' ? id.replace(/^urn:robos:crpg:character:/, '') : (id.slug || id.id)
+    );
+    const matched = state.characters.filter(c => {
+      const isHero = c.characterType !== 'npc' && c.characterType !== 'robos:CRPGNPC' && !c.role;
+      if (!isHero) return false;
+      return campaignCharIds.length === 0 || campaignCharIds.includes(c.slug) || campaignCharIds.includes(c.id);
+    });
+    if (matched.length > 0) {
+      state.activeCampaignData['robos:heroes'] = matched;
+    }
   }
-  return state.activeCampaignData['robos:heroes'];
+  return state.activeCampaignData['robos:heroes'] || [];
 }
 
 function updateCampaignSummaryStats() {
@@ -450,6 +634,9 @@ function createNewCampaign() {
     'robos:setting': 'Sword Coast / Forgotten Realms',
     'robos:ruleSet': 'D&D 5e SRD',
     'robos:difficulty': 'Core Rules',
+    'robos:maps': [],
+    'robos:characters': [],
+    'robos:startingMap': '',
     'robos:heroes': [],
     'robos:gameState': {
       'robos:currentScene': 'candlekeep-exterior',
@@ -469,6 +656,10 @@ function createNewCampaign() {
   document.getElementById('camp-difficulty').value = state.activeCampaignData['robos:difficulty'];
   document.getElementById('camp-desc').value = state.activeCampaignData['dcterms:description'];
 
+  populateCampStartingMapDropdown();
+  renderCampaignMapsChecklist();
+  renderCampaignCharactersChecklist();
+
   state.activeHeroId = null;
   state.activeEquipHeroId = null;
 
@@ -479,6 +670,137 @@ function createNewCampaign() {
   updateCampaignSummaryStats();
 
   setStatus(`Created new campaign: ${safeSlug}`);
+}
+
+function populateCampStartingMapDropdown() {
+  const select = document.getElementById('camp-starting-map');
+  if (!select) return;
+
+  const currentVal = select.value || (state.activeCampaignData && state.activeCampaignData['robos:startingMap']) || '';
+  select.innerHTML = '<option value="">(Select starting map...)</option>' +
+    state.maps.map(m => `<option value="${m.slug}">🗺️ ${m.title || m.slug}</option>`).join('');
+
+  if (currentVal && state.maps.some(m => m.slug === currentVal)) {
+    select.value = currentVal;
+  } else if (state.maps.length > 0 && !currentVal) {
+    select.value = state.maps[0].slug;
+    if (state.activeCampaignData) state.activeCampaignData['robos:startingMap'] = state.maps[0].slug;
+  }
+}
+
+function populateNpcLocationDropdown() {
+  const select = document.getElementById('npc-location');
+  if (!select) return;
+
+  const currentVal = select.value;
+  select.innerHTML = '<option value="">(Select map placement...)</option>' +
+    state.maps.map(m => `<option value="${m.slug}">🗺️ ${m.title || m.slug}</option>`).join('');
+
+  if (currentVal) select.value = currentVal;
+}
+
+function renderCampaignMapsChecklist() {
+  const container = document.getElementById('camp-maps-checklist');
+  if (!container) return;
+
+  const campMaps = (state.activeCampaignData && state.activeCampaignData['robos:maps']) || [];
+  const mapIds = campMaps.map(m => typeof m === 'string' ? m.replace(/^urn:robos:crpg:battle-map:/, '') : (m.slug || m.id));
+
+  if (state.maps.length === 0) {
+    container.innerHTML = '<div style="color:var(--text-muted);font-size:11px;padding:4px;">No maps available.</div>';
+    document.getElementById('camp-maps-count').textContent = '0';
+    return;
+  }
+
+  let checkedCount = 0;
+  container.innerHTML = state.maps.map(m => {
+    const isChecked = mapIds.includes(m.slug) || mapIds.length === 0;
+    if (isChecked) checkedCount++;
+    return `
+      <label class="camp-check-item">
+        <input type="checkbox" class="camp-map-chk" data-slug="${m.slug}" ${isChecked ? 'checked' : ''}>
+        <span>🗺️ ${m.title || m.slug} (${m.width || 120}×${m.height || 80} ft)</span>
+      </label>
+    `;
+  }).join('');
+
+  document.getElementById('camp-maps-count').textContent = checkedCount;
+
+  container.querySelectorAll('.camp-map-chk').forEach(chk => {
+    chk.addEventListener('change', updateCampaignMapsFromChecklist);
+  });
+}
+
+function updateCampaignMapsFromChecklist() {
+  if (!state.activeCampaignData) return;
+  const container = document.getElementById('camp-maps-checklist');
+  if (!container) return;
+
+  const checkedSlugs = [];
+  container.querySelectorAll('.camp-map-chk:checked').forEach(c => {
+    checkedSlugs.push(c.getAttribute('data-slug'));
+  });
+
+  state.activeCampaignData['robos:maps'] = checkedSlugs.map(s => `urn:robos:crpg:battle-map:${s}`);
+  document.getElementById('camp-maps-count').textContent = checkedSlugs.length;
+
+  populateCampStartingMapDropdown();
+}
+
+function renderCampaignCharactersChecklist() {
+  const container = document.getElementById('camp-characters-checklist');
+  if (!container) return;
+
+  const campChars = (state.activeCampaignData && state.activeCampaignData['robos:characters']) || [];
+  const charIds = campChars.map(c => typeof c === 'string' ? c.replace(/^urn:robos:crpg:character:/, '') : (c.slug || c.id));
+
+  if (state.characters.length === 0) {
+    container.innerHTML = '<div style="color:var(--text-muted);font-size:11px;padding:4px;">No characters created.</div>';
+    document.getElementById('camp-chars-count').textContent = '0';
+    return;
+  }
+
+  let checkedCount = 0;
+  container.innerHTML = state.characters.map(c => {
+    const isNpc = c.characterType === 'npc' || c.characterType === 'robos:CRPGNPC' || !!c.role;
+    const isChecked = charIds.includes(c.slug) || (charIds.length === 0 && !isNpc);
+    if (isChecked) checkedCount++;
+    return `
+      <label class="camp-check-item">
+        <input type="checkbox" class="camp-char-chk" data-slug="${c.slug}" data-is-npc="${isNpc}" ${isChecked ? 'checked' : ''}>
+        <span>${c.portrait || (isNpc ? '👑' : '👤')} ${c.name || c.slug}</span>
+        <span class="char-type-pill ${isNpc ? 'npc' : 'hero'}">${isNpc ? (c.role || 'NPC') : 'Hero'}</span>
+      </label>
+    `;
+  }).join('');
+
+  document.getElementById('camp-chars-count').textContent = checkedCount;
+
+  container.querySelectorAll('.camp-char-chk').forEach(chk => {
+    chk.addEventListener('change', updateCampaignCharactersFromChecklist);
+  });
+}
+
+function updateCampaignCharactersFromChecklist() {
+  if (!state.activeCampaignData) return;
+  const container = document.getElementById('camp-characters-checklist');
+  if (!container) return;
+
+  const checkedSlugs = [];
+  container.querySelectorAll('.camp-char-chk:checked').forEach(c => {
+    checkedSlugs.push(c.getAttribute('data-slug'));
+  });
+
+  state.activeCampaignData['robos:characters'] = checkedSlugs.map(s => `urn:robos:crpg:character:${s}`);
+  document.getElementById('camp-chars-count').textContent = checkedSlugs.length;
+
+  const heroes = state.characters.filter(c => {
+    const isHero = c.characterType !== 'npc' && c.characterType !== 'robos:CRPGNPC' && !c.role;
+    return isHero && checkedSlugs.includes(c.slug);
+  });
+  state.activeCampaignData['robos:heroes'] = heroes;
+  updateCampaignSummaryStats();
+  renderInventoryViews();
 }
 
 async function saveCurrentCampaign() {
@@ -495,8 +817,32 @@ async function saveCurrentCampaign() {
   const startScene = document.getElementById('camp-starting-scene')?.value;
   if (startScene) gs['robos:currentScene'] = startScene;
 
-  // Persist current hero sheet changes if active
-  saveActiveHeroSheet();
+  // Starting map and campaign maps
+  const startingMap = document.getElementById('camp-starting-map')?.value;
+  if (startingMap) state.activeCampaignData['robos:startingMap'] = startingMap;
+
+  const mapChecklist = document.getElementById('camp-maps-checklist');
+  if (mapChecklist) {
+    const checkedMapSlugs = [];
+    mapChecklist.querySelectorAll('.camp-map-chk:checked').forEach(c => {
+      checkedMapSlugs.push(c.getAttribute('data-slug'));
+    });
+    if (checkedMapSlugs.length > 0) {
+      state.activeCampaignData['robos:maps'] = checkedMapSlugs.map(s => `urn:robos:crpg:battle-map:${s}`);
+    }
+  }
+
+  // Campaign characters
+  const charChecklist = document.getElementById('camp-characters-checklist');
+  if (charChecklist) {
+    const checkedCharSlugs = [];
+    charChecklist.querySelectorAll('.camp-char-chk:checked').forEach(c => {
+      checkedCharSlugs.push(c.getAttribute('data-slug'));
+    });
+    if (checkedCharSlugs.length > 0) {
+      state.activeCampaignData['robos:characters'] = checkedCharSlugs.map(s => `urn:robos:crpg:character:${s}`);
+    }
+  }
 
   // Persist inventory inputs
   persistInventoryFromUI();
@@ -663,36 +1009,90 @@ function renderStoryFlags() {
 }
 
 // ========================================================
-// MODULE 2: cRPG CHARACTER EDITOR
+// MODULE 2: cRPG CHARACTER EDITOR & NPC STUDIO
 // ========================================================
 function setupCharacterHandlers() {
+  // Sidebar Add Buttons
   document.getElementById('btn-add-hero')?.addEventListener('click', addNewHero);
-  document.getElementById('btn-clone-hero')?.addEventListener('click', cloneActiveHero);
-  document.getElementById('btn-delete-hero')?.addEventListener('click', deleteActiveHero);
+  document.getElementById('btn-add-npc')?.addEventListener('click', addNewNpc);
 
-  // Pre-rolled archetype dropdown
-  document.getElementById('archetype-select')?.addEventListener('change', (e) => {
-    const archKey = e.target.value;
-    if (archKey && ARCHETYPES[archKey]) {
-      const newHero = JSON.parse(JSON.stringify(ARCHETYPES[archKey]));
-      newHero.id = `hero-${Date.now().toString().slice(-4)}`;
-      const heroes = getHeroes();
-      heroes.push(newHero);
-      state.activeHeroId = newHero.id;
-      renderHeroesList();
-      loadHeroSheet(newHero.id);
-      updateCampaignSummaryStats();
-      e.target.value = '';
-    }
+  // Top Header Context Controls
+  document.getElementById('btn-header-new-hero')?.addEventListener('click', addNewHero);
+  document.getElementById('btn-hdr-new-hero')?.addEventListener('click', addNewHero);
+  document.getElementById('btn-header-new-npc')?.addEventListener('click', addNewNpc);
+  document.getElementById('btn-hdr-new-npc')?.addEventListener('click', addNewNpc);
+  document.getElementById('btn-header-save-char')?.addEventListener('click', saveCurrentCharacter);
+  document.getElementById('btn-hdr-save-char')?.addEventListener('click', saveCurrentCharacter);
+  document.getElementById('btn-header-delete-char')?.addEventListener('click', deleteActiveCharacter);
+  document.getElementById('btn-hdr-del-char')?.addEventListener('click', deleteActiveCharacter);
+  document.getElementById('header-char-select')?.addEventListener('change', (e) => {
+    if (e.target.value) loadCharacterSheet(e.target.value);
   });
 
-  // Real-time modifier updates for ability score inputs
+  // Action Buttons
+  document.getElementById('btn-save-character')?.addEventListener('click', saveCurrentCharacter);
+  document.getElementById('btn-clone-hero')?.addEventListener('click', cloneActiveCharacter);
+  document.getElementById('btn-delete-hero')?.addEventListener('click', deleteActiveCharacter);
+
+  // Filter Pills
+  document.getElementById('pill-filter-all')?.addEventListener('click', () => setCharacterFilter('all'));
+  document.getElementById('pill-filter-heroes')?.addEventListener('click', () => setCharacterFilter('hero'));
+  document.getElementById('pill-filter-npcs')?.addEventListener('click', () => setCharacterFilter('npc'));
+
+  // Entity Type Radios (Hero vs NPC)
+  document.querySelectorAll('input[name="char-type-radio"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      const isNpc = e.target.value === 'npc';
+      toggleCharacterTypeUI(isNpc);
+    });
+  });
+
+  // Archetype Dropdown
+  document.getElementById('archetype-select')?.addEventListener('change', (e) => {
+    const archKey = e.target.value;
+    if (!archKey || !ARCHETYPES[archKey]) return;
+    applyArchetype(ARCHETYPES[archKey], archKey);
+    e.target.value = '';
+  });
+
+  // Live Modifiers for Ability Scores
   ['str', 'dex', 'con', 'int', 'wis', 'cha'].forEach(attr => {
     const input = document.getElementById(`attr-${attr}`);
     input?.addEventListener('input', () => {
       updateAbilityModifier(attr, Number(input.value || 10));
     });
   });
+
+  // Live Portrait & Name sync
+  document.getElementById('hero-portrait')?.addEventListener('input', (e) => {
+    const avatar = document.getElementById('hero-avatar-display');
+    if (avatar) avatar.textContent = e.target.value.trim() || '👤';
+  });
+
+  document.getElementById('hero-name')?.addEventListener('input', (e) => {
+    const isNpc = document.getElementById('radio-type-npc')?.checked;
+    const titleEl = document.getElementById('sheet-hero-title');
+    if (titleEl) titleEl.textContent = `${e.target.value || 'Character'} (${isNpc ? 'NPC' : 'Hero'})`;
+  });
+}
+
+function setCharacterFilter(filter) {
+  state.characterFilter = filter;
+  document.getElementById('pill-filter-all')?.classList.toggle('active', filter === 'all');
+  document.getElementById('pill-filter-heroes')?.classList.toggle('active', filter === 'hero');
+  document.getElementById('pill-filter-npcs')?.classList.toggle('active', filter === 'npc');
+  renderCharactersList();
+}
+
+function toggleCharacterTypeUI(isNpc) {
+  const npcSection = document.getElementById('section-npc-details');
+  const heroSection = document.getElementById('section-hero-details');
+  if (npcSection) npcSection.classList.toggle('hidden', !isNpc);
+  if (heroSection) heroSection.classList.toggle('hidden', isNpc);
+
+  const charName = document.getElementById('hero-name')?.value || 'Character';
+  const titleEl = document.getElementById('sheet-hero-title');
+  if (titleEl) titleEl.textContent = `${charName} (${isNpc ? 'NPC' : 'Hero'})`;
 }
 
 function updateAbilityModifier(attr, val) {
@@ -702,26 +1102,69 @@ function updateAbilityModifier(attr, val) {
   if (label) label.textContent = sign;
 }
 
-function renderHeroesList() {
+async function loadAllCharacters() {
+  try {
+    const res = await window.robos.listCharacters();
+    if (res.success) {
+      state.characters = res.characters || [];
+
+      // Update header dropdown
+      const hdrSelect = document.getElementById('header-char-select');
+      if (hdrSelect) {
+        hdrSelect.innerHTML = '<option value="">(Select character...)</option>' +
+          state.characters.map(c => {
+            const isNpc = c.characterType === 'npc' || !!c.role;
+            return `<option value="${c.slug}">${c.portrait || (isNpc ? '👑' : '👤')} ${c.name || c.slug}</option>`;
+          }).join('');
+        if (state.activeCharacterSlug) {
+          hdrSelect.value = state.activeCharacterSlug;
+        }
+      }
+
+      renderCharactersList();
+
+      if (!state.activeCharacterSlug && state.characters.length > 0) {
+        await loadCharacterSheet(state.characters[0].slug);
+      } else if (state.activeCharacterSlug) {
+        await loadCharacterSheet(state.activeCharacterSlug);
+      }
+    }
+  } catch (err) {
+    console.error('Error loading characters list:', err);
+  }
+}
+
+function renderCharactersList() {
   const listEl = document.getElementById('heroes-list');
   if (!listEl) return;
-  const heroes = getHeroes();
-  document.getElementById('roster-count').textContent = heroes.length;
 
-  if (heroes.length === 0) {
-    listEl.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px;">Roster empty. Click + Hero or pick an Archetype.</div>';
+  const filtered = state.characters.filter(c => {
+    const isNpc = c.characterType === 'npc' || !!c.role;
+    if (state.characterFilter === 'hero') return !isNpc;
+    if (state.characterFilter === 'npc') return isNpc;
+    return true;
+  });
+
+  const countEl = document.getElementById('roster-count');
+  if (countEl) countEl.textContent = filtered.length;
+
+  if (filtered.length === 0) {
+    listEl.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px;">No characters found for this filter. Click + Hero or + NPC.</div>';
     return;
   }
 
-  listEl.innerHTML = heroes.map(h => {
-    const id = h.id || h['@id'];
-    const isActive = id === state.activeHeroId;
+  listEl.innerHTML = filtered.map(c => {
+    const isNpc = c.characterType === 'npc' || !!c.role;
+    const isActive = c.slug === state.activeCharacterSlug;
     return `
-      <div class="hero-list-item ${isActive ? 'active' : ''}" data-hero-id="${id}">
-        <div class="hero-avatar-badge">${h.portrait || '👤'}</div>
+      <div class="hero-list-item ${isActive ? 'active' : ''}" data-slug="${c.slug}">
+        <div class="hero-avatar-badge">${c.portrait || (isNpc ? '👑' : '👤')}</div>
         <div class="hero-info-text">
-          <span class="hero-name-label">${h.name || 'Unnamed'}</span>
-          <span class="hero-class-label">Level ${h.level || 1} ${h.race || ''} ${h.class || ''}</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span class="hero-name-label">${c.name || c.slug}</span>
+            <span class="char-type-pill ${isNpc ? 'npc' : 'hero'}">${isNpc ? (c.role || 'NPC') : 'Hero'}</span>
+          </div>
+          <span class="hero-class-label">${isNpc ? `Role: ${c.role || 'NPC'}` : `Lvl ${c.level || 1} ${c.race || ''} ${c.class || ''}`}</span>
         </div>
       </div>
     `;
@@ -729,139 +1172,387 @@ function renderHeroesList() {
 
   listEl.querySelectorAll('.hero-list-item').forEach(item => {
     item.addEventListener('click', () => {
-      saveActiveHeroSheet();
-      const heroId = item.getAttribute('data-hero-id');
-      state.activeHeroId = heroId;
-      renderHeroesList();
-      loadHeroSheet(heroId);
+      const slug = item.getAttribute('data-slug');
+      loadCharacterSheet(slug);
     });
   });
 }
 
-function loadHeroSheet(heroId) {
-  const heroes = getHeroes();
-  const hero = heroes.find(h => (h.id || h['@id']) === heroId) || heroes[0];
-  if (!hero) return;
+async function loadCharacterSheet(slug) {
+  if (!slug) return;
+  try {
+    setStatus(`Loading character ${slug}...`);
+    const res = await window.robos.loadCharacter(slug);
+    if (res.success) {
+      const data = res.data;
+      state.activeCharacterSlug = slug;
+      state.activeCharacterData = data;
 
-  state.activeHeroId = hero.id || hero['@id'];
+      // Header select sync
+      const hdrSelect = document.getElementById('header-char-select');
+      if (hdrSelect) hdrSelect.value = slug;
 
-  document.getElementById('sheet-hero-title').textContent = `${hero.name || 'Hero'} Character Sheet`;
-  document.getElementById('hero-avatar-display').textContent = hero.portrait || '👤';
-  document.getElementById('hero-name').value = hero.name || '';
-  document.getElementById('hero-portrait').value = hero.portrait || '';
-  document.getElementById('hero-level').value = hero.level || 1;
-  document.getElementById('hero-race').value = hero.race || 'Human';
-  document.getElementById('hero-class').value = hero.class || 'Fighter';
-  document.getElementById('hero-subclass').value = hero.subclass || '';
-  document.getElementById('hero-background').value = hero.background || '';
-  document.getElementById('hero-alignment').value = hero.alignment || 'Neutral Good';
-  document.getElementById('hero-xp').value = hero.xp || 0;
+      // Determine NPC vs Hero
+      const types = Array.isArray(data['@type']) ? data['@type'] : [data['@type']];
+      const isNpc = data['robos:characterType'] === 'npc' ||
+                    data.characterType === 'npc' ||
+                    types.includes('robos:CRPGNPC') ||
+                    !!data['robos:npcRole'] ||
+                    !!data.role;
 
-  // Ability Scores
-  ['str', 'dex', 'con', 'int', 'wis', 'cha'].forEach(attr => {
-    const val = hero[attr] || 10;
-    const input = document.getElementById(`attr-${attr}`);
-    if (input) input.value = val;
-    updateAbilityModifier(attr, val);
-  });
+      // Update Radio Buttons
+      const radHero = document.getElementById('radio-type-hero');
+      const radNpc = document.getElementById('radio-type-npc');
+      if (radHero && radNpc) {
+        radHero.checked = !isNpc;
+        radNpc.checked = isNpc;
+      }
+      toggleCharacterTypeUI(isNpc);
 
-  // Combat Vitals
-  document.getElementById('vital-ac').value = hero.ac || 10;
-  document.getElementById('vital-hp-max').value = hero.hpMax || 10;
-  document.getElementById('vital-hp-cur').value = hero.hpCurrent || 10;
-  document.getElementById('vital-speed').value = hero.speed || 30;
-  document.getElementById('vital-init').value = hero.initiative || 0;
-  document.getElementById('vital-prof').value = hero.prof || 2;
+      const name = data['schema:name'] || data.name || slug;
+      const portrait = data['robos:portrait'] || data.portrait || (isNpc ? '👑' : '👤');
 
-  // Spells and backstory
-  document.getElementById('hero-spells').value = hero.spells || '';
-  document.getElementById('hero-backstory').value = hero.backstory || '';
+      document.getElementById('sheet-hero-title').textContent = `${name} (${isNpc ? 'NPC' : 'Hero'})`;
+      document.getElementById('hero-avatar-display').textContent = portrait;
+      document.getElementById('hero-name').value = name;
+      document.getElementById('hero-slug').value = slug;
+      document.getElementById('hero-portrait').value = portrait;
+      document.getElementById('hero-alignment').value = data['robos:alignment'] || data.alignment || 'Neutral Good';
+
+      // NPC details
+      document.getElementById('npc-role').value = data['robos:npcRole'] || data.role || 'villager';
+      document.getElementById('npc-interaction').value = data['robos:interactionType'] || data.interactionType || 'talk';
+      populateNpcLocationDropdown();
+      document.getElementById('npc-location').value = data['robos:location'] || data.location || '';
+      document.getElementById('npc-facing').value = data['robos:facing'] || data.facing || 'down';
+      document.getElementById('npc-col').value = data['robos:col'] ?? data.col ?? 0;
+      document.getElementById('npc-row').value = data['robos:row'] ?? data.row ?? 0;
+
+      const dialogue = data['robos:dialogue'] || data.dialogue || '';
+      document.getElementById('npc-dialogue').value = Array.isArray(dialogue) ? dialogue.join('\n\n') : dialogue;
+
+      // Hero details
+      document.getElementById('hero-level').value = data['robos:level'] || data.level || 1;
+      document.getElementById('hero-race').value = data['robos:race'] || data.race || 'Human';
+      document.getElementById('hero-class').value = data['robos:class'] || data.class || 'Fighter';
+      document.getElementById('hero-subclass').value = data['robos:subclass'] || data.subclass || '';
+      document.getElementById('hero-background').value = data['robos:background'] || data.background || '';
+      document.getElementById('hero-xp').value = data['robos:xp'] || data.xp || 0;
+
+      ['str', 'dex', 'con', 'int', 'wis', 'cha'].forEach(attr => {
+        const val = data[`robos:${attr}`] || data[attr] || 10;
+        const input = document.getElementById(`attr-${attr}`);
+        if (input) input.value = val;
+        updateAbilityModifier(attr, val);
+      });
+
+      document.getElementById('vital-ac').value = data['robos:ac'] || data.ac || 10;
+      document.getElementById('vital-hp-max').value = data['robos:hpMax'] || data.hpMax || 10;
+      document.getElementById('vital-hp-cur').value = data['robos:hpCurrent'] || data.hpCurrent || 10;
+      document.getElementById('vital-speed').value = data['robos:speed'] || data.speed || 30;
+      document.getElementById('vital-init').value = data['robos:initiative'] || data.initiative || 0;
+      document.getElementById('vital-prof').value = data['robos:prof'] || data.prof || 2;
+
+      document.getElementById('hero-spells').value = data['robos:spells'] || data.spells || '';
+      document.getElementById('hero-backstory').value = data['robos:backstory'] || data.backstory || '';
+
+      // Update active highlight in sidebar list
+      document.querySelectorAll('#heroes-list .hero-list-item').forEach(el => {
+        el.classList.toggle('active', el.getAttribute('data-slug') === slug);
+      });
+
+      setStatus(`Loaded character: ${slug}`, res.filePath);
+    }
+  } catch (err) {
+    console.error('Error loading character:', err);
+    setStatus(`Error loading character: ${err.message}`);
+  }
 }
 
-function saveActiveHeroSheet() {
-  if (!state.activeHeroId) return;
-  const heroes = getHeroes();
-  const hero = heroes.find(h => (h.id || h['@id']) === state.activeHeroId);
-  if (!hero) return;
+async function saveCurrentCharacter() {
+  const name = document.getElementById('hero-name').value.trim() || 'New Character';
+  let slug = document.getElementById('hero-slug').value.trim();
+  if (!slug) {
+    slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || `char-${Date.now().toString().slice(-4)}`;
+    document.getElementById('hero-slug').value = slug;
+  }
 
-  hero.name = document.getElementById('hero-name').value.trim();
-  hero.portrait = document.getElementById('hero-portrait').value.trim() || '👤';
-  hero.level = Number(document.getElementById('hero-level').value || 1);
-  hero.race = document.getElementById('hero-race').value;
-  hero.class = document.getElementById('hero-class').value;
-  hero.subclass = document.getElementById('hero-subclass').value.trim();
-  hero.background = document.getElementById('hero-background').value.trim();
-  hero.alignment = document.getElementById('hero-alignment').value;
-  hero.xp = Number(document.getElementById('hero-xp').value || 0);
+  const isNpc = document.getElementById('radio-type-npc').checked;
+  const characterType = isNpc ? 'npc' : 'hero';
+  const portrait = document.getElementById('hero-portrait').value.trim() || (isNpc ? '👑' : '👤');
+  const alignment = document.getElementById('hero-alignment').value;
+  const backstory = document.getElementById('hero-backstory').value.trim();
 
-  ['str', 'dex', 'con', 'int', 'wis', 'cha'].forEach(attr => {
-    hero[attr] = Number(document.getElementById(`attr-${attr}`).value || 10);
-  });
+  const types = ['robos:CRPGCharacter', isNpc ? 'robos:CRPGNPC' : 'robos:CRPGHero', 'schema:Person'];
 
-  hero.ac = Number(document.getElementById('vital-ac').value || 10);
-  hero.hpMax = Number(document.getElementById('vital-hp-max').value || 10);
-  hero.hpCurrent = Number(document.getElementById('vital-hp-cur').value || 10);
-  hero.speed = Number(document.getElementById('vital-speed').value || 30);
-  hero.initiative = Number(document.getElementById('vital-init').value || 0);
-  hero.prof = Number(document.getElementById('vital-prof').value || 2);
+  const charData = {
+    '@context': {
+      robos: 'urn:robos:',
+      schema: 'https://schema.org/',
+      dcterms: 'http://purl.org/dc/terms/'
+    },
+    '@type': types,
+    '@id': `urn:robos:crpg:character:${slug}`,
+    'schema:name': name,
+    name,
+    slug,
+    'robos:characterType': characterType,
+    characterType,
+    'robos:portrait': portrait,
+    portrait,
+    'robos:alignment': alignment,
+    alignment,
+    'robos:backstory': backstory,
+    backstory
+  };
 
-  hero.spells = document.getElementById('hero-spells').value.trim();
-  hero.backstory = document.getElementById('hero-backstory').value.trim();
+  if (isNpc) {
+    const role = document.getElementById('npc-role').value;
+    const interactionType = document.getElementById('npc-interaction').value;
+    const location = document.getElementById('npc-location').value;
+    const facing = document.getElementById('npc-facing').value;
+    const col = Number(document.getElementById('npc-col').value || 0);
+    const row = Number(document.getElementById('npc-row').value || 0);
+    const rawDialogue = document.getElementById('npc-dialogue').value.trim();
+    const dialogue = rawDialogue ? rawDialogue.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean) : [];
+
+    charData['robos:npcRole'] = role;
+    charData.role = role;
+    charData['robos:interactionType'] = interactionType;
+    charData.interactionType = interactionType;
+    charData['robos:location'] = location;
+    charData.location = location;
+    charData['robos:facing'] = facing;
+    charData.facing = facing;
+    charData['robos:col'] = col;
+    charData.col = col;
+    charData['robos:row'] = row;
+    charData.row = row;
+    charData['robos:dialogue'] = dialogue.length > 0 ? dialogue : [rawDialogue];
+    charData.dialogue = charData['robos:dialogue'];
+  } else {
+    const level = Number(document.getElementById('hero-level').value || 1);
+    const race = document.getElementById('hero-race').value;
+    const charClass = document.getElementById('hero-class').value;
+    const subclass = document.getElementById('hero-subclass').value.trim();
+    const background = document.getElementById('hero-background').value.trim();
+    const xp = Number(document.getElementById('hero-xp').value || 0);
+
+    charData['robos:level'] = level;
+    charData.level = level;
+    charData['robos:race'] = race;
+    charData.race = race;
+    charData['robos:class'] = charClass;
+    charData.class = charClass;
+    charData['robos:subclass'] = subclass;
+    charData.subclass = subclass;
+    charData['robos:background'] = background;
+    charData.background = background;
+    charData['robos:xp'] = xp;
+    charData.xp = xp;
+
+    ['str', 'dex', 'con', 'int', 'wis', 'cha'].forEach(attr => {
+      const val = Number(document.getElementById(`attr-${attr}`).value || 10);
+      charData[`robos:${attr}`] = val;
+      charData[attr] = val;
+    });
+
+    const ac = Number(document.getElementById('vital-ac').value || 10);
+    const hpMax = Number(document.getElementById('vital-hp-max').value || 10);
+    const hpCurrent = Number(document.getElementById('vital-hp-cur').value || 10);
+    const speed = Number(document.getElementById('vital-speed').value || 30);
+    const init = Number(document.getElementById('vital-init').value || 0);
+    const prof = Number(document.getElementById('vital-prof').value || 2);
+
+    charData['robos:ac'] = ac;
+    charData.ac = ac;
+    charData['robos:hpMax'] = hpMax;
+    charData.hpMax = hpMax;
+    charData['robos:hpCurrent'] = hpCurrent;
+    charData.hpCurrent = hpCurrent;
+    charData['robos:speed'] = speed;
+    charData.speed = speed;
+    charData['robos:initiative'] = init;
+    charData.initiative = init;
+    charData['robos:prof'] = prof;
+    charData.prof = prof;
+
+    const spells = document.getElementById('hero-spells').value.trim();
+    charData['robos:spells'] = spells;
+    charData.spells = spells;
+  }
+
+  try {
+    setStatus(`Saving character ${slug}...`);
+    const res = await window.robos.saveCharacter({ slug, data: charData });
+    if (res.success) {
+      state.activeCharacterSlug = res.slug;
+      setStatus(`Saved character successfully!`, res.filePath);
+      await loadAllCharacters();
+      await loadCharacterSheet(res.slug);
+      renderCampaignCharactersChecklist();
+    } else {
+      setStatus(`Failed to save character: ${res.error}`);
+    }
+  } catch (err) {
+    console.error('Error saving character:', err);
+    setStatus(`Error saving character: ${err.message}`);
+  }
 }
 
 function addNewHero() {
-  const heroes = getHeroes();
-  const newHero = {
-    id: `hero-${Date.now().toString().slice(-4)}`,
-    name: "New Adventurer",
-    race: "Human",
-    class: "Fighter",
-    subclass: "",
-    background: "Wanderer",
-    alignment: "Neutral Good",
-    level: 1,
-    xp: 0,
-    portrait: "⚔️",
-    str: 14, dex: 12, con: 14, int: 10, wis: 10, cha: 10,
-    ac: 14, hpMax: 10, hpCurrent: 10, speed: 30, initiative: 1, prof: 2,
-    mainHand: "Broadsword", offHand: "Shield", armor: "Leather Armor",
-    spells: "", backstory: ""
-  };
-  heroes.push(newHero);
-  state.activeHeroId = newHero.id;
-  renderHeroesList();
-  loadHeroSheet(newHero.id);
-  updateCampaignSummaryStats();
+  const safeSlug = `hero-${Date.now().toString().slice(-4)}`;
+  state.activeCharacterSlug = safeSlug;
+  state.activeCharacterData = null;
+
+  document.getElementById('radio-type-hero').checked = true;
+  document.getElementById('radio-type-npc').checked = false;
+  toggleCharacterTypeUI(false);
+
+  document.getElementById('sheet-hero-title').textContent = 'New Hero Character';
+  document.getElementById('hero-avatar-display').textContent = '⚔️';
+  document.getElementById('hero-name').value = 'New Hero';
+  document.getElementById('hero-slug').value = safeSlug;
+  document.getElementById('hero-portrait').value = '⚔️';
+  document.getElementById('hero-alignment').value = 'Neutral Good';
+  document.getElementById('hero-level').value = 1;
+  document.getElementById('hero-race').value = 'Human';
+  document.getElementById('hero-class').value = 'Fighter';
+  document.getElementById('hero-subclass').value = '';
+  document.getElementById('hero-background').value = 'Folk Hero';
+  document.getElementById('hero-xp').value = 0;
+
+  ['str', 'dex', 'con', 'int', 'wis', 'cha'].forEach(attr => {
+    const input = document.getElementById(`attr-${attr}`);
+    if (input) input.value = 12;
+    updateAbilityModifier(attr, 12);
+  });
+
+  document.getElementById('vital-ac').value = 14;
+  document.getElementById('vital-hp-max').value = 12;
+  document.getElementById('vital-hp-cur').value = 12;
+  document.getElementById('vital-speed').value = 30;
+  document.getElementById('vital-init').value = 1;
+  document.getElementById('vital-prof').value = 2;
+  document.getElementById('hero-spells').value = '';
+  document.getElementById('hero-backstory').value = 'A brave adventurer setting forth on a quest.';
+
+  setStatus(`Ready to configure new hero: ${safeSlug}`);
 }
 
-function cloneActiveHero() {
-  if (!state.activeHeroId) return;
-  saveActiveHeroSheet();
-  const heroes = getHeroes();
-  const hero = heroes.find(h => (h.id || h['@id']) === state.activeHeroId);
-  if (!hero) return;
+function addNewNpc() {
+  const safeSlug = `npc-${Date.now().toString().slice(-4)}`;
+  state.activeCharacterSlug = safeSlug;
+  state.activeCharacterData = null;
 
-  const clone = JSON.parse(JSON.stringify(hero));
-  clone.id = `hero-${Date.now().toString().slice(-4)}`;
-  clone.name = `${hero.name} (Copy)`;
-  heroes.push(clone);
-  state.activeHeroId = clone.id;
-  renderHeroesList();
-  loadHeroSheet(clone.id);
-  updateCampaignSummaryStats();
+  document.getElementById('radio-type-hero').checked = false;
+  document.getElementById('radio-type-npc').checked = true;
+  toggleCharacterTypeUI(true);
+
+  document.getElementById('sheet-hero-title').textContent = 'New NPC Character';
+  document.getElementById('hero-avatar-display').textContent = '👑';
+  document.getElementById('hero-name').value = 'New NPC';
+  document.getElementById('hero-slug').value = safeSlug;
+  document.getElementById('hero-portrait').value = '👑';
+  document.getElementById('hero-alignment').value = 'Lawful Good';
+
+  document.getElementById('npc-role').value = 'villager';
+  document.getElementById('npc-interaction').value = 'talk';
+  populateNpcLocationDropdown();
+  if (state.maps.length > 0) {
+    document.getElementById('npc-location').value = state.maps[0].slug;
+  }
+  document.getElementById('npc-facing').value = 'down';
+  document.getElementById('npc-col').value = 5;
+  document.getElementById('npc-row').value = 5;
+  document.getElementById('npc-dialogue').value = 'Greetings, traveler. Safe journeys ahead.';
+  document.getElementById('hero-backstory').value = 'A resident of the realm.';
+
+  setStatus(`Ready to configure new NPC: ${safeSlug}`);
 }
 
-function deleteActiveHero() {
-  if (!state.activeHeroId) return;
-  const heroes = getHeroes();
-  const idx = heroes.findIndex(h => (h.id || h['@id']) === state.activeHeroId);
-  if (idx < 0) return;
+function cloneActiveCharacter() {
+  if (!state.activeCharacterData) return;
+  const isNpc = document.getElementById('radio-type-npc').checked;
+  const baseName = document.getElementById('hero-name').value.trim();
+  const newName = `${baseName} (Copy)`;
+  const newSlug = `${state.activeCharacterSlug}-copy`;
 
-  heroes.splice(idx, 1);
-  state.activeHeroId = heroes.length > 0 ? (heroes[0].id || heroes[0]['@id']) : null;
-  renderHeroesList();
-  loadHeroSheet(state.activeHeroId);
-  updateCampaignSummaryStats();
+  document.getElementById('hero-name').value = newName;
+  document.getElementById('hero-slug').value = newSlug;
+  document.getElementById('sheet-hero-title').textContent = `${newName} (${isNpc ? 'NPC' : 'Hero'})`;
+
+  saveCurrentCharacter();
+}
+
+async function deleteActiveCharacter() {
+  if (!state.activeCharacterSlug) return;
+  if (!confirm(`Are you sure you want to delete character '${state.activeCharacterSlug}'?`)) return;
+
+  try {
+    const res = await window.robos.deleteCharacter(state.activeCharacterSlug);
+    if (res.success) {
+      setStatus(`Deleted character: ${state.activeCharacterSlug}`);
+      state.activeCharacterSlug = null;
+      await loadAllCharacters();
+    }
+  } catch (err) {
+    console.error('Error deleting character:', err);
+    setStatus(`Error deleting character: ${err.message}`);
+  }
+}
+
+function applyArchetype(arch, archKey) {
+  const isNpc = arch.characterType === 'npc';
+  const safeSlug = `${arch.slug || arch.id || archKey}-${Date.now().toString().slice(-4)}`;
+
+  document.getElementById('radio-type-hero').checked = !isNpc;
+  document.getElementById('radio-type-npc').checked = isNpc;
+  toggleCharacterTypeUI(isNpc);
+
+  document.getElementById('sheet-hero-title').textContent = `${arch.name} (${isNpc ? 'NPC' : 'Hero'})`;
+  document.getElementById('hero-avatar-display').textContent = arch.portrait || (isNpc ? '👑' : '👤');
+  document.getElementById('hero-name').value = arch.name;
+  document.getElementById('hero-slug').value = safeSlug;
+  document.getElementById('hero-portrait').value = arch.portrait || '';
+  document.getElementById('hero-alignment').value = arch.alignment || 'Neutral Good';
+  document.getElementById('hero-backstory').value = arch.backstory || '';
+
+  if (isNpc) {
+    document.getElementById('npc-role').value = arch.role || 'villager';
+    document.getElementById('npc-interaction').value = arch.interactionType || 'talk';
+    populateNpcLocationDropdown();
+    document.getElementById('npc-location').value = arch.location || '';
+    document.getElementById('npc-facing').value = arch.facing || 'down';
+    document.getElementById('npc-col').value = arch.col ?? 0;
+    document.getElementById('npc-row').value = arch.row ?? 0;
+    document.getElementById('npc-dialogue').value = arch.dialogue || '';
+  } else {
+    document.getElementById('hero-level').value = arch.level || 1;
+    document.getElementById('hero-race').value = arch.race || 'Human';
+    document.getElementById('hero-class').value = arch.class || 'Fighter';
+    document.getElementById('hero-subclass').value = arch.subclass || '';
+    document.getElementById('hero-background').value = arch.background || '';
+    document.getElementById('hero-xp').value = arch.xp || 0;
+
+    ['str', 'dex', 'con', 'int', 'wis', 'cha'].forEach(attr => {
+      const val = arch[attr] || 10;
+      const input = document.getElementById(`attr-${attr}`);
+      if (input) input.value = val;
+      updateAbilityModifier(attr, val);
+    });
+
+    document.getElementById('vital-ac').value = arch.ac || 10;
+    document.getElementById('vital-hp-max').value = arch.hpMax || 10;
+    document.getElementById('vital-hp-cur').value = arch.hpCurrent || 10;
+    document.getElementById('vital-speed').value = arch.speed || 30;
+    document.getElementById('vital-init').value = arch.initiative || 0;
+    document.getElementById('vital-prof').value = arch.prof || 2;
+    document.getElementById('hero-spells').value = arch.spells || '';
+  }
+
+  state.activeCharacterSlug = safeSlug;
+  saveCurrentCharacter();
 }
 
 // ========================================================
@@ -1158,6 +1849,10 @@ async function loadMapsList() {
           `<option value="${m.slug}">${m.title || m.slug}</option>`
         ).join('');
       }
+
+      populateCampStartingMapDropdown();
+      populateNpcLocationDropdown();
+      renderCampaignMapsChecklist();
 
       if (state.maps.length > 0) {
         await loadMap(state.maps[0].slug);
