@@ -197,4 +197,27 @@ describe('RobOS eLearning Slide Action Menu, Git URLs & Offline Zip Export', () 
     assert.equal(slug, 'grpc-cache-proxy', 'Anchor slug must strip urn:*:elearning: prefix');
     assert.ok(fs.existsSync(resolved), 'Resolved path must physically exist on disk');
   });
+
+  it('8. renderOverviewContent formats rich markdown and preserves semantic HTML', () => {
+    const { renderOverviewContent } = require(path.join(rootRepo, 'packages/robos-elearning/main.js'));
+    assert.ok(typeof renderOverviewContent === 'function', 'main.js must export renderOverviewContent');
+
+    // 1. Markdown conversion
+    const md = '### Test Header\n\nThis is **bold** and *italic* with `inline code`.\n\n- Bullet 1\n- Bullet 2\n\n| Param | Value |\n|---|---|\n| Mode | Fast |\n\n```bash\necho hello\n```';
+    const htmlFromMd = renderOverviewContent(md);
+    assert.ok(htmlFromMd.includes('<h3>Test Header</h3>'), 'Must render h3');
+    assert.ok(htmlFromMd.includes('<strong>bold</strong>'), 'Must render strong');
+    assert.ok(htmlFromMd.includes('<em>italic</em>'), 'Must render em');
+    assert.ok(htmlFromMd.includes('<code>inline code</code>'), 'Must render inline code');
+    assert.ok(htmlFromMd.includes('<ul><li>Bullet 1</li><li>Bullet 2</li></ul>'), 'Must render ul/li');
+    assert.ok(htmlFromMd.includes('<table><thead><tr><th>Param</th><th>Value</th></tr></thead>'), 'Must render table');
+    assert.ok(htmlFromMd.includes('<pre><code class="language-bash">echo hello</code></pre>'), 'Must render code block');
+
+    // 2. HTML preservation
+    const mixedHtml = '<p>A Bazel build asks Buildbarn for cached results.</p>\n<dl><dt>gRPC</dt><dd>The RPC protocol</dd></dl>\n<figure class="flow-diagram"><img src="data:image/jpeg;base64,123"></figure>';
+    const htmlFromHtml = renderOverviewContent(mixedHtml);
+    assert.ok(htmlFromHtml.includes('<dl><dt>gRPC</dt><dd>The RPC protocol</dd></dl>'), 'Must preserve dl/dt/dd');
+    assert.ok(htmlFromHtml.includes('<figure class="flow-diagram"><img src="data:image/jpeg;base64,123"></figure>'), 'Must preserve figure');
+  });
 });
+

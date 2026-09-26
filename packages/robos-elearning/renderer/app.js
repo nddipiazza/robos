@@ -22,6 +22,124 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
+function renderOverviewContent(raw) {
+  if (!raw) return '';
+  let content = String(raw).trim();
+  if (!content) return '';
+
+  const tokens = [];
+  function saveToken(html) {
+    const placeholder = `<!--ROBOS_TOKEN_${tokens.length}-->`;
+    tokens.push({ placeholder, html });
+    return placeholder;
+  }
+
+  // 1. Preserve pre-existing <pre><code>...</code></pre> blocks
+  content = content.replace(/<pre[\s\S]*?<\/pre>/gi, (match) => saveToken(match));
+
+  // 2. Fenced code blocks ```lang ... ```
+  content = content.replace(/```([a-zA-Z0-9_\-]*)([\s\S]*?)```/g, (_match, lang, code) => {
+    const esc = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').trim();
+    const cls = lang ? ` class="language-${lang}"` : '';
+    return saveToken(`<pre><code${cls}>${esc}</code></pre>`);
+  });
+
+  // 3. Preserve HTML figures, images, tables, details, dl, div, video, iframe blocks
+  content = content.replace(/<figure[\s\S]*?<\/figure>/gi, (match) => saveToken(match));
+  content = content.replace(/<table[\s\S]*?<\/table>/gi, (match) => saveToken(match));
+  content = content.replace(/<dl[\s\S]*?<\/dl>/gi, (match) => saveToken(match));
+  content = content.replace(/<details[\s\S]*?<\/details>/gi, (match) => saveToken(match));
+  content = content.replace(/<div[\s\S]*?<\/div>/gi, (match) => saveToken(match));
+  content = content.replace(/<(?:video|iframe|audio)[\s\S]*?<\/(?:video|iframe|audio)>/gi, (match) => saveToken(match));
+
+  // 4. Markdown tables (| col | col |)
+  content = content.replace(/((?:\|[^\n]+\|\r?\n)+)/g, (match) => {
+    const lines = match.trim().split('\n').filter(l => l.trim().startsWith('|'));
+    if (lines.length < 2) return match;
+    let html = '<table>';
+    lines.forEach((line, idx) => {
+      if (line.includes('---')) return;
+      const cells = line.split('|').slice(1, -1).map(c => c.trim());
+      if (idx === 0) {
+        html += '<thead><tr>' + cells.map(c => `<th>${c}</th>`).join('') + '</tr></thead><tbody>';
+      } else {
+        html += '<tr>' + cells.map(c => `<td>${c}</td>`).join('') + '</tr>';
+      }
+    });
+    html += '</tbody></table>';
+    return saveToken(html);
+  });
+
+  // 5. Markdown headers (# h1, ## h2, ### h3, #### h4)
+  content = content.replace(/^#### (.*$)/gim, '<h4>$1</h4>');
+  content = content.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+  content = content.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+  content = content.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+
+  // 6. Horizontal rules
+  content = content.replace(/^---$/gm, '<hr>');
+
+  // 7. Blockquotes
+  content = content.replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>');
+
+  // 8. Markdown unordered lists (- item or * item)
+  content = content.replace(/(?:^|\n)((?:[ \t]*[-*] .+(?:\n|$))+)/g, (match) => {
+    const items = match.trim().split('\n').map(l => {
+      const clean = l.trim().replace(/^[-*]\s+/, '');
+      return `<li>${clean}</li>`;
+    }).join('');
+    return saveToken(`<ul>${items}</ul>`);
+  });
+
+  // 9. Markdown ordered lists (1. item)
+  content = content.replace(/(?:^|\n)((?:[ \t]*\d+\. .+(?:\n|$))+)/g, (match) => {
+    const items = match.trim().split('\n').map(l => {
+      const clean = l.trim().replace(/^\d+\.\s+/, '');
+      return `<li>${clean}</li>`;
+    }).join('');
+    return saveToken(`<ol>${items}</ol>`);
+  });
+
+  // 10. Inline bold / italic / code / links
+  content = content.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  content = content.replace(/(^|[^\*])\*([^*]+)\*([^\*]|$)/g, '$1<em>$2</em>$3');
+  content = content.replace(/`([^`]+)`/g, '<code>$1</code>');
+  content = content.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+
+  // 11. Wrap loose paragraphs
+  const chunks = content.split(/\n\s*\n/).map(p => {
+    const trimmed = p.trim();
+    if (!trimmed) return '';
+    if (trimmed.startsWith('<!--ROBOS_TOKEN_') ||
+        trimmed.startsWith('<h') ||
+        trimmed.startsWith('<table') ||
+        trimmed.startsWith('<pre') ||
+        trimmed.startsWith('<div') ||
+        trimmed.startsWith('<hr') ||
+        trimmed.startsWith('<blockquote') ||
+        trimmed.startsWith('<ul') ||
+        trimmed.startsWith('<ol') ||
+        trimmed.startsWith('<p') ||
+        trimmed.startsWith('<dl') ||
+        trimmed.startsWith('<figure') ||
+        trimmed.startsWith('<details')) {
+      return trimmed;
+    }
+    return `<p>${trimmed.replace(/\n/g, '<br>')}</p>`;
+  });
+
+  let result = chunks.join('\n\n');
+
+  // 12. Restore tokens
+  for (const { placeholder, html } of tokens) {
+    result = result.replace(placeholder, html);
+  }
+
+  return result;
+}
+
+window.renderOverviewContent = renderOverviewContent;
+
 window.addEventListener('DOMContentLoaded', async () => {
   await initApp();
 });
@@ -181,7 +299,7 @@ function renderModule(idx) {
           </div>
         </div>
       </div>
-      <div class="module-overview">${m.overview || ''}</div>
+      <div class="module-overview">${renderOverviewContent(m.overview)}</div>
 
       <div class="section-title">🧪 Hands-On Lab Exercises</div>
       <div class="lab-steps">
