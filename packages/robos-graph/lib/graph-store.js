@@ -1489,6 +1489,30 @@ body { background: var(--bg-primary); color: var(--text); height: 100vh; display
 .module-item:hover { background: var(--bg-surface-hover); border-color: var(--accent); }
 .module-item.active { background: rgba(0, 188, 212, 0.1); border-color: var(--accent); color: var(--text-bright); }
 .module-item.completed { border-left: 4px solid var(--success); }
+.module-item-title-row { margin-bottom: 6px; line-height: 1.4; word-break: break-word; }
+.module-item-footer { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 4px; }
+.copy-tab-path-link {
+  font-size: 11px;
+  color: var(--accent);
+  text-decoration: none;
+  background: rgba(0, 188, 212, 0.1);
+  border: 1px solid rgba(0, 188, 212, 0.3);
+  padding: 2px 7px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+.copy-tab-path-link:hover {
+  background: rgba(0, 188, 212, 0.25);
+  border-color: var(--accent);
+  color: var(--text-bright);
+  text-decoration: none;
+}
+.copy-tab-path-link:active { transform: scale(0.96); }
 .cert-status-box { margin-top: auto; padding: 14px; background: rgba(241, 224, 90, 0.05); border: 1px solid rgba(241, 224, 90, 0.2); border-radius: 8px; }
 .cert-status-box h4 { color: var(--gold); font-size: 13px; margin-bottom: 6px; }
 .cert-status-box p { font-size: 11px; color: var(--text-muted); margin-bottom: 10px; line-height: 1.4; }
@@ -1549,11 +1573,37 @@ function renderModuleNav() {
   (course['robos:modules'] || []).forEach((m, idx) => {
     const li = document.createElement('li');
     li.className = 'module-item ' + (idx === currentModIdx ? 'active' : '') + (isModuleComplete(idx) ? ' completed' : '');
-    li.innerHTML = '<strong>' + (m.title || 'Module ' + (idx + 1)) + '</strong><br><small style="color:var(--text-muted);">' + (m.durationMinutes || 15) + ' mins</small>';
-    li.onclick = () => renderModule(idx);
+    li.innerHTML = \\\`
+      <div class="module-item-title-row">
+        <strong>\\\${m.title || 'Module ' + (idx + 1)}</strong>
+      </div>
+      <div class="module-item-footer">
+        <small style="color:var(--text-muted);">\\\${m.durationMinutes || 15} mins</small>
+        <a href="#" class="copy-tab-path-link" onclick="window.copyTabPath(event, \\\${idx})" title="Copy file system path for AI agent">
+          📋 Copy as Path
+        </a>
+      </div>
+    \\\`;
+    li.onclick = (e) => {
+      if (e.target.closest('.copy-tab-path-link')) return;
+      renderModule(idx);
+    };
     list.appendChild(li);
   });
 }
+
+window.copyTabPath = async function(event, idx) {
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+  const m = (course['robos:modules'] || [])[idx];
+  const slideId = (m && m.id) || ('slide-' + (idx + 1));
+  const fullPath = (course['robos:gitopsFile'] || '.robos/elearning.yaml') + '#' + slideId;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    await navigator.clipboard.writeText(fullPath);
+  }
+};
 
 function renderModule(idx) {
   currentModIdx = idx;

@@ -46,6 +46,9 @@
         <select class="course-picker" id="course-selector" onchange="window.onCourseSelected(this.value)">
           <option value="">Switch Course…</option>
         </select>
+        <button class="btn btn-outline btn-copy-course-path" id="btn-copy-course-path" onclick="window.copyCoursePath()" title="Copy course file system path for AI agents" style="font-size: 11px; padding: 5px 10px;">
+          📋 Copy Course Path
+        </button>
         <button class="btn btn-outline" id="btn-toggle-editor" onclick="window.toggleEditorMode()" title="Toggle Curriculum Editor Mode" style="font-size: 11px; padding: 5px 10px;">
           ✏️ Editor Mode
         </button>
