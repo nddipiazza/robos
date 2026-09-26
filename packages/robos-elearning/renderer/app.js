@@ -543,19 +543,51 @@ window.toggleSlideMenu = function(event, idx) {
   }
 };
 
+function resolveGitopsPathForCourse(course, srcInfo) {
+  if (!course) return '';
+  if (course.resolvedGitopsPath) return course.resolvedGitopsPath;
+  const customFile = course['robos:gitopsFile'] || course.gitopsFile;
+  if (customFile && customFile.startsWith('/')) return customFile;
+
+  const repoRoot = (srcInfo && srcInfo.repoRoot) || '/home/ndipiazza/source/robos';
+  if (!customFile) return (srcInfo && srcInfo.gitopsPath) || `${repoRoot}/.robos/elearning.yaml`;
+
+  const rel = customFile.replace(/^\.?\//, '');
+
+  const evidence = [].concat(course['robos:evidence'] || []);
+  const ev = evidence.find(e => e && e.repository);
+  if (ev && ev.repository) {
+    const repoParts = ev.repository.split('/');
+    const repoName = repoParts.pop();
+    const orgPrefix = repoParts[0]?.toLowerCase();
+    const candidateRoot = orgPrefix && orgPrefix !== repoName.toLowerCase()
+      ? `/home/ndipiazza/source/${orgPrefix}/${repoName}`
+      : `/home/ndipiazza/source/${repoName}`;
+    return `${candidateRoot}/${rel}`;
+  }
+
+  if (course.graphRoot && course.graphRoot.includes('/source/')) {
+    const parts = course.graphRoot.split('/knowledge-graphs/');
+    if (parts.length > 1) {
+      return `${parts[0]}/${rel}`;
+    }
+  }
+
+  return `${repoRoot}/${rel}`;
+}
+
+function getCourseAnchorSlug(course) {
+  if (!course) return 'course';
+  if (course.id && !course.id.startsWith('urn:')) return course.id;
+  const rawId = course['@id'] || course.id || '';
+  const stripped = rawId.replace(/^urn:[^:]+:(?:elearning|course):/i, '').replace(/^urn:[^:]+:/i, '');
+  return stripped || 'course';
+}
+
 window.getSlidePath = function(idx) {
   if (!activeCourse) return '';
   const m = (activeCourse['robos:modules'] || [])[idx];
-  const repoRoot = (sourceInfo && sourceInfo.repoRoot) || '/home/ndipiazza/source/robos';
-  let gitopsPath = (sourceInfo && sourceInfo.gitopsPath) || `${repoRoot}/.robos/elearning.yaml`;
-  if (activeCourse && (activeCourse['robos:gitopsFile'] || activeCourse.gitopsFile)) {
-    const customFile = activeCourse['robos:gitopsFile'] || activeCourse.gitopsFile;
-    if (customFile.startsWith('/')) {
-      gitopsPath = customFile;
-    } else {
-      gitopsPath = `${repoRoot}/${customFile.replace(/^\.?\//, '')}`;
-    }
-  }
+  const gitopsPath = resolveGitopsPathForCourse(activeCourse, sourceInfo);
   const slideId = (m && (m.id || m['@id'] || m.slideId)) || ('slide-' + (idx + 1));
   return `${gitopsPath}#${slideId}`;
 };
@@ -579,17 +611,8 @@ window.copySlidePath = async function(idx) {
 
 window.copyCoursePath = async function() {
   if (!activeCourse) return '';
-  const repoRoot = (sourceInfo && sourceInfo.repoRoot) || '/home/ndipiazza/source/robos';
-  let gitopsPath = (sourceInfo && sourceInfo.gitopsPath) || `${repoRoot}/.robos/elearning.yaml`;
-  if (activeCourse && (activeCourse['robos:gitopsFile'] || activeCourse.gitopsFile)) {
-    const customFile = activeCourse['robos:gitopsFile'] || activeCourse.gitopsFile;
-    if (customFile.startsWith('/')) {
-      gitopsPath = customFile;
-    } else {
-      gitopsPath = `${repoRoot}/${customFile.replace(/^\.?\//, '')}`;
-    }
-  }
-  const courseId = activeCourse.id || (activeCourse['@id'] || '').replace('urn:robos:elearning:', '').replace('urn:robos:course:', '') || 'course';
+  const gitopsPath = resolveGitopsPathForCourse(activeCourse, sourceInfo);
+  const courseId = getCourseAnchorSlug(activeCourse);
   const fullPath = `${gitopsPath}#${courseId}`;
   await copyToClipboardText(fullPath);
   window.showToast(`📋 Copied course file system path: ${fullPath}`, 'success');
