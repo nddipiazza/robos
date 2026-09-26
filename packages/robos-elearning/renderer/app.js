@@ -223,8 +223,8 @@ function renderModuleNav() {
       </div>
       <div class="module-item-footer">
         <small class="module-item-duration" style="color:var(--text-muted);">${m.durationMinutes || 15} mins</small>
-        <a href="#" class="copy-tab-path-link" onclick="window.copyTabPath(event, ${idx})" title="Copy file system path for AI agents (e.g. Claude Code, Antigravity, Copilot)">
-          📋 Copy as Path
+        <a href="#" class="copy-tab-path-link" onclick="window.copyTabPath(event, ${idx})" title="Copy as Path" aria-label="Copy as Path">
+          📋
         </a>
       </div>
     `;
