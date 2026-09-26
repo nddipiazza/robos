@@ -10,6 +10,7 @@ __pycache__/
 *.pyo
 
 # Videos
+videos/
 *.mp4
 !docs/assets/videos/*.mp4
 *.mkv
