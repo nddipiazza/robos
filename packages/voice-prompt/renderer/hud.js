@@ -1,6 +1,83 @@
 'use strict';
 
-document.addEventListener('DOMContentLoaded', async () => {
+function normalize(str) {
+  return (str || '')
+    .toLowerCase()
+    .replace(/[^\w\s]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Evaluates relationship between previous text and incoming speech text.
+ * Prevents replaying overlapping streams of audio data and duplicate recall fragments.
+ */
+function mergeWithPrevious(prevText, newText) {
+  const normPrev = normalize(prevText);
+  const normNew = normalize(newText);
+  if (!normNew) return { action: 'ignore' };
+  if (!normPrev) return { action: 'append' };
+
+  // 1. Exact match (ignore duplicate)
+  if (normPrev === normNew) {
+    return { action: 'ignore' };
+  }
+
+  // 2. Substring recall check: newText is already fully contained within prevText
+  // (e.g. prev="the link data section is really stupid", new="really stupid")
+  if (normPrev.includes(normNew)) {
+    return { action: 'ignore' };
+  }
+
+  // 3. Extension check: newText starts with and extends prevText
+  // (e.g. prev="The", new="The Json LD link data")
+  // (e.g. prev="It is me", new="It is me, Nick")
+  if (normNew.startsWith(normPrev)) {
+    return { action: 'replace', text: newText };
+  }
+
+  // 4. Word-level suffix-prefix overlap check (Whisper sliding window overlap)
+  // (e.g. prev="The Json LD link data", new="link data section is really stupid")
+  const wordsPrev = prevText.trim().split(/\s+/);
+  const wordsNew = newText.trim().split(/\s+/);
+  const normWordsPrev = wordsPrev.map(w => normalize(w));
+  const normWordsNew = wordsNew.map(w => normalize(w));
+
+  const maxCheck = Math.min(normWordsPrev.length, normWordsNew.length, 12);
+  for (let k = maxCheck; k >= 2; k--) {
+    const prevSuffix = normWordsPrev.slice(-k).join(' ');
+    const newPrefix = normWordsNew.slice(0, k).join(' ');
+    if (prevSuffix === newPrefix) {
+      const remainingNewWords = wordsNew.slice(k);
+      if (remainingNewWords.length === 0) {
+        return { action: 'ignore' };
+      }
+      const stitched = wordsPrev.join(' ') + ' ' + remainingNewWords.join(' ');
+      return { action: 'replace', text: stitched };
+    }
+  }
+
+  // Check with 1-2 words offset in newText (e.g. "the link data" where "the" was added)
+  for (let start = 1; start < Math.min(3, normWordsNew.length); start++) {
+    for (let k = Math.min(normWordsPrev.length, normWordsNew.length - start, 8); k >= 2; k--) {
+      const prevSuffix = normWordsPrev.slice(-k).join(' ');
+      const newPart = normWordsNew.slice(start, start + k).join(' ');
+      if (prevSuffix === newPart) {
+        const remainingNewWords = wordsNew.slice(start + k);
+        if (remainingNewWords.length === 0) {
+          return { action: 'ignore' };
+        }
+        const stitched = wordsPrev.join(' ') + ' ' + remainingNewWords.join(' ');
+        return { action: 'replace', text: stitched };
+      }
+    }
+  }
+
+  return { action: 'append' };
+}
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', async () => {
   const chatFeed = document.getElementById('chat-feed');
   const chatWelcome = document.getElementById('chat-welcome');
   const btnToggleRecord = document.getElementById('btn-toggle-record');
@@ -123,10 +200,36 @@ document.addEventListener('DOMContentLoaded', async () => {
     return false;
   }
 
+
   // Update or create live interim text bubble
   function updateInterimBubble(text) {
     const cleanText = (text || '').trim();
     if (!cleanText || !chatFeed) return;
+
+    // Check against the last finalized message if it was finalized within the last 6 seconds
+    const lastFinal = finalizedMessages[finalizedMessages.length - 1];
+    const now = Date.now();
+    if (lastFinal && (now - (lastFinal.ts || 0) < 6000)) {
+      const merge = mergeWithPrevious(lastFinal.text, cleanText);
+      if (merge.action === 'ignore') {
+        if (currentInterimBubble) {
+          currentInterimBubble.remove();
+          currentInterimBubble = null;
+        }
+        return;
+      }
+      if (merge.action === 'replace') {
+        lastFinal.text = merge.text;
+        lastFinal.ts = now;
+        const lastEl = chatFeed.querySelector(`[data-id="${lastFinal.id}"] .bubble-text`);
+        if (lastEl) lastEl.textContent = merge.text;
+        if (currentInterimBubble) {
+          currentInterimBubble.remove();
+          currentInterimBubble = null;
+        }
+        return;
+      }
+    }
 
     hideWelcome();
 
@@ -162,15 +265,29 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    // Ignore duplicate text if identical to the last message within 2.5 seconds
     const now = Date.now();
-    const lastMsg = finalizedMessages[finalizedMessages.length - 1];
-    if (lastMsg && lastMsg.text.toLowerCase() === cleanText.toLowerCase() && (now - (lastMsg.ts || 0) < 2500)) {
-      if (currentInterimBubble) {
-        currentInterimBubble.remove();
-        currentInterimBubble = null;
+    const lastFinal = finalizedMessages[finalizedMessages.length - 1];
+
+    if (lastFinal) {
+      const merge = mergeWithPrevious(lastFinal.text, cleanText);
+      if (merge.action === 'ignore') {
+        if (currentInterimBubble) {
+          currentInterimBubble.remove();
+          currentInterimBubble = null;
+        }
+        return;
       }
-      return;
+      if (merge.action === 'replace') {
+        lastFinal.text = merge.text;
+        lastFinal.ts = now;
+        const lastEl = chatFeed.querySelector(`[data-id="${lastFinal.id}"] .bubble-text`);
+        if (lastEl) lastEl.textContent = merge.text;
+        if (currentInterimBubble) {
+          currentInterimBubble.remove();
+          currentInterimBubble = null;
+        }
+        return;
+      }
     }
 
     hideWelcome();
@@ -207,7 +324,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const copyBtn = bubbleEl.querySelector('.btn-copy-msg');
     const copyLabel = bubbleEl.querySelector('.copy-label');
     copyBtn?.addEventListener('click', async () => {
-      const ok = await copyTextToClipboard(cleanText);
+      const textToCopy = bubbleEl.querySelector('.bubble-text')?.textContent || cleanText;
+      const ok = await copyTextToClipboard(textToCopy);
       if (ok && copyLabel) {
         copyLabel.textContent = 'Copied!';
         copyBtn.classList.add('copied');
@@ -314,7 +432,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           const interimText = currentInterimBubble.querySelector('.bubble-text')?.textContent || '';
           if (interimText.trim()) finalizeBubble(interimText);
         }
-      }, 700);
+      }, 1800);
     });
 
     // 2. Finalized speech stream
@@ -338,3 +456,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 });
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    normalize,
+    mergeWithPrevious,
+  };
+}
