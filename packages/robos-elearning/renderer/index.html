@@ -21,28 +21,6 @@
         </div>
       </div>
       <div class="header-right">
-        <!-- Voice Assistant Toolbar -->
-        <div class="voice-assistant-toolbar">
-          <button id="btn-toggle-voice" class="btn-voice-toggle idle" title="Toggle Real-Time Voice Suggestions">
-            <span class="mic-dot"></span>
-            <span id="btn-voice-label">🎤 Voice Suggestions: OFF</span>
-          </button>
-          <div class="agent-selector-group">
-            <label for="select-voice-agent">Agent:</label>
-            <select id="select-voice-agent" class="agent-select" disabled title="Select RobOS Agent to process voice suggestions">
-              <option value="fast-reactive">⚡ Fast Reactive Agent</option>
-              <option value="claude-code">Claude Code</option>
-              <option value="github-copilot">GitHub Copilot</option>
-              <option value="codex">Codex</option>
-            </select>
-          </div>
-          <div id="voice-activity-ticker" class="voice-ticker hidden">
-            <span class="ticker-pulse"></span>
-            <span id="ticker-status">Listening to stream…</span>
-            <span id="ticker-speech" class="ticker-speech"></span>
-          </div>
-        </div>
-
         <select class="course-picker" id="course-selector" onchange="window.onCourseSelected(this.value)">
           <option value="">Switch Course…</option>
         </select>
@@ -87,7 +65,6 @@
           <span>✏️ <strong>Slide Editor Active</strong> — Use the <strong>⋮ Slide Menu</strong> on each slide to copy paths, copy Git URL, export as HTML zip, or edit content.</span>
           <button class="btn btn-xs btn-primary" onclick="window.saveCurrentCourse()">💾 Save Course</button>
         </div>
-        <div id="voice-feedback-banner" class="voice-feedback-banner hidden"></div>
         <div id="module-content">
           <div class="loading-state">Loading interactive curriculum from Knowledge Graph…</div>
         </div>

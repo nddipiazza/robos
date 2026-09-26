@@ -219,4 +219,57 @@ test('RobOS Voice Activated Commands & Configuration', async (t) => {
       await new Promise(r => server.close(r));
     }
   });
+
+  await t.test('7. Standalone Dialog Popup Window for Voice Activated Commands', async (t) => {
+    const mainModule = require('../../../voice-prompt/main');
+
+    await t.test('exports window lifecycle management functions', () => {
+      assert.strictEqual(typeof mainModule.createVoiceCommandsWindow, 'function');
+      assert.strictEqual(typeof mainModule.showVoiceCommandsWindow, 'function');
+      assert.strictEqual(typeof mainModule.hideVoiceCommandsWindow, 'function');
+      assert.strictEqual(typeof mainModule.toggleVoiceCommandsWindow, 'function');
+    });
+
+    await t.test('commands-preload.js exists and exposes voiceCommandsApi contract', () => {
+      const preloadFile = path.resolve(__dirname, '../../../voice-prompt/commands-preload.js');
+      assert.ok(fs.existsSync(preloadFile), 'commands-preload.js must exist');
+      const content = fs.readFileSync(preloadFile, 'utf8');
+      assert.ok(content.includes('voiceCommandsApi'), 'Must expose voiceCommandsApi');
+      assert.ok(content.includes('vp-voice-commands-list'));
+      assert.ok(content.includes('vp-voice-command-match'));
+      assert.ok(content.includes('vp-voice-command-execute'));
+      assert.ok(content.includes('vp-voice-commands-test-phrase'));
+      assert.ok(content.includes('vp-voice-commands-window-close'));
+    });
+
+    await t.test('hud-preload.js exposes voice commands window controls and test phrase listener', () => {
+      const hudPreloadFile = path.resolve(__dirname, '../../../voice-prompt/hud-preload.js');
+      assert.ok(fs.existsSync(hudPreloadFile), 'hud-preload.js must exist');
+      const content = fs.readFileSync(hudPreloadFile, 'utf8');
+      assert.ok(content.includes('openVoiceCommandsWindow'));
+      assert.ok(content.includes('closeVoiceCommandsWindow'));
+      assert.ok(content.includes('toggleVoiceCommandsWindow'));
+      assert.ok(content.includes('onVoiceCommandsWindowClosed'));
+      assert.ok(content.includes('onTestPhrase'));
+    });
+
+    await t.test('commands-window.html provides search, tabs, feed container, and escape hint', () => {
+      const htmlFile = path.resolve(__dirname, '../../../voice-prompt/renderer/commands-window.html');
+      assert.ok(fs.existsSync(htmlFile), 'commands-window.html must exist');
+      const content = fs.readFileSync(htmlFile, 'utf8');
+      assert.ok(content.includes('commands-search-input'), 'Must have search input');
+      assert.ok(content.includes('category-tabs'), 'Must have category tabs');
+      assert.ok(content.includes('commands-list-container'), 'Must have list container');
+      assert.ok(content.includes('btn-close-window'), 'Must have close button');
+      assert.ok(content.includes('commands-window.js'), 'Must load script');
+      assert.ok(content.includes('commands-window.css'), 'Must load stylesheet');
+    });
+
+    await t.test('hud.html removes old embedded modal overlay in favor of standalone window', () => {
+      const hudHtmlFile = path.resolve(__dirname, '../../../voice-prompt/renderer/hud.html');
+      const content = fs.readFileSync(hudHtmlFile, 'utf8');
+      assert.strictEqual(content.includes('id="voice-commands-modal"'), false, 'hud.html must not contain embedded voice-commands-modal');
+      assert.ok(content.includes('id="btn-voice-commands"'), 'hud.html retains toolbar trigger button');
+    });
+  });
 });

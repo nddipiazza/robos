@@ -46,6 +46,7 @@ if (process.env.ROBOS_TEST !== '1' && process.env.ROBOS_TEST_MODE !== '1') {
 
 let mainWindow = null;
 let hudWindow = null;
+let voiceCommandsWindow = null;
 let apiServer = null;
 let currentApiPort = parseInt(process.env.ROBOS_VOICE_PORT || '19188', 10);
 
@@ -650,6 +651,30 @@ function startApiServer(overridePort) {
         return res.end(JSON.stringify(result));
       }
 
+      if (pathname === '/api/voice-commands/window/open' && method === 'POST') {
+        showVoiceCommandsWindow();
+        res.writeHead(200);
+        return res.end(JSON.stringify({ ok: true, open: true }));
+      }
+
+      if (pathname === '/api/voice-commands/window/close' && method === 'POST') {
+        hideVoiceCommandsWindow();
+        res.writeHead(200);
+        return res.end(JSON.stringify({ ok: true, open: false }));
+      }
+
+      if (pathname === '/api/voice-commands/window/toggle' && method === 'POST') {
+        const resToggle = toggleVoiceCommandsWindow();
+        res.writeHead(200);
+        return res.end(JSON.stringify(resToggle));
+      }
+
+      if (pathname === '/api/voice-commands/window/status' && method === 'GET') {
+        const isOpen = Boolean(voiceCommandsWindow && !voiceCommandsWindow.isDestroyed() && voiceCommandsWindow.isVisible());
+        res.writeHead(200);
+        return res.end(JSON.stringify({ ok: true, open: isOpen }));
+      }
+
       // 11. Debug / Testing endpoints for harness & snapshot-cli: /eval, /health
       if (pathname === '/eval' && method === 'POST') {
         const body = await parseBody(req);
@@ -670,7 +695,11 @@ function startApiServer(overridePort) {
       }
 
       if (pathname === '/screenshot' && method === 'GET') {
-        const targetWin = (mainWindow && !mainWindow.isDestroyed()) ? mainWindow : hudWindow;
+        const targetParam = urlObj.searchParams.get('window') || urlObj.searchParams.get('target');
+        let targetWin = (mainWindow && !mainWindow.isDestroyed()) ? mainWindow : hudWindow;
+        if ((targetParam === 'commands' || targetParam === 'voice-commands') && voiceCommandsWindow && !voiceCommandsWindow.isDestroyed()) {
+          targetWin = voiceCommandsWindow;
+        }
         if (!targetWin || targetWin.isDestroyed()) {
           res.writeHead(503, { 'Content-Type': 'application/json' });
           return res.end(JSON.stringify({ error: 'No active window to capture' }));
@@ -765,6 +794,10 @@ function createWindow() {
   mainWindow.on('closed', () => {
     mainWindow = null;
     hudWindow = null;
+    if (voiceCommandsWindow && !voiceCommandsWindow.isDestroyed()) {
+      try { voiceCommandsWindow.close(); } catch {}
+      voiceCommandsWindow = null;
+    }
   });
 
   // Connect dom-snapshot debug IPC if available
@@ -865,6 +898,95 @@ function showHudWindow() {
 function hideHudWindow() {
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.hide();
+  }
+}
+
+/**
+ * Voice Activated Commands standalone dialog window
+ */
+function createVoiceCommandsWindow() {
+  if (voiceCommandsWindow && !voiceCommandsWindow.isDestroyed()) {
+    voiceCommandsWindow.show();
+    voiceCommandsWindow.focus();
+    return voiceCommandsWindow;
+  }
+
+  voiceCommandsWindow = new BrowserWindow({
+    title: 'Voice Activated Commands — RobOS Voice',
+    icon: getAppIcon(),
+    width: 720,
+    height: 640,
+    minWidth: 480,
+    minHeight: 400,
+    backgroundColor: '#0d1117',
+    frame: true,
+    resizable: true,
+    alwaysOnTop: true,
+    hasShadow: true,
+    webPreferences: {
+      preload: path.join(__dirname, 'commands-preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+    autoHideMenuBar: true,
+  });
+
+  voiceCommandsWindow.loadFile(path.join(__dirname, 'renderer', 'commands-window.html'));
+
+  voiceCommandsWindow.once('ready-to-show', () => {
+    voiceCommandsWindow.show();
+    voiceCommandsWindow.focus();
+  });
+
+  voiceCommandsWindow.on('closed', () => {
+    voiceCommandsWindow = null;
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      try { mainWindow.webContents.send('vp-voice-commands-window-closed'); } catch {}
+    }
+  });
+
+  // Optional dom-snapshot debug IPC if available
+  if (_debugServer && _debugServer.registerSnapshotIPC) {
+    try {
+      _debugServer.registerSnapshotIPC(voiceCommandsWindow);
+    } catch {}
+  }
+
+  return voiceCommandsWindow;
+}
+
+function showVoiceCommandsWindow() {
+  if (!isElectronRuntime) return null;
+  try {
+    if (!voiceCommandsWindow || voiceCommandsWindow.isDestroyed()) {
+      createVoiceCommandsWindow();
+    } else {
+      voiceCommandsWindow.show();
+      voiceCommandsWindow.focus();
+    }
+    return voiceCommandsWindow;
+  } catch (err) {
+    console.warn('[voice-prompt] showVoiceCommandsWindow error:', err.message);
+    return null;
+  }
+}
+
+function hideVoiceCommandsWindow() {
+  if (voiceCommandsWindow && !voiceCommandsWindow.isDestroyed()) {
+    try {
+      voiceCommandsWindow.close();
+    } catch {}
+    voiceCommandsWindow = null;
+  }
+}
+
+function toggleVoiceCommandsWindow() {
+  if (voiceCommandsWindow && !voiceCommandsWindow.isDestroyed() && voiceCommandsWindow.isVisible()) {
+    hideVoiceCommandsWindow();
+    return { ok: true, open: false };
+  } else {
+    showVoiceCommandsWindow();
+    return { ok: true, open: true };
   }
 }
 
@@ -1058,6 +1180,29 @@ ipcMain.handle('vp-voice-command-execute', async (_e, { commandId, args, text } 
   return handleExecuteVoiceCommand(commandId, args, text);
 });
 
+ipcMain.handle('vp-voice-commands-window-open', () => {
+  showVoiceCommandsWindow();
+  return { ok: true, open: true };
+});
+
+ipcMain.handle('vp-voice-commands-window-close', () => {
+  hideVoiceCommandsWindow();
+  return { ok: true, open: false };
+});
+
+ipcMain.handle('vp-voice-commands-window-toggle', () => {
+  return toggleVoiceCommandsWindow();
+});
+
+ipcMain.handle('vp-voice-commands-test-phrase', (_e, phrase) => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    try {
+      mainWindow.webContents.send('vp-hud-test-phrase', phrase);
+    } catch {}
+  }
+  return { ok: true, phrase };
+});
+
 // Floating HUD IPC Handlers
 ipcMain.handle('vp-hud-show', () => {
   showHudWindow();
@@ -1118,6 +1263,10 @@ module.exports = {
   createHudWindow,
   showHudWindow,
   hideHudWindow,
+  createVoiceCommandsWindow,
+  showVoiceCommandsWindow,
+  hideVoiceCommandsWindow,
+  toggleVoiceCommandsWindow,
   getHudBounds,
   repositionHudWindow,
   voiceCommandsRegistry,

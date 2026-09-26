@@ -17,7 +17,7 @@ A bi-directional, privacy-first voice assistant engineered for hands-free AI int
 - **Universal REST API (`:19188`), Node.js Library (`robos-lib/voice`), & CLI (`robos-voice`)**: Full programmatic control over speech generation, microphone capture, wake-word activation, and assistant dialogues.
 - **Voice Activated Commands**: Dynamic catalog connecting spoken phrases directly to RobOS skills and desktop applications. Automatically matches commands when speech settles, executing actions hands-free.
 - **Dual-State Knowledge Graph Integration**: Voice commands are semantic `robos:VoiceCommand` entities conforming to W3C SHACL shape `urn:robos:shape:VoiceCommandShape` (derived from Schema.org `schema:ControlAction`).
-- **Floating HUD & Configuration Modal**: Desktop overlay featuring real-time speech bubbles, settle debounce with bounce animations, formatted execution result cards, and an in-app searchable commands directory.
+- **Floating HUD & Standalone Voice Commands Dialog**: Desktop overlay featuring real-time speech bubbles, settle debounce with bounce animations, formatted execution result cards, and a dedicated standalone dialog popup window for browsing and testing voice commands across all apps and skills.
 
 ### Voice Activated Commands & Floating HUD
 
@@ -29,9 +29,9 @@ A bi-directional, privacy-first voice assistant engineered for hands-free AI int
     </div>
   </div>
   <div style="border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b;">
-    <img src="{{ '/assets/images/screenshots/robos-voice-commands-modal.png' | relative_url }}" alt="RobOS Voice Activated Commands Configuration Modal" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+    <img src="{{ '/assets/images/screenshots/robos-voice-commands-modal.png' | relative_url }}" alt="RobOS Voice Activated Commands Standalone Dialog Window" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
     <div style="padding: 0.5rem 0.75rem; font-size: 0.8rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-      <strong>Configuration Modal</strong>: Searchable voice command catalog with trigger pills and test buttons.
+      <strong>Commands Dialog Popup</strong>: Dedicated window with searchable voice command catalog, category tabs, and test phrase triggers.
     </div>
   </div>
 </div>

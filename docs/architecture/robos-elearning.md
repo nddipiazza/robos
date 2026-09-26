@@ -29,7 +29,6 @@ graph TD
     Learner[Developer / Engineer] -->|Interactive Labs| Player[RobOS eLearning Player]
     Player -->|IPC Bridge| Main[Electron Main Process]
     Main -->|Query Courses| Graph[SDLC Knowledge Graph Store]
-    Main -->|Real-Time Co-Authoring| Voice[RobOS Voice Subsystem]
     Player -->|100% Score| Cert[Issue Certificate of Completion]
     Cert -->|W3C SHACL| Store[Register Credential in KGraph]
 ```

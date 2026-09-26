@@ -13,16 +13,6 @@ contextBridge.exposeInMainWorld('robosELearning', {
   exportSlideZip: (payload) => ipcRenderer.invoke('elearning:export-slide-zip', payload),
   saveCourse: (course) => ipcRenderer.invoke('elearning:save-course', course),
   copyToClipboard: (text) => ipcRenderer.invoke('elearning:copy-to-clipboard', text),
-  // Voice Assistant & Real-Time Co-Authoring
-  startVoiceAssistant: (opts) => ipcRenderer.invoke('elearning:start-voice-assistant', opts),
-  stopVoiceAssistant: () => ipcRenderer.invoke('elearning:stop-voice-assistant'),
-  getVoiceStatus: () => ipcRenderer.invoke('elearning:get-voice-status'),
-  onVoiceMutation: (callback) => {
-    ipcRenderer.on('elearning:voice-mutation', (_e, data) => callback(data));
-  },
-  onVoiceStreamEvent: (callback) => {
-    ipcRenderer.on('elearning:voice-stream-event', (_e, data) => callback(data));
-  },
   // Zoom Controls (Ctrl +, Ctrl -, Ctrl 0)
   getZoom: () => ipcRenderer.invoke('elearning:get-zoom'),
   setZoom: (factor) => ipcRenderer.invoke('elearning:set-zoom', factor),

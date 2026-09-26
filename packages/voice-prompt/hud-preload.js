@@ -20,6 +20,9 @@ const hudApi = {
   getVoiceCommands: (opts) => ipcRenderer.invoke('vp-voice-commands-list', opts),
   matchVoiceCommand: (text) => ipcRenderer.invoke('vp-voice-command-match', text),
   executeVoiceCommand: (commandId, args, text) => ipcRenderer.invoke('vp-voice-command-execute', { commandId, args, text }),
+  openVoiceCommandsWindow: () => ipcRenderer.invoke('vp-voice-commands-window-open'),
+  closeVoiceCommandsWindow: () => ipcRenderer.invoke('vp-voice-commands-window-close'),
+  toggleVoiceCommandsWindow: () => ipcRenderer.invoke('vp-voice-commands-window-toggle'),
 
   // Events from main process
   onRecordingState: (callback) => {
@@ -42,6 +45,12 @@ const hudApi = {
   },
   onInterimText: (callback) => {
     ipcRenderer.on('vp-hud-interim-text', (_e, data) => callback(data));
+  },
+  onVoiceCommandsWindowClosed: (callback) => {
+    ipcRenderer.on('vp-voice-commands-window-closed', (_e, data) => callback(data));
+  },
+  onTestPhrase: (callback) => {
+    ipcRenderer.on('vp-hud-test-phrase', (_e, phrase) => callback(phrase));
   },
 };
 

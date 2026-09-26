@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Voice Activated Commands — RobOS Voice</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="commands-window.css">
+</head>
+<body>
+  <div class="commands-dialog-container">
+    <!-- Header -->
+    <header class="dialog-header">
+      <div class="dialog-title-group">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="4 17 10 11 4 5"/>
+          <line x1="12" x2="20" y1="19" y2="19"/>
+        </svg>
+        <div class="dialog-title-text">
+          <h1>Voice Activated Commands</h1>
+          <span class="dialog-subtitle">Spoken voice triggers across all RobOS applications and skills</span>
+        </div>
+        <span id="commands-count-badge" class="commands-count-badge">0</span>
+      </div>
+      <div class="dialog-header-actions">
+        <button id="btn-close-window" class="btn-icon" title="Close Dialog (Esc)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Toolbar: Search & Category Tabs -->
+    <div class="dialog-toolbar">
+      <div class="search-input-wrap">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8b949e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" x2="16.65" y1="21" y2="16.65"/>
+        </svg>
+        <input type="text" id="commands-search-input" placeholder="Search commands, apps, skills, or spoken trigger phrases..." autocomplete="off" spellcheck="false" autofocus />
+        <button id="btn-clear-search" class="btn-clear-search hidden" title="Clear search">&times;</button>
+      </div>
+      <div class="category-tabs">
+        <button class="category-tab-btn active" data-tab="all">All Commands</button>
+        <button class="category-tab-btn" data-tab="apps">Applications</button>
+        <button class="category-tab-btn" data-tab="skills">Skills &amp; Actions</button>
+      </div>
+    </div>
+
+    <!-- Feedback Toast / Toast Notification Banner -->
+    <div id="toast-banner" class="toast-banner hidden">
+      <span class="toast-icon">⚡</span>
+      <span id="toast-message" class="toast-message">Sent to RobOS Voice HUD</span>
+    </div>
+
+    <!-- Commands List -->
+    <main class="dialog-body" id="commands-list-container">
+      <div class="loading-state">Loading registered voice commands...</div>
+    </main>
+
+    <!-- Footer info -->
+    <footer class="dialog-footer">
+      <span class="footer-tip">💡 Click any spoken trigger phrase or <strong>Test</strong> button to execute instantly in the RobOS Voice HUD.</span>
+      <span class="footer-hint"><kbd>Esc</kbd> to close</span>
+    </footer>
+  </div>
+
+  <script src="commands-window.js"></script>
+</body>
+</html>

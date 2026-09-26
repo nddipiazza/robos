@@ -90,16 +90,7 @@ if (typeof document !== 'undefined') {
   const posLabel = document.getElementById('pos-label');
   const btnCloseHud = document.getElementById('btn-close-hud');
   const btnVoiceCommands = document.getElementById('btn-voice-commands');
-  const voiceCommandsModal = document.getElementById('voice-commands-modal');
-  const btnCloseCommandsModal = document.getElementById('btn-close-commands-modal');
-  const commandsSearchInput = document.getElementById('commands-search-input');
-  const btnClearCommandsSearch = document.getElementById('btn-clear-commands-search');
-  const commandsCountBadge = document.getElementById('commands-count-badge');
-  const commandsListContainer = document.getElementById('commands-list-container');
-  const filterTabBtns = document.querySelectorAll('.commands-tab-btn');
 
-  let cachedCommands = [];
-  let currentFilterTab = 'all';
 
   const positions = ['bottom-right', 'bottom-left', 'top-left', 'top-right'];
   const posShort = {
@@ -518,154 +509,38 @@ if (typeof document !== 'undefined') {
     }
   });
 
-  // ── Voice Activated Commands Configuration Modal ──────────────────────────────
-  async function loadVoiceCommands() {
-    if (window.robosVoiceHud && typeof window.robosVoiceHud.getVoiceCommands === 'function') {
-      try {
-        cachedCommands = await window.robosVoiceHud.getVoiceCommands();
-      } catch (err) {
-        console.warn('Failed to load voice commands:', err);
-      }
-    }
-    if (commandsCountBadge) {
-      commandsCountBadge.textContent = cachedCommands.length;
-    }
-  }
-
-  function renderVoiceCommandsList() {
-    if (!commandsListContainer) return;
-    const query = normalize(commandsSearchInput?.value || '');
-
-    let list = cachedCommands;
-    if (currentFilterTab === 'apps') {
-      list = list.filter(c => c.targetType === 'app');
-    } else if (currentFilterTab === 'skills') {
-      list = list.filter(c => c.targetType === 'skill');
-    }
-
-    if (query) {
-      list = list.filter(c => {
-        if (normalize(c.title).includes(query)) return true;
-        if (normalize(c.description).includes(query)) return true;
-        if (normalize(c.targetId).includes(query)) return true;
-        return Array.isArray(c.matchers) && c.matchers.some(m => normalize(m).includes(query));
-      });
-    }
-
-    if (list.length === 0) {
-      commandsListContainer.innerHTML = `
-        <div class="commands-empty-state">
-          No voice commands matching "${escapeHtml(commandsSearchInput?.value || '')}"
-        </div>`;
-      return;
-    }
-
-    commandsListContainer.innerHTML = '';
-    list.forEach(cmd => {
-      const card = document.createElement('div');
-      card.className = 'command-item-card';
-
-      const typeLabel = cmd.targetType === 'app' ? 'App' : 'Skill';
-      const typeClass = cmd.targetType === 'app' ? 'app' : 'skill';
-
-      const phrasesHtml = (cmd.matchers || []).slice(0, 4).map(p =>
-        `<span class="cmd-phrase-badge" data-phrase="${escapeHtml(p)}" title="Click to dictate: &quot;${escapeHtml(p)}&quot;">&ldquo;${escapeHtml(p)}&rdquo;</span>`
-      ).join('');
-
-      card.innerHTML = `
-        <div class="command-item-top">
-          <div class="command-item-title-wrap">
-            <span class="command-type-badge ${typeClass}">${typeLabel}</span>
-            <span class="command-item-title">${escapeHtml(cmd.title)}</span>
-          </div>
-          <button type="button" class="btn-test-cmd" data-phrase="${escapeHtml(cmd.matchers?.[0] || cmd.title)}">Test</button>
-        </div>
-        <div class="command-item-desc">${escapeHtml(cmd.description || '')}</div>
-        <div class="command-item-phrases">${phrasesHtml}</div>
-      `;
-
-      card.querySelector('.btn-test-cmd')?.addEventListener('click', (e) => {
-        const phrase = e.currentTarget.getAttribute('data-phrase');
-        testCommandPhrase(phrase);
-      });
-
-      card.querySelectorAll('.cmd-phrase-badge').forEach(badge => {
-        badge.addEventListener('click', (e) => {
-          const phrase = e.currentTarget.getAttribute('data-phrase');
-          testCommandPhrase(phrase);
-        });
-      });
-
-      commandsListContainer.appendChild(card);
-    });
-  }
-
-  function testCommandPhrase(phrase) {
-    if (!phrase) return;
-    if (voiceCommandsModal) {
-      voiceCommandsModal.classList.add('hidden');
-    }
-    btnVoiceCommands?.classList.remove('active');
-    finalizeBubble(phrase);
-  }
-
+  // ── Voice Activated Commands Dialog Window ───────────────────────────────────
   btnVoiceCommands?.addEventListener('click', async () => {
-    if (!voiceCommandsModal) return;
-    const isHidden = voiceCommandsModal.classList.contains('hidden');
-    if (isHidden) {
-      voiceCommandsModal.classList.remove('hidden');
-      btnVoiceCommands.classList.add('active');
-      if (cachedCommands.length === 0) {
-        await loadVoiceCommands();
-      }
-      renderVoiceCommandsList();
-      commandsSearchInput?.focus();
-    } else {
-      voiceCommandsModal.classList.add('hidden');
-      btnVoiceCommands.classList.remove('active');
-    }
-  });
-
-  btnCloseCommandsModal?.addEventListener('click', () => {
-    voiceCommandsModal?.classList.add('hidden');
-    btnVoiceCommands?.classList.remove('active');
-  });
-
-  commandsSearchInput?.addEventListener('input', () => {
-    const val = commandsSearchInput.value || '';
-    if (btnClearCommandsSearch) {
-      if (val.trim()) {
-        btnClearCommandsSearch.classList.remove('hidden');
-      } else {
-        btnClearCommandsSearch.classList.add('hidden');
+    if (window.robosVoiceHud && typeof window.robosVoiceHud.toggleVoiceCommandsWindow === 'function') {
+      try {
+        const res = await window.robosVoiceHud.toggleVoiceCommandsWindow();
+        if (res && res.open) {
+          btnVoiceCommands.classList.add('active');
+        } else {
+          btnVoiceCommands.classList.remove('active');
+        }
+      } catch (err) {
+        console.warn('Failed to toggle voice commands window:', err);
       }
     }
-    renderVoiceCommandsList();
   });
-
-  btnClearCommandsSearch?.addEventListener('click', () => {
-    if (commandsSearchInput) {
-      commandsSearchInput.value = '';
-      commandsSearchInput.focus();
-    }
-    btnClearCommandsSearch.classList.add('hidden');
-    renderVoiceCommandsList();
-  });
-
-  filterTabBtns.forEach(tabBtn => {
-    tabBtn.addEventListener('click', () => {
-      filterTabBtns.forEach(b => b.classList.remove('active'));
-      tabBtn.classList.add('active');
-      currentFilterTab = tabBtn.getAttribute('data-tab') || 'all';
-      renderVoiceCommandsList();
-    });
-  });
-
-  // Preload voice commands on startup
-  loadVoiceCommands();
 
   // IPC Event Listeners from Main Process
   if (window.robosVoiceHud) {
+    // Listen for voice commands window close to toggle button state off
+    if (typeof window.robosVoiceHud.onVoiceCommandsWindowClosed === 'function') {
+      window.robosVoiceHud.onVoiceCommandsWindowClosed(() => {
+        btnVoiceCommands?.classList.remove('active');
+      });
+    }
+
+    // Listen for test phrase from voice commands window
+    if (typeof window.robosVoiceHud.onTestPhrase === 'function') {
+      window.robosVoiceHud.onTestPhrase((phrase) => {
+        finalizeBubble(phrase);
+      });
+    }
+
     // 1. Live interim speech stream (words being spoken in real-time)
     window.robosVoiceHud.onInterimText((evt = {}) => {
       const text = (evt.text || '').trim();

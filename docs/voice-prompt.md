@@ -201,46 +201,48 @@ flowchart TD
 
 ---
 
-## 7. Floating HUD & In-App Configuration Modal
-
+## 7. Floating HUD & Standalone Voice Commands Dialog
+ 
 RobOS Voice features a discreet, semi-transparent floating desktop HUD positioned at the corner of your screen (customizable to Bottom-Right, Top-Right, Bottom-Left, or Top-Left).
-
+ 
 ### 7.1 Speech Bubble Settle Window & Bounce Animation
-
+ 
 As speech is dictated, words appear live in real-time bubbles:
-
+ 
 1. **Settle Debounce (650ms)**: When the developer pauses speaking, the bubble enters a 650ms settle window. If no new words arrive, the finalized text is evaluated against the voice commands matching engine.
 2. **Bounce Animation Effect**: When a command matches, the dialog bubble triggers a `@keyframes commandBounce` animation, dynamically scaling and pulsing with a glowing cyan accent.
 3. **Execution Card**: The bubble automatically formats to display an execution card featuring:
    - Target category badge (`App` or `Skill`) with lightning icon.
    - Command title and live status indicator (`Executing` $\to$ `✓ Done` or `✕ Error`).
    - Detailed execution feedback (e.g., Knowledge Graph SHACL validation report or app launch confirmation).
-
+ 
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
   <img src="{{ '/assets/images/screenshots/robos-voice-hud-bubble-command.png' | relative_url }}" alt="RobOS Voice HUD with Matched Voice Command and Formatted Status Card" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
   <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
     <strong>RobOS Voice Floating HUD</strong>: Real-time dictation feed displaying finalized speech bubbles, matched app and skill execution cards with live status badges, copy-to-clipboard buttons, and active stream listening.
   </div>
 </div>
-
-### 7.2 In-App Voice Activated Commands Configuration Modal
-
-Clicking the terminal icon button (`>_`) in the HUD header opens the interactive **Voice Activated Commands** configuration modal:
-
+ 
+### 7.2 Standalone Voice Activated Commands Dialog Window
+ 
+Clicking the terminal icon button (`>_`) in the HUD header opens the interactive **Voice Activated Commands** standalone dialog popup window in its own BrowserWindow (`720x640`):
+ 
+- **Standalone Window Separation**: Opens cleanly in its own dedicated Electron window instead of an in-page modal overlay, providing abundant breathing room and preventing cramped layouts inside the narrow floating HUD.
 - **Command Count Badge**: Displays the total count of registered voice commands across all active skills and desktop apps.
-- **Instant Search Filter**: Filter commands in real time by title, description, target identifier, or trigger phrases.
-- **Category Filter Tabs**: Switch between **All**, **Apps**, and **Skills** to isolate specific workflows.
-- **Clickable Trigger Phrase Badges**: Each command displays its supported spoken trigger phrases (e.g., `“open git projects”`, `“validate knowledge graph”`). Clicking any badge immediately runs that phrase as test dictation.
+- **Instant Search Filter**: Filter commands in real time by title, description, target identifier, or trigger phrases with instant clear button (`×`).
+- **Category Filter Tabs**: Switch between **All Commands**, **Applications**, and **Skills & Actions** to isolate specific workflows.
+- **Clickable Trigger Phrase Badges**: Each command displays its supported spoken trigger phrases. Clicking any phrase sends it directly to the active RobOS Voice HUD for instant test execution.
 - **Direct Test Runner**: Each card includes a `Test` button to trigger immediate execution without speaking.
-
+- **Escape Shortcut & Close**: Press <kbd>Esc</kbd> or click the close icon to dismiss the dialog window cleanly.
+ 
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin: 2rem 0;">
   <div style="border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-    <img src="{{ '/assets/images/screenshots/robos-voice-commands-modal.png' | relative_url }}" alt="RobOS Voice Commands Configuration Catalog Modal" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+    <img src="{{ '/assets/images/screenshots/robos-voice-commands-modal.png' | relative_url }}" alt="RobOS Voice Commands Standalone Dialog Window" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
     <div style="padding: 0.75rem 1rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-      <strong>Voice Commands Configuration Modal</strong>: Searchable directory of voice-activated skills and apps with trigger pills and test buttons.
+      <strong>Voice Commands Standalone Dialog</strong>: Searchable directory of voice-activated skills and apps with trigger pills and test buttons.
     </div>
   </div>
-
+ 
   <div style="border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
     <img src="{{ '/assets/images/screenshots/robos-voice-commands-search.png' | relative_url }}" alt="RobOS Voice Commands Search Filter" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
     <div style="padding: 0.75rem 1rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
