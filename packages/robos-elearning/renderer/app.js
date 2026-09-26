@@ -191,7 +191,7 @@ async function loadCourse(courseOrAppId) {
     activeCourse = res.course;
     activeApp = res.application;
     currentModIdx = 0;
-    progress = { completedLabs: {}, passedQuizzes: {}, isCertified: false, certificate: null };
+    progress = { viewedModules: { 0: true }, completedLabs: {}, passedQuizzes: {}, isCertified: false, certificate: null };
 
     document.getElementById('course-title').textContent = activeCourse['dcterms:title'] || 'RobOS Masterclass';
     document.getElementById('course-difficulty').textContent = activeCourse['robos:difficulty'] || 'Intermediate';
@@ -238,6 +238,8 @@ function renderModuleNav() {
 
 function renderModule(idx) {
   currentModIdx = idx;
+  if (!progress.viewedModules) progress.viewedModules = {};
+  progress.viewedModules[idx] = true;
   renderModuleNav();
   if (!activeCourse) return;
   const m = (activeCourse['robos:modules'] || [])[idx];
@@ -332,6 +334,7 @@ function renderModule(idx) {
       ` : ''}
     </div>
   `;
+  updateProgress();
 }
 
 window.toggleLab = function(mIdx, sIdx) {
@@ -363,44 +366,101 @@ function isModuleComplete(idx) {
   if (!activeCourse) return false;
   const m = (activeCourse['robos:modules'] || [])[idx];
   if (!m) return false;
-  const labsDone = (m.labSteps || []).every((_, sIdx) => progress.completedLabs[`${idx}-${sIdx}`]);
-  const quizDone = (m.quiz || []).every((_, qIdx) => progress.passedQuizzes[`${idx}-${qIdx}`]);
-  return labsDone && (m.quiz && m.quiz.length ? quizDone : true);
+
+  const hasLabs = Array.isArray(m.labSteps) && m.labSteps.length > 0;
+  const hasQuiz = Array.isArray(m.quiz) && m.quiz.length > 0;
+
+  if (!hasLabs && !hasQuiz) {
+    return !!(progress.viewedModules && progress.viewedModules[idx]);
+  }
+
+  const labsDone = hasLabs ? m.labSteps.every((_, sIdx) => !!progress.completedLabs[`${idx}-${sIdx}`]) : true;
+  const quizDone = hasQuiz ? m.quiz.every((_, qIdx) => !!progress.passedQuizzes[`${idx}-${qIdx}`]) : true;
+  return labsDone && quizDone;
 }
 
 async function updateProgress() {
   if (!activeCourse) return;
-  const totalMods = (activeCourse['robos:modules'] || []).length;
-  let completed = 0;
+  const modules = activeCourse['robos:modules'] || [];
+  const totalMods = modules.length;
+
+  let totalLabs = 0;
+  let completedLabs = 0;
+  let totalQuizzes = 0;
+  let passedQuizzes = 0;
+
+  modules.forEach((m, mIdx) => {
+    (m.labSteps || []).forEach((_, sIdx) => {
+      totalLabs++;
+      if (progress.completedLabs[`${mIdx}-${sIdx}`]) completedLabs++;
+    });
+    (m.quiz || []).forEach((_, qIdx) => {
+      totalQuizzes++;
+      if (progress.passedQuizzes[`${mIdx}-${qIdx}`]) passedQuizzes++;
+    });
+  });
+
+  const totalInteractive = totalLabs + totalQuizzes;
+  const completedInteractive = completedLabs + passedQuizzes;
+
+  let completedMods = 0;
   for (let i = 0; i < totalMods; i++) {
-    if (isModuleComplete(i)) completed++;
+    if (isModuleComplete(i)) completedMods++;
   }
-  const pct = Math.round((completed / (totalMods || 1)) * 100);
+
+  let pct = 0;
+  if (totalInteractive > 0) {
+    pct = Math.round((completedInteractive / totalInteractive) * 100);
+  } else if (totalMods > 0) {
+    pct = Math.round((completedMods / totalMods) * 100);
+  }
+
   const pctEl = document.getElementById('progress-percent');
   if (pctEl) pctEl.textContent = pct + '%';
   const barEl = document.getElementById('progress-bar-fill');
   if (barEl) barEl.style.width = pct + '%';
   renderModuleNav();
 
-  if (pct === 100 && !progress.isCertified) {
-    progress.isCertified = true;
-    const btn = document.getElementById('btn-view-certificate');
-    if (btn) btn.style.display = 'block';
-    const txt = document.getElementById('cert-status-text');
-    if (txt) txt.textContent = '🎉 Perfect score! You have completed all lab steps and quizzes. Click below to view your verified certificate.';
+  const btn = document.getElementById('btn-view-certificate');
+  const txt = document.getElementById('cert-status-text');
 
-    try {
-      const res = await window.robosELearning.issueCertificate({
-        courseId: activeCourse['@id'],
-        appId: activeApp ? activeApp['@id'] : null,
-        userId: 'robos',
-        scorePercentage: 100,
-      });
-      if (res && res.certificate) {
-        progress.certificate = res.certificate;
+  if (pct === 100 && (totalInteractive > 0 || completedMods === totalMods)) {
+    const noCert = activeCourse['dcterms:description'] && activeCourse['dcterms:description'].includes('no completion, certification');
+    if (noCert) {
+      if (btn) btn.style.display = 'none';
+      if (txt) txt.textContent = '🎉 All modules reviewed! This reference curriculum does not issue a credential.';
+    } else {
+      if (btn) btn.style.display = 'block';
+      if (txt) txt.textContent = totalInteractive > 0
+        ? '🎉 Perfect score! You have completed all lab steps and quizzes. Click below to view your verified certificate.'
+        : '🎉 Congratulations! You have completed all curriculum modules. Click below to view your certificate.';
+
+      if (!progress.isCertified) {
+        progress.isCertified = true;
+        try {
+          const res = await window.robosELearning.issueCertificate({
+            courseId: activeCourse['@id'],
+            appId: activeApp ? activeApp['@id'] : null,
+            userId: 'robos',
+            scorePercentage: 100,
+          });
+          if (res && res.certificate) {
+            progress.certificate = res.certificate;
+          }
+        } catch (err) {
+          console.warn('Could not issue certificate via IPC:', err.message);
+        }
       }
-    } catch (err) {
-      console.warn('Could not issue certificate via IPC:', err.message);
+    }
+  } else {
+    progress.isCertified = false;
+    if (btn) btn.style.display = 'none';
+    if (txt) {
+      if (totalInteractive > 0) {
+        txt.textContent = `${completedInteractive} of ${totalInteractive} curriculum milestones completed (${pct}%). Complete all lab steps and quizzes to earn your verified certificate.`;
+      } else {
+        txt.textContent = `Reviewed ${completedMods} of ${totalMods} modules (${pct}%). Complete all modules to finish this curriculum.`;
+      }
     }
   }
 }

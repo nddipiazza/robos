@@ -1557,6 +1557,7 @@ body { background: var(--bg-primary); color: var(--text); height: 100vh; display
 let course = \${JSON.stringify(courseNode, null, 2)};
 let currentModIdx = 0;
 let progress = {
+  viewedModules: { 0: true },
   completedLabs: {},
   passedQuizzes: {},
   isCertified: false
@@ -1608,6 +1609,8 @@ window.copyTabPath = async function(event, idx) {
 
 function renderModule(idx) {
   currentModIdx = idx;
+  if (!progress.viewedModules) progress.viewedModules = {};
+  progress.viewedModules[idx] = true;
   renderModuleNav();
   const m = (course['robos:modules'] || [])[idx];
   if (!m) return;
@@ -1653,6 +1656,7 @@ function renderModule(idx) {
       \\\` : ''}
     </div>
   \\\`;
+  updateProgress();
 }
 
 window.toggleLab = function(mIdx, sIdx) {
@@ -1679,30 +1683,77 @@ window.checkQuiz = function(mIdx, qIdx, selected, correct) {
 function isModuleComplete(idx) {
   const m = (course['robos:modules'] || [])[idx];
   if (!m) return false;
-  const labsDone = (m.labSteps || []).every((_, sIdx) => progress.completedLabs[\\\`\\\${idx}-\\\${sIdx}\\\`]);
-  const quizDone = (m.quiz || []).every((_, qIdx) => progress.passedQuizzes[\\\`\\\${idx}-\\\${qIdx}\\\`]);
-  return labsDone && (m.quiz && m.quiz.length ? quizDone : true);
+
+  const hasLabs = Array.isArray(m.labSteps) && m.labSteps.length > 0;
+  const hasQuiz = Array.isArray(m.quiz) && m.quiz.length > 0;
+
+  if (!hasLabs && !hasQuiz) {
+    return !!(progress.viewedModules && progress.viewedModules[idx]);
+  }
+
+  const labsDone = hasLabs ? m.labSteps.every((_, sIdx) => !!progress.completedLabs[\\\`\\\${idx}-\\\${sIdx}\\\`]) : true;
+  const quizDone = hasQuiz ? m.quiz.every((_, qIdx) => !!progress.passedQuizzes[\\\`\\\${idx}-\\\${qIdx}\\\`]) : true;
+  return labsDone && quizDone;
 }
 
 function updateProgress() {
-  const totalMods = (course['robos:modules'] || []).length;
-  let completed = 0;
+  const modules = course['robos:modules'] || [];
+  const totalMods = modules.length;
+
+  let totalLabs = 0;
+  let completedLabs = 0;
+  let totalQuizzes = 0;
+  let passedQuizzes = 0;
+
+  modules.forEach((m, mIdx) => {
+    (m.labSteps || []).forEach((_, sIdx) => {
+      totalLabs++;
+      if (progress.completedLabs[\\\`\\\${mIdx}-\\\${sIdx}\\\`]) completedLabs++;
+    });
+    (m.quiz || []).forEach((_, qIdx) => {
+      totalQuizzes++;
+      if (progress.passedQuizzes[\\\`\\\${mIdx}-\\\${qIdx}\\\`]) passedQuizzes++;
+    });
+  });
+
+  const totalInteractive = totalLabs + totalQuizzes;
+  const completedInteractive = completedLabs + passedQuizzes;
+
+  let completedMods = 0;
   for (let i = 0; i < totalMods; i++) {
-    if (isModuleComplete(i)) completed++;
+    if (isModuleComplete(i)) completedMods++;
   }
-  const pct = Math.round((completed / (totalMods || 1)) * 100);
+
+  let pct = 0;
+  if (totalInteractive > 0) {
+    pct = Math.round((completedInteractive / totalInteractive) * 100);
+  } else if (totalMods > 0) {
+    pct = Math.round((completedMods / totalMods) * 100);
+  }
+
   const pctEl = document.getElementById('progress-percent');
   if (pctEl) pctEl.textContent = pct + '%';
   const barEl = document.getElementById('progress-bar-fill');
   if (barEl) barEl.style.width = pct + '%';
   renderModuleNav();
 
-  if (pct === 100) {
+  const btn = document.getElementById('btn-view-certificate');
+  const txt = document.getElementById('cert-status-text');
+
+  if (pct === 100 && (totalInteractive > 0 || completedMods === totalMods)) {
     progress.isCertified = true;
-    const btn = document.getElementById('btn-view-certificate');
     if (btn) btn.style.display = 'block';
-    const txt = document.getElementById('cert-status-text');
     if (txt) txt.textContent = '🎉 Congratulations! You have mastered all modules and earned your Certificate of Completion!';
+  } else {
+    progress.isCertified = false;
+    if (btn) btn.style.display = 'none';
+    if (txt) {
+      if (totalInteractive > 0) {
+        txt.textContent = \\\`\\\${completedInteractive} of \\\${totalInteractive} curriculum milestones completed (\\\${pct}%). Complete all lab steps and quizzes to earn your verified certificate.\\\`;
+      } else {
+        txt.textContent = \\\`Reviewed \\\${completedMods} of \\\${totalMods} modules (\\\${pct}%). Complete all modules to finish this curriculum.\\\`;
+      }
+    }
   }
 }
 
