@@ -281,6 +281,12 @@ const state = {
   activeCharacterData: null,
   characterFilter: 'all', // 'all', 'hero', 'npc'
 
+  // Item Studio State
+  items: [],
+  activeItemSlug: null,
+  activeItemData: null,
+  itemFilter: 'all', // 'all', 'weapon', 'armor', etc.
+
   // Map / Blockmap State
   maps: [],
   activeMapSlug: null,
@@ -307,6 +313,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupNavigation();
   setupCampaignHandlers();
   setupCharacterHandlers();
+  setupItemHandlers();
   setupInventoryHandlers();
   setupBlockmapHandlers();
 
@@ -322,6 +329,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Load initial data via IPC
   await loadScenesList();
   await loadMapsList();
+  await loadAllItems();
   await loadAllCharacters();
   await loadCampaignsList();
 
@@ -373,11 +381,13 @@ function switchModule(paneId) {
   // Toggle contextual header controls
   const campControls = document.getElementById('campaign-header-controls');
   const charControls = document.getElementById('character-header-controls');
+  const itemControls = document.getElementById('items-header-controls');
   const invControls = document.getElementById('inventory-header-controls');
   const mapControls = document.getElementById('maps-header-controls') || document.getElementById('blockmap-header-controls');
 
   if (campControls) campControls.classList.toggle('hidden', paneId !== 'pane-campaign');
   if (charControls) charControls.classList.toggle('hidden', paneId !== 'pane-characters');
+  if (itemControls) itemControls.classList.toggle('hidden', paneId !== 'pane-items');
   if (invControls) invControls.classList.toggle('hidden', paneId !== 'pane-inventory');
   if (mapControls) mapControls.classList.toggle('hidden', paneId !== 'pane-maps' && paneId !== 'pane-blockmap');
 
@@ -390,11 +400,22 @@ function switchModule(paneId) {
     } else {
       showEmptyCharacterState();
     }
+  } else if (paneId === 'pane-items') {
+    renderItemsList();
+    if (state.activeItemSlug) {
+      loadItemForm(state.activeItemSlug);
+    } else {
+      showEmptyItemState();
+    }
   } else if (paneId === 'pane-inventory') {
     renderInventoryViews();
   } else if (paneId === 'pane-campaign') {
     renderCampaignMapsChecklist();
     renderCampaignCharactersChecklist();
+    const activeSubpane = document.querySelector('.campaign-subtab-btn.active')?.getAttribute('data-subpane');
+    if (activeSubpane === 'subpane-camp-inventory') {
+      renderInventoryViews();
+    }
   }
 }
 
@@ -463,6 +484,14 @@ function setupCampaignHandlers() {
     if (e.target.value) loadCampaign(e.target.value);
   });
 
+  // Campaign Sub-navigation (Overview & Story vs Party & Inventory)
+  document.querySelectorAll('.campaign-subtab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const subpaneId = btn.getAttribute('data-subpane');
+      switchCampaignSubpane(subpaneId);
+    });
+  });
+
   btnNew?.addEventListener('click', createNewCampaign);
   btnSave?.addEventListener('click', saveCurrentCampaign);
   btnDelete?.addEventListener('click', deleteCurrentCampaign);
@@ -519,6 +548,20 @@ function setupCampaignHandlers() {
     gs['robos:worldFlags'][key] = true;
     renderStoryFlags();
   });
+}
+
+function switchCampaignSubpane(subpaneId) {
+  document.querySelectorAll('.campaign-subtab-btn').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('data-subpane') === subpaneId);
+  });
+  document.querySelectorAll('.campaign-subpane').forEach(p => {
+    const isTarget = p.id === subpaneId;
+    p.classList.toggle('active', isTarget);
+    p.classList.toggle('hidden', !isTarget);
+  });
+  if (subpaneId === 'subpane-camp-inventory') {
+    renderInventoryViews();
+  }
 }
 
 async function loadCampaignsList() {
@@ -1240,6 +1283,8 @@ async function loadAllCharacters(options = {}) {
       } else if (!state.activeCharacterSlug) {
         showEmptyCharacterState();
       }
+
+      renderInventoryViews();
     }
   } catch (err) {
     console.error('Error loading characters list:', err);
@@ -1702,7 +1747,7 @@ function applyArchetype(arch, archKey) {
 }
 
 // ========================================================
-// MODULE 3: cRPG INVENTORY EDITOR
+// CAMPAIGN PARTY & INVENTORY SUB-VIEW
 // ========================================================
 function setupInventoryHandlers() {
   const equipHeroSelect = document.getElementById('equip-hero-select');
@@ -1730,6 +1775,14 @@ function setupInventoryHandlers() {
   sceneSelect?.addEventListener('change', (e) => {
     const gs = getGameState();
     gs['robos:currentScene'] = e.target.value;
+  });
+
+  document.getElementById('btn-add-stash-item')?.addEventListener('click', addStashItem);
+
+  document.querySelectorAll('.equip-slot-select').forEach(sel => {
+    sel.addEventListener('change', () => {
+      persistEquipSlotsToHero();
+    });
   });
 
   document.getElementById('btn-save-inventory')?.addEventListener('click', saveInventory);
@@ -1782,15 +1835,18 @@ function renderInventoryViews() {
 
   // 3. Currency & Shared Stash
   const sharedInv = gs['robos:sharedInventory'] || { gold: 0, silver: 0, copper: 0, items: [] };
-  document.getElementById('gold-gp').value = sharedInv.gold ?? 0;
-  document.getElementById('gold-sp').value = sharedInv.silver ?? 0;
-  document.getElementById('gold-cp').value = sharedInv.copper ?? 0;
+  const gpInput = document.getElementById('gold-gp');
+  const spInput = document.getElementById('gold-sp');
+  const cpInput = document.getElementById('gold-cp');
+  if (gpInput) gpInput.value = sharedInv.gold ?? 0;
+  if (spInput) spInput.value = sharedInv.silver ?? 0;
+  if (cpInput) cpInput.value = sharedInv.copper ?? 0;
 
-  const itemsArr = Array.isArray(sharedInv.items) ? sharedInv.items : [];
-  const itemsText = itemsArr.map(it => typeof it === 'string' ? it : (it.name || it.id)).join('\n');
-  document.getElementById('shared-items-textarea').value = itemsText || '';
+  populateStashItemPicker();
+  renderStashTable();
 
-  // 4. Hero Equipment Dropdown
+  // 4. Hero Equipment Dropdown & Slot Selects
+  populateEquipmentDropdowns();
   const equipHeroSelect = document.getElementById('equip-hero-select');
   if (equipHeroSelect) {
     if (heroes.length === 0) {
@@ -1840,30 +1896,113 @@ function updateLeaderDropdown() {
   }
 }
 
+function setSelectValue(selectEl, val) {
+  if (!selectEl) return;
+  if (!val) {
+    selectEl.value = '';
+    return;
+  }
+  const cleanVal = String(val).trim();
+  let found = false;
+  for (const opt of selectEl.options) {
+    if (opt.value === cleanVal || (cleanVal && opt.value && (cleanVal.includes(opt.value) || opt.value.includes(cleanVal)))) {
+      selectEl.value = opt.value;
+      found = true;
+      break;
+    }
+    if (opt.textContent && opt.textContent.toLowerCase().includes(cleanVal.toLowerCase())) {
+      selectEl.value = opt.value;
+      found = true;
+      break;
+    }
+  }
+  if (!found && cleanVal) {
+    const opt = document.createElement('option');
+    opt.value = cleanVal;
+    opt.textContent = cleanVal;
+    selectEl.appendChild(opt);
+    selectEl.value = cleanVal;
+  }
+}
+
+function populateEquipmentDropdowns() {
+  const slotConfigs = [
+    { id: 'equip-mainhand', categories: ['weapon'], slots: ['main_hand'] },
+    { id: 'equip-offhand', categories: ['shield', 'weapon'], slots: ['off_hand'] },
+    { id: 'equip-armor', categories: ['armor'], slots: ['armor'] },
+    { id: 'equip-helmet', categories: ['armor'], slots: ['helmet'] },
+    { id: 'equip-cloak', categories: ['accessory'], slots: ['cloak'] },
+    { id: 'equip-boots', categories: ['accessory', 'armor'], slots: ['boots'] },
+    { id: 'equip-ring1', categories: ['accessory'], slots: ['ring'] },
+    { id: 'equip-quickitems', categories: ['consumable', 'tool'], slots: ['quick_item'] }
+  ];
+
+  const allItems = state.items || [];
+
+  slotConfigs.forEach(({ id, categories, slots }) => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const currentVal = sel.value;
+
+    let html = '<option value="">(Empty)</option>';
+
+    const matching = allItems.filter(it => {
+      const cat = (it['robos:itemCategory'] || it.category || '').toLowerCase();
+      const slot = (it['robos:equipSlot'] || it.equipSlot || '').toLowerCase();
+      return categories.includes(cat) || slots.includes(slot);
+    });
+
+    const others = allItems.filter(it => !matching.includes(it));
+
+    if (matching.length > 0) {
+      html += '<optgroup label="Compatible Items">';
+      matching.forEach(it => {
+        const slug = it.slug || it['dcterms:identifier'];
+        const title = it['dcterms:title'] || it.title || it.name || slug;
+        const icon = it['robos:icon'] || it.icon || '📦';
+        html += `<option value="${slug}">${icon} ${title}</option>`;
+      });
+      html += '</optgroup>';
+    }
+
+    if (others.length > 0) {
+      html += '<optgroup label="Other Items">';
+      others.forEach(it => {
+        const slug = it.slug || it['dcterms:identifier'];
+        const title = it['dcterms:title'] || it.title || it.name || slug;
+        const icon = it['robos:icon'] || it.icon || '📦';
+        html += `<option value="${slug}">${icon} ${title}</option>`;
+      });
+      html += '</optgroup>';
+    }
+
+    sel.innerHTML = html;
+    if (currentVal) {
+      setSelectValue(sel, currentVal);
+    }
+  });
+}
+
 function loadEquipSlotsForHero(heroId) {
   const heroes = getHeroes();
   const hero = heroes.find(h => (h.id || h['@id'] || `urn:robos:crpg:character:${h.slug}` || h.slug) === heroId) ||
                (state.characters || []).find(c => (c.id || c['@id'] || `urn:robos:crpg:character:${c.slug}` || c.slug) === heroId);
   if (!hero) {
-    document.getElementById('equip-mainhand').value = '';
-    document.getElementById('equip-offhand').value = '';
-    document.getElementById('equip-armor').value = '';
-    document.getElementById('equip-helmet').value = '';
-    document.getElementById('equip-cloak').value = '';
-    document.getElementById('equip-boots').value = '';
-    document.getElementById('equip-ring1').value = '';
-    document.getElementById('equip-quickitems').value = '';
+    ['equip-mainhand', 'equip-offhand', 'equip-armor', 'equip-helmet', 'equip-cloak', 'equip-boots', 'equip-ring1', 'equip-quickitems'].forEach(id => {
+      const sel = document.getElementById(id);
+      if (sel) sel.value = '';
+    });
     return;
   }
 
-  document.getElementById('equip-mainhand').value = hero['robos:mainHand'] || hero.mainHand || '';
-  document.getElementById('equip-offhand').value = hero['robos:offHand'] || hero.offHand || '';
-  document.getElementById('equip-armor').value = hero['robos:armor'] || hero.armor || '';
-  document.getElementById('equip-helmet').value = hero['robos:helmet'] || hero.helmet || '';
-  document.getElementById('equip-cloak').value = hero['robos:cloak'] || hero.cloak || '';
-  document.getElementById('equip-boots').value = hero['robos:boots'] || hero.boots || '';
-  document.getElementById('equip-ring1').value = hero['robos:ring1'] || hero.ring1 || '';
-  document.getElementById('equip-quickitems').value = hero['robos:quickItems'] || hero.quickItems || '';
+  setSelectValue(document.getElementById('equip-mainhand'), hero['robos:mainHand'] || hero.mainHand || '');
+  setSelectValue(document.getElementById('equip-offhand'), hero['robos:offHand'] || hero.offHand || '');
+  setSelectValue(document.getElementById('equip-armor'), hero['robos:armor'] || hero.armor || '');
+  setSelectValue(document.getElementById('equip-helmet'), hero['robos:helmet'] || hero.helmet || '');
+  setSelectValue(document.getElementById('equip-cloak'), hero['robos:cloak'] || hero.cloak || '');
+  setSelectValue(document.getElementById('equip-boots'), hero['robos:boots'] || hero.boots || '');
+  setSelectValue(document.getElementById('equip-ring1'), hero['robos:ring1'] || hero.ring1 || '');
+  setSelectValue(document.getElementById('equip-quickitems'), hero['robos:quickItems'] || hero.quickItems || '');
 }
 
 function persistEquipSlotsToHero() {
@@ -1873,14 +2012,14 @@ function persistEquipSlotsToHero() {
                (state.characters || []).find(c => (c.id || c['@id'] || `urn:robos:crpg:character:${c.slug}` || c.slug) === state.activeEquipHeroId);
   if (!hero) return;
 
-  const mainHand = document.getElementById('equip-mainhand').value.trim();
-  const offHand = document.getElementById('equip-offhand').value.trim();
-  const armor = document.getElementById('equip-armor').value.trim();
-  const helmet = document.getElementById('equip-helmet').value.trim();
-  const cloak = document.getElementById('equip-cloak').value.trim();
-  const boots = document.getElementById('equip-boots').value.trim();
-  const ring1 = document.getElementById('equip-ring1').value.trim();
-  const quickItems = document.getElementById('equip-quickitems').value.trim();
+  const mainHand = document.getElementById('equip-mainhand')?.value || '';
+  const offHand = document.getElementById('equip-offhand')?.value || '';
+  const armor = document.getElementById('equip-armor')?.value || '';
+  const helmet = document.getElementById('equip-helmet')?.value || '';
+  const cloak = document.getElementById('equip-cloak')?.value || '';
+  const boots = document.getElementById('equip-boots')?.value || '';
+  const ring1 = document.getElementById('equip-ring1')?.value || '';
+  const quickItems = document.getElementById('equip-quickitems')?.value || '';
 
   hero.mainHand = mainHand;
   hero.offHand = offHand;
@@ -1921,6 +2060,105 @@ function persistEquipSlotsToHero() {
   }
 }
 
+function populateStashItemPicker() {
+  const picker = document.getElementById('stash-item-picker');
+  if (!picker) return;
+  const currentVal = picker.value;
+  let html = '<option value="">(Select item to add...)</option>';
+  (state.items || []).forEach(it => {
+    const slug = it.slug || it['dcterms:identifier'];
+    const title = it['dcterms:title'] || it.title || it.name || slug;
+    const cat = it['robos:itemCategory'] || it.category || 'misc';
+    const icon = it['robos:icon'] || it.icon || '📦';
+    html += `<option value="${slug}">${icon} ${title} (${cat})</option>`;
+  });
+  picker.innerHTML = html;
+  if (currentVal) picker.value = currentVal;
+}
+
+function renderStashTable() {
+  const tbody = document.getElementById('stash-items-tbody');
+  if (!tbody) return;
+  const gs = getGameState();
+  if (!gs['robos:sharedInventory']) gs['robos:sharedInventory'] = { gold: 0, silver: 0, copper: 0, items: [] };
+  const items = gs['robos:sharedInventory'].items || [];
+
+  if (items.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted); font-size:11px; padding:12px;">No items in party stash.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = items.map((it, idx) => {
+    const isObj = typeof it === 'object' && it !== null;
+    const slug = isObj ? (it.slug || it.id || '') : it;
+    const itemEntity = (state.items || []).find(x => x.slug === slug);
+    const name = isObj ? (it.name || it.title || slug) : (itemEntity ? (itemEntity['dcterms:title'] || itemEntity.title) : slug);
+    const icon = isObj ? (it.icon || '📦') : (itemEntity ? (itemEntity['robos:icon'] || itemEntity.icon || '📦') : '📦');
+    const category = isObj ? (it.category || 'misc') : (itemEntity ? (itemEntity['robos:itemCategory'] || itemEntity.category || 'misc') : 'misc');
+    const qty = isObj ? (it.quantity || 1) : 1;
+
+    return `
+      <tr data-index="${idx}" data-slug="${slug}">
+        <td style="font-size: 14px; text-align: center;">${icon}</td>
+        <td style="font-weight: 500;">${name}</td>
+        <td><span class="item-badge-pill">${category}</span></td>
+        <td style="text-align: center;"><span class="stash-qty-badge">${qty}</span></td>
+        <td style="text-align: center;">
+          <button type="button" class="stash-remove-btn" data-index="${idx}" title="Remove item">×</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  tbody.querySelectorAll('.stash-remove-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.getAttribute('data-index'), 10);
+      if (!isNaN(idx) && idx >= 0 && idx < items.length) {
+        items.splice(idx, 1);
+        renderStashTable();
+        persistInventoryFromUI();
+      }
+    });
+  });
+}
+
+function addStashItem() {
+  const picker = document.getElementById('stash-item-picker');
+  const qtyInput = document.getElementById('stash-item-qty');
+  if (!picker || !picker.value) return;
+
+  const slug = picker.value;
+  const qty = Math.max(1, parseInt(qtyInput?.value || '1', 10));
+  const itemEntity = (state.items || []).find(x => x.slug === slug);
+  const name = itemEntity ? (itemEntity['dcterms:title'] || itemEntity.title || slug) : slug;
+  const icon = itemEntity ? (itemEntity['robos:icon'] || itemEntity.icon || '📦') : '📦';
+  const category = itemEntity ? (itemEntity['robos:itemCategory'] || itemEntity.category || 'misc') : 'misc';
+
+  const gs = getGameState();
+  if (!gs['robos:sharedInventory']) gs['robos:sharedInventory'] = { gold: 0, silver: 0, copper: 0, items: [] };
+  if (!Array.isArray(gs['robos:sharedInventory'].items)) gs['robos:sharedInventory'].items = [];
+
+  const items = gs['robos:sharedInventory'].items;
+  const existing = items.find(it => (typeof it === 'object' && it !== null && it.slug === slug));
+  if (existing) {
+    existing.quantity = (existing.quantity || 1) + qty;
+  } else {
+    items.push({
+      id: itemEntity ? (itemEntity['@id'] || `urn:robos:crpg:item:${slug}`) : `urn:robos:crpg:item:${slug}`,
+      slug,
+      name,
+      icon,
+      category,
+      quantity: qty
+    });
+  }
+
+  picker.value = '';
+  if (qtyInput) qtyInput.value = '1';
+  renderStashTable();
+  persistInventoryFromUI();
+}
+
 function persistInventoryFromUI() {
   const gs = getGameState();
   if (!gs['robos:sharedInventory']) gs['robos:sharedInventory'] = {};
@@ -1928,8 +2166,13 @@ function persistInventoryFromUI() {
   gs['robos:sharedInventory'].silver = Number(document.getElementById('gold-sp')?.value || 0);
   gs['robos:sharedInventory'].copper = Number(document.getElementById('gold-cp')?.value || 0);
 
-  const rawItems = document.getElementById('shared-items-textarea')?.value || '';
-  gs['robos:sharedInventory'].items = rawItems.split('\n').map(s => s.trim()).filter(Boolean);
+  if (!Array.isArray(gs['robos:sharedInventory'].items)) {
+    gs['robos:sharedInventory'].items = [];
+  }
+
+  const rawItems = gs['robos:sharedInventory'].items.map(it => typeof it === 'string' ? it : (it.name || it.slug)).join('\n');
+  const txtArea = document.getElementById('shared-items-textarea');
+  if (txtArea) txtArea.value = rawItems;
 
   persistEquipSlotsToHero();
 }
@@ -2008,6 +2251,369 @@ async function saveInventory() {
     console.error('Error saving inventory:', err);
     setStatus(`Error saving inventory: ${err.message}`);
     return { success: false, error: err.message };
+  }
+}
+
+// ========================================================
+// MODULE 3: ITEM STUDIO (robos:CRPGItem)
+// ========================================================
+function setupItemHandlers() {
+  const hdrSelect = document.getElementById('header-item-select');
+  hdrSelect?.addEventListener('change', (e) => {
+    if (e.target.value) {
+      loadItemForm(e.target.value);
+    } else {
+      closeItem();
+    }
+  });
+
+  document.getElementById('btn-header-new-item')?.addEventListener('click', createNewItem);
+  document.getElementById('btn-sidebar-new-item')?.addEventListener('click', createNewItem);
+  document.getElementById('btn-empty-new-item')?.addEventListener('click', createNewItem);
+
+  document.getElementById('btn-header-close-item')?.addEventListener('click', closeItem);
+  document.getElementById('btn-close-item')?.addEventListener('click', closeItem);
+
+  document.getElementById('btn-header-save-item')?.addEventListener('click', saveCurrentItem);
+  document.getElementById('btn-save-item')?.addEventListener('click', saveCurrentItem);
+
+  document.getElementById('btn-header-delete-item')?.addEventListener('click', deleteCurrentItem);
+  document.getElementById('btn-delete-item')?.addEventListener('click', deleteCurrentItem);
+
+  const searchInput = document.getElementById('item-search-input');
+  searchInput?.addEventListener('input', () => {
+    renderItemsList();
+  });
+
+  const filterRow = document.getElementById('item-category-filters');
+  filterRow?.querySelectorAll('.filter-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      filterRow.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      state.itemFilter = pill.getAttribute('data-category') || 'all';
+      renderItemsList();
+    });
+  });
+
+  const categorySelect = document.getElementById('item-category');
+  categorySelect?.addEventListener('change', () => {
+    updateItemCategorySections();
+  });
+
+  const itemNameInput = document.getElementById('item-name');
+  itemNameInput?.addEventListener('input', () => {
+    if (!state.activeItemSlug) {
+      const slugInput = document.getElementById('item-slug');
+      if (slugInput) {
+        slugInput.value = itemNameInput.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      }
+    }
+  });
+}
+
+function updateItemCategorySections() {
+  const cat = document.getElementById('item-category')?.value || 'weapon';
+  const secWeapon = document.getElementById('section-item-weapon');
+  const secArmor = document.getElementById('section-item-armor');
+  const secConsumable = document.getElementById('section-item-consumable');
+  const equipSlotSel = document.getElementById('item-equip-slot');
+
+  if (secWeapon) secWeapon.classList.toggle('hidden', cat !== 'weapon');
+  if (secArmor) secArmor.classList.toggle('hidden', cat !== 'armor' && cat !== 'shield');
+  if (secConsumable) secConsumable.classList.toggle('hidden', cat !== 'consumable');
+
+  // Auto-suggest equip slot if creating or currently none
+  if (equipSlotSel) {
+    if (cat === 'weapon' && (equipSlotSel.value === 'none' || !equipSlotSel.value)) {
+      equipSlotSel.value = 'main_hand';
+    } else if (cat === 'armor' && (equipSlotSel.value === 'none' || !equipSlotSel.value)) {
+      equipSlotSel.value = 'armor';
+    } else if (cat === 'shield' && (equipSlotSel.value === 'none' || !equipSlotSel.value)) {
+      equipSlotSel.value = 'off_hand';
+    } else if (cat === 'consumable' && (equipSlotSel.value === 'none' || !equipSlotSel.value)) {
+      equipSlotSel.value = 'quick_item';
+    }
+  }
+}
+
+async function loadAllItems() {
+  try {
+    const res = await window.robos.listItems();
+    if (res.success) {
+      state.items = res.items || [];
+      updateItemsHeaderSelect();
+      renderItemsList();
+      populateEquipmentDropdowns();
+      populateStashItemPicker();
+    }
+  } catch (err) {
+    console.error('Error loading items list:', err);
+  }
+}
+
+function updateItemsHeaderSelect() {
+  const hdrSelect = document.getElementById('header-item-select');
+  if (!hdrSelect) return;
+  hdrSelect.innerHTML = '<option value="">(No item selected)</option>' +
+    (state.items || []).map(it => {
+      const slug = it.slug || it['dcterms:identifier'];
+      const title = it['dcterms:title'] || it.title || it.name || slug;
+      const icon = it['robos:icon'] || it.icon || '📦';
+      return `<option value="${slug}">${icon} ${title}</option>`;
+    }).join('');
+
+  if (state.activeItemSlug) {
+    hdrSelect.value = state.activeItemSlug;
+  }
+}
+
+function renderItemsList() {
+  const listEl = document.getElementById('items-list');
+  const countEl = document.getElementById('items-count');
+  if (!listEl) return;
+
+  const query = (document.getElementById('item-search-input')?.value || '').toLowerCase().trim();
+  const filter = state.itemFilter || 'all';
+
+  const filtered = (state.items || []).filter(it => {
+    const cat = (it['robos:itemCategory'] || it.category || 'misc').toLowerCase();
+    const title = (it['dcterms:title'] || it.title || it.name || it.slug || '').toLowerCase();
+    const slug = (it.slug || it['dcterms:identifier'] || '').toLowerCase();
+    const slot = (it['robos:equipSlot'] || it.equipSlot || '').toLowerCase();
+
+    if (filter !== 'all' && cat !== filter) {
+      return false;
+    }
+    if (query) {
+      return title.includes(query) || slug.includes(query) || cat.includes(query) || slot.includes(query);
+    }
+    return true;
+  });
+
+  if (countEl) countEl.textContent = filtered.length;
+
+  if (filtered.length === 0) {
+    listEl.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text-muted);font-size:12px;">No items match query.</div>';
+    return;
+  }
+
+  listEl.innerHTML = filtered.map(it => {
+    const slug = it.slug || it['dcterms:identifier'];
+    const title = it['dcterms:title'] || it.title || it.name || slug;
+    const icon = it['robos:icon'] || it.icon || '📦';
+    const cat = it['robos:itemCategory'] || it.category || 'misc';
+    const cost = it['robos:cost'] ?? it.cost ?? 0;
+    const isSelected = slug === state.activeItemSlug;
+
+    return `
+      <div class="item-list-item ${isSelected ? 'active' : ''}" data-slug="${slug}">
+        <span class="item-list-icon">${icon}</span>
+        <div class="item-list-meta">
+          <div class="item-list-title">${title}</div>
+          <div class="item-list-sub">
+            <span class="item-badge-pill">${cat}</span>
+            <span class="item-cost-text">${cost} GP</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  listEl.querySelectorAll('.item-list-item').forEach(itemEl => {
+    itemEl.addEventListener('click', () => {
+      const slug = itemEl.getAttribute('data-slug');
+      loadItemForm(slug);
+    });
+  });
+}
+
+function showEmptyItemState() {
+  const emptyState = document.getElementById('item-empty-state');
+  const formContainer = document.getElementById('item-form-container');
+  if (emptyState) emptyState.classList.remove('hidden');
+  if (formContainer) formContainer.classList.add('hidden');
+}
+
+async function loadItemForm(slug) {
+  try {
+    setStatus(`Loading item ${slug}...`);
+    const res = await window.robos.loadItem(slug);
+    if (!res.success) {
+      setStatus(`Failed to load item: ${res.error}`);
+      return;
+    }
+
+    state.activeItemSlug = slug;
+    state.activeItemData = res.item;
+
+    const it = res.item;
+    document.getElementById('item-name').value = it['dcterms:title'] || it.title || it.name || '';
+    document.getElementById('item-slug').value = it['dcterms:identifier'] || it.slug || slug;
+    document.getElementById('item-icon').value = it['robos:icon'] || it.icon || '📦';
+    document.getElementById('item-category').value = it['robos:itemCategory'] || it.category || 'weapon';
+    document.getElementById('item-equip-slot').value = it['robos:equipSlot'] || it.equipSlot || 'none';
+    document.getElementById('item-cost').value = it['robos:cost'] ?? it.cost ?? 0;
+    document.getElementById('item-weight').value = it['robos:weight'] ?? it.weight ?? 1;
+    document.getElementById('item-rarity').value = it['robos:rarity'] || it.rarity || 'common';
+    document.getElementById('item-desc').value = it['dcterms:description'] || it.description || '';
+
+    // Weapon
+    document.getElementById('item-damage').value = it['robos:damageDice'] || it.damageDice || '';
+    document.getElementById('item-damage-type').value = it['robos:damageType'] || it.damageType || 'slashing';
+
+    // Armor
+    document.getElementById('item-ac-bonus').value = it['robos:acBonus'] ?? it.acBonus ?? 10;
+
+    // Consumable
+    document.getElementById('item-effect').value = it['robos:effect'] || it.effect || '';
+
+    updateItemCategorySections();
+
+    const emptyState = document.getElementById('item-empty-state');
+    const formContainer = document.getElementById('item-form-container');
+    if (emptyState) emptyState.classList.add('hidden');
+    if (formContainer) formContainer.classList.remove('hidden');
+
+    const formTitle = document.getElementById('item-form-title');
+    if (formTitle) formTitle.textContent = `Item Blueprint: ${it['dcterms:title'] || slug}`;
+
+    const hdrSelect = document.getElementById('header-item-select');
+    if (hdrSelect) hdrSelect.value = slug;
+
+    renderItemsList();
+    setStatus(`Item loaded: ${slug}`, res.filePath);
+  } catch (err) {
+    console.error('Error loading item:', err);
+    setStatus(`Error loading item: ${err.message}`);
+  }
+}
+
+function createNewItem() {
+  state.activeItemSlug = null;
+  state.activeItemData = null;
+
+  document.getElementById('item-name').value = '';
+  document.getElementById('item-slug').value = '';
+  document.getElementById('item-icon').value = '📦';
+  document.getElementById('item-category').value = 'weapon';
+  document.getElementById('item-equip-slot').value = 'main_hand';
+  document.getElementById('item-cost').value = '10';
+  document.getElementById('item-weight').value = '1';
+  document.getElementById('item-rarity').value = 'common';
+  document.getElementById('item-desc').value = '';
+
+  document.getElementById('item-damage').value = '1d6';
+  document.getElementById('item-damage-type').value = 'slashing';
+  document.getElementById('item-ac-bonus').value = '10';
+  document.getElementById('item-effect').value = '';
+
+  updateItemCategorySections();
+
+  const emptyState = document.getElementById('item-empty-state');
+  const formContainer = document.getElementById('item-form-container');
+  if (emptyState) emptyState.classList.add('hidden');
+  if (formContainer) formContainer.classList.remove('hidden');
+
+  const formTitle = document.getElementById('item-form-title');
+  if (formTitle) formTitle.textContent = 'Create New Item Blueprint';
+
+  const hdrSelect = document.getElementById('header-item-select');
+  if (hdrSelect) hdrSelect.value = '';
+
+  document.getElementById('item-name')?.focus();
+  setStatus('Authoring new item blueprint...');
+}
+
+function closeItem() {
+  state.activeItemSlug = null;
+  state.activeItemData = null;
+  showEmptyItemState();
+  const hdrSelect = document.getElementById('header-item-select');
+  if (hdrSelect) hdrSelect.value = '';
+  renderItemsList();
+  setStatus('Closed item blueprint.');
+}
+
+async function saveCurrentItem() {
+  const name = document.getElementById('item-name')?.value.trim() || 'New Item';
+  let slug = document.getElementById('item-slug')?.value.trim();
+  if (!slug) {
+    slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || `item-${Date.now().toString().slice(-4)}`;
+    document.getElementById('item-slug').value = slug;
+  }
+
+  const category = document.getElementById('item-category')?.value || 'misc';
+  const equipSlot = document.getElementById('item-equip-slot')?.value || 'none';
+  const cost = Number(document.getElementById('item-cost')?.value || 0);
+  const weight = Number(document.getElementById('item-weight')?.value || 1);
+  const rarity = document.getElementById('item-rarity')?.value || 'common';
+  const icon = document.getElementById('item-icon')?.value.trim() || '📦';
+  const desc = document.getElementById('item-desc')?.value.trim() || '';
+
+  const itemPayload = {
+    '@context': {
+      robos: 'urn:robos:',
+      schema: 'http://schema.org/',
+      dcterms: 'http://purl.org/dc/terms/',
+      oslc_am: 'http://open-services.net/ns/am#'
+    },
+    '@id': `urn:robos:crpg:item:${slug}`,
+    '@type': ['robos:CRPGItem', 'schema:Product', 'oslc_am:Resource'],
+    'dcterms:identifier': slug,
+    'dcterms:title': name,
+    'dcterms:description': desc,
+    'robos:icon': icon,
+    'robos:itemCategory': category,
+    'robos:equipSlot': equipSlot,
+    'robos:cost': cost,
+    'robos:weight': weight,
+    'robos:rarity': rarity,
+  };
+
+  if (category === 'weapon') {
+    itemPayload['robos:damageDice'] = document.getElementById('item-damage')?.value.trim() || '1d6';
+    itemPayload['robos:damageType'] = document.getElementById('item-damage-type')?.value || 'slashing';
+  } else if (category === 'armor' || category === 'shield') {
+    itemPayload['robos:acBonus'] = Number(document.getElementById('item-ac-bonus')?.value || 0);
+  } else if (category === 'consumable') {
+    itemPayload['robos:effect'] = document.getElementById('item-effect')?.value.trim() || '';
+  }
+
+  try {
+    setStatus(`Saving item ${slug}...`);
+    const res = await window.robos.saveItem({ slug, data: itemPayload });
+    if (res.success) {
+      state.activeItemSlug = res.slug;
+      state.activeItemData = itemPayload;
+      setStatus(`Saved item successfully!`, res.filePath);
+      await loadAllItems();
+      const formTitle = document.getElementById('item-form-title');
+      if (formTitle) formTitle.textContent = `Item Blueprint: ${name}`;
+    } else {
+      setStatus(`Failed to save item: ${res.error}`);
+    }
+  } catch (err) {
+    console.error('Error saving item:', err);
+    setStatus(`Error saving item: ${err.message}`);
+  }
+}
+
+async function deleteCurrentItem() {
+  if (!state.activeItemSlug) return;
+  if (!confirm(`Are you sure you want to delete item '${state.activeItemSlug}'?`)) return;
+
+  try {
+    const res = await window.robos.deleteItem(state.activeItemSlug);
+    if (res.success) {
+      setStatus(`Deleted item: ${state.activeItemSlug}`);
+      closeItem();
+      await loadAllItems();
+    } else {
+      setStatus(`Failed to delete item: ${res.error}`);
+    }
+  } catch (err) {
+    console.error('Error deleting item:', err);
+    setStatus(`Error deleting item: ${err.message}`);
   }
 }
 

@@ -21,6 +21,7 @@ function getPaths() {
     : path.join(repoRoot, 'games/crpg-realm');
   const campaignsDir = path.join(baseDir, 'campaigns');
   const charactersDir = path.join(baseDir, 'characters');
+  const itemsDir = path.join(baseDir, 'items');
   const mapsDir = path.join(baseDir, 'maps');
   const scenesDir = path.join(baseDir, 'scenes');
   const blockoutsDir = path.join(baseDir, 'assets/blockouts');
@@ -31,6 +32,7 @@ function getPaths() {
     baseDir,
     campaignsDir,
     charactersDir,
+    itemsDir,
     mapsDir,
     scenesDir,
     blockoutsDir,
@@ -43,6 +45,7 @@ function ensureWorkspaceDirs(paths) {
   [
     paths.campaignsDir,
     paths.charactersDir,
+    paths.itemsDir,
     paths.mapsDir,
     paths.scenesDir,
     paths.blockoutsDir,
@@ -672,6 +675,141 @@ function setupIpcHandlers() {
         return { slug, fileName: f, title };
       });
       return { success: true, scenes };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  // 5. Items API
+  ipcMain.handle('items:list', async () => {
+    try {
+      if (!fs.existsSync(paths.itemsDir)) {
+        fs.mkdirSync(paths.itemsDir, { recursive: true });
+      }
+      const files = fs.readdirSync(paths.itemsDir).filter(f => f.endsWith('.jsonld'));
+      const items = [];
+
+      for (const file of files) {
+        const slug = file.replace(/\.jsonld$/, '');
+        const fullPath = path.join(paths.itemsDir, file);
+        try {
+          const raw = fs.readFileSync(fullPath, 'utf8');
+          const data = JSON.parse(raw);
+          items.push({
+            slug,
+            fileName: file,
+            path: fullPath,
+            id: data['@id'] || `urn:robos:crpg:item:${slug}`,
+            name: data['dcterms:title'] || data['schema:name'] || data.name || slug,
+            title: data['dcterms:title'] || data['schema:name'] || data.name || slug,
+            category: data['robos:itemCategory'] || data.itemCategory || data.category || 'misc',
+            itemCategory: data['robos:itemCategory'] || data.itemCategory || data.category || 'misc',
+            equipSlot: data['robos:equipSlot'] || data.equipSlot || null,
+            cost: Number(data['robos:cost'] ?? data.cost ?? 0),
+            weight: Number(data['robos:weight'] ?? data.weight ?? 0),
+            rarity: data['robos:rarity'] || data.rarity || 'common',
+            icon: data['robos:icon'] || data.icon || '📦',
+            damageDice: data['robos:damageDice'] || data.damageDice || '',
+            damageType: data['robos:damageType'] || data.damageType || '',
+            acBonus: Number(data['robos:acBonus'] ?? data.acBonus ?? 0),
+            effect: data['robos:effect'] || data.effect || '',
+            description: data['dcterms:description'] || data.description || '',
+            raw: data,
+          });
+        } catch (e) {
+          items.push({ slug, fileName: file, path: fullPath, name: slug, error: e.message });
+        }
+      }
+      return { success: true, items };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('items:load', async (_event, slug) => {
+    try {
+      const filePath = path.join(paths.itemsDir, `${slug}.jsonld`);
+      if (!fs.existsSync(filePath)) {
+        throw new Error(`Item file not found: ${filePath}`);
+      }
+      const raw = fs.readFileSync(filePath, 'utf8');
+      const data = JSON.parse(raw);
+      return { success: true, slug, filePath, data };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('items:save', async (_event, { slug, data }) => {
+    try {
+      if (!slug) throw new Error('Item slug is required');
+      const safeSlug = slug.toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+      const filePath = path.join(paths.itemsDir, `${safeSlug}.jsonld`);
+
+      const formatted = {
+        '@context': {
+          robos: 'https://robos.dev/ns/sdlc#',
+          dcterms: 'http://purl.org/dc/terms/',
+          schema: 'https://schema.org/',
+          xsd: 'http://www.w3.org/2001/XMLSchema#',
+        },
+        '@id': data['@id'] || `urn:robos:crpg:item:${safeSlug}`,
+        '@type': [
+          'robos:CRPGItem',
+          'schema:Product',
+          'oslc_am:Resource',
+        ],
+        'dcterms:title': data.name || data['dcterms:title'] || safeSlug,
+        'schema:name': data.name || data['dcterms:title'] || safeSlug,
+        'robos:slug': safeSlug,
+        slug: safeSlug,
+        'robos:itemCategory': data.category || data.itemCategory || data['robos:itemCategory'] || 'misc',
+        itemCategory: data.category || data.itemCategory || data['robos:itemCategory'] || 'misc',
+        'robos:equipSlot': data.equipSlot || data['robos:equipSlot'] || null,
+        equipSlot: data.equipSlot || data['robos:equipSlot'] || null,
+        'robos:cost': Number(data.cost ?? data['robos:cost'] ?? 0),
+        cost: Number(data.cost ?? data['robos:cost'] ?? 0),
+        'robos:weight': Number(data.weight ?? data['robos:weight'] ?? 0),
+        weight: Number(data.weight ?? data['robos:weight'] ?? 0),
+        'robos:rarity': data.rarity || data['robos:rarity'] || 'common',
+        rarity: data.rarity || data['robos:rarity'] || 'common',
+        'robos:icon': data.icon || data['robos:icon'] || '📦',
+        icon: data.icon || data['robos:icon'] || '📦',
+        'robos:damageDice': data.damageDice || data['robos:damageDice'] || '',
+        damageDice: data.damageDice || data['robos:damageDice'] || '',
+        'robos:damageType': data.damageType || data['robos:damageType'] || '',
+        damageType: data.damageType || data['robos:damageType'] || '',
+        'robos:acBonus': Number(data.acBonus ?? data['robos:acBonus'] ?? 0),
+        acBonus: Number(data.acBonus ?? data['robos:acBonus'] ?? 0),
+        'robos:effect': data.effect || data['robos:effect'] || '',
+        effect: data.effect || data['robos:effect'] || '',
+        'dcterms:description': data.description || data['dcterms:description'] || '',
+        description: data.description || data['dcterms:description'] || '',
+      };
+
+      if (!fs.existsSync(paths.itemsDir)) {
+        fs.mkdirSync(paths.itemsDir, { recursive: true });
+      }
+      fs.writeFileSync(filePath, JSON.stringify(formatted, null, 2) + '\n', 'utf8');
+
+      return {
+        success: true,
+        slug: safeSlug,
+        filePath,
+        savedAt: new Date().toISOString(),
+      };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('items:delete', async (_event, slug) => {
+    try {
+      const filePath = path.join(paths.itemsDir, `${slug}.jsonld`);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+      return { success: true };
     } catch (err) {
       return { success: false, error: err.message };
     }

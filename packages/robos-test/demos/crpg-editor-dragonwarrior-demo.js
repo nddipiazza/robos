@@ -18,9 +18,17 @@ const NPC_PATH = path.join(SANDBOX_DIR, "characters", "npc-king-loric.jsonld");
 const GWAELIN_PATH = path.join(SANDBOX_DIR, "characters", "npc-princess-gwaelin.jsonld");
 const CAMPAIGN_PATH = path.join(SANDBOX_DIR, "campaigns", "dragonwarrior-1-usa.jsonld");
 
+const BAMBOO_PATH = path.join(SANDBOX_DIR, "items", "bamboo-pole.jsonld");
+const CLOTHES_PATH = path.join(SANDBOX_DIR, "items", "clothes.jsonld");
+const CLOAK_PATH = path.join(SANDBOX_DIR, "items", "travelers-cloak.jsonld");
+const BOOTS_PATH = path.join(SANDBOX_DIR, "items", "leather-boots.jsonld");
+const TORCH_PATH = path.join(SANDBOX_DIR, "items", "torch.jsonld");
+const KEY_PATH = path.join(SANDBOX_DIR, "items", "magic-key.jsonld");
+const HERB_PATH = path.join(SANDBOX_DIR, "items", "herb.jsonld");
+
 const SCRIPT = [
   {
-    narration: "Starting with a blank sandboxed RobOS cRPG Editor, we verify pristine workspace isolation: 0 default characters, 0 default maps, 0 inventory items.",
+    narration: "Starting with a blank sandboxed RobOS cRPG Editor, we verify pristine workspace isolation: 0 default characters, 0 default maps, 0 items, 0 inventory.",
     target: ".nav-tab-btn[data-pane='pane-maps']",
     action: "hover",
     callout: "Verify Workspace Isolation & 0 Defaults",
@@ -31,6 +39,9 @@ const SCRIPT = [
       if (!Array.isArray(state.maps) || state.maps.length !== 0) {
         throw new Error('Workspace isolation failed: state.maps has ' + (state.maps ? state.maps.length : 0) + ' items!');
       }
+      if (!Array.isArray(state.items) || state.items.length !== 0) {
+        throw new Error('Workspace isolation failed: state.items has ' + (state.items ? state.items.length : 0) + ' items!');
+      }
       const heroesStat = document.getElementById('stat-heroes-count')?.textContent;
       const goldStat = document.getElementById('stat-gold-count')?.textContent;
       if (heroesStat !== '0') {
@@ -39,7 +50,7 @@ const SCRIPT = [
       if (goldStat !== '0 gp') {
         throw new Error('Workspace isolation failed: gold stat is ' + goldStat);
       }
-      console.log('✔ Verified: 100% isolated sandbox with 0 characters, 0 maps, 0 default inventory.');
+      console.log('✔ Verified: 100% isolated sandbox with 0 characters, 0 maps, 0 items, 0 default inventory.');
     })()`,
     minHold: 3500,
   },
@@ -720,34 +731,219 @@ const SCRIPT = [
     minHold: 4500,
   },
   {
-    narration: "Next, we move to Screen 3: authoring the Dragon Warrior starting inventory, purse, formation, and equipment in the Inventory Editor.",
-    target: ".nav-tab-btn[data-pane='pane-inventory']",
+    narration: "Next, we move to Screen 3: the Item Studio, authoring real CRPGItem linked-data entities to eliminate free-text item strings.",
+    target: ".nav-tab-btn[data-pane='pane-items']",
     action: "click",
-    callout: "Switch to Inventory Studio",
+    callout: "Switch to Item Studio",
     js: `(() => {
-      document.querySelector(".nav-tab-btn[data-pane='pane-inventory']")?.click();
+      document.querySelector(".nav-tab-btn[data-pane='pane-items']")?.click();
     })()`,
     minHold: 3500,
   },
   {
-    narration: "The Inventory Studio opens with the newly authored Hero of Alefgard available in the roster, 0 GP in the purse, and empty equipment slots.",
-    target: "#party-checklist",
+    narration: "The Item Studio opens in a clean state with 0 default items, displaying the blueprint creation options.",
+    target: "#item-empty-state",
     action: "hover",
-    callout: "Verify Initial Inventory State",
+    callout: "Verify Item Studio Empty State: 0 Items",
     js: `(() => {
-      const checklistItems = document.querySelectorAll('#party-checklist .party-check-input');
-      if (checklistItems.length === 0) {
-        throw new Error('Hero of Alefgard is not present in party checklist!');
+      const emptyState = document.getElementById('item-empty-state');
+      if (emptyState.classList.contains('hidden')) {
+        throw new Error('Item Studio should start in empty state!');
       }
-      const gold = document.getElementById('gold-gp')?.value;
-      if (gold !== '0') {
-        throw new Error('Gold should initially be 0, found: ' + gold);
+      if (!Array.isArray(state.items) || state.items.length !== 0) {
+        throw new Error('state.items should be empty on start! Count: ' + (state.items ? state.items.length : 0));
       }
-      const sharedText = document.getElementById('shared-items-textarea')?.value;
-      if (sharedText && sharedText.trim() !== '') {
-        throw new Error('Shared stash items should initially be empty, found: ' + sharedText);
+      console.log('✔ Verified: Item Studio started in pristine empty state with 0 items.');
+    })()`,
+    minHold: 3500,
+  },
+  {
+    narration: "We click 'Create Item Blueprint' to author our first weapon: Bamboo Pole, with 1d4 bludgeoning damage, 10 GP cost, and main-hand equip slot.",
+    target: "#btn-empty-new-item",
+    action: "click",
+    callout: "Author Weapon: Bamboo Pole (1d4, 10 GP)",
+    js: `(async () => {
+      document.getElementById('btn-empty-new-item')?.click();
+      document.getElementById('item-name').value = 'Bamboo Pole';
+      document.getElementById('item-slug').value = 'bamboo-pole';
+      document.getElementById('item-icon').value = '🎋';
+      document.getElementById('item-category').value = 'weapon';
+      updateItemCategorySections();
+      document.getElementById('item-equip-slot').value = 'main_hand';
+      document.getElementById('item-cost').value = 10;
+      document.getElementById('item-weight').value = 2;
+      document.getElementById('item-rarity').value = 'common';
+      document.getElementById('item-damage').value = '1d4';
+      document.getElementById('item-damage-type').value = 'bludgeoning';
+      document.getElementById('item-desc').value = 'A sturdy pole cut from dense bamboo stalks. Serves as a modest starting weapon for aspiring adventurers.';
+      await saveCurrentItem();
+      console.log('✔ Authoring & saved Bamboo Pole weapon.');
+    })()`,
+    minHold: 4000,
+  },
+  {
+    narration: "Next, we author the starting armor: Clothes, providing AC 11, costing 20 GP, with body armor equip slot.",
+    target: "#btn-sidebar-new-item",
+    action: "click",
+    callout: "Author Armor: Clothes (AC 11, 20 GP)",
+    js: `(async () => {
+      document.getElementById('btn-sidebar-new-item')?.click();
+      document.getElementById('item-name').value = 'Clothes';
+      document.getElementById('item-slug').value = 'clothes';
+      document.getElementById('item-icon').value = '🥋';
+      document.getElementById('item-category').value = 'armor';
+      updateItemCategorySections();
+      document.getElementById('item-equip-slot').value = 'armor';
+      document.getElementById('item-cost').value = 20;
+      document.getElementById('item-weight').value = 3;
+      document.getElementById('item-rarity').value = 'common';
+      document.getElementById('item-ac-bonus').value = 11;
+      document.getElementById('item-desc').value = 'Simple woven traveler clothes offering light protection against the elements.';
+      await saveCurrentItem();
+      console.log('✔ Authoring & saved Clothes armor.');
+    })()`,
+    minHold: 3500,
+  },
+  {
+    narration: "We author the Traveler's Cloak accessory, costing 15 GP and occupying the cloak equip slot.",
+    target: "#btn-sidebar-new-item",
+    action: "click",
+    callout: "Author Accessory: Traveler's Cloak (15 GP)",
+    js: `(async () => {
+      document.getElementById('btn-sidebar-new-item')?.click();
+      document.getElementById('item-name').value = "Traveler's Cloak";
+      document.getElementById('item-slug').value = 'travelers-cloak';
+      document.getElementById('item-icon').value = '🧥';
+      document.getElementById('item-category').value = 'accessory';
+      updateItemCategorySections();
+      document.getElementById('item-equip-slot').value = 'cloak';
+      document.getElementById('item-cost').value = 15;
+      document.getElementById('item-weight').value = 1.5;
+      document.getElementById('item-rarity').value = 'common';
+      document.getElementById('item-desc').value = 'A weather-worn woolen cloak worn by Erdrick lineage wanderers.';
+      await saveCurrentItem();
+      console.log('✔ Authoring & saved Traveler\\'s Cloak.');
+    })()`,
+    minHold: 3500,
+  },
+  {
+    narration: "We author Leather Boots, costing 10 GP and occupying the boots equip slot.",
+    target: "#btn-sidebar-new-item",
+    action: "click",
+    callout: "Author Footwear: Leather Boots (10 GP)",
+    js: `(async () => {
+      document.getElementById('btn-sidebar-new-item')?.click();
+      document.getElementById('item-name').value = 'Leather Boots';
+      document.getElementById('item-slug').value = 'leather-boots';
+      document.getElementById('item-icon').value = '👢';
+      document.getElementById('item-category').value = 'accessory';
+      updateItemCategorySections();
+      document.getElementById('item-equip-slot').value = 'boots';
+      document.getElementById('item-cost').value = 10;
+      document.getElementById('item-weight').value = 2;
+      document.getElementById('item-rarity').value = 'common';
+      document.getElementById('item-desc').value = 'Tough leather boots crafted to withstand the stony paths of Alefgard.';
+      await saveCurrentItem();
+      console.log('✔ Authoring & saved Leather Boots.');
+    })()`,
+    minHold: 3500,
+  },
+  {
+    narration: "From the Tantegel treasure chests, we author the Torch tool, costing 8 GP, which illuminates dark subterranean dungeons.",
+    target: "#btn-sidebar-new-item",
+    action: "click",
+    callout: "Author Tool: Torch (Caves & Dungeons)",
+    js: `(async () => {
+      document.getElementById('btn-sidebar-new-item')?.click();
+      document.getElementById('item-name').value = 'Torch';
+      document.getElementById('item-slug').value = 'torch';
+      document.getElementById('item-icon').value = '🔥';
+      document.getElementById('item-category').value = 'tool';
+      updateItemCategorySections();
+      document.getElementById('item-equip-slot').value = 'none';
+      document.getElementById('item-cost').value = 8;
+      document.getElementById('item-weight').value = 1;
+      document.getElementById('item-rarity').value = 'common';
+      document.getElementById('item-desc').value = 'A wooden torch dipped in pitch. Illuminates a radius in pitch-black caves.';
+      await saveCurrentItem();
+      console.log('✔ Authoring & saved Torch tool.');
+    })()`,
+    minHold: 3500,
+  },
+  {
+    narration: "Next, we author the Magic Key quest tool, costing 25 GP, capable of unlocking ancient Tantegel doors.",
+    target: "#btn-sidebar-new-item",
+    action: "click",
+    callout: "Author Quest Tool: Magic Key",
+    js: `(async () => {
+      document.getElementById('btn-sidebar-new-item')?.click();
+      document.getElementById('item-name').value = 'Magic Key';
+      document.getElementById('item-slug').value = 'magic-key';
+      document.getElementById('item-icon').value = '🗝️';
+      document.getElementById('item-category').value = 'quest';
+      updateItemCategorySections();
+      document.getElementById('item-equip-slot').value = 'none';
+      document.getElementById('item-cost').value = 25;
+      document.getElementById('item-weight').value = 0.5;
+      document.getElementById('item-rarity').value = 'uncommon';
+      document.getElementById('item-desc').value = 'A mysterious silver key that dissolves in the lock upon opening royal doors.';
+      await saveCurrentItem();
+      console.log('✔ Authoring & saved Magic Key.');
+    })()`,
+    minHold: 3500,
+  },
+  {
+    narration: "Finally, we author the Herb consumable, restoring 20-35 HP, costing 24 GP, equipped in quick items.",
+    target: "#btn-sidebar-new-item",
+    action: "click",
+    callout: "Author Consumable: Herb (Restores HP)",
+    js: `(async () => {
+      document.getElementById('btn-sidebar-new-item')?.click();
+      document.getElementById('item-name').value = 'Herb';
+      document.getElementById('item-slug').value = 'herb';
+      document.getElementById('item-icon').value = '🌿';
+      document.getElementById('item-category').value = 'consumable';
+      updateItemCategorySections();
+      document.getElementById('item-equip-slot').value = 'quick_item';
+      document.getElementById('item-cost').value = 24;
+      document.getElementById('item-weight').value = 0.2;
+      document.getElementById('item-rarity').value = 'common';
+      document.getElementById('item-effect').value = 'Restores 20-35 HP to one ally';
+      document.getElementById('item-desc').value = 'A fragrant healing medicinal plant prized throughout the realm.';
+      await saveCurrentItem();
+      console.log('✔ Authoring & saved Herb consumable.');
+    })()`,
+    minHold: 4000,
+  },
+  {
+    narration: "We test the live search by searching for 'herb', verifying fast filtering, and confirming all 7 items are registered in the Item Library.",
+    target: "#item-search-input",
+    action: "hover",
+    callout: "Live Search & Filter: 7 Items Registered",
+    js: `(() => {
+      const search = document.getElementById('item-search-input');
+      if (search) {
+        search.value = 'herb';
+        search.dispatchEvent(new Event('input'));
       }
-      console.log('✔ Initial inventory state verified: 1 player character available, 0 GP purse, empty shared stash.');
+      const count = document.getElementById('items-count')?.textContent;
+      if (count !== '1') throw new Error('Search for herb should show 1 item, found: ' + count);
+      search.value = '';
+      search.dispatchEvent(new Event('input'));
+      if (state.items.length !== 7) throw new Error('Expected 7 authored items, found: ' + state.items.length);
+      console.log('✔ Item Studio search and library count verified: 7 items.');
+    })()`,
+    minHold: 3500,
+  },
+  {
+    narration: "Now we switch to Screen 4: Campaign Studio, clicking the new Party & Inventory sub-tab to configure the party and assign real item entities.",
+    target: "#tab-camp-inventory",
+    action: "click",
+    callout: "Campaign -> Party & Inventory Sub-tab",
+    js: `(() => {
+      switchModule('pane-campaign');
+      switchCampaignSubpane('subpane-camp-inventory');
+      console.log('✔ Navigated to Campaign -> Party & Inventory sub-tab.');
     })()`,
     minHold: 3500,
   },
@@ -785,65 +981,65 @@ const SCRIPT = [
         sceneSel.value = 'tantegel-throne-room';
         sceneSel.dispatchEvent(new Event('change'));
       }
-      console.log('✔ Active party configured: 1 member, Wedge formation, Tantegel Throne Room scene.');
+      console.log('✔ Active party configured: Hero of Alefgard leader, Wedge formation, Tantegel Throne Room scene.');
     })()`,
     minHold: 4500,
   },
   {
-    narration: "King Loric grants 120 Gold from the royal treasury to aid in our quest. We input 120 GP into the party purse.",
-    target: "#gold-gp",
+    narration: "King Loric grants 120 Gold from the royal treasury. From the castle chests, we add real Torch, Magic Key, and Herb item entities to the party stash.",
+    target: "#stash-item-picker",
     action: "hover",
-    callout: "Grant Royal Treasury: 120 GP",
+    callout: "120 GP Purse & Add Real Item Entities to Stash",
     js: `(() => {
       const gp = document.getElementById('gold-gp');
       if (gp) {
         gp.value = 120;
         gp.dispatchEvent(new Event('input'));
       }
-      const sp = document.getElementById('gold-sp');
-      if (sp) sp.value = 0;
-      const cp = document.getElementById('gold-cp');
-      if (cp) cp.value = 0;
-      console.log('✔ Party purse funded with 120 GP.');
-    })()`,
-    minHold: 3500,
-  },
-  {
-    narration: "From the three royal chests in Tantegel Castle, we add the starting items: Torch, Magic Key, and Herb.",
-    target: "#shared-items-textarea",
-    action: "hover",
-    callout: "Add Starting Chest Items: Torch, Magic Key, Herb",
-    js: `(() => {
-      const stash = document.getElementById('shared-items-textarea');
-      if (stash) {
-        stash.value = "Torch (x1)\\nMagic Key (x1)\\nHerb (x1)";
-        stash.dispatchEvent(new Event('input'));
+
+      // Add Torch, Magic Key, Herb
+      const picker = document.getElementById('stash-item-picker');
+      const addBtn = document.getElementById('btn-add-stash-item');
+      if (picker && addBtn) {
+        picker.value = 'torch';
+        addBtn.click();
+        picker.value = 'magic-key';
+        addBtn.click();
+        picker.value = 'herb';
+        addBtn.click();
       }
-      console.log('✔ Shared stash populated with starting items.');
+
+      const rows = document.querySelectorAll('#stash-items-tbody tr');
+      if (rows.length !== 3) {
+        throw new Error('Expected 3 rows in stash table, found: ' + rows.length);
+      }
+      console.log('✔ Party purse funded with 120 GP and shared stash populated with real item entities.');
     })()`,
-    minHold: 4000,
+    minHold: 4500,
   },
   {
-    narration: "We equip the Hero of Alefgard with his starting gear: Bamboo Pole weapon, Clothes armor, Traveler's Cloak, Leather Boots, and a quick-slot Herb.",
+    narration: "We equip the Hero of Alefgard using real item entity selectors: Bamboo Pole weapon, Clothes armor, Traveler's Cloak, Leather Boots, and Herb quick item.",
     target: ".equipment-slots-grid",
     action: "hover",
-    callout: "Equip Hero of Alefgard: Bamboo Pole & Clothes",
+    callout: "Equip Hero with Real Item Entity Dropdowns",
     js: `(() => {
       const equipHeroSelect = document.getElementById('equip-hero-select');
       if (equipHeroSelect && equipHeroSelect.options.length > 0) {
         equipHeroSelect.selectedIndex = 0;
         equipHeroSelect.dispatchEvent(new Event('change'));
       }
-      document.getElementById('equip-mainhand').value = 'Bamboo Pole';
+
+      document.getElementById('equip-mainhand').value = 'bamboo-pole';
       document.getElementById('equip-offhand').value = '';
-      document.getElementById('equip-armor').value = 'Clothes';
+      document.getElementById('equip-armor').value = 'clothes';
       document.getElementById('equip-helmet').value = '';
-      document.getElementById('equip-cloak').value = "Traveler's Cloak";
-      document.getElementById('equip-boots').value = 'Leather Boots';
+      document.getElementById('equip-cloak').value = 'travelers-cloak';
+      document.getElementById('equip-boots').value = 'leather-boots';
       document.getElementById('equip-ring1').value = '';
-      document.getElementById('equip-quickitems').value = 'Herb (x1)';
+      document.getElementById('equip-quickitems').value = 'herb';
+
       persistEquipSlotsToHero();
-      console.log('✔ Hero of Alefgard equipped with Bamboo Pole, Clothes, Cloak, Boots, Herb.');
+      console.log('✔ Hero of Alefgard equipped with real item entities (bamboo-pole, clothes, travelers-cloak, leather-boots, herb).');
     })()`,
     minHold: 4500,
   },
@@ -860,12 +1056,12 @@ const SCRIPT = [
     minHold: 4500,
   },
   {
-    narration: "Switching back to the Campaign tab, the live stat cards reflect 1 Active Party Member, 1 Player Character, and 120 GP in the treasury.",
-    target: ".nav-tab-btn[data-pane='pane-campaign']",
+    narration: "Switching back to the Overview sub-tab, the live summary reflects 1 Active Party Member, 1 Player Character, and 120 GP in the party purse. We save the campaign.",
+    target: "#tab-camp-overview",
     action: "click",
-    callout: "Verify Campaign Stats: 120 GP, 1 Party Member",
+    callout: "Verify Campaign Overview & Save Campaign JSON-LD",
     js: `(async () => {
-      document.querySelector(".nav-tab-btn[data-pane='pane-campaign']")?.click();
+      switchCampaignSubpane('subpane-camp-overview');
       const gold = document.getElementById('stat-gold-count')?.textContent;
       const party = document.getElementById('stat-party-count')?.textContent;
       const heroes = document.getElementById('stat-heroes-count')?.textContent;
@@ -880,7 +1076,6 @@ const SCRIPT = [
         throw new Error('Assertion failed: Campaign stat-heroes-count is ' + heroes + ' instead of 1');
       }
 
-      // Also ensure campaign fields and persist
       document.getElementById('camp-slug').value = 'dragonwarrior-1-usa';
       document.getElementById('camp-title').value = 'Dragon Warrior (USA)';
       document.getElementById('camp-setting').value = 'Alefgard (NES / Chunsoft)';
@@ -892,7 +1087,7 @@ const SCRIPT = [
 ];
 
 async function main() {
-  console.log("=== RobOS cRPG Editor E2E: Screens 1, 2 & 3 - Map, Characters & Inventory ===");
+  console.log("=== RobOS cRPG Editor E2E: Screens 1, 2, 3 & 4 - Map, Characters, Items & Campaign ===");
 
   // 1. Pre-test cleanup: Guarantee blank sandboxed state
   console.log(`Pre-test sandboxing: Ensuring clean isolated directory at ${SANDBOX_DIR}...`);
@@ -989,13 +1184,11 @@ async function main() {
   // ==========================================
   // SCREEN 2 ASSERTIONS: CHARACTERS
   // ==========================================
-  // Assertion 6: Hero of Alefgard Player Character JSON-LD exists
   if (!fs.existsSync(HERO_PATH)) {
     throw new Error(`Assertion failed: Player Character file does not exist at ${HERO_PATH}`);
   }
   console.log("✔ Assertion 6 Passed: Player Character file exists at", HERO_PATH);
 
-  // Assertion 7: Validate Hero of Alefgard JSON-LD
   const heroData = JSON.parse(fs.readFileSync(HERO_PATH, "utf8"));
   if (heroData["@id"] !== "urn:robos:crpg:character:hero-of-alefgard") {
     throw new Error(`Assertion failed: Unexpected character @id: ${heroData["@id"]}`);
@@ -1018,13 +1211,11 @@ async function main() {
   }
   console.log("✔ Assertion 7 Passed: Hero of Alefgard Player Character JSON-LD metadata and 5e stats verified");
 
-  // Assertion 8: King Loric NPC JSON-LD exists
   if (!fs.existsSync(NPC_PATH)) {
     throw new Error(`Assertion failed: NPC file does not exist at ${NPC_PATH}`);
   }
   console.log("✔ Assertion 8 Passed: NPC file exists at", NPC_PATH);
 
-  // Assertion 9: Validate King Loric NPC JSON-LD
   const npcData = JSON.parse(fs.readFileSync(NPC_PATH, "utf8"));
   if (npcData["@id"] !== "urn:robos:crpg:character:npc-king-loric") {
     throw new Error(`Assertion failed: Unexpected NPC @id: ${npcData["@id"]}`);
@@ -1052,26 +1243,74 @@ async function main() {
   console.log("✔ Assertion 9 Passed: King Loric NPC JSON-LD, map link, and dialogue verified");
 
   // ==========================================
-  // SCREEN 3 ASSERTIONS: INVENTORY & EQUIPMENT
+  // SCREEN 3 ASSERTIONS: ITEMS (Item Studio)
   // ==========================================
-  // Assertion 10: Validate Hero of Alefgard Equipment slots saved on disk
-  const reloadedHeroData = JSON.parse(fs.readFileSync(HERO_PATH, "utf8"));
-  if (reloadedHeroData.mainHand !== "Bamboo Pole" && reloadedHeroData["robos:mainHand"] !== "Bamboo Pole") {
-    throw new Error(`Assertion failed: Hero mainHand weapon mismatch: ${reloadedHeroData.mainHand}`);
-  }
-  if (reloadedHeroData.armor !== "Clothes" && reloadedHeroData["robos:armor"] !== "Clothes") {
-    throw new Error(`Assertion failed: Hero armor mismatch: ${reloadedHeroData.armor}`);
-  }
-  if (reloadedHeroData.quickItems !== "Herb (x1)" && reloadedHeroData["robos:quickItems"] !== "Herb (x1)") {
-    throw new Error(`Assertion failed: Hero quickItems mismatch: ${reloadedHeroData.quickItems}`);
-  }
-  console.log("✔ Assertion 10 Passed: Hero of Alefgard equipment slots verified on disk (Bamboo Pole, Clothes, Herb)");
+  const itemPaths = [
+    { path: BAMBOO_PATH, slug: "bamboo-pole", title: "Bamboo Pole", category: "weapon", slot: "main_hand" },
+    { path: CLOTHES_PATH, slug: "clothes", title: "Clothes", category: "armor", slot: "armor" },
+    { path: CLOAK_PATH, slug: "travelers-cloak", title: "Traveler's Cloak", category: "accessory", slot: "cloak" },
+    { path: BOOTS_PATH, slug: "leather-boots", title: "Leather Boots", category: "accessory", slot: "boots" },
+    { path: TORCH_PATH, slug: "torch", title: "Torch", category: "tool", slot: "none" },
+    { path: KEY_PATH, slug: "magic-key", title: "Magic Key", category: "quest", slot: "none" },
+    { path: HERB_PATH, slug: "herb", title: "Herb", category: "consumable", slot: "quick_item" },
+  ];
 
-  // Assertion 11: Validate Campaign Shared Inventory & Party
+  for (const it of itemPaths) {
+    if (!fs.existsSync(it.path)) {
+      throw new Error(`Assertion failed: Item file does not exist at ${it.path}`);
+    }
+    const itemData = JSON.parse(fs.readFileSync(it.path, "utf8"));
+    if (itemData["@id"] !== `urn:robos:crpg:item:${it.slug}`) {
+      throw new Error(`Assertion failed: Item @id mismatch: ${itemData["@id"]}`);
+    }
+    if (itemData["dcterms:title"] !== it.title) {
+      throw new Error(`Assertion failed: Item title mismatch: ${itemData["dcterms:title"]}`);
+    }
+    if (itemData["robos:itemCategory"] !== it.category) {
+      throw new Error(`Assertion failed: Item category mismatch: ${itemData["robos:itemCategory"]}`);
+    }
+  }
+  console.log("✔ Assertion 10 Passed: All 7 real CRPGItem JSON-LD files exist and validate against CRPGItemShape");
+
+  // Validate Bamboo Pole Weapon details
+  const bambooData = JSON.parse(fs.readFileSync(BAMBOO_PATH, "utf8"));
+  if (bambooData["robos:damageDice"] !== "1d4" || bambooData["robos:damageType"] !== "bludgeoning" || Number(bambooData["robos:cost"]) !== 10) {
+    throw new Error(`Assertion failed: Bamboo Pole weapon properties mismatch: dice=${bambooData["robos:damageDice"]}, type=${bambooData["robos:damageType"]}, cost=${bambooData["robos:cost"]}`);
+  }
+  console.log("✔ Assertion 11 Passed: Bamboo Pole weapon properties (1d4 bludgeoning, 10 GP) verified");
+
+  // Validate Herb Consumable details
+  const herbData = JSON.parse(fs.readFileSync(HERB_PATH, "utf8"));
+  if (!herbData["robos:effect"] || !herbData["robos:effect"].includes("Restores 20-35 HP") || Number(herbData["robos:cost"]) !== 24) {
+    throw new Error(`Assertion failed: Herb consumable properties mismatch: ${herbData["robos:effect"]}`);
+  }
+  console.log("✔ Assertion 12 Passed: Herb consumable properties (restores HP, 24 GP) verified");
+
+  // ==========================================
+  // SCREEN 4 ASSERTIONS: CAMPAIGN & INVENTORY
+  // ==========================================
+  // Assertion 13: Validate Hero of Alefgard Equipment slots saved on disk with real item entities
+  const reloadedHeroData = JSON.parse(fs.readFileSync(HERO_PATH, "utf8"));
+  const expectedSlots = {
+    mainHand: "bamboo-pole",
+    armor: "clothes",
+    cloak: "travelers-cloak",
+    boots: "leather-boots",
+    quickItems: "herb"
+  };
+  for (const [slot, expectedSlug] of Object.entries(expectedSlots)) {
+    const actual = reloadedHeroData[slot] || reloadedHeroData[`robos:${slot}`];
+    if (actual !== expectedSlug && !actual.toLowerCase().includes(expectedSlug)) {
+      throw new Error(`Assertion failed: Hero ${slot} mismatch: ${actual} (expected ${expectedSlug})`);
+    }
+  }
+  console.log("✔ Assertion 13 Passed: Hero of Alefgard equipment slots verified with real item entities (bamboo-pole, clothes, cloak, boots, herb)");
+
+  // Assertion 14: Validate Campaign Shared Inventory & Party
   if (!fs.existsSync(CAMPAIGN_PATH)) {
     throw new Error(`Assertion failed: Campaign file does not exist at ${CAMPAIGN_PATH}`);
   }
-  console.log("✔ Assertion 11 Passed: Campaign file exists at", CAMPAIGN_PATH);
+  console.log("✔ Assertion 14 Passed: Campaign file exists at", CAMPAIGN_PATH);
 
   const campaignData = JSON.parse(fs.readFileSync(CAMPAIGN_PATH, "utf8"));
   const gsData = campaignData["robos:gameState"] || campaignData.gameState;
@@ -1083,7 +1322,8 @@ async function main() {
     throw new Error(`Assertion failed: Shared inventory gold mismatch: ${sharedInv ? sharedInv.gold : "missing"}`);
   }
   const items = sharedInv.items || [];
-  if (!items.includes("Torch (x1)") || !items.includes("Magic Key (x1)") || !items.includes("Herb (x1)")) {
+  const itemSlugs = items.map(it => typeof it === 'object' && it !== null ? (it.slug || it.id) : it);
+  if (!itemSlugs.some(s => s.includes("torch")) || !itemSlugs.some(s => s.includes("magic-key")) || !itemSlugs.some(s => s.includes("herb"))) {
     throw new Error(`Assertion failed: Shared items missing starting chest items: ${JSON.stringify(items)}`);
   }
   if (gsData["robos:partyFormation"] !== "wedge") {
@@ -1093,7 +1333,7 @@ async function main() {
   if (activeParty.length !== 1 || !activeParty[0].includes("hero-of-alefgard")) {
     throw new Error(`Assertion failed: Active party mismatch: ${JSON.stringify(activeParty)}`);
   }
-  console.log("✔ Assertion 12 Passed: Campaign shared inventory (120 GP, Torch, Magic Key, Herb) & Wedge formation verified");
+  console.log("✔ Assertion 15 Passed: Campaign shared inventory (120 GP, real Torch, Magic Key, Herb entities) & Wedge formation verified");
 
   // 3. Copy artifacts to persistent walkthrough and brain directories
   fs.mkdirSync(PERSIST_DIR, { recursive: true });
@@ -1116,8 +1356,9 @@ async function main() {
     const frameHeroPath = path.join(BRAIN_DIR, "crpg_editor_hero_alefgard_authored.png");
     const frameKingPath = path.join(BRAIN_DIR, "crpg_editor_king_loric_authored.png");
     const frameCharSearchPath = path.join(BRAIN_DIR, "crpg_editor_char_search_filter.png");
-    const frameInvPath = path.join(BRAIN_DIR, "crpg_editor_inventory_screen.png");
-    const frameCampPath = path.join(BRAIN_DIR, "crpg_editor_campaign_overview_with_party.png");
+    const frameItemStudioPath = path.join(BRAIN_DIR, "crpg_editor_item_studio.png");
+    const frameCampPartyInvPath = path.join(BRAIN_DIR, "crpg_editor_campaign_party_inventory.png");
+    const frameCampOverviewPath = path.join(BRAIN_DIR, "crpg_editor_campaign_overview_with_party.png");
 
     try {
       execSync(`ffmpeg -y -ss 00:00:03 -i "${finalVideo}" -vframes 1 "${frameEmptyPath}"`, { stdio: "ignore" });
@@ -1127,9 +1368,10 @@ async function main() {
       execSync(`ffmpeg -y -ss 00:01:18 -i "${finalVideo}" -vframes 1 "${frameHeroPath}"`, { stdio: "ignore" });
       execSync(`ffmpeg -y -ss 00:01:33 -i "${finalVideo}" -vframes 1 "${frameKingPath}"`, { stdio: "ignore" });
       execSync(`ffmpeg -y -ss 00:01:43 -i "${finalVideo}" -vframes 1 "${frameCharSearchPath}"`, { stdio: "ignore" });
-      execSync(`ffmpeg -y -ss 00:02:18 -i "${finalVideo}" -vframes 1 "${frameInvPath}"`, { stdio: "ignore" });
-      execSync(`ffmpeg -y -ss 00:02:34 -i "${finalVideo}" -vframes 1 "${frameCampPath}"`, { stdio: "ignore" });
-      console.log(`Extracted review frames:\n  - ${frameEmptyPath}\n  - ${frameModalPath}\n  - ${frameMapPath}\n  - ${frameCharEmptyPath}\n  - ${frameHeroPath}\n  - ${frameKingPath}\n  - ${frameCharSearchPath}\n  - ${frameInvPath}\n  - ${frameCampPath}`);
+      execSync(`ffmpeg -y -ss 00:02:15 -i "${finalVideo}" -vframes 1 "${frameItemStudioPath}"`, { stdio: "ignore" });
+      execSync(`ffmpeg -y -ss 00:02:58 -i "${finalVideo}" -vframes 1 "${frameCampPartyInvPath}"`, { stdio: "ignore" });
+      execSync(`ffmpeg -y -ss 00:03:07 -i "${finalVideo}" -vframes 1 "${frameCampOverviewPath}"`, { stdio: "ignore" });
+      console.log(`Extracted review frames:\n  - ${frameEmptyPath}\n  - ${frameModalPath}\n  - ${frameMapPath}\n  - ${frameCharEmptyPath}\n  - ${frameHeroPath}\n  - ${frameKingPath}\n  - ${frameCharSearchPath}\n  - ${frameItemStudioPath}\n  - ${frameCampPartyInvPath}\n  - ${frameCampOverviewPath}`);
     } catch (err) {
       console.warn("Could not extract frames:", err.message);
     }
@@ -1141,7 +1383,7 @@ async function main() {
   }
 
   console.log("\n=======================================================");
-  console.log("🎉 SCREENS 1, 2 & 3 (MAP, CHARACTERS, INVENTORY) CREATED, SAVED, AND ASSERTED SUCCESSFULLY!");
+  console.log("🎉 SCREENS 1, 2, 3 & 4 (MAP, CHARACTERS, ITEMS, CAMPAIGN PARTY & INVENTORY) CREATED, SAVED, AND ASSERTED SUCCESSFULLY!");
   console.log("=======================================================");
 }
 

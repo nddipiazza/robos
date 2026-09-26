@@ -22,6 +22,12 @@ contextBridge.exposeInMainWorld('robos', {
   buildMap: (payload) => ipcRenderer.invoke('maps:build', payload),
   exportMapPng: (payload) => ipcRenderer.invoke('maps:export-png', payload),
 
+  // Item APIs
+  listItems: () => ipcRenderer.invoke('items:list'),
+  loadItem: (slug) => ipcRenderer.invoke('items:load', slug),
+  saveItem: (payload) => ipcRenderer.invoke('items:save', payload),
+  deleteItem: (slug) => ipcRenderer.invoke('items:delete', slug),
+
   // Scene APIs
   listScenes: () => ipcRenderer.invoke('scenes:list'),
 

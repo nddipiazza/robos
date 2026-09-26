@@ -33,13 +33,14 @@
           <button id="nav-characters" class="nav-tab-btn" data-pane="pane-characters">
             <span>👤 Characters & NPCs</span>
           </button>
-          <button id="nav-inventory" class="nav-tab-btn" data-pane="pane-inventory">
-            <span>🎒 Inventory Editor</span>
+          <button id="nav-items" class="nav-tab-btn" data-pane="pane-items">
+            <span>📦 Items</span>
           </button>
           <button id="nav-maps" class="nav-tab-btn" data-pane="pane-maps">
             <span>🗺️ Maps</span>
           </button>
-          <!-- Hidden compatibility alias for nav-blockmap -->
+          <!-- Hidden compatibility alias for nav-inventory and nav-blockmap -->
+          <button id="nav-inventory" class="hidden" data-pane="pane-campaign"></button>
           <button id="nav-blockmap" class="hidden" data-pane="pane-maps"></button>
         </nav>
       </div>
@@ -98,11 +99,16 @@
           <button id="btn-header-delete-char" class="btn btn-danger btn-sm" title="Delete current character">🗑</button>
         </div>
 
-        <!-- Inventory Context Controls -->
-        <div id="inventory-header-controls" class="context-selector-group hidden">
-          <button id="btn-hdr-save-inventory" class="btn btn-primary" title="Save Inventory, Party & Equipment">
-            <span>💾 Save Inventory</span>
-          </button>
+        <!-- Items Context Controls -->
+        <div id="items-header-controls" class="context-selector-group hidden">
+          <span class="context-label">Item:</span>
+          <select id="header-item-select" class="dropdown-select">
+            <option value="">(No item selected)</option>
+          </select>
+          <button id="btn-header-new-item" class="btn btn-secondary" title="Create a new item">+ New Item</button>
+          <button id="btn-header-close-item" class="btn btn-secondary" title="Close active item">✖ Close</button>
+          <button id="btn-header-save-item" class="btn btn-primary" title="Save item JSON-LD">💾 Save</button>
+          <button id="btn-header-delete-item" class="btn btn-danger btn-sm" title="Delete current item">🗑</button>
         </div>
 
         <!-- Maps Context Controls -->
@@ -163,7 +169,19 @@
            PANE 1: cRPG CAMPAIGN
            ======================================================== -->
       <section id="pane-campaign" class="module-pane active">
-        <div class="campaign-layout">
+        <!-- Campaign Sub-navigation Bar -->
+        <div class="campaign-subnav-bar">
+          <button id="tab-camp-overview" class="campaign-subtab-btn active" data-subpane="subpane-camp-overview">
+            <span>📋 Overview & Story</span>
+          </button>
+          <button id="tab-camp-inventory" class="campaign-subtab-btn" data-subpane="subpane-camp-inventory">
+            <span>🎒 Party & Inventory</span>
+          </button>
+        </div>
+
+        <!-- Subpane 1: Overview & Story -->
+        <div id="subpane-camp-overview" class="campaign-subpane active">
+          <div class="campaign-layout">
           <!-- Top Section: Metadata & Summary -->
           <div class="campaign-grid-top">
             <div class="panel">
@@ -328,6 +346,171 @@
             </div>
           </div>
         </div>
+        </div> <!-- End #subpane-camp-overview -->
+
+        <!-- Subpane 2: Party & Inventory -->
+        <div id="subpane-camp-inventory" class="campaign-subpane hidden">
+          <div class="inventory-header-bar">
+            <h2>🎒 Party Inventory, Currency & Equipment</h2>
+            <button id="btn-save-inventory" class="btn btn-primary" title="Save Inventory, Party & Equipment">
+              <span>💾 Save Inventory</span>
+            </button>
+          </div>
+          <div class="inventory-layout">
+            <!-- Column 1: Active Party & Formations -->
+            <div class="panel">
+              <div class="panel-header">
+                <h2>Active Party Configuration</h2>
+              </div>
+              <div class="panel-body">
+                <div class="form-group" style="margin-bottom: 12px;">
+                  <label>Select Active Party Members (up to 6):</label>
+                  <div id="party-checklist" class="party-checklist-box">
+                    <!-- Checkbox items rendered via JS -->
+                  </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 12px;">
+                  <label for="party-leader-select">Party Leader</label>
+                  <select id="party-leader-select" class="dropdown-select full-width">
+                    <!-- Populated from active heroes -->
+                  </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 12px;">
+                  <label for="party-formation-select">Tactical Party Formation</label>
+                  <select id="party-formation-select" class="dropdown-select full-width">
+                    <option value="rank">Rank (2x3 Grid Formation)</option>
+                    <option value="wedge">Wedge (V-Formation Point)</option>
+                    <option value="line">Line (Side by Side Wall)</option>
+                    <option value="column">Column (Single File March)</option>
+                    <option value="square">Square (Defensive Box)</option>
+                    <option value="scatter">Scatter (Skirmish Stance)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="inventory-scene-select">Current Scene</label>
+                  <select id="inventory-scene-select" class="dropdown-select full-width">
+                    <option value="">(No scenes)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Column 2: Party Shared Stash & Currency -->
+            <div class="panel">
+              <div class="panel-header">
+                <h2>Party Purse & Shared Stash</h2>
+              </div>
+              <div class="panel-body">
+                <div class="currency-cards-grid">
+                  <div class="currency-card gp">
+                    <label for="gold-gp">Gold (GP)</label>
+                    <input type="number" id="gold-gp" class="input-number" min="0" value="0">
+                  </div>
+                  <div class="currency-card sp">
+                    <label for="gold-sp">Silver (SP)</label>
+                    <input type="number" id="gold-sp" class="input-number" min="0" value="0">
+                  </div>
+                  <div class="currency-card cp">
+                    <label for="gold-cp">Copper (CP)</label>
+                    <input type="number" id="gold-cp" class="input-number" min="0" value="0">
+                  </div>
+                </div>
+
+                <!-- Structured Item Stash -->
+                <div class="form-group" style="margin-top: 14px;">
+                  <label style="display: block; margin-bottom: 6px;">Campaign Shared Stash</label>
+                  <div class="stash-add-row" style="display: flex; gap: 8px; margin-bottom: 10px;">
+                    <select id="stash-item-picker" class="dropdown-select" style="flex: 1;">
+                      <option value="">(Select item to add...)</option>
+                    </select>
+                    <input type="number" id="stash-item-qty" class="input-number" min="1" value="1" style="width: 70px;" title="Quantity">
+                    <button id="btn-add-stash-item" class="btn btn-secondary btn-sm" type="button">+ Add</button>
+                  </div>
+                  <div class="stash-table-box">
+                    <table id="stash-items-table" class="stash-table">
+                      <thead>
+                        <tr>
+                          <th style="width: 28px;"></th>
+                          <th>Item Name</th>
+                          <th style="width: 80px;">Category</th>
+                          <th style="width: 50px; text-align: center;">Qty</th>
+                          <th style="width: 40px; text-align: center;"></th>
+                        </tr>
+                      </thead>
+                      <tbody id="stash-items-tbody">
+                        <!-- Populated via JS -->
+                      </tbody>
+                    </table>
+                  </div>
+                  <!-- Hidden legacy fallback textarea -->
+                  <textarea id="shared-items-textarea" class="hidden"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Column 3: Per-Hero Equipment Slots -->
+            <div class="panel">
+              <div class="panel-header">
+                <h2>Equipment Slots Inspector</h2>
+                <select id="equip-hero-select" class="dropdown-select">
+                  <!-- Populated from heroes -->
+                </select>
+              </div>
+              <div class="panel-body">
+                <div class="equipment-slots-grid">
+                  <div class="equip-slot-item">
+                    <label for="equip-mainhand">Main Hand (Weapon)</label>
+                    <select id="equip-mainhand" class="dropdown-select equip-slot-select full-width">
+                      <option value="">(Empty)</option>
+                    </select>
+                  </div>
+                  <div class="equip-slot-item">
+                    <label for="equip-offhand">Off Hand (Shield)</label>
+                    <select id="equip-offhand" class="dropdown-select equip-slot-select full-width">
+                      <option value="">(Empty)</option>
+                    </select>
+                  </div>
+                  <div class="equip-slot-item">
+                    <label for="equip-armor">Armor / Body</label>
+                    <select id="equip-armor" class="dropdown-select equip-slot-select full-width">
+                      <option value="">(Empty)</option>
+                    </select>
+                  </div>
+                  <div class="equip-slot-item">
+                    <label for="equip-helmet">Helmet / Head</label>
+                    <select id="equip-helmet" class="dropdown-select equip-slot-select full-width">
+                      <option value="">(Empty)</option>
+                    </select>
+                  </div>
+                  <div class="equip-slot-item">
+                    <label for="equip-cloak">Cloak / Shoulders</label>
+                    <select id="equip-cloak" class="dropdown-select equip-slot-select full-width">
+                      <option value="">(Empty)</option>
+                    </select>
+                  </div>
+                  <div class="equip-slot-item">
+                    <label for="equip-boots">Boots / Feet</label>
+                    <select id="equip-boots" class="dropdown-select equip-slot-select full-width">
+                      <option value="">(Empty)</option>
+                    </select>
+                  </div>
+                  <div class="equip-slot-item">
+                    <label for="equip-ring1">Ring / Accessory</label>
+                    <select id="equip-ring1" class="dropdown-select equip-slot-select full-width">
+                      <option value="">(Empty)</option>
+                    </select>
+                  </div>
+                  <div class="equip-slot-item">
+                    <label for="equip-quickitems">Quick Items / Potions</label>
+                    <select id="equip-quickitems" class="dropdown-select equip-slot-select full-width">
+                      <option value="">(Empty)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div> <!-- End #subpane-camp-inventory -->
       </section>
 
       <!-- ========================================================
@@ -667,127 +850,156 @@
       </section>
 
       <!-- ========================================================
-           PANE 3: cRPG INVENTORY EDITOR
+           PANE 3: cRPG ITEM STUDIO
            ======================================================== -->
-      <section id="pane-inventory" class="module-pane">
-        <div class="inventory-header-bar">
-          <h2>🎒 Party Inventory, Currency & Equipment</h2>
-          <button id="btn-save-inventory" class="btn btn-primary" title="Save Inventory, Party & Equipment">
-            <span>💾 Save Inventory</span>
-          </button>
-        </div>
-        <div class="inventory-layout">
-          <!-- Column 1: Active Party & Formations -->
-          <div class="panel">
-            <div class="panel-header">
-              <h2>Active Party Configuration</h2>
-            </div>
-            <div class="panel-body">
-              <div class="form-group" style="margin-bottom: 12px;">
-                <label>Select Active Party Members (up to 6):</label>
-                <div id="party-checklist" class="party-checklist-box">
-                  <!-- Checkbox items rendered via JS -->
-                </div>
+      <section id="pane-items" class="module-pane">
+        <div class="items-layout">
+          <!-- Left Column: Item Catalog & Search -->
+          <aside class="items-sidebar">
+            <div class="sidebar-header">
+              <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px;">
+                <h2>Item Library (<span id="items-count">0</span>)</h2>
+                <button id="btn-sidebar-new-item" class="btn btn-sm btn-primary">➕ New Item</button>
               </div>
-              <div class="form-group" style="margin-bottom: 12px;">
-                <label for="party-leader-select">Party Leader</label>
-                <select id="party-leader-select" class="dropdown-select full-width">
-                  <!-- Populated from active heroes -->
-                </select>
+              <div class="search-box" style="padding: 0 16px 10px 16px;">
+                <input type="text" id="item-search-input" class="search-input full-width" placeholder="🔍 Search items by name, category, slot...">
               </div>
-              <div class="form-group" style="margin-bottom: 12px;">
-                <label for="party-formation-select">Tactical Party Formation</label>
-                <select id="party-formation-select" class="dropdown-select full-width">
-                  <option value="rank">Rank (2x3 Grid Formation)</option>
-                  <option value="wedge">Wedge (V-Formation Point)</option>
-                  <option value="line">Line (Side by Side Wall)</option>
-                  <option value="column">Column (Single File March)</option>
-                  <option value="square">Square (Defensive Box)</option>
-                  <option value="scatter">Scatter (Skirmish Stance)</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="inventory-scene-select">Current Scene</label>
-                <select id="inventory-scene-select" class="dropdown-select full-width">
-                  <option value="">(No scenes)</option>
-                </select>
+              <div class="filter-pills-row" id="item-category-filters" style="display: flex; gap: 6px; padding: 0 16px 12px 16px; overflow-x: auto;">
+                <button class="filter-pill active" data-category="all">All</button>
+                <button class="filter-pill" data-category="weapon">Weapons</button>
+                <button class="filter-pill" data-category="armor">Armor</button>
+                <button class="filter-pill" data-category="consumable">Consumables</button>
+                <button class="filter-pill" data-category="quest">Quest</button>
+                <button class="filter-pill" data-category="accessory">Accessories</button>
               </div>
             </div>
-          </div>
+            <div id="items-list" class="items-list-container">
+              <!-- Item cards rendered via JS -->
+            </div>
+          </aside>
 
-          <!-- Column 2: Party Shared Stash & Currency -->
-          <div class="panel">
-            <div class="panel-header">
-              <h2>Party Purse & Shared Stash</h2>
+          <!-- Right Column: Item Blueprint Editor -->
+          <main class="item-editor-content">
+            <!-- Empty State -->
+            <div id="item-empty-state" class="empty-state-card">
+              <div class="empty-state-icon">📦</div>
+              <h3>Item Library</h3>
+              <p>Select an item from the library on the left, or create a fresh item blueprint.</p>
+              <button id="btn-empty-new-item" class="btn btn-primary" style="margin-top: 14px;">➕ Create Item Blueprint</button>
             </div>
-            <div class="panel-body">
-              <div class="currency-cards-grid">
-                <div class="currency-card gp">
-                  <label for="gold-gp">Gold (GP)</label>
-                  <input type="number" id="gold-gp" class="input-number" min="0" value="0">
-                </div>
-                <div class="currency-card sp">
-                  <label for="gold-sp">Silver (SP)</label>
-                  <input type="number" id="gold-sp" class="input-number" min="0" value="0">
-                </div>
-                <div class="currency-card cp">
-                  <label for="gold-cp">Copper (CP)</label>
-                  <input type="number" id="gold-cp" class="input-number" min="0" value="0">
-                </div>
-              </div>
 
-              <div class="form-group">
-                <label for="shared-items-textarea">Shared Stash Items (one per line)</label>
-                <textarea id="shared-items-textarea" rows="10" placeholder="Enter party items (one per line)..."></textarea>
+            <!-- Item Form Panel -->
+            <div id="item-form-container" class="item-form-panel hidden">
+              <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); padding: 14px 20px;">
+                <h2 id="item-form-title">Item Blueprint</h2>
+                <div style="display: flex; gap: 8px;">
+                  <button id="btn-close-item" class="btn btn-secondary btn-sm" title="Close item">✖ Close</button>
+                  <button id="btn-save-item" class="btn btn-primary btn-sm" title="Save item JSON-LD">💾 Save Item</button>
+                  <button id="btn-delete-item" class="btn btn-danger btn-sm" title="Delete item">🗑</button>
+                </div>
               </div>
-            </div>
-          </div>
+              <div class="panel-body form-grid" style="padding: 20px;">
+                <div class="form-group col-span-2">
+                  <label for="item-name">Item Name</label>
+                  <input type="text" id="item-name" class="input-text" placeholder="e.g. Bamboo Pole">
+                </div>
+                <div class="form-group">
+                  <label for="item-slug">Unique Slug</label>
+                  <input type="text" id="item-slug" class="input-text" placeholder="e.g. bamboo-pole">
+                </div>
+                <div class="form-group">
+                  <label for="item-icon">Icon / Emoji</label>
+                  <input type="text" id="item-icon" class="input-text" value="📦" maxlength="4">
+                </div>
+                <div class="form-group">
+                  <label for="item-category">Category</label>
+                  <select id="item-category" class="dropdown-select">
+                    <option value="weapon">Weapon</option>
+                    <option value="armor">Armor</option>
+                    <option value="shield">Shield</option>
+                    <option value="accessory">Accessory</option>
+                    <option value="consumable">Consumable</option>
+                    <option value="quest">Quest Item</option>
+                    <option value="tool">Tool</option>
+                    <option value="misc">Miscellaneous</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="item-equip-slot">Equip Slot</label>
+                  <select id="item-equip-slot" class="dropdown-select">
+                    <option value="none">None (Inventory Only)</option>
+                    <option value="main_hand">Main Hand (Weapon)</option>
+                    <option value="off_hand">Off Hand (Shield/Secondary)</option>
+                    <option value="armor">Armor (Body/Chest)</option>
+                    <option value="helmet">Helmet (Head)</option>
+                    <option value="cloak">Cloak (Shoulders)</option>
+                    <option value="boots">Boots (Feet)</option>
+                    <option value="ring">Ring (Accessory)</option>
+                    <option value="quick_item">Quick Item (Belt/Pouch)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="item-cost">Gold Cost (GP)</label>
+                  <input type="number" id="item-cost" class="input-number" min="0" value="0">
+                </div>
+                <div class="form-group">
+                  <label for="item-weight">Weight (lbs)</label>
+                  <input type="number" id="item-weight" class="input-number" min="0" step="0.5" value="1">
+                </div>
+                <div class="form-group col-span-2">
+                  <label for="item-rarity">Rarity</label>
+                  <select id="item-rarity" class="dropdown-select">
+                    <option value="common">Common</option>
+                    <option value="uncommon">Uncommon</option>
+                    <option value="rare">Rare</option>
+                    <option value="very_rare">Very Rare</option>
+                    <option value="legendary">Legendary</option>
+                    <option value="artifact">Artifact</option>
+                  </select>
+                </div>
 
-          <!-- Column 3: Per-Hero Equipment Slots -->
-          <div class="panel">
-            <div class="panel-header">
-              <h2>Equipment Slots Inspector</h2>
-              <select id="equip-hero-select" class="dropdown-select">
-                <!-- Populated from heroes -->
-              </select>
-            </div>
-            <div class="panel-body">
-              <div class="equipment-slots-grid">
-                <div class="equip-slot-item">
-                  <label for="equip-mainhand">Main Hand (Weapon)</label>
-                  <input type="text" id="equip-mainhand" class="input-text" placeholder="Longsword">
+                <!-- Weapon Properties (Conditional) -->
+                <div id="section-item-weapon" class="form-group col-span-2 form-grid">
+                  <div class="form-group">
+                    <label for="item-damage">Damage Dice</label>
+                    <input type="text" id="item-damage" class="input-text" placeholder="e.g. 1d4, 1d8+2">
+                  </div>
+                  <div class="form-group">
+                    <label for="item-damage-type">Damage Type</label>
+                    <select id="item-damage-type" class="dropdown-select">
+                      <option value="bludgeoning">Bludgeoning</option>
+                      <option value="slashing">Slashing</option>
+                      <option value="piercing">Piercing</option>
+                      <option value="fire">Fire</option>
+                      <option value="cold">Cold</option>
+                      <option value="lightning">Lightning</option>
+                      <option value="radiant">Radiant</option>
+                      <option value="necrotic">Necrotic</option>
+                    </select>
+                  </div>
                 </div>
-                <div class="equip-slot-item">
-                  <label for="equip-offhand">Off Hand (Shield)</label>
-                  <input type="text" id="equip-offhand" class="input-text" placeholder="Steel Shield">
+
+                <!-- Armor Properties (Conditional) -->
+                <div id="section-item-armor" class="form-group col-span-2 form-grid hidden">
+                  <div class="form-group">
+                    <label for="item-ac-bonus">Base AC or Bonus</label>
+                    <input type="number" id="item-ac-bonus" class="input-number" min="0" value="11">
+                  </div>
                 </div>
-                <div class="equip-slot-item">
-                  <label for="equip-armor">Armor / Body</label>
-                  <input type="text" id="equip-armor" class="input-text" placeholder="Chain Mail">
+
+                <!-- Consumable Properties (Conditional) -->
+                <div id="section-item-consumable" class="form-group col-span-2 hidden">
+                  <label for="item-effect">Consumable Effect</label>
+                  <input type="text" id="item-effect" class="input-text" placeholder="e.g. Restores 20-35 HP to one ally">
                 </div>
-                <div class="equip-slot-item">
-                  <label for="equip-helmet">Helmet / Head</label>
-                  <input type="text" id="equip-helmet" class="input-text" placeholder="Iron Helm">
-                </div>
-                <div class="equip-slot-item">
-                  <label for="equip-cloak">Cloak / Shoulders</label>
-                  <input type="text" id="equip-cloak" class="input-text" placeholder="Traveler's Cloak">
-                </div>
-                <div class="equip-slot-item">
-                  <label for="equip-boots">Boots / Feet</label>
-                  <input type="text" id="equip-boots" class="input-text" placeholder="Stout Boots">
-                </div>
-                <div class="equip-slot-item">
-                  <label for="equip-ring1">Ring / Accessory</label>
-                  <input type="text" id="equip-ring1" class="input-text" placeholder="Ring of Protection">
-                </div>
-                <div class="equip-slot-item">
-                  <label for="equip-quickitems">Quick Items / Potions</label>
-                  <input type="text" id="equip-quickitems" class="input-text" placeholder="2x Healing Potion">
+
+                <div class="form-group col-span-2">
+                  <label for="item-desc">Lore & Description</label>
+                  <textarea id="item-desc" rows="3" placeholder="Enter lore, visual appearance, or in-game rules text..."></textarea>
                 </div>
               </div>
             </div>
-          </div>
+          </main>
         </div>
       </section>
 
