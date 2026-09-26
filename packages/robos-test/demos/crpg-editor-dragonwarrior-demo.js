@@ -9,16 +9,41 @@ const SLUG = "crpg-editor-dragonwarrior";
 const PERSIST_DIR = path.join(process.env.HOME || "/home/ndipiazza", ".robos", "development", "walkthroughs", SLUG);
 const BRAIN_DIR = "/home/ndipiazza/.gemini/antigravity/brain/378ca830-4ff9-41ba-a48b-b56c4dd0a48f";
 const ROBOS_ROOT = "/home/ndipiazza/source/robos";
+const SANDBOX_DIR = path.join(PERSIST_DIR, "sandbox");
 
-const MAP_PATH = path.join(ROBOS_ROOT, "games", "crpg-realm", "maps", "tantegel-throne-room.jsonld");
-const PNG_PATH = path.join(ROBOS_ROOT, "games", "crpg-realm", "assets", "blockouts", "tantegel-throne-room.png");
-const HERO_PATH = path.join(ROBOS_ROOT, "games", "crpg-realm", "characters", "hero-of-alefgard.jsonld");
-const NPC_PATH = path.join(ROBOS_ROOT, "games", "crpg-realm", "characters", "npc-king-loric.jsonld");
-const GWAELIN_PATH = path.join(ROBOS_ROOT, "games", "crpg-realm", "characters", "npc-princess-gwaelin.jsonld");
+const MAP_PATH = path.join(SANDBOX_DIR, "maps", "tantegel-throne-room.jsonld");
+const PNG_PATH = path.join(SANDBOX_DIR, "assets", "blockouts", "tantegel-throne-room.png");
+const HERO_PATH = path.join(SANDBOX_DIR, "characters", "hero-of-alefgard.jsonld");
+const NPC_PATH = path.join(SANDBOX_DIR, "characters", "npc-king-loric.jsonld");
+const GWAELIN_PATH = path.join(SANDBOX_DIR, "characters", "npc-princess-gwaelin.jsonld");
 
 const SCRIPT = [
   {
-    narration: "Starting with a blank sandboxed RobOS cRPG Editor, we switch to the Tactical Maps Studio.",
+    narration: "Starting with a blank sandboxed RobOS cRPG Editor, we verify pristine workspace isolation: 0 default characters, 0 default maps, 0 inventory items.",
+    target: ".nav-tab-btn[data-pane='pane-maps']",
+    action: "hover",
+    callout: "Verify Workspace Isolation & 0 Defaults",
+    js: `(() => {
+      if (!Array.isArray(state.characters) || state.characters.length !== 0) {
+        throw new Error('Workspace isolation failed: state.characters has ' + (state.characters ? state.characters.length : 0) + ' items!');
+      }
+      if (!Array.isArray(state.maps) || state.maps.length !== 0) {
+        throw new Error('Workspace isolation failed: state.maps has ' + (state.maps ? state.maps.length : 0) + ' items!');
+      }
+      const heroesStat = document.getElementById('stat-heroes-count')?.textContent;
+      const goldStat = document.getElementById('stat-gold-count')?.textContent;
+      if (heroesStat !== '0') {
+        throw new Error('Workspace isolation failed: heroes stat is ' + heroesStat);
+      }
+      if (goldStat !== '0 gp') {
+        throw new Error('Workspace isolation failed: gold stat is ' + goldStat);
+      }
+      console.log('✔ Verified: 100% isolated sandbox with 0 characters, 0 maps, 0 default inventory.');
+    })()`,
+    minHold: 3500,
+  },
+  {
+    narration: "We switch to the Tactical Maps Studio.",
     target: ".nav-tab-btn[data-pane='pane-maps']",
     action: "click",
     callout: "Switch to Tactical Maps Studio",
@@ -41,7 +66,10 @@ const SCRIPT = [
       if (state.activeMapData !== null) {
         throw new Error('Assertion failed: state.activeMapData is not null on start!');
       }
-      console.log('✔ Verified: Editor started in clean empty state.');
+      if (!Array.isArray(state.maps) || state.maps.length !== 0) {
+        throw new Error('Assertion failed: state.maps is not empty! Count: ' + (state.maps ? state.maps.length : 0));
+      }
+      console.log('✔ Verified: Editor started in clean empty state with 0 maps.');
     })()`,
     minHold: 3500,
   },
@@ -460,7 +488,14 @@ const SCRIPT = [
       if (state.activeCharacterSlug !== null) {
         throw new Error('Assertion failed: state.activeCharacterSlug is not null: ' + state.activeCharacterSlug);
       }
-      console.log('✔ Verified: Character studio in clean empty state.');
+      if (!Array.isArray(state.characters) || state.characters.length !== 0) {
+        throw new Error('Assertion failed: state.characters is not empty! Count: ' + (state.characters ? state.characters.length : 0));
+      }
+      const rosterCount = document.getElementById('roster-count');
+      if (rosterCount && rosterCount.textContent !== '0') {
+        throw new Error('Assertion failed: roster-count is not 0! Found: ' + rosterCount.textContent);
+      }
+      console.log('✔ Verified: Character studio in clean empty state with 0 characters.');
     })()`,
     minHold: 3500,
   },
@@ -689,29 +724,14 @@ async function main() {
   console.log("=== RobOS cRPG Editor E2E: Screens 1 & 2 - Map & Characters ===");
 
   // 1. Pre-test cleanup: Guarantee blank sandboxed state
-  console.log("Pre-test sandboxing: Cleaning any existing Dragon Warrior files...");
-  if (fs.existsSync(MAP_PATH)) {
-    fs.unlinkSync(MAP_PATH);
-    console.log(`Removed pre-existing map: ${MAP_PATH}`);
+  console.log(`Pre-test sandboxing: Ensuring clean isolated directory at ${SANDBOX_DIR}...`);
+  if (fs.existsSync(SANDBOX_DIR)) {
+    fs.rmSync(SANDBOX_DIR, { recursive: true, force: true });
   }
-  if (fs.existsSync(PNG_PATH)) {
-    fs.unlinkSync(PNG_PATH);
-    console.log(`Removed pre-existing blockout PNG: ${PNG_PATH}`);
-  }
-  if (fs.existsSync(HERO_PATH)) {
-    fs.unlinkSync(HERO_PATH);
-    console.log(`Removed pre-existing hero: ${HERO_PATH}`);
-  }
-  if (fs.existsSync(NPC_PATH)) {
-    fs.unlinkSync(NPC_PATH);
-    console.log(`Removed pre-existing npc: ${NPC_PATH}`);
-  }
-  if (fs.existsSync(GWAELIN_PATH)) {
-    fs.unlinkSync(GWAELIN_PATH);
-    console.log(`Removed pre-existing princess gwaelin: ${GWAELIN_PATH}`);
-  }
+  fs.mkdirSync(SANDBOX_DIR, { recursive: true });
 
   // 2. Run the E2E Demo via runDemo
+  process.env.ROBOS_CRPG_DIR = SANDBOX_DIR;
   await runDemo({
     slug: SLUG,
     appId: "crpg-editor",
@@ -719,6 +739,9 @@ async function main() {
     scenario: {
       ...scenarios["all-good"],
       useRealBinaries: true,
+      env: {
+        ROBOS_CRPG_DIR: SANDBOX_DIR,
+      },
     },
     prelaunch: async () => {
       console.log("Prelaunch hook: Ensuring pristine workspace for crpg-editor...");
@@ -784,7 +807,7 @@ async function main() {
   console.log(`✔ Assertion 4 Passed: Blockout PNG exists (${stat.size} bytes)`);
 
   console.log("Running Python blockout compiler verification on generated map...");
-  const buildOutput = execSync(`python3 -m robos_crpg_blockout build "${MAP_PATH}"`, {
+  const buildOutput = execSync(`python3 -m robos_crpg_blockout build "${MAP_PATH}" --game-dir "${SANDBOX_DIR}"`, {
     encoding: "utf8",
     cwd: ROBOS_ROOT,
     env: { ...process.env, PYTHONPATH: path.join(ROBOS_ROOT, "packages", "robos-crpg-blockout") },

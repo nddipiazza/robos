@@ -16,15 +16,19 @@ let mainWindow = null;
 // Determine repository root and core paths
 function getPaths() {
   const repoRoot = path.resolve(__dirname, '../..');
-  const campaignsDir = path.join(repoRoot, 'games/crpg-realm/campaigns');
-  const charactersDir = path.join(repoRoot, 'games/crpg-realm/characters');
-  const mapsDir = path.join(repoRoot, 'games/crpg-realm/maps');
-  const scenesDir = path.join(repoRoot, 'games/crpg-realm/scenes');
-  const blockoutsDir = path.join(repoRoot, 'games/crpg-realm/assets/blockouts');
-  const portraitsDir = path.join(repoRoot, 'games/crpg-realm/assets/portraits');
+  const baseDir = process.env.ROBOS_CRPG_DIR
+    ? path.resolve(process.env.ROBOS_CRPG_DIR)
+    : path.join(repoRoot, 'games/crpg-realm');
+  const campaignsDir = path.join(baseDir, 'campaigns');
+  const charactersDir = path.join(baseDir, 'characters');
+  const mapsDir = path.join(baseDir, 'maps');
+  const scenesDir = path.join(baseDir, 'scenes');
+  const blockoutsDir = path.join(baseDir, 'assets/blockouts');
+  const portraitsDir = path.join(baseDir, 'assets/portraits');
   const blockoutPackageDir = path.join(repoRoot, 'packages/robos-crpg-blockout');
   return {
     repoRoot,
+    baseDir,
     campaignsDir,
     charactersDir,
     mapsDir,
@@ -33,6 +37,21 @@ function getPaths() {
     portraitsDir,
     blockoutPackageDir,
   };
+}
+
+function ensureWorkspaceDirs(paths) {
+  [
+    paths.campaignsDir,
+    paths.charactersDir,
+    paths.mapsDir,
+    paths.scenesDir,
+    paths.blockoutsDir,
+    paths.portraitsDir,
+  ].forEach(d => {
+    if (!fs.existsSync(d)) {
+      try { fs.mkdirSync(d, { recursive: true }); } catch {}
+    }
+  });
 }
 
 function createWindow() {
@@ -214,7 +233,7 @@ function ensureSeedCharacters(charactersDir) {
 // IPC Handler Registrations
 function setupIpcHandlers() {
   const paths = getPaths();
-  ensureSeedCharacters(paths.charactersDir);
+  ensureWorkspaceDirs(paths);
 
   // 1. Environment Paths
   ipcMain.handle('app:get-paths', async () => paths);
@@ -299,7 +318,7 @@ function setupIpcHandlers() {
         '@type': ['robos:CRPGCampaign', 'schema:CreativeWork'],
         'dcterms:title': data.title || data['dcterms:title'] || safeSlug,
         'dcterms:description': data.description || data['dcterms:description'] || '',
-        'robos:setting': data.setting || data['robos:setting'] || 'Sword Coast',
+        'robos:setting': data.setting || data['robos:setting'] || '',
         'robos:ruleSet': data.ruleSet || data['robos:ruleSet'] || 'D&D 5e SRD',
         'robos:difficulty': data.difficulty || data['robos:difficulty'] || 'Core Rules',
         'robos:startingMap': data.startingMap || data['robos:startingMap'] || data.currentScene || '',
@@ -307,11 +326,11 @@ function setupIpcHandlers() {
         'robos:characters': Array.isArray(data.characters) ? data.characters : (Array.isArray(data['robos:characters']) ? data['robos:characters'] : []),
         'robos:heroes': data.heroes || data['robos:heroes'] || [],
         'robos:gameState': data.gameState || data['robos:gameState'] || {
-          'robos:currentScene': data.startingMap || 'candlekeep-exterior',
+          'robos:currentScene': data.startingMap || '',
           'robos:activeParty': [],
           'robos:partyLeaderIndex': 0,
           'robos:partyFormation': 'rank',
-          'robos:sharedInventory': { gold: 100, items: [] },
+          'robos:sharedInventory': { gold: 0, silver: 0, copper: 0, items: [] },
           'robos:questLog': [],
           'robos:worldFlags': {},
         },
@@ -349,7 +368,9 @@ function setupIpcHandlers() {
   // 2b. Character & NPC APIs
   ipcMain.handle('characters:list', async () => {
     try {
-      ensureSeedCharacters(paths.charactersDir);
+      if (!fs.existsSync(paths.charactersDir)) {
+        fs.mkdirSync(paths.charactersDir, { recursive: true });
+      }
       const files = fs.readdirSync(paths.charactersDir).filter(f => f.endsWith('.jsonld'));
       const characters = [];
 
@@ -573,7 +594,7 @@ function setupIpcHandlers() {
       }
 
       const flags = debugCollision ? '--debug-collision' : '';
-      const cmd = `python3 -m robos_crpg_blockout build "${mapPath}" ${flags}`;
+      const cmd = `python3 -m robos_crpg_blockout build "${mapPath}" --game-dir "${paths.baseDir}" ${flags}`;
       console.log(`[maps:build] Executing: ${cmd}`);
 
       const { stdout, stderr } = await execPromise(cmd, {

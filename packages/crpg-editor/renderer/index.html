@@ -166,15 +166,15 @@
               <div class="panel-body form-grid">
                 <div class="form-group col-span-2">
                   <label for="camp-title">Campaign Title</label>
-                  <input type="text" id="camp-title" class="input-text" placeholder="e.g. Candlekeep: The Prophecy Begins">
+                  <input type="text" id="camp-title" class="input-text" placeholder="e.g. The Grand Adventure">
                 </div>
                 <div class="form-group">
                   <label for="camp-slug">Unique Slug</label>
-                  <input type="text" id="camp-slug" class="input-text" placeholder="e.g. candlekeep-prologue">
+                  <input type="text" id="camp-slug" class="input-text" placeholder="e.g. campaign-slug">
                 </div>
                 <div class="form-group">
                   <label for="camp-setting">World Setting</label>
-                  <input type="text" id="camp-setting" class="input-text" value="Sword Coast / Forgotten Realms">
+                  <input type="text" id="camp-setting" class="input-text" placeholder="e.g. High Fantasy Kingdom">
                 </div>
                 <div class="form-group">
                   <label for="camp-ruleset">Rule System</label>
@@ -196,7 +196,7 @@
                 <div class="form-group col-span-2">
                   <label for="camp-starting-scene">Starting Scene</label>
                   <select id="camp-starting-scene" class="dropdown-select">
-                    <option value="candlekeep-exterior">candlekeep-exterior</option>
+                    <option value="">(No scenes)</option>
                   </select>
                 </div>
                 <div class="form-group col-span-2">
@@ -696,7 +696,7 @@
               <div class="form-group">
                 <label for="inventory-scene-select">Current Scene</label>
                 <select id="inventory-scene-select" class="dropdown-select full-width">
-                  <option value="candlekeep-exterior">candlekeep-exterior</option>
+                  <option value="">(No scenes)</option>
                 </select>
               </div>
             </div>
@@ -711,21 +711,21 @@
               <div class="currency-cards-grid">
                 <div class="currency-card gp">
                   <label for="gold-gp">Gold (GP)</label>
-                  <input type="number" id="gold-gp" class="input-number" min="0" value="150">
+                  <input type="number" id="gold-gp" class="input-number" min="0" value="0">
                 </div>
                 <div class="currency-card sp">
                   <label for="gold-sp">Silver (SP)</label>
-                  <input type="number" id="gold-sp" class="input-number" min="0" value="40">
+                  <input type="number" id="gold-sp" class="input-number" min="0" value="0">
                 </div>
                 <div class="currency-card cp">
                   <label for="gold-cp">Copper (CP)</label>
-                  <input type="number" id="gold-cp" class="input-number" min="0" value="120">
+                  <input type="number" id="gold-cp" class="input-number" min="0" value="0">
                 </div>
               </div>
 
               <div class="form-group">
                 <label for="shared-items-textarea">Shared Stash Items (one per line)</label>
-                <textarea id="shared-items-textarea" rows="10" placeholder="Potion of Healing (x4)&#10;Silk Rope (50 ft)&#10;Thieves' Tools&#10;Torch (x3)&#10;Rations (x10)"></textarea>
+                <textarea id="shared-items-textarea" rows="10" placeholder="Enter party items (one per line)..."></textarea>
               </div>
             </div>
           </div>
@@ -794,12 +794,12 @@
             <div id="content-map-settings" class="sidebar-scroll-content">
               <div class="form-group" style="margin-bottom: 12px;">
                 <label for="map-slug">Map ID (Slug)</label>
-                <input type="text" id="map-slug" class="input-text" placeholder="candlekeep">
+                <input type="text" id="map-slug" class="input-text" placeholder="e.g. dungeon-level-1">
               </div>
 
               <div class="form-group" style="margin-bottom: 12px;">
                 <label for="map-title">Display Title</label>
-                <input type="text" id="map-title" class="input-text" placeholder="Candlekeep Exterior">
+                <input type="text" id="map-title" class="input-text" placeholder="e.g. Dungeon Level 1">
               </div>
 
               <div class="form-group" style="margin-bottom: 12px;">
@@ -846,7 +846,7 @@
               <!-- Background Artwork Underlay Image -->
               <div class="form-group" style="margin-bottom: 12px;">
                 <label for="map-bg-image">Background Artwork Underlay Image</label>
-                <input type="text" id="map-bg-image" class="input-text" placeholder="assets/maps/candlekeep_bg.jpg">
+                <input type="text" id="map-bg-image" class="input-text" placeholder="assets/maps/background.jpg">
               </div>
 
               <div class="form-group">
@@ -1121,7 +1121,7 @@
       </div>
 
       <div class="map-picker-search-bar">
-        <input type="text" id="map-search-input" class="input-text" placeholder="🔍 Search maps by name, slug, or terrain (e.g. tantegel, stone, candlekeep)..." autofocus>
+        <input type="text" id="map-search-input" class="input-text" placeholder="🔍 Search maps by name, slug, or terrain (e.g. tantegel, stone, castle)..." autofocus>
       </div>
 
       <div class="map-picker-body">
