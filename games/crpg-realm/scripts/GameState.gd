@@ -124,6 +124,9 @@ var flags: Dictionary = {
 	"garrison_skirmishers_slain": false,
 	"malakor_slain": false
 }
+var world_flags: Dictionary:
+	get:
+		return flags
 
 var stats: Dictionary = {
 	"kills": 0,

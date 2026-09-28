@@ -1,0 +1,2093 @@
+{
+  "crpgCartridgeVersion": "1.0.0",
+  "cartridgeId": "rescue-the-princess",
+  "header": {
+    "title": "Rescue of Princess Jennifer",
+    "slug": "rescue-the-princess",
+    "author": "RobOS AI Studio",
+    "genre": "Tactical cRPG",
+    "ruleset": "D&D 5e SRD",
+    "difficulty": "Core Rules",
+    "setting": "The High Kingdom of Eldoria",
+    "description": "The sinister Dark Lord Malakor has abducted Princess Jennifer into his subterranean lair. King Alden commands Sir Caleb to claim the Hero's Sword from the Dragonclaw Forge, vanquish the Dark Lord, and bring the princess home.",
+    "coverColor": "#7c2d12",
+    "icon": "👑",
+    "mapCount": 4,
+    "characterCount": 6,
+    "itemCount": 12,
+    "questCount": 2,
+    "startingMap": "throne-room",
+    "startingPosition": {
+      "x": 25,
+      "y": 20
+    },
+    "partyLimit": 1,
+    "createdDate": "2026-09-28T19:43:43.692Z"
+  },
+  "campaign": {
+    "@context": {
+      "robos": "https://robos.dev/ns/sdlc#",
+      "dcterms": "http://purl.org/dc/terms/",
+      "schema": "https://schema.org/",
+      "xsd": "http://www.w3.org/2001/XMLSchema#"
+    },
+    "@id": "urn:robos:crpg:campaign:rescue-the-princess",
+    "@type": [
+      "robos:CRPGCampaign",
+      "schema:CreativeWork"
+    ],
+    "dcterms:title": "Rescue of Princess Jennifer",
+    "dcterms:description": "The sinister Dark Lord Malakor has abducted Princess Jennifer into his subterranean lair. King Alden commands Sir Caleb to claim the Hero's Sword from the Dragonclaw Forge, vanquish the Dark Lord, and bring the princess home.",
+    "robos:setting": "The High Kingdom of Eldoria",
+    "robos:ruleSet": "D&D 5e SRD",
+    "robos:difficulty": "Core Rules",
+    "robos:startingMap": "throne-room",
+    "robos:startingSpawn": {
+      "position": [
+        25,
+        20
+      ],
+      "facing": "north",
+      "entryDescription": "Sir Caleb kneels before King Alden upon the royal carpet in the Throne Room."
+    },
+    "robos:maps": [
+      "urn:robos:crpg:battle-map:throne-room",
+      "urn:robos:crpg:battle-map:main-castle",
+      "urn:robos:crpg:battle-map:world-overworld",
+      "urn:robos:crpg:battle-map:dark-lord-lair"
+    ],
+    "robos:mapConnections": [
+      {
+        "id": "conn-throne-to-castle",
+        "fromMap": "throne-room",
+        "fromObjectId": "castle-exit-door",
+        "toMap": "main-castle",
+        "toObjectId": "throne-entry-door",
+        "toSpawn": [
+          25,
+          8
+        ],
+        "toFacing": "south",
+        "transitionType": "door",
+        "bidirectional": true,
+        "requiredKey": null,
+        "label": "Double Doors to Castle Courtyard"
+      },
+      {
+        "id": "conn-castle-to-world",
+        "fromMap": "main-castle",
+        "fromObjectId": "castle-world-gate",
+        "toMap": "world-overworld",
+        "toObjectId": "castle-road-entry",
+        "toSpawn": [
+          15,
+          20
+        ],
+        "toFacing": "east",
+        "transitionType": "portal",
+        "bidirectional": true,
+        "requiredKey": null,
+        "requiredFlag": "obtained_heros_sword",
+        "label": "Castle Gate to World Realm (Requires Hero's Sword)"
+      },
+      {
+        "id": "conn-world-to-lair",
+        "fromMap": "world-overworld",
+        "fromObjectId": "dark-lair-portal",
+        "toMap": "dark-lord-lair",
+        "toObjectId": "lair-exit-portal",
+        "toSpawn": [
+          12,
+          25
+        ],
+        "toFacing": "east",
+        "transitionType": "portal",
+        "bidirectional": true,
+        "requiredKey": null,
+        "label": "Dark Cavern Maw into Lair"
+      }
+    ],
+    "robos:characters": [
+      "urn:robos:crpg:character:hero-sir-caleb",
+      "urn:robos:crpg:character:npc-king-alden",
+      "urn:robos:crpg:character:npc-blacksmith-torvald",
+      "urn:robos:crpg:character:creature-projection-goblin",
+      "urn:robos:crpg:character:boss-dark-lord-malakor",
+      "urn:robos:crpg:character:npc-princess-jennifer"
+    ],
+    "robos:heroes": [
+      {
+        "slug": "hero-sir-caleb",
+        "fileName": "hero-sir-caleb.jsonld",
+        "path": "/home/ndipiazza/source/robos/games/crpg-realm/characters/hero-sir-caleb.jsonld",
+        "id": "urn:robos:crpg:character:hero-sir-caleb",
+        "name": "Sir Caleb",
+        "characterType": "hero",
+        "role": "",
+        "class": "Fighter",
+        "subclass": "Champion",
+        "race": "Human",
+        "level": 1,
+        "hpMax": 16,
+        "hpCurrent": 16,
+        "armorClass": 14,
+        "speed": 30,
+        "stats": {
+          "str": 16,
+          "dex": 14,
+          "con": 15,
+          "int": 10,
+          "wis": 12,
+          "cha": 13
+        },
+        "portrait": "🛡️",
+        "alignment": "Lawful Good",
+        "equipped": {
+          "main_hand": "clothes",
+          "body": "leather-armor"
+        }
+      }
+    ],
+    "robos:storyFlow": {
+      "robos:rootNodeId": "node-kings-plea",
+      "robos:flowPages": [
+        {
+          "id": "page-1",
+          "name": "Act I: Royal Decree & Dragonclaw Forge",
+          "act": "Act I",
+          "summary": "King Alden tasks Sir Caleb with rescuing Princess Jennifer, and Caleb proves his valor at the Dragonclaw Forge."
+        },
+        {
+          "id": "page-2",
+          "name": "Act II: The Journey & Slaying Malakor",
+          "act": "Act II",
+          "summary": "Sir Caleb journeys across the World Realm, enters the Lair, and slays Dark Lord Malakor."
+        },
+        {
+          "id": "page-3",
+          "name": "Act III: The Triumphant Return",
+          "act": "Act III",
+          "summary": "Princess Jennifer is safely returned to the Throne Room, achieving total campaign victory."
+        }
+      ],
+      "robos:storyNodes": [
+        {
+          "id": "node-kings-plea",
+          "dcterms:title": "The King's Royal Decree",
+          "robos:nodeType": "game_start",
+          "robos:act": "Act I",
+          "robos:flowPage": "page-1",
+          "robos:location": "throne-room",
+          "robos:giver": "King Alden",
+          "robos:summary": "King Alden reveals that Princess Jennifer has been abducted by Dark Lord Malakor. He commands Sir Caleb to obtain the Hero's Sword from Master Torvald before entering the dungeon.",
+          "robos:choices": [
+            {
+              "id": "choice-accept-decree",
+              "label": "Accept King's decree and go to Dragonclaw Forge",
+              "targetNodeId": "node-dragonclaw-forge-trial",
+              "robos:triggerType": "talk_npc",
+              "robos:targetNpc": "King Alden"
+            }
+          ]
+        },
+        {
+          "id": "node-dragonclaw-forge-trial",
+          "dcterms:title": "Master Torvald's Crucible",
+          "robos:nodeType": "quest_stage",
+          "robos:act": "Act I",
+          "robos:flowPage": "page-1",
+          "robos:location": "main-castle",
+          "robos:giver": "Master Torvald",
+          "robos:summary": "Master Torvald at the Dragonclaw Forge requires proof of valor before yielding the rune-forged Hero's Sword. He conjures a Projection Goblin.",
+          "robos:choices": [
+            {
+              "id": "choice-fight-projection",
+              "label": "Draw steel and duel the astral projection",
+              "targetNodeId": "node-slay-projection-goblin",
+              "robos:triggerType": "combat",
+              "robos:targetNpc": "Master Torvald",
+              "robos:actor": "Projection Goblin"
+            }
+          ]
+        },
+        {
+          "id": "node-slay-projection-goblin",
+          "dcterms:title": "Trial of the Projection Goblin",
+          "robos:nodeType": "combat_trial",
+          "robos:act": "Act I",
+          "robos:flowPage": "page-1",
+          "robos:location": "main-castle",
+          "robos:giver": "Master Torvald",
+          "robos:summary": "Sir Caleb slays the weak Projection Goblin with ease. Master Torvald awards the legendary Hero's Sword and opens the castle gate.",
+          "robos:choices": [
+            {
+              "id": "choice-claim-sword",
+              "label": "Claim Hero's Sword and depart through the gate into the World",
+              "targetNodeId": "node-journey-through-world",
+              "robos:triggerType": "item",
+              "robos:actor": "Hero's Sword",
+              "robos:requiredFlag": "defeated_projection_goblin"
+            }
+          ]
+        },
+        {
+          "id": "node-journey-through-world",
+          "dcterms:title": "Wilderness Trek to the Cavern Maw",
+          "robos:nodeType": "quest_stage",
+          "robos:act": "Act II",
+          "robos:flowPage": "page-2",
+          "robos:location": "world-overworld",
+          "robos:summary": "Equipped with the Hero's Sword, Sir Caleb journeys across the wilderness and crags of the World Realm, discovering the entrance to the Dark Lord's Lair.",
+          "robos:choices": [
+            {
+              "id": "choice-enter-lair",
+              "label": "Descend into the darkness to confront Dark Lord Malakor",
+              "targetNodeId": "node-confront-dark-lord",
+              "robos:triggerType": "transition",
+              "robos:actor": "Dark Lord's Lair",
+              "robos:requiredFlag": "obtained_heros_sword"
+            }
+          ]
+        },
+        {
+          "id": "node-confront-dark-lord",
+          "dcterms:title": "Slaying the Dark Lord",
+          "robos:nodeType": "combat_trial",
+          "robos:act": "Act II",
+          "robos:flowPage": "page-2",
+          "robos:location": "dark-lord-lair",
+          "robos:giver": "Dark Lord Malakor",
+          "robos:summary": "Sir Caleb battles Dark Lord Malakor. The Hero's Sword shatters Malakor's shadow ward and slays the Dark Lord, liberating Princess Jennifer from her cage.",
+          "robos:choices": [
+            {
+              "id": "choice-rescue-princess",
+              "label": "Unlock the gilded cage and escort Princess Jennifer home",
+              "targetNodeId": "node-triumphant-return",
+              "robos:triggerType": "victory",
+              "robos:targetNpc": "Princess Jennifer",
+              "robos:requiredFlag": "defeated_dark_lord"
+            }
+          ]
+        },
+        {
+          "id": "node-triumphant-return",
+          "dcterms:title": "Victory: The Kingdom Celebrates",
+          "robos:nodeType": "end_game_state",
+          "robos:act": "Act III",
+          "robos:flowPage": "page-3",
+          "robos:location": "throne-room",
+          "robos:giver": "King Alden",
+          "robos:summary": "Sir Caleb returns Princess Jennifer to King Alden in the Throne Room. King Alden declares Sir Caleb the Savior of the Realm, and victory is proclaimed across the land.",
+          "robos:endingType": "triumph",
+          "robos:victoryStatus": "victory",
+          "robos:epilogueText": "With Dark Lord Malakor vanquished and Princess Jennifer safely restored to the throne, the bells of the High Kingdom chime in celebration of Sir Caleb's valor."
+        }
+      ]
+    },
+    "robos:questLog": [
+      {
+        "id": "quest-rescue-princess",
+        "title": "Rescue of Princess Jennifer",
+        "type": "main",
+        "formType": "Quest",
+        "status": "active",
+        "giver": "King Alden",
+        "targetMap": "dark-lord-lair",
+        "description": "Princess Jennifer has been kidnapped by Dark Lord Malakor. Obtain the Hero's Sword from Dragonclaw Forge, slay the Dark Lord, and bring her home.",
+        "currentStage": 10,
+        "robos:questObjectives": [
+          {
+            "id": "obj-1",
+            "robos:objectiveText": "Speak with King Alden in the Throne Room",
+            "robos:status": "completed",
+            "robos:optional": false
+          },
+          {
+            "id": "obj-2",
+            "robos:objectiveText": "Obtain the Hero's Sword from Master Torvald at Dragonclaw Forge",
+            "robos:status": "active",
+            "robos:optional": false
+          },
+          {
+            "id": "obj-3",
+            "robos:objectiveText": "Journey through the World Realm to the Dark Lord's Lair",
+            "robos:status": "unstarted",
+            "robos:optional": false
+          },
+          {
+            "id": "obj-4",
+            "robos:objectiveText": "Slay Dark Lord Malakor and liberate Princess Jennifer",
+            "robos:status": "unstarted",
+            "robos:optional": false
+          },
+          {
+            "id": "obj-5",
+            "robos:objectiveText": "Escort Princess Jennifer back to King Alden in the Throne Room",
+            "robos:status": "unstarted",
+            "robos:optional": false
+          }
+        ],
+        "robos:questStages": [
+          {
+            "stage": 0,
+            "logEntry": "The Princess has been abducted."
+          },
+          {
+            "stage": 10,
+            "logEntry": "King Alden has commanded you to seek the Hero's Sword at Dragonclaw Forge."
+          },
+          {
+            "stage": 20,
+            "logEntry": "You passed Torvald's trial and received the Hero's Sword."
+          },
+          {
+            "stage": 30,
+            "logEntry": "You breached the Dark Lord's Lair."
+          },
+          {
+            "stage": 40,
+            "logEntry": "Dark Lord Malakor is slain. Princess Jennifer is freed!"
+          },
+          {
+            "stage": 50,
+            "logEntry": "Princess Jennifer is safely returned to the Throne Room. Victory!"
+          }
+        ],
+        "robos:questRewards": {
+          "xp": 1000,
+          "gold": 500,
+          "items": [
+            "heros-sword"
+          ]
+        }
+      },
+      {
+        "id": "quest-dragonclaw-trial",
+        "title": "The Dragonclaw Trial",
+        "type": "side",
+        "formType": "Quest",
+        "status": "active",
+        "giver": "Master Torvald",
+        "targetMap": "main-castle",
+        "description": "Prove your martial prowess to Master Torvald by defeating his conjured Projection Goblin.",
+        "currentStage": 10,
+        "robos:questObjectives": [
+          {
+            "id": "trial-obj-1",
+            "robos:objectiveText": "Speak with Master Torvald at Dragonclaw Forge",
+            "robos:status": "completed",
+            "robos:optional": false
+          },
+          {
+            "id": "trial-obj-2",
+            "robos:objectiveText": "Defeat the Projection Goblin in single combat",
+            "robos:status": "active",
+            "robos:optional": false
+          },
+          {
+            "id": "trial-obj-3",
+            "robos:objectiveText": "Claim the Hero's Sword",
+            "robos:status": "unstarted",
+            "robos:optional": false
+          }
+        ],
+        "robos:questRewards": {
+          "xp": 150,
+          "gold": 50,
+          "items": [
+            "heros-sword"
+          ]
+        }
+      }
+    ],
+    "robos:worldFlags": {
+      "princess_kidnapped": true,
+      "talked_to_king": true,
+      "obtained_heros_sword": false,
+      "defeated_projection_goblin": false,
+      "defeated_dark_lord": false,
+      "princess_rescued": false,
+      "campaign_won": false
+    },
+    "robos:gameState": {
+      "robos:currentScene": "throne-room",
+      "robos:activeParty": [
+        "hero-sir-caleb"
+      ],
+      "robos:partyLeaderIndex": 0,
+      "robos:partyFormation": "rank",
+      "robos:sharedInventory": {
+        "gold": 100,
+        "silver": 0,
+        "copper": 0,
+        "items": [
+          "potion-healing"
+        ]
+      },
+      "robos:questLog": [
+        {
+          "id": "quest-rescue-princess",
+          "title": "Rescue of Princess Jennifer",
+          "questType": "main",
+          "type": "main",
+          "category": "Main Questline",
+          "formType": "Quest",
+          "status": "active",
+          "stage": 10,
+          "giver": "King Alden",
+          "targetMap": "dark-lord-lair",
+          "description": "Princess Jennifer has been kidnapped by Dark Lord Malakor. Obtain the Hero's Sword from Dragonclaw Forge, slay the Dark Lord, and bring her home.",
+          "stages": [
+            {
+              "stage": 0,
+              "journalEntry": "The Princess has been abducted."
+            },
+            {
+              "stage": 10,
+              "journalEntry": "King Alden has commanded you to seek the Hero's Sword at Dragonclaw Forge."
+            },
+            {
+              "stage": 20,
+              "journalEntry": "You passed Torvald's trial and received the Hero's Sword."
+            },
+            {
+              "stage": 30,
+              "journalEntry": "You breached the Dark Lord's Lair."
+            },
+            {
+              "stage": 40,
+              "journalEntry": "Dark Lord Malakor is slain. Princess Jennifer is freed!"
+            },
+            {
+              "stage": 50,
+              "journalEntry": "Princess Jennifer is safely returned to the Throne Room. Victory!"
+            }
+          ],
+          "objectives": [
+            {
+              "id": "obj-1",
+              "text": "Speak with King Alden in the Throne Room",
+              "status": "completed",
+              "isOptional": false,
+              "targetEntity": "king-alden"
+            },
+            {
+              "id": "obj-2",
+              "text": "Obtain the Hero's Sword from Master Torvald at Dragonclaw Forge",
+              "status": "active",
+              "isOptional": false,
+              "targetEntity": "blacksmith-torvald"
+            },
+            {
+              "id": "obj-3",
+              "text": "Journey through the World Realm to the Dark Lord's Lair",
+              "status": "unstarted",
+              "isOptional": false,
+              "targetEntity": "dark-lord-lair"
+            },
+            {
+              "id": "obj-4",
+              "text": "Slay Dark Lord Malakor and liberate Princess Jennifer",
+              "status": "unstarted",
+              "isOptional": false,
+              "targetEntity": "boss-dark-lord-malakor"
+            },
+            {
+              "id": "obj-5",
+              "text": "Escort Princess Jennifer back to King Alden in the Throne Room",
+              "status": "unstarted",
+              "isOptional": false,
+              "targetEntity": "king-alden"
+            }
+          ],
+          "rewards": {
+            "xp": 1000,
+            "gold": 500,
+            "items": [
+              "heros-sword"
+            ]
+          }
+        },
+        {
+          "id": "quest-dragonclaw-trial",
+          "title": "The Dragonclaw Blade Trial",
+          "questType": "side",
+          "type": "side",
+          "category": "Dragonclaw Forge Side Quests",
+          "formType": "Quest",
+          "status": "active",
+          "stage": 10,
+          "giver": "Master Torvald",
+          "targetMap": "main-castle",
+          "description": "Prove your martial prowess to Master Torvald by defeating his conjured Projection Goblin.",
+          "stages": [
+            {
+              "stage": 10,
+              "journalEntry": "Master Torvald demands a trial of arms before yielding the blade."
+            },
+            {
+              "stage": 20,
+              "journalEntry": "Projection Goblin defeated in single combat. Blade claimed."
+            }
+          ],
+          "objectives": [
+            {
+              "id": "trial-obj-1",
+              "text": "Speak with Master Torvald at Dragonclaw Forge",
+              "status": "completed",
+              "isOptional": false,
+              "targetEntity": "blacksmith-torvald"
+            },
+            {
+              "id": "trial-obj-2",
+              "text": "Defeat the Projection Goblin in single combat",
+              "status": "active",
+              "isOptional": false,
+              "targetEntity": "projection-goblin"
+            },
+            {
+              "id": "trial-obj-3",
+              "text": "Claim the Hero's Sword",
+              "status": "unstarted",
+              "isOptional": false,
+              "targetEntity": "blacksmith-torvald"
+            }
+          ],
+          "rewards": {
+            "xp": 150,
+            "gold": 50,
+            "items": [
+              "heros-sword"
+            ]
+          }
+        }
+      ],
+      "robos:worldFlags": {
+        "princess_kidnapped": true,
+        "talked_to_king": true,
+        "obtained_heros_sword": false,
+        "defeated_projection_goblin": false,
+        "defeated_dark_lord": false,
+        "princess_rescued": false,
+        "campaign_won": false
+      }
+    }
+  },
+  "maps": {
+    "throne-room": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/"
+      },
+      "@id": "urn:robos:crpg:battle-map:throne-room",
+      "@type": [
+        "robos:CRPGBattleMap",
+        "schema:Place"
+      ],
+      "dcterms:title": "Royal Throne Room",
+      "robos:slug": "throne-room",
+      "slug": "throne-room",
+      "robos:width": 50,
+      "robos:height": 40,
+      "robos:terrain": "stone",
+      "robos:backgroundImage": "res://assets/blockouts/throne-room.png",
+      "robos:backgroundOpacity": 1,
+      "robos:mapObjects": [
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "throne-dais",
+          "robos:objectType": "wall",
+          "robos:shape": "rect",
+          "robos:position": [
+            20,
+            4
+          ],
+          "robos:size": [
+            10,
+            6
+          ],
+          "dcterms:title": "King Alden's Golden Throne",
+          "id": "throne-dais",
+          "type": "wall",
+          "shape": "rect",
+          "x": 20,
+          "y": 4,
+          "w": 10,
+          "h": 6,
+          "collision": "blocked",
+          "label": "King Alden's Throne"
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "npc-king-alden-spawn",
+          "robos:objectType": "spawn",
+          "robos:shape": "circle",
+          "robos:position": [
+            25,
+            7
+          ],
+          "robos:size": [
+            4,
+            4
+          ],
+          "dcterms:title": "King Alden",
+          "id": "npc-king-alden-spawn",
+          "type": "spawn",
+          "label": "King Alden (NPC)"
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "castle-exit-door",
+          "robos:objectType": "passage",
+          "robos:shape": "rect",
+          "robos:position": [
+            23,
+            36
+          ],
+          "robos:size": [
+            4,
+            3
+          ],
+          "dcterms:title": "Castle Double Doors",
+          "id": "castle-exit-door",
+          "type": "passage",
+          "shape": "rect",
+          "x": 23,
+          "y": 36,
+          "w": 4,
+          "h": 3,
+          "collision": "open",
+          "label": "Door to Main Castle Courtyard",
+          "robos:transition": {
+            "targetMap": "main-castle",
+            "targetSpawn": [
+              25,
+              8
+            ],
+            "targetFacing": "south",
+            "transitionType": "door",
+            "requiredKey": null,
+            "requiredFlag": null
+          }
+        }
+      ]
+    },
+    "main-castle": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/"
+      },
+      "@id": "urn:robos:crpg:battle-map:main-castle",
+      "@type": [
+        "robos:CRPGBattleMap",
+        "schema:Place"
+      ],
+      "dcterms:title": "Castle Courtyard & Dragonclaw Forge",
+      "robos:slug": "main-castle",
+      "slug": "main-castle",
+      "robos:width": 80,
+      "robos:height": 60,
+      "robos:terrain": "stone",
+      "robos:backgroundImage": "res://assets/blockouts/main-castle.png",
+      "robos:backgroundOpacity": 1,
+      "robos:mapObjects": [
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "throne-entry-door",
+          "robos:objectType": "passage",
+          "robos:shape": "rect",
+          "robos:position": [
+            23,
+            2
+          ],
+          "robos:size": [
+            4,
+            3
+          ],
+          "dcterms:title": "Door to Throne Room",
+          "id": "throne-entry-door",
+          "type": "passage",
+          "shape": "rect",
+          "x": 23,
+          "y": 2,
+          "w": 4,
+          "h": 3,
+          "collision": "open",
+          "label": "Stairs to Royal Throne Room",
+          "robos:transition": {
+            "targetMap": "throne-room",
+            "targetSpawn": [
+              25,
+              33
+            ],
+            "targetFacing": "north",
+            "transitionType": "door",
+            "requiredKey": null,
+            "requiredFlag": null
+          }
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "dragonclaw-forge-anvil",
+          "robos:objectType": "altar",
+          "robos:shape": "rect",
+          "robos:position": [
+            55,
+            18
+          ],
+          "robos:size": [
+            8,
+            6
+          ],
+          "dcterms:title": "Dragonclaw Forge & Anvil",
+          "id": "dragonclaw-forge-anvil",
+          "type": "altar",
+          "shape": "rect",
+          "x": 55,
+          "y": 18,
+          "w": 8,
+          "h": 6,
+          "collision": "blocked",
+          "label": "Dragonclaw Forge & Anvil"
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "npc-torvald-spawn",
+          "robos:objectType": "spawn",
+          "robos:shape": "circle",
+          "robos:position": [
+            58,
+            26
+          ],
+          "robos:size": [
+            4,
+            4
+          ],
+          "dcterms:title": "Master Torvald",
+          "id": "npc-torvald-spawn",
+          "type": "spawn",
+          "label": "Master Torvald (Blacksmith)"
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "castle-world-gate",
+          "robos:objectType": "passage",
+          "robos:shape": "rect",
+          "robos:position": [
+            38,
+            55
+          ],
+          "robos:size": [
+            6,
+            4
+          ],
+          "dcterms:title": "Castle Outer Gate",
+          "id": "castle-world-gate",
+          "type": "passage",
+          "shape": "rect",
+          "x": 38,
+          "y": 55,
+          "w": 6,
+          "h": 4,
+          "collision": "open",
+          "label": "Gate to the World Realm",
+          "robos:transition": {
+            "targetMap": "world-overworld",
+            "targetSpawn": [
+              15,
+              20
+            ],
+            "targetFacing": "east",
+            "transitionType": "portal",
+            "requiredKey": null,
+            "requiredFlag": "obtained_heros_sword"
+          }
+        }
+      ]
+    },
+    "world-overworld": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/"
+      },
+      "@id": "urn:robos:crpg:battle-map:world-overworld",
+      "@type": [
+        "robos:CRPGBattleMap",
+        "schema:Place"
+      ],
+      "dcterms:title": "Wilderness Realm & Dark Mountain Pass",
+      "robos:slug": "world-overworld",
+      "slug": "world-overworld",
+      "robos:width": 120,
+      "robos:height": 80,
+      "robos:terrain": "grass",
+      "robos:backgroundImage": "res://assets/blockouts/world-overworld.png",
+      "robos:backgroundOpacity": 1,
+      "robos:mapObjects": [
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "castle-road-entry",
+          "robos:objectType": "passage",
+          "robos:shape": "rect",
+          "robos:position": [
+            10,
+            18
+          ],
+          "robos:size": [
+            6,
+            6
+          ],
+          "dcterms:title": "Road to Castle Gate",
+          "id": "castle-road-entry",
+          "type": "passage",
+          "shape": "rect",
+          "x": 10,
+          "y": 18,
+          "w": 6,
+          "h": 6,
+          "collision": "open",
+          "label": "Road back to Castle Gate",
+          "robos:transition": {
+            "targetMap": "main-castle",
+            "targetSpawn": [
+              40,
+              50
+            ],
+            "targetFacing": "north",
+            "transitionType": "portal",
+            "requiredKey": null,
+            "requiredFlag": null
+          }
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "dark-lair-portal",
+          "robos:objectType": "passage",
+          "robos:shape": "rect",
+          "robos:position": [
+            105,
+            50
+          ],
+          "robos:size": [
+            8,
+            8
+          ],
+          "dcterms:title": "Dark Cavern Maw",
+          "id": "dark-lair-portal",
+          "type": "passage",
+          "shape": "rect",
+          "x": 105,
+          "y": 50,
+          "w": 8,
+          "h": 8,
+          "collision": "open",
+          "label": "Maw to Dark Lord's Lair",
+          "robos:transition": {
+            "targetMap": "dark-lord-lair",
+            "targetSpawn": [
+              12,
+              25
+            ],
+            "targetFacing": "east",
+            "transitionType": "portal",
+            "requiredKey": null,
+            "requiredFlag": null
+          }
+        }
+      ]
+    },
+    "dark-lord-lair": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/"
+      },
+      "@id": "urn:robos:crpg:battle-map:dark-lord-lair",
+      "@type": [
+        "robos:CRPGBattleMap",
+        "schema:Place"
+      ],
+      "dcterms:title": "The Dark Lord's Lair",
+      "robos:slug": "dark-lord-lair",
+      "slug": "dark-lord-lair",
+      "robos:width": 60,
+      "robos:height": 50,
+      "robos:terrain": "dungeon",
+      "robos:backgroundImage": "res://assets/blockouts/dark-lord-lair.png",
+      "robos:backgroundOpacity": 1,
+      "robos:mapObjects": [
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "lair-exit-portal",
+          "robos:objectType": "passage",
+          "robos:shape": "rect",
+          "robos:position": [
+            4,
+            22
+          ],
+          "robos:size": [
+            4,
+            6
+          ],
+          "dcterms:title": "Lair Exit",
+          "id": "lair-exit-portal",
+          "type": "passage",
+          "shape": "rect",
+          "x": 4,
+          "y": 22,
+          "w": 4,
+          "h": 6,
+          "collision": "open",
+          "label": "Exit Portal to World Realm",
+          "robos:transition": {
+            "targetMap": "world-overworld",
+            "targetSpawn": [
+              98,
+              52
+            ],
+            "targetFacing": "west",
+            "transitionType": "portal",
+            "requiredKey": null,
+            "requiredFlag": null
+          }
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "dark-lord-throne",
+          "robos:objectType": "altar",
+          "robos:shape": "rect",
+          "robos:position": [
+            36,
+            18
+          ],
+          "robos:size": [
+            12,
+            8
+          ],
+          "dcterms:title": "Obsidian Altar of Shadows",
+          "id": "dark-lord-throne",
+          "type": "altar",
+          "shape": "rect",
+          "x": 36,
+          "y": 18,
+          "w": 12,
+          "h": 8,
+          "collision": "blocked",
+          "label": "Dark Lord's Altar"
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "boss-malakor-spawn",
+          "robos:objectType": "spawn",
+          "robos:shape": "circle",
+          "robos:position": [
+            40,
+            26
+          ],
+          "robos:size": [
+            5,
+            5
+          ],
+          "dcterms:title": "Dark Lord Malakor",
+          "id": "boss-malakor-spawn",
+          "type": "spawn",
+          "label": "Dark Lord Malakor (Boss)"
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "princess-cage",
+          "robos:objectType": "chest",
+          "robos:shape": "rect",
+          "robos:position": [
+            50,
+            8
+          ],
+          "robos:size": [
+            6,
+            6
+          ],
+          "dcterms:title": "Princess Jennifer's Gilded Cage",
+          "id": "princess-cage",
+          "type": "chest",
+          "shape": "rect",
+          "x": 50,
+          "y": 8,
+          "w": 6,
+          "h": 6,
+          "collision": "blocked",
+          "label": "Prison Cage (Princess Jennifer)"
+        }
+      ]
+    }
+  },
+  "characters": {
+    "hero-sir-caleb": {
+      "@context": {
+        "robos": "urn:robos:",
+        "schema": "https://schema.org/",
+        "dcterms": "http://purl.org/dc/terms/"
+      },
+      "@id": "urn:robos:crpg:character:hero-sir-caleb",
+      "@type": [
+        "robos:CRPGCharacter",
+        "robos:CRPGHero",
+        "schema:Person"
+      ],
+      "dcterms:title": "Sir Caleb",
+      "robos:characterType": "hero",
+      "schema:name": "Sir Caleb",
+      "name": "Sir Caleb",
+      "slug": "hero-sir-caleb",
+      "characterType": "hero",
+      "class": "Fighter",
+      "subclass": "Champion",
+      "race": "Human",
+      "level": 1,
+      "robos:portrait": "🛡️",
+      "portrait": "🛡️",
+      "robos:alignment": "Lawful Good",
+      "alignment": "Lawful Good",
+      "robos:hpMax": 16,
+      "hpMax": 16,
+      "robos:hpCurrent": 16,
+      "hpCurrent": 16,
+      "robos:armorClass": 14,
+      "armorClass": 14,
+      "robos:speed": 30,
+      "speed": 30,
+      "robos:stats": {
+        "str": 16,
+        "dex": 14,
+        "con": 15,
+        "int": 10,
+        "wis": 12,
+        "cha": 13
+      },
+      "stats": {
+        "str": 16,
+        "dex": 14,
+        "con": 15,
+        "int": 10,
+        "wis": 12,
+        "cha": 13
+      },
+      "robos:backstory": "A valiant knight of the realm sworn to defend the throne and protect the innocent.",
+      "backstory": "A valiant knight of the realm sworn to defend the throne and protect the innocent.",
+      "robos:equipped": {
+        "main_hand": "clothes",
+        "body": "leather-armor"
+      }
+    },
+    "npc-king-alden": {
+      "@context": {
+        "robos": "urn:robos:",
+        "schema": "https://schema.org/",
+        "dcterms": "http://purl.org/dc/terms/"
+      },
+      "@id": "urn:robos:crpg:character:npc-king-alden",
+      "@type": [
+        "robos:CRPGCharacter",
+        "robos:CRPGNPC",
+        "schema:Person"
+      ],
+      "dcterms:title": "King Alden",
+      "robos:characterType": "npc",
+      "schema:name": "King Alden",
+      "name": "King Alden",
+      "slug": "npc-king-alden",
+      "characterType": "npc",
+      "robos:portrait": "👑",
+      "portrait": "👑",
+      "robos:alignment": "Lawful Good",
+      "alignment": "Lawful Good",
+      "robos:backstory": "Ruler of the realm, grief-stricken by the kidnapping of his daughter Princess Jennifer.",
+      "backstory": "Ruler of the realm, grief-stricken by the kidnapping of his daughter Princess Jennifer.",
+      "robos:npcRole": "king",
+      "role": "king",
+      "robos:interactionType": "talk",
+      "interactionType": "talk",
+      "robos:location": "throne-room",
+      "location": "throne-room",
+      "robos:facing": "down",
+      "facing": "down",
+      "robos:col": 12,
+      "col": 12,
+      "robos:row": 5,
+      "row": 5,
+      "robos:dialogue": [
+        "Sir Caleb! Darkness enshrouds our court. The sinister Dark Lord Malakor hath abducted Princess Jennifer into his subterranean lair!",
+        "Thou must venture forth, slay the Dark Lord, and bring my daughter home! But mortal iron cannot pierce his shadow armor.",
+        "Go first to the Dragonclaw Forge in the castle courtyard and speak with Master Torvald. Claim the Hero's Sword, then rid our realm of this evil!"
+      ],
+      "dialogue": [
+        "Sir Caleb! Darkness enshrouds our court. The sinister Dark Lord Malakor hath abducted Princess Jennifer into his subterranean lair!",
+        "Thou must venture forth, slay the Dark Lord, and bring my daughter home! But mortal iron cannot pierce his shadow armor.",
+        "Go first to the Dragonclaw Forge in the castle courtyard and speak with Master Torvald. Claim the Hero's Sword, then rid our realm of this evil!"
+      ]
+    },
+    "npc-blacksmith-torvald": {
+      "@context": {
+        "robos": "urn:robos:",
+        "schema": "https://schema.org/",
+        "dcterms": "http://purl.org/dc/terms/"
+      },
+      "@id": "urn:robos:crpg:character:npc-blacksmith-torvald",
+      "@type": [
+        "robos:CRPGCharacter",
+        "robos:CRPGNPC",
+        "schema:Person"
+      ],
+      "dcterms:title": "Master Torvald",
+      "robos:characterType": "npc",
+      "schema:name": "Master Torvald",
+      "name": "Master Torvald",
+      "slug": "npc-blacksmith-torvald",
+      "characterType": "npc",
+      "robos:portrait": "⚒️",
+      "portrait": "⚒️",
+      "robos:alignment": "Neutral Good",
+      "alignment": "Neutral Good",
+      "robos:backstory": "Legendary blacksmith of the Dragonclaw Forge, keeper of ancient rune weapons.",
+      "backstory": "Legendary blacksmith of the Dragonclaw Forge, keeper of ancient rune weapons.",
+      "robos:npcRole": "blacksmith",
+      "role": "blacksmith",
+      "robos:interactionType": "talk",
+      "interactionType": "talk",
+      "robos:location": "main-castle",
+      "location": "main-castle",
+      "robos:facing": "left",
+      "facing": "left",
+      "robos:col": 18,
+      "col": 18,
+      "robos:row": 10,
+      "row": 10,
+      "robos:dialogue": [
+        "Hail, Sir Caleb! The King's messenger informed me of the dire news. You seek the Hero's Sword from the Dragonclaw Forge.",
+        "The blade is forged and imbued with dragonfire runes, but I cannot place it in hands that tremble! Prove your battle mettle against my astral creation!",
+        "Behold, the Projection Goblin! Strike it down, and the Hero's Sword is yours!"
+      ],
+      "dialogue": [
+        "Hail, Sir Caleb! The King's messenger informed me of the dire news. You seek the Hero's Sword from the Dragonclaw Forge.",
+        "The blade is forged and imbued with dragonfire runes, but I cannot place it in hands that tremble! Prove your battle mettle against my astral creation!",
+        "Behold, the Projection Goblin! Strike it down, and the Hero's Sword is yours!"
+      ]
+    },
+    "creature-projection-goblin": {
+      "@context": {
+        "robos": "urn:robos:",
+        "schema": "https://schema.org/",
+        "dcterms": "http://purl.org/dc/terms/"
+      },
+      "@id": "urn:robos:crpg:character:creature-projection-goblin",
+      "@type": [
+        "robos:CRPGCharacter",
+        "robos:CRPGMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Projection Goblin",
+      "robos:characterType": "creature",
+      "schema:name": "Projection Goblin",
+      "name": "Projection Goblin",
+      "slug": "creature-projection-goblin",
+      "characterType": "creature",
+      "class": "Monstrosity",
+      "subclass": "Astral Projection",
+      "level": 1,
+      "robos:portrait": "👺",
+      "portrait": "👺",
+      "robos:alignment": "Chaotic Evil",
+      "alignment": "Chaotic Evil",
+      "robos:hpMax": 6,
+      "hpMax": 6,
+      "robos:hpCurrent": 6,
+      "hpCurrent": 6,
+      "robos:armorClass": 10,
+      "armorClass": 10,
+      "robos:speed": 25,
+      "speed": 25,
+      "robos:stats": {
+        "str": 8,
+        "dex": 12,
+        "con": 10,
+        "int": 6,
+        "wis": 8,
+        "cha": 6
+      },
+      "stats": {
+        "str": 8,
+        "dex": 12,
+        "con": 10,
+        "int": 6,
+        "wis": 8,
+        "cha": 6
+      },
+      "robos:backstory": "An ethereal training manifestation conjured by Master Torvald at the Dragonclaw Forge.",
+      "backstory": "An ethereal training manifestation conjured by Master Torvald at the Dragonclaw Forge.",
+      "robos:npcRole": "training_creature",
+      "role": "training_creature",
+      "robos:location": "main-castle",
+      "location": "main-castle"
+    },
+    "boss-dark-lord-malakor": {
+      "@context": {
+        "robos": "urn:robos:",
+        "schema": "https://schema.org/",
+        "dcterms": "http://purl.org/dc/terms/"
+      },
+      "@id": "urn:robos:crpg:character:boss-dark-lord-malakor",
+      "@type": [
+        "robos:CRPGCharacter",
+        "robos:CRPGMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Dark Lord Malakor",
+      "robos:characterType": "boss",
+      "schema:name": "Dark Lord Malakor",
+      "name": "Dark Lord Malakor",
+      "slug": "boss-dark-lord-malakor",
+      "characterType": "boss",
+      "class": "Warlock",
+      "subclass": "Shadow Lord",
+      "level": 3,
+      "robos:portrait": "😈",
+      "portrait": "😈",
+      "robos:alignment": "Chaotic Evil",
+      "alignment": "Chaotic Evil",
+      "robos:hpMax": 35,
+      "hpMax": 35,
+      "robos:hpCurrent": 35,
+      "hpCurrent": 35,
+      "robos:armorClass": 13,
+      "armorClass": 13,
+      "robos:speed": 30,
+      "speed": 30,
+      "robos:stats": {
+        "str": 14,
+        "dex": 12,
+        "con": 16,
+        "int": 14,
+        "wis": 12,
+        "cha": 16
+      },
+      "stats": {
+        "str": 14,
+        "dex": 12,
+        "con": 16,
+        "int": 14,
+        "wis": 12,
+        "cha": 16
+      },
+      "robos:backstory": "A sinister sorcerer and warlord who kidnapped Princess Jennifer to extort the realm.",
+      "backstory": "A sinister sorcerer and warlord who kidnapped Princess Jennifer to extort the realm.",
+      "robos:npcRole": "dark_lord",
+      "role": "dark_lord",
+      "robos:location": "dark-lord-lair",
+      "location": "dark-lord-lair",
+      "robos:dialogue": [
+        "You dare invade my sanctum, worm? The Princess is mine, and your kingdom shall burn to ashes!",
+        "No! The Dragonclaw runes... the Hero's Sword pierces my shadow ward! Aaaaargh!"
+      ],
+      "dialogue": [
+        "You dare invade my sanctum, worm? The Princess is mine, and your kingdom shall burn to ashes!",
+        "No! The Dragonclaw runes... the Hero's Sword pierces my shadow ward! Aaaaargh!"
+      ]
+    },
+    "npc-princess-jennifer": {
+      "@context": {
+        "robos": "urn:robos:",
+        "schema": "https://schema.org/",
+        "dcterms": "http://purl.org/dc/terms/"
+      },
+      "@id": "urn:robos:crpg:character:npc-princess-jennifer",
+      "@type": [
+        "robos:CRPGCharacter",
+        "robos:CRPGNPC",
+        "schema:Person"
+      ],
+      "dcterms:title": "Princess Jennifer",
+      "robos:characterType": "npc",
+      "schema:name": "Princess Jennifer",
+      "name": "Princess Jennifer",
+      "slug": "npc-princess-jennifer",
+      "characterType": "npc",
+      "robos:portrait": "👸",
+      "portrait": "👸",
+      "robos:alignment": "Lawful Good",
+      "alignment": "Lawful Good",
+      "robos:backstory": "Beloved princess of the realm abducted by Dark Lord Malakor and rescued by Sir Caleb.",
+      "backstory": "Beloved princess of the realm abducted by Dark Lord Malakor and rescued by Sir Caleb.",
+      "robos:npcRole": "princess",
+      "role": "princess",
+      "robos:interactionType": "talk",
+      "interactionType": "talk",
+      "robos:location": "dark-lord-lair",
+      "location": "dark-lord-lair",
+      "robos:dialogue": [
+        "Oh, Sir Caleb! You defeated Malakor! You shattered my cage! Please, lead me home to my father King Alden in the castle throne room!",
+        "Father! Sir Caleb hath vanquished the Dark Lord and brought me safely home!"
+      ],
+      "dialogue": [
+        "Oh, Sir Caleb! You defeated Malakor! You shattered my cage! Please, lead me home to my father King Alden in the castle throne room!",
+        "Father! Sir Caleb hath vanquished the Dark Lord and brought me safely home!"
+      ]
+    }
+  },
+  "items": {
+    "clothes": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:item:clothes",
+      "@type": [
+        "robos:CRPGItem",
+        "schema:Product",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Plain Clothes",
+      "schema:name": "Plain Clothes",
+      "robos:slug": "clothes",
+      "slug": "clothes",
+      "robos:itemCategory": "armor",
+      "itemCategory": "armor",
+      "robos:equipSlot": "armor",
+      "equipSlot": "armor",
+      "robos:cost": 20,
+      "cost": 20,
+      "robos:weight": 3,
+      "weight": 3,
+      "robos:rarity": "common",
+      "rarity": "common",
+      "robos:icon": "🥋",
+      "icon": "🥋",
+      "robos:damageDice": "",
+      "damageDice": "",
+      "robos:damageType": "",
+      "damageType": "",
+      "robos:acBonus": 1,
+      "acBonus": 1,
+      "robos:effect": "",
+      "effect": "",
+      "dcterms:description": "Simple traveler clothes made of spun linen.",
+      "description": "Simple traveler clothes made of spun linen."
+    },
+    "leather-armor": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:item:leather-armor",
+      "@type": [
+        "robos:CRPGItem",
+        "schema:Product",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Leather Armor",
+      "schema:name": "Leather Armor",
+      "robos:slug": "leather-armor",
+      "slug": "leather-armor",
+      "robos:itemCategory": "armor",
+      "itemCategory": "armor",
+      "robos:equipSlot": "armor",
+      "equipSlot": "armor",
+      "robos:cost": 70,
+      "cost": 70,
+      "robos:weight": 15,
+      "weight": 15,
+      "robos:rarity": "common",
+      "rarity": "common",
+      "robos:icon": "🛡️",
+      "icon": "🛡️",
+      "robos:damageDice": "",
+      "damageDice": "",
+      "robos:damageType": "",
+      "damageType": "",
+      "robos:acBonus": 2,
+      "acBonus": 2,
+      "robos:effect": "",
+      "effect": "",
+      "dcterms:description": "Cured boiled leather tunic.",
+      "description": "Cured boiled leather tunic."
+    },
+    "bamboo-pole": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:item:bamboo-pole",
+      "@type": [
+        "robos:CRPGItem",
+        "schema:Product",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Bamboo Pole",
+      "schema:name": "Bamboo Pole",
+      "robos:slug": "bamboo-pole",
+      "slug": "bamboo-pole",
+      "robos:itemCategory": "weapon",
+      "itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "equipSlot": "main_hand",
+      "robos:cost": 10,
+      "cost": 10,
+      "robos:weight": 2,
+      "weight": 2,
+      "robos:rarity": "common",
+      "rarity": "common",
+      "robos:icon": "🎋",
+      "icon": "🎋",
+      "robos:damageDice": "1d4-1",
+      "damageDice": "1d4-1",
+      "robos:damageType": "bludgeoning",
+      "damageType": "bludgeoning",
+      "robos:acBonus": 0,
+      "acBonus": 0,
+      "robos:effect": "+1 ATK",
+      "effect": "+1 ATK",
+      "dcterms:description": "A basic walking pole crafted from hardened bamboo.",
+      "description": "A basic walking pole crafted from hardened bamboo."
+    },
+    "club": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:item:club",
+      "@type": [
+        "robos:CRPGItem",
+        "schema:Product",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Oak Club",
+      "schema:name": "Oak Club",
+      "robos:slug": "club",
+      "slug": "club",
+      "robos:itemCategory": "weapon",
+      "itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "equipSlot": "main_hand",
+      "robos:cost": 30,
+      "cost": 30,
+      "robos:weight": 3,
+      "weight": 3,
+      "robos:rarity": "common",
+      "rarity": "common",
+      "robos:icon": "🏏",
+      "icon": "🏏",
+      "robos:damageDice": "1d4",
+      "damageDice": "1d4",
+      "robos:damageType": "bludgeoning",
+      "damageType": "bludgeoning",
+      "robos:acBonus": 0,
+      "acBonus": 0,
+      "robos:effect": "+1 ATK",
+      "effect": "+1 ATK",
+      "dcterms:description": "A knotty oak cudgel.",
+      "description": "A knotty oak cudgel."
+    },
+    "copper-sword": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:item:copper-sword",
+      "@type": [
+        "robos:CRPGItem",
+        "schema:Product",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Copper Sword",
+      "schema:name": "Copper Sword",
+      "robos:slug": "copper-sword",
+      "slug": "copper-sword",
+      "robos:itemCategory": "weapon",
+      "itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "equipSlot": "main_hand",
+      "robos:cost": 180,
+      "cost": 180,
+      "robos:weight": 5,
+      "weight": 5,
+      "robos:rarity": "common",
+      "rarity": "common",
+      "robos:icon": "🗡️",
+      "icon": "🗡️",
+      "robos:damageDice": "1d6",
+      "damageDice": "1d6",
+      "robos:damageType": "slashing",
+      "damageType": "slashing",
+      "robos:acBonus": 0,
+      "acBonus": 0,
+      "robos:effect": "+2 ATK",
+      "effect": "+2 ATK",
+      "dcterms:description": "A sturdy forged copper blade.",
+      "description": "A sturdy forged copper blade."
+    },
+    "herb": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:item:herb",
+      "@type": [
+        "robos:CRPGItem",
+        "schema:Product",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Medicinal Herb",
+      "schema:name": "Medicinal Herb",
+      "robos:slug": "herb",
+      "slug": "herb",
+      "robos:itemCategory": "consumable",
+      "itemCategory": "consumable",
+      "robos:equipSlot": "quick_item",
+      "equipSlot": "quick_item",
+      "robos:cost": 24,
+      "cost": 24,
+      "robos:weight": 0.2,
+      "weight": 0.2,
+      "robos:rarity": "common",
+      "rarity": "common",
+      "robos:icon": "🌿",
+      "icon": "🌿",
+      "robos:damageDice": "",
+      "damageDice": "",
+      "robos:damageType": "",
+      "damageType": "",
+      "robos:acBonus": 0,
+      "acBonus": 0,
+      "robos:effect": "Restores 20-35 HP",
+      "effect": "Restores 20-35 HP",
+      "dcterms:description": "Fragrant healing plant.",
+      "description": "Fragrant healing plant."
+    },
+    "heros-sword": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:item:heros-sword",
+      "@type": [
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "The Hero's Sword",
+      "schema:name": "The Hero's Sword",
+      "robos:slug": "heros-sword",
+      "slug": "heros-sword",
+      "robos:itemCategory": "weapon",
+      "itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "equipSlot": "main_hand",
+      "robos:cost": 500,
+      "cost": 500,
+      "robos:weight": 4,
+      "weight": 4,
+      "robos:rarity": "rare",
+      "rarity": "rare",
+      "robos:icon": "⚔️",
+      "icon": "⚔️",
+      "robos:damageDice": "1d8",
+      "damageDice": "1d8",
+      "robos:damageType": "slashing",
+      "damageType": "slashing",
+      "robos:acBonus": 0,
+      "acBonus": 0,
+      "robos:effect": "+3 ATK, Dragonclaw Rune",
+      "effect": "+3 ATK, Dragonclaw Rune",
+      "dcterms:description": "A legendary blade forged in dragonfire at the Dragonclaw Forge. Granted only to champions who prove their courage.",
+      "description": "A legendary blade forged in dragonfire at the Dragonclaw Forge. Granted only to champions who prove their courage."
+    },
+    "leather-boots": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:item:leather-boots",
+      "@type": [
+        "robos:CRPGItem",
+        "schema:Product",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Leather Boots",
+      "schema:name": "Leather Boots",
+      "robos:slug": "leather-boots",
+      "slug": "leather-boots",
+      "robos:itemCategory": "accessory",
+      "itemCategory": "accessory",
+      "robos:equipSlot": "boots",
+      "equipSlot": "boots",
+      "robos:cost": 15,
+      "cost": 15,
+      "robos:weight": 3,
+      "weight": 3,
+      "robos:rarity": "common",
+      "rarity": "common",
+      "robos:icon": "🥾",
+      "icon": "🥾",
+      "robos:damageDice": "",
+      "damageDice": "",
+      "robos:damageType": "",
+      "damageType": "",
+      "robos:acBonus": 0,
+      "acBonus": 0,
+      "robos:effect": "Normal terrain traction",
+      "effect": "Normal terrain traction",
+      "dcterms:description": "Durable reinforced boots.",
+      "description": "Durable reinforced boots."
+    },
+    "magic-key": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:item:magic-key",
+      "@type": [
+        "robos:CRPGItem",
+        "schema:Product",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Magic Key",
+      "schema:name": "Magic Key",
+      "robos:slug": "magic-key",
+      "slug": "magic-key",
+      "robos:itemCategory": "quest",
+      "itemCategory": "quest",
+      "robos:equipSlot": "quick_item",
+      "equipSlot": "quick_item",
+      "robos:cost": 25,
+      "cost": 25,
+      "robos:weight": 0.5,
+      "weight": 0.5,
+      "robos:rarity": "uncommon",
+      "rarity": "uncommon",
+      "robos:icon": "🗝️",
+      "icon": "🗝️",
+      "robos:damageDice": "",
+      "damageDice": "",
+      "robos:damageType": "",
+      "damageType": "",
+      "robos:acBonus": 0,
+      "acBonus": 0,
+      "robos:effect": "Unlocks royal doors",
+      "effect": "Unlocks royal doors",
+      "dcterms:description": "A magic key that dissolves in the lock.",
+      "description": "A magic key that dissolves in the lock."
+    },
+    "potion-healing": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:item:potion-healing",
+      "@type": [
+        "robos:CRPGItem",
+        "schema:Product",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Potion of Healing",
+      "schema:name": "Potion of Healing",
+      "robos:slug": "potion-healing",
+      "slug": "potion-healing",
+      "robos:itemCategory": "consumable",
+      "itemCategory": "consumable",
+      "robos:equipSlot": "quick_item",
+      "equipSlot": "quick_item",
+      "robos:cost": 50,
+      "cost": 50,
+      "robos:weight": 0.5,
+      "weight": 0.5,
+      "robos:rarity": "common",
+      "rarity": "common",
+      "robos:icon": "🧪",
+      "icon": "🧪",
+      "robos:damageDice": "",
+      "damageDice": "",
+      "robos:damageType": "",
+      "damageType": "",
+      "robos:acBonus": 0,
+      "acBonus": 0,
+      "robos:effect": "Restores 2d4+2 HP",
+      "effect": "Restores 2d4+2 HP",
+      "dcterms:description": "Standard red restorative brew.",
+      "description": "Standard red restorative brew."
+    },
+    "torch": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:item:torch",
+      "@type": [
+        "robos:CRPGItem",
+        "schema:Product",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Torch",
+      "schema:name": "Torch",
+      "robos:slug": "torch",
+      "slug": "torch",
+      "robos:itemCategory": "tool",
+      "itemCategory": "tool",
+      "robos:equipSlot": "quick_item",
+      "equipSlot": "quick_item",
+      "robos:cost": 8,
+      "cost": 8,
+      "robos:weight": 1,
+      "weight": 1,
+      "robos:rarity": "common",
+      "rarity": "common",
+      "robos:icon": "🔥",
+      "icon": "🔥",
+      "robos:damageDice": "",
+      "damageDice": "",
+      "robos:damageType": "",
+      "damageType": "",
+      "robos:acBonus": 0,
+      "acBonus": 0,
+      "robos:effect": "Illuminates caves 3x3",
+      "effect": "Illuminates caves 3x3",
+      "dcterms:description": "A wooden torch dipped in pitch.",
+      "description": "A wooden torch dipped in pitch."
+    },
+    "travelers-cloak": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:item:travelers-cloak",
+      "@type": [
+        "robos:CRPGItem",
+        "schema:Product",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Traveler's Cloak",
+      "schema:name": "Traveler's Cloak",
+      "robos:slug": "travelers-cloak",
+      "slug": "travelers-cloak",
+      "robos:itemCategory": "accessory",
+      "itemCategory": "accessory",
+      "robos:equipSlot": "cloak",
+      "equipSlot": "cloak",
+      "robos:cost": 35,
+      "cost": 35,
+      "robos:weight": 2,
+      "weight": 2,
+      "robos:rarity": "common",
+      "rarity": "common",
+      "robos:icon": "🧥",
+      "icon": "🧥",
+      "robos:damageDice": "",
+      "damageDice": "",
+      "robos:damageType": "",
+      "damageType": "",
+      "robos:acBonus": 0,
+      "acBonus": 0,
+      "robos:effect": "+1 Save vs Cold",
+      "effect": "+1 Save vs Cold",
+      "dcterms:description": "Heavy wool mantle.",
+      "description": "Heavy wool mantle."
+    }
+  },
+  "quests": [
+    {
+      "id": "quest-rescue-princess",
+      "title": "Rescue of Princess Jennifer",
+      "questType": "main",
+      "type": "main",
+      "category": "Main Questline",
+      "formType": "Quest",
+      "status": "active",
+      "stage": 10,
+      "giver": "King Alden",
+      "targetMap": "dark-lord-lair",
+      "description": "Princess Jennifer has been kidnapped by Dark Lord Malakor. Obtain the Hero's Sword from Dragonclaw Forge, slay the Dark Lord, and bring her home.",
+      "stages": [
+        {
+          "stage": 0,
+          "journalEntry": "The Princess has been abducted."
+        },
+        {
+          "stage": 10,
+          "journalEntry": "King Alden has commanded you to seek the Hero's Sword at Dragonclaw Forge."
+        },
+        {
+          "stage": 20,
+          "journalEntry": "You passed Torvald's trial and received the Hero's Sword."
+        },
+        {
+          "stage": 30,
+          "journalEntry": "You breached the Dark Lord's Lair."
+        },
+        {
+          "stage": 40,
+          "journalEntry": "Dark Lord Malakor is slain. Princess Jennifer is freed!"
+        },
+        {
+          "stage": 50,
+          "journalEntry": "Princess Jennifer is safely returned to the Throne Room. Victory!"
+        }
+      ],
+      "objectives": [
+        {
+          "id": "obj-1",
+          "text": "Speak with King Alden in the Throne Room",
+          "status": "completed",
+          "isOptional": false,
+          "targetEntity": "king-alden"
+        },
+        {
+          "id": "obj-2",
+          "text": "Obtain the Hero's Sword from Master Torvald at Dragonclaw Forge",
+          "status": "active",
+          "isOptional": false,
+          "targetEntity": "blacksmith-torvald"
+        },
+        {
+          "id": "obj-3",
+          "text": "Journey through the World Realm to the Dark Lord's Lair",
+          "status": "unstarted",
+          "isOptional": false,
+          "targetEntity": "dark-lord-lair"
+        },
+        {
+          "id": "obj-4",
+          "text": "Slay Dark Lord Malakor and liberate Princess Jennifer",
+          "status": "unstarted",
+          "isOptional": false,
+          "targetEntity": "boss-dark-lord-malakor"
+        },
+        {
+          "id": "obj-5",
+          "text": "Escort Princess Jennifer back to King Alden in the Throne Room",
+          "status": "unstarted",
+          "isOptional": false,
+          "targetEntity": "king-alden"
+        }
+      ],
+      "rewards": {
+        "xp": 1000,
+        "gold": 500,
+        "items": [
+          "heros-sword"
+        ]
+      }
+    },
+    {
+      "id": "quest-dragonclaw-trial",
+      "title": "The Dragonclaw Blade Trial",
+      "questType": "side",
+      "type": "side",
+      "category": "Dragonclaw Forge Side Quests",
+      "formType": "Quest",
+      "status": "active",
+      "stage": 10,
+      "giver": "Master Torvald",
+      "targetMap": "main-castle",
+      "description": "Prove your martial prowess to Master Torvald by defeating his conjured Projection Goblin.",
+      "stages": [
+        {
+          "stage": 10,
+          "journalEntry": "Master Torvald demands a trial of arms before yielding the blade."
+        },
+        {
+          "stage": 20,
+          "journalEntry": "Projection Goblin defeated in single combat. Blade claimed."
+        }
+      ],
+      "objectives": [
+        {
+          "id": "trial-obj-1",
+          "text": "Speak with Master Torvald at Dragonclaw Forge",
+          "status": "completed",
+          "isOptional": false,
+          "targetEntity": "blacksmith-torvald"
+        },
+        {
+          "id": "trial-obj-2",
+          "text": "Defeat the Projection Goblin in single combat",
+          "status": "active",
+          "isOptional": false,
+          "targetEntity": "projection-goblin"
+        },
+        {
+          "id": "trial-obj-3",
+          "text": "Claim the Hero's Sword",
+          "status": "unstarted",
+          "isOptional": false,
+          "targetEntity": "blacksmith-torvald"
+        }
+      ],
+      "rewards": {
+        "xp": 150,
+        "gold": 50,
+        "items": [
+          "heros-sword"
+        ]
+      }
+    }
+  ],
+  "storyDAG": {
+    "robos:rootNodeId": "node-kings-plea",
+    "robos:flowPages": [
+      {
+        "id": "page-1",
+        "name": "Act I: Royal Decree & Dragonclaw Forge",
+        "act": "Act I",
+        "summary": "King Alden tasks Sir Caleb with rescuing Princess Jennifer, and Caleb proves his valor at the Dragonclaw Forge."
+      },
+      {
+        "id": "page-2",
+        "name": "Act II: The Journey & Slaying Malakor",
+        "act": "Act II",
+        "summary": "Sir Caleb journeys across the World Realm, enters the Lair, and slays Dark Lord Malakor."
+      },
+      {
+        "id": "page-3",
+        "name": "Act III: The Triumphant Return",
+        "act": "Act III",
+        "summary": "Princess Jennifer is safely returned to the Throne Room, achieving total campaign victory."
+      }
+    ],
+    "robos:storyNodes": [
+      {
+        "id": "node-kings-plea",
+        "dcterms:title": "The King's Royal Decree",
+        "robos:nodeType": "game_start",
+        "robos:act": "Act I",
+        "robos:flowPage": "page-1",
+        "robos:location": "throne-room",
+        "robos:giver": "King Alden",
+        "robos:summary": "King Alden reveals that Princess Jennifer has been abducted by Dark Lord Malakor. He commands Sir Caleb to obtain the Hero's Sword from Master Torvald before entering the dungeon.",
+        "robos:choices": [
+          {
+            "id": "choice-accept-decree",
+            "label": "Accept King's decree and go to Dragonclaw Forge",
+            "targetNodeId": "node-dragonclaw-forge-trial",
+            "robos:triggerType": "talk_npc",
+            "robos:targetNpc": "King Alden"
+          }
+        ]
+      },
+      {
+        "id": "node-dragonclaw-forge-trial",
+        "dcterms:title": "Master Torvald's Crucible",
+        "robos:nodeType": "quest_stage",
+        "robos:act": "Act I",
+        "robos:flowPage": "page-1",
+        "robos:location": "main-castle",
+        "robos:giver": "Master Torvald",
+        "robos:summary": "Master Torvald at the Dragonclaw Forge requires proof of valor before yielding the rune-forged Hero's Sword. He conjures a Projection Goblin.",
+        "robos:choices": [
+          {
+            "id": "choice-fight-projection",
+            "label": "Draw steel and duel the astral projection",
+            "targetNodeId": "node-slay-projection-goblin",
+            "robos:triggerType": "combat",
+            "robos:targetNpc": "Master Torvald",
+            "robos:actor": "Projection Goblin"
+          }
+        ]
+      },
+      {
+        "id": "node-slay-projection-goblin",
+        "dcterms:title": "Trial of the Projection Goblin",
+        "robos:nodeType": "combat_trial",
+        "robos:act": "Act I",
+        "robos:flowPage": "page-1",
+        "robos:location": "main-castle",
+        "robos:giver": "Master Torvald",
+        "robos:summary": "Sir Caleb slays the weak Projection Goblin with ease. Master Torvald awards the legendary Hero's Sword and opens the castle gate.",
+        "robos:choices": [
+          {
+            "id": "choice-claim-sword",
+            "label": "Claim Hero's Sword and depart through the gate into the World",
+            "targetNodeId": "node-journey-through-world",
+            "robos:triggerType": "item",
+            "robos:actor": "Hero's Sword",
+            "robos:requiredFlag": "defeated_projection_goblin"
+          }
+        ]
+      },
+      {
+        "id": "node-journey-through-world",
+        "dcterms:title": "Wilderness Trek to the Cavern Maw",
+        "robos:nodeType": "quest_stage",
+        "robos:act": "Act II",
+        "robos:flowPage": "page-2",
+        "robos:location": "world-overworld",
+        "robos:summary": "Equipped with the Hero's Sword, Sir Caleb journeys across the wilderness and crags of the World Realm, discovering the entrance to the Dark Lord's Lair.",
+        "robos:choices": [
+          {
+            "id": "choice-enter-lair",
+            "label": "Descend into the darkness to confront Dark Lord Malakor",
+            "targetNodeId": "node-confront-dark-lord",
+            "robos:triggerType": "transition",
+            "robos:actor": "Dark Lord's Lair",
+            "robos:requiredFlag": "obtained_heros_sword"
+          }
+        ]
+      },
+      {
+        "id": "node-confront-dark-lord",
+        "dcterms:title": "Slaying the Dark Lord",
+        "robos:nodeType": "combat_trial",
+        "robos:act": "Act II",
+        "robos:flowPage": "page-2",
+        "robos:location": "dark-lord-lair",
+        "robos:giver": "Dark Lord Malakor",
+        "robos:summary": "Sir Caleb battles Dark Lord Malakor. The Hero's Sword shatters Malakor's shadow ward and slays the Dark Lord, liberating Princess Jennifer from her cage.",
+        "robos:choices": [
+          {
+            "id": "choice-rescue-princess",
+            "label": "Unlock the gilded cage and escort Princess Jennifer home",
+            "targetNodeId": "node-triumphant-return",
+            "robos:triggerType": "victory",
+            "robos:targetNpc": "Princess Jennifer",
+            "robos:requiredFlag": "defeated_dark_lord"
+          }
+        ]
+      },
+      {
+        "id": "node-triumphant-return",
+        "dcterms:title": "Victory: The Kingdom Celebrates",
+        "robos:nodeType": "end_game_state",
+        "robos:act": "Act III",
+        "robos:flowPage": "page-3",
+        "robos:location": "throne-room",
+        "robos:giver": "King Alden",
+        "robos:summary": "Sir Caleb returns Princess Jennifer to King Alden in the Throne Room. King Alden declares Sir Caleb the Savior of the Realm, and victory is proclaimed across the land.",
+        "robos:endingType": "triumph",
+        "robos:victoryStatus": "victory",
+        "robos:epilogueText": "With Dark Lord Malakor vanquished and Princess Jennifer safely restored to the throne, the bells of the High Kingdom chime in celebration of Sir Caleb's valor."
+      }
+    ]
+  }
+}

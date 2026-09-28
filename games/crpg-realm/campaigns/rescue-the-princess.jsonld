@@ -158,7 +158,9 @@
           {
             "id": "choice-accept-decree",
             "label": "Accept King's decree and go to Dragonclaw Forge",
-            "targetNodeId": "node-dragonclaw-forge-trial"
+            "targetNodeId": "node-dragonclaw-forge-trial",
+            "robos:triggerType": "talk_npc",
+            "robos:targetNpc": "King Alden"
           }
         ]
       },
@@ -175,7 +177,10 @@
           {
             "id": "choice-fight-projection",
             "label": "Draw steel and duel the astral projection",
-            "targetNodeId": "node-slay-projection-goblin"
+            "targetNodeId": "node-slay-projection-goblin",
+            "robos:triggerType": "combat",
+            "robos:targetNpc": "Master Torvald",
+            "robos:actor": "Projection Goblin"
           }
         ]
       },
@@ -192,7 +197,10 @@
           {
             "id": "choice-claim-sword",
             "label": "Claim Hero's Sword and depart through the gate into the World",
-            "targetNodeId": "node-journey-through-world"
+            "targetNodeId": "node-journey-through-world",
+            "robos:triggerType": "item",
+            "robos:actor": "Hero's Sword",
+            "robos:requiredFlag": "defeated_projection_goblin"
           }
         ]
       },
@@ -208,7 +216,10 @@
           {
             "id": "choice-enter-lair",
             "label": "Descend into the darkness to confront Dark Lord Malakor",
-            "targetNodeId": "node-confront-dark-lord"
+            "targetNodeId": "node-confront-dark-lord",
+            "robos:triggerType": "transition",
+            "robos:actor": "Dark Lord's Lair",
+            "robos:requiredFlag": "obtained_heros_sword"
           }
         ]
       },
@@ -225,7 +236,10 @@
           {
             "id": "choice-rescue-princess",
             "label": "Unlock the gilded cage and escort Princess Jennifer home",
-            "targetNodeId": "node-triumphant-return"
+            "targetNodeId": "node-triumphant-return",
+            "robos:triggerType": "victory",
+            "robos:targetNpc": "Princess Jennifer",
+            "robos:requiredFlag": "defeated_dark_lord"
           }
         ]
       },

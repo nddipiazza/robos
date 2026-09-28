@@ -331,18 +331,22 @@ graph TD
 ```
 
 ![Step 5: Visual Story Quest Tree DAG]({{ '/assets/images/crpg-realm/tutorial_step5_quest_tree_dag.png' | relative_url }}){: .robos-zoomable-img }
-*Figure 5: The visual Story Quest Tree DAG displaying sequential nodes, trigger conditions, and scene assignments.*
+*Figure 5: The visual Story Quest Tree DAG displaying sequential nodes, explicit transition trigger badges (💬 Talk to NPC, ⚔️ Combat Trial, 🚪 Area Transition, 🏆 Victory Epilogue), required prerequisites, and outlet-anchored connection curves.*
 
-### Story Node Configuration
+### Story Node & Transition Trigger UX
 
-Each node contains interactive narrative data:
+The RobOS cRPG Campaign Editor equips the Story Quest Tree with a high-readability node card UX designed for immediate comprehension of story flow:
 
-1. **`kings_decree`**: Triggers upon conversation with King Alden. Sets flag `accepted_quest = true`.
-2. **`blacksmith_trial`**: Spawns the `creature-projection-goblin` in the castle forge.
-3. **`forge_heros_sword`**: Rewards `heros-sword` to inventory; sets `obtained_heros_sword = true`.
-4. **`breach_dark_lair`**: Traverses the overworld map to enter the dungeon entrance.
-5. **`slay_dark_lord`**: Initiates combat with `boss-dark-lord-malakor`. On death, sets `malakor_slain = true` and `rescued_princess = true`.
-6. **`royal_celebration`**: Dialogue choice with King Alden checks `rescued_princess`. Triggers victory screen.
+- **Glowing Archetype Stripes**: Top accent bar color-coded by node type (`GAME START`: emerald glow, `QUEST STAGE`: cyan glow, `COMBAT TRIAL`: crimson glow, `DECISION BRANCH`: amber glow, `VICTORY EPILOGUE`: royal purple glow).
+- **Node Identifier Chips**: Every card clearly identifies its canonical entity ID (`#node-kings-plea`, `#node-dragonclaw-forge-trial`, `#node-journey-through-world`).
+- **Explicit Transition Trigger Bars**: Each outgoing option pill prominently displays what game action triggers the transition:
+  - `[ 💬 TALK TO NPC: King Alden ] ➔ Master Torvald's Crucible`
+  - `[ ⚔️ COMBAT TRIAL: Projection Goblin ] ➔ Trial of the Projection Goblin`
+  - `[ 🎁 CLAIM ITEM: Hero's Sword ] ➔ Wilderness Trek to the Cavern Maw`
+  - `[ 🚪 AREA TRANSITION: Dark Lord's Lair ] ➔ Slaying the Dark Lord` with `🔒 Requires: obtained_heros_sword`
+  - `[ 🏆 VICTORY EPILOGUE: Princess Jennifer ] ➔ Victory: The Kingdom Celebrates`
+- **Dynamic Bézier Curve Anchoring**: SVG connection curves automatically calculate exact DOM coordinates to snap directly from the right-hand outlet dot of each choice pill to the target node's inlet.
+- **Quick Hover Toolbar**: Hovering over any card reveals quick actions: `▶ Test` (starts walkthrough test from that node), `+ Choice` (adds outgoing branch), `✏️ Edit` (focuses inspector), and `🗑` (safe delete with dangling branch pruning).
 
 ---
 
@@ -474,14 +478,97 @@ test('Blacksmith trial: Projection Goblin defeated, Hero\'s Sword rewarded and u
 
 ---
 
+## The Player Cartridge System: Plug & Play in Godot 4
+
+Any campaign created in the **RobOS cRPG Campaign Editor** can be packaged into a standalone **Player Cartridge** (`.cartridge.json`). A Player Cartridge bundles all required battle maps, NPCs, monsters, weapons, items, quest journals, and story DAGs into a single self-contained payload that can be plugged into the Godot 4 engine and played immediately.
+
+```mermaid
+flowchart LR
+    subgraph Editor["RobOS cRPG Editor"]
+        Campaign["rescue-the-princess.jsonld"]
+        Maps["maps/*.jsonld"]
+        Chars["characters/*.jsonld"]
+        Items["items/*.jsonld"]
+    end
+
+    subgraph Bundler["Cartridge Bundler"]
+        BundleCLI["crpg-cartridge bundle"]
+    end
+
+    subgraph Cartridge["Player Cartridge (.cartridge.json)"]
+        Cart["rescue-the-princess.cartridge.json"]
+    end
+
+    subgraph Godot["Godot 4 Engine"]
+        CM["CartridgeManager (Autoload)"]
+        Bay["Cartridge Bay UI"]
+        CW["CartridgeWorld.tscn Runner"]
+    end
+
+    Campaign & Maps & Chars & Items --> BundleCLI
+    BundleCLI --> Cart
+    Cart -->|Plug into Bay / CLI| CM
+    CM --> Bay
+    CM --> CW
+```
+
+### 1. Bundling with the CLI
+
+Use the `crpg-cartridge` CLI utility from `packages/crpg-builder`:
+
+```bash
+# Bundle a specific campaign into games/crpg-realm/cartridges/
+node packages/crpg-builder/bin/crpg-cartridge.js bundle rescue-the-princess
+
+# Bundle all available campaigns at once
+node packages/crpg-builder/bin/crpg-cartridge.js bundle-all
+
+# Inspect available cartridges
+node packages/crpg-builder/bin/crpg-cartridge.js list
+```
+
+### 2. Plug & Play in Godot 4
+
+Launch Godot with the cartridge argument directly from the terminal:
+
+```bash
+# Plug in the cartridge via CLI
+godot4 --path games/crpg-realm --cartridge rescue-the-princess
+```
+
+Alternatively, launch into the **Character Select** scene. The **Cartridge Bay** located at the top of the screen automatically discovers all cartridges in `res://cartridges/` and allows you to swap campaigns dynamically before embarking:
+
+- Selecting a cartridge dynamically loads all items and NPCs into the `DataStore`.
+- Spawns the party on the starting map (e.g. `throne-room` at $(25, 20)$).
+- Maps passages and portals automatically to target scenes via `CartridgeWorld.tscn`.
+
+### 3. Automated REST API Control
+
+The embedded `GameControlServer` (`:8080`) provides REST endpoints for automated agent testing and external cartridge hot-swapping:
+
+```bash
+# Discover available cartridges
+curl http://127.0.0.1:8080/cartridges
+
+# Hot-swap the plugged cartridge
+curl -X POST http://127.0.0.1:8080/cartridge/insert \
+     -H "Content-Type: application/json" \
+     -d '{"cartridge": "rescue-the-princess"}'
+
+# Embark into the cartridge world
+curl -X POST http://127.0.0.1:8080/cartridge/embark
+```
+
+---
+
 ## Launching in the Godot 4.3 Engine
 
 Once verified in the editor and test runner, launch the game in Godot:
 
 ```bash
-# Launch interactive gameplay in Godot 4.3
+# Launch interactive gameplay in Godot 4.3 with the Player Cartridge plugged in
 cd games/crpg-realm
-godot --path . res://scenes/CharacterSelect.tscn --campaign rescue-the-princess
+godot4 --path . --cartridge rescue-the-princess
 ```
 
 Or run headless video proof-of-work with the Infinity AI harness:

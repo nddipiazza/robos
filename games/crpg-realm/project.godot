@@ -22,6 +22,7 @@ FloatingTextManager="*res://scripts/FloatingTextManager.gd"
 Dice="*res://scripts/engine/Dice.gd"
 ScenarioEngine="*res://scripts/engine/ScenarioEngine.gd"
 DemoController="*res://scripts/demo/DemoController.gd"
+CartridgeManager="*res://scripts/engine/CartridgeManager.gd"
 
 [display]
 

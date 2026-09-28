@@ -334,6 +334,9 @@ func log_system(text: String) -> void:
 func add_log(text: String, category: String = "system") -> void:
 	add_log_entry(category, text)
 
+func add_entry(text: String, category: String = "system") -> void:
+	add_log_entry(category, text)
+
 func add_log_entry(category: String, bbcode_content: String) -> void:
 	var color_hex = "#ecf0f1"
 	var prefix = ""

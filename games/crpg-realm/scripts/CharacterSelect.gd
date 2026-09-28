@@ -142,6 +142,8 @@ func _ready() -> void:
 	demo_real_btn.pressed.connect(func(): _start_demo(1))
 	add_child(demo_real_btn)
 
+	_setup_cartridge_bay()
+
 	# Auto-start demo if requested via CLI or URL query param (only on first boot)
 	var auto_demo := -1
 	if _cli_demo_checked:
@@ -362,7 +364,67 @@ func embark() -> void:
 	var h_name = name_input.text.strip_edges() if name_input else ""
 	if h_name == "": h_name = "Lieutenant Vance"
 	GameState.init_hero(h_name, selected_class, base_stats, selected_race, selected_spells)
-	get_tree().change_scene_to_file("res://scenes/Homestead.tscn")
+	if has_node("/root/CartridgeManager") and get_node("/root/CartridgeManager").is_cartridge_active:
+		get_node("/root/CartridgeManager").embark_cartridge()
+	else:
+		get_tree().change_scene_to_file("res://scenes/Homestead.tscn")
+
+func _setup_cartridge_bay() -> void:
+	if not has_node("/root/CartridgeManager"):
+		return
+	var cm = get_node("/root/CartridgeManager")
+	var carts = cm.discover_cartridges()
+	if carts.is_empty():
+		return
+
+	var bay_panel = PanelContainer.new()
+	bay_panel.name = "CartridgeBay"
+	bay_panel.anchor_left = 0.0
+	bay_panel.anchor_top = 0.0
+	bay_panel.offset_left = 32.0
+	bay_panel.offset_top = 16.0
+	bay_panel.offset_right = 460.0
+	bay_panel.offset_bottom = 56.0
+
+	var hbox = HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 10)
+	bay_panel.add_child(hbox)
+
+	var lbl = Label.new()
+	lbl.text = "📼 Cartridge:"
+	lbl.add_theme_font_size_override("font_size", 13)
+	lbl.add_theme_color_override("font_color", Color(0.9, 0.75, 0.3))
+	hbox.add_child(lbl)
+
+	var opt = OptionButton.new()
+	opt.custom_minimum_size = Vector2(280, 32)
+	opt.add_theme_font_size_override("font_size", 12)
+	hbox.add_child(opt)
+
+	for i in range(carts.size()):
+		var c = carts[i]
+		var title = str(c.get("title", c.get("id")))
+		opt.add_item("%s %s" % [c.get("icon", "📼"), title], i)
+		opt.set_item_metadata(i, c.get("id"))
+		if cm.is_cartridge_active and cm.active_cartridge.get("cartridgeId") == c.get("id"):
+			opt.select(i)
+
+	if not cm.is_cartridge_active and carts.size() > 0:
+		var default_idx = 0
+		for i in range(carts.size()):
+			if carts[i].get("id") == "rescue-the-princess":
+				default_idx = i
+				break
+		opt.select(default_idx)
+		cm.insert_cartridge(carts[default_idx].get("id"))
+
+	opt.item_selected.connect(func(idx):
+		var cart_id = opt.get_item_metadata(idx)
+		if cart_id:
+			cm.insert_cartridge(cart_id)
+	)
+
+	add_child(bay_panel)
 
 
 func _setup_portrait_preview() -> void:

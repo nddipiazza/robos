@@ -217,6 +217,32 @@ func _process_http_request(client: StreamPeerTCP, raw_req: String) -> void:
 				"ie_round": GameState.ie_round, "ie_round_elapsed": GameState.ie_round_elapsed, "ie_round_seconds": GameState.IE_ROUND_SECONDS})
 		["POST", "/api/v1/scenario/load"]:
 			_send_http_response(client, 200, await _scenario_load(body_dict))
+		["GET", "/cartridges"], ["GET", "/api/v1/cartridges"]:
+			if has_node("/root/CartridgeManager"):
+				var cm = get_node("/root/CartridgeManager")
+				_send_http_response(client, 200, {
+					"success": true,
+					"activeCartridge": cm.active_cartridge.get("cartridgeId", ""),
+					"isCartridgeActive": cm.is_cartridge_active,
+					"cartridges": cm.discover_cartridges()
+				})
+			else:
+				_send_http_response(client, 200, {"success": false, "error": "CartridgeManager autoload not found"})
+		["POST", "/cartridge/insert"], ["POST", "/api/v1/cartridge/insert"]:
+			if has_node("/root/CartridgeManager"):
+				var cm = get_node("/root/CartridgeManager")
+				var target = body_dict.get("cartridge", body_dict.get("id", body_dict.get("slug", "")))
+				var ok = cm.insert_cartridge(target)
+				_send_http_response(client, 200, {"success": ok, "cartridge": cm.active_cartridge.get("cartridgeId", "")})
+			else:
+				_send_http_response(client, 200, {"success": false, "error": "CartridgeManager autoload not found"})
+		["POST", "/cartridge/embark"], ["POST", "/api/v1/cartridge/embark"]:
+			if has_node("/root/CartridgeManager"):
+				var cm = get_node("/root/CartridgeManager")
+				cm.embark_cartridge.call_deferred()
+				_send_http_response(client, 200, {"success": true, "startingMap": cm.current_map_slug})
+			else:
+				_send_http_response(client, 200, {"success": false, "error": "CartridgeManager autoload not found"})
 		["POST", "/api/v1/scenario/dice"]:
 			if body_dict.has("seed"):
 				Dice.reseed(int(body_dict["seed"]))

@@ -3358,16 +3358,123 @@ function computeTopologicalRanks(nodeList) {
   return ranks;
 }
 
+function formatLocationName(slug) {
+  if (!slug) return '';
+  const map = {
+    'throne-room': 'Throne Room',
+    'main-castle': 'Main Castle',
+    'world-overworld': 'World Overworld',
+    'dark-lord-lair': "Dark Lord's Lair"
+  };
+  if (map[slug]) return map[slug];
+  return slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+
+function resolveChoiceTrigger(choice, sourceNode, targetNode, allNodes) {
+  const label = (choice.label || '').toLowerCase();
+  const explicitType = choice.triggerType || choice['robos:triggerType'];
+  const explicitActor = choice.actor || choice['robos:actor'] || choice.targetNpc || choice['robos:targetNpc'] || choice.npc;
+  const explicitReq = choice.requiredFlag || choice['robos:requiredFlag'] || choice.requires;
+  const targetTitle = targetNode ? (targetNode['dcterms:title'] || targetNode.title || targetNode.id) : (choice.targetNodeId || '');
+  const targetType = targetNode ? (targetNode['robos:nodeType'] || targetNode.type || '') : '';
+  const sourceGiver = sourceNode ? (sourceNode['robos:giver'] || sourceNode.giver || '') : '';
+  const targetGiver = targetNode ? (targetNode['robos:giver'] || targetNode.giver || '') : '';
+  const sourceLoc = formatLocationName(sourceNode ? (sourceNode['robos:location'] || sourceNode.location || '') : '');
+  const targetLoc = formatLocationName(targetNode ? (targetNode['robos:location'] || targetNode.location || '') : '');
+
+  // 1. Explicit or Inferred NPC Dialogue
+  if (explicitType === 'talk_npc' || (!explicitType && (/talk|speak|accept|decree|converse|ask|greet|report/i.test(label) || (!label.includes('claim') && !label.includes('fight') && sourceGiver && sourceGiver !== 'None')))) {
+    const actor = explicitActor || sourceGiver || targetGiver || 'NPC';
+    return {
+      type: 'talk_npc',
+      icon: '💬',
+      badgeClass: 'trigger-dialogue',
+      category: 'TALK TO NPC',
+      actor: actor,
+      destLabel: targetTitle,
+      req: explicitReq
+    };
+  }
+
+  // 2. Explicit or Inferred Combat / Boss Trial
+  if (explicitType === 'combat' || (!explicitType && (targetType === 'combat_trial' || /fight|duel|slay|kill|defeat|combat|battle|vanquish/i.test(label)))) {
+    const foe = explicitActor || (label.includes('goblin') ? 'Projection Goblin' : (label.includes('dark lord') || label.includes('malakor') ? 'Dark Lord Malakor' : (targetGiver || 'Hostile Enemy')));
+    const isBoss = /boss|lord|malakor|dragon/i.test(foe) || /boss/i.test(label);
+    return {
+      type: 'combat',
+      icon: isBoss ? '💀' : '⚔️',
+      badgeClass: isBoss ? 'trigger-boss' : 'trigger-combat',
+      category: isBoss ? 'BOSS BATTLE' : 'COMBAT TRIAL',
+      actor: foe,
+      destLabel: targetTitle,
+      req: explicitReq
+    };
+  }
+
+  // 3. Explicit or Inferred Item Claim / Reward
+  if (explicitType === 'item' || (!explicitType && /claim|obtain|take|forge|loot|receive|pickup|sword|blade/i.test(label))) {
+    const item = explicitActor || (label.includes('sword') || label.includes('blade') ? "Hero's Sword" : 'Quest Item');
+    return {
+      type: 'item',
+      icon: '🎁',
+      badgeClass: 'trigger-item',
+      category: 'CLAIM ITEM',
+      actor: item,
+      destLabel: targetTitle,
+      req: explicitReq || (label.includes('depart') ? 'defeated_projection_goblin' : null)
+    };
+  }
+
+  // 4. Epilogue / Victory Return
+  if (explicitType === 'victory' || (!explicitType && (targetType === 'end_game_state' || /return|rescue|celebrat|liberat|conclude|win|triumph/i.test(label)))) {
+    const actor = explicitActor || (label.includes('princess') ? 'Princess Jennifer' : (sourceGiver || 'King Alden'));
+    return {
+      type: 'victory',
+      icon: '🏆',
+      badgeClass: 'trigger-victory',
+      category: 'VICTORY EPILOGUE',
+      actor: actor,
+      destLabel: targetTitle,
+      req: explicitReq || 'defeated_dark_lord'
+    };
+  }
+
+  // 5. Area / Map / Portal Transition
+  if (explicitType === 'transition' || (!explicitType && (/gate|portal|enter|descend|depart|travel|journey|reach|door|maw/i.test(label) || (sourceLoc && targetLoc && sourceLoc !== targetLoc)))) {
+    const destArea = explicitActor || targetLoc || 'Next Area';
+    return {
+      type: 'transition',
+      icon: '🚪',
+      badgeClass: 'trigger-transition',
+      category: 'AREA TRANSITION',
+      actor: destArea,
+      destLabel: targetTitle,
+      req: explicitReq || (destArea.includes('World') ? 'obtained_heros_sword' : null)
+    };
+  }
+
+  // Default fallback
+  return {
+    type: 'action',
+    icon: '⚡',
+    badgeClass: 'trigger-action',
+    category: 'TRIGGER ACTION',
+    actor: explicitActor || '',
+    destLabel: targetTitle,
+    req: explicitReq
+  };
+}
+
 function getNodeChoiceOffsetY(node, choiceIndex, hasInbound) {
-  let y = 28 + 10; // header height + body padding top
+  let y = 32 + 10; // header height + body padding top
   if (hasInbound) y += 24;
   y += 20; // title height
   const summary = node['robos:summary'] || node.summary || node['robos:narrative'] || '';
-  if (summary) y += 38; // synopsis box height
-  y += 20; // meta row
+  if (summary) y += 42; // synopsis box height
+  y += 24; // meta row
   y += 14; // choices top dashed border & padding
-  y += choiceIndex * 58; // preceding choice pills
-  y += 26; // center of current choice pill
+  y += choiceIndex * 66; // preceding choice pills
+  y += 32; // center of current choice pill
   return y;
 }
 
@@ -3443,8 +3550,8 @@ function renderStoryTreeCanvas(nodes, filterAct) {
     return;
   }
 
-  const colWidth = state.activeFlowPageId === 'all' ? 480 : 470;
-  const rowHeight = 250;
+  const colWidth = state.activeFlowPageId === 'all' ? 500 : 490;
+  const rowHeight = 310;
   const x0 = 40;
   const y0 = 50;
 
@@ -3530,7 +3637,7 @@ function renderStoryTreeCanvas(nodes, filterAct) {
     choices.forEach((ch, chIdx) => {
       const targetNode = visibleNodes.find(n => n.id === ch.targetNodeId);
       if (targetNode && node._x !== undefined && targetNode._x !== undefined) {
-        const x1 = node._x + 310;
+        const x1 = node._x + 330;
         const y1 = node._y + getNodeChoiceOffsetY(node, chIdx, hasInbound);
         const x2 = targetNode._x;
         const y2 = targetNode._y + 36;
@@ -3626,6 +3733,8 @@ function renderStoryTreeCanvas(nodes, filterAct) {
           const isCrossPage = targetNode && state.activeFlowPageId !== 'all' && (targetNode['robos:flowPage'] || targetNode.flowPage) !== state.activeFlowPageId;
           const targetPage = isCrossPage ? pages.find(p => p.id === (targetNode['robos:flowPage'] || targetNode.flowPage)) : null;
 
+          const trigger = resolveChoiceTrigger(c, node, targetNode, nodes);
+
           const boundEvt = (state.gameEvents || []).find(e =>
             e.slug === c.boundEventId ||
             e.id === c['robos:boundEvent'] ||
@@ -3642,29 +3751,36 @@ function renderStoryTreeCanvas(nodes, filterAct) {
           if (isCrossPage && targetPage) {
             return `
               <div class="cross-page-jump-pill" data-target-page="${targetPage.id}" data-target-node="${targetNode.id}" title="Branch leads to ${escapeXml(targetPage.name)} — click to navigate">
-                <span>↳ 📄 ${targetPage.name.split(':')[0]}: ${escapeXml(targetNode['dcterms:title'] || targetNode.id)}</span>
+                <div class="choice-trigger-bar">
+                  <span class="trigger-badge ${trigger.badgeClass}">${trigger.icon} ${trigger.category}${trigger.actor ? `: <strong>${escapeXml(trigger.actor)}</strong>` : ''}</span>
+                  <span class="trigger-dest-badge">➔ 📄 ${targetPage.name.split(':')[0]}</span>
+                </div>
+                <div class="node-choice-label">${escapeXml(c.label || targetNode['dcterms:title'] || targetNode.id)}</div>
+                ${trigger.req ? `<div class="choice-req-badge">🔒 Requires: <code>${escapeXml(trigger.req)}</code></div>` : ''}
                 ${eventBadge}
-                <span>↗</span>
               </div>
             `;
           }
           return `
             <div class="node-choice-pill" data-source-id="${node.id}" data-target-id="${c.targetNodeId}" title="${escapeXml(c.label || '')}">
               <div class="choice-outlet-dot"></div>
-              <div class="node-choice-header">
-                <span>↳ Option ${chIdx + 1}</span>
-                ${eventBadge}
+              <div class="choice-trigger-bar">
+                <span class="trigger-badge ${trigger.badgeClass}">${trigger.icon} ${trigger.category}${trigger.actor ? `: <strong>${escapeXml(trigger.actor)}</strong>` : ''}</span>
+                <span class="trigger-dest-badge" title="Transitions to: ${escapeXml(trigger.destLabel)}">➔ ${escapeXml(trigger.destLabel)}</span>
               </div>
               <div class="node-choice-label">${escapeXml(c.label || c.targetNodeId)}</div>
+              ${trigger.req ? `<div class="choice-req-badge">🔒 Requires: <code>${escapeXml(trigger.req)}</code></div>` : ''}
+              ${eventBadge}
             </div>
           `;
         }).join('')}
       </div>
     ` : (nodeType === 'end_game_state' ? `
       <div class="story-node-choices">
-        <div class="node-choice-pill" style="border-color:#a855f7;color:#d8b4fe;">
-          <div class="node-choice-header" style="color:#c084fc;">
-            <span>🏆 End Game Conclusion</span>
+        <div class="node-choice-pill end-game-pill" style="border-color:#a855f7;color:#d8b4fe;">
+          <div class="choice-trigger-bar">
+            <span class="trigger-badge trigger-victory">🏆 VICTORY EPILOGUE</span>
+            <span class="trigger-dest-badge">➔ Campaign Won</span>
           </div>
           <div class="node-choice-label" style="color:#e9d5ff;">${escapeXml(node['robos:epilogueText'] || node.epilogueText || 'Campaign narrative concludes here.')}</div>
         </div>
@@ -3677,25 +3793,36 @@ function renderStoryTreeCanvas(nodes, filterAct) {
     return `
       <div class="story-node-card ${nodeType.replace(/_/g, '-')} ${isSelected ? 'selected' : ''} ${isWalkthrough ? 'active-walkthrough' : ''} ${searchClass}"
            data-id="${node.id}" style="left: ${node._x}px; top: ${node._y}px;">
+        <div class="node-accent-stripe"></div>
         <div class="story-node-header">
-          <span>${icon} ${typeLabel}</span>
-          <span>${act}</span>
+          <span class="node-archetype-pill">${icon} ${typeLabel}</span>
+          <span class="node-id-chip">#${escapeXml(node.id)}</span>
         </div>
         <div class="story-node-body">
           ${inboundHtml}
           <div class="story-node-title">${escapeXml(title)}</div>
           ${synopsisHtml}
           <div class="story-node-meta">
-            ${location ? `<span class="story-node-tag">📍 ${escapeXml(location)}</span>` : ''}
-            ${giver ? `<span class="story-node-tag">👑 ${escapeXml(giver)}</span>` : ''}
+            ${act ? `<span class="story-node-tag act-tag">📖 ${escapeXml(act)}</span>` : ''}
+            ${location ? `<span class="story-node-tag loc-tag">📍 ${escapeXml(formatLocationName(location))}</span>` : ''}
+            ${giver ? `<span class="story-node-tag giver-tag">👑 ${escapeXml(giver)}</span>` : ''}
           </div>
           ${choicesHtml}
+        </div>
+        <div class="node-card-quick-toolbar">
+          <button class="quick-btn" title="Walkthrough test from this node" onclick="window.startWalkthroughFromNode('${escapeXml(node.id)}', event)">▶ Test</button>
+          <button class="quick-btn" title="Add Choice" onclick="window.addChoiceToNodeDirect('${escapeXml(node.id)}', event)">+ Choice</button>
+          <button class="quick-btn" title="Edit in Inspector" onclick="window.editStoryNodeDirect('${escapeXml(node.id)}', event)">✏️ Edit</button>
+          <button class="quick-btn del-btn" title="Delete Node" onclick="window.deleteStoryNodeDirect('${escapeXml(node.id)}', event)">🗑</button>
         </div>
       </div>
     `;
   }).join('');
 
   layerEl.innerHTML += nodeCardsHtml;
+
+  // Run dynamic SVG edge positioning to snap directly to choice dots
+  requestAnimationFrame(updateSvgEdgePositions);
 
   // Add click handlers on cross-page jump pills
   layerEl.querySelectorAll('.cross-page-jump-pill').forEach(pill => {
@@ -3708,9 +3835,10 @@ function renderStoryTreeCanvas(nodes, filterAct) {
     });
   });
 
-  // Add click handlers on node cards
+  // Add click handlers on node cards (ignoring buttons)
   layerEl.querySelectorAll('.story-node-card').forEach(card => {
     card.addEventListener('click', (e) => {
+      if (e.target.closest('.quick-btn') || e.target.closest('button')) return;
       e.stopPropagation();
       const id = card.getAttribute('data-id');
       selectStoryNode(id);
@@ -3734,8 +3862,8 @@ function renderStoryTreeCanvas(nodes, filterAct) {
   });
 
   // 3. Dynamic Canvas / SVG sizing so nothing clips and fills width
-  const maxNodeX = Math.max(...visibleNodes.map(n => (n._x || 0) + 330), 0);
-  const maxNodeY = Math.max(...visibleNodes.map(n => (n._y || 0) + 260), 0);
+  const maxNodeX = Math.max(...visibleNodes.map(n => (n._x || 0) + 360), 0);
+  const maxNodeY = Math.max(...visibleNodes.map(n => (n._y || 0) + 320), 0);
   const containerW = container.clientWidth || 1600;
   const containerH = container.clientHeight || 900;
   const fullW = Math.max(maxNodeX + 160, containerW);
@@ -3748,6 +3876,101 @@ function renderStoryTreeCanvas(nodes, filterAct) {
   layerEl.style.width = fullW + 'px';
   layerEl.style.height = fullH + 'px';
 }
+
+function updateSvgEdgePositions() {
+  const container = document.getElementById('story-canvas-viewport');
+  if (!container) return;
+  const containerRect = container.getBoundingClientRect();
+  const scrollL = container.scrollLeft;
+  const scrollT = container.scrollTop;
+
+  document.querySelectorAll('.story-node-card').forEach(card => {
+    const srcId = card.getAttribute('data-id');
+    const pills = card.querySelectorAll('.node-choice-pill[data-target-id]');
+    pills.forEach((pill, chIdx) => {
+      const tgtId = pill.getAttribute('data-target-id');
+      const dot = pill.querySelector('.choice-outlet-dot');
+      const edge = document.getElementById(`edge-${srcId}-${tgtId}-${chIdx}`);
+      const targetCard = document.querySelector(`.story-node-card[data-id="${tgtId}"]`);
+      if (edge && dot && targetCard) {
+        const dotRect = dot.getBoundingClientRect();
+        const tgtRect = targetCard.getBoundingClientRect();
+
+        const x1 = dotRect.left + (dotRect.width / 2) - containerRect.left + scrollL;
+        const y1 = dotRect.top + (dotRect.height / 2) - containerRect.top + scrollT;
+        const x2 = tgtRect.left - containerRect.left + scrollL;
+        const y2 = tgtRect.top + 34 - containerRect.top + scrollT;
+
+        const dx = Math.max(50, Math.abs(x2 - x1) * 0.45);
+        edge.setAttribute('d', `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`);
+
+        const labelGrp = document.querySelector(`.story-edge-label-group[data-source-id="${srcId}"][data-target-id="${tgtId}"]`);
+        if (labelGrp) {
+          const mx = (x1 + x2) / 2;
+          const my = (y1 + y2) / 2;
+          labelGrp.setAttribute('transform', `translate(${mx}, ${my - 12})`);
+        }
+      }
+    });
+  });
+}
+
+// Window actions for card toolbar
+window.startWalkthroughFromNode = function(nodeId, e) {
+  if (e) e.stopPropagation();
+  startStoryWalkthrough(nodeId);
+};
+
+window.addChoiceToNodeDirect = function(nodeId, e) {
+  if (e) e.stopPropagation();
+  selectStoryNode(nodeId);
+  const flow = getStoryFlow();
+  const node = (flow['robos:storyNodes'] || []).find(n => n.id === nodeId);
+  if (!node) return;
+  if (!node['robos:choices']) node['robos:choices'] = [];
+  const otherNodes = (flow['robos:storyNodes'] || []).filter(n => n.id !== nodeId);
+  const targetId = otherNodes[0]?.id || '';
+  node['robos:choices'].push({
+    id: `choice-${Date.now().toString(36)}`,
+    label: 'New Player Action',
+    targetNodeId: targetId
+  });
+  renderStoryNodeChoices(node);
+  renderQuestScenarioTree();
+  setStatus(`Added choice to node ${nodeId}`);
+};
+
+window.editStoryNodeDirect = function(nodeId, e) {
+  if (e) e.stopPropagation();
+  selectStoryNode(nodeId);
+  const insp = document.getElementById('story-node-inspector');
+  if (insp) {
+    insp.scrollIntoView({ behavior: 'smooth' });
+    const titleInp = document.getElementById('node-edit-title');
+    if (titleInp) titleInp.focus();
+  }
+};
+
+window.deleteStoryNodeDirect = function(nodeId, e) {
+  if (e) e.stopPropagation();
+  const flow = getStoryFlow();
+  const nodes = flow['robos:storyNodes'] || [];
+  const node = nodes.find(n => n.id === nodeId);
+  if (!node) return;
+  if (!confirm(`Delete story node "${node['dcterms:title'] || nodeId}"?`)) return;
+  flow['robos:storyNodes'] = nodes.filter(n => n.id !== nodeId);
+  flow['robos:storyNodes'].forEach(n => {
+    if (n['robos:choices']) {
+      n['robos:choices'] = n['robos:choices'].filter(c => c.targetNodeId !== nodeId);
+    }
+  });
+  if (state.selectedStoryNodeId === nodeId) {
+    state.selectedStoryNodeId = null;
+  }
+  renderQuestScenarioTree();
+  renderStoryOutline();
+  setStatus(`Deleted node ${nodeId}`);
+};
 
 function selectStoryNode(nodeId) {
   state.selectedStoryNodeId = nodeId;
@@ -4060,19 +4283,19 @@ function toggleStoryWalkthrough() {
   }
 }
 
-function startStoryWalkthrough() {
+function startStoryWalkthrough(fromNodeId) {
   const flow = getStoryFlow();
   const nodes = flow['robos:storyNodes'] || [];
   if (nodes.length === 0) return;
 
-  const rootId = flow['robos:rootNodeId'] || nodes[0].id;
+  const rootId = fromNodeId || flow['robos:rootNodeId'] || nodes[0].id;
   state.storyWalkthrough.active = true;
   state.storyWalkthrough.currentNodeId = rootId;
   state.storyWalkthrough.visitedNodeIds = [rootId];
 
   renderStoryWalkthroughHUD();
   renderQuestScenarioTree();
-  setStatus('Started Interactive Story Walkthrough.');
+  setStatus(`Started Interactive Story Walkthrough from ${rootId}.`);
 }
 
 function resetStoryWalkthrough() {
