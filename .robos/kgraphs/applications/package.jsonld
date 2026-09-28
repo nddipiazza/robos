@@ -112,7 +112,7 @@
         "c4:Container"
       ],
       "dcterms:title": "Voice Prompt Agent",
-      "dcterms:description": "Offline neural speech-to-text dictation agent with real-time streaming, desktop active window context capture, REST API, and tabbed microphone and RobOS Commands settings with a live microphone test waveform.",
+      "dcterms:description": "Offline neural speech-to-text dictation agent with real-time streaming, desktop active window context capture, REST API, and tabbed microphone and RobOS Commands settings with a live microphone test waveform and text-file chat history export.",
       "robos:package": "applications",
       "robos:namespace": "robos.applications",
       "robos:repository": "github.com/nddipiazza/robos",
@@ -412,7 +412,7 @@
         "c4:Container"
       ],
       "dcterms:title": "Voice Prompt Agent",
-      "dcterms:description": "Offline neural speech-to-text dictation agent with real-time streaming, desktop active window context capture, REST API, and tabbed microphone and RobOS Commands settings with a live microphone test waveform.",
+      "dcterms:description": "Offline neural speech-to-text dictation agent with real-time streaming, desktop active window context capture, REST API, and tabbed microphone and RobOS Commands settings with a live microphone test waveform and text-file chat history export.",
       "robos:package": "applications",
       "robos:namespace": "robos.applications",
       "robos:repository": "github.com/nddipiazza/robos",

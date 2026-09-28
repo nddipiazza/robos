@@ -1021,6 +1021,23 @@ function repositionHudWindow(position) {
 
 // ── IPC Handlers ─────────────────────────────────────────────────────────────
 
+ipcMain.handle('vp-save-chat-as', async (event, text) => {
+  if (!mainWindow || event.sender !== mainWindow.webContents) throw new Error('Open RobOS Voice to save chat history.');
+  if (typeof text !== 'string' || !text.trim()) return { error: 'There are no messages to save.' };
+  try {
+    const result = await dialog.showSaveDialog(mainWindow, {
+      title: 'Save voice chat history',
+      defaultPath: path.join(app.getPath('documents'), `robos-voice-${new Date().toISOString().replace(/[:.]/g, '-')}.txt`),
+      filters: [{ name: 'Text files', extensions: ['txt'] }],
+    });
+    if (result.canceled || !result.filePath) return { canceled: true };
+    await fs.promises.writeFile(result.filePath, text, 'utf8');
+    return { ok: true, filePath: result.filePath };
+  } catch (error) {
+    return { error: `Could not save chat history: ${error.message}` };
+  }
+});
+
 ipcMain.handle('vp-get-status', async () => {
   const activeWin = await contextProvider.getActiveWindow();
   const prefs = promptStore.loadPrefs();

@@ -8,6 +8,9 @@ Voice Prompt Agent bridges natural developer speech to autonomous AI coding agen
 
 ## Features
 
+- **Save chat history**: Use the Save As icon in the floating voice window to save all current messages and command results as a text file, including messages above the visible scroll area.
+- **E-learning commands**: “Open E-learning”, “open e learning”, and “open elearning” open the same e-learning app.
+
 - **Voice settings**: Click the gear in the floating voice window. The **Device** tab lets you choose, refresh, and save the dictation microphone; changes apply to the next recording. PipeWire inputs use stable device names so a selected microphone cannot silently fall back to the system default. **Test microphone** previews live audio from the selected input as a waveform without saving audio or transcribing it. Stop the test with the same button; it also stops when you change devices, leave the tab, close settings, or after 30 seconds. The second tab, **RobOS Commands**, contains command search, categories, and spoken-trigger testing.
 
 - **100% Offline Neural Whisper STT**: Uses on-device ONNX runtime models via `@xenova/transformers` (`whisper-tiny.en`). Audio never leaves the local machine.

@@ -3,6 +3,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 const hudApi = {
+  saveChatAs: text => ipcRenderer.invoke('vp-save-chat-as', text),
   getStatus: () => ipcRenderer.invoke('vp-get-status'),
   getPrefs: () => ipcRenderer.invoke('vp-get-prefs'),
   savePrefs: (prefs) => ipcRenderer.invoke('vp-save-prefs', prefs),
