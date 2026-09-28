@@ -346,6 +346,13 @@ const state = {
   
   // Scenes State
   scenes: [],
+
+  // Visual Asset & 3D Model Library State
+  assets: [],
+  assetCounts: {},
+  activeAssetCategory: 'all',
+  selectedAsset: null,
+  assetPickerCallback: null,
 };
 
 // Canvas Renderer Instance
@@ -367,6 +374,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupInventoryHandlers();
   setupDragAndDrop();
   setupBlockmapHandlers();
+  setupAssetPickerHandlers();
 
   // Initialize Canvas Renderer
   const canvasEl = document.getElementById('blockmap-canvas');
@@ -380,6 +388,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Load initial data via IPC
   await loadScenesList();
   await loadMapsList();
+  await loadAllAssets();
   await loadAllItems();
   await loadAllEnemies();
   await loadAllSpells();
@@ -824,6 +833,10 @@ async function loadCampaign(slug) {
       document.getElementById('camp-ruleset').value = res.data['robos:ruleSet'] || res.data.ruleSet || 'D&D 5e SRD';
       document.getElementById('camp-difficulty').value = res.data['robos:difficulty'] || res.data.difficulty || 'Core Rules';
       document.getElementById('camp-desc').value = res.data['dcterms:description'] || res.data.description || '';
+      const splash = res.data['robos:splashAssetRef'] || res.data.splashAssetRef || '';
+      const splashInput = document.getElementById('camp-splash-asset');
+      if (splashInput) splashInput.value = splash;
+      renderSplashPreview('camp-splash-preview', splash);
 
       const gs = getGameState();
       const currentScene = gs['robos:currentScene'] || gs.currentScene || '';
@@ -1417,6 +1430,8 @@ async function saveCurrentCampaign() {
   state.activeCampaignData['robos:ruleSet'] = document.getElementById('camp-ruleset').value;
   state.activeCampaignData['robos:difficulty'] = document.getElementById('camp-difficulty').value;
   state.activeCampaignData['dcterms:description'] = document.getElementById('camp-desc').value.trim();
+  const splashAsset = document.getElementById('camp-splash-asset')?.value.trim() || '';
+  state.activeCampaignData['robos:splashAssetRef'] = splashAsset;
 
   const gs = getGameState();
   const startScene = document.getElementById('camp-starting-scene')?.value;
@@ -5054,13 +5069,17 @@ async function loadCharacterSheet(slug) {
       toggleCharacterTypeUI(isNpc);
 
       const name = data['schema:name'] || data.name || slug;
-      const portrait = data['robos:portrait'] || data.portrait || (isNpc ? '👑' : '👤');
+      const portrait = data['robos:portraitAssetRef'] || data.portraitAssetRef || data['robos:portrait'] || data.portrait || (isNpc ? '👑' : '👤');
+      const tokenAsset = data['robos:tokenAssetRef'] || data.tokenAssetRef || '';
 
       document.getElementById('sheet-hero-title').textContent = `${name} (${isNpc ? 'NPC' : 'Player Character'})`;
-      document.getElementById('hero-avatar-display').textContent = portrait;
+      renderAvatarPreview('hero-avatar-display', portrait, isNpc ? '👑' : '👤');
+      renderTokenPreview('hero-token-display', tokenAsset);
       document.getElementById('hero-name').value = name;
       document.getElementById('hero-slug').value = slug;
       document.getElementById('hero-portrait').value = portrait;
+      const tokenInput = document.getElementById('hero-token-asset');
+      if (tokenInput) tokenInput.value = tokenAsset;
       document.getElementById('hero-alignment').value = data['robos:alignment'] || data.alignment || 'Neutral Good';
 
       // NPC details
@@ -5151,6 +5170,7 @@ async function saveCurrentCharacter() {
   const isNpc = document.getElementById('radio-type-npc').checked;
   const characterType = isNpc ? 'npc' : 'hero';
   const portrait = document.getElementById('hero-portrait').value.trim() || (isNpc ? '👑' : '👤');
+  const tokenAsset = document.getElementById('hero-token-asset')?.value.trim() || '';
   const alignment = document.getElementById('hero-alignment').value;
   const backstory = document.getElementById('hero-backstory').value.trim();
 
@@ -5173,6 +5193,10 @@ async function saveCurrentCharacter() {
     characterType,
     'robos:portrait': portrait,
     portrait,
+    'robos:portraitAssetRef': portrait.startsWith('assets/') ? portrait : '',
+    portraitAssetRef: portrait.startsWith('assets/') ? portrait : '',
+    'robos:tokenAssetRef': tokenAsset,
+    tokenAssetRef: tokenAsset,
     'robos:alignment': alignment,
     alignment,
     'robos:backstory': backstory,
@@ -7655,7 +7679,12 @@ async function loadItemForm(slug) {
     state.activeItemData = it;
     document.getElementById('item-name').value = it['dcterms:title'] || it.title || it.name || '';
     document.getElementById('item-slug').value = it['dcterms:identifier'] || it.slug || slug;
-    document.getElementById('item-icon').value = it['robos:icon'] || it.icon || '📦';
+    const icon = it['robos:iconAssetRef'] || it.iconAssetRef || it['robos:icon'] || it.icon || '📦';
+    const modelAsset = it['robos:modelAssetRef'] || it.modelAssetRef || '';
+    document.getElementById('item-icon').value = icon;
+    renderThumbPreview('item-icon-preview', icon, '📦');
+    const modelInput = document.getElementById('item-model-ref');
+    if (modelInput) modelInput.value = modelAsset;
     document.getElementById('item-category').value = it['robos:itemCategory'] || it.category || 'weapon';
     document.getElementById('item-equip-slot').value = it['robos:equipSlot'] || it.equipSlot || 'none';
     document.getElementById('item-cost').value = it['robos:cost'] ?? it.cost ?? 0;
@@ -7754,6 +7783,7 @@ async function saveCurrentItem() {
   const weight = Number(document.getElementById('item-weight')?.value || 1);
   const rarity = document.getElementById('item-rarity')?.value || 'common';
   const icon = document.getElementById('item-icon')?.value.trim() || '📦';
+  const modelAssetRef = document.getElementById('item-model-ref')?.value.trim() || '';
   const desc = document.getElementById('item-desc')?.value.trim() || '';
 
   const itemPayload = {
@@ -7769,6 +7799,10 @@ async function saveCurrentItem() {
     'dcterms:title': name,
     'dcterms:description': desc,
     'robos:icon': icon,
+    'robos:iconAssetRef': icon.startsWith('assets/') ? icon : '',
+    iconAssetRef: icon.startsWith('assets/') ? icon : '',
+    'robos:modelAssetRef': modelAssetRef,
+    modelAssetRef: modelAssetRef,
     'robos:itemCategory': category,
     'robos:equipSlot': equipSlot,
     'robos:cost': cost,
@@ -8194,16 +8228,16 @@ async function loadEnemyForm(slug) {
     state.activeEnemySlug = slug;
     state.activeEnemyData = en;
 
-    const name = en['dcterms:title'] || en['schema:name'] || en.name || en.title || slug;
-    const icon = en['robos:portrait'] || en.portrait || en['robos:icon'] || en.icon || '👹';
-    const cr = en['robos:challengeRating'] || en.challengeRating || en.cr || '1/4';
-    const type = en['robos:creatureType'] || en.creatureType || en.type || 'beast';
-    const alignment = en['robos:alignment'] || en.alignment || 'Neutral Evil';
-    const isBoss = Boolean(en['robos:isBoss'] ?? en.isBoss ?? en.boss ?? false);
+    const portrait = en['robos:portraitAssetRef'] || en.portraitAssetRef || en['robos:portrait'] || en.portrait || icon;
+    const tokenAsset = en['robos:tokenAssetRef'] || en.tokenAssetRef || '';
 
     document.getElementById('enemy-name').value = name;
     document.getElementById('enemy-slug').value = en['robos:slug'] || en.slug || slug;
-    document.getElementById('enemy-icon').value = icon;
+    document.getElementById('enemy-icon').value = portrait;
+    renderAvatarPreview('enemy-avatar-display', portrait, isBoss ? '😈' : '👹');
+    renderTokenPreview('enemy-token-display', tokenAsset);
+    const enemyTokenInput = document.getElementById('enemy-token-asset');
+    if (enemyTokenInput) enemyTokenInput.value = tokenAsset;
     document.getElementById('enemy-type').value = type;
     document.getElementById('enemy-cr').value = cr;
     document.getElementById('enemy-alignment').value = alignment;
@@ -8440,6 +8474,7 @@ async function saveCurrentEnemy() {
   };
 
   const spriteAssetRef = document.getElementById('enemy-sprite-asset')?.value || '';
+  const tokenAssetRef = document.getElementById('enemy-token-asset')?.value.trim() || '';
   const desc = document.getElementById('enemy-desc')?.value.trim() || '';
 
   const enemyPayload = {
@@ -8459,6 +8494,10 @@ async function saveCurrentEnemy() {
     'robos:icon': icon,
     portrait: icon,
     'robos:portrait': icon,
+    'robos:portraitAssetRef': icon.startsWith('assets/') ? icon : '',
+    portraitAssetRef: icon.startsWith('assets/') ? icon : '',
+    'robos:tokenAssetRef': tokenAssetRef,
+    tokenAssetRef: tokenAssetRef,
     'robos:creatureType': creatureType,
     creatureType,
     'robos:challengeRating': cr,
@@ -8957,12 +8996,13 @@ async function loadSpellForm(slug) {
 
       const name = data['dcterms:title'] || data['schema:name'] || data.name || slug;
       const school = data['robos:magicSchool'] || data['robos:school'] || data.magicSchool || data.school || 'Evocation';
-      const icon = data['robos:icon'] || data.icon || '✨';
+      const icon = data['robos:iconAssetRef'] || data.iconAssetRef || data['robos:icon'] || data.icon || '✨';
 
       document.getElementById('spell-form-title').textContent = `Spell: ${name}`;
       document.getElementById('spell-name').value = name;
       document.getElementById('spell-slug').value = slug;
       document.getElementById('spell-icon').value = icon;
+      renderThumbPreview('spell-icon-preview', icon, '✨');
       document.getElementById('spell-form-icon').textContent = icon;
 
       const schoolSelect = document.getElementById('spell-school');
@@ -9078,6 +9118,8 @@ async function saveCurrentSpell() {
     slug,
     'robos:icon': icon,
     icon,
+    'robos:iconAssetRef': icon.startsWith('assets/') ? icon : '',
+    iconAssetRef: icon.startsWith('assets/') ? icon : '',
     'robos:school': school,
     school,
     'robos:level': level,
@@ -10858,4 +10900,460 @@ function updateZoomLevelDisplay() {
   const pct = Math.round(canvasRenderer.zoom * 100);
   const lbl = document.getElementById('lbl-zoom-level');
   if (lbl) lbl.textContent = `${pct}%`;
+}
+
+// ========================================================
+// VISUAL ASSET & 3D MODEL LIBRARY CONTROLLER
+// ========================================================
+
+async function loadAllAssets(preferredCategory = null) {
+  try {
+    const res = await window.robos.listAssets({ category: 'all' });
+    if (res.success) {
+      state.assets = res.assets || [];
+      state.assetCounts = res.counts || {};
+      updateAssetCountsUI();
+      renderAssetGrid();
+    }
+  } catch (err) {
+    console.error('Error loading visual assets:', err);
+  }
+}
+
+function updateAssetCountsUI() {
+  const c = state.assetCounts || {};
+  const setEl = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val ?? 0;
+  };
+  setEl('count-cat-all', c.all);
+  setEl('count-cat-portraits', c.portraits);
+  setEl('count-cat-tokens', c.tokens);
+  setEl('count-cat-items', c.items);
+  setEl('count-cat-spells', c.spells);
+  setEl('count-cat-maps', c.maps);
+  setEl('count-cat-models', c.models);
+  setEl('count-cat-sprites', c.sprites);
+}
+
+function setupAssetPickerHandlers() {
+  // Category tabs
+  const catButtons = document.querySelectorAll('#asset-picker-categories .asset-cat-btn');
+  catButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      catButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.activeAssetCategory = btn.getAttribute('data-cat') || 'all';
+      renderAssetGrid();
+    });
+  });
+
+  // Search input
+  const searchInput = document.getElementById('asset-picker-search');
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      renderAssetGrid();
+    });
+  }
+
+  // Close and Cancel buttons
+  document.getElementById('btn-close-modal-asset')?.addEventListener('click', closeAssetPicker);
+  document.getElementById('btn-cancel-asset-picker')?.addEventListener('click', closeAssetPicker);
+
+  // Confirm / Associate button
+  document.getElementById('btn-confirm-asset-picker')?.addEventListener('click', () => {
+    if (state.selectedAsset && state.assetPickerCallback) {
+      state.assetPickerCallback(state.selectedAsset);
+    }
+    closeAssetPicker();
+  });
+
+  // Import Asset button
+  document.getElementById('btn-import-asset-file')?.addEventListener('click', async () => {
+    try {
+      const res = await window.robos.importAsset({ category: state.activeAssetCategory });
+      if (res.success) {
+        setStatus(`Imported asset: ${res.fileName}`);
+        await loadAllAssets();
+        const found = state.assets.find(a => a.relativePath === res.relativePath);
+        if (found) selectAssetCard(found);
+      }
+    } catch (err) {
+      console.error('Error importing asset:', err);
+    }
+  });
+
+  // Token Generator action inside asset preview sidebar
+  document.getElementById('btn-generate-token-action')?.addEventListener('click', async () => {
+    if (!state.selectedAsset || state.selectedAsset.category !== 'portraits') return;
+    const ringColor = document.getElementById('token-ring-color')?.value || 'gold';
+    const statusEl = document.getElementById('token-bake-status');
+    if (statusEl) statusEl.textContent = 'Baking token...';
+    try {
+      const res = await window.robos.generateToken({
+        portraitRelativePath: state.selectedAsset.relativePath,
+        ringColor,
+      });
+      if (res.success) {
+        if (statusEl) statusEl.textContent = `✓ Created: ${res.fileName}`;
+        await loadAllAssets();
+        // Switch to tokens tab and select newly baked token
+        const tokensTab = document.querySelector('#asset-picker-categories [data-cat="tokens"]');
+        if (tokensTab) tokensTab.click();
+        const found = state.assets.find(a => a.relativePath === res.relativePath);
+        if (found) selectAssetCard(found);
+      } else {
+        if (statusEl) statusEl.textContent = `Error: ${res.error}`;
+      }
+    } catch (err) {
+      if (statusEl) statusEl.textContent = `Error: ${err.message}`;
+    }
+  });
+
+  // Wire up module trigger buttons:
+  // 1. Campaign Cover Art
+  document.getElementById('btn-browse-camp-splash')?.addEventListener('click', () => {
+    openAssetPicker({
+      category: 'maps',
+      onSelect: (asset) => {
+        document.getElementById('camp-splash-asset').value = asset.relativePath;
+        renderSplashPreview('camp-splash-preview', asset.relativePath);
+      }
+    });
+  });
+
+  // 2. Characters & NPCs Portrait & Token
+  document.getElementById('btn-browse-hero-portrait')?.addEventListener('click', () => {
+    openAssetPicker({
+      category: 'portraits',
+      onSelect: (asset) => {
+        document.getElementById('hero-portrait').value = asset.relativePath;
+        renderAvatarPreview('hero-avatar-display', asset.relativePath, '👤');
+      }
+    });
+  });
+  document.getElementById('btn-choose-hero-portrait-input')?.addEventListener('click', () => {
+    openAssetPicker({
+      category: 'portraits',
+      onSelect: (asset) => {
+        document.getElementById('hero-portrait').value = asset.relativePath;
+        renderAvatarPreview('hero-avatar-display', asset.relativePath, '👤');
+      }
+    });
+  });
+  document.getElementById('hero-avatar-display')?.addEventListener('click', () => {
+    openAssetPicker({
+      category: 'portraits',
+      onSelect: (asset) => {
+        document.getElementById('hero-portrait').value = asset.relativePath;
+        renderAvatarPreview('hero-avatar-display', asset.relativePath, '👤');
+      }
+    });
+  });
+  document.getElementById('btn-make-hero-token')?.addEventListener('click', async () => {
+    const curPortrait = document.getElementById('hero-portrait')?.value?.trim();
+    if (!curPortrait || !curPortrait.startsWith('assets/')) {
+      alert('Please select a high-definition portrait asset first before generating a token.');
+      return;
+    }
+    const name = document.getElementById('hero-name')?.value?.trim() || 'hero';
+    const isNpc = document.getElementById('radio-type-npc')?.checked;
+    const ringColor = isNpc ? 'emerald' : 'gold';
+    try {
+      const res = await window.robos.generateToken({ portraitRelativePath: curPortrait, tokenName: name, ringColor });
+      if (res.success) {
+        document.getElementById('hero-token-asset').value = res.relativePath;
+        renderTokenPreview('hero-token-display', res.relativePath);
+        setStatus(`Token generated: ${res.fileName}`);
+      }
+    } catch (e) {
+      console.error('Error generating token:', e);
+    }
+  });
+  document.getElementById('btn-choose-hero-token-input')?.addEventListener('click', () => {
+    openAssetPicker({
+      category: 'tokens',
+      onSelect: (asset) => {
+        document.getElementById('hero-token-asset').value = asset.relativePath;
+        renderTokenPreview('hero-token-display', asset.relativePath);
+      }
+    });
+  });
+
+  // 3. Enemies Monster Portrait & Token
+  document.getElementById('btn-browse-enemy-portrait')?.addEventListener('click', () => {
+    openAssetPicker({
+      category: 'portraits',
+      onSelect: (asset) => {
+        document.getElementById('enemy-icon').value = asset.relativePath;
+        renderAvatarPreview('enemy-avatar-display', asset.relativePath, '👹');
+      }
+    });
+  });
+  document.getElementById('enemy-avatar-display')?.addEventListener('click', () => {
+    openAssetPicker({
+      category: 'portraits',
+      onSelect: (asset) => {
+        document.getElementById('enemy-icon').value = asset.relativePath;
+        renderAvatarPreview('enemy-avatar-display', asset.relativePath, '👹');
+      }
+    });
+  });
+  document.getElementById('btn-browse-enemy-token')?.addEventListener('click', () => {
+    openAssetPicker({
+      category: 'tokens',
+      onSelect: (asset) => {
+        document.getElementById('enemy-token-asset').value = asset.relativePath;
+        renderTokenPreview('enemy-token-display', asset.relativePath);
+      }
+    });
+  });
+  document.getElementById('btn-make-enemy-token')?.addEventListener('click', async () => {
+    const curPortrait = document.getElementById('enemy-icon')?.value?.trim();
+    if (!curPortrait || !curPortrait.startsWith('assets/')) {
+      alert('Please select a high-definition monster portrait asset first before generating a token.');
+      return;
+    }
+    const name = document.getElementById('enemy-name')?.value?.trim() || 'monster';
+    const isBoss = document.getElementById('enemy-is-boss')?.checked;
+    const ringColor = isBoss ? 'crimson' : 'amber';
+    try {
+      const res = await window.robos.generateToken({ portraitRelativePath: curPortrait, tokenName: name, ringColor });
+      if (res.success) {
+        document.getElementById('enemy-token-asset').value = res.relativePath;
+        renderTokenPreview('enemy-token-display', res.relativePath);
+        setStatus(`Monster token generated: ${res.fileName}`);
+      }
+    } catch (e) {
+      console.error('Error generating enemy token:', e);
+    }
+  });
+
+  // 4. Items Studio Icon & Model
+  document.getElementById('btn-browse-item-icon')?.addEventListener('click', () => {
+    openAssetPicker({
+      category: 'items',
+      onSelect: (asset) => {
+        document.getElementById('item-icon').value = asset.relativePath;
+        renderThumbPreview('item-icon-preview', asset.relativePath, '📦');
+      }
+    });
+  });
+  document.getElementById('btn-browse-item-model')?.addEventListener('click', () => {
+    openAssetPicker({
+      category: 'models',
+      onSelect: (asset) => {
+        document.getElementById('item-model-ref').value = asset.relativePath;
+      }
+    });
+  });
+
+  // 5. Spells Studio Icon
+  document.getElementById('btn-browse-spell-icon')?.addEventListener('click', () => {
+    openAssetPicker({
+      category: 'spells',
+      onSelect: (asset) => {
+        document.getElementById('spell-icon').value = asset.relativePath;
+        renderThumbPreview('spell-icon-preview', asset.relativePath, '✨');
+      }
+    });
+  });
+
+  // 6. Maps Studio Background Art
+  document.getElementById('btn-browse-map-art')?.addEventListener('click', () => {
+    openAssetPicker({
+      category: 'maps',
+      onSelect: (asset) => {
+        const bgInput = document.getElementById('map-bg-image');
+        if (bgInput) {
+          bgInput.value = asset.relativePath;
+          bgInput.dispatchEvent(new Event('change'));
+        }
+      }
+    });
+  });
+}
+
+function openAssetPicker({ category = 'all', onSelect = null, currentVal = '' }) {
+  state.assetPickerCallback = onSelect;
+  state.selectedAsset = null;
+  state.activeAssetCategory = category;
+
+  // Highlight tab
+  const catButtons = document.querySelectorAll('#asset-picker-categories .asset-cat-btn');
+  catButtons.forEach(btn => {
+    if (btn.getAttribute('data-cat') === category) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+
+  const searchEl = document.getElementById('asset-picker-search');
+  if (searchEl) searchEl.value = '';
+  const confirmBtn = document.getElementById('btn-confirm-asset-picker');
+  if (confirmBtn) confirmBtn.disabled = true;
+
+  // Reset preview sidebar
+  document.getElementById('asset-preview-empty')?.classList.remove('hidden');
+  document.getElementById('asset-preview-details')?.classList.add('hidden');
+  document.getElementById('asset-token-generator-panel')?.classList.add('hidden');
+
+  renderAssetGrid();
+
+  const modal = document.getElementById('modal-asset-picker');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeAssetPicker() {
+  const modal = document.getElementById('modal-asset-picker');
+  if (modal) modal.classList.add('hidden');
+  state.assetPickerCallback = null;
+  state.selectedAsset = null;
+}
+
+function renderAssetGrid() {
+  const grid = document.getElementById('asset-picker-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  const cat = state.activeAssetCategory || 'all';
+  const query = (document.getElementById('asset-picker-search')?.value || '').toLowerCase().trim();
+
+  let filtered = (state.assets || []).filter(a => {
+    if (cat !== 'all' && a.category !== cat) return false;
+    if (query) {
+      const matchName = a.name.toLowerCase().includes(query);
+      const matchPath = a.relativePath.toLowerCase().includes(query);
+      if (!matchName && !matchPath) return false;
+    }
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div style="grid-column: 1 / -1; padding: 40px; text-align: center; color: var(--text-muted);">
+      <div style="font-size: 32px; margin-bottom: 8px;">🔍</div>
+      <div>No visual assets found in this category.</div>
+      <div style="font-size: 11px; margin-top: 4px;">Click "Import Asset..." to add one.</div>
+    </div>`;
+    return;
+  }
+
+  filtered.forEach(asset => {
+    const card = document.createElement('div');
+    card.className = `asset-card ${state.selectedAsset?.relativePath === asset.relativePath ? 'selected' : ''}`;
+    card.setAttribute('data-path', asset.relativePath);
+    card.dataset.path = asset.relativePath;
+    
+    let thumbHtml = '';
+    if (asset.fileType === 'model') {
+      thumbHtml = `<div class="asset-card-thumb-wrap"><span class="asset-card-3d-badge">🧊</span></div>`;
+    } else {
+      const isToken = asset.category === 'tokens';
+      thumbHtml = `<div class="asset-card-thumb-wrap ${isToken ? 'token-thumb' : ''}">
+        <img src="${asset.webPath}" alt="${asset.name}" loading="lazy">
+      </div>`;
+    }
+
+    card.innerHTML = `
+      ${thumbHtml}
+      <div class="asset-card-title" title="${asset.name}">${asset.name}</div>
+      <div class="asset-card-cat">${asset.subCategory || asset.category}</div>
+    `;
+
+    card.addEventListener('click', () => selectAssetCard(asset, card));
+    grid.appendChild(card);
+  });
+}
+
+function selectAssetCard(asset, cardEl) {
+  state.selectedAsset = asset;
+  document.querySelectorAll('#asset-picker-grid .asset-card').forEach(c => c.classList.remove('selected'));
+  if (cardEl) cardEl.classList.add('selected');
+  const confirmBtn = document.getElementById('btn-confirm-asset-picker');
+  if (confirmBtn) confirmBtn.disabled = false;
+
+  // Update preview sidebar
+  document.getElementById('asset-preview-empty')?.classList.add('hidden');
+  const details = document.getElementById('asset-preview-details');
+  if (details) details.classList.remove('hidden');
+
+  const display = document.getElementById('asset-preview-display');
+  if (display) {
+    if (asset.fileType === 'model') {
+      display.innerHTML = `
+        <div style="text-align: center;">
+          <span style="font-size: 54px;">🧊</span>
+          <div style="font-size: 12px; font-weight: 700; color: #00bcd4; margin-top: 6px;">3D Binary glTF (.glb)</div>
+          <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">Ready for Godot 4 3D SubViewport or Isometric Baker</div>
+        </div>
+      `;
+    } else {
+      display.innerHTML = `<img src="${asset.webPath}" alt="${asset.name}" style="${asset.category === 'tokens' ? 'border-radius: 50%; max-height: 150px;' : 'max-height: 170px;'}">`;
+    }
+  }
+
+  const nameEl = document.getElementById('asset-detail-name');
+  if (nameEl) nameEl.textContent = asset.name;
+  const pathEl = document.getElementById('asset-detail-rel');
+  if (pathEl) pathEl.textContent = asset.relativePath;
+  const typeEl = document.getElementById('asset-detail-type');
+  if (typeEl) typeEl.textContent = asset.fileType.toUpperCase();
+  const catEl = document.getElementById('asset-detail-cat');
+  if (catEl) catEl.textContent = (asset.subCategory || asset.category).toUpperCase();
+  const sizeEl = document.getElementById('asset-detail-size');
+  if (sizeEl) sizeEl.textContent = `${Math.round(asset.size / 1024)} KB`;
+
+  // Token generator panel
+  const tokenPanel = document.getElementById('asset-token-generator-panel');
+  if (tokenPanel) {
+    if (asset.category === 'portraits') {
+      tokenPanel.classList.remove('hidden');
+      const st = document.getElementById('token-bake-status');
+      if (st) st.textContent = '';
+    } else {
+      tokenPanel.classList.add('hidden');
+    }
+  }
+}
+
+// Visual Media Helpers for Pane Elements
+function renderAvatarPreview(elementId, portraitValue, fallbackEmoji = '👤') {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  if (portraitValue && (portraitValue.startsWith('assets/') || portraitValue.endsWith('.png') || portraitValue.endsWith('.jpg') || portraitValue.endsWith('.webp'))) {
+    el.innerHTML = `<img src="../../../games/crpg-realm/${portraitValue}" alt="Portrait" style="width: 100%; height: 100%; object-fit: cover;">`;
+  } else {
+    el.textContent = portraitValue || fallbackEmoji;
+  }
+}
+
+function renderTokenPreview(elementId, tokenValue, fallback = '🪙') {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  if (tokenValue && (tokenValue.startsWith('assets/') || tokenValue.endsWith('.png') || tokenValue.endsWith('.webp'))) {
+    el.innerHTML = `<img src="../../../games/crpg-realm/${tokenValue}" alt="Token" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+  } else {
+    el.textContent = fallback;
+  }
+}
+
+function renderThumbPreview(elementId, assetValue, fallback = '📦') {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  if (assetValue && (assetValue.startsWith('assets/') || assetValue.endsWith('.png') || assetValue.endsWith('.webp') || assetValue.endsWith('.svg'))) {
+    el.innerHTML = `<img src="../../../games/crpg-realm/${assetValue}" alt="Icon" style="width: 100%; height: 100%; object-fit: contain;">`;
+  } else {
+    el.textContent = assetValue || fallback;
+  }
+}
+
+function renderSplashPreview(elementId, assetValue) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  if (assetValue && (assetValue.startsWith('assets/') || assetValue.endsWith('.png') || assetValue.endsWith('.jpg') || assetValue.endsWith('.webp'))) {
+    el.innerHTML = `<img src="../../../games/crpg-realm/${assetValue}" alt="Splash" style="max-height: 100%; max-width: 100%; object-fit: contain;">`;
+  } else {
+    el.innerHTML = `<span class="media-slot-placeholder" style="font-size: 12px; color: var(--text-muted);">🖼️ No Cover Artwork Set</span>`;
+  }
 }

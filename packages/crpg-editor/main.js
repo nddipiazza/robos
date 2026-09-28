@@ -30,6 +30,12 @@ function getPaths() {
   const scenesDir = path.join(baseDir, 'scenes');
   const blockoutsDir = path.join(baseDir, 'assets/blockouts');
   const portraitsDir = path.join(baseDir, 'assets/portraits');
+  const iconsDir = path.join(baseDir, 'assets/icons');
+  const mapsAssetsDir = path.join(baseDir, 'assets/maps');
+  const backgroundsDir = path.join(baseDir, 'assets/backgrounds');
+  const modelsDir = path.join(baseDir, 'assets/models');
+  const tokensDir = path.join(baseDir, 'assets/tokens');
+  const spritesDir = path.join(baseDir, 'assets/sprites');
   const blockoutPackageDir = path.join(repoRoot, 'packages/robos-crpg-blockout');
   return {
     repoRoot,
@@ -45,6 +51,12 @@ function getPaths() {
     scenesDir,
     blockoutsDir,
     portraitsDir,
+    iconsDir,
+    mapsAssetsDir,
+    backgroundsDir,
+    modelsDir,
+    tokensDir,
+    spritesDir,
     blockoutPackageDir,
   };
 }
@@ -62,6 +74,12 @@ function ensureWorkspaceDirs(paths) {
     paths.scenesDir,
     paths.blockoutsDir,
     paths.portraitsDir,
+    paths.iconsDir,
+    paths.mapsAssetsDir,
+    paths.backgroundsDir,
+    paths.modelsDir,
+    paths.tokensDir,
+    paths.spritesDir,
   ].forEach(d => {
     if (!fs.existsSync(d)) {
       try { fs.mkdirSync(d, { recursive: true }); } catch {}
@@ -1799,6 +1817,187 @@ function setupIpcHandlers() {
         fs.unlinkSync(filePath);
       }
       return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  // 9. Visual Assets & 3D Models API
+  function scanAssetDirectory(dir, category, subCategory = '') {
+    if (!fs.existsSync(dir)) return [];
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    const results = [];
+    for (const ent of entries) {
+      if (ent.name.endsWith('.import')) continue;
+      const full = path.join(dir, ent.name);
+      if (ent.isDirectory()) {
+        results.push(...scanAssetDirectory(full, category, ent.name));
+      } else {
+        const ext = path.extname(ent.name).toLowerCase();
+        const isImage = ['.png', '.jpg', '.jpeg', '.webp', '.svg'].includes(ext);
+        const isModel = ['.glb', '.gltf'].includes(ext);
+        if (isImage || isModel) {
+          const rel = path.relative(paths.baseDir, full);
+          const stat = fs.statSync(full);
+          const cleanName = ent.name
+            .replace(/\.[^/.]+$/, '')
+            .replace(/[-_]/g, ' ')
+            .replace(/\b\w/g, c => c.toUpperCase());
+          results.push({
+            id: rel,
+            fileName: ent.name,
+            name: cleanName,
+            category,
+            subCategory: subCategory || category,
+            relativePath: rel,
+            webPath: `../../../games/crpg-realm/${rel}`,
+            fullPath: full,
+            extension: ext,
+            fileType: isModel ? 'model' : 'image',
+            size: stat.size,
+            mtime: stat.mtimeMs,
+          });
+        }
+      }
+    }
+    return results;
+  }
+
+  ipcMain.handle('assets:list', async (_event, filter = {}) => {
+    try {
+      const category = filter.category || 'all';
+      let assets = [];
+
+      if (category === 'all' || category === 'portraits') {
+        assets.push(...scanAssetDirectory(paths.portraitsDir, 'portraits'));
+      }
+      if (category === 'all' || category === 'tokens') {
+        assets.push(...scanAssetDirectory(paths.tokensDir, 'tokens'));
+      }
+      if (category === 'all' || category === 'items') {
+        assets.push(...scanAssetDirectory(paths.iconsDir, 'items'));
+      }
+      if (category === 'all' || category === 'spells') {
+        const spellsDir = path.join(paths.iconsDir, 'spells');
+        const statusDir = path.join(paths.iconsDir, 'status_effects');
+        assets.push(...scanAssetDirectory(spellsDir, 'spells', 'spells'));
+        assets.push(...scanAssetDirectory(statusDir, 'spells', 'status_effects'));
+      }
+      if (category === 'all' || category === 'maps') {
+        assets.push(...scanAssetDirectory(paths.mapsAssetsDir, 'maps', 'maps'));
+        assets.push(...scanAssetDirectory(paths.backgroundsDir, 'maps', 'backgrounds'));
+        assets.push(...scanAssetDirectory(paths.blockoutsDir, 'maps', 'blockouts'));
+      }
+      if (category === 'all' || category === 'models') {
+        assets.push(...scanAssetDirectory(paths.modelsDir, 'models'));
+      }
+      if (category === 'all' || category === 'sprites') {
+        assets.push(...scanAssetDirectory(paths.spritesDir, 'sprites'));
+      }
+
+      // Sort alphabetically by name
+      assets.sort((a, b) => a.name.localeCompare(b.name));
+
+      return {
+        success: true,
+        assets,
+        counts: {
+          all: assets.length,
+          portraits: assets.filter(a => a.category === 'portraits').length,
+          tokens: assets.filter(a => a.category === 'tokens').length,
+          items: assets.filter(a => a.category === 'items').length,
+          spells: assets.filter(a => a.category === 'spells').length,
+          maps: assets.filter(a => a.category === 'maps').length,
+          models: assets.filter(a => a.category === 'models').length,
+          sprites: assets.filter(a => a.category === 'sprites').length,
+        }
+      };
+    } catch (err) {
+      return { success: false, error: err.message, assets: [] };
+    }
+  });
+
+  ipcMain.handle('assets:import', async (_event, payload = {}) => {
+    try {
+      const category = payload.category || 'portraits';
+      let destDir = paths.portraitsDir;
+      if (category === 'tokens') destDir = paths.tokensDir;
+      else if (category === 'items') destDir = path.join(paths.iconsDir, payload.subCategory || 'weapons');
+      else if (category === 'spells') destDir = path.join(paths.iconsDir, 'spells');
+      else if (category === 'maps') destDir = paths.mapsAssetsDir;
+      else if (category === 'models') destDir = paths.modelsDir;
+
+      let sourcePath = payload.sourcePath;
+      if (!sourcePath) {
+        const dialogRes = await dialog.showOpenDialog(mainWindow, {
+          title: 'Select Image or 3D Model',
+          properties: ['openFile'],
+          filters: [
+            { name: 'All Visual Assets', extensions: ['png', 'jpg', 'jpeg', 'webp', 'svg', 'glb', 'gltf'] },
+            { name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp', 'svg'] },
+            { name: '3D Models', extensions: ['glb', 'gltf'] },
+          ],
+        });
+        if (dialogRes.canceled || !dialogRes.filePaths.length) {
+          return { success: false, canceled: true };
+        }
+        sourcePath = dialogRes.filePaths[0];
+      }
+
+      const fileName = payload.fileName || path.basename(sourcePath);
+      const safeFileName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+      if (!fs.existsSync(destDir)) {
+        fs.mkdirSync(destDir, { recursive: true });
+      }
+      const targetPath = path.join(destDir, safeFileName);
+
+      fs.copyFileSync(sourcePath, targetPath);
+      const rel = path.relative(paths.baseDir, targetPath);
+
+      return {
+        success: true,
+        fileName: safeFileName,
+        relativePath: rel,
+        webPath: `../../../games/crpg-realm/${rel}`,
+        fullPath: targetPath,
+        category,
+      };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('assets:generate-token', async (_event, payload = {}) => {
+    try {
+      const { portraitRelativePath, tokenName, ringColor = 'gold' } = payload;
+      if (!portraitRelativePath) {
+        return { success: false, error: 'Missing portraitRelativePath' };
+      }
+      const absSrc = path.join(paths.baseDir, portraitRelativePath);
+      if (!fs.existsSync(absSrc)) {
+        return { success: false, error: `Source portrait not found: ${absSrc}` };
+      }
+      const slug = (tokenName || path.basename(portraitRelativePath, path.extname(portraitRelativePath)))
+        .toLowerCase()
+        .replace(/[^a-z0-9_-]/g, '_');
+      const tokenFileName = `token_${slug}.png`;
+      if (!fs.existsSync(paths.tokensDir)) {
+        fs.mkdirSync(paths.tokensDir, { recursive: true });
+      }
+      const absDst = path.join(paths.tokensDir, tokenFileName);
+      const generatorScript = path.join(paths.repoRoot, 'packages/crpg-builder/lib/token_generator.py');
+
+      const cmd = `python3 "${generatorScript}" --src "${absSrc}" --dst "${absDst}" --ring "${ringColor}" --size 256`;
+      await execPromise(cmd);
+
+      const rel = path.relative(paths.baseDir, absDst);
+      return {
+        success: true,
+        fileName: tokenFileName,
+        relativePath: rel,
+        webPath: `../../../games/crpg-realm/${rel}`,
+        ringColor,
+      };
     } catch (err) {
       return { success: false, error: err.message };
     }

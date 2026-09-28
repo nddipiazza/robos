@@ -56,6 +56,11 @@ contextBridge.exposeInMainWorld('robos', {
   // Scene APIs
   listScenes: () => ipcRenderer.invoke('scenes:list'),
 
+  // Visual Asset & 3D Model APIs
+  listAssets: (filter) => ipcRenderer.invoke('assets:list', filter),
+  importAsset: (payload) => ipcRenderer.invoke('assets:import', payload),
+  generateToken: (payload) => ipcRenderer.invoke('assets:generate-token', payload),
+
   // Platform info
   platform: process.platform,
 });

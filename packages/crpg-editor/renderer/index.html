@@ -293,6 +293,18 @@
                     <label for="camp-desc">Prologue / Story Synopsis</label>
                     <textarea id="camp-desc" rows="4" placeholder="Describe the opening premise, narrative stakes, and setting..."></textarea>
                   </div>
+                  <div class="form-group col-span-2">
+                    <label>Campaign Cover & Splash Art</label>
+                    <div class="media-slot-card">
+                      <div class="media-slot-preview" id="camp-splash-preview" style="height: 100px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); border-radius: 4px; border: 1px dashed var(--border-light); overflow: hidden;">
+                        <span class="media-slot-placeholder" style="font-size: 12px; color: var(--text-muted);">🖼️ No Cover Artwork Set</span>
+                      </div>
+                      <div class="media-slot-controls" style="display: flex; gap: 6px; margin-top: 6px;">
+                        <input type="text" id="camp-splash-asset" class="input-text" placeholder="assets/backgrounds/... or assets/maps/...">
+                        <button type="button" id="btn-browse-camp-splash" class="btn btn-secondary btn-sm">🖼️ Browse Art...</button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1387,7 +1399,13 @@
             <!-- Identity Section -->
             <div class="sheet-section">
               <div class="identity-header-grid">
-                <div class="portrait-preview-box" id="hero-avatar-display">👤</div>
+                <div class="media-portrait-card" style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+                  <div class="portrait-preview-box" id="hero-avatar-display" title="Click to choose hi-def portrait" style="cursor: pointer; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;">👤</div>
+                  <div class="portrait-action-btns" style="display: flex; gap: 4px;">
+                    <button type="button" id="btn-browse-hero-portrait" class="btn btn-secondary btn-xs" title="Select high-definition portrait artwork">🖼️ Portrait</button>
+                    <button type="button" id="btn-make-hero-token" class="btn btn-secondary btn-xs" title="Generate circular battle token from this portrait">🪙 Token</button>
+                  </div>
+                </div>
                 <div class="form-grid" style="flex: 1;">
                   <div class="form-group">
                     <label for="hero-name">Character Name</label>
@@ -1398,8 +1416,19 @@
                     <input type="text" id="hero-slug" class="input-text" placeholder="e.g. king-loric, hero-vance">
                   </div>
                   <div class="form-group">
-                    <label for="hero-portrait">Portrait / Emoji</label>
-                    <input type="text" id="hero-portrait" class="input-text" placeholder="Emoji or file path">
+                    <label for="hero-portrait">Portrait Asset Ref / Emoji</label>
+                    <div style="display: flex; gap: 4px;">
+                      <input type="text" id="hero-portrait" class="input-text" placeholder="assets/portraits/... or ⚔️">
+                      <button type="button" id="btn-choose-hero-portrait-input" class="btn btn-secondary btn-sm" title="Choose asset">📂</button>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="hero-token-asset">Tactical Battle Token / 3D Model</label>
+                    <div style="display: flex; gap: 4px; align-items: center;">
+                      <div class="token-thumb-mini" id="hero-token-display" style="width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border-light); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; background: rgba(0,0,0,0.3); font-size: 13px;">🪙</div>
+                      <input type="text" id="hero-token-asset" class="input-text" placeholder="assets/tokens/... or assets/models/...">
+                      <button type="button" id="btn-choose-hero-token-input" class="btn btn-secondary btn-sm" title="Choose token or 3D model">🪙</button>
+                    </div>
                   </div>
                   <div class="form-group">
                     <label for="hero-alignment">Alignment</label>
@@ -1922,8 +1951,19 @@
                   <input type="text" id="item-slug" class="input-text" placeholder="e.g. bamboo-pole">
                 </div>
                 <div class="form-group">
-                  <label for="item-icon">Icon / Emoji</label>
-                  <input type="text" id="item-icon" class="input-text" value="📦" maxlength="4">
+                  <label for="item-icon">Item Icon (Asset or Emoji)</label>
+                  <div style="display: flex; gap: 6px; align-items: center;">
+                    <div class="token-thumb-mini" id="item-icon-preview" style="width: 28px; height: 28px; border-radius: 4px; border: 1px solid var(--border-light); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; background: rgba(0,0,0,0.3); font-size: 14px;">📦</div>
+                    <input type="text" id="item-icon" class="input-text" value="📦" placeholder="assets/icons/... or 📦">
+                    <button type="button" id="btn-browse-item-icon" class="btn btn-secondary btn-sm" title="Browse hi-def item icons">🖼️</button>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="item-model-ref">3D Model / Detail Artwork Ref</label>
+                  <div style="display: flex; gap: 6px; align-items: center;">
+                    <input type="text" id="item-model-ref" class="input-text" placeholder="assets/models/... or assets/icons/...">
+                    <button type="button" id="btn-browse-item-model" class="btn btn-secondary btn-sm" title="Browse 3D models or detail art">🧊</button>
+                  </div>
                 </div>
                 <div class="form-group">
                   <label for="item-category">Category</label>
@@ -2113,8 +2153,12 @@
                       <input type="text" id="enemy-slug" class="input-text" placeholder="e.g. dragonlord">
                     </div>
                     <div class="form-group">
-                      <label for="enemy-icon">Portrait / Emoji Icon</label>
-                      <input type="text" id="enemy-icon" class="input-text" value="👹" maxlength="4">
+                      <label for="enemy-icon">Portrait / Monster Art</label>
+                      <div style="display: flex; gap: 6px; align-items: center;">
+                        <div class="token-thumb-mini" id="enemy-avatar-display" style="width: 28px; height: 28px; border-radius: 4px; border: 1px solid var(--border-light); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; background: rgba(0,0,0,0.3); font-size: 14px;">👹</div>
+                        <input type="text" id="enemy-icon" class="input-text" value="👹" placeholder="assets/portraits/... or 👹">
+                        <button type="button" id="btn-browse-enemy-portrait" class="btn btn-secondary btn-sm" title="Browse hi-def monster portraits">🖼️</button>
+                      </div>
                     </div>
                     <div class="form-group">
                       <label for="enemy-type">Creature Type</label>
@@ -2274,6 +2318,15 @@
                         <option value="flare:creature:dragon">flare:creature:dragon (Dragonlord Wyrm)</option>
                       </select>
                     </div>
+                    <div class="form-group col-span-2">
+                      <label for="enemy-token-asset">Tactical Battle Token / 3D Model Ref</label>
+                      <div style="display: flex; gap: 6px; align-items: center;">
+                        <div class="token-thumb-mini" id="enemy-token-display" style="width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border-light); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; background: rgba(0,0,0,0.3); font-size: 13px;">🪙</div>
+                        <input type="text" id="enemy-token-asset" class="input-text" placeholder="assets/tokens/... or assets/models/...">
+                        <button type="button" id="btn-browse-enemy-token" class="btn btn-secondary btn-sm" title="Browse tokens or 3D models">🪙 Choose</button>
+                        <button type="button" id="btn-make-enemy-token" class="btn btn-secondary btn-sm" title="Bake battle token from monster portrait">🪙 Bake Token</button>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -2367,8 +2420,12 @@
                   <input type="text" id="spell-slug" class="input-text" placeholder="e.g. magic-missile">
                 </div>
                 <div class="form-group">
-                  <label for="spell-icon">Icon / Emoji</label>
-                  <input type="text" id="spell-icon" class="input-text" value="✨" maxlength="4">
+                  <label for="spell-icon">Spell Icon (Asset or Emoji)</label>
+                  <div style="display: flex; gap: 6px; align-items: center;">
+                    <div class="token-thumb-mini" id="spell-icon-preview" style="width: 28px; height: 28px; border-radius: 4px; border: 1px solid var(--border-light); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; background: rgba(0,0,0,0.3); font-size: 14px;">✨</div>
+                    <input type="text" id="spell-icon" class="input-text" value="✨" placeholder="assets/icons/spells/... or ✨">
+                    <button type="button" id="btn-browse-spell-icon" class="btn btn-secondary btn-sm" title="Browse hi-def spell icons">🖼️</button>
+                  </div>
                 </div>
                 <div class="form-group">
                   <label for="spell-school">Magic School</label>
@@ -2661,8 +2718,11 @@
 
               <!-- Background Artwork Underlay Image -->
               <div class="form-group" style="margin-bottom: 12px;">
-                <label for="map-bg-image">Background Artwork Underlay Image</label>
-                <input type="text" id="map-bg-image" class="input-text" placeholder="assets/maps/background.jpg">
+                <label for="map-bg-image">High-Definition Battlemap Artwork Underlay</label>
+                <div style="display: flex; gap: 6px; align-items: center;">
+                  <input type="text" id="map-bg-image" class="input-text" placeholder="assets/maps/... or assets/backgrounds/...">
+                  <button type="button" id="btn-browse-map-art" class="btn btn-secondary btn-sm" title="Browse hi-def battlemaps and backgrounds">🖼️ Browse</button>
+                </div>
               </div>
 
               <div class="form-group">
@@ -2995,6 +3055,90 @@
       <div class="modal-footer">
         <button id="btn-cancel-open-map" class="btn btn-secondary">Cancel</button>
         <button id="btn-confirm-open-map" class="btn btn-primary" disabled>Open Selected Map</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Visual Asset & 3D Model Picker -->
+  <div id="modal-asset-picker" class="modal-backdrop hidden">
+    <div class="modal-dialog asset-picker-dialog">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-icon">🎨</span>
+          <div>
+            <h2 class="modal-title">Visual Asset & 3D Model Library</h2>
+            <div class="modal-subtitle">Associate real hi-def portraits, icons, tokens, 3D meshes, and battlemaps</div>
+          </div>
+        </div>
+        <button id="btn-close-modal-asset" class="btn-icon-close" title="Close">✕</button>
+      </div>
+
+      <div class="asset-picker-toolbar">
+        <div class="asset-category-tabs" id="asset-picker-categories">
+          <button class="asset-cat-btn active" data-cat="all">All (<span id="count-cat-all">0</span>)</button>
+          <button class="asset-cat-btn" data-cat="portraits">👤 Portraits (<span id="count-cat-portraits">0</span>)</button>
+          <button class="asset-cat-btn" data-cat="tokens">🪙 Tokens (<span id="count-cat-tokens">0</span>)</button>
+          <button class="asset-cat-btn" data-cat="items">📦 Items (<span id="count-cat-items">0</span>)</button>
+          <button class="asset-cat-btn" data-cat="spells">✨ Spells (<span id="count-cat-spells">0</span>)</button>
+          <button class="asset-cat-btn" data-cat="maps">🗺️ Maps & Art (<span id="count-cat-maps">0</span>)</button>
+          <button class="asset-cat-btn" data-cat="models">🧊 3D Models (<span id="count-cat-models">0</span>)</button>
+          <button class="asset-cat-btn" data-cat="sprites">👾 Sprites (<span id="count-cat-sprites">0</span>)</button>
+        </div>
+        <div class="asset-toolbar-actions">
+          <input type="text" id="asset-picker-search" class="input-text" placeholder="🔍 Search assets by name or path...">
+          <button id="btn-import-asset-file" class="btn btn-secondary btn-sm" title="Import external image or 3D model into project">📥 Import Asset...</button>
+        </div>
+      </div>
+
+      <div class="asset-picker-body">
+        <!-- Asset Grid -->
+        <div class="asset-grid-container" id="asset-picker-grid">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Sidebar Detail & Preview -->
+        <div class="asset-preview-sidebar" id="asset-preview-sidebar">
+          <div id="asset-preview-empty" class="preview-empty">
+            <span>Select an asset from the grid to preview details</span>
+          </div>
+          <div id="asset-preview-details" class="preview-details hidden">
+            <div class="asset-preview-box" id="asset-preview-display">
+              <!-- Rendered image, token, or 3D model info -->
+            </div>
+            <h3 id="asset-detail-name">Asset Name</h3>
+            <div id="asset-detail-rel" class="asset-detail-path">assets/...</div>
+            <div class="asset-detail-tags">
+              <span id="asset-detail-type" class="badge">IMAGE</span>
+              <span id="asset-detail-cat" class="badge">PORTRAIT</span>
+              <span id="asset-detail-size" class="badge">256 KB</span>
+            </div>
+
+            <!-- Token Action Panel (if portrait) -->
+            <div id="asset-token-generator-panel" class="asset-token-panel hidden">
+              <div class="stat-section-title" style="margin-bottom: 6px; font-size: 11px;">🪙 Instant Token Generator</div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">
+                Bake this portrait into a high-res circular VTT battle token with an anti-aliased metallic border ring:
+              </div>
+              <div style="display: flex; gap: 6px; align-items: center; margin-bottom: 8px;">
+                <select id="token-ring-color" class="dropdown-select" style="font-size: 11px; padding: 4px 8px;">
+                  <option value="gold">Gold Ring (Player Hero)</option>
+                  <option value="crimson">Crimson Ring (Boss / Nemesis)</option>
+                  <option value="amber">Amber Ring (Monster / Foe)</option>
+                  <option value="emerald">Emerald Ring (Ally / NPC)</option>
+                  <option value="cyan">Cyan Ring (Magic / Caster)</option>
+                  <option value="silver">Silver Ring (Neutral)</option>
+                </select>
+                <button id="btn-generate-token-action" class="btn btn-sm btn-secondary" style="font-size: 11px; white-space: nowrap;">Bake Token</button>
+              </div>
+              <div id="token-bake-status" style="font-size: 11px; color: #00bcd4;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="btn-cancel-asset-picker" class="btn btn-secondary">Cancel</button>
+        <button id="btn-confirm-asset-picker" class="btn btn-primary" disabled>Associate Selected Asset</button>
       </div>
     </div>
   </div>

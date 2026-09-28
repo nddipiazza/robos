@@ -4885,3 +4885,211 @@ body.resizing * {
   color: #94a3b8;
   text-transform: uppercase;
 }
+
+/* ========================================================
+   VISUAL ASSET & 3D MODEL PICKER MODAL
+   ======================================================== */
+.asset-picker-dialog {
+  max-width: 1040px;
+  width: 90vw;
+  height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.asset-picker-toolbar {
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border-light);
+  background-color: var(--bg-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.asset-category-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.asset-cat-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-light);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.asset-cat-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+  border-color: var(--accent);
+}
+
+.asset-cat-btn.active {
+  background: rgba(0, 188, 212, 0.15);
+  color: #00bcd4;
+  border-color: #00bcd4;
+}
+
+.asset-toolbar-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.asset-picker-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.asset-grid-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 12px;
+  align-content: start;
+}
+
+.asset-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+  text-align: center;
+}
+
+.asset-card:hover {
+  border-color: var(--accent);
+  background: rgba(0, 188, 212, 0.06);
+  transform: translateY(-2px);
+}
+
+.asset-card.selected {
+  border-color: #00bcd4;
+  background: rgba(0, 188, 212, 0.16);
+  box-shadow: 0 0 10px rgba(0, 188, 212, 0.3);
+}
+
+.asset-card-thumb-wrap {
+  width: 76px;
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.25);
+  margin-bottom: 8px;
+  position: relative;
+}
+
+.asset-card-thumb-wrap img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.asset-card-thumb-wrap.token-thumb img {
+  border-radius: 50%;
+}
+
+.asset-card-3d-badge {
+  font-size: 28px;
+}
+
+.asset-card-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-primary);
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+
+.asset-card-cat {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: capitalize;
+}
+
+/* Asset Preview Sidebar */
+.asset-preview-sidebar {
+  width: 290px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--border-light);
+  background: var(--bg-secondary);
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.asset-preview-box {
+  width: 100%;
+  height: 180px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+
+.asset-preview-box img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.asset-detail-path {
+  font-size: 11px;
+  font-family: monospace;
+  color: var(--accent);
+  word-break: break-all;
+  margin-bottom: 10px;
+}
+
+.asset-detail-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.asset-token-panel {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-light);
+}
+
+/* Portrait and mini token visual slots */
+.portrait-preview-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.token-thumb-mini img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

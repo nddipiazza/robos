@@ -86,9 +86,13 @@ class MapCanvasRenderer {
     if (!this.imageCache.has(bgPath)) {
       const img = new Image();
       // Handle repo-relative path if necessary
-      img.src = bgPath.startsWith('http') || bgPath.startsWith('/') || bgPath.startsWith('file://')
-        ? bgPath
-        : `../../${bgPath}`;
+      if (bgPath.startsWith('http') || bgPath.startsWith('/') || bgPath.startsWith('file://')) {
+        img.src = bgPath;
+      } else if (bgPath.startsWith('assets/')) {
+        img.src = `../../../games/crpg-realm/${bgPath}`;
+      } else {
+        img.src = `../../../${bgPath}`;
+      }
       img.onload = () => {
         this.imageCache.set(bgPath, img);
         this.render();
@@ -96,7 +100,7 @@ class MapCanvasRenderer {
       img.onerror = () => {
         // Fallback for file path
         const fallback = new Image();
-        fallback.src = `../../games/crpg-realm/${bgPath}`;
+        fallback.src = `../../../games/crpg-realm/${bgPath}`;
         fallback.onload = () => {
           this.imageCache.set(bgPath, fallback);
           this.render();
