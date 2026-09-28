@@ -2919,12 +2919,14 @@ function setupStoryTreeHandlers() {
   searchInput?.addEventListener('input', (e) => {
     state.flowPageSearchQuery = e.target.value;
     renderFlowPageTurner();
+    renderQuestScenarioTree(true);
   });
 
   btnClearSearch?.addEventListener('click', () => {
     state.flowPageSearchQuery = '';
     if (searchInput) searchInput.value = '';
     renderFlowPageTurner();
+    renderQuestScenarioTree(true);
   });
 
   btnOpenDirectory?.addEventListener('click', () => {
@@ -3015,16 +3017,15 @@ function setupStoryTreeHandlers() {
   });
 
   btnZoomIn?.addEventListener('click', () => {
-    state.storyTreeZoom = Math.min(1.8, state.storyTreeZoom + 0.15);
+    state.storyTreeZoom = Math.min(1.8, Math.round((state.storyTreeZoom + 0.15) * 100) / 100);
     applyTreeZoom();
   });
   btnZoomOut?.addEventListener('click', () => {
-    state.storyTreeZoom = Math.max(0.5, state.storyTreeZoom - 0.15);
+    state.storyTreeZoom = Math.max(0.4, Math.round((state.storyTreeZoom - 0.15) * 100) / 100);
     applyTreeZoom();
   });
   btnFit?.addEventListener('click', () => {
-    state.storyTreeZoom = 1.0;
-    applyTreeZoom();
+    fitTreeToScreen();
   });
 
   // Node Inspector input bindings
@@ -3108,6 +3109,54 @@ function applyTreeZoom() {
     svg.style.transform = `scale(${state.storyTreeZoom})`;
     svg.style.transformOrigin = '0 0';
   }
+  const badge = document.getElementById('tree-zoom-level');
+  if (badge) {
+    badge.textContent = `${Math.round(state.storyTreeZoom * 100)}%`;
+  }
+}
+
+function fitTreeToScreen() {
+  const container = document.getElementById('quest-tree-canvas-container');
+  const flow = getStoryFlow();
+  const nodes = flow['robos:storyNodes'] || [];
+  let visibleNodes = [];
+  if (state.activeFlowPageId === 'all') {
+    visibleNodes = nodes;
+  } else {
+    visibleNodes = nodes.filter(n => (n['robos:flowPage'] || n.flowPage) === state.activeFlowPageId);
+  }
+  const filterAct = document.getElementById('story-act-filter')?.value || 'all';
+  if (filterAct !== 'all') {
+    visibleNodes = visibleNodes.filter(n => (n['robos:act'] || n.act || 'Prologue').toLowerCase() === filterAct.toLowerCase());
+  }
+
+  if (!container || visibleNodes.length === 0) {
+    state.storyTreeZoom = 1.0;
+    applyTreeZoom();
+    return;
+  }
+
+  const xs = visibleNodes.map(n => n._x || 0);
+  const ys = visibleNodes.map(n => n._y || 0);
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs) + 310;
+  const minY = Math.min(...ys);
+  const maxY = Math.max(...ys) + 240;
+
+  const contentW = Math.max(maxX - minX + 80, 400);
+  const contentH = Math.max(maxY - minY + 80, 300);
+  const containerW = container.clientWidth || 1200;
+  const containerH = container.clientHeight || 700;
+
+  const scaleX = (containerW - 60) / contentW;
+  const scaleY = (containerH - 60) / contentH;
+  const bestZoom = Math.min(scaleX, scaleY);
+
+  state.storyTreeZoom = Math.min(1.3, Math.max(0.4, Math.round(bestZoom * 100) / 100));
+  applyTreeZoom();
+
+  container.scrollLeft = Math.max(0, (minX - 40) * state.storyTreeZoom);
+  container.scrollTop = Math.max(0, (minY - 40) * state.storyTreeZoom);
 }
 
 function populateStoryInspectorDropdowns() {
@@ -3245,6 +3294,119 @@ function renderStoryTreeOutline(nodes, filterAct) {
   });
 }
 
+function computeTopologicalRanks(nodeList) {
+  const nodeMap = new Map();
+  nodeList.forEach(n => nodeMap.set(n.id, n));
+
+  const inDegree = new Map();
+  nodeList.forEach(n => inDegree.set(n.id, 0));
+
+  nodeList.forEach(src => {
+    const choices = src['robos:choices'] || src.choices || [];
+    choices.forEach(ch => {
+      if (nodeMap.has(ch.targetNodeId)) {
+        inDegree.set(ch.targetNodeId, (inDegree.get(ch.targetNodeId) || 0) + 1);
+      }
+    });
+  });
+
+  const ranks = new Map();
+  const roots = nodeList.filter(n => inDegree.get(n.id) === 0);
+  if (roots.length === 0 && nodeList.length > 0) {
+    roots.push(nodeList[0]);
+  }
+
+  roots.forEach(r => ranks.set(r.id, 0));
+
+  let changed = true;
+  let iter = 0;
+  const maxIter = nodeList.length + 3;
+  while (changed && iter < maxIter) {
+    changed = false;
+    iter++;
+    nodeList.forEach(src => {
+      const curRank = ranks.get(src.id) !== undefined ? ranks.get(src.id) : 0;
+      const choices = src['robos:choices'] || src.choices || [];
+      choices.forEach(ch => {
+        if (nodeMap.has(ch.targetNodeId)) {
+          const targetRank = ranks.get(ch.targetNodeId);
+          if (targetRank === undefined || targetRank < curRank + 1) {
+            ranks.set(ch.targetNodeId, curRank + 1);
+            changed = true;
+          }
+        }
+      });
+    });
+  }
+
+  const typeOrder = {
+    'game_start': 0,
+    'act_chapter': 0,
+    'quest_stage': 1,
+    'combat_trial': 2,
+    'decision_branch': 2,
+    'end_game_state': 3
+  };
+
+  nodeList.forEach(n => {
+    if (ranks.get(n.id) === undefined) {
+      const t = n['robos:nodeType'] || n.type || 'quest_stage';
+      ranks.set(n.id, typeOrder[t] !== undefined ? typeOrder[t] : 0);
+    }
+  });
+
+  return ranks;
+}
+
+function getNodeChoiceOffsetY(node, choiceIndex, hasInbound) {
+  let y = 28 + 10; // header height + body padding top
+  if (hasInbound) y += 24;
+  y += 20; // title height
+  const summary = node['robos:summary'] || node.summary || node['robos:narrative'] || '';
+  if (summary) y += 38; // synopsis box height
+  y += 20; // meta row
+  y += 14; // choices top dashed border & padding
+  y += choiceIndex * 58; // preceding choice pills
+  y += 26; // center of current choice pill
+  return y;
+}
+
+function checkHasInbound(node, allNodes) {
+  if (state.activeFlowPageId === 'all') return false;
+  return allNodes.some(other => {
+    const otherPage = other['robos:flowPage'] || other.flowPage;
+    if (otherPage === state.activeFlowPageId) return false;
+    const otherChoices = other['robos:choices'] || other.choices || [];
+    return otherChoices.some(ch => ch.targetNodeId === node.id);
+  });
+}
+
+function checkNodeMatchesQuery(node, query) {
+  if (!query) return true;
+  const q = query.toLowerCase();
+  const title = (node['dcterms:title'] || node.title || node.id || '').toLowerCase();
+  const summary = (node['robos:summary'] || node.summary || node['robos:narrative'] || '').toLowerCase();
+  const act = (node['robos:act'] || node.act || '').toLowerCase();
+  const location = (node['robos:location'] || node.location || '').toLowerCase();
+  const giver = (node['robos:giver'] || node.giver || '').toLowerCase();
+  const choices = (node['robos:choices'] || node.choices || []);
+  const choiceMatch = choices.some(c => (c.label || '').toLowerCase().includes(q) || (c.targetNodeId || '').toLowerCase().includes(q));
+  return title.includes(q) || summary.includes(q) || act.includes(q) || location.includes(q) || giver.includes(q) || choiceMatch;
+}
+
+function highlightStoryPath(sourceId, targetId) {
+  document.querySelectorAll(`.story-edge-path[data-source-id="${sourceId}"][data-target-id="${targetId}"]`).forEach(p => p.classList.add('highlighted'));
+  document.querySelectorAll(`.story-edge-label-group[data-source-id="${sourceId}"][data-target-id="${targetId}"]`).forEach(l => l.classList.add('highlighted'));
+  const targetCard = document.querySelector(`.story-node-card[data-id="${targetId}"]`);
+  if (targetCard) targetCard.classList.add('target-highlighted');
+}
+
+function clearStoryPathHighlight() {
+  document.querySelectorAll('.story-edge-path.highlighted').forEach(p => p.classList.remove('highlighted'));
+  document.querySelectorAll('.story-edge-label-group.highlighted').forEach(l => l.classList.remove('highlighted'));
+  document.querySelectorAll('.story-node-card.target-highlighted').forEach(c => c.classList.remove('target-highlighted'));
+}
+
 function renderStoryTreeCanvas(nodes, filterAct) {
   const svgEl = document.getElementById('quest-tree-svg');
   const layerEl = document.getElementById('quest-tree-nodes-layer');
@@ -3267,6 +3429,8 @@ function renderStoryTreeCanvas(nodes, filterAct) {
     visibleNodes = visibleNodes.filter(n => (n['robos:act'] || n.act || 'Prologue').toLowerCase() === filterAct.toLowerCase());
   }
 
+  const rawQuery = (state.flowPageSearchQuery || '').trim().toLowerCase();
+
   // Clean empty state
   if (visibleNodes.length === 0) {
     svgEl.innerHTML = '';
@@ -3279,8 +3443,8 @@ function renderStoryTreeCanvas(nodes, filterAct) {
     return;
   }
 
-  const colWidth = 320;
-  const rowHeight = 185;
+  const colWidth = state.activeFlowPageId === 'all' ? 480 : 470;
+  const rowHeight = 250;
   const x0 = 40;
   const y0 = 50;
 
@@ -3298,7 +3462,7 @@ function renderStoryTreeCanvas(nodes, filterAct) {
     });
 
     let bannersHtml = '';
-    Object.keys(pageColGroups).forEach(colKey => {
+    Object.keys(pageColGroups).sort((a, b) => Number(a) - Number(b)).forEach(colKey => {
       const colIdx = Number(colKey);
       const pageObj = pages[colIdx] || { name: `Page ${colIdx + 1}` };
       const colLeft = x0 + colIdx * (colWidth + 40);
@@ -3309,33 +3473,28 @@ function renderStoryTreeCanvas(nodes, filterAct) {
         </div>
       `;
 
+      // Sort nodes within the page by their internal topological rank
+      const pageRanks = computeTopologicalRanks(pageColGroups[colKey]);
+      pageColGroups[colKey].sort((a, b) => (pageRanks.get(a.id) || 0) - (pageRanks.get(b.id) || 0));
+
       pageColGroups[colKey].forEach((node, rowIdx) => {
         node._x = colLeft;
-        node._y = y0 + 30 + rowIdx * rowHeight;
+        node._y = y0 + 35 + rowIdx * rowHeight;
       });
     });
 
     layerEl.innerHTML = bannersHtml;
   } else {
-    // Single page view: arrange topologically by node type
-    const typeOrder = {
-      'game_start': 0,
-      'act_chapter': 0,
-      'quest_stage': 1,
-      'combat_trial': 2,
-      'decision_branch': 2,
-      'end_game_state': 3
-    };
-
+    // Single page view: arrange topologically by DAG depth / rank
+    const ranks = computeTopologicalRanks(visibleNodes);
     const colGroups = {};
     visibleNodes.forEach(node => {
-      const type = node['robos:nodeType'] || node.type || 'quest_stage';
-      let col = typeOrder[type] !== undefined ? typeOrder[type] : 1;
+      const col = ranks.get(node.id) !== undefined ? ranks.get(node.id) : 0;
       if (!colGroups[col]) colGroups[col] = [];
       colGroups[col].push(node);
     });
 
-    Object.keys(colGroups).forEach(colKey => {
+    Object.keys(colGroups).sort((a, b) => Number(a) - Number(b)).forEach(colKey => {
       const colIdx = Number(colKey);
       colGroups[colKey].forEach((node, rowIdx) => {
         node._x = x0 + colIdx * colWidth;
@@ -3346,36 +3505,73 @@ function renderStoryTreeCanvas(nodes, filterAct) {
     layerEl.innerHTML = '';
   }
 
-  // 1. Render SVG Connection Curves
-  let svgPaths = '';
+  // 1. Render SVG Connection Curves & Markers
+  const svgDefs = `
+    <defs>
+      <marker id="arrow-cyan" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M 0 1 L 9 5 L 0 9 z" fill="#38bdf8" />
+      </marker>
+      <marker id="arrow-visited" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M 0 1 L 9 5 L 0 9 z" fill="#10b981" />
+      </marker>
+      <marker id="arrow-purple" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M 0 1 L 9 5 L 0 9 z" fill="#c084fc" />
+      </marker>
+      <marker id="arrow-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M 0 1 L 9 5 L 0 9 z" fill="#f59e0b" />
+      </marker>
+    </defs>
+  `;
+
+  let svgPaths = svgDefs;
   visibleNodes.forEach(node => {
     const choices = node['robos:choices'] || node.choices || [];
-    choices.forEach(ch => {
+    const hasInbound = checkHasInbound(node, nodes);
+    choices.forEach((ch, chIdx) => {
       const targetNode = visibleNodes.find(n => n.id === ch.targetNodeId);
       if (targetNode && node._x !== undefined && targetNode._x !== undefined) {
-        const x1 = node._x + 230;
-        const y1 = node._y + 40;
+        const x1 = node._x + 310;
+        const y1 = node._y + getNodeChoiceOffsetY(node, chIdx, hasInbound);
         const x2 = targetNode._x;
-        const y2 = targetNode._y + 40;
-        const dx = Math.max(50, Math.abs(x2 - x1) * 0.45);
+        const y2 = targetNode._y + 36;
+        const dx = Math.max(60, Math.abs(x2 - x1) * 0.45);
         const pathData = `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
 
         const isVisited = state.storyWalkthrough.visitedNodeIds.includes(node.id) &&
                           state.storyWalkthrough.visitedNodeIds.includes(targetNode.id);
         const isEndNode = targetNode['robos:nodeType'] === 'end_game_state' || targetNode.type === 'end_game_state';
-        const strokeColor = isVisited ? '#10b981' : (isEndNode ? '#a855f7' : '#0ea5e9');
-        const strokeWidth = isVisited ? 3 : 2;
+        const isCombatOrDecision = targetNode['robos:nodeType'] === 'combat_trial' || targetNode['robos:nodeType'] === 'decision_branch';
 
-        svgPaths += `<path d="${pathData}" fill="none" stroke="${strokeColor}" stroke-width="${strokeWidth}" stroke-opacity="${isVisited ? 1 : 0.6}" ${isVisited ? '' : 'stroke-dasharray="4,3"'}/>`;
+        let strokeColor = '#38bdf8';
+        let markerId = 'arrow-cyan';
+        if (isVisited) {
+          strokeColor = '#10b981';
+          markerId = 'arrow-visited';
+        } else if (isEndNode) {
+          strokeColor = '#c084fc';
+          markerId = 'arrow-purple';
+        } else if (isCombatOrDecision) {
+          strokeColor = '#f59e0b';
+          markerId = 'arrow-amber';
+        }
+
+        const strokeWidth = isVisited ? 3 : 2;
+        const edgeId = `edge-${node.id}-${targetNode.id}-${chIdx}`;
+
+        const sourceMatches = checkNodeMatchesQuery(node, rawQuery);
+        const targetMatches = checkNodeMatchesQuery(targetNode, rawQuery);
+        const isSearchDimmed = rawQuery && (!sourceMatches && !targetMatches);
+
+        svgPaths += `<path id="${edgeId}" class="story-edge-path ${isSearchDimmed ? 'search-dimmed' : ''}" d="${pathData}" fill="none" stroke="${strokeColor}" stroke-width="${strokeWidth}" stroke-opacity="${isVisited ? 1 : 0.75}" ${isVisited ? '' : 'stroke-dasharray="6,4"'} marker-end="url(#${markerId})" data-source-id="${node.id}" data-target-id="${targetNode.id}"/>`;
 
         if (ch.label) {
           const mx = (x1 + x2) / 2;
           const my = (y1 + y2) / 2;
           const truncatedLabel = ch.label.length > 22 ? ch.label.slice(0, 20) + '…' : ch.label;
           svgPaths += `
-            <g transform="translate(${mx}, ${my})">
-              <rect x="-70" y="-10" width="140" height="18" rx="4" fill="#0f172a" stroke="${strokeColor}" stroke-width="1" opacity="0.9"/>
-              <text x="0" y="2" fill="#e2e8f0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle" dominant-baseline="middle">${escapeXml(truncatedLabel)}</text>
+            <g class="story-edge-label-group ${isSearchDimmed ? 'search-dimmed' : ''}" transform="translate(${mx}, ${my - 12})" data-source-id="${node.id}" data-target-id="${targetNode.id}">
+              <rect x="-58" y="-9" width="116" height="18" rx="4" fill="#0f172a" stroke="${strokeColor}" stroke-width="1" opacity="0.92"/>
+              <text x="0" y="2" fill="#cbd5e1" font-size="9" font-weight="600" font-family="system-ui, sans-serif" text-anchor="middle" dominant-baseline="middle">${escapeXml(truncatedLabel)}</text>
             </g>
           `;
         }
@@ -3384,7 +3580,7 @@ function renderStoryTreeCanvas(nodes, filterAct) {
   });
   svgEl.innerHTML = svgPaths;
 
-  // 2. Render Node Cards with Inbound/Outbound Cross-Page Jump Ports
+  // 2. Render Node Cards with Inbound/Outbound Cross-Page Jump Ports and Synopses
   const nodeCardsHtml = visibleNodes.map(node => {
     const isSelected = node.id === state.selectedStoryNodeId;
     const isWalkthrough = node.id === state.storyWalkthrough.currentNodeId;
@@ -3396,6 +3592,7 @@ function renderStoryTreeCanvas(nodes, filterAct) {
     const location = node['robos:location'] || node.location || '';
     const giver = node['robos:giver'] || node.giver || '';
     const choices = node['robos:choices'] || node.choices || [];
+    const summary = node['robos:summary'] || node.summary || node['robos:narrative'] || '';
 
     // Find any inbound cross-page connections
     let inboundHtml = '';
@@ -3415,10 +3612,16 @@ function renderStoryTreeCanvas(nodes, filterAct) {
       }
     }
 
+    const synopsisHtml = summary ? `
+      <div class="story-node-synopsis" title="${escapeXml(summary)}">
+        "${escapeXml(summary)}"
+      </div>
+    ` : '';
+
     // Choices and Outbound Cross-Page Jump Ports
     const choicesHtml = choices.length > 0 ? `
       <div class="story-node-choices">
-        ${choices.map(c => {
+        ${choices.map((c, chIdx) => {
           const targetNode = nodes.find(n => n.id === c.targetNodeId);
           const isCrossPage = targetNode && state.activeFlowPageId !== 'all' && (targetNode['robos:flowPage'] || targetNode.flowPage) !== state.activeFlowPageId;
           const targetPage = isCrossPage ? pages.find(p => p.id === (targetNode['robos:flowPage'] || targetNode.flowPage)) : null;
@@ -3432,7 +3635,7 @@ function renderStoryTreeCanvas(nodes, filterAct) {
 
           const eventBadge = boundEvt ? `
             <span class="choice-event-badge ${boundEvt.eventType}" title="Bound Infinity Engine Event: ${escapeXml(boundEvt.title)}\nType: ${boundEvt.eventType}\nBCS Trigger: ${escapeXml(boundEvt.infinityInteraction?.bcsTrigger || 'None')}\nBCS Action: ${escapeXml(boundEvt.infinityInteraction?.bcsAction || 'None')}">
-              ${getEventIcon(boundEvt.eventType)} ${escapeXml(boundEvt.title.length > 22 ? boundEvt.title.slice(0, 20) + '…' : boundEvt.title)}
+              ${getEventIcon(boundEvt.eventType)} ${escapeXml(boundEvt.title.length > 20 ? boundEvt.title.slice(0, 18) + '…' : boundEvt.title)}
             </span>
           ` : '';
 
@@ -3446,10 +3649,13 @@ function renderStoryTreeCanvas(nodes, filterAct) {
             `;
           }
           return `
-            <div class="node-choice-pill" title="${escapeXml(c.label || '')}">
-              <span>↳</span>
-              <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:130px;">${escapeXml(c.label || c.targetNodeId)}</span>
-              ${eventBadge}
+            <div class="node-choice-pill" data-source-id="${node.id}" data-target-id="${c.targetNodeId}" title="${escapeXml(c.label || '')}">
+              <div class="choice-outlet-dot"></div>
+              <div class="node-choice-header">
+                <span>↳ Option ${chIdx + 1}</span>
+                ${eventBadge}
+              </div>
+              <div class="node-choice-label">${escapeXml(c.label || c.targetNodeId)}</div>
             </div>
           `;
         }).join('')}
@@ -3457,14 +3663,19 @@ function renderStoryTreeCanvas(nodes, filterAct) {
     ` : (nodeType === 'end_game_state' ? `
       <div class="story-node-choices">
         <div class="node-choice-pill" style="border-color:#a855f7;color:#d8b4fe;">
-          <span>🏆</span>
-          <span>End Game Conclusion</span>
+          <div class="node-choice-header" style="color:#c084fc;">
+            <span>🏆 End Game Conclusion</span>
+          </div>
+          <div class="node-choice-label" style="color:#e9d5ff;">${escapeXml(node['robos:epilogueText'] || node.epilogueText || 'Campaign narrative concludes here.')}</div>
         </div>
       </div>
     ` : '');
 
+    const isMatch = !rawQuery || checkNodeMatchesQuery(node, rawQuery);
+    const searchClass = rawQuery ? (isMatch ? 'search-matched' : 'search-dimmed') : '';
+
     return `
-      <div class="story-node-card ${nodeType.replace(/_/g, '-')} ${isSelected ? 'selected' : ''} ${isWalkthrough ? 'active-walkthrough' : ''}"
+      <div class="story-node-card ${nodeType.replace(/_/g, '-')} ${isSelected ? 'selected' : ''} ${isWalkthrough ? 'active-walkthrough' : ''} ${searchClass}"
            data-id="${node.id}" style="left: ${node._x}px; top: ${node._y}px;">
         <div class="story-node-header">
           <span>${icon} ${typeLabel}</span>
@@ -3473,6 +3684,7 @@ function renderStoryTreeCanvas(nodes, filterAct) {
         <div class="story-node-body">
           ${inboundHtml}
           <div class="story-node-title">${escapeXml(title)}</div>
+          ${synopsisHtml}
           <div class="story-node-meta">
             ${location ? `<span class="story-node-tag">📍 ${escapeXml(location)}</span>` : ''}
             ${giver ? `<span class="story-node-tag">👑 ${escapeXml(giver)}</span>` : ''}
@@ -3505,13 +3717,29 @@ function renderStoryTreeCanvas(nodes, filterAct) {
     });
   });
 
+  // Add hover path tracing on choice pills
+  layerEl.querySelectorAll('.node-choice-pill[data-target-id]').forEach(pill => {
+    const srcId = pill.getAttribute('data-source-id');
+    const tgtId = pill.getAttribute('data-target-id');
+    pill.addEventListener('mouseenter', () => highlightStoryPath(srcId, tgtId));
+    pill.addEventListener('mouseleave', () => clearStoryPathHighlight());
+  });
+
+  // Add hover path tracing on edge labels
+  svgEl.querySelectorAll('.story-edge-label-group').forEach(grp => {
+    const srcId = grp.getAttribute('data-source-id');
+    const tgtId = grp.getAttribute('data-target-id');
+    grp.addEventListener('mouseenter', () => highlightStoryPath(srcId, tgtId));
+    grp.addEventListener('mouseleave', () => clearStoryPathHighlight());
+  });
+
   // 3. Dynamic Canvas / SVG sizing so nothing clips and fills width
-  const maxNodeX = Math.max(...visibleNodes.map(n => (n._x || 0) + 260), 0);
-  const maxNodeY = Math.max(...visibleNodes.map(n => (n._y || 0) + 200), 0);
+  const maxNodeX = Math.max(...visibleNodes.map(n => (n._x || 0) + 330), 0);
+  const maxNodeY = Math.max(...visibleNodes.map(n => (n._y || 0) + 260), 0);
   const containerW = container.clientWidth || 1600;
   const containerH = container.clientHeight || 900;
-  const fullW = Math.max(maxNodeX + 120, containerW);
-  const fullH = Math.max(maxNodeY + 120, containerH);
+  const fullW = Math.max(maxNodeX + 160, containerW);
+  const fullH = Math.max(maxNodeY + 160, containerH);
 
   svgEl.style.width = fullW + 'px';
   svgEl.style.height = fullH + 'px';
