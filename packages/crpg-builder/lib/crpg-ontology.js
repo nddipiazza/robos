@@ -128,7 +128,18 @@ const CRPG_SHACL_SHAPES = [
     domainStandard: 'http://open-services.net/ns/cm#ChangeRequest',
     properties: [
       { path: 'dcterms:title', minCount: 1, message: 'Quest must have a title.' },
-      { path: 'robos:questStages', minCount: 1, message: 'Quest must declare progressive stages/milestones.' }
+      { path: 'robos:questStages', minCount: 1, message: 'Quest must declare progressive stages/milestones.' },
+      { path: 'robos:questType', minCount: 1, in: ['main', 'side', 'faction', 'miscellaneous', 'radiant', 'companion'], message: 'Quest must specify questType (main, side, faction, miscellaneous, radiant, companion).' }
+    ]
+  },
+  {
+    shapeId: 'urn:robos:shape:CRPGQuestObjectiveShape',
+    targetClass: 'robos:CRPGQuestObjective',
+    refersFrom: 'https://schema.org/Action',
+    domainStandard: 'https://robos.dev/ns/crpg#QuestObjective',
+    properties: [
+      { path: 'robos:objectiveText', minCount: 1, message: 'Quest objective must have display text.' },
+      { path: 'robos:status', minCount: 1, in: ['unstarted', 'active', 'completed', 'failed'], message: 'Quest objective must have valid status (unstarted, active, completed, failed).' }
     ]
   },
   {

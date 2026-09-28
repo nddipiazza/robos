@@ -4078,3 +4078,223 @@ body.resizing * {
   margin-bottom: 10px;
   animation: fadeIn 0.2s ease-in;
 }
+
+/* ==========================================================================
+   SKYRIM-STYLE QUEST JOURNAL & SIDE QUEST TRACKER
+   ========================================================================== */
+.skyrim-journal-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 14px;
+}
+
+.skyrim-journal-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-light);
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.skyrim-category-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.skyrim-cat-btn {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  color: var(--text-normal);
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.skyrim-cat-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-bright);
+}
+
+.skyrim-cat-btn.active {
+  background: rgba(0, 188, 212, 0.15);
+  border-color: #00bcd4;
+  color: #00bcd4;
+  font-weight: 600;
+}
+
+.skyrim-cat-count {
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+}
+
+.skyrim-cat-btn.active .skyrim-cat-count {
+  background: #00bcd4;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.skyrim-journal-split {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 16px;
+  flex: 1;
+  min-height: 520px;
+  overflow: hidden;
+}
+
+.skyrim-quest-roster-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-right: 1px solid var(--border-light);
+  padding-right: 14px;
+  height: 100%;
+}
+
+.skyrim-quest-cards-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  flex: 1;
+  padding-right: 4px;
+}
+
+.skyrim-quest-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.skyrim-quest-card:hover {
+  border-color: var(--accent-cyan);
+  background: rgba(15, 23, 42, 0.9);
+}
+
+.skyrim-quest-card.selected {
+  border-color: #00bcd4;
+  background: rgba(0, 188, 212, 0.08);
+  box-shadow: 0 0 0 1px #00bcd4;
+}
+
+.skyrim-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.skyrim-type-badge {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+}
+
+.skyrim-type-badge.main { background: rgba(0, 188, 212, 0.2); color: #00bcd4; border: 1px solid rgba(0, 188, 212, 0.4); }
+.skyrim-type-badge.side { background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); }
+.skyrim-type-badge.faction { background: rgba(168, 85, 247, 0.2); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.4); }
+.skyrim-type-badge.miscellaneous { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); }
+.skyrim-type-badge.radiant { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); }
+.skyrim-type-badge.companion { background: rgba(244, 63, 94, 0.2); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.4); }
+
+.skyrim-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-bright);
+}
+
+.skyrim-card-meta {
+  font-size: 10px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.skyrim-quest-inspector-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.skyrim-inspector-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 10px;
+}
+
+.skyrim-objectives-box {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skyrim-obj-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid transparent;
+}
+
+.skyrim-obj-row:hover {
+  border-color: var(--border-light);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.skyrim-obj-row.completed .skyrim-obj-text {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+.skyrim-obj-text {
+  font-size: 12px;
+  flex: 1;
+}
+
+.skyrim-obj-optional {
+  font-size: 9px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(148, 163, 184, 0.15);
+  color: #94a3b8;
+  text-transform: uppercase;
+}

@@ -369,50 +369,122 @@
       {
         "id": "q-gorion-departure",
         "title": "Departure from Candlekeep",
+        "questType": "main",
+        "category": "Main Questline",
         "status": "active",
         "stage": 1,
         "giver": "Gorion",
-        "description": "Gorion has urged you to make haste and purchase necessary supplies. Meet him by the central library steps once ready to leave."
+        "targetMap": "candlekeep",
+        "description": "Gorion has urged you to make haste and purchase necessary supplies. Meet him by the central library steps once ready to leave.",
+        "stages": [
+          { "stage": 1, "journalEntry": "Gorion instructed me to prepare for an urgent departure from Candlekeep." },
+          { "stage": 2, "journalEntry": "I have purchased supplies and travel rations from Winthrop's Inn." },
+          { "stage": 3, "journalEntry": "I met Gorion at the library steps and we departed past the main gates." }
+        ],
+        "objectives": [
+          { "id": "obj-gorion-talk", "text": "Listen to Gorion's urgent warning at the library steps", "isOptional": false, "status": "completed", "targetEntity": "gorion" },
+          { "id": "obj-buy-provisions", "text": "Visit Winthrop at Candlekeep Inn and stock up on provisions", "isOptional": false, "status": "active", "targetEntity": "winthrop" },
+          { "id": "obj-gate-rendezvous", "text": "Meet Gorion at the library steps to depart", "isOptional": false, "status": "unstarted", "targetEntity": "gorion" }
+        ],
+        "rewards": { "experience": 300, "gold": 50 }
       },
       {
         "id": "q-firebead-scroll",
         "title": "Firebead's Identification Scroll",
+        "questType": "side",
+        "category": "Candlekeep Side Quests",
         "status": "active",
         "stage": 1,
         "giver": "Firebead Elfmirk",
-        "description": "Fetch the scroll of identify from Tethtoril and bring it to Firebead inside the Candlekeep Inn."
+        "targetMap": "candlekeep",
+        "description": "Fetch the scroll of identify from Tethtoril and bring it to Firebead inside the Candlekeep Inn.",
+        "stages": [
+          { "stage": 1, "journalEntry": "Firebead Elfmirk asked me to fetch an identification scroll from Tethtoril." },
+          { "stage": 2, "journalEntry": "I delivered the scroll to Firebead and received a protective ward." }
+        ],
+        "objectives": [
+          { "id": "obj-get-scroll", "text": "Obtain identification scroll from Tethtoril in the gardens", "isOptional": false, "status": "active", "targetEntity": "tethtoril" },
+          { "id": "obj-return-scroll", "text": "Deliver scroll to Firebead in Candlekeep Inn", "isOptional": false, "status": "unstarted", "targetEntity": "firebead" }
+        ],
+        "rewards": { "experience": 150, "gold": 50, "items": ["potion-healing"] }
       },
       {
         "id": "q-shank-carbos",
         "title": "Assassins in the Sanctuary",
+        "questType": "side",
+        "category": "Candlekeep Side Quests",
         "status": "active",
         "stage": 1,
         "giver": "Self",
-        "description": "Two cutthroats named Shank and Carbos have attempted to murder you in the storehouses. Find out who sent them."
-      },
-      {
-        "id": "q-dreppin-cow",
-        "title": "Dreppin's Sick Cow",
-        "status": "active",
-        "stage": 1,
-        "giver": "Dreppin",
-        "description": "Retrieve an antidote potion from the temple stores to cure Nessa the cow."
-      },
-      {
-        "id": "q-hull-sword",
-        "title": "Hull's Longsword",
-        "status": "active",
-        "stage": 1,
-        "giver": "Hull",
-        "description": "Find the longsword Hull forgot in the gate barracks and return it to him at the main gates."
+        "targetMap": "candlekeep",
+        "description": "Two cutthroats named Shank and Carbos have attempted to murder you in the storehouses. Find out who sent them.",
+        "stages": [
+          { "stage": 1, "journalEntry": "Assassins Shank and Carbos ambushed me within Candlekeep walls. I must eliminate the threat." },
+          { "stage": 2, "journalEntry": "Both assassins have been slain and their bounties searched." }
+        ],
+        "objectives": [
+          { "id": "obj-defeat-shank", "text": "Defeat assassin Shank in the priest quarters", "isOptional": false, "status": "active", "targetEntity": "shank" },
+          { "id": "obj-defeat-carbos", "text": "Defeat assassin Carbos in the bunkhouse", "isOptional": false, "status": "active", "targetEntity": "carbos" }
+        ],
+        "rewards": { "experience": 200, "gold": 40, "items": ["dagger-plus-1"] }
       },
       {
         "id": "q-reevor-storehouse",
         "title": "Reevor's Infested Storehouse",
+        "questType": "side",
+        "category": "Candlekeep Side Quests",
         "status": "active",
         "stage": 1,
         "giver": "Reevor",
-        "description": "Clear out the giant rats invading Reevor's grain storehouse near the library."
+        "targetMap": "candlekeep",
+        "description": "Clear out the giant rats invading Reevor's grain storehouse near the library.",
+        "stages": [
+          { "stage": 1, "journalEntry": "Reevor locked his storehouse due to giant rats and promised gold to clear them." },
+          { "stage": 2, "journalEntry": "The storehouse has been cleared of vermin." }
+        ],
+        "objectives": [
+          { "id": "obj-clear-rats", "text": "Exterminate giant rats in the grain storehouse", "isOptional": false, "status": "active", "targetEntity": "giant-rat" },
+          { "id": "obj-report-reevor", "text": "Collect reward from Reevor", "isOptional": false, "status": "unstarted", "targetEntity": "reevor" }
+        ],
+        "rewards": { "experience": 100, "gold": 25 }
+      },
+      {
+        "id": "q-dreppin-cow",
+        "title": "Dreppin's Sick Cow",
+        "questType": "miscellaneous",
+        "category": "Miscellaneous Tasks",
+        "status": "active",
+        "stage": 1,
+        "giver": "Dreppin",
+        "targetMap": "candlekeep",
+        "description": "Retrieve an antidote potion from the temple stores to cure Nessa the cow.",
+        "stages": [
+          { "stage": 1, "journalEntry": "Dreppin asked me to fetch an antidote for his sick cow Nessa." }
+        ],
+        "objectives": [
+          { "id": "obj-fetch-antidote", "text": "Fetch antidote from the healer temple", "isOptional": false, "status": "active", "targetEntity": "temple" },
+          { "id": "obj-heal-nessa", "text": "Administer antidote to Nessa the cow", "isOptional": false, "status": "unstarted", "targetEntity": "nessa" }
+        ],
+        "rewards": { "experience": 50, "gold": 10 }
+      },
+      {
+        "id": "q-hull-sword",
+        "title": "Hull's Longsword",
+        "questType": "miscellaneous",
+        "category": "Miscellaneous Tasks",
+        "status": "active",
+        "stage": 1,
+        "giver": "Hull",
+        "targetMap": "candlekeep",
+        "description": "Find the longsword Hull forgot in the gate barracks and return it to him at the main gates.",
+        "stages": [
+          { "stage": 1, "journalEntry": "Hull left his longsword in the barracks and cannot stand watch without it." }
+        ],
+        "objectives": [
+          { "id": "obj-find-longsword", "text": "Retrieve longsword from Hull's chest in the barracks", "isOptional": false, "status": "active", "targetEntity": "barracks-chest" },
+          { "id": "obj-return-sword", "text": "Deliver longsword to Hull at the main gate", "isOptional": false, "status": "unstarted", "targetEntity": "hull" }
+        ],
+        "rewards": { "experience": 50, "gold": 20 }
       }
     ],
     "robos:worldFlags": {

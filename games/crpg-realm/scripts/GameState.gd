@@ -114,6 +114,7 @@ var equipped_armor: String = "chain-mail"
 var equipped_accessory: String = ""
 
 var quest_stage: int = 1
+var quest_log: Array[Dictionary] = []
 var flags: Dictionary = {
 	"partner_conversed": false,
 	"footlocker_looted": false,
@@ -394,6 +395,60 @@ func advance_quest(p_stage: int) -> void:
 		quest_advanced.emit(p_stage)
 		log_message("quest", "Journal updated (Stage %d)" % p_stage)
 		print("Quest Advanced to Stage ", p_stage)
+
+# ── Skyrim-Style Quest Tracking (Main, Side, Faction, Misc) ───────────────────
+
+func get_quests_by_type(q_type: String) -> Array[Dictionary]:
+	if q_type == "" or q_type == "all":
+		return quest_log
+	var res: Array[Dictionary] = []
+	for q in quest_log:
+		var t = str(q.get("questType", q.get("robos:questType", "side"))).to_lower()
+		if t == q_type.to_lower():
+			res.append(q)
+	return res
+
+func get_active_side_quests() -> Array[Dictionary]:
+	var res: Array[Dictionary] = []
+	for q in quest_log:
+		var t = str(q.get("questType", q.get("robos:questType", "side"))).to_lower()
+		var st = str(q.get("status", "active")).to_lower()
+		if t == "side" and st == "active":
+			res.append(q)
+	return res
+
+func get_quest(q_id: String) -> Dictionary:
+	for q in quest_log:
+		if str(q.get("id", "")) == q_id or str(q.get("@id", "")).ends_with(q_id):
+			return q
+	return {}
+
+func update_quest_objective(q_id: String, obj_id: String, completed: bool = true) -> bool:
+	for q in quest_log:
+		if str(q.get("id", "")) == q_id or str(q.get("@id", "")).ends_with(q_id):
+			var objs = q.get("objectives", q.get("robos:questObjectives", []))
+			for obj in objs:
+				if str(obj.get("id", "")) == obj_id:
+					obj["status"] = "completed" if completed else "active"
+					var obj_txt = str(obj.get("text", obj_id))
+					log_message("quest", "Objective %s: %s" % ["Completed" if completed else "Active", obj_txt])
+					return true
+	return false
+
+func update_quest_stage(q_id: String, new_stage: int) -> bool:
+	for q in quest_log:
+		if str(q.get("id", "")) == q_id or str(q.get("@id", "")).ends_with(q_id):
+			q["stage"] = new_stage
+			var q_title = str(q.get("title", q_id))
+			log_message("quest", "Journal updated: %s (Stage %d)" % [q_title, new_stage])
+			return true
+	return false
+
+func add_quest(q_dict: Dictionary) -> void:
+	quest_log.append(q_dict.duplicate(true))
+	var q_title = str(q_dict.get("title", "New Quest"))
+	var q_type = str(q_dict.get("questType", "side")).capitalize()
+	log_message("quest", "New %s Quest Added: %s" % [q_type, q_title])
 
 func take_damage(amount: int) -> void:
 	hero_hp = max(0, hero_hp - amount)
@@ -698,9 +753,25 @@ func load_campaign_state(campaign: Dictionary) -> void:
 
 	# 4. Quest Log & Stage
 	quest_stage = 1
+	quest_log.clear()
+	if campaign.has("robos:gameState") and campaign["robos:gameState"] is Dictionary:
+		var gs_q = campaign["robos:gameState"]
+		if gs_q.has("robos:questLog") and gs_q["robos:questLog"] is Array:
+			for q in gs_q["robos:questLog"]:
+				if q is Dictionary:
+					quest_log.append(q.duplicate(true))
+	if quest_log.is_empty() and FileAccess.file_exists("res://data/v1/quests.json"):
+		var f_q = FileAccess.open("res://data/v1/quests.json", FileAccess.READ)
+		var parsed_q = JSON.parse_string(f_q.get_as_text())
+		if parsed_q is Array:
+			for q in parsed_q:
+				if q is Dictionary:
+					quest_log.append(q.duplicate(true))
+
 	var c_title = str(campaign.get("dcterms:title", "Active Campaign"))
 	log_message("system", "🏁 Campaign Rendered: %s" % c_title)
 	log_message("system", "⚔️ Real cRPG Engine Active — Party of %d Ready" % party_members.size())
+	log_message("system", "📜 Tracked Quests: %d (Active Side Quests: %d)" % [quest_log.size(), get_active_side_quests().size()])
 
 func set_party_formation(formation_id: String) -> void:
 	if FORMATIONS.has(formation_id):

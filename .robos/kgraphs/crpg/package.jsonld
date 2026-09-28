@@ -532,6 +532,11 @@
         "oslc_cm:ChangeRequest"
       ],
       "dcterms:title": "A Night Without Memory",
+      "robos:questType": "main",
+      "robos:questCategory": "Main Questline",
+      "robos:questGiver": "Elora",
+      "robos:targetMap": "homestead",
+      "robos:status": "active",
       "robos:questStages": [
         {
           "stage": 1,
@@ -554,6 +559,166 @@
           "description": "Confront Captain Malakor in the War Room, defeat his corrupted form, and seal the Azrath vault breach."
         }
       ],
+      "robos:questObjectives": [
+        {
+          "id": "obj-wake-partner",
+          "text": "Converse with partner Elora about the midnight summons",
+          "isOptional": false,
+          "status": "completed",
+          "targetEntity": "elora"
+        },
+        {
+          "id": "obj-retrieve-blade",
+          "text": "Retrieve service blade from footlocker",
+          "isOptional": false,
+          "status": "active",
+          "targetEntity": "footlocker"
+        },
+        {
+          "id": "obj-investigate-village",
+          "text": "Investigate disturbance in Village Square and speak with Blacksmith Brand",
+          "isOptional": false,
+          "status": "unstarted",
+          "targetEntity": "blacksmith-brand"
+        },
+        {
+          "id": "obj-defeat-malakor",
+          "text": "Infiltrate Garrison Keep and defeat Captain Malakor",
+          "isOptional": false,
+          "status": "unstarted",
+          "targetEntity": "captain-malakor"
+        }
+      ],
+      "robos:rewards": {
+        "experience": 500,
+        "gold": 120,
+        "items": ["service-sword", "potion-healing"]
+      },
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:quest:firebead-scroll",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGQuest",
+        "oslc_cm:ChangeRequest"
+      ],
+      "dcterms:title": "Firebead's Identification Scroll",
+      "robos:questType": "side",
+      "robos:questCategory": "Candlekeep Side Quests",
+      "robos:questGiver": "Firebead Elfmirk",
+      "robos:targetMap": "candlekeep",
+      "robos:status": "active",
+      "robos:questStages": [
+        {
+          "stage": 1,
+          "description": "Fetch the scroll of identify from Tethtoril and bring it to Firebead inside Candlekeep Inn."
+        },
+        {
+          "stage": 2,
+          "description": "Deliver the identified scroll back to Firebead for a protection ward."
+        }
+      ],
+      "robos:questObjectives": [
+        {
+          "id": "obj-fetch-scroll",
+          "text": "Obtain scroll of identify from Tethtoril",
+          "isOptional": false,
+          "status": "active",
+          "targetEntity": "tethtoril"
+        },
+        {
+          "id": "obj-deliver-firebead",
+          "text": "Deliver scroll to Firebead at Candlekeep Inn",
+          "isOptional": false,
+          "status": "unstarted",
+          "targetEntity": "firebead"
+        }
+      ],
+      "robos:rewards": {
+        "experience": 150,
+        "gold": 50,
+        "items": ["potion-healing"]
+      },
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:quest:harpers-covert-rendezvous",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGQuest",
+        "oslc_cm:ChangeRequest"
+      ],
+      "dcterms:title": "Covert Harpers Rendezvous",
+      "robos:questType": "faction",
+      "robos:questCategory": "Harpers Guild",
+      "robos:questGiver": "Gorion",
+      "robos:targetMap": "candlekeep",
+      "robos:status": "active",
+      "robos:questStages": [
+        {
+          "stage": 1,
+          "description": "Meet Harper contacts Jaheira and Khalid at the Friendly Arm Inn along the Coast Way."
+        }
+      ],
+      "robos:questObjectives": [
+        {
+          "id": "obj-rendezvous-harpers",
+          "text": "Rendezvous with Khalid and Jaheira at the Friendly Arm Inn",
+          "isOptional": false,
+          "status": "active",
+          "targetEntity": "jaheira"
+        }
+      ],
+      "robos:rewards": {
+        "experience": 250,
+        "gold": 75,
+        "reputation": { "Harpers": 15 }
+      },
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:quest:dreppin-sick-cow",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGQuest",
+        "oslc_cm:ChangeRequest"
+      ],
+      "dcterms:title": "Dreppin's Sick Cow",
+      "robos:questType": "miscellaneous",
+      "robos:questCategory": "Miscellaneous Favors",
+      "robos:questGiver": "Dreppin",
+      "robos:targetMap": "candlekeep",
+      "robos:status": "active",
+      "robos:questStages": [
+        {
+          "stage": 1,
+          "description": "Retrieve an antidote potion from the temple stores to cure Nessa the cow."
+        }
+      ],
+      "robos:questObjectives": [
+        {
+          "id": "obj-get-antidote",
+          "text": "Collect antidote from the temple pantry",
+          "isOptional": false,
+          "status": "active",
+          "targetEntity": "temple-cabinet"
+        },
+        {
+          "id": "obj-cure-nessa",
+          "text": "Administer antidote to Nessa the cow",
+          "isOptional": false,
+          "status": "unstarted",
+          "targetEntity": "nessa"
+        }
+      ],
+      "robos:rewards": {
+        "experience": 50,
+        "gold": 15
+      },
       "robos:package": "crpg",
       "robos:namespace": "robos.crpg"
     },

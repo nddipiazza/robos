@@ -656,20 +656,50 @@ function setupCampaignHandlers() {
     updateCampaignCharactersFromChecklist();
   });
 
-  btnAddQuest?.addEventListener('click', () => {
+  document.querySelectorAll('.skyrim-cat-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const cat = btn.getAttribute('data-category');
+      renderSkyrimQuestJournal(cat);
+    });
+  });
+
+  document.getElementById('skyrim-quest-search')?.addEventListener('input', (e) => {
+    state.skyrimQuestSearch = e.target.value;
+    renderSkyrimQuestJournal();
+  });
+
+  const btnAddSkyrimQuest = document.getElementById('btn-add-skyrim-quest');
+  const handleAddSkyrimQuest = () => {
     if (!state.activeCampaignData) return;
     const gs = getGameState();
     if (!Array.isArray(gs['robos:questLog'])) gs['robos:questLog'] = [];
-    gs['robos:questLog'].push({
-      id: `quest-${Date.now().toString().slice(-4)}`,
-      title: "New Adventure Objective",
+    const newId = `q-side-${Date.now().toString(36)}`;
+    const newQuest = {
+      id: newId,
+      title: "New Side Adventure",
+      questType: (state.skyrimQuestFilter && state.skyrimQuestFilter !== 'all') ? state.skyrimQuestFilter : 'side',
+      category: "Local Side Stories",
+      giver: "Tavern Patron",
+      targetMap: state.activeCampaignData['robos:startingMap'] || "candlekeep-inn",
+      description: "A mysterious rumor has surfaced regarding hidden supplies or unusual disturbances.",
       status: "active",
-      description: "Investigate suspicious activity in the surrounding lands.",
-      reward: "100 XP, 50 GP"
-    });
-    renderQuestLog();
+      stage: 10,
+      stages: [
+        { stage: 10, journalEntry: "I spoke with a patron about strange events occurring nearby." }
+      ],
+      objectives: [
+        { id: `obj-${Date.now().toString(36)}`, text: "Investigate the rumored location", status: "active", isOptional: false }
+      ],
+      rewards: { xp: 50, gold: 25, items: [] }
+    };
+    gs['robos:questLog'].push(newQuest);
+    state.selectedSkyrimQuestId = newId;
+    renderSkyrimQuestJournal();
     updateCampaignSummaryStats();
-  });
+    setStatus(`Created new side quest: ${newQuest.title}`);
+  };
+  btnAddSkyrimQuest?.addEventListener('click', handleAddSkyrimQuest);
+  btnAddQuest?.addEventListener('click', handleAddSkyrimQuest);
 
   btnAddFlag?.addEventListener('click', () => {
     if (!state.activeCampaignData) return;
@@ -717,6 +747,8 @@ function switchCampaignSubpane(subpaneId) {
     renderCampaignTacticsRoster();
   } else if (subpaneId === 'subpane-camp-quests') {
     renderQuestScenarioTree();
+  } else if (subpaneId === 'subpane-camp-questlog') {
+    renderSkyrimQuestJournal();
   } else if (subpaneId === 'subpane-camp-maps') {
     renderCampaignMapsChecklist();
   } else if (subpaneId === 'subpane-camp-roster') {
@@ -1505,61 +1537,403 @@ function scaffoldStandardParty() {
   setStatus('Scaffolded standard 6-PC party.');
 }
 
+// ==========================================================================
+// SKYRIM-STYLE QUEST JOURNAL & SIDE QUEST TRACKER
+// ==========================================================================
+state.skyrimQuestFilter = 'all';
+state.selectedSkyrimQuestId = null;
+state.skyrimQuestSearch = '';
+
 function renderQuestLog() {
-  const container = document.getElementById('quest-cards-list');
-  if (!container) return;
+  renderSkyrimQuestJournal();
+}
+
+function renderSkyrimQuestJournal(filterType) {
+  if (filterType !== undefined) {
+    state.skyrimQuestFilter = filterType;
+  }
   const gs = getGameState();
   const quests = gs['robos:questLog'] || [];
-  document.getElementById('quest-count').textContent = quests.length;
 
-  if (quests.length === 0) {
-    container.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px;">No quests added yet. Click + Add Quest.</div>';
+  // Update category counts
+  const countAll = quests.length;
+  const countMain = quests.filter(q => (q.questType || 'main') === 'main').length;
+  const countSide = quests.filter(q => q.questType === 'side').length;
+  const countFaction = quests.filter(q => q.questType === 'faction').length;
+  const countMisc = quests.filter(q => q.questType === 'miscellaneous').length;
+  const countRadiant = quests.filter(q => q.questType === 'radiant').length;
+  const countCompanion = quests.filter(q => q.questType === 'companion').length;
+
+  const setCnt = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  };
+  setCnt('skyrim-count-all', countAll);
+  setCnt('skyrim-count-main', countMain);
+  setCnt('skyrim-count-side', countSide);
+  setCnt('skyrim-count-faction', countFaction);
+  setCnt('skyrim-count-miscellaneous', countMisc);
+  setCnt('skyrim-count-radiant', countRadiant);
+  setCnt('skyrim-count-companion', countCompanion);
+
+  // Update tab active classes
+  document.querySelectorAll('.skyrim-cat-btn').forEach(btn => {
+    const cat = btn.getAttribute('data-category');
+    btn.classList.toggle('active', cat === state.skyrimQuestFilter);
+  });
+
+  // Filter quests
+  const filter = state.skyrimQuestFilter;
+  const search = (state.skyrimQuestSearch || '').toLowerCase().trim();
+  const filtered = quests.filter(q => {
+    const qType = q.questType || 'main';
+    if (filter !== 'all' && qType !== filter) return false;
+    if (search) {
+      const matchTitle = (q.title || '').toLowerCase().includes(search);
+      const matchGiver = (q.giver || '').toLowerCase().includes(search);
+      const matchMap = (q.targetMap || '').toLowerCase().includes(search);
+      const matchDesc = (q.description || '').toLowerCase().includes(search);
+      const matchCat = (q.category || '').toLowerCase().includes(search);
+      const matchObjs = (q.objectives || []).some(o => (o.text || '').toLowerCase().includes(search));
+      if (!matchTitle && !matchGiver && !matchMap && !matchDesc && !matchCat && !matchObjs) return false;
+    }
+    return true;
+  });
+
+  // Ensure selected quest exists in filtered, or default to first filtered quest
+  if (!filtered.some(q => (q.id || q['@id']) === state.selectedSkyrimQuestId)) {
+    state.selectedSkyrimQuestId = filtered.length > 0 ? (filtered[0].id || filtered[0]['@id']) : null;
+  }
+
+  // Render quest cards list
+  const listEl = document.getElementById('skyrim-quest-cards-list');
+  if (listEl) {
+    if (filtered.length === 0) {
+      listEl.innerHTML = `
+        <div style="padding: 24px 12px; text-align: center; color: var(--text-muted); font-size: 12px;">
+          <div style="font-size: 24px; margin-bottom: 8px;">📜</div>
+          <div>No ${filter === 'all' ? '' : filter + ' '}quests found.</div>
+          <div style="font-size: 11px; margin-top: 4px; opacity: 0.8;">Click "+ New Quest" above to create one.</div>
+        </div>
+      `;
+    } else {
+      listEl.innerHTML = filtered.map(q => {
+        const qId = q.id || q['@id'] || '';
+        const isSelected = qId === state.selectedSkyrimQuestId;
+        const qType = q.questType || 'main';
+        const objs = q.objectives || [];
+        const completedCount = objs.filter(o => o.status === 'completed').length;
+        const statusBadge = q.status === 'completed'
+          ? '<span style="color:#10b981;font-weight:600;font-size:10px;">✓ Complete</span>'
+          : q.status === 'failed'
+          ? '<span style="color:#ef4444;font-weight:600;font-size:10px;">✗ Failed</span>'
+          : '<span style="color:#00bcd4;font-weight:600;font-size:10px;">● Active</span>';
+
+        return `
+          <div class="skyrim-quest-card ${isSelected ? 'selected' : ''}" data-quest-id="${escapeXml(qId)}">
+            <div class="skyrim-card-top">
+              <span class="skyrim-type-badge ${escapeXml(qType)}">${escapeXml(qType.toUpperCase())}</span>
+              ${statusBadge}
+            </div>
+            <div class="skyrim-card-title">${escapeXml(q.title || 'Untitled Quest')}</div>
+            <div class="skyrim-card-meta">
+              <span>👤 ${escapeXml(q.giver || 'None')}</span>
+              <span>🗺️ ${escapeXml(q.targetMap || 'Any')}</span>
+              <span>🎯 ${completedCount}/${objs.length} Objs</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      listEl.querySelectorAll('.skyrim-quest-card').forEach(card => {
+        card.addEventListener('click', () => {
+          state.selectedSkyrimQuestId = card.getAttribute('data-quest-id');
+          renderSkyrimQuestJournal();
+        });
+      });
+    }
+  }
+
+  // Render Inspector
+  renderSkyrimQuestInspector(quests.find(q => (q.id || q['@id']) === state.selectedSkyrimQuestId));
+}
+
+function renderSkyrimQuestInspector(selectedQuest) {
+  const inspector = document.getElementById('skyrim-quest-inspector');
+  if (!inspector) return;
+
+  if (!selectedQuest) {
+    inspector.innerHTML = `
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; min-height: 380px; color: var(--text-muted); text-align: center; gap: 12px;">
+        <div style="font-size: 36px;">📜</div>
+        <div style="font-size: 14px; font-weight: 600; color: var(--text-bright);">No Quest Selected</div>
+        <div style="font-size: 12px; max-width: 320px;">Select a quest from the roster on the left or create a new side quest to track objectives and Skyrim milestones.</div>
+      </div>
+    `;
     return;
   }
 
-  container.innerHTML = quests.map((q, idx) => `
-    <div class="quest-item-card" data-idx="${idx}">
-      <div class="quest-item-header">
-        <input type="text" class="input-text quest-title-input" value="${q.title || 'Untitled'}" style="font-weight:600;font-size:12px;padding:2px 6px;">
-        <div style="display:flex;align-items:center;gap:6px;">
-          <select class="dropdown-select quest-status-select" style="font-size:11px;padding:2px 4px;">
-            <option value="active" ${q.status === 'active' ? 'selected' : ''}>Active</option>
-            <option value="completed" ${q.status === 'completed' ? 'selected' : ''}>Completed</option>
-            <option value="failed" ${q.status === 'failed' ? 'selected' : ''}>Failed</option>
-          </select>
-          <button class="btn btn-danger btn-sm btn-delete-quest" data-idx="${idx}" style="padding:2px 6px;">✕</button>
+  const q = selectedQuest;
+  const qId = q.id || q['@id'] || '';
+  const objectives = Array.isArray(q.objectives) ? q.objectives : [];
+  const stages = Array.isArray(q.stages) ? q.stages : [];
+  const rewards = q.rewards || { xp: 0, gold: 0, items: [] };
+
+  inspector.innerHTML = `
+    <!-- Top Header -->
+    <div class="skyrim-inspector-header">
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <input type="text" id="sq-edit-title" class="input-text" value="${escapeXml(q.title || '')}" style="font-size: 16px; font-weight: 700; width: 100%; padding: 4px 8px;" placeholder="Quest Title">
+        </div>
+        <div style="font-size: 11px; color: var(--text-muted); font-family: monospace;">ID: ${escapeXml(qId)}</div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <select id="sq-edit-status" class="dropdown-select" style="font-size: 12px; padding: 4px 8px;">
+          <option value="unstarted" ${q.status === 'unstarted' ? 'selected' : ''}>Unstarted</option>
+          <option value="active" ${q.status === 'active' || !q.status ? 'selected' : ''}>Active</option>
+          <option value="completed" ${q.status === 'completed' ? 'selected' : ''}>Completed</option>
+          <option value="failed" ${q.status === 'failed' ? 'selected' : ''}>Failed</option>
+        </select>
+        <button id="sq-btn-delete" class="btn btn-sm btn-danger" title="Delete Quest">🗑️ Delete</button>
+      </div>
+    </div>
+
+    <!-- Metadata Grid -->
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; background: var(--bg-surface); padding: 12px; border-radius: 6px; border: 1px solid var(--border-light);">
+      <div class="form-group">
+        <label style="font-size: 11px; text-transform: uppercase; color: var(--text-muted);">Skyrim Form Type</label>
+        <select id="sq-edit-type" class="dropdown-select full-width" style="font-size: 12px;">
+          <option value="main" ${q.questType === 'main' ? 'selected' : ''}>Main Quest</option>
+          <option value="side" ${q.questType === 'side' ? 'selected' : ''}>Side Quest</option>
+          <option value="faction" ${q.questType === 'faction' ? 'selected' : ''}>Faction Story</option>
+          <option value="miscellaneous" ${q.questType === 'miscellaneous' ? 'selected' : ''}>Miscellaneous</option>
+          <option value="radiant" ${q.questType === 'radiant' ? 'selected' : ''}>Radiant / Bounty</option>
+          <option value="companion" ${q.questType === 'companion' ? 'selected' : ''}>Companion Quest</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label style="font-size: 11px; text-transform: uppercase; color: var(--text-muted);">Quest Giver</label>
+        <input type="text" id="sq-edit-giver" class="input-text full-width" value="${escapeXml(q.giver || '')}" placeholder="e.g. Winthrop">
+      </div>
+      <div class="form-group">
+        <label style="font-size: 11px; text-transform: uppercase; color: var(--text-muted);">Target Map</label>
+        <input type="text" id="sq-edit-map" class="input-text full-width" value="${escapeXml(q.targetMap || '')}" placeholder="e.g. candlekeep-inn">
+      </div>
+      <div class="form-group">
+        <label style="font-size: 11px; text-transform: uppercase; color: var(--text-muted);">Current Stage</label>
+        <input type="number" id="sq-edit-stage" class="input-text full-width" value="${q.stage || 10}" step="10">
+      </div>
+    </div>
+
+    <!-- Description / Journal Log -->
+    <div class="form-group">
+      <label style="font-size: 11px; text-transform: uppercase; color: var(--text-muted);">Quest Synopsis / Lore</label>
+      <textarea id="sq-edit-desc" rows="2" class="full-width" placeholder="Describe the background and plot hook...">${escapeXml(q.description || '')}</textarea>
+    </div>
+
+    <!-- Objectives Checklist Section -->
+    <div class="skyrim-objectives-box">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <span style="font-size: 12px; font-weight: 700; color: var(--text-bright); text-transform: uppercase; letter-spacing: 0.5px;">
+          🎯 Quest Objectives (${objectives.filter(o => o.status === 'completed').length}/${objectives.length})
+        </span>
+        <button id="sq-btn-add-obj" class="btn btn-sm btn-secondary" style="font-size: 11px; padding: 2px 8px;">+ Add Objective</button>
+      </div>
+      <div id="sq-objectives-list" style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px;">
+        ${objectives.length === 0 ? '<div style="color:var(--text-muted);font-size:11px;padding:6px;">No objectives yet. Click "+ Add Objective".</div>' : ''}
+        ${objectives.map((obj, oIdx) => {
+          const isDone = obj.status === 'completed';
+          return `
+            <div class="skyrim-obj-row ${isDone ? 'completed' : ''}" data-obj-idx="${oIdx}">
+              <input type="checkbox" class="sq-obj-check" ${isDone ? 'checked' : ''} style="cursor: pointer; width: 15px; height: 15px; accent-color: #00bcd4;">
+              <input type="text" class="input-text sq-obj-input" value="${escapeXml(obj.text || '')}" style="flex: 1; font-size: 12px; padding: 2px 6px; background: transparent; border: 1px solid transparent;" placeholder="Objective text...">
+              ${obj.isOptional ? '<span class="skyrim-obj-optional">Optional</span>' : ''}
+              ${obj.targetEntity ? `<span style="font-size: 10px; color: #a855f7; background: rgba(168,85,247,0.1); padding: 1px 5px; border-radius: 3px;">👤 ${escapeXml(obj.targetEntity)}</span>` : ''}
+              ${obj.targetMap ? `<span style="font-size: 10px; color: #00bcd4; background: rgba(0,188,212,0.1); padding: 1px 5px; border-radius: 3px;">🗺️ ${escapeXml(obj.targetMap)}</span>` : ''}
+              <button class="btn btn-danger btn-sm sq-btn-del-obj" data-obj-idx="${oIdx}" style="padding: 1px 5px; font-size: 10px;" title="Remove Objective">✕</button>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+
+    <!-- Skyrim Milestones / Stages Section -->
+    <div style="background: var(--bg-primary); border: 1px solid var(--border-light); border-radius: 6px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <span style="font-size: 12px; font-weight: 700; color: var(--text-bright); text-transform: uppercase; letter-spacing: 0.5px;">
+          📖 Journal Stages (Skyrim Milestones)
+        </span>
+        <button id="sq-btn-add-stage" class="btn btn-sm btn-secondary" style="font-size: 11px; padding: 2px 8px;">+ Add Stage</button>
+      </div>
+      <div id="sq-stages-list" style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px;">
+        ${stages.length === 0 ? '<div style="color:var(--text-muted);font-size:11px;padding:6px;">No journal milestones defined.</div>' : ''}
+        ${stages.map((st, sIdx) => `
+          <div style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.02); padding: 4px 8px; border-radius: 4px;" data-stage-idx="${sIdx}">
+            <span style="font-family: monospace; font-size: 11px; font-weight: 700; color: #00bcd4; min-width: 55px;">Stage ${st.stage || 10}</span>
+            <input type="text" class="input-text sq-stage-entry-input" value="${escapeXml(st.journalEntry || '')}" style="flex: 1; font-size: 12px; padding: 2px 6px; background: transparent; border: 1px solid var(--border-light);" placeholder="Journal entry log...">
+            <button class="btn btn-danger btn-sm sq-btn-del-stage" data-stage-idx="${sIdx}" style="padding: 1px 5px; font-size: 10px;">✕</button>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <!-- Rewards Section -->
+    <div style="background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: 6px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+      <span style="font-size: 12px; font-weight: 700; color: var(--text-bright); text-transform: uppercase; letter-spacing: 0.5px;">
+        🎁 Quest Rewards
+      </span>
+      <div style="display: grid; grid-template-columns: 120px 120px 1fr; gap: 10px; align-items: center;">
+        <div class="form-group">
+          <label style="font-size: 10px; text-transform: uppercase; color: var(--text-muted);">XP Reward</label>
+          <input type="number" id="sq-edit-xp" class="input-text full-width" value="${rewards.xp || 0}">
+        </div>
+        <div class="form-group">
+          <label style="font-size: 10px; text-transform: uppercase; color: var(--text-muted);">Gold (GP)</label>
+          <input type="number" id="sq-edit-gold" class="input-text full-width" value="${rewards.gold || 0}">
+        </div>
+        <div class="form-group">
+          <label style="font-size: 10px; text-transform: uppercase; color: var(--text-muted);">Item Rewards (comma-separated)</label>
+          <input type="text" id="sq-edit-items" class="input-text full-width" value="${escapeXml((rewards.items || []).join(', '))}" placeholder="e.g. potion-healing, ring-protection">
         </div>
       </div>
-      <textarea rows="2" class="quest-desc-input" style="font-size:11px;padding:4px 6px;">${q.description || ''}</textarea>
     </div>
-  `).join('');
+  `;
 
-  // Wire events
-  container.querySelectorAll('.quest-title-input').forEach(inp => {
-    inp.addEventListener('change', (e) => {
-      const idx = e.target.closest('.quest-item-card').getAttribute('data-idx');
-      quests[idx].title = e.target.value.trim();
+  // Wire inspector change events
+  document.getElementById('sq-edit-title')?.addEventListener('input', (e) => {
+    q.title = e.target.value.trim();
+    const cardTitle = document.querySelector(`.skyrim-quest-card[data-quest-id="${qId}"] .skyrim-card-title`);
+    if (cardTitle) cardTitle.textContent = q.title || 'Untitled Quest';
+  });
+
+  document.getElementById('sq-edit-status')?.addEventListener('change', (e) => {
+    q.status = e.target.value;
+    renderSkyrimQuestJournal();
+  });
+
+  document.getElementById('sq-edit-type')?.addEventListener('change', (e) => {
+    q.questType = e.target.value;
+    renderSkyrimQuestJournal();
+  });
+
+  document.getElementById('sq-edit-giver')?.addEventListener('input', (e) => {
+    q.giver = e.target.value.trim();
+  });
+
+  document.getElementById('sq-edit-map')?.addEventListener('input', (e) => {
+    q.targetMap = e.target.value.trim();
+  });
+
+  document.getElementById('sq-edit-stage')?.addEventListener('input', (e) => {
+    q.stage = parseInt(e.target.value, 10) || 10;
+  });
+
+  document.getElementById('sq-edit-desc')?.addEventListener('input', (e) => {
+    q.description = e.target.value.trim();
+  });
+
+  // Rewards
+  document.getElementById('sq-edit-xp')?.addEventListener('input', (e) => {
+    if (!q.rewards) q.rewards = {};
+    q.rewards.xp = parseInt(e.target.value, 10) || 0;
+  });
+  document.getElementById('sq-edit-gold')?.addEventListener('input', (e) => {
+    if (!q.rewards) q.rewards = {};
+    q.rewards.gold = parseInt(e.target.value, 10) || 0;
+  });
+  document.getElementById('sq-edit-items')?.addEventListener('input', (e) => {
+    if (!q.rewards) q.rewards = {};
+    q.rewards.items = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+  });
+
+  // Objective checkboxes & inputs
+  inspector.querySelectorAll('.sq-obj-check').forEach(chk => {
+    chk.addEventListener('change', (e) => {
+      const row = e.target.closest('.skyrim-obj-row');
+      const idx = Number(row.getAttribute('data-obj-idx'));
+      if (q.objectives && q.objectives[idx]) {
+        q.objectives[idx].status = e.target.checked ? 'completed' : 'active';
+        setStatus(`Updated quest objective: "${q.objectives[idx].text}" (${q.objectives[idx].status})`);
+        renderSkyrimQuestJournal();
+      }
     });
   });
-  container.querySelectorAll('.quest-status-select').forEach(sel => {
-    sel.addEventListener('change', (e) => {
-      const idx = e.target.closest('.quest-item-card').getAttribute('data-idx');
-      quests[idx].status = e.target.value;
+
+  inspector.querySelectorAll('.sq-obj-input').forEach(inp => {
+    inp.addEventListener('input', (e) => {
+      const row = e.target.closest('.skyrim-obj-row');
+      const idx = Number(row.getAttribute('data-obj-idx'));
+      if (q.objectives && q.objectives[idx]) {
+        q.objectives[idx].text = e.target.value.trim();
+      }
     });
   });
-  container.querySelectorAll('.quest-desc-input').forEach(ta => {
-    ta.addEventListener('change', (e) => {
-      const idx = e.target.closest('.quest-item-card').getAttribute('data-idx');
-      quests[idx].description = e.target.value.trim();
+
+  inspector.querySelectorAll('.sq-btn-del-obj').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = Number(btn.getAttribute('data-obj-idx'));
+      if (q.objectives) {
+        q.objectives.splice(idx, 1);
+        renderSkyrimQuestJournal();
+      }
     });
   });
-  container.querySelectorAll('.btn-delete-quest').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const idx = Number(btn.getAttribute('data-idx'));
-      quests.splice(idx, 1);
-      renderQuestLog();
+
+  document.getElementById('sq-btn-add-obj')?.addEventListener('click', () => {
+    if (!Array.isArray(q.objectives)) q.objectives = [];
+    q.objectives.push({
+      id: `obj-${Date.now().toString(36)}`,
+      text: 'New Objective Requirement',
+      status: 'active',
+      isOptional: false
+    });
+    renderSkyrimQuestJournal();
+  });
+
+  // Stages
+  inspector.querySelectorAll('.sq-stage-entry-input').forEach(inp => {
+    inp.addEventListener('input', (e) => {
+      const row = e.target.closest('[data-stage-idx]');
+      const idx = Number(row.getAttribute('data-stage-idx'));
+      if (q.stages && q.stages[idx]) {
+        q.stages[idx].journalEntry = e.target.value.trim();
+      }
+    });
+  });
+
+  inspector.querySelectorAll('.sq-btn-del-stage').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = Number(btn.getAttribute('data-stage-idx'));
+      if (q.stages) {
+        q.stages.splice(idx, 1);
+        renderSkyrimQuestJournal();
+      }
+    });
+  });
+
+  document.getElementById('sq-btn-add-stage')?.addEventListener('click', () => {
+    if (!Array.isArray(q.stages)) q.stages = [];
+    const nextStage = (q.stages.length + 1) * 10;
+    q.stages.push({
+      stage: nextStage,
+      journalEntry: `Stage ${nextStage} journal log entry.`
+    });
+    renderSkyrimQuestJournal();
+  });
+
+  // Delete Quest
+  document.getElementById('sq-btn-delete')?.addEventListener('click', () => {
+    const gs = getGameState();
+    const quests = gs['robos:questLog'] || [];
+    const qIndex = quests.findIndex(item => (item.id || item['@id']) === qId);
+    if (qIndex !== -1) {
+      quests.splice(qIndex, 1);
+      state.selectedSkyrimQuestId = null;
+      renderSkyrimQuestJournal();
       updateCampaignSummaryStats();
-    });
+      setStatus(`Deleted quest: ${q.title}`);
+    }
   });
 }
 

@@ -2,6 +2,11 @@
   {
     "id": "night-without-memory",
     "title": "A Night Without Memory",
+    "questType": "main",
+    "category": "Main Questline",
+    "giver": "Elora",
+    "targetMap": "homestead",
+    "status": "active",
     "stages": [
       {
         "stage": 1,
@@ -23,6 +28,152 @@
         "stage": 5,
         "description": "Confront Captain Malakor in the War Room, defeat his corrupted form, and seal the Azrath vault breach."
       }
-    ]
+    ],
+    "objectives": [
+      {
+        "id": "obj-wake-partner",
+        "text": "Converse with partner Elora about the midnight summons",
+        "isOptional": false,
+        "status": "completed",
+        "targetEntity": "elora"
+      },
+      {
+        "id": "obj-retrieve-blade",
+        "text": "Retrieve service blade from footlocker",
+        "isOptional": false,
+        "status": "active",
+        "targetEntity": "footlocker"
+      },
+      {
+        "id": "obj-investigate-village",
+        "text": "Investigate disturbance in Village Square and speak with Blacksmith Brand",
+        "isOptional": false,
+        "status": "unstarted",
+        "targetEntity": "blacksmith-brand"
+      },
+      {
+        "id": "obj-defeat-malakor",
+        "text": "Infiltrate Garrison Keep and defeat Captain Malakor",
+        "isOptional": false,
+        "status": "unstarted",
+        "targetEntity": "captain-malakor"
+      }
+    ],
+    "rewards": {
+      "experience": 500,
+      "gold": 120,
+      "items": [
+        "service-sword",
+        "potion-healing"
+      ]
+    }
+  },
+  {
+    "id": "firebead-scroll",
+    "title": "Firebead's Identification Scroll",
+    "questType": "side",
+    "category": "Candlekeep Side Quests",
+    "giver": "Firebead Elfmirk",
+    "targetMap": "candlekeep",
+    "status": "active",
+    "stages": [
+      {
+        "stage": 1,
+        "description": "Fetch the scroll of identify from Tethtoril and bring it to Firebead inside Candlekeep Inn."
+      },
+      {
+        "stage": 2,
+        "description": "Deliver the identified scroll back to Firebead for a protection ward."
+      }
+    ],
+    "objectives": [
+      {
+        "id": "obj-fetch-scroll",
+        "text": "Obtain scroll of identify from Tethtoril",
+        "isOptional": false,
+        "status": "active",
+        "targetEntity": "tethtoril"
+      },
+      {
+        "id": "obj-deliver-firebead",
+        "text": "Deliver scroll to Firebead at Candlekeep Inn",
+        "isOptional": false,
+        "status": "unstarted",
+        "targetEntity": "firebead"
+      }
+    ],
+    "rewards": {
+      "experience": 150,
+      "gold": 50,
+      "items": [
+        "potion-healing"
+      ]
+    }
+  },
+  {
+    "id": "harpers-covert-rendezvous",
+    "title": "Covert Harpers Rendezvous",
+    "questType": "faction",
+    "category": "Harpers Guild",
+    "giver": "Gorion",
+    "targetMap": "candlekeep",
+    "status": "active",
+    "stages": [
+      {
+        "stage": 1,
+        "description": "Meet Harper contacts Jaheira and Khalid at the Friendly Arm Inn along the Coast Way."
+      }
+    ],
+    "objectives": [
+      {
+        "id": "obj-rendezvous-harpers",
+        "text": "Rendezvous with Khalid and Jaheira at the Friendly Arm Inn",
+        "isOptional": false,
+        "status": "active",
+        "targetEntity": "jaheira"
+      }
+    ],
+    "rewards": {
+      "experience": 250,
+      "gold": 75,
+      "reputation": {
+        "Harpers": 15
+      }
+    }
+  },
+  {
+    "id": "dreppin-sick-cow",
+    "title": "Dreppin's Sick Cow",
+    "questType": "miscellaneous",
+    "category": "Miscellaneous Favors",
+    "giver": "Dreppin",
+    "targetMap": "candlekeep",
+    "status": "active",
+    "stages": [
+      {
+        "stage": 1,
+        "description": "Retrieve an antidote potion from the temple stores to cure Nessa the cow."
+      }
+    ],
+    "objectives": [
+      {
+        "id": "obj-get-antidote",
+        "text": "Collect antidote from the temple pantry",
+        "isOptional": false,
+        "status": "active",
+        "targetEntity": "temple-cabinet"
+      },
+      {
+        "id": "obj-cure-nessa",
+        "text": "Administer antidote to Nessa the cow",
+        "isOptional": false,
+        "status": "unstarted",
+        "targetEntity": "nessa"
+      }
+    ],
+    "rewards": {
+      "experience": 50,
+      "gold": 15
+    }
   }
 ]

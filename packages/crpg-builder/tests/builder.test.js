@@ -62,3 +62,67 @@ test('CRPGGameBuilder validates graph and builds engine artifacts', () => {
   // Cleanup tmp dir
   fs.rmSync(tmpTarget, { recursive: true, force: true });
 });
+
+test('Skyrim-style side quests, faction quests, and misc tasks validate and serialize into quests.json', () => {
+  const tmpTarget = path.join(__dirname, 'tmp-quest-build');
+  const builder = new CRPGGameBuilder({ targetDir: tmpTarget });
+  const result = builder.build();
+
+  assert.equal(result.success, true);
+  const questsFile = path.join(tmpTarget, 'data/v1/quests.json');
+  assert.ok(fs.existsSync(questsFile));
+
+  const quests = JSON.parse(fs.readFileSync(questsFile, 'utf8'));
+  assert.ok(quests.length >= 4, 'Expected at least 4 quests');
+
+  const mainQuest = quests.find(q => q.questType === 'main');
+  assert.ok(mainQuest, 'Expected a main quest');
+  assert.equal(mainQuest.id, 'night-without-memory');
+  assert.ok(mainQuest.objectives.length > 0, 'Main quest should have objectives');
+
+  const sideQuest = quests.find(q => q.questType === 'side');
+  assert.ok(sideQuest, 'Expected a side quest');
+  assert.equal(sideQuest.id, 'firebead-scroll');
+  assert.equal(sideQuest.category, 'Candlekeep Side Quests');
+  assert.equal(sideQuest.giver, 'Firebead Elfmirk');
+  assert.ok(sideQuest.objectives.some(o => o.id === 'obj-fetch-scroll'));
+  assert.ok(sideQuest.rewards.experience > 0);
+
+  const factionQuest = quests.find(q => q.questType === 'faction');
+  assert.ok(factionQuest, 'Expected a faction quest');
+  assert.equal(factionQuest.category, 'Harpers Guild');
+
+  const miscQuest = quests.find(q => q.questType === 'miscellaneous');
+  assert.ok(miscQuest, 'Expected a miscellaneous quest');
+  assert.equal(miscQuest.category, 'Miscellaneous Favors');
+
+  fs.rmSync(tmpTarget, { recursive: true, force: true });
+});
+
+test('validateGraph rejects invalid quest types', () => {
+  const builder = new CRPGGameBuilder({});
+  const mockNodes = [
+    {
+      '@id': 'urn:robos:crpg:game:test',
+      '@type': ['robos:CRPGGame'],
+      'dcterms:title': 'Test Game',
+      'robos:startingZone': 'urn:robos:crpg:zone:test'
+    },
+    {
+      '@id': 'urn:robos:crpg:zone:test',
+      '@type': ['robos:CRPGMapZone'],
+      'dcterms:title': 'Test Zone'
+    },
+    {
+      '@id': 'urn:robos:crpg:quest:invalid-type-quest',
+      '@type': ['robos:CRPGQuest'],
+      'dcterms:title': 'Invalid Quest',
+      'robos:questType': 'alien-quest-type',
+      'robos:questStages': [{ stage: 1, description: 'Step 1' }]
+    }
+  ];
+
+  const validation = builder.validateGraph(mockNodes);
+  assert.equal(validation.valid, false);
+  assert.ok(validation.errors.some(e => e.includes("invalid robos:questType 'alien-quest-type'")));
+});

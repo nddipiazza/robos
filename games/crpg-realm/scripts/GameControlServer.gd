@@ -1437,6 +1437,15 @@ func _get_full_game_state() -> Dictionary:
 			"enemy_count": battle_enemies.size(),
 			"all_enemies_dead": (battle_enemies.size() > 0 and battle_enemies.all(func(e): return e.hp <= 0))
 		},
+		"quest_log": GameState.quest_log,
+		"quests_summary": {
+			"total": GameState.quest_log.size(),
+			"main": GameState.get_quests_by_type("main").size(),
+			"side": GameState.get_quests_by_type("side").size(),
+			"faction": GameState.get_quests_by_type("faction").size(),
+			"miscellaneous": GameState.get_quests_by_type("miscellaneous").size(),
+			"active_side_quests": GameState.get_active_side_quests().size()
+		},
 		"combat_telemetry": (cur_scene.get_combat_telemetry() if (cur_scene and cur_scene.has_method("get_combat_telemetry")) else {}),
 		"last_aoe_telemetry": (cur_scene.last_aoe_telemetry if (cur_scene and "last_aoe_telemetry" in cur_scene) else {}),
 		"last_spell_telemetry": (cur_scene.last_spell_telemetry if (cur_scene and "last_spell_telemetry" in cur_scene) else (cur_scene.last_aoe_telemetry if (cur_scene and "last_aoe_telemetry" in cur_scene) else {})),
@@ -1605,6 +1614,23 @@ func _execute_game_action(payload: Dictionary) -> Dictionary:
 			GameState.quest_advanced.emit(stg)
 			GameState.log_message("quest", "Journal updated (Stage %d)" % stg)
 			return {"success": true, "quest_stage": GameState.quest_stage}
+
+		"update_quest_objective":
+			var q_id = str(args.get("quest_id", args.get("quest", "")))
+			var obj_id = str(args.get("objective_id", args.get("objective", "")))
+			var completed = bool(args.get("completed", true))
+			var ok = GameState.update_quest_objective(q_id, obj_id, completed)
+			return {"success": ok, "quest_id": q_id, "objective_id": obj_id, "completed": completed}
+
+		"update_quest_stage":
+			var q_id = str(args.get("quest_id", args.get("quest", "")))
+			var new_stage = int(args.get("stage", 1))
+			var ok = GameState.update_quest_stage(q_id, new_stage)
+			return {"success": ok, "quest_id": q_id, "stage": new_stage}
+
+		"add_quest":
+			GameState.add_quest(args)
+			return {"success": true, "quest": args.get("title", "")}
 
 		"end_game_victory", "trigger_victory":
 			GameState.flags.victory_achieved = true

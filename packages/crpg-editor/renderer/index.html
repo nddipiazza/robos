@@ -210,6 +210,9 @@
           <button id="tab-camp-quests" class="campaign-subtab-btn" data-subpane="subpane-camp-quests">
             <span>🌳 Quest & Scenario Tree</span>
           </button>
+          <button id="tab-camp-questlog" class="campaign-subtab-btn" data-subpane="subpane-camp-questlog">
+            <span>📜 Skyrim Quest Journal</span>
+          </button>
           <button id="tab-camp-maps" class="campaign-subtab-btn" data-subpane="subpane-camp-maps">
             <span>🗺️ Maps & Scenes</span>
           </button>
@@ -677,6 +680,69 @@
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Subpane: Skyrim-Style Quest Journal & Side Quest Tracker -->
+        <div id="subpane-camp-questlog" class="campaign-subpane hidden">
+          <div class="skyrim-journal-wrapper">
+            <!-- Header Bar with Filter Tabs & Actions -->
+            <div class="skyrim-journal-header-bar">
+              <div class="skyrim-category-tabs" id="skyrim-category-tabs">
+                <button class="skyrim-cat-btn active" data-category="all">
+                  <span>All Quests</span>
+                  <span class="skyrim-cat-count" id="skyrim-count-all">0</span>
+                </button>
+                <button class="skyrim-cat-btn" data-category="main">
+                  <span>Main Story</span>
+                  <span class="skyrim-cat-count" id="skyrim-count-main">0</span>
+                </button>
+                <button class="skyrim-cat-btn" data-category="side">
+                  <span>Side Quests</span>
+                  <span class="skyrim-cat-count" id="skyrim-count-side">0</span>
+                </button>
+                <button class="skyrim-cat-btn" data-category="faction">
+                  <span>Factions</span>
+                  <span class="skyrim-cat-count" id="skyrim-count-faction">0</span>
+                </button>
+                <button class="skyrim-cat-btn" data-category="miscellaneous">
+                  <span>Miscellaneous</span>
+                  <span class="skyrim-cat-count" id="skyrim-count-miscellaneous">0</span>
+                </button>
+                <button class="skyrim-cat-btn" data-category="radiant">
+                  <span>Bounties / Radiant</span>
+                  <span class="skyrim-cat-count" id="skyrim-count-radiant">0</span>
+                </button>
+                <button class="skyrim-cat-btn" data-category="companion">
+                  <span>Companions</span>
+                  <span class="skyrim-cat-count" id="skyrim-count-companion">0</span>
+                </button>
+              </div>
+
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <button id="btn-add-skyrim-quest" class="btn btn-sm btn-primary">
+                  <span>+ New Quest</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Two-Column Split Layout -->
+            <div class="skyrim-journal-split">
+              <!-- Left Column: Quest Roster List -->
+              <div class="skyrim-quest-roster-pane">
+                <div style="display: flex; gap: 6px;">
+                  <input type="text" id="skyrim-quest-search" class="input-text" placeholder="Search quests by title, giver, or map..." style="font-size: 12px; padding: 6px 10px; width: 100%;">
+                </div>
+                <div class="skyrim-quest-cards-scroll" id="skyrim-quest-cards-list">
+                  <!-- Populated via JS -->
+                </div>
+              </div>
+
+              <!-- Right Column: Quest Inspector & Objectives Tracker -->
+              <div class="skyrim-quest-inspector-pane" id="skyrim-quest-inspector">
+                <!-- Populated via JS when a quest is selected -->
               </div>
             </div>
           </div>

@@ -66,6 +66,20 @@ class CRPGGameBuilder {
       }
     }
 
+    const quests = byType('robos:CRPGQuest');
+    const validQuestTypes = new Set(['main', 'side', 'faction', 'miscellaneous', 'radiant', 'companion']);
+    for (const q of quests) {
+      if (!q['dcterms:title']) {
+        report.errors.push(`Quest ${q['@id']} is missing dcterms:title`);
+      }
+      if (!q['robos:questStages'] || !Array.isArray(q['robos:questStages']) || q['robos:questStages'].length === 0) {
+        report.errors.push(`Quest ${q['@id']} must declare at least one quest stage`);
+      }
+      if (q['robos:questType'] && !validQuestTypes.has(q['robos:questType'])) {
+        report.errors.push(`Quest ${q['@id']} has invalid robos:questType '${q['robos:questType']}'`);
+      }
+    }
+
     report.valid = report.errors.length === 0;
     return report;
   }
@@ -213,7 +227,14 @@ class CRPGGameBuilder {
     const questsData = questNodes.map(q => ({
       id: q['@id'].split(':').pop(),
       title: q['dcterms:title'],
-      stages: q['robos:questStages'] || []
+      questType: q['robos:questType'] || 'side',
+      category: q['robos:questCategory'] || (q['robos:questType'] === 'main' ? 'Main Questline' : 'Side Quests'),
+      giver: q['robos:questGiver'] || '',
+      targetMap: q['robos:targetMap'] || '',
+      status: q['robos:status'] || 'active',
+      stages: q['robos:questStages'] || [],
+      objectives: q['robos:questObjectives'] || [],
+      rewards: q['robos:rewards'] || { experience: 100, gold: 25 }
     }));
     fs.writeFileSync(path.join(dataDir, 'quests.json'), JSON.stringify(questsData, null, 2), 'utf8');
 
