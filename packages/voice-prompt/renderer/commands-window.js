@@ -284,7 +284,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       for (const device of devices) {
         deviceSelect.add(new Option(device.name, String(device.id)));
       }
-      const selected = String(prefs.configuredDevice || 'default');
+      const savedId = String(prefs.configuredDevice || 'default');
+      const selected = devices.find(device => device.legacyId === savedId)?.id || savedId;
       const available = devices.some(device => String(device.id) === selected);
       if (!available) {
         const missing = new Option(`Unavailable microphone (${selected})`, selected);

@@ -1,6 +1,7 @@
 'use strict';
 
 const EventEmitter = require('events');
+const { pipewireSources, captureCommand } = require('./capture-device');
 const { exec, spawn } = require('child_process');
 const { Worker } = require('worker_threads');
 const fs = require('fs');
@@ -249,39 +250,12 @@ class STTEngine extends EventEmitter {
       { id: 'default', name: 'Default System Microphone', isDefault: true },
     ];
 
-    // 1. Try PipeWire wpctl status
     let hasPipewire = false;
-    await new Promise((resolve) => {
-      exec('wpctl status 2>/dev/null', (err, stdout) => {
-        if (!err && stdout) {
-          const lines = stdout.split('\n');
-          let inSources = false;
-          for (const line of lines) {
-            if (line.includes('Sources:')) { inSources = true; continue; }
-            if (inSources && (line.includes('Filters:') || line.includes('Streams:') || line.includes('Video') || line.includes('Settings:'))) {
-              inSources = false;
-              break;
-            }
-            if (inSources) {
-              const match = line.match(/([* ]*)\s+(\d+)\.\s+(.*)/);
-              if (match) {
-                hasPipewire = true;
-                const isDef = match[1].includes('*');
-                const id = match[2];
-                const cleanName = match[3].replace(/\s+\[alsa\]|\s+\[v4l2\]/gi, '').replace(/\[.*\]/g, '').trim();
-                devices.push({
-                  id,
-                  name: `${cleanName}${isDef ? ' (System Default)' : ''}`,
-                  isDefault: isDef,
-                  type: 'pipewire',
-                });
-              }
-            }
-          }
-        }
-        resolve();
-      });
-    });
+    try {
+      const sources = pipewireSources();
+      devices.push(...sources);
+      hasPipewire = sources.length > 0;
+    } catch {} // ALSA-only systems still support direct capture below.
 
     // 2. If no PipeWire, fallback to arecord -l for ALSA hardware cards
     if (!hasPipewire) {
@@ -326,25 +300,15 @@ class STTEngine extends EventEmitter {
   }
 
   _startRecordingProcess(tmpFile, device = this.configuredDevice) {
-    let spawnCmd = 'arecord';
-    let spawnArgs = ['-q', '-D', 'default', '-f', 'S16_LE', '-r', '16000', '-c', '1', tmpFile];
-
-    if (/^\d+$/.test(device)) {
-      spawnCmd = 'pw-record';
-      spawnArgs = ['--target', String(device), '--rate', '16000', '--channels', '1', tmpFile];
-    } else if (device && device.startsWith('hw:')) {
-      spawnCmd = 'arecord';
-      spawnArgs = ['-q', '-D', device, '-f', 'S16_LE', '-r', '16000', '-c', '1', tmpFile];
-    }
-
     try {
+      const { command: spawnCmd, args: spawnArgs } = captureCommand(device, tmpFile);
       const proc = spawn(spawnCmd, spawnArgs, { stdio: ['ignore', 'pipe', 'pipe'] });
       proc.on('error', (err) => {
         console.warn(`[stt-engine] Recording process error (${spawnCmd}):`, err.message);
       });
       return proc;
     } catch (err) {
-      console.warn(`[stt-engine] Failed to spawn ${spawnCmd}:`, err.message);
+      console.warn('[stt-engine] Could not open selected microphone:', err.message);
       return null;
     }
   }
@@ -393,6 +357,10 @@ class STTEngine extends EventEmitter {
     const tmpFile = path.join(os.tmpdir(), `robos-voice-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.wav`);
     this.currentRecordingFile = tmpFile;
     this.recordingProcess = this._startRecordingProcess(tmpFile, device);
+    if (!this.recordingProcess) {
+      this.active = false;
+      return { ok: false, active: false, error: 'Selected microphone is unavailable. Refresh devices and choose an input.' };
+    }
 
     this.vad.reset();
     this.inSpeech = false;

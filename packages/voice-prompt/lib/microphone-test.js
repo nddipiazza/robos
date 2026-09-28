@@ -1,5 +1,6 @@
 'use strict';
 const { spawn } = require('child_process');
+const { captureCommand } = require('./capture-device');
 
 // A short raw-PCM preview, independent of dictation and transcription.
 class MicrophoneTest {
@@ -15,14 +16,8 @@ class MicrophoneTest {
 
   start(device, send) {
     this.stop();
-    if (typeof device !== 'string' || !/^(default|\d+|hw:\d+,\d+)$/.test(device)) {
-      throw new Error('Choose an available microphone.');
-    }
-    const pipewire = /^\d+$/.test(device);
-    const proc = spawn(pipewire ? 'pw-record' : 'arecord', pipewire
-      ? ['--target', device, '--rate', '16000', '--channels', '1', '--format', 's16', '-']
-      : ['-q', '-D', device, '-t', 'raw', '-f', 'S16_LE', '-r', '16000', '-c', '1', '-'],
-    { stdio: ['ignore', 'pipe', 'pipe'] });
+    const { command, args } = captureCommand(device, '-', true);
+    const proc = spawn(command, args, { stdio: ['ignore', 'pipe', 'pipe'] });
     const session = { process: proc, send };
     this.session = session;
     let pending = Buffer.alloc(0);

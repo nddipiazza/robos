@@ -62,7 +62,18 @@ function broadcastToWindows(channel, data) {
   }
 }
 
-const sttEngine = new STTEngine(promptStore.loadPrefs());
+const voicePrefs = promptStore.loadPrefs();
+if (/^\d+$/.test(String(voicePrefs.configuredDevice))) {
+  try {
+    const { pipewireSources } = require('./lib/capture-device');
+    const source = pipewireSources().find(source => source.legacyId === String(voicePrefs.configuredDevice));
+    if (source) {
+      voicePrefs.configuredDevice = source.id;
+      promptStore.savePrefs({ configuredDevice: source.id });
+    }
+  } catch {} // Preserve an unavailable selection; never replace it with default.
+}
+const sttEngine = new STTEngine(voicePrefs);
 const ttsEngine = new TTSEngine((promptStore.loadPrefs() && promptStore.loadPrefs().tts) || {});
 const wakeDetector = new WakeWordDetector({ enabled: true, cooldownMs: 4000 });
 const desktopAssistant = new DesktopAssistant({ ttsEngine, wakeDetector, promptStore });
