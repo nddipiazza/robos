@@ -1,0 +1,78 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "oslc_am": "http://open-services.net/ns/am#"
+  },
+  "@id": "urn:robos:crpg:monster:skeleton-archer",
+  "@type": [
+    "robos:CRPGMonster",
+    "oslc_am:Resource",
+    "schema:Person"
+  ],
+  "dcterms:title": "Skeleton Marksman",
+  "schema:name": "Skeleton Marksman",
+  "robos:slug": "skeleton-archer",
+  "slug": "skeleton-archer",
+  "robos:challengeRating": "1/4",
+  "challengeRating": "1/4",
+  "robos:creatureType": "undead",
+  "creatureType": "undead",
+  "robos:armorClass": 13,
+  "armorClass": 13,
+  "robos:hitPoints": 13,
+  "hitPoints": 13,
+  "robos:speed": 30,
+  "speed": 30,
+  "robos:alignment": "Lawful Evil",
+  "alignment": "Lawful Evil",
+  "robos:abilities": {
+    "str": 10,
+    "dex": 14,
+    "con": 15,
+    "int": 6,
+    "wis": 8,
+    "cha": 5
+  },
+  "abilities": {
+    "str": 10,
+    "dex": 14,
+    "con": 15,
+    "int": 6,
+    "wis": 8,
+    "cha": 5
+  },
+  "robos:attacks": [
+    {
+      "name": "Shortbow",
+      "attackBonus": 4,
+      "damage": "1d6+2",
+      "damageType": "piercing",
+      "range": 80
+    }
+  ],
+  "attacks": [
+    {
+      "name": "Shortbow",
+      "attackBonus": 4,
+      "damage": "1d6+2",
+      "damageType": "piercing",
+      "range": 80
+    }
+  ],
+  "robos:isBoss": false,
+  "isBoss": false,
+  "robos:portrait": "🏹",
+  "portrait": "🏹",
+  "robos:spriteAssetRef": "flare:creature:skeleton",
+  "spriteAssetRef": "flare:creature:skeleton",
+  "robos:xpReward": 50,
+  "xpReward": 50,
+  "robos:goldDrop": 5,
+  "goldDrop": 5,
+  "robos:behavior": "ranged_kiter",
+  "behavior": "ranged_kiter",
+  "dcterms:description": "Skeletal sharpshooter guarding dungeon parapets.",
+  "description": "Skeletal sharpshooter guarding dungeon parapets."
+}

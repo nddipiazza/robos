@@ -1,0 +1,92 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "oslc_am": "http://open-services.net/ns/am#"
+  },
+  "@id": "urn:robos:crpg:monster:captain-malakor-boss",
+  "@type": [
+    "robos:CRPGMonster",
+    "oslc_am:Resource",
+    "schema:Person"
+  ],
+  "dcterms:title": "Dark Lord Malakor (Boss)",
+  "schema:name": "Dark Lord Malakor (Boss)",
+  "robos:slug": "captain-malakor-boss",
+  "slug": "captain-malakor-boss",
+  "robos:challengeRating": "5",
+  "challengeRating": "5",
+  "robos:creatureType": "fiend",
+  "creatureType": "fiend",
+  "robos:armorClass": 16,
+  "armorClass": 16,
+  "robos:hitPoints": 85,
+  "hitPoints": 85,
+  "robos:speed": 30,
+  "speed": 30,
+  "robos:alignment": "Chaotic Evil",
+  "alignment": "Chaotic Evil",
+  "robos:abilities": {
+    "str": 16,
+    "dex": 14,
+    "con": 16,
+    "int": 16,
+    "wis": 14,
+    "cha": 18
+  },
+  "abilities": {
+    "str": 16,
+    "dex": 14,
+    "con": 16,
+    "int": 16,
+    "wis": 14,
+    "cha": 18
+  },
+  "robos:attacks": [
+    {
+      "name": "Shadow Scythe",
+      "attackBonus": 7,
+      "damage": "2d8+3",
+      "damageType": "slashing",
+      "range": 5
+    },
+    {
+      "name": "Necrotic Blast",
+      "attackBonus": 6,
+      "damage": "3d6",
+      "damageType": "necrotic",
+      "range": 60
+    }
+  ],
+  "attacks": [
+    {
+      "name": "Shadow Scythe",
+      "attackBonus": 7,
+      "damage": "2d8+3",
+      "damageType": "slashing",
+      "range": 5
+    },
+    {
+      "name": "Necrotic Blast",
+      "attackBonus": 6,
+      "damage": "3d6",
+      "damageType": "necrotic",
+      "range": 60
+    }
+  ],
+  "robos:isBoss": true,
+  "isBoss": true,
+  "robos:portrait": "😈",
+  "portrait": "😈",
+  "robos:spriteAssetRef": "flare:creature:minotaur",
+  "spriteAssetRef": "flare:creature:minotaur",
+  "robos:xpReward": 1800,
+  "xpReward": 1800,
+  "robos:goldDrop": 250,
+  "goldDrop": 250,
+  "robos:behavior": "boss_phase",
+  "behavior": "boss_phase",
+  "dcterms:description": "Dread sorcerer-warlord threatening the kingdom with abyssal dark magic.",
+  "description": "Dread sorcerer-warlord threatening the kingdom with abyssal dark magic."
+}

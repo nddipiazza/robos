@@ -1284,6 +1284,264 @@ textarea {
 }
 
 /* ========================================================
+   MODULE: ENEMIES BESTIARY & MONSTER STUDIO PANE
+   ======================================================== */
+#pane-enemies {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.enemies-layout {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.enemies-sidebar {
+  width: 330px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border-light);
+  background-color: var(--bg-secondary);
+  overflow: hidden;
+}
+
+.enemies-list-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.enemy-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-light);
+  background-color: var(--bg-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.enemy-list-item:hover {
+  border-color: #ff5252;
+  background-color: rgba(255, 82, 82, 0.05);
+}
+
+.enemy-list-item.selected,
+.enemy-list-item.active {
+  border-color: #ff5252;
+  background-color: rgba(255, 82, 82, 0.12);
+}
+
+.enemy-item-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.enemy-item-icon {
+  font-size: 24px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.enemy-item-details {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.enemy-item-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.enemy-item-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.enemy-item-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.enemy-badge-cr {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+  background: rgba(255, 171, 0, 0.15);
+  color: #ffab00;
+  border: 1px solid rgba(255, 171, 0, 0.3);
+}
+
+.enemy-badge-boss {
+  font-size: 9px;
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-weight: 800;
+  text-transform: uppercase;
+  background: rgba(255, 82, 82, 0.2);
+  color: #ff5252;
+  border: 1px solid rgba(255, 82, 82, 0.4);
+  letter-spacing: 0.5px;
+}
+
+.enemy-editor-content {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-primary);
+}
+
+.enemy-form-panel {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.stat-block-scroll {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.stat-section {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 16px 20px;
+}
+
+.stat-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--accent);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ability-scores-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+}
+
+.ability-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 6px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  text-align: center;
+}
+
+.ability-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.ability-score-input {
+  width: 100%;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 2px 0;
+}
+
+.ability-score-input:focus {
+  border-color: var(--accent);
+  background: var(--bg-secondary);
+  outline: none;
+}
+
+.ability-mod {
+  font-size: 12px;
+  font-weight: 700;
+  color: #00bcd4;
+  margin-top: 4px;
+  padding: 2px 6px;
+  background: rgba(0, 188, 212, 0.1);
+  border-radius: 10px;
+}
+
+.enemy-attacks-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.enemy-attack-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.2fr 1.2fr 1fr 40px;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+}
+
+.enemy-attack-row .btn-remove-attack {
+  background: transparent;
+  border: none;
+  color: #ff5252;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px;
+}
+.enemy-attack-row .btn-remove-attack:hover {
+  background: rgba(255, 82, 82, 0.15);
+  border-radius: 4px;
+}
+
+/* ========================================================
    MODULE 4: BLOCKMAP EDITOR PANE
    ======================================================== */
 .blockmap-layout {

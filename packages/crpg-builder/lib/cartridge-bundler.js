@@ -168,6 +168,32 @@ class CartridgeBundler {
       }
     }
 
+    // 3b. Bundle Enemies / Monsters
+    const enemies = {};
+    const enemiesDir = path.join(this.baseDir, 'enemies');
+    if (fs.existsSync(enemiesDir)) {
+      const files = fs.readdirSync(enemiesDir);
+      for (const file of files) {
+        if (file.endsWith('.jsonld') || file.endsWith('.json')) {
+          const eSlug = file.replace(/\.jsonld$/, '').replace(/\.json$/, '');
+          if (!enemies[eSlug]) {
+            const eData = this._readJsonSafe(path.join(enemiesDir, file));
+            if (eData) enemies[eSlug] = eData;
+          }
+        }
+      }
+    }
+
+    // Also include any monsters defined in characters directory with robos:CRPGMonster
+    for (const [cSlug, cData] of Object.entries(characters)) {
+      const types = Array.isArray(cData['@type']) ? cData['@type'] : [cData['@type']];
+      if (types.includes('robos:CRPGMonster') || cData.characterType === 'boss' || cData.characterType === 'creature') {
+        if (!enemies[cSlug]) {
+          enemies[cSlug] = cData;
+        }
+      }
+    }
+
     // 4. Bundle Quests
     let quests = [];
     if (campaign['robos:gameState'] && Array.isArray(campaign['robos:gameState']['robos:questLog'])) {
@@ -210,6 +236,7 @@ class CartridgeBundler {
         mapCount: Object.keys(maps).length,
         characterCount: Object.keys(characters).length,
         itemCount: Object.keys(items).length,
+        enemyCount: Object.keys(enemies).length,
         questCount: quests.length,
         startingMap,
         startingPosition: startingSpawn,
@@ -220,6 +247,7 @@ class CartridgeBundler {
       maps,
       characters,
       items,
+      enemies,
       quests,
       storyDAG
     };

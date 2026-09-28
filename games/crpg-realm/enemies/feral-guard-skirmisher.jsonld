@@ -1,0 +1,78 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "oslc_am": "http://open-services.net/ns/am#"
+  },
+  "@id": "urn:robos:crpg:monster:feral-guard-skirmisher",
+  "@type": [
+    "robos:CRPGMonster",
+    "oslc_am:Resource",
+    "schema:Person"
+  ],
+  "dcterms:title": "Feral Guard Skirmisher",
+  "schema:name": "Feral Guard Skirmisher",
+  "robos:slug": "feral-guard-skirmisher",
+  "slug": "feral-guard-skirmisher",
+  "robos:challengeRating": "1/2",
+  "challengeRating": "1/2",
+  "robos:creatureType": "undead",
+  "creatureType": "undead",
+  "robos:armorClass": 14,
+  "armorClass": 14,
+  "robos:hitPoints": 16,
+  "hitPoints": 16,
+  "robos:speed": 30,
+  "speed": 30,
+  "robos:alignment": "Lawful Evil",
+  "alignment": "Lawful Evil",
+  "robos:abilities": {
+    "str": 14,
+    "dex": 12,
+    "con": 14,
+    "int": 8,
+    "wis": 10,
+    "cha": 8
+  },
+  "abilities": {
+    "str": 14,
+    "dex": 12,
+    "con": 14,
+    "int": 8,
+    "wis": 10,
+    "cha": 8
+  },
+  "robos:attacks": [
+    {
+      "name": "Spear Thrust",
+      "attackBonus": 4,
+      "damage": "1d6+2",
+      "damageType": "piercing",
+      "range": 5
+    }
+  ],
+  "attacks": [
+    {
+      "name": "Spear Thrust",
+      "attackBonus": 4,
+      "damage": "1d6+2",
+      "damageType": "piercing",
+      "range": 5
+    }
+  ],
+  "robos:isBoss": false,
+  "isBoss": false,
+  "robos:portrait": "💀",
+  "portrait": "💀",
+  "robos:spriteAssetRef": "flare:creature:skeleton",
+  "spriteAssetRef": "flare:creature:skeleton",
+  "robos:xpReward": 100,
+  "xpReward": 100,
+  "robos:goldDrop": 8,
+  "goldDrop": 8,
+  "robos:behavior": "defensive",
+  "behavior": "defensive",
+  "dcterms:description": "Fallen garrison guards resurrected by necromantic curse, wielding rusty spears.",
+  "description": "Fallen garrison guards resurrected by necromantic curse, wielding rusty spears."
+}

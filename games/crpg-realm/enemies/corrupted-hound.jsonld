@@ -1,0 +1,78 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "oslc_am": "http://open-services.net/ns/am#"
+  },
+  "@id": "urn:robos:crpg:monster:corrupted-hound",
+  "@type": [
+    "robos:CRPGMonster",
+    "oslc_am:Resource",
+    "schema:Person"
+  ],
+  "dcterms:title": "Corrupted Shadow Hound",
+  "schema:name": "Corrupted Shadow Hound",
+  "robos:slug": "corrupted-hound",
+  "slug": "corrupted-hound",
+  "robos:challengeRating": "1/4",
+  "challengeRating": "1/4",
+  "robos:creatureType": "beast",
+  "creatureType": "beast",
+  "robos:armorClass": 12,
+  "armorClass": 12,
+  "robos:hitPoints": 11,
+  "hitPoints": 11,
+  "robos:speed": 40,
+  "speed": 40,
+  "robos:alignment": "Neutral Evil",
+  "alignment": "Neutral Evil",
+  "robos:abilities": {
+    "str": 12,
+    "dex": 15,
+    "con": 12,
+    "int": 3,
+    "wis": 12,
+    "cha": 6
+  },
+  "abilities": {
+    "str": 12,
+    "dex": 15,
+    "con": 12,
+    "int": 3,
+    "wis": 12,
+    "cha": 6
+  },
+  "robos:attacks": [
+    {
+      "name": "Bite",
+      "attackBonus": 4,
+      "damage": "1d6+2",
+      "damageType": "piercing",
+      "range": 5
+    }
+  ],
+  "attacks": [
+    {
+      "name": "Bite",
+      "attackBonus": 4,
+      "damage": "1d6+2",
+      "damageType": "piercing",
+      "range": 5
+    }
+  ],
+  "robos:isBoss": false,
+  "isBoss": false,
+  "robos:portrait": "🐺",
+  "portrait": "🐺",
+  "robos:spriteAssetRef": "flare:creature:wolf",
+  "spriteAssetRef": "flare:creature:wolf",
+  "robos:xpReward": 50,
+  "xpReward": 50,
+  "robos:goldDrop": 0,
+  "goldDrop": 0,
+  "robos:behavior": "aggressive",
+  "behavior": "aggressive",
+  "dcterms:description": "Savage shadow wolf warped by abyssal miasma, hunting in coordinated packs.",
+  "description": "Savage shadow wolf warped by abyssal miasma, hunting in coordinated packs."
+}

@@ -1,0 +1,78 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "oslc_am": "http://open-services.net/ns/am#"
+  },
+  "@id": "urn:robos:crpg:monster:goblin-raider",
+  "@type": [
+    "robos:CRPGMonster",
+    "oslc_am:Resource",
+    "schema:Person"
+  ],
+  "dcterms:title": "Goblin Raider",
+  "schema:name": "Goblin Raider",
+  "robos:slug": "goblin-raider",
+  "slug": "goblin-raider",
+  "robos:challengeRating": "1/4",
+  "challengeRating": "1/4",
+  "robos:creatureType": "humanoid",
+  "creatureType": "humanoid",
+  "robos:armorClass": 15,
+  "armorClass": 15,
+  "robos:hitPoints": 7,
+  "hitPoints": 7,
+  "robos:speed": 30,
+  "speed": 30,
+  "robos:alignment": "Neutral Evil",
+  "alignment": "Neutral Evil",
+  "robos:abilities": {
+    "str": 8,
+    "dex": 14,
+    "con": 10,
+    "int": 10,
+    "wis": 8,
+    "cha": 8
+  },
+  "abilities": {
+    "str": 8,
+    "dex": 14,
+    "con": 10,
+    "int": 10,
+    "wis": 8,
+    "cha": 8
+  },
+  "robos:attacks": [
+    {
+      "name": "Scimitar",
+      "attackBonus": 4,
+      "damage": "1d6+2",
+      "damageType": "slashing",
+      "range": 5
+    }
+  ],
+  "attacks": [
+    {
+      "name": "Scimitar",
+      "attackBonus": 4,
+      "damage": "1d6+2",
+      "damageType": "slashing",
+      "range": 5
+    }
+  ],
+  "robos:isBoss": false,
+  "isBoss": false,
+  "robos:portrait": "👺",
+  "portrait": "👺",
+  "robos:spriteAssetRef": "flare:creature:goblin",
+  "spriteAssetRef": "flare:creature:goblin",
+  "robos:xpReward": 50,
+  "xpReward": 50,
+  "robos:goldDrop": 12,
+  "goldDrop": 12,
+  "robos:behavior": "flanker",
+  "behavior": "flanker",
+  "dcterms:description": "Cunning mountain ambusher armed with a notched scimitar.",
+  "description": "Cunning mountain ambusher armed with a notched scimitar."
+}

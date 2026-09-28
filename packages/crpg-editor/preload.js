@@ -29,6 +29,12 @@ contextBridge.exposeInMainWorld('robos', {
   saveItem: (payload) => ipcRenderer.invoke('items:save', payload),
   deleteItem: (slug) => ipcRenderer.invoke('items:delete', slug),
 
+  // Enemy / Monster APIs
+  listEnemies: () => ipcRenderer.invoke('enemies:list'),
+  loadEnemy: (slug) => ipcRenderer.invoke('enemies:load', slug),
+  saveEnemy: (payload) => ipcRenderer.invoke('enemies:save', payload),
+  deleteEnemy: (slug) => ipcRenderer.invoke('enemies:delete', slug),
+
   // Spell APIs
   listSpells: () => ipcRenderer.invoke('spells:list'),
   loadSpell: (slug) => ipcRenderer.invoke('spells:load', slug),

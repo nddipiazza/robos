@@ -1,0 +1,92 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "oslc_am": "http://open-services.net/ns/am#"
+  },
+  "@id": "urn:robos:crpg:monster:minotaur-marauder",
+  "@type": [
+    "robos:CRPGMonster",
+    "oslc_am:Resource",
+    "schema:Person"
+  ],
+  "dcterms:title": "Minotaur Marauder",
+  "schema:name": "Minotaur Marauder",
+  "robos:slug": "minotaur-marauder",
+  "slug": "minotaur-marauder",
+  "robos:challengeRating": "3",
+  "challengeRating": "3",
+  "robos:creatureType": "monstrosity",
+  "creatureType": "monstrosity",
+  "robos:armorClass": 14,
+  "armorClass": 14,
+  "robos:hitPoints": 76,
+  "hitPoints": 76,
+  "robos:speed": 40,
+  "speed": 40,
+  "robos:alignment": "Chaotic Evil",
+  "alignment": "Chaotic Evil",
+  "robos:abilities": {
+    "str": 18,
+    "dex": 11,
+    "con": 16,
+    "int": 6,
+    "wis": 16,
+    "cha": 9
+  },
+  "abilities": {
+    "str": 18,
+    "dex": 11,
+    "con": 16,
+    "int": 6,
+    "wis": 16,
+    "cha": 9
+  },
+  "robos:attacks": [
+    {
+      "name": "Greataxe",
+      "attackBonus": 6,
+      "damage": "2d12+4",
+      "damageType": "slashing",
+      "range": 5
+    },
+    {
+      "name": "Gore / Horns",
+      "attackBonus": 6,
+      "damage": "2d8+4",
+      "damageType": "piercing",
+      "range": 5
+    }
+  ],
+  "attacks": [
+    {
+      "name": "Greataxe",
+      "attackBonus": 6,
+      "damage": "2d12+4",
+      "damageType": "slashing",
+      "range": 5
+    },
+    {
+      "name": "Gore / Horns",
+      "attackBonus": 6,
+      "damage": "2d8+4",
+      "damageType": "piercing",
+      "range": 5
+    }
+  ],
+  "robos:isBoss": false,
+  "isBoss": false,
+  "robos:portrait": "🧌",
+  "portrait": "🧌",
+  "robos:spriteAssetRef": "flare:creature:minotaur",
+  "spriteAssetRef": "flare:creature:minotaur",
+  "robos:xpReward": 700,
+  "xpReward": 700,
+  "robos:goldDrop": 50,
+  "goldDrop": 50,
+  "robos:behavior": "aggressive",
+  "behavior": "aggressive",
+  "dcterms:description": "Towering beast of the subterranean maze who charges trespassers.",
+  "description": "Towering beast of the subterranean maze who charges trespassers."
+}

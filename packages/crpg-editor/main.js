@@ -22,6 +22,7 @@ function getPaths() {
   const campaignsDir = path.join(baseDir, 'campaigns');
   const charactersDir = path.join(baseDir, 'characters');
   const itemsDir = path.join(baseDir, 'items');
+  const enemiesDir = path.join(baseDir, 'enemies');
   const spellsDir = path.join(baseDir, 'spells');
   const abilitiesDir = path.join(baseDir, 'abilities');
   const eventsDir = path.join(baseDir, 'events');
@@ -36,6 +37,7 @@ function getPaths() {
     campaignsDir,
     charactersDir,
     itemsDir,
+    enemiesDir,
     spellsDir,
     abilitiesDir,
     eventsDir,
@@ -52,6 +54,7 @@ function ensureWorkspaceDirs(paths) {
     paths.campaignsDir,
     paths.charactersDir,
     paths.itemsDir,
+    paths.enemiesDir,
     paths.spellsDir,
     paths.abilitiesDir,
     paths.eventsDir,
@@ -248,10 +251,231 @@ function ensureSeedCharacters(charactersDir) {
   }
 }
 
+// Helper to seed initial enemy entities if enemiesDir is empty
+function ensureSeedEnemies(enemiesDir) {
+  try {
+    if (!fs.existsSync(enemiesDir)) {
+      fs.mkdirSync(enemiesDir, { recursive: true });
+    }
+    const existing = fs.readdirSync(enemiesDir).filter(f => f.endsWith('.jsonld'));
+    if (existing.length > 0) return;
+
+    const seedEnemies = [
+      {
+        slug: 'corrupted-hound',
+        name: 'Corrupted Shadow Hound',
+        creatureType: 'beast',
+        challengeRating: '1/4',
+        armorClass: 12,
+        hitPoints: 11,
+        speed: 40,
+        alignment: 'Neutral Evil',
+        abilities: { str: 12, dex: 15, con: 12, int: 3, wis: 12, cha: 6 },
+        attacks: [
+          { name: 'Bite', attackBonus: 4, damage: '1d6+2', damageType: 'piercing', range: 5 }
+        ],
+        portrait: '🐺',
+        spriteAssetRef: 'flare:creature:wolf',
+        behavior: 'aggressive',
+        xpReward: 50,
+        goldDrop: 0,
+        isBoss: false,
+        description: 'Savage shadow wolf warped by abyssal miasma, hunting in coordinated packs.'
+      },
+      {
+        slug: 'feral-guard-skirmisher',
+        name: 'Feral Guard Skirmisher',
+        creatureType: 'undead',
+        challengeRating: '1/2',
+        armorClass: 14,
+        hitPoints: 16,
+        speed: 30,
+        alignment: 'Lawful Evil',
+        abilities: { str: 14, dex: 12, con: 14, int: 8, wis: 10, cha: 8 },
+        attacks: [
+          { name: 'Spear Thrust', attackBonus: 4, damage: '1d6+2', damageType: 'piercing', range: 5 }
+        ],
+        portrait: '💀',
+        spriteAssetRef: 'flare:creature:skeleton',
+        behavior: 'defensive',
+        xpReward: 100,
+        goldDrop: 8,
+        isBoss: false,
+        description: 'Fallen garrison guards resurrected by necromantic curse, wielding rusty spears.'
+      },
+      {
+        slug: 'skeleton-archer',
+        name: 'Skeleton Marksman',
+        creatureType: 'undead',
+        challengeRating: '1/4',
+        armorClass: 13,
+        hitPoints: 13,
+        speed: 30,
+        alignment: 'Lawful Evil',
+        abilities: { str: 10, dex: 14, con: 15, int: 6, wis: 8, cha: 5 },
+        attacks: [
+          { name: 'Shortbow', attackBonus: 4, damage: '1d6+2', damageType: 'piercing', range: 80 }
+        ],
+        portrait: '🏹',
+        spriteAssetRef: 'flare:creature:skeleton',
+        behavior: 'ranged_kiter',
+        xpReward: 50,
+        goldDrop: 5,
+        isBoss: false,
+        description: 'Skeletal sharpshooter guarding dungeon parapets.'
+      },
+      {
+        slug: 'goblin-raider',
+        name: 'Goblin Raider',
+        creatureType: 'humanoid',
+        challengeRating: '1/4',
+        armorClass: 15,
+        hitPoints: 7,
+        speed: 30,
+        alignment: 'Neutral Evil',
+        abilities: { str: 8, dex: 14, con: 10, int: 10, wis: 8, cha: 8 },
+        attacks: [
+          { name: 'Scimitar', attackBonus: 4, damage: '1d6+2', damageType: 'slashing', range: 5 }
+        ],
+        portrait: '👺',
+        spriteAssetRef: 'flare:creature:goblin',
+        behavior: 'flanker',
+        xpReward: 50,
+        goldDrop: 12,
+        isBoss: false,
+        description: 'Cunning mountain ambusher armed with a notched scimitar.'
+      },
+      {
+        slug: 'minotaur-marauder',
+        name: 'Minotaur Marauder',
+        creatureType: 'monstrosity',
+        challengeRating: '3',
+        armorClass: 14,
+        hitPoints: 76,
+        speed: 40,
+        alignment: 'Chaotic Evil',
+        abilities: { str: 18, dex: 11, con: 16, int: 6, wis: 16, cha: 9 },
+        attacks: [
+          { name: 'Greataxe', attackBonus: 6, damage: '2d12+4', damageType: 'slashing', range: 5 },
+          { name: 'Gore / Horns', attackBonus: 6, damage: '2d8+4', damageType: 'piercing', range: 5 }
+        ],
+        portrait: '🧌',
+        spriteAssetRef: 'flare:creature:minotaur',
+        behavior: 'aggressive',
+        xpReward: 700,
+        goldDrop: 50,
+        isBoss: false,
+        description: 'Towering beast of the subterranean maze who charges trespassers.'
+      },
+      {
+        slug: 'captain-malakor-boss',
+        name: 'Dark Lord Malakor (Boss)',
+        creatureType: 'fiend',
+        challengeRating: '5',
+        armorClass: 16,
+        hitPoints: 85,
+        speed: 30,
+        alignment: 'Chaotic Evil',
+        abilities: { str: 16, dex: 14, con: 16, int: 16, wis: 14, cha: 18 },
+        attacks: [
+          { name: 'Shadow Scythe', attackBonus: 7, damage: '2d8+3', damageType: 'slashing', range: 5 },
+          { name: 'Necrotic Blast', attackBonus: 6, damage: '3d6', damageType: 'necrotic', range: 60 }
+        ],
+        portrait: '😈',
+        spriteAssetRef: 'flare:creature:minotaur',
+        behavior: 'boss_phase',
+        xpReward: 1800,
+        goldDrop: 250,
+        isBoss: true,
+        description: 'Dread sorcerer-warlord threatening the kingdom with abyssal dark magic.'
+      },
+      {
+        slug: 'red-dragon-wyrm',
+        name: 'Red Dragonlord (Boss)',
+        creatureType: 'dragon',
+        challengeRating: '10',
+        armorClass: 18,
+        hitPoints: 178,
+        speed: 40,
+        alignment: 'Chaotic Evil',
+        abilities: { str: 23, dex: 10, con: 21, int: 14, wis: 11, cha: 17 },
+        attacks: [
+          { name: 'Bite', attackBonus: 10, damage: '2d10+6', damageType: 'piercing', range: 10 },
+          { name: 'Fire Breath', attackBonus: 9, damage: '8d6', damageType: 'fire', range: 30 }
+        ],
+        portrait: '🐉',
+        spriteAssetRef: 'flare:creature:dragon',
+        behavior: 'boss_phase',
+        xpReward: 5900,
+        goldDrop: 1200,
+        isBoss: true,
+        description: 'Ancient wyrm that hoards stolen artifacts of light within deep cavern vaults.'
+      }
+    ];
+
+    for (const enemy of seedEnemies) {
+      const slug = enemy.slug;
+      const jsonld = {
+        '@context': {
+          robos: 'https://robos.dev/ns/sdlc#',
+          dcterms: 'http://purl.org/dc/terms/',
+          schema: 'https://schema.org/',
+          oslc_am: 'http://open-services.net/ns/am#'
+        },
+        '@id': `urn:robos:crpg:monster:${slug}`,
+        '@type': [
+          'robos:CRPGMonster',
+          'oslc_am:Resource',
+          'schema:Person'
+        ],
+        'dcterms:title': enemy.name,
+        'schema:name': enemy.name,
+        'robos:slug': slug,
+        slug: slug,
+        'robos:challengeRating': enemy.challengeRating,
+        challengeRating: enemy.challengeRating,
+        'robos:creatureType': enemy.creatureType,
+        creatureType: enemy.creatureType,
+        'robos:armorClass': enemy.armorClass,
+        armorClass: enemy.armorClass,
+        'robos:hitPoints': enemy.hitPoints,
+        hitPoints: enemy.hitPoints,
+        'robos:speed': enemy.speed,
+        speed: enemy.speed,
+        'robos:alignment': enemy.alignment,
+        alignment: enemy.alignment,
+        'robos:abilities': enemy.abilities,
+        abilities: enemy.abilities,
+        'robos:attacks': enemy.attacks,
+        attacks: enemy.attacks,
+        'robos:isBoss': enemy.isBoss,
+        isBoss: enemy.isBoss,
+        'robos:portrait': enemy.portrait,
+        portrait: enemy.portrait,
+        'robos:spriteAssetRef': enemy.spriteAssetRef,
+        spriteAssetRef: enemy.spriteAssetRef,
+        'robos:xpReward': enemy.xpReward,
+        xpReward: enemy.xpReward,
+        'robos:goldDrop': enemy.goldDrop,
+        goldDrop: enemy.goldDrop,
+        'robos:behavior': enemy.behavior,
+        behavior: enemy.behavior,
+        'dcterms:description': enemy.description,
+        description: enemy.description,
+      };
+      fs.writeFileSync(path.join(enemiesDir, `${slug}.jsonld`), JSON.stringify(jsonld, null, 2) + '\n', 'utf8');
+    }
+  } catch (err) {
+    console.warn('Could not seed default enemies:', err.message);
+  }
+}
+
 // IPC Handler Registrations
 function setupIpcHandlers() {
   const paths = getPaths();
   ensureWorkspaceDirs(paths);
+  ensureSeedCharacters(paths.charactersDir);
+  ensureSeedEnemies(paths.enemiesDir);
 
   // 1. Environment Paths
   ipcMain.handle('app:get-paths', async () => paths);
@@ -958,6 +1182,192 @@ function setupIpcHandlers() {
   ipcMain.handle('items:delete', async (_event, slug) => {
     try {
       const filePath = path.join(paths.itemsDir, `${slug}.jsonld`);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  // 5b. Enemies / Monsters Bestiary API
+  ipcMain.handle('enemies:list', async () => {
+    try {
+      if (!fs.existsSync(paths.enemiesDir)) {
+        fs.mkdirSync(paths.enemiesDir, { recursive: true });
+      }
+      const files = fs.readdirSync(paths.enemiesDir).filter(f => f.endsWith('.jsonld'));
+      const enemies = [];
+
+      for (const file of files) {
+        const slug = file.replace(/\.jsonld$/, '');
+        const fullPath = path.join(paths.enemiesDir, file);
+        try {
+          const raw = fs.readFileSync(fullPath, 'utf8');
+          const data = JSON.parse(raw);
+          const name = data['dcterms:title'] || data['schema:name'] || data.name || data.title || slug;
+          const cr = data['robos:challengeRating'] || data.challengeRating || data.cr || '1/4';
+          const creatureType = data['robos:creatureType'] || data.creatureType || data.type || 'beast';
+          const ac = Number(data['robos:armorClass'] ?? data.armorClass ?? data.ac ?? 10);
+          const hp = Number(data['robos:hitPoints'] ?? data.hitPoints ?? data.hp ?? 10);
+          const speed = Number(data['robos:speed'] ?? data.speed ?? 30);
+          const abilities = data['robos:abilities'] || data.abilities || { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
+          const attacks = Array.isArray(data['robos:attacks']) ? data['robos:attacks'] : (Array.isArray(data.attacks) ? data.attacks : []);
+          const isBoss = Boolean(data['robos:isBoss'] ?? data.isBoss ?? data.boss ?? false);
+          const portrait = data['robos:portrait'] || data.portrait || (isBoss ? '😈' : '👹');
+          const spriteAssetRef = data['robos:spriteAssetRef'] || data.spriteAssetRef || '';
+          const alignment = data['robos:alignment'] || data.alignment || 'Neutral Evil';
+          const behavior = data['robos:behavior'] || data.behavior || 'aggressive';
+          const xpReward = Number(data['robos:xpReward'] ?? data.xpReward ?? 50);
+          const goldDrop = Number(data['robos:goldDrop'] ?? data.goldDrop ?? 0);
+          const description = data['dcterms:description'] || data.description || '';
+
+          enemies.push({
+            slug,
+            fileName: file,
+            path: fullPath,
+            id: data['@id'] || `urn:robos:crpg:monster:${slug}`,
+            name,
+            title: name,
+            challengeRating: cr,
+            cr,
+            creatureType,
+            type: creatureType,
+            armorClass: ac,
+            ac,
+            hitPoints: hp,
+            hp,
+            speed,
+            abilities,
+            attacks,
+            isBoss,
+            boss: isBoss,
+            portrait,
+            icon: portrait,
+            spriteAssetRef,
+            alignment,
+            behavior,
+            xpReward,
+            goldDrop,
+            description,
+            raw: data,
+          });
+        } catch (e) {
+          enemies.push({ slug, fileName: file, path: fullPath, name: slug, error: e.message });
+        }
+      }
+      return { success: true, enemies };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('enemies:load', async (_event, slug) => {
+    try {
+      const filePath = path.join(paths.enemiesDir, `${slug}.jsonld`);
+      if (!fs.existsSync(filePath)) {
+        throw new Error(`Enemy file not found: ${filePath}`);
+      }
+      const raw = fs.readFileSync(filePath, 'utf8');
+      const data = JSON.parse(raw);
+      return { success: true, slug, filePath, data, enemy: data };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('enemies:save', async (_event, { slug, data }) => {
+    try {
+      if (!slug) throw new Error('Enemy slug is required');
+      const safeSlug = slug.toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+      const filePath = path.join(paths.enemiesDir, `${safeSlug}.jsonld`);
+
+      const name = data.name || data['dcterms:title'] || safeSlug;
+      const cr = data.challengeRating || data.cr || data['robos:challengeRating'] || '1/4';
+      const creatureType = data.creatureType || data.type || data['robos:creatureType'] || 'beast';
+      const ac = Number(data.armorClass ?? data.ac ?? data['robos:armorClass'] ?? 10);
+      const hp = Number(data.hitPoints ?? data.hp ?? data['robos:hitPoints'] ?? 10);
+      const speed = Number(data.speed ?? data['robos:speed'] ?? 30);
+      const abilities = data.abilities || data['robos:abilities'] || { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
+      const attacks = Array.isArray(data.attacks) ? data.attacks : (Array.isArray(data['robos:attacks']) ? data['robos:attacks'] : []);
+      const isBoss = Boolean(data.isBoss ?? data.boss ?? data['robos:isBoss'] ?? false);
+      const portrait = data.portrait || data.icon || data['robos:portrait'] || (isBoss ? '😈' : '👹');
+      const spriteAssetRef = data.spriteAssetRef || data['robos:spriteAssetRef'] || '';
+      const alignment = data.alignment || data['robos:alignment'] || 'Neutral Evil';
+      const behavior = data.behavior || data['robos:behavior'] || 'aggressive';
+      const xpReward = Number(data.xpReward ?? data['robos:xpReward'] ?? 50);
+      const goldDrop = Number(data.goldDrop ?? data['robos:goldDrop'] ?? 0);
+      const description = data.description || data['dcterms:description'] || '';
+
+      const formatted = {
+        '@context': {
+          robos: 'https://robos.dev/ns/sdlc#',
+          dcterms: 'http://purl.org/dc/terms/',
+          schema: 'https://schema.org/',
+          oslc_am: 'http://open-services.net/ns/am#'
+        },
+        '@id': data['@id'] || `urn:robos:crpg:monster:${safeSlug}`,
+        '@type': [
+          'robos:CRPGMonster',
+          'oslc_am:Resource',
+          'schema:Person'
+        ],
+        'dcterms:title': name,
+        'schema:name': name,
+        'robos:slug': safeSlug,
+        slug: safeSlug,
+        'robos:challengeRating': cr,
+        challengeRating: cr,
+        'robos:creatureType': creatureType,
+        creatureType,
+        'robos:armorClass': ac,
+        armorClass: ac,
+        'robos:hitPoints': hp,
+        hitPoints: hp,
+        'robos:speed': speed,
+        speed,
+        'robos:alignment': alignment,
+        alignment,
+        'robos:abilities': abilities,
+        abilities,
+        'robos:attacks': attacks,
+        attacks,
+        'robos:isBoss': isBoss,
+        isBoss,
+        'robos:portrait': portrait,
+        portrait,
+        'robos:spriteAssetRef': spriteAssetRef,
+        spriteAssetRef,
+        'robos:xpReward': xpReward,
+        xpReward,
+        'robos:goldDrop': goldDrop,
+        goldDrop,
+        'robos:behavior': behavior,
+        behavior,
+        'dcterms:description': description,
+        description,
+      };
+
+      if (!fs.existsSync(paths.enemiesDir)) {
+        fs.mkdirSync(paths.enemiesDir, { recursive: true });
+      }
+      fs.writeFileSync(filePath, JSON.stringify(formatted, null, 2) + '\n', 'utf8');
+
+      return {
+        success: true,
+        slug: safeSlug,
+        filePath,
+        savedAt: new Date().toISOString(),
+      };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('enemies:delete', async (_event, slug) => {
+    try {
+      const filePath = path.join(paths.enemiesDir, `${slug}.jsonld`);
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
       }

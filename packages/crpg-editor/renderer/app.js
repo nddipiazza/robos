@@ -290,6 +290,13 @@ const state = {
   activeItemData: null,
   itemFilter: 'all', // 'all', 'weapon', 'armor', etc.
 
+  // Enemies Bestiary State
+  enemies: [],
+  activeEnemySlug: null,
+  activeEnemyData: null,
+  enemyFilter: 'all',
+  activeEnemyAttacks: [],
+
   // Spells Studio State
   spells: [],
   activeSpellSlug: null,
@@ -353,6 +360,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupCampaignHandlers();
   setupCharacterHandlers();
   setupItemHandlers();
+  setupEnemyHandlers();
   setupSpellHandlers();
   setupAbilityHandlers();
   setupTacticsSimHandlers();
@@ -373,6 +381,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadScenesList();
   await loadMapsList();
   await loadAllItems();
+  await loadAllEnemies();
   await loadAllSpells();
   await loadAllAbilities();
   await loadAllGameEvents();
@@ -428,6 +437,7 @@ function switchModule(paneId) {
   const campControls = document.getElementById('campaign-header-controls');
   const charControls = document.getElementById('character-header-controls');
   const itemControls = document.getElementById('items-header-controls');
+  const enemyControls = document.getElementById('enemies-header-controls');
   const spellsControls = document.getElementById('spells-header-controls');
   const abilitiesControls = document.getElementById('abilities-header-controls');
   const invControls = document.getElementById('inventory-header-controls');
@@ -436,6 +446,7 @@ function switchModule(paneId) {
   if (campControls) campControls.classList.toggle('hidden', paneId !== 'pane-campaign');
   if (charControls) charControls.classList.toggle('hidden', paneId !== 'pane-characters');
   if (itemControls) itemControls.classList.toggle('hidden', paneId !== 'pane-items');
+  if (enemyControls) enemyControls.classList.toggle('hidden', paneId !== 'pane-enemies');
   if (spellsControls) spellsControls.classList.toggle('hidden', paneId !== 'pane-spells');
   if (abilitiesControls) abilitiesControls.classList.toggle('hidden', paneId !== 'pane-abilities');
   if (invControls) invControls.classList.toggle('hidden', paneId !== 'pane-inventory');
@@ -456,6 +467,13 @@ function switchModule(paneId) {
       loadItemForm(state.activeItemSlug);
     } else {
       showEmptyItemState();
+    }
+  } else if (paneId === 'pane-enemies') {
+    renderEnemiesList();
+    if (state.activeEnemySlug) {
+      loadEnemyForm(state.activeEnemySlug);
+    } else {
+      showEmptyEnemyState();
     }
   } else if (paneId === 'pane-spells') {
     renderSpellsList();
@@ -7802,6 +7820,716 @@ async function deleteCurrentItem() {
   } catch (err) {
     console.error('Error deleting item:', err);
     setStatus(`Error deleting item: ${err.message}`);
+  }
+}
+
+// ========================================================
+// MODULE: ENEMIES BESTIARY & MONSTER STUDIO
+// ========================================================
+const ENEMY_PRESETS = {
+  'corrupted-hound': {
+    name: 'Corrupted Shadow Hound',
+    slug: 'corrupted-hound',
+    creatureType: 'beast',
+    cr: '1/4',
+    ac: 12,
+    hp: 11,
+    speed: 40,
+    alignment: 'Neutral Evil',
+    str: 12, dex: 15, con: 12, int: 3, wis: 12, cha: 6,
+    portrait: '🐺',
+    spriteAssetRef: 'flare:creature:wolf',
+    behavior: 'aggressive',
+    xp: 50, gold: 0, isBoss: false,
+    attacks: [{ name: 'Bite', attackBonus: 4, damage: '1d6+2', damageType: 'piercing', range: 5 }],
+    desc: 'Savage shadow wolf warped by abyssal miasma, hunting in coordinated packs.'
+  },
+  'feral-guard-skirmisher': {
+    name: 'Feral Guard Skirmisher',
+    slug: 'feral-guard-skirmisher',
+    creatureType: 'undead',
+    cr: '1/2',
+    ac: 14,
+    hp: 16,
+    speed: 30,
+    alignment: 'Lawful Evil',
+    str: 14, dex: 12, con: 14, int: 8, wis: 10, cha: 8,
+    portrait: '💀',
+    spriteAssetRef: 'flare:creature:skeleton',
+    behavior: 'defensive',
+    xp: 100, gold: 8, isBoss: false,
+    attacks: [{ name: 'Spear Thrust', attackBonus: 4, damage: '1d6+2', damageType: 'piercing', range: 5 }],
+    desc: 'Fallen garrison guards resurrected by necromantic curse, wielding rusty spears.'
+  },
+  'skeleton-archer': {
+    name: 'Skeleton Marksman',
+    slug: 'skeleton-archer',
+    creatureType: 'undead',
+    cr: '1/4',
+    ac: 13,
+    hp: 13,
+    speed: 30,
+    alignment: 'Lawful Evil',
+    str: 10, dex: 14, con: 15, int: 6, wis: 8, cha: 5,
+    portrait: '🏹',
+    spriteAssetRef: 'flare:creature:skeleton',
+    behavior: 'ranged_kiter',
+    xp: 50, gold: 5, isBoss: false,
+    attacks: [{ name: 'Shortbow', attackBonus: 4, damage: '1d6+2', damageType: 'piercing', range: 80 }],
+    desc: 'Skeletal sharpshooter guarding dungeon parapets.'
+  },
+  'goblin-raider': {
+    name: 'Goblin Raider',
+    slug: 'goblin-raider',
+    creatureType: 'humanoid',
+    cr: '1/4',
+    ac: 15,
+    hp: 7,
+    speed: 30,
+    alignment: 'Neutral Evil',
+    str: 8, dex: 14, con: 10, int: 10, wis: 8, cha: 8,
+    portrait: '👺',
+    spriteAssetRef: 'flare:creature:goblin',
+    behavior: 'flanker',
+    xp: 50, gold: 12, isBoss: false,
+    attacks: [{ name: 'Scimitar', attackBonus: 4, damage: '1d6+2', damageType: 'slashing', range: 5 }],
+    desc: 'Cunning mountain ambusher armed with a crude scimitar.'
+  },
+  'minotaur-marauder': {
+    name: 'Minotaur Marauder',
+    slug: 'minotaur-marauder',
+    creatureType: 'monstrosity',
+    cr: '3',
+    ac: 14,
+    hp: 76,
+    speed: 40,
+    alignment: 'Chaotic Evil',
+    str: 18, dex: 11, con: 16, int: 6, wis: 16, cha: 9,
+    portrait: '🧌',
+    spriteAssetRef: 'flare:creature:minotaur',
+    behavior: 'aggressive',
+    xp: 700, gold: 50, isBoss: false,
+    attacks: [
+      { name: 'Greataxe', attackBonus: 6, damage: '2d12+4', damageType: 'slashing', range: 5 },
+      { name: 'Gore / Horns', attackBonus: 6, damage: '2d8+4', damageType: 'piercing', range: 5 }
+    ],
+    desc: 'Towering beast of the subterranean maze who charges trespassers.'
+  },
+  'orc-berserker': {
+    name: 'Orc Berserker',
+    slug: 'orc-berserker',
+    creatureType: 'humanoid',
+    cr: '1',
+    ac: 13,
+    hp: 30,
+    speed: 30,
+    alignment: 'Chaotic Evil',
+    str: 16, dex: 12, con: 16, int: 7, wis: 11, cha: 10,
+    portrait: '🪓',
+    spriteAssetRef: 'flare:creature:goblin',
+    behavior: 'aggressive',
+    xp: 200, gold: 20, isBoss: false,
+    attacks: [{ name: 'Greataxe', attackBonus: 5, damage: '1d12+3', damageType: 'slashing', range: 5 }],
+    desc: 'Fierce warrior enraged in battle, relentless in combat.'
+  },
+  'ogre-crusher': {
+    name: 'Ogre Crusher',
+    slug: 'ogre-crusher',
+    creatureType: 'giant',
+    cr: '2',
+    ac: 11,
+    hp: 59,
+    speed: 40,
+    alignment: 'Chaotic Evil',
+    str: 19, dex: 8, con: 16, int: 5, wis: 7, cha: 7,
+    portrait: '🧟',
+    spriteAssetRef: 'flare:creature:minotaur',
+    behavior: 'aggressive',
+    xp: 450, gold: 40, isBoss: false,
+    attacks: [{ name: 'Greatclub', attackBonus: 6, damage: '2d8+4', damageType: 'bludgeoning', range: 5 }],
+    desc: 'Massive, gluttonous giant wielding a tree trunk as a bludgeon.'
+  },
+  'captain-malakor-boss': {
+    name: 'Dark Lord Malakor (Boss)',
+    slug: 'captain-malakor-boss',
+    creatureType: 'fiend',
+    cr: '5',
+    ac: 16,
+    hp: 85,
+    speed: 30,
+    alignment: 'Chaotic Evil',
+    str: 16, dex: 14, con: 16, int: 16, wis: 14, cha: 18,
+    portrait: '😈',
+    spriteAssetRef: 'flare:creature:minotaur',
+    behavior: 'boss_phase',
+    xp: 1800, gold: 250, isBoss: true,
+    attacks: [
+      { name: 'Shadow Scythe', attackBonus: 7, damage: '2d8+3', damageType: 'slashing', range: 5 },
+      { name: 'Necrotic Blast', attackBonus: 6, damage: '3d6', damageType: 'necrotic', range: 60 }
+    ],
+    desc: 'Dread sorcerer-warlord threatening the kingdom with abyssal dark magic.'
+  },
+  'red-dragon-wyrm': {
+    name: 'Red Dragonlord (Boss)',
+    slug: 'red-dragon-wyrm',
+    creatureType: 'dragon',
+    cr: '10',
+    ac: 18,
+    hp: 178,
+    speed: 40,
+    alignment: 'Chaotic Evil',
+    str: 23, dex: 10, con: 21, int: 14, wis: 11, cha: 17,
+    portrait: '🐉',
+    spriteAssetRef: 'flare:creature:dragon',
+    behavior: 'boss_phase',
+    xp: 5900, gold: 1200, isBoss: true,
+    attacks: [
+      { name: 'Bite', attackBonus: 10, damage: '2d10+6', damageType: 'piercing', range: 10 },
+      { name: 'Fire Breath', attackBonus: 9, damage: '8d6', damageType: 'fire', range: 30 }
+    ],
+    desc: 'Ancient wyrm that hoards stolen artifacts of light within deep cavern vaults.'
+  }
+};
+
+function setupEnemyHandlers() {
+  const hdrSelect = document.getElementById('header-enemy-select');
+  hdrSelect?.addEventListener('change', (e) => {
+    if (e.target.value) {
+      loadEnemyForm(e.target.value);
+    } else {
+      closeEnemy();
+    }
+  });
+
+  document.getElementById('btn-header-new-enemy')?.addEventListener('click', () => createNewEnemy());
+  document.getElementById('btn-sidebar-new-enemy')?.addEventListener('click', () => createNewEnemy());
+  document.getElementById('btn-empty-new-enemy')?.addEventListener('click', () => createNewEnemy());
+
+  document.getElementById('btn-header-close-enemy')?.addEventListener('click', closeEnemy);
+  document.getElementById('btn-close-enemy')?.addEventListener('click', closeEnemy);
+
+  document.getElementById('btn-header-save-enemy')?.addEventListener('click', saveCurrentEnemy);
+  document.getElementById('btn-save-enemy')?.addEventListener('click', saveCurrentEnemy);
+
+  document.getElementById('btn-header-delete-enemy')?.addEventListener('click', deleteCurrentEnemy);
+  document.getElementById('btn-delete-enemy')?.addEventListener('click', deleteCurrentEnemy);
+
+  const searchInput = document.getElementById('enemy-search-input');
+  searchInput?.addEventListener('input', () => {
+    renderEnemiesList();
+  });
+
+  const filterRow = document.getElementById('enemy-type-filters');
+  filterRow?.querySelectorAll('.filter-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      filterRow.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      state.enemyFilter = pill.getAttribute('data-type') || 'all';
+      renderEnemiesList();
+    });
+  });
+
+  const archetypeSelect = document.getElementById('enemy-archetype-select');
+  archetypeSelect?.addEventListener('change', (e) => {
+    if (e.target.value) {
+      createNewEnemy(e.target.value);
+      e.target.value = '';
+    }
+  });
+
+  const enemyNameInput = document.getElementById('enemy-name');
+  enemyNameInput?.addEventListener('input', () => {
+    if (!state.activeEnemySlug) {
+      const slugInput = document.getElementById('enemy-slug');
+      if (slugInput) {
+        slugInput.value = enemyNameInput.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      }
+    }
+  });
+
+  // Ability score listeners for live modifiers
+  ['str', 'dex', 'con', 'int', 'wis', 'cha'].forEach(st => {
+    document.getElementById(`enemy-${st}`)?.addEventListener('input', updateEnemyAbilityMods);
+  });
+
+  document.getElementById('btn-add-enemy-attack')?.addEventListener('click', addAttackToCurrentEnemy);
+}
+
+function updateEnemyAbilityMods() {
+  const stats = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+  stats.forEach(st => {
+    const inp = document.getElementById(`enemy-${st}`);
+    const badge = document.getElementById(`enemy-${st}-mod`);
+    if (inp && badge) {
+      const score = parseInt(inp.value) || 10;
+      const mod = Math.floor((score - 10) / 2);
+      badge.textContent = mod >= 0 ? `+${mod}` : `${mod}`;
+    }
+  });
+}
+
+async function loadAllEnemies() {
+  try {
+    const res = await window.robos.listEnemies();
+    if (res.success) {
+      state.enemies = res.enemies || [];
+      updateEnemiesHeaderSelect();
+      renderEnemiesList();
+    }
+  } catch (err) {
+    console.error('Error loading enemies list:', err);
+  }
+}
+
+function updateEnemiesHeaderSelect() {
+  const hdrSelect = document.getElementById('header-enemy-select');
+  if (!hdrSelect) return;
+  hdrSelect.innerHTML = '<option value="">(No enemy selected)</option>' +
+    (state.enemies || []).map(en => {
+      const slug = en.slug || en.id;
+      const title = en.name || en.title || slug;
+      const icon = en.portrait || en.icon || '👹';
+      const cr = en.challengeRating || en.cr || '1/4';
+      return `<option value="${slug}">${icon} ${title} (CR ${cr})</option>`;
+    }).join('');
+
+  if (state.activeEnemySlug) {
+    hdrSelect.value = state.activeEnemySlug;
+  }
+}
+
+function renderEnemiesList() {
+  const listEl = document.getElementById('enemies-list');
+  const countEl = document.getElementById('enemies-count');
+  if (!listEl) return;
+
+  const query = (document.getElementById('enemy-search-input')?.value || '').toLowerCase().trim();
+  const filter = state.enemyFilter || 'all';
+
+  const filtered = (state.enemies || []).filter(en => {
+    const type = (en.creatureType || en.type || 'beast').toLowerCase();
+    const title = (en.name || en.title || en.slug || '').toLowerCase();
+    const slug = (en.slug || '').toLowerCase();
+    const cr = (en.challengeRating || en.cr || '').toLowerCase();
+    const isBoss = Boolean(en.isBoss || en.boss);
+
+    if (filter === 'boss') {
+      if (!isBoss) return false;
+    } else if (filter !== 'all' && type !== filter) {
+      return false;
+    }
+
+    if (query) {
+      return title.includes(query) || slug.includes(query) || type.includes(query) || cr.includes(query);
+    }
+    return true;
+  });
+
+  if (countEl) countEl.textContent = filtered.length;
+
+  if (filtered.length === 0) {
+    listEl.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text-muted);font-size:12px;">No enemies match query.</div>';
+    return;
+  }
+
+  listEl.innerHTML = filtered.map(en => {
+    const slug = en.slug || en.id;
+    const title = en.name || en.title || slug;
+    const icon = en.portrait || en.icon || '👹';
+    const type = en.creatureType || en.type || 'beast';
+    const cr = en.challengeRating || en.cr || '1/4';
+    const ac = en.armorClass ?? en.ac ?? 10;
+    const hp = en.hitPoints ?? en.hp ?? 10;
+    const isBoss = Boolean(en.isBoss || en.boss);
+    const isSelected = slug === state.activeEnemySlug;
+
+    return `
+      <div class="enemy-list-item ${isSelected ? 'active' : ''}" data-slug="${slug}">
+        <div class="enemy-item-info">
+          <span class="enemy-item-icon">${icon}</span>
+          <div class="enemy-item-details">
+            <div class="enemy-item-title">${title}</div>
+            <div class="enemy-item-sub">
+              <span style="text-transform: capitalize;">${type}</span>
+              <span>•</span>
+              <span>AC ${ac}</span>
+              <span>•</span>
+              <span>HP ${hp}</span>
+            </div>
+          </div>
+        </div>
+        <div class="enemy-item-meta">
+          <span class="enemy-badge-cr">CR ${cr}</span>
+          ${isBoss ? '<span class="enemy-badge-boss">BOSS</span>' : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  listEl.querySelectorAll('.enemy-list-item').forEach(itemEl => {
+    itemEl.addEventListener('click', () => {
+      const slug = itemEl.getAttribute('data-slug');
+      loadEnemyForm(slug);
+    });
+  });
+}
+
+function showEmptyEnemyState() {
+  const emptyState = document.getElementById('enemy-empty-state');
+  const formContainer = document.getElementById('enemy-form-container');
+  if (emptyState) emptyState.classList.remove('hidden');
+  if (formContainer) formContainer.classList.add('hidden');
+}
+
+async function loadEnemyForm(slug) {
+  try {
+    setStatus(`Loading enemy ${slug}...`);
+    const res = await window.robos.loadEnemy(slug);
+    if (!res.success) {
+      setStatus(`Failed to load enemy: ${res.error}`);
+      return;
+    }
+
+    const en = res.enemy || res.data;
+    state.activeEnemySlug = slug;
+    state.activeEnemyData = en;
+
+    const name = en['dcterms:title'] || en['schema:name'] || en.name || en.title || slug;
+    const icon = en['robos:portrait'] || en.portrait || en['robos:icon'] || en.icon || '👹';
+    const cr = en['robos:challengeRating'] || en.challengeRating || en.cr || '1/4';
+    const type = en['robos:creatureType'] || en.creatureType || en.type || 'beast';
+    const alignment = en['robos:alignment'] || en.alignment || 'Neutral Evil';
+    const isBoss = Boolean(en['robos:isBoss'] ?? en.isBoss ?? en.boss ?? false);
+
+    document.getElementById('enemy-name').value = name;
+    document.getElementById('enemy-slug').value = en['robos:slug'] || en.slug || slug;
+    document.getElementById('enemy-icon').value = icon;
+    document.getElementById('enemy-type').value = type;
+    document.getElementById('enemy-cr').value = cr;
+    document.getElementById('enemy-alignment').value = alignment;
+    document.getElementById('enemy-is-boss').checked = isBoss;
+
+    document.getElementById('enemy-ac').value = en['robos:armorClass'] ?? en.armorClass ?? en.ac ?? 10;
+    document.getElementById('enemy-hp').value = en['robos:hitPoints'] ?? en.hitPoints ?? en.hp ?? 10;
+    document.getElementById('enemy-speed').value = en['robos:speed'] ?? en.speed ?? 30;
+    document.getElementById('enemy-xp').value = en['robos:xpReward'] ?? en.xpReward ?? 50;
+    document.getElementById('enemy-gold').value = en['robos:goldDrop'] ?? en.goldDrop ?? 0;
+    document.getElementById('enemy-behavior').value = en['robos:behavior'] || en.behavior || 'aggressive';
+
+    const abilities = en['robos:abilities'] || en.abilities || { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
+    document.getElementById('enemy-str').value = abilities.str ?? abilities.STR ?? 10;
+    document.getElementById('enemy-dex').value = abilities.dex ?? abilities.DEX ?? 10;
+    document.getElementById('enemy-con').value = abilities.con ?? abilities.CON ?? 10;
+    document.getElementById('enemy-int').value = abilities.int ?? abilities.INT ?? 10;
+    document.getElementById('enemy-wis').value = abilities.wis ?? abilities.WIS ?? 10;
+    document.getElementById('enemy-cha').value = abilities.cha ?? abilities.CHA ?? 10;
+    updateEnemyAbilityMods();
+
+    state.activeEnemyAttacks = Array.isArray(en['robos:attacks']) ? JSON.parse(JSON.stringify(en['robos:attacks'])) : (Array.isArray(en.attacks) ? JSON.parse(JSON.stringify(en.attacks)) : []);
+    renderEnemyAttacksList();
+
+    document.getElementById('enemy-sprite-asset').value = en['robos:spriteAssetRef'] || en.spriteAssetRef || '';
+    document.getElementById('enemy-desc').value = en['dcterms:description'] || en.description || '';
+
+    const emptyState = document.getElementById('enemy-empty-state');
+    const formContainer = document.getElementById('enemy-form-container');
+    if (emptyState) emptyState.classList.add('hidden');
+    if (formContainer) formContainer.classList.remove('hidden');
+
+    const formTitle = document.getElementById('enemy-form-title');
+    if (formTitle) formTitle.textContent = `Enemy Blueprint: ${name}`;
+    const formIcon = document.getElementById('enemy-form-icon');
+    if (formIcon) formIcon.textContent = icon;
+
+    const hdrSelect = document.getElementById('header-enemy-select');
+    if (hdrSelect) hdrSelect.value = slug;
+
+    renderEnemiesList();
+    setStatus(`Enemy loaded: ${slug}`, res.filePath);
+  } catch (err) {
+    console.error('Error loading enemy:', err);
+    setStatus(`Error loading enemy: ${err.message}`);
+  }
+}
+
+function createNewEnemy(presetKey = null) {
+  state.activeEnemySlug = null;
+  state.activeEnemyData = null;
+
+  if (presetKey && ENEMY_PRESETS[presetKey]) {
+    const p = ENEMY_PRESETS[presetKey];
+    document.getElementById('enemy-name').value = p.name;
+    document.getElementById('enemy-slug').value = p.slug;
+    document.getElementById('enemy-icon').value = p.portrait;
+    document.getElementById('enemy-type').value = p.creatureType;
+    document.getElementById('enemy-cr').value = p.cr;
+    document.getElementById('enemy-alignment').value = p.alignment;
+    document.getElementById('enemy-is-boss').checked = Boolean(p.isBoss);
+
+    document.getElementById('enemy-ac').value = p.ac;
+    document.getElementById('enemy-hp').value = p.hp;
+    document.getElementById('enemy-speed').value = p.speed;
+    document.getElementById('enemy-xp').value = p.xp;
+    document.getElementById('enemy-gold').value = p.gold;
+    document.getElementById('enemy-behavior').value = p.behavior;
+
+    document.getElementById('enemy-str').value = p.str;
+    document.getElementById('enemy-dex').value = p.dex;
+    document.getElementById('enemy-con').value = p.con;
+    document.getElementById('enemy-int').value = p.int;
+    document.getElementById('enemy-wis').value = p.wis;
+    document.getElementById('enemy-cha').value = p.cha;
+
+    state.activeEnemyAttacks = JSON.parse(JSON.stringify(p.attacks || []));
+    document.getElementById('enemy-sprite-asset').value = p.spriteAssetRef || '';
+    document.getElementById('enemy-desc').value = p.desc || '';
+  } else {
+    document.getElementById('enemy-name').value = '';
+    document.getElementById('enemy-slug').value = '';
+    document.getElementById('enemy-icon').value = '👹';
+    document.getElementById('enemy-type').value = 'beast';
+    document.getElementById('enemy-cr').value = '1/4';
+    document.getElementById('enemy-alignment').value = 'Neutral Evil';
+    document.getElementById('enemy-is-boss').checked = false;
+
+    document.getElementById('enemy-ac').value = '12';
+    document.getElementById('enemy-hp').value = '15';
+    document.getElementById('enemy-speed').value = '30';
+    document.getElementById('enemy-xp').value = '50';
+    document.getElementById('enemy-gold').value = '5';
+    document.getElementById('enemy-behavior').value = 'aggressive';
+
+    document.getElementById('enemy-str').value = '12';
+    document.getElementById('enemy-dex').value = '12';
+    document.getElementById('enemy-con').value = '12';
+    document.getElementById('enemy-int').value = '6';
+    document.getElementById('enemy-wis').value = '10';
+    document.getElementById('enemy-cha').value = '6';
+
+    state.activeEnemyAttacks = [
+      { name: 'Claw / Strike', attackBonus: 4, damage: '1d6+2', damageType: 'slashing', range: 5 }
+    ];
+    document.getElementById('enemy-sprite-asset').value = '';
+    document.getElementById('enemy-desc').value = '';
+  }
+
+  updateEnemyAbilityMods();
+  renderEnemyAttacksList();
+
+  const emptyState = document.getElementById('enemy-empty-state');
+  const formContainer = document.getElementById('enemy-form-container');
+  if (emptyState) emptyState.classList.add('hidden');
+  if (formContainer) formContainer.classList.remove('hidden');
+
+  const formTitle = document.getElementById('enemy-form-title');
+  if (formTitle) formTitle.textContent = presetKey ? `Blueprint: ${ENEMY_PRESETS[presetKey].name}` : 'Create New Enemy Blueprint';
+  const formIcon = document.getElementById('enemy-form-icon');
+  if (formIcon) formIcon.textContent = document.getElementById('enemy-icon').value;
+
+  const hdrSelect = document.getElementById('header-enemy-select');
+  if (hdrSelect) hdrSelect.value = '';
+
+  document.getElementById('enemy-name')?.focus();
+  setStatus('Authoring new enemy blueprint...');
+}
+
+function closeEnemy() {
+  state.activeEnemySlug = null;
+  state.activeEnemyData = null;
+  showEmptyEnemyState();
+  const hdrSelect = document.getElementById('header-enemy-select');
+  if (hdrSelect) hdrSelect.value = '';
+  renderEnemiesList();
+  setStatus('Closed enemy blueprint.');
+}
+
+function renderEnemyAttacksList() {
+  const container = document.getElementById('enemy-attacks-list');
+  if (!container) return;
+
+  if (!state.activeEnemyAttacks || state.activeEnemyAttacks.length === 0) {
+    container.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px 0;">No attacks added. Click "+ Add Attack" above.</div>';
+    return;
+  }
+
+  container.innerHTML = state.activeEnemyAttacks.map((atk, idx) => `
+    <div class="enemy-attack-row" data-idx="${idx}">
+      <input type="text" class="input-text atk-name" value="${atk.name || ''}" placeholder="Attack Name (e.g. Bite)">
+      <input type="number" class="input-number atk-bonus" value="${atk.attackBonus ?? 4}" placeholder="+Hit">
+      <input type="text" class="input-text atk-damage" value="${atk.damage || '1d6+2'}" placeholder="Damage (1d6+2)">
+      <select class="dropdown-select atk-type">
+        <option value="slashing" ${atk.damageType === 'slashing' ? 'selected' : ''}>Slashing</option>
+        <option value="piercing" ${atk.damageType === 'piercing' ? 'selected' : ''}>Piercing</option>
+        <option value="bludgeoning" ${atk.damageType === 'bludgeoning' ? 'selected' : ''}>Bludgeoning</option>
+        <option value="fire" ${atk.damageType === 'fire' ? 'selected' : ''}>Fire</option>
+        <option value="cold" ${atk.damageType === 'cold' ? 'selected' : ''}>Cold</option>
+        <option value="lightning" ${atk.damageType === 'lightning' ? 'selected' : ''}>Lightning</option>
+        <option value="poison" ${atk.damageType === 'poison' ? 'selected' : ''}>Poison</option>
+        <option value="necrotic" ${atk.damageType === 'necrotic' ? 'selected' : ''}>Necrotic</option>
+        <option value="radiant" ${atk.damageType === 'radiant' ? 'selected' : ''}>Radiant</option>
+        <option value="psychic" ${atk.damageType === 'psychic' ? 'selected' : ''}>Psychic</option>
+      </select>
+      <input type="number" class="input-number atk-range" value="${atk.range ?? 5}" placeholder="Range (ft)">
+      <button class="btn-remove-attack" title="Remove Attack" data-idx="${idx}">🗑</button>
+    </div>
+  `).join('');
+
+  container.querySelectorAll('.enemy-attack-row').forEach(row => {
+    const idx = parseInt(row.getAttribute('data-idx'));
+    row.querySelector('.atk-name')?.addEventListener('input', (e) => {
+      state.activeEnemyAttacks[idx].name = e.target.value;
+    });
+    row.querySelector('.atk-bonus')?.addEventListener('input', (e) => {
+      state.activeEnemyAttacks[idx].attackBonus = parseInt(e.target.value) || 0;
+    });
+    row.querySelector('.atk-damage')?.addEventListener('input', (e) => {
+      state.activeEnemyAttacks[idx].damage = e.target.value;
+    });
+    row.querySelector('.atk-type')?.addEventListener('change', (e) => {
+      state.activeEnemyAttacks[idx].damageType = e.target.value;
+    });
+    row.querySelector('.atk-range')?.addEventListener('input', (e) => {
+      state.activeEnemyAttacks[idx].range = parseInt(e.target.value) || 5;
+    });
+    row.querySelector('.btn-remove-attack')?.addEventListener('click', () => {
+      state.activeEnemyAttacks.splice(idx, 1);
+      renderEnemyAttacksList();
+    });
+  });
+}
+
+function addAttackToCurrentEnemy() {
+  if (!state.activeEnemyAttacks) state.activeEnemyAttacks = [];
+  state.activeEnemyAttacks.push({
+    name: 'New Attack',
+    attackBonus: 4,
+    damage: '1d6+2',
+    damageType: 'slashing',
+    range: 5
+  });
+  renderEnemyAttacksList();
+}
+
+async function saveCurrentEnemy() {
+  const name = document.getElementById('enemy-name')?.value.trim() || 'New Enemy';
+  let slug = document.getElementById('enemy-slug')?.value.trim();
+  if (!slug) {
+    slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || `enemy-${Date.now().toString().slice(-4)}`;
+    document.getElementById('enemy-slug').value = slug;
+  }
+
+  const icon = document.getElementById('enemy-icon')?.value.trim() || '👹';
+  const creatureType = document.getElementById('enemy-type')?.value || 'beast';
+  const cr = document.getElementById('enemy-cr')?.value || '1/4';
+  const alignment = document.getElementById('enemy-alignment')?.value || 'Neutral Evil';
+  const isBoss = Boolean(document.getElementById('enemy-is-boss')?.checked);
+  const ac = Number(document.getElementById('enemy-ac')?.value || 12);
+  const hp = Number(document.getElementById('enemy-hp')?.value || 15);
+  const speed = Number(document.getElementById('enemy-speed')?.value || 30);
+  const xpReward = Number(document.getElementById('enemy-xp')?.value || 50);
+  const goldDrop = Number(document.getElementById('enemy-gold')?.value || 5);
+  const behavior = document.getElementById('enemy-behavior')?.value || 'aggressive';
+
+  const abilities = {
+    str: Number(document.getElementById('enemy-str')?.value || 10),
+    dex: Number(document.getElementById('enemy-dex')?.value || 10),
+    con: Number(document.getElementById('enemy-con')?.value || 10),
+    int: Number(document.getElementById('enemy-int')?.value || 10),
+    wis: Number(document.getElementById('enemy-wis')?.value || 10),
+    cha: Number(document.getElementById('enemy-cha')?.value || 10)
+  };
+
+  const spriteAssetRef = document.getElementById('enemy-sprite-asset')?.value || '';
+  const desc = document.getElementById('enemy-desc')?.value.trim() || '';
+
+  const enemyPayload = {
+    '@context': {
+      robos: 'urn:robos:',
+      schema: 'http://schema.org/',
+      dcterms: 'http://purl.org/dc/terms/',
+      oslc_am: 'http://open-services.net/ns/am#'
+    },
+    '@id': `urn:robos:crpg:monster:${slug}`,
+    '@type': ['robos:CRPGMonster', 'oslc_am:Resource', 'schema:Person'],
+    'dcterms:identifier': slug,
+    'dcterms:title': name,
+    'schema:name': name,
+    'robos:slug': slug,
+    slug,
+    'robos:icon': icon,
+    portrait: icon,
+    'robos:portrait': icon,
+    'robos:creatureType': creatureType,
+    creatureType,
+    'robos:challengeRating': cr,
+    challengeRating: cr,
+    cr,
+    'robos:alignment': alignment,
+    alignment,
+    'robos:isBoss': isBoss,
+    isBoss,
+    boss: isBoss,
+    'robos:armorClass': ac,
+    armorClass: ac,
+    ac,
+    'robos:hitPoints': hp,
+    hitPoints: hp,
+    hp,
+    'robos:speed': speed,
+    speed,
+    'robos:xpReward': xpReward,
+    xpReward,
+    'robos:goldDrop': goldDrop,
+    goldDrop,
+    'robos:behavior': behavior,
+    behavior,
+    'robos:abilities': abilities,
+    abilities,
+    'robos:attacks': state.activeEnemyAttacks || [],
+    attacks: state.activeEnemyAttacks || [],
+    'robos:spriteAssetRef': spriteAssetRef,
+    spriteAssetRef,
+    'dcterms:description': desc,
+    description: desc,
+  };
+
+  try {
+    setStatus(`Saving enemy ${slug}...`);
+    const res = await window.robos.saveEnemy({ slug, data: enemyPayload });
+    if (res.success) {
+      state.activeEnemySlug = res.slug;
+      state.activeEnemyData = enemyPayload;
+      setStatus(`Saved enemy successfully!`, res.filePath);
+      await loadAllEnemies();
+      const formTitle = document.getElementById('enemy-form-title');
+      if (formTitle) formTitle.textContent = `Enemy Blueprint: ${name}`;
+      const formIcon = document.getElementById('enemy-form-icon');
+      if (formIcon) formIcon.textContent = icon;
+    } else {
+      setStatus(`Failed to save enemy: ${res.error}`);
+    }
+  } catch (err) {
+    console.error('Error saving enemy:', err);
+    setStatus(`Error saving enemy: ${err.message}`);
+  }
+}
+
+async function deleteCurrentEnemy() {
+  if (!state.activeEnemySlug) return;
+  if (!confirm(`Are you sure you want to delete enemy '${state.activeEnemySlug}'?`)) return;
+
+  try {
+    const res = await window.robos.deleteEnemy(state.activeEnemySlug);
+    if (res.success) {
+      setStatus(`Deleted enemy: ${state.activeEnemySlug}`);
+      closeEnemy();
+      await loadAllEnemies();
+    } else {
+      setStatus(`Failed to delete enemy: ${res.error}`);
+    }
+  } catch (err) {
+    console.error('Error deleting enemy:', err);
+    setStatus(`Error deleting enemy: ${err.message}`);
   }
 }
 

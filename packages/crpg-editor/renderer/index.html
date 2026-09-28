@@ -36,6 +36,9 @@
           <button id="nav-items" class="nav-tab-btn" data-pane="pane-items">
             <span>📦 Items</span>
           </button>
+          <button id="nav-enemies" class="nav-tab-btn" data-pane="pane-enemies">
+            <span>👹 Enemies</span>
+          </button>
           <button id="nav-spells" class="nav-tab-btn" data-pane="pane-spells">
             <span>✨ Spells</span>
           </button>
@@ -118,6 +121,18 @@
           <button id="btn-header-close-item" class="btn btn-secondary" title="Close active item">✖ Close</button>
           <button id="btn-header-save-item" class="btn btn-primary" title="Save item JSON-LD">💾 Save</button>
           <button id="btn-header-delete-item" class="btn btn-danger btn-sm" title="Delete current item">🗑</button>
+        </div>
+
+        <!-- Enemies Context Controls -->
+        <div id="enemies-header-controls" class="context-selector-group hidden">
+          <span class="context-label">Enemy:</span>
+          <select id="header-enemy-select" class="dropdown-select">
+            <option value="">(No enemy selected)</option>
+          </select>
+          <button id="btn-header-new-enemy" class="btn btn-secondary" title="Create a new enemy">+ New Enemy</button>
+          <button id="btn-header-close-enemy" class="btn btn-secondary" title="Close active enemy">✖ Close</button>
+          <button id="btn-header-save-enemy" class="btn btn-primary" title="Save enemy JSON-LD">💾 Save</button>
+          <button id="btn-header-delete-enemy" class="btn btn-danger btn-sm" title="Delete current enemy">🗑</button>
         </div>
 
         <!-- Spells Context Controls -->
@@ -1995,6 +2010,279 @@
                 <div class="form-group col-span-2">
                   <label for="item-desc">Lore & Description</label>
                   <textarea id="item-desc" rows="3" placeholder="Enter lore, visual appearance, or in-game rules text..."></textarea>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+      </section>
+
+      <!-- ========================================================
+           PANE: cRPG ENEMIES & MONSTER BESTIARY STUDIO
+           ======================================================== -->
+      <section id="pane-enemies" class="module-pane">
+        <div class="enemies-layout">
+          <!-- Left Column: Bestiary Catalog & Filters -->
+          <aside class="enemies-sidebar">
+            <div class="sidebar-header">
+              <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px;">
+                <h2>Enemy Bestiary (<span id="enemies-count">0</span>)</h2>
+                <button id="btn-sidebar-new-enemy" class="btn btn-sm btn-primary">➕ New Enemy</button>
+              </div>
+              <div class="search-box" style="padding: 0 16px 10px 16px;">
+                <input type="text" id="enemy-search-input" class="search-input full-width" placeholder="🔍 Search enemies by name, type, CR...">
+              </div>
+              <div class="filter-pills-row" id="enemy-type-filters" style="display: flex; gap: 6px; padding: 0 16px 10px 16px; overflow-x: auto;">
+                <button class="filter-pill active" data-type="all">All</button>
+                <button class="filter-pill" data-type="beast">Beasts</button>
+                <button class="filter-pill" data-type="undead">Undead</button>
+                <button class="filter-pill" data-type="humanoid">Humanoids</button>
+                <button class="filter-pill" data-type="monstrosity">Monstrosities</button>
+                <button class="filter-pill" data-type="dragon">Dragons</button>
+                <button class="filter-pill" data-type="boss">Bosses</button>
+              </div>
+              <div style="padding: 0 16px 12px 16px;">
+                <select id="enemy-archetype-select" class="dropdown-select" style="width: 100%;">
+                  <option value="">+ Add Pre-Rolled Enemy Archetype...</option>
+                  <optgroup label="Common Foes (CR 1/4 - 1/2)">
+                    <option value="corrupted-hound">Corrupted Shadow Hound (CR 1/4 Beast)</option>
+                    <option value="feral-guard-skirmisher">Feral Guard Skirmisher (CR 1/2 Undead)</option>
+                    <option value="skeleton-archer">Skeleton Marksman (CR 1/4 Undead)</option>
+                    <option value="goblin-raider">Goblin Raider (CR 1/4 Humanoid)</option>
+                  </optgroup>
+                  <optgroup label="Elites & Marauders (CR 1 - 3)">
+                    <option value="minotaur-marauder">Minotaur Marauder (CR 3 Monstrosity)</option>
+                    <option value="orc-berserker">Orc Berserker (CR 1 Humanoid)</option>
+                    <option value="ogre-crusher">Ogre Crusher (CR 2 Giant)</option>
+                  </optgroup>
+                  <optgroup label="Legendary Boss Encounters (CR 5 - 10)">
+                    <option value="captain-malakor-boss">Dark Lord Malakor (CR 5 Fiend Boss)</option>
+                    <option value="red-dragon-wyrm">Red Dragonlord (CR 10 Dragon Boss)</option>
+                  </optgroup>
+                </select>
+              </div>
+            </div>
+            <div id="enemies-list" class="enemies-list-container">
+              <!-- Enemy cards rendered via JS -->
+            </div>
+          </aside>
+
+          <!-- Resizable Divider -->
+          <div class="split-divider col-resize" id="resizer-enemies-1" data-target="prev" data-min="240" data-max="500" title="Drag to resize Enemy Bestiary"></div>
+
+          <!-- Right Column: Enemy Blueprint & Stat Block Editor -->
+          <main class="enemy-editor-content">
+            <!-- Empty State -->
+            <div id="enemy-empty-state" class="empty-state-card">
+              <div class="empty-state-icon">👹</div>
+              <h3>Enemy Bestiary & Stat Block Studio</h3>
+              <p>Select a creature from the bestiary on the left, or create a brand new enemy blueprint.</p>
+              <div class="empty-state-actions">
+                <button id="btn-empty-new-enemy" class="btn btn-primary" style="margin-top: 14px;">➕ Create Enemy Blueprint</button>
+              </div>
+            </div>
+
+            <!-- Enemy Form Panel -->
+            <div id="enemy-form-container" class="enemy-form-panel hidden">
+              <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); padding: 14px 20px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <span id="enemy-form-icon" style="font-size: 24px;">👹</span>
+                  <div>
+                    <h2 id="enemy-form-title" style="margin: 0; font-size: 16px;">Enemy Blueprint</h2>
+                    <span id="enemy-form-subtitle" style="font-size: 11px; color: var(--text-muted);">D&D 5e SRD Monster Stat Block</span>
+                  </div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                  <button id="btn-close-enemy" class="btn btn-secondary btn-sm" title="Close enemy">✖ Close</button>
+                  <button id="btn-save-enemy" class="btn btn-primary btn-sm" title="Save enemy JSON-LD">💾 Save Enemy</button>
+                  <button id="btn-delete-enemy" class="btn btn-danger btn-sm" title="Delete enemy">🗑</button>
+                </div>
+              </div>
+
+              <div class="panel-body stat-block-scroll" style="padding: 20px; overflow-y: auto;">
+                <!-- Section 1: Core Identity -->
+                <div class="stat-section">
+                  <div class="stat-section-title">Core Identity & Classification</div>
+                  <div class="form-grid">
+                    <div class="form-group col-span-2">
+                      <label for="enemy-name">Monster / Enemy Name</label>
+                      <input type="text" id="enemy-name" class="input-text" placeholder="e.g. Dragonlord">
+                    </div>
+                    <div class="form-group">
+                      <label for="enemy-slug">Unique Slug</label>
+                      <input type="text" id="enemy-slug" class="input-text" placeholder="e.g. dragonlord">
+                    </div>
+                    <div class="form-group">
+                      <label for="enemy-icon">Portrait / Emoji Icon</label>
+                      <input type="text" id="enemy-icon" class="input-text" value="👹" maxlength="4">
+                    </div>
+                    <div class="form-group">
+                      <label for="enemy-type">Creature Type</label>
+                      <select id="enemy-type" class="dropdown-select">
+                        <option value="beast">Beast</option>
+                        <option value="undead">Undead</option>
+                        <option value="humanoid">Humanoid</option>
+                        <option value="monstrosity">Monstrosity</option>
+                        <option value="dragon">Dragon</option>
+                        <option value="fiend">Fiend</option>
+                        <option value="aberration">Aberration</option>
+                        <option value="construct">Construct</option>
+                        <option value="elemental">Elemental</option>
+                        <option value="giant">Giant</option>
+                        <option value="ooze">Ooze</option>
+                        <option value="plant">Plant</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label for="enemy-cr">Challenge Rating (CR)</label>
+                      <select id="enemy-cr" class="dropdown-select">
+                        <option value="0">CR 0 (10 XP)</option>
+                        <option value="1/8">CR 1/8 (25 XP)</option>
+                        <option value="1/4">CR 1/4 (50 XP)</option>
+                        <option value="1/2">CR 1/2 (100 XP)</option>
+                        <option value="1">CR 1 (200 XP)</option>
+                        <option value="2">CR 2 (450 XP)</option>
+                        <option value="3">CR 3 (700 XP)</option>
+                        <option value="4">CR 4 (1,100 XP)</option>
+                        <option value="5">CR 5 (1,800 XP)</option>
+                        <option value="6">CR 6 (2,300 XP)</option>
+                        <option value="7">CR 7 (2,900 XP)</option>
+                        <option value="8">CR 8 (3,900 XP)</option>
+                        <option value="9">CR 9 (5,000 XP)</option>
+                        <option value="10">CR 10 (5,900 XP)</option>
+                        <option value="15">CR 15 (13,000 XP)</option>
+                        <option value="20">CR 20 (25,000 XP)</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label for="enemy-alignment">Alignment</label>
+                      <select id="enemy-alignment" class="dropdown-select">
+                        <option value="Chaotic Evil">Chaotic Evil</option>
+                        <option value="Neutral Evil">Neutral Evil</option>
+                        <option value="Lawful Evil">Lawful Evil</option>
+                        <option value="Chaotic Neutral">Chaotic Neutral</option>
+                        <option value="True Neutral">True Neutral</option>
+                        <option value="Unaligned">Unaligned</option>
+                      </select>
+                    </div>
+                    <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-top: 24px;">
+                      <input type="checkbox" id="enemy-is-boss" class="checkbox-input" style="width: 18px; height: 18px;">
+                      <label for="enemy-is-boss" style="margin: 0; font-weight: 600; color: #ff5252; cursor: pointer;">🔥 Boss Encounter Combatant</label>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Section 2: Combat Vitals -->
+                <div class="stat-section">
+                  <div class="stat-section-title">Combat Vitals & Action Economy</div>
+                  <div class="form-grid">
+                    <div class="form-group">
+                      <label for="enemy-ac">Armor Class (AC)</label>
+                      <input type="number" id="enemy-ac" class="input-number" min="1" max="30" value="12">
+                    </div>
+                    <div class="form-group">
+                      <label for="enemy-hp">Max Hit Points (HP)</label>
+                      <input type="number" id="enemy-hp" class="input-number" min="1" max="1000" value="15">
+                    </div>
+                    <div class="form-group">
+                      <label for="enemy-speed">Speed (ft / round)</label>
+                      <input type="number" id="enemy-speed" class="input-number" min="0" step="5" value="30">
+                    </div>
+                    <div class="form-group">
+                      <label for="enemy-xp">XP Reward</label>
+                      <input type="number" id="enemy-xp" class="input-number" min="0" value="50">
+                    </div>
+                    <div class="form-group">
+                      <label for="enemy-gold">Average Gold Drop (GP)</label>
+                      <input type="number" id="enemy-gold" class="input-number" min="0" value="5">
+                    </div>
+                    <div class="form-group">
+                      <label for="enemy-behavior">AI Behavior & Tactics</label>
+                      <select id="enemy-behavior" class="dropdown-select">
+                        <option value="aggressive">Aggressive (Frontline Melee)</option>
+                        <option value="defensive">Defensive (Guards, Shields)</option>
+                        <option value="flanker">Flanker (Hit & Run, Ambush)</option>
+                        <option value="ranged_kiter">Ranged Kiter (Bow, Spells)</option>
+                        <option value="caster">Spellcaster (Direct Damage & Debuffs)</option>
+                        <option value="boss_phase">Boss Phase (Multi-Action & AoE)</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Section 3: Ability Scores (D&D 5e) -->
+                <div class="stat-section">
+                  <div class="stat-section-title">D&D 5e Ability Scores</div>
+                  <div class="ability-scores-grid">
+                    <div class="ability-box">
+                      <span class="ability-label">STR</span>
+                      <input type="number" id="enemy-str" class="ability-score-input" min="1" max="30" value="10">
+                      <span class="ability-mod" id="enemy-str-mod">+0</span>
+                    </div>
+                    <div class="ability-box">
+                      <span class="ability-label">DEX</span>
+                      <input type="number" id="enemy-dex" class="ability-score-input" min="1" max="30" value="10">
+                      <span class="ability-mod" id="enemy-dex-mod">+0</span>
+                    </div>
+                    <div class="ability-box">
+                      <span class="ability-label">CON</span>
+                      <input type="number" id="enemy-con" class="ability-score-input" min="1" max="30" value="10">
+                      <span class="ability-mod" id="enemy-con-mod">+0</span>
+                    </div>
+                    <div class="ability-box">
+                      <span class="ability-label">INT</span>
+                      <input type="number" id="enemy-int" class="ability-score-input" min="1" max="30" value="10">
+                      <span class="ability-mod" id="enemy-int-mod">+0</span>
+                    </div>
+                    <div class="ability-box">
+                      <span class="ability-label">WIS</span>
+                      <input type="number" id="enemy-wis" class="ability-score-input" min="1" max="30" value="10">
+                      <span class="ability-mod" id="enemy-wis-mod">+0</span>
+                    </div>
+                    <div class="ability-box">
+                      <span class="ability-label">CHA</span>
+                      <input type="number" id="enemy-cha" class="ability-score-input" min="1" max="30" value="10">
+                      <span class="ability-mod" id="enemy-cha-mod">+0</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Section 4: Actions & Attacks -->
+                <div class="stat-section">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <div class="stat-section-title" style="margin-bottom: 0;">Attacks & Actions</div>
+                    <button id="btn-add-enemy-attack" class="btn btn-sm btn-secondary">➕ Add Attack</button>
+                  </div>
+                  <div id="enemy-attacks-list" class="enemy-attacks-container">
+                    <!-- Attacks populated via JS -->
+                  </div>
+                </div>
+
+                <!-- Section 5: Sprite & Engine Assets -->
+                <div class="stat-section">
+                  <div class="stat-section-title">Visual & Audio Assets</div>
+                  <div class="form-grid">
+                    <div class="form-group col-span-2">
+                      <label for="enemy-sprite-asset">Flare RPG Creature Sprite Ref</label>
+                      <select id="enemy-sprite-asset" class="dropdown-select">
+                        <option value="">(None - Default Token)</option>
+                        <option value="flare:creature:wolf">flare:creature:wolf (Wolf / Hound)</option>
+                        <option value="flare:creature:skeleton">flare:creature:skeleton (Skeleton)</option>
+                        <option value="flare:creature:zombie">flare:creature:zombie (Zombie)</option>
+                        <option value="flare:creature:goblin">flare:creature:goblin (Goblin)</option>
+                        <option value="flare:creature:minotaur">flare:creature:minotaur (Minotaur)</option>
+                        <option value="flare:creature:dragon">flare:creature:dragon (Dragonlord Wyrm)</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Section 6: Lore & Description -->
+                <div class="stat-section">
+                  <div class="stat-section-title">Lore & Description</div>
+                  <div class="form-group">
+                    <textarea id="enemy-desc" rows="3" placeholder="Enter background lore, monster ecology, or tactical notes..."></textarea>
+                  </div>
                 </div>
               </div>
             </div>
