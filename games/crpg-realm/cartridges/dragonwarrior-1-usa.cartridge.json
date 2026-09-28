@@ -22,7 +22,7 @@
       "y": 14
     },
     "partyLimit": 1,
-    "createdDate": "2026-09-28T20:14:48.014Z"
+    "createdDate": "2026-09-28T20:27:45.986Z"
   },
   "campaign": {
     "@context": {
@@ -221,31 +221,59 @@
       "dcterms:title": "Charlock Castle - Dragonlord's Lair",
       "robos:width": 40,
       "robos:height": 30,
-      "robos:terrain": "stone",
+      "robos:terrain": "cave",
       "robos:backgroundImage": "",
       "robos:backgroundOpacity": 1,
       "robos:mapObjects": [
         {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "dragon-altar",
+          "robos:objectType": "altar",
+          "robos:shape": "rect",
+          "dcterms:title": "Dragonlord's Altar",
           "id": "dragon-altar",
           "type": "altar",
+          "label": "Dragonlord's Altar",
           "shape": "rect",
+          "robos:position": [
+            18,
+            12
+          ],
           "x": 18,
           "y": 12,
+          "robos:size": [
+            8,
+            4
+          ],
           "w": 8,
           "h": 4,
-          "label": "Dragonlord's Altar",
-          "collision": "blocked"
+          "width": 8,
+          "height": 4
         },
         {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "stairs-up",
+          "robos:objectType": "stairs",
+          "robos:shape": "rect",
+          "dcterms:title": "Stairs Back to Tantegel",
           "id": "stairs-up",
-          "type": "passage",
+          "type": "stairs",
+          "label": "Stairs Back to Tantegel",
           "shape": "rect",
+          "robos:position": [
+            18,
+            26
+          ],
           "x": 18,
           "y": 26,
+          "robos:size": [
+            4,
+            4
+          ],
           "w": 4,
-          "h": 3,
-          "label": "Stairs Back to Tantegel",
-          "collision": "open"
+          "h": 4,
+          "width": 4,
+          "height": 4
         }
       ]
     },
@@ -268,112 +296,241 @@
       "robos:backgroundOpacity": 1,
       "robos:mapObjects": [
         {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "throne-dais",
+          "robos:objectType": "wall",
+          "robos:shape": "rect",
+          "dcterms:title": "King Lorik's Dais",
           "id": "throne-dais",
           "type": "wall",
+          "label": "King Lorik's Dais",
           "shape": "rect",
+          "robos:position": [
+            24,
+            6
+          ],
           "x": 24,
           "y": 6,
+          "robos:size": [
+            12,
+            6
+          ],
           "w": 12,
           "h": 6,
-          "label": "King Lorik's Dais",
-          "collision": "blocked",
-          "opacity": "opaque"
+          "width": 12,
+          "height": 6
         },
         {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "king-throne",
+          "robos:objectType": "altar",
+          "robos:shape": "rect",
+          "dcterms:title": "Royal Throne",
           "id": "king-throne",
           "type": "altar",
+          "label": "Royal Throne",
           "shape": "rect",
+          "robos:position": [
+            28,
+            8
+          ],
           "x": 28,
           "y": 8,
+          "robos:size": [
+            4,
+            3
+          ],
           "w": 4,
           "h": 3,
-          "label": "Royal Throne",
-          "collision": "blocked",
-          "opacity": "transparent"
+          "width": 4,
+          "height": 3
         },
         {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "pillar-west",
+          "robos:objectType": "pillar",
+          "robos:shape": "circle",
+          "dcterms:title": "Stone Pillar West",
           "id": "pillar-west",
           "type": "pillar",
-          "shape": "circle",
-          "x": 14,
-          "y": 18,
-          "w": 5,
-          "h": 5,
           "label": "Stone Pillar West",
-          "collision": "blocked",
-          "opacity": "opaque"
+          "shape": "circle",
+          "robos:center": [
+            14,
+            18
+          ],
+          "cx": 14,
+          "cy": 18,
+          "robos:radius": 3,
+          "radius": 3,
+          "x": 11,
+          "y": 15,
+          "w": 6,
+          "h": 6,
+          "robos:position": [
+            11,
+            15
+          ],
+          "robos:size": [
+            6,
+            6
+          ]
         },
         {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "pillar-east",
+          "robos:objectType": "pillar",
+          "robos:shape": "circle",
+          "dcterms:title": "Stone Pillar East",
           "id": "pillar-east",
           "type": "pillar",
-          "shape": "circle",
-          "x": 42,
-          "y": 18,
-          "w": 5,
-          "h": 5,
           "label": "Stone Pillar East",
-          "collision": "blocked",
-          "opacity": "opaque"
+          "shape": "circle",
+          "robos:center": [
+            42,
+            18
+          ],
+          "cx": 42,
+          "cy": 18,
+          "robos:radius": 3,
+          "radius": 3,
+          "x": 39,
+          "y": 15,
+          "w": 6,
+          "h": 6,
+          "robos:position": [
+            39,
+            15
+          ],
+          "robos:size": [
+            6,
+            6
+          ]
         },
         {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "chest-120g",
+          "robos:objectType": "chest",
+          "robos:shape": "rect",
+          "dcterms:title": "Treasure Chest (120 Gold)",
           "id": "chest-120g",
           "type": "chest",
+          "label": "Treasure Chest (120 Gold)",
           "shape": "rect",
+          "robos:position": [
+            18,
+            10
+          ],
           "x": 18,
           "y": 10,
+          "robos:size": [
+            3,
+            3
+          ],
           "w": 3,
           "h": 3,
-          "label": "Treasure Chest (120 Gold)",
-          "collision": "blocked",
-          "opacity": "transparent"
+          "width": 3,
+          "height": 3
         },
         {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "chest-torch",
+          "robos:objectType": "chest",
+          "robos:shape": "rect",
+          "dcterms:title": "Treasure Chest (Torch)",
           "id": "chest-torch",
           "type": "chest",
+          "label": "Treasure Chest (Torch)",
           "shape": "rect",
+          "robos:position": [
+            22,
+            10
+          ],
           "x": 22,
           "y": 10,
+          "robos:size": [
+            3,
+            3
+          ],
           "w": 3,
           "h": 3,
-          "label": "Treasure Chest (Torch)",
-          "collision": "blocked",
-          "opacity": "transparent"
+          "width": 3,
+          "height": 3
         },
         {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "chest-magic-key",
+          "robos:objectType": "chest",
+          "robos:shape": "rect",
+          "dcterms:title": "Treasure Chest (Magic Key)",
           "id": "chest-magic-key",
           "type": "chest",
+          "label": "Treasure Chest (Magic Key)",
           "shape": "rect",
+          "robos:position": [
+            26,
+            10
+          ],
           "x": 26,
           "y": 10,
+          "robos:size": [
+            3,
+            3
+          ],
           "w": 3,
           "h": 3,
-          "label": "Treasure Chest (Magic Key)",
-          "collision": "blocked",
-          "opacity": "transparent"
+          "width": 3,
+          "height": 3
         },
         {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "royal-door",
+          "robos:objectType": "door",
+          "robos:shape": "rect",
+          "dcterms:title": "Royal Locked Door",
           "id": "royal-door",
           "type": "door",
+          "label": "Royal Locked Door",
           "shape": "rect",
+          "robos:position": [
+            28,
+            22
+          ],
           "x": 28,
           "y": 22,
+          "robos:size": [
+            4,
+            2
+          ],
           "w": 4,
           "h": 2,
-          "label": "Royal Locked Door",
-          "collision": "door",
-          "opacity": "opaque"
+          "width": 4,
+          "height": 2
         },
         {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "stairs-down",
+          "robos:objectType": "stairs",
+          "robos:shape": "rect",
+          "dcterms:title": "Stairs Down to Charlock Maw",
           "id": "stairs-down",
-          "type": "passage",
+          "type": "stairs",
+          "label": "Stairs Down to Charlock Maw",
           "shape": "rect",
+          "robos:position": [
+            28,
+            25
+          ],
           "x": 28,
           "y": 25,
+          "robos:size": [
+            4,
+            4
+          ],
           "w": 4,
           "h": 4,
-          "label": "Stairs Down to Charlock Maw",
-          "collision": "open",
-          "opacity": "transparent"
+          "width": 4,
+          "height": 4
         }
       ]
     }

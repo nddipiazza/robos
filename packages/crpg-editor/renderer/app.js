@@ -9664,6 +9664,8 @@ async function saveCurrentMap() {
   if (!state.activeMapData) return;
 
   const slug = document.getElementById('map-slug').value.trim() || 'my-map';
+  state.activeMapData['@id'] = `urn:robos:crpg:battle-map:${slug}`;
+  state.activeMapData.slug = slug;
   state.activeMapData['dcterms:title'] = document.getElementById('map-title').value.trim();
   state.activeMapData['robos:terrain'] = document.getElementById('map-terrain').value;
   state.activeMapData['robos:width'] = Number(document.getElementById('map-width').value || 120);
@@ -9859,45 +9861,59 @@ function applyMapObjectForm() {
   }
 
   // Update properties on obj (handling both prefixed and non-prefixed)
-  if (obj['robos:objectId'] !== undefined) obj['robos:objectId'] = id;
-  else obj.id = id;
+  obj['robos:objectId'] = id;
+  obj.id = id;
 
-  if (obj['robos:objectType'] !== undefined) obj['robos:objectType'] = type;
-  else obj.type = type;
+  obj['robos:objectType'] = type;
+  obj.type = type;
 
-  if (obj['dcterms:title'] !== undefined) obj['dcterms:title'] = label;
-  else obj.label = label;
+  obj['dcterms:title'] = label;
+  obj.label = label;
 
-  if (obj['robos:shape'] !== undefined) obj['robos:shape'] = shape;
-  else obj.shape = shape;
+  obj['robos:shape'] = shape;
+  obj.shape = shape;
 
   if (shape === 'rect') {
     const x = Number(document.getElementById('obj-x').value || 0);
     const y = Number(document.getElementById('obj-y').value || 0);
     const w = Number(document.getElementById('obj-w').value || 5);
     const h = Number(document.getElementById('obj-h').value || 5);
-    if (obj['robos:position'] !== undefined) obj['robos:position'] = [x, y];
-    else { obj.x = x; obj.y = y; }
-    if (obj['robos:size'] !== undefined) obj['robos:size'] = [w, h];
-    else { obj.width = w; obj.height = h; }
+    obj['robos:position'] = [x, y];
+    obj.x = x;
+    obj.y = y;
+    obj['robos:size'] = [w, h];
+    obj.w = w;
+    obj.h = h;
+    obj.width = w;
+    obj.height = h;
   } else if (shape === 'circle') {
     const cx = Number(document.getElementById('obj-cx').value || 0);
     const cy = Number(document.getElementById('obj-cy').value || 0);
     const rad = Number(document.getElementById('obj-radius').value || 5);
-    if (obj['robos:center'] !== undefined) obj['robos:center'] = [cx, cy];
-    else { obj.cx = cx; obj.cy = cy; }
-    if (obj['robos:radius'] !== undefined) obj['robos:radius'] = rad;
-    else obj.radius = rad;
+    obj['robos:center'] = [cx, cy];
+    obj.cx = cx;
+    obj.cy = cy;
+    obj['robos:radius'] = rad;
+    obj.radius = rad;
+    obj.x = cx - rad;
+    obj.y = cy - rad;
+    obj.w = rad * 2;
+    obj.h = rad * 2;
+    obj['robos:position'] = [cx - rad, cy - rad];
+    obj['robos:size'] = [rad * 2, rad * 2];
   } else if (shape === 'line') {
     const x1 = Number(document.getElementById('obj-lx1').value || 0);
     const y1 = Number(document.getElementById('obj-ly1').value || 0);
     const x2 = Number(document.getElementById('obj-lx2').value || 0);
     const y2 = Number(document.getElementById('obj-ly2').value || 0);
     const th = Number(document.getElementById('obj-thick').value || 5);
-    if (obj['robos:points'] !== undefined) obj['robos:points'] = [[x1, y1], [x2, y2]];
-    else { obj.x1 = x1; obj.y1 = y1; obj.x2 = x2; obj.y2 = y2; }
-    if (obj['robos:thickness'] !== undefined) obj['robos:thickness'] = th;
-    else obj.thickness = th;
+    obj['robos:points'] = [[x1, y1], [x2, y2]];
+    obj.x1 = x1;
+    obj.y1 = y1;
+    obj.x2 = x2;
+    obj.y2 = y2;
+    obj['robos:thickness'] = th;
+    obj.thickness = th;
   }
 
   selectMapObject(id);

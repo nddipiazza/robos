@@ -137,6 +137,63 @@ async function main() {
         el.dispatchEvent(new Event('blur', { bubbles: true }));
       };
 
+      // 1b. Map Editor Object Entry Simulator
+      window.__addMapObjectViaUI = async (obj) => {
+        document.getElementById('subtab-map-objects')?.click();
+        document.getElementById('btn-deselect-obj')?.click();
+        await new Promise(r => setTimeout(r, 60));
+
+        // 1. Type ID key by key
+        await window.__typeKeyByKey('#obj-id', obj.id, 8);
+
+        // 2. Select Object Type
+        const typeSelect = document.getElementById('obj-type');
+        if (typeSelect) {
+          typeSelect.value = obj.type;
+          typeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        // 3. Select Shape
+        const shape = obj.shape || 'rect';
+        const shapeRadio = document.querySelector('input[name="obj-shape"][value="' + shape + '"]');
+        if (shapeRadio) {
+          shapeRadio.checked = true;
+          shapeRadio.dispatchEvent(new Event('change', { bubbles: true }));
+          if (typeof updateShapeCoordinateInputs === 'function') updateShapeCoordinateInputs(shape);
+        }
+
+        // 4. Coordinates
+        if (shape === 'rect') {
+          const xIn = document.getElementById('obj-x');
+          const yIn = document.getElementById('obj-y');
+          const wIn = document.getElementById('obj-w');
+          const hIn = document.getElementById('obj-h');
+          if (xIn) { xIn.value = obj.x; xIn.dispatchEvent(new Event('input', { bubbles: true })); }
+          if (yIn) { yIn.value = obj.y; yIn.dispatchEvent(new Event('input', { bubbles: true })); }
+          if (wIn) { wIn.value = obj.w; wIn.dispatchEvent(new Event('input', { bubbles: true })); }
+          if (hIn) { hIn.value = obj.h; hIn.dispatchEvent(new Event('input', { bubbles: true })); }
+        } else if (shape === 'circle') {
+          const cxIn = document.getElementById('obj-cx');
+          const cyIn = document.getElementById('obj-cy');
+          const radIn = document.getElementById('obj-radius');
+          if (cxIn) { cxIn.value = obj.cx; cxIn.dispatchEvent(new Event('input', { bubbles: true })); }
+          if (cyIn) { cyIn.value = obj.cy; cyIn.dispatchEvent(new Event('input', { bubbles: true })); }
+          if (radIn) { radIn.value = obj.radius; radIn.dispatchEvent(new Event('input', { bubbles: true })); }
+        }
+
+        // 5. Type Display Label key by key
+        await window.__typeKeyByKey('#obj-label', obj.label, 8);
+
+        // 6. Highlight and Click ➕ Add / Update Object button
+        const applyBtn = document.getElementById('btn-apply-obj');
+        if (applyBtn) {
+          applyBtn.classList.add('demo-target-highlight');
+          applyBtn.click();
+          await new Promise(r => setTimeout(r, 100));
+          applyBtn.classList.remove('demo-target-highlight');
+        }
+      };
+
       // 2. Visual Callout & Banner Overlay
       if (document.getElementById('robos-demo-overlay-root')) return;
 
@@ -439,68 +496,107 @@ async function main() {
   // Step 7: Type map properties key by key
   await runEditorStep({
     stepNum: 7,
-    narration: "The user types map properties key-by-key: slug, title, stone terrain, and dimensions (60x40 ft).",
-    target: "#map-title",
-    action: "type",
-    callout: "Key-by-Key: 'Tantegel Castle - Throne Room (2F)'",
+    narration: "The user types map properties key-by-key in Map Settings: slug, title, stone terrain, and dimensions (60x40 ft).",
+    target: "#subtab-map-settings",
+    action: "click",
+    callout: "Map Settings: 60x40 ft Stone Arena",
     minHold: 3500,
     jsAction: `(async () => {
+      document.getElementById('subtab-map-settings')?.click();
       await window.__typeKeyByKey('#map-slug', 'tantegel-throne-room');
       await window.__typeKeyByKey('#map-title', 'Tantegel Castle - Throne Room (2F)');
       document.getElementById('map-terrain').value = 'stone';
+      document.getElementById('map-terrain').dispatchEvent(new Event('change', { bubbles: true }));
       document.getElementById('map-width').value = '60';
       document.getElementById('map-height').value = '40';
       if (typeof updateMapDimensionsFromForm === 'function') updateMapDimensionsFromForm();
+      if (typeof canvasRenderer !== 'undefined' && canvasRenderer) canvasRenderer.resetView(60, 40);
     })()`,
   });
 
   // Step 8: Populate map objects and save
   await runEditorStep({
     stepNum: 8,
-    narration: "The user places the throne dais, King's throne, pillars, treasure chests, royal door, and stairwell, then saves the map.",
-    target: "#map-canvas",
-    action: "hover",
-    callout: "Place Dais, Throne, Chests & Doors",
-    minHold: 3200,
-    jsAction: `(() => {
-      state.activeMapData['@id'] = 'urn:robos:crpg:battle-map:tantegel-throne-room';
-      state.activeMapData['robos:mapObjects'] = [
-        { id: 'throne-dais', type: 'wall', shape: 'rect', x: 24, y: 6, w: 12, h: 6, label: "King Lorik's Dais", collision: 'blocked', opacity: 'opaque' },
-        { id: 'king-throne', type: 'altar', shape: 'rect', x: 28, y: 8, w: 4, h: 3, label: "Royal Throne", collision: 'blocked', opacity: 'transparent' },
-        { id: 'pillar-west', type: 'pillar', shape: 'circle', x: 14, y: 18, w: 5, h: 5, label: 'Stone Pillar West', collision: 'blocked', opacity: 'opaque' },
-        { id: 'pillar-east', type: 'pillar', shape: 'circle', x: 42, y: 18, w: 5, h: 5, label: 'Stone Pillar East', collision: 'blocked', opacity: 'opaque' },
-        { id: 'chest-120g', type: 'chest', shape: 'rect', x: 18, y: 10, w: 3, h: 3, label: 'Treasure Chest (120 Gold)', collision: 'blocked', opacity: 'transparent' },
-        { id: 'chest-torch', type: 'chest', shape: 'rect', x: 22, y: 10, w: 3, h: 3, label: 'Treasure Chest (Torch)', collision: 'blocked', opacity: 'transparent' },
-        { id: 'chest-magic-key', type: 'chest', shape: 'rect', x: 26, y: 10, w: 3, h: 3, label: 'Treasure Chest (Magic Key)', collision: 'blocked', opacity: 'transparent' },
-        { id: 'royal-door', type: 'door', shape: 'rect', x: 28, y: 22, w: 4, h: 2, label: 'Royal Locked Door', collision: 'door', opacity: 'opaque' },
-        { id: 'stairs-down', type: 'passage', shape: 'rect', x: 28, y: 25, w: 4, h: 4, label: 'Stairs Down to Charlock Maw', collision: 'open', opacity: 'transparent' }
-      ];
-      if (typeof renderMapToCanvas === 'function') renderMapToCanvas();
+    narration: "Using the Map Object form and tools, the user places the throne dais, King's throne, pillars, treasure chests, royal door, and stairs.",
+    target: "#subtab-map-objects",
+    action: "click",
+    callout: "Map Editor: Object Form & Tools",
+    minHold: 6000,
+    jsAction: `(async () => {
+      document.getElementById('subtab-map-objects')?.click();
+
+      // 1. King Lorik's Dais (Solid Wall rect)
+      await window.__addMapObjectViaUI({ id: 'throne-dais', type: 'wall', shape: 'rect', x: 24, y: 6, w: 12, h: 6, label: "King Lorik's Dais" });
+
+      // 2. Royal Throne (Altar rect)
+      await window.__addMapObjectViaUI({ id: 'king-throne', type: 'altar', shape: 'rect', x: 28, y: 8, w: 4, h: 3, label: "Royal Throne" });
+
+      // 3. Stone Pillar West (Circle)
+      await window.__addMapObjectViaUI({ id: 'pillar-west', type: 'pillar', shape: 'circle', cx: 14, cy: 18, radius: 3, label: 'Stone Pillar West' });
+
+      // 4. Stone Pillar East (Circle)
+      await window.__addMapObjectViaUI({ id: 'pillar-east', type: 'pillar', shape: 'circle', cx: 42, cy: 18, radius: 3, label: 'Stone Pillar East' });
+
+      // 5. Treasure Chest 120G (Chest rect)
+      await window.__addMapObjectViaUI({ id: 'chest-120g', type: 'chest', shape: 'rect', x: 18, y: 10, w: 3, h: 3, label: 'Treasure Chest (120 Gold)' });
+
+      // 6. Treasure Chest Torch (Chest rect)
+      await window.__addMapObjectViaUI({ id: 'chest-torch', type: 'chest', shape: 'rect', x: 22, y: 10, w: 3, h: 3, label: 'Treasure Chest (Torch)' });
+
+      // 7. Treasure Chest Magic Key (Chest rect)
+      await window.__addMapObjectViaUI({ id: 'chest-magic-key', type: 'chest', shape: 'rect', x: 26, y: 10, w: 3, h: 3, label: 'Treasure Chest (Magic Key)' });
+
+      // 8. Royal Locked Door (Door rect)
+      await window.__addMapObjectViaUI({ id: 'royal-door', type: 'door', shape: 'rect', x: 28, y: 22, w: 4, h: 2, label: 'Royal Locked Door' });
+
+      // 9. Stairs Down to Charlock (Stairs rect)
+      await window.__addMapObjectViaUI({ id: 'stairs-down', type: 'stairs', shape: 'rect', x: 28, y: 25, w: 4, h: 4, label: 'Stairs Down to Charlock Maw' });
+
+      // Interactive Canvas Selection: select Royal Door from the object hierarchy list
+      document.getElementById('tool-select')?.click();
+      const doorNode = document.querySelector('.object-tree-node[data-obj-id="royal-door"]');
+      if (doorNode) doorNode.click();
+      document.getElementById('btn-zoom-reset')?.click();
+
+      // Save Tantegel Throne Room
       document.getElementById('btn-save-map')?.click();
+      await new Promise(r => setTimeout(r, 600));
     })()`,
   });
 
   // Step 9: Create Charlock Castle Lair map
   await runEditorStep({
     stepNum: 9,
-    narration: "The user creates and saves the second battle map: Charlock Castle - Dragonlord's Lair (40x30 ft, lava terrain).",
+    narration: "The user creates and saves the second battle map: Charlock Castle - Dragonlord's Lair (40x30 ft, cave terrain) using the Map Editor.",
     target: "#btn-new-map",
     action: "click",
-    callout: "Key-by-Key: 'Charlock Castle - Dragonlord's Lair'",
-    minHold: 3200,
+    callout: "Map 2: Charlock Castle - Dragonlord's Lair",
+    minHold: 4500,
     jsAction: `(async () => {
       document.getElementById('btn-new-map')?.click();
+      document.getElementById('subtab-map-settings')?.click();
+
       await window.__typeKeyByKey('#map-slug', 'charlock-castle');
       await window.__typeKeyByKey('#map-title', "Charlock Castle - Dragonlord's Lair");
-      document.getElementById('map-terrain').value = 'lava';
+      document.getElementById('map-terrain').value = 'cave';
+      document.getElementById('map-terrain').dispatchEvent(new Event('change', { bubbles: true }));
       document.getElementById('map-width').value = '40';
       document.getElementById('map-height').value = '30';
-      state.activeMapData['@id'] = 'urn:robos:crpg:battle-map:charlock-castle';
-      state.activeMapData['robos:mapObjects'] = [
-        { id: 'dragon-altar', type: 'altar', shape: 'rect', x: 18, y: 12, w: 8, h: 4, label: "Dragonlord's Altar", collision: 'blocked' },
-        { id: 'stairs-up', type: 'passage', shape: 'rect', x: 18, y: 26, w: 4, h: 3, label: 'Stairs Back to Tantegel', collision: 'open' }
-      ];
+      if (typeof updateMapDimensionsFromForm === 'function') updateMapDimensionsFromForm();
+      if (typeof canvasRenderer !== 'undefined' && canvasRenderer) canvasRenderer.resetView(40, 30);
+
+      // Switch to Object Form
+      document.getElementById('subtab-map-objects')?.click();
+
+      // 1. Dragonlord's Altar
+      await window.__addMapObjectViaUI({ id: 'dragon-altar', type: 'altar', shape: 'rect', x: 18, y: 12, w: 8, h: 4, label: "Dragonlord's Altar" });
+
+      // 2. Stairs Back to Tantegel
+      await window.__addMapObjectViaUI({ id: 'stairs-up', type: 'stairs', shape: 'rect', x: 18, y: 26, w: 4, h: 4, label: 'Stairs Back to Tantegel' });
+
+      // Save Charlock Castle
       document.getElementById('btn-save-map')?.click();
+      await new Promise(r => setTimeout(r, 600));
     })()`,
   });
 
@@ -924,13 +1020,13 @@ async function main() {
 
   try {
     execSync(`ffmpeg -y -ss 00:00:08 -i "${outFinal}" -vframes 1 "${frame1}"`, { stdio: "ignore" });
-    execSync(`ffmpeg -y -ss 00:00:22 -i "${outFinal}" -vframes 1 "${frame2}"`, { stdio: "ignore" });
-    execSync(`ffmpeg -y -ss 00:00:35 -i "${outFinal}" -vframes 1 "${frame3}"`, { stdio: "ignore" });
-    execSync(`ffmpeg -y -ss 00:00:46 -i "${outFinal}" -vframes 1 "${frame4}"`, { stdio: "ignore" });
-    execSync(`ffmpeg -y -ss 00:00:54 -i "${outFinal}" -vframes 1 "${frame5}"`, { stdio: "ignore" });
-    execSync(`ffmpeg -y -ss 00:01:05 -i "${outFinal}" -vframes 1 "${frame6}"`, { stdio: "ignore" });
-    execSync(`ffmpeg -y -ss 00:01:18 -i "${outFinal}" -vframes 1 "${frame7}"`, { stdio: "ignore" });
-    execSync(`ffmpeg -y -ss 00:01:28 -i "${outFinal}" -vframes 1 "${frame8}"`, { stdio: "ignore" });
+    execSync(`ffmpeg -y -ss 00:00:34 -i "${outFinal}" -vframes 1 "${frame2}"`, { stdio: "ignore" });
+    execSync(`ffmpeg -y -ss 00:00:40 -i "${outFinal}" -vframes 1 "${frame3}"`, { stdio: "ignore" });
+    execSync(`ffmpeg -y -ss 00:00:50 -i "${outFinal}" -vframes 1 "${frame4}"`, { stdio: "ignore" });
+    execSync(`ffmpeg -y -ss 00:00:58 -i "${outFinal}" -vframes 1 "${frame5}"`, { stdio: "ignore" });
+    execSync(`ffmpeg -y -ss 00:01:10 -i "${outFinal}" -vframes 1 "${frame6}"`, { stdio: "ignore" });
+    execSync(`ffmpeg -y -ss 00:01:25 -i "${outFinal}" -vframes 1 "${frame7}"`, { stdio: "ignore" });
+    execSync(`ffmpeg -y -ss 00:01:38 -i "${outFinal}" -vframes 1 "${frame8}"`, { stdio: "ignore" });
     console.log("✔ Review frames successfully extracted.");
   } catch (frameErr) {
     console.warn("Could not extract all frames:", frameErr.message);
