@@ -912,7 +912,7 @@ function createVoiceCommandsWindow() {
   }
 
   voiceCommandsWindow = new BrowserWindow({
-    title: 'Voice Activated Commands — RobOS Voice',
+    title: 'RobOS Voice Settings',
     icon: getAppIcon(),
     width: 720,
     height: 640,
