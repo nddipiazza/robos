@@ -1485,12 +1485,12 @@ async function handleRenderCampaignAsGame() {
     if (res.success) {
       setStatus(`🎮 Real cRPG Game Active! PID: ${res.pid} | Campaign: ${res.title} | Map: ${res.startingMap} (Display ${res.display})`);
     } else {
+      console.warn(`Could not launch real cRPG game: ${res.error}`);
       setStatus(`❌ Failed to launch real game: ${res.error}`);
-      alert(`Could not launch real cRPG game: ${res.error}`);
     }
   } catch (err) {
+    console.error(`Render as game error: ${err.message}`);
     setStatus(`❌ Render as game error: ${err.message}`);
-    alert(`Render as game error: ${err.message}`);
   }
 }
 

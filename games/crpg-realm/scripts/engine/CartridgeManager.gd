@@ -26,11 +26,16 @@ func _ready() -> void:
 func _check_cli_cartridge() -> void:
 	var cmd_args = OS.get_cmdline_user_args() + OS.get_cmdline_args()
 	var cart_arg: String = OS.get_environment("CRPG_CARTRIDGE")
+	if cart_arg == "":
+		cart_arg = OS.get_environment("CRPG_CAMPAIGN")
+
 	for i in range(cmd_args.size()):
 		var a = cmd_args[i]
-		if a == "--cartridge" and i + 1 < cmd_args.size():
+		if (a == "--cartridge" or a == "--campaign") and i + 1 < cmd_args.size():
 			cart_arg = cmd_args[i + 1]
 		elif a.begins_with("--cartridge="):
+			cart_arg = a.split("=")[1]
+		elif a.begins_with("--campaign="):
 			cart_arg = a.split("=")[1]
 	
 	if cart_arg != "":

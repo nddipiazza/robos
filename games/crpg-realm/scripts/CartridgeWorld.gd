@@ -131,7 +131,37 @@ func _spawn_map_object(obj: Dictionary) -> void:
 
 		$MapElements.add_child(sb)
 
-	elif o_type in ["passage", "door", "portal"]:
+	elif o_type in ["chest"] or "chest" in obj_id:
+		var area = Area2D.new()
+		area.name = "Chest_" + obj_id
+		area.position = Vector2(px + pw/2, py + ph/2)
+
+		var cs = CollisionShape2D.new()
+		var shape = RectangleShape2D.new()
+		shape.size = Vector2(pw, ph)
+		cs.shape = shape
+		area.add_child(cs)
+
+		var visual = ColorRect.new()
+		visual.position = Vector2(-pw/2, -ph/2)
+		visual.size = Vector2(pw, ph)
+		visual.color = Color(0.9, 0.7, 0.1, 0.9)
+		area.add_child(visual)
+
+		var lbl = Label.new()
+		lbl.text = "📦 " + title
+		lbl.position = Vector2(-pw/2 - 10, -ph/2 - 18)
+		lbl.add_theme_font_size_override("font_size", 10)
+		area.add_child(lbl)
+
+		area.body_entered.connect(func(body):
+			if body == hero or body.name == "HeroPlayer":
+				_on_chest_opened(obj_id, title)
+		)
+
+		$MapElements.add_child(area)
+
+	elif o_type in ["passage", "door", "portal"] or "door" in obj_id or "stairs" in obj_id:
 		var area = Area2D.new()
 		area.name = "Passage_" + obj_id
 		area.position = Vector2(px + pw/2, py + ph/2)
@@ -195,6 +225,19 @@ func _spawn_map_npcs(map_slug: String) -> void:
 		elif map_slug == "dark-lord-lair" and "princess" in ch_slug:
 			should_spawn = true
 			spawn_coord = Vector2(25, 8)
+		# Dragon Warrior 1 USA placements:
+		elif (map_slug == "tantegel-throne-room" or "tantegel" in map_slug) and ("king" in ch_slug or "loric" in ch_slug or "lorik" in ch_slug):
+			should_spawn = true
+			spawn_coord = Vector2(28, 8)
+		elif (map_slug == "tantegel-throne-room" or "tantegel" in map_slug) and ("princess" in ch_slug or "gwaelin" in ch_slug) and GameState.world_flags.get("princess_rescued", false):
+			should_spawn = true
+			spawn_coord = Vector2(32, 8)
+		elif ("charlock" in map_slug or "lair" in map_slug) and ("dragonlord" in ch_slug or "boss" in ch_slug) and not GameState.world_flags.get("defeated_dragonlord", false):
+			should_spawn = true
+			spawn_coord = Vector2(20, 15)
+		elif ("charlock" in map_slug or "lair" in map_slug) and ("princess" in ch_slug or "gwaelin" in ch_slug):
+			should_spawn = true
+			spawn_coord = Vector2(20, 8)
 
 		if should_spawn:
 			_create_interactive_npc(ch_slug, ch, spawn_coord, is_monster)
@@ -212,7 +255,7 @@ func _create_interactive_npc(slug: String, ch_data: Dictionary, coord: Vector2, 
 	npc_node.add_child(cs)
 
 	var icon_lbl = Label.new()
-	icon_lbl.text = "👑" if "king" in slug else ("👸" if "princess" in slug else ("🔨" if "blacksmith" in slug or "torvald" in slug else ("👹" if "goblin" in slug else ("💀" if "malakor" in slug else "👤"))))
+	icon_lbl.text = "🐉" if "dragonlord" in slug else ("👑" if "king" in slug else ("👸" if "princess" in slug else ("🔨" if "blacksmith" in slug or "torvald" in slug else ("👹" if "goblin" in slug else ("💀" if "malakor" in slug else "👤")))))
 	icon_lbl.add_theme_font_size_override("font_size", 24)
 	icon_lbl.position = Vector2(-14, -28)
 	npc_node.add_child(icon_lbl)
@@ -290,6 +333,82 @@ func _interact_with_npc(slug: String, ch_data: Dictionary, is_monster: bool) -> 
 				{"text": "Hold on Princess!", "action": func(): _close_dialog()}
 			])
 
+	# Dragon Warrior 1 USA NPCs
+	elif "king-loric" in slug or "king-lorik" in slug or ("king" in slug and "loric" in slug):
+		if GameState.world_flags.get("princess_rescued", false) or GameState.world_flags.get("defeated_dragonlord", false):
+			_show_dialog(name_str, "Descendant of Erdrick! Thou hast vanquished the Dragonlord, restored the Ball of Light, and returned Princess Gwaelin safely to Tantegel! All Alefgard rejoices in thy eternal glory! Total Victory!", [
+				{"text": "🏆 Proclaim Total Victory", "action": func(): _trigger_victory()}
+			])
+		else:
+			_show_dialog(name_str, "Descendant of Erdrick! The foul Dragonlord hath stolen the sacred Ball of Light and captured Princess Gwaelin! Take the 120 Gold and Magic Key from my treasure chests, venture forth to Charlock Castle, and slay the fiend!", [
+				{"text": "Accept Royal Quest of Erdrick", "action": func(): _on_accept_loric_quest()}
+			])
+
+	elif "dragonlord" in slug:
+		_show_dialog("The Dragonlord", "Descendant of Erdrick! If thou wilt take my side, I will give thee half each of the world! What sayest thou? Wilt thou join me, or perish in dragonflame?", [
+			{"text": "⚔️ Strike Down the Dragonlord", "action": func(): _on_defeat_dragonlord(slug)}
+		])
+
+	elif "princess-gwaelin" in slug or "gwaelin" in slug:
+		if GameState.world_flags.get("defeated_dragonlord", false):
+			_show_dialog("Princess Gwaelin", "Thou hast saved me from the Dragonlord's grasp, brave Erdrick! Forever shall I accompany thee! Let us return to Father King Lorik in Tantegel Castle!", [
+				{"text": "👸 Escort Princess to Tantegel Castle", "action": func(): _on_escort_gwaelin()}
+			])
+		else:
+			_show_dialog("Princess Gwaelin", "Brave descendant of Erdrick, defeat the Dragonlord to break my prison seal!", [
+				{"text": "I shall free thee!", "action": func(): _close_dialog()}
+			])
+
+func _on_accept_loric_quest() -> void:
+	GameState.world_flags["talked_to_king"] = true
+	if action_log:
+		action_log.add_entry("King Lorik bestowed the Quest of Erdrick: recover the Ball of Light and rescue Princess Gwaelin.", "quest")
+	_update_hud_status("Quest: Open chests, claim Magic Key, and venture to Charlock Castle")
+	_close_dialog()
+
+func _on_defeat_dragonlord(slug: String) -> void:
+	GameState.world_flags["defeated_dragonlord"] = true
+	GameState.world_flags["obtained_ball_of_light"] = true
+	if action_log:
+		action_log.add_entry("Erdrick struck down the Dragonlord! The Ball of Light shines brightly once more!", "combat")
+	if spawned_npcs.has(slug):
+		spawned_npcs[slug].queue_free()
+		spawned_npcs.erase(slug)
+	_close_dialog()
+	_update_hud_status("Quest: Rescue Princess Gwaelin from the Lair")
+
+func _on_escort_gwaelin() -> void:
+	GameState.world_flags["princess_rescued"] = true
+	if action_log:
+		action_log.add_entry("Princess Gwaelin joins your party. Returning to Tantegel Castle Throne Room!", "quest")
+	_close_dialog()
+	CartridgeManager.transition_to_map("tantegel-throne-room", Vector2(28, 20))
+
+func _on_chest_opened(obj_id: String, title: String) -> void:
+	if GameState.world_flags.get("chest_" + obj_id, false):
+		return
+	GameState.world_flags["chest_" + obj_id] = true
+	if "120g" in obj_id:
+		GameState.add_gold(120)
+		if action_log:
+			action_log.add_entry("Found [b]120 Gold[/b] in King's Treasure Chest!", "loot")
+	elif "key" in obj_id:
+		GameState.add_item("magic-key")
+		GameState.world_flags["has_magic_key"] = true
+		if action_log:
+			action_log.add_entry("Found [b]Magic Key[/b]! Royal castle gates can now be unlocked.", "loot")
+	elif "torch" in obj_id:
+		GameState.add_item("torch")
+		if action_log:
+			action_log.add_entry("Found [b]Torch[/b] to illuminate dark dungeons!", "loot")
+	elif "herb" in obj_id:
+		GameState.add_item("herb")
+		if action_log:
+			action_log.add_entry("Found healing [b]Herb[/b]!", "loot")
+	else:
+		if action_log:
+			action_log.add_entry("Opened chest: " + title, "loot")
+
 func _on_accept_king_quest() -> void:
 	GameState.world_flags["talked_to_king"] = true
 	if action_log:
@@ -361,8 +480,10 @@ func _close_dialog() -> void:
 
 func _trigger_victory() -> void:
 	_close_dialog()
-	action_log.add_entry("🏆 [b]CAMPAIGN COMPLETE: Total Victory in The Rescue of Princess Jennifer![/b]", "info")
-	_show_dialog("Victory Proclamation", "With Dark Lord Malakor vanquished and Princess Jennifer safely restored to the throne, the bells of the High Kingdom chime in celebration of Sir Caleb's valor. You have won the campaign!", [
+	var h = CartridgeManager.active_cartridge.get("header", {})
+	var title = str(h.get("title", "Campaign"))
+	action_log.add_entry("🏆 [b]CAMPAIGN COMPLETE: Total Victory in %s![/b]" % title, "info")
+	_show_dialog("Victory Proclamation", "The realm is saved! The darkness has lifted, the Ball of Light restored, and the royal lineage secured. You have won the campaign!", [
 		{"text": "Restart Campaign", "action": func(): _on_restart_campaign()}
 	])
 
@@ -390,6 +511,17 @@ func _on_passage_entered(object_id: String) -> void:
 
 			CartridgeManager.transition_to_map(target_map, target_spawn)
 			return
+
+	# Fallback transition for standard Dragon Warrior 1 / dungeon objects
+	if object_id in ["royal-door", "stairs-down"] or "door" in object_id or "stairs" in object_id:
+		if current_map_slug == "tantegel-throne-room" or "tantegel" in current_map_slug:
+			if not GameState.world_flags.get("has_magic_key", false) and not GameState.has_item("magic-key"):
+				if action_log:
+					action_log.add_entry("The royal door is locked! You need a Magic Key from the King's chests.", "warning")
+				return
+			CartridgeManager.transition_to_map("charlock-castle", Vector2(20, 25))
+		elif current_map_slug == "charlock-castle":
+			CartridgeManager.transition_to_map("tantegel-throne-room", Vector2(28, 20))
 
 func _on_map_transitioned(from_map: String, to_map: String, spawn: Vector2) -> void:
 	_load_map(to_map, spawn)

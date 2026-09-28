@@ -437,6 +437,24 @@ function setupIpcHandlers() {
       const activeData = fs.existsSync(filePath) ? JSON.parse(fs.readFileSync(filePath, 'utf8')) : (data || {});
       fs.writeFileSync(activeCampPath, JSON.stringify(activeData, null, 2) + '\n', 'utf8');
 
+      const gameEngineDir = path.join(paths.repoRoot, 'games/crpg-realm');
+
+      // 2b. Auto-bundle Player Cartridge for instant Godot 4 engine execution
+      try {
+        const { CartridgeBundler } = require('../crpg-builder/lib/cartridge-bundler');
+        const bundler = new CartridgeBundler(paths.baseDir);
+        const cartridge = bundler.bundle(safeSlug);
+        const targetDirs = [path.join(paths.baseDir, 'cartridges'), path.join(gameEngineDir, 'cartridges')];
+        for (const cDir of targetDirs) {
+          if (!fs.existsSync(cDir)) fs.mkdirSync(cDir, { recursive: true });
+          const cartOut = path.join(cDir, `${safeSlug}.cartridge.json`);
+          fs.writeFileSync(cartOut, JSON.stringify(cartridge, null, 2) + '\n', 'utf8');
+          console.log(`[campaign:render-as-game] Bundled Player Cartridge at: ${cartOut}`);
+        }
+      } catch (bundErr) {
+        console.warn(`[campaign:render-as-game] Note on bundling cartridge:`, bundErr.message);
+      }
+
       // 3. Find Godot executable
       const candidateBins = [
         process.env.GODOT_BIN,
@@ -456,7 +474,7 @@ function setupIpcHandlers() {
       }
 
       if (!godotBin) {
-        const playScript = path.join(paths.baseDir, 'play.sh');
+        const playScript = path.join(gameEngineDir, 'play.sh');
         if (fs.existsSync(playScript)) {
           godotBin = playScript;
         } else {
@@ -464,8 +482,8 @@ function setupIpcHandlers() {
         }
       }
 
-      // 4. Launch Godot process in Real cRPG mode
-      const spawnArgs = ['--path', `"${paths.baseDir}"`, '--campaign', `"${safeSlug}"`];
+      // 4. Launch Godot process in Real cRPG mode with Player Cartridge
+      const spawnArgs = ['--path', `"${gameEngineDir}"`, '--cartridge', `"${safeSlug}"`];
       if (headless) {
         spawnArgs.unshift('--headless');
       }
@@ -475,6 +493,7 @@ function setupIpcHandlers() {
         ...process.env,
         DISPLAY: display,
         CRPG_CAMPAIGN: safeSlug,
+        CRPG_CARTRIDGE: safeSlug,
         CRPG_MODE: 'real',
       };
 
@@ -482,7 +501,7 @@ function setupIpcHandlers() {
       console.log(`[campaign:render-as-game] Launching: ${launchCmd} on DISPLAY=${display}`);
 
       const child = exec(launchCmd, {
-        cwd: paths.baseDir,
+        cwd: gameEngineDir,
         env: childEnv,
       });
 

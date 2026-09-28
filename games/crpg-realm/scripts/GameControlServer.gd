@@ -217,6 +217,52 @@ func _process_http_request(client: StreamPeerTCP, raw_req: String) -> void:
 				"ie_round": GameState.ie_round, "ie_round_elapsed": GameState.ie_round_elapsed, "ie_round_seconds": GameState.IE_ROUND_SECONDS})
 		["POST", "/api/v1/scenario/load"]:
 			_send_http_response(client, 200, await _scenario_load(body_dict))
+		["POST", "/qa/cartridge_step"], ["POST", "/api/v1/qa/cartridge_step"]:
+			var action_name = str(body_dict.get("action", ""))
+			var cur_sc = get_tree().current_scene
+			var res = {"success": false, "action": action_name}
+			if cur_sc:
+				match action_name:
+					"talk_king_lorik":
+						if cur_sc.has_method("_interact_with_npc"):
+							cur_sc._interact_with_npc("npc-king-loric", {"name": "King Lorik"}, false)
+							res["success"] = true
+					"accept_loric_quest":
+						if cur_sc.has_method("_on_accept_loric_quest"):
+							cur_sc._on_accept_loric_quest()
+							res["success"] = true
+					"open_chests":
+						if cur_sc.has_method("_on_chest_opened"):
+							cur_sc._on_chest_opened("chest-120g", "King's Gold Chest (120 Gold)")
+							cur_sc._on_chest_opened("chest-magic-key", "Chest with Magic Key")
+							cur_sc._on_chest_opened("chest-torch", "Chest with Torch")
+							cur_sc._on_chest_opened("chest-herb", "Chest with Herb")
+							res["success"] = true
+					"transition_charlock":
+						if has_node("/root/CartridgeManager"):
+							get_node("/root/CartridgeManager").transition_to_map("charlock-castle", Vector2(20, 25))
+							res["success"] = true
+					"confront_dragonlord":
+						if cur_sc.has_method("_interact_with_npc"):
+							cur_sc._interact_with_npc("dragonlord", {"name": "The Dragonlord"}, true)
+							res["success"] = true
+					"slay_dragonlord":
+						if cur_sc.has_method("_on_defeat_dragonlord"):
+							cur_sc._on_defeat_dragonlord("dragonlord")
+							res["success"] = true
+					"rescue_gwaelin":
+						if cur_sc.has_method("_interact_with_npc"):
+							cur_sc._interact_with_npc("npc-princess-gwaelin", {"name": "Princess Gwaelin"}, false)
+							res["success"] = true
+					"escort_gwaelin":
+						if cur_sc.has_method("_on_escort_gwaelin"):
+							cur_sc._on_escort_gwaelin()
+							res["success"] = true
+					"proclaim_victory":
+						if cur_sc.has_method("_trigger_victory"):
+							cur_sc._trigger_victory()
+							res["success"] = true
+			_send_http_response(client, 200, res)
 		["GET", "/cartridges"], ["GET", "/api/v1/cartridges"]:
 			if has_node("/root/CartridgeManager"):
 				var cm = get_node("/root/CartridgeManager")
@@ -619,10 +665,31 @@ func _handle_click_dialog_choice(payload: Dictionary) -> Dictionary:
 	if not cur_scene:
 		return {"success": false, "error": "No current active scene"}
 
+	# First inspect CartridgeWorld DialogBox
+	var cw_dialog = cur_scene.find_child("DialogBox", true, false)
+	if cw_dialog and cw_dialog.visible:
+		var btn_container = cw_dialog.find_child("Buttons", true, false)
+		if btn_container:
+			var cw_buttons: Array = []
+			for c in btn_container.get_children():
+				if c is Button and c.visible:
+					cw_buttons.append(c)
+			var target_cw_btn: Button = null
+			if choice_text != "":
+				for b in cw_buttons:
+					if b.text.to_lower().contains(choice_text):
+						target_cw_btn = b
+						break
+			if not target_cw_btn and choice_idx >= 0 and choice_idx < cw_buttons.size():
+				target_cw_btn = cw_buttons[choice_idx]
+			if target_cw_btn:
+				target_cw_btn.emit_signal("pressed")
+				return {"success": true, "message": "Clicked CartridgeWorld dialogue choice: " + target_cw_btn.text}
+
 	# Inspect ActionLog for in-log dialogue choices
 	var action_log: ActionLog = cur_scene.find_child("ActionLog", true, false)
 	if not action_log or not action_log.is_dialogue_active:
-		return {"success": false, "error": "No active dialogue found in ActionLog"}
+		return {"success": false, "error": "No active dialogue found"}
 
 	var container: VBoxContainer = action_log.find_child("ChoicesContainer", true, false)
 	if not container:

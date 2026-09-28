@@ -108,6 +108,17 @@ class CartridgeBundler {
       }
     }
 
+    // Also inspect activeParty in gameState
+    const activeParty = campaign['robos:gameState']?.['robos:activeParty'] || [];
+    for (const ref of activeParty) {
+      const charSlug = this._cleanSlug(ref);
+      if (charSlug && !characters[charSlug]) {
+        const charPath = path.join(this.baseDir, 'characters', `${charSlug}.jsonld`);
+        const charData = this._readJsonSafe(charPath) || this._readJsonSafe(path.join(this.baseDir, 'characters', `${charSlug}.json`));
+        if (charData) characters[charSlug] = charData;
+      }
+    }
+
     // Also inspect heroes array
     const heroes = campaign['robos:heroes'] || campaign.heroes || [];
     for (const hero of heroes) {
