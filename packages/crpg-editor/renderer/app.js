@@ -1194,6 +1194,9 @@ state.selectedStoryNodeId = null;
 state.storyWalkthrough = { active: false, currentNodeId: null, visitedNodeIds: [] };
 state.storyTreeZoom = 1.0;
 state.activeFlowPageId = 'page-1';
+state.flowPageSearchQuery = '';
+state.directoryActFilter = 'all';
+state.directorySearchQuery = '';
 
 function escapeXml(unsafe) {
   if (!unsafe) return '';
@@ -1319,6 +1322,20 @@ function getStoryFlowPages() {
   return ensureFlowPages(flow);
 }
 
+async function saveCampaignJson() {
+  if (!state.activeCampaignSlug || !state.activeCampaignData) return;
+  try {
+    if (window.robos?.saveCampaign) {
+      await window.robos.saveCampaign({
+        slug: state.activeCampaignSlug,
+        data: state.activeCampaignData
+      });
+    }
+  } catch (err) {
+    console.error('Failed to auto-save campaign JSON:', err);
+  }
+}
+
 function getStoryFlow() {
   if (!state.activeCampaignData) return { 'robos:rootNodeId': '', 'robos:storyNodes': [], 'robos:flowPages': [] };
   if (!state.activeCampaignData['robos:storyFlow']) {
@@ -1408,12 +1425,23 @@ function getStoryFlow() {
   return flow;
 }
 
-function renderFlowPageTabs() {
+function renderFlowPageTurner() {
   const container = document.getElementById('quest-flow-page-tabs');
   const indicator = document.getElementById('flow-page-indicator');
+  const selectEl = document.getElementById('flow-page-quick-select');
+  const jumpInput = document.getElementById('flow-page-jump-input');
+  const totalLabel = document.getElementById('flow-page-total-label');
+  const countBadge = document.getElementById('flow-pages-count-badge');
+  const btnFirst = document.getElementById('btn-flow-first-page');
   const btnPrev = document.getElementById('btn-flow-prev-page');
   const btnNext = document.getElementById('btn-flow-next-page');
-  if (!container) return;
+  const btnLast = document.getElementById('btn-flow-last-page');
+  const btnToggleAll = document.getElementById('btn-flow-toggle-all');
+  const btnMoveLeft = document.getElementById('btn-flow-move-left');
+  const btnMoveRight = document.getElementById('btn-flow-move-right');
+  const searchInput = document.getElementById('flow-page-search-input');
+  const searchClear = document.getElementById('btn-clear-flow-page-search');
+  const matchBadge = document.getElementById('flow-search-match-badge');
 
   const flow = getStoryFlow();
   const pages = ensureFlowPages(flow);
@@ -1424,58 +1452,144 @@ function renderFlowPageTabs() {
   }
 
   const curIdx = pages.findIndex(p => p.id === state.activeFlowPageId);
+  const isAll = state.activeFlowPageId === 'all';
 
-  // Flow Page Tabs HTML
-  let tabsHtml = pages.map((page, idx) => {
-    const isActive = state.activeFlowPageId === page.id;
-    const pageNodes = nodes.filter(n => (n['robos:flowPage'] || n.flowPage) === page.id);
-    return `
-      <div class="flow-page-tab ${isActive ? 'active' : ''}" data-page-id="${page.id}" title="${escapeXml(page.summary || page.name)}">
-        <span>📄</span>
-        <span>${escapeXml(page.name)}</span>
-        <span class="flow-page-node-count">${pageNodes.length}</span>
-      </div>
-    `;
-  }).join('');
+  // Update total count badge on directory button
+  if (countBadge) countBadge.textContent = pages.length;
 
-  // All Flow Overview Tab
-  const isAllActive = state.activeFlowPageId === 'all';
-  tabsHtml += `
-    <div class="flow-page-tab ${isAllActive ? 'active' : ''}" data-page-id="all" title="View all story flow pages together in macro overview">
-      <span>🌐</span>
-      <span>All Flow (Overview)</span>
-      <span class="flow-page-node-count">${nodes.length}</span>
-    </div>
-  `;
+  // Update Quick Select Dropdown
+  if (selectEl) {
+    let selectHtml = pages.map((page, idx) => {
+      const pageNodes = nodes.filter(n => (n['robos:flowPage'] || n.flowPage) === page.id);
+      return `<option value="${page.id}" ${state.activeFlowPageId === page.id ? 'selected' : ''}>Page ${idx + 1}: ${escapeXml(page.name)} (${pageNodes.length} nodes)</option>`;
+    }).join('');
+    selectHtml += `<option value="all" ${isAll ? 'selected' : ''}>🌐 All Flow (Overview) (${nodes.length} nodes)</option>`;
+    selectEl.innerHTML = selectHtml;
+  }
 
-  container.innerHTML = tabsHtml;
+  // Update Direct Jump Input & Total Label
+  if (jumpInput) {
+    jumpInput.min = '1';
+    jumpInput.max = String(pages.length);
+    jumpInput.value = isAll ? '' : String(curIdx >= 0 ? curIdx + 1 : 1);
+  }
+  if (totalLabel) {
+    totalLabel.textContent = `/ ${pages.length}`;
+  }
 
-  // Add click listeners
-  container.querySelectorAll('.flow-page-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      const pageId = tab.getAttribute('data-page-id');
-      switchFlowPage(pageId);
-    });
-  });
-
-  // Update Indicator
+  // Update Indicator if present in DOM
   if (indicator) {
-    if (state.activeFlowPageId === 'all') {
+    if (isAll) {
       indicator.textContent = `All Flow (${pages.length} Pages, ${nodes.length} Nodes)`;
     } else {
       indicator.textContent = `Page ${curIdx >= 0 ? curIdx + 1 : 1} of ${pages.length}`;
     }
   }
 
-  // Update Prev / Next buttons
+  // Update First / Prev / Next / Last / Reorder button states
+  if (btnFirst) {
+    btnFirst.disabled = isAll || curIdx <= 0;
+    btnFirst.style.opacity = btnFirst.disabled ? '0.4' : '1';
+  }
   if (btnPrev) {
-    btnPrev.disabled = state.activeFlowPageId === 'all' || curIdx <= 0;
+    btnPrev.disabled = isAll || curIdx <= 0;
     btnPrev.style.opacity = btnPrev.disabled ? '0.4' : '1';
   }
   if (btnNext) {
-    btnNext.disabled = state.activeFlowPageId === 'all' || curIdx >= pages.length - 1;
+    btnNext.disabled = isAll || curIdx >= pages.length - 1;
     btnNext.style.opacity = btnNext.disabled ? '0.4' : '1';
   }
+  if (btnLast) {
+    btnLast.disabled = isAll || curIdx >= pages.length - 1;
+    btnLast.style.opacity = btnLast.disabled ? '0.4' : '1';
+  }
+  if (btnMoveLeft) {
+    btnMoveLeft.disabled = isAll || curIdx <= 0;
+    btnMoveLeft.style.opacity = btnMoveLeft.disabled ? '0.4' : '1';
+  }
+  if (btnMoveRight) {
+    btnMoveRight.disabled = isAll || curIdx >= pages.length - 1;
+    btnMoveRight.style.opacity = btnMoveRight.disabled ? '0.4' : '1';
+  }
+  if (btnToggleAll) {
+    btnToggleAll.classList.toggle('active', isAll);
+    if (isAll) {
+      btnToggleAll.style.borderColor = '#38bdf8';
+      btnToggleAll.style.background = 'rgba(56, 189, 248, 0.15)';
+    } else {
+      btnToggleAll.style.borderColor = '';
+      btnToggleAll.style.background = '';
+    }
+  }
+
+  // Handle Live Search Filtering
+  const rawQuery = (state.flowPageSearchQuery || '').trim().toLowerCase();
+  let matchingPages = pages;
+  if (rawQuery) {
+    searchClear?.classList.remove('hidden');
+    matchingPages = pages.filter(page => {
+      const pageNodes = nodes.filter(n => (n['robos:flowPage'] || n.flowPage) === page.id);
+      const matchName = (page.name || '').toLowerCase().includes(rawQuery);
+      const matchId = (page.id || '').toLowerCase().includes(rawQuery);
+      const matchAct = (page.act || '').toLowerCase().includes(rawQuery);
+      const matchSummary = (page.summary || '').toLowerCase().includes(rawQuery);
+      const matchNodes = pageNodes.some(n => 
+        (n['dcterms:title'] || n.title || n.id || '').toLowerCase().includes(rawQuery) ||
+        (n['robos:narrative'] || '').toLowerCase().includes(rawQuery)
+      );
+      return matchName || matchId || matchAct || matchSummary || matchNodes;
+    });
+
+    if (matchBadge) {
+      matchBadge.textContent = `${matchingPages.length} / ${pages.length} pages`;
+      matchBadge.classList.remove('hidden');
+    }
+  } else {
+    searchClear?.classList.add('hidden');
+    matchBadge?.classList.add('hidden');
+  }
+
+  // Render Smart Page Ribbon (matching search or clean compact tabs)
+  if (container) {
+    let tabsHtml = matchingPages.map((page) => {
+      const originalIdx = pages.findIndex(p => p.id === page.id);
+      const isActive = state.activeFlowPageId === page.id;
+      const pageNodes = nodes.filter(n => (n['robos:flowPage'] || n.flowPage) === page.id);
+      return `
+        <div class="flow-page-tab ${isActive ? 'active' : ''}" data-page-id="${page.id}" title="${escapeXml(page.summary || page.name)}">
+          <span>📄</span>
+          <span>Pg ${originalIdx + 1}: ${escapeXml(page.name)}</span>
+          <span class="flow-page-node-count">${pageNodes.length}</span>
+        </div>
+      `;
+    }).join('');
+
+    // If query matches overview or empty query, show All Flow
+    const matchAll = !rawQuery || 'all flow overview'.includes(rawQuery);
+    if (matchAll) {
+      tabsHtml += `
+        <div class="flow-page-tab ${isAll ? 'active' : ''}" data-page-id="all" title="View all story flow pages together in macro overview">
+          <span>🌐</span>
+          <span>All Flow</span>
+          <span class="flow-page-node-count">${nodes.length}</span>
+        </div>
+      `;
+    }
+
+    container.innerHTML = tabsHtml;
+
+    container.querySelectorAll('.flow-page-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const pageId = tab.getAttribute('data-page-id');
+        switchFlowPage(pageId);
+      });
+    });
+  }
+}
+
+// Alias for backward compatibility
+function renderFlowPageTabs() {
+  renderFlowPageTurner();
 }
 
 function switchFlowPage(pageId) {
@@ -1495,11 +1609,18 @@ function switchFlowPage(pageId) {
   renderQuestScenarioTree();
 }
 
+function firstFlowPage() {
+  const pages = getStoryFlowPages();
+  if (pages.length > 0) switchFlowPage(pages[0].id);
+}
+
 function prevFlowPage() {
   const pages = getStoryFlowPages();
   const curIdx = pages.findIndex(p => p.id === state.activeFlowPageId);
   if (curIdx > 0) {
     switchFlowPage(pages[curIdx - 1].id);
+  } else if (state.activeFlowPageId === 'all' && pages.length > 0) {
+    switchFlowPage(pages[0].id);
   }
 }
 
@@ -1508,7 +1629,287 @@ function nextFlowPage() {
   const curIdx = pages.findIndex(p => p.id === state.activeFlowPageId);
   if (curIdx >= 0 && curIdx < pages.length - 1) {
     switchFlowPage(pages[curIdx + 1].id);
+  } else if (state.activeFlowPageId === 'all' && pages.length > 0) {
+    switchFlowPage(pages[0].id);
   }
+}
+
+function lastFlowPage() {
+  const pages = getStoryFlowPages();
+  if (pages.length > 0) switchFlowPage(pages[pages.length - 1].id);
+}
+
+function toggleAllFlow() {
+  if (state.activeFlowPageId === 'all') {
+    const pages = getStoryFlowPages();
+    state.activeFlowPageId = pages[0]?.id || 'page-1';
+  } else {
+    state.activeFlowPageId = 'all';
+  }
+  renderQuestScenarioTree();
+}
+
+function jumpToFlowPageNumber(pageNum) {
+  if (isNaN(pageNum)) return;
+  const pages = getStoryFlowPages();
+  const targetIdx = Math.max(0, Math.min(pages.length - 1, pageNum - 1));
+  if (pages[targetIdx]) {
+    switchFlowPage(pages[targetIdx].id);
+  }
+}
+
+function moveCurrentFlowPage(direction) {
+  if (state.activeFlowPageId === 'all') return;
+  moveFlowPage(state.activeFlowPageId, direction);
+}
+
+function moveFlowPage(pageId, direction) {
+  const flow = getStoryFlow();
+  const pages = flow['robos:flowPages'] || [];
+  const idx = pages.findIndex(p => p.id === pageId);
+  if (idx === -1) return;
+  const targetIdx = idx + direction;
+  if (targetIdx < 0 || targetIdx >= pages.length) return;
+
+  const temp = pages[idx];
+  pages[idx] = pages[targetIdx];
+  pages[targetIdx] = temp;
+
+  saveCampaignJson();
+  renderQuestScenarioTree();
+  if (!document.getElementById('flow-pages-directory-modal')?.classList.contains('hidden')) {
+    renderPagesDirectory();
+  }
+  setStatus(`Reordered Page: "${temp.name}" is now at position ${targetIdx + 1}.`);
+}
+
+function openPagesDirectoryModal() {
+  const modal = document.getElementById('flow-pages-directory-modal');
+  if (!modal) return;
+  state.directorySearchQuery = state.flowPageSearchQuery || '';
+  state.directoryActFilter = 'all';
+
+  const searchInput = document.getElementById('directory-search-input');
+  if (searchInput) searchInput.value = state.directorySearchQuery;
+
+  renderDirectoryActFilters();
+  renderPagesDirectory();
+  modal.classList.remove('hidden');
+}
+
+function closePagesDirectoryModal() {
+  document.getElementById('flow-pages-directory-modal')?.classList.add('hidden');
+}
+
+function renderDirectoryActFilters() {
+  const container = document.getElementById('directory-act-filters');
+  if (!container) return;
+  const pages = getStoryFlowPages();
+  const acts = new Set();
+  pages.forEach(p => { if (p.act) acts.add(p.act); });
+
+  let html = `<div class="act-filter-pill ${state.directoryActFilter === 'all' ? 'active' : ''}" data-act="all">All Acts (${pages.length})</div>`;
+  acts.forEach(act => {
+    const actPages = pages.filter(p => p.act === act);
+    html += `<div class="act-filter-pill ${state.directoryActFilter === act ? 'active' : ''}" data-act="${escapeXml(act)}">${escapeXml(act)} (${actPages.length})</div>`;
+  });
+
+  container.innerHTML = html;
+  container.querySelectorAll('.act-filter-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      state.directoryActFilter = pill.getAttribute('data-act');
+      renderDirectoryActFilters();
+      renderPagesDirectory();
+    });
+  });
+}
+
+function renderPagesDirectory() {
+  const grid = document.getElementById('page-directory-grid');
+  const statPages = document.getElementById('dir-stat-pages');
+  const statNodes = document.getElementById('dir-stat-nodes');
+  const subtitle = document.getElementById('directory-campaign-subtitle');
+  if (!grid) return;
+
+  const flow = getStoryFlow();
+  const pages = ensureFlowPages(flow);
+  const nodes = flow['robos:storyNodes'] || [];
+
+  if (statPages) statPages.textContent = `${pages.length} Pages`;
+  if (statNodes) statNodes.textContent = `${nodes.length} Story Nodes`;
+  if (subtitle && state.activeCampaignData) {
+    subtitle.textContent = `${state.activeCampaignData['dcterms:title'] || 'Campaign'} — Interactive Story Flow Catalog`;
+  }
+
+  const query = (state.directorySearchQuery || '').trim().toLowerCase();
+  const actFilter = state.directoryActFilter || 'all';
+
+  const filtered = pages.filter(page => {
+    if (actFilter !== 'all' && (page.act || '') !== actFilter) return false;
+    if (!query) return true;
+
+    const pageNodes = nodes.filter(n => (n['robos:flowPage'] || n.flowPage) === page.id);
+    const matchName = (page.name || '').toLowerCase().includes(query);
+    const matchId = (page.id || '').toLowerCase().includes(query);
+    const matchAct = (page.act || '').toLowerCase().includes(query);
+    const matchSummary = (page.summary || '').toLowerCase().includes(query);
+    const matchNodes = pageNodes.some(n => 
+      (n['dcterms:title'] || n.title || n.id || '').toLowerCase().includes(query) ||
+      (n['robos:narrative'] || '').toLowerCase().includes(query)
+    );
+    return matchName || matchId || matchAct || matchSummary || matchNodes;
+  });
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-muted);">
+        <p style="font-size: 14px; margin-bottom: 8px;">🔍 No flow pages match "${escapeXml(query)}"</p>
+        <button id="btn-clear-dir-search" class="btn btn-secondary btn-xs">Clear Filter</button>
+      </div>
+    `;
+    document.getElementById('btn-clear-dir-search')?.addEventListener('click', () => {
+      state.directorySearchQuery = '';
+      const inp = document.getElementById('directory-search-input');
+      if (inp) inp.value = '';
+      renderPagesDirectory();
+    });
+    return;
+  }
+
+  grid.innerHTML = filtered.map((page) => {
+    const originalIdx = pages.findIndex(p => p.id === page.id);
+    const isActive = state.activeFlowPageId === page.id;
+    const pageNodes = nodes.filter(n => (n['robos:flowPage'] || n.flowPage) === page.id);
+
+    const compCounts = {};
+    pageNodes.forEach(n => {
+      const t = n['robos:nodeType'] || n.nodeType || 'standard';
+      compCounts[t] = (compCounts[t] || 0) + 1;
+    });
+
+    const compPills = Object.entries(compCounts).map(([type, count]) => {
+      const icon = getNodeTypeIcon(type);
+      return `<span class="comp-pill">${icon} ${count} ${type}</span>`;
+    }).join('');
+
+    const nodesChips = pageNodes.map(n => {
+      const icon = getNodeTypeIcon(n['robos:nodeType'] || n.nodeType);
+      const title = n['dcterms:title'] || n.title || n.id;
+      return `<span class="card-node-chip" data-page-id="${page.id}" data-node-id="${n.id}" title="${escapeXml(title)}">${icon} ${escapeXml(title)}</span>`;
+    }).join('');
+
+    const canMoveUp = originalIdx > 0;
+    const canMoveDown = originalIdx < pages.length - 1;
+
+    return `
+      <div class="page-directory-card ${isActive ? 'active' : ''}" data-page-id="${page.id}">
+        <div class="card-top-row">
+          <div class="card-badge-cluster">
+            <span class="card-page-num">Page ${originalIdx + 1}</span>
+            <span class="card-act-tag">${escapeXml(page.act || 'Prologue')}</span>
+            ${isActive ? '<span class="card-active-indicator">★ ACTIVE</span>' : ''}
+          </div>
+          <div class="card-reorder-cluster">
+            <button class="card-reorder-btn btn-page-move-up" data-page-id="${page.id}" title="Move Page Earlier" ${canMoveUp ? '' : 'disabled style="opacity:0.3;"'}>⬆️</button>
+            <button class="card-reorder-btn btn-page-move-down" data-page-id="${page.id}" title="Move Page Later" ${canMoveDown ? '' : 'disabled style="opacity:0.3;"'}>⬇️</button>
+          </div>
+        </div>
+
+        <div class="card-title-text">${escapeXml(page.name)}</div>
+        <div class="card-summary-text">${escapeXml(page.summary || 'No page summary notes documented.')}</div>
+
+        <div class="card-composition-row">
+          <span style="font-size: 10px; font-weight: 700; color: #38bdf8;">${pageNodes.length} Nodes:</span>
+          ${compPills}
+        </div>
+
+        <div class="card-nodes-container">
+          <span class="card-nodes-title">Contained Nodes:</span>
+          <div class="card-nodes-chips">
+            ${nodesChips || '<span style="color:var(--text-muted); font-size:10px;">No nodes assigned to this page.</span>'}
+          </div>
+        </div>
+
+        <div class="card-bottom-row">
+          <button class="btn btn-primary btn-xs btn-card-open-page" data-page-id="${page.id}">
+            <span>${isActive ? 'Viewing Page' : '🚀 Open Page'}</span>
+          </button>
+          <div style="display:flex; gap: 4px;">
+            <button class="btn btn-secondary btn-xs btn-card-edit-page" data-page-id="${page.id}" title="Edit page details">✏️ Edit</button>
+            <button class="btn btn-secondary btn-xs btn-card-delete-page" data-page-id="${page.id}" title="Delete page" ${pages.length <= 1 ? 'disabled style="opacity:0.3;"' : ''}>🗑️</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Add event listeners on cards
+  grid.querySelectorAll('.btn-card-open-page').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const pageId = e.currentTarget.getAttribute('data-page-id');
+      switchFlowPage(pageId);
+      closePagesDirectoryModal();
+    });
+  });
+
+  grid.querySelectorAll('.card-node-chip').forEach(chip => {
+    chip.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const pageId = chip.getAttribute('data-page-id');
+      const nodeId = chip.getAttribute('data-node-id');
+      jumpToNodeInPage(pageId, nodeId);
+    });
+  });
+
+  grid.querySelectorAll('.btn-page-move-up').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const pageId = btn.getAttribute('data-page-id');
+      moveFlowPage(pageId, -1);
+    });
+  });
+
+  grid.querySelectorAll('.btn-page-move-down').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const pageId = btn.getAttribute('data-page-id');
+      moveFlowPage(pageId, 1);
+    });
+  });
+
+  grid.querySelectorAll('.btn-card-edit-page').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const pageId = btn.getAttribute('data-page-id');
+      state.activeFlowPageId = pageId;
+      closePagesDirectoryModal();
+      showEditFlowPageModal();
+    });
+  });
+
+  grid.querySelectorAll('.btn-card-delete-page').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const pageId = btn.getAttribute('data-page-id');
+      state.activeFlowPageId = pageId;
+      deleteCurrentFlowPage();
+      renderPagesDirectory();
+    });
+  });
+}
+
+function jumpToNodeInPage(pageId, nodeId) {
+  closePagesDirectoryModal();
+  state.activeFlowPageId = pageId;
+  state.selectedStoryNodeId = nodeId;
+  renderQuestScenarioTree();
+  setTimeout(() => {
+    selectStoryNode(nodeId);
+    const card = document.querySelector(`.story-node-card[data-id="${nodeId}"]`);
+    if (card) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+    }
+  }, 60);
 }
 
 let editingFlowPageId = null;
@@ -1705,6 +2106,129 @@ function setupStoryTreeHandlers() {
 
   btnNextPage?.addEventListener('click', () => {
     nextFlowPage();
+  });
+
+  // Flow Page Turner & Search Controls
+  const btnFirstPage = document.getElementById('btn-flow-first-page');
+  const btnLastPage = document.getElementById('btn-flow-last-page');
+  const btnToggleAll = document.getElementById('btn-flow-toggle-all');
+  const btnMoveLeft = document.getElementById('btn-flow-move-left');
+  const btnMoveRight = document.getElementById('btn-flow-move-right');
+  const quickSelect = document.getElementById('flow-page-quick-select');
+  const jumpInput = document.getElementById('flow-page-jump-input');
+  const searchInput = document.getElementById('flow-page-search-input');
+  const btnClearSearch = document.getElementById('btn-clear-flow-page-search');
+  const btnOpenDirectory = document.getElementById('btn-open-pages-directory');
+  const btnCloseDirectory = document.getElementById('btn-close-pages-directory');
+  const directorySearchInput = document.getElementById('directory-search-input');
+  const btnDirAddPage = document.getElementById('btn-dir-add-page');
+  const btnDirViewAll = document.getElementById('btn-dir-view-all');
+
+  btnFirstPage?.addEventListener('click', () => {
+    firstFlowPage();
+  });
+
+  btnLastPage?.addEventListener('click', () => {
+    lastFlowPage();
+  });
+
+  btnToggleAll?.addEventListener('click', () => {
+    toggleAllFlow();
+  });
+
+  btnMoveLeft?.addEventListener('click', () => {
+    moveCurrentFlowPage(-1);
+  });
+
+  btnMoveRight?.addEventListener('click', () => {
+    moveCurrentFlowPage(1);
+  });
+
+  quickSelect?.addEventListener('change', (e) => {
+    switchFlowPage(e.target.value);
+  });
+
+  jumpInput?.addEventListener('input', (e) => {
+    const val = parseInt(e.target.value, 10);
+    const pages = getStoryFlowPages();
+    if (!isNaN(val) && val >= 1 && val <= pages.length) {
+      jumpToFlowPageNumber(val);
+    }
+  });
+
+  jumpInput?.addEventListener('change', (e) => {
+    jumpToFlowPageNumber(parseInt(e.target.value, 10));
+  });
+
+  jumpInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      jumpToFlowPageNumber(parseInt(e.target.value, 10));
+    }
+  });
+
+  searchInput?.addEventListener('input', (e) => {
+    state.flowPageSearchQuery = e.target.value;
+    renderFlowPageTurner();
+  });
+
+  btnClearSearch?.addEventListener('click', () => {
+    state.flowPageSearchQuery = '';
+    if (searchInput) searchInput.value = '';
+    renderFlowPageTurner();
+  });
+
+  btnOpenDirectory?.addEventListener('click', () => {
+    openPagesDirectoryModal();
+  });
+
+  btnCloseDirectory?.addEventListener('click', () => {
+    closePagesDirectoryModal();
+  });
+
+  directorySearchInput?.addEventListener('input', (e) => {
+    state.directorySearchQuery = e.target.value;
+    renderPagesDirectory();
+  });
+
+  btnDirAddPage?.addEventListener('click', () => {
+    closePagesDirectoryModal();
+    showCreateFlowPageModal();
+  });
+
+  btnDirViewAll?.addEventListener('click', () => {
+    closePagesDirectoryModal();
+    switchFlowPage('all');
+  });
+
+  // Global Page Turner keyboard shortcuts
+  window.addEventListener('keydown', (e) => {
+    const tag = (e.target?.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || tag === 'select') {
+      return;
+    }
+    const questTreePane = document.getElementById('subpane-camp-quests');
+    if (!questTreePane || questTreePane.classList.contains('hidden')) {
+      return;
+    }
+
+    if (e.key === 'PageUp' || (e.altKey && e.key === 'ArrowLeft')) {
+      e.preventDefault();
+      prevFlowPage();
+    } else if (e.key === 'PageDown' || (e.altKey && e.key === 'ArrowRight')) {
+      e.preventDefault();
+      nextFlowPage();
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      firstFlowPage();
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      lastFlowPage();
+    } else if (e.key === '/') {
+      e.preventDefault();
+      const sInput = document.getElementById('flow-page-search-input');
+      sInput?.focus();
+      sInput?.select();
+    }
   });
 
   btnSavePageModal?.addEventListener('click', () => {

@@ -325,25 +325,30 @@ function setupIpcHandlers() {
       const safeSlug = slug.toLowerCase().replace(/[^a-z0-9_-]/g, '-');
       const filePath = path.join(paths.campaignsDir, `${safeSlug}.jsonld`);
 
+      const existing = fs.existsSync(filePath) ? JSON.parse(fs.readFileSync(filePath, 'utf8')) : {};
       const formatted = {
+        ...existing,
+        ...data,
         '@context': {
           robos: 'https://robos.dev/ns/sdlc#',
           dcterms: 'http://purl.org/dc/terms/',
           schema: 'https://schema.org/',
           xsd: 'http://www.w3.org/2001/XMLSchema#',
+          ...(existing['@context'] || {}),
+          ...(data['@context'] || {}),
         },
         '@id': `urn:robos:crpg:campaign:${safeSlug}`,
         '@type': ['robos:CRPGCampaign', 'schema:CreativeWork'],
-        'dcterms:title': data.title || data['dcterms:title'] || safeSlug,
-        'dcterms:description': data.description || data['dcterms:description'] || '',
-        'robos:setting': data.setting || data['robos:setting'] || '',
-        'robos:ruleSet': data.ruleSet || data['robos:ruleSet'] || 'D&D 5e SRD',
-        'robos:difficulty': data.difficulty || data['robos:difficulty'] || 'Core Rules',
-        'robos:startingMap': data.startingMap || data['robos:startingMap'] || data.currentScene || '',
-        'robos:maps': Array.isArray(data.maps) ? data.maps : (Array.isArray(data['robos:maps']) ? data['robos:maps'] : []),
-        'robos:characters': Array.isArray(data.characters) ? data.characters : (Array.isArray(data['robos:characters']) ? data['robos:characters'] : []),
-        'robos:heroes': data.heroes || data['robos:heroes'] || [],
-        'robos:gameState': data.gameState || data['robos:gameState'] || {
+        'dcterms:title': data.title || data['dcterms:title'] || existing['dcterms:title'] || safeSlug,
+        'dcterms:description': data.description !== undefined ? data.description : (data['dcterms:description'] !== undefined ? data['dcterms:description'] : (existing['dcterms:description'] || '')),
+        'robos:setting': data.setting !== undefined ? data.setting : (data['robos:setting'] !== undefined ? data['robos:setting'] : (existing['robos:setting'] || '')),
+        'robos:ruleSet': data.ruleSet || data['robos:ruleSet'] || existing['robos:ruleSet'] || 'D&D 5e SRD',
+        'robos:difficulty': data.difficulty || data['robos:difficulty'] || existing['robos:difficulty'] || 'Core Rules',
+        'robos:startingMap': data.startingMap || data['robos:startingMap'] || data.currentScene || existing['robos:startingMap'] || '',
+        'robos:maps': Array.isArray(data.maps) ? data.maps : (Array.isArray(data['robos:maps']) ? data['robos:maps'] : (existing['robos:maps'] || [])),
+        'robos:characters': Array.isArray(data.characters) ? data.characters : (Array.isArray(data['robos:characters']) ? data['robos:characters'] : (existing['robos:characters'] || [])),
+        'robos:heroes': data.heroes || data['robos:heroes'] || existing['robos:heroes'] || [],
+        'robos:gameState': data.gameState || data['robos:gameState'] || existing['robos:gameState'] || {
           'robos:currentScene': data.startingMap || '',
           'robos:activeParty': [],
           'robos:partyLeaderIndex': 0,
@@ -352,8 +357,10 @@ function setupIpcHandlers() {
           'robos:questLog': [],
           'robos:worldFlags': {},
         },
-        'robos:scenes': data.scenes || data['robos:scenes'] || [],
+        'robos:storyFlow': data['robos:storyFlow'] || data.storyFlow || existing['robos:storyFlow'] || undefined,
+        'robos:scenes': data.scenes || data['robos:scenes'] || existing['robos:scenes'] || [],
       };
+      if (!formatted['robos:storyFlow']) delete formatted['robos:storyFlow'];
 
       if (!fs.existsSync(paths.campaignsDir)) {
         fs.mkdirSync(paths.campaignsDir, { recursive: true });

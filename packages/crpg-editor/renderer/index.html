@@ -348,24 +348,62 @@
               </div>
             </div>
 
-            <!-- Flow Pages Navigation Bar: Story Chapters & Pages of Flow -->
+            <!-- Flow Pages Navigation Bar: Full-Featured Story Flow Page Turner & Search -->
             <div class="quest-flow-pages-bar">
-              <div class="flow-pages-bar-left">
-                <span class="flow-pages-label">📄 Flow Pages:</span>
-                <div id="quest-flow-page-tabs" class="flow-page-tabs">
-                  <!-- Populated by JS -->
+              <!-- Left: Full Featured Page Turner Cluster -->
+              <div class="flow-turner-cluster">
+                <button id="btn-flow-first-page" class="btn btn-secondary btn-xs" title="First Story Page (|◀) [Home]">|◀</button>
+                <button id="btn-flow-prev-page" class="btn btn-secondary btn-xs" title="Previous Story Page (◀) [Alt+Left / PageUp]">◀ Prev</button>
+                
+                <div class="flow-page-picker-wrapper">
+                  <select id="flow-page-quick-select" class="flow-page-select" title="Jump directly to any Story Flow Page">
+                    <!-- Populated by JS -->
+                  </select>
+                  <div class="flow-page-jump-box" title="Direct Page Jump: Type number and press Enter">
+                    <span class="jump-label">Pg</span>
+                    <input type="number" id="flow-page-jump-input" min="1" max="1" value="1" class="flow-page-number-input">
+                    <span id="flow-page-total-label" class="flow-total-label">/ 1</span>
+                  </div>
                 </div>
-                <button id="btn-add-flow-page" class="btn btn-secondary btn-xs" title="Create a new Story Flow Page">
-                  <span>➕ New Page</span>
+
+                <button id="btn-flow-next-page" class="btn btn-secondary btn-xs" title="Next Story Page (▶) [Alt+Right / PageDown]">Next ▶</button>
+                <button id="btn-flow-last-page" class="btn btn-secondary btn-xs" title="Last Story Page (▶|) [End]">▶|</button>
+
+                <button id="btn-flow-toggle-all" class="btn btn-secondary btn-xs" title="Toggle All Flow macro overview mode">
+                  <span>🌐 All Flow</span>
                 </button>
               </div>
-              <div class="flow-pages-bar-right">
-                <button id="btn-flow-prev-page" class="btn btn-secondary btn-xs" title="Previous Flow Page">◀ Prev</button>
-                <span id="flow-page-indicator" class="flow-page-indicator">Page 1 of 4</span>
-                <button id="btn-flow-next-page" class="btn btn-secondary btn-xs" title="Next Flow Page">Next ▶</button>
-                <button id="btn-edit-flow-page" class="btn btn-secondary btn-xs" title="Edit current Flow Page title and details">✏️ Edit Page</button>
+
+              <!-- Middle: Live Search Filter across Pages and Nodes -->
+              <div class="flow-search-cluster">
+                <div class="flow-search-box">
+                  <span class="search-icon">🔍</span>
+                  <input type="text" id="flow-page-search-input" class="flow-search-input" placeholder="Search pages, acts, or nodes... (Press /)">
+                  <button id="btn-clear-flow-page-search" class="search-clear-btn hidden" title="Clear Search">×</button>
+                </div>
+                <span id="flow-search-match-badge" class="flow-search-match-badge hidden">0 matches</span>
+              </div>
+
+              <!-- Right: Directory Drawer, Reorder, New, Edit, Delete -->
+              <div class="flow-actions-cluster">
+                <button id="btn-open-pages-directory" class="btn btn-primary btn-xs" title="Open Story Pages Directory & Navigator">
+                  <span>📚 Pages Directory (<span id="flow-pages-count-badge">4</span>)</span>
+                </button>
+                <div class="flow-reorder-group" title="Reorder current page in story sequence">
+                  <button id="btn-flow-move-left" class="btn btn-secondary btn-xs" title="Move Current Page Earlier (Left)">⬅️</button>
+                  <button id="btn-flow-move-right" class="btn btn-secondary btn-xs" title="Move Current Page Later (Right)">➡️</button>
+                </div>
+                <button id="btn-add-flow-page" class="btn btn-secondary btn-xs" title="Create a new Story Flow Page">
+                  <span>➕ New</span>
+                </button>
+                <button id="btn-edit-flow-page" class="btn btn-secondary btn-xs" title="Edit current Flow Page title and details">✏️ Edit</button>
                 <button id="btn-delete-flow-page" class="btn btn-secondary btn-xs" title="Delete current Flow Page and reassign nodes">🗑️</button>
               </div>
+            </div>
+
+            <!-- Smart Filtered Page Ribbon (Responsive chips, avoids huge single-row autoscroll) -->
+            <div id="quest-flow-page-tabs" class="flow-page-ribbon-bar">
+              <!-- Populated by JS -->
             </div>
 
             <!-- Interactive Walkthrough HUD (visible when playing walkthrough) -->
@@ -446,6 +484,49 @@
                 <div class="epilogue-scroll-footer">
                   <button id="btn-save-flow-page-modal" class="btn btn-primary">Save Flow Page</button>
                   <button id="btn-close-flow-page-modal" class="btn btn-secondary">Cancel</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Flow Pages Directory Modal / Catalog Navigator -->
+            <div id="flow-pages-directory-modal" class="story-epilogue-overlay hidden">
+              <div class="epilogue-scroll-container page-directory-modal-container">
+                <div class="epilogue-scroll-header">
+                  <div class="directory-header-row">
+                    <div>
+                      <span class="epilogue-badge" style="background:#0284c7;">📚 STORY PAGES DIRECTORY</span>
+                      <h2 class="epilogue-title">Campaign Flow Pages Catalog</h2>
+                      <span id="directory-campaign-subtitle" class="epilogue-subtitle">Browse, search, reorder, and jump to any chapter or scenario</span>
+                    </div>
+                    <div class="directory-header-stats">
+                      <span id="dir-stat-pages" class="dir-stat-pill">4 Pages</span>
+                      <span id="dir-stat-nodes" class="dir-stat-pill">16 Story Nodes</span>
+                    </div>
+                  </div>
+                  <!-- Search & Filter Controls in Directory -->
+                  <div class="directory-filter-bar">
+                    <div class="directory-search-wrapper">
+                      <span class="search-icon">🔍</span>
+                      <input type="text" id="directory-search-input" class="directory-search-input" placeholder="Filter pages by title, act, summary, or contained nodes...">
+                    </div>
+                    <div id="directory-act-filters" class="directory-act-filters">
+                      <!-- Populated by JS: All Acts, Prologue, Chapter 1, etc. -->
+                    </div>
+                  </div>
+                </div>
+
+                <div class="epilogue-scroll-body page-directory-scroll-body">
+                  <div id="page-directory-grid" class="page-directory-grid">
+                    <!-- Populated dynamically by JS -->
+                  </div>
+                </div>
+
+                <div class="epilogue-scroll-footer directory-footer">
+                  <div class="directory-footer-left">
+                    <button id="btn-dir-add-page" class="btn btn-secondary btn-sm">➕ Create New Page</button>
+                    <button id="btn-dir-view-all" class="btn btn-secondary btn-sm">🌐 View All Flow Overview</button>
+                  </div>
+                  <button id="btn-close-pages-directory" class="btn btn-primary btn-sm">Done / Close</button>
                 </div>
               </div>
             </div>
