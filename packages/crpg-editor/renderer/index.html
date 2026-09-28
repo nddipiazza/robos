@@ -65,6 +65,9 @@
           <button id="btn-save-campaign" class="btn btn-primary" title="Save campaign JSON-LD">
             <span>💾 Save</span>
           </button>
+          <button id="btn-render-game" class="btn btn-accent" title="Render campaign in current state and play in real Godot cRPG engine (Real Mode)">
+            <span>🎮 Render as Game</span>
+          </button>
           <button id="btn-delete-campaign" class="btn btn-danger btn-sm" title="Delete current campaign">
             <span>🗑</span>
           </button>
@@ -307,6 +310,7 @@
                       <button type="button" class="btn btn-secondary btn-sm" onclick="switchCampaignSubpane('subpane-camp-inventory')">🎒 Party & Stash</button>
                       <button type="button" class="btn btn-secondary btn-sm" onclick="switchCampaignSubpane('subpane-camp-tactics')">⚔️ Battle Arena</button>
                       <button type="button" class="btn btn-secondary btn-sm" onclick="switchCampaignSubpane('subpane-camp-maps')">🗺️ Maps Roster</button>
+                      <button type="button" id="btn-quick-render-game" class="btn btn-accent btn-sm" style="grid-column: span 2;" title="Render campaign in current state and play in real Godot cRPG engine">🎮 Render as Real Game Engine</button>
                     </div>
                   </div>
                 </div>
@@ -341,6 +345,9 @@
                 </button>
                 <button id="btn-play-story-tree" class="btn btn-primary btn-sm" title="Simulate walking through the story from Game Start">
                   <span>🎮 Walkthrough Simulator</span>
+                </button>
+                <button id="btn-tree-render-game" class="btn btn-accent btn-sm" title="Render campaign in current state and play in real Godot cRPG engine (Real Mode)">
+                  <span>🎮 Render as Game</span>
                 </button>
                 <button id="btn-reset-story-walkthrough" class="btn btn-secondary btn-sm" title="Reset walkthrough to Game Start">
                   <span>↺ Reset</span>

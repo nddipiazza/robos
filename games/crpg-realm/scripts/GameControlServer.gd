@@ -297,6 +297,9 @@ func _process_http_request(client: StreamPeerTCP, raw_req: String) -> void:
 		["POST", "/setup_state"], ["POST", "/api/v1/setup_state"]:
 			var res = await _setup_initial_state(body_dict)
 			_send_http_response(client, 200, res)
+		["POST", "/campaign/load"], ["POST", "/api/v1/campaign/load"]:
+			var res = await _handle_load_campaign(body_dict)
+			_send_http_response(client, 200, res)
 		["POST", "/reset"], ["POST", "/api/v1/reset"]:
 			_reset_game()
 			_send_http_response(client, 200, {"success": true, "message": "Game state reset"})
@@ -886,7 +889,64 @@ func _handle_select_option(payload: Dictionary) -> Dictionary:
 
 	return {"success": false, "error": "OptionButton '%s' not found or not visible" % target}
 
+func _handle_load_campaign(payload: Dictionary) -> Dictionary:
+	var camp_slug = str(payload.get("campaign", "candlekeep-prologue")).strip_edges()
+	var camp_file = "res://campaigns/%s.jsonld" % camp_slug
+	var camp_dict: Dictionary = {}
+	if FileAccess.file_exists(camp_file):
+		var f = FileAccess.open(camp_file, FileAccess.READ)
+		var parsed = JSON.parse_string(f.get_as_text())
+		if parsed is Dictionary:
+			camp_dict = parsed
+	elif FileAccess.file_exists("res://data/v1/active_campaign.json"):
+		var f = FileAccess.open("res://data/v1/active_campaign.json", FileAccess.READ)
+		var parsed = JSON.parse_string(f.get_as_text())
+		if parsed is Dictionary:
+			camp_dict = parsed
+
+	if camp_dict.is_empty():
+		return {"success": false, "error": "Campaign not found: %s" % camp_slug}
+
+	GameState.load_campaign_state(camp_dict)
+
+	var starting_scene = str(payload.get("scene", ""))
+	if starting_scene == "":
+		var start_map = str(camp_dict.get("robos:startingMap", camp_dict.get("startingMap", ""))).to_lower()
+		if "candlekeep" in start_map or "homestead" in start_map:
+			starting_scene = "Homestead"
+		elif "tactical" in start_map or "siege" in start_map or "battle" in start_map:
+			starting_scene = "TacticalBattle"
+		elif "village" in start_map:
+			starting_scene = "VillageSquare"
+		elif "catacomb" in start_map or "crypt" in start_map:
+			starting_scene = "AncientCatacombs"
+		elif "whisper" in start_map or "forest" in start_map:
+			starting_scene = "WhisperingForest"
+		elif "keep" in start_map or "garrison" in start_map:
+			starting_scene = "GarrisonKeep"
+		else:
+			starting_scene = "Homestead"
+
+	var scene_path = "res://scenes/%s.tscn" % starting_scene
+	if get_tree().current_scene and get_tree().current_scene.scene_file_path == scene_path:
+		get_tree().reload_current_scene()
+	else:
+		get_tree().change_scene_to_file(scene_path)
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	return {
+		"success": true,
+		"campaign": camp_slug,
+		"title": camp_dict.get("dcterms:title", camp_slug),
+		"party_size": GameState.party_members.size(),
+		"scene": starting_scene
+	}
+
 func _setup_initial_state(payload: Dictionary) -> Dictionary:
+	if payload.has("campaign"):
+		return await _handle_load_campaign(payload)
+
 	if payload.has("state_spec"):
 		var spec = str(payload.get("state_spec", "")).strip_edges()
 		if spec.begins_with("{") and spec.ends_with("}"):
@@ -1524,6 +1584,35 @@ func _execute_game_action(payload: Dictionary) -> Dictionary:
 			var itm = str(args.get("item", args.get("item_id", "")))
 			GameState.add_item(itm)
 			return {"success": true, "item": itm}
+
+		"change_scene":
+			var scn = str(args.get("scene", "Homestead"))
+			var pth = "res://scenes/%s.tscn" % scn
+			get_tree().change_scene_to_file(pth)
+			for _i in range(4):
+				await get_tree().process_frame
+			return {"success": true, "scene": scn}
+
+		"set_flag":
+			var flg = str(args.get("flag", args.get("name", "")))
+			var val = args.get("value", true)
+			GameState.flags[flg] = val
+			return {"success": true, "flag": flg, "value": val}
+
+		"advance_quest":
+			var stg = int(args.get("stage", 1))
+			GameState.quest_stage = stg
+			GameState.quest_advanced.emit(stg)
+			GameState.log_message("quest", "Journal updated (Stage %d)" % stg)
+			return {"success": true, "quest_stage": GameState.quest_stage}
+
+		"end_game_victory", "trigger_victory":
+			GameState.flags.victory_achieved = true
+			GameState.flags.ending = str(args.get("ending", "Heroic Triumph"))
+			get_tree().change_scene_to_file("res://scenes/VictoryScreen.tscn")
+			for _i in range(4):
+				await get_tree().process_frame
+			return {"success": true, "scene": "VictoryScreen", "ending": GameState.flags.ending}
 
 		"set_fog_of_war":
 			var en = bool(args.get("enabled", true))

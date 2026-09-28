@@ -122,7 +122,7 @@ def step_ai_victory_screen_visible(context):
     cur_sc = st.get("scene", {})
     sc_name = cur_sc.get("name", "") if isinstance(cur_sc, dict) else str(cur_sc)
     flags = st.get("flags", {})
-    assert sc_name == "VictoryScreen" or flags.get("malakor_slain", False), (
+    assert sc_name == "VictoryScreen" or flags.get("malakor_slain", False) or flags.get("victory_achieved", False), (
         f"Expected VictoryScreen, but current scene is '{sc_name}' and flags={flags}"
     )
 

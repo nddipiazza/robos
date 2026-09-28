@@ -375,3 +375,241 @@ def step_terminal_victory_screen(context):
         "action": "log_message",
         "args": {"category": "dialogue", "text": "🏆 Total Victory achieved for the realm!"}
     })
+
+# ── Campaign Quest Scenario Tree Steps ───────────────────────────────────────
+
+@given('the campaign "{campaign}" is rendered as game in its current state')
+def step_campaign_rendered_as_game(context, campaign):
+    res = api_post(context.web_port, "/api/v1/campaign/load", {"campaign": campaign})
+    assert res.get("success") == True, f"Failed to render campaign as game: {res}"
+    time.sleep(1.0)
+
+@then('hero "{hero_name}" is the party leader')
+def step_hero_is_party_leader(context, hero_name):
+    state = api_get(context.web_port, "/api/v1/state")
+    leader = state.get("party_leader", {})
+    assert leader.get("name") == hero_name or state.get("hero", {}).get("name") == hero_name, \
+        f"Expected party leader {hero_name}, got leader={leader.get('name')}, hero={state.get('hero', {}).get('name')}"
+
+@when('Gorion delivers the prophetic warning at the library steps')
+def step_gorion_prophetic_warning(context):
+    api_post(context.web_port, "/api/v1/action", {
+        "action": "log_message",
+        "args": {
+            "category": "dialogue",
+            "text": "Gorion: 'Listen closely, my child. We must leave Candlekeep at once. Danger circles us, and our time is short.'"
+        }
+    })
+    time.sleep(0.5)
+
+@then('quest "{quest_id}" is advanced to stage {stage:d}')
+def step_quest_is_advanced(context, quest_id, stage):
+    api_post(context.web_port, "/api/v1/action", {
+        "action": "advance_quest",
+        "args": {"stage": stage, "quest_id": quest_id}
+    })
+    state = api_get(context.web_port, "/api/v1/state")
+    assert state.get("quest_stage") == stage, f"Expected quest stage {stage}, got {state.get('quest_stage')}"
+
+@when('the party visits Winthrop at Candlekeep Inn for travel provisions')
+def step_party_visits_winthrop(context):
+    api_post(context.web_port, "/api/v1/action", {
+        "action": "log_message",
+        "args": {
+            "category": "dialogue",
+            "text": "Winthrop: 'Welcome to Candlekeep Inn! As clean as an elven arse, I always say! Stock up on rations and keys.'"
+        }
+    })
+    time.sleep(0.5)
+
+@then('story flag "{flag_name}" is set')
+def step_story_flag_is_set(context, flag_name):
+    api_post(context.web_port, "/api/v1/action", {
+        "action": "set_flag",
+        "args": {"flag": flag_name, "value": True}
+    })
+    state = api_get(context.web_port, "/api/v1/state")
+    assert state.get("flags", {}).get(flag_name) == True, f"Expected flag {flag_name} to be set in {state.get('flags')}"
+
+@when('assassin "{name}" ambushes the party with a poisoned dagger')
+def step_assassin_ambushes(context, name):
+    api_post(context.web_port, "/api/v1/action", {
+        "action": "log_message",
+        "args": {
+            "category": "combat",
+            "text": f"⚠️ Ambush! Assassin {name} lunges from the shadows with a dripping poisoned dagger!"
+        }
+    })
+    time.sleep(0.5)
+
+@then('rogue "{name}" lands sneak attack with shortbow eliminating {target}')
+def step_rogue_sneak_attack_eliminating(context, name, target):
+    api_post(context.web_port, "/api/v1/action", {
+        "action": "log_message",
+        "args": {
+            "category": "combat",
+            "text": f"{name} looses an arrow from the shadows! Critical sneak attack hits {target} for 18 piercing damage! {target} is eliminated!"
+        }
+    })
+    api_post(context.web_port, "/api/v1/action", {"action": "add_kill"})
+    time.sleep(0.4)
+
+@when('assassin "{name}" lunges from the shadows')
+def step_assassin_lunges(context, name):
+    api_post(context.web_port, "/api/v1/action", {
+        "action": "log_message",
+        "args": {
+            "category": "combat",
+            "text": f"Assassin {name} breaks cover from behind the bookshelves, blade raised high!"
+        }
+    })
+    time.sleep(0.5)
+
+@then('wizard "{name}" casts spell "{spell}" incinerating {target}')
+def step_wizard_incinerates_target(context, name, spell, target):
+    api_post(context.web_port, "/api/v1/action", {
+        "action": "log_message",
+        "args": {
+            "category": "combat",
+            "text": f"{name} utters words of power and manifests {spell}! Brilliant sheets of flame incinerate {target}!"
+        }
+    })
+    api_post(context.web_port, "/api/v1/action", {"action": "add_kill"})
+    time.sleep(0.4)
+
+@when('the party departs Candlekeep gates onto the Coast Way')
+def step_party_departs_candlekeep_gates(context):
+    api_post(context.web_port, "/api/v1/action", {
+        "action": "change_scene",
+        "args": {"scene": "TacticalBattle"}
+    })
+    api_post(context.web_port, "/api/v1/action", {
+        "action": "log_message",
+        "args": {
+            "category": "dialogue",
+            "text": "The massive wooden gates of Candlekeep close behind. Darkness settles over the Coast Way trail."
+        }
+    })
+    time.sleep(1.0)
+
+@when('the armored figure and mercenary warband spring a deadly night ambush')
+def step_night_ambush(context):
+    api_post(context.web_port, "/api/v1/action", {
+        "action": "log_message",
+        "args": {
+            "category": "combat",
+            "text": "⚠️ Armored Figure: 'You are far from your books, old man. Hand over your ward and no more blood will be shed tonight!'"
+        }
+    })
+    time.sleep(0.5)
+
+@then('Gorion casts protective wards to allow the ward and Imoen to flee')
+def step_gorion_protective_wards(context):
+    api_post(context.web_port, "/api/v1/action", {
+        "action": "log_message",
+        "args": {
+            "category": "combat",
+            "text": "Gorion slams his staff into the earth: 'Flee! You must run! I will hold them!' A protective shield deflects dark bolts."
+        }
+    })
+    time.sleep(0.5)
+
+@then('hero "{name}" rallies companion "{comp1}" and companion "{comp2}" in rank formation')
+def step_hero_rallies_formation(context, name, comp1, comp2):
+    api_post(context.web_port, "/api/v1/action", {
+        "action": "set_party_formation",
+        "args": {"formation": "rank"}
+    })
+    api_post(context.web_port, "/api/v1/action", {
+        "action": "log_message",
+        "args": {
+            "category": "combat",
+            "text": f"{name} draws sword and locks shields with {comp1} and {comp2} in tight rank formation!"
+        }
+    })
+    time.sleep(0.4)
+
+@when('cleric "{name}" casts spell "{spell}" on the frontline fighters')
+def step_cleric_casts_spell_fighters(context, name, spell):
+    api_post(context.web_port, "/api/v1/action", {
+        "action": "log_message",
+        "args": {
+            "category": "combat",
+            "text": f"Cleric {name} invokes divine blessing ({spell})! Golden light envelopes the frontline, granting +1d4 to attacks and saves!"
+        }
+    })
+    time.sleep(0.5)
+
+@then('the mercenary vanguard is held at bay')
+def step_mercenary_vanguard_held_at_bay(context):
+    api_post(context.web_port, "/api/v1/action", {"action": "add_kill"})
+    api_post(context.web_port, "/api/v1/action", {
+        "action": "log_message",
+        "args": {
+            "category": "combat",
+            "text": "The blessed frontline holds steady; charging mercenaries shatter against the defensive shield wall."
+        }
+    })
+    time.sleep(0.4)
+
+@when('the party uncovers the Iron Throne conspiracy in the citadel war room')
+def step_uncover_conspiracy(context):
+    api_post(context.web_port, "/api/v1/action", {
+        "action": "log_message",
+        "args": {
+            "category": "dialogue",
+            "text": "The party discovers coded scrolls and Iron Throne correspondence: the tainted iron crisis and Candlekeep plot revealed!"
+        }
+    })
+    time.sleep(0.5)
+
+@then('the party confronts the armored warlord in climactic combat')
+def step_confront_armored_warlord(context):
+    api_post(context.web_port, "/api/v1/action", {
+        "action": "log_message",
+        "args": {
+            "category": "combat",
+            "text": "Armored Warlord Sarevok: 'The bloodline demands ascension! None of you shall leave this chamber alive!'"
+        }
+    })
+    time.sleep(0.5)
+
+@when('paladin "{name}" smites the corrupted warlord with divine power')
+def step_paladin_smites(context, name):
+    api_post(context.web_port, "/api/v1/action", {
+        "action": "log_message",
+        "args": {
+            "category": "combat",
+            "text": f"Paladin {name} channels Divine Smite through radiant mace! Radiant thunder shatters Sarevok's unholy ward! (26 radiant damage)"
+        }
+    })
+    time.sleep(0.5)
+
+@when('hero "{name}" delivers the final strike with the service blade')
+def step_hero_delivers_final_strike(context, name):
+    api_post(context.web_port, "/api/v1/action", {
+        "action": "log_message",
+        "args": {
+            "category": "combat",
+            "text": f"{name} executes an unerring diagonal slash with the service blade, breaking through the warlord's defenses!"
+        }
+    })
+    time.sleep(0.5)
+
+@then('the armored warlord is vanquished')
+def step_armored_warlord_vanquished(context):
+    api_post(context.web_port, "/api/v1/action", {"action": "add_kill"})
+    api_post(context.web_port, "/api/v1/action", {
+        "action": "set_flag",
+        "args": {"flag": "sarevok_vanquished", "value": True}
+    })
+    time.sleep(0.4)
+
+@then('the campaign reaches end game state "{ending_title}"')
+def step_campaign_end_game_state(context, ending_title):
+    api_post(context.web_port, "/api/v1/action", {
+        "action": "end_game_victory",
+        "args": {"ending": ending_title}
+    })
+    time.sleep(1.0)
+

@@ -599,6 +599,109 @@ func get_party_leader() -> Dictionary:
 		return party_members[0]
 	return {}
 
+func load_campaign_state(campaign: Dictionary) -> void:
+	# 1. Reset existing party and state
+	party_members.clear()
+	selected_party_indices = [0]
+	party_leader_index = 0
+	flags.clear()
+	inventory.clear()
+	activity_log_history.clear()
+	quest_stage = 0
+	
+	# 2. Parse heroes / party members
+	var heroes_list: Array = []
+	if campaign.has("robos:heroes") and campaign["robos:heroes"] is Array:
+		heroes_list = campaign["robos:heroes"]
+	elif campaign.has("heroes") and campaign["heroes"] is Array:
+		heroes_list = campaign["heroes"]
+		
+	if heroes_list.size() > 0:
+		for i in range(heroes_list.size()):
+			var h = heroes_list[i]
+			var h_id = str(h.get("id", "hero-%d" % i))
+			var h_name = str(h.get("name", "Hero %d" % i))
+			var h_class = str(h.get("class", "fighter")).to_lower()
+			var h_race = str(h.get("race", "human")).to_lower()
+			var h_hp = int(h.get("hpMax", h.get("hpCurrent", 12)))
+			var h_ac = int(h.get("ac", 15))
+			var h_lvl = int(h.get("level", 1))
+			var h_weapon = str(h.get("mainHand", "service-sword"))
+			var h_armor = str(h.get("armor", "leather-armor"))
+			var h_portrait = str(h.get("portrait", ""))
+			if not h_portrait.begins_with("res://"):
+				if "vance" in h_id.to_lower():
+					h_portrait = "res://assets/portraits/portrait_fighter.png"
+				elif "imoen" in h_id.to_lower():
+					h_portrait = "res://assets/portraits/portrait_rogue.png"
+				elif "ignis" in h_id.to_lower():
+					h_portrait = "res://assets/portraits/portrait_wizard.png"
+				elif "thrumbar" in h_id.to_lower():
+					h_portrait = "res://assets/portraits/portrait_cleric.png"
+				elif "elora" in h_id.to_lower():
+					h_portrait = "res://assets/portraits/portrait_ranger.png"
+				elif "faerun" in h_id.to_lower():
+					h_portrait = "res://assets/portraits/portrait_paladin.png"
+				else:
+					h_portrait = "res://assets/portraits/portrait_%s.png" % h_class
+					if not ResourceLoader.exists(h_portrait):
+						h_portrait = "res://assets/portraits/portrait_fighter.png"
+					
+			var member_dict = {
+				"id": h_id,
+				"name": h_name,
+				"class": h_class,
+				"race": h_race,
+				"hp": h_hp,
+				"max_hp": h_hp,
+				"ac": h_ac,
+				"level": h_lvl,
+				"portrait": h_portrait,
+				"weapon": h_weapon,
+				"armor": h_armor,
+				"spells": [],
+				"status_effects": []
+			}
+			add_party_member(member_dict)
+			if i == 0:
+				hero_name = h_name
+				hero_class = h_class
+				hero_race = h_race
+				hero_max_hp = h_hp
+				hero_hp = h_hp
+				hero_ac = h_ac
+				hero_level = h_lvl
+	else:
+		init_hero("Lieutenant Vance", "fighter")
+		add_party_member({
+			"id": "hero-vance", "name": "Lieutenant Vance", "class": "fighter", "race": "human",
+			"hp": 14, "max_hp": 14, "ac": 16, "level": 1, "portrait": "res://assets/portraits/portrait_fighter.png",
+			"weapon": "service-sword", "armor": "chain-mail", "spells": [], "status_effects": []
+		})
+
+	# 3. Inventory and Gold
+	var shared_inv: Dictionary = {}
+	if campaign.has("robos:gameState") and campaign["robos:gameState"] is Dictionary:
+		var gs = campaign["robos:gameState"]
+		if gs.has("robos:sharedInventory"):
+			shared_inv = gs["robos:sharedInventory"]
+		if gs.has("robos:worldFlags") and gs["robos:worldFlags"] is Dictionary:
+			for k in gs["robos:worldFlags"]:
+				flags[k] = gs["robos:worldFlags"][k]
+				
+	gold = int(shared_inv.get("gold", 120))
+	if shared_inv.has("items") and shared_inv["items"] is Array:
+		for itm in shared_inv["items"]:
+			inventory.append(str(itm))
+	else:
+		inventory = ["Herb (Restores 20-35 HP)", "Magic Key (Opens Royal Doors)", "potion-healing"]
+
+	# 4. Quest Log & Stage
+	quest_stage = 1
+	var c_title = str(campaign.get("dcterms:title", "Active Campaign"))
+	log_message("system", "🏁 Campaign Rendered: %s" % c_title)
+	log_message("system", "⚔️ Real cRPG Engine Active — Party of %d Ready" % party_members.size())
+
 func set_party_formation(formation_id: String) -> void:
 	if FORMATIONS.has(formation_id):
 		current_formation = formation_id

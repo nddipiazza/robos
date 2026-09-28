@@ -394,6 +394,115 @@ function setupIpcHandlers() {
     }
   });
 
+  // 1c. Render Campaign as Real cRPG Game (Godot 4 Engine)
+  ipcMain.handle('campaigns:render-as-game', async (_event, { slug, data, headless = false }) => {
+    try {
+      if (!slug) throw new Error('Campaign slug is required');
+      const safeSlug = slug.toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+      const filePath = path.join(paths.campaignsDir, `${safeSlug}.jsonld`);
+
+      // 1. Ensure current campaign state is written to disk
+      if (data) {
+        const existing = fs.existsSync(filePath) ? JSON.parse(fs.readFileSync(filePath, 'utf8')) : {};
+        const formatted = {
+          ...existing,
+          ...data,
+          '@context': {
+            robos: 'https://robos.dev/ns/sdlc#',
+            dcterms: 'http://purl.org/dc/terms/',
+            schema: 'https://schema.org/',
+            xsd: 'http://www.w3.org/2001/XMLSchema#',
+            ...(existing['@context'] || {}),
+            ...(data['@context'] || {}),
+          },
+          '@id': `urn:robos:crpg:campaign:${safeSlug}`,
+          '@type': ['robos:CRPGCampaign', 'schema:CreativeWork'],
+          'dcterms:title': data.title || data['dcterms:title'] || existing['dcterms:title'] || safeSlug,
+          'robos:startingMap': data.startingMap || data['robos:startingMap'] || data.currentScene || existing['robos:startingMap'] || '',
+          'robos:heroes': data.heroes || data['robos:heroes'] || existing['robos:heroes'] || [],
+          'robos:gameState': data.gameState || data['robos:gameState'] || existing['robos:gameState'] || {},
+          'robos:storyFlow': data['robos:storyFlow'] || data.storyFlow || existing['robos:storyFlow'] || undefined,
+          'robos:startingSpawn': data['robos:startingSpawn'] || data.startingSpawn || existing['robos:startingSpawn'] || undefined,
+          'robos:mapConnections': data['robos:mapConnections'] || data.mapConnections || existing['robos:mapConnections'] || undefined,
+        };
+        fs.writeFileSync(filePath, JSON.stringify(formatted, null, 2) + '\n', 'utf8');
+      }
+
+      // 2. Also write active campaign JSON descriptor into data/v1/active_campaign.json
+      const dataV1Dir = path.join(paths.baseDir, 'data/v1');
+      if (!fs.existsSync(dataV1Dir)) {
+        fs.mkdirSync(dataV1Dir, { recursive: true });
+      }
+      const activeCampPath = path.join(dataV1Dir, 'active_campaign.json');
+      const activeData = fs.existsSync(filePath) ? JSON.parse(fs.readFileSync(filePath, 'utf8')) : (data || {});
+      fs.writeFileSync(activeCampPath, JSON.stringify(activeData, null, 2) + '\n', 'utf8');
+
+      // 3. Find Godot executable
+      const candidateBins = [
+        process.env.GODOT_BIN,
+        path.join(process.env.HOME || '', '.local/bin/godot4'),
+        path.join(process.env.HOME || '', 'apps/godot4'),
+        '/usr/bin/godot4',
+        '/usr/local/bin/godot4',
+        '/usr/bin/godot',
+      ].filter(Boolean);
+
+      let godotBin = null;
+      for (const bin of candidateBins) {
+        if (fs.existsSync(bin)) {
+          godotBin = bin;
+          break;
+        }
+      }
+
+      if (!godotBin) {
+        const playScript = path.join(paths.baseDir, 'play.sh');
+        if (fs.existsSync(playScript)) {
+          godotBin = playScript;
+        } else {
+          throw new Error('Godot 4 binary not found. Please install Godot 4 or set GODOT_BIN.');
+        }
+      }
+
+      // 4. Launch Godot process in Real cRPG mode
+      const spawnArgs = ['--path', `"${paths.baseDir}"`, '--campaign', `"${safeSlug}"`];
+      if (headless) {
+        spawnArgs.unshift('--headless');
+      }
+
+      const display = process.env.DISPLAY || ':0';
+      const childEnv = {
+        ...process.env,
+        DISPLAY: display,
+        CRPG_CAMPAIGN: safeSlug,
+        CRPG_MODE: 'real',
+      };
+
+      const launchCmd = `"${godotBin}" ${spawnArgs.join(' ')}`;
+      console.log(`[campaign:render-as-game] Launching: ${launchCmd} on DISPLAY=${display}`);
+
+      const child = exec(launchCmd, {
+        cwd: paths.baseDir,
+        env: childEnv,
+      });
+
+      console.log(`[campaign:render-as-game] Launched Real Game (PID: ${child.pid}) for '${safeSlug}'`);
+
+      return {
+        success: true,
+        pid: child.pid,
+        campaign: safeSlug,
+        title: activeData['dcterms:title'] || safeSlug,
+        startingMap: activeData['robos:startingMap'] || '',
+        mode: 'real',
+        display,
+      };
+    } catch (err) {
+      console.error('[campaign:render-as-game] Error:', err);
+      return { success: false, error: err.message };
+    }
+  });
+
   // 2b. Character & NPC APIs
   ipcMain.handle('characters:list', async () => {
     try {

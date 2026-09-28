@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('robos', {
   loadCampaign: (slug) => ipcRenderer.invoke('campaigns:load', slug),
   saveCampaign: (payload) => ipcRenderer.invoke('campaigns:save', payload),
   deleteCampaign: (slug) => ipcRenderer.invoke('campaigns:delete', slug),
+  renderCampaignAsGame: (payload) => ipcRenderer.invoke('campaigns:render-as-game', payload),
 
   // Character & NPC APIs
   listCharacters: () => ipcRenderer.invoke('characters:list'),

@@ -162,8 +162,52 @@ func _ready() -> void:
 			elif "--demo" in cmd_args:
 				auto_demo = 0
 
+			# Check if launched via "Render as Game" with --campaign or CRPG_CAMPAIGN
+			var camp_slug = OS.get_environment("CRPG_CAMPAIGN")
+			for i in range(cmd_args.size()):
+				var a = cmd_args[i]
+				if a == "--campaign" and i + 1 < cmd_args.size():
+					camp_slug = cmd_args[i + 1]
+				elif a.begins_with("--campaign="):
+					camp_slug = a.split("=")[1]
+			if camp_slug != "":
+				_load_and_embark_campaign.call_deferred(camp_slug)
+				return
+
 	if auto_demo >= 0:
 		_start_demo.call_deferred(auto_demo)
+
+func _load_and_embark_campaign(camp_slug: String) -> void:
+	var camp_file = "res://campaigns/%s.jsonld" % camp_slug
+	var camp_dict: Dictionary = {}
+	if FileAccess.file_exists(camp_file):
+		var f = FileAccess.open(camp_file, FileAccess.READ)
+		var parsed = JSON.parse_string(f.get_as_text())
+		if parsed is Dictionary:
+			camp_dict = parsed
+	elif FileAccess.file_exists("res://data/v1/active_campaign.json"):
+		var f = FileAccess.open("res://data/v1/active_campaign.json", FileAccess.READ)
+		var parsed = JSON.parse_string(f.get_as_text())
+		if parsed is Dictionary:
+			camp_dict = parsed
+
+	if camp_dict.size() > 0:
+		GameState.load_campaign_state(camp_dict)
+		var starting_scene = "Homestead"
+		var start_map = str(camp_dict.get("robos:startingMap", camp_dict.get("startingMap", ""))).to_lower()
+		if "candlekeep" in start_map or "homestead" in start_map:
+			starting_scene = "Homestead"
+		elif "tactical" in start_map or "siege" in start_map or "battle" in start_map:
+			starting_scene = "TacticalBattle"
+		elif "village" in start_map:
+			starting_scene = "VillageSquare"
+		elif "catacomb" in start_map or "crypt" in start_map:
+			starting_scene = "AncientCatacombs"
+		elif "whisper" in start_map or "forest" in start_map:
+			starting_scene = "WhisperingForest"
+		elif "keep" in start_map or "garrison" in start_map:
+			starting_scene = "GarrisonKeep"
+		get_tree().change_scene_to_file("res://scenes/%s.tscn" % starting_scene)
 
 func _start_demo(target_mode: int = 0) -> void:
 	if has_node("/root/DemoController"):

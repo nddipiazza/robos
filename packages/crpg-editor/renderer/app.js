@@ -563,6 +563,13 @@ function setupCampaignHandlers() {
   btnDelete?.addEventListener('click', deleteCurrentCampaign);
   btnScaffold?.addEventListener('click', scaffoldStandardParty);
 
+  const btnRenderGame = document.getElementById('btn-render-game');
+  const btnTreeRenderGame = document.getElementById('btn-tree-render-game');
+  const btnQuickRenderGame = document.getElementById('btn-quick-render-game');
+  btnRenderGame?.addEventListener('click', handleRenderCampaignAsGame);
+  btnTreeRenderGame?.addEventListener('click', handleRenderCampaignAsGame);
+  btnQuickRenderGame?.addEventListener('click', handleRenderCampaignAsGame);
+
   btnSelectAllMaps?.addEventListener('click', () => {
     document.querySelectorAll('#camp-maps-checklist .camp-map-chk').forEach(c => c.checked = true);
     updateCampaignMapsFromChecklist();
@@ -1421,6 +1428,37 @@ async function saveCurrentCampaign() {
   } catch (err) {
     console.error('Error saving campaign:', err);
     setStatus(`Error saving campaign: ${err.message}`);
+  }
+}
+
+async function handleRenderCampaignAsGame() {
+  if (!state.activeCampaignSlug || !state.activeCampaignData) {
+    alert('Please select or create an active campaign first.');
+    return;
+  }
+
+  // Ensure current campaign state is saved first
+  await saveCurrentCampaign();
+
+  const title = state.activeCampaignData['dcterms:title'] || state.activeCampaignSlug;
+  setStatus(`🎮 Compiling and launching real Godot cRPG engine for '${title}'...`);
+
+  try {
+    const res = await window.robos.renderCampaignAsGame({
+      slug: state.activeCampaignSlug,
+      data: state.activeCampaignData,
+      headless: false,
+    });
+
+    if (res.success) {
+      setStatus(`🎮 Real cRPG Game Active! PID: ${res.pid} | Campaign: ${res.title} | Map: ${res.startingMap} (Display ${res.display})`);
+    } else {
+      setStatus(`❌ Failed to launch real game: ${res.error}`);
+      alert(`Could not launch real cRPG game: ${res.error}`);
+    }
+  } catch (err) {
+    setStatus(`❌ Render as game error: ${err.message}`);
+    alert(`Render as game error: ${err.message}`);
   }
 }
 

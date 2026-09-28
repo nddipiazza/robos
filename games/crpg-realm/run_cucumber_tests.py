@@ -138,6 +138,10 @@ def main() -> int:
                     p = p.resolve()
                 elif (PROJECT_DIR / a).exists():
                     p = (PROJECT_DIR / a).resolve()
+                else:
+                    matches = list(FEATURES_DIR.rglob(a))
+                    if matches:
+                        p = matches[0].resolve()
             resolved_args.append(str(p))
         else:
             resolved_args.append(a)

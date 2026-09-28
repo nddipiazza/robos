@@ -163,6 +163,9 @@ def before_scenario(context, scenario):
     if context.engine_scenario:
         # Engine scenarios load their own map, state and directives in their Given steps
         pass
+    elif any("is rendered as game in its current state" in s for s in all_step_names) or any(t in tags for t in ["quest_tree", "custom_campaign"]):
+        # Scenario handles its own campaign load & state setup in Given steps
+        pass
     elif needs_character_creation:
         # Full playthrough or onboarding test: start at Character Creation
         try:
