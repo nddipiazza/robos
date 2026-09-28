@@ -1,0 +1,429 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:campaign:rescue-the-princess",
+  "@type": [
+    "robos:CRPGCampaign",
+    "schema:CreativeWork"
+  ],
+  "dcterms:title": "Rescue of Princess Jennifer",
+  "dcterms:description": "The sinister Dark Lord Malakor has abducted Princess Jennifer into his subterranean lair. King Alden commands Sir Caleb to claim the Hero's Sword from the Dragonclaw Forge, vanquish the Dark Lord, and bring the princess home.",
+  "robos:setting": "The High Kingdom of Eldoria",
+  "robos:ruleSet": "D&D 5e SRD",
+  "robos:difficulty": "Core Rules",
+  "robos:startingMap": "throne-room",
+  "robos:startingSpawn": {
+    "position": [
+      25,
+      20
+    ],
+    "facing": "north",
+    "entryDescription": "Sir Caleb kneels before King Alden upon the royal carpet in the Throne Room."
+  },
+  "robos:maps": [
+    "urn:robos:crpg:battle-map:throne-room",
+    "urn:robos:crpg:battle-map:main-castle",
+    "urn:robos:crpg:battle-map:world-overworld",
+    "urn:robos:crpg:battle-map:dark-lord-lair"
+  ],
+  "robos:mapConnections": [
+    {
+      "id": "conn-throne-to-castle",
+      "fromMap": "throne-room",
+      "fromObjectId": "castle-exit-door",
+      "toMap": "main-castle",
+      "toObjectId": "throne-entry-door",
+      "toSpawn": [
+        25,
+        8
+      ],
+      "toFacing": "south",
+      "transitionType": "door",
+      "bidirectional": true,
+      "requiredKey": null,
+      "label": "Double Doors to Castle Courtyard"
+    },
+    {
+      "id": "conn-castle-to-world",
+      "fromMap": "main-castle",
+      "fromObjectId": "castle-world-gate",
+      "toMap": "world-overworld",
+      "toObjectId": "castle-road-entry",
+      "toSpawn": [
+        15,
+        20
+      ],
+      "toFacing": "east",
+      "transitionType": "portal",
+      "bidirectional": true,
+      "requiredKey": null,
+      "requiredFlag": "obtained_heros_sword",
+      "label": "Castle Gate to World Realm (Requires Hero's Sword)"
+    },
+    {
+      "id": "conn-world-to-lair",
+      "fromMap": "world-overworld",
+      "fromObjectId": "dark-lair-portal",
+      "toMap": "dark-lord-lair",
+      "toObjectId": "lair-exit-portal",
+      "toSpawn": [
+        12,
+        25
+      ],
+      "toFacing": "east",
+      "transitionType": "portal",
+      "bidirectional": true,
+      "requiredKey": null,
+      "label": "Dark Cavern Maw into Lair"
+    }
+  ],
+  "robos:characters": [
+    "urn:robos:crpg:character:hero-sir-caleb",
+    "urn:robos:crpg:character:npc-king-alden",
+    "urn:robos:crpg:character:npc-blacksmith-torvald",
+    "urn:robos:crpg:character:creature-projection-goblin",
+    "urn:robos:crpg:character:boss-dark-lord-malakor",
+    "urn:robos:crpg:character:npc-princess-jennifer"
+  ],
+  "robos:heroes": [
+    {
+      "slug": "hero-sir-caleb",
+      "fileName": "hero-sir-caleb.jsonld",
+      "path": "/home/ndipiazza/source/robos/games/crpg-realm/characters/hero-sir-caleb.jsonld",
+      "id": "urn:robos:crpg:character:hero-sir-caleb",
+      "name": "Sir Caleb",
+      "characterType": "hero",
+      "role": "",
+      "class": "Fighter",
+      "subclass": "Champion",
+      "race": "Human",
+      "level": 1,
+      "hpMax": 16,
+      "hpCurrent": 16,
+      "armorClass": 14,
+      "speed": 30,
+      "stats": {
+        "str": 16,
+        "dex": 14,
+        "con": 15,
+        "int": 10,
+        "wis": 12,
+        "cha": 13
+      },
+      "portrait": "🛡️",
+      "alignment": "Lawful Good",
+      "equipped": {
+        "main_hand": "clothes",
+        "body": "leather-armor"
+      }
+    }
+  ],
+  "robos:storyFlow": {
+    "robos:rootNodeId": "node-kings-plea",
+    "robos:flowPages": [
+      {
+        "id": "page-1",
+        "name": "Act I: Royal Decree & Dragonclaw Forge",
+        "act": "Act I",
+        "summary": "King Alden tasks Sir Caleb with rescuing Princess Jennifer, and Caleb proves his valor at the Dragonclaw Forge."
+      },
+      {
+        "id": "page-2",
+        "name": "Act II: The Journey & Slaying Malakor",
+        "act": "Act II",
+        "summary": "Sir Caleb journeys across the World Realm, enters the Lair, and slays Dark Lord Malakor."
+      },
+      {
+        "id": "page-3",
+        "name": "Act III: The Triumphant Return",
+        "act": "Act III",
+        "summary": "Princess Jennifer is safely returned to the Throne Room, achieving total campaign victory."
+      }
+    ],
+    "robos:storyNodes": [
+      {
+        "id": "node-kings-plea",
+        "dcterms:title": "The King's Royal Decree",
+        "robos:nodeType": "game_start",
+        "robos:act": "Act I",
+        "robos:flowPage": "page-1",
+        "robos:location": "throne-room",
+        "robos:giver": "King Alden",
+        "robos:summary": "King Alden reveals that Princess Jennifer has been abducted by Dark Lord Malakor. He commands Sir Caleb to obtain the Hero's Sword from Master Torvald before entering the dungeon.",
+        "robos:choices": [
+          {
+            "id": "choice-accept-decree",
+            "label": "Accept King's decree and go to Dragonclaw Forge",
+            "targetNodeId": "node-dragonclaw-forge-trial"
+          }
+        ]
+      },
+      {
+        "id": "node-dragonclaw-forge-trial",
+        "dcterms:title": "Master Torvald's Crucible",
+        "robos:nodeType": "quest_stage",
+        "robos:act": "Act I",
+        "robos:flowPage": "page-1",
+        "robos:location": "main-castle",
+        "robos:giver": "Master Torvald",
+        "robos:summary": "Master Torvald at the Dragonclaw Forge requires proof of valor before yielding the rune-forged Hero's Sword. He conjures a Projection Goblin.",
+        "robos:choices": [
+          {
+            "id": "choice-fight-projection",
+            "label": "Draw steel and duel the astral projection",
+            "targetNodeId": "node-slay-projection-goblin"
+          }
+        ]
+      },
+      {
+        "id": "node-slay-projection-goblin",
+        "dcterms:title": "Trial of the Projection Goblin",
+        "robos:nodeType": "combat_trial",
+        "robos:act": "Act I",
+        "robos:flowPage": "page-1",
+        "robos:location": "main-castle",
+        "robos:giver": "Master Torvald",
+        "robos:summary": "Sir Caleb slays the weak Projection Goblin with ease. Master Torvald awards the legendary Hero's Sword and opens the castle gate.",
+        "robos:choices": [
+          {
+            "id": "choice-claim-sword",
+            "label": "Claim Hero's Sword and depart through the gate into the World",
+            "targetNodeId": "node-journey-through-world"
+          }
+        ]
+      },
+      {
+        "id": "node-journey-through-world",
+        "dcterms:title": "Wilderness Trek to the Cavern Maw",
+        "robos:nodeType": "quest_stage",
+        "robos:act": "Act II",
+        "robos:flowPage": "page-2",
+        "robos:location": "world-overworld",
+        "robos:summary": "Equipped with the Hero's Sword, Sir Caleb journeys across the wilderness and crags of the World Realm, discovering the entrance to the Dark Lord's Lair.",
+        "robos:choices": [
+          {
+            "id": "choice-enter-lair",
+            "label": "Descend into the darkness to confront Dark Lord Malakor",
+            "targetNodeId": "node-confront-dark-lord"
+          }
+        ]
+      },
+      {
+        "id": "node-confront-dark-lord",
+        "dcterms:title": "Slaying the Dark Lord",
+        "robos:nodeType": "combat_trial",
+        "robos:act": "Act II",
+        "robos:flowPage": "page-2",
+        "robos:location": "dark-lord-lair",
+        "robos:giver": "Dark Lord Malakor",
+        "robos:summary": "Sir Caleb battles Dark Lord Malakor. The Hero's Sword shatters Malakor's shadow ward and slays the Dark Lord, liberating Princess Jennifer from her cage.",
+        "robos:choices": [
+          {
+            "id": "choice-rescue-princess",
+            "label": "Unlock the gilded cage and escort Princess Jennifer home",
+            "targetNodeId": "node-triumphant-return"
+          }
+        ]
+      },
+      {
+        "id": "node-triumphant-return",
+        "dcterms:title": "Victory: The Kingdom Celebrates",
+        "robos:nodeType": "end_game_state",
+        "robos:act": "Act III",
+        "robos:flowPage": "page-3",
+        "robos:location": "throne-room",
+        "robos:giver": "King Alden",
+        "robos:summary": "Sir Caleb returns Princess Jennifer to King Alden in the Throne Room. King Alden declares Sir Caleb the Savior of the Realm, and victory is proclaimed across the land.",
+        "robos:endingType": "triumph",
+        "robos:victoryStatus": "victory",
+        "robos:epilogueText": "With Dark Lord Malakor vanquished and Princess Jennifer safely restored to the throne, the bells of the High Kingdom chime in celebration of Sir Caleb's valor."
+      }
+    ]
+  },
+  "robos:questLog": [
+    {
+      "id": "quest-rescue-princess",
+      "title": "Rescue of Princess Jennifer",
+      "type": "main",
+      "formType": "Quest",
+      "status": "active",
+      "giver": "King Alden",
+      "targetMap": "dark-lord-lair",
+      "description": "Princess Jennifer has been kidnapped by Dark Lord Malakor. Obtain the Hero's Sword from Dragonclaw Forge, slay the Dark Lord, and bring her home.",
+      "currentStage": 10,
+      "robos:questObjectives": [
+        {
+          "id": "obj-1",
+          "robos:objectiveText": "Speak with King Alden in the Throne Room",
+          "robos:status": "completed",
+          "robos:optional": false
+        },
+        {
+          "id": "obj-2",
+          "robos:objectiveText": "Obtain the Hero's Sword from Master Torvald at Dragonclaw Forge",
+          "robos:status": "active",
+          "robos:optional": false
+        },
+        {
+          "id": "obj-3",
+          "robos:objectiveText": "Journey through the World Realm to the Dark Lord's Lair",
+          "robos:status": "unstarted",
+          "robos:optional": false
+        },
+        {
+          "id": "obj-4",
+          "robos:objectiveText": "Slay Dark Lord Malakor and liberate Princess Jennifer",
+          "robos:status": "unstarted",
+          "robos:optional": false
+        },
+        {
+          "id": "obj-5",
+          "robos:objectiveText": "Escort Princess Jennifer back to King Alden in the Throne Room",
+          "robos:status": "unstarted",
+          "robos:optional": false
+        }
+      ],
+      "robos:questStages": [
+        { "stage": 0, "logEntry": "The Princess has been abducted." },
+        { "stage": 10, "logEntry": "King Alden has commanded you to seek the Hero's Sword at Dragonclaw Forge." },
+        { "stage": 20, "logEntry": "You passed Torvald's trial and received the Hero's Sword." },
+        { "stage": 30, "logEntry": "You breached the Dark Lord's Lair." },
+        { "stage": 40, "logEntry": "Dark Lord Malakor is slain. Princess Jennifer is freed!" },
+        { "stage": 50, "logEntry": "Princess Jennifer is safely returned to the Throne Room. Victory!" }
+      ],
+      "robos:questRewards": {
+        "xp": 1000,
+        "gold": 500,
+        "items": ["heros-sword"]
+      }
+    },
+    {
+      "id": "quest-dragonclaw-trial",
+      "title": "The Dragonclaw Trial",
+      "type": "side",
+      "formType": "Quest",
+      "status": "active",
+      "giver": "Master Torvald",
+      "targetMap": "main-castle",
+      "description": "Prove your martial prowess to Master Torvald by defeating his conjured Projection Goblin.",
+      "currentStage": 10,
+      "robos:questObjectives": [
+        {
+          "id": "trial-obj-1",
+          "robos:objectiveText": "Speak with Master Torvald at Dragonclaw Forge",
+          "robos:status": "completed",
+          "robos:optional": false
+        },
+        {
+          "id": "trial-obj-2",
+          "robos:objectiveText": "Defeat the Projection Goblin in single combat",
+          "robos:status": "active",
+          "robos:optional": false
+        },
+        {
+          "id": "trial-obj-3",
+          "robos:objectiveText": "Claim the Hero's Sword",
+          "robos:status": "unstarted",
+          "robos:optional": false
+        }
+      ],
+      "robos:questRewards": {
+        "xp": 150,
+        "gold": 50,
+        "items": ["heros-sword"]
+      }
+    }
+  ],
+  "robos:worldFlags": {
+    "princess_kidnapped": true,
+    "talked_to_king": true,
+    "obtained_heros_sword": false,
+    "defeated_projection_goblin": false,
+    "defeated_dark_lord": false,
+    "princess_rescued": false,
+    "campaign_won": false
+  },
+  "robos:gameState": {
+    "robos:currentScene": "throne-room",
+    "robos:activeParty": [
+      "hero-sir-caleb"
+    ],
+    "robos:partyLeaderIndex": 0,
+    "robos:partyFormation": "rank",
+    "robos:sharedInventory": {
+      "gold": 100,
+      "silver": 0,
+      "copper": 0,
+      "items": [
+        "potion-healing"
+      ]
+    },
+    "robos:questLog": [
+      {
+        "id": "quest-rescue-princess",
+        "title": "Rescue of Princess Jennifer",
+        "questType": "main",
+        "type": "main",
+        "category": "Main Questline",
+        "formType": "Quest",
+        "status": "active",
+        "stage": 10,
+        "giver": "King Alden",
+        "targetMap": "dark-lord-lair",
+        "description": "Princess Jennifer has been kidnapped by Dark Lord Malakor. Obtain the Hero's Sword from Dragonclaw Forge, slay the Dark Lord, and bring her home.",
+        "stages": [
+          { "stage": 0, "journalEntry": "The Princess has been abducted." },
+          { "stage": 10, "journalEntry": "King Alden has commanded you to seek the Hero's Sword at Dragonclaw Forge." },
+          { "stage": 20, "journalEntry": "You passed Torvald's trial and received the Hero's Sword." },
+          { "stage": 30, "journalEntry": "You breached the Dark Lord's Lair." },
+          { "stage": 40, "journalEntry": "Dark Lord Malakor is slain. Princess Jennifer is freed!" },
+          { "stage": 50, "journalEntry": "Princess Jennifer is safely returned to the Throne Room. Victory!" }
+        ],
+        "objectives": [
+          { "id": "obj-1", "text": "Speak with King Alden in the Throne Room", "status": "completed", "isOptional": false, "targetEntity": "king-alden" },
+          { "id": "obj-2", "text": "Obtain the Hero's Sword from Master Torvald at Dragonclaw Forge", "status": "active", "isOptional": false, "targetEntity": "blacksmith-torvald" },
+          { "id": "obj-3", "text": "Journey through the World Realm to the Dark Lord's Lair", "status": "unstarted", "isOptional": false, "targetEntity": "dark-lord-lair" },
+          { "id": "obj-4", "text": "Slay Dark Lord Malakor and liberate Princess Jennifer", "status": "unstarted", "isOptional": false, "targetEntity": "boss-dark-lord-malakor" },
+          { "id": "obj-5", "text": "Escort Princess Jennifer back to King Alden in the Throne Room", "status": "unstarted", "isOptional": false, "targetEntity": "king-alden" }
+        ],
+        "rewards": { "xp": 1000, "gold": 500, "items": ["heros-sword"] }
+      },
+      {
+        "id": "quest-dragonclaw-trial",
+        "title": "The Dragonclaw Blade Trial",
+        "questType": "side",
+        "type": "side",
+        "category": "Dragonclaw Forge Side Quests",
+        "formType": "Quest",
+        "status": "active",
+        "stage": 10,
+        "giver": "Master Torvald",
+        "targetMap": "main-castle",
+        "description": "Prove your martial prowess to Master Torvald by defeating his conjured Projection Goblin.",
+        "stages": [
+          { "stage": 10, "journalEntry": "Master Torvald demands a trial of arms before yielding the blade." },
+          { "stage": 20, "journalEntry": "Projection Goblin defeated in single combat. Blade claimed." }
+        ],
+        "objectives": [
+          { "id": "trial-obj-1", "text": "Speak with Master Torvald at Dragonclaw Forge", "status": "completed", "isOptional": false, "targetEntity": "blacksmith-torvald" },
+          { "id": "trial-obj-2", "text": "Defeat the Projection Goblin in single combat", "status": "active", "isOptional": false, "targetEntity": "projection-goblin" },
+          { "id": "trial-obj-3", "text": "Claim the Hero's Sword", "status": "unstarted", "isOptional": false, "targetEntity": "blacksmith-torvald" }
+        ],
+        "rewards": { "xp": 150, "gold": 50, "items": ["heros-sword"] }
+      }
+    ],
+    "robos:worldFlags": {
+      "princess_kidnapped": true,
+      "talked_to_king": true,
+      "obtained_heros_sword": false,
+      "defeated_projection_goblin": false,
+      "defeated_dark_lord": false,
+      "princess_rescued": false,
+      "campaign_won": false
+    }
+  }
+}

@@ -15,6 +15,9 @@ description: A 12-chapter guide to building your own levels, items, traps, enemi
 This guide teaches you to extend `games/crpg-realm` — a party-based isometric cRPG built with Godot 4.3 and GDScript — by adding your own locations, items, traps, enemies, spells and BDD tests. Each chapter explains how one system really works in the code, then walks you through a concrete change and the test that proves it.
 {: .fs-6 .fw-300 }
 
+> [!TIP]
+> **Prefer a visual campaign builder?** If you want to visually author campaigns, maps, D&D 5e characters, items, and story quest trees without writing GDScript by hand, follow the **[Campaign Editor Tutorial: Rescue the Princess]({{ '/projects/crpg-realm/campaign-editor-tutorial.html' | relative_url }})**.
+
 ## Table of contents
 {: .no_toc .text-delta }
 

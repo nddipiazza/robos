@@ -1,0 +1,96 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/"
+  },
+  "@id": "urn:robos:crpg:battle-map:dark-lord-lair",
+  "@type": [
+    "robos:CRPGBattleMap",
+    "schema:Place"
+  ],
+  "dcterms:title": "The Dark Lord's Lair",
+  "robos:slug": "dark-lord-lair",
+  "slug": "dark-lord-lair",
+  "robos:width": 60,
+  "robos:height": 50,
+  "robos:terrain": "dungeon",
+  "robos:backgroundImage": "res://assets/blockouts/dark-lord-lair.png",
+  "robos:backgroundOpacity": 1,
+  "robos:mapObjects": [
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "lair-exit-portal",
+      "robos:objectType": "passage",
+      "robos:shape": "rect",
+      "robos:position": [ 4, 22 ],
+      "robos:size": [ 4, 6 ],
+      "dcterms:title": "Lair Exit",
+      "id": "lair-exit-portal",
+      "type": "passage",
+      "shape": "rect",
+      "x": 4,
+      "y": 22,
+      "w": 4,
+      "h": 6,
+      "collision": "open",
+      "label": "Exit Portal to World Realm",
+      "robos:transition": {
+        "targetMap": "world-overworld",
+        "targetSpawn": [ 98, 52 ],
+        "targetFacing": "west",
+        "transitionType": "portal",
+        "requiredKey": null,
+        "requiredFlag": null
+      }
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "dark-lord-throne",
+      "robos:objectType": "altar",
+      "robos:shape": "rect",
+      "robos:position": [ 36, 18 ],
+      "robos:size": [ 12, 8 ],
+      "dcterms:title": "Obsidian Altar of Shadows",
+      "id": "dark-lord-throne",
+      "type": "altar",
+      "shape": "rect",
+      "x": 36,
+      "y": 18,
+      "w": 12,
+      "h": 8,
+      "collision": "blocked",
+      "label": "Dark Lord's Altar"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "boss-malakor-spawn",
+      "robos:objectType": "spawn",
+      "robos:shape": "circle",
+      "robos:position": [ 40, 26 ],
+      "robos:size": [ 5, 5 ],
+      "dcterms:title": "Dark Lord Malakor",
+      "id": "boss-malakor-spawn",
+      "type": "spawn",
+      "label": "Dark Lord Malakor (Boss)"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "princess-cage",
+      "robos:objectType": "chest",
+      "robos:shape": "rect",
+      "robos:position": [ 50, 8 ],
+      "robos:size": [ 6, 6 ],
+      "dcterms:title": "Princess Jennifer's Gilded Cage",
+      "id": "princess-cage",
+      "type": "chest",
+      "shape": "rect",
+      "x": 50,
+      "y": 8,
+      "w": 6,
+      "h": 6,
+      "collision": "blocked",
+      "label": "Prison Cage (Princess Jennifer)"
+    }
+  ]
+}

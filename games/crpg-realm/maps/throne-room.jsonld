@@ -1,0 +1,78 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/"
+  },
+  "@id": "urn:robos:crpg:battle-map:throne-room",
+  "@type": [
+    "robos:CRPGBattleMap",
+    "schema:Place"
+  ],
+  "dcterms:title": "Royal Throne Room",
+  "robos:slug": "throne-room",
+  "slug": "throne-room",
+  "robos:width": 50,
+  "robos:height": 40,
+  "robos:terrain": "stone",
+  "robos:backgroundImage": "res://assets/blockouts/throne-room.png",
+  "robos:backgroundOpacity": 1,
+  "robos:mapObjects": [
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "throne-dais",
+      "robos:objectType": "wall",
+      "robos:shape": "rect",
+      "robos:position": [ 20, 4 ],
+      "robos:size": [ 10, 6 ],
+      "dcterms:title": "King Alden's Golden Throne",
+      "id": "throne-dais",
+      "type": "wall",
+      "shape": "rect",
+      "x": 20,
+      "y": 4,
+      "w": 10,
+      "h": 6,
+      "collision": "blocked",
+      "label": "King Alden's Throne"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "npc-king-alden-spawn",
+      "robos:objectType": "spawn",
+      "robos:shape": "circle",
+      "robos:position": [ 25, 7 ],
+      "robos:size": [ 4, 4 ],
+      "dcterms:title": "King Alden",
+      "id": "npc-king-alden-spawn",
+      "type": "spawn",
+      "label": "King Alden (NPC)"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "castle-exit-door",
+      "robos:objectType": "passage",
+      "robos:shape": "rect",
+      "robos:position": [ 23, 36 ],
+      "robos:size": [ 4, 3 ],
+      "dcterms:title": "Castle Double Doors",
+      "id": "castle-exit-door",
+      "type": "passage",
+      "shape": "rect",
+      "x": 23,
+      "y": 36,
+      "w": 4,
+      "h": 3,
+      "collision": "open",
+      "label": "Door to Main Castle Courtyard",
+      "robos:transition": {
+        "targetMap": "main-castle",
+        "targetSpawn": [ 25, 8 ],
+        "targetFacing": "south",
+        "transitionType": "door",
+        "requiredKey": null,
+        "requiredFlag": null
+      }
+    }
+  ]
+}

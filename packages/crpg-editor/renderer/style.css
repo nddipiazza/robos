@@ -1174,14 +1174,15 @@ textarea {
 }
 
 .items-layout {
-  display: grid;
-  grid-template-columns: 320px 1fr;
+  display: flex;
   width: 100%;
   height: 100%;
   overflow: hidden;
 }
 
 .items-sidebar {
+  width: 320px;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--border-light);

@@ -1,0 +1,57 @@
+{
+  "@context": {
+    "robos": "urn:robos:",
+    "schema": "https://schema.org/",
+    "dcterms": "http://purl.org/dc/terms/"
+  },
+  "@id": "urn:robos:crpg:character:hero-sir-caleb",
+  "@type": [
+    "robos:CRPGCharacter",
+    "robos:CRPGHero",
+    "schema:Person"
+  ],
+  "dcterms:title": "Sir Caleb",
+  "robos:characterType": "hero",
+  "schema:name": "Sir Caleb",
+  "name": "Sir Caleb",
+  "slug": "hero-sir-caleb",
+  "characterType": "hero",
+  "class": "Fighter",
+  "subclass": "Champion",
+  "race": "Human",
+  "level": 1,
+  "robos:portrait": "🛡️",
+  "portrait": "🛡️",
+  "robos:alignment": "Lawful Good",
+  "alignment": "Lawful Good",
+  "robos:hpMax": 16,
+  "hpMax": 16,
+  "robos:hpCurrent": 16,
+  "hpCurrent": 16,
+  "robos:armorClass": 14,
+  "armorClass": 14,
+  "robos:speed": 30,
+  "speed": 30,
+  "robos:stats": {
+    "str": 16,
+    "dex": 14,
+    "con": 15,
+    "int": 10,
+    "wis": 12,
+    "cha": 13
+  },
+  "stats": {
+    "str": 16,
+    "dex": 14,
+    "con": 15,
+    "int": 10,
+    "wis": 12,
+    "cha": 13
+  },
+  "robos:backstory": "A valiant knight of the realm sworn to defend the throne and protect the innocent.",
+  "backstory": "A valiant knight of the realm sworn to defend the throne and protect the innocent.",
+  "robos:equipped": {
+    "main_hand": "clothes",
+    "body": "leather-armor"
+  }
+}

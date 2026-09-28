@@ -7409,10 +7409,9 @@ async function loadItemForm(slug) {
       return;
     }
 
+    const it = res.item || res.data;
     state.activeItemSlug = slug;
-    state.activeItemData = res.item;
-
-    const it = res.item;
+    state.activeItemData = it;
     document.getElementById('item-name').value = it['dcterms:title'] || it.title || it.name || '';
     document.getElementById('item-slug').value = it['dcterms:identifier'] || it.slug || slug;
     document.getElementById('item-icon').value = it['robos:icon'] || it.icon || '📦';

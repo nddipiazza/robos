@@ -1,0 +1,47 @@
+{
+  "@context": {
+    "robos": "urn:robos:",
+    "schema": "https://schema.org/",
+    "dcterms": "http://purl.org/dc/terms/"
+  },
+  "@id": "urn:robos:crpg:character:npc-king-alden",
+  "@type": [
+    "robos:CRPGCharacter",
+    "robos:CRPGNPC",
+    "schema:Person"
+  ],
+  "dcterms:title": "King Alden",
+  "robos:characterType": "npc",
+  "schema:name": "King Alden",
+  "name": "King Alden",
+  "slug": "npc-king-alden",
+  "characterType": "npc",
+  "robos:portrait": "👑",
+  "portrait": "👑",
+  "robos:alignment": "Lawful Good",
+  "alignment": "Lawful Good",
+  "robos:backstory": "Ruler of the realm, grief-stricken by the kidnapping of his daughter Princess Jennifer.",
+  "backstory": "Ruler of the realm, grief-stricken by the kidnapping of his daughter Princess Jennifer.",
+  "robos:npcRole": "king",
+  "role": "king",
+  "robos:interactionType": "talk",
+  "interactionType": "talk",
+  "robos:location": "throne-room",
+  "location": "throne-room",
+  "robos:facing": "down",
+  "facing": "down",
+  "robos:col": 12,
+  "col": 12,
+  "robos:row": 5,
+  "row": 5,
+  "robos:dialogue": [
+    "Sir Caleb! Darkness enshrouds our court. The sinister Dark Lord Malakor hath abducted Princess Jennifer into his subterranean lair!",
+    "Thou must venture forth, slay the Dark Lord, and bring my daughter home! But mortal iron cannot pierce his shadow armor.",
+    "Go first to the Dragonclaw Forge in the castle courtyard and speak with Master Torvald. Claim the Hero's Sword, then rid our realm of this evil!"
+  ],
+  "dialogue": [
+    "Sir Caleb! Darkness enshrouds our court. The sinister Dark Lord Malakor hath abducted Princess Jennifer into his subterranean lair!",
+    "Thou must venture forth, slay the Dark Lord, and bring my daughter home! But mortal iron cannot pierce his shadow armor.",
+    "Go first to the Dragonclaw Forge in the castle courtyard and speak with Master Torvald. Claim the Hero's Sword, then rid our realm of this evil!"
+  ]
+}

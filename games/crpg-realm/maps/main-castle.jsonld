@@ -1,0 +1,104 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/"
+  },
+  "@id": "urn:robos:crpg:battle-map:main-castle",
+  "@type": [
+    "robos:CRPGBattleMap",
+    "schema:Place"
+  ],
+  "dcterms:title": "Castle Courtyard & Dragonclaw Forge",
+  "robos:slug": "main-castle",
+  "slug": "main-castle",
+  "robos:width": 80,
+  "robos:height": 60,
+  "robos:terrain": "stone",
+  "robos:backgroundImage": "res://assets/blockouts/main-castle.png",
+  "robos:backgroundOpacity": 1,
+  "robos:mapObjects": [
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "throne-entry-door",
+      "robos:objectType": "passage",
+      "robos:shape": "rect",
+      "robos:position": [ 23, 2 ],
+      "robos:size": [ 4, 3 ],
+      "dcterms:title": "Door to Throne Room",
+      "id": "throne-entry-door",
+      "type": "passage",
+      "shape": "rect",
+      "x": 23,
+      "y": 2,
+      "w": 4,
+      "h": 3,
+      "collision": "open",
+      "label": "Stairs to Royal Throne Room",
+      "robos:transition": {
+        "targetMap": "throne-room",
+        "targetSpawn": [ 25, 33 ],
+        "targetFacing": "north",
+        "transitionType": "door",
+        "requiredKey": null,
+        "requiredFlag": null
+      }
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "dragonclaw-forge-anvil",
+      "robos:objectType": "altar",
+      "robos:shape": "rect",
+      "robos:position": [ 55, 18 ],
+      "robos:size": [ 8, 6 ],
+      "dcterms:title": "Dragonclaw Forge & Anvil",
+      "id": "dragonclaw-forge-anvil",
+      "type": "altar",
+      "shape": "rect",
+      "x": 55,
+      "y": 18,
+      "w": 8,
+      "h": 6,
+      "collision": "blocked",
+      "label": "Dragonclaw Forge & Anvil"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "npc-torvald-spawn",
+      "robos:objectType": "spawn",
+      "robos:shape": "circle",
+      "robos:position": [ 58, 26 ],
+      "robos:size": [ 4, 4 ],
+      "dcterms:title": "Master Torvald",
+      "id": "npc-torvald-spawn",
+      "type": "spawn",
+      "label": "Master Torvald (Blacksmith)"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "castle-world-gate",
+      "robos:objectType": "passage",
+      "robos:shape": "rect",
+      "robos:position": [ 38, 55 ],
+      "robos:size": [ 6, 4 ],
+      "dcterms:title": "Castle Outer Gate",
+      "id": "castle-world-gate",
+      "type": "passage",
+      "shape": "rect",
+      "x": 38,
+      "y": 55,
+      "w": 6,
+      "h": 4,
+      "collision": "open",
+      "label": "Gate to the World Realm",
+      "robos:transition": {
+        "targetMap": "world-overworld",
+        "targetSpawn": [ 15, 20 ],
+        "targetFacing": "east",
+        "transitionType": "portal",
+        "requiredKey": null,
+        "requiredFlag": "obtained_heros_sword"
+      }
+    }
+  ]
+}

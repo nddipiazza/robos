@@ -10,6 +10,9 @@ summary: "Unified cRPG game editor for campaign management, character & NPC auth
 
 RobOS cRPG Editor is the unified game development and authoring environment for `robos-crpg` (Realm of Heroes). It consolidates campaign orchestration, independent D&D 5e character and NPC authoring, party inventory management, and tactical 2.5D battle map level design into a cohesive, production-grade desktop application.
 
+[Step-by-Step Tutorial: Rescue the Princess]({{ '/projects/crpg-realm/campaign-editor-tutorial.html' | relative_url }}){: .btn .btn-primary .mr-2 }
+[Tactical cRPG Architecture]({{ '/projects/crpg-realm/' | relative_url }}){: .btn .mr-2 }
+
 ![RobOS cRPG Editor Architecture]({{ '/assets/images/architecture/crpg-editor-architecture.jpg' | relative_url }})
 
 ## Unified Architectural Model
@@ -111,3 +114,11 @@ Using only user inputs in the editor, the full Dragon Warrior 1 (USA) starting c
 | ![King Loric NPC Profile]({{ '/assets/images/screenshots/crpg-editor-king-loric.png' | relative_url }}) | ![Dragon Warrior 1 Campaign]({{ '/assets/images/screenshots/crpg-editor-campaign-dragonwarrior.png' | relative_url }}) |
 | **🎒 Equipped Gear & Purse** | **⚡ Editor Overview** |
 | ![Inventory and Equipment]({{ '/assets/images/screenshots/crpg-editor-inventory-equipped.png' | relative_url }}) | ![RobOS cRPG Editor Overview]({{ '/assets/images/screenshots/crpg-editor-overview.png' | relative_url }}) |
+
+---
+
+## Step-by-Step Campaign Creation Tutorial
+
+Looking for a complete end-to-end tutorial showing how to use the editor to create maps, D&D 5e characters, blacksmith trials, and Skyrim-style quests?
+
+Check out our comprehensive guide: **[Campaign Editor Tutorial: Rescue the Princess]({{ '/projects/crpg-realm/campaign-editor-tutorial.html' | relative_url }})**. It walks through every step from the King's royal decree in the Throne Room to the Dragonclaw Forge trial, Overworld wilderness, Dark Lord Malakor's dungeon lair, and triumphant victory.

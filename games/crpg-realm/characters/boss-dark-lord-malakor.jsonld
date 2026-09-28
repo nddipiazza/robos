@@ -1,0 +1,64 @@
+{
+  "@context": {
+    "robos": "urn:robos:",
+    "schema": "https://schema.org/",
+    "dcterms": "http://purl.org/dc/terms/"
+  },
+  "@id": "urn:robos:crpg:character:boss-dark-lord-malakor",
+  "@type": [
+    "robos:CRPGCharacter",
+    "robos:CRPGMonster",
+    "schema:Person"
+  ],
+  "dcterms:title": "Dark Lord Malakor",
+  "robos:characterType": "boss",
+  "schema:name": "Dark Lord Malakor",
+  "name": "Dark Lord Malakor",
+  "slug": "boss-dark-lord-malakor",
+  "characterType": "boss",
+  "class": "Warlock",
+  "subclass": "Shadow Lord",
+  "level": 3,
+  "robos:portrait": "😈",
+  "portrait": "😈",
+  "robos:alignment": "Chaotic Evil",
+  "alignment": "Chaotic Evil",
+  "robos:hpMax": 35,
+  "hpMax": 35,
+  "robos:hpCurrent": 35,
+  "hpCurrent": 35,
+  "robos:armorClass": 13,
+  "armorClass": 13,
+  "robos:speed": 30,
+  "speed": 30,
+  "robos:stats": {
+    "str": 14,
+    "dex": 12,
+    "con": 16,
+    "int": 14,
+    "wis": 12,
+    "cha": 16
+  },
+  "stats": {
+    "str": 14,
+    "dex": 12,
+    "con": 16,
+    "int": 14,
+    "wis": 12,
+    "cha": 16
+  },
+  "robos:backstory": "A sinister sorcerer and warlord who kidnapped Princess Jennifer to extort the realm.",
+  "backstory": "A sinister sorcerer and warlord who kidnapped Princess Jennifer to extort the realm.",
+  "robos:npcRole": "dark_lord",
+  "role": "dark_lord",
+  "robos:location": "dark-lord-lair",
+  "location": "dark-lord-lair",
+  "robos:dialogue": [
+    "You dare invade my sanctum, worm? The Princess is mine, and your kingdom shall burn to ashes!",
+    "No! The Dragonclaw runes... the Hero's Sword pierces my shadow ward! Aaaaargh!"
+  ],
+  "dialogue": [
+    "You dare invade my sanctum, worm? The Princess is mine, and your kingdom shall burn to ashes!",
+    "No! The Dragonclaw runes... the Hero's Sword pierces my shadow ward! Aaaaargh!"
+  ]
+}

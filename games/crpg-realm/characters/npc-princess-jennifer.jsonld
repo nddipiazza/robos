@@ -1,0 +1,39 @@
+{
+  "@context": {
+    "robos": "urn:robos:",
+    "schema": "https://schema.org/",
+    "dcterms": "http://purl.org/dc/terms/"
+  },
+  "@id": "urn:robos:crpg:character:npc-princess-jennifer",
+  "@type": [
+    "robos:CRPGCharacter",
+    "robos:CRPGNPC",
+    "schema:Person"
+  ],
+  "dcterms:title": "Princess Jennifer",
+  "robos:characterType": "npc",
+  "schema:name": "Princess Jennifer",
+  "name": "Princess Jennifer",
+  "slug": "npc-princess-jennifer",
+  "characterType": "npc",
+  "robos:portrait": "👸",
+  "portrait": "👸",
+  "robos:alignment": "Lawful Good",
+  "alignment": "Lawful Good",
+  "robos:backstory": "Beloved princess of the realm abducted by Dark Lord Malakor and rescued by Sir Caleb.",
+  "backstory": "Beloved princess of the realm abducted by Dark Lord Malakor and rescued by Sir Caleb.",
+  "robos:npcRole": "princess",
+  "role": "princess",
+  "robos:interactionType": "talk",
+  "interactionType": "talk",
+  "robos:location": "dark-lord-lair",
+  "location": "dark-lord-lair",
+  "robos:dialogue": [
+    "Oh, Sir Caleb! You defeated Malakor! You shattered my cage! Please, lead me home to my father King Alden in the castle throne room!",
+    "Father! Sir Caleb hath vanquished the Dark Lord and brought me safely home!"
+  ],
+  "dialogue": [
+    "Oh, Sir Caleb! You defeated Malakor! You shattered my cage! Please, lead me home to my father King Alden in the castle throne room!",
+    "Father! Sir Caleb hath vanquished the Dark Lord and brought me safely home!"
+  ]
+}

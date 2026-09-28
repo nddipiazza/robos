@@ -1,0 +1,74 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/"
+  },
+  "@id": "urn:robos:crpg:battle-map:world-overworld",
+  "@type": [
+    "robos:CRPGBattleMap",
+    "schema:Place"
+  ],
+  "dcterms:title": "Wilderness Realm & Dark Mountain Pass",
+  "robos:slug": "world-overworld",
+  "slug": "world-overworld",
+  "robos:width": 120,
+  "robos:height": 80,
+  "robos:terrain": "grass",
+  "robos:backgroundImage": "res://assets/blockouts/world-overworld.png",
+  "robos:backgroundOpacity": 1,
+  "robos:mapObjects": [
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "castle-road-entry",
+      "robos:objectType": "passage",
+      "robos:shape": "rect",
+      "robos:position": [ 10, 18 ],
+      "robos:size": [ 6, 6 ],
+      "dcterms:title": "Road to Castle Gate",
+      "id": "castle-road-entry",
+      "type": "passage",
+      "shape": "rect",
+      "x": 10,
+      "y": 18,
+      "w": 6,
+      "h": 6,
+      "collision": "open",
+      "label": "Road back to Castle Gate",
+      "robos:transition": {
+        "targetMap": "main-castle",
+        "targetSpawn": [ 40, 50 ],
+        "targetFacing": "north",
+        "transitionType": "portal",
+        "requiredKey": null,
+        "requiredFlag": null
+      }
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "dark-lair-portal",
+      "robos:objectType": "passage",
+      "robos:shape": "rect",
+      "robos:position": [ 105, 50 ],
+      "robos:size": [ 8, 8 ],
+      "dcterms:title": "Dark Cavern Maw",
+      "id": "dark-lair-portal",
+      "type": "passage",
+      "shape": "rect",
+      "x": 105,
+      "y": 50,
+      "w": 8,
+      "h": 8,
+      "collision": "open",
+      "label": "Maw to Dark Lord's Lair",
+      "robos:transition": {
+        "targetMap": "dark-lord-lair",
+        "targetSpawn": [ 12, 25 ],
+        "targetFacing": "east",
+        "transitionType": "portal",
+        "requiredKey": null,
+        "requiredFlag": null
+      }
+    }
+  ]
+}

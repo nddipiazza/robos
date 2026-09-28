@@ -867,7 +867,7 @@ function setupIpcHandlers() {
       }
       const raw = fs.readFileSync(filePath, 'utf8');
       const data = JSON.parse(raw);
-      return { success: true, slug, filePath, data };
+      return { success: true, slug, filePath, data, item: data };
     } catch (err) {
       return { success: false, error: err.message };
     }

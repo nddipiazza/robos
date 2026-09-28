@@ -1,0 +1,56 @@
+{
+  "@context": {
+    "robos": "urn:robos:",
+    "schema": "https://schema.org/",
+    "dcterms": "http://purl.org/dc/terms/"
+  },
+  "@id": "urn:robos:crpg:character:creature-projection-goblin",
+  "@type": [
+    "robos:CRPGCharacter",
+    "robos:CRPGMonster",
+    "schema:Person"
+  ],
+  "dcterms:title": "Projection Goblin",
+  "robos:characterType": "creature",
+  "schema:name": "Projection Goblin",
+  "name": "Projection Goblin",
+  "slug": "creature-projection-goblin",
+  "characterType": "creature",
+  "class": "Monstrosity",
+  "subclass": "Astral Projection",
+  "level": 1,
+  "robos:portrait": "👺",
+  "portrait": "👺",
+  "robos:alignment": "Chaotic Evil",
+  "alignment": "Chaotic Evil",
+  "robos:hpMax": 6,
+  "hpMax": 6,
+  "robos:hpCurrent": 6,
+  "hpCurrent": 6,
+  "robos:armorClass": 10,
+  "armorClass": 10,
+  "robos:speed": 25,
+  "speed": 25,
+  "robos:stats": {
+    "str": 8,
+    "dex": 12,
+    "con": 10,
+    "int": 6,
+    "wis": 8,
+    "cha": 6
+  },
+  "stats": {
+    "str": 8,
+    "dex": 12,
+    "con": 10,
+    "int": 6,
+    "wis": 8,
+    "cha": 6
+  },
+  "robos:backstory": "An ethereal training manifestation conjured by Master Torvald at the Dragonclaw Forge.",
+  "backstory": "An ethereal training manifestation conjured by Master Torvald at the Dragonclaw Forge.",
+  "robos:npcRole": "training_creature",
+  "role": "training_creature",
+  "robos:location": "main-castle",
+  "location": "main-castle"
+}

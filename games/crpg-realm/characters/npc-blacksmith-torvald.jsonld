@@ -1,0 +1,47 @@
+{
+  "@context": {
+    "robos": "urn:robos:",
+    "schema": "https://schema.org/",
+    "dcterms": "http://purl.org/dc/terms/"
+  },
+  "@id": "urn:robos:crpg:character:npc-blacksmith-torvald",
+  "@type": [
+    "robos:CRPGCharacter",
+    "robos:CRPGNPC",
+    "schema:Person"
+  ],
+  "dcterms:title": "Master Torvald",
+  "robos:characterType": "npc",
+  "schema:name": "Master Torvald",
+  "name": "Master Torvald",
+  "slug": "npc-blacksmith-torvald",
+  "characterType": "npc",
+  "robos:portrait": "⚒️",
+  "portrait": "⚒️",
+  "robos:alignment": "Neutral Good",
+  "alignment": "Neutral Good",
+  "robos:backstory": "Legendary blacksmith of the Dragonclaw Forge, keeper of ancient rune weapons.",
+  "backstory": "Legendary blacksmith of the Dragonclaw Forge, keeper of ancient rune weapons.",
+  "robos:npcRole": "blacksmith",
+  "role": "blacksmith",
+  "robos:interactionType": "talk",
+  "interactionType": "talk",
+  "robos:location": "main-castle",
+  "location": "main-castle",
+  "robos:facing": "left",
+  "facing": "left",
+  "robos:col": 18,
+  "col": 18,
+  "robos:row": 10,
+  "row": 10,
+  "robos:dialogue": [
+    "Hail, Sir Caleb! The King's messenger informed me of the dire news. You seek the Hero's Sword from the Dragonclaw Forge.",
+    "The blade is forged and imbued with dragonfire runes, but I cannot place it in hands that tremble! Prove your battle mettle against my astral creation!",
+    "Behold, the Projection Goblin! Strike it down, and the Hero's Sword is yours!"
+  ],
+  "dialogue": [
+    "Hail, Sir Caleb! The King's messenger informed me of the dire news. You seek the Hero's Sword from the Dragonclaw Forge.",
+    "The blade is forged and imbued with dragonfire runes, but I cannot place it in hands that tremble! Prove your battle mettle against my astral creation!",
+    "Behold, the Projection Goblin! Strike it down, and the Hero's Sword is yours!"
+  ]
+}

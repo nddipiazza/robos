@@ -16,6 +16,7 @@ description: "Realm of Heroes: a Godot 4.3 real-time-with-pause party cRPG built
 
 [Quick Start]({{ '/projects/crpg-realm/quick-start.html' | relative_url }}){: .btn .btn-primary .mr-2 }
 [Build your own game]({{ '/projects/crpg-realm/create-your-own-game.html' | relative_url }}){: .btn .mr-2 }
+[Campaign Editor Tutorial]({{ '/projects/crpg-realm/campaign-editor-tutorial.html' | relative_url }}){: .btn .mr-2 }
 [Source on GitHub](https://github.com/nddipiazza/robos/tree/main/games/crpg-realm){: .btn }
 
 ![Oakhaven Village Square]({{ '/assets/images/crpg-realm/village_square_overview.png' | relative_url }}){: .robos-zoomable-img }
@@ -35,6 +36,7 @@ description: "Realm of Heroes: a Godot 4.3 real-time-with-pause party cRPG built
 |:---|:---|
 | Run the game or the tests | [Quick Start]({{ '/projects/crpg-realm/quick-start.html' | relative_url }}) |
 | Learn the keys | [Controls]({{ '/projects/crpg-realm/controls.html' | relative_url }}) |
+| Create a campaign with the visual editor | [Campaign Editor Tutorial]({{ '/projects/crpg-realm/campaign-editor-tutorial.html' | relative_url }}), step-by-step "Rescue the Princess" guide |
 | Add scenes, items, traps, enemies or spells | [Creating Your Own Game]({{ '/projects/crpg-realm/create-your-own-game.html' | relative_url }}), a 12-chapter guide |
 | Understand how the test harness drives the game | [Infinity AI Agent & BDD Harness]({{ '/projects/crpg-realm/infinity-ai-agent-harness.html' | relative_url }}) |
 | Understand collision, pathfinding, NPCs and fog of war | [World Systems & Pathfinding]({{ '/projects/crpg-realm/world-systems-and-pathfinding.html' | relative_url }}) |

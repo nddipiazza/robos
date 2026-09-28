@@ -1,0 +1,39 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:item:heros-sword",
+  "@type": [
+    "robos:CRPGItem",
+    "schema:Product"
+  ],
+  "dcterms:title": "The Hero's Sword",
+  "schema:name": "The Hero's Sword",
+  "robos:slug": "heros-sword",
+  "slug": "heros-sword",
+  "robos:itemCategory": "weapon",
+  "itemCategory": "weapon",
+  "robos:equipSlot": "main_hand",
+  "equipSlot": "main_hand",
+  "robos:cost": 500,
+  "cost": 500,
+  "robos:weight": 4,
+  "weight": 4,
+  "robos:rarity": "rare",
+  "rarity": "rare",
+  "robos:icon": "⚔️",
+  "icon": "⚔️",
+  "robos:damageDice": "1d8",
+  "damageDice": "1d8",
+  "robos:damageType": "slashing",
+  "damageType": "slashing",
+  "robos:acBonus": 0,
+  "acBonus": 0,
+  "robos:effect": "+3 ATK, Dragonclaw Rune",
+  "effect": "+3 ATK, Dragonclaw Rune",
+  "dcterms:description": "A legendary blade forged in dragonfire at the Dragonclaw Forge. Granted only to champions who prove their courage.",
+  "description": "A legendary blade forged in dragonfire at the Dragonclaw Forge. Granted only to champions who prove their courage."
+}
