@@ -419,3 +419,8 @@ button:focus-visible, select:focus-visible { outline: 2px solid var(--cyan-prima
 .device-panel button:disabled { opacity: .5; cursor: default; }
 #btn-save-device { background: var(--cyan-primary); color: #0d1117; font-weight: 600; }
 #device-status[data-error="true"] { color: #ff7b72; }
+
+.microphone-preview { margin-top: 18px; }
+#microphone-wave { display: block; width: 100%; height: 90px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 6px; }
+.microphone-preview p { margin: 8px 0; font-size: 12px; }
+#btn-test-device[aria-pressed="true"] { border-color: var(--cyan-primary); color: var(--cyan-primary); }

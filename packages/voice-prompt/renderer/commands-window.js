@@ -185,6 +185,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const settingsTabs = [...document.querySelectorAll('[role="tab"]')];
   function selectTab(tab) {
+    if (tab.id !== 'tab-device') stopMicrophoneTest();
     settingsTabs.forEach(button => {
       const selected = button === tab;
       button.setAttribute('aria-selected', String(selected));
@@ -211,11 +212,68 @@ document.addEventListener('DOMContentLoaded', async () => {
   const refreshDevices = document.getElementById('btn-refresh-devices');
   const saveDevice = document.getElementById('btn-save-device');
   const deviceStatus = document.getElementById('device-status');
+  const testDevice = document.getElementById('btn-test-device');
+  const testStatus = document.getElementById('microphone-test-status');
+  const wave = document.getElementById('microphone-wave');
+  const ctx = wave.getContext('2d');
+  let testing = false;
+  let testGeneration = 0;
+  function drawWave(samples = []) {
+    ctx.clearRect(0, 0, wave.width, wave.height);
+    ctx.strokeStyle = '#00bcd4';
+    ctx.beginPath();
+    ctx.moveTo(0, 45); ctx.lineTo(wave.width, 45);
+    samples.forEach((sample, index) => {
+      const height = Math.min(42, sample * 180);
+      const x = (index + .5) * wave.width / samples.length;
+      ctx.moveTo(x, 45 - height); ctx.lineTo(x, 45 + height);
+    });
+    ctx.stroke();
+  }
+  function resetTest(text = 'Microphone test stopped.') {
+    testing = false;
+    testDevice.textContent = 'Test microphone';
+    testDevice.setAttribute('aria-pressed', 'false');
+    testStatus.textContent = text;
+    drawWave();
+  }
+  function stopMicrophoneTest() {
+    testGeneration++;
+    if (testing) window.voiceCommandsApi.stopMicrophoneTest().catch(() => {});
+    resetTest();
+  }
+  window.voiceCommandsApi.onMicrophoneTestData(data => {
+    if (data.generation !== testGeneration) return;
+    if (data.error) { resetTest(`Could not test microphone: ${data.error}`); return; }
+    if (data.stopped) { resetTest(); return; }
+    if (!testing) return;
+    drawWave(data.samples);
+    wave.dataset.frames = String(Number(wave.dataset.frames || 0) + 1);
+    testStatus.textContent = data.level > .005 ? 'Microphone is receiving sound.' : 'Listening — speak into your microphone.';
+  });
+  testDevice.addEventListener('click', async () => {
+    if (testing) { stopMicrophoneTest(); return; }
+    const generation = ++testGeneration;
+    testing = true;
+    testDevice.textContent = 'Stop test';
+    testDevice.setAttribute('aria-pressed', 'true');
+    testStatus.textContent = 'Starting microphone test… (stops automatically after 30 seconds)';
+    wave.dataset.frames = '0';
+    try {
+      await window.voiceCommandsApi.startMicrophoneTest(deviceSelect.value, generation);
+    } catch (error) {
+      if (generation === testGeneration) resetTest(`Could not test microphone: ${error.message}`);
+    }
+  });
+  window.addEventListener('beforeunload', stopMicrophoneTest);
+  drawWave();
   function deviceMessage(text, error = false) {
     deviceStatus.textContent = text;
     deviceStatus.dataset.error = String(error);
   }
   async function loadDevices() {
+    stopMicrophoneTest();
+    testDevice.disabled = true;
     deviceSelect.disabled = saveDevice.disabled = refreshDevices.disabled = true;
     deviceMessage('Loading microphones…');
     try {
@@ -235,7 +293,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       deviceSelect.value = selected;
       deviceSelect.disabled = false;
-      saveDevice.disabled = !available;
+      saveDevice.disabled = testDevice.disabled = !available;
       deviceMessage(available ? '' : 'The saved microphone is unavailable. Choose another input or refresh.', !available);
     } catch (error) {
       deviceMessage(`Could not load microphones: ${error.message}`, true);
@@ -244,6 +302,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
   deviceSelect.addEventListener('change', () => {
+    stopMicrophoneTest();
+    testDevice.disabled = false;
     saveDevice.disabled = false;
     deviceMessage('Selection not saved yet.');
   });

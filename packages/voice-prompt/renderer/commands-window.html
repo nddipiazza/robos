@@ -43,6 +43,11 @@
       </div>
       <p>Changes apply to the next recording. Stop dictation before switching microphones.</p>
       <button id="btn-save-device" type="button" disabled>Save device</button>
+      <button id="btn-test-device" type="button" disabled aria-pressed="false">Test microphone</button>
+      <div class="microphone-preview">
+        <canvas id="microphone-wave" width="640" height="90" role="img" aria-label="Live microphone waveform"></canvas>
+        <p id="microphone-test-status" role="status">Test your selected microphone and speak to see the waveform. Audio is not saved.</p>
+      </div>
       <p id="device-status" role="status" aria-live="polite"></p>
     </section>
     <section id="panel-commands" class="commands-panel" role="tabpanel" aria-labelledby="tab-commands" hidden>

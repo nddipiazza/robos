@@ -1,5 +1,5 @@
 'use strict';
-// Real Electron UI + IPC + device enumeration; isolated preferences, no microphone capture.
+// Real Electron UI + IPC + device enumeration; isolated preferences and a brief real microphone waveform preview.
 // Run with NODE_PATH pointing to playwright-core if robos-test dependencies are not installed.
 const { _electron: electron } = require('playwright-core');
 const assert = require('node:assert/strict');
@@ -53,8 +53,18 @@ async function step(page, selector, text, action) {
     assert.equal(JSON.parse(fs.readFileSync(path.join(config, 'voice-prompt-prefs.json'))).configuredDevice, device);
     const status = await fetch('http://127.0.0.1:19289/api/status').then(r => r.json());
     assert.equal(status.configuredDevice, device);
+    await step(page, '#btn-test-device', 'Test the selected microphone and view its live waveform.', () => page.click('#btn-test-device'));
+    await page.waitForFunction(() => Number(document.querySelector('#microphone-wave').dataset.frames) > 2);
+    assert.equal(await page.locator('#btn-test-device').getAttribute('aria-pressed'), 'true');
     await page.screenshot({ path: path.join(output, 'device.png') });
+    await step(page, '#btn-test-device', 'Stop the microphone preview.', () => page.click('#btn-test-device'));
+    assert.equal(await page.locator('#btn-test-device').getAttribute('aria-pressed'), 'false');
+    const frames = await page.locator('#microphone-wave').getAttribute('data-frames');
+    await page.waitForTimeout(300);
+    assert.equal(await page.locator('#microphone-wave').getAttribute('data-frames'), frames);
+    await page.click('#btn-test-device');
     await step(page, '#tab-commands', 'RobOS Commands is the second settings tab.', () => page.click('#tab-commands'));
+    assert.equal(await page.locator('#btn-test-device').getAttribute('aria-pressed'), 'false');
     await page.locator('.command-card').first().waitFor();
     await step(page, '#commands-search-input', 'Search the registered RobOS commands.', () => page.fill('#commands-search-input', 'voice'));
     assert(await page.locator('.command-card').count() > 0);
