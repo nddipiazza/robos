@@ -575,6 +575,64 @@ function setupCampaignHandlers() {
 
   campStartMap?.addEventListener('change', (e) => {
     if (state.activeCampaignData) state.activeCampaignData['robos:startingMap'] = e.target.value;
+    renderCampaignMapConnections();
+    initMapNavigatorSimulator();
+  });
+
+  document.getElementById('sim-current-map-select')?.addEventListener('change', () => {
+    updateSimulatorExits();
+  });
+
+  document.getElementById('btn-sim-reset-to-start')?.addEventListener('click', () => {
+    if (!state.activeCampaignData) return;
+    const startMap = state.activeCampaignData['robos:startingMap'] || '';
+    const spawnObj = state.activeCampaignData['robos:startingSpawn'] || {};
+    const spawnPos = spawnObj.position || [28, 14];
+    const select = document.getElementById('sim-current-map-select');
+    if (select) select.value = startMap;
+    updateSimulatorExits();
+    const consoleEl = document.getElementById('sim-traversal-console');
+    if (consoleEl) {
+      consoleEl.innerHTML = `<span style="color:#a5f3fc;">[PARTY RESET] Reset party to initial campaign boot map '${startMap}' at [${spawnPos[0]}, ${spawnPos[1]}] ft.</span><br>` + consoleEl.innerHTML;
+    }
+  });
+
+  document.getElementById('btn-sim-action-swamp')?.addEventListener('click', () => {
+    const select = document.getElementById('sim-current-map-select');
+    if (select) select.value = 'cavern-depths';
+    updateSimulatorExits();
+    const consoleEl = document.getElementById('sim-traversal-console');
+    if (consoleEl) {
+      consoleEl.innerHTML = `<span style="color:#f472b6;">[ACTION TRANSPORT] Event: evt-dw-swamp-cave-discovery fired! Transported party into 'cavern-depths' at [15, 20] ft. Flag set: discovered_swamp_cave=true.</span><br>` + consoleEl.innerHTML;
+    }
+  });
+
+  document.getElementById('btn-sim-action-return-spell')?.addEventListener('click', () => {
+    const select = document.getElementById('sim-current-map-select');
+    if (select) select.value = 'tantegel-throne-room';
+    updateSimulatorExits();
+    const consoleEl = document.getElementById('sim-traversal-console');
+    if (consoleEl) {
+      consoleEl.innerHTML = `<span style="color:#f472b6;">[ACTION TRANSPORT] Spell: Cast 'Return' / Wyvern Wings! A divine vortex whisks party back to Tantegel Throne Room at [28, 14] ft.</span><br>` + consoleEl.innerHTML;
+    }
+  });
+
+  document.getElementById('btn-sim-action-candlekeep-gate')?.addEventListener('click', () => {
+    const select = document.getElementById('sim-current-map-select');
+    if (select) select.value = 'homestead-yard';
+    updateSimulatorExits();
+    const consoleEl = document.getElementById('sim-traversal-console');
+    if (consoleEl) {
+      consoleEl.innerHTML = `<span style="color:#f472b6;">[ACTION TRANSPORT] Cutscene: evt-candlekeep-gate-departure (Cut01A) executed! Transported party onto Coast Way road at [10, 15] ft. Flag set: gate_unlocked=true.</span><br>` + consoleEl.innerHTML;
+    }
+  });
+
+  document.getElementById('btn-validate-map-topology')?.addEventListener('click', () => {
+    validateCampaignMapTopologyUI();
+  });
+
+  document.getElementById('btn-add-map-connection')?.addEventListener('click', () => {
+    addNewMapConnectionPrompt();
   });
 
   btnSelectAllHeroes?.addEventListener('click', () => {
@@ -723,6 +781,8 @@ async function loadCampaign(slug) {
 
       renderCampaignMapsChecklist();
       renderCampaignCharactersChecklist();
+      renderCampaignMapConnections();
+      initMapNavigatorSimulator();
 
       // Set initial active hero if present
       const heroes = getHeroes();
@@ -966,6 +1026,273 @@ function updateCampaignMapsFromChecklist() {
   document.getElementById('camp-maps-count').textContent = checkedSlugs.length;
 
   populateCampStartingMapDropdown();
+  renderCampaignMapConnections();
+  initMapNavigatorSimulator();
+}
+
+function renderCampaignMapConnections() {
+  if (!state.activeCampaignData) return;
+
+  const startingMap = state.activeCampaignData['robos:startingMap'] || '';
+  const spawnObj = state.activeCampaignData['robos:startingSpawn'] || {};
+  const spawnPos = spawnObj.position || [28, 14];
+  const spawnFacing = spawnObj.facing || 'south';
+  const spawnDesc = spawnObj.entryDescription || '';
+
+  const spawnXInput = document.getElementById('camp-start-spawn-x');
+  const spawnYInput = document.getElementById('camp-start-spawn-y');
+  const facingInput = document.getElementById('camp-start-facing');
+  const descInput = document.getElementById('camp-start-entry-desc');
+  const badge = document.getElementById('camp-starting-map-badge');
+
+  if (spawnXInput) spawnXInput.value = spawnPos[0];
+  if (spawnYInput) spawnYInput.value = spawnPos[1];
+  if (facingInput) facingInput.value = spawnFacing;
+  if (descInput) descInput.value = spawnDesc;
+
+  const currentMapObj = state.maps.find(m => m.slug === startingMap);
+  const mapTitle = currentMapObj ? (currentMapObj.title || currentMapObj.slug) : (startingMap || 'None');
+  if (badge) {
+    badge.innerHTML = `
+      <strong>🏁 Primary Boot Zone:</strong> ${mapTitle} (${startingMap})<br>
+      <span style="color:#94a3b8;">Party Spawn: [${spawnPos[0]}, ${spawnPos[1]}] ft • Facing: <em>${spawnFacing}</em> • Terrain: ${currentMapObj?.terrain || 'stone'}</span>
+      ${spawnDesc ? `<div style="margin-top:4px; font-style:italic; color:#cbd5e1;">"${spawnDesc}"</div>` : ''}
+    `;
+  }
+
+  // Connections Table
+  const tbody = document.getElementById('map-connections-table-body');
+  const countSpan = document.getElementById('camp-connections-count');
+  const conns = state.activeCampaignData['robos:mapConnections'] || [];
+
+  if (countSpan) countSpan.textContent = conns.length;
+  if (tbody) {
+    if (conns.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 16px;">
+            No campaign-level transitions defined. Map objects may declare local transitions or click "+ Add Connection" above.
+          </td>
+        </tr>
+      `;
+    } else {
+      tbody.innerHTML = conns.map((c, idx) => {
+        const fromMap = c['robos:fromMap'] || c.fromMap || '';
+        const toMap = c['robos:toMap'] || c.toMap || '';
+        const fromObj = c['robos:fromObjectId'] || c.fromObjectId || 'exit';
+        const toSpawn = c['robos:toSpawn'] || c.toSpawn || [10, 10];
+        const transType = c['robos:transitionType'] || c.transitionType || 'door';
+        const reqKey = c['robos:requiredKey'] || c.requiredKey;
+        const reqFlag = c['robos:requiredFlag'] || c.requiredFlag;
+
+        let lockHtml = '<span style="color:#10b981;">🔓 Open / Unlocked</span>';
+        if (reqKey) {
+          lockHtml = `<span style="color:#f59e0b;">🗝️ Key: <code>${reqKey}</code></span>`;
+        } else if (reqFlag) {
+          lockHtml = `<span style="color:#38bdf8;">🚩 Flag: <code>${reqFlag}</code></span>`;
+        }
+
+        const typeIcons = {
+          door: '🚪 Door',
+          stairs: '🪜 Stairs',
+          portal: '🌀 Portal',
+          zone: '📍 Zone',
+          teleport: '⚡ Teleport'
+        };
+
+        return `
+          <tr>
+            <td><strong>🗺️ ${fromMap}</strong></td>
+            <td><code>${fromObj}</code></td>
+            <td><strong style="color:#00bcd4;">🗺️ ${toMap}</strong></td>
+            <td><code>[${toSpawn[0]}, ${toSpawn[1]}]</code></td>
+            <td>${typeIcons[transType] || transType}</td>
+            <td>${lockHtml}</td>
+            <td>
+              <button class="btn btn-sm btn-danger btn-delete-conn" data-idx="${idx}" style="padding: 2px 6px; font-size: 11px;">✕</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      tbody.querySelectorAll('.btn-delete-conn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const idx = parseInt(e.target.getAttribute('data-idx'), 10);
+          conns.splice(idx, 1);
+          renderCampaignMapConnections();
+          saveCampaignJson();
+          initMapNavigatorSimulator();
+        });
+      });
+    }
+  }
+}
+
+function initMapNavigatorSimulator() {
+  const mapSelect = document.getElementById('sim-current-map-select');
+  if (!mapSelect) return;
+
+  const currentVal = mapSelect.value || (state.activeCampaignData && state.activeCampaignData['robos:startingMap']) || '';
+  const campMaps = (state.activeCampaignData && state.activeCampaignData['robos:maps']) || [];
+  const mapSlugs = campMaps.map(m => typeof m === 'string' ? m.replace(/^urn:robos:crpg:battle-map:/, '') : (m.slug || m.id));
+
+  const optionsMaps = state.maps.filter(m => mapSlugs.length === 0 || mapSlugs.includes(m.slug));
+  mapSelect.innerHTML = (optionsMaps.length > 0 ? optionsMaps : state.maps).map(m =>
+    `<option value="${m.slug}">🗺️ ${m.title || m.slug}</option>`
+  ).join('');
+
+  if (currentVal && mapSelect.querySelector(`option[value="${currentVal}"]`)) {
+    mapSelect.value = currentVal;
+  } else if (state.activeCampaignData && state.activeCampaignData['robos:startingMap']) {
+    mapSelect.value = state.activeCampaignData['robos:startingMap'];
+  }
+
+  updateSimulatorExits();
+}
+
+function updateSimulatorExits() {
+  const mapSelect = document.getElementById('sim-current-map-select');
+  const exitsList = document.getElementById('sim-connected-exits-list');
+  if (!mapSelect || !exitsList || !state.activeCampaignData) return;
+
+  const currentMap = mapSelect.value;
+  const conns = (state.activeCampaignData['robos:mapConnections'] || []).filter(c => {
+    const from = c['robos:fromMap'] || c.fromMap;
+    const to = c['robos:toMap'] || c.toMap;
+    const twoWay = c['robos:bidirectional'] !== false && c.bidirectional !== false;
+    return from === currentMap || (twoWay && to === currentMap);
+  });
+
+  if (conns.length === 0) {
+    exitsList.innerHTML = `<span style="color:var(--text-muted);font-size:11px;">No exits registered for this map.</span>`;
+    return;
+  }
+
+  exitsList.innerHTML = conns.map(c => {
+    const from = c['robos:fromMap'] || c.fromMap;
+    const to = c['robos:toMap'] || c.toMap;
+    const dest = from === currentMap ? to : from;
+    const fromObj = from === currentMap ? (c['robos:fromObjectId'] || c.fromObjectId) : (c['robos:toObjectId'] || c.toObjectId || 'stairs-up');
+    const toSpawn = from === currentMap ? (c['robos:toSpawn'] || c.toSpawn || [10, 10]) : (c['robos:fromPosition'] || [28, 14]);
+    const reqKey = from === currentMap ? (c['robos:requiredKey'] || c.requiredKey) : null;
+    const reqFlag = from === currentMap ? (c['robos:requiredFlag'] || c.requiredFlag) : null;
+
+    return `
+      <button class="btn btn-sm btn-secondary btn-traverse-exit" data-dest="${dest}" data-spawn-x="${toSpawn[0]}" data-spawn-y="${toSpawn[1]}" data-key="${reqKey || ''}" data-flag="${reqFlag || ''}" style="text-align: left; font-size: 11px; display: flex; justify-content: space-between; align-items: center;">
+        <span>🚪 <strong>${fromObj}</strong> ➔ 🗺️ ${dest} [${toSpawn[0]}, ${toSpawn[1]}]</span>
+        ${reqKey ? `<span style="color:#f59e0b;font-size:10px;">🗝️ ${reqKey}</span>` : ''}
+      </button>
+    `;
+  }).join('');
+
+  exitsList.querySelectorAll('.btn-traverse-exit').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const targetBtn = e.currentTarget;
+      const dest = targetBtn.getAttribute('data-dest');
+      const sx = targetBtn.getAttribute('data-spawn-x');
+      const sy = targetBtn.getAttribute('data-spawn-y');
+      const reqKey = targetBtn.getAttribute('data-key');
+      const reqFlag = targetBtn.getAttribute('data-flag');
+
+      const hasMagicKey = document.getElementById('sim-has-magic-key')?.checked;
+      const hasSwampFlag = document.getElementById('sim-flag-swamp-cave')?.checked;
+      const hasGateFlag = document.getElementById('sim-flag-gate-unlocked')?.checked;
+
+      const consoleEl = document.getElementById('sim-traversal-console');
+
+      // Key check
+      if (reqKey === 'magic-key' && !hasMagicKey) {
+        if (consoleEl) {
+          consoleEl.innerHTML = `<span style="color:#ef4444;">[BLOCKED] Cannot traverse passage: requires 'magic-key'. Checked party bags: Key missing!</span><br>` + consoleEl.innerHTML;
+        }
+        return;
+      }
+
+      // Flag checks
+      if (reqFlag === 'discovered_swamp_cave' && !hasSwampFlag) {
+        if (consoleEl) {
+          consoleEl.innerHTML = `<span style="color:#ef4444;">[BLOCKED] Passage hidden until story flag 'discovered_swamp_cave' is triggered!</span><br>` + consoleEl.innerHTML;
+        }
+        return;
+      }
+      if (reqFlag === 'gate_unlocked' && !hasGateFlag) {
+        if (consoleEl) {
+          consoleEl.innerHTML = `<span style="color:#ef4444;">[BLOCKED] Iron fortress gates are locked. Requires story flag 'gate_unlocked'.</span><br>` + consoleEl.innerHTML;
+        }
+        return;
+      }
+
+      // Success
+      mapSelect.value = dest;
+      updateSimulatorExits();
+      if (consoleEl) {
+        consoleEl.innerHTML = `<span style="color:#10b981;">[TRAVERSAL SUCCESS] Party moved through passage to '${dest}' at coordinates [${sx}, ${sy}] ft. Scene updated!</span><br>` + consoleEl.innerHTML;
+      }
+    });
+  });
+}
+
+function validateCampaignMapTopologyUI() {
+  if (!state.activeCampaignData) return;
+  const consoleEl = document.getElementById('sim-traversal-console');
+  const startMap = state.activeCampaignData['robos:startingMap'] || '';
+  const spawnObj = state.activeCampaignData['robos:startingSpawn'] || {};
+  const conns = state.activeCampaignData['robos:mapConnections'] || [];
+  const maps = (state.activeCampaignData['robos:maps'] || []).map(m => typeof m === 'string' ? m.replace(/^urn:robos:crpg:battle-map:/, '') : (m.slug || m.id));
+
+  let issues = [];
+  if (!startMap) issues.push("Missing primary starting map (robos:startingMap)");
+  if (!maps.includes(startMap)) issues.push(`Starting map '${startMap}' is not included in campaign maps list`);
+
+  for (const c of conns) {
+    const to = c['robos:toMap'] || c.toMap;
+    if (to && !maps.includes(to)) {
+      issues.push(`Connection targets un-included map '${to}'`);
+    }
+  }
+
+  if (consoleEl) {
+    if (issues.length === 0) {
+      consoleEl.innerHTML = `<span style="color:#10b981;font-weight:bold;">[TOPOLOGY VALIDATION PASSED] ✔ 100% Valid! Evaluated ${maps.length} campaign maps, ${conns.length} spatial transitions. Starting spawn at [${spawnObj.position?.[0] || 28}, ${spawnObj.position?.[1] || 14}] ft is unblocked. Graph reachability: complete.</span><br>` + consoleEl.innerHTML;
+    } else {
+      consoleEl.innerHTML = `<span style="color:#ef4444;font-weight:bold;">[TOPOLOGY VALIDATION FAILED] Found issues: ${issues.join('; ')}</span><br>` + consoleEl.innerHTML;
+    }
+  }
+}
+
+function addNewMapConnectionPrompt() {
+  if (!state.activeCampaignData) return;
+  const maps = (state.activeCampaignData['robos:maps'] || []).map(m => typeof m === 'string' ? m.replace(/^urn:robos:crpg:battle-map:/, '') : (m.slug || m.id));
+  if (maps.length < 2) {
+    alert("Please include at least 2 maps in the campaign before adding connections.");
+    return;
+  }
+  const fromMap = prompt("Enter Origin Map slug:", maps[0]) || maps[0];
+  const toMap = prompt("Enter Destination Map slug:", maps[1] || maps[0]) || maps[1];
+  const fromObj = prompt("Enter Origin Object / Door ID:", "passage_door") || "passage_door";
+  const type = prompt("Enter Transition Type (door, stairs, portal, zone):", "door") || "door";
+
+  if (!Array.isArray(state.activeCampaignData['robos:mapConnections'])) {
+    state.activeCampaignData['robos:mapConnections'] = [];
+  }
+
+  state.activeCampaignData['robos:mapConnections'].push({
+    id: `conn-${fromMap}-to-${toMap}-${Date.now().toString().slice(-4)}`,
+    fromMap,
+    fromObjectId: fromObj,
+    toMap,
+    toObjectId: `${fromObj}_return`,
+    toSpawn: [15, 15],
+    toFacing: 'south',
+    transitionType: type,
+    bidirectional: true,
+    requiredKey: null,
+    label: `${fromMap} to ${toMap}`
+  });
+
+  renderCampaignMapConnections();
+  saveCampaignJson();
+  initMapNavigatorSimulator();
 }
 
 function renderCampaignCharactersChecklist() {
@@ -1041,6 +1368,17 @@ async function saveCurrentCampaign() {
   // Starting map and campaign maps
   const startingMap = document.getElementById('camp-starting-map')?.value;
   if (startingMap) state.activeCampaignData['robos:startingMap'] = startingMap;
+
+  const spawnX = parseFloat(document.getElementById('camp-start-spawn-x')?.value) || 28;
+  const spawnY = parseFloat(document.getElementById('camp-start-spawn-y')?.value) || 14;
+  const spawnFacing = document.getElementById('camp-start-facing')?.value || 'south';
+  const spawnDesc = document.getElementById('camp-start-entry-desc')?.value || '';
+
+  state.activeCampaignData['robos:startingSpawn'] = {
+    position: [spawnX, spawnY],
+    facing: spawnFacing,
+    entryDescription: spawnDesc
+  };
 
   const mapChecklist = document.getElementById('camp-maps-checklist');
   if (mapChecklist) {

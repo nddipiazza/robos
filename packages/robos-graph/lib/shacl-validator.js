@@ -2664,6 +2664,55 @@ const BUILTIN_SHACL_SHAPES = [
     "domainStandard": "https://robos.dev/ns/crpg#GameEvent"
   },
   {
+    "shapeId": "urn:robos:shape:CRPGCampaignShape",
+    "targetClass": "robos:CRPGCampaign",
+    "targetClasses": [
+      "robos:CRPGCampaign"
+    ],
+    "properties": [
+      {
+        "path": "dcterms:title",
+        "minCount": 1,
+        "message": "CRPG Campaign must have a title."
+      },
+      {
+        "path": "robos:startingMap",
+        "minCount": 1,
+        "message": "CRPG Campaign must specify starting battle map (robos:startingMap)."
+      },
+      {
+        "path": "robos:maps",
+        "minCount": 1,
+        "message": "CRPG Campaign must declare included battle maps (robos:maps)."
+      }
+    ],
+    "refersFrom": "https://schema.org/CreativeWork",
+    "schemaOrgType": "https://schema.org/CreativeWork",
+    "domainStandard": "https://schema.org/CreativeWork"
+  },
+  {
+    "shapeId": "urn:robos:shape:CRPGMapTransitionShape",
+    "targetClass": "robos:CRPGMapTransition",
+    "targetClasses": [
+      "robos:CRPGMapTransition"
+    ],
+    "properties": [
+      {
+        "path": "robos:targetMap",
+        "minCount": 1,
+        "message": "Map transition must declare a target destination map."
+      },
+      {
+        "path": "robos:targetSpawn",
+        "minCount": 1,
+        "message": "Map transition must declare destination spawn coordinates [x, y]."
+      }
+    ],
+    "refersFrom": "https://schema.org/Place",
+    "schemaOrgType": "https://schema.org/Place",
+    "domainStandard": "https://robos.dev/ns/crpg#MapTransition"
+  },
+  {
     "shapeId": "urn:robos:shape:WebRouteShape",
     "targetClass": "robos:WebRoute",
     "properties": [

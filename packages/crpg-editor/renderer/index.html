@@ -675,27 +675,161 @@
           </div>
         </div>
 
-        <!-- Subpane 3: Maps & Scenes -->
+        <!-- Subpane 3: Maps, Connectivity & Traversal -->
         <div id="subpane-camp-maps" class="campaign-subpane hidden">
-          <div class="campaign-layout">
-            <div class="panel">
-              <div class="panel-header">
-                <h2>Campaign Maps (<span id="camp-maps-count">0</span>)</h2>
-                <div style="display: flex; gap: 6px;">
-                  <button id="btn-select-all-maps" class="btn btn-sm btn-secondary">Select All</button>
-                  <button id="btn-clear-maps" class="btn btn-sm btn-secondary">Clear</button>
+          <div class="campaign-layout" style="display: flex; flex-direction: column; gap: 16px;">
+            <!-- Top Row: Starting Map / Spawn & Included Maps -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+              <!-- Left Card: Starting Map & Initial Party Spawn -->
+              <div class="panel">
+                <div class="panel-header">
+                  <h2>🎯 Initial Game Boot & Starting Scene</h2>
+                </div>
+                <div class="panel-body">
+                  <div class="form-group" style="margin-bottom: 10px;">
+                    <label for="camp-starting-map" style="display: block; margin-bottom: 4px; font-weight: 600;">Primary Starting Map:</label>
+                    <select id="camp-starting-map" class="dropdown-select full-width">
+                      <option value="">(Select starting map...)</option>
+                    </select>
+                  </div>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+                    <div class="form-group">
+                      <label for="camp-start-spawn-x" style="display: block; margin-bottom: 4px; font-size: 11px;">Spawn X (ft)</label>
+                      <input type="number" id="camp-start-spawn-x" class="input-number full-width" step="1" value="28">
+                    </div>
+                    <div class="form-group">
+                      <label for="camp-start-spawn-y" style="display: block; margin-bottom: 4px; font-size: 11px;">Spawn Y (ft)</label>
+                      <input type="number" id="camp-start-spawn-y" class="input-number full-width" step="1" value="14">
+                    </div>
+                    <div class="form-group">
+                      <label for="camp-start-facing" style="display: block; margin-bottom: 4px; font-size: 11px;">Facing</label>
+                      <select id="camp-start-facing" class="dropdown-select full-width">
+                        <option value="south">South (Down)</option>
+                        <option value="north">North (Up)</option>
+                        <option value="east">East (Right)</option>
+                        <option value="west">West (Left)</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="form-group" style="margin-bottom: 8px;">
+                    <label for="camp-start-entry-desc" style="display: block; margin-bottom: 4px; font-size: 11px;">Starting Room / Entry Narration:</label>
+                    <input type="text" id="camp-start-entry-desc" class="input-text full-width" placeholder="e.g. Party stands in audience before King Loric in Tantegel Throne Room">
+                  </div>
+                  <div id="camp-starting-map-badge" style="padding: 8px; border-radius: 4px; background: rgba(0, 188, 212, 0.08); border: 1px solid rgba(0, 188, 212, 0.3); font-size: 12px; color: #a5f3fc;">
+                    <!-- Rendered via JS -->
+                  </div>
                 </div>
               </div>
-              <div class="panel-body">
-                <div style="margin-bottom: 10px;">
-                  <label for="camp-starting-map" style="display: block; margin-bottom: 4px;">Primary Starting Map:</label>
-                  <select id="camp-starting-map" class="dropdown-select full-width">
-                    <option value="">(Select starting map...)</option>
-                  </select>
+
+              <!-- Right Card: Included Campaign Maps Checklist -->
+              <div class="panel">
+                <div class="panel-header">
+                  <h2>Campaign Maps (<span id="camp-maps-count">0</span>)</h2>
+                  <div style="display: flex; gap: 6px;">
+                    <button id="btn-select-all-maps" class="btn btn-sm btn-secondary">Select All</button>
+                    <button id="btn-clear-maps" class="btn btn-sm btn-secondary">Clear</button>
+                  </div>
                 </div>
-                <label style="display: block; margin-bottom: 4px;">Included Independent Maps:</label>
-                <div id="camp-maps-checklist" class="camp-checklist-box">
-                  <!-- Rendered via JS -->
+                <div class="panel-body">
+                  <label style="display: block; margin-bottom: 4px; font-size: 12px;">Included Independent Maps:</label>
+                  <div id="camp-maps-checklist" class="camp-checklist-box" style="max-height: 180px;">
+                    <!-- Rendered via JS -->
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Middle Row: World Map Topology & Connections Table -->
+            <div class="panel">
+              <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h2>🌐 World Map Topology & Spatial Connections (<span id="camp-connections-count">0</span>)</h2>
+                <div style="display: flex; gap: 8px;">
+                  <button id="btn-validate-map-topology" class="btn btn-sm btn-secondary">🛡️ Validate Topology</button>
+                  <button id="btn-add-map-connection" class="btn btn-sm btn-primary">➕ Add Connection</button>
+                </div>
+              </div>
+              <div class="panel-body" style="padding: 0;">
+                <div id="map-connections-table-container" style="overflow-x: auto; max-height: 240px;">
+                  <table class="flags-table" style="width: 100%; font-size: 12px;">
+                    <thead>
+                      <tr>
+                        <th>Origin Map</th>
+                        <th>Passage / Object</th>
+                        <th>Destination Map</th>
+                        <th>Target Landing Spawn</th>
+                        <th>Type</th>
+                        <th>Lock / Key Requirements</th>
+                        <th style="width: 70px;">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody id="map-connections-table-body">
+                      <!-- Rendered via JS -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bottom Row: Intermediate cRPG Map Navigator & Traversal Simulator -->
+            <div class="panel" style="border: 1px solid rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.03);">
+              <div class="panel-header" style="background: rgba(16, 185, 129, 0.08);">
+                <h2>🎮 Contract-First Map Navigator & Traversal Prover (Simulator)</h2>
+                <span style="font-size: 11px; color: #6ee7b7; padding: 2px 8px; border-radius: 999px; background: rgba(16, 185, 129, 0.15);">Interactive Engine Prover</span>
+              </div>
+              <div class="panel-body">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 12px;">
+                  <div>
+                    <label style="display: block; margin-bottom: 4px; font-weight: 600; font-size: 12px;">Current Active Party Map:</label>
+                    <div style="display: flex; gap: 8px;">
+                      <select id="sim-current-map-select" class="dropdown-select flex-1">
+                        <!-- Populated via JS -->
+                      </select>
+                      <button id="btn-sim-reset-to-start" class="btn btn-sm btn-secondary" title="Reset Party to Starting Map">Reset to Start</button>
+                    </div>
+                  </div>
+                  <div>
+                    <label style="display: block; margin-bottom: 4px; font-weight: 600; font-size: 12px;">Party Inventory Key Rings:</label>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                      <label style="font-size: 12px; display: flex; align-items: center; gap: 4px;">
+                        <input type="checkbox" id="sim-has-magic-key" checked> 🗝️ Has Magic Key
+                      </label>
+                      <label style="font-size: 12px; display: flex; align-items: center; gap: 4px;">
+                        <input type="checkbox" id="sim-flag-swamp-cave" checked> 🚩 Swamp Cave Found
+                      </label>
+                      <label style="font-size: 12px; display: flex; align-items: center; gap: 4px;">
+                        <input type="checkbox" id="sim-flag-gate-unlocked" checked> 🚩 Gate Unlocked
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Simulation Action Controls -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 12px;">
+                  <div style="padding: 10px; border-radius: 6px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.08);">
+                    <div style="font-size: 12px; font-weight: 600; margin-bottom: 6px; color: #a5f3fc;">🚪 Available Physical Exits / Doors:</div>
+                    <div id="sim-connected-exits-list" style="display: flex; flex-direction: column; gap: 6px; max-height: 120px; overflow-y: auto;">
+                      <!-- Populated via JS -->
+                    </div>
+                  </div>
+                  <div style="padding: 10px; border-radius: 6px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.08);">
+                    <div style="font-size: 12px; font-weight: 600; margin-bottom: 6px; color: #fbcfe8;">⚡ Trigger Action / Story Transport:</div>
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                      <button id="btn-sim-action-swamp" class="btn btn-sm btn-secondary" style="text-align: left;">
+                        🦇 Descent to Swamp Cave (evt-dw-swamp-cave-discovery)
+                      </button>
+                      <button id="btn-sim-action-return-spell" class="btn btn-sm btn-secondary" style="text-align: left;">
+                        ✨ Cast 'Return' Spell (Transport back to King Loric)
+                      </button>
+                      <button id="btn-sim-action-candlekeep-gate" class="btn btn-sm btn-secondary" style="text-align: left;">
+                        🎬 Gorion Gate Departure (evt-candlekeep-gate-departure)
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Live Traversal Log / Telemetry Console -->
+                <div id="sim-traversal-console" style="background: #0f172a; border: 1px solid #334155; border-radius: 4px; padding: 8px 12px; font-family: monospace; font-size: 11px; color: #38bdf8; min-height: 48px; max-height: 100px; overflow-y: auto;">
+                  [Engine Ready] Select a physical exit or action transport to test party navigation.
                 </div>
               </div>
             </div>

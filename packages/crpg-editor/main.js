@@ -358,9 +358,13 @@ function setupIpcHandlers() {
           'robos:worldFlags': {},
         },
         'robos:storyFlow': data['robos:storyFlow'] || data.storyFlow || existing['robos:storyFlow'] || undefined,
+        'robos:startingSpawn': data['robos:startingSpawn'] || data.startingSpawn || existing['robos:startingSpawn'] || undefined,
+        'robos:mapConnections': data['robos:mapConnections'] || data.mapConnections || existing['robos:mapConnections'] || undefined,
         'robos:scenes': data.scenes || data['robos:scenes'] || existing['robos:scenes'] || [],
       };
       if (!formatted['robos:storyFlow']) delete formatted['robos:storyFlow'];
+      if (!formatted['robos:startingSpawn']) delete formatted['robos:startingSpawn'];
+      if (!formatted['robos:mapConnections']) delete formatted['robos:mapConnections'];
 
       if (!fs.existsSync(paths.campaignsDir)) {
         fs.mkdirSync(paths.campaignsDir, { recursive: true });

@@ -16,8 +16,70 @@
   "robos:ruleSet": "D&D 5e SRD",
   "robos:difficulty": "Core Rules",
   "robos:startingMap": "tantegel-throne-room",
+  "robos:startingSpawn": {
+    "position": [
+      28,
+      14
+    ],
+    "facing": "south",
+    "entryDescription": "Descendant of Erdrick stands in audience before King Loric in Tantegel Throne Room"
+  },
   "robos:maps": [
-    "urn:robos:crpg:battle-map:tantegel-throne-room"
+    "urn:robos:crpg:battle-map:tantegel-throne-room",
+    "urn:robos:crpg:battle-map:homestead-yard",
+    "urn:robos:crpg:battle-map:catacomb-antechamber",
+    "urn:robos:crpg:battle-map:cavern-depths"
+  ],
+  "robos:mapConnections": [
+    {
+      "id": "conn-tantegel-to-courtyard",
+      "fromMap": "tantegel-throne-room",
+      "fromObjectId": "stairs-down",
+      "toMap": "homestead-yard",
+      "toObjectId": "homestead_door",
+      "toSpawn": [
+        10,
+        15
+      ],
+      "toFacing": "south",
+      "transitionType": "stairs",
+      "bidirectional": true,
+      "requiredKey": null,
+      "label": "Stairs Down to Courtyard"
+    },
+    {
+      "id": "conn-tantegel-to-catacombs",
+      "fromMap": "tantegel-throne-room",
+      "fromObjectId": "royal-door",
+      "toMap": "catacomb-antechamber",
+      "toObjectId": "antechamber-entry-door",
+      "toSpawn": [
+        20,
+        15
+      ],
+      "toFacing": "south",
+      "transitionType": "door",
+      "bidirectional": true,
+      "requiredKey": "magic-key",
+      "label": "Royal Vault Gate to Ancient Catacombs (Requires Magic Key)"
+    },
+    {
+      "id": "conn-swamp-cave-descent",
+      "fromMap": "homestead-yard",
+      "fromObjectId": "yard_gate",
+      "toMap": "cavern-depths",
+      "toObjectId": "cavern_entry",
+      "toSpawn": [
+        15,
+        20
+      ],
+      "toFacing": "east",
+      "transitionType": "portal",
+      "bidirectional": true,
+      "requiredKey": null,
+      "requiredFlag": "discovered_swamp_cave",
+      "label": "Descent into Noxious Swamp Cave"
+    }
   ],
   "robos:characters": [
     "urn:robos:crpg:character:hero-of-alefgard",

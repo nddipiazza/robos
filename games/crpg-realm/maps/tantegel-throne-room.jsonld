@@ -248,7 +248,18 @@
       "opacity": "transparent",
       "height": 8,
       "label": "Royal Locked Door",
-      "notes": "Requires a Magic Key to pass through to the stairs"
+      "notes": "Requires a Magic Key to pass through to the stairs",
+      "robos:transition": {
+        "@type": "robos:CRPGMapTransition",
+        "robos:targetMap": "urn:robos:crpg:battle-map:catacomb-antechamber",
+        "robos:targetSpawn": [20, 15],
+        "robos:targetFacing": "south",
+        "robos:targetObjectId": "antechamber-entry-door",
+        "robos:transitionType": "door",
+        "robos:requiredKey": "magic-key",
+        "robos:lockedMessage": "The royal door is locked by heavy iron wards. You need a Magic Key to open it.",
+        "robos:transitionMessage": "Unlocking the royal gate and passing through to the ancient catacombs..."
+      }
     },
     {
       "@type": "robos:CRPGMapObject",
@@ -278,7 +289,16 @@
       "opacity": "transparent",
       "height": 0,
       "label": "Stairs Down to Castle 1F",
-      "notes": "Descends to Tantegel Castle 1F Courtyard"
+      "notes": "Descends to Tantegel Castle 1F Courtyard",
+      "robos:transition": {
+        "@type": "robos:CRPGMapTransition",
+        "robos:targetMap": "urn:robos:crpg:battle-map:homestead-yard",
+        "robos:targetSpawn": [10, 15],
+        "robos:targetFacing": "south",
+        "robos:targetObjectId": "homestead_door",
+        "robos:transitionType": "stairs",
+        "robos:transitionMessage": "Descending the spiral staircase to the courtyard..."
+      }
     }
   ],
   "robos:blockout": {

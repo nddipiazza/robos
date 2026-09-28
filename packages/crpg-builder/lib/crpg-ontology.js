@@ -181,6 +181,27 @@ const CRPG_SHACL_SHAPES = [
       { path: 'robos:eventType', minCount: 1, message: 'Game event must declare an event type (e.g. dialogue, combat_victory, area_transition, cutscene, item_acquisition, quest_milestone, decision_branch).' },
       { path: 'robos:infinityInteraction', minCount: 1, message: 'Game event must declare an Infinity Engine interaction specification.' }
     ]
+  },
+  {
+    shapeId: 'urn:robos:shape:CRPGCampaignShape',
+    targetClass: 'robos:CRPGCampaign',
+    refersFrom: 'https://schema.org/CreativeWork',
+    domainStandard: 'https://schema.org/CreativeWork',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'CRPG Campaign must have a title.' },
+      { path: 'robos:startingMap', minCount: 1, message: 'CRPG Campaign must specify starting battle map (robos:startingMap).' },
+      { path: 'robos:maps', minCount: 1, message: 'CRPG Campaign must declare included battle maps (robos:maps).' }
+    ]
+  },
+  {
+    shapeId: 'urn:robos:shape:CRPGMapTransitionShape',
+    targetClass: 'robos:CRPGMapTransition',
+    refersFrom: 'https://schema.org/Place',
+    domainStandard: 'https://robos.dev/ns/crpg#MapTransition',
+    properties: [
+      { path: 'robos:targetMap', minCount: 1, message: 'Map transition must declare a target destination map.' },
+      { path: 'robos:targetSpawn', minCount: 1, message: 'Map transition must declare destination spawn coordinates [x, y].' }
+    ]
   }
 ];
 

@@ -156,6 +156,31 @@
         30
       ],
       "dcterms:title": "Burial niches"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "antechamber-entry-door",
+      "robos:objectType": "door",
+      "robos:shape": "rect",
+      "robos:position": [
+        20,
+        10
+      ],
+      "robos:size": [
+        6,
+        4
+      ],
+      "dcterms:title": "Catacomb Entry Portal to Tantegel Castle",
+      "robos:open": true,
+      "robos:transition": {
+        "@type": "robos:CRPGMapTransition",
+        "robos:targetMap": "urn:robos:crpg:battle-map:tantegel-throne-room",
+        "robos:targetSpawn": [27, 30],
+        "robos:targetFacing": "north",
+        "robos:targetObjectId": "royal-door",
+        "robos:transitionType": "door",
+        "robos:transitionMessage": "Passing back through the iron vault portal into Tantegel Throne Room..."
+      }
     }
   ],
   "robos:blockout": {

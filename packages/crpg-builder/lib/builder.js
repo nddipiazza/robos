@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { FLARE_CREATURE_SPRITES, FLARE_TILESETS, FLARE_ICONS } = require('./flare-asset-catalog');
 const { SRD_CLASSES, SRD_SPELLS, SRD_MONSTERS, SRD_EQUIPMENT } = require('./srd-data');
+const { CRPGMapNavigator } = require('./map-navigator');
 
 class CRPGGameBuilder {
   constructor(options = {}) {
@@ -1790,4 +1791,4 @@ func _init() -> void:
   }
 }
 
-module.exports = { CRPGGameBuilder };
+module.exports = { CRPGGameBuilder, CRPGMapNavigator };

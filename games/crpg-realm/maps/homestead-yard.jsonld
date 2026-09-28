@@ -42,7 +42,16 @@
         5,
         5
       ],
-      "robos:open": true
+      "robos:open": true,
+      "robos:transition": {
+        "@type": "robos:CRPGMapTransition",
+        "robos:targetMap": "urn:robos:crpg:battle-map:tantegel-throne-room",
+        "robos:targetSpawn": [48, 25],
+        "robos:targetFacing": "north",
+        "robos:targetObjectId": "stairs-down",
+        "robos:transitionType": "stairs",
+        "robos:transitionMessage": "Ascending the spiral stone staircase back to Tantegel Throne Room..."
+      }
     },
     {
       "@type": "robos:CRPGMapObject",

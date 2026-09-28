@@ -15,7 +15,15 @@
   "robos:setting": "Sword Coast / Forgotten Realms",
   "robos:ruleSet": "D&D 5e SRD",
   "robos:difficulty": "Core Rules",
-  "robos:startingMap": "tantegel-throne-room",
+  "robos:startingMap": "candlekeep",
+  "robos:startingSpawn": {
+    "position": [
+      270,
+      95
+    ],
+    "facing": "south",
+    "entryDescription": "Gorion's ward stands before the central library steps in Candlekeep"
+  },
   "robos:maps": [
     "urn:robos:crpg:battle-map:candlekeep",
     "urn:robos:crpg:battle-map:catacomb-antechamber",
@@ -28,6 +36,90 @@
     "urn:robos:crpg:battle-map:tantegel-throne-room",
     "urn:robos:crpg:battle-map:test-doors",
     "urn:robos:crpg:battle-map:test-wall-room"
+  ],
+  "robos:mapConnections": [
+    {
+      "id": "conn-candlekeep-main-gate-to-exterior",
+      "fromMap": "candlekeep",
+      "fromObjectId": "candlekeep_main_gate",
+      "toMap": "homestead-yard",
+      "toObjectId": "homestead_door",
+      "toSpawn": [
+        10,
+        15
+      ],
+      "toFacing": "south",
+      "transitionType": "door",
+      "bidirectional": true,
+      "requiredKey": null,
+      "requiredFlag": "gate_unlocked",
+      "label": "Candlekeep Main Fortress Gates to Lion's Way / Coast Road"
+    },
+    {
+      "id": "conn-candlekeep-exit-zone-lions-way",
+      "fromMap": "candlekeep",
+      "fromObjectId": "zone_exit_lions_way",
+      "toMap": "homestead-yard",
+      "toObjectId": "homestead_door",
+      "toSpawn": [
+        10,
+        15
+      ],
+      "toFacing": "south",
+      "transitionType": "zone",
+      "bidirectional": true,
+      "requiredKey": null,
+      "requiredFlag": "gate_unlocked",
+      "label": "Travel Zone: Exit to Coast Way / Lion's Way"
+    },
+    {
+      "id": "conn-candlekeep-to-catacombs",
+      "fromMap": "candlekeep",
+      "fromObjectId": "catacomb_entry",
+      "toMap": "catacomb-antechamber",
+      "toObjectId": "antechamber-entry-door",
+      "toSpawn": [
+        20,
+        15
+      ],
+      "toFacing": "south",
+      "transitionType": "stairs",
+      "bidirectional": true,
+      "requiredKey": null,
+      "label": "Crypt Entrance Down to Ancient Catacombs"
+    },
+    {
+      "id": "conn-catacombs-to-corridor",
+      "fromMap": "catacomb-antechamber",
+      "fromObjectId": "corridor_arch",
+      "toMap": "catacomb-corridor",
+      "toObjectId": "corridor_entry",
+      "toSpawn": [
+        10,
+        20
+      ],
+      "toFacing": "east",
+      "transitionType": "portal",
+      "bidirectional": true,
+      "requiredKey": null,
+      "label": "Passage to Catacomb Corridor"
+    },
+    {
+      "id": "conn-corridor-to-crypt-vault",
+      "fromMap": "catacomb-corridor",
+      "fromObjectId": "crypt_door",
+      "toMap": "dungeon-crypt-vault",
+      "toObjectId": "vault_gate",
+      "toSpawn": [
+        68,
+        46
+      ],
+      "toFacing": "south",
+      "transitionType": "door",
+      "bidirectional": true,
+      "requiredKey": null,
+      "label": "Vault Gate to Subterranean Crypt & Reliquary"
+    }
   ],
   "robos:characters": [
     "urn:robos:crpg:character:hero-ignis",
