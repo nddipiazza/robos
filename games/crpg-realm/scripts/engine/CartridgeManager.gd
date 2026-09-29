@@ -130,7 +130,7 @@ func insert_cartridge(cart_data_or_slug: Variant) -> bool:
 	if cart_data_or_slug is Dictionary:
 		cart = cart_data_or_slug
 	elif cart_data_or_slug is String:
-		var slug_or_path = str(cart_data_or_slug).strip_edges()
+		var slug_or_path = str(cart_data_or_slug).strip_edges().replace('"', '').replace("'", "")
 		if slug_or_path.ends_with(".json") or slug_or_path.begins_with("res://") or slug_or_path.begins_with("user://"):
 			cart = _load_json_file(slug_or_path)
 		else:
@@ -248,7 +248,7 @@ func embark_cartridge() -> void:
 		if sc != "" and ResourceLoader.exists(sc) and sc != "res://scenes/CartridgeWorld.tscn":
 			# If user specifically wants the generic cartridge runner or hard-coded scene
 			# For new cartridge maps like throne-room, main-castle, world-overworld, dark-lord-lair -> CartridgeWorld
-			if not (current_map_slug in ["throne-room", "main-castle", "world-overworld", "dark-lord-lair", "tantegel-throne-room"]):
+			if not (current_map_slug in ["throne-room", "main-castle", "world-overworld", "dark-lord-lair", "tantegel-throne-room", "charlock-castle"]):
 				target_scene = sc
 				break
 				
@@ -261,7 +261,11 @@ func get_current_map() -> Dictionary:
 
 func transition_to_map(to_map_slug: String, target_spawn: Vector2 = Vector2.ZERO) -> bool:
 	if not maps_cache.has(to_map_slug):
-		push_warning("[CartridgeManager] Target map '%s' not found in active cartridge maps!" % to_map_slug)
+		var cand_path = "res://maps/%s.jsonld" % to_map_slug
+		if FileAccess.file_exists(cand_path):
+			maps_cache[to_map_slug] = _load_json_file(cand_path)
+		else:
+			push_warning("[CartridgeManager] Target map '%s' not found in active cartridge maps!" % to_map_slug)
 	
 	var from_map = current_map_slug
 	current_map_slug = to_map_slug

@@ -84,7 +84,8 @@
   "robos:characters": [
     "urn:robos:crpg:character:hero-of-alefgard",
     "urn:robos:crpg:character:npc-king-loric",
-    "urn:robos:crpg:character:npc-princess-gwaelin"
+    "urn:robos:crpg:character:npc-princess-gwaelin",
+    "urn:robos:crpg:character:dragonlord"
   ],
   "robos:heroes": [
     {
@@ -101,7 +102,9 @@
       "background": "Erdrick Bloodline",
       "level": 1,
       "alignment": "Lawful Good",
-      "portrait": "⚔️",
+      "portrait": "assets/portraits/portrait_fighter.png",
+      "portraitAssetRef": "assets/portraits/portrait_fighter.png",
+      "tokenAssetRef": "assets/tokens/token_hero-alefgard-token.png",
       "interactionType": "talk",
       "location": "",
       "col": 0,

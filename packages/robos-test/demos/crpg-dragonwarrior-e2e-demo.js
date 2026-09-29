@@ -89,7 +89,15 @@ async function main() {
   fs.mkdirSync(path.join(SANDBOX_DIR, "maps"), { recursive: true });
   fs.mkdirSync(path.join(SANDBOX_DIR, "characters"), { recursive: true });
   fs.mkdirSync(path.join(SANDBOX_DIR, "items"), { recursive: true });
-  fs.mkdirSync(path.join(SANDBOX_DIR, "assets", "blockouts"), { recursive: true });
+  const repoAssets = path.join(ROBOS_ROOT, "games", "crpg-realm", "assets");
+  const sandboxAssets = path.join(SANDBOX_DIR, "assets");
+  if (!fs.existsSync(sandboxAssets)) {
+    try {
+      fs.symlinkSync(repoAssets, sandboxAssets, "dir");
+    } catch (_) {
+      fs.cpSync(repoAssets, sandboxAssets, { recursive: true });
+    }
+  }
 
   const outRoot = path.join(ROBOS_ROOT, "packages", "robos-test", "run", "demos");
   const outDir = path.join(outRoot, SLUG);
@@ -97,6 +105,24 @@ async function main() {
   const outVideo = path.join(outDir, `${SLUG}.webm`);
   const outCaption = path.join(outDir, `${SLUG}.vtt`);
   const outFinal = path.join(outDir, `${SLUG}-final.webm`);
+
+  // Clean prior review frames to guarantee newly captured screenshots
+  const priorFrames = [
+    "dw1_01_campaign_authoring.png",
+    "dw1_02_map_studio.png",
+    "dw1_03_characters_authoring.png",
+    "dw1_04_items_studio.png",
+    "dw1_05_quest_tree_dag.png",
+    "dw1_06_godot_throne_room.png",
+    "dw1_07_godot_dragonlord.png",
+    "dw1_08_godot_total_victory.png",
+  ];
+  for (const pf of priorFrames) {
+    const pfPath = path.join(BRAIN_DIR, pf);
+    if (fs.existsSync(pfPath)) {
+      try { fs.unlinkSync(pfPath); } catch (_) {}
+    }
+  }
 
   process.env.ROBOS_CRPG_DIR = SANDBOX_DIR;
 
@@ -505,6 +531,7 @@ async function main() {
       document.getElementById('subtab-map-settings')?.click();
       await window.__typeKeyByKey('#map-slug', 'tantegel-throne-room');
       await window.__typeKeyByKey('#map-title', 'Tantegel Castle - Throne Room (2F)');
+      await window.__typeKeyByKey('#map-bg-image', 'res://assets/blockouts/tantegel-throne-room.png');
       document.getElementById('map-terrain').value = 'stone';
       document.getElementById('map-terrain').dispatchEvent(new Event('change', { bubbles: true }));
       document.getElementById('map-width').value = '60';
@@ -578,6 +605,7 @@ async function main() {
 
       await window.__typeKeyByKey('#map-slug', 'charlock-castle');
       await window.__typeKeyByKey('#map-title', "Charlock Castle - Dragonlord's Lair");
+      await window.__typeKeyByKey('#map-bg-image', 'res://assets/blockouts/catacomb-antechamber.png');
       document.getElementById('map-terrain').value = 'cave';
       document.getElementById('map-terrain').dispatchEvent(new Event('change', { bubbles: true }));
       document.getElementById('map-width').value = '40';
@@ -616,7 +644,7 @@ async function main() {
   // Step 11: Author Hero of Alefgard key by key
   await runEditorStep({
     stepNum: 11,
-    narration: "The user authors the Player Character key-by-key: 'Hero of Alefgard', Fighter Lvl 1, STR 16, HP 16, and Erdrick lore.",
+    narration: "The user authors the Player Character key-by-key: 'Hero of Alefgard', Fighter Lvl 1, STR 16, HP 16, hi-def portrait, battle token, and Erdrick lore.",
     target: "#btn-header-new-hero",
     action: "click",
     callout: "Key-by-Key: Hero of Alefgard (PC)",
@@ -637,6 +665,8 @@ async function main() {
         hpInput.value = '16';
         hpInput.dispatchEvent(new Event('input', { bubbles: true }));
       }
+      await window.__typeKeyByKey('#hero-portrait', 'assets/portraits/portrait_fighter.png');
+      await window.__typeKeyByKey('#hero-token-asset', 'assets/tokens/token_hero-alefgard-token.png');
       await window.__typeKeyByKey('#hero-backstory', 'Descendant of the legendary hero Erdrick, destined to restore the Ball of Light to Alefgard.');
       document.getElementById('btn-header-save-char')?.click();
       await new Promise(r => setTimeout(r, 600));
@@ -646,7 +676,7 @@ async function main() {
   // Step 12: Author King Loric NPC key by key
   await runEditorStep({
     stepNum: 12,
-    narration: "The user creates King Loric with his royal quest decree to seek the Ball of Light and rescue the Princess.",
+    narration: "The user creates King Loric with real monarch portrait, golden battle token, and royal quest decree.",
     target: "#btn-header-new-npc",
     action: "click",
     callout: "Key-by-Key: King Loric (NPC)",
@@ -658,6 +688,8 @@ async function main() {
       await window.__typeKeyByKey('#hero-slug', 'npc-king-loric');
       document.getElementById('npc-role').value = 'king';
       document.getElementById('npc-location').value = 'tantegel-throne-room';
+      await window.__typeKeyByKey('#hero-portrait', 'assets/portraits/portrait_male01.png');
+      await window.__typeKeyByKey('#hero-token-asset', 'assets/tokens/token_king_lorik.png');
       await window.__typeKeyByKey('#npc-dialogue', 'Descendant of Erdrick! The foul Dragonlord hath stolen the sacred Ball of Light and captured Princess Gwaelin! Take 120 Gold and the Magic Key from the chests and slay the Dragonlord!');
       document.getElementById('btn-header-save-char')?.click();
       await new Promise(r => setTimeout(r, 600));
@@ -667,7 +699,7 @@ async function main() {
   // Step 13: Author Dragonlord and Princess Gwaelin
   await runEditorStep({
     stepNum: 13,
-    narration: "The user authors the Dragonlord boss and Princess Gwaelin with full linked-data dialogue and map locations.",
+    narration: "The user authors the Dragonlord boss and Princess Gwaelin with full linked-data dialogue, high-definition portraits, and battle tokens.",
     target: "#header-char-select",
     action: "hover",
     callout: "Dragonlord (Boss) & Princess Gwaelin Created",
@@ -680,6 +712,8 @@ async function main() {
       await window.__typeKeyByKey('#hero-slug', 'dragonlord');
       document.getElementById('npc-role').value = 'boss';
       document.getElementById('npc-location').value = 'charlock-castle';
+      await window.__typeKeyByKey('#hero-portrait', 'assets/portraits/portrait_malakor.png');
+      await window.__typeKeyByKey('#hero-token-asset', 'assets/tokens/token_dragonlord.png');
       await window.__typeKeyByKey('#npc-dialogue', 'Join me and rule half the world, or perish in dragonfire!');
       document.getElementById('btn-header-save-char')?.click();
       await new Promise(r => setTimeout(r, 600));
@@ -691,6 +725,8 @@ async function main() {
       await window.__typeKeyByKey('#hero-slug', 'npc-princess-gwaelin');
       document.getElementById('npc-role').value = 'princess';
       document.getElementById('npc-location').value = 'charlock-castle';
+      await window.__typeKeyByKey('#hero-portrait', 'assets/portraits/portrait_female04.png');
+      await window.__typeKeyByKey('#hero-token-asset', 'assets/tokens/token_princess_gwaelin.png');
       await window.__typeKeyByKey('#npc-dialogue', 'Thou hast saved me from the Dragonlord, brave Erdrick! Forever shall I accompany thee!');
       document.getElementById('btn-header-save-char')?.click();
       await new Promise(r => setTimeout(r, 600));
@@ -768,7 +804,14 @@ async function main() {
       state.activeCampaignData['robos:startingSpawn'] = { position: [28, 14] };
       state.activeCampaignData['robos:maps'] = ['tantegel-throne-room', 'charlock-castle'];
       state.activeCampaignData['robos:characters'] = ['hero-of-alefgard', 'npc-king-loric', 'dragonlord', 'npc-princess-gwaelin'];
-      state.activeCampaignData['robos:heroes'] = [{ id: 'urn:robos:crpg:character:hero-of-alefgard', slug: 'hero-of-alefgard', name: 'Hero of Alefgard' }];
+      state.activeCampaignData['robos:heroes'] = [{
+        id: 'urn:robos:crpg:character:hero-of-alefgard',
+        slug: 'hero-of-alefgard',
+        name: 'Hero of Alefgard',
+        portrait: 'assets/portraits/portrait_fighter.png',
+        portraitAssetRef: 'assets/portraits/portrait_fighter.png',
+        tokenAssetRef: 'assets/tokens/token_hero-alefgard-token.png',
+      }];
     })()`,
   });
 
@@ -865,13 +908,13 @@ async function main() {
   // Raise Godot 4 window to top of display
   if (process.platform === "linux" && process.env.DISPLAY) {
     try {
-      execSync(`wmctrl -r "Realm of Heroes" -b add,above,sticky || xdotool search --name "Realm of Heroes" windowraise windowfocus`, { stdio: "ignore" });
+      execSync(`wmctrl -r "Realm of Heroes" -b add,above,sticky && wmctrl -r "Realm of Heroes" -e 0,0,0,1920,1080 || xdotool search --name "Realm of Heroes" windowraise windowfocus`, { stdio: "ignore" });
     } catch (_) {}
   }
   await sleep(1500);
 
   // Helper for Godot playthrough steps
-  async function runGodotStep({ stepNum, narration, stepTitle, actionName, holdMs = 2800 }) {
+  async function runGodotStep({ stepNum, narration, stepTitle, actionName, holdMs = 2800, saveScreenshotPath = null }) {
     console.log(`  [Godot Step ${stepNum}] ${narration}`);
     captions.add(narration);
 
@@ -884,6 +927,12 @@ async function main() {
     if (actionName) {
       const res = await sendGodotCommand("/qa/cartridge_step", { action: actionName });
       console.log(`    Action '${actionName}' result:`, res.success ? "✔ OK" : res.error || "Failed");
+    }
+
+    if (saveScreenshotPath) {
+      await sleep(600);
+      const sRes = await sendGodotCommand("/api/v1/screenshot", { path: saveScreenshotPath });
+      console.log(`    Saved direct Godot 4 scene screenshot to: ${saveScreenshotPath} (${sRes.success ? '✔' : 'fallback'})`);
     }
 
     await sleep(holdMs);
@@ -904,6 +953,7 @@ async function main() {
     stepTitle: "Audience with King Lorik",
     actionName: "talk_king_lorik",
     holdMs: 3200,
+    saveScreenshotPath: path.join(BRAIN_DIR, "dw1_06_godot_throne_room.png"),
   });
   await runGodotStep({
     stepNum: 20,
@@ -938,6 +988,7 @@ async function main() {
     stepTitle: "Confronting The Dragonlord",
     actionName: "confront_dragonlord",
     holdMs: 3200,
+    saveScreenshotPath: path.join(BRAIN_DIR, "dw1_07_godot_dragonlord.png"),
   });
   await runGodotStep({
     stepNum: 23,
@@ -970,6 +1021,7 @@ async function main() {
     stepTitle: "Total Victory in Dragon Warrior (USA)!",
     actionName: "proclaim_victory",
     holdMs: 4500,
+    saveScreenshotPath: path.join(BRAIN_DIR, "dw1_08_godot_total_victory.png"),
   });
 
   // Final hold
@@ -1024,9 +1076,9 @@ async function main() {
     execSync(`ffmpeg -y -ss 00:00:40 -i "${outFinal}" -vframes 1 "${frame3}"`, { stdio: "ignore" });
     execSync(`ffmpeg -y -ss 00:00:50 -i "${outFinal}" -vframes 1 "${frame4}"`, { stdio: "ignore" });
     execSync(`ffmpeg -y -ss 00:00:58 -i "${outFinal}" -vframes 1 "${frame5}"`, { stdio: "ignore" });
-    execSync(`ffmpeg -y -ss 00:01:10 -i "${outFinal}" -vframes 1 "${frame6}"`, { stdio: "ignore" });
-    execSync(`ffmpeg -y -ss 00:01:25 -i "${outFinal}" -vframes 1 "${frame7}"`, { stdio: "ignore" });
-    execSync(`ffmpeg -y -ss 00:01:38 -i "${outFinal}" -vframes 1 "${frame8}"`, { stdio: "ignore" });
+    if (!fs.existsSync(frame6)) execSync(`ffmpeg -y -ss 00:01:10 -i "${outFinal}" -vframes 1 "${frame6}"`, { stdio: "ignore" });
+    if (!fs.existsSync(frame7)) execSync(`ffmpeg -y -ss 00:01:25 -i "${outFinal}" -vframes 1 "${frame7}"`, { stdio: "ignore" });
+    if (!fs.existsSync(frame8)) execSync(`ffmpeg -y -ss 00:01:38 -i "${outFinal}" -vframes 1 "${frame8}"`, { stdio: "ignore" });
     console.log("✔ Review frames successfully extracted.");
   } catch (frameErr) {
     console.warn("Could not extract all frames:", frameErr.message);

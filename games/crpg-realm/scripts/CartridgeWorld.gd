@@ -10,15 +10,35 @@ const TILE_SIZE: float = 48.0
 @onready var hud: Control = $CanvasLayer/PartyHUD
 @onready var msg_label: Label = $CanvasLayer/NoticeLabel
 @onready var dialog_box: PanelContainer = $CanvasLayer/DialogBox
-@onready var dialog_speaker: Label = $CanvasLayer/DialogBox/VBox/SpeakerLabel
-@onready var dialog_text: Label = $CanvasLayer/DialogBox/VBox/DialogText
-@onready var dialog_buttons: HBoxContainer = $CanvasLayer/DialogBox/VBox/Buttons
+@onready var dialog_speaker: Label = $CanvasLayer/DialogBox.find_child("SpeakerLabel", true, false)
+@onready var dialog_text: Label = $CanvasLayer/DialogBox.find_child("DialogText", true, false)
+@onready var dialog_buttons: HBoxContainer = $CanvasLayer/DialogBox.find_child("Buttons", true, false)
+@onready var dialog_portrait: TextureRect = $CanvasLayer/DialogBox.find_child("PortraitRect", true, false)
 
 var hero: Node2D = null
 var current_map_slug: String = ""
 var spawned_npcs: Dictionary = {}
 var spawned_monsters: Dictionary = {}
 var active_connections: Array = []
+var has_background_art: bool = false
+
+func _load_texture_safe(path: String) -> Texture2D:
+	if path == "":
+		return null
+	var norm_path = path
+	if not norm_path.begins_with("res://") and not norm_path.begins_with("user://") and not norm_path.begins_with("/"):
+		norm_path = "res://" + norm_path.trim_prefix("/")
+	if norm_path.begins_with("res://") and ResourceLoader.exists(norm_path):
+		var res = load(norm_path)
+		if res is Texture2D:
+			return res
+	var abs_p = ProjectSettings.globalize_path(norm_path) if norm_path.begins_with("res://") else norm_path
+	if FileAccess.file_exists(abs_p) or FileAccess.file_exists(norm_path):
+		var check_path = abs_p if FileAccess.file_exists(abs_p) else norm_path
+		var img = Image.load_from_file(check_path)
+		if img and not img.is_empty():
+			return ImageTexture.create_from_image(img)
+	return null
 
 func _ready() -> void:
 	print("📼 [CartridgeWorld] Initializing Cartridge Runner...")
@@ -51,7 +71,7 @@ func _load_map(map_slug: String, spawn_coords: Vector2) -> void:
 	# 1. Update Camera Limits & Background
 	var pixel_w = map_w * TILE_SIZE
 	var pixel_h = map_h * TILE_SIZE
-	_draw_map_background(pixel_w, pixel_h, terrain)
+	_draw_map_background(pixel_w, pixel_h, terrain, map_data, map_slug)
 
 	# 2. Spawn Hero
 	_spawn_hero(spawn_coords, pixel_w, pixel_h)
@@ -77,16 +97,43 @@ func _load_map(map_slug: String, spawn_coords: Vector2) -> void:
 	if action_log:
 		action_log.add_entry("Entered: [b]%s[/b]" % map_title, "info")
 
-func _draw_map_background(pixel_w: float, pixel_h: float, terrain: String) -> void:
+func _draw_map_background(pixel_w: float, pixel_h: float, terrain: String, map_data: Dictionary = {}, map_slug: String = "") -> void:
 	var bg = $Background
+	has_background_art = false
 	if bg:
 		bg.size = Vector2(pixel_w, pixel_h)
 		var color = Color(0.1, 0.12, 0.16)
 		match terrain:
 			"stone", "dungeon": color = Color(0.08, 0.1, 0.14)
 			"grass", "wilderness": color = Color(0.1, 0.18, 0.12)
-			"lava", "lair": color = Color(0.18, 0.08, 0.08)
+			"lava", "lair", "cave": color = Color(0.18, 0.08, 0.08)
 		bg.color = color
+
+		# Real high-definition background artwork underlay
+		var bg_img_path = str(map_data.get("robos:backgroundImage", map_data.get("backgroundImage", "")))
+		if bg_img_path == "":
+			if "tantegel" in map_slug or map_slug == "throne-room":
+				bg_img_path = "res://assets/blockouts/tantegel-throne-room.png"
+			elif "charlock" in map_slug or "lair" in map_slug or map_slug == "dark-lord-lair":
+				bg_img_path = "res://assets/blockouts/catacomb-antechamber.png"
+
+		if bg_img_path != "":
+			var underlay_tex = _load_texture_safe(bg_img_path)
+			if underlay_tex:
+				var underlay = bg.get_node_or_null("MapArtUnderlay") as TextureRect
+				if not underlay:
+					underlay = TextureRect.new()
+					underlay.name = "MapArtUnderlay"
+					underlay.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+					underlay.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+					bg.add_child(underlay)
+				underlay.size = Vector2(pixel_w, pixel_h)
+				underlay.texture = underlay_tex
+				underlay.visible = true
+				has_background_art = true
+				print("🎨 [CartridgeWorld] Successfully loaded background artwork underlay: ", bg_img_path)
+			else:
+				push_warning("[CartridgeWorld] Failed loading background underlay at: " + bg_img_path)
 
 func _spawn_hero(coords: Vector2, pixel_w: float, pixel_h: float) -> void:
 	if not hero:
@@ -99,6 +146,45 @@ func _spawn_hero(coords: Vector2, pixel_w: float, pixel_h: float) -> void:
 
 	if hero.has_method("set_camera_limits"):
 		hero.set_camera_limits(0, 0, int(pixel_w), int(pixel_h))
+
+	# Update Hero name and token from active cartridge
+	var camp = CartridgeManager.active_cartridge.get("campaign", {})
+	var heroes_list = camp.get("robos:heroes", camp.get("heroes", []))
+	var h_data = {}
+	if heroes_list.size() > 0 and (heroes_list[0] is Dictionary):
+		h_data = heroes_list[0]
+	var h_name = str(h_data.get("name", h_data.get("dcterms:title", "")))
+	if h_name != "":
+		hero.character_name = h_name
+		var nl = hero.find_child("NameLabel", true, false)
+		if nl and nl is Label:
+			nl.text = h_name
+
+	var h_token_path = str(h_data.get("tokenAssetRef", h_data.get("robos:tokenAssetRef", "")))
+	if h_token_path == "":
+		if "alefgard" in current_map_slug or "tantegel" in current_map_slug or "charlock" in current_map_slug or "dw" in str(camp.get("slug", "")):
+			h_token_path = "res://assets/tokens/token_hero-alefgard-token.png"
+	if h_token_path != "":
+		var h_tex = _load_texture_safe(h_token_path)
+		if h_tex:
+			var spr = hero.get_node_or_null("Sprite") as Sprite2D
+			if spr:
+				spr.texture = h_tex
+				var sz = h_tex.get_size()
+				var s = 52.0 / max(sz.x, sz.y)
+				spr.scale = Vector2(s, s)
+				spr.offset = Vector2(0, 0)
+			var token_spr = hero.get_node_or_null("HeroTokenRing") as Sprite2D
+			if not token_spr:
+				token_spr = Sprite2D.new()
+				token_spr.name = "HeroTokenRing"
+				hero.add_child(token_spr)
+				hero.move_child(token_spr, 0)
+			token_spr.texture = h_tex
+			var sz = h_tex.get_size()
+			var s = 48.0 / max(sz.x, sz.y)
+			token_spr.scale = Vector2(s, s)
+			token_spr.position = Vector2(0, 0)
 
 func _spawn_map_object(obj: Dictionary) -> void:
 	var o_type = str(obj.get("robos:objectType", obj.get("type", "wall")))
@@ -126,7 +212,10 @@ func _spawn_map_object(obj: Dictionary) -> void:
 		var visual = ColorRect.new()
 		visual.position = Vector2(-pw/2, -ph/2)
 		visual.size = Vector2(pw, ph)
-		visual.color = Color(0.2, 0.25, 0.35, 0.8)
+		if has_background_art:
+			visual.color = Color(0.2, 0.25, 0.35, 0.0)
+		else:
+			visual.color = Color(0.2, 0.25, 0.35, 0.8)
 		sb.add_child(visual)
 
 		$MapElements.add_child(sb)
@@ -142,11 +231,21 @@ func _spawn_map_object(obj: Dictionary) -> void:
 		cs.shape = shape
 		area.add_child(cs)
 
-		var visual = ColorRect.new()
-		visual.position = Vector2(-pw/2, -ph/2)
-		visual.size = Vector2(pw, ph)
-		visual.color = Color(0.9, 0.7, 0.1, 0.9)
-		area.add_child(visual)
+		var chest_spr = Sprite2D.new()
+		chest_spr.name = "ChestSprite"
+		var chest_tex = _load_texture_safe("res://assets/props/chest_closed.png")
+		if chest_tex:
+			chest_spr.texture = chest_tex
+			var csz = chest_tex.get_size()
+			var cs_scale = 36.0 / max(csz.x, csz.y)
+			chest_spr.scale = Vector2(cs_scale, cs_scale)
+			area.add_child(chest_spr)
+		else:
+			var visual = ColorRect.new()
+			visual.position = Vector2(-pw/2, -ph/2)
+			visual.size = Vector2(pw, ph)
+			visual.color = Color(0.9, 0.7, 0.1, 0.9)
+			area.add_child(visual)
 
 		var lbl = Label.new()
 		lbl.text = "📦 " + title
@@ -254,17 +353,47 @@ func _create_interactive_npc(slug: String, ch_data: Dictionary, coord: Vector2, 
 	cs.shape = shape
 	npc_node.add_child(cs)
 
-	var icon_lbl = Label.new()
-	icon_lbl.text = "🐉" if "dragonlord" in slug else ("👑" if "king" in slug else ("👸" if "princess" in slug else ("🔨" if "blacksmith" in slug or "torvald" in slug else ("👹" if "goblin" in slug else ("💀" if "malakor" in slug else "👤")))))
-	icon_lbl.add_theme_font_size_override("font_size", 24)
-	icon_lbl.position = Vector2(-14, -28)
-	npc_node.add_child(icon_lbl)
+	var token_path = str(ch_data.get("tokenAssetRef", ch_data.get("robos:tokenAssetRef", ch_data.get("token", ""))))
+	if token_path == "":
+		if "dragonlord" in slug:
+			token_path = "res://assets/tokens/token_dragonlord.png"
+		elif "king" in slug or "loric" in slug or "lorik" in slug:
+			token_path = "res://assets/tokens/token_king_lorik.png"
+		elif "princess" in slug or "gwaelin" in slug:
+			token_path = "res://assets/tokens/token_princess_gwaelin.png"
+		elif "malakor" in slug:
+			token_path = "res://assets/tokens/token_malakor_boss.png"
+		elif "goblin" in slug:
+			token_path = "res://assets/tokens/token_rogue.png"
+		elif "blacksmith" in slug or "torvald" in slug:
+			token_path = "res://assets/tokens/token_fighter.png"
+
+	var token_tex: Texture2D = _load_texture_safe(token_path)
+
+	if token_tex:
+		var spr = Sprite2D.new()
+		spr.name = "TokenSprite"
+		spr.texture = token_tex
+		var tex_size = token_tex.get_size()
+		var target_diameter = 52.0
+		if is_monster and ("dragonlord" in slug or "boss" in slug):
+			target_diameter = 72.0
+		var s = target_diameter / max(tex_size.x, tex_size.y)
+		spr.scale = Vector2(s, s)
+		spr.position = Vector2(0, -6)
+		npc_node.add_child(spr)
+	else:
+		var icon_lbl = Label.new()
+		icon_lbl.text = "🐉" if "dragonlord" in slug else ("👑" if "king" in slug else ("👸" if "princess" in slug else ("🔨" if "blacksmith" in slug or "torvald" in slug else ("👹" if "goblin" in slug else ("💀" if "malakor" in slug else "👤")))))
+		icon_lbl.add_theme_font_size_override("font_size", 24)
+		icon_lbl.position = Vector2(-14, -28)
+		npc_node.add_child(icon_lbl)
 
 	var name_lbl = Label.new()
 	name_lbl.text = name_str
 	name_lbl.add_theme_font_size_override("font_size", 11)
 	name_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.4) if not is_monster else Color(1.0, 0.4, 0.4))
-	name_lbl.position = Vector2(-40, 10)
+	name_lbl.position = Vector2(-40, 22)
 	name_lbl.custom_minimum_size = Vector2(80, 20)
 	name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	npc_node.add_child(name_lbl)
@@ -454,23 +583,55 @@ func _on_begin_torvald_trial() -> void:
 		action_log.add_entry("Master Torvald conjured an Astral Projection Goblin!", "combat")
 	_close_dialog()
 
-func _show_dialog(speaker: String, text: String, options: Array) -> void:
+func _show_dialog(speaker: String, text: String, options: Array, portrait_ref: Variant = null) -> void:
 	if not dialog_box:
 		return
-	dialog_speaker.text = speaker
-	dialog_text.text = text
+	if dialog_speaker:
+		dialog_speaker.text = speaker
+	if dialog_text:
+		dialog_text.text = text
 
-	for child in dialog_buttons.get_children():
-		child.queue_free()
+	var p_path = ""
+	if portrait_ref is String and portrait_ref != "":
+		p_path = portrait_ref
+	elif portrait_ref is Texture2D:
+		if dialog_portrait:
+			dialog_portrait.texture = portrait_ref
+			dialog_portrait.visible = true
 
-	for opt in options:
-		var btn = Button.new()
-		btn.text = opt.get("text", "Continue")
-		btn.add_theme_font_size_override("font_size", 12)
-		var act = opt.get("action", null)
-		if act is Callable:
-			btn.pressed.connect(act)
-		dialog_buttons.add_child(btn)
+	if p_path == "":
+		var sp_low = speaker.to_lower()
+		if "lorik" in sp_low or "loric" in sp_low or "king" in sp_low:
+			p_path = "res://assets/portraits/portrait_male01.png"
+		elif "gwaelin" in sp_low or "princess" in sp_low or "jennifer" in sp_low:
+			p_path = "res://assets/portraits/portrait_female04.png"
+		elif "dragonlord" in sp_low or "malakor" in sp_low or "dark lord" in sp_low:
+			p_path = "res://assets/portraits/portrait_malakor.png"
+		elif "torvald" in sp_low or "blacksmith" in sp_low:
+			p_path = "res://assets/portraits/portrait_brand.png"
+		elif "victory" in sp_low:
+			p_path = "res://assets/portraits/portrait_female04.png"
+		else:
+			p_path = "res://assets/portraits/portrait_fighter.png"
+
+	if p_path != "":
+		var p_tex = _load_texture_safe(p_path)
+		if p_tex and dialog_portrait:
+			dialog_portrait.texture = p_tex
+			dialog_portrait.visible = true
+
+	if dialog_buttons:
+		for child in dialog_buttons.get_children():
+			child.queue_free()
+
+		for opt in options:
+			var btn = Button.new()
+			btn.text = opt.get("text", "Continue")
+			btn.add_theme_font_size_override("font_size", 12)
+			var act = opt.get("action", null)
+			if act is Callable:
+				btn.pressed.connect(act)
+			dialog_buttons.add_child(btn)
 
 	dialog_box.visible = true
 
@@ -485,7 +646,7 @@ func _trigger_victory() -> void:
 	action_log.add_entry("🏆 [b]CAMPAIGN COMPLETE: Total Victory in %s![/b]" % title, "info")
 	_show_dialog("Victory Proclamation", "The realm is saved! The darkness has lifted, the Ball of Light restored, and the royal lineage secured. You have won the campaign!", [
 		{"text": "Restart Campaign", "action": func(): _on_restart_campaign()}
-	])
+	], "res://assets/portraits/portrait_female04.png")
 
 func _on_restart_campaign() -> void:
 	CartridgeManager.insert_cartridge("rescue-the-princess")

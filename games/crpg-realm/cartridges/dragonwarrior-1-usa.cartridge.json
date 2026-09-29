@@ -15,6 +15,7 @@
     "mapCount": 2,
     "characterCount": 4,
     "itemCount": 3,
+    "enemyCount": 7,
     "questCount": 0,
     "startingMap": "tantegel-throne-room",
     "startingPosition": {
@@ -22,7 +23,7 @@
       "y": 14
     },
     "partyLimit": 1,
-    "createdDate": "2026-09-28T20:27:45.986Z"
+    "createdDate": "2026-09-29T10:44:01.374Z"
   },
   "campaign": {
     "@context": {
@@ -57,6 +58,11 @@
         "id": "urn:robos:crpg:character:hero-of-alefgard",
         "slug": "hero-of-alefgard",
         "name": "Hero of Alefgard",
+        "portrait": "assets/portraits/portrait_fighter.png",
+        "portraitAssetRef": "assets/portraits/portrait_fighter.png",
+        "tokenAssetRef": "assets/tokens/token_hero-alefgard-token.png",
+        "robos:inventory": [],
+        "inventory": [],
         "mainHand": "",
         "offHand": "",
         "armor": "",
@@ -72,9 +78,7 @@
         "robos:cloak": "",
         "robos:boots": "",
         "robos:ring1": "",
-        "robos:quickItems": "",
-        "robos:inventory": [],
-        "inventory": []
+        "robos:quickItems": ""
       }
     ],
     "robos:gameState": {
@@ -196,6 +200,7 @@
         }
       ]
     },
+    "robos:splashAssetRef": "",
     "robos:startingSpawn": {
       "position": [
         28,
@@ -222,7 +227,7 @@
       "robos:width": 40,
       "robos:height": 30,
       "robos:terrain": "cave",
-      "robos:backgroundImage": "",
+      "robos:backgroundImage": "res://assets/blockouts/catacomb-antechamber.png",
       "robos:backgroundOpacity": 1,
       "robos:mapObjects": [
         {
@@ -292,7 +297,7 @@
       "robos:width": 60,
       "robos:height": 40,
       "robos:terrain": "stone",
-      "robos:backgroundImage": "",
+      "robos:backgroundImage": "res://assets/blockouts/tantegel-throne-room.png",
       "robos:backgroundOpacity": 1,
       "robos:mapObjects": [
         {
@@ -554,8 +559,12 @@
       "name": "Dragonlord",
       "slug": "dragonlord",
       "characterType": "npc",
-      "robos:portrait": "👑",
-      "portrait": "👑",
+      "robos:portrait": "assets/portraits/portrait_malakor.png",
+      "portrait": "assets/portraits/portrait_malakor.png",
+      "robos:portraitAssetRef": "assets/portraits/portrait_malakor.png",
+      "portraitAssetRef": "assets/portraits/portrait_malakor.png",
+      "robos:tokenAssetRef": "assets/tokens/token_dragonlord.png",
+      "tokenAssetRef": "assets/tokens/token_dragonlord.png",
       "robos:alignment": "Lawful Good",
       "alignment": "Lawful Good",
       "robos:backstory": "A resident of the realm.",
@@ -652,8 +661,12 @@
       "name": "Hero of Alefgard",
       "slug": "hero-of-alefgard",
       "characterType": "hero",
-      "robos:portrait": "⚔️",
-      "portrait": "⚔️",
+      "robos:portrait": "assets/portraits/portrait_fighter.png",
+      "portrait": "assets/portraits/portrait_fighter.png",
+      "robos:portraitAssetRef": "assets/portraits/portrait_fighter.png",
+      "portraitAssetRef": "assets/portraits/portrait_fighter.png",
+      "robos:tokenAssetRef": "assets/tokens/token_hero-alefgard-token.png",
+      "tokenAssetRef": "assets/tokens/token_hero-alefgard-token.png",
       "robos:alignment": "Neutral Good",
       "alignment": "Neutral Good",
       "robos:backstory": "Descendant of the legendary hero Erdrick, destined to restore the Ball of Light to Alefgard.",
@@ -765,8 +778,12 @@
       "name": "King Loric",
       "slug": "npc-king-loric",
       "characterType": "npc",
-      "robos:portrait": "👑",
-      "portrait": "👑",
+      "robos:portrait": "assets/portraits/portrait_male01.png",
+      "portrait": "assets/portraits/portrait_male01.png",
+      "robos:portraitAssetRef": "assets/portraits/portrait_male01.png",
+      "portraitAssetRef": "assets/portraits/portrait_male01.png",
+      "robos:tokenAssetRef": "assets/tokens/token_king_lorik.png",
+      "tokenAssetRef": "assets/tokens/token_king_lorik.png",
       "robos:alignment": "Lawful Good",
       "alignment": "Lawful Good",
       "robos:backstory": "A resident of the realm.",
@@ -862,8 +879,12 @@
       "name": "Princess Gwaelin",
       "slug": "npc-princess-gwaelin",
       "characterType": "npc",
-      "robos:portrait": "👑",
-      "portrait": "👑",
+      "robos:portrait": "assets/portraits/portrait_female04.png",
+      "portrait": "assets/portraits/portrait_female04.png",
+      "robos:portraitAssetRef": "assets/portraits/portrait_female04.png",
+      "portraitAssetRef": "assets/portraits/portrait_female04.png",
+      "robos:tokenAssetRef": "assets/tokens/token_princess_gwaelin.png",
+      "tokenAssetRef": "assets/tokens/token_princess_gwaelin.png",
       "robos:alignment": "Lawful Good",
       "alignment": "Lawful Good",
       "robos:backstory": "A resident of the realm.",
@@ -1062,6 +1083,596 @@
       "effect": "",
       "dcterms:description": "",
       "description": ""
+    }
+  },
+  "enemies": {
+    "captain-malakor-boss": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "oslc_am": "http://open-services.net/ns/am#"
+      },
+      "@id": "urn:robos:crpg:monster:captain-malakor-boss",
+      "@type": [
+        "robos:CRPGMonster",
+        "oslc_am:Resource",
+        "schema:Person"
+      ],
+      "dcterms:title": "Dark Lord Malakor (Boss)",
+      "schema:name": "Dark Lord Malakor (Boss)",
+      "robos:slug": "captain-malakor-boss",
+      "slug": "captain-malakor-boss",
+      "robos:challengeRating": "5",
+      "challengeRating": "5",
+      "robos:creatureType": "fiend",
+      "creatureType": "fiend",
+      "robos:armorClass": 16,
+      "armorClass": 16,
+      "robos:hitPoints": 85,
+      "hitPoints": 85,
+      "robos:speed": 30,
+      "speed": 30,
+      "robos:alignment": "Chaotic Evil",
+      "alignment": "Chaotic Evil",
+      "robos:abilities": {
+        "str": 16,
+        "dex": 14,
+        "con": 16,
+        "int": 16,
+        "wis": 14,
+        "cha": 18
+      },
+      "abilities": {
+        "str": 16,
+        "dex": 14,
+        "con": 16,
+        "int": 16,
+        "wis": 14,
+        "cha": 18
+      },
+      "robos:attacks": [
+        {
+          "name": "Shadow Scythe",
+          "attackBonus": 7,
+          "damage": "2d8+3",
+          "damageType": "slashing",
+          "range": 5
+        },
+        {
+          "name": "Necrotic Blast",
+          "attackBonus": 6,
+          "damage": "3d6",
+          "damageType": "necrotic",
+          "range": 60
+        }
+      ],
+      "attacks": [
+        {
+          "name": "Shadow Scythe",
+          "attackBonus": 7,
+          "damage": "2d8+3",
+          "damageType": "slashing",
+          "range": 5
+        },
+        {
+          "name": "Necrotic Blast",
+          "attackBonus": 6,
+          "damage": "3d6",
+          "damageType": "necrotic",
+          "range": 60
+        }
+      ],
+      "robos:isBoss": true,
+      "isBoss": true,
+      "robos:portrait": "😈",
+      "portrait": "😈",
+      "robos:spriteAssetRef": "flare:creature:minotaur",
+      "spriteAssetRef": "flare:creature:minotaur",
+      "robos:xpReward": 1800,
+      "xpReward": 1800,
+      "robos:goldDrop": 250,
+      "goldDrop": 250,
+      "robos:behavior": "boss_phase",
+      "behavior": "boss_phase",
+      "dcterms:description": "Dread sorcerer-warlord threatening the kingdom with abyssal dark magic.",
+      "description": "Dread sorcerer-warlord threatening the kingdom with abyssal dark magic."
+    },
+    "corrupted-hound": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "oslc_am": "http://open-services.net/ns/am#"
+      },
+      "@id": "urn:robos:crpg:monster:corrupted-hound",
+      "@type": [
+        "robos:CRPGMonster",
+        "oslc_am:Resource",
+        "schema:Person"
+      ],
+      "dcterms:title": "Corrupted Shadow Hound",
+      "schema:name": "Corrupted Shadow Hound",
+      "robos:slug": "corrupted-hound",
+      "slug": "corrupted-hound",
+      "robos:challengeRating": "1/4",
+      "challengeRating": "1/4",
+      "robos:creatureType": "beast",
+      "creatureType": "beast",
+      "robos:armorClass": 12,
+      "armorClass": 12,
+      "robos:hitPoints": 11,
+      "hitPoints": 11,
+      "robos:speed": 40,
+      "speed": 40,
+      "robos:alignment": "Neutral Evil",
+      "alignment": "Neutral Evil",
+      "robos:abilities": {
+        "str": 12,
+        "dex": 15,
+        "con": 12,
+        "int": 3,
+        "wis": 12,
+        "cha": 6
+      },
+      "abilities": {
+        "str": 12,
+        "dex": 15,
+        "con": 12,
+        "int": 3,
+        "wis": 12,
+        "cha": 6
+      },
+      "robos:attacks": [
+        {
+          "name": "Bite",
+          "attackBonus": 4,
+          "damage": "1d6+2",
+          "damageType": "piercing",
+          "range": 5
+        }
+      ],
+      "attacks": [
+        {
+          "name": "Bite",
+          "attackBonus": 4,
+          "damage": "1d6+2",
+          "damageType": "piercing",
+          "range": 5
+        }
+      ],
+      "robos:isBoss": false,
+      "isBoss": false,
+      "robos:portrait": "🐺",
+      "portrait": "🐺",
+      "robos:spriteAssetRef": "flare:creature:wolf",
+      "spriteAssetRef": "flare:creature:wolf",
+      "robos:xpReward": 50,
+      "xpReward": 50,
+      "robos:goldDrop": 0,
+      "goldDrop": 0,
+      "robos:behavior": "aggressive",
+      "behavior": "aggressive",
+      "dcterms:description": "Savage shadow wolf warped by abyssal miasma, hunting in coordinated packs.",
+      "description": "Savage shadow wolf warped by abyssal miasma, hunting in coordinated packs."
+    },
+    "feral-guard-skirmisher": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "oslc_am": "http://open-services.net/ns/am#"
+      },
+      "@id": "urn:robos:crpg:monster:feral-guard-skirmisher",
+      "@type": [
+        "robos:CRPGMonster",
+        "oslc_am:Resource",
+        "schema:Person"
+      ],
+      "dcterms:title": "Feral Guard Skirmisher",
+      "schema:name": "Feral Guard Skirmisher",
+      "robos:slug": "feral-guard-skirmisher",
+      "slug": "feral-guard-skirmisher",
+      "robos:challengeRating": "1/2",
+      "challengeRating": "1/2",
+      "robos:creatureType": "undead",
+      "creatureType": "undead",
+      "robos:armorClass": 14,
+      "armorClass": 14,
+      "robos:hitPoints": 16,
+      "hitPoints": 16,
+      "robos:speed": 30,
+      "speed": 30,
+      "robos:alignment": "Lawful Evil",
+      "alignment": "Lawful Evil",
+      "robos:abilities": {
+        "str": 14,
+        "dex": 12,
+        "con": 14,
+        "int": 8,
+        "wis": 10,
+        "cha": 8
+      },
+      "abilities": {
+        "str": 14,
+        "dex": 12,
+        "con": 14,
+        "int": 8,
+        "wis": 10,
+        "cha": 8
+      },
+      "robos:attacks": [
+        {
+          "name": "Spear Thrust",
+          "attackBonus": 4,
+          "damage": "1d6+2",
+          "damageType": "piercing",
+          "range": 5
+        }
+      ],
+      "attacks": [
+        {
+          "name": "Spear Thrust",
+          "attackBonus": 4,
+          "damage": "1d6+2",
+          "damageType": "piercing",
+          "range": 5
+        }
+      ],
+      "robos:isBoss": false,
+      "isBoss": false,
+      "robos:portrait": "💀",
+      "portrait": "💀",
+      "robos:spriteAssetRef": "flare:creature:skeleton",
+      "spriteAssetRef": "flare:creature:skeleton",
+      "robos:xpReward": 100,
+      "xpReward": 100,
+      "robos:goldDrop": 8,
+      "goldDrop": 8,
+      "robos:behavior": "defensive",
+      "behavior": "defensive",
+      "dcterms:description": "Fallen garrison guards resurrected by necromantic curse, wielding rusty spears.",
+      "description": "Fallen garrison guards resurrected by necromantic curse, wielding rusty spears."
+    },
+    "goblin-raider": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "oslc_am": "http://open-services.net/ns/am#"
+      },
+      "@id": "urn:robos:crpg:monster:goblin-raider",
+      "@type": [
+        "robos:CRPGMonster",
+        "oslc_am:Resource",
+        "schema:Person"
+      ],
+      "dcterms:title": "Goblin Raider",
+      "schema:name": "Goblin Raider",
+      "robos:slug": "goblin-raider",
+      "slug": "goblin-raider",
+      "robos:challengeRating": "1/4",
+      "challengeRating": "1/4",
+      "robos:creatureType": "humanoid",
+      "creatureType": "humanoid",
+      "robos:armorClass": 15,
+      "armorClass": 15,
+      "robos:hitPoints": 7,
+      "hitPoints": 7,
+      "robos:speed": 30,
+      "speed": 30,
+      "robos:alignment": "Neutral Evil",
+      "alignment": "Neutral Evil",
+      "robos:abilities": {
+        "str": 8,
+        "dex": 14,
+        "con": 10,
+        "int": 10,
+        "wis": 8,
+        "cha": 8
+      },
+      "abilities": {
+        "str": 8,
+        "dex": 14,
+        "con": 10,
+        "int": 10,
+        "wis": 8,
+        "cha": 8
+      },
+      "robos:attacks": [
+        {
+          "name": "Scimitar",
+          "attackBonus": 4,
+          "damage": "1d6+2",
+          "damageType": "slashing",
+          "range": 5
+        }
+      ],
+      "attacks": [
+        {
+          "name": "Scimitar",
+          "attackBonus": 4,
+          "damage": "1d6+2",
+          "damageType": "slashing",
+          "range": 5
+        }
+      ],
+      "robos:isBoss": false,
+      "isBoss": false,
+      "robos:portrait": "👺",
+      "portrait": "👺",
+      "robos:spriteAssetRef": "flare:creature:goblin",
+      "spriteAssetRef": "flare:creature:goblin",
+      "robos:xpReward": 50,
+      "xpReward": 50,
+      "robos:goldDrop": 12,
+      "goldDrop": 12,
+      "robos:behavior": "flanker",
+      "behavior": "flanker",
+      "dcterms:description": "Cunning mountain ambusher armed with a notched scimitar.",
+      "description": "Cunning mountain ambusher armed with a notched scimitar."
+    },
+    "minotaur-marauder": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "oslc_am": "http://open-services.net/ns/am#"
+      },
+      "@id": "urn:robos:crpg:monster:minotaur-marauder",
+      "@type": [
+        "robos:CRPGMonster",
+        "oslc_am:Resource",
+        "schema:Person"
+      ],
+      "dcterms:title": "Minotaur Marauder",
+      "schema:name": "Minotaur Marauder",
+      "robos:slug": "minotaur-marauder",
+      "slug": "minotaur-marauder",
+      "robos:challengeRating": "3",
+      "challengeRating": "3",
+      "robos:creatureType": "monstrosity",
+      "creatureType": "monstrosity",
+      "robos:armorClass": 14,
+      "armorClass": 14,
+      "robos:hitPoints": 76,
+      "hitPoints": 76,
+      "robos:speed": 40,
+      "speed": 40,
+      "robos:alignment": "Chaotic Evil",
+      "alignment": "Chaotic Evil",
+      "robos:abilities": {
+        "str": 18,
+        "dex": 11,
+        "con": 16,
+        "int": 6,
+        "wis": 16,
+        "cha": 9
+      },
+      "abilities": {
+        "str": 18,
+        "dex": 11,
+        "con": 16,
+        "int": 6,
+        "wis": 16,
+        "cha": 9
+      },
+      "robos:attacks": [
+        {
+          "name": "Greataxe",
+          "attackBonus": 6,
+          "damage": "2d12+4",
+          "damageType": "slashing",
+          "range": 5
+        },
+        {
+          "name": "Gore / Horns",
+          "attackBonus": 6,
+          "damage": "2d8+4",
+          "damageType": "piercing",
+          "range": 5
+        }
+      ],
+      "attacks": [
+        {
+          "name": "Greataxe",
+          "attackBonus": 6,
+          "damage": "2d12+4",
+          "damageType": "slashing",
+          "range": 5
+        },
+        {
+          "name": "Gore / Horns",
+          "attackBonus": 6,
+          "damage": "2d8+4",
+          "damageType": "piercing",
+          "range": 5
+        }
+      ],
+      "robos:isBoss": false,
+      "isBoss": false,
+      "robos:portrait": "🧌",
+      "portrait": "🧌",
+      "robos:spriteAssetRef": "flare:creature:minotaur",
+      "spriteAssetRef": "flare:creature:minotaur",
+      "robos:xpReward": 700,
+      "xpReward": 700,
+      "robos:goldDrop": 50,
+      "goldDrop": 50,
+      "robos:behavior": "aggressive",
+      "behavior": "aggressive",
+      "dcterms:description": "Towering beast of the subterranean maze who charges trespassers.",
+      "description": "Towering beast of the subterranean maze who charges trespassers."
+    },
+    "red-dragon-wyrm": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "oslc_am": "http://open-services.net/ns/am#"
+      },
+      "@id": "urn:robos:crpg:monster:red-dragon-wyrm",
+      "@type": [
+        "robos:CRPGMonster",
+        "oslc_am:Resource",
+        "schema:Person"
+      ],
+      "dcterms:title": "Red Dragonlord (Boss)",
+      "schema:name": "Red Dragonlord (Boss)",
+      "robos:slug": "red-dragon-wyrm",
+      "slug": "red-dragon-wyrm",
+      "robos:challengeRating": "10",
+      "challengeRating": "10",
+      "robos:creatureType": "dragon",
+      "creatureType": "dragon",
+      "robos:armorClass": 18,
+      "armorClass": 18,
+      "robos:hitPoints": 178,
+      "hitPoints": 178,
+      "robos:speed": 40,
+      "speed": 40,
+      "robos:alignment": "Chaotic Evil",
+      "alignment": "Chaotic Evil",
+      "robos:abilities": {
+        "str": 23,
+        "dex": 10,
+        "con": 21,
+        "int": 14,
+        "wis": 11,
+        "cha": 17
+      },
+      "abilities": {
+        "str": 23,
+        "dex": 10,
+        "con": 21,
+        "int": 14,
+        "wis": 11,
+        "cha": 17
+      },
+      "robos:attacks": [
+        {
+          "name": "Bite",
+          "attackBonus": 10,
+          "damage": "2d10+6",
+          "damageType": "piercing",
+          "range": 10
+        },
+        {
+          "name": "Fire Breath",
+          "attackBonus": 9,
+          "damage": "8d6",
+          "damageType": "fire",
+          "range": 30
+        }
+      ],
+      "attacks": [
+        {
+          "name": "Bite",
+          "attackBonus": 10,
+          "damage": "2d10+6",
+          "damageType": "piercing",
+          "range": 10
+        },
+        {
+          "name": "Fire Breath",
+          "attackBonus": 9,
+          "damage": "8d6",
+          "damageType": "fire",
+          "range": 30
+        }
+      ],
+      "robos:isBoss": true,
+      "isBoss": true,
+      "robos:portrait": "🐉",
+      "portrait": "🐉",
+      "robos:spriteAssetRef": "flare:creature:dragon",
+      "spriteAssetRef": "flare:creature:dragon",
+      "robos:xpReward": 5900,
+      "xpReward": 5900,
+      "robos:goldDrop": 1200,
+      "goldDrop": 1200,
+      "robos:behavior": "boss_phase",
+      "behavior": "boss_phase",
+      "dcterms:description": "Ancient wyrm that hoards stolen artifacts of light within deep cavern vaults.",
+      "description": "Ancient wyrm that hoards stolen artifacts of light within deep cavern vaults."
+    },
+    "skeleton-archer": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "oslc_am": "http://open-services.net/ns/am#"
+      },
+      "@id": "urn:robos:crpg:monster:skeleton-archer",
+      "@type": [
+        "robos:CRPGMonster",
+        "oslc_am:Resource",
+        "schema:Person"
+      ],
+      "dcterms:title": "Skeleton Marksman",
+      "schema:name": "Skeleton Marksman",
+      "robos:slug": "skeleton-archer",
+      "slug": "skeleton-archer",
+      "robos:challengeRating": "1/4",
+      "challengeRating": "1/4",
+      "robos:creatureType": "undead",
+      "creatureType": "undead",
+      "robos:armorClass": 13,
+      "armorClass": 13,
+      "robos:hitPoints": 13,
+      "hitPoints": 13,
+      "robos:speed": 30,
+      "speed": 30,
+      "robos:alignment": "Lawful Evil",
+      "alignment": "Lawful Evil",
+      "robos:abilities": {
+        "str": 10,
+        "dex": 14,
+        "con": 15,
+        "int": 6,
+        "wis": 8,
+        "cha": 5
+      },
+      "abilities": {
+        "str": 10,
+        "dex": 14,
+        "con": 15,
+        "int": 6,
+        "wis": 8,
+        "cha": 5
+      },
+      "robos:attacks": [
+        {
+          "name": "Shortbow",
+          "attackBonus": 4,
+          "damage": "1d6+2",
+          "damageType": "piercing",
+          "range": 80
+        }
+      ],
+      "attacks": [
+        {
+          "name": "Shortbow",
+          "attackBonus": 4,
+          "damage": "1d6+2",
+          "damageType": "piercing",
+          "range": 80
+        }
+      ],
+      "robos:isBoss": false,
+      "isBoss": false,
+      "robos:portrait": "🏹",
+      "portrait": "🏹",
+      "robos:spriteAssetRef": "flare:creature:skeleton",
+      "spriteAssetRef": "flare:creature:skeleton",
+      "robos:xpReward": 50,
+      "xpReward": 50,
+      "robos:goldDrop": 5,
+      "goldDrop": 5,
+      "robos:behavior": "ranged_kiter",
+      "behavior": "ranged_kiter",
+      "dcterms:description": "Skeletal sharpshooter guarding dungeon parapets.",
+      "description": "Skeletal sharpshooter guarding dungeon parapets."
     }
   },
   "quests": [],

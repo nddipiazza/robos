@@ -164,13 +164,15 @@ func _ready() -> void:
 			elif "--demo" in cmd_args:
 				auto_demo = 0
 
-			# Check if launched via "Render as Game" with --campaign or CRPG_CAMPAIGN
-			var camp_slug = OS.get_environment("CRPG_CAMPAIGN")
+			# Check if launched via "Render as Game" with --cartridge, --campaign, CRPG_CARTRIDGE, CRPG_CAMPAIGN
+			var camp_slug = OS.get_environment("CRPG_CARTRIDGE")
+			if camp_slug == "":
+				camp_slug = OS.get_environment("CRPG_CAMPAIGN")
 			for i in range(cmd_args.size()):
 				var a = cmd_args[i]
-				if a == "--campaign" and i + 1 < cmd_args.size():
+				if (a == "--cartridge" or a == "--campaign") and i + 1 < cmd_args.size():
 					camp_slug = cmd_args[i + 1]
-				elif a.begins_with("--campaign="):
+				elif a.begins_with("--cartridge=") or a.begins_with("--campaign="):
 					camp_slug = a.split("=")[1]
 			if camp_slug != "":
 				_load_and_embark_campaign.call_deferred(camp_slug)
@@ -180,6 +182,17 @@ func _ready() -> void:
 		_start_demo.call_deferred(auto_demo)
 
 func _load_and_embark_campaign(camp_slug: String) -> void:
+	if not is_inside_tree() or get_tree() == null:
+		return
+	camp_slug = camp_slug.strip_edges().replace('"', '').replace("'", "")
+	if has_node("/root/CartridgeManager"):
+		var cm = get_node("/root/CartridgeManager")
+		if cm.is_cartridge_active and cm.active_cartridge.get("cartridgeId", "") == camp_slug:
+			return
+		if cm.insert_cartridge(camp_slug):
+			cm.embark_cartridge()
+			return
+
 	var camp_file = "res://campaigns/%s.jsonld" % camp_slug
 	var camp_dict: Dictionary = {}
 	if FileAccess.file_exists(camp_file):
@@ -195,7 +208,7 @@ func _load_and_embark_campaign(camp_slug: String) -> void:
 
 	if camp_dict.size() > 0:
 		GameState.load_campaign_state(camp_dict)
-		var starting_scene = "Homestead"
+		var starting_scene = "CartridgeWorld"
 		var start_map = str(camp_dict.get("robos:startingMap", camp_dict.get("startingMap", ""))).to_lower()
 		if "candlekeep" in start_map or "homestead" in start_map:
 			starting_scene = "Homestead"
@@ -209,6 +222,8 @@ func _load_and_embark_campaign(camp_slug: String) -> void:
 			starting_scene = "WhisperingForest"
 		elif "keep" in start_map or "garrison" in start_map:
 			starting_scene = "GarrisonKeep"
+		else:
+			starting_scene = "CartridgeWorld"
 		get_tree().change_scene_to_file("res://scenes/%s.tscn" % starting_scene)
 
 func _start_demo(target_mode: int = 0) -> void:

@@ -220,6 +220,10 @@ func _process_http_request(client: StreamPeerTCP, raw_req: String) -> void:
 		["POST", "/qa/cartridge_step"], ["POST", "/api/v1/qa/cartridge_step"]:
 			var action_name = str(body_dict.get("action", ""))
 			var cur_sc = get_tree().current_scene
+			if not cur_sc or not cur_sc.has_method("_interact_with_npc"):
+				var cand_cw = get_tree().root.find_child("CartridgeWorld", true, false)
+				if cand_cw:
+					cur_sc = cand_cw
 			var res = {"success": false, "action": action_name}
 			if cur_sc:
 				match action_name:

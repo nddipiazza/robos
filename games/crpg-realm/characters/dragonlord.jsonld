@@ -1,0 +1,64 @@
+{
+  "@context": {
+    "robos": "urn:robos:",
+    "schema": "https://schema.org/",
+    "dcterms": "http://purl.org/dc/terms/"
+  },
+  "@id": "urn:robos:crpg:character:dragonlord",
+  "@type": [
+    "robos:CRPGCharacter",
+    "robos:CRPGMonster",
+    "schema:Person"
+  ],
+  "dcterms:title": "Dragonlord",
+  "robos:characterType": "boss",
+  "schema:name": "Dragonlord",
+  "name": "Dragonlord",
+  "slug": "dragonlord",
+  "characterType": "boss",
+  "class": "Sorcerer",
+  "subclass": "Draconic Bloodline",
+  "level": 5,
+  "robos:portrait": "assets/portraits/portrait_malakor.png",
+  "portrait": "assets/portraits/portrait_malakor.png",
+  "robos:portraitAssetRef": "assets/portraits/portrait_malakor.png",
+  "portraitAssetRef": "assets/portraits/portrait_malakor.png",
+  "robos:tokenAssetRef": "assets/tokens/token_dragonlord.png",
+  "tokenAssetRef": "assets/tokens/token_dragonlord.png",
+  "robos:alignment": "Chaotic Evil",
+  "alignment": "Chaotic Evil",
+  "robos:hpMax": 50,
+  "hpMax": 50,
+  "robos:hpCurrent": 50,
+  "hpCurrent": 50,
+  "robos:armorClass": 15,
+  "armorClass": 15,
+  "robos:speed": 30,
+  "speed": 30,
+  "robos:stats": {
+    "str": 16,
+    "dex": 14,
+    "con": 16,
+    "int": 16,
+    "wis": 14,
+    "cha": 18
+  },
+  "stats": {
+    "str": 16,
+    "dex": 14,
+    "con": 16,
+    "int": 16,
+    "wis": 14,
+    "cha": 18
+  },
+  "robos:backstory": "Ancient dragon sorcerer who stole the sacred Ball of Light and plunged Alefgard into darkness.",
+  "backstory": "Ancient dragon sorcerer who stole the sacred Ball of Light and plunged Alefgard into darkness.",
+  "robos:location": "charlock-castle",
+  "location": "charlock-castle",
+  "robos:dialogue": [
+    "Join me and rule half the world, or perish in dragonfire!"
+  ],
+  "dialogue": [
+    "Join me and rule half the world, or perish in dragonfire!"
+  ]
+}
