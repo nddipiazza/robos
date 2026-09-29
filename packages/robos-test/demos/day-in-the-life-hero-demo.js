@@ -19,7 +19,7 @@ const SEGMENTS = [
   {
     type: 'card',
     image: path.join(ROOT_DIR, 'docs/assets/images/day-in-the-life/hero-title.jpg'),
-    duration: 2.5,
+    duration: 3.5,
   },
   // Onboarding Wizard (rapidly advancing through setup steps 1 to 11)
   {
@@ -29,8 +29,8 @@ const SEGMENTS = [
     duration: 15,
     speed: 0.18,
     cues: [
-      { start: 0.5, duration: 3.2, text: 'Setup Assistant: Step 1 (GPG Key ready) ➔ Step 2 (Pass Store init) ➔ Step 3 (Pinentry)' },
-      { start: 7.5, duration: 3.2, text: 'Rapid Provisioning: Step 4 (Git Profile) ➔ Step 5 (SSH Key) ➔ Step 10 (Software Center)' },
+      { start: 0.5, duration: 6.5, text: 'Setup Assistant: Step 1 (GPG Key ready) ➔ Step 2 (Pass Store init) ➔ Step 3 (Pinentry)' },
+      { start: 7.5, duration: 7.0, text: 'Rapid Provisioning: Step 4 (Git Profile) ➔ Step 5 (SSH Key) ➔ Step 10 (Software Center)' },
     ],
   },
   // Phase 1 Card
@@ -48,7 +48,7 @@ const SEGMENTS = [
     crop: '1100:780:410:150',
     subtitle: 'Phase 1: Issue Manager decomposes prompt into executable task DAG',
     subStart: 0.5,
-    subDuration: 3.0,
+    subDuration: 9.0,
   },
   // Knowledge Graph & Dual-State Card
   {
@@ -63,9 +63,9 @@ const SEGMENTS = [
     start: 1,
     duration: 25,
     cues: [
-      { start: 0.5, duration: 3.2, text: 'Knowledge Graph Explorer: Interactive SVG topology, node dependencies, & C4 architecture' },
-      { start: 5.5, duration: 3.2, text: 'Schema-Driven Entity Creator: ➕ Add Entity modal with live W3C SHACL validation gate' },
-      { start: 13.5, duration: 3.2, text: 'Transitive Blast Radius Analyzer & Multi-Hop Path Finder: BFS connection chains' },
+      { start: 0.5, duration: 7.0, text: 'Knowledge Graph Explorer: Interactive SVG topology, node dependencies, & C4 architecture' },
+      { start: 8.0, duration: 7.5, text: 'Schema-Driven Entity Creator: ➕ Add Entity modal with live W3C SHACL validation gate' },
+      { start: 16.0, duration: 8.5, text: 'Transitive Blast Radius Analyzer & Multi-Hop Path Finder: BFS connection chains' },
     ],
   },
   // Dual-State Architecture: Blast Radius Diffing
@@ -76,7 +76,7 @@ const SEGMENTS = [
     duration: 11,
     subtitle: 'Dual-State Sync: World 1 (main) vs World 2 (feature) automated blast radius diff',
     subStart: 0.5,
-    subDuration: 3.2,
+    subDuration: 10.0,
   },
   // Phase 2 Card
   {
@@ -91,8 +91,8 @@ const SEGMENTS = [
     start: 19,
     duration: 18,
     cues: [
-      { start: 0.5, duration: 3.2, text: 'Phase 2: OpenAPI 3.1 Web Service Explorer: Browsing routes, security, & parameters' },
-      { start: 8.5, duration: 3.2, text: 'Live Web Service Testing: Execute POST /pets/{id}/adopt & receive 200 OK response' },
+      { start: 0.5, duration: 7.5, text: 'Phase 2: OpenAPI 3.1 Web Service Explorer: Browsing routes, security, & parameters' },
+      { start: 8.5, duration: 8.5, text: 'Live Web Service Testing: Execute POST /pets/{id}/adopt & receive 200 OK response' },
     ],
   },
   // Phase 3 Card
@@ -110,7 +110,7 @@ const SEGMENTS = [
     crop: '1100:750:410:165',
     subtitle: 'Phase 3: Git Projects loads polyglot repositories with GPG pass signed commits',
     subStart: 0.5,
-    subDuration: 3.0,
+    subDuration: 8.5,
   },
   // Phase 4 Card
   {
@@ -127,7 +127,7 @@ const SEGMENTS = [
     crop: '1200:780:360:150',
     subtitle: 'Phase 4: Data Sources & REST Client: Live SQL/NoSQL queries & API runner',
     subStart: 0.5,
-    subDuration: 3.0,
+    subDuration: 8.5,
   },
   // Phase 5 Card
   {
@@ -143,8 +143,8 @@ const SEGMENTS = [
     duration: 18,
     crop: '1040:680:440:200',
     cues: [
-      { start: 0.5, duration: 3.2, text: 'Phase 5: IntelliJ IDEA Plugin: Port 63343 IPC, pass secrets, & reproduction breakpoint' },
-      { start: 8.5, duration: 3.2, text: 'Paused Thread State: Inspecting stack frames, local variables, & 14/14 Pact tests pass' },
+      { start: 0.5, duration: 7.5, text: 'Phase 5: IntelliJ IDEA Plugin: Port 63343 IPC, pass secrets, & reproduction breakpoint' },
+      { start: 8.5, duration: 8.5, text: 'Paused Thread State: Inspecting stack frames, local variables, & 14/14 Pact tests pass' },
     ],
   },
   // Phase 5b: Agent Code Review Platform PR Sign-Off
@@ -156,7 +156,7 @@ const SEGMENTS = [
     crop: '1400:900:260:90',
     subtitle: 'Agent Code Review Platform: Autonomous PR audit & 1-click dual-branch merge',
     subStart: 0.5,
-    subDuration: 3.0,
+    subDuration: 8.5,
   },
   // Phase 6 Card
   {
@@ -173,7 +173,7 @@ const SEGMENTS = [
     crop: '1400:900:260:90',
     subtitle: 'Phase 6: Kube Studio & Dev Central: ArgoCD GitOps sync & engineering cockpit',
     subStart: 0.5,
-    subDuration: 3.2,
+    subDuration: 9.5,
   },
 ];
 
@@ -184,6 +184,15 @@ function formatVttTime(seconds) {
   const s = Math.floor(seconds % 60);
   const ms = Math.floor((seconds % 1) * 1000);
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${String(ms).padStart(3, '0')}`;
+}
+
+// Helper: Format ASS timestamp 0:00:00.00
+function formatAssTime(seconds) {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  const cs = Math.floor((seconds % 1) * 100);
+  return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${String(cs).padStart(2, '0')}`;
 }
 
 // 2. Transcode each segment into uniform 1080p 30fps H.264 mp4
@@ -233,7 +242,7 @@ SEGMENTS.forEach((seg, idx) => {
   cumulativeTimelineSec += seg.duration;
 });
 
-// 3. Write WebVTT Subtitle File
+// 3. Write WebVTT and ASS Subtitle Files
 const vttPath = path.join(TMP_DIR, 'subtitles.vtt');
 let vttContent = 'WEBVTT\n\n';
 for (const cue of vttCues) {
@@ -241,6 +250,25 @@ for (const cue of vttCues) {
 }
 fs.writeFileSync(vttPath, vttContent, 'utf8');
 console.log(`✓ WebVTT subtitles written to ${vttPath} (${vttCues.length} cues across ${cumulativeTimelineSec.toFixed(1)}s timeline)`);
+
+const assPath = path.join(TMP_DIR, 'subtitles.ass');
+let assContent = `[Script Info]
+ScriptType: v4.00+
+PlayResX: 1920
+PlayResY: 1080
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Default,DejaVu Sans,28,&H00FFFFFF,&H000000FF,&H90000000,&Haa0b101b,-1,0,0,0,100,100,0,0,4,1,0,2,60,60,115,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+`;
+for (const cue of vttCues) {
+  assContent += `Dialogue: 0,${formatAssTime(cue.start)},${formatAssTime(cue.end)},Default,,0,0,0,,${cue.text}\n`;
+}
+fs.writeFileSync(assPath, assContent, 'utf8');
+console.log(`✓ Pixel-perfect 1080p ASS subtitles written to ${assPath}`);
 
 // 4. Concat all segments into a single master video
 const concatListPath = path.join(TMP_DIR, 'concat.txt');
@@ -251,13 +279,12 @@ const uncaptionedMaster = path.join(TMP_DIR, 'master_uncaptioned.mp4');
 console.log('Concatenating all segments into 1080p master video...');
 execSync(`ffmpeg -y -f concat -safe 0 -i "${concatListPath}" -c copy "${uncaptionedMaster}"`, { stdio: 'ignore' });
 
-// 5. Burn-in crisp, highly legible captions at bottom margin
+// 5. Burn-in crisp, pixel-perfect 1080p subtitles right above step pill
 const finalMp4 = path.join(OUT_DIR, 'videos/robos-proof-of-work-demo.mp4');
-console.log('Burning crisp DejaVu Sans subtitles into final 1080p video...');
-// FontSize=22, semi-transparent background capsule, ample vertical margin MarginV=30
+console.log('Burning pixel-perfect DejaVu Sans subtitles into final 1080p video...');
 execSync(
   `ffmpeg -y -i "${uncaptionedMaster}" ` +
-  `-vf "subtitles=${vttPath}:force_style='Fontname=DejaVu Sans,FontSize=22,PrimaryColour=&H00FFFFFF,OutlineColour=&H90000000,BackColour=&H800b101b,BorderStyle=4,Outline=1,Shadow=0,MarginV=30'" ` +
+  `-vf "ass=${assPath}" ` +
   `-c:v libx264 -preset fast -crf 22 -pix_fmt yuv420p "${finalMp4}"`,
   { stdio: 'inherit' }
 );
@@ -272,16 +299,16 @@ execSync(
 );
 console.log(`✓ Poster Frame created: ${finalPoster}`);
 
-// 7. Extract High-Impact 18.5s Highlight Reel across key SDLC phases
-console.log('Extracting high-impact highlight beats for hero loop and animated GIF...');
+// 7. Extract High-Impact 41s Highlight Reel across key SDLC phases with relaxed, legible pacing
+console.log('Extracting high-impact highlight beats for hero loop and animated GIF with generous reading time...');
 const highlightListPath = path.join(TMP_DIR, 'highlight_concat.txt');
 const highlightBeats = [
-  { start: '00:00:00.000', duration: 2.5 }, // Intro Title Card
-  { start: '00:00:22.000', duration: 3.0 }, // Task Breakdown & Visual DAG
-  { start: '00:00:37.000', duration: 3.5 }, // Knowledge Graph Topology & SHACL Validation
-  { start: '00:00:54.000', duration: 3.0 }, // Dual-State Blast Radius Diff
-  { start: '00:01:34.000', duration: 3.5 }, // IntelliJ IDEA Breakpoint Debugging
-  { start: '00:02:18.000', duration: 3.0 }, // PR Review Theater Signoff & ArgoCD Deploy
+  { start: '00:00:00.000', duration: 3.5 }, // Intro Title Card (3.5s)
+  { start: '00:00:21.500', duration: 7.5 }, // Phase 1: Task Breakdown & Visual DAG (7.5s)
+  { start: '00:00:34.000', duration: 7.5 }, // Knowledge Graph Topology & C4 Architecture (7.5s)
+  { start: '00:00:59.000', duration: 7.5 }, // Dual-State Blast Radius Diff (7.5s)
+  { start: '00:01:58.000', duration: 7.5 }, // IntelliJ IDEA Breakpoint Debugging (7.5s)
+  { start: '00:02:16.000', duration: 7.5 }, // PR Review Theater Signoff & 1-Click Merge (7.5s)
 ];
 
 const highlightFiles = [];
@@ -307,17 +334,17 @@ execSync(
 );
 console.log(`✓ Looping Hero Video created: ${finalLoopMp4}`);
 
-// 9. Generate High-Quality, Silky-Smooth Animated Hero GIF Preview (880x494, 12 fps, optimal Bayer dither)
+// 9. Generate High-Quality, Silky-Smooth Animated Hero GIF Preview (880x494, 10 fps, optimal Bayer dither)
 const finalGif = path.join(OUT_DIR, 'images/robos-proof-of-work-demo.gif');
-console.log('Generating fast, high-impact animated GIF preview from highlight beats...');
+console.log('Generating relaxed-pace, high-impact animated GIF preview from highlight beats...');
 const palettePath = path.join(TMP_DIR, 'palette.png');
 
 execSync(
-  `ffmpeg -y -i "${highlightMaster}" -vf "fps=12,scale=880:494:flags=lanczos,palettegen=stats_mode=diff" "${palettePath}"`,
+  `ffmpeg -y -i "${highlightMaster}" -vf "fps=10,scale=880:494:flags=lanczos,palettegen=stats_mode=diff" "${palettePath}"`,
   { stdio: 'ignore' }
 );
 execSync(
-  `ffmpeg -y -i "${highlightMaster}" -i "${palettePath}" -lavfi "fps=12,scale=880:494:flags=lanczos [x]; [x][1:v] paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle" "${finalGif}"`,
+  `ffmpeg -y -i "${highlightMaster}" -i "${palettePath}" -lavfi "fps=10,scale=880:494:flags=lanczos [x]; [x][1:v] paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle" "${finalGif}"`,
   { stdio: 'ignore' }
 );
 
