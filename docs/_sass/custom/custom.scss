@@ -515,6 +515,9 @@ body.robos-lightbox-open {
 // RobOS Interactive Flowchart & Diagram Card Component
 // ==============================================================================
 .robos-diagram-card {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
   background: linear-gradient(180deg, #0d1424 0%, #090e1a 100%) !important;
   border: 1px solid $robos-border !important;
   border-radius: 10px !important;
@@ -582,26 +585,52 @@ body.robos-lightbox-open {
   border-color: $robos-cyan;
 }
 
+// Reset pre containers that enclose diagram cards or mermaid blocks
+pre:has(.robos-diagram-card),
+pre:has(.language-mermaid) {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
 // ==============================================================================
 // Mermaid Flowchart Deep Theme & High Contrast Styling
 // ==============================================================================
-.mermaid, .robos-diagram-card .mermaid, div.mermaid, pre.mermaid, .language-mermaid {
+.mermaid,
+.robos-diagram-card .mermaid,
+div.mermaid,
+pre.mermaid,
+.language-mermaid,
+code.language-mermaid,
+.robos-diagram-card code.language-mermaid,
+.robos-diagram-card .language-mermaid {
   background: transparent !important;
   padding: 1.5rem 1rem !important;
   margin: 0 !important;
   border: none !important;
+  border-radius: 0 !important;
   box-shadow: none !important;
   display: flex !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
   justify-content: center !important;
   align-items: center !important;
+  overflow: visible !important;
 }
 
 .mermaid svg,
 .robos-diagram-card svg,
 .language-mermaid svg,
+code.language-mermaid svg,
 svg[id^="mermaid-"] {
+  width: 100% !important;
   max-width: 100% !important;
   height: auto !important;
+  display: block !important;
 }
 
 .mermaid .edgePath .path,
@@ -734,21 +763,17 @@ svg[id^="mermaid-"] .node tspan,
 }
 
 /* Backticked Code & Identifier Badges inside Diagrams (Expanded & Non-Expanded) */
-.robos-diagram-card code,
 .robos-diagram-card .node code,
 .robos-diagram-card foreignObject code,
-.mermaid code,
 .mermaid .node code,
 .mermaid foreignObject code,
-.language-mermaid code,
 .language-mermaid .node code,
 .language-mermaid foreignObject code,
-svg[id^="mermaid-"] code,
+svg[id^="mermaid-"] .node code,
 svg[id^="mermaid-"] foreignObject code,
-.robos-lightbox-rendered-svg code,
 .robos-lightbox-rendered-svg .node code,
 .robos-lightbox-rendered-svg foreignObject code,
-#robos-lightbox-svg-target code {
+#robos-lightbox-svg-target foreignObject code {
   color: #38bdf8 !important;
   background-color: #121927 !important;
   border: 1px solid rgba(56, 189, 248, 0.4) !important;

@@ -44,6 +44,7 @@ footer_content: "RobOS &mdash; AI-First SDLC Platform & Autonomous Agent Governa
 
 mermaid:
   version: "10.9.0"
+  startOnLoad: false
 
 callouts:
   note:

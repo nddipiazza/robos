@@ -23,7 +23,7 @@
     if (typeof window !== 'undefined' && window.mermaid) {
       try {
         window.mermaid.initialize({
-          startOnLoad: true,
+          startOnLoad: false,
           theme: 'base',
           securityLevel: 'loose',
           themeVariables: {
@@ -225,11 +225,19 @@
 
     // Cleanly clone SVG
     const clonedSvg = svgElement.cloneNode(true);
-    // Retain ID so Mermaid's scoped stylesheet rules continue to apply to cloned nodes
-    if (svgElement.id) {
-      clonedSvg.id = svgElement.id;
-    }
+    clonedSvg.classList.remove('mermaid');
     clonedSvg.classList.add('robos-lightbox-rendered-svg');
+    clonedSvg.dataset.robosDiagramReady = 'true';
+    
+    // Assign a distinct ID for the clone and update internal style selectors to match
+    const originalId = svgElement.id || '';
+    const lightboxId = originalId ? `${originalId}-lightbox` : 'robos-diagram-lightbox-svg';
+    clonedSvg.id = lightboxId;
+    if (originalId) {
+      clonedSvg.querySelectorAll('style').forEach((styleTag) => {
+        styleTag.textContent = styleTag.textContent.replaceAll(originalId, lightboxId);
+      });
+    }
     
     // Ensure responsive vector viewBox
     const origViewBox = svgElement.getAttribute('viewBox');
@@ -615,6 +623,10 @@
     );
 
     mermaidContainers.forEach((container) => {
+      // Never process elements inside the lightbox overlay
+      if (container.closest('#robos-lightbox-overlay')) return;
+      // Never re-process elements already wrapped in a diagram card
+      if (container.closest('.robos-diagram-card')) return;
       if (container.dataset.robosDiagramReady === 'true') return;
 
       // Check if container has rendered SVG or is an SVG itself
@@ -624,7 +636,9 @@
       if (!svgEl) return;
 
       container.dataset.robosDiagramReady = 'true';
-      svgEl.classList.add('mermaid');
+      svgEl.dataset.robosDiagramReady = 'true';
+      // Do NOT add 'mermaid' class: Mermaid parser treats .mermaid as raw unparsed diagram syntax
+      svgEl.classList.remove('mermaid');
       svgEl.classList.add('robos-flowchart-svg');
       applyHighContrastToSvg(svgEl);
 
@@ -633,7 +647,6 @@
       if (!cardWrapper) {
         cardWrapper = document.createElement('div');
         cardWrapper.className = 'robos-diagram-card';
-        container.parentNode.insertBefore(cardWrapper, container);
 
         const header = document.createElement('div');
         header.className = 'robos-diagram-header';
@@ -648,7 +661,17 @@
           </div>
         `;
         cardWrapper.appendChild(header);
-        cardWrapper.appendChild(container);
+
+        // If container is within a <pre> block (standard kramdown syntax), replace the <pre>
+        const parentPre = container.tagName.toLowerCase() !== 'pre' ? container.closest('pre') : null;
+        if (parentPre && parentPre.parentElement) {
+          parentPre.parentElement.insertBefore(cardWrapper, parentPre);
+          cardWrapper.appendChild(container);
+          parentPre.remove();
+        } else {
+          container.parentNode.insertBefore(cardWrapper, container);
+          cardWrapper.appendChild(container);
+        }
       }
 
       cardWrapper.classList.add('robos-zoomable-diagram');
