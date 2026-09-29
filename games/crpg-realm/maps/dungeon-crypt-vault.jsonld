@@ -1272,7 +1272,7 @@
     },
     "objectsHash": "7025e8211510da6e",
     "image": "res://assets/blockouts/dungeon-crypt-vault.png",
-    "imagePxPerFoot": 16
+    "imagePxPerFoot": 48
   },
   "robos:backgroundImage": "res://assets/blockouts/dungeon-crypt-vault.png"
 }

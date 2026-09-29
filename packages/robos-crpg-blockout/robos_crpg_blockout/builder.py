@@ -68,7 +68,8 @@ class BlockoutError(ValueError):
     pass
 
 
-def build_map_file(path: str | Path, game_dir: str | Path, px_per_ft: int = 16, debug_collision: bool = False) -> dict:
+def build_map_file(path: str | Path, game_dir: str | Path, px_per_ft: int = 16, debug_collision: bool = False,
+                   show_labels: bool = False) -> dict:
     """Validates a map file, renders its blockout image into
     <game_dir>/assets/blockouts/<slug>.png, and writes the collision grid and the
     image path back into the map node. Returns a summary."""
@@ -81,7 +82,7 @@ def build_map_file(path: str | Path, game_dir: str | Path, px_per_ft: int = 16, 
         raise BlockoutError("; ".join(errors))
     grid = compute_blockout(m)
     image_rel = f"assets/blockouts/{m.slug}.png"
-    render(m, Path(game_dir) / image_rel, px_per_ft=px_per_ft, debug_collision=debug_collision)
+    render(m, Path(game_dir) / image_rel, px_per_ft=px_per_ft, show_labels=show_labels, debug_collision=debug_collision)
     grid["image"] = "res://" + image_rel
     grid["imagePxPerFoot"] = px_per_ft
     node["robos:blockout"] = grid

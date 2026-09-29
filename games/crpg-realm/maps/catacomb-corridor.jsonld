@@ -430,7 +430,7 @@
     },
     "objectsHash": "6f5738aa47330dc7",
     "image": "res://assets/blockouts/catacomb-corridor.png",
-    "imagePxPerFoot": 16
+    "imagePxPerFoot": 48
   },
   "robos:backgroundImage": "res://assets/blockouts/catacomb-corridor.png"
 }

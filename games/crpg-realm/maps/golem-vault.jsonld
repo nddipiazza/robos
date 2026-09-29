@@ -128,7 +128,7 @@
     },
     "objectsHash": "8c83ffd6c93619e0",
     "image": "res://assets/blockouts/golem-vault.png",
-    "imagePxPerFoot": 16
+    "imagePxPerFoot": 48
   },
   "robos:backgroundImage": "res://assets/blockouts/golem-vault.png"
 }

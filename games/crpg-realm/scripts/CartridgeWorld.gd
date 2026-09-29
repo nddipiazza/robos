@@ -369,14 +369,17 @@ func _spawn_map_object(obj: Dictionary) -> void:
 		cs.shape = shape
 		area.add_child(cs)
 
+		var is_opened = GameState.world_flags.get("chest_" + obj_id, false)
 		var chest_spr = Sprite2D.new()
 		chest_spr.name = "ChestSprite"
-		var chest_tex = _load_texture_safe("res://assets/props/chest_closed.png")
+		var chest_tex = _load_texture_safe("res://assets/props/chest_open.png" if is_opened else "res://assets/props/chest_closed.png")
 		if chest_tex:
 			chest_spr.texture = chest_tex
 			var csz = chest_tex.get_size()
-			var cs_scale = 36.0 / max(csz.x, csz.y)
+			var target_size = max(pw * 0.65, 48.0)
+			var cs_scale = target_size / max(csz.x, csz.y)
 			chest_spr.scale = Vector2(cs_scale, cs_scale)
+			chest_spr.position = Vector2(0, 0)
 			area.add_child(chest_spr)
 		else:
 			var visual = ColorRect.new()
@@ -385,10 +388,31 @@ func _spawn_map_object(obj: Dictionary) -> void:
 			visual.color = Color(0.9, 0.7, 0.1, 0.9)
 			area.add_child(visual)
 
+		var clean_chest = title
+		clean_chest = clean_chest.replace("Treasure Chest (", "").replace(")", "").replace("Treasure Chest", "Chest")
+		if clean_chest.to_lower().ends_with("gold"):
+			clean_chest = clean_chest.substr(0, clean_chest.length() - 4).strip_edges() + "G"
+
 		var lbl = Label.new()
-		lbl.text = "📦 " + title
-		lbl.position = Vector2(-pw/2 - 10, -ph/2 - 18)
-		lbl.add_theme_font_size_override("font_size", 10)
+		lbl.name = "ChestLabel"
+		lbl.text = "Empty" if is_opened else ("📦 " + clean_chest)
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		lbl.add_theme_font_size_override("font_size", 9)
+		lbl.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6, 0.7) if is_opened else Color(0.9, 0.9, 0.95, 0.95))
+
+		var style = StyleBoxFlat.new()
+		style.bg_color = Color(0.06, 0.08, 0.12, 0.82)
+		style.border_color = Color(0.25, 0.35, 0.48, 0.5)
+		style.set_border_width_all(1)
+		style.set_corner_radius_all(3)
+		style.content_margin_left = 5
+		style.content_margin_right = 5
+		style.content_margin_top = 1
+		style.content_margin_bottom = 1
+		lbl.add_theme_stylebox_override("normal", style)
+		lbl.custom_minimum_size = Vector2(70, 16)
+		lbl.position = Vector2(-35, -pw * 0.35 - 16)
 		area.add_child(lbl)
 
 		area.input_pickable = true
@@ -426,10 +450,29 @@ func _spawn_map_object(obj: Dictionary) -> void:
 		visual.color = Color(0.2, 0.8, 0.4, 0.3)
 		area.add_child(visual)
 
+		var clean_door = title
+		clean_door = clean_door.replace("Royal Locked Door", "Locked Door").replace("Door to ", "").replace("Stairs Down to ", "Stairs: ")
+
 		var lbl = Label.new()
-		lbl.text = "🚪 " + title
-		lbl.position = Vector2(-pw/2, -ph/2 - 18)
-		lbl.add_theme_font_size_override("font_size", 11)
+		lbl.name = "PassageLabel"
+		lbl.text = "🚪 " + clean_door
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		lbl.add_theme_font_size_override("font_size", 9)
+		lbl.add_theme_color_override("font_color", Color(0.4, 0.9, 0.95, 0.95))
+
+		var p_style = StyleBoxFlat.new()
+		p_style.bg_color = Color(0.06, 0.08, 0.12, 0.82)
+		p_style.border_color = Color(0.1, 0.5, 0.6, 0.5)
+		p_style.set_border_width_all(1)
+		p_style.set_corner_radius_all(3)
+		p_style.content_margin_left = 5
+		p_style.content_margin_right = 5
+		p_style.content_margin_top = 1
+		p_style.content_margin_bottom = 1
+		lbl.add_theme_stylebox_override("normal", p_style)
+		lbl.custom_minimum_size = Vector2(90, 16)
+		lbl.position = Vector2(-45, -ph/2 - 16)
 		area.add_child(lbl)
 
 		area.input_pickable = true
@@ -551,11 +594,23 @@ func _create_interactive_npc(slug: String, ch_data: Dictionary, coord: Vector2, 
 
 	var name_lbl = Label.new()
 	name_lbl.text = name_str
-	name_lbl.add_theme_font_size_override("font_size", 11)
-	name_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.4) if not is_monster else Color(1.0, 0.4, 0.4))
-	name_lbl.position = Vector2(-40, 22)
-	name_lbl.custom_minimum_size = Vector2(80, 20)
+	name_lbl.add_theme_font_size_override("font_size", 9)
+	name_lbl.add_theme_color_override("font_color", Color(1.0, 0.88, 0.45) if not is_monster else Color(1.0, 0.45, 0.45))
+	name_lbl.position = Vector2(-45, 22)
+	name_lbl.custom_minimum_size = Vector2(90, 16)
 	name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+
+	var n_style = StyleBoxFlat.new()
+	n_style.bg_color = Color(0.06, 0.08, 0.12, 0.82)
+	n_style.border_color = Color(0.35, 0.35, 0.25, 0.5) if not is_monster else Color(0.5, 0.2, 0.2, 0.5)
+	n_style.set_border_width_all(1)
+	n_style.set_corner_radius_all(3)
+	n_style.content_margin_left = 5
+	n_style.content_margin_right = 5
+	n_style.content_margin_top = 1
+	n_style.content_margin_bottom = 1
+	name_lbl.add_theme_stylebox_override("normal", n_style)
 	npc_node.add_child(name_lbl)
 
 	var trigger_area = Area2D.new()
@@ -708,6 +763,18 @@ func _on_chest_opened(obj_id: String, title: String) -> void:
 	else:
 		if action_log:
 			action_log.add_entry("Opened chest: " + title, "loot")
+
+	# Update visual sprite and label dynamically
+	var chest_node = $MapElements.get_node_or_null("Chest_" + obj_id)
+	if chest_node:
+		var spr = chest_node.get_node_or_null("ChestSprite") as Sprite2D
+		var open_tex = _load_texture_safe("res://assets/props/chest_open.png")
+		if spr and open_tex:
+			spr.texture = open_tex
+		var clbl = chest_node.get_node_or_null("ChestLabel") as Label
+		if clbl:
+			clbl.text = "Empty"
+			clbl.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6, 0.7))
 
 func _on_accept_king_quest() -> void:
 	GameState.world_flags["talked_to_king"] = true

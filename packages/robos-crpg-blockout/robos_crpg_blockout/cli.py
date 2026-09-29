@@ -29,6 +29,7 @@ def main(argv: list[str] | None = None) -> int:
     b.add_argument("maps", nargs="+")
     b.add_argument("--game-dir", default=str(DEFAULT_GAME_DIR))
     b.add_argument("--px-per-ft", type=int, default=16)
+    b.add_argument("--labels", action="store_true", help="burn text labels into the background image")
     b.add_argument("--debug-collision", action="store_true", help="outline blocked and difficult cells in the image")
     r = sub.add_parser("render")
     r.add_argument("map")
@@ -55,7 +56,7 @@ def main(argv: list[str] | None = None) -> int:
         rc = 0
         for p in args.maps:
             try:
-                s = build_map_file(p, args.game_dir, args.px_per_ft, args.debug_collision)
+                s = build_map_file(p, args.game_dir, args.px_per_ft, args.debug_collision, show_labels=args.labels)
             except BlockoutError as e:
                 print(f"{p}: error: {e}")
                 rc = 1

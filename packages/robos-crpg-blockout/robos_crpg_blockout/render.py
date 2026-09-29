@@ -8,6 +8,7 @@ the rules read the collision grid, not the picture.
 from __future__ import annotations
 
 import math
+import re
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
@@ -115,15 +116,7 @@ def render(m: BattleMap, out_path: str | Path, px_per_ft: int = 16, show_grid: b
         for r in range(0, h + 1, cell):
             d.line([(0, r), (w, r)], fill=(255, 255, 255, 22), width=1)
     if show_labels:
-        f = _font(max(12, s))
-        for o in objs:
-            text = o.label or (o.type if o.type in ("building", "zone", "altar", "statue", "chest") else "")
-            if text:
-                cx, cy = _center(o, s)
-                box = d.textbbox((0, 0), text, font=f)
-                tw, th = box[2] - box[0], box[3] - box[1]
-                d.rectangle([cx - tw / 2 - 6, cy - th / 2 - 4, cx + tw / 2 + 6, cy + th / 2 + 6], fill=(0, 0, 0, 120))
-                d.text((cx - tw / 2, cy - th / 2), text, font=f, fill=(240, 240, 235))
+        img = _render_labels(img, objs, s, w, h)
     if debug_collision:
         grid = compute_blockout(m)
         for c, r in grid["blocked"]:
@@ -137,6 +130,197 @@ def render(m: BattleMap, out_path: str | Path, px_per_ft: int = 16, show_grid: b
     else:
         img.convert("RGB").save(out)
     return out
+
+
+def _clean_label(o: MapObject) -> str:
+    text = (o.label or (o.type if o.type in ("building", "zone", "altar", "statue", "chest") else "")).strip()
+    if not text:
+        return ""
+    # Condense verbose descriptions for clean tactical battlemap schematics
+    text = re.sub(r"^Treasure Chest \((.*?)\)$", r"Chest: \1", text, flags=re.IGNORECASE)
+    text = re.sub(r"^Treasure Chest$", r"Chest", text, flags=re.IGNORECASE)
+    text = re.sub(r"^Stone Pillar [A-Za-z]+$", r"Pillar", text, flags=re.IGNORECASE)
+    text = re.sub(r"^Stone Pillar$", r"Pillar", text, flags=re.IGNORECASE)
+    text = re.sub(r"^Royal Locked Door$", r"Locked Door", text, flags=re.IGNORECASE)
+    text = re.sub(r"^Stairs Down to (.*?)$", r"Stairs: \1", text, flags=re.IGNORECASE)
+    text = re.sub(r"([0-9]+)\s*Gold\b", r"\1G", text, flags=re.IGNORECASE)
+    text = re.sub(r"King Lorik's Throne Dais", "Throne Dais", text, flags=re.IGNORECASE)
+    text = re.sub(r"King's Royal Throne", "Royal Throne", text, flags=re.IGNORECASE)
+    # Don't label plain walls
+    if o.type == "wall" and text.lower() in ("wall", "stone wall", "perimeter wall"):
+        return ""
+    return text
+
+
+def _object_bounds(o: MapObject, s: int) -> tuple[float, float, float, float]:
+    if o.shape == "rect":
+        return o.position[0] * s, o.position[1] * s, (o.position[0] + o.size[0]) * s, (o.position[1] + o.size[1]) * s
+    if o.shape == "circle":
+        return (o.position[0] - o.radius) * s, (o.position[1] - o.radius) * s, (o.position[0] + o.radius) * s, (o.position[1] + o.radius) * s
+    if o.shape == "line":
+        x0, x1 = min(o.position[0], o.to[0]) * s, max(o.position[0], o.to[0]) * s
+        y0, y1 = min(o.position[1], o.to[1]) * s, max(o.position[1], o.to[1]) * s
+        return x0, y0, x1, y1
+    if o.shape == "polygon" and o.points:
+        xs = [p[0] * s for p in o.points]
+        ys = [p[1] * s for p in o.points]
+        return min(xs), min(ys), max(xs), max(ys)
+    return o.position[0] * s, o.position[1] * s, o.position[0] * s, o.position[1] * s
+
+
+def _boxes_intersect(b1: tuple[float, float, float, float], b2: tuple[float, float, float, float], pad: float = 2.0) -> bool:
+    return not (b1[2] + pad < b2[0] - pad or b1[0] - pad > b2[2] + pad or
+                b1[3] + pad < b2[1] - pad or b1[1] - pad > b2[3] + pad)
+
+
+def _render_labels(img: Image.Image, objs: list[MapObject], s: int, map_w: int, map_h: int) -> Image.Image:
+    # Use compact, crisp font size (clamped to 9-11px for clean technical schematics)
+    font_size = max(9, min(11, int(s * 0.6)))
+    f = _font(font_size)
+
+    # Prepare candidate items: (object, cleaned_text, bounds, center)
+    candidates = []
+    for o in objs:
+        clean = _clean_label(o)
+        if clean:
+            bx = _object_bounds(o, s)
+            cx, cy = _center(o, s)
+            candidates.append({
+                "obj": o,
+                "text": clean,
+                "bounds": bx,
+                "cx": cx,
+                "cy": cy,
+                "area": max(1.0, (bx[2] - bx[0]) * (bx[3] - bx[1])),
+            })
+
+    if not candidates:
+        return img
+
+    # Detect containment: if item A contains item B, place A's label at its top edge
+    for i, c_a in enumerate(candidates):
+        for j, c_b in enumerate(candidates):
+            if i != j:
+                b_a, b_b = c_a["bounds"], c_b["bounds"]
+                if (b_a[0] <= b_b[0] + 1 and b_a[1] <= b_b[1] + 1 and
+                        b_a[2] >= b_b[2] - 1 and b_a[3] >= b_b[3] - 1 and c_a["area"] > c_b["area"]):
+                    # c_a contains c_b -> anchor c_a to top edge
+                    c_a["anchor_top"] = True
+
+    # Sort candidates so smaller/inner props are placed first, containers second
+    candidates.sort(key=lambda c: (1 if c.get("anchor_top") else 0, -c["area"] if not c.get("anchor_top") else c["area"]))
+
+    label_overlay = Image.new("RGBA", (map_w, map_h), (0, 0, 0, 0))
+    d_lbl = ImageDraw.Draw(label_overlay, "RGBA")
+
+    placed_boxes: list[tuple[float, float, float, float]] = []
+    h_pad = 4.0
+    v_pad = 2.0
+
+    for cand in candidates:
+        text = cand["text"]
+        tbox = d_lbl.textbbox((0, 0), text, font=f)
+        tw = tbox[2] - tbox[0]
+        th = tbox[3] - tbox[1]
+
+        # Determine preferred center
+        bx = cand["bounds"]
+        bw = bx[2] - bx[0]
+        bh = bx[3] - bx[1]
+
+        if cand.get("anchor_top"):
+            # Top edge of container
+            pref_cx = (bx[0] + bx[2]) / 2
+            pref_cy = bx[1] + th / 2 + v_pad + 2
+        elif cand["obj"].type in ("chest", "crate", "barrel") and bh <= 4 * s:
+            # Place small prop label slightly below prop so icon/wood cross is visible
+            pref_cx = cand["cx"]
+            pref_cy = bx[3] + th / 2 + v_pad + 2
+        else:
+            pref_cx = cand["cx"]
+            pref_cy = cand["cy"]
+
+        # Clamp preferred center within map bounds
+        pref_cx = max(tw / 2 + h_pad + 2, min(map_w - tw / 2 - h_pad - 2, pref_cx))
+        pref_cy = max(th / 2 + v_pad + 2, min(map_h - th / 2 - v_pad - 2, pref_cy))
+
+        # Collision avoidance candidates
+        offsets = [
+            (0, 0),
+            (0, -(th + v_pad * 2 + 4)),
+            (0, (th + v_pad * 2 + 4)),
+            (-(tw / 2 + h_pad + 6), 0),
+            ((tw / 2 + h_pad + 6), 0),
+            (0, -(th + v_pad * 2 + 8)),
+            (0, (th + v_pad * 2 + 8)),
+        ]
+
+        best_pos = None
+        for ox, oy in offsets:
+            test_cx = pref_cx + ox
+            test_cy = pref_cy + oy
+            test_box = (
+                test_cx - tw / 2 - h_pad,
+                test_cy - th / 2 - v_pad,
+                test_cx + tw / 2 + h_pad,
+                test_cy + th / 2 + v_pad,
+            )
+            # Must stay inside map
+            if test_box[0] < 2 or test_box[1] < 2 or test_box[2] > map_w - 2 or test_box[3] > map_h - 2:
+                continue
+            # Must not intersect already placed labels
+            if any(_boxes_intersect(test_box, pb) for pb in placed_boxes):
+                continue
+            best_pos = (test_cx, test_cy, test_box)
+            break
+
+        if not best_pos:
+            # If it's a secondary prop (e.g. repetitive pillar or decorative chest) and would collide, skip it
+            if cand["obj"].type in ("pillar", "fence", "rubble", "wall"):
+                continue
+            # Try a compact version of text if available
+            compact_text = text.split(":")[-1].strip() if ":" in text else text[:10]
+            tbox = d_lbl.textbbox((0, 0), compact_text, font=f)
+            tw = tbox[2] - tbox[0]
+            th = tbox[3] - tbox[1]
+            for ox, oy in offsets:
+                test_cx = pref_cx + ox
+                test_cy = pref_cy + oy
+                test_box = (
+                    test_cx - tw / 2 - h_pad,
+                    test_cy - th / 2 - v_pad,
+                    test_cx + tw / 2 + h_pad,
+                    test_cy + th / 2 + v_pad,
+                )
+                if test_box[0] < 2 or test_box[1] < 2 or test_box[2] > map_w - 2 or test_box[3] > map_h - 2:
+                    continue
+                if any(_boxes_intersect(test_box, pb) for pb in placed_boxes):
+                    continue
+                text = compact_text
+                best_pos = (test_cx, test_cy, test_box)
+                break
+
+        if best_pos:
+            final_cx, final_cy, final_box = best_pos
+            placed_boxes.append(final_box)
+
+            # Draw sleek semi-transparent pill badge
+            d_lbl.rounded_rectangle(
+                [final_box[0], final_box[1], final_box[2], final_box[3]],
+                radius=3,
+                fill=(16, 20, 28, 195),
+                outline=(75, 90, 110, 180),
+                width=1,
+            )
+            # Draw crisp text
+            d_lbl.text(
+                (final_cx - tw / 2, final_cy - th / 2 - 1),
+                text,
+                font=f,
+                fill=(240, 243, 248, 255),
+            )
+
+    return Image.alpha_composite(img, label_overlay)
 
 
 def _center(o: MapObject, s: int) -> tuple[float, float]:

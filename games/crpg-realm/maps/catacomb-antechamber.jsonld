@@ -175,7 +175,10 @@
       "robos:transition": {
         "@type": "robos:CRPGMapTransition",
         "robos:targetMap": "urn:robos:crpg:battle-map:tantegel-throne-room",
-        "robos:targetSpawn": [27, 30],
+        "robos:targetSpawn": [
+          27,
+          30
+        ],
         "robos:targetFacing": "north",
         "robos:targetObjectId": "royal-door",
         "robos:transitionType": "door",
@@ -350,9 +353,9 @@
       ],
       "three-quarters": []
     },
-    "objectsHash": "3afce7e41780ab6a",
+    "objectsHash": "8a63c657292ba99a",
     "image": "res://assets/blockouts/catacomb-antechamber.png",
-    "imagePxPerFoot": 16
+    "imagePxPerFoot": 48
   },
   "robos:backgroundImage": "res://assets/blockouts/catacomb-antechamber.png"
 }

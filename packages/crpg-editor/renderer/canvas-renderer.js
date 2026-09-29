@@ -211,7 +211,12 @@ class MapCanvasRenderer {
       this.drawMapObject(ctx, obj, isSelected);
     }
 
-    // 6. Draw Map Outer Border
+    // 6. Draw Intelligent De-Cluttered Labels (if enabled)
+    if (this.showLabels) {
+      this.drawAllLabels(ctx, objects);
+    }
+
+    // 7. Draw Map Outer Border
     ctx.strokeStyle = '#00bcd4';
     ctx.lineWidth = 2;
     ctx.strokeRect(origin.x, origin.y, mapW, mapH);
@@ -352,10 +357,6 @@ class MapCanvasRenderer {
       const h = this.worldDistToScreen(obj.height);
       ctx.fillRect(pos.x, pos.y, w, h);
       ctx.strokeRect(pos.x, pos.y, w, h);
-
-      if (this.showLabels && (obj.label || obj.id)) {
-        this.drawLabel(ctx, obj.label || obj.id, pos.x + w / 2, pos.y + h / 2);
-      }
     } else if (shape === 'circle') {
       const center = this.worldToScreen(obj.cx, obj.cy);
       const rad = this.worldDistToScreen(obj.radius);
@@ -363,10 +364,6 @@ class MapCanvasRenderer {
       ctx.arc(center.x, center.y, rad, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
-
-      if (this.showLabels && (obj.label || obj.id)) {
-        this.drawLabel(ctx, obj.label || obj.id, center.x, center.y);
-      }
     } else if (shape === 'line') {
       const p1 = this.worldToScreen(obj.x1, obj.y1);
       const p2 = this.worldToScreen(obj.x2, obj.y2);
@@ -384,10 +381,6 @@ class MapCanvasRenderer {
         ctx.lineWidth = 2;
         ctx.stroke();
       }
-
-      if (this.showLabels && (obj.label || obj.id)) {
-        this.drawLabel(ctx, obj.label || obj.id, (p1.x + p2.x) / 2, (p1.y + p2.y) / 2);
-      }
     }
 
     if (isSelected) {
@@ -397,14 +390,193 @@ class MapCanvasRenderer {
     ctx.restore();
   }
 
+  cleanLabelText(rawText, type) {
+    let text = (rawText || '').trim();
+    if (!text) return '';
+    text = text.replace(/^Treasure Chest \((.*?)\)$/i, 'Chest: $1');
+    text = text.replace(/^Treasure Chest$/i, 'Chest');
+    text = text.replace(/^Stone Pillar [A-Za-z]+$/i, 'Pillar');
+    text = text.replace(/^Stone Pillar$/i, 'Pillar');
+    text = text.replace(/^Royal Locked Door$/i, 'Locked Door');
+    text = text.replace(/^Stairs Down to (.*?)$/i, 'Stairs: $1');
+    text = text.replace(/([0-9]+)\s*Gold\b/i, '$1G');
+    text = text.replace(/King Lorik's Throne Dais/i, 'Throne Dais');
+    text = text.replace(/King's Royal Throne/i, 'Royal Throne');
+    if (type === 'wall' && /^(wall|stone wall|perimeter wall)$/i.test(text)) return '';
+    return text;
+  }
+
+  drawAllLabels(ctx, rawObjects) {
+    if (!rawObjects || rawObjects.length === 0) return;
+
+    ctx.save();
+    const fontSize = Math.max(9, Math.min(12, Math.round(10 * Math.sqrt(this.zoom))));
+    ctx.font = `${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    const candidates = [];
+    for (const raw of rawObjects) {
+      const obj = this.normalizeMapObject(raw);
+      const clean = this.cleanLabelText(obj.label || obj.id, obj.type);
+      if (!clean) continue;
+
+      let sx0, sy0, sx1, sy1, cx, cy, bw, bh;
+      if (obj.shape === 'rect') {
+        const pos = this.worldToScreen(obj.x, obj.y);
+        bw = this.worldDistToScreen(obj.width);
+        bh = this.worldDistToScreen(obj.height);
+        sx0 = pos.x; sy0 = pos.y;
+        sx1 = pos.x + bw; sy1 = pos.y + bh;
+        cx = pos.x + bw / 2; cy = pos.y + bh / 2;
+      } else if (obj.shape === 'circle') {
+        const center = this.worldToScreen(obj.cx, obj.cy);
+        const rad = this.worldDistToScreen(obj.radius);
+        sx0 = center.x - rad; sy0 = center.y - rad;
+        sx1 = center.x + rad; sy1 = center.y + rad;
+        cx = center.x; cy = center.y;
+        bw = rad * 2; bh = rad * 2;
+      } else {
+        const p1 = this.worldToScreen(obj.x1, obj.y1);
+        const p2 = this.worldToScreen(obj.x2, obj.y2);
+        sx0 = Math.min(p1.x, p2.x); sy0 = Math.min(p1.y, p2.y);
+        sx1 = Math.max(p1.x, p2.x); sy1 = Math.max(p1.y, p2.y);
+        cx = (p1.x + p2.x) / 2; cy = (p1.y + p2.y) / 2;
+        bw = Math.max(sx1 - sx0, 10); bh = Math.max(sy1 - sy0, 10);
+      }
+
+      candidates.append ? null : candidates.push({
+        obj,
+        text: clean,
+        bounds: [sx0, sy0, sx1, sy1],
+        cx, cy, bw, bh,
+        area: bw * bh,
+      });
+    }
+
+    if (candidates.length === 0) {
+      ctx.restore();
+      return;
+    }
+
+    // Detect containment (e.g. throne inside throne dais)
+    for (let i = 0; i < candidates.length; i++) {
+      for (let j = 0; j < candidates.length; j++) {
+        if (i !== j) {
+          const a = candidates[i], b = candidates[j];
+          if (a.bounds[0] <= b.bounds[0] + 2 && a.bounds[1] <= b.bounds[1] + 2 &&
+              a.bounds[2] >= b.bounds[2] - 2 && a.bounds[3] >= b.bounds[3] - 2 && a.area > b.area) {
+            a.anchorTop = true;
+          }
+        }
+      }
+    }
+
+    // Sort: inner props first, containers second
+    candidates.sort((a, b) => (a.anchorTop ? 1 : 0) - (b.anchorTop ? 1 : 0));
+
+    const placedBoxes = [];
+    const hPad = 5;
+    const vPad = 2;
+
+    for (const cand of candidates) {
+      let text = cand.text;
+      let metrics = ctx.measureText(text);
+      let tw = metrics.width;
+      let th = fontSize + 2;
+
+      let prefCx = cand.cx;
+      let prefCy = cand.cy;
+
+      if (cand.anchorTop) {
+        prefCy = cand.bounds[1] + th / 2 + vPad + 3;
+      } else if (['chest', 'crate', 'barrel'].includes(cand.obj.type) && cand.bh <= 60) {
+        // Place below chest so graphic is visible
+        prefCy = cand.bounds[3] + th / 2 + vPad + 3;
+      }
+
+      const offsets = [
+        [0, 0],
+        [0, -(th + vPad * 2 + 4)],
+        [0, (th + vPad * 2 + 4)],
+        [-(tw / 2 + hPad + 4), 0],
+        [(tw / 2 + hPad + 4), 0],
+      ];
+
+      const intersects = (box, other) => !(
+        box[2] < other[0] || box[0] > other[2] || box[3] < other[1] || box[1] > other[3]
+      );
+
+      let best = null;
+      for (const [ox, oy] of offsets) {
+        const tcx = prefCx + ox;
+        const tcy = prefCy + oy;
+        const tbox = [tcx - tw / 2 - hPad, tcy - th / 2 - vPad, tcx + tw / 2 + hPad, tcy + th / 2 + vPad];
+        if (!placedBoxes.some(pb => intersects(tbox, pb))) {
+          best = { cx: tcx, cy: tcy, box: tbox, text, tw, th };
+          break;
+        }
+      }
+
+      if (!best && ['pillar', 'wall', 'fence', 'rubble'].includes(cand.obj.type)) {
+        continue; // Skip secondary label collision
+      }
+
+      if (!best) {
+        const compact = text.includes(':') ? text.split(':').pop().trim() : text.slice(0, 10);
+        metrics = ctx.measureText(compact);
+        tw = metrics.width;
+        for (const [ox, oy] of offsets) {
+          const tcx = prefCx + ox;
+          const tcy = prefCy + oy;
+          const tbox = [tcx - tw / 2 - hPad, tcy - th / 2 - vPad, tcx + tw / 2 + hPad, tcy + th / 2 + vPad];
+          if (!placedBoxes.some(pb => intersects(tbox, pb))) {
+            best = { cx: tcx, cy: tcy, box: tbox, text: compact, tw, th };
+            break;
+          }
+        }
+      }
+
+      if (best) {
+        placedBoxes.push(best.box);
+        const bx = best.box;
+        const rw = bx[2] - bx[0];
+        const rh = bx[3] - bx[1];
+        const rx = bx[0];
+        const ry = bx[1];
+
+        // Draw sleek pill badge
+        ctx.fillStyle = 'rgba(16, 20, 28, 0.88)';
+        ctx.strokeStyle = 'rgba(80, 100, 130, 0.6)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        if (typeof ctx.roundRect === 'function') {
+          ctx.roundRect(rx, ry, rw, rh, 3);
+        } else {
+          ctx.rect(rx, ry, rw, rh);
+        }
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#f0f4f8';
+        ctx.shadowColor = 'rgba(0,0,0,0.8)';
+        ctx.shadowBlur = 2;
+        ctx.fillText(best.text, best.cx, best.cy);
+        ctx.shadowBlur = 0;
+      }
+    }
+
+    ctx.restore();
+  }
+
   drawLabel(ctx, text, x, y) {
     ctx.save();
-    ctx.font = '11px sans-serif';
+    ctx.font = '10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#ffffff';
     ctx.shadowColor = 'rgba(0,0,0,0.8)';
-    ctx.shadowBlur = 4;
+    ctx.shadowBlur = 3;
     ctx.fillText(text, x, y);
     ctx.restore();
   }

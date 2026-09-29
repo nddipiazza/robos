@@ -2116,7 +2116,7 @@
     },
     "objectsHash": "2a50114525d822b4",
     "image": "res://assets/blockouts/cavern-depths.png",
-    "imagePxPerFoot": 16
+    "imagePxPerFoot": 48
   },
   "robos:backgroundImage": "res://assets/blockouts/cavern-depths.png"
 }

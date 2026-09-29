@@ -139,7 +139,7 @@
     },
     "objectsHash": "8896f91f80007a84",
     "image": "res://assets/blockouts/test-doors.png",
-    "imagePxPerFoot": 16
+    "imagePxPerFoot": 48
   },
   "robos:backgroundImage": "res://assets/blockouts/test-doors.png"
 }

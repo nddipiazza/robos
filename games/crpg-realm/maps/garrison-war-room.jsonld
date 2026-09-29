@@ -309,7 +309,7 @@
     },
     "objectsHash": "d96a8007461bd248",
     "image": "res://assets/blockouts/garrison-war-room.png",
-    "imagePxPerFoot": 16
+    "imagePxPerFoot": 48
   },
   "robos:backgroundImage": "res://assets/blockouts/garrison-war-room.png"
 }

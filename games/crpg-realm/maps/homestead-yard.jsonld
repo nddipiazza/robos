@@ -46,7 +46,10 @@
       "robos:transition": {
         "@type": "robos:CRPGMapTransition",
         "robos:targetMap": "urn:robos:crpg:battle-map:tantegel-throne-room",
-        "robos:targetSpawn": [48, 25],
+        "robos:targetSpawn": [
+          48,
+          25
+        ],
         "robos:targetFacing": "north",
         "robos:targetObjectId": "stairs-down",
         "robos:transitionType": "stairs",
@@ -371,7 +374,7 @@
     },
     "objectsHash": "33c4d7bbcb734ced",
     "image": "res://assets/blockouts/homestead-yard.png",
-    "imagePxPerFoot": 16
+    "imagePxPerFoot": 48
   },
   "robos:backgroundImage": "res://assets/blockouts/homestead-yard.png"
 }

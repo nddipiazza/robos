@@ -166,7 +166,7 @@
       "robos:objectType": "chest",
       "robos:shape": "rect",
       "robos:position": [
-        24,
+        22,
         10
       ],
       "robos:size": [
@@ -177,7 +177,7 @@
       "id": "chest-torch",
       "type": "chest",
       "shape": "rect",
-      "x": 24,
+      "x": 22,
       "y": 10,
       "w": 3,
       "h": 3,
@@ -196,7 +196,7 @@
       "robos:objectType": "chest",
       "robos:shape": "rect",
       "robos:position": [
-        38,
+        26,
         10
       ],
       "robos:size": [
@@ -207,7 +207,7 @@
       "id": "chest-magic-key",
       "type": "chest",
       "shape": "rect",
-      "x": 38,
+      "x": 26,
       "y": 10,
       "w": 3,
       "h": 3,
@@ -252,7 +252,10 @@
       "robos:transition": {
         "@type": "robos:CRPGMapTransition",
         "robos:targetMap": "urn:robos:crpg:battle-map:catacomb-antechamber",
-        "robos:targetSpawn": [20, 15],
+        "robos:targetSpawn": [
+          20,
+          15
+        ],
         "robos:targetFacing": "south",
         "robos:targetObjectId": "antechamber-entry-door",
         "robos:transitionType": "door",
@@ -293,7 +296,10 @@
       "robos:transition": {
         "@type": "robos:CRPGMapTransition",
         "robos:targetMap": "urn:robos:crpg:battle-map:homestead-yard",
-        "robos:targetSpawn": [10, 15],
+        "robos:targetSpawn": [
+          10,
+          15
+        ],
         "robos:targetFacing": "south",
         "robos:targetObjectId": "homestead_door",
         "robos:transitionType": "stairs",
@@ -352,10 +358,6 @@
       ],
       [
         7,
-        2
-      ],
-      [
-        8,
         2
       ],
       [
@@ -456,20 +458,12 @@
         [
           6,
           2
-        ],
-        [
-          7,
-          2
-        ],
-        [
-          8,
-          2
         ]
       ],
       "three-quarters": []
     },
-    "objectsHash": "040609d4884e87c7",
+    "objectsHash": "8b78e580edc0c9b0",
     "image": "res://assets/blockouts/tantegel-throne-room.png",
-    "imagePxPerFoot": 16
+    "imagePxPerFoot": 48
   }
 }
