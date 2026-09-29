@@ -362,6 +362,19 @@ func _spawn_hero(coords: Vector2, pixel_w: float, pixel_h: float) -> void:
 			model_node.name = "CharacterModel3D"
 			hero.add_child(model_node)
 		model_node.setup_model(model_ref, model_type, model_scale, model_tint)
+		var weapon_ref = str(h_data.get("robos:equippedWeapon", h_data.get("equippedWeapon", h_data.get("weapon", ""))))
+		if weapon_ref != "":
+			model_node.equip_weapon(weapon_ref)
+		var shield_ref = str(h_data.get("robos:equippedShield", h_data.get("equippedShield", h_data.get("shield", ""))))
+		if shield_ref != "":
+			model_node.equip_shield(shield_ref)
+		var helm_ref = str(h_data.get("robos:equippedHelmet", h_data.get("equippedHelmet", h_data.get("helmet", ""))))
+		if helm_ref != "":
+			model_node.equip_helmet(helm_ref)
+		var armor_ref = str(h_data.get("robos:equippedArmor", h_data.get("equippedArmor", h_data.get("armor", ""))))
+		if armor_ref != "":
+			model_node.apply_armor_styling(armor_ref)
+
 		model_node.visible = true
 		var spr = hero.get_node_or_null("Sprite") as Sprite2D
 		if spr: spr.visible = false
@@ -632,16 +645,28 @@ func _create_interactive_npc(slug: String, ch_data: Dictionary, coord: Vector2, 
 	if model_type == "":
 		if "dragonlord" in slug or "boss" in slug or "malakor" in slug:
 			model_type = "dragon"
+		elif "skeleton" in slug or "undead" in slug or "bone" in slug:
+			model_type = "skeleton"
+		elif "minotaur" in slug or "beast" in slug or "ogre" in slug:
+			model_type = "minotaur"
+		elif "hound" in slug or "wolf" in slug or "dire" in slug:
+			model_type = "hound"
+		elif "skirmisher" in slug or "brigand" in slug or "bandit" in slug:
+			model_type = "skirmisher"
+		elif "goblin" in slug:
+			model_type = "goblin"
 		elif "king" in slug or "loric" in slug or "lorik" in slug or "alden" in slug:
 			model_type = "king"
 		elif "princess" in slug or "gwaelin" in slug or "jennifer" in slug:
 			model_type = "princess"
-		elif "goblin" in slug:
-			model_type = "goblin"
+		elif "wizard" in slug or "mage" in slug or "sorcerer" in slug:
+			model_type = "wizard"
+		elif "rogue" in slug or "thief" in slug or "assassin" in slug:
+			model_type = "rogue"
 		elif "blacksmith" in slug or "torvald" in slug:
 			model_type = "knight"
 		elif is_monster:
-			model_type = "dragon"
+			model_type = "skeleton"
 		else:
 			model_type = "knight"
 
@@ -650,6 +675,12 @@ func _create_interactive_npc(slug: String, ch_data: Dictionary, coord: Vector2, 
 		model_node.name = "CharacterModel3D"
 		model_node.position = Vector2(0, 0)
 		model_node.setup_model(model_ref, model_type, model_scale, model_tint)
+		var w_ref = str(ch_data.get("robos:equippedWeapon", ch_data.get("equippedWeapon", ch_data.get("weapon", ""))))
+		if w_ref != "":
+			model_node.equip_weapon(w_ref)
+		var s_ref = str(ch_data.get("robos:equippedShield", ch_data.get("equippedShield", ch_data.get("shield", ""))))
+		if s_ref != "":
+			model_node.equip_shield(s_ref)
 		npc_node.add_child(model_node)
 	elif token_tex:
 		var spr = Sprite2D.new()

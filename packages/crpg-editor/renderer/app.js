@@ -7741,11 +7741,55 @@ async function loadItemForm(slug) {
     document.getElementById('item-name').value = it['dcterms:title'] || it.title || it.name || '';
     document.getElementById('item-slug').value = it['dcterms:identifier'] || it.slug || slug;
     const icon = it['robos:iconAssetRef'] || it.iconAssetRef || it['robos:icon'] || it.icon || '📦';
-    const modelAsset = it['robos:modelAssetRef'] || it.modelAssetRef || '';
+    const modelAsset = it['robos:modelAssetRef'] || it.modelAssetRef || it.model3dAsset || '';
+    const modelSocket = it['robos:modelSocket'] || it.modelSocket || it.model3dSocket || (it['robos:equipSlot'] || it.equipSlot || 'main_hand');
+    const modelScale = it['robos:modelScale'] ?? it.modelScale ?? it.model3dScale ?? 1.0;
+    const modelTint = it['robos:modelTint'] || it.modelTint || it.model3dTint || '#ffffff';
+
     document.getElementById('item-icon').value = icon;
     renderThumbPreview('item-icon-preview', icon, '📦');
+
     const modelInput = document.getElementById('item-model-ref');
     if (modelInput) modelInput.value = modelAsset;
+    const socketInput = document.getElementById('item-model-socket');
+    if (socketInput) socketInput.value = modelSocket;
+    const scaleInput = document.getElementById('item-model-scale');
+    if (scaleInput) scaleInput.value = modelScale;
+    const tintInput = document.getElementById('item-model-tint');
+    if (tintInput) tintInput.value = modelTint;
+
+    const presetSelect = document.getElementById('item-model-preset');
+    if (presetSelect) {
+      if (!modelAsset) {
+        presetSelect.value = 'none';
+      } else if (modelAsset.includes('weapon_sword_iron')) {
+        presetSelect.value = 'sword_iron';
+      } else if (modelAsset.includes('weapon_sword_hero')) {
+        presetSelect.value = 'sword_hero';
+      } else if (modelAsset.includes('weapon_club_wood')) {
+        presetSelect.value = 'club_wood';
+      } else if (modelAsset.includes('weapon_staff_wizard')) {
+        presetSelect.value = 'staff_wizard';
+      } else if (modelAsset.includes('weapon_bow_recurve')) {
+        presetSelect.value = 'bow_recurve';
+      } else if (modelAsset.includes('weapon_dagger_rogue')) {
+        presetSelect.value = 'dagger_rogue';
+      } else if (modelAsset.includes('weapon_bamboo_pole')) {
+        presetSelect.value = 'bamboo_pole';
+      } else if (modelAsset.includes('armor_shield_heater')) {
+        presetSelect.value = 'shield_heater';
+      } else if (modelAsset.includes('armor_shield_round')) {
+        presetSelect.value = 'shield_round';
+      } else if (modelAsset.includes('armor_helm_knight')) {
+        presetSelect.value = 'helm_knight';
+      } else if (modelAsset.includes('armor_suit_plate')) {
+        presetSelect.value = 'suit_plate';
+      } else if (modelAsset.includes('armor_suit_leather')) {
+        presetSelect.value = 'suit_leather';
+      } else {
+        presetSelect.value = 'custom';
+      }
+    }
     document.getElementById('item-category').value = it['robos:itemCategory'] || it.category || 'weapon';
     document.getElementById('item-equip-slot').value = it['robos:equipSlot'] || it.equipSlot || 'none';
     document.getElementById('item-cost').value = it['robos:cost'] ?? it.cost ?? 0;
@@ -7845,6 +7889,9 @@ async function saveCurrentItem() {
   const rarity = document.getElementById('item-rarity')?.value || 'common';
   const icon = document.getElementById('item-icon')?.value.trim() || '📦';
   const modelAssetRef = document.getElementById('item-model-ref')?.value.trim() || '';
+  const modelSocket = document.getElementById('item-model-socket')?.value || 'main_hand';
+  const modelScale = Number(document.getElementById('item-model-scale')?.value || 1.0);
+  const modelTint = document.getElementById('item-model-tint')?.value || '#ffffff';
   const desc = document.getElementById('item-desc')?.value.trim() || '';
 
   const itemPayload = {
@@ -7864,6 +7911,16 @@ async function saveCurrentItem() {
     iconAssetRef: icon.startsWith('assets/') ? icon : '',
     'robos:modelAssetRef': modelAssetRef,
     modelAssetRef: modelAssetRef,
+    model3dAsset: modelAssetRef,
+    'robos:modelSocket': modelSocket,
+    modelSocket: modelSocket,
+    model3dSocket: modelSocket,
+    'robos:modelScale': modelScale,
+    modelScale: modelScale,
+    model3dScale: modelScale,
+    'robos:modelTint': modelTint,
+    modelTint: modelTint,
+    model3dTint: modelTint,
     'robos:itemCategory': category,
     'robos:equipSlot': equipSlot,
     'robos:cost': cost,
@@ -9125,6 +9182,42 @@ async function loadSpellForm(slug) {
       document.getElementById('spell-saving-throw').value = data['robos:savingThrow'] || data.savingThrow || 'None';
       document.getElementById('spell-desc').value = data['dcterms:description'] || data['schema:description'] || data.description || '';
 
+      // 3D Spell VFX Model Configuration
+      const spellModelAsset = data['robos:modelAssetRef'] || data.modelAssetRef || data.model3dAsset || '';
+      const spellVfxType = data['robos:vfxType'] || data.vfxType || data.model3dVfxType || 'projectile';
+      const spellScale = data['robos:modelScale'] ?? data.modelScale ?? data.model3dScale ?? 1.0;
+      const spellTint = data['robos:modelTint'] || data.modelTint || data.model3dTint || '#ffffff';
+
+      const spellModelInput = document.getElementById('spell-model-ref');
+      if (spellModelInput) spellModelInput.value = spellModelAsset;
+      const spellVfxInput = document.getElementById('spell-vfx-type');
+      if (spellVfxInput) spellVfxInput.value = spellVfxType;
+      const spellScaleInput = document.getElementById('spell-model-scale');
+      if (spellScaleInput) spellScaleInput.value = spellScale;
+      const spellTintInput = document.getElementById('spell-model-tint');
+      if (spellTintInput) spellTintInput.value = spellTint;
+
+      const spellPresetSelect = document.getElementById('spell-model-preset');
+      if (spellPresetSelect) {
+        if (!spellModelAsset) {
+          spellPresetSelect.value = 'magic_missile';
+        } else if (spellModelAsset.includes('spell_fireball')) {
+          spellPresetSelect.value = 'fireball';
+        } else if (spellModelAsset.includes('spell_magic_missile')) {
+          spellPresetSelect.value = 'magic_missile';
+        } else if (spellModelAsset.includes('spell_healing_glyph')) {
+          spellPresetSelect.value = 'healing_glyph';
+        } else if (spellModelAsset.includes('spell_lightning_spark')) {
+          spellPresetSelect.value = 'lightning_spark';
+        } else if (spellModelAsset.includes('spell_frost_shard')) {
+          spellPresetSelect.value = 'frost_shard';
+        } else if (spellModelAsset.includes('spell_stinking_cloud')) {
+          spellPresetSelect.value = 'stinking_cloud';
+        } else {
+          spellPresetSelect.value = 'custom';
+        }
+      }
+
       document.querySelectorAll('#spells-list .spell-list-item').forEach(el => {
         el.classList.toggle('active', el.getAttribute('data-slug') === slug);
       });
@@ -9183,6 +9276,17 @@ function createNewSpell() {
   document.getElementById('spell-saving-throw').value = 'DEX';
   document.getElementById('spell-desc').value = '';
 
+  const spellModelInput = document.getElementById('spell-model-ref');
+  if (spellModelInput) spellModelInput.value = 'res://assets/models/spell_magic_missile_orb.glb';
+  const spellVfxInput = document.getElementById('spell-vfx-type');
+  if (spellVfxInput) spellVfxInput.value = 'projectile';
+  const spellScaleInput = document.getElementById('spell-model-scale');
+  if (spellScaleInput) spellScaleInput.value = 1.0;
+  const spellTintInput = document.getElementById('spell-model-tint');
+  if (spellTintInput) spellTintInput.value = '#ffffff';
+  const spellPresetSelect = document.getElementById('spell-model-preset');
+  if (spellPresetSelect) spellPresetSelect.value = 'magic_missile';
+
   document.querySelectorAll('#spells-list .spell-list-item').forEach(el => el.classList.remove('active'));
   document.getElementById('spell-name').focus();
 }
@@ -9207,6 +9311,11 @@ async function saveCurrentSpell() {
   const savingThrow = document.getElementById('spell-saving-throw').value;
   const description = document.getElementById('spell-desc').value.trim();
 
+  const modelAssetRef = document.getElementById('spell-model-ref')?.value.trim() || '';
+  const vfxType = document.getElementById('spell-vfx-type')?.value || 'projectile';
+  const modelScale = Number(document.getElementById('spell-model-scale')?.value || 1.0);
+  const modelTint = document.getElementById('spell-model-tint')?.value || '#ffffff';
+
   const spellPayload = {
     '@context': {
       robos: 'urn:robos:',
@@ -9222,6 +9331,18 @@ async function saveCurrentSpell() {
     icon,
     'robos:iconAssetRef': icon.startsWith('assets/') ? icon : '',
     iconAssetRef: icon.startsWith('assets/') ? icon : '',
+    'robos:modelAssetRef': modelAssetRef,
+    modelAssetRef: modelAssetRef,
+    model3dAsset: modelAssetRef,
+    'robos:vfxType': vfxType,
+    vfxType: vfxType,
+    model3dVfxType: vfxType,
+    'robos:modelScale': modelScale,
+    modelScale: modelScale,
+    model3dScale: modelScale,
+    'robos:modelTint': modelTint,
+    modelTint: modelTint,
+    model3dTint: modelTint,
     'robos:school': school,
     school,
     'robos:level': level,
@@ -11299,6 +11420,22 @@ function setupAssetPickerHandlers() {
         modelAssetInput.value = 'res://assets/models/monster_goblin_pawn.glb';
         if (scaleInput) scaleInput.value = 0.90;
         break;
+      case 'skeleton':
+        modelAssetInput.value = 'res://assets/models/monster_skeleton_pawn.glb';
+        if (scaleInput) scaleInput.value = 1.0;
+        break;
+      case 'minotaur':
+        modelAssetInput.value = 'res://assets/models/monster_minotaur_pawn.glb';
+        if (scaleInput) scaleInput.value = 1.35;
+        break;
+      case 'hound':
+        modelAssetInput.value = 'res://assets/models/monster_hound_pawn.glb';
+        if (scaleInput) scaleInput.value = 1.0;
+        break;
+      case 'skirmisher':
+        modelAssetInput.value = 'res://assets/models/monster_skirmisher_pawn.glb';
+        if (scaleInput) scaleInput.value = 1.05;
+        break;
       case 'knight':
         modelAssetInput.value = 'res://assets/models/character_knight_pawn.glb';
         if (scaleInput) scaleInput.value = 1.0;
@@ -11307,13 +11444,17 @@ function setupAssetPickerHandlers() {
         modelAssetInput.value = 'res://assets/models/character_wizard_pawn.glb';
         if (scaleInput) scaleInput.value = 1.1;
         break;
+      case 'rogue':
+        modelAssetInput.value = 'res://assets/models/character_rogue_pawn.glb';
+        if (scaleInput) scaleInput.value = 0.95;
+        break;
     }
   });
 
   // Bundle Cartridge Button in Header
   document.getElementById('btn-bundle-cartridge')?.addEventListener('click', handleBundleCurrentCartridge);
 
-  // 4. Items Studio Icon & Model
+  // 4. Items Studio Icon & 3D Model
   document.getElementById('btn-browse-item-icon')?.addEventListener('click', () => {
     openAssetPicker({
       category: 'items',
@@ -11323,22 +11464,148 @@ function setupAssetPickerHandlers() {
       }
     });
   });
+
+  document.getElementById('item-model-preset')?.addEventListener('change', (e) => {
+    const preset = e.target.value;
+    const modelInput = document.getElementById('item-model-ref');
+    const socketInput = document.getElementById('item-model-socket');
+    const scaleInput = document.getElementById('item-model-scale');
+    if (!modelInput) return;
+    switch (preset) {
+      case 'none':
+        modelInput.value = '';
+        break;
+      case 'sword_iron':
+        modelInput.value = 'res://assets/models/weapon_sword_iron.glb';
+        if (socketInput) socketInput.value = 'main_hand';
+        if (scaleInput) scaleInput.value = 1.0;
+        break;
+      case 'sword_hero':
+        modelInput.value = 'res://assets/models/weapon_sword_hero.glb';
+        if (socketInput) socketInput.value = 'main_hand';
+        if (scaleInput) scaleInput.value = 1.0;
+        break;
+      case 'club_wood':
+        modelInput.value = 'res://assets/models/weapon_club_wood.glb';
+        if (socketInput) socketInput.value = 'main_hand';
+        if (scaleInput) scaleInput.value = 1.0;
+        break;
+      case 'staff_wizard':
+        modelInput.value = 'res://assets/models/weapon_staff_wizard.glb';
+        if (socketInput) socketInput.value = 'main_hand';
+        if (scaleInput) scaleInput.value = 1.0;
+        break;
+      case 'bow_recurve':
+        modelInput.value = 'res://assets/models/weapon_bow_recurve.glb';
+        if (socketInput) socketInput.value = 'main_hand';
+        if (scaleInput) scaleInput.value = 1.0;
+        break;
+      case 'dagger_rogue':
+        modelInput.value = 'res://assets/models/weapon_dagger_rogue.glb';
+        if (socketInput) socketInput.value = 'main_hand';
+        if (scaleInput) scaleInput.value = 1.0;
+        break;
+      case 'bamboo_pole':
+        modelInput.value = 'res://assets/models/weapon_bamboo_pole.glb';
+        if (socketInput) socketInput.value = 'main_hand';
+        if (scaleInput) scaleInput.value = 1.0;
+        break;
+      case 'shield_heater':
+        modelInput.value = 'res://assets/models/armor_shield_heater.glb';
+        if (socketInput) socketInput.value = 'off_hand';
+        if (scaleInput) scaleInput.value = 1.0;
+        break;
+      case 'shield_round':
+        modelInput.value = 'res://assets/models/armor_shield_round.glb';
+        if (socketInput) socketInput.value = 'off_hand';
+        if (scaleInput) scaleInput.value = 1.0;
+        break;
+      case 'helm_knight':
+        modelInput.value = 'res://assets/models/armor_helm_knight.glb';
+        if (socketInput) socketInput.value = 'head';
+        if (scaleInput) scaleInput.value = 1.0;
+        break;
+      case 'suit_plate':
+        modelInput.value = 'res://assets/models/armor_suit_plate.glb';
+        if (socketInput) socketInput.value = 'armor';
+        if (scaleInput) scaleInput.value = 1.0;
+        break;
+      case 'suit_leather':
+        modelInput.value = 'res://assets/models/armor_suit_leather.glb';
+        if (socketInput) socketInput.value = 'armor';
+        if (scaleInput) scaleInput.value = 1.0;
+        break;
+    }
+  });
+
   document.getElementById('btn-browse-item-model')?.addEventListener('click', () => {
     openAssetPicker({
       category: 'models',
       onSelect: (asset) => {
-        document.getElementById('item-model-ref').value = asset.relativePath;
+        const p = asset.relativePath.startsWith('res://') ? asset.relativePath : `res://${asset.relativePath}`;
+        document.getElementById('item-model-ref').value = p;
       }
     });
   });
 
-  // 5. Spells Studio Icon
+  // 5. Spells Studio Icon & 3D VFX
   document.getElementById('btn-browse-spell-icon')?.addEventListener('click', () => {
     openAssetPicker({
       category: 'spells',
       onSelect: (asset) => {
         document.getElementById('spell-icon').value = asset.relativePath;
         renderThumbPreview('spell-icon-preview', asset.relativePath, '✨');
+      }
+    });
+  });
+
+  document.getElementById('spell-model-preset')?.addEventListener('change', (e) => {
+    const preset = e.target.value;
+    const modelInput = document.getElementById('spell-model-ref');
+    const vfxInput = document.getElementById('spell-vfx-type');
+    const scaleInput = document.getElementById('spell-model-scale');
+    if (!modelInput) return;
+    switch (preset) {
+      case 'fireball':
+        modelInput.value = 'res://assets/models/spell_fireball_projectile.glb';
+        if (vfxInput) vfxInput.value = 'projectile';
+        if (scaleInput) scaleInput.value = 1.0;
+        break;
+      case 'magic_missile':
+        modelInput.value = 'res://assets/models/spell_magic_missile_orb.glb';
+        if (vfxInput) vfxInput.value = 'projectile';
+        if (scaleInput) scaleInput.value = 1.0;
+        break;
+      case 'healing_glyph':
+        modelInput.value = 'res://assets/models/spell_healing_glyph.glb';
+        if (vfxInput) vfxInput.value = 'aura';
+        if (scaleInput) scaleInput.value = 1.0;
+        break;
+      case 'lightning_spark':
+        modelInput.value = 'res://assets/models/spell_lightning_spark.glb';
+        if (vfxInput) vfxInput.value = 'projectile';
+        if (scaleInput) scaleInput.value = 1.0;
+        break;
+      case 'frost_shard':
+        modelInput.value = 'res://assets/models/spell_frost_shard.glb';
+        if (vfxInput) vfxInput.value = 'projectile';
+        if (scaleInput) scaleInput.value = 1.0;
+        break;
+      case 'stinking_cloud':
+        modelInput.value = 'res://assets/models/spell_stinking_cloud_ring.glb';
+        if (vfxInput) vfxInput.value = 'aura';
+        if (scaleInput) scaleInput.value = 1.0;
+        break;
+    }
+  });
+
+  document.getElementById('btn-browse-spell-model')?.addEventListener('click', () => {
+    openAssetPicker({
+      category: 'models',
+      onSelect: (asset) => {
+        const p = asset.relativePath.startsWith('res://') ? asset.relativePath : `res://${asset.relativePath}`;
+        document.getElementById('spell-model-ref').value = p;
+        setStatus(`Selected 3D Spell Model: ${asset.fileName}`);
       }
     });
   });

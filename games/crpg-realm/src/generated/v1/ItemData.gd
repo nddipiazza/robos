@@ -15,6 +15,10 @@ var icon: String = ""
 var description: String = ""
 var properties: Array = []
 var weight: int = 0
+var model_3d_asset: String = ""
+var model_3d_socket: String = "main_hand"
+var model_3d_scale: float = 1.0
+var model_3d_tint: String = ""
 
 static func from_dict(d: Dictionary) -> ItemData:
 	var item = ItemData.new()
@@ -31,4 +35,9 @@ static func from_dict(d: Dictionary) -> ItemData:
 	item.description = str(d.get("description", ""))
 	item.properties = d.get("properties", [])
 	item.weight = int(d.get("weight", 0))
+	item.model_3d_asset = str(d.get("model3dAsset", d.get("model_3d_asset", "")))
+	item.model_3d_socket = str(d.get("model3dSocket", d.get("model_3d_socket", "main_hand")))
+	item.model_3d_scale = float(d.get("model3dScale", d.get("model_3d_scale", 1.0)))
+	item.model_3d_tint = str(d.get("model3dTint", d.get("model_3d_tint", "")))
 	return item
+

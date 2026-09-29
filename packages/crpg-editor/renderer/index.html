@@ -2010,11 +2010,52 @@
                     <button type="button" id="btn-browse-item-icon" class="btn btn-secondary btn-sm" title="Browse hi-def item icons">🖼️</button>
                   </div>
                 </div>
-                <div class="form-group">
-                  <label for="item-model-ref">3D Model / Detail Artwork Ref</label>
-                  <div style="display: flex; gap: 6px; align-items: center;">
-                    <input type="text" id="item-model-ref" class="input-text" placeholder="assets/models/... or assets/icons/...">
-                    <button type="button" id="btn-browse-item-model" class="btn btn-secondary btn-sm" title="Browse 3D models or detail art">🧊</button>
+                <div class="form-group col-span-2 stat-section" style="margin-top: 10px; background: rgba(15, 23, 42, 0.4); padding: 12px; border-radius: 6px; border: 1px solid var(--border-light);">
+                  <div class="stat-section-title" style="font-size: 12px; font-weight: 600; color: #38bdf8; margin-bottom: 8px;">🧊 3D Weapon / Armor Model (Godot 4 glTF Sockets)</div>
+                  <div class="form-grid">
+                    <div class="form-group">
+                      <label for="item-model-preset">3D Equipment Preset</label>
+                      <select id="item-model-preset" class="dropdown-select">
+                        <option value="none">None (2D Item Icon Only)</option>
+                        <option value="sword_iron">⚔️ Iron Sword (weapon_sword_iron.glb)</option>
+                        <option value="sword_hero">🗡️ Hero's Sword (weapon_sword_hero.glb)</option>
+                        <option value="club_wood">🪵 Wooden Club (weapon_club_wood.glb)</option>
+                        <option value="staff_wizard">🔮 Wizard Staff (weapon_staff_wizard.glb)</option>
+                        <option value="bow_recurve">🏹 Recurve Bow (weapon_bow_recurve.glb)</option>
+                        <option value="dagger_rogue">🔪 Rogue Dagger (weapon_dagger_rogue.glb)</option>
+                        <option value="bamboo_pole">🎋 Bamboo Pole (weapon_bamboo_pole.glb)</option>
+                        <option value="shield_heater">🛡️ Heater Shield (armor_shield_heater.glb)</option>
+                        <option value="shield_round">🛡️ Round Buckler (armor_shield_round.glb)</option>
+                        <option value="helm_knight">🪖 Knight Greathelm (armor_helm_knight.glb)</option>
+                        <option value="suit_plate">🛡️ Plate Armor (armor_suit_plate.glb)</option>
+                        <option value="suit_leather">🥋 Studded Leather (armor_suit_leather.glb)</option>
+                        <option value="custom">🧊 Custom GLB Asset Ref</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label for="item-model-socket">Mount Socket</label>
+                      <select id="item-model-socket" class="dropdown-select">
+                        <option value="main_hand">Main Hand (Right Arm)</option>
+                        <option value="off_hand">Off Hand (Shield / Left Arm)</option>
+                        <option value="head">Helmet (Head Socket)</option>
+                        <option value="armor">Armor (Body Styling)</option>
+                      </select>
+                    </div>
+                    <div class="form-group col-span-2">
+                      <label for="item-model-ref">Model Asset File (.glb)</label>
+                      <div style="display: flex; gap: 6px; align-items: center;">
+                        <input type="text" id="item-model-ref" class="input-text" placeholder="res://assets/models/weapon_sword_iron.glb">
+                        <button type="button" id="btn-browse-item-model" class="btn btn-secondary btn-sm" title="Browse 3D models">📂 Browse 3D</button>
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label for="item-model-scale">Scale Multiplier</label>
+                      <input type="number" id="item-model-scale" class="input-text" min="0.2" max="3.0" step="0.05" value="1.0">
+                    </div>
+                    <div class="form-group">
+                      <label for="item-model-tint">Material Tint / Tone</label>
+                      <input type="color" id="item-model-tint" class="input-color" value="#ffffff" style="width: 100%; height: 36px; padding: 2px; border-radius: 4px; background: #1e293b;">
+                    </div>
                   </div>
                 </div>
                 <div class="form-group">
@@ -2399,8 +2440,13 @@
                       <select id="enemy-model-preset" class="dropdown-select">
                         <option value="dragon">🐉 Dragonlord / Wyrm (monster_dragon_pawn.glb)</option>
                         <option value="goblin">👺 Goblin / Skulker (monster_goblin_pawn.glb)</option>
+                        <option value="skeleton">💀 Skeleton Marksman / Undead (monster_skeleton_pawn.glb)</option>
+                        <option value="minotaur">🐂 Minotaur Marauder / Brute (monster_minotaur_pawn.glb)</option>
+                        <option value="hound">🐺 Corrupted Hound / Dire Wolf (monster_hound_pawn.glb)</option>
+                        <option value="skirmisher">🏹 Feral Skirmisher / Scout (monster_skirmisher_pawn.glb)</option>
                         <option value="knight">⚔️ Dark Knight / Champion (character_knight_pawn.glb)</option>
                         <option value="wizard">🧙 Dark Sorcerer (character_wizard_pawn.glb)</option>
+                        <option value="rogue">🗡️ Shadow Assassin / Rogue (character_rogue_pawn.glb)</option>
                         <option value="custom">🧊 Custom glTF / GLB Creature Model</option>
                       </select>
                     </div>
@@ -2602,6 +2648,46 @@
                     <option value="STR">STR Save (Physical)</option>
                     <option value="CHA">CHA Save (Charisma)</option>
                   </select>
+                <div class="form-group col-span-2 stat-section" style="margin-top: 10px; background: rgba(15, 23, 42, 0.4); padding: 12px; border-radius: 6px; border: 1px solid var(--border-light);">
+                  <div class="stat-section-title" style="font-size: 12px; font-weight: 600; color: #a855f7; margin-bottom: 8px;">✨ 3D Spell VFX & Projectile Model (Godot 4 SubViewport)</div>
+                  <div class="form-grid">
+                    <div class="form-group">
+                      <label for="spell-model-preset">3D Spell Visual Preset</label>
+                      <select id="spell-model-preset" class="dropdown-select">
+                        <option value="fireball">🔥 Fireball Projectile (spell_fireball_projectile.glb)</option>
+                        <option value="magic_missile">💠 Magic Missile Orb (spell_magic_missile_orb.glb)</option>
+                        <option value="healing_glyph">🌿 Healing Runic Glyph (spell_healing_glyph.glb)</option>
+                        <option value="lightning_spark">⚡ Lightning Bolt Spark (spell_lightning_spark.glb)</option>
+                        <option value="frost_shard">❄️ Frost Shard Diamond (spell_frost_shard.glb)</option>
+                        <option value="stinking_cloud">☁️ Stinking Cloud Ring (spell_stinking_cloud_ring.glb)</option>
+                        <option value="custom">🧊 Custom GLB Spell Model</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label for="spell-vfx-type">VFX Display Behavior</label>
+                      <select id="spell-vfx-type" class="dropdown-select">
+                        <option value="projectile">🚀 Projectile Arc (Flies to target grid)</option>
+                        <option value="aura">💫 Area Aura / Glyph (Pulsing floor ring)</option>
+                        <option value="burst">💥 Impact Burst (Expanding shockwave)</option>
+                        <option value="beam">⚡ Continuous Arc (Stationary channel)</option>
+                      </select>
+                    </div>
+                    <div class="form-group col-span-2">
+                      <label for="spell-model-ref">3D Model File (.glb)</label>
+                      <div style="display: flex; gap: 6px; align-items: center;">
+                        <input type="text" id="spell-model-ref" class="input-text" placeholder="res://assets/models/spell_magic_missile_orb.glb">
+                        <button type="button" id="btn-browse-spell-model" class="btn btn-secondary btn-sm" title="Browse 3D spell models">📂 Browse 3D</button>
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label for="spell-model-scale">Scale Multiplier</label>
+                      <input type="number" id="spell-model-scale" class="input-text" min="0.2" max="3.0" step="0.05" value="1.0">
+                    </div>
+                    <div class="form-group">
+                      <label for="spell-model-tint">Spell Glow / Aura Tint</label>
+                      <input type="color" id="spell-model-tint" class="input-color" value="#ffffff" style="width: 100%; height: 36px; padding: 2px; border-radius: 4px; background: #1e293b;">
+                    </div>
+                  </div>
                 </div>
                 <div class="form-group col-span-2">
                   <label for="spell-desc">Spell Rules & Lore Description</label>

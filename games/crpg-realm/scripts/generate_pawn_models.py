@@ -132,6 +132,23 @@ class GLBBuilder:
                 n = (math.cos(phi0)*math.sin(th0), math.cos(th0), math.sin(phi0)*math.sin(th0))
                 self._add_quad(v00, v01, v11, v10, n)
 
+    def add_ring(self, center_y, inner_radius, outer_radius, height, segments=16):
+        y_bot = center_y - height / 2.0
+        y_top = center_y + height / 2.0
+        for i in range(segments):
+            a0 = 2.0 * math.pi * i / segments
+            a1 = 2.0 * math.pi * (i + 1) / segments
+            ox0, oz0 = outer_radius * math.cos(a0), outer_radius * math.sin(a0)
+            ox1, oz1 = outer_radius * math.cos(a1), outer_radius * math.sin(a1)
+            no = (math.cos((a0+a1)/2.0), 0.0, math.sin((a0+a1)/2.0))
+            self._add_quad((ox0, y_bot, oz0), (ox1, y_bot, oz1), (ox1, y_top, oz1), (ox0, y_top, oz0), no)
+            ix0, iz0 = inner_radius * math.cos(a0), inner_radius * math.sin(a0)
+            ix1, iz1 = inner_radius * math.cos(a1), inner_radius * math.sin(a1)
+            ni = (-math.cos((a0+a1)/2.0), 0.0, -math.sin((a0+a1)/2.0))
+            self._add_quad((ix1, y_bot, iz1), (ix0, y_bot, iz0), (ix0, y_top, iz0), (ix1, y_top, iz1), ni)
+            self._add_quad((ix0, y_top, iz0), (ix1, y_top, iz1), (ox1, y_top, oz1), (ox0, y_top, oz0), (0, 1, 0))
+            self._add_quad((ox0, y_bot, oz0), (ox1, y_bot, oz1), (ix1, y_bot, iz1), (ix0, y_bot, iz0), (0, -1, 0))
+
     def add_base_pedestal(self, radius=0.45, height=0.10):
         # Tabletop miniature round pedestal base
         self.add_cylinder(height/2.0, radius, height, segments=20)
@@ -410,14 +427,634 @@ def build_rogue_pawn(filepath):
     b.export_glb(filepath)
 
 
+def build_skeleton_pawn(filepath):
+    """Skeleton Pawn: Tabletop miniature with bone ivory ribs, skull, and rusted scythe."""
+    b = GLBBuilder("SkeletonPawn")
+    b.add_material("SkeletonBone", base_color=(0.88, 0.85, 0.76, 1.0), metallic=0.1, roughness=0.8)
+    b.add_base_pedestal(radius=0.38, height=0.08)
+
+    # Spinal column and thin skeletal legs
+    b.add_cylinder(center_y=0.16, radius=0.03, height=0.16, segments=8)
+    b.add_cylinder(center_y=0.38, radius=0.035, height=0.30, segments=8)
+    # Pelvis
+    b.add_box(center=(0, 0.24, 0), size=(0.20, 0.05, 0.12))
+    # Rib cage (3 horizontal rings of bone bars)
+    b.add_box(center=(0, 0.40, 0.01), size=(0.22, 0.03, 0.14))
+    b.add_box(center=(0, 0.46, 0.01), size=(0.25, 0.03, 0.15))
+    b.add_box(center=(0, 0.52, 0.01), size=(0.23, 0.03, 0.13))
+    # Collarbones / shoulders
+    b.add_box(center=(0, 0.57, 0), size=(0.28, 0.04, 0.06))
+    # Skull & jaw
+    b.add_sphere(center=(0, 0.69, 0), radius=0.12, rings=8, sectors=10)
+    b.add_box(center=(0, 0.62, 0.04), size=(0.09, 0.06, 0.08))
+    # Dark eye sockets
+    b.add_box(center=(-0.04, 0.70, 0.09), size=(0.03, 0.03, 0.03))
+    b.add_box(center=(0.04, 0.70, 0.09), size=(0.03, 0.03, 0.03))
+    # Right arm holding scythe/blade
+    b.add_cylinder(center_y=0.48, radius=0.02, height=0.75, segments=8)
+    b.add_box(center=(0.14, 0.82, 0.06), size=(0.26, 0.08, 0.02))
+
+    b.export_glb(filepath)
+
+
+def build_minotaur_pawn(filepath):
+    """Minotaur Pawn: Muscular brute miniature with sweeping horns, septum ring, and battleaxe."""
+    b = GLBBuilder("MinotaurPawn")
+    b.add_material("MinotaurHide", base_color=(0.42, 0.26, 0.16, 1.0), metallic=0.2, roughness=0.7)
+    b.add_base_pedestal(radius=0.52, height=0.12)
+
+    # Heavy hooved legs
+    b.add_cylinder(center_y=0.20, radius=0.12, height=0.24, segments=12)
+    # Muscular torso & massive shoulders
+    b.add_box(center=(0, 0.54, 0), size=(0.48, 0.38, 0.32))
+    b.add_box(center=(-0.12, 0.58, 0.14), size=(0.18, 0.16, 0.08))
+    b.add_box(center=(0.12, 0.58, 0.14), size=(0.18, 0.16, 0.08))
+    # Trapezius / thick neck
+    b.add_box(center=(0, 0.70, -0.02), size=(0.34, 0.14, 0.26))
+    # Bovine Head & Snout
+    b.add_box(center=(0, 0.78, 0.10), size=(0.26, 0.22, 0.24))
+    b.add_box(center=(0, 0.72, 0.22), size=(0.18, 0.12, 0.14))
+    # Septum ring
+    b.add_ring(center_y=0.66, inner_radius=0.025, outer_radius=0.05, height=0.02)
+    # Sweeping curved horns
+    b.add_box(center=(-0.24, 0.90, 0.02), size=(0.18, 0.08, 0.08))
+    b.add_box(center=(-0.30, 0.98, 0.08), size=(0.07, 0.14, 0.07))
+    b.add_box(center=(0.24, 0.90, 0.02), size=(0.18, 0.08, 0.08))
+    b.add_box(center=(0.30, 0.98, 0.08), size=(0.07, 0.14, 0.07))
+    # Double-bitted Battleaxe in right hand
+    b.add_cylinder(center_y=0.60, radius=0.03, height=0.95, segments=8)
+    b.add_box(center=(0.24, 0.88, 0.08), size=(0.22, 0.18, 0.03))
+    b.add_box(center=(0.24, 0.88, -0.08), size=(0.20, 0.16, 0.03))
+
+    b.export_glb(filepath)
+
+
+def build_hound_pawn(filepath):
+    """Hound / Dire Wolf Pawn: Quadruped predator miniature with spiked collar and bristling tail."""
+    b = GLBBuilder("HoundPawn")
+    b.add_material("DireHoundFur", base_color=(0.24, 0.24, 0.28, 1.0), metallic=0.1, roughness=0.85)
+    b.add_base_pedestal(radius=0.46, height=0.09)
+
+    # Quadruped body
+    b.add_box(center=(0, 0.36, -0.02), size=(0.26, 0.24, 0.48))
+    # 4 legs
+    b.add_cylinder(center_y=0.18, radius=0.05, height=0.20, segments=8)
+    # Muscular chest & raised neck
+    b.add_box(center=(0, 0.46, 0.18), size=(0.24, 0.22, 0.22))
+    # Lupine head & sharp muzzle
+    b.add_box(center=(0, 0.58, 0.28), size=(0.20, 0.18, 0.20))
+    b.add_box(center=(0, 0.53, 0.38), size=(0.12, 0.10, 0.16))
+    # Pointed ears
+    b.add_box(center=(-0.08, 0.70, 0.24), size=(0.05, 0.10, 0.04))
+    b.add_box(center=(0.08, 0.70, 0.24), size=(0.05, 0.10, 0.04))
+    # Spiked collar
+    b.add_box(center=(0, 0.48, 0.20), size=(0.28, 0.06, 0.26))
+    # Arched tail
+    b.add_box(center=(0, 0.38, -0.32), size=(0.08, 0.08, 0.24))
+
+    b.export_glb(filepath)
+
+
+def build_skirmisher_pawn(filepath):
+    """Skirmisher Pawn: Brigand scout with woodland leather, spiked buckler, spear, and quiver."""
+    b = GLBBuilder("SkirmisherPawn")
+    b.add_material("SkirmisherLeather", base_color=(0.38, 0.44, 0.28, 1.0), metallic=0.2, roughness=0.7)
+    b.add_base_pedestal(radius=0.40, height=0.09)
+
+    # Legs & Boots
+    b.add_cylinder(center_y=0.22, radius=0.18, height=0.22, segments=12)
+    # Leather brigandine torso
+    b.add_box(center=(0, 0.48, 0), size=(0.28, 0.26, 0.20))
+    # Belt & side pouch
+    b.add_box(center=(0, 0.35, 0.01), size=(0.30, 0.05, 0.21))
+    b.add_box(center=(0.14, 0.34, 0.08), size=(0.06, 0.07, 0.06))
+    # Head & Scout Cap
+    b.add_sphere(center=(0, 0.70, 0), radius=0.13, rings=8, sectors=10)
+    b.add_box(center=(0, 0.76, -0.02), size=(0.20, 0.08, 0.20))
+    # Left arm spiked buckler
+    b.add_cylinder(center_y=0.45, radius=0.14, height=0.04, segments=12)
+    b.add_cone(base_y=0.45, radius=0.04, height=0.08, segments=8)
+    # Right hand spear
+    b.add_cylinder(center_y=0.55, radius=0.02, height=0.90, segments=8)
+    b.add_cone(base_y=0.98, radius=0.04, height=0.14, segments=8)
+    # Back quiver
+    b.add_box(center=(-0.08, 0.54, -0.14), size=(0.08, 0.28, 0.08))
+
+    b.export_glb(filepath)
+
+
+def build_weapon_sword_iron(filepath):
+    """Iron Sword: Straight steel blade, crossguard, and round pommel."""
+    b = GLBBuilder("WeaponSwordIron")
+    b.add_material("SwordIron", base_color=(0.72, 0.75, 0.80, 1.0), metallic=0.8, roughness=0.25)
+    # Grip
+    b.add_cylinder(center_y=-0.04, radius=0.02, height=0.14, segments=8)
+    # Pommel
+    b.add_sphere(center=(0, -0.12, 0), radius=0.035, rings=6, sectors=8)
+    # Crossguard
+    b.add_box(center=(0, 0.04, 0), size=(0.18, 0.03, 0.04))
+    # Blade
+    b.add_box(center=(0, 0.36, 0), size=(0.04, 0.60, 0.015))
+    # Blade tip
+    b.add_cone(base_y=0.66, radius=0.03, height=0.08, segments=4)
+    b.export_glb(filepath)
+
+
+def build_weapon_sword_hero(filepath):
+    """Hero Sword / Excalibur: Ornate mythril broadsword with winged golden crossguard and fuller."""
+    b = GLBBuilder("WeaponSwordHero")
+    b.add_material("SwordHeroMythril", base_color=(0.88, 0.94, 1.0, 1.0), metallic=0.9, roughness=0.15)
+    # Grip
+    b.add_cylinder(center_y=-0.05, radius=0.022, height=0.16, segments=10)
+    # Ornate pommel with gem
+    b.add_sphere(center=(0, -0.14, 0), radius=0.04, rings=8, sectors=10)
+    # Winged crossguard
+    b.add_box(center=(0, 0.05, 0), size=(0.26, 0.04, 0.05))
+    b.add_box(center=(-0.12, 0.08, 0), size=(0.05, 0.06, 0.04))
+    b.add_box(center=(0.12, 0.08, 0), size=(0.05, 0.06, 0.04))
+    # Broad blade with fuller
+    b.add_box(center=(0, 0.40, 0), size=(0.06, 0.66, 0.018))
+    b.add_cone(base_y=0.73, radius=0.042, height=0.10, segments=4)
+    b.export_glb(filepath)
+
+
+def build_weapon_club_wood(filepath):
+    """Wooden Club: Heavy gnarled hardwood cudgel with iron reinforcement studs."""
+    b = GLBBuilder("WeaponClubWood")
+    b.add_material("ClubWood", base_color=(0.45, 0.30, 0.18, 1.0), metallic=0.15, roughness=0.85)
+    # Grip
+    b.add_cylinder(center_y=-0.06, radius=0.026, height=0.16, segments=8)
+    # Tapered striking head
+    b.add_cylinder(center_y=0.15, radius=0.045, height=0.22, segments=10)
+    b.add_cylinder(center_y=0.36, radius=0.070, height=0.22, segments=12)
+    # Striking knob top
+    b.add_sphere(center=(0, 0.48, 0), radius=0.075, rings=6, sectors=8)
+    # Reinforcement bands
+    b.add_ring(center_y=0.25, inner_radius=0.052, outer_radius=0.065, height=0.03)
+    b.add_ring(center_y=0.40, inner_radius=0.072, outer_radius=0.085, height=0.03)
+    b.export_glb(filepath)
+
+
+def build_weapon_staff_wizard(filepath):
+    """Wizard Staff: Carved runic elderwood staff crowned with an arcane crystal orb."""
+    b = GLBBuilder("WeaponStaffWizard")
+    b.add_material("StaffWizard", base_color=(0.38, 0.26, 0.18, 1.0), metallic=0.2, roughness=0.6)
+    # Long staff shaft
+    b.add_cylinder(center_y=0.05, radius=0.022, height=1.05, segments=8)
+    # Headpiece crown prongs
+    b.add_box(center=(-0.05, 0.60, 0), size=(0.02, 0.12, 0.04))
+    b.add_box(center=(0.05, 0.60, 0), size=(0.02, 0.12, 0.04))
+    b.add_box(center=(0, 0.60, -0.05), size=(0.04, 0.12, 0.02))
+    b.add_box(center=(0, 0.60, 0.05), size=(0.04, 0.12, 0.02))
+    # Arcane crystal orb
+    b.add_sphere(center=(0, 0.64, 0), radius=0.065, rings=8, sectors=10)
+    b.export_glb(filepath)
+
+
+def build_weapon_bow_recurve(filepath):
+    """Recurve Bow: Layered yew-wood bow limbs, riser grip, and taut bowstring."""
+    b = GLBBuilder("WeaponBowRecurve")
+    b.add_material("BowRecurve", base_color=(0.55, 0.38, 0.22, 1.0), metallic=0.1, roughness=0.6)
+    # Central riser handle
+    b.add_box(center=(0, 0, 0), size=(0.03, 0.14, 0.04))
+    # Upper limb
+    b.add_box(center=(0, 0.16, -0.04), size=(0.025, 0.18, 0.03))
+    b.add_box(center=(0, 0.32, -0.10), size=(0.022, 0.16, 0.025))
+    b.add_box(center=(0, 0.44, -0.07), size=(0.020, 0.10, 0.02))
+    # Lower limb
+    b.add_box(center=(0, -0.16, -0.04), size=(0.025, 0.18, 0.03))
+    b.add_box(center=(0, -0.32, -0.10), size=(0.022, 0.16, 0.025))
+    b.add_box(center=(0, -0.44, -0.07), size=(0.020, 0.10, 0.02))
+    # Bowstring
+    b.add_cylinder(center_y=0, radius=0.005, height=0.88, segments=4)
+    b.export_glb(filepath)
+
+
+def build_weapon_dagger_rogue(filepath):
+    """Rogue Dagger: Blackened steel curved stealth blade with thumb guard."""
+    b = GLBBuilder("WeaponDaggerRogue")
+    b.add_material("DaggerRogue", base_color=(0.28, 0.30, 0.34, 1.0), metallic=0.7, roughness=0.3)
+    # Grip
+    b.add_cylinder(center_y=-0.04, radius=0.016, height=0.10, segments=8)
+    # Curved thumbguard
+    b.add_box(center=(0, 0.02, 0), size=(0.10, 0.02, 0.03))
+    # Curved blade
+    b.add_box(center=(0.01, 0.14, 0), size=(0.026, 0.22, 0.012))
+    b.add_cone(base_y=0.25, radius=0.02, height=0.06, segments=4)
+    b.export_glb(filepath)
+
+
+def build_weapon_bamboo_pole(filepath):
+    """Bamboo Pole: Segmented bamboo bo staff with raised nodal rings."""
+    b = GLBBuilder("WeaponBambooPole")
+    b.add_material("BambooPole", base_color=(0.55, 0.68, 0.28, 1.0), metallic=0.1, roughness=0.5)
+    # Main bamboo shaft
+    b.add_cylinder(center_y=0, radius=0.024, height=1.10, segments=10)
+    # 5 Nodal bamboo rings
+    for y in [-0.40, -0.20, 0.0, 0.20, 0.40]:
+        b.add_ring(center_y=y, inner_radius=0.023, outer_radius=0.032, height=0.02)
+    b.export_glb(filepath)
+
+
+def build_armor_shield_heater(filepath):
+    """Heater Shield: Azure heraldic medieval shield with reinforced rim and center cross."""
+    b = GLBBuilder("ArmorShieldHeater")
+    b.add_material("ShieldHeater", base_color=(0.24, 0.50, 0.85, 1.0), metallic=0.6, roughness=0.35)
+    # Main shield plate
+    b.add_box(center=(0, 0.05, 0), size=(0.32, 0.36, 0.03))
+    # Tapered bottom triangular wedge
+    b.add_cone(base_y=-0.13, radius=0.16, height=-0.18, segments=4)
+    # Outer reinforced rim
+    b.add_box(center=(0, 0.22, 0.01), size=(0.34, 0.03, 0.035))
+    # Center heraldic cross boss
+    b.add_sphere(center=(0, 0.04, 0.025), radius=0.05, rings=6, sectors=8)
+    b.export_glb(filepath)
+
+
+def build_armor_shield_round(filepath):
+    """Round Shield: Norse / Celtic tabletop round shield with heavy iron boss and outer rim."""
+    b = GLBBuilder("ArmorShieldRound")
+    b.add_material("ShieldRound", base_color=(0.55, 0.42, 0.28, 1.0), metallic=0.4, roughness=0.6)
+    # Round disc face
+    b.add_cylinder(center_y=0, radius=0.22, height=0.025, segments=18)
+    # Outer iron reinforcement rim
+    b.add_ring(center_y=0, inner_radius=0.20, outer_radius=0.23, height=0.03)
+    # Central hemispherical boss
+    b.add_sphere(center=(0, 0.02, 0), radius=0.065, rings=6, sectors=10)
+    b.export_glb(filepath)
+
+
+def build_armor_helm_knight(filepath):
+    """Knight Greathelm: Enclosed steel helmet with vision slit and top crest."""
+    b = GLBBuilder("ArmorHelmKnight")
+    b.add_material("HelmKnight", base_color=(0.75, 0.78, 0.82, 1.0), metallic=0.8, roughness=0.25)
+    # Helmet bucket
+    b.add_box(center=(0, 0, 0), size=(0.24, 0.26, 0.24))
+    # Visor slit
+    b.add_box(center=(0, 0.02, 0.12), size=(0.19, 0.04, 0.03))
+    # Reinforced top crest
+    b.add_box(center=(0, 0.16, -0.01), size=(0.05, 0.10, 0.22))
+    b.export_glb(filepath)
+
+
+def build_armor_suit_plate(filepath):
+    """Plate Armor: Armored cuirass mannequin with articulated pauldrons and faulds."""
+    b = GLBBuilder("ArmorSuitPlate")
+    b.add_material("SuitPlate", base_color=(0.80, 0.83, 0.88, 1.0), metallic=0.85, roughness=0.2)
+    b.add_base_pedestal(radius=0.30, height=0.07)
+    # Stand pole
+    b.add_cylinder(center_y=0.25, radius=0.03, height=0.35, segments=8)
+    # Breastplate Cuirass
+    b.add_box(center=(0, 0.50, 0), size=(0.34, 0.32, 0.24))
+    b.add_box(center=(0, 0.52, 0.12), size=(0.20, 0.22, 0.04))
+    # Pauldrons
+    b.add_box(center=(-0.21, 0.58, 0), size=(0.14, 0.12, 0.18))
+    b.add_box(center=(0.21, 0.58, 0), size=(0.14, 0.12, 0.18))
+    # Waist fauld lames
+    b.add_box(center=(0, 0.32, 0), size=(0.30, 0.10, 0.22))
+    b.export_glb(filepath)
+
+
+def build_armor_suit_leather(filepath):
+    """Leather Armor: Studded cuir-bouilli brigandine vest mannequin with cross-straps."""
+    b = GLBBuilder("ArmorSuitLeather")
+    b.add_material("SuitLeather", base_color=(0.48, 0.32, 0.20, 1.0), metallic=0.2, roughness=0.75)
+    b.add_base_pedestal(radius=0.28, height=0.07)
+    # Stand pole
+    b.add_cylinder(center_y=0.25, radius=0.03, height=0.35, segments=8)
+    # Leather vest
+    b.add_box(center=(0, 0.48, 0), size=(0.30, 0.30, 0.22))
+    # Cross-body straps
+    b.add_box(center=(0, 0.50, 0.11), size=(0.26, 0.04, 0.02))
+    b.add_box(center=(0, 0.42, 0.11), size=(0.26, 0.04, 0.02))
+    # Brass rivets
+    b.add_box(center=(-0.10, 0.50, 0.12), size=(0.02, 0.02, 0.02))
+    b.add_box(center=(0.10, 0.50, 0.12), size=(0.02, 0.02, 0.02))
+    b.export_glb(filepath)
+
+
+def build_spell_fireball(filepath):
+    """Fireball: Blazing orange-red swirling core sphere with trailing flame cones and heat ring."""
+    b = GLBBuilder("SpellFireball")
+    b.add_material("SpellFireball", base_color=(0.98, 0.38, 0.05, 1.0), metallic=0.1, roughness=0.2)
+    # Core fireball sphere
+    b.add_sphere(center=(0, 0, 0), radius=0.18, rings=8, sectors=10)
+    # Swirling flame ring
+    b.add_ring(center_y=0, inner_radius=0.20, outer_radius=0.27, height=0.04)
+    # Trailing flame tongues
+    b.add_cone(base_y=-0.08, radius=0.10, height=-0.28, segments=6)
+    b.add_box(center=(0.08, 0.08, -0.16), size=(0.06, 0.06, 0.18))
+    b.add_box(center=(-0.08, -0.08, -0.16), size=(0.06, 0.06, 0.18))
+    b.export_glb(filepath)
+
+
+def build_spell_magic_missile(filepath):
+    """Magic Missile: Arcane ethereal cyan orb with orbiting prism motes and spin ring."""
+    b = GLBBuilder("SpellMagicMissile")
+    b.add_material("SpellMagicMissile", base_color=(0.18, 0.65, 0.98, 1.0), metallic=0.3, roughness=0.2)
+    # Central arcane energy core
+    b.add_sphere(center=(0, 0, 0), radius=0.14, rings=8, sectors=10)
+    # Orbital spin ring
+    b.add_ring(center_y=0, inner_radius=0.22, outer_radius=0.28, height=0.03)
+    # 3 orbiting diamond energy shards
+    for i in range(3):
+        a = 2.0 * math.pi * i / 3.0
+        x, z = 0.25 * math.cos(a), 0.25 * math.sin(a)
+        b.add_box(center=(x, 0, z), size=(0.05, 0.05, 0.05))
+    b.export_glb(filepath)
+
+
+def build_spell_healing_glyph(filepath):
+    """Healing Glyph: Runic emerald restoration floor ring with center cross and vitality spark."""
+    b = GLBBuilder("SpellHealingGlyph")
+    b.add_material("SpellHealingGlyph", base_color=(0.15, 0.95, 0.45, 1.0), metallic=0.2, roughness=0.3)
+    # Floor runic circle
+    b.add_ring(center_y=0.02, inner_radius=0.35, outer_radius=0.46, height=0.03)
+    # Healing cross
+    b.add_box(center=(0, 0.04, 0), size=(0.36, 0.03, 0.10))
+    b.add_box(center=(0, 0.04, 0), size=(0.10, 0.03, 0.36))
+    # Hovering vitality orb
+    b.add_sphere(center=(0, 0.20, 0), radius=0.08, rings=8, sectors=10)
+    b.export_glb(filepath)
+
+
+def build_spell_lightning_spark(filepath):
+    """Lightning Spark: High-voltage electric bolt cluster with jagged branching energy arcing."""
+    b = GLBBuilder("SpellLightningSpark")
+    b.add_material("SpellLightningSpark", base_color=(0.98, 0.96, 0.25, 1.0), metallic=0.5, roughness=0.1)
+    # Core electric kernel
+    b.add_sphere(center=(0, 0, 0), radius=0.08, rings=6, sectors=8)
+    # 4 Jagged branching lightning arms
+    b.add_box(center=(0.12, 0.12, 0), size=(0.16, 0.03, 0.03))
+    b.add_box(center=(0.24, 0.22, 0.05), size=(0.14, 0.03, 0.03))
+    b.add_box(center=(-0.12, -0.12, 0), size=(0.16, 0.03, 0.03))
+    b.add_box(center=(-0.24, -0.22, -0.05), size=(0.14, 0.03, 0.03))
+    b.add_box(center=(0, 0.14, 0.14), size=(0.03, 0.16, 0.03))
+    b.add_box(center=(0, -0.14, -0.14), size=(0.03, 0.16, 0.03))
+    b.export_glb(filepath)
+
+
+def build_spell_frost_shard(filepath):
+    """Frost Shard: Double-pointed crystalline ice diamond with orbiting sub-zero icicle needles."""
+    b = GLBBuilder("SpellFrostShard")
+    b.add_material("SpellFrostShard", base_color=(0.65, 0.88, 0.98, 1.0), metallic=0.4, roughness=0.15)
+    # Double-cone crystal diamond
+    b.add_cone(base_y=0, radius=0.14, height=0.30, segments=6)
+    b.add_cone(base_y=0, radius=0.14, height=-0.30, segments=6)
+    # 4 orbiting icicle needles
+    for i in range(4):
+        a = 2.0 * math.pi * i / 4.0
+        x, z = 0.24 * math.cos(a), 0.24 * math.sin(a)
+        b.add_cone(base_y=-0.10, radius=0.03, height=0.20, segments=4)
+    b.export_glb(filepath)
+
+
+def build_spell_stinking_cloud_ring(filepath):
+    """Stinking Cloud Ring: Swirling noxious miasma toroid with bubbling toxic vapor pods."""
+    b = GLBBuilder("SpellStinkingCloudRing")
+    b.add_material("SpellStinkingCloudRing", base_color=(0.45, 0.68, 0.18, 1.0), metallic=0.1, roughness=0.7)
+    # Toxic swirling vapor ring
+    b.add_ring(center_y=0.06, inner_radius=0.36, outer_radius=0.50, height=0.08)
+    # 6 bubbling poison vapor pods along circumference
+    for i in range(6):
+        a = 2.0 * math.pi * i / 6.0
+        x, z = 0.43 * math.cos(a), 0.43 * math.sin(a)
+        y = 0.06 + (0.04 if i % 2 == 0 else -0.02)
+        b.add_sphere(center=(x, y, z), radius=0.07, rings=6, sectors=8)
+    b.export_glb(filepath)
+
+
+def build_weapon_greatsword(filepath):
+    """Greatsword: Massive two-handed claymore with extended grip, wide fuller, and side lugs."""
+    b = GLBBuilder("WeaponGreatsword")
+    b.add_material("GreatswordSteel", base_color=(0.75, 0.78, 0.82, 1.0), metallic=0.85, roughness=0.2)
+    # Long two-handed grip
+    b.add_cylinder(center_y=-0.08, radius=0.022, height=0.24, segments=8)
+    # Faceted pommel
+    b.add_sphere(center=(0, -0.22, 0), radius=0.04, rings=6, sectors=8)
+    # Broad crossguard with protective lugs
+    b.add_box(center=(0, 0.05, 0), size=(0.28, 0.04, 0.04))
+    # Ricasso section
+    b.add_box(center=(0, 0.16, 0), size=(0.06, 0.18, 0.02))
+    # Long broad blade
+    b.add_box(center=(0, 0.55, 0), size=(0.055, 0.60, 0.016))
+    # Diamond point tip
+    b.add_cone(base_y=0.85, radius=0.04, height=0.12, segments=4)
+    b.export_glb(filepath)
+
+
+def build_weapon_warhammer(filepath):
+    """Warhammer: Dwarven forged warhammer with crushing square face and reverse beak spike."""
+    b = GLBBuilder("WeaponWarhammer")
+    b.add_material("WarhammerSteel", base_color=(0.58, 0.60, 0.65, 1.0), metallic=0.75, roughness=0.3)
+    # Reinforced wooden shaft
+    b.add_cylinder(center_y=0.15, radius=0.024, height=0.65, segments=8)
+    # Grip rings
+    b.add_ring(center_y=-0.05, inner_radius=0.023, outer_radius=0.030, height=0.02)
+    b.add_ring(center_y=-0.12, inner_radius=0.023, outer_radius=0.030, height=0.02)
+    # Heavy square striking head
+    b.add_box(center=(0.07, 0.44, 0), size=(0.10, 0.09, 0.09))
+    # Reverse armor-piercing spike
+    b.add_box(center=(-0.08, 0.44, 0), size=(0.10, 0.05, 0.05))
+    # Top crown spike
+    b.add_cone(base_y=0.49, radius=0.025, height=0.08, segments=4)
+    b.export_glb(filepath)
+
+
+def build_weapon_mace_flanged(filepath):
+    """Flanged Mace: Heavy clerical mace with steel shaft and four radial impact flanges."""
+    b = GLBBuilder("WeaponMaceFlanged")
+    b.add_material("MaceSteel", base_color=(0.68, 0.70, 0.75, 1.0), metallic=0.8, roughness=0.25)
+    # Steel shaft
+    b.add_cylinder(center_y=0.12, radius=0.022, height=0.55, segments=8)
+    # Pommel
+    b.add_sphere(center=(0, -0.16, 0), radius=0.035, rings=6, sectors=8)
+    # Striking core
+    b.add_cylinder(center_y=0.36, radius=0.04, height=0.14, segments=8)
+    # 4 Steel flanges radiating outward
+    b.add_box(center=(0.05, 0.36, 0), size=(0.06, 0.14, 0.015))
+    b.add_box(center=(-0.05, 0.36, 0), size=(0.06, 0.14, 0.015))
+    b.add_box(center=(0, 0.36, 0.05), size=(0.015, 0.14, 0.06))
+    b.add_box(center=(0, 0.36, -0.05), size=(0.015, 0.14, 0.06))
+    # Top finial knob
+    b.add_sphere(center=(0, 0.45, 0), radius=0.035, rings=6, sectors=8)
+    b.export_glb(filepath)
+
+
+def build_weapon_rapier(filepath):
+    """Rapier: Slender dueling blade with intricate swept cup guard and needle tip."""
+    b = GLBBuilder("WeaponRapier")
+    b.add_material("RapierSteel", base_color=(0.82, 0.85, 0.90, 1.0), metallic=0.9, roughness=0.18)
+    # Slender grip
+    b.add_cylinder(center_y=-0.04, radius=0.016, height=0.12, segments=8)
+    # Teardrop pommel
+    b.add_sphere(center=(0, -0.11, 0), radius=0.03, rings=6, sectors=8)
+    # Swept cup guard basket
+    b.add_ring(center_y=0.03, inner_radius=0.04, outer_radius=0.07, height=0.04)
+    b.add_box(center=(0, 0.03, 0), size=(0.14, 0.015, 0.015))
+    b.add_box(center=(0, -0.03, 0.05), size=(0.015, 0.10, 0.015))
+    # Needle blade
+    b.add_box(center=(0, 0.40, 0), size=(0.018, 0.70, 0.012))
+    b.add_cone(base_y=0.75, radius=0.012, height=0.08, segments=4)
+    b.export_glb(filepath)
+
+
+def build_weapon_spear(filepath):
+    """Spear: Long ash wood polearm tipped with a broad leaf steel blade and socket."""
+    b = GLBBuilder("WeaponSpear")
+    b.add_material("SpearWoodAndSteel", base_color=(0.60, 0.45, 0.30, 1.0), metallic=0.2, roughness=0.6)
+    # Ash wood pole shaft
+    b.add_cylinder(center_y=0.25, radius=0.02, height=1.20, segments=8)
+    # Steel socket collar
+    b.add_cylinder(center_y=0.86, radius=0.026, height=0.06, segments=8)
+    # Leaf-shaped steel blade
+    b.add_box(center=(0, 0.96, 0), size=(0.06, 0.20, 0.015))
+    b.add_cone(base_y=1.06, radius=0.035, height=0.12, segments=4)
+    # Bottom butt spike
+    b.add_cone(base_y=-0.35, radius=0.022, height=-0.08, segments=4)
+    b.export_glb(filepath)
+
+
+def build_weapon_crossbow(filepath):
+    """Crossbow: Precision mechanical arbalest with steel prod, wood stock, and stirrup."""
+    b = GLBBuilder("WeaponCrossbow")
+    b.add_material("CrossbowMaterial", base_color=(0.50, 0.35, 0.22, 1.0), metallic=0.3, roughness=0.5)
+    # Hardwood stock / tiller
+    b.add_box(center=(0, 0, 0.10), size=(0.04, 0.05, 0.50))
+    # Steel transverse prod / lathe
+    b.add_box(center=(0, 0.02, 0.32), size=(0.48, 0.03, 0.025))
+    # Front iron cocking stirrup
+    b.add_box(center=(0, 0, 0.39), size=(0.10, 0.015, 0.08))
+    # Bowstring
+    b.add_cylinder(center_y=0.02, radius=0.005, height=0.46, segments=4)
+    # Trigger housing
+    b.add_box(center=(0, -0.04, -0.05), size=(0.025, 0.05, 0.04))
+    b.export_glb(filepath)
+
+
+def build_weapon_battleaxe(filepath):
+    """Battleaxe: Heavy crescent-bladed martial axe with reverse beard spike and top thrust tip."""
+    b = GLBBuilder("WeaponBattleaxe")
+    b.add_material("BattleaxeSteel", base_color=(0.70, 0.72, 0.76, 1.0), metallic=0.8, roughness=0.25)
+    # Oak handle
+    b.add_cylinder(center_y=0.15, radius=0.024, height=0.70, segments=8)
+    # Axe eye socket
+    b.add_cylinder(center_y=0.45, radius=0.038, height=0.08, segments=8)
+    # Crescent curved axe blade
+    b.add_box(center=(0.12, 0.45, 0), size=(0.14, 0.24, 0.018))
+    b.add_box(center=(0.20, 0.45, 0), size=(0.03, 0.26, 0.01))
+    # Reverse beard spike
+    b.add_box(center=(-0.08, 0.45, 0), size=(0.09, 0.08, 0.02))
+    # Top spear tip
+    b.add_cone(base_y=0.50, radius=0.025, height=0.08, segments=4)
+    b.export_glb(filepath)
+
+
+def build_armor_suit_chainmail(filepath):
+    """Chainmail: Knight hauberk mannequin with linked rings, mail coif, and cinched belt."""
+    b = GLBBuilder("ArmorSuitChainmail")
+    b.add_material("SuitChainmail", base_color=(0.65, 0.68, 0.72, 1.0), metallic=0.75, roughness=0.45)
+    b.add_base_pedestal(radius=0.29, height=0.07)
+    # Stand pole
+    b.add_cylinder(center_y=0.25, radius=0.03, height=0.35, segments=8)
+    # Mail hauberk torso
+    b.add_box(center=(0, 0.48, 0), size=(0.32, 0.32, 0.24))
+    # Mail coif collar
+    b.add_cylinder(center_y=0.62, radius=0.10, height=0.10, segments=10)
+    # Short sleeves
+    b.add_box(center=(-0.19, 0.52, 0), size=(0.10, 0.14, 0.18))
+    b.add_box(center=(0.19, 0.52, 0), size=(0.10, 0.14, 0.18))
+    # Mail skirt
+    b.add_box(center=(0, 0.28, 0), size=(0.30, 0.14, 0.22))
+    # Leather belt
+    b.add_box(center=(0, 0.36, 0), size=(0.33, 0.04, 0.25))
+    b.export_glb(filepath)
+
+
+def build_armor_shield_tower(filepath):
+    """Tower Shield: Massive pavise infantry shield with reinforced iron rim and central brace."""
+    b = GLBBuilder("ArmorShieldTower")
+    b.add_material("ShieldTower", base_color=(0.35, 0.25, 0.18, 1.0), metallic=0.3, roughness=0.6)
+    # Curved rectangular body
+    b.add_box(center=(0, 0.08, 0), size=(0.30, 0.62, 0.04))
+    # Iron rim reinforcement
+    b.add_box(center=(0, 0.38, 0.01), size=(0.32, 0.03, 0.05))
+    b.add_box(center=(0, -0.22, 0.01), size=(0.32, 0.03, 0.05))
+    b.add_box(center=(-0.15, 0.08, 0.01), size=(0.03, 0.62, 0.05))
+    b.add_box(center=(0.15, 0.08, 0.01), size=(0.03, 0.62, 0.05))
+    # Center steel boss
+    b.add_sphere(center=(0, 0.08, 0.025), radius=0.06, rings=6, sectors=8)
+    b.export_glb(filepath)
+
+
+def build_armor_helm_iron(filepath):
+    """Iron Helmet: Classic Norman / Saxon nasal helm with conical skull cap and cheek plates."""
+    b = GLBBuilder("ArmorHelmIron")
+    b.add_material("HelmIron", base_color=(0.68, 0.70, 0.74, 1.0), metallic=0.8, roughness=0.3)
+    # Conical dome
+    b.add_cone(base_y=-0.04, radius=0.15, height=0.22, segments=12)
+    # Brow band
+    b.add_ring(center_y=-0.04, inner_radius=0.14, outer_radius=0.16, height=0.035)
+    # Nasal bar
+    b.add_box(center=(0, -0.10, 0.15), size=(0.025, 0.10, 0.015))
+    # Cheek plates
+    b.add_box(center=(-0.13, -0.10, 0.04), size=(0.02, 0.09, 0.08))
+    b.add_box(center=(0.13, -0.10, 0.04), size=(0.02, 0.09, 0.08))
+    b.export_glb(filepath)
+
+
 if __name__ == "__main__":
     out_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "assets", "models"))
     print(f"Generating 3D tabletop miniature models into: {out_dir}")
+
+    # Core Character Tabletop Miniatures
     build_knight_pawn(os.path.join(out_dir, "character_knight_pawn.glb"))
     build_king_pawn(os.path.join(out_dir, "character_king_pawn.glb"))
     build_princess_pawn(os.path.join(out_dir, "character_princess_pawn.glb"))
-    build_dragon_pawn(os.path.join(out_dir, "monster_dragon_pawn.glb"))
-    build_goblin_pawn(os.path.join(out_dir, "monster_goblin_pawn.glb"))
     build_wizard_pawn(os.path.join(out_dir, "character_wizard_pawn.glb"))
     build_rogue_pawn(os.path.join(out_dir, "character_rogue_pawn.glb"))
-    print("✨ All 7 tabletop miniature 3D models generated successfully!")
+
+    # Monster Miniatures
+    build_dragon_pawn(os.path.join(out_dir, "monster_dragon_pawn.glb"))
+    build_goblin_pawn(os.path.join(out_dir, "monster_goblin_pawn.glb"))
+    build_skeleton_pawn(os.path.join(out_dir, "monster_skeleton_pawn.glb"))
+    build_minotaur_pawn(os.path.join(out_dir, "monster_minotaur_pawn.glb"))
+    build_hound_pawn(os.path.join(out_dir, "monster_hound_pawn.glb"))
+    build_skirmisher_pawn(os.path.join(out_dir, "monster_skirmisher_pawn.glb"))
+
+    # Weapon 3D Models
+    build_weapon_sword_iron(os.path.join(out_dir, "weapon_sword_iron.glb"))
+    build_weapon_sword_hero(os.path.join(out_dir, "weapon_sword_hero.glb"))
+    build_weapon_club_wood(os.path.join(out_dir, "weapon_club_wood.glb"))
+    build_weapon_staff_wizard(os.path.join(out_dir, "weapon_staff_wizard.glb"))
+    build_weapon_bow_recurve(os.path.join(out_dir, "weapon_bow_recurve.glb"))
+    build_weapon_dagger_rogue(os.path.join(out_dir, "weapon_dagger_rogue.glb"))
+    build_weapon_bamboo_pole(os.path.join(out_dir, "weapon_bamboo_pole.glb"))
+    build_weapon_greatsword(os.path.join(out_dir, "weapon_greatsword.glb"))
+    build_weapon_warhammer(os.path.join(out_dir, "weapon_warhammer.glb"))
+    build_weapon_mace_flanged(os.path.join(out_dir, "weapon_mace_flanged.glb"))
+    build_weapon_rapier(os.path.join(out_dir, "weapon_rapier.glb"))
+    build_weapon_spear(os.path.join(out_dir, "weapon_spear.glb"))
+    build_weapon_crossbow(os.path.join(out_dir, "weapon_crossbow.glb"))
+    build_weapon_battleaxe(os.path.join(out_dir, "weapon_battleaxe.glb"))
+
+    # Armor, Shield & Helmet 3D Models
+    build_armor_shield_heater(os.path.join(out_dir, "armor_shield_heater.glb"))
+    build_armor_shield_round(os.path.join(out_dir, "armor_shield_round.glb"))
+    build_armor_shield_tower(os.path.join(out_dir, "armor_shield_tower.glb"))
+    build_armor_helm_knight(os.path.join(out_dir, "armor_helm_knight.glb"))
+    build_armor_helm_iron(os.path.join(out_dir, "armor_helm_iron.glb"))
+    build_armor_suit_plate(os.path.join(out_dir, "armor_suit_plate.glb"))
+    build_armor_suit_leather(os.path.join(out_dir, "armor_suit_leather.glb"))
+    build_armor_suit_chainmail(os.path.join(out_dir, "armor_suit_chainmail.glb"))
+
+    # Spell VFX & Projectile 3D Models
+    build_spell_fireball(os.path.join(out_dir, "spell_fireball_projectile.glb"))
+    build_spell_magic_missile(os.path.join(out_dir, "spell_magic_missile_orb.glb"))
+    build_spell_healing_glyph(os.path.join(out_dir, "spell_healing_glyph.glb"))
+    build_spell_lightning_spark(os.path.join(out_dir, "spell_lightning_spark.glb"))
+    build_spell_frost_shard(os.path.join(out_dir, "spell_frost_shard.glb"))
+    build_spell_stinking_cloud_ring(os.path.join(out_dir, "spell_stinking_cloud_ring.glb"))
+
+    print("✨ All 39 3D models generated successfully!")
+

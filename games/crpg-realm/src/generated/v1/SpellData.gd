@@ -11,6 +11,10 @@ var range_str: String = "60 feet"
 var damage_formula: String = "1d6"
 var damage_type: String = "force"
 var icon_path: String = ""
+var model_3d_asset: String = ""
+var model_3d_vfx_type: String = "projectile"
+var model_3d_scale: float = 1.0
+var model_3d_tint: String = ""
 
 static func from_dict(d: Dictionary) -> SpellData:
 	var s = SpellData.new()
@@ -23,4 +27,9 @@ static func from_dict(d: Dictionary) -> SpellData:
 	s.damage_formula = str(d.get("damageFormula", "1d6"))
 	s.damage_type = str(d.get("damageType", "force"))
 	s.icon_path = str(d.get("icon", ""))
+	s.model_3d_asset = str(d.get("model3dAsset", d.get("model_3d_asset", "")))
+	s.model_3d_vfx_type = str(d.get("model3dVfxType", d.get("model_3d_vfx_type", "projectile")))
+	s.model_3d_scale = float(d.get("model3dScale", d.get("model_3d_scale", 1.0)))
+	s.model_3d_tint = str(d.get("model3dTint", d.get("model_3d_tint", "")))
 	return s
+

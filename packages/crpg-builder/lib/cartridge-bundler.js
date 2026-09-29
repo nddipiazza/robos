@@ -61,7 +61,8 @@ class CartridgeBundler {
 
     let modelRef = charData['robos:modelAssetRef'] || charData.modelAssetRef || '';
     let modelType = charData['robos:modelType'] || charData.modelType || '';
-    let modelScale = charData['robos:modelScale'] ?? charData.modelScale ?? (isBoss && (s.includes('dragonlord') || s.includes('boss')) ? 1.45 : 1.0);
+    const hasExplicitScale = charData['robos:modelScale'] !== undefined || charData.modelScale !== undefined;
+    let modelScale = charData['robos:modelScale'] ?? charData.modelScale ?? 1.0;
     let modelTint = charData['robos:modelTint'] || charData.modelTint || '#ffffff';
     let animStance = charData['robos:animationStance'] || charData.animationStance || 'tabletop_hop';
     let renderMode = charData['robos:renderMode'] || charData.renderMode || '3d_model';
@@ -71,19 +72,35 @@ class CartridgeBundler {
       if (s.includes('dragonlord') || s.includes('dragon') || name.includes('dragonlord') || s.includes('malakor')) {
         modelRef = 'res://assets/models/monster_dragon_pawn.glb';
         modelType = modelType || 'dragon';
-        modelScale = modelScale || 1.45;
+        if (!hasExplicitScale) modelScale = 1.45;
       } else if (s.includes('king') || s.includes('lorik') || s.includes('loric') || s.includes('alden') || name.includes('king')) {
         modelRef = 'res://assets/models/character_king_pawn.glb';
         modelType = modelType || 'king';
-        modelScale = modelScale || 1.05;
+        if (!hasExplicitScale) modelScale = 1.05;
       } else if (s.includes('princess') || s.includes('gwaelin') || s.includes('jennifer') || name.includes('princess')) {
         modelRef = 'res://assets/models/character_princess_pawn.glb';
         modelType = modelType || 'princess';
-        modelScale = modelScale || 0.95;
+        if (!hasExplicitScale) modelScale = 0.95;
       } else if (s.includes('goblin') || name.includes('goblin') || s.includes('skulker')) {
         modelRef = 'res://assets/models/monster_goblin_pawn.glb';
         modelType = modelType || 'goblin';
-        modelScale = modelScale || 0.9;
+        if (!hasExplicitScale) modelScale = 0.9;
+      } else if (s.includes('skeleton') || name.includes('skeleton') || s.includes('undead')) {
+        modelRef = 'res://assets/models/monster_skeleton_pawn.glb';
+        modelType = modelType || 'skeleton';
+        if (!hasExplicitScale) modelScale = 1.0;
+      } else if (s.includes('minotaur') || name.includes('minotaur') || s.includes('marauder')) {
+        modelRef = 'res://assets/models/monster_minotaur_pawn.glb';
+        modelType = modelType || 'minotaur';
+        if (!hasExplicitScale) modelScale = 1.35;
+      } else if (s.includes('hound') || name.includes('hound') || s.includes('wolf')) {
+        modelRef = 'res://assets/models/monster_hound_pawn.glb';
+        modelType = modelType || 'hound';
+        if (!hasExplicitScale) modelScale = 1.0;
+      } else if (s.includes('skirmisher') || name.includes('skirmisher') || s.includes('guard')) {
+        modelRef = 'res://assets/models/monster_skirmisher_pawn.glb';
+        modelType = modelType || 'skirmisher';
+        if (!hasExplicitScale) modelScale = 1.05;
       } else if (s.includes('wizard') || s.includes('mage') || s.includes('sorcerer') || s.includes('ignis') || s.includes('elora')) {
         modelRef = 'res://assets/models/character_wizard_pawn.glb';
         modelType = modelType || 'wizard';
@@ -110,6 +127,129 @@ class CartridgeBundler {
     charData.animationStance = animStance;
 
     return charData;
+  }
+
+  _resolveItem3DModel(slug, itemData) {
+    if (!itemData) return itemData;
+    const s = (slug || '').toLowerCase();
+    const title = String(itemData['dcterms:title'] || itemData.name || s).toLowerCase();
+    const cat = String(itemData['robos:itemCategory'] || itemData.itemCategory || itemData.category || '').toLowerCase();
+    const slot = String(itemData['robos:equipSlot'] || itemData.equipSlot || '').toLowerCase();
+
+    let modelRef = itemData['robos:modelAssetRef'] || itemData.modelAssetRef || itemData.model3dAsset || '';
+    let socket = itemData['robos:modelSocket'] || itemData.modelSocket || itemData.model3dSocket || slot || 'main_hand';
+    let scale = itemData['robos:modelScale'] ?? itemData.modelScale ?? itemData.model3dScale ?? 1.0;
+    let tint = itemData['robos:modelTint'] || itemData.modelTint || itemData.model3dTint || '';
+
+    if (!modelRef || !modelRef.includes('.glb')) {
+      if (s.includes('hero') || title.includes('hero') || title.includes('excalibur')) {
+        modelRef = 'res://assets/models/weapon_sword_hero.glb';
+        socket = 'main_hand';
+      } else if (s.includes('copper-sword') || s.includes('iron-sword') || title.includes('sword') || title.includes('blade')) {
+        modelRef = 'res://assets/models/weapon_sword_iron.glb';
+        socket = 'main_hand';
+      } else if (s.includes('club') || title.includes('club') || title.includes('cudgel')) {
+        modelRef = 'res://assets/models/weapon_club_wood.glb';
+        socket = 'main_hand';
+      } else if (s.includes('staff') || title.includes('staff') || title.includes('wand')) {
+        modelRef = 'res://assets/models/weapon_staff_wizard.glb';
+        socket = 'main_hand';
+      } else if (s.includes('bow') || title.includes('bow')) {
+        modelRef = 'res://assets/models/weapon_bow_recurve.glb';
+        socket = 'main_hand';
+      } else if (s.includes('dagger') || title.includes('dagger') || title.includes('knife')) {
+        modelRef = 'res://assets/models/weapon_dagger_rogue.glb';
+        socket = 'main_hand';
+      } else if (s.includes('bamboo') || title.includes('bamboo') || title.includes('pole')) {
+        modelRef = 'res://assets/models/weapon_bamboo_pole.glb';
+        socket = 'main_hand';
+      } else if (s.includes('round-shield') || title.includes('round shield')) {
+        modelRef = 'res://assets/models/armor_shield_round.glb';
+        socket = 'off_hand';
+      } else if (s.includes('shield') || title.includes('shield')) {
+        modelRef = 'res://assets/models/armor_shield_heater.glb';
+        socket = 'off_hand';
+      } else if (s.includes('helm') || title.includes('helm') || title.includes('helmet')) {
+        modelRef = 'res://assets/models/armor_helm_knight.glb';
+        socket = 'head';
+      } else if (s.includes('plate') || title.includes('plate')) {
+        modelRef = 'res://assets/models/armor_suit_plate.glb';
+        socket = 'armor';
+      } else if (s.includes('leather') || title.includes('leather')) {
+        modelRef = 'res://assets/models/armor_suit_leather.glb';
+        socket = 'armor';
+      }
+    }
+
+    if (modelRef) {
+      itemData['robos:modelAssetRef'] = modelRef;
+      itemData.modelAssetRef = modelRef;
+      itemData.model3dAsset = modelRef;
+      itemData['robos:modelSocket'] = socket;
+      itemData.modelSocket = socket;
+      itemData.model3dSocket = socket;
+      itemData['robos:modelScale'] = Number(scale);
+      itemData.modelScale = Number(scale);
+      itemData.model3dScale = Number(scale);
+      if (tint) {
+        itemData['robos:modelTint'] = tint;
+        itemData.modelTint = tint;
+        itemData.model3dTint = tint;
+      }
+    }
+    return itemData;
+  }
+
+  _resolveSpell3DModel(slug, spellData) {
+    if (!spellData) return spellData;
+    const s = (slug || '').toLowerCase();
+    const title = String(spellData['dcterms:title'] || spellData.name || s).toLowerCase();
+
+    let modelRef = spellData['robos:modelAssetRef'] || spellData.modelAssetRef || spellData.model3dAsset || '';
+    let vfxType = spellData['robos:vfxType'] || spellData.vfxType || spellData.model3dVfxType || 'projectile';
+    let scale = spellData['robos:modelScale'] ?? spellData.modelScale ?? spellData.model3dScale ?? 1.0;
+    let tint = spellData['robos:modelTint'] || spellData.modelTint || spellData.model3dTint || '';
+
+    if (!modelRef || !modelRef.includes('.glb')) {
+      if (s.includes('fireball') || s.includes('fire-bolt') || s.includes('burning-hands') || title.includes('fire')) {
+        modelRef = 'res://assets/models/spell_fireball_projectile.glb';
+        vfxType = 'projectile';
+      } else if (s.includes('magic-missile') || title.includes('magic missile') || s.includes('dispel') || s.includes('counterspell')) {
+        modelRef = 'res://assets/models/spell_magic_missile_orb.glb';
+        vfxType = 'projectile';
+      } else if (s.includes('cure-wounds') || s.includes('healing') || s.includes('bless') || s.includes('sanctuary') || title.includes('heal')) {
+        modelRef = 'res://assets/models/spell_healing_glyph.glb';
+        vfxType = 'aura';
+      } else if (s.includes('lightning') || s.includes('thunderwave') || title.includes('lightning')) {
+        modelRef = 'res://assets/models/spell_lightning_spark.glb';
+        vfxType = 'projectile';
+      } else if (s.includes('frost') || s.includes('blizzard') || s.includes('ray-of-frost') || title.includes('frost')) {
+        modelRef = 'res://assets/models/spell_frost_shard.glb';
+        vfxType = 'projectile';
+      } else if (s.includes('stinking-cloud') || s.includes('cloud') || s.includes('poison') || s.includes('sleep')) {
+        modelRef = 'res://assets/models/spell_stinking_cloud_ring.glb';
+        vfxType = 'aura';
+      } else {
+        modelRef = 'res://assets/models/spell_magic_missile_orb.glb';
+        vfxType = 'projectile';
+      }
+    }
+
+    spellData['robos:modelAssetRef'] = modelRef;
+    spellData.modelAssetRef = modelRef;
+    spellData.model3dAsset = modelRef;
+    spellData['robos:vfxType'] = vfxType;
+    spellData.vfxType = vfxType;
+    spellData.model3dVfxType = vfxType;
+    spellData['robos:modelScale'] = Number(scale);
+    spellData.modelScale = Number(scale);
+    spellData.model3dScale = Number(scale);
+    if (tint) {
+      spellData['robos:modelTint'] = tint;
+      spellData.modelTint = tint;
+      spellData.model3dTint = tint;
+    }
+    return spellData;
   }
 
   bundle(campaignSlug) {
@@ -279,6 +419,27 @@ class CartridgeBundler {
       }
     }
 
+    // 3c. Bundle Spells & Spell 3D Models
+    const spells = {};
+    const spellsDir = path.join(this.baseDir, 'spells');
+    if (fs.existsSync(spellsDir)) {
+      const files = fs.readdirSync(spellsDir);
+      for (const file of files) {
+        if (file.endsWith('.jsonld') || file.endsWith('.json')) {
+          const spSlug = file.replace(/\.jsonld$/, '').replace(/\.json$/, '');
+          if (!spells[spSlug]) {
+            const spData = this._readJsonSafe(path.join(spellsDir, file));
+            if (spData) spells[spSlug] = this._resolveSpell3DModel(spSlug, spData);
+          }
+        }
+      }
+    }
+
+    // Process all items with 3D model metadata
+    for (const [itKey, itVal] of Object.entries(items)) {
+      items[itKey] = this._resolveItem3DModel(itKey, itVal);
+    }
+
     // 4. Bundle Quests
     let quests = [];
     if (campaign['robos:gameState'] && Array.isArray(campaign['robos:gameState']['robos:questLog'])) {
@@ -322,6 +483,7 @@ class CartridgeBundler {
         characterCount: Object.keys(characters).length,
         itemCount: Object.keys(items).length,
         enemyCount: Object.keys(enemies).length,
+        spellCount: Object.keys(spells).length,
         questCount: quests.length,
         startingMap,
         startingPosition: startingSpawn,
@@ -333,6 +495,7 @@ class CartridgeBundler {
       characters,
       items,
       enemies,
+      spells,
       quests,
       storyDAG
     };

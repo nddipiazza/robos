@@ -22,6 +22,10 @@ var walk_timer: float = 0.0
 var idle_timer: float = 0.0
 var loaded_model_node: Node3D = null
 
+var weapon_socket: Node3D = null
+var shield_socket: Node3D = null
+var helm_socket: Node3D = null
+
 func _init() -> void:
 	name = "CharacterModel3D"
 
@@ -74,6 +78,22 @@ func _setup_viewport_pipeline() -> void:
 	model_pivot = Node3D.new()
 	model_pivot.name = "ModelPivot"
 	sub_viewport.add_child(model_pivot)
+
+	# Equipment Sockets attached to ModelPivot (so they animate hop and rotate with character)
+	weapon_socket = Node3D.new()
+	weapon_socket.name = "WeaponSocket"
+	weapon_socket.position = Vector3(0.24, 0.45, 0.12)
+	model_pivot.add_child(weapon_socket)
+
+	shield_socket = Node3D.new()
+	shield_socket.name = "ShieldSocket"
+	shield_socket.position = Vector3(-0.25, 0.46, 0.12)
+	model_pivot.add_child(shield_socket)
+
+	helm_socket = Node3D.new()
+	helm_socket.name = "HelmSocket"
+	helm_socket.position = Vector3(0.0, 0.78, 0.0)
+	model_pivot.add_child(helm_socket)
 
 	# Display 2D Sprite displaying the ViewportTexture
 	display_sprite = Sprite2D.new()
@@ -139,9 +159,7 @@ func setup_model(asset_path: String, type_name: String = "", scale_mul: float = 
 
 func _resolve_model_path(path: String, type_name: String) -> String:
 	if path != "" and (path.ends_with(".glb") or path.ends_with(".gltf")):
-		var check_p = path
-		if not check_p.begins_with("res://") and not check_p.begins_with("/"):
-			check_p = "res://" + check_p.trim_prefix("/")
+		var check_p = _ensure_res_path(path)
 		if FileAccess.file_exists(check_p) or ResourceLoader.exists(check_p):
 			return check_p
 
@@ -149,18 +167,128 @@ func _resolve_model_path(path: String, type_name: String) -> String:
 	var t = (type_name + " " + path).to_lower()
 	if "dragonlord" in t or "dragon" in t or "wyrm" in t or "boss" in t or "malakor" in t:
 		return "res://assets/models/monster_dragon_pawn.glb"
+	elif "skeleton" in t or "undead" in t or "bone" in t:
+		return "res://assets/models/monster_skeleton_pawn.glb"
+	elif "minotaur" in t or "beast" in t or "brute" in t or "ogre" in t:
+		return "res://assets/models/monster_minotaur_pawn.glb"
+	elif "hound" in t or "wolf" in t or "dire" in t or "dog" in t:
+		return "res://assets/models/monster_hound_pawn.glb"
+	elif "skirmisher" in t or "brigand" in t or "bandit" in t or "scout" in t:
+		return "res://assets/models/monster_skirmisher_pawn.glb"
+	elif "goblin" in t or "skulker" in t or "creature" in t:
+		return "res://assets/models/monster_goblin_pawn.glb"
 	elif "king" in t or "lorik" in t or "loric" in t or "alden" in t or "monarch" in t:
 		return "res://assets/models/character_king_pawn.glb"
 	elif "princess" in t or "gwaelin" in t or "jennifer" in t or "royal" in t:
 		return "res://assets/models/character_princess_pawn.glb"
-	elif "goblin" in t or "skulker" in t or "creature" in t:
-		return "res://assets/models/monster_goblin_pawn.glb"
 	elif "wizard" in t or "mage" in t or "sorcerer" in t or "elora" in t or "ignis" in t:
 		return "res://assets/models/character_wizard_pawn.glb"
 	elif "rogue" in t or "thief" in t or "assassin" in t or "imoen" in t:
 		return "res://assets/models/character_rogue_pawn.glb"
 	else:
 		return "res://assets/models/character_knight_pawn.glb"
+
+func equip_weapon(weapon_ref: String) -> void:
+	if not weapon_socket:
+		return
+	for c in weapon_socket.get_children():
+		c.queue_free()
+	if weapon_ref == "" or weapon_ref == "none":
+		return
+	var path = _resolve_weapon_path(weapon_ref)
+	var scene = _load_glb_scene(path)
+	if scene:
+		weapon_socket.add_child(scene)
+		print("⚔️ [CharacterModel3D] Equipped weapon: ", path)
+
+func equip_shield(shield_ref: String) -> void:
+	if not shield_socket:
+		return
+	for c in shield_socket.get_children():
+		c.queue_free()
+	if shield_ref == "" or shield_ref == "none":
+		return
+	var path = _resolve_shield_path(shield_ref)
+	var scene = _load_glb_scene(path)
+	if scene:
+		shield_socket.add_child(scene)
+		print("🛡️ [CharacterModel3D] Equipped shield: ", path)
+
+func equip_helmet(helm_ref: String) -> void:
+	if not helm_socket:
+		return
+	for c in helm_socket.get_children():
+		c.queue_free()
+	if helm_ref == "" or helm_ref == "none":
+		return
+	var path = _resolve_helm_path(helm_ref)
+	var scene = _load_glb_scene(path)
+	if scene:
+		helm_socket.add_child(scene)
+		print("🪖 [CharacterModel3D] Equipped helmet: ", path)
+
+func apply_armor_styling(armor_type: String, armor_color: Color = Color.WHITE) -> void:
+	if not loaded_model_node:
+		return
+	var a = armor_type.to_lower()
+	var metallic = 0.4
+	var roughness = 0.4
+	var tint = armor_color
+	if "plate" in a or "knight" in a or "steel" in a or "iron" in a:
+		metallic = 0.85
+		roughness = 0.2
+		if tint == Color.WHITE:
+			tint = Color(0.80, 0.83, 0.88)
+	elif "leather" in a or "studded" in a or "hide" in a:
+		metallic = 0.2
+		roughness = 0.75
+		if tint == Color.WHITE:
+			tint = Color(0.48, 0.32, 0.20)
+	elif "robe" in a or "cloth" in a or "linen" in a:
+		metallic = 0.05
+		roughness = 0.9
+		if tint == Color.WHITE:
+			tint = Color(0.55, 0.25, 0.85)
+
+	_apply_material_styling(loaded_model_node, tint, metallic, roughness)
+
+func _resolve_weapon_path(ref: String) -> String:
+	if ref.ends_with(".glb") or ref.ends_with(".gltf"):
+		return _ensure_res_path(ref)
+	var r = ref.to_lower()
+	if "hero" in r or "excalibur" in r or "erdrick" in r or "legendary" in r:
+		return "res://assets/models/weapon_sword_hero.glb"
+	elif "club" in r or "cudgel" in r or "mace" in r:
+		return "res://assets/models/weapon_club_wood.glb"
+	elif "staff" in r or "rod" in r or "wand" in r:
+		return "res://assets/models/weapon_staff_wizard.glb"
+	elif "bow" in r or "arrow" in r:
+		return "res://assets/models/weapon_bow_recurve.glb"
+	elif "dagger" in r or "knife" in r or "blade" in r:
+		return "res://assets/models/weapon_dagger_rogue.glb"
+	elif "bamboo" in r or "pole" in r or "spear" in r:
+		return "res://assets/models/weapon_bamboo_pole.glb"
+	else:
+		return "res://assets/models/weapon_sword_iron.glb"
+
+func _resolve_shield_path(ref: String) -> String:
+	if ref.ends_with(".glb") or ref.ends_with(".gltf"):
+		return _ensure_res_path(ref)
+	var r = ref.to_lower()
+	if "round" in r or "buckler" in r or "viking" in r:
+		return "res://assets/models/armor_shield_round.glb"
+	else:
+		return "res://assets/models/armor_shield_heater.glb"
+
+func _resolve_helm_path(ref: String) -> String:
+	if ref.ends_with(".glb") or ref.ends_with(".gltf"):
+		return _ensure_res_path(ref)
+	return "res://assets/models/armor_helm_knight.glb"
+
+func _ensure_res_path(path: String) -> String:
+	if not path.begins_with("res://") and not path.begins_with("/"):
+		return "res://" + path.trim_prefix("/")
+	return path
 
 func _load_glb_scene(path: String) -> Node:
 	if not FileAccess.file_exists(path) and not ResourceLoader.exists(path):
@@ -173,15 +301,18 @@ func _load_glb_scene(path: String) -> Node:
 	return null
 
 func _apply_tint_to_meshes(root: Node3D, tint: Color) -> void:
+	_apply_material_styling(root, tint, 0.4, 0.4)
+
+func _apply_material_styling(root: Node3D, tint: Color, metallic: float, roughness: float) -> void:
 	for child in root.get_children():
 		if child is MeshInstance3D and child.mesh:
 			var mat = StandardMaterial3D.new()
 			mat.albedo_color = tint
-			mat.metallic = 0.4
-			mat.roughness = 0.4
+			mat.metallic = metallic
+			mat.roughness = roughness
 			child.material_override = mat
 		elif child is Node3D:
-			_apply_tint_to_meshes(child, tint)
+			_apply_material_styling(child, tint, metallic, roughness)
 
 func _build_procedural_fallback_miniature(type_name: String, tint: Color) -> void:
 	var fallback_root = Node3D.new()

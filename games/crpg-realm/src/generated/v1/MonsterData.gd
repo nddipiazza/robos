@@ -11,6 +11,10 @@ var speed: int = 30
 var abilities: Dictionary = {}
 var attacks: Array = []
 var sprite_config: Dictionary = {}
+var model_3d_asset: String = ""
+var model_3d_type: String = ""
+var model_3d_scale: float = 1.0
+var model_3d_tint: String = ""
 
 static func from_dict(d: Dictionary) -> MonsterData:
 	var m = MonsterData.new()
@@ -23,4 +27,9 @@ static func from_dict(d: Dictionary) -> MonsterData:
 	m.abilities = d.get("abilities", {})
 	m.attacks = d.get("attacks", [])
 	m.sprite_config = d.get("sprite", {})
+	m.model_3d_asset = str(d.get("model3dAsset", d.get("model_3d_asset", "")))
+	m.model_3d_type = str(d.get("model3dType", d.get("model_3d_type", "")))
+	m.model_3d_scale = float(d.get("model3dScale", d.get("model_3d_scale", 1.0)))
+	m.model_3d_tint = str(d.get("model3dTint", d.get("model_3d_tint", "")))
 	return m
+
