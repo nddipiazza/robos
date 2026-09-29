@@ -1,0 +1,29 @@
+WEBVTT
+
+1
+00:00:01.051 --> 00:00:05.653
+RobOS models the complete enterprise architecture as an OASIS OSLC Core 3.0 & W3C JSON-LD Dual-State Knowledge Graph.
+
+2
+00:00:05.653 --> 00:00:10.715
+The Interactive Topology engine visualizes all microservices, databases, Kafka pipelines, and OpenAPI contracts.
+
+3
+00:00:10.715 --> 00:00:15.751
+Adding entities triggers an immediate W3C SHACL shape validation gate, guaranteeing schema conformance before saving.
+
+4
+00:00:15.751 --> 00:00:20.786
+We execute a sub-100ms Semantic Graph Diff comparing World 1 (Production main) against World 2 (feature/TASK-101-auth).
+
+5
+00:00:20.786 --> 00:00:25.868
+The Transitive Blast Radius engine traverses dependency edges, calculating upstream/downstream risk before code is written.
+
+6
+00:00:25.868 --> 00:00:30.909
+The Multi-Hop Path Finder uses breadth-first search to reveal multi-service transitive coupling across squads.
+
+7
+00:00:30.909 --> 00:00:34.916
+Blast radius proofs and semantic diffs attach to pull requests, enabling lead architects to verify changes in under 30 seconds.

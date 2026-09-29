@@ -10,13 +10,15 @@ __pycache__/
 *.pyo
 
 # Videos
-videos/
+/videos/
 *.mp4
 !docs/assets/videos/*.mp4
+!docs/assets/videos/**/*.mp4
 *.mkv
 *.mov
 *.avi
 *.webm
+!docs/assets/videos/*.vtt
 
 # Editor files
 *.swp

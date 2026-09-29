@@ -251,32 +251,75 @@ const uncaptionedMaster = path.join(TMP_DIR, 'master_uncaptioned.mp4');
 console.log('Concatenating all segments into 1080p master video...');
 execSync(`ffmpeg -y -f concat -safe 0 -i "${concatListPath}" -c copy "${uncaptionedMaster}"`, { stdio: 'ignore' });
 
-// 5. Burn-in small, non-obstructive captions at bottom margin
+// 5. Burn-in crisp, highly legible captions at bottom margin
 const finalMp4 = path.join(OUT_DIR, 'videos/robos-proof-of-work-demo.mp4');
-console.log('Burning compact, elegant subtitles into final 1080p video...');
-// FontSize=13, semi-transparent background capsule, ample vertical margin MarginV=24
+console.log('Burning crisp DejaVu Sans subtitles into final 1080p video...');
+// FontSize=22, semi-transparent background capsule, ample vertical margin MarginV=30
 execSync(
   `ffmpeg -y -i "${uncaptionedMaster}" ` +
-  `-vf "subtitles=${vttPath}:force_style='Fontname=DejaVu Sans,FontSize=13,PrimaryColour=&H00FFFFFF,OutlineColour=&H90000000,BackColour=&H800b101b,BorderStyle=4,Outline=1,Shadow=0,MarginV=24'" ` +
+  `-vf "subtitles=${vttPath}:force_style='Fontname=DejaVu Sans,FontSize=22,PrimaryColour=&H00FFFFFF,OutlineColour=&H90000000,BackColour=&H800b101b,BorderStyle=4,Outline=1,Shadow=0,MarginV=30'" ` +
   `-c:v libx264 -preset fast -crf 22 -pix_fmt yuv420p "${finalMp4}"`,
   { stdio: 'inherit' }
 );
 console.log(`✓ 1080p Walkthrough Video created: ${finalMp4}`);
 
-// 6. Generate High-Quality Animated Preview GIF (880x495, crisp palette, smooth sampling)
+// 6. Generate High-Res Poster Frame
+const finalPoster = path.join(OUT_DIR, 'images/robos-proof-of-work-demo-poster.jpg');
+console.log('Extracting high-res poster frame at active architecture point...');
+execSync(
+  `ffmpeg -y -ss 00:00:38 -i "${finalMp4}" -frames:v 1 -q:v 2 "${finalPoster}"`,
+  { stdio: 'ignore' }
+);
+console.log(`✓ Poster Frame created: ${finalPoster}`);
+
+// 7. Extract High-Impact 18.5s Highlight Reel across key SDLC phases
+console.log('Extracting high-impact highlight beats for hero loop and animated GIF...');
+const highlightListPath = path.join(TMP_DIR, 'highlight_concat.txt');
+const highlightBeats = [
+  { start: '00:00:00.000', duration: 2.5 }, // Intro Title Card
+  { start: '00:00:22.000', duration: 3.0 }, // Task Breakdown & Visual DAG
+  { start: '00:00:37.000', duration: 3.5 }, // Knowledge Graph Topology & SHACL Validation
+  { start: '00:00:54.000', duration: 3.0 }, // Dual-State Blast Radius Diff
+  { start: '00:01:34.000', duration: 3.5 }, // IntelliJ IDEA Breakpoint Debugging
+  { start: '00:02:18.000', duration: 3.0 }, // PR Review Theater Signoff & ArgoCD Deploy
+];
+
+const highlightFiles = [];
+highlightBeats.forEach((beat, bIdx) => {
+  const bOut = path.join(TMP_DIR, `beat_${bIdx}.mp4`);
+  highlightFiles.push(bOut);
+  execSync(
+    `ffmpeg -y -ss ${beat.start} -i "${finalMp4}" -t ${beat.duration} -c:v libx264 -pix_fmt yuv420p -r 30 "${bOut}"`,
+    { stdio: 'ignore' }
+  );
+});
+
+fs.writeFileSync(highlightListPath, highlightFiles.map(f => `file '${f}'`).join('\n'), 'utf8');
+const highlightMaster = path.join(TMP_DIR, 'highlight_master.mp4');
+execSync(`ffmpeg -y -f concat -safe 0 -i "${highlightListPath}" -c copy "${highlightMaster}"`, { stdio: 'ignore' });
+
+// 8. Generate Looping Hero MP4 for documentation homepage
+const finalLoopMp4 = path.join(OUT_DIR, 'videos/robos-proof-of-work-demo-loop.mp4');
+console.log('Generating optimized looping hero MP4 video...');
+execSync(
+  `ffmpeg -y -i "${highlightMaster}" -c:v libx264 -crf 23 -preset fast -pix_fmt yuv420p -vf "scale=880:494:flags=lanczos" "${finalLoopMp4}"`,
+  { stdio: 'ignore' }
+);
+console.log(`✓ Looping Hero Video created: ${finalLoopMp4}`);
+
+// 9. Generate High-Quality, Silky-Smooth Animated Hero GIF Preview (880x494, 12 fps, optimal Bayer dither)
 const finalGif = path.join(OUT_DIR, 'images/robos-proof-of-work-demo.gif');
-console.log('Generating optimized animated GIF preview across all phases...');
+console.log('Generating fast, high-impact animated GIF preview from highlight beats...');
 const palettePath = path.join(TMP_DIR, 'palette.png');
 
-// Sample the video smoothly into a high-fidelity GIF preview
 execSync(
-  `ffmpeg -y -i "${finalMp4}" -vf "fps=10,scale=880:495:flags=lanczos,palettegen=stats_mode=diff" "${palettePath}"`,
+  `ffmpeg -y -i "${highlightMaster}" -vf "fps=12,scale=880:494:flags=lanczos,palettegen=stats_mode=diff" "${palettePath}"`,
   { stdio: 'ignore' }
 );
 execSync(
-  `ffmpeg -y -i "${finalMp4}" -i "${palettePath}" -lavfi "fps=10,scale=880:495:flags=lanczos [x]; [x][1:v] paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle" "${finalGif}"`,
+  `ffmpeg -y -i "${highlightMaster}" -i "${palettePath}" -lavfi "fps=12,scale=880:494:flags=lanczos [x]; [x][1:v] paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle" "${finalGif}"`,
   { stdio: 'ignore' }
 );
 
-console.log(`✓ Animated GIF Preview created: ${finalGif}`);
-console.log('=== Walkthrough Video and GIF Generation Complete! ===');
+console.log(`✓ High-Impact Animated Hero GIF Preview created: ${finalGif}`);
+console.log('=== Walkthrough Video, Loop, Poster, and Hero GIF Generation Complete! ===');

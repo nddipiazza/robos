@@ -38,6 +38,17 @@ Instead of treating codebases as isolated silos, RobOS maintains an executable, 
   </div>
 </div>
 
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <video autoplay muted loop playsinline controls preload="metadata" poster="{{ '/assets/images/big-win-dual-state-kgraph-poster.jpg' | relative_url }}" style="display: block; width: 100%; height: auto;" aria-label="Dual-State SDLC Knowledge Graph & Automated Blast Radius E2E Walkthrough">
+    <source src="{{ '/assets/videos/big-win-dual-state-kgraph.mp4' | relative_url }}" type="video/mp4">
+    <track label="English" kind="subtitles" srclang="en" src="{{ '/assets/videos/big-win-dual-state-kgraph.vtt' | relative_url }}" default>
+    <img src="{{ '/assets/images/big-win-dual-state-kgraph.gif' | relative_url }}" alt="Dual-State SDLC Knowledge Graph & Automated Blast Radius E2E Walkthrough" />
+  </video>
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    🎥 <strong>End-to-End Walkthrough (0:35)</strong>: Live C4 topology exploration, W3C SHACL shape validation gate, sub-100ms semantic graph diff (World 1 vs World 2), transitive blast radius calculation, and multi-hop BFS path tracing.
+  </div>
+</div>
+
 ---
 
 ## The Dual-State Model: World 1 vs. World 2

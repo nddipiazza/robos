@@ -348,7 +348,7 @@ Traditional AI coding assistants are myopic: they only see the file or folder op
 - **W3C SHACL Constraint Gates**: formal constraint shapes ensure every architectural change satisfies domain rules, contract standards, and security requirements.
 - **Living Documentation Continuous Sync**: Automatically updates Mermaid flowcharts, architecture diagrams, and living docs whenever graph objects change.
 
-👉 **[Read the Complete Guide: Dual-State Knowledge Graph →]({{ site.baseurl }}{% link big-wins/dual-state-knowledge-graph.md %})**
+👉 **[Read the Complete Guide: Dual-State Knowledge Graph →]({{ site.baseurl }}{% link big-wins/dual-state-knowledge-graph.md %})** · 🎥 **[Watch the 1080p Walkthrough Video (0:35)]({{ '/assets/videos/big-win-dual-state-kgraph.mp4' | relative_url }})**
 
 ---
 
