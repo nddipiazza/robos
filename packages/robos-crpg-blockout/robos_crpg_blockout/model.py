@@ -46,6 +46,11 @@ OBJECT_TYPES: dict[str, dict] = {
     "bridge":   {"blocksMovement": False, "blocksSight": False, "difficult": False, "cover": "none"},
     "rug":      {"blocksMovement": False, "blocksSight": False, "difficult": False, "cover": "none"},
     "zone":     {"blocksMovement": False, "blocksSight": False, "difficult": False, "cover": "none"},
+    "passage":  {"blocksMovement": False, "blocksSight": False, "difficult": False, "cover": "none"},
+    "dais":     {"blocksMovement": False, "blocksSight": False, "difficult": False, "cover": "none"},
+    "item":     {"blocksMovement": False, "blocksSight": False, "difficult": False, "cover": "none"},
+    "pickup":   {"blocksMovement": False, "blocksSight": False, "difficult": False, "cover": "none"},
+    "weapon":   {"blocksMovement": False, "blocksSight": False, "difficult": False, "cover": "none"},
 }
 SHAPES = ("rect", "circle", "line", "polygon")
 TERRAINS = ("stone", "grass", "dirt", "sand", "wood", "snow", "cave")

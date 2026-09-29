@@ -1,0 +1,530 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/"
+  },
+  "@id": "urn:robos:crpg:battle-map:sword-shrine",
+  "@type": [
+    "robos:CRPGBattleMap",
+    "schema:Place"
+  ],
+  "dcterms:title": "Sanctuary of the Blade - Ancient Shrine",
+  "robos:width": 40,
+  "robos:height": 30,
+  "robos:terrain": "stone",
+  "robos:backgroundImage": "res://assets/blockouts/sword-shrine.png",
+  "robos:backgroundOpacity": 1,
+  "robos:mapObjects": [
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "wall-north",
+      "robos:objectType": "wall",
+      "robos:shape": "rect",
+      "robos:position": [
+        0,
+        0
+      ],
+      "robos:size": [
+        40,
+        2
+      ],
+      "dcterms:title": "North Perimeter Wall",
+      "id": "wall-north",
+      "type": "wall",
+      "shape": "rect",
+      "x": 0,
+      "y": 0,
+      "w": 40,
+      "h": 2,
+      "collision": "blocked",
+      "opacity": "opaque",
+      "label": "North Wall"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "wall-west",
+      "robos:objectType": "wall",
+      "robos:shape": "rect",
+      "robos:position": [
+        0,
+        2
+      ],
+      "robos:size": [
+        2,
+        26
+      ],
+      "dcterms:title": "West Perimeter Wall",
+      "id": "wall-west",
+      "type": "wall",
+      "shape": "rect",
+      "x": 0,
+      "y": 2,
+      "w": 2,
+      "h": 26,
+      "collision": "blocked",
+      "opacity": "opaque",
+      "label": "West Wall"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "wall-east",
+      "robos:objectType": "wall",
+      "robos:shape": "rect",
+      "robos:position": [
+        38,
+        2
+      ],
+      "robos:size": [
+        2,
+        26
+      ],
+      "dcterms:title": "East Perimeter Wall",
+      "id": "wall-east",
+      "type": "wall",
+      "shape": "rect",
+      "x": 38,
+      "y": 2,
+      "w": 2,
+      "h": 26,
+      "collision": "blocked",
+      "opacity": "opaque",
+      "label": "East Wall"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "wall-south-west",
+      "robos:objectType": "wall",
+      "robos:shape": "rect",
+      "robos:position": [
+        0,
+        28
+      ],
+      "robos:size": [
+        16,
+        2
+      ],
+      "dcterms:title": "South Wall West",
+      "id": "wall-south-west",
+      "type": "wall",
+      "shape": "rect",
+      "x": 0,
+      "y": 28,
+      "w": 16,
+      "h": 2,
+      "collision": "blocked",
+      "opacity": "opaque",
+      "label": "South Wall"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "wall-south-east",
+      "robos:objectType": "wall",
+      "robos:shape": "rect",
+      "robos:position": [
+        24,
+        28
+      ],
+      "robos:size": [
+        16,
+        2
+      ],
+      "dcterms:title": "South Wall East",
+      "id": "wall-south-east",
+      "type": "wall",
+      "shape": "rect",
+      "x": 24,
+      "y": 28,
+      "w": 16,
+      "h": 2,
+      "collision": "blocked",
+      "opacity": "opaque",
+      "label": "South Wall"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "sanctuary-gates",
+      "robos:objectType": "passage",
+      "robos:shape": "rect",
+      "robos:position": [
+        16,
+        28
+      ],
+      "robos:size": [
+        8,
+        2
+      ],
+      "dcterms:title": "Sanctuary Gates",
+      "id": "sanctuary-gates",
+      "type": "passage",
+      "shape": "rect",
+      "x": 16,
+      "y": 28,
+      "w": 8,
+      "h": 2,
+      "collision": "open",
+      "opacity": "transparent",
+      "label": "Sanctuary Gates"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "pillar-nw",
+      "robos:objectType": "pillar",
+      "robos:shape": "circle",
+      "robos:position": [
+        8,
+        8
+      ],
+      "robos:size": [
+        4,
+        4
+      ],
+      "dcterms:title": "Ancient Stone Pillar West",
+      "id": "pillar-nw",
+      "type": "pillar",
+      "shape": "circle",
+      "x": 8,
+      "y": 8,
+      "w": 4,
+      "h": 4,
+      "collision": "blocked",
+      "opacity": "opaque",
+      "label": "Pillar West"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "pillar-ne",
+      "robos:objectType": "pillar",
+      "robos:shape": "circle",
+      "robos:position": [
+        28,
+        8
+      ],
+      "robos:size": [
+        4,
+        4
+      ],
+      "dcterms:title": "Ancient Stone Pillar East",
+      "id": "pillar-ne",
+      "type": "pillar",
+      "shape": "circle",
+      "x": 28,
+      "y": 8,
+      "w": 4,
+      "h": 4,
+      "collision": "blocked",
+      "opacity": "opaque",
+      "label": "Pillar East"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "shrine-altar-dais",
+      "robos:objectType": "dais",
+      "robos:shape": "rect",
+      "robos:position": [
+        14,
+        10
+      ],
+      "robos:size": [
+        12,
+        8
+      ],
+      "dcterms:title": "Altar of the Blade Dais",
+      "id": "shrine-altar-dais",
+      "type": "dais",
+      "shape": "rect",
+      "x": 14,
+      "y": 10,
+      "w": 12,
+      "h": 8,
+      "collision": "open",
+      "opacity": "transparent",
+      "label": "Altar of the Blade"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "sword-pickup",
+      "robos:objectType": "item",
+      "robos:shape": "circle",
+      "robos:position": [
+        19,
+        13
+      ],
+      "robos:size": [
+        2,
+        2
+      ],
+      "dcterms:title": "Ground Item (Iron Sword)",
+      "id": "sword-pickup",
+      "type": "item",
+      "item": "iron-sword",
+      "shape": "circle",
+      "x": 19,
+      "y": 13,
+      "w": 2,
+      "h": 2,
+      "collision": "open",
+      "opacity": "transparent",
+      "label": "Iron Sword"
+    },
+    {
+      "@type": "robos:CRPGMapObject",
+      "robos:objectId": "chest-sword",
+      "robos:objectType": "chest",
+      "robos:shape": "rect",
+      "robos:position": [
+        22,
+        12
+      ],
+      "robos:size": [
+        3,
+        3
+      ],
+      "dcterms:title": "Treasure Chest (Hero's Sword)",
+      "id": "chest-sword",
+      "type": "chest",
+      "shape": "rect",
+      "x": 22,
+      "y": 12,
+      "w": 3,
+      "h": 3,
+      "collision": "blocked",
+      "opacity": "transparent",
+      "label": "Hero's Sword Chest"
+    }
+  ],
+  "robos:blockout": {
+    "gridSize": 5,
+    "cols": 9,
+    "rows": 7,
+    "blocked": [
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        2
+      ],
+      [
+        0,
+        3
+      ],
+      [
+        0,
+        4
+      ],
+      [
+        0,
+        5
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        1,
+        5
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        2,
+        5
+      ],
+      [
+        3,
+        0
+      ],
+      [
+        3,
+        5
+      ],
+      [
+        4,
+        0
+      ],
+      [
+        4,
+        2
+      ],
+      [
+        4,
+        5
+      ],
+      [
+        5,
+        0
+      ],
+      [
+        5,
+        1
+      ],
+      [
+        5,
+        5
+      ],
+      [
+        6,
+        0
+      ],
+      [
+        6,
+        5
+      ],
+      [
+        7,
+        0
+      ],
+      [
+        7,
+        1
+      ],
+      [
+        7,
+        2
+      ],
+      [
+        7,
+        3
+      ],
+      [
+        7,
+        4
+      ],
+      [
+        7,
+        5
+      ]
+    ],
+    "opaque": [
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        2
+      ],
+      [
+        0,
+        3
+      ],
+      [
+        0,
+        4
+      ],
+      [
+        0,
+        5
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        1,
+        5
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        2,
+        5
+      ],
+      [
+        3,
+        0
+      ],
+      [
+        3,
+        5
+      ],
+      [
+        4,
+        0
+      ],
+      [
+        4,
+        5
+      ],
+      [
+        5,
+        0
+      ],
+      [
+        5,
+        1
+      ],
+      [
+        5,
+        5
+      ],
+      [
+        6,
+        0
+      ],
+      [
+        6,
+        5
+      ],
+      [
+        7,
+        0
+      ],
+      [
+        7,
+        1
+      ],
+      [
+        7,
+        2
+      ],
+      [
+        7,
+        3
+      ],
+      [
+        7,
+        4
+      ],
+      [
+        7,
+        5
+      ]
+    ],
+    "difficult": [],
+    "cover": {
+      "half": [
+        [
+          4,
+          2
+        ]
+      ],
+      "three-quarters": []
+    },
+    "objectsHash": "338c7302adc79ab5",
+    "image": "res://assets/blockouts/sword-shrine.png",
+    "imagePxPerFoot": 16
+  }
+}

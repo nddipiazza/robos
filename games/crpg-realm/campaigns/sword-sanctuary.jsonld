@@ -1,0 +1,63 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:crpg:campaign:sword-sanctuary",
+  "@type": [
+    "robos:CRPGCampaign",
+    "schema:CreativeWork"
+  ],
+  "dcterms:title": "Sanctuary of the Blade",
+  "dcterms:description": "A brave knight enters the ancient stone shrine unarmed to claim the legendary Iron Sword from the altar.",
+  "robos:setting": "Forgotten Sanctuary",
+  "robos:ruleSet": "D&D 5e SRD",
+  "robos:difficulty": "Core Rules",
+  "robos:startingMap": "sword-shrine",
+  "robos:startingSpawn": {
+    "position": [
+      20,
+      24
+    ],
+    "facing": "north",
+    "entryDescription": "Sir Justin the Brave steps into the ancient stone shrine unarmed."
+  },
+  "robos:maps": [
+    "urn:robos:crpg:battle-map:sword-shrine"
+  ],
+  "robos:heroes": [
+    {
+      "id": "hero-knight",
+      "name": "Sir Justin the Brave",
+      "slug": "hero-knight",
+      "characterType": "hero",
+      "renderMode": "3d_model",
+      "modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "modelType": "knight",
+      "modelScale": 1.0,
+      "equippedWeapon": "",
+      "equippedShield": "",
+      "equippedArmor": "chain-mail",
+      "hpCurrent": 20,
+      "hpMax": 20,
+      "ac": 15,
+      "speed": 30
+    }
+  ],
+  "robos:gameState": {
+    "gold": 50,
+    "worldFlags": {
+      "sword_sanctuary_started": true
+    },
+    "questLog": [
+      {
+        "id": "quest-claim-the-blade",
+        "title": "Claim the Blade",
+        "description": "Approach the altar and claim the Iron Sword.",
+        "status": "active"
+      }
+    ]
+  }
+}

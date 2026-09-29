@@ -700,6 +700,7 @@ function setupIpcHandlers() {
       // 3. Find Godot executable
       const candidateBins = [
         process.env.GODOT_BIN,
+        path.join(process.env.HOME || '', '.local/bin/godot'),
         path.join(process.env.HOME || '', '.local/bin/godot4'),
         path.join(process.env.HOME || '', 'apps/godot4'),
         '/usr/bin/godot4',

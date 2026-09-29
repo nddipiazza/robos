@@ -1,0 +1,3700 @@
+{
+  "crpgCartridgeVersion": "1.0.0",
+  "cartridgeId": "sword-sanctuary",
+  "header": {
+    "title": "Sanctuary of the Blade",
+    "slug": "sword-sanctuary",
+    "author": "RobOS AI Studio",
+    "genre": "Tactical cRPG",
+    "ruleset": "D&D 5e SRD",
+    "difficulty": "Core Rules",
+    "setting": "Forgotten Sanctuary",
+    "description": "A brave knight enters the ancient stone shrine unarmed to claim the legendary Iron Sword from the altar.",
+    "coverColor": "#1e3a8a",
+    "icon": "📼",
+    "mapCount": 1,
+    "characterCount": 1,
+    "itemCount": 13,
+    "enemyCount": 7,
+    "spellCount": 26,
+    "questCount": 0,
+    "startingMap": "sword-shrine",
+    "startingPosition": {
+      "x": 20,
+      "y": 24
+    },
+    "partyLimit": 1,
+    "createdDate": "2026-09-29T22:25:34.364Z"
+  },
+  "campaign": {
+    "@context": {
+      "robos": "https://robos.dev/ns/sdlc#",
+      "dcterms": "http://purl.org/dc/terms/",
+      "schema": "https://schema.org/",
+      "xsd": "http://www.w3.org/2001/XMLSchema#"
+    },
+    "@id": "urn:robos:crpg:campaign:sword-sanctuary",
+    "@type": [
+      "robos:CRPGCampaign",
+      "schema:CreativeWork"
+    ],
+    "dcterms:title": "Sanctuary of the Blade",
+    "dcterms:description": "A brave knight enters the ancient stone shrine unarmed to claim the legendary Iron Sword from the altar.",
+    "robos:setting": "Forgotten Sanctuary",
+    "robos:ruleSet": "D&D 5e SRD",
+    "robos:difficulty": "Core Rules",
+    "robos:startingMap": "sword-shrine",
+    "robos:startingSpawn": {
+      "position": [
+        20,
+        24
+      ],
+      "facing": "north",
+      "entryDescription": "Sir Justin the Brave steps into the ancient stone shrine unarmed."
+    },
+    "robos:maps": [
+      "urn:robos:crpg:battle-map:sword-shrine"
+    ],
+    "robos:heroes": [
+      {
+        "id": "hero-knight",
+        "name": "Sir Justin the Brave",
+        "slug": "hero-knight",
+        "characterType": "hero",
+        "renderMode": "3d_model",
+        "modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+        "modelType": "knight",
+        "modelScale": 1,
+        "equippedWeapon": "",
+        "equippedShield": "",
+        "equippedArmor": "chain-mail",
+        "hpCurrent": 20,
+        "hpMax": 20,
+        "ac": 15,
+        "speed": 30,
+        "robos:renderMode": "3d_model",
+        "robos:modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+        "robos:modelType": "knight",
+        "robos:modelScale": 1,
+        "robos:modelTint": "#ffffff",
+        "modelTint": "#ffffff",
+        "robos:animationStance": "tabletop_hop",
+        "animationStance": "tabletop_hop"
+      }
+    ],
+    "robos:gameState": {
+      "gold": 50,
+      "worldFlags": {
+        "sword_sanctuary_started": true
+      },
+      "questLog": [
+        {
+          "id": "quest-claim-the-blade",
+          "title": "Claim the Blade",
+          "description": "Approach the altar and claim the Iron Sword.",
+          "status": "active"
+        }
+      ]
+    }
+  },
+  "maps": {
+    "sword-shrine": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/"
+      },
+      "@id": "urn:robos:crpg:battle-map:sword-shrine",
+      "@type": [
+        "robos:CRPGBattleMap",
+        "schema:Place"
+      ],
+      "dcterms:title": "Sanctuary of the Blade - Ancient Shrine",
+      "robos:width": 40,
+      "robos:height": 30,
+      "robos:terrain": "stone",
+      "robos:backgroundImage": "res://assets/blockouts/sword-shrine.png",
+      "robos:backgroundOpacity": 1,
+      "robos:mapObjects": [
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "wall-north",
+          "robos:objectType": "wall",
+          "robos:shape": "rect",
+          "robos:position": [
+            0,
+            0
+          ],
+          "robos:size": [
+            40,
+            2
+          ],
+          "dcterms:title": "North Perimeter Wall",
+          "id": "wall-north",
+          "type": "wall",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "w": 40,
+          "h": 2,
+          "collision": "blocked",
+          "opacity": "opaque",
+          "label": "North Wall"
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "wall-west",
+          "robos:objectType": "wall",
+          "robos:shape": "rect",
+          "robos:position": [
+            0,
+            2
+          ],
+          "robos:size": [
+            2,
+            26
+          ],
+          "dcterms:title": "West Perimeter Wall",
+          "id": "wall-west",
+          "type": "wall",
+          "shape": "rect",
+          "x": 0,
+          "y": 2,
+          "w": 2,
+          "h": 26,
+          "collision": "blocked",
+          "opacity": "opaque",
+          "label": "West Wall"
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "wall-east",
+          "robos:objectType": "wall",
+          "robos:shape": "rect",
+          "robos:position": [
+            38,
+            2
+          ],
+          "robos:size": [
+            2,
+            26
+          ],
+          "dcterms:title": "East Perimeter Wall",
+          "id": "wall-east",
+          "type": "wall",
+          "shape": "rect",
+          "x": 38,
+          "y": 2,
+          "w": 2,
+          "h": 26,
+          "collision": "blocked",
+          "opacity": "opaque",
+          "label": "East Wall"
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "wall-south-west",
+          "robos:objectType": "wall",
+          "robos:shape": "rect",
+          "robos:position": [
+            0,
+            28
+          ],
+          "robos:size": [
+            16,
+            2
+          ],
+          "dcterms:title": "South Wall West",
+          "id": "wall-south-west",
+          "type": "wall",
+          "shape": "rect",
+          "x": 0,
+          "y": 28,
+          "w": 16,
+          "h": 2,
+          "collision": "blocked",
+          "opacity": "opaque",
+          "label": "South Wall"
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "wall-south-east",
+          "robos:objectType": "wall",
+          "robos:shape": "rect",
+          "robos:position": [
+            24,
+            28
+          ],
+          "robos:size": [
+            16,
+            2
+          ],
+          "dcterms:title": "South Wall East",
+          "id": "wall-south-east",
+          "type": "wall",
+          "shape": "rect",
+          "x": 24,
+          "y": 28,
+          "w": 16,
+          "h": 2,
+          "collision": "blocked",
+          "opacity": "opaque",
+          "label": "South Wall"
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "sanctuary-gates",
+          "robos:objectType": "passage",
+          "robos:shape": "rect",
+          "robos:position": [
+            16,
+            28
+          ],
+          "robos:size": [
+            8,
+            2
+          ],
+          "dcterms:title": "Sanctuary Gates",
+          "id": "sanctuary-gates",
+          "type": "passage",
+          "shape": "rect",
+          "x": 16,
+          "y": 28,
+          "w": 8,
+          "h": 2,
+          "collision": "open",
+          "opacity": "transparent",
+          "label": "Sanctuary Gates"
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "pillar-nw",
+          "robos:objectType": "pillar",
+          "robos:shape": "circle",
+          "robos:position": [
+            8,
+            8
+          ],
+          "robos:size": [
+            4,
+            4
+          ],
+          "dcterms:title": "Ancient Stone Pillar West",
+          "id": "pillar-nw",
+          "type": "pillar",
+          "shape": "circle",
+          "x": 8,
+          "y": 8,
+          "w": 4,
+          "h": 4,
+          "collision": "blocked",
+          "opacity": "opaque",
+          "label": "Pillar West"
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "pillar-ne",
+          "robos:objectType": "pillar",
+          "robos:shape": "circle",
+          "robos:position": [
+            28,
+            8
+          ],
+          "robos:size": [
+            4,
+            4
+          ],
+          "dcterms:title": "Ancient Stone Pillar East",
+          "id": "pillar-ne",
+          "type": "pillar",
+          "shape": "circle",
+          "x": 28,
+          "y": 8,
+          "w": 4,
+          "h": 4,
+          "collision": "blocked",
+          "opacity": "opaque",
+          "label": "Pillar East"
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "shrine-altar-dais",
+          "robos:objectType": "dais",
+          "robos:shape": "rect",
+          "robos:position": [
+            14,
+            10
+          ],
+          "robos:size": [
+            12,
+            8
+          ],
+          "dcterms:title": "Altar of the Blade Dais",
+          "id": "shrine-altar-dais",
+          "type": "dais",
+          "shape": "rect",
+          "x": 14,
+          "y": 10,
+          "w": 12,
+          "h": 8,
+          "collision": "open",
+          "opacity": "transparent",
+          "label": "Altar of the Blade"
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "sword-pickup",
+          "robos:objectType": "item",
+          "robos:shape": "circle",
+          "robos:position": [
+            19,
+            13
+          ],
+          "robos:size": [
+            2,
+            2
+          ],
+          "dcterms:title": "Ground Item (Iron Sword)",
+          "id": "sword-pickup",
+          "type": "item",
+          "item": "iron-sword",
+          "shape": "circle",
+          "x": 19,
+          "y": 13,
+          "w": 2,
+          "h": 2,
+          "collision": "open",
+          "opacity": "transparent",
+          "label": "Iron Sword"
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "chest-sword",
+          "robos:objectType": "chest",
+          "robos:shape": "rect",
+          "robos:position": [
+            22,
+            12
+          ],
+          "robos:size": [
+            3,
+            3
+          ],
+          "dcterms:title": "Treasure Chest (Hero's Sword)",
+          "id": "chest-sword",
+          "type": "chest",
+          "shape": "rect",
+          "x": 22,
+          "y": 12,
+          "w": 3,
+          "h": 3,
+          "collision": "blocked",
+          "opacity": "transparent",
+          "label": "Hero's Sword Chest"
+        }
+      ],
+      "robos:blockout": {
+        "gridSize": 5,
+        "cols": 9,
+        "rows": 7,
+        "blocked": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            3
+          ],
+          [
+            0,
+            4
+          ],
+          [
+            0,
+            5
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            5
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            5
+          ],
+          [
+            3,
+            0
+          ],
+          [
+            3,
+            5
+          ],
+          [
+            4,
+            0
+          ],
+          [
+            4,
+            2
+          ],
+          [
+            4,
+            5
+          ],
+          [
+            5,
+            0
+          ],
+          [
+            5,
+            1
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            6,
+            0
+          ],
+          [
+            6,
+            5
+          ],
+          [
+            7,
+            0
+          ],
+          [
+            7,
+            1
+          ],
+          [
+            7,
+            2
+          ],
+          [
+            7,
+            3
+          ],
+          [
+            7,
+            4
+          ],
+          [
+            7,
+            5
+          ]
+        ],
+        "opaque": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            3
+          ],
+          [
+            0,
+            4
+          ],
+          [
+            0,
+            5
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            5
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            5
+          ],
+          [
+            3,
+            0
+          ],
+          [
+            3,
+            5
+          ],
+          [
+            4,
+            0
+          ],
+          [
+            4,
+            5
+          ],
+          [
+            5,
+            0
+          ],
+          [
+            5,
+            1
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            6,
+            0
+          ],
+          [
+            6,
+            5
+          ],
+          [
+            7,
+            0
+          ],
+          [
+            7,
+            1
+          ],
+          [
+            7,
+            2
+          ],
+          [
+            7,
+            3
+          ],
+          [
+            7,
+            4
+          ],
+          [
+            7,
+            5
+          ]
+        ],
+        "difficult": [],
+        "cover": {
+          "half": [
+            [
+              4,
+              2
+            ]
+          ],
+          "three-quarters": []
+        },
+        "objectsHash": "338c7302adc79ab5",
+        "image": "res://assets/blockouts/sword-shrine.png",
+        "imagePxPerFoot": 16
+      }
+    }
+  },
+  "characters": {
+    "hero-knight": {
+      "id": "hero-knight",
+      "name": "Sir Justin the Brave",
+      "slug": "hero-knight",
+      "characterType": "hero",
+      "renderMode": "3d_model",
+      "modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "modelType": "knight",
+      "modelScale": 1,
+      "equippedWeapon": "",
+      "equippedShield": "",
+      "equippedArmor": "chain-mail",
+      "hpCurrent": 20,
+      "hpMax": 20,
+      "ac": 15,
+      "speed": 30,
+      "robos:renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "robos:modelType": "knight",
+      "robos:modelScale": 1,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
+    }
+  },
+  "items": {
+    "bamboo-pole": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:item:bamboo-pole",
+      "@type": [
+        "robos:CRPGItem",
+        "schema:Product",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Bamboo Pole",
+      "schema:name": "Bamboo Pole",
+      "robos:slug": "bamboo-pole",
+      "slug": "bamboo-pole",
+      "robos:itemCategory": "weapon",
+      "itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "equipSlot": "main_hand",
+      "robos:cost": 10,
+      "cost": 10,
+      "robos:weight": 2,
+      "weight": 2,
+      "robos:rarity": "common",
+      "rarity": "common",
+      "robos:icon": "🎋",
+      "icon": "🎋",
+      "robos:damageDice": "1d4-1",
+      "damageDice": "1d4-1",
+      "robos:damageType": "bludgeoning",
+      "damageType": "bludgeoning",
+      "robos:acBonus": 0,
+      "acBonus": 0,
+      "robos:effect": "+1 ATK",
+      "effect": "+1 ATK",
+      "dcterms:description": "A basic walking pole crafted from hardened bamboo.",
+      "description": "A basic walking pole crafted from hardened bamboo.",
+      "robos:modelAssetRef": "res://assets/models/weapon_bamboo_pole.glb",
+      "modelAssetRef": "res://assets/models/weapon_bamboo_pole.glb",
+      "model3dAsset": "res://assets/models/weapon_bamboo_pole.glb",
+      "robos:modelSocket": "main_hand",
+      "modelSocket": "main_hand",
+      "model3dSocket": "main_hand",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "model3dScale": 1
+    },
+    "clothes": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:item:clothes",
+      "@type": [
+        "robos:CRPGItem",
+        "schema:Product",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Plain Clothes",
+      "schema:name": "Plain Clothes",
+      "robos:slug": "clothes",
+      "slug": "clothes",
+      "robos:itemCategory": "armor",
+      "itemCategory": "armor",
+      "robos:equipSlot": "armor",
+      "equipSlot": "armor",
+      "robos:cost": 20,
+      "cost": 20,
+      "robos:weight": 3,
+      "weight": 3,
+      "robos:rarity": "common",
+      "rarity": "common",
+      "robos:icon": "🥋",
+      "icon": "🥋",
+      "robos:damageDice": "",
+      "damageDice": "",
+      "robos:damageType": "",
+      "damageType": "",
+      "robos:acBonus": 1,
+      "acBonus": 1,
+      "robos:effect": "",
+      "effect": "",
+      "dcterms:description": "Simple traveler clothes made of spun linen.",
+      "description": "Simple traveler clothes made of spun linen."
+    },
+    "club": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:item:club",
+      "@type": [
+        "robos:CRPGItem",
+        "schema:Product",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Oak Club",
+      "schema:name": "Oak Club",
+      "robos:slug": "club",
+      "slug": "club",
+      "robos:itemCategory": "weapon",
+      "itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "equipSlot": "main_hand",
+      "robos:cost": 30,
+      "cost": 30,
+      "robos:weight": 3,
+      "weight": 3,
+      "robos:rarity": "common",
+      "rarity": "common",
+      "robos:icon": "🏏",
+      "icon": "🏏",
+      "robos:damageDice": "1d4",
+      "damageDice": "1d4",
+      "robos:damageType": "bludgeoning",
+      "damageType": "bludgeoning",
+      "robos:acBonus": 0,
+      "acBonus": 0,
+      "robos:effect": "+1 ATK",
+      "effect": "+1 ATK",
+      "dcterms:description": "A knotty oak cudgel.",
+      "description": "A knotty oak cudgel.",
+      "robos:modelAssetRef": "res://assets/models/weapon_club_wood.glb",
+      "modelAssetRef": "res://assets/models/weapon_club_wood.glb",
+      "model3dAsset": "res://assets/models/weapon_club_wood.glb",
+      "robos:modelSocket": "main_hand",
+      "modelSocket": "main_hand",
+      "model3dSocket": "main_hand",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "model3dScale": 1
+    },
+    "copper-sword": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:item:copper-sword",
+      "@type": [
+        "robos:CRPGItem",
+        "schema:Product",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Copper Sword",
+      "schema:name": "Copper Sword",
+      "robos:slug": "copper-sword",
+      "slug": "copper-sword",
+      "robos:itemCategory": "weapon",
+      "itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "equipSlot": "main_hand",
+      "robos:cost": 180,
+      "cost": 180,
+      "robos:weight": 5,
+      "weight": 5,
+      "robos:rarity": "common",
+      "rarity": "common",
+      "robos:icon": "🗡️",
+      "icon": "🗡️",
+      "robos:damageDice": "1d6",
+      "damageDice": "1d6",
+      "robos:damageType": "slashing",
+      "damageType": "slashing",
+      "robos:acBonus": 0,
+      "acBonus": 0,
+      "robos:effect": "+2 ATK",
+      "effect": "+2 ATK",
+      "dcterms:description": "A sturdy forged copper blade.",
+      "description": "A sturdy forged copper blade.",
+      "robos:modelAssetRef": "res://assets/models/weapon_sword_iron.glb",
+      "modelAssetRef": "res://assets/models/weapon_sword_iron.glb",
+      "model3dAsset": "res://assets/models/weapon_sword_iron.glb",
+      "robos:modelSocket": "main_hand",
+      "modelSocket": "main_hand",
+      "model3dSocket": "main_hand",
+      "robos:modelScale": 0.82,
+      "modelScale": 0.82,
+      "model3dScale": 0.82
+    },
+    "herb": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:item:herb",
+      "@type": [
+        "robos:CRPGItem",
+        "schema:Product",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Medicinal Herb",
+      "schema:name": "Medicinal Herb",
+      "robos:slug": "herb",
+      "slug": "herb",
+      "robos:itemCategory": "consumable",
+      "itemCategory": "consumable",
+      "robos:equipSlot": "quick_item",
+      "equipSlot": "quick_item",
+      "robos:cost": 24,
+      "cost": 24,
+      "robos:weight": 0.2,
+      "weight": 0.2,
+      "robos:rarity": "common",
+      "rarity": "common",
+      "robos:icon": "🌿",
+      "icon": "🌿",
+      "robos:damageDice": "",
+      "damageDice": "",
+      "robos:damageType": "",
+      "damageType": "",
+      "robos:acBonus": 0,
+      "acBonus": 0,
+      "robos:effect": "Restores 20-35 HP",
+      "effect": "Restores 20-35 HP",
+      "dcterms:description": "Fragrant healing plant.",
+      "description": "Fragrant healing plant."
+    },
+    "heros-sword": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:item:heros-sword",
+      "@type": [
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "The Hero's Sword",
+      "schema:name": "The Hero's Sword",
+      "robos:slug": "heros-sword",
+      "slug": "heros-sword",
+      "robos:itemCategory": "weapon",
+      "itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "equipSlot": "main_hand",
+      "robos:cost": 500,
+      "cost": 500,
+      "robos:weight": 4,
+      "weight": 4,
+      "robos:rarity": "rare",
+      "rarity": "rare",
+      "robos:icon": "⚔️",
+      "icon": "⚔️",
+      "robos:damageDice": "1d8",
+      "damageDice": "1d8",
+      "robos:damageType": "slashing",
+      "damageType": "slashing",
+      "robos:acBonus": 0,
+      "acBonus": 0,
+      "robos:effect": "+3 ATK, Dragonclaw Rune",
+      "effect": "+3 ATK, Dragonclaw Rune",
+      "dcterms:description": "A legendary blade forged in dragonfire at the Dragonclaw Forge. Granted only to champions who prove their courage.",
+      "description": "A legendary blade forged in dragonfire at the Dragonclaw Forge. Granted only to champions who prove their courage.",
+      "robos:modelAssetRef": "res://assets/models/weapon_sword_hero.glb",
+      "modelAssetRef": "res://assets/models/weapon_sword_hero.glb",
+      "model3dAsset": "res://assets/models/weapon_sword_hero.glb",
+      "robos:modelSocket": "main_hand",
+      "modelSocket": "main_hand",
+      "model3dSocket": "main_hand",
+      "robos:modelScale": 1.05,
+      "modelScale": 1.05,
+      "model3dScale": 1.05
+    },
+    "iron-sword": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:item:iron-sword",
+      "@type": [
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Iron Sword",
+      "schema:name": "Iron Sword",
+      "robos:slug": "iron-sword",
+      "slug": "iron-sword",
+      "robos:itemCategory": "weapon",
+      "itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "equipSlot": "main_hand",
+      "robos:modelAssetRef": "res://assets/models/weapon_sword_iron.glb",
+      "modelAssetRef": "res://assets/models/weapon_sword_iron.glb",
+      "robos:modelSocket": "WeaponSocket",
+      "modelSocket": "WeaponSocket",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "robos:cost": 240,
+      "cost": 240,
+      "robos:weight": 3,
+      "weight": 3,
+      "robos:rarity": "common",
+      "rarity": "common",
+      "robos:icon": "⚔️",
+      "icon": "⚔️",
+      "robos:damageDice": "1d8",
+      "damageDice": "1d8",
+      "robos:damageType": "slashing",
+      "damageType": "slashing",
+      "robos:acBonus": 0,
+      "acBonus": 0,
+      "robos:effect": "+2 ATK",
+      "effect": "+2 ATK",
+      "dcterms:description": "A finely balanced martial iron broadsword forged with a tempered steel edge.",
+      "description": "A finely balanced martial iron broadsword forged with a tempered steel edge.",
+      "model3dAsset": "res://assets/models/weapon_sword_iron.glb",
+      "model3dSocket": "WeaponSocket",
+      "model3dScale": 1
+    },
+    "leather-armor": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:item:leather-armor",
+      "@type": [
+        "robos:CRPGItem",
+        "schema:Product",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Leather Armor",
+      "schema:name": "Leather Armor",
+      "robos:slug": "leather-armor",
+      "slug": "leather-armor",
+      "robos:itemCategory": "armor",
+      "itemCategory": "armor",
+      "robos:equipSlot": "armor",
+      "equipSlot": "armor",
+      "robos:cost": 70,
+      "cost": 70,
+      "robos:weight": 15,
+      "weight": 15,
+      "robos:rarity": "common",
+      "rarity": "common",
+      "robos:icon": "🛡️",
+      "icon": "🛡️",
+      "robos:damageDice": "",
+      "damageDice": "",
+      "robos:damageType": "",
+      "damageType": "",
+      "robos:acBonus": 2,
+      "acBonus": 2,
+      "robos:effect": "",
+      "effect": "",
+      "dcterms:description": "Cured boiled leather tunic.",
+      "description": "Cured boiled leather tunic.",
+      "robos:modelAssetRef": "res://assets/models/armor_suit_leather.glb",
+      "modelAssetRef": "res://assets/models/armor_suit_leather.glb",
+      "model3dAsset": "res://assets/models/armor_suit_leather.glb",
+      "robos:modelSocket": "armor",
+      "modelSocket": "armor",
+      "model3dSocket": "armor",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "model3dScale": 1
+    },
+    "leather-boots": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:item:leather-boots",
+      "@type": [
+        "robos:CRPGItem",
+        "schema:Product",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Leather Boots",
+      "schema:name": "Leather Boots",
+      "robos:slug": "leather-boots",
+      "slug": "leather-boots",
+      "robos:itemCategory": "accessory",
+      "itemCategory": "accessory",
+      "robos:equipSlot": "boots",
+      "equipSlot": "boots",
+      "robos:cost": 15,
+      "cost": 15,
+      "robos:weight": 3,
+      "weight": 3,
+      "robos:rarity": "common",
+      "rarity": "common",
+      "robos:icon": "🥾",
+      "icon": "🥾",
+      "robos:damageDice": "",
+      "damageDice": "",
+      "robos:damageType": "",
+      "damageType": "",
+      "robos:acBonus": 0,
+      "acBonus": 0,
+      "robos:effect": "Normal terrain traction",
+      "effect": "Normal terrain traction",
+      "dcterms:description": "Durable reinforced boots.",
+      "description": "Durable reinforced boots.",
+      "robos:modelAssetRef": "res://assets/models/armor_suit_leather.glb",
+      "modelAssetRef": "res://assets/models/armor_suit_leather.glb",
+      "model3dAsset": "res://assets/models/armor_suit_leather.glb",
+      "robos:modelSocket": "armor",
+      "modelSocket": "armor",
+      "model3dSocket": "armor",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "model3dScale": 1
+    },
+    "magic-key": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:item:magic-key",
+      "@type": [
+        "robos:CRPGItem",
+        "schema:Product",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Magic Key",
+      "schema:name": "Magic Key",
+      "robos:slug": "magic-key",
+      "slug": "magic-key",
+      "robos:itemCategory": "quest",
+      "itemCategory": "quest",
+      "robos:equipSlot": "quick_item",
+      "equipSlot": "quick_item",
+      "robos:cost": 25,
+      "cost": 25,
+      "robos:weight": 0.5,
+      "weight": 0.5,
+      "robos:rarity": "uncommon",
+      "rarity": "uncommon",
+      "robos:icon": "🗝️",
+      "icon": "🗝️",
+      "robos:damageDice": "",
+      "damageDice": "",
+      "robos:damageType": "",
+      "damageType": "",
+      "robos:acBonus": 0,
+      "acBonus": 0,
+      "robos:effect": "Unlocks royal doors",
+      "effect": "Unlocks royal doors",
+      "dcterms:description": "A magic key that dissolves in the lock.",
+      "description": "A magic key that dissolves in the lock."
+    },
+    "potion-healing": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:item:potion-healing",
+      "@type": [
+        "robos:CRPGItem",
+        "schema:Product",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Potion of Healing",
+      "schema:name": "Potion of Healing",
+      "robos:slug": "potion-healing",
+      "slug": "potion-healing",
+      "robos:itemCategory": "consumable",
+      "itemCategory": "consumable",
+      "robos:equipSlot": "quick_item",
+      "equipSlot": "quick_item",
+      "robos:cost": 50,
+      "cost": 50,
+      "robos:weight": 0.5,
+      "weight": 0.5,
+      "robos:rarity": "common",
+      "rarity": "common",
+      "robos:icon": "🧪",
+      "icon": "🧪",
+      "robos:damageDice": "",
+      "damageDice": "",
+      "robos:damageType": "",
+      "damageType": "",
+      "robos:acBonus": 0,
+      "acBonus": 0,
+      "robos:effect": "Restores 2d4+2 HP",
+      "effect": "Restores 2d4+2 HP",
+      "dcterms:description": "Standard red restorative brew.",
+      "description": "Standard red restorative brew."
+    },
+    "torch": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:item:torch",
+      "@type": [
+        "robos:CRPGItem",
+        "schema:Product",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Torch",
+      "schema:name": "Torch",
+      "robos:slug": "torch",
+      "slug": "torch",
+      "robos:itemCategory": "tool",
+      "itemCategory": "tool",
+      "robos:equipSlot": "quick_item",
+      "equipSlot": "quick_item",
+      "robos:cost": 8,
+      "cost": 8,
+      "robos:weight": 1,
+      "weight": 1,
+      "robos:rarity": "common",
+      "rarity": "common",
+      "robos:icon": "🔥",
+      "icon": "🔥",
+      "robos:damageDice": "",
+      "damageDice": "",
+      "robos:damageType": "",
+      "damageType": "",
+      "robos:acBonus": 0,
+      "acBonus": 0,
+      "robos:effect": "Illuminates caves 3x3",
+      "effect": "Illuminates caves 3x3",
+      "dcterms:description": "A wooden torch dipped in pitch.",
+      "description": "A wooden torch dipped in pitch."
+    },
+    "travelers-cloak": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:item:travelers-cloak",
+      "@type": [
+        "robos:CRPGItem",
+        "schema:Product",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Traveler's Cloak",
+      "schema:name": "Traveler's Cloak",
+      "robos:slug": "travelers-cloak",
+      "slug": "travelers-cloak",
+      "robos:itemCategory": "accessory",
+      "itemCategory": "accessory",
+      "robos:equipSlot": "cloak",
+      "equipSlot": "cloak",
+      "robos:cost": 35,
+      "cost": 35,
+      "robos:weight": 2,
+      "weight": 2,
+      "robos:rarity": "common",
+      "rarity": "common",
+      "robos:icon": "🧥",
+      "icon": "🧥",
+      "robos:damageDice": "",
+      "damageDice": "",
+      "robos:damageType": "",
+      "damageType": "",
+      "robos:acBonus": 0,
+      "acBonus": 0,
+      "robos:effect": "+1 Save vs Cold",
+      "effect": "+1 Save vs Cold",
+      "dcterms:description": "Heavy wool mantle.",
+      "description": "Heavy wool mantle."
+    }
+  },
+  "enemies": {
+    "captain-malakor-boss": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "oslc_am": "http://open-services.net/ns/am#"
+      },
+      "@id": "urn:robos:crpg:monster:captain-malakor-boss",
+      "@type": [
+        "robos:CRPGMonster",
+        "oslc_am:Resource",
+        "schema:Person"
+      ],
+      "dcterms:title": "Dark Lord Malakor (Boss)",
+      "schema:name": "Dark Lord Malakor (Boss)",
+      "robos:slug": "captain-malakor-boss",
+      "slug": "captain-malakor-boss",
+      "robos:challengeRating": "5",
+      "challengeRating": "5",
+      "robos:creatureType": "fiend",
+      "creatureType": "fiend",
+      "robos:armorClass": 16,
+      "armorClass": 16,
+      "robos:hitPoints": 85,
+      "hitPoints": 85,
+      "robos:speed": 30,
+      "speed": 30,
+      "robos:alignment": "Chaotic Evil",
+      "alignment": "Chaotic Evil",
+      "robos:abilities": {
+        "str": 16,
+        "dex": 14,
+        "con": 16,
+        "int": 16,
+        "wis": 14,
+        "cha": 18
+      },
+      "abilities": {
+        "str": 16,
+        "dex": 14,
+        "con": 16,
+        "int": 16,
+        "wis": 14,
+        "cha": 18
+      },
+      "robos:attacks": [
+        {
+          "name": "Shadow Scythe",
+          "attackBonus": 7,
+          "damage": "2d8+3",
+          "damageType": "slashing",
+          "range": 5
+        },
+        {
+          "name": "Necrotic Blast",
+          "attackBonus": 6,
+          "damage": "3d6",
+          "damageType": "necrotic",
+          "range": 60
+        }
+      ],
+      "attacks": [
+        {
+          "name": "Shadow Scythe",
+          "attackBonus": 7,
+          "damage": "2d8+3",
+          "damageType": "slashing",
+          "range": 5
+        },
+        {
+          "name": "Necrotic Blast",
+          "attackBonus": 6,
+          "damage": "3d6",
+          "damageType": "necrotic",
+          "range": 60
+        }
+      ],
+      "robos:isBoss": true,
+      "isBoss": true,
+      "robos:portrait": "😈",
+      "portrait": "😈",
+      "robos:spriteAssetRef": "flare:creature:minotaur",
+      "spriteAssetRef": "flare:creature:minotaur",
+      "robos:xpReward": 1800,
+      "xpReward": 1800,
+      "robos:goldDrop": 250,
+      "goldDrop": 250,
+      "robos:behavior": "boss_phase",
+      "behavior": "boss_phase",
+      "dcterms:description": "Dread sorcerer-warlord threatening the kingdom with abyssal dark magic.",
+      "description": "Dread sorcerer-warlord threatening the kingdom with abyssal dark magic.",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/monster_dragon_pawn.glb",
+      "modelAssetRef": "res://assets/models/monster_dragon_pawn.glb",
+      "robos:modelType": "dragon",
+      "modelType": "dragon",
+      "robos:modelScale": 1.45,
+      "modelScale": 1.45,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
+    },
+    "corrupted-hound": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "oslc_am": "http://open-services.net/ns/am#"
+      },
+      "@id": "urn:robos:crpg:monster:corrupted-hound",
+      "@type": [
+        "robos:CRPGMonster",
+        "oslc_am:Resource",
+        "schema:Person"
+      ],
+      "dcterms:title": "Corrupted Shadow Hound",
+      "schema:name": "Corrupted Shadow Hound",
+      "robos:slug": "corrupted-hound",
+      "slug": "corrupted-hound",
+      "robos:challengeRating": "1/4",
+      "challengeRating": "1/4",
+      "robos:creatureType": "beast",
+      "creatureType": "beast",
+      "robos:armorClass": 12,
+      "armorClass": 12,
+      "robos:hitPoints": 11,
+      "hitPoints": 11,
+      "robos:speed": 40,
+      "speed": 40,
+      "robos:alignment": "Neutral Evil",
+      "alignment": "Neutral Evil",
+      "robos:abilities": {
+        "str": 12,
+        "dex": 15,
+        "con": 12,
+        "int": 3,
+        "wis": 12,
+        "cha": 6
+      },
+      "abilities": {
+        "str": 12,
+        "dex": 15,
+        "con": 12,
+        "int": 3,
+        "wis": 12,
+        "cha": 6
+      },
+      "robos:attacks": [
+        {
+          "name": "Bite",
+          "attackBonus": 4,
+          "damage": "1d6+2",
+          "damageType": "piercing",
+          "range": 5
+        }
+      ],
+      "attacks": [
+        {
+          "name": "Bite",
+          "attackBonus": 4,
+          "damage": "1d6+2",
+          "damageType": "piercing",
+          "range": 5
+        }
+      ],
+      "robos:isBoss": false,
+      "isBoss": false,
+      "robos:portrait": "🐺",
+      "portrait": "🐺",
+      "robos:spriteAssetRef": "flare:creature:wolf",
+      "spriteAssetRef": "flare:creature:wolf",
+      "robos:xpReward": 50,
+      "xpReward": 50,
+      "robos:goldDrop": 0,
+      "goldDrop": 0,
+      "robos:behavior": "aggressive",
+      "behavior": "aggressive",
+      "dcterms:description": "Savage shadow wolf warped by abyssal miasma, hunting in coordinated packs.",
+      "description": "Savage shadow wolf warped by abyssal miasma, hunting in coordinated packs.",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/monster_hound_pawn.glb",
+      "modelAssetRef": "res://assets/models/monster_hound_pawn.glb",
+      "robos:modelType": "hound",
+      "modelType": "hound",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
+    },
+    "feral-guard-skirmisher": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "oslc_am": "http://open-services.net/ns/am#"
+      },
+      "@id": "urn:robos:crpg:monster:feral-guard-skirmisher",
+      "@type": [
+        "robos:CRPGMonster",
+        "oslc_am:Resource",
+        "schema:Person"
+      ],
+      "dcterms:title": "Feral Guard Skirmisher",
+      "schema:name": "Feral Guard Skirmisher",
+      "robos:slug": "feral-guard-skirmisher",
+      "slug": "feral-guard-skirmisher",
+      "robos:challengeRating": "1/2",
+      "challengeRating": "1/2",
+      "robos:creatureType": "undead",
+      "creatureType": "undead",
+      "robos:armorClass": 14,
+      "armorClass": 14,
+      "robos:hitPoints": 16,
+      "hitPoints": 16,
+      "robos:speed": 30,
+      "speed": 30,
+      "robos:alignment": "Lawful Evil",
+      "alignment": "Lawful Evil",
+      "robos:abilities": {
+        "str": 14,
+        "dex": 12,
+        "con": 14,
+        "int": 8,
+        "wis": 10,
+        "cha": 8
+      },
+      "abilities": {
+        "str": 14,
+        "dex": 12,
+        "con": 14,
+        "int": 8,
+        "wis": 10,
+        "cha": 8
+      },
+      "robos:attacks": [
+        {
+          "name": "Spear Thrust",
+          "attackBonus": 4,
+          "damage": "1d6+2",
+          "damageType": "piercing",
+          "range": 5
+        }
+      ],
+      "attacks": [
+        {
+          "name": "Spear Thrust",
+          "attackBonus": 4,
+          "damage": "1d6+2",
+          "damageType": "piercing",
+          "range": 5
+        }
+      ],
+      "robos:isBoss": false,
+      "isBoss": false,
+      "robos:portrait": "💀",
+      "portrait": "💀",
+      "robos:spriteAssetRef": "flare:creature:skeleton",
+      "spriteAssetRef": "flare:creature:skeleton",
+      "robos:xpReward": 100,
+      "xpReward": 100,
+      "robos:goldDrop": 8,
+      "goldDrop": 8,
+      "robos:behavior": "defensive",
+      "behavior": "defensive",
+      "dcterms:description": "Fallen garrison guards resurrected by necromantic curse, wielding rusty spears.",
+      "description": "Fallen garrison guards resurrected by necromantic curse, wielding rusty spears.",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/monster_skirmisher_pawn.glb",
+      "modelAssetRef": "res://assets/models/monster_skirmisher_pawn.glb",
+      "robos:modelType": "skirmisher",
+      "modelType": "skirmisher",
+      "robos:modelScale": 1.05,
+      "modelScale": 1.05,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
+    },
+    "goblin-raider": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "oslc_am": "http://open-services.net/ns/am#"
+      },
+      "@id": "urn:robos:crpg:monster:goblin-raider",
+      "@type": [
+        "robos:CRPGMonster",
+        "oslc_am:Resource",
+        "schema:Person"
+      ],
+      "dcterms:title": "Goblin Raider",
+      "schema:name": "Goblin Raider",
+      "robos:slug": "goblin-raider",
+      "slug": "goblin-raider",
+      "robos:challengeRating": "1/4",
+      "challengeRating": "1/4",
+      "robos:creatureType": "humanoid",
+      "creatureType": "humanoid",
+      "robos:armorClass": 15,
+      "armorClass": 15,
+      "robos:hitPoints": 7,
+      "hitPoints": 7,
+      "robos:speed": 30,
+      "speed": 30,
+      "robos:alignment": "Neutral Evil",
+      "alignment": "Neutral Evil",
+      "robos:abilities": {
+        "str": 8,
+        "dex": 14,
+        "con": 10,
+        "int": 10,
+        "wis": 8,
+        "cha": 8
+      },
+      "abilities": {
+        "str": 8,
+        "dex": 14,
+        "con": 10,
+        "int": 10,
+        "wis": 8,
+        "cha": 8
+      },
+      "robos:attacks": [
+        {
+          "name": "Scimitar",
+          "attackBonus": 4,
+          "damage": "1d6+2",
+          "damageType": "slashing",
+          "range": 5
+        }
+      ],
+      "attacks": [
+        {
+          "name": "Scimitar",
+          "attackBonus": 4,
+          "damage": "1d6+2",
+          "damageType": "slashing",
+          "range": 5
+        }
+      ],
+      "robos:isBoss": false,
+      "isBoss": false,
+      "robos:portrait": "👺",
+      "portrait": "👺",
+      "robos:spriteAssetRef": "flare:creature:goblin",
+      "spriteAssetRef": "flare:creature:goblin",
+      "robos:xpReward": 50,
+      "xpReward": 50,
+      "robos:goldDrop": 12,
+      "goldDrop": 12,
+      "robos:behavior": "flanker",
+      "behavior": "flanker",
+      "dcterms:description": "Cunning mountain ambusher armed with a notched scimitar.",
+      "description": "Cunning mountain ambusher armed with a notched scimitar.",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/monster_goblin_pawn.glb",
+      "modelAssetRef": "res://assets/models/monster_goblin_pawn.glb",
+      "robos:modelType": "goblin",
+      "modelType": "goblin",
+      "robos:modelScale": 0.9,
+      "modelScale": 0.9,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
+    },
+    "minotaur-marauder": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "oslc_am": "http://open-services.net/ns/am#"
+      },
+      "@id": "urn:robos:crpg:monster:minotaur-marauder",
+      "@type": [
+        "robos:CRPGMonster",
+        "oslc_am:Resource",
+        "schema:Person"
+      ],
+      "dcterms:title": "Minotaur Marauder",
+      "schema:name": "Minotaur Marauder",
+      "robos:slug": "minotaur-marauder",
+      "slug": "minotaur-marauder",
+      "robos:challengeRating": "3",
+      "challengeRating": "3",
+      "robos:creatureType": "monstrosity",
+      "creatureType": "monstrosity",
+      "robos:armorClass": 14,
+      "armorClass": 14,
+      "robos:hitPoints": 76,
+      "hitPoints": 76,
+      "robos:speed": 40,
+      "speed": 40,
+      "robos:alignment": "Chaotic Evil",
+      "alignment": "Chaotic Evil",
+      "robos:abilities": {
+        "str": 18,
+        "dex": 11,
+        "con": 16,
+        "int": 6,
+        "wis": 16,
+        "cha": 9
+      },
+      "abilities": {
+        "str": 18,
+        "dex": 11,
+        "con": 16,
+        "int": 6,
+        "wis": 16,
+        "cha": 9
+      },
+      "robos:attacks": [
+        {
+          "name": "Greataxe",
+          "attackBonus": 6,
+          "damage": "2d12+4",
+          "damageType": "slashing",
+          "range": 5
+        },
+        {
+          "name": "Gore / Horns",
+          "attackBonus": 6,
+          "damage": "2d8+4",
+          "damageType": "piercing",
+          "range": 5
+        }
+      ],
+      "attacks": [
+        {
+          "name": "Greataxe",
+          "attackBonus": 6,
+          "damage": "2d12+4",
+          "damageType": "slashing",
+          "range": 5
+        },
+        {
+          "name": "Gore / Horns",
+          "attackBonus": 6,
+          "damage": "2d8+4",
+          "damageType": "piercing",
+          "range": 5
+        }
+      ],
+      "robos:isBoss": false,
+      "isBoss": false,
+      "robos:portrait": "🧌",
+      "portrait": "🧌",
+      "robos:spriteAssetRef": "flare:creature:minotaur",
+      "spriteAssetRef": "flare:creature:minotaur",
+      "robos:xpReward": 700,
+      "xpReward": 700,
+      "robos:goldDrop": 50,
+      "goldDrop": 50,
+      "robos:behavior": "aggressive",
+      "behavior": "aggressive",
+      "dcterms:description": "Towering beast of the subterranean maze who charges trespassers.",
+      "description": "Towering beast of the subterranean maze who charges trespassers.",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/monster_minotaur_pawn.glb",
+      "modelAssetRef": "res://assets/models/monster_minotaur_pawn.glb",
+      "robos:modelType": "minotaur",
+      "modelType": "minotaur",
+      "robos:modelScale": 1.35,
+      "modelScale": 1.35,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
+    },
+    "red-dragon-wyrm": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "oslc_am": "http://open-services.net/ns/am#"
+      },
+      "@id": "urn:robos:crpg:monster:red-dragon-wyrm",
+      "@type": [
+        "robos:CRPGMonster",
+        "oslc_am:Resource",
+        "schema:Person"
+      ],
+      "dcterms:title": "Red Dragonlord (Boss)",
+      "schema:name": "Red Dragonlord (Boss)",
+      "robos:slug": "red-dragon-wyrm",
+      "slug": "red-dragon-wyrm",
+      "robos:challengeRating": "10",
+      "challengeRating": "10",
+      "robos:creatureType": "dragon",
+      "creatureType": "dragon",
+      "robos:armorClass": 18,
+      "armorClass": 18,
+      "robos:hitPoints": 178,
+      "hitPoints": 178,
+      "robos:speed": 40,
+      "speed": 40,
+      "robos:alignment": "Chaotic Evil",
+      "alignment": "Chaotic Evil",
+      "robos:abilities": {
+        "str": 23,
+        "dex": 10,
+        "con": 21,
+        "int": 14,
+        "wis": 11,
+        "cha": 17
+      },
+      "abilities": {
+        "str": 23,
+        "dex": 10,
+        "con": 21,
+        "int": 14,
+        "wis": 11,
+        "cha": 17
+      },
+      "robos:attacks": [
+        {
+          "name": "Bite",
+          "attackBonus": 10,
+          "damage": "2d10+6",
+          "damageType": "piercing",
+          "range": 10
+        },
+        {
+          "name": "Fire Breath",
+          "attackBonus": 9,
+          "damage": "8d6",
+          "damageType": "fire",
+          "range": 30
+        }
+      ],
+      "attacks": [
+        {
+          "name": "Bite",
+          "attackBonus": 10,
+          "damage": "2d10+6",
+          "damageType": "piercing",
+          "range": 10
+        },
+        {
+          "name": "Fire Breath",
+          "attackBonus": 9,
+          "damage": "8d6",
+          "damageType": "fire",
+          "range": 30
+        }
+      ],
+      "robos:isBoss": true,
+      "isBoss": true,
+      "robos:portrait": "🐉",
+      "portrait": "🐉",
+      "robos:spriteAssetRef": "flare:creature:dragon",
+      "spriteAssetRef": "flare:creature:dragon",
+      "robos:xpReward": 5900,
+      "xpReward": 5900,
+      "robos:goldDrop": 1200,
+      "goldDrop": 1200,
+      "robos:behavior": "boss_phase",
+      "behavior": "boss_phase",
+      "dcterms:description": "Ancient wyrm that hoards stolen artifacts of light within deep cavern vaults.",
+      "description": "Ancient wyrm that hoards stolen artifacts of light within deep cavern vaults.",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/monster_dragon_pawn.glb",
+      "modelAssetRef": "res://assets/models/monster_dragon_pawn.glb",
+      "robos:modelType": "dragon",
+      "modelType": "dragon",
+      "robos:modelScale": 1.45,
+      "modelScale": 1.45,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
+    },
+    "skeleton-archer": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "oslc_am": "http://open-services.net/ns/am#"
+      },
+      "@id": "urn:robos:crpg:monster:skeleton-archer",
+      "@type": [
+        "robos:CRPGMonster",
+        "oslc_am:Resource",
+        "schema:Person"
+      ],
+      "dcterms:title": "Skeleton Marksman",
+      "schema:name": "Skeleton Marksman",
+      "robos:slug": "skeleton-archer",
+      "slug": "skeleton-archer",
+      "robos:challengeRating": "1/4",
+      "challengeRating": "1/4",
+      "robos:creatureType": "undead",
+      "creatureType": "undead",
+      "robos:armorClass": 13,
+      "armorClass": 13,
+      "robos:hitPoints": 13,
+      "hitPoints": 13,
+      "robos:speed": 30,
+      "speed": 30,
+      "robos:alignment": "Lawful Evil",
+      "alignment": "Lawful Evil",
+      "robos:abilities": {
+        "str": 10,
+        "dex": 14,
+        "con": 15,
+        "int": 6,
+        "wis": 8,
+        "cha": 5
+      },
+      "abilities": {
+        "str": 10,
+        "dex": 14,
+        "con": 15,
+        "int": 6,
+        "wis": 8,
+        "cha": 5
+      },
+      "robos:attacks": [
+        {
+          "name": "Shortbow",
+          "attackBonus": 4,
+          "damage": "1d6+2",
+          "damageType": "piercing",
+          "range": 80
+        }
+      ],
+      "attacks": [
+        {
+          "name": "Shortbow",
+          "attackBonus": 4,
+          "damage": "1d6+2",
+          "damageType": "piercing",
+          "range": 80
+        }
+      ],
+      "robos:isBoss": false,
+      "isBoss": false,
+      "robos:portrait": "🏹",
+      "portrait": "🏹",
+      "robos:spriteAssetRef": "flare:creature:skeleton",
+      "spriteAssetRef": "flare:creature:skeleton",
+      "robos:xpReward": 50,
+      "xpReward": 50,
+      "robos:goldDrop": 5,
+      "goldDrop": 5,
+      "robos:behavior": "ranged_kiter",
+      "behavior": "ranged_kiter",
+      "dcterms:description": "Skeletal sharpshooter guarding dungeon parapets.",
+      "description": "Skeletal sharpshooter guarding dungeon parapets.",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/monster_skeleton_pawn.glb",
+      "modelAssetRef": "res://assets/models/monster_skeleton_pawn.glb",
+      "robos:modelType": "skeleton",
+      "modelType": "skeleton",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
+    }
+  },
+  "spells": {
+    "bless": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:spell:bless",
+      "@type": [
+        "robos:CRPGSpell",
+        "schema:Action",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Bless",
+      "schema:name": "Bless",
+      "robos:slug": "bless",
+      "slug": "bless",
+      "robos:spellLevel": 1,
+      "spellLevel": 1,
+      "robos:magicSchool": "Enchantment",
+      "magicSchool": "Enchantment",
+      "robos:castingTime": "1 action",
+      "castingTime": "1 action",
+      "robos:range": "30 feet",
+      "range": "30 feet",
+      "robos:damageFormula": "1d4",
+      "damageFormula": "1d4",
+      "robos:damageType": "",
+      "damageType": "",
+      "robos:icon": "💫",
+      "icon": "💫",
+      "robos:duration": "10 rounds",
+      "duration": "10 rounds",
+      "robos:components": "V, S, M",
+      "components": "V, S, M",
+      "robos:savingThrow": "None",
+      "savingThrow": "None",
+      "robos:mechanics": {
+        "kind": "buff",
+        "target": "allies",
+        "range": 30,
+        "maxTargets": 3,
+        "condition": "blessed",
+        "duration": 10,
+        "concentration": true
+      },
+      "mechanics": {
+        "kind": "buff",
+        "target": "allies",
+        "range": 30,
+        "maxTargets": 3,
+        "condition": "blessed",
+        "duration": 10,
+        "concentration": true
+      },
+      "dcterms:description": "You bless up to three creatures. Whenever a target makes an attack roll or saving throw, they add a d4 to the roll.",
+      "description": "You bless up to three creatures. Whenever a target makes an attack roll or saving throw, they add a d4 to the roll.",
+      "robos:modelAssetRef": "res://assets/models/spell_healing_glyph.glb",
+      "modelAssetRef": "res://assets/models/spell_healing_glyph.glb",
+      "model3dAsset": "res://assets/models/spell_healing_glyph.glb",
+      "robos:vfxType": "aura",
+      "vfxType": "aura",
+      "model3dVfxType": "aura",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "model3dScale": 1
+    },
+    "blizzard": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:spell:blizzard",
+      "@type": [
+        "robos:CRPGSpell",
+        "schema:Action",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Blizzard",
+      "schema:name": "Blizzard",
+      "robos:slug": "blizzard",
+      "slug": "blizzard",
+      "robos:spellLevel": 3,
+      "spellLevel": 3,
+      "robos:magicSchool": "Evocation",
+      "magicSchool": "Evocation",
+      "robos:castingTime": "1 action",
+      "castingTime": "1 action",
+      "robos:range": "150 feet",
+      "range": "150 feet",
+      "robos:damageFormula": "6d6",
+      "damageFormula": "6d6",
+      "robos:damageType": "cold",
+      "damageType": "cold",
+      "robos:icon": "🔥",
+      "icon": "🔥",
+      "robos:duration": "1 rounds",
+      "duration": "1 rounds",
+      "robos:components": "V, S, M",
+      "components": "V, S, M",
+      "robos:savingThrow": "DEX",
+      "savingThrow": "DEX",
+      "robos:mechanics": {
+        "kind": "save_damage",
+        "target": "point",
+        "range": 150,
+        "area": {
+          "shape": "sphere",
+          "size": 20
+        },
+        "save": "DEX",
+        "onSave": "half",
+        "damage": "6d6",
+        "damageType": "cold",
+        "conditionOnFail": "prone",
+        "duration": 1
+      },
+      "mechanics": {
+        "kind": "save_damage",
+        "target": "point",
+        "range": 150,
+        "area": {
+          "shape": "sphere",
+          "size": 20
+        },
+        "save": "DEX",
+        "onSave": "half",
+        "damage": "6d6",
+        "damageType": "cold",
+        "conditionOnFail": "prone",
+        "duration": 1
+      },
+      "dcterms:description": "A howling localized tempest of sleet and freezing winds blankets the target area, dealing 6d6 cold damage to all creatures caught within and leaving behind a treacherously slippery sheet of ice.",
+      "description": "A howling localized tempest of sleet and freezing winds blankets the target area, dealing 6d6 cold damage to all creatures caught within and leaving behind a treacherously slippery sheet of ice.",
+      "robos:modelAssetRef": "res://assets/models/spell_frost_shard.glb",
+      "modelAssetRef": "res://assets/models/spell_frost_shard.glb",
+      "model3dAsset": "res://assets/models/spell_frost_shard.glb",
+      "robos:vfxType": "projectile",
+      "vfxType": "projectile",
+      "model3dVfxType": "projectile",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "model3dScale": 1
+    },
+    "burning-hands": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:spell:burning-hands",
+      "@type": [
+        "robos:CRPGSpell",
+        "schema:Action",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Burning Hands",
+      "schema:name": "Burning Hands",
+      "robos:slug": "burning-hands",
+      "slug": "burning-hands",
+      "robos:spellLevel": 1,
+      "spellLevel": 1,
+      "robos:magicSchool": "Evocation",
+      "magicSchool": "Evocation",
+      "robos:castingTime": "1 action",
+      "castingTime": "1 action",
+      "robos:range": "15 feet cone",
+      "range": "15 feet cone",
+      "robos:damageFormula": "3d6",
+      "damageFormula": "3d6",
+      "robos:damageType": "fire",
+      "damageType": "fire",
+      "robos:icon": "🔥",
+      "icon": "🔥",
+      "robos:duration": "Instantaneous",
+      "duration": "Instantaneous",
+      "robos:components": "V, S, M",
+      "components": "V, S, M",
+      "robos:savingThrow": "DEX",
+      "savingThrow": "DEX",
+      "robos:mechanics": {
+        "kind": "save_damage",
+        "target": "point",
+        "origin": "self",
+        "range": 15,
+        "area": {
+          "shape": "cone",
+          "size": 15
+        },
+        "save": "DEX",
+        "onSave": "half",
+        "damage": "3d6",
+        "damageType": "fire"
+      },
+      "mechanics": {
+        "kind": "save_damage",
+        "target": "point",
+        "origin": "self",
+        "range": 15,
+        "area": {
+          "shape": "cone",
+          "size": 15
+        },
+        "save": "DEX",
+        "onSave": "half",
+        "damage": "3d6",
+        "damageType": "fire"
+      },
+      "dcterms:description": "A thin sheet of flames shoots forth from your outstretched fingertips, dealing 3d6 fire damage on a failed Dex save.",
+      "description": "A thin sheet of flames shoots forth from your outstretched fingertips, dealing 3d6 fire damage on a failed Dex save.",
+      "robos:modelAssetRef": "res://assets/models/spell_fireball_projectile.glb",
+      "modelAssetRef": "res://assets/models/spell_fireball_projectile.glb",
+      "model3dAsset": "res://assets/models/spell_fireball_projectile.glb",
+      "robos:vfxType": "projectile",
+      "vfxType": "projectile",
+      "model3dVfxType": "projectile",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "model3dScale": 1
+    },
+    "counterspell": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:spell:counterspell",
+      "@type": [
+        "robos:CRPGSpell",
+        "schema:Action",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Counterspell",
+      "schema:name": "Counterspell",
+      "robos:slug": "counterspell",
+      "slug": "counterspell",
+      "robos:spellLevel": 3,
+      "spellLevel": 3,
+      "robos:magicSchool": "Abjuration",
+      "magicSchool": "Abjuration",
+      "robos:castingTime": "1 reaction",
+      "castingTime": "1 reaction",
+      "robos:range": "60 feet",
+      "range": "60 feet",
+      "robos:damageFormula": "",
+      "damageFormula": "",
+      "robos:damageType": "",
+      "damageType": "",
+      "robos:icon": "🛡️",
+      "icon": "🛡️",
+      "robos:duration": "1 round",
+      "duration": "1 round",
+      "robos:components": "V, S, M",
+      "components": "V, S, M",
+      "robos:savingThrow": "None",
+      "savingThrow": "None",
+      "robos:mechanics": {
+        "kind": "counter",
+        "target": "creature",
+        "range": 60,
+        "reaction": "when_enemy_casts",
+        "autoCounterUpToLevel": 3
+      },
+      "mechanics": {
+        "kind": "counter",
+        "target": "creature",
+        "range": 60,
+        "reaction": "when_enemy_casts",
+        "autoCounterUpToLevel": 3
+      },
+      "dcterms:description": "You attempt to interrupt a creature in the process of casting a spell, causing the spell to fail.",
+      "description": "You attempt to interrupt a creature in the process of casting a spell, causing the spell to fail.",
+      "robos:modelAssetRef": "res://assets/models/spell_magic_missile_orb.glb",
+      "modelAssetRef": "res://assets/models/spell_magic_missile_orb.glb",
+      "model3dAsset": "res://assets/models/spell_magic_missile_orb.glb",
+      "robos:vfxType": "projectile",
+      "vfxType": "projectile",
+      "model3dVfxType": "projectile",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "model3dScale": 1
+    },
+    "cure-wounds": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:spell:cure-wounds",
+      "@type": [
+        "robos:CRPGSpell",
+        "schema:Action",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Cure Wounds",
+      "schema:name": "Cure Wounds",
+      "robos:slug": "cure-wounds",
+      "slug": "cure-wounds",
+      "robos:spellLevel": 1,
+      "spellLevel": 1,
+      "robos:magicSchool": "Evocation",
+      "magicSchool": "Evocation",
+      "robos:castingTime": "1 action",
+      "castingTime": "1 action",
+      "robos:range": "Touch",
+      "range": "Touch",
+      "robos:damageFormula": "1d8+WIS",
+      "damageFormula": "1d8+WIS",
+      "robos:damageType": "healing",
+      "damageType": "healing",
+      "robos:icon": "🔥",
+      "icon": "🔥",
+      "robos:duration": "Instantaneous",
+      "duration": "Instantaneous",
+      "robos:components": "V, S, M",
+      "components": "V, S, M",
+      "robos:savingThrow": "None",
+      "savingThrow": "None",
+      "robos:mechanics": {
+        "kind": "heal",
+        "target": "ally",
+        "range": 5,
+        "heal": "1d8+MOD"
+      },
+      "mechanics": {
+        "kind": "heal",
+        "target": "ally",
+        "range": 5,
+        "heal": "1d8+MOD"
+      },
+      "dcterms:description": "A creature you touch regains hit points equal to 1d8 + your spellcasting ability modifier.",
+      "description": "A creature you touch regains hit points equal to 1d8 + your spellcasting ability modifier.",
+      "robos:modelAssetRef": "res://assets/models/spell_healing_glyph.glb",
+      "modelAssetRef": "res://assets/models/spell_healing_glyph.glb",
+      "model3dAsset": "res://assets/models/spell_healing_glyph.glb",
+      "robos:vfxType": "aura",
+      "vfxType": "aura",
+      "model3dVfxType": "aura",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "model3dScale": 1
+    },
+    "dispel-magic": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:spell:dispel-magic",
+      "@type": [
+        "robos:CRPGSpell",
+        "schema:Action",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Dispel Magic",
+      "schema:name": "Dispel Magic",
+      "robos:slug": "dispel-magic",
+      "slug": "dispel-magic",
+      "robos:spellLevel": 3,
+      "spellLevel": 3,
+      "robos:magicSchool": "Abjuration",
+      "magicSchool": "Abjuration",
+      "robos:castingTime": "1 action",
+      "castingTime": "1 action",
+      "robos:range": "120 feet",
+      "range": "120 feet",
+      "robos:damageFormula": "",
+      "damageFormula": "",
+      "robos:damageType": "",
+      "damageType": "",
+      "robos:icon": "🛡️",
+      "icon": "🛡️",
+      "robos:duration": "Instantaneous",
+      "duration": "Instantaneous",
+      "robos:components": "V, S, M",
+      "components": "V, S, M",
+      "robos:savingThrow": "None",
+      "savingThrow": "None",
+      "robos:mechanics": {
+        "kind": "dispel",
+        "target": "point",
+        "range": 120,
+        "area": {
+          "shape": "sphere",
+          "size": 20
+        }
+      },
+      "mechanics": {
+        "kind": "dispel",
+        "target": "point",
+        "range": 120,
+        "area": {
+          "shape": "sphere",
+          "size": 20
+        }
+      },
+      "dcterms:description": "Choose any creature, object, or magical effect within range. Any active spell or magical condition on the target ends.",
+      "description": "Choose any creature, object, or magical effect within range. Any active spell or magical condition on the target ends.",
+      "robos:modelAssetRef": "res://assets/models/spell_magic_missile_orb.glb",
+      "modelAssetRef": "res://assets/models/spell_magic_missile_orb.glb",
+      "model3dAsset": "res://assets/models/spell_magic_missile_orb.glb",
+      "robos:vfxType": "projectile",
+      "vfxType": "projectile",
+      "model3dVfxType": "projectile",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "model3dScale": 1
+    },
+    "find-traps": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:spell:find-traps",
+      "@type": [
+        "robos:CRPGSpell",
+        "schema:Action",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Find Traps",
+      "schema:name": "Find Traps",
+      "robos:slug": "find-traps",
+      "slug": "find-traps",
+      "robos:spellLevel": 2,
+      "spellLevel": 2,
+      "robos:magicSchool": "Divination",
+      "magicSchool": "Divination",
+      "robos:castingTime": "1 action",
+      "castingTime": "1 action",
+      "robos:range": "120 feet",
+      "range": "120 feet",
+      "robos:damageFormula": "",
+      "damageFormula": "",
+      "robos:damageType": "divination",
+      "damageType": "divination",
+      "robos:icon": "🔮",
+      "icon": "🔮",
+      "robos:duration": "Instantaneous",
+      "duration": "Instantaneous",
+      "robos:components": "V, S, M",
+      "components": "V, S, M",
+      "robos:savingThrow": "None",
+      "savingThrow": "None",
+      "robos:mechanics": {
+        "kind": "detect_traps",
+        "target": "self",
+        "range": 120
+      },
+      "mechanics": {
+        "kind": "detect_traps",
+        "target": "self",
+        "range": 120
+      },
+      "dcterms:description": "You sense the presence of any trap within range. Concealed magical and mechanical hazards in the area are illuminated in bright red divination runes.",
+      "description": "You sense the presence of any trap within range. Concealed magical and mechanical hazards in the area are illuminated in bright red divination runes.",
+      "robos:modelAssetRef": "res://assets/models/spell_magic_missile_orb.glb",
+      "modelAssetRef": "res://assets/models/spell_magic_missile_orb.glb",
+      "model3dAsset": "res://assets/models/spell_magic_missile_orb.glb",
+      "robos:vfxType": "projectile",
+      "vfxType": "projectile",
+      "model3dVfxType": "projectile",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "model3dScale": 1
+    },
+    "fire-bolt": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:spell:fire-bolt",
+      "@type": [
+        "robos:CRPGSpell",
+        "schema:Action",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Fire Bolt",
+      "schema:name": "Fire Bolt",
+      "robos:slug": "fire-bolt",
+      "slug": "fire-bolt",
+      "robos:spellLevel": 0,
+      "spellLevel": 0,
+      "robos:magicSchool": "Evocation",
+      "magicSchool": "Evocation",
+      "robos:castingTime": "1 action",
+      "castingTime": "1 action",
+      "robos:range": "120 feet",
+      "range": "120 feet",
+      "robos:damageFormula": "1d10",
+      "damageFormula": "1d10",
+      "robos:damageType": "fire",
+      "damageType": "fire",
+      "robos:icon": "🔥",
+      "icon": "🔥",
+      "robos:duration": "Instantaneous",
+      "duration": "Instantaneous",
+      "robos:components": "V, S",
+      "components": "V, S",
+      "robos:savingThrow": "None",
+      "savingThrow": "None",
+      "robos:mechanics": {
+        "kind": "attack_damage",
+        "target": "creature",
+        "range": 120,
+        "damage": "1d10",
+        "damageType": "fire"
+      },
+      "mechanics": {
+        "kind": "attack_damage",
+        "target": "creature",
+        "range": 120,
+        "damage": "1d10",
+        "damageType": "fire"
+      },
+      "dcterms:description": "You hurl a mote of fire at a creature or object within range. Make a ranged spell attack. On a hit, the target takes 1d10 fire damage.",
+      "description": "You hurl a mote of fire at a creature or object within range. Make a ranged spell attack. On a hit, the target takes 1d10 fire damage.",
+      "robos:modelAssetRef": "res://assets/models/spell_fireball_projectile.glb",
+      "modelAssetRef": "res://assets/models/spell_fireball_projectile.glb",
+      "model3dAsset": "res://assets/models/spell_fireball_projectile.glb",
+      "robos:vfxType": "projectile",
+      "vfxType": "projectile",
+      "model3dVfxType": "projectile",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "model3dScale": 1
+    },
+    "fireball": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:spell:fireball",
+      "@type": [
+        "robos:CRPGSpell",
+        "schema:Action",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Fireball",
+      "schema:name": "Fireball",
+      "robos:slug": "fireball",
+      "slug": "fireball",
+      "robos:spellLevel": 3,
+      "spellLevel": 3,
+      "robos:magicSchool": "Evocation",
+      "magicSchool": "Evocation",
+      "robos:castingTime": "1 action",
+      "castingTime": "1 action",
+      "robos:range": "150 feet",
+      "range": "150 feet",
+      "robos:damageFormula": "8d6",
+      "damageFormula": "8d6",
+      "robos:damageType": "fire",
+      "damageType": "fire",
+      "robos:icon": "🔥",
+      "icon": "🔥",
+      "robos:duration": "Instantaneous",
+      "duration": "Instantaneous",
+      "robos:components": "V, S, M",
+      "components": "V, S, M",
+      "robos:savingThrow": "DEX",
+      "savingThrow": "DEX",
+      "robos:mechanics": {
+        "kind": "save_damage",
+        "target": "point",
+        "range": 150,
+        "area": {
+          "shape": "sphere",
+          "size": 20
+        },
+        "save": "DEX",
+        "onSave": "half",
+        "damage": "8d6",
+        "damageType": "fire"
+      },
+      "mechanics": {
+        "kind": "save_damage",
+        "target": "point",
+        "range": 150,
+        "area": {
+          "shape": "sphere",
+          "size": 20
+        },
+        "save": "DEX",
+        "onSave": "half",
+        "damage": "8d6",
+        "damageType": "fire"
+      },
+      "dcterms:description": "A bright streak flashes to a chosen point and blossoms into an enormous roar of flame, dealing 8d6 fire damage.",
+      "description": "A bright streak flashes to a chosen point and blossoms into an enormous roar of flame, dealing 8d6 fire damage.",
+      "robos:modelAssetRef": "res://assets/models/spell_fireball_projectile.glb",
+      "modelAssetRef": "res://assets/models/spell_fireball_projectile.glb",
+      "model3dAsset": "res://assets/models/spell_fireball_projectile.glb",
+      "robos:vfxType": "projectile",
+      "vfxType": "projectile",
+      "model3dVfxType": "projectile",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "model3dScale": 1
+    },
+    "haste": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:spell:haste",
+      "@type": [
+        "robos:CRPGSpell",
+        "schema:Action",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Haste",
+      "schema:name": "Haste",
+      "robos:slug": "haste",
+      "slug": "haste",
+      "robos:spellLevel": 3,
+      "spellLevel": 3,
+      "robos:magicSchool": "Transmutation",
+      "magicSchool": "Transmutation",
+      "robos:castingTime": "1 action",
+      "castingTime": "1 action",
+      "robos:range": "30 feet",
+      "range": "30 feet",
+      "robos:damageFormula": "",
+      "damageFormula": "",
+      "robos:damageType": "",
+      "damageType": "",
+      "robos:icon": "⏳",
+      "icon": "⏳",
+      "robos:duration": "10 rounds",
+      "duration": "10 rounds",
+      "robos:components": "V, S, M",
+      "components": "V, S, M",
+      "robos:savingThrow": "None",
+      "savingThrow": "None",
+      "robos:mechanics": {
+        "kind": "buff",
+        "target": "ally",
+        "range": 30,
+        "condition": "hasted",
+        "duration": 10,
+        "acBonus": 2,
+        "concentration": true
+      },
+      "mechanics": {
+        "kind": "buff",
+        "target": "ally",
+        "range": 30,
+        "condition": "hasted",
+        "duration": 10,
+        "acBonus": 2,
+        "concentration": true
+      },
+      "dcterms:description": "Choose a willing creature within range. Its speed is doubled, it gains a +2 bonus to AC, and it gains an additional action.",
+      "description": "Choose a willing creature within range. Its speed is doubled, it gains a +2 bonus to AC, and it gains an additional action.",
+      "robos:modelAssetRef": "res://assets/models/spell_magic_missile_orb.glb",
+      "modelAssetRef": "res://assets/models/spell_magic_missile_orb.glb",
+      "model3dAsset": "res://assets/models/spell_magic_missile_orb.glb",
+      "robos:vfxType": "projectile",
+      "vfxType": "projectile",
+      "model3dVfxType": "projectile",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "model3dScale": 1
+    },
+    "healing-word": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:spell:healing-word",
+      "@type": [
+        "robos:CRPGSpell",
+        "schema:Action",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Healing Word",
+      "schema:name": "Healing Word",
+      "robos:slug": "healing-word",
+      "slug": "healing-word",
+      "robos:spellLevel": 1,
+      "spellLevel": 1,
+      "robos:magicSchool": "Evocation",
+      "magicSchool": "Evocation",
+      "robos:castingTime": "1 bonus action",
+      "castingTime": "1 bonus action",
+      "robos:range": "60 feet",
+      "range": "60 feet",
+      "robos:damageFormula": "1d4+WIS",
+      "damageFormula": "1d4+WIS",
+      "robos:damageType": "healing",
+      "damageType": "healing",
+      "robos:icon": "🔥",
+      "icon": "🔥",
+      "robos:duration": "Instantaneous",
+      "duration": "Instantaneous",
+      "robos:components": "V, S, M",
+      "components": "V, S, M",
+      "robos:savingThrow": "None",
+      "savingThrow": "None",
+      "robos:mechanics": {
+        "kind": "heal",
+        "target": "ally",
+        "range": 60,
+        "heal": "1d4+MOD",
+        "bonusAction": true
+      },
+      "mechanics": {
+        "kind": "heal",
+        "target": "ally",
+        "range": 60,
+        "heal": "1d4+MOD",
+        "bonusAction": true
+      },
+      "dcterms:description": "A creature of your choice that you can see within range regains hit points equal to 1d4 + your spellcasting modifier.",
+      "description": "A creature of your choice that you can see within range regains hit points equal to 1d4 + your spellcasting modifier.",
+      "robos:modelAssetRef": "res://assets/models/spell_healing_glyph.glb",
+      "modelAssetRef": "res://assets/models/spell_healing_glyph.glb",
+      "model3dAsset": "res://assets/models/spell_healing_glyph.glb",
+      "robos:vfxType": "aura",
+      "vfxType": "aura",
+      "model3dVfxType": "aura",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "model3dScale": 1
+    },
+    "hold-person": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:spell:hold-person",
+      "@type": [
+        "robos:CRPGSpell",
+        "schema:Action",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Hold Person",
+      "schema:name": "Hold Person",
+      "robos:slug": "hold-person",
+      "slug": "hold-person",
+      "robos:spellLevel": 2,
+      "spellLevel": 2,
+      "robos:magicSchool": "Enchantment",
+      "magicSchool": "Enchantment",
+      "robos:castingTime": "1 action",
+      "castingTime": "1 action",
+      "robos:range": "60 feet",
+      "range": "60 feet",
+      "robos:damageFormula": "",
+      "damageFormula": "",
+      "robos:damageType": "",
+      "damageType": "",
+      "robos:icon": "💫",
+      "icon": "💫",
+      "robos:duration": "10 rounds",
+      "duration": "10 rounds",
+      "robos:components": "V, S, M",
+      "components": "V, S, M",
+      "robos:savingThrow": "WIS",
+      "savingThrow": "WIS",
+      "robos:mechanics": {
+        "kind": "save_condition",
+        "target": "creature",
+        "range": 60,
+        "save": "WIS",
+        "condition": "paralyzed",
+        "duration": 10,
+        "repeatSave": true,
+        "requiresCreatureType": "humanoid",
+        "concentration": true
+      },
+      "mechanics": {
+        "kind": "save_condition",
+        "target": "creature",
+        "range": 60,
+        "save": "WIS",
+        "condition": "paralyzed",
+        "duration": 10,
+        "repeatSave": true,
+        "requiresCreatureType": "humanoid",
+        "concentration": true
+      },
+      "dcterms:description": "Choose a humanoid that you can see within range. The target must succeed on a Wisdom saving throw or become paralyzed.",
+      "description": "Choose a humanoid that you can see within range. The target must succeed on a Wisdom saving throw or become paralyzed.",
+      "robos:modelAssetRef": "res://assets/models/spell_magic_missile_orb.glb",
+      "modelAssetRef": "res://assets/models/spell_magic_missile_orb.glb",
+      "model3dAsset": "res://assets/models/spell_magic_missile_orb.glb",
+      "robos:vfxType": "projectile",
+      "vfxType": "projectile",
+      "model3dVfxType": "projectile",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "model3dScale": 1
+    },
+    "invisibility": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:spell:invisibility",
+      "@type": [
+        "robos:CRPGSpell",
+        "schema:Action",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Invisibility",
+      "schema:name": "Invisibility",
+      "robos:slug": "invisibility",
+      "slug": "invisibility",
+      "robos:spellLevel": 2,
+      "spellLevel": 2,
+      "robos:magicSchool": "Illusion",
+      "magicSchool": "Illusion",
+      "robos:castingTime": "1 action",
+      "castingTime": "1 action",
+      "robos:range": "Touch",
+      "range": "Touch",
+      "robos:damageFormula": "",
+      "damageFormula": "",
+      "robos:damageType": "",
+      "damageType": "",
+      "robos:icon": "👁️",
+      "icon": "👁️",
+      "robos:duration": "600 rounds",
+      "duration": "600 rounds",
+      "robos:components": "V, S, M",
+      "components": "V, S, M",
+      "robos:savingThrow": "None",
+      "savingThrow": "None",
+      "robos:mechanics": {
+        "kind": "buff",
+        "target": "ally",
+        "range": 5,
+        "condition": "invisible",
+        "duration": 600,
+        "endsOnAttackOrCast": true,
+        "concentration": true
+      },
+      "mechanics": {
+        "kind": "buff",
+        "target": "ally",
+        "range": 5,
+        "condition": "invisible",
+        "duration": 600,
+        "endsOnAttackOrCast": true,
+        "concentration": true
+      },
+      "dcterms:description": "A creature you touch becomes invisible until the spell ends, gaining advantage on attacks and stealth.",
+      "description": "A creature you touch becomes invisible until the spell ends, gaining advantage on attacks and stealth.",
+      "robos:modelAssetRef": "res://assets/models/spell_magic_missile_orb.glb",
+      "modelAssetRef": "res://assets/models/spell_magic_missile_orb.glb",
+      "model3dAsset": "res://assets/models/spell_magic_missile_orb.glb",
+      "robos:vfxType": "projectile",
+      "vfxType": "projectile",
+      "model3dVfxType": "projectile",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "model3dScale": 1
+    },
+    "knock": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:spell:knock",
+      "@type": [
+        "robos:CRPGSpell",
+        "schema:Action",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Knock",
+      "schema:name": "Knock",
+      "robos:slug": "knock",
+      "slug": "knock",
+      "robos:spellLevel": 2,
+      "spellLevel": 2,
+      "robos:magicSchool": "Transmutation",
+      "magicSchool": "Transmutation",
+      "robos:castingTime": "1 action",
+      "castingTime": "1 action",
+      "robos:range": "60 feet",
+      "range": "60 feet",
+      "robos:damageFormula": "",
+      "damageFormula": "",
+      "robos:damageType": "utility",
+      "damageType": "utility",
+      "robos:icon": "⏳",
+      "icon": "⏳",
+      "robos:duration": "Instantaneous",
+      "duration": "Instantaneous",
+      "robos:components": "V, S, M",
+      "components": "V, S, M",
+      "robos:savingThrow": "None",
+      "savingThrow": "None",
+      "robos:mechanics": {
+        "kind": "utility",
+        "target": "point",
+        "range": 60
+      },
+      "mechanics": {
+        "kind": "utility",
+        "target": "point",
+        "range": 60
+      },
+      "dcterms:description": "A loud mechanical resonance unlocks a target door or chest, or safely suppresses and disarms a trigger mechanism.",
+      "description": "A loud mechanical resonance unlocks a target door or chest, or safely suppresses and disarms a trigger mechanism.",
+      "robos:modelAssetRef": "res://assets/models/spell_magic_missile_orb.glb",
+      "modelAssetRef": "res://assets/models/spell_magic_missile_orb.glb",
+      "model3dAsset": "res://assets/models/spell_magic_missile_orb.glb",
+      "robos:vfxType": "projectile",
+      "vfxType": "projectile",
+      "model3dVfxType": "projectile",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "model3dScale": 1
+    },
+    "lightning-bolt": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:spell:lightning-bolt",
+      "@type": [
+        "robos:CRPGSpell",
+        "schema:Action",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Lightning Bolt",
+      "schema:name": "Lightning Bolt",
+      "robos:slug": "lightning-bolt",
+      "slug": "lightning-bolt",
+      "robos:spellLevel": 3,
+      "spellLevel": 3,
+      "robos:magicSchool": "Evocation",
+      "magicSchool": "Evocation",
+      "robos:castingTime": "1 action",
+      "castingTime": "1 action",
+      "robos:range": "100-foot line",
+      "range": "100-foot line",
+      "robos:damageFormula": "8d6",
+      "damageFormula": "8d6",
+      "robos:damageType": "lightning",
+      "damageType": "lightning",
+      "robos:icon": "🔥",
+      "icon": "🔥",
+      "robos:duration": "Instantaneous",
+      "duration": "Instantaneous",
+      "robos:components": "V, S, M",
+      "components": "V, S, M",
+      "robos:savingThrow": "DEX",
+      "savingThrow": "DEX",
+      "robos:mechanics": {
+        "kind": "save_damage",
+        "target": "point",
+        "origin": "self",
+        "range": 100,
+        "area": {
+          "shape": "line",
+          "size": 100,
+          "width": 5
+        },
+        "save": "DEX",
+        "onSave": "half",
+        "damage": "8d6",
+        "damageType": "lightning"
+      },
+      "mechanics": {
+        "kind": "save_damage",
+        "target": "point",
+        "origin": "self",
+        "range": 100,
+        "area": {
+          "shape": "line",
+          "size": 100,
+          "width": 5
+        },
+        "save": "DEX",
+        "onSave": "half",
+        "damage": "8d6",
+        "damageType": "lightning"
+      },
+      "dcterms:description": "A stroke of lightning forming a line 100 feet long blasts out from you in a direction you choose, dealing 8d6 lightning damage.",
+      "description": "A stroke of lightning forming a line 100 feet long blasts out from you in a direction you choose, dealing 8d6 lightning damage.",
+      "robos:modelAssetRef": "res://assets/models/spell_lightning_spark.glb",
+      "modelAssetRef": "res://assets/models/spell_lightning_spark.glb",
+      "model3dAsset": "res://assets/models/spell_lightning_spark.glb",
+      "robos:vfxType": "projectile",
+      "vfxType": "projectile",
+      "model3dVfxType": "projectile",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "model3dScale": 1
+    },
+    "mage-armor": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:spell:mage-armor",
+      "@type": [
+        "robos:CRPGSpell",
+        "schema:Action",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Mage Armor",
+      "schema:name": "Mage Armor",
+      "robos:slug": "mage-armor",
+      "slug": "mage-armor",
+      "robos:spellLevel": 1,
+      "spellLevel": 1,
+      "robos:magicSchool": "Abjuration",
+      "magicSchool": "Abjuration",
+      "robos:castingTime": "1 action",
+      "castingTime": "1 action",
+      "robos:range": "Touch",
+      "range": "Touch",
+      "robos:damageFormula": "",
+      "damageFormula": "",
+      "robos:damageType": "",
+      "damageType": "",
+      "robos:icon": "🛡️",
+      "icon": "🛡️",
+      "robos:duration": "600 rounds",
+      "duration": "600 rounds",
+      "robos:components": "V, S, M",
+      "components": "V, S, M",
+      "robos:savingThrow": "None",
+      "savingThrow": "None",
+      "robos:mechanics": {
+        "kind": "buff",
+        "target": "ally",
+        "range": 5,
+        "condition": "mage_armor",
+        "duration": 600,
+        "baseAc": 13
+      },
+      "mechanics": {
+        "kind": "buff",
+        "target": "ally",
+        "range": 5,
+        "condition": "mage_armor",
+        "duration": 600,
+        "baseAc": 13
+      },
+      "dcterms:description": "You touch a willing creature who isn't wearing armor. The target's base AC becomes 13 + its Dexterity modifier.",
+      "description": "You touch a willing creature who isn't wearing armor. The target's base AC becomes 13 + its Dexterity modifier.",
+      "robos:modelAssetRef": "res://assets/models/spell_magic_missile_orb.glb",
+      "modelAssetRef": "res://assets/models/spell_magic_missile_orb.glb",
+      "model3dAsset": "res://assets/models/spell_magic_missile_orb.glb",
+      "robos:vfxType": "projectile",
+      "vfxType": "projectile",
+      "model3dVfxType": "projectile",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "model3dScale": 1
+    },
+    "magic-missile": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:spell:magic-missile",
+      "@type": [
+        "robos:CRPGSpell",
+        "schema:Action",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Magic Missile",
+      "schema:name": "Magic Missile",
+      "robos:slug": "magic-missile",
+      "slug": "magic-missile",
+      "robos:spellLevel": 1,
+      "spellLevel": 1,
+      "robos:magicSchool": "Evocation",
+      "magicSchool": "Evocation",
+      "robos:castingTime": "1 action",
+      "castingTime": "1 action",
+      "robos:range": "120 feet",
+      "range": "120 feet",
+      "robos:damageFormula": "3d4+3",
+      "damageFormula": "3d4+3",
+      "robos:damageType": "force",
+      "damageType": "force",
+      "robos:icon": "🔥",
+      "icon": "🔥",
+      "robos:duration": "Instantaneous",
+      "duration": "Instantaneous",
+      "robos:components": "V, S, M",
+      "components": "V, S, M",
+      "robos:savingThrow": "None",
+      "savingThrow": "None",
+      "robos:mechanics": {
+        "kind": "auto_damage",
+        "target": "creature",
+        "range": 120,
+        "darts": 3,
+        "dartDamage": "1d4+1",
+        "damageType": "force",
+        "blockedByCondition": "shielded"
+      },
+      "mechanics": {
+        "kind": "auto_damage",
+        "target": "creature",
+        "range": 120,
+        "darts": 3,
+        "dartDamage": "1d4+1",
+        "damageType": "force",
+        "blockedByCondition": "shielded"
+      },
+      "dcterms:description": "You create three glowing darts of magical force. Each dart hits a creature of your choice that you can see, dealing 1d4 + 1 force damage.",
+      "description": "You create three glowing darts of magical force. Each dart hits a creature of your choice that you can see, dealing 1d4 + 1 force damage.",
+      "robos:modelAssetRef": "res://assets/models/spell_magic_missile_orb.glb",
+      "modelAssetRef": "res://assets/models/spell_magic_missile_orb.glb",
+      "model3dAsset": "res://assets/models/spell_magic_missile_orb.glb",
+      "robos:vfxType": "projectile",
+      "vfxType": "projectile",
+      "model3dVfxType": "projectile",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "model3dScale": 1
+    },
+    "ray-of-frost": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:spell:ray-of-frost",
+      "@type": [
+        "robos:CRPGSpell",
+        "schema:Action",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Ray of Frost",
+      "schema:name": "Ray of Frost",
+      "robos:slug": "ray-of-frost",
+      "slug": "ray-of-frost",
+      "robos:spellLevel": 0,
+      "spellLevel": 0,
+      "robos:magicSchool": "Evocation",
+      "magicSchool": "Evocation",
+      "robos:castingTime": "1 action",
+      "castingTime": "1 action",
+      "robos:range": "60 feet",
+      "range": "60 feet",
+      "robos:damageFormula": "1d8",
+      "damageFormula": "1d8",
+      "robos:damageType": "cold",
+      "damageType": "cold",
+      "robos:icon": "❄️",
+      "icon": "❄️",
+      "robos:duration": "Instantaneous",
+      "duration": "Instantaneous",
+      "robos:components": "V, S",
+      "components": "V, S",
+      "robos:savingThrow": "None",
+      "savingThrow": "None",
+      "robos:mechanics": {
+        "kind": "attack_damage",
+        "target": "creature",
+        "range": 60,
+        "damage": "1d8",
+        "damageType": "cold",
+        "condition": "slowed"
+      },
+      "mechanics": {
+        "kind": "attack_damage",
+        "target": "creature",
+        "range": 60,
+        "damage": "1d8",
+        "damageType": "cold",
+        "condition": "slowed"
+      },
+      "dcterms:description": "A frigid beam of blue-white light streaks toward a creature within range. On a hit, it takes 1d8 cold damage and its speed is reduced by 10 feet.",
+      "description": "A frigid beam of blue-white light streaks toward a creature within range. On a hit, it takes 1d8 cold damage and its speed is reduced by 10 feet.",
+      "robos:modelAssetRef": "res://assets/models/spell_frost_shard.glb",
+      "modelAssetRef": "res://assets/models/spell_frost_shard.glb",
+      "model3dAsset": "res://assets/models/spell_frost_shard.glb",
+      "robos:vfxType": "projectile",
+      "vfxType": "projectile",
+      "model3dVfxType": "projectile",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "model3dScale": 1
+    },
+    "sacred-flame": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:spell:sacred-flame",
+      "@type": [
+        "robos:CRPGSpell",
+        "schema:Action",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Sacred Flame",
+      "schema:name": "Sacred Flame",
+      "robos:slug": "sacred-flame",
+      "slug": "sacred-flame",
+      "robos:spellLevel": 0,
+      "spellLevel": 0,
+      "robos:magicSchool": "Evocation",
+      "magicSchool": "Evocation",
+      "robos:castingTime": "1 action",
+      "castingTime": "1 action",
+      "robos:range": "60 feet",
+      "range": "60 feet",
+      "robos:damageFormula": "1d8",
+      "damageFormula": "1d8",
+      "robos:damageType": "radiant",
+      "damageType": "radiant",
+      "robos:icon": "✨",
+      "icon": "✨",
+      "robos:duration": "Instantaneous",
+      "duration": "Instantaneous",
+      "robos:components": "V, S",
+      "components": "V, S",
+      "robos:savingThrow": "DEX",
+      "savingThrow": "DEX",
+      "robos:mechanics": {
+        "kind": "save_damage",
+        "target": "creature",
+        "range": 60,
+        "save": "DEX",
+        "damage": "1d8",
+        "damageType": "radiant"
+      },
+      "mechanics": {
+        "kind": "save_damage",
+        "target": "creature",
+        "range": 60,
+        "save": "DEX",
+        "damage": "1d8",
+        "damageType": "radiant"
+      },
+      "dcterms:description": "Flame-like radiance descends on a creature that you can see within range. The target must succeed on a Dex save or take 1d8 radiant damage.",
+      "description": "Flame-like radiance descends on a creature that you can see within range. The target must succeed on a Dex save or take 1d8 radiant damage.",
+      "robos:modelAssetRef": "res://assets/models/spell_magic_missile_orb.glb",
+      "modelAssetRef": "res://assets/models/spell_magic_missile_orb.glb",
+      "model3dAsset": "res://assets/models/spell_magic_missile_orb.glb",
+      "robos:vfxType": "projectile",
+      "vfxType": "projectile",
+      "model3dVfxType": "projectile",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "model3dScale": 1
+    },
+    "sanctuary": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:spell:sanctuary",
+      "@type": [
+        "robos:CRPGSpell",
+        "schema:Action",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Sanctuary",
+      "schema:name": "Sanctuary",
+      "robos:slug": "sanctuary",
+      "slug": "sanctuary",
+      "robos:spellLevel": 1,
+      "spellLevel": 1,
+      "robos:magicSchool": "Abjuration",
+      "magicSchool": "Abjuration",
+      "robos:castingTime": "1 bonus action",
+      "castingTime": "1 bonus action",
+      "robos:range": "30 feet",
+      "range": "30 feet",
+      "robos:damageFormula": "",
+      "damageFormula": "",
+      "robos:damageType": "",
+      "damageType": "",
+      "robos:icon": "🛡️",
+      "icon": "🛡️",
+      "robos:duration": "10 rounds",
+      "duration": "10 rounds",
+      "robos:components": "V, S, M",
+      "components": "V, S, M",
+      "robos:savingThrow": "None",
+      "savingThrow": "None",
+      "robos:mechanics": {
+        "kind": "buff",
+        "target": "ally",
+        "range": 30,
+        "condition": "sanctuary",
+        "duration": 10,
+        "wardSave": "WIS"
+      },
+      "mechanics": {
+        "kind": "buff",
+        "target": "ally",
+        "range": 30,
+        "condition": "sanctuary",
+        "duration": 10,
+        "wardSave": "WIS"
+      },
+      "dcterms:description": "You ward a creature within range against attack. Until the spell ends, any creature who targets the warded creature with an attack or a harmful spell cannot target it. The ward ends if the warded creature attacks.",
+      "description": "You ward a creature within range against attack. Until the spell ends, any creature who targets the warded creature with an attack or a harmful spell cannot target it. The ward ends if the warded creature attacks.",
+      "robos:modelAssetRef": "res://assets/models/spell_healing_glyph.glb",
+      "modelAssetRef": "res://assets/models/spell_healing_glyph.glb",
+      "model3dAsset": "res://assets/models/spell_healing_glyph.glb",
+      "robos:vfxType": "aura",
+      "vfxType": "aura",
+      "model3dVfxType": "aura",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "model3dScale": 1
+    },
+    "see-invisibility": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:spell:see-invisibility",
+      "@type": [
+        "robos:CRPGSpell",
+        "schema:Action",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "See Invisibility",
+      "schema:name": "See Invisibility",
+      "robos:slug": "see-invisibility",
+      "slug": "see-invisibility",
+      "robos:spellLevel": 2,
+      "spellLevel": 2,
+      "robos:magicSchool": "Divination",
+      "magicSchool": "Divination",
+      "robos:castingTime": "1 action",
+      "castingTime": "1 action",
+      "robos:range": "Self",
+      "range": "Self",
+      "robos:damageFormula": "",
+      "damageFormula": "",
+      "robos:damageType": "",
+      "damageType": "",
+      "robos:icon": "🔮",
+      "icon": "🔮",
+      "robos:duration": "600 rounds",
+      "duration": "600 rounds",
+      "robos:components": "V, S, M",
+      "components": "V, S, M",
+      "robos:savingThrow": "None",
+      "savingThrow": "None",
+      "robos:mechanics": {
+        "kind": "buff",
+        "target": "self",
+        "range": 0,
+        "condition": "see_invisibility",
+        "duration": 600
+      },
+      "mechanics": {
+        "kind": "buff",
+        "target": "self",
+        "range": 0,
+        "condition": "see_invisibility",
+        "duration": 600
+      },
+      "dcterms:description": "For the duration, you see invisible creatures and objects as if they were visible, with a luminous ethereal outline.",
+      "description": "For the duration, you see invisible creatures and objects as if they were visible, with a luminous ethereal outline.",
+      "robos:modelAssetRef": "res://assets/models/spell_magic_missile_orb.glb",
+      "modelAssetRef": "res://assets/models/spell_magic_missile_orb.glb",
+      "model3dAsset": "res://assets/models/spell_magic_missile_orb.glb",
+      "robos:vfxType": "projectile",
+      "vfxType": "projectile",
+      "model3dVfxType": "projectile",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "model3dScale": 1
+    },
+    "shield": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:spell:shield",
+      "@type": [
+        "robos:CRPGSpell",
+        "schema:Action",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Shield",
+      "schema:name": "Shield",
+      "robos:slug": "shield",
+      "slug": "shield",
+      "robos:spellLevel": 1,
+      "spellLevel": 1,
+      "robos:magicSchool": "Abjuration",
+      "magicSchool": "Abjuration",
+      "robos:castingTime": "1 reaction",
+      "castingTime": "1 reaction",
+      "robos:range": "Self",
+      "range": "Self",
+      "robos:damageFormula": "",
+      "damageFormula": "",
+      "robos:damageType": "",
+      "damageType": "",
+      "robos:icon": "🛡️",
+      "icon": "🛡️",
+      "robos:duration": "1 rounds",
+      "duration": "1 rounds",
+      "robos:components": "V, S, M",
+      "components": "V, S, M",
+      "robos:savingThrow": "None",
+      "savingThrow": "None",
+      "robos:mechanics": {
+        "kind": "buff",
+        "target": "self",
+        "range": 0,
+        "condition": "shielded",
+        "duration": 1,
+        "acBonus": 5,
+        "reaction": "when_hit"
+      },
+      "mechanics": {
+        "kind": "buff",
+        "target": "self",
+        "range": 0,
+        "condition": "shielded",
+        "duration": 1,
+        "acBonus": 5,
+        "reaction": "when_hit"
+      },
+      "dcterms:description": "An invisible barrier of magical force appears and protects you, granting a +5 bonus to AC until the start of your next turn.",
+      "description": "An invisible barrier of magical force appears and protects you, granting a +5 bonus to AC until the start of your next turn.",
+      "robos:modelAssetRef": "res://assets/models/spell_magic_missile_orb.glb",
+      "modelAssetRef": "res://assets/models/spell_magic_missile_orb.glb",
+      "model3dAsset": "res://assets/models/spell_magic_missile_orb.glb",
+      "robos:vfxType": "projectile",
+      "vfxType": "projectile",
+      "model3dVfxType": "projectile",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "model3dScale": 1
+    },
+    "sleep": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:spell:sleep",
+      "@type": [
+        "robos:CRPGSpell",
+        "schema:Action",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Sleep",
+      "schema:name": "Sleep",
+      "robos:slug": "sleep",
+      "slug": "sleep",
+      "robos:spellLevel": 1,
+      "spellLevel": 1,
+      "robos:magicSchool": "Enchantment",
+      "magicSchool": "Enchantment",
+      "robos:castingTime": "1 action",
+      "castingTime": "1 action",
+      "robos:range": "90 feet",
+      "range": "90 feet",
+      "robos:damageFormula": "5d8",
+      "damageFormula": "5d8",
+      "robos:damageType": "",
+      "damageType": "",
+      "robos:icon": "💫",
+      "icon": "💫",
+      "robos:duration": "10 rounds",
+      "duration": "10 rounds",
+      "robos:components": "V, S, M",
+      "components": "V, S, M",
+      "robos:savingThrow": "None",
+      "savingThrow": "None",
+      "robos:mechanics": {
+        "kind": "hp_pool",
+        "target": "point",
+        "range": 90,
+        "area": {
+          "shape": "sphere",
+          "size": 20
+        },
+        "pool": "5d8",
+        "condition": "unconscious",
+        "duration": 10,
+        "endsOnDamage": true,
+        "immuneCreatureTypes": [
+          "undead",
+          "construct"
+        ]
+      },
+      "mechanics": {
+        "kind": "hp_pool",
+        "target": "point",
+        "range": 90,
+        "area": {
+          "shape": "sphere",
+          "size": 20
+        },
+        "pool": "5d8",
+        "condition": "unconscious",
+        "duration": 10,
+        "endsOnDamage": true,
+        "immuneCreatureTypes": [
+          "undead",
+          "construct"
+        ]
+      },
+      "dcterms:description": "This spell sends creatures into a magical slumber. Roll 5d8; the total is how many hit points of creatures this spell can affect.",
+      "description": "This spell sends creatures into a magical slumber. Roll 5d8; the total is how many hit points of creatures this spell can affect.",
+      "robos:modelAssetRef": "res://assets/models/spell_stinking_cloud_ring.glb",
+      "modelAssetRef": "res://assets/models/spell_stinking_cloud_ring.glb",
+      "model3dAsset": "res://assets/models/spell_stinking_cloud_ring.glb",
+      "robos:vfxType": "aura",
+      "vfxType": "aura",
+      "model3dVfxType": "aura",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "model3dScale": 1
+    },
+    "spiritual-weapon": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:spell:spiritual-weapon",
+      "@type": [
+        "robos:CRPGSpell",
+        "schema:Action",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Spiritual Weapon",
+      "schema:name": "Spiritual Weapon",
+      "robos:slug": "spiritual-weapon",
+      "slug": "spiritual-weapon",
+      "robos:spellLevel": 2,
+      "spellLevel": 2,
+      "robos:magicSchool": "Evocation",
+      "magicSchool": "Evocation",
+      "robos:castingTime": "1 bonus action",
+      "castingTime": "1 bonus action",
+      "robos:range": "60 feet",
+      "range": "60 feet",
+      "robos:damageFormula": "1d8+WIS",
+      "damageFormula": "1d8+WIS",
+      "robos:damageType": "force",
+      "damageType": "force",
+      "robos:icon": "🔥",
+      "icon": "🔥",
+      "robos:duration": "Instantaneous",
+      "duration": "Instantaneous",
+      "robos:components": "V, S, M",
+      "components": "V, S, M",
+      "robos:savingThrow": "None",
+      "savingThrow": "None",
+      "robos:mechanics": {
+        "kind": "spell_attack",
+        "target": "creature",
+        "range": 60,
+        "damage": "1d8+MOD",
+        "damageType": "force",
+        "bonusAction": true
+      },
+      "mechanics": {
+        "kind": "spell_attack",
+        "target": "creature",
+        "range": 60,
+        "damage": "1d8+MOD",
+        "damageType": "force",
+        "bonusAction": true
+      },
+      "dcterms:description": "You create a floating, spectral weapon within range that strikes foes for 1d8 + Wisdom modifier force damage.",
+      "description": "You create a floating, spectral weapon within range that strikes foes for 1d8 + Wisdom modifier force damage.",
+      "robos:modelAssetRef": "res://assets/models/spell_magic_missile_orb.glb",
+      "modelAssetRef": "res://assets/models/spell_magic_missile_orb.glb",
+      "model3dAsset": "res://assets/models/spell_magic_missile_orb.glb",
+      "robos:vfxType": "projectile",
+      "vfxType": "projectile",
+      "model3dVfxType": "projectile",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "model3dScale": 1
+    },
+    "stinking-cloud": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:spell:stinking-cloud",
+      "@type": [
+        "robos:CRPGSpell",
+        "schema:Action",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Stinking Cloud",
+      "schema:name": "Stinking Cloud",
+      "robos:slug": "stinking-cloud",
+      "slug": "stinking-cloud",
+      "robos:spellLevel": 3,
+      "spellLevel": 3,
+      "robos:magicSchool": "Conjuration",
+      "magicSchool": "Conjuration",
+      "robos:castingTime": "1 action",
+      "castingTime": "1 action",
+      "robos:range": "90 feet",
+      "range": "90 feet",
+      "robos:damageFormula": "4d6",
+      "damageFormula": "4d6",
+      "robos:damageType": "poison",
+      "damageType": "poison",
+      "robos:icon": "☁️",
+      "icon": "☁️",
+      "robos:duration": "2 rounds",
+      "duration": "2 rounds",
+      "robos:components": "V, S, M",
+      "components": "V, S, M",
+      "robos:savingThrow": "CON",
+      "savingThrow": "CON",
+      "robos:mechanics": {
+        "kind": "save_damage",
+        "target": "point",
+        "range": 90,
+        "area": {
+          "shape": "sphere",
+          "size": 20
+        },
+        "save": "CON",
+        "onSave": "none",
+        "damage": "4d6",
+        "damageType": "poison",
+        "conditionOnFail": "poisoned",
+        "duration": 2
+      },
+      "mechanics": {
+        "kind": "save_damage",
+        "target": "point",
+        "range": 90,
+        "area": {
+          "shape": "sphere",
+          "size": 20
+        },
+        "save": "CON",
+        "onSave": "none",
+        "damage": "4d6",
+        "damageType": "poison",
+        "conditionOnFail": "poisoned",
+        "duration": 2
+      },
+      "dcterms:description": "You create a 20-foot-radius sphere of yellow, nauseating toxic gas centered on a chosen point. The billowing vapors deal 4d6 poison damage and overcome creatures within, forcing them to spend their turn retching and reeling on the ground.",
+      "description": "You create a 20-foot-radius sphere of yellow, nauseating toxic gas centered on a chosen point. The billowing vapors deal 4d6 poison damage and overcome creatures within, forcing them to spend their turn retching and reeling on the ground.",
+      "robos:modelAssetRef": "res://assets/models/spell_stinking_cloud_ring.glb",
+      "modelAssetRef": "res://assets/models/spell_stinking_cloud_ring.glb",
+      "model3dAsset": "res://assets/models/spell_stinking_cloud_ring.glb",
+      "robos:vfxType": "aura",
+      "vfxType": "aura",
+      "model3dVfxType": "aura",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "model3dScale": 1
+    },
+    "thunderwave": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:spell:thunderwave",
+      "@type": [
+        "robos:CRPGSpell",
+        "schema:Action",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Thunderwave",
+      "schema:name": "Thunderwave",
+      "robos:slug": "thunderwave",
+      "slug": "thunderwave",
+      "robos:spellLevel": 1,
+      "spellLevel": 1,
+      "robos:magicSchool": "Evocation",
+      "magicSchool": "Evocation",
+      "robos:castingTime": "1 action",
+      "castingTime": "1 action",
+      "robos:range": "15-foot cube",
+      "range": "15-foot cube",
+      "robos:damageFormula": "2d8",
+      "damageFormula": "2d8",
+      "robos:damageType": "thunder",
+      "damageType": "thunder",
+      "robos:icon": "🔥",
+      "icon": "🔥",
+      "robos:duration": "Instantaneous",
+      "duration": "Instantaneous",
+      "robos:components": "V, S, M",
+      "components": "V, S, M",
+      "robos:savingThrow": "CON",
+      "savingThrow": "CON",
+      "robos:mechanics": {
+        "kind": "save_damage",
+        "target": "self",
+        "origin": "self",
+        "range": 0,
+        "area": {
+          "shape": "cube",
+          "size": 15
+        },
+        "save": "CON",
+        "onSave": "half",
+        "damage": "2d8",
+        "damageType": "thunder",
+        "pushOnFail": 10
+      },
+      "mechanics": {
+        "kind": "save_damage",
+        "target": "self",
+        "origin": "self",
+        "range": 0,
+        "area": {
+          "shape": "cube",
+          "size": 15
+        },
+        "save": "CON",
+        "onSave": "half",
+        "damage": "2d8",
+        "damageType": "thunder",
+        "pushOnFail": 10
+      },
+      "dcterms:description": "A wave of thunderous force sweeps out from you, dealing 2d8 thunder damage and pushing creatures away.",
+      "description": "A wave of thunderous force sweeps out from you, dealing 2d8 thunder damage and pushing creatures away.",
+      "robos:modelAssetRef": "res://assets/models/spell_lightning_spark.glb",
+      "modelAssetRef": "res://assets/models/spell_lightning_spark.glb",
+      "model3dAsset": "res://assets/models/spell_lightning_spark.glb",
+      "robos:vfxType": "projectile",
+      "vfxType": "projectile",
+      "model3dVfxType": "projectile",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "model3dScale": 1
+    }
+  },
+  "quests": [],
+  "storyDAG": {}
+}

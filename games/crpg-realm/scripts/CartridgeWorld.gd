@@ -363,8 +363,12 @@ func _spawn_hero(coords: Vector2, pixel_w: float, pixel_h: float) -> void:
 			hero.add_child(model_node)
 		model_node.setup_model(model_ref, model_type, model_scale, model_tint)
 		var weapon_ref = str(h_data.get("robos:equippedWeapon", h_data.get("equippedWeapon", h_data.get("weapon", ""))))
-		if weapon_ref != "":
+		if weapon_ref != "" and weapon_ref != "none":
 			model_node.equip_weapon(weapon_ref)
+			GameState.equipped_weapon = weapon_ref
+		else:
+			model_node.equip_weapon("none")
+			GameState.equipped_weapon = ""
 		var shield_ref = str(h_data.get("robos:equippedShield", h_data.get("equippedShield", h_data.get("shield", ""))))
 		if shield_ref != "":
 			model_node.equip_shield(shield_ref)
@@ -486,6 +490,79 @@ func _spawn_map_object(obj: Dictionary) -> void:
 		area.body_entered.connect(func(body):
 			if body == hero or body.name == "HeroPlayer":
 				_on_chest_opened(obj_id, title)
+		)
+
+		$MapElements.add_child(area)
+
+	elif o_type in ["item", "weapon", "pickup", "loot", "equipment"] or "sword-pickup" in obj_id or "ground-sword" in obj_id or obj_id.begins_with("item-"):
+		var area = Area2D.new()
+		area.name = "Item_" + obj_id
+		area.position = Vector2(px + pw/2, py + ph/2)
+
+		var cs = CollisionShape2D.new()
+		var shape = CircleShape2D.new()
+		shape.radius = max(pw * 0.5, 24.0)
+		cs.shape = shape
+		area.add_child(cs)
+
+		var marker = ColorRect.new()
+		marker.position = Vector2(-16, -16)
+		marker.size = Vector2(32, 32)
+		marker.color = Color(0.9, 0.75, 0.15, 0.45)
+		area.add_child(marker)
+
+		var icon_spr = Sprite2D.new()
+		icon_spr.name = "ItemIcon"
+		var icon_tex = _load_texture_safe("res://assets/props/chest_open.png")
+		if icon_tex:
+			icon_spr.texture = icon_tex
+			icon_spr.scale = Vector2(0.55, 0.55)
+			icon_spr.position = Vector2(0, 0)
+			area.add_child(icon_spr)
+
+		var item_label = title if title != "" else "Iron Sword"
+		var clean_item_title = item_label.replace("Ground Item (", "").replace(")", "").replace("Ground Item", "Sword")
+		var lbl = Label.new()
+		lbl.name = "ItemLabel"
+		lbl.text = "⚔️ " + clean_item_title
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		lbl.add_theme_font_size_override("font_size", 10)
+		lbl.add_theme_color_override("font_color", Color(1.0, 0.88, 0.25, 1.0))
+
+		var p_style = StyleBoxFlat.new()
+		p_style.bg_color = Color(0.06, 0.08, 0.12, 0.88)
+		p_style.border_color = Color(0.95, 0.75, 0.2, 0.8)
+		p_style.set_border_width_all(1)
+		p_style.set_corner_radius_all(3)
+		p_style.content_margin_left = 6
+		p_style.content_margin_right = 6
+		p_style.content_margin_top = 2
+		p_style.content_margin_bottom = 2
+		lbl.add_theme_stylebox_override("normal", p_style)
+		lbl.position = Vector2(-55, -28)
+		area.add_child(lbl)
+
+		var item_id_val = str(obj.get("item", obj.get("robos:itemId", "iron-sword")))
+		if "hero" in obj_id or "hero" in item_id_val:
+			item_id_val = "heros-sword"
+		elif item_id_val == "" or item_id_val == "weapon":
+			item_id_val = "iron-sword"
+
+		area.input_pickable = true
+		area.input_event.connect(func(_vp, event, _shape_idx):
+			if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+				get_viewport().set_input_as_handled()
+				if is_auto_playing:
+					pause_auto_play("Manual item pickup")
+				_navigate_and_interact(area.global_position, func():
+					_on_item_picked_up(obj_id, item_id_val, clean_item_title)
+				)
+		)
+
+		area.body_entered.connect(func(body):
+			if body == hero or body.name == "HeroPlayer":
+				_on_item_picked_up(obj_id, item_id_val, clean_item_title)
 		)
 
 		$MapElements.add_child(area)
@@ -875,6 +952,16 @@ func _on_chest_opened(obj_id: String, title: String) -> void:
 		GameState.add_item("torch")
 		if action_log:
 			action_log.add_entry("Found [b]Torch[/b] to illuminate dark dungeons!", "loot")
+	elif "sword" in obj_id or "weapon" in obj_id or "blade" in obj_id:
+		var w_id = "heros-sword" if "hero" in obj_id else "iron-sword"
+		var w_name = "Hero's Sword" if w_id == "heros-sword" else "Iron Sword"
+		GameState.add_item(w_id)
+		GameState.equip_item(w_id)
+		if action_log:
+			action_log.add_entry("Found and equipped [b]%s[/b] in weapon chest!" % w_name, "loot")
+		if AudioManager:
+			AudioManager.play_sfx("melee_attack")
+		_update_hud_status("Equipped: " + w_name)
 	elif "herb" in obj_id:
 		GameState.add_item("herb")
 		if action_log:
@@ -894,6 +981,22 @@ func _on_chest_opened(obj_id: String, title: String) -> void:
 		if clbl:
 			clbl.text = "Empty"
 			clbl.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6, 0.7))
+
+func _on_item_picked_up(obj_id: String, item_id: String, title: String) -> void:
+	if GameState.world_flags.get("item_" + obj_id, false):
+		return
+	GameState.world_flags["item_" + obj_id] = true
+	GameState.add_item(item_id)
+	GameState.equip_item(item_id)
+	if action_log:
+		action_log.add_entry("⚔️ Picked up and equipped [b]%s[/b]!" % title, "loot")
+	if AudioManager:
+		AudioManager.play_sfx("melee_attack")
+	_update_hud_status("Equipped: " + title)
+
+	var item_node = $MapElements.get_node_or_null("Item_" + obj_id)
+	if item_node:
+		item_node.queue_free()
 
 func _on_accept_king_quest() -> void:
 	GameState.world_flags["talked_to_king"] = true

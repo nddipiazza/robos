@@ -76,6 +76,7 @@ func _ready() -> void:
 	GameState.hero_damaged.connect(_on_hero_damaged)
 	GameState.settings_changed.connect(_update_overhead_ui)
 	GameState.status_effects_changed.connect(_on_status_effects_changed)
+	GameState.inventory_changed.connect(_on_inventory_changed)
 	_update_prone_state()
 	if reticle:
 		reticle.visible = false
@@ -247,6 +248,15 @@ func setup_3d_hero_model(asset_ref: String, type_name: String = "knight", scale_
 	if token_spr:
 		token_spr.visible = false
 	return m3d
+
+func _on_inventory_changed() -> void:
+	var m3d = get_node_or_null("CharacterModel3D") as CharacterModel3D
+	if m3d and m3d.has_method("equip_weapon"):
+		var w = GameState.equipped_weapon
+		if w != "" and w != "none":
+			m3d.equip_weapon(w)
+		else:
+			m3d.equip_weapon("none")
 
 func set_hero_visual_appearance(h_class: String) -> void:
 	if h_class == "wizard" or h_class == "mage":
