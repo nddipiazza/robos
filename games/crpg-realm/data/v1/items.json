@@ -14,7 +14,11 @@
     "acBonus": 0,
     "cost": 15,
     "icon": "assets/icons/weapons/longsword.png",
-    "description": "Standard-issue steel military arming sword of the Oakhaven Royal Guard."
+    "description": "Standard-issue steel military arming sword of the Oakhaven Royal Guard.",
+    "model3dAsset": "res://assets/models/weapon_sword_iron.glb",
+    "model3dSocket": "main_hand",
+    "model3dScale": 1.0,
+    "model3dTint": ""
   },
   {
     "id": "dagger",
@@ -34,7 +38,11 @@
     "cost": 2,
     "icon": "assets/icons/weapons/dagger.png",
     "description": "A small, double-edged knife favored for swift strikes and concealment.",
-    "rangeFeet": 20
+    "rangeFeet": 20,
+    "model3dAsset": "res://assets/models/weapon_dagger_rogue.glb",
+    "model3dSocket": "main_hand",
+    "model3dScale": 0.95,
+    "model3dTint": ""
   },
   {
     "id": "shortsword",
@@ -52,7 +60,11 @@
     "acBonus": 0,
     "cost": 10,
     "icon": "assets/icons/weapons/shortsword.png",
-    "description": "A balanced thrusting blade designed for quick tactical strikes in tight quarters."
+    "description": "A balanced thrusting blade designed for quick tactical strikes in tight quarters.",
+    "model3dAsset": "res://assets/models/weapon_sword_iron.glb",
+    "model3dSocket": "main_hand",
+    "model3dScale": 0.82,
+    "model3dTint": ""
   },
   {
     "id": "longsword",
@@ -69,7 +81,11 @@
     "acBonus": 0,
     "cost": 15,
     "icon": "assets/icons/weapons/longsword.png",
-    "description": "A classical knightly straight blade, wieldable with one or two hands."
+    "description": "A classical knightly straight blade, wieldable with one or two hands.",
+    "model3dAsset": "res://assets/models/weapon_sword_iron.glb",
+    "model3dSocket": "main_hand",
+    "model3dScale": 1.0,
+    "model3dTint": ""
   },
   {
     "id": "greatsword",
@@ -87,7 +103,11 @@
     "acBonus": 0,
     "cost": 50,
     "icon": "assets/icons/weapons/greatsword.png",
-    "description": "A massive two-handed sword capable of cleaving multiple foes in a broad arc."
+    "description": "A massive two-handed sword capable of cleaving multiple foes in a broad arc.",
+    "model3dAsset": "res://assets/models/weapon_greatsword.glb",
+    "model3dSocket": "main_hand",
+    "model3dScale": 1.15,
+    "model3dTint": ""
   },
   {
     "id": "mace",
@@ -102,7 +122,11 @@
     "acBonus": 0,
     "cost": 5,
     "icon": "assets/icons/weapons/mace.png",
-    "description": "Heavy steel club with protruding flanges, favored by clerics and temple guards."
+    "description": "Heavy steel club with protruding flanges, favored by clerics and temple guards.",
+    "model3dAsset": "res://assets/models/weapon_mace_flanged.glb",
+    "model3dSocket": "main_hand",
+    "model3dScale": 1.0,
+    "model3dTint": ""
   },
   {
     "id": "warhammer",
@@ -119,7 +143,11 @@
     "acBonus": 0,
     "cost": 15,
     "icon": "assets/icons/weapons/warhammer.png",
-    "description": "Dwarven-crafted bludgeon with a spiked face designed to crush armor plate."
+    "description": "Dwarven-crafted bludgeon with a spiked face designed to crush armor plate.",
+    "model3dAsset": "res://assets/models/weapon_warhammer.glb",
+    "model3dSocket": "main_hand",
+    "model3dScale": 1.0,
+    "model3dTint": ""
   },
   {
     "id": "morningstar",
@@ -134,7 +162,11 @@
     "acBonus": 0,
     "cost": 15,
     "icon": "assets/icons/weapons/morningstar.png",
-    "description": "A spiked metal ball mounted on a reinforced wooden shaft."
+    "description": "A spiked metal ball mounted on a reinforced wooden shaft.",
+    "model3dAsset": "res://assets/models/weapon_mace_flanged.glb",
+    "model3dSocket": "main_hand",
+    "model3dScale": 1.05,
+    "model3dTint": ""
   },
   {
     "id": "rapier",
@@ -151,7 +183,11 @@
     "acBonus": 0,
     "cost": 25,
     "icon": "assets/icons/weapons/rapier.png",
-    "description": "A slender, sharply pointed sword prized by agile duelists and rogues."
+    "description": "A slender, sharply pointed sword prized by agile duelists and rogues.",
+    "model3dAsset": "res://assets/models/weapon_rapier.glb",
+    "model3dSocket": "main_hand",
+    "model3dScale": 1.0,
+    "model3dTint": ""
   },
   {
     "id": "quarterstaff",
@@ -168,7 +204,11 @@
     "acBonus": 0,
     "cost": 1,
     "icon": "assets/icons/weapons/quarterstaff.png",
-    "description": "A smooth hardwood walking staff suitable for martial discipline or wizard focus."
+    "description": "A smooth hardwood walking staff suitable for martial discipline or wizard focus.",
+    "model3dAsset": "res://assets/models/weapon_staff_wizard.glb",
+    "model3dSocket": "main_hand",
+    "model3dScale": 0.95,
+    "model3dTint": ""
   },
   {
     "id": "spear",
@@ -187,7 +227,11 @@
     "cost": 1,
     "icon": "assets/icons/weapons/spear.png",
     "description": "A versatile pointed polearm capable of being hurled or wielded two-handed.",
-    "rangeFeet": 20
+    "rangeFeet": 20,
+    "model3dAsset": "res://assets/models/weapon_spear.glb",
+    "model3dSocket": "main_hand",
+    "model3dScale": 1.0,
+    "model3dTint": ""
   },
   {
     "id": "hunting-bow",
@@ -207,7 +251,11 @@
     "cost": 25,
     "icon": "assets/icons/weapons/shortbow.png",
     "description": "Carved from aged yew, delivering silent lethal arrows from distance.",
-    "rangeFeet": 80
+    "rangeFeet": 80,
+    "model3dAsset": "res://assets/models/weapon_bow_recurve.glb",
+    "model3dSocket": "main_hand",
+    "model3dScale": 1.0,
+    "model3dTint": ""
   },
   {
     "id": "shortbow",
@@ -227,7 +275,11 @@
     "cost": 25,
     "icon": "assets/icons/weapons/shortbow.png",
     "description": "A compact bow easy to draw while on the march or in confined woods.",
-    "rangeFeet": 80
+    "rangeFeet": 80,
+    "model3dAsset": "res://assets/models/weapon_bow_recurve.glb",
+    "model3dSocket": "main_hand",
+    "model3dScale": 0.9,
+    "model3dTint": ""
   },
   {
     "id": "longbow",
@@ -248,7 +300,11 @@
     "cost": 50,
     "icon": "assets/icons/weapons/longbow.png",
     "description": "A tall bow capable of penetrating armor at extreme range.",
-    "rangeFeet": 150
+    "rangeFeet": 150,
+    "model3dAsset": "res://assets/models/weapon_bow_recurve.glb",
+    "model3dSocket": "main_hand",
+    "model3dScale": 1.2,
+    "model3dTint": ""
   },
   {
     "id": "light-crossbow",
@@ -269,7 +325,11 @@
     "cost": 25,
     "icon": "assets/icons/weapons/shortbow.png",
     "description": "Mechanical bow that shoots iron bolts with high stopping power.",
-    "rangeFeet": 80
+    "rangeFeet": 80,
+    "model3dAsset": "res://assets/models/weapon_crossbow.glb",
+    "model3dSocket": "main_hand",
+    "model3dScale": 0.95,
+    "model3dTint": ""
   },
   {
     "id": "heavy-crossbow",
@@ -291,7 +351,11 @@
     "cost": 50,
     "icon": "assets/icons/weapons/heavy_crossbow.png",
     "description": "A powerful steel-spanned crossbow delivering crushing impact.",
-    "rangeFeet": 100
+    "rangeFeet": 100,
+    "model3dAsset": "res://assets/models/weapon_crossbow.glb",
+    "model3dSocket": "main_hand",
+    "model3dScale": 1.15,
+    "model3dTint": ""
   },
   {
     "id": "padded",
@@ -304,7 +368,11 @@
     "weight": 8,
     "cost": 5,
     "icon": "assets/icons/armor/padded.png",
-    "description": "Quilted layers of cloth and batting providing basic protection."
+    "description": "Quilted layers of cloth and batting providing basic protection.",
+    "model3dAsset": "res://assets/models/armor_suit_leather.glb",
+    "model3dSocket": "chest",
+    "model3dScale": 0.95,
+    "model3dTint": ""
   },
   {
     "id": "leather-armor",
@@ -317,7 +385,11 @@
     "weight": 10,
     "cost": 10,
     "icon": "assets/icons/armor/leather_armor.png",
-    "description": "Supple boiled leather breastplate and greaves offering silent mobility."
+    "description": "Supple boiled leather breastplate and greaves offering silent mobility.",
+    "model3dAsset": "res://assets/models/armor_suit_leather.glb",
+    "model3dSocket": "chest",
+    "model3dScale": 1.0,
+    "model3dTint": ""
   },
   {
     "id": "studded-leather",
@@ -330,7 +402,11 @@
     "weight": 13,
     "cost": 45,
     "icon": "assets/icons/armor/studded_leather.png",
-    "description": "Tough leather reinforced with close-set rivets and metal studs."
+    "description": "Tough leather reinforced with close-set rivets and metal studs.",
+    "model3dAsset": "res://assets/models/armor_suit_leather.glb",
+    "model3dSocket": "chest",
+    "model3dScale": 1.02,
+    "model3dTint": ""
   },
   {
     "id": "hide-armor",
@@ -343,7 +419,11 @@
     "weight": 12,
     "cost": 10,
     "icon": "assets/icons/armor/hide_armor.png",
-    "description": "Crude armor made from thick pelts and hides, favored by barbarians and druids."
+    "description": "Crude armor made from thick pelts and hides, favored by barbarians and druids.",
+    "model3dAsset": "res://assets/models/armor_suit_leather.glb",
+    "model3dSocket": "chest",
+    "model3dScale": 1.05,
+    "model3dTint": ""
   },
   {
     "id": "chain-shirt",
@@ -356,7 +436,11 @@
     "weight": 20,
     "cost": 50,
     "icon": "assets/icons/armor/chain_shirt.png",
-    "description": "Interlocking steel rings worn between layers of cloth to protect vital organs."
+    "description": "Interlocking steel rings worn between layers of cloth to protect vital organs.",
+    "model3dAsset": "res://assets/models/armor_suit_chainmail.glb",
+    "model3dSocket": "chest",
+    "model3dScale": 0.9,
+    "model3dTint": ""
   },
   {
     "id": "scale-mail",
@@ -369,7 +453,11 @@
     "weight": 45,
     "cost": 50,
     "icon": "assets/icons/armor/scale_mail.png",
-    "description": "Overlapping iron scales stitched onto leather backing."
+    "description": "Overlapping iron scales stitched onto leather backing.",
+    "model3dAsset": "res://assets/models/armor_suit_chainmail.glb",
+    "model3dSocket": "chest",
+    "model3dScale": 0.95,
+    "model3dTint": ""
   },
   {
     "id": "breastplate",
@@ -382,7 +470,11 @@
     "weight": 20,
     "cost": 400,
     "icon": "assets/icons/armor/breastplate.png",
-    "description": "A solid metal plate protecting the torso without hindering stealth."
+    "description": "A solid metal plate protecting the torso without hindering stealth.",
+    "model3dAsset": "res://assets/models/armor_suit_plate.glb",
+    "model3dSocket": "chest",
+    "model3dScale": 0.9,
+    "model3dTint": ""
   },
   {
     "id": "half-plate",
@@ -395,7 +487,11 @@
     "weight": 40,
     "cost": 750,
     "icon": "assets/icons/armor/half_plate.png",
-    "description": "Shaped metal plates covering most of the body over flexible chainmail."
+    "description": "Shaped metal plates covering most of the body over flexible chainmail.",
+    "model3dAsset": "res://assets/models/armor_suit_plate.glb",
+    "model3dSocket": "chest",
+    "model3dScale": 0.95,
+    "model3dTint": ""
   },
   {
     "id": "ring-mail",
@@ -408,7 +504,11 @@
     "weight": 40,
     "cost": 30,
     "icon": "assets/icons/armor/ring_mail.png",
-    "description": "Leather armor with heavy rings sewn into the exterior."
+    "description": "Leather armor with heavy rings sewn into the exterior.",
+    "model3dAsset": "res://assets/models/armor_suit_chainmail.glb",
+    "model3dSocket": "chest",
+    "model3dScale": 0.95,
+    "model3dTint": ""
   },
   {
     "id": "chain-mail",
@@ -421,7 +521,11 @@
     "weight": 55,
     "cost": 75,
     "icon": "assets/icons/armor/chain_mail.png",
-    "description": "Full hauberk of interlocked steel rings offering dependable knightly protection."
+    "description": "Full hauberk of interlocked steel rings offering dependable knightly protection.",
+    "model3dAsset": "res://assets/models/armor_suit_chainmail.glb",
+    "model3dSocket": "chest",
+    "model3dScale": 1.0,
+    "model3dTint": ""
   },
   {
     "id": "splint-armor",
@@ -434,7 +538,11 @@
     "weight": 60,
     "cost": 200,
     "icon": "assets/icons/armor/splint_armor.png",
-    "description": "Vertical strips of metal riveted to leather backing over chain cloth."
+    "description": "Vertical strips of metal riveted to leather backing over chain cloth.",
+    "model3dAsset": "res://assets/models/armor_suit_plate.glb",
+    "model3dSocket": "chest",
+    "model3dScale": 0.98,
+    "model3dTint": ""
   },
   {
     "id": "plate-armor",
@@ -447,7 +555,11 @@
     "weight": 65,
     "cost": 1500,
     "icon": "assets/icons/armor/plate_armor.png",
-    "description": "Interlocking shaped plates encasing the entire body; the pinnacle of defensive armor."
+    "description": "Interlocking shaped plates encasing the entire body; the pinnacle of defensive armor.",
+    "model3dAsset": "res://assets/models/armor_suit_plate.glb",
+    "model3dSocket": "chest",
+    "model3dScale": 1.0,
+    "model3dTint": ""
   },
   {
     "id": "shield",
@@ -460,7 +572,11 @@
     "weight": 6,
     "cost": 10,
     "icon": "assets/icons/armor/shield.png",
-    "description": "A wooden or metal shield carried in one hand, granting +2 to AC."
+    "description": "A wooden or metal shield carried in one hand, granting +2 to AC.",
+    "model3dAsset": "res://assets/models/armor_shield_heater.glb",
+    "model3dSocket": "off_hand",
+    "model3dScale": 1.0,
+    "model3dTint": ""
   },
   {
     "id": "potion-healing",
@@ -672,6 +788,10 @@
     "description": "A crown of burnished silver set with an azure star sapphire that pierces all veils of invisibility and shadows.",
     "grants": [
       "see_invisibility"
-    ]
+    ],
+    "model3dAsset": "res://assets/models/armor_helm_knight.glb",
+    "model3dSocket": "head",
+    "model3dScale": 1.0,
+    "model3dTint": ""
   }
 ]

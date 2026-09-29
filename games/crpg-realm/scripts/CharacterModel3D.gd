@@ -244,6 +244,11 @@ func apply_armor_styling(armor_type: String, armor_color: Color = Color.WHITE) -
 		roughness = 0.75
 		if tint == Color.WHITE:
 			tint = Color(0.48, 0.32, 0.20)
+	elif "chain" in a or "mail" in a or "scale" in a or "ring" in a:
+		metallic = 0.75
+		roughness = 0.45
+		if tint == Color.WHITE:
+			tint = Color(0.65, 0.68, 0.72)
 	elif "robe" in a or "cloth" in a or "linen" in a:
 		metallic = 0.05
 		roughness = 0.9
@@ -258,7 +263,21 @@ func _resolve_weapon_path(ref: String) -> String:
 	var r = ref.to_lower()
 	if "hero" in r or "excalibur" in r or "erdrick" in r or "legendary" in r:
 		return "res://assets/models/weapon_sword_hero.glb"
-	elif "club" in r or "cudgel" in r or "mace" in r:
+	elif "greatsword" in r or "claymore" in r:
+		return "res://assets/models/weapon_greatsword.glb"
+	elif "warhammer" in r or "maul" in r:
+		return "res://assets/models/weapon_warhammer.glb"
+	elif "mace" in r or "morningstar" in r or "flange" in r:
+		return "res://assets/models/weapon_mace_flanged.glb"
+	elif "rapier" in r or "estoc" in r:
+		return "res://assets/models/weapon_rapier.glb"
+	elif "battleaxe" in r or "axe" in r:
+		return "res://assets/models/weapon_battleaxe.glb"
+	elif "crossbow" in r:
+		return "res://assets/models/weapon_crossbow.glb"
+	elif "spear" in r or "pike" in r or "javelin" in r:
+		return "res://assets/models/weapon_spear.glb"
+	elif "club" in r or "cudgel" in r:
 		return "res://assets/models/weapon_club_wood.glb"
 	elif "staff" in r or "rod" in r or "wand" in r:
 		return "res://assets/models/weapon_staff_wizard.glb"
@@ -266,7 +285,7 @@ func _resolve_weapon_path(ref: String) -> String:
 		return "res://assets/models/weapon_bow_recurve.glb"
 	elif "dagger" in r or "knife" in r or "blade" in r:
 		return "res://assets/models/weapon_dagger_rogue.glb"
-	elif "bamboo" in r or "pole" in r or "spear" in r:
+	elif "bamboo" in r or "pole" in r:
 		return "res://assets/models/weapon_bamboo_pole.glb"
 	else:
 		return "res://assets/models/weapon_sword_iron.glb"
@@ -275,7 +294,9 @@ func _resolve_shield_path(ref: String) -> String:
 	if ref.ends_with(".glb") or ref.ends_with(".gltf"):
 		return _ensure_res_path(ref)
 	var r = ref.to_lower()
-	if "round" in r or "buckler" in r or "viking" in r:
+	if "tower" in r or "pavise" in r:
+		return "res://assets/models/armor_shield_tower.glb"
+	elif "round" in r or "buckler" in r or "viking" in r:
 		return "res://assets/models/armor_shield_round.glb"
 	else:
 		return "res://assets/models/armor_shield_heater.glb"
@@ -283,6 +304,9 @@ func _resolve_shield_path(ref: String) -> String:
 func _resolve_helm_path(ref: String) -> String:
 	if ref.ends_with(".glb") or ref.ends_with(".gltf"):
 		return _ensure_res_path(ref)
+	var r = ref.to_lower()
+	if "iron" in r or "nasal" in r or "spangenhelm" in r or "coif" in r:
+		return "res://assets/models/armor_helm_iron.glb"
 	return "res://assets/models/armor_helm_knight.glb"
 
 func _ensure_res_path(path: String) -> String:

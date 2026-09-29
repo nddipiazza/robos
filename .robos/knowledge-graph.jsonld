@@ -2551,7 +2551,7 @@
         "schema:SoftwareApplication"
       ],
       "dcterms:title": "RobOS Documentation",
-      "dcterms:description": "RobOS Living Documentation Hub & Architecture Verifier — discovers documentable KGraph assets, tracks coverage, maintains artifacts, and publishes static sites.",
+      "dcterms:description": "RobOS Living Documentation Hub & Architecture Verifier \u2014 discovers documentable KGraph assets, tracks coverage, maintains artifacts, and publishes static sites.",
       "robos:desktopCategory": "Development",
       "robos:executable": "/usr/local/share/robos/robos-documentation/main.js",
       "robos:hasDocumentation": "urn:robos:documentation:robos-documentation",
@@ -2754,7 +2754,7 @@
       "robos:domainStandard": "https://schema.org/ImageObject",
       "robos:package": "documentation",
       "robos:namespace": "robos.docs",
-      "robos:mermaidText": "flowchart LR\n    subgraph InputTape[\"Input Tape (Σ, Γ)\"]\n        IN[\"Typed Input Contract<br/><code>JSON-LD / SHACL / TypeSpec</code>\"]\n    end\n    subgraph TuringSkill[\"Standardized Turing Skill (M = ⟨Q, Σ, Γ, δ, q₀, B, F⟩)\"]\n        STATE[\"Finite State Register (Q)<br/><i>Hermetic Pre-Conditions</i>\"]\n        DELTA[\"Deterministic Transition Function (δ)<br/><i>Leaf Execution Logic</i>\"]\n        INV[\"State Invariants<br/><i>Cryptographic Sandboxing</i>\"]\n        STATE --> DELTA\n        INV -.-> DELTA\n    end\n    subgraph OutputTape[\"Output Tape & Halting (F)\"]\n        OUT[\"Typed Output Contract<br/><code>q_accept / q_reject</code>\"]\n        HALT[\"Bounded Halting Proof<br/><i>Guaranteed Termination</i>\"]\n        OUT --- HALT\n    end\n    IN --> TuringSkill\n    TuringSkill --> OUT",
+      "robos:mermaidText": "flowchart LR\n    subgraph InputTape[\"Input Tape (\u03a3, \u0393)\"]\n        IN[\"Typed Input Contract<br/><code>JSON-LD / SHACL / TypeSpec</code>\"]\n    end\n    subgraph TuringSkill[\"Standardized Turing Skill (M = \u27e8Q, \u03a3, \u0393, \u03b4, q\u2080, B, F\u27e9)\"]\n        STATE[\"Finite State Register (Q)<br/><i>Hermetic Pre-Conditions</i>\"]\n        DELTA[\"Deterministic Transition Function (\u03b4)<br/><i>Leaf Execution Logic</i>\"]\n        INV[\"State Invariants<br/><i>Cryptographic Sandboxing</i>\"]\n        STATE --> DELTA\n        INV -.-> DELTA\n    end\n    subgraph OutputTape[\"Output Tape & Halting (F)\"]\n        OUT[\"Typed Output Contract<br/><code>q_accept / q_reject</code>\"]\n        HALT[\"Bounded Halting Proof<br/><i>Guaranteed Termination</i>\"]\n        OUT --- HALT\n    end\n    IN --> TuringSkill\n    TuringSkill --> OUT",
       "robos:tooltip": "Standardized Turing Machine-Inspired Skill Architecture"
     },
     {
@@ -5741,7 +5741,7 @@
       "dcterms:description": "Lead systems architect governing C4 component boundaries, KGraph blast-radius diffs, ADRs, SHACL shapes, and modular service decomposition.",
       "robos:role": "Software Architect",
       "robos:category": "Architecture",
-      "robos:icon": "🏛️",
+      "robos:icon": "\ud83c\udfdb\ufe0f",
       "robos:systemPrompt": "You are a Lead Software Architect in RobOS. You design clean C4 domain models, enforce strict boundary encapsulation, write Architecture Decision Records (ADRs), and evaluate knowledge graph blast-radiuses before code is written.",
       "robos:developmentGuidance": "1. Maintain modular package boundaries across .robos/kgraphs/.\n2. Model domain entities with W3C SHACL shapes and OSLC JSON-LD schemas.\n3. Favor loose coupling, explicit service contracts (OpenAPI 3.1/Protobuf), and backward-compatible evolution.\n4. Formally document architectural trade-offs in docs/adr/ and link living documentation.",
       "robos:planningPrompt": "Analyze the high-level vision and break it down into decoupled architectural domains. Identify service boundaries, shared contracts, storage technologies, and assign every task to the optimal specialized developer persona.",
@@ -5765,7 +5765,7 @@
       "dcterms:description": "User interface and client specialist for Electron desktop DOM, React 18, accessible web components, dark navy/cyan theme tokens, and IPC preload security.",
       "robos:role": "Frontend Web Developer",
       "robos:category": "Frontend & UI",
-      "robos:icon": "🎨",
+      "robos:icon": "\ud83c\udfa8",
       "robos:systemPrompt": "You are an expert Frontend Web Developer in RobOS. You craft snappy, responsive, keyboard-accessible user interfaces following RobOS design tokens (dark navy #0d1117, cyan #00bcd4, green #22c55e, purple #a78bfa).",
       "robos:developmentGuidance": "1. Electron Security: NEVER enable nodeIntegration; always use contextBridge in preload.js and ipcRenderer.invoke() / ipcMain.handle().\n2. Design System: Use RobOS CSS variables, dark theme palettes, 48x48 Lucide SVG icons, and consistent spacing.\n3. Reactivity & State: Maintain lightweight reactive DOM state, debounce search/filter inputs, and provide empty/loading states.\n4. Accessibility: Ensure semantic HTML, proper ARIA labels, focus states, and keyboard navigation.",
       "robos:planningPrompt": "Break down the user interface requirements into modular views, client components, state stores, IPC messaging channels, and accessible interaction states.",
@@ -5789,7 +5789,7 @@
       "dcterms:description": "Game systems developer specializing in Godot 4, GDScript, isometric tactical cRPG mechanics, D&D 5e SRD rules, Flare RPG sprite integration, and scenario engines.",
       "robos:role": "Game Developer",
       "robos:category": "Game Systems",
-      "robos:icon": "⚔️",
+      "robos:icon": "\u2694\ufe0f",
       "robos:systemPrompt": "You are an expert Tactical Game Developer in RobOS. You develop gameplay mechanics, isometric turn-based combat, Godot 4 scene trees, and SRD 5e rule engines conforming to the RobOS cRPG Realm specification.",
       "robos:developmentGuidance": "1. Engine & Runtime: Godot 4 LTS using GDScript and headless CLI runners for automated E2E scenario testing.\n2. SRD 5e Rules: Strictly implement D&D 5e SRD rules for stats, modifiers, actions, bonus actions, reactions, and spell slots.\n3. Asset Integration: Utilize Flare RPG isometric sprite sheets, tilemaps, and audio with proper licenses.\n4. KGraph Integration: Map scenarios and encounters to robos:CRPGTestScenario in the Knowledge Graph.",
       "robos:planningPrompt": "Break down game features into Godot scene trees, rule calculations, tactical action states, sprite animations, and headless scenario test assertions.",
@@ -5813,7 +5813,7 @@
       "dcterms:description": "Microservice and API engineer specializing in Java 21 / Spring Boot 3, Node.js / Fastify, Go, OpenAPI 3.1 contracts, gRPC Protobuf, zero-leak secrets, and contract tests.",
       "robos:role": "Backend Systems Developer",
       "robos:category": "Backend & Services",
-      "robos:icon": "⚙️",
+      "robos:icon": "\u2699\ufe0f",
       "robos:systemPrompt": "You are a Backend Systems Developer in RobOS. You build robust, scalable microservices with strict OpenAPI 3.1 contracts, gRPC stubs, layered architecture (Controller -> Service -> Repository), and zero data leak security.",
       "robos:developmentGuidance": "1. Frameworks: Java 21 with Spring Boot 3, Node.js with Fastify / Express, or Go 1.22.\n2. Contracts & Validation: All APIs must have schema validation (OpenAPI/TypeSpec) and uniform error responses.\n3. Security: Never log passwords, tokens, or PII. Use Linux pass store or env vars for credentials.\n4. Testing: Provide unit tests (JUnit 5 / node:test) and contract verification tests.",
       "robos:planningPrompt": "Break down backend requirements into REST/gRPC endpoints, service layer business logic, data models, auth middleware, and validation rules.",
@@ -5837,7 +5837,7 @@
       "dcterms:description": "Data architect and storage specialist for PostgreSQL relational schemas, Flyway migrations, Kafka event streaming pipelines, NoSQL document collections, and caching.",
       "robos:role": "Data & Storage Engineer",
       "robos:category": "Data & Storage",
-      "robos:icon": "💾",
+      "robos:icon": "\ud83d\udcbe",
       "robos:systemPrompt": "You are a Data & Storage Engineer in RobOS. You design ACID relational schemas, version-controlled Flyway migrations, Kafka event streaming topics, NoSQL collections, and optimal query indexing.",
       "robos:developmentGuidance": "1. Database Migrations: Every relational schema change must be a versioned, repeatable migration (Flyway V001__...).\n2. Streaming: Design idempotent Kafka consumers and producers with Avro / JSON Schema contracts.\n3. Integrity: Enforce foreign keys, unique constraints, and check constraints at the storage engine level.\n4. Performance: Include indexes for foreign keys and filter columns, and benchmark query execution plans.",
       "robos:planningPrompt": "Break down data persistence requirements into table schemas, foreign key relationships, migration scripts, event topics, and index strategies.",
@@ -7251,6 +7251,798 @@
         }
       ],
       "robos:namespace": "robos.testing"
+    },
+    {
+      "@id": "urn:robos:crpg:item:longsword",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Longsword",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 15,
+      "robos:modelAssetRef": "res://assets/models/weapon_sword_iron.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1,
+      "robos:weight": 3,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d8",
+      "robos:damageType": "slashing",
+      "robos:properties": [
+        "versatile"
+      ]
+    },
+    {
+      "@id": "urn:robos:crpg:item:shortsword",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Shortsword",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 10,
+      "robos:modelAssetRef": "res://assets/models/weapon_sword_iron.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 0.82,
+      "robos:weight": 2,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d6",
+      "robos:damageType": "piercing",
+      "robos:properties": [
+        "finesse",
+        "light"
+      ]
+    },
+    {
+      "@id": "urn:robos:crpg:item:greatsword",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Greatsword",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 50,
+      "robos:modelAssetRef": "res://assets/models/weapon_greatsword.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1.15,
+      "robos:weight": 6,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "2d6",
+      "robos:damageType": "slashing",
+      "robos:properties": [
+        "heavy",
+        "two-handed"
+      ]
+    },
+    {
+      "@id": "urn:robos:crpg:item:sword-hero",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Mythril Hero Sword (Excalibur)",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 2500,
+      "robos:modelAssetRef": "res://assets/models/weapon_sword_hero.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1.05,
+      "robos:weight": 4,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d10+2",
+      "robos:damageType": "slashing",
+      "robos:properties": [
+        "versatile",
+        "magical"
+      ]
+    },
+    {
+      "@id": "urn:robos:crpg:item:dagger",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Dagger",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 2,
+      "robos:modelAssetRef": "res://assets/models/weapon_dagger_rogue.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 0.95,
+      "robos:weight": 1,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d4",
+      "robos:damageType": "piercing",
+      "robos:properties": [
+        "finesse",
+        "light",
+        "thrown"
+      ],
+      "robos:rangeFeet": 20
+    },
+    {
+      "@id": "urn:robos:crpg:item:rapier",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Rapier",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 25,
+      "robos:modelAssetRef": "res://assets/models/weapon_rapier.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1,
+      "robos:weight": 2,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d8",
+      "robos:damageType": "piercing",
+      "robos:properties": [
+        "finesse"
+      ]
+    },
+    {
+      "@id": "urn:robos:crpg:item:mace",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Flanged Mace",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 5,
+      "robos:modelAssetRef": "res://assets/models/weapon_mace_flanged.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1,
+      "robos:weight": 4,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d6",
+      "robos:damageType": "bludgeoning"
+    },
+    {
+      "@id": "urn:robos:crpg:item:warhammer",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Warhammer",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 15,
+      "robos:modelAssetRef": "res://assets/models/weapon_warhammer.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1,
+      "robos:weight": 2,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d8",
+      "robos:damageType": "bludgeoning",
+      "robos:properties": [
+        "versatile"
+      ]
+    },
+    {
+      "@id": "urn:robos:crpg:item:morningstar",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Morningstar",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 15,
+      "robos:modelAssetRef": "res://assets/models/weapon_mace_flanged.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1.05,
+      "robos:weight": 4,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d8",
+      "robos:damageType": "piercing"
+    },
+    {
+      "@id": "urn:robos:crpg:item:battleaxe",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Battleaxe",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 10,
+      "robos:modelAssetRef": "res://assets/models/weapon_battleaxe.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1,
+      "robos:weight": 4,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d8",
+      "robos:damageType": "slashing",
+      "robos:properties": [
+        "versatile"
+      ]
+    },
+    {
+      "@id": "urn:robos:crpg:item:spear",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Spear",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 1,
+      "robos:modelAssetRef": "res://assets/models/weapon_spear.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1,
+      "robos:weight": 3,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d6",
+      "robos:damageType": "piercing",
+      "robos:properties": [
+        "thrown",
+        "versatile"
+      ],
+      "robos:rangeFeet": 20
+    },
+    {
+      "@id": "urn:robos:crpg:item:quarterstaff",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Quarterstaff",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 1,
+      "robos:modelAssetRef": "res://assets/models/weapon_staff_wizard.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 0.95,
+      "robos:weight": 4,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d6",
+      "robos:damageType": "bludgeoning",
+      "robos:properties": [
+        "versatile"
+      ]
+    },
+    {
+      "@id": "urn:robos:crpg:item:club",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Hardwood Club",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 1,
+      "robos:modelAssetRef": "res://assets/models/weapon_club_wood.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1,
+      "robos:weight": 2,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d4",
+      "robos:damageType": "bludgeoning",
+      "robos:properties": [
+        "light"
+      ]
+    },
+    {
+      "@id": "urn:robos:crpg:item:bamboo-pole",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Bamboo Pole",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 1,
+      "robos:modelAssetRef": "res://assets/models/weapon_bamboo_pole.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1,
+      "robos:weight": 2,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d4",
+      "robos:damageType": "bludgeoning",
+      "robos:properties": [
+        "versatile"
+      ]
+    },
+    {
+      "@id": "urn:robos:crpg:item:shortbow",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Shortbow",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 25,
+      "robos:modelAssetRef": "res://assets/models/weapon_bow_recurve.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 0.9,
+      "robos:weight": 2,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d6",
+      "robos:damageType": "piercing",
+      "robos:properties": [
+        "ammunition",
+        "two-handed"
+      ],
+      "robos:rangeFeet": 80
+    },
+    {
+      "@id": "urn:robos:crpg:item:hunting-bow",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Oak Hunting Bow",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 25,
+      "robos:modelAssetRef": "res://assets/models/weapon_bow_recurve.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1,
+      "robos:weight": 2,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d8",
+      "robos:damageType": "piercing",
+      "robos:properties": [
+        "ammunition",
+        "two-handed"
+      ],
+      "robos:rangeFeet": 80
+    },
+    {
+      "@id": "urn:robos:crpg:item:longbow",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Longbow",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 50,
+      "robos:modelAssetRef": "res://assets/models/weapon_bow_recurve.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1.2,
+      "robos:weight": 2,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d8",
+      "robos:damageType": "piercing",
+      "robos:properties": [
+        "ammunition",
+        "heavy",
+        "two-handed"
+      ],
+      "robos:rangeFeet": 150
+    },
+    {
+      "@id": "urn:robos:crpg:item:light-crossbow",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Light Crossbow",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 25,
+      "robos:modelAssetRef": "res://assets/models/weapon_crossbow.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 0.95,
+      "robos:weight": 5,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d8",
+      "robos:damageType": "piercing",
+      "robos:properties": [
+        "ammunition",
+        "loading",
+        "two-handed"
+      ],
+      "robos:rangeFeet": 80
+    },
+    {
+      "@id": "urn:robos:crpg:item:heavy-crossbow",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Heavy Crossbow",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 50,
+      "robos:modelAssetRef": "res://assets/models/weapon_crossbow.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1.15,
+      "robos:weight": 9,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d10",
+      "robos:damageType": "piercing",
+      "robos:properties": [
+        "ammunition",
+        "heavy",
+        "loading",
+        "two-handed"
+      ],
+      "robos:rangeFeet": 100
+    },
+    {
+      "@id": "urn:robos:crpg:item:shield",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Knightly Shield",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "off_hand",
+      "robos:cost": 10,
+      "robos:modelAssetRef": "res://assets/models/armor_shield_heater.glb",
+      "robos:modelSocket": "off_hand",
+      "robos:modelScale": 1,
+      "robos:weight": 6,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 2
+    },
+    {
+      "@id": "urn:robos:crpg:item:shield-round",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Norse Round Shield",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "off_hand",
+      "robos:cost": 8,
+      "robos:modelAssetRef": "res://assets/models/armor_shield_round.glb",
+      "robos:modelSocket": "off_hand",
+      "robos:modelScale": 1,
+      "robos:weight": 5,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 2
+    },
+    {
+      "@id": "urn:robos:crpg:item:shield-tower",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Pavise Tower Shield",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "off_hand",
+      "robos:cost": 35,
+      "robos:modelAssetRef": "res://assets/models/armor_shield_tower.glb",
+      "robos:modelSocket": "off_hand",
+      "robos:modelScale": 1.05,
+      "robos:weight": 15,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 3
+    },
+    {
+      "@id": "urn:robos:crpg:item:helm-knight",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Knight Greathelm",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "head",
+      "robos:cost": 40,
+      "robos:modelAssetRef": "res://assets/models/armor_helm_knight.glb",
+      "robos:modelSocket": "head",
+      "robos:modelScale": 1,
+      "robos:weight": 6,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 1
+    },
+    {
+      "@id": "urn:robos:crpg:item:helm-iron",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Iron Nasal Helm",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "head",
+      "robos:cost": 20,
+      "robos:modelAssetRef": "res://assets/models/armor_helm_iron.glb",
+      "robos:modelSocket": "head",
+      "robos:modelScale": 1,
+      "robos:weight": 4,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 1
+    },
+    {
+      "@id": "urn:robos:crpg:item:plate-armor",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Full Plate Armor",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "chest",
+      "robos:cost": 1500,
+      "robos:modelAssetRef": "res://assets/models/armor_suit_plate.glb",
+      "robos:modelSocket": "chest",
+      "robos:modelScale": 1,
+      "robos:weight": 65,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 18
+    },
+    {
+      "@id": "urn:robos:crpg:item:half-plate",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Half Plate Armor",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "chest",
+      "robos:cost": 750,
+      "robos:modelAssetRef": "res://assets/models/armor_suit_plate.glb",
+      "robos:modelSocket": "chest",
+      "robos:modelScale": 0.95,
+      "robos:weight": 40,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 15
+    },
+    {
+      "@id": "urn:robos:crpg:item:breastplate",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Steel Breastplate",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "chest",
+      "robos:cost": 400,
+      "robos:modelAssetRef": "res://assets/models/armor_suit_plate.glb",
+      "robos:modelSocket": "chest",
+      "robos:modelScale": 0.9,
+      "robos:weight": 20,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 14
+    },
+    {
+      "@id": "urn:robos:crpg:item:splint-armor",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Splint Armor",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "chest",
+      "robos:cost": 200,
+      "robos:modelAssetRef": "res://assets/models/armor_suit_plate.glb",
+      "robos:modelSocket": "chest",
+      "robos:modelScale": 0.98,
+      "robos:weight": 60,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 17
+    },
+    {
+      "@id": "urn:robos:crpg:item:chain-shirt",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Chain Shirt",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "chest",
+      "robos:cost": 50,
+      "robos:modelAssetRef": "res://assets/models/armor_suit_chainmail.glb",
+      "robos:modelSocket": "chest",
+      "robos:modelScale": 0.9,
+      "robos:weight": 20,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 13
+    },
+    {
+      "@id": "urn:robos:crpg:item:ring-mail",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Ring Mail",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "chest",
+      "robos:cost": 30,
+      "robos:modelAssetRef": "res://assets/models/armor_suit_chainmail.glb",
+      "robos:modelSocket": "chest",
+      "robos:modelScale": 0.95,
+      "robos:weight": 40,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 14
+    },
+    {
+      "@id": "urn:robos:crpg:item:scale-mail",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Scale Mail",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "chest",
+      "robos:cost": 50,
+      "robos:modelAssetRef": "res://assets/models/armor_suit_chainmail.glb",
+      "robos:modelSocket": "chest",
+      "robos:modelScale": 0.95,
+      "robos:weight": 45,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 14
+    },
+    {
+      "@id": "urn:robos:crpg:item:leather-armor",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Cured Leather Armor",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "chest",
+      "robos:cost": 10,
+      "robos:modelAssetRef": "res://assets/models/armor_suit_leather.glb",
+      "robos:modelSocket": "chest",
+      "robos:modelScale": 1,
+      "robos:weight": 10,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 11
+    },
+    {
+      "@id": "urn:robos:crpg:item:studded-leather",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Studded Leather Armor",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "chest",
+      "robos:cost": 45,
+      "robos:modelAssetRef": "res://assets/models/armor_suit_leather.glb",
+      "robos:modelSocket": "chest",
+      "robos:modelScale": 1.02,
+      "robos:weight": 13,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 12
+    },
+    {
+      "@id": "urn:robos:crpg:item:padded",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Padded Armor",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "chest",
+      "robos:cost": 5,
+      "robos:modelAssetRef": "res://assets/models/armor_suit_leather.glb",
+      "robos:modelSocket": "chest",
+      "robos:modelScale": 0.95,
+      "robos:weight": 8,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 11
+    },
+    {
+      "@id": "urn:robos:crpg:item:hide-armor",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Hide Armor",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "chest",
+      "robos:cost": 10,
+      "robos:modelAssetRef": "res://assets/models/armor_suit_leather.glb",
+      "robos:modelSocket": "chest",
+      "robos:modelScale": 1.05,
+      "robos:weight": 12,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 12
     }
   ],
   "@graph": [
@@ -9680,7 +10472,7 @@
         "schema:SoftwareApplication"
       ],
       "dcterms:title": "RobOS Documentation",
-      "dcterms:description": "RobOS Living Documentation Hub & Architecture Verifier — discovers documentable KGraph assets, tracks coverage, maintains artifacts, and publishes static sites.",
+      "dcterms:description": "RobOS Living Documentation Hub & Architecture Verifier \u2014 discovers documentable KGraph assets, tracks coverage, maintains artifacts, and publishes static sites.",
       "robos:desktopCategory": "Development",
       "robos:executable": "/usr/local/share/robos/robos-documentation/main.js",
       "robos:hasDocumentation": "urn:robos:documentation:robos-documentation",
@@ -9883,7 +10675,7 @@
       "robos:domainStandard": "https://schema.org/ImageObject",
       "robos:package": "documentation",
       "robos:namespace": "robos.docs",
-      "robos:mermaidText": "flowchart LR\n    subgraph InputTape[\"Input Tape (Σ, Γ)\"]\n        IN[\"Typed Input Contract<br/><code>JSON-LD / SHACL / TypeSpec</code>\"]\n    end\n    subgraph TuringSkill[\"Standardized Turing Skill (M = ⟨Q, Σ, Γ, δ, q₀, B, F⟩)\"]\n        STATE[\"Finite State Register (Q)<br/><i>Hermetic Pre-Conditions</i>\"]\n        DELTA[\"Deterministic Transition Function (δ)<br/><i>Leaf Execution Logic</i>\"]\n        INV[\"State Invariants<br/><i>Cryptographic Sandboxing</i>\"]\n        STATE --> DELTA\n        INV -.-> DELTA\n    end\n    subgraph OutputTape[\"Output Tape & Halting (F)\"]\n        OUT[\"Typed Output Contract<br/><code>q_accept / q_reject</code>\"]\n        HALT[\"Bounded Halting Proof<br/><i>Guaranteed Termination</i>\"]\n        OUT --- HALT\n    end\n    IN --> TuringSkill\n    TuringSkill --> OUT",
+      "robos:mermaidText": "flowchart LR\n    subgraph InputTape[\"Input Tape (\u03a3, \u0393)\"]\n        IN[\"Typed Input Contract<br/><code>JSON-LD / SHACL / TypeSpec</code>\"]\n    end\n    subgraph TuringSkill[\"Standardized Turing Skill (M = \u27e8Q, \u03a3, \u0393, \u03b4, q\u2080, B, F\u27e9)\"]\n        STATE[\"Finite State Register (Q)<br/><i>Hermetic Pre-Conditions</i>\"]\n        DELTA[\"Deterministic Transition Function (\u03b4)<br/><i>Leaf Execution Logic</i>\"]\n        INV[\"State Invariants<br/><i>Cryptographic Sandboxing</i>\"]\n        STATE --> DELTA\n        INV -.-> DELTA\n    end\n    subgraph OutputTape[\"Output Tape & Halting (F)\"]\n        OUT[\"Typed Output Contract<br/><code>q_accept / q_reject</code>\"]\n        HALT[\"Bounded Halting Proof<br/><i>Guaranteed Termination</i>\"]\n        OUT --- HALT\n    end\n    IN --> TuringSkill\n    TuringSkill --> OUT",
       "robos:tooltip": "Standardized Turing Machine-Inspired Skill Architecture"
     },
     {
@@ -12870,7 +13662,7 @@
       "dcterms:description": "Lead systems architect governing C4 component boundaries, KGraph blast-radius diffs, ADRs, SHACL shapes, and modular service decomposition.",
       "robos:role": "Software Architect",
       "robos:category": "Architecture",
-      "robos:icon": "🏛️",
+      "robos:icon": "\ud83c\udfdb\ufe0f",
       "robos:systemPrompt": "You are a Lead Software Architect in RobOS. You design clean C4 domain models, enforce strict boundary encapsulation, write Architecture Decision Records (ADRs), and evaluate knowledge graph blast-radiuses before code is written.",
       "robos:developmentGuidance": "1. Maintain modular package boundaries across .robos/kgraphs/.\n2. Model domain entities with W3C SHACL shapes and OSLC JSON-LD schemas.\n3. Favor loose coupling, explicit service contracts (OpenAPI 3.1/Protobuf), and backward-compatible evolution.\n4. Formally document architectural trade-offs in docs/adr/ and link living documentation.",
       "robos:planningPrompt": "Analyze the high-level vision and break it down into decoupled architectural domains. Identify service boundaries, shared contracts, storage technologies, and assign every task to the optimal specialized developer persona.",
@@ -12894,7 +13686,7 @@
       "dcterms:description": "User interface and client specialist for Electron desktop DOM, React 18, accessible web components, dark navy/cyan theme tokens, and IPC preload security.",
       "robos:role": "Frontend Web Developer",
       "robos:category": "Frontend & UI",
-      "robos:icon": "🎨",
+      "robos:icon": "\ud83c\udfa8",
       "robos:systemPrompt": "You are an expert Frontend Web Developer in RobOS. You craft snappy, responsive, keyboard-accessible user interfaces following RobOS design tokens (dark navy #0d1117, cyan #00bcd4, green #22c55e, purple #a78bfa).",
       "robos:developmentGuidance": "1. Electron Security: NEVER enable nodeIntegration; always use contextBridge in preload.js and ipcRenderer.invoke() / ipcMain.handle().\n2. Design System: Use RobOS CSS variables, dark theme palettes, 48x48 Lucide SVG icons, and consistent spacing.\n3. Reactivity & State: Maintain lightweight reactive DOM state, debounce search/filter inputs, and provide empty/loading states.\n4. Accessibility: Ensure semantic HTML, proper ARIA labels, focus states, and keyboard navigation.",
       "robos:planningPrompt": "Break down the user interface requirements into modular views, client components, state stores, IPC messaging channels, and accessible interaction states.",
@@ -12918,7 +13710,7 @@
       "dcterms:description": "Game systems developer specializing in Godot 4, GDScript, isometric tactical cRPG mechanics, D&D 5e SRD rules, Flare RPG sprite integration, and scenario engines.",
       "robos:role": "Game Developer",
       "robos:category": "Game Systems",
-      "robos:icon": "⚔️",
+      "robos:icon": "\u2694\ufe0f",
       "robos:systemPrompt": "You are an expert Tactical Game Developer in RobOS. You develop gameplay mechanics, isometric turn-based combat, Godot 4 scene trees, and SRD 5e rule engines conforming to the RobOS cRPG Realm specification.",
       "robos:developmentGuidance": "1. Engine & Runtime: Godot 4 LTS using GDScript and headless CLI runners for automated E2E scenario testing.\n2. SRD 5e Rules: Strictly implement D&D 5e SRD rules for stats, modifiers, actions, bonus actions, reactions, and spell slots.\n3. Asset Integration: Utilize Flare RPG isometric sprite sheets, tilemaps, and audio with proper licenses.\n4. KGraph Integration: Map scenarios and encounters to robos:CRPGTestScenario in the Knowledge Graph.",
       "robos:planningPrompt": "Break down game features into Godot scene trees, rule calculations, tactical action states, sprite animations, and headless scenario test assertions.",
@@ -12942,7 +13734,7 @@
       "dcterms:description": "Microservice and API engineer specializing in Java 21 / Spring Boot 3, Node.js / Fastify, Go, OpenAPI 3.1 contracts, gRPC Protobuf, zero-leak secrets, and contract tests.",
       "robos:role": "Backend Systems Developer",
       "robos:category": "Backend & Services",
-      "robos:icon": "⚙️",
+      "robos:icon": "\u2699\ufe0f",
       "robos:systemPrompt": "You are a Backend Systems Developer in RobOS. You build robust, scalable microservices with strict OpenAPI 3.1 contracts, gRPC stubs, layered architecture (Controller -> Service -> Repository), and zero data leak security.",
       "robos:developmentGuidance": "1. Frameworks: Java 21 with Spring Boot 3, Node.js with Fastify / Express, or Go 1.22.\n2. Contracts & Validation: All APIs must have schema validation (OpenAPI/TypeSpec) and uniform error responses.\n3. Security: Never log passwords, tokens, or PII. Use Linux pass store or env vars for credentials.\n4. Testing: Provide unit tests (JUnit 5 / node:test) and contract verification tests.",
       "robos:planningPrompt": "Break down backend requirements into REST/gRPC endpoints, service layer business logic, data models, auth middleware, and validation rules.",
@@ -12966,7 +13758,7 @@
       "dcterms:description": "Data architect and storage specialist for PostgreSQL relational schemas, Flyway migrations, Kafka event streaming pipelines, NoSQL document collections, and caching.",
       "robos:role": "Data & Storage Engineer",
       "robos:category": "Data & Storage",
-      "robos:icon": "💾",
+      "robos:icon": "\ud83d\udcbe",
       "robos:systemPrompt": "You are a Data & Storage Engineer in RobOS. You design ACID relational schemas, version-controlled Flyway migrations, Kafka event streaming topics, NoSQL collections, and optimal query indexing.",
       "robos:developmentGuidance": "1. Database Migrations: Every relational schema change must be a versioned, repeatable migration (Flyway V001__...).\n2. Streaming: Design idempotent Kafka consumers and producers with Avro / JSON Schema contracts.\n3. Integrity: Enforce foreign keys, unique constraints, and check constraints at the storage engine level.\n4. Performance: Include indexes for foreign keys and filter columns, and benchmark query execution plans.",
       "robos:planningPrompt": "Break down data persistence requirements into table schemas, foreign key relationships, migration scripts, event topics, and index strategies.",

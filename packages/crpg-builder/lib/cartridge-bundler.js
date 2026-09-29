@@ -6,6 +6,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { resolveModelForItem } = require('./crpg-equipment-3d-catalog');
 
 class CartridgeBundler {
   constructor(baseDir = null) {
@@ -142,7 +143,13 @@ class CartridgeBundler {
     let tint = itemData['robos:modelTint'] || itemData.modelTint || itemData.model3dTint || '';
 
     if (!modelRef || !modelRef.includes('.glb')) {
-      if (s.includes('hero') || title.includes('hero') || title.includes('excalibur')) {
+      const match = resolveModelForItem({ id: slug, title, ...itemData });
+      if (match) {
+        modelRef = match.model3dAsset;
+        socket = match.model3dSocket || socket;
+        scale = match.model3dScale ?? scale;
+        tint = match.model3dTint || tint;
+      } else if (s.includes('hero') || title.includes('hero') || title.includes('excalibur')) {
         modelRef = 'res://assets/models/weapon_sword_hero.glb';
         socket = 'main_hand';
       } else if (s.includes('copper-sword') || s.includes('iron-sword') || title.includes('sword') || title.includes('blade')) {

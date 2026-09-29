@@ -592,7 +592,10 @@
       "robos:rewards": {
         "experience": 500,
         "gold": 120,
-        "items": ["service-sword", "potion-healing"]
+        "items": [
+          "service-sword",
+          "potion-healing"
+        ]
       },
       "robos:package": "crpg",
       "robos:namespace": "robos.crpg"
@@ -639,7 +642,9 @@
       "robos:rewards": {
         "experience": 150,
         "gold": 50,
-        "items": ["potion-healing"]
+        "items": [
+          "potion-healing"
+        ]
       },
       "robos:package": "crpg",
       "robos:namespace": "robos.crpg"
@@ -675,7 +680,9 @@
       "robos:rewards": {
         "experience": 250,
         "gold": 75,
-        "reputation": { "Harpers": 15 }
+        "reputation": {
+          "Harpers": 15
+        }
       },
       "robos:package": "crpg",
       "robos:namespace": "robos.crpg"
@@ -1514,6 +1521,798 @@
       },
       "robos:package": "crpg",
       "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:item:longsword",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Longsword",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 15,
+      "robos:modelAssetRef": "res://assets/models/weapon_sword_iron.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1,
+      "robos:weight": 3,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d8",
+      "robos:damageType": "slashing",
+      "robos:properties": [
+        "versatile"
+      ]
+    },
+    {
+      "@id": "urn:robos:crpg:item:shortsword",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Shortsword",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 10,
+      "robos:modelAssetRef": "res://assets/models/weapon_sword_iron.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 0.82,
+      "robos:weight": 2,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d6",
+      "robos:damageType": "piercing",
+      "robos:properties": [
+        "finesse",
+        "light"
+      ]
+    },
+    {
+      "@id": "urn:robos:crpg:item:greatsword",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Greatsword",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 50,
+      "robos:modelAssetRef": "res://assets/models/weapon_greatsword.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1.15,
+      "robos:weight": 6,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "2d6",
+      "robos:damageType": "slashing",
+      "robos:properties": [
+        "heavy",
+        "two-handed"
+      ]
+    },
+    {
+      "@id": "urn:robos:crpg:item:sword-hero",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Mythril Hero Sword (Excalibur)",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 2500,
+      "robos:modelAssetRef": "res://assets/models/weapon_sword_hero.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1.05,
+      "robos:weight": 4,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d10+2",
+      "robos:damageType": "slashing",
+      "robos:properties": [
+        "versatile",
+        "magical"
+      ]
+    },
+    {
+      "@id": "urn:robos:crpg:item:dagger",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Dagger",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 2,
+      "robos:modelAssetRef": "res://assets/models/weapon_dagger_rogue.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 0.95,
+      "robos:weight": 1,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d4",
+      "robos:damageType": "piercing",
+      "robos:properties": [
+        "finesse",
+        "light",
+        "thrown"
+      ],
+      "robos:rangeFeet": 20
+    },
+    {
+      "@id": "urn:robos:crpg:item:rapier",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Rapier",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 25,
+      "robos:modelAssetRef": "res://assets/models/weapon_rapier.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1,
+      "robos:weight": 2,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d8",
+      "robos:damageType": "piercing",
+      "robos:properties": [
+        "finesse"
+      ]
+    },
+    {
+      "@id": "urn:robos:crpg:item:mace",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Flanged Mace",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 5,
+      "robos:modelAssetRef": "res://assets/models/weapon_mace_flanged.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1,
+      "robos:weight": 4,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d6",
+      "robos:damageType": "bludgeoning"
+    },
+    {
+      "@id": "urn:robos:crpg:item:warhammer",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Warhammer",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 15,
+      "robos:modelAssetRef": "res://assets/models/weapon_warhammer.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1,
+      "robos:weight": 2,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d8",
+      "robos:damageType": "bludgeoning",
+      "robos:properties": [
+        "versatile"
+      ]
+    },
+    {
+      "@id": "urn:robos:crpg:item:morningstar",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Morningstar",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 15,
+      "robos:modelAssetRef": "res://assets/models/weapon_mace_flanged.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1.05,
+      "robos:weight": 4,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d8",
+      "robos:damageType": "piercing"
+    },
+    {
+      "@id": "urn:robos:crpg:item:battleaxe",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Battleaxe",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 10,
+      "robos:modelAssetRef": "res://assets/models/weapon_battleaxe.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1,
+      "robos:weight": 4,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d8",
+      "robos:damageType": "slashing",
+      "robos:properties": [
+        "versatile"
+      ]
+    },
+    {
+      "@id": "urn:robos:crpg:item:spear",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Spear",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 1,
+      "robos:modelAssetRef": "res://assets/models/weapon_spear.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1,
+      "robos:weight": 3,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d6",
+      "robos:damageType": "piercing",
+      "robos:properties": [
+        "thrown",
+        "versatile"
+      ],
+      "robos:rangeFeet": 20
+    },
+    {
+      "@id": "urn:robos:crpg:item:quarterstaff",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Quarterstaff",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 1,
+      "robos:modelAssetRef": "res://assets/models/weapon_staff_wizard.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 0.95,
+      "robos:weight": 4,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d6",
+      "robos:damageType": "bludgeoning",
+      "robos:properties": [
+        "versatile"
+      ]
+    },
+    {
+      "@id": "urn:robos:crpg:item:club",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Hardwood Club",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 1,
+      "robos:modelAssetRef": "res://assets/models/weapon_club_wood.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1,
+      "robos:weight": 2,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d4",
+      "robos:damageType": "bludgeoning",
+      "robos:properties": [
+        "light"
+      ]
+    },
+    {
+      "@id": "urn:robos:crpg:item:bamboo-pole",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Bamboo Pole",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 1,
+      "robos:modelAssetRef": "res://assets/models/weapon_bamboo_pole.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1,
+      "robos:weight": 2,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d4",
+      "robos:damageType": "bludgeoning",
+      "robos:properties": [
+        "versatile"
+      ]
+    },
+    {
+      "@id": "urn:robos:crpg:item:shortbow",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Shortbow",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 25,
+      "robos:modelAssetRef": "res://assets/models/weapon_bow_recurve.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 0.9,
+      "robos:weight": 2,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d6",
+      "robos:damageType": "piercing",
+      "robos:properties": [
+        "ammunition",
+        "two-handed"
+      ],
+      "robos:rangeFeet": 80
+    },
+    {
+      "@id": "urn:robos:crpg:item:hunting-bow",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Oak Hunting Bow",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 25,
+      "robos:modelAssetRef": "res://assets/models/weapon_bow_recurve.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1,
+      "robos:weight": 2,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d8",
+      "robos:damageType": "piercing",
+      "robos:properties": [
+        "ammunition",
+        "two-handed"
+      ],
+      "robos:rangeFeet": 80
+    },
+    {
+      "@id": "urn:robos:crpg:item:longbow",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Longbow",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 50,
+      "robos:modelAssetRef": "res://assets/models/weapon_bow_recurve.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1.2,
+      "robos:weight": 2,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d8",
+      "robos:damageType": "piercing",
+      "robos:properties": [
+        "ammunition",
+        "heavy",
+        "two-handed"
+      ],
+      "robos:rangeFeet": 150
+    },
+    {
+      "@id": "urn:robos:crpg:item:light-crossbow",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Light Crossbow",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 25,
+      "robos:modelAssetRef": "res://assets/models/weapon_crossbow.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 0.95,
+      "robos:weight": 5,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d8",
+      "robos:damageType": "piercing",
+      "robos:properties": [
+        "ammunition",
+        "loading",
+        "two-handed"
+      ],
+      "robos:rangeFeet": 80
+    },
+    {
+      "@id": "urn:robos:crpg:item:heavy-crossbow",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Heavy Crossbow",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 50,
+      "robos:modelAssetRef": "res://assets/models/weapon_crossbow.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1.15,
+      "robos:weight": 9,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d10",
+      "robos:damageType": "piercing",
+      "robos:properties": [
+        "ammunition",
+        "heavy",
+        "loading",
+        "two-handed"
+      ],
+      "robos:rangeFeet": 100
+    },
+    {
+      "@id": "urn:robos:crpg:item:shield",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Knightly Shield",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "off_hand",
+      "robos:cost": 10,
+      "robos:modelAssetRef": "res://assets/models/armor_shield_heater.glb",
+      "robos:modelSocket": "off_hand",
+      "robos:modelScale": 1,
+      "robos:weight": 6,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 2
+    },
+    {
+      "@id": "urn:robos:crpg:item:shield-round",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Norse Round Shield",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "off_hand",
+      "robos:cost": 8,
+      "robos:modelAssetRef": "res://assets/models/armor_shield_round.glb",
+      "robos:modelSocket": "off_hand",
+      "robos:modelScale": 1,
+      "robos:weight": 5,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 2
+    },
+    {
+      "@id": "urn:robos:crpg:item:shield-tower",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Pavise Tower Shield",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "off_hand",
+      "robos:cost": 35,
+      "robos:modelAssetRef": "res://assets/models/armor_shield_tower.glb",
+      "robos:modelSocket": "off_hand",
+      "robos:modelScale": 1.05,
+      "robos:weight": 15,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 3
+    },
+    {
+      "@id": "urn:robos:crpg:item:helm-knight",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Knight Greathelm",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "head",
+      "robos:cost": 40,
+      "robos:modelAssetRef": "res://assets/models/armor_helm_knight.glb",
+      "robos:modelSocket": "head",
+      "robos:modelScale": 1,
+      "robos:weight": 6,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 1
+    },
+    {
+      "@id": "urn:robos:crpg:item:helm-iron",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Iron Nasal Helm",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "head",
+      "robos:cost": 20,
+      "robos:modelAssetRef": "res://assets/models/armor_helm_iron.glb",
+      "robos:modelSocket": "head",
+      "robos:modelScale": 1,
+      "robos:weight": 4,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 1
+    },
+    {
+      "@id": "urn:robos:crpg:item:plate-armor",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Full Plate Armor",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "chest",
+      "robos:cost": 1500,
+      "robos:modelAssetRef": "res://assets/models/armor_suit_plate.glb",
+      "robos:modelSocket": "chest",
+      "robos:modelScale": 1,
+      "robos:weight": 65,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 18
+    },
+    {
+      "@id": "urn:robos:crpg:item:half-plate",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Half Plate Armor",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "chest",
+      "robos:cost": 750,
+      "robos:modelAssetRef": "res://assets/models/armor_suit_plate.glb",
+      "robos:modelSocket": "chest",
+      "robos:modelScale": 0.95,
+      "robos:weight": 40,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 15
+    },
+    {
+      "@id": "urn:robos:crpg:item:breastplate",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Steel Breastplate",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "chest",
+      "robos:cost": 400,
+      "robos:modelAssetRef": "res://assets/models/armor_suit_plate.glb",
+      "robos:modelSocket": "chest",
+      "robos:modelScale": 0.9,
+      "robos:weight": 20,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 14
+    },
+    {
+      "@id": "urn:robos:crpg:item:splint-armor",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Splint Armor",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "chest",
+      "robos:cost": 200,
+      "robos:modelAssetRef": "res://assets/models/armor_suit_plate.glb",
+      "robos:modelSocket": "chest",
+      "robos:modelScale": 0.98,
+      "robos:weight": 60,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 17
+    },
+    {
+      "@id": "urn:robos:crpg:item:chain-shirt",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Chain Shirt",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "chest",
+      "robos:cost": 50,
+      "robos:modelAssetRef": "res://assets/models/armor_suit_chainmail.glb",
+      "robos:modelSocket": "chest",
+      "robos:modelScale": 0.9,
+      "robos:weight": 20,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 13
+    },
+    {
+      "@id": "urn:robos:crpg:item:ring-mail",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Ring Mail",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "chest",
+      "robos:cost": 30,
+      "robos:modelAssetRef": "res://assets/models/armor_suit_chainmail.glb",
+      "robos:modelSocket": "chest",
+      "robos:modelScale": 0.95,
+      "robos:weight": 40,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 14
+    },
+    {
+      "@id": "urn:robos:crpg:item:scale-mail",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Scale Mail",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "chest",
+      "robos:cost": 50,
+      "robos:modelAssetRef": "res://assets/models/armor_suit_chainmail.glb",
+      "robos:modelSocket": "chest",
+      "robos:modelScale": 0.95,
+      "robos:weight": 45,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 14
+    },
+    {
+      "@id": "urn:robos:crpg:item:leather-armor",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Cured Leather Armor",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "chest",
+      "robos:cost": 10,
+      "robos:modelAssetRef": "res://assets/models/armor_suit_leather.glb",
+      "robos:modelSocket": "chest",
+      "robos:modelScale": 1,
+      "robos:weight": 10,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 11
+    },
+    {
+      "@id": "urn:robos:crpg:item:studded-leather",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Studded Leather Armor",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "chest",
+      "robos:cost": 45,
+      "robos:modelAssetRef": "res://assets/models/armor_suit_leather.glb",
+      "robos:modelSocket": "chest",
+      "robos:modelScale": 1.02,
+      "robos:weight": 13,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 12
+    },
+    {
+      "@id": "urn:robos:crpg:item:padded",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Padded Armor",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "chest",
+      "robos:cost": 5,
+      "robos:modelAssetRef": "res://assets/models/armor_suit_leather.glb",
+      "robos:modelSocket": "chest",
+      "robos:modelScale": 0.95,
+      "robos:weight": 8,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 11
+    },
+    {
+      "@id": "urn:robos:crpg:item:hide-armor",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Hide Armor",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "chest",
+      "robos:cost": 10,
+      "robos:modelAssetRef": "res://assets/models/armor_suit_leather.glb",
+      "robos:modelSocket": "chest",
+      "robos:modelScale": 1.05,
+      "robos:weight": 12,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 12
     }
   ],
   "@graph": [
