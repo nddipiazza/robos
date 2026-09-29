@@ -1157,7 +1157,7 @@ func _run_dragonwarrior_auto_play(gen: int) -> void:
 			_set_auto_play_status("Descending Stairs to Charlock Castle...")
 			await _auto_walk_to(Vector2(28 * 48 + 96, 25 * 48 + 96), gen)
 			if not _is_auto_valid(gen): return
-			_on_passage_entered("stairs-down")
+			CartridgeManager.transition_to_map("charlock-castle", Vector2(20, 25))
 			return
 
 		# If dragonlord was defeated and princess was rescued, conclude campaign!
