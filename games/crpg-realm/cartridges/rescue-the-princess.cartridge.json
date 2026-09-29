@@ -23,7 +23,7 @@
       "y": 20
     },
     "partyLimit": 1,
-    "createdDate": "2026-09-29T14:09:38.999Z"
+    "createdDate": "2026-09-29T16:26:13.242Z"
   },
   "campaign": {
     "@context": {
@@ -146,7 +146,19 @@
         "equipped": {
           "main_hand": "clothes",
           "body": "leather-armor"
-        }
+        },
+        "robos:renderMode": "3d_model",
+        "renderMode": "3d_model",
+        "robos:modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+        "modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+        "robos:modelType": "knight",
+        "modelType": "knight",
+        "robos:modelScale": 1,
+        "modelScale": 1,
+        "robos:modelTint": "#ffffff",
+        "modelTint": "#ffffff",
+        "robos:animationStance": "tabletop_hop",
+        "animationStance": "tabletop_hop"
       }
     ],
     "robos:storyFlow": {
@@ -1049,6 +1061,16 @@
       "level": 1,
       "robos:portrait": "🛡️",
       "portrait": "🛡️",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "robos:modelType": "knight",
+      "modelType": "knight",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop",
       "robos:alignment": "Lawful Good",
       "alignment": "Lawful Good",
       "robos:hpMax": 16,
@@ -1080,7 +1102,9 @@
       "robos:equipped": {
         "main_hand": "clothes",
         "body": "leather-armor"
-      }
+      },
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff"
     },
     "npc-king-alden": {
       "@context": {
@@ -1102,6 +1126,16 @@
       "characterType": "npc",
       "robos:portrait": "👑",
       "portrait": "👑",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/character_king_pawn.glb",
+      "modelAssetRef": "res://assets/models/character_king_pawn.glb",
+      "robos:modelType": "king",
+      "modelType": "king",
+      "robos:modelScale": 1.05,
+      "modelScale": 1.05,
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop",
       "robos:alignment": "Lawful Good",
       "alignment": "Lawful Good",
       "robos:backstory": "Ruler of the realm, grief-stricken by the kidnapping of his daughter Princess Jennifer.",
@@ -1127,7 +1161,9 @@
         "Sir Caleb! Darkness enshrouds our court. The sinister Dark Lord Malakor hath abducted Princess Jennifer into his subterranean lair!",
         "Thou must venture forth, slay the Dark Lord, and bring my daughter home! But mortal iron cannot pierce his shadow armor.",
         "Go first to the Dragonclaw Forge in the castle courtyard and speak with Master Torvald. Claim the Hero's Sword, then rid our realm of this evil!"
-      ]
+      ],
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff"
     },
     "npc-blacksmith-torvald": {
       "@context": {
@@ -1149,6 +1185,16 @@
       "characterType": "npc",
       "robos:portrait": "⚒️",
       "portrait": "⚒️",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "robos:modelType": "knight",
+      "modelType": "knight",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop",
       "robos:alignment": "Neutral Good",
       "alignment": "Neutral Good",
       "robos:backstory": "Legendary blacksmith of the Dragonclaw Forge, keeper of ancient rune weapons.",
@@ -1174,7 +1220,9 @@
         "Hail, Sir Caleb! The King's messenger informed me of the dire news. You seek the Hero's Sword from the Dragonclaw Forge.",
         "The blade is forged and imbued with dragonfire runes, but I cannot place it in hands that tremble! Prove your battle mettle against my astral creation!",
         "Behold, the Projection Goblin! Strike it down, and the Hero's Sword is yours!"
-      ]
+      ],
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff"
     },
     "creature-projection-goblin": {
       "@context": {
@@ -1199,6 +1247,16 @@
       "level": 1,
       "robos:portrait": "👺",
       "portrait": "👺",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/monster_goblin_pawn.glb",
+      "modelAssetRef": "res://assets/models/monster_goblin_pawn.glb",
+      "robos:modelType": "goblin",
+      "modelType": "goblin",
+      "robos:modelScale": 0.9,
+      "modelScale": 0.9,
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop",
       "robos:alignment": "Chaotic Evil",
       "alignment": "Chaotic Evil",
       "robos:hpMax": 6,
@@ -1230,7 +1288,9 @@
       "robos:npcRole": "training_creature",
       "role": "training_creature",
       "robos:location": "main-castle",
-      "location": "main-castle"
+      "location": "main-castle",
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff"
     },
     "boss-dark-lord-malakor": {
       "@context": {
@@ -1255,6 +1315,16 @@
       "level": 3,
       "robos:portrait": "😈",
       "portrait": "😈",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/monster_dragon_pawn.glb",
+      "modelAssetRef": "res://assets/models/monster_dragon_pawn.glb",
+      "robos:modelType": "dragon",
+      "modelType": "dragon",
+      "robos:modelScale": 1.4,
+      "modelScale": 1.4,
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop",
       "robos:alignment": "Chaotic Evil",
       "alignment": "Chaotic Evil",
       "robos:hpMax": 35,
@@ -1294,7 +1364,9 @@
       "dialogue": [
         "You dare invade my sanctum, worm? The Princess is mine, and your kingdom shall burn to ashes!",
         "No! The Dragonclaw runes... the Hero's Sword pierces my shadow ward! Aaaaargh!"
-      ]
+      ],
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff"
     },
     "npc-princess-jennifer": {
       "@context": {
@@ -1316,6 +1388,16 @@
       "characterType": "npc",
       "robos:portrait": "👸",
       "portrait": "👸",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/character_princess_pawn.glb",
+      "modelAssetRef": "res://assets/models/character_princess_pawn.glb",
+      "robos:modelType": "princess",
+      "modelType": "princess",
+      "robos:modelScale": 0.95,
+      "modelScale": 0.95,
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop",
       "robos:alignment": "Lawful Good",
       "alignment": "Lawful Good",
       "robos:backstory": "Beloved princess of the realm abducted by Dark Lord Malakor and rescued by Sir Caleb.",
@@ -1333,7 +1415,9 @@
       "dialogue": [
         "Oh, Sir Caleb! You defeated Malakor! You shattered my cage! Please, lead me home to my father King Alden in the castle throne room!",
         "Father! Sir Caleb hath vanquished the Dark Lord and brought me safely home!"
-      ]
+      ],
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff"
     }
   },
   "items": {
@@ -1908,7 +1992,19 @@
       "robos:behavior": "boss_phase",
       "behavior": "boss_phase",
       "dcterms:description": "Dread sorcerer-warlord threatening the kingdom with abyssal dark magic.",
-      "description": "Dread sorcerer-warlord threatening the kingdom with abyssal dark magic."
+      "description": "Dread sorcerer-warlord threatening the kingdom with abyssal dark magic.",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/monster_dragon_pawn.glb",
+      "modelAssetRef": "res://assets/models/monster_dragon_pawn.glb",
+      "robos:modelType": "dragon",
+      "modelType": "dragon",
+      "robos:modelScale": 1.45,
+      "modelScale": 1.45,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
     },
     "corrupted-hound": {
       "@context": {
@@ -1986,7 +2082,19 @@
       "robos:behavior": "aggressive",
       "behavior": "aggressive",
       "dcterms:description": "Savage shadow wolf warped by abyssal miasma, hunting in coordinated packs.",
-      "description": "Savage shadow wolf warped by abyssal miasma, hunting in coordinated packs."
+      "description": "Savage shadow wolf warped by abyssal miasma, hunting in coordinated packs.",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "robos:modelType": "knight",
+      "modelType": "knight",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
     },
     "feral-guard-skirmisher": {
       "@context": {
@@ -2064,7 +2172,19 @@
       "robos:behavior": "defensive",
       "behavior": "defensive",
       "dcterms:description": "Fallen garrison guards resurrected by necromantic curse, wielding rusty spears.",
-      "description": "Fallen garrison guards resurrected by necromantic curse, wielding rusty spears."
+      "description": "Fallen garrison guards resurrected by necromantic curse, wielding rusty spears.",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "robos:modelType": "knight",
+      "modelType": "knight",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
     },
     "goblin-raider": {
       "@context": {
@@ -2142,7 +2262,19 @@
       "robos:behavior": "flanker",
       "behavior": "flanker",
       "dcterms:description": "Cunning mountain ambusher armed with a notched scimitar.",
-      "description": "Cunning mountain ambusher armed with a notched scimitar."
+      "description": "Cunning mountain ambusher armed with a notched scimitar.",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/monster_goblin_pawn.glb",
+      "modelAssetRef": "res://assets/models/monster_goblin_pawn.glb",
+      "robos:modelType": "goblin",
+      "modelType": "goblin",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
     },
     "minotaur-marauder": {
       "@context": {
@@ -2234,7 +2366,19 @@
       "robos:behavior": "aggressive",
       "behavior": "aggressive",
       "dcterms:description": "Towering beast of the subterranean maze who charges trespassers.",
-      "description": "Towering beast of the subterranean maze who charges trespassers."
+      "description": "Towering beast of the subterranean maze who charges trespassers.",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "robos:modelType": "knight",
+      "modelType": "knight",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
     },
     "red-dragon-wyrm": {
       "@context": {
@@ -2326,7 +2470,19 @@
       "robos:behavior": "boss_phase",
       "behavior": "boss_phase",
       "dcterms:description": "Ancient wyrm that hoards stolen artifacts of light within deep cavern vaults.",
-      "description": "Ancient wyrm that hoards stolen artifacts of light within deep cavern vaults."
+      "description": "Ancient wyrm that hoards stolen artifacts of light within deep cavern vaults.",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/monster_dragon_pawn.glb",
+      "modelAssetRef": "res://assets/models/monster_dragon_pawn.glb",
+      "robos:modelType": "dragon",
+      "modelType": "dragon",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
     },
     "skeleton-archer": {
       "@context": {
@@ -2404,7 +2560,19 @@
       "robos:behavior": "ranged_kiter",
       "behavior": "ranged_kiter",
       "dcterms:description": "Skeletal sharpshooter guarding dungeon parapets.",
-      "description": "Skeletal sharpshooter guarding dungeon parapets."
+      "description": "Skeletal sharpshooter guarding dungeon parapets.",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "robos:modelType": "knight",
+      "modelType": "knight",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
     },
     "creature-projection-goblin": {
       "@context": {
@@ -2429,6 +2597,16 @@
       "level": 1,
       "robos:portrait": "👺",
       "portrait": "👺",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/monster_goblin_pawn.glb",
+      "modelAssetRef": "res://assets/models/monster_goblin_pawn.glb",
+      "robos:modelType": "goblin",
+      "modelType": "goblin",
+      "robos:modelScale": 0.9,
+      "modelScale": 0.9,
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop",
       "robos:alignment": "Chaotic Evil",
       "alignment": "Chaotic Evil",
       "robos:hpMax": 6,
@@ -2460,7 +2638,9 @@
       "robos:npcRole": "training_creature",
       "role": "training_creature",
       "robos:location": "main-castle",
-      "location": "main-castle"
+      "location": "main-castle",
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff"
     },
     "boss-dark-lord-malakor": {
       "@context": {
@@ -2485,6 +2665,16 @@
       "level": 3,
       "robos:portrait": "😈",
       "portrait": "😈",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/monster_dragon_pawn.glb",
+      "modelAssetRef": "res://assets/models/monster_dragon_pawn.glb",
+      "robos:modelType": "dragon",
+      "modelType": "dragon",
+      "robos:modelScale": 1.4,
+      "modelScale": 1.4,
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop",
       "robos:alignment": "Chaotic Evil",
       "alignment": "Chaotic Evil",
       "robos:hpMax": 35,
@@ -2524,7 +2714,9 @@
       "dialogue": [
         "You dare invade my sanctum, worm? The Princess is mine, and your kingdom shall burn to ashes!",
         "No! The Dragonclaw runes... the Hero's Sword pierces my shadow ward! Aaaaargh!"
-      ]
+      ],
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff"
     }
   },
   "quests": [

@@ -1527,6 +1527,29 @@ async function handleRenderCampaignAsGame() {
   }
 }
 
+async function handleBundleCurrentCartridge() {
+  if (!state.activeCampaignSlug) {
+    alert('Please select an active campaign first.');
+    return;
+  }
+  await saveCurrentCampaign();
+  const slug = state.activeCampaignSlug;
+  setStatus(`📼 Compiling campaign '${slug}' into Player Cartridge...`);
+  try {
+    const res = await window.robos.bundleCartridge(slug);
+    if (res.success) {
+      setStatus(`📼 Player Cartridge Generated! ${res.cartridgeId}.cartridge.json (Maps: ${res.header.mapCount}, Chars: ${res.header.characterCount}, 3D Models: Active)`);
+      alert(`Player Cartridge successfully generated with 3D Models at:\n${res.targetPath}`);
+    } else {
+      setStatus(`❌ Failed to bundle cartridge: ${res.error}`);
+      alert(`Failed to bundle cartridge: ${res.error}`);
+    }
+  } catch (err) {
+    console.error('Bundle error:', err);
+    setStatus(`❌ Bundle error: ${err.message}`);
+  }
+}
+
 async function deleteCurrentCampaign() {
   if (!state.activeCampaignSlug) return;
   if (!confirm(`Are you sure you want to delete campaign '${state.activeCampaignSlug}'?`)) return;
@@ -5090,6 +5113,20 @@ async function loadCharacterSheet(slug) {
       if (tokenInput) tokenInput.value = tokenAsset;
       document.getElementById('hero-alignment').value = data['robos:alignment'] || data.alignment || 'Neutral Good';
 
+      // 3D Model Configuration
+      const renderModeEl = document.getElementById('char-render-mode');
+      if (renderModeEl) renderModeEl.value = data['robos:renderMode'] || data.renderMode || '3d_model';
+      const modelPresetEl = document.getElementById('char-model-preset');
+      if (modelPresetEl) modelPresetEl.value = data['robos:modelType'] || data.modelType || (isNpc ? (slug.includes('king') ? 'king' : (slug.includes('princess') ? 'princess' : 'knight')) : 'knight');
+      const modelAssetEl = document.getElementById('char-model-asset');
+      if (modelAssetEl) modelAssetEl.value = data['robos:modelAssetRef'] || data.modelAssetRef || '';
+      const modelScaleEl = document.getElementById('char-model-scale');
+      if (modelScaleEl) modelScaleEl.value = data['robos:modelScale'] ?? data.modelScale ?? 1.0;
+      const modelTintEl = document.getElementById('char-model-tint');
+      if (modelTintEl) modelTintEl.value = data['robos:modelTint'] || data.modelTint || '#ffffff';
+      const animStanceEl = document.getElementById('char-anim-stance');
+      if (animStanceEl) animStanceEl.value = data['robos:animationStance'] || data.animationStance || 'tabletop_hop';
+
       // NPC details
       document.getElementById('npc-role').value = data['robos:npcRole'] || data.role || 'villager';
       document.getElementById('npc-interaction').value = data['robos:interactionType'] || data.interactionType || 'talk';
@@ -5205,6 +5242,18 @@ async function saveCurrentCharacter() {
     portraitAssetRef: portrait.startsWith('assets/') ? portrait : '',
     'robos:tokenAssetRef': tokenAsset,
     tokenAssetRef: tokenAsset,
+    'robos:renderMode': document.getElementById('char-render-mode')?.value || '3d_model',
+    renderMode: document.getElementById('char-render-mode')?.value || '3d_model',
+    'robos:modelType': document.getElementById('char-model-preset')?.value || 'knight',
+    modelType: document.getElementById('char-model-preset')?.value || 'knight',
+    'robos:modelAssetRef': document.getElementById('char-model-asset')?.value.trim() || '',
+    modelAssetRef: document.getElementById('char-model-asset')?.value.trim() || '',
+    'robos:modelScale': Number(document.getElementById('char-model-scale')?.value || 1.0),
+    modelScale: Number(document.getElementById('char-model-scale')?.value || 1.0),
+    'robos:modelTint': document.getElementById('char-model-tint')?.value || '#ffffff',
+    modelTint: document.getElementById('char-model-tint')?.value || '#ffffff',
+    'robos:animationStance': document.getElementById('char-anim-stance')?.value || 'tabletop_hop',
+    animationStance: document.getElementById('char-anim-stance')?.value || 'tabletop_hop',
     'robos:alignment': alignment,
     alignment,
     'robos:backstory': backstory,
@@ -8251,6 +8300,13 @@ async function loadEnemyForm(slug) {
     state.activeEnemySlug = slug;
     state.activeEnemyData = en;
 
+    const isBoss = Boolean(en['robos:isBoss'] ?? en.isBoss ?? slug.includes('boss'));
+    const name = en['dcterms:title'] || en['schema:name'] || en.title || en.name || slug;
+    const icon = en['robos:portrait'] || en.portrait || (isBoss ? '🐉' : '👺');
+    const type = en['robos:creatureType'] || en.creatureType || 'monstrosity';
+    const cr = en['robos:challengeRating'] || en.challengeRating || '1';
+    const alignment = en['robos:alignment'] || en.alignment || 'Neutral Evil';
+
     const portrait = en['robos:portraitAssetRef'] || en.portraitAssetRef || en['robos:portrait'] || en.portrait || icon;
     const tokenAsset = en['robos:tokenAssetRef'] || en.tokenAssetRef || '';
 
@@ -8261,6 +8317,21 @@ async function loadEnemyForm(slug) {
     renderTokenPreview('enemy-token-display', tokenAsset);
     const enemyTokenInput = document.getElementById('enemy-token-asset');
     if (enemyTokenInput) enemyTokenInput.value = tokenAsset;
+
+    // 3D Creature Model Configuration
+    const enemyRenderModeEl = document.getElementById('enemy-render-mode');
+    if (enemyRenderModeEl) enemyRenderModeEl.value = en['robos:renderMode'] || en.renderMode || '3d_model';
+    const enemyPresetEl = document.getElementById('enemy-model-preset');
+    if (enemyPresetEl) enemyPresetEl.value = en['robos:modelType'] || en.modelType || (isBoss ? 'dragon' : (slug.includes('goblin') ? 'goblin' : 'knight'));
+    const enemyModelAssetEl = document.getElementById('enemy-model-asset');
+    if (enemyModelAssetEl) enemyModelAssetEl.value = en['robos:modelAssetRef'] || en.modelAssetRef || '';
+    const enemyModelScaleEl = document.getElementById('enemy-model-scale');
+    if (enemyModelScaleEl) enemyModelScaleEl.value = en['robos:modelScale'] ?? en.modelScale ?? (isBoss ? 1.45 : 1.0);
+    const enemyModelTintEl = document.getElementById('enemy-model-tint');
+    if (enemyModelTintEl) enemyModelTintEl.value = en['robos:modelTint'] || en.modelTint || '#ffffff';
+    const enemyAnimStanceEl = document.getElementById('enemy-anim-stance');
+    if (enemyAnimStanceEl) enemyAnimStanceEl.value = en['robos:animationStance'] || en.animationStance || 'tabletop_hop';
+
     document.getElementById('enemy-type').value = type;
     document.getElementById('enemy-cr').value = cr;
     document.getElementById('enemy-alignment').value = alignment;
@@ -8516,9 +8587,20 @@ async function saveCurrentEnemy() {
     portrait: icon,
     'robos:portrait': icon,
     'robos:portraitAssetRef': icon.startsWith('assets/') ? icon : '',
-    portraitAssetRef: icon.startsWith('assets/') ? icon : '',
     'robos:tokenAssetRef': tokenAssetRef,
     tokenAssetRef: tokenAssetRef,
+    'robos:renderMode': document.getElementById('enemy-render-mode')?.value || '3d_model',
+    renderMode: document.getElementById('enemy-render-mode')?.value || '3d_model',
+    'robos:modelType': document.getElementById('enemy-model-preset')?.value || 'dragon',
+    modelType: document.getElementById('enemy-model-preset')?.value || 'dragon',
+    'robos:modelAssetRef': document.getElementById('enemy-model-asset')?.value.trim() || '',
+    modelAssetRef: document.getElementById('enemy-model-asset')?.value.trim() || '',
+    'robos:modelScale': Number(document.getElementById('enemy-model-scale')?.value || 1.0),
+    modelScale: Number(document.getElementById('enemy-model-scale')?.value || 1.0),
+    'robos:modelTint': document.getElementById('enemy-model-tint')?.value || '#ffffff',
+    modelTint: document.getElementById('enemy-model-tint')?.value || '#ffffff',
+    'robos:animationStance': document.getElementById('enemy-anim-stance')?.value || 'tabletop_hop',
+    animationStance: document.getElementById('enemy-anim-stance')?.value || 'tabletop_hop',
     'robos:creatureType': creatureType,
     creatureType,
     'robos:challengeRating': cr,
@@ -11148,6 +11230,88 @@ function setupAssetPickerHandlers() {
       console.error('Error generating enemy token:', e);
     }
   });
+
+  // 3b. 3D Model Miniature Browsers & Preset Synchronizers
+  document.getElementById('btn-browse-char-model')?.addEventListener('click', () => {
+    openAssetPicker({
+      category: 'models',
+      onSelect: (asset) => {
+        const p = asset.relativePath.startsWith('res://') ? asset.relativePath : `res://${asset.relativePath}`;
+        const input = document.getElementById('char-model-asset');
+        if (input) input.value = p;
+        setStatus(`Selected 3D Model: ${asset.fileName}`);
+      }
+    });
+  });
+
+  document.getElementById('char-model-preset')?.addEventListener('change', (e) => {
+    const preset = e.target.value;
+    const modelAssetInput = document.getElementById('char-model-asset');
+    const scaleInput = document.getElementById('char-model-scale');
+    if (!modelAssetInput) return;
+    switch (preset) {
+      case 'knight':
+        modelAssetInput.value = 'res://assets/models/character_knight_pawn.glb';
+        if (scaleInput) scaleInput.value = 1.0;
+        break;
+      case 'king':
+        modelAssetInput.value = 'res://assets/models/character_king_pawn.glb';
+        if (scaleInput) scaleInput.value = 1.05;
+        break;
+      case 'princess':
+        modelAssetInput.value = 'res://assets/models/character_princess_pawn.glb';
+        if (scaleInput) scaleInput.value = 0.95;
+        break;
+      case 'wizard':
+        modelAssetInput.value = 'res://assets/models/character_wizard_pawn.glb';
+        if (scaleInput) scaleInput.value = 1.0;
+        break;
+      case 'rogue':
+        modelAssetInput.value = 'res://assets/models/character_rogue_pawn.glb';
+        if (scaleInput) scaleInput.value = 0.95;
+        break;
+    }
+  });
+
+  document.getElementById('btn-browse-enemy-model')?.addEventListener('click', () => {
+    openAssetPicker({
+      category: 'models',
+      onSelect: (asset) => {
+        const p = asset.relativePath.startsWith('res://') ? asset.relativePath : `res://${asset.relativePath}`;
+        const input = document.getElementById('enemy-model-asset');
+        if (input) input.value = p;
+        setStatus(`Selected 3D Creature Model: ${asset.fileName}`);
+      }
+    });
+  });
+
+  document.getElementById('enemy-model-preset')?.addEventListener('change', (e) => {
+    const preset = e.target.value;
+    const modelAssetInput = document.getElementById('enemy-model-asset');
+    const scaleInput = document.getElementById('enemy-model-scale');
+    if (!modelAssetInput) return;
+    switch (preset) {
+      case 'dragon':
+        modelAssetInput.value = 'res://assets/models/monster_dragon_pawn.glb';
+        if (scaleInput) scaleInput.value = 1.45;
+        break;
+      case 'goblin':
+        modelAssetInput.value = 'res://assets/models/monster_goblin_pawn.glb';
+        if (scaleInput) scaleInput.value = 0.90;
+        break;
+      case 'knight':
+        modelAssetInput.value = 'res://assets/models/character_knight_pawn.glb';
+        if (scaleInput) scaleInput.value = 1.0;
+        break;
+      case 'wizard':
+        modelAssetInput.value = 'res://assets/models/character_wizard_pawn.glb';
+        if (scaleInput) scaleInput.value = 1.1;
+        break;
+    }
+  });
+
+  // Bundle Cartridge Button in Header
+  document.getElementById('btn-bundle-cartridge')?.addEventListener('click', handleBundleCurrentCartridge);
 
   // 4. Items Studio Icon & Model
   document.getElementById('btn-browse-item-icon')?.addEventListener('click', () => {

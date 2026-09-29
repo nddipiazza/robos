@@ -23,7 +23,7 @@
       "y": 95
     },
     "partyLimit": 1,
-    "createdDate": "2026-09-29T14:09:38.958Z"
+    "createdDate": "2026-09-29T16:26:13.218Z"
   },
   "campaign": {
     "@context": {
@@ -191,7 +191,19 @@
           "second-wind",
           "action-surge"
         ],
-        "backstory": "Raised within the fortified monastery of Candlekeep by the sage Gorion. Trained in bladecraft by the Watchers."
+        "backstory": "Raised within the fortified monastery of Candlekeep by the sage Gorion. Trained in bladecraft by the Watchers.",
+        "robos:renderMode": "3d_model",
+        "renderMode": "3d_model",
+        "robos:modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+        "modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+        "robos:modelType": "knight",
+        "modelType": "knight",
+        "robos:modelScale": 1,
+        "modelScale": 1,
+        "robos:modelTint": "#ffffff",
+        "modelTint": "#ffffff",
+        "robos:animationStance": "tabletop_hop",
+        "animationStance": "tabletop_hop"
       },
       {
         "id": "hero-imoen",
@@ -229,7 +241,19 @@
           "sneak-attack",
           "cunning-action"
         ],
-        "backstory": "Childhood companion and foster sister in Candlekeep, always picking locks and following along on adventures."
+        "backstory": "Childhood companion and foster sister in Candlekeep, always picking locks and following along on adventures.",
+        "robos:renderMode": "3d_model",
+        "renderMode": "3d_model",
+        "robos:modelAssetRef": "res://assets/models/character_rogue_pawn.glb",
+        "modelAssetRef": "res://assets/models/character_rogue_pawn.glb",
+        "robos:modelType": "rogue",
+        "modelType": "rogue",
+        "robos:modelScale": 1,
+        "modelScale": 1,
+        "robos:modelTint": "#ffffff",
+        "modelTint": "#ffffff",
+        "robos:animationStance": "tabletop_hop",
+        "animationStance": "tabletop_hop"
       },
       {
         "id": "hero-ignis",
@@ -263,7 +287,19 @@
         "ring1": "Ring of Wizardry",
         "quickItems": "Scroll of Magic Missile, Wand of Frost (3 ch)",
         "spells": "Cantrips: Fire Bolt, Light, Prestidigitation. Spells: Magic Missile, Shield, Mage Armor, Burning Hands",
-        "backstory": "Apprentice archivist studying under Firebead Elfmirk. Fascinated by the weave of destructive magic."
+        "backstory": "Apprentice archivist studying under Firebead Elfmirk. Fascinated by the weave of destructive magic.",
+        "robos:renderMode": "3d_model",
+        "renderMode": "3d_model",
+        "robos:modelAssetRef": "res://assets/models/character_wizard_pawn.glb",
+        "modelAssetRef": "res://assets/models/character_wizard_pawn.glb",
+        "robos:modelType": "wizard",
+        "modelType": "wizard",
+        "robos:modelScale": 1,
+        "modelScale": 1,
+        "robos:modelTint": "#ffffff",
+        "modelTint": "#ffffff",
+        "robos:animationStance": "tabletop_hop",
+        "animationStance": "tabletop_hop"
       },
       {
         "id": "hero-thrumbar",
@@ -297,7 +333,19 @@
         "ring1": "Holy Symbol of Oghma",
         "quickItems": "Healer's Kit, 3x Holy Water, Rations",
         "spells": "Cantrips: Sacred Flame, Spare the Dying, Guidance. Spells: Cure Wounds, Bless, Healing Word",
-        "backstory": "Devoted battle priest dispatched to Candlekeep library to catalog ancient dwarven liturgical codices."
+        "backstory": "Devoted battle priest dispatched to Candlekeep library to catalog ancient dwarven liturgical codices.",
+        "robos:renderMode": "3d_model",
+        "renderMode": "3d_model",
+        "robos:modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+        "modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+        "robos:modelType": "knight",
+        "modelType": "knight",
+        "robos:modelScale": 1,
+        "modelScale": 1,
+        "robos:modelTint": "#ffffff",
+        "modelTint": "#ffffff",
+        "robos:animationStance": "tabletop_hop",
+        "animationStance": "tabletop_hop"
       },
       {
         "id": "hero-elora",
@@ -331,7 +379,19 @@
         "ring1": "Ring of Natural Attunement",
         "quickItems": "Hunting Trap, 40x Flight Arrows, Jerky",
         "spells": "Favored Enemy: Humanoids, Natural Explorer: Coast",
-        "backstory": "Wilderness scout patrolling the Lion's Way and Coast Way cliffs, watchful of bandit raids."
+        "backstory": "Wilderness scout patrolling the Lion's Way and Coast Way cliffs, watchful of bandit raids.",
+        "robos:renderMode": "3d_model",
+        "renderMode": "3d_model",
+        "robos:modelAssetRef": "res://assets/models/character_wizard_pawn.glb",
+        "modelAssetRef": "res://assets/models/character_wizard_pawn.glb",
+        "robos:modelType": "wizard",
+        "modelType": "wizard",
+        "robos:modelScale": 1,
+        "modelScale": 1,
+        "robos:modelTint": "#ffffff",
+        "modelTint": "#ffffff",
+        "robos:animationStance": "tabletop_hop",
+        "animationStance": "tabletop_hop"
       },
       {
         "id": "hero-faerun",
@@ -365,7 +425,19 @@
         "ring1": "Signet Ring of Baldur's Gate",
         "quickItems": "2x Healing Draught, Whetstone",
         "spells": "Divine Sense, Lay on Hands (5 hp pool)",
-        "backstory": "Sworn champion on pilgrimage to the sacred archives of Oghma before undertaking his knightly quest."
+        "backstory": "Sworn champion on pilgrimage to the sacred archives of Oghma before undertaking his knightly quest.",
+        "robos:renderMode": "3d_model",
+        "renderMode": "3d_model",
+        "robos:modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+        "modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+        "robos:modelType": "knight",
+        "modelType": "knight",
+        "robos:modelScale": 1,
+        "modelScale": 1,
+        "robos:modelTint": "#ffffff",
+        "modelTint": "#ffffff",
+        "robos:animationStance": "tabletop_hop",
+        "animationStance": "tabletop_hop"
       }
     ],
     "robos:gameState": {
@@ -15998,7 +16070,19 @@
       "spells": "fire-bolt, magic-missile, shield, mage-armor, burning-hands",
       "robos:abilities": [],
       "abilities": [],
-      "backstory": "Apprentice archivist studying under Firebead Elfmirk. Fascinated by the weave of destructive magic."
+      "backstory": "Apprentice archivist studying under Firebead Elfmirk. Fascinated by the weave of destructive magic.",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/character_wizard_pawn.glb",
+      "modelAssetRef": "res://assets/models/character_wizard_pawn.glb",
+      "robos:modelType": "wizard",
+      "modelType": "wizard",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
     },
     "hero-imoen": {
       "@context": {
@@ -16180,7 +16264,19 @@
           "quantity": 1,
           "weight": 3
         }
-      ]
+      ],
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/character_rogue_pawn.glb",
+      "modelAssetRef": "res://assets/models/character_rogue_pawn.glb",
+      "robos:modelType": "rogue",
+      "modelType": "rogue",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
     },
     "hero-of-alefgard": {
       "@context": {
@@ -16206,6 +16302,16 @@
       "portraitAssetRef": "assets/portraits/portrait_fighter.png",
       "robos:tokenAssetRef": "assets/tokens/token_hero-alefgard-token.png",
       "tokenAssetRef": "assets/tokens/token_hero-alefgard-token.png",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "robos:modelType": "knight",
+      "modelType": "knight",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop",
       "robos:alignment": "Lawful Good",
       "alignment": "Lawful Good",
       "robos:backstory": "Descendant of the legendary hero Erdrick, summoned to Tantegel Castle to retrieve the Ball of Light and vanquish the Dragonlord.",
@@ -16297,7 +16403,9 @@
           "quantity": 1,
           "slot": 3
         }
-      ]
+      ],
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff"
     },
     "hero-vance": {
       "@context": {
@@ -16479,7 +16587,19 @@
           "uncannyDodge": false,
           "defensiveFlurry": false
         }
-      }
+      },
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "robos:modelType": "knight",
+      "modelType": "knight",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
     },
     "hero-thrumbar": {
       "id": "hero-thrumbar",
@@ -16513,7 +16633,19 @@
       "ring1": "Holy Symbol of Oghma",
       "quickItems": "Healer's Kit, 3x Holy Water, Rations",
       "spells": "Cantrips: Sacred Flame, Spare the Dying, Guidance. Spells: Cure Wounds, Bless, Healing Word",
-      "backstory": "Devoted battle priest dispatched to Candlekeep library to catalog ancient dwarven liturgical codices."
+      "backstory": "Devoted battle priest dispatched to Candlekeep library to catalog ancient dwarven liturgical codices.",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "robos:modelType": "knight",
+      "modelType": "knight",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
     },
     "hero-elora": {
       "id": "hero-elora",
@@ -16547,7 +16679,19 @@
       "ring1": "Ring of Natural Attunement",
       "quickItems": "Hunting Trap, 40x Flight Arrows, Jerky",
       "spells": "Favored Enemy: Humanoids, Natural Explorer: Coast",
-      "backstory": "Wilderness scout patrolling the Lion's Way and Coast Way cliffs, watchful of bandit raids."
+      "backstory": "Wilderness scout patrolling the Lion's Way and Coast Way cliffs, watchful of bandit raids.",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/character_wizard_pawn.glb",
+      "modelAssetRef": "res://assets/models/character_wizard_pawn.glb",
+      "robos:modelType": "wizard",
+      "modelType": "wizard",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
     },
     "hero-faerun": {
       "id": "hero-faerun",
@@ -16581,7 +16725,19 @@
       "ring1": "Signet Ring of Baldur's Gate",
       "quickItems": "2x Healing Draught, Whetstone",
       "spells": "Divine Sense, Lay on Hands (5 hp pool)",
-      "backstory": "Sworn champion on pilgrimage to the sacred archives of Oghma before undertaking his knightly quest."
+      "backstory": "Sworn champion on pilgrimage to the sacred archives of Oghma before undertaking his knightly quest.",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "robos:modelType": "knight",
+      "modelType": "knight",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
     }
   },
   "items": {
@@ -17156,7 +17312,19 @@
       "robos:behavior": "boss_phase",
       "behavior": "boss_phase",
       "dcterms:description": "Dread sorcerer-warlord threatening the kingdom with abyssal dark magic.",
-      "description": "Dread sorcerer-warlord threatening the kingdom with abyssal dark magic."
+      "description": "Dread sorcerer-warlord threatening the kingdom with abyssal dark magic.",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/monster_dragon_pawn.glb",
+      "modelAssetRef": "res://assets/models/monster_dragon_pawn.glb",
+      "robos:modelType": "dragon",
+      "modelType": "dragon",
+      "robos:modelScale": 1.45,
+      "modelScale": 1.45,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
     },
     "corrupted-hound": {
       "@context": {
@@ -17234,7 +17402,19 @@
       "robos:behavior": "aggressive",
       "behavior": "aggressive",
       "dcterms:description": "Savage shadow wolf warped by abyssal miasma, hunting in coordinated packs.",
-      "description": "Savage shadow wolf warped by abyssal miasma, hunting in coordinated packs."
+      "description": "Savage shadow wolf warped by abyssal miasma, hunting in coordinated packs.",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "robos:modelType": "knight",
+      "modelType": "knight",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
     },
     "feral-guard-skirmisher": {
       "@context": {
@@ -17312,7 +17492,19 @@
       "robos:behavior": "defensive",
       "behavior": "defensive",
       "dcterms:description": "Fallen garrison guards resurrected by necromantic curse, wielding rusty spears.",
-      "description": "Fallen garrison guards resurrected by necromantic curse, wielding rusty spears."
+      "description": "Fallen garrison guards resurrected by necromantic curse, wielding rusty spears.",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "robos:modelType": "knight",
+      "modelType": "knight",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
     },
     "goblin-raider": {
       "@context": {
@@ -17390,7 +17582,19 @@
       "robos:behavior": "flanker",
       "behavior": "flanker",
       "dcterms:description": "Cunning mountain ambusher armed with a notched scimitar.",
-      "description": "Cunning mountain ambusher armed with a notched scimitar."
+      "description": "Cunning mountain ambusher armed with a notched scimitar.",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/monster_goblin_pawn.glb",
+      "modelAssetRef": "res://assets/models/monster_goblin_pawn.glb",
+      "robos:modelType": "goblin",
+      "modelType": "goblin",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
     },
     "minotaur-marauder": {
       "@context": {
@@ -17482,7 +17686,19 @@
       "robos:behavior": "aggressive",
       "behavior": "aggressive",
       "dcterms:description": "Towering beast of the subterranean maze who charges trespassers.",
-      "description": "Towering beast of the subterranean maze who charges trespassers."
+      "description": "Towering beast of the subterranean maze who charges trespassers.",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "robos:modelType": "knight",
+      "modelType": "knight",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
     },
     "red-dragon-wyrm": {
       "@context": {
@@ -17574,7 +17790,19 @@
       "robos:behavior": "boss_phase",
       "behavior": "boss_phase",
       "dcterms:description": "Ancient wyrm that hoards stolen artifacts of light within deep cavern vaults.",
-      "description": "Ancient wyrm that hoards stolen artifacts of light within deep cavern vaults."
+      "description": "Ancient wyrm that hoards stolen artifacts of light within deep cavern vaults.",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/monster_dragon_pawn.glb",
+      "modelAssetRef": "res://assets/models/monster_dragon_pawn.glb",
+      "robos:modelType": "dragon",
+      "modelType": "dragon",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
     },
     "skeleton-archer": {
       "@context": {
@@ -17652,7 +17880,19 @@
       "robos:behavior": "ranged_kiter",
       "behavior": "ranged_kiter",
       "dcterms:description": "Skeletal sharpshooter guarding dungeon parapets.",
-      "description": "Skeletal sharpshooter guarding dungeon parapets."
+      "description": "Skeletal sharpshooter guarding dungeon parapets.",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "robos:modelType": "knight",
+      "modelType": "knight",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
     }
   },
   "quests": [

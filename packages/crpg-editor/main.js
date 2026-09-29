@@ -764,6 +764,25 @@ function setupIpcHandlers() {
     }
   });
 
+  ipcMain.handle('campaigns:bundle-cartridge', async (_event, slug) => {
+    try {
+      if (!slug) throw new Error('Campaign slug is required');
+      const safeSlug = slug.toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+      const { CartridgeBundler } = require('../crpg-builder/lib/cartridge-bundler');
+      const bundler = new CartridgeBundler(paths.baseDir);
+      const res = bundler.saveCartridge(safeSlug);
+      return {
+        success: true,
+        targetPath: res.targetPath,
+        cartridgeId: res.cartridge.cartridgeId,
+        header: res.cartridge.header
+      };
+    } catch (err) {
+      console.error('[campaigns:bundle-cartridge] Error:', err);
+      return { success: false, error: err.message };
+    }
+  });
+
   // 2b. Character & NPC APIs
   ipcMain.handle('characters:list', async () => {
     try {

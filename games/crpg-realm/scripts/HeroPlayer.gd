@@ -1845,6 +1845,12 @@ func _physics_process(delta: float) -> void:
 	elif velocity.x > 10.0:
 		sprite.flip_h = false
 
+	# 3D Miniature Model update
+	var m3d = get_node_or_null("CharacterModel3D")
+	if m3d and m3d.has_method("update_facing"):
+		m3d.update_facing(velocity)
+		m3d.set_moving(velocity.length() > 10.0)
+
 	# Step animations
 	anim_timer += delta
 	if velocity.length() > 10.0:

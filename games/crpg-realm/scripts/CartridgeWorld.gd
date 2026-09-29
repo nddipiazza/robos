@@ -1,5 +1,7 @@
 extends Node2D
 
+const CharacterModel3D = preload("res://scripts/CharacterModel3D.gd")
+
 # RobOS cRPG Cartridge World Runner
 # Dynamically loads and renders any battle-map contained within the plugged-in Player Cartridge.
 
@@ -147,14 +149,25 @@ func _setup_auto_play_banner() -> void:
 func _move_hero_to(dest: Vector2, on_reached: Callable = Callable()) -> void:
 	if not hero or not is_instance_valid(hero):
 		return
+	var m3d = hero.get_node_or_null("CharacterModel3D") as CharacterModel3D
+	if m3d:
+		var dir = hero.global_position.direction_to(dest)
+		m3d.update_facing(dir * 100.0)
+		m3d.set_moving(true)
 	if hero.has_method("move_to_point"):
-		hero.move_to_point(dest, on_reached)
+		hero.move_to_point(dest, func():
+			if is_instance_valid(hero):
+				var m = hero.get_node_or_null("CharacterModel3D") as CharacterModel3D
+				if m: m.set_moving(false)
+			if on_reached.is_valid(): on_reached.call()
+		)
 	elif hero.has_method("move_to"):
 		hero.move_to(dest)
 		if on_reached.is_valid():
 			_wait_for_arrival(dest, on_reached)
 	else:
 		hero.position = dest
+		if m3d: m3d.set_moving(false)
 		if on_reached.is_valid():
 			on_reached.call()
 
@@ -165,8 +178,11 @@ func _wait_for_arrival(dest: Vector2, on_reached: Callable, timeout: float = 8.0
 			break
 		await get_tree().create_timer(0.1).timeout
 		timer += 0.1
-	if is_instance_valid(hero) and on_reached.is_valid():
-		on_reached.call()
+	if is_instance_valid(hero):
+		var m3d = hero.get_node_or_null("CharacterModel3D") as CharacterModel3D
+		if m3d: m3d.set_moving(false)
+		if on_reached.is_valid():
+			on_reached.call()
 
 func _navigate_and_interact(target_pos: Vector2, on_reached: Callable) -> void:
 	if not hero or not is_instance_valid(hero):
@@ -330,6 +346,27 @@ func _spawn_hero(coords: Vector2, pixel_w: float, pixel_h: float) -> void:
 			var s = 48.0 / max(sz.x, sz.y)
 			token_spr.scale = Vector2(s, s)
 			token_spr.position = Vector2(0, 0)
+
+	# 3D Model Miniature Rendering in Godot 4
+	var render_mode = str(h_data.get("robos:renderMode", h_data.get("renderMode", "3d_model")))
+	var model_ref = str(h_data.get("robos:modelAssetRef", h_data.get("modelAssetRef", "")))
+	var model_type = str(h_data.get("robos:modelType", h_data.get("modelType", "knight")))
+	var model_scale = float(h_data.get("robos:modelScale", h_data.get("modelScale", 1.0)))
+	var model_tint_str = str(h_data.get("robos:modelTint", h_data.get("modelTint", "#ffffff")))
+	var model_tint = Color.from_string(model_tint_str, Color.WHITE)
+
+	if render_mode == "3d_model" or model_ref != "" or model_type != "":
+		var model_node = hero.get_node_or_null("CharacterModel3D") as CharacterModel3D
+		if not model_node:
+			model_node = CharacterModel3D.new()
+			model_node.name = "CharacterModel3D"
+			hero.add_child(model_node)
+		model_node.setup_model(model_ref, model_type, model_scale, model_tint)
+		model_node.visible = true
+		var spr = hero.get_node_or_null("Sprite") as Sprite2D
+		if spr: spr.visible = false
+		var token_spr = hero.get_node_or_null("HeroTokenRing") as Sprite2D
+		if token_spr: token_spr.visible = false
 
 func _spawn_map_object(obj: Dictionary) -> void:
 	var o_type = str(obj.get("robos:objectType", obj.get("type", "wall")))
@@ -583,7 +620,38 @@ func _create_interactive_npc(slug: String, ch_data: Dictionary, coord: Vector2, 
 
 	var token_tex: Texture2D = _load_texture_safe(token_path)
 
-	if token_tex:
+	# 3D Model Miniature Rendering in Godot 4
+	var render_mode = str(ch_data.get("robos:renderMode", ch_data.get("renderMode", "3d_model")))
+	var model_ref = str(ch_data.get("robos:modelAssetRef", ch_data.get("modelAssetRef", "")))
+	var model_type = str(ch_data.get("robos:modelType", ch_data.get("modelType", "")))
+	var default_scale = 1.45 if (is_monster and ("dragonlord" in slug or "boss" in slug)) else 1.0
+	var model_scale = float(ch_data.get("robos:modelScale", ch_data.get("modelScale", default_scale)))
+	var model_tint_str = str(ch_data.get("robos:modelTint", ch_data.get("modelTint", "#ffffff")))
+	var model_tint = Color.from_string(model_tint_str, Color.WHITE)
+
+	if model_type == "":
+		if "dragonlord" in slug or "boss" in slug or "malakor" in slug:
+			model_type = "dragon"
+		elif "king" in slug or "loric" in slug or "lorik" in slug or "alden" in slug:
+			model_type = "king"
+		elif "princess" in slug or "gwaelin" in slug or "jennifer" in slug:
+			model_type = "princess"
+		elif "goblin" in slug:
+			model_type = "goblin"
+		elif "blacksmith" in slug or "torvald" in slug:
+			model_type = "knight"
+		elif is_monster:
+			model_type = "dragon"
+		else:
+			model_type = "knight"
+
+	if render_mode == "3d_model" or model_ref != "" or model_type != "":
+		var model_node = CharacterModel3D.new()
+		model_node.name = "CharacterModel3D"
+		model_node.position = Vector2(0, 0)
+		model_node.setup_model(model_ref, model_type, model_scale, model_tint)
+		npc_node.add_child(model_node)
+	elif token_tex:
 		var spr = Sprite2D.new()
 		spr.name = "TokenSprite"
 		spr.texture = token_tex
@@ -653,6 +721,16 @@ func _create_interactive_npc(slug: String, ch_data: Dictionary, coord: Vector2, 
 func _interact_with_npc(slug: String, ch_data: Dictionary, is_monster: bool) -> void:
 	var name_str = str(ch_data.get("name", slug))
 	print("💬 [CartridgeWorld] Interacting with NPC: ", name_str)
+
+	# Mutual 3D facing orientation
+	if spawned_npcs.has(slug) and is_instance_valid(hero):
+		var npc_node = spawned_npcs[slug]
+		var npc_m3d = npc_node.get_node_or_null("CharacterModel3D") as CharacterModel3D
+		if npc_m3d:
+			npc_m3d.face_point(hero.global_position)
+		var hero_m3d = hero.get_node_or_null("CharacterModel3D") as CharacterModel3D
+		if hero_m3d:
+			hero_m3d.face_point(npc_node.global_position)
 
 	if "king-alden" in slug:
 		if GameState.world_flags.get("princess_rescued", false):

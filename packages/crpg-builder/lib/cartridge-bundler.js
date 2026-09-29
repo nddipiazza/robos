@@ -52,6 +52,66 @@ class CartridgeBundler {
     return mapData;
   }
 
+  _resolveCharacter3DModel(slug, charData, isEnemy = false) {
+    if (!charData) return charData;
+    const s = (slug || '').toLowerCase();
+    const name = String(charData['dcterms:title'] || charData.name || s).toLowerCase();
+    const ctype = String(charData['robos:characterType'] || charData.characterType || '').toLowerCase();
+    const isBoss = isEnemy || ctype === 'boss' || ctype === 'enemy' || s.includes('boss') || s.includes('dragonlord') || s.includes('malakor');
+
+    let modelRef = charData['robos:modelAssetRef'] || charData.modelAssetRef || '';
+    let modelType = charData['robos:modelType'] || charData.modelType || '';
+    let modelScale = charData['robos:modelScale'] ?? charData.modelScale ?? (isBoss && (s.includes('dragonlord') || s.includes('boss')) ? 1.45 : 1.0);
+    let modelTint = charData['robos:modelTint'] || charData.modelTint || '#ffffff';
+    let animStance = charData['robos:animationStance'] || charData.animationStance || 'tabletop_hop';
+    let renderMode = charData['robos:renderMode'] || charData.renderMode || '3d_model';
+
+    // Auto-resolve archetype 3D models if not explicitly set to a .glb
+    if (!modelRef || !modelRef.includes('.glb')) {
+      if (s.includes('dragonlord') || s.includes('dragon') || name.includes('dragonlord') || s.includes('malakor')) {
+        modelRef = 'res://assets/models/monster_dragon_pawn.glb';
+        modelType = modelType || 'dragon';
+        modelScale = modelScale || 1.45;
+      } else if (s.includes('king') || s.includes('lorik') || s.includes('loric') || s.includes('alden') || name.includes('king')) {
+        modelRef = 'res://assets/models/character_king_pawn.glb';
+        modelType = modelType || 'king';
+        modelScale = modelScale || 1.05;
+      } else if (s.includes('princess') || s.includes('gwaelin') || s.includes('jennifer') || name.includes('princess')) {
+        modelRef = 'res://assets/models/character_princess_pawn.glb';
+        modelType = modelType || 'princess';
+        modelScale = modelScale || 0.95;
+      } else if (s.includes('goblin') || name.includes('goblin') || s.includes('skulker')) {
+        modelRef = 'res://assets/models/monster_goblin_pawn.glb';
+        modelType = modelType || 'goblin';
+        modelScale = modelScale || 0.9;
+      } else if (s.includes('wizard') || s.includes('mage') || s.includes('sorcerer') || s.includes('ignis') || s.includes('elora')) {
+        modelRef = 'res://assets/models/character_wizard_pawn.glb';
+        modelType = modelType || 'wizard';
+      } else if (s.includes('rogue') || s.includes('thief') || s.includes('assassin') || s.includes('imoen')) {
+        modelRef = 'res://assets/models/character_rogue_pawn.glb';
+        modelType = modelType || 'rogue';
+      } else {
+        modelRef = 'res://assets/models/character_knight_pawn.glb';
+        modelType = modelType || 'knight';
+      }
+    }
+
+    charData['robos:renderMode'] = renderMode;
+    charData.renderMode = renderMode;
+    charData['robos:modelAssetRef'] = modelRef;
+    charData.modelAssetRef = modelRef;
+    charData['robos:modelType'] = modelType;
+    charData.modelType = modelType;
+    charData['robos:modelScale'] = Number(modelScale);
+    charData.modelScale = Number(modelScale);
+    charData['robos:modelTint'] = modelTint;
+    charData.modelTint = modelTint;
+    charData['robos:animationStance'] = animStance;
+    charData.animationStance = animStance;
+
+    return charData;
+  }
+
   bundle(campaignSlug) {
     const cleanCampSlug = this._cleanSlug(campaignSlug);
     const campPath = path.join(this.baseDir, 'campaigns', `${cleanCampSlug}.jsonld`);
@@ -127,7 +187,7 @@ class CartridgeBundler {
         charData = this._readJsonSafe(path.join(this.baseDir, 'characters', `${charSlug}.json`));
       }
       if (charData) {
-        characters[charSlug] = charData;
+        characters[charSlug] = this._resolveCharacter3DModel(charSlug, charData, false);
       }
     }
 
@@ -138,16 +198,18 @@ class CartridgeBundler {
       if (charSlug && !characters[charSlug]) {
         const charPath = path.join(this.baseDir, 'characters', `${charSlug}.jsonld`);
         const charData = this._readJsonSafe(charPath) || this._readJsonSafe(path.join(this.baseDir, 'characters', `${charSlug}.json`));
-        if (charData) characters[charSlug] = charData;
+        if (charData) characters[charSlug] = this._resolveCharacter3DModel(charSlug, charData, false);
       }
     }
 
     // Also inspect heroes array
     const heroes = campaign['robos:heroes'] || campaign.heroes || [];
-    for (const hero of heroes) {
+    for (let i = 0; i < heroes.length; i++) {
+      const hero = heroes[i];
       const heroSlug = hero.slug || this._cleanSlug(hero.id);
+      heroes[i] = this._resolveCharacter3DModel(heroSlug, hero, false);
       if (heroSlug && !characters[heroSlug]) {
-        characters[heroSlug] = hero;
+        characters[heroSlug] = heroes[i];
       }
     }
 
@@ -201,7 +263,7 @@ class CartridgeBundler {
           const eSlug = file.replace(/\.jsonld$/, '').replace(/\.json$/, '');
           if (!enemies[eSlug]) {
             const eData = this._readJsonSafe(path.join(enemiesDir, file));
-            if (eData) enemies[eSlug] = eData;
+            if (eData) enemies[eSlug] = this._resolveCharacter3DModel(eSlug, eData, true);
           }
         }
       }
@@ -212,7 +274,7 @@ class CartridgeBundler {
       const types = Array.isArray(cData['@type']) ? cData['@type'] : [cData['@type']];
       if (types.includes('robos:CRPGMonster') || cData.characterType === 'boss' || cData.characterType === 'creature') {
         if (!enemies[cSlug]) {
-          enemies[cSlug] = cData;
+          enemies[cSlug] = this._resolveCharacter3DModel(cSlug, cData, true);
         }
       }
     }

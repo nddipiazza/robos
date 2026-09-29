@@ -56,8 +56,23 @@ describe('Player Cartridge System Test Suite', () => {
     const cartridge = bundler.bundle('dragonwarrior-1-usa');
     assert.equal(cartridge.header.slug, 'dragonwarrior-1-usa');
     assert.ok(cartridge.maps['tantegel-throne-room'], 'Must inline Tantegel Throne Room');
-    assert.ok(cartridge.characters['hero-of-alefgard'], 'Must inline Hero of Alefgard');
     assert.ok(cartridge.characters['npc-king-loric'], 'Must inline King Loric');
+    
+    // 3D Model Miniature validation
+    const hero = cartridge.characters['hero-of-alefgard'];
+    assert.equal(hero.renderMode, '3d_model');
+    assert.ok(hero.modelAssetRef.includes('character_knight_pawn.glb'), 'Hero must have 3D Knight pawn model');
+    assert.equal(hero.modelType, 'knight');
+
+    const king = cartridge.characters['npc-king-loric'];
+    assert.equal(king.renderMode, '3d_model');
+    assert.ok(king.modelAssetRef.includes('character_king_pawn.glb'), 'King must have 3D King pawn model');
+    assert.equal(king.modelType, 'king');
+
+    const dragon = cartridge.characters['dragonlord'];
+    assert.equal(dragon.renderMode, '3d_model');
+    assert.ok(dragon.modelAssetRef.includes('monster_dragon_pawn.glb'), 'Dragonlord must have 3D Dragon pawn model');
+    assert.ok(dragon.modelScale >= 1.4, 'Dragonlord boss scale must be enlarged');
   });
 
   test('CartridgeBundler: saveCartridge writes valid JSON file', () => {

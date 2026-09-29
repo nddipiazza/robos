@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld('robos', {
   saveCampaign: (payload) => ipcRenderer.invoke('campaigns:save', payload),
   deleteCampaign: (slug) => ipcRenderer.invoke('campaigns:delete', slug),
   renderCampaignAsGame: (payload) => ipcRenderer.invoke('campaigns:render-as-game', payload),
+  bundleCartridge: (slug) => ipcRenderer.invoke('campaigns:bundle-cartridge', slug),
 
   // Character & NPC APIs
   listCharacters: () => ipcRenderer.invoke('characters:list'),

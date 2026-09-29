@@ -14,6 +14,7 @@ var is_cartridge_active: bool = false
 var current_map_slug: String = ""
 var current_spawn_coord: Vector2 = Vector2(25, 20)
 var auto_play_enabled: bool = false
+var cli_map_override: String = ""
 
 var maps_cache: Dictionary = {}
 var characters_cache: Dictionary = {}
@@ -38,6 +39,18 @@ func _check_cli_cartridge() -> void:
 			cart_arg = a.split("=")[1]
 		elif a.begins_with("--campaign="):
 			cart_arg = a.split("=")[1]
+	
+	var map_arg: String = OS.get_environment("CRPG_MAP")
+	for i in range(cmd_args.size()):
+		var a = cmd_args[i]
+		if (a == "--map" or a == "--starting-map") and i + 1 < cmd_args.size():
+			map_arg = cmd_args[i + 1]
+		elif a.begins_with("--map="):
+			map_arg = a.split("=")[1]
+		elif a.begins_with("--starting-map="):
+			map_arg = a.split("=")[1]
+	if map_arg != "":
+		cli_map_override = map_arg.strip_edges().replace('"', '').replace("'", "")
 	
 	if cart_arg != "":
 		print("📼 [CartridgeManager] Auto-plugging cartridge from CLI: ", cart_arg)
@@ -208,13 +221,17 @@ func insert_cartridge(cart_data_or_slug: Variant) -> bool:
 
 	# 4. Resolve Starting Map & Spawn Position
 	var header = cart.get("header", {})
-	current_map_slug = str(header.get("startingMap", camp_dict.get("robos:startingMap", "throne-room")))
+	if cli_map_override != "":
+		current_map_slug = cli_map_override
+		print("🗺️ [CartridgeManager] CLI override applied for starting map: ", current_map_slug)
+	else:
+		current_map_slug = str(header.get("startingMap", camp_dict.get("robos:startingMap", "throne-room")))
 	
 	var pos = header.get("startingPosition", {})
-	if pos is Dictionary and pos.has("x") and pos.has("y"):
+	if pos is Dictionary and pos.has("x") and pos.has("y") and cli_map_override == "":
 		current_spawn_coord = Vector2(float(pos["x"]), float(pos["y"]))
 	else:
-		current_spawn_coord = Vector2(25, 20)
+		current_spawn_coord = Vector2(20, 20)
 
 	var c_title = str(header.get("title", active_cartridge.get("cartridgeId", "Untitled Cartridge")))
 	print("📼 [CartridgeManager] Successfully inserted cartridge '%s' (%d maps, %d characters, %d quests)" % [

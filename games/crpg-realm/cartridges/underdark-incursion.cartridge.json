@@ -23,7 +23,7 @@
       "y": 20
     },
     "partyLimit": 1,
-    "createdDate": "2026-09-29T14:09:39.006Z"
+    "createdDate": "2026-09-29T16:26:13.245Z"
   },
   "campaign": {
     "@context": {
@@ -75,7 +75,19 @@
           "second-wind",
           "action-surge"
         ],
-        "backstory": "Frontline mercenary captain veteran of three subterranean cavern campaigns."
+        "backstory": "Frontline mercenary captain veteran of three subterranean cavern campaigns.",
+        "robos:renderMode": "3d_model",
+        "renderMode": "3d_model",
+        "robos:modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+        "modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+        "robos:modelType": "knight",
+        "modelType": "knight",
+        "robos:modelScale": 1,
+        "modelScale": 1,
+        "robos:modelTint": "#ffffff",
+        "modelTint": "#ffffff",
+        "robos:animationStance": "tabletop_hop",
+        "animationStance": "tabletop_hop"
       },
       {
         "id": "hero-lyra",
@@ -113,7 +125,19 @@
           "sneak-attack",
           "cunning-action"
         ],
-        "backstory": "Infiltration specialist who navigates cavern fissures and detects concealed tripwires."
+        "backstory": "Infiltration specialist who navigates cavern fissures and detects concealed tripwires.",
+        "robos:renderMode": "3d_model",
+        "renderMode": "3d_model",
+        "robos:modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+        "modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+        "robos:modelType": "knight",
+        "modelType": "knight",
+        "robos:modelScale": 1,
+        "modelScale": 1,
+        "robos:modelTint": "#ffffff",
+        "modelTint": "#ffffff",
+        "robos:animationStance": "tabletop_hop",
+        "animationStance": "tabletop_hop"
       },
       {
         "id": "hero-kaelen",
@@ -147,7 +171,19 @@
         "ring1": "Holy Symbol of the Dawnfather",
         "quickItems": "Healer's Kit, 2x Potion of Healing, Antidote Potion",
         "spells": "Cantrips: Sacred Flame, Light. 1st: Cure Wounds, Bless, Burning Hands. 2nd: Spiritual Weapon, Scorching Ray",
-        "backstory": "Dwarven lightbringer sworn to cleanse subterranean tunnels with sacred flame."
+        "backstory": "Dwarven lightbringer sworn to cleanse subterranean tunnels with sacred flame.",
+        "robos:renderMode": "3d_model",
+        "renderMode": "3d_model",
+        "robos:modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+        "modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+        "robos:modelType": "knight",
+        "modelType": "knight",
+        "robos:modelScale": 1,
+        "modelScale": 1,
+        "robos:modelTint": "#ffffff",
+        "modelTint": "#ffffff",
+        "robos:animationStance": "tabletop_hop",
+        "animationStance": "tabletop_hop"
       },
       {
         "id": "hero-sylphira",
@@ -181,7 +217,19 @@
         "ring1": "Ring of Spell Storing (1 charge)",
         "quickItems": "Wand of Magic Missiles (7 charges), Potion of Mana, Scroll of Web",
         "spells": "Cantrips: Fire Bolt, Ray of Frost. 1st: Magic Missile, Shield, Burning Hands. 2nd: Scorching Ray, Misty Step",
-        "backstory": "Master of elemental incantations, weaving blasts of destructive flame to incinerate spider broods."
+        "backstory": "Master of elemental incantations, weaving blasts of destructive flame to incinerate spider broods.",
+        "robos:renderMode": "3d_model",
+        "renderMode": "3d_model",
+        "robos:modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+        "modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+        "robos:modelType": "knight",
+        "modelType": "knight",
+        "robos:modelScale": 1,
+        "modelScale": 1,
+        "robos:modelTint": "#ffffff",
+        "modelTint": "#ffffff",
+        "robos:animationStance": "tabletop_hop",
+        "animationStance": "tabletop_hop"
       }
     ],
     "robos:gameState": {
@@ -392,7 +440,19 @@
         "second-wind",
         "action-surge"
       ],
-      "backstory": "Frontline mercenary captain veteran of three subterranean cavern campaigns."
+      "backstory": "Frontline mercenary captain veteran of three subterranean cavern campaigns.",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "robos:modelType": "knight",
+      "modelType": "knight",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
     },
     "hero-lyra": {
       "id": "hero-lyra",
@@ -430,7 +490,19 @@
         "sneak-attack",
         "cunning-action"
       ],
-      "backstory": "Infiltration specialist who navigates cavern fissures and detects concealed tripwires."
+      "backstory": "Infiltration specialist who navigates cavern fissures and detects concealed tripwires.",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "robos:modelType": "knight",
+      "modelType": "knight",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
     },
     "hero-kaelen": {
       "id": "hero-kaelen",
@@ -464,7 +536,19 @@
       "ring1": "Holy Symbol of the Dawnfather",
       "quickItems": "Healer's Kit, 2x Potion of Healing, Antidote Potion",
       "spells": "Cantrips: Sacred Flame, Light. 1st: Cure Wounds, Bless, Burning Hands. 2nd: Spiritual Weapon, Scorching Ray",
-      "backstory": "Dwarven lightbringer sworn to cleanse subterranean tunnels with sacred flame."
+      "backstory": "Dwarven lightbringer sworn to cleanse subterranean tunnels with sacred flame.",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "robos:modelType": "knight",
+      "modelType": "knight",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
     },
     "hero-sylphira": {
       "id": "hero-sylphira",
@@ -498,7 +582,19 @@
       "ring1": "Ring of Spell Storing (1 charge)",
       "quickItems": "Wand of Magic Missiles (7 charges), Potion of Mana, Scroll of Web",
       "spells": "Cantrips: Fire Bolt, Ray of Frost. 1st: Magic Missile, Shield, Burning Hands. 2nd: Scorching Ray, Misty Step",
-      "backstory": "Master of elemental incantations, weaving blasts of destructive flame to incinerate spider broods."
+      "backstory": "Master of elemental incantations, weaving blasts of destructive flame to incinerate spider broods.",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "robos:modelType": "knight",
+      "modelType": "knight",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
     }
   },
   "items": {
@@ -1073,7 +1169,19 @@
       "robos:behavior": "boss_phase",
       "behavior": "boss_phase",
       "dcterms:description": "Dread sorcerer-warlord threatening the kingdom with abyssal dark magic.",
-      "description": "Dread sorcerer-warlord threatening the kingdom with abyssal dark magic."
+      "description": "Dread sorcerer-warlord threatening the kingdom with abyssal dark magic.",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/monster_dragon_pawn.glb",
+      "modelAssetRef": "res://assets/models/monster_dragon_pawn.glb",
+      "robos:modelType": "dragon",
+      "modelType": "dragon",
+      "robos:modelScale": 1.45,
+      "modelScale": 1.45,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
     },
     "corrupted-hound": {
       "@context": {
@@ -1151,7 +1259,19 @@
       "robos:behavior": "aggressive",
       "behavior": "aggressive",
       "dcterms:description": "Savage shadow wolf warped by abyssal miasma, hunting in coordinated packs.",
-      "description": "Savage shadow wolf warped by abyssal miasma, hunting in coordinated packs."
+      "description": "Savage shadow wolf warped by abyssal miasma, hunting in coordinated packs.",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "robos:modelType": "knight",
+      "modelType": "knight",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
     },
     "feral-guard-skirmisher": {
       "@context": {
@@ -1229,7 +1349,19 @@
       "robos:behavior": "defensive",
       "behavior": "defensive",
       "dcterms:description": "Fallen garrison guards resurrected by necromantic curse, wielding rusty spears.",
-      "description": "Fallen garrison guards resurrected by necromantic curse, wielding rusty spears."
+      "description": "Fallen garrison guards resurrected by necromantic curse, wielding rusty spears.",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "robos:modelType": "knight",
+      "modelType": "knight",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
     },
     "goblin-raider": {
       "@context": {
@@ -1307,7 +1439,19 @@
       "robos:behavior": "flanker",
       "behavior": "flanker",
       "dcterms:description": "Cunning mountain ambusher armed with a notched scimitar.",
-      "description": "Cunning mountain ambusher armed with a notched scimitar."
+      "description": "Cunning mountain ambusher armed with a notched scimitar.",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/monster_goblin_pawn.glb",
+      "modelAssetRef": "res://assets/models/monster_goblin_pawn.glb",
+      "robos:modelType": "goblin",
+      "modelType": "goblin",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
     },
     "minotaur-marauder": {
       "@context": {
@@ -1399,7 +1543,19 @@
       "robos:behavior": "aggressive",
       "behavior": "aggressive",
       "dcterms:description": "Towering beast of the subterranean maze who charges trespassers.",
-      "description": "Towering beast of the subterranean maze who charges trespassers."
+      "description": "Towering beast of the subterranean maze who charges trespassers.",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "robos:modelType": "knight",
+      "modelType": "knight",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
     },
     "red-dragon-wyrm": {
       "@context": {
@@ -1491,7 +1647,19 @@
       "robos:behavior": "boss_phase",
       "behavior": "boss_phase",
       "dcterms:description": "Ancient wyrm that hoards stolen artifacts of light within deep cavern vaults.",
-      "description": "Ancient wyrm that hoards stolen artifacts of light within deep cavern vaults."
+      "description": "Ancient wyrm that hoards stolen artifacts of light within deep cavern vaults.",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/monster_dragon_pawn.glb",
+      "modelAssetRef": "res://assets/models/monster_dragon_pawn.glb",
+      "robos:modelType": "dragon",
+      "modelType": "dragon",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
     },
     "skeleton-archer": {
       "@context": {
@@ -1569,7 +1737,19 @@
       "robos:behavior": "ranged_kiter",
       "behavior": "ranged_kiter",
       "dcterms:description": "Skeletal sharpshooter guarding dungeon parapets.",
-      "description": "Skeletal sharpshooter guarding dungeon parapets."
+      "description": "Skeletal sharpshooter guarding dungeon parapets.",
+      "robos:renderMode": "3d_model",
+      "renderMode": "3d_model",
+      "robos:modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+      "robos:modelType": "knight",
+      "modelType": "knight",
+      "robos:modelScale": 1,
+      "modelScale": 1,
+      "robos:modelTint": "#ffffff",
+      "modelTint": "#ffffff",
+      "robos:animationStance": "tabletop_hop",
+      "animationStance": "tabletop_hop"
     }
   },
   "quests": [

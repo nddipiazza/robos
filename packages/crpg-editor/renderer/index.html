@@ -71,6 +71,9 @@
           <button id="btn-render-game" class="btn btn-accent" title="Render campaign in current state and play in real Godot cRPG engine (Real Mode)">
             <span>🎮 Render as Game</span>
           </button>
+          <button id="btn-bundle-cartridge" class="btn btn-secondary" title="Compile campaign into standalone Player Cartridge (.cartridge.json)">
+            <span>📼 Generate Cartridge</span>
+          </button>
           <button id="btn-delete-campaign" class="btn btn-danger btn-sm" title="Delete current campaign">
             <span>🗑</span>
           </button>
@@ -1448,6 +1451,55 @@
               </div>
             </div>
 
+            <!-- 3D Model Miniature & Godot 4 Renderer Section -->
+            <div class="sheet-section" id="section-char-3d-model">
+              <h3>🧊 3D Model Miniature & Godot 4 Renderer</h3>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="char-render-mode">Render Mode</label>
+                  <select id="char-render-mode" class="dropdown-select">
+                    <option value="3d_model">🧊 Real 3D Model Miniature (Godot 4 SubViewport)</option>
+                    <option value="2d_token">🪙 2D Circular Battle Token</option>
+                    <option value="2d_sprite">🖼️ 2D Sprite Character</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="char-model-preset">3D Archetype Preset</label>
+                  <select id="char-model-preset" class="dropdown-select">
+                    <option value="knight">⚔️ Knight / Fighter (character_knight_pawn.glb)</option>
+                    <option value="king">👑 King / Monarch (character_king_pawn.glb)</option>
+                    <option value="princess">👸 Princess / Royal (character_princess_pawn.glb)</option>
+                    <option value="wizard">🧙 Wizard / Mage (character_wizard_pawn.glb)</option>
+                    <option value="rogue">🗡️ Rogue / Thief (character_rogue_pawn.glb)</option>
+                    <option value="custom">🧊 Custom glTF / GLB Model</option>
+                  </select>
+                </div>
+                <div class="form-group col-span-2">
+                  <label for="char-model-asset">3D Model File (.glb / .gltf)</label>
+                  <div style="display: flex; gap: 6px; align-items: center;">
+                    <input type="text" id="char-model-asset" class="input-text" placeholder="res://assets/models/character_knight_pawn.glb">
+                    <button type="button" id="btn-browse-char-model" class="btn btn-secondary btn-sm" title="Browse 3D Model Assets">📂 Browse 3D</button>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="char-model-scale">3D Model Scale Multiplier</label>
+                  <input type="number" id="char-model-scale" class="input-text" min="0.5" max="3.0" step="0.05" value="1.0">
+                </div>
+                <div class="form-group">
+                  <label for="char-model-tint">Pedestal / Material Tint</label>
+                  <input type="color" id="char-model-tint" class="input-color" value="#ffffff" style="width: 100%; height: 36px; padding: 2px; border-radius: 4px; background: #1e293b;">
+                </div>
+                <div class="form-group col-span-2">
+                  <label for="char-anim-stance">Animation Stance</label>
+                  <select id="char-anim-stance" class="dropdown-select">
+                    <option value="tabletop_hop">♟️ Tabletop Hop (Animated miniature hop while walking)</option>
+                    <option value="idle_bob">🌬️ Idle Sway (Subtle breathing sway & rotation)</option>
+                    <option value="static">🗿 Static (Fixed tabletop position)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
             <!-- NPC Details Section -->
             <div id="section-npc-details" class="sheet-section hidden">
               <h3>NPC Configuration & Dialogue</h3>
@@ -2326,6 +2378,53 @@
                         <button type="button" id="btn-browse-enemy-token" class="btn btn-secondary btn-sm" title="Browse tokens or 3D models">🪙 Choose</button>
                         <button type="button" id="btn-make-enemy-token" class="btn btn-secondary btn-sm" title="Bake battle token from monster portrait">🪙 Bake Token</button>
                       </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Section 5b: 3D Creature Model & Godot 4 Renderer -->
+                <div class="stat-section" id="section-enemy-3d-model">
+                  <div class="stat-section-title">🧊 3D Creature Model & Godot 4 Renderer</div>
+                  <div class="form-grid">
+                    <div class="form-group">
+                      <label for="enemy-render-mode">Render Mode</label>
+                      <select id="enemy-render-mode" class="dropdown-select">
+                        <option value="3d_model">🧊 Real 3D Model Miniature (Godot 4 SubViewport)</option>
+                        <option value="2d_token">🪙 2D Circular Battle Token</option>
+                        <option value="2d_sprite">👹 2D Sprite Character</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label for="enemy-model-preset">3D Creature Archetype</label>
+                      <select id="enemy-model-preset" class="dropdown-select">
+                        <option value="dragon">🐉 Dragonlord / Wyrm (monster_dragon_pawn.glb)</option>
+                        <option value="goblin">👺 Goblin / Skulker (monster_goblin_pawn.glb)</option>
+                        <option value="knight">⚔️ Dark Knight / Champion (character_knight_pawn.glb)</option>
+                        <option value="wizard">🧙 Dark Sorcerer (character_wizard_pawn.glb)</option>
+                        <option value="custom">🧊 Custom glTF / GLB Creature Model</option>
+                      </select>
+                    </div>
+                    <div class="form-group col-span-2">
+                      <label for="enemy-model-asset">3D Creature Model File (.glb / .gltf)</label>
+                      <div style="display: flex; gap: 6px; align-items: center;">
+                        <input type="text" id="enemy-model-asset" class="input-text" placeholder="res://assets/models/monster_dragon_pawn.glb">
+                        <button type="button" id="btn-browse-enemy-model" class="btn btn-secondary btn-sm" title="Browse 3D Model Assets">📂 Browse 3D</button>
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label for="enemy-model-scale">3D Creature Scale Multiplier</label>
+                      <input type="number" id="enemy-model-scale" class="input-text" min="0.5" max="3.0" step="0.05" value="1.0">
+                    </div>
+                    <div class="form-group">
+                      <label for="enemy-model-tint">Creature Tint / Aura Color</label>
+                      <input type="color" id="enemy-model-tint" class="input-color" value="#ffffff" style="width: 100%; height: 36px; padding: 2px; border-radius: 4px; background: #1e293b;">
+                    </div>
+                    <div class="form-group col-span-2">
+                      <label for="enemy-anim-stance">Animation Stance</label>
+                      <select id="enemy-anim-stance" class="dropdown-select">
+                        <option value="tabletop_hop">♟️ Tabletop Hop (Animated miniature hop while walking)</option>
+                        <option value="idle_bob">🌬️ Idle Sway (Subtle breathing sway & rotation)</option>
+                      </select>
                     </div>
                   </div>
                 </div>
