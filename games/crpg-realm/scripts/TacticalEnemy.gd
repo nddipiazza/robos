@@ -42,6 +42,19 @@ var current_state: State = State.PATROL
 var current_hp: int = 28
 var is_looted: bool = false
 
+var model_3d: CharacterModel3D = null
+
+func setup_3d_pawn(asset_ref: String, type_name: String = "goblin", scale_mul: float = 1.0, tint: Color = Color.WHITE) -> CharacterModel3D:
+	if not model_3d:
+		model_3d = CharacterModel3D.new()
+		model_3d.name = "CharacterModel3D"
+		add_child(model_3d)
+	model_3d.setup_model(asset_ref, type_name, scale_mul, tint)
+	model_3d.visible = true
+	if sprite:
+		sprite.visible = false
+	return model_3d
+
 # Infinity Engine Threat Table
 var threat_table: Dictionary = {} # ActorName -> int
 var direct_damage_table: Dictionary = {} # ActorName -> int
@@ -330,6 +343,16 @@ func _physics_process(delta: float) -> void:
 		sprite.flip_h = true
 	elif velocity.x > 4.0:
 		sprite.flip_h = false
+
+	if model_3d and is_instance_valid(model_3d):
+		if velocity.length() > 5.0:
+			model_3d.update_facing(velocity)
+			model_3d.set_moving(true)
+		else:
+			model_3d.set_moving(false)
+			if current_target and is_instance_valid(current_target):
+				var t_dir = global_position.direction_to(current_target.global_position)
+				model_3d.update_facing(t_dir * 100.0)
 
 # ── Infinity Engine Threat & Aggro System ─────────────────────────────────────
 
@@ -699,6 +722,13 @@ func die() -> void:
 	var tw = create_tween()
 	tw.parallel().tween_property(sprite, "rotation_degrees", 85.0, 0.35)
 	tw.parallel().tween_property(sprite, "modulate", Color(0.65, 0.55, 0.55, 0.85), 0.35)
+
+	if model_3d and is_instance_valid(model_3d):
+		var tw_m = create_tween()
+		if model_3d.model_pivot:
+			tw_m.parallel().tween_property(model_3d.model_pivot, "rotation:x", PI * 0.45, 0.35)
+			tw_m.parallel().tween_property(model_3d.model_pivot, "position:y", -0.15, 0.35)
+		tw_m.parallel().tween_property(model_3d, "modulate", Color(0.65, 0.55, 0.55, 0.85), 0.35)
 
 	if has_node("CollisionShape2D"):
 		get_node("CollisionShape2D").set_deferred("disabled", true)

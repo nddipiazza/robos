@@ -233,6 +233,21 @@ func play_hit_reaction() -> void:
 	tw.tween_property(sprite, "modulate", Color(2.0, 0.4, 0.4, 1.0), 0.08)
 	tw.tween_property(sprite, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.15)
 
+func setup_3d_hero_model(asset_ref: String, type_name: String = "knight", scale_mul: float = 1.0, tint: Color = Color.WHITE) -> CharacterModel3D:
+	var m3d = get_node_or_null("CharacterModel3D") as CharacterModel3D
+	if not m3d:
+		m3d = CharacterModel3D.new()
+		m3d.name = "CharacterModel3D"
+		add_child(m3d)
+	m3d.setup_model(asset_ref, type_name, scale_mul, tint)
+	m3d.visible = true
+	if sprite:
+		sprite.visible = false
+	var token_spr = get_node_or_null("HeroTokenRing") as Sprite2D
+	if token_spr:
+		token_spr.visible = false
+	return m3d
+
 func set_hero_visual_appearance(h_class: String) -> void:
 	if h_class == "wizard" or h_class == "mage":
 		var p_mage = "res://assets/sprites/characters/hero_mage.png"
@@ -242,6 +257,9 @@ func set_hero_visual_appearance(h_class: String) -> void:
 			idle_textures = [tex]
 			walk_textures = [tex]
 			attack_textures = [tex]
+		var m3d = setup_3d_hero_model("res://assets/models/character_wizard_pawn.glb", "wizard", 1.0)
+		if m3d:
+			m3d.equip_weapon("res://assets/models/weapon_staff_wizard.glb")
 
 func play_attack(target_pos: Vector2, on_hit_callback: Callable = Callable(), target_node: Node2D = null) -> void:
 	if is_attacking or is_down_prone or is_prone():
@@ -547,11 +565,32 @@ func play_cast_spell(spell_id: String, target_pos: Vector2, on_cast_callback: Ca
 			remove_meta("mm_target")
 		if has_meta("mm_shielded"):
 			remove_meta("mm_shielded")
+	elif spell_id == "fireball":
+		var m3d = get_node_or_null("CharacterModel3D") as CharacterModel3D
+		if m3d and m3d.has_method("update_facing"):
+			var dir_cast = global_position.direction_to(target_pos)
+			m3d.update_facing(dir_cast * 100.0)
+
+		# 3D Fireball Projectile Flight & 3D Volumetric Detonation
+		var cast_start = global_position + Vector2(16, -20)
+		var proj = SpellModel3D.cast_spell_projectile(get_parent(), "fireball", cast_start, target_pos, 750.0, func():
+			# 3D Detonation Shockwave Explosion
+			SpellModel3D.detonate_spell_explosion(get_parent(), "fireball", target_pos, 180.0, 0.65)
+			_spawn_fireball_explosion_vfx(target_pos, 180.0)
+			if AudioManager:
+				AudioManager.play_sfx("spell_impact")
+			if on_cast_callback.is_valid():
+				on_cast_callback.call()
+		)
+		var guard_t = 1.0
+		while is_instance_valid(proj) and guard_t > 0.0:
+			await get_tree().process_frame
+			guard_t -= get_process_delta_time()
 	else:
 		var orb = Node2D.new()
 		orb.top_level = true
 		orb.global_position = global_position + Vector2(0, -10)
-		var orb_col = Color(1.5, 0.6, 0.2, 1.0) if spell_id == "fireball" else Color(0.4, 0.8, 1.5, 1.0)
+		var orb_col = Color(0.4, 0.8, 1.5, 1.0)
 		var poly = Polygon2D.new()
 		var p_pts: PackedVector2Array = []
 		for i in range(16):
@@ -567,10 +606,7 @@ func play_cast_spell(spell_id: String, target_pos: Vector2, on_cast_callback: Ca
 		tw.tween_property(orb, "global_position", target_pos, flight_time)
 		await tw.finished
 		orb.queue_free()
-		if spell_id == "fireball":
-			_spawn_fireball_explosion_vfx(target_pos, 180.0)
-		else:
-			_spawn_spell_blast_vfx(target_pos, orb_col)
+		_spawn_spell_blast_vfx(target_pos, orb_col)
 		if AudioManager:
 			AudioManager.play_sfx("spell_impact")
 		if on_cast_callback.is_valid():

@@ -307,6 +307,9 @@
       "robos:range": "120 feet",
       "robos:damageFormula": "3d4+3",
       "robos:damageType": "force",
+      "robos:deliveryType": "projectile",
+      "robos:modelAssetRef": "res://assets/models/spell_magic_missile_orb.glb",
+      "robos:vfxColor": "#2ea6fa",
       "robos:package": "crpg",
       "robos:namespace": "robos.crpg"
     },
@@ -324,6 +327,9 @@
       "robos:range": "Touch",
       "robos:damageFormula": "1d8+WIS",
       "robos:damageType": "healing",
+      "robos:deliveryType": "aura",
+      "robos:modelAssetRef": "res://assets/models/spell_healing_glyph.glb",
+      "robos:vfxColor": "#26f273",
       "robos:package": "crpg",
       "robos:namespace": "robos.crpg"
     },
@@ -341,6 +347,70 @@
       "robos:range": "150 feet",
       "robos:damageFormula": "8d6",
       "robos:damageType": "fire",
+      "robos:deliveryType": "projectile",
+      "robos:modelAssetRef": "res://assets/models/spell_fireball_projectile.glb",
+      "robos:burstModelAssetRef": "res://assets/models/spell_fireball_explosion.glb",
+      "robos:vfxColor": "#fa6414",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:spell:blizzard",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Blizzard",
+      "robos:spellLevel": 3,
+      "robos:magicSchool": "Evocation",
+      "robos:castingTime": "1 action",
+      "robos:range": "120 feet",
+      "robos:damageFormula": "8d6",
+      "robos:damageType": "cold",
+      "robos:deliveryType": "aura",
+      "robos:modelAssetRef": "res://assets/models/spell_blizzard_vortex.glb",
+      "robos:vfxColor": "#bfe6ff",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:spell:dispel-magic",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Dispel Magic",
+      "robos:spellLevel": 3,
+      "robos:magicSchool": "Abjuration",
+      "robos:castingTime": "1 action",
+      "robos:range": "120 feet",
+      "robos:damageFormula": "dispel",
+      "robos:damageType": "purge",
+      "robos:deliveryType": "burst",
+      "robos:modelAssetRef": "res://assets/models/spell_dispel_purge.glb",
+      "robos:vfxColor": "#bf66fa",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:spell:water-splash",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Tidal Wave",
+      "robos:spellLevel": 3,
+      "robos:magicSchool": "Conjuration",
+      "robos:castingTime": "1 action",
+      "robos:range": "120 feet",
+      "robos:damageFormula": "4d8",
+      "robos:damageType": "bludgeoning",
+      "robos:deliveryType": "burst",
+      "robos:modelAssetRef": "res://assets/models/spell_water_splash.glb",
+      "robos:vfxColor": "#26a6f2",
       "robos:package": "crpg",
       "robos:namespace": "robos.crpg"
     },

@@ -125,6 +125,38 @@ func setup_spell(asset_path: String, vfx_type: String = "projectile", scale_mul:
 	# Fallback procedural spell mesh if GLB missing
 	_build_fallback_spell_mesh(vfx_type, tint)
 
+# --- FACTORY STATIC HELPERS (Reusable 3D Spell VFX API) ---
+
+static func cast_spell_projectile(parent: Node, spell_id: String, start_pos: Vector2, target_pos: Vector2, speed: float = 700.0, on_hit: Callable = Callable()) -> Node2D:
+	var script = load("res://scripts/SpellModel3D.gd")
+	var fx = script.new()
+	fx.name = "SpellProjectile_" + spell_id
+	parent.add_child(fx)
+	var tint = Color(1.0, 0.4, 0.1) if "fire" in spell_id else (Color(0.2, 0.7, 1.0) if "missile" in spell_id else (Color(0.6, 0.9, 1.0) if "frost" in spell_id else Color.WHITE))
+	fx.setup_spell(spell_id, "projectile", 1.0, tint)
+	fx.play_projectile(start_pos, target_pos, speed, on_hit)
+	return fx
+
+static func detonate_spell_explosion(parent: Node, spell_id: String, hit_pos: Vector2, radius: float = 180.0, duration: float = 0.55, on_complete: Callable = Callable()) -> Node2D:
+	var script = load("res://scripts/SpellModel3D.gd")
+	var fx = script.new()
+	fx.name = "SpellExplosion_" + spell_id
+	parent.add_child(fx)
+	var asset = "res://assets/models/spell_fireball_explosion.glb" if "fire" in spell_id else ("res://assets/models/spell_water_splash.glb" if "water" in spell_id else "res://assets/models/spell_dispel_purge.glb")
+	var tint = Color(1.0, 0.35, 0.05) if "fire" in spell_id else (Color(0.2, 0.65, 0.95) if "water" in spell_id else Color(0.75, 0.4, 0.98))
+	fx.setup_spell(asset, "burst", 1.4, tint)
+	fx.play_burst_explosion(hit_pos, radius, duration, on_complete)
+	return fx
+
+static func spawn_spell_aura(parent: Node, spell_id: String, center_pos: Vector2, radius: float = 120.0, duration: float = 3.0, on_complete: Callable = Callable()) -> Node2D:
+	var script = load("res://scripts/SpellModel3D.gd")
+	var fx = script.new()
+	fx.name = "SpellAura_" + spell_id
+	parent.add_child(fx)
+	fx.setup_spell(spell_id, "aura", clamp(radius / 90.0, 1.0, 2.5), Color.WHITE)
+	fx.play_area_aura(center_pos, duration, on_complete)
+	return fx
+
 func play_projectile(start_pos: Vector2, target_pos: Vector2, speed: float = 450.0, on_hit: Callable = Callable()) -> void:
 	global_position = start_pos
 	var distance = start_pos.distance_to(target_pos)
@@ -140,6 +172,28 @@ func play_projectile(start_pos: Vector2, target_pos: Vector2, speed: float = 450
 		if on_hit.is_valid():
 			on_hit.call()
 		_play_impact_and_free()
+	)
+
+func play_burst_explosion(pos: Vector2, radius: float = 180.0, duration: float = 0.55, on_complete: Callable = Callable()) -> void:
+	global_position = pos
+	spin_speed = 6.0
+	pulse_speed = 8.0
+	scale = Vector2(0.25, 0.25)
+	modulate = Color(1.8, 1.2, 1.0, 1.0)
+	
+	# Target scale proportional to 180px radius
+	var target_scale_val = clamp(radius / 75.0, 1.2, 3.2) * spell_scale_multiplier
+	var target_scale = Vector2(target_scale_val, target_scale_val)
+
+	var tween = create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(self, "scale", target_scale, duration * 0.45)
+	tween.parallel().tween_property(self, "rotation", PI * 0.75, duration)
+	tween.tween_interval(duration * 0.1)
+	tween.tween_property(self, "modulate:a", 0.0, duration * 0.45)
+	tween.tween_callback(func():
+		if on_complete.is_valid():
+			on_complete.call()
+		queue_free()
 	)
 
 func play_area_aura(pos: Vector2, duration: float = 3.0, on_complete: Callable = Callable()) -> void:
@@ -172,15 +226,25 @@ func _resolve_spell_path(path: String, vfx_type: String) -> String:
 			return check_p
 
 	var p = (path + " " + vfx_type).to_lower()
-	if "fireball" in p or "fire" in p or "flame" in p or "ignis" in p or "blast" in p:
+	if "explosion" in p or "detonat" in p:
+		return "res://assets/models/spell_fireball_explosion.glb"
+	elif "fireball" in p or "fire" in p or "flame" in p or "ignis" in p or "blast" in p:
+		if vfx_type == "burst":
+			return "res://assets/models/spell_fireball_explosion.glb"
 		return "res://assets/models/spell_fireball_projectile.glb"
+	elif "water" in p or "splash" in p or "hydro" in p or "tidal" in p:
+		return "res://assets/models/spell_water_splash.glb"
+	elif "blizzard" in p or "vortex" in p or "cyclone" in p:
+		return "res://assets/models/spell_blizzard_vortex.glb"
+	elif "dispel" in p or "purge" in p or "counter" in p or "null" in p or "abjur" in p:
+		return "res://assets/models/spell_dispel_purge.glb"
 	elif "missile" in p or "magic_missile" in p or "arcane" in p or "force" in p:
 		return "res://assets/models/spell_magic_missile_orb.glb"
 	elif "heal" in p or "cure" in p or "glyph" in p or "holy" in p or "restore" in p:
 		return "res://assets/models/spell_healing_glyph.glb"
 	elif "lightning" in p or "spark" in p or "shock" in p or "thunder" in p or "electric" in p:
 		return "res://assets/models/spell_lightning_spark.glb"
-	elif "frost" in p or "ice" in p or "cold" in p or "shard" in p or "blizzard" in p:
+	elif "frost" in p or "ice" in p or "cold" in p or "shard" in p:
 		return "res://assets/models/spell_frost_shard.glb"
 	elif "stinking_cloud" in p or "cloud" in p or "poison" in p or "gas" in p or "miasma" in p:
 		return "res://assets/models/spell_stinking_cloud_ring.glb"
@@ -202,8 +266,11 @@ func _apply_tint_to_meshes(root: Node3D, tint: Color) -> void:
 		if child is MeshInstance3D and child.mesh:
 			var mat = StandardMaterial3D.new()
 			mat.albedo_color = tint
-			mat.metallic = 0.3
+			mat.metallic = 0.2
 			mat.roughness = 0.2
+			mat.emission_enabled = true
+			mat.emission = tint
+			mat.emission_energy_multiplier = 1.8
 			child.material_override = mat
 		elif child is Node3D:
 			_apply_tint_to_meshes(child, tint)
@@ -221,6 +288,9 @@ func _build_fallback_spell_mesh(vfx_type: String, tint: Color) -> void:
 	mat.albedo_color = tint if tint != Color.WHITE else Color(0.2, 0.7, 1.0)
 	mat.metallic = 0.2
 	mat.roughness = 0.2
+	mat.emission_enabled = true
+	mat.emission = mat.albedo_color
+	mat.emission_energy_multiplier = 1.5
 	inst.material_override = mat
 	fallback_root.add_child(inst)
 

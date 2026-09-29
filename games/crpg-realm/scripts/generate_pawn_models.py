@@ -824,6 +824,84 @@ def build_spell_stinking_cloud_ring(filepath):
     b.export_glb(filepath)
 
 
+def build_spell_fireball_explosion(filepath):
+    """Fireball Explosion: Volumetric 3D detonation sphere with 8 radiating flame burst spikes, dual shockwaves, and embers."""
+    b = GLBBuilder("SpellFireballExplosion")
+    b.add_material("SpellFireExplosion", base_color=(1.0, 0.35, 0.05, 1.0), metallic=0.1, roughness=0.2)
+    # Central white-hot plasma blast core
+    b.add_sphere(center=(0, 0, 0), radius=0.38, rings=10, sectors=12)
+    # Primary expanding thermal shockwave ring
+    b.add_ring(center_y=0, inner_radius=0.50, outer_radius=0.75, height=0.08)
+    # Secondary outer pressure wave
+    b.add_ring(center_y=0, inner_radius=0.82, outer_radius=0.98, height=0.04)
+    # 8 Radial flame ejection cones projecting outward
+    for i in range(8):
+        a = 2.0 * math.pi * i / 8.0
+        x, z = 0.40 * math.cos(a), 0.40 * math.sin(a)
+        b.add_box(center=(x, 0.05 * math.sin(a * 2), z), size=(0.14, 0.12, 0.14))
+        b.add_cone(base_y=0, radius=0.08, height=0.45, segments=5)
+    # Dispersed flying spark fragments
+    for i in range(6):
+        a = 2.0 * math.pi * (i + 0.5) / 6.0
+        x, z = 0.65 * math.cos(a), 0.65 * math.sin(a)
+        b.add_box(center=(x, 0.12, z), size=(0.06, 0.06, 0.06))
+    b.export_glb(filepath)
+
+
+def build_spell_water_splash(filepath):
+    """Water Splash: Hydrokinetic impact dome with concentric tidal ripple rings and splashing crests."""
+    b = GLBBuilder("SpellWaterSplash")
+    b.add_material("SpellWaterSplash", base_color=(0.15, 0.65, 0.95, 0.9), metallic=0.2, roughness=0.1)
+    # Central surge column
+    b.add_cylinder(center_y=0.15, radius=0.22, height=0.30, segments=12)
+    # Impact crown / dome
+    b.add_sphere(center=(0, 0.30, 0), radius=0.26, rings=8, sectors=10)
+    # Expanding concentric water rings
+    b.add_ring(center_y=0.02, inner_radius=0.32, outer_radius=0.52, height=0.04)
+    b.add_ring(center_y=0.02, inner_radius=0.60, outer_radius=0.82, height=0.03)
+    # 6 Ascending splash droplet spires
+    for i in range(6):
+        a = 2.0 * math.pi * i / 6.0
+        x, z = 0.38 * math.cos(a), 0.38 * math.sin(a)
+        b.add_cone(base_y=0.10, radius=0.06, height=0.32, segments=5)
+    b.export_glb(filepath)
+
+
+def build_spell_blizzard_vortex(filepath):
+    """Blizzard Vortex: Whirling arctic cylinder with multi-tiered frost rings and orbiting ice daggers."""
+    b = GLBBuilder("SpellBlizzardVortex")
+    b.add_material("SpellBlizzardVortex", base_color=(0.75, 0.90, 1.0, 1.0), metallic=0.5, roughness=0.1)
+    # Central cold core
+    b.add_cylinder(center_y=0.25, radius=0.18, height=0.50, segments=10)
+    # 3 Staggered vortex wind rings
+    b.add_ring(center_y=0.08, inner_radius=0.30, outer_radius=0.45, height=0.04)
+    b.add_ring(center_y=0.28, inner_radius=0.42, outer_radius=0.62, height=0.04)
+    b.add_ring(center_y=0.48, inner_radius=0.55, outer_radius=0.78, height=0.04)
+    # Orbiting frost spikes
+    for i in range(6):
+        a = 2.0 * math.pi * i / 6.0
+        x, z = 0.50 * math.cos(a), 0.50 * math.sin(a)
+        b.add_cone(base_y=0.20 + (0.05 * (i % 2)), radius=0.05, height=0.25, segments=4)
+    b.export_glb(filepath)
+
+
+def build_spell_dispel_purge(filepath):
+    """Dispel Purge: Sacred abjuration geometric rings with banishing prisms and nullifying runic cage."""
+    b = GLBBuilder("SpellDispelPurge")
+    b.add_material("SpellDispelPurge", base_color=(0.75, 0.40, 0.98, 1.0), metallic=0.4, roughness=0.2)
+    # Central nullification core
+    b.add_sphere(center=(0, 0.15, 0), radius=0.16, rings=8, sectors=8)
+    # Dual counter-rotating abjuration rings
+    b.add_ring(center_y=0.10, inner_radius=0.35, outer_radius=0.50, height=0.04)
+    b.add_ring(center_y=0.25, inner_radius=0.48, outer_radius=0.65, height=0.04)
+    # 4 Geometric dispel prism pillars
+    for i in range(4):
+        a = 2.0 * math.pi * i / 4.0
+        x, z = 0.42 * math.cos(a), 0.42 * math.sin(a)
+        b.add_box(center=(x, 0.20, z), size=(0.08, 0.35, 0.08))
+    b.export_glb(filepath)
+
+
 def build_weapon_greatsword(filepath):
     """Greatsword: Massive two-handed claymore with extended grip, wide fuller, and side lugs."""
     b = GLBBuilder("WeaponGreatsword")
@@ -1050,11 +1128,15 @@ if __name__ == "__main__":
 
     # Spell VFX & Projectile 3D Models
     build_spell_fireball(os.path.join(out_dir, "spell_fireball_projectile.glb"))
+    build_spell_fireball_explosion(os.path.join(out_dir, "spell_fireball_explosion.glb"))
     build_spell_magic_missile(os.path.join(out_dir, "spell_magic_missile_orb.glb"))
     build_spell_healing_glyph(os.path.join(out_dir, "spell_healing_glyph.glb"))
     build_spell_lightning_spark(os.path.join(out_dir, "spell_lightning_spark.glb"))
     build_spell_frost_shard(os.path.join(out_dir, "spell_frost_shard.glb"))
     build_spell_stinking_cloud_ring(os.path.join(out_dir, "spell_stinking_cloud_ring.glb"))
+    build_spell_water_splash(os.path.join(out_dir, "spell_water_splash.glb"))
+    build_spell_blizzard_vortex(os.path.join(out_dir, "spell_blizzard_vortex.glb"))
+    build_spell_dispel_purge(os.path.join(out_dir, "spell_dispel_purge.glb"))
 
-    print("✨ All 39 3D models generated successfully!")
+    print("✨ All 43 3D models generated successfully!")
 

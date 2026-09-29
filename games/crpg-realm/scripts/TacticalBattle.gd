@@ -991,6 +991,9 @@ func configure_goblin_crowd_encounter(count: int = 6, goblin_hp: int = 7) -> Dic
 		g.sprite_texture_path = "res://assets/sprites/enemies/goblin.png"
 		g.sprite_scale = Vector2(0.40, 0.40)
 		g.position = center + offsets[i % offsets.size()]
+		g.setup_3d_pawn("res://assets/models/monster_goblin_pawn.glb", "goblin", 0.95)
+		if g.model_3d:
+			g.model_3d.equip_weapon("res://assets/models/weapon_dagger_rogue.glb")
 
 		add_child(g)
 		g.enemy_slain.connect(_on_enemy_slain)
