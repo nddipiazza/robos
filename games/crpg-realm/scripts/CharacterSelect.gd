@@ -139,7 +139,13 @@ func _ready() -> void:
 	demo_real_btn.add_theme_font_size_override("font_size", 14)
 	demo_real_btn.add_theme_color_override("font_color", Color(0.35, 0.9, 0.5))
 	demo_real_btn.tooltip_text = "Watch live autonomous playthroughs in the real cRPG app"
-	demo_real_btn.pressed.connect(func(): _start_demo(1))
+	demo_real_btn.pressed.connect(func():
+		if has_node("/root/CartridgeManager") and CartridgeManager.is_cartridge_active:
+			CartridgeManager.auto_play_enabled = true
+			embark()
+		else:
+			_start_demo(1)
+	)
 	add_child(demo_real_btn)
 
 	_setup_cartridge_bay()
@@ -159,12 +165,7 @@ func _ready() -> void:
 				auto_demo = 0
 		else:
 			var cmd_args = OS.get_cmdline_user_args() + OS.get_cmdline_args()
-			if "--real-demo" in cmd_args or "--demo=real" in cmd_args:
-				auto_demo = 1
-			elif "--demo" in cmd_args:
-				auto_demo = 0
-
-			# Check if launched via "Render as Game" with --cartridge, --campaign, CRPG_CARTRIDGE, CRPG_CAMPAIGN
+			# Check if launched with --cartridge, --campaign, CRPG_CARTRIDGE, CRPG_CAMPAIGN
 			var camp_slug = OS.get_environment("CRPG_CARTRIDGE")
 			if camp_slug == "":
 				camp_slug = OS.get_environment("CRPG_CAMPAIGN")
@@ -174,9 +175,29 @@ func _ready() -> void:
 					camp_slug = cmd_args[i + 1]
 				elif a.begins_with("--cartridge=") or a.begins_with("--campaign="):
 					camp_slug = a.split("=")[1]
+
+			var wants_auto = (
+				"--auto-play" in cmd_args or
+				"--real-demo" in cmd_args or
+				"--demo=real" in cmd_args or
+				"--demo" in cmd_args or
+				OS.get_environment("CRPG_AUTO_PLAY") == "1"
+			)
+
 			if camp_slug != "":
+				if has_node("/root/CartridgeManager"):
+					CartridgeManager.auto_play_enabled = wants_auto
 				_load_and_embark_campaign.call_deferred(camp_slug)
 				return
+
+			if "--real-demo" in cmd_args or "--demo=real" in cmd_args:
+				if has_node("/root/CartridgeManager") and CartridgeManager.is_cartridge_active:
+					CartridgeManager.auto_play_enabled = true
+					embark.call_deferred()
+					return
+				auto_demo = 1
+			elif "--demo" in cmd_args:
+				auto_demo = 0
 
 	if auto_demo >= 0:
 		_start_demo.call_deferred(auto_demo)
@@ -398,7 +419,7 @@ func _setup_cartridge_bay() -> void:
 	bay_panel.anchor_top = 0.0
 	bay_panel.offset_left = 32.0
 	bay_panel.offset_top = 16.0
-	bay_panel.offset_right = 460.0
+	bay_panel.offset_right = 720.0
 	bay_panel.offset_bottom = 56.0
 
 	var hbox = HBoxContainer.new()
@@ -415,6 +436,32 @@ func _setup_cartridge_bay() -> void:
 	opt.custom_minimum_size = Vector2(280, 32)
 	opt.add_theme_font_size_override("font_size", 12)
 	hbox.add_child(opt)
+
+	var btn_play = Button.new()
+	btn_play.text = "▶ Play"
+	btn_play.custom_minimum_size = Vector2(85, 32)
+	btn_play.add_theme_font_size_override("font_size", 12)
+	btn_play.add_theme_color_override("font_color", Color(0.35, 0.95, 0.55))
+	btn_play.tooltip_text = "Embark into the selected cartridge and play interactively"
+	btn_play.pressed.connect(func():
+		if has_node("/root/CartridgeManager"):
+			CartridgeManager.auto_play_enabled = false
+		embark()
+	)
+	hbox.add_child(btn_play)
+
+	var btn_auto = Button.new()
+	btn_auto.text = "⚡ Auto-Play"
+	btn_auto.custom_minimum_size = Vector2(105, 32)
+	btn_auto.add_theme_font_size_override("font_size", 12)
+	btn_auto.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
+	btn_auto.tooltip_text = "Watch the cartridge play its story autonomously"
+	btn_auto.pressed.connect(func():
+		if has_node("/root/CartridgeManager"):
+			CartridgeManager.auto_play_enabled = true
+		embark()
+	)
+	hbox.add_child(btn_auto)
 
 	for i in range(carts.size()):
 		var c = carts[i]

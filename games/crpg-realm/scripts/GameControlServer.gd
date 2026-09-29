@@ -2760,7 +2760,26 @@ func _execute_game_action(payload: Dictionary) -> Dictionary:
 				cur_scene.reset_encounter()
 			else:
 				GameState.retry_encounter()
-			return {"success": true, "hero_hp": GameState.hero_hp, "is_party_defeated": GameState.is_party_defeated}
+		"toggle_auto_play":
+			var cw = cur_scene if (cur_scene and cur_scene.has_method("toggle_auto_play")) else get_tree().root.find_child("CartridgeWorld", true, false)
+			if cw and cw.has_method("toggle_auto_play"):
+				cw.toggle_auto_play()
+				return {"success": true, "is_auto_playing": cw.is_auto_playing}
+			return {"success": false, "error": "CartridgeWorld not found"}
+
+		"start_auto_play":
+			var cw = cur_scene if (cur_scene and cur_scene.has_method("start_auto_play")) else get_tree().root.find_child("CartridgeWorld", true, false)
+			if cw and cw.has_method("start_auto_play"):
+				cw.start_auto_play()
+				return {"success": true, "is_auto_playing": cw.is_auto_playing}
+			return {"success": false, "error": "CartridgeWorld not found"}
+
+		"pause_auto_play":
+			var cw = cur_scene if (cur_scene and cur_scene.has_method("pause_auto_play")) else get_tree().root.find_child("CartridgeWorld", true, false)
+			if cw and cw.has_method("pause_auto_play"):
+				cw.pause_auto_play(str(args.get("reason", "API request")))
+				return {"success": true, "is_auto_playing": cw.is_auto_playing}
+			return {"success": false, "error": "CartridgeWorld not found"}
 
 		_:
 			return {"success": false, "error": "Unknown action: %s" % action}

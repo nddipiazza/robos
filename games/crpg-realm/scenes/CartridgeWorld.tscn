@@ -40,6 +40,7 @@ script = ExtResource("1_cw")
 [node name="Background" type="ColorRect" parent="."]
 offset_right = 2500.0
 offset_bottom = 2000.0
+mouse_filter = 2
 color = Color(0.08, 0.1, 0.14, 1)
 
 [node name="MapElements" type="Node2D" parent="."]

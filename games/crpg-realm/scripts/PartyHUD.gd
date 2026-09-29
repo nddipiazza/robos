@@ -66,6 +66,33 @@ func _ready() -> void:
 		add_child(char_btn)
 	char_btn.pressed.connect(func(): toggle_character_status())
 
+	var autoplay_btn = find_child("BtnAutoPlay", true, false)
+	if not autoplay_btn:
+		autoplay_btn = Button.new()
+		autoplay_btn.name = "BtnAutoPlay"
+		autoplay_btn.text = "🎮 Auto-Play"
+		autoplay_btn.custom_minimum_size = Vector2(120, 36)
+		autoplay_btn.anchor_left = 1.0
+		autoplay_btn.anchor_right = 1.0
+		autoplay_btn.anchor_top = 0.5
+		autoplay_btn.anchor_bottom = 0.5
+		autoplay_btn.offset_left = -660.0
+		autoplay_btn.offset_right = -535.0
+		autoplay_btn.offset_top = -18.0
+		autoplay_btn.offset_bottom = 18.0
+		autoplay_btn.add_theme_font_size_override("font_size", 12)
+		autoplay_btn.add_theme_color_override("font_color", Color(0.3, 0.9, 1.0, 1.0))
+		add_child(autoplay_btn)
+	autoplay_btn.pressed.connect(func():
+		var cur = get_tree().current_scene
+		if cur and cur.has_method("toggle_auto_play"):
+			cur.toggle_auto_play()
+		else:
+			var cw = get_tree().root.find_child("CartridgeWorld", true, false)
+			if cw and cw.has_method("toggle_auto_play"):
+				cw.toggle_auto_play()
+	)
+
 	# Clean up any legacy single-hero status block if present in scenes
 	for legacy_name in ["HeroNameLabel", "HeroLabel", "HPBar", "HPLabel"]:
 		var legacy_node = find_child(legacy_name, true, false)
@@ -259,3 +286,13 @@ func toggle_character_status(member_idx: int = -1) -> void:
 	var csw = canvas.find_child("CharacterStatusWindow", true, false)
 	if csw and csw.has_method("toggle"):
 		csw.toggle(member_idx)
+
+func set_autoplay_button_state(is_auto: bool) -> void:
+	var btn = find_child("BtnAutoPlay", true, false) as Button
+	if btn:
+		if is_auto:
+			btn.text = "⏸ Manual"
+			btn.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3, 1.0))
+		else:
+			btn.text = "🎮 Auto-Play"
+			btn.add_theme_color_override("font_color", Color(0.3, 0.9, 1.0, 1.0))

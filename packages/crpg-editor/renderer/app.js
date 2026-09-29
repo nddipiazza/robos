@@ -4715,10 +4715,14 @@ function setupCharacterHandlers() {
     });
   });
 
-  // Live Portrait & Name sync
+  // Live Portrait, Token & Name sync
   document.getElementById('hero-portrait')?.addEventListener('input', (e) => {
-    const avatar = document.getElementById('hero-avatar-display');
-    if (avatar) avatar.textContent = e.target.value.trim() || '👤';
+    const isNpc = document.getElementById('radio-type-npc')?.checked;
+    renderAvatarPreview('hero-avatar-display', e.target.value.trim(), isNpc ? '👑' : '👤');
+  });
+
+  document.getElementById('hero-token-asset')?.addEventListener('input', (e) => {
+    renderTokenPreview('hero-token-display', e.target.value.trim(), '🪙');
   });
 
   document.getElementById('hero-name')?.addEventListener('input', (e) => {
@@ -4832,6 +4836,9 @@ function toggleCharacterTypeUI(isNpc) {
   const charName = document.getElementById('hero-name')?.value || 'Character';
   const titleEl = document.getElementById('sheet-hero-title');
   if (titleEl) titleEl.textContent = `${charName} (${isNpc ? 'NPC' : 'Player Character'})`;
+
+  const curPortrait = document.getElementById('hero-portrait')?.value?.trim();
+  renderAvatarPreview('hero-avatar-display', curPortrait, isNpc ? '👑' : '👤');
 }
 
 function updateAbilityModifier(attr, val) {
@@ -4854,7 +4861,8 @@ async function loadAllCharacters(options = {}) {
         hdrSelect.innerHTML = '<option value="">(No character selected)</option>' +
           state.characters.map(c => {
             const isNpc = c.characterType === 'npc' || !!c.role;
-            return `<option value="${c.slug}">${c.portrait || (isNpc ? '👑' : '👤')} ${c.name || c.slug}</option>`;
+            const icon = getSelectOptionEmoji(c.portrait, isNpc ? '👑' : '👤');
+            return `<option value="${c.slug}">${icon} ${c.name || c.slug}</option>`;
           }).join('');
         if (state.activeCharacterSlug) {
           hdrSelect.value = state.activeCharacterSlug;
@@ -4916,7 +4924,7 @@ function renderCharactersList() {
     const isActive = c.slug === state.activeCharacterSlug;
     return `
       <div class="hero-list-item ${isActive ? 'active' : ''}" data-slug="${c.slug}">
-        <div class="hero-avatar-badge">${c.portrait || (isNpc ? '👑' : '👤')}</div>
+        <div class="hero-avatar-badge">${getAvatarBadgeHtml(c, isNpc)}</div>
         <div class="hero-info-text">
           <div style="display:flex;align-items:center;gap:6px;">
             <span class="hero-name-label">${c.name || c.slug}</span>
@@ -5506,7 +5514,7 @@ function applyArchetype(arch, archKey) {
   toggleCharacterTypeUI(isNpc);
 
   document.getElementById('sheet-hero-title').textContent = `${arch.name} (${isNpc ? 'NPC' : 'Player Character'})`;
-  document.getElementById('hero-avatar-display').textContent = arch.portrait || (isNpc ? '👑' : '👤');
+  renderAvatarPreview('hero-avatar-display', arch.portrait, isNpc ? '👑' : '👤');
   document.getElementById('hero-name').value = arch.name;
   document.getElementById('hero-slug').value = safeSlug;
   document.getElementById('hero-portrait').value = arch.portrait || '';
@@ -6186,7 +6194,7 @@ function renderInventoryViews() {
         html += '<optgroup label="Player Characters">';
         heroes.forEach(h => {
           const id = h.id || h['@id'] || `urn:robos:crpg:character:${h.slug}`;
-          html += `<option value="${id}">${h.portrait || '👤'} ${h.name || h.slug}</option>`;
+          html += `<option value="${id}">${getSelectOptionEmoji(h.portrait, '👤')} ${h.name || h.slug}</option>`;
         });
         html += '</optgroup>';
       }
@@ -6194,7 +6202,7 @@ function renderInventoryViews() {
         html += '<optgroup label="NPCs & Companions">';
         npcs.forEach(n => {
           const id = n.id || n['@id'] || `urn:robos:crpg:character:${n.slug}`;
-          html += `<option value="${id}">${n.portrait || '👑'} ${n.name || n.slug} (${n.role || 'NPC'})</option>`;
+          html += `<option value="${id}">${getSelectOptionEmoji(n.portrait, '👑')} ${n.name || n.slug} (${n.role || 'NPC'})</option>`;
         });
         html += '</optgroup>';
       }
@@ -6225,7 +6233,7 @@ function updateLeaderDropdown() {
 
   leaderSelect.innerHTML = activeHeroes.map(h => {
     const id = h.id || h['@id'] || `urn:robos:crpg:character:${h.slug}`;
-    return `<option value="${id}">${h.portrait || '👤'} ${h.name}</option>`;
+    return `<option value="${id}">${getSelectOptionEmoji(h.portrait, '👤')} ${h.name}</option>`;
   }).join('');
 
   const leaderIdx = gs['robos:partyLeaderIndex'] || 0;
@@ -7517,6 +7525,10 @@ function setupItemHandlers() {
       }
     }
   });
+
+  document.getElementById('item-icon')?.addEventListener('input', (e) => {
+    renderThumbPreview('item-icon-preview', e.target.value.trim(), '📦');
+  });
 }
 
 function updateItemCategorySections() {
@@ -7573,7 +7585,7 @@ function updateItemsHeaderSelect() {
     (state.items || []).map(it => {
       const slug = it.slug || it['dcterms:identifier'];
       const title = it['dcterms:title'] || it.title || it.name || slug;
-      const icon = it['robos:icon'] || it.icon || '📦';
+      const icon = getSelectOptionEmoji(it['robos:icon'] || it.icon, '📦');
       return `<option value="${slug}">${icon} ${title}</option>`;
     }).join('');
 
@@ -7622,7 +7634,7 @@ function renderItemsList() {
 
     return `
       <div class="item-list-item ${isSelected ? 'active' : ''}" data-slug="${slug}" draggable="true">
-        <span class="item-list-icon">${icon}</span>
+        <span class="item-list-icon">${getItemBadgeHtml(it)}</span>
         <div class="item-list-meta">
           <div class="item-list-title">${title}</div>
           <div class="item-list-sub">
@@ -8086,6 +8098,16 @@ function setupEnemyHandlers() {
     document.getElementById(`enemy-${st}`)?.addEventListener('input', updateEnemyAbilityMods);
   });
 
+  document.getElementById('enemy-icon')?.addEventListener('input', (e) => {
+    const isBoss = document.getElementById('enemy-is-boss')?.checked;
+    renderAvatarPreview('enemy-avatar-display', e.target.value.trim(), isBoss ? '😈' : '👹');
+    updateEnemyFormIcon(e.target.value.trim(), isBoss);
+  });
+
+  document.getElementById('enemy-token-asset')?.addEventListener('input', (e) => {
+    renderTokenPreview('enemy-token-display', e.target.value.trim(), '🪙');
+  });
+
   document.getElementById('btn-add-enemy-attack')?.addEventListener('click', addAttackToCurrentEnemy);
 }
 
@@ -8122,7 +8144,8 @@ function updateEnemiesHeaderSelect() {
     (state.enemies || []).map(en => {
       const slug = en.slug || en.id;
       const title = en.name || en.title || slug;
-      const icon = en.portrait || en.icon || '👹';
+      const isBoss = Boolean(en.isBoss || en.boss);
+      const icon = getSelectOptionEmoji(en.portrait || en.icon, isBoss ? '😈' : '👹');
       const cr = en.challengeRating || en.cr || '1/4';
       return `<option value="${slug}">${icon} ${title} (CR ${cr})</option>`;
     }).join('');
@@ -8180,7 +8203,7 @@ function renderEnemiesList() {
     return `
       <div class="enemy-list-item ${isSelected ? 'active' : ''}" data-slug="${slug}">
         <div class="enemy-item-info">
-          <span class="enemy-item-icon">${icon}</span>
+          <span class="enemy-item-icon">${getEnemyBadgeHtml(en)}</span>
           <div class="enemy-item-details">
             <div class="enemy-item-title">${title}</div>
             <div class="enemy-item-sub">
@@ -8272,8 +8295,7 @@ async function loadEnemyForm(slug) {
 
     const formTitle = document.getElementById('enemy-form-title');
     if (formTitle) formTitle.textContent = `Enemy Blueprint: ${name}`;
-    const formIcon = document.getElementById('enemy-form-icon');
-    if (formIcon) formIcon.textContent = icon;
+    updateEnemyFormIcon(icon, isBoss);
 
     const hdrSelect = document.getElementById('header-enemy-select');
     if (hdrSelect) hdrSelect.value = slug;
@@ -8357,8 +8379,7 @@ function createNewEnemy(presetKey = null) {
 
   const formTitle = document.getElementById('enemy-form-title');
   if (formTitle) formTitle.textContent = presetKey ? `Blueprint: ${ENEMY_PRESETS[presetKey].name}` : 'Create New Enemy Blueprint';
-  const formIcon = document.getElementById('enemy-form-icon');
-  if (formIcon) formIcon.textContent = document.getElementById('enemy-icon').value;
+  updateEnemyFormIcon(document.getElementById('enemy-icon')?.value || '👹', false);
 
   const hdrSelect = document.getElementById('header-enemy-select');
   if (hdrSelect) hdrSelect.value = '';
@@ -8542,8 +8563,7 @@ async function saveCurrentEnemy() {
       await loadAllEnemies();
       const formTitle = document.getElementById('enemy-form-title');
       if (formTitle) formTitle.textContent = `Enemy Blueprint: ${name}`;
-      const formIcon = document.getElementById('enemy-form-icon');
-      if (formIcon) formIcon.textContent = icon;
+      updateEnemyFormIcon(icon, isBoss);
     } else {
       setStatus(`Failed to save enemy: ${res.error}`);
     }
@@ -11318,21 +11338,111 @@ function selectAssetCard(asset, cardEl) {
 }
 
 // Visual Media Helpers for Pane Elements
+function isLikelyImagePath(val) {
+  if (!val || typeof val !== 'string') return false;
+  const s = val.trim().toLowerCase();
+  return (
+    s.endsWith('.png') ||
+    s.endsWith('.jpg') ||
+    s.endsWith('.jpeg') ||
+    s.endsWith('.webp') ||
+    s.endsWith('.svg') ||
+    s.startsWith('assets/') ||
+    s.startsWith('res://') ||
+    s.startsWith('file://') ||
+    s.startsWith('data:') ||
+    s.startsWith('/') ||
+    s.includes('/') ||
+    s.includes('\\')
+  );
+}
+
+function hasValidImageExtension(val) {
+  if (!val || typeof val !== 'string') return false;
+  const s = val.trim().toLowerCase();
+  return (
+    s.endsWith('.png') ||
+    s.endsWith('.jpg') ||
+    s.endsWith('.jpeg') ||
+    s.endsWith('.webp') ||
+    s.endsWith('.svg')
+  );
+}
+
+function resolveAssetSrc(val) {
+  if (!val || typeof val !== 'string') return '';
+  val = val.trim();
+  if (val.startsWith('file://') || val.startsWith('data:') || val.startsWith('http://') || val.startsWith('https://')) {
+    return val;
+  }
+  const clean = val.replace(/^res:\/\//, '').replace(/^\/+/, '');
+  return `../../../games/crpg-realm/${clean}`;
+}
+
+function isSingleEmojiOrSymbol(val) {
+  if (!val || typeof val !== 'string') return false;
+  const s = val.trim();
+  if (s.length === 0 || s.length > 4) return false;
+  if (/[a-zA-Z0-9_\-\.\/\\]/.test(s)) return false;
+  return true;
+}
+
 function renderAvatarPreview(elementId, portraitValue, fallbackEmoji = '👤') {
   const el = document.getElementById(elementId);
   if (!el) return;
-  if (portraitValue && (portraitValue.startsWith('assets/') || portraitValue.endsWith('.png') || portraitValue.endsWith('.jpg') || portraitValue.endsWith('.webp'))) {
-    el.innerHTML = `<img src="../../../games/crpg-realm/${portraitValue}" alt="Portrait" style="width: 100%; height: 100%; object-fit: cover;">`;
+
+  const val = (portraitValue || '').trim();
+
+  // If empty, display fallback emoji placeholder
+  if (!val) {
+    el.textContent = fallbackEmoji;
+    return;
+  }
+
+  // If it looks like an image path:
+  if (isLikelyImagePath(val)) {
+    // Only attempt <img> if it actually ends with a valid image extension
+    if (hasValidImageExtension(val)) {
+      const src = resolveAssetSrc(val);
+      el.innerHTML = `<img src="${src}" alt="Portrait" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.parentElement.textContent='${fallbackEmoji}';">`;
+    } else {
+      // In-progress typed path (e.g. "assets/portraits/port") -> keep placeholder icon/emoji!
+      el.textContent = fallbackEmoji;
+    }
+    return;
+  }
+
+  // Not a path: only show text if it's an actual emoji/symbol, NEVER raw path text
+  if (isSingleEmojiOrSymbol(val)) {
+    el.textContent = val;
   } else {
-    el.textContent = portraitValue || fallbackEmoji;
+    el.textContent = fallbackEmoji;
   }
 }
 
 function renderTokenPreview(elementId, tokenValue, fallback = '🪙') {
   const el = document.getElementById(elementId);
   if (!el) return;
-  if (tokenValue && (tokenValue.startsWith('assets/') || tokenValue.endsWith('.png') || tokenValue.endsWith('.webp'))) {
-    el.innerHTML = `<img src="../../../games/crpg-realm/${tokenValue}" alt="Token" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+
+  const val = (tokenValue || '').trim();
+
+  if (!val) {
+    el.textContent = fallback;
+    return;
+  }
+
+  if (isLikelyImagePath(val)) {
+    if (hasValidImageExtension(val)) {
+      const src = resolveAssetSrc(val);
+      el.innerHTML = `<img src="${src}" alt="Token" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" onerror="this.onerror=null; this.parentElement.textContent='${fallback}';">`;
+    } else {
+      el.textContent = fallback;
+    }
+    return;
+  }
+
+  if (isSingleEmojiOrSymbol(val)) {
+    el.textContent = val;
   } else {
     el.textContent = fallback;
   }
@@ -11341,19 +11451,138 @@ function renderTokenPreview(elementId, tokenValue, fallback = '🪙') {
 function renderThumbPreview(elementId, assetValue, fallback = '📦') {
   const el = document.getElementById(elementId);
   if (!el) return;
-  if (assetValue && (assetValue.startsWith('assets/') || assetValue.endsWith('.png') || assetValue.endsWith('.webp') || assetValue.endsWith('.svg'))) {
-    el.innerHTML = `<img src="../../../games/crpg-realm/${assetValue}" alt="Icon" style="width: 100%; height: 100%; object-fit: contain;">`;
+
+  const val = (assetValue || '').trim();
+
+  if (!val) {
+    el.textContent = fallback;
+    return;
+  }
+
+  if (isLikelyImagePath(val)) {
+    if (hasValidImageExtension(val)) {
+      const src = resolveAssetSrc(val);
+      el.innerHTML = `<img src="${src}" alt="Icon" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.onerror=null; this.parentElement.textContent='${fallback}';">`;
+    } else {
+      el.textContent = fallback;
+    }
+    return;
+  }
+
+  if (isSingleEmojiOrSymbol(val)) {
+    el.textContent = val;
   } else {
-    el.textContent = assetValue || fallback;
+    el.textContent = fallback;
   }
 }
 
 function renderSplashPreview(elementId, assetValue) {
   const el = document.getElementById(elementId);
   if (!el) return;
-  if (assetValue && (assetValue.startsWith('assets/') || assetValue.endsWith('.png') || assetValue.endsWith('.jpg') || assetValue.endsWith('.webp'))) {
-    el.innerHTML = `<img src="../../../games/crpg-realm/${assetValue}" alt="Splash" style="max-height: 100%; max-width: 100%; object-fit: contain;">`;
+  const val = (assetValue || '').trim();
+
+  if (!val) {
+    el.innerHTML = `<span class="media-slot-placeholder" style="font-size: 12px; color: var(--text-muted);">🖼️ No Cover Artwork Set</span>`;
+    return;
+  }
+
+  if (hasValidImageExtension(val)) {
+    const src = resolveAssetSrc(val);
+    el.innerHTML = `<img src="${src}" alt="Splash" style="max-height: 100%; max-width: 100%; object-fit: contain;" onerror="this.onerror=null; this.parentElement.innerHTML='<span class=\\'media-slot-placeholder\\' style=\\'font-size: 12px; color: var(--text-muted);\\'>🖼️ No Cover Artwork Set</span>';">`;
   } else {
     el.innerHTML = `<span class="media-slot-placeholder" style="font-size: 12px; color: var(--text-muted);">🖼️ No Cover Artwork Set</span>`;
   }
 }
+
+function getAvatarBadgeHtml(char, isNpc = false) {
+  const fallback = isNpc ? '👑' : '👤';
+  if (!char) return fallback;
+  const asset = (
+    char.tokenAssetRef ||
+    char['robos:tokenAssetRef'] ||
+    char.portraitAssetRef ||
+    char['robos:portraitAssetRef'] ||
+    char.portrait ||
+    char['robos:portrait'] ||
+    ''
+  ).trim();
+
+  if (asset && isLikelyImagePath(asset) && hasValidImageExtension(asset)) {
+    const src = resolveAssetSrc(asset);
+    return `<img src="${src}" alt="${char.name || 'Avatar'}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;" onerror="this.onerror=null;this.parentElement.textContent='${fallback}';">`;
+  }
+  if (asset && isSingleEmojiOrSymbol(asset)) {
+    return asset;
+  }
+  return fallback;
+}
+
+function getEnemyBadgeHtml(en) {
+  const isBoss = Boolean(en && (en.isBoss || en.boss));
+  const fallback = isBoss ? '😈' : '👹';
+  if (!en) return fallback;
+  const asset = (
+    en.tokenAssetRef ||
+    en['robos:tokenAssetRef'] ||
+    en.portraitAssetRef ||
+    en['robos:portraitAssetRef'] ||
+    en.portrait ||
+    en['robos:portrait'] ||
+    en.icon ||
+    en['robos:icon'] ||
+    ''
+  ).trim();
+
+  if (asset && isLikelyImagePath(asset) && hasValidImageExtension(asset)) {
+    const src = resolveAssetSrc(asset);
+    return `<img src="${src}" alt="${en.name || en.title || 'Enemy'}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;display:block;" onerror="this.onerror=null;this.parentElement.textContent='${fallback}';">`;
+  }
+  if (asset && isSingleEmojiOrSymbol(asset)) {
+    return asset;
+  }
+  return fallback;
+}
+
+function getItemBadgeHtml(it) {
+  const fallback = '📦';
+  if (!it) return fallback;
+  const asset = (
+    it['robos:icon'] ||
+    it.icon ||
+    it.assetRef ||
+    it['robos:assetRef'] ||
+    ''
+  ).trim();
+
+  if (asset && isLikelyImagePath(asset) && hasValidImageExtension(asset)) {
+    const src = resolveAssetSrc(asset);
+    return `<img src="${src}" alt="${it['dcterms:title'] || it.title || it.name || 'Item'}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;display:block;" onerror="this.onerror=null;this.parentElement.textContent='${fallback}';">`;
+  }
+  if (asset && isSingleEmojiOrSymbol(asset)) {
+    return asset;
+  }
+  return fallback;
+}
+
+function updateEnemyFormIcon(iconValue, isBoss = false) {
+  const formIcon = document.getElementById('enemy-form-icon');
+  if (!formIcon) return;
+  const fallback = isBoss ? '😈' : '👹';
+  const val = (iconValue || '').trim();
+  if (isSingleEmojiOrSymbol(val)) {
+    formIcon.innerHTML = val;
+  } else if (isLikelyImagePath(val) && hasValidImageExtension(val)) {
+    const src = resolveAssetSrc(val);
+    formIcon.innerHTML = `<img src="${src}" alt="Icon" style="width:24px;height:24px;object-fit:cover;border-radius:4px;vertical-align:middle;display:inline-block;" onerror="this.onerror=null;this.parentElement.textContent='${fallback}';">`;
+  } else {
+    formIcon.textContent = fallback;
+  }
+}
+
+function getSelectOptionEmoji(val, fallback = '📦') {
+  if (!val || typeof val !== 'string') return fallback;
+  const s = val.trim();
+  return isSingleEmojiOrSymbol(s) ? s : fallback;
+}
+
+

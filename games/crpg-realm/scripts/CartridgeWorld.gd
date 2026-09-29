@@ -21,6 +21,11 @@ var spawned_npcs: Dictionary = {}
 var spawned_monsters: Dictionary = {}
 var active_connections: Array = []
 var has_background_art: bool = false
+var is_auto_playing: bool = false
+var _auto_play_generation: int = 0
+var auto_play_banner: PanelContainer = null
+var auto_play_label: Label = null
+var auto_play_btn: Button = null
 
 func _load_texture_safe(path: String) -> Texture2D:
 	if path == "":
@@ -42,13 +47,142 @@ func _load_texture_safe(path: String) -> Texture2D:
 
 func _ready() -> void:
 	print("📼 [CartridgeWorld] Initializing Cartridge Runner...")
+	if $Background:
+		$Background.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if not has_node("/root/CartridgeManager") or not CartridgeManager.is_cartridge_active:
-		# If launched without a cartridge, auto-insert rescue-the-princess
+		# If launched without a cartridge, auto-insert dragonwarrior-1-usa
 		if has_node("/root/CartridgeManager"):
-			CartridgeManager.insert_cartridge("rescue-the-princess")
+			CartridgeManager.insert_cartridge("dragonwarrior-1-usa")
 
 	CartridgeManager.cartridge_map_transitioned.connect(_on_map_transitioned)
+	_setup_auto_play_banner()
 	_load_map(CartridgeManager.current_map_slug, CartridgeManager.current_spawn_coord)
+
+	var cmd_args = OS.get_cmdline_user_args() + OS.get_cmdline_args()
+	var wants_auto = (
+		CartridgeManager.auto_play_enabled or
+		"--auto-play" in cmd_args or
+		"--real-demo" in cmd_args or
+		"--demo=real" in cmd_args or
+		"--demo" in cmd_args or
+		OS.get_environment("CRPG_AUTO_PLAY") == "1"
+	)
+	if wants_auto:
+		call_deferred("start_auto_play")
+	else:
+		_set_auto_play_status("Interactive Mode: Click to move or press [Auto-Play]")
+		_update_hud_auto_play_btn(false)
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		var click_pos = get_global_mouse_position()
+		if is_auto_playing:
+			pause_auto_play("Manual player control")
+		_move_hero_to(click_pos)
+	elif event is InputEventKey and event.pressed:
+		if event.keycode == KEY_SPACE or event.keycode == KEY_P:
+			toggle_auto_play()
+
+func _setup_auto_play_banner() -> void:
+	if auto_play_banner:
+		return
+	auto_play_banner = PanelContainer.new()
+	auto_play_banner.name = "AutoPlayBanner"
+	auto_play_banner.custom_minimum_size = Vector2(760, 42)
+	auto_play_banner.anchors_preset = Control.PRESET_TOP_WIDE
+	auto_play_banner.anchor_left = 0.5
+	auto_play_banner.anchor_right = 0.5
+	auto_play_banner.anchor_top = 0.0
+	auto_play_banner.anchor_bottom = 0.0
+	auto_play_banner.offset_left = -380.0
+	auto_play_banner.offset_right = 380.0
+	auto_play_banner.offset_top = 16.0
+	auto_play_banner.offset_bottom = 58.0
+	auto_play_banner.grow_horizontal = Control.GROW_DIRECTION_BOTH
+
+	var sb = StyleBoxFlat.new()
+	sb.bg_color = Color(0.04, 0.08, 0.14, 0.94)
+	sb.border_width_left = 2
+	sb.border_width_top = 2
+	sb.border_width_right = 2
+	sb.border_width_bottom = 2
+	sb.border_color = Color(0.2, 0.7, 0.9, 0.9)
+	sb.corner_radius_top_left = 6
+	sb.corner_radius_top_right = 6
+	sb.corner_radius_bottom_left = 6
+	sb.corner_radius_bottom_right = 6
+	sb.shadow_color = Color(0.1, 0.4, 0.8, 0.4)
+	sb.shadow_size = 8
+	auto_play_banner.add_theme_stylebox_override("panel", sb)
+
+	var hbox = HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 12)
+	auto_play_banner.add_child(hbox)
+
+	var spacer_left = Control.new()
+	spacer_left.custom_minimum_size = Vector2(10, 0)
+	hbox.add_child(spacer_left)
+
+	auto_play_label = Label.new()
+	auto_play_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	auto_play_label.text = "🎮 Auto-Playing Cartridge..."
+	auto_play_label.add_theme_font_size_override("font_size", 13)
+	auto_play_label.add_theme_color_override("font_color", Color(0.4, 0.9, 1.0))
+	hbox.add_child(auto_play_label)
+
+	auto_play_btn = Button.new()
+	auto_play_btn.text = "⏸ Manual (Space)"
+	auto_play_btn.custom_minimum_size = Vector2(140, 30)
+	auto_play_btn.add_theme_font_size_override("font_size", 12)
+	auto_play_btn.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
+	auto_play_btn.pressed.connect(toggle_auto_play)
+	hbox.add_child(auto_play_btn)
+
+	var spacer_right = Control.new()
+	spacer_right.custom_minimum_size = Vector2(8, 0)
+	hbox.add_child(spacer_right)
+
+	$CanvasLayer.add_child(auto_play_banner)
+
+func _move_hero_to(dest: Vector2, on_reached: Callable = Callable()) -> void:
+	if not hero or not is_instance_valid(hero):
+		return
+	if hero.has_method("move_to_point"):
+		hero.move_to_point(dest, on_reached)
+	elif hero.has_method("move_to"):
+		hero.move_to(dest)
+		if on_reached.is_valid():
+			_wait_for_arrival(dest, on_reached)
+	else:
+		hero.position = dest
+		if on_reached.is_valid():
+			on_reached.call()
+
+func _wait_for_arrival(dest: Vector2, on_reached: Callable, timeout: float = 8.0) -> void:
+	var timer = 0.0
+	while timer < timeout and is_instance_valid(hero):
+		if hero.global_position.distance_to(dest) < 35.0:
+			break
+		await get_tree().create_timer(0.1).timeout
+		timer += 0.1
+	if is_instance_valid(hero) and on_reached.is_valid():
+		on_reached.call()
+
+func _navigate_and_interact(target_pos: Vector2, on_reached: Callable) -> void:
+	if not hero or not is_instance_valid(hero):
+		return
+	var cur_pos = hero.global_position
+	var dist = cur_pos.distance_to(target_pos)
+	if dist <= 60.0:
+		if on_reached.is_valid():
+			on_reached.call()
+		return
+
+	var dir = (cur_pos - target_pos).normalized()
+	if dir.length() < 0.1:
+		dir = Vector2(0, 1)
+	var stand_pos = target_pos + dir * 45.0
+	_move_hero_to(stand_pos, on_reached)
 
 func _load_map(map_slug: String, spawn_coords: Vector2) -> void:
 	current_map_slug = map_slug
@@ -101,6 +235,7 @@ func _draw_map_background(pixel_w: float, pixel_h: float, terrain: String, map_d
 	var bg = $Background
 	has_background_art = false
 	if bg:
+		bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		bg.size = Vector2(pixel_w, pixel_h)
 		var color = Color(0.1, 0.12, 0.16)
 		match terrain:
@@ -126,7 +261,9 @@ func _draw_map_background(pixel_w: float, pixel_h: float, terrain: String, map_d
 					underlay.name = "MapArtUnderlay"
 					underlay.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 					underlay.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+					underlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 					bg.add_child(underlay)
+				underlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 				underlay.size = Vector2(pixel_w, pixel_h)
 				underlay.texture = underlay_tex
 				underlay.visible = true
@@ -139,6 +276,7 @@ func _spawn_hero(coords: Vector2, pixel_w: float, pixel_h: float) -> void:
 	if not hero:
 		var hero_scene = load("res://scenes/HeroPlayer.tscn")
 		hero = hero_scene.instantiate()
+		hero.name = "HeroPlayer"
 		$MapElements.add_child(hero)
 
 	var spawn_pos = Vector2(coords.x * TILE_SIZE, coords.y * TILE_SIZE)
@@ -253,6 +391,17 @@ func _spawn_map_object(obj: Dictionary) -> void:
 		lbl.add_theme_font_size_override("font_size", 10)
 		area.add_child(lbl)
 
+		area.input_pickable = true
+		area.input_event.connect(func(_vp, event, _shape_idx):
+			if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+				get_viewport().set_input_as_handled()
+				if is_auto_playing:
+					pause_auto_play("Manual chest interaction")
+				_navigate_and_interact(area.global_position, func():
+					_on_chest_opened(obj_id, title)
+				)
+		)
+
 		area.body_entered.connect(func(body):
 			if body == hero or body.name == "HeroPlayer":
 				_on_chest_opened(obj_id, title)
@@ -282,6 +431,17 @@ func _spawn_map_object(obj: Dictionary) -> void:
 		lbl.position = Vector2(-pw/2, -ph/2 - 18)
 		lbl.add_theme_font_size_override("font_size", 11)
 		area.add_child(lbl)
+
+		area.input_pickable = true
+		area.input_event.connect(func(_vp, event, _shape_idx):
+			if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+				get_viewport().set_input_as_handled()
+				if is_auto_playing:
+					pause_auto_play("Manual passage interaction")
+				_navigate_and_interact(area.global_position, func():
+					_on_passage_entered(obj_id)
+				)
+		)
 
 		area.body_entered.connect(func(body):
 			if body == hero or body.name == "HeroPlayer":
@@ -405,6 +565,17 @@ func _create_interactive_npc(slug: String, ch_data: Dictionary, coord: Vector2, 
 	t_cs.shape = t_shape
 	trigger_area.add_child(t_cs)
 	npc_node.add_child(trigger_area)
+
+	trigger_area.input_pickable = true
+	trigger_area.input_event.connect(func(_vp, event, _shape_idx):
+		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			get_viewport().set_input_as_handled()
+			if is_auto_playing:
+				pause_auto_play("Manual NPC interaction")
+			_navigate_and_interact(npc_node.global_position, func():
+				_interact_with_npc(slug, ch_data, is_monster)
+			)
+	)
 
 	trigger_area.body_entered.connect(func(body):
 		if body == hero or body.name == "HeroPlayer":
@@ -640,6 +811,9 @@ func _close_dialog() -> void:
 		dialog_box.visible = false
 
 func _trigger_victory() -> void:
+	is_auto_playing = false
+	_auto_play_generation += 1
+	_update_hud_auto_play_btn(false)
 	_close_dialog()
 	var h = CartridgeManager.active_cartridge.get("header", {})
 	var title = str(h.get("title", "Campaign"))
@@ -686,7 +860,318 @@ func _on_passage_entered(object_id: String) -> void:
 
 func _on_map_transitioned(from_map: String, to_map: String, spawn: Vector2) -> void:
 	_load_map(to_map, spawn)
+	if is_auto_playing:
+		get_tree().create_timer(0.8).timeout.connect(func():
+			if is_auto_playing:
+				_trigger_auto_play_for_current_map()
+		)
 
 func _update_hud_status(status_text: String) -> void:
 	if hud and hud.has_method("update_display"):
 		hud.update_display(status_text)
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Autonomous Auto-Play Engine
+# ══════════════════════════════════════════════════════════════════════════════
+
+func toggle_auto_play() -> void:
+	if is_auto_playing:
+		pause_auto_play("User paused")
+	else:
+		start_auto_play()
+
+func start_auto_play() -> void:
+	is_auto_playing = true
+	_auto_play_generation += 1
+	var current_gen = _auto_play_generation
+	_update_hud_auto_play_btn(true)
+	var h = CartridgeManager.active_cartridge.get("header", {})
+	var cart_title = str(h.get("title", "Active Cartridge"))
+	_set_auto_play_status("🎮 Auto-Playing: %s (Space to Pause)" % cart_title)
+	print("⚡ [CartridgeWorld] Auto-Play started (generation %d) for cartridge '%s'" % [current_gen, cart_title])
+	_trigger_auto_play_for_current_map()
+
+func pause_auto_play(reason: String = "") -> void:
+	if not is_auto_playing:
+		return
+	is_auto_playing = false
+	_auto_play_generation += 1
+	_update_hud_auto_play_btn(false)
+	var reason_str = (" (%s)" % reason) if reason != "" else ""
+	_set_auto_play_status("⏸️ Manual Control%s · Press [Auto-Play] to Resume" % reason_str)
+	print("⏸️ [CartridgeWorld] Auto-Play paused: %s" % reason)
+
+func _is_auto_valid(gen: int) -> bool:
+	return is_auto_playing and gen == _auto_play_generation and is_inside_tree()
+
+func _set_auto_play_status(txt: String) -> void:
+	if auto_play_label:
+		auto_play_label.text = txt
+	if action_log:
+		action_log.add_entry(txt, "info")
+	_update_hud_status(txt)
+
+func _update_hud_auto_play_btn(is_auto: bool) -> void:
+	if auto_play_btn:
+		if is_auto:
+			auto_play_btn.text = "⏸ Manual (Space)"
+			auto_play_btn.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
+		else:
+			auto_play_btn.text = "▶ Auto-Play (Space)"
+			auto_play_btn.add_theme_color_override("font_color", Color(0.35, 0.95, 0.55))
+	if hud and hud.has_method("set_autoplay_button_state"):
+		hud.set_autoplay_button_state(is_auto)
+
+func _auto_walk_to(dest: Vector2, gen: int, timeout: float = 6.5) -> void:
+	if not hero or not is_instance_valid(hero):
+		return
+	var arrived := false
+	_move_hero_to(dest, func(): arrived = true)
+	var elapsed := 0.0
+	while not arrived and elapsed < timeout and _is_auto_valid(gen) and is_instance_valid(hero):
+		if hero.global_position.distance_to(dest) < 42.0:
+			arrived = true
+			break
+		await get_tree().create_timer(0.1).timeout
+		elapsed += 0.1
+	if is_instance_valid(hero) and not arrived and _is_auto_valid(gen):
+		hero.global_position = dest
+
+func _trigger_auto_play_for_current_map() -> void:
+	if not is_auto_playing:
+		return
+	var gen = _auto_play_generation
+	var cart_id = str(CartridgeManager.active_cartridge.get("cartridgeId", ""))
+	if cart_id == "dragonwarrior-1-usa" or "dragonwarrior" in cart_id or "dw" in cart_id or "tantegel" in current_map_slug or "charlock" in current_map_slug:
+		_run_dragonwarrior_auto_play(gen)
+	elif cart_id == "rescue-the-princess" or "rescue" in cart_id or "eldoria" in cart_id or current_map_slug in ["throne-room", "main-castle", "dark-lord-lair"]:
+		_run_rescue_princess_auto_play(gen)
+	else:
+		_run_generic_auto_play(gen)
+
+func _run_dragonwarrior_auto_play(gen: int) -> void:
+	if current_map_slug == "tantegel-throne-room" or "tantegel" in current_map_slug:
+		# If not talked to King Lorik yet:
+		if not GameState.world_flags.get("talked_to_king", false):
+			_set_auto_play_status("Erdrick approaches King Lorik's Throne...")
+			await _auto_walk_to(Vector2(28 * 48, 9 * 48), gen)
+			if not _is_auto_valid(gen): return
+			_interact_with_npc("npc-king-loric", {"name": "King Lorik"}, false)
+			_set_auto_play_status("Audience with King Lorik: Receiving Quest of Erdrick...")
+			await get_tree().create_timer(2.2).timeout
+			if not _is_auto_valid(gen): return
+			_on_accept_loric_quest()
+			await get_tree().create_timer(1.0).timeout
+			if not _is_auto_valid(gen): return
+
+		# Open 120g chest
+		if not GameState.world_flags.get("chest_chest-120g", false):
+			_set_auto_play_status("Opening Royal Chest (120 Gold)...")
+			await _auto_walk_to(Vector2(18 * 48 + 72, 10 * 48 + 72), gen)
+			if not _is_auto_valid(gen): return
+			_on_chest_opened("chest-120g", "King's Gold Chest (120 Gold)")
+			await get_tree().create_timer(1.0).timeout
+			if not _is_auto_valid(gen): return
+
+		# Open torch chest
+		if not GameState.world_flags.get("chest_chest-torch", false):
+			_set_auto_play_status("Opening Royal Chest (Torch)...")
+			await _auto_walk_to(Vector2(22 * 48 + 72, 10 * 48 + 72), gen)
+			if not _is_auto_valid(gen): return
+			_on_chest_opened("chest-torch", "Chest with Torch")
+			await get_tree().create_timer(1.0).timeout
+			if not _is_auto_valid(gen): return
+
+		# Open magic key chest
+		if not GameState.world_flags.get("chest_chest-magic-key", false):
+			_set_auto_play_status("Claiming the Magic Key...")
+			await _auto_walk_to(Vector2(26 * 48 + 72, 10 * 48 + 72), gen)
+			if not _is_auto_valid(gen): return
+			_on_chest_opened("chest-magic-key", "Chest with Magic Key")
+			await get_tree().create_timer(1.0).timeout
+			if not _is_auto_valid(gen): return
+
+		# If dragonlord is not defeated yet, go to Charlock Castle
+		if not GameState.world_flags.get("defeated_dragonlord", false):
+			_set_auto_play_status("Unlocking Royal Gate with Magic Key...")
+			await _auto_walk_to(Vector2(28 * 48 + 96, 22 * 48 + 48), gen)
+			if not _is_auto_valid(gen): return
+			await get_tree().create_timer(0.8).timeout
+			if not _is_auto_valid(gen): return
+
+			_set_auto_play_status("Descending Stairs to Charlock Castle...")
+			await _auto_walk_to(Vector2(28 * 48 + 96, 25 * 48 + 96), gen)
+			if not _is_auto_valid(gen): return
+			_on_passage_entered("stairs-down")
+			return
+
+		# If dragonlord was defeated and princess was rescued, conclude campaign!
+		if GameState.world_flags.get("princess_rescued", false) or GameState.world_flags.get("defeated_dragonlord", false):
+			if GameState.world_flags.get("campaign_victory", false):
+				return
+			GameState.world_flags["campaign_victory"] = true
+			_set_auto_play_status("Presenting Princess Gwaelin to King Lorik...")
+			await _auto_walk_to(Vector2(28 * 48, 9 * 48), gen)
+			if not _is_auto_valid(gen): return
+			_interact_with_npc("npc-king-loric", {"name": "King Lorik"}, false)
+			await get_tree().create_timer(2.5).timeout
+			if not _is_auto_valid(gen): return
+			_trigger_victory()
+			_set_auto_play_status("🏆 TOTAL VICTORY: Erdrick restored the Ball of Light and saved Alefgard!")
+			return
+
+	elif current_map_slug == "charlock-castle" or "charlock" in current_map_slug:
+		if not GameState.world_flags.get("defeated_dragonlord", false):
+			_set_auto_play_status("Erdrick confronts the Dragonlord in his Throne Room...")
+			await _auto_walk_to(Vector2(20 * 48, 16 * 48), gen)
+			if not _is_auto_valid(gen): return
+			_interact_with_npc("dragonlord", {"name": "The Dragonlord"}, true)
+			await get_tree().create_timer(2.4).timeout
+			if not _is_auto_valid(gen): return
+			_on_defeat_dragonlord("dragonlord")
+			_set_auto_play_status("Dragonlord Vanquished! Sacred Ball of Light Restored!")
+			await get_tree().create_timer(1.5).timeout
+			if not _is_auto_valid(gen): return
+
+		if not GameState.world_flags.get("princess_rescued", false):
+			_set_auto_play_status("Rescuing Princess Gwaelin from the Lair...")
+			await _auto_walk_to(Vector2(20 * 48, 9 * 48), gen)
+			if not _is_auto_valid(gen): return
+			_interact_with_npc("npc-princess-gwaelin", {"name": "Princess Gwaelin"}, false)
+			await get_tree().create_timer(2.2).timeout
+			if not _is_auto_valid(gen): return
+			_on_escort_gwaelin()
+			return
+
+func _run_rescue_princess_auto_play(gen: int) -> void:
+	if current_map_slug == "throne-room":
+		if not GameState.world_flags.get("talked_to_king", false):
+			_set_auto_play_status("Sir Caleb approaches King Alden...")
+			await _auto_walk_to(Vector2(25 * 48, 7 * 48), gen)
+			if not _is_auto_valid(gen): return
+			_interact_with_npc("king-alden", {"name": "King Alden"}, false)
+			await get_tree().create_timer(2.2).timeout
+			if not _is_auto_valid(gen): return
+			_on_accept_king_quest()
+			await get_tree().create_timer(1.0).timeout
+			if not _is_auto_valid(gen): return
+
+		if not GameState.world_flags.get("obtained_heros_sword", false):
+			_set_auto_play_status("Heading to Main Castle Forge...")
+			await _auto_walk_to(Vector2(25 * 48, 28 * 48), gen)
+			if not _is_auto_valid(gen): return
+			_on_passage_entered("passage-main-castle")
+			return
+
+		if GameState.world_flags.get("princess_rescued", false):
+			if GameState.world_flags.get("campaign_victory", false):
+				return
+			GameState.world_flags["campaign_victory"] = true
+			_set_auto_play_status("Returning Princess Jennifer to King Alden...")
+			await _auto_walk_to(Vector2(25 * 48, 7 * 48), gen)
+			if not _is_auto_valid(gen): return
+			_interact_with_npc("king-alden", {"name": "King Alden"}, false)
+			await get_tree().create_timer(2.5).timeout
+			if not _is_auto_valid(gen): return
+			_trigger_victory()
+			_set_auto_play_status("🏆 TOTAL VICTORY: Princess Jennifer rescued and Eldoria saved!")
+			return
+
+	elif current_map_slug == "main-castle":
+		if not GameState.world_flags.get("defeated_projection_goblin", false):
+			_set_auto_play_status("Speaking with Master Torvald at the Forge...")
+			await _auto_walk_to(Vector2(18 * 48, 13 * 48), gen)
+			if not _is_auto_valid(gen): return
+			_interact_with_npc("blacksmith-torvald", {"name": "Master Torvald"}, false)
+			await get_tree().create_timer(2.0).timeout
+			if not _is_auto_valid(gen): return
+			_on_begin_torvald_trial()
+
+			_set_auto_play_status("Fighting the Projection Goblin...")
+			await _auto_walk_to(Vector2(26 * 48, 13 * 48), gen)
+			if not _is_auto_valid(gen): return
+			_interact_with_npc("projection-goblin", {"name": "Projection Goblin"}, true)
+			await get_tree().create_timer(1.8).timeout
+			if not _is_auto_valid(gen): return
+			_on_defeat_projection_goblin("projection-goblin")
+			await get_tree().create_timer(1.0).timeout
+			if not _is_auto_valid(gen): return
+
+		if not GameState.world_flags.get("obtained_heros_sword", false):
+			_set_auto_play_status("Claiming the Hero's Sword from Torvald...")
+			await _auto_walk_to(Vector2(18 * 48, 13 * 48), gen)
+			if not _is_auto_valid(gen): return
+			_interact_with_npc("blacksmith-torvald", {"name": "Master Torvald"}, false)
+			await get_tree().create_timer(2.0).timeout
+			if not _is_auto_valid(gen): return
+			_on_claim_heros_sword()
+			await get_tree().create_timer(1.0).timeout
+			if not _is_auto_valid(gen): return
+
+		_set_auto_play_status("Journeying to Dark Lord Malakor's Lair...")
+		await _auto_walk_to(Vector2(35 * 48, 15 * 48), gen)
+		if not _is_auto_valid(gen): return
+		_on_passage_entered("passage-dark-lair")
+		return
+
+	elif current_map_slug == "dark-lord-lair":
+		if not GameState.world_flags.get("defeated_dark_lord", false):
+			_set_auto_play_status("Confronting Dark Lord Malakor...")
+			await _auto_walk_to(Vector2(25 * 48, 16 * 48), gen)
+			if not _is_auto_valid(gen): return
+			_interact_with_npc("dark-lord-malakor", {"name": "Dark Lord Malakor"}, true)
+			await get_tree().create_timer(2.2).timeout
+			if not _is_auto_valid(gen): return
+			_on_defeat_dark_lord("dark-lord-malakor")
+			_set_auto_play_status("Dark Lord Malakor Slain by the Hero's Sword!")
+			await get_tree().create_timer(1.5).timeout
+			if not _is_auto_valid(gen): return
+
+		if not GameState.world_flags.get("princess_rescued", false):
+			_set_auto_play_status("Freeing Princess Jennifer from shadow bonds...")
+			await _auto_walk_to(Vector2(25 * 48, 9 * 48), gen)
+			if not _is_auto_valid(gen): return
+			_interact_with_npc("princess-jennifer", {"name": "Princess Jennifer"}, false)
+			await get_tree().create_timer(2.2).timeout
+			if not _is_auto_valid(gen): return
+			_on_escort_princess()
+			return
+
+func _run_generic_auto_play(gen: int) -> void:
+	_set_auto_play_status("Exploring map for points of interest...")
+	await get_tree().create_timer(1.0).timeout
+	if not _is_auto_valid(gen): return
+
+	for slug in spawned_npcs:
+		var npc_node = spawned_npcs[slug]
+		if is_instance_valid(npc_node):
+			var ch_data = CartridgeManager.characters_cache.get(slug, {})
+			var name_str = str(ch_data.get("name", slug))
+			_set_auto_play_status("Approaching %s..." % name_str)
+			await _auto_walk_to(npc_node.global_position + Vector2(0, 36), gen)
+			if not _is_auto_valid(gen): return
+			_interact_with_npc(slug, ch_data, false)
+			await get_tree().create_timer(2.0).timeout
+			if not _is_auto_valid(gen): return
+			_close_dialog()
+
+	for child in $MapElements.get_children():
+		if child is Area2D and "Chest_" in child.name:
+			var obj_id = child.name.replace("Chest_", "")
+			if not GameState.world_flags.get("chest_" + obj_id, false):
+				_set_auto_play_status("Opening %s..." % child.name)
+				await _auto_walk_to(child.global_position, gen)
+				if not _is_auto_valid(gen): return
+				_on_chest_opened(obj_id, "Treasure Chest")
+				await get_tree().create_timer(1.0).timeout
+				if not _is_auto_valid(gen): return
+
+	for child in $MapElements.get_children():
+		if child is Area2D and "Passage_" in child.name:
+			var obj_id = child.name.replace("Passage_", "")
+			_set_auto_play_status("Entering passage: %s..." % child.name)
+			await _auto_walk_to(child.global_position, gen)
+			if not _is_auto_valid(gen): return
+			_on_passage_entered(obj_id)
+			return
+

@@ -13,6 +13,7 @@ var active_cartridge: Dictionary = {}
 var is_cartridge_active: bool = false
 var current_map_slug: String = ""
 var current_spawn_coord: Vector2 = Vector2(25, 20)
+var auto_play_enabled: bool = false
 
 var maps_cache: Dictionary = {}
 var characters_cache: Dictionary = {}
@@ -40,6 +41,14 @@ func _check_cli_cartridge() -> void:
 	
 	if cart_arg != "":
 		print("📼 [CartridgeManager] Auto-plugging cartridge from CLI: ", cart_arg)
+		var wants_auto = (
+			"--auto-play" in cmd_args or
+			"--real-demo" in cmd_args or
+			"--demo=real" in cmd_args or
+			"--demo" in cmd_args or
+			OS.get_environment("CRPG_AUTO_PLAY") == "1"
+		)
+		auto_play_enabled = wants_auto
 		if insert_cartridge(cart_arg):
 			embark_cartridge()
 

@@ -1071,14 +1071,14 @@ async function main() {
   const frame8 = path.join(BRAIN_DIR, "dw1_08_godot_total_victory.png");
 
   try {
-    execSync(`ffmpeg -y -ss 00:00:08 -i "${outFinal}" -vframes 1 "${frame1}"`, { stdio: "ignore" });
-    execSync(`ffmpeg -y -ss 00:00:34 -i "${outFinal}" -vframes 1 "${frame2}"`, { stdio: "ignore" });
-    execSync(`ffmpeg -y -ss 00:00:40 -i "${outFinal}" -vframes 1 "${frame3}"`, { stdio: "ignore" });
-    execSync(`ffmpeg -y -ss 00:00:50 -i "${outFinal}" -vframes 1 "${frame4}"`, { stdio: "ignore" });
-    execSync(`ffmpeg -y -ss 00:00:58 -i "${outFinal}" -vframes 1 "${frame5}"`, { stdio: "ignore" });
-    if (!fs.existsSync(frame6)) execSync(`ffmpeg -y -ss 00:01:10 -i "${outFinal}" -vframes 1 "${frame6}"`, { stdio: "ignore" });
-    if (!fs.existsSync(frame7)) execSync(`ffmpeg -y -ss 00:01:25 -i "${outFinal}" -vframes 1 "${frame7}"`, { stdio: "ignore" });
-    if (!fs.existsSync(frame8)) execSync(`ffmpeg -y -ss 00:01:38 -i "${outFinal}" -vframes 1 "${frame8}"`, { stdio: "ignore" });
+    execSync(`ffmpeg -y -ss 00:00:10 -i "${outFinal}" -vframes 1 "${frame1}"`, { stdio: "ignore" });
+    execSync(`ffmpeg -y -ss 00:00:35 -i "${outFinal}" -vframes 1 "${frame2}"`, { stdio: "ignore" });
+    execSync(`ffmpeg -y -ss 00:01:05 -i "${outFinal}" -vframes 1 "${frame3}"`, { stdio: "ignore" });
+    execSync(`ffmpeg -y -ss 00:01:28 -i "${outFinal}" -vframes 1 "${frame4}"`, { stdio: "ignore" });
+    execSync(`ffmpeg -y -ss 00:01:38 -i "${outFinal}" -vframes 1 "${frame5}"`, { stdio: "ignore" });
+    if (!fs.existsSync(frame6)) execSync(`ffmpeg -y -ss 00:01:50 -i "${outFinal}" -vframes 1 "${frame6}"`, { stdio: "ignore" });
+    if (!fs.existsSync(frame7)) execSync(`ffmpeg -y -ss 00:02:05 -i "${outFinal}" -vframes 1 "${frame7}"`, { stdio: "ignore" });
+    if (!fs.existsSync(frame8)) execSync(`ffmpeg -y -ss 00:02:20 -i "${outFinal}" -vframes 1 "${frame8}"`, { stdio: "ignore" });
     console.log("✔ Review frames successfully extracted.");
   } catch (frameErr) {
     console.warn("Could not extract all frames:", frameErr.message);
