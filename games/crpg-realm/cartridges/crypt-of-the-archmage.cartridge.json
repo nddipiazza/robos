@@ -23,7 +23,7 @@
       "y": 20
     },
     "partyLimit": 1,
-    "createdDate": "2026-09-29T10:41:58.725Z"
+    "createdDate": "2026-09-29T14:09:38.973Z"
   },
   "campaign": {
     "@context": {
@@ -273,7 +273,7 @@
       "robos:width": 50,
       "robos:height": 40,
       "robos:terrain": "stone",
-      "robos:backgroundImage": "res://assets/blockouts/throne-room.png",
+      "robos:backgroundImage": "res://assets/backgrounds/tantegel_throne_room.png",
       "robos:backgroundOpacity": 1,
       "robos:mapObjects": [
         {

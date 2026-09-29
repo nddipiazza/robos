@@ -246,11 +246,18 @@ func _draw_map_background(pixel_w: float, pixel_h: float, terrain: String, map_d
 
 		# Real high-definition background artwork underlay
 		var bg_img_path = str(map_data.get("robos:backgroundImage", map_data.get("backgroundImage", "")))
-		if bg_img_path == "":
-			if "tantegel" in map_slug or map_slug == "throne-room":
-				bg_img_path = "res://assets/blockouts/tantegel-throne-room.png"
-			elif "charlock" in map_slug or "lair" in map_slug or map_slug == "dark-lord-lair":
-				bg_img_path = "res://assets/blockouts/catacomb-antechamber.png"
+		if bg_img_path == "" or "blockouts" in bg_img_path:
+			var s = map_slug.to_lower()
+			if "tantegel" in s or "throne" in s:
+				bg_img_path = "res://assets/backgrounds/tantegel_throne_room.png"
+			elif "charlock" in s or "catacomb" in s or "antechamber" in s or "corridor" in s or "crypt" in s or "cavern" in s or "lair" in s:
+				bg_img_path = "res://assets/backgrounds/ancient_catacombs_2560.png"
+			elif "forest" in s or "wilderness" in s or "candlekeep" in s:
+				bg_img_path = "res://assets/backgrounds/forest_wilderness_2560.png"
+			elif "village" in s or "town" in s or "square" in s or "castle" in s or "homestead" in s or "overworld" in s:
+				bg_img_path = "res://assets/backgrounds/village_open_world_2560.png"
+			elif "garrison" in s:
+				bg_img_path = "res://assets/backgrounds/garrison_dungeon_2560.png"
 
 		if bg_img_path != "":
 			var underlay_tex = _load_texture_safe(bg_img_path)
@@ -268,7 +275,7 @@ func _draw_map_background(pixel_w: float, pixel_h: float, terrain: String, map_d
 				underlay.texture = underlay_tex
 				underlay.visible = true
 				has_background_art = true
-				print("🎨 [CartridgeWorld] Successfully loaded background artwork underlay: ", bg_img_path)
+				print("🎨 [CartridgeWorld] Successfully loaded pretty background artwork: ", bg_img_path)
 			else:
 				push_warning("[CartridgeWorld] Failed loading background underlay at: " + bg_img_path)
 
@@ -447,7 +454,10 @@ func _spawn_map_object(obj: Dictionary) -> void:
 		var visual = ColorRect.new()
 		visual.position = Vector2(-pw/2, -ph/2)
 		visual.size = Vector2(pw, ph)
-		visual.color = Color(0.2, 0.8, 0.4, 0.3)
+		if has_background_art:
+			visual.color = Color(0.2, 0.8, 0.4, 0.0)
+		else:
+			visual.color = Color(0.2, 0.8, 0.4, 0.3)
 		area.add_child(visual)
 
 		var clean_door = title

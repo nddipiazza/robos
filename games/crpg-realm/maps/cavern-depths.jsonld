@@ -2118,5 +2118,5 @@
     "image": "res://assets/blockouts/cavern-depths.png",
     "imagePxPerFoot": 48
   },
-  "robos:backgroundImage": "res://assets/blockouts/cavern-depths.png"
+  "robos:backgroundImage": "res://assets/backgrounds/ancient_catacombs_2560.png"
 }

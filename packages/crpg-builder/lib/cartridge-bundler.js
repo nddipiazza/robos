@@ -29,6 +29,29 @@ class CartridgeBundler {
     return null;
   }
 
+  _resolvePrettyBackground(mapSlug, mapData) {
+    if (!mapData) return null;
+    let bg = mapData['robos:backgroundImage'] || mapData.backgroundImage || '';
+    if (!bg || bg.includes('blockouts')) {
+      const s = mapSlug.toLowerCase();
+      if (s.includes('tantegel') || s.includes('throne')) {
+        bg = 'res://assets/backgrounds/tantegel_throne_room.png';
+      } else if (s.includes('charlock') || s.includes('catacomb') || s.includes('antechamber') || s.includes('corridor') || s.includes('crypt') || s.includes('cavern') || s.includes('lair')) {
+        bg = 'res://assets/backgrounds/ancient_catacombs_2560.png';
+      } else if (s.includes('forest') || s.includes('wilderness') || s.includes('candlekeep')) {
+        bg = 'res://assets/backgrounds/forest_wilderness_2560.png';
+      } else if (s.includes('village') || s.includes('town') || s.includes('square') || s.includes('castle') || s.includes('homestead') || s.includes('overworld')) {
+        bg = 'res://assets/backgrounds/village_open_world_2560.png';
+      } else if (s.includes('garrison')) {
+        bg = 'res://assets/backgrounds/garrison_dungeon_2560.png';
+      }
+    }
+    if (bg) {
+      mapData['robos:backgroundImage'] = bg;
+    }
+    return mapData;
+  }
+
   bundle(campaignSlug) {
     const cleanCampSlug = this._cleanSlug(campaignSlug);
     const campPath = path.join(this.baseDir, 'campaigns', `${cleanCampSlug}.jsonld`);
@@ -70,7 +93,7 @@ class CartridgeBundler {
         mapData = this._readJsonSafe(path.join(this.baseDir, 'maps', `${mapSlug}.json`));
       }
       if (mapData) {
-        maps[mapSlug] = mapData;
+        maps[mapSlug] = this._resolvePrettyBackground(mapSlug, mapData);
       }
     }
 
@@ -78,7 +101,7 @@ class CartridgeBundler {
     if (!maps[startingMap]) {
       const mapPath = path.join(this.baseDir, 'maps', `${startingMap}.jsonld`);
       const mapData = this._readJsonSafe(mapPath);
-      if (mapData) maps[startingMap] = mapData;
+      if (mapData) maps[startingMap] = this._resolvePrettyBackground(startingMap, mapData);
     }
 
     // Also include any maps from mapConnections
@@ -88,7 +111,7 @@ class CartridgeBundler {
         const mSlug = conn[mKey];
         if (mSlug && !maps[mSlug]) {
           const mData = this._readJsonSafe(path.join(this.baseDir, 'maps', `${mSlug}.jsonld`));
-          if (mData) maps[mSlug] = mData;
+          if (mData) maps[mSlug] = this._resolvePrettyBackground(mSlug, mData);
         }
       }
     }

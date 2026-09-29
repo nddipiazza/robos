@@ -96,7 +96,11 @@ switch (command) {
     console.log('\n=== Cartridge Inspection ===');
     console.log(JSON.stringify({
       header: cart.header,
-      maps: Object.keys(cart.maps || {}),
+      maps: Object.entries(cart.maps || {}).map(([slug, m]) => ({
+        slug,
+        title: m['dcterms:title'] || m.title || slug,
+        backgroundImage: m['robos:backgroundImage'] || m.backgroundImage || 'none'
+      })),
       characters: Object.keys(cart.characters || {}),
       items: Object.keys(cart.items || {}),
       quests: (cart.quests || []).map(q => ({ id: q.id, title: q.title, type: q.questType }))

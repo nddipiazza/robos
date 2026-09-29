@@ -15,7 +15,7 @@
   "robos:width": 80,
   "robos:height": 60,
   "robos:terrain": "stone",
-  "robos:backgroundImage": "res://assets/blockouts/main-castle.png",
+  "robos:backgroundImage": "res://assets/backgrounds/village_open_world_2560.png",
   "robos:backgroundOpacity": 1,
   "robos:mapObjects": [
     {

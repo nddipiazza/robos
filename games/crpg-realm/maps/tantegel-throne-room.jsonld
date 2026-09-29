@@ -13,7 +13,7 @@
   "robos:width": 60,
   "robos:height": 40,
   "robos:terrain": "stone",
-  "robos:backgroundImage": "res://assets/blockouts/tantegel-throne-room.png",
+  "robos:backgroundImage": "res://assets/backgrounds/tantegel_throne_room.png",
   "robos:backgroundOpacity": 1,
   "robos:mapObjects": [
     {
@@ -137,7 +137,7 @@
       "robos:shape": "rect",
       "robos:position": [
         18,
-        10
+        13
       ],
       "robos:size": [
         3,
@@ -148,7 +148,7 @@
       "type": "chest",
       "shape": "rect",
       "x": 18,
-      "y": 10,
+      "y": 13,
       "w": 3,
       "h": 3,
       "rot": 0,
@@ -166,8 +166,8 @@
       "robos:objectType": "chest",
       "robos:shape": "rect",
       "robos:position": [
-        22,
-        10
+        21,
+        13
       ],
       "robos:size": [
         3,
@@ -177,8 +177,8 @@
       "id": "chest-torch",
       "type": "chest",
       "shape": "rect",
-      "x": 22,
-      "y": 10,
+      "x": 21,
+      "y": 13,
       "w": 3,
       "h": 3,
       "rot": 0,
@@ -196,8 +196,8 @@
       "robos:objectType": "chest",
       "robos:shape": "rect",
       "robos:position": [
-        26,
-        10
+        24,
+        13
       ],
       "robos:size": [
         3,
@@ -207,8 +207,8 @@
       "id": "chest-magic-key",
       "type": "chest",
       "shape": "rect",
-      "x": 26,
-      "y": 10,
+      "x": 24,
+      "y": 13,
       "w": 3,
       "h": 3,
       "rot": 0,

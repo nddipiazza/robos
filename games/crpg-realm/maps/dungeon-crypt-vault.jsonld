@@ -1274,5 +1274,5 @@
     "image": "res://assets/blockouts/dungeon-crypt-vault.png",
     "imagePxPerFoot": 48
   },
-  "robos:backgroundImage": "res://assets/blockouts/dungeon-crypt-vault.png"
+  "robos:backgroundImage": "res://assets/backgrounds/ancient_catacombs_2560.png"
 }

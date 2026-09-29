@@ -15,7 +15,7 @@
   "robos:width": 60,
   "robos:height": 50,
   "robos:terrain": "dungeon",
-  "robos:backgroundImage": "res://assets/blockouts/dark-lord-lair.png",
+  "robos:backgroundImage": "res://assets/backgrounds/ancient_catacombs_2560.png",
   "robos:backgroundOpacity": 1,
   "robos:mapObjects": [
     {

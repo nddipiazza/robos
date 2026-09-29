@@ -357,5 +357,5 @@
     "image": "res://assets/blockouts/catacomb-antechamber.png",
     "imagePxPerFoot": 48
   },
-  "robos:backgroundImage": "res://assets/blockouts/catacomb-antechamber.png"
+  "robos:backgroundImage": "res://assets/backgrounds/ancient_catacombs_2560.png"
 }

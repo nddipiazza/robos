@@ -23,7 +23,7 @@
       "y": 20
     },
     "partyLimit": 1,
-    "createdDate": "2026-09-29T10:41:58.739Z"
+    "createdDate": "2026-09-29T14:09:38.999Z"
   },
   "campaign": {
     "@context": {
@@ -592,7 +592,7 @@
       "robos:width": 50,
       "robos:height": 40,
       "robos:terrain": "stone",
-      "robos:backgroundImage": "res://assets/blockouts/throne-room.png",
+      "robos:backgroundImage": "res://assets/backgrounds/tantegel_throne_room.png",
       "robos:backgroundOpacity": 1,
       "robos:mapObjects": [
         {
@@ -691,7 +691,7 @@
       "robos:width": 80,
       "robos:height": 60,
       "robos:terrain": "stone",
-      "robos:backgroundImage": "res://assets/blockouts/main-castle.png",
+      "robos:backgroundImage": "res://assets/backgrounds/village_open_world_2560.png",
       "robos:backgroundOpacity": 1,
       "robos:mapObjects": [
         {
@@ -825,7 +825,7 @@
       "robos:width": 120,
       "robos:height": 80,
       "robos:terrain": "grass",
-      "robos:backgroundImage": "res://assets/blockouts/world-overworld.png",
+      "robos:backgroundImage": "res://assets/backgrounds/village_open_world_2560.png",
       "robos:backgroundOpacity": 1,
       "robos:mapObjects": [
         {
@@ -917,7 +917,7 @@
       "robos:width": 60,
       "robos:height": 50,
       "robos:terrain": "dungeon",
-      "robos:backgroundImage": "res://assets/blockouts/dark-lord-lair.png",
+      "robos:backgroundImage": "res://assets/backgrounds/ancient_catacombs_2560.png",
       "robos:backgroundOpacity": 1,
       "robos:mapObjects": [
         {

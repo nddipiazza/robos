@@ -8,61 +8,199 @@
     "genre": "Tactical cRPG",
     "ruleset": "D&D 5e SRD",
     "difficulty": "Core Rules",
-    "setting": "Realm of Alefgard",
-    "description": "King Lorik commands the descendant of Erdrick to recover the stolen Ball of Light and rescue Princess Gwaelin from the Dragonlord.",
+    "setting": "Alefgard (NES / Chunsoft)",
+    "description": "Darkness enshrouds the realm of Alefgard after the sinister Dragonlord plundered the sacred Ball of Light. King Loric summons the last descendant of Erdrick to embark on the quest.",
     "coverColor": "#065f46",
     "icon": "🐉",
-    "mapCount": 2,
+    "mapCount": 4,
     "characterCount": 4,
-    "itemCount": 3,
-    "enemyCount": 7,
-    "questCount": 0,
+    "itemCount": 12,
+    "enemyCount": 8,
+    "questCount": 2,
     "startingMap": "tantegel-throne-room",
     "startingPosition": {
       "x": 28,
       "y": 14
     },
     "partyLimit": 1,
-    "createdDate": "2026-09-29T10:57:23.624Z"
+    "createdDate": "2026-09-29T14:09:38.980Z"
   },
   "campaign": {
     "@context": {
-      "robos": "urn:robos:",
+      "robos": "https://robos.dev/ns/sdlc#",
       "dcterms": "http://purl.org/dc/terms/",
       "schema": "https://schema.org/",
       "xsd": "http://www.w3.org/2001/XMLSchema#"
     },
+    "@id": "urn:robos:crpg:campaign:dragonwarrior-1-usa",
     "@type": [
       "robos:CRPGCampaign",
       "schema:CreativeWork"
     ],
-    "@id": "urn:robos:crpg:campaign:dragonwarrior-1-usa",
     "dcterms:title": "Dragon Warrior (USA)",
-    "dcterms:description": "King Lorik commands the descendant of Erdrick to recover the stolen Ball of Light and rescue Princess Gwaelin from the Dragonlord.",
-    "robos:setting": "Realm of Alefgard",
+    "dcterms:description": "Darkness enshrouds the realm of Alefgard after the sinister Dragonlord plundered the sacred Ball of Light. King Loric summons the last descendant of Erdrick to embark on the quest.",
+    "robos:setting": "Alefgard (NES / Chunsoft)",
     "robos:ruleSet": "D&D 5e SRD",
     "robos:difficulty": "Core Rules",
+    "robos:startingMap": "tantegel-throne-room",
+    "robos:startingSpawn": {
+      "position": [
+        28,
+        14
+      ],
+      "facing": "south",
+      "entryDescription": "Descendant of Erdrick stands in audience before King Loric in Tantegel Throne Room"
+    },
     "robos:maps": [
-      "urn:robos:crpg:battle-map:charlock-castle",
-      "urn:robos:crpg:battle-map:tantegel-throne-room"
+      "urn:robos:crpg:battle-map:tantegel-throne-room",
+      "urn:robos:crpg:battle-map:homestead-yard",
+      "urn:robos:crpg:battle-map:catacomb-antechamber",
+      "urn:robos:crpg:battle-map:cavern-depths"
+    ],
+    "robos:mapConnections": [
+      {
+        "id": "conn-tantegel-to-courtyard",
+        "fromMap": "tantegel-throne-room",
+        "fromObjectId": "stairs-down",
+        "toMap": "homestead-yard",
+        "toObjectId": "homestead_door",
+        "toSpawn": [
+          10,
+          15
+        ],
+        "toFacing": "south",
+        "transitionType": "stairs",
+        "bidirectional": true,
+        "requiredKey": null,
+        "label": "Stairs Down to Courtyard"
+      },
+      {
+        "id": "conn-tantegel-to-catacombs",
+        "fromMap": "tantegel-throne-room",
+        "fromObjectId": "royal-door",
+        "toMap": "catacomb-antechamber",
+        "toObjectId": "antechamber-entry-door",
+        "toSpawn": [
+          20,
+          15
+        ],
+        "toFacing": "south",
+        "transitionType": "door",
+        "bidirectional": true,
+        "requiredKey": "magic-key",
+        "label": "Royal Vault Gate to Ancient Catacombs (Requires Magic Key)"
+      },
+      {
+        "id": "conn-swamp-cave-descent",
+        "fromMap": "homestead-yard",
+        "fromObjectId": "yard_gate",
+        "toMap": "cavern-depths",
+        "toObjectId": "cavern_entry",
+        "toSpawn": [
+          15,
+          20
+        ],
+        "toFacing": "east",
+        "transitionType": "portal",
+        "bidirectional": true,
+        "requiredKey": null,
+        "requiredFlag": "discovered_swamp_cave",
+        "label": "Descent into Noxious Swamp Cave"
+      }
     ],
     "robos:characters": [
-      "urn:robos:crpg:character:dragonlord",
       "urn:robos:crpg:character:hero-of-alefgard",
       "urn:robos:crpg:character:npc-king-loric",
-      "urn:robos:crpg:character:npc-princess-gwaelin"
+      "urn:robos:crpg:character:npc-princess-gwaelin",
+      "urn:robos:crpg:character:dragonlord"
     ],
-    "robos:startingMap": "tantegel-throne-room",
     "robos:heroes": [
       {
-        "id": "urn:robos:crpg:character:hero-of-alefgard",
         "slug": "hero-of-alefgard",
+        "fileName": "hero-of-alefgard.jsonld",
+        "path": "/home/ndipiazza/source/robos/games/crpg-realm/characters/hero-of-alefgard.jsonld",
+        "id": "urn:robos:crpg:character:hero-of-alefgard",
         "name": "Hero of Alefgard",
+        "characterType": "hero",
+        "role": "",
+        "class": "Fighter",
+        "subclass": "Descendant of Erdrick",
+        "race": "Human",
+        "background": "Erdrick Bloodline",
+        "level": 1,
+        "alignment": "Lawful Good",
         "portrait": "assets/portraits/portrait_fighter.png",
         "portraitAssetRef": "assets/portraits/portrait_fighter.png",
         "tokenAssetRef": "assets/tokens/token_hero-alefgard-token.png",
-        "robos:inventory": [],
-        "inventory": [],
+        "interactionType": "talk",
+        "location": "",
+        "col": 0,
+        "row": 0,
+        "facing": "down",
+        "dialogue": [],
+        "raw": {
+          "@context": {
+            "robos": "urn:robos:",
+            "schema": "https://schema.org/",
+            "dcterms": "http://purl.org/dc/terms/"
+          },
+          "@id": "urn:robos:crpg:character:hero-of-alefgard",
+          "@type": [
+            "robos:CRPGCharacter",
+            "robos:CRPGHero",
+            "schema:Person"
+          ],
+          "dcterms:title": "Hero of Alefgard",
+          "robos:characterType": "hero",
+          "schema:name": "Hero of Alefgard",
+          "name": "Hero of Alefgard",
+          "slug": "hero-of-alefgard",
+          "characterType": "hero",
+          "robos:portrait": "⚔️",
+          "portrait": "⚔️",
+          "robos:alignment": "Lawful Good",
+          "alignment": "Lawful Good",
+          "robos:backstory": "Direct bloodline descendant of legendary hero Erdrick. Answering King Lorics summons in Alefgard to defeat the Dragonlord and reclaim the Ball of Light.",
+          "backstory": "Direct bloodline descendant of legendary hero Erdrick. Answering King Lorics summons in Alefgard to defeat the Dragonlord and reclaim the Ball of Light.",
+          "robos:level": 1,
+          "level": 1,
+          "robos:race": "Human",
+          "race": "Human",
+          "robos:class": "Fighter",
+          "class": "Fighter",
+          "robos:subclass": "Descendant of Erdrick",
+          "subclass": "Descendant of Erdrick",
+          "robos:background": "Erdrick Bloodline",
+          "background": "Erdrick Bloodline",
+          "robos:xp": 0,
+          "xp": 0,
+          "robos:str": 16,
+          "str": 16,
+          "robos:dex": 14,
+          "dex": 14,
+          "robos:con": 15,
+          "con": 15,
+          "robos:int": 11,
+          "int": 11,
+          "robos:wis": 12,
+          "wis": 12,
+          "robos:cha": 13,
+          "cha": 13,
+          "robos:ac": 12,
+          "ac": 12,
+          "robos:hpMax": 15,
+          "hpMax": 15,
+          "robos:hpCurrent": 15,
+          "hpCurrent": 15,
+          "robos:speed": 30,
+          "speed": 30,
+          "robos:initiative": 2,
+          "initiative": 2,
+          "robos:prof": 2,
+          "prof": 2,
+          "robos:spells": "HEAL (Cantrip: 3-5 HP), SIZZ (Fire Spell, 2 MP)",
+          "spells": "HEAL (Cantrip: 3-5 HP), SIZZ (Fire Spell, 2 MP)"
+        },
         "mainHand": "",
         "offHand": "",
         "armor": "",
@@ -70,218 +208,264 @@
         "cloak": "",
         "boots": "",
         "ring1": "",
-        "quickItems": "",
-        "robos:mainHand": "",
-        "robos:offHand": "",
-        "robos:armor": "",
-        "robos:helmet": "",
-        "robos:cloak": "",
-        "robos:boots": "",
-        "robos:ring1": "",
-        "robos:quickItems": ""
+        "quickItems": ""
       }
     ],
     "robos:gameState": {
-      "robos:currentScene": "",
-      "robos:activeParty": [
-        "urn:robos:crpg:character:hero-of-alefgard"
-      ],
+      "robos:currentScene": "candlekeep-exterior",
+      "robos:activeParty": [],
       "robos:partyLeaderIndex": 0,
       "robos:partyFormation": "rank",
       "robos:sharedInventory": {
-        "gold": 0,
+        "gold": 150,
+        "silver": 40,
+        "copper": 120,
         "items": [
-          "bamboo-pole",
-          "magic-key",
-          "torch",
-          "herb"
-        ],
-        "silver": 0,
-        "copper": 0
+          "Potion of Healing (x4)",
+          "Silk Rope (50 ft)",
+          "Thieves' Tools",
+          "Torches (x3)",
+          "Rations (x10)"
+        ]
       },
-      "robos:questLog": [],
-      "robos:worldFlags": {}
+      "robos:questLog": [
+        {
+          "id": "quest-defeat-dragonlord",
+          "title": "Defeat the Dragonlord",
+          "status": "active",
+          "description": "Journey across Alefgard, breach Charlock Castle, and vanquish the Dragonlord.",
+          "reward": "Ball of Light, Peace in Alefgard"
+        },
+        {
+          "id": "quest-rescue-gwaelin",
+          "title": "Rescue Princess Gwaelin",
+          "status": "active",
+          "description": "Search the swamp cave south of Tantegel Castle and defeat the Green Dragon to free Princess Gwaelin.",
+          "reward": "Princess Gwaelin's Love, 100 XP"
+        }
+      ],
+      "robos:worldFlags": {
+        "ball_of_light_stolen": true,
+        "dragonlord_threat": true,
+        "princess_rescued": false
+      }
     },
     "robos:storyFlow": {
-      "@type": "robos:StoryFlowGraph",
-      "robos:rootNodeId": "node-kings-decree",
-      "robos:storyNodes": [
-        {
-          "id": "node-kings-decree",
-          "title": "King Lorik's Royal Decree",
-          "nodeType": "start",
-          "location": "tantegel-throne-room",
-          "giver": "npc-king-loric",
-          "synopsis": "King Lorik charges Erdrick with recovering the Ball of Light and rescuing Princess Gwaelin.",
-          "choices": [
-            {
-              "text": "Accept Royal Quest of Erdrick",
-              "targetNodeId": "node-equip-erdrick",
-              "trigger": "talk_npc",
-              "required": "talk_king_lorik"
-            }
-          ],
-          "robos:flowPage": "page-prologue",
-          "_x": 40,
-          "_y": 50
-        },
-        {
-          "id": "node-equip-erdrick",
-          "title": "Arming the Descendant of Erdrick",
-          "nodeType": "quest",
-          "location": "tantegel-throne-room",
-          "synopsis": "Open the royal chests to claim 120 Gold, Magic Key, Torch, and Herbs.",
-          "choices": [
-            {
-              "text": "Unlock Royal Gate with Magic Key",
-              "targetNodeId": "node-charlock-ascent",
-              "trigger": "claim_item",
-              "required": "has_magic_key"
-            }
-          ],
-          "robos:flowPage": "page-prologue",
-          "_x": 530,
-          "_y": 50
-        },
-        {
-          "id": "node-charlock-ascent",
-          "title": "Journey to Charlock Castle",
-          "nodeType": "branch",
-          "location": "charlock-castle",
-          "synopsis": "Venture across Alefgard and enter the foul lair of the Dragonlord.",
-          "choices": [
-            {
-              "text": "Enter the Dragonlord's Lair",
-              "targetNodeId": "node-slay-dragonlord",
-              "trigger": "area_transition",
-              "required": "has_magic_key"
-            }
-          ],
-          "robos:flowPage": "page-prologue",
-          "_x": 1020,
-          "_y": 50
-        },
-        {
-          "id": "node-slay-dragonlord",
-          "title": "Slaying the Dragonlord",
-          "nodeType": "combat",
-          "location": "charlock-castle",
-          "synopsis": "Confront the Dragonlord in combat, resist corruption, and strike him down.",
-          "choices": [
-            {
-              "text": "Strike Down the Dragonlord",
-              "targetNodeId": "node-victory-alefgard",
-              "trigger": "combat_trial"
-            }
-          ],
-          "robos:flowPage": "page-prologue",
-          "_x": 1510,
-          "_y": 50
-        },
-        {
-          "id": "node-victory-alefgard",
-          "title": "Restoring Ball of Light & Rescuing Princess Gwaelin",
-          "nodeType": "epilogue",
-          "location": "tantegel-throne-room",
-          "giver": "npc-princess-gwaelin",
-          "synopsis": "Princess Gwaelin is rescued and the Ball of Light restored to Tantegel Castle. Total Victory!",
-          "choices": [],
-          "robos:flowPage": "page-prologue",
-          "_x": 2000,
-          "_y": 50
-        }
-      ],
+      "@type": "robos:CRPGStoryFlow",
+      "@id": "urn:robos:crpg:storyflow:dragonwarrior-1-usa",
+      "dcterms:title": "The Quest for the Ball of Light",
+      "robos:rootNodeId": "node-dw-throne-room",
       "robos:flowPages": [
         {
-          "id": "page-prologue",
-          "name": "Page 1: Prologue",
+          "id": "page-dw-p1",
+          "name": "Page 1: Tantegel & Early Trials",
           "act": "Prologue",
-          "summary": "Prologue storyline and scenarios (5 nodes)"
+          "summary": "King Loric's decree and preparing in Tantegel Castle."
+        },
+        {
+          "id": "page-dw-p2",
+          "name": "Page 2: Chapter 1 — Brecconary & Swamp Cave",
+          "act": "Chapter 1",
+          "summary": "Rescuing Princess Gwaelin from the Green Dragon."
+        },
+        {
+          "id": "page-dw-p3",
+          "name": "Page 3: Chapter 2 — The Rainbow Bridge",
+          "act": "Chapter 2",
+          "summary": "Forging the Rainbow Drop and crossing the sea."
+        },
+        {
+          "id": "page-dw-p4",
+          "name": "Page 4: Finale & Epilogue — Throne of Charlock",
+          "act": "Finale",
+          "summary": "Confronting the Dragonlord and determining the fate of Alefgard."
+        }
+      ],
+      "robos:storyNodes": [
+        {
+          "@type": "robos:CRPGStoryNode",
+          "id": "node-dw-throne-room",
+          "dcterms:title": "The Royal Decree of Tantegel",
+          "robos:nodeType": "game_start",
+          "robos:act": "Prologue",
+          "robos:flowPage": "page-dw-p1",
+          "robos:location": "tantegel-throne-room",
+          "robos:giver": "King Loric",
+          "robos:summary": "King Loric greets the descendant of Erdrick in Tantegel Throne Room. The Ball of Light has been stolen by the Dragonlord, plunging Alefgard into darkness.",
+          "robos:choices": [
+            {
+              "targetNodeId": "node-dw-brecconary",
+              "label": "Take the royal treasure chests and depart for Brecconary Town",
+              "setFlags": {
+                "received_royal_blessing": true,
+                "spoke_to_king_loric": true
+              },
+              "boundEventId": "evt-dw-loric-decree",
+              "robos:boundEvent": "urn:robos:crpg:event:evt-dw-loric-decree"
+            }
+          ]
+        },
+        {
+          "@type": "robos:CRPGStoryNode",
+          "id": "node-dw-brecconary",
+          "dcterms:title": "The Town of Brecconary",
+          "robos:nodeType": "quest_stage",
+          "robos:act": "Chapter 1",
+          "robos:flowPage": "page-dw-p2",
+          "robos:location": "tantegel-throne-room",
+          "robos:giver": "Brecconary Merchant",
+          "robos:summary": "In Brecconary, townspeople whisper of Princess Gwaelin's abduction and an ancient inscription left by Erdrick concerning the three sacred relics.",
+          "robos:choices": [
+            {
+              "targetNodeId": "node-dw-quagmire",
+              "label": "Descend into the swamp cave to rescue Princess Gwaelin",
+              "setFlags": {
+                "discovered_swamp_cave": true
+              },
+              "boundEventId": "evt-dw-swamp-cave-discovery",
+              "robos:boundEvent": "urn:robos:crpg:event:evt-dw-swamp-cave-discovery"
+            },
+            {
+              "targetNodeId": "node-dw-rainbow-drop",
+              "label": "Seek the sacred relics across Rimuldar and Cantlin first",
+              "setFlags": {
+                "quest_for_relics": true
+              },
+              "boundEventId": "evt-dw-relic-search",
+              "robos:boundEvent": "urn:robos:crpg:event:evt-dw-relic-search"
+            }
+          ]
+        },
+        {
+          "@type": "robos:CRPGStoryNode",
+          "id": "node-dw-quagmire",
+          "dcterms:title": "The Swamp Cave & The Green Dragon",
+          "robos:nodeType": "combat_trial",
+          "robos:act": "Chapter 1",
+          "robos:flowPage": "page-dw-p2",
+          "robos:location": "tantegel-throne-room",
+          "robos:giver": "Princess Gwaelin",
+          "robos:summary": "Deep within the noxious swamp cave, a fierce Green Dragon guards Princess Gwaelin's cage.",
+          "robos:choices": [
+            {
+              "targetNodeId": "node-dw-rainbow-drop",
+              "label": "Slay the Green Dragon, rescue the Princess, and carry her to Tantegel",
+              "setFlags": {
+                "green_dragon_slain": true,
+                "princess_rescued": true
+              },
+              "boundEventId": "evt-dw-green-dragon-slain",
+              "robos:boundEvent": "urn:robos:crpg:event:evt-dw-green-dragon-slain"
+            }
+          ]
+        },
+        {
+          "@type": "robos:CRPGStoryNode",
+          "id": "node-dw-rainbow-drop",
+          "dcterms:title": "The Rainbow Bridge",
+          "robos:nodeType": "act_chapter",
+          "robos:act": "Chapter 2",
+          "robos:flowPage": "page-dw-p3",
+          "robos:location": "tantegel-throne-room",
+          "robos:giver": "Old Man of Kol",
+          "robos:summary": "Combining the Staff of Rain and Sunstone at the sacred shrine creates the Rainbow Drop, spanning a luminous bridge across the sea to Charlock Castle.",
+          "robos:choices": [
+            {
+              "targetNodeId": "node-dw-charlock",
+              "label": "Cross the Rainbow Bridge into Castle Charlock",
+              "setFlags": {
+                "rainbow_bridge_created": true
+              },
+              "boundEventId": "evt-dw-rainbow-bridge-created",
+              "robos:boundEvent": "urn:robos:crpg:event:evt-dw-rainbow-bridge-created"
+            }
+          ]
+        },
+        {
+          "@type": "robos:CRPGStoryNode",
+          "id": "node-dw-charlock",
+          "dcterms:title": "Throne of the Dragonlord",
+          "robos:nodeType": "decision_branch",
+          "robos:act": "Finale",
+          "robos:flowPage": "page-dw-p4",
+          "robos:location": "tantegel-throne-room",
+          "robos:giver": "Dragonlord",
+          "robos:summary": "Reaching the infernal throne at the base of Charlock Castle, the Dragonlord sneers: 'Welcome, Erdrick's blood. Will thou join me and rule half the world in shadows?'",
+          "robos:choices": [
+            {
+              "targetNodeId": "node-dw-ending-savior",
+              "label": "Refuse the evil bargain! Draw Erdrick's Sword and strike him down",
+              "setFlags": {
+                "dragonlord_slain": true,
+                "ball_of_light_restored": true
+              },
+              "boundEventId": "evt-dw-dragonlord-slain",
+              "robos:boundEvent": "urn:robos:crpg:event:evt-dw-dragonlord-slain"
+            },
+            {
+              "targetNodeId": "node-dw-ending-dark-pact",
+              "label": "Accept the dark pact and kneel before the Dragonlord",
+              "setFlags": {
+                "dark_pact_accepted": true
+              },
+              "boundEventId": "evt-dw-dark-pact-accepted",
+              "robos:boundEvent": "urn:robos:crpg:event:evt-dw-dark-pact-accepted"
+            },
+            {
+              "targetNodeId": "node-dw-ending-defeat",
+              "label": "Waver in hesitation as the Dragonlord unleashes searing flames",
+              "setFlags": {
+                "hero_slain_charlock": true
+              },
+              "boundEventId": "evt-dw-hero-slain-charlock",
+              "robos:boundEvent": "urn:robos:crpg:event:evt-dw-hero-slain-charlock"
+            }
+          ]
+        },
+        {
+          "@type": "robos:CRPGStoryNode",
+          "id": "node-dw-ending-savior",
+          "dcterms:title": "Ending A: The Ball of Light & The Royal Wedding",
+          "robos:nodeType": "end_game_state",
+          "robos:act": "Epilogue",
+          "robos:flowPage": "page-dw-p4",
+          "robos:endingType": "triumph_good",
+          "robos:victoryStatus": "victory",
+          "robos:summary": "The Dragonlord is vanquished and the Ball of Light banishes all monsters.",
+          "robos:epilogueText": "Holding high the radiant Ball of Light, sunlight pierces the dark clouds over Alefgard for the first time in an age. King Loric steps down from his throne, and Princess Gwaelin takes your hand in marriage as you set sail to found a prosperous new kingdom across the ocean.",
+          "robos:choices": []
+        },
+        {
+          "@type": "robos:CRPGStoryNode",
+          "id": "node-dw-ending-dark-pact",
+          "dcterms:title": "Ending B: Reign of the Shadow Sovereign",
+          "robos:nodeType": "end_game_state",
+          "robos:act": "Epilogue",
+          "robos:flowPage": "page-dw-p4",
+          "robos:endingType": "tyrant_evil",
+          "robos:victoryStatus": "victory",
+          "robos:summary": "You betray King Loric and rule Alefgard as the Dragonlord's dark champion.",
+          "robos:epilogueText": "Seduced by promises of absolute dominion, you take the Dragonlord's outstretched claw. Tantegel Castle falls to your combined legions, and Alefgard is carved into two dark realms ruled by terror and draconic flame.",
+          "robos:choices": []
+        },
+        {
+          "@type": "robos:CRPGStoryNode",
+          "id": "node-dw-ending-defeat",
+          "dcterms:title": "Ending C: Ashes in Charlock",
+          "robos:nodeType": "end_game_state",
+          "robos:act": "Epilogue",
+          "robos:flowPage": "page-dw-p4",
+          "robos:endingType": "game_over_defeat",
+          "robos:victoryStatus": "defeat",
+          "robos:summary": "The descendant of Erdrick falls in the depths of Charlock Castle.",
+          "robos:epilogueText": "The Dragonlord's infernal breath incinerates the halls of Charlock. With the last hero slain, King Loric watches helplessly from Tantegel as darkness consumes the realm of Alefgard.",
+          "robos:choices": []
         }
       ]
-    },
-    "robos:splashAssetRef": "",
-    "robos:startingSpawn": {
-      "position": [
-        28,
-        14
-      ],
-      "facing": "south",
-      "entryDescription": ""
     },
     "robos:scenes": []
   },
   "maps": {
-    "charlock-castle": {
-      "@context": {
-        "robos": "https://robos.dev/ns/sdlc#",
-        "dcterms": "http://purl.org/dc/terms/",
-        "schema": "https://schema.org/"
-      },
-      "@id": "urn:robos:crpg:battle-map:charlock-castle",
-      "@type": [
-        "robos:CRPGBattleMap",
-        "schema:Place"
-      ],
-      "dcterms:title": "Charlock Castle - Dragonlord's Lair",
-      "robos:width": 40,
-      "robos:height": 30,
-      "robos:terrain": "cave",
-      "robos:backgroundImage": "res://assets/blockouts/catacomb-antechamber.png",
-      "robos:backgroundOpacity": 1,
-      "robos:mapObjects": [
-        {
-          "@type": "robos:CRPGMapObject",
-          "robos:objectId": "dragon-altar",
-          "robos:objectType": "altar",
-          "robos:shape": "rect",
-          "dcterms:title": "Dragonlord's Altar",
-          "id": "dragon-altar",
-          "type": "altar",
-          "label": "Dragonlord's Altar",
-          "shape": "rect",
-          "robos:position": [
-            18,
-            12
-          ],
-          "x": 18,
-          "y": 12,
-          "robos:size": [
-            8,
-            4
-          ],
-          "w": 8,
-          "h": 4,
-          "width": 8,
-          "height": 4
-        },
-        {
-          "@type": "robos:CRPGMapObject",
-          "robos:objectId": "stairs-up",
-          "robos:objectType": "stairs",
-          "robos:shape": "rect",
-          "dcterms:title": "Stairs Back to Tantegel",
-          "id": "stairs-up",
-          "type": "stairs",
-          "label": "Stairs Back to Tantegel",
-          "shape": "rect",
-          "robos:position": [
-            18,
-            26
-          ],
-          "x": 18,
-          "y": 26,
-          "robos:size": [
-            4,
-            4
-          ],
-          "w": 4,
-          "h": 4,
-          "width": 4,
-          "height": 4
-        }
-      ]
-    },
     "tantegel-throne-room": {
       "@context": {
         "robos": "https://robos.dev/ns/sdlc#",
@@ -297,7 +481,7 @@
       "robos:width": 60,
       "robos:height": 40,
       "robos:terrain": "stone",
-      "robos:backgroundImage": "res://assets/blockouts/tantegel-throne-room.png",
+      "robos:backgroundImage": "res://assets/backgrounds/tantegel_throne_room.png",
       "robos:backgroundOpacity": 1,
       "robos:mapObjects": [
         {
@@ -305,343 +489,3317 @@
           "robos:objectId": "throne-dais",
           "robos:objectType": "wall",
           "robos:shape": "rect",
-          "dcterms:title": "King Lorik's Dais",
-          "id": "throne-dais",
-          "type": "wall",
-          "label": "King Lorik's Dais",
-          "shape": "rect",
           "robos:position": [
             24,
             6
           ],
-          "x": 24,
-          "y": 6,
           "robos:size": [
             12,
             6
           ],
+          "dcterms:title": "King Lorik's Throne Dais",
+          "id": "throne-dais",
+          "type": "wall",
+          "shape": "rect",
+          "x": 24,
+          "y": 6,
           "w": 12,
           "h": 6,
-          "width": 12,
-          "height": 6
+          "rot": 0,
+          "stroke": "#ffd700",
+          "fill": "#b8860b",
+          "collision": "blocked",
+          "opacity": "opaque",
+          "height": 6,
+          "label": "King Lorik's Throne Dais",
+          "notes": "Elevated throne where King Lorik sits with Imperial Scrolls"
         },
         {
           "@type": "robos:CRPGMapObject",
           "robos:objectId": "king-throne",
           "robos:objectType": "altar",
           "robos:shape": "rect",
-          "dcterms:title": "Royal Throne",
-          "id": "king-throne",
-          "type": "altar",
-          "label": "Royal Throne",
-          "shape": "rect",
           "robos:position": [
             28,
             8
           ],
-          "x": 28,
-          "y": 8,
           "robos:size": [
             4,
             3
           ],
+          "dcterms:title": "King's Royal Throne",
+          "id": "king-throne",
+          "type": "altar",
+          "shape": "rect",
+          "x": 28,
+          "y": 8,
           "w": 4,
           "h": 3,
-          "width": 4,
-          "height": 3
+          "rot": 0,
+          "stroke": "#ffd700",
+          "fill": "#ffd700",
+          "collision": "blocked",
+          "opacity": "transparent",
+          "height": 4,
+          "label": "King's Royal Throne",
+          "notes": "Gilded seat of the monarch of Alefgard"
         },
         {
           "@type": "robos:CRPGMapObject",
           "robos:objectId": "pillar-west",
           "robos:objectType": "pillar",
           "robos:shape": "circle",
-          "dcterms:title": "Stone Pillar West",
-          "id": "pillar-west",
-          "type": "pillar",
-          "label": "Stone Pillar West",
-          "shape": "circle",
-          "robos:center": [
+          "robos:position": [
             14,
             18
           ],
-          "cx": 14,
-          "cy": 18,
-          "robos:radius": 3,
-          "radius": 3,
-          "x": 11,
-          "y": 15,
-          "w": 6,
-          "h": 6,
-          "robos:position": [
-            11,
-            15
-          ],
-          "robos:size": [
-            6,
-            6
-          ]
+          "robos:radius": 2.5,
+          "dcterms:title": "Stone Pillar West",
+          "id": "pillar-west",
+          "type": "pillar",
+          "shape": "circle",
+          "x": 14,
+          "y": 18,
+          "w": 5,
+          "h": 5,
+          "rot": 0,
+          "stroke": "#8892b0",
+          "fill": "#495670",
+          "collision": "blocked",
+          "opacity": "opaque",
+          "height": 12,
+          "label": "Stone Pillar West",
+          "notes": "Castle archway support column"
         },
         {
           "@type": "robos:CRPGMapObject",
           "robos:objectId": "pillar-east",
           "robos:objectType": "pillar",
           "robos:shape": "circle",
-          "dcterms:title": "Stone Pillar East",
-          "id": "pillar-east",
-          "type": "pillar",
-          "label": "Stone Pillar East",
-          "shape": "circle",
-          "robos:center": [
+          "robos:position": [
             42,
             18
           ],
-          "cx": 42,
-          "cy": 18,
-          "robos:radius": 3,
-          "radius": 3,
-          "x": 39,
-          "y": 15,
-          "w": 6,
-          "h": 6,
-          "robos:position": [
-            39,
-            15
-          ],
-          "robos:size": [
-            6,
-            6
-          ]
+          "robos:radius": 2.5,
+          "dcterms:title": "Stone Pillar East",
+          "id": "pillar-east",
+          "type": "pillar",
+          "shape": "circle",
+          "x": 42,
+          "y": 18,
+          "w": 5,
+          "h": 5,
+          "rot": 0,
+          "stroke": "#8892b0",
+          "fill": "#495670",
+          "collision": "blocked",
+          "opacity": "opaque",
+          "height": 12,
+          "label": "Stone Pillar East",
+          "notes": "Castle archway support column"
         },
         {
           "@type": "robos:CRPGMapObject",
           "robos:objectId": "chest-120g",
           "robos:objectType": "chest",
           "robos:shape": "rect",
-          "dcterms:title": "Treasure Chest (120 Gold)",
-          "id": "chest-120g",
-          "type": "chest",
-          "label": "Treasure Chest (120 Gold)",
-          "shape": "rect",
           "robos:position": [
             18,
-            10
+            13
           ],
-          "x": 18,
-          "y": 10,
           "robos:size": [
             3,
             3
           ],
+          "dcterms:title": "Treasure Chest (120 Gold)",
+          "id": "chest-120g",
+          "type": "chest",
+          "shape": "rect",
+          "x": 18,
+          "y": 13,
           "w": 3,
           "h": 3,
-          "width": 3,
-          "height": 3
+          "rot": 0,
+          "stroke": "#ffd700",
+          "fill": "#eab308",
+          "collision": "blocked",
+          "opacity": "transparent",
+          "height": 3,
+          "label": "Treasure Chest (120 Gold)",
+          "notes": "Contains 120 G granted by King Lorik for the quest"
         },
         {
           "@type": "robos:CRPGMapObject",
           "robos:objectId": "chest-torch",
           "robos:objectType": "chest",
           "robos:shape": "rect",
-          "dcterms:title": "Treasure Chest (Torch)",
-          "id": "chest-torch",
-          "type": "chest",
-          "label": "Treasure Chest (Torch)",
-          "shape": "rect",
           "robos:position": [
-            22,
-            10
+            21,
+            13
           ],
-          "x": 22,
-          "y": 10,
           "robos:size": [
             3,
             3
           ],
+          "dcterms:title": "Treasure Chest (Torch)",
+          "id": "chest-torch",
+          "type": "chest",
+          "shape": "rect",
+          "x": 21,
+          "y": 13,
           "w": 3,
           "h": 3,
-          "width": 3,
-          "height": 3
+          "rot": 0,
+          "stroke": "#ffd700",
+          "fill": "#eab308",
+          "collision": "blocked",
+          "opacity": "transparent",
+          "height": 3,
+          "label": "Treasure Chest (Torch)",
+          "notes": "Contains a Torch for illuminating dungeons and caves"
         },
         {
           "@type": "robos:CRPGMapObject",
           "robos:objectId": "chest-magic-key",
           "robos:objectType": "chest",
           "robos:shape": "rect",
-          "dcterms:title": "Treasure Chest (Magic Key)",
-          "id": "chest-magic-key",
-          "type": "chest",
-          "label": "Treasure Chest (Magic Key)",
-          "shape": "rect",
           "robos:position": [
-            26,
-            10
+            24,
+            13
           ],
-          "x": 26,
-          "y": 10,
           "robos:size": [
             3,
             3
           ],
+          "dcterms:title": "Treasure Chest (Magic Key)",
+          "id": "chest-magic-key",
+          "type": "chest",
+          "shape": "rect",
+          "x": 24,
+          "y": 13,
           "w": 3,
           "h": 3,
-          "width": 3,
-          "height": 3
+          "rot": 0,
+          "stroke": "#ffd700",
+          "fill": "#eab308",
+          "collision": "blocked",
+          "opacity": "transparent",
+          "height": 3,
+          "label": "Treasure Chest (Magic Key)",
+          "notes": "Contains a single-use Magic Key that opens royal doors"
         },
         {
           "@type": "robos:CRPGMapObject",
           "robos:objectId": "royal-door",
           "robos:objectType": "door",
           "robos:shape": "rect",
+          "robos:position": [
+            27,
+            36
+          ],
+          "robos:size": [
+            6,
+            2
+          ],
           "dcterms:title": "Royal Locked Door",
           "id": "royal-door",
           "type": "door",
-          "label": "Royal Locked Door",
           "shape": "rect",
-          "robos:position": [
-            28,
-            22
-          ],
-          "x": 28,
-          "y": 22,
-          "robos:size": [
-            4,
-            2
-          ],
-          "w": 4,
+          "x": 27,
+          "y": 36,
+          "w": 6,
           "h": 2,
-          "width": 4,
-          "height": 2
+          "rot": 0,
+          "stroke": "#06b6d4",
+          "fill": "#0891b2",
+          "collision": "blocked",
+          "opacity": "transparent",
+          "height": 8,
+          "label": "Royal Locked Door",
+          "notes": "Requires a Magic Key to pass through to the stairs",
+          "robos:transition": {
+            "@type": "robos:CRPGMapTransition",
+            "robos:targetMap": "urn:robos:crpg:battle-map:catacomb-antechamber",
+            "robos:targetSpawn": [
+              20,
+              15
+            ],
+            "robos:targetFacing": "south",
+            "robos:targetObjectId": "antechamber-entry-door",
+            "robos:transitionType": "door",
+            "robos:requiredKey": "magic-key",
+            "robos:lockedMessage": "The royal door is locked by heavy iron wards. You need a Magic Key to open it.",
+            "robos:transitionMessage": "Unlocking the royal gate and passing through to the ancient catacombs..."
+          }
         },
         {
           "@type": "robos:CRPGMapObject",
           "robos:objectId": "stairs-down",
           "robos:objectType": "stairs",
           "robos:shape": "rect",
-          "dcterms:title": "Stairs Down to Charlock Maw",
+          "robos:position": [
+            48,
+            30
+          ],
+          "robos:size": [
+            6,
+            6
+          ],
+          "dcterms:title": "Stairs Down to Castle 1F",
           "id": "stairs-down",
           "type": "stairs",
-          "label": "Stairs Down to Charlock Maw",
           "shape": "rect",
+          "x": 48,
+          "y": 30,
+          "w": 6,
+          "h": 6,
+          "rot": 0,
+          "stroke": "#94a3b8",
+          "fill": "#475569",
+          "collision": "open",
+          "opacity": "transparent",
+          "height": 0,
+          "label": "Stairs Down to Castle 1F",
+          "notes": "Descends to Tantegel Castle 1F Courtyard",
+          "robos:transition": {
+            "@type": "robos:CRPGMapTransition",
+            "robos:targetMap": "urn:robos:crpg:battle-map:homestead-yard",
+            "robos:targetSpawn": [
+              10,
+              15
+            ],
+            "robos:targetFacing": "south",
+            "robos:targetObjectId": "homestead_door",
+            "robos:transitionType": "stairs",
+            "robos:transitionMessage": "Descending the spiral staircase to the courtyard..."
+          }
+        }
+      ],
+      "robos:blockout": {
+        "gridSize": 5,
+        "cols": 13,
+        "rows": 9,
+        "blocked": [
+          [
+            2,
+            3
+          ],
+          [
+            3,
+            2
+          ],
+          [
+            4,
+            1
+          ],
+          [
+            4,
+            2
+          ],
+          [
+            5,
+            1
+          ],
+          [
+            5,
+            2
+          ],
+          [
+            5,
+            7
+          ],
+          [
+            6,
+            1
+          ],
+          [
+            6,
+            2
+          ],
+          [
+            6,
+            7
+          ],
+          [
+            7,
+            1
+          ],
+          [
+            7,
+            2
+          ],
+          [
+            8,
+            3
+          ]
+        ],
+        "opaque": [
+          [
+            2,
+            3
+          ],
+          [
+            4,
+            1
+          ],
+          [
+            4,
+            2
+          ],
+          [
+            5,
+            1
+          ],
+          [
+            5,
+            2
+          ],
+          [
+            5,
+            7
+          ],
+          [
+            6,
+            1
+          ],
+          [
+            6,
+            2
+          ],
+          [
+            6,
+            7
+          ],
+          [
+            7,
+            1
+          ],
+          [
+            7,
+            2
+          ],
+          [
+            8,
+            3
+          ]
+        ],
+        "difficult": [
+          [
+            9,
+            6
+          ],
+          [
+            9,
+            7
+          ],
+          [
+            10,
+            6
+          ],
+          [
+            10,
+            7
+          ]
+        ],
+        "cover": {
+          "half": [
+            [
+              3,
+              2
+            ],
+            [
+              4,
+              2
+            ],
+            [
+              5,
+              1
+            ],
+            [
+              5,
+              2
+            ],
+            [
+              6,
+              1
+            ],
+            [
+              6,
+              2
+            ]
+          ],
+          "three-quarters": []
+        },
+        "objectsHash": "8b78e580edc0c9b0",
+        "image": "res://assets/blockouts/tantegel-throne-room.png",
+        "imagePxPerFoot": 48
+      }
+    },
+    "homestead-yard": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/"
+      },
+      "@id": "urn:robos:crpg:battle-map:homestead-yard",
+      "@type": [
+        "robos:CRPGBattleMap",
+        "schema:Place"
+      ],
+      "dcterms:title": "Guard's Homestead yard",
+      "robos:width": 90,
+      "robos:height": 60,
+      "robos:terrain": "grass",
+      "robos:mapObjects": [
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "homestead",
+          "robos:objectType": "building",
+          "robos:shape": "rect",
           "robos:position": [
-            28,
+            0,
+            0
+          ],
+          "robos:size": [
+            15,
+            20
+          ],
+          "dcterms:title": "Homestead"
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "homestead_door",
+          "robos:objectType": "door",
+          "robos:shape": "rect",
+          "robos:position": [
+            10,
+            10
+          ],
+          "robos:size": [
+            5,
+            5
+          ],
+          "robos:open": true,
+          "robos:transition": {
+            "@type": "robos:CRPGMapTransition",
+            "robos:targetMap": "urn:robos:crpg:battle-map:tantegel-throne-room",
+            "robos:targetSpawn": [
+              48,
+              25
+            ],
+            "robos:targetFacing": "north",
+            "robos:targetObjectId": "stairs-down",
+            "robos:transitionType": "stairs",
+            "robos:transitionMessage": "Ascending the spiral stone staircase back to Tantegel Throne Room..."
+          }
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "oak_1",
+          "robos:objectType": "tree",
+          "robos:shape": "circle",
+          "robos:position": [
+            50,
+            10
+          ],
+          "robos:radius": 5
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "oak_2",
+          "robos:objectType": "tree",
+          "robos:shape": "circle",
+          "robos:position": [
+            60,
+            45
+          ],
+          "robos:radius": 4
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "well",
+          "robos:objectType": "rock",
+          "robos:shape": "circle",
+          "robos:position": [
+            40,
+            30
+          ],
+          "robos:radius": 3
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "yard_fence",
+          "robos:objectType": "fence",
+          "robos:shape": "line",
+          "robos:position": [
+            30,
+            55
+          ],
+          "robos:to": [
+            60,
+            55
+          ],
+          "robos:thickness": 5
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "barrels",
+          "robos:objectType": "barrel",
+          "robos:shape": "circle",
+          "robos:position": [
+            5,
+            40
+          ],
+          "robos:radius": 2.5
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "path",
+          "robos:objectType": "road",
+          "robos:shape": "rect",
+          "robos:position": [
+            15,
             25
           ],
-          "x": 28,
-          "y": 25,
           "robos:size": [
+            75,
+            5
+          ],
+          "dcterms:title": "Road to Oakhaven"
+        }
+      ],
+      "robos:mapZone": {
+        "@id": "urn:robos:crpg:zone:homestead"
+      },
+      "robos:blockout": {
+        "gridSize": 5,
+        "cols": 19,
+        "rows": 13,
+        "blocked": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            3
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            3
+          ],
+          [
+            1,
+            8
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            6,
+            11
+          ],
+          [
+            7,
+            11
+          ],
+          [
+            8,
+            6
+          ],
+          [
+            8,
+            11
+          ],
+          [
+            9,
+            1
+          ],
+          [
+            9,
+            2
+          ],
+          [
+            9,
+            11
+          ],
+          [
+            10,
+            1
+          ],
+          [
+            10,
+            2
+          ],
+          [
+            10,
+            11
+          ],
+          [
+            11,
+            8
+          ],
+          [
+            11,
+            9
+          ],
+          [
+            11,
+            11
+          ],
+          [
+            12,
+            8
+          ],
+          [
+            12,
+            9
+          ],
+          [
+            12,
+            11
+          ]
+        ],
+        "opaque": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            3
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            3
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            3
+          ]
+        ],
+        "difficult": [],
+        "cover": {
+          "half": [
+            [
+              1,
+              8
+            ],
+            [
+              6,
+              11
+            ],
+            [
+              7,
+              11
+            ],
+            [
+              8,
+              6
+            ],
+            [
+              8,
+              11
+            ],
+            [
+              9,
+              1
+            ],
+            [
+              9,
+              2
+            ],
+            [
+              9,
+              11
+            ],
+            [
+              10,
+              1
+            ],
+            [
+              10,
+              2
+            ],
+            [
+              10,
+              11
+            ],
+            [
+              11,
+              8
+            ],
+            [
+              11,
+              9
+            ],
+            [
+              11,
+              11
+            ],
+            [
+              12,
+              8
+            ],
+            [
+              12,
+              9
+            ],
+            [
+              12,
+              11
+            ]
+          ],
+          "three-quarters": []
+        },
+        "objectsHash": "33c4d7bbcb734ced",
+        "image": "res://assets/blockouts/homestead-yard.png",
+        "imagePxPerFoot": 48
+      },
+      "robos:backgroundImage": "res://assets/backgrounds/village_open_world_2560.png"
+    },
+    "catacomb-antechamber": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/"
+      },
+      "@id": "urn:robos:crpg:battle-map:catacomb-antechamber",
+      "@type": [
+        "robos:CRPGBattleMap",
+        "schema:Place"
+      ],
+      "dcterms:title": "Ancient Catacombs antechamber",
+      "robos:width": 120,
+      "robos:height": 80,
+      "robos:terrain": "stone",
+      "robos:mapObjects": [
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "pillar_nw",
+          "robos:objectType": "pillar",
+          "robos:shape": "rect",
+          "robos:position": [
+            40,
+            10
+          ],
+          "robos:size": [
+            5,
+            5
+          ]
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "pillar_sw",
+          "robos:objectType": "pillar",
+          "robos:shape": "rect",
+          "robos:position": [
+            40,
+            65
+          ],
+          "robos:size": [
+            5,
+            5
+          ]
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "pillar_ne",
+          "robos:objectType": "pillar",
+          "robos:shape": "rect",
+          "robos:position": [
+            60,
+            10
+          ],
+          "robos:size": [
+            5,
+            5
+          ]
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "pillar_se",
+          "robos:objectType": "pillar",
+          "robos:shape": "rect",
+          "robos:position": [
+            60,
+            65
+          ],
+          "robos:size": [
+            5,
+            5
+          ]
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "sarcophagus",
+          "robos:objectType": "altar",
+          "robos:shape": "rect",
+          "robos:position": [
+            100,
+            55
+          ],
+          "robos:size": [
+            10,
+            5
+          ],
+          "dcterms:title": "Sarcophagus"
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "collapsed_rubble",
+          "robos:objectType": "rubble",
+          "robos:shape": "rect",
+          "robos:position": [
+            45,
+            40
+          ],
+          "robos:size": [
+            10,
+            10
+          ]
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "crates",
+          "robos:objectType": "crate",
+          "robos:shape": "rect",
+          "robos:position": [
+            25,
+            65
+          ],
+          "robos:size": [
+            5,
+            5
+          ]
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "crates_2",
+          "robos:objectType": "crate",
+          "robos:shape": "rect",
+          "robos:position": [
+            30,
+            70
+          ],
+          "robos:size": [
+            5,
+            5
+          ]
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "crypt_wall",
+          "robos:objectType": "wall",
+          "robos:shape": "line",
+          "robos:position": [
+            105,
+            0
+          ],
+          "robos:to": [
+            105,
+            40
+          ],
+          "robos:thickness": 5
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "burial_niche",
+          "robos:objectType": "zone",
+          "robos:shape": "rect",
+          "robos:position": [
+            106,
+            5
+          ],
+          "robos:size": [
+            14,
+            30
+          ],
+          "dcterms:title": "Burial niches"
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "antechamber-entry-door",
+          "robos:objectType": "door",
+          "robos:shape": "rect",
+          "robos:position": [
+            20,
+            10
+          ],
+          "robos:size": [
+            6,
+            4
+          ],
+          "dcterms:title": "Catacomb Entry Portal to Tantegel Castle",
+          "robos:open": true,
+          "robos:transition": {
+            "@type": "robos:CRPGMapTransition",
+            "robos:targetMap": "urn:robos:crpg:battle-map:tantegel-throne-room",
+            "robos:targetSpawn": [
+              27,
+              30
+            ],
+            "robos:targetFacing": "north",
+            "robos:targetObjectId": "royal-door",
+            "robos:transitionType": "door",
+            "robos:transitionMessage": "Passing back through the iron vault portal into Tantegel Throne Room..."
+          }
+        }
+      ],
+      "robos:blockout": {
+        "gridSize": 5,
+        "cols": 25,
+        "rows": 17,
+        "blocked": [
+          [
+            5,
+            13
+          ],
+          [
+            6,
+            14
+          ],
+          [
+            8,
+            2
+          ],
+          [
+            8,
+            13
+          ],
+          [
+            12,
+            2
+          ],
+          [
+            12,
+            13
+          ],
+          [
+            20,
+            11
+          ],
+          [
+            21,
+            0
+          ],
+          [
+            21,
+            1
+          ],
+          [
+            21,
+            2
+          ],
+          [
+            21,
+            3
+          ],
+          [
+            21,
+            4
+          ],
+          [
+            21,
+            5
+          ],
+          [
+            21,
+            6
+          ],
+          [
+            21,
+            7
+          ],
+          [
+            21,
+            8
+          ],
+          [
+            21,
+            11
+          ]
+        ],
+        "opaque": [
+          [
+            8,
+            2
+          ],
+          [
+            8,
+            13
+          ],
+          [
+            12,
+            2
+          ],
+          [
+            12,
+            13
+          ],
+          [
+            21,
+            0
+          ],
+          [
+            21,
+            1
+          ],
+          [
+            21,
+            2
+          ],
+          [
+            21,
+            3
+          ],
+          [
+            21,
+            4
+          ],
+          [
+            21,
+            5
+          ],
+          [
+            21,
+            6
+          ],
+          [
+            21,
+            7
+          ],
+          [
+            21,
+            8
+          ]
+        ],
+        "difficult": [
+          [
+            9,
+            8
+          ],
+          [
+            9,
+            9
+          ],
+          [
+            10,
+            8
+          ],
+          [
+            10,
+            9
+          ]
+        ],
+        "cover": {
+          "half": [
+            [
+              5,
+              13
+            ],
+            [
+              6,
+              14
+            ],
+            [
+              20,
+              11
+            ],
+            [
+              21,
+              11
+            ]
+          ],
+          "three-quarters": []
+        },
+        "objectsHash": "8a63c657292ba99a",
+        "image": "res://assets/blockouts/catacomb-antechamber.png",
+        "imagePxPerFoot": 48
+      },
+      "robos:backgroundImage": "res://assets/backgrounds/ancient_catacombs_2560.png"
+    },
+    "cavern-depths": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/"
+      },
+      "@id": "urn:robos:crpg:battle-map:cavern-depths",
+      "@type": [
+        "robos:CRPGBattleMap",
+        "schema:Place"
+      ],
+      "dcterms:title": "Cavern Depths & Arachnid Lair",
+      "robos:width": 120,
+      "robos:height": 90,
+      "robos:terrain": "cave",
+      "robos:mapObjects": [
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "cavern_north_wall",
+          "robos:objectType": "wall",
+          "robos:shape": "line",
+          "robos:position": [
+            0,
+            5
+          ],
+          "robos:to": [
+            120,
+            5
+          ],
+          "robos:thickness": 6
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "cavern_south_wall",
+          "robos:objectType": "wall",
+          "robos:shape": "line",
+          "robos:position": [
+            0,
+            85
+          ],
+          "robos:to": [
+            120,
+            85
+          ],
+          "robos:thickness": 6
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "cavern_west_wall",
+          "robos:objectType": "wall",
+          "robos:shape": "line",
+          "robos:position": [
+            5,
+            5
+          ],
+          "robos:to": [
+            5,
+            85
+          ],
+          "robos:thickness": 6
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "cavern_east_wall",
+          "robos:objectType": "wall",
+          "robos:shape": "line",
+          "robos:position": [
+            115,
+            5
+          ],
+          "robos:to": [
+            115,
+            85
+          ],
+          "robos:thickness": 6
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "rock_formation_nw",
+          "robos:objectType": "rock",
+          "robos:shape": "rect",
+          "robos:position": [
+            20,
+            15
+          ],
+          "robos:size": [
+            25,
+            20
+          ],
+          "dcterms:title": "Northwest stalagmite cluster"
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "rock_formation_sw",
+          "robos:objectType": "rock",
+          "robos:shape": "rect",
+          "robos:position": [
+            20,
+            55
+          ],
+          "robos:size": [
+            25,
+            20
+          ],
+          "dcterms:title": "Southwest rock outcropping"
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "subterranean_chasm_north",
+          "robos:objectType": "pit",
+          "robos:shape": "rect",
+          "robos:position": [
+            60,
+            10
+          ],
+          "robos:size": [
+            15,
+            25
+          ],
+          "dcterms:title": "Bottomless dark chasm (north)"
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "subterranean_chasm_south",
+          "robos:objectType": "pit",
+          "robos:shape": "rect",
+          "robos:position": [
+            60,
+            55
+          ],
+          "robos:size": [
+            15,
+            25
+          ],
+          "dcterms:title": "Bottomless dark chasm (south)"
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "stone_natural_bridge",
+          "robos:objectType": "bridge",
+          "robos:shape": "rect",
+          "robos:position": [
+            58,
+            38
+          ],
+          "robos:size": [
+            19,
+            14
+          ],
+          "dcterms:title": "Natural limestone bridge across chasm"
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "spider_nest_webs",
+          "robos:objectType": "rubble",
+          "robos:shape": "rect",
+          "robos:position": [
+            85,
+            20
+          ],
+          "robos:size": [
+            25,
+            25
+          ],
+          "dcterms:title": "Thick sticky spider webs (difficult terrain)"
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "stalagmite_pillar_1",
+          "robos:objectType": "pillar",
+          "robos:shape": "circle",
+          "robos:position": [
+            50,
+            25
+          ],
+          "robos:radius": 3,
+          "dcterms:title": "Massive cavern stalagmite"
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "stalagmite_pillar_2",
+          "robos:objectType": "pillar",
+          "robos:shape": "circle",
+          "robos:position": [
+            50,
+            65
+          ],
+          "robos:radius": 3,
+          "dcterms:title": "Massive cavern stalagmite"
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "stalagmite_pillar_3",
+          "robos:objectType": "pillar",
+          "robos:shape": "circle",
+          "robos:position": [
+            95,
+            60
+          ],
+          "robos:radius": 4,
+          "dcterms:title": "Colossal stalagmite column"
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "mineral_chest",
+          "robos:objectType": "chest",
+          "robos:shape": "rect",
+          "robos:position": [
+            105,
+            75
+          ],
+          "robos:size": [
+            5,
+            5
+          ],
+          "dcterms:title": "Forgotten Delver's Mineral Chest"
+        },
+        {
+          "@type": "robos:CRPGMapObject",
+          "robos:objectId": "cavern_rubble_corridor",
+          "robos:objectType": "rubble",
+          "robos:shape": "rect",
+          "robos:position": [
+            30,
+            40
+          ],
+          "robos:size": [
+            15,
+            10
+          ],
+          "dcterms:title": "Cave-in rock debris"
+        }
+      ],
+      "robos:blockout": {
+        "gridSize": 5,
+        "cols": 25,
+        "rows": 19,
+        "blocked": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            3
+          ],
+          [
+            0,
+            4
+          ],
+          [
+            0,
+            5
+          ],
+          [
+            0,
+            6
+          ],
+          [
+            0,
+            7
+          ],
+          [
+            0,
+            8
+          ],
+          [
+            0,
+            9
+          ],
+          [
+            0,
+            10
+          ],
+          [
+            0,
+            11
+          ],
+          [
+            0,
+            12
+          ],
+          [
+            0,
+            13
+          ],
+          [
+            0,
+            14
+          ],
+          [
+            0,
+            15
+          ],
+          [
+            0,
+            16
+          ],
+          [
+            0,
+            17
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            3
+          ],
+          [
+            1,
+            4
+          ],
+          [
+            1,
+            5
+          ],
+          [
+            1,
+            6
+          ],
+          [
+            1,
+            7
+          ],
+          [
+            1,
+            8
+          ],
+          [
+            1,
+            9
+          ],
+          [
+            1,
+            10
+          ],
+          [
+            1,
+            11
+          ],
+          [
+            1,
+            12
+          ],
+          [
+            1,
+            13
+          ],
+          [
+            1,
+            14
+          ],
+          [
+            1,
+            15
+          ],
+          [
+            1,
+            16
+          ],
+          [
+            1,
+            17
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            16
+          ],
+          [
+            2,
+            17
+          ],
+          [
+            3,
+            0
+          ],
+          [
+            3,
+            1
+          ],
+          [
+            3,
+            16
+          ],
+          [
+            3,
+            17
+          ],
+          [
+            4,
+            0
+          ],
+          [
+            4,
+            1
+          ],
+          [
+            4,
+            3
+          ],
+          [
             4,
             4
           ],
-          "w": 4,
-          "h": 4,
-          "width": 4,
-          "height": 4
-        }
-      ]
+          [
+            4,
+            5
+          ],
+          [
+            4,
+            6
+          ],
+          [
+            4,
+            11
+          ],
+          [
+            4,
+            12
+          ],
+          [
+            4,
+            13
+          ],
+          [
+            4,
+            14
+          ],
+          [
+            4,
+            16
+          ],
+          [
+            4,
+            17
+          ],
+          [
+            5,
+            0
+          ],
+          [
+            5,
+            1
+          ],
+          [
+            5,
+            3
+          ],
+          [
+            5,
+            4
+          ],
+          [
+            5,
+            5
+          ],
+          [
+            5,
+            6
+          ],
+          [
+            5,
+            11
+          ],
+          [
+            5,
+            12
+          ],
+          [
+            5,
+            13
+          ],
+          [
+            5,
+            14
+          ],
+          [
+            5,
+            16
+          ],
+          [
+            5,
+            17
+          ],
+          [
+            6,
+            0
+          ],
+          [
+            6,
+            1
+          ],
+          [
+            6,
+            3
+          ],
+          [
+            6,
+            4
+          ],
+          [
+            6,
+            5
+          ],
+          [
+            6,
+            6
+          ],
+          [
+            6,
+            11
+          ],
+          [
+            6,
+            12
+          ],
+          [
+            6,
+            13
+          ],
+          [
+            6,
+            14
+          ],
+          [
+            6,
+            16
+          ],
+          [
+            6,
+            17
+          ],
+          [
+            7,
+            0
+          ],
+          [
+            7,
+            1
+          ],
+          [
+            7,
+            3
+          ],
+          [
+            7,
+            4
+          ],
+          [
+            7,
+            5
+          ],
+          [
+            7,
+            6
+          ],
+          [
+            7,
+            11
+          ],
+          [
+            7,
+            12
+          ],
+          [
+            7,
+            13
+          ],
+          [
+            7,
+            14
+          ],
+          [
+            7,
+            16
+          ],
+          [
+            7,
+            17
+          ],
+          [
+            8,
+            0
+          ],
+          [
+            8,
+            1
+          ],
+          [
+            8,
+            3
+          ],
+          [
+            8,
+            4
+          ],
+          [
+            8,
+            5
+          ],
+          [
+            8,
+            6
+          ],
+          [
+            8,
+            11
+          ],
+          [
+            8,
+            12
+          ],
+          [
+            8,
+            13
+          ],
+          [
+            8,
+            14
+          ],
+          [
+            8,
+            16
+          ],
+          [
+            8,
+            17
+          ],
+          [
+            9,
+            0
+          ],
+          [
+            9,
+            1
+          ],
+          [
+            9,
+            16
+          ],
+          [
+            9,
+            17
+          ],
+          [
+            10,
+            0
+          ],
+          [
+            10,
+            1
+          ],
+          [
+            10,
+            5
+          ],
+          [
+            10,
+            13
+          ],
+          [
+            10,
+            16
+          ],
+          [
+            10,
+            17
+          ],
+          [
+            11,
+            0
+          ],
+          [
+            11,
+            1
+          ],
+          [
+            11,
+            16
+          ],
+          [
+            11,
+            17
+          ],
+          [
+            12,
+            0
+          ],
+          [
+            12,
+            1
+          ],
+          [
+            12,
+            2
+          ],
+          [
+            12,
+            3
+          ],
+          [
+            12,
+            4
+          ],
+          [
+            12,
+            5
+          ],
+          [
+            12,
+            6
+          ],
+          [
+            12,
+            11
+          ],
+          [
+            12,
+            12
+          ],
+          [
+            12,
+            13
+          ],
+          [
+            12,
+            14
+          ],
+          [
+            12,
+            15
+          ],
+          [
+            12,
+            16
+          ],
+          [
+            12,
+            17
+          ],
+          [
+            13,
+            0
+          ],
+          [
+            13,
+            1
+          ],
+          [
+            13,
+            2
+          ],
+          [
+            13,
+            3
+          ],
+          [
+            13,
+            4
+          ],
+          [
+            13,
+            5
+          ],
+          [
+            13,
+            6
+          ],
+          [
+            13,
+            11
+          ],
+          [
+            13,
+            12
+          ],
+          [
+            13,
+            13
+          ],
+          [
+            13,
+            14
+          ],
+          [
+            13,
+            15
+          ],
+          [
+            13,
+            16
+          ],
+          [
+            13,
+            17
+          ],
+          [
+            14,
+            0
+          ],
+          [
+            14,
+            1
+          ],
+          [
+            14,
+            2
+          ],
+          [
+            14,
+            3
+          ],
+          [
+            14,
+            4
+          ],
+          [
+            14,
+            5
+          ],
+          [
+            14,
+            6
+          ],
+          [
+            14,
+            11
+          ],
+          [
+            14,
+            12
+          ],
+          [
+            14,
+            13
+          ],
+          [
+            14,
+            14
+          ],
+          [
+            14,
+            15
+          ],
+          [
+            14,
+            16
+          ],
+          [
+            14,
+            17
+          ],
+          [
+            15,
+            0
+          ],
+          [
+            15,
+            1
+          ],
+          [
+            15,
+            16
+          ],
+          [
+            15,
+            17
+          ],
+          [
+            16,
+            0
+          ],
+          [
+            16,
+            1
+          ],
+          [
+            16,
+            16
+          ],
+          [
+            16,
+            17
+          ],
+          [
+            17,
+            0
+          ],
+          [
+            17,
+            1
+          ],
+          [
+            17,
+            16
+          ],
+          [
+            17,
+            17
+          ],
+          [
+            18,
+            0
+          ],
+          [
+            18,
+            1
+          ],
+          [
+            18,
+            11
+          ],
+          [
+            18,
+            12
+          ],
+          [
+            18,
+            16
+          ],
+          [
+            18,
+            17
+          ],
+          [
+            19,
+            0
+          ],
+          [
+            19,
+            1
+          ],
+          [
+            19,
+            11
+          ],
+          [
+            19,
+            12
+          ],
+          [
+            19,
+            16
+          ],
+          [
+            19,
+            17
+          ],
+          [
+            20,
+            0
+          ],
+          [
+            20,
+            1
+          ],
+          [
+            20,
+            16
+          ],
+          [
+            20,
+            17
+          ],
+          [
+            21,
+            0
+          ],
+          [
+            21,
+            1
+          ],
+          [
+            21,
+            15
+          ],
+          [
+            21,
+            16
+          ],
+          [
+            21,
+            17
+          ],
+          [
+            22,
+            0
+          ],
+          [
+            22,
+            1
+          ],
+          [
+            22,
+            2
+          ],
+          [
+            22,
+            3
+          ],
+          [
+            22,
+            4
+          ],
+          [
+            22,
+            5
+          ],
+          [
+            22,
+            6
+          ],
+          [
+            22,
+            7
+          ],
+          [
+            22,
+            8
+          ],
+          [
+            22,
+            9
+          ],
+          [
+            22,
+            10
+          ],
+          [
+            22,
+            11
+          ],
+          [
+            22,
+            12
+          ],
+          [
+            22,
+            13
+          ],
+          [
+            22,
+            14
+          ],
+          [
+            22,
+            15
+          ],
+          [
+            22,
+            16
+          ],
+          [
+            22,
+            17
+          ],
+          [
+            23,
+            0
+          ],
+          [
+            23,
+            1
+          ],
+          [
+            23,
+            2
+          ],
+          [
+            23,
+            3
+          ],
+          [
+            23,
+            4
+          ],
+          [
+            23,
+            5
+          ],
+          [
+            23,
+            6
+          ],
+          [
+            23,
+            7
+          ],
+          [
+            23,
+            8
+          ],
+          [
+            23,
+            9
+          ],
+          [
+            23,
+            10
+          ],
+          [
+            23,
+            11
+          ],
+          [
+            23,
+            12
+          ],
+          [
+            23,
+            13
+          ],
+          [
+            23,
+            14
+          ],
+          [
+            23,
+            15
+          ],
+          [
+            23,
+            16
+          ],
+          [
+            23,
+            17
+          ],
+          [
+            24,
+            0
+          ],
+          [
+            24,
+            1
+          ],
+          [
+            24,
+            16
+          ],
+          [
+            24,
+            17
+          ]
+        ],
+        "opaque": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            3
+          ],
+          [
+            0,
+            4
+          ],
+          [
+            0,
+            5
+          ],
+          [
+            0,
+            6
+          ],
+          [
+            0,
+            7
+          ],
+          [
+            0,
+            8
+          ],
+          [
+            0,
+            9
+          ],
+          [
+            0,
+            10
+          ],
+          [
+            0,
+            11
+          ],
+          [
+            0,
+            12
+          ],
+          [
+            0,
+            13
+          ],
+          [
+            0,
+            14
+          ],
+          [
+            0,
+            15
+          ],
+          [
+            0,
+            16
+          ],
+          [
+            0,
+            17
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            3
+          ],
+          [
+            1,
+            4
+          ],
+          [
+            1,
+            5
+          ],
+          [
+            1,
+            6
+          ],
+          [
+            1,
+            7
+          ],
+          [
+            1,
+            8
+          ],
+          [
+            1,
+            9
+          ],
+          [
+            1,
+            10
+          ],
+          [
+            1,
+            11
+          ],
+          [
+            1,
+            12
+          ],
+          [
+            1,
+            13
+          ],
+          [
+            1,
+            14
+          ],
+          [
+            1,
+            15
+          ],
+          [
+            1,
+            16
+          ],
+          [
+            1,
+            17
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            16
+          ],
+          [
+            2,
+            17
+          ],
+          [
+            3,
+            0
+          ],
+          [
+            3,
+            1
+          ],
+          [
+            3,
+            16
+          ],
+          [
+            3,
+            17
+          ],
+          [
+            4,
+            0
+          ],
+          [
+            4,
+            1
+          ],
+          [
+            4,
+            16
+          ],
+          [
+            4,
+            17
+          ],
+          [
+            5,
+            0
+          ],
+          [
+            5,
+            1
+          ],
+          [
+            5,
+            16
+          ],
+          [
+            5,
+            17
+          ],
+          [
+            6,
+            0
+          ],
+          [
+            6,
+            1
+          ],
+          [
+            6,
+            16
+          ],
+          [
+            6,
+            17
+          ],
+          [
+            7,
+            0
+          ],
+          [
+            7,
+            1
+          ],
+          [
+            7,
+            16
+          ],
+          [
+            7,
+            17
+          ],
+          [
+            8,
+            0
+          ],
+          [
+            8,
+            1
+          ],
+          [
+            8,
+            16
+          ],
+          [
+            8,
+            17
+          ],
+          [
+            9,
+            0
+          ],
+          [
+            9,
+            1
+          ],
+          [
+            9,
+            16
+          ],
+          [
+            9,
+            17
+          ],
+          [
+            10,
+            0
+          ],
+          [
+            10,
+            1
+          ],
+          [
+            10,
+            5
+          ],
+          [
+            10,
+            13
+          ],
+          [
+            10,
+            16
+          ],
+          [
+            10,
+            17
+          ],
+          [
+            11,
+            0
+          ],
+          [
+            11,
+            1
+          ],
+          [
+            11,
+            16
+          ],
+          [
+            11,
+            17
+          ],
+          [
+            12,
+            0
+          ],
+          [
+            12,
+            1
+          ],
+          [
+            12,
+            16
+          ],
+          [
+            12,
+            17
+          ],
+          [
+            13,
+            0
+          ],
+          [
+            13,
+            1
+          ],
+          [
+            13,
+            16
+          ],
+          [
+            13,
+            17
+          ],
+          [
+            14,
+            0
+          ],
+          [
+            14,
+            1
+          ],
+          [
+            14,
+            16
+          ],
+          [
+            14,
+            17
+          ],
+          [
+            15,
+            0
+          ],
+          [
+            15,
+            1
+          ],
+          [
+            15,
+            16
+          ],
+          [
+            15,
+            17
+          ],
+          [
+            16,
+            0
+          ],
+          [
+            16,
+            1
+          ],
+          [
+            16,
+            16
+          ],
+          [
+            16,
+            17
+          ],
+          [
+            17,
+            0
+          ],
+          [
+            17,
+            1
+          ],
+          [
+            17,
+            16
+          ],
+          [
+            17,
+            17
+          ],
+          [
+            18,
+            0
+          ],
+          [
+            18,
+            1
+          ],
+          [
+            18,
+            11
+          ],
+          [
+            18,
+            12
+          ],
+          [
+            18,
+            16
+          ],
+          [
+            18,
+            17
+          ],
+          [
+            19,
+            0
+          ],
+          [
+            19,
+            1
+          ],
+          [
+            19,
+            11
+          ],
+          [
+            19,
+            12
+          ],
+          [
+            19,
+            16
+          ],
+          [
+            19,
+            17
+          ],
+          [
+            20,
+            0
+          ],
+          [
+            20,
+            1
+          ],
+          [
+            20,
+            16
+          ],
+          [
+            20,
+            17
+          ],
+          [
+            21,
+            0
+          ],
+          [
+            21,
+            1
+          ],
+          [
+            21,
+            16
+          ],
+          [
+            21,
+            17
+          ],
+          [
+            22,
+            0
+          ],
+          [
+            22,
+            1
+          ],
+          [
+            22,
+            2
+          ],
+          [
+            22,
+            3
+          ],
+          [
+            22,
+            4
+          ],
+          [
+            22,
+            5
+          ],
+          [
+            22,
+            6
+          ],
+          [
+            22,
+            7
+          ],
+          [
+            22,
+            8
+          ],
+          [
+            22,
+            9
+          ],
+          [
+            22,
+            10
+          ],
+          [
+            22,
+            11
+          ],
+          [
+            22,
+            12
+          ],
+          [
+            22,
+            13
+          ],
+          [
+            22,
+            14
+          ],
+          [
+            22,
+            15
+          ],
+          [
+            22,
+            16
+          ],
+          [
+            22,
+            17
+          ],
+          [
+            23,
+            0
+          ],
+          [
+            23,
+            1
+          ],
+          [
+            23,
+            2
+          ],
+          [
+            23,
+            3
+          ],
+          [
+            23,
+            4
+          ],
+          [
+            23,
+            5
+          ],
+          [
+            23,
+            6
+          ],
+          [
+            23,
+            7
+          ],
+          [
+            23,
+            8
+          ],
+          [
+            23,
+            9
+          ],
+          [
+            23,
+            10
+          ],
+          [
+            23,
+            11
+          ],
+          [
+            23,
+            12
+          ],
+          [
+            23,
+            13
+          ],
+          [
+            23,
+            14
+          ],
+          [
+            23,
+            15
+          ],
+          [
+            23,
+            16
+          ],
+          [
+            23,
+            17
+          ],
+          [
+            24,
+            0
+          ],
+          [
+            24,
+            1
+          ],
+          [
+            24,
+            16
+          ],
+          [
+            24,
+            17
+          ]
+        ],
+        "difficult": [
+          [
+            6,
+            8
+          ],
+          [
+            6,
+            9
+          ],
+          [
+            7,
+            8
+          ],
+          [
+            7,
+            9
+          ],
+          [
+            8,
+            8
+          ],
+          [
+            8,
+            9
+          ],
+          [
+            17,
+            4
+          ],
+          [
+            17,
+            5
+          ],
+          [
+            17,
+            6
+          ],
+          [
+            17,
+            7
+          ],
+          [
+            17,
+            8
+          ],
+          [
+            18,
+            4
+          ],
+          [
+            18,
+            5
+          ],
+          [
+            18,
+            6
+          ],
+          [
+            18,
+            7
+          ],
+          [
+            18,
+            8
+          ],
+          [
+            19,
+            4
+          ],
+          [
+            19,
+            5
+          ],
+          [
+            19,
+            6
+          ],
+          [
+            19,
+            7
+          ],
+          [
+            19,
+            8
+          ],
+          [
+            20,
+            4
+          ],
+          [
+            20,
+            5
+          ],
+          [
+            20,
+            6
+          ],
+          [
+            20,
+            7
+          ],
+          [
+            20,
+            8
+          ],
+          [
+            21,
+            4
+          ],
+          [
+            21,
+            5
+          ],
+          [
+            21,
+            6
+          ],
+          [
+            21,
+            7
+          ],
+          [
+            21,
+            8
+          ]
+        ],
+        "cover": {
+          "half": [
+            [
+              4,
+              3
+            ],
+            [
+              4,
+              4
+            ],
+            [
+              4,
+              5
+            ],
+            [
+              4,
+              6
+            ],
+            [
+              4,
+              11
+            ],
+            [
+              4,
+              12
+            ],
+            [
+              4,
+              13
+            ],
+            [
+              4,
+              14
+            ],
+            [
+              5,
+              3
+            ],
+            [
+              5,
+              4
+            ],
+            [
+              5,
+              5
+            ],
+            [
+              5,
+              6
+            ],
+            [
+              5,
+              11
+            ],
+            [
+              5,
+              12
+            ],
+            [
+              5,
+              13
+            ],
+            [
+              5,
+              14
+            ],
+            [
+              6,
+              3
+            ],
+            [
+              6,
+              4
+            ],
+            [
+              6,
+              5
+            ],
+            [
+              6,
+              6
+            ],
+            [
+              6,
+              11
+            ],
+            [
+              6,
+              12
+            ],
+            [
+              6,
+              13
+            ],
+            [
+              6,
+              14
+            ],
+            [
+              7,
+              3
+            ],
+            [
+              7,
+              4
+            ],
+            [
+              7,
+              5
+            ],
+            [
+              7,
+              6
+            ],
+            [
+              7,
+              11
+            ],
+            [
+              7,
+              12
+            ],
+            [
+              7,
+              13
+            ],
+            [
+              7,
+              14
+            ],
+            [
+              8,
+              3
+            ],
+            [
+              8,
+              4
+            ],
+            [
+              8,
+              5
+            ],
+            [
+              8,
+              6
+            ],
+            [
+              8,
+              11
+            ],
+            [
+              8,
+              12
+            ],
+            [
+              8,
+              13
+            ],
+            [
+              8,
+              14
+            ],
+            [
+              21,
+              15
+            ]
+          ],
+          "three-quarters": []
+        },
+        "objectsHash": "2a50114525d822b4",
+        "image": "res://assets/blockouts/cavern-depths.png",
+        "imagePxPerFoot": 48
+      },
+      "robos:backgroundImage": "res://assets/backgrounds/ancient_catacombs_2560.png"
     }
   },
   "characters": {
-    "dragonlord": {
-      "@context": {
-        "robos": "urn:robos:",
-        "schema": "https://schema.org/",
-        "dcterms": "http://purl.org/dc/terms/"
-      },
-      "@id": "urn:robos:crpg:character:dragonlord",
-      "@type": [
-        "robos:CRPGCharacter",
-        "robos:CRPGNPC",
-        "schema:Person"
-      ],
-      "dcterms:title": "Dragonlord",
-      "robos:characterType": "npc",
-      "schema:name": "Dragonlord",
-      "name": "Dragonlord",
-      "slug": "dragonlord",
-      "characterType": "npc",
-      "robos:portrait": "assets/portraits/portrait_malakor.png",
-      "portrait": "assets/portraits/portrait_malakor.png",
-      "robos:portraitAssetRef": "assets/portraits/portrait_malakor.png",
-      "portraitAssetRef": "assets/portraits/portrait_malakor.png",
-      "robos:tokenAssetRef": "assets/tokens/token_dragonlord.png",
-      "tokenAssetRef": "assets/tokens/token_dragonlord.png",
-      "robos:alignment": "Lawful Good",
-      "alignment": "Lawful Good",
-      "robos:backstory": "A resident of the realm.",
-      "backstory": "A resident of the realm.",
-      "robos:npcRole": "",
-      "role": "",
-      "robos:interactionType": "talk",
-      "interactionType": "talk",
-      "robos:location": "charlock-castle",
-      "location": "charlock-castle",
-      "robos:facing": "down",
-      "facing": "down",
-      "robos:col": 5,
-      "col": 5,
-      "robos:row": 5,
-      "row": 5,
-      "robos:str": 10,
-      "str": 10,
-      "robos:dialogue": [
-        "Join me and rule half the world, or perish in dragonfire!"
-      ],
-      "dialogue": [
-        "Join me and rule half the world, or perish in dragonfire!"
-      ],
-      "robos:mainHand": "",
-      "mainHand": "",
-      "robos:offHand": "",
-      "offHand": "",
-      "robos:armor": "",
-      "armor": "",
-      "robos:cloak": "",
-      "cloak": "",
-      "robos:quickItems": "",
-      "quickItems": "",
-      "robos:preparedSpells": [],
-      "preparedSpells": [],
-      "robos:spells": "",
-      "spells": "",
-      "robos:abilities": [],
-      "abilities": [],
-      "robos:directive": {
-        "controller": "scripted",
-        "role": "tank",
-        "targetPriority": "nearest",
-        "movement": "hold",
-        "healThreshold": 0.3,
-        "potionThreshold": 0.2,
-        "useSpells": false,
-        "allowFriendlyFire": false,
-        "reactions": {
-          "shield": true,
-          "opportunityAttack": true,
-          "counterspell": false,
-          "uncannyDodge": false,
-          "defensiveFlurry": false
-        }
-      },
-      "directive": {
-        "controller": "scripted",
-        "role": "tank",
-        "targetPriority": "nearest",
-        "movement": "hold",
-        "healThreshold": 0.3,
-        "potionThreshold": 0.2,
-        "useSpells": false,
-        "allowFriendlyFire": false,
-        "reactions": {
-          "shield": true,
-          "opportunityAttack": true,
-          "counterspell": false,
-          "uncannyDodge": false,
-          "defensiveFlurry": false
-        }
-      },
-      "robos:inventory": [],
-      "inventory": []
-    },
     "hero-of-alefgard": {
       "@context": {
         "robos": "urn:robos:",
@@ -651,7 +3809,6 @@
       "@id": "urn:robos:crpg:character:hero-of-alefgard",
       "@type": [
         "robos:CRPGCharacter",
-        "robos:CRPGPlayerCharacter",
         "robos:CRPGHero",
         "schema:Person"
       ],
@@ -667,98 +3824,98 @@
       "portraitAssetRef": "assets/portraits/portrait_fighter.png",
       "robos:tokenAssetRef": "assets/tokens/token_hero-alefgard-token.png",
       "tokenAssetRef": "assets/tokens/token_hero-alefgard-token.png",
-      "robos:alignment": "Neutral Good",
-      "alignment": "Neutral Good",
-      "robos:backstory": "Descendant of the legendary hero Erdrick, destined to restore the Ball of Light to Alefgard.",
-      "backstory": "Descendant of the legendary hero Erdrick, destined to restore the Ball of Light to Alefgard.",
+      "robos:alignment": "Lawful Good",
+      "alignment": "Lawful Good",
+      "robos:backstory": "Descendant of the legendary hero Erdrick, summoned to Tantegel Castle to retrieve the Ball of Light and vanquish the Dragonlord.",
+      "backstory": "Descendant of the legendary hero Erdrick, summoned to Tantegel Castle to retrieve the Ball of Light and vanquish the Dragonlord.",
       "robos:level": 1,
       "level": 1,
       "robos:race": "Human",
       "race": "Human",
       "robos:class": "Fighter",
       "class": "Fighter",
-      "robos:subclass": "",
-      "subclass": "",
-      "robos:background": "Folk Hero",
-      "background": "Folk Hero",
+      "robos:subclass": "Champion",
+      "subclass": "Champion",
+      "robos:background": "Descendant of Erdrick",
+      "background": "Descendant of Erdrick",
       "robos:xp": 0,
       "xp": 0,
       "robos:str": 16,
       "str": 16,
-      "robos:dex": 12,
-      "dex": 12,
-      "robos:con": 12,
-      "con": 12,
+      "robos:dex": 14,
+      "dex": 14,
+      "robos:con": 15,
+      "con": 15,
       "robos:int": 12,
       "int": 12,
-      "robos:wis": 12,
-      "wis": 12,
-      "robos:cha": 12,
-      "cha": 12,
+      "robos:wis": 13,
+      "wis": 13,
+      "robos:cha": 14,
+      "cha": 14,
       "robos:ac": 14,
       "ac": 14,
       "robos:hpMax": 16,
       "hpMax": 16,
-      "robos:hpCurrent": 12,
-      "hpCurrent": 12,
+      "robos:hpCurrent": 16,
+      "hpCurrent": 16,
       "robos:speed": 30,
       "speed": 30,
-      "robos:initiative": 1,
-      "initiative": 1,
+      "robos:initiative": 2,
+      "initiative": 2,
       "robos:prof": 2,
       "prof": 2,
       "robos:spells": "",
       "spells": "",
-      "robos:mainHand": "",
-      "mainHand": "",
-      "robos:offHand": "",
-      "offHand": "",
-      "robos:armor": "",
-      "armor": "",
-      "robos:cloak": "",
-      "cloak": "",
-      "robos:quickItems": "",
-      "quickItems": "",
-      "robos:preparedSpells": [],
-      "preparedSpells": [],
-      "robos:abilities": [],
-      "abilities": [],
-      "robos:directive": {
-        "controller": "infinity_ai",
-        "role": "striker",
-        "targetPriority": "nearest",
-        "movement": "advance",
-        "healThreshold": 0.5,
-        "potionThreshold": 0.4,
-        "useSpells": true,
-        "allowFriendlyFire": false,
-        "reactions": {
-          "shield": true,
-          "opportunityAttack": true,
-          "counterspell": false,
-          "uncannyDodge": false,
-          "defensiveFlurry": false
+      "robos:mainHand": "copper-sword",
+      "mainHand": "copper-sword",
+      "robos:armor": "clothes",
+      "armor": "clothes",
+      "robos:quickItems": "herb",
+      "quickItems": "herb",
+      "robos:inventory": [
+        {
+          "slug": "herb",
+          "quantity": 2,
+          "slot": 0
+        },
+        {
+          "slug": "torch",
+          "quantity": 1,
+          "slot": 1
+        },
+        {
+          "slug": "magic-key",
+          "quantity": 1,
+          "slot": 2
+        },
+        {
+          "slug": "bamboo-pole",
+          "quantity": 1,
+          "slot": 3
         }
-      },
-      "directive": {
-        "controller": "infinity_ai",
-        "role": "striker",
-        "targetPriority": "nearest",
-        "movement": "advance",
-        "healThreshold": 0.5,
-        "potionThreshold": 0.4,
-        "useSpells": true,
-        "allowFriendlyFire": false,
-        "reactions": {
-          "shield": true,
-          "opportunityAttack": true,
-          "counterspell": false,
-          "uncannyDodge": false,
-          "defensiveFlurry": false
+      ],
+      "inventory": [
+        {
+          "slug": "herb",
+          "quantity": 2,
+          "slot": 0
+        },
+        {
+          "slug": "torch",
+          "quantity": 1,
+          "slot": 1
+        },
+        {
+          "slug": "magic-key",
+          "quantity": 1,
+          "slot": 2
+        },
+        {
+          "slug": "bamboo-pole",
+          "quantity": 1,
+          "slot": 3
         }
-      },
-      "robos:inventory": [],
-      "inventory": []
+      ]
     },
     "npc-king-loric": {
       "@context": {
@@ -786,80 +3943,28 @@
       "tokenAssetRef": "assets/tokens/token_king_lorik.png",
       "robos:alignment": "Lawful Good",
       "alignment": "Lawful Good",
-      "robos:backstory": "A resident of the realm.",
-      "backstory": "A resident of the realm.",
+      "robos:backstory": "Monarch of Alefgard who guides the descendant of Erdrick on the quest to restore the Ball of Light.",
+      "backstory": "Monarch of Alefgard who guides the descendant of Erdrick on the quest to restore the Ball of Light.",
       "robos:npcRole": "king",
       "role": "king",
-      "robos:interactionType": "talk",
-      "interactionType": "talk",
+      "robos:interactionType": "save",
+      "interactionType": "save",
       "robos:location": "tantegel-throne-room",
       "location": "tantegel-throne-room",
       "robos:facing": "down",
       "facing": "down",
-      "robos:col": 5,
-      "col": 5,
-      "robos:row": 5,
-      "row": 5,
-      "robos:str": 10,
-      "str": 10,
+      "robos:col": 8,
+      "col": 8,
+      "robos:row": 4,
+      "row": 4,
       "robos:dialogue": [
-        "Descendant of Erdrick! The foul Dragonlord hath stolen the sacred Ball of Light and captured Princess Gwaelin! Take 120 Gold and the Magic Key from the chests and slay the Dragonlord!"
+        "Descendant of Erdrick, listen now to my words. It is told that in ages past Erdrick fought demons with a Ball of Light.",
+        "Now, Hero, thou must help us recover the Ball of Light and restore peace to our land. The Dragonlord must be defeated."
       ],
       "dialogue": [
-        "Descendant of Erdrick! The foul Dragonlord hath stolen the sacred Ball of Light and captured Princess Gwaelin! Take 120 Gold and the Magic Key from the chests and slay the Dragonlord!"
-      ],
-      "robos:mainHand": "",
-      "mainHand": "",
-      "robos:offHand": "",
-      "offHand": "",
-      "robos:armor": "",
-      "armor": "",
-      "robos:cloak": "",
-      "cloak": "",
-      "robos:quickItems": "",
-      "quickItems": "",
-      "robos:preparedSpells": [],
-      "preparedSpells": [],
-      "robos:spells": "",
-      "spells": "",
-      "robos:abilities": [],
-      "abilities": [],
-      "robos:directive": {
-        "controller": "scripted",
-        "role": "tank",
-        "targetPriority": "nearest",
-        "movement": "hold",
-        "healThreshold": 0.3,
-        "potionThreshold": 0.2,
-        "useSpells": false,
-        "allowFriendlyFire": false,
-        "reactions": {
-          "shield": true,
-          "opportunityAttack": true,
-          "counterspell": false,
-          "uncannyDodge": false,
-          "defensiveFlurry": false
-        }
-      },
-      "directive": {
-        "controller": "scripted",
-        "role": "tank",
-        "targetPriority": "nearest",
-        "movement": "hold",
-        "healThreshold": 0.3,
-        "potionThreshold": 0.2,
-        "useSpells": false,
-        "allowFriendlyFire": false,
-        "reactions": {
-          "shield": true,
-          "opportunityAttack": true,
-          "counterspell": false,
-          "uncannyDodge": false,
-          "defensiveFlurry": false
-        }
-      },
-      "robos:inventory": [],
-      "inventory": []
+        "Descendant of Erdrick, listen now to my words. It is told that in ages past Erdrick fought demons with a Ball of Light.",
+        "Now, Hero, thou must help us recover the Ball of Light and restore peace to our land. The Dragonlord must be defeated."
+      ]
     },
     "npc-princess-gwaelin": {
       "@context": {
@@ -885,82 +3990,94 @@
       "portraitAssetRef": "assets/portraits/portrait_female04.png",
       "robos:tokenAssetRef": "assets/tokens/token_princess_gwaelin.png",
       "tokenAssetRef": "assets/tokens/token_princess_gwaelin.png",
-      "robos:alignment": "Lawful Good",
-      "alignment": "Lawful Good",
-      "robos:backstory": "A resident of the realm.",
-      "backstory": "A resident of the realm.",
+      "robos:alignment": "Neutral Good",
+      "alignment": "Neutral Good",
+      "robos:backstory": "Beloved princess of Alefgard kidnapped by the Dragonlord in a swamp cave.",
+      "backstory": "Beloved princess of Alefgard kidnapped by the Dragonlord in a swamp cave.",
       "robos:npcRole": "princess",
       "role": "princess",
       "robos:interactionType": "talk",
       "interactionType": "talk",
-      "robos:location": "charlock-castle",
-      "location": "charlock-castle",
+      "robos:location": "tantegel-throne-room",
+      "location": "tantegel-throne-room",
       "robos:facing": "down",
       "facing": "down",
-      "robos:col": 5,
-      "col": 5,
-      "robos:row": 5,
-      "row": 5,
-      "robos:str": 10,
-      "str": 10,
+      "robos:col": 6,
+      "col": 6,
+      "robos:row": 19,
+      "row": 19,
       "robos:dialogue": [
-        "Thou hast saved me from the Dragonlord, brave Erdrick! Forever shall I accompany thee!"
+        "I have waited so long for thee, brave Hero. I knew the bloodline of Erdrick would save our realm.",
+        "Wilt thou take me back to Tantegel Castle?"
       ],
       "dialogue": [
-        "Thou hast saved me from the Dragonlord, brave Erdrick! Forever shall I accompany thee!"
+        "I have waited so long for thee, brave Hero. I knew the bloodline of Erdrick would save our realm.",
+        "Wilt thou take me back to Tantegel Castle?"
+      ]
+    },
+    "dragonlord": {
+      "@context": {
+        "robos": "urn:robos:",
+        "schema": "https://schema.org/",
+        "dcterms": "http://purl.org/dc/terms/"
+      },
+      "@id": "urn:robos:crpg:character:dragonlord",
+      "@type": [
+        "robos:CRPGCharacter",
+        "robos:CRPGMonster",
+        "schema:Person"
       ],
-      "robos:mainHand": "",
-      "mainHand": "",
-      "robos:offHand": "",
-      "offHand": "",
-      "robos:armor": "",
-      "armor": "",
-      "robos:cloak": "",
-      "cloak": "",
-      "robos:quickItems": "",
-      "quickItems": "",
-      "robos:preparedSpells": [],
-      "preparedSpells": [],
-      "robos:spells": "",
-      "spells": "",
-      "robos:abilities": [],
-      "abilities": [],
-      "robos:directive": {
-        "controller": "scripted",
-        "role": "tank",
-        "targetPriority": "nearest",
-        "movement": "hold",
-        "healThreshold": 0.3,
-        "potionThreshold": 0.2,
-        "useSpells": false,
-        "allowFriendlyFire": false,
-        "reactions": {
-          "shield": true,
-          "opportunityAttack": true,
-          "counterspell": false,
-          "uncannyDodge": false,
-          "defensiveFlurry": false
-        }
+      "dcterms:title": "Dragonlord",
+      "robos:characterType": "boss",
+      "schema:name": "Dragonlord",
+      "name": "Dragonlord",
+      "slug": "dragonlord",
+      "characterType": "boss",
+      "class": "Sorcerer",
+      "subclass": "Draconic Bloodline",
+      "level": 5,
+      "robos:portrait": "assets/portraits/portrait_malakor.png",
+      "portrait": "assets/portraits/portrait_malakor.png",
+      "robos:portraitAssetRef": "assets/portraits/portrait_malakor.png",
+      "portraitAssetRef": "assets/portraits/portrait_malakor.png",
+      "robos:tokenAssetRef": "assets/tokens/token_dragonlord.png",
+      "tokenAssetRef": "assets/tokens/token_dragonlord.png",
+      "robos:alignment": "Chaotic Evil",
+      "alignment": "Chaotic Evil",
+      "robos:hpMax": 50,
+      "hpMax": 50,
+      "robos:hpCurrent": 50,
+      "hpCurrent": 50,
+      "robos:armorClass": 15,
+      "armorClass": 15,
+      "robos:speed": 30,
+      "speed": 30,
+      "robos:stats": {
+        "str": 16,
+        "dex": 14,
+        "con": 16,
+        "int": 16,
+        "wis": 14,
+        "cha": 18
       },
-      "directive": {
-        "controller": "scripted",
-        "role": "tank",
-        "targetPriority": "nearest",
-        "movement": "hold",
-        "healThreshold": 0.3,
-        "potionThreshold": 0.2,
-        "useSpells": false,
-        "allowFriendlyFire": false,
-        "reactions": {
-          "shield": true,
-          "opportunityAttack": true,
-          "counterspell": false,
-          "uncannyDodge": false,
-          "defensiveFlurry": false
-        }
+      "stats": {
+        "str": 16,
+        "dex": 14,
+        "con": 16,
+        "int": 16,
+        "wis": 14,
+        "cha": 18
       },
-      "robos:inventory": [],
-      "inventory": []
+      "robos:backstory": "Ancient dragon sorcerer who stole the sacred Ball of Light and plunged Alefgard into darkness.",
+      "backstory": "Ancient dragon sorcerer who stole the sacred Ball of Light and plunged Alefgard into darkness.",
+      "robos:location": "charlock-castle",
+      "location": "charlock-castle",
+      "robos:dialogue": [
+        "Join me and rule half the world, or perish in dragonfire!"
+      ],
+      "dialogue": [
+        "Join me and rule half the world, or perish in dragonfire!"
+      ]
     }
   },
   "items": {
@@ -987,22 +4104,142 @@
       "equipSlot": "main_hand",
       "robos:cost": 10,
       "cost": 10,
-      "robos:weight": 1,
-      "weight": 1,
+      "robos:weight": 2,
+      "weight": 2,
       "robos:rarity": "common",
       "rarity": "common",
-      "robos:icon": "📦",
-      "icon": "📦",
+      "robos:icon": "🎋",
+      "icon": "🎋",
+      "robos:damageDice": "1d4-1",
+      "damageDice": "1d4-1",
+      "robos:damageType": "bludgeoning",
+      "damageType": "bludgeoning",
+      "robos:acBonus": 0,
+      "acBonus": 0,
+      "robos:effect": "+1 ATK",
+      "effect": "+1 ATK",
+      "dcterms:description": "A basic walking pole crafted from hardened bamboo.",
+      "description": "A basic walking pole crafted from hardened bamboo."
+    },
+    "clothes": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:item:clothes",
+      "@type": [
+        "robos:CRPGItem",
+        "schema:Product",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Plain Clothes",
+      "schema:name": "Plain Clothes",
+      "robos:slug": "clothes",
+      "slug": "clothes",
+      "robos:itemCategory": "armor",
+      "itemCategory": "armor",
+      "robos:equipSlot": "armor",
+      "equipSlot": "armor",
+      "robos:cost": 20,
+      "cost": 20,
+      "robos:weight": 3,
+      "weight": 3,
+      "robos:rarity": "common",
+      "rarity": "common",
+      "robos:icon": "🥋",
+      "icon": "🥋",
+      "robos:damageDice": "",
+      "damageDice": "",
+      "robos:damageType": "",
+      "damageType": "",
+      "robos:acBonus": 1,
+      "acBonus": 1,
+      "robos:effect": "",
+      "effect": "",
+      "dcterms:description": "Simple traveler clothes made of spun linen.",
+      "description": "Simple traveler clothes made of spun linen."
+    },
+    "club": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:item:club",
+      "@type": [
+        "robos:CRPGItem",
+        "schema:Product",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Oak Club",
+      "schema:name": "Oak Club",
+      "robos:slug": "club",
+      "slug": "club",
+      "robos:itemCategory": "weapon",
+      "itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "equipSlot": "main_hand",
+      "robos:cost": 30,
+      "cost": 30,
+      "robos:weight": 3,
+      "weight": 3,
+      "robos:rarity": "common",
+      "rarity": "common",
+      "robos:icon": "🏏",
+      "icon": "🏏",
+      "robos:damageDice": "1d4",
+      "damageDice": "1d4",
+      "robos:damageType": "bludgeoning",
+      "damageType": "bludgeoning",
+      "robos:acBonus": 0,
+      "acBonus": 0,
+      "robos:effect": "+1 ATK",
+      "effect": "+1 ATK",
+      "dcterms:description": "A knotty oak cudgel.",
+      "description": "A knotty oak cudgel."
+    },
+    "copper-sword": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:item:copper-sword",
+      "@type": [
+        "robos:CRPGItem",
+        "schema:Product",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Copper Sword",
+      "schema:name": "Copper Sword",
+      "robos:slug": "copper-sword",
+      "slug": "copper-sword",
+      "robos:itemCategory": "weapon",
+      "itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "equipSlot": "main_hand",
+      "robos:cost": 180,
+      "cost": 180,
+      "robos:weight": 5,
+      "weight": 5,
+      "robos:rarity": "common",
+      "rarity": "common",
+      "robos:icon": "🗡️",
+      "icon": "🗡️",
       "robos:damageDice": "1d6",
       "damageDice": "1d6",
       "robos:damageType": "slashing",
       "damageType": "slashing",
       "robos:acBonus": 0,
       "acBonus": 0,
-      "robos:effect": "",
-      "effect": "",
-      "dcterms:description": "",
-      "description": ""
+      "robos:effect": "+2 ATK",
+      "effect": "+2 ATK",
+      "dcterms:description": "A sturdy forged copper blade.",
+      "description": "A sturdy forged copper blade."
     },
     "herb": {
       "@context": {
@@ -1017,32 +4254,151 @@
         "schema:Product",
         "oslc_am:Resource"
       ],
-      "dcterms:title": "Herb",
-      "schema:name": "Herb",
+      "dcterms:title": "Medicinal Herb",
+      "schema:name": "Medicinal Herb",
       "robos:slug": "herb",
       "slug": "herb",
       "robos:itemCategory": "consumable",
       "itemCategory": "consumable",
-      "robos:equipSlot": "main_hand",
-      "equipSlot": "main_hand",
-      "robos:cost": 10,
-      "cost": 10,
-      "robos:weight": 1,
-      "weight": 1,
+      "robos:equipSlot": "quick_item",
+      "equipSlot": "quick_item",
+      "robos:cost": 24,
+      "cost": 24,
+      "robos:weight": 0.2,
+      "weight": 0.2,
       "robos:rarity": "common",
       "rarity": "common",
-      "robos:icon": "📦",
-      "icon": "📦",
+      "robos:icon": "🌿",
+      "icon": "🌿",
       "robos:damageDice": "",
       "damageDice": "",
       "robos:damageType": "",
       "damageType": "",
       "robos:acBonus": 0,
       "acBonus": 0,
+      "robos:effect": "Restores 20-35 HP",
+      "effect": "Restores 20-35 HP",
+      "dcterms:description": "Fragrant healing plant.",
+      "description": "Fragrant healing plant."
+    },
+    "heros-sword": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:item:heros-sword",
+      "@type": [
+        "robos:CRPGItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "The Hero's Sword",
+      "schema:name": "The Hero's Sword",
+      "robos:slug": "heros-sword",
+      "slug": "heros-sword",
+      "robos:itemCategory": "weapon",
+      "itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "equipSlot": "main_hand",
+      "robos:cost": 500,
+      "cost": 500,
+      "robos:weight": 4,
+      "weight": 4,
+      "robos:rarity": "rare",
+      "rarity": "rare",
+      "robos:icon": "⚔️",
+      "icon": "⚔️",
+      "robos:damageDice": "1d8",
+      "damageDice": "1d8",
+      "robos:damageType": "slashing",
+      "damageType": "slashing",
+      "robos:acBonus": 0,
+      "acBonus": 0,
+      "robos:effect": "+3 ATK, Dragonclaw Rune",
+      "effect": "+3 ATK, Dragonclaw Rune",
+      "dcterms:description": "A legendary blade forged in dragonfire at the Dragonclaw Forge. Granted only to champions who prove their courage.",
+      "description": "A legendary blade forged in dragonfire at the Dragonclaw Forge. Granted only to champions who prove their courage."
+    },
+    "leather-armor": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:item:leather-armor",
+      "@type": [
+        "robos:CRPGItem",
+        "schema:Product",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Leather Armor",
+      "schema:name": "Leather Armor",
+      "robos:slug": "leather-armor",
+      "slug": "leather-armor",
+      "robos:itemCategory": "armor",
+      "itemCategory": "armor",
+      "robos:equipSlot": "armor",
+      "equipSlot": "armor",
+      "robos:cost": 70,
+      "cost": 70,
+      "robos:weight": 15,
+      "weight": 15,
+      "robos:rarity": "common",
+      "rarity": "common",
+      "robos:icon": "🛡️",
+      "icon": "🛡️",
+      "robos:damageDice": "",
+      "damageDice": "",
+      "robos:damageType": "",
+      "damageType": "",
+      "robos:acBonus": 2,
+      "acBonus": 2,
       "robos:effect": "",
       "effect": "",
-      "dcterms:description": "",
-      "description": ""
+      "dcterms:description": "Cured boiled leather tunic.",
+      "description": "Cured boiled leather tunic."
+    },
+    "leather-boots": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:item:leather-boots",
+      "@type": [
+        "robos:CRPGItem",
+        "schema:Product",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Leather Boots",
+      "schema:name": "Leather Boots",
+      "robos:slug": "leather-boots",
+      "slug": "leather-boots",
+      "robos:itemCategory": "accessory",
+      "itemCategory": "accessory",
+      "robos:equipSlot": "boots",
+      "equipSlot": "boots",
+      "robos:cost": 15,
+      "cost": 15,
+      "robos:weight": 3,
+      "weight": 3,
+      "robos:rarity": "common",
+      "rarity": "common",
+      "robos:icon": "🥾",
+      "icon": "🥾",
+      "robos:damageDice": "",
+      "damageDice": "",
+      "robos:damageType": "",
+      "damageType": "",
+      "robos:acBonus": 0,
+      "acBonus": 0,
+      "robos:effect": "Normal terrain traction",
+      "effect": "Normal terrain traction",
+      "dcterms:description": "Durable reinforced boots.",
+      "description": "Durable reinforced boots."
     },
     "magic-key": {
       "@context": {
@@ -1063,26 +4419,146 @@
       "slug": "magic-key",
       "robos:itemCategory": "quest",
       "itemCategory": "quest",
-      "robos:equipSlot": "main_hand",
-      "equipSlot": "main_hand",
-      "robos:cost": 10,
-      "cost": 10,
-      "robos:weight": 1,
-      "weight": 1,
-      "robos:rarity": "common",
-      "rarity": "common",
-      "robos:icon": "📦",
-      "icon": "📦",
+      "robos:equipSlot": "quick_item",
+      "equipSlot": "quick_item",
+      "robos:cost": 25,
+      "cost": 25,
+      "robos:weight": 0.5,
+      "weight": 0.5,
+      "robos:rarity": "uncommon",
+      "rarity": "uncommon",
+      "robos:icon": "🗝️",
+      "icon": "🗝️",
       "robos:damageDice": "",
       "damageDice": "",
       "robos:damageType": "",
       "damageType": "",
       "robos:acBonus": 0,
       "acBonus": 0,
-      "robos:effect": "",
-      "effect": "",
-      "dcterms:description": "",
-      "description": ""
+      "robos:effect": "Unlocks royal doors",
+      "effect": "Unlocks royal doors",
+      "dcterms:description": "A magic key that dissolves in the lock.",
+      "description": "A magic key that dissolves in the lock."
+    },
+    "potion-healing": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:item:potion-healing",
+      "@type": [
+        "robos:CRPGItem",
+        "schema:Product",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Potion of Healing",
+      "schema:name": "Potion of Healing",
+      "robos:slug": "potion-healing",
+      "slug": "potion-healing",
+      "robos:itemCategory": "consumable",
+      "itemCategory": "consumable",
+      "robos:equipSlot": "quick_item",
+      "equipSlot": "quick_item",
+      "robos:cost": 50,
+      "cost": 50,
+      "robos:weight": 0.5,
+      "weight": 0.5,
+      "robos:rarity": "common",
+      "rarity": "common",
+      "robos:icon": "🧪",
+      "icon": "🧪",
+      "robos:damageDice": "",
+      "damageDice": "",
+      "robos:damageType": "",
+      "damageType": "",
+      "robos:acBonus": 0,
+      "acBonus": 0,
+      "robos:effect": "Restores 2d4+2 HP",
+      "effect": "Restores 2d4+2 HP",
+      "dcterms:description": "Standard red restorative brew.",
+      "description": "Standard red restorative brew."
+    },
+    "torch": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:item:torch",
+      "@type": [
+        "robos:CRPGItem",
+        "schema:Product",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Torch",
+      "schema:name": "Torch",
+      "robos:slug": "torch",
+      "slug": "torch",
+      "robos:itemCategory": "tool",
+      "itemCategory": "tool",
+      "robos:equipSlot": "quick_item",
+      "equipSlot": "quick_item",
+      "robos:cost": 8,
+      "cost": 8,
+      "robos:weight": 1,
+      "weight": 1,
+      "robos:rarity": "common",
+      "rarity": "common",
+      "robos:icon": "🔥",
+      "icon": "🔥",
+      "robos:damageDice": "",
+      "damageDice": "",
+      "robos:damageType": "",
+      "damageType": "",
+      "robos:acBonus": 0,
+      "acBonus": 0,
+      "robos:effect": "Illuminates caves 3x3",
+      "effect": "Illuminates caves 3x3",
+      "dcterms:description": "A wooden torch dipped in pitch.",
+      "description": "A wooden torch dipped in pitch."
+    },
+    "travelers-cloak": {
+      "@context": {
+        "robos": "https://robos.dev/ns/sdlc#",
+        "dcterms": "http://purl.org/dc/terms/",
+        "schema": "https://schema.org/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "@id": "urn:robos:crpg:item:travelers-cloak",
+      "@type": [
+        "robos:CRPGItem",
+        "schema:Product",
+        "oslc_am:Resource"
+      ],
+      "dcterms:title": "Traveler's Cloak",
+      "schema:name": "Traveler's Cloak",
+      "robos:slug": "travelers-cloak",
+      "slug": "travelers-cloak",
+      "robos:itemCategory": "accessory",
+      "itemCategory": "accessory",
+      "robos:equipSlot": "cloak",
+      "equipSlot": "cloak",
+      "robos:cost": 35,
+      "cost": 35,
+      "robos:weight": 2,
+      "weight": 2,
+      "robos:rarity": "common",
+      "rarity": "common",
+      "robos:icon": "🧥",
+      "icon": "🧥",
+      "robos:damageDice": "",
+      "damageDice": "",
+      "robos:damageType": "",
+      "damageType": "",
+      "robos:acBonus": 0,
+      "acBonus": 0,
+      "robos:effect": "+1 Save vs Cold",
+      "effect": "+1 Save vs Cold",
+      "dcterms:description": "Heavy wool mantle.",
+      "description": "Heavy wool mantle."
     }
   },
   "enemies": {
@@ -1673,104 +5149,298 @@
       "behavior": "ranged_kiter",
       "dcterms:description": "Skeletal sharpshooter guarding dungeon parapets.",
       "description": "Skeletal sharpshooter guarding dungeon parapets."
+    },
+    "dragonlord": {
+      "@context": {
+        "robos": "urn:robos:",
+        "schema": "https://schema.org/",
+        "dcterms": "http://purl.org/dc/terms/"
+      },
+      "@id": "urn:robos:crpg:character:dragonlord",
+      "@type": [
+        "robos:CRPGCharacter",
+        "robos:CRPGMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Dragonlord",
+      "robos:characterType": "boss",
+      "schema:name": "Dragonlord",
+      "name": "Dragonlord",
+      "slug": "dragonlord",
+      "characterType": "boss",
+      "class": "Sorcerer",
+      "subclass": "Draconic Bloodline",
+      "level": 5,
+      "robos:portrait": "assets/portraits/portrait_malakor.png",
+      "portrait": "assets/portraits/portrait_malakor.png",
+      "robos:portraitAssetRef": "assets/portraits/portrait_malakor.png",
+      "portraitAssetRef": "assets/portraits/portrait_malakor.png",
+      "robos:tokenAssetRef": "assets/tokens/token_dragonlord.png",
+      "tokenAssetRef": "assets/tokens/token_dragonlord.png",
+      "robos:alignment": "Chaotic Evil",
+      "alignment": "Chaotic Evil",
+      "robos:hpMax": 50,
+      "hpMax": 50,
+      "robos:hpCurrent": 50,
+      "hpCurrent": 50,
+      "robos:armorClass": 15,
+      "armorClass": 15,
+      "robos:speed": 30,
+      "speed": 30,
+      "robos:stats": {
+        "str": 16,
+        "dex": 14,
+        "con": 16,
+        "int": 16,
+        "wis": 14,
+        "cha": 18
+      },
+      "stats": {
+        "str": 16,
+        "dex": 14,
+        "con": 16,
+        "int": 16,
+        "wis": 14,
+        "cha": 18
+      },
+      "robos:backstory": "Ancient dragon sorcerer who stole the sacred Ball of Light and plunged Alefgard into darkness.",
+      "backstory": "Ancient dragon sorcerer who stole the sacred Ball of Light and plunged Alefgard into darkness.",
+      "robos:location": "charlock-castle",
+      "location": "charlock-castle",
+      "robos:dialogue": [
+        "Join me and rule half the world, or perish in dragonfire!"
+      ],
+      "dialogue": [
+        "Join me and rule half the world, or perish in dragonfire!"
+      ]
     }
   },
-  "quests": [],
+  "quests": [
+    {
+      "id": "quest-defeat-dragonlord",
+      "title": "Defeat the Dragonlord",
+      "status": "active",
+      "description": "Journey across Alefgard, breach Charlock Castle, and vanquish the Dragonlord.",
+      "reward": "Ball of Light, Peace in Alefgard"
+    },
+    {
+      "id": "quest-rescue-gwaelin",
+      "title": "Rescue Princess Gwaelin",
+      "status": "active",
+      "description": "Search the swamp cave south of Tantegel Castle and defeat the Green Dragon to free Princess Gwaelin.",
+      "reward": "Princess Gwaelin's Love, 100 XP"
+    }
+  ],
   "storyDAG": {
-    "@type": "robos:StoryFlowGraph",
-    "robos:rootNodeId": "node-kings-decree",
-    "robos:storyNodes": [
-      {
-        "id": "node-kings-decree",
-        "title": "King Lorik's Royal Decree",
-        "nodeType": "start",
-        "location": "tantegel-throne-room",
-        "giver": "npc-king-loric",
-        "synopsis": "King Lorik charges Erdrick with recovering the Ball of Light and rescuing Princess Gwaelin.",
-        "choices": [
-          {
-            "text": "Accept Royal Quest of Erdrick",
-            "targetNodeId": "node-equip-erdrick",
-            "trigger": "talk_npc",
-            "required": "talk_king_lorik"
-          }
-        ],
-        "robos:flowPage": "page-prologue",
-        "_x": 40,
-        "_y": 50
-      },
-      {
-        "id": "node-equip-erdrick",
-        "title": "Arming the Descendant of Erdrick",
-        "nodeType": "quest",
-        "location": "tantegel-throne-room",
-        "synopsis": "Open the royal chests to claim 120 Gold, Magic Key, Torch, and Herbs.",
-        "choices": [
-          {
-            "text": "Unlock Royal Gate with Magic Key",
-            "targetNodeId": "node-charlock-ascent",
-            "trigger": "claim_item",
-            "required": "has_magic_key"
-          }
-        ],
-        "robos:flowPage": "page-prologue",
-        "_x": 530,
-        "_y": 50
-      },
-      {
-        "id": "node-charlock-ascent",
-        "title": "Journey to Charlock Castle",
-        "nodeType": "branch",
-        "location": "charlock-castle",
-        "synopsis": "Venture across Alefgard and enter the foul lair of the Dragonlord.",
-        "choices": [
-          {
-            "text": "Enter the Dragonlord's Lair",
-            "targetNodeId": "node-slay-dragonlord",
-            "trigger": "area_transition",
-            "required": "has_magic_key"
-          }
-        ],
-        "robos:flowPage": "page-prologue",
-        "_x": 1020,
-        "_y": 50
-      },
-      {
-        "id": "node-slay-dragonlord",
-        "title": "Slaying the Dragonlord",
-        "nodeType": "combat",
-        "location": "charlock-castle",
-        "synopsis": "Confront the Dragonlord in combat, resist corruption, and strike him down.",
-        "choices": [
-          {
-            "text": "Strike Down the Dragonlord",
-            "targetNodeId": "node-victory-alefgard",
-            "trigger": "combat_trial"
-          }
-        ],
-        "robos:flowPage": "page-prologue",
-        "_x": 1510,
-        "_y": 50
-      },
-      {
-        "id": "node-victory-alefgard",
-        "title": "Restoring Ball of Light & Rescuing Princess Gwaelin",
-        "nodeType": "epilogue",
-        "location": "tantegel-throne-room",
-        "giver": "npc-princess-gwaelin",
-        "synopsis": "Princess Gwaelin is rescued and the Ball of Light restored to Tantegel Castle. Total Victory!",
-        "choices": [],
-        "robos:flowPage": "page-prologue",
-        "_x": 2000,
-        "_y": 50
-      }
-    ],
+    "@type": "robos:CRPGStoryFlow",
+    "@id": "urn:robos:crpg:storyflow:dragonwarrior-1-usa",
+    "dcterms:title": "The Quest for the Ball of Light",
+    "robos:rootNodeId": "node-dw-throne-room",
     "robos:flowPages": [
       {
-        "id": "page-prologue",
-        "name": "Page 1: Prologue",
+        "id": "page-dw-p1",
+        "name": "Page 1: Tantegel & Early Trials",
         "act": "Prologue",
-        "summary": "Prologue storyline and scenarios (5 nodes)"
+        "summary": "King Loric's decree and preparing in Tantegel Castle."
+      },
+      {
+        "id": "page-dw-p2",
+        "name": "Page 2: Chapter 1 — Brecconary & Swamp Cave",
+        "act": "Chapter 1",
+        "summary": "Rescuing Princess Gwaelin from the Green Dragon."
+      },
+      {
+        "id": "page-dw-p3",
+        "name": "Page 3: Chapter 2 — The Rainbow Bridge",
+        "act": "Chapter 2",
+        "summary": "Forging the Rainbow Drop and crossing the sea."
+      },
+      {
+        "id": "page-dw-p4",
+        "name": "Page 4: Finale & Epilogue — Throne of Charlock",
+        "act": "Finale",
+        "summary": "Confronting the Dragonlord and determining the fate of Alefgard."
+      }
+    ],
+    "robos:storyNodes": [
+      {
+        "@type": "robos:CRPGStoryNode",
+        "id": "node-dw-throne-room",
+        "dcterms:title": "The Royal Decree of Tantegel",
+        "robos:nodeType": "game_start",
+        "robos:act": "Prologue",
+        "robos:flowPage": "page-dw-p1",
+        "robos:location": "tantegel-throne-room",
+        "robos:giver": "King Loric",
+        "robos:summary": "King Loric greets the descendant of Erdrick in Tantegel Throne Room. The Ball of Light has been stolen by the Dragonlord, plunging Alefgard into darkness.",
+        "robos:choices": [
+          {
+            "targetNodeId": "node-dw-brecconary",
+            "label": "Take the royal treasure chests and depart for Brecconary Town",
+            "setFlags": {
+              "received_royal_blessing": true,
+              "spoke_to_king_loric": true
+            },
+            "boundEventId": "evt-dw-loric-decree",
+            "robos:boundEvent": "urn:robos:crpg:event:evt-dw-loric-decree"
+          }
+        ]
+      },
+      {
+        "@type": "robos:CRPGStoryNode",
+        "id": "node-dw-brecconary",
+        "dcterms:title": "The Town of Brecconary",
+        "robos:nodeType": "quest_stage",
+        "robos:act": "Chapter 1",
+        "robos:flowPage": "page-dw-p2",
+        "robos:location": "tantegel-throne-room",
+        "robos:giver": "Brecconary Merchant",
+        "robos:summary": "In Brecconary, townspeople whisper of Princess Gwaelin's abduction and an ancient inscription left by Erdrick concerning the three sacred relics.",
+        "robos:choices": [
+          {
+            "targetNodeId": "node-dw-quagmire",
+            "label": "Descend into the swamp cave to rescue Princess Gwaelin",
+            "setFlags": {
+              "discovered_swamp_cave": true
+            },
+            "boundEventId": "evt-dw-swamp-cave-discovery",
+            "robos:boundEvent": "urn:robos:crpg:event:evt-dw-swamp-cave-discovery"
+          },
+          {
+            "targetNodeId": "node-dw-rainbow-drop",
+            "label": "Seek the sacred relics across Rimuldar and Cantlin first",
+            "setFlags": {
+              "quest_for_relics": true
+            },
+            "boundEventId": "evt-dw-relic-search",
+            "robos:boundEvent": "urn:robos:crpg:event:evt-dw-relic-search"
+          }
+        ]
+      },
+      {
+        "@type": "robos:CRPGStoryNode",
+        "id": "node-dw-quagmire",
+        "dcterms:title": "The Swamp Cave & The Green Dragon",
+        "robos:nodeType": "combat_trial",
+        "robos:act": "Chapter 1",
+        "robos:flowPage": "page-dw-p2",
+        "robos:location": "tantegel-throne-room",
+        "robos:giver": "Princess Gwaelin",
+        "robos:summary": "Deep within the noxious swamp cave, a fierce Green Dragon guards Princess Gwaelin's cage.",
+        "robos:choices": [
+          {
+            "targetNodeId": "node-dw-rainbow-drop",
+            "label": "Slay the Green Dragon, rescue the Princess, and carry her to Tantegel",
+            "setFlags": {
+              "green_dragon_slain": true,
+              "princess_rescued": true
+            },
+            "boundEventId": "evt-dw-green-dragon-slain",
+            "robos:boundEvent": "urn:robos:crpg:event:evt-dw-green-dragon-slain"
+          }
+        ]
+      },
+      {
+        "@type": "robos:CRPGStoryNode",
+        "id": "node-dw-rainbow-drop",
+        "dcterms:title": "The Rainbow Bridge",
+        "robos:nodeType": "act_chapter",
+        "robos:act": "Chapter 2",
+        "robos:flowPage": "page-dw-p3",
+        "robos:location": "tantegel-throne-room",
+        "robos:giver": "Old Man of Kol",
+        "robos:summary": "Combining the Staff of Rain and Sunstone at the sacred shrine creates the Rainbow Drop, spanning a luminous bridge across the sea to Charlock Castle.",
+        "robos:choices": [
+          {
+            "targetNodeId": "node-dw-charlock",
+            "label": "Cross the Rainbow Bridge into Castle Charlock",
+            "setFlags": {
+              "rainbow_bridge_created": true
+            },
+            "boundEventId": "evt-dw-rainbow-bridge-created",
+            "robos:boundEvent": "urn:robos:crpg:event:evt-dw-rainbow-bridge-created"
+          }
+        ]
+      },
+      {
+        "@type": "robos:CRPGStoryNode",
+        "id": "node-dw-charlock",
+        "dcterms:title": "Throne of the Dragonlord",
+        "robos:nodeType": "decision_branch",
+        "robos:act": "Finale",
+        "robos:flowPage": "page-dw-p4",
+        "robos:location": "tantegel-throne-room",
+        "robos:giver": "Dragonlord",
+        "robos:summary": "Reaching the infernal throne at the base of Charlock Castle, the Dragonlord sneers: 'Welcome, Erdrick's blood. Will thou join me and rule half the world in shadows?'",
+        "robos:choices": [
+          {
+            "targetNodeId": "node-dw-ending-savior",
+            "label": "Refuse the evil bargain! Draw Erdrick's Sword and strike him down",
+            "setFlags": {
+              "dragonlord_slain": true,
+              "ball_of_light_restored": true
+            },
+            "boundEventId": "evt-dw-dragonlord-slain",
+            "robos:boundEvent": "urn:robos:crpg:event:evt-dw-dragonlord-slain"
+          },
+          {
+            "targetNodeId": "node-dw-ending-dark-pact",
+            "label": "Accept the dark pact and kneel before the Dragonlord",
+            "setFlags": {
+              "dark_pact_accepted": true
+            },
+            "boundEventId": "evt-dw-dark-pact-accepted",
+            "robos:boundEvent": "urn:robos:crpg:event:evt-dw-dark-pact-accepted"
+          },
+          {
+            "targetNodeId": "node-dw-ending-defeat",
+            "label": "Waver in hesitation as the Dragonlord unleashes searing flames",
+            "setFlags": {
+              "hero_slain_charlock": true
+            },
+            "boundEventId": "evt-dw-hero-slain-charlock",
+            "robos:boundEvent": "urn:robos:crpg:event:evt-dw-hero-slain-charlock"
+          }
+        ]
+      },
+      {
+        "@type": "robos:CRPGStoryNode",
+        "id": "node-dw-ending-savior",
+        "dcterms:title": "Ending A: The Ball of Light & The Royal Wedding",
+        "robos:nodeType": "end_game_state",
+        "robos:act": "Epilogue",
+        "robos:flowPage": "page-dw-p4",
+        "robos:endingType": "triumph_good",
+        "robos:victoryStatus": "victory",
+        "robos:summary": "The Dragonlord is vanquished and the Ball of Light banishes all monsters.",
+        "robos:epilogueText": "Holding high the radiant Ball of Light, sunlight pierces the dark clouds over Alefgard for the first time in an age. King Loric steps down from his throne, and Princess Gwaelin takes your hand in marriage as you set sail to found a prosperous new kingdom across the ocean.",
+        "robos:choices": []
+      },
+      {
+        "@type": "robos:CRPGStoryNode",
+        "id": "node-dw-ending-dark-pact",
+        "dcterms:title": "Ending B: Reign of the Shadow Sovereign",
+        "robos:nodeType": "end_game_state",
+        "robos:act": "Epilogue",
+        "robos:flowPage": "page-dw-p4",
+        "robos:endingType": "tyrant_evil",
+        "robos:victoryStatus": "victory",
+        "robos:summary": "You betray King Loric and rule Alefgard as the Dragonlord's dark champion.",
+        "robos:epilogueText": "Seduced by promises of absolute dominion, you take the Dragonlord's outstretched claw. Tantegel Castle falls to your combined legions, and Alefgard is carved into two dark realms ruled by terror and draconic flame.",
+        "robos:choices": []
+      },
+      {
+        "@type": "robos:CRPGStoryNode",
+        "id": "node-dw-ending-defeat",
+        "dcterms:title": "Ending C: Ashes in Charlock",
+        "robos:nodeType": "end_game_state",
+        "robos:act": "Epilogue",
+        "robos:flowPage": "page-dw-p4",
+        "robos:endingType": "game_over_defeat",
+        "robos:victoryStatus": "defeat",
+        "robos:summary": "The descendant of Erdrick falls in the depths of Charlock Castle.",
+        "robos:epilogueText": "The Dragonlord's infernal breath incinerates the halls of Charlock. With the last hero slain, King Loric watches helplessly from Tantegel as darkness consumes the realm of Alefgard.",
+        "robos:choices": []
       }
     ]
   }

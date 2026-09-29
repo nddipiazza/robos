@@ -23,7 +23,7 @@
       "y": 95
     },
     "partyLimit": 1,
-    "createdDate": "2026-09-29T10:41:58.716Z"
+    "createdDate": "2026-09-29T14:09:38.958Z"
   },
   "campaign": {
     "@context": {
@@ -968,7 +968,7 @@
       "robos:width": 320,
       "robos:height": 240,
       "robos:terrain": "grass",
-      "robos:backgroundImage": "res://assets/blockouts/candlekeep.png",
+      "robos:backgroundImage": "res://assets/backgrounds/forest_wilderness_2560.png",
       "robos:backgroundOpacity": 1,
       "robos:mapObjects": [
         {
@@ -10478,11 +10478,11 @@
           ],
           "three-quarters": []
         },
-        "objectsHash": "3afce7e41780ab6a",
+        "objectsHash": "8a63c657292ba99a",
         "image": "res://assets/blockouts/catacomb-antechamber.png",
-        "imagePxPerFoot": 16
+        "imagePxPerFoot": 48
       },
-      "robos:backgroundImage": "res://assets/blockouts/catacomb-antechamber.png"
+      "robos:backgroundImage": "res://assets/backgrounds/ancient_catacombs_2560.png"
     },
     "catacomb-corridor": {
       "@context": {
@@ -10916,9 +10916,9 @@
         },
         "objectsHash": "6f5738aa47330dc7",
         "image": "res://assets/blockouts/catacomb-corridor.png",
-        "imagePxPerFoot": 16
+        "imagePxPerFoot": 48
       },
-      "robos:backgroundImage": "res://assets/blockouts/catacomb-corridor.png"
+      "robos:backgroundImage": "res://assets/backgrounds/ancient_catacombs_2560.png"
     },
     "cavern-depths": {
       "@context": {
@@ -13038,9 +13038,9 @@
         },
         "objectsHash": "2a50114525d822b4",
         "image": "res://assets/blockouts/cavern-depths.png",
-        "imagePxPerFoot": 16
+        "imagePxPerFoot": 48
       },
-      "robos:backgroundImage": "res://assets/blockouts/cavern-depths.png"
+      "robos:backgroundImage": "res://assets/backgrounds/ancient_catacombs_2560.png"
     },
     "dungeon-crypt-vault": {
       "@context": {
@@ -14316,9 +14316,9 @@
         },
         "objectsHash": "7025e8211510da6e",
         "image": "res://assets/blockouts/dungeon-crypt-vault.png",
-        "imagePxPerFoot": 16
+        "imagePxPerFoot": 48
       },
-      "robos:backgroundImage": "res://assets/blockouts/dungeon-crypt-vault.png"
+      "robos:backgroundImage": "res://assets/backgrounds/ancient_catacombs_2560.png"
     },
     "garrison-war-room": {
       "@context": {
@@ -14631,9 +14631,9 @@
         },
         "objectsHash": "d96a8007461bd248",
         "image": "res://assets/blockouts/garrison-war-room.png",
-        "imagePxPerFoot": 16
+        "imagePxPerFoot": 48
       },
-      "robos:backgroundImage": "res://assets/blockouts/garrison-war-room.png"
+      "robos:backgroundImage": "res://assets/backgrounds/garrison_dungeon_2560.png"
     },
     "golem-vault": {
       "@context": {
@@ -14765,7 +14765,7 @@
         },
         "objectsHash": "8c83ffd6c93619e0",
         "image": "res://assets/blockouts/golem-vault.png",
-        "imagePxPerFoot": 16
+        "imagePxPerFoot": 48
       },
       "robos:backgroundImage": "res://assets/blockouts/golem-vault.png"
     },
@@ -15145,9 +15145,9 @@
         },
         "objectsHash": "33c4d7bbcb734ced",
         "image": "res://assets/blockouts/homestead-yard.png",
-        "imagePxPerFoot": 16
+        "imagePxPerFoot": 48
       },
-      "robos:backgroundImage": "res://assets/blockouts/homestead-yard.png"
+      "robos:backgroundImage": "res://assets/backgrounds/village_open_world_2560.png"
     },
     "tantegel-throne-room": {
       "@context": {
@@ -15164,7 +15164,7 @@
       "robos:width": 60,
       "robos:height": 40,
       "robos:terrain": "stone",
-      "robos:backgroundImage": "res://assets/blockouts/tantegel-throne-room.png",
+      "robos:backgroundImage": "res://assets/backgrounds/tantegel_throne_room.png",
       "robos:backgroundOpacity": 1,
       "robos:mapObjects": [
         {
@@ -15288,7 +15288,7 @@
           "robos:shape": "rect",
           "robos:position": [
             18,
-            10
+            13
           ],
           "robos:size": [
             3,
@@ -15299,7 +15299,7 @@
           "type": "chest",
           "shape": "rect",
           "x": 18,
-          "y": 10,
+          "y": 13,
           "w": 3,
           "h": 3,
           "rot": 0,
@@ -15317,8 +15317,8 @@
           "robos:objectType": "chest",
           "robos:shape": "rect",
           "robos:position": [
-            24,
-            10
+            21,
+            13
           ],
           "robos:size": [
             3,
@@ -15328,8 +15328,8 @@
           "id": "chest-torch",
           "type": "chest",
           "shape": "rect",
-          "x": 24,
-          "y": 10,
+          "x": 21,
+          "y": 13,
           "w": 3,
           "h": 3,
           "rot": 0,
@@ -15347,8 +15347,8 @@
           "robos:objectType": "chest",
           "robos:shape": "rect",
           "robos:position": [
-            38,
-            10
+            24,
+            13
           ],
           "robos:size": [
             3,
@@ -15358,8 +15358,8 @@
           "id": "chest-magic-key",
           "type": "chest",
           "shape": "rect",
-          "x": 38,
-          "y": 10,
+          "x": 24,
+          "y": 13,
           "w": 3,
           "h": 3,
           "rot": 0,
@@ -15513,10 +15513,6 @@
           ],
           [
             8,
-            2
-          ],
-          [
-            8,
             3
           ]
         ],
@@ -15613,21 +15609,13 @@
             [
               6,
               2
-            ],
-            [
-              7,
-              2
-            ],
-            [
-              8,
-              2
             ]
           ],
           "three-quarters": []
         },
-        "objectsHash": "040609d4884e87c7",
+        "objectsHash": "8b78e580edc0c9b0",
         "image": "res://assets/blockouts/tantegel-throne-room.png",
-        "imagePxPerFoot": 16
+        "imagePxPerFoot": 48
       }
     },
     "test-doors": {
@@ -15771,7 +15759,7 @@
         },
         "objectsHash": "8896f91f80007a84",
         "image": "res://assets/blockouts/test-doors.png",
-        "imagePxPerFoot": 16
+        "imagePxPerFoot": 48
       },
       "robos:backgroundImage": "res://assets/blockouts/test-doors.png"
     },
@@ -15940,7 +15928,7 @@
         },
         "objectsHash": "ad5c9b212967bf1f",
         "image": "res://assets/blockouts/test-wall-room.png",
-        "imagePxPerFoot": 16
+        "imagePxPerFoot": 48
       },
       "robos:backgroundImage": "res://assets/blockouts/test-wall-room.png"
     }

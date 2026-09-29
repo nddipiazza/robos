@@ -15,7 +15,7 @@
   "robos:width": 50,
   "robos:height": 40,
   "robos:terrain": "stone",
-  "robos:backgroundImage": "res://assets/blockouts/throne-room.png",
+  "robos:backgroundImage": "res://assets/backgrounds/tantegel_throne_room.png",
   "robos:backgroundOpacity": 1,
   "robos:mapObjects": [
     {
