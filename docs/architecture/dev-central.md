@@ -2,7 +2,7 @@
 title: Dev Central Command Center Architecture
 layout: default
 parent: System Architecture
-nav_order: 4
+nav_order: 5
 ---
 
 # Dev Central Command Center — Architecture Specification

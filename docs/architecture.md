@@ -3,6 +3,7 @@ title: System Architecture
 layout: default
 parent: Build on RobOS
 nav_order: 6
+has_children: true
 ---
 
 # System Architecture (How RobOS Works Under the Hood)

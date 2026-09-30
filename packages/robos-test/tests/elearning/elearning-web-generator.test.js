@@ -185,6 +185,8 @@ describe('RobOS eLearning Website Generator & GitHub Pages Publishing', () => {
     // 1. Verify Jekyll Front Matter
     assert.ok(content.startsWith('---'), 'Must start with Jekyll YAML frontmatter');
     assert.ok(content.includes('permalink: /projects/kgraph-parse-portal/elearning/'), 'Must specify exact GitHub Pages permalink');
+    assert.ok(content.includes('parent: RobOS Kgraph Parse Portal'), 'Must specify parent navigation category');
+    assert.ok(content.includes('grand_parent: Build on RobOS'), 'Must specify grand_parent navigation category');
 
     // 2. Verify all 5 curriculum modules are present in sidebar & content
     assert.ok(content.includes('Universal Linux Filesystem Ingestion'), 'Module 1 title must be present');

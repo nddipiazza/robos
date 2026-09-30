@@ -42,3 +42,9 @@ graph TD
 - **Source Package**: `packages/robos-elearning`
 - **Debug Port**: `19185`
 - **GitOps Catalog**: `.robos/elearning.yaml`
+
+---
+
+## 4. UX Audit & Creation Studio Specification
+
+For the comprehensive usability audit, Course Creation Studio workflows, hierarchical folder trees, and drag-and-drop interaction models, see the **[eLearning Creation & Organization UX Audit]({{ site.baseurl }}/ideas/specs/robos-elearning-creation-and-organization-ux-audit.html)**.

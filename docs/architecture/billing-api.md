@@ -2,7 +2,7 @@
 title: Billing API Microservice Architecture
 layout: default
 parent: System Architecture
-nav_order: 5
+nav_order: 6
 ---
 
 # Billing API Microservice — Living Architecture Documentation

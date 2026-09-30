@@ -1,3 +1,12 @@
+---
+title: "eLearning Creation & Organization UX Audit"
+layout: default
+parent: System Architecture
+grand_parent: Build on RobOS
+nav_order: 4
+permalink: /ideas/specs/robos-elearning-creation-and-organization-ux-audit.html
+---
+
 # RobOS eLearning UX Audit: Course Creation Studio & Folder Organization
 
 This comprehensive UX audit and architectural design evaluates two core functional areas of the **RobOS Interactive eLearning Hub** (`packages/robos-elearning`):
@@ -94,7 +103,7 @@ flowchart TD
     PersistStore --> OpenCourse["Open Course in Player View"]
 ```
 
-![RobOS eLearning Course Creation Architecture](/home/ndipiazza/.gemini/antigravity/brain/3ba8a5a1-9642-4068-a09d-804461d13b0b/elearning_creation_ux_architecture_1790347594430.jpg)
+![RobOS eLearning Course Creation Architecture]({{ '/assets/images/elearning-creation-ux-architecture.jpg' | relative_url }})
 
 #### Detailed Step Breakdown of the Creation Wizard
 
@@ -189,7 +198,7 @@ courses:
 
 ### 3.3 Drag-and-Drop (DnD) Interaction Specifications
 
-![RobOS eLearning Folder Organization and Drag-and-Drop UX](/home/ndipiazza/.gemini/antigravity/brain/3ba8a5a1-9642-4068-a09d-804461d13b0b/elearning_organization_dnd_ux_1790347609466.jpg)
+![RobOS eLearning Folder Organization and Drag-and-Drop UX]({{ '/assets/images/elearning-organization-dnd-ux.jpg' | relative_url }})
 
 #### Level 1: Folder Tree & Course Card Movement
 

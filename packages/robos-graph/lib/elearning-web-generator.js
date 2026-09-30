@@ -196,11 +196,14 @@ function buildStandaloneHtml(params) {
 
   return `---
 layout: null
-title: "${isCrpg ? 'Interactive eLearning Masterclass' : ('RobOS eLearning — ' + courseTitle.replace(/"/g, '\\"'))}"
+title: "${(isCrpg || isParsePortal) ? 'Interactive eLearning Masterclass' : ('RobOS eLearning — ' + courseTitle.replace(/"/g, '\\"'))}"
 ${isCrpg ? `parent: Tactical cRPG & Infinity AI Engine
 grand_parent: RobOS Projects
 nav_order: 4
-` : ''}permalink: ${permalink}
+` : (isParsePortal ? `parent: RobOS Kgraph Parse Portal
+grand_parent: Build on RobOS
+nav_order: 1
+` : '')}permalink: ${permalink}
 redirect_from:
 ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
 ---
