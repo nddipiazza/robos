@@ -1,5 +1,5 @@
 ---
-title: "2. Onboarding Your App in App Wizard"
+title: "Onboarding Your App in App Wizard"
 layout: default
 parent: For Non-Developers
 grand_parent: Training
@@ -7,10 +7,10 @@ nav_order: 2
 permalink: /training/for-non-developers/02-onboarding-your-app.html
 ---
 
-# Module 2: Onboarding Your App in App Wizard
+# Onboarding Your App in App Wizard
 {: .no_toc }
 
-Step 1 of the lifecycle: How to pick an application archetype, configure team identity, define data contracts, and let RobOS scaffold the complete project into the Knowledge Graph.
+How to pick an application archetype, configure team identity, define data contracts, and let RobOS scaffold the complete project into the Knowledge Graph.
 {: .fs-6 .fw-300 }
 
 ## Table of contents
@@ -31,51 +31,67 @@ The App Wizard is an interactive visual stepping engine that asks you a few simp
 
 ---
 
-## Step-by-Step: The 5-Step App Onboarding Flow
+## The Archetype Comparison Matrix
 
-Let's walk through the exact screens captured during our automated E2E test runs.
+Before opening the wizard, decide which archetype matches your product vision:
 
-### Step 1: Choose Your Application Archetype
+| Archetype | Flagship Example | Under the Hood Tech | Best Suited For |
+|:---|:---|:---|:---|
+| **Web Application (SPA/SSR)** | **`getemgigs.com`** | Next.js 15, React 19, TailwindCSS, Neon Postgres | SaaS products, marketplaces, customer portals, mobile-first web apps |
+| **PC Video Game** | **`crpg-realm`** | Godot 4.3, GL Compatibility, 2.5D Isometric, D&D 5e SRD | 2D/3D video games, tactical RPGs, dungeon crawlers, simulations |
+| **Desktop Tool** | **`app-launcher`** | Electron, Vanilla JS, Lucide icons, native IPC bridge | Internal developer tools, admin utilities, offline dashboards |
+| **Microservice Backend** | **`billing-api`** | Node.js, Go, or Python with OpenAPI 3.1 &amp; Protobuf gRPC | High-performance data pipelines, transaction processors, APIs |
+
+---
+
+## The App Onboarding Flow
+
+Let's walk through the screens captured during our automated E2E test runs.
+
+### Choose Your Application Archetype
 
 When you open App Wizard from the desktop or App Launcher, the first screen presents the **Archetype Selector**.
 
 <div style="margin: 1.5rem 0;">
   <img src="{{ '/assets/images/screenshots/new-app-archetypes_frame.png' | relative_url }}" alt="App Wizard Archetype Selection Screen" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
-  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Screenshot 2.1: Selecting your project archetype in the App Wizard.</em></p>
+  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Selecting your project archetype in the App Wizard.</em></p>
 </div>
 
-RobOS provides battle-tested starter blueprints across multiple project types:
-- **Web Application SPA/SSR**: Complete Next.js 15, React 19, TailwindCSS stack with API routing (used for **`getemgigs.com`**).
-- **PC Video Game**: Complete Godot 4.3 project with 2.5D isometric geometry, character bodies, and RTwP combat (used for **`crpg-realm`**).
-- **Desktop Electron Tool**: Vanilla JS, zero-dependency dark-themed native app for Linux, Mac, and Windows.
-- **Microservice Backend**: Node.js, Go, or Python REST and gRPC services with OpenAPI specs.
-
-Select your desired archetype and click **Next: Identity &amp; Team**.
+- Review the available archetype cards.
+- For a website or marketplace, select **Web Application (Next.js)**.
+- For a role-playing game or tactical simulator, select **PC Video Game (Godot 4)**.
+- Click **Next: Identity &amp; Team**.
 
 ---
 
-### Step 2: Configure App Identity & Team Ownership
+### Configure App Identity & Team Ownership
 
-Every great project needs an identity and an owner. In Step 2, you provide the human-readable name, a machine identifier (slug), a brief description, and assign the owning squad from your organization's directory.
+Every great project needs an identity and an owner. In this step, you provide the human-readable name, a machine identifier (slug), a brief description, and assign the owning squad from your organization's directory.
 
 <div style="margin: 1.5rem 0;">
   <img src="{{ '/assets/images/screenshots/new-app-identity-team_frame.png' | relative_url }}" alt="App Identity and Team Assignment" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
-  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Screenshot 2.2: Defining project metadata, repository namespace, and squad ownership.</em></p>
+  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Defining project metadata, repository namespace, and squad ownership.</em></p>
 </div>
 
-Why does team ownership matter?
-- In RobOS, autonomous agents route pull requests, issue notifications, and compliance policies based on the team topology.
-- For example, if you are building the `getemgigs.com` web portal, assigning it to **Band Experience Squad** ensures that related task boards and notifications stay neatly organized.
+| Form Field | What to Enter (Example: Web App) | What to Enter (Example: Game) |
+|:---|:---|:---|
+| **Display Name** | The Gig Bandit &amp; Get 'Em Gigs | Tactical cRPG Realm of Heroes |
+| **Project Slug** | `getemgigs` | `crpg-realm` |
+| **Owning Squad** | Band Experience Squad (`squad:band-exp`) | Game Core Engineering (`squad:game-core`) |
+| **Description** | Reciprocal buddy gig escrow &amp; venue booking | Party-based tactical isometric RPG in Godot 4 |
+
+> [!TIP]
+> **Why Team Ownership Matters**: In RobOS, autonomous agents route pull requests, issue notifications, and compliance policies based on the team topology. Assigning an owning squad ensures that tasks, notifications, and code reviews are organized neatly and never get lost in a generic inbox.
 
 ---
 
-### Step 3: Define Contracts & Schemas
+### Define Contracts & Schemas
 
 In traditional development, frontends and backends constantly get out of sync because someone changed a database column without telling the UI team. RobOS eliminates this by making **Contract Specifications** first-class citizens.
 
 <div style="margin: 1.5rem 0;">
   <img src="{{ '/assets/images/screenshots/new-app-contract-spec_frame.png' | relative_url }}" alt="App Contract Specifications" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
-  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Screenshot 2.3: Declaring data contracts, API protocols, and schema shapes.</em></p>
+  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Declaring data contracts, API protocols, and schema shapes.</em></p>
 </div>
 
 Here you specify:
@@ -85,38 +101,62 @@ Here you specify:
 
 ---
 
-### Step 4: Review the Scaffolding Blueprint
+### Review the Scaffolding Blueprint
 
 Before touching any disk or Git files, RobOS generates a comprehensive **Scaffolding Blueprint**.
 
 <div style="margin: 1.5rem 0;">
   <img src="{{ '/assets/images/screenshots/new-app-scaffold-blueprint_frame.png' | relative_url }}" alt="Scaffolding Blueprint Preview" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
-  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Screenshot 2.4: Reviewing generated file trees, dependency manifests, and Knowledge Graph nodes.</em></p>
+  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Reviewing generated file trees, dependency manifests, and Knowledge Graph nodes.</em></p>
 </div>
 
 The blueprint previews:
-1. Every file and directory that will be generated.
-2. The Git repository initialization script.
-3. The exact Knowledge Graph nodes (`robos:FrontEndApp`, `schema:VideoGame`, etc.) being registered.
+- Every file and directory that will be generated (e.g. `package.json`, `tailwind.config.js`, starter components).
+- The Git repository initialization script.
+- The exact Knowledge Graph nodes (`robos:FrontEndApp`, `schema:VideoGame`, etc.) being registered.
 
 Click **Generate Project** to execute the blueprint.
 
 ---
 
-### Step 5: Scaffolding Complete & Registered in Knowledge Graph
+### Scaffolding Complete & Registered in Knowledge Graph
 
-In under three seconds, RobOS scaffolds the codebase, creates the local Git repository, builds the initial branch, and registers the application into `.robos/kgraphs/applications/package.jsonld`.
+In seconds, RobOS scaffolds the codebase, creates the local Git repository, builds the initial branch, and registers the application into `.robos/kgraphs/applications/package.jsonld`.
 
 <div style="margin: 1.5rem 0;">
   <img src="{{ '/assets/images/screenshots/new-app-scaffold-complete_frame.png' | relative_url }}" alt="Scaffolding Complete Screen" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
-  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Screenshot 2.5: Application successfully bootstrapped and ready for planning.</em></p>
+  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Application successfully bootstrapped and ready for planning.</em></p>
 </div>
-
-With one click on **Open in Task Planner**, you are ready to start planning your features!
 
 ---
 
-## What About Existing Apps? (The Ingestion Wizard)
+## Under the Hood: What Did RobOS Actually Write?
+
+You don't need to edit this by hand, but here is what RobOS created in the background:
+
+```json
+{
+  "@id": "urn:robos:app:getemgigs",
+  "@type": ["oslc_am:Resource", "schema:WebApplication", "robos:FrontEndApp"],
+  "dcterms:title": "The Gig Bandit & Get 'Em Gigs",
+  "dcterms:description": "Reciprocal buddy gig escrow & venue booking web app.",
+  "robos:repository": "github.com/nddipiazza/thegigbandit",
+  "robos:technology": "Next.js 15 / React 19 / TailwindCSS",
+  "robos:ownerSquad": "urn:robos:org:squad:band-exp",
+  "robos:runtimeEnvironment": "Vercel Serverless Edge",
+  "robos:database": "urn:robos:db:neon-postgres"
+}
+```
+
+Look at how clear and structured that is!
+- Any AI agent that works on this project now knows **exactly** what tech stack to use (Next.js 15, not an outdated React 16).
+- It knows which database is connected (Neon Postgres).
+- It knows which squad owns it.
+- **The AI never has to hallucinate basic facts.**
+
+---
+
+## What About Existing Code? (The Ingestion Wizard)
 
 What if you already have an existing project on GitHub that you want to bring into RobOS?
 
@@ -124,22 +164,23 @@ The App Wizard includes an **Import / Ingestion Wizard** that scans any local fo
 
 <div style="margin: 1.5rem 0;">
   <img src="{{ '/assets/images/screenshots/import-app-source-select_frame.png' | relative_url }}" alt="Brownfield App Ingestion Source Select" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
-  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Screenshot 2.6: Importing an existing codebase into RobOS.</em></p>
+  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Importing an existing codebase into RobOS.</em></p>
 </div>
 
 The Ingestion engine reads your `package.json`, `project.godot`, or backend routes, automatically infers the architecture, and creates Knowledge Graph nodes so agents immediately understand your existing system.
 
 ---
 
-## Summary Checklist
+## Hands-On Lab: Onboarding Your First Sandbox App
 
-| Action | Done Via | Outcome |
-|:---|:---|:---|
-| Select Project Archetype | App Wizard Step 1 | High-level technology stack configured |
-| Assign Team &amp; Metadata | App Wizard Step 2 | Ownership and notification routing wired |
-| Declare Data Contracts | App Wizard Step 3 | Schemas defined so AI never guesses |
-| Execute Scaffolding | App Wizard Step 4 &amp; 5 | Git repository created &amp; Knowledge Graph node linked |
+To complete this module, let's execute your first onboarding:
+- Open **App Wizard** from the desktop panel or App Launcher.
+- Select **PC Video Game (Godot 4)**.
+- Name it `my-first-rpg` and assign it to `Game Core Engineering`.
+- Leave the default starter contracts enabled.
+- Click **Generate Project**.
+- When the success screen appears, click **Open in Task Planner**!
 
-Now that your project foundation is laid, it's time to build your feature roadmap!
+---
 
-Proceed to **[Module 3: Visual Project &amp; Task Planning]({{ '/training/for-non-developers/03-visual-task-planning.html' | relative_url }})**!
+Proceed to **[Visual Project &amp; Task Planning]({{ '/training/for-non-developers/03-visual-task-planning.html' | relative_url }})** to learn how to break your dream features into visual, bite-sized tasks!

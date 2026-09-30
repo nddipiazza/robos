@@ -36,17 +36,17 @@ RobOS transforms software engineering from exhausting code monkey labor into an 
 <div class="rb-links" style="margin: 2rem 0;">
   <a class="rb-link" href="{{ '/training/for-non-developers/' | relative_url }}" style="border-left: 4px solid #00e5ff; background: rgba(0, 229, 255, 0.04);">
     <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.35rem;">
-      <strong style="color: #00e5ff; font-size: 1.15rem;">🚀 Track 1: For Non-Developers — Building Games &amp; Software</strong>
-      <span style="background: rgba(0, 229, 255, 0.15); color: #00e5ff; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 9999px; text-transform: uppercase;">Live Now &bull; 7 Modules</span>
+      <strong style="color: #00e5ff; font-size: 1.15rem;">🚀 For Non-Developers — Building Games &amp; Software</strong>
+      <span style="background: rgba(0, 229, 255, 0.15); color: #00e5ff; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 9999px; text-transform: uppercase;">Live Now</span>
     </div>
     <span style="color: #c9d1d9; font-size: 0.92rem; line-height: 1.5;">
-      Zero coding required. Learn the Director Mindset, Context Engineering, and AI Generative Review-Based Development while building two real flagship projects from scratch: the <strong>getemgigs.com</strong> web app and the <strong>crpg-realm</strong> tactical video game.
+      Zero coding required. Learn the Director Mindset, Context Engineering, and AI Generative Review-Based Development while building real flagship projects from scratch: the <strong>getemgigs.com</strong> web app and the <strong>crpg-realm</strong> tactical video game.
     </span>
   </a>
 
   <div class="rb-link" style="opacity: 0.75; border-left: 4px solid #8b949e; cursor: default;">
     <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.35rem;">
-      <strong style="color: #e6edf3; font-size: 1.15rem;">📐 Track 2: Systems Architects — Dual-State Knowledge Graph Modeling</strong>
+      <strong style="color: #e6edf3; font-size: 1.15rem;">📐 Systems Architects — Dual-State Knowledge Graph Modeling</strong>
       <span style="background: rgba(139, 148, 158, 0.2); color: #8b949e; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 9999px; text-transform: uppercase;">Coming Soon</span>
     </div>
     <span style="color: #8b949e; font-size: 0.92rem; line-height: 1.5;">
@@ -56,7 +56,7 @@ RobOS transforms software engineering from exhausting code monkey labor into an 
 
   <div class="rb-link" style="opacity: 0.75; border-left: 4px solid #8b949e; cursor: default;">
     <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.35rem;">
-      <strong style="color: #e6edf3; font-size: 1.15rem;">🤖 Track 3: Agent Personas &amp; UHP Autonomous Harness Engineering</strong>
+      <strong style="color: #e6edf3; font-size: 1.15rem;">🤖 Agent Personas &amp; UHP Autonomous Harness Engineering</strong>
       <span style="background: rgba(139, 148, 158, 0.2); color: #8b949e; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 9999px; text-transform: uppercase;">Coming Soon</span>
     </div>
     <span style="color: #8b949e; font-size: 0.92rem; line-height: 1.5;">
@@ -69,27 +69,27 @@ RobOS transforms software engineering from exhausting code monkey labor into an 
 
 ## How Our Courses Are Structured
 
-Every module in the RobOS Academy follows a 4-part hands-on cadence:
+Every module in the RobOS Academy follows a hands-on cadence:
 
 ```mermaid
 flowchart LR
-    A["1. Context & Architecture<br/>(Knowledge Graph & Blueprint)"] --> B["2. Visual Task Plan<br/>(Task Planner & DAG Milestones)"]
-    B --> C["3. Sandboxed Agent Run<br/>(Task Implementer & Tests)"]
-    C --> D["4. Verifiable Signoff<br/>(PR Review Theater & Launch)"]
+    A["Context & Architecture<br/>(Knowledge Graph & Blueprint)"] --> B["Visual Task Plan<br/>(Task Planner & DAG Milestones)"]
+    B --> C["Sandboxed Agent Run<br/>(Task Implementer & Tests)"]
+    C --> D["Verifiable Signoff<br/>(PR Review Theater & Launch)"]
     
-    style A fill:#0d1117,stroke:#00bcd4,stroke-width:2px,color:#e6edf3
+    style A fill:#0d1117,stroke:#00e5ff,stroke-width:2px,color:#e6edf3
     style B fill:#0d1117,stroke:#38bdf8,stroke-width:2px,color:#e6edf3
     style C fill:#0d1117,stroke:#a855f7,stroke-width:2px,color:#e6edf3
     style D fill:#0d1117,stroke:#10b981,stroke-width:2px,color:#e6edf3
 ```
 
-1. **Context &amp; Architecture**: Understand the "why" and model the domain using schemas and templates rather than staring at blank text files.
-2. **Visual Task Plan**: Break complex ambitions into small, testable chunks with visual dependencies in **Task Planner**.
-3. **Sandboxed Agent Execution**: Watch autonomous AI agents execute tasks in clean ephemeral sandboxes with live logs and breakpoint pauses.
-4. **Verifiable Signoff &amp; Launch**: Review 1080p narrated video proof-of-work, pass interactive knowledge checks in the **PR Review Theater**, and launch your app in Chrome or on the desktop!
+- **Context &amp; Architecture**: Understand the "why" and model the domain using schemas and templates rather than staring at blank text files.
+- **Visual Task Plan**: Break complex ambitions into small, testable chunks with visual dependencies in **Task Planner**.
+- **Sandboxed Agent Execution**: Watch autonomous AI agents execute tasks in clean ephemeral sandboxes with live logs and breakpoint pauses.
+- **Verifiable Signoff &amp; Launch**: Review 1080p narrated video proof-of-work, pass interactive knowledge checks in the **PR Review Theater**, and launch your app in Chrome or on the desktop!
 
 ---
 
 ## Start Learning Now
 
-Ready to dive in? Jump into **[Track 1: For Non-Developers]({{ '/training/for-non-developers/' | relative_url }})** and see how easy it is to build games and apps with RobOS!
+Ready to dive in? Jump into **[For Non-Developers Track]({{ '/training/for-non-developers/' | relative_url }})** and see how easy it is to build games and apps with RobOS!
