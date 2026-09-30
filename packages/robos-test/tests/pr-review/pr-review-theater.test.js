@@ -247,4 +247,263 @@ index 1234..5678 100644
     assert.ok(ctx.desktopSession.steps.some(s => s.text.includes('mTLS')));
     assert.ok(ctx.desktopSession.steps.some(s => s.text.includes('Kafka')));
   });
+
+  it('8. Manages Team KGraph Policy Configuration (getPRTheaterConfig, savePRTheaterConfig, getAllTeams)', () => {
+    // 1. List all teams
+    const teams = store.getAllTeams();
+    assert.ok(Array.isArray(teams));
+    assert.ok(teams.length > 0, 'Found teams in organization package');
+    assert.ok(teams.some(t => (t['@id'] && t['@id'].includes('core-platform')) || t['dcterms:title']));
+
+    // 2. Fetch default configuration for a team
+    const initial = store.getPRTheaterConfig({ teamId: 'team-core-platform' });
+    assert.ok(initial.config);
+    assert.strictEqual(typeof initial.config.strictMode, 'boolean');
+    assert.ok(initial.config.stage1_elearning.passThresholdScore > 0);
+    assert.strictEqual(initial.config.stage5_showTheFix.enabled, true);
+
+    // 3. Save customized team theater policy
+    const customConfig = {
+      ...initial.config,
+      strictMode: false,
+      requireAllStageCheckboxes: true,
+      requireCommentsOnApproval: true,
+      stage1_elearning: {
+        ...initial.config.stage1_elearning,
+        passThresholdScore: 90,
+        lockDiffsUntilPassed: true
+      },
+      stage5_showTheFix: {
+        enabled: true,
+        required: true,
+        targetType: 'frontend',
+        frontendHeadedBrowser: true,
+        frontendReviewerHandoff: true
+      }
+    };
+
+    const saveRes = store.savePRTheaterConfig({
+      teamId: 'team-core-platform',
+      config: customConfig
+    });
+
+    assert.ok(saveRes.ok);
+    assert.ok(saveRes.teamId.includes('core-platform'));
+    assert.strictEqual(saveRes.config.stage1_elearning.passThresholdScore, 90);
+    assert.strictEqual(saveRes.config.stage5_showTheFix.required, true);
+
+    // 4. Verify persisted configuration on reload
+    const reloaded = store.getPRTheaterConfig({ teamId: 'team-core-platform' });
+    assert.strictEqual(reloaded.config.strictMode, false);
+    assert.strictEqual(reloaded.config.stage1_elearning.passThresholdScore, 90);
+    assert.strictEqual(reloaded.config.requireCommentsOnApproval, true);
+    assert.strictEqual(reloaded.config.stage5_showTheFix.targetType, 'frontend');
+
+    // 5. Verify the updated team node still conforms to SHACL shapes
+    const teamNode = store.findTeamNode('team-core-platform');
+    assert.ok(teamNode);
+    assert.ok(teamNode['robos:prReviewTheaterConfig']);
+    const validation = validator.validateGraph(store.parser);
+    assert.strictEqual(validation.conforms, true, 'Team node with prReviewTheaterConfig conforms to SHACL');
+  });
+
+  it('9. Automatically detects PR fix type based on changed files and target app semantics', () => {
+    // 1. Backend files (Java / Go / Python)
+    const backendFiles = [
+      'src/main/java/com/acme/petshop/service/PetService.java',
+      'pom.xml'
+    ];
+    assert.strictEqual(store.detectPRFixType(backendFiles), 'backend');
+
+    // 2. Frontend files (HTML / TSX / Vue / CSS)
+    const frontendFiles = [
+      'apps/portal/src/components/PetCard.tsx',
+      'apps/portal/src/styles/theme.css'
+    ];
+    assert.strictEqual(store.detectPRFixType(frontendFiles), 'frontend');
+
+    // 3. Desktop application files (Electron / desktop-shell / IPC)
+    const desktopFiles = [
+      'packages/dev-central/renderer/app.js',
+      'packages/dev-central/main.js'
+    ];
+    assert.strictEqual(store.detectPRFixType(desktopFiles), 'desktop');
+  });
+
+  it('10. Synthesizes Stage 5 "Show You The Fix" context and telemetry targets', () => {
+    const ctx = store.generatePRReviewTheaterContext({
+      repo: 'acme/petstore-api',
+      prNumber: 12,
+      title: 'feat(service): verify rabies certificate over mTLS [PET-105]',
+      changedFiles: [
+        'src/main/java/com/acme/petshop/client/VaccineGatewayClient.java'
+      ]
+    });
+
+    assert.ok(ctx.showTheFix, 'Contains showTheFix context object');
+    assert.strictEqual(ctx.showTheFix.fixType, 'backend');
+    assert.ok(ctx.showTheFix.description.includes('VaccineGatewayClient'));
+
+    // Backend target metadata
+    assert.ok(ctx.showTheFix.backendTarget);
+    assert.strictEqual(ctx.showTheFix.backendTarget.ideBridgePort, 63343);
+    assert.ok(ctx.showTheFix.backendTarget.entrypoint.includes(':34'));
+    assert.ok(ctx.showTheFix.backendTarget.command.includes('mvn test'));
+
+    // Frontend target metadata
+    assert.ok(ctx.showTheFix.frontendTarget);
+    assert.strictEqual(ctx.showTheFix.frontendTarget.headedBrowser, true);
+    assert.strictEqual(ctx.showTheFix.frontendTarget.devtoolsPort, 9222);
+    assert.strictEqual(ctx.showTheFix.frontendTarget.handoffSupported, true);
+
+    // Desktop target metadata
+    assert.ok(ctx.showTheFix.desktopTarget);
+    assert.strictEqual(ctx.showTheFix.desktopTarget.debugIpcPort, 19101);
+    assert.ok(ctx.showTheFix.desktopTarget.domSnapshotSupported);
+
+    // Verification gates include fixDemonstrated
+    assert.strictEqual(ctx.validationGates.fixDemonstrated, false);
+  });
+
+  it('11. Dynamic eLearning Pass Threshold verifies against team policy score', () => {
+    const ctx = store.generatePRReviewTheaterContext({
+      repo: 'acme/petstore-api',
+      prNumber: 12,
+      title: 'feat(service): verify rabies certificate [PET-105]'
+    });
+
+    const courseId = ctx.elearning.course['@id'];
+
+    // Quiz with 2 out of 3 correct answers => 66.7% (~67%)
+    const answers2of3 = {
+      'q1-mtls': 1, // correct
+      'q2-transaction': 2, // correct
+      'q3-kgraph-merge': 0  // wrong
+    };
+
+    // 1. With standard threshold 80% -> should fail
+    const standardRes = store.verifyPRELearningQuiz({
+      courseId,
+      answers: answers2of3,
+      reviewerId: 'architect-1',
+      passThresholdScore: 80
+    });
+    assert.strictEqual(standardRes.passed, false);
+    assert.strictEqual(standardRes.score, 67);
+    assert.strictEqual(standardRes.passThreshold, 80);
+
+    // 2. With relaxed threshold 60% -> should pass
+    const relaxedRes = store.verifyPRELearningQuiz({
+      courseId,
+      answers: answers2of3,
+      reviewerId: 'architect-1',
+      passThresholdScore: 60
+    });
+    assert.strictEqual(relaxedRes.passed, true);
+    assert.strictEqual(relaxedRes.score, 67);
+    assert.strictEqual(relaxedRes.passThreshold, 60);
+    assert.ok(relaxedRes.certificate);
+  });
+
+  it('12. Supports Stage 5 Show The Fix execution flows across Backend, Frontend, and Desktop targets', () => {
+    // 1. Backend simulation
+    const backendRun = {
+      target: 'backend',
+      prNumber: 12,
+      repo: 'acme/petstore-api',
+      breakpointTarget: 'VaccineGatewayClient.java:34',
+      threadSuspended: true,
+      verified: false,
+      steps: [
+        { timestamp: '00:01', text: 'Connecting to IntelliJ IDEA on port 63343...' },
+        { timestamp: '00:02', text: 'Setting breakpoint at VaccineGatewayClient.java:34' },
+        { timestamp: '00:03', text: 'Running test: mvn test -Dtest=PetServiceTest#testAdoption' },
+        { timestamp: '00:04', text: '⏸️ Thread Suspended at breakpoint (SSLContext handshake)' }
+      ]
+    };
+    assert.strictEqual(backendRun.threadSuspended, true);
+    assert.strictEqual(backendRun.steps.length, 4);
+
+    // 2. Frontend simulation with interactive reviewer handoff
+    const frontendRun = {
+      target: 'frontend',
+      prNumber: 12,
+      repo: 'acme/petstore-api',
+      headedBrowser: true,
+      devtoolsPort: 9222,
+      handoffActive: true,
+      verified: false,
+      checkpoint: 'pet-adoption-form-loaded',
+      steps: [
+        { timestamp: '00:01', text: 'Launching headed browser (Chrome/Chromium)...' },
+        { timestamp: '00:02', text: 'Navigating to http://localhost:8080/pets/105/adopt' },
+        { timestamp: '00:03', text: '🎮 Reviewer handoff active. Take control of the browser window.' }
+      ]
+    };
+    assert.strictEqual(frontendRun.handoffActive, true);
+    assert.strictEqual(frontendRun.checkpoint, 'pet-adoption-form-loaded');
+
+    // 3. Desktop simulation
+    const desktopRun = {
+      target: 'desktop',
+      prNumber: 12,
+      repo: 'acme/petstore-api',
+      targetApp: 'dev-central',
+      debugPort: 19101,
+      domSnapshot: true,
+      verified: true,
+      steps: [
+        { timestamp: '00:01', text: 'Launching Electron application via RobOS supervisor...' },
+        { timestamp: '00:02', text: 'Connecting to DOM snapshot debug server on port 19101' },
+        { timestamp: '00:03', text: 'Triggering view navigation: #view-pr-review' },
+        { timestamp: '00:04', text: '✓ DOM verified: Element #pr-review-theater rendered' }
+      ]
+    };
+    assert.strictEqual(desktopRun.verified, true);
+    assert.strictEqual(desktopRun.debugPort, 19101);
+  });
+
+  it('13. Enforces team theater configuration policies in validation gates', () => {
+    // Create theater context with strict policy requiring Stage 5 fix demonstration
+    const customConfig = {
+      strictMode: true,
+      requireAllStageCheckboxes: true,
+      requireCommentsOnApproval: true,
+      stage1_elearning: { enabled: true, required: true, passThresholdScore: 85, lockDiffsUntilPassed: true },
+      stage5_showTheFix: { enabled: true, required: true, targetType: 'backend' }
+    };
+
+    const ctx = store.generatePRReviewTheaterContext({
+      repo: 'acme/petstore-api',
+      prNumber: 12,
+      headBranch: 'feature/PET-105-rabies-verification',
+      config: customConfig
+    });
+
+    assert.strictEqual(ctx.theaterConfig.stage1_elearning.passThresholdScore, 85);
+    assert.strictEqual(ctx.theaterConfig.stage5_showTheFix.required, true);
+    assert.strictEqual(ctx.validationGates.requiredPassScore, 85);
+
+    // Gate evaluation function matching signoff logic
+    function canSubmitApproval(gates, cfg, notes) {
+      if (cfg.stage1_elearning?.required !== false && !gates.elearningPassed) return false;
+      if (cfg.stage5_showTheFix?.required === true && !gates.fixDemonstrated) return false;
+      if (cfg.requireCommentsOnApproval && (!notes || notes.trim().length === 0)) return false;
+      return true;
+    }
+
+    // Initially all pending -> cannot approve
+    assert.strictEqual(canSubmitApproval(ctx.validationGates, ctx.theaterConfig, 'LGTM'), false);
+
+    // Pass eLearning -> still cannot approve because Stage 5 fix demonstration is required
+    ctx.validationGates.elearningPassed = true;
+    assert.strictEqual(canSubmitApproval(ctx.validationGates, ctx.theaterConfig, 'LGTM'), false);
+
+    // Observe fix demonstration -> still cannot approve without notes
+    ctx.validationGates.fixDemonstrated = true;
+    assert.strictEqual(canSubmitApproval(ctx.validationGates, ctx.theaterConfig, ''), false);
+
+    // Provide reviewer notes -> approval unlocks!
+    assert.strictEqual(canSubmitApproval(ctx.validationGates, ctx.theaterConfig, 'Verified mTLS in IDE!'), true);
+  });
 });

@@ -2563,6 +2563,242 @@ This system documentation is registered as an official \`robos:Documentation\` e
     });
   }
 
+  static get DEFAULT_THEATER_CONFIG() {
+    return {
+      strictMode: true,
+      requireAllStageCheckboxes: true,
+      requireCommentsOnApproval: false,
+      enableDualBranchMerge: true,
+      themeStyle: 'robos-cyber',
+
+      stage1_elearning: {
+        enabled: true,
+        title: 'Training & Knowledge Check',
+        required: true,
+        lockDiffsUntilPassed: true,
+        passThresholdScore: 80,
+        autoGenerateCurriculum: true,
+        autoGenerateQuiz: true,
+        allowQuizRetries: true,
+        linkAppMasterclass: true,
+      },
+
+      stage2_livingDocs: {
+        enabled: true,
+        title: 'Living Docs & Flows',
+        required: true,
+        autoGenerateMermaid: true,
+        showDualRealityDelta: true,
+        showBlastRadiusBadges: true,
+        enableRestRunner: true,
+        requireRestExecution: false,
+        validateContracts: true,
+      },
+
+      stage3_fileDiffs: {
+        enabled: true,
+        title: 'File Diff Viewer',
+        required: true,
+        defaultViewMode: 'unified',
+        syntaxHighlighting: true,
+        showHunkMetrics: true,
+        requireFileChecklist: true,
+        showInlineAuditNotes: true,
+      },
+
+      stage4_ideBridge: {
+        enabled: true,
+        title: 'IDE Branch Diffs',
+        required: false,
+        defaultIde: 'intellij',
+        enableIpcPort63343: true,
+        enableVsCodeProtocol: true,
+        enableBreakpointRunner: true,
+        autoPopulateBreakpoints: true,
+      },
+
+      stage5_showTheFix: {
+        enabled: true,
+        title: 'Show You The Fix',
+        required: false,
+        autoDetectTargetType: true,
+        targetType: 'auto',
+        backendIde: 'intellij',
+        backendAutoLaunch: true,
+        frontendBrowserHeadless: false,
+        frontendInteractiveHandoff: true,
+        desktopAppLaunchViaIpc: true,
+        desktopAppAutoNavigate: true,
+        showExecutionTerminal: true,
+      },
+
+      stage6_proofCanvas: {
+        enabled: true,
+        title: 'Proof-of-Work Canvas',
+        required: true,
+        defaultMode: 'video',
+        enablePiperTTSNarration: true,
+        showWebVttSubtitles: true,
+        allowLiveDesktopExecution: true,
+      },
+
+      stage7_signOff: {
+        enabled: true,
+        title: 'Sign-Off & Merge',
+        required: true,
+        requireAllGatesPass: true,
+        requireCiPassed: true,
+        requireKgraphShaclPass: true,
+        commitCertificateToKGraph: true,
+      },
+    };
+  }
+
+  getAllTeams() {
+    return this.parser.nodes.filter(n => {
+      const types = Array.isArray(n['@type']) ? n['@type'] : [n['@type']];
+      return types.some(t => t === 'robos:Team' || t === 'schema:ProjectTeam');
+    });
+  }
+
+  findTeamNode(teamIdOrName) {
+    if (!teamIdOrName) return null;
+    let node = this.getNode(teamIdOrName);
+    if (node) return node;
+    const clean = String(teamIdOrName).trim().toLowerCase();
+    const cleanNoPrefix = clean.replace(/.*:/, '');
+    const cleanNoTeam = cleanNoPrefix.replace(/^team[-_]/, '');
+    for (const prefix of ['urn:robos:team:', 'robos:team:']) {
+      node = this.getNode(prefix + cleanNoPrefix) || this.getNode(prefix + cleanNoTeam);
+      if (node) return node;
+    }
+    return this.getAllTeams().find(t => {
+      const id = (t['@id'] || '').toLowerCase();
+      const title = (t['dcterms:title'] || '').toLowerCase();
+      return (
+        id === clean ||
+        id.endsWith(':' + cleanNoPrefix) ||
+        id.endsWith(':' + cleanNoTeam) ||
+        title === clean ||
+        title.includes(clean) ||
+        title.includes(cleanNoTeam)
+      );
+    }) || null;
+  }
+
+  getPRTheaterConfig({ teamId, repo } = {}) {
+    let teamNode = null;
+    if (teamId) {
+      teamNode = this.findTeamNode(teamId);
+    }
+    if (!teamNode && repo) {
+      const appNode = this.findApplicationNode(repo);
+      if (appNode && appNode['robos:ownerTeam']) {
+        teamNode = this.findTeamNode(appNode['robos:ownerTeam']);
+      }
+    }
+    if (!teamNode) {
+      teamNode = this.findTeamNode('urn:robos:team:core-platform') || this.getAllTeams()[0];
+    }
+
+    const teamPolicy = (teamNode && teamNode['robos:prReviewTheaterConfig']) || {};
+    const defaultConfig = SDLCKnowledgeGraphStore.DEFAULT_THEATER_CONFIG;
+
+    // Deep merge with DEFAULT_THEATER_CONFIG
+    const mergedConfig = JSON.parse(JSON.stringify(defaultConfig));
+    for (const [key, val] of Object.entries(teamPolicy)) {
+      if (val && typeof val === 'object' && !Array.isArray(val) && mergedConfig[key] && typeof mergedConfig[key] === 'object') {
+        mergedConfig[key] = { ...mergedConfig[key], ...val };
+      } else {
+        mergedConfig[key] = val;
+      }
+    }
+
+    const allTeams = this.getAllTeams().map(t => ({
+      id: t['@id'],
+      title: t['dcterms:title'] || t['@id'],
+      topology: t['robos:topology'] || 'team',
+      isCurrent: teamNode ? t['@id'] === teamNode['@id'] : false
+    }));
+
+    return {
+      ok: true,
+      teamId: teamNode ? teamNode['@id'] : 'urn:robos:team:core-platform',
+      teamTitle: teamNode ? (teamNode['dcterms:title'] || 'Core Platform') : 'Core Platform',
+      config: mergedConfig,
+      availableTeams: allTeams
+    };
+  }
+
+  savePRTheaterConfig({ teamId, repo, config } = {}) {
+    let teamNode = null;
+    if (teamId) {
+      teamNode = this.findTeamNode(teamId);
+    }
+    if (!teamNode && repo) {
+      const appNode = this.findApplicationNode(repo);
+      if (appNode && appNode['robos:ownerTeam']) {
+        teamNode = this.findTeamNode(appNode['robos:ownerTeam']);
+      }
+    }
+    if (!teamNode) {
+      teamNode = this.findTeamNode('urn:robos:team:core-platform') || this.getAllTeams()[0];
+    }
+    if (!teamNode) {
+      return { ok: false, error: 'No team node found to store PR Review Theater policy' };
+    }
+
+    const currentConfig = teamNode['robos:prReviewTheaterConfig'] || SDLCKnowledgeGraphStore.DEFAULT_THEATER_CONFIG;
+    const newConfig = { ...currentConfig, ...config };
+    teamNode['robos:prReviewTheaterConfig'] = newConfig;
+
+    this.updateNode(teamNode['@id'], { 'robos:prReviewTheaterConfig': newConfig });
+
+    return {
+      ok: true,
+      teamId: teamNode['@id'],
+      teamTitle: teamNode['dcterms:title'] || teamNode['@id'],
+      config: newConfig,
+      message: `PR Review Theater policy successfully saved to team "${teamNode['dcterms:title']}" in Knowledge Graph.`
+    };
+  }
+
+  detectPRFixType(changedFiles = [], appNode = null) {
+    const files = Array.isArray(changedFiles) ? changedFiles : [];
+    
+    // Check desktop files
+    const hasDesktopFiles = files.some(f => 
+      f.includes('electron') || f.includes('.desktop') || f.includes('packages/pr-review') || 
+      f.includes('packages/dev-central') || f.includes('packages/desktop-') || f.includes('packages/robos-toast')
+    );
+    if (hasDesktopFiles) return 'desktop';
+
+    // Check frontend files
+    const hasFrontendFiles = files.some(f =>
+      f.endsWith('.vue') || f.endsWith('.jsx') || f.endsWith('.tsx') || f.includes('frontend/') ||
+      f.includes('renderer/') || f.endsWith('.html') || f.endsWith('.css')
+    );
+    if (hasFrontendFiles) return 'frontend';
+
+    // Check backend files
+    const hasBackendFiles = files.some(f =>
+      f.endsWith('.java') || f.endsWith('.go') || f.endsWith('.py') || f.endsWith('.rs') ||
+      f.endsWith('.rb') || f.endsWith('.kt') || f.endsWith('.scala') || f.includes('pom.xml') ||
+      f.includes('build.gradle') || f.includes('go.mod') || f.includes('Cargo.toml')
+    );
+    if (hasBackendFiles) return 'backend';
+
+    // Check appNode type
+    if (appNode) {
+      const types = Array.isArray(appNode['@type']) ? appNode['@type'] : [appNode['@type'] || ''];
+      if (types.some(t => t.includes('DesktopApp'))) return 'desktop';
+      if (types.some(t => t.includes('FrontEndApp') || t.includes('WebApplication'))) return 'frontend';
+      if (types.some(t => t.includes('Microservice') || t.includes('BackendApp') || t.includes('Service'))) return 'backend';
+    }
+
+    return 'backend';
+  }
+
   generatePRReviewTheaterContext(options = {}) {
     const {
       repo = 'acme/petstore-api',
@@ -2889,14 +3125,97 @@ mTLS client connects to vaccine-gateway over port 8443 using the ACME Root CA ke
 Knowledge Graph branch kgraph/PET-105-rabies-verification validated with 0 SHACL errors.`
     };
 
-    // 10. Validation Gates Status
+    // 10. Synthesize "Show You The Fix" Agent Guided Fix Walkthrough Context
+    const fixType = options.fixType || this.detectPRFixType(changedFiles, appNode);
+    const targetFile = primaryFile || (changedFiles[0] || 'src/main/java/com/acme/petshop/client/VaccineGatewayClient.java');
+    const targetLine = 34;
+
+    const backendTarget = {
+      ide: ideBridge.intellij.title,
+      ideBridgePort: 63343,
+      ipcEndpoint: ideBridge.intellij.ipcEndpoint,
+      command: `mvn test -Dtest=PetServiceTest#testAdoptPetWithRabiesVerification`,
+      runCommand: `mvn test -Dtest=PetServiceTest#testAdoptPetWithRabiesVerification`,
+      targetFile,
+      targetLine,
+      entrypoint: `${targetFile}:${targetLine}`,
+      breakpointTarget: `${targetFile}:${targetLine}`,
+      handshakeStatus: 'TLSv1.3 [ACME-ROOT-CA] Handshake: NEED_UNWRAP -> FINISHED',
+      testPassOutput: 'Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.812 s - in PetServiceTest',
+      statusText: 'mTLS Client Keystore loaded -> Handshake verified -> HTTP 201 Created',
+      description: `Agent contacts IntelliJ IDEA over port 63343, sets breakpoints at altered methods in ${targetFile.split('/').pop()}, launches test suite, and inspects live variables.`
+    };
+
+    const frontendTarget = {
+      browserUrl: `http://localhost:3000/pets/adopt?fix=PET-105&pr=${prNumber}`,
+      headless: false,
+      headedBrowser: true,
+      devtoolsPort: 9222,
+      handoffSupported: true,
+      testRunner: 'playwright test e2e/pets-adopt-verified.spec.js --headed',
+      interactiveHandoff: true,
+      checkpointStep: 3,
+      checkpointMessage: 'Agent navigated through adoption form and uploaded verified certificate details. Handoff ready: Take control to verify live in the browser!',
+      statusText: 'Visible Chromium browser launched (headless=false). Interactivity checkpoint active.',
+      description: 'Agent pops up visible browser window (headless: false), executes E2E test to the modified view, and yields interactive control.'
+    };
+
+    const desktopTarget = {
+      appName: appTitle,
+      appId: appNode ? appNode['@id'] : 'urn:robos:app:desktop-app',
+      debugPort: 19101,
+      debugIpcPort: 19101,
+      domSnapshotSupported: true,
+      domSnapshotEndpoint: 'http://127.0.0.1:19101/snapshot',
+      targetSelector: '#pet-adoption-dialog[data-verified="true"]',
+      statusText: 'Desktop app launched via process supervisor. DOM snapshot debug port 19101 attached.',
+      description: 'Agent launches desktop application, connects over DOM Snapshot debug server (port 19100-19121), and drives UI focus to modified components.'
+    };
+
+    const showTheFix = {
+      fixType,
+      targetType: fixType,
+      autoDetectedType: this.detectPRFixType(changedFiles, appNode),
+      title: `${appTitle} — Fix Demonstration Walkthrough`,
+      summary: `Autonomous agent walkthrough demonstrating the verified PR fix for #${prNumber}`,
+      description: `Autonomous agent fix walkthrough for ${targetFile.split('/').pop()} demonstrating verified fix behavior.`,
+      status: 'ready',
+      backend: backendTarget,
+      backendTarget,
+      frontend: frontendTarget,
+      frontendTarget,
+      desktop: desktopTarget,
+      desktopTarget,
+      steps: [
+        { id: 1, text: `Provision sandbox and load feature branch ${headBranch}`, status: 'done', timestamp: '00:00.15' },
+        { id: 2, text: `Trigger runtime execution environment for ${fixType.toUpperCase()}`, status: 'done', timestamp: '00:01.20' },
+        { id: 3, text: `Execute reproduction and demonstrate verified fix in action`, status: 'ready', timestamp: '00:02.80' },
+        { id: 4, text: `Interactive reviewer inspection and handoff verification`, status: 'pending', timestamp: '00:04.10' }
+      ]
+    };
+
+    // 11. Ingest Team PR Review Theater Policy & Validation Gates
+    const theaterConfig = options.config || this.getPRTheaterConfig({ repo, teamId: options.teamId }).config;
+
     const validationGates = {
       elearningPassed: false,
       docsReviewed: false,
       diffsInspected: false,
       ideDiffLaunched: false,
+      fixDemonstrated: false,
       ciPassed: true,
-      canApprove: false
+      canApprove: false,
+      // Pass thresholds and requirements from config
+      requiredPassScore: theaterConfig.stage1_elearning?.passThresholdScore || 80,
+      stage1Required: theaterConfig.stage1_elearning?.enabled !== false && theaterConfig.stage1_elearning?.required !== false,
+      stage2Required: theaterConfig.stage2_livingDocs?.enabled !== false && theaterConfig.stage2_livingDocs?.required !== false,
+      stage3Required: theaterConfig.stage3_fileDiffs?.enabled !== false && theaterConfig.stage3_fileDiffs?.required !== false,
+      stage4Required: theaterConfig.stage4_ideBridge?.enabled !== false && theaterConfig.stage4_ideBridge?.required === true,
+      stage5Required: theaterConfig.stage5_showTheFix?.enabled !== false && theaterConfig.stage5_showTheFix?.required === true,
+      stage6Required: theaterConfig.stage6_proofCanvas?.enabled !== false && theaterConfig.stage6_proofCanvas?.required !== false,
+      lockDiffsUntilPassed: theaterConfig.stage1_elearning?.lockDiffsUntilPassed !== false,
+      requireCheckboxes: theaterConfig.requireAllStageCheckboxes !== false,
+      strictMode: theaterConfig.strictMode !== false
     };
 
     return {
@@ -2933,6 +3252,8 @@ Knowledge Graph branch kgraph/PET-105-rabies-verification validated with 0 SHACL
       restCall,
       desktopSession,
       proofOfWorkVideo,
+      showTheFix,
+      theaterConfig,
       validationGates
     };
   }
@@ -2942,7 +3263,8 @@ Knowledge Graph branch kgraph/PET-105-rabies-verification validated with 0 SHACL
       courseId,
       answers = {},
       reviewerId = 'robos',
-      appId = null
+      appId = null,
+      passThresholdScore = 80
     } = options;
 
     const answerMap = typeof answers === 'object' && answers !== null ? answers : {};
@@ -2970,7 +3292,7 @@ Knowledge Graph branch kgraph/PET-105-rabies-verification validated with 0 SHACL
     }
 
     const score = Math.round((correctCount / totalQuestions) * 100);
-    const passed = score >= 80;
+    const passed = score >= passThresholdScore;
 
     let certResult = null;
     if (passed) {
@@ -2992,13 +3314,15 @@ Knowledge Graph branch kgraph/PET-105-rabies-verification validated with 0 SHACL
       ok: true,
       score,
       passed,
+      passThreshold: passThresholdScore,
+      passThresholdScore,
       correctCount,
       totalQuestions,
       details,
       certificate: certResult ? certResult.certificate : null,
       message: passed
         ? `eLearning knowledge check passed with ${score}%! Verified Certificate of Completion issued in Knowledge Graph.`
-        : `Score ${score}% did not meet 80% passing threshold. Please review the architectural documentation and retry.`
+        : `Score ${score}% did not meet ${passThresholdScore}% passing threshold. Please review the architectural documentation and retry.`
     };
   }
 

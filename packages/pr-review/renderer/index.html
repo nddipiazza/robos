@@ -211,17 +211,27 @@
             <span class="step-status" id="step-status-4">○</span>
           </button>
           <button class="step-btn" data-stage="5" id="step-btn-5" onclick="window.setTheaterStage(5)">
-            <span class="step-num">5</span> <span class="step-label">Proof-of-Work Video</span>
+            <span class="step-num">5</span> <span class="step-label">Show You The Fix</span>
             <span class="step-status" id="step-status-5">○</span>
           </button>
           <button class="step-btn" data-stage="6" id="step-btn-6" onclick="window.setTheaterStage(6)">
-            <span class="step-num">6</span> <span class="step-label">Sign-Off &amp; Merge</span>
+            <span class="step-num">6</span> <span class="step-label">Proof-of-Work Video</span>
             <span class="step-status" id="step-status-6">○</span>
+          </button>
+          <button class="step-btn" data-stage="7" id="step-btn-7" onclick="window.setTheaterStage(7)">
+            <span class="step-num">7</span> <span class="step-label">Sign-Off &amp; Merge</span>
+            <span class="step-status" id="step-status-7">○</span>
           </button>
         </div>
 
         <div class="theater-actions">
-          <button id="btn-exit-theater" class="btn-theater-exit" onclick="window.exitTheater()" title="Exit Review Theater">&times; Exit Theater</button>
+          <button id="btn-theater-config" class="btn-theater-action btn-theater-settings" onclick="window.openTheaterConfigModal()" title="Customize PR Review Stages &amp; Team KGraph Policy">
+            ⚙️ Stage Policy
+          </button>
+          <button id="btn-theater-expand" class="btn-theater-action" onclick="window.toggleTheaterFullscreen()" title="Toggle Fullscreen Expansion">
+            ⛶
+          </button>
+          <button id="btn-exit-theater" class="btn-theater-exit" onclick="window.exitTheater()" title="Exit Review Theater">&times; Exit</button>
         </div>
       </div>
 
@@ -532,15 +542,124 @@
 
           <div class="stage-nav-footer">
             <button class="btn-stage-nav" onclick="window.setTheaterStage(3)">&larr; Previous: File Diff Viewer</button>
-            <button class="btn-stage-nav btn-stage-next" onclick="window.setTheaterStage(5)">Next: Proof-of-Work Canvas &rarr;</button>
+            <button class="btn-stage-nav btn-stage-next" onclick="window.setTheaterStage(5)">Next: Show You The Fix &rarr;</button>
           </div>
         </div>
 
-        <!-- STAGE 5: Autonomous Proof-of-Work Canvas -->
+        <!-- STAGE 5: "Show You The Fix" Agent Guided Fix Walkthrough -->
         <div class="theater-stage" id="stage-5">
           <div class="stage-header">
             <div class="stage-title-wrap">
-              <h3>🎬 Stage 5: Autonomous Proof-of-Work Canvas</h3>
+              <h3>🤖 Stage 5: "Show You The Fix" Agent Guided Walkthrough</h3>
+              <p>Task the AI agent with actively proving the fix: pop up the IDE (backend), launch a headed browser with interactive handoff (frontend), or navigate the desktop app via IPC.</p>
+            </div>
+            <div class="stage-badge-wrap">
+              <span class="gate-pill gate-pending" id="gate-pill-fix">Fix: Not Demonstrated</span>
+            </div>
+          </div>
+
+          <!-- Target Selector Pill Bar -->
+          <div class="fix-type-selector-bar">
+            <span class="fix-type-label">Demonstration Target:</span>
+            <div class="fix-type-buttons">
+              <button type="button" class="fix-type-btn active" id="btn-fix-type-auto" onclick="window.setFixTypeTarget('auto')">
+                ⚡ Auto-Detect (<span id="auto-detected-badge">Backend</span>)
+              </button>
+              <button type="button" class="fix-type-btn" id="btn-fix-type-backend" onclick="window.setFixTypeTarget('backend')">
+                ☕ Backend (IDE + App Launcher)
+              </button>
+              <button type="button" class="fix-type-btn" id="btn-fix-type-frontend" onclick="window.setFixTypeTarget('frontend')">
+                🌐 Frontend (Browser + Handoff)
+              </button>
+              <button type="button" class="fix-type-btn" id="btn-fix-type-desktop" onclick="window.setFixTypeTarget('desktop')">
+                🖥️ Desktop App (IPC + DevTools)
+              </button>
+            </div>
+          </div>
+
+          <!-- Fix Briefing Card -->
+          <div class="theater-card fix-briefing-card">
+            <div class="card-head">
+              <span class="card-icon" id="fix-card-icon">⚡</span>
+              <h4 id="fix-target-title">Target: Backend Service mTLS Handshake</h4>
+              <span class="fix-target-badge" id="fix-target-badge">BACKEND</span>
+            </div>
+            <p id="fix-target-desc" class="fix-card-desc">
+              The agent will contact IntelliJ IDEA over port 63343, set a breakpoint at <code>VaccineGatewayClient.java:34</code>, run the adoption test, pause on thread suspension, and prove that rabies certificate verification succeeds over mTLS port 8443.
+            </p>
+
+            <div class="fix-action-banner">
+              <button type="button" class="btn-primary btn-launch-show-fix" id="btn-run-show-fix" onclick="window.executeAgentShowFix()">
+                ▶ Run Agent "Show Fix" Demonstration
+              </button>
+              <span id="fix-execution-status" class="fix-status-indicator">Ready to run demonstration</span>
+            </div>
+          </div>
+
+          <!-- Interactive Handoff Notification Banner (Shows when frontend checkpoint reached) -->
+          <div id="frontend-handoff-banner" class="frontend-handoff-banner hidden">
+            <div class="handoff-pulse-icon">🎮</div>
+            <div class="handoff-content">
+              <strong>Interactive Reviewer Handoff Active:</strong>
+              <span>Visible browser window opened! Take control of the browser to interact with the adoption form live. When finished, mark the handoff complete.</span>
+            </div>
+            <div class="handoff-actions">
+              <button type="button" class="btn-handoff-pulse" onclick="window.focusBrowserHandoff()">
+                🎮 Focus Browser Window
+              </button>
+              <button type="button" class="btn-primary btn-complete-handoff" onclick="window.completeBrowserHandoff()">
+                ✓ Handoff Complete / Fix Verified
+              </button>
+            </div>
+          </div>
+
+          <!-- Backend Breakpoint Controls (Shows when backend pauses) -->
+          <div id="backend-breakpoint-banner" class="backend-breakpoint-banner hidden">
+            <div class="bp-icon">⏸️</div>
+            <div class="bp-content">
+              <strong>Thread Suspended at Breakpoint:</strong>
+              <code id="backend-bp-file">VaccineGatewayClient.java:34</code>
+              <span id="backend-bp-vals">sslContext: TLSv1.3 [ACME-ROOT-CA] &middot; petId: "PET-105-VAX"</span>
+            </div>
+            <div class="bp-actions">
+              <button type="button" class="btn-debug-step" onclick="window.stepBackendFix()">↷ Step In IDE</button>
+              <button type="button" class="btn-debug-resume" onclick="window.resumeBackendFix()">▶ Resume Execution</button>
+            </div>
+          </div>
+
+          <!-- Live Terminal Output Console -->
+          <div class="desktop-console-box" style="margin-top:14px;">
+            <div class="console-titlebar">
+              <span class="console-dot dot-red"></span>
+              <span class="console-dot dot-yellow"></span>
+              <span class="console-dot dot-green"></span>
+              <span class="console-title" id="show-fix-terminal-title">Agent Fix Execution Terminal</span>
+              <span class="console-status-tag" id="show-fix-terminal-status">IDLE</span>
+            </div>
+            <div class="console-terminal-body" id="show-fix-terminal-logs">
+              <div class="console-line line-dim">// Click "Run Agent 'Show Fix' Demonstration" to watch the agent pop up the target environment and prove the fix.</div>
+            </div>
+          </div>
+
+          <!-- Stage Confirmation Card -->
+          <div class="theater-card stage-confirm-card" style="margin-top:14px;">
+            <label class="confirm-check-label">
+              <input type="checkbox" id="check-fix-demonstrated" onchange="window.toggleFixDemonstrated(this.checked)">
+              <span><strong>I have observed the fix demonstration</strong> and verified that the behavior matches requirements.</span>
+            </label>
+          </div>
+
+          <div class="stage-nav-footer">
+            <button class="btn-stage-nav" onclick="window.setTheaterStage(4)">&larr; Previous: IDE Branch Diffs</button>
+            <button class="btn-stage-nav btn-stage-next" onclick="window.setTheaterStage(6)">Next: Proof-of-Work Canvas &rarr;</button>
+          </div>
+        </div>
+
+        <!-- STAGE 6: Autonomous Proof-of-Work Canvas -->
+        <div class="theater-stage" id="stage-6">
+          <div class="stage-header">
+            <div class="stage-title-wrap">
+              <h3>🎬 Stage 6: Autonomous Proof-of-Work Canvas</h3>
               <p>A blank canvas for the robot to prove to you it works in a 1080p Xvfb recorded video... or right in your current desktop session if you prefer.</p>
             </div>
             <div class="stage-badge-wrap">
@@ -616,16 +735,16 @@
           </div>
 
           <div class="stage-nav-footer">
-            <button class="btn-stage-nav" onclick="window.setTheaterStage(4)">&larr; Previous: IDE Branch Diffs</button>
-            <button class="btn-stage-nav btn-stage-next" onclick="window.setTheaterStage(6)">Next: Sign-Off &amp; Merge &rarr;</button>
+            <button class="btn-stage-nav" onclick="window.setTheaterStage(5)">&larr; Previous: Show You The Fix</button>
+            <button class="btn-stage-nav btn-stage-next" onclick="window.setTheaterStage(7)">Next: Sign-Off &amp; Merge &rarr;</button>
           </div>
         </div>
 
-        <!-- STAGE 6: Review Validation & Sign-Off -->
-        <div class="theater-stage" id="stage-6">
+        <!-- STAGE 7: Review Validation & Sign-Off -->
+        <div class="theater-stage" id="stage-7">
           <div class="stage-header">
             <div class="stage-title-wrap">
-              <h3>✅ Stage 6: PR Review Sign-Off &amp; Dual-Branch Merge</h3>
+              <h3>✅ Stage 7: PR Review Sign-Off &amp; Dual-Branch Merge</h3>
               <p>Verify all required validation gates before approving. Approving merges both the Git code repository and Knowledge Graph branches.</p>
             </div>
           </div>
@@ -677,6 +796,15 @@
               <span class="gate-status-badge gate-pass" id="gate-badge-ide">Ready</span>
             </div>
 
+            <div class="gate-card" id="gate-card-fix">
+              <div class="gate-icon">🤖</div>
+              <div class="gate-info">
+                <strong>Agent Fix Demonstration</strong>
+                <span class="gate-subtext" id="gate-desc-fix">Observed fix demonstration</span>
+              </div>
+              <span class="gate-status-badge gate-pass" id="gate-badge-fix">Ready</span>
+            </div>
+
             <div class="gate-card" id="gate-card-ci">
               <div class="gate-icon">✓</div>
               <div class="gate-info">
@@ -719,11 +847,273 @@
           </div>
 
           <div class="stage-nav-footer">
-            <button class="btn-stage-nav" onclick="window.setTheaterStage(5)">&larr; Previous: Proof-of-Work Video</button>
+            <button class="btn-stage-nav" onclick="window.setTheaterStage(6)">&larr; Previous: Proof-of-Work Canvas</button>
             <button class="btn-stage-nav" onclick="window.exitTheater()">Exit Review Theater &times;</button>
           </div>
         </div>
 
+      </div>
+    </div>
+  </div>
+
+  <!-- PR Review Theater Configuration & Policy Modal -->
+  <div id="theater-config-modal" class="modal-overlay hidden">
+    <div class="config-modal-window">
+      <div class="config-modal-header">
+        <div class="modal-title-wrap">
+          <span class="modal-badge">⚙️ STAGE CONFIGURATION</span>
+          <h3>PR Review Theater Customization &amp; Team KGraph Policy</h3>
+        </div>
+        <button type="button" class="btn-modal-close" onclick="window.closeTheaterConfigModal()">&times;</button>
+      </div>
+
+      <div class="config-modal-body">
+        <!-- Team Selector & Presets Banner -->
+        <div class="config-top-toolbar">
+          <div class="config-team-selector-wrap">
+            <label for="config-team-select"><strong>Team KGraph Policy Entity:</strong></label>
+            <select id="config-team-select" class="config-team-dropdown" onchange="window.switchConfigTeam(this.value)">
+              <!-- Populated dynamically with teams from KGraph -->
+            </select>
+          </div>
+          <div class="config-preset-pills">
+            <span class="preset-label">Quick Presets:</span>
+            <button type="button" class="btn-preset-pill" onclick="window.applyTheaterPreset('strict')">🛡️ Strict Anti-Rubber-Stamp</button>
+            <button type="button" class="btn-preset-pill" onclick="window.applyTheaterPreset('fast')">⚡ Fast Developer Flow</button>
+            <button type="button" class="btn-preset-pill" onclick="window.applyTheaterPreset('frontend')">🌐 Frontend Focus</button>
+            <button type="button" class="btn-preset-pill" onclick="window.applyTheaterPreset('full')">🌟 Full 7-Stage Comprehensive</button>
+          </div>
+        </div>
+
+        <!-- Global Policies -->
+        <div class="config-global-policy-card">
+          <h4>Global Theater Workflow Policies</h4>
+          <div class="config-checkbox-grid">
+            <label class="config-check-label">
+              <input type="checkbox" id="cfg-strict-mode" checked>
+              <span><strong>Strict Prerequisites Enforcement</strong> (locks subsequent stages until prerequisites pass)</span>
+            </label>
+            <label class="config-check-label">
+              <input type="checkbox" id="cfg-require-checkboxes" checked>
+              <span><strong>Require Stage Confirmation Checkboxes</strong> (reviewer must manually confirm each reviewed stage)</span>
+            </label>
+            <label class="config-check-label">
+              <input type="checkbox" id="cfg-require-comments">
+              <span><strong>Mandate Written Feedback on Approval</strong> (require reviewer notes before merging)</span>
+            </label>
+            <label class="config-check-label">
+              <input type="checkbox" id="cfg-dual-branch-merge" checked>
+              <span><strong>Dual-Branch Merge Execution</strong> (merge both Git branch &amp; Knowledge Graph branch to main)</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Stage Customizer Grid -->
+        <div class="config-stages-accordion">
+          <!-- Stage 1 Config -->
+          <div class="stage-config-card" id="card-cfg-stage-1">
+            <div class="stage-cfg-header">
+              <div class="stage-cfg-left">
+                <input type="checkbox" id="cfg-s1-enabled" checked>
+                <span class="stage-cfg-number">Stage 1</span>
+                <strong>Anti-Rubber-Stamp Training &amp; Knowledge Check</strong>
+              </div>
+              <div class="stage-cfg-right">
+                <label class="mini-toggle"><input type="checkbox" id="cfg-s1-required" checked> Required Gate</label>
+              </div>
+            </div>
+            <div class="stage-cfg-body">
+              <div class="cfg-row">
+                <label>Minimum Passing Score Threshold:</label>
+                <div class="range-wrap">
+                  <input type="range" id="cfg-s1-threshold" min="50" max="100" step="5" value="80" oninput="document.getElementById('cfg-s1-threshold-val').textContent = this.value + '%'">
+                  <span id="cfg-s1-threshold-val" class="range-val-badge">80%</span>
+                </div>
+              </div>
+              <div class="cfg-options-grid">
+                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s1-lock-diffs" checked> Lock code diffs in Stage 3 until passed</label>
+                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s1-auto-curriculum" checked> Auto-generate curriculum &amp; lessons from PR blast radius</label>
+                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s1-auto-quiz" checked> Auto-generate targeted quiz questions</label>
+                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s1-link-masterclass" checked> Provide 1-click launch to RobOS eLearning Hub</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stage 2 Config -->
+          <div class="stage-config-card" id="card-cfg-stage-2">
+            <div class="stage-cfg-header">
+              <div class="stage-cfg-left">
+                <input type="checkbox" id="cfg-s2-enabled" checked>
+                <span class="stage-cfg-number">Stage 2</span>
+                <strong>Living Architecture Docs &amp; Interaction Flows</strong>
+              </div>
+              <div class="stage-cfg-right">
+                <label class="mini-toggle"><input type="checkbox" id="cfg-s2-required" checked> Required Gate</label>
+              </div>
+            </div>
+            <div class="stage-cfg-body">
+              <div class="cfg-options-grid">
+                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s2-mermaid" checked> Synthesize Mermaid sequence diagrams</label>
+                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s2-dual-reality" checked> Display Dual-Reality Delta (Prod vs Proposed)</label>
+                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s2-rest-runner" checked> Enable Interactive REST API verification runner</label>
+                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s2-require-rest"> Require executing REST API call before sign-off</label>
+                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s2-validate-contracts" checked> Validate OpenAPI 3.1 &amp; Pact contract scenarios</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stage 3 Config -->
+          <div class="stage-config-card" id="card-cfg-stage-3">
+            <div class="stage-cfg-header">
+              <div class="stage-cfg-left">
+                <input type="checkbox" id="cfg-s3-enabled" checked>
+                <span class="stage-cfg-number">Stage 3</span>
+                <strong>In-App Semantic File Diff Viewer</strong>
+              </div>
+              <div class="stage-cfg-right">
+                <label class="mini-toggle"><input type="checkbox" id="cfg-s3-required" checked> Required Gate</label>
+              </div>
+            </div>
+            <div class="stage-cfg-body">
+              <div class="cfg-row">
+                <label>Default Diff Mode:</label>
+                <select id="cfg-s3-default-mode" class="config-select">
+                  <option value="unified">Unified</option>
+                  <option value="split">Side-by-Side (Split)</option>
+                </select>
+              </div>
+              <div class="cfg-options-grid">
+                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s3-syntax" checked> Enable syntax highlighting &amp; hunk stats</label>
+                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s3-file-checklist" checked> Require reviewing individual files in sidebar</label>
+                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s3-audit-notes" checked> Show inline AI auditor notes in diffs</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stage 4 Config -->
+          <div class="stage-config-card" id="card-cfg-stage-4">
+            <div class="stage-cfg-header">
+              <div class="stage-cfg-left">
+                <input type="checkbox" id="cfg-s4-enabled" checked>
+                <span class="stage-cfg-number">Stage 4</span>
+                <strong>IDE Branch Diff Bridge &amp; Breakpoint Debugger</strong>
+              </div>
+              <div class="stage-cfg-right">
+                <label class="mini-toggle"><input type="checkbox" id="cfg-s4-required"> Required Gate</label>
+              </div>
+            </div>
+            <div class="stage-cfg-body">
+              <div class="cfg-row">
+                <label>Preferred IDE:</label>
+                <select id="cfg-s4-default-ide" class="config-select">
+                  <option value="intellij">IntelliJ IDEA (Port 63343 IPC)</option>
+                  <option value="vscode">Visual Studio Code (vscode:// URI Protocol)</option>
+                </select>
+              </div>
+              <div class="cfg-options-grid">
+                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s4-ipc-intellij" checked> Connect to IntelliJ IDEA bridge on port 63343</label>
+                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s4-uri-vscode" checked> Support VS Code Pull Requests extension URI</label>
+                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s4-breakpoint-runner" checked> Pre-populate interactive breakpoint runner</label>
+                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s4-auto-breakpoints" checked> Auto-detect breakpoint line from critical AST diff</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stage 5 Config: Show You The Fix -->
+          <div class="stage-config-card stage-config-highlight" id="card-cfg-stage-5">
+            <div class="stage-cfg-header">
+              <div class="stage-cfg-left">
+                <input type="checkbox" id="cfg-s5-enabled" checked>
+                <span class="stage-cfg-number">Stage 5</span>
+                <strong>"Show You The Fix" Agent Guided Fix Walkthrough</strong>
+                <span class="new-tag">NEW PHASE</span>
+              </div>
+              <div class="stage-cfg-right">
+                <label class="mini-toggle"><input type="checkbox" id="cfg-s5-required"> Required Gate</label>
+              </div>
+            </div>
+            <div class="stage-cfg-body">
+              <div class="cfg-row">
+                <label>Target Execution Mode:</label>
+                <select id="cfg-s5-target-type" class="config-select">
+                  <option value="auto">Auto-Detect from Changed Files (Backend / Frontend / Desktop)</option>
+                  <option value="backend">Backend: Pop up IDE, Launch App Test, Show Breakpoint Fix</option>
+                  <option value="frontend">Frontend: Pop up Browser, Run E2E Test, Interactive Handoff</option>
+                  <option value="desktop">Desktop App: Launch Electron App via IPC, Highlight View</option>
+                </select>
+              </div>
+              <div class="cfg-options-grid">
+                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s5-backend-ide" checked> Backend: Automatically trigger IDE test execution</label>
+                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s5-frontend-headed" checked> Frontend: Launch visible browser window (headless: false)</label>
+                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s5-frontend-handoff" checked> Frontend: Enable "Take Control" interactive browser handoff</label>
+                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s5-desktop-ipc" checked> Desktop: Connect over DOM Snapshot debug server (port 19100-19121)</label>
+                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s5-show-terminal" checked> Stream live robot console execution logs</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stage 6 Config -->
+          <div class="stage-config-card" id="card-cfg-stage-6">
+            <div class="stage-cfg-header">
+              <div class="stage-cfg-left">
+                <input type="checkbox" id="cfg-s6-enabled" checked>
+                <span class="stage-cfg-number">Stage 6</span>
+                <strong>Autonomous Proof-of-Work Canvas</strong>
+              </div>
+              <div class="stage-cfg-right">
+                <label class="mini-toggle"><input type="checkbox" id="cfg-s6-required" checked> Required Gate</label>
+              </div>
+            </div>
+            <div class="stage-cfg-body">
+              <div class="cfg-row">
+                <label>Default Proof Canvas View:</label>
+                <select id="cfg-s6-default-mode" class="config-select">
+                  <option value="video">1080p Narrated Video Walkthrough (Xvfb virtual framebuffer)</option>
+                  <option value="desktop">Live Robot Proof on Current Desktop Session (DISPLAY=:0)</option>
+                </select>
+              </div>
+              <div class="cfg-options-grid">
+                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s6-tts" checked> Include Piper neural TTS voice narration in video</label>
+                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s6-vtt" checked> Display synchronized W3C WebVTT subtitles</label>
+                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s6-allow-desktop" checked> Allow running live proof on current workstation display</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stage 7 Config -->
+          <div class="stage-config-card" id="card-cfg-stage-7">
+            <div class="stage-cfg-header">
+              <div class="stage-cfg-left">
+                <input type="checkbox" id="cfg-s7-enabled" checked disabled>
+                <span class="stage-cfg-number">Stage 7</span>
+                <strong>Sign-Off &amp; Dual-Branch Merge</strong>
+              </div>
+              <div class="stage-cfg-right">
+                <span class="gate-always-required">Always Required</span>
+              </div>
+            </div>
+            <div class="stage-cfg-body">
+              <div class="cfg-options-grid">
+                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s7-all-gates" checked> Require all enabled mandatory stages to pass before merge</label>
+                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s7-ci" checked> Require GitHub CI checks green (Success / Neutral)</label>
+                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s7-shacl" checked> Require W3C SHACL shape validation with 0 violations</label>
+                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s7-cert" checked> Issue and commit Certificate of Completion to KGraph</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="config-modal-footer">
+        <div class="footer-left">
+          <span id="config-status-msg" class="config-save-msg hidden">✓ Policy saved to team Knowledge Graph</span>
+        </div>
+        <div class="footer-right">
+          <button type="button" class="btn-secondary" onclick="window.closeTheaterConfigModal()">Cancel</button>
+          <button type="button" class="btn-primary btn-save-policy" onclick="window.saveTheaterConfigFromModal()">
+            💾 Save Team Policy to Knowledge Graph
+          </button>
+        </div>
       </div>
     </div>
   </div>

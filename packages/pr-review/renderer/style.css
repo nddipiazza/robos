@@ -2069,4 +2069,587 @@ header h1 { font-size: 15px; font-weight: 600; }
   pointer-events: none;
 }
 
+/* ── Fullscreen Theater Mode ── */
+.theater-window.theater-fullscreen {
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  border-radius: 0 !important;
+  border: none !important;
+}
+
+/* ── Topbar Actions Enhancements ── */
+.theater-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-theater-action {
+  background: #21262d;
+  color: #c9d1d9;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-theater-action:hover {
+  background: #30363d;
+  color: #58a6ff;
+  border-color: #58a6ff;
+}
+.btn-theater-settings {
+  color: #00bcd4;
+  border-color: rgba(0, 188, 212, 0.4);
+}
+.btn-theater-settings:hover {
+  background: rgba(0, 188, 212, 0.15);
+  color: #33c9dc;
+}
+
+/* ── Stepper Badges ── */
+.step-status.optional {
+  color: #d29922;
+}
+.step-status.locked {
+  color: #f85149;
+}
+.step-status.done {
+  color: #3fb950;
+}
+
+/* ── Modal Overlay & Configuration Window ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(13, 17, 23, 0.85);
+  backdrop-filter: blur(4px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.modal-overlay.hidden {
+  display: none !important;
+}
+.config-modal-window {
+  width: 100%;
+  max-width: 860px;
+  max-height: 90vh;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(0, 188, 212, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modalPopIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes modalPopIn {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.config-modal-header {
+  padding: 16px 20px;
+  background: #0d1117;
+  border-bottom: 1px solid #21262d;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.modal-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.modal-badge {
+  font-size: 10px;
+  font-weight: 700;
+  background: rgba(0, 188, 212, 0.15);
+  color: #00bcd4;
+  border: 1px solid rgba(0, 188, 212, 0.3);
+  padding: 2px 8px;
+  border-radius: 10px;
+  letter-spacing: 0.5px;
+}
+.config-modal-header h3 {
+  font-size: 15px;
+  color: #e6edf3;
+  margin: 0;
+}
+.btn-modal-close {
+  background: none;
+  border: none;
+  color: #8b949e;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+.btn-modal-close:hover {
+  background: #21262d;
+  color: #f85149;
+}
+.config-modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Team Selector & Presets ── */
+.config-top-toolbar {
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.config-team-selector-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #c9d1d9;
+}
+.config-team-dropdown {
+  background: #161b22;
+  border: 1px solid #30363d;
+  color: #58a6ff;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  outline: none;
+}
+.config-team-dropdown:focus {
+  border-color: #00bcd4;
+}
+.config-preset-pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.preset-label {
+  font-size: 11.5px;
+  color: #8b949e;
+  font-weight: 600;
+}
+.btn-preset-pill {
+  background: #21262d;
+  color: #c9d1d9;
+  border: 1px solid #30363d;
+  border-radius: 14px;
+  padding: 3px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-preset-pill:hover {
+  background: #30363d;
+  color: #00bcd4;
+  border-color: #00bcd4;
+}
+
+/* ── Global Policy Card ── */
+.config-global-policy-card {
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+.config-global-policy-card h4 {
+  font-size: 12.5px;
+  color: #58a6ff;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.config-checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 10px;
+}
+.config-check-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  color: #c9d1d9;
+  cursor: pointer;
+}
+.config-check-label input[type="checkbox"] {
+  accent-color: #00bcd4;
+  margin-top: 2px;
+}
+
+/* ── Stage Customizer Cards ── */
+.config-stages-accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.stage-config-card {
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 12px 16px;
+  transition: border-color 0.2s ease;
+}
+.stage-config-card:hover {
+  border-color: #484f58;
+}
+.stage-config-highlight {
+  border-color: rgba(0, 188, 212, 0.4);
+  background: linear-gradient(180deg, rgba(0, 188, 212, 0.05) 0%, #0d1117 100%);
+}
+.stage-cfg-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.stage-cfg-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #e6edf3;
+}
+.stage-cfg-left input[type="checkbox"] {
+  accent-color: #00bcd4;
+}
+.stage-cfg-number {
+  font-size: 10px;
+  font-weight: 700;
+  background: #21262d;
+  color: #8b949e;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+.new-tag {
+  font-size: 9px;
+  font-weight: 800;
+  background: #00bcd4;
+  color: #0d1117;
+  padding: 1px 5px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+}
+.mini-toggle {
+  font-size: 11px;
+  color: #8b949e;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+.mini-toggle input[type="checkbox"] {
+  accent-color: #f85149;
+}
+.gate-always-required {
+  font-size: 10px;
+  color: #3fb950;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.stage-cfg-body {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #21262d;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cfg-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #8b949e;
+}
+.range-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.range-wrap input[type="range"] {
+  accent-color: #00bcd4;
+  width: 140px;
+}
+.range-val-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #00bcd4;
+  background: #21262d;
+  padding: 2px 6px;
+  border-radius: 4px;
+  min-width: 38px;
+  text-align: center;
+}
+.config-select {
+  background: #161b22;
+  border: 1px solid #30363d;
+  color: #c9d1d9;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 11.5px;
+  outline: none;
+}
+.config-select:focus {
+  border-color: #00bcd4;
+}
+.cfg-options-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 6px;
+}
+.cfg-sub-check {
+  font-size: 11.5px;
+  color: #8b949e;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.cfg-sub-check input[type="checkbox"] {
+  accent-color: #00bcd4;
+}
+
+/* ── Modal Footer ── */
+.config-modal-footer {
+  padding: 14px 20px;
+  background: #0d1117;
+  border-top: 1px solid #21262d;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.config-save-msg {
+  font-size: 12px;
+  color: #3fb950;
+  font-weight: 600;
+}
+.btn-save-policy {
+  background: #00bcd4;
+  border-color: #00bcd4;
+  color: #0d1117;
+  font-weight: 700;
+}
+.btn-save-policy:hover {
+  background: #33c9dc;
+}
+
+/* ── Stage 5: "Show You The Fix" Styles ── */
+.fix-type-selector-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+.fix-type-label {
+  font-size: 12px;
+  color: #8b949e;
+  font-weight: 600;
+}
+.fix-type-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.fix-type-btn {
+  background: #0d1117;
+  border: 1px solid #30363d;
+  color: #c9d1d9;
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.fix-type-btn:hover {
+  border-color: #58a6ff;
+  color: #58a6ff;
+}
+.fix-type-btn.active {
+  background: rgba(0, 188, 212, 0.15);
+  border-color: #00bcd4;
+  color: #00bcd4;
+}
+
+.fix-briefing-card {
+  border-left: 4px solid #00bcd4;
+}
+.fix-target-badge {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(0, 188, 212, 0.2);
+  color: #00bcd4;
+  margin-left: auto;
+  letter-spacing: 0.5px;
+}
+.fix-card-desc {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #c9d1d9;
+  margin: 10px 0 14px;
+}
+.fix-action-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-top: 10px;
+  border-top: 1px solid #21262d;
+}
+.btn-launch-show-fix {
+  background: #238636;
+  border-color: #2ea043;
+  color: #ffffff;
+  font-weight: 700;
+  padding: 8px 18px;
+  font-size: 12.5px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-launch-show-fix:hover {
+  background: #2ea043;
+}
+.fix-status-indicator {
+  font-size: 12px;
+  color: #8b949e;
+  font-style: italic;
+}
+
+/* ── Interactive Frontend Handoff Banner ── */
+.frontend-handoff-banner {
+  background: linear-gradient(90deg, #1b2838 0%, #16364a 100%);
+  border: 2px solid #00bcd4;
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 4px 20px rgba(0, 188, 212, 0.25);
+  animation: pulseBorder 2s infinite ease-in-out;
+}
+@keyframes pulseBorder {
+  0% { box-shadow: 0 0 0 0 rgba(0, 188, 212, 0.4); }
+  70% { box-shadow: 0 0 0 8px rgba(0, 188, 212, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 188, 212, 0); }
+}
+.handoff-pulse-icon {
+  font-size: 24px;
+}
+.handoff-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12.5px;
+  color: #c9d1d9;
+}
+.handoff-content strong {
+  color: #00bcd4;
+  font-size: 13.5px;
+}
+.handoff-actions {
+  display: flex;
+  gap: 10px;
+}
+.btn-handoff-pulse {
+  background: #00bcd4;
+  color: #0d1117;
+  border: none;
+  font-weight: 700;
+  padding: 7px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.btn-complete-handoff {
+  background: #238636;
+  border-color: #2ea043;
+  color: #fff;
+  font-weight: 700;
+  padding: 7px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* ── Backend Breakpoint Banner ── */
+.backend-breakpoint-banner {
+  background: #1c2128;
+  border: 1px solid #d29922;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.bp-icon {
+  font-size: 20px;
+}
+.bp-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 12px;
+  color: #c9d1d9;
+}
+.bp-content code {
+  color: #d29922;
+  font-weight: 700;
+}
+.bp-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ── Stage Confirmation Checklist Card ── */
+.stage-confirm-card {
+  background: #0d1117;
+  border: 1px dashed #30363d;
+  padding: 12px 16px;
+}
+.confirm-check-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #c9d1d9;
+  cursor: pointer;
+}
+.confirm-check-label input[type="checkbox"] {
+  accent-color: #3fb950;
+  width: 16px;
+  height: 16px;
+}
+
+
 

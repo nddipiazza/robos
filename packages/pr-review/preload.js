@@ -21,7 +21,10 @@ contextBridge.exposeInMainWorld('api', {
   executePRRestCall:     (opts) => ipcRenderer.invoke('execute-pr-rest-call', opts),
   launchIDEBreakpointSession: (opts) => ipcRenderer.invoke('launch-ide-breakpoint-session', opts),
   resumeIDEBreakpointSession: (opts) => ipcRenderer.invoke('resume-ide-breakpoint-session', opts),
-  runLiveDesktopProof:   (opts) => ipcRenderer.invoke('run-live-desktop-proof', opts),
   openAppELearning:      (opts) => ipcRenderer.invoke('open-app-elearning', opts),
+  getPRTheaterConfig:    (opts) => ipcRenderer.invoke('get-pr-theater-config', opts),
+  savePRTheaterConfig:   (opts) => ipcRenderer.invoke('save-pr-theater-config', opts),
+  runAgentShowFix:       (opts) => ipcRenderer.invoke('run-agent-show-fix', opts),
+  resumeAgentShowFixHandoff: (opts) => ipcRenderer.invoke('resume-agent-show-fix-handoff', opts),
 });
 
