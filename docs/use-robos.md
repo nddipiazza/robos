@@ -33,6 +33,10 @@ New here? Start with these pages to get RobOS running and find your way around i
     <strong>🎥 Video walkthroughs</strong>
     <span>Narrated recordings of RobOS features being tested end to end.</span>
   </a>
+  <a class="rb-link" href="{{ '/training/' | relative_url }}">
+    <strong>🎓 Training Academy</strong>
+    <span>Learn to build full-scale web apps and video games without writing code. Step-by-step tutorials and hands-on courses for non-developers and architects.</span>
+  </a>
   <a class="rb-link" href="{{ site.baseurl }}{% link projects.md %}">
     <strong>🎮 Projects built with RobOS</strong>
     <span>Apps, games and systems that RobOS agents designed and built.</span>
