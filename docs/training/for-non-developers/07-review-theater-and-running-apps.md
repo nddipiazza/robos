@@ -29,7 +29,9 @@ Shortly thereafter, the app crashes in production because nobody actually ran th
 
 In RobOS, **blind rubber-stamping is physically impossible.**
 
-When an autonomous AI agent finishes building a task, it submits its work to the **PR Review Theater** (`packages/pr-review`). The Review Theater turns review into an interactive, multi-modal governance flight simulator where you verify real proof-of-work before anything merges into your main branch.
+When an autonomous AI agent finishes building a task, it submits its work as a **Pull Request (PR)**—a formal proposal asking you to review, test, and approve its work before anything merges into the main project.
+
+In RobOS, this takes place inside the **PR Review Theater** (`packages/pr-review`). The Review Theater turns code review into an interactive governance flight simulator where you verify real proof-of-work before anything merges into your main branch.
 
 <div style="margin: 2rem 0;">
   <img src="{{ '/assets/images/training/review-theater-quality-gate.jpg' | relative_url }}" alt="RobOS PR Review Theater Quality Gate" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
@@ -79,7 +81,7 @@ Next, you inspect the files that were modified:
   <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Semantic in-app file diff viewer with syntax highlighting and inline commenting.</em></p>
 </div>
 
-Unlike raw text diffs, RobOS highlights the **semantic blast radius**: which database tables, API routes, or character scenes were impacted, and whether any upstream contracts were touched.
+Unlike raw text diffs, RobOS highlights the **semantic blast radius**: which database tables, data communication routes, or character scenes were impacted, and whether any upstream contracts were touched.
 
 ---
 
@@ -92,18 +94,18 @@ This is the crown jewel of RobOS governance. You don't have to guess if the code
   <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Narrated video proof-of-work showing the feature executing end-to-end.</em></p>
 </div>
 
-- The video player plays an automated screen recording of the app executing inside the virtual framebuffer.
-- On-screen captions and Piper TTS audio narrate every action: clicking the buttons, triggering the QR code, moving Sir Caleb, or disarming the dungeon trap.
+- The video player plays an automated screen recording of the app executing inside the invisible virtual screen.
+- On-screen captions and spoken voice narration describe every action: clicking buttons, triggering the QR code, moving Sir Caleb, or disarming the dungeon trap.
 
 ---
 
-### Final Signoff & Atomic Merge
+### Final Signoff & Merging Your Changes
 
 With the tests green, knowledge check passed, and video verified, click **Sign Off &amp; Merge**.
 
 <div style="margin: 1.5rem 0;">
-  <img src="{{ '/assets/images/screenshots/pr-review-theater-09-stage6-signoff.png' | relative_url }}" alt="Final Signoff and Atomic Merge" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
-  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Final signoff screen executing atomic git merge and updating living documentation.</em></p>
+  <img src="{{ '/assets/images/screenshots/pr-review-theater-09-stage6-signoff.png' | relative_url }}" alt="Final Signoff and Safe Merge" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
+  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Final signoff screen safely merging the changes and updating living documentation.</em></p>
 </div>
 
 RobOS merges the branch, updates the Knowledge Graph, and cleans up the sandbox.
@@ -116,7 +118,7 @@ Now that your feature is merged, how do you and other people actually use it?
 
 ### Installed as a Native Desktop App
 If you built a desktop tool or game editor:
-- RobOS automatically generates a FreeDesktop `.desktop` entry.
+- RobOS automatically generates an application shortcut.
 - An SVG icon is registered in the desktop shell.
 - You can find it instantly by opening the **App Launcher** (`Super` key or panel icon):
 
@@ -132,14 +134,14 @@ You can right-click the icon to **Pin to Taskbar** or **Add to Desktop**.
 ### Running Web Apps in Google Chrome
 If you built a web application like `getemgigs.com`:
 - **Local Development**: Click **Run Dev Server** in Git Projects. Your default browser (Google Chrome) launches directly to `http://localhost:3000`.
-- **Public Cloud URL**: With one click in **Kube Studio** or Vercel GitOps, your app deploys to the cloud (e.g. `https://www.getemgigs.com`) accessible from any smartphone, tablet, or laptop in the world.
+- **Public Cloud URL**: With one click in **Kube Studio** or Vercel cloud hosting, your app deploys to the cloud (e.g. `https://www.getemgigs.com`) accessible from any smartphone, tablet, or laptop in the world.
 
 ---
 
 ### Playing Godot Games
 If you built a video game like `crpg-realm`:
 - **Native Game Run**: Click **Play Game** to boot the Godot runtime engine and play with rich graphics, spatial audio, and mouse controls.
-- **Web Export (HTML5)**: Export with one click to HTML5 WASM to let friends play your game directly in any web browser without installing anything!
+- **Web Export (HTML5)**: Export with one click to HTML5 (browser-playable) to let friends play your game directly in any web browser without installing anything!
 
 ---
 

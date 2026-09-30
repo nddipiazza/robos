@@ -23,7 +23,11 @@ How to pick an application archetype, configure team identity, define data contr
 
 ## Starting with a Clean Slate (No Blank Page Syndrome)
 
-Starting a new software project is usually terrifying for non-developers. Where do you even begin? Do you create a GitHub repository? What folder structure should you use? Which build tools, test runners, and linting rules are needed?
+Starting a new software project is usually terrifying for non-developers. Where do you even begin? Do you create a repository? What folder structure should you use? Which build tools, test runners, and linting rules are needed?
+
+> [!NOTE]
+> **What is a Git Repository?**  
+> A **Git repository (or repo)** is simply a project folder equipped with an automated version timeline. Every time code is saved or updated, Git records a snapshot so you can roll back to any past state if something breaks.
 
 In RobOS, you never start with a blank folder. You start in the **RobOS App Wizard** (`packages/app-wizard`).
 
@@ -37,10 +41,10 @@ Before opening the wizard, decide which archetype matches your product vision:
 
 | Archetype | Flagship Example | Under the Hood Tech | Best Suited For |
 |:---|:---|:---|:---|
-| **Web Application (SPA/SSR)** | **`getemgigs.com`** | Next.js 15, React 19, TailwindCSS, Neon Postgres | SaaS products, marketplaces, customer portals, mobile-first web apps |
-| **PC Video Game** | **`crpg-realm`** | Godot 4.3, GL Compatibility, 2.5D Isometric, D&D 5e SRD | 2D/3D video games, tactical RPGs, dungeon crawlers, simulations |
-| **Desktop Tool** | **`app-launcher`** | Electron, Vanilla JS, Lucide icons, native IPC bridge | Internal developer tools, admin utilities, offline dashboards |
-| **Microservice Backend** | **`billing-api`** | Node.js, Go, or Python with OpenAPI 3.1 &amp; Protobuf gRPC | High-performance data pipelines, transaction processors, APIs |
+| **Web Application (Modern Web)** | **`getemgigs.com`** | Next.js 15, React 19, TailwindCSS, Neon Postgres | SaaS products, marketplaces, customer portals, mobile-first web apps |
+| **PC Video Game** | **`crpg-realm`** | Godot Engine, 2.5D Isometric, Tabletop RPG Rules | 2D/3D video games, tactical RPGs, dungeon crawlers, simulations |
+| **Desktop Tool** | **`app-launcher`** | Electron, Vanilla JS, Lucide icons, Desktop Window Bridge | Internal developer tools, admin utilities, offline dashboards |
+| **Microservice Backend** | **`billing-api`** | Node.js, Go, or Python with standard API contracts | High-performance data pipelines, transaction processors, APIs |
 
 ---
 
@@ -91,13 +95,13 @@ In traditional development, frontends and backends constantly get out of sync be
 
 <div style="margin: 1.5rem 0;">
   <img src="{{ '/assets/images/screenshots/new-app-contract-spec_frame.png' | relative_url }}" alt="App Contract Specifications" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
-  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Declaring data contracts, API protocols, and schema shapes.</em></p>
+  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Declaring data agreements, communication protocols, and visual shapes.</em></p>
 </div>
 
 Here you specify:
-- The data protocols your app uses (REST OpenAPI 3.1, Protobuf gRPC, or GraphQL).
-- Key entity models (e.g. `Band`, `Gig`, `EscrowAgreement`, or `HeroPlayer`, `InventoryItem`, `QuestDAG`).
-- Don't worry if you don't know the exact schema yet—RobOS provides starter templates you can visually modify later.
+- How your app communicates with data (web-standard REST APIs, GraphQL, or fast messaging protocols).
+- Key information models (for example, `Band`, `Gig`, and `EscrowAgreement` for a music app, or `HeroPlayer`, `InventoryItem`, and `Quest` for a game).
+- Don't worry if you don't know the exact details yet—RobOS provides ready-to-use starter templates you can visually customize anytime.
 
 ---
 
@@ -111,7 +115,7 @@ Before touching any disk or Git files, RobOS generates a comprehensive **Scaffol
 </div>
 
 The blueprint previews:
-- Every file and directory that will be generated (e.g. `package.json`, `tailwind.config.js`, starter components).
+- Every file and directory that will be generated (such as project configuration files, visual themes, and starter screens).
 - The Git repository initialization script.
 - The exact Knowledge Graph nodes (`robos:FrontEndApp`, `schema:VideoGame`, etc.) being registered.
 
@@ -121,7 +125,7 @@ Click **Generate Project** to execute the blueprint.
 
 ### Scaffolding Complete & Registered in Knowledge Graph
 
-In seconds, RobOS scaffolds the codebase, creates the local Git repository, builds the initial branch, and registers the application into `.robos/kgraphs/applications/package.jsonld`.
+In seconds, RobOS scaffolds the codebase, creates the local Git repository, builds the initial branch, and registers the application into the RobOS Knowledge Graph catalog.
 
 <div style="margin: 1.5rem 0;">
   <img src="{{ '/assets/images/screenshots/new-app-scaffold-complete_frame.png' | relative_url }}" alt="Scaffolding Complete Screen" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
@@ -167,7 +171,7 @@ The App Wizard includes an **Import / Ingestion Wizard** that scans any local fo
   <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Importing an existing codebase into RobOS.</em></p>
 </div>
 
-The Ingestion engine reads your `package.json`, `project.godot`, or backend routes, automatically infers the architecture, and creates Knowledge Graph nodes so agents immediately understand your existing system.
+The Ingestion engine reads your project configuration files (like `package.json` for web apps or `project.godot` for games), automatically infers the architecture, and registers Knowledge Graph records so agents immediately understand your existing system.
 
 ---
 

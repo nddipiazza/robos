@@ -43,10 +43,10 @@ We set out to fix this with radical software mechanics:
 
 ## Onboarding the Web App in App Wizard
 
-In **App Wizard**, we selected the **Web Application (Next.js / SSR)** archetype:
+In **App Wizard**, we selected the **Modern Web Application (Next.js)** archetype:
 - **Name**: `getemgigs`
 - **Domain**: `schema:WebApplication`, `robos:FrontEndApp`
-- **Stack**: Next.js 15 App Router, React 19, TailwindCSS, Neon Serverless Postgres.
+- **Stack**: Next.js 15, React 19, TailwindCSS, Neon Serverless Postgres.
 
 RobOS generated the clean project structure under `packages/getemgigs` and registered the node `urn:robos:app:getemgigs` in the Knowledge Graph.
 
@@ -80,7 +80,7 @@ stateDiagram-v2
     "lockCondition": "When reciprocal agreement accepted by both hosts",
     "checkInWindow": "From 1 hour before scheduled doors until 5 hours after",
     "qrCodeExpirySeconds": 30,
-    "settlementCron": "Every morning at scheduled deadline",
+    "settlementSchedule": "Every morning at scheduled deadline",
     "defaultOutcome": "Flaked deposit forfeited to the band that played"
   }
 }
@@ -90,15 +90,15 @@ Because these rules were explicitly registered in the Knowledge Graph, the AI ag
 
 ---
 
-## Decomposing into DAG Tasks in Task Planner
+## Decomposing into Visual Tasks in Task Planner
 
 In **Task Planner**, we used the interactive form to generate a structured milestone plan:
-- **Core Data &amp; Escrow Engine**: Neon Postgres schema for `users`, `bands`, `gigs`, and `escrow_deals`.
-- **Rotating QR Code API**: Crypto token generator that invalidates QR codes on a timed schedule.
+- **Core Data &amp; Escrow Engine**: Neon Postgres database schema for `users`, `bands`, `gigs`, and `escrow_deals`.
+- **Rotating QR Code Service**: Crypto token generator that invalidates QR codes on a timed schedule.
 - **Mobile-First Web UI**: Responsive phone screens for browsing gigs, initiating trades, and displaying the live QR ticket.
 
 <div style="margin: 1.5rem 0;">
-  <img src="{{ '/assets/images/screenshots/acme-petshop-step8-vercel_deployments_frame.png' | relative_url }}" alt="Vercel Deployments and GitOps Overview" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
+  <img src="{{ '/assets/images/screenshots/acme-petshop-step8-vercel_deployments_frame.png' | relative_url }}" alt="Cloud Deployments Overview" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
   <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Reviewing web app deployments and automated build pipelines.</em></p>
 </div>
 
@@ -107,7 +107,7 @@ In **Task Planner**, we used the interactive form to generate a structured miles
 ## Running the Task Implementer in Sandboxes
 
 We dispatched the tasks to the **Task Implementer**:
-- The agent spun up an ephemeral `tmpfs` container.
+- The agent spun up a disposable in-memory RAM sandbox.
 - It wrote the Next.js routes under `app/api/deals/` and `app/deals/[id]/`.
 - It created a complete automated test suite (`tests/escrow.test.js`) verifying:
   - Deposit locking on trade agreement.

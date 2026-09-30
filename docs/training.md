@@ -27,7 +27,7 @@ Traditional coding bootcamps teach you how to manually type syntax, debug memory
 RobOS transforms software engineering from exhausting code monkey labor into an **Executive Director / Lead Architect** workflow:
 - **No Blind Trust**: You never accept code simply because an LLM claimed it works. Autonomous agents execute in disposable in-memory sandboxes, produce verifiable test scorecards, and generate 1080p narrated video proof-of-work.
 - **Context Over Syntax**: You govern agents by curating schemas, contracts, and blueprints in the Knowledge Graph.
-- **Flight Simulator Reviews**: Before changes are merged, you step through the PR Review Theater with interactive knowledge checks, living documentation deltas, and visual blast-radius diffs.
+- **Flight Simulator Reviews**: Before changes are merged, you step through the Pull Request (PR) Review Theater with interactive knowledge checks, living documentation deltas, and visual blast-radius diffs.
 
 ---
 

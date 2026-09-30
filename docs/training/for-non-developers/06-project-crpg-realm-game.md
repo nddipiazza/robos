@@ -21,14 +21,14 @@ A complete real-world case study: How a creator designs, authors, and plays a pa
 
 ---
 
-## Game Development Without GDScript or Matrix Math
+## Game Development Without Complex Code or Matrix Math
 
 Building a 2D/3D video game has historically been one of the steepest mountains in software:
 - You had to master game engine scene trees and node hierarchies.
-- You had to write pathfinding algorithms and collision polygon physics.
+- You had to write pathfinding algorithms and collision physics.
 - You had to hand-code turn-based or real-time dice roll combat math.
 
-In RobOS, you don't write GDScript or calculate vector dot products. Instead:
+In RobOS, you don't write programming scripts (like Godot's GDScript language) or calculate complex geometry formulas. Instead:
 - You use the **RobOS cRPG Campaign Editor** (`packages/crpg-editor`) to visually design maps, characters, quests, and loot.
 - RobOS stores your world as declarative Knowledge Graph data (`data/v1/`).
 - Autonomous AI agents assemble the Godot game engine, hook up character bodies, wire audio, and run automated bots to play through your dungeon!
@@ -40,7 +40,7 @@ In RobOS, you don't write GDScript or calculate vector dot products. Instead:
 ```mermaid
 graph TD
     A["Visual Campaign Editor<br/>(You paint maps, roll heroes & write quests)"] --> B["Declarative Knowledge Graph<br/>(Zero-hardcoded data: items, spells, monsters)"]
-    B --> C["Godot Engine & Infinity AI<br/>(AI bots play dungeon headlessly in Xvfb)"]
+    B --> C["Godot Engine & Infinity AI<br/>(AI bots play dungeon in invisible virtual screen)"]
     C --> D["Playable Game in Godot<br/>(Click-to-move, Spacebar pause, smooth rendering)"]
     
     style A fill:#0d1117,stroke:#00e5ff,stroke-width:2px,color:#e6edf3
@@ -85,7 +85,7 @@ Next, click on the **Characters** tab to assemble your adventuring party.
 Here you visually configure:
 - **Hero Name &amp; Class**: Sir Caleb (Paladin), Elora (Elven Ranger/Rogue), Torvald (Dwarven Cleric).
 - **Ability Scores**: Strength, Dexterity, Constitution, Intelligence, Wisdom, Charisma.
-- **Starting Hit Points &amp; Armor Class**: Automatically calculated based on standard tabletop SRD rules!
+- **Starting Hit Points &amp; Armor Class**: Automatically calculated based on standard tabletop role-playing rules (like D&D 5e)!
 
 ---
 
@@ -112,7 +112,7 @@ How do you know the dungeon isn't too hard, or that a door trigger isn't broken?
 Normally, game creators have to spend hundreds of hours manually playtesting every single tweak.
 
 In RobOS, **Infinity AI Bots** test the game for you:
-- When you save your campaign, the agent boots Godot headlessly in a virtual screen (Xvfb).
+- When you save your campaign, the agent boots Godot in an invisible virtual screen (without popping windows over your work).
 - The AI bot connects to the game's internal control port.
 - It moves characters, navigates around obstacles, disarms traps with the rogue, casts spells, fights the boss, and verifies victory!
 
@@ -130,12 +130,12 @@ Your hero and companions spawn in the village square:
   <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Live Godot runtime showing the adventuring party in the Village Square.</em></p>
 </div>
 
-- **Click-to-Move**: Left-click anywhere on the ground to move the party with smooth string-pulled A* pathfinding.
+- **Click-to-Move**: Left-click anywhere on the ground to move the party with smooth automatic movement and obstacle avoidance.
 - **Interact**: Click on NPCs (Guildmaster, Blacksmith) to open dialogue trees and buy potions.
 
 ---
 
-### Tactical Real-Time with Pause (RTwP) Combat
+### Tactical Combat with Active Pause
 When enemies like Shadow Hounds or Minotaurs engage, combat begins:
 
 <div style="margin: 1.5rem 0;">
@@ -157,7 +157,7 @@ Defeating the boss unlocks legendary ground loot and triggers the victory screen
   <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Quest complete and kingdom saved!</em></p>
 </div>
 
-You just designed and played a complete tactical fantasy video game with 2.5D graphics, SRD math, inventory looting, and multi-scene level transitions without writing a single line of game engine code!
+You just designed and played a complete tactical fantasy video game with 2.5D graphics, role-playing dice math, inventory looting, and multi-scene level transitions without writing a single line of game engine code!
 
 ---
 

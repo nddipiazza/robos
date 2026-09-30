@@ -21,36 +21,36 @@ How the Task Implementer drives autonomous coding agents, how disposable in-memo
 
 ---
 
-## Welcome to the Cleanroom: Ephemeral `tmpfs` Sandboxes
+## Welcome to the Cleanroom: Ephemeral In-Memory Sandboxes
 
 The single biggest fear people have when letting an AI run commands on their computer is simple: **"What if it breaks my computer?"**
 
-What if an agent deletes your personal photos? What if it modifies your global Python environment and breaks your other apps? What if it accidentally leaks your SSH keys or passwords?
+What if an agent deletes your personal photos? What if it modifies system settings and breaks your other software? What if it accidentally leaks your secret passwords?
 
-RobOS solves this with **Ephemeral In-Memory Sandboxes (`tmpfs`)**:
+RobOS solves this with **Ephemeral In-Memory Sandboxes** (technically known in Linux as `tmpfs`):
 
 ```mermaid
 flowchart LR
     Host["Your Personal Computer<br/>(Physical OS, Personal Files, Safe)"]
     
-    subgraph Sandbox ["Disposable tmpfs RAM Sandbox"]
+    subgraph Sandbox ["Disposable RAM Sandbox (tmpfs)"]
         Agent["Autonomous AI Agent"]
         Code["Isolated Code Checkout"]
         Build["Builds, Dependencies & Tests"]
-        Screen["Virtual Display (Xvfb 1080p)"]
+        Screen["Virtual Display (Invisible 1080p)"]
     end
     
     Host -- "Mounts Ephemeral Workspace in RAM" --> Sandbox
-    Sandbox -- "Discarded After PR or Test Run" --> Clean["Zero Residual Files or Clutter"]
+    Sandbox -- "Discarded After Review or Test Run" --> Clean["Zero Residual Files or Clutter"]
     
     style Host fill:#0d1117,stroke:#10b981,stroke-width:2px,color:#e6edf3
     style Sandbox fill:#161b22,stroke:#00e5ff,stroke-width:2px,color:#e6edf3
     style Clean fill:#0d1117,stroke:#38bdf8,stroke-width:2px,color:#e6edf3
 ```
 
-### How `tmpfs` RAM Sandboxes Work
-- **Zero Disk Writes**: The workspace is mounted directly in your computer's RAM. No temporary files, test databases, or build caches touch your physical solid-state drive (SSD).
-- **Virtual Framebuffer (Xvfb)**: The agent gets its own invisible 1080p display. When it boots up Google Chrome or Godot to run tests, windows don't pop up over your mouse cursor or steal your keyboard focus.
+### How In-Memory RAM Sandboxes Work
+- **Zero Disk Writes**: The workspace is mounted directly in your computer's active memory (RAM). No temporary files, test databases, or build caches ever touch your permanent solid-state drive (SSD).
+- **Virtual Display (Xvfb)**: The agent gets its own invisible 1080p display (called a virtual framebuffer or `Xvfb`). When it boots up Google Chrome or Godot to run tests, windows don't pop up over your mouse cursor or steal your keyboard focus.
 - **Instant Disposal**: When the task finishes or if you cancel it, RobOS unmounts the RAM disk. The entire workspace vanishes in milliseconds. **Zero residual clutter, zero machine pollution, zero security risk.**
 
 ---
@@ -65,10 +65,10 @@ When you open **Task Implementer** (`packages/task-implementer`), you see your p
 </div>
 
 When you click **Start Implementation**:
-- **Branch Checkout**: The agent creates an isolated Git feature branch (e.g. `feature/rotating-qr-code`).
-- **Sandbox Provisioning**: RobOS mounts the in-memory `tmpfs` workspace.
+- **Branch Isolation**: The agent creates an isolated work branch (a temporary parallel lane so your main project code remains completely safe and untouched).
+- **Sandbox Provisioning**: RobOS mounts the in-memory RAM sandbox.
 - **Context Injection**: The agent reads the exact task acceptance criteria, linked Knowledge Graph nodes, and contract schemas.
-- **Execution Loop**: The agent writes the code, installs necessary local libraries inside the sandbox, and runs tests.
+- **Execution Loop**: The agent writes the code, installs necessary local packages inside the sandbox, and runs tests.
 
 <div style="margin: 1.5rem 0;">
   <img src="{{ '/assets/images/screenshots/acme-petshop-step5-provisioning_frame.png' | relative_url }}" alt="Sandbox Provisioning Stage" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />

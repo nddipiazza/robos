@@ -50,14 +50,19 @@ In RobOS, you do not write code, and you do not copy-paste terminal errors. Inst
 | **Curious Non-Engineers** | Ambition and a desire to build things | Teaches you system architecture, context engineering, and quality review with zero math or syntax |
 
 > [!NOTE]
-> **Who This Is NOT For**: If you are looking for tutorials on how to memorize C++ pointer arithmetic, configure webpack configurations by hand, or argue over tabs versus spaces, this course is not for you. We focus exclusively on **outcomes, architecture, and governance**.
+> **Who This Is NOT For**: If you are looking for tutorials on how to memorize C++ pointer arithmetic, configure complex compiler flags by hand, or argue over tabs versus spaces, this course is not for you. We focus exclusively on **outcomes, architecture, and governance**.
 
 ---
 
 ## Core Architectural Pillars
 
 ### RobOS: Your Autonomous Engineering Crew & Cleanroom
-RobOS is not just an IDE—it is an autonomous agent governance harness. When an AI agent writes code for you, it runs inside an **ephemeral in-memory sandbox (`tmpfs`)** with a virtual screen (Xvfb). The agent cannot leak your personal files, cannot mess up your system, and cannot leave phantom background processes running. If an experiment goes wrong, the sandbox simply vanishes into thin air.
+In traditional software development, programmers spend their lives inside an **IDE (Integrated Development Environment)**—a complex text editor like VS Code full of cryptic syntax checkers, terminal windows, and configuration menus.
+
+RobOS is completely different. You don't need a code editor because you don't write code by hand. Instead, RobOS is a **governance system and cleanroom** for AI coding agents:
+- **Disposable In-Memory Workspaces**: When an AI agent writes code for you, it works inside a temporary sandbox held strictly in your computer's memory (RAM), not on your physical hard drive.
+- **Invisible Virtual Screens**: The agent runs its tests and launches web browsers or games on a private virtual display behind the scenes, so no windows ever steal your keyboard focus or pop up over your mouse.
+- **Zero Machine Pollution**: The agent cannot access your personal photos, files, or passwords. When a task is finished or discarded, its workspace vanishes into thin air.
 
 ### Context Engineering: The Art of the Blueprint
 In the old days of programming, you had to learn syntax (semicolons, variable scopes, memory allocation). In the AI era, typing code is a commodity. What matters is **Context Engineering**:
@@ -68,7 +73,7 @@ In the old days of programming, you had to learn syntax (semicolons, variable sc
 ### AI Generative Review-Based Development
 When an agent finishes building a feature, you don't just "hope it works". RobOS enforces **Review-Based Development**:
 - **Automated 1080p Video Proof-of-Work**: The agent boots up the app in a virtual screen, clicks buttons, plays through the level, and records a narrated video proving it works.
-- **Flight Simulator Knowledge Checks**: The **PR Review Theater** gives you an interactive focused walkthrough and quiz to ensure you understand how the piece fits into your vision.
+- **Flight Simulator Knowledge Checks**: The **PR (Pull Request) Review Theater**—where you inspect proposed changes before accepting them—gives you an interactive focused walkthrough and quiz to ensure you understand how the piece fits into your vision.
 - **Visual Blast-Radius Checks**: You see exactly what changed before approving the merge.
 
 ---
@@ -89,9 +94,9 @@ graph TD
 
     subgraph P2 ["Project: Tactical cRPG Realm (crpg-realm)"]
         R1["Party-Based Isometric RPG Game"]
-        R2["D&D 5e Ruleset & RTwP Combat"]
+        R2["Tabletop Rules & Tactical Combat with Pause"]
         R3["Visual Campaign & Map Editor"]
-        R4["Godot 4.3 Engine & Infinity AI Bots"]
+        R4["Godot Engine & Autonomous Playthrough Bots"]
         R5["Playable Desktop Native Game"]
     end
 
@@ -103,20 +108,20 @@ graph TD
 
 ### Project: `getemgigs.com` (Live Production Web App)
 - **The Challenge**: Help local indie bands kill predatory pay-to-play venues through **Buddy Gigs** (reciprocal deposit escrow) and phone-scanned QR door codes.
-- **Tech Profile**: Next.js 15, React 19, TailwindCSS, Neon Serverless Postgres, Vercel Edge Runtime.
+- **Tech Profile**: Modern Web (Next.js 15, React 19, TailwindCSS, Neon Serverless Postgres, Vercel Edge Runtime).
 - **What You'll Learn**:
   - How to select the Web App archetype in the App Wizard.
-  - How to model financial escrow states and Haversine venue distance rules without math.
+  - How to model financial escrow states and venue distance proximity rules without math.
   - How to watch agents write backend routes and tests inside RAM sandboxes.
   - How to open Google Chrome, toggle mobile emulation, and test the rotating QR ticket live in the browser!
 
 ### Project: `crpg-realm` (Playable Tactical Video Game)
 - **The Challenge**: Build a classic party-based tactical isometric RPG inspired by Baldur's Gate and Dragon Warrior.
-- **Tech Profile**: Godot (GL Compatibility), painted maps, tabletop SRD rules, Real-Time with Pause (RTwP) combat, headless Infinity AI bot harness.
+- **Tech Profile**: Godot 2D/3D game engine, painted maps, tabletop role-playing rules, tactical combat with active pause, and autonomous AI playthrough bots.
 - **What You'll Learn**:
   - How to use the visual **cRPG Campaign Editor** to paint maps, place structure colliders with the Foundation Footprint Rule, and configure door portals.
   - How to author adventuring parties (Paladins, Rogues, Clerics, Wizards) with tabletop ability scores and weapon damage.
-  - How to create quest DAGs and dungeon traps with passive perception checks.
+  - How to create quest trees and dungeon traps with passive perception checks.
   - How autonomous AI bots play through your dungeons headlessly to verify victory conditions.
   - How to launch the game, move your party with click-to-move, and pause combat with the Spacebar!
 
@@ -129,9 +134,9 @@ Throughout this course, you will use the visual RobOS developer applications. No
 | Tool | Icon &amp; Purpose | What You Do In It |
 |:---|:---|:---|
 | **App Wizard** | 🪄 **Scaffolding &amp; Ingestion** | Pick your app archetype (Web, Game, Desktop), name it, and scaffold the whole project instantly. |
-| **Task Planner** | 📋 **Visual Blueprints** | Answer interactive multiple-choice questionnaires and watch RobOS generate an ordered task DAG. |
+| **Task Planner** | 📋 **Visual Blueprints** | Answer interactive multiple-choice questionnaires and watch RobOS generate an ordered task dependency tree. |
 | **Task Implementer** | ⚡ **Agent Execution** | Click "Start Task", watch agents work in RAM sandboxes, and inspect live paused screens at breakpoints. |
-| **PR Review Theater** | 🎭 **Verification Flight Simulator** | Watch narrated video proof-of-work, pass reviewer knowledge checks, and click "Sign Off &amp; Merge". |
+| **PR Review Theater** | 🎭 **Verification Flight Simulator** | Review an agent's Pull Request (PR) with narrated video proof-of-work, pass reviewer knowledge checks, and click "Sign Off &amp; Merge". |
 | **cRPG Campaign Editor** | ⚔️ **Game World Authoring** | Visually paint maps, forge weapons, roll characters, and write quest journals. |
 
 ---
@@ -156,14 +161,14 @@ Throughout this course, you will use the visual RobOS developer applications. No
   <a class="rb-link" href="{{ '/training/for-non-developers/03-visual-task-planning.html' | relative_url }}">
     <strong>Visual Project &amp; Task Planning</strong>
     <span style="color: #c9d1d9; font-size: 0.9rem; line-height: 1.5; display: block; margin-top: 0.25rem;">
-      The anatomy of a great task, using Task Planner interactive template forms, decomposing dreams into DAG task trees, and syncing to GitHub issues instantly.
+      The anatomy of a great task, using Task Planner interactive template forms, decomposing dreams into visual task trees, and syncing to GitHub issues instantly.
     </span>
   </a>
 
   <a class="rb-link" href="{{ '/training/for-non-developers/04-task-implementer-and-sandboxes.html' | relative_url }}">
     <strong>Autonomous Task Implementation &amp; Sandboxes</strong>
     <span style="color: #c9d1d9; font-size: 0.9rem; line-height: 1.5; display: block; margin-top: 0.25rem;">
-      Driving agents in the Task Implementer, ephemeral tmpfs cleanrooms, Breakpoint Debugging for non-developers, and reading behavioral test scorecards.
+      Driving agents in the Task Implementer, disposable in-memory cleanrooms, Breakpoint Debugging for non-developers, and reading behavioral test scorecards.
     </span>
   </a>
 

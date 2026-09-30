@@ -10,7 +10,7 @@ permalink: /training/for-non-developers/03-visual-task-planning.html
 # Visual Project & Task Planning
 {: .no_toc }
 
-From raw ideas to structured milestones in Task Planner: resolve design questions with interactive web forms, build a DAG task graph, and sync to GitHub Issues.
+From raw ideas to structured milestones in Task Planner: resolve design questions with interactive web forms, build a dependency task graph, and sync to GitHub Issues.
 {: .fs-6 .fw-300 }
 
 ## Table of contents
@@ -28,7 +28,7 @@ When beginners first use AI tools, they almost always write a massive, unstructu
 > *"Build me a complete fantasy role-playing game with five dungeons, an inventory system, a trading shop, sixteen magic spells, real-time combat, audio sound effects, and a boss fight."*
 
 What happens when an AI agent receives a prompt like that?
-- The agent gets completely overwhelmed by the token explosion.
+- The agent gets completely overwhelmed by context overload (trying to remember and process too much information at once).
 - It tries to write thousands of lines of code across numerous files all at once.
 - It suffers from **Context Rot**: halfway through writing the inventory screen, it forgets what the combat rules were.
 - It invents fake helper functions that don't exist, crashes midway through, and leaves you with a broken mess.
@@ -104,14 +104,14 @@ The plan organizes your feature into logical milestones:
 
 ---
 
-### The Directed Acyclic Graph (DAG) View
+### The Dependency Flowchart (DAG View)
 
 How does an AI agent know what order to build things in?
-In Task Planner, every task has explicit dependencies arranged in a **Directed Acyclic Graph (DAG)**.
+In Task Planner, every task has explicit prerequisites arranged in a **Directed Acyclic Graph (DAG)**—which is simply a visual flowchart where work flows in one clear forward direction without any circular loops.
 
 <div style="margin: 1.5rem 0;">
   <img src="{{ '/assets/images/screenshots/acme-petshop-step1-dag_frame.png' | relative_url }}" alt="Directed Acyclic Graph Task Tree" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
-  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Visual DAG dependency graph ensuring tasks execute in logical order.</em></p>
+  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Visual dependency graph ensuring tasks execute in logical order.</em></p>
 </div>
 
 ```mermaid

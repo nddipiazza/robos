@@ -25,7 +25,7 @@ Learn why you don't need to write code to build software, how Context Engineerin
 
 For fifty years, building software required one mandatory skill: **typing cryptic syntax into a text editor without making a typo.** If you missed a semicolon on line 412, the entire program crashed. Because computers were completely unforgiving, developers spent their careers memorizing syntax rules, package managers, and compiler flags.
 
-Autonomous AI agents (Claude Code, OpenAI Codex, Google Gemini CLI, GitHub Copilot) have completely flipped this equation. Modern AI agents can write error-free syntax in seconds. **Typing code is now a free commodity.**
+Autonomous AI agents (Claude Code, OpenAI Codex, Google Gemini, GitHub Copilot) have completely flipped this equation. Modern AI agents can write error-free syntax in seconds. **Typing code is now a free commodity.**
 
 So what is the actual bottleneck today? **Direction, context, and review.**
 
@@ -49,13 +49,13 @@ flowchart TD
         A3 --> A4["Crash: Uncaught TypeError: items.map is not a function"]
         A4 --> A5["Alice pastes error into chat"]
         A5 --> A6["Chatbot: 'Sorry! Install npm install lodash-uuid-v4'"]
-        A6 --> A7["Alice's laptop global node_modules fills with phantom junk"]
+        A6 --> A7["Alice's laptop fills with phantom packages & mystery files"]
         A7 --> A8["Hours later: Abandoned project & headache"]
     end
 
     subgraph RobOSBob ["Bob: The RobOS Director Workflow"]
-        B1["Context: Defines Item schema in Knowledge Graph"] --> B2["Plan: Generates DAG tasks in Task Planner"]
-        B2 --> B3["Sandbox: Agent runs in disposable tmpfs RAM"]
+        B1["Context: Defines Item schema in Knowledge Graph"] --> B2["Plan: Generates visual task plan in Task Planner"]
+        B2 --> B3["Sandbox: Agent runs in disposable RAM disk"]
         B3 --> B4["Verification: Agent passes automated tests"]
         B4 --> B5["Review Theater: Bob watches 1080p video of sword pickup"]
         B5 --> B6["1-Click Merge: Zero clutter, working inventory!"]
@@ -90,7 +90,7 @@ Spending weeks learning JavaScript array methods is an unnecessary detour. Spend
 An AI agent trying to build "a complete social network" will fail. An AI agent asked to build "a profile card component that displays an avatar and username" will succeed reliably. In **Task Planner**, you break big dreams into bite-sized milestones.
 
 ### Principle: Burn the Sandbox, Never Your Laptop
-Never let an AI agent install random global tools or run untracked scripts directly on your physical computer. In RobOS, every agent runs inside an **ephemeral `tmpfs` RAM sandbox**. If something goes wrong, you simply discard the sandbox and try again.
+Never let an AI agent install random global tools or run untracked scripts directly on your physical computer. In RobOS, every agent runs inside an **ephemeral in-memory sandbox** (a temporary workspace held safely in computer memory, not on your drive). If something goes wrong, you simply discard the sandbox and try again.
 
 ---
 
@@ -116,9 +116,9 @@ In RobOS, Context Engineering provides these exact foundations to autonomous AI 
 | Technical Concept | Plain English Meaning | Chef Analogy | How You Use It in RobOS |
 |:---|:---|:---|:---|
 | **Data Schema** | A formal description of what a piece of information contains. | The ingredient list | In **App Wizard**, you declare that a `Band` has a `name`, `genre`, and `homeCity`. |
-| **API Contract** | The agreement between the frontend screen and the backend server. | The kitchen ticket | You specify that clicking "Lock Deposit" sends `{ gigId, amount }` and receives `{ status: "locked" }`. |
+| **API Contract** | The agreement between the screen and backend server (an **API** is a digital messenger connecting user screens to data). | The kitchen ticket | You specify that clicking "Lock Deposit" sends `{ gigId, amount }` and receives `{ status: "locked" }`. |
 | **Knowledge Graph Node** | A persistent record of an entity in your system. | The pantry inventory | In **Knowledge Graph Explorer**, your game zones, character classes, and APIs are indexed forever. |
-| **BDD Scenario** | A plain-English story describing how a feature should behave. | The tasting criteria | *"Given Sir Caleb has 10 HP, when he drinks a healing potion, then his HP becomes 25."* |
+| **User Story (BDD)** | A plain-English scenario describing how a feature should behave (technically called **Behavior-Driven Development**). | The tasting criteria | *"Given Sir Caleb has 10 HP, when he drinks a healing potion, then his HP becomes 25."* |
 
 ---
 
@@ -141,9 +141,9 @@ Before continuing, review this checklist. If you ever find yourself doing the ac
 | ❌ The Amateur Prompter | ✅ The RobOS Director |
 |:---|:---|
 | Pasting giant prompts into a browser window | Using **Task Planner** interactive web forms to pick options |
-| Manually debugging cryptic terminal errors | Letting agents fix errors inside isolated `tmpfs` sandboxes |
+| Manually debugging cryptic terminal errors | Letting agents fix errors inside isolated in-memory sandboxes |
 | Skimming code hoping it works | Watching a 1080p video recording of the feature in action |
-| Letting AI install mystery tools globally on their laptop | Running tests headlessly in virtual displays (Xvfb) |
+| Letting AI install mystery tools globally on their laptop | Running tests headlessly in invisible virtual displays |
 | Starting from a blank folder with zero structure | Using **App Wizard** to scaffold complete archetypes instantly |
 
 ---
@@ -156,7 +156,7 @@ Before continuing, review this checklist. If you ever find yourself doing the ac
 - **What replaces syntax memorization in the AI-First era?**  
   *Context Engineering: curating schemas, contracts, and visual blueprints in the Knowledge Graph.*
 - **Why should you never run AI coding experiments directly on your laptop?**  
-  *Because agents can leave phantom background processes, install conflicting global packages, or leak credentials. In RobOS, all work runs in RAM sandboxes (`tmpfs`) that leave zero residue.*
+  *Because agents can leave phantom background processes, install conflicting global packages, or leak credentials. In RobOS, all work runs in disposable in-memory sandboxes that leave zero residue.*
 - **What is the primary gate before approving any AI-generated feature?**  
   *Verifiable proof-of-work: green test scorecards and a 1080p narrated video recording of the working feature.*
 
