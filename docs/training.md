@@ -44,26 +44,47 @@ RobOS transforms software engineering from exhausting code monkey labor into an 
     </span>
   </a>
 
-  <div class="rb-link" style="opacity: 0.75; border-left: 4px solid #8b949e; cursor: default;">
+  <a class="rb-link" href="{{ '/training/systems-architects/' | relative_url }}" style="border-left: 4px solid #10b981; background: rgba(16, 185, 129, 0.04);">
     <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.35rem;">
-      <strong style="color: #e6edf3; font-size: 1.15rem;">📐 Systems Architects — Dual-State Knowledge Graph Modeling</strong>
-      <span style="background: rgba(139, 148, 158, 0.2); color: #8b949e; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 9999px; text-transform: uppercase;">Coming Soon</span>
+      <strong style="color: #10b981; font-size: 1.15rem;">📐 Systems Architects — Dual-State Knowledge Graph Modeling</strong>
+      <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 9999px; text-transform: uppercase;">Live Now</span>
     </div>
-    <span style="color: #8b949e; font-size: 0.92rem; line-height: 1.5;">
-      Model enterprise microservices, OpenAPI 3.1 contracts, Protobuf stubs, and W3C SHACL shapes. Govern multi-repo blast radiuses before a single line of agent code is committed.
+    <span style="color: #c9d1d9; font-size: 0.92rem; line-height: 1.5;">
+      Tame distributed architectures. Model enterprise microservices, OpenAPI 3.1 contracts, Protobuf stubs, and W3C SHACL shapes. Govern multi-repo blast radiuses before a single line of agent code is committed.
     </span>
-  </div>
+  </a>
 
-  <div class="rb-link" style="opacity: 0.75; border-left: 4px solid #8b949e; cursor: default;">
+  <a class="rb-link" href="{{ '/training/agent-harness-engineering/' | relative_url }}" style="border-left: 4px solid #a855f7; background: rgba(168, 85, 247, 0.04);">
     <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.35rem;">
-      <strong style="color: #e6edf3; font-size: 1.15rem;">🤖 Agent Personas &amp; UHP Autonomous Harness Engineering</strong>
-      <span style="background: rgba(139, 148, 158, 0.2); color: #8b949e; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 9999px; text-transform: uppercase;">Coming Soon</span>
+      <strong style="color: #c084fc; font-size: 1.15rem;">🤖 Agent Harness Engineers — Autonomous Personas &amp; UHP Governance</strong>
+      <span style="background: rgba(168, 85, 247, 0.15); color: #c084fc; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 9999px; text-transform: uppercase;">Live Now</span>
     </div>
-    <span style="color: #8b949e; font-size: 0.92rem; line-height: 1.5;">
-      Engineer custom developer agent personas, configure UHP gateways (Claude, Antigravity, Codex, Copilot), and calibrate token-saving IDE refactoring suites.
+    <span style="color: #c9d1d9; font-size: 0.92rem; line-height: 1.5;">
+      Engineer custom developer agent personas, configure vendor-neutral UHP gateways (Claude, Antigravity, Codex, Copilot), deploy the Zero-Data-Leak Prompt Security Guard, and isolate runs in ephemeral RAM sandboxes.
     </span>
-  </div>
+  </a>
+
+  <a class="rb-link" href="{{ '/training/review-based-development/' | relative_url }}" style="border-left: 4px solid #38bdf8; background: rgba(56, 189, 248, 0.04);">
+    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.35rem;">
+      <strong style="color: #38bdf8; font-size: 1.15rem;">🎭 Senior Reviewers &amp; Tech Leads — Review-Based Development</strong>
+      <span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 9999px; text-transform: uppercase;">Live Now</span>
+    </div>
+    <span style="color: #c9d1d9; font-size: 0.92rem; line-height: 1.5;">
+      Survive the AI pull request tsunami. Eliminate review fatigue and reflexive "LGTM" rubber-stamping through the PR Review Theater flight simulator, 1080p narrated video proof, and the IntelliJ/VS Code IDE review bridge.
+    </span>
+  </a>
 </div>
+
+---
+
+## Which Track Is Right for You?
+
+| Your Role | What You Care About | Recommended Starting Track |
+|:---|:---|:---|
+| **Entrepreneurs, Designers, &amp; Non-Coders** | Bringing product ideas to life without learning syntax or terminal commands | **[For Non-Developers]({{ '/training/for-non-developers/' | relative_url }})** |
+| **Principal &amp; Staff Systems Architects** | Preventing breaking contract changes and governing distributed microservices | **[Systems Architects]({{ '/training/systems-architects/' | relative_url }})** |
+| **Platform, AI, &amp; DevSecOps Engineers** | Hardening execution boundaries, zero-leak prompt security, and multi-model routing | **[Agent Harness Engineers]({{ '/training/agent-harness-engineering/' | relative_url }})** |
+| **Senior Developers &amp; Engineering Managers** | Conducting high-signal reviews on large AI diffs without burnout | **[Senior Reviewers &amp; Tech Leads]({{ '/training/review-based-development/' | relative_url }})** |
 
 ---
 
