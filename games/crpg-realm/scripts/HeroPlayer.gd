@@ -1579,14 +1579,15 @@ func move_to_point(target_pos: Vector2, on_reached: Callable = Callable(), queue
 
 	clear_waypoints()
 	var cur_scene = get_tree().current_scene
-	var path = Pathfinder.get_nav_path(get_world_2d(), global_position, target_pos, cur_scene, [get_rid()])
+	var feet_start = global_position + Vector2(0, 16)
+	var path = Pathfinder.get_nav_path(get_world_2d(), feet_start, target_pos, cur_scene, [get_rid()])
 	if path.is_empty():
-		path = PackedVector2Array([target_pos])
+		return
 
-	target_position = path[0]
+	target_position = path[0] - Vector2(0, 16)
 	is_moving = true
 	for k in range(1, path.size()):
-		waypoint_queue.append(path[k])
+		waypoint_queue.append(path[k] - Vector2(0, 16))
 		waypoint_callbacks.append(Callable())
 
 	if waypoint_callbacks.is_empty():
@@ -1597,7 +1598,7 @@ func move_to_point(target_pos: Vector2, on_reached: Callable = Callable(), queue
 
 	stuck_timer = 0.0
 	if reticle:
-		reticle.global_position = target_pos
+		reticle.global_position = path[path.size() - 1]
 		reticle.visible = true
 		reticle.modulate = Color(1.0, 0.9, 0.3, 1.0)
 		reticle.scale = Vector2(0.55, 0.55)
@@ -1612,14 +1613,14 @@ func queue_move_point(target_pos: Vector2, on_reached: Callable = Callable()) ->
 		move_to_point(target_pos, on_reached)
 		return
 
-	var start_anchor = waypoint_queue.back() if waypoint_queue.size() > 0 else target_position
+	var start_anchor = (waypoint_queue.back() + Vector2(0, 16)) if waypoint_queue.size() > 0 else (target_position + Vector2(0, 16))
 	var cur_scene = get_tree().current_scene
 	var path = Pathfinder.get_nav_path(get_world_2d(), start_anchor, target_pos, cur_scene, [get_rid()])
 	if path.is_empty():
-		path = PackedVector2Array([target_pos])
+		return
 
 	for k in range(path.size()):
-		waypoint_queue.append(path[k])
+		waypoint_queue.append(path[k] - Vector2(0, 16))
 		if k == path.size() - 1:
 			waypoint_callbacks.append(on_reached)
 		else:
@@ -1627,7 +1628,7 @@ func queue_move_point(target_pos: Vector2, on_reached: Callable = Callable()) ->
 
 	stuck_timer = 0.0
 	if reticle:
-		reticle.global_position = waypoint_queue.back()
+		reticle.global_position = waypoint_queue.back() + Vector2(0, 16)
 		reticle.visible = true
 		reticle.modulate = Color(0.2, 1.0, 0.5, 1.0)
 	if path_visualizer:

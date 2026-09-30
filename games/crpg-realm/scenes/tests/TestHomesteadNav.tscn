@@ -1,0 +1,7 @@
+[gd_scene load_steps=3 format=3 uid="uid://testhomesteadnav01"]
+
+[ext_resource type="PackedScene" path="res://scenes/Homestead.tscn" id="1_hs"]
+[ext_resource type="Script" path="res://scenes/tests/TestHomesteadNav.gd" id="2_thn"]
+
+[node name="Homestead" instance=ExtResource("1_hs")]
+script = ExtResource("2_thn")

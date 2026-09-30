@@ -1,6 +1,7 @@
 extends Node2D
 
 const CharacterModel3D = preload("res://scripts/CharacterModel3D.gd")
+const Pathfinder = preload("res://scripts/Pathfinder.gd")
 
 # RobOS cRPG Cartridge World Runner
 # Dynamically loads and renders any battle-map contained within the plugged-in Player Cartridge.
@@ -230,6 +231,7 @@ func _load_map(map_slug: String, spawn_coords: Vector2) -> void:
 	var objects = map_data.get("robos:mapObjects", map_data.get("objects", []))
 	for obj in objects:
 		_spawn_map_object(obj)
+	Pathfinder.invalidate_grid()
 
 	# 4. Resolve Map Connections from Campaign
 	var campaign = CartridgeManager.active_cartridge.get("campaign", {})
