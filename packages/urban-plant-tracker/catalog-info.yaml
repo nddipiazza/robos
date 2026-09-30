@@ -1,0 +1,17 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: urban-plant-tracker
+  title: "Urban Plant Tracker"
+  description: "Smart indoor plant care companion with automated watering reminders, botanical light logs, and care guides."
+  annotations:
+    github.com/project-slug: "nddipiazza/urban-plant-tracker"
+    vercel.com/project-name: "urban-plant-tracker"
+    robos.dev/template: "nextjs-vercel-web@1"
+    robos.dev/domain: "urbanplanttracker.com"
+    robos.dev/urn: "urn:robos:frontend-app:urban-plant-tracker"
+  tags: [frontend, nextjs, react, vercel, neon, seo, e2e-evidence]
+spec:
+  type: website
+  lifecycle: production
+  owner: frontend-team

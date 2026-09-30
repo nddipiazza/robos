@@ -817,6 +817,21 @@
       "robos:namespace": "robos.services",
       "robos:schemaOrgType": "https://schema.org/EntryPoint",
       "robos:domainStandard": "https://spec.openapis.org/oas/v3.1.0"
+    },
+    {
+      "@id": "urn:robos:service:barista-order-api",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:Microservice",
+        "schema:WebApplication"
+      ],
+      "dcterms:title": "Barista Order API",
+      "dcterms:description": "Specialty coffee roastery order queue, origin bean catalog, and barista drink fulfillment microservice.",
+      "robos:package": "services",
+      "robos:namespace": "robos.services",
+      "robos:repository": "github.com/nddipiazza/barista-order-api",
+      "robos:technology": "Node.js 20 / Express",
+      "robos:schemaOrgType": "https://schema.org/WebApplication"
     }
   ],
   "@graph": [

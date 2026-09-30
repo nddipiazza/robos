@@ -1,0 +1,15 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: barista-order-api
+  title: "Barista Order API"
+  description: "Specialty coffee roastery order queue, origin bean catalog, and barista drink fulfillment microservice."
+  annotations:
+    github.com/project-slug: "nddipiazza/barista-order-api"
+    robos.dev/domain: "barista-api.robos.internal"
+    robos.dev/urn: "urn:robos:service:barista-order-api"
+  tags: [microservice]
+spec:
+  type: microservice
+  lifecycle: production
+  owner: order-team

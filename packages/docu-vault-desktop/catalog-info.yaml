@@ -1,0 +1,15 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: docu-vault-desktop
+  title: "DocuVault Desktop"
+  description: "Offline-first secure markdown notes, personal snippet vault, and encrypted local storage workstation tool."
+  annotations:
+    github.com/project-slug: "nddipiazza/docu-vault-desktop"
+    robos.dev/domain: "docuvault.app"
+    robos.dev/urn: "urn:robos:desktop-app:docu-vault-desktop"
+  tags: [desktopapp]
+spec:
+  type: desktopapp
+  lifecycle: production
+  owner: platform-team

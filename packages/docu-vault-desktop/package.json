@@ -1,0 +1,17 @@
+{
+  "name": "docu-vault-desktop",
+  "version": "1.0.0",
+  "description": "Offline-first secure markdown notes, personal snippet vault, and encrypted local storage workstation tool.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron . --no-sandbox --disable-gpu --disable-dev-shm-usage",
+    "test": "node --test"
+  },
+  "keywords": [
+    "robos",
+    "desktop",
+    "docu-vault-desktop"
+  ],
+  "author": "platform-team",
+  "license": "Apache-2.0"
+}

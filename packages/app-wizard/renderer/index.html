@@ -22,13 +22,19 @@
         <circle cx="19" cy="5" r="2"/>
       </svg>
       <div>
-        <div class="brand-title">RobOS App Wizard</div>
-        <div class="brand-subtitle">Develop New Apps & Import Existing Repositories</div>
+        <div class="brand-title">RobOS Create Project & App Wizard</div>
+        <div class="brand-subtitle">Effortlessly build new applications, websites & services or import code</div>
       </div>
     </div>
-    <div class="mode-toggle">
-      <button class="mode-btn active" id="btn-mode-new" data-mode="new">Develop New App</button>
-      <button class="mode-btn" id="btn-mode-import" data-mode="import">Import Existing App</button>
+    <div class="header-controls">
+      <div class="view-mode-toggle" id="view-mode-toggle">
+        <button type="button" class="view-toggle-btn active" id="btn-view-simple" title="Friendly, plain-English mode for everyone">🟢 Simple Mode</button>
+        <button type="button" class="view-toggle-btn" id="btn-view-advanced" title="Granular engineering configuration">⚙️ Advanced Mode</button>
+      </div>
+      <div class="mode-toggle">
+        <button class="mode-btn active" id="btn-mode-new" data-mode="new">✨ Create New Project</button>
+        <button class="mode-btn" id="btn-mode-import" data-mode="import">📥 Import Existing Code</button>
+      </div>
     </div>
   </header>
 
@@ -40,173 +46,307 @@
     <main class="main-view">
       <!-- MODE: NEW APP PANELS -->
       <section class="step-panel active" id="panel-new-1">
-        <h2>Select Application Archetype</h2>
-        <div class="subtitle">Choose the architectural template tailored to your software artifact.</div>
+        <!-- Quick-Start Realistic Templates Banner -->
+        <div class="quick-templates-section">
+          <div class="quick-templates-header">
+            <span class="quick-badge">🌟 ONE-CLICK REALISTIC TEMPLATES</span>
+            <span class="quick-sub">Click any idea below to fill out realistic settings instantly:</span>
+          </div>
+          <div class="quick-templates-grid">
+            <button type="button" class="quick-tpl-btn" data-preset="plant" id="btn-preset-plant">
+              <span class="tpl-icon">🌿</span>
+              <div class="tpl-info">
+                <div class="tpl-name">Urban Plant Tracker</div>
+                <div class="tpl-desc">Web App · Plant care schedules & indoor garden journal</div>
+              </div>
+            </button>
+            <button type="button" class="quick-tpl-btn" data-preset="coffee" id="btn-preset-coffee">
+              <span class="tpl-icon">☕</span>
+              <div class="tpl-info">
+                <div class="tpl-name">Barista Order API</div>
+                <div class="tpl-desc">Cloud API · Roastery drink queue & bean inventory</div>
+              </div>
+            </button>
+            <button type="button" class="quick-tpl-btn" data-preset="docu" id="btn-preset-docu">
+              <span class="tpl-icon">📑</span>
+              <div class="tpl-info">
+                <div class="tpl-name">DocuVault Desktop</div>
+                <div class="tpl-desc">Desktop App · Offline markdown notes & secure files</div>
+              </div>
+            </button>
+            <button type="button" class="quick-tpl-btn" data-preset="pulse" id="btn-preset-pulse">
+              <span class="tpl-icon">⚡</span>
+              <div class="tpl-info">
+                <div class="tpl-name">Pulse Metrics CLI</div>
+                <div class="tpl-desc">Terminal Tool · System health monitor & latency pinger</div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <h2>Step 1: What kind of project are you building?</h2>
+        <div class="subtitle">Choose the type of project. Don't worry—you can customize all details in the next steps.</div>
         <div class="archetype-grid">
-          <div class="archetype-card selected" data-archetype="robos:Microservice" id="card-arch-microservice">
-            <div class="arch-icon">⚡</div>
-            <div class="arch-title">Microservice / Web API</div>
-            <div class="arch-desc">RESTful backend, Java Spring Boot, Go Gin, Python FastAPI with OpenAPI 3.1 contracts.</div>
+          <div class="archetype-card selected" data-archetype="robos:FrontEndApp" id="card-arch-frontend">
+            <div class="arch-badge">RECOMMENDED FOR WEB</div>
+            <div class="arch-icon">🌐</div>
+            <div class="arch-title">Modern Website / Web App</div>
+            <div class="arch-desc">An interactive website that runs on phones, tablets, and laptops with zero setup.</div>
           </div>
           <div class="archetype-card" data-archetype="robos:DesktopApp" id="card-arch-desktop">
             <div class="arch-icon">🖥️</div>
             <div class="arch-title">Desktop Application</div>
-            <div class="arch-desc">Electron, Tauri, or Qt workstation app integrated into RobOS app launcher & panels.</div>
+            <div class="arch-desc">An installable computer program that opens in its own window (like Spotify or Slack).</div>
+          </div>
+          <div class="archetype-card" data-archetype="robos:Microservice" id="card-arch-microservice">
+            <div class="arch-icon">⚡</div>
+            <div class="arch-title">Backend Cloud API</div>
+            <div class="arch-desc">A cloud service that handles data storage, user accounts, and business operations.</div>
           </div>
           <div class="archetype-card" data-archetype="robos:ConsoleApp" id="card-arch-cli">
             <div class="arch-icon">⌨️</div>
-            <div class="arch-title">Console & CLI Tool</div>
-            <div class="arch-desc">Command-line terminal utilities using Go Cobra, Rust Clap, Python Click, or Node.</div>
-          </div>
-          <div class="archetype-card" data-archetype="robos:MobileApp" id="card-arch-mobile">
-            <div class="arch-icon">📱</div>
-            <div class="arch-title">Mobile Application</div>
-            <div class="arch-desc">iOS, Android, React Native, or Flutter client applications.</div>
-          </div>
-          <div class="archetype-card" data-archetype="robos:FrontEndApp" id="card-arch-frontend">
-            <div class="arch-icon">🌐</div>
-            <div class="arch-title">Front End Application</div>
-            <div class="arch-desc">Single-page and SSR web client applications with React, Vite, Next.js, Vue, or Svelte.</div>
+            <div class="arch-title">Command-Line Utility</div>
+            <div class="arch-desc">A fast, lightweight tool that runs in your terminal command prompt.</div>
           </div>
           <div class="archetype-card" data-archetype="robos:PCGame" id="card-arch-pcgame">
             <div class="arch-icon">🎮</div>
-            <div class="arch-title">PC Game</div>
-            <div class="arch-desc">Interactive desktop games built with Unreal Engine, Unity, Godot, or Bevy.</div>
+            <div class="arch-title">PC Video Game</div>
+            <div class="arch-desc">An interactive 2D or 3D desktop game built with Godot or modern game engines.</div>
           </div>
-          <div class="archetype-card" data-archetype="robos:MobileGame" id="card-arch-mobilegame">
-            <div class="arch-icon">🕹️</div>
-            <div class="arch-title">Mobile Game</div>
-            <div class="arch-desc">Mobile game applications for iOS and Android built with Unity, Unreal, or Godot.</div>
+          <div class="archetype-card" data-archetype="robos:MobileApp" id="card-arch-mobile">
+            <div class="arch-icon">📱</div>
+            <div class="arch-title">Mobile Phone App</div>
+            <div class="arch-desc">A smartphone app designed for iOS and Android devices.</div>
           </div>
           <div class="archetype-card" data-archetype="robos:DataPipeline" id="card-arch-pipeline">
             <div class="arch-icon">🌊</div>
-            <div class="arch-title">Data Pipeline / Worker</div>
-            <div class="arch-desc">Stream and batch processing jobs with Apache Kafka, Celery, or Spark.</div>
+            <div class="arch-title">Data Worker / Sync</div>
+            <div class="arch-desc">An automated background service for batch processing and live event synchronization.</div>
           </div>
           <div class="archetype-card" data-archetype="robos:Library" id="card-arch-library">
             <div class="arch-icon">📦</div>
-            <div class="arch-title">Library / SDK</div>
-            <div class="arch-desc">Reusable client SDKs, domain modules, and packages published across registries.</div>
+            <div class="arch-title">Reusable Code Library</div>
+            <div class="arch-desc">A shared software module or package that other projects can import and use.</div>
           </div>
         </div>
         <div class="action-bar">
-          <button class="btn btn-primary" id="btn-next-new-1">Next: App Identity →</button>
+          <button class="btn btn-primary" id="btn-next-new-1">Next: Project Basics →</button>
         </div>
       </section>
 
       <section class="step-panel" id="panel-new-2">
-        <h2>App Identity & Ownership</h2>
-        <div class="subtitle">Specify naming, package identifier URN, technology, and team ownership.</div>
+        <h2>Step 2: Project Basics</h2>
+        <div class="subtitle">Enter simple details about your project. The folder name will update automatically.</div>
+        
         <div class="form-group">
-          <label for="new-app-name">Application Name</label>
-          <input type="text" id="new-app-name" value="Payment Gateway API" placeholder="e.g. Payment Gateway API">
+          <label for="new-app-name">Project Name</label>
+          <input type="text" id="new-app-name" value="Urban Plant Tracker" placeholder="e.g. Urban Plant Tracker, Coffee Roaster API">
+          <span class="field-hint">The human-readable name of your project.</span>
         </div>
+
         <div class="form-group">
-          <label for="new-app-slug">Package Identifier Slug</label>
-          <input type="text" id="new-app-slug" value="payment-gateway-api" placeholder="e.g. payment-gateway-api">
+          <label for="new-app-slug">Folder Name on Computer</label>
+          <div class="slug-input-wrapper">
+            <span class="slug-prefix">packages/</span>
+            <input type="text" id="new-app-slug" value="urban-plant-tracker" placeholder="e.g. urban-plant-tracker">
+          </div>
+          <span class="field-hint">Automatic folder identifier (lowercase with hyphens). Updates as you type above.</span>
         </div>
+
         <div class="form-group">
-          <label for="new-app-tech">Technology Stack & Language</label>
-          <select id="new-app-tech">
-            <option value="Next.js 15 / React / TailwindCSS (Vercel + GitHub)">Next.js 15 / React / TailwindCSS (Vercel + GitHub)</option>
-            <option value="Java 21 / Spring Boot 3">Java 21 / Spring Boot 3</option>
-            <option value="Node.js 20 / TypeScript / Express">Node.js 20 / TypeScript / Express</option>
-            <option value="Vite / React / TypeScript (SPA)">Vite / React / TypeScript (SPA)</option>
-            <option value="Go 1.22 / Gin">Go 1.22 / Gin</option>
-            <option value="Python 3.11 / FastAPI">Python 3.11 / FastAPI</option>
-            <option value="Electron 29 / Vanilla JS">Electron 29 / Vanilla JS</option>
-            <option value="Rust / Tokio">Rust / Tokio</option>
-          </select>
+          <label for="new-app-description">What does this project do?</label>
+          <input type="text" id="new-app-description" value="Smart indoor plant care companion with automated watering reminders and botanical health logs." placeholder="One or two sentences explaining what this project does">
+          <span class="field-hint">Used for documentation, search, and AI assistant context.</span>
         </div>
-        <div class="form-group">
-          <label for="new-app-deploy">Deployment & Hosting Target</label>
-          <select id="new-app-deploy">
-            <option value="vercel">Vercel (Serverless / Edge Functions)</option>
-            <option value="docker">Docker Container / Kubernetes</option>
-            <option value="cloudflare">Cloudflare Pages / Workers</option>
-            <option value="self-hosted">Self-Hosted / Standalone Linux</option>
-          </select>
+
+        <div class="form-group" id="group-tagline">
+          <label for="new-app-tagline">Catchy Tagline</label>
+          <input type="text" id="new-app-tagline" value="Keep your green friends thriving effortlessly." placeholder="e.g. Keep your green friends thriving effortlessly.">
+          <span class="field-hint">Short phrase displayed on the homepage and social previews.</span>
         </div>
-        <div class="form-group">
-          <label for="new-app-storage">Data Storage & Persistence Layer</label>
-          <select id="new-app-storage">
-            <option value="embedded-json">Zero-Config Embedded JSON / Vercel KV</option>
-            <option value="mongodb">MongoDB Atlas (Mongoose ODM)</option>
-            <option value="postgres">PostgreSQL / Supabase / Neon</option>
-            <option value="sqlite">SQLite / Turso LibSQL</option>
-          </select>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="new-app-storage">How will it save data?</label>
+            <select id="new-app-storage">
+              <option value="embedded-json">✨ Zero-Setup Embedded Storage (Recommended, works immediately)</option>
+              <option value="postgres">PostgreSQL / Supabase Database</option>
+              <option value="mongodb">MongoDB Document Database</option>
+              <option value="sqlite">SQLite Local Database File</option>
+            </select>
+            <span class="field-hint">Embedded storage requires no server configuration.</span>
+          </div>
+
+          <div class="form-group">
+            <label for="new-app-deploy">Where will it run?</label>
+            <select id="new-app-deploy">
+              <option value="vercel">Cloud Hosting (Vercel / Web)</option>
+              <option value="self-hosted">Local Workstation / Linux</option>
+              <option value="docker">Docker Container</option>
+              <option value="cloudflare">Cloudflare Edge</option>
+            </select>
+            <span class="field-hint">Target environment for launching your project.</span>
+          </div>
         </div>
-        <div class="form-group">
-          <label for="new-app-domain">Custom Domain (Optional)</label>
-          <input type="text" id="new-app-domain" placeholder="e.g. getemgigs.com">
+
+        <!-- Advanced Fields Container (hidden in Simple Mode) -->
+        <div class="advanced-fields-box" id="advanced-fields-new-2">
+          <div class="advanced-badge">⚙️ ADVANCED DEVELOPER SETTINGS</div>
+          <div class="form-group">
+            <label for="new-app-tech">Technology Stack & Runtime</label>
+            <select id="new-app-tech">
+              <option value="Next.js 15 / React / TailwindCSS (Vercel + GitHub)">Next.js 15 / React / TailwindCSS (Vercel + GitHub)</option>
+              <option value="Electron 29 / Vanilla JS">Electron 29 / Vanilla JS</option>
+              <option value="Node.js 20 / TypeScript / Express">Node.js 20 / TypeScript / Express</option>
+              <option value="Python 3.11 / FastAPI">Python 3.11 / FastAPI</option>
+              <option value="Java 21 / Spring Boot 3">Java 21 / Spring Boot 3</option>
+              <option value="Go 1.22 / Gin">Go 1.22 / Gin</option>
+              <option value="Vite / React / TypeScript (SPA)">Vite / React / TypeScript (SPA)</option>
+              <option value="Rust / Tokio">Rust / Tokio</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="new-app-domain">Custom Domain Name (Optional)</label>
+            <input type="text" id="new-app-domain" placeholder="e.g. planttracker.com">
+          </div>
+          <div class="form-group">
+            <label for="new-app-keywords">Search Keywords</label>
+            <input type="text" id="new-app-keywords" placeholder="e.g. plants, gardening, botanical">
+          </div>
         </div>
+
         <div class="form-group">
-          <label for="new-app-tagline">Tagline (web apps: hero, OG image, meta)</label>
-          <input type="text" id="new-app-tagline" placeholder="e.g. Fill the room. Kill pay-to-play.">
-        </div>
-        <div class="form-group">
-          <label for="new-app-description">Description (meta description, llms.txt, JSON-LD)</label>
-          <input type="text" id="new-app-description" placeholder="One or two sentences for search engines and AI agents">
-        </div>
-        <div class="form-group">
-          <label for="new-app-keywords">Keywords (comma separated)</label>
-          <input type="text" id="new-app-keywords" placeholder="e.g. local bands, live music, gig swap">
-        </div>
-        <div class="form-group">
-          <label for="new-app-team">Team Ownership (.robos/teams.yaml)</label>
+          <label for="new-app-team">Project Team Owner</label>
           <select id="new-app-team">
             <!-- Populated via IPC -->
           </select>
+          <span class="field-hint">Team responsible for maintaining this project.</span>
         </div>
+
         <div class="action-bar">
           <button class="btn btn-secondary" id="btn-back-new-2">← Back</button>
-          <button class="btn btn-primary" id="btn-next-new-2">Next: API Contracts →</button>
+          <button class="btn btn-primary" id="btn-next-new-2">Next: Features & Contracts →</button>
         </div>
       </section>
 
       <section class="step-panel" id="panel-new-3">
-        <h2>Contract & API Specification</h2>
-        <div class="subtitle">Define the API contract specification for consumer contract verification.</div>
-        <div class="form-group">
-          <label for="new-contract-type">Specification Type</label>
-          <select id="new-contract-type">
-            <option value="next-routes">Next.js App Router API Routes (/api/*)</option>
-            <option value="openapi">OpenAPI 3.1 (REST API)</option>
-            <option value="typespec">Microsoft TypeSpec (.tsp)</option>
-            <option value="protobuf">Protobuf gRPC (.proto)</option>
-            <option value="graphql">GraphQL Schema (.graphql)</option>
-          </select>
+        <h2>Step 3: Features & API Configuration</h2>
+        <div class="subtitle">RobOS sets up standard verified contracts, health checks, and security controls automatically.</div>
+        
+        <!-- Simple Mode Features Checklist -->
+        <div class="simple-features-card" id="simple-features-view">
+          <div class="simple-features-title">Included Out-Of-The-Box Capabilities</div>
+          <div class="features-checklist">
+            <div class="feature-item">
+              <span class="feature-check">✅</span>
+              <div>
+                <strong>Automatic System Health Endpoint</strong>
+                <p>Monitors uptime, service responsiveness, and diagnostics automatically.</p>
+              </div>
+            </div>
+            <div class="feature-item">
+              <span class="feature-check">✅</span>
+              <div>
+                <strong>Built-In Security & Abuse Protection</strong>
+                <p>Includes rate limits, CSRF protection, and prompt security guard integration.</p>
+              </div>
+            </div>
+            <div class="feature-item">
+              <span class="feature-check">✅</span>
+              <div>
+                <strong>Full RobOS Knowledge Graph Integration</strong>
+                <p>Indexed in the SDLC Graph with semantic relationship tracking and living docs.</p>
+              </div>
+            </div>
+            <div class="feature-item">
+              <span class="feature-check">✅</span>
+              <div>
+                <strong>One-Click Developer Setup Script</strong>
+                <p>Includes an executable <code>dev-setup.sh</code> that prepares and verifies everything.</p>
+              </div>
+            </div>
+          </div>
+          <div class="simple-features-tip">
+            💡 <em>Need to customize raw OpenAPI YAML or TypeSpec? Switch to <strong>⚙️ Advanced Mode</strong> at the top right anytime.</em>
+          </div>
         </div>
-        <div class="form-group">
-          <label for="new-contract-content">Contract Preview (OpenAPI 3.1)</label>
-          <textarea id="new-contract-content" rows="8">openapi: 3.1.0
+
+        <!-- Advanced Mode Contract Editor (hidden in Simple Mode) -->
+        <div class="advanced-fields-box" id="advanced-contract-view" style="display: none;">
+          <div class="advanced-badge">⚙️ CONTRACT SPECIFICATION (ADVANCED)</div>
+          <div class="form-group">
+            <label for="new-contract-type">Specification Format</label>
+            <select id="new-contract-type">
+              <option value="next-routes">Next.js App Router API Routes (/api/*)</option>
+              <option value="openapi">OpenAPI 3.1 (REST API)</option>
+              <option value="typespec">Microsoft TypeSpec (.tsp)</option>
+              <option value="protobuf">Protobuf gRPC (.proto)</option>
+              <option value="graphql">GraphQL Schema (.graphql)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="new-contract-content">Raw Contract Preview</label>
+            <textarea id="new-contract-content" rows="7">openapi: 3.1.0
 info:
-  title: Payment Gateway API
+  title: Application API
   version: 1.0.0
 paths:
-  /v1/payments:
-    post:
-      summary: Process payment
-  /v1/refunds:
-    post:
-      summary: Process refund</textarea>
+  /api/health:
+    get:
+      summary: Service health check endpoint
+      responses:
+        '200':
+          description: OK</textarea>
+          </div>
         </div>
+
         <div class="action-bar">
           <button class="btn btn-secondary" id="btn-back-new-3">← Back</button>
-          <button class="btn btn-primary" id="btn-next-new-3">Next: Scaffold & Generate →</button>
+          <button class="btn btn-primary" id="btn-next-new-3">Next: Review & Create →</button>
         </div>
       </section>
 
       <section class="step-panel" id="panel-new-4">
-        <h2>Scaffolding Generation & Registration</h2>
-        <div class="subtitle">Review the configuration and execute automated project bootstrapping.</div>
-        <div class="summary-box" id="new-summary-box">
-          <!-- Populated by app.js -->
+        <h2>Step 4: Review & Create Project</h2>
+        <div class="subtitle">Review your project details below and click "Create Project Now" to scaffold everything.</div>
+        
+        <!-- Human-Readable Project Launch Card -->
+        <div class="project-launch-card" id="project-launch-card">
+          <div class="launch-card-header">
+            <div class="launch-card-icon" id="launch-card-icon">🌿</div>
+            <div class="launch-card-titles">
+              <div class="launch-card-name" id="launch-card-name">Urban Plant Tracker</div>
+              <div class="launch-card-tagline" id="launch-card-tagline">Keep your green friends thriving effortlessly.</div>
+            </div>
+          </div>
+          
+          <div class="launch-card-desc" id="launch-card-desc">
+            Smart indoor plant care companion with automated watering reminders and botanical health logs.
+          </div>
+
+          <div class="launch-badges-row" id="launch-badges-row">
+            <!-- Populated by app.js -->
+          </div>
+
+          <div class="launch-checklist">
+            <div class="launch-checklist-title">What RobOS will create for you:</div>
+            <div class="checklist-item">📁 Project folder at <code id="launch-folder-path">packages/urban-plant-tracker</code></div>
+            <div class="checklist-item">📄 Clean, runnable starter code with tests and README</div>
+            <div class="checklist-item">🛡️ Automatic health check endpoints and security protections</div>
+            <div class="checklist-item">🧭 Registration in RobOS Knowledge Graph and Developer Central</div>
+            <div class="checklist-item">⚡ Executable <code>dev-setup.sh</code> script ready to run</div>
+          </div>
         </div>
-        <div class="console-output" id="new-console-output">Ready to scaffold application...</div>
+
+        <div class="summary-box" id="new-summary-box" style="display:none;">
+          <!-- Fallback technical summary for advanced mode -->
+        </div>
+
+        <div class="console-output" id="new-console-output">Ready to create project... Click "Create Project Now" below!</div>
+        
         <div class="action-bar">
           <button class="btn btn-secondary" id="btn-back-new-4">← Back</button>
-          <button class="btn btn-primary" id="btn-generate-new">Scaffold Application ⚡</button>
+          <button class="btn btn-primary btn-launch-action" id="btn-generate-new">🚀 Create Project Now</button>
         </div>
       </section>
 

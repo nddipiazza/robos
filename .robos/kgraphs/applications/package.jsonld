@@ -383,6 +383,79 @@
       "robos:refersFrom": "https://schema.org/ControlAction",
       "robos:package": "applications",
       "robos:namespace": "robos.applications"
+    },
+    {
+      "@id": "urn:robos:frontend-app:urban-plant-tracker",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:FrontEndApp",
+        "schema:WebApplication"
+      ],
+      "dcterms:title": "Urban Plant Tracker",
+      "dcterms:description": "Smart indoor plant care companion with automated watering reminders, botanical light logs, and care guides.",
+      "robos:package": "applications",
+      "robos:namespace": "robos.applications",
+      "robos:repository": "github.com/nddipiazza/urban-plant-tracker",
+      "robos:technology": "Next.js 15 / React 19 / Node.js 22",
+      "robos:frontendFramework": "Next.js",
+      "robos:appTemplate": "robos:template:nextjs-vercel-web@1",
+      "robos:hostingPlatform": "Vercel",
+      "robos:productionUrl": "https://www.urbanplanttracker.com",
+      "robos:databaseEngine": "Neon serverless Postgres (PGlite locally)",
+      "robos:authStrategy": "Email + password, server-side sessions (bcrypt, SHA-256 hashed tokens)",
+      "robos:abuseControls": [
+        "rate-limits",
+        "honeypot",
+        "form-timing",
+        "disposable-email-block",
+        "password-policy",
+        "same-origin-csrf",
+        "csp",
+        "audit-log"
+      ],
+      "robos:captchaProvider": "reCAPTCHA v3 (wired, disabled)",
+      "robos:crawlerPolicy": "Search engines, AI search/agents and link-preview bots allowed on public pages; /api, /dashboard, /account disallowed",
+      "robos:sitemapUrl": "https://www.urbanplanttracker.com/sitemap.xml",
+      "robos:llmsTxtUrl": "https://www.urbanplanttracker.com/llms.txt",
+      "robos:structuredData": [
+        "schema:Organization",
+        "schema:WebSite",
+        "schema:WebApplication",
+        "schema:FAQPage"
+      ],
+      "robos:e2eEvidence": "tests/e2e (Cucumber + Playwright) → npm run evidence",
+      "robos:schemaOrgType": "https://schema.org/WebApplication",
+      "robos:domainStandard": "https://schema.org/WebApplication"
+    },
+    {
+      "@id": "urn:robos:desktop-app:docu-vault-desktop",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:title": "DocuVault Desktop",
+      "dcterms:description": "Offline-first secure markdown notes, personal snippet vault, and encrypted local storage workstation tool.",
+      "robos:package": "applications",
+      "robos:namespace": "robos.applications",
+      "robos:repository": "github.com/nddipiazza/docu-vault-desktop",
+      "robos:technology": "Electron 29 / Vanilla JS",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:console-app:pulse-metrics-cli",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:ConsoleApp",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:title": "Pulse Metrics CLI",
+      "dcterms:description": "Terminal-based server health diagnostics, network latency pinger, and automated uptime reporting utility.",
+      "robos:package": "applications",
+      "robos:namespace": "robos.applications",
+      "robos:repository": "github.com/nddipiazza/pulse-metrics-cli",
+      "robos:technology": "Node.js 20 / CLI",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
     }
   ],
   "@graph": [

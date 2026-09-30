@@ -1,0 +1,16 @@
+# Urban Plant Tracker (urbanplanttracker.com)
+
+> Smart indoor plant care companion with automated watering reminders, botanical light logs, and care guides.
+
+Key facts:
+- Keep your green friends thriving effortlessly.
+- Phone-first web app; add urbanplanttracker.com to your home screen.
+
+## Main pages
+- [Home](https://www.urbanplanttracker.com/): what Urban Plant Tracker is, FAQ
+- [Sign up](https://www.urbanplanttracker.com/signup): create a free account
+- [Sitemap](https://www.urbanplanttracker.com/sitemap.xml): every public page
+
+## Policies
+- [Terms](https://www.urbanplanttracker.com/terms)
+- [Privacy](https://www.urbanplanttracker.com/privacy)

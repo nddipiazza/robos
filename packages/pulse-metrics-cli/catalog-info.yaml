@@ -1,0 +1,15 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: pulse-metrics-cli
+  title: "Pulse Metrics CLI"
+  description: "Terminal-based server health diagnostics, network latency pinger, and automated uptime reporting utility."
+  annotations:
+    github.com/project-slug: "nddipiazza/pulse-metrics-cli"
+    robos.dev/domain: "pulsemetrics.dev"
+    robos.dev/urn: "urn:robos:console-app:pulse-metrics-cli"
+  tags: [consoleapp]
+spec:
+  type: consoleapp
+  lifecycle: production
+  owner: platform-team

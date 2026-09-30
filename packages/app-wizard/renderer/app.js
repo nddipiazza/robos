@@ -9,11 +9,13 @@ let kgraphImportData = null;
 let queuedResources = [];
 let teamsList = [];
 
+let isAdvancedView = false;
+
 const NEW_STEPS = [
-  { num: 1, label: 'Archetype' },
-  { num: 2, label: 'Identity & Team' },
-  { num: 3, label: 'API Contracts' },
-  { num: 4, label: 'Scaffolding' },
+  { num: 1, label: 'What to Build' },
+  { num: 2, label: 'Project Basics' },
+  { num: 3, label: 'Features & Data' },
+  { num: 4, label: 'Review & Create' },
 ];
 
 const IMPORT_STEPS = [
@@ -21,6 +23,65 @@ const IMPORT_STEPS = [
   { num: 2, label: 'Deep Inspection' },
   { num: 3, label: 'Catalog & Ingest' },
 ];
+
+const PRESETS = {
+  plant: {
+    archetype: 'robos:FrontEndApp',
+    name: 'Urban Plant Tracker',
+    slug: 'urban-plant-tracker',
+    description: 'Smart indoor plant care companion with automated watering reminders and botanical health logs.',
+    tagline: 'Keep your green friends thriving effortlessly.',
+    storage: 'embedded-json',
+    deploy: 'vercel',
+    tech: 'Next.js 15 / React / TailwindCSS (Vercel + GitHub)',
+    keywords: 'plants, gardening, indoor botanical, reminders',
+    contractType: 'next-routes',
+  },
+  coffee: {
+    archetype: 'robos:Microservice',
+    name: 'Barista Order API',
+    slug: 'barista-order-api',
+    description: 'Specialty coffee roastery order queue, origin bean catalog, and barista drink fulfillment service.',
+    tagline: 'Precision brewing and real-time cafe order management.',
+    storage: 'postgres',
+    deploy: 'docker',
+    tech: 'Node.js 20 / TypeScript / Express',
+    keywords: 'coffee, barista, orders, roastery, api',
+    contractType: 'openapi',
+  },
+  docu: {
+    archetype: 'robos:DesktopApp',
+    name: 'DocuVault Desktop',
+    slug: 'docu-vault-desktop',
+    description: 'Offline-first secure markdown notes, personal snippet vault, and encrypted local storage.',
+    tagline: 'Your thoughts, code snippets, and ideas—safely stored locally.',
+    storage: 'sqlite',
+    deploy: 'self-hosted',
+    tech: 'Electron 29 / Vanilla JS',
+    keywords: 'notes, markdown, offline, vault, desktop',
+    contractType: 'openapi',
+  },
+  pulse: {
+    archetype: 'robos:ConsoleApp',
+    name: 'Pulse Metrics CLI',
+    slug: 'pulse-metrics-cli',
+    description: 'Terminal-based server health diagnostics, network latency pinger, and uptime monitoring utility.',
+    tagline: 'Lightning-fast infrastructure diagnostics from your terminal.',
+    storage: 'embedded-json',
+    deploy: 'self-hosted',
+    tech: 'Node.js 20 / CLI',
+    keywords: 'cli, terminal, ping, metrics, diagnostics',
+    contractType: 'openapi',
+  },
+};
+
+function slugify(name) {
+  return (name || '')
+    .toLowerCase()
+    .replace(/['"]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
 
 function getArchetypeUrnPrefix(arch) {
   const clean = (arch || '').replace('robos:', '');
@@ -38,21 +99,133 @@ function getArchetypeUrnPrefix(arch) {
 
 async function init() {
   setupModeToggle();
+  setupViewModeToggle();
   setupArchetypeCards();
+  setupPresetButtons();
+  setupAutoSlug();
   setupNavButtons();
   setupResourceQueue();
   await loadTeams();
   renderSidebar();
 }
 
+function setupViewModeToggle() {
+  const btnSimple = document.getElementById('btn-view-simple');
+  const btnAdvanced = document.getElementById('btn-view-advanced');
+  const advFields = document.getElementById('advanced-fields-new-2');
+  const advContract = document.getElementById('advanced-contract-view');
+  const summaryBox = document.getElementById('new-summary-box');
+
+  const updateViewMode = () => {
+    if (advFields) advFields.style.display = isAdvancedView ? 'flex' : 'none';
+    if (advContract) advContract.style.display = isAdvancedView ? 'flex' : 'none';
+    if (summaryBox) summaryBox.style.display = isAdvancedView ? 'block' : 'none';
+
+    if (btnSimple && btnAdvanced) {
+      if (isAdvancedView) {
+        btnAdvanced.classList.add('active');
+        btnSimple.classList.remove('active');
+      } else {
+        btnSimple.classList.add('active');
+        btnAdvanced.classList.remove('active');
+      }
+    }
+  };
+
+  if (btnSimple) {
+    btnSimple.addEventListener('click', () => {
+      isAdvancedView = false;
+      updateViewMode();
+    });
+  }
+
+  if (btnAdvanced) {
+    btnAdvanced.addEventListener('click', () => {
+      isAdvancedView = true;
+      updateViewMode();
+    });
+  }
+
+  updateViewMode();
+}
+
+function setupAutoSlug() {
+  const nameInput = document.getElementById('new-app-name');
+  const slugInput = document.getElementById('new-app-slug');
+  if (!nameInput || !slugInput) return;
+
+  nameInput.addEventListener('input', () => {
+    slugInput.value = slugify(nameInput.value);
+  });
+}
+
+function applyPreset(presetKey) {
+  const p = PRESETS[presetKey];
+  if (!p) return;
+
+  selectedArchetype = p.archetype;
+  document.querySelectorAll('.archetype-card').forEach(card => {
+    if (card.dataset.archetype === p.archetype) {
+      card.classList.add('selected');
+    } else {
+      card.classList.remove('selected');
+    }
+  });
+
+  const nameInput = document.getElementById('new-app-name');
+  if (nameInput) nameInput.value = p.name;
+
+  const slugInput = document.getElementById('new-app-slug');
+  if (slugInput) slugInput.value = p.slug;
+
+  const descInput = document.getElementById('new-app-description');
+  if (descInput) descInput.value = p.description;
+
+  const taglineInput = document.getElementById('new-app-tagline');
+  if (taglineInput) taglineInput.value = p.tagline;
+
+  const storageSelect = document.getElementById('new-app-storage');
+  if (storageSelect) storageSelect.value = p.storage;
+
+  const deploySelect = document.getElementById('new-app-deploy');
+  if (deploySelect) deploySelect.value = p.deploy;
+
+  const techSelect = document.getElementById('new-app-tech');
+  if (techSelect) techSelect.value = p.tech;
+
+  const keywordsInput = document.getElementById('new-app-keywords');
+  if (keywordsInput) keywordsInput.value = p.keywords;
+
+  const contractSelect = document.getElementById('new-contract-type');
+  if (contractSelect) {
+    contractSelect.value = p.contractType;
+    contractSelect.dispatchEvent(new Event('change'));
+  }
+
+  // Jump smoothly to Step 2 so user can see their loaded project basics
+  newStep = 2;
+  renderSidebar();
+  showStepPanel();
+}
+
+function setupPresetButtons() {
+  document.querySelectorAll('.quick-tpl-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      applyPreset(btn.dataset.preset);
+    });
+  });
+}
+
 function setupModeToggle() {
   const btnNew = document.getElementById('btn-mode-new');
   const btnImport = document.getElementById('btn-mode-import');
+  const viewToggle = document.getElementById('view-mode-toggle');
 
   btnNew.addEventListener('click', () => {
     currentMode = 'new';
     btnNew.classList.add('active');
     btnImport.classList.remove('active');
+    if (viewToggle) viewToggle.style.display = 'flex';
     renderSidebar();
     showStepPanel();
   });
@@ -61,6 +234,7 @@ function setupModeToggle() {
     currentMode = 'import';
     btnImport.classList.add('active');
     btnNew.classList.remove('active');
+    if (viewToggle) viewToggle.style.display = 'none';
     renderSidebar();
     showStepPanel();
   });
@@ -73,6 +247,29 @@ function setupArchetypeCards() {
       cards.forEach(c => c.classList.remove('selected'));
       card.classList.add('selected');
       selectedArchetype = card.dataset.archetype;
+
+      // Adapt defaults nicely based on archetype
+      const techSelect = document.getElementById('new-app-tech');
+      const deploySelect = document.getElementById('new-app-deploy');
+      const contractSelect = document.getElementById('new-contract-type');
+
+      if (selectedArchetype === 'robos:DesktopApp') {
+        if (techSelect) techSelect.value = 'Electron 29 / Vanilla JS';
+        if (deploySelect) deploySelect.value = 'self-hosted';
+        if (contractSelect) { contractSelect.value = 'openapi'; contractSelect.dispatchEvent(new Event('change')); }
+      } else if (selectedArchetype === 'robos:Microservice') {
+        if (techSelect) techSelect.value = 'Node.js 20 / TypeScript / Express';
+        if (deploySelect) deploySelect.value = 'docker';
+        if (contractSelect) { contractSelect.value = 'openapi'; contractSelect.dispatchEvent(new Event('change')); }
+      } else if (selectedArchetype === 'robos:ConsoleApp') {
+        if (techSelect) techSelect.value = 'Node.js 20 / TypeScript / Express';
+        if (deploySelect) deploySelect.value = 'self-hosted';
+        if (contractSelect) { contractSelect.value = 'openapi'; contractSelect.dispatchEvent(new Event('change')); }
+      } else if (selectedArchetype === 'robos:FrontEndApp') {
+        if (techSelect) techSelect.value = 'Next.js 15 / React / TailwindCSS (Vercel + GitHub)';
+        if (deploySelect) deploySelect.value = 'vercel';
+        if (contractSelect) { contractSelect.value = 'next-routes'; contractSelect.dispatchEvent(new Event('change')); }
+      }
     });
   });
 }
@@ -124,30 +321,76 @@ function showStepPanel() {
 }
 
 function updateNewSummary() {
-  const name = document.getElementById('new-app-name').value;
-  const slug = document.getElementById('new-app-slug').value;
+  const name = document.getElementById('new-app-name').value || 'My Project';
+  const slug = document.getElementById('new-app-slug').value || slugify(name);
+  const desc = document.getElementById('new-app-description').value || '';
+  const tagline = document.getElementById('new-app-tagline')?.value || '';
   const tech = document.getElementById('new-app-tech').value;
-  const team = document.getElementById('new-app-team').value;
+  const teamSelect = document.getElementById('new-app-team');
+  const team = teamSelect ? teamSelect.options[teamSelect.selectedIndex]?.text || teamSelect.value : 'platform-team';
   const deploy = document.getElementById('new-app-deploy')?.value || 'vercel';
   const storage = document.getElementById('new-app-storage')?.value || 'embedded-json';
   const domain = document.getElementById('new-app-domain')?.value || '';
-  const urn = 'urn:robos:' + selectedArchetype.replace('robos:', '').toLowerCase() + ':' + slug;
+  const urn = 'urn:robos:' + getArchetypeUrnPrefix(selectedArchetype) + ':' + slug;
 
-  const items = [
-    '<div class="summary-item"><strong>Application Name:</strong> <span>' + name + '</span></div>',
-    '<div class="summary-item"><strong>Archetype:</strong> <span>' + selectedArchetype + '</span></div>',
-    '<div class="summary-item"><strong>Package URN:</strong> <span>' + urn + '</span></div>',
-    '<div class="summary-item"><strong>Technology:</strong> <span>' + tech + '</span></div>',
-    '<div class="summary-item"><strong>Deployment Target:</strong> <span style="color:var(--accent); font-weight:600;">' + deploy.toUpperCase() + '</span></div>',
-    '<div class="summary-item"><strong>Storage Engine:</strong> <span>' + storage + '</span></div>',
-  ];
-  if (domain) {
-    items.push('<div class="summary-item"><strong>Custom Domain:</strong> <span style="color:#4ade80; font-weight:600;">' + domain + '</span></div>');
+  // Update launch card elements
+  const cardName = document.getElementById('launch-card-name');
+  if (cardName) cardName.textContent = name;
+
+  const cardTagline = document.getElementById('launch-card-tagline');
+  if (cardTagline) cardTagline.textContent = tagline || (name + ' — Powered by RobOS');
+
+  const cardDesc = document.getElementById('launch-card-desc');
+  if (cardDesc) cardDesc.textContent = desc || 'Ready to scaffold application.';
+
+  const folderPath = document.getElementById('launch-folder-path');
+  if (folderPath) folderPath.textContent = 'packages/' + slug;
+
+  const cardIcon = document.getElementById('launch-card-icon');
+  if (cardIcon) {
+    const icons = {
+      'robos:FrontEndApp': '🌐',
+      'robos:DesktopApp': '🖥️',
+      'robos:Microservice': '⚡',
+      'robos:ConsoleApp': '⌨️',
+      'robos:PCGame': '🎮',
+      'robos:MobileApp': '📱',
+      'robos:DataPipeline': '🌊',
+      'robos:Library': '📦',
+    };
+    cardIcon.textContent = icons[selectedArchetype] || '🚀';
   }
-  items.push('<div class="summary-item"><strong>Owner:</strong> <span>' + team + '</span></div>');
+
+  const badgesRow = document.getElementById('launch-badges-row');
+  if (badgesRow) {
+    const archLabel = selectedArchetype.replace('robos:', '');
+    const deployLabel = deploy === 'vercel' ? 'Cloud (Vercel)' : (deploy === 'docker' ? 'Docker Container' : 'Local Workstation');
+    const storageLabel = storage === 'embedded-json' ? 'Zero-Config Storage' : (storage === 'postgres' ? 'PostgreSQL' : (storage === 'sqlite' ? 'SQLite' : 'MongoDB'));
+
+    badgesRow.innerHTML = [
+      '<span class="launch-chip highlight">🏷️ ' + archLabel + '</span>',
+      '<span class="launch-chip">🚀 ' + deployLabel + '</span>',
+      '<span class="launch-chip">💾 ' + storageLabel + '</span>',
+      '<span class="launch-chip">👥 ' + team + '</span>',
+    ].join('');
+  }
 
   const box = document.getElementById('new-summary-box');
-  box.innerHTML = items.join('');
+  if (box) {
+    const items = [
+      '<div class="summary-item"><strong>Application Name:</strong> <span>' + name + '</span></div>',
+      '<div class="summary-item"><strong>Archetype:</strong> <span>' + selectedArchetype + '</span></div>',
+      '<div class="summary-item"><strong>Package URN:</strong> <span>' + urn + '</span></div>',
+      '<div class="summary-item"><strong>Technology:</strong> <span>' + tech + '</span></div>',
+      '<div class="summary-item"><strong>Deployment Target:</strong> <span style="color:var(--accent); font-weight:600;">' + deploy.toUpperCase() + '</span></div>',
+      '<div class="summary-item"><strong>Storage Engine:</strong> <span>' + storage + '</span></div>',
+    ];
+    if (domain) {
+      items.push('<div class="summary-item"><strong>Custom Domain:</strong> <span style="color:#4ade80; font-weight:600;">' + domain + '</span></div>');
+    }
+    items.push('<div class="summary-item"><strong>Owner:</strong> <span>' + team + '</span></div>');
+    box.innerHTML = items.join('');
+  }
 }
 
 function updateImportSummary() {
@@ -665,23 +908,22 @@ service AppService {
     if (res.error) {
       consoleOut.textContent += '❌ Error: ' + res.error;
     } else {
-      consoleOut.textContent += '✓ Created component in: ' + res.targetDir + '\n';
-      consoleOut.textContent += '✓ Generated: catalog-info.yaml\n';
-      consoleOut.textContent += '✓ Generated: dev-setup.sh (chmod +x)\n';
+      consoleOut.textContent += '✓ Created project directory: ' + res.targetDir + '\n';
+      consoleOut.textContent += '✓ Generated component catalog: catalog-info.yaml\n';
+      consoleOut.textContent += '✓ Generated executable setup script: dev-setup.sh (chmod +x)\n';
       if (res.isVercel && res.template) {
-        consoleOut.textContent += '✓ Template: ' + res.template.name + ' v' + res.template.version + ' (' + res.template.written.length + ' files' + (res.template.skipped.length ? ', ' + res.template.skipped.length + ' existing kept' : '') + ')\n';
+        consoleOut.textContent += '✓ Production Launch Kit: ' + res.template.name + ' v' + res.template.version + ' (' + res.template.written.length + ' files)\n';
         consoleOut.textContent += '  • Next.js 15 App Router, mobile-first UI, Neon Postgres (PGlite locally)\n';
-        consoleOut.textContent += '  • Email/password auth, rate limits, honeypot, CSRF checks, CSP, reCAPTCHA v3 (disabled)\n';
-        consoleOut.textContent += '  • robots.txt for search engines + AI agents, sitemap.xml, llms.txt, JSON-LD, OG images, manifest\n';
-        consoleOut.textContent += '  • Cucumber + Playwright E2E with RobOS evidence videos (npm run e2e && npm run evidence)\n';
-        consoleOut.textContent += '  • Vercel + GitHub Actions CI, DEPLOYMENT.md launch checklist\n';
-        if (res.kgraph && res.kgraph.registered) consoleOut.textContent += '✓ Added robos:FrontEndApp node to SDLC KGraph (applications package)\n';
-        if (res.docPage) consoleOut.textContent += '✓ Created project doc page: ' + res.docPage + '\n';
+        consoleOut.textContent += '  • Email/password auth, rate limits, CSRF protection, CSP, security guard\n';
+        consoleOut.textContent += '  • Search engine + AI agent discoverability (robots, sitemap, llms.txt, JSON-LD)\n';
+        consoleOut.textContent += '  • Cucumber + Playwright E2E with evidence videos (npm test)\n';
       } else {
-        consoleOut.textContent += '✓ Generated: ' + (res.generated || ['Dockerfile']).join(', ') + '\n';
+        consoleOut.textContent += '✓ Generated application files: ' + (res.generated || ['Dockerfile']).join(', ') + '\n';
       }
-      consoleOut.textContent += '✓ Registered in .robos/packages.yaml (' + res.urn + ')\n';
-      consoleOut.textContent += '🎉 Greenfield Application Scaffolding Complete!';
+      if (res.kgraph && res.kgraph.registered) consoleOut.textContent += '✓ Registered in RobOS Knowledge Graph (' + res.urn + ')\n';
+      if (res.docPage) consoleOut.textContent += '✓ Created living project documentation: ' + res.docPage + '\n';
+      consoleOut.textContent += '✓ Registered in .robos/packages.yaml\n';
+      consoleOut.textContent += '\n🎉 Project Successfully Created! Run "./dev-setup.sh" to launch.';
     }
   });
 

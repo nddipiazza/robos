@@ -1,0 +1,16 @@
+{
+  "name": "barista-order-api",
+  "version": "1.0.0",
+  "description": "Specialty coffee roastery order queue, origin bean catalog, and barista drink fulfillment microservice.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  },
+  "keywords": [
+    "robos",
+    "microservice",
+    "barista-order-api"
+  ],
+  "license": "Apache-2.0"
+}

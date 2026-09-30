@@ -493,3 +493,387 @@ input:focus, select:focus, textarea:focus {
   color: var(--text-primary);
 }
 
+/* ── Header Controls & View Toggle ─────────────────────────────────────── */
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.view-mode-toggle {
+  display: flex;
+  background: var(--bg-primary);
+  border-radius: 8px;
+  padding: 3px;
+  border: 1px solid var(--border-color);
+}
+
+.view-toggle-btn {
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.view-toggle-btn.active {
+  background: rgba(0, 188, 212, 0.18);
+  color: var(--accent);
+}
+
+/* ── Quick Templates Section ───────────────────────────────────────────── */
+.quick-templates-section {
+  background: linear-gradient(135deg, rgba(0, 188, 212, 0.06), rgba(46, 160, 67, 0.04));
+  border: 1px solid rgba(0, 188, 212, 0.25);
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+}
+
+.quick-templates-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.quick-badge {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--accent);
+  background: rgba(0, 188, 212, 0.15);
+  padding: 3px 8px;
+  border-radius: 12px;
+}
+
+.quick-sub {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+}
+
+.quick-templates-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.quick-tpl-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.quick-tpl-btn:hover {
+  border-color: var(--accent);
+  background: var(--bg-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.tpl-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.tpl-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.tpl-name {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tpl-desc {
+  font-size: 10.5px;
+  color: var(--text-secondary);
+  line-height: 1.3;
+}
+
+/* ── Archetype Card Enhancements ───────────────────────────────────────── */
+.arch-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--accent);
+  background: rgba(0, 188, 212, 0.15);
+  padding: 2px 6px;
+  border-radius: 10px;
+  letter-spacing: 0.3px;
+}
+
+.archetype-card {
+  position: relative;
+}
+
+/* ── Form Enhancements & Non-Technical Guidance ────────────────────────── */
+.field-hint {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.slug-input-wrapper {
+  display: flex;
+  align-items: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.slug-input-wrapper:focus-within {
+  border-color: var(--accent);
+}
+
+.slug-prefix {
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--accent);
+  background: rgba(0, 188, 212, 0.08);
+  border-right: 1px solid var(--border-color);
+  user-select: none;
+  font-family: monospace;
+}
+
+.slug-input-wrapper input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 10px 12px;
+}
+
+.form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.advanced-fields-box {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed var(--border-color);
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.advanced-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--warning);
+  letter-spacing: 0.5px;
+}
+
+/* ── Simple Features Card (Step 3) ─────────────────────────────────────── */
+.simple-features-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.simple-features-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.features-checklist {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.feature-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.feature-check {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.feature-item strong {
+  display: block;
+  font-size: 13px;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.feature-item p {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.simple-features-tip {
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: rgba(0, 188, 212, 0.06);
+  padding: 10px 14px;
+  border-radius: 6px;
+  border-left: 3px solid var(--accent);
+}
+
+/* ── Project Launch Card (Step 4) ──────────────────────────────────────── */
+.project-launch-card {
+  background: linear-gradient(145deg, #131a24, #0d1219);
+  border: 1px solid rgba(0, 188, 212, 0.35);
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.launch-card-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.launch-card-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: rgba(0, 188, 212, 0.15);
+  border: 1px solid var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+}
+
+.launch-card-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.launch-card-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.launch-card-tagline {
+  font-size: 13px;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.launch-card-desc {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.launch-badges-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.launch-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.launch-chip.highlight {
+  background: rgba(0, 188, 212, 0.12);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.launch-checklist {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 8px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.launch-checklist-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.checklist-item {
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checklist-item code {
+  color: var(--accent);
+  background: rgba(0, 188, 212, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11.5px;
+}
+
+.btn-launch-action {
+  font-size: 15px !important;
+  padding: 12px 28px !important;
+  background: var(--accent) !important;
+  color: #000 !important;
+  font-weight: 700 !important;
+}
+
+.btn-launch-action:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 4px 16px rgba(0, 188, 212, 0.4);
+}
+
+

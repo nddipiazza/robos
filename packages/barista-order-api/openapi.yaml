@@ -1,0 +1,18 @@
+openapi: 3.1.0
+info:
+  title: "Barista Order API API"
+  version: "1.0.0"
+  description: "Specialty coffee roastery order queue, origin bean catalog, and barista drink fulfillment microservice."
+paths:
+  /api/health:
+    get:
+      summary: Service health check endpoint
+      responses:
+        '200':
+          description: Service is healthy and responding
+  /api/items:
+    get:
+      summary: List items
+      responses:
+        '200':
+          description: Returns collection of items

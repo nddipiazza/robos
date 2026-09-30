@@ -1,0 +1,18 @@
+{
+  "name": "pulse-metrics-cli",
+  "version": "1.0.0",
+  "description": "Terminal-based server health diagnostics, network latency pinger, and automated uptime reporting utility.",
+  "bin": {
+    "pulse-metrics-cli": "bin/cli.js"
+  },
+  "scripts": {
+    "start": "node bin/cli.js",
+    "test": "node --test"
+  },
+  "keywords": [
+    "robos",
+    "cli",
+    "pulse-metrics-cli"
+  ],
+  "license": "Apache-2.0"
+}

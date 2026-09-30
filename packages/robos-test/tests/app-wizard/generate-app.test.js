@@ -111,3 +111,51 @@ test('initials and slug validation', () => {
   assert.equal(initialsFor('rowbose'), 'RO');
   assert.throws(() => generateNewApp({ name: 'Bad', slug: 'Bad Slug!' }, { robosRoot: fakeRoot() }), /slug/);
 });
+
+test('desktop apps generate runnable Electron scaffold and register in KGraph', () => {
+  const root = fakeRoot();
+  const res = generateNewApp({
+    name: 'DocuVault Desktop',
+    slug: 'docu-vault-desktop',
+    archetype: 'robos:DesktopApp',
+    technology: 'Electron 29 / Vanilla JS',
+    description: 'Offline-first markdown notes and personal snippet vault',
+  }, { robosRoot: root });
+
+  assert.equal(res.success, true);
+  assert.ok(fs.existsSync(path.join(res.targetDir, 'main.js')));
+  assert.ok(fs.existsSync(path.join(res.targetDir, 'preload.js')));
+  assert.ok(fs.existsSync(path.join(res.targetDir, 'renderer', 'index.html')));
+  assert.ok(fs.existsSync(path.join(res.targetDir, 'renderer', 'styles.css')));
+  assert.ok(fs.existsSync(path.join(res.targetDir, 'renderer', 'app.js')));
+  assert.ok(fs.existsSync(path.join(res.targetDir, 'docu-vault-desktop.desktop')));
+  assert.ok(fs.existsSync(path.join(res.targetDir, 'package.json')));
+  assert.ok(fs.existsSync(res.docPage));
+
+  const pkg = JSON.parse(fs.readFileSync(path.join(root, '.robos', 'kgraphs', 'applications', 'package.jsonld'), 'utf8'));
+  const node = pkg['robos:nodes'].find((n) => n['@id'] === 'urn:robos:desktop-app:docu-vault-desktop');
+  assert.ok(node, 'DesktopApp node should be present in applications package');
+  assert.deepEqual(node['@type'], ['oslc_am:Resource', 'robos:DesktopApp', 'schema:SoftwareApplication']);
+});
+
+test('console tools generate runnable CLI scaffold and register in KGraph', () => {
+  const root = fakeRoot();
+  const res = generateNewApp({
+    name: 'Pulse Metrics CLI',
+    slug: 'pulse-metrics-cli',
+    archetype: 'robos:ConsoleApp',
+    technology: 'Node.js 20 / CLI',
+    description: 'System health check and network ping latency tool',
+  }, { robosRoot: root });
+
+  assert.equal(res.success, true);
+  assert.ok(fs.existsSync(path.join(res.targetDir, 'bin', 'cli.js')));
+  assert.ok(fs.existsSync(path.join(res.targetDir, 'package.json')));
+  assert.ok(fs.existsSync(path.join(res.targetDir, 'README.md')));
+  assert.ok(fs.statSync(path.join(res.targetDir, 'bin', 'cli.js')).mode & 0o111, 'cli script must be executable');
+
+  const pkg = JSON.parse(fs.readFileSync(path.join(root, '.robos', 'kgraphs', 'applications', 'package.jsonld'), 'utf8'));
+  const node = pkg['robos:nodes'].find((n) => n['@id'] === 'urn:robos:console-app:pulse-metrics-cli');
+  assert.ok(node, 'ConsoleApp node should be present in applications package');
+});
+
