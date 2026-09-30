@@ -4,6 +4,7 @@ package: robos-elearning
 category: learning
 icon: robos-elearning.svg
 summary: "Interactive developer eLearning player, hands-on lab runner, and Knowledge Graph certificates."
+description: "Interactive developer eLearning player, hands-on lab runner, and Knowledge Graph certificates."
 related:
   - /pr-review-theater.html#standalone-robos-elearning-player-hub
 ---

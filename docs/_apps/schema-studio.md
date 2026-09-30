@@ -4,6 +4,7 @@ package: schema-studio
 category: arch-planning
 icon: schema-studio.svg
 summary: "Schema.org ontology explorer, TypeSpec domain modeling, W3C SHACL synthesis, and live JSON-LD validator."
+description: "Schema.org ontology explorer, TypeSpec domain modeling, W3C SHACL synthesis, and live JSON-LD validator."
 ---
 
 The semantic command center and ontology explorer bridging Schema.org, OASIS OSLC, and W3C standards with native developer tooling:

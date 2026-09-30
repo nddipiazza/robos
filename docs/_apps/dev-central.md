@@ -4,6 +4,7 @@ package: dev-central
 category: core-desktop
 icon: dev-central.svg
 summary: "Daily developer engineering command center: sprint burndown, PR health, calendar, and AI standup."
+description: "Daily developer engineering command center: sprint burndown, PR health, calendar, and AI standup."
 ---
 
 Your daily engineering cockpit and mission control hub for the entire Software Delivery Lifecycle (SDLC). Dev Central aggregates in-flight tasks, sprint commitments, pull request health, reviewer queues, blocker early warnings, and automated daily standup synthesis into a single high-density desktop cockpit:

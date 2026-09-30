@@ -4,6 +4,7 @@ package: voice-prompt
 category: ai-agents
 icon: voice-prompt.svg
 summary: "Bi-directional voice assistant with lifelike neural TTS (Kokoro-82M & Edge-TTS), continuous stream listening ('hello robos' / 'rob OS' / 'row bose'), Whisper STT, and desktop assistant."
+description: "Bi-directional voice assistant with lifelike neural TTS (Kokoro-82M & Edge-TTS), continuous stream listening ('hello robos' / 'rob OS' / 'row bose'), Whisper STT, and desktop assistant."
 related:
   - /voice-prompt.html
 ---

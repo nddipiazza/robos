@@ -4,6 +4,7 @@ package: crpg-editor
 category: "games"
 icon: crpg-editor.svg
 summary: "Unified cRPG game editor for campaign management, character & NPC authoring, party inventory, and tactical maps"
+description: "Unified cRPG game editor for campaign management, character & NPC authoring, party inventory, and tactical maps"
 ---
 
 # RobOS cRPG Editor

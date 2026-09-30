@@ -4,6 +4,7 @@ package: group-manager
 category: arch-planning
 icon: group-manager.svg
 summary: "Enterprise directory sync (Okta/SCIM/LDAP), company tenant onboarding, and Team Topologies."
+description: "Enterprise directory sync (Okta/SCIM/LDAP), company tenant onboarding, and Team Topologies."
 ---
 
 Manage organizations, squads, enterprise directory sync, and user access control:

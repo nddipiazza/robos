@@ -71,19 +71,14 @@
 </script>
 
 
-<!-- Open Graph meta for LinkedIn / Twitter / Slack link previews -->
-<meta property="og:title" content="RobOS — AI-First SDLC Platform & Autonomous Agent Governance Harness" />
-<meta property="og:description" content="Autonomous AI agents that prove their work. Automated 1080p video proof-of-work, semantic blast-radius diffs, and zero-residue sandboxes." />
-<meta property="og:image" content="https://rowbose.com/assets/images/kgraph-autogen-architecture.jpg" />
-<meta property="og:image:width" content="1280" />
-<meta property="og:image:height" content="720" />
-<meta property="og:url" content="https://rowbose.com/" />
-<meta property="og:type" content="website" />
-<meta property="og:site_name" content="RobOS" />
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="RobOS — AI-First SDLC Platform & Autonomous Agent Governance Harness" />
-<meta name="twitter:description" content="Autonomous AI agents that prove their work. Automated 1080p video proof-of-work, semantic blast-radius diffs, and zero-residue sandboxes." />
-<meta name="twitter:image" content="https://rowbose.com/assets/images/kgraph-autogen-architecture.jpg" />
+{%- comment -%}
+  Homepage-specific Open Graph / Twitter Card title override.
+  Subpages inherit their individual page title, description, and canonical URL dynamically via jekyll-seo-tag.
+{%- endcomment -%}
+{%- if page.url == "/" or page.url == "/index.html" -%}
+<meta property="og:title" content="RobOS — AI-First SDLC Platform &amp; Autonomous Agent Governance Harness" />
+<meta name="twitter:title" content="RobOS — AI-First SDLC Platform &amp; Autonomous Agent Governance Harness" />
+{%- endif -%}
 
 <!-- Favicon & App Icons -->
 <link rel="icon" type="image/svg+xml" href="{{ '/assets/images/favicon.svg' | relative_url }}">

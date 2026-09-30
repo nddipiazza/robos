@@ -4,6 +4,7 @@ package: agent-chat
 category: ai-agents
 icon: agent-chat.svg
 summary: "VS Code & Cursor-style conversational AI assistant with multi-model switcher, live tool cards, and quick prompt popup."
+description: "VS Code & Cursor-style conversational AI assistant with multi-model switcher, live tool cards, and quick prompt popup."
 ---
 
 A native conversational interface inspired by VS Code Copilot Chat and Cursor, engineered specifically for autonomous SDLC workflows:

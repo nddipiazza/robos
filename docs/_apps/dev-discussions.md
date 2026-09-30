@@ -4,6 +4,7 @@ package: dev-discussions
 category: core-desktop
 icon: dev-discussions.svg
 summary: "Discord/Slack-like work-item and PR review chat interface across Projects &rarr; Features &rarr; Tasks/PRs with smart caching."
+description: "Discord/Slack-like work-item and PR review chat interface across Projects &rarr; Features &rarr; Tasks/PRs with smart caching."
 ---
 
 Stop using generic team chat programs in your SDLC! **Dev Discussions** (`packages/dev-discussions`) brings the fluid, keyboard-driven ergonomics of Slack and Discord directly to your work items and pull requests:

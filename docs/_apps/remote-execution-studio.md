@@ -4,6 +4,7 @@ package: remote-execution-studio
 category: devops-cloud
 icon: remote-execution-studio.svg
 summary: "REAPI v2 distributed build control room, Bazel/Buck2 client synthesis, and Buildbarn management."
+description: "REAPI v2 distributed build control room, Bazel/Buck2 client synthesis, and Buildbarn management."
 ---
 
 Eliminate the friction, operational overhead, and vendor lock-in of distributed build and caching infrastructure. Remote Execution Studio is a native developer OS control room built entirely on the open-source **Remote Execution API standard (REAPI v2)** (`build.bazel.remote.execution.v2`):

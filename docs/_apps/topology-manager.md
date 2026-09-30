@@ -3,6 +3,7 @@ title: "System Topology Studio"
 package: topology-manager
 category: arch-planning
 summary: "Visual C4 architecture canvas that reads your Backstage catalog and generates Kubernetes manifests."
+description: "Visual C4 architecture canvas that reads your Backstage catalog and generates Kubernetes manifests."
 ---
 
 A visual whiteboard for mapping your entire engineering architecture:

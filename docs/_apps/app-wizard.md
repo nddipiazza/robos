@@ -4,6 +4,7 @@ package: app-wizard
 category: arch-planning
 icon: app-wizard.svg
 summary: "Greenfield scaffolding and brownfield codebase ingestion across multi-app archetypes."
+description: "Greenfield scaffolding and brownfield codebase ingestion across multi-app archetypes."
 ---
 
 Scaffold brand-new applications or import existing repositories across multi-app archetypes:

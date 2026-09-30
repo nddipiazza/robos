@@ -4,6 +4,7 @@ package: skills-manager
 category: ai-agents
 icon: skills-manager.svg
 summary: "Cross-agent AI skills marketplace and catalog supporting Claude, Codex, Antigravity, and Gemini."
+description: "Cross-agent AI skills marketplace and catalog supporting Claude, Codex, Antigravity, and Gemini."
 related:
   - /skills/skills-manager.html
   - /robos-skills.html

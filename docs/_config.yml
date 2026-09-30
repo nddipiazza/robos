@@ -5,9 +5,18 @@ url: "https://rowbose.com"
 baseurl: ""
 
 # Open Graph / LinkedIn / Twitter preview
-og_image: "/assets/images/kgraph-autogen-architecture.jpg"
+image:
+  path: /assets/images/kgraph-autogen-architecture.jpg
+  height: 720
+  width: 1280
+  alt: "RobOS — AI-First SDLC Platform & Autonomous Agent Governance Harness"
 twitter:
   card: summary_large_image
+social:
+  name: RobOS
+  links:
+    - "https://github.com/nddipiazza/robos"
+    - "https://discord.gg/6PjxzkHujE"
 
 remote_theme: just-the-docs/just-the-docs@v0.10.0
 
@@ -81,6 +90,14 @@ just_the_docs:
       search_exclude: false
 
 defaults:
+  - scope:
+      path: ""
+    values:
+      image:
+        path: /assets/images/kgraph-autogen-architecture.jpg
+        height: 720
+        width: 1280
+        alt: "RobOS — AI-First SDLC Platform & Autonomous Agent Governance Harness"
   - scope:
       path: ""
       type: apps

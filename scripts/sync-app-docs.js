@@ -67,7 +67,8 @@ for (const name of fs.readdirSync(packagesDir).sort()) {
 
   const lines = ['---', `title: ${JSON.stringify(title)}`, `package: ${name}`, 'category: ""'];
   if (icon) lines.push(`icon: ${icon}`);
-  lines.push(`summary: ${JSON.stringify(summary)}`, '---', '');
+  lines.push(`summary: ${JSON.stringify(summary)}`);
+  lines.push(`description: ${JSON.stringify(summary)}`, '---', '');
   fs.writeFileSync(path.join(appsDir, `${name}.md`), lines.join('\n'));
   console.log(`created docs/_apps/${name}.md`);
 }

@@ -4,6 +4,7 @@ package: robos-documentation
 category: arch-planning
 icon: robos-documentation.svg
 summary: "Living documentation hub, selective KGraph asset discovery, persistent artifact maintainer, and static site exporter."
+description: "Living documentation hub, selective KGraph asset discovery, persistent artifact maintainer, and static site exporter."
 related:
   - /schemas/documentation/documentation.html
   - /system-documentation/

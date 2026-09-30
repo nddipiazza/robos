@@ -4,6 +4,7 @@ package: rest-client
 category: apis-testing
 icon: rest-client.svg
 summary: "Git-backed Bruno-compatible REST client, OpenAPI request synthesis, and sequential runner."
+description: "Git-backed Bruno-compatible REST client, OpenAPI request synthesis, and sequential runner."
 ---
 
 A Git-backed API testing client storing plain-text `.bru` request files directly in your Git repository with automated request synthesis from OpenAPI contracts.

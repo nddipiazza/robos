@@ -4,6 +4,7 @@ package: ci-monitor
 category: devops-cloud
 icon: ci-monitor.svg
 summary: "Real-time CI/CD pipeline monitor with AI root-cause failure analysis and one-click reruns."
+description: "Real-time CI/CD pipeline monitor with AI root-cause failure analysis and one-click reruns."
 ---
 
 Real-time continuous integration pipeline monitoring with automated AI root-cause explanations and one-click failure reruns.

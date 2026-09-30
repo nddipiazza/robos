@@ -4,6 +4,7 @@ package: pr-review
 category: code-review
 icon: pr-review.svg
 summary: "Autonomous AI pull request auditor, 6-stage Review Theater, knowledge checks, and IDE bridges."
+description: "Autonomous AI pull request auditor, 6-stage Review Theater, knowledge checks, and IDE bridges."
 related:
   - /pr-review-theater.html
 ---

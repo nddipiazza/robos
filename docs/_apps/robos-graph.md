@@ -3,6 +3,7 @@ title: "Knowledge Graph Explorer"
 package: robos-graph
 category: arch-planning
 summary: "Browse the connected map of your software, and compare production (main) with a proposed branch."
+description: "Browse the connected map of your software, and compare production (main) with a proposed branch."
 related:
   - /knowledge-graph.html
 ---
