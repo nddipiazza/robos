@@ -527,11 +527,23 @@ async function loadPrefsToUI() {
   const qStart = document.getElementById('pref-quiet-start');
   const qEnd = document.getElementById('pref-quiet-end');
   const dndToggle = document.getElementById('pref-dnd');
+  const deliveryMode = document.getElementById('pref-delivery-mode');
+  const gnomeEnabled = document.getElementById('pref-gnome-enabled');
+  const antiSpamEnabled = document.getElementById('pref-antispam-enabled');
+  const antiSpamCooldown = document.getElementById('pref-antispam-cooldown');
+  const antiSpamBurst = document.getElementById('pref-antispam-burst');
+  const antiSpamBypass = document.getElementById('pref-antispam-bypass');
 
   if (qEnabled) qEnabled.checked = !!prefs.quietHours?.enabled;
   if (qStart && prefs.quietHours?.start) qStart.value = prefs.quietHours.start;
   if (qEnd && prefs.quietHours?.end) qEnd.value = prefs.quietHours.end;
   if (dndToggle) dndToggle.checked = !!prefs.dnd;
+  if (deliveryMode && prefs.deliveryMode) deliveryMode.value = prefs.deliveryMode;
+  if (gnomeEnabled) gnomeEnabled.checked = prefs.enableGnomeNotifications !== false;
+  if (antiSpamEnabled) antiSpamEnabled.checked = prefs.antiSpam?.enabled !== false;
+  if (antiSpamCooldown && prefs.antiSpam?.cooldownSeconds) antiSpamCooldown.value = String(prefs.antiSpam.cooldownSeconds);
+  if (antiSpamBurst && prefs.antiSpam?.maxBurst) antiSpamBurst.value = String(prefs.antiSpam.maxBurst);
+  if (antiSpamBypass) antiSpamBypass.checked = prefs.antiSpam?.bypassForSecurityAndCritical !== false;
 }
 
 window.saveNotifPrefsFromUI = async function() {
@@ -539,14 +551,31 @@ window.saveNotifPrefsFromUI = async function() {
   const qStart = document.getElementById('pref-quiet-start')?.value || '22:00';
   const qEnd = document.getElementById('pref-quiet-end')?.value || '07:00';
   const dndToggle = document.getElementById('pref-dnd')?.checked || false;
+  const deliveryMode = document.getElementById('pref-delivery-mode')?.value || 'dual';
+  const gnomeEnabled = document.getElementById('pref-gnome-enabled')?.checked !== false;
+  const antiSpamEnabled = document.getElementById('pref-antispam-enabled')?.checked !== false;
+  const antiSpamCooldown = parseInt(document.getElementById('pref-antispam-cooldown')?.value || '30', 10);
+  const antiSpamBurst = parseInt(document.getElementById('pref-antispam-burst')?.value || '4', 10);
+  const antiSpamBypass = document.getElementById('pref-antispam-bypass')?.checked !== false;
 
+  const currentPrefs = appState.notifPrefs || {};
   const newPrefs = {
-    ...appState.notifPrefs,
-    quietHours: { enabled: qEnabled, start: qStart, end: qEnd },
+    ...currentPrefs,
+    quietHours: { ...(currentPrefs.quietHours || {}), enabled: qEnabled, start: qStart, end: qEnd },
     dnd: dndToggle,
+    deliveryMode,
+    enableGnomeNotifications: gnomeEnabled,
+    antiSpam: {
+      ...(currentPrefs.antiSpam || {}),
+      enabled: antiSpamEnabled,
+      cooldownSeconds: antiSpamCooldown,
+      maxBurst: antiSpamBurst,
+      bypassForSecurityAndCritical: antiSpamBypass,
+    },
   };
 
   await window.robos.notifications.savePrefs(newPrefs);
+  appState.notifPrefs = newPrefs;
   const statusMsg = document.getElementById('pref-status-msg');
   if (statusMsg) {
     statusMsg.style.display = 'inline';

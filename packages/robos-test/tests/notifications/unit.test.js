@@ -88,10 +88,35 @@ describe('notifications unit tests', () => {
       categoryOverrides: {},
       quietHours: { enabled: true, start: '23:00', end: '06:00' },
       dnd: false,
+      deliveryMode: 'smart_dual',
+      enableAntiSpam: true,
+      antiSpamCooldownSec: 20,
     };
     fs.writeFileSync(file, JSON.stringify(prefs, null, 2));
     const loaded = JSON.parse(fs.readFileSync(file, 'utf8'));
     assert.deepStrictEqual(loaded, prefs);
+    assert.strictEqual(loaded.deliveryMode, 'smart_dual');
+    assert.strictEqual(loaded.enableAntiSpam, true);
+    assert.strictEqual(loaded.antiSpamCooldownSec, 20);
+    fs.rmSync(tmp, { recursive: true });
+  });
+
+  it('notifications loadPrefs merges default deliveryMode and anti-spam settings', () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'notif-merge-'));
+    const file = path.join(tmp, 'prefs.json');
+    // Simulate legacy prefs file with only dnd
+    fs.writeFileSync(file, JSON.stringify({ dnd: true }));
+    const raw = JSON.parse(fs.readFileSync(file, 'utf8'));
+    const merged = {
+      deliveryMode: 'smart_dual',
+      enableAntiSpam: true,
+      antiSpamCooldownSec: 15,
+      ...raw,
+    };
+    assert.strictEqual(merged.dnd, true);
+    assert.strictEqual(merged.deliveryMode, 'smart_dual');
+    assert.strictEqual(merged.enableAntiSpam, true);
+    assert.strictEqual(merged.antiSpamCooldownSec, 15);
     fs.rmSync(tmp, { recursive: true });
   });
 });

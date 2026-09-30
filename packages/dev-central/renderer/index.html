@@ -340,7 +340,69 @@
           <!-- Notification Preferences Subview -->
           <div id="notif-view-prefs" class="notif-subview hidden">
             <div class="prefs-panel-box">
-              <h3>Notification Preferences</h3>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                <h3 style="margin:0;">Notification Preferences</h3>
+                <button id="btn-open-toast-console" class="btn btn-secondary-sm" onclick="window.robos.openAppContext({ app: 'robos-toast' })" title="Open full customization console">
+                  <span>⚙️ Open Toast Notification Console</span>
+                </button>
+              </div>
+
+              <!-- Delivery & Dual Notifications -->
+              <div class="prefs-group">
+                <h4>Dual-Notification & Delivery Mode</h4>
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">
+                  Configure coordination between Ubuntu GNOME native alerts and RobOS rich overlay toasts.
+                </div>
+                <div class="pref-field-row" style="margin-bottom:8px;">
+                  <label for="pref-delivery-mode" style="font-size:12px; font-weight:500;">Delivery Mode:</label>
+                  <select id="pref-delivery-mode" class="filter-sel" style="margin-left:10px; width:220px;">
+                    <option value="dual">Smart Dual (RobOS + GNOME)</option>
+                    <option value="toast_only">RobOS Rich Toasts Only</option>
+                    <option value="native_only">Ubuntu GNOME Native Only</option>
+                    <option value="both">Both Always (Simultaneous)</option>
+                  </select>
+                </div>
+                <label class="pref-toggle">
+                  <input type="checkbox" id="pref-gnome-enabled" checked />
+                  <span>Enable Ubuntu GNOME system notifications (notify-send)</span>
+                </label>
+              </div>
+
+              <!-- Anti-Spam & Respam Prevention -->
+              <div class="prefs-group">
+                <h4>Anti-Spam & Respam Prevention Controls</h4>
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">
+                  Prevent notification storms, repetitive sequential popups, and chatter on rapid changes.
+                </div>
+                <label class="pref-toggle" style="margin-bottom:8px;">
+                  <input type="checkbox" id="pref-antispam-enabled" checked />
+                  <span>Enable Anti-Spam & deduplication throttle</span>
+                </label>
+                <div class="time-range-row" style="gap:16px;">
+                  <label>Respam Cooldown:
+                    <select id="pref-antispam-cooldown" class="filter-sel" style="margin-left:6px; width:110px;">
+                      <option value="15">15 seconds</option>
+                      <option value="30">30 seconds</option>
+                      <option value="60">1 minute</option>
+                      <option value="120">2 minutes</option>
+                      <option value="300">5 minutes</option>
+                    </select>
+                  </label>
+                  <label>Max Burst Limit:
+                    <select id="pref-antispam-burst" class="filter-sel" style="margin-left:6px; width:110px;">
+                      <option value="2">2 toasts / 10s</option>
+                      <option value="3">3 toasts / 10s</option>
+                      <option value="4">4 toasts / 10s</option>
+                      <option value="6">6 toasts / 10s</option>
+                    </select>
+                  </label>
+                </div>
+                <label class="pref-toggle" style="margin-top:8px;">
+                  <input type="checkbox" id="pref-antispam-bypass" checked />
+                  <span>Bypass throttle for Critical alerts and Security authorization prompts</span>
+                </label>
+              </div>
+
               <div class="prefs-group">
                 <h4>Quiet Hours</h4>
                 <label class="pref-toggle">
@@ -362,7 +424,7 @@
               </div>
 
               <div class="prefs-action-row">
-                <button id="btn-save-prefs" class="btn btn-primary">Save Preferences</button>
+                <button id="btn-save-prefs" class="btn btn-primary" onclick="window.saveNotifPrefsFromUI()">Save Preferences</button>
                 <span id="pref-status-msg" class="pref-status-msg" style="display:none;">✓ Preferences saved successfully.</span>
               </div>
             </div>

@@ -48,18 +48,32 @@ function saveNotifications(data) {
 
 function loadPrefs() {
   try {
-    if (fs.existsSync(PREFS_FILE)) return JSON.parse(fs.readFileSync(PREFS_FILE, 'utf8'));
+    if (fs.existsSync(PREFS_FILE)) {
+      const data = JSON.parse(fs.readFileSync(PREFS_FILE, 'utf8'));
+      return {
+        deliveryMode: 'smart_dual',
+        enableAntiSpam: true,
+        antiSpamCooldownSec: 15,
+        ...data,
+      };
+    }
   } catch {}
   return {
     categoryOverrides: {},
     quietHours: { enabled: false, start: '22:00', end: '07:00' },
     dnd: false,
+    deliveryMode: 'smart_dual',
+    enableAntiSpam: true,
+    antiSpamCooldownSec: 15,
   };
 }
 
 function savePrefs(prefs) {
   fs.mkdirSync(CONFIG_DIR, { recursive: true });
-  fs.writeFileSync(PREFS_FILE, JSON.stringify(prefs, null, 2), 'utf8');
+  const existing = loadPrefs();
+  const merged = { ...existing, ...prefs };
+  fs.writeFileSync(PREFS_FILE, JSON.stringify(merged, null, 2), 'utf8');
+  return merged;
 }
 
 function createWindow() {
@@ -166,6 +180,7 @@ ipcMain.handle('open-app-context', (_, action) => {
         client.write(JSON.stringify({ launch: action.app }));
         client.end();
       });
+      client.on('error', () => {});
     } catch {}
   }
   return { ok: true };

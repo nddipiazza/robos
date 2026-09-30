@@ -4,13 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline';">
-  <title>RobOS Toast Daemon</title>
+  <title>RobOS Toast Notification Console</title>
   <style>
     :root {
       --bg-primary: #0d1117;
       --bg-card: #161b22;
+      --bg-card-alt: #1a202c;
       --bg-input: #090d12;
       --border: #30363d;
+      --border-accent: #00bcd4;
       --accent: #00bcd4;
       --accent-dim: rgba(0, 188, 212, 0.15);
       --accent-glow: rgba(0, 188, 212, 0.35);
@@ -19,11 +21,12 @@
       --success: #3fb950;
       --warning: #d29922;
       --danger: #f85149;
+      --security: #a371f7;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       background: var(--bg-primary);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       color: var(--text-main);
       display: flex;
       flex-direction: column;
@@ -48,21 +51,21 @@
       gap: 12px;
     }
     .logo-badge {
-      width: 32px;
-      height: 32px;
+      width: 36px;
+      height: 36px;
       background: var(--accent-dim);
       border: 1px solid var(--accent);
-      border-radius: 8px;
+      border-radius: 9px;
       display: flex;
       align-items: center;
       justify-content: center;
       color: var(--accent);
-      font-size: 16px;
-      box-shadow: 0 0 10px var(--accent-glow);
+      font-size: 18px;
+      box-shadow: 0 0 12px var(--accent-glow);
     }
     .title-group h1 {
       font-size: 15px;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--text-main);
       display: flex;
       align-items: center;
@@ -75,8 +78,9 @@
     .header-right {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
+
     .status-pill {
       display: inline-flex;
       align-items: center;
@@ -89,32 +93,86 @@
       border: 1px solid rgba(63, 185, 80, 0.3);
       color: var(--success);
     }
+    .status-pill.info {
+      background: rgba(0, 188, 212, 0.12);
+      border-color: rgba(0, 188, 212, 0.3);
+      color: var(--accent);
+    }
+    .status-pill.warning {
+      background: rgba(210, 153, 34, 0.12);
+      border-color: rgba(210, 153, 34, 0.3);
+      color: var(--warning);
+    }
     .status-dot {
       width: 7px;
       height: 7px;
       border-radius: 50%;
-      background: var(--success);
-      box-shadow: 0 0 6px var(--success);
+      background: currentColor;
+      box-shadow: 0 0 6px currentColor;
     }
 
-    /* Main Layout */
+    /* Tab Bar */
+    #tab-bar {
+      display: flex;
+      align-items: center;
+      background: #11161d;
+      border-bottom: 1px solid var(--border);
+      padding: 0 16px;
+      gap: 4px;
+      overflow-x: auto;
+      flex-shrink: 0;
+    }
+    .console-tab {
+      padding: 10px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .console-tab:hover {
+      color: var(--text-main);
+      background: rgba(255,255,255,0.02);
+    }
+    .console-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    /* Main Container */
     #main-content {
       flex: 1;
+      padding: 16px 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .tab-pane { display: none; }
+    .tab-pane.active { display: flex; flex-direction: column; gap: 16px; }
+
+    /* Cards & Layout */
+    .grid-2 {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 16px;
-      padding: 16px;
-      overflow-y: auto;
     }
-
     .card {
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 14px;
+      padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 14px;
     }
     .card-title {
       font-size: 13px;
@@ -124,18 +182,18 @@
       align-items: center;
       justify-content: space-between;
     }
-
-    /* Preset Triggers */
-    .preset-triggers {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+    .card-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: -8px;
     }
+
+    /* Buttons */
     .btn {
       background: #21262d;
       border: 1px solid var(--border);
       color: var(--text-main);
-      padding: 8px 12px;
+      padding: 7px 12px;
       border-radius: 6px;
       font-size: 12px;
       font-weight: 500;
@@ -171,6 +229,15 @@
       background: var(--danger);
       color: #fff;
     }
+    .btn-security {
+      background: rgba(163, 113, 247, 0.15);
+      border-color: rgba(163, 113, 247, 0.4);
+      color: var(--security);
+    }
+    .btn-security:hover {
+      background: var(--security);
+      color: #fff;
+    }
 
     .tier-badge {
       font-size: 9px;
@@ -183,41 +250,10 @@
     .tier-badge.info { background: rgba(0, 188, 212, 0.2); color: var(--accent); }
     .tier-badge.warning { background: rgba(210, 153, 34, 0.2); color: var(--warning); }
     .tier-badge.critical { background: rgba(248, 81, 73, 0.2); color: var(--danger); }
+    .tier-badge.security { background: rgba(163, 113, 247, 0.2); color: var(--security); }
 
-    /* Toast Stack Preview */
-    .toast-stack-preview {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      min-height: 180px;
-      padding: 10px;
-      background: var(--bg-input);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      overflow-y: auto;
-    }
-    .preview-toast {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-left: 4px solid var(--accent);
-      border-radius: 8px;
-      padding: 10px 12px;
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      animation: slideIn 0.2s ease;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
-    }
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateX(15px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-    .preview-toast.tier-critical { border-left-color: var(--danger); }
-    .preview-toast.tier-warning { border-left-color: var(--warning); }
-    .preview-toast.tier-info { border-left-color: var(--accent); }
-
-    /* DND Switch */
-    .dnd-row {
+    /* Form Rows & Toggles */
+    .setting-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -225,12 +261,28 @@
       background: #11161d;
       border: 1px solid var(--border);
       border-radius: 6px;
+      gap: 16px;
     }
+    .setting-meta {
+      flex: 1;
+    }
+    .setting-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+    .setting-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
     .toggle-switch {
       position: relative;
       width: 36px;
       height: 20px;
       display: inline-block;
+      flex-shrink: 0;
     }
     .toggle-switch input { opacity: 0; width: 0; height: 0; }
     .slider {
@@ -252,33 +304,131 @@
       transition: .2s;
       border-radius: 50%;
     }
-    input:checked + .slider {
-      background-color: var(--accent);
-    }
+    input:checked + .slider { background-color: var(--accent); }
     input:checked + .slider:before {
       transform: translateX(16px);
       background-color: #0d1117;
     }
 
-    /* Event Stream */
-    .event-log {
-      grid-column: 1 / -1;
-      background: var(--bg-card);
+    .form-input, .form-select {
+      background: var(--bg-input);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 14px;
+      border-radius: 6px;
+      padding: 6px 10px;
+      color: var(--text-main);
+      font-size: 12px;
+      outline: none;
+    }
+    .form-input:focus, .form-select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 6px var(--accent-glow);
+    }
+    .form-range {
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    /* Screen Mockup */
+    .screen-mockup {
+      width: 100%;
+      height: 140px;
+      background: #090d12;
+      border: 2px solid var(--border);
+      border-radius: 6px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+    }
+    .screen-panel-mock {
+      height: 16px;
+      background: #161b22;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+      font-size: 8px;
+      color: var(--text-muted);
+    }
+    .toast-zone {
+      position: absolute;
+      width: 80px;
+      height: 35px;
+      background: rgba(0, 188, 212, 0.25);
+      border: 1px dashed var(--accent);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--accent);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Toast Stack Preview */
+    .toast-stack-preview {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
+      min-height: 160px;
+      max-height: 280px;
+      padding: 10px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow-y: auto;
     }
+    .preview-toast {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      animation: slideIn 0.2s ease;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .preview-toast.tier-critical { border-left-color: var(--danger); }
+    .preview-toast.tier-warning { border-left-color: var(--warning); }
+    .preview-toast.tier-security { border-left-color: var(--security); }
+    .preview-toast.tier-info { border-left-color: var(--accent); }
+
+    /* Category Table */
+    .cat-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .cat-table th {
+      text-align: left;
+      padding: 8px 10px;
+      background: #11161d;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+    .cat-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Telemetry Log Stream */
     .log-stream {
       background: #090d12;
       border: 1px solid var(--border);
       border-radius: 6px;
       padding: 10px;
-      font-family: monospace;
+      font-family: ui-monospace, SFMono-Regular, monospace;
       font-size: 11px;
-      max-height: 140px;
+      height: 380px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
@@ -287,100 +437,499 @@
     .log-line {
       color: #c9d1d9;
       display: flex;
+      align-items: baseline;
       gap: 8px;
+      padding: 2px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
     }
-    .log-line .time { color: var(--text-muted); }
-    .log-line .tag { color: var(--accent); font-weight: 600; }
+    .log-line .time { color: var(--text-muted); flex-shrink: 0; }
+    .log-line .tag { color: var(--accent); font-weight: 600; flex-shrink: 0; }
+    .log-line .tag.throttled { color: var(--warning); }
+    .log-line .tag.action { color: var(--security); }
   </style>
 </head>
 <body>
 
+  <!-- Top Header -->
   <header id="header">
     <div class="header-left">
       <div class="logo-badge">🔔</div>
       <div class="title-group">
-        <h1>RobOS Toast Daemon</h1>
-        <div class="sub">Categorized SDLC Overlay Notification Manager</div>
+        <h1>RobOS Toast Notification Console</h1>
+        <div class="sub">Dual-Delivery Gateway, Anti-Spam Respam Controls & Overlay Customizer</div>
       </div>
     </div>
     <div class="header-right">
-      <div class="status-pill">
+      <div class="status-pill" id="status-daemon">
         <span class="status-dot"></span>
         <span>Daemon Active</span>
       </div>
+      <div class="status-pill info" id="status-gnome">
+        <span class="status-dot"></span>
+        <span id="label-status-gnome">GNOME: Dual</span>
+      </div>
+      <div class="status-pill warning" id="status-antispam">
+        <span class="status-dot"></span>
+        <span>Anti-Spam Active</span>
+      </div>
+      <button class="btn btn-danger" id="btn-dismiss-all" title="Dismiss all active toasts">Dismiss All</button>
+      <button class="btn" id="btn-reset-prefs" title="Reset preferences to default">Reset Defaults</button>
+      <button class="btn btn-primary" id="btn-save-all-prefs">Save Preferences</button>
     </div>
   </header>
 
+  <!-- Navigation Tab Bar -->
+  <nav id="tab-bar">
+    <button class="console-tab active" data-tab="tab-overview">🥞 Monitor & Stack</button>
+    <button class="console-tab" data-tab="tab-delivery">🔔 Delivery & Dual-Notifications</button>
+    <button class="console-tab" data-tab="tab-antispam">🛡️ Anti-Spam & Respam</button>
+    <button class="console-tab" data-tab="tab-fading">⏱️ Auto-Fade & Timing</button>
+    <button class="console-tab" data-tab="tab-display">📐 Position & Appearance</button>
+    <button class="console-tab" data-tab="tab-categories">📑 Category Matrix</button>
+    <button class="console-tab" data-tab="tab-tester">🧪 Sandbox & Auth Simulator</button>
+    <button class="console-tab" data-tab="tab-telemetry">📜 Event Audit Stream</button>
+  </nav>
+
+  <!-- Main Content Tabs -->
   <main id="main-content">
-    <!-- Left Column: Notification Triggers -->
-    <div class="card">
-      <div class="card-title">
-        <span>⚡ SDLC Notification Triggers</span>
-        <span style="font-size:11px; color:var(--text-muted);">5 Categories &bull; 3 Tiers</span>
-      </div>
-      <div class="preset-triggers">
-        <button class="btn" id="btn-trigger-ci-info">
-          <span>⚙️</span>
-          <span><strong>CI Build Passed</strong> (ci_completed)</span>
-          <span class="tier-badge info">INFO &bull; 5s</span>
-        </button>
-        <button class="btn" id="btn-trigger-pr-warning">
-          <span>🔍</span>
-          <span><strong>PR Review Requested</strong> (pr_review_requested)</span>
-          <span class="tier-badge warning">WARNING &bull; 15s</span>
-        </button>
-        <button class="btn" id="btn-trigger-ci-crit">
-          <span>❌</span>
-          <span><strong>CI Pipeline Blocked</strong> (ci_failed)</span>
-          <span class="tier-badge critical">CRITICAL &bull; PERSISTENT</span>
-        </button>
-        <button class="btn" id="btn-trigger-task-info">
-          <span>📋</span>
-          <span><strong>Task Assigned: TASK-408</strong> (task_started)</span>
-          <span class="tier-badge info">INFO &bull; 5s</span>
-        </button>
+
+    <!-- Tab 1: Overview & Stack Monitor -->
+    <div class="tab-pane active" id="tab-overview">
+      <div class="grid-2">
+        <!-- Quick Trigger Presets -->
+        <div class="card">
+          <div class="card-title">
+            <span>⚡ SDLC Notification Triggers</span>
+            <span class="card-subtitle">Quick simulation presets</span>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <button class="btn" id="btn-trigger-ci-info">
+              <span>⚙️</span>
+              <span><strong>CI Build Passed</strong> (ci_completed)</span>
+              <span class="tier-badge info">INFO &bull; 5s</span>
+            </button>
+            <button class="btn" id="btn-trigger-pr-warning">
+              <span>🔍</span>
+              <span><strong>PR Review Requested</strong> (pr_review_requested)</span>
+              <span class="tier-badge warning">WARNING &bull; 12s</span>
+            </button>
+            <button class="btn" id="btn-trigger-ci-crit">
+              <span>❌</span>
+              <span><strong>CI Pipeline Blocked</strong> (ci_failed)</span>
+              <span class="tier-badge critical">CRITICAL &bull; PERSISTENT</span>
+            </button>
+            <button class="btn" id="btn-trigger-task-info">
+              <span>📋</span>
+              <span><strong>Task Assigned: TASK-408</strong> (task_started)</span>
+              <span class="tier-badge info">INFO &bull; 5s</span>
+            </button>
+            <button class="btn btn-security" id="btn-trigger-security-auth">
+              <span>🛡️</span>
+              <span><strong>Security Auth Request</strong> (pass_locked)</span>
+              <span class="tier-badge security">3 OPTIONS</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Active Stack & Live Position Preview -->
+        <div class="card">
+          <div class="card-title">
+            <span>🥞 Active Toast Stack (<span id="active-toast-count">0</span>/5)</span>
+            <span class="card-subtitle" id="queue-status">Queue: 0 items</span>
+          </div>
+
+          <!-- DND Row -->
+          <div class="setting-row">
+            <div class="setting-meta">
+              <div class="setting-title">Do Not Disturb (DND) Mode</div>
+              <div class="setting-desc">Suppress overlay toasts; queue critical and security alerts</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="dnd-toggle">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <!-- Toast Stack Preview -->
+          <div class="toast-stack-preview" id="toast-stack-preview">
+            <div style="text-align:center; color:var(--text-muted); font-size:12px; padding:20px;">
+              No active overlay toasts. Trigger an alert on the left to preview.
+            </div>
+          </div>
+
+          <!-- Screen Position Mockup -->
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <div style="font-size:11px; font-weight:600; color:var(--text-muted);">Screen Position Indicator:</div>
+            <div class="screen-mockup">
+              <div class="screen-panel-mock">GNOME Desktop Panel</div>
+              <div class="toast-zone" id="mockup-toast-zone">Toasts</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Right Column: Overlay Stack & DND Controls -->
-    <div class="card">
-      <div class="card-title">
-        <span>🥞 Active Toast Stack (<span id="active-toast-count">0</span>/5)</span>
-        <button class="btn btn-danger" id="btn-dismiss-all" style="padding:4px 8px; font-size:11px;">Dismiss All</button>
-      </div>
-
-      <div class="dnd-row">
-        <div>
-          <div style="font-size:12px; font-weight:600;">Do Not Disturb (DND) Mode</div>
-          <div style="font-size:11px; color:var(--text-muted);">Suppress toasts; queue critical alerts</div>
+    <!-- Tab 2: Delivery & Dual-Notifications -->
+    <div class="tab-pane" id="tab-delivery">
+      <div class="card">
+        <div class="card-title">
+          <span>🔔 Dual-Delivery Coordination Settings</span>
+          <span class="card-subtitle">Manage coordination between Ubuntu GNOME alerts and RobOS overlay toasts</span>
         </div>
-        <label class="toggle-switch">
-          <input type="checkbox" id="dnd-toggle">
-          <span class="slider"></span>
-        </label>
-      </div>
 
-      <div class="toast-stack-preview" id="toast-stack-preview">
-        <div style="text-align:center; color:var(--text-muted); font-size:12px; padding:20px;">
-          No active overlay toasts. Trigger an SDLC notification on the left.
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">Primary Delivery Mode</div>
+            <div class="setting-desc">Determines whether notifications broadcast to RobOS toasts, GNOME native, or both</div>
+          </div>
+          <select id="pref-delivery-mode" class="form-select" style="width:260px;">
+            <option value="dual">Smart Dual (RobOS Toasts + GNOME Native)</option>
+            <option value="toast_only">RobOS Rich Toasts Only</option>
+            <option value="native_only">Ubuntu GNOME Native Only</option>
+            <option value="both">Both Always (Simultaneous)</option>
+          </select>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">Enable Ubuntu GNOME Notifications (notify-send)</div>
+            <div class="setting-desc">Dispatches native OS notification toasts into GNOME Shell and top bar tray</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="pref-gnome-toggle" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">Enable RobOS Rich Overlay Toasts</div>
+            <div class="setting-desc">Displays rich on-screen floating toast windows with action buttons and progress bars</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="pref-toasts-toggle" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">Scheduled Quiet Hours</div>
+            <div class="setting-desc">Mutes non-critical notification sounds and non-critical popups during work focus periods</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <label class="toggle-switch">
+              <input type="checkbox" id="pref-quiet-toggle">
+              <span class="slider"></span>
+            </label>
+            <input type="time" id="pref-quiet-start" value="22:00" class="form-input">
+            <span style="font-size:12px; color:var(--text-muted);">&ndash;</span>
+            <input type="time" id="pref-quiet-end" value="07:00" class="form-input">
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Bottom Event Stream -->
-    <div class="event-log">
-      <div class="card-title">
-        <span>📜 Toast Daemon Event Stream</span>
-        <span style="font-size:11px; color:var(--text-muted);" id="queue-status">Queue: 0 items</span>
-      </div>
-      <div class="log-stream" id="log-stream">
-        <div class="log-line">
-          <span class="time">[00:00:00]</span>
-          <span class="tag">[DAEMON READY]</span>
-          <span>Toast overlay subsystem initialized on top-right viewport.</span>
+    <!-- Tab 3: Anti-Spam & Respam Controls -->
+    <div class="tab-pane" id="tab-antispam">
+      <div class="card">
+        <div class="card-title">
+          <span>🛡️ Anti-Spam & Respam Prevention Controls</span>
+          <span class="card-subtitle">Prevent sequential repeats, alert storms, and unthrottled continuous popups</span>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">Master Anti-Spam Protection</div>
+            <div class="setting-desc">Enforce cooldowns and burst rate limiting across all background pollers and tools</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="pref-antispam-master" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">Respam Cooldown Duration</div>
+            <div class="setting-desc">Suppress duplicate or repeated notifications for the same entity or event within this window</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <input type="range" id="pref-antispam-cooldown-range" min="5" max="300" step="5" value="30" class="form-range" style="width:160px;">
+            <span id="antispam-cooldown-label" style="font-size:12px; font-weight:700; width:60px;">30s</span>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">Burst Rate Limiter (Max Toasts / 10s Window)</div>
+            <div class="setting-desc">Limits rapid succession toasts (e.g. bulk task sync) to prevent screen floods</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <input type="range" id="pref-antispam-burst-range" min="1" max="10" step="1" value="4" class="form-range" style="width:160px;">
+            <span id="antispam-burst-label" style="font-size:12px; font-weight:700; width:60px;">4 toasts</span>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">Exact Content Deduplication</div>
+            <div class="setting-desc">Automatically drop notifications with identical title and message body during cooldown</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="pref-antispam-dedup" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">Bypass Throttle for Critical & Security Auth Alerts</div>
+            <div class="setting-desc">Never drop or throttle critical build blockers, token requests, or authorization prompts</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="pref-antispam-bypass" checked>
+            <span class="slider"></span>
+          </label>
         </div>
       </div>
     </div>
+
+    <!-- Tab 4: Auto-Fade & Timing -->
+    <div class="tab-pane" id="tab-fading">
+      <div class="card">
+        <div class="card-title">
+          <span>⏱️ Auto-Fade & Dismissal Timing</span>
+          <span class="card-subtitle">Smooth opacity transitions, hover pause, and per-tier lifespans</span>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">Enable Auto-Fade Transitions</div>
+            <div class="setting-desc">Smoothly animate opacity and position before closing toast windows</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="pref-fading-master" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">Fade Animation Duration</div>
+            <div class="setting-desc">Speed of smooth CSS cubic-bezier fade-out animation</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <input type="range" id="pref-fade-duration" min="150" max="1000" step="50" value="350" class="form-range" style="width:160px;">
+            <span id="fade-duration-label" style="font-size:12px; font-weight:700; width:60px;">350ms</span>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">Pause Countdown on Mouse Hover</div>
+            <div class="setting-desc">Freezes timer and progress bar when hovering so users can read or click action options</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="pref-fading-hover" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">Show Visual Countdown Progress Bar</div>
+            <div class="setting-desc">Displays a shrinking progress indicator along bottom of temporary toasts</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="pref-fading-pbar" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">Info Tier Duration (Standard Notifications)</div>
+            <div class="setting-desc">Auto-dismiss time for routine tasks, commits, and agent notes</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <input type="range" id="pref-dur-info" min="2" max="20" step="1" value="5" class="form-range" style="width:160px;">
+            <span id="dur-info-label" style="font-size:12px; font-weight:700; width:60px;">5s</span>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">Warning Tier Duration (Review Requests & Spikes)</div>
+            <div class="setting-desc">Auto-dismiss time for PR reviews and non-blocking warnings</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <input type="range" id="pref-dur-warning" min="5" max="30" step="1" value="12" class="form-range" style="width:160px;">
+            <span id="dur-warning-label" style="font-size:12px; font-weight:700; width:60px;">12s</span>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">Critical & Security Alerts Auto-Fade</div>
+            <div class="setting-desc">By default, critical alerts stay persistent. Enable to allow them to fade after 30s.</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="pref-dur-crit-autofade">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 5: Position & Appearance -->
+    <div class="tab-pane" id="tab-display">
+      <div class="card">
+        <div class="card-title">
+          <span>📐 Screen Positioning, Geometry & Audio</span>
+          <span class="card-subtitle">Customize where and how toasts display across multi-monitor setups</span>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">Screen Anchor Position</div>
+            <div class="setting-desc">Viewport quadrant where toast stack originates</div>
+          </div>
+          <select id="pref-display-position" class="form-select" style="width:200px;">
+            <option value="top-right">Top-Right (Default)</option>
+            <option value="top-left">Top-Left</option>
+            <option value="bottom-right">Bottom-Right</option>
+            <option value="bottom-left">Bottom-Left</option>
+            <option value="top-center">Top-Center</option>
+          </select>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">Max Concurrent Visible Toasts</div>
+            <div class="setting-desc">Excess alerts are cleanly queued in background until space frees up</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <input type="range" id="pref-display-max" min="1" max="10" step="1" value="5" class="form-range" style="width:160px;">
+            <span id="display-max-label" style="font-size:12px; font-weight:700; width:60px;">5 toasts</span>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">Toast Window Width</div>
+            <div class="setting-desc">Width in pixels of overlay toast boxes</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <input type="range" id="pref-display-width" min="300" max="500" step="10" value="380" class="form-range" style="width:160px;">
+            <span id="display-width-label" style="font-size:12px; font-weight:700; width:60px;">380px</span>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-meta">
+            <div class="setting-title">Audio Chime Effects</div>
+            <div class="setting-desc">Play subtle system audio chimes on high-priority alerts</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="pref-sound-toggle" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 6: Category Overrides Matrix -->
+    <div class="tab-pane" id="tab-categories">
+      <div class="card">
+        <div class="card-title">
+          <span>📑 SDLC Category Configuration Matrix</span>
+          <span class="card-subtitle">Fine-tune delivery behavior per domain</span>
+        </div>
+        <table class="cat-table">
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>Status</th>
+              <th>Delivery Override</th>
+              <th>Sound</th>
+            </tr>
+          </thead>
+          <tbody id="category-matrix-body">
+            <!-- Rendered dynamically in app.js -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab 7: Sandbox & Auth Simulator -->
+    <div class="tab-pane" id="tab-tester">
+      <div class="grid-2">
+        <!-- Security Auth Prompt Simulator -->
+        <div class="card">
+          <div class="card-title">
+            <span>🛡️ Security Authorization Prompt Sandbox</span>
+            <span class="tier-badge security">INTERACTIVE OPTIONS</span>
+          </div>
+          <div class="card-subtitle">Simulate multi-option security authentication dialogs (e.g. GPG pass-token requests)</div>
+          <div style="font-size:12px; color:var(--text-muted); line-height:1.5; background:var(--bg-input); padding:10px; border-radius:6px; border:1px solid var(--border);">
+            <strong>Prompt Context:</strong> Agent "Claude Code" is requesting temporary elevated GPG authorization for <code>acme-corp/api-token</code>.
+            This demonstrates interactive option buttons directly inside the RobOS toast!
+          </div>
+          <button class="btn btn-security" id="btn-simulate-security-auth" style="justify-content:center; padding:10px; font-weight:600;">
+            <span>🚀 Dispatch Interactive Security Auth Toast</span>
+          </button>
+        </div>
+
+        <!-- Custom Notification Composer -->
+        <div class="card">
+          <div class="card-title">
+            <span>✍️ Custom Notification Composer</span>
+            <span class="card-subtitle">Test arbitrary payloads</span>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <input type="text" id="custom-title" class="form-input" placeholder="Title (e.g. Code Review Alert)" value="Custom Notification Test">
+            <textarea id="custom-body" class="form-input" rows="2" placeholder="Message content">Test message dispatched from RobOS Toast Notification Console.</textarea>
+            <div style="display:flex; gap:10px;">
+              <select id="custom-category" class="form-select" style="flex:1;">
+                <option value="system">System</option>
+                <option value="pr_review">PR Review</option>
+                <option value="ci_cd">CI/CD</option>
+                <option value="task">Task</option>
+                <option value="agent">Agent</option>
+                <option value="security">Security</option>
+              </select>
+              <select id="custom-tier" class="form-select" style="flex:1;">
+                <option value="info">Info</option>
+                <option value="warning">Warning</option>
+                <option value="critical">Critical</option>
+                <option value="security">Security</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" id="btn-dispatch-custom" style="justify-content:center;">
+              <span>Dispatch Test Toast</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 8: Telemetry & Event Audit Stream -->
+    <div class="tab-pane" id="tab-telemetry">
+      <div class="card">
+        <div class="card-title">
+          <span>📜 Telemetry & Event Audit Stream</span>
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="telemetry-search" class="form-input" placeholder="Filter telemetry events..." style="width:200px; font-size:11px; padding:4px 8px;">
+            <button class="btn" id="btn-clear-telemetry" style="padding:4px 8px; font-size:11px;">Clear Stream</button>
+          </div>
+        </div>
+        <div class="log-stream" id="log-stream">
+          <!-- Real-time entries appended here -->
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <script src="app.js"></script>

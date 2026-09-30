@@ -70,6 +70,26 @@
     <div id="prefs-panel">
       <h3>Notification Preferences</h3>
       <div class="prefs-section">
+        <h4>Desktop Delivery Mode</h4>
+        <p style="font-size:12px; color:#8b949e; margin-bottom:8px;">Control how notifications appear on your desktop to prevent duplicate or overlapping popups.</p>
+        <select id="pref-delivery-mode" class="filter-sel" style="width:100%; max-width:440px; padding:6px 10px; font-size:12px;">
+          <option value="smart_dual">Smart Dual (RobOS Toast + GNOME Native if RobOS Toast unfocused)</option>
+          <option value="toast_only">RobOS Toasts Only (Rich animated popups)</option>
+          <option value="native_only">GNOME Native Only (Desktop system notifications)</option>
+          <option value="both">Both Always (Show both for every alert)</option>
+        </select>
+      </div>
+      <div class="prefs-section">
+        <h4>Anti-Spam & Respam Prevention</h4>
+        <label class="pref-row">
+          <input type="checkbox" id="pref-antispam-enabled" checked />
+          <span>Enable Anti-Spam deduplication & rate limiting</span>
+        </label>
+        <div class="pref-row" style="margin-top:8px;">
+          <label>Cooldown (sec): <input type="number" id="pref-antispam-cooldown" value="15" min="2" max="300" class="time-input" style="width:70px;" /></label>
+        </div>
+      </div>
+      <div class="prefs-section">
         <h4>Quiet Hours</h4>
         <label class="pref-row">
           <input type="checkbox" id="pref-quiet-enabled" />
@@ -87,7 +107,12 @@
           <span>Enable DND mode (suppress all toasts; queue critical alerts)</span>
         </label>
       </div>
-      <div class="prefs-section" style="display:flex; align-items:center; gap:12px;">
+      <div class="prefs-section" style="background:#161b22; padding:14px; border-radius:8px; border:1px solid #30363d;">
+        <div style="font-weight:600; color:#58a6ff; margin-bottom:4px; font-size:13px;">🎛️ Advanced Toast Customization Console</div>
+        <p style="font-size:12px; color:#8b949e; margin-bottom:10px;">Customize auto-fade duration, display positioning, multi-option security auth prompts, sound, burst limits, and inspect real-time toast telemetry.</p>
+        <button id="btn-open-toast-console" class="tb-btn" style="background:#238636; border-color:#2ea043; color:#fff; font-weight:600; padding:6px 14px;">Open Toast Notification Console</button>
+      </div>
+      <div class="prefs-section" style="display:flex; align-items:center; gap:12px; margin-top:16px;">
         <button id="btn-save-prefs" class="btn btn-primary" style="background:#00bcd4; border-color:#00bcd4; color:#0d1117; font-weight:600;">Save Preferences</button>
         <span id="pref-status-msg" style="font-size:12px; color:#3fb950; display:none;">✓ Preferences saved successfully.</span>
       </div>

@@ -608,6 +608,20 @@ function handleNotify({ title, body, icon, source, sticky, action, category, tie
     try { return fs.existsSync(NOTIF_FILE) ? JSON.parse(fs.readFileSync(NOTIF_FILE, 'utf8')) : []; }
     catch { return []; }
   })();
+
+  // Deduplication check: check if an identical notification was inserted in the last 3000ms
+  const now = Date.now();
+  const isDuplicate = data.slice(0, 10).some(existing => {
+    if (existing.title === title && (existing.body === body || existing.message === body)) {
+      const existingTime = new Date(existing.ts).getTime();
+      return Math.abs(now - existingTime) < 3000;
+    }
+    return false;
+  });
+  if (isDuplicate) {
+    return { ok: true, deduplicated: true };
+  }
+
   const entry = {
     id: Date.now().toString(),
     title,

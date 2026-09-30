@@ -70,14 +70,53 @@ function saveNotifications(data) {
 }
 
 function loadPrefs() {
-  try {
-    if (fs.existsSync(PREFS_FILE)) return JSON.parse(fs.readFileSync(PREFS_FILE, 'utf8'));
-  } catch {}
-  return {
+  const defaults = {
     categoryOverrides: {},
     quietHours: { enabled: false, start: '22:00', end: '07:00' },
     dnd: false,
+    deliveryMode: 'dual',
+    enableGnomeNotifications: true,
+    enableRobosToasts: true,
+    antiSpam: {
+      enabled: true,
+      cooldownSeconds: 30,
+      maxBurst: 4,
+      burstWindowSeconds: 10,
+      dedupExactContent: true,
+      bypassForSecurityAndCritical: true,
+    },
+    fading: {
+      enabled: true,
+      fadeDurationMs: 400,
+      pauseOnHover: true,
+      showProgressBar: true,
+      tierDurations: { critical: 0, warning: 12000, info: 5000, security: 0 },
+      criticalAutoFade: false,
+    },
+    display: {
+      position: 'top-right',
+      maxVisible: 5,
+      width: 380,
+      margin: 20,
+      gap: 10,
+      soundEnabled: true,
+      soundVolume: 80,
+    },
   };
+  try {
+    if (fs.existsSync(PREFS_FILE)) {
+      const parsed = JSON.parse(fs.readFileSync(PREFS_FILE, 'utf8'));
+      return {
+        ...defaults,
+        ...parsed,
+        antiSpam: { ...defaults.antiSpam, ...(parsed.antiSpam || {}) },
+        fading: { ...defaults.fading, ...(parsed.fading || {}) },
+        display: { ...defaults.display, ...(parsed.display || {}) },
+        quietHours: { ...defaults.quietHours, ...(parsed.quietHours || {}) },
+      };
+    }
+  } catch {}
+  return defaults;
 }
 
 function savePrefs(prefs) {
@@ -107,23 +146,21 @@ function sendDesktopToast(title, body, category = 'task', tier = 'info') {
   const prefs = loadPrefs();
   if (prefs.dnd && tier !== 'critical') return;
 
-  // 1. Notify-send
-  try {
-    const iconName = tier === 'critical' ? 'dialog-error' : tier === 'warning' ? 'dialog-warning' : 'dialog-information';
-    cp.spawn('notify-send', ['-a', 'Dev Central', '-t', '6000', '-i', iconName, title, body], { stdio: 'ignore' }).unref();
-  } catch {}
+  // Check delivery mode & native notification preference
+  // deliveryMode can be 'dual' (both), 'toast_only', 'native_only', 'both'
+  const deliveryMode = prefs.deliveryMode || 'dual';
+  const enableGnome = prefs.enableGnomeNotifications !== false;
+  const allowNative = enableGnome && (deliveryMode === 'dual' || deliveryMode === 'both' || deliveryMode === 'native_only');
 
-  // 2. Desktop Manager socket
-  try {
-    const sockPath = process.env.ROBOS_DM_SOCKET || (process.env.XDG_RUNTIME_DIR ? path.join(process.env.XDG_RUNTIME_DIR, 'robos-dm.sock') : `/tmp/robos-dm-${process.getuid ? process.getuid() : 1000}.sock`);
-    if (fs.existsSync(sockPath)) {
-      const client = net.connect(sockPath, () => {
-        client.write(JSON.stringify({ notify: { title, body, category, tier } }));
-        client.end();
-      });
-      client.on('error', () => {});
-    }
-  } catch {}
+  // Notify-send (Ubuntu GNOME native) if enabled by preferences
+  if (allowNative) {
+    try {
+      const iconName = tier === 'critical' ? 'dialog-error' : tier === 'warning' ? 'dialog-warning' : 'dialog-information';
+      cp.spawn('notify-send', ['-a', 'Dev Central', '-t', '6000', '-i', iconName, title, body], { stdio: 'ignore' }).unref();
+    } catch {}
+  }
+  // Note: We deliberately DO NOT send to robos-dm.sock here because Dev Central already writes
+  // to notifications.json directly, which robos-toast watches. Sending to robos-dm.sock caused duplicate entries!
 }
 
 // ── Active RobOS Feature Management & Lifetime Ticket State History ─────────
@@ -698,6 +735,73 @@ async function fetchLatestData() {
   return { issues, prs, reviews, activity, features: loadFeatures() };
 }
 
+// ── Anti-Spam & Respam Control State ──────────────────────────────────────────
+const antiSpamHistory = new Map(); // key -> { lastNotifiedAt: number, count: number }
+const recentDispatches = []; // array of timestamps for sliding-window burst rate limiting
+
+function isAntiSpamThrottled(key, tier, title, body) {
+  const prefs = loadPrefs();
+  const antiSpam = prefs.antiSpam || {
+    enabled: true,
+    cooldownSeconds: 30,
+    maxBurst: 4,
+    burstWindowSeconds: 10,
+    dedupExactContent: true,
+    bypassForSecurityAndCritical: true,
+  };
+
+  if (!antiSpam.enabled) return false;
+
+  // Security and Critical bypass if configured
+  if (antiSpam.bypassForSecurityAndCritical && (tier === 'critical' || (key && key.startsWith('security-')))) {
+    return false;
+  }
+
+  const now = Date.now();
+
+  // 1. Sliding window burst rate limiter
+  const burstWindowMs = (antiSpam.burstWindowSeconds || 10) * 1000;
+  while (recentDispatches.length > 0 && recentDispatches[0] < now - burstWindowMs) {
+    recentDispatches.shift();
+  }
+  const maxBurst = antiSpam.maxBurst || 4;
+  if (recentDispatches.length >= maxBurst) {
+    return true; // Burst rate limit reached
+  }
+
+  // 2. Exact content deduplication within cooldown
+  if (antiSpam.dedupExactContent && title && body) {
+    const contentKey = `content:${title.trim()}:${body.trim()}`;
+    const prevContent = antiSpamHistory.get(contentKey);
+    const cooldownMs = (antiSpam.cooldownSeconds || 30) * 1000;
+    if (prevContent && now - prevContent.lastNotifiedAt < cooldownMs) {
+      return true; // Exact content duplicate within cooldown
+    }
+  }
+
+  // 3. Entity-level cooldown
+  if (key) {
+    const prev = antiSpamHistory.get(key);
+    const cooldownMs = (antiSpam.cooldownSeconds || 30) * 1000;
+    if (prev && now - prev.lastNotifiedAt < cooldownMs) {
+      return true; // Entity notification within cooldown
+    }
+  }
+
+  return false;
+}
+
+function recordAntiSpamDispatch(key, title, body) {
+  const now = Date.now();
+  recentDispatches.push(now);
+  if (key) {
+    antiSpamHistory.set(key, { lastNotifiedAt: now });
+  }
+  if (title && body) {
+    antiSpamHistory.set(`content:${title.trim()}:${body.trim()}`, { lastNotifiedAt: now });
+  }
+}
+
 function checkTrafficAndNotify(prs, issues) {
   let trafficDetected = false;
 
@@ -714,6 +818,7 @@ function checkTrafficAndNotify(prs, issues) {
           body: `Continuous integration checks failed on "${pr.title}". Check workflow logs.`,
           category: 'ci_cd',
           tier: 'critical',
+          entityKey: `pr-${pr.number}-ci-failed`,
           action: { type: 'open-url', url: pr.url },
         });
         trafficDetected = true;
@@ -726,6 +831,7 @@ function checkTrafficAndNotify(prs, issues) {
           body: `Your pull request "${pr.title}" was approved and is ready to merge into main.`,
           category: 'pr_review',
           tier: 'info',
+          entityKey: `pr-${pr.number}-approved`,
           action: { type: 'open-url', url: pr.url },
         });
         trafficDetected = true;
@@ -738,6 +844,7 @@ function checkTrafficAndNotify(prs, issues) {
           body: `Reviewer requested code changes on "${pr.title}". Review inline comments.`,
           category: 'pr_review',
           tier: 'warning',
+          entityKey: `pr-${pr.number}-changes-requested`,
           action: { type: 'open-url', url: pr.url },
         });
         trafficDetected = true;
@@ -750,6 +857,7 @@ function checkTrafficAndNotify(prs, issues) {
           body: `New discussion traffic or comment posted on "${pr.title}".`,
           category: 'pr_review',
           tier: 'info',
+          entityKey: `pr-${pr.number}-comment`,
           action: { type: 'open-url', url: pr.url },
         });
         trafficDetected = true;
@@ -768,6 +876,7 @@ function checkTrafficAndNotify(prs, issues) {
           body: `Updates recorded on assigned task "${issue.title}".`,
           category: 'task',
           tier: 'info',
+          entityKey: `task-${issue.number}-updated`,
           action: { type: 'open-url', url: issue.url },
         });
         trafficDetected = true;
@@ -779,7 +888,33 @@ function checkTrafficAndNotify(prs, issues) {
   return trafficDetected;
 }
 
-function dispatchTrafficNotification({ title, body, category = 'system', tier = 'info', action = null }) {
+function dispatchTrafficNotification({ title, body, category = 'system', tier = 'info', action = null, entityKey = null, bypassAntiSpam = false }) {
+  const spamKey = entityKey || `${category}:${title}`;
+
+  if (!bypassAntiSpam && isAntiSpamThrottled(spamKey, tier, title, body)) {
+    // Throttled by anti-spam! Record quietly in history without sending loud toasts
+    const notifs = loadNotifications();
+    const entry = {
+      id: `notif-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      title,
+      body,
+      icon: category === 'ci_cd' ? 'alert-triangle' : category === 'pr_review' ? 'git-pull-request' : 'bell',
+      source: 'dev-central-monitor',
+      category,
+      tier,
+      ts: new Date().toISOString(),
+      read: false,
+      action,
+      throttled: true,
+    };
+    notifs.unshift(entry);
+    saveNotifications(notifs.slice(0, 500));
+    updateTrayAndIcon();
+    return { ok: true, throttled: true, entry };
+  }
+
+  recordAntiSpamDispatch(spamKey, title, body);
+
   const notifs = loadNotifications();
   const entry = {
     id: `notif-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
@@ -807,6 +942,8 @@ function dispatchTrafficNotification({ title, body, category = 'system', tier = 
   if (win && win.webContents) {
     win.webContents.send('dc-traffic-notification', entry);
   }
+
+  return { ok: true, entry };
 }
 
 async function triggerSync() {
@@ -1078,7 +1215,13 @@ ipcMain.handle('open-app-context', (_, action) => {
 ipcMain.handle('dc-sync-now', async () => triggerSync());
 
 ipcMain.handle('dc-simulate-traffic', async (_, payload = {}) => {
-  const { type = 'pr_comment', prNumber = 84, commentText = 'Review feedback submitted on AST verification.', status = 'fail' } = payload;
+  const {
+    type = 'pr_comment',
+    prNumber = 84,
+    commentText = 'Review feedback submitted on AST verification.',
+    status = 'fail',
+    bypassAntiSpam = true,
+  } = payload;
 
   if (type === 'ci_failed') {
     dispatchTrafficNotification({
@@ -1086,6 +1229,8 @@ ipcMain.handle('dc-simulate-traffic', async (_, payload = {}) => {
       body: `Workflow run failed on step: typecheck and Pact contracts for forms-api.`,
       category: 'ci_cd',
       tier: 'critical',
+      entityKey: `pr-${prNumber}-ci-failed`,
+      bypassAntiSpam,
       action: { type: 'open-url', url: `https://github.com/acme-corp/buildbarn-forms/pull/${prNumber}` },
     });
   } else if (type === 'pr_approved') {
@@ -1094,6 +1239,8 @@ ipcMain.handle('dc-simulate-traffic', async (_, payload = {}) => {
       body: `Sarah Chen approved your pull request with automated 1080p video sign-off.`,
       category: 'pr_review',
       tier: 'info',
+      entityKey: `pr-${prNumber}-approved`,
+      bypassAntiSpam,
       action: { type: 'open-url', url: `https://github.com/acme-corp/buildbarn-forms/pull/${prNumber}` },
     });
   } else if (type === 'pr_changes_requested') {
@@ -1102,6 +1249,8 @@ ipcMain.handle('dc-simulate-traffic', async (_, payload = {}) => {
       body: `Dave K. requested changes: "Ensure 3-year rabies booster exemption rule is covered."`,
       category: 'pr_review',
       tier: 'warning',
+      entityKey: `pr-${prNumber}-changes-requested`,
+      bypassAntiSpam,
       action: { type: 'open-url', url: `https://github.com/acme-corp/buildbarn-forms/pull/${prNumber}` },
     });
   } else if (type === 'task_updated') {
@@ -1110,6 +1259,8 @@ ipcMain.handle('dc-simulate-traffic', async (_, payload = {}) => {
       body: `Alex Rivera promoted task #201 lifecycle state to In Review.`,
       category: 'task',
       tier: 'info',
+      entityKey: `task-${prNumber}-updated`,
+      bypassAntiSpam,
       action: { type: 'open-url', url: `https://github.com/acme-corp/buildbarn-forms/issues/201` },
     });
   } else {
@@ -1118,6 +1269,8 @@ ipcMain.handle('dc-simulate-traffic', async (_, payload = {}) => {
       body: commentText,
       category: 'pr_review',
       tier: 'info',
+      entityKey: `pr-${prNumber}-comment`,
+      bypassAntiSpam,
       action: { type: 'open-url', url: `https://github.com/acme-corp/buildbarn-forms/pull/${prNumber}` },
     });
   }
@@ -1136,4 +1289,7 @@ module.exports = {
   getActiveFeature,
   setActiveFeatureId,
   triggerSync,
+  isAntiSpamThrottled,
+  antiSpamHistory,
+  recentDispatches,
 };

@@ -35,8 +35,8 @@ const PREFS_FILE = path.join(CONFIG_DIR, 'notification-prefs.json');
 
 // ── Notification Categories, Events & Tiers ──────────────────────────────────
 
-const CATEGORIES = ['pr_review', 'ci_cd', 'task', 'agent', 'system'];
-const TIERS = ['critical', 'warning', 'info'];
+const CATEGORIES = ['pr_review', 'ci_cd', 'task', 'agent', 'security', 'system'];
+const TIERS = ['critical', 'warning', 'info', 'security'];
 
 const EVENT_CATEGORY_MAP = {
   pr_review_requested: 'pr_review',
@@ -49,6 +49,8 @@ const EVENT_CATEGORY_MAP = {
   task_started:        'task',
   task_status_changed: 'task',
   agent_session:       'agent',
+  security_auth:       'security',
+  pass_locked:         'security',
   disk_low:            'system',
   service_crash:       'system',
   update_available:    'system',
@@ -63,21 +65,60 @@ function normalizeCategory(catOrEvent) {
 
 const TIER_DEFAULTS = {
   critical: { persistent: true, duration: 0, sound: true },
-  warning:  { persistent: false, duration: 15000, sound: true },
+  warning:  { persistent: false, duration: 12000, sound: true },
   info:     { persistent: false, duration: 5000, sound: false },
+  security: { persistent: true, duration: 0, sound: true },
+};
+
+const DEFAULT_PREFS = {
+  categoryOverrides: {},
+  quietHours: { enabled: false, start: '22:00', end: '07:00' },
+  dnd: false,
+  deliveryMode: 'dual',
+  enableGnomeNotifications: true,
+  enableRobosToasts: true,
+  antiSpam: {
+    enabled: true,
+    cooldownSeconds: 30,
+    maxBurst: 4,
+    burstWindowSeconds: 10,
+    dedupExactContent: true,
+    bypassForSecurityAndCritical: true,
+  },
+  fading: {
+    enabled: true,
+    fadeDurationMs: 350,
+    pauseOnHover: true,
+    showProgressBar: true,
+    tierDurations: { critical: 0, warning: 12000, info: 5000, security: 0 },
+    criticalAutoFade: false,
+  },
+  display: {
+    position: 'top-right',
+    maxVisible: 5,
+    width: 380,
+    margin: 20,
+    gap: 10,
+    soundEnabled: true,
+    soundVolume: 80,
+  },
 };
 
 function loadPrefs() {
   try {
     if (fs.existsSync(PREFS_FILE)) {
-      return JSON.parse(fs.readFileSync(PREFS_FILE, 'utf8'));
+      const parsed = JSON.parse(fs.readFileSync(PREFS_FILE, 'utf8'));
+      return {
+        ...DEFAULT_PREFS,
+        ...parsed,
+        antiSpam: { ...DEFAULT_PREFS.antiSpam, ...(parsed.antiSpam || {}) },
+        fading: { ...DEFAULT_PREFS.fading, ...(parsed.fading || {}) },
+        display: { ...DEFAULT_PREFS.display, ...(parsed.display || {}) },
+        quietHours: { ...DEFAULT_PREFS.quietHours, ...(parsed.quietHours || {}) },
+      };
     }
   } catch {}
-  return {
-    categoryOverrides: {},
-    quietHours: { enabled: false, start: '22:00', end: '07:00' },
-    dnd: false,
-  };
+  return { ...DEFAULT_PREFS };
 }
 
 function savePrefs(prefs) {
@@ -86,6 +127,12 @@ function savePrefs(prefs) {
     fs.writeFileSync(PREFS_FILE, JSON.stringify(prefs, null, 2));
     return true;
   } catch { return false; }
+}
+
+function resetPrefs() {
+  savePrefs(DEFAULT_PREFS);
+  repositionToasts();
+  return { ok: true, prefs: loadPrefs() };
 }
 
 function isQuietHours() {
@@ -105,7 +152,8 @@ function isQuietHours() {
 
 function shouldPlaySound(category, tier) {
   const prefs = loadPrefs();
-  if (isQuietHours() && tier !== 'critical') return false;
+  if (prefs.display && prefs.display.soundEnabled === false) return false;
+  if (isQuietHours() && tier !== 'critical' && tier !== 'security') return false;
   const normalized = normalizeCategory(category);
   const override = prefs.categoryOverrides?.[normalized]?.[tier];
   if (override && override.sound !== undefined) return !!override.sound;
@@ -118,7 +166,10 @@ function getDuration(category, tier) {
   const override = prefs.categoryOverrides?.[normalized]?.[tier];
   if (override && override.duration !== undefined) return override.duration;
   if (override && override.persistent) return 0;
-  return TIER_DEFAULTS[tier]?.duration || 5000;
+  if (prefs.fading?.tierDurations && prefs.fading.tierDurations[tier] !== undefined) {
+    return prefs.fading.tierDurations[tier];
+  }
+  return TIER_DEFAULTS[tier]?.duration ?? 5000;
 }
 
 function isPersistent(category, tier) {
@@ -126,19 +177,83 @@ function isPersistent(category, tier) {
   const normalized = normalizeCategory(category);
   const override = prefs.categoryOverrides?.[normalized]?.[tier];
   if (override && override.persistent !== undefined) return override.persistent;
+  if (prefs.fading?.criticalAutoFade && tier === 'critical') return false;
   return TIER_DEFAULTS[tier]?.persistent || false;
 }
 
-// ── Toast Stack Management ───────────────────────────────────────────────────
+// ── Anti-Spam & Respam Control State ──────────────────────────────────────────
+
+const antiSpamHistory = new Map();
+const recentDispatches = [];
+
+function isAntiSpamThrottled(key, tier, title, body) {
+  const prefs = loadPrefs();
+  const antiSpam = prefs.antiSpam || DEFAULT_PREFS.antiSpam;
+  if (!antiSpam.enabled) return false;
+
+  if (antiSpam.bypassForSecurityAndCritical && (tier === 'critical' || tier === 'security' || (key && key.startsWith('security-')))) {
+    return false;
+  }
+
+  const now = Date.now();
+  const burstWindowMs = (antiSpam.burstWindowSeconds || 10) * 1000;
+  while (recentDispatches.length > 0 && recentDispatches[0] < now - burstWindowMs) {
+    recentDispatches.shift();
+  }
+  const maxBurst = antiSpam.maxBurst || 4;
+  if (recentDispatches.length >= maxBurst) return true;
+
+  if (antiSpam.dedupExactContent && title && body) {
+    const contentKey = `content:${title.trim()}:${body.trim()}`;
+    const prevContent = antiSpamHistory.get(contentKey);
+    const cooldownMs = (antiSpam.cooldownSeconds || 30) * 1000;
+    if (prevContent && now - prevContent.lastNotifiedAt < cooldownMs) return true;
+  }
+
+  if (key) {
+    const prev = antiSpamHistory.get(key);
+    const cooldownMs = (antiSpam.cooldownSeconds || 30) * 1000;
+    if (prev && now - prev.lastNotifiedAt < cooldownMs) return true;
+  }
+
+  return false;
+}
+
+function recordAntiSpamDispatch(key, title, body) {
+  const now = Date.now();
+  recentDispatches.push(now);
+  if (key) antiSpamHistory.set(key, { lastNotifiedAt: now });
+  if (title && body) antiSpamHistory.set(`content:${title.trim()}:${body.trim()}`, { lastNotifiedAt: now });
+}
+
+// ── Telemetry Audit Log ───────────────────────────────────────────────────────
+
+const telemetryLog = [];
+
+function logTelemetry(type, notif, outcome, detail = '') {
+  const entry = {
+    id: `tel-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    timestamp: new Date().toISOString(),
+    type,
+    title: notif?.title || 'Unknown',
+    category: notif?.category || 'system',
+    tier: notif?.tier || 'info',
+    outcome,
+    detail,
+  };
+  telemetryLog.unshift(entry);
+  if (telemetryLog.length > 200) telemetryLog.length = 200;
+
+  if (debugWin && !debugWin.isDestroyed() && debugWin.webContents) {
+    debugWin.webContents.send('telemetry-event', entry);
+  }
+}
+
+// ── Toast Stack Management & Positioning ──────────────────────────────────────
 
 let knownIds = new Set();
 const activeToasts = [];
-const MAX_VISIBLE_TOASTS = 5;
 const queuedToasts = [];
-const TOAST_HEIGHT = 100;
-const TOAST_GAP    = 8;
-const TOAST_MARGIN = 20;
-const TOAST_WIDTH  = 360;
 
 function loadNotifications() {
   try {
@@ -157,14 +272,47 @@ function initKnownIds() {
   });
 }
 
-function getToastY(index) {
-  return TOAST_MARGIN + (TOAST_HEIGHT + TOAST_GAP) * index;
+function getToastBounds(index, totalActive = 1, optionsCount = 0) {
+  const prefs = loadPrefs();
+  const pos = prefs.display?.position || 'top-right';
+  const margin = prefs.display?.margin || 20;
+  const gap = prefs.display?.gap || 10;
+  const width = prefs.display?.width || 380;
+  const height = optionsCount > 0 ? 135 : 100;
+
+  let screenWidth = 1920, screenHeight = 1080;
+  try {
+    const display = screen.getPrimaryDisplay();
+    screenWidth = display.workAreaSize.width;
+    screenHeight = display.workAreaSize.height;
+  } catch {}
+
+  let x = screenWidth - width - margin;
+  let y = margin + (height + gap) * index;
+
+  if (pos === 'top-left') {
+    x = margin;
+    y = margin + (height + gap) * index;
+  } else if (pos === 'top-center') {
+    x = Math.round((screenWidth - width) / 2);
+    y = margin + (height + gap) * index;
+  } else if (pos === 'bottom-right') {
+    x = screenWidth - width - margin;
+    y = screenHeight - margin - height - (height + gap) * index;
+  } else if (pos === 'bottom-left') {
+    x = margin;
+    y = screenHeight - margin - height - (height + gap) * index;
+  }
+
+  return { x, y, width, height };
 }
 
 function repositionToasts() {
   activeToasts.forEach((item, i) => {
     if (item && item.win && !item.win.isDestroyed()) {
-      item.win.setPosition(item.win.getBounds().x, getToastY(i));
+      const optionsCount = (item.notif.actions || item.notif.options || []).length;
+      const bounds = getToastBounds(i, activeToasts.length, optionsCount);
+      item.win.setBounds(bounds);
     }
   });
 }
@@ -173,6 +321,7 @@ function getTierBorderColor(tier) {
   switch (tier) {
     case 'critical': return '#f85149';
     case 'warning':  return '#d29922';
+    case 'security': return '#a371f7';
     case 'info':
     default:         return '#00bcd4';
   }
@@ -181,37 +330,51 @@ function getTierBorderColor(tier) {
 function createToast(notif) {
   const prefs = loadPrefs();
   const category = normalizeCategory(notif.category || notif.eventType || notif.type);
-  const tier = notif.tier || 'info';
+  const tier = notif.tier || (category === 'security' ? 'security' : 'info');
 
-  // DND mode — queue critical/sticky, suppress non-critical
+  // Check delivery mode overrides
+  if (prefs.enableRobosToasts === false || prefs.deliveryMode === 'native_only') {
+    logTelemetry('TOAST_SUPPRESSED', notif, 'NATIVE_ONLY_MODE', 'RobOS overlay toasts disabled in delivery settings.');
+    return null;
+  }
+
+  // DND mode — queue critical/security/sticky, suppress non-critical
   if (prefs.dnd) {
-    if (tier === 'critical' || notif.sticky) {
+    if (tier === 'critical' || tier === 'security' || notif.sticky) {
       queuedToasts.push(notif);
+      logTelemetry('TOAST_QUEUED', notif, 'DND_QUEUED', 'Critical alert queued due to active DND.');
+    } else {
+      logTelemetry('TOAST_SUPPRESSED', notif, 'DND_SUPPRESSED', 'Non-critical alert suppressed in DND mode.');
     }
     return null;
   }
 
-  // Max visible limit — queue excess
-  if (activeToasts.length >= MAX_VISIBLE_TOASTS) {
+  // Anti-Spam Throttle check
+  const spamKey = notif.entityKey || notif.id || `${category}:${notif.title}`;
+  if (!notif.bypassAntiSpam && isAntiSpamThrottled(spamKey, tier, notif.title, notif.body || notif.message)) {
+    logTelemetry('TOAST_THROTTLED', notif, 'ANTI_SPAM_THROTTLED', `Repeated alert throttled within cooldown (${prefs.antiSpam.cooldownSeconds}s).`);
+    return null;
+  }
+  recordAntiSpamDispatch(spamKey, notif.title, notif.body || notif.message);
+
+  const maxVisible = prefs.display?.maxVisible || 5;
+  if (activeToasts.length >= maxVisible) {
     queuedToasts.push(notif);
+    logTelemetry('TOAST_QUEUED', notif, 'STACK_FULL', `Active stack limit reached (${maxVisible}). Queued.`);
     return null;
   }
 
-  let width = 1920;
-  try {
-    const display = screen.getPrimaryDisplay();
-    width = display.workAreaSize.width;
-  } catch {}
+  const optionsCount = (notif.actions || notif.options || []).length;
+  const bounds = getToastBounds(activeToasts.length, activeToasts.length + 1, optionsCount);
 
-  const index = activeToasts.length;
   const persistent = notif.sticky || isPersistent(category, tier);
   const duration = persistent ? 0 : getDuration(category, tier);
 
   const win = new BrowserWindow({
-    width: TOAST_WIDTH,
-    height: TOAST_HEIGHT,
-    x: width - TOAST_WIDTH - TOAST_MARGIN,
-    y: getToastY(index),
+    width: bounds.width,
+    height: bounds.height,
+    x: bounds.x,
+    y: bounds.y,
     frame: false,
     transparent: false,
     backgroundColor: '#161b22',
@@ -234,6 +397,7 @@ function createToast(notif) {
     id: notif.id || Date.now().toString(),
     win,
     notif: { ...notif, category, tier },
+    closing: false,
   };
 
   win.webContents.once('did-finish-load', () => {
@@ -244,15 +408,17 @@ function createToast(notif) {
       _tierColor: getTierBorderColor(tier),
       _persistent: persistent,
       _duration: duration,
+      _fading: prefs.fading,
     });
   });
 
   activeToasts.push(toastItem);
+  logTelemetry('TOAST_DISPATCHED', notif, 'DELIVERED', `Rendered toast overlay in position ${prefs.display?.position || 'top-right'}.`);
 
-  // Auto-dismiss timer
+  // Auto-dismiss timer with smooth fade-out
   if (!persistent && duration > 0) {
     const timer = setTimeout(() => {
-      dismissToast(win);
+      fadeAndDismissToast(win);
     }, duration);
     win.on('closed', () => clearTimeout(timer));
   }
@@ -262,7 +428,7 @@ function createToast(notif) {
     if (idx !== -1) activeToasts.splice(idx, 1);
     repositionToasts();
     // Dequeue next if available
-    if (queuedToasts.length > 0 && activeToasts.length < MAX_VISIBLE_TOASTS) {
+    if (queuedToasts.length > 0 && activeToasts.length < (prefs.display?.maxVisible || 5)) {
       createToast(queuedToasts.shift());
     }
   });
@@ -270,27 +436,45 @@ function createToast(notif) {
   return toastItem;
 }
 
+function fadeAndDismissToast(win) {
+  if (!win || win.isDestroyed()) return;
+  const item = activeToasts.find(t => t.win === win);
+  if (item && item.closing) return;
+  if (item) item.closing = true;
+
+  try {
+    win.webContents.send('start-fade-out');
+    setTimeout(() => {
+      if (win && !win.isDestroyed()) win.close();
+    }, 380);
+  } catch {
+    if (win && !win.isDestroyed()) win.close();
+  }
+}
+
 function dismissToast(win) {
-  if (win && !win.isDestroyed()) win.close();
+  fadeAndDismissToast(win);
 }
 
 function dismissAll() {
   const copy = [...activeToasts];
-  copy.forEach(t => dismissToast(t.win));
+  copy.forEach(t => fadeAndDismissToast(t.win));
   queuedToasts.length = 0;
+  logTelemetry('DISMISS_ALL', { title: 'All Toasts' }, 'DISMISSED_ALL', 'User cleared all active overlay toasts.');
 }
 
 // ── IPC Handlers ─────────────────────────────────────────────────────────────
 
 ipcMain.on('dismiss-toast', (event) => {
   const win = BrowserWindow.fromWebContents(event.sender);
-  if (win) dismissToast(win);
+  if (win && !win.isDestroyed()) win.close();
 });
 
 ipcMain.on('toast-action', (event, action) => {
   const win = BrowserWindow.fromWebContents(event.sender);
+  logTelemetry('TOAST_ACTION', { title: action?.label || 'Action Clicked' }, 'ACTION_EXECUTED', JSON.stringify(action));
+
   if (action && action.type === 'open-app') {
-    // Dispatch app launch request to desktop-manager socket or fallback
     const sockPath = process.env.ROBOS_DM_SOCKET || `/tmp/robos-dm-${process.getuid ? process.getuid() : 1000}.sock`;
     try {
       const client = net.connect(sockPath, () => {
@@ -299,7 +483,7 @@ ipcMain.on('toast-action', (event, action) => {
       });
     } catch {}
   }
-  if (win) dismissToast(win);
+  if (win && !win.isDestroyed()) win.close();
 });
 
 ipcMain.handle('get-active-toasts', () => {
@@ -327,17 +511,49 @@ ipcMain.handle('emit-toast', (_, notif) => {
 ipcMain.handle('get-prefs', () => loadPrefs());
 ipcMain.handle('set-prefs', (_, prefs) => {
   savePrefs(prefs);
+  repositionToasts();
   if (!prefs.dnd && queuedToasts.length > 0) {
-    while (queuedToasts.length > 0 && activeToasts.length < MAX_VISIBLE_TOASTS) {
+    const maxVisible = prefs.display?.maxVisible || 5;
+    while (queuedToasts.length > 0 && activeToasts.length < maxVisible) {
       createToast(queuedToasts.shift());
     }
   }
   return { ok: true, prefs: loadPrefs() };
 });
 
+ipcMain.handle('reset-prefs', () => resetPrefs());
+
 ipcMain.handle('dismiss-all', () => {
   dismissAll();
   return { ok: true };
+});
+
+ipcMain.handle('get-telemetry-log', () => telemetryLog);
+ipcMain.handle('clear-telemetry-log', () => {
+  telemetryLog.length = 0;
+  return { ok: true };
+});
+
+ipcMain.handle('simulate-toast', (_, notif) => {
+  const result = createToast({ ...notif, bypassAntiSpam: notif.bypassAntiSpam ?? true });
+  return result ? { ok: true, id: result.id } : { ok: false };
+});
+
+ipcMain.handle('get-system-info', () => {
+  let notifySendAvailable = false;
+  try {
+    const cp = require('child_process');
+    const res = cp.spawnSync('which', ['notify-send']);
+    notifySendAvailable = res.status === 0;
+  } catch {}
+
+  return {
+    notifySendAvailable,
+    desktop: process.env.XDG_CURRENT_DESKTOP || 'GNOME',
+    display: process.env.DISPLAY || ':0',
+    platform: process.platform,
+    version: 'RobOS 2026.1',
+  };
 });
 
 function checkForNewNotifications() {
@@ -356,9 +572,11 @@ app.on('ready', () => {
 
   // Create dashboard/status window for demo and test assertions
   debugWin = new BrowserWindow({
-    title: 'RobOS Toast Daemon',
-    width: 900,
-    height: 620,
+    title: 'RobOS Toast Notification Console',
+    width: 960,
+    height: 680,
+    minWidth: 800,
+    minHeight: 550,
     backgroundColor: '#0d1117',
     show: true,
     webPreferences: {
@@ -394,6 +612,7 @@ app.on('window-all-closed', (e) => e.preventDefault());
 module.exports = {
   loadPrefs,
   savePrefs,
+  resetPrefs,
   isQuietHours,
   shouldPlaySound,
   getDuration,
@@ -402,8 +621,13 @@ module.exports = {
   CATEGORIES,
   TIERS,
   TIER_DEFAULTS,
+  DEFAULT_PREFS,
   EVENT_CATEGORY_MAP,
   getTierBorderColor,
   createToast,
   dismissAll,
+  isAntiSpamThrottled,
+  antiSpamHistory,
+  recentDispatches,
+  getToastBounds,
 };

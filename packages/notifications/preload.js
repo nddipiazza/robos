@@ -11,4 +11,5 @@ contextBridge.exposeInMainWorld('notifs', {
   getUnreadByCategory: ()     => ipcRenderer.invoke('get-unread-by-category'),
   getPrefs:            ()     => ipcRenderer.invoke('get-prefs'),
   savePrefs:           (p)    => ipcRenderer.invoke('save-prefs', p),
+  openAppContext:      (act)  => ipcRenderer.invoke('open-app-context', act),
 });

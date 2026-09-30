@@ -232,11 +232,25 @@ async function loadPrefs() {
   document.getElementById('pref-quiet-start').value = prefs.quietHours?.start || '22:00';
   document.getElementById('pref-quiet-end').value = prefs.quietHours?.end || '07:00';
   document.getElementById('pref-dnd').checked = prefs.dnd || false;
+  const delivSel = document.getElementById('pref-delivery-mode');
+  if (delivSel && prefs.deliveryMode) delivSel.value = prefs.deliveryMode;
+  const antiSpamCb = document.getElementById('pref-antispam-enabled');
+  if (antiSpamCb) antiSpamCb.checked = prefs.enableAntiSpam !== false;
+  const antiSpamCd = document.getElementById('pref-antispam-cooldown');
+  if (antiSpamCd && prefs.antiSpamCooldownSec !== undefined) antiSpamCd.value = prefs.antiSpamCooldownSec;
 }
 
 document.getElementById('btn-save-prefs').addEventListener('click', async () => {
+  const existing = await window.notifs.getPrefs();
+  const delivSel = document.getElementById('pref-delivery-mode');
+  const antiSpamCb = document.getElementById('pref-antispam-enabled');
+  const antiSpamCd = document.getElementById('pref-antispam-cooldown');
+
   const prefs = {
-    categoryOverrides: {},
+    ...existing,
+    deliveryMode: delivSel ? delivSel.value : (existing.deliveryMode || 'smart_dual'),
+    enableAntiSpam: antiSpamCb ? antiSpamCb.checked : true,
+    antiSpamCooldownSec: antiSpamCd ? (parseInt(antiSpamCd.value, 10) || 15) : 15,
     quietHours: {
       enabled: document.getElementById('pref-quiet-enabled').checked,
       start: document.getElementById('pref-quiet-start').value,
@@ -251,6 +265,15 @@ document.getElementById('btn-save-prefs').addEventListener('click', async () => 
     setTimeout(() => { msg.style.display = 'none'; }, 3000);
   }
 });
+
+const btnOpenConsole = document.getElementById('btn-open-toast-console');
+if (btnOpenConsole) {
+  btnOpenConsole.addEventListener('click', () => {
+    if (window.notifs && window.notifs.openAppContext) {
+      window.notifs.openAppContext({ app: 'robos-toast' });
+    }
+  });
+}
 
 load();
 loadPrefs();
