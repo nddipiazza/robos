@@ -37,17 +37,10 @@ In RobOS, you don't write programming scripts (like Godot's GDScript language) o
 
 ## Game Architecture
 
-```mermaid
-graph TD
-    A["Visual Campaign Editor<br/>(You paint maps, roll heroes & write quests)"] --> B["Declarative Knowledge Graph<br/>(Zero-hardcoded data: items, spells, monsters)"]
-    B --> C["Godot Engine & Infinity AI<br/>(AI bots play dungeon in invisible virtual screen)"]
-    C --> D["Playable Game in Godot<br/>(Click-to-move, Spacebar pause, smooth rendering)"]
-    
-    style A fill:#0d1117,stroke:#00e5ff,stroke-width:2px,color:#e6edf3
-    style B fill:#0d1117,stroke:#38bdf8,stroke-width:2px,color:#e6edf3
-    style C fill:#0d1117,stroke:#a855f7,stroke-width:2px,color:#e6edf3
-    style D fill:#0d1117,stroke:#10b981,stroke-width:2px,color:#e6edf3
-```
+<div style="margin: 2rem 0;">
+  <img src="{{ '/assets/images/training/crpg-architecture-flow.jpg' | relative_url }}" alt="RobOS cRPG Game Architecture Pipeline" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
+  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>The RobOS cRPG Game Architecture: from visual design in Campaign Editor to native Godot runtime.</em></p>
+</div>
 
 ---
 

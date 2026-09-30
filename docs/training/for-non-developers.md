@@ -82,29 +82,10 @@ When an agent finishes building a feature, you don't just "hope it works". RobOS
 
 To make this training grounded and practical, you will follow the exact creation journey of flagship RobOS projects:
 
-```mermaid
-graph TD
-    subgraph P1 ["Project: The Gig Bandit (getemgigs.com)"]
-        G1["Live Web Application"]
-        G2["Buddy Gig Reciprocal Escrow"]
-        G3["Rotating QR Code Mobile Check-ins"]
-        G4["Next.js 15, TailwindCSS & Neon Postgres"]
-        G5["Run & Test in Google Chrome"]
-    end
-
-    subgraph P2 ["Project: Tactical cRPG Realm (crpg-realm)"]
-        R1["Party-Based Isometric RPG Game"]
-        R2["Tabletop Rules & Tactical Combat with Pause"]
-        R3["Visual Campaign & Map Editor"]
-        R4["Godot Engine & Autonomous Playthrough Bots"]
-        R5["Playable Desktop Native Game"]
-    end
-
-    P1 --- P2
-    
-    style P1 fill:#0d1117,stroke:#38bdf8,stroke-width:2px,color:#e6edf3
-    style P2 fill:#0d1117,stroke:#a855f7,stroke-width:2px,color:#e6edf3
-```
+<div style="margin: 2rem 0;">
+  <img src="{{ '/assets/images/training/flagship-projects-overview.jpg' | relative_url }}" alt="RobOS Flagship Projects: The Gig Bandit and Tactical cRPG Realm" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
+  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>The two flagship projects: The Gig Bandit (modern web app) and Tactical cRPG Realm (isometric video game).</em></p>
+</div>
 
 ### Project: `getemgigs.com` (Live Production Web App)
 - **The Challenge**: Help local indie bands kill predatory pay-to-play venues through **Buddy Gigs** (reciprocal deposit escrow) and phone-scanned QR door codes.

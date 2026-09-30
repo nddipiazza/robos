@@ -41,29 +41,10 @@ In RobOS, **you are the Director**. The AI agents are your hyper-fast technical 
 
 To understand why the old way of using AI is broken, let's compare two creators trying to build the exact same game inventory system:
 
-```mermaid
-flowchart TD
-    subgraph BrowserAlice ["Alice: The Browser Chatbot Trap"]
-        A1["Prompt: 'Build me an inventory with swords'"] --> A2["Chatbot outputs 450 lines of JavaScript"]
-        A2 --> A3["Alice creates file & runs in terminal"]
-        A3 --> A4["Crash: Uncaught TypeError: items.map is not a function"]
-        A4 --> A5["Alice pastes error into chat"]
-        A5 --> A6["Chatbot: 'Sorry! Install npm install lodash-uuid-v4'"]
-        A6 --> A7["Alice's laptop fills with phantom packages & mystery files"]
-        A7 --> A8["Hours later: Abandoned project & headache"]
-    end
-
-    subgraph RobOSBob ["Bob: The RobOS Director Workflow"]
-        B1["Context: Defines Item schema in Knowledge Graph"] --> B2["Plan: Generates visual task plan in Task Planner"]
-        B2 --> B3["Sandbox: Agent runs in disposable RAM disk"]
-        B3 --> B4["Verification: Agent passes automated tests"]
-        B4 --> B5["Review Theater: Bob watches 1080p video of sword pickup"]
-        B5 --> B6["1-Click Merge: Zero clutter, working inventory!"]
-    end
-    
-    style BrowserAlice fill:#161b22,stroke:#f85149,stroke-width:2px,color:#e6edf3
-    style RobOSBob fill:#0d1117,stroke:#00e5ff,stroke-width:2px,color:#e6edf3
-```
+<div style="margin: 2rem 0;">
+  <img src="{{ '/assets/images/training/alice-bob-workflow.jpg' | relative_url }}" alt="Alice vs Bob: The Chatbot Trap vs RobOS Director Workflow" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
+  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Comparing the painful Chatbot Trap (Alice) against the governed RobOS Director Workflow (Bob).</em></p>
+</div>
 
 - **Alice** spent hours acting as an unpaid copy-paste intern for a chatbot. She installed mystery packages, polluted her computer, and still has nothing that works.
 - **Bob** acted as a Lead Architect. He gave the agent a clear blueprint, let the agent execute inside an ephemeral RAM sandbox, watched a 1080p video proof of the sword being picked up, and merged the feature in minutes.

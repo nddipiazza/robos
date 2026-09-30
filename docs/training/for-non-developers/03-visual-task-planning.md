@@ -114,20 +114,10 @@ In Task Planner, every task has explicit prerequisites arranged in a **Directed 
   <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Visual dependency graph ensuring tasks execute in logical order.</em></p>
 </div>
 
-```mermaid
-graph TD
-    T1["Escrow & Deposit Data Model"] --> T2["Geolocation Verification API"]
-    T1 --> T3["Rotating QR Code Generator"]
-    T2 --> T4["Next.js Mobile Check-in UI"]
-    T3 --> T4
-    T4 --> T5["End-to-End Chrome Verification Test"]
-    
-    style T1 fill:#0d1117,stroke:#00e5ff,stroke-width:2px,color:#e6edf3
-    style T2 fill:#0d1117,stroke:#38bdf8,stroke-width:2px,color:#e6edf3
-    style T3 fill:#0d1117,stroke:#38bdf8,stroke-width:2px,color:#e6edf3
-    style T4 fill:#0d1117,stroke:#a855f7,stroke-width:2px,color:#e6edf3
-    style T5 fill:#0d1117,stroke:#10b981,stroke-width:2px,color:#e6edf3
-```
+<div style="margin: 2rem 0;">
+  <img src="{{ '/assets/images/training/task-dag-flowchart.jpg' | relative_url }}" alt="Task Dependency Flowchart (DAG)" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
+  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Structured task dependency flow: prerequisites unlock downstream tasks in one unstoppable direction.</em></p>
+</div>
 
 > [!NOTE]
 > **What Does "Acyclic" Mean?**  

@@ -61,17 +61,10 @@ RobOS generated the clean project structure under `packages/getemgigs` and regis
 
 Instead of trying to code banking logic by hand, we used **Context Engineering** to define the exact rules in plain English:
 
-```mermaid
-stateDiagram-v2
-    [*] --> Draft: Creator drafts gig trade
-    Draft --> Offered: Sent to partner band
-    Offered --> Locked: Both bands deposit $25
-    Locked --> CheckedIn: Door QR scanned at venue
-    Locked --> Forfeited: No-show by next morning deadline
-    CheckedIn --> Settled: Deposit returned to attendee
-    Forfeited --> Settled: Deposit paid to host band
-    Settled --> [*]
-```
+<div style="margin: 2rem 0;">
+  <img src="{{ '/assets/images/training/escrow-state-machine.jpg' | relative_url }}" alt="Escrow Attendance Deal State Machine" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
+  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>The Escrow Attendance Deal state machine: trade offer, locked funds, check-in, and payout.</em></p>
+</div>
 
 ```json
 {

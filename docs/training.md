@@ -71,17 +71,10 @@ RobOS transforms software engineering from exhausting code monkey labor into an 
 
 Every module in the RobOS Academy follows a hands-on cadence:
 
-```mermaid
-flowchart LR
-    A["Context & Architecture<br/>(Knowledge Graph & Blueprint)"] --> B["Visual Task Plan<br/>(Task Planner & DAG Milestones)"]
-    B --> C["Sandboxed Agent Run<br/>(Task Implementer & Tests)"]
-    C --> D["Verifiable Signoff<br/>(PR Review Theater & Launch)"]
-    
-    style A fill:#0d1117,stroke:#00e5ff,stroke-width:2px,color:#e6edf3
-    style B fill:#0d1117,stroke:#38bdf8,stroke-width:2px,color:#e6edf3
-    style C fill:#0d1117,stroke:#a855f7,stroke-width:2px,color:#e6edf3
-    style D fill:#0d1117,stroke:#10b981,stroke-width:2px,color:#e6edf3
-```
+<div style="margin: 2rem 0;">
+  <img src="{{ '/assets/images/training/course-cadence-flow.jpg' | relative_url }}" alt="RobOS Training Course Cadence" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
+  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>The RobOS Training Course Cadence: from context to verified launch.</em></p>
+</div>
 
 - **Context &amp; Architecture**: Understand the "why" and model the domain using schemas and templates rather than staring at blank text files.
 - **Visual Task Plan**: Break complex ambitions into small, testable chunks with visual dependencies in **Task Planner**.

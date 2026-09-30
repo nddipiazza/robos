@@ -29,24 +29,10 @@ What if an agent deletes your personal photos? What if it modifies system settin
 
 RobOS solves this with **Ephemeral In-Memory Sandboxes** (technically known in Linux as `tmpfs`):
 
-```mermaid
-flowchart LR
-    Host["Your Personal Computer<br/>(Physical OS, Personal Files, Safe)"]
-    
-    subgraph Sandbox ["Disposable RAM Sandbox (tmpfs)"]
-        Agent["Autonomous AI Agent"]
-        Code["Isolated Code Checkout"]
-        Build["Builds, Dependencies & Tests"]
-        Screen["Virtual Display (Invisible 1080p)"]
-    end
-    
-    Host -- "Mounts Ephemeral Workspace in RAM" --> Sandbox
-    Sandbox -- "Discarded After Review or Test Run" --> Clean["Zero Residual Files or Clutter"]
-    
-    style Host fill:#0d1117,stroke:#10b981,stroke-width:2px,color:#e6edf3
-    style Sandbox fill:#161b22,stroke:#00e5ff,stroke-width:2px,color:#e6edf3
-    style Clean fill:#0d1117,stroke:#38bdf8,stroke-width:2px,color:#e6edf3
-```
+<div style="margin: 2rem 0;">
+  <img src="{{ '/assets/images/training/ram-sandbox-cleanroom.jpg' | relative_url }}" alt="Ephemeral In-Memory RAM Sandbox Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
+  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Disposable RAM Sandboxes: executing code in active memory with zero hard drive pollution.</em></p>
+</div>
 
 ### How In-Memory RAM Sandboxes Work
 - **Zero Disk Writes**: The workspace is mounted directly in your computer's active memory (RAM). No temporary files, test databases, or build caches ever touch your permanent solid-state drive (SSD).
