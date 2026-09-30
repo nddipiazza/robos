@@ -1,5 +1,7 @@
-extends CharacterBody2D
 class_name ShadowHound
+extends CharacterBody2D
+
+const CharacterModel3D = preload("res://scripts/CharacterModel3D.gd")
 
 signal hound_slain
 signal body_clicked
@@ -36,6 +38,15 @@ func _ready() -> void:
 		hp_bar.value = current_hp
 	
 	_load_textures()
+	
+	# Setup 3D miniature model for Shadow Hound
+	var m3d = CharacterModel3D.new()
+	m3d.name = "CharacterModel3D"
+	m3d.setup_model("res://assets/models/monster_hound_pawn.glb", "hound", 1.15, Color(0.35, 0.35, 0.45))
+	add_child(m3d)
+	if sprite:
+		sprite.visible = false
+	
 	_update_health_bar_visibility()
 	GameState.settings_changed.connect(_update_health_bar_visibility)
 
@@ -96,6 +107,11 @@ func _physics_process(delta: float) -> void:
 		sprite.flip_h = false
 	elif velocity.x > 5.0:
 		sprite.flip_h = true
+
+	var m3d = get_node_or_null("CharacterModel3D") as CharacterModel3D
+	if m3d and m3d.has_method("update_facing"):
+		m3d.update_facing(velocity)
+		m3d.set_moving(velocity.length() > 5.0)
 
 	# Step animations
 	anim_timer += delta

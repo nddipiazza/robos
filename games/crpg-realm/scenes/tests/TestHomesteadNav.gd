@@ -19,6 +19,21 @@ func _ready() -> void:
 		return
 		
 	print("📍 Hero initial position: ", hero.global_position)
+	
+	# Setup Elora in 3D for test scene
+	var partner_node = get_node_or_null("EloraNPC")
+	if partner_node:
+		var elora_m3d = partner_node.get_node_or_null("CharacterModel3D")
+		if not elora_m3d:
+			const CharacterModel3D = preload("res://scripts/CharacterModel3D.gd")
+			elora_m3d = CharacterModel3D.new()
+			elora_m3d.name = "CharacterModel3D"
+			partner_node.add_child(elora_m3d)
+			elora_m3d.setup_model("res://assets/models/character_princess_pawn.glb", "princess", 1.0)
+			elora_m3d.equip_weapon("res://assets/models/weapon_bow_recurve.glb")
+			var spr = partner_node.get_node_or_null("Sprite")
+			if spr:
+				spr.visible = false
 
 func _capture_screenshot() -> void:
 	if screenshot_saved: return

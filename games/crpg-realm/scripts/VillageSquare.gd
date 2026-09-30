@@ -1,5 +1,7 @@
 extends Node2D
 
+const CharacterModel3D = preload("res://scripts/CharacterModel3D.gd")
+
 @onready var action_log: ActionLog = $CanvasLayer/ActionLog
 @onready var hud = $CanvasLayer/PartyHUD
 @onready var combat_mgr = $CombatManager
@@ -34,6 +36,13 @@ func _ready() -> void:
 				$FogOfWar.register_actor(comp)
 	if blacksmith and blacksmith.has_signal("body_clicked"):
 		blacksmith.body_clicked.connect(talk_to_blacksmith)
+		var brand_m3d = CharacterModel3D.new()
+		brand_m3d.name = "CharacterModel3D"
+		brand_m3d.setup_model("res://assets/models/character_knight_pawn.glb", "knight", 1.05)
+		brand_m3d.equip_weapon("res://assets/models/weapon_warhammer.glb")
+		blacksmith.add_child(brand_m3d)
+		if blacksmith_sprite:
+			blacksmith_sprite.visible = false
 	if garrison_gate and garrison_gate.has_signal("door_entered"):
 		garrison_gate.door_entered.connect(try_enter_garrison)
 	if has_node("ForestGate"):

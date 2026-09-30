@@ -1,5 +1,7 @@
 extends Node2D
 
+const CharacterModel3D = preload("res://scripts/CharacterModel3D.gd")
+
 @onready var action_log: ActionLog = $CanvasLayer/ActionLog
 @onready var hud = $CanvasLayer/PartyHUD
 @onready var msg_label = $CanvasLayer/NoticeLabel
@@ -27,6 +29,18 @@ func _ready() -> void:
 	door.door_entered.connect(try_exit_to_village)
 	
 	_load_elora_textures()
+	
+	# Initialize 3D Miniature Model for Elora NPC
+	if partner:
+		var elora_m3d = partner.get_node_or_null("CharacterModel3D") as CharacterModel3D
+		if not elora_m3d:
+			elora_m3d = CharacterModel3D.new()
+			elora_m3d.name = "CharacterModel3D"
+			partner.add_child(elora_m3d)
+		elora_m3d.setup_model("res://assets/models/character_princess_pawn.glb", "princess", 1.0)
+		elora_m3d.equip_weapon("res://assets/models/weapon_bow_recurve.glb")
+		if partner_sprite:
+			partner_sprite.visible = false
 	
 	if has_node("FogOfWar"):
 		if partner:
@@ -77,14 +91,20 @@ func _load_elora_textures() -> void:
 			elora_idle_textures.append(load(p_idle))
 
 func _process(delta: float) -> void:
+	var elora_m3d = partner.get_node_or_null("CharacterModel3D") as CharacterModel3D
 	if action_log and action_log.is_dialogue_active:
 		# Face hero during dialogue
 		if partner_sprite and hero:
 			partner_sprite.flip_h = (hero.global_position.x > partner.global_position.x)
+		if elora_m3d and hero:
+			elora_m3d.face_point(hero.global_position)
+			elora_m3d.set_moving(false)
 		return
 
 	if elora_wait_timer > 0.0:
 		elora_wait_timer -= delta
+		if elora_m3d:
+			elora_m3d.set_moving(false)
 		# Play gentle idle animation
 		elora_anim_timer += delta
 		if elora_anim_timer >= 0.4 and elora_idle_textures.size() > 0:
@@ -99,6 +119,9 @@ func _process(delta: float) -> void:
 		var dir = partner.global_position.direction_to(dest)
 		partner.global_position += dir * (70.0 * delta)
 		partner_sprite.flip_h = (dir.x > 0)
+		if elora_m3d:
+			elora_m3d.update_facing(dir)
+			elora_m3d.set_moving(true)
 		
 		# Cycle walk frames
 		elora_anim_timer += delta
@@ -107,12 +130,17 @@ func _process(delta: float) -> void:
 			elora_frame = (elora_frame + 1) % elora_walk_textures.size()
 			partner_sprite.texture = elora_walk_textures[elora_frame]
 	else:
+		if elora_m3d:
+			elora_m3d.set_moving(false)
 		elora_wait_timer = randf_range(4.0, 7.0)
 		elora_wp_idx = (elora_wp_idx + 1) % elora_waypoints.size()
 
 func talk_to_elora() -> void:
 	if hero and partner_sprite:
 		partner_sprite.flip_h = (hero.global_position.x > partner.global_position.x)
+	var elora_m3d = partner.get_node_or_null("CharacterModel3D") as CharacterModel3D
+	if elora_m3d and hero:
+		elora_m3d.face_point(hero.global_position)
 	var dial = DataStore.dialogue_trees.get("partner-confrontation", {})
 	if action_log:
 		action_log.start_dialogue(dial, "node_wake")
@@ -152,7 +180,9 @@ func open_footlocker() -> void:
 		if GameState.hero_class == "rogue":
 			GameState.add_item("hunting-bow")
 			GameState.equipped_weapon = "hunting-bow"
-		GameState.add_item("service-sword")
+		else:
+			GameState.add_item("service-sword")
+			GameState.equipped_weapon = "service-sword"
 		GameState.add_item("potion-healing")
 		GameState.add_chest()
 		show_notice("Acquired Equipment and Potion of Healing from Footlocker!")

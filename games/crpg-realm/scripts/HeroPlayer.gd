@@ -71,6 +71,7 @@ func _ready() -> void:
 	if character_name == "":
 		character_name = GameState.hero_name
 	_load_textures()
+	_setup_hero_3d_model()
 	_update_overhead_ui()
 	_update_invisibility_visual()
 	GameState.hero_damaged.connect(_on_hero_damaged)
@@ -233,6 +234,37 @@ func play_hit_reaction() -> void:
 	var tw = create_tween()
 	tw.tween_property(sprite, "modulate", Color(2.0, 0.4, 0.4, 1.0), 0.08)
 	tw.tween_property(sprite, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.15)
+
+func _setup_hero_3d_model() -> void:
+	var h_class = GameState.hero_class.to_lower() if GameState.hero_class != "" else "fighter"
+	var model_type = "knight"
+	var model_ref = "res://assets/models/character_knight_pawn.glb"
+	if "wizard" in h_class or "mage" in h_class or "sorcerer" in h_class or "warlock" in h_class:
+		model_type = "wizard"
+		model_ref = "res://assets/models/character_wizard_pawn.glb"
+	elif "rogue" in h_class or "thief" in h_class or "ranger" in h_class:
+		model_type = "rogue"
+		model_ref = "res://assets/models/character_rogue_pawn.glb"
+	elif "king" in h_class or "noble" in h_class:
+		model_type = "king"
+		model_ref = "res://assets/models/character_king_pawn.glb"
+
+	var m3d = setup_3d_hero_model(model_ref, model_type, 1.0)
+	if m3d:
+		var w = GameState.equipped_weapon
+		if w != "" and w != "none":
+			m3d.equip_weapon(w)
+		else:
+			if GameState.flags.get("footlocker_looted", false) or GameState.has_item("service-sword") or GameState.has_item("iron-sword"):
+				m3d.equip_weapon("res://assets/models/weapon_sword_iron.glb")
+			elif GameState.has_item("hunting-bow"):
+				m3d.equip_weapon("res://assets/models/weapon_bow_recurve.glb")
+			elif model_type == "wizard":
+				m3d.equip_weapon("res://assets/models/weapon_staff_wizard.glb")
+			elif model_type == "rogue":
+				m3d.equip_weapon("res://assets/models/weapon_dagger_rogue.glb")
+			else:
+				m3d.equip_weapon("res://assets/models/weapon_sword_iron.glb")
 
 func setup_3d_hero_model(asset_ref: String, type_name: String = "knight", scale_mul: float = 1.0, tint: Color = Color.WHITE) -> CharacterModel3D:
 	var m3d = get_node_or_null("CharacterModel3D") as CharacterModel3D

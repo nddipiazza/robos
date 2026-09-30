@@ -1,5 +1,7 @@
 extends Node2D
 
+const CharacterModel3D = preload("res://scripts/CharacterModel3D.gd")
+
 @onready var action_log: ActionLog = $CanvasLayer/ActionLog
 @onready var hud = $CanvasLayer/PartyHUD
 @onready var combat_mgr = $CombatManager
@@ -30,6 +32,17 @@ func _ready() -> void:
 			if has_node("FogOfWar"):
 				$FogOfWar.register_actor(comp)
 	malakor_npc.body_clicked.connect(confront_malakor)
+	
+	# Setup 3D miniature model for Captain Malakor
+	if malakor_npc:
+		var malakor_m3d = CharacterModel3D.new()
+		malakor_m3d.name = "CharacterModel3D"
+		malakor_m3d.setup_model("res://assets/models/character_knight_pawn.glb", "knight", 1.25, Color(0.75, 0.25, 0.25))
+		malakor_m3d.equip_weapon("res://assets/models/weapon_greatsword.glb")
+		malakor_npc.add_child(malakor_m3d)
+		if malakor_sprite:
+			malakor_sprite.visible = false
+			
 	_load_malakor_textures()
 	_update_health_bar_visibility()
 	GameState.settings_changed.connect(_update_health_bar_visibility)

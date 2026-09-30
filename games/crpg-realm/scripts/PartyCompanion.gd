@@ -2,6 +2,7 @@ class_name PartyCompanion
 extends CharacterBody2D
 
 const Pathfinder = preload("res://scripts/Pathfinder.gd")
+const CharacterModel3D = preload("res://scripts/CharacterModel3D.gd")
 
 signal attack_finished(target_node: Node2D)
 
@@ -34,6 +35,7 @@ var pending_interact_callback: Callable = Callable()
 
 func _ready() -> void:
 	_load_textures()
+	_setup_companion_3d_model()
 	_update_overhead_ui()
 	GameState.party_changed.connect(_on_party_changed)
 	GameState.party_selection_changed.connect(_on_selection_changed)
@@ -64,6 +66,24 @@ func _load_textures() -> void:
 			walk_textures.append(load(p_walk))
 	if idle_textures.size() > 0:
 		sprite.texture = idle_textures[0]
+
+func _setup_companion_3d_model() -> void:
+	var m3d = get_node_or_null("CharacterModel3D") as CharacterModel3D
+	if not m3d:
+		m3d = CharacterModel3D.new()
+		m3d.name = "CharacterModel3D"
+		add_child(m3d)
+	var m_ref = "res://assets/models/character_princess_pawn.glb"
+	var m_type = "princess"
+	var w_ref = "res://assets/models/weapon_bow_recurve.glb"
+	if companion_id == "brand" or "brand" in companion_name.to_lower():
+		m_ref = "res://assets/models/character_knight_pawn.glb"
+		m_type = "knight"
+		w_ref = "res://assets/models/weapon_warhammer.glb"
+	m3d.setup_model(m_ref, m_type, 1.0)
+	m3d.equip_weapon(w_ref)
+	if sprite:
+		sprite.visible = false
 
 func _update_overhead_ui() -> void:
 	var m = _get_member_data()
@@ -212,6 +232,11 @@ func _physics_process(delta: float) -> void:
 	else:
 		velocity = Vector2.ZERO
 		_animate_idle(delta)
+
+	var m3d = get_node_or_null("CharacterModel3D") as CharacterModel3D
+	if m3d and m3d.has_method("update_facing"):
+		m3d.update_facing(velocity)
+		m3d.set_moving(velocity.length() > 10.0)
 
 func move_to(dest: Vector2) -> void:
 	target_position = dest
