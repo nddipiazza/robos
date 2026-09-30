@@ -82,16 +82,14 @@ func set_camera_limits(left: int, top: int, right: int, bottom: int) -> void:
 
 ### Click-to-move: `Pathfinder.get_nav_path()`
 
-When you click the ground, `HeroPlayer.move_to_point()` asks the pathfinder for a route and queues each point:
+When you click the ground, `HeroPlayer.move_to_point()` asks the pathfinder for a collision-free route and queues each point:
 
 ```gdscript
 var cur_scene = get_tree().current_scene
 var path = Pathfinder.get_nav_path(get_world_2d(), global_position, target_pos, cur_scene, [get_rid()])
 ```
 
-`Pathfinder.gd` is a static helper, not a node. It works in four steps:
-
-[scripts/Pathfinder.gd](https://github.com/nddipiazza/robos/blob/main/games/crpg-realm/scripts/Pathfinder.gd)
+[`scripts/Pathfinder.gd`](https://github.com/nddipiazza/robos/blob/main/games/crpg-realm/scripts/Pathfinder.gd) is a static helper class executing a 4-step pipeline:
 
 ```gdscript
 static func get_nav_path(world_2d: World2D, start_pos: Vector2, target_pos: Vector2, scene: Node = null, exclude: Array[RID] = []) -> PackedVector2Array:
@@ -99,24 +97,27 @@ static func get_nav_path(world_2d: World2D, start_pos: Vector2, target_pos: Vect
 	if is_line_clear(world_2d, start_pos, target_pos, 10.0, exclude):
 		return PackedVector2Array([target_pos])
 
-	# 2. Collect Scene Navigation Waypoints
-	var nav_points: Array[Vector2] = []
-	if scene and scene.has_method("get_nav_points"):
-		nav_points = scene.get_nav_points()
+	# 2. Get or construct sub-tile AStarGrid2D (20x20px grid, cached per scene ID)
+	var grid = get_or_build_grid(world_2d, scene)
+	if not grid:
+		return _legacy_nav_points_path(world_2d, start_pos, target_pos, scene, exclude)
 
-	if nav_points.is_empty():
-		return PackedVector2Array([target_pos])
+	# 3. Map start & target to nearest walkable grid cell
+	start_cell = find_nearest_walkable_cell(grid, start_cell, 8)
+	target_cell = find_nearest_walkable_cell(grid, target_cell, 8)
+	var raw_path = grid.get_point_path(start_cell, target_cell)
 
-	# 3. Build AStar2D graph connecting navigable points
-	# ... start, target and every nav point become AStar2D points;
-	# ... two points are connected when is_line_clear() between them.
-
-	# 4. Funnel smoothing: skip intermediate nodes where direct line is clear
-	var smoothed = smooth_path(world_2d, raw_path, exclude)
-	# ...
+	# 4. String-Pulling Funnel Smoothing: raycasts forward to the furthest visible waypoint
+	var smoothed = smooth_path(world_2d, full_path, exclude)
+	if smoothed.size() > 1 and smoothed[0].distance_to(start_pos) < 8.0:
+		return smoothed.slice(1)
+	return smoothed
 ```
 
-`is_line_clear()` casts three rays against layer 1: one centre ray and two parallel rays offset sideways (10 px for the direct check, 8 px between waypoints), so the route clears corners. The hero's own body is excluded. If nothing is visible from the start or the target, it connects to the closest nav point instead.
+1. **Direct line-of-sight check (`is_line_clear`)**: Casts three parallel rays (centre ray plus two lateral rays offset 10 px sideways) against collision layer 1. If clear, the character moves straight without engaging grid search.
+2. **Sub-tile `AStarGrid2D`**: Automatically rasterizes collision layer 1 using a `CircleShape2D` (radius 14 px) across a 20×20 px grid, guaranteeing wall clearance. The grid is cached per scene instance ID so subsequent clicks require zero physics shape queries.
+3. **Nearest walkable cell remapping**: If the player clicks inside a solid wall, obstacle, or fireplace, concentric ring expansion finds the closest walkable tile within 8 cells.
+4. **String-Pulling funnel smoothing (`smooth_path`)**: Scans from start to destination, raycasting forward to the furthest visible point. Jagged 45°/90° stair-steps collapse into 2–3 clean corner waypoints that round doorway thresholds and wall corners smoothly.
 
 So the scene has one job: return good waypoints. Here are the catacombs':
 

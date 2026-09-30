@@ -330,10 +330,40 @@ The demo mode plays the e2e test pyramid inside the game with the BDD HUD (scena
   - **Round Pace / Combat Timer:** Combat rounds default to a relaxed 1.4s/turn (slowed 2x). You can dynamically adjust the combat timer during battles using the bottom control bar (`🐢 Slower` / `Faster 🐇` buttons and the pace slider) or keyboard shortcuts `[` / `-` (slower) and `]` / `+` (faster). Range: 0.4s to 6.0s/turn.
   - **Navigation & Playback:** `M` toggles Demo Arena / Real cRPG mode, `Space` pauses/resumes, `Left` / `Right` steps between scenarios, `T` toggles the test pyramid navigator drawer, `1`–`5` adjusts overall speed (`0.25x` to `4.0x`), and `Esc` exits back to character selection.
 
+## Visuals & 3D Miniature Model Conventions
+
+Characters, companions, NPCs, and monsters in `robos-crpg` render as 3D miniature tabletop figurines via `scripts/CharacterModel3D.gd`:
+
+- **SubViewport 3D Pipeline:** Each actor creates or instances a `CharacterModel3D` node. It sets up an anti-aliased 160×160 `SubViewport` (MSAA 4X, transparent background, isolated 3D world), an isometric `Camera3D` (fov 36°, pitch ~35°), key sun and fill omni lighting, and a `ModelPivot` parent.
+- **Dynamic Equipment Sockets:** `ModelPivot` hosts three standard equipment sockets:
+  - `WeaponSocket` at `(0.24, 0.45, 0.12)` (main hand: sword, staff, bow, dagger, warhammer, greatsword)
+  - `ShieldSocket` at `(-0.25, 0.46, 0.12)` (off hand: heater or round shield)
+  - `HelmSocket` at `(0.0, 0.78, 0.0)` (head: knight or iron helm)
+- **Attachment & Sockets:** Call `m3d.equip_weapon(res_path)`, `m3d.equip_shield(...)`, and `m3d.equip_helmet(...)` to mount glTF/GLB meshes. Equipped meshes automatically rotate and hop in sync with the pawn.
+- **Alignment:** The miniature pedestal is projected via `DisplaySprite` with `offset = Vector2(0, -18)`, matching the actor's 2D feet collision shape (`CircleShape2D`, radius 12–14 px) positioned at `(0, 16)`.
+- **Facing & Tabletop Hop Motion:** In `_physics_process(delta)`:
+  - Pass the movement vector to `m3d.update_facing(velocity)` or call `m3d.face_point(target_pos)`.
+  - Pass motion state via `m3d.set_moving(velocity.length() > 10.0)`. Moving models perform a tabletop hop (`abs(sin(walk_timer)) * 0.14`), while stationary models perform idle breathing sway.
+  - In combat, trigger `m3d.play_attack()` to pitch the weapon socket forward and lunge.
+- **Spells & VFX (`scripts/SpellModel3D.gd`):** Projectiles (Magic Missile, Fireball) and area-of-effect bursts render through isolated 3D viewports with trailing ribbons and shockwave rings.
+
+## Navigation & Pathfinding Architecture (`Pathfinder.gd`)
+
+Movement in real campaign scenes and tactical maps routes through `scripts/Pathfinder.gd`:
+
+- **AStarGrid2D Sub-Tile Grid:** Automatically rasterizes scene collision layer 1 using a 20×20 px grid resolution and a 14 px `CircleShape2D` body sweep, ensuring complete corner clearance.
+- **Per-Scene Caching:** Caches the rasterized grid by scene instance ID (`_cached_scene_id`). Clear the cache with `Pathfinder.invalidate_grid()` if level geometry or collision barriers alter at runtime.
+- **Solid-Click Remapping:** If an interaction click targets a solid obstacle (e.g. wall, doorframe, fireplace), `find_nearest_walkable_cell(grid, cell, 8)` finds the nearest valid tile within an 8-cell concentric ring.
+- **String-Pulling Funnel Smoothing (`smooth_path`):** Eliminates jagged tile stair-stepping by raycasting forward from each path node to the furthest visible waypoint.
+- **Fast-Path Line-of-Sight:** `is_line_clear()` performs a 3-ray sweep (center ray + 2 parallel lateral rays offset 10–12 px) against layer 1. If clear, the pathfinder returns `[target_pos]` immediately without grid computation.
+
 ## Engine map
 
 | File | Role |
 |---|---|
+| `scripts/CharacterModel3D.gd` | 3D tabletop miniature pawn renderer, ViewportTexture projection, equipment sockets (`WeaponSocket`, `ShieldSocket`, `HelmSocket`), and hop motion |
+| `scripts/SpellModel3D.gd` | 3D spell projectile, ribbon particles, and area-of-effect explosion renderer |
+| `scripts/Pathfinder.gd` | Collision-aware navigation: `is_line_clear()`, `AStarGrid2D` obstacle rasterization, nearest-walkable cell search, and string-pulling funnel smoothing |
 | `scripts/engine/Dice.gd` | Seeded dice, scripted rolls, roll log (autoload `Dice`) |
 | `scripts/engine/ScenarioEngine.gd` | Rules core, Infinity AI, audit, coverage, fuzz (autoload `ScenarioEngine`) |
 | `scripts/engine/ScenarioArena.gd`, `scenes/ScenarioArena.tscn` | Human-mode rendering of any scenario |
