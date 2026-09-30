@@ -94,11 +94,13 @@ In RobOS, Context Engineering provides these exact foundations to autonomous AI 
   <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>Figure: The RobOS Non-Developer Application and Game Building Lifecycle.</em></p>
 </div>
 
-| Technical Concept | Plain English Meaning | Chef Analogy | How You Use It in RobOS |
+| Technical Concept | Plain English Meaning | Chef &amp; Restaurant Analogy | How You Use It in RobOS |
 |:---|:---|:---|:---|
+| **Frontend Screen** | Everything the user sees and clicks (buttons, menus, text, colors). | The dining table &amp; menu | You design the screen layout and decide where the "Accept Deal" button goes. |
+| **Backend Engine** | The behind-the-scenes system that runs rules, calculations, and database storage. | The kitchen &amp; pantry | You set the escrow deposit amounts and cancellation deadline rules. |
+| **API Contract** | The agreement between the screen and the behind-the-scenes engine (an **API** is a digital messenger connecting user screens to data). | The kitchen order ticket | You specify that clicking "Lock Deposit" sends `{ gigId, amount }` and receives `{ status: "locked" }`. |
 | **Data Schema** | A formal description of what a piece of information contains. | The ingredient list | In **App Wizard**, you declare that a `Band` has a `name`, `genre`, and `homeCity`. |
-| **API Contract** | The agreement between the screen and backend server (an **API** is a digital messenger connecting user screens to data). | The kitchen ticket | You specify that clicking "Lock Deposit" sends `{ gigId, amount }` and receives `{ status: "locked" }`. |
-| **Knowledge Graph Node** | A persistent record of an entity in your system. | The pantry inventory | In **Knowledge Graph Explorer**, your game zones, character classes, and APIs are indexed forever. |
+| **Knowledge Graph Node** | A persistent record of an entity in your system. | The permanent recipe book | In **Knowledge Graph Explorer**, your game zones, character classes, and APIs are indexed forever. |
 | **User Story (BDD)** | A plain-English scenario describing how a feature should behave (technically called **Behavior-Driven Development**). | The tasting criteria | *"Given Sir Caleb has 10 HP, when he drinks a healing potion, then his HP becomes 25."* |
 
 ---

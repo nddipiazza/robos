@@ -97,10 +97,10 @@ Next, Task Planner synthesizes a comprehensive **Plan Proposal**.
 </div>
 
 The plan organizes your feature into logical milestones:
-- **Core Data Models &amp; Schemas**
-- **Backend Logic &amp; Verification Tests**
-- **User Interface &amp; Interactive Controls**
-- **End-to-End Verification &amp; Walkthrough**
+- **Core Data Models &amp; Storage** (the information ingredients)
+- **Behind-the-Scenes Rules &amp; Verification Tests** (the calculations and checks)
+- **User Interface &amp; Interactive Controls** (the buttons, screens, and visual layout)
+- **End-to-End Verification &amp; Walkthrough** (watching the complete feature work)
 
 ---
 

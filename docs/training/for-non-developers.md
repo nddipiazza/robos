@@ -46,7 +46,7 @@ In RobOS, you do not write code, and you do not copy-paste terminal errors. Inst
 |:---|:---|:---|
 | **Product Managers &amp; Entrepreneurs** | Market ideas, user workflows, business logic, feature priorities | Generates production web apps, databases, and APIs without waiting on dev cycles |
 | **Game Designers &amp; Writers** | World lore, quest trees, character classes, battle balance | Scaffolds Godot 4 scenes, paints map colliders, and runs autonomous bot playthroughs |
-| **UX &amp; UI Designers** | Visual layouts, color schemes, user interactions, ergonomics | Scaffolds responsive web and desktop frontends with pixel-perfect component structures |
+| **UX &amp; UI Designers** | Visual layouts, color schemes, user interactions, ergonomics | Scaffolds responsive web and desktop screens with pixel-perfect visual layouts |
 | **Curious Non-Engineers** | Ambition and a desire to build things | Teaches you system architecture, context engineering, and quality review with zero math or syntax |
 
 > [!NOTE]
@@ -76,6 +76,12 @@ When an agent finishes building a feature, you don't just "hope it works". RobOS
 - **Flight Simulator Knowledge Checks**: The **PR (Pull Request) Review Theater**—think of a Pull Request as an **Approval Packet** where the agent hands you its finished draft to inspect before anything touches your real project—gives you an interactive focused walkthrough and quiz to ensure you understand how the piece fits into your vision.
 - **Visual Blast-Radius Checks**: You see exactly what changed before approving the merge.
 
+### Demystifying "Frontend" and "Backend" (The Restaurant Analogy)
+If you've heard tech people talk about "frontend" and "backend" and wondered what that means, imagine walking into a restaurant:
+- **The Frontend (The Dining Room)**: This is everything the user sees, touches, and clicks on their screen—the buttons, menus, colors, fonts, forms, and sound effects on their phone, laptop, or game window.
+- **The Backend (The Kitchen & Storage Vault)**: Behind the swinging doors where guests never go, the kitchen cooks the food, stores ingredients in the pantry, and handles the cash register. The **backend** is the hidden engine: it securely stores passwords, calculates account balances, and manages the database.
+- **The API (The Waiter)**: The digital messenger that carries the order ticket from the dining table (the frontend) into the kitchen (the backend), and brings the prepared meal back out to the table.
+
 ---
 
 ## Flagship Projects You Will Build
@@ -93,7 +99,7 @@ To make this training grounded and practical, you will follow the exact creation
 - **What You'll Learn**:
   - How to select the Web App archetype in the App Wizard.
   - How to model financial escrow states and venue distance proximity rules without math.
-  - How to watch agents write backend routes and tests inside RAM sandboxes.
+  - How to watch agents write the behind-the-scenes data rules and tests inside RAM sandboxes.
   - How to open Google Chrome, toggle mobile emulation, and test the rotating QR ticket live in the browser!
 
 ### Project: `crpg-realm` (Playable Tactical Video Game)

@@ -45,7 +45,7 @@ We set out to fix this with radical software mechanics:
 
 In **App Wizard**, we selected the **Modern Web Application (Next.js)** archetype:
 - **Name**: `getemgigs`
-- **Domain**: `schema:WebApplication`, `robos:FrontEndApp`
+- **Category**: Modern Web Application (interactive mobile/desktop screens)
 - **Stack**: Next.js 15, React 19, TailwindCSS, Neon Serverless Postgres.
 
 RobOS generated the clean project structure under `packages/getemgigs` and registered the node `urn:robos:app:getemgigs` in the Knowledge Graph.
@@ -101,7 +101,7 @@ In **Task Planner**, we used the interactive form to generate a structured miles
 
 We dispatched the tasks to the **Task Implementer**:
 - The agent spun up a disposable in-memory RAM sandbox.
-- It wrote the Next.js routes under `app/api/deals/` and `app/deals/[id]/`.
+- It wrote the behind-the-scenes data rules under `app/api/deals/` and user screens under `app/deals/[id]/`.
 - It created a complete automated test suite (`tests/escrow.test.js`) verifying:
   - Deposit locking on trade agreement.
   - Door QR verification with timed token rotation.

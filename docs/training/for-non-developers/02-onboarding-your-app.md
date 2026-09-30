@@ -47,7 +47,7 @@ Before opening the wizard, decide which archetype matches your product vision:
 | **Web Application (Modern Web)** | **`getemgigs.com`** | Next.js 15, React 19, TailwindCSS, Neon Postgres | SaaS products, marketplaces, customer portals, mobile-first web apps |
 | **PC Video Game** | **`crpg-realm`** | Godot Engine, 2.5D Isometric, Tabletop RPG Rules | 2D/3D video games, tactical RPGs, dungeon crawlers, simulations |
 | **Desktop Tool** | **`app-launcher`** | Electron, Vanilla JS, Lucide icons, Desktop Window Bridge | Internal developer tools, admin utilities, offline dashboards |
-| **Microservice Backend** | **`billing-api`** | Node.js, Go, or Python with standard API contracts | High-performance data pipelines, transaction processors, APIs |
+| **Backend Data Engine** | **`billing-api`** | Behind-the-scenes service | High-performance data processing, payments, and background calculations |
 
 ---
 
@@ -94,7 +94,7 @@ Every great project needs an identity and an owner. In this step, you provide th
 
 ### Define Contracts & Schemas
 
-In traditional development, frontends and backends constantly get out of sync because someone changed a database column without telling the UI team. RobOS eliminates this by making **Contract Specifications** first-class citizens.
+In traditional software development, the visual screens (the "frontend") and the behind-the-scenes data engines (the "backend") constantly get out of sync because someone changed a database rule without telling the screen designers. RobOS eliminates this by making **Data Agreements (Contract Specifications)** first-class citizens.
 
 <div style="margin: 1.5rem 0;">
   <img src="{{ '/assets/images/screenshots/new-app-contract-spec_frame.png' | relative_url }}" alt="App Contract Specifications" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
@@ -120,7 +120,7 @@ Before touching any disk or Git files, RobOS generates a comprehensive **Scaffol
 The blueprint previews:
 - Every file and directory that will be generated (such as project configuration files, visual themes, and starter screens).
 - The Git repository initialization script.
-- The exact Knowledge Graph nodes (`robos:FrontEndApp`, `schema:VideoGame`, etc.) being registered.
+- The exact Knowledge Graph records (such as your visual app and data models) being registered.
 
 Click **Generate Project** to execute the blueprint.
 

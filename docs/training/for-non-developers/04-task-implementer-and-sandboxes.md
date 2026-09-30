@@ -105,7 +105,7 @@ Before finishing, the Task Implementer runs automated test suites:
 
 The scorecard shows:
 - **Test Results**: Proving all assertions passed without errors.
-- **Contract Compatibility**: Proving the frontend matches the backend schema.
+- **Contract Compatibility**: Proving the visual buttons and screens match the behind-the-scenes data rules.
 - **Narrated Video Capture**: A 1080p recording of the test running in the virtual screen.
 
 ---
