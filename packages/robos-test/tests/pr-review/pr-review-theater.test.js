@@ -260,7 +260,8 @@ index 1234..5678 100644
     assert.ok(initial.config);
     assert.strictEqual(typeof initial.config.strictMode, 'boolean');
     assert.ok(initial.config.stage1_elearning.passThresholdScore > 0);
-    assert.strictEqual(initial.config.stage5_showTheFix.enabled, true);
+    assert.strictEqual(initial.config.stage5_proofCanvas.enabled, true);
+    assert.strictEqual(initial.config.stage6_showTheFix.enabled, true);
 
     // 3. Save customized team theater policy
     const customConfig = {
@@ -273,7 +274,12 @@ index 1234..5678 100644
         passThresholdScore: 90,
         lockDiffsUntilPassed: true
       },
-      stage5_showTheFix: {
+      stage5_proofCanvas: {
+        enabled: true,
+        required: true,
+        defaultMode: 'video'
+      },
+      stage6_showTheFix: {
         enabled: true,
         required: true,
         targetType: 'frontend',
@@ -290,14 +296,15 @@ index 1234..5678 100644
     assert.ok(saveRes.ok);
     assert.ok(saveRes.teamId.includes('core-platform'));
     assert.strictEqual(saveRes.config.stage1_elearning.passThresholdScore, 90);
-    assert.strictEqual(saveRes.config.stage5_showTheFix.required, true);
+    assert.strictEqual(saveRes.config.stage5_proofCanvas.required, true);
+    assert.strictEqual(saveRes.config.stage6_showTheFix.required, true);
 
     // 4. Verify persisted configuration on reload
     const reloaded = store.getPRTheaterConfig({ teamId: 'team-core-platform' });
     assert.strictEqual(reloaded.config.strictMode, false);
     assert.strictEqual(reloaded.config.stage1_elearning.passThresholdScore, 90);
     assert.strictEqual(reloaded.config.requireCommentsOnApproval, true);
-    assert.strictEqual(reloaded.config.stage5_showTheFix.targetType, 'frontend');
+    assert.strictEqual(reloaded.config.stage6_showTheFix.targetType, 'frontend');
 
     // 5. Verify the updated team node still conforms to SHACL shapes
     const teamNode = store.findTeamNode('team-core-platform');
@@ -330,7 +337,7 @@ index 1234..5678 100644
     assert.strictEqual(store.detectPRFixType(desktopFiles), 'desktop');
   });
 
-  it('10. Synthesizes Stage 5 "Show You The Fix" context and telemetry targets', () => {
+  it('10. Synthesizes Stage 6 "Show Me The Fix" context and telemetry targets', () => {
     const ctx = store.generatePRReviewTheaterContext({
       repo: 'acme/petstore-api',
       prNumber: 12,
@@ -405,7 +412,7 @@ index 1234..5678 100644
     assert.ok(relaxedRes.certificate);
   });
 
-  it('12. Supports Stage 5 Show The Fix execution flows across Backend, Frontend, and Desktop targets', () => {
+  it('12. Supports Stage 6 Show Me The Fix execution flows across Backend, Frontend, and Desktop targets', () => {
     // 1. Backend simulation
     const backendRun = {
       target: 'backend',

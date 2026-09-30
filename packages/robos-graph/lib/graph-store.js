@@ -2617,9 +2617,19 @@ This system documentation is registered as an official \`robos:Documentation\` e
         autoPopulateBreakpoints: true,
       },
 
-      stage5_showTheFix: {
+      stage5_proofCanvas: {
         enabled: true,
-        title: 'Show You The Fix',
+        title: 'Evidence Video (Proof-of-Work Canvas)',
+        required: true,
+        defaultMode: 'video',
+        enablePiperTTSNarration: true,
+        showWebVttSubtitles: true,
+        allowLiveDesktopExecution: true,
+      },
+
+      stage6_showTheFix: {
+        enabled: true,
+        title: 'Show Me The Fix',
         required: false,
         autoDetectTargetType: true,
         targetType: 'auto',
@@ -2630,16 +2640,6 @@ This system documentation is registered as an official \`robos:Documentation\` e
         desktopAppLaunchViaIpc: true,
         desktopAppAutoNavigate: true,
         showExecutionTerminal: true,
-      },
-
-      stage6_proofCanvas: {
-        enabled: true,
-        title: 'Proof-of-Work Canvas',
-        required: true,
-        defaultMode: 'video',
-        enablePiperTTSNarration: true,
-        showWebVttSubtitles: true,
-        allowLiveDesktopExecution: true,
       },
 
       stage7_signOff: {
@@ -2712,6 +2712,20 @@ This system documentation is registered as an official \`robos:Documentation\` e
       } else {
         mergedConfig[key] = val;
       }
+    }
+
+    // Backward compatibility aliases for stage5/stage6 swap
+    if (!mergedConfig.stage5_proofCanvas && mergedConfig.stage6_proofCanvas) {
+      mergedConfig.stage5_proofCanvas = mergedConfig.stage6_proofCanvas;
+    }
+    if (!mergedConfig.stage6_showTheFix && mergedConfig.stage5_showTheFix) {
+      mergedConfig.stage6_showTheFix = mergedConfig.stage5_showTheFix;
+    }
+    if (!mergedConfig.stage5_showTheFix && mergedConfig.stage6_showTheFix) {
+      mergedConfig.stage5_showTheFix = mergedConfig.stage6_showTheFix;
+    }
+    if (!mergedConfig.stage6_proofCanvas && mergedConfig.stage5_proofCanvas) {
+      mergedConfig.stage6_proofCanvas = mergedConfig.stage5_proofCanvas;
     }
 
     const allTeams = this.getAllTeams().map(t => ({
@@ -3211,8 +3225,8 @@ Knowledge Graph branch kgraph/PET-105-rabies-verification validated with 0 SHACL
       stage2Required: theaterConfig.stage2_livingDocs?.enabled !== false && theaterConfig.stage2_livingDocs?.required !== false,
       stage3Required: theaterConfig.stage3_fileDiffs?.enabled !== false && theaterConfig.stage3_fileDiffs?.required !== false,
       stage4Required: theaterConfig.stage4_ideBridge?.enabled !== false && theaterConfig.stage4_ideBridge?.required === true,
-      stage5Required: theaterConfig.stage5_showTheFix?.enabled !== false && theaterConfig.stage5_showTheFix?.required === true,
-      stage6Required: theaterConfig.stage6_proofCanvas?.enabled !== false && theaterConfig.stage6_proofCanvas?.required !== false,
+      stage5Required: (theaterConfig.stage5_proofCanvas?.enabled !== false && theaterConfig.stage5_proofCanvas?.required !== false) || (theaterConfig.stage6_proofCanvas?.enabled !== false && theaterConfig.stage6_proofCanvas?.required !== false),
+      stage6Required: (theaterConfig.stage6_showTheFix?.enabled !== false && theaterConfig.stage6_showTheFix?.required === true) || (theaterConfig.stage5_showTheFix?.enabled !== false && theaterConfig.stage5_showTheFix?.required === true),
       lockDiffsUntilPassed: theaterConfig.stage1_elearning?.lockDiffsUntilPassed !== false,
       requireCheckboxes: theaterConfig.requireAllStageCheckboxes !== false,
       strictMode: theaterConfig.strictMode !== false

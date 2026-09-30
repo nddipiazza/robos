@@ -52,12 +52,12 @@ The PR Review Theater leverages W3C SHACL constraint shapes (`robos:PullRequestR
 
 ---
 
-## The 7-Stage PR Review Theater & Team Policy Architecture
+## PR Review Theater & Team Policy Architecture
 
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/pr-review-theater-architecture.jpg' | relative_url }}" alt="RobOS 7-Stage PR Review Theater and Team KGraph Policy Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <img src="{{ '/assets/images/pr-review-theater-architecture.jpg' | relative_url }}" alt="RobOS PR Review Theater and Team Policy Governance Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
   <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>RobOS 7-Stage PR Review Theater Architecture</strong>: Team KGraph Policy Governance (`robos:Team`) controls dynamic stage activation, anti-rubber-stamp quiz thresholds, and the multi-target "Show You The Fix" agent verification walkthrough. <em>(Click image to zoom full screen)</em>
+    <strong>RobOS PR Review Theater Architecture</strong>: Team Policy Governance (<code>robos:Team</code>) controls dynamic stage activation, anti-rubber-stamp quiz thresholds, evidence video proof teaching feature mechanics first, and the multi-target Show Me The Fix agent verification walkthrough. <em>(Click image to zoom full screen)</em>
   </div>
 </div>
 
@@ -75,7 +75,7 @@ sequenceDiagram
     KGraph-->>Theater: Active stages, quiz pass threshold, required gates
 
     rect rgb(15, 23, 42)
-        Note over Architect,Theater: Stage 1 to 4: Anti-Rubber-Stamp & Code Inspection
+        Note over Architect,Theater: Stages: Anti-Rubber-Stamp, Living Docs & Code Inspection
         Architect->>Theater: Stage 1: Pass Knowledge Check (Score >= threshold)
         Theater->>KGraph: Issue robos:CompletionCertificate
         Architect->>Theater: Stage 2: Living Docs & REST Verification Runner
@@ -84,7 +84,14 @@ sequenceDiagram
     end
 
     rect rgb(16, 37, 66)
-        Note over Architect,IDE: Stage 5: "Show You The Fix" Agent Guided Walkthrough
+        Note over Architect,Agent: Stage 5: Evidence Video & Proof-of-Work (Teaches Feature Mechanics First)
+        Architect->>Theater: Stage 5: Inspect 1080p Video Walkthrough / Desktop Session
+        Theater->>Agent: Stream narrated video playback & WebVTT captions
+        Architect->>Theater: Understand feature mechanics & runtime behavior
+    end
+
+    rect rgb(15, 30, 55)
+        Note over Architect,IDE: Stage 6: "Show Me The Fix" Interactive Agent Walkthrough
         Architect->>Theater: Click "Run Agent 'Show Fix' Demonstration"
         Theater->>Agent: Spawn fix walkthrough (Target: Backend / Frontend / Desktop)
         alt Backend Target
@@ -98,12 +105,11 @@ sequenceDiagram
             Agent->>IDE: Launch desktop app via supervisor, attach DOM snapshot IPC
             Agent-->>Architect: Highlight component with glow & route focus
         end
-        Agent-->>Theater: Mark Fix Demonstrated (Gate 5 Passed)
+        Agent-->>Theater: Mark Fix Demonstrated (Gate 6 Passed)
     end
 
     rect rgb(15, 23, 42)
-        Note over Architect,KGraph: Stage 6 & 7: Proof Canvas & Dual-Branch Merge
-        Architect->>Theater: Stage 6: Inspect 1080p Video Walkthrough / Desktop Session
+        Note over Architect,KGraph: Stage 7: Validation Gates & Dual-Branch Merge
         Architect->>Theater: Stage 7: Enter Reviewer Notes & Click Approve
         Theater->>KGraph: Dual-Branch Atomic Merge (Git main + KGraph main)
         KGraph-->>Architect: ✓ Merged & Synchronized
@@ -120,13 +126,13 @@ Clicking **`⚙️ Stage Policy`** in the review topbar opens the policy editor:
 - **Stage 2 (Living Docs & REST)**: Toggle Mermaid sequence synthesis, Dual-Reality deltas, and mandatory REST contract executions.
 - **Stage 3 (Diffs)**: Choose default mode (unified vs split) and require file-by-file review checklists.
 - **Stage 4 (IDE Bridge)**: Select default IDE (IntelliJ IDEA on port 63343 vs VS Code protocol).
-- **Stage 5 (Show You The Fix)**: Select demonstration target (`Auto-Detect`, `Backend`, `Frontend`, or `Desktop`), headed browser flags, and interactive handoff checkpoints.
-- **Stage 6 (Proof Canvas)**: Set default view (1080p recorded video vs live desktop session).
-- **Quick Presets**: Apply 1-click presets: *Strict Anti-Rubber-Stamp*, *Fast Developer Flow*, *Frontend Focus*, or *Full 7-Stage Comprehensive*.
+- **Stage 5 (Evidence Video)**: Set default view (1080p recorded video vs live desktop session). Teaches the reviewer how the feature works first before interactive walkthroughs.
+- **Stage 6 (Show Me The Fix)**: Select demonstration target (`Auto-Detect`, `Backend`, `Frontend`, or `Desktop`), headed browser flags, and interactive handoff checkpoints.
+- **Quick Presets**: Apply 1-click presets: *Strict Anti-Rubber-Stamp*, *Fast Developer Flow*, *Frontend Focus*, or *Full Comprehensive*.
 
 ---
 
-## The 7-Stage PR Review Theater Walkthrough
+## PR Review Theater Walkthrough
 
 Let's walk through the end-to-end PR Review Theater workflow as experienced by a Lead Architect reviewing a multi-component feature (`PR #12: feat(auth): add OAuth2 PKCE social login and session token refresh`).
 
@@ -280,9 +286,32 @@ When a Lead Architect requires full IDE power—AST symbol navigation, type hier
 
 ---
 
-### Stage 5: "Show You The Fix" Agent Guided Fix Walkthrough
+### Stage 5: Evidence Video & Proof-of-Work Canvas (1080p Xvfb Video or Live Desktop)
 
-Stage 5 bridges the gap between passive code reading and active execution. Instead of asking the reviewer to build and run the PR branch manually, the autonomous AI agent is tasked with **actively showing you the fix in real time** across three target architectures:
+RobOS completely eliminates the question *"Did anyone actually run this to see if it works?"* Stage 5 acts as an autonomous proof-of-work canvas where the robot proves execution through either **autonomous 1080p recorded video walkthrough** or **live execution right in your current desktop session**.
+
+Crucially, **the evidence video teaches the reviewer how the feature works first**—narrating the architectural design decisions with Piper neural TTS, walking through the end-to-end user journey, and validating test assertions before transitioning into interactive hands-on inspection.
+
+<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+  <img src="{{ '/assets/images/screenshots/pr-review-theater-08-stage5-video.png' | relative_url }}" alt="Stage 5: Autonomous Evidence Video & Proof-of-Work Walkthrough" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
+  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
+    <strong>Stage 5 — Evidence Video &amp; Proof-of-Work Canvas</strong>: Switchable proof canvas supporting 1080p Xvfb recorded video with Piper neural narration or real-time interactive desktop execution on DISPLAY=:0. Teaches feature mechanics first. <em>(Click image to zoom full screen)</em>
+  </div>
+</div>
+
+#### Key Capabilities:
+- **Dual-Mode Canvas Switcher**:
+  - **1080p Recorded Xvfb Video**: The agent runs headless inside a virtual framebuffer, interacting with UI buttons, submitting forms, and asserting responses with Piper neural speech and synchronized WebVTT captions.
+  - **Live Desktop Session (`DISPLAY=:0`)**: For reviewers who prefer to watch the app run live or interact with it directly in their active GNOME/X11 session. Launches the test reproduction harness right on the reviewer's screen with live terminal logs, process PID tracking, and exit telemetry.
+- **Piper Neural TTS Audio**: Explains each action in natural human speech, highlighting edge cases tested and test assertions validated.
+- **Synchronized WebVTT Subtitles**: Captions update in real time with interactive timeline jump markers (`00:04 Click Social Login`, `00:12 Submit PKCE Token`, `00:22 Validate Session Refresh`).
+- **Zero Fluff**: 30-to-60-second concise proof validating end-to-end functionality before merge.
+
+---
+
+### Stage 6: "Show Me The Fix" Agent Guided Fix Walkthrough
+
+Now that the reviewer has watched the evidence video and understands the feature mechanics, Stage 6 bridges the gap between passive code reading and active execution. Instead of asking the reviewer to build and run the PR branch manually, the autonomous AI agent is tasked with **actively showing you the fix in real time** across three target architectures:
 
 #### 1. Backend Service Targets (IDE + App Launcher)
 - **Automatic IDE Popup**: Connects to IntelliJ IDEA over port 63343 IPC (or VS Code).
@@ -304,27 +333,6 @@ Stage 5 bridges the gap between passive code reading and active execution. Inste
 
 ---
 
-### Stage 6: Dual-Mode Proof-of-Work Canvas (1080p Xvfb Video or Live Desktop)
-
-RobOS completely eliminates the question *"Did anyone actually run this to see if it works?"* Stage 6 acts as a blank canvas for the robot to prove execution through either **autonomous 1080p recorded video walkthrough** or **live execution right in your current desktop session**.
-
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/screenshots/pr-review-theater-08-stage5-video.png' | relative_url }}" alt="Stage 6: Autonomous Proof-of-Work Video Walkthrough" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Stage 6 — Proof-of-Work Canvas</strong>: Switchable proof canvas supporting 1080p Xvfb recorded video with Piper neural narration or real-time interactive desktop execution on DISPLAY=:0. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
-
-#### Key Capabilities:
-- **Dual-Mode Canvas Switcher**:
-  - **1080p Recorded Xvfb Video**: The agent runs headless inside a virtual framebuffer, interacting with UI buttons, submitting forms, and asserting responses with Piper neural speech and synchronized WebVTT captions.
-  - **Live Desktop Session (`DISPLAY=:0`)**: For reviewers who prefer to watch the app run live or interact with it directly in their active GNOME/X11 session. Launches the test reproduction harness right on the reviewer's screen with live terminal logs, process PID tracking, and exit telemetry.
-- **Piper Neural TTS Audio**: Explains each action in natural human speech, highlighting edge cases tested and test assertions validated.
-- **Synchronized WebVTT Subtitles**: Captions update in real time with interactive timeline jump markers (`00:04 Click Social Login`, `00:12 Submit PKCE Token`, `00:22 Validate Session Refresh`).
-- **Zero Fluff**: 30-to-60-second concise proof validating end-to-end functionality before merge.
-
----
-
 ### Stage 7: Review Validation Gates & Dual-Branch Merge Sign-Off
 
 The review culminates in Stage 7: the **Merge Sign-Off & Verification Gates Console**.
@@ -341,8 +349,8 @@ The review culminates in Stage 7: the **Merge Sign-Off & Verification Gates Cons
 2. **Gate 2: Living Architecture Guide**: Confirms the architectural delta, sequence diagrams, and REST contract scenarios have been inspected and executed.
 3. **Gate 3: In-App Code Diff Review**: Confirms the syntax-highlighted code hunks have been audited.
 4. **Gate 4: IDE Verification Bridge**: Confirms the PR branch was compared in IntelliJ IDEA or VS Code.
-5. **Gate 5: "Show You The Fix" Demonstration**: Confirms the agent successfully demonstrated the fix in the IDE, browser, or desktop session.
-6. **Gate 6: Proof-of-Work Telemetry**: Confirms the 1080p narrated proof video or live robot session was observed.
+5. **Gate 5: Proof-of-Work Telemetry**: Confirms the 1080p narrated proof video or live robot session was observed.
+6. **Gate 6: "Show Me The Fix" Demonstration**: Confirms the agent successfully demonstrated the fix in the IDE, browser, or desktop session.
 
 #### Atomic Sign-Off & Merge:
 - **Decision Controls**: Choose between `Approved` (with green badge), `Request Changes`, or `Comment`.

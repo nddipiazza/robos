@@ -662,8 +662,8 @@ function updateTheaterStepper() {
     { num: 2, key: 'stage2_livingDocs', label: 'Living Docs & Flow', done: gates.docsReviewed },
     { num: 3, key: 'stage3_fileDiffs', label: 'File Diff Viewer', done: gates.diffsInspected },
     { num: 4, key: 'stage4_ideBridge', label: 'IDE Branch Diffs', done: gates.ideDiffLaunched },
-    { num: 5, key: 'stage5_showTheFix', label: 'Show You The Fix', done: gates.fixDemonstrated },
-    { num: 6, key: 'stage6_proofCanvas', label: 'Proof-of-Work Video', done: true },
+    { num: 5, key: 'stage5_proofCanvas', label: 'Evidence Video', done: true },
+    { num: 6, key: 'stage6_showTheFix', label: 'Show Me The Fix', done: gates.fixDemonstrated },
     { num: 7, key: 'stage7_signOff', label: 'Sign-Off & Merge', done: false }
   ];
 
@@ -672,7 +672,7 @@ function updateTheaterStepper() {
     const statusSpan = document.getElementById(`step-status-${s.num}`);
     if (!btn) return;
 
-    const sCfg = cfg[s.key] || {};
+    const sCfg = cfg[s.key] || (s.num === 5 ? cfg.stage6_proofCanvas : (s.num === 6 ? cfg.stage5_showTheFix : {})) || {};
     const enabled = sCfg.enabled !== false;
     const required = sCfg.required !== false;
 
@@ -714,12 +714,13 @@ window.setTheaterStage = function(stageNum) {
       2: 'stage2_livingDocs',
       3: 'stage3_fileDiffs',
       4: 'stage4_ideBridge',
-      5: 'stage5_showTheFix',
-      6: 'stage6_proofCanvas',
+      5: 'stage5_proofCanvas',
+      6: 'stage6_showTheFix',
       7: 'stage7_signOff'
     };
     const sKey = stageKeyMap[stageNum];
-    if (sKey && cfg[sKey] && cfg[sKey].enabled === false) {
+    const sObj = cfg[sKey] || (stageNum === 5 ? cfg.stage6_proofCanvas : (stageNum === 6 ? cfg.stage5_showTheFix : null));
+    if (sObj && sObj.enabled === false) {
       // Find nearest enabled stage
       const nextNum = stageNum < currentTheaterStage ? stageNum - 1 : stageNum + 1;
       if (nextNum >= 1 && nextNum <= 7) {
@@ -1603,7 +1604,7 @@ function renderTheaterSignOff() {
   // Fix Demonstration Gate
   const badgeFix = document.getElementById('gate-badge-fix');
   const descFix = document.getElementById('gate-desc-fix');
-  const fixRequired = cfg.stage5_showTheFix?.required === true;
+  const fixRequired = (cfg.stage6_showTheFix?.required === true) || (cfg.stage5_showTheFix?.required === true);
   if (badgeFix) {
     if (gates.fixDemonstrated) {
       badgeFix.className = 'gate-status-badge gate-pass';
@@ -1631,7 +1632,7 @@ function renderTheaterSignOff() {
     if (!quizPass || !fixPass) {
       submitBtn.title = !quizPass
         ? 'Complete Stage 1 Interactive eLearning quiz to unlock PR approval.'
-        : 'Observe Stage 5 Fix Demonstration before approving.';
+        : 'Observe Stage 6 Fix Demonstration before approving.';
       submitBtn.classList.add('btn-disabled');
     } else {
       submitBtn.title = 'Approve PR and merge both code and Knowledge Graph branches.';
@@ -1796,27 +1797,27 @@ function populateModalFromConfig(cfg) {
   setCheck('cfg-s4-breakpoint-runner', s4.enableBreakpointRunner !== false);
   setCheck('cfg-s4-auto-breakpoints', s4.autoInjectBreakpoints !== false);
 
-  // Stage 5
-  const s5 = cfg.stage5_showTheFix || {};
+  // Stage 5: Evidence Video & Proof-of-Work Canvas
+  const s5 = cfg.stage5_proofCanvas || cfg.stage6_proofCanvas || {};
   setCheck('cfg-s5-enabled', s5.enabled !== false);
-  setCheck('cfg-s5-required', s5.required === true);
-  const s5Target = document.getElementById('cfg-s5-target-type');
-  if (s5Target) s5Target.value = s5.targetType || 'auto';
-  setCheck('cfg-s5-backend-ide', s5.backendLaunchIDE !== false);
-  setCheck('cfg-s5-frontend-headed', s5.frontendHeadedBrowser !== false);
-  setCheck('cfg-s5-frontend-handoff', s5.frontendReviewerHandoff !== false);
-  setCheck('cfg-s5-desktop-ipc', s5.desktopAppIPC !== false);
-  setCheck('cfg-s5-show-terminal', s5.streamTerminalLogs !== false);
+  setCheck('cfg-s5-required', s5.required !== false);
+  const s5Mode = document.getElementById('cfg-s5-default-mode');
+  if (s5Mode) s5Mode.value = s5.defaultMode || 'video';
+  setCheck('cfg-s5-tts', s5.piperTTS !== false);
+  setCheck('cfg-s5-vtt', s5.vttSubtitles !== false);
+  setCheck('cfg-s5-allow-desktop', s5.allowDesktopExecution !== false);
 
-  // Stage 6
-  const s6 = cfg.stage6_proofCanvas || {};
+  // Stage 6: Show Me The Fix
+  const s6 = cfg.stage6_showTheFix || cfg.stage5_showTheFix || {};
   setCheck('cfg-s6-enabled', s6.enabled !== false);
-  setCheck('cfg-s6-required', s6.required !== false);
-  const s6Mode = document.getElementById('cfg-s6-default-mode');
-  if (s6Mode) s6Mode.value = s6.defaultMode || 'video';
-  setCheck('cfg-s6-tts', s6.piperTTS !== false);
-  setCheck('cfg-s6-vtt', s6.vttSubtitles !== false);
-  setCheck('cfg-s6-allow-desktop', s6.allowDesktopExecution !== false);
+  setCheck('cfg-s6-required', s6.required === true);
+  const s6Target = document.getElementById('cfg-s6-target-type');
+  if (s6Target) s6Target.value = s6.targetType || 'auto';
+  setCheck('cfg-s6-backend-ide', s6.backendLaunchIDE !== false);
+  setCheck('cfg-s6-frontend-headed', s6.frontendHeadedBrowser !== false);
+  setCheck('cfg-s6-frontend-handoff', s6.frontendReviewerHandoff !== false);
+  setCheck('cfg-s6-desktop-ipc', s6.desktopAppIPC !== false);
+  setCheck('cfg-s6-show-terminal', s6.streamTerminalLogs !== false);
 
   // Stage 7
   const s7 = cfg.stage7_signOff || {};
@@ -1875,14 +1876,15 @@ window.applyTheaterPreset = function(preset) {
     setCheck('cfg-s5-required', false);
     setCheck('cfg-s6-required', false);
   } else if (preset === 'frontend') {
-    setCheck('cfg-s5-enabled', true);
-    setCheck('cfg-s5-required', true);
-    const targetSel = document.getElementById('cfg-s5-target-type');
+    setCheck('cfg-s6-enabled', true);
+    setCheck('cfg-s6-required', true);
+    const targetSel = document.getElementById('cfg-s6-target-type');
     if (targetSel) targetSel.value = 'frontend';
-    setCheck('cfg-s5-frontend-headed', true);
-    setCheck('cfg-s5-frontend-handoff', true);
+    setCheck('cfg-s6-frontend-headed', true);
+    setCheck('cfg-s6-frontend-handoff', true);
     setCheck('cfg-s1-required', true);
     setCheck('cfg-s3-required', true);
+    setCheck('cfg-s5-required', true);
   } else if (preset === 'full') {
     setCheck('cfg-strict-mode', true);
     setCheck('cfg-require-checkboxes', true);
@@ -1910,6 +1912,26 @@ window.applyTheaterPreset = function(preset) {
 
 window.saveTheaterConfigFromModal = async function() {
   const teamId = document.getElementById('config-team-select')?.value || 'team-core-platform';
+
+  const s5Canvas = {
+    enabled: getCheck('cfg-s5-enabled', true),
+    required: getCheck('cfg-s5-required', true),
+    defaultMode: document.getElementById('cfg-s5-default-mode')?.value || 'video',
+    piperTTS: getCheck('cfg-s5-tts', true),
+    vttSubtitles: getCheck('cfg-s5-vtt', true),
+    allowDesktopExecution: getCheck('cfg-s5-allow-desktop', true)
+  };
+
+  const s6Fix = {
+    enabled: getCheck('cfg-s6-enabled', true),
+    required: getCheck('cfg-s6-required', false),
+    targetType: document.getElementById('cfg-s6-target-type')?.value || 'auto',
+    backendLaunchIDE: getCheck('cfg-s6-backend-ide', true),
+    frontendHeadedBrowser: getCheck('cfg-s6-frontend-headed', true),
+    frontendReviewerHandoff: getCheck('cfg-s6-frontend-handoff', true),
+    desktopAppIPC: getCheck('cfg-s6-desktop-ipc', true),
+    streamTerminalLogs: getCheck('cfg-s6-show-terminal', true)
+  };
 
   const config = {
     strictMode: getCheck('cfg-strict-mode', true),
@@ -1951,24 +1973,11 @@ window.saveTheaterConfigFromModal = async function() {
       enableBreakpointRunner: getCheck('cfg-s4-breakpoint-runner', true),
       autoInjectBreakpoints: getCheck('cfg-s4-auto-breakpoints', true)
     },
-    stage5_showTheFix: {
-      enabled: getCheck('cfg-s5-enabled', true),
-      required: getCheck('cfg-s5-required', false),
-      targetType: document.getElementById('cfg-s5-target-type')?.value || 'auto',
-      backendLaunchIDE: getCheck('cfg-s5-backend-ide', true),
-      frontendHeadedBrowser: getCheck('cfg-s5-frontend-headed', true),
-      frontendReviewerHandoff: getCheck('cfg-s5-frontend-handoff', true),
-      desktopAppIPC: getCheck('cfg-s5-desktop-ipc', true),
-      streamTerminalLogs: getCheck('cfg-s5-show-terminal', true)
-    },
-    stage6_proofCanvas: {
-      enabled: getCheck('cfg-s6-enabled', true),
-      required: getCheck('cfg-s6-required', true),
-      defaultMode: document.getElementById('cfg-s6-default-mode')?.value || 'video',
-      piperTTS: getCheck('cfg-s6-tts', true),
-      vttSubtitles: getCheck('cfg-s6-vtt', true),
-      allowDesktopExecution: getCheck('cfg-s6-allow-desktop', true)
-    },
+    stage5_proofCanvas: s5Canvas,
+    stage6_showTheFix: s6Fix,
+    // Backward compatibility aliases
+    stage5_showTheFix: s6Fix,
+    stage6_proofCanvas: s5Canvas,
     stage7_signOff: {
       enabled: true,
       required: true,

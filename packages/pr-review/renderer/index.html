@@ -211,11 +211,11 @@
             <span class="step-status" id="step-status-4">○</span>
           </button>
           <button class="step-btn" data-stage="5" id="step-btn-5" onclick="window.setTheaterStage(5)">
-            <span class="step-num">5</span> <span class="step-label">Show You The Fix</span>
+            <span class="step-num">5</span> <span class="step-label">Evidence Video</span>
             <span class="step-status" id="step-status-5">○</span>
           </button>
           <button class="step-btn" data-stage="6" id="step-btn-6" onclick="window.setTheaterStage(6)">
-            <span class="step-num">6</span> <span class="step-label">Proof-of-Work Video</span>
+            <span class="step-num">6</span> <span class="step-label">Show Me The Fix</span>
             <span class="step-status" id="step-status-6">○</span>
           </button>
           <button class="step-btn" data-stage="7" id="step-btn-7" onclick="window.setTheaterStage(7)">
@@ -542,15 +542,100 @@
 
           <div class="stage-nav-footer">
             <button class="btn-stage-nav" onclick="window.setTheaterStage(3)">&larr; Previous: File Diff Viewer</button>
-            <button class="btn-stage-nav btn-stage-next" onclick="window.setTheaterStage(5)">Next: Show You The Fix &rarr;</button>
+            <button class="btn-stage-nav btn-stage-next" onclick="window.setTheaterStage(5)">Next: Evidence Video &rarr;</button>
           </div>
         </div>
 
-        <!-- STAGE 5: "Show You The Fix" Agent Guided Fix Walkthrough -->
+        <!-- STAGE 5: Autonomous Evidence Video & Proof-of-Work Canvas -->
         <div class="theater-stage" id="stage-5">
           <div class="stage-header">
             <div class="stage-title-wrap">
-              <h3>🤖 Stage 5: "Show You The Fix" Agent Guided Walkthrough</h3>
+              <h3>🎬 Stage 5: Evidence Video &amp; Proof-of-Work Canvas</h3>
+              <p>Watch the robot prove how the feature works in a 1080p narrated video walkthrough... or right in your current desktop session if you prefer.</p>
+            </div>
+            <div class="stage-badge-wrap">
+              <span class="status-tag-pass" id="proof-canvas-badge">🟢 100% VERIFIED PROOF-OF-WORK</span>
+            </div>
+          </div>
+
+          <!-- Dual-Mode Proof-of-Work Canvas Selector -->
+          <div class="canvas-mode-bar">
+            <button type="button" class="canvas-mode-btn active" id="btn-canvas-video" onclick="window.setProofCanvasMode('video')">
+              🎥 Recorded 1080p Xvfb Video Walkthrough
+            </button>
+            <button type="button" class="canvas-mode-btn" id="btn-canvas-desktop" onclick="window.setProofCanvasMode('desktop')">
+              🖥️ Run Live in Current Desktop Session
+            </button>
+          </div>
+
+          <!-- Mode 1: Recorded 1080p Video Walkthrough -->
+          <div id="canvas-video-view" class="stage-grid-2col">
+            <div class="theater-card">
+              <div class="card-head">
+                <span class="card-icon">📽️</span>
+                <h4>Narrated Video Player &amp; Chapter Timeline</h4>
+              </div>
+              <div class="video-preview-mockup">
+                <div class="video-screen-banner">
+                  <span class="rec-dot"></span> 1080p (1920x1080 @ 30fps) &middot; Piper TTS Audio Narration &middot; WebVTT Synced
+                </div>
+                <div class="video-center-art">
+                  <div class="play-circle">▶</div>
+                  <div class="video-title-label" id="theater-video-title">Proof-of-Work: PET-105 Rabies Verification</div>
+                </div>
+              </div>
+              <table class="matrix-table" id="theater-video-chapters-table">
+                <thead><tr><th>Timecode</th><th>Action / Chapter Title</th><th>Status</th></tr></thead>
+                <tbody id="theater-video-chapters-tbody"></tbody>
+              </table>
+            </div>
+
+            <div class="theater-card">
+              <div class="card-head">
+                <span class="card-icon">📜</span>
+                <h4>W3C WebVTT Subtitle Stream</h4>
+              </div>
+              <pre class="json-pre" id="theater-video-vtt-pre"></pre>
+            </div>
+          </div>
+
+          <!-- Mode 2: Live Desktop Session (Current Display) -->
+          <div id="canvas-desktop-view" class="canvas-desktop-container hidden">
+            <div class="desktop-session-header">
+              <div class="display-info">
+                <span class="display-badge" id="desktop-display-badge">DISPLAY=:0</span>
+                <span class="desktop-status-text">Autonomous Robot Ready to Execute on Current Workstation Display</span>
+              </div>
+              <div class="desktop-actions">
+                <button type="button" class="btn-primary btn-run-desktop" id="btn-run-desktop" onclick="window.runLiveDesktopSession()">
+                  ▶ Run Live Robot Proof on Display
+                </button>
+              </div>
+            </div>
+            <div class="desktop-console-box">
+              <div class="console-titlebar">
+                <span class="console-dot dot-red"></span>
+                <span class="console-dot dot-yellow"></span>
+                <span class="console-dot dot-green"></span>
+                <span class="console-title">RobOS Robot Session Terminal (Display :0)</span>
+              </div>
+              <div class="console-terminal-body" id="desktop-console-logs">
+                <div class="console-line line-dim">// Click "Run Live Robot Proof on Display" to watch the robot drive UI and API in real time on your desktop.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="stage-nav-footer">
+            <button class="btn-stage-nav" onclick="window.setTheaterStage(4)">&larr; Previous: IDE Branch Diffs</button>
+            <button class="btn-stage-nav btn-stage-next" onclick="window.setTheaterStage(6)">Next: Show Me The Fix &rarr;</button>
+          </div>
+        </div>
+
+        <!-- STAGE 6: "Show Me The Fix" Agent Guided Fix Walkthrough -->
+        <div class="theater-stage" id="stage-6">
+          <div class="stage-header">
+            <div class="stage-title-wrap">
+              <h3>🤖 Stage 6: "Show Me The Fix" Agent Guided Walkthrough</h3>
               <p>Task the AI agent with actively proving the fix: pop up the IDE (backend), launch a headed browser with interactive handoff (frontend), or navigate the desktop app via IPC.</p>
             </div>
             <div class="stage-badge-wrap">
@@ -650,92 +735,7 @@
           </div>
 
           <div class="stage-nav-footer">
-            <button class="btn-stage-nav" onclick="window.setTheaterStage(4)">&larr; Previous: IDE Branch Diffs</button>
-            <button class="btn-stage-nav btn-stage-next" onclick="window.setTheaterStage(6)">Next: Proof-of-Work Canvas &rarr;</button>
-          </div>
-        </div>
-
-        <!-- STAGE 6: Autonomous Proof-of-Work Canvas -->
-        <div class="theater-stage" id="stage-6">
-          <div class="stage-header">
-            <div class="stage-title-wrap">
-              <h3>🎬 Stage 6: Autonomous Proof-of-Work Canvas</h3>
-              <p>A blank canvas for the robot to prove to you it works in a 1080p Xvfb recorded video... or right in your current desktop session if you prefer.</p>
-            </div>
-            <div class="stage-badge-wrap">
-              <span class="status-tag-pass" id="proof-canvas-badge">🟢 100% VERIFIED PROOF-OF-WORK</span>
-            </div>
-          </div>
-
-          <!-- Dual-Mode Proof-of-Work Canvas Selector -->
-          <div class="canvas-mode-bar">
-            <button type="button" class="canvas-mode-btn active" id="btn-canvas-video" onclick="window.setProofCanvasMode('video')">
-              🎥 Recorded 1080p Xvfb Video Walkthrough
-            </button>
-            <button type="button" class="canvas-mode-btn" id="btn-canvas-desktop" onclick="window.setProofCanvasMode('desktop')">
-              🖥️ Run Live in Current Desktop Session
-            </button>
-          </div>
-
-          <!-- Mode 1: Recorded 1080p Video Walkthrough -->
-          <div id="canvas-video-view" class="stage-grid-2col">
-            <div class="theater-card">
-              <div class="card-head">
-                <span class="card-icon">📽️</span>
-                <h4>Narrated Video Player &amp; Chapter Timeline</h4>
-              </div>
-              <div class="video-preview-mockup">
-                <div class="video-screen-banner">
-                  <span class="rec-dot"></span> 1080p (1920x1080 @ 30fps) &middot; Piper TTS Audio Narration &middot; WebVTT Synced
-                </div>
-                <div class="video-center-art">
-                  <div class="play-circle">▶</div>
-                  <div class="video-title-label" id="theater-video-title">Proof-of-Work: PET-105 Rabies Verification</div>
-                </div>
-              </div>
-              <table class="matrix-table" id="theater-video-chapters-table">
-                <thead><tr><th>Timecode</th><th>Action / Chapter Title</th><th>Status</th></tr></thead>
-                <tbody id="theater-video-chapters-tbody"></tbody>
-              </table>
-            </div>
-
-            <div class="theater-card">
-              <div class="card-head">
-                <span class="card-icon">📜</span>
-                <h4>W3C WebVTT Subtitle Stream</h4>
-              </div>
-              <pre class="json-pre" id="theater-video-vtt-pre"></pre>
-            </div>
-          </div>
-
-          <!-- Mode 2: Live Desktop Session (Current Display) -->
-          <div id="canvas-desktop-view" class="canvas-desktop-container hidden">
-            <div class="desktop-session-header">
-              <div class="display-info">
-                <span class="display-badge" id="desktop-display-badge">DISPLAY=:0</span>
-                <span class="desktop-status-text">Autonomous Robot Ready to Execute on Current Workstation Display</span>
-              </div>
-              <div class="desktop-actions">
-                <button type="button" class="btn-primary btn-run-desktop" id="btn-run-desktop" onclick="window.runLiveDesktopSession()">
-                  ▶ Run Live Robot Proof on Display
-                </button>
-              </div>
-            </div>
-            <div class="desktop-console-box">
-              <div class="console-titlebar">
-                <span class="console-dot dot-red"></span>
-                <span class="console-dot dot-yellow"></span>
-                <span class="console-dot dot-green"></span>
-                <span class="console-title">RobOS Robot Session Terminal (Display :0)</span>
-              </div>
-              <div class="console-terminal-body" id="desktop-console-logs">
-                <div class="console-line line-dim">// Click "Run Live Robot Proof on Display" to watch the robot drive UI and API in real time on your desktop.</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="stage-nav-footer">
-            <button class="btn-stage-nav" onclick="window.setTheaterStage(5)">&larr; Previous: Show You The Fix</button>
+            <button class="btn-stage-nav" onclick="window.setTheaterStage(5)">&larr; Previous: Evidence Video</button>
             <button class="btn-stage-nav btn-stage-next" onclick="window.setTheaterStage(7)">Next: Sign-Off &amp; Merge &rarr;</button>
           </div>
         </div>
@@ -847,7 +847,7 @@
           </div>
 
           <div class="stage-nav-footer">
-            <button class="btn-stage-nav" onclick="window.setTheaterStage(6)">&larr; Previous: Proof-of-Work Canvas</button>
+            <button class="btn-stage-nav" onclick="window.setTheaterStage(6)">&larr; Previous: Show Me The Fix</button>
             <button class="btn-stage-nav" onclick="window.exitTheater()">Exit Review Theater &times;</button>
           </div>
         </div>
@@ -1019,23 +1019,51 @@
             </div>
           </div>
 
-          <!-- Stage 5 Config: Show You The Fix -->
-          <div class="stage-config-card stage-config-highlight" id="card-cfg-stage-5">
+          <!-- Stage 5 Config: Evidence Video & Proof-of-Work Canvas -->
+          <div class="stage-config-card" id="card-cfg-stage-5">
             <div class="stage-cfg-header">
               <div class="stage-cfg-left">
                 <input type="checkbox" id="cfg-s5-enabled" checked>
                 <span class="stage-cfg-number">Stage 5</span>
-                <strong>"Show You The Fix" Agent Guided Fix Walkthrough</strong>
-                <span class="new-tag">NEW PHASE</span>
+                <strong>Evidence Video &amp; Autonomous Proof-of-Work Canvas</strong>
               </div>
               <div class="stage-cfg-right">
-                <label class="mini-toggle"><input type="checkbox" id="cfg-s5-required"> Required Gate</label>
+                <label class="mini-toggle"><input type="checkbox" id="cfg-s5-required" checked> Required Gate</label>
+              </div>
+            </div>
+            <div class="stage-cfg-body">
+              <div class="cfg-row">
+                <label>Default Proof Canvas View:</label>
+                <select id="cfg-s5-default-mode" class="config-select">
+                  <option value="video">1080p Narrated Video Walkthrough (Xvfb virtual framebuffer)</option>
+                  <option value="desktop">Live Robot Proof on Current Desktop Session (DISPLAY=:0)</option>
+                </select>
+              </div>
+              <div class="cfg-options-grid">
+                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s5-tts" checked> Include Piper neural TTS voice narration in video</label>
+                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s5-vtt" checked> Display synchronized W3C WebVTT subtitles</label>
+                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s5-allow-desktop" checked> Allow running live proof on current workstation display</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stage 6 Config: Show Me The Fix -->
+          <div class="stage-config-card stage-config-highlight" id="card-cfg-stage-6">
+            <div class="stage-cfg-header">
+              <div class="stage-cfg-left">
+                <input type="checkbox" id="cfg-s6-enabled" checked>
+                <span class="stage-cfg-number">Stage 6</span>
+                <strong>"Show Me The Fix" Agent Guided Fix Walkthrough</strong>
+                <span class="new-tag">INTERACTIVE</span>
+              </div>
+              <div class="stage-cfg-right">
+                <label class="mini-toggle"><input type="checkbox" id="cfg-s6-required"> Required Gate</label>
               </div>
             </div>
             <div class="stage-cfg-body">
               <div class="cfg-row">
                 <label>Target Execution Mode:</label>
-                <select id="cfg-s5-target-type" class="config-select">
+                <select id="cfg-s6-target-type" class="config-select">
                   <option value="auto">Auto-Detect from Changed Files (Backend / Frontend / Desktop)</option>
                   <option value="backend">Backend: Pop up IDE, Launch App Test, Show Breakpoint Fix</option>
                   <option value="frontend">Frontend: Pop up Browser, Run E2E Test, Interactive Handoff</option>
@@ -1043,39 +1071,11 @@
                 </select>
               </div>
               <div class="cfg-options-grid">
-                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s5-backend-ide" checked> Backend: Automatically trigger IDE test execution</label>
-                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s5-frontend-headed" checked> Frontend: Launch visible browser window (headless: false)</label>
-                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s5-frontend-handoff" checked> Frontend: Enable "Take Control" interactive browser handoff</label>
-                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s5-desktop-ipc" checked> Desktop: Connect over DOM Snapshot debug server (port 19100-19121)</label>
-                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s5-show-terminal" checked> Stream live robot console execution logs</label>
-              </div>
-            </div>
-          </div>
-
-          <!-- Stage 6 Config -->
-          <div class="stage-config-card" id="card-cfg-stage-6">
-            <div class="stage-cfg-header">
-              <div class="stage-cfg-left">
-                <input type="checkbox" id="cfg-s6-enabled" checked>
-                <span class="stage-cfg-number">Stage 6</span>
-                <strong>Autonomous Proof-of-Work Canvas</strong>
-              </div>
-              <div class="stage-cfg-right">
-                <label class="mini-toggle"><input type="checkbox" id="cfg-s6-required" checked> Required Gate</label>
-              </div>
-            </div>
-            <div class="stage-cfg-body">
-              <div class="cfg-row">
-                <label>Default Proof Canvas View:</label>
-                <select id="cfg-s6-default-mode" class="config-select">
-                  <option value="video">1080p Narrated Video Walkthrough (Xvfb virtual framebuffer)</option>
-                  <option value="desktop">Live Robot Proof on Current Desktop Session (DISPLAY=:0)</option>
-                </select>
-              </div>
-              <div class="cfg-options-grid">
-                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s6-tts" checked> Include Piper neural TTS voice narration in video</label>
-                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s6-vtt" checked> Display synchronized W3C WebVTT subtitles</label>
-                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s6-allow-desktop" checked> Allow running live proof on current workstation display</label>
+                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s6-backend-ide" checked> Backend: Automatically trigger IDE test execution</label>
+                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s6-frontend-headed" checked> Frontend: Launch visible browser window (headless: false)</label>
+                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s6-frontend-handoff" checked> Frontend: Enable "Take Control" interactive browser handoff</label>
+                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s6-desktop-ipc" checked> Desktop: Connect over DOM Snapshot debug server (port 19100-19121)</label>
+                <label class="cfg-sub-check"><input type="checkbox" id="cfg-s6-show-terminal" checked> Stream live robot console execution logs</label>
               </div>
             </div>
           </div>
