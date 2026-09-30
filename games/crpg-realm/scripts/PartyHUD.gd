@@ -13,6 +13,7 @@ signal pause_toggled
 
 var is_paused: bool = false
 var pause_banner: PanelContainer = null
+var fog_indicator_btn: Button = null
 
 func _ready() -> void:
 	# Anchor cleanly across bottom edge
@@ -93,6 +94,24 @@ func _ready() -> void:
 				cw.toggle_auto_play()
 	)
 
+	var fog_btn = find_child("BtnFogIndicator", true, false)
+	if not fog_btn:
+		fog_btn = Button.new()
+		fog_btn.name = "BtnFogIndicator"
+		fog_btn.custom_minimum_size = Vector2(130, 36)
+		fog_btn.anchor_left = 1.0
+		fog_btn.anchor_right = 1.0
+		fog_btn.anchor_top = 0.5
+		fog_btn.anchor_bottom = 0.5
+		fog_btn.offset_left = -805.0
+		fog_btn.offset_right = -675.0
+		fog_btn.offset_top = -18.0
+		fog_btn.offset_bottom = 18.0
+		fog_btn.add_theme_font_size_override("font_size", 12)
+		add_child(fog_btn)
+	fog_indicator_btn = fog_btn
+	fog_indicator_btn.pressed.connect(_on_fog_indicator_pressed)
+
 	# Clean up any legacy single-hero status block if present in scenes
 	for legacy_name in ["HeroNameLabel", "HeroLabel", "HPBar", "HPLabel"]:
 		var legacy_node = find_child(legacy_name, true, false)
@@ -110,8 +129,10 @@ func _ready() -> void:
 		quest_label.add_theme_font_size_override("font_size", 12)
 
 	update_hero_stats()
+	update_fog_indicator()
 	GameState.hero_damaged.connect(func(_cur, _max): update_hero_stats())
 	GameState.pause_toggled.connect(_on_pause_toggled)
+	GameState.settings_changed.connect(func(): update_fog_indicator())
 
 	call_deferred("_setup_pause_banner")
 	call_deferred("_setup_toolbars")
@@ -296,3 +317,32 @@ func set_autoplay_button_state(is_auto: bool) -> void:
 		else:
 			btn.text = "🎮 Auto-Play"
 			btn.add_theme_color_override("font_color", Color(0.3, 0.9, 1.0, 1.0))
+
+func update_fog_indicator() -> void:
+	if not fog_indicator_btn: return
+	var cur_scene = get_tree().current_scene if get_tree() else null
+	var fow = cur_scene.find_child("FogOfWar", true, false) if cur_scene else null
+	var fog_on = false
+	if fow and fow.has_method("_is_fog_enabled"):
+		fog_on = fow._is_fog_enabled()
+	elif cur_scene and "is_town_or_interior" in cur_scene:
+		fog_on = not bool(cur_scene.get("is_town_or_interior"))
+
+	if fog_on:
+		fog_indicator_btn.text = "🌫️ Fog: ON"
+		fog_indicator_btn.tooltip_text = "Fog of War is active in this area. Click to disable."
+		fog_indicator_btn.add_theme_color_override("font_color", Color(0.4, 0.9, 1.0, 1.0))
+	else:
+		fog_indicator_btn.text = "☀️ Fog: OFF"
+		fog_indicator_btn.tooltip_text = "Fog of War is disabled in this area (Town/Interior). Click to enable."
+		fog_indicator_btn.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3, 1.0))
+
+func _on_fog_indicator_pressed() -> void:
+	var cur_scene = get_tree().current_scene if get_tree() else null
+	var fow = cur_scene.find_child("FogOfWar", true, false) if cur_scene else null
+	if fow and fow.has_method("toggle_map_fog"):
+		var new_st = fow.toggle_map_fog()
+		GameState.log_message("system", "Fog of War toggled %s for %s." % ["ON" if new_st else "OFF", cur_scene.name if cur_scene else "current area"])
+	elif fow and fow.has_method("set_map_fog_enabled"):
+		fow.set_map_fog_enabled(not fow._is_fog_enabled())
+	update_fog_indicator()

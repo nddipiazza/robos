@@ -357,6 +357,18 @@ Movement in real campaign scenes and tactical maps routes through `scripts/Pathf
 - **String-Pulling Funnel Smoothing (`smooth_path`):** Eliminates jagged tile stair-stepping by raycasting forward from each path node to the furthest visible waypoint.
 - **Fast-Path Line-of-Sight:** `is_line_clear()` performs a 3-ray sweep (center ray + 2 parallel lateral rays offset 10–12 px) against layer 1. If clear, the pathfinder returns `[target_pos]` immediately without grid computation.
 
+## Fog of War & Dynamic Sight Architecture (`FogOfWar.gd`)
+
+Classic Infinity Engine line-of-sight and memory fog runs through `scripts/FogOfWar.gd`:
+
+- **Vision Radius Scaling ($1.25\times$):** Default vision radius is **425.0 px** (~47 ft at 9 px/ft, scaled 1.25× from the base 340 px circle) with an inner illuminated radius of **300.0 px** and Hermite smoothstep edge falloff.
+- **Dynamic Configuration Slider:** Configurable from **200 px to 800 px** in the **Gameplay & Feedback Options** modal (`SettingsModal.tscn` / `SettingsModal.gd`), automatically updating `GameState.settings["fog_of_war_radius"]`, `GameState.get_visual_range_px()`, and regenerating the brush matrix.
+- **Map-Level Classification & Disablement:**
+  - **Towns, Houses, and Interiors** (`Homestead.tscn`, `VillageSquare.tscn`): Marked with `is_town_or_interior = true`. Fog of War is **disabled by default** with all actors and terrain visible.
+  - **Wilderness, Dungeons, and Keeps** (`WhisperingForest.tscn`, `AncientCatacombs.tscn`, `GarrisonKeep.tscn`): Fog of War is **enabled by default**.
+- **Interactive Map Indicator:** Party HUD toolbar displays an interactive pill button (`☀️ Fog: OFF` / `🌫️ Fog: ON`) allowing the player to toggle fog on or off for the current area on demand.
+- **Persistent Exploration Memory:** Explored cells persist across scene transitions in `GameState.get_meta("fog_cache")`.
+
 ## Engine map
 
 | File | Role |
@@ -364,10 +376,13 @@ Movement in real campaign scenes and tactical maps routes through `scripts/Pathf
 | `scripts/CharacterModel3D.gd` | 3D tabletop miniature pawn renderer, ViewportTexture projection, equipment sockets (`WeaponSocket`, `ShieldSocket`, `HelmSocket`), and hop motion |
 | `scripts/SpellModel3D.gd` | 3D spell projectile, ribbon particles, and area-of-effect explosion renderer |
 | `scripts/Pathfinder.gd` | Collision-aware navigation: `is_line_clear()`, `AStarGrid2D` obstacle rasterization, nearest-walkable cell search, and string-pulling funnel smoothing |
+| `scripts/FogOfWar.gd` | Infinity Engine line-of-sight, 1.25× vision radius (425 px), map-level town/interior detection, and memory shroud |
+| `scripts/PartyHUD.gd` | Bottom HUD toolbar: status, party controls, RTwP pause, and interactive `BtnFogIndicator` pill |
+| `scripts/SettingsModal.gd` | Gameplay settings modal: vision radius slider (200–800 px), area fog toggle, health bar display mode, and auto-pause triggers |
 | `scripts/engine/Dice.gd` | Seeded dice, scripted rolls, roll log (autoload `Dice`) |
 | `scripts/engine/ScenarioEngine.gd` | Rules core, Infinity AI, audit, coverage, fuzz (autoload `ScenarioEngine`) |
 | `scripts/engine/ScenarioArena.gd`, `scenes/ScenarioArena.tscn` | Human-mode rendering of any scenario |
-| `scripts/GameControlServer.gd` | `/api/v1/scenario/*` control API |
+| `scripts/GameControlServer.gd` | REST API (`/api/v1/state`, `/api/v1/action`, `/api/v1/scenario/*`) |
 | `scenarios/*.jsonld` | Drop-in `robos:CRPGTestScenario` KGraph nodes |
 | `maps/*.jsonld`, `assets/blockouts/*.png` | `robos:CRPGBattleMap` blockout maps and their rendered backgrounds |
 | `../../packages/robos-crpg-blockout/` | Python library and CLI that builds blockout maps |

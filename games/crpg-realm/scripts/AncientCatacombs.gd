@@ -1,5 +1,8 @@
 extends Node2D
 
+@export var is_town_or_interior: bool = false
+@export var default_fog_of_war: bool = true
+
 const TrapClass = preload("res://scripts/Trap.gd")
 
 @onready var action_log: ActionLog = $CanvasLayer/ActionLog

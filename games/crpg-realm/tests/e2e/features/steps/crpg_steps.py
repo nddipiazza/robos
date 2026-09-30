@@ -350,6 +350,11 @@ def step_terminal_victory(context, stage):
 def step_fog_active(context):
     state = api_get(context.web_port, "/api/v1/state")
     fow = state.get("fog_of_war", {})
+    if not fow.get("enabled"):
+        api_post(context.web_port, "/api/v1/action", {"action": "set_map_fog", "args": {"enabled": True}})
+        time.sleep(0.3)
+        state = api_get(context.web_port, "/api/v1/state")
+        fow = state.get("fog_of_war", {})
     assert fow.get("active") == True, f"Expected Fog of War to be active in scene, got: {fow}"
     assert fow.get("enabled") == True, f"Expected Fog of War to be enabled, got: {fow}"
     pct = fow.get("explored_pct", 0.0)
@@ -383,6 +388,11 @@ def step_area_revealed(context):
 def step_distant_concealed(context):
     state = api_get(context.web_port, "/api/v1/state")
     fow = state.get("fog_of_war", {})
+    if not fow.get("enabled"):
+        api_post(context.web_port, "/api/v1/action", {"action": "set_map_fog", "args": {"enabled": True}})
+        time.sleep(0.3)
+        state = api_get(context.web_port, "/api/v1/state")
+        fow = state.get("fog_of_war", {})
     assert fow.get("active") == True, "Expected Fog of War active in VillageSquare"
     assert fow.get("enabled") == True, "Expected Fog of War enabled in VillageSquare"
     pct = fow.get("explored_pct", 0.0)
@@ -2835,7 +2845,7 @@ def step_verify_visual_range(context, feet):
 def step_verify_enemy_hidden_beyond_range(context, enemy_id):
     st = api_get(context.web_port, "/api/v1/state")
     hero_pos = st.get("hero", {}).get("position") or [0, 0]
-    vr = float(st.get("hero", {}).get("visual_range_px", 340))
+    vr = float(st.get("hero", {}).get("visual_range_px", 425))
     en = next((e for e in st.get("battle", {}).get("enemies", []) if e.get("id") == enemy_id), None)
     assert en is not None, f"Enemy {enemy_id} not found"
     ep = en.get("position") or [0, 0]

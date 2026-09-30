@@ -19,7 +19,7 @@ Feature: Invisible Enemy Complete Invisibility, True Sight Gear, and Sanctuary T
     so the wearer must close the distance before the cultist shimmers into view.
     Given an isolated tactical spell encounter "invisible_infiltrator" with hero "Vance" class "wizard" and 30 HP
     Then enemy "stalker_1" is not visible to the player
-    And the hero has a visual range of 38 feet
+    And the hero has a visual range of 47 feet
     And the hero's visual range equals the fog-of-war sight circle
     When the hero equips item "gem-of-seeing"
     Then the hero has item "gem-of-seeing" equipped

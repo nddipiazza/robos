@@ -1,5 +1,8 @@
 extends Node2D
 
+@export var is_town_or_interior: bool = true
+@export var default_fog_of_war: bool = false
+
 const CharacterModel3D = preload("res://scripts/CharacterModel3D.gd")
 
 @onready var action_log: ActionLog = $CanvasLayer/ActionLog

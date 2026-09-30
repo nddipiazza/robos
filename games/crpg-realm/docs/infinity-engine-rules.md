@@ -8,7 +8,7 @@ tactical engine follows, so scenarios, spells and AI all agree on the same numbe
 | Quantity | Value | Where |
 |---|---|---|
 | Pixels per foot | **9 px = 1 ft** | `GameState.PX_PER_FOOT` (anchored on the classic 20-ft Fireball = 180 px) |
-| Visual range | **340 px (~38 ft)** | `GameState.VISUAL_RANGE_PX`, same as `FogOfWar.vision_radius` |
+| Visual range | **425 px (~47 ft)** | `GameState.VISUAL_RANGE_PX`, same as default `FogOfWar.vision_radius` (scaled 1.25x from base 340 px) |
 
 ### Visual range (how far a character can see)
 
@@ -17,9 +17,15 @@ edge of the fog-of-war circle around each party member. Spell descriptions call 
 "visual range" and treat it as about 30 ft, since a 30-ft-range spell can reach the
 edge of it. Walls and closed doors block sight, but other creatures never do.
 
-The Realm maps that circle onto its own sprite scale as the 340 px fog-of-war radius,
-which works out to about 1.9× the Fireball radius (BG uses about 1.75×). The engine
-follows these rules:
+The Realm maps that circle onto its own sprite scale as the 425 px fog-of-war radius
+(scaled 1.25× from the base 340 px sight circle), which works out to about 2.36× the
+Fireball radius. Players can also adjust this radius live between 200 px and 800 px in
+the **Gameplay & Feedback Options** settings modal.
+
+Furthermore, maps feature an on/off Fog of War toggle with a HUD pill indicator (`🌫️ Fog: ON` / `☀️ Fog: OFF`):
+* **Towns, houses, and interiors** (`Homestead`, `VillageSquare`): Fog of War is disabled by default (`☀️ Fog: OFF`).
+* **Dungeons and wilderness** (`WhisperingForest`, `AncientCatacombs`, `GarrisonKeep`): Fog of War is enabled by default (`🌫️ Fog: ON`).
+* Players can toggle fog on or off in real-time from either the HUD or Settings Modal.
 
 * `GameState.has_line_of_sight(a, b)`: only `StaticBody2D` geometry blocks the ray.
 * `GameState.can_see_invisible_at(pos)`: invisibility is pierced only when a party

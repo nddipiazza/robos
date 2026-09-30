@@ -1358,11 +1358,25 @@ func _get_full_game_state() -> Dictionary:
 				if b is Button:
 					dial_state.choices.append(b.text)
 
-	var fow_info = {"active": false, "enabled": GameState.settings.get("fog_of_war", true), "explored_cells": 0, "total_cells": 0, "explored_pct": 0.0}
+	var fow_info = {
+		"active": false,
+		"enabled": GameState.settings.get("fog_of_war", true),
+		"global_fog_enabled": GameState.settings.get("fog_of_war", true),
+		"map_fog_enabled": true,
+		"is_town_or_interior": bool(cur_scene.get("is_town_or_interior")) if (cur_scene and "is_town_or_interior" in cur_scene) else false,
+		"vision_radius": GameState.get_visual_range_px(),
+		"inner_vision_radius": GameState.get_visual_range_px() * (300.0 / 425.0),
+		"explored_cells": 0,
+		"total_cells": 0,
+		"explored_pct": 0.0
+	}
 	var fow = cur_scene.find_child("FogOfWar", true, false) if cur_scene else null
 	if fow:
 		fow_info.active = true
 		fow_info.enabled = fow._is_fog_enabled()
+		fow_info.map_fog_enabled = fow._is_fog_enabled()
+		fow_info.vision_radius = fow.vision_radius
+		fow_info.inner_vision_radius = fow.inner_vision_radius
 		if fow.fog_image:
 			var exp_count = 0
 			var total_cells = fow.grid_w * fow.grid_h
@@ -1490,9 +1504,9 @@ func _get_full_game_state() -> Dictionary:
 			"armor": GameState.equipped_armor,
 			"accessory": GameState.equipped_accessory,
 			"can_see_invisible": GameState.can_see_invisible(),
-			"visual_range_px": GameState.VISUAL_RANGE_PX,
-			"fog_vision_radius_px": (cur_scene.find_child("FogOfWar", true, false).vision_radius if (cur_scene and cur_scene.find_child("FogOfWar", true, false)) else GameState.VISUAL_RANGE_PX),
-			"visual_range_ft": GameState.px_to_feet(GameState.VISUAL_RANGE_PX),
+			"visual_range_px": GameState.get_visual_range_px(),
+			"fog_vision_radius_px": (cur_scene.find_child("FogOfWar", true, false).vision_radius if (cur_scene and cur_scene.find_child("FogOfWar", true, false)) else GameState.get_visual_range_px()),
+			"visual_range_ft": GameState.px_to_feet(GameState.get_visual_range_px()),
 			"ability_scores": GameState.ability_scores,
 			"is_invisible": GameState.is_invisible(GameState.hero_name),
 			"is_prone": ((hero_node.has_method("is_prone") and hero_node.is_prone()) or bool(hero_node.get("is_down_prone"))) if hero_node else false,
@@ -1742,6 +1756,30 @@ func _execute_game_action(payload: Dictionary) -> Dictionary:
 			GameState.settings["fog_of_war"] = en
 			GameState.settings_changed.emit()
 			return {"success": true, "fog_of_war": GameState.settings["fog_of_war"]}
+
+		"set_fog_of_war_radius":
+			var rad = float(args.get("radius", 425.0))
+			GameState.settings["fog_of_war_radius"] = rad
+			GameState.settings_changed.emit()
+			var fow_node = cur_scene.find_child("FogOfWar", true, false) if cur_scene else null
+			if fow_node and fow_node.has_method("set_vision_radius"):
+				fow_node.set_vision_radius(rad)
+			return {"success": true, "fog_of_war_radius": rad}
+
+		"set_map_fog":
+			var map_en = bool(args.get("enabled", true))
+			var fow_node = cur_scene.find_child("FogOfWar", true, false) if cur_scene else null
+			if fow_node and fow_node.has_method("set_map_fog_enabled"):
+				fow_node.set_map_fog_enabled(map_en)
+				return {"success": true, "map_fog_enabled": map_en}
+			return {"success": false, "error": "FogOfWar not found in scene"}
+
+		"toggle_map_fog":
+			var fow_node = cur_scene.find_child("FogOfWar", true, false) if cur_scene else null
+			if fow_node and fow_node.has_method("toggle_map_fog"):
+				var res_en = fow_node.toggle_map_fog()
+				return {"success": true, "map_fog_enabled": res_en}
+			return {"success": false, "error": "FogOfWar not found in scene"}
 
 		"open_character_status":
 			var idx = int(args.get("member_index", 0))

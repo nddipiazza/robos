@@ -15,11 +15,11 @@ corner_radius_bottom_left = 6
 corner_radius_bottom_right = 6
 
 [node name="SettingsModal" type="Panel"]
-custom_minimum_size = Vector2(480, 400)
-offset_left = 400.0
-offset_top = 140.0
-offset_right = 880.0
-offset_bottom = 540.0
+custom_minimum_size = Vector2(500, 470)
+offset_left = 390.0
+offset_top = 115.0
+offset_right = 890.0
+offset_bottom = 585.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_bg")
 script = ExtResource("1_set")
 
@@ -27,7 +27,7 @@ script = ExtResource("1_set")
 layout_mode = 0
 offset_left = 20.0
 offset_top = 16.0
-offset_right = 460.0
+offset_right = 480.0
 offset_bottom = 44.0
 theme_override_colors/font_color = Color(1, 0.88, 0.4, 1)
 theme_override_font_sizes/font_size = 15
@@ -38,8 +38,8 @@ horizontal_alignment = 1
 layout_mode = 0
 offset_left = 36.0
 offset_top = 56.0
-offset_right = 444.0
-offset_bottom = 296.0
+offset_right = 464.0
+offset_bottom = 396.0
 theme_override_constants/separation = 14
 
 [node name="LblFeedback" type="Label" parent="VBox"]
@@ -73,7 +73,56 @@ text = "Show Floating Damage & Roll Numbers"
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
 button_pressed = true
-text = "Enable Infinity Engine Fog of War"
+text = "Enable Infinity Engine Fog of War (Global)"
+
+[node name="HBoxFogRadius" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="LblFogRadius" type="Label" parent="VBox/HBoxFogRadius"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 12
+text = "Vision Sight Radius:"
+
+[node name="SliderFogRadius" type="HSlider" parent="VBox/HBoxFogRadius"]
+custom_minimum_size = Vector2(160, 22)
+layout_mode = 2
+min_value = 200.0
+max_value = 800.0
+step = 25.0
+value = 425.0
+
+[node name="LblFogRadiusVal" type="Label" parent="VBox/HBoxFogRadius"]
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 11
+text = "425 px (1.25x)"
+horizontal_alignment = 2
+
+[node name="HBoxMapFog" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="LblMapFog" type="Label" parent="VBox/HBoxMapFog"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 12
+text = "Current Area Fog:"
+
+[node name="LblMapFogStatus" type="Label" parent="VBox/HBoxMapFog"]
+custom_minimum_size = Vector2(130, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_font_sizes/font_size = 11
+text = "☀️ OFF (Town/House)"
+
+[node name="BtnToggleMapFog" type="Button" parent="VBox/HBoxMapFog"]
+custom_minimum_size = Vector2(110, 26)
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "Toggle Area"
 
 [node name="LblPause" type="Label" parent="VBox"]
 layout_mode = 2
@@ -93,10 +142,10 @@ text = "Auto-Pause on Character Critically Injured (<25% HP)"
 
 [node name="BtnClose" type="Button" parent="."]
 layout_mode = 0
-offset_left = 160.0
-offset_top = 348.0
-offset_right = 320.0
-offset_bottom = 382.0
+offset_left = 170.0
+offset_top = 416.0
+offset_right = 330.0
+offset_bottom = 450.0
 theme_override_colors/font_color = Color(1, 0.95, 0.8, 1)
 theme_override_font_sizes/font_size = 13
 text = "APPLY & CLOSE"

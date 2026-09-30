@@ -25,7 +25,8 @@ var settings: Dictionary = {
 	"floating_text": true,
 	"auto_pause_combat": false,
 	"auto_pause_injured": false,
-	"fog_of_war": true
+	"fog_of_war": true,
+	"fog_of_war_radius": 425.0
 }
 
 var is_game_paused: bool = false
@@ -316,6 +317,7 @@ func init_hero(p_name: String, p_class: String, p_stats: Dictionary = {}, p_race
 	quest_stage = 1
 	reset_flags()
 	settings["fog_of_war"] = true
+	settings["fog_of_war_radius"] = 425.0
 	if has_meta("fog_cache"):
 		set_meta("fog_cache", {})
 	stats.kills = 0
@@ -1210,10 +1212,12 @@ func is_sanctuaried(target_name: String) -> bool:
 # Scale anchor: the classic 20-ft-radius Fireball renders at 180 px, so 1 ft = 9 px.
 const PX_PER_FOOT := 9.0
 # Infinity Engine (BG1/BG2) rule: every creature sees 448 IE units in all directions
-# (the edge of the fog-of-war circle, ~"30 ft" in spell range terms), blocked only by
-# walls/doors — never by other creatures. Scaled to this game's sprite size the sight
-# circle is 340 px, which is exactly the FogOfWar vision_radius.
-const VISUAL_RANGE_PX := 340.0
+# (the edge of the fog-of-war circle), blocked only by walls/doors — never by other creatures.
+# Scaled to this game's sprite size with 1.25x vision boost the default sight circle is 425 px (340 px * 1.25).
+const VISUAL_RANGE_PX := 425.0
+
+func get_visual_range_px() -> float:
+	return float(settings.get("fog_of_war_radius", VISUAL_RANGE_PX))
 
 # Area-of-effect radii in FEET (5e SRD sizes, cross-checked against the Infinity Engine,
 # where Fireball, Stinking Cloud and Dispel Magic all share the same 256-unit projectile).
@@ -1293,7 +1297,7 @@ func can_see_invisible_at(world_pos: Vector2) -> bool:
 				break
 		if not has_sight:
 			continue
-		if n.global_position.distance_to(world_pos) > VISUAL_RANGE_PX:
+		if n.global_position.distance_to(world_pos) > get_visual_range_px():
 			continue
 		if has_line_of_sight(n.global_position, world_pos):
 			return true

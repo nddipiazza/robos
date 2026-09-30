@@ -505,24 +505,78 @@ The source sprites face left, so `flip_h = true` turns the NPC to face a hero on
 
 ---
 
-## Fog of war
+## Fog of war & dynamic vision
 
-`FogOfWar` ([`scripts/FogOfWar.gd`](https://github.com/nddipiazza/robos/blob/main/games/crpg-realm/scripts/FogOfWar.gd), instanced from `scenes/components/FogOfWar.tscn`) is in all five location scenes. It keeps a low-resolution image of the map and draws it scaled up over everything.
+`FogOfWar` ([`scripts/FogOfWar.gd`](https://github.com/nddipiazza/robos/blob/main/games/crpg-realm/scripts/FogOfWar.gd), instanced from `scenes/components/FogOfWar.tscn`) provides classic Infinity Engine vision geometry across all location scenes. It maintains a low-resolution exploration grid of the map and renders it as an anti-aliased shader overlay atop the world.
 
-![Fog of war around the party]({{ '/assets/images/crpg-realm/fog_of_war_reveal.png' | relative_url }}){: .robos-zoomable-img }
-*Explored ground stays dimmed; the area around the hero is clear.*
+![Modern cRPG Fog of War and Dynamic Vision Architecture]({{ '/assets/images/crpg-realm/crpg_fog_of_war_architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+*Fog of War technical architecture: 1.25× scaled vision radius (425 px), runtime configuration slider in Settings Modal, per-map town/interior detection, and interactive HUD indicator pill (`☀️ Fog: OFF` / `🌫️ Fog: ON`).*
+
+```mermaid
+flowchart TD
+    subgraph UI["Player Controls & Configuration"]
+        Settings["Settings Modal (O Key)<br/>• Global Fog Master Switch<br/>• Vision Radius Slider (200px - 800px)<br/>• Area Fog Toggle"]
+        PartyHUD["Party HUD Toolbar<br/>• BtnFogIndicator Pill<br/>(☀️ Fog: OFF / 🌫️ Fog: ON)"]
+    end
+
+    subgraph State["State Management"]
+        GS["GameState Singleton<br/>• settings['fog_of_war_radius'] = 425.0<br/>• settings['fog_of_war'] = true<br/>• VISUAL_RANGE_PX = 425.0<br/>• fog_cache metadata"]
+    end
+
+    subgraph FogNode["FogOfWar Node2D (res://scripts/FogOfWar.gd)"]
+        SceneCheck{"Map Classification<br/>(is_town_or_interior)"}
+        TownHouse["Towns / Houses / Interiors<br/>(Homestead, VillageSquare)<br/>is_fog_enabled = false"]
+        WildDungeon["Wilds / Dungeons / Keeps<br/>(WhisperingForest, Catacombs)<br/>is_fog_enabled = true"]
+        Brush["Dynamic Brush Generator<br/>• brush_radius_cells = 53 (425px / 8)<br/>• inner_vision = 300px<br/>• Hermite soft-edge curve"]
+        GridBuffer["Dual-Channel Grid Buffer (320x180)<br/>• R = Explored Memory Fog<br/>• G = Active Sight Line"]
+    end
+
+    subgraph RenderEngine["Shader & Actor Lifecycle"]
+        Shader["fog_of_war.gdshader<br/>• Shroud Color: (0.02, 0.02, 0.04)<br/>• Memory Darkness: 0.65<br/>• enabled uniform"]
+        Actors["Registered Actors & Enemies<br/>• Smooth alpha fade in vision<br/>• OverheadUI & SelectionCircle auto-hide"]
+        API["GameControlServer REST API<br/>/api/v1/state (fog_of_war info)<br/>/api/v1/action (set_fog_of_war_radius, set_map_fog)"]
+    end
+
+    Settings -->|"update_setting()"| GS
+    GS -->|"settings_changed"| FogNode
+    PartyHUD -->|"toggle_map_fog()"| FogNode
+    SceneCheck -->|Interior / Town| TownHouse
+    SceneCheck -->|Wilderness / Crypt| WildDungeon
+    TownHouse -->|"visible = false, reveal_actors()"| RenderEngine
+    WildDungeon -->|"stamp circle"| Brush
+    Brush --> GridBuffer
+    GridBuffer --> Shader
+    GridBuffer --> Actors
+    FogNode -->|"map_fog_toggled"| PartyHUD
+    API -->|"query / mutate"| FogNode
+```
+
+### Vision geometry & exports
 
 | Export | Default | Meaning |
 |:---|:---|:---|
-| `map_width`, `map_height` | 2560, 1440 | map size in pixels |
-| `grid_scale` | 8 | one fog cell = 8x8 px, so the grid is 320x180 |
-| `vision_radius` | 340.0 | outer edge of sight |
-| `inner_vision_radius` | 240.0 | fully clear inside this radius; smoothstep fade to 340 |
-| `memory_darkness` | 0.65 | alpha over explored ground not currently in sight |
-| `shroud_color` | `Color(0.02, 0.02, 0.04, 1.0)` | fog colour |
-| `is_fog_enabled` | true | used only if `GameState.settings` has no `fog_of_war` key |
+| `map_width`, `map_height` | 2560, 1440 | map size in world pixels |
+| `grid_scale` | 8 | one fog cell = 8x8 px, yielding a 320x180 cell buffer |
+| `vision_radius` | **425.0** | outer edge of sight (**scaled 1.25×** from base 340 px) |
+| `inner_vision_radius` | **300.0** | fully illuminated core (**scaled 1.25×** from base 240 px); smooth cubic Hermite falloff to 425 px |
+| `memory_darkness` | 0.65 | alpha darkness over previously explored ground not currently in sight |
+| `shroud_color` | `Color(0.02, 0.02, 0.04, 1.0)` | shroud color |
+| `is_fog_enabled` | contextual | automatically disabled in towns and houses; enabled in wilderness and dungeons |
 
-Each cell stores two values: red = explored (never decreases), green = in sight now. When the hero moves more than 5 px, `update_fog_at_position()` clears last frame's green cells and stamps a precomputed circular brush. The shader [`shaders/fog_of_war.gdshader`](https://github.com/nddipiazza/robos/blob/main/games/crpg-realm/shaders/fog_of_war.gdshader) turns that into alpha:
+### Map-level classification & HUD indicator
+
+Towns, villages, and residential houses typically don't have fog of war in classic tactical RPGs. The engine automatically inspects the active scene:
+- **Towns & Interiors** (`Homestead.tscn`, `VillageSquare.tscn`): `is_town_or_interior = true`. Fog of War is **disabled by default**, displaying the `☀️ Fog: OFF` pill on the party HUD.
+- **Wilderness & Dungeons** (`WhisperingForest.tscn`, `AncientCatacombs.tscn`, `GarrisonKeep.tscn`): `is_town_or_interior = false`. Fog of War is **enabled by default**, displaying the `🌫️ Fog: ON` pill on the party HUD.
+- **Real-Time Map Toggle**: Clicking the `BtnFogIndicator` pill on the bottom HUD toolbar or pressing the **Toggle Area** button in the Settings Modal instantly flips fog on or off for the active map without affecting the global player preference.
+
+### Live radius configuration
+
+In the **Gameplay & Feedback Options** modal (`O` key or Options button), players can adjust the vision radius on a continuous slider from **200 px to 800 px** with real-time numeric readout (e.g. `425 px (1.25x)`). Moving the slider recomputes the brush matrix in memory, preserving explored terrain while updating active sight diameter on the fly.
+
+### Pixel memory & shader processing
+
+Each cell stores two values: red = explored (persists across visits), green = currently in line-of-sight. When the hero moves more than 5 px, `update_fog_at_position()` stamps the precomputed circular brush into the `ImageTexture`. The shader [`shaders/fog_of_war.gdshader`](https://github.com/nddipiazza/robos/blob/main/games/crpg-realm/shaders/fog_of_war.gdshader) transforms those values into pixel alpha:
 
 ```glsl
 uniform vec4 shroud_color : source_color = vec4(0.02, 0.02, 0.04, 1.0);
@@ -535,13 +589,11 @@ uniform bool enabled = true;
 		COLOR = vec4(shroud_color.rgb, clamp(alpha, 0.0, 1.0));
 ```
 
-- **Unexplored:** alpha 1 (black). **Explored, out of sight:** alpha 0.65. **In sight:** alpha 0.
-- **Actors.** Nodes passed to `register_actor()` fade to invisible when their cell is not in sight (green ≤ 0.15), and their `OverheadUI`/`SelectionCircle` hide too. `VillageSquare._ready()` registers the hero, the hound, Brand, companions and every `CharacterBody2D` child.
-- **Memory.** Explored cells are cached per scene name in `GameState` metadata (`fog_cache`), so returning to a map keeps what you uncovered. `/reset` clears the cache.
-- **Toggle.** The Settings modal checkbox `ChkFogOfWar` writes `GameState.settings.fog_of_war`.
-
-{: .note }
-**Not implemented yet:** vision from companions or light sources (only the node in `hero_node`, the `HeroPlayer`, reveals fog), line-of-sight blocking by walls (vision is a plain circle through buildings), and a minimap.
+- **Unexplored:** alpha 1 (opaque black shroud).
+- **Explored, out of sight:** alpha 0.65 (dimmed memory fog).
+- **In active vision:** alpha 0 (crystal clear).
+- **Actor Culling:** Nodes passed to `register_actor()` fade to invisible when outside active vision (green ≤ 0.15), and their overhead labels and selection circles are automatically hidden.
+- **Persistent Cache:** Explored cells are cached per scene name in `GameState` metadata (`fog_cache`), preserving player exploration across scene transitions.
 
 ---
 

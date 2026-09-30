@@ -45,6 +45,23 @@ func _init() -> void:
 	assert(fow.is_point_explored(hero_start), "Old hero position must REMAIN explored in memory fog")
 	print("✔ Memory fog verified: old position is explored=true but in_vision=false")
 
+	# Test vision radius scaling (1.25x of 340 = 425)
+	assert(abs(fow.vision_radius - 425.0) < 0.1, "Expected default vision_radius 425.0 (340 * 1.25)")
+	print("✔ FogOfWar vision radius verified at 425px (1.25x scaling)")
+
+	# Test dynamic radius adjustment
+	fow.set_vision_radius(510.0)
+	assert(abs(fow.vision_radius - 510.0) < 0.1, "Expected updated vision_radius 510.0")
+	print("✔ set_vision_radius(510.0) dynamically updated brush geometry")
+
+	# Test map fog toggle
+	assert(fow.is_map_fog_active(), "Fog should be active initially")
+	fow.set_map_fog_enabled(false)
+	assert(not fow.is_map_fog_active(), "Map fog should be disabled after set_map_fog_enabled(false)")
+	fow.toggle_map_fog()
+	assert(fow.is_map_fog_active(), "Map fog should be enabled after toggle_map_fog()")
+	print("✔ Map fog toggle and state query verified")
+
 	# Test reveal_all()
 	fow.reveal_all()
 	assert(fow.is_point_explored(far_pt), "reveal_all must explore all points")

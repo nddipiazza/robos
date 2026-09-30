@@ -7,6 +7,10 @@ signal settings_closed
 @onready var opt_health_bars: OptionButton = find_child("OptHealthBars", true, false)
 @onready var chk_floating_text: CheckBox = find_child("ChkFloatingText", true, false)
 @onready var chk_fog_of_war: CheckBox = find_child("ChkFogOfWar", true, false)
+@onready var slider_fog_radius: HSlider = find_child("SliderFogRadius", true, false)
+@onready var lbl_fog_radius_val: Label = find_child("LblFogRadiusVal", true, false)
+@onready var lbl_map_fog_status: Label = find_child("LblMapFogStatus", true, false)
+@onready var btn_toggle_map_fog: Button = find_child("BtnToggleMapFog", true, false)
 @onready var chk_autopause_combat: CheckBox = find_child("ChkAutoPauseCombat", true, false)
 @onready var chk_autopause_injured: CheckBox = find_child("ChkAutoPauseInjured", true, false)
 
@@ -25,7 +29,14 @@ func _ready() -> void:
 	if chk_floating_text:
 		chk_floating_text.toggled.connect(func(val): GameState.update_setting("floating_text", val))
 	if chk_fog_of_war:
-		chk_fog_of_war.toggled.connect(func(val): GameState.update_setting("fog_of_war", val))
+		chk_fog_of_war.toggled.connect(func(val):
+			GameState.update_setting("fog_of_war", val)
+			_update_map_fog_ui()
+		)
+	if slider_fog_radius:
+		slider_fog_radius.value_changed.connect(_on_fog_radius_changed)
+	if btn_toggle_map_fog:
+		btn_toggle_map_fog.pressed.connect(_on_toggle_map_fog_pressed)
 	if chk_autopause_combat:
 		chk_autopause_combat.toggled.connect(func(val): GameState.update_setting("auto_pause_combat", val))
 	if chk_autopause_injured:
@@ -62,10 +73,50 @@ func _load_current_values() -> void:
 		chk_floating_text.button_pressed = GameState.settings.get("floating_text", true)
 	if chk_fog_of_war:
 		chk_fog_of_war.button_pressed = GameState.settings.get("fog_of_war", true)
+	var rad = float(GameState.settings.get("fog_of_war_radius", 425.0))
+	if slider_fog_radius:
+		slider_fog_radius.value = rad
+	if lbl_fog_radius_val:
+		var mult = rad / 340.0
+		lbl_fog_radius_val.text = "%d px (%.2fx)" % [int(rad), mult]
+	_update_map_fog_ui()
 	if chk_autopause_combat:
 		chk_autopause_combat.button_pressed = GameState.settings.get("auto_pause_combat", false)
 	if chk_autopause_injured:
 		chk_autopause_injured.button_pressed = GameState.settings.get("auto_pause_injured", false)
+
+func _on_fog_radius_changed(val: float) -> void:
+	if lbl_fog_radius_val:
+		var mult = val / 340.0
+		lbl_fog_radius_val.text = "%d px (%.2fx)" % [int(val), mult]
+	GameState.update_setting("fog_of_war_radius", val)
+
+func _update_map_fog_ui() -> void:
+	var cur_scene = get_tree().current_scene if get_tree() else null
+	var fow = cur_scene.find_child("FogOfWar", true, false) if cur_scene else null
+	var fog_on = false
+	if fow and fow.has_method("_is_fog_enabled"):
+		fog_on = fow._is_fog_enabled()
+	elif cur_scene and "is_town_or_interior" in cur_scene:
+		fog_on = not bool(cur_scene.get("is_town_or_interior"))
+
+	if lbl_map_fog_status:
+		if fog_on:
+			lbl_map_fog_status.text = "🌫️ ON (Active)"
+			lbl_map_fog_status.add_theme_color_override("font_color", Color(0.4, 0.9, 1.0, 1.0))
+		else:
+			lbl_map_fog_status.text = "☀️ OFF (Town/House)"
+			lbl_map_fog_status.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3, 1.0))
+
+func _on_toggle_map_fog_pressed() -> void:
+	var cur_scene = get_tree().current_scene if get_tree() else null
+	var fow = cur_scene.find_child("FogOfWar", true, false) if cur_scene else null
+	if fow and fow.has_method("toggle_map_fog"):
+		var new_st = fow.toggle_map_fog()
+		GameState.log_message("system", "Fog of War toggled %s for current area." % ("ON" if new_st else "OFF"))
+	elif fow and fow.has_method("set_map_fog_enabled"):
+		fow.set_map_fog_enabled(not fow._is_fog_enabled())
+	_update_map_fog_ui()
 
 func _on_health_bar_mode_selected(index: int) -> void:
 	var mode = "always"

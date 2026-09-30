@@ -1,19 +1,23 @@
 class_name FogOfWar
 extends Node2D
 
+signal map_fog_toggled(enabled: bool)
+signal vision_radius_changed(radius: float)
+
 @export var map_width: int = 2560
 @export var map_height: int = 1440
 @export var grid_scale: int = 8
-@export var vision_radius: float = 340.0
-@export var inner_vision_radius: float = 240.0
+@export var vision_radius: float = 425.0
+@export var inner_vision_radius: float = 300.0
 @export var memory_darkness: float = 0.65
 @export var shroud_color: Color = Color(0.02, 0.02, 0.04, 1.0)
 @export var is_fog_enabled: bool = true
 
+var map_fog_override: Variant = null
 var grid_w: int = 320
 var grid_h: int = 180
-var brush_radius_cells: int = 42
-var brush_size: int = 85
+var brush_radius_cells: int = 53
+var brush_size: int = 107
 var brush_data: PackedFloat32Array = PackedFloat32Array()
 
 var fog_image: Image
@@ -29,6 +33,17 @@ var registered_actors: Array[Node2D] = []
 func _ready() -> void:
 	z_index = 25
 	process_mode = PROCESS_MODE_ALWAYS
+
+	_determine_default_map_fog()
+
+	var gs = _get_game_state()
+	if gs and "settings" in gs and gs.settings.has("fog_of_war_radius"):
+		var rad = float(gs.settings.get("fog_of_war_radius", 425.0))
+		if rad > 0.0:
+			vision_radius = rad
+			inner_vision_radius = vision_radius * (300.0 / 425.0)
+	if gs and gs.has_signal("settings_changed"):
+		gs.settings_changed.connect(_on_settings_changed)
 
 	grid_w = int(float(map_width) / float(grid_scale))
 	grid_h = int(float(map_height) / float(grid_scale))
@@ -98,6 +113,7 @@ func _create_fog_overlay() -> void:
 		var is_enabled = _is_fog_enabled()
 		fog_material.set_shader_parameter("enabled", is_enabled)
 		fog_sprite.material = fog_material
+		fog_sprite.visible = is_enabled
 
 	add_child(fog_sprite)
 
@@ -105,6 +121,8 @@ func _process(_delta: float) -> void:
 	var is_enabled = _is_fog_enabled()
 	if fog_material:
 		fog_material.set_shader_parameter("enabled", is_enabled)
+	if fog_sprite:
+		fog_sprite.visible = is_enabled
 	if not is_enabled:
 		_reveal_all_actors()
 		return
@@ -220,11 +238,76 @@ func _get_game_state() -> Node:
 			return root.get_node("GameState")
 	return null
 
+func _determine_default_map_fog() -> void:
+	if not is_inside_tree(): return
+	var cur_scene = get_tree().current_scene if get_tree() else null
+	if not cur_scene: return
+	if "is_town_or_interior" in cur_scene and bool(cur_scene.get("is_town_or_interior")):
+		is_fog_enabled = false
+		return
+	if "default_fog_of_war" in cur_scene:
+		is_fog_enabled = bool(cur_scene.get("default_fog_of_war"))
+		return
+	var sname = cur_scene.name.to_lower()
+	if "homestead" in sname or "village" in sname or "town" in sname or "interior" in sname or "shop" in sname or "inn" in sname:
+		is_fog_enabled = false
+	else:
+		is_fog_enabled = true
+
 func _is_fog_enabled() -> bool:
 	var gs = _get_game_state()
-	if gs and "settings" in gs:
-		return gs.settings.get("fog_of_war", true)
+	if gs and "settings" in gs and not gs.settings.get("fog_of_war", true):
+		return false
+	if map_fog_override != null:
+		return bool(map_fog_override)
 	return is_fog_enabled
+
+func is_map_fog_active() -> bool:
+	return _is_fog_enabled()
+
+func set_map_fog_enabled(enabled: bool) -> void:
+	map_fog_override = enabled
+	is_fog_enabled = enabled
+	var active = _is_fog_enabled()
+	if fog_material:
+		fog_material.set_shader_parameter("enabled", active)
+	if fog_sprite:
+		fog_sprite.visible = active
+	if not active:
+		_reveal_all_actors()
+	else:
+		if hero_node and is_instance_valid(hero_node):
+			update_fog_at_position(hero_node.global_position, true)
+	map_fog_toggled.emit(active)
+
+func toggle_map_fog() -> bool:
+	set_map_fog_enabled(not _is_fog_enabled())
+	return _is_fog_enabled()
+
+func set_vision_radius(new_radius: float) -> void:
+	vision_radius = max(100.0, new_radius)
+	inner_vision_radius = vision_radius * (300.0 / 425.0)
+	brush_radius_cells = int(vision_radius / float(grid_scale))
+	brush_size = brush_radius_cells * 2 + 1
+	_precompute_brush()
+	if hero_node and is_instance_valid(hero_node):
+		update_fog_at_position(hero_node.global_position, true)
+	vision_radius_changed.emit(vision_radius)
+
+func _on_settings_changed() -> void:
+	var gs = _get_game_state()
+	if not gs or not ("settings" in gs): return
+	var target_rad = float(gs.settings.get("fog_of_war_radius", vision_radius))
+	if abs(target_rad - vision_radius) > 1.0:
+		set_vision_radius(target_rad)
+	var active = _is_fog_enabled()
+	if fog_material:
+		fog_material.set_shader_parameter("enabled", active)
+	if fog_sprite:
+		fog_sprite.visible = active
+	if not active:
+		_reveal_all_actors()
+	map_fog_toggled.emit(active)
 
 func register_actor(actor: Node2D) -> void:
 	if actor and not registered_actors.has(actor):

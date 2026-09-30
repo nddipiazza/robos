@@ -295,7 +295,7 @@ func _process(delta: float) -> void:
 		var d = seer.global_position.distance_to(global_position) if seer else -1.0
 		GameState.record_event("true_sight_reveal" if seen else "true_sight_lost", {
 			"target_id": enemy_id, "target": enemy_name, "distance_px": d,
-			"visual_range_px": GameState.VISUAL_RANGE_PX,
+			"visual_range_px": GameState.get_visual_range_px(),
 			"line_of_sight": GameState.has_line_of_sight(seer.global_position, global_position) if seer else false,
 			"sprite_opacity": sprite.modulate.a if sprite else 1.0})
 		if seen and FloatingTextManager:
