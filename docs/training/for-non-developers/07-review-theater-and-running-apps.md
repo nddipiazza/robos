@@ -23,13 +23,19 @@ How to verify autonomous agent work in the PR Review Theater using narrated vide
 
 ## The Quality Gate: Why You Never Blindly Approve
 
-In the traditional software world, "Code Review" meant an exhausted senior engineer squinting at lines of colored green and red diffs on GitHub, getting a headache, and typing: *"LGTM ("Looks good to me") 🚢"*.
+In the traditional software world, "Code Review" meant an engineer staring at confusing walls of red and green text on code websites like GitHub, getting a headache, and typing: *"LGTM ("Looks good to me") 🚢"* without even running the program.
 
 Shortly thereafter, the app crashes in production because nobody actually ran the code.
 
 In RobOS, **blind rubber-stamping is physically impossible.**
 
-When an autonomous AI agent finishes building a task, it submits its work as a **Pull Request (PR)**—a formal proposal asking you to review, test, and approve its work before anything merges into the main project.
+When an autonomous AI agent finishes building a task, it submits its work as a **Pull Request (PR)**—a formal **Approval Packet** asking you to review, test, and approve its work before anything touches your real project.
+
+> [!NOTE]
+> **Why Is It Called a "Pull Request"?**  
+> To anyone who hasn't worked as a programmer, the term "Pull Request" sounds backward!  
+> Because the AI agent built the feature in a temporary sandbox, it is formally asking you: *"I verified this feature works. Please **pull** my changes into your main project."*  
+> Just think of a Pull Request as an **Inspection & Approval Packet**.
 
 In RobOS, this takes place inside the **PR Review Theater** (`packages/pr-review`). The Review Theater turns code review into an interactive governance flight simulator where you verify real proof-of-work before anything merges into your main branch.
 
@@ -110,6 +116,10 @@ With the tests green, knowledge check passed, and video verified, click **Sign O
 
 RobOS merges the branch, updates the Knowledge Graph, and cleans up the sandbox.
 
+> [!NOTE]
+> **What Does "Merge" Mean?**  
+> "Merging" simply means **accepting the draft**. RobOS takes the approved changes from the agent's temporary sandbox branch and saves them permanently into your main project. Then it dissolves the sandbox so no leftover clutter remains on your computer.
+
 ---
 
 ## How to Run & Distribute Your Creation
@@ -133,7 +143,7 @@ You can right-click the icon to **Pin to Taskbar** or **Add to Desktop**.
 
 ### Running Web Apps in Google Chrome
 If you built a web application like `getemgigs.com`:
-- **Local Development**: Click **Run Dev Server** in Git Projects. Your default browser (Google Chrome) launches directly to `http://localhost:3000`.
+- **Local Development**: Click **Run Dev Server** in **Git Projects** (the RobOS project manager app). Your default browser (Google Chrome) launches directly to `http://localhost:3000`.
 - **Public Cloud URL**: With one click in **Kube Studio** or Vercel cloud hosting, your app deploys to the cloud (e.g. `https://www.getemgigs.com`) accessible from any smartphone, tablet, or laptop in the world.
 
 ---

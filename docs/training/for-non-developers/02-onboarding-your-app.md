@@ -26,12 +26,15 @@ How to pick an application archetype, configure team identity, define data contr
 Starting a new software project is usually terrifying for non-developers. Where do you even begin? Do you create a repository? What folder structure should you use? Which build tools, test runners, and linting rules are needed?
 
 > [!NOTE]
-> **What is a Git Repository?**  
-> A **Git repository (or repo)** is simply a project folder equipped with an automated version timeline. Every time code is saved or updated, Git records a snapshot so you can roll back to any past state if something breaks.
+> **What Are Git and GitHub? (A Friendly 30-Second Primer)**  
+> If you have ever heard programmers talk about "Git" or "GitHub" and had no idea what they meant, think of it like this:
+> - **GitHub is like Google Drive or Dropbox for software**: It is a secure cloud locker where project files live so you never lose your work and your team (and AI agents) can collaborate.
+> - **Git is an automatic file time machine**: Every time an AI agent saves a task, Git records a snapshot. If something ever breaks, you can rewind time with one click back to any previous working state—just like checking the version history in Google Docs.
+> - **In RobOS, you never have to learn Git commands**: RobOS operates the time machine and saves all project history automatically behind the scenes.
 
 In RobOS, you never start with a blank folder. You start in the **RobOS App Wizard** (`packages/app-wizard`).
 
-The App Wizard is an interactive visual stepping engine that asks you a few simple questions, generates the complete multi-file project skeleton, sets up all Git repositories, and registers the project into the SDLC Knowledge Graph.
+The App Wizard is an interactive visual stepping engine that asks you a few simple questions, generates the complete multi-file project skeleton, initializes your project history timeline, and registers the project into the Knowledge Graph.
 
 ---
 
@@ -162,9 +165,9 @@ Look at how clear and structured that is!
 
 ## What About Existing Code? (The Ingestion Wizard)
 
-What if you already have an existing project on GitHub that you want to bring into RobOS?
+What if you already have an existing project in a folder on your computer or hosted online on GitHub that you want to bring into RobOS?
 
-The App Wizard includes an **Import / Ingestion Wizard** that scans any local folder or Git repository:
+The App Wizard includes an **Import / Ingestion Wizard** that scans any local folder or project repository:
 
 <div style="margin: 1.5rem 0;">
   <img src="{{ '/assets/images/screenshots/import-app-source-select_frame.png' | relative_url }}" alt="Brownfield App Ingestion Source Select" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />

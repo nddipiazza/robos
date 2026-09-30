@@ -51,7 +51,7 @@ When you open **Task Implementer** (`packages/task-implementer`), you see your p
 </div>
 
 When you click **Start Implementation**:
-- **Branch Isolation**: The agent creates an isolated work branch (a temporary parallel lane so your main project code remains completely safe and untouched).
+- **Branch Isolation (The Scratchpad Draft)**: The agent creates a temporary draft copy of your project (known as a "branch"). Think of it like making a duplicate document called `Draft_v2` before making edits—your real project remains completely safe, untouched, and unblemished.
 - **Sandbox Provisioning**: RobOS mounts the in-memory RAM sandbox.
 - **Context Injection**: The agent reads the exact task acceptance criteria, linked Knowledge Graph nodes, and contract schemas.
 - **Execution Loop**: The agent writes the code, installs necessary local packages inside the sandbox, and runs tests.

@@ -50,7 +50,7 @@ In RobOS, you do not write code, and you do not copy-paste terminal errors. Inst
 | **Curious Non-Engineers** | Ambition and a desire to build things | Teaches you system architecture, context engineering, and quality review with zero math or syntax |
 
 > [!NOTE]
-> **Who This Is NOT For**: If you are looking for tutorials on how to memorize C++ pointer arithmetic, configure complex compiler flags by hand, or argue over tabs versus spaces, this course is not for you. We focus exclusively on **outcomes, architecture, and governance**.
+> **Zero Prior Technical Knowledge Required**: You do **not** need to know what GitHub, Git, terminal commands, or programming languages are. If you know how to browse the web, click a mouse, and describe an idea in plain words, you have everything you need. RobOS handles the technical plumbing automatically.
 
 ---
 
@@ -73,7 +73,7 @@ In the old days of programming, you had to learn syntax (semicolons, variable sc
 ### AI Generative Review-Based Development
 When an agent finishes building a feature, you don't just "hope it works". RobOS enforces **Review-Based Development**:
 - **Automated 1080p Video Proof-of-Work**: The agent boots up the app in a virtual screen, clicks buttons, plays through the level, and records a narrated video proving it works.
-- **Flight Simulator Knowledge Checks**: The **PR (Pull Request) Review Theater**—where you inspect proposed changes before accepting them—gives you an interactive focused walkthrough and quiz to ensure you understand how the piece fits into your vision.
+- **Flight Simulator Knowledge Checks**: The **PR (Pull Request) Review Theater**—think of a Pull Request as an **Approval Packet** where the agent hands you its finished draft to inspect before anything touches your real project—gives you an interactive focused walkthrough and quiz to ensure you understand how the piece fits into your vision.
 - **Visual Blast-Radius Checks**: You see exactly what changed before approving the merge.
 
 ---
@@ -142,7 +142,7 @@ Throughout this course, you will use the visual RobOS developer applications. No
   <a class="rb-link" href="{{ '/training/for-non-developers/03-visual-task-planning.html' | relative_url }}">
     <strong>Visual Project &amp; Task Planning</strong>
     <span style="color: #c9d1d9; font-size: 0.9rem; line-height: 1.5; display: block; margin-top: 0.25rem;">
-      The anatomy of a great task, using Task Planner interactive template forms, decomposing dreams into visual task trees, and syncing to GitHub issues instantly.
+      The anatomy of a great task, using Task Planner interactive template forms, decomposing dreams into visual task trees, and syncing to your visual project board instantly.
     </span>
   </a>
 

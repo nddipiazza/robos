@@ -40,7 +40,7 @@ RobOS transforms software engineering from exhausting code monkey labor into an 
       <span style="background: rgba(0, 229, 255, 0.15); color: #00e5ff; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 9999px; text-transform: uppercase;">Live Now</span>
     </div>
     <span style="color: #c9d1d9; font-size: 0.92rem; line-height: 1.5;">
-      Zero coding required. Learn the Director Mindset, Context Engineering, and AI Generative Review-Based Development while building real flagship projects from scratch: the <strong>getemgigs.com</strong> web app and the <strong>crpg-realm</strong> tactical video game.
+      Zero coding or developer background required. Never touched GitHub, a terminal, or code in your life? Perfect. Learn the Director Mindset, Context Engineering, and Review-Based Development while building real flagship projects from scratch: the <strong>getemgigs.com</strong> web app and the <strong>crpg-realm</strong> tactical video game.
     </span>
   </a>
 

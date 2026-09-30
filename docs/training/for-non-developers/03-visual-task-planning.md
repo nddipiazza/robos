@@ -10,7 +10,7 @@ permalink: /training/for-non-developers/03-visual-task-planning.html
 # Visual Project & Task Planning
 {: .no_toc }
 
-From raw ideas to structured milestones in Task Planner: resolve design questions with interactive web forms, build a dependency task graph, and sync to GitHub Issues.
+From raw ideas to structured milestones in Task Planner: resolve design questions with interactive web forms, build a dependency task graph, and sync to your visual project board.
 {: .fs-6 .fw-300 }
 
 ## Table of contents
@@ -127,16 +127,21 @@ In Task Planner, every task has explicit prerequisites arranged in a **Directed 
 
 ---
 
-### Syncing to GitHub Issues
+### Syncing Tasks to Your Visual Project Board
 
 Once you are satisfied with the plan, click **Sync to Project**.
 
 <div style="margin: 1.5rem 0;">
-  <img src="{{ '/assets/images/screenshots/acme-petshop-step1-synced_badge_frame.png' | relative_url }}" alt="Tasks Synced to GitHub Issues" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
-  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>All tasks converted into tracked GitHub Issues with a single action.</em></p>
+  <img src="{{ '/assets/images/screenshots/acme-petshop-step1-synced_badge_frame.png' | relative_url }}" alt="Tasks Synced to Visual Project Board" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
+  <p style="text-align: center; color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem;"><em>All tasks converted into tracked, organized work cards with a single click.</em></p>
 </div>
 
-Without ever touching git commands or logging into a browser, Task Planner creates real GitHub Issues with labels, acceptance criteria, and dependency links.
+> [!NOTE]
+> **What Is an "Issue" in Software? (It's Not a Bug!)**  
+> In everyday conversation, an "issue" sounds like a bug, error, or headache. But in software development:
+> - An **"Issue" is simply a to-do card or sticky note** on a project board (just like a card on Trello, Asana, or a refrigerator checklist).
+> - Each card lists the instructions, rules, and acceptance criteria for one specific task.
+> - Programmers historically tracked these on **GitHub** (the online cloud locker for software projects). In RobOS, you never have to log into GitHub or manually manage spreadsheets—Task Planner automatically creates and organizes these task cards for you!
 
 ---
 
