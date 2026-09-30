@@ -407,6 +407,67 @@ ipcMain.handle('generate-tasks', async (_, { prompt, serverInfo }) => {
       return { ok: true, tasks: mockTasks };
     }
 
+    const pLower = (prompt || '').toLowerCase();
+    if (pLower.includes('game') || pLower.includes('potion') || pLower.includes('rpg') || pLower.includes('quest') || pLower.includes('village') || pLower.includes('hero')) {
+      const gameTasks = [
+        {
+          isEpic: true,
+          epicName: 'Village Potion Shop',
+          title: 'Epic: Village Potion Shop & Adventure Quest System',
+          body: 'An interactive village shop where hero characters converse with apothecary NPCs, purchase healing elixirs, and manage inventory gold.',
+          labels: ['epic', 'game', 'rpg'],
+          assignedRole: 'Game Developer',
+          agentPersonaId: 'urn:robos:agent:game-dev',
+        },
+        {
+          title: 'QUEST-101: Apothecary Shopkeeper NPC & Dialog Tree',
+          body: 'Place an apothecary NPC in the village square with greeting chat bubbles and interactive trade dialog.',
+          parentEpicIndex: 0,
+          labels: ['npc', 'dialog', 'village'],
+          assignedRole: 'Game Developer',
+          agentPersonaId: 'urn:robos:agent:game-dev',
+          implementationGuidance: 'Configure dialogue tree with greeting, browsing options, and farewell messages.',
+        },
+        {
+          title: 'QUEST-102: Healing Potion Item & Inventory Bag',
+          body: 'Define red healing potion item restoring 25 HP upon drink, with inventory slot icon and carry limit.',
+          parentEpicIndex: 0,
+          labels: ['items', 'inventory', 'player'],
+          assignedRole: 'Game Developer',
+          agentPersonaId: 'urn:robos:agent:game-dev',
+          implementationGuidance: 'Register potion item in items catalog with health restore effect and stack size 10.',
+        },
+        {
+          title: 'QUEST-103: Gold Coin Economy & Trading Counter',
+          body: 'Trade counter charging 50 gold coins per potion with instant player wallet balance deduction.',
+          parentEpicIndex: 0,
+          labels: ['economy', 'trading', 'gold'],
+          assignedRole: 'Game Developer',
+          agentPersonaId: 'urn:robos:agent:game-dev',
+          implementationGuidance: 'Check player has >= 50 gold before purchase and deduct funds atomically.',
+        },
+        {
+          title: 'QUEST-104: Visual Shop Window & Inventory HUD',
+          body: 'Create clean, clickable game interface displaying item prices, current party gold, and buy button.',
+          parentEpicIndex: 0,
+          labels: ['hud', 'screens', 'interface'],
+          assignedRole: 'Frontend Web Developer',
+          agentPersonaId: 'urn:robos:agent:frontend-web-dev',
+          implementationGuidance: 'Render shop overlay window with responsive item cards and purchase sound trigger.',
+        },
+        {
+          title: 'QUEST-105: Sound Effects & Cheerful Greeting Audio',
+          body: 'Add audio clips for door bell chime, shopkeeper greeting voice, coin rattle, and potion gulp.',
+          parentEpicIndex: 0,
+          labels: ['audio', 'sound-effects', 'music'],
+          assignedRole: 'Game Developer',
+          agentPersonaId: 'urn:robos:agent:game-dev',
+          implementationGuidance: 'Hook up 16-bit sound effect cues for chat open, item purchase, and drink animation.',
+        },
+      ];
+      return { ok: true, tasks: gameTasks };
+    }
+
     const nonTechTasks = [
       {
         isEpic: true,

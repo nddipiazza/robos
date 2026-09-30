@@ -608,7 +608,7 @@ function getPromptValue() {
 }
 
 // ── Form-Based AI Clarification Wizard ───────────────────────────────────────
-const ARCH_QUESTIONS = [
+const DEFAULT_POLYGLOT_QUESTIONS = [
   {
     id: 'messaging',
     step: 'Question 1 of 2: Messaging & Event Pipeline',
@@ -633,22 +633,81 @@ const ARCH_QUESTIONS = [
   }
 ];
 
+const NON_TECH_QUESTIONS = [
+  {
+    id: 'matching',
+    step: 'Question 1 of 2: Lifestyle Matchmaker Experience',
+    prompt: 'How should prospective families discover and match with compatible rescue pets?',
+    options: [
+      { id: 'quiz', label: 'Lifestyle Compatibility Questionnaire & Badges (Recommended)', desc: 'Interactive quiz evaluating living space, activity level, and family habits with personality badges.' },
+      { id: 'gallery', label: 'Simple Filterable Photo Gallery', desc: 'Standard photo grid filterable by dog/cat, age, and breed without questionnaire matching.' },
+      { id: 'map', label: 'Local Rescue Shelter Map View', desc: 'Map-first discovery view showing available animals at neighboring rescue centers.' }
+    ],
+    selected: 'quiz'
+  },
+  {
+    id: 'visits',
+    step: 'Question 2 of 2: Shelter Meet-and-Greet Booking',
+    prompt: 'How should families schedule appointments to visit and play with rescue animals?',
+    options: [
+      { id: 'calendar', label: 'Online Timeslot Booking with Volunteer Review (Recommended)', desc: 'Select an available 30-minute play slot and submit a simple application for volunteer review.' },
+      { id: 'walkin', label: 'Open Walk-In Visiting Hours Only', desc: 'Display open shelter visiting hours and collect paper visitor sign-in sheets on-site.' },
+      { id: 'phone', label: 'Telephone Reservation Queue', desc: 'Direct visitors to call the shelter office to arrange an appointment.' }
+    ],
+    selected: 'calendar'
+  }
+];
+
+const GAME_QUESTIONS = [
+  {
+    id: 'interaction',
+    step: 'Question 1 of 2: Shopkeeper Interaction Style',
+    prompt: 'How should hero characters interact with the village apothecary shopkeeper?',
+    options: [
+      { id: 'proximity', label: 'Proximity Pop-Up & Comic Chat Bubble (Recommended)', desc: 'Walking near the merchant shows an "E - Talk" prompt and opens a comic chat bubble above their head.' },
+      { id: 'modal', label: 'Full-Screen Visual Novel Dialog Window', desc: 'Pauses gameplay and slides up character portraits with branching conversation choices.' },
+      { id: 'collision', label: 'Automatic Open on Tile Collision', desc: 'Stepping onto the shop threshold tile immediately opens the buy/sell merchant screen.' }
+    ],
+    selected: 'proximity'
+  },
+  {
+    id: 'potion-use',
+    step: 'Question 2 of 2: Potion Effect & Inventory Controls',
+    prompt: 'How should healing potions be consumed during adventure gameplay?',
+    options: [
+      { id: 'quickslot', label: 'Instant Drink from Quick-Slot Belt (Recommended)', desc: 'Players press hotkey 1 to instantly sip a potion for 25 HP without opening menus.' },
+      { id: 'inventory-only', label: 'Turn-Based Inventory Bag Use Only', desc: 'Requires pausing or waiting for player turn to open backpack and select use.' },
+      { id: 'auto-sip', label: 'Automatic Sip on Low Health', desc: 'Automatically consumes a potion from inventory when hero health drops below 20% HP.' }
+    ],
+    selected: 'quickslot'
+  }
+];
+
+let activeQuestions = GAME_QUESTIONS;
 let currentQuestionIndex = 0;
 let userAnswers = {};
 
 function startQuestionWizard() {
   currentQuestionIndex = 0;
-  userAnswers = {
-    messaging: 'kafka',
-    security: 'vaccine-gateway'
-  };
+  const prompt = getPromptValue().toLowerCase();
+  const isGame = prompt.includes('game') || prompt.includes('potion') || prompt.includes('rpg') || prompt.includes('quest') || prompt.includes('village') || prompt.includes('hero');
+  const isPolyglot = prompt.includes('kafka') || prompt.includes('spring') || prompt.includes('polyglot') || prompt.includes('typespec');
+  if (isGame) {
+    activeQuestions = GAME_QUESTIONS;
+  } else if (isPolyglot) {
+    activeQuestions = DEFAULT_POLYGLOT_QUESTIONS;
+  } else {
+    activeQuestions = NON_TECH_QUESTIONS;
+  }
+  userAnswers = {};
+  activeQuestions.forEach(q => { userAnswers[q.id] = q.selected; });
   const card = document.getElementById('ai-questions-card');
   if (card) card.style.display = 'flex';
   renderCurrentQuestion();
 }
 
 function renderCurrentQuestion() {
-  const q = ARCH_QUESTIONS[currentQuestionIndex];
+  const q = activeQuestions[currentQuestionIndex];
   if (!q) return;
 
   const stepEl = document.getElementById('question-step-indicator');
@@ -686,12 +745,12 @@ function renderCurrentQuestion() {
   const submitBtn = document.getElementById('btn-question-submit');
 
   if (prevBtn) prevBtn.style.display = currentQuestionIndex > 0 ? 'inline-flex' : 'none';
-  if (nextBtn) nextBtn.style.display = currentQuestionIndex < ARCH_QUESTIONS.length - 1 ? 'inline-flex' : 'none';
-  if (submitBtn) submitBtn.style.display = currentQuestionIndex === ARCH_QUESTIONS.length - 1 ? 'inline-flex' : 'none';
+  if (nextBtn) nextBtn.style.display = currentQuestionIndex < activeQuestions.length - 1 ? 'inline-flex' : 'none';
+  if (submitBtn) submitBtn.style.display = currentQuestionIndex === activeQuestions.length - 1 ? 'inline-flex' : 'none';
 }
 
 function handleNextQuestion() {
-  if (currentQuestionIndex < ARCH_QUESTIONS.length - 1) {
+  if (currentQuestionIndex < activeQuestions.length - 1) {
     currentQuestionIndex++;
     renderCurrentQuestion();
   }
@@ -1127,10 +1186,18 @@ async function handleSubmitAnswers() {
     ticketStatus:   null,
   }));
 
+  const rawPrompt = getPromptValue().toLowerCase();
+  const isGame = rawPrompt.includes('game') || rawPrompt.includes('potion') || rawPrompt.includes('rpg') || rawPrompt.includes('quest') || rawPrompt.includes('village') || rawPrompt.includes('hero');
+  const isPolyglot = rawPrompt.includes('kafka') || rawPrompt.includes('spring') || rawPrompt.includes('polyglot') || rawPrompt.includes('typespec');
+
   if (projectFeatures.length === 0) {
+    let featName = 'Feature 1: Pet Discovery & Adoption Flow';
+    if (isGame) featName = 'Feature 1: Village Potion Shop & Trading';
+    else if (isPolyglot) featName = 'Feature 1: Platform Core & APIs';
+
     projectFeatures.push({
       id: 'feat-core',
-      name: 'Feature 1: Platform Core & APIs',
+      name: featName,
       tasks: [...tasks]
     });
     activeFeatureId = 'feat-core';
@@ -1138,10 +1205,22 @@ async function handleSubmitAnswers() {
   }
   const techStackInput = document.getElementById('project-tech-stack');
   if (techStackInput && !techStackInput.value) {
-    techStackInput.value = 'Java 21 Spring Boot 3 + React 18 + TypeSpec + Kafka + PostgreSQL';
+    if (isGame) {
+      techStackInput.value = '2D Fantasy Adventure Game (Godot & HTML5)';
+    } else if (isPolyglot) {
+      techStackInput.value = 'Java 21 Spring Boot 3 + React 18 + TypeSpec + Kafka + PostgreSQL';
+    } else {
+      techStackInput.value = 'Modern Web App (Next.js & Postgres)';
+    }
   }
   if (projectRepos.length === 0) {
-    projectRepos = ['petstore-api (Java)', 'petstore-web (React)', 'petstore-common (TypeSpec)'];
+    if (isGame) {
+      projectRepos = ['village-scenes', 'items-catalog', 'game-audio'];
+    } else if (isPolyglot) {
+      projectRepos = ['petstore-api (Java)', 'petstore-web (React)', 'petstore-common (TypeSpec)'];
+    } else {
+      projectRepos = ['pet-adoption-web', 'shelter-records'];
+    }
     renderRepoTags();
   }
 
