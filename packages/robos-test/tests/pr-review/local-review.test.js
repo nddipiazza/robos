@@ -1,0 +1,25 @@
+'use strict';
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const {ShowMeSession,loadLocalReview}=require('../../../pr-review/lib/local-review');
+const runner=code=>({command:process.execPath,args:['-e',code],timeoutMs:1000});
+test('unconfigured runner refuses to claim success',async()=>{assert.equal((await new ShowMeSession().start()).ok,false);});
+test('process failure never reports handoff',async()=>{const s=new ShowMeSession(runner('process.exit(2)'));const r=await s.start();assert.equal(r.ok,false);assert.match(r.error,/exited \(2\)/);assert.equal(s.control('complete').ok,false);});
+test('ready requires explicit runner checkpoint and completion requires active handoff',async()=>{const s=new ShowMeSession(runner(`console.log(JSON.stringify({status:'HANDOFF_READY',message:'Actual assertion passed'}));process.stdin.on('data',()=>process.exit(0));`));const r=await s.start();assert.equal(r.ok,true);assert.equal(r.handoffActive,true);assert.match(r.steps[0].text,/Actual assertion/);assert.equal((await s.start()).ok,false);assert.equal(s.control('complete').status,'REVIEWER_CONFIRMED');assert.equal(s.control('complete').ok,false);s.stop();});
+test('timeout fails rather than showing ready',async()=>{const s=new ShowMeSession({...runner('setInterval(()=>{},1000)'),timeoutMs:50});assert.equal((await s.start()).ok,false);});
+test('no launch manifest is a normal GitHub review',()=>assert.equal(loadLocalReview(),null));
+test('focus does not complete or verify a handoff',async()=>{const s=new ShowMeSession(runner(`console.log(JSON.stringify({status:'HANDOFF_READY'}));process.stdin.resume();`));await s.start();assert.equal(s.control('focus').status,'HANDOFF_READY');assert.equal(s.ready,true);s.stop();});
+test('renderer theater controls preserve strict CSP without inline scripts',()=>{const fs=require('node:fs');const path=require('node:path');const html=fs.readFileSync(path.join(__dirname,'../../../pr-review/renderer/index.html'),'utf8');assert.match(html,/default-src 'self'/);assert.doesNotMatch(html,/script-src[^;]*unsafe-inline/);assert.doesNotMatch(html,/onclick="window\./);assert.match(html,/data-theater-action="executeAgentShowFix"/);});
+test('local manifest reads real committed diff and rejects shell commands',()=>{
+ const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
+ const {execFileSync}=require('node:child_process');
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'robos-local-review-'));
+ const git=args=>execFileSync('git',['-C',dir,...args],{stdio:'pipe'});
+ git(['init']);git(['config','user.name','Test']);git(['config','user.email','test@example.invalid']);
+ fs.writeFileSync(path.join(dir,'app.txt'),'before\n');git(['add','app.txt']);git(['commit','-m','before']);
+ fs.writeFileSync(path.join(dir,'app.txt'),'after\n');git(['add','app.txt']);git(['commit','-m','after']);
+ const file=path.join(dir,'review.json');const config={workspace:dir,title:'Local change',baseRef:'HEAD~1'};
+ fs.writeFileSync(file,JSON.stringify(config));const review=loadLocalReview(file);
+ assert.match(review.diffPatch,/\+after/);assert.deepEqual(review.changedFiles,['app.txt']);assert.equal(review.pr.local,true);
+ fs.writeFileSync(file,JSON.stringify({...config,runner:{command:'echo unsafe',args:[]}}));assert.throws(()=>loadLocalReview(file),/absolute executable/);
+});

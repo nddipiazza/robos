@@ -1,5 +1,6 @@
 const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('api', {
+  getLocalReview: () => ipcRenderer.invoke('get-local-review'),
   getConfig:             ()     => ipcRenderer.invoke('get-config'),
   fetchPRs:              (opts) => ipcRenderer.invoke('fetch-prs', opts),
   fetchPRDetail:         (opts) => ipcRenderer.invoke('fetch-pr-detail', opts),

@@ -5,6 +5,12 @@ const fs   = require('fs');
 const os   = require('os');
 const { execSync } = require('child_process');
 
+const { loadLocalReview, ShowMeSession } = require('./lib/local-review');
+const localReview = loadLocalReview(process.env.ROBOS_LOCAL_REVIEW);
+const showMeSession = new ShowMeSession(localReview?.runner);
+app.on('before-quit', () => showMeSession.stop());
+ipcMain.handle('get-local-review', () => localReview ? { ok: true, pr: localReview.pr } : null);
+
 const SETTINGS_FILE = path.join(os.homedir(), '.config', 'robos', 'settings.json');
 
 // Debug server (optional)
@@ -68,7 +74,7 @@ function getRepos(server) {
 
 let win;
 app.setName('pr-review');
-app.setPath('userData', path.join(process.env.HOME || '/home/robos', '.config', 'robos', 'electron', 'pr-review'));
+app.setPath('userData', path.join(process.env.HOME || '/home/robos', '.config', 'robos', 'electron', localReview ? 'pr-review-local' : 'pr-review'));
 if (!app.requestSingleInstanceLock()) { app.quit(); process.exit(0); }
 app.on('second-instance', () => {
   const w = require('electron').BrowserWindow.getAllWindows()[0];
@@ -464,6 +470,15 @@ ipcMain.handle('get-ide-status', async () => {
 
 ipcMain.handle('fetch-pr-theater-context', async (_, opts = {}) => {
   try {
+    if (localReview) return {
+      ok: true, local: true, pr: localReview.pr,
+      targetApp: { title: localReview.title },
+      fileDiffs: getGraphStore()?.parseUnifiedDiff(localReview.diffPatch, localReview.changedFiles) || [],
+      proofOfWorkVideo: { title: 'Recorded local evidence', url: localReview.videoUrl, chapters: [], vttTranscript: localReview.summary || '' },
+      showTheFix: { fixType: 'frontend', frontendTarget: { description: localReview.showMeDescription || 'Run the configured local demonstration and leave its browser open for review.' } },
+      theaterConfig: { stage1_elearning: { enabled: false, required: false, lockDiffsUntilPassed: false }, stage2_livingDocs: { enabled: false }, stage4_ideBridge: { enabled: false }, stage7_signOff: { enabled: false }, stage6_showTheFix: { required: true } },
+      validationGates: { fixDemonstrated: false }
+    };
     const store = getGraphStore();
     let diffPatch = opts.diffPatch || null;
     if (!diffPatch && opts.repo && opts.number) {
@@ -796,6 +811,7 @@ ipcMain.handle('launch-ide-branch-diff', async (_, { ide, repo, number, baseBran
 });
 
 ipcMain.handle('submit-pr-theater-review', async (_, { repo, number, action, body, kgraphBranch, gates } = {}) => {
+  if (localReview) return { ok: false, error: 'Local draft review cannot submit or merge a GitHub PR.' };
   try {
     if (action === 'approve' && gates && (!gates.elearningPassed || !gates.ciPassed)) {
       return {
@@ -1060,6 +1076,7 @@ ipcMain.handle('save-pr-theater-config', async (_, opts = {}) => {
 });
 
 ipcMain.handle('run-agent-show-fix', async (_, { type, target, repo, number, prNumber, headBranch, filePath, line } = {}) => {
+  if (localReview) return showMeSession.start();
   const targetType = target || type || 'backend';
   const prNum = prNumber || number || 12;
   const targetFile = filePath || 'src/main/java/com/acme/petshop/client/VaccineGatewayClient.java';
@@ -1124,31 +1141,7 @@ ipcMain.handle('run-agent-show-fix', async (_, { type, target, repo, number, prN
       canResume: true
     };
   } else if (targetType === 'frontend') {
-    const targetUrl = `http://localhost:3000/pets/adopt?fix=PET-105&pr=${prNum}`;
-    try {
-      shell.openExternal(targetUrl);
-    } catch {}
-
-    const logs = [
-      `[00:00.12] Provisioned frontend web sandbox on local dev server`,
-      `[00:01.30] Launched visible browser window (headless: false) on active display`,
-      `[00:02.45] Navigated to ${targetUrl}`,
-      `[00:03.80] Executed Playwright E2E fixture: filled adopter details and rabies certificate upload`,
-      `[00:04.90] Reached interactive breakpoint: PAUSED FOR REVIEWER HANDOFF`
-    ];
-
-    return {
-      ok: true,
-      type: 'frontend',
-      status: 'HANDOFF_READY',
-      browser: 'Chromium (Headed Display :0)',
-      targetUrl,
-      checkpointStep: 'Step 3 of 4: Adoption Form Verification Checkpoint',
-      logs,
-      steps: logs.map(l => ({ text: l })),
-      stepOutput: 'Browser opened in visible mode! Take control of the browser window to test the form live, or click "Handoff Complete".',
-      handoffActive: true
-    };
+    return { ok: false, error: 'Configure a trusted local review manifest with a Show me runner. No frontend demonstration has been run.' };
   } else {
     const appSocket = process.env.ROBOS_DM_SOCKET || `/tmp/robos-dm-${process.getuid ? process.getuid() : 1000}.sock`;
     try {
@@ -1185,6 +1178,7 @@ ipcMain.handle('run-agent-show-fix', async (_, { type, target, repo, number, prN
 });
 
 ipcMain.handle('resume-agent-show-fix-handoff', async (_, { type, action = 'complete' } = {}) => {
+  if (localReview) return showMeSession.control(action);
   return {
     ok: true,
     type,

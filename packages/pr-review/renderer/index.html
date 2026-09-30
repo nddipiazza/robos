@@ -194,44 +194,44 @@
 
         <!-- Stage Navigation Stepper -->
         <div class="theater-stepper" id="theater-stepper">
-          <button class="step-btn active" data-stage="1" id="step-btn-1" onclick="window.setTheaterStage(1)">
+          <button class="step-btn active" data-stage="1" id="step-btn-1" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="1">
             <span class="step-num">1</span> <span class="step-label">Training &amp; eLearning</span>
             <span class="step-status" id="step-status-1">⏳</span>
           </button>
-          <button class="step-btn" data-stage="2" id="step-btn-2" onclick="window.setTheaterStage(2)">
+          <button class="step-btn" data-stage="2" id="step-btn-2" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="2">
             <span class="step-num">2</span> <span class="step-label">Living Docs &amp; Flow</span>
             <span class="step-status" id="step-status-2">○</span>
           </button>
-          <button class="step-btn" data-stage="3" id="step-btn-3" onclick="window.setTheaterStage(3)">
+          <button class="step-btn" data-stage="3" id="step-btn-3" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="3">
             <span class="step-num">3</span> <span class="step-label">File Diff Viewer</span>
             <span class="step-status" id="step-status-3">○</span>
           </button>
-          <button class="step-btn" data-stage="4" id="step-btn-4" onclick="window.setTheaterStage(4)">
+          <button class="step-btn" data-stage="4" id="step-btn-4" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="4">
             <span class="step-num">4</span> <span class="step-label">IDE Branch Diffs</span>
             <span class="step-status" id="step-status-4">○</span>
           </button>
-          <button class="step-btn" data-stage="5" id="step-btn-5" onclick="window.setTheaterStage(5)">
+          <button class="step-btn" data-stage="5" id="step-btn-5" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="5">
             <span class="step-num">5</span> <span class="step-label">Evidence Video</span>
             <span class="step-status" id="step-status-5">○</span>
           </button>
-          <button class="step-btn" data-stage="6" id="step-btn-6" onclick="window.setTheaterStage(6)">
+          <button class="step-btn" data-stage="6" id="step-btn-6" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="6">
             <span class="step-num">6</span> <span class="step-label">Show Me The Fix</span>
             <span class="step-status" id="step-status-6">○</span>
           </button>
-          <button class="step-btn" data-stage="7" id="step-btn-7" onclick="window.setTheaterStage(7)">
+          <button class="step-btn" data-stage="7" id="step-btn-7" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="7">
             <span class="step-num">7</span> <span class="step-label">Sign-Off &amp; Merge</span>
             <span class="step-status" id="step-status-7">○</span>
           </button>
         </div>
 
         <div class="theater-actions">
-          <button id="btn-theater-config" class="btn-theater-action btn-theater-settings" onclick="window.openTheaterConfigModal()" title="Customize PR Review Stages &amp; Team KGraph Policy">
+          <button id="btn-theater-config" class="btn-theater-action btn-theater-settings" data-theater-action="openTheaterConfigModal" data-theater-event="click" title="Customize PR Review Stages &amp; Team KGraph Policy">
             ⚙️ Stage Policy
           </button>
-          <button id="btn-theater-expand" class="btn-theater-action" onclick="window.toggleTheaterFullscreen()" title="Toggle Fullscreen Expansion">
+          <button id="btn-theater-expand" class="btn-theater-action" data-theater-action="toggleTheaterFullscreen" data-theater-event="click" title="Toggle Fullscreen Expansion">
             ⛶
           </button>
-          <button id="btn-exit-theater" class="btn-theater-exit" onclick="window.exitTheater()" title="Exit Review Theater">&times; Exit</button>
+          <button id="btn-exit-theater" class="btn-theater-exit" data-theater-action="exitTheater" data-theater-event="click" title="Exit Review Theater">&times; Exit</button>
         </div>
       </div>
 
@@ -257,7 +257,7 @@
               <strong>Anti-Rubber-Stamp Policy Enforced:</strong>
               <span>Reviewers must pass the PR Knowledge Check (&ge;80% score) to unlock code diff inspection and merge sign-off. Prove you know what is being changed before looking at code!</span>
             </div>
-            <button type="button" class="btn-app-elearning" id="btn-open-app-elearning" onclick="window.openAppCourseInHub()">
+            <button type="button" class="btn-app-elearning" id="btn-open-app-elearning" data-theater-action="openAppCourseInHub" data-theater-event="click">
               🎓 App Architecture Masterclass
             </button>
           </div>
@@ -283,7 +283,7 @@
               <form id="theater-quiz-form" onsubmit="return false;">
                 <div id="theater-quiz-questions"></div>
                 <div class="quiz-actions-row">
-                  <button type="button" class="btn-primary" id="btn-submit-quiz" onclick="window.submitTheaterQuiz()">Submit Knowledge Check</button>
+                  <button type="button" class="btn-primary" id="btn-submit-quiz" data-theater-action="submitTheaterQuiz" data-theater-event="click">Submit Knowledge Check</button>
                   <span id="quiz-feedback-pill" class="hidden"></span>
                 </div>
               </form>
@@ -300,7 +300,7 @@
 
           <div class="stage-nav-footer">
             <button class="btn-stage-nav" disabled>&larr; Previous Stage</button>
-            <button class="btn-stage-nav btn-stage-next" onclick="window.setTheaterStage(2)">Next: Living Docs &amp; Flow &rarr;</button>
+            <button class="btn-stage-nav btn-stage-next" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="2">Next: Living Docs &amp; Flow &rarr;</button>
           </div>
         </div>
 
@@ -352,7 +352,7 @@
             <div class="rest-endpoint-bar">
               <span class="rest-method-tag" id="rest-bar-method">POST</span>
               <input type="text" id="rest-url-input" class="rest-url-field" value="http://localhost:8080/api/v1/pets/adopt" readonly>
-              <button type="button" class="btn-primary btn-execute-rest" id="btn-execute-rest" onclick="window.executeTheaterRestCall()">
+              <button type="button" class="btn-primary btn-execute-rest" id="btn-execute-rest" data-theater-action="executeTheaterRestCall" data-theater-event="click">
                 🚀 Send Request
               </button>
             </div>
@@ -377,8 +377,8 @@
           </div>
 
           <div class="stage-nav-footer">
-            <button class="btn-stage-nav" onclick="window.setTheaterStage(1)">&larr; Previous: Training &amp; eLearning</button>
-            <button class="btn-stage-nav btn-stage-next" onclick="window.setTheaterStage(3)">Next: File Diff Viewer &rarr;</button>
+            <button class="btn-stage-nav" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="1">&larr; Previous: Training &amp; eLearning</button>
+            <button class="btn-stage-nav btn-stage-next" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="3">Next: File Diff Viewer &rarr;</button>
           </div>
         </div>
 
@@ -390,8 +390,8 @@
               <p>Review code modifications with syntax highlighting, unified/split views, hunk line numbers, and inline audit notes.</p>
             </div>
             <div class="diff-view-controls">
-              <button class="btn-toggle active" id="btn-diff-mode-unified" onclick="window.setDiffMode('unified')">Unified</button>
-              <button class="btn-toggle" id="btn-diff-mode-split" onclick="window.setDiffMode('split')">Side-by-Side</button>
+              <button class="btn-toggle active" id="btn-diff-mode-unified" data-theater-action="setDiffMode" data-theater-event="click" data-theater-arg="unified">Unified</button>
+              <button class="btn-toggle" id="btn-diff-mode-split" data-theater-action="setDiffMode" data-theater-event="click" data-theater-arg="split">Side-by-Side</button>
             </div>
           </div>
 
@@ -410,7 +410,7 @@
                   <div class="lock-icon">🔒</div>
                   <h3>CODE DIFFS LOCKED</h3>
                   <p><strong>Anti-Rubber-Stamp Policy Enforced:</strong> You must complete Stage 1 (PR Masterclass &amp; Knowledge Check) with &ge;80% score before inspecting raw code diffs.</p>
-                  <button type="button" class="btn-primary" onclick="window.setTheaterStage(1)">👉 Take Knowledge Check (Stage 1)</button>
+                  <button type="button" class="btn-primary" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="1">👉 Take Knowledge Check (Stage 1)</button>
                 </div>
               </div>
               <div class="diff-file-header">
@@ -422,8 +422,8 @@
           </div>
 
           <div class="stage-nav-footer">
-            <button class="btn-stage-nav" onclick="window.setTheaterStage(2)">&larr; Previous: Living Docs</button>
-            <button class="btn-stage-nav btn-stage-next" onclick="window.setTheaterStage(4)">Next: IDE Branch Diffs &rarr;</button>
+            <button class="btn-stage-nav" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="2">&larr; Previous: Living Docs</button>
+            <button class="btn-stage-nav btn-stage-next" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="4">Next: IDE Branch Diffs &rarr;</button>
           </div>
         </div>
 
@@ -455,7 +455,7 @@
                 <strong>Breakpoint Target:</strong> <code id="intellij-breakpoint-target">VaccineGatewayClient.java:34</code> (SSLContext Handshake)
               </div>
               <div class="ide-action-buttons">
-                <button class="btn-ide btn-ide-intellij" onclick="window.launchTheaterIDE('intellij')">
+                <button class="btn-ide btn-ide-intellij" data-theater-action="launchTheaterIDE" data-theater-event="click" data-theater-arg="intellij">
                   🚀 Compare Branches in IntelliJ
                 </button>
               </div>
@@ -476,7 +476,7 @@
                 <strong>Branch Diff Command:</strong> <code>code --diff &lt;base&gt; &lt;head&gt;</code>
               </div>
               <div class="ide-action-buttons">
-                <button class="btn-ide btn-ide-vscode" onclick="window.launchTheaterIDE('vscode')">
+                <button class="btn-ide btn-ide-vscode" data-theater-action="launchTheaterIDE" data-theater-event="click" data-theater-arg="vscode">
                   🚀 Open in VS Code PR Extension
                 </button>
               </div>
@@ -499,10 +499,10 @@
                 <span class="debug-target-desc">(mTLS Handshake before adoption transaction)</span>
               </div>
               <div class="debug-actions-btns">
-                <button type="button" class="btn-ide btn-ide-intellij" id="btn-fire-breakpoint-intellij" onclick="window.launchTheaterBreakpoint('intellij')">
+                <button type="button" class="btn-ide btn-ide-intellij" id="btn-fire-breakpoint-intellij" data-theater-action="launchTheaterBreakpoint" data-theater-event="click" data-theater-arg="intellij">
                   🔥 Start App with Breakpoint in IntelliJ (Port 63343)
                 </button>
-                <button type="button" class="btn-ide btn-ide-vscode" id="btn-fire-breakpoint-vscode" onclick="window.launchTheaterBreakpoint('vscode')">
+                <button type="button" class="btn-ide btn-ide-vscode" id="btn-fire-breakpoint-vscode" data-theater-action="launchTheaterBreakpoint" data-theater-event="click" data-theater-arg="vscode">
                   🔥 Start App with Breakpoint in VS Code
                 </button>
               </div>
@@ -513,8 +513,8 @@
               <div class="debug-controls-toolbar">
                 <span class="thread-badge">⏸️ Thread Suspended: <strong id="debug-thread-name">http-nio-8080-exec-1</strong></span>
                 <div class="debug-step-buttons">
-                  <button type="button" class="btn-debug-step" onclick="window.resumeTheaterBreakpoint('step')">↷ Step Over (F8)</button>
-                  <button type="button" class="btn-debug-resume" onclick="window.resumeTheaterBreakpoint('resume')">▶ Resume Execution (F9)</button>
+                  <button type="button" class="btn-debug-step" data-theater-action="resumeTheaterBreakpoint" data-theater-event="click" data-theater-arg="step">↷ Step Over (F8)</button>
+                  <button type="button" class="btn-debug-resume" data-theater-action="resumeTheaterBreakpoint" data-theater-event="click" data-theater-arg="resume">▶ Resume Execution (F9)</button>
                 </div>
               </div>
 
@@ -541,8 +541,8 @@
           <div class="ide-feedback-output" id="theater-ide-feedback" style="display:none;"></div>
 
           <div class="stage-nav-footer">
-            <button class="btn-stage-nav" onclick="window.setTheaterStage(3)">&larr; Previous: File Diff Viewer</button>
-            <button class="btn-stage-nav btn-stage-next" onclick="window.setTheaterStage(5)">Next: Evidence Video &rarr;</button>
+            <button class="btn-stage-nav" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="3">&larr; Previous: File Diff Viewer</button>
+            <button class="btn-stage-nav btn-stage-next" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="5">Next: Evidence Video &rarr;</button>
           </div>
         </div>
 
@@ -560,10 +560,10 @@
 
           <!-- Dual-Mode Proof-of-Work Canvas Selector -->
           <div class="canvas-mode-bar">
-            <button type="button" class="canvas-mode-btn active" id="btn-canvas-video" onclick="window.setProofCanvasMode('video')">
+            <button type="button" class="canvas-mode-btn active" id="btn-canvas-video" data-theater-action="setProofCanvasMode" data-theater-event="click" data-theater-arg="video">
               🎥 Recorded 1080p Xvfb Video Walkthrough
             </button>
-            <button type="button" class="canvas-mode-btn" id="btn-canvas-desktop" onclick="window.setProofCanvasMode('desktop')">
+            <button type="button" class="canvas-mode-btn" id="btn-canvas-desktop" data-theater-action="setProofCanvasMode" data-theater-event="click" data-theater-arg="desktop">
               🖥️ Run Live in Current Desktop Session
             </button>
           </div>
@@ -607,7 +607,7 @@
                 <span class="desktop-status-text">Autonomous Robot Ready to Execute on Current Workstation Display</span>
               </div>
               <div class="desktop-actions">
-                <button type="button" class="btn-primary btn-run-desktop" id="btn-run-desktop" onclick="window.runLiveDesktopSession()">
+                <button type="button" class="btn-primary btn-run-desktop" id="btn-run-desktop" data-theater-action="runLiveDesktopSession" data-theater-event="click">
                   ▶ Run Live Robot Proof on Display
                 </button>
               </div>
@@ -626,8 +626,8 @@
           </div>
 
           <div class="stage-nav-footer">
-            <button class="btn-stage-nav" onclick="window.setTheaterStage(4)">&larr; Previous: IDE Branch Diffs</button>
-            <button class="btn-stage-nav btn-stage-next" onclick="window.setTheaterStage(6)">Next: Show Me The Fix &rarr;</button>
+            <button class="btn-stage-nav" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="4">&larr; Previous: IDE Branch Diffs</button>
+            <button class="btn-stage-nav btn-stage-next" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="6">Next: Show Me The Fix &rarr;</button>
           </div>
         </div>
 
@@ -647,16 +647,16 @@
           <div class="fix-type-selector-bar">
             <span class="fix-type-label">Demonstration Target:</span>
             <div class="fix-type-buttons">
-              <button type="button" class="fix-type-btn active" id="btn-fix-type-auto" onclick="window.setFixTypeTarget('auto')">
+              <button type="button" class="fix-type-btn active" id="btn-fix-type-auto" data-theater-action="setFixTypeTarget" data-theater-event="click" data-theater-arg="auto">
                 ⚡ Auto-Detect (<span id="auto-detected-badge">Backend</span>)
               </button>
-              <button type="button" class="fix-type-btn" id="btn-fix-type-backend" onclick="window.setFixTypeTarget('backend')">
+              <button type="button" class="fix-type-btn" id="btn-fix-type-backend" data-theater-action="setFixTypeTarget" data-theater-event="click" data-theater-arg="backend">
                 ☕ Backend (IDE + App Launcher)
               </button>
-              <button type="button" class="fix-type-btn" id="btn-fix-type-frontend" onclick="window.setFixTypeTarget('frontend')">
+              <button type="button" class="fix-type-btn" id="btn-fix-type-frontend" data-theater-action="setFixTypeTarget" data-theater-event="click" data-theater-arg="frontend">
                 🌐 Frontend (Browser + Handoff)
               </button>
-              <button type="button" class="fix-type-btn" id="btn-fix-type-desktop" onclick="window.setFixTypeTarget('desktop')">
+              <button type="button" class="fix-type-btn" id="btn-fix-type-desktop" data-theater-action="setFixTypeTarget" data-theater-event="click" data-theater-arg="desktop">
                 🖥️ Desktop App (IPC + DevTools)
               </button>
             </div>
@@ -674,7 +674,7 @@
             </p>
 
             <div class="fix-action-banner">
-              <button type="button" class="btn-primary btn-launch-show-fix" id="btn-run-show-fix" onclick="window.executeAgentShowFix()">
+              <button type="button" class="btn-primary btn-launch-show-fix" id="btn-run-show-fix" data-theater-action="executeAgentShowFix" data-theater-event="click">
                 ▶ Run Agent "Show Fix" Demonstration
               </button>
               <span id="fix-execution-status" class="fix-status-indicator">Ready to run demonstration</span>
@@ -686,13 +686,13 @@
             <div class="handoff-pulse-icon">🎮</div>
             <div class="handoff-content">
               <strong>Interactive Reviewer Handoff Active:</strong>
-              <span>Visible browser window opened! Take control of the browser to interact with the adoption form live. When finished, mark the handoff complete.</span>
+              <span>Visible browser window opened! Take control of the browser to interact with the application live. When finished, mark the handoff complete.</span>
             </div>
             <div class="handoff-actions">
-              <button type="button" class="btn-handoff-pulse" onclick="window.focusBrowserHandoff()">
+              <button type="button" class="btn-handoff-pulse" data-theater-action="focusBrowserHandoff" data-theater-event="click">
                 🎮 Focus Browser Window
               </button>
-              <button type="button" class="btn-primary btn-complete-handoff" onclick="window.completeBrowserHandoff()">
+              <button type="button" class="btn-primary btn-complete-handoff" data-theater-action="completeBrowserHandoff" data-theater-event="click">
                 ✓ Handoff Complete / Fix Verified
               </button>
             </div>
@@ -707,8 +707,8 @@
               <span id="backend-bp-vals">sslContext: TLSv1.3 [ACME-ROOT-CA] &middot; petId: "PET-105-VAX"</span>
             </div>
             <div class="bp-actions">
-              <button type="button" class="btn-debug-step" onclick="window.stepBackendFix()">↷ Step In IDE</button>
-              <button type="button" class="btn-debug-resume" onclick="window.resumeBackendFix()">▶ Resume Execution</button>
+              <button type="button" class="btn-debug-step" data-theater-action="stepBackendFix" data-theater-event="click">↷ Step In IDE</button>
+              <button type="button" class="btn-debug-resume" data-theater-action="resumeBackendFix" data-theater-event="click">▶ Resume Execution</button>
             </div>
           </div>
 
@@ -729,14 +729,14 @@
           <!-- Stage Confirmation Card -->
           <div class="theater-card stage-confirm-card" style="margin-top:14px;">
             <label class="confirm-check-label">
-              <input type="checkbox" id="check-fix-demonstrated" onchange="window.toggleFixDemonstrated(this.checked)">
+              <input type="checkbox" id="check-fix-demonstrated" data-theater-action="toggleFixDemonstrated" data-theater-event="change" data-theater-value="checked">
               <span><strong>I have observed the fix demonstration</strong> and verified that the behavior matches requirements.</span>
             </label>
           </div>
 
           <div class="stage-nav-footer">
-            <button class="btn-stage-nav" onclick="window.setTheaterStage(5)">&larr; Previous: Evidence Video</button>
-            <button class="btn-stage-nav btn-stage-next" onclick="window.setTheaterStage(7)">Next: Sign-Off &amp; Merge &rarr;</button>
+            <button class="btn-stage-nav" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="5">&larr; Previous: Evidence Video</button>
+            <button class="btn-stage-nav btn-stage-next" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="7">Next: Sign-Off &amp; Merge &rarr;</button>
           </div>
         </div>
 
@@ -756,7 +756,7 @@
               <strong>Approval Locked by Anti-Rubber-Stamp Gate:</strong>
               <span>You must achieve &ge;80% on Stage 1 Knowledge Check before approving or merging this pull request.</span>
             </div>
-            <button type="button" class="btn-primary" onclick="window.setTheaterStage(1)">👉 Go to Stage 1</button>
+            <button type="button" class="btn-primary" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="1">👉 Go to Stage 1</button>
           </div>
 
           <div class="signoff-gates-grid">
@@ -839,7 +839,7 @@
             <textarea id="theater-review-notes" rows="4" placeholder="Approved! Completed PR Review Theater masterclass (100% quiz score), inspected mTLS keystores in VaccineGatewayClient, and validated dual-branch Knowledge Graph sync."></textarea>
 
             <div class="signoff-actions-row">
-              <button class="btn-action btn-approve btn-prominent" id="btn-theater-submit-review" onclick="window.submitTheaterReviewAction()">
+              <button class="btn-action btn-approve btn-prominent" id="btn-theater-submit-review" data-theater-action="submitTheaterReviewAction" data-theater-event="click">
                 <span class="btn-icon-symbol">✓</span> Execute Review &amp; Dual Merge
               </button>
               <div id="theater-review-feedback" class="hidden"></div>
@@ -847,8 +847,8 @@
           </div>
 
           <div class="stage-nav-footer">
-            <button class="btn-stage-nav" onclick="window.setTheaterStage(6)">&larr; Previous: Show Me The Fix</button>
-            <button class="btn-stage-nav" onclick="window.exitTheater()">Exit Review Theater &times;</button>
+            <button class="btn-stage-nav" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="6">&larr; Previous: Show Me The Fix</button>
+            <button class="btn-stage-nav" data-theater-action="exitTheater" data-theater-event="click">Exit Review Theater &times;</button>
           </div>
         </div>
 
@@ -864,7 +864,7 @@
           <span class="modal-badge">⚙️ STAGE CONFIGURATION</span>
           <h3>PR Review Theater Customization &amp; Team KGraph Policy</h3>
         </div>
-        <button type="button" class="btn-modal-close" onclick="window.closeTheaterConfigModal()">&times;</button>
+        <button type="button" class="btn-modal-close" data-theater-action="closeTheaterConfigModal" data-theater-event="click">&times;</button>
       </div>
 
       <div class="config-modal-body">
@@ -872,16 +872,16 @@
         <div class="config-top-toolbar">
           <div class="config-team-selector-wrap">
             <label for="config-team-select"><strong>Team KGraph Policy Entity:</strong></label>
-            <select id="config-team-select" class="config-team-dropdown" onchange="window.switchConfigTeam(this.value)">
+            <select id="config-team-select" class="config-team-dropdown" data-theater-action="switchConfigTeam" data-theater-event="change" data-theater-value="value">
               <!-- Populated dynamically with teams from KGraph -->
             </select>
           </div>
           <div class="config-preset-pills">
             <span class="preset-label">Quick Presets:</span>
-            <button type="button" class="btn-preset-pill" onclick="window.applyTheaterPreset('strict')">🛡️ Strict Anti-Rubber-Stamp</button>
-            <button type="button" class="btn-preset-pill" onclick="window.applyTheaterPreset('fast')">⚡ Fast Developer Flow</button>
-            <button type="button" class="btn-preset-pill" onclick="window.applyTheaterPreset('frontend')">🌐 Frontend Focus</button>
-            <button type="button" class="btn-preset-pill" onclick="window.applyTheaterPreset('full')">🌟 Full 7-Stage Comprehensive</button>
+            <button type="button" class="btn-preset-pill" data-theater-action="applyTheaterPreset" data-theater-event="click" data-theater-arg="strict">🛡️ Strict Anti-Rubber-Stamp</button>
+            <button type="button" class="btn-preset-pill" data-theater-action="applyTheaterPreset" data-theater-event="click" data-theater-arg="fast">⚡ Fast Developer Flow</button>
+            <button type="button" class="btn-preset-pill" data-theater-action="applyTheaterPreset" data-theater-event="click" data-theater-arg="frontend">🌐 Frontend Focus</button>
+            <button type="button" class="btn-preset-pill" data-theater-action="applyTheaterPreset" data-theater-event="click" data-theater-arg="full">🌟 Full 7-Stage Comprehensive</button>
           </div>
         </div>
 
@@ -1109,8 +1109,8 @@
           <span id="config-status-msg" class="config-save-msg hidden">✓ Policy saved to team Knowledge Graph</span>
         </div>
         <div class="footer-right">
-          <button type="button" class="btn-secondary" onclick="window.closeTheaterConfigModal()">Cancel</button>
-          <button type="button" class="btn-primary btn-save-policy" onclick="window.saveTheaterConfigFromModal()">
+          <button type="button" class="btn-secondary" data-theater-action="closeTheaterConfigModal" data-theater-event="click">Cancel</button>
+          <button type="button" class="btn-primary btn-save-policy" data-theater-action="saveTheaterConfigFromModal" data-theater-event="click">
             💾 Save Team Policy to Knowledge Graph
           </button>
         </div>

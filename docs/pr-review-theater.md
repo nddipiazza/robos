@@ -426,3 +426,34 @@ Explore the complete schema definitions in the [Living Learning & Documentation 
 - **[Agent Tiers & Model Dispatch]({{ site.baseurl }}{% link agent-tiers.md %})**: Learn how RobOS optimizes model intelligence and cost across 3 agent tiers.
 - **[RobOS Desktop Applications Suite]({{ site.baseurl }}{% link apps.md %})**: Explore all native developer tools in the RobOS platform.
 - **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps and structured architecture specs.
+
+## Review a local draft before publishing a PR
+
+Launch the theater with a workstation-owned JSON manifest:
+
+```bash
+ROBOS_LOCAL_REVIEW=/absolute/path/review.json electron packages/pr-review
+```
+
+The manifest supplies `title`, `repo`, an absolute `workspace`, `baseRef`,
+`videoPath`, `summary`, and an optional `showMeDescription`. The theater reads the
+actual committed Git diff from `baseRef` to `HEAD`, plays the supplied recording,
+and labels the review as a local draft. It does not publish a PR or enable merge.
+Uncommitted changes are not included in this review.
+
+For an interactive frontend demonstration, add `runner` with an absolute
+`command`, an `args` array, optional `cwd`, and optional `timeoutMs` (default
+120000). Use only a locally reviewed runner: this is permission to execute it.
+Commands are never taken from a PR body or renderer input, and no shell is used.
+The runner should launch a headed browser, perform and assert its setup, then
+write one JSON line with `status: "HANDOFF_READY"` and an accurate `message`.
+It must keep running to leave the browser available to the reviewer. Other JSON
+lines containing `message` appear as execution steps. Failed launches, early
+exits, and checkpoint timeouts are errors, not successful demonstrations.
+
+The runner receives JSON lines on stdin: `{"action":"focus"}` to bring the
+browser forward, and `{"action":"complete"}` after the reviewer confirms the
+handoff. It should close its browser and exit on completion or SIGTERM. Merely
+opening or focusing a browser does not mark the review verified. The normal
+GitHub frontend Show me path now reports missing configuration instead of
+opening a hard-coded example app and claiming simulated test results.

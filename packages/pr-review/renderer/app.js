@@ -70,6 +70,12 @@ document.getElementById("header-btn-request-changes")?.addEventListener("click",
 // ── Init ──────────────────────────────────────────────────────────────────
 
 async function init() {
+  const local = await window.api.getLocalReview?.();
+  if (local?.ok) {
+    serverBadge.textContent = 'Local draft — no GitHub PR created';
+    await window.openPRReviewTheater(local.pr);
+    return;
+  }
   serverConfig = await window.api.getConfig();
   if (!serverConfig.ok) {
     showError(serverConfig.error || "No task server configured. Open Task Servers to set one up.");
@@ -599,7 +605,7 @@ window.openPRReviewTheater = async function(pr) {
 
   // Set header info
   const titleEl = document.getElementById('theater-pr-title');
-  if (titleEl) titleEl.textContent = `PR #${targetPR.number}: ${targetPR.title}`;
+  if (titleEl) titleEl.textContent = targetPR.local ? `Local draft: ${targetPR.title}` : `PR #${targetPR.number}: ${targetPR.title}`;
 
   // Fetch full theater context (includes showTheFix and team theaterConfig)
   const res = await window.api.fetchPRTheaterContext({
@@ -624,6 +630,16 @@ window.openPRReviewTheater = async function(pr) {
   const appBadge = document.getElementById('theater-target-app');
   if (appBadge) appBadge.textContent = res.targetApp?.title || 'Application';
 
+  if (res.local) {
+    renderTheaterDiffViewer(); renderTheaterShowTheFix(); renderTheaterVideo();
+    document.getElementById('btn-canvas-desktop').style.display = 'none';
+    document.querySelector('[data-theater-action="openTheaterConfigModal"]').style.display = 'none';
+    document.querySelector('.fix-type-selector-bar').style.display = 'none';
+    document.querySelectorAll('[id^="btn-fix-type-"]').forEach(el => el.hidden = true);
+    document.querySelectorAll('.stage-nav-footer').forEach(el => el.style.display = 'none');
+    updateTheaterStepper(); window.setProofCanvasMode('video'); window.setTheaterStage(6);
+    return;
+  }
   // Render all stages
   renderTheaterELearning();
   renderTheaterDocs();
@@ -662,7 +678,7 @@ function updateTheaterStepper() {
     { num: 2, key: 'stage2_livingDocs', label: 'Living Docs & Flow', done: gates.docsReviewed },
     { num: 3, key: 'stage3_fileDiffs', label: 'File Diff Viewer', done: gates.diffsInspected },
     { num: 4, key: 'stage4_ideBridge', label: 'IDE Branch Diffs', done: gates.ideDiffLaunched },
-    { num: 5, key: 'stage5_proofCanvas', label: 'Evidence Video', done: true },
+    { num: 5, key: 'stage5_proofCanvas', label: 'Evidence Video', done: theaterContext.local ? false : true },
     { num: 6, key: 'stage6_showTheFix', label: 'Show Me The Fix', done: gates.fixDemonstrated },
     { num: 7, key: 'stage7_signOff', label: 'Sign-Off & Merge', done: false }
   ];
@@ -676,7 +692,7 @@ function updateTheaterStepper() {
     const enabled = sCfg.enabled !== false;
     const required = sCfg.required !== false;
 
-    if (!enabled && s.num !== 7) {
+    if (!enabled && (s.num !== 7 || theaterContext.local)) {
       btn.style.display = 'none';
       return;
     }
@@ -706,6 +722,7 @@ function updateTheaterStepper() {
 }
 
 window.setTheaterStage = function(stageNum) {
+  if (theaterContext?.local && ![3, 5, 6].includes(stageNum)) return;
   // If target stage is disabled in config, skip to next or previous available stage
   if (theaterContext && theaterContext.theaterConfig) {
     const cfg = theaterContext.theaterConfig;
@@ -779,7 +796,7 @@ window.setTheaterStage = function(stageNum) {
       theaterContext.validationGates.diffsInspected = true;
     }
     if (stageNum === 4) theaterContext.validationGates.ideDiffLaunched = true;
-    renderTheaterSignOff();
+    if (!theaterContext.local) renderTheaterSignOff();
     updateTheaterStepper();
   }
 };
@@ -1043,7 +1060,7 @@ function renderTheaterDiffViewer() {
   const fileListEl = document.getElementById('theater-diff-file-list');
   if (fileListEl) {
     fileListEl.innerHTML = files.map((f, idx) => `
-      <div class="diff-file-item ${idx === activeDiffFileIndex ? 'active' : ''}" onclick="window.selectDiffFile(${idx})">
+      <div class="diff-file-item ${idx === activeDiffFileIndex ? 'active' : ''}" data-theater-action="selectDiffFile" data-theater-arg="${idx}">
         <span class="diff-file-path">${esc(f.filePath.split('/').pop())}</span>
         <span class="diff-file-stats">
           <span class="stat-add">+${f.additions}</span>
@@ -1321,7 +1338,7 @@ window.executeAgentShowFix = async function() {
   if (termLogs) {
     termLogs.innerHTML = `
       <div class="console-line line-info">🤖 [ROBOS-AGENT] Initializing autonomous fix demonstration for target: <strong>${target.toUpperCase()}</strong></div>
-      <div class="console-line line-dim">[1/4] Inspecting changed files and target service metadata...</div>
+      <div class="console-line line-dim">Starting demonstration runner; waiting for its verified checkpoint...</div>
     `;
   }
 
@@ -1332,6 +1349,13 @@ window.executeAgentShowFix = async function() {
     changedFiles: prDetail ? prDetail.changedFiles : []
   });
 
+  if (!res.ok) {
+    if (termLogs) termLogs.textContent = res.error || 'Demonstration failed.';
+    if (termStatus) termStatus.textContent = 'FAILED';
+    if (statusEl) statusEl.textContent = 'No handoff reached';
+    if (runBtn) { runBtn.disabled = false; runBtn.textContent = 'Retry Show me'; }
+    return;
+  }
   if (termLogs && res.steps) {
     let delay = 0;
     res.steps.forEach(step => {
@@ -1388,19 +1412,21 @@ window.executeAgentShowFix = async function() {
 };
 
 window.focusBrowserHandoff = async function() {
-  await window.api.resumeAgentShowFixHandoff({ action: 'focus' });
+  const result = await window.api.resumeAgentShowFixHandoff({ action: 'focus' });
+  if (!result.ok) { showError(result.error); return; }
   const termLogs = document.getElementById('show-fix-terminal-logs');
   if (termLogs) {
     const line = document.createElement('div');
     line.className = 'console-line line-info';
-    line.innerHTML = `🎮 [REVIEWER] Focused browser window on port 9222. Reviewer in active control.`;
+    line.innerHTML = `🎮 [REVIEWER] Requested focus for the active demonstration browser.`;
     termLogs.appendChild(line);
     termLogs.scrollTop = termLogs.scrollHeight;
   }
 };
 
 window.completeBrowserHandoff = async function() {
-  await window.api.resumeAgentShowFixHandoff({ action: 'complete' });
+  const result = await window.api.resumeAgentShowFixHandoff({ action: 'complete' });
+  if (!result.ok) { showError(result.error); return; }
   document.getElementById('frontend-handoff-banner')?.classList.add('hidden');
   const termLogs = document.getElementById('show-fix-terminal-logs');
   if (termLogs) {
@@ -1461,14 +1487,22 @@ window.toggleFixDemonstrated = function(checked) {
   }
 
   updateTheaterStepper();
-  renderTheaterSignOff();
+  if (!theaterContext.local) renderTheaterSignOff();
 };
 
 // ── Stage 6: Proof-of-Work Canvas (Video & Live Desktop Session) ────────────
 
 function renderTheaterVideo() {
   if (!theaterContext || !theaterContext.proofOfWorkVideo) return;
-  const { title, chapters, vttTranscript } = theaterContext.proofOfWorkVideo;
+  const { title, chapters, vttTranscript, url } = theaterContext.proofOfWorkVideo;
+  if (theaterContext.local) {
+    const container = document.getElementById('canvas-video-view');
+    container.replaceChildren(); container.style.display = 'block';
+    const video = document.createElement('video'); video.controls = true; video.src = url || ''; video.style.width = '100%'; video.style.maxHeight = '65vh';
+    const summary = document.createElement('p'); summary.textContent = vttTranscript;
+    container.append(video, summary);
+    return;
+  }
 
   const titleEl = document.getElementById('theater-video-title');
   if (titleEl) titleEl.textContent = title;
@@ -2010,6 +2044,20 @@ window.saveTheaterConfigFromModal = async function() {
 };
 
 // ── Init ──────────────────────────────────────────────────────────────────
+
+// Delegated events work with the app's strict script CSP, including dynamic diffs.
+const theaterActions = new Set(["applyTheaterPreset", "closeTheaterConfigModal", "completeBrowserHandoff", "executeAgentShowFix", "executeTheaterRestCall", "exitTheater", "focusBrowserHandoff", "launchTheaterBreakpoint", "launchTheaterIDE", "openAppCourseInHub", "openTheaterConfigModal", "resumeBackendFix", "resumeTheaterBreakpoint", "runLiveDesktopSession", "saveTheaterConfigFromModal", "selectDiffFile", "setDiffMode", "setFixTypeTarget", "setProofCanvasMode", "setTheaterStage", "stepBackendFix", "submitTheaterQuiz", "submitTheaterReviewAction", "switchConfigTeam", "toggleFixDemonstrated", "toggleTheaterFullscreen"]);
+for (const eventType of ['click', 'change']) document.addEventListener(eventType, event => {
+  const control = event.target.closest('[data-theater-action]');
+  if (!control || (control.dataset.theaterEvent || 'click') !== eventType) return;
+  const action = control.dataset.theaterAction;
+  if (!theaterActions.has(action) || typeof window[action] !== 'function') return;
+  let arg = control.dataset.theaterArg;
+  if (control.dataset.theaterValue === 'checked') arg = control.checked;
+  if (control.dataset.theaterValue === 'value') arg = control.value;
+  if (arg !== undefined && /^\d+$/.test(arg)) arg = Number(arg);
+  window[action](arg);
+});
 
 init();
 
