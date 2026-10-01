@@ -605,7 +605,16 @@ window.openPRReviewTheater = async function(pr) {
 
   // Set header info
   const titleEl = document.getElementById('theater-pr-title');
-  if (titleEl) { titleEl.textContent = targetPR.title; titleEl.title = targetPR.title; }
+  if (titleEl) {
+    titleEl.replaceChildren(); titleEl.title = targetPR.title;
+    if (!targetPR.local && /^\d+$/.test(String(targetPR.number)) && /^[\w.-]+\/[\w.-]+$/.test(targetPR.repo || '')) {
+      const link = document.createElement('a');
+      link.href = `https://github.com/${targetPR.repo}/pull/${targetPR.number}`;
+      link.textContent = `#${targetPR.number} · ${targetPR.title}`;
+      link.addEventListener('click', event => { event.preventDefault(); window.api.openUrl(link.href); });
+      titleEl.append(link);
+    } else titleEl.textContent = targetPR.title;
+  }
 
   // Fetch full theater context (includes showTheFix and team theaterConfig)
   const res = await window.api.fetchPRTheaterContext({
@@ -628,7 +637,7 @@ window.openPRReviewTheater = async function(pr) {
 
   // Set target app badge
   const appBadge = document.getElementById('theater-target-app');
-  if (appBadge) appBadge.textContent = [targetPR.local ? 'Local draft' : `#${targetPR.number}`, targetPR.repo].filter(Boolean).join(' · ');
+  if (appBadge) appBadge.textContent = [targetPR.local ? 'No pull request yet' : '', targetPR.repo].filter(Boolean).join(' · ');
 
   if (res.local) {
     renderTheaterDiffViewer(); renderTheaterShowTheFix(); renderTheaterVideo();
