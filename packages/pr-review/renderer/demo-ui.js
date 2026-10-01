@@ -12,6 +12,7 @@ window.mountWalkthrough = async function () {
   const feature = button('Show the change', 'Return to the feature branch walkthrough', () => act('feature'));
   const explain = button('Explain this step', 'Explain what you are demonstrating at this checkpoint', () => act('explain'));
   const next = button('Next checkpoint →', 'Go to the next checkpoint', () => act(state.status === 'error' ? 'continue' : 'next'));
+  const resume = button('Resume agent', 'Continue this saved agent session at the current step', () => act('resume'));
   const retry = button('Recheck this step', 'Retry this checkpoint', () => act('retry'));
   const process = button('Process…', 'Customize this project’s demo process', () => { editor.value = JSON.stringify(state.process, null, 2); dialog.showModal(); });
   const more = document.createElement('details'); more.className = 'walkthrough-more';
@@ -24,14 +25,14 @@ window.mountWalkthrough = async function () {
   next.className = 'walkthrough-primary'; start.className = 'walkthrough-primary'; retry.className = '';
   bar.append(title, badge, more);
   const checkpoint = document.createElement('section'); checkpoint.className = 'walkthrough-checkpoint'; checkpoint.setAttribute('aria-live', 'polite');
-  const stepActions = document.createElement('div'); stepActions.className = 'walkthrough-step-actions'; stepActions.append(start, explain, retry, next);
+  const stepActions = document.createElement('div'); stepActions.className = 'walkthrough-step-actions'; stepActions.append(start, resume, explain, retry, next);
   const progress = document.createElement('section'); progress.className = 'walkthrough-progress'; progress.setAttribute('aria-label', 'Demo progress');
   const activity = document.createElement('div'); activity.setAttribute('role', 'status');
   const elapsed = document.createElement('small');
   progress.append(activity, elapsed);
   const historyNotice = document.createElement('small'); historyNotice.className = 'walkthrough-history-note';
   const chatHeader = document.createElement('div'); chatHeader.className = 'walkthrough-chat-header';
-  const clearChat = button('Clear chat', 'Clear this conversation', () => clearDialog.showModal()); chatHeader.append(historyNotice, clearChat);
+  const clearChat = button('Clear chat', 'Clear this conversation', () => clearDialog.showModal()); const savedHistory = button('Saved history', 'Browse the saved conversation', () => { historyDialog.showModal(); loadHistory(); }); chatHeader.append(historyNotice, savedHistory, clearChat);
   const chat = document.createElement('div'); chat.className = 'walkthrough-chat'; chat.setAttribute('role', 'log'); chat.setAttribute('aria-label', 'Live demo conversation');
   let pendingMessage = null;
   const receipt = document.createElement('div'); receipt.className = 'walkthrough-receipt'; receipt.setAttribute('role', 'status');
@@ -54,7 +55,7 @@ window.mountWalkthrough = async function () {
   const receivedTimes = new Map(); let historyInitialized = false;
   const clearDialog = document.createElement('dialog'); clearDialog.className = 'walkthrough-clear-dialog'; clearDialog.setAttribute('aria-labelledby', 'clear-chat-title');
   const clearTitle = document.createElement('h3'); clearTitle.id = 'clear-chat-title'; clearTitle.textContent = 'Clear chat?';
-  const clearDescription = document.createElement('p'); clearDescription.textContent = 'Remove all messages from this conversation? Your current step and code changes will stay. A running agent will continue and may add new messages. This cannot be undone.';
+  const clearDescription = document.createElement('p'); clearDescription.textContent = 'Clear the chat window? Your current step and code changes will stay. Previously saved messages remain in the local archive. A running agent will continue and may add new messages.';
   const cancelClear = button('Cancel', 'Keep the conversation', () => clearDialog.close()); cancelClear.autofocus = true;
   const confirmClear = button('Clear chat', 'Confirm clearing the conversation', async () => {
     confirmClear.disabled = true;
@@ -64,6 +65,21 @@ window.mountWalkthrough = async function () {
   });
   const clearError = document.createElement('p'); clearError.setAttribute('role', 'alert');
   clearDialog.append(clearTitle, clearDescription, clearError, cancelClear, confirmClear); stage.append(clearDialog);
+  const historyDialog = document.createElement('dialog'); historyDialog.className = 'walkthrough-history-dialog'; historyDialog.setAttribute('aria-label', 'Saved conversation');
+  const historyTitle = document.createElement('h3'); historyTitle.textContent = 'Saved conversation';
+  const historyBody = document.createElement('div'); historyBody.className = 'walkthrough-saved-messages';
+  let historyCursor;
+  const older = button('Older messages', 'Load the previous page', () => loadHistory(historyCursor));
+  const newest = button('Latest messages', 'Return to the latest saved page', () => loadHistory());
+  historyDialog.append(historyTitle, historyBody, older, newest, button('Close', 'Close saved history', () => historyDialog.close())); stage.append(historyDialog);
+  async function loadHistory(before) {
+    older.disabled = true;
+    try { const page = await window.api.getDemoHistory(before); historyCursor = page.before; historyBody.replaceChildren();
+      for (const message of page.messages) { const entry = document.createElement('p'); const who = message.role === 'user' ? 'You' : message.agentName || 'Status'; entry.textContent = `${who} · ${new Date(message.timestamp).toLocaleString()}\n${message.text}`; historyBody.append(entry); }
+      if (!page.messages.length) historyBody.textContent = 'No saved messages in this conversation yet.';
+      older.disabled = !historyCursor; historyBody.scrollTop = 0;
+    } catch(e) { historyBody.textContent = e.message; }
+  }
   let state; let lastNarration = ''; let lastActionStart;
   function button(text, label, fn) { const b = document.createElement('button'); b.type = 'button'; b.textContent = text; b.title = label; b.addEventListener('click', fn); return b; }
   function render(value) {
@@ -71,6 +87,9 @@ window.mountWalkthrough = async function () {
     for (const id of receivedTimes.keys()) if (!currentIds.has(id)) receivedTimes.delete(id);
     for (const m of value.messages) if (m.id && !receivedTimes.has(m.id)) receivedTimes.set(m.id, historyInitialized ? Date.now() : null);
     historyInitialized = true;
+    savedHistory.hidden = !value.historyAvailable;
+    resume.hidden = !value.restored || value.status === 'running';
+    if (value.persistenceError) error.textContent = value.persistenceError;
     clearChat.disabled = value.messages.length === 0;
     state = value; const busy = value.status === 'running';
     if (pendingMessage && value.messages.some(m => m.role === 'user' && m.text === pendingMessage.text && m.id !== pendingMessage.lastId)) {
@@ -90,7 +109,7 @@ window.mountWalkthrough = async function () {
     explain.hidden = busy || value.index < 0; explain.disabled = busy || value.index < 0;
     next.hidden = busy || !['paused', 'error'].includes(value.status) || lastStep;
     next.disabled = busy;
-    next.textContent = value.status === 'error' ? `Continue to step ${stepIndex + 2} →` : `Next step: ${value.process.checkpoints[value.index + 1]?.title || 'Continue'} →`;
+    next.textContent = value.status === 'error' ? `Continue to step ${stepIndex + 2} →` : `Next step: ${(value.mode === 'before' ? value.process.before?.checkpoints : value.process.checkpoints)?.[value.index + 1]?.title || 'Continue'} →`;
     retry.hidden = value.status !== 'error'; process.disabled = busy; send.disabled = !busy && value.status !== 'error' && value.index < 0; send.textContent = busy ? 'Steer' : 'Send';
     // Older running sessions can be upgraded without interrupting their agent.
     if (lastActionStart !== value.startedAt) { lastNarration = ''; lastActionStart = value.startedAt; }
@@ -105,7 +124,7 @@ window.mountWalkthrough = async function () {
     if (value.status === 'error') { const reason = document.createElement('p'); reason.className = 'walkthrough-blocker'; reason.textContent = (value.messages.filter(m => m.kind !== 'progress' && m.role !== 'user').at(-1)?.text || 'This step could not be verified.') + (lastStep ? ' You can recheck or ask for a change below.' : ' Recheck this step, ask for a change below, or continue with this check marked unverified.'); checkpoint.append(reason); }
     if (value.status === 'paused' && lastStep) { const done = document.createElement('p'); done.textContent = 'You’ve reached the end of this walkthrough. You can keep asking for changes, or use More to start over. This does not approve or merge the PR.'; checkpoint.append(done); }
     const followTail = chat.scrollHeight - chat.scrollTop - chat.clientHeight < 60;
-    historyNotice.textContent = value.droppedMessages ? `${value.droppedMessages} older entries removed. History keeps the newest 120 entries, up to 128 KB.` : 'History keeps the newest 120 entries, up to 128 KB; oldest entries are removed first.';
+    historyNotice.textContent = value.historyAvailable ? 'Conversation saved locally · Recent messages shown here. Open Saved history for earlier messages.' : 'History keeps the newest 120 entries, up to 128 KB; oldest entries are removed first.';
     chat.replaceChildren();
     for (const message of value.messages) { const bubble = document.createElement('div'); bubble.className = 'walkthrough-bubble ' + message.role + (message.kind === 'progress' ? ' progress-entry' : ''); const label = document.createElement('strong'); label.textContent = message.role === 'user' ? 'You' : message.role === 'assistant' ? message.agentName || value.agentName || 'Demo agent' : 'Status'; label.textContent = label.textContent.replace(/ · configured default$/, '');
       const timestamp = document.createElement('time');

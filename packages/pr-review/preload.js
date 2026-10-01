@@ -2,6 +2,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('api', {
   getDemoState: () => ipcRenderer.invoke('demo-state'),
   demoAction: opts => ipcRenderer.invoke('demo-action', opts),
+  getDemoHistory: before => ipcRenderer.invoke('demo-history', before),
   clearDemoChat: () => ipcRenderer.invoke('demo-clear-chat'),
   saveDemoProcess: value => ipcRenderer.invoke('demo-save-process', value),
   onDemoState: callback => { const listener = (_, state) => callback(state); ipcRenderer.on('demo-state', listener); return () => ipcRenderer.removeListener('demo-state', listener); },

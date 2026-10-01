@@ -2739,3 +2739,9 @@ header h1 { font-size: 15px; font-weight: 600; }
 .walkthrough-clear-dialog::backdrop { background: #0009; }
 .walkthrough-clear-dialog p { line-height: 1.6; color: #a5b3c1; }
 .walkthrough-clear-dialog button { margin-right: 8px; }
+
+.walkthrough-history-dialog { width: min(800px, 85vw); color: #e6edf3; background: #161b22; border: 1px solid #384758; border-radius: 10px; padding: 24px; }
+.walkthrough-history-dialog::backdrop { background: #0009; }
+.walkthrough-saved-messages { max-height: 60vh; overflow: auto; white-space: pre-wrap; font-size: 13px; line-height: 1.6; }
+.walkthrough-saved-messages p { border-bottom: 1px solid #30363d; padding: 12px 0; }
+.walkthrough-history-dialog button { margin-right: 8px; }

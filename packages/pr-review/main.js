@@ -8,20 +8,25 @@ const { execSync } = require('child_process');
 const { loadLocalReview, ShowMeSession } = require('./lib/local-review');
 const localReview = loadLocalReview(process.env.ROBOS_LOCAL_REVIEW);
 const showMeSession = new ShowMeSession(localReview?.runner);
+const { ReviewSessionStore } = require('./lib/review-session-store');
+const reviewStore = localReview ? new ReviewSessionStore({repo:localReview.repo,number:localReview.number,branch:localReview.pr.headBranch,workspace:localReview.workspace}) : null;
 const { DemoSession } = require('./lib/demo-session');
-const demoSession = localReview?.demoProcess ? new DemoSession({ workspace: localReview.workspace, processFile: localReview.demoProcess, agent: localReview.demoAgent, beforeWorkspace: localReview.beforeWorkspace }) : null;
+const demoSession = localReview?.demoProcess ? new DemoSession({ workspace: localReview.workspace, processFile: localReview.demoProcess, agent: localReview.demoAgent, beforeWorkspace: localReview.beforeWorkspace, store: reviewStore }) : null;
 // Optional workstation snapshot for restarting the theater without losing a paused review.
 if (demoSession && localReview.resumeStatePath) {
   const saved = JSON.parse(fs.readFileSync(localReview.resumeStatePath, 'utf8'));
   if (['paused', 'error', 'idle'].includes(saved.status) && JSON.stringify(saved.process) === JSON.stringify(demoSession.process)) {
     for (const key of ['index', 'status', 'mode', 'guidance', 'failedIndex', 'droppedMessages']) if (saved[key] !== undefined) demoSession[key] = saved[key];
-    demoSession.messages = (saved.messages || []).slice(-120);
+    demoSession.messages = [];
+    for (const message of saved.messages || []) demoSession.addMessage(message);
+    demoSession.publish();
     while (Buffer.byteLength(JSON.stringify(demoSession.messages)) > 128 * 1024) demoSession.messages.shift();
   }
 }
 demoSession?.on('state', state => { if (win && !win.isDestroyed()) win.webContents.send('demo-state', state); });
 ipcMain.handle('demo-state', () => demoSession?.state() || null);
 ipcMain.handle('demo-action', async (_, { action, text } = {}) => { try { if (!demoSession) throw new Error('No project demo process configured.'); return { ok: true, state: await demoSession.act(action, text) }; } catch (e) { return { ok: false, error: e.message }; } });
+ipcMain.handle('demo-history', (_, before) => reviewStore?.page(before, {includeCleared:true}) || {messages:[],before:0});
 ipcMain.handle('demo-clear-chat', () => { if (!demoSession) return { ok: false, error: 'No walkthrough configured.' }; return { ok: true, state: demoSession.clearChat() }; });
 ipcMain.handle('demo-save-process', (_, value) => { try { if (!demoSession) throw new Error('No project demo process configured.'); return { ok: true, state: demoSession.saveProcess(value) }; } catch (e) { return { ok: false, error: e.message }; } });
 app.on('before-quit', () => demoSession?.stop());
