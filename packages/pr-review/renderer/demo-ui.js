@@ -1,5 +1,6 @@
 'use strict';
 window.mountWalkthrough = async function () {
+  window.cleanupWalkthrough?.();
   const stage = document.getElementById('stage-6');
   stage.replaceChildren(); stage.classList.add('walkthrough');
   const bar = document.createElement('div'); bar.className = 'walkthrough-bar';
@@ -15,12 +16,16 @@ window.mountWalkthrough = async function () {
   const process = button('Process…', 'Customize this project’s demo process', () => { editor.value = JSON.stringify(state.process, null, 2); dialog.showModal(); });
   bar.append(title, badge, start, restart, before, feature, explain, next, retry, process);
   const checkpoint = document.createElement('section'); checkpoint.className = 'walkthrough-checkpoint'; checkpoint.setAttribute('aria-live', 'polite');
+  const progress = document.createElement('section'); progress.className = 'walkthrough-progress'; progress.setAttribute('aria-label', 'Demo progress');
+  const activity = document.createElement('div'); activity.setAttribute('role', 'status');
+  const elapsed = document.createElement('small');
+  const history = document.createElement('details'); const historyTitle = document.createElement('summary'); historyTitle.textContent = 'Recent activity'; const historyList = document.createElement('ol'); history.append(historyTitle, historyList); progress.append(activity, elapsed, history);
   const chat = document.createElement('div'); chat.className = 'walkthrough-chat'; chat.setAttribute('role', 'log'); chat.setAttribute('aria-label', 'Live demo conversation');
   const form = document.createElement('form'); form.className = 'walkthrough-compose';
   const input = document.createElement('textarea'); input.rows = 2; input.placeholder = 'Ask a question or request a change while we stay at this checkpoint…'; input.setAttribute('aria-label', 'Message the demo agent'); input.maxLength = 16000;
   const send = document.createElement('button'); send.textContent = 'Send'; send.type = 'submit';
   const error = document.createElement('p'); error.className = 'walkthrough-error'; error.setAttribute('role', 'alert');
-  form.append(input, send); stage.append(bar, checkpoint, chat, error, form);
+  form.append(input, send); stage.append(bar, checkpoint, progress, chat, error, form);
   const dialog = document.createElement('dialog'); dialog.className = 'walkthrough-process';
   const heading = document.createElement('h3'); heading.textContent = 'Project demo process';
   const hint = document.createElement('p'); hint.textContent = 'Edit demo instructions, checkpoint intent, and the optional before-change walkthrough. Saving restarts the walkthrough at its beginning. The agent executable is configured separately on this workstation.';
@@ -32,7 +37,7 @@ window.mountWalkthrough = async function () {
   function button(text, label, fn) { const b = document.createElement('button'); b.type = 'button'; b.textContent = text; b.title = label; b.addEventListener('click', fn); return b; }
   function render(value) {
     state = value; const busy = value.status === 'running';
-    badge.textContent = busy ? 'Agent working…' : value.status === 'paused' ? `Paused · ${value.index + 1}/${value.total}` : value.status === 'error' ? 'Needs attention' : 'Ready';
+    badge.textContent = busy ? 'In progress' : value.status === 'paused' ? `Paused · ${value.index + 1}/${value.total}` : value.status === 'error' ? 'Needs attention' : 'Ready';
     start.hidden = value.index >= 0 || value.status === 'error'; start.disabled = busy;
     restart.hidden = value.messages.length === 0; restart.disabled = busy;
     before.hidden = !value.process.before || value.mode === 'before'; before.disabled = busy;
@@ -40,6 +45,9 @@ window.mountWalkthrough = async function () {
     explain.disabled = busy || value.index < 0;
     next.disabled = busy || value.status !== 'paused' || value.index >= value.total - 1;
     retry.hidden = value.status !== 'error'; process.disabled = busy; send.disabled = busy || value.index < 0;
+    progress.hidden = !busy; activity.textContent = value.progress?.at(-1)?.text || 'Connecting to the demo agent…';
+    historyList.replaceChildren(); for (const event of value.progress || []) { const li = document.createElement('li'); li.textContent = event.text; historyList.append(li); }
+    updateElapsed();
     checkpoint.replaceChildren();
     const c = value.checkpoint;
     if (c) { const h = document.createElement('h3'); h.textContent = c.title; const p = document.createElement('p'); p.textContent = busy ? `I’m preparing “${c.title}”. I’ll show you what to try and pause when it’s ready.` : value.guidance || c.summary || 'Ask Explain for a walkthrough of this step, or try the app before moving on.'; checkpoint.append(h, p); if (value.baseline) { const note = document.createElement('small'); note.textContent = `Before the change · ${value.baseline.ref} · ${value.baseline.revision.slice(0, 8)}`; checkpoint.append(note); } }
@@ -50,5 +58,8 @@ window.mountWalkthrough = async function () {
   }
   async function act(action, text) { error.textContent = ''; try { const result = await window.api.demoAction({ action, text }); if (!result.ok) throw new Error(result.error); render(result.state); } catch (e) { error.textContent = e.message; } }
   form.addEventListener('submit', event => { event.preventDefault(); const text = input.value.trim(); if (!text) return; input.value = ''; act('message', text); });
-  window.api.onDemoState(render); render(await window.api.getDemoState());
+  function updateElapsed() { if (!state?.startedAt || state.status !== 'running') return; const seconds = Math.floor((Date.now() - state.startedAt) / 1000); const quiet = Math.floor((Date.now() - (state.progress?.at(-1)?.at || state.startedAt)) / 1000); elapsed.textContent = `${Math.floor(seconds / 60)}m ${seconds % 60}s elapsed` + (quiet >= 20 ? ` · No new update for ${quiet}s; still waiting for the agent.` : ''); }
+  const unsubscribe = window.api.onDemoState(render); const timer = setInterval(updateElapsed, 1000);
+  window.cleanupWalkthrough = () => { clearInterval(timer); unsubscribe?.(); };
+  render(await window.api.getDemoState());
 };

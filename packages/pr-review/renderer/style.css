@@ -2680,3 +2680,8 @@ header h1 { font-size: 15px; font-weight: 600; }
 .walkthrough-process { width: min(850px, 85vw); background: #161b22; color: #e6edf3; border: 1px solid #384758; border-radius: 10px; padding: 22px; }
 .walkthrough-process::backdrop { background: #000a; }
 .walkthrough-process textarea { width: 100%; box-sizing: border-box; font-family: monospace; }
+
+.walkthrough-progress { padding: 12px 16px; border-left: 3px solid #8bdbe5; background: #172635; border-radius: 6px; line-height: 1.5; }
+.walkthrough-progress small { display: block; color: #a5b3c1; margin-top: 6px; }
+.walkthrough-progress details { margin-top: 8px; font-size: 12px; color: #a5b3c1; }
+.walkthrough-progress ol { padding-left: 20px; }

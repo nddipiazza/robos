@@ -20,12 +20,17 @@ test('Start over toolbar resets a completed walkthrough and blocks duplicate act
   await page.addScriptTag({path:path.resolve(__dirname,'../../../pr-review/renderer/demo-ui.js')});await page.evaluate(()=>window.mountWalkthrough());
   let finish;session.runAgent=()=>new Promise(r=>finish=r);
   await page.getByRole('button',{name:'Start over',exact:true}).click();
-  await page.waitForFunction(()=>document.querySelector('.walkthrough-status').textContent==='Agent working…');
+  await page.waitForFunction(()=>document.querySelector('.walkthrough-status').textContent==='In progress');
   assert.equal(await page.getByRole('button',{name:'Start over',exact:true}).isDisabled(),true);
   assert.equal(await page.getByRole('button',{name:'Next checkpoint →',exact:true}).isDisabled(),true);
+  session.reportProgress('Checking that the saved compact filters appear in Build History.');
+  await page.getByRole('status').filter({hasText:'saved compact filters'}).waitFor();
+  assert.match(await page.locator('.walkthrough-progress small').textContent(),/elapsed/);
+  assert.match(await page.locator('.walkthrough-progress ol').textContent(),/Preparing First/);
   finish({reply:'First checkpoint ready',checkpointReached:true});
   await page.waitForFunction(()=>document.querySelector('.walkthrough-status').textContent==='Paused · 1/2');
   assert.equal(await page.locator('.walkthrough-checkpoint h3').textContent(),'First');
+  assert.equal(await page.locator('.walkthrough-progress').isVisible(),false);
   assert.match(await page.getByRole('log').textContent(),/Start over: First/);
   assert.equal(await page.getByRole('button',{name:'Next checkpoint →',exact:true}).isEnabled(),true);
  } finally {session.removeAllListeners();await browser.close();}

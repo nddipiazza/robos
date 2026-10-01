@@ -59,3 +59,17 @@ test('baseline checkout pins main without touching dirty feature files',()=>{
  assert.equal(git(['branch','--show-current']),'feature');assert.equal(fs.readFileSync(path.join(dir,'app.txt'),'utf8'),'unsaved feature');
  assert.throws(()=>prepareBaseline(dir,'--bad'),/Invalid baseline ref/);
 });
+test('public progress streams while busy without leaking tool payloads or advancing checkpoints',async()=>{
+ let finish;const s=session(()=>new Promise(r=>finish=r));const run=s.act('start');
+ assert.ok(s.startedAt);assert.match(s.state().progress[0].text,/Preparing One/);
+ s.handleAgentEvent({type:'item.completed',item:{type:'agent_message',text:'Checking whether the saved compact view is visible.'}});
+ assert.match(s.state().progress.at(-1).text,/saved compact/);
+ s.handleAgentEvent({type:'item.started',item:{type:'mcp_tool_call',tool:'take_snapshot',arguments:{token:'SECRET'}}});
+ assert.match(s.state().progress.at(-1).text,/Inspecting the page/);
+ s.handleAgentEvent({type:'item.completed',item:{type:'reasoning',text:'PRIVATE'}});
+ s.handleAgentEvent({type:'item.completed',item:{type:'agent_message',text:'{"reply":"final"}'}});
+ s.handleAgentEvent({type:'item.started',item:{type:'command_execution',command:'echo SECRET'}});
+ assert.doesNotMatch(JSON.stringify(s.progress),/SECRET|PRIVATE|final/);assert.equal(s.index,-1);
+ for(let i=0;i<10;i++)s.reportProgress('Update '+i);assert.equal(s.progress.length,6);
+ finish({reply:'Ready',checkpointReached:true});await run;const count=s.progress.length;s.reportProgress('late');assert.equal(s.progress.length,count);
+});
