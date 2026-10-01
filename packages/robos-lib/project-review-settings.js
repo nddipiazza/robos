@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 const { createHash } = require('node:crypto');
-const DEFAULT_PR = '## Changes\n\n{{description}}\n\n## Validation\n\n';
+const DEFAULT_PR = '## Changes\n\n{{description}}\n';
 const DEFAULT_MESSAGE = 'Please review {{title}}\n{{url}}\n\nRepository: {{repo}}\nBranch: {{branch}}';
 function repoKey(value) {
   const key = String(value || '').replace(/^https?:\/\/github.com\//, '').replace(/^git@github.com:/, '').replace(/\.git\/?$/, '').replace(/\/$/, '');
