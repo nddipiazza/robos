@@ -569,3 +569,23 @@ Only supplied shared screenshot URLs may be embedded. Local-only artifacts are
 reported as needing upload, and before/after claims must be supported by observed
 evidence. Image insertion accepts shared URLs; this editor does not upload local
 files to GitHub automatically.
+
+### Evidence-led descriptions
+
+The description agent receives a complete evidence catalog rather than only files
+beside the video and the latest chat messages. The catalog includes configured
+`evidenceRoots` and `evidenceIndexes`, saved walkthrough screenshots, full chat,
+the before/after checkpoint process, manifests, test reports, and logs. Overlapping
+roots are deduplicated; any inventory limit is reported explicitly.
+
+Up to eight priority screenshots are attached directly to the generation request.
+The agent must inspect representative images and relevant reports, use the visible
+product differences in the description, and distinguish baseline screenshots from
+earlier feature iterations. Local images remain useful evidence even before upload.
+The Create PR stage shows the selected real screenshots in an expandable gallery;
+only shared URLs are embedded in the GitHub Markdown.
+
+New walkthrough actions capture clean product screenshots into the review's
+`evidence/` directory and retain checkpoint, mode, capture time, baseline revision,
+and verification status in its index. This keeps comparison evidence available
+across chat clearing, restarts, and description regeneration.

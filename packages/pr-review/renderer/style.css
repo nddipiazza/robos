@@ -2786,3 +2786,10 @@ review-markdown-editor { display: block; margin: 8px 0 20px; }
 .review-ai-description { margin: 18px 0; padding: 14px; background: #101c26; border: 1px solid #324859; border-radius: 8px; }
 .review-ai-description label { margin: 0 0 8px; line-height: 1.5; }
 .review-ai-description p { margin: 8px 0; white-space: pre-line; color: #afc4d6; }
+
+.review-evidence-gallery { margin-top:16px; }
+.review-evidence-gallery summary { cursor:pointer; color:#b4dcf4; }
+.review-evidence-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; margin-top:12px; }
+.review-evidence-grid figure { margin:0; }
+.review-evidence-grid img { width:100%; max-height:300px; object-fit:contain; background:#0a1118; border:1px solid #384758; }
+.review-evidence-grid figcaption { font-size:12px; line-height:1.5; color:#aab9c8; }

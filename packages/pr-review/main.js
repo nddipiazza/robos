@@ -1259,3 +1259,10 @@ const descriptionGenerator = localReview ? new (require('./lib/pr-description').
 ipcMain.handle('generate-pr-description',async(_,input)=>{try{if(!descriptionGenerator)throw Error('No local review is open.');if(demoSession?.status==='running')throw Error('Wait for the current demo edit to finish before generating its description.');return {ok:true,...await descriptionGenerator.generate(input)};}catch(e){return {ok:false,error:e.message};}});
 
 app.on('before-quit',()=>descriptionGenerator?.stop());
+
+ipcMain.handle('review-evidence-image',(_,id)=>{try {
+  const item=require('./lib/review-evidence').evidenceFor(localReview,reviewStore).evidence.find(e=>e.id===id&&e.kind==='screenshot');
+  if(!item?.path||fs.statSync(item.path).size>12*1024*1024)throw Error('Screenshot preview unavailable.');
+  const mime=/\.jpe?g$/i.test(item.path)?'image/jpeg':/\.webp$/i.test(item.path)?'image/webp':'image/png';
+  return {ok:true,url:'data:'+mime+';base64,'+fs.readFileSync(item.path).toString('base64')};
+}catch(e){return {ok:false,error:e.message};}});

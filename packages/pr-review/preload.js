@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('api', {
   reviewMessageOptions: () => ipcRenderer.invoke('review-message-options'),
   reviewMessageChannels: serverId => ipcRenderer.invoke('review-message-channels', serverId),
   sendReviewMessage: input => ipcRenderer.invoke('review-message-send', input),
+  reviewEvidenceImage: id => ipcRenderer.invoke('review-evidence-image',id),
   generatePRDescription: input => ipcRenderer.invoke('generate-pr-description', input),
   onDescriptionProgress: cb => {const listener=(_,text)=>cb(text);ipcRenderer.on('review-description-progress',listener);return ()=>ipcRenderer.removeListener('review-description-progress',listener);},
   createReviewPR: input => ipcRenderer.invoke('create-review-pr', input),
