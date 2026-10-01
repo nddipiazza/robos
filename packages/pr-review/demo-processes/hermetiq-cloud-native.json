@@ -1,5 +1,5 @@
 {
-  "instructions": "Run Hermetiq cloud-native in its local sandbox in development mode with hot reload. Use Chrome DevTools MCP with a dedicated desktop Chrome profile. Verify app and backend readiness before starting; use the local-stack instructions for setup. Seed synthetic build records through the real backend: include failed and successful builds, commands, platforms, repositories, and enough records to make filters meaningful. Define and verify the expected counts before the demo. Use real React requests and backend responses, not intercepted APIs. Before meaningful actions, show compact site-styled Given/When/Then callouts without intercepting pointer events. Pause at every checkpoint. Explain and chat must stay at the current checkpoint. Apply requested local edits and verify hot reload and relevant assertions. Keep navigation, login, and page layouts unchanged. Never commit, push, create a PR, or mark human approval during the demo. Leave Chrome open. Only at checkpoint one, establish Expanded as the initial saved view using existing Customize page.",
+  "instructions": "Run Hermetiq cloud-native in its local sandbox in development mode with hot reload. Use Chrome DevTools MCP with a dedicated desktop Chrome profile. Verify app and backend readiness before starting; use the local-stack instructions for setup. Seed synthetic build records through the real backend: include failed and successful builds, commands, platforms, repositories, and enough records to make filters meaningful. Define and verify the expected counts before the demo. Use real React requests and backend responses, not intercepted APIs. Pause at every checkpoint. Explain and chat must stay at the current checkpoint. Apply requested local edits and verify hot reload and relevant assertions. Keep navigation, login, and page layouts unchanged. Never commit, push, create a PR, or mark human approval during the demo. Leave Chrome open. Only at checkpoint one, establish Expanded as the initial saved view using existing Customize page.\nPresentation: never show GIVEN/WHEN/THEN labels. Write specific conversational guidance describing what we are showing, what to try, and the visible difference to look for, then invite Next checkpoint. Use the RobOS showDemoCallout helper provided in the agent prompt for every overlay; it is translucent, dismissible, and replaces old overlays. Do not create ad-hoc callouts. ",
   "checkpoints": [
     {
       "title": "Existing customization, ready to change",
@@ -31,5 +31,23 @@
       "when": "Navigate to Analytics & Trends and show its compact filters. Apply Failed if necessary.",
       "then": "Analytics retains its existing layout, uses compact filters, and shows 29 matching invocations. Leave the browser open."
     }
-  ]
+  ],
+  "before": {
+    "ref": "origin/main",
+    "instructions": "Demonstrate the actual main-branch checkout supplied by the theater, never the feature checkout. Use a separate dev server on http://127.0.0.1:3185 and the same real local backend with synthetic fixture records. The dev service is hermetiq-before-filters-frontend; verify the URL and start it with systemctl --user start hermetiq-before-filters-frontend if needed. Use Chrome DevTools MCP to open a separate browser tab at port3185; do not reuse the feature tab at3184. Verify the checkout HEAD matches the baseline revision in the prompt. Initialize the real project membership as needed, using the fixture /tmp/integrated-filters-fixture.json and the local GetProjectsForUser RPC. Source is read-only during the before demo: do not modify main or the feature checkout, and do not simulate the old UI with injected DOM. Observe the actual behavior; do not claim a bug exists if it does not. Use the provided callout helper with natural-language guidance, pause at each checkpoint, and leave the tab open. Do not change saved project customization in this comparison; user filters are fine.",
+    "checkpoints": [
+      {
+        "title": "How filters used to take up space",
+        "given": "The main-branch dev app is running in its own checkout and tab.",
+        "when": "Open Build History and inspect the existing filter controls.",
+        "then": "Show the actual expanded filter area and explain its space usage. Invite the reviewer to inspect the controls, then choose Next checkpoint or Show the change."
+      },
+      {
+        "title": "Filtering before the compact summary",
+        "given": "The original main-branch filter controls are visible.",
+        "when": "Select Failed and command test using the existing controls.",
+        "then": "Verify the matching rows and explain where the active selections are visible in this version. Stop so the reviewer can compare by choosing Show the change."
+      }
+    ]
+  }
 }

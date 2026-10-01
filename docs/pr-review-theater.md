@@ -484,7 +484,7 @@ The bundled example at
 compact filters through the existing Customize page flow. Adapt its sandbox URL,
 fixture setup, and expected counts to the project's local lab. Connect the agent
 to the official Chrome DevTools MCP server and a dedicated, visible Chrome
-profile. The project process owns setup, BDD callouts, checkpoints, and mutation
+profile. The project process owns setup, conversational guidance, checkpoints, and mutation
 constraints. Code edits happen in the selected workspace: review the resulting
 diff before publishing. Explain-only requests explicitly prohibit changes.
 
@@ -494,3 +494,10 @@ runner manifests continue to work. The shell executable and permissions remain
 workstation configuration and cannot be changed by the in-app process editor.
 
 **Start over** reruns the initial setup and checkpoint one using the current project process. It preserves chat context and source edits, resets prior checkpoint completion, and pauses again after the first checkpoint is verified. It is disabled while an agent action is running. A failed restart stays incomplete; Retry targets checkpoint one.
+
+
+### Guidance and before-change comparisons
+
+The agent translates checkpoint intent into a short explanation of what is being demonstrated, what to try, and what visible result to expect. Given/When/Then remain internal test intent. Browser callouts use `lib/demo-callout.js`: translucent, click-through except for ×, and limited to one overlay. Showing new guidance removes older overlays. Closing a callout suppresses updates with the same id until a new action starts.
+
+An optional `before` object in the process contains `ref` (default `origin/main`), `instructions`, and its own `checkpoints`. **How it used to work** creates a separate detached worktree at the locally fetched ref; fetch main before launching to compare with its latest revision. The theater displays the pinned revision. Configure a separate dev port and browser tab in its instructions. An optional trusted manifest `beforeWorkspace` object (`workspace`, `ref`, `revision`) can reuse a prepared checkout. **Show the change** returns to checkpoint one of the feature process. Start over resets the current mode. Neither operation resets or switches the feature checkout or discards live edits.

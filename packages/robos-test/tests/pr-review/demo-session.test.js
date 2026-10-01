@@ -36,3 +36,26 @@ test('Start over cannot race an active agent action',async()=>{
  let finish;const s=session(()=>new Promise(r=>finish=r));const pending=s.act('start');
  await assert.rejects(s.act('restart'),/already working/);finish({reply:'Ready',checkpointReached:true});await pending;
 });
+
+test('optional before walkthrough has independent progress and conversational guidance',async()=>{
+ const prompts=[];const s=session(async p=>{prompts.push(p);return {reply:'Observed',guidance:'Try the old filters, then choose Next checkpoint.',checkpointReached:true};});
+ await assert.rejects(s.act('before'),/No before-change/);
+ s.process.before={instructions:'Read-only baseline',checkpoints:s.process.checkpoints};
+ s.baseline={workspace:'/tmp/baseline-test',ref:'origin/main',revision:'1234567890'};
+ await s.act('before');assert.equal(s.state().mode,'before');assert.equal(s.index,0);
+ assert.match(prompts.at(-1),/Workspace: \/tmp\/baseline-test/);assert.match(prompts.at(-1),/showDemoCallout/);
+ assert.equal(s.state().guidance,'Try the old filters, then choose Next checkpoint.');
+ await s.act('next');assert.equal(s.index,1);await s.act('restart');assert.equal(s.index,0);assert.equal(s.mode,'before');
+ await s.act('feature');assert.equal(s.index,0);assert.equal(s.mode,'feature');assert.equal(s.state().baseline,null);
+});
+test('baseline checkout pins main without touching dirty feature files',()=>{
+ const {execFileSync}=require('node:child_process');const {prepareBaseline}=require('../../../pr-review/lib/demo-baseline');
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'baseline-test-'));
+ const git=args=>execFileSync('git',['-C',dir,...args],{encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim();
+ git(['init','-b','main']);git(['config','user.email','test@example.test']);git(['config','user.name','Test']);
+ fs.writeFileSync(path.join(dir,'app.txt'),'main');git(['add','app.txt']);git(['commit','-m','baseline']);const sha=git(['rev-parse','HEAD']);
+ git(['switch','-c','feature']);fs.writeFileSync(path.join(dir,'app.txt'),'unsaved feature');
+ const baseline=prepareBaseline(dir,'main');assert.equal(baseline.revision,sha);assert.equal(fs.readFileSync(path.join(baseline.workspace,'app.txt'),'utf8'),'main');
+ assert.equal(git(['branch','--show-current']),'feature');assert.equal(fs.readFileSync(path.join(dir,'app.txt'),'utf8'),'unsaved feature');
+ assert.throws(()=>prepareBaseline(dir,'--bad'),/Invalid baseline ref/);
+});

@@ -7,11 +7,13 @@ window.mountWalkthrough = async function () {
   const badge = document.createElement('span'); badge.className = 'walkthrough-status';
   const start = button('Start', 'Start the live walkthrough', () => act('start'));
   const restart = button('Start over', 'Rerun setup and return to checkpoint 1; keep code changes and chat', () => act('restart'));
+  const before = button('How it used to work', 'Demo the main branch in a separate checkout', () => act('before'));
+  const feature = button('Show the change', 'Return to the feature branch walkthrough', () => act('feature'));
   const explain = button('Explain', 'Explain what you are demonstrating at this checkpoint', () => act('explain'));
   const next = button('Next checkpoint →', 'Go to the next checkpoint', () => act('next'));
   const retry = button('Retry', 'Retry this checkpoint', () => act('retry'));
   const process = button('Process…', 'Customize this project’s demo process', () => { editor.value = JSON.stringify(state.process, null, 2); dialog.showModal(); });
-  bar.append(title, badge, start, restart, explain, next, retry, process);
+  bar.append(title, badge, start, restart, before, feature, explain, next, retry, process);
   const checkpoint = document.createElement('section'); checkpoint.className = 'walkthrough-checkpoint'; checkpoint.setAttribute('aria-live', 'polite');
   const chat = document.createElement('div'); chat.className = 'walkthrough-chat'; chat.setAttribute('role', 'log'); chat.setAttribute('aria-label', 'Live demo conversation');
   const form = document.createElement('form'); form.className = 'walkthrough-compose';
@@ -21,7 +23,7 @@ window.mountWalkthrough = async function () {
   form.append(input, send); stage.append(bar, checkpoint, chat, error, form);
   const dialog = document.createElement('dialog'); dialog.className = 'walkthrough-process';
   const heading = document.createElement('h3'); heading.textContent = 'Project demo process';
-  const hint = document.createElement('p'); hint.textContent = 'Edit instructions and Given/When/Then checkpoints. Saving restarts the walkthrough at its beginning. The agent executable is configured separately on this workstation.';
+  const hint = document.createElement('p'); hint.textContent = 'Edit demo instructions, checkpoint intent, and the optional before-change walkthrough. Saving restarts the walkthrough at its beginning. The agent executable is configured separately on this workstation.';
   const editor = document.createElement('textarea'); editor.setAttribute('aria-label', 'Demo process JSON'); editor.rows = 18;
   const editorError = document.createElement('p'); editorError.setAttribute('role', 'alert');
   const save = button('Save process', 'Save process and reset walkthrough', async () => { try { const result = await window.api.saveDemoProcess(JSON.parse(editor.value)); if (!result.ok) throw new Error(result.error); render(result.state); dialog.close(); } catch (e) { editorError.textContent = e.message; } });
@@ -33,12 +35,14 @@ window.mountWalkthrough = async function () {
     badge.textContent = busy ? 'Agent working…' : value.status === 'paused' ? `Paused · ${value.index + 1}/${value.total}` : value.status === 'error' ? 'Needs attention' : 'Ready';
     start.hidden = value.index >= 0 || value.status === 'error'; start.disabled = busy;
     restart.hidden = value.messages.length === 0; restart.disabled = busy;
+    before.hidden = !value.process.before || value.mode === 'before'; before.disabled = busy;
+    feature.hidden = value.mode !== 'before'; feature.disabled = busy;
     explain.disabled = busy || value.index < 0;
     next.disabled = busy || value.status !== 'paused' || value.index >= value.total - 1;
     retry.hidden = value.status !== 'error'; process.disabled = busy; send.disabled = busy || value.index < 0;
     checkpoint.replaceChildren();
     const c = value.checkpoint;
-    if (c) { const h = document.createElement('h3'); h.textContent = c.title; checkpoint.append(h); for (const key of ['given', 'when', 'then']) { const p = document.createElement('p'); const strong = document.createElement('strong'); strong.textContent = key.toUpperCase() + ' '; p.append(strong, document.createTextNode(c[key])); checkpoint.append(p); } }
+    if (c) { const h = document.createElement('h3'); h.textContent = c.title; const p = document.createElement('p'); p.textContent = busy ? `I’m preparing “${c.title}”. I’ll show you what to try and pause when it’s ready.` : value.guidance || c.summary || 'Ask Explain for a walkthrough of this step, or try the app before moving on.'; checkpoint.append(h, p); if (value.baseline) { const note = document.createElement('small'); note.textContent = `Before the change · ${value.baseline.ref} · ${value.baseline.revision.slice(0, 8)}`; checkpoint.append(note); } }
     else checkpoint.textContent = 'Start the dev app and demonstrate one checkpoint at a time. You decide when we move on.';
     chat.replaceChildren();
     for (const message of value.messages) { const bubble = document.createElement('div'); bubble.className = 'walkthrough-bubble ' + message.role; const label = document.createElement('strong'); label.textContent = message.role === 'user' ? 'You' : message.role === 'assistant' ? 'Demo agent' : 'Status'; const body = document.createElement('p'); body.textContent = message.text; bubble.append(label, body); chat.append(bubble); }

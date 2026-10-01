@@ -9,7 +9,7 @@ const { loadLocalReview, ShowMeSession } = require('./lib/local-review');
 const localReview = loadLocalReview(process.env.ROBOS_LOCAL_REVIEW);
 const showMeSession = new ShowMeSession(localReview?.runner);
 const { DemoSession } = require('./lib/demo-session');
-const demoSession = localReview?.demoProcess ? new DemoSession({ workspace: localReview.workspace, processFile: localReview.demoProcess, agent: localReview.demoAgent }) : null;
+const demoSession = localReview?.demoProcess ? new DemoSession({ workspace: localReview.workspace, processFile: localReview.demoProcess, agent: localReview.demoAgent, beforeWorkspace: localReview.beforeWorkspace }) : null;
 demoSession?.on('state', state => { if (win && !win.isDestroyed()) win.webContents.send('demo-state', state); });
 ipcMain.handle('demo-state', () => demoSession?.state() || null);
 ipcMain.handle('demo-action', async (_, { action, text } = {}) => { try { if (!demoSession) throw new Error('No project demo process configured.'); return { ok: true, state: await demoSession.act(action, text) }; } catch (e) { return { ok: false, error: e.message }; } });
