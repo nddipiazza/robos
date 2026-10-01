@@ -18,3 +18,21 @@ test('agent executable receives structured-output paths and returns a real proce
 });
 test('timeout cannot advance progress',async()=>{const s=session();s.agent={command:process.execPath,args:['-e','setInterval(()=>{},1000)','--'],timeoutMs:30};await s.act('start');assert.equal(s.index,-1);assert.equal(s.status,'error');assert.match(s.messages.at(-1).text,/timed out/);});
 test('missing executable is reported without becoming a ready checkpoint',async()=>{const s=session();s.agent={command:'/nonexistent/robos-test-agent',args:[],timeoutMs:1000};await s.act('start');assert.equal(s.status,'error');assert.equal(s.index,-1);});
+test('Start over reruns checkpoint one, preserves chat/code context and process',async()=>{
+ const prompts=[];const s=session(async p=>{prompts.push(p);return {reply:'Verified',checkpointReached:true};});
+ await s.act('start');await s.act('message','Keep the new label');await s.act('next');
+ const processBefore=JSON.stringify(s.process);await s.act('restart');
+ assert.equal(s.index,0);assert.equal(s.status,'paused');assert.equal(s.failedIndex,0);
+ assert.equal(JSON.stringify(s.process),processBefore);assert.ok(s.messages.some(m=>m.text==='Keep the new label'));
+ assert.match(prompts.at(-1),/Re-establish the initial app\/browser state/);assert.match(prompts.at(-1),/do not undo code edits/);
+ await s.act('next');assert.equal(s.index,1);
+});
+test('failed restart does not retain old completion; Retry returns to first checkpoint',async()=>{
+ let pass=true;const s=session(async()=>({reply:'Result',checkpointReached:pass}));await s.act('start');await s.act('next');
+ pass=false;await s.act('restart');assert.equal(s.index,-1);assert.equal(s.status,'error');
+ pass=true;await s.act('retry');assert.equal(s.index,0);
+});
+test('Start over cannot race an active agent action',async()=>{
+ let finish;const s=session(()=>new Promise(r=>finish=r));const pending=s.act('start');
+ await assert.rejects(s.act('restart'),/already working/);finish({reply:'Ready',checkpointReached:true});await pending;
+});

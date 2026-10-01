@@ -6,11 +6,12 @@ window.mountWalkthrough = async function () {
   const title = document.createElement('strong'); title.textContent = 'Walk me through it';
   const badge = document.createElement('span'); badge.className = 'walkthrough-status';
   const start = button('Start', 'Start the live walkthrough', () => act('start'));
+  const restart = button('Start over', 'Rerun setup and return to checkpoint 1; keep code changes and chat', () => act('restart'));
   const explain = button('Explain', 'Explain what you are demonstrating at this checkpoint', () => act('explain'));
   const next = button('Next checkpoint →', 'Go to the next checkpoint', () => act('next'));
   const retry = button('Retry', 'Retry this checkpoint', () => act('retry'));
   const process = button('Process…', 'Customize this project’s demo process', () => { editor.value = JSON.stringify(state.process, null, 2); dialog.showModal(); });
-  bar.append(title, badge, start, explain, next, retry, process);
+  bar.append(title, badge, start, restart, explain, next, retry, process);
   const checkpoint = document.createElement('section'); checkpoint.className = 'walkthrough-checkpoint'; checkpoint.setAttribute('aria-live', 'polite');
   const chat = document.createElement('div'); chat.className = 'walkthrough-chat'; chat.setAttribute('role', 'log'); chat.setAttribute('aria-label', 'Live demo conversation');
   const form = document.createElement('form'); form.className = 'walkthrough-compose';
@@ -31,6 +32,7 @@ window.mountWalkthrough = async function () {
     state = value; const busy = value.status === 'running';
     badge.textContent = busy ? 'Agent working…' : value.status === 'paused' ? `Paused · ${value.index + 1}/${value.total}` : value.status === 'error' ? 'Needs attention' : 'Ready';
     start.hidden = value.index >= 0 || value.status === 'error'; start.disabled = busy;
+    restart.hidden = value.messages.length === 0; restart.disabled = busy;
     explain.disabled = busy || value.index < 0;
     next.disabled = busy || value.status !== 'paused' || value.index >= value.total - 1;
     retry.hidden = value.status !== 'error'; process.disabled = busy; send.disabled = busy || value.index < 0;

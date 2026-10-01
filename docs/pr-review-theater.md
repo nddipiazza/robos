@@ -492,3 +492,5 @@ Demo progress and chat remain in the running theater session. Restarting the
 app starts a fresh demo; the saved project process persists. Legacy one-shot
 runner manifests continue to work. The shell executable and permissions remain
 workstation configuration and cannot be changed by the in-app process editor.
+
+**Start over** reruns the initial setup and checkpoint one using the current project process. It preserves chat context and source edits, resets prior checkpoint completion, and pauses again after the first checkpoint is verified. It is disabled while an agent action is running. A failed restart stays incomplete; Retry targets checkpoint one.
