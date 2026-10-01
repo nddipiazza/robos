@@ -1,5 +1,6 @@
 'use strict';
-const { app, BrowserWindow, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, protocol, net } = require('electron');
+protocol.registerSchemesAsPrivileged([{scheme:'robos-evidence',privileges:{standard:true,secure:true,supportFetchAPI:true}}]);
 const path = require('path');
 const fs   = require('fs');
 const os   = require('os');
@@ -9,7 +10,7 @@ const { loadLocalReview, ShowMeSession } = require('./lib/local-review');
 const localReview = loadLocalReview(process.env.ROBOS_LOCAL_REVIEW);
 const { ReviewPRPublisher } = require('./lib/create-review-pr');
 const reviewPublisher = localReview ? new ReviewPRPublisher(localReview, process.env.ROBOS_LOCAL_REVIEW) : null;
-ipcMain.handle('create-review-pr', async (_, input) => { try { if (!reviewPublisher) throw new Error('No local review is open.'); if (demoSession?.status === 'running') throw new Error('Wait for the current edit to finish before creating the PR.'); return {ok:true,pr:await reviewPublisher.create(input)}; } catch(error) { return {ok:false,error:error.message}; } });
+ipcMain.handle('create-review-pr', async (_, input) => { try { if (!reviewPublisher) throw new Error('No local review is open.'); if (demoSession?.status === 'running') throw new Error('Wait for the current edit to finish before creating the PR.'); return {ok:true,pr:await reviewPublisher.create({...input,body:require('./lib/inline-evidence').resolveEvidence(input.body,require('./lib/review-evidence').evidenceFor(localReview,reviewStore).evidence)})}; } catch(error) { return {ok:false,error:error.message}; } });
 const showMeSession = new ShowMeSession(localReview?.runner);
 const { ReviewSessionStore } = require('./lib/review-session-store');
 const reviewStore = localReview ? new ReviewSessionStore({repo:localReview.repo,number:localReview.number,branch:localReview.pr.headBranch,workspace:localReview.workspace}) : null;
@@ -107,6 +108,13 @@ app.on('second-instance', () => {
   if (w) { if (w.isMinimized()) w.restore(); w.focus(); }
 });
 app.whenReady().then(() => {
+  protocol.handle('robos-evidence', async request => {
+    const url=new URL(request.url);
+    if(url.hostname!=='screenshot'||!/^\/[a-f0-9]{16}$/.test(url.pathname)||!localReview)return new Response('Not found',{status:404});
+    const item=require('./lib/review-evidence').evidenceFor(localReview,reviewStore).evidence.find(e=>e.id===url.pathname.slice(1)&&e.kind==='screenshot');
+    if(!item?.path||!fs.existsSync(item.path))return new Response('Not found',{status:404});
+    return net.fetch(require('node:url').pathToFileURL(item.path).href);
+  });
   win = new BrowserWindow({
     width: 1400, height: 900,
     minWidth: 900, minHeight: 600,

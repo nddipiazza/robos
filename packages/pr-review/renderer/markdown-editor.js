@@ -4,7 +4,7 @@ class ReviewMarkdownEditor extends HTMLElement {
   connectedCallback(){
     if(this.editor)return;
     this.editor=new toastui.Editor({el:this,height:'440px',initialEditType:'wysiwyg',previewStyle:'vertical',initialValue:this._value,theme:'dark',usageStatistics:false,autofocus:false,
-      customHTMLSanitizer:html=>DOMPurify.sanitize(html),
+      customHTMLSanitizer:html=>DOMPurify.sanitize(html,{ALLOWED_URI_REGEXP:/^(?:(?:https?|mailto|tel|data):|robos-evidence:\/\/screenshot\/[a-f0-9]{16}$|[^a-z]|[a-z+.-]+(?:[^a-z+.-:]|$))/i}),
       toolbarItems:[['heading','bold','italic','strike'],['hr','quote'],['ul','ol','task'],['table','image','link'],['code','codeblock'],['scrollSync']],
       events:{change:()=>{this._value=this.editor.getMarkdown();if(!this.setting)this.dispatchEvent(new Event('input',{bubbles:true}));}},
       hooks:{addImageBlobHook:()=>{this.dispatchEvent(new CustomEvent('editor-warning',{bubbles:true,detail:'Use a shared screenshot URL in the image dialog. Local images must be uploaded before they can appear in a GitHub PR.'}));return false;}}

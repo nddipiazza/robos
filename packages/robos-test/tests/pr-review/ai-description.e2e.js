@@ -11,3 +11,13 @@ test('visual editor formats Markdown and AI description defaults on, remains edi
  await p.evaluate(()=>{window.api.generatePRDescription=()=>new Promise(resolve=>window.resolveDescription=resolve);});await p.getByRole('checkbox').check();await p.getByRole('textbox',{name:'Description',exact:true}).fill('Human edit while generating');await p.evaluate(()=>window.resolveDescription({ok:true,markdown:'Stale AI text',warnings:[]}));await p.getByRole('status').filter({hasText:'Your edits were kept'}).waitFor();assert.equal(await p.locator('review-markdown-editor').evaluate(el=>el.value),'**Human edit while generating**');
  }finally{await b.close();}
 });
+test('inline evidence remains an image in the visual description and survives Markdown editing',async()=>{
+ const b=await chromium.launch({headless:true});try{const p=await b.newPage();await p.setContent('<review-markdown-editor></review-markdown-editor>');await require('./editor-test-helper')(p);
+ const markdown='## Filters\n\nExpanded controls and matching results.\n\n![Failed builds](robos-evidence://screenshot/0123456789abcdef)';
+ await p.locator('review-markdown-editor').evaluate((el,value)=>el.value=value,markdown);
+ assert.equal(await p.locator('.toastui-editor-ww-container img[src]').getAttribute('src'),'robos-evidence://screenshot/0123456789abcdef');
+ assert.match(await p.locator('review-markdown-editor').evaluate(el=>{el.editor.changeMode('markdown');return el.value;}),/!\[Failed builds\]\(robos-evidence:\/\/screenshot\/0123456789abcdef\)/);
+ await p.locator('review-markdown-editor').evaluate(el=>el.editor.changeMode('wysiwyg'));
+ assert.equal(await p.locator('.toastui-editor-ww-container img[src]').count(),1);
+ }finally{await b.close();}
+});
