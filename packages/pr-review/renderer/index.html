@@ -218,6 +218,9 @@
             <span class="step-num">6</span> <span class="step-label">Walkthrough</span>
             <span class="step-status" id="step-status-6">○</span>
           </button>
+          <button class="step-btn" data-stage="8" id="step-btn-8" hidden data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="8">
+            <span class="step-label">Create PR</span>
+          </button>
           <button class="step-btn" data-stage="7" id="step-btn-7" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="7">
             <span class="step-num">7</span> <span class="step-label">Approve</span>
             <span class="step-status" id="step-status-7">○</span>
@@ -225,7 +228,6 @@
         </nav>
 
         <div class="theater-actions">
-          <button id="btn-create-review-pr" class="btn-theater-action" hidden>Create PR</button>
           <button id="btn-theater-config" class="btn-theater-action btn-theater-settings" data-theater-action="openTheaterConfigModal" data-theater-event="click" title="Customize PR Review Stages &amp; Team KGraph Policy">
             Review settings
           </button>
@@ -633,6 +635,7 @@
         </div>
 
         <!-- STAGE 6: "Walk Me Through It" Interactive Walkthrough -->
+        <section class="theater-stage" id="stage-8" aria-label="Create PR"></section>
         <div class="theater-stage" id="stage-6">
           <div class="stage-header">
             <div class="stage-title-wrap">

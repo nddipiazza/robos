@@ -25,7 +25,7 @@ How RobOS turns pull request reviews into an interactive, multi-modal governance
 1. **Task Planner** iteratively refines an epic and its tasks, including scope, dependencies, acceptance criteria, and happy, negative, and edge cases.
 2. **Task Implementer** creates a feature branch, implements and validates the task, then commits and pushes the branch. It does **not** create a PR or draft PR.
 3. **Local review is optional.** Choose **Review branch…** in Task Implementer and select the implementation checkout. The review header displays the repository and actual branch. Use Changes, Evidence, and Walkthrough to inspect or refine the work before publication.
-4. When ready, click **Create PR** in the review header from any review tab. Review the title and description, optionally choose a draft, and explicitly create the PR. Completing every walkthrough checkpoint is not required.
+4. When ready, open the **Create PR** stage alongside Changes, Evidence, and Walkthrough. Its title and description are saved locally as you edit, including across navigation and restarts. Review the title and description, optionally choose a draft, and explicitly create the PR. Completing every walkthrough checkpoint is not required.
 
 Commit and push any edits made during local review before creating the PR. Publication checks the checkout's origin and current branch, rejects uncommitted or unpushed work, and reuses an existing open PR for that branch rather than creating a duplicate. The header then links to the PR number and title. Saved chat and walkthrough state remain attached to the local review.
 

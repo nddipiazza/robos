@@ -729,6 +729,11 @@ function updateTheaterStepper() {
     }
   });
 
+  const publishStep = document.getElementById('step-btn-8');
+  if (publishStep) {
+    if (currentTheaterStage === 8) publishStep.setAttribute('aria-current', 'step');
+    else publishStep.removeAttribute('aria-current');
+  }
   const activeStatus = document.getElementById(`step-status-${currentTheaterStage}`);
   if (activeStatus && !stageDefs.find(s => s.num === currentTheaterStage)?.done) {
     activeStatus.textContent = '⏳';
@@ -736,7 +741,7 @@ function updateTheaterStepper() {
 }
 
 window.setTheaterStage = function(stageNum) {
-  if (theaterContext?.local && ![3, 5, 6].includes(stageNum)) return;
+  if (theaterContext?.local && ![3, 5, 6, 8].includes(stageNum)) return;
   // If target stage is disabled in config, skip to next or previous available stage
   if (theaterContext && theaterContext.theaterConfig) {
     const cfg = theaterContext.theaterConfig;
