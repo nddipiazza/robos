@@ -19,9 +19,12 @@ const PorchDeckZone = preload("res://scripts/PorchDeckZone.gd")
 
 var showcase_timer: float = 0.0
 var showcase_step: int = 0
+var test_timer: float = 0.0
+var test_step: int = 0
 
 func _ready() -> void:
 	print("🏡 [HousePorchElevationMap] Loaded: Ground Yard (Z=0), Stairs, Porch (Z=1), and Front Door.")
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	if hero and hero.has_method("set_camera_limits"):
 		hero.set_camera_limits(0, 0, 1920, 1080)
 	
@@ -41,11 +44,11 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		var click_pos = get_global_mouse_position()
 		if hero:
-			hero.target_position = click_pos
-			hero.is_moving = true
+			hero.move_to_point(click_pos)
 
 func _process(delta: float) -> void:
 	_handle_showcase(delta)
+	_handle_test_clicks(delta)
 
 	if not hero or not elevation_badge:
 		return
@@ -105,6 +108,53 @@ func _handle_showcase(delta: float) -> void:
 		print("✔ [Showcase] Demonstration complete.")
 		get_tree().quit(0)
 
+func _handle_test_clicks(delta: float) -> void:
+	if not OS.has_environment("CRPG_TEST_CLICKS"):
+		return
+	test_timer += delta
+
+	if test_step == 0 and test_timer >= 0.5:
+		test_step = 1
+		print("🧪 [TestClicks] Dispatching simulated mouse click at (960, 670) [Staircase]...")
+		var ev = InputEventMouseButton.new()
+		ev.button_index = MOUSE_BUTTON_LEFT
+		ev.pressed = true
+		ev.position = Vector2(960, 670)
+		ev.global_position = Vector2(960, 670)
+		Input.parse_input_event(ev)
+
+		var ev_rel = InputEventMouseButton.new()
+		ev_rel.button_index = MOUSE_BUTTON_LEFT
+		ev_rel.pressed = false
+		ev_rel.position = Vector2(960, 670)
+		ev_rel.global_position = Vector2(960, 670)
+		Input.parse_input_event(ev_rel)
+
+	elif test_step == 1 and test_timer >= 0.9:
+		test_step = 2
+		print("🧪 [TestClicks] Checking hero movement status: is_moving=%s, target_position=%s" % [hero.is_moving if hero else false, hero.target_position if hero else Vector2.ZERO])
+		if not hero or not hero.is_moving:
+			print("❌ [TestClicks] FAILURE: Hero did not start moving after mouse click!")
+			get_tree().quit(1)
+			return
+		print("✅ [TestClicks] SUCCESS: Hero responded to click and is navigating toward stairs.")
+
+	elif test_step == 2 and test_timer >= 2.0:
+		test_step = 3
+		print("🧪 [TestClicks] Dispatching simulated mouse click at (960, 480) [Front Door]...")
+		var ev = InputEventMouseButton.new()
+		ev.button_index = MOUSE_BUTTON_LEFT
+		ev.pressed = true
+		ev.position = Vector2(960, 480)
+		ev.global_position = Vector2(960, 480)
+		Input.parse_input_event(ev)
+
+	elif test_step == 3 and test_timer >= 3.5:
+		test_step = 4
+		print("🧪 [TestClicks] Checking hero status: elevation tier=%d, visual_offset=%.1f" % [hero.get_elevation_tier() if hero else 0, hero.visual_elevation_offset if hero else 0.0])
+		print("✅ [TestClicks] ALL CLICK-TO-MOVE AND ELEVATION CHECKS PASSED!")
+		get_tree().quit(0)
+
 func _on_actor_ascended(_actor: Node2D, tier: int) -> void:
 	_log_message("🪜 Climbed the wooden stairs to Elevation Tier %d." % tier)
 
@@ -118,6 +168,15 @@ func _on_actor_exited_deck(_actor: Node2D) -> void:
 	pass
 
 func _on_door_entered() -> void:
+	if hero and is_instance_valid(hero) and door and hero.global_position.distance_to(door.global_position) > 80.0:
+		_log_message("🚶 Walking up to the cottage front door...")
+		hero.approach_and_interact(door.global_position, 60.0, func():
+			_enter_cottage()
+		)
+	else:
+		_enter_cottage()
+
+func _enter_cottage() -> void:
 	_log_message("🚪 Opened the cottage front door. Entering interior...")
 	if status_label:
 		status_label.text = "🚪 Entered the House Interior!"

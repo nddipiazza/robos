@@ -29,12 +29,21 @@ func _init() -> void:
 	process_mode = PROCESS_MODE_ALWAYS
 
 func _ready() -> void:
-	Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN)
 	_create_step_toolbar()
 	_create_event_viewer()
 	_create_proof_panel()
 	_create_virtual_cursor()
 	_create_scenario_splash()
+
+	if OS.has_environment("CRPG_HEADLESS_QA") or OS.has_environment("CRPG_SHOWCASE_MODE"):
+		Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN)
+		if virtual_cursor:
+			virtual_cursor.visible = true
+	else:
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+		if virtual_cursor:
+			virtual_cursor.visible = false
+
 	# Browser builds are for players: keep the game cursor, hide the test panels
 	if OS.has_feature("web"):
 		step_panel.visible = false
@@ -53,6 +62,7 @@ func set_hud_visible(show: bool) -> void:
 
 func _create_step_toolbar() -> void:
 	step_panel = Panel.new()
+	step_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	step_panel.custom_minimum_size = Vector2(1920, 38)
 	step_panel.position = Vector2(0, 0)
 	step_panel.size = Vector2(1920, 38)
@@ -66,6 +76,7 @@ func _create_step_toolbar() -> void:
 	add_child(step_panel)
 
 	step_hbox = HBoxContainer.new()
+	step_hbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	step_hbox.position = Vector2(16, 2)
 	step_hbox.size = Vector2(1888, 34)
 	step_hbox.add_theme_constant_override("separation", 12)
@@ -115,6 +126,7 @@ func _create_step_toolbar() -> void:
 
 func _create_event_viewer() -> void:
 	event_panel = Panel.new()
+	event_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	event_panel.position = Vector2(1610, 44)
 	event_panel.size = Vector2(294, 130)
 
@@ -134,6 +146,7 @@ func _create_event_viewer() -> void:
 	add_child(event_panel)
 
 	var vbox = VBoxContainer.new()
+	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vbox.position = Vector2(10, 8)
 	vbox.size = Vector2(274, 114)
 	vbox.add_theme_constant_override("separation", 3)
@@ -164,6 +177,8 @@ func set_cursor_position(pos: Vector2) -> void:
 		virtual_cursor.position = pos
 
 func human_move_and_click(target_pos: Vector2, ping_color: Color = Color(0.1, 0.95, 0.4, 0.95), tag_text: String = "", on_click_callback: Callable = Callable()) -> void:
+	if virtual_cursor:
+		virtual_cursor.visible = true
 	var start_pos = current_cursor_pos
 	var dist = start_pos.distance_to(target_pos)
 	
@@ -245,6 +260,7 @@ const PROOF_MAX_LINES := 9
 
 func _create_proof_panel() -> void:
 	proof_panel = PanelContainer.new()
+	proof_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	proof_panel.position = Vector2(14, 64)
 	proof_panel.custom_minimum_size = Vector2(700, 0)
 	var style = StyleBoxFlat.new()
@@ -260,6 +276,7 @@ func _create_proof_panel() -> void:
 	proof_panel.visible = false
 	add_child(proof_panel)
 	var v = VBoxContainer.new()
+	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	v.add_theme_constant_override("separation", 2)
 	proof_panel.add_child(v)
 	var hdr = HBoxContainer.new()

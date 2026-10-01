@@ -23,6 +23,7 @@ script = ExtResource("1_map")
 [node name="GroundYard" type="ColorRect" parent="."]
 offset_right = 1920.0
 offset_bottom = 1080.0
+mouse_filter = 2
 color = Color(0.12, 0.16, 0.14, 1)
 
 [node name="FlagstonePath" type="Polygon2D" parent="."]
@@ -58,6 +59,7 @@ offset_left = -60.0
 offset_top = -55.0
 offset_right = 60.0
 offset_bottom = -28.0
+mouse_filter = 2
 color = Color(0.46, 0.35, 0.25, 1)
 
 [node name="Step2" type="ColorRect" parent="VisualStairs"]
@@ -65,6 +67,7 @@ offset_left = -60.0
 offset_top = -28.0
 offset_right = 60.0
 offset_bottom = -1.0
+mouse_filter = 2
 color = Color(0.43, 0.33, 0.23, 1)
 
 [node name="Step3" type="ColorRect" parent="VisualStairs"]
@@ -72,6 +75,7 @@ offset_left = -60.0
 offset_top = -1.0
 offset_right = 60.0
 offset_bottom = 26.0
+mouse_filter = 2
 color = Color(0.40, 0.30, 0.21, 1)
 
 [node name="Step4" type="ColorRect" parent="VisualStairs"]
@@ -79,6 +83,7 @@ offset_left = -60.0
 offset_top = 26.0
 offset_right = 60.0
 offset_bottom = 55.0
+mouse_filter = 2
 color = Color(0.37, 0.28, 0.19, 1)
 
 [node name="StairRisers" type="Line2D" parent="VisualStairs"]
@@ -112,6 +117,7 @@ offset_left = -310.0
 offset_top = -24.0
 offset_right = -65.0
 offset_bottom = -16.0
+mouse_filter = 2
 color = Color(0.55, 0.42, 0.30, 1)
 
 [node name="RailRight" type="ColorRect" parent="PorchFrontRailing"]
@@ -119,6 +125,7 @@ offset_left = 65.0
 offset_top = -24.0
 offset_right = 310.0
 offset_bottom = -16.0
+mouse_filter = 2
 color = Color(0.55, 0.42, 0.30, 1)
 
 [node name="BalustersLeft" type="Line2D" parent="PorchFrontRailing"]
@@ -147,6 +154,7 @@ offset_left = -80.0
 offset_top = -65.0
 offset_right = 80.0
 offset_bottom = -42.0
+mouse_filter = 2
 theme_override_colors/font_color = Color(0.9, 0.7, 0.4, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
 theme_override_constants/shadow_offset_y = 1
@@ -165,6 +173,7 @@ offset_left = -16.0
 offset_top = -8.0
 offset_right = 16.0
 offset_bottom = 8.0
+mouse_filter = 2
 color = Color(0.35, 0.25, 0.15, 1)
 
 [node name="DummyPost" type="ColorRect" parent="TrainingDummy"]
@@ -172,6 +181,7 @@ offset_left = -4.0
 offset_top = -45.0
 offset_right = 4.0
 offset_bottom = -8.0
+mouse_filter = 2
 color = Color(0.5, 0.38, 0.24, 1)
 
 [node name="DummyHead" type="ColorRect" parent="TrainingDummy"]
@@ -179,6 +189,7 @@ offset_left = -10.0
 offset_top = -65.0
 offset_right = 10.0
 offset_bottom = -45.0
+mouse_filter = 2
 color = Color(0.8, 0.7, 0.5, 1)
 
 [node name="DummyLabel" type="Label" parent="TrainingDummy"]
@@ -186,6 +197,7 @@ offset_left = -70.0
 offset_top = -90.0
 offset_right = 70.0
 offset_bottom = -68.0
+mouse_filter = 2
 theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
 theme_override_font_sizes/font_size = 12
 text = "Yard Target Dummy"
@@ -201,6 +213,7 @@ offset_left = 30.0
 offset_top = 20.0
 offset_right = 1890.0
 offset_bottom = 90.0
+mouse_filter = 2
 
 [node name="TitleLabel" type="Label" parent="CanvasLayer/HeaderPanel"]
 layout_mode = 0
@@ -208,6 +221,7 @@ offset_left = 20.0
 offset_top = 8.0
 offset_right = 1200.0
 offset_bottom = 38.0
+mouse_filter = 2
 theme_override_colors/font_color = Color(0.3, 0.85, 1, 1)
 theme_override_font_sizes/font_size = 20
 text = "ROBOS cRPG — MULTI-TIER ELEVATION & STAIRCASE SHOWCASE"
@@ -218,6 +232,7 @@ offset_left = 22.0
 offset_top = 38.0
 offset_right = 1200.0
 offset_bottom = 60.0
+mouse_filter = 2
 theme_override_colors/font_color = Color(0.8, 0.85, 0.9, 1)
 theme_override_font_sizes/font_size = 13
 text = "Ground Yard (Z=0) • Wooden Staircase (Z=0 -> 1) • Elevated Porch (Z=1, -48px Offset) • Front Door Entrance"
@@ -227,6 +242,7 @@ offset_left = 660.0
 offset_top = 110.0
 offset_right = 1260.0
 offset_bottom = 150.0
+mouse_filter = 2
 theme_override_colors/font_color = Color(0.6, 0.9, 0.6, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
 theme_override_font_sizes/font_size = 16
@@ -238,6 +254,7 @@ offset_left = 660.0
 offset_top = 155.0
 offset_right = 1260.0
 offset_bottom = 185.0
+mouse_filter = 2
 theme_override_colors/font_color = Color(1, 0.9, 0.4, 1)
 theme_override_font_sizes/font_size = 14
 text = "Click to move: Walk up stairs to elevate onto porch; click front door to enter."
@@ -248,6 +265,7 @@ offset_left = 30.0
 offset_top = 880.0
 offset_right = 650.0
 offset_bottom = 1050.0
+mouse_filter = 2
 theme_override_colors/default_color = Color(0.85, 0.9, 0.95, 1)
 theme_override_font_sizes/normal_font_size = 12
 bbcode_enabled = true
