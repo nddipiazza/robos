@@ -10,7 +10,9 @@
     "c4": "https://c4model.com/ns#",
     "dcterms": "http://purl.org/dc/terms/",
     "schema": "https://schema.org/",
-    "xsd": "http://www.w3.org/2001/XMLSchema#"
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "game": "https://robos.dev/ns/game#",
+    "tabletop": "https://robos.dev/ns/tabletop#"
   },
   "@id": "urn:robos:package:crpg",
   "@type": [
@@ -29,7 +31,8 @@
         "oslc_am:Resource",
         "robos:CRPGGame",
         "robos:PCGame",
-        "schema:VideoGame"
+        "schema:VideoGame",
+        "robos:Game"
       ],
       "dcterms:title": "Realm of Heroes: A Night Without Memory",
       "robos:repository": "github.com/nddipiazza/realm-of-heroes",
@@ -73,14 +76,16 @@
         "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muicpmge",
         "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muimlank",
         "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muimmiax"
-      ]
+      ],
+      "robos:gameType": "crpg"
     },
     {
       "@id": "urn:robos:crpg:class:fighter",
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGClass",
-        "schema:Role"
+        "schema:Role",
+        "robos:GameClass"
       ],
       "dcterms:title": "Fighter",
       "robos:hitDie": "d10",
@@ -98,7 +103,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGClass",
-        "schema:Role"
+        "schema:Role",
+        "robos:GameClass"
       ],
       "dcterms:title": "Wizard",
       "robos:hitDie": "d6",
@@ -116,7 +122,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGClass",
-        "schema:Role"
+        "schema:Role",
+        "robos:GameClass"
       ],
       "dcterms:title": "Rogue",
       "robos:hitDie": "d8",
@@ -134,7 +141,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGClass",
-        "schema:Role"
+        "schema:Role",
+        "robos:GameClass"
       ],
       "dcterms:title": "Cleric",
       "robos:hitDie": "d8",
@@ -178,7 +186,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGMonster",
-        "schema:Person"
+        "schema:Person",
+        "robos:GameMonster"
       ],
       "dcterms:title": "Corrupted Shadow Hound",
       "robos:challengeRating": "1/4",
@@ -202,7 +211,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGMonster",
-        "schema:Person"
+        "schema:Person",
+        "robos:GameMonster"
       ],
       "dcterms:title": "Feral Guard Skirmisher",
       "robos:challengeRating": "1/2",
@@ -226,7 +236,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGMonster",
-        "schema:Person"
+        "schema:Person",
+        "robos:GameMonster"
       ],
       "dcterms:title": "Captain Malakor (Corrupted Commander)",
       "robos:challengeRating": "3",
@@ -250,7 +261,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGMonster",
-        "schema:Person"
+        "schema:Person",
+        "robos:GameMonster"
       ],
       "dcterms:title": "Skeleton Warrior",
       "robos:challengeRating": "1/4",
@@ -274,7 +286,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGMonster",
-        "schema:Person"
+        "schema:Person",
+        "robos:GameMonster"
       ],
       "dcterms:title": "Shambling Zombie",
       "robos:challengeRating": "1/4",
@@ -298,7 +311,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGSpell",
-        "schema:Action"
+        "schema:Action",
+        "robos:GameSpell"
       ],
       "dcterms:title": "Magic Missile",
       "robos:spellLevel": 1,
@@ -318,7 +332,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGSpell",
-        "schema:Action"
+        "schema:Action",
+        "robos:GameSpell"
       ],
       "dcterms:title": "Cure Wounds",
       "robos:spellLevel": 1,
@@ -338,7 +353,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGSpell",
-        "schema:Action"
+        "schema:Action",
+        "robos:GameSpell"
       ],
       "dcterms:title": "Fireball",
       "robos:spellLevel": 3,
@@ -359,7 +375,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGSpell",
-        "schema:Action"
+        "schema:Action",
+        "robos:GameSpell"
       ],
       "dcterms:title": "Blizzard",
       "robos:spellLevel": 3,
@@ -379,7 +396,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGSpell",
-        "schema:Action"
+        "schema:Action",
+        "robos:GameSpell"
       ],
       "dcterms:title": "Dispel Magic",
       "robos:spellLevel": 3,
@@ -399,7 +417,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGSpell",
-        "schema:Action"
+        "schema:Action",
+        "robos:GameSpell"
       ],
       "dcterms:title": "Tidal Wave",
       "robos:spellLevel": 3,
@@ -419,7 +438,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Royal Guard Service Sword",
       "robos:itemCategory": "weapon",
@@ -434,7 +454,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Garrison Side-Gate Key",
       "robos:itemCategory": "quest",
@@ -448,7 +469,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Blood-Stained Watch Journal",
       "robos:itemCategory": "quest",
@@ -462,7 +484,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Commander's Void Signet",
       "robos:itemCategory": "accessory",
@@ -477,7 +500,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Guard Chain Mail",
       "robos:itemCategory": "armor",
@@ -492,7 +516,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Potion of Healing",
       "robos:itemCategory": "consumable",
@@ -506,7 +531,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGMapZone",
-        "schema:Place"
+        "schema:Place",
+        "robos:GameMap"
       ],
       "dcterms:title": "Guard's Homestead",
       "robos:zoneType": "interior",
@@ -521,7 +547,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGMapZone",
-        "schema:Place"
+        "schema:Place",
+        "robos:GameMap"
       ],
       "dcterms:title": "Oakhaven Village Square",
       "robos:zoneType": "wilderness",
@@ -536,7 +563,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGMapZone",
-        "schema:Place"
+        "schema:Place",
+        "robos:GameMap"
       ],
       "dcterms:title": "Royal Garrison Keep & War Room",
       "robos:zoneType": "dungeon",
@@ -1597,7 +1625,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Longsword",
       "robos:itemCategory": "weapon",
@@ -1621,7 +1650,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Shortsword",
       "robos:itemCategory": "weapon",
@@ -1646,7 +1676,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Greatsword",
       "robos:itemCategory": "weapon",
@@ -1671,7 +1702,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Mythril Hero Sword (Excalibur)",
       "robos:itemCategory": "weapon",
@@ -1696,7 +1728,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Dagger",
       "robos:itemCategory": "weapon",
@@ -1723,7 +1756,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Rapier",
       "robos:itemCategory": "weapon",
@@ -1747,7 +1781,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Flanged Mace",
       "robos:itemCategory": "weapon",
@@ -1768,7 +1803,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Warhammer",
       "robos:itemCategory": "weapon",
@@ -1792,7 +1828,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Morningstar",
       "robos:itemCategory": "weapon",
@@ -1813,7 +1850,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Battleaxe",
       "robos:itemCategory": "weapon",
@@ -1837,7 +1875,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Spear",
       "robos:itemCategory": "weapon",
@@ -1863,7 +1902,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Quarterstaff",
       "robos:itemCategory": "weapon",
@@ -1887,7 +1927,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Hardwood Club",
       "robos:itemCategory": "weapon",
@@ -1911,7 +1952,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Bamboo Pole",
       "robos:itemCategory": "weapon",
@@ -1935,7 +1977,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Shortbow",
       "robos:itemCategory": "weapon",
@@ -1961,7 +2004,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Oak Hunting Bow",
       "robos:itemCategory": "weapon",
@@ -1987,7 +2031,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Longbow",
       "robos:itemCategory": "weapon",
@@ -2014,7 +2059,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Light Crossbow",
       "robos:itemCategory": "weapon",
@@ -2041,7 +2087,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Heavy Crossbow",
       "robos:itemCategory": "weapon",
@@ -2069,7 +2116,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Knightly Shield",
       "robos:itemCategory": "armor",
@@ -2089,7 +2137,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Norse Round Shield",
       "robos:itemCategory": "armor",
@@ -2109,7 +2158,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Pavise Tower Shield",
       "robos:itemCategory": "armor",
@@ -2129,7 +2179,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Knight Greathelm",
       "robos:itemCategory": "armor",
@@ -2149,7 +2200,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Iron Nasal Helm",
       "robos:itemCategory": "armor",
@@ -2169,7 +2221,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Full Plate Armor",
       "robos:itemCategory": "armor",
@@ -2189,7 +2242,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Half Plate Armor",
       "robos:itemCategory": "armor",
@@ -2209,7 +2263,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Steel Breastplate",
       "robos:itemCategory": "armor",
@@ -2229,7 +2284,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Splint Armor",
       "robos:itemCategory": "armor",
@@ -2249,7 +2305,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Chain Shirt",
       "robos:itemCategory": "armor",
@@ -2269,7 +2326,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Ring Mail",
       "robos:itemCategory": "armor",
@@ -2289,7 +2347,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Scale Mail",
       "robos:itemCategory": "armor",
@@ -2309,7 +2368,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Cured Leather Armor",
       "robos:itemCategory": "armor",
@@ -2329,7 +2389,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Studded Leather Armor",
       "robos:itemCategory": "armor",
@@ -2349,7 +2410,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Padded Armor",
       "robos:itemCategory": "armor",
@@ -2369,7 +2431,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Hide Armor",
       "robos:itemCategory": "armor",

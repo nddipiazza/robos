@@ -1,0 +1,31 @@
+; Engine configuration file.
+; RobOS Tabletop RPG - Godot 4 GL Compatibility Project
+
+config_version=5
+
+[application]
+
+config/name="RobOS Tabletop RPG: HeroQuest"
+config/description="Tabletop RPG Cartridge Player powered by RobOS Dual-State KGraph"
+run/main_scene="res://scenes/TabletopWorld.tscn"
+config/features=PackedStringArray("4.3", "GL Compatibility")
+
+[autoload]
+
+TabletopDice="*res://scripts/engine/TabletopDice.gd"
+CartridgeManager="*res://scripts/engine/CartridgeManager.gd"
+GameControlServer="*res://scripts/GameControlServer.gd"
+
+[display]
+
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+window/size/window_width_override=1920
+window/size/window_height_override=1080
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"

@@ -1,0 +1,21 @@
+{
+  "name": "robos-gaming",
+  "version": "1.0.0",
+  "description": "RobOS Shared Gaming Library — Core Gaming Ontology, Dice Subsystems, Grid Mathematics, and Cartridge Engine",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  },
+  "keywords": [
+    "robos",
+    "gaming",
+    "rpg",
+    "crpg",
+    "tabletop",
+    "heroquest",
+    "dice",
+    "cartridge"
+  ],
+  "author": "RobOS AI Team",
+  "license": "Apache-2.0"
+}

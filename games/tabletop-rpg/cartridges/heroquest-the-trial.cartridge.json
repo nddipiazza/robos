@@ -1,0 +1,636 @@
+{
+  "cartridgeVersion": "2.0.0",
+  "cartridgeId": "heroquest-the-trial",
+  "header": {
+    "title": "HeroQuest: The Trial",
+    "slug": "heroquest-the-trial",
+    "author": "RobOS Tabletop Studio",
+    "gameType": "tabletop",
+    "genre": "Tabletop Dungeon Crawler",
+    "ruleset": "heroquest",
+    "description": "You have learned well, my apprentices. Now comes your final test. Seek out the foul Orc Warlord Verag in his hidden catacombs, slay him, and return to the stairwell alive.",
+    "coverColor": "#78350f",
+    "icon": "🛡️",
+    "mapCount": 1,
+    "heroCount": 4,
+    "monsterCount": 6,
+    "spellCount": 4,
+    "itemCount": 4,
+    "questCount": 1,
+    "startingMap": "the-trial",
+    "startingPosition": [
+      1,
+      1
+    ],
+    "createdDate": "2026-10-01T20:04:05.953Z"
+  },
+  "heroes": {
+    "barbarian": {
+      "id": "barbarian",
+      "slug": "barbarian",
+      "name": "Barbarian",
+      "title": "Conan the Barbarian",
+      "bodyPoints": 8,
+      "mindPoints": 2,
+      "attackDice": 3,
+      "defendDice": 2,
+      "movementFormula": "2d6",
+      "tokenColor": "#b91c1c",
+      "icon": "⚔️",
+      "position": [
+        1,
+        1
+      ],
+      "startingWeapon": "Broadsword"
+    },
+    "dwarf": {
+      "id": "dwarf",
+      "slug": "dwarf",
+      "name": "Dwarf",
+      "title": "Gimli the Dwarf",
+      "bodyPoints": 7,
+      "mindPoints": 3,
+      "attackDice": 2,
+      "defendDice": 2,
+      "movementFormula": "2d6",
+      "tokenColor": "#b45309",
+      "specialAbility": "Disarm Traps",
+      "icon": "⛏️",
+      "position": [
+        1,
+        2
+      ],
+      "startingWeapon": "Shortsword"
+    },
+    "elf": {
+      "id": "elf",
+      "slug": "elf",
+      "name": "Elf",
+      "title": "Legolas the Elf",
+      "bodyPoints": 6,
+      "mindPoints": 4,
+      "attackDice": 2,
+      "defendDice": 2,
+      "movementFormula": "2d6",
+      "tokenColor": "#15803d",
+      "specialAbility": "Spellcaster (Earth)",
+      "icon": "🏹",
+      "position": [
+        2,
+        1
+      ],
+      "startingWeapon": "Shortsword"
+    },
+    "wizard": {
+      "id": "wizard",
+      "slug": "wizard",
+      "name": "Wizard",
+      "title": "Gandalf the Wizard",
+      "bodyPoints": 4,
+      "mindPoints": 6,
+      "attackDice": 1,
+      "defendDice": 2,
+      "movementFormula": "2d6",
+      "tokenColor": "#1d4ed8",
+      "specialAbility": "Master Spellcaster (Fire, Water, Air)",
+      "icon": "🔮",
+      "position": [
+        2,
+        2
+      ],
+      "startingWeapon": "Dagger"
+    }
+  },
+  "monsters": {
+    "verag-boss": {
+      "id": "verag-boss",
+      "slug": "verag-boss",
+      "name": "Verag the Orc Warlord",
+      "bodyPoints": 3,
+      "attackDice": 4,
+      "defendDice": 3,
+      "movementSquares": 8,
+      "isBoss": true,
+      "tokenColor": "#15803d",
+      "icon": "👹",
+      "position": [
+        12,
+        9
+      ],
+      "roomId": "room-center"
+    },
+    "fellmarg-gargoyle": {
+      "id": "fellmarg-gargoyle",
+      "slug": "fellmarg-gargoyle",
+      "name": "Fellmarg Gargoyle",
+      "bodyPoints": 3,
+      "attackDice": 4,
+      "defendDice": 5,
+      "movementSquares": 6,
+      "tokenColor": "#475569",
+      "icon": "🗿",
+      "position": [
+        13,
+        9
+      ],
+      "roomId": "room-center"
+    },
+    "goblin-scout-1": {
+      "id": "goblin-scout-1",
+      "slug": "goblin-scout-1",
+      "name": "Goblin Scout",
+      "bodyPoints": 1,
+      "attackDice": 2,
+      "defendDice": 1,
+      "movementSquares": 10,
+      "tokenColor": "#16a34a",
+      "icon": "👺",
+      "position": [
+        3,
+        2
+      ],
+      "roomId": "room-nw-1"
+    },
+    "orc-guard-1": {
+      "id": "orc-guard-1",
+      "slug": "orc-guard-1",
+      "name": "Orc Guard",
+      "bodyPoints": 1,
+      "attackDice": 3,
+      "defendDice": 2,
+      "movementSquares": 8,
+      "tokenColor": "#059669",
+      "icon": "🧌",
+      "position": [
+        8,
+        2
+      ],
+      "roomId": "room-nw-2"
+    },
+    "skeleton-guard-1": {
+      "id": "skeleton-guard-1",
+      "slug": "skeleton-guard-1",
+      "name": "Skeleton Warrior",
+      "bodyPoints": 1,
+      "attackDice": 2,
+      "defendDice": 2,
+      "movementSquares": 6,
+      "tokenColor": "#e2e8f0",
+      "icon": "💀",
+      "position": [
+        2,
+        15
+      ],
+      "roomId": "room-sw-3"
+    },
+    "chaos-warrior-1": {
+      "id": "chaos-warrior-1",
+      "slug": "chaos-warrior-1",
+      "name": "Chaos Warrior",
+      "bodyPoints": 3,
+      "attackDice": 4,
+      "defendDice": 4,
+      "movementSquares": 7,
+      "tokenColor": "#334155",
+      "icon": "🛡️",
+      "position": [
+        22,
+        15
+      ],
+      "roomId": "room-se-4"
+    }
+  },
+  "spells": {
+    "ball-of-flame": {
+      "id": "ball-of-flame",
+      "name": "Ball of Flame",
+      "college": "fire",
+      "damageDice": 2
+    },
+    "heal-body": {
+      "id": "heal-body",
+      "name": "Heal Body",
+      "college": "earth",
+      "restoresBp": 4
+    },
+    "water-of-healing": {
+      "id": "water-of-healing",
+      "name": "Water of Healing",
+      "college": "water",
+      "restoresBp": 4
+    },
+    "genie": {
+      "id": "genie",
+      "name": "Genie",
+      "college": "air",
+      "attackDice": 5
+    }
+  },
+  "items": {
+    "broadsword": {
+      "id": "broadsword",
+      "name": "Broadsword",
+      "category": "weapon",
+      "attackDice": 3,
+      "cost": 250
+    },
+    "shortsword": {
+      "id": "shortsword",
+      "name": "Shortsword",
+      "category": "weapon",
+      "attackDice": 2,
+      "cost": 150
+    },
+    "dagger": {
+      "id": "dagger",
+      "name": "Dagger",
+      "category": "weapon",
+      "attackDice": 1,
+      "cost": 25
+    },
+    "healing-potion": {
+      "id": "healing-potion",
+      "name": "Potion of Healing",
+      "category": "consumable",
+      "restoresBp": 4,
+      "cost": 50
+    }
+  },
+  "maps": {
+    "the-trial": {
+      "id": "the-trial",
+      "title": "The Trial: Dungeon of Verag",
+      "width": 26,
+      "height": 19,
+      "backgroundImage": "res://assets/boards/heroquest_board.png",
+      "startingStair": [
+        1,
+        0
+      ],
+      "rooms": [
+        {
+          "id": "room-center",
+          "name": "Central Chamber",
+          "x": 11,
+          "y": 7,
+          "w": 4,
+          "h": 5,
+          "quadrant": "center"
+        },
+        {
+          "id": "room-nw-1",
+          "name": "Northwest Corner Chamber",
+          "x": 1,
+          "y": 1,
+          "w": 4,
+          "h": 4,
+          "quadrant": "nw"
+        },
+        {
+          "id": "room-nw-2",
+          "name": "Upper North Hall",
+          "x": 6,
+          "y": 1,
+          "w": 4,
+          "h": 4,
+          "quadrant": "nw"
+        },
+        {
+          "id": "room-nw-3",
+          "name": "West Upper Barracks",
+          "x": 1,
+          "y": 6,
+          "w": 5,
+          "h": 3,
+          "quadrant": "nw"
+        },
+        {
+          "id": "room-nw-4",
+          "name": "Northwest Inner Sanctum",
+          "x": 7,
+          "y": 6,
+          "w": 3,
+          "h": 3,
+          "quadrant": "nw"
+        },
+        {
+          "id": "room-sw-1",
+          "name": "West Lower Armory",
+          "x": 1,
+          "y": 10,
+          "w": 5,
+          "h": 3,
+          "quadrant": "sw"
+        },
+        {
+          "id": "room-sw-2",
+          "name": "Southwest Guardpost",
+          "x": 7,
+          "y": 10,
+          "w": 3,
+          "h": 3,
+          "quadrant": "sw"
+        },
+        {
+          "id": "room-sw-3",
+          "name": "Southwest Crypt",
+          "x": 1,
+          "y": 14,
+          "w": 4,
+          "h": 4,
+          "quadrant": "sw"
+        },
+        {
+          "id": "room-sw-4",
+          "name": "Lower South Vault",
+          "x": 6,
+          "y": 14,
+          "w": 4,
+          "h": 4,
+          "quadrant": "sw"
+        },
+        {
+          "id": "room-ne-1",
+          "name": "Northeast Inner Library",
+          "x": 16,
+          "y": 1,
+          "w": 4,
+          "h": 4,
+          "quadrant": "ne"
+        },
+        {
+          "id": "room-ne-2",
+          "name": "Northeast Corner Tomb",
+          "x": 21,
+          "y": 1,
+          "w": 4,
+          "h": 4,
+          "quadrant": "ne"
+        },
+        {
+          "id": "room-ne-3",
+          "name": "East Upper Crypt",
+          "x": 16,
+          "y": 6,
+          "w": 3,
+          "h": 3,
+          "quadrant": "ne"
+        },
+        {
+          "id": "room-ne-4",
+          "name": "East Grand Parlor",
+          "x": 20,
+          "y": 6,
+          "w": 5,
+          "h": 3,
+          "quadrant": "ne"
+        },
+        {
+          "id": "room-se-1",
+          "name": "East Lower Torture Chamber",
+          "x": 16,
+          "y": 10,
+          "w": 3,
+          "h": 3,
+          "quadrant": "se"
+        },
+        {
+          "id": "room-se-2",
+          "name": "East Lower Forge",
+          "x": 20,
+          "y": 10,
+          "w": 5,
+          "h": 3,
+          "quadrant": "se"
+        },
+        {
+          "id": "room-se-3",
+          "name": "Lower Southeast Laboratory",
+          "x": 16,
+          "y": 14,
+          "w": 4,
+          "h": 4,
+          "quadrant": "se"
+        },
+        {
+          "id": "room-se-4",
+          "name": "Southeast Corner Lair",
+          "x": 21,
+          "y": 14,
+          "w": 4,
+          "h": 4,
+          "quadrant": "se"
+        }
+      ],
+      "doors": [
+        {
+          "id": "door-center-n",
+          "from": [
+            12,
+            6
+          ],
+          "to": [
+            12,
+            7
+          ],
+          "room": "room-center"
+        },
+        {
+          "id": "door-center-s",
+          "from": [
+            13,
+            12
+          ],
+          "to": [
+            13,
+            11
+          ],
+          "room": "room-center"
+        },
+        {
+          "id": "door-nw-1",
+          "from": [
+            2,
+            0
+          ],
+          "to": [
+            2,
+            1
+          ],
+          "room": "room-nw-1"
+        },
+        {
+          "id": "door-nw-2",
+          "from": [
+            8,
+            0
+          ],
+          "to": [
+            8,
+            1
+          ],
+          "room": "room-nw-2"
+        },
+        {
+          "id": "door-nw-3",
+          "from": [
+            0,
+            7
+          ],
+          "to": [
+            1,
+            7
+          ],
+          "room": "room-nw-3"
+        },
+        {
+          "id": "door-sw-1",
+          "from": [
+            0,
+            11
+          ],
+          "to": [
+            1,
+            11
+          ],
+          "room": "room-sw-1"
+        },
+        {
+          "id": "door-sw-3",
+          "from": [
+            2,
+            18
+          ],
+          "to": [
+            2,
+            17
+          ],
+          "room": "room-sw-3"
+        },
+        {
+          "id": "door-ne-1",
+          "from": [
+            18,
+            0
+          ],
+          "to": [
+            18,
+            1
+          ],
+          "room": "room-ne-1"
+        },
+        {
+          "id": "door-ne-2",
+          "from": [
+            23,
+            0
+          ],
+          "to": [
+            23,
+            1
+          ],
+          "room": "room-ne-2"
+        },
+        {
+          "id": "door-ne-4",
+          "from": [
+            25,
+            7
+          ],
+          "to": [
+            24,
+            7
+          ],
+          "room": "room-ne-4"
+        },
+        {
+          "id": "door-se-2",
+          "from": [
+            25,
+            11
+          ],
+          "to": [
+            24,
+            11
+          ],
+          "room": "room-se-2"
+        },
+        {
+          "id": "door-se-4",
+          "from": [
+            23,
+            18
+          ],
+          "to": [
+            23,
+            17
+          ],
+          "room": "room-se-4"
+        }
+      ],
+      "furniture": [
+        {
+          "id": "furn-tomb-center",
+          "name": "Ancient Stone Tomb",
+          "type": "tomb",
+          "position": [
+            12,
+            8
+          ],
+          "roomId": "room-center"
+        },
+        {
+          "id": "furn-chest-nw1",
+          "name": "Treasure Chest",
+          "type": "chest",
+          "position": [
+            4,
+            1
+          ],
+          "gold": 50,
+          "roomId": "room-nw-1"
+        },
+        {
+          "id": "furn-alchemist-nw2",
+          "name": "Alchemist's Bench",
+          "type": "alchemist_bench",
+          "position": [
+            9,
+            3
+          ],
+          "roomId": "room-nw-2"
+        },
+        {
+          "id": "furn-weapons-sw3",
+          "name": "Weapons Rack",
+          "type": "weapons_rack",
+          "position": [
+            3,
+            16
+          ],
+          "roomId": "room-sw-3"
+        },
+        {
+          "id": "furn-chest-se4",
+          "name": "Warlord's Hoard Chest",
+          "type": "chest",
+          "position": [
+            23,
+            16
+          ],
+          "gold": 200,
+          "roomId": "room-se-4"
+        }
+      ]
+    }
+  },
+  "quests": [
+    {
+      "id": "quest-the-trial",
+      "title": "The Trial",
+      "description": "Slay the Orc Warlord Verag and return to the stairwell alive.",
+      "targetBoss": "verag-boss",
+      "rewardGold": 100
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+[gd_scene load_steps=3 format=3 uid="uid://tabletopworld01"]
+
+[ext_resource type="Script" path="res://scripts/TabletopWorld.gd" id="1_world"]
+[ext_resource type="Texture2D" path="res://assets/boards/heroquest_board.png" id="2_board"]
+
+[node name="TabletopWorld" type="Node2D"]
+script = ExtResource("1_world")
+
+[node name="Background" type="ColorRect" parent="."]
+offset_right = 1920.0
+offset_bottom = 1080.0
+mouse_filter = 2
+color = Color(0.06, 0.08, 0.12, 1)
+
+[node name="BoardSprite" type="Sprite2D" parent="."]
+position = Vector2(648, 507)
+scale = Vector2(0.92, 0.88)
+texture = ExtResource("2_board")
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="TitleBar" type="Panel" parent="UI"]
+offset_right = 1920.0
+offset_bottom = 50.0
+
+[node name="TitleLabel" type="Label" parent="UI/TitleBar"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 10.0
+offset_right = 800.0
+offset_bottom = 40.0
+theme_override_font_sizes/font_size = 22
+text = "🛡️ RobOS Tabletop RPG: HeroQuest — The Trial"
+
+[node name="StatsPanel" type="Panel" parent="UI"]
+offset_left = 1300.0
+offset_top = 70.0
+offset_right = 1880.0
+offset_bottom = 260.0
+
+[node name="HeroLabel" type="Label" parent="UI/StatsPanel"]
+layout_mode = 0
+offset_left = 15.0
+offset_top = 15.0
+offset_right = 560.0
+offset_bottom = 175.0
+theme_override_font_sizes/font_size = 18
+text = "Barbarian (Conan the Barbarian)\nBP: 8/8 | MP: 2/2\nAtk Dice: 3 | Def Dice: 2\nGold: 0 gp"
+
+[node name="DicePanel" type="Panel" parent="UI"]
+offset_left = 1300.0
+offset_top = 280.0
+offset_right = 1880.0
+offset_bottom = 360.0
+
+[node name="DiceLabel" type="Label" parent="UI/DicePanel"]
+layout_mode = 0
+offset_left = 15.0
+offset_top = 20.0
+offset_right = 560.0
+offset_bottom = 60.0
+theme_override_font_sizes/font_size = 20
+text = "🎲 Dice: Ready (Roll 2d6 movement)"
+
+[node name="Actions" type="HBoxContainer" parent="UI"]
+offset_left = 1300.0
+offset_top = 380.0
+offset_right = 1880.0
+offset_bottom = 430.0
+theme_override_constants/separation = 12
+
+[node name="BtnRoll" type="Button" parent="UI/Actions"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "🎲 Roll Move"
+
+[node name="BtnAttack" type="Button" parent="UI/Actions"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "⚔️ Attack"
+
+[node name="BtnSearch" type="Button" parent="UI/Actions"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "🔍 Search"
+
+[node name="BtnEndTurn" type="Button" parent="UI/Actions"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "⏭️ End Turn"
+
+[node name="LogPanel" type="Panel" parent="UI"]
+offset_left = 1300.0
+offset_top = 450.0
+offset_right = 1880.0
+offset_bottom = 1030.0
+
+[node name="LogLabel" type="RichTextLabel" parent="UI/LogPanel"]
+layout_mode = 0
+offset_left = 15.0
+offset_top = 15.0
+offset_right = 565.0
+offset_bottom = 565.0
+theme_override_font_sizes/normal_font_size = 15
+text = "Log loaded..."

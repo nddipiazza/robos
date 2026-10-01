@@ -69,16 +69,29 @@ packages:
     description: "First-class Gherkin features, scenarios, step definitions, test execution records, and 16+ testing framework integrations."
     path: "kgraphs/testing/package.jsonld"
 
+  - id: "game"
+    namespace: "robos.game"
+    title: "RobOS Base Gaming & Universal RPG Rules Engine Package"
+    description: "Universal gaming ontology, rulesets, character archetypes, items, dice mechanics, turn architectures, and base SHACL shapes across digital and tabletop gaming."
+    path: "kgraphs/game/package.jsonld"
+
   - id: "crpg"
     namespace: "robos.crpg"
     title: "cRPG Game & D&D Rules Engine Package"
     description: "Party-based tactical isometric cRPG ontology nodes, D&D 5e SRD entities, Flare RPG asset bindings, and map zones."
     path: "kgraphs/crpg/package.jsonld"
 
+  - id: "tabletop-game"
+    namespace: "robos.tabletop"
+    title: "Tabletop Dungeon Crawler & HeroQuest Ruleset Package"
+    description: "Turn-based dungeon crawler board game mechanics, 26x19 tactical board layout, 4 classic heroes (Barbarian, Dwarf, Elf, Wizard), 8 monster types, 12 elemental spell cards, furniture props, and 'The Trial' quest scenario."
+    path: "kgraphs/tabletop-game/package.jsonld"
+
   - id: "infinity-engine"
     namespace: "robos.infinity"
     title: "BioWare Infinity Engine & GemRB Architecture Specification"
     description: "Comprehensive engineering architecture for the Infinity Engine (GemRB open-source clone): subsystems, binary file format codecs, RTwP game loop, D&D 2e rules engine, BCS script virtual machine, dialogue state machine, and pathfinding pipeline."
     path: "kgraphs/infinity-engine/package.jsonld"
+
 
 

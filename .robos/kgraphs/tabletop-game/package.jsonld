@@ -1,0 +1,512 @@
+{
+  "@context": {
+    "oslc": "http://open-services.net/ns/core#",
+    "oslc_am": "http://open-services.net/ns/am#",
+    "oslc_cm": "http://open-services.net/ns/cm#",
+    "oslc_rm": "http://open-services.net/ns/rm#",
+    "oslc_qm": "http://open-services.net/ns/qm#",
+    "robos": "https://robos.dev/ns/sdlc#",
+    "game": "https://robos.dev/ns/game#",
+    "tabletop": "https://robos.dev/ns/tabletop#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:package:tabletop-game",
+  "@type": [
+    "oslc:ServiceProvider",
+    "robos:Package"
+  ],
+  "robos:package": "tabletop-game",
+  "robos:namespace": "robos.tabletop",
+  "robos:version": "1.0.0",
+  "dcterms:title": "Tabletop Dungeon Crawler & HeroQuest Ruleset Package",
+  "dcterms:description": "Turn-based dungeon crawler board game mechanics, 26x19 tactical board layout, 4 classic heroes (Barbarian, Dwarf, Elf, Wizard), 8 monster types, 12 elemental spell cards, furniture props, and The Trial quest scenario.",
+  "robos:nodes": [
+    {
+      "@id": "urn:robos:tabletop:game:heroquest",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopGame",
+        "robos:Game",
+        "schema:Game"
+      ],
+      "dcterms:title": "HeroQuest: The Gathering of Heroes",
+      "robos:ruleset": "heroquest",
+      "robos:gameType": "tabletop",
+      "robos:gridDimensions": [
+        26,
+        19
+      ],
+      "robos:movementFormula": "2d6",
+      "robos:startingZone": "urn:robos:tabletop:map:the-trial",
+      "robos:combatDice": "3 skulls, 2 white shields, 1 black shield",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:hero:barbarian",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopHero",
+        "robos:GameCharacter",
+        "schema:Person"
+      ],
+      "dcterms:title": "Barbarian",
+      "robos:bodyPoints": 8,
+      "robos:mindPoints": 2,
+      "robos:attackDice": 3,
+      "robos:defendDice": 2,
+      "robos:startingWeapon": "urn:robos:game:item:broadsword",
+      "robos:tokenColor": "#b91c1c",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:hero:dwarf",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopHero",
+        "robos:GameCharacter",
+        "schema:Person"
+      ],
+      "dcterms:title": "Dwarf",
+      "robos:bodyPoints": 7,
+      "robos:mindPoints": 3,
+      "robos:attackDice": 2,
+      "robos:defendDice": 2,
+      "robos:specialAbility": "Disarm Traps",
+      "robos:startingWeapon": "urn:robos:game:item:shortsword",
+      "robos:tokenColor": "#b45309",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:hero:elf",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopHero",
+        "robos:GameCharacter",
+        "schema:Person"
+      ],
+      "dcterms:title": "Elf",
+      "robos:bodyPoints": 6,
+      "robos:mindPoints": 4,
+      "robos:attackDice": 2,
+      "robos:defendDice": 2,
+      "robos:specialAbility": "Spellcaster (1 College)",
+      "robos:startingWeapon": "urn:robos:game:item:shortsword",
+      "robos:tokenColor": "#15803d",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:hero:wizard",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopHero",
+        "robos:GameCharacter",
+        "schema:Person"
+      ],
+      "dcterms:title": "Wizard",
+      "robos:bodyPoints": 4,
+      "robos:mindPoints": 6,
+      "robos:attackDice": 1,
+      "robos:defendDice": 2,
+      "robos:specialAbility": "Master Spellcaster (3 Colleges, 9 Spells)",
+      "robos:startingWeapon": "urn:robos:game:item:dagger",
+      "robos:tokenColor": "#1d4ed8",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:goblin",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Goblin",
+      "robos:bodyPoints": 1,
+      "robos:attackDice": 2,
+      "robos:defendDice": 1,
+      "robos:movementSquares": 10,
+      "robos:tokenColor": "#15803d",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:orc",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Orc",
+      "robos:bodyPoints": 1,
+      "robos:attackDice": 3,
+      "robos:defendDice": 2,
+      "robos:movementSquares": 8,
+      "robos:tokenColor": "#047857",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:fimir",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Fimir",
+      "robos:bodyPoints": 2,
+      "robos:attackDice": 3,
+      "robos:defendDice": 3,
+      "robos:movementSquares": 6,
+      "robos:tokenColor": "#0f766e",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:skeleton",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Skeleton",
+      "robos:bodyPoints": 1,
+      "robos:attackDice": 2,
+      "robos:defendDice": 2,
+      "robos:movementSquares": 6,
+      "robos:monsterType": "undead",
+      "robos:tokenColor": "#e2e8f0",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:zombie",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Zombie",
+      "robos:bodyPoints": 1,
+      "robos:attackDice": 2,
+      "robos:defendDice": 3,
+      "robos:movementSquares": 4,
+      "robos:monsterType": "undead",
+      "robos:tokenColor": "#94a3b8",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:mummy",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Mummy",
+      "robos:bodyPoints": 2,
+      "robos:attackDice": 3,
+      "robos:defendDice": 4,
+      "robos:movementSquares": 4,
+      "robos:monsterType": "undead",
+      "robos:tokenColor": "#d97706",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:chaos-warrior",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Chaos Warrior",
+      "robos:bodyPoints": 3,
+      "robos:attackDice": 4,
+      "robos:defendDice": 4,
+      "robos:movementSquares": 7,
+      "robos:tokenColor": "#334155",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:gargoyle",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Gargoyle",
+      "robos:bodyPoints": 3,
+      "robos:attackDice": 4,
+      "robos:defendDice": 5,
+      "robos:movementSquares": 6,
+      "robos:tokenColor": "#64748b",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:verag-orc-warlord",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Verag the Orc Warlord",
+      "robos:bodyPoints": 3,
+      "robos:attackDice": 4,
+      "robos:defendDice": 3,
+      "robos:movementSquares": 8,
+      "robos:isBoss": true,
+      "robos:tokenColor": "#15803d",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:ball-of-flame",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Ball of Flame",
+      "robos:element": "fire",
+      "robos:damageDice": 2,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:courage",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Courage",
+      "robos:element": "fire",
+      "robos:buffAttackDice": 2,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:fire-of-wrath",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Fire of Wrath",
+      "robos:element": "fire",
+      "robos:damageDice": 1,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:heal-body",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Heal Body",
+      "robos:element": "earth",
+      "robos:healingPoints": 4,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:pass-through-rock",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Pass Through Rock",
+      "robos:element": "earth",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:rock-skin",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Rock Skin",
+      "robos:element": "earth",
+      "robos:buffDefendDice": 1,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:water-of-healing",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Water of Healing",
+      "robos:element": "water",
+      "robos:healingPoints": 4,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:sleep",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Sleep",
+      "robos:element": "water",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:veil-of-mist",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Veil of Mist",
+      "robos:element": "water",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:genie",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Genie",
+      "robos:element": "air",
+      "robos:attackDice": 5,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:swift-wind",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Swift Wind",
+      "robos:element": "air",
+      "robos:doubleMovement": true,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:tempest",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Tempest",
+      "robos:element": "air",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:furniture:chest",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopFurniture",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Treasure Chest",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:furniture:tomb",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopFurniture",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Stone Tomb",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:furniture:weapons-rack",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopFurniture",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Weapons Rack",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:furniture:alchemists-bench",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopFurniture",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Alchemist's Bench",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:map:the-trial",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopQuestMap",
+        "robos:GameMap",
+        "schema:Place"
+      ],
+      "dcterms:title": "The Trial — Quest 1: Lair of the Orc Warlord",
+      "robos:width": 26,
+      "robos:height": 19,
+      "robos:startingSpawn": [
+        1,
+        1
+      ],
+      "robos:backgroundImage": "res://assets/boards/heroquest_board.png",
+      "robos:boss": "urn:robos:tabletop:monster:verag-orc-warlord",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    }
+  ]
+}

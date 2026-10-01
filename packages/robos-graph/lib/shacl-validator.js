@@ -2713,6 +2713,201 @@ const BUILTIN_SHACL_SHAPES = [
     "domainStandard": "https://robos.dev/ns/crpg#MapTransition"
   },
   {
+    "shapeId": "urn:robos:shape:GameShape",
+    "targetClass": "robos:Game",
+    "targetClasses": ["robos:Game"],
+    "properties": [
+      {
+        "path": "dcterms:title",
+        "minCount": 1,
+        "message": "Game must declare a title."
+      },
+      {
+        "path": "robos:ruleset",
+        "minCount": 1,
+        "message": "Game must declare an underlying ruleset."
+      }
+    ],
+    "refersFrom": "https://schema.org/Game",
+    "schemaOrgType": "https://schema.org/Game",
+    "domainStandard": "https://schema.org/Game"
+  },
+  {
+    "shapeId": "urn:robos:shape:GameClassShape",
+    "targetClass": "robos:GameClass",
+    "targetClasses": ["robos:GameClass"],
+    "properties": [
+      {
+        "path": "dcterms:title",
+        "minCount": 1,
+        "message": "Game class must have a title."
+      }
+    ],
+    "refersFrom": "https://schema.org/Role",
+    "schemaOrgType": "https://schema.org/Role",
+    "domainStandard": "https://schema.org/Role"
+  },
+  {
+    "shapeId": "urn:robos:shape:GameMonsterShape",
+    "targetClass": "robos:GameMonster",
+    "targetClasses": ["robos:GameMonster"],
+    "properties": [
+      {
+        "path": "dcterms:title",
+        "minCount": 1,
+        "message": "Game monster must have a name."
+      }
+    ],
+    "refersFrom": "https://schema.org/Person",
+    "schemaOrgType": "https://schema.org/Person",
+    "domainStandard": "https://robos.dev/ns/game#Monster"
+  },
+  {
+    "shapeId": "urn:robos:shape:GameItemShape",
+    "targetClass": "robos:GameItem",
+    "targetClasses": ["robos:GameItem"],
+    "properties": [
+      {
+        "path": "dcterms:title",
+        "minCount": 1,
+        "message": "Game item must have a name."
+      }
+    ],
+    "refersFrom": "https://schema.org/Product",
+    "schemaOrgType": "https://schema.org/Product",
+    "domainStandard": "https://robos.dev/ns/game#Item"
+  },
+  {
+    "shapeId": "urn:robos:shape:GameSpellShape",
+    "targetClass": "robos:GameSpell",
+    "targetClasses": ["robos:GameSpell"],
+    "properties": [
+      {
+        "path": "dcterms:title",
+        "minCount": 1,
+        "message": "Game spell must have a name."
+      }
+    ],
+    "refersFrom": "https://schema.org/Action",
+    "schemaOrgType": "https://schema.org/Action",
+    "domainStandard": "https://robos.dev/ns/game#Spell"
+  },
+  {
+    "shapeId": "urn:robos:shape:TabletopGameShape",
+    "targetClass": "robos:TabletopGame",
+    "targetClasses": ["robos:TabletopGame"],
+    "properties": [
+      {
+        "path": "dcterms:title",
+        "minCount": 1,
+        "message": "Tabletop game must declare a title."
+      },
+      {
+        "path": "robos:ruleset",
+        "minCount": 1,
+        "message": "Tabletop game must declare a ruleset."
+      },
+      {
+        "path": "robos:gridDimensions",
+        "minCount": 1,
+        "message": "Tabletop game must declare grid dimensions [width, height]."
+      }
+    ],
+    "refersFrom": "https://schema.org/Game",
+    "schemaOrgType": "https://schema.org/Game",
+    "domainStandard": "https://robos.dev/ns/tabletop#Game"
+  },
+  {
+    "shapeId": "urn:robos:shape:TabletopHeroShape",
+    "targetClass": "robos:TabletopHero",
+    "targetClasses": ["robos:TabletopHero"],
+    "properties": [
+      {
+        "path": "dcterms:title",
+        "minCount": 1,
+        "message": "Tabletop hero must have a name."
+      },
+      {
+        "path": "robos:bodyPoints",
+        "minCount": 1,
+        "message": "Tabletop hero must declare Body Points."
+      },
+      {
+        "path": "robos:mindPoints",
+        "minCount": 1,
+        "message": "Tabletop hero must declare Mind Points."
+      },
+      {
+        "path": "robos:attackDice",
+        "minCount": 1,
+        "message": "Tabletop hero must declare attack dice."
+      },
+      {
+        "path": "robos:defendDice",
+        "minCount": 1,
+        "message": "Tabletop hero must declare defend dice."
+      }
+    ],
+    "refersFrom": "https://schema.org/Person",
+    "schemaOrgType": "https://schema.org/Person",
+    "domainStandard": "https://robos.dev/ns/tabletop#Hero"
+  },
+  {
+    "shapeId": "urn:robos:shape:TabletopMonsterShape",
+    "targetClass": "robos:TabletopMonster",
+    "targetClasses": ["robos:TabletopMonster"],
+    "properties": [
+      {
+        "path": "dcterms:title",
+        "minCount": 1,
+        "message": "Tabletop monster must have a name."
+      },
+      {
+        "path": "robos:bodyPoints",
+        "minCount": 1,
+        "message": "Tabletop monster must declare Body Points."
+      },
+      {
+        "path": "robos:attackDice",
+        "minCount": 1,
+        "message": "Tabletop monster must declare attack dice."
+      },
+      {
+        "path": "robos:defendDice",
+        "minCount": 1,
+        "message": "Tabletop monster must declare defend dice."
+      },
+      {
+        "path": "robos:movementSquares",
+        "minCount": 1,
+        "message": "Tabletop monster must declare movement speed in squares."
+      }
+    ],
+    "refersFrom": "https://schema.org/Person",
+    "schemaOrgType": "https://schema.org/Person",
+    "domainStandard": "https://robos.dev/ns/tabletop#Monster"
+  },
+  {
+    "shapeId": "urn:robos:shape:TabletopQuestMapShape",
+    "targetClass": "robos:TabletopQuestMap",
+    "targetClasses": ["robos:TabletopQuestMap"],
+    "properties": [
+      {
+        "path": "dcterms:title",
+        "minCount": 1,
+        "message": "Quest map must declare a title."
+      },
+      {
+        "path": "robos:startingSpawn",
+        "minCount": 1,
+        "message": "Quest map must declare starting spawn coordinate."
+      }
+    ],
+    "refersFrom": "https://schema.org/Place",
+    "schemaOrgType": "https://schema.org/Place",
+    "domainStandard": "https://robos.dev/ns/tabletop#QuestMap"
+  },
+  {
     "shapeId": "urn:robos:shape:WebRouteShape",
     "targetClass": "robos:WebRoute",
     "properties": [
