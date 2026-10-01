@@ -28,11 +28,7 @@ class DemoSession extends EventEmitter {
     this.steering = []; this.droppedMessages = 0;
     this.runAgent = runAgent || this.executeAgent.bind(this);
   }
-  agentName() {
-    const args = this.agent?.args || []; const i = args.findIndex(a => a === '--model' || a === '-m');
-    const model = i >= 0 ? args[i + 1] : null;
-    return `${this.agent?.name || 'Codex'}${model ? ' · ' + model : ''}`;
-  }
+  agentName() { return require('./demo-agent-label').agentLabel(this.agent); }
   addMessage(message) {
     this.messages.push({ ...message, id: randomUUID(), timestamp: Date.now(), text: message.text.slice(0, 16000), agentName: message.role === 'assistant' ? this.agentName() : undefined });
     let size = this.messages.reduce((n,m) => n + Buffer.byteLength(m.text, 'utf8'), 0);

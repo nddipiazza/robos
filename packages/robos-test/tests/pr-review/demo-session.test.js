@@ -95,7 +95,7 @@ test('rapid steering messages are retained in order without concurrent continuat
 test('agent-labeled history keeps progress in FIFO order with count and byte limits',()=>{
  const s=session();s.agent={name:'Codex',args:['exec','--model','test-model']};s.status='running';
  for(let i=0;i<140;i++)s.reportProgress('Checking control '+i);
- assert.equal(s.messages.length,120);assert.equal(s.droppedMessages,20);assert.equal(s.messages[0].text,'Checking control 20');assert.equal(s.messages.at(-1).agentName,'Codex · test-model');
+ assert.equal(s.messages.length,120);assert.equal(s.droppedMessages,20);assert.equal(s.messages[0].text,'Checking control 20');assert.match(s.messages.at(-1).agentName,/^Codex · test-model · /);
  for(let i=0;i<20;i++)s.addMessage({role:'user',text:'界'.repeat(15000)});
  assert.ok(s.messages.reduce((n,m)=>n+Buffer.byteLength(m.text),0)<=128*1024);assert.ok(s.messages.length<=120);
 });
