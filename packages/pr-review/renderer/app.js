@@ -605,7 +605,7 @@ window.openPRReviewTheater = async function(pr) {
 
   // Set header info
   const titleEl = document.getElementById('theater-pr-title');
-  if (titleEl) titleEl.textContent = targetPR.local ? `Local draft: ${targetPR.title}` : `PR #${targetPR.number}: ${targetPR.title}`;
+  if (titleEl) { titleEl.textContent = targetPR.title; titleEl.title = targetPR.title; }
 
   // Fetch full theater context (includes showTheFix and team theaterConfig)
   const res = await window.api.fetchPRTheaterContext({
@@ -628,7 +628,7 @@ window.openPRReviewTheater = async function(pr) {
 
   // Set target app badge
   const appBadge = document.getElementById('theater-target-app');
-  if (appBadge) appBadge.textContent = res.targetApp?.title || 'Application';
+  if (appBadge) appBadge.textContent = [targetPR.local ? 'Local draft' : `#${targetPR.number}`, targetPR.repo].filter(Boolean).join(' · ');
 
   if (res.local) {
     renderTheaterDiffViewer(); renderTheaterShowTheFix(); renderTheaterVideo();
@@ -698,6 +698,8 @@ function updateTheaterStepper() {
       return;
     }
     btn.style.display = 'inline-flex';
+    if (s.num === currentTheaterStage) btn.setAttribute('aria-current', 'step'); else btn.removeAttribute('aria-current');
+    btn.title = s.label + (s.done ? ' — completed' : '');
 
     if (statusSpan) {
       if (s.done) {

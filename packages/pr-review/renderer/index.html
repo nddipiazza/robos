@@ -187,51 +187,51 @@
       <!-- Theater Top Bar -->
       <div class="theater-topbar">
         <div class="theater-branding">
-          <span class="theater-badge">🎭 PR REVIEW THEATER</span>
+          <span class="theater-badge">Code review</span>
           <h2 id="theater-pr-title">PR #12: feat(service): verify rabies certificate over mTLS</h2>
           <span class="theater-app-badge" id="theater-target-app">PetStore API</span>
         </div>
 
         <!-- Stage Navigation Stepper -->
-        <div class="theater-stepper" id="theater-stepper">
+        <nav class="theater-stepper" id="theater-stepper" aria-label="Review sections">
           <button class="step-btn active" data-stage="1" id="step-btn-1" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="1">
-            <span class="step-num">1</span> <span class="step-label">Training &amp; eLearning</span>
+            <span class="step-num">1</span> <span class="step-label">Overview</span>
             <span class="step-status" id="step-status-1">⏳</span>
           </button>
           <button class="step-btn" data-stage="2" id="step-btn-2" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="2">
-            <span class="step-num">2</span> <span class="step-label">Living Docs &amp; Flow</span>
+            <span class="step-num">2</span> <span class="step-label">Documentation</span>
             <span class="step-status" id="step-status-2">○</span>
           </button>
           <button class="step-btn" data-stage="3" id="step-btn-3" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="3">
-            <span class="step-num">3</span> <span class="step-label">File Diff Viewer</span>
+            <span class="step-num">3</span> <span class="step-label">Changes</span>
             <span class="step-status" id="step-status-3">○</span>
           </button>
           <button class="step-btn" data-stage="4" id="step-btn-4" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="4">
-            <span class="step-num">4</span> <span class="step-label">IDE Branch Diffs</span>
+            <span class="step-num">4</span> <span class="step-label">Open in IDE</span>
             <span class="step-status" id="step-status-4">○</span>
           </button>
           <button class="step-btn" data-stage="5" id="step-btn-5" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="5">
-            <span class="step-num">5</span> <span class="step-label">Evidence Video</span>
+            <span class="step-num">5</span> <span class="step-label">Evidence</span>
             <span class="step-status" id="step-status-5">○</span>
           </button>
           <button class="step-btn" data-stage="6" id="step-btn-6" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="6">
-            <span class="step-num">6</span> <span class="step-label">Walk Me Through It</span>
+            <span class="step-num">6</span> <span class="step-label">Walkthrough</span>
             <span class="step-status" id="step-status-6">○</span>
           </button>
           <button class="step-btn" data-stage="7" id="step-btn-7" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="7">
-            <span class="step-num">7</span> <span class="step-label">Sign-Off &amp; Merge</span>
+            <span class="step-num">7</span> <span class="step-label">Approve</span>
             <span class="step-status" id="step-status-7">○</span>
           </button>
-        </div>
+        </nav>
 
         <div class="theater-actions">
           <button id="btn-theater-config" class="btn-theater-action btn-theater-settings" data-theater-action="openTheaterConfigModal" data-theater-event="click" title="Customize PR Review Stages &amp; Team KGraph Policy">
-            ⚙️ Stage Policy
+            Review settings
           </button>
-          <button id="btn-theater-expand" class="btn-theater-action" data-theater-action="toggleTheaterFullscreen" data-theater-event="click" title="Toggle Fullscreen Expansion">
+          <button id="btn-theater-expand" class="btn-theater-action" data-theater-action="toggleTheaterFullscreen" data-theater-event="click" title="Toggle fullscreen" aria-label="Toggle fullscreen">
             ⛶
           </button>
-          <button id="btn-exit-theater" class="btn-theater-exit" data-theater-action="exitTheater" data-theater-event="click" title="Exit Review Theater">&times; Exit</button>
+          <button id="btn-exit-theater" class="btn-theater-exit" data-theater-action="exitTheater" data-theater-event="click" title="Close review" aria-label="Close review">&times;</button>
         </div>
       </div>
 
