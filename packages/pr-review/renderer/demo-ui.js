@@ -66,7 +66,7 @@ window.mountWalkthrough = async function () {
     explain.hidden = busy || value.index < 0; explain.disabled = busy || value.index < 0;
     next.hidden = busy || value.status !== 'paused' || value.index >= value.total - 1;
     next.disabled = busy || value.status !== 'paused' || value.index >= value.total - 1;
-    retry.hidden = value.status !== 'error'; process.disabled = busy; send.disabled = busy || value.index < 0;
+    retry.hidden = value.status !== 'error'; process.disabled = busy; send.disabled = !busy && value.index < 0; send.textContent = busy ? 'Steer' : 'Send';
     // Older running sessions can be upgraded without interrupting their agent.
     if (lastActionStart !== value.startedAt) { lastNarration = ''; lastActionStart = value.startedAt; }
     const meaningful = [...(value.progress || [])].reverse().find(e => !/^(Running a local setup|Local check finished|A local check failed)/.test(e.text));
@@ -83,8 +83,8 @@ window.mountWalkthrough = async function () {
   }
   async function act(action, text) { error.textContent = ''; try { const result = await window.api.demoAction({ action, text }); if (!result.ok) throw new Error(result.error); render(result.state); return true; } catch (e) { error.textContent = e.message; return false; } }
   input.addEventListener('robos-submit', async event => {
-    if (state.status === 'running' || pendingMessage) { error.textContent = 'The agent is still working. Your draft is saved here; send it when this action finishes.'; return; }
-    if (state.index < 0) { error.textContent = 'Start the walkthrough before sending a message.'; return; }
+    if (pendingMessage) return;
+    if (state.index < 0 && state.status !== 'running') { error.textContent = 'Start the walkthrough before sending a message.'; return; }
     const text = event.detail.value.trim(); if (!text) return;
     if (text.length > 16000) { error.textContent = 'Keep your message under 16,000 characters.'; return; }
     pendingMessage = { text, count: state.messages.length }; receipt.textContent = 'Sending your message…';

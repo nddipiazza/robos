@@ -78,3 +78,10 @@ test('tails public subprocess output before the agent finishes',async()=>{
  const update=new Promise(resolve=>s.on('state',state=>{if(state.activitySummary?.text==='Checking the Filters click handler.')resolve(state.status);}));
  const run=s.act('start');assert.equal(await update,'running');assert.equal(s.index,-1);await run;assert.equal(s.status,'paused');
 });
+test('steering interrupts the real runner and applies instructions at the same checkpoint',async()=>{
+ const s=session();s.agent={command:process.execPath,args:['-e',`const fs=require('node:fs');const a=process.argv;const out=a[a.indexOf('--output-last-message')+1];let p='';process.stdin.on('data',x=>p+=x);process.stdin.on('end',()=>{if(p.includes('Use the right-hand Filters control'))fs.writeFileSync(out,JSON.stringify({reply:'Steering applied',checkpointReached:true}));else {console.log(JSON.stringify({type:'item.completed',item:{type:'agent_message',text:'Original attempt started'}}));setInterval(()=>{},1000);}});`,'--'],timeoutMs:3000};
+ const started=new Promise(resolve=>s.on('state',v=>{if(v.activitySummary?.text==='Original attempt started')resolve();}));
+ const run=s.act('start');await started;const receipt=await s.act('message','Use the right-hand Filters control');
+ assert.equal(receipt.status,'running');assert.equal(s.index,-1);await run;
+ assert.equal(s.index,0);assert.equal(s.status,'paused');assert.equal(s.messages.at(-1).text,'Steering applied');assert.ok(!s.messages.some(m=>m.role==='system'));
+});

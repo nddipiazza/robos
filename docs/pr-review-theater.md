@@ -505,3 +505,5 @@ An optional `before` object in the process contains `ref` (default `origin/main`
 During an action, the theater streams public agent updates and safe descriptions of tool activity. It shows one live status line with elapsed time and the age of a status after 20 seconds. Specific public narration remains visible across generic command events; the agent is instructed to name the actual control, file, or check it is working on. It does not display raw commands, tool payloads, or reasoning, and progress messages never advance a checkpoint.
 
 The walkthrough toolbar shows only actions relevant to its current state. While paused, Explain and Next checkpoint are visible; Start over, the before/after comparison, and Process settings are in More. During agent work, action buttons disappear and live progress remains visible.
+
+While an action runs, Send becomes **Steer**. A steering message stops the current CLI attempt, waits for its process to exit, and starts a continuation at the same checkpoint with the new instructions and existing source edits. It does not mark interrupted work verified or run concurrent browser-editing agents.

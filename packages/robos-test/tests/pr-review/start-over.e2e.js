@@ -52,7 +52,6 @@ test('Start over toolbar resets a completed walkthrough and blocks duplicate act
   await page.locator('.walkthrough-compose [role=status]').filter({hasText:'Inspecting the Filters click handler'}).waitFor();
   session.reportProgress('Verifying that advanced controls disappear when Filters is clicked again.');
   await page.locator('.walkthrough-compose [role=status]').filter({hasText:'Verifying that advanced controls disappear'}).waitFor();
-  await composer.fill('Keep this next draft.');
   const count=session.messages.length;await composer.press('Control+Enter');assert.equal(session.messages.length,count);
   await composer.fill('Keep this next draft.');finish({reply:'Explained',checkpointReached:true});
   await page.waitForFunction(()=>document.querySelector('.walkthrough-status').textContent.startsWith('Paused'));
