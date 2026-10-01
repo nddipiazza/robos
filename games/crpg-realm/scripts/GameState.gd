@@ -112,6 +112,8 @@ var gold: int = 150
 var inventory: Array = ["potion-healing"]
 var equipped_weapon: String = "service-sword"
 var equipped_armor: String = "chain-mail"
+var equipped_shield: String = "shield"
+var equipped_helmet: String = "helm-knight"
 var equipped_accessory: String = ""
 
 var quest_stage: int = 1
@@ -164,6 +166,31 @@ func roll_all_stats() -> Dictionary:
 
 func get_stat_modifier(val: int) -> int:
 	return int(floor((val - 10) / 2.0))
+
+func recalculate_hero_ac() -> int:
+	var dex_mod = get_stat_modifier(int(ability_scores.get("DEX", 10)))
+	var base_ac = 10 + dex_mod
+	if equipped_armor != "":
+		var arm_data = get_item_data(equipped_armor)
+		if arm_data:
+			var a_type = str(arm_data.armor_type if "armor_type" in arm_data else "").to_lower()
+			var a_bonus = arm_data.ac_bonus
+			if a_type == "light":
+				base_ac = a_bonus + dex_mod
+			elif a_type == "medium":
+				base_ac = a_bonus + min(dex_mod, 2)
+			elif a_type == "heavy":
+				base_ac = a_bonus
+			else:
+				base_ac = a_bonus if a_bonus > 0 else (10 + dex_mod)
+	
+	if equipped_shield != "":
+		var sh_data = get_item_data(equipped_shield)
+		var sh_bonus = sh_data.ac_bonus if (sh_data and sh_data.ac_bonus > 0) else 2
+		base_ac += (sh_bonus if sh_bonus > 0 else 2)
+
+	hero_ac = base_ac
+	return hero_ac
 
 func reset_flags() -> void:
 	neutralized_traps.clear()
@@ -240,6 +267,7 @@ func init_hero(p_name: String, p_class: String, p_stats: Dictionary = {}, p_race
 			hero_ac = 14 + min(2, dex_mod)
 			equipped_weapon = "mace"
 			equipped_armor = "chain-mail"
+			equipped_shield = "shield"
 			if selected_spells.is_empty():
 				selected_spells = ["cure-wounds"]
 		"druid":
@@ -247,23 +275,29 @@ func init_hero(p_name: String, p_class: String, p_stats: Dictionary = {}, p_race
 			hero_ac = 12 + min(2, dex_mod)
 			equipped_weapon = "quarterstaff"
 			equipped_armor = "leather-armor"
+			equipped_shield = "shield"
 			if selected_spells.is_empty():
 				selected_spells = ["cure-wounds"]
 		"fighter":
 			hero_max_hp = 10 + con_mod
-			hero_ac = 16
+			hero_ac = 18
 			equipped_weapon = "service-sword"
 			equipped_armor = "chain-mail"
+			equipped_shield = "shield"
+			equipped_helmet = "helm-knight"
 		"monk":
 			hero_max_hp = 8 + con_mod
 			hero_ac = 10 + dex_mod + get_stat_modifier(int(ability_scores.get("WIS", 10)))
 			equipped_weapon = "quarterstaff"
 			equipped_armor = "robe"
+			equipped_shield = ""
 		"paladin":
 			hero_max_hp = 10 + con_mod
-			hero_ac = 16
+			hero_ac = 18
 			equipped_weapon = "service-sword"
 			equipped_armor = "chain-mail"
+			equipped_shield = "shield"
+			equipped_helmet = "helm-knight"
 			if selected_spells.is_empty():
 				selected_spells = ["cure-wounds"]
 		"ranger":
@@ -271,10 +305,12 @@ func init_hero(p_name: String, p_class: String, p_stats: Dictionary = {}, p_race
 			hero_ac = 12 + dex_mod
 			equipped_weapon = "hunting-bow"
 			equipped_armor = "leather-armor"
+			equipped_shield = ""
 		"rogue":
 			hero_max_hp = 8 + con_mod
 			hero_ac = 11 + dex_mod
 			equipped_armor = "leather-armor"
+			equipped_shield = ""
 			if hero_race in ["halfling", "elf"]:
 				equipped_weapon = "hunting-bow"
 			else:
@@ -284,6 +320,7 @@ func init_hero(p_name: String, p_class: String, p_stats: Dictionary = {}, p_race
 			hero_ac = 10 + dex_mod
 			equipped_weapon = "dagger"
 			equipped_armor = "robe"
+			equipped_shield = ""
 			if selected_spells.is_empty():
 				selected_spells = ["fireball"]
 		"warlock":
@@ -291,6 +328,7 @@ func init_hero(p_name: String, p_class: String, p_stats: Dictionary = {}, p_race
 			hero_ac = 11 + dex_mod
 			equipped_weapon = "dagger"
 			equipped_armor = "leather-armor"
+			equipped_shield = ""
 			if selected_spells.is_empty():
 				selected_spells = ["magic-missile"]
 		"wizard":
@@ -298,6 +336,7 @@ func init_hero(p_name: String, p_class: String, p_stats: Dictionary = {}, p_race
 			hero_ac = 10 + dex_mod
 			equipped_weapon = "quarterstaff"
 			equipped_armor = "robe"
+			equipped_shield = ""
 			if selected_spells.is_empty():
 				selected_spells = ["magic-missile", "fireball"]
 		_:
@@ -305,6 +344,10 @@ func init_hero(p_name: String, p_class: String, p_stats: Dictionary = {}, p_race
 			hero_ac = 10 + dex_mod
 			equipped_weapon = "service-sword"
 			equipped_armor = "chain-mail"
+			equipped_shield = "shield"
+
+	# Recalculate true AC based on equipped armor, shields, and DEX mod
+	recalculate_hero_ac()
 
 	# Racial traits adjustments
 	if hero_race in ["dwarf", "half-orc"]:
@@ -536,6 +579,17 @@ func use_item(item_id: String) -> Dictionary:
 	return {"success": false, "error": "Item cannot be consumed directly"}
 
 func equip_item(item_id: String) -> Dictionary:
+	if equipped_weapon == item_id:
+		return {"success": true, "slot": "weapon", "equipped": item_id, "already_equipped": true}
+	if equipped_shield == item_id:
+		return {"success": true, "slot": "shield", "equipped": item_id, "already_equipped": true, "ac": hero_ac}
+	if equipped_helmet == item_id:
+		return {"success": true, "slot": "helmet", "equipped": item_id, "already_equipped": true}
+	if equipped_armor == item_id:
+		return {"success": true, "slot": "armor", "equipped": item_id, "already_equipped": true, "ac": hero_ac}
+	if equipped_accessory == item_id:
+		return {"success": true, "slot": "accessory", "equipped": item_id, "already_equipped": true}
+
 	if not inventory.has(item_id):
 		return {"success": false, "error": "Item not in inventory: %s" % item_id}
 	
@@ -554,17 +608,58 @@ func equip_item(item_id: String) -> Dictionary:
 			AudioManager.play_sfx("melee_attack")
 		print("GameState: Equipped weapon %s (Swapped out %s)" % [item.title, old_weap])
 		return {"success": true, "slot": "weapon", "equipped": item_id, "swapped": old_weap}
-	elif item.category == "armor":
+	# Shield Check (can have category "armor" or armor_type "shield" or equipSlot "off_hand" or "shield" in id)
+	var is_shield = false
+	if "armor_type" in item and item.armor_type == "shield":
+		is_shield = true
+	elif item.get("equipSlot") == "off_hand" or item.get("equip_slot") == "off_hand":
+		is_shield = true
+	elif item_id == "shield" or "shield" in item_id.to_lower():
+		is_shield = true
+		
+	if is_shield:
+		var old_sh = equipped_shield
+		inventory.erase(item_id)
+		equipped_shield = item_id
+		if old_sh != "":
+			inventory.append(old_sh)
+		recalculate_hero_ac()
+		inventory_changed.emit()
+		if AudioManager:
+			AudioManager.play_sfx("wood_open")
+		print("GameState: Equipped shield %s (Swapped out %s, AC=%d)" % [item.title, old_sh, hero_ac])
+		return {"success": true, "slot": "shield", "equipped": item_id, "swapped": old_sh, "ac": hero_ac}
+
+	# Helmet Check (equipSlot "head" or armor_type "helmet" or "helm" in id)
+	var is_helmet = false
+	if "armor_type" in item and item.armor_type == "helmet":
+		is_helmet = true
+	elif item.get("equipSlot") == "head" or item.get("equip_slot") == "head":
+		is_helmet = true
+	elif "helm" in item_id.to_lower():
+		is_helmet = true
+
+	if is_helmet:
+		var old_helm = equipped_helmet
+		inventory.erase(item_id)
+		equipped_helmet = item_id
+		if old_helm != "":
+			inventory.append(old_helm)
+		inventory_changed.emit()
+		print("GameState: Equipped helmet %s (Swapped out %s)" % [item.title, old_helm])
+		return {"success": true, "slot": "helmet", "equipped": item_id, "swapped": old_helm}
+
+	if item.category == "armor":
 		var old_arm = equipped_armor
 		inventory.erase(item_id)
 		equipped_armor = item_id
-		hero_ac = item.ac_bonus if item.ac_bonus > 0 else (12 + get_stat_modifier(ability_scores.get("DEX", 10)))
+		recalculate_hero_ac()
 		if old_arm != "":
 			inventory.append(old_arm)
 		inventory_changed.emit()
 		print("GameState: Equipped armor %s (Swapped out %s, AC=%d)" % [item.title, old_arm, hero_ac])
 		return {"success": true, "slot": "armor", "equipped": item_id, "swapped": old_arm, "ac": hero_ac}
-	elif item.category in ["accessory", "equipment", "gear", "head", "ring"] or item.get("equipSlot") in ["accessory", "head", "ring", "belt", "eyes"]:
+	elif item.category in ["accessory", "equipment", "gear", "ring"] or item.get("equipSlot") in ["accessory", "ring", "belt", "eyes"]:
 		var old_acc = equipped_accessory
 		inventory.erase(item_id)
 		equipped_accessory = item_id
@@ -583,14 +678,27 @@ func unequip_item(slot: String) -> Dictionary:
 		equipped_weapon = ""
 		inventory_changed.emit()
 		return {"success": true, "slot": "weapon", "unequipped": old}
-	elif slot == "armor" and equipped_armor != "":
+	elif (slot == "shield" or slot == "off_hand") and equipped_shield != "":
+		var old = equipped_shield
+		inventory.append(old)
+		equipped_shield = ""
+		recalculate_hero_ac()
+		inventory_changed.emit()
+		return {"success": true, "slot": "shield", "unequipped": old, "ac": hero_ac}
+	elif (slot == "helmet" or slot == "head") and equipped_helmet != "":
+		var old = equipped_helmet
+		inventory.append(old)
+		equipped_helmet = ""
+		inventory_changed.emit()
+		return {"success": true, "slot": "helmet", "unequipped": old}
+	elif (slot == "armor" or slot == "chest") and equipped_armor != "":
 		var old = equipped_armor
 		inventory.append(old)
 		equipped_armor = ""
-		hero_ac = 10 + get_stat_modifier(ability_scores.get("DEX", 10))
+		recalculate_hero_ac()
 		inventory_changed.emit()
 		return {"success": true, "slot": "armor", "unequipped": old, "ac": hero_ac}
-	elif slot in ["accessory", "head", "ring", "eyes"] and equipped_accessory != "":
+	elif slot in ["accessory", "ring", "eyes"] and equipped_accessory != "":
 		var old = equipped_accessory
 		inventory.append(old)
 		equipped_accessory = ""

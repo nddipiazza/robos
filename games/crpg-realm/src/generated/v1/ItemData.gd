@@ -6,6 +6,7 @@ var id: String = ""
 var title: String = ""
 var category: String = "weapon"
 var equip_slot: String = "main_hand"
+var armor_type: String = ""
 var damage_dice: String = ""
 var damage_type: String = ""
 var ac_bonus: int = 0
@@ -22,22 +23,23 @@ var model_3d_tint: String = ""
 
 static func from_dict(d: Dictionary) -> ItemData:
 	var item = ItemData.new()
-	item.id = str(d.get("id", ""))
-	item.title = str(d.get("title", ""))
-	item.category = str(d.get("category", "weapon"))
-	item.equip_slot = str(d.get("equipSlot", "main_hand"))
-	item.damage_dice = str(d.get("damageDice", ""))
-	item.damage_type = str(d.get("damageType", ""))
-	item.ac_bonus = int(d.get("acBonus", 0))
-	item.cost = int(d.get("cost", 10))
-	item.icon_path = str(d.get("icon", ""))
+	item.id = str(d.get("id", d.get("slug", d.get("robos:slug", ""))))
+	item.title = str(d.get("title", d.get("dcterms:title", d.get("schema:name", d.get("name", "")))))
+	item.category = str(d.get("category", d.get("itemCategory", d.get("robos:itemCategory", "weapon"))))
+	item.equip_slot = str(d.get("equipSlot", d.get("robos:equipSlot", d.get("equip_slot", "main_hand"))))
+	item.armor_type = str(d.get("armorType", d.get("armor_type", d.get("robos:armorType", ""))))
+	item.damage_dice = str(d.get("damageDice", d.get("robos:damageDice", d.get("damage_dice", ""))))
+	item.damage_type = str(d.get("damageType", d.get("robos:damageType", d.get("damage_type", ""))))
+	item.ac_bonus = int(d.get("acBonus", d.get("robos:acBonus", d.get("ac_bonus", 0))))
+	item.cost = int(d.get("cost", d.get("robos:cost", 10)))
+	item.icon_path = str(d.get("icon", d.get("schema:image", d.get("robos:icon", ""))))
 	item.icon = item.icon_path
-	item.description = str(d.get("description", ""))
-	item.properties = d.get("properties", [])
-	item.weight = int(d.get("weight", 0))
-	item.model_3d_asset = str(d.get("model3dAsset", d.get("model_3d_asset", "")))
-	item.model_3d_socket = str(d.get("model3dSocket", d.get("model_3d_socket", "main_hand")))
-	item.model_3d_scale = float(d.get("model3dScale", d.get("model_3d_scale", 1.0)))
-	item.model_3d_tint = str(d.get("model3dTint", d.get("model_3d_tint", "")))
+	item.description = str(d.get("description", d.get("dcterms:description", d.get("schema:description", ""))))
+	item.properties = d.get("properties", d.get("robos:properties", []))
+	item.weight = int(d.get("weight", d.get("robos:weight", 0)))
+	item.model_3d_asset = str(d.get("model3dAsset", d.get("model_3d_asset", d.get("robos:model3dAsset", d.get("modelAssetRef", "")))))
+	item.model_3d_socket = str(d.get("model3dSocket", d.get("model_3d_socket", d.get("robos:model3dSocket", d.get("modelSocket", "main_hand")))))
+	item.model_3d_scale = float(d.get("model3dScale", d.get("model_3d_scale", d.get("robos:model3dScale", d.get("modelScale", 1.0)))))
+	item.model_3d_tint = str(d.get("model3dTint", d.get("model_3d_tint", d.get("robos:model3dTint", ""))))
 	return item
 

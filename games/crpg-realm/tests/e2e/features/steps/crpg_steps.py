@@ -158,6 +158,61 @@ def step_hero_equipped_weapon(context, weapon_id):
     actual = state["hero"].get("weapon", "")
     assert actual == weapon_id, f"Expected weapon {weapon_id}, got {actual}"
 
+@then('the hero equipped shield is "{shield_id}"')
+def step_hero_equipped_shield(context, shield_id):
+    state = api_get(context.web_port, "/api/v1/state")
+    actual = state["hero"].get("shield", "")
+    assert actual == shield_id, f"Expected shield {shield_id}, got {actual}"
+
+@then('the hero equipped shield is ""')
+@then('the hero equipped shield is empty')
+def step_hero_equipped_shield_empty(context):
+    state = api_get(context.web_port, "/api/v1/state")
+    actual = state["hero"].get("shield", "")
+    assert actual == "" or actual == "none", f"Expected empty shield, got {actual}"
+
+@then('the hero equipped armor is "{armor_id}"')
+def step_hero_equipped_armor(context, armor_id):
+    state = api_get(context.web_port, "/api/v1/state")
+    actual = state["hero"].get("armor", "")
+    assert actual == armor_id, f"Expected armor {armor_id}, got {actual}"
+
+@then('the hero equipped armor is ""')
+@then('the hero equipped armor is empty')
+def step_hero_equipped_armor_empty(context):
+    state = api_get(context.web_port, "/api/v1/state")
+    actual = state["hero"].get("armor", "")
+    assert actual == "" or actual == "none", f"Expected empty armor, got {actual}"
+
+@then('the hero equipped helmet is "{helmet_id}"')
+def step_hero_equipped_helmet(context, helmet_id):
+    state = api_get(context.web_port, "/api/v1/state")
+    actual = state["hero"].get("helmet", "")
+    assert actual == helmet_id, f"Expected helmet {helmet_id}, got {actual}"
+
+@then('the hero equipped helmet is ""')
+@then('the hero equipped helmet is empty')
+def step_hero_equipped_helmet_empty(context):
+    state = api_get(context.web_port, "/api/v1/state")
+    actual = state["hero"].get("helmet", "")
+    assert actual == "" or actual == "none", f"Expected empty helmet, got {actual}"
+
+@then('the hero armor class is {expected_ac:d}')
+def step_hero_armor_class(context, expected_ac):
+    state = api_get(context.web_port, "/api/v1/state")
+    actual = state["hero"].get("ac", 10)
+    assert actual == expected_ac, f"Expected AC {expected_ac}, got {actual}"
+
+@given('the hero has ability score "{stat_name}" of {value:d}')
+@when('the hero ability score "{stat_name}" is set to {value:d}')
+def step_set_hero_ability_score(context, stat_name, value):
+    res = api_post(context.web_port, "/api/v1/action", {
+        "action": "set_ability_scores",
+        "args": {stat_name: value}
+    })
+    assert res.get("success") is True, f"Failed to set ability score: {res}"
+    time.sleep(0.2)
+
 @then('the player awakens in the Homestead with quest stage {stage:d}')
 def step_awaken_homestead(context, stage):
     state = api_get(context.web_port, "/api/v1/state")
@@ -2711,9 +2766,18 @@ def step_hero_equips_item(context, item_id):
 def step_verify_hero_has_item_equipped(context, item_id):
     st = api_get(context.web_port, "/api/v1/state")
     hero = st.get("hero", {})
-    equipped = [hero.get("weapon"), hero.get("armor"), hero.get("accessory")]
+    equipped = [hero.get("weapon"), hero.get("armor"), hero.get("shield"), hero.get("helmet"), hero.get("accessory")]
     assert item_id in equipped, f"Expected {item_id} to be equipped in {equipped}, hero state: {hero}"
     proof(context, f"equipped = {[e for e in equipped if e]}")
+
+@when('the hero unequips item slot "{slot}"')
+def step_hero_unequips_item_slot(context, slot):
+    res = api_post(context.web_port, "/api/v1/action", {
+        "action": "unequip_item",
+        "args": {"slot": slot}
+    })
+    assert res.get("success") is True, f"Failed to unequip slot {slot}: {res}"
+    time.sleep(0.5)
 
 @then('the hero can see invisible creatures')
 def step_verify_hero_can_see_invis(context):

@@ -947,7 +947,7 @@ func _handle_inventory_equip(payload: Dictionary) -> Dictionary:
 	if item_id == "":
 		return {"success": false, "error": "Missing item or item_id"}
 
-	if not GameState.inventory.has(item_id) and GameState.equipped_weapon != item_id and GameState.equipped_armor != item_id and GameState.equipped_accessory != item_id:
+	if not GameState.inventory.has(item_id) and GameState.equipped_weapon != item_id and GameState.equipped_armor != item_id and GameState.equipped_shield != item_id and GameState.equipped_helmet != item_id and GameState.equipped_accessory != item_id:
 		GameState.add_item(item_id)
 
 	var res = GameState.equip_item(item_id)
@@ -1099,6 +1099,15 @@ func _setup_initial_state(payload: Dictionary) -> Dictionary:
 	if payload.has("flags") and payload.get("flags") is Dictionary:
 		for k in payload["flags"]:
 			GameState.flags[k] = payload["flags"][k]
+
+	if payload.has("ability_scores") and payload.get("ability_scores") is Dictionary:
+		for k in payload["ability_scores"]:
+			GameState.ability_scores[k] = int(payload["ability_scores"][k])
+		GameState.recalculate_hero_ac()
+	elif payload.has("stats") and payload.get("stats") is Dictionary:
+		for k in payload["stats"]:
+			GameState.ability_scores[k] = int(payload["stats"][k])
+		GameState.recalculate_hero_ac()
 
 	var companions = payload.get("companions", [])
 	if companions is Array:
@@ -1502,7 +1511,16 @@ func _get_full_game_state() -> Dictionary:
 			"gold": GameState.gold,
 			"weapon": GameState.equipped_weapon,
 			"armor": GameState.equipped_armor,
+			"shield": GameState.equipped_shield,
+			"helmet": GameState.equipped_helmet,
 			"accessory": GameState.equipped_accessory,
+			"equipment": {
+				"weapon": GameState.equipped_weapon,
+				"armor": GameState.equipped_armor,
+				"shield": GameState.equipped_shield,
+				"helmet": GameState.equipped_helmet,
+				"accessory": GameState.equipped_accessory
+			},
 			"can_see_invisible": GameState.can_see_invisible(),
 			"visual_range_px": GameState.get_visual_range_px(),
 			"fog_vision_radius_px": (cur_scene.find_child("FogOfWar", true, false).vision_radius if (cur_scene and cur_scene.find_child("FogOfWar", true, false)) else GameState.get_visual_range_px()),
@@ -1999,6 +2017,16 @@ func _execute_game_action(payload: Dictionary) -> Dictionary:
 
 		"equip_item", "equip":
 			return _handle_inventory_equip(args)
+
+		"unequip_item", "unequip":
+			var slot = str(args.get("slot", args.get("item", "")))
+			return GameState.unequip_item(slot)
+
+		"set_ability_scores", "set_stats":
+			for k in args:
+				GameState.ability_scores[k] = int(args[k])
+			GameState.recalculate_hero_ac()
+			return {"success": true, "ability_scores": GameState.ability_scores, "ac": GameState.hero_ac}
 
 		"cast_spell":
 			var spell_id = str(args.get("spell", "magic-missile"))

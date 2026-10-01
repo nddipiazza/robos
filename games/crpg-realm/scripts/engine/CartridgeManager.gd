@@ -197,7 +197,7 @@ func insert_cartridge(cart_data_or_slug: Variant) -> bool:
 		var ds = get_node("/root/DataStore")
 		for it_slug in items_cache:
 			var it_dict = items_cache[it_slug]
-			if it_dict is Dictionary:
+			if it_dict is Dictionary and not ds.items.has(it_slug):
 				ds.items[it_slug] = ItemData.from_dict(it_dict)
 
 	# 2. Register NPCs and Monsters into DataStore

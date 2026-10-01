@@ -286,6 +286,13 @@ func _setup_hero_3d_model() -> void:
 				m3d.equip_weapon("res://assets/models/weapon_dagger_rogue.glb")
 			else:
 				m3d.equip_weapon("res://assets/models/weapon_sword_iron.glb")
+		
+		if GameState.equipped_shield != "" and GameState.equipped_shield != "none":
+			m3d.equip_shield(GameState.equipped_shield)
+		if GameState.equipped_helmet != "" and GameState.equipped_helmet != "none":
+			m3d.equip_helmet(GameState.equipped_helmet)
+		if GameState.equipped_armor != "" and GameState.equipped_armor != "none":
+			m3d.apply_armor_styling(GameState.equipped_armor)
 
 func setup_3d_hero_model(asset_ref: String, type_name: String = "knight", scale_mul: float = 1.0, tint: Color = Color.WHITE) -> CharacterModel3D:
 	var m3d = get_node_or_null("CharacterModel3D") as CharacterModel3D
@@ -302,14 +309,25 @@ func setup_3d_hero_model(asset_ref: String, type_name: String = "knight", scale_
 		token_spr.visible = false
 	return m3d
 
-func _on_inventory_changed() -> void:
+func _sync_hero_equipment_visuals() -> void:
 	var m3d = get_node_or_null("CharacterModel3D") as CharacterModel3D
-	if m3d and m3d.has_method("equip_weapon"):
+	if not m3d:
+		return
+	if m3d.has_method("equip_weapon"):
 		var w = GameState.equipped_weapon
-		if w != "" and w != "none":
-			m3d.equip_weapon(w)
-		else:
-			m3d.equip_weapon("none")
+		m3d.equip_weapon(w if (w != "" and w != "none") else "none")
+	if m3d.has_method("equip_shield"):
+		var sh = GameState.equipped_shield
+		m3d.equip_shield(sh if (sh != "" and sh != "none") else "none")
+	if m3d.has_method("equip_helmet"):
+		var h = GameState.equipped_helmet
+		m3d.equip_helmet(h if (h != "" and h != "none") else "none")
+	if m3d.has_method("apply_armor_styling"):
+		var a = GameState.equipped_armor
+		m3d.apply_armor_styling(a if (a != "" and a != "none") else "cloth")
+
+func _on_inventory_changed() -> void:
+	_sync_hero_equipment_visuals()
 
 func set_hero_visual_appearance(h_class: String) -> void:
 	if h_class == "wizard" or h_class == "mage":
