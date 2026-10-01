@@ -11,6 +11,20 @@ test('Create PR stage retains drafts across navigation and reload; publishes onl
  await p.locator('#stage-8').evaluate(el=>el.hidden=true);await p.locator('#stage-8').evaluate(el=>el.hidden=false);
  assert.equal(await p.getByLabel('Title',{exact:true}).inputValue(),'Reviewed title');
  await p.reload();await mount();assert.equal(await p.locator('review-markdown-editor').evaluate(el=>el.value),'My saved description');assert.equal(calls,0);
- await p.locator('#stage-8').getByRole('button',{name:'Create PR',exact:true}).click();await p.getByRole('link',{name:'#42 · Reviewed title'}).waitFor();assert.equal(calls,1);assert.equal(await p.locator('#step-btn-8').innerText(),'PR created');
+ await p.locator('#stage-8').getByRole('button',{name:'Create PR',exact:true}).click();await p.getByRole('link',{name:'#42 · Reviewed title'}).waitFor();assert.equal(calls,1);assert.equal(await p.locator('#step-btn-8').innerText(),'Pull Request');
+ }finally{await b.close();}
+});
+
+test('Create PR immediately acknowledges pending preparation and reports preparation errors',async()=>{
+ const b=await chromium.launch({headless:true});try{const p=await b.newPage();
+ await p.setContent('<h2 id="theater-pr-title"></h2><span id="theater-target-app"></span><button id="step-btn-8"><span class="step-label">PR</span></button><section id="stage-8"></section>');
+ await require('./editor-test-helper')(p);
+ await p.evaluate(()=>{window.mountAIDescription=()=>({ensureReady:()=>new Promise((resolve,reject)=>{window.finish=resolve;window.fail=reject;})});window.api={createReviewPR:()=>{throw Error('Must not publish while preparing');}};});
+ await p.addScriptTag({path:path.resolve(__dirname,'../../../pr-review/renderer/publish-ui.js')});
+ await p.evaluate(()=>window.configureReviewPublish({local:true,title:'Filters',repo:'org/repo',headBranch:'codex/filters',baseBranch:'main'}));
+ assert.equal(await p.locator('#step-btn-8').innerText(),'Pull Request');
+ await p.getByRole('button',{name:'Create PR',exact:true}).click();assert.equal(await p.getByRole('button',{name:'Preparing PR…',exact:true}).isDisabled(),true);
+ await p.evaluate(()=>window.finish(false));await p.getByRole('alert').filter({hasText:'description needs your review'}).waitFor();
+ await p.getByRole('button',{name:'Create PR',exact:true}).click();await p.evaluate(()=>window.fail(Error('Description service unavailable')));await p.getByRole('alert').filter({hasText:'Description service unavailable'}).waitFor();assert.equal(await p.getByRole('button',{name:'Create PR',exact:true}).isEnabled(),true);
  }finally{await b.close();}
 });

@@ -1,6 +1,6 @@
 'use strict';
 window.configureReviewPublish = function(pr) {
-  const trigger=document.getElementById('step-btn-8');trigger.hidden=!pr.local;
+  const trigger=document.getElementById('step-btn-8');trigger.hidden=!pr.local;trigger.querySelector('.step-label').textContent='Pull Request';
   const stage=document.getElementById('stage-8');stage.replaceChildren();
   if (!pr.local) return;
   const key='robos-pr-draft:'+pr.repo+':'+pr.headBranch;
@@ -20,16 +20,18 @@ window.configureReviewPublish = function(pr) {
     const messaging=window.mountReviewMessageOptions?.(messagingHost,pr,title,body,saved);
     const aiHost=document.createElement('div');
     const create=document.createElement('button');create.textContent='Create PR';create.onclick=async()=>{
-      if(aiDescription && !await aiDescription.ensureReady())return;
-      save();create.disabled=true;error.textContent='Checking the branch and creating the PR…';
-      try{await messaging?.ready;save();messaging?.validate();const result=await window.api.createReviewPR({title:title.value,body:body.value,draft:draft.checked});if(!result.ok)throw new Error(result.error);
-        Object.assign(pr,result.pr);const link=document.createElement('a');link.href=result.pr.url;link.textContent=`#${result.pr.number} · ${result.pr.title}`;link.onclick=e=>{e.preventDefault();window.api.openUrl(link.href);};document.getElementById('theater-pr-title').replaceChildren(link);trigger.querySelector('.step-label').textContent='PR created';document.getElementById('theater-target-app').textContent=`${result.pr.repo} · ${result.pr.headBranch}`;error.textContent='Pull request created. Use the linked title above to open it.';create.hidden=true;title.disabled=true;body.disabled=true;draft.disabled=true;
+      create.disabled=true;create.textContent='Preparing PR…';error.textContent='Checking the description…';
+      try{
+        if(aiDescription && !await aiDescription.ensureReady()){error.textContent='The description needs your review. Check the description and its status above, then click Create PR when ready.';return;}
+        save();create.textContent='Creating PR…';error.textContent='Checking the branch and creating the PR…';
+        await messaging?.ready;save();messaging?.validate();const result=await window.api.createReviewPR({title:title.value,body:body.value,draft:draft.checked});if(!result.ok)throw new Error(result.error);
+        Object.assign(pr,result.pr);const link=document.createElement('a');link.href=result.pr.url;link.textContent=`#${result.pr.number} · ${result.pr.title}`;link.onclick=e=>{e.preventDefault();window.api.openUrl(link.href);};document.getElementById('theater-pr-title').replaceChildren(link);trigger.querySelector('.step-label').textContent='Pull Request';document.getElementById('theater-target-app').textContent=`${result.pr.repo} · ${result.pr.headBranch}`;error.textContent='Pull request created. Use the linked title above to open it.';create.hidden=true;title.disabled=true;body.disabled=true;draft.disabled=true;
         await messaging?.send();
-      }catch(e){error.textContent=e.message;}finally{create.disabled=false;}
+      }catch(e){error.textContent=e.message;}finally{create.disabled=false;create.textContent='Create PR';error.scrollIntoView({block:'nearest'});}
     };
     dialog.append(heading,branch,titleLabel,aiHost,bodyLabel,draftLabel,messagingHost,error,create);stage.append(dialog);
     body.addEventListener('editor-warning',e=>error.textContent=e.detail);
     aiDescription=window.mountAIDescription?.(aiHost,{pr,title,body,saved,save,ready:messaging?.ready});
-    if(pr.published){trigger.querySelector('.step-label').textContent='PR created';create.hidden=true;title.disabled=true;body.disabled=true;draft.disabled=true;error.textContent='Pull request created. Use the linked title above to open it.';}
+    if(pr.published){trigger.querySelector('.step-label').textContent='Pull Request';create.hidden=true;title.disabled=true;body.disabled=true;draft.disabled=true;error.textContent='Pull request created. Use the linked title above to open it.';}
   }
 };
