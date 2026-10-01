@@ -1,6 +1,9 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('gp', {
+  reviewOptions: repo => ipcRenderer.invoke('project-review-options', repo),
+  saveReviewSettings: input => ipcRenderer.invoke('project-review-save', input),
+  reviewChannels: serverId => ipcRenderer.invoke('project-review-channels', serverId),
   readProjects:  ()              => ipcRenderer.invoke('read-projects'),
   writeProjects: (data)          => ipcRenderer.invoke('write-projects', data),
   parseUrl:      (url)           => ipcRenderer.invoke('parse-url', url),

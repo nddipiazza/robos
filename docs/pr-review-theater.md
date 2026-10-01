@@ -528,3 +528,22 @@ Step actions sit below the checkpoint description. An incomplete check displays 
 The local review runner stores sessions under `~/.robos/pr-reviews/<repository>-<hash>/pr-<number>/`, or `branch-<branch>-<workspace-hash>/` for unpublished work. `conversation.jsonl` archives every public chat entry before the in-memory FIFO cap; `session.json` atomically saves the checkpoint, mode, baseline checkout and native Codex thread IDs. Files are private to the user. Raw commands, tool output and model reasoning are not archived as chat.
 
 Reopening restores recent messages automatically. **Saved history** pages through the complete archive, including messages cleared from the window, without loading the entire file. **Clear chat** resets only the visible conversation. **Resume agent** continues the saved Codex thread in the same mode and workspace; opening a review never automatically starts an agent. If the app closed mid-action, the checkpoint stays unverified until resumed. Changing the demo process resets checkpoint progress but retains saved history; changing runner configuration starts a fresh native thread using the saved conversation rather than resuming a potentially incompatible runner.
+
+### Project review templates and notifications
+
+Git Projects → Edit includes **Pull request review** settings for the PR description,
+team notification template, workspace, and channel. Templates support `{{title}}`,
+`{{url}}`, `{{repo}}`, `{{branch}}`, and `{{description}}`. Notifications must include
+`{{url}}`. Settings are stored per repository under `~/.robos/project-review-settings/`.
+
+The Create PR stage offers an unchecked **Send PR review notification to Slack**
+option when Slack is the configured provider (or “messaging app” for multiple
+providers). Select the channel and inspect the preview before creating the PR.
+Only successful PR creation triggers the selected notification; a send failure
+keeps the created PR visible. Completed sends are deduplicated across restarts,
+and uncertain sends require checking the channel rather than automatic retry.
+
+The integration uses RobOS Team Chat Servers, including its password-store
+credentials and delivery receipts. It prefers the bundled service, with installed
+runtime discovery through `ROBOS_HOME` and `~/.hermetiq/robos` for older checkouts.
+No Slack token is exposed to the renderer or saved in review settings.

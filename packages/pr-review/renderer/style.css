@@ -2767,3 +2767,12 @@ header h1 { font-size: 15px; font-weight: 600; }
 
 #step-btn-8[hidden] { display: none; }
 .review-publish-stage { margin: 24px auto; width: min(800px, 95%); max-height: none; }
+
+#step-btn-8 { color: #b9efd5; border: 1px solid #37634e; background: #17382b; gap: 8px; }
+#step-btn-8:hover, #step-btn-8.active { background: #24523d; border-color: #68bf92; color: #ecfff4; }
+.pr-tab-icon { flex-shrink: 0; }
+.review-message-options { margin: 20px 0; padding: 16px; border: 1px solid #384758; border-radius: 8px; }
+.review-message-options select { background: #0d1117; color: #e6edf3; padding: 8px; border: 1px solid #384758; border-radius: 6px; max-width: 100%; }
+.review-message-preview { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; color: #b7c6d6; padding: 12px; background: #0d1117; border-radius: 6px; }
+
+#step-btn-8 { padding: 9px 14px; margin: 6px 0 6px 8px; border-radius: 7px; }

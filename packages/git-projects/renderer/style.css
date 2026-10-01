@@ -609,3 +609,8 @@ html, body { height: 100%; background: #0d1117; color: #c9d1d9; font-family: -ap
   margin-top: 1px;
 }
 
+
+#project-review-settings { margin-top: 28px; padding-top: 20px; border-top: 1px solid #384758; max-width: 850px; }
+#project-review-settings label { display:block; margin:16px 0; }
+#project-review-settings textarea, #project-review-settings select { display:block; margin-top:8px; width:100%; box-sizing:border-box; background:#0d1117; color:#e6edf3; padding:10px; border:1px solid #384758; border-radius:6px; font:inherit; }
+#project-review-settings p { color:#9daebf; margin:12px 0; }

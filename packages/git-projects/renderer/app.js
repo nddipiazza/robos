@@ -356,6 +356,8 @@ async function selectProject(id) {
   document.getElementById('btn-browser').onclick  = () => gp.openBrowser(p.url);
   wireIdeDropdown(p);
 
+  window.mountProjectReviewSettings(p);
+
   // Tab edit fields
   document.getElementById('edit-label').value = p.label || '';
   document.getElementById('edit-url').value   = p.url;

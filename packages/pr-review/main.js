@@ -1248,3 +1248,9 @@ function getCIStatus(rollup) {
   if (states.every(s => s === 'SUCCESS' || s === 'NEUTRAL' || s === 'SKIPPED')) return 'success';
   return 'pending';
 }
+
+const projectReviewSettings = require('../robos-lib/project-review-settings');
+const notification = localReview ? new (require('./lib/review-notification').ReviewNotification)(localReview, process.env.ROBOS_LOCAL_REVIEW) : null;
+ipcMain.handle('review-message-options', async () => {try {if(!localReview)throw Error('No local review.');return {ok:true,...await projectReviewSettings.options(localReview.repo)};}catch(e){return {ok:false,error:e.message};}});
+ipcMain.handle('review-message-channels', async (_,serverId) => {try{return {ok:true,channels:await projectReviewSettings.channels(serverId)};}catch(e){return {ok:false,error:e.message};}});
+ipcMain.handle('review-message-send', async (_,input) => {try{if(!notification)throw Error('No local review.');return {ok:true,notification:await notification.send(input)};}catch(e){return {ok:false,error:e.message};}});
