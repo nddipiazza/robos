@@ -581,6 +581,12 @@ func play_cast_spell(spell_id: String, target_pos: Vector2, on_cast_callback: Ca
 	elif spell_id in ["stinking-cloud", "stinking_cloud"]:
 		await _spawn_stinking_cloud_vfx(target_pos, on_cast_callback)
 	elif spell_id == "magic-missile":
+		var m3d = get_node_or_null("CharacterModel3D") as CharacterModel3D
+		if m3d and m3d.has_method("update_facing"):
+			var dir_cast = global_position.direction_to(target_pos)
+			m3d.update_facing(dir_cast * 100.0)
+		if m3d and m3d.has_method("play_attack"):
+			m3d.play_attack()
 		# 5e / Infinity Engine: glowing force darts that weave independently and never miss.
 		var dart_values: Array = get_meta("mm_darts", []) if has_meta("mm_darts") else []
 		var dart_count: int = max(1, dart_values.size()) if dart_values.size() > 0 else 3
@@ -664,6 +670,14 @@ func _spawn_magic_missile_dart(target_pos: Vector2, index: int, total: int, dart
 	dart.top_level = true
 	dart.global_position = start_pos
 	dart.z_index = 20
+
+	# 3D Magic Missile Orb
+	var mm_3d = SpellModel3D.new()
+	mm_3d.name = "SpellModel3D_MM"
+	mm_3d.setup_spell("res://assets/models/spell_magic_missile_orb.glb", "projectile", 0.75, Color(0.3, 0.85, 1.3))
+	if mm_3d.sub_viewport:
+		mm_3d.sub_viewport.size = Vector2i(96, 96)
+	dart.add_child(mm_3d)
 
 	# Soft outer glow + bright white-hot core (HDR colours bloom in GL Compatibility)
 	var glow = Polygon2D.new()
