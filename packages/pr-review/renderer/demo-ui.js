@@ -10,9 +10,9 @@ window.mountWalkthrough = async function () {
   const restart = button('Start over', 'Rerun setup and return to checkpoint 1; keep code changes and chat', () => act('restart'));
   const before = button('How it used to work', 'Demo the main branch in a separate checkout', () => act('before'));
   const feature = button('Show the change', 'Return to the feature branch walkthrough', () => act('feature'));
-  const explain = button('Explain', 'Explain what you are demonstrating at this checkpoint', () => act('explain'));
-  const next = button('Next checkpoint →', 'Go to the next checkpoint', () => act('next'));
-  const retry = button('Retry', 'Retry this checkpoint', () => act('retry'));
+  const explain = button('Explain this step', 'Explain what you are demonstrating at this checkpoint', () => act('explain'));
+  const next = button('Next checkpoint →', 'Go to the next checkpoint', () => act(state.status === 'error' ? 'continue' : 'next'));
+  const retry = button('Recheck this step', 'Retry this checkpoint', () => act('retry'));
   const process = button('Process…', 'Customize this project’s demo process', () => { editor.value = JSON.stringify(state.process, null, 2); dialog.showModal(); });
   const more = document.createElement('details'); more.className = 'walkthrough-more';
   const moreToggle = document.createElement('summary'); moreToggle.textContent = 'More'; moreToggle.setAttribute('aria-label', 'More walkthrough actions');
@@ -21,9 +21,10 @@ window.mountWalkthrough = async function () {
   const dismissMenu = event => { if (!more.contains(event.target)) more.open = false; };
   const escapeMenu = event => { if (event.key === 'Escape' && more.open) { more.open = false; moreToggle.focus(); } };
   document.addEventListener('click', dismissMenu); document.addEventListener('keydown', escapeMenu);
-  next.className = 'walkthrough-primary'; start.className = 'walkthrough-primary'; retry.className = 'walkthrough-primary';
-  bar.append(title, badge, explain, start, next, retry, more);
+  next.className = 'walkthrough-primary'; start.className = 'walkthrough-primary'; retry.className = '';
+  bar.append(title, badge, more);
   const checkpoint = document.createElement('section'); checkpoint.className = 'walkthrough-checkpoint'; checkpoint.setAttribute('aria-live', 'polite');
+  const stepActions = document.createElement('div'); stepActions.className = 'walkthrough-step-actions'; stepActions.append(start, explain, retry, next);
   const progress = document.createElement('section'); progress.className = 'walkthrough-progress'; progress.setAttribute('aria-label', 'Demo progress');
   const activity = document.createElement('div'); activity.setAttribute('role', 'status');
   const elapsed = document.createElement('small');
@@ -38,7 +39,7 @@ window.mountWalkthrough = async function () {
   input.setAttribute('show-agent', 'false');
   input.setAttribute('placeholder', 'Ask a question or request a change at this checkpoint…');
   const error = document.createElement('p'); error.className = 'walkthrough-error'; error.setAttribute('role', 'alert');
-  form.append(input, progress, receipt); stage.append(bar, checkpoint, historyNotice, chat, error, form);
+  form.append(input, progress, receipt); stage.append(bar, checkpoint, stepActions, historyNotice, chat, error, form);
   const send = input.querySelector('.robos-submit-btn'); send.textContent = 'Send'; send.type = 'button';
   const editable = input.querySelector('.robos-ai-inner'); editable.setAttribute('role', 'textbox'); editable.setAttribute('aria-label', 'Message the demo agent'); editable.setAttribute('aria-multiline', 'true');
   const dialog = document.createElement('dialog'); dialog.className = 'walkthrough-process';
@@ -62,17 +63,20 @@ window.mountWalkthrough = async function () {
       pendingMessage = null;
     }
     receipt.hidden = busy;
-    if (!busy && !pendingMessage) receipt.textContent = value.index < 0 ? 'Start the walkthrough to chat with the demo agent.' : 'Ready for your next message.';
-    badge.textContent = busy ? 'In progress' : value.status === 'paused' ? `Paused · ${value.index + 1}/${value.total}` : value.status === 'error' ? 'Needs attention' : 'Ready';
+    if (!busy && !pendingMessage) receipt.textContent = value.index < 0 && value.status !== 'error' ? 'Start the walkthrough to chat with the demo agent.' : 'Ready for your next message.';
+    const stepIndex = value.status === 'error' ? (value.failedIndex ?? Math.max(0, value.index)) : value.index;
+    const lastStep = stepIndex >= value.total - 1;
+    badge.textContent = busy ? 'In progress' : value.status === 'paused' ? lastStep ? 'Walkthrough complete' : `Step ${value.index + 1} of ${value.total}` : value.status === 'error' ? `Step ${stepIndex + 1} of ${value.total} · Check incomplete` : `Ready · ${value.total} steps`;
     start.hidden = busy || value.index >= 0 || value.status === 'error'; start.disabled = busy;
     restart.hidden = value.messages.length === 0; restart.disabled = busy;
     before.hidden = !value.process.before || value.mode === 'before'; before.disabled = busy;
     feature.hidden = value.mode !== 'before'; feature.disabled = busy;
     more.hidden = busy; if (busy) more.open = false;
     explain.hidden = busy || value.index < 0; explain.disabled = busy || value.index < 0;
-    next.hidden = busy || value.status !== 'paused' || value.index >= value.total - 1;
-    next.disabled = busy || value.status !== 'paused' || value.index >= value.total - 1;
-    retry.hidden = value.status !== 'error'; process.disabled = busy; send.disabled = !busy && value.index < 0; send.textContent = busy ? 'Steer' : 'Send';
+    next.hidden = busy || !['paused', 'error'].includes(value.status) || lastStep;
+    next.disabled = busy;
+    next.textContent = value.status === 'error' ? `Continue to step ${stepIndex + 2} →` : `Next step: ${value.process.checkpoints[value.index + 1]?.title || 'Continue'} →`;
+    retry.hidden = value.status !== 'error'; process.disabled = busy; send.disabled = !busy && value.status !== 'error' && value.index < 0; send.textContent = busy ? 'Steer' : 'Send';
     // Older running sessions can be upgraded without interrupting their agent.
     if (lastActionStart !== value.startedAt) { lastNarration = ''; lastActionStart = value.startedAt; }
     const meaningful = [...(value.progress || [])].reverse().find(e => !/^(Running a local setup|Local check finished|A local check failed)/.test(e.text));
@@ -83,6 +87,8 @@ window.mountWalkthrough = async function () {
     const c = value.checkpoint;
     if (c) { const h = document.createElement('h3'); h.textContent = c.title; const p = document.createElement('p'); p.textContent = busy ? `I’m preparing “${c.title}”. I’ll show you what to try and pause when it’s ready.` : value.guidance || c.summary || 'Ask Explain for a walkthrough of this step, or try the app before moving on.'; checkpoint.append(h, p); if (value.baseline) { const note = document.createElement('small'); note.textContent = `Before the change · ${value.baseline.ref} · ${value.baseline.revision.slice(0, 8)}`; checkpoint.append(note); } }
     else checkpoint.textContent = 'Start the dev app and demonstrate one checkpoint at a time. You decide when we move on.';
+    if (value.status === 'error') { const reason = document.createElement('p'); reason.className = 'walkthrough-blocker'; reason.textContent = (value.messages.filter(m => m.kind !== 'progress' && m.role !== 'user').at(-1)?.text || 'This step could not be verified.') + (lastStep ? ' You can recheck or ask for a change below.' : ' Recheck this step, ask for a change below, or continue with this check marked unverified.'); checkpoint.append(reason); }
+    if (value.status === 'paused' && lastStep) { const done = document.createElement('p'); done.textContent = 'You’ve reached the end of this walkthrough. You can keep asking for changes, or use More to start over. This does not approve or merge the PR.'; checkpoint.append(done); }
     const followTail = chat.scrollHeight - chat.scrollTop - chat.clientHeight < 60;
     historyNotice.textContent = value.droppedMessages ? `${value.droppedMessages} older entries removed. History keeps the newest 120 entries, up to 128 KB.` : 'History keeps the newest 120 entries, up to 128 KB; oldest entries are removed first.';
     chat.replaceChildren();
@@ -100,7 +106,7 @@ window.mountWalkthrough = async function () {
   async function act(action, text) { error.textContent = ''; try { const result = await window.api.demoAction({ action, text }); if (!result.ok) throw new Error(result.error); render(result.state); return true; } catch (e) { error.textContent = e.message; return false; } }
   input.addEventListener('robos-submit', async event => {
     if (pendingMessage) return;
-    if (state.index < 0 && state.status !== 'running') { error.textContent = 'Start the walkthrough before sending a message.'; return; }
+    if (state.index < 0 && !['running', 'error'].includes(state.status)) { error.textContent = 'Start the walkthrough before sending a message.'; return; }
     const text = event.detail.value.trim(); if (!text) return;
     if (text.length > 16000) { error.textContent = 'Keep your message under 16,000 characters.'; return; }
     pendingMessage = { text, lastId: state.messages.filter(m => m.role === 'user').at(-1)?.id }; receipt.textContent = 'Sending your message…';

@@ -99,3 +99,9 @@ test('agent-labeled history keeps progress in FIFO order with count and byte lim
  for(let i=0;i<20;i++)s.addMessage({role:'user',text:'界'.repeat(15000)});
  assert.ok(s.messages.reduce((n,m)=>n+Buffer.byteLength(m.text),0)<=128*1024);assert.ok(s.messages.length<=120);
 });
+test('reviewer can continue after an unverified step without claiming it passed',async()=>{
+ let pass=false;const s=session(async()=>({reply:'Old label is missing',checkpointReached:pass}));await s.act('start');
+ assert.equal(s.state().checkpoint.title,'One');assert.equal(s.state().failedIndex,0);
+ pass=true;await s.act('continue');assert.equal(s.index,1);assert.equal(s.status,'paused');
+ assert.ok(s.messages.some(m=>m.role==='system' && /remains unverified/.test(m.text)));
+});

@@ -35,7 +35,7 @@ class DemoSession extends EventEmitter {
     while (this.messages.length > 120 || size > 128 * 1024) { size -= Buffer.byteLength(this.messages.shift().text, 'utf8'); this.droppedMessages++; }
   }
   activeProcess() { return this.mode === 'before' ? this.process.before : this.process; }
-  state() { return { agentName: this.agentName(), droppedMessages: this.droppedMessages, activitySummary: this.activitySummary, progress: this.progress, startedAt: this.startedAt, mode: this.mode, baseline: this.mode === 'before' ? this.baseline : null, guidance: this.guidance, status: this.status, index: this.index, total: this.activeProcess().checkpoints.length, checkpoint: this.activeProcess().checkpoints[this.status === 'running' ? this.failedIndex : this.index] || null, messages: this.messages, process: this.process }; }
+  state() { return { agentName: this.agentName(), droppedMessages: this.droppedMessages, activitySummary: this.activitySummary, progress: this.progress, startedAt: this.startedAt, failedIndex: this.failedIndex, mode: this.mode, baseline: this.mode === 'before' ? this.baseline : null, guidance: this.guidance, status: this.status, index: this.index, total: this.activeProcess().checkpoints.length, checkpoint: this.activeProcess().checkpoints[['running', 'error'].includes(this.status) ? this.failedIndex : this.index] || null, messages: this.messages, process: this.process }; }
   reportProgress(text, headline = true) {
     if (this.status !== 'running' || !text || this.progress.at(-1)?.text === text) return;
     const event = { text: text.replace(/\s+/g, ' ').trim().slice(0, 600), at: Date.now() };
@@ -75,7 +75,7 @@ class DemoSession extends EventEmitter {
       this.reportProgress('Steering received — stopping the current action before applying your instructions.');
       this.interruptRun?.(); return this.state();
     }
-    if (!['start', 'restart', 'before', 'feature', 'next', 'explain', 'message', 'retry'].includes(action)) throw new Error('Unknown demo action.');
+    if (!['start', 'restart', 'before', 'feature', 'next', 'explain', 'message', 'retry', 'continue'].includes(action)) throw new Error('Unknown demo action.');
     if (action === 'before') {
       if (!this.process.before) throw new Error('No before-change walkthrough configured.');
       this.baseline ||= prepareBaseline(this.workspace, this.process.before.ref || 'origin/main');
@@ -84,12 +84,14 @@ class DemoSession extends EventEmitter {
     if (action === 'feature') { this.mode = 'feature'; this.index = -1; this.failedIndex = 0; this.guidance = ''; }
     const process = this.activeProcess();
     if (action === 'message' && (!text.trim() || text.length > 16000)) throw new Error('Enter a message of 1–16000 characters.');
-    if (['explain', 'message'].includes(action) && this.index < 0) throw new Error('Start the walkthrough first.');
+    if (['explain', 'message'].includes(action) && this.index < 0 && this.failedIndex == null) throw new Error('Start the walkthrough first.');
     if (action === 'next' && this.status !== 'paused') throw new Error('Reach the current checkpoint before advancing.');
     if (action === 'next' && this.index >= process.checkpoints.length - 1) throw new Error('You are at the final checkpoint.');
     if (action === 'start' && this.index >= 0) throw new Error('The walkthrough has already started.');
     if (action === 'restart') { this.guidance = ''; this.index = -1; this.failedIndex = 0; }
-    const proposed = action === 'retry' ? (this.failedIndex ?? this.index) : ['start', 'restart', 'before', 'feature'].includes(action) ? 0 : action === 'next' ? this.index + 1 : this.index;
+    if (action === 'continue' && (this.status !== 'error' || (this.failedIndex ?? this.index) >= process.checkpoints.length - 1)) throw new Error('No next step is available.');
+    if (action === 'continue') this.addMessage({ role: 'system', text: `Reviewer continued past step ${(this.failedIndex ?? this.index) + 1}; its check remains unverified.` });
+    const proposed = action === 'continue' ? (this.failedIndex ?? this.index) + 1 : action === 'retry' ? (this.failedIndex ?? this.index) : ['start', 'restart', 'before', 'feature'].includes(action) ? 0 : action === 'next' ? this.index + 1 : this.index < 0 ? this.failedIndex : this.index;
     if (proposed < 0) throw new Error('Start the walkthrough first.');
     this.failedIndex = proposed;
     const checkpoint = process.checkpoints[proposed];

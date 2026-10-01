@@ -33,11 +33,11 @@ test('Start over toolbar resets a completed walkthrough and blocks duplicate act
   session.handleAgentEvent({type:'item.started',item:{type:'command_execution',command:'opaque'}});
   assert.match(await page.locator('.walkthrough-progress [role=status]').textContent(),/saved compact filters/);
   finish({reply:'First checkpoint ready',checkpointReached:true});
-  await page.waitForFunction(()=>document.querySelector('.walkthrough-status').textContent==='Paused · 1/2');
+  await page.waitForFunction(()=>document.querySelector('.walkthrough-status').textContent==='Step 1 of 2');
   assert.equal(await page.locator('.walkthrough-checkpoint h3').textContent(),'First');
   assert.equal(await page.locator('.walkthrough-progress').isVisible(),false);
   assert.match(await page.getByRole('log').textContent(),/Start over: First/);
-  assert.equal(await page.getByRole('button',{name:'Next checkpoint →',exact:true}).isEnabled(),true);
+  assert.equal(await page.getByRole('button',{name:/^Next step:/}).isEnabled(),true);
   const composer=page.getByRole('textbox',{name:'Message the demo agent'});
   assert.equal(await page.locator('.walkthrough-compose robos-ai-textarea').count(),1);
   const small=(await composer.boundingBox()).height;
@@ -54,7 +54,7 @@ test('Start over toolbar resets a completed walkthrough and blocks duplicate act
   await page.getByRole('log').locator('.progress-entry').filter({hasText:'Verifying that advanced controls disappear'}).waitFor();
   const count=session.messages.length;await composer.press('Control+Enter');assert.equal(session.messages.length,count);
   await composer.fill('Keep this next draft.');finish({reply:'Explained',checkpointReached:true});
-  await page.waitForFunction(()=>document.querySelector('.walkthrough-status').textContent.startsWith('Paused'));
+  await page.waitForFunction(()=>document.querySelector('.walkthrough-status').textContent.startsWith('Step'));
   assert.equal(await composer.innerText(),'Keep this next draft.');
  } finally {session.removeAllListeners();await browser.close();}
 });
