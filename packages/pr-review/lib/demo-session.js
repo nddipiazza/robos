@@ -31,10 +31,10 @@ class DemoSession extends EventEmitter {
   agentName() {
     const args = this.agent?.args || []; const i = args.findIndex(a => a === '--model' || a === '-m');
     const model = i >= 0 ? args[i + 1] : null;
-    return `${this.agent?.name || 'Codex'}${model ? ' · ' + model : ' · configured default'}`;
+    return `${this.agent?.name || 'Codex'}${model ? ' · ' + model : ''}`;
   }
   addMessage(message) {
-    this.messages.push({ ...message, id: randomUUID(), text: message.text.slice(0, 16000), agentName: message.role === 'assistant' ? this.agentName() : undefined });
+    this.messages.push({ ...message, id: randomUUID(), timestamp: Date.now(), text: message.text.slice(0, 16000), agentName: message.role === 'assistant' ? this.agentName() : undefined });
     let size = this.messages.reduce((n,m) => n + Buffer.byteLength(m.text, 'utf8'), 0);
     while (this.messages.length > 120 || size > 128 * 1024) { size -= Buffer.byteLength(this.messages.shift().text, 'utf8'); this.droppedMessages++; }
   }

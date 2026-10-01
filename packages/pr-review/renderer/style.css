@@ -2704,3 +2704,6 @@ header h1 { font-size: 15px; font-weight: 600; }
 
 .walkthrough-history-note { color: #8294a6; font-size: 11px; }
 .walkthrough-bubble.progress-entry { padding: 7px 12px; background: transparent; border-color: #293d50; font-size: 13px; }
+
+.walkthrough-bubble-header { display: flex; align-items: baseline; gap: 16px; justify-content: space-between; }
+.walkthrough-bubble-header time { color: #8294a6; font-size: 11px; white-space: nowrap; }

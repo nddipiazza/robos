@@ -48,9 +48,14 @@ window.mountWalkthrough = async function () {
   const editorError = document.createElement('p'); editorError.setAttribute('role', 'alert');
   const save = button('Save process', 'Save process and reset walkthrough', async () => { try { const result = await window.api.saveDemoProcess(JSON.parse(editor.value)); if (!result.ok) throw new Error(result.error); render(result.state); dialog.close(); } catch (e) { editorError.textContent = e.message; } });
   dialog.append(heading, hint, editor, editorError, save, button('Cancel', 'Close without saving', () => dialog.close())); stage.append(dialog);
+  const receivedTimes = new Map(); let historyInitialized = false;
   let state; let lastNarration = ''; let lastActionStart;
   function button(text, label, fn) { const b = document.createElement('button'); b.type = 'button'; b.textContent = text; b.title = label; b.addEventListener('click', fn); return b; }
   function render(value) {
+    const currentIds = new Set(value.messages.map(m => m.id));
+    for (const id of receivedTimes.keys()) if (!currentIds.has(id)) receivedTimes.delete(id);
+    for (const m of value.messages) if (m.id && !receivedTimes.has(m.id)) receivedTimes.set(m.id, historyInitialized ? Date.now() : null);
+    historyInitialized = true;
     state = value; const busy = value.status === 'running';
     if (pendingMessage && value.messages.some(m => m.role === 'user' && m.text === pendingMessage.text && m.id !== pendingMessage.lastId)) {
       if (input.value.trim() === pendingMessage.text) { input.value = ''; input.dispatchEvent(new Event('input')); }
@@ -81,7 +86,15 @@ window.mountWalkthrough = async function () {
     const followTail = chat.scrollHeight - chat.scrollTop - chat.clientHeight < 60;
     historyNotice.textContent = value.droppedMessages ? `${value.droppedMessages} older entries removed. History keeps the newest 120 entries, up to 128 KB.` : 'History keeps the newest 120 entries, up to 128 KB; oldest entries are removed first.';
     chat.replaceChildren();
-    for (const message of value.messages) { const bubble = document.createElement('div'); bubble.className = 'walkthrough-bubble ' + message.role + (message.kind === 'progress' ? ' progress-entry' : ''); const label = document.createElement('strong'); label.textContent = message.role === 'user' ? 'You' : message.role === 'assistant' ? message.agentName || value.agentName || 'Demo agent' : 'Status'; const body = document.createElement('p'); body.textContent = message.text; bubble.append(label, body); chat.append(bubble); }
+    for (const message of value.messages) { const bubble = document.createElement('div'); bubble.className = 'walkthrough-bubble ' + message.role + (message.kind === 'progress' ? ' progress-entry' : ''); const label = document.createElement('strong'); label.textContent = message.role === 'user' ? 'You' : message.role === 'assistant' ? message.agentName || value.agentName || 'Demo agent' : 'Status'; label.textContent = label.textContent.replace(/ · configured default$/, '');
+      const timestamp = document.createElement('time');
+      const recordedTime = message.timestamp ?? receivedTimes.get(message.id);
+      if (Number.isFinite(recordedTime)) {
+        const date = new Date(recordedTime); timestamp.dateTime = date.toISOString();
+        timestamp.textContent = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); timestamp.title = (message.timestamp ? '' : 'Received: ') + date.toLocaleString();
+      } else { timestamp.textContent = '—'; timestamp.title = 'Time was not recorded for this older message.'; }
+      const header = document.createElement('div'); header.className = 'walkthrough-bubble-header'; header.append(label, timestamp);
+      const body = document.createElement('p'); body.textContent = message.text; bubble.append(header, body); chat.append(bubble); }
     if (followTail) chat.scrollTop = chat.scrollHeight;
   }
   async function act(action, text) { error.textContent = ''; try { const result = await window.api.demoAction({ action, text }); if (!result.ok) throw new Error(result.error); render(result.state); return true; } catch (e) { error.textContent = e.message; return false; } }
