@@ -30,6 +30,8 @@ window.mountWalkthrough = async function () {
   const elapsed = document.createElement('small');
   progress.append(activity, elapsed);
   const historyNotice = document.createElement('small'); historyNotice.className = 'walkthrough-history-note';
+  const chatHeader = document.createElement('div'); chatHeader.className = 'walkthrough-chat-header';
+  const clearChat = button('Clear chat', 'Clear this conversation', () => clearDialog.showModal()); chatHeader.append(historyNotice, clearChat);
   const chat = document.createElement('div'); chat.className = 'walkthrough-chat'; chat.setAttribute('role', 'log'); chat.setAttribute('aria-label', 'Live demo conversation');
   let pendingMessage = null;
   const receipt = document.createElement('div'); receipt.className = 'walkthrough-receipt'; receipt.setAttribute('role', 'status');
@@ -39,7 +41,7 @@ window.mountWalkthrough = async function () {
   input.setAttribute('show-agent', 'false');
   input.setAttribute('placeholder', 'Ask a question or request a change at this checkpoint…');
   const error = document.createElement('p'); error.className = 'walkthrough-error'; error.setAttribute('role', 'alert');
-  form.append(input, progress, receipt); stage.append(bar, checkpoint, stepActions, historyNotice, chat, error, form);
+  form.append(input, progress, receipt); stage.append(bar, checkpoint, stepActions, chatHeader, chat, error, form);
   const send = input.querySelector('.robos-submit-btn'); send.textContent = 'Send'; send.type = 'button';
   const editable = input.querySelector('.robos-ai-inner'); editable.setAttribute('role', 'textbox'); editable.setAttribute('aria-label', 'Message the demo agent'); editable.setAttribute('aria-multiline', 'true');
   const dialog = document.createElement('dialog'); dialog.className = 'walkthrough-process';
@@ -50,6 +52,18 @@ window.mountWalkthrough = async function () {
   const save = button('Save process', 'Save process and reset walkthrough', async () => { try { const result = await window.api.saveDemoProcess(JSON.parse(editor.value)); if (!result.ok) throw new Error(result.error); render(result.state); dialog.close(); } catch (e) { editorError.textContent = e.message; } });
   dialog.append(heading, hint, editor, editorError, save, button('Cancel', 'Close without saving', () => dialog.close())); stage.append(dialog);
   const receivedTimes = new Map(); let historyInitialized = false;
+  const clearDialog = document.createElement('dialog'); clearDialog.className = 'walkthrough-clear-dialog'; clearDialog.setAttribute('aria-labelledby', 'clear-chat-title');
+  const clearTitle = document.createElement('h3'); clearTitle.id = 'clear-chat-title'; clearTitle.textContent = 'Clear chat?';
+  const clearDescription = document.createElement('p'); clearDescription.textContent = 'Remove all messages from this conversation? Your current step and code changes will stay. A running agent will continue and may add new messages. This cannot be undone.';
+  const cancelClear = button('Cancel', 'Keep the conversation', () => clearDialog.close()); cancelClear.autofocus = true;
+  const confirmClear = button('Clear chat', 'Confirm clearing the conversation', async () => {
+    confirmClear.disabled = true;
+    try { const result = await window.api.clearDemoChat(); if (!result.ok) throw new Error(result.error); render(result.state); clearDialog.close(); clearChat.focus(); }
+    catch (e) { clearError.textContent = e.message; }
+    finally { confirmClear.disabled = false; }
+  });
+  const clearError = document.createElement('p'); clearError.setAttribute('role', 'alert');
+  clearDialog.append(clearTitle, clearDescription, clearError, cancelClear, confirmClear); stage.append(clearDialog);
   let state; let lastNarration = ''; let lastActionStart;
   function button(text, label, fn) { const b = document.createElement('button'); b.type = 'button'; b.textContent = text; b.title = label; b.addEventListener('click', fn); return b; }
   function render(value) {
@@ -57,6 +71,7 @@ window.mountWalkthrough = async function () {
     for (const id of receivedTimes.keys()) if (!currentIds.has(id)) receivedTimes.delete(id);
     for (const m of value.messages) if (m.id && !receivedTimes.has(m.id)) receivedTimes.set(m.id, historyInitialized ? Date.now() : null);
     historyInitialized = true;
+    clearChat.disabled = value.messages.length === 0;
     state = value; const busy = value.status === 'running';
     if (pendingMessage && value.messages.some(m => m.role === 'user' && m.text === pendingMessage.text && m.id !== pendingMessage.lastId)) {
       if (input.value.trim() === pendingMessage.text) { input.value = ''; input.dispatchEvent(new Event('input')); }

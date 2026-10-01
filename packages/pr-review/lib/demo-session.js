@@ -34,6 +34,7 @@ class DemoSession extends EventEmitter {
     let size = this.messages.reduce((n,m) => n + Buffer.byteLength(m.text, 'utf8'), 0);
     while (this.messages.length > 120 || size > 128 * 1024) { size -= Buffer.byteLength(this.messages.shift().text, 'utf8'); this.droppedMessages++; }
   }
+  clearChat() { this.messages = []; this.droppedMessages = 0; this.publish(); return this.state(); }
   activeProcess() { return this.mode === 'before' ? this.process.before : this.process; }
   state() { return { agentName: this.agentName(), droppedMessages: this.droppedMessages, activitySummary: this.activitySummary, progress: this.progress, startedAt: this.startedAt, failedIndex: this.failedIndex, mode: this.mode, baseline: this.mode === 'before' ? this.baseline : null, guidance: this.guidance, status: this.status, index: this.index, total: this.activeProcess().checkpoints.length, checkpoint: this.activeProcess().checkpoints[['running', 'error'].includes(this.status) ? this.failedIndex : this.index] || null, messages: this.messages, process: this.process }; }
   reportProgress(text, headline = true) {

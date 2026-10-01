@@ -2732,3 +2732,10 @@ header h1 { font-size: 15px; font-weight: 600; }
 
 .walkthrough-step-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .walkthrough-blocker { color: #d7b78a; font-size: 13px; line-height: 1.5; }
+
+.walkthrough-chat-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.walkthrough-chat-header button { flex-shrink: 0; font-size: 12px; }
+.walkthrough-clear-dialog { max-width: 420px; padding: 24px; color: #e6edf3; background: #161b22; border: 1px solid #384758; border-radius: 10px; }
+.walkthrough-clear-dialog::backdrop { background: #0009; }
+.walkthrough-clear-dialog p { line-height: 1.6; color: #a5b3c1; }
+.walkthrough-clear-dialog button { margin-right: 8px; }
