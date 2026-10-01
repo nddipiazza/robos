@@ -2756,9 +2756,9 @@ header h1 { font-size: 15px; font-weight: 600; }
 .review-publish-stage::backdrop { background: #0009; }
 .review-publish-stage label { display: block; margin: 14px 0; }
 .review-publish-stage input:not([type=checkbox]), .review-publish-stage textarea { display: block; box-sizing: border-box; width: 100%; margin-top: 6px; background: #0d1117; color: #e6edf3; border: 1px solid #384758; border-radius: 6px; padding: 9px; }
-.review-publish-stage button { background: #212a36; color: #e6edf3; border: 1px solid #384758; border-radius: 6px; padding: 8px 14px; margin-right: 8px; cursor: pointer; }
+.review-publish-stage > button, .review-ai-description > button { background: #212a36; color: #e6edf3; border: 1px solid #384758; border-radius: 6px; padding: 8px 14px; margin-right: 8px; cursor: pointer; }
 
-.review-publish-stage button:last-child { background: #204737; border-color: #38634e; }
+.review-publish-stage > button:last-child { background: #204737; border-color: #38634e; }
 .review-publish-stage button:disabled { opacity: .55; cursor: wait; }
 .review-publish-stage textarea { font: inherit; resize: vertical; }
 
@@ -2776,3 +2776,13 @@ header h1 { font-size: 15px; font-weight: 600; }
 .review-message-preview { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; color: #b7c6d6; padding: 12px; background: #0d1117; border-radius: 6px; }
 
 #step-btn-8 { padding: 9px 14px; margin: 6px 0 6px 8px; border-radius: 7px; }
+
+review-markdown-editor { display: block; margin: 8px 0 20px; }
+.review-description-field { margin: 18px 0; }
+.review-publish-stage { width: min(1040px, 96%); }
+.review-publish-stage .toastui-editor-defaultUI button { margin: 0; padding: 0; background-color: transparent; border-radius: 0; }
+.review-publish-stage .toastui-editor-contents { font-size: 16px; line-height: 1.65; }
+.review-publish-stage .toastui-editor-defaultUI { border-radius: 8px; overflow: hidden; }
+.review-ai-description { margin: 18px 0; padding: 14px; background: #101c26; border: 1px solid #324859; border-radius: 8px; }
+.review-ai-description label { margin: 0 0 8px; line-height: 1.5; }
+.review-ai-description p { margin: 8px 0; white-space: pre-line; color: #afc4d6; }

@@ -4,9 +4,17 @@
   "description": "RobOS Agent-Generated Code Review Platform — World-class pull request review with AI agent audit, contract verification, and IntelliJ / VS Code IDE review plugins",
   "main": "main.js",
   "scripts": {
-    "start": "electron --no-sandbox --disable-gpu --disable-dev-shm-usage ."
+    "start": "electron --no-sandbox --disable-gpu --disable-dev-shm-usage .",
+    "build:editor": "node build-editor.js",
+    "postinstall": "node build-editor.js"
   },
   "dependencies": {
-    "electron": "^30.0.0"
+    "@toast-ui/editor": "3.2.2",
+    "dompurify": "3.4.16",
+    "electron": "^30.0.0",
+    "esbuild": "0.28.2"
+  },
+  "overrides": {
+    "dompurify": "$dompurify"
   }
 }

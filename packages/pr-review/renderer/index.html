@@ -2,9 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:;">
   <title>RobOS Agent-Generated Code Review Platform</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../node_modules/@toast-ui/editor/dist/toastui-editor.css">
+  <link rel="stylesheet" href="../node_modules/@toast-ui/editor/dist/theme/toastui-editor-dark.css">
 </head>
 <body>
 <div id="app">
@@ -1124,6 +1126,9 @@
 
   <script src="../../robos-ui/robos-ui.js"></script>
   <script src="demo-ui.js"></script>
+  <script src="vendor/markdown-editor.js"></script>
+  <script src="markdown-editor.js"></script>
+  <script src="ai-description.js"></script>
   <script src="message-options.js"></script>
   <script src="publish-ui.js"></script>
   <script src="app.js"></script>

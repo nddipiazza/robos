@@ -1254,3 +1254,8 @@ const notification = localReview ? new (require('./lib/review-notification').Rev
 ipcMain.handle('review-message-options', async () => {try {if(!localReview)throw Error('No local review.');return {ok:true,...await projectReviewSettings.options(localReview.repo)};}catch(e){return {ok:false,error:e.message};}});
 ipcMain.handle('review-message-channels', async (_,serverId) => {try{return {ok:true,channels:await projectReviewSettings.channels(serverId)};}catch(e){return {ok:false,error:e.message};}});
 ipcMain.handle('review-message-send', async (_,input) => {try{if(!notification)throw Error('No local review.');return {ok:true,notification:await notification.send(input)};}catch(e){return {ok:false,error:e.message};}});
+
+const descriptionGenerator = localReview ? new (require('./lib/pr-description').PRDescriptionGenerator)(localReview, reviewStore, text => {for(const window of BrowserWindow.getAllWindows())window.webContents.send('review-description-progress',text);}) : null;
+ipcMain.handle('generate-pr-description',async(_,input)=>{try{if(!descriptionGenerator)throw Error('No local review is open.');if(demoSession?.status==='running')throw Error('Wait for the current demo edit to finish before generating its description.');return {ok:true,...await descriptionGenerator.generate(input)};}catch(e){return {ok:false,error:e.message};}});
+
+app.on('before-quit',()=>descriptionGenerator?.stop());

@@ -767,6 +767,7 @@ window.setTheaterStage = function(stageNum) {
   }
 
   currentTheaterStage = stageNum;
+  if(stageNum===8)window.preparePRDescription?.();
 
   // Update Stepper buttons
   document.querySelectorAll('.step-btn').forEach(btn => {

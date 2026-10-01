@@ -548,3 +548,24 @@ The integration uses RobOS Team Chat Servers, including its password-store
 credentials and delivery receipts. It prefers the bundled service, with installed
 runtime discovery through `ROBOS_HOME` and `~/.hermetiq/robos` for older checkouts.
 No Slack token is exposed to the renderer or saved in review settings.
+
+### Editing the PR description
+
+Create PR uses a dark WYSIWYG Markdown editor with headings, emphasis, lists,
+tables, links, shared images, and code. Switch to Markdown to edit source directly.
+The editor stores Markdown in the saved draft and sends that Markdown to GitHub.
+Run `npm install` in `packages/pr-review` to install and bundle the editor; the
+bundle can also be rebuilt with `npm run build:editor`.
+
+**Replace default PR text with an AI-generated description** is checked by default.
+Opening Create PR drafts a description from the current diff, saved review notes,
+and the supplied proof directory. Generation uses the configured Codex model in
+a separate read-only run; it does not publish anything. Review or edit the result,
+regenerate it, or restore the previous text. Edits made during generation are kept.
+
+The local review manifest can provide an `evidence` array with `label`, `kind`
+(`screenshot` or `video`), `side` (`before` or `after`), and a shared HTTPS `url`.
+Only supplied shared screenshot URLs may be embedded. Local-only artifacts are
+reported as needing upload, and before/after claims must be supported by observed
+evidence. Image insertion accepts shared URLs; this editor does not upload local
+files to GitHub automatically.
