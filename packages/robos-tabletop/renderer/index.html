@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RobOS Tabletop Studio</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Top Header -->
+    <header class="top-header">
+      <div class="header-left">
+        <div class="brand">
+          <svg class="brand-icon" viewBox="0 0 48 48" fill="none" stroke="#00bcd4" stroke-width="2">
+            <path d="M24 4 L40 10 V24 C40 33 33 41 24 44 C15 41 8 33 8 24 V10 Z" />
+            <rect x="18" y="16" width="12" height="12" rx="2" />
+            <circle cx="21" cy="19" r="1" fill="#00bcd4" />
+            <circle cx="27" cy="19" r="1" fill="#00bcd4" />
+            <circle cx="24" cy="22" r="1" fill="#00bcd4" />
+            <circle cx="21" cy="25" r="1" fill="#00bcd4" />
+            <circle cx="27" cy="25" r="1" fill="#00bcd4" />
+          </svg>
+          <div class="brand-text">
+            <span class="brand-title">RobOS Tabletop Studio</span>
+            <span class="brand-subtitle">HeroQuest & Tabletop Cartridge Form Editor</span>
+          </div>
+        </div>
+
+        <nav class="nav-tabs">
+          <button class="tab-btn active" data-tab="tab-quest">📜 Quest & Campaign</button>
+          <button class="tab-btn" data-tab="tab-heroes">🛡️ Heroes</button>
+          <button class="tab-btn" data-tab="tab-monsters">👹 Monsters & Bosses</button>
+          <button class="tab-btn" data-tab="tab-board">🗺️ Board & Map Studio</button>
+          <button class="tab-btn" data-tab="tab-spells">✨ Spells & Items</button>
+        </nav>
+      </div>
+
+      <div class="header-actions">
+        <div class="cartridge-select-wrap">
+          <span class="label">Cartridge:</span>
+          <select id="cartridge-select" class="dropdown">
+            <option value="heroquest-the-trial">HeroQuest: The Trial</option>
+          </select>
+        </div>
+        <button id="btn-save-kgraph" class="btn btn-secondary" title="Save current form changes directly into .robos/kgraphs/tabletop-game/package.jsonld">
+          💾 Save to KGraph
+        </button>
+        <button id="btn-bundle" class="btn btn-secondary" title="Compile campaign data into standalone Player Cartridge (.cartridge.json)">
+          📼 Bundle Cartridge
+        </button>
+        <button id="btn-play-hero" class="btn btn-accent" title="Launch Godot 4 Tabletop Player in Player Mode (Play Heroes)">
+          ⚔️ Play as Hero
+        </button>
+        <button id="btn-play-dm" class="btn btn-primary" title="Launch Godot 4 Tabletop Player in DunMaster Mode (Dungeon Master / Zargon)">
+          👑 Play as DunMaster
+        </button>
+      </div>
+    </header>
+
+    <!-- Notification Bar -->
+    <div id="status-bar" class="status-bar">
+      <span id="status-text">Ready. Loaded Knowledge Graph package tabletop-game.</span>
+    </div>
+
+    <!-- Main Content Panes -->
+    <main class="main-content">
+      <!-- 1. Quest & Campaign Tab -->
+      <section id="tab-quest" class="tab-pane active">
+        <div class="pane-header">
+          <h2>Quest & Campaign Blueprint</h2>
+          <p>Configure dungeon objectives, win conditions, starting spawn, and lore briefing.</p>
+        </div>
+        <div class="form-grid">
+          <div class="card form-card">
+            <h3>Basic Quest Metadata</h3>
+            <div class="form-group">
+              <label>Cartridge Identifier (Slug):</label>
+              <input type="text" id="quest-slug" value="heroquest-the-trial" class="form-input">
+            </div>
+            <div class="form-group">
+              <label>Quest Title:</label>
+              <input type="text" id="quest-title" value="HeroQuest: The Trial" class="form-input">
+            </div>
+            <div class="form-group">
+              <label>Ruleset Engine:</label>
+              <select id="quest-ruleset" class="form-input">
+                <option value="heroquest" selected>HeroQuest Classic (2d6 Movement, Combat Dice)</option>
+                <option value="dnd5e">D&D 5e SRD Tabletop Grid</option>
+                <option value="d20-open">OGL D20 Tabletop</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Starting Spawn Square [X, Y]:</label>
+              <div class="coord-inputs">
+                <input type="number" id="quest-spawn-x" value="1" min="0" max="25" class="form-input">
+                <input type="number" id="quest-spawn-y" value="1" min="0" max="18" class="form-input">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Gold Reward:</label>
+              <input type="number" id="quest-gold" value="100" class="form-input">
+            </div>
+          </div>
+
+          <div class="card form-card">
+            <h3>Dungeon Briefing & Win State</h3>
+            <div class="form-group">
+              <label>Story Briefing (Parchment Parchment):</label>
+              <textarea id="quest-briefing" rows="6" class="form-textarea">You have learned well, my apprentices. Now comes your final test. Seek out the foul Orc Warlord Verag in his hidden catacombs, slay him, and return to the stairwell alive.</textarea>
+            </div>
+            <div class="form-group">
+              <label>Boss Monster Target:</label>
+              <input type="text" id="quest-boss-target" value="verag-boss" class="form-input">
+            </div>
+            <div class="form-group">
+              <label>Board Theme / Background:</label>
+              <input type="text" id="quest-bg-ref" value="res://assets/boards/heroquest_board.png" class="form-input">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Heroes Tab -->
+      <section id="tab-heroes" class="tab-pane">
+        <div class="split-view">
+          <aside class="sidebar-list">
+            <div class="list-header">
+              <h3>Tabletop Heroes</h3>
+              <button id="btn-add-hero" class="btn btn-sm btn-secondary">+ New</button>
+            </div>
+            <div id="heroes-list" class="item-list"></div>
+          </aside>
+          <div class="editor-panel">
+            <div class="card form-card">
+              <h3 id="hero-editor-title">Edit Hero: Barbarian</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Hero ID:</label>
+                  <input type="text" id="hero-id" class="form-input" readonly>
+                </div>
+                <div class="form-group">
+                  <label>Hero Name:</label>
+                  <input type="text" id="hero-name" class="form-input">
+                </div>
+              </div>
+              <div class="form-row stats-row">
+                <div class="form-group">
+                  <label>Body Points (BP):</label>
+                  <input type="number" id="hero-bp" min="1" max="20" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label>Mind Points (MP):</label>
+                  <input type="number" id="hero-mp" min="1" max="20" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label>Attack Dice:</label>
+                  <input type="number" id="hero-atk" min="1" max="10" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label>Defend Dice:</label>
+                  <input type="number" id="hero-def" min="1" max="10" class="form-input">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Starting Weapon:</label>
+                  <input type="text" id="hero-weapon" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label>Special Trait / Ability:</label>
+                  <input type="text" id="hero-ability" class="form-input">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Token Color:</label>
+                  <input type="color" id="hero-color" class="form-color">
+                </div>
+                <div class="form-group">
+                  <label>Emoji / Icon:</label>
+                  <input type="text" id="hero-icon" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label>Spawn Pos [X, Y]:</label>
+                  <div class="coord-inputs">
+                    <input type="number" id="hero-pos-x" min="0" max="25" class="form-input">
+                    <input type="number" id="hero-pos-y" min="0" max="18" class="form-input">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. Monsters Tab -->
+      <section id="tab-monsters" class="tab-pane">
+        <div class="split-view">
+          <aside class="sidebar-list">
+            <div class="list-header">
+              <h3>Dungeon Monsters</h3>
+              <button id="btn-add-monster" class="btn btn-sm btn-secondary">+ New</button>
+            </div>
+            <div id="monsters-list" class="item-list"></div>
+          </aside>
+          <div class="editor-panel">
+            <div class="card form-card">
+              <h3 id="monster-editor-title">Edit Monster: Verag Boss</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Monster ID:</label>
+                  <input type="text" id="monster-id" class="form-input" readonly>
+                </div>
+                <div class="form-group">
+                  <label>Monster Name:</label>
+                  <input type="text" id="monster-name" class="form-input">
+                </div>
+              </div>
+              <div class="form-row stats-row">
+                <div class="form-group">
+                  <label>Body Points:</label>
+                  <input type="number" id="monster-bp" min="1" max="20" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label>Attack Dice:</label>
+                  <input type="number" id="monster-atk" min="1" max="10" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label>Defend Dice:</label>
+                  <input type="number" id="monster-def" min="1" max="10" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label>Movement (Squares):</label>
+                  <input type="number" id="monster-move" min="1" max="20" class="form-input">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Room Assignment:</label>
+                  <input type="text" id="monster-room" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label>Initial Position [X, Y]:</label>
+                  <div class="coord-inputs">
+                    <input type="number" id="monster-pos-x" min="0" max="25" class="form-input">
+                    <input type="number" id="monster-pos-y" min="0" max="18" class="form-input">
+                  </div>
+                </div>
+              </div>
+              <div class="form-row check-row">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="monster-is-boss">
+                  Is Boss Monster
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="monster-is-undead">
+                  Is Undead (Affected by Turn Undead)
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. Board & Map Studio Tab -->
+      <section id="tab-board" class="tab-pane">
+        <div class="board-studio-layout">
+          <div class="board-canvas-card card">
+            <div class="board-header">
+              <h3>HeroQuest 26×19 Tactical Board Visualizer</h3>
+              <span id="board-hover-coords" class="badge">Square: [0, 0] | Corridor</span>
+            </div>
+            <div class="board-container">
+              <canvas id="board-canvas" width="780" height="570"></canvas>
+            </div>
+          </div>
+
+          <div class="board-side-panel">
+            <div class="card">
+              <h3>Furniture & Objects</h3>
+              <div id="furniture-list" class="mini-list"></div>
+            </div>
+            <div class="card">
+              <h3>Doors & Portals</h3>
+              <div id="doors-list" class="mini-list"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. Spells & Equipment Tab -->
+      <section id="tab-spells" class="tab-pane">
+        <div class="form-grid">
+          <div class="card">
+            <h3>Elemental Spell Cards</h3>
+            <div id="spells-grid" class="cards-grid"></div>
+          </div>
+          <div class="card">
+            <h3>Weapons & Armor Armory</h3>
+            <div id="items-grid" class="cards-grid"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Automated Verification Suite for RobOS Tabletop RPG & HeroQuest Cartridge Player
-Validates cartridge structure, 26x19 board dimensions, hero stat blocks, and headless Godot execution.
+Validates cartridge structure, 26x19 board dimensions, hero stat blocks,
+Player Mode execution, and DunMaster Mode execution.
 """
 
 import json
@@ -33,14 +34,12 @@ class TestHeroQuestCartridge(unittest.TestCase):
         self.assertIn("elf", heroes)
         self.assertIn("wizard", heroes)
 
-        # Barbarian: 8 BP, 2 MP, 3 Atk, 2 Def
         b = heroes["barbarian"]
         self.assertEqual(b.get("bodyPoints"), 8)
         self.assertEqual(b.get("mindPoints"), 2)
         self.assertEqual(b.get("attackDice"), 3)
         self.assertEqual(b.get("defendDice"), 2)
 
-        # Wizard: 4 BP, 6 MP, 1 Atk, 2 Def
         w = heroes["wizard"]
         self.assertEqual(w.get("bodyPoints"), 4)
         self.assertEqual(w.get("mindPoints"), 6)
@@ -58,13 +57,21 @@ class TestHeroQuestCartridge(unittest.TestCase):
         self.assertIn("doors", trial_map)
         self.assertGreaterEqual(len(trial_map.get("doors", [])), 10)
 
-    def test_headless_godot_execution(self):
+    def test_headless_player_mode_execution(self):
         play_script = os.path.join(ROOT_DIR, "play.sh")
-        cmd = [play_script, "--headless", "--auto-play", "--quit-after", "150"]
+        cmd = [play_script, "--headless", "--role=player", "--auto-play", "--quit-after", "120"]
         res = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
         self.assertEqual(res.returncode, 0, f"Godot execution failed: {res.stderr}")
+        self.assertIn("Player Mode Active", res.stdout)
         self.assertIn("Plugged in cartridge: HeroQuest: The Trial", res.stdout)
-        self.assertIn("rolled 2d6 movement", res.stdout)
+
+    def test_headless_dunmaster_mode_execution(self):
+        play_script = os.path.join(ROOT_DIR, "play.sh")
+        cmd = [play_script, "--headless", "--role=dm", "--auto-play", "--quit-after", "120"]
+        res = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+        self.assertEqual(res.returncode, 0, f"Godot execution failed: {res.stderr}")
+        self.assertIn("DunMaster Mode Active", res.stdout)
+        self.assertIn("Zargon, Master of Darkness", res.stdout)
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,5 +1,5 @@
 # RobOS Tabletop RPG: TabletopWorld
-# Cartridge Game Player for HeroQuest and Tabletop Dungeon Crawlers
+# Dual-Role Cartridge Game Player for HeroQuest: Player Mode & DunMaster Mode
 extends Node2D
 
 const GRID_COLS = 26
@@ -7,8 +7,11 @@ const GRID_ROWS = 19
 const TILE_SIZE = 46.0
 const BOARD_OFFSET = Vector2(50.0, 70.0)
 
+var current_role: String = "player" # "player" or "dm" / "dunmaster"
 var current_round: int = 1
 var active_hero_idx: int = 0
+var active_monster_idx: int = 0
+var current_phase: String = "hero_phase" # "hero_phase" or "dm_phase"
 var movement_remaining: int = 0
 var has_acted_this_turn: bool = false
 var combat_log: Array[String] = []
@@ -23,6 +26,8 @@ var auto_play_timer: float = 0.0
 var auto_play_step: int = 0
 
 @onready var board_sprite: Sprite2D = $BoardSprite
+@onready var title_label: Label = $UI/TitleBar/TitleLabel
+@onready var role_badge: Button = $UI/TitleBar/BtnToggleRole
 @onready var log_label: RichTextLabel = $UI/LogPanel/LogLabel
 @onready var hero_card: Label = $UI/StatsPanel/HeroLabel
 @onready var dice_label: Label = $UI/DicePanel/DiceLabel
@@ -30,14 +35,70 @@ var auto_play_step: int = 0
 @onready var btn_attack: Button = $UI/Actions/BtnAttack
 @onready var btn_search: Button = $UI/Actions/BtnSearch
 @onready var btn_end_turn: Button = $UI/Actions/BtnEndTurn
+@onready var btn_summon: Button = $UI/Actions/BtnSummon
+@onready var btn_ai_step: Button = $UI/Actions/BtnAIStep
 
 func _ready() -> void:
 	print("🛡️ [TabletopWorld] Initializing HeroQuest Cartridge Player...")
+	_check_cli_role()
 	_load_active_cartridge()
 	CartridgeManager.cartridge_inserted.connect(_on_cartridge_inserted)
+	_setup_ui_signals()
 	_update_ui()
 	_log("=== Welcome to HeroQuest: The Trial ===")
-	_log("Four heroes embark into the ancient catacombs to face the Orc Warlord Verag!")
+	if current_role == "dm" or current_role == "dunmaster":
+		_log("👑 [DunMaster Mode Active] You are Zargon, Master of Darkness. Full dungeon visibility granted.")
+	else:
+		_log("⚔️ [Player Mode Active] You lead the four heroes into the catacombs of Verag!")
+
+func _check_cli_role() -> void:
+	var cmd_args = OS.get_cmdline_user_args() + OS.get_cmdline_args()
+	var role_env = OS.get_environment("TABLETOP_ROLE").to_lower()
+	if role_env != "":
+		current_role = role_env
+
+	for i in range(cmd_args.size()):
+		var a = cmd_args[i]
+		if a == "--role" and i + 1 < cmd_args.size():
+			current_role = cmd_args[i + 1].to_lower()
+		elif a.begins_with("--role="):
+			current_role = a.split("=")[1].to_lower()
+		elif a == "--dm" or a == "--dunmaster":
+			current_role = "dm"
+		elif a == "--player":
+			current_role = "player"
+
+func _setup_ui_signals() -> void:
+	if role_badge and not role_badge.pressed.is_connected(toggle_role):
+		role_badge.pressed.connect(toggle_role)
+	if btn_roll and not btn_roll.pressed.is_connected(roll_movement_dice):
+		btn_roll.pressed.connect(roll_movement_dice)
+	if btn_attack and not btn_attack.pressed.is_connected(_on_attack_pressed):
+		btn_attack.pressed.connect(_on_attack_pressed)
+	if btn_search and not btn_search.pressed.is_connected(search_room):
+		btn_search.pressed.connect(search_room)
+	if btn_end_turn and not btn_end_turn.pressed.is_connected(end_turn):
+		btn_end_turn.pressed.connect(end_turn)
+	if btn_summon and not btn_summon.pressed.is_connected(summon_wandering_monster):
+		btn_summon.pressed.connect(summon_wandering_monster)
+	if btn_ai_step and not btn_ai_step.pressed.is_connected(_execute_auto_play_step):
+		btn_ai_step.pressed.connect(_execute_auto_play_step)
+
+func toggle_role() -> void:
+	if current_role == "player":
+		current_role = "dm"
+		_log("👑 Switched to DunMaster Mode! You command Morcar's minions and see all hidden rooms.")
+	else:
+		current_role = "player"
+		_log("⚔️ Switched to Player Mode! You control the hero party.")
+	_update_ui()
+	queue_redraw()
+
+func _on_attack_pressed() -> void:
+	if current_role == "dm" or current_phase == "dm_phase":
+		dm_attack_hero()
+	else:
+		attack_adjacent_monster()
 
 func _on_cartridge_inserted(_cart: Dictionary) -> void:
 	_load_active_cartridge()
@@ -102,42 +163,48 @@ func _execute_auto_play_step() -> void:
 			_log("⚡ [Auto-Play] Step 1: " + str(hero.get("name")) + " rolls movement dice (2d6)...")
 			roll_movement_dice()
 		2:
-			# Move Barbarian forward toward North Door
 			var target = Vector2i(2, 0)
 			_log("⚡ [Auto-Play] Step 2: " + str(hero.get("name")) + " advances down corridor to door at (2, 0).")
 			move_hero(target)
 		3:
-			# Open door to Northwest room
 			_log("⚡ [Auto-Play] Step 3: " + str(hero.get("name")) + " kicks open the ancient wooden door!")
 			open_door(Vector2i(2, 0), Vector2i(2, 1))
 		4:
-			# Move inside Northwest room
 			_log("⚡ [Auto-Play] Step 4: " + str(hero.get("name")) + " enters room and spots a Goblin Scout!")
 			move_hero(Vector2i(2, 2))
 		5:
-			# Attack Goblin Scout
 			_log("⚡ [Auto-Play] Step 5: " + str(hero.get("name")) + " swings Broadsword at Goblin Scout!")
 			attack_adjacent_monster("goblin-scout-1")
 		6:
-			# End turn to Dwarf
 			_log("⚡ [Auto-Play] Step 6: Barbarian ends turn. Next hero: Dwarf.")
 			end_turn()
 		7:
-			# Dwarf rolls movement and enters room
 			roll_movement_dice()
 			move_hero(Vector2i(3, 1))
 		8:
-			# Dwarf searches room for treasure
 			_log("⚡ [Auto-Play] Step 8: Dwarf searches room for treasure and hidden traps!")
 			search_room()
 		9:
-			_log("⚡ [Auto-Play] Step 9: Quest demonstration complete! Telemetry verified.")
+			if current_role == "dm" or current_role == "dunmaster":
+				_log("⚡ [Auto-Play] Step 9: DunMaster summons wandering monster ambush!")
+				summon_wandering_monster()
+			else:
+				_log("⚡ [Auto-Play] Step 9: Quest demonstration complete! Telemetry verified.")
+				CartridgeManager.auto_play_enabled = false
+		10:
+			_log("⚡ [Auto-Play] Step 10: DunMaster demonstration complete! Telemetry verified.")
 			CartridgeManager.auto_play_enabled = false
 
 func get_active_hero() -> Dictionary:
 	if heroes.size() == 0:
 		return {}
 	return heroes[active_hero_idx % heroes.size()]
+
+func get_active_monster() -> Dictionary:
+	var live_monsters = monsters.filter(func(m): return m.get("is_alive", false))
+	if live_monsters.size() == 0:
+		return {}
+	return live_monsters[active_monster_idx % live_monsters.size()]
 
 func roll_movement_dice() -> Dictionary:
 	var roll = TabletopDice.roll_movement()
@@ -157,7 +224,6 @@ func move_hero(target_pos: Vector2i) -> bool:
 	var curr = hero.get("grid_pos", Vector2i(1, 1))
 	var dist = absi(curr.x - target_pos.x) + absi(curr.y - target_pos.y)
 
-	# In auto-play or manual, clamp to movement or allow reasonable step
 	if movement_remaining > 0 and dist > movement_remaining:
 		_log("⚠️ Target out of movement range (need %d, have %d)" % [dist, movement_remaining])
 		return false
@@ -226,6 +292,66 @@ func attack_adjacent_monster(monster_id: String = "") -> Dictionary:
 	queue_redraw()
 	return res
 
+# DunMaster Action: Monster attacks Hero!
+func dm_attack_hero(hero_id: String = "") -> Dictionary:
+	var monster = get_active_monster()
+	if monster.size() == 0:
+		_log("No living monster to attack with!")
+		return {}
+
+	var target_h: Dictionary = {}
+	for h in heroes:
+		if h.get("current_bp", 1) > 0:
+			if hero_id != "" and h.get("id") == hero_id:
+				target_h = h
+				break
+			elif hero_id == "":
+				target_h = h
+				break
+
+	if target_h.size() == 0:
+		_log("No living hero to attack!")
+		return {}
+
+	var atk_dice = monster.get("attackDice", 3)
+	var def_dice = target_h.get("defendDice", 2)
+
+	var res = TabletopDice.resolve_combat(atk_dice, def_dice, true)
+	_log("👑 [DunMaster] %s attacks %s! Rolled %d Skulls. %s rolled %d White Shields." % [
+		monster.get("name"), target_h.get("name"), res.total_skulls, target_h.get("name"), res.effective_shields
+	])
+
+	if res.wounds > 0:
+		target_h["current_bp"] = maxi(0, target_h.get("current_bp", 8) - res.wounds)
+		_log("💥 %s takes %d wound(s)! Remaining HP: %d" % [target_h.get("name"), res.wounds, target_h.get("current_bp")])
+	else:
+		_log("🛡️ %s successfully blocked the monster attack!" % target_h.get("name"))
+
+	_update_ui()
+	queue_redraw()
+	return res
+
+# DunMaster Action: Summon Wandering Monster Ambush
+func summon_wandering_monster(spawn_pos: Vector2i = Vector2i(3, 0)) -> Dictionary:
+	var new_m = {
+		"id": "wandering-orc-" + str(monsters.size() + 1),
+		"name": "Wandering Orc",
+		"bodyPoints": 1,
+		"current_bp": 1,
+		"attackDice": 3,
+		"defendDice": 2,
+		"movementSquares": 8,
+		"tokenColor": "#047857",
+		"icon": "🧌",
+		"grid_pos": spawn_pos,
+		"is_alive": true
+	}
+	monsters.append(new_m)
+	_log("👑 [DunMaster] An evil laugh echoes! A Wandering Orc appears at (%d, %d)!" % [spawn_pos.x, spawn_pos.y])
+	_update_ui()
+	queue_redraw()
+	return { "success": true, "monster": new_m }
+
 func search_room() -> Dictionary:
 	var hero = get_active_hero()
 	var found_gold = 50
@@ -238,19 +364,46 @@ func search_room() -> Dictionary:
 	return { "success": true, "goldFound": found_gold }
 
 func end_turn() -> void:
-	active_hero_idx = (active_hero_idx + 1) % maxi(1, heroes.size())
-	if active_hero_idx == 0:
+	if current_phase == "hero_phase":
+		active_hero_idx = (active_hero_idx + 1) % maxi(1, heroes.size())
+		if active_hero_idx == 0:
+			current_phase = "dm_phase"
+			_log("=== Zargon / DunMaster Phase Begins ===")
+			if current_role == "player":
+				# In Player Mode, monsters take quick automated turn
+				call_deferred("_run_automated_monster_turn")
+		else:
+			_log("Next hero: %s" % get_active_hero().get("name", "Hero"))
+	else:
+		current_phase = "hero_phase"
 		current_round += 1
-		_log("--- Round %d begins ---" % current_round)
+		_log("--- Round %d begins (Heroes Turn) ---" % current_round)
+		_log("Active hero: %s" % get_active_hero().get("name", "Hero"))
+
 	movement_remaining = 0
 	has_acted_this_turn = false
-	_log("Active turn passed to: %s" % get_active_hero().get("name", "Next Hero"))
 	_update_ui()
 	queue_redraw()
 
+func _run_automated_monster_turn() -> void:
+	_log("Minions of Zargon stir in the darkness...")
+	# Return to heroes turn after monsters act
+	end_turn()
+
 func _update_ui() -> void:
+	var role_name = "Player Mode (Playing Heroes)" if current_role == "player" else "DunMaster Mode (Zargon DM)"
+	if title_label:
+		title_label.text = "🛡️ RobOS Tabletop RPG: HeroQuest — %s" % role_name
+	if role_badge:
+		role_badge.text = "Role: " + ("⚔️ Player" if current_role == "player" else "👑 DunMaster")
+
+	if btn_summon:
+		btn_summon.visible = (current_role == "dm" or current_role == "dunmaster")
+	if btn_attack:
+		btn_attack.text = "⚔️ Hero Attack" if current_role == "player" else "👹 Monster Attack"
+
 	var hero = get_active_hero()
-	if hero.size() > 0:
+	if hero.size() > 0 and hero_card:
 		hero_card.text = "%s (%s)\nBP: %d/%d | MP: %d/%d\nAtk Dice: %d | Def Dice: %d\nGold: %d gp" % [
 			hero.get("name"), hero.get("title", ""),
 			hero.get("current_bp", 8), hero.get("bodyPoints", 8),
@@ -258,10 +411,12 @@ func _update_ui() -> void:
 			hero.get("attackDice", 3), hero.get("defendDice", 2),
 			hero.get("gold", 0)
 		]
+
 	var log_text = ""
 	for i in range(maxi(0, combat_log.size() - 8), combat_log.size()):
 		log_text += combat_log[i] + "\n"
-	log_label.text = log_text
+	if log_label:
+		log_label.text = log_text
 
 func _log(msg: String) -> void:
 	print("[Tabletop] ", msg)
@@ -270,7 +425,9 @@ func _log(msg: String) -> void:
 
 func get_telemetry_state() -> Dictionary:
 	return {
+		"role": current_role,
 		"round": current_round,
+		"phase": current_phase,
 		"activeHero": get_active_hero().get("id", ""),
 		"movementRemaining": movement_remaining,
 		"heroes": heroes,
@@ -284,6 +441,9 @@ func get_telemetry_state() -> Dictionary:
 func execute_action(action_data: Dictionary) -> Dictionary:
 	var action_type = str(action_data.get("action", ""))
 	match action_type:
+		"toggle_role":
+			toggle_role()
+			return { "success": true, "role": current_role }
 		"roll_movement":
 			var r = roll_movement_dice()
 			return { "success": true, "roll": r }
@@ -303,6 +463,15 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			var mid = str(action_data.get("monsterId", ""))
 			var res = attack_adjacent_monster(mid)
 			return { "success": true, "result": res }
+		"dm_attack":
+			var hid = str(action_data.get("heroId", ""))
+			var res = dm_attack_hero(hid)
+			return { "success": true, "result": res }
+		"summon_monster":
+			var sx = int(action_data.get("x", 3))
+			var sy = int(action_data.get("y", 0))
+			var res = summon_wandering_monster(Vector2i(sx, sy))
+			return res
 		"search":
 			var res = search_room()
 			return res
@@ -323,12 +492,24 @@ func _draw() -> void:
 		var p2 = BOARD_OFFSET + Vector2(GRID_COLS * TILE_SIZE, r * TILE_SIZE)
 		draw_line(p1, p2, Color(0.2, 0.4, 0.6, 0.25), 1.0)
 
+	# In Player Mode, draw fog of war over unrevealed central chamber
+	if current_role == "player" and not revealed_rooms.has("room-center"):
+		var fog_rect = Rect2(BOARD_OFFSET + Vector2(11 * TILE_SIZE, 7 * TILE_SIZE), Vector2(4 * TILE_SIZE, 5 * TILE_SIZE))
+		draw_rect(fog_rect, Color(0.04, 0.06, 0.09, 0.85))
+	elif current_role == "dm" or current_role == "dunmaster":
+		# In DunMaster Mode, show DM halo outline around the central chamber
+		var center_rect = Rect2(BOARD_OFFSET + Vector2(11 * TILE_SIZE, 7 * TILE_SIZE), Vector2(4 * TILE_SIZE, 5 * TILE_SIZE))
+		draw_rect(center_rect, Color(0.7, 0.2, 0.8, 0.15))
+		draw_rect(center_rect, Color(0.8, 0.3, 0.9, 0.8), false, 2.0)
+
 	# Draw Furniture
 	for f in furniture:
-		var pos = f.get("position", [0, 0])
-		var screen_pos = BOARD_OFFSET + Vector2(pos[0] * TILE_SIZE + TILE_SIZE * 0.5, pos[1] * TILE_SIZE + TILE_SIZE * 0.5)
-		draw_circle(screen_pos, TILE_SIZE * 0.35, Color(0.5, 0.35, 0.2, 0.8))
-		draw_string(ThemeDB.fallback_font, screen_pos + Vector2(-6, 5), "📦", HORIZONTAL_ALIGNMENT_CENTER, -1, 14)
+		var r_id = f.get("roomId", "")
+		if current_role == "dm" or revealed_rooms.has(r_id) or r_id == "":
+			var pos = f.get("position", [0, 0])
+			var screen_pos = BOARD_OFFSET + Vector2(pos[0] * TILE_SIZE + TILE_SIZE * 0.5, pos[1] * TILE_SIZE + TILE_SIZE * 0.5)
+			draw_circle(screen_pos, TILE_SIZE * 0.35, Color(0.5, 0.35, 0.2, 0.8))
+			draw_string(ThemeDB.fallback_font, screen_pos + Vector2(-6, 5), "📦", HORIZONTAL_ALIGNMENT_CENTER, -1, 14)
 
 	# Draw Doors
 	for d in doors:
@@ -344,11 +525,14 @@ func _draw() -> void:
 	# Draw Monsters
 	for m in monsters:
 		if m.get("is_alive", false):
-			var pos = m.get("grid_pos", Vector2i(0, 0))
-			var screen_pos = BOARD_OFFSET + Vector2(pos.x * TILE_SIZE + TILE_SIZE * 0.5, pos.y * TILE_SIZE + TILE_SIZE * 0.5)
-			var col = Color.from_string(m.get("tokenColor", "#15803d"), Color.GREEN)
-			draw_circle(screen_pos, TILE_SIZE * 0.4, col)
-			draw_string(ThemeDB.fallback_font, screen_pos + Vector2(-8, 6), m.get("icon", "👹"), HORIZONTAL_ALIGNMENT_CENTER, -1, 18)
+			var r_id = m.get("roomId", "")
+			# Visible if DM mode OR room is revealed OR in corridor
+			if current_role == "dm" or revealed_rooms.has(r_id) or r_id == "":
+				var pos = m.get("grid_pos", Vector2i(0, 0))
+				var screen_pos = BOARD_OFFSET + Vector2(pos.x * TILE_SIZE + TILE_SIZE * 0.5, pos.y * TILE_SIZE + TILE_SIZE * 0.5)
+				var col = Color.from_string(m.get("tokenColor", "#15803d"), Color.GREEN)
+				draw_circle(screen_pos, TILE_SIZE * 0.4, col)
+				draw_string(ThemeDB.fallback_font, screen_pos + Vector2(-8, 6), m.get("icon", "👹"), HORIZONTAL_ALIGNMENT_CENTER, -1, 18)
 
 	# Draw Heroes
 	for idx in range(heroes.size()):
@@ -357,6 +541,6 @@ func _draw() -> void:
 		var screen_pos = BOARD_OFFSET + Vector2(pos.x * TILE_SIZE + TILE_SIZE * 0.5, pos.y * TILE_SIZE + TILE_SIZE * 0.5)
 		var col = Color.from_string(h.get("tokenColor", "#b91c1c"), Color.RED)
 		draw_circle(screen_pos, TILE_SIZE * 0.42, col)
-		if idx == active_hero_idx:
+		if idx == active_hero_idx and current_phase == "hero_phase":
 			draw_arc(screen_pos, TILE_SIZE * 0.46, 0, TAU, 32, Color.YELLOW, 3.0)
 		draw_string(ThemeDB.fallback_font, screen_pos + Vector2(-8, 6), h.get("icon", "⚔️"), HORIZONTAL_ALIGNMENT_CENTER, -1, 18)
