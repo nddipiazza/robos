@@ -28,6 +28,7 @@ window.mountWalkthrough = async function () {
   const activity = document.createElement('div'); activity.setAttribute('role', 'status');
   const elapsed = document.createElement('small');
   progress.append(activity, elapsed);
+  const historyNotice = document.createElement('small'); historyNotice.className = 'walkthrough-history-note';
   const chat = document.createElement('div'); chat.className = 'walkthrough-chat'; chat.setAttribute('role', 'log'); chat.setAttribute('aria-label', 'Live demo conversation');
   let pendingMessage = null;
   const receipt = document.createElement('div'); receipt.className = 'walkthrough-receipt'; receipt.setAttribute('role', 'status');
@@ -37,7 +38,7 @@ window.mountWalkthrough = async function () {
   input.setAttribute('show-agent', 'false');
   input.setAttribute('placeholder', 'Ask a question or request a change at this checkpoint…');
   const error = document.createElement('p'); error.className = 'walkthrough-error'; error.setAttribute('role', 'alert');
-  form.append(input, progress, receipt); stage.append(bar, checkpoint, chat, error, form);
+  form.append(input, progress, receipt); stage.append(bar, checkpoint, historyNotice, chat, error, form);
   const send = input.querySelector('.robos-submit-btn'); send.textContent = 'Send'; send.type = 'button';
   const editable = input.querySelector('.robos-ai-inner'); editable.setAttribute('role', 'textbox'); editable.setAttribute('aria-label', 'Message the demo agent'); editable.setAttribute('aria-multiline', 'true');
   const dialog = document.createElement('dialog'); dialog.className = 'walkthrough-process';
@@ -51,7 +52,7 @@ window.mountWalkthrough = async function () {
   function button(text, label, fn) { const b = document.createElement('button'); b.type = 'button'; b.textContent = text; b.title = label; b.addEventListener('click', fn); return b; }
   function render(value) {
     state = value; const busy = value.status === 'running';
-    if (pendingMessage && value.messages.length > pendingMessage.count && value.messages.some((m, i) => i >= pendingMessage.count && m.role === 'user' && m.text === pendingMessage.text)) {
+    if (pendingMessage && value.messages.some(m => m.role === 'user' && m.text === pendingMessage.text && m.id !== pendingMessage.lastId)) {
       if (input.value.trim() === pendingMessage.text) { input.value = ''; input.dispatchEvent(new Event('input')); }
       pendingMessage = null;
     }
@@ -71,15 +72,17 @@ window.mountWalkthrough = async function () {
     if (lastActionStart !== value.startedAt) { lastNarration = ''; lastActionStart = value.startedAt; }
     const meaningful = [...(value.progress || [])].reverse().find(e => !/^(Running a local setup|Local check finished|A local check failed)/.test(e.text));
     lastNarration = value.activitySummary?.text || meaningful?.text || lastNarration;
-    progress.hidden = !busy; activity.textContent = lastNarration || `Preparing ${value.checkpoint?.title || 'this checkpoint'}…`; activity.title = activity.textContent;
+    progress.hidden = true; activity.textContent = lastNarration || `Preparing ${value.checkpoint?.title || 'this checkpoint'}…`; activity.title = activity.textContent;
     updateElapsed();
     checkpoint.replaceChildren();
     const c = value.checkpoint;
     if (c) { const h = document.createElement('h3'); h.textContent = c.title; const p = document.createElement('p'); p.textContent = busy ? `I’m preparing “${c.title}”. I’ll show you what to try and pause when it’s ready.` : value.guidance || c.summary || 'Ask Explain for a walkthrough of this step, or try the app before moving on.'; checkpoint.append(h, p); if (value.baseline) { const note = document.createElement('small'); note.textContent = `Before the change · ${value.baseline.ref} · ${value.baseline.revision.slice(0, 8)}`; checkpoint.append(note); } }
     else checkpoint.textContent = 'Start the dev app and demonstrate one checkpoint at a time. You decide when we move on.';
+    const followTail = chat.scrollHeight - chat.scrollTop - chat.clientHeight < 60;
+    historyNotice.textContent = value.droppedMessages ? `${value.droppedMessages} older entries removed. History keeps the newest 120 entries, up to 128 KB.` : 'History keeps the newest 120 entries, up to 128 KB; oldest entries are removed first.';
     chat.replaceChildren();
-    for (const message of value.messages) { const bubble = document.createElement('div'); bubble.className = 'walkthrough-bubble ' + message.role; const label = document.createElement('strong'); label.textContent = message.role === 'user' ? 'You' : message.role === 'assistant' ? 'Demo agent' : 'Status'; const body = document.createElement('p'); body.textContent = message.text; bubble.append(label, body); chat.append(bubble); }
-    chat.scrollTop = chat.scrollHeight;
+    for (const message of value.messages) { const bubble = document.createElement('div'); bubble.className = 'walkthrough-bubble ' + message.role + (message.kind === 'progress' ? ' progress-entry' : ''); const label = document.createElement('strong'); label.textContent = message.role === 'user' ? 'You' : message.role === 'assistant' ? message.agentName || value.agentName || 'Demo agent' : 'Status'; const body = document.createElement('p'); body.textContent = message.text; bubble.append(label, body); chat.append(bubble); }
+    if (followTail) chat.scrollTop = chat.scrollHeight;
   }
   async function act(action, text) { error.textContent = ''; try { const result = await window.api.demoAction({ action, text }); if (!result.ok) throw new Error(result.error); render(result.state); return true; } catch (e) { error.textContent = e.message; return false; } }
   input.addEventListener('robos-submit', async event => {
@@ -87,7 +90,7 @@ window.mountWalkthrough = async function () {
     if (state.index < 0 && state.status !== 'running') { error.textContent = 'Start the walkthrough before sending a message.'; return; }
     const text = event.detail.value.trim(); if (!text) return;
     if (text.length > 16000) { error.textContent = 'Keep your message under 16,000 characters.'; return; }
-    pendingMessage = { text, count: state.messages.length }; receipt.textContent = 'Sending your message…';
+    pendingMessage = { text, lastId: state.messages.filter(m => m.role === 'user').at(-1)?.id }; receipt.textContent = 'Sending your message…';
     if (!await act('message', text)) { pendingMessage = null; receipt.textContent = 'Message was not sent. Your draft is still here.'; }
   });
   function updateElapsed() { if (!state?.startedAt || state.status !== 'running') return; const seconds = Math.floor((Date.now() - state.startedAt) / 1000); const quiet = Math.floor((Date.now() - (state.activitySummary?.at || state.progress?.at(-1)?.at || state.startedAt)) / 1000); elapsed.textContent = `${Math.floor(seconds / 60)}m ${seconds % 60}s elapsed` + (quiet >= 20 ? ` · Last status ${quiet}s ago` : ''); }

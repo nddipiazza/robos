@@ -507,3 +507,5 @@ During an action, the theater streams public agent updates and safe descriptions
 The walkthrough toolbar shows only actions relevant to its current state. While paused, Explain and Next checkpoint are visible; Start over, the before/after comparison, and Process settings are in More. During agent work, action buttons disappear and live progress remains visible.
 
 While an action runs, Send becomes **Steer**. A steering message stops the current CLI attempt, waits for its process to exit, and starts a continuation at the same checkpoint with the new instructions and existing source edits. It does not mark interrupted work verified or run concurrent browser-editing agents.
+
+Live progress is retained in the conversation under the configured agent/model label. History is FIFO-bounded to 120 entries and 128 KiB of message text, with each entry limited to 16,000 characters; the renderer explains when older entries were removed. Progress entries are excluded from the follow-up prompt's conversation history. New activity does not pull a reviewer away from older messages they are reading.

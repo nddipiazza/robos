@@ -27,7 +27,7 @@ test('Start over toolbar resets a completed walkthrough and blocks duplicate act
   assert.equal(await page.locator('.walkthrough-more').isVisible(),false);
   assert.equal(await page.locator('.walkthrough-bar button:visible').count(),0);
   session.reportProgress('Checking that the saved compact filters appear in Build History.');
-  await page.getByRole('status').filter({hasText:'saved compact filters'}).waitFor();
+  await page.getByRole('log').getByText('Checking that the saved compact filters appear in Build History.',{exact:true}).waitFor();
   assert.match(await page.locator('.walkthrough-progress small').textContent(),/elapsed/);
   assert.equal(await page.locator('.walkthrough-progress details').count(),0);
   session.handleAgentEvent({type:'item.started',item:{type:'command_execution',command:'opaque'}});
@@ -45,13 +45,13 @@ test('Start over toolbar resets a completed walkthrough and blocks duplicate act
   const large=(await composer.boundingBox()).height;assert.ok(large>small);assert.ok(large<=300);
   await composer.fill('Please explain the current filter.');await composer.press('Control+Enter');
   await page.waitForFunction(()=>document.querySelector('.walkthrough-status').textContent==='In progress');
-  assert.equal(session.messages.at(-1).text,'Please explain the current filter.');
+  assert.equal(session.messages.filter(m=>m.role==='user').at(-1).text,'Please explain the current filter.');
   assert.equal(await composer.innerText(),'');
   assert.equal(await page.locator('.walkthrough-receipt').isVisible(),false);
   session.reportProgress('Inspecting the Filters click handler before changing it.');
-  await page.locator('.walkthrough-compose [role=status]').filter({hasText:'Inspecting the Filters click handler'}).waitFor();
+  await page.getByRole('log').locator('.progress-entry').filter({hasText:'Inspecting the Filters click handler'}).waitFor();
   session.reportProgress('Verifying that advanced controls disappear when Filters is clicked again.');
-  await page.locator('.walkthrough-compose [role=status]').filter({hasText:'Verifying that advanced controls disappear'}).waitFor();
+  await page.getByRole('log').locator('.progress-entry').filter({hasText:'Verifying that advanced controls disappear'}).waitFor();
   const count=session.messages.length;await composer.press('Control+Enter');assert.equal(session.messages.length,count);
   await composer.fill('Keep this next draft.');finish({reply:'Explained',checkpointReached:true});
   await page.waitForFunction(()=>document.querySelector('.walkthrough-status').textContent.startsWith('Paused'));
