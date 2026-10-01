@@ -531,8 +531,9 @@ Reopening restores recent messages automatically. **Saved history** pages throug
 
 ### Project review templates and notifications
 
-Git Projects → Edit includes **Pull request review** settings for the PR description,
-team notification template, workspace, and channel. Templates support `{{title}}`,
+Git Projects has separate **PR template** and **Slack** (or **Team messaging**) tabs
+for the PR description and notification settings. Both use the expanding RobOS AI
+text editor. The messaging tab also holds the workspace and channel. Templates support `{{title}}`,
 `{{url}}`, `{{repo}}`, `{{branch}}`, and `{{description}}`. Notifications must include
 `{{url}}`. Settings are stored per repository under `~/.robos/project-review-settings/`.
 
