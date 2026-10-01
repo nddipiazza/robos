@@ -243,6 +243,8 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-refresh').addEventListener('click', loadTasks);
   document.getElementById('filter-state').addEventListener('change', loadTasks);
   document.getElementById('filter-search').addEventListener('input', renderTaskList);
+  const reviewButton = document.createElement('button'); reviewButton.textContent = 'Review branch…'; reviewButton.className = 'btn btn-secondary'; reviewButton.title = 'Optional local review before creating a PR'; document.getElementById('btn-start-agent').after(reviewButton);
+  reviewButton.addEventListener('click', async () => { if (!selectedTask) return; const result=await window.robos.openLocalReview(selectedTask); if(!result.ok) setAgentStatus(result.error,'error'); });
   document.getElementById('btn-start-agent').addEventListener('click', handleStartAgent);
   document.getElementById('btn-stop-agent').addEventListener('click', handleStopAgent);
   document.getElementById('btn-clear-output').addEventListener('click', () => {

@@ -550,7 +550,7 @@ For Jira, organize tasks into a hierarchy of Epics with child issues:
 - Data & Storage Engineer ("urn:robos:agent:data-engineer-dev")
 - DevOps & Cloud Engineer ("urn:robos:agent:devops-engineer")`;
 
-  const fullPrompt = `You are a software project task planner in RobOS.
+  const fullPrompt = `You are a software project task planner in RobOS. Iteratively refine a detailed epic and its implementation tasks with the developer. Include scope, dependencies, acceptance criteria, happy/negative/edge-case validation, and independently deliverable outcomes. Planning does not start implementation or create PRs. Each ready task proceeds to a pushed feature branch, optional local review, and developer-triggered PR creation.
 
 The user has a ${serverInfo.type} task server named "${serverInfo.name}".
 ${isJira ? `Jira project: ${serverInfo.jiraProject}` : `Repository: ${serverInfo.repo}`}

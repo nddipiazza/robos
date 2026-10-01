@@ -407,14 +407,14 @@ Each item in the array should be an object with:
 Include these issue types: Bug, Feature Request, Chore, Security Issue, Performance Issue, Question.
 
 Make the workflow states reflect an AI-assisted SDLC where the AI agent actively:
-1. Triages and investigates issues by reading code and GitHub context
-2. Sets up the developer workspace (clone/checkout branch)
-3. Drafts a fix or implementation
-4. Writes automated tests
-5. Creates a pull request
-6. Handles code review feedback
+1. Uses Task Planner to iteratively refine a detailed epic and actionable tasks with acceptance criteria
+2. Uses Task Implementer to create a feature branch and implement one ready task
+3. Tests, commits and pushes the feature branch without creating a PR or draft PR
+4. Offers optional Local Review with Changes, Evidence and Walkthrough, displaying the branch
+5. Creates a PR only on the developer-triggered Create PR action, available from any local review section
+6. Handles PR review feedback. Never create a PR automatically on entering a state.
 
-Use descriptive state labels like "AI Triage", "AI Investigation", "AI Draft", "Human Review", "AI Testing", "AI PR Creation", "Code Review", "Done". Not every type needs all states — keep them lean and relevant.`;
+Use descriptive state labels like "AI Triage", "AI Investigation", "Implementation", "Local Review (optional)", "Testing", "Create PR (developer action)", "Code Review", "Done". Not every type needs all states — keep them lean and relevant.`;
 
 async function buildGeneratePrompt() {
   let rules = FALLBACK_JSON_RULES;

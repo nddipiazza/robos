@@ -1,0 +1,8 @@
+'use strict';
+const {test}=require('node:test');const assert=require('node:assert/strict');const path=require('node:path');const {chromium}=require(process.env.ROBOS_PLAYWRIGHT_MODULE||'playwright-core');
+test('Create PR is explicit, cancel is inert, publishing links the returned PR',async()=>{
+ const b=await chromium.launch({headless:true});try{const p=await b.newPage();let calls=0;await p.setContent('<h2 id="theater-pr-title"></h2><span id="theater-target-app"></span><button id="btn-create-review-pr">Create PR</button>');await p.exposeFunction('create',async data=>{calls++;assert.equal(data.draft,false);return {ok:true,pr:{published:true,number:42,title:data.title,url:'https://github.com/org/repo/pull/42',repo:'org/repo',headBranch:'codex/filters'}};});await p.evaluate(()=>window.api={createReviewPR:window.create,openUrl:()=>{}});await p.addScriptTag({path:path.resolve(__dirname,'../../../pr-review/renderer/publish-ui.js')});await p.evaluate(()=>window.configureReviewPublish({local:true,title:'Filters',repo:'org/repo',headBranch:'codex/filters',baseBranch:'origin/main'}));
+ assert.equal(calls,0);await p.getByRole('button',{name:'Create PR',exact:true}).click();await p.getByRole('button',{name:'Cancel',exact:true}).click();assert.equal(calls,0);
+ await p.getByRole('button',{name:'Create PR',exact:true}).click();await p.getByRole('dialog').getByRole('button',{name:'Create PR',exact:true}).click();await p.getByRole('link',{name:'#42 · Filters'}).waitFor();assert.equal(calls,1);assert.equal(await p.locator('#btn-create-review-pr').isVisible(),false);
+ }finally{await b.close();}
+});

@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('api', {
   clearDemoChat: () => ipcRenderer.invoke('demo-clear-chat'),
   saveDemoProcess: value => ipcRenderer.invoke('demo-save-process', value),
   onDemoState: callback => { const listener = (_, state) => callback(state); ipcRenderer.on('demo-state', listener); return () => ipcRenderer.removeListener('demo-state', listener); },
+  createReviewPR: input => ipcRenderer.invoke('create-review-pr', input),
   getLocalReview: () => ipcRenderer.invoke('get-local-review'),
   getConfig:             ()     => ipcRenderer.invoke('get-config'),
   fetchPRs:              (opts) => ipcRenderer.invoke('fetch-prs', opts),

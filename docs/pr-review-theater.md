@@ -20,6 +20,17 @@ How RobOS turns pull request reviews into an interactive, multi-modal governance
 
 ---
 
+## Default delivery workflow
+
+1. **Task Planner** iteratively refines an epic and its tasks, including scope, dependencies, acceptance criteria, and happy, negative, and edge cases.
+2. **Task Implementer** creates a feature branch, implements and validates the task, then commits and pushes the branch. It does **not** create a PR or draft PR.
+3. **Local review is optional.** Choose **Review branch…** in Task Implementer and select the implementation checkout. The review header displays the repository and actual branch. Use Changes, Evidence, and Walkthrough to inspect or refine the work before publication.
+4. When ready, click **Create PR** in the review header from any review tab. Review the title and description, optionally choose a draft, and explicitly create the PR. Completing every walkthrough checkpoint is not required.
+
+Commit and push any edits made during local review before creating the PR. Publication checks the checkout's origin and current branch, rejects uncommitted or unpushed work, and reuses an existing open PR for that branch rather than creating a duplicate. The header then links to the PR number and title. Saved chat and walkthrough state remain attached to the local review.
+
+Local review launch manifests live under `~/.robos/local-reviews/`. When `baseRef` pins a diff commit, set `baseBranch` to the PR target branch. An optional `githubAccount` selects an existing `gh` account for publication without switching the global account. Existing configured demo processes remain customizable; newly prepared reviews start with two checkpoints for understanding and trying the changed behavior.
+
 ## The Paradigm Shift: Why Traditional Code Review Fails for AI Code
 
 In traditional software development, developers spend hours scrolling through lines of green and red text in a browser diff tool. When code is written by humans, diff reading is already tiring and error-prone. When code is drafted at high velocity by autonomous AI agents (Claude Code, Google Antigravity, GitHub Copilot, OpenAI Codex), **traditional line-by-line diff review completely collapses**:

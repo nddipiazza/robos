@@ -7,6 +7,9 @@ const { execSync } = require('child_process');
 
 const { loadLocalReview, ShowMeSession } = require('./lib/local-review');
 const localReview = loadLocalReview(process.env.ROBOS_LOCAL_REVIEW);
+const { ReviewPRPublisher } = require('./lib/create-review-pr');
+const reviewPublisher = localReview ? new ReviewPRPublisher(localReview, process.env.ROBOS_LOCAL_REVIEW) : null;
+ipcMain.handle('create-review-pr', async (_, input) => { try { if (!reviewPublisher) throw new Error('No local review is open.'); if (demoSession?.status === 'running') throw new Error('Wait for the current edit to finish before creating the PR.'); return {ok:true,pr:await reviewPublisher.create(input)}; } catch(error) { return {ok:false,error:error.message}; } });
 const showMeSession = new ShowMeSession(localReview?.runner);
 const { ReviewSessionStore } = require('./lib/review-session-store');
 const reviewStore = localReview ? new ReviewSessionStore({repo:localReview.repo,number:localReview.number,branch:localReview.pr.headBranch,workspace:localReview.workspace}) : null;
@@ -25,7 +28,7 @@ if (demoSession && localReview.resumeStatePath) {
 }
 demoSession?.on('state', state => { if (win && !win.isDestroyed()) win.webContents.send('demo-state', state); });
 ipcMain.handle('demo-state', () => demoSession?.state() || null);
-ipcMain.handle('demo-action', async (_, { action, text } = {}) => { try { if (!demoSession) throw new Error('No project demo process configured.'); return { ok: true, state: await demoSession.act(action, text) }; } catch (e) { return { ok: false, error: e.message }; } });
+ipcMain.handle('demo-action', async (_, { action, text } = {}) => { try { if (!demoSession) throw new Error('No project demo process configured.'); if (reviewPublisher?.pending) throw new Error('PR creation is in progress.'); return { ok: true, state: await demoSession.act(action, text) }; } catch (e) { return { ok: false, error: e.message }; } });
 ipcMain.handle('demo-open-session-file', async () => { try { await require('./lib/open-session-file').openSessionFile(reviewStore?.transcript, shell); return { ok: true }; } catch (error) { return { ok: false, error: error.message }; } });
 ipcMain.handle('demo-history', (_, before) => reviewStore?.page(before, {includeCleared:true}) || {messages:[],before:0});
 ipcMain.handle('demo-clear-chat', () => { if (!demoSession) return { ok: false, error: 'No walkthrough configured.' }; return { ok: true, state: demoSession.clearChat() }; });

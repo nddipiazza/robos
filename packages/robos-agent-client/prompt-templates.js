@@ -43,7 +43,7 @@ const DRAFT_PROMPT = `You are an AI development assistant implementing a softwar
 {{answers}}
 
 ## Instructions
-Implement the solution for this task. Follow the project conventions and coding standards. When done, provide a summary of all changes made, including:
+Create a feature branch (use the specified branch, otherwise codex/<task-key>), implement and test the solution, commit the changes, and push the branch. Do not create a pull request or draft PR. Offer optional local review of Changes, Evidence and Walkthrough; PR creation happens only when the developer clicks Create PR. Follow the project conventions and coding standards. When done, provide a summary of all changes made, including:
 - Files created or modified
 - Key design decisions
 - Any assumptions made`;

@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld('robos', {
   readSettings:    ()    => ipcRenderer.invoke('read-settings'),
   getServerInfo:   ()    => ipcRenderer.invoke('get-server-info'),
   listTasks:       (f)   => ipcRenderer.invoke('list-tasks', f),
+  openLocalReview: task => ipcRenderer.invoke('open-local-review', task),
   startAgent:      (p)   => ipcRenderer.invoke('start-agent', p),
   stopAgent:       (p)   => ipcRenderer.invoke('stop-agent', p),
   openUrl:         (url) => ipcRenderer.invoke('open-url', url),

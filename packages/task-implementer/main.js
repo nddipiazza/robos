@@ -1,5 +1,5 @@
 'use strict';
-const { app, BrowserWindow, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, dialog } = require('electron');
 const path = require('path');
 const fs   = require('fs');
 const os   = require('os');
@@ -256,10 +256,11 @@ ipcMain.handle('start-agent', (event, { taskKey, task, extraContext, persona, cu
   }
 
   let prompt = '';
+  let effectivePersona = persona;
   if (customPrompt && customPrompt.trim()) {
     prompt = customPrompt.trim();
   } else {
-    let effectivePersona = persona;
+    effectivePersona = persona;
     if (customDirectives && customDirectives.trim()) {
       effectivePersona = {
         ...(persona || {}),
@@ -269,6 +270,8 @@ ipcMain.handle('start-agent', (event, { taskKey, task, extraContext, persona, cu
     }
     prompt = buildAgentPrompt(task, extraContext, effectivePersona);
   }
+
+  prompt += '\n\nDEFAULT ROBOS DELIVERY WORKFLOW:\nCreate a feature branch (use the requested branch, otherwise codex/<task-key>). Implement and test the task, commit the task changes, and push that branch to origin. Do not create a pull request, including a draft PR. Report the workspace path, repository, branch, base branch, validation and evidence locations. The developer may optionally review Changes, Evidence and Walkthrough locally and then explicitly click Create PR when ready. Never make PR creation an automatic completion step.';
 
   // Determine display and execution environment based on persona execution mode
   const isEphemeralGui = effectivePersona?.executionMode === 'ephemeral-gui' || effectivePersona?.slug === 'non-headless-dev';
@@ -336,6 +339,19 @@ ipcMain.handle('start-agent', (event, { taskKey, task, extraContext, persona, cu
   });
 
   return { ok: true };
+});
+
+ipcMain.handle('open-local-review', async (_, task) => {
+  if (activeAgents.has(task?.key || task?.id)) return {ok:false,error:'Wait for Task Implementer to finish before reviewing its branch.'};
+  const selected = await dialog.showOpenDialog(mainWindow, {title:'Choose the implementation branch checkout',properties:['openDirectory']});
+  if (selected.canceled) return {ok:true,canceled:true};
+  try {
+    const manifest = require('../pr-review/lib/prepare-local-review').prepareLocalReview(selected.filePaths[0],task);
+    const child = cp.spawn(process.execPath, [path.join(__dirname, '../pr-review'), '--no-sandbox', '--disable-gpu'], {detached:true, stdio:'ignore', env:{...process.env, ROBOS_LOCAL_REVIEW:manifest}});
+    await new Promise((resolve, reject) => { child.once('spawn', resolve); child.once('error', reject); });
+    child.unref();
+    return {ok:true};
+  } catch(error) {return {ok:false,error:error.message};}
 });
 
 ipcMain.handle('stop-agent', (_, { taskKey }) => {
