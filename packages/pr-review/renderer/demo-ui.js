@@ -37,7 +37,7 @@ window.mountWalkthrough = async function () {
   input.setAttribute('show-agent', 'false');
   input.setAttribute('placeholder', 'Ask a question or request a change at this checkpoint…');
   const error = document.createElement('p'); error.className = 'walkthrough-error'; error.setAttribute('role', 'alert');
-  form.append(input, receipt); stage.append(bar, checkpoint, progress, chat, error, form);
+  form.append(input, progress, receipt); stage.append(bar, checkpoint, chat, error, form);
   const send = input.querySelector('.robos-submit-btn'); send.textContent = 'Send'; send.type = 'button';
   const editable = input.querySelector('.robos-ai-inner'); editable.setAttribute('role', 'textbox'); editable.setAttribute('aria-label', 'Message the demo agent'); editable.setAttribute('aria-multiline', 'true');
   const dialog = document.createElement('dialog'); dialog.className = 'walkthrough-process';
@@ -53,8 +53,9 @@ window.mountWalkthrough = async function () {
     state = value; const busy = value.status === 'running';
     if (pendingMessage && value.messages.length > pendingMessage.count && value.messages.some((m, i) => i >= pendingMessage.count && m.role === 'user' && m.text === pendingMessage.text)) {
       if (input.value.trim() === pendingMessage.text) { input.value = ''; input.dispatchEvent(new Event('input')); }
-      pendingMessage = null; receipt.textContent = 'Message sent. The agent is working on your suggestion.';
-    } else if (busy && !receipt.textContent) receipt.textContent = 'The agent is working. You can draft your next message here.';
+      pendingMessage = null;
+    }
+    receipt.hidden = busy;
     if (!busy && !pendingMessage) receipt.textContent = value.index < 0 ? 'Start the walkthrough to chat with the demo agent.' : 'Ready for your next message.';
     badge.textContent = busy ? 'In progress' : value.status === 'paused' ? `Paused · ${value.index + 1}/${value.total}` : value.status === 'error' ? 'Needs attention' : 'Ready';
     start.hidden = busy || value.index >= 0 || value.status === 'error'; start.disabled = busy;

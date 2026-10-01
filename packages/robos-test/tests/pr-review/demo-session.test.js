@@ -73,3 +73,8 @@ test('public progress streams while busy without leaking tool payloads or advanc
  for(let i=0;i<10;i++)s.reportProgress('Update '+i);assert.equal(s.progress.length,6);
  finish({reply:'Ready',checkpointReached:true});await run;const count=s.progress.length;s.reportProgress('late');assert.equal(s.progress.length,count);
 });
+test('tails public subprocess output before the agent finishes',async()=>{
+ const s=session();s.agent={command:process.execPath,args:['-e',`const fs=require('node:fs');const a=process.argv;const out=a[a.indexOf('--output-last-message')+1];process.stdin.resume();process.stdin.on('end',()=>{console.log(JSON.stringify({type:'item.completed',item:{type:'agent_message',text:'Checking the Filters click handler.'}}));setTimeout(()=>{fs.writeFileSync(out,JSON.stringify({reply:'Verified',guidance:'Try Filters',checkpointReached:true}));},200);});`,'--'],timeoutMs:2000};
+ const update=new Promise(resolve=>s.on('state',state=>{if(state.activitySummary?.text==='Checking the Filters click handler.')resolve(state.status);}));
+ const run=s.act('start');assert.equal(await update,'running');assert.equal(s.index,-1);await run;assert.equal(s.status,'paused');
+});
