@@ -13,6 +13,7 @@ window.configureReviewPublish = function(pr) {
     const bodyLabel=document.createElement('div');bodyLabel.className='review-description-field';const bodyHeading=document.createElement('p');bodyHeading.textContent='Description';bodyLabel.append(bodyHeading);const body=document.createElement('review-markdown-editor');body.value=saved.body ?? pr.body ?? '';bodyLabel.append(body);
     const draftLabel=document.createElement('label');const draft=document.createElement('input');draft.type='checkbox';draft.checked=!!saved.draft;draftLabel.append(draft,' Create as draft');
     const error=document.createElement('p');error.setAttribute('role','alert');
+    window.cleanupPublishProgress?.();window.cleanupPublishProgress=window.api.onPublishProgress?.(text=>{error.textContent=text;});
     let aiDescription;
     const save=()=>{try {localStorage.setItem(key,JSON.stringify({title:title.value,body:body.value,draft:draft.checked,...(aiDescription?.state()||{})}));} catch {error.textContent='Draft cannot be saved across restarts on this device.';}};
     for(const field of [title,body,draft])field.addEventListener('input',save);

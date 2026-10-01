@@ -1,6 +1,8 @@
 'use strict';
 function resolveEvidence(markdown,evidence){
   if(typeof markdown!=='string')throw Error('Provide a PR description.');
+  // Organization-private Drive viewer pages are links, not public image bytes.
+  markdown=markdown.replace(/!\[([^\]]*)\]\(robos-evidence:\/\/screenshot\/([a-f0-9]{16})\)/g,(match,label,id)=>evidence.find(e=>e.id===id)?.linkOnly?`[${label}](robos-evidence://screenshot/${id})`:match);
   const resolved=markdown.replace(/robos-evidence:\/\/screenshot\/([a-f0-9]{16})/g,(_,id)=>{
     const item=evidence.find(e=>e.id===id&&e.kind==='screenshot');
     if(!item||!/^https:\/\/[^\s<>"()]+$/.test(item.url||''))throw Error('The description includes local screenshots. Add shared HTTPS URLs to their evidence records before creating the PR; your draft is saved.');

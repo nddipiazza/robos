@@ -17,6 +17,7 @@ function evidenceFor(review,store){
   if(review.demoProcess)add({path:review.demoProcess,label:'Walkthrough definition, including before-change checkpoints',kind:'report'});
   if(store?.transcript)add({path:store.transcript,label:'Complete saved human/agent walkthrough conversation',kind:'report'});
   if(store?.snapshot)add({path:store.snapshot,label:'Saved walkthrough state and baseline revision',kind:'report'});
+  if(store?.directory)try{for(const p of JSON.parse(fs.readFileSync(path.join(store.directory,'published-screenshots.json'),'utf8')).evidence||[]){const e=evidence.find(e=>e.id===p.id&&e.path===p.path);if(e&&fs.existsSync(e.path)&&createHash('sha256').update(fs.readFileSync(e.path)).digest('hex')===p.sha256)Object.assign(e,{url:p.url,linkOnly:p.linkOnly});}}catch(error){if(error.code!=='ENOENT')limits.push('Previously published screenshot receipts could not be read.');}
   // Keep every page available; the full transcript path is also supplied for long reviews.
   let cursor,reviewNotes=[],bytes=0;
   if(store?.page)do{const page=store.page(cursor,{includeCleared:true});const notes=page.messages.filter(m=>m.kind!=='progress').map(m=>({role:m.role,text:m.text,timestamp:m.timestamp}));reviewNotes=notes.concat(reviewNotes);bytes+=JSON.stringify(notes).length;if(!page.before||page.before===cursor)break;cursor=page.before;}while(bytes<200000);
