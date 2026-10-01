@@ -29,13 +29,15 @@ window.mountWalkthrough = async function () {
   const elapsed = document.createElement('small');
   const history = document.createElement('details'); const historyTitle = document.createElement('summary'); historyTitle.textContent = 'Recent activity'; const historyList = document.createElement('ol'); history.append(historyTitle, historyList); progress.append(activity, elapsed, history);
   const chat = document.createElement('div'); chat.className = 'walkthrough-chat'; chat.setAttribute('role', 'log'); chat.setAttribute('aria-label', 'Live demo conversation');
+  let pendingMessage = null;
+  const receipt = document.createElement('div'); receipt.className = 'walkthrough-receipt'; receipt.setAttribute('role', 'status');
   const form = document.createElement('div'); form.className = 'walkthrough-compose';
   const input = document.createElement('robos-ai-textarea');
   input.setAttribute('min-height', '64'); input.setAttribute('max-chars', '16000');
   input.setAttribute('show-agent', 'false');
   input.setAttribute('placeholder', 'Ask a question or request a change at this checkpoint…');
   const error = document.createElement('p'); error.className = 'walkthrough-error'; error.setAttribute('role', 'alert');
-  form.append(input); stage.append(bar, checkpoint, progress, chat, error, form);
+  form.append(input, receipt); stage.append(bar, checkpoint, progress, chat, error, form);
   const send = input.querySelector('.robos-submit-btn'); send.textContent = 'Send'; send.type = 'button';
   const editable = input.querySelector('.robos-ai-inner'); editable.setAttribute('role', 'textbox'); editable.setAttribute('aria-label', 'Message the demo agent'); editable.setAttribute('aria-multiline', 'true');
   const dialog = document.createElement('dialog'); dialog.className = 'walkthrough-process';
@@ -49,6 +51,11 @@ window.mountWalkthrough = async function () {
   function button(text, label, fn) { const b = document.createElement('button'); b.type = 'button'; b.textContent = text; b.title = label; b.addEventListener('click', fn); return b; }
   function render(value) {
     state = value; const busy = value.status === 'running';
+    if (pendingMessage && value.messages.length > pendingMessage.count && value.messages.some((m, i) => i >= pendingMessage.count && m.role === 'user' && m.text === pendingMessage.text)) {
+      if (input.value.trim() === pendingMessage.text) { input.value = ''; input.dispatchEvent(new Event('input')); }
+      pendingMessage = null; receipt.textContent = 'Message sent. The agent is working on your suggestion.';
+    } else if (busy && !receipt.textContent) receipt.textContent = 'The agent is working. You can draft your next message here.';
+    if (!busy && !pendingMessage) receipt.textContent = value.index < 0 ? 'Start the walkthrough to chat with the demo agent.' : 'Ready for your next message.';
     badge.textContent = busy ? 'In progress' : value.status === 'paused' ? `Paused · ${value.index + 1}/${value.total}` : value.status === 'error' ? 'Needs attention' : 'Ready';
     start.hidden = busy || value.index >= 0 || value.status === 'error'; start.disabled = busy;
     restart.hidden = value.messages.length === 0; restart.disabled = busy;
@@ -72,10 +79,12 @@ window.mountWalkthrough = async function () {
   }
   async function act(action, text) { error.textContent = ''; try { const result = await window.api.demoAction({ action, text }); if (!result.ok) throw new Error(result.error); render(result.state); return true; } catch (e) { error.textContent = e.message; return false; } }
   input.addEventListener('robos-submit', async event => {
-    if (state.status === 'running' || state.index < 0) return;
+    if (state.status === 'running' || pendingMessage) { error.textContent = 'The agent is still working. Your draft is saved here; send it when this action finishes.'; return; }
+    if (state.index < 0) { error.textContent = 'Start the walkthrough before sending a message.'; return; }
     const text = event.detail.value.trim(); if (!text) return;
     if (text.length > 16000) { error.textContent = 'Keep your message under 16,000 characters.'; return; }
-    if (await act('message', text)) { if (input.value.trim() === text) { input.value = ''; input.dispatchEvent(new Event('input')); } }
+    pendingMessage = { text, count: state.messages.length }; receipt.textContent = 'Sending your message…';
+    if (!await act('message', text)) { pendingMessage = null; receipt.textContent = 'Message was not sent. Your draft is still here.'; }
   });
   function updateElapsed() { if (!state?.startedAt || state.status !== 'running') return; const seconds = Math.floor((Date.now() - state.startedAt) / 1000); const quiet = Math.floor((Date.now() - (state.progress?.at(-1)?.at || state.startedAt)) / 1000); elapsed.textContent = `${Math.floor(seconds / 60)}m ${seconds % 60}s elapsed` + (quiet >= 20 ? ` · No new update for ${quiet}s; still waiting for the agent.` : ''); }
   const unsubscribe = window.api.onDemoState(render); const timer = setInterval(updateElapsed, 1000);

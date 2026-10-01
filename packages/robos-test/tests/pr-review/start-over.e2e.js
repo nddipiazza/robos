@@ -44,6 +44,9 @@ test('Start over toolbar resets a completed walkthrough and blocks duplicate act
   await composer.fill('Please explain the current filter.');await composer.press('Control+Enter');
   await page.waitForFunction(()=>document.querySelector('.walkthrough-status').textContent==='In progress');
   assert.equal(session.messages.at(-1).text,'Please explain the current filter.');
+  assert.equal(await composer.innerText(),'');
+  assert.match(await page.locator('.walkthrough-receipt').textContent(),/Message sent/);
+  await composer.fill('Keep this next draft.');
   const count=session.messages.length;await composer.press('Control+Enter');assert.equal(session.messages.length,count);
   await composer.fill('Keep this next draft.');finish({reply:'Explained',checkpointReached:true});
   await page.waitForFunction(()=>document.querySelector('.walkthrough-status').textContent.startsWith('Paused'));
