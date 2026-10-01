@@ -57,7 +57,7 @@ The PR Review Theater leverages W3C SHACL constraint shapes (`robos:PullRequestR
 <div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
   <img src="{{ '/assets/images/pr-review-theater-architecture.jpg' | relative_url }}" alt="RobOS PR Review Theater and Team Policy Governance Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
   <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>RobOS PR Review Theater Architecture</strong>: Team Policy Governance (<code>robos:Team</code>) controls dynamic stage activation, anti-rubber-stamp quiz thresholds, evidence video proof teaching feature mechanics first, and the multi-target Show Me The Fix agent verification walkthrough. <em>(Click image to zoom full screen)</em>
+    <strong>RobOS PR Review Theater Architecture</strong>: Team Policy Governance (<code>robos:Team</code>) controls dynamic stage activation, anti-rubber-stamp quiz thresholds, evidence video proof teaching feature mechanics first, and the multi-target Walk Me Through It agent verification walkthrough. <em>(Click image to zoom full screen)</em>
   </div>
 </div>
 
@@ -91,8 +91,8 @@ sequenceDiagram
     end
 
     rect rgb(15, 30, 55)
-        Note over Architect,IDE: Stage 6: "Show Me The Fix" Interactive Agent Walkthrough
-        Architect->>Theater: Click "Run Agent 'Show Fix' Demonstration"
+        Note over Architect,IDE: Stage 6: "Walk Me Through It" Interactive Agent Walkthrough
+        Architect->>Theater: Click "Start Walkthrough"
         Theater->>Agent: Spawn fix walkthrough (Target: Backend / Frontend / Desktop)
         alt Backend Target
             Agent->>IDE: Connect port 63343, set breakpoint, run test, pause thread
@@ -127,7 +127,7 @@ Clicking **`⚙️ Stage Policy`** in the review topbar opens the policy editor:
 - **Stage 3 (Diffs)**: Choose default mode (unified vs split) and require file-by-file review checklists.
 - **Stage 4 (IDE Bridge)**: Select default IDE (IntelliJ IDEA on port 63343 vs VS Code protocol).
 - **Stage 5 (Evidence Video)**: Set default view (1080p recorded video vs live desktop session). Teaches the reviewer how the feature works first before interactive walkthroughs.
-- **Stage 6 (Show Me The Fix)**: Select demonstration target (`Auto-Detect`, `Backend`, `Frontend`, or `Desktop`), headed browser flags, and interactive handoff checkpoints.
+- **Stage 6 (Walk Me Through It)**: Select demonstration target (`Auto-Detect`, `Backend`, `Frontend`, or `Desktop`), headed browser flags, and interactive handoff checkpoints.
 - **Quick Presets**: Apply 1-click presets: *Strict Anti-Rubber-Stamp*, *Fast Developer Flow*, *Frontend Focus*, or *Full Comprehensive*.
 
 ---
@@ -309,7 +309,7 @@ Crucially, **the evidence video teaches the reviewer how the feature works first
 
 ---
 
-### Stage 6: "Show Me The Fix" Agent Guided Fix Walkthrough
+### Stage 6: "Walk Me Through It" Interactive Walkthrough
 
 Now that the reviewer has watched the evidence video and understands the feature mechanics, Stage 6 bridges the gap between passive code reading and active execution. Instead of asking the reviewer to build and run the PR branch manually, the autonomous AI agent is tasked with **actively showing you the fix in real time** across three target architectures:
 
@@ -350,7 +350,7 @@ The review culminates in Stage 7: the **Merge Sign-Off & Verification Gates Cons
 3. **Gate 3: In-App Code Diff Review**: Confirms the syntax-highlighted code hunks have been audited.
 4. **Gate 4: IDE Verification Bridge**: Confirms the PR branch was compared in IntelliJ IDEA or VS Code.
 5. **Gate 5: Proof-of-Work Telemetry**: Confirms the 1080p narrated proof video or live robot session was observed.
-6. **Gate 6: "Show Me The Fix" Demonstration**: Confirms the agent successfully demonstrated the fix in the IDE, browser, or desktop session.
+6. **Gate 6: "Walk Me Through It" Demonstration**: Confirms the agent successfully demonstrated the fix in the IDE, browser, or desktop session.
 
 #### Atomic Sign-Off & Merge:
 - **Decision Controls**: Choose between `Approved` (with green badge), `Request Changes`, or `Comment`.
@@ -457,3 +457,38 @@ handoff. It should close its browser and exit on completion or SIGTERM. Merely
 opening or focusing a browser does not mark the review verified. The normal
 GitHub frontend Show me path now reports missing configuration instead of
 opening a hard-coded example app and claiming simulated test results.
+
+## Walk me through it: an editable, checkpoint-based demo
+
+A feature does not have to be a bug fix. **Walk me through it** is the live,
+agent-driven review mode. Its compact toolbar has **Explain** and **Next
+checkpoint**, and the rest of the interaction is a conversation with the agent.
+The agent reaches one checkpoint and pauses. Explain stays at that checkpoint;
+chat can request a local code change and its hot-reloaded verification. Only
+Next requests the following checkpoint. Failures leave progress unchanged and
+expose Retry. Reaching the last checkpoint does not approve or merge anything.
+
+Add two properties to the local review launch manifest:
+
+- `demoProcess`: absolute path to the project's JSON demo process. It contains
+  `instructions` and a `checkpoints` array, each with `title`, `given`, `when`,
+  and `then`. **Process…** edits this configuration; saving resets progress.
+- `demoAgent`: a locally authorized Codex CLI `command` (absolute path), `args`
+  (start with `exec`, `--json` and the desired sandbox/MCP configuration), and
+  optional `timeoutMs`. The CLI must support the configured model. RobOS sends
+  the contextual request on stdin and requires a structured checkpoint result.
+  It never takes executable commands from a chat message or PR body.
+
+The bundled example at
+`packages/pr-review/demo-processes/hermetiq-cloud-native.json` demonstrates the
+compact filters through the existing Customize page flow. Adapt its sandbox URL,
+fixture setup, and expected counts to the project's local lab. Connect the agent
+to the official Chrome DevTools MCP server and a dedicated, visible Chrome
+profile. The project process owns setup, BDD callouts, checkpoints, and mutation
+constraints. Code edits happen in the selected workspace: review the resulting
+diff before publishing. Explain-only requests explicitly prohibit changes.
+
+Demo progress and chat remain in the running theater session. Restarting the
+app starts a fresh demo; the saved project process persists. Legacy one-shot
+runner manifests continue to work. The shell executable and permissions remain
+workstation configuration and cannot be changed by the in-app process editor.

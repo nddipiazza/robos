@@ -1,0 +1,35 @@
+{
+  "instructions": "Run Hermetiq cloud-native in its local sandbox in development mode with hot reload. Use Chrome DevTools MCP with a dedicated desktop Chrome profile. Verify app and backend readiness before starting; use the local-stack instructions for setup. Seed synthetic build records through the real backend: include failed and successful builds, commands, platforms, repositories, and enough records to make filters meaningful. Define and verify the expected counts before the demo. Use real React requests and backend responses, not intercepted APIs. Before meaningful actions, show compact site-styled Given/When/Then callouts without intercepting pointer events. Pause at every checkpoint. Explain and chat must stay at the current checkpoint. Apply requested local edits and verify hot reload and relevant assertions. Keep navigation, login, and page layouts unchanged. Never commit, push, create a PR, or mark human approval during the demo. Leave Chrome open. Only at checkpoint one, establish Expanded as the initial saved view using existing Customize page.",
+  "checkpoints": [
+    {
+      "title": "Existing customization, ready to change",
+      "given": "The dev sandbox is running with realistic synthetic build records.",
+      "when": "Open Build History, ensure Expanded is saved, then open the existing Customize page editor.",
+      "then": "The original editor is open and the Filter panel view field shows Expanded. Stop before changing it."
+    },
+    {
+      "title": "Save the compact presentation",
+      "given": "Customize page is open with Expanded selected.",
+      "when": "Choose Compact and Save for project.",
+      "then": "The editor closes and the collapsed Filters bar shows Last 7 days. Explain that this is saved for the project."
+    },
+    {
+      "title": "Make the filters useful",
+      "given": "The compact bar is visible.",
+      "when": "Expand Filters, select Failed and command test, then collapse Filters.",
+      "then": "Status: Failed and Command: test chips are aligned and 9 matching rows appear. Leave this state for hands-on review."
+    },
+    {
+      "title": "Remove one constraint",
+      "given": "Failed and command test are applied.",
+      "when": "Remove the Command: test chip using its x.",
+      "then": "Status: Failed remains, and 29 failed invocations are shown. Stop so the reviewer can inspect the result."
+    },
+    {
+      "title": "Same setting on Analytics",
+      "given": "Compact is saved for the project.",
+      "when": "Navigate to Analytics & Trends and show its compact filters. Apply Failed if necessary.",
+      "then": "Analytics retains its existing layout, uses compact filters, and shows 29 matching invocations. Leave the browser open."
+    }
+  ]
+}

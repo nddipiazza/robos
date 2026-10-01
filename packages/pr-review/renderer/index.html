@@ -215,7 +215,7 @@
             <span class="step-status" id="step-status-5">○</span>
           </button>
           <button class="step-btn" data-stage="6" id="step-btn-6" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="6">
-            <span class="step-num">6</span> <span class="step-label">Show Me The Fix</span>
+            <span class="step-num">6</span> <span class="step-label">Walk Me Through It</span>
             <span class="step-status" id="step-status-6">○</span>
           </button>
           <button class="step-btn" data-stage="7" id="step-btn-7" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="7">
@@ -627,15 +627,15 @@
 
           <div class="stage-nav-footer">
             <button class="btn-stage-nav" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="4">&larr; Previous: IDE Branch Diffs</button>
-            <button class="btn-stage-nav btn-stage-next" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="6">Next: Show Me The Fix &rarr;</button>
+            <button class="btn-stage-nav btn-stage-next" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="6">Next: Walk Me Through It &rarr;</button>
           </div>
         </div>
 
-        <!-- STAGE 6: "Show Me The Fix" Agent Guided Fix Walkthrough -->
+        <!-- STAGE 6: "Walk Me Through It" Interactive Walkthrough -->
         <div class="theater-stage" id="stage-6">
           <div class="stage-header">
             <div class="stage-title-wrap">
-              <h3>🤖 Stage 6: "Show Me The Fix" Agent Guided Walkthrough</h3>
+              <h3>🤖 Stage 6: "Walk Me Through It" Agent Guided Walkthrough</h3>
               <p>Task the AI agent with actively proving the fix: pop up the IDE (backend), launch a headed browser with interactive handoff (frontend), or navigate the desktop app via IPC.</p>
             </div>
             <div class="stage-badge-wrap">
@@ -675,7 +675,7 @@
 
             <div class="fix-action-banner">
               <button type="button" class="btn-primary btn-launch-show-fix" id="btn-run-show-fix" data-theater-action="executeAgentShowFix" data-theater-event="click">
-                ▶ Run Agent "Show Fix" Demonstration
+                ▶ Run Agent "Walkthrough" Demonstration
               </button>
               <span id="fix-execution-status" class="fix-status-indicator">Ready to run demonstration</span>
             </div>
@@ -693,7 +693,7 @@
                 🎮 Focus Browser Window
               </button>
               <button type="button" class="btn-primary btn-complete-handoff" data-theater-action="completeBrowserHandoff" data-theater-event="click">
-                ✓ Handoff Complete / Fix Verified
+                ✓ Handoff Complete / Demo Reviewed
               </button>
             </div>
           </div>
@@ -722,7 +722,7 @@
               <span class="console-status-tag" id="show-fix-terminal-status">IDLE</span>
             </div>
             <div class="console-terminal-body" id="show-fix-terminal-logs">
-              <div class="console-line line-dim">// Click "Run Agent 'Show Fix' Demonstration" to watch the agent pop up the target environment and prove the fix.</div>
+              <div class="console-line line-dim">// Click "Run Agent 'Walkthrough' Demonstration" to watch the agent pop up the target environment and demonstrate the change.</div>
             </div>
           </div>
 
@@ -730,7 +730,7 @@
           <div class="theater-card stage-confirm-card" style="margin-top:14px;">
             <label class="confirm-check-label">
               <input type="checkbox" id="check-fix-demonstrated" data-theater-action="toggleFixDemonstrated" data-theater-event="change" data-theater-value="checked">
-              <span><strong>I have observed the fix demonstration</strong> and verified that the behavior matches requirements.</span>
+              <span><strong>I have observed the walkthrough</strong> and verified that the behavior matches requirements.</span>
             </label>
           </div>
 
@@ -799,8 +799,8 @@
             <div class="gate-card" id="gate-card-fix">
               <div class="gate-icon">🤖</div>
               <div class="gate-info">
-                <strong>Agent Fix Demonstration</strong>
-                <span class="gate-subtext" id="gate-desc-fix">Observed fix demonstration</span>
+                <strong>Agent Live Walkthrough</strong>
+                <span class="gate-subtext" id="gate-desc-fix">Observed walkthrough</span>
               </div>
               <span class="gate-status-badge gate-pass" id="gate-badge-fix">Ready</span>
             </div>
@@ -847,7 +847,7 @@
           </div>
 
           <div class="stage-nav-footer">
-            <button class="btn-stage-nav" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="6">&larr; Previous: Show Me The Fix</button>
+            <button class="btn-stage-nav" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="6">&larr; Previous: Walk Me Through It</button>
             <button class="btn-stage-nav" data-theater-action="exitTheater" data-theater-event="click">Exit Review Theater &times;</button>
           </div>
         </div>
@@ -1047,13 +1047,13 @@
             </div>
           </div>
 
-          <!-- Stage 6 Config: Show Me The Fix -->
+          <!-- Stage 6 Config: Walk Me Through It -->
           <div class="stage-config-card stage-config-highlight" id="card-cfg-stage-6">
             <div class="stage-cfg-header">
               <div class="stage-cfg-left">
                 <input type="checkbox" id="cfg-s6-enabled" checked>
                 <span class="stage-cfg-number">Stage 6</span>
-                <strong>"Show Me The Fix" Agent Guided Fix Walkthrough</strong>
+                <strong>"Walk Me Through It" Interactive Walkthrough</strong>
                 <span class="new-tag">INTERACTIVE</span>
               </div>
               <div class="stage-cfg-right">
@@ -1119,6 +1119,7 @@
   </div>
 
   <script src="../../robos-ui/robos-ui.js"></script>
+  <script src="demo-ui.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

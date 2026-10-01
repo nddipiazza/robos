@@ -638,6 +638,7 @@ window.openPRReviewTheater = async function(pr) {
     document.querySelectorAll('[id^="btn-fix-type-"]').forEach(el => el.hidden = true);
     document.querySelectorAll('.stage-nav-footer').forEach(el => el.style.display = 'none');
     updateTheaterStepper(); window.setProofCanvasMode('video'); window.setTheaterStage(6);
+    if (res.interactiveDemo) await window.mountWalkthrough();
     return;
   }
   // Render all stages
@@ -679,7 +680,7 @@ function updateTheaterStepper() {
     { num: 3, key: 'stage3_fileDiffs', label: 'File Diff Viewer', done: gates.diffsInspected },
     { num: 4, key: 'stage4_ideBridge', label: 'IDE Branch Diffs', done: gates.ideDiffLaunched },
     { num: 5, key: 'stage5_proofCanvas', label: 'Evidence Video', done: theaterContext.local ? false : true },
-    { num: 6, key: 'stage6_showTheFix', label: 'Show Me The Fix', done: gates.fixDemonstrated },
+    { num: 6, key: 'stage6_showTheFix', label: 'Walk Me Through It', done: gates.fixDemonstrated },
     { num: 7, key: 'stage7_signOff', label: 'Sign-Off & Merge', done: false }
   ];
 
@@ -1262,7 +1263,7 @@ window.resumeTheaterBreakpoint = async function(action) {
   }
 };
 
-// ── Stage 5: "Show You The Fix" Agent Guided Fix Walkthrough ───────────────
+// ── Stage 5: "Walk Me Through It" Agent Guided Fix Walkthrough ───────────────
 
 function renderTheaterShowTheFix() {
   if (!theaterContext) return;
@@ -1310,7 +1311,7 @@ function renderTheaterShowTheFix() {
   const pill = document.getElementById('gate-pill-fix');
   if (pill) {
     pill.className = theaterContext.validationGates?.fixDemonstrated ? 'gate-pill gate-pass' : 'gate-pill gate-pending';
-    pill.textContent = theaterContext.validationGates?.fixDemonstrated ? 'Fix: Verified' : 'Fix: Not Demonstrated';
+    pill.textContent = theaterContext.validationGates?.fixDemonstrated ? 'Demo: Reviewed' : 'Demo: Not Reviewed';
   }
 }
 
@@ -1332,12 +1333,12 @@ window.executeAgentShowFix = async function() {
     runBtn.disabled = true;
     runBtn.innerHTML = '<span class="spinner">⏳</span> Agent Demonstrating Fix...';
   }
-  if (statusEl) statusEl.textContent = `Agent executing ${target} fix demonstration...`;
+  if (statusEl) statusEl.textContent = `Agent executing ${target} walkthrough...`;
   if (termStatus) termStatus.textContent = 'RUNNING';
 
   if (termLogs) {
     termLogs.innerHTML = `
-      <div class="console-line line-info">🤖 [ROBOS-AGENT] Initializing autonomous fix demonstration for target: <strong>${target.toUpperCase()}</strong></div>
+      <div class="console-line line-info">🤖 [ROBOS-AGENT] Initializing autonomous walkthrough for target: <strong>${target.toUpperCase()}</strong></div>
       <div class="console-line line-dim">Starting demonstration runner; waiting for its verified checkpoint...</div>
     `;
   }
@@ -1400,13 +1401,13 @@ window.executeAgentShowFix = async function() {
 
       if (runBtn) {
         runBtn.disabled = false;
-        runBtn.innerHTML = '▶ Re-run Agent Fix Demonstration';
+        runBtn.innerHTML = '▶ Re-run Agent Live Walkthrough';
       }
     }, delay + 100);
   } else {
     if (runBtn) {
       runBtn.disabled = false;
-      runBtn.innerHTML = '▶ Run Agent "Show Fix" Demonstration';
+      runBtn.innerHTML = '▶ Run Agent "Walkthrough" Demonstration';
     }
   }
 };
@@ -1483,7 +1484,7 @@ window.toggleFixDemonstrated = function(checked) {
   const pill = document.getElementById('gate-pill-fix');
   if (pill) {
     pill.className = checked ? 'gate-pill gate-pass' : 'gate-pill gate-pending';
-    pill.textContent = checked ? 'Fix: Verified' : 'Fix: Not Demonstrated';
+    pill.textContent = checked ? 'Demo: Reviewed' : 'Demo: Not Reviewed';
   }
 
   updateTheaterStepper();
@@ -1635,7 +1636,7 @@ function renderTheaterSignOff() {
     badgeIDE.textContent = gates.ideDiffLaunched ? 'Launched' : 'Ready';
   }
 
-  // Fix Demonstration Gate
+  // Live Walkthrough Gate
   const badgeFix = document.getElementById('gate-badge-fix');
   const descFix = document.getElementById('gate-desc-fix');
   const fixRequired = (cfg.stage6_showTheFix?.required === true) || (cfg.stage5_showTheFix?.required === true);
@@ -1653,7 +1654,7 @@ function renderTheaterSignOff() {
   }
   if (descFix) {
     descFix.textContent = gates.fixDemonstrated
-      ? 'Observed and verified fix demonstration'
+      ? 'Observed and verified walkthrough'
       : (fixRequired ? 'Demonstration required by team policy' : 'Fix demonstration optional');
   }
 
@@ -1666,7 +1667,7 @@ function renderTheaterSignOff() {
     if (!quizPass || !fixPass) {
       submitBtn.title = !quizPass
         ? 'Complete Stage 1 Interactive eLearning quiz to unlock PR approval.'
-        : 'Observe Stage 6 Fix Demonstration before approving.';
+        : 'Observe Stage 6 Live Walkthrough before approving.';
       submitBtn.classList.add('btn-disabled');
     } else {
       submitBtn.title = 'Approve PR and merge both code and Knowledge Graph branches.';
@@ -1700,7 +1701,7 @@ window.submitTheaterReviewAction = async function() {
     if (cfg.stage5_showTheFix?.required === true && !theaterContext.validationGates.fixDemonstrated) {
       if (feedbackEl) {
         feedbackEl.className = 'quiz-feedback fail';
-        feedbackEl.innerHTML = '🛡️ <strong>Fix Demonstration Gate Active:</strong> Team policy requires observing the Stage 5 Fix Demonstration before approving!';
+        feedbackEl.innerHTML = '🛡️ <strong>Live Walkthrough Gate Active:</strong> Team policy requires observing the Stage 5 Live Walkthrough before approving!';
       }
       return;
     }
@@ -1841,7 +1842,7 @@ function populateModalFromConfig(cfg) {
   setCheck('cfg-s5-vtt', s5.vttSubtitles !== false);
   setCheck('cfg-s5-allow-desktop', s5.allowDesktopExecution !== false);
 
-  // Stage 6: Show Me The Fix
+  // Stage 6: Walk Me Through It
   const s6 = cfg.stage6_showTheFix || cfg.stage5_showTheFix || {};
   setCheck('cfg-s6-enabled', s6.enabled !== false);
   setCheck('cfg-s6-required', s6.required === true);

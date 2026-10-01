@@ -1,5 +1,9 @@
 const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('api', {
+  getDemoState: () => ipcRenderer.invoke('demo-state'),
+  demoAction: opts => ipcRenderer.invoke('demo-action', opts),
+  saveDemoProcess: value => ipcRenderer.invoke('demo-save-process', value),
+  onDemoState: callback => { const listener = (_, state) => callback(state); ipcRenderer.on('demo-state', listener); return () => ipcRenderer.removeListener('demo-state', listener); },
   getLocalReview: () => ipcRenderer.invoke('get-local-review'),
   getConfig:             ()     => ipcRenderer.invoke('get-config'),
   fetchPRs:              (opts) => ipcRenderer.invoke('fetch-prs', opts),

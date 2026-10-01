@@ -2629,7 +2629,7 @@ This system documentation is registered as an official \`robos:Documentation\` e
 
       stage6_showTheFix: {
         enabled: true,
-        title: 'Show Me The Fix',
+        title: 'Walk Me Through It',
         required: false,
         autoDetectTargetType: true,
         targetType: 'auto',
@@ -3139,7 +3139,7 @@ mTLS client connects to vaccine-gateway over port 8443 using the ACME Root CA ke
 Knowledge Graph branch kgraph/PET-105-rabies-verification validated with 0 SHACL errors.`
     };
 
-    // 10. Synthesize "Show You The Fix" Agent Guided Fix Walkthrough Context
+    // 10. Synthesize "Walk Me Through It" Agent Guided Fix Walkthrough Context
     const fixType = options.fixType || this.detectPRFixType(changedFiles, appNode);
     const targetFile = primaryFile || (changedFiles[0] || 'src/main/java/com/acme/petshop/client/VaccineGatewayClient.java');
     const targetLine = 34;

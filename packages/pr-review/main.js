@@ -8,6 +8,13 @@ const { execSync } = require('child_process');
 const { loadLocalReview, ShowMeSession } = require('./lib/local-review');
 const localReview = loadLocalReview(process.env.ROBOS_LOCAL_REVIEW);
 const showMeSession = new ShowMeSession(localReview?.runner);
+const { DemoSession } = require('./lib/demo-session');
+const demoSession = localReview?.demoProcess ? new DemoSession({ workspace: localReview.workspace, processFile: localReview.demoProcess, agent: localReview.demoAgent }) : null;
+demoSession?.on('state', state => { if (win && !win.isDestroyed()) win.webContents.send('demo-state', state); });
+ipcMain.handle('demo-state', () => demoSession?.state() || null);
+ipcMain.handle('demo-action', async (_, { action, text } = {}) => { try { if (!demoSession) throw new Error('No project demo process configured.'); return { ok: true, state: await demoSession.act(action, text) }; } catch (e) { return { ok: false, error: e.message }; } });
+ipcMain.handle('demo-save-process', (_, value) => { try { if (!demoSession) throw new Error('No project demo process configured.'); return { ok: true, state: demoSession.saveProcess(value) }; } catch (e) { return { ok: false, error: e.message }; } });
+app.on('before-quit', () => demoSession?.stop());
 app.on('before-quit', () => showMeSession.stop());
 ipcMain.handle('get-local-review', () => localReview ? { ok: true, pr: localReview.pr } : null);
 
@@ -471,7 +478,7 @@ ipcMain.handle('get-ide-status', async () => {
 ipcMain.handle('fetch-pr-theater-context', async (_, opts = {}) => {
   try {
     if (localReview) return {
-      ok: true, local: true, pr: localReview.pr,
+      ok: true, local: true, interactiveDemo: !!demoSession, pr: localReview.pr,
       targetApp: { title: localReview.title },
       fileDiffs: getGraphStore()?.parseUnifiedDiff(localReview.diffPatch, localReview.changedFiles) || [],
       proofOfWorkVideo: { title: 'Recorded local evidence', url: localReview.videoUrl, chapters: [], vttTranscript: localReview.summary || '' },
@@ -1184,7 +1191,7 @@ ipcMain.handle('resume-agent-show-fix-handoff', async (_, { type, action = 'comp
     type,
     action,
     status: 'VERIFIED',
-    message: `✓ Agent fix demonstration for ${String(type || 'fix').toUpperCase()} verified successfully by reviewer.`
+    message: `✓ Agent demonstration for ${String(type || 'fix').toUpperCase()} verified successfully by reviewer.`
   };
 });
 
