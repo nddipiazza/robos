@@ -19,10 +19,11 @@ test('Start over toolbar resets a completed walkthrough and blocks duplicate act
   session.on('state',state=>page.evaluate(s=>window.updateDemo(s),state));
   await page.addScriptTag({path:path.resolve(__dirname,'../../../pr-review/renderer/demo-ui.js')});await page.evaluate(()=>window.mountWalkthrough());
   let finish;session.runAgent=()=>new Promise(r=>finish=r);
+  await page.getByText('More',{exact:true}).click();
   await page.getByRole('button',{name:'Start over',exact:true}).click();
   await page.waitForFunction(()=>document.querySelector('.walkthrough-status').textContent==='In progress');
-  assert.equal(await page.getByRole('button',{name:'Start over',exact:true}).isDisabled(),true);
-  assert.equal(await page.getByRole('button',{name:'Next checkpoint →',exact:true}).isDisabled(),true);
+  assert.equal(await page.locator('.walkthrough-more').isVisible(),false);
+  assert.equal(await page.locator('.walkthrough-bar button:visible').count(),0);
   session.reportProgress('Checking that the saved compact filters appear in Build History.');
   await page.getByRole('status').filter({hasText:'saved compact filters'}).waitFor();
   assert.match(await page.locator('.walkthrough-progress small').textContent(),/elapsed/);

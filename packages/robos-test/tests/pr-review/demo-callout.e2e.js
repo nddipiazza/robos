@@ -28,7 +28,12 @@ test('checkpoint card shows agent guidance and comparison controls instead of BD
   assert.match(await page.locator('.walkthrough-checkpoint').textContent(),/Try the original filters/);
   assert.doesNotMatch(await page.locator('.walkthrough-checkpoint').textContent(),/PRIVATE/);
   assert.match(await page.locator('.walkthrough-checkpoint').textContent(),/origin\/main · 12345678/);
+  assert.equal(await page.getByRole('button',{name:'Show the change',exact:true}).count(),0);
+  await page.getByText('More',{exact:true}).click();
   assert.equal(await page.getByRole('button',{name:'Show the change',exact:true}).isVisible(),true);
   assert.equal(await page.getByRole('button',{name:'How it used to work',exact:true}).count(),0);
+  await page.keyboard.press('Escape'); assert.equal(await page.locator('.walkthrough-more').getAttribute('open'),null);
+  await page.getByText('More',{exact:true}).click(); await page.locator('.walkthrough-checkpoint').click();
+  assert.equal(await page.locator('.walkthrough-more').getAttribute('open'),null);
  } finally {await browser.close();}
 });

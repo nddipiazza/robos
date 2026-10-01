@@ -14,7 +14,15 @@ window.mountWalkthrough = async function () {
   const next = button('Next checkpoint →', 'Go to the next checkpoint', () => act('next'));
   const retry = button('Retry', 'Retry this checkpoint', () => act('retry'));
   const process = button('Process…', 'Customize this project’s demo process', () => { editor.value = JSON.stringify(state.process, null, 2); dialog.showModal(); });
-  bar.append(title, badge, start, restart, before, feature, explain, next, retry, process);
+  const more = document.createElement('details'); more.className = 'walkthrough-more';
+  const moreToggle = document.createElement('summary'); moreToggle.textContent = 'More'; moreToggle.setAttribute('aria-label', 'More walkthrough actions');
+  const menu = document.createElement('div'); menu.className = 'walkthrough-menu'; menu.append(restart, before, feature, process); more.append(moreToggle, menu);
+  menu.addEventListener('click', event => { if (event.target.closest('button')) more.open = false; });
+  const dismissMenu = event => { if (!more.contains(event.target)) more.open = false; };
+  const escapeMenu = event => { if (event.key === 'Escape' && more.open) { more.open = false; moreToggle.focus(); } };
+  document.addEventListener('click', dismissMenu); document.addEventListener('keydown', escapeMenu);
+  next.className = 'walkthrough-primary'; start.className = 'walkthrough-primary'; retry.className = 'walkthrough-primary';
+  bar.append(title, badge, explain, start, next, retry, more);
   const checkpoint = document.createElement('section'); checkpoint.className = 'walkthrough-checkpoint'; checkpoint.setAttribute('aria-live', 'polite');
   const progress = document.createElement('section'); progress.className = 'walkthrough-progress'; progress.setAttribute('aria-label', 'Demo progress');
   const activity = document.createElement('div'); activity.setAttribute('role', 'status');
@@ -38,11 +46,13 @@ window.mountWalkthrough = async function () {
   function render(value) {
     state = value; const busy = value.status === 'running';
     badge.textContent = busy ? 'In progress' : value.status === 'paused' ? `Paused · ${value.index + 1}/${value.total}` : value.status === 'error' ? 'Needs attention' : 'Ready';
-    start.hidden = value.index >= 0 || value.status === 'error'; start.disabled = busy;
+    start.hidden = busy || value.index >= 0 || value.status === 'error'; start.disabled = busy;
     restart.hidden = value.messages.length === 0; restart.disabled = busy;
     before.hidden = !value.process.before || value.mode === 'before'; before.disabled = busy;
     feature.hidden = value.mode !== 'before'; feature.disabled = busy;
-    explain.disabled = busy || value.index < 0;
+    more.hidden = busy; if (busy) more.open = false;
+    explain.hidden = busy || value.index < 0; explain.disabled = busy || value.index < 0;
+    next.hidden = busy || value.status !== 'paused' || value.index >= value.total - 1;
     next.disabled = busy || value.status !== 'paused' || value.index >= value.total - 1;
     retry.hidden = value.status !== 'error'; process.disabled = busy; send.disabled = busy || value.index < 0;
     progress.hidden = !busy; activity.textContent = value.progress?.at(-1)?.text || 'Connecting to the demo agent…';
@@ -60,6 +70,6 @@ window.mountWalkthrough = async function () {
   form.addEventListener('submit', event => { event.preventDefault(); const text = input.value.trim(); if (!text) return; input.value = ''; act('message', text); });
   function updateElapsed() { if (!state?.startedAt || state.status !== 'running') return; const seconds = Math.floor((Date.now() - state.startedAt) / 1000); const quiet = Math.floor((Date.now() - (state.progress?.at(-1)?.at || state.startedAt)) / 1000); elapsed.textContent = `${Math.floor(seconds / 60)}m ${seconds % 60}s elapsed` + (quiet >= 20 ? ` · No new update for ${quiet}s; still waiting for the agent.` : ''); }
   const unsubscribe = window.api.onDemoState(render); const timer = setInterval(updateElapsed, 1000);
-  window.cleanupWalkthrough = () => { clearInterval(timer); unsubscribe?.(); };
+  window.cleanupWalkthrough = () => { clearInterval(timer); unsubscribe?.(); document.removeEventListener('click', dismissMenu); document.removeEventListener('keydown', escapeMenu); };
   render(await window.api.getDemoState());
 };
