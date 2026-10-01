@@ -24,6 +24,7 @@ test('checkpoint card shows agent guidance and comparison controls instead of BD
  try {
   const page=await browser.newPage();await page.setContent('<section id="stage-6"></section>');
   await page.evaluate(()=>{window.api={onDemoState:fn=>window.updateDemo=fn,getDemoState:async()=>({mode:'before',status:'paused',index:0,total:2,messages:[],baseline:{ref:'origin/main',revision:'1234567890'},guidance:'Try the original filters, then choose Next checkpoint.',checkpoint:{title:'Original filters',given:'PRIVATE GIVEN',when:'PRIVATE WHEN',then:'PRIVATE THEN'},process:{before:{}}})};});
+  await page.addScriptTag({path:path.resolve(__dirname,'../../../robos-ui/robos-ui.js')});
   await page.addScriptTag({path:path.resolve(__dirname,'../../../pr-review/renderer/demo-ui.js')});await page.evaluate(()=>window.mountWalkthrough());
   assert.match(await page.locator('.walkthrough-checkpoint').textContent(),/Try the original filters/);
   assert.doesNotMatch(await page.locator('.walkthrough-checkpoint').textContent(),/PRIVATE/);

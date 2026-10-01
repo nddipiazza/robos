@@ -12,12 +12,14 @@ test('Start over toolbar resets a completed walkthrough and blocks duplicate act
  await session.act('start');await session.act('next');
  const browser=await chromium.launch({headless:true});
  try {
-  const page=await browser.newPage();await page.setContent('<section id="stage-6"></section>');
+  const page=await browser.newPage();await page.addStyleTag({path:path.resolve(__dirname,'../../../pr-review/renderer/style.css')});await page.setContent('<section id="stage-6"></section>');
   await page.exposeFunction('readDemo',()=>session.state());
   await page.exposeFunction('actDemo',async opts=>({ok:true,state:await session.act(opts.action,opts.text)}));
   await page.evaluate(()=>{window.api={getDemoState:window.readDemo,demoAction:window.actDemo,onDemoState:fn=>window.updateDemo=fn};});
   session.on('state',state=>page.evaluate(s=>window.updateDemo(s),state));
+  await page.addScriptTag({path:path.resolve(__dirname,'../../../robos-ui/robos-ui.js')});
   await page.addScriptTag({path:path.resolve(__dirname,'../../../pr-review/renderer/demo-ui.js')});await page.evaluate(()=>window.mountWalkthrough());
+  await page.addStyleTag({path:path.resolve(__dirname,'../../../pr-review/renderer/style.css')});
   let finish;session.runAgent=()=>new Promise(r=>finish=r);
   await page.getByText('More',{exact:true}).click();
   await page.getByRole('button',{name:'Start over',exact:true}).click();
@@ -34,5 +36,17 @@ test('Start over toolbar resets a completed walkthrough and blocks duplicate act
   assert.equal(await page.locator('.walkthrough-progress').isVisible(),false);
   assert.match(await page.getByRole('log').textContent(),/Start over: First/);
   assert.equal(await page.getByRole('button',{name:'Next checkpoint →',exact:true}).isEnabled(),true);
+  const composer=page.getByRole('textbox',{name:'Message the demo agent'});
+  assert.equal(await page.locator('.walkthrough-compose robos-ai-textarea').count(),1);
+  const small=(await composer.boundingBox()).height;
+  await composer.fill(Array(30).fill('Please explain this change.').join('\n'));
+  const large=(await composer.boundingBox()).height;assert.ok(large>small);assert.ok(large<=300);
+  await composer.fill('Please explain the current filter.');await composer.press('Control+Enter');
+  await page.waitForFunction(()=>document.querySelector('.walkthrough-status').textContent==='In progress');
+  assert.equal(session.messages.at(-1).text,'Please explain the current filter.');
+  const count=session.messages.length;await composer.press('Control+Enter');assert.equal(session.messages.length,count);
+  await composer.fill('Keep this next draft.');finish({reply:'Explained',checkpointReached:true});
+  await page.waitForFunction(()=>document.querySelector('.walkthrough-status').textContent.startsWith('Paused'));
+  assert.equal(await composer.innerText(),'Keep this next draft.');
  } finally {session.removeAllListeners();await browser.close();}
 });

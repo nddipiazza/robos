@@ -29,11 +29,15 @@ window.mountWalkthrough = async function () {
   const elapsed = document.createElement('small');
   const history = document.createElement('details'); const historyTitle = document.createElement('summary'); historyTitle.textContent = 'Recent activity'; const historyList = document.createElement('ol'); history.append(historyTitle, historyList); progress.append(activity, elapsed, history);
   const chat = document.createElement('div'); chat.className = 'walkthrough-chat'; chat.setAttribute('role', 'log'); chat.setAttribute('aria-label', 'Live demo conversation');
-  const form = document.createElement('form'); form.className = 'walkthrough-compose';
-  const input = document.createElement('textarea'); input.rows = 2; input.placeholder = 'Ask a question or request a change while we stay at this checkpoint…'; input.setAttribute('aria-label', 'Message the demo agent'); input.maxLength = 16000;
-  const send = document.createElement('button'); send.textContent = 'Send'; send.type = 'submit';
+  const form = document.createElement('div'); form.className = 'walkthrough-compose';
+  const input = document.createElement('robos-ai-textarea');
+  input.setAttribute('min-height', '64'); input.setAttribute('max-chars', '16000');
+  input.setAttribute('show-agent', 'false');
+  input.setAttribute('placeholder', 'Ask a question or request a change at this checkpoint…');
   const error = document.createElement('p'); error.className = 'walkthrough-error'; error.setAttribute('role', 'alert');
-  form.append(input, send); stage.append(bar, checkpoint, progress, chat, error, form);
+  form.append(input); stage.append(bar, checkpoint, progress, chat, error, form);
+  const send = input.querySelector('.robos-submit-btn'); send.textContent = 'Send'; send.type = 'button';
+  const editable = input.querySelector('.robos-ai-inner'); editable.setAttribute('role', 'textbox'); editable.setAttribute('aria-label', 'Message the demo agent'); editable.setAttribute('aria-multiline', 'true');
   const dialog = document.createElement('dialog'); dialog.className = 'walkthrough-process';
   const heading = document.createElement('h3'); heading.textContent = 'Project demo process';
   const hint = document.createElement('p'); hint.textContent = 'Edit demo instructions, checkpoint intent, and the optional before-change walkthrough. Saving restarts the walkthrough at its beginning. The agent executable is configured separately on this workstation.';
@@ -66,8 +70,13 @@ window.mountWalkthrough = async function () {
     for (const message of value.messages) { const bubble = document.createElement('div'); bubble.className = 'walkthrough-bubble ' + message.role; const label = document.createElement('strong'); label.textContent = message.role === 'user' ? 'You' : message.role === 'assistant' ? 'Demo agent' : 'Status'; const body = document.createElement('p'); body.textContent = message.text; bubble.append(label, body); chat.append(bubble); }
     chat.scrollTop = chat.scrollHeight;
   }
-  async function act(action, text) { error.textContent = ''; try { const result = await window.api.demoAction({ action, text }); if (!result.ok) throw new Error(result.error); render(result.state); } catch (e) { error.textContent = e.message; } }
-  form.addEventListener('submit', event => { event.preventDefault(); const text = input.value.trim(); if (!text) return; input.value = ''; act('message', text); });
+  async function act(action, text) { error.textContent = ''; try { const result = await window.api.demoAction({ action, text }); if (!result.ok) throw new Error(result.error); render(result.state); return true; } catch (e) { error.textContent = e.message; return false; } }
+  input.addEventListener('robos-submit', async event => {
+    if (state.status === 'running' || state.index < 0) return;
+    const text = event.detail.value.trim(); if (!text) return;
+    if (text.length > 16000) { error.textContent = 'Keep your message under 16,000 characters.'; return; }
+    if (await act('message', text)) { if (input.value.trim() === text) { input.value = ''; input.dispatchEvent(new Event('input')); } }
+  });
   function updateElapsed() { if (!state?.startedAt || state.status !== 'running') return; const seconds = Math.floor((Date.now() - state.startedAt) / 1000); const quiet = Math.floor((Date.now() - (state.progress?.at(-1)?.at || state.startedAt)) / 1000); elapsed.textContent = `${Math.floor(seconds / 60)}m ${seconds % 60}s elapsed` + (quiet >= 20 ? ` · No new update for ${quiet}s; still waiting for the agent.` : ''); }
   const unsubscribe = window.api.onDemoState(render); const timer = setInterval(updateElapsed, 1000);
   window.cleanupWalkthrough = () => { clearInterval(timer); unsubscribe?.(); document.removeEventListener('click', dismissMenu); document.removeEventListener('keydown', escapeMenu); };
