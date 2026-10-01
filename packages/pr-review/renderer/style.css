@@ -2745,3 +2745,7 @@ header h1 { font-size: 15px; font-weight: 600; }
 .walkthrough-saved-messages { max-height: 60vh; overflow: auto; white-space: pre-wrap; font-size: 13px; line-height: 1.6; }
 .walkthrough-saved-messages p { border-bottom: 1px solid #30363d; padding: 12px 0; }
 .walkthrough-history-dialog button { margin-right: 8px; }
+
+.walkthrough button.walkthrough-timestamp { padding: 0; border: 0; background: transparent; font-size: 11px; color: #8294a6; cursor: pointer; }
+.walkthrough button.walkthrough-timestamp:hover { color: #a5cfff; text-decoration: underline; }
+.walkthrough-timestamp:focus-visible { outline: 2px solid #79b8ed; outline-offset: 4px; }

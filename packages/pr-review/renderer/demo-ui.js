@@ -72,10 +72,11 @@ window.mountWalkthrough = async function () {
   const older = button('Older messages', 'Load the previous page', () => loadHistory(historyCursor));
   const newest = button('Latest messages', 'Return to the latest saved page', () => loadHistory());
   historyDialog.append(historyTitle, historyBody, older, newest, button('Close', 'Close saved history', () => historyDialog.close())); stage.append(historyDialog);
+  async function openSessionFile() { try { const result = await window.api.openDemoSessionFile(); if (!result.ok) throw new Error(result.error); } catch(e) { error.textContent = e.message; } }
   async function loadHistory(before) {
     older.disabled = true;
     try { const page = await window.api.getDemoHistory(before); historyCursor = page.before; historyBody.replaceChildren();
-      for (const message of page.messages) { const entry = document.createElement('p'); const who = message.role === 'user' ? 'You' : message.agentName || 'Status'; entry.textContent = `${who} · ${new Date(message.timestamp).toLocaleString()}\n${message.text}`; historyBody.append(entry); }
+      for (const message of page.messages) { const entry = document.createElement('p'); const who = message.role === 'user' ? 'You' : message.agentName || 'Status'; const when = button(new Date(message.timestamp).toLocaleString(), 'Open saved session in your default text editor', openSessionFile); when.className = 'walkthrough-timestamp'; const text = document.createElement('span'); text.textContent = `\n${message.text}`; entry.append(who + ' · ', when, text); historyBody.append(entry); }
       if (!page.messages.length) historyBody.textContent = 'No saved messages in this conversation yet.';
       older.disabled = !historyCursor; historyBody.scrollTop = 0;
     } catch(e) { historyBody.textContent = e.message; }
@@ -133,7 +134,8 @@ window.mountWalkthrough = async function () {
         const date = new Date(recordedTime); timestamp.dateTime = date.toISOString();
         timestamp.textContent = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); timestamp.title = (message.timestamp ? '' : 'Received: ') + date.toLocaleString();
       } else { timestamp.textContent = '—'; timestamp.title = 'Time was not recorded for this older message.'; }
-      const header = document.createElement('div'); header.className = 'walkthrough-bubble-header'; header.append(label, timestamp);
+      const timestampLink = button('', 'Open saved session in your default text editor', openSessionFile); timestampLink.className = 'walkthrough-timestamp'; timestampLink.append(timestamp);
+      const header = document.createElement('div'); header.className = 'walkthrough-bubble-header'; header.append(label, timestampLink);
       const body = document.createElement('p'); body.textContent = message.text; bubble.append(header, body); chat.append(bubble); }
     if (followTail) chat.scrollTop = chat.scrollHeight;
   }

@@ -13,10 +13,11 @@ test('Start over toolbar resets a completed walkthrough and blocks duplicate act
  const browser=await chromium.launch({headless:true});
  try {
   const page=await browser.newPage();await page.addStyleTag({path:path.resolve(__dirname,'../../../pr-review/renderer/style.css')});await page.setContent('<section id="stage-6"></section>');
+  let openedSessionFiles=0; await page.exposeFunction('openSessionFile',()=>{openedSessionFiles++;return {ok:true};});
   await page.exposeFunction('clearDemo',()=>({ok:true,state:session.clearChat()}));
   await page.exposeFunction('readDemo',()=>session.state());
   await page.exposeFunction('actDemo',async opts=>({ok:true,state:await session.act(opts.action,opts.text)}));
-  await page.evaluate(()=>{window.api={clearDemoChat:window.clearDemo,getDemoState:window.readDemo,demoAction:window.actDemo,onDemoState:fn=>window.updateDemo=fn};});
+  await page.evaluate(()=>{window.api={openDemoSessionFile:window.openSessionFile,clearDemoChat:window.clearDemo,getDemoState:window.readDemo,demoAction:window.actDemo,onDemoState:fn=>window.updateDemo=fn};});
   session.on('state',state=>page.evaluate(s=>window.updateDemo(s),state));
   await page.addScriptTag({path:path.resolve(__dirname,'../../../robos-ui/robos-ui.js')});
   await page.addScriptTag({path:path.resolve(__dirname,'../../../pr-review/renderer/demo-ui.js')});await page.evaluate(()=>window.mountWalkthrough());
@@ -57,6 +58,8 @@ test('Start over toolbar resets a completed walkthrough and blocks duplicate act
   await composer.fill('Keep this next draft.');finish({reply:'Explained',checkpointReached:true});
   await page.waitForFunction(()=>document.querySelector('.walkthrough-status').textContent.startsWith('Step'));
   assert.equal(await composer.innerText(),'Keep this next draft.');
+  await page.locator('.walkthrough-bubble .walkthrough-timestamp').first().click();
+  assert.equal(openedSessionFiles,1);
   const previousCount=session.messages.length; const step=session.index;
   await page.getByRole('button',{name:'Clear chat',exact:true}).click();
   await page.getByRole('dialog',{name:'Clear chat?'}).getByRole('button',{name:'Cancel',exact:true}).click();

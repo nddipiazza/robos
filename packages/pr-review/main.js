@@ -26,6 +26,7 @@ if (demoSession && localReview.resumeStatePath) {
 demoSession?.on('state', state => { if (win && !win.isDestroyed()) win.webContents.send('demo-state', state); });
 ipcMain.handle('demo-state', () => demoSession?.state() || null);
 ipcMain.handle('demo-action', async (_, { action, text } = {}) => { try { if (!demoSession) throw new Error('No project demo process configured.'); return { ok: true, state: await demoSession.act(action, text) }; } catch (e) { return { ok: false, error: e.message }; } });
+ipcMain.handle('demo-open-session-file', async () => { try { await require('./lib/open-session-file').openSessionFile(reviewStore?.transcript, shell); return { ok: true }; } catch (error) { return { ok: false, error: error.message }; } });
 ipcMain.handle('demo-history', (_, before) => reviewStore?.page(before, {includeCleared:true}) || {messages:[],before:0});
 ipcMain.handle('demo-clear-chat', () => { if (!demoSession) return { ok: false, error: 'No walkthrough configured.' }; return { ok: true, state: demoSession.clearChat() }; });
 ipcMain.handle('demo-save-process', (_, value) => { try { if (!demoSession) throw new Error('No project demo process configured.'); return { ok: true, state: demoSession.saveProcess(value) }; } catch (e) { return { ok: false, error: e.message }; } });
