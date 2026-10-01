@@ -2912,8 +2912,24 @@ Knowledge Graph branch kgraph/PET-105-rabies-verification validated with 0 SHACL
         author: options.author || 'ai-agent-petstore',
         url: options.url || `https://github.com/${repo}/pull/${prNumber}`,
         additions: fileDiffs.reduce((acc, f) => acc + f.additions, 0),
-        deletions: fileDiffs.reduce((acc, f) => acc + f.deletions, 0)
+        deletions: fileDiffs.reduce((acc, f) => acc + f.deletions, 0),
+        workItems: options.workItems || [
+          {
+            id: 'PET-105',
+            key: 'PET-105',
+            title: 'Verify rabies certificate over mTLS before adoption',
+            url: `https://github.com/${repo}/issues/105`,
+            type: 'story',
+            status: 'In Review'
+          }
+        ]
       },
+      checks: options.checks || [
+        { name: 'Unit Tests (JUnit 5 & Mockito)', state: 'success', description: '48 tests passing in 3.4s' },
+        { name: 'mTLS Handshake Contract (Pact 4.0)', state: 'success', description: '14/14 pact interactions verified' },
+        { name: 'Knowledge Graph SHACL Validation', state: 'success', description: '0 shape violations, 4 nodes verified' },
+        { name: 'Security Audit (Gitleaks & Trivy)', state: 'success', description: 'No secrets or high CVEs detected' }
+      ],
       targetApp: {
         id: appNode ? appNode['@id'] : `urn:robos:app:${appSlug}`,
         title: appTitle,

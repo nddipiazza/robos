@@ -484,6 +484,10 @@ ipcMain.handle('fetch-pr-theater-context', async (_, opts = {}) => {
         diffPatch,
         appId: opts.appId,
         reviewerId: opts.reviewerId || 'robos',
+        checks: opts.checks,
+        workItems: opts.workItems,
+        url: opts.url,
+        author: opts.author,
       });
       return ctx;
     }
@@ -502,10 +506,26 @@ ipcMain.handle('fetch-pr-theater-context', async (_, opts = {}) => {
         baseBranch: opts.baseBranch || 'main',
         changedFiles: fallbackFiles,
         author: opts.author || 'robos',
-        url: `https://github.com/${opts.repo || 'acme/petstore-api'}/pull/${opts.number || 12}`,
+        url: opts.url || `https://github.com/${opts.repo || 'acme/petstore-api'}/pull/${opts.number || 12}`,
         additions: 42,
         deletions: 3,
+        workItems: opts.workItems || [
+          {
+            id: 'PET-105',
+            key: 'PET-105',
+            title: 'Verify rabies certificate over mTLS before adoption',
+            url: `https://github.com/${opts.repo || 'acme/petstore-api'}/issues/105`,
+            type: 'story',
+            status: 'In Review'
+          }
+        ]
       },
+      checks: opts.checks || [
+        { name: 'Unit Tests (JUnit 5 & Mockito)', state: 'success', description: '48 tests passing in 3.4s' },
+        { name: 'mTLS Handshake Contract (Pact 4.0)', state: 'success', description: '14/14 pact interactions verified' },
+        { name: 'Knowledge Graph SHACL Validation', state: 'success', description: '0 shape violations, 4 nodes verified' },
+        { name: 'Security Audit (Gitleaks & Trivy)', state: 'success', description: 'No secrets or high CVEs detected' }
+      ],
       targetApp: {
         id: 'urn:robos:service:forms-api',
         title: 'PetStore API',
