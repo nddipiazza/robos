@@ -2761,3 +2761,6 @@ header h1 { font-size: 15px; font-weight: 600; }
 .review-publish-dialog button:last-child { background: #204737; border-color: #38634e; }
 .review-publish-dialog button:disabled { opacity: .55; cursor: wait; }
 .review-publish-dialog textarea { font: inherit; resize: vertical; }
+
+.walkthrough-checkpoint > p { white-space: pre-line; font-size: 18px; line-height: 1.6; }
+.walkthrough-bubble.assistant:not(.progress-entry) p { white-space: pre-line; font-size: 16px; line-height: 1.6; }

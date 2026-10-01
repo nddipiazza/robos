@@ -13,10 +13,14 @@ test('one translucent callout replaces legacy guidance and respects dismissal',a
   const overlay=page.locator('[data-robos-demo-callout]');assert.equal(await overlay.count(),1);
   assert.equal(await overlay.getAttribute('data-robos-demo-callout'),'two');assert.equal(await overlay.locator('img').count(),0);
   assert.equal(await overlay.evaluate(el=>getComputedStyle(el).backgroundColor),'rgba(15, 23, 34, 0.82)');
-  assert.equal(await overlay.evaluate(el=>getComputedStyle(el).pointerEvents),'none');
+  assert.equal(await overlay.evaluate(el=>getComputedStyle(el).pointerEvents),'auto');
   await page.getByRole('button',{name:'Hide demo guidance'}).click();assert.equal(await overlay.count(),0);
   assert.deepEqual(await page.evaluate(showDemoCallout,{id:'two',summary:'Updated'}),{visible:false,dismissed:true});
-  await page.evaluate(showDemoCallout,{id:'three',summary:'A new checkpoint.'});assert.equal(await overlay.count(),1);
+  await page.evaluate(showDemoCallout,{id:'three',title:'Explore filters',summary:'See **matching builds**.\n\n- Click Filters.\n- Check the result count.'});assert.equal(await overlay.count(),1);
+  assert.equal(await overlay.locator('p strong').innerText(),'matching builds');
+  assert.equal(await overlay.locator('li').count(),2);
+  assert.equal(await overlay.evaluate(el=>getComputedStyle(el).fontSize),'18px');
+  assert.equal(await overlay.locator(':scope > strong').evaluate(el=>getComputedStyle(el).fontSize),'22px');
  } finally {await browser.close();}
 });
 test('checkpoint card shows agent guidance and comparison controls instead of BDD labels',async()=>{
