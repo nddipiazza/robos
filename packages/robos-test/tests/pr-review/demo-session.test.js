@@ -85,3 +85,10 @@ test('steering interrupts the real runner and applies instructions at the same c
  assert.equal(receipt.status,'running');assert.equal(s.index,-1);await run;
  assert.equal(s.index,0);assert.equal(s.status,'paused');assert.equal(s.messages.at(-1).text,'Steering applied');assert.ok(!s.messages.some(m=>m.role==='system'));
 });
+test('rapid steering messages are retained in order without concurrent continuations',async()=>{
+ const prompts=[];let finish;const s=session(p=>{prompts.push(p);return new Promise(r=>finish=r);});const run=s.act('start');
+ await s.act('message','Move Filters left');await s.act('message','Keep the original icon');
+ assert.equal(prompts.length,1);finish({reply:'superseded',checkpointReached:true});
+ await new Promise(r=>setImmediate(r));assert.equal(prompts.length,2);assert.match(prompts[1],/Move Filters left\nKeep the original icon/);assert.equal(s.index,-1);
+ finish({reply:'Both changes verified',checkpointReached:true});await run;assert.equal(s.index,0);assert.ok(!s.messages.some(m=>m.text==='superseded'));
+});
