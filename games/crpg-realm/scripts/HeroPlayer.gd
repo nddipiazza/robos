@@ -64,7 +64,28 @@ var is_down_prone: bool = false
 var orig_sprite_pos: Vector2 = Vector2.ZERO
 var _was_prone: bool = false
 
+# Elevation & Verticality Simulation
+var current_elevation_tier: int = 0
+var visual_elevation_offset: float = 0.0
+var target_elevation_offset: float = 0.0
+var elevation_lerp_speed: float = 8.0
+
+func set_elevation(tier: int, custom_offset: float = 0.0) -> void:
+	current_elevation_tier = tier
+	if custom_offset != 0.0:
+		target_elevation_offset = custom_offset
+	else:
+		target_elevation_offset = -float(tier) * 48.0
+
+func set_elevation_offset_direct(offset: float) -> void:
+	target_elevation_offset = offset
+
+func get_elevation_tier() -> int:
+	return current_elevation_tier
+
 func _ready() -> void:
+	if sprite and orig_sprite_pos == Vector2.ZERO:
+		orig_sprite_pos = sprite.position
 	if GameState.spawn_position != Vector2.ZERO:
 		global_position = GameState.spawn_position
 		GameState.spawn_position = Vector2.ZERO
@@ -1964,4 +1985,17 @@ func _physics_process(delta: float) -> void:
 		reticle.rotation += delta * 2.2
 		var pulse = sin(Time.get_ticks_msec() * 0.007) * 0.05
 		reticle.scale = Vector2(0.5 + pulse, 0.5 + pulse)
+
+	# Elevation visual lift interpolation (lifts miniature/sprite, leaving selection circle / shadow on ground)
+	visual_elevation_offset = lerp(visual_elevation_offset, target_elevation_offset, clamp(delta * elevation_lerp_speed, 0.0, 1.0))
+	if abs(visual_elevation_offset - target_elevation_offset) < 0.1:
+		visual_elevation_offset = target_elevation_offset
+
+	if sprite and not is_down_prone and not is_prone():
+		sprite.position.y = orig_sprite_pos.y + visual_elevation_offset
+	if m3d:
+		m3d.position.y = visual_elevation_offset
+	var ui = get_node_or_null("OverheadUI")
+	if ui:
+		ui.position.y = -50.0 + visual_elevation_offset
 

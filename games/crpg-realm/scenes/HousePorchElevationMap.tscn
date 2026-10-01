@@ -1,0 +1,254 @@
+[gd_scene load_steps=8 format=3 uid="uid://house_porch_elevation_map01"]
+
+[ext_resource type="Script" path="res://scripts/HousePorchElevationMap.gd" id="1_map"]
+[ext_resource type="Script" path="res://scripts/StairTransitionZone.gd" id="2_stair"]
+[ext_resource type="Script" path="res://scripts/PorchDeckZone.gd" id="3_porch"]
+[ext_resource type="Script" path="res://scripts/DoorPortal.gd" id="4_door"]
+[ext_resource type="PackedScene" path="res://scenes/HeroPlayer.tscn" id="5_hero"]
+[ext_resource type="Texture2D" path="res://assets/props/door_arch.png" id="6_door_tex"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_stair"]
+size = Vector2(140, 130)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_porch"]
+size = Vector2(620, 130)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_door"]
+size = Vector2(70, 70)
+
+[node name="HousePorchElevationMap" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_map")
+
+[node name="GroundYard" type="ColorRect" parent="."]
+offset_right = 1920.0
+offset_bottom = 1080.0
+color = Color(0.12, 0.16, 0.14, 1)
+
+[node name="FlagstonePath" type="Polygon2D" parent="."]
+color = Color(0.22, 0.25, 0.23, 1)
+polygon = PackedVector2Array(900, 1080, 1020, 1080, 1010, 730, 910, 730)
+
+[node name="HouseShadow" type="Polygon2D" parent="."]
+color = Color(0.06, 0.08, 0.07, 0.65)
+polygon = PackedVector2Array(620, 640, 1300, 640, 1280, 615, 640, 615)
+
+[node name="HouseFacade" type="Polygon2D" parent="."]
+color = Color(0.28, 0.22, 0.18, 1)
+polygon = PackedVector2Array(620, 220, 1300, 220, 1300, 480, 620, 480)
+
+[node name="HouseRoof" type="Polygon2D" parent="."]
+color = Color(0.18, 0.14, 0.12, 1)
+polygon = PackedVector2Array(580, 225, 960, 90, 1340, 225, 1300, 235, 960, 110, 620, 235)
+
+[node name="PorchDeckMesh" type="Polygon2D" parent="."]
+color = Color(0.42, 0.32, 0.22, 1)
+polygon = PackedVector2Array(650, 480, 1270, 480, 1270, 615, 650, 615)
+
+[node name="PorchDeckPlanks" type="Line2D" parent="."]
+points = PackedVector2Array(650, 520, 1270, 520, 1270, 530, 650, 530, 650, 560, 1270, 560, 1270, 570, 650, 570, 650, 600, 1270, 600)
+width = 2.0
+default_color = Color(0.32, 0.24, 0.16, 0.7)
+
+[node name="VisualStairs" type="Node2D" parent="."]
+position = Vector2(960, 670)
+
+[node name="Step1" type="ColorRect" parent="VisualStairs"]
+offset_left = -60.0
+offset_top = -55.0
+offset_right = 60.0
+offset_bottom = -28.0
+color = Color(0.46, 0.35, 0.25, 1)
+
+[node name="Step2" type="ColorRect" parent="VisualStairs"]
+offset_left = -60.0
+offset_top = -28.0
+offset_right = 60.0
+offset_bottom = -1.0
+color = Color(0.43, 0.33, 0.23, 1)
+
+[node name="Step3" type="ColorRect" parent="VisualStairs"]
+offset_left = -60.0
+offset_top = -1.0
+offset_right = 60.0
+offset_bottom = 26.0
+color = Color(0.40, 0.30, 0.21, 1)
+
+[node name="Step4" type="ColorRect" parent="VisualStairs"]
+offset_left = -60.0
+offset_top = 26.0
+offset_right = 60.0
+offset_bottom = 55.0
+color = Color(0.37, 0.28, 0.19, 1)
+
+[node name="StairRisers" type="Line2D" parent="VisualStairs"]
+points = PackedVector2Array(-60, -28, 60, -28, 60, -1, -60, -1, -60, 26, 60, 26)
+width = 2.0
+default_color = Color(0.24, 0.18, 0.12, 1)
+
+[node name="StaircaseZone" type="Area2D" parent="."]
+position = Vector2(960, 670)
+script = ExtResource("2_stair")
+stair_bottom_y = 730.0
+stair_top_y = 610.0
+step_height_px = 48.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaircaseZone"]
+shape = SubResource("RectangleShape2D_stair")
+
+[node name="PorchDeckZone" type="Area2D" parent="."]
+position = Vector2(960, 550)
+script = ExtResource("3_porch")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PorchDeckZone"]
+shape = SubResource("RectangleShape2D_porch")
+
+[node name="PorchFrontRailing" type="Node2D" parent="."]
+y_sort_enabled = true
+position = Vector2(960, 615)
+
+[node name="RailLeft" type="ColorRect" parent="PorchFrontRailing"]
+offset_left = -310.0
+offset_top = -24.0
+offset_right = -65.0
+offset_bottom = -16.0
+color = Color(0.55, 0.42, 0.30, 1)
+
+[node name="RailRight" type="ColorRect" parent="PorchFrontRailing"]
+offset_left = 65.0
+offset_top = -24.0
+offset_right = 310.0
+offset_bottom = -16.0
+color = Color(0.55, 0.42, 0.30, 1)
+
+[node name="BalustersLeft" type="Line2D" parent="PorchFrontRailing"]
+points = PackedVector2Array(-300, -24, -300, 0, -250, -24, -250, 0, -200, -24, -200, 0, -150, -24, -150, 0, -100, -24, -100, 0, -70, -24, -70, 0)
+width = 4.0
+default_color = Color(0.45, 0.34, 0.24, 1)
+
+[node name="BalustersRight" type="Line2D" parent="PorchFrontRailing"]
+points = PackedVector2Array(70, -24, 70, 0, 100, -24, 100, 0, 150, -24, 150, 0, 200, -24, 200, 0, 250, -24, 250, 0, 300, -24, 300, 0)
+width = 4.0
+default_color = Color(0.45, 0.34, 0.24, 1)
+
+[node name="FrontPorchDoor" type="Area2D" parent="."]
+position = Vector2(960, 480)
+script = ExtResource("4_door")
+door_id = "door-cottage-front"
+door_name = "Cottage Front Door"
+
+[node name="Sprite" type="Sprite2D" parent="FrontPorchDoor"]
+scale = Vector2(0.55, 0.55)
+texture = ExtResource("6_door_tex")
+offset = Vector2(0, -20)
+
+[node name="Label" type="Label" parent="FrontPorchDoor"]
+offset_left = -80.0
+offset_top = -65.0
+offset_right = 80.0
+offset_bottom = -42.0
+theme_override_colors/font_color = Color(0.9, 0.7, 0.4, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 13
+text = "Cottage Front Door"
+horizontal_alignment = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="FrontPorchDoor"]
+shape = SubResource("RectangleShape2D_door")
+
+[node name="TrainingDummy" type="Node2D" parent="."]
+position = Vector2(1380, 800)
+
+[node name="DummyBase" type="ColorRect" parent="TrainingDummy"]
+offset_left = -16.0
+offset_top = -8.0
+offset_right = 16.0
+offset_bottom = 8.0
+color = Color(0.35, 0.25, 0.15, 1)
+
+[node name="DummyPost" type="ColorRect" parent="TrainingDummy"]
+offset_left = -4.0
+offset_top = -45.0
+offset_right = 4.0
+offset_bottom = -8.0
+color = Color(0.5, 0.38, 0.24, 1)
+
+[node name="DummyHead" type="ColorRect" parent="TrainingDummy"]
+offset_left = -10.0
+offset_top = -65.0
+offset_right = 10.0
+offset_bottom = -45.0
+color = Color(0.8, 0.7, 0.5, 1)
+
+[node name="DummyLabel" type="Label" parent="TrainingDummy"]
+offset_left = -70.0
+offset_top = -90.0
+offset_right = 70.0
+offset_bottom = -68.0
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "Yard Target Dummy"
+horizontal_alignment = 1
+
+[node name="HeroPlayer" parent="." instance=ExtResource("5_hero")]
+position = Vector2(960, 880)
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="HeaderPanel" type="Panel" parent="CanvasLayer"]
+offset_left = 30.0
+offset_top = 20.0
+offset_right = 1890.0
+offset_bottom = 90.0
+
+[node name="TitleLabel" type="Label" parent="CanvasLayer/HeaderPanel"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 8.0
+offset_right = 1200.0
+offset_bottom = 38.0
+theme_override_colors/font_color = Color(0.3, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "ROBOS cRPG — MULTI-TIER ELEVATION & STAIRCASE SHOWCASE"
+
+[node name="SubtitleLabel" type="Label" parent="CanvasLayer/HeaderPanel"]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 38.0
+offset_right = 1200.0
+offset_bottom = 60.0
+theme_override_colors/font_color = Color(0.8, 0.85, 0.9, 1)
+theme_override_font_sizes/font_size = 13
+text = "Ground Yard (Z=0) • Wooden Staircase (Z=0 -> 1) • Elevated Porch (Z=1, -48px Offset) • Front Door Entrance"
+
+[node name="ElevationBadge" type="Label" parent="CanvasLayer"]
+offset_left = 660.0
+offset_top = 110.0
+offset_right = 1260.0
+offset_bottom = 150.0
+theme_override_colors/font_color = Color(0.6, 0.9, 0.6, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 16
+text = "🏔️ GROUND YARD (Tier 0, Offset: 0.0 px)"
+horizontal_alignment = 1
+
+[node name="StatusLabel" type="Label" parent="CanvasLayer"]
+offset_left = 660.0
+offset_top = 155.0
+offset_right = 1260.0
+offset_bottom = 185.0
+theme_override_colors/font_color = Color(1, 0.9, 0.4, 1)
+theme_override_font_sizes/font_size = 14
+text = "Click to move: Walk up stairs to elevate onto porch; click front door to enter."
+horizontal_alignment = 1
+
+[node name="CombatLog" type="RichTextLabel" parent="CanvasLayer"]
+offset_left = 30.0
+offset_top = 880.0
+offset_right = 650.0
+offset_bottom = 1050.0
+theme_override_colors/default_color = Color(0.85, 0.9, 0.95, 1)
+theme_override_font_sizes/normal_font_size = 12
+bbcode_enabled = true
+scroll_following = true
