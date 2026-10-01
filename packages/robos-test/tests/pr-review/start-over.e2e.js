@@ -29,7 +29,9 @@ test('Start over toolbar resets a completed walkthrough and blocks duplicate act
   session.reportProgress('Checking that the saved compact filters appear in Build History.');
   await page.getByRole('status').filter({hasText:'saved compact filters'}).waitFor();
   assert.match(await page.locator('.walkthrough-progress small').textContent(),/elapsed/);
-  assert.match(await page.locator('.walkthrough-progress ol').textContent(),/Preparing First/);
+  assert.equal(await page.locator('.walkthrough-progress details').count(),0);
+  session.handleAgentEvent({type:'item.started',item:{type:'command_execution',command:'opaque'}});
+  assert.match(await page.locator('.walkthrough-progress [role=status]').textContent(),/saved compact filters/);
   finish({reply:'First checkpoint ready',checkpointReached:true});
   await page.waitForFunction(()=>document.querySelector('.walkthrough-status').textContent==='Paused · 1/2');
   assert.equal(await page.locator('.walkthrough-checkpoint h3').textContent(),'First');

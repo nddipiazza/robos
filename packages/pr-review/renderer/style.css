@@ -2697,3 +2697,7 @@ header h1 { font-size: 15px; font-weight: 600; }
 
 .walkthrough-compose { flex-direction: column; gap: 5px; }
 .walkthrough-receipt { font-size: 12px; color: #a5b3c1; min-height: 18px; }
+
+.walkthrough-progress { display: flex; align-items: center; gap: 12px; padding: 8px 12px; }
+.walkthrough-progress [role="status"] { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.walkthrough-progress small { margin: 0; flex-shrink: 0; }

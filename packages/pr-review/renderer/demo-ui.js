@@ -27,7 +27,7 @@ window.mountWalkthrough = async function () {
   const progress = document.createElement('section'); progress.className = 'walkthrough-progress'; progress.setAttribute('aria-label', 'Demo progress');
   const activity = document.createElement('div'); activity.setAttribute('role', 'status');
   const elapsed = document.createElement('small');
-  const history = document.createElement('details'); const historyTitle = document.createElement('summary'); historyTitle.textContent = 'Recent activity'; const historyList = document.createElement('ol'); history.append(historyTitle, historyList); progress.append(activity, elapsed, history);
+  progress.append(activity, elapsed);
   const chat = document.createElement('div'); chat.className = 'walkthrough-chat'; chat.setAttribute('role', 'log'); chat.setAttribute('aria-label', 'Live demo conversation');
   let pendingMessage = null;
   const receipt = document.createElement('div'); receipt.className = 'walkthrough-receipt'; receipt.setAttribute('role', 'status');
@@ -47,7 +47,7 @@ window.mountWalkthrough = async function () {
   const editorError = document.createElement('p'); editorError.setAttribute('role', 'alert');
   const save = button('Save process', 'Save process and reset walkthrough', async () => { try { const result = await window.api.saveDemoProcess(JSON.parse(editor.value)); if (!result.ok) throw new Error(result.error); render(result.state); dialog.close(); } catch (e) { editorError.textContent = e.message; } });
   dialog.append(heading, hint, editor, editorError, save, button('Cancel', 'Close without saving', () => dialog.close())); stage.append(dialog);
-  let state;
+  let state; let lastNarration = ''; let lastActionStart;
   function button(text, label, fn) { const b = document.createElement('button'); b.type = 'button'; b.textContent = text; b.title = label; b.addEventListener('click', fn); return b; }
   function render(value) {
     state = value; const busy = value.status === 'running';
@@ -66,8 +66,11 @@ window.mountWalkthrough = async function () {
     next.hidden = busy || value.status !== 'paused' || value.index >= value.total - 1;
     next.disabled = busy || value.status !== 'paused' || value.index >= value.total - 1;
     retry.hidden = value.status !== 'error'; process.disabled = busy; send.disabled = busy || value.index < 0;
-    progress.hidden = !busy; activity.textContent = value.progress?.at(-1)?.text || 'Connecting to the demo agent…';
-    historyList.replaceChildren(); for (const event of value.progress || []) { const li = document.createElement('li'); li.textContent = event.text; historyList.append(li); }
+    // Older running sessions can be upgraded without interrupting their agent.
+    if (lastActionStart !== value.startedAt) { lastNarration = ''; lastActionStart = value.startedAt; }
+    const meaningful = [...(value.progress || [])].reverse().find(e => !/^(Running a local setup|Local check finished|A local check failed)/.test(e.text));
+    lastNarration = value.activitySummary?.text || meaningful?.text || lastNarration;
+    progress.hidden = !busy; activity.textContent = lastNarration || `Preparing ${value.checkpoint?.title || 'this checkpoint'}…`; activity.title = activity.textContent;
     updateElapsed();
     checkpoint.replaceChildren();
     const c = value.checkpoint;
@@ -86,7 +89,7 @@ window.mountWalkthrough = async function () {
     pendingMessage = { text, count: state.messages.length }; receipt.textContent = 'Sending your message…';
     if (!await act('message', text)) { pendingMessage = null; receipt.textContent = 'Message was not sent. Your draft is still here.'; }
   });
-  function updateElapsed() { if (!state?.startedAt || state.status !== 'running') return; const seconds = Math.floor((Date.now() - state.startedAt) / 1000); const quiet = Math.floor((Date.now() - (state.progress?.at(-1)?.at || state.startedAt)) / 1000); elapsed.textContent = `${Math.floor(seconds / 60)}m ${seconds % 60}s elapsed` + (quiet >= 20 ? ` · No new update for ${quiet}s; still waiting for the agent.` : ''); }
+  function updateElapsed() { if (!state?.startedAt || state.status !== 'running') return; const seconds = Math.floor((Date.now() - state.startedAt) / 1000); const quiet = Math.floor((Date.now() - (state.activitySummary?.at || state.progress?.at(-1)?.at || state.startedAt)) / 1000); elapsed.textContent = `${Math.floor(seconds / 60)}m ${seconds % 60}s elapsed` + (quiet >= 20 ? ` · Last status ${quiet}s ago` : ''); }
   const unsubscribe = window.api.onDemoState(render); const timer = setInterval(updateElapsed, 1000);
   window.cleanupWalkthrough = () => { clearInterval(timer); unsubscribe?.(); document.removeEventListener('click', dismissMenu); document.removeEventListener('keydown', escapeMenu); };
   render(await window.api.getDemoState());
