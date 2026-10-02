@@ -59,8 +59,11 @@ class TabletopQAPlayer:
     def get_state(self) -> dict:
         return self._get("/state")
 
-    def execute_action(self, action: str, **kwargs) -> dict:
-        payload = {"action": action, **kwargs}
+    def execute_action(self, action, **kwargs) -> dict:
+        if isinstance(action, dict):
+            payload = {**action, **kwargs}
+        else:
+            payload = {"action": str(action), **kwargs}
         res = self._post("/action", payload)
         if self.human_delay > 0:
             time.sleep(self.human_delay)
@@ -81,9 +84,21 @@ class TabletopQAPlayer:
         self.log(f"Kicking open door between ({from_x}, {from_y}) and ({to_x}, {to_y})...")
         return self.execute_action("open_door", from_x=from_x, from_y=from_y, to_x=to_x, to_y=to_y)
 
-    def attack(self, monster_id: str = "") -> dict:
-        self.log(f"Swinging hero weapon in melee attack{' against ' + monster_id if monster_id else ''}...")
-        return self.execute_action("attack", monsterId=monster_id)
+    def attack(self, monster_id: str = "", weapon: str = "") -> dict:
+        self.log(f"Attacking with {weapon if weapon else 'equipped weapon'}{' against ' + monster_id if monster_id else ''}...")
+        return self.execute_action("attack", monsterId=monster_id, weapon=weapon)
+
+    def cast_spell(self, spell: str, target: str = "", tile_x: int = -1, tile_y: int = -1) -> dict:
+        self.log(f"Casting spell '{spell}'{' on ' + target if target else ''}...")
+        return self.execute_action("cast_spell", spell=spell, target=target, tile_x=tile_x, tile_y=tile_y)
+
+    def equip(self, item_id: str, hero_id: str = "") -> dict:
+        self.log(f"Equipping item '{item_id}'{' on ' + hero_id if hero_id else ''}...")
+        return self.execute_action("equip", itemId=item_id, heroId=hero_id)
+
+    def unequip(self, item_id: str, hero_id: str = "") -> dict:
+        self.log(f"Unequipping item '{item_id}'{' from ' + hero_id if hero_id else ''}...")
+        return self.execute_action("unequip", itemId=item_id, heroId=hero_id)
 
     def dm_attack(self, hero_id: str = "") -> dict:
         self.log(f"Zargon monster strikes at hero{' ' + hero_id if hero_id else ''}...")
@@ -108,3 +123,17 @@ class TabletopQAPlayer:
     def toggle_role(self) -> dict:
         self.log("Toggling player / GM role...")
         return self.execute_action("toggle_role")
+
+    def take_screenshot(self, out_path: str = "/tmp/tabletop_screenshot.png") -> dict:
+        self.log(f"Capturing game viewport screenshot to {out_path}...")
+        url = f"{self.base_url}/screenshot"
+        req = urllib.request.Request(
+            url,
+            data=json.dumps({"path": out_path}).encode("utf-8"),
+            headers={"Content-Type": "application/json"}
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=3.0) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except Exception as e:
+            return {"success": False, "error": str(e)}

@@ -14,6 +14,8 @@ config/features=PackedStringArray("4.3", "GL Compatibility")
 
 TabletopDice="*res://scripts/engine/TabletopDice.gd"
 CartridgeManager="*res://scripts/engine/CartridgeManager.gd"
+HeroQuestSpells="*res://scripts/engine/HeroQuestSpells.gd"
+HeroQuestEquipment="*res://scripts/engine/HeroQuestEquipment.gd"
 GameControlServer="*res://scripts/GameControlServer.gd"
 
 [display]

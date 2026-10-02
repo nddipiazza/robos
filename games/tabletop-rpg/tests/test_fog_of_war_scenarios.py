@@ -64,18 +64,15 @@ class TestFogOfWarScenarios(unittest.TestCase):
         self.assertAlmostEqual(token_pos[1], expected_y, delta=0.5,
                                msg=f"Token Y ({token_pos[1]}) must equal expected tile center Y ({expected_y})")
 
-        # Verify Standard HeroQuest Rule: No sharing squares on board
+        # Verify Standard HeroQuest Rule: Initially heroes do not show up until their first turn
         heroes = st.get("heroes", [])
-        hero_positions = [tuple(h.get("grid_pos")) for h in heroes]
-        self.assertEqual(len(hero_positions), 4, "Must have 4 heroes on board")
-        self.assertEqual(len(set(hero_positions)), 4,
-                         "All 4 heroes must occupy distinct squares at quest start (no sharing squares)")
+        on_board_heroes = [h for h in heroes if h.get("is_on_board")]
+        self.assertEqual(len(on_board_heroes), 1, "Initially, only the active starting hero is on the board")
+        self.assertEqual(on_board_heroes[0].get("id"), "barbarian")
+        self.assertEqual(on_board_heroes[0].get("grid_pos"), [1, 1])
 
-        # Attempting to move onto square occupied by Dwarf (2, 1) must be rejected
-        self.player.execute_action({"action": "roll_movement"})
-        bad_share = self.player.move(2, 1)
-        self.assertFalse(bad_share.get("success"),
-                         "Moving onto square occupied by Dwarf must be rejected per HeroQuest rules")
+        off_board_heroes = [h for h in heroes if not h.get("is_on_board")]
+        self.assertEqual(len(off_board_heroes), 3, "Other 3 heroes are off the board until their first turn")
 
     def test_02_initial_spawn_corridor_los(self):
         """At initial spawn (1, 1), unobstructed corridor tiles are visible; rooms remain shrouded."""
@@ -176,6 +173,18 @@ class TestFogOfWarScenarios(unittest.TestCase):
         # Attempt to move directly onto Crypt Skeleton at (5, 4)
         m_move = self.player.move(5, 4)
         self.assertFalse(m_move.get("success"), "Moving directly onto monster square must fail per HeroQuest rules")
+
+    def test_09_hero_enters_board_on_first_turn(self):
+        """When a hero's first turn arrives, they descend the spiral stairway and enter the board."""
+        # Barbarian concludes turn
+        self.player.execute_action({"action": "end_turn"})
+        st = self.player.get_state()
+        self.assertEqual(st.get("activeHero"), "dwarf", "Turn must advance to Dwarf")
+
+        heroes = st.get("heroes", [])
+        dwarf = next(h for h in heroes if h.get("id") == "dwarf")
+        self.assertTrue(dwarf.get("is_on_board"), "Dwarf must now be on the board on his first turn")
+        self.assertEqual(dwarf.get("grid_pos"), [1, 1], "Dwarf enters at the spiral stairway")
 
 
 if __name__ == "__main__":
