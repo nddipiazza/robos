@@ -31,3 +31,15 @@ Your daily engineering cockpit and mission control hub for the entire Software D
 | Automated 3-Column AI Standup Notes (`dev-central-standup.png`) | 1-Click Sign-Off & Production Reality Merge (`dev-central-merged-reality.png`) |
 |:---:|:---:|
 | ![AI Standup Summary]({{ '/assets/images/screenshots/dev-central-standup.png' | relative_url }}) | ![Production Reality Merged]({{ '/assets/images/screenshots/dev-central-merged-reality.png' | relative_url }}) |
+
+## Your pull requests
+
+My Pull Requests sits at the top of the overview. It includes your open PRs
+from every repository on the active task server, with passing CI first and
+the most recently updated PRs first within each group. Use **Passing CI only**
+to narrow the list. GitHub errors appear in the list instead of sample PRs.
+
+For a draft with passing CI, **Move from draft to ready** checks the current
+commit, author, and CI on GitHub before removing draft status. **Open code
+review** opens that PR in Review Theater, reusing its saved local review when
+one exists under `~/.robos/local-reviews`. The GitHub link remains available.

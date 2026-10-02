@@ -43,21 +43,9 @@ function timeAgo(dateStr) {
 }
 
 function ciStatus(pr) {
-  const checks = pr.statusCheckRollup || [];
-  if (!checks.length) return 'pending';
-  const failed = checks.some(c =>
-    c.conclusion === 'FAILURE' || c.conclusion === 'failure' ||
-    c.state === 'FAILURE' || c.state === 'failure' ||
-    c.conclusion === 'TIMED_OUT' || c.state === 'ERROR'
-  );
-  if (failed) return 'fail';
-  const pending = checks.some(c =>
-    (!c.conclusion && !c.state) ||
-    c.conclusion === 'PENDING' || c.conclusion === 'pending' ||
-    c.state === 'PENDING' || c.state === 'pending'
-  );
-  if (pending) return 'pending';
-  return 'pass';
+  const states=(pr.statusCheckRollup||[]).map(c=>(c.status==='COMPLETED'?c.conclusion:c.status||c.state||'PENDING').toUpperCase());
+  if(states.some(s=>['FAILURE','ERROR','TIMED_OUT','CANCELLED','ACTION_REQUIRED','STARTUP_FAILURE'].includes(s)))return 'fail';
+  return states.includes('SUCCESS')&&states.every(s=>['SUCCESS','NEUTRAL','SKIPPED'].includes(s))?'pass':'pending';
 }
 
 function reviewStatus(pr) {
@@ -694,50 +682,36 @@ function renderTasks(issues) {
 }
 
 function renderPRs(prs) {
-  const el = document.getElementById('prs-list');
-  const countEl = document.getElementById('prs-count');
-
-  let filtered = prs;
-  if (appState.searchQuery) {
-    const q = appState.searchQuery.toLowerCase();
-    filtered = prs.filter(pr =>
-      String(pr.number).includes(q) ||
-      (pr.title || '').toLowerCase().includes(q) ||
-      (pr.headRefName || '').toLowerCase().includes(q)
-    );
+  const el=document.getElementById('prs-list');if(!el)return;
+  const q=appState.searchQuery.toLowerCase();
+  const passingOnly=document.getElementById('prs-passing-only')?.checked;
+  const filtered=prs.filter(pr=>(!passingOnly||ciStatus(pr)==='pass')&&[pr.number,pr.title,pr.headRefName,pr.repo].join(' ').toLowerCase().includes(q))
+    .sort((a,b)=>(ciStatus(b)==='pass')-(ciStatus(a)==='pass')||new Date(b.updatedAt)-new Date(a.updatedAt));
+  document.getElementById('prs-count').textContent=filtered.length;
+  el.replaceChildren();
+  if(appState.prWarning){const warning=document.createElement('p');warning.className='pr-action-status';warning.role='alert';warning.textContent=appState.prWarning;el.append(warning);}
+  if(!filtered.length){const empty=document.createElement('div');empty.className='placeholder';empty.textContent=passingOnly?'No PRs with passing CI.':'No open pull requests.';el.append(empty);return;}
+  for(const pr of filtered){
+    const ci=ciStatus(pr),row=document.createElement('article');row.className='pr-row';
+    const info=document.createElement('div');info.className='pr-info';
+    const title=document.createElement('button');title.className='pr-title-link';title.textContent=pr.title;
+    const meta=document.createElement('p');meta.className='pr-meta';meta.textContent=`${pr.repo||new URL(pr.url).pathname.split('/').slice(1,3).join('/')} #${pr.number} · ${pr.isDraft?'Draft':'In review'} · ${timeAgo(pr.updatedAt)}`;
+    const status=document.createElement('span');status.className='ci-badge ci-'+ci;status.textContent=ci==='pass'?'CI passing':ci==='fail'?'CI failed':'CI pending';
+    const actions=document.createElement('div');actions.className='pr-row-actions';
+    const notice=document.createElement('p');notice.className='pr-action-status';notice.role='status';
+    const review=document.createElement('button');review.className='pr-review-action';review.textContent='Open code review';
+    const open=async()=>{review.disabled=true;notice.textContent='Opening code review…';try{const r=await window.robos.openReview(pr.url);if(!r.ok)throw Error(r.error);notice.textContent='Code review opened.';}catch(e){notice.textContent=e.message;}finally{review.disabled=false;}};
+    review.onclick=open;title.onclick=open;
+    actions.append(status,review);
+    if(pr.isDraft&&pr.state==='OPEN'&&ci==='pass'){
+      const ready=document.createElement('button');ready.className='pr-ready-action';ready.textContent='Move from draft to ready';
+      ready.onclick=async()=>{ready.disabled=true;notice.textContent='Checking GitHub…';try{const r=await window.robos.readyPR(pr.url,pr.headRefOid);if(!r.ok)throw Error(r.error);Object.assign(pr,r.pr);renderPRs(appState.allPRs);}catch(e){notice.textContent=e.message;ready.disabled=false;}};actions.append(ready);
+    }
+    const github=document.createElement('button');github.className='pr-github-action';github.textContent='GitHub ↗';github.onclick=()=>window.robos.openUrl(pr.url);actions.append(github);
+    info.append(title,meta);row.append(info,actions,notice);el.append(row);
   }
-  if (countEl) countEl.textContent = filtered.length;
-
-  if (!el) return;
-  if (!filtered.length) {
-    el.innerHTML = '<div class="placeholder">No open pull requests</div>';
-    return;
-  }
-
-  el.innerHTML = filtered.map(pr => {
-    const ci = ciStatus(pr);
-    const ciClass = ci === 'pass' ? 'ci-pass' : ci === 'fail' ? 'ci-fail' : 'ci-pending';
-    const ciLabel = ci === 'pass' ? 'CI Pass' : ci === 'fail' ? 'CI Fail' : 'CI Pending';
-    const review = reviewStatus(pr);
-    const revDot = review === 'approved' ? 'dot-green' : review === 'changes' ? 'dot-red' : 'dot-yellow';
-
-    return `<div class="item" data-url="${pr.url || ''}">
-      <span class="item-key">#${pr.number}</span>
-      <span class="item-title">${pr.title}</span>
-      ${pr.headRefName ? `<span class="branch-tag">${pr.headRefName}</span>` : ''}
-      <span class="ci-badge ${ciClass}">${ciLabel}</span>
-      <span class="dot ${revDot}"></span>
-      <span class="item-meta">${timeAgo(pr.updatedAt)}</span>
-    </div>`;
-  }).join('');
-
-  el.querySelectorAll('.item').forEach(row => {
-    row.addEventListener('click', () => {
-      const url = row.dataset.url;
-      if (url && window.robos && window.robos.openUrl) window.robos.openUrl(url);
-    });
-  });
 }
+document.getElementById('prs-passing-only')?.addEventListener('change',()=>renderPRs(appState.allPRs));
 
 function renderReviews(reviews) {
   const el = document.getElementById('reviews-list');
@@ -1026,6 +1000,7 @@ function wireInteractivity() {
   window.robos.onDataUpdated(async (data) => {
     if (data.issues) appState.allIssues = data.issues;
     if (data.prs) appState.allPRs = data.prs;
+    appState.prWarning=data.prWarning||'';
     if (data.reviews) appState.allReviews = data.reviews;
     if (data.activity) appState.allEvents = data.activity;
     if (data.features) appState.allFeatures = data.features;
@@ -1082,6 +1057,7 @@ async function init() {
 
   appState.allIssues  = issuesRes.ok  ? issuesRes.data  : [];
   appState.allPRs     = prsRes.ok     ? prsRes.data     : [];
+  appState.prWarning=prsRes.warning||prsRes.error||'';
   appState.allReviews = reviewsRes.ok ? reviewsRes.data : [];
   appState.allEvents  = activityRes.ok ? activityRes.data : [];
   appState.allBlockers = detectBlockers(appState.allIssues, appState.allPRs);

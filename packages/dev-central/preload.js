@@ -21,6 +21,8 @@ contextBridge.exposeInMainWorld('robos', {
   openCodeReview:id=>ipcRenderer.invoke('dc-open-code-review',id),
   readSettings:           ()       => ipcRenderer.invoke('dc-read-settings'),
   getMyIssues:            ()       => ipcRenderer.invoke('dc-get-my-issues'),
+  readyPR: (url,head) => ipcRenderer.invoke('dc-ready-pr',{url,head}),
+  openReview: url => ipcRenderer.invoke('dc-open-review',url),
   getMyPRs:               ()       => ipcRenderer.invoke('dc-get-my-prs'),
   getReviewRequests:      ()       => ipcRenderer.invoke('dc-get-review-requests'),
   getRecentActivity:      ()       => ipcRenderer.invoke('dc-get-recent-activity'),
