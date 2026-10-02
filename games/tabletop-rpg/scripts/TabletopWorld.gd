@@ -742,14 +742,14 @@ func ai_monster_turn() -> Dictionary:
 func _update_ui() -> void:
 	var role_name = "Player Mode (Playing Heroes)" if current_role == "player" else "Game Master Mode (Zargon GM)"
 	if title_label:
-		title_label.text = "🛡️ RobOS Tabletop RPG: HeroQuest — %s" % role_name
+		title_label.text = "RobOS Tabletop RPG: HeroQuest — %s" % role_name
 	if role_badge:
-		role_badge.text = "Role: " + ("⚔️ Player" if current_role == "player" else "👑 Game Master")
+		role_badge.text = "Role: " + ("Player" if current_role == "player" else "Game Master")
 
 	if btn_summon:
 		btn_summon.visible = is_gm_role()
 	if btn_attack:
-		btn_attack.text = "⚔️ Hero Attack" if current_role == "player" else "👹 Monster Attack"
+		btn_attack.text = "Hero Attack" if current_role == "player" else "Monster Attack"
 
 	var hero = get_active_hero()
 	if hero.size() > 0 and hero_card:
@@ -868,7 +868,10 @@ func _draw_board(canvas: CanvasItem) -> void:
 				canvas.draw_rect(r_rect, Color(0.04, 0.05, 0.08, 0.96))
 				canvas.draw_rect(r_rect, Color(0.14, 0.18, 0.25, 0.8), false, 2.0)
 				var center = r_rect.get_center()
-				canvas.draw_string(ThemeDB.fallback_font, center + Vector2(-36, 5), "🌫️ Shrouded", HORIZONTAL_ALIGNMENT_CENTER, -1, 13, Color(0.45, 0.55, 0.65, 0.7))
+				var txt = "Shrouded"
+				var f_size = 13
+				var s_w = ThemeDB.fallback_font.get_string_size(txt, HORIZONTAL_ALIGNMENT_CENTER, -1, f_size).x
+				canvas.draw_string(ThemeDB.fallback_font, Vector2(center.x - s_w * 0.5, center.y + 4), txt, HORIZONTAL_ALIGNMENT_CENTER, -1, f_size, Color(0.45, 0.55, 0.65, 0.7))
 
 		# Unexplored corridor tiles shroud
 		for c in range(grid_cols):
@@ -891,7 +894,7 @@ func _draw_board(canvas: CanvasItem) -> void:
 				var r_rect = Rect2(board_offset + Vector2(rx * tile_size, ry * tile_size), Vector2(rw * tile_size, rh * tile_size))
 				canvas.draw_rect(r_rect, Color(0.35, 0.1, 0.5, 0.22))
 				canvas.draw_rect(r_rect, Color(0.7, 0.25, 0.9, 0.8), false, 1.5)
-				canvas.draw_string(ThemeDB.fallback_font, r_rect.position + Vector2(8, 18), "👑 Hidden from Players", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.85, 0.6, 1.0, 0.8))
+				canvas.draw_string(ThemeDB.fallback_font, r_rect.position + Vector2(8, 18), "Hidden from Players", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.85, 0.6, 1.0, 0.8))
 
 	# Draw Wall Blocks (1-tile and 2-tile walls)
 	for wb in wall_blocks:
@@ -911,8 +914,9 @@ func _draw_board(canvas: CanvasItem) -> void:
 			canvas.draw_rect(block_rect, Color(0.18, 0.20, 0.24, 0.95))
 			# Bevel border
 			canvas.draw_rect(block_rect, Color(0.45, 0.50, 0.58, 1.0), false, 2.0)
-			# Inner masonry accent
-			canvas.draw_string(ThemeDB.fallback_font, block_rect.position + Vector2(w * tile_size * 0.5 - 6, h * tile_size * 0.5 + 5), "🧱", HORIZONTAL_ALIGNMENT_CENTER, -1, 14)
+			# Inner masonry lines (clean geometric X crossbar)
+			canvas.draw_line(block_rect.position + Vector2(4, 4), block_rect.end - Vector2(4, 4), Color(0.35, 0.40, 0.48, 0.6), 1.5)
+			canvas.draw_line(Vector2(block_rect.end.x - 4, block_rect.position.y + 4), Vector2(block_rect.position.x + 4, block_rect.end.y - 4), Color(0.35, 0.40, 0.48, 0.6), 1.5)
 
 	# Draw Traps (visible in GM mode or if detected/revealed)
 	for tr in traps:
@@ -927,11 +931,10 @@ func _draw_board(canvas: CanvasItem) -> void:
 			if "boulder" in t_type:
 				canvas.draw_circle(trap_rect.get_center(), tile_size * 0.42 * min(w, h), Color(0.35, 0.38, 0.42, 0.95))
 				canvas.draw_arc(trap_rect.get_center(), tile_size * 0.42 * min(w, h), 0, TAU, 32, Color(0.65, 0.70, 0.75), 2.0)
-				canvas.draw_string(ThemeDB.fallback_font, trap_rect.position + Vector2(w * tile_size * 0.5 - 6, h * tile_size * 0.5 + 5), "🪨", HORIZONTAL_ALIGNMENT_CENTER, -1, 14)
 			else:
 				canvas.draw_rect(trap_rect, Color(0.6, 0.1, 0.1, 0.6))
 				canvas.draw_rect(trap_rect, Color(0.9, 0.2, 0.2, 0.9), false, 1.5)
-				canvas.draw_string(ThemeDB.fallback_font, trap_rect.position + Vector2(w * tile_size * 0.5 - 6, h * tile_size * 0.5 + 5), "⚠️", HORIZONTAL_ALIGNMENT_CENTER, -1, 14)
+				canvas.draw_string(ThemeDB.fallback_font, trap_rect.get_center() + Vector2(-12, 4), "TRAP", HORIZONTAL_ALIGNMENT_CENTER, -1, 9, Color(1, 0.8, 0.8, 0.9))
 
 	# Draw Furniture
 	for f in furniture:
@@ -954,47 +957,49 @@ func _draw_board(canvas: CanvasItem) -> void:
 				w = 2; h = 3
 
 			var f_rect = Rect2(board_offset + Vector2(px * tile_size + 2, py * tile_size + 2), Vector2(w * tile_size - 4, h * tile_size - 4))
-			var icon_char = "📦"
+			var label_text = ""
 
 			if f_type == "altar":
 				canvas.draw_rect(f_rect, Color(0.14, 0.10, 0.20, 0.95))
 				canvas.draw_rect(f_rect, Color(0.68, 0.35, 0.95, 0.9), false, 2.0)
 				canvas.draw_arc(f_rect.get_center(), min(w, h) * tile_size * 0.28, 0, TAU, 24, Color(0.85, 0.45, 1.0, 0.6), 1.5)
-				icon_char = "🔮"
+				label_text = "ALTAR"
 			elif f_type == "bookcase":
 				canvas.draw_rect(f_rect, Color(0.24, 0.12, 0.08, 0.95))
 				canvas.draw_rect(f_rect, Color(0.62, 0.36, 0.20, 1.0), false, 2.0)
-				icon_char = "📚"
-			elif f_type == "bookshelf":
+				label_text = "BOOKS"
+			elif f_type == "bookshelf" or f_type == "cupboard":
 				canvas.draw_rect(f_rect, Color(0.32, 0.20, 0.10, 0.95))
 				canvas.draw_rect(f_rect, Color(0.72, 0.48, 0.24, 1.0), false, 2.0)
-				icon_char = "📖"
+				label_text = "SHELF"
 			elif f_type == "boulder":
 				canvas.draw_circle(f_rect.get_center(), tile_size * 0.42 * min(w, h), Color(0.32, 0.35, 0.38, 0.95))
 				canvas.draw_arc(f_rect.get_center(), tile_size * 0.42 * min(w, h), 0, TAU, 32, Color(0.65, 0.70, 0.75), 2.0)
-				icon_char = "🪨"
+				label_text = ""
 			elif f_type == "tomb":
 				canvas.draw_rect(f_rect, Color(0.25, 0.28, 0.32, 0.95))
 				canvas.draw_rect(f_rect, Color(0.55, 0.60, 0.68, 1.0), false, 2.0)
-				icon_char = "⚰️"
+				label_text = "TOMB"
 			elif f_type == "table":
 				canvas.draw_rect(f_rect, Color(0.35, 0.22, 0.12, 0.95))
 				canvas.draw_rect(f_rect, Color(0.58, 0.38, 0.22, 1.0), false, 1.5)
-				icon_char = "🪵"
+				label_text = "TABLE"
 			elif f_type == "chest":
 				canvas.draw_rect(f_rect, Color(0.45, 0.32, 0.08, 0.95))
 				canvas.draw_rect(f_rect, Color(0.9, 0.75, 0.2, 1.0), false, 1.5)
-				icon_char = "💰"
+				label_text = "CHEST"
 			elif f_type == "weapons-rack" or f_type == "rack":
 				canvas.draw_rect(f_rect, Color(0.25, 0.25, 0.28, 0.95))
 				canvas.draw_rect(f_rect, Color(0.6, 0.6, 0.7, 1.0), false, 1.5)
-				icon_char = "⚔️"
+				label_text = "ARMS"
 			else:
 				canvas.draw_rect(f_rect, Color(0.4, 0.28, 0.16, 0.85))
 				canvas.draw_rect(f_rect, Color(0.6, 0.45, 0.25, 1.0), false, 1.5)
-				icon_char = "📦"
+				label_text = f_type.to_upper().substr(0, 5)
 
-			canvas.draw_string(ThemeDB.fallback_font, f_rect.position + Vector2(w * tile_size * 0.5 - 6, h * tile_size * 0.5 + 5), icon_char, HORIZONTAL_ALIGNMENT_CENTER, -1, 14)
+			if label_text != "":
+				var lbl_w = ThemeDB.fallback_font.get_string_size(label_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 10).x
+				canvas.draw_string(ThemeDB.fallback_font, Vector2(f_rect.get_center().x - lbl_w * 0.5, f_rect.get_center().y + 3), label_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(0.9, 0.9, 0.9, 0.85))
 
 	# Draw Doors
 	for d in doors:
@@ -1020,7 +1025,29 @@ func _draw_board(canvas: CanvasItem) -> void:
 				var screen_pos = board_offset + Vector2(pos.x * tile_size + tile_size * 0.5, pos.y * tile_size + tile_size * 0.5)
 				var col = Color.from_string(m.get("tokenColor", "#15803d"), Color.GREEN)
 				canvas.draw_circle(screen_pos, tile_size * 0.4, col)
-				canvas.draw_string(ThemeDB.fallback_font, screen_pos + Vector2(-8, 6), m.get("icon", "👹"), HORIZONTAL_ALIGNMENT_CENTER, -1, 18)
+				canvas.draw_arc(screen_pos, tile_size * 0.4, 0, TAU, 24, Color(0.1, 0.3, 0.1, 0.9), 1.5)
+				var m_name = str(m.get("name", "Monster")).to_lower()
+				var m_code = "M"
+				if "skeleton" in m_name:
+					m_code = "SK"
+				elif "orc" in m_name:
+					m_code = "OR"
+				elif "goblin" in m_name:
+					m_code = "GB"
+				elif "zombie" in m_name:
+					m_code = "ZM"
+				elif "verag" in m_name:
+					m_code = "VG"
+				elif "fimir" in m_name:
+					m_code = "FM"
+				elif "mummy" in m_name:
+					m_code = "MU"
+				elif "gargoyle" in m_name:
+					m_code = "GG"
+				else:
+					m_code = m_name.substr(0, 2).to_upper()
+				var cd_w = ThemeDB.fallback_font.get_string_size(m_code, HORIZONTAL_ALIGNMENT_CENTER, -1, 12).x
+				canvas.draw_string(ThemeDB.fallback_font, Vector2(screen_pos.x - cd_w * 0.5, screen_pos.y + 4), m_code, HORIZONTAL_ALIGNMENT_CENTER, -1, 12, Color.WHITE)
 
 	# Draw Heroes
 	for idx in range(heroes.size()):
@@ -1029,6 +1056,20 @@ func _draw_board(canvas: CanvasItem) -> void:
 		var screen_pos = board_offset + Vector2(pos.x * tile_size + tile_size * 0.5, pos.y * tile_size + tile_size * 0.5)
 		var col = Color.from_string(h.get("tokenColor", "#b91c1c"), Color.RED)
 		canvas.draw_circle(screen_pos, tile_size * 0.42, col)
+		canvas.draw_arc(screen_pos, tile_size * 0.42, 0, TAU, 32, Color(0.9, 0.9, 0.9, 0.8), 1.5)
 		if idx == active_hero_idx and current_phase == "hero_phase":
-			canvas.draw_arc(screen_pos, tile_size * 0.46, 0, TAU, 32, Color.YELLOW, 3.0)
-		canvas.draw_string(ThemeDB.fallback_font, screen_pos + Vector2(-8, 6), h.get("icon", "⚔️"), HORIZONTAL_ALIGNMENT_CENTER, -1, 18)
+			canvas.draw_arc(screen_pos, tile_size * 0.48, 0, TAU, 32, Color.YELLOW, 3.0)
+		var h_name = str(h.get("name", "Hero")).to_lower()
+		var h_initial = "H"
+		if "barbarian" in h_name:
+			h_initial = "B"
+		elif "dwarf" in h_name:
+			h_initial = "D"
+		elif "elf" in h_name:
+			h_initial = "E"
+		elif "wizard" in h_name:
+			h_initial = "W"
+		else:
+			h_initial = h_name.substr(0, 1).to_upper()
+		var init_w = ThemeDB.fallback_font.get_string_size(h_initial, HORIZONTAL_ALIGNMENT_CENTER, -1, 14).x
+		canvas.draw_string(ThemeDB.fallback_font, Vector2(screen_pos.x - init_w * 0.5, screen_pos.y + 5), h_initial, HORIZONTAL_ALIGNMENT_CENTER, -1, 14, Color.WHITE)
