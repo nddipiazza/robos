@@ -1078,9 +1078,9 @@ ipcMain.handle('open-app-elearning', async (_, { courseId, appSlug } = {}) => {
   }
 });
 
-ipcMain.handle('open-url', (_, url) => {
-  if (url) shell.openExternal(url);
-  return { ok: true };
+ipcMain.handle('open-url', async (_, url) => {
+  try {const parsed=new URL(url);if(!['https:','http:'].includes(parsed.protocol))throw Error('Unsupported link.');await shell.openExternal(parsed.href,{activate:true});return {ok:true};}
+  catch(error){return {ok:false,error:'Could not open your browser: '+error.message};}
 });
 
 ipcMain.handle('get-pr-theater-config', async (_, opts = {}) => {

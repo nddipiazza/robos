@@ -12,6 +12,8 @@ test('Create PR stage retains drafts across navigation and reload; publishes onl
  assert.equal(await p.getByLabel('Title',{exact:true}).inputValue(),'Reviewed title');
  await p.reload();await mount();assert.equal(await p.locator('review-markdown-editor').evaluate(el=>el.value),'My saved description');assert.equal(calls,0);
  await p.locator('#stage-8').getByRole('button',{name:'Create PR',exact:true}).click();await p.getByRole('link',{name:'#42 · Reviewed title'}).waitFor();assert.equal(calls,1);assert.equal(await p.locator('#step-btn-8').innerText(),'Pull Request');
+ await p.evaluate(()=>{window.opened=[];window.api.openUrl=async url=>{opened.push(url);return {ok:false,error:'Browser unavailable'};};});
+ await p.getByRole('button',{name:'Open pull request',exact:true}).click();await p.getByRole('alert').filter({hasText:'Browser unavailable'}).waitFor();assert.deepEqual(await p.evaluate(()=>opened),['https://github.com/org/repo/pull/42']);assert.equal(await p.getByRole('button',{name:'Open pull request',exact:true}).isEnabled(),true);
  }finally{await b.close();}
 });
 

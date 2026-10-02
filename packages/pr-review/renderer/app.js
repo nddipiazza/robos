@@ -612,7 +612,7 @@ window.openPRReviewTheater = async function(pr) {
       const link = document.createElement('a');
       link.href = `https://github.com/${targetPR.repo}/pull/${targetPR.number}`;
       link.textContent = `#${targetPR.number} · ${targetPR.title}`;
-      link.addEventListener('click', event => { event.preventDefault(); window.api.openUrl(link.href); });
+      link.addEventListener('click', async event => { event.preventDefault();try{const result=await window.api.openUrl(link.href);if(result?.ok===false)throw Error(result.error);}catch(e){window.setTheaterStage(8);const status=document.querySelector('#stage-8 [role=alert]');if(status)status.textContent=e.message+' '+link.href;} });
       titleEl.append(link);
     } else titleEl.textContent = targetPR.title;
   }
