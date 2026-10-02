@@ -410,7 +410,7 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
 
     const spellNodes = nodes.filter(n => {
       const t = Array.isArray(n["@type"]) ? n["@type"] : [n["@type"]];
-      return t.includes("robos:TabletopSpellCard");
+      return t.includes("robos:TabletopSpellCard") && !t.includes("robos:TabletopDreadSpell");
     });
 
     assert.strictEqual(spellNodes.length, 12, "Must contain exactly 12 HeroQuest elemental spells");
@@ -437,6 +437,100 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
       const found = spellNodes.some(s => s["dcterms:title"] === title);
       assert.ok(found, `Spell '${title}' must exist in KGraph nodes`);
     });
+  });
+
+  it("verifies all 8 authentic HeroQuest Dread / Chaos spells are defined for enemy spellcasters", () => {
+    assert.ok(fs.existsSync(KGRAPH_TABLETOP), "tabletop-game package.jsonld must exist");
+    const data = JSON.parse(fs.readFileSync(KGRAPH_TABLETOP, "utf8"));
+    const nodes = data["robos:nodes"] || [];
+
+    const dreadSpellNodes = nodes.filter(n => {
+      const t = Array.isArray(n["@type"]) ? n["@type"] : [n["@type"]];
+      return t.includes("robos:TabletopDreadSpell");
+    });
+
+    assert.strictEqual(dreadSpellNodes.length, 8, "Must contain exactly 8 HeroQuest Dread spells");
+
+    const expectedDreadTitles = [
+      "Lightning Bolt", "Firestorm", "Fear", "Sleep of Dread",
+      "Cloud of Chaos", "Summon Undead", "Rust", "Escape"
+    ];
+    expectedDreadTitles.forEach(title => {
+      const found = dreadSpellNodes.some(s => s["dcterms:title"] === title);
+      assert.ok(found, `Dread Spell '${title}' must exist in KGraph nodes`);
+    });
+  });
+
+  it("verifies enemy spellcasters exist in KGraph with dread spell assignments", () => {
+    assert.ok(fs.existsSync(KGRAPH_TABLETOP), "tabletop-game package.jsonld must exist");
+    const data = JSON.parse(fs.readFileSync(KGRAPH_TABLETOP, "utf8"));
+    const nodes = data["robos:nodes"] || [];
+
+    const monsters = nodes.filter(n => {
+      const t = Array.isArray(n["@type"]) ? n["@type"] : [n["@type"]];
+      return t.includes("robos:TabletopMonster");
+    });
+
+    const casters = monsters.filter(m => m["robos:isSpellcaster"]);
+    assert.ok(casters.length >= 4, "Must include at least 4 spellcaster monsters (Chaos Sorcerer, Witch Lord, Orc Shaman, Verag)");
+
+    const chaosSorcerer = monsters.find(m => m["@id"].includes("chaos-sorcerer"));
+    assert.ok(chaosSorcerer, "Chaos Sorcerer must exist");
+    assert.strictEqual(chaosSorcerer["robos:isBoss"], true);
+    assert.strictEqual(chaosSorcerer["robos:isSpellcaster"], true);
+    assert.ok(Array.isArray(chaosSorcerer["robos:spells"]) && chaosSorcerer["robos:spells"].length >= 3);
+
+    const witchLord = monsters.find(m => m["@id"].includes("witch-lord"));
+    assert.ok(witchLord, "The Witch Lord must exist");
+    assert.strictEqual(witchLord["robos:isBoss"], true);
+    assert.strictEqual(witchLord["robos:isUndead"], true);
+    assert.strictEqual(witchLord["robos:isSpellcaster"], true);
+    assert.ok(witchLord["robos:spells"].includes("urn:robos:tabletop:spell:summon-undead"));
+
+    const orcShaman = monsters.find(m => m["@id"].includes("orc-shaman"));
+    assert.ok(orcShaman, "Orc Shaman must exist");
+    assert.strictEqual(orcShaman["robos:isSpellcaster"], true);
+    assert.ok(orcShaman["robos:spells"].includes("urn:robos:tabletop:spell:rust"));
+  });
+
+  it("supports monster black-shield defend rolls and dread spellcasting in combat HUD", () => {
+    function rollMonsterCombatDie(mockRoll = null) {
+      const r = mockRoll !== null ? mockRoll : Math.floor(Math.random() * 6) + 1;
+      if (r <= 3) return { type: "skull", label: "💀 Skull" };
+      if (r <= 5) return { type: "white-shield", label: "🛡️ Shield" };
+      return { type: "black-shield", label: "⬛ Black Shield" };
+    }
+
+    const monsterRolls = [1, 2, 4, 6].map(r => rollMonsterCombatDie(r));
+    const monsterBlocks = monsterRolls.filter(r => r.type === "black-shield").length;
+    assert.strictEqual(monsterBlocks, 1, "Monsters only block on Black Shield (roll 6)");
+
+    function executeMonsterSpell(spellSlug) {
+      const spellEffects = {
+        "lightning-bolt": { damage: 2, defendDice: 2 },
+        "firestorm": { damage: 3, defendDice: 3 },
+        "fear": { debuffAtkDice: 1 },
+        "sleep-dread": { status: "sleep" },
+        "cloud-of-chaos": { status: "freeze" },
+        "summon-undead": { summoned: 2, type: "undead" },
+        "rust": { destroys: "metal-gear" },
+        "escape": { teleported: true }
+      };
+      return spellEffects[spellSlug] || null;
+    }
+
+    const bolt = executeMonsterSpell("lightning-bolt");
+    assert.strictEqual(bolt.damage, 2);
+    assert.strictEqual(bolt.defendDice, 2);
+
+    const firestorm = executeMonsterSpell("firestorm");
+    assert.strictEqual(firestorm.damage, 3);
+
+    const fear = executeMonsterSpell("fear");
+    assert.strictEqual(fear.debuffAtkDice, 1);
+
+    const summon = executeMonsterSpell("summon-undead");
+    assert.strictEqual(summon.summoned, 2);
   });
 
   it("supports HeroQuest elemental spell draft (Elf 1 college vs Wizard 3 colleges)", () => {

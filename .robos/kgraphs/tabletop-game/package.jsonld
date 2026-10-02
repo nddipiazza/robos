@@ -297,6 +297,88 @@
       "robos:defendDice": 3,
       "robos:movementSquares": 8,
       "robos:isBoss": true,
+      "robos:isSpellcaster": true,
+      "robos:spells": [
+        "urn:robos:tabletop:spell:lightning-bolt",
+        "urn:robos:tabletop:spell:fear"
+      ],
+      "robos:tokenColor": "#15803d",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:chaos-sorcerer",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Chaos Sorcerer",
+      "robos:bodyPoints": 3,
+      "robos:attackDice": 3,
+      "robos:defendDice": 4,
+      "robos:movementSquares": 7,
+      "robos:isBoss": true,
+      "robos:isSpellcaster": true,
+      "robos:spells": [
+        "urn:robos:tabletop:spell:lightning-bolt",
+        "urn:robos:tabletop:spell:firestorm",
+        "urn:robos:tabletop:spell:summon-undead",
+        "urn:robos:tabletop:spell:cloud-of-chaos"
+      ],
+      "robos:tokenColor": "#7c3aed",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:witch-lord",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "The Witch Lord",
+      "robos:bodyPoints": 4,
+      "robos:attackDice": 4,
+      "robos:defendDice": 5,
+      "robos:movementSquares": 7,
+      "robos:isBoss": true,
+      "robos:isUndead": true,
+      "robos:isSpellcaster": true,
+      "robos:spells": [
+        "urn:robos:tabletop:spell:fear",
+        "urn:robos:tabletop:spell:sleep-dread",
+        "urn:robos:tabletop:spell:summon-undead",
+        "urn:robos:tabletop:spell:lightning-bolt",
+        "urn:robos:tabletop:spell:firestorm",
+        "urn:robos:tabletop:spell:escape"
+      ],
+      "robos:tokenColor": "#4c1d95",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:orc-shaman",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Orc Shaman",
+      "robos:bodyPoints": 2,
+      "robos:attackDice": 2,
+      "robos:defendDice": 3,
+      "robos:movementSquares": 8,
+      "robos:isBoss": false,
+      "robos:isSpellcaster": true,
+      "robos:spells": [
+        "urn:robos:tabletop:spell:fear",
+        "urn:robos:tabletop:spell:rust",
+        "urn:robos:tabletop:spell:lightning-bolt"
+      ],
       "robos:tokenColor": "#15803d",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -462,6 +544,122 @@
       ],
       "dcterms:title": "Tempest",
       "robos:element": "air",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:lightning-bolt",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:TabletopDreadSpell",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Lightning Bolt",
+      "robos:element": "dread",
+      "robos:damageDice": 2,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:firestorm",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:TabletopDreadSpell",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Firestorm",
+      "robos:element": "dread",
+      "robos:damageDice": 3,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:fear",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:TabletopDreadSpell",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Fear",
+      "robos:element": "dread",
+      "robos:debuffAttackDice": 1,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:sleep-dread",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:TabletopDreadSpell",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Sleep of Dread",
+      "robos:element": "dread",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:cloud-of-chaos",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:TabletopDreadSpell",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Cloud of Chaos",
+      "robos:element": "dread",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:summon-undead",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:TabletopDreadSpell",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Summon Undead",
+      "robos:element": "dread",
+      "robos:summonCount": 2,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:rust",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:TabletopDreadSpell",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Rust",
+      "robos:element": "dread",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:escape",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:TabletopDreadSpell",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Escape",
+      "robos:element": "dread",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
     },

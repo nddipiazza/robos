@@ -1796,6 +1796,7 @@ async function initKGraphData() {
       });
 
       setupHeroEditorControls();
+      setupMonsterEditorControls();
       setupSpellDraftControls();
       applySpellAllocationToHeroes();
       renderHeroesList();
@@ -1984,6 +1985,90 @@ const ELEMENTAL_DECKS = {
     ]
   }
 };
+
+// Authentic HeroQuest Chaos & Dread Spells (Enemies & Evil Sorcerers)
+const DREAD_SPELLS = [
+  {
+    id: "urn:robos:tabletop:spell:lightning-bolt",
+    slug: "lightning-bolt",
+    name: "Lightning Bolt",
+    element: "dread",
+    icon: "⚡",
+    description: "Strikes any hero with a bolt of dark lightning causing 2 BP damage. Target rolls 2 combat dice to defend.",
+    effect: "damage-bp",
+    val: 2
+  },
+  {
+    id: "urn:robos:tabletop:spell:firestorm",
+    slug: "firestorm",
+    name: "Firestorm",
+    element: "dread",
+    icon: "🔥",
+    description: "Engulfs a hero or entire room in searing hellfire causing 3 BP damage. Target rolls 3 combat dice to defend.",
+    effect: "damage-bp",
+    val: 3
+  },
+  {
+    id: "urn:robos:tabletop:spell:fear",
+    slug: "fear",
+    name: "Fear",
+    element: "dread",
+    icon: "💀",
+    description: "Paralyzes a hero with terror, reducing their Attack Strength to 1 combat die on their next turn.",
+    effect: "debuff-atk",
+    val: 1
+  },
+  {
+    id: "urn:robos:tabletop:spell:sleep-dread",
+    slug: "sleep-dread",
+    name: "Sleep of Dread",
+    element: "dread",
+    icon: "💤",
+    description: "Puts a hero into deep magical slumber. They cannot move, attack, or defend until rolling a 6 or taking damage.",
+    effect: "status-sleep",
+    val: 1
+  },
+  {
+    id: "urn:robos:tabletop:spell:cloud-of-chaos",
+    slug: "cloud-of-chaos",
+    name: "Cloud of Chaos",
+    element: "dread",
+    icon: "🕸️",
+    description: "Releases a suffocating cloud of toxic chaos vapors. Target hero is stunned and loses their entire next turn.",
+    effect: "status-freeze",
+    val: 1
+  },
+  {
+    id: "urn:robos:tabletop:spell:summon-undead",
+    slug: "summon-undead",
+    name: "Summon Undead",
+    element: "dread",
+    icon: "🧟",
+    description: "Raises 2 Skeletons or Zombies from the dungeon floor adjacent to the caster to fight alongside them.",
+    effect: "summon-monsters",
+    val: 2
+  },
+  {
+    id: "urn:robos:tabletop:spell:rust",
+    slug: "rust",
+    name: "Rust",
+    element: "dread",
+    icon: "🛡️",
+    description: "Corrodes and destroys one metal weapon or helmet equipped by a target hero, reducing their combat stats.",
+    effect: "destroy-equipment",
+    val: 1
+  },
+  {
+    id: "urn:robos:tabletop:spell:escape",
+    slug: "escape",
+    name: "Escape",
+    element: "dread",
+    icon: "💨",
+    description: "Dissolves the evil sorcerer into dark mist, teleporting them instantly to another room or safety.",
+    effect: "teleport",
+    val: 1
+  }
+];
 
 function getSpellAllocation() {
   return currentData.spellAllocation;
@@ -2966,7 +3051,379 @@ function setupHeroEditorControls() {
   document.getElementById("btn-roll-hero-move")?.addEventListener("click", rollHeroMove);
 }
 
-// Render Monsters
+// ==========================================
+// 2. MONSTERS, BOSSES & DREAD GRIMOIRE ENGINE
+// ==========================================
+
+function getActiveMonster() {
+  if (!Array.isArray(currentData.monsters)) return null;
+  return currentData.monsters.find(m => m["@id"] === currentData.activeMonsterId) || currentData.monsters[0] || null;
+}
+
+function getMonsterSpells(monster) {
+  if (!monster) return [];
+  const assigned = monster["robos:spells"] || [];
+  return assigned.map(sp => {
+    if (typeof sp === "object" && sp !== null) return sp;
+    const slug = String(sp).replace("urn:robos:tabletop:spell:", "");
+    return DREAD_SPELLS.find(ds => ds.slug === slug || ds.id === sp) || {
+      id: sp,
+      slug: slug,
+      name: slug.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" "),
+      element: "dread",
+      icon: "⚡",
+      description: "Dread Chaos spell."
+    };
+  });
+}
+
+function addMonsterSpell(monster, spellSlug) {
+  if (!monster || !spellSlug) return;
+  if (!Array.isArray(monster["robos:spells"])) {
+    monster["robos:spells"] = [];
+  }
+  const fullId = `urn:robos:tabletop:spell:${spellSlug}`;
+  if (!monster["robos:spells"].some(s => s === fullId || (typeof s === "object" && s.slug === spellSlug) || s === spellSlug)) {
+    monster["robos:spells"].push(fullId);
+    monster["robos:isSpellcaster"] = true;
+    renderMonsterGrimoire(monster);
+    renderMonsterActionScreen(monster);
+    triggerMonsterAutosave();
+    logMonsterCombatAction(`⚡ Added Dread spell '${spellSlug}' to ${monster["dcterms:title"] || "Monster"} grimoire.`, "chaos");
+  }
+}
+
+function removeMonsterSpell(monster, spellSlug) {
+  if (!monster || !Array.isArray(monster["robos:spells"])) return;
+  const fullId = `urn:robos:tabletop:spell:${spellSlug}`;
+  monster["robos:spells"] = monster["robos:spells"].filter(s => s !== fullId && s !== spellSlug && (typeof s !== "object" || s.slug !== spellSlug));
+  renderMonsterGrimoire(monster);
+  renderMonsterActionScreen(monster);
+  triggerMonsterAutosave();
+  logMonsterCombatAction(`🗑️ Removed Dread spell '${spellSlug}' from ${monster["dcterms:title"] || "Monster"} grimoire.`, "system");
+}
+
+function renderMonsterGrimoire(monster) {
+  const section = document.getElementById("monster-spells-section");
+  const chipsList = document.getElementById("monster-assigned-spells-list");
+  const select = document.getElementById("monster-spell-add-select");
+  if (!section || !chipsList) return;
+
+  const isSpellcaster = !!monster?.["robos:isSpellcaster"];
+  section.style.display = isSpellcaster ? "block" : "none";
+
+  if (!isSpellcaster || !monster) {
+    chipsList.innerHTML = "";
+    return;
+  }
+
+  const assigned = getMonsterSpells(monster);
+  const assignedSlugs = assigned.map(s => s.slug);
+
+  chipsList.innerHTML = "";
+  if (assigned.length === 0) {
+    chipsList.innerHTML = `<span class="text-muted" style="font-size:12px; font-style:italic;">No spells memorized. Select from the dropdown above to add Dread spells.</span>`;
+  } else {
+    assigned.forEach(s => {
+      const chip = document.createElement("div");
+      chip.className = "monster-spell-chip";
+      chip.innerHTML = `
+        <span>${s.icon || "⚡"}</span>
+        <strong>${s.name}</strong>
+        <button class="btn-remove-chip" title="Remove spell">&times;</button>
+      `;
+      chip.querySelector(".btn-remove-chip")?.addEventListener("click", () => {
+        removeMonsterSpell(monster, s.slug);
+      });
+      chipsList.appendChild(chip);
+    });
+  }
+
+  // Populate dropdown with unassigned dread spells
+  if (select) {
+    select.innerHTML = "";
+    const available = DREAD_SPELLS.filter(ds => !assignedSlugs.includes(ds.slug));
+    if (available.length === 0) {
+      select.innerHTML = `<option value="">All 8 Dread Spells Memorized</option>`;
+      select.disabled = true;
+      const addBtn = document.getElementById("btn-monster-add-spell");
+      if (addBtn) addBtn.disabled = true;
+    } else {
+      select.disabled = false;
+      const addBtn = document.getElementById("btn-monster-add-spell");
+      if (addBtn) addBtn.disabled = false;
+      available.forEach(ds => {
+        const opt = document.createElement("option");
+        opt.value = ds.slug;
+        opt.textContent = `${ds.icon} ${ds.name}`;
+        select.appendChild(opt);
+      });
+    }
+  }
+}
+
+function renderMonsterActionScreen(monster) {
+  if (!monster) return;
+  const nameEl = document.getElementById("act-monster-name");
+  const typeTag = document.getElementById("act-monster-type-tag");
+  const casterBadge = document.getElementById("act-monster-spellcaster-badge");
+  const iconEl = document.getElementById("act-monster-icon");
+  const atkStat = document.getElementById("act-monster-atk-stat");
+  const defStat = document.getElementById("act-monster-def-stat");
+  const moveStat = document.getElementById("act-monster-move-stat");
+
+  if (nameEl) nameEl.textContent = monster["dcterms:title"] || "Monster";
+  if (typeTag) {
+    if (monster["robos:isBoss"]) {
+      typeTag.textContent = "Boss Monster";
+      typeTag.style.background = "#581c87";
+      typeTag.style.color = "#f3e8ff";
+      typeTag.style.borderColor = "#a855f7";
+    } else if (monster["robos:isUndead"]) {
+      typeTag.textContent = "Undead";
+      typeTag.style.background = "#1f2937";
+      typeTag.style.color = "#9ca3af";
+      typeTag.style.borderColor = "#4b5563";
+    } else {
+      typeTag.textContent = "Monster";
+      typeTag.style.background = "#450a0a";
+      typeTag.style.color = "#fca5a5";
+      typeTag.style.borderColor = "#991b1b";
+    }
+  }
+
+  if (iconEl) {
+    if (monster["robos:isBoss"]) iconEl.textContent = "👑";
+    else if (monster["robos:isUndead"]) iconEl.textContent = "💀";
+    else if (monster["robos:isSpellcaster"]) iconEl.textContent = "🧙‍♂️";
+    else iconEl.textContent = "👹";
+  }
+
+  const isSpellcaster = !!monster["robos:isSpellcaster"];
+  if (casterBadge) casterBadge.style.display = isSpellcaster ? "inline-block" : "none";
+
+  if (atkStat) atkStat.textContent = `${monster["robos:attackDice"] || 2} Combat Dice`;
+  if (defStat) defStat.textContent = `${monster["robos:defendDice"] || 2} Combat Dice`;
+  if (moveStat) moveStat.textContent = `${monster["robos:movementSquares"] || 6} Squares`;
+
+  renderMonsterVitalityPips(monster);
+
+  const spellModule = document.getElementById("act-mon-spell-module");
+  const spellCount = document.getElementById("act-mon-spell-count");
+  const spellSelect = document.getElementById("act-mon-spell-select");
+
+  if (spellModule) {
+    spellModule.style.display = isSpellcaster ? "flex" : "none";
+  }
+
+  if (isSpellcaster && spellSelect && spellCount) {
+    const spells = getMonsterSpells(monster);
+    spellCount.textContent = `${spells.length} Spell${spells.length !== 1 ? 's' : ''}`;
+    spellSelect.innerHTML = "";
+    if (spells.length === 0) {
+      spellSelect.innerHTML = `<option value="">No spells memorized</option>`;
+      spellSelect.disabled = true;
+      const castBtn = document.getElementById("btn-cast-monster-spell");
+      if (castBtn) castBtn.disabled = true;
+    } else {
+      spellSelect.disabled = false;
+      const castBtn = document.getElementById("btn-cast-monster-spell");
+      if (castBtn) castBtn.disabled = false;
+      spells.forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s.slug;
+        opt.textContent = `${s.icon || "⚡"} ${s.name}`;
+        spellSelect.appendChild(opt);
+      });
+    }
+  }
+}
+
+function renderMonsterVitalityPips(monster) {
+  const bpTrack = document.getElementById("act-monster-bp-track");
+  if (!bpTrack || !monster) return;
+
+  const maxBP = parseInt(monster["robos:bodyPoints"], 10) || 1;
+  if (monster["robos:currentBP"] === undefined) {
+    monster["robos:currentBP"] = maxBP;
+  }
+  const currentBP = Math.min(maxBP, Math.max(0, monster["robos:currentBP"]));
+  monster["robos:currentBP"] = currentBP;
+
+  bpTrack.innerHTML = "";
+  for (let i = 1; i <= maxBP; i++) {
+    const pip = document.createElement("span");
+    pip.className = `pip ${i <= currentBP ? "bp-active" : "bp-lost"}`;
+    pip.title = `BP ${i}/${maxBP}`;
+    bpTrack.appendChild(pip);
+  }
+}
+
+function rollMonsterAttack() {
+  const monster = getActiveMonster();
+  if (!monster) return null;
+  const numDice = parseInt(monster["robos:attackDice"], 10) || 2;
+  const rolls = [];
+  let skulls = 0;
+  for (let i = 0; i < numDice; i++) {
+    const die = rollHeroCombatDie();
+    rolls.push(die);
+    if (die.type === "skull") skulls++;
+  }
+
+  const resultBox = document.getElementById("act-monster-atk-result");
+  if (resultBox) {
+    resultBox.innerHTML = rolls.map(r => `<span class="dice-badge ${r.faceClass}">${r.label}</span>`).join(" ");
+  }
+
+  logMonsterCombatAction(`⚔️ ${monster["dcterms:title"]} rolled Monster Attack (${numDice} dice): ${rolls.map(r => r.type === "skull" ? "💀" : (r.type === "white-shield" ? "🛡️" : "⬛")).join(" ")} — [${skulls} Skull${skulls !== 1 ? 's' : ''} Hit!]`, "attack");
+  return { numDice, rolls, skulls };
+}
+
+function rollMonsterDefend() {
+  const monster = getActiveMonster();
+  if (!monster) return null;
+  const numDice = parseInt(monster["robos:defendDice"], 10) || 2;
+  const rolls = [];
+  let blackShields = 0;
+  for (let i = 0; i < numDice; i++) {
+    const die = rollHeroCombatDie();
+    rolls.push(die);
+    // Authentic HeroQuest Rule: Monsters defend ONLY on Black Shields (⬛ Black Shield)
+    if (die.type === "black-shield") blackShields++;
+  }
+
+  const resultBox = document.getElementById("act-monster-def-result");
+  if (resultBox) {
+    resultBox.innerHTML = rolls.map(r => `<span class="dice-badge ${r.faceClass}">${r.label}</span>`).join(" ");
+  }
+
+  logMonsterCombatAction(`⬛ ${monster["dcterms:title"]} rolled Monster Defend (${numDice} dice): ${rolls.map(r => r.type === "skull" ? "💀" : (r.type === "white-shield" ? "🛡️" : "⬛")).join(" ")} — [${blackShields} Black Shield${blackShields !== 1 ? 's' : ''} Blocked!]`, "defend");
+  return { numDice, rolls, blackShields };
+}
+
+function rollMonsterMove() {
+  const monster = getActiveMonster();
+  if (!monster) return null;
+  const moveSquares = parseInt(monster["robos:movementSquares"], 10) || 6;
+  const resultBox = document.getElementById("act-monster-move-result");
+  if (resultBox) {
+    resultBox.innerHTML = `<span class="dice-badge dice-d6">👣 Move Allowance</span> = <strong>${moveSquares} Squares</strong>`;
+  }
+  logMonsterCombatAction(`👣 ${monster["dcterms:title"]} advances up to ${moveSquares} squares.`, "move");
+  return { moveSquares };
+}
+
+function castMonsterSpell(monster, spellSlug) {
+  if (!monster) monster = getActiveMonster();
+  if (!monster) return null;
+
+  if (!spellSlug) {
+    const select = document.getElementById("act-mon-spell-select");
+    spellSlug = select ? select.value : "";
+  }
+  if (!spellSlug) return null;
+
+  const spell = DREAD_SPELLS.find(s => s.slug === spellSlug) || {
+    slug: spellSlug,
+    name: spellSlug,
+    icon: "⚡",
+    description: "Invoked Dread spell",
+    effect: "dread-chaos"
+  };
+
+  const resultBox = document.getElementById("act-mon-spell-result");
+  if (resultBox) {
+    resultBox.innerHTML = `<span class="dice-badge" style="background:#581c87; color:#f3e8ff; border:1px solid #7e22ce;">${spell.icon} ${spell.name}</span>`;
+  }
+
+  let effectDescription = "";
+  if (spell.slug === "lightning-bolt") {
+    effectDescription = "Strikes target hero with black electricity for 2 BP damage! (Target rolls 2 defense dice)";
+  } else if (spell.slug === "firestorm") {
+    effectDescription = "Unleashes inferno across room for 3 BP damage! (Targets roll 3 defense dice)";
+  } else if (spell.slug === "fear") {
+    effectDescription = "Instills horrific dread! Target hero attacks with only 1 combat die on next turn.";
+  } else if (spell.slug === "sleep-dread") {
+    effectDescription = "Inflicts dark slumber! Hero falls asleep until rolling a 6 or wounded.";
+  } else if (spell.slug === "cloud-of-chaos") {
+    effectDescription = "Noxious vapors choke target hero! Hero loses their entire next turn.";
+  } else if (spell.slug === "summon-undead") {
+    effectDescription = "Chants necromantic rite! 2 Skeletons or Zombies rise from stone to attack!";
+  } else if (spell.slug === "rust") {
+    effectDescription = "Decays metal! Target hero's weapon or helmet corrodes into brittle rust.";
+  } else if (spell.slug === "escape") {
+    effectDescription = "Sorcerer dissolves into shadow and teleports away to another dungeon wing!";
+  } else {
+    effectDescription = spell.description;
+  }
+
+  logMonsterCombatAction(`⚡ ${monster["dcterms:title"]} cast DREAD SPELL: [${spell.icon} ${spell.name}] — ${effectDescription}`, "chaos");
+  return { success: true, monster, spell, effectDescription };
+}
+
+function logMonsterCombatAction(msg, type = "system") {
+  const logEl = document.getElementById("monster-combat-roll-log");
+  if (!logEl) return;
+  const entry = document.createElement("div");
+  entry.className = `log-entry ${type}`;
+  const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  entry.textContent = `[${time}] ${msg}`;
+  logEl.prepend(entry);
+}
+
+async function saveActiveMonsterToKGraph(explicit = false) {
+  const monster = getActiveMonster();
+  if (!monster) return { success: false, error: "No active monster" };
+
+  const monsterNode = {
+    "@id": monster["@id"],
+    "@type": [
+      "oslc_am:Resource",
+      "robos:TabletopMonster",
+      "robos:GameMonster",
+      "schema:Person"
+    ],
+    "dcterms:title": monster["dcterms:title"] || "Monster",
+    "robos:bodyPoints": parseInt(monster["robos:bodyPoints"], 10) || 1,
+    "robos:attackDice": parseInt(monster["robos:attackDice"], 10) || 2,
+    "robos:defendDice": parseInt(monster["robos:defendDice"], 10) || 2,
+    "robos:movementSquares": parseInt(monster["robos:movementSquares"], 10) || 6,
+    "robos:roomId": monster["robos:roomId"] || "room-center",
+    "robos:isBoss": !!monster["robos:isBoss"],
+    "robos:isUndead": !!monster["robos:isUndead"],
+    "robos:isSpellcaster": !!monster["robos:isSpellcaster"],
+    "robos:spells": monster["robos:spells"] || [],
+    "robos:tokenColor": monster["robos:tokenColor"] || "#991b1b",
+    "robos:package": "tabletop-game",
+    "robos:namespace": "robos.tabletop"
+  };
+
+  try {
+    const res = await window.robosTabletop.saveKGraphEntity({ entity: monsterNode });
+    if (explicit) {
+      if (res && res.success) {
+        setStatus(`Saved monster '${monsterNode["dcterms:title"]}' to Knowledge Graph.`);
+        logMonsterCombatAction(`💾 Monster '${monsterNode["dcterms:title"]}' saved to Knowledge Graph.`, "system");
+      } else {
+        setStatus(`Error saving monster: ${res ? res.error : "Unknown"}`);
+      }
+    }
+    return res;
+  } catch (err) {
+    if (explicit) setStatus(`Save failed: ${err.message}`);
+    return { success: false, error: err.message };
+  }
+}
+
+let monsterAutosaveTimer = null;
+function triggerMonsterAutosave() {
+  clearTimeout(monsterAutosaveTimer);
+  monsterAutosaveTimer = setTimeout(() => {
+    saveActiveMonsterToKGraph(false);
+  }, 400);
+}
+
 function renderMonstersList() {
   const container = document.getElementById("monsters-list");
   if (!container) return;
@@ -2975,7 +3432,11 @@ function renderMonstersList() {
   currentData.monsters.forEach(m => {
     const div = document.createElement("div");
     div.className = "list-item" + (m["@id"] === currentData.activeMonsterId ? " active" : "");
-    div.innerHTML = `<span>${m["robos:isBoss"] ? "👑" : "👹"}</span> <strong>${m["dcterms:title"] || m["@id"]}</strong>`;
+    let icon = "👹";
+    if (m["robos:isBoss"]) icon = "👑";
+    else if (m["robos:isUndead"]) icon = "💀";
+    else if (m["robos:isSpellcaster"]) icon = "🧙‍♂️";
+    div.innerHTML = `<span>${icon}</span> <strong>${m["dcterms:title"] || m["@id"]}</strong>`;
     div.onclick = () => selectMonster(m["@id"]);
     container.appendChild(div);
   });
@@ -3001,6 +3462,129 @@ function selectMonster(monsterId) {
   document.getElementById("monster-room").value = monster["robos:roomId"] || "room-center";
   document.getElementById("monster-is-boss").checked = !!monster["robos:isBoss"];
   document.getElementById("monster-is-undead").checked = !!monster["robos:isUndead"];
+
+  const isCaster = !!monster["robos:isSpellcaster"];
+  const casterCheckbox = document.getElementById("monster-is-spellcaster");
+  if (casterCheckbox) casterCheckbox.checked = isCaster;
+
+  renderMonsterGrimoire(monster);
+  renderMonsterActionScreen(monster);
+}
+
+function setupMonsterEditorControls() {
+  const bindInput = (id, prop, isNumber = false) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener("input", (e) => {
+      const monster = getActiveMonster();
+      if (!monster) return;
+      monster[prop] = isNumber ? parseInt(e.target.value, 10) || 0 : e.target.value;
+      if (prop === "dcterms:title") {
+        document.getElementById("monster-editor-title").textContent = "Edit Monster: " + e.target.value;
+        renderMonstersList();
+      }
+      renderMonsterActionScreen(monster);
+      triggerMonsterAutosave();
+    });
+  };
+
+  bindInput("monster-name", "dcterms:title");
+  bindInput("monster-bp", "robos:bodyPoints", true);
+  bindInput("monster-atk", "robos:attackDice", true);
+  bindInput("monster-def", "robos:defendDice", true);
+  bindInput("monster-move", "robos:movementSquares", true);
+  bindInput("monster-room", "robos:roomId");
+
+  document.getElementById("monster-is-boss")?.addEventListener("change", (e) => {
+    const monster = getActiveMonster();
+    if (!monster) return;
+    monster["robos:isBoss"] = e.target.checked;
+    renderMonstersList();
+    renderMonsterActionScreen(monster);
+    triggerMonsterAutosave();
+  });
+
+  document.getElementById("monster-is-undead")?.addEventListener("change", (e) => {
+    const monster = getActiveMonster();
+    if (!monster) return;
+    monster["robos:isUndead"] = e.target.checked;
+    renderMonstersList();
+    renderMonsterActionScreen(monster);
+    triggerMonsterAutosave();
+  });
+
+  document.getElementById("monster-is-spellcaster")?.addEventListener("change", (e) => {
+    const monster = getActiveMonster();
+    if (!monster) return;
+    monster["robos:isSpellcaster"] = e.target.checked;
+    if (monster["robos:isSpellcaster"] && (!monster["robos:spells"] || monster["robos:spells"].length === 0)) {
+      monster["robos:spells"] = ["urn:robos:tabletop:spell:lightning-bolt"];
+    }
+    renderMonsterGrimoire(monster);
+    renderMonsterActionScreen(monster);
+    triggerMonsterAutosave();
+  });
+
+  document.getElementById("btn-monster-add-spell")?.addEventListener("click", () => {
+    const monster = getActiveMonster();
+    const select = document.getElementById("monster-spell-add-select");
+    if (!monster || !select || !select.value) return;
+    addMonsterSpell(monster, select.value);
+  });
+
+  document.getElementById("btn-act-monster-dmg-bp")?.addEventListener("click", () => {
+    const monster = getActiveMonster();
+    if (!monster || monster["robos:currentBP"] <= 0) return;
+    monster["robos:currentBP"]--;
+    renderMonsterVitalityPips(monster);
+    const maxBP = parseInt(monster["robos:bodyPoints"], 10) || 1;
+    logMonsterCombatAction(`💥 ${monster["dcterms:title"]} took 1 damage! (BP: ${monster["robos:currentBP"]}/${maxBP})`, "attack");
+    if (monster["robos:currentBP"] === 0) {
+      logMonsterCombatAction(`💀 ${monster["dcterms:title"]} has been DEFEATED!`, "system");
+    }
+  });
+
+  document.getElementById("btn-act-monster-heal-bp")?.addEventListener("click", () => {
+    const monster = getActiveMonster();
+    const maxBP = parseInt(monster["robos:bodyPoints"], 10) || 1;
+    if (!monster || monster["robos:currentBP"] >= maxBP) return;
+    monster["robos:currentBP"]++;
+    renderMonsterVitalityPips(monster);
+    logMonsterCombatAction(`💖 ${monster["dcterms:title"]} healed 1 Body Point! (BP: ${monster["robos:currentBP"]}/${maxBP})`, "defend");
+  });
+
+  document.getElementById("btn-roll-monster-attack")?.addEventListener("click", rollMonsterAttack);
+  document.getElementById("btn-roll-monster-defend")?.addEventListener("click", rollMonsterDefend);
+  document.getElementById("btn-roll-monster-move")?.addEventListener("click", rollMonsterMove);
+  document.getElementById("btn-cast-monster-spell")?.addEventListener("click", () => castMonsterSpell());
+
+  document.getElementById("btn-add-monster")?.addEventListener("click", () => {
+    const newId = `urn:robos:tabletop:monster:custom-${Date.now().toString(36)}`;
+    const newMonster = {
+      "@id": newId,
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "New Monster",
+      "robos:bodyPoints": 2,
+      "robos:attackDice": 2,
+      "robos:defendDice": 2,
+      "robos:movementSquares": 6,
+      "robos:roomId": "room-center",
+      "robos:isBoss": false,
+      "robos:isUndead": false,
+      "robos:isSpellcaster": false,
+      "robos:spells": [],
+      "robos:tokenColor": "#991b1b"
+    };
+    currentData.monsters.push(newMonster);
+    renderMonstersList();
+    selectMonster(newId);
+    triggerMonsterAutosave();
+  });
 }
 
 // Render Spells & Items
@@ -3060,6 +3644,27 @@ function renderSpellsAndItems() {
         <div class="card-meta">${item.type} • ${item.dice}</div>
       `;
       itemsGrid.appendChild(card);
+    });
+  }
+
+  const dreadGrid = document.getElementById("dread-spells-grid");
+  if (dreadGrid) {
+    dreadGrid.innerHTML = "";
+    DREAD_SPELLS.forEach(s => {
+      const card = document.createElement("div");
+      card.className = "spell-card deck-dread";
+      card.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+          <div class="card-title" style="margin:0; color:#f3e8ff;">${s.icon} ${s.name}</div>
+          <span class="element-tag tag-dread">DREAD MAGIC</span>
+        </div>
+        <div class="card-meta" style="color:var(--text-muted); font-size:0.75rem; margin-bottom:6px;">${s.description}</div>
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem;">
+          <span class="card-meta" style="margin:0; color:#c084fc;">Witch Lord & Chaos Sorcerers</span>
+          <span class="badge" style="background:#581c87; color:#f3e8ff; border:1px solid #7e22ce; font-size:0.7rem;">Enemy Magic</span>
+        </div>
+      `;
+      dreadGrid.appendChild(card);
     });
   }
 }
@@ -3474,18 +4079,24 @@ document.getElementById("btn-bundle")?.addEventListener("click", async () => {
       spells: getHeroSpells(h),
       position: (h["robos:startingPosition"] && h["robos:startingPosition"].length === 2) ? h["robos:startingPosition"] : [1, 1]
     })),
-    monsters: q.monsters.map(m => ({
-      id: m.id,
-      slug: m.monsterType,
-      name: m.name,
-      bodyPoints: m.bp,
-      attackDice: m.atk,
-      defendDice: m.def,
-      movementSquares: 6,
-      isBoss: !!m.isBoss,
-      position: [m.x, m.y],
-      roomId: m.roomId
-    })),
+    monsters: q.monsters.map(m => {
+      const kMonster = currentData.monsters?.find(km => km["@id"].endsWith(m.monsterType) || km["dcterms:title"] === m.name);
+      return {
+        id: m.id,
+        slug: m.monsterType,
+        name: m.name,
+        bodyPoints: m.bp,
+        attackDice: m.atk,
+        defendDice: m.def,
+        movementSquares: kMonster ? (kMonster["robos:movementSquares"] || 6) : 6,
+        isBoss: !!m.isBoss,
+        isUndead: kMonster ? !!kMonster["robos:isUndead"] : false,
+        isSpellcaster: kMonster ? !!kMonster["robos:isSpellcaster"] : false,
+        spells: kMonster ? getMonsterSpells(kMonster).map(s => s.slug) : [],
+        position: [m.x, m.y],
+        roomId: m.roomId
+      };
+    }),
     maps: mapsPayload,
     spellAllocation: {
       elfElement: currentData.spellAllocation.elfElement,
@@ -3636,6 +4247,21 @@ if (typeof window !== "undefined") {
     resetQuest,
     advanceToNextQuest,
     updateCampaignProgress
+  };
+
+  window._tabletopMonsterGrimoire = {
+    DREAD_SPELLS,
+    getActiveMonster,
+    getMonsterSpells,
+    addMonsterSpell,
+    removeMonsterSpell,
+    renderMonsterGrimoire,
+    renderMonsterActionScreen,
+    rollMonsterAttack,
+    rollMonsterDefend,
+    rollMonsterMove,
+    castMonsterSpell,
+    saveActiveMonsterToKGraph
   };
 }
 

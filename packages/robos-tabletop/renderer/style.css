@@ -1453,3 +1453,57 @@ body {
   font-size: 0.78rem;
 }
 
+/* Monster Action Screen & Dread Spells */
+.monster-action-screen {
+  border: 1px solid rgba(220, 38, 38, 0.4);
+  background: linear-gradient(180deg, #18090f 0%, #0d1526 100%);
+}
+
+.monster-spell-chip {
+  background: #3b0764;
+  border: 1px solid #7e22ce;
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 0.78rem;
+  color: #f3e8ff;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.monster-spell-chip .btn-remove-chip {
+  background: transparent;
+  border: none;
+  color: #fca5a5;
+  cursor: pointer;
+  padding: 0 2px;
+  font-size: 0.82rem;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.monster-spell-chip .btn-remove-chip:hover {
+  color: #ef4444;
+}
+
+.spell-card.deck-dread {
+  border-top: 3px solid #9333ea;
+  background: linear-gradient(180deg, rgba(88, 28, 135, 0.18) 0%, rgba(15, 23, 42, 0.6) 100%);
+}
+
+.tag-dread {
+  background: rgba(147, 51, 234, 0.25);
+  color: #d8b4fe;
+  border: 1px solid #9333ea;
+}
+
+.spell-card-mini.deck-dread {
+  border-left: 3px solid #9333ea;
+}
+
+.log-entry.chaos,
+.log-entry.dread {
+  color: #d8b4fe;
+}
+

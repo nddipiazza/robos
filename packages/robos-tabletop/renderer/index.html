@@ -481,6 +481,112 @@
                   <input type="checkbox" id="monster-is-undead">
                   Is Undead (Affected by Turn Undead)
                 </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="monster-is-spellcaster">
+                  Is Spellcaster (Chaos / Dread Sorcery)
+                </label>
+              </div>
+
+              <!-- Monster Dread Spells Grimoire -->
+              <div id="monster-spells-section" class="monster-spells-section" style="display:none; margin-top:14px; padding-top:12px; border-top:1px solid #334155;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:8px;">
+                  <label style="font-weight:600; color:#c084fc; display:flex; align-items:center; gap:6px; margin:0;">
+                    <span>⚡</span> Dread / Chaos Spell Grimoire:
+                  </label>
+                  <div style="display:flex; gap:6px;">
+                    <select id="monster-spell-add-select" class="form-select dropdown form-input-sm" style="font-size:12px; width:220px;"></select>
+                    <button id="btn-monster-add-spell" class="btn btn-sm btn-secondary" style="background:#581c87; color:#f3e8ff; border-color:#7e22ce;">+ Add Spell</button>
+                  </div>
+                </div>
+                <div id="monster-assigned-spells-list" class="monster-spells-chips-list" style="display:flex; flex-wrap:wrap; gap:6px; min-height:32px;"></div>
+              </div>
+            </div>
+
+            <!-- Monster Action & Combat HUD Screen -->
+            <div class="card form-card monster-action-screen" id="monster-action-screen" style="margin-top:16px;">
+              <div class="action-screen-header">
+                <div class="action-hero-identity">
+                  <span id="act-monster-icon" class="act-icon">👹</span>
+                  <div>
+                    <h3 id="act-monster-name" style="margin:0;">Monster</h3>
+                    <div style="display:flex; gap:8px; align-items:center; margin-top:2px;">
+                      <span id="act-monster-type-tag" class="hero-class-tag" style="background:#450a0a; color:#fca5a5; border-color:#991b1b;">Monster</span>
+                      <span id="act-monster-spellcaster-badge" class="badge" style="background:#3b0764; color:#d8b4fe; border:1px solid #7e22ce; font-size:10px; display:none;">⚡ Dread Spellcaster</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="vitality-pips-container">
+                  <div class="vitality-group">
+                    <span class="vitality-label">❤️ Body Points (BP):</span>
+                    <span id="act-monster-bp-track" class="pips-track"></span>
+                    <div class="vitality-btns">
+                      <button id="btn-act-monster-dmg-bp" class="btn btn-xs btn-danger" title="Take 1 Damage">-1</button>
+                      <button id="btn-act-monster-heal-bp" class="btn btn-xs btn-success" title="Heal 1 BP">+1</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Action Roll Modules -->
+              <div class="action-modules-grid">
+                <!-- ⚔️ Attack Module -->
+                <div class="action-module-card attack-card">
+                  <div class="module-title">⚔️ MONSTER ATTACK</div>
+                  <div class="module-stat" id="act-monster-atk-stat">2 Combat Dice</div>
+                  <div class="module-weapon">Skull hits on 💀 (50%)</div>
+                  <button id="btn-roll-monster-attack" class="btn btn-danger btn-roll-action">
+                    🎲 Roll Attack
+                  </button>
+                  <div id="act-monster-atk-result" class="roll-result-box">
+                    <span class="result-placeholder">Ready to strike</span>
+                  </div>
+                </div>
+
+                <!-- ⬛ Monster Defend Module (Black Shield Defend!) -->
+                <div class="action-module-card defend-card">
+                  <div class="module-title">⬛ MONSTER DEFEND</div>
+                  <div class="module-stat" id="act-monster-def-stat">2 Combat Dice</div>
+                  <div class="module-armor">Blocks on ⬛ Black Shield (16.7%)</div>
+                  <button id="btn-roll-monster-defend" class="btn btn-primary btn-roll-action" style="background:#1e293b; border-color:#475569;">
+                    ⬛ Roll Defend
+                  </button>
+                  <div id="act-monster-def-result" class="roll-result-box">
+                    <span class="result-placeholder">Ready to defend</span>
+                  </div>
+                </div>
+
+                <!-- 👟 Monster Movement Module -->
+                <div class="action-module-card move-card">
+                  <div class="module-title">👟 MOVEMENT</div>
+                  <div class="module-stat" id="act-monster-move-stat">6 Squares</div>
+                  <div class="module-speed">Fixed Move Allowance</div>
+                  <button id="btn-roll-monster-move" class="btn btn-secondary btn-roll-action">
+                    👣 Move Monster
+                  </button>
+                  <div id="act-monster-move-result" class="roll-result-box">
+                    <span class="result-placeholder">Ready to advance</span>
+                  </div>
+                </div>
+
+                <!-- ⚡ Dread Spellcasting Module -->
+                <div class="action-module-card spell-card-action" id="act-mon-spell-module" style="display:none; border-color:#7e22ce; background:linear-gradient(135deg, rgba(30,27,75,0.7), rgba(15,23,42,0.8));">
+                  <div class="module-title" style="color:#d8b4fe;">⚡ DREAD MAGIC</div>
+                  <div class="module-stat" id="act-mon-spell-count" style="color:#c084fc;">0 Spells</div>
+                  <div class="module-weapon" id="act-mon-spell-select-wrap">
+                    <select id="act-mon-spell-select" class="form-select dropdown" style="font-size:11px; width:100%; padding:3px 6px; background:#0f172a; color:#e2e8f0; border-color:#6b21a8; margin-bottom:4px;"></select>
+                  </div>
+                  <button id="btn-cast-monster-spell" class="btn btn-roll-action" style="background:#6b21a8; color:#fff; border-color:#a855f7;">
+                    ⚡ Cast Dread Spell
+                  </button>
+                  <div id="act-mon-spell-result" class="roll-result-box">
+                    <span class="result-placeholder">Select Dread spell</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Monster Combat Log -->
+              <div class="combat-roll-log" id="monster-combat-roll-log">
+                <div class="log-entry system">👹 Monster combat screen ready. Roll combat dice or cast Dread spells above.</div>
               </div>
             </div>
           </div>
@@ -700,6 +806,18 @@
             <h3>Weapons & Armor Armory</h3>
             <div id="items-grid" class="cards-grid"></div>
           </div>
+        </div>
+
+        <div class="card" style="margin-top:16px;">
+          <h3 style="display:flex; align-items:center; gap:8px;">
+            <span>⚡</span>
+            <span>Dread & Chaos Spells (Enemies & Game Master)</span>
+            <span class="badge" style="background:#3b0764; color:#d8b4fe; border:1px solid #7e22ce; font-size:11px;">8 Classic Chaos Spells</span>
+          </h3>
+          <p class="text-muted" style="margin:4px 0 12px 0; font-size:12px;">
+            Authentic HeroQuest Chaos & Dread Spells used by evil spellcasters (Chaos Sorcerer, Witch Lord, Orc Shaman, Verag).
+          </p>
+          <div id="dread-spells-grid" class="cards-grid"></div>
         </div>
       </section>
     </main>
