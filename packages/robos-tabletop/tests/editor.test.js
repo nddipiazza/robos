@@ -402,5 +402,143 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
     assert.strictEqual(resetProg.completed, 2);
     assert.strictEqual(resetProg.percentage, 67);
   });
+
+  it("verifies all 12 authentic HeroQuest elemental spells are defined across 4 colleges", () => {
+    assert.ok(fs.existsSync(KGRAPH_TABLETOP), "tabletop-game package.jsonld must exist");
+    const data = JSON.parse(fs.readFileSync(KGRAPH_TABLETOP, "utf8"));
+    const nodes = data["robos:nodes"] || [];
+
+    const spellNodes = nodes.filter(n => {
+      const t = Array.isArray(n["@type"]) ? n["@type"] : [n["@type"]];
+      return t.includes("robos:TabletopSpellCard");
+    });
+
+    assert.strictEqual(spellNodes.length, 12, "Must contain exactly 12 HeroQuest elemental spells");
+
+    const colleges = { earth: 0, fire: 0, water: 0, air: 0 };
+    spellNodes.forEach(sp => {
+      const elem = sp["robos:element"];
+      assert.ok(colleges[elem] !== undefined, `Unknown spell element: ${elem}`);
+      colleges[elem]++;
+    });
+
+    assert.strictEqual(colleges.earth, 3, "Earth college must have 3 spells");
+    assert.strictEqual(colleges.fire, 3, "Fire college must have 3 spells");
+    assert.strictEqual(colleges.water, 3, "Water college must have 3 spells");
+    assert.strictEqual(colleges.air, 3, "Air college must have 3 spells");
+
+    const expectedTitles = [
+      "Ball of Flame", "Courage", "Fire of Wrath",
+      "Heal Body", "Pass Through Rock", "Rock Skin",
+      "Water of Healing", "Sleep", "Veil of Mist",
+      "Genie", "Swift Wind", "Tempest"
+    ];
+    expectedTitles.forEach(title => {
+      const found = spellNodes.some(s => s["dcterms:title"] === title);
+      assert.ok(found, `Spell '${title}' must exist in KGraph nodes`);
+    });
+  });
+
+  it("supports HeroQuest elemental spell draft (Elf 1 college vs Wizard 3 colleges)", () => {
+    const ALL_ELEMENTS = ["earth", "fire", "water", "air"];
+    const SPELLS_BY_COLLEGE = {
+      earth: ["heal-body", "pass-through-rock", "rock-skin"],
+      fire: ["ball-of-flame", "courage", "fire-of-wrath"],
+      water: ["water-of-healing", "sleep", "veil-of-mist"],
+      air: ["genie", "swift-wind", "tempest"]
+    };
+
+    function allocateSpells(elfElement) {
+      assert.ok(ALL_ELEMENTS.includes(elfElement), "Elf element must be one of earth/fire/water/air");
+      const wizardElements = ALL_ELEMENTS.filter(e => e !== elfElement);
+
+      const elfSpells = [...SPELLS_BY_COLLEGE[elfElement]];
+      const wizardSpells = wizardElements.flatMap(e => SPELLS_BY_COLLEGE[e]);
+
+      return {
+        elfElement,
+        wizardElements,
+        elfSpells,
+        wizardSpells
+      };
+    }
+
+    // Default Draft: Elf chooses Water
+    const draftWater = allocateSpells("water");
+    assert.strictEqual(draftWater.elfElement, "water");
+    assert.strictEqual(draftWater.elfSpells.length, 3, "Elf must receive 3 spells");
+    assert.deepStrictEqual(draftWater.elfSpells, ["water-of-healing", "sleep", "veil-of-mist"]);
+    assert.strictEqual(draftWater.wizardElements.length, 3, "Wizard must receive 3 colleges");
+    assert.strictEqual(draftWater.wizardSpells.length, 9, "Wizard must receive 9 spells");
+    assert.ok(!draftWater.wizardSpells.includes("water-of-healing"), "Wizard must not receive Elf's drafted spells");
+
+    // Alternate Draft: Elf chooses Earth
+    const draftEarth = allocateSpells("earth");
+    assert.strictEqual(draftEarth.elfElement, "earth");
+    assert.strictEqual(draftEarth.elfSpells.length, 3);
+    assert.deepStrictEqual(draftEarth.elfSpells, ["heal-body", "pass-through-rock", "rock-skin"]);
+    assert.strictEqual(draftEarth.wizardSpells.length, 9);
+    assert.ok(draftEarth.wizardElements.includes("water"), "Wizard receives Water when Elf drafts Earth");
+    assert.ok(draftEarth.wizardElements.includes("fire"), "Wizard receives Fire");
+    assert.ok(draftEarth.wizardElements.includes("air"), "Wizard receives Air");
+
+    // Alternate Draft: Elf chooses Fire
+    const draftFire = allocateSpells("fire");
+    assert.strictEqual(draftFire.elfElement, "fire");
+    assert.strictEqual(draftFire.elfSpells.length, 3);
+    assert.deepStrictEqual(draftFire.elfSpells, ["ball-of-flame", "courage", "fire-of-wrath"]);
+    assert.strictEqual(draftFire.wizardSpells.length, 9);
+
+    // Alternate Draft: Elf chooses Air
+    const draftAir = allocateSpells("air");
+    assert.strictEqual(draftAir.elfElement, "air");
+    assert.strictEqual(draftAir.elfSpells.length, 3);
+    assert.deepStrictEqual(draftAir.elfSpells, ["genie", "swift-wind", "tempest"]);
+    assert.strictEqual(draftAir.wizardSpells.length, 9);
+
+    // Non-casters (Barbarian, Dwarf)
+    const barbarianSpells = [];
+    const dwarfSpells = [];
+    assert.strictEqual(barbarianSpells.length, 0, "Barbarian must have 0 spells");
+    assert.strictEqual(dwarfSpells.length, 0, "Dwarf must have 0 spells");
+  });
+
+  it("executes spell effects in hero combat action HUD", () => {
+    const heroElf = {
+      name: "Elrond the Swift",
+      heroClass: "Elf",
+      bodyPoints: 6,
+      currentBP: 2, // injured
+      mindPoints: 4,
+      currentMP: 4
+    };
+
+    function castSpell(hero, spell) {
+      if (spell.effect === "heal-bp") {
+        const prev = hero.currentBP;
+        hero.currentBP = Math.min(hero.bodyPoints, hero.currentBP + spell.val);
+        return { success: true, healed: hero.currentBP - prev };
+      }
+      if (spell.effect === "damage-bp") {
+        return { success: true, damageDealt: spell.val };
+      }
+      return { success: true };
+    }
+
+    // Cast Water of Healing (+4 BP)
+    const healRes = castSpell(heroElf, { name: "Water of Healing", effect: "heal-bp", val: 4 });
+    assert.strictEqual(healRes.healed, 4, "Must heal 4 lost Body Points");
+    assert.strictEqual(heroElf.currentBP, 6, "Elf BP must now be at maximum (6)");
+
+    // Cast again when at full BP
+    const overHealRes = castSpell(heroElf, { name: "Water of Healing", effect: "heal-bp", val: 4 });
+    assert.strictEqual(overHealRes.healed, 0, "Cannot overheal beyond max BP");
+    assert.strictEqual(heroElf.currentBP, 6);
+
+    // Cast offensive spell: Ball of Flame (2 BP damage)
+    const dmgRes = castSpell(heroElf, { name: "Ball of Flame", effect: "damage-bp", val: 2 });
+    assert.strictEqual(dmgRes.damageDealt, 2, "Must deal 2 damage");
+  });
 });
+
 

@@ -43,6 +43,9 @@
             <option value="heroquest-the-trial">HeroQuest: The Trial</option>
           </select>
         </div>
+        <button id="btn-open-spell-pick" class="btn btn-secondary" title="Pick spells for Elf vs Wizard (HeroQuest elemental spell draft)">
+          🔮 Pick Spells
+        </button>
         <button id="btn-save-kgraph" class="btn btn-secondary" title="Save current form changes directly into .robos/kgraphs/tabletop-game/package.jsonld">
           💾 Save to KGraph
         </button>
@@ -302,6 +305,18 @@
                 </div>
                 <div id="hero-inventory-list" class="inventory-table-container"></div>
               </div>
+
+              <!-- Hero Grimoire (Memorized Spells) Section -->
+              <div id="hero-spells-section" class="hero-spells-section" style="margin-top:16px; border-top: 1px solid var(--border-color); padding-top:14px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                  <div>
+                    <h4 id="hero-spells-title" style="margin:0; font-size:13px; color:#38bdf8; text-transform:uppercase;">🔮 Memorized Elemental Spells</h4>
+                    <span id="hero-spells-subtitle" style="font-size:11px; color:#94a3b8;">HeroQuest Grimoire</span>
+                  </div>
+                  <button id="btn-hero-repick-spells" class="btn btn-sm btn-secondary" title="Re-pick or draft spells for Elf vs Wizard">🔮 Pick / Draft Spells</button>
+                </div>
+                <div id="hero-spells-list" class="hero-spells-grid"></div>
+              </div>
             </div>
 
             <!-- Hero Action & Combat HUD Screen -->
@@ -375,6 +390,21 @@
                   </button>
                   <div id="act-move-result" class="roll-result-box">
                     <span class="result-placeholder">Ready to move</span>
+                  </div>
+                </div>
+
+                <!-- ✨ Spellcasting Module (Elf & Wizard) -->
+                <div class="action-module-card spell-card-action" id="act-spell-module">
+                  <div class="module-title">✨ SPELLCASTING</div>
+                  <div class="module-stat" id="act-spell-count">3 Spells</div>
+                  <div class="module-weapon" id="act-spell-select-wrap">
+                    <select id="act-spell-select" class="form-select" style="font-size:11px; width:100%; padding:3px 6px; background:#0f172a; color:#e2e8f0; border-color:#334155; margin-bottom:4px;"></select>
+                  </div>
+                  <button id="btn-cast-hero-spell" class="btn btn-roll-action" style="background:#7c3aed; color:#fff;">
+                    🔮 Cast Spell
+                  </button>
+                  <div id="act-spell-result" class="roll-result-box">
+                    <span class="result-placeholder">Select spell to invoke</span>
                   </div>
                 </div>
               </div>
@@ -649,6 +679,18 @@
 
       <!-- 5. Spells & Equipment Tab -->
       <section id="tab-spells" class="tab-pane">
+        <div class="card" style="margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+          <div>
+            <h3 style="margin:0; display:flex; align-items:center; gap:8px;">
+              <span>🔮 HeroQuest Elemental Spells</span>
+              <span id="spells-draft-summary-badge" class="badge badge-info" style="font-size:12px;">Elf: Water (3) | Wizard: Earth, Fire, Air (9)</span>
+            </h3>
+            <p class="text-muted" style="margin:4px 0 0 0; font-size:12px;">
+              Authentic HeroQuest Spell Selection: The Elf picks 1 Elemental College (3 spells); the Wizard receives the remaining 3 Elemental Colleges (9 spells).
+            </p>
+          </div>
+          <button id="btn-spells-tab-pick" class="btn btn-primary">🔮 Pick / Draft Spells</button>
+        </div>
         <div class="form-grid">
           <div class="card">
             <h3>Elemental Spell Cards</h3>
@@ -661,6 +703,132 @@
         </div>
       </section>
     </main>
+  </div>
+
+  <!-- Spell Selection Draft Modal (Elf vs Wizard) -->
+  <div id="modal-spell-pick" class="modal-backdrop" style="display:none;">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div>
+          <h2 style="margin:0; font-size:18px; display:flex; align-items:center; gap:8px;">
+            <span>🔮</span> HeroQuest Elemental Spell Selection
+          </h2>
+          <div class="text-muted" style="font-size:12px; margin-top:2px;">
+            Rule: The <strong>Elf</strong> chooses 1 Elemental Deck (3 spells). The <strong>Wizard</strong> takes the remaining 3 Elemental Decks (9 spells).
+          </div>
+        </div>
+        <button id="btn-close-spell-modal" class="modal-close-btn" title="Close modal">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="spell-pick-instruction">
+          <span class="step-badge">Step 1</span>
+          <span>Choose which Elemental Deck the <strong>Elf</strong> memorizes for this adventure:</span>
+        </div>
+
+        <!-- 4 Elemental Deck Selection Cards -->
+        <div class="element-decks-grid">
+          <div class="element-deck-card" data-element="earth">
+            <div class="deck-card-header">
+              <span class="deck-icon">🪨</span>
+              <div>
+                <strong class="deck-title">Earth Magic</strong>
+                <span class="deck-role">Defense & Healing</span>
+              </div>
+            </div>
+            <ul class="deck-spells-list">
+              <li><strong>Heal Body</strong> — Restore up to 4 lost BP</li>
+              <li><strong>Pass Through Rock</strong> — Move through solid walls</li>
+              <li><strong>Rock Skin</strong> — +1 extra Combat Defend Die</li>
+            </ul>
+            <button class="btn btn-sm btn-element-select" data-select-element="earth">Draft for Elf</button>
+          </div>
+
+          <div class="element-deck-card" data-element="fire">
+            <div class="deck-card-header">
+              <span class="deck-icon">🔥</span>
+              <div>
+                <strong class="deck-title">Fire Magic</strong>
+                <span class="deck-role">Direct Damage & Buffs</span>
+              </div>
+            </div>
+            <ul class="deck-spells-list">
+              <li><strong>Ball of Flame</strong> — Deal 2 BP damage (roll 2 def)</li>
+              <li><strong>Courage</strong> — +2 extra Combat Attack Dice</li>
+              <li><strong>Fire of Wrath</strong> — Deal 1 BP damage (roll 1 def)</li>
+            </ul>
+            <button class="btn btn-sm btn-element-select" data-select-element="fire">Draft for Elf</button>
+          </div>
+
+          <div class="element-deck-card active" data-element="water">
+            <div class="deck-card-header">
+              <span class="deck-icon">💧</span>
+              <div>
+                <strong class="deck-title">Water Magic</strong>
+                <span class="deck-role">Restoration & Stealth</span>
+              </div>
+            </div>
+            <ul class="deck-spells-list">
+              <li><strong>Water of Healing</strong> — Restore up to 4 lost BP</li>
+              <li><strong>Sleep</strong> — Put monster into magical slumber</li>
+              <li><strong>Veil of Mist</strong> — Move unseen past monsters</li>
+            </ul>
+            <button class="btn btn-sm btn-element-select" data-select-element="water">Draft for Elf</button>
+          </div>
+
+          <div class="element-deck-card" data-element="air">
+            <div class="deck-card-header">
+              <span class="deck-icon">🌪️</span>
+              <div>
+                <strong class="deck-title">Air Magic</strong>
+                <span class="deck-role">Speed & Summons</span>
+              </div>
+            </div>
+            <ul class="deck-spells-list">
+              <li><strong>Genie</strong> — Attack or open any door</li>
+              <li><strong>Swift Wind</strong> — Roll double red dice to move</li>
+              <li><strong>Tempest</strong> — Trap a monster in a whirlwind</li>
+            </ul>
+            <button class="btn btn-sm btn-element-select" data-select-element="air">Draft for Elf</button>
+          </div>
+        </div>
+
+        <!-- Live Grimoire Distribution Preview -->
+        <div class="grimoire-distribution-preview">
+          <div class="grimoire-side-card elf-side">
+            <div class="side-card-header">
+              <span class="hero-avatar">🧝</span>
+              <div>
+                <strong>Elf Grimoire</strong>
+                <span id="modal-elf-element-summary" class="element-tag tag-water">💧 Water (3 Spells)</span>
+              </div>
+            </div>
+            <div id="modal-elf-spells-preview" class="modal-spells-preview-list"></div>
+          </div>
+
+          <div class="grimoire-side-card wizard-side">
+            <div class="side-card-header">
+              <span class="hero-avatar">🧙</span>
+              <div>
+                <strong>Wizard Grimoire</strong>
+                <span id="modal-wizard-element-summary" class="element-tag tag-multi">🪨 Earth, 🔥 Fire, 🌪️ Air (9 Spells)</span>
+              </div>
+            </div>
+            <div id="modal-wizard-spells-preview" class="modal-spells-preview-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <div class="modal-footer-note text-muted">
+          💡 The Barbarian and Dwarf are non-casters and fight with steel and armor.
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button id="btn-cancel-spell-modal" class="btn btn-secondary">Cancel</button>
+          <button id="btn-confirm-spell-modal" class="btn btn-primary">✨ Confirm Spell Selection</button>
+        </div>
+      </div>
+    </div>
   </div>
   <script src="app.js"></script>
 </body>

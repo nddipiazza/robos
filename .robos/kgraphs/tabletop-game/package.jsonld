@@ -117,7 +117,32 @@
       "robos:startingWeapon": "urn:robos:game:item:dagger",
       "robos:tokenColor": "#1d4ed8",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:heroClass": "Wizard",
+      "robos:gold": 100,
+      "robos:equippedWeapon": "Dagger (1 Combat Die)",
+      "robos:equippedArmor": "Wizard Cloak (2 Defend Dice)",
+      "robos:inventory": [
+        {
+          "id": "item-holy-water-1",
+          "name": "Holy Water",
+          "type": "relic",
+          "effect": "Destroys undead instantly",
+          "value": 200
+        },
+        {
+          "id": "item-pot-heal-3",
+          "name": "Potion of Healing",
+          "type": "potion",
+          "effect": "Restores up to 4 BP",
+          "value": 100
+        }
+      ],
+      "robos:icon": "🛡️",
+      "robos:startingPosition": [
+        1,
+        1
+      ]
     },
     {
       "@id": "urn:robos:tabletop:monster:goblin",

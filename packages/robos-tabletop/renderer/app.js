@@ -9,6 +9,11 @@ let currentData = {
   heroes: [],
   monsters: [],
   spells: [],
+  spellAllocation: {
+    elfElement: 'water',
+    wizardElements: ['earth', 'fire', 'air'],
+    confirmed: false
+  },
   furniture: [],
   doors: [],
   activeHeroId: null,
@@ -1791,9 +1796,12 @@ async function initKGraphData() {
       });
 
       setupHeroEditorControls();
+      setupSpellDraftControls();
+      applySpellAllocationToHeroes();
       renderHeroesList();
       renderMonstersList();
       renderSpellsAndItems();
+      renderSpellDraftSummaryBadges();
 
       // Initialize Campaign & Multi-Quest Blueprint
       setupCampaignQuestControls();
@@ -1808,6 +1816,495 @@ async function initKGraphData() {
   } catch (err) {
     setStatus("Failed to initialize: " + err.message);
   }
+}
+
+// ==========================================
+// 1.5. ELEMENTAL SPELL DRAFT & GRIMOIRE ENGINE
+// ==========================================
+
+const ELEMENTAL_DECKS = {
+  earth: {
+    id: "earth",
+    name: "Earth Magic",
+    icon: "🪨",
+    role: "Defense & Healing",
+    badgeClass: "tag-earth",
+    color: "#eab308",
+    spells: [
+      {
+        id: "urn:robos:tabletop:spell:heal-body",
+        slug: "heal-body",
+        name: "Heal Body",
+        element: "earth",
+        icon: "💖",
+        description: "Restores up to 4 lost Body Points to any Hero, including yourself.",
+        effect: "heal-bp",
+        val: 4
+      },
+      {
+        id: "urn:robos:tabletop:spell:pass-through-rock",
+        slug: "pass-through-rock",
+        name: "Pass Through Rock",
+        element: "earth",
+        icon: "🧱",
+        description: "Allows the caster or ally to move through solid stone walls on their next turn.",
+        effect: "phase-walls",
+        val: 1
+      },
+      {
+        id: "urn:robos:tabletop:spell:rock-skin",
+        slug: "rock-skin",
+        name: "Rock Skin",
+        element: "earth",
+        icon: "🛡️",
+        description: "Hardens the caster's skin, granting +1 extra Combat Defend Die until damaged.",
+        effect: "buff-def",
+        val: 1
+      }
+    ]
+  },
+  fire: {
+    id: "fire",
+    name: "Fire Magic",
+    icon: "🔥",
+    role: "Direct Damage & Buffs",
+    badgeClass: "tag-fire",
+    color: "#ef4444",
+    spells: [
+      {
+        id: "urn:robos:tabletop:spell:ball-of-flame",
+        slug: "ball-of-flame",
+        name: "Ball of Flame",
+        element: "fire",
+        icon: "☄️",
+        description: "Hurls a blazing sphere dealing 2 BP damage. Target defends with 2 dice.",
+        effect: "damage-bp",
+        val: 2
+      },
+      {
+        id: "urn:robos:tabletop:spell:courage",
+        slug: "courage",
+        name: "Courage",
+        element: "fire",
+        icon: "🦁",
+        description: "Fills a hero with magical bravado, granting +2 extra Combat Attack Dice until no monsters remain.",
+        effect: "buff-atk",
+        val: 2
+      },
+      {
+        id: "urn:robos:tabletop:spell:fire-of-wrath",
+        slug: "fire-of-wrath",
+        name: "Fire of Wrath",
+        element: "fire",
+        icon: "🔥",
+        description: "Strikes any visible monster with darts of flame, causing 1 BP damage. Target defends with 1 die.",
+        effect: "damage-bp",
+        val: 1
+      }
+    ]
+  },
+  water: {
+    id: "water",
+    name: "Water Magic",
+    icon: "💧",
+    role: "Restoration & Stealth",
+    badgeClass: "tag-water",
+    color: "#06b6d4",
+    spells: [
+      {
+        id: "urn:robos:tabletop:spell:water-of-healing",
+        slug: "water-of-healing",
+        name: "Water of Healing",
+        element: "water",
+        icon: "💧",
+        description: "Restores up to 4 lost Body Points to any Hero.",
+        effect: "heal-bp",
+        val: 4
+      },
+      {
+        id: "urn:robos:tabletop:spell:sleep",
+        slug: "sleep",
+        name: "Sleep",
+        element: "water",
+        icon: "💤",
+        description: "Puts a monster into magical slumber. It cannot move or attack until it rolls a 6 to wake up.",
+        effect: "status-sleep",
+        val: 1
+      },
+      {
+        id: "urn:robos:tabletop:spell:veil-of-mist",
+        slug: "veil-of-mist",
+        name: "Veil of Mist",
+        element: "water",
+        icon: "🌫️",
+        description: "Envelops the caster in thick fog, allowing movement unseen past monsters.",
+        effect: "status-stealth",
+        val: 1
+      }
+    ]
+  },
+  air: {
+    id: "air",
+    name: "Air Magic",
+    icon: "🌪️",
+    role: "Speed & Summons",
+    badgeClass: "tag-air",
+    color: "#a855f7",
+    spells: [
+      {
+        id: "urn:robos:tabletop:spell:genie",
+        slug: "genie",
+        name: "Genie",
+        element: "air",
+        icon: "🧞",
+        description: "Summons an ancient djinn to attack any visible monster with 5 combat dice, or to open any locked door.",
+        effect: "summon-attack",
+        val: 5
+      },
+      {
+        id: "urn:robos:tabletop:spell:swift-wind",
+        slug: "swift-wind",
+        name: "Swift Wind",
+        element: "air",
+        icon: "💨",
+        description: "Bestows the speed of the tempest, allowing the hero to roll double movement dice (4d6).",
+        effect: "buff-move",
+        val: 2
+      },
+      {
+        id: "urn:robos:tabletop:spell:tempest",
+        slug: "tempest",
+        name: "Tempest",
+        element: "air",
+        icon: "🌪️",
+        description: "Creates a localized vortex trapping a monster for 1 turn. It misses its next turn.",
+        effect: "status-freeze",
+        val: 1
+      }
+    ]
+  }
+};
+
+function getSpellAllocation() {
+  return currentData.spellAllocation;
+}
+
+function setElfElement(elementKey) {
+  if (!ELEMENTAL_DECKS[elementKey]) return;
+  const allElements = ["earth", "fire", "water", "air"];
+  currentData.spellAllocation.elfElement = elementKey;
+  currentData.spellAllocation.wizardElements = allElements.filter(e => e !== elementKey);
+  applySpellAllocationToHeroes();
+  renderSpellSelectionModalUI();
+  renderSpellDraftSummaryBadges();
+  renderSpellsAndItems();
+}
+
+function getHeroSpells(hero) {
+  if (!hero) return [];
+  const heroClass = getHeroClass(hero);
+  if (heroClass === "Elf") {
+    const elem = currentData.spellAllocation?.elfElement || "water";
+    return ELEMENTAL_DECKS[elem] ? [...ELEMENTAL_DECKS[elem].spells] : [];
+  }
+  if (heroClass === "Wizard") {
+    const elems = currentData.spellAllocation?.wizardElements || ["earth", "fire", "air"];
+    let wizardSpells = [];
+    elems.forEach(elem => {
+      if (ELEMENTAL_DECKS[elem]) {
+        wizardSpells = wizardSpells.concat(ELEMENTAL_DECKS[elem].spells);
+      }
+    });
+    return wizardSpells;
+  }
+  return [];
+}
+
+function applySpellAllocationToHeroes() {
+  if (!Array.isArray(currentData.heroes)) return;
+  currentData.heroes.forEach(h => {
+    const heroClass = getHeroClass(h);
+    if (heroClass === "Elf" || heroClass === "Wizard") {
+      h["robos:spells"] = getHeroSpells(h);
+    } else {
+      h["robos:spells"] = [];
+    }
+  });
+
+  const activeHero = getActiveHero();
+  if (activeHero) {
+    renderHeroGrimoire(activeHero);
+    renderHeroSpellActionModule(activeHero);
+  }
+}
+
+function renderHeroGrimoire(hero) {
+  const spellsSection = document.getElementById("hero-spells-section");
+  const spellsList = document.getElementById("hero-spells-list");
+  const spellsTitle = document.getElementById("hero-spells-title");
+  const spellsSubtitle = document.getElementById("hero-spells-subtitle");
+  if (!spellsSection || !spellsList) return;
+
+  const heroClass = getHeroClass(hero);
+  if (heroClass !== "Elf" && heroClass !== "Wizard") {
+    spellsSection.style.display = "block";
+    if (spellsTitle) spellsTitle.textContent = "🛡️ Martial Hero (Non-Spellcaster)";
+    if (spellsSubtitle) spellsSubtitle.textContent = `${heroClass} uses no magic`;
+    spellsList.innerHTML = `
+      <div style="grid-column: 1 / -1; padding: 14px; background: rgba(30, 41, 59, 0.4); border: 1px dashed var(--border-color); border-radius: 6px; color: var(--text-muted); font-size: 0.8rem; text-align: center;">
+        The <strong>${heroClass}</strong> fights exclusively with brute martial prowess, steel, and armor.<br>
+        <span style="font-size:0.75rem; color:#64748b;">Only the <strong>Elf</strong> (1 elemental deck) and <strong>Wizard</strong> (3 elemental decks) memorize spells.</span>
+      </div>
+    `;
+    return;
+  }
+
+  spellsSection.style.display = "block";
+  const spells = getHeroSpells(hero);
+
+  if (heroClass === "Elf") {
+    const elemKey = currentData.spellAllocation?.elfElement || "water";
+    const deck = ELEMENTAL_DECKS[elemKey];
+    if (spellsTitle) spellsTitle.textContent = `🧝 Elf Grimoire — ${deck?.name || 'Elemental Magic'}`;
+    if (spellsSubtitle) spellsSubtitle.textContent = `1 College Drafted (${spells.length} Spells Memorized)`;
+  } else {
+    const elemNames = (currentData.spellAllocation?.wizardElements || []).map(e => ELEMENTAL_DECKS[e]?.name?.replace(" Magic", "") || e).join(", ");
+    if (spellsTitle) spellsTitle.textContent = `🧙 Wizard Grimoire — Master of Elements`;
+    if (spellsSubtitle) spellsSubtitle.textContent = `3 Colleges Drafted: ${elemNames} (${spells.length} Spells Memorized)`;
+  }
+
+  spellsList.innerHTML = "";
+  spells.forEach(spell => {
+    const card = document.createElement("div");
+    card.className = `spell-card-mini deck-${spell.element}`;
+    card.innerHTML = `
+      <div class="spell-card-mini-header">
+        <span class="spell-mini-name">${spell.icon} ${spell.name}</span>
+        <span class="element-tag tag-${spell.element}">${spell.element.toUpperCase()}</span>
+      </div>
+      <div class="spell-mini-desc">${spell.description}</div>
+    `;
+    spellsList.appendChild(card);
+  });
+}
+
+function renderHeroSpellActionModule(hero) {
+  const moduleEl = document.getElementById("act-spell-module");
+  const countEl = document.getElementById("act-spell-count");
+  const selectEl = document.getElementById("act-spell-select");
+  if (!moduleEl) return;
+
+  const heroClass = getHeroClass(hero);
+  if (heroClass !== "Elf" && heroClass !== "Wizard") {
+    moduleEl.style.display = "none";
+    return;
+  }
+
+  moduleEl.style.display = "flex";
+  const spells = getHeroSpells(hero);
+  if (countEl) countEl.textContent = `${spells.length} Spells Ready`;
+
+  if (selectEl) {
+    const currentVal = selectEl.value;
+    selectEl.innerHTML = "";
+    spells.forEach(sp => {
+      const opt = document.createElement("option");
+      opt.value = sp.id || sp.slug;
+      opt.textContent = `${sp.icon} ${sp.name} (${sp.element.toUpperCase()})`;
+      selectEl.appendChild(opt);
+    });
+    if (currentVal && spells.some(s => (s.id || s.slug) === currentVal)) {
+      selectEl.value = currentVal;
+    }
+  }
+}
+
+function castHeroSpell(hero, spellId) {
+  if (!hero) hero = getActiveHero();
+  if (!hero) return null;
+
+  const spells = getHeroSpells(hero);
+  const spell = spells.find(s => s.id === spellId || s.slug === spellId) || spells[0];
+  if (!spell) return null;
+
+  const resultBox = document.getElementById("act-spell-result");
+
+  let castMessage = "";
+  let effectSummary = "";
+
+  if (spell.effect === "heal-bp") {
+    const maxBP = parseInt(hero["robos:bodyPoints"], 10) || 8;
+    const curBP = hero["robos:currentBP"] !== undefined ? hero["robos:currentBP"] : maxBP;
+    const healedBP = Math.min(maxBP, curBP + spell.val);
+    const amount = healedBP - curBP;
+    hero["robos:currentBP"] = healedBP;
+    renderVitalityPips(hero);
+    castMessage = `✨ [MAGIC] ${hero["dcterms:title"]} cast ${spell.name}! Restored ${amount} BP (Current BP: ${healedBP}/${maxBP}).`;
+    effectSummary = `+${amount} BP Healed!`;
+  } else if (spell.effect === "damage-bp") {
+    castMessage = `🔥 [MAGIC] ${hero["dcterms:title"]} cast ${spell.name}! Dealt ${spell.val} magical BP damage (target defends with combat dice).`;
+    effectSummary = `${spell.val} BP Damage Dealt`;
+  } else if (spell.effect === "summon-attack") {
+    castMessage = `🌪️ [MAGIC] ${hero["dcterms:title"]} summoned Genie! Attacking target with ${spell.val} combat dice.`;
+    effectSummary = `Genie Strikes with ${spell.val} Dice!`;
+  } else if (spell.effect === "buff-def" || spell.effect === "buff-atk" || spell.effect === "buff-move") {
+    castMessage = `✨ [MAGIC] ${hero["dcterms:title"]} cast ${spell.name}! Applied active enhancement effect: ${spell.description}`;
+    effectSummary = `Buff Active!`;
+  } else {
+    castMessage = `🔮 [MAGIC] ${hero["dcterms:title"]} cast ${spell.name}! ${spell.description}`;
+    effectSummary = `Spell Effect Active`;
+  }
+
+  if (resultBox) {
+    resultBox.innerHTML = `
+      <span class="dice-badge dice-shield">${spell.icon} ${spell.name}</span>
+      <span style="font-size:0.75rem; color:#a7f3d0; font-weight:600;">${effectSummary}</span>
+    `;
+  }
+
+  logCombatAction(castMessage, "system");
+  triggerHeroAutosave();
+  return { spell, effectSummary, castMessage };
+}
+
+let pendingSpellDraftCallback = null;
+
+function openSpellSelectionModal(onConfirmCallback = null) {
+  pendingSpellDraftCallback = onConfirmCallback;
+  const modal = document.getElementById("modal-spell-pick");
+  if (!modal) return;
+  modal.style.display = "flex";
+  renderSpellSelectionModalUI();
+}
+
+function closeSpellSelectionModal() {
+  const modal = document.getElementById("modal-spell-pick");
+  if (modal) modal.style.display = "none";
+  pendingSpellDraftCallback = null;
+}
+
+function renderSpellDraftSummaryBadges() {
+  const badge = document.getElementById("spells-draft-summary-badge");
+  if (badge) {
+    const elfDeck = ELEMENTAL_DECKS[currentData.spellAllocation.elfElement]?.name || currentData.spellAllocation.elfElement;
+    const wizDecks = currentData.spellAllocation.wizardElements
+      .map(e => ELEMENTAL_DECKS[e]?.name?.replace(" Magic", "") || e)
+      .join(", ");
+    badge.textContent = `Elf: ${elfDeck} (3) | Wizard: ${wizDecks} (9)`;
+  }
+}
+
+function renderSpellSelectionModalUI() {
+  const elfElem = currentData.spellAllocation.elfElement;
+  const wizElems = currentData.spellAllocation.wizardElements;
+
+  // Highlight active deck card
+  document.querySelectorAll(".element-deck-card").forEach(card => {
+    const elem = card.dataset.element;
+    const selectBtn = card.querySelector(".btn-element-select");
+    if (elem === elfElem) {
+      card.classList.add("active");
+      if (selectBtn) selectBtn.textContent = "✓ Drafted by Elf";
+    } else {
+      card.classList.remove("active");
+      if (selectBtn) selectBtn.textContent = "Draft for Elf";
+    }
+  });
+
+  // Update summary tags
+  const elfSummary = document.getElementById("modal-elf-element-summary");
+  if (elfSummary) {
+    const deck = ELEMENTAL_DECKS[elfElem];
+    elfSummary.className = `element-tag tag-${elfElem}`;
+    elfSummary.textContent = `${deck.icon} ${deck.name} (3 Spells)`;
+  }
+
+  const wizSummary = document.getElementById("modal-wizard-element-summary");
+  if (wizSummary) {
+    const deckNames = wizElems.map(e => `${ELEMENTAL_DECKS[e].icon} ${ELEMENTAL_DECKS[e].name.replace(" Magic", "")}`).join(", ");
+    wizSummary.className = "element-tag tag-multi";
+    wizSummary.textContent = `${deckNames} (9 Spells)`;
+  }
+
+  // Preview chips for Elf
+  const elfPreview = document.getElementById("modal-elf-spells-preview");
+  if (elfPreview) {
+    elfPreview.innerHTML = "";
+    const elfSpells = ELEMENTAL_DECKS[elfElem]?.spells || [];
+    elfSpells.forEach(s => {
+      const chip = document.createElement("div");
+      chip.className = `spell-preview-chip tag-${elfElem}`;
+      chip.innerHTML = `<strong>${s.icon} ${s.name}</strong><span>${s.description}</span>`;
+      elfPreview.appendChild(chip);
+    });
+  }
+
+  // Preview chips for Wizard
+  const wizPreview = document.getElementById("modal-wizard-spells-preview");
+  if (wizPreview) {
+    wizPreview.innerHTML = "";
+    wizElems.forEach(elemKey => {
+      const deckSpells = ELEMENTAL_DECKS[elemKey]?.spells || [];
+      deckSpells.forEach(s => {
+        const chip = document.createElement("div");
+        chip.className = `spell-preview-chip tag-${elemKey}`;
+        chip.innerHTML = `<strong>${s.icon} ${s.name}</strong><span>${s.description}</span>`;
+        wizPreview.appendChild(chip);
+      });
+    });
+  }
+}
+
+let spellDraftControlsInitialized = false;
+function setupSpellDraftControls() {
+  if (spellDraftControlsInitialized) return;
+  spellDraftControlsInitialized = true;
+
+  document.getElementById("btn-open-spell-pick")?.addEventListener("click", () => openSpellSelectionModal());
+  document.getElementById("btn-spells-tab-pick")?.addEventListener("click", () => openSpellSelectionModal());
+  document.getElementById("btn-hero-repick-spells")?.addEventListener("click", () => openSpellSelectionModal());
+  document.getElementById("btn-close-spell-modal")?.addEventListener("click", closeSpellSelectionModal);
+  document.getElementById("btn-cancel-spell-modal")?.addEventListener("click", closeSpellSelectionModal);
+
+  document.querySelectorAll(".element-deck-card").forEach(card => {
+    card.addEventListener("click", (e) => {
+      const elem = card.dataset.element;
+      if (elem) setElfElement(elem);
+    });
+  });
+
+  document.querySelectorAll(".btn-element-select").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const elem = btn.dataset.selectElement;
+      if (elem) setElfElement(elem);
+    });
+  });
+
+  document.getElementById("btn-confirm-spell-modal")?.addEventListener("click", () => {
+    currentData.spellAllocation.confirmed = true;
+    applySpellAllocationToHeroes();
+    renderSpellsAndItems();
+    renderSpellDraftSummaryBadges();
+    closeSpellSelectionModal();
+    const elfDeckName = ELEMENTAL_DECKS[currentData.spellAllocation.elfElement]?.name || currentData.spellAllocation.elfElement;
+    setStatus(`Spell Selection Confirmed: Elf memorizes ${elfDeckName}; Wizard takes remaining 3 decks.`);
+    logCombatAction(`🔮 Spell Selection Confirmed! Elf memorizes ${elfDeckName}. Wizard takes remaining 3 decks.`, "system");
+    if (typeof pendingSpellDraftCallback === "function") {
+      const cb = pendingSpellDraftCallback;
+      pendingSpellDraftCallback = null;
+      cb();
+    }
+  });
+
+  document.getElementById("btn-cast-hero-spell")?.addEventListener("click", () => {
+    const hero = getActiveHero();
+    const selectEl = document.getElementById("act-spell-select");
+    const spellId = selectEl?.value;
+    if (hero && spellId) {
+      castHeroSpell(hero, spellId);
+    }
+  });
 }
 
 // ==========================================
@@ -1955,8 +2452,9 @@ function selectHero(heroId) {
   document.getElementById("hero-pos-x").value = (hero["robos:startingPosition"] && hero["robos:startingPosition"][0]) || 1;
   document.getElementById("hero-pos-y").value = (hero["robos:startingPosition"] && hero["robos:startingPosition"][1]) || 1;
 
-  // Render Inventory & Action Screen
+  // Render Inventory, Grimoire & Action Screen
   renderHeroInventory(hero);
+  renderHeroGrimoire(hero);
   renderHeroActionScreen(hero);
 }
 
@@ -2066,6 +2564,7 @@ function renderHeroActionScreen(hero) {
   if (defArmor) defArmor.textContent = armor;
 
   renderVitalityPips(hero);
+  renderHeroSpellActionModule(hero);
 }
 
 function renderVitalityPips(hero) {
@@ -2509,15 +3008,58 @@ function renderSpellsAndItems() {
   const spellsGrid = document.getElementById("spells-grid");
   if (spellsGrid) {
     spellsGrid.innerHTML = "";
-    currentData.spells.forEach(s => {
+    const elfElement = currentData.spellAllocation?.elfElement || "water";
+    const allSpells = [];
+    Object.keys(ELEMENTAL_DECKS).forEach(elemKey => {
+      ELEMENTAL_DECKS[elemKey].spells.forEach(s => allSpells.push(s));
+    });
+
+    allSpells.forEach(s => {
+      const card = document.createElement("div");
+      card.className = `spell-card deck-${s.element}`;
+      const isElf = s.element === elfElement;
+      const draftedBy = isElf ? "🧝 Elf Grimoire" : "🧙 Wizard Grimoire";
+      const draftedClass = isElf ? "badge-info" : "badge-purple";
+      card.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+          <div class="card-title" style="margin:0;">${s.icon} ${s.name}</div>
+          <span class="element-tag tag-${s.element}">${s.element.toUpperCase()}</span>
+        </div>
+        <div class="card-meta" style="color:var(--text-muted); font-size:0.75rem; margin-bottom:6px;">${s.description}</div>
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem;">
+          <span class="card-meta" style="margin:0;">College: ${ELEMENTAL_DECKS[s.element]?.name}</span>
+          <span class="badge ${draftedClass}" style="font-size:0.7rem;">${draftedBy}</span>
+        </div>
+      `;
+      spellsGrid.appendChild(card);
+    });
+  }
+
+  const itemsGrid = document.getElementById("items-grid");
+  if (itemsGrid) {
+    itemsGrid.innerHTML = "";
+    const armory = [
+      { name: "Broadsword", type: "Weapon", dice: "3 Attack Dice", cost: "250 GP", icon: "⚔️" },
+      { name: "Shortsword", type: "Weapon", dice: "2 Attack Dice (Diagonal)", cost: "150 GP", icon: "🗡️" },
+      { name: "Battle Axe", type: "Weapon", dice: "4 Attack Dice (Two-Handed)", cost: "400 GP", icon: "🪓" },
+      { name: "Crossbow", type: "Ranged Weapon", dice: "3 Attack Dice (Straight Line)", cost: "350 GP", icon: "🏹" },
+      { name: "Chainmail", type: "Armor", dice: "+1 Defend Die (3 Total)", cost: "500 GP", icon: "🛡️" },
+      { name: "Plate Armor", type: "Armor", dice: "+2 Defend Dice (4 Total, 1d6 Move)", cost: "850 GP", icon: "🦾" },
+      { name: "Shield", type: "Armor", dice: "+1 Defend Die", cost: "150 GP", icon: "🛡️" },
+      { name: "Helmet", type: "Armor", dice: "+1 Defend Die", cost: "120 GP", icon: "🪖" },
+      { name: "Toolkit", type: "Gear", dice: "Disarm Traps on 1-5", cost: "250 GP", icon: "🔧" }
+    ];
+    armory.forEach(item => {
       const card = document.createElement("div");
       card.className = "spell-card";
       card.innerHTML = `
-        <div class="card-title">${s["dcterms:title"]}</div>
-        <div class="card-meta">College: ${s["robos:element"] || "neutral"}</div>
-        <div class="card-meta">${s["robos:attackDice"] ? `Attack Dice: ${s["robos:attackDice"]}` : ""}</div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div class="card-title">${item.icon} ${item.name}</div>
+          <span style="font-weight:700; color:#fbbf24; font-size:0.8rem;">💰 ${item.cost}</span>
+        </div>
+        <div class="card-meta">${item.type} • ${item.dice}</div>
       `;
-      spellsGrid.appendChild(card);
+      itemsGrid.appendChild(card);
     });
   }
 }
@@ -2929,6 +3471,7 @@ document.getElementById("btn-bundle")?.addEventListener("click", async () => {
       armor: getHeroArmor(h),
       inventory: getHeroInventory(h),
       tokenColor: h["robos:tokenColor"] || "#b91c1c",
+      spells: getHeroSpells(h),
       position: (h["robos:startingPosition"] && h["robos:startingPosition"].length === 2) ? h["robos:startingPosition"] : [1, 1]
     })),
     monsters: q.monsters.map(m => ({
@@ -2944,6 +3487,10 @@ document.getElementById("btn-bundle")?.addEventListener("click", async () => {
       roomId: m.roomId
     })),
     maps: mapsPayload,
+    spellAllocation: {
+      elfElement: currentData.spellAllocation.elfElement,
+      wizardElements: currentData.spellAllocation.wizardElements
+    },
     quests: currentData.campaign.quests.map(qst => ({
       id: qst.id,
       slug: qst.slug,
@@ -2965,9 +3512,21 @@ document.getElementById("btn-bundle")?.addEventListener("click", async () => {
   }
 });
 
-// Action: Play as Hero
+// Action: Play as Hero (Launches spell draft modal first if unconfirmed)
 document.getElementById("btn-play-hero")?.addEventListener("click", async () => {
   const slug = document.getElementById("quest-slug").value || currentData.currentQuest.slug;
+  if (!currentData.spellAllocation.confirmed) {
+    openSpellSelectionModal(async () => {
+      setStatus(`Launching Tabletop Player (PLAYER MODE)...`);
+      const res = await window.robosTabletop.launchGame({ cartridgeSlug: slug, role: "player" });
+      if (res.success) {
+        setStatus(`Launched Player Mode (PID: ${res.pid})`);
+      } else {
+        setStatus("Error launching game: " + res.error);
+      }
+    });
+    return;
+  }
   setStatus(`Launching Tabletop Player (PLAYER MODE)...`);
   const res = await window.robosTabletop.launchGame({ cartridgeSlug: slug, role: "player" });
   if (res.success) {
@@ -2977,9 +3536,21 @@ document.getElementById("btn-play-hero")?.addEventListener("click", async () => 
   }
 });
 
-// Action: Play as Game Master
+// Action: Play as Game Master (Launches spell draft modal first if unconfirmed)
 document.getElementById("btn-play-dm")?.addEventListener("click", async () => {
   const slug = document.getElementById("quest-slug").value || currentData.currentQuest.slug;
+  if (!currentData.spellAllocation.confirmed) {
+    openSpellSelectionModal(async () => {
+      setStatus(`Launching Tabletop Player (GAME MASTER MODE)...`);
+      const res = await window.robosTabletop.launchGame({ cartridgeSlug: slug, role: "gm" });
+      if (res.success) {
+        setStatus(`Launched Game Master Mode (PID: ${res.pid})`);
+      } else {
+        setStatus("Error launching game: " + res.error);
+      }
+    });
+    return;
+  }
   setStatus(`Launching Tabletop Player (GAME MASTER MODE)...`);
   const res = await window.robosTabletop.launchGame({ cartridgeSlug: slug, role: "gm" });
   if (res.success) {
@@ -3041,6 +3612,17 @@ if (typeof window !== "undefined") {
     rollHeroMove,
     addHeroInventoryItem,
     removeHeroInventoryItem
+  };
+
+  window._tabletopSpellDraft = {
+    ELEMENTAL_DECKS,
+    getSpellAllocation: () => currentData.spellAllocation,
+    setElfElement,
+    getHeroSpells,
+    openSpellSelectionModal,
+    closeSpellSelectionModal,
+    castHeroSpell,
+    renderSpellDraftSummaryBadges
   };
 
   window._tabletopCampaign = {
