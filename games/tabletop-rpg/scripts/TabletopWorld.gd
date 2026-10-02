@@ -121,7 +121,7 @@ const ELEMENTAL_DECKS: Dictionary = {
 const ELEMENTAL_DECK_INFO: Dictionary = {
 	"water": {
 		"name": "Water Magic",
-		"icon": "💧",
+		"icon": "",
 		"role": "Restoration & Stealth",
 		"color": Color(0.02, 0.71, 0.83, 1.0),
 		"spells": [
@@ -132,7 +132,7 @@ const ELEMENTAL_DECK_INFO: Dictionary = {
 	},
 	"earth": {
 		"name": "Earth Magic",
-		"icon": "🪨",
+		"icon": "",
 		"role": "Defense & Healing",
 		"color": Color(0.13, 0.77, 0.36, 1.0),
 		"spells": [
@@ -143,7 +143,7 @@ const ELEMENTAL_DECK_INFO: Dictionary = {
 	},
 	"fire": {
 		"name": "Fire Magic",
-		"icon": "🔥",
+		"icon": "",
 		"role": "Direct Damage & Buffs",
 		"color": Color(0.98, 0.45, 0.08, 1.0),
 		"spells": [
@@ -154,7 +154,7 @@ const ELEMENTAL_DECK_INFO: Dictionary = {
 	},
 	"air": {
 		"name": "Air Magic",
-		"icon": "🌪️",
+		"icon": "",
 		"role": "Speed & Summons",
 		"color": Color(0.22, 0.74, 0.97, 1.0),
 		"spells": [
@@ -171,7 +171,7 @@ var is_ai_step_pending: bool = false
 var pending_ai_command: Dictionary = {}
 
 func _ready() -> void:
-	print("🛡️ [TabletopWorld] Initializing HeroQuest Cartridge Player...")
+	print("[TabletopWorld] Initializing HeroQuest Cartridge Player...")
 	_check_cli_role()
 	_update_board_metrics()
 	_load_active_cartridge()
@@ -183,9 +183,9 @@ func _ready() -> void:
 	_update_ui()
 	_log("=== Welcome to HeroQuest: The Trial ===")
 	if is_gm_role():
-		_log("👑 [Game Master / DunMaster Mode Active] You are Zargon, Master of Darkness. Full dungeon visibility granted.")
+		_log("[GM] [Game Master / DunMaster Mode Active] You are Zargon, Master of Darkness. Full dungeon visibility granted.")
 	else:
-		_log("⚔️ [Player Mode Active] You lead the four heroes into the catacombs of Verag!")
+		_log("[PLAYER] [Player Mode Active] You lead the four heroes into the catacombs of Verag!")
 		_check_start_elf_spell_selection()
 
 func _load_door_textures() -> void:
@@ -250,10 +250,10 @@ func _setup_ui_signals() -> void:
 func toggle_role() -> void:
 	if current_role == "player":
 		current_role = "gm"
-		_log("👑 Switched to Game Master Mode! You command Morcar's minions and see all hidden rooms.")
+		_log("[GM] Switched to Game Master Mode! You command Morcar's minions and see all hidden rooms.")
 	else:
 		current_role = "player"
-		_log("⚔️ Switched to Player Mode! You control the hero party.")
+		_log("[PLAYER] Switched to Player Mode! You control the hero party.")
 		update_party_vision()
 	_update_ui()
 	queue_redraw_all()
@@ -649,7 +649,7 @@ func reveal_room_by_id(r_id: String) -> void:
 	revealed_rooms.append(r_id)
 	var room_obj = _get_room_by_id(r_id)
 	var room_name = room_obj.get("name", r_id)
-	_log("🚪 Door kicked open! Revealed chamber: %s!" % room_name)
+	_log("[DOOR] Door kicked open! Revealed chamber: %s!" % room_name)
 
 	# Reveal all tiles of this room immediately
 	var rx = int(room_obj.get("x", 0))
@@ -672,9 +672,9 @@ func reveal_room_by_id(r_id: String) -> void:
 			if m.get("is_alive", false):
 				found_m.append(str(m.get("name", "Monster")))
 	if found_m.size() > 0:
-		_log("⚠️ Danger! Spotted inside: %s!" % ", ".join(found_m))
+		_log("[DANGER] Spotted inside: %s!" % ", ".join(found_m))
 	else:
-		_log("✨ The chamber appears calm... for now.")
+		_log("[CALM] The chamber appears calm... for now.")
 
 func _is_inside_any_room(tile: Vector2i) -> bool:
 	for r in rooms:
@@ -938,10 +938,12 @@ func _populate_elf_spell_decks() -> void:
 
 		# Header
 		var hdr = HBoxContainer.new()
-		var icon_lbl = Label.new()
-		icon_lbl.text = str(info.get("icon", "🔮"))
-		icon_lbl.add_theme_font_size_override("font_size", 22)
-		hdr.add_child(icon_lbl)
+		var icon_str = str(info.get("icon", ""))
+		if icon_str != "":
+			var icon_lbl = Label.new()
+			icon_lbl.text = icon_str
+			icon_lbl.add_theme_font_size_override("font_size", 22)
+			hdr.add_child(icon_lbl)
 
 		var title_vbox = VBoxContainer.new()
 		title_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -1019,9 +1021,8 @@ func _update_elf_spell_modal_ui() -> void:
 		for k in ["water", "earth", "fire", "air"]:
 			if k != current_elf_element:
 				var wi = ELEMENTAL_DECK_INFO.get(k, {})
-				wiz_names.append("%s %s" % [wi.get("icon", ""), wi.get("name", k).replace(" Magic", "")])
-		elf_spell_summary_text.text = "Selected: %s %s (Elf: 3 Spells) | Wizard takes: %s (9 Spells)" % [
-			cur_info.get("icon", ""),
+				wiz_names.append(wi.get("name", k).replace(" Magic", ""))
+		elf_spell_summary_text.text = "Selected: %s (Elf: 3 Spells) | Wizard takes: %s (9 Spells)" % [
 			cur_info.get("name", current_elf_element),
 			", ".join(wiz_names)
 		]
@@ -1065,8 +1066,7 @@ func confirm_elf_spell_selection() -> Dictionary:
 	var res = select_elf_element(current_elf_element)
 	close_elf_spell_selection_modal()
 	var info = ELEMENTAL_DECK_INFO.get(current_elf_element, {})
-	_log("🔮 Spell Selection Confirmed! Elf memorizes %s %s. Wizard takes the remaining 3 decks." % [
-		info.get("icon", ""),
+	_log("[SPELLS] Spell Selection Confirmed! Elf memorizes %s. Wizard takes the remaining 3 decks." % [
 		info.get("name", current_elf_element)
 	])
 	return res
@@ -1131,7 +1131,7 @@ func get_next_ai_step_command() -> Dictionary:
 				"action": "roll_movement",
 				"command": "roll_movement_dice",
 				"hero": h_name,
-				"title": "🎲 %s Rolls 2d6 Movement Dice" % h_name,
+				"title": "%s Rolls 2d6 Movement Dice" % h_name,
 				"action_name": "Roll Movement",
 				"description": "%s rolls two red acrylic dice to determine available movement squares for this turn." % h_name,
 				"parameters": {
@@ -1149,7 +1149,7 @@ func get_next_ai_step_command() -> Dictionary:
 				"action": "move",
 				"command": "move_hero",
 				"hero": h_name,
-				"title": "👣 Advance Along Corridor to (%d, %d)" % [target.x, target.y],
+				"title": "Advance Along Corridor to (%d, %d)" % [target.x, target.y],
 				"action_name": "Move Hero",
 				"description": "%s advances through the corridor toward the heavy wooden crypt door at (%d, %d)." % [h_name, target.x, target.y],
 				"parameters": {
@@ -1168,7 +1168,7 @@ func get_next_ai_step_command() -> Dictionary:
 				"action": "open_door",
 				"command": "open_door",
 				"hero": h_name,
-				"title": "🚪 Kick Open Crypt Door (%d, %d) ➔ (%d, %d)" % [door_from.x, door_from.y, door_to.x, door_to.y],
+				"title": "Kick Open Crypt Door (%d, %d) -> (%d, %d)" % [door_from.x, door_from.y, door_to.x, door_to.y],
 				"action_name": "Open Door",
 				"description": "%s kicks open the reinforced dungeon door, lifting the Fog of War and revealing the Northwest Crypt." % h_name,
 				"parameters": {
@@ -1186,7 +1186,7 @@ func get_next_ai_step_command() -> Dictionary:
 				"action": "move",
 				"command": "move_hero",
 				"hero": h_name,
-				"title": "👣 Enter Northwest Crypt at (%d, %d)" % [room_target.x, room_target.y],
+				"title": "Enter Northwest Crypt at (%d, %d)" % [room_target.x, room_target.y],
 				"action_name": "Move Into Room",
 				"description": "%s strides through the doorway into the crypt chamber to engage the spotted skeletons." % h_name,
 				"parameters": {
@@ -1203,7 +1203,7 @@ func get_next_ai_step_command() -> Dictionary:
 				"action": "attack",
 				"command": "attack_adjacent_monster",
 				"hero": h_name,
-				"title": "⚔️ Attack Crypt Skeleton with Broadsword",
+				"title": "Attack Crypt Skeleton with Broadsword",
 				"action_name": "Melee Attack",
 				"description": "%s swings Broadsword at adjacent Crypt Skeleton rolling combat dice (Skulls vs Black Shields)." % h_name,
 				"parameters": {
@@ -1220,7 +1220,7 @@ func get_next_ai_step_command() -> Dictionary:
 				"action": "end_turn",
 				"command": "end_turn",
 				"hero": h_name,
-				"title": "⏭️ Conclude Barbarian Turn & Handover to Dwarf",
+				"title": "Conclude Barbarian Turn & Handover to Dwarf",
 				"action_name": "End Turn",
 				"description": "%s concludes their turn. Active turn control advances to Dwarf at the dungeon stair." % h_name,
 				"parameters": {
@@ -1238,7 +1238,7 @@ func get_next_ai_step_command() -> Dictionary:
 				"action": "roll_and_move",
 				"command": "roll_and_move",
 				"hero": "Dwarf",
-				"title": "🎲 Advance Dwarf into Crypt at (%d, %d)" % [dwarf_pos.x, dwarf_pos.y],
+				"title": "Advance Dwarf into Crypt at (%d, %d)" % [dwarf_pos.x, dwarf_pos.y],
 				"action_name": "Roll & Move",
 				"description": "Dwarf rolls movement dice and advances into the crypt to support Barbarian.",
 				"parameters": {
@@ -1255,7 +1255,7 @@ func get_next_ai_step_command() -> Dictionary:
 				"action": "search",
 				"command": "search_room",
 				"hero": "Dwarf",
-				"title": "🔍 Search Crypt for Treasure & Hidden Traps",
+				"title": "Search Crypt for Treasure & Hidden Traps",
 				"action_name": "Search Room",
 				"description": "Dwarf searches the crypt chamber for gold coins, hidden loot chests, and traps.",
 				"parameters": {
@@ -1271,7 +1271,7 @@ func get_next_ai_step_command() -> Dictionary:
 				"action": "monster_turn",
 				"command": "ai_monster_turn",
 				"hero": "Game Master (Zargon)",
-				"title": "👑 Conclude Hero Phase & Begin Zargon AI Phase",
+				"title": "Conclude Hero Phase & Begin Zargon AI Phase",
 				"action_name": "Game Master Turn",
 				"description": "All heroes finish their turns. Zargon AI activates surviving dungeon monsters for tactical counterattacks.",
 				"parameters": {
@@ -1287,7 +1287,7 @@ func get_next_ai_step_command() -> Dictionary:
 				"action": "conclude_auto_play",
 				"command": "conclude_auto_play",
 				"hero": "System",
-				"title": "🏁 Conclude Auto-Play & Begin Round 2",
+				"title": "Conclude Auto-Play & Begin Round 2",
 				"action_name": "Finish Auto-Play",
 				"description": "Completes the 10-step autonomous gameplay demonstration and transitions to active free-play mode.",
 				"parameters": {
@@ -1297,23 +1297,23 @@ func get_next_ai_step_command() -> Dictionary:
 			}
 		_:
 			var cmd_name = "end_turn"
-			var act_title = "⏭️ End Turn"
+			var act_title = "End Turn"
 			var act_desc = "%s ends their turn." % h_name
 			if turn_state == "awaiting_roll":
 				cmd_name = "roll_movement_dice"
-				act_title = "🎲 Roll Movement Dice"
+				act_title = "Roll Movement Dice"
 				act_desc = "%s rolls 2d6 movement dice." % h_name
 			elif get_adjacent_monsters().size() > 0 and not has_acted_this_turn:
 				cmd_name = "attack_adjacent_monster"
-				act_title = "⚔️ Attack Adjacent Monster"
+				act_title = "Attack Adjacent Monster"
 				act_desc = "%s attacks adjacent monster." % h_name
 			elif get_adjacent_closed_doors().size() > 0:
 				cmd_name = "open_door"
-				act_title = "🚪 Open Adjacent Door"
+				act_title = "Open Adjacent Door"
 				act_desc = "%s opens adjacent door." % h_name
 			elif can_search_room():
 				cmd_name = "search_room"
-				act_title = "🔍 Search Room"
+				act_title = "Search Room"
 				act_desc = "%s searches room for treasure." % h_name
 
 			return {
@@ -1357,7 +1357,7 @@ func propose_ai_step() -> Dictionary:
 	if ai_confirm_modal:
 		ai_confirm_modal.visible = true
 
-	_log("🤖 [AI Step Proposal] Step %d: %s (Command: %s). Awaiting user confirmation..." % [
+	_log("[AI PROPOSAL] Step %d: %s (Command: %s). Awaiting user confirmation..." % [
 		int(cmd_info.get("step", 1)),
 		str(cmd_info.get("title", "")),
 		str(cmd_info.get("command", ""))
@@ -1373,7 +1373,7 @@ func confirm_and_execute_ai_step() -> Dictionary:
 	if ai_confirm_modal:
 		ai_confirm_modal.visible = false
 
-	_log("⚡ [AI Step Confirmed] Executing Step %d: %s" % [
+	_log("[AI CONFIRMED] Executing Step %d: %s" % [
 		int(executed_cmd.get("step", auto_play_step + 1)),
 		str(executed_cmd.get("title", ""))
 	])
@@ -1387,7 +1387,7 @@ func cancel_ai_step() -> Dictionary:
 	pending_ai_command = {}
 	if ai_confirm_modal:
 		ai_confirm_modal.visible = false
-	_log("❌ [AI Step Cancelled] Proposal for Step %d cancelled by user." % cancelled_step)
+	_log("[AI CANCELLED] Proposal for Step %d cancelled by user." % cancelled_step)
 	return { "success": true, "cancelled": true, "step": cancelled_step }
 
 func _execute_auto_play_step() -> void:
@@ -1398,42 +1398,42 @@ func _execute_auto_play_step() -> void:
 
 	match auto_play_step:
 		1:
-			_log("⚡ [Auto-Play] Step 1: %s rolls 2d6 movement dice..." % str(hero.get("name")))
+			_log("[AUTO-PLAY] Step 1: %s rolls 2d6 movement dice..." % str(hero.get("name")))
 			roll_movement_dice()
 		2:
 			var target = Vector2i(4, 1) if starting_stair == Vector2i(0, 1) else Vector2i(2, 0)
-			_log("⚡ [Auto-Play] Step 2: %s advances down the corridor toward heavy dungeon door at (%d, %d)." % [hero.get("name"), target.x, target.y])
+			_log("[AUTO-PLAY] Step 2: %s advances down the corridor toward heavy dungeon door at (%d, %d)." % [hero.get("name"), target.x, target.y])
 			move_hero(target)
 		3:
 			var door_from = Vector2i(4, 1) if starting_stair == Vector2i(0, 1) else Vector2i(2, 0)
 			var door_to = Vector2i(4, 2) if starting_stair == Vector2i(0, 1) else Vector2i(2, 1)
-			_log("⚡ [Auto-Play] Step 3: %s kicks open the ancient wooden door! Fog of War lifts!" % str(hero.get("name")))
+			_log("[AUTO-PLAY] Step 3: %s kicks open the ancient wooden door! Fog of War lifts!" % str(hero.get("name")))
 			open_door(door_from, door_to)
 		4:
 			var room_target = Vector2i(4, 3) if starting_stair == Vector2i(0, 1) else Vector2i(2, 2)
-			_log("⚡ [Auto-Play] Step 4: %s strides boldly into the revealed chamber!" % str(hero.get("name")))
+			_log("[AUTO-PLAY] Step 4: %s strides boldly into the revealed chamber!" % str(hero.get("name")))
 			move_hero(room_target)
 		5:
-			_log("⚡ [Auto-Play] Step 5: %s swings Broadsword at enemy monster!" % str(hero.get("name")))
+			_log("[AUTO-PLAY] Step 5: %s swings Broadsword at enemy monster!" % str(hero.get("name")))
 			attack_adjacent_monster()
 		6:
-			_log("⚡ [Auto-Play] Step 6: Barbarian ends turn. Next hero: Dwarf.")
+			_log("[AUTO-PLAY] Step 6: Barbarian ends turn. Next hero: Dwarf.")
 			end_turn()
 		7:
-			_log("⚡ [Auto-Play] Step 7: Dwarf rolls movement and enters the chamber.")
+			_log("[AUTO-PLAY] Step 7: Dwarf rolls movement and enters the chamber.")
 			roll_movement_dice()
 			var dwarf_pos = Vector2i(3, 3) if starting_stair == Vector2i(0, 1) else Vector2i(3, 1)
 			move_hero(dwarf_pos)
 		8:
-			_log("⚡ [Auto-Play] Step 8: Dwarf searches room for treasure and hidden traps!")
+			_log("[AUTO-PLAY] Step 8: Dwarf searches room for treasure and hidden traps!")
 			search_room()
 		9:
-			_log("⚡ [Auto-Play] Step 9: Hero phase concludes! Game Master / Zargon AI Phase begins!")
+			_log("[AUTO-PLAY] Step 9: Hero phase concludes! Game Master / Zargon AI Phase begins!")
 			end_turn()
 			current_phase = "gm_phase"
 			ai_monster_turn()
 		10:
-			_log("⚡ [Auto-Play] Step 10: Round 2 begins! E2E Gameplay & Turn Cycle verified.")
+			_log("[AUTO-PLAY] Step 10: Round 2 begins! E2E Gameplay & Turn Cycle verified.")
 			CartridgeManager.auto_play_enabled = false
 
 func get_active_hero() -> Dictionary:
@@ -1547,7 +1547,7 @@ func _handle_tile_click(tile: Vector2i) -> void:
 
 func roll_movement_dice() -> Dictionary:
 	if movement_closed or (moved_before_action and has_acted_this_turn):
-		_log("⚠️ HeroQuest Rule: Movement phase has concluded for this turn!")
+		_log("[RULE] HeroQuest Rule: Movement phase has concluded for this turn!")
 		return {}
 
 	var hero = get_active_hero()
@@ -1561,7 +1561,7 @@ func roll_movement_dice() -> Dictionary:
 		var d1 = randi_range(1, 6)
 		roll = { "total": d1, "d1": d1, "d2": 0, "plate_mail": true }
 		dice_vals = [d1]
-		_log("🎲 %s wears Plate Mail: movement restricted to 1d6: [%d] = %d squares!" % [
+		_log("[MOVE] %s wears Plate Mail: movement restricted to 1d6: [%d] = %d squares!" % [
 			hero.get("name", "Hero"), d1, d1
 		])
 	elif is_swift:
@@ -1571,13 +1571,13 @@ func roll_movement_dice() -> Dictionary:
 		roll = { "total": total, "d1": r1.total, "d2": r2.total, "swift_wind": true }
 		dice_vals = [r1.d1, r1.d2, r2.d1, r2.d2]
 		hero["swift_wind_active"] = false
-		_log("💨 Swift Wind carries %s forward at double speed: 4d6 = %d squares!" % [
+		_log("[MOVE] Swift Wind carries %s forward at double speed: 4d6 = %d squares!" % [
 			hero.get("name", "Hero"), total
 		])
 	else:
 		roll = TabletopDice.roll_movement()
 		dice_vals = [roll.d1, roll.d2]
-		_log("🎲 %s rolled 2d6 movement: [%d, %d] = %d squares!" % [
+		_log("[MOVE] %s rolled 2d6 movement: [%d, %d] = %d squares!" % [
 			hero.get("name", "Hero"), roll.d1, roll.d2, roll.total
 		])
 
@@ -1659,34 +1659,34 @@ func move_hero(target_pos: Vector2i) -> bool:
 	# You cannot split movement before and after an attack/action.
 	# If the hero moved before taking an action, any action taken closes movement permanently.
 	if movement_closed or (moved_before_action and has_acted_this_turn):
-		_log("⚠️ HeroQuest Rule: Movement cannot be split before and after an action! Turn is complete.")
+		_log("[RULE] HeroQuest Rule: Movement cannot be split before and after an action! Turn is complete.")
 		return false
 
 	# Standard HeroQuest Rule: No Sharing Squares
 	if is_tile_occupied(target_pos, active_hero_idx):
 		if is_tile_occupied_by_hero(target_pos, active_hero_idx):
 			var occ_hero = get_hero_at(target_pos)
-			_log("⚠️ Square (%d, %d) is occupied by %s! HeroQuest rules strictly forbid sharing a space." % [
+			_log("[WARNING] Square (%d, %d) is occupied by %s! HeroQuest rules strictly forbid sharing a space." % [
 				target_pos.x, target_pos.y, occ_hero.get("name", "another hero")
 			])
 		else:
 			var occ_monster = get_monster_at(target_pos)
-			_log("⚠️ Square (%d, %d) is occupied by %s! Cannot end movement on monster squares." % [
+			_log("[WARNING] Square (%d, %d) is occupied by %s! Cannot end movement on monster squares." % [
 				target_pos.x, target_pos.y, occ_monster.get("name", "monster")
 			])
 		return false
 
 	var path = find_path(curr, target_pos, active_hero_idx)
 	if path.is_empty():
-		_log("⚠️ Path to (%d, %d) is blocked!" % [target_pos.x, target_pos.y])
+		_log("[WARNING] Path to (%d, %d) is blocked!" % [target_pos.x, target_pos.y])
 		return false
 
 	var cost = path.size() - 1
 	if movement_remaining <= 0:
-		_log("⚠️ No movement remaining this turn!")
+		_log("[WARNING] No movement remaining this turn!")
 		return false
 	if cost > movement_remaining:
-		_log("⚠️ Target out of movement range (need %d, have %d)" % [cost, movement_remaining])
+		_log("[WARNING] Target out of movement range (need %d, have %d)" % [cost, movement_remaining])
 		return false
 
 	var final_pos = target_pos
@@ -1721,7 +1721,7 @@ func move_hero(target_pos: Vector2i) -> bool:
 		movement_remaining = 0 # Stepping into a trap ends remaining movement
 		var dmg = int(sprung_trap.get("damageDice", 1))
 		hero["current_bp"] = maxi(0, hero.get("current_bp", 1) - dmg)
-		_log("💥 Trap sprung at (%d, %d)! %s suffers %d damage (Remaining BP: %d). Movement halts!" % [
+		_log("[TRAP] Trap sprung at (%d, %d)! %s suffers %d damage (Remaining BP: %d). Movement halts!" % [
 			final_pos.x, final_pos.y, hero.get("name"), dmg, hero.get("current_bp")
 		])
 		spawn_floating_text(final_pos, "-%d HP TRAP" % dmg, Color(1.0, 0.2, 0.2), 1.5)
@@ -1741,13 +1741,13 @@ func move_hero(target_pos: Vector2i) -> bool:
 
 	if hero.get("pass_through_rock_active", false):
 		hero["pass_through_rock_active"] = false
-		_log("👻 Pass Through Rock fades away as %s materializes in solid space." % hero.get("name"))
+		_log("[SPELL] Pass Through Rock fades away as %s materializes in solid space." % hero.get("name"))
 	if hero.get("veil_of_mist_active", false):
 		hero["veil_of_mist_active"] = false
-		_log("🌫️ The Veil of Mist dissipates from around %s." % hero.get("name"))
+		_log("[SPELL] The Veil of Mist dissipates from around %s." % hero.get("name"))
 
 	update_party_vision()
-	_log("👣 %s moved to (%d, %d). Remaining movement: %d" % [
+	_log("[MOVE] %s moved to (%d, %d). Remaining movement: %d" % [
 		hero.get("name"), final_pos.x, final_pos.y, movement_remaining
 	])
 	_update_ui()
@@ -1872,21 +1872,21 @@ func equip_item(hero_id: String, item_id: String) -> Dictionary:
 
 	var can_res = HeroQuestEquipment.can_hero_equip(hero_id, item_id)
 	if not can_res.get("can_equip", false):
-		_log("❌ %s" % can_res.get("reason", "Cannot equip"))
+		_log("[ERROR] %s" % can_res.get("reason", "Cannot equip"))
 		return { "success": false, "error": can_res.get("reason") }
 
 	var w = HeroQuestEquipment.get_weapon(item_id)
 	if not w.is_empty():
 		var armors: Array = hero.get("equipped_armor", [])
 		if w.get("two_handed", false) and armors.has("shield"):
-			_log("❌ Cannot equip two-handed weapon %s while wielding a Shield!" % w.get("name"))
+			_log("[ERROR] Cannot equip two-handed weapon %s while wielding a Shield!" % w.get("name"))
 			return { "success": false, "error": "Cannot equip two-handed weapon while wielding a Shield" }
 		hero["equipped_weapon"] = item_id
 		var inv: Array = hero.get("inventory", [])
 		if not inv.has(item_id):
 			inv.append(item_id)
 			hero["inventory"] = inv
-		_log("⚔️ %s equipped %s (Attack Dice: %d)!" % [hero.get("name"), w.get("name"), get_hero_attack_dice(hero)])
+		_log("[EQUIP] %s equipped %s (Attack Dice: %d)!" % [hero.get("name"), w.get("name"), get_hero_attack_dice(hero)])
 		_update_ui()
 		queue_redraw_all()
 		return { "success": true, "equipped": item_id, "attackDice": get_hero_attack_dice(hero) }
@@ -1898,7 +1898,7 @@ func equip_item(hero_id: String, item_id: String) -> Dictionary:
 		if a.get("incompatible_with_two_handed", false):
 			var cur_w = HeroQuestEquipment.get_weapon(hero.get("equipped_weapon", ""))
 			if cur_w.get("two_handed", false):
-				_log("❌ Cannot equip Shield while wielding two-handed %s!" % cur_w.get("name"))
+				_log("[ERROR] Cannot equip Shield while wielding two-handed %s!" % cur_w.get("name"))
 				return { "success": false, "error": "Cannot equip Shield while wielding a two-handed weapon" }
 		if slot == "body":
 			armors.erase("chain_mail")
@@ -1910,7 +1910,7 @@ func equip_item(hero_id: String, item_id: String) -> Dictionary:
 		if not inv.has(item_id):
 			inv.append(item_id)
 			hero["inventory"] = inv
-		_log("🛡️ %s equipped %s (Defend Dice: %d)!" % [hero.get("name"), a.get("name"), get_hero_defend_dice(hero)])
+		_log("[EQUIP] %s equipped %s (Defend Dice: %d)!" % [hero.get("name"), a.get("name"), get_hero_defend_dice(hero)])
 		_update_ui()
 		queue_redraw_all()
 		return { "success": true, "equipped": item_id, "defendDice": get_hero_defend_dice(hero) }
@@ -1928,7 +1928,7 @@ func unequip_item(hero_id: String, item_id: String) -> Dictionary:
 
 	if hero.get("equipped_weapon") == item_id:
 		hero["equipped_weapon"] = "dagger" if hero.get("id") == "wizard" else "broadsword"
-		_log("⚔️ %s unequipped weapon %s." % [hero.get("name"), item_id])
+		_log("[EQUIP] %s unequipped weapon %s." % [hero.get("name"), item_id])
 		_update_ui()
 		queue_redraw_all()
 		return { "success": true, "unequipped": item_id }
@@ -1937,7 +1937,7 @@ func unequip_item(hero_id: String, item_id: String) -> Dictionary:
 	if armors.has(item_id):
 		armors.erase(item_id)
 		hero["equipped_armor"] = armors
-		_log("🛡️ %s unequipped armor %s." % [hero.get("name"), item_id])
+		_log("[EQUIP] %s unequipped armor %s." % [hero.get("name"), item_id])
 		_update_ui()
 		queue_redraw_all()
 		return { "success": true, "unequipped": item_id }
@@ -1954,7 +1954,7 @@ func _conclude_action_turn_state() -> void:
 		movement_remaining = 0
 		movement_closed = true
 		turn_state = "turn_complete"
-		_log("⚔️ HeroQuest Rules: Action taken after moving. Movement phase permanently concluded.")
+		_log("[RULE] HeroQuest Rules: Action taken after moving. Movement phase permanently concluded.")
 	elif movement_rolled and movement_remaining == 0:
 		turn_state = "turn_complete"
 		movement_closed = true
@@ -1969,7 +1969,7 @@ func attack_adjacent_monster(monster_id: String = "", weapon_id: String = "") ->
 		return { "success": false, "error": "No active hero" }
 
 	if has_acted_this_turn:
-		_log("❌ %s has already taken an action this turn!" % hero.get("name", "Hero"))
+		_log("[ERROR] %s has already taken an action this turn!" % hero.get("name", "Hero"))
 		return { "success": false, "error": "Already acted this turn" }
 
 	if weapon_id != "":
@@ -2016,28 +2016,28 @@ func attack_adjacent_monster(monster_id: String = "", weapon_id: String = "") ->
 	if w_def.get("ranged", false):
 		if cur_w_id == "crossbow":
 			if dx <= 1 and dy <= 1:
-				_log("❌ Crossbow cannot target adjacent monsters!")
+				_log("[ATTACK] Crossbow cannot target adjacent monsters!")
 				return { "success": false, "error": "Crossbow cannot target adjacent monsters" }
 			if not has_line_of_sight(hero_pos, m_pos):
-				_log("❌ No clear line of sight to target for Crossbow!")
+				_log("[ATTACK] No clear line of sight to target for Crossbow!")
 				return { "success": false, "error": "No line of sight to target" }
 			spawn_projectile_vfx(hero_pos, m_pos, Color(0.8, 0.7, 0.5), 0.3)
 		elif cur_w_id == "dagger":
 			if dx > 1 or dy > 1:
 				if not has_line_of_sight(hero_pos, m_pos):
-					_log("❌ No line of sight to throw Dagger!")
+					_log("[ATTACK] No line of sight to throw Dagger!")
 					return { "success": false, "error": "No line of sight to target" }
 				spawn_projectile_vfx(hero_pos, m_pos, Color(0.85, 0.85, 0.95), 0.25)
-				_log("🗡️ %s throws a dagger at %s!" % [hero.get("name"), target_m.get("name")])
+				_log("[ATTACK] %s throws a dagger at %s!" % [hero.get("name"), target_m.get("name")])
 	elif w_def.get("diagonal", false):
 		if not (dx <= 1 and dy <= 1 and (dx + dy > 0)):
-			_log("❌ Target is out of reach of %s!" % w_def.get("name"))
+			_log("[ATTACK] Target is out of reach of %s!" % w_def.get("name"))
 			return { "success": false, "error": "Target out of reach" }
 		var center_screen = board_offset + Vector2((m_pos.x + 0.5) * tile_size, (m_pos.y + 0.5) * tile_size)
 		spawn_slash_vfx(center_screen, 0.785)
 	else:
 		if dx + dy != 1:
-			_log("❌ %s cannot attack diagonally or at range!" % w_def.get("name", "Broadsword"))
+			_log("[ATTACK] %s cannot attack diagonally or at range!" % w_def.get("name", "Broadsword"))
 			return { "success": false, "error": "Weapon requires orthogonal adjacency" }
 		var center_screen = board_offset + Vector2((m_pos.x + 0.5) * tile_size, (m_pos.y + 0.5) * tile_size)
 		spawn_slash_vfx(center_screen, 0.0)
@@ -2050,20 +2050,20 @@ func attack_adjacent_monster(monster_id: String = "", weapon_id: String = "") ->
 	var res = TabletopDice.resolve_combat(atk_dice, def_dice, false)
 	var will_defeat = (res.wounds >= int(target_m.get("current_bp", 1)))
 	trigger_combat_dice_roll(res, get_hero_display_title(hero), str(target_m.get("name", "Monster")), false, will_defeat)
-	_log("⚔️ %s attacks %s with %s (%d dice)! Rolled %d Skulls. %s defended with %d Black Shields." % [
+	_log("[ATTACK] %s attacks %s with %s (%d dice)! Rolled %d Skulls. %s defended with %d Black Shields." % [
 		hero.get("name"), target_m.get("name"), w_def.get("name", "weapon"), atk_dice, res.total_skulls, target_m.get("name"), res.effective_shields
 	])
 
 	if res.wounds > 0:
 		target_m["current_bp"] = maxi(0, target_m.get("current_bp", 1) - res.wounds)
-		_log("💥 Wounds inflicted: %d! %s HP: %d" % [res.wounds, target_m.get("name"), target_m.get("current_bp")])
+		_log("[HIT] Wounds inflicted: %d! %s HP: %d" % [res.wounds, target_m.get("name"), target_m.get("current_bp")])
 		spawn_floating_text(m_pos, "-%d HP" % res.wounds, Color(0.95, 0.2, 0.2))
 		if target_m.get("current_bp") <= 0:
 			target_m["is_alive"] = false
-			_log("💀 %s is DEFEATED!" % target_m.get("name"))
+			_log("[DEFEATED] %s is DEFEATED!" % target_m.get("name"))
 			spawn_floating_text(m_pos, "DEFEATED!", Color(1.0, 0.1, 0.1), 1.5)
 	else:
-		_log("🛡️ Attack was completely blocked by %s!" % target_m.get("name"))
+		_log("[BLOCKED] Attack was completely blocked by %s!" % target_m.get("name"))
 		spawn_floating_text(m_pos, "BLOCKED!", Color(0.7, 0.8, 1.0))
 
 	if cur_w_id == "dagger" and (dx > 1 or dy > 1):
@@ -2104,20 +2104,20 @@ func dm_attack_hero(hero_id: String = "") -> Dictionary:
 	var res = TabletopDice.resolve_combat(atk_dice, def_dice, true)
 	var will_defeat = (res.wounds >= int(target_h.get("current_bp", 8)))
 	trigger_combat_dice_roll(res, str(monster.get("name", "Monster")), get_hero_display_title(target_h), true, will_defeat)
-	_log("👑 [Game Master] %s attacks %s! Rolled %d Skulls. %s rolled %d White Shields (Defend Dice: %d)." % [
+	_log("[GM] %s attacks %s! Rolled %d Skulls. %s rolled %d White Shields (Defend Dice: %d)." % [
 		monster.get("name"), target_h.get("name"), res.total_skulls, target_h.get("name"), res.effective_shields, def_dice
 	])
 
 	if res.wounds > 0:
 		target_h["current_bp"] = maxi(0, target_h.get("current_bp", 8) - res.wounds)
-		_log("💥 %s takes %d wound(s)! Remaining HP: %d" % [target_h.get("name"), res.wounds, target_h.get("current_bp")])
+		_log("[HIT] %s takes %d wound(s)! Remaining HP: %d" % [target_h.get("name"), res.wounds, target_h.get("current_bp")])
 		spawn_floating_text(h_pos, "-%d HP" % res.wounds, Color(0.95, 0.2, 0.2))
 		if target_h.get("rock_skin_active", false):
 			target_h["rock_skin_active"] = false
-			_log("🪨 The wound shatters %s's Rock Skin spell!" % target_h.get("name"))
+			_log("[SPELL] The wound shatters %s's Rock Skin spell!" % target_h.get("name"))
 			spawn_floating_text(h_pos, "SHATTERED!", Color(0.8, 0.8, 0.8))
 	else:
-		_log("🛡️ %s successfully blocked the monster attack!" % target_h.get("name"))
+		_log("[BLOCKED] %s successfully blocked the monster attack!" % target_h.get("name"))
 		spawn_floating_text(h_pos, "BLOCKED!", Color(0.3, 0.8, 1.0))
 
 	last_combat_result = res
@@ -2132,7 +2132,7 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 		return { "success": false, "error": "No active hero to cast spell" }
 
 	if has_acted_this_turn:
-		_log("❌ %s has already taken an action this turn!" % hero.get("name", "Hero"))
+		_log("[ACTION] %s has already taken an action this turn!" % hero.get("name", "Hero"))
 		return { "success": false, "error": "Already acted this turn" }
 
 	var spell = HeroQuestSpells.get_spell(spell_id)
@@ -2144,7 +2144,7 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 	var spell_name = str(spell.get("name", spell_id))
 	var s_id = str(spell.get("id"))
 
-	_log("🔮 %s invokes the ancient incantation: [b]%s[/b]!" % [hero.get("name"), spell_name])
+	_log("[SPELL] %s invokes the ancient incantation: [b]%s[/b]!" % [hero.get("name"), spell_name])
 	var res: Dictionary = { "success": true, "spell": s_id, "name": spell_name }
 
 	match s_id:
@@ -2167,7 +2167,7 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 			var will_defeat = (wounds >= int(target_m.get("current_bp", 1)))
 			trigger_combat_dice_roll(c_res, "Ball of Flame", str(target_m.get("name", "Monster")), false, will_defeat)
 			target_m["current_bp"] = maxi(0, target_m.get("current_bp", 1) - wounds)
-			_log("🔥 Ball of Flame engulfs %s! Rolled %d Black Shields. Wounds: %d (Remaining BP: %d)" % [
+			_log("[SPELL] Ball of Flame engulfs %s! Rolled %d Black Shields. Wounds: %d (Remaining BP: %d)" % [
 				target_m.get("name"), shields, wounds, target_m.get("current_bp")
 			])
 			if wounds > 0:
@@ -2176,7 +2176,7 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 				spawn_floating_text(m_pos, "BLOCKED!", Color(0.6, 0.8, 1.0))
 			if target_m.get("current_bp") <= 0:
 				target_m["is_alive"] = false
-				_log("💀 %s is incinerated by the Ball of Flame!" % target_m.get("name"))
+				_log("[DEFEATED] %s is incinerated by the Ball of Flame!" % target_m.get("name"))
 				spawn_floating_text(m_pos, "INCINERATED!", Color(1.0, 0.2, 0.1), 1.5)
 			res["target"] = target_m.get("id")
 			res["wounds"] = wounds
@@ -2204,7 +2204,7 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 			var will_defeat_fow = (wounds >= int(target_m.get("current_bp", 1)))
 			trigger_combat_dice_roll(c_res, "Fire of Wrath", str(target_m.get("name", "Monster")), false, will_defeat_fow)
 			target_m["current_bp"] = maxi(0, target_m.get("current_bp", 1) - wounds)
-			_log("⚡ Fire of Wrath strikes %s! Shield roll: %d. Wounds: %d (BP: %d)" % [
+			_log("[SPELL] Fire of Wrath strikes %s! Shield roll: %d. Wounds: %d (BP: %d)" % [
 				target_m.get("name"), shields, wounds, target_m.get("current_bp")
 			])
 			if wounds > 0:
@@ -2213,7 +2213,7 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 				spawn_floating_text(m_pos, "BLOCKED!", Color(0.6, 0.8, 1.0))
 			if target_m.get("current_bp") <= 0:
 				target_m["is_alive"] = false
-				_log("💀 %s was consumed by Fire of Wrath!" % target_m.get("name"))
+				_log("[DEFEATED] %s was consumed by Fire of Wrath!" % target_m.get("name"))
 			res["target"] = target_m.get("id")
 			res["wounds"] = wounds
 			res["defended"] = shields
@@ -2226,7 +2226,7 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 			var th_screen = board_offset + Vector2((th_pos.x + 0.5) * tile_size, (th_pos.y + 0.5) * tile_size)
 			spawn_burst_vfx(th_screen, Color(0.9, 0.2, 0.2), 40.0, 0.4)
 			spawn_floating_text(th_pos, "+2 ATK DICE", Color(1.0, 0.3, 0.3))
-			_log("🦁 %s is filled with Courage! +2 extra combat dice on attacks." % target_h.get("name"))
+			_log("[SPELL] %s is filled with Courage! +2 extra combat dice on attacks." % target_h.get("name"))
 			res["target"] = target_h.get("id")
 			res["courage_active"] = true
 
@@ -2237,7 +2237,7 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 			var th_screen = board_offset + Vector2((th_pos.x + 0.5) * tile_size, (th_pos.y + 0.5) * tile_size)
 			spawn_burst_vfx(th_screen, Color(0.5, 0.5, 0.55), 38.0, 0.4)
 			spawn_floating_text(th_pos, "+1 DEF DIE", Color(0.7, 0.7, 0.8))
-			_log("🪨 %s's skin hardens like granite! +1 extra defend die until wounded." % target_h.get("name"))
+			_log("[SPELL] %s's skin hardens like granite! +1 extra defend die until wounded." % target_h.get("name"))
 			res["target"] = target_h.get("id")
 			res["rock_skin_active"] = true
 
@@ -2251,7 +2251,7 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 			var th_screen = board_offset + Vector2((th_pos.x + 0.5) * tile_size, (th_pos.y + 0.5) * tile_size)
 			spawn_heal_vfx(th_screen, Color(0.2, 0.9, 0.4), 0.6)
 			spawn_floating_text(th_pos, "+%d HP" % healed, Color(0.3, 1.0, 0.4))
-			_log("💚 Heal Body restores %d Body Points to %s (Current: %d/%d)." % [
+			_log("[HEAL] Heal Body restores %d Body Points to %s (Current: %d/%d)." % [
 				healed, target_h.get("name"), target_h.get("current_bp"), max_bp
 			])
 			res["target"] = target_h.get("id")
@@ -2265,7 +2265,7 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 			var th_screen = board_offset + Vector2((th_pos.x + 0.5) * tile_size, (th_pos.y + 0.5) * tile_size)
 			spawn_burst_vfx(th_screen, Color(0.7, 0.7, 0.9), 35.0, 0.4)
 			spawn_floating_text(th_pos, "PHASE SHIFT", Color(0.8, 0.8, 1.0))
-			_log("👻 %s turns ethereal! Can phase through solid rock walls on next movement." % target_h.get("name"))
+			_log("[SPELL] %s turns ethereal! Can phase through solid rock walls on next movement." % target_h.get("name"))
 			res["target"] = target_h.get("id")
 			res["pass_through_rock_active"] = true
 
@@ -2279,7 +2279,7 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 			var th_screen = board_offset + Vector2((th_pos.x + 0.5) * tile_size, (th_pos.y + 0.5) * tile_size)
 			spawn_heal_vfx(th_screen, Color(0.1, 0.75, 0.95), 0.6)
 			spawn_floating_text(th_pos, "+%d HP" % healed, Color(0.2, 0.8, 1.0))
-			_log("💧 Pure waters of healing bathe %s! Restored %d Body Points (Current: %d/%d)." % [
+			_log("[HEAL] Pure waters of healing bathe %s! Restored %d Body Points (Current: %d/%d)." % [
 				target_h.get("name"), healed, target_h.get("current_bp"), max_bp
 			])
 			res["target"] = target_h.get("id")
@@ -2294,8 +2294,8 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 			var m_pos = target_m.get("grid_pos", Vector2i(-1, -1))
 			var m_screen = board_offset + Vector2((m_pos.x + 0.5) * tile_size, (m_pos.y + 0.5) * tile_size)
 			spawn_burst_vfx(m_screen, Color(0.4, 0.4, 0.9), 35.0, 0.5)
-			spawn_floating_text(m_pos, "💤 SLEEP", Color(0.5, 0.5, 1.0))
-			_log("💤 %s falls into deep enchanted sleep! Cannot move, attack, or defend." % target_m.get("name"))
+			spawn_floating_text(m_pos, "SLEEP", Color(0.5, 0.5, 1.0))
+			_log("[SLEEP] %s falls into deep enchanted sleep! Cannot move, attack, or defend." % target_m.get("name"))
 			res["target"] = target_m.get("id")
 			res["is_sleeping"] = true
 
@@ -2306,7 +2306,7 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 			var th_screen = board_offset + Vector2((th_pos.x + 0.5) * tile_size, (th_pos.y + 0.5) * tile_size)
 			spawn_burst_vfx(th_screen, Color(0.65, 0.7, 0.8), 35.0, 0.4)
 			spawn_floating_text(th_pos, "MIST SHROUD", Color(0.7, 0.8, 0.9))
-			_log("🌫️ %s is enveloped in mist! Can move through monsters unseen." % target_h.get("name"))
+			_log("[SPELL] %s is enveloped in mist! Can move through monsters unseen." % target_h.get("name"))
 			res["target"] = target_h.get("id")
 			res["veil_of_mist_active"] = true
 
@@ -2318,7 +2318,7 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 						var tr = d.get("toRoom", "")
 						if tr != "":
 							reveal_room_by_id(tr)
-						_log("🧞 Genie gestures and magically forces open the door!")
+						_log("[GENIE] Genie gestures and magically forces open the door!")
 						spawn_burst_vfx(hero_screen, Color(0.2, 0.8, 1.0), 55.0, 0.5)
 						res["door_opened"] = true
 						break
@@ -2332,14 +2332,14 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 				var will_defeat = (combat_res.wounds >= int(target_m.get("current_bp", 1)))
 				trigger_combat_dice_roll(combat_res, "Genie", str(target_m.get("name", "Monster")), false, will_defeat)
 				target_m["current_bp"] = maxi(0, target_m.get("current_bp", 1) - combat_res.wounds)
-				_log("🧞 Genie manifests and attacks %s with 5 dice! Skulls: %d, Defended: %d, Wounds: %d (BP: %d)" % [
+				_log("[GENIE] Genie manifests and attacks %s with 5 dice! Skulls: %d, Defended: %d, Wounds: %d (BP: %d)" % [
 					target_m.get("name"), combat_res.total_skulls, combat_res.effective_shields, combat_res.wounds, target_m.get("current_bp")
 				])
 				if combat_res.wounds > 0:
 					spawn_floating_text(m_pos, "-%d HP" % combat_res.wounds, Color(0.2, 0.8, 1.0))
 				if target_m.get("current_bp") <= 0:
 					target_m["is_alive"] = false
-					_log("💀 %s is crushed by the Genie's wrath!" % target_m.get("name"))
+					_log("[DEFEATED] %s is crushed by the Genie's wrath!" % target_m.get("name"))
 					spawn_floating_text(m_pos, "OBLITERATED!", Color(0.3, 0.9, 1.0), 1.5)
 				res["target"] = target_m.get("id")
 				res["wounds"] = combat_res.wounds
@@ -2352,7 +2352,7 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 			var th_screen = board_offset + Vector2((th_pos.x + 0.5) * tile_size, (th_pos.y + 0.5) * tile_size)
 			spawn_cyclone_vfx(th_screen, Color(0.3, 0.8, 1.0), 0.5)
 			spawn_floating_text(th_pos, "2X SPEED (4d6)", Color(0.3, 0.9, 1.0))
-			_log("💨 Swift Wind envelopes %s! Movement dice doubled to 4d6 on next turn." % target_h.get("name"))
+			_log("[SPELL] Swift Wind envelopes %s! Movement dice doubled to 4d6 on next turn." % target_h.get("name"))
 			res["target"] = target_h.get("id")
 			res["swift_wind_active"] = true
 
@@ -2364,8 +2364,8 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 			var m_pos = target_m.get("grid_pos", Vector2i(-1, -1))
 			var m_screen = board_offset + Vector2((m_pos.x + 0.5) * tile_size, (m_pos.y + 0.5) * tile_size)
 			spawn_cyclone_vfx(m_screen, Color(0.1, 0.7, 0.9), 0.6)
-			spawn_floating_text(m_pos, "🌪️ STUNNED", Color(0.2, 0.8, 1.0))
-			_log("🌪️ Tempest whirlwind traps %s! It will miss its next turn." % target_m.get("name"))
+			spawn_floating_text(m_pos, "STUNNED", Color(0.2, 0.8, 1.0))
+			_log("[SPELL] Tempest whirlwind traps %s! It will miss its next turn." % target_m.get("name"))
 			res["target"] = target_m.get("id")
 			res["tempest_stunned"] = true
 
@@ -2375,7 +2375,7 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 			var th_screen = board_offset + Vector2((th_pos.x + 0.5) * tile_size, (th_pos.y + 0.5) * tile_size)
 			spawn_burst_vfx(th_screen, Color(0.6, 0.1, 0.8), 40.0, 0.5)
 			spawn_floating_text(th_pos, "CONTROLLED!", Color(0.7, 0.2, 0.9))
-			_log("👁️ Dread Sorcery: %s is commanded by Zargon to strike an ally!" % target_h.get("name"))
+			_log("[DREAD] Dread Sorcery: %s is commanded by Zargon to strike an ally!" % target_h.get("name"))
 			res["target"] = target_h.get("id")
 			res["commanded"] = true
 
@@ -2536,12 +2536,12 @@ func search_room() -> Dictionary:
 	if hero.is_empty():
 		return { "success": false, "error": "No active hero" }
 	if has_acted_this_turn:
-		_log("❌ %s has already taken an action this turn!" % hero.get("name", "Hero"))
+		_log("[ACTION] %s has already taken an action this turn!" % hero.get("name", "Hero"))
 		return { "success": false, "error": "Already acted this turn" }
 
 	var found_gold = 50
 	hero["gold"] = hero.get("gold", 0) + found_gold
-	_log("💰 %s searches room for treasure: Discovered a chest with %d Gold Coins! Total Gold: %d" % [
+	_log("[TREASURE] %s searches room for treasure: Discovered a chest with %d Gold Coins! Total Gold: %d" % [
 		hero.get("name"), found_gold, hero.get("gold")
 	])
 	_conclude_action_turn_state()
@@ -2554,7 +2554,7 @@ func search_traps() -> Dictionary:
 	if hero.is_empty():
 		return { "success": false, "error": "No active hero" }
 	if has_acted_this_turn:
-		_log("❌ %s has already taken an action this turn!" % hero.get("name", "Hero"))
+		_log("[ACTION] %s has already taken an action this turn!" % hero.get("name", "Hero"))
 		return { "success": false, "error": "Already acted this turn" }
 
 	var h_pos = hero.get("grid_pos", Vector2i(-1, -1))
@@ -2580,7 +2580,7 @@ func search_traps() -> Dictionary:
 
 	_conclude_action_turn_state()
 
-	_log("🔍 %s searches carefully for traps and secret doors: Found %d hidden trap(s)!" % [
+	_log("[SEARCH] %s searches carefully for traps and secret doors: Found %d hidden trap(s)!" % [
 		hero.get("name"), found_traps.size()
 	])
 	_update_ui()
@@ -2592,7 +2592,7 @@ func disarm_trap(trap_id: String) -> Dictionary:
 	if hero.is_empty():
 		return { "success": false, "error": "No active hero" }
 	if has_acted_this_turn:
-		_log("❌ %s has already taken an action this turn!" % hero.get("name", "Hero"))
+		_log("[ACTION] %s has already taken an action this turn!" % hero.get("name", "Hero"))
 		return { "success": false, "error": "Already acted this turn" }
 
 	var h_pos = hero.get("grid_pos", Vector2i(-1, -1))
@@ -2615,7 +2615,7 @@ func disarm_trap(trap_id: String) -> Dictionary:
 	target_trap["disarmed"] = true
 	_conclude_action_turn_state()
 
-	_log("🛠️ %s disarms the %s at (%d, %d) safely!" % [
+	_log("[DISARM] %s disarms the %s at (%d, %d) safely!" % [
 		hero.get("name"), target_trap.get("type", target_trap.get("trapType", "trap")), target_trap.get("x", 0), target_trap.get("y", 0)
 	])
 	_update_ui()
@@ -2637,7 +2637,7 @@ func _check_hero_enter_board(idx: int) -> void:
 					spawn_tile = cand
 					break
 		h["grid_pos"] = spawn_tile
-		_log("🌟 %s descends the spiral stairway and enters the dungeon at (%d, %d)!" % [
+		_log("[ENTER] %s descends the spiral stairway and enters the dungeon at (%d, %d)!" % [
 			h.get("name"), spawn_tile.x, spawn_tile.y
 		])
 
@@ -2673,7 +2673,7 @@ func end_turn() -> void:
 	queue_redraw_all()
 
 func ai_monster_turn() -> Dictionary:
-	_log("👑 [Game Master] Minions of Zargon stir in the darkness...")
+	_log("[GM] Minions of Zargon stir in the darkness...")
 	var live_monsters = monsters.filter(func(m): return m.get("is_alive", false))
 	
 	# Only monsters that are revealed or in active rooms will act
@@ -2683,7 +2683,7 @@ func ai_monster_turn() -> Dictionary:
 	)
 
 	if active_monsters.is_empty():
-		_log("👑 No active monsters in sight. The dungeon echoes with distant whispers.")
+		_log("[GM] No active monsters in sight. The dungeon echoes with distant whispers.")
 		end_turn()
 		return { "success": true, "acted": 0 }
 
@@ -2706,7 +2706,7 @@ func ai_monster_turn() -> Dictionary:
 		var h_pos: Vector2i = nearest_hero.get("grid_pos", Vector2i(0, 0))
 
 		if min_dist == 1:
-			_log("👹 %s roars and attacks %s!" % [m.get("name"), nearest_hero.get("name")])
+			_log("[MONSTER] %s roars and attacks %s!" % [m.get("name"), nearest_hero.get("name")])
 			dm_attack_hero(str(nearest_hero.get("id", "")))
 			acts += 1
 		elif min_dist > 1:
@@ -2717,7 +2717,7 @@ func ai_monster_turn() -> Dictionary:
 			var next_pos = m_pos + step_dir
 			if not has_wall_between(m_pos, next_pos) and not is_tile_wall_blocked(next_pos) and not is_tile_occupied(next_pos):
 				m["grid_pos"] = next_pos
-				_log("👣 %s moves towards %s to (%d, %d)." % [m.get("name"), nearest_hero.get("name"), next_pos.x, next_pos.y])
+				_log("[MOVE] %s moves towards %s to (%d, %d)." % [m.get("name"), nearest_hero.get("name"), next_pos.x, next_pos.y])
 				acts += 1
 				if absi(h_pos.x - next_pos.x) + absi(h_pos.y - next_pos.y) == 1:
 					dm_attack_hero(str(nearest_hero.get("id", "")))
@@ -2742,7 +2742,7 @@ func _update_ui() -> void:
 		if btn_roll:
 			btn_roll.visible = true
 			btn_roll.disabled = false
-			btn_roll.text = "🎲 Roll Monster"
+			btn_roll.text = "Roll Monster"
 		if btn_attack:
 			btn_attack.visible = true
 			btn_attack.disabled = false
@@ -2753,7 +2753,7 @@ func _update_ui() -> void:
 			btn_end_turn.visible = true
 			btn_end_turn.text = "End GM Turn"
 		if dice_label:
-			dice_label.text = "👑 Zargon Game Master Mode: Full Dungeon Control"
+			dice_label.text = "Zargon Game Master Mode: Full Dungeon Control"
 	elif current_phase == "gm_phase":
 		# Watching Game Master / AI turn
 		if btn_summon:
@@ -2767,7 +2767,7 @@ func _update_ui() -> void:
 		if btn_end_turn:
 			btn_end_turn.visible = false
 		if dice_label:
-			dice_label.text = "👑 Minions of Zargon stir in the darkness..."
+			dice_label.text = "Minions of Zargon stir in the darkness..."
 	else:
 		# Hero Phase (Player)
 		if btn_summon:
@@ -2795,18 +2795,18 @@ func _update_ui() -> void:
 			# Awaiting Roll state
 			if dice_label:
 				if has_acted_this_turn:
-					dice_label.text = "⚔️ Action taken! %s may now ROLL DICE to move or click End Turn." % h_name
+					dice_label.text = "Action taken! %s may now ROLL DICE to move or click End Turn." % h_name
 				else:
-					dice_label.text = "👉 %s's Turn: ROLL DICE to determine movement!" % h_name
+					dice_label.text = "%s's Turn: ROLL DICE to determine movement!" % h_name
 			if btn_roll:
 				btn_roll.visible = true
 				btn_roll.disabled = false
-				btn_roll.text = "🎲 Roll Movement (2d6)"
+				btn_roll.text = "Roll Movement (2d6)"
 			if btn_attack:
 				if adj_monsters.size() > 0 and not has_acted_this_turn:
 					btn_attack.visible = true
 					btn_attack.disabled = false
-					btn_attack.text = "⚔️ Attack %s" % adj_monsters[0].get("name", "Monster")
+					btn_attack.text = "Attack %s" % adj_monsters[0].get("name", "Monster")
 				else:
 					btn_attack.visible = false
 			if btn_search:
@@ -2844,11 +2844,11 @@ func _update_ui() -> void:
 				if adj_monsters.size() > 0 and not has_acted_this_turn:
 					btn_attack.visible = true
 					btn_attack.disabled = false
-					btn_attack.text = "⚔️ Attack %s" % adj_monsters[0].get("name", "Monster")
+					btn_attack.text = "Attack %s" % adj_monsters[0].get("name", "Monster")
 				elif adj_doors.size() > 0:
 					btn_attack.visible = true
 					btn_attack.disabled = false
-					btn_attack.text = "🚪 Open Door"
+					btn_attack.text = "Open Door"
 				else:
 					btn_attack.visible = false
 
@@ -2857,13 +2857,13 @@ func _update_ui() -> void:
 				if in_room_clean and not has_acted_this_turn:
 					btn_search.visible = true
 					btn_search.disabled = false
-					btn_search.text = "🔍 Search Room"
+					btn_search.text = "Search Room"
 				else:
 					btn_search.visible = false
 
 			if btn_end_turn:
 				btn_end_turn.visible = true
-				btn_end_turn.text = "⏹️ End Turn"
+				btn_end_turn.text = "End Turn"
 
 	# Character card
 	# Character card legacy label update for backwards compatibility
@@ -2884,7 +2884,7 @@ func _update_ui() -> void:
 
 	var log_text = ""
 	for i in range(maxi(0, combat_log.size() - 8), combat_log.size()):
-		log_text += combat_log[i] + "\n"
+		log_text += _sanitize_ui_text(combat_log[i]) + "\n"
 	if log_label:
 		log_label.text = log_text
 
@@ -3169,7 +3169,7 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 		var sp_preview: Array = []
 		for s in hero_spells.slice(0, 3):
 			sp_preview.append(str(s).replace("_", " ").capitalize())
-		sp_lbl.text = "🔮 Spells (%d): %s" % [hero_spells.size(), ", ".join(sp_preview)]
+		sp_lbl.text = "Spells (%d): %s" % [hero_spells.size(), ", ".join(sp_preview)]
 		if hero_spells.size() > 3:
 			sp_lbl.text += " +%d" % (hero_spells.size() - 3)
 		sp_lbl.add_theme_font_size_override("font_size", 9)
@@ -3341,9 +3341,62 @@ func _create_enemy_card(m: Dictionary, is_visible: bool) -> PanelContainer:
 
 	return card
 
+func _sanitize_ui_text(text: String) -> String:
+	var s = text
+	# Replace emojis with clean thematic bracket tags or text
+	s = s.replace("🛡️", "[BLOCKED]").replace("🛡", "[BLOCKED]")
+	s = s.replace("⚔️", "[ATTACK]").replace("⚔", "[ATTACK]")
+	s = s.replace("💥", "[HIT]")
+	s = s.replace("💀", "[DEFEATED]")
+	s = s.replace("👑", "[GM]")
+	s = s.replace("🎲", "[DICE]")
+	s = s.replace("🔮", "[SPELL]")
+	s = s.replace("🔥", "[SPELL]")
+	s = s.replace("⚡", "[SPELL]")
+	s = s.replace("🦁", "[SPELL]")
+	s = s.replace("🪨", "[SPELL]")
+	s = s.replace("💚", "[HEAL]")
+	s = s.replace("👻", "[SPELL]")
+	s = s.replace("💧", "[HEAL]")
+	s = s.replace("💤", "[SLEEP]")
+	s = s.replace("🌫️", "[SPELL]").replace("🌫", "[SPELL]")
+	s = s.replace("🧞", "[GENIE]")
+	s = s.replace("💨", "[SPELL]")
+	s = s.replace("🌪️", "[SPELL]").replace("🌪", "[SPELL]")
+	s = s.replace("👁️", "[DREAD]").replace("👁", "[DREAD]")
+	s = s.replace("💰", "[TREASURE]")
+	s = s.replace("🔍", "[SEARCH]")
+	s = s.replace("🛠️", "[DISARM]").replace("🛠", "[DISARM]")
+	s = s.replace("🌟", "[ENTER]")
+	s = s.replace("👹", "[MONSTER]")
+	s = s.replace("👣", "[MOVE]")
+	s = s.replace("🚪", "[DOOR]")
+	s = s.replace("⏹️", "[END]").replace("⏹", "[END]")
+	s = s.replace("⚠️", "[!]").replace("⚠", "[!]")
+	s = s.replace("❌", "[X]")
+	s = s.replace("🗡️", "[ATTACK]").replace("🗡", "[ATTACK]")
+	s = s.replace("👉", "->")
+	s = s.replace("🤖", "[AI]")
+	s = s.replace("✨", "[*]")
+	s = s.replace("🧌", "[MONSTER]")
+
+	# Strip any variation selectors (0xFE00..0xFE0F) or high emoji characters
+	var out = ""
+	for i in range(s.length()):
+		var code = s.unicode_at(i)
+		if code >= 0xFE00 and code <= 0xFE0F:
+			continue
+		if code >= 0x1F000 and code <= 0x1FAFF:
+			continue
+		if code >= 0x2600 and code <= 0x27BF and code != 0x2605: # Preserve star ★ (0x2605)
+			continue
+		out += s[i]
+	return out
+
 func _log(msg: String) -> void:
-	print("[Tabletop] ", msg)
-	combat_log.append(msg)
+	var clean_msg = _sanitize_ui_text(msg)
+	print("[Tabletop] ", clean_msg)
+	combat_log.append(clean_msg)
 	_update_ui()
 
 func get_telemetry_state() -> Dictionary:
@@ -4164,7 +4217,7 @@ func _draw_board(canvas: CanvasItem) -> void:
 				canvas.draw_string(ThemeDB.fallback_font, Vector2(screen_pos.x - cd_w * 0.5, screen_pos.y + 4), m_code, HORIZONTAL_ALIGNMENT_CENTER, -1, 12, Color.WHITE)
 
 				if m.get("is_sleeping", false):
-					var z_txt = "💤 Zzz"
+					var z_txt = "Zzz"
 					var zw = ThemeDB.fallback_font.get_string_size(z_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 11).x
 					canvas.draw_string(ThemeDB.fallback_font, Vector2(screen_pos.x - zw * 0.5, screen_pos.y - tile_size * 0.45), z_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 11, Color(0.6, 0.7, 1.0))
 				if m.get("tempest_stunned", false):
@@ -4555,7 +4608,7 @@ func trigger_combat_dice_roll(combat_res: Dictionary, attacker_name: String, def
 	var def_shield_name = "White Shield" if is_hero_defending else "Black Shield"
 	var summary_txt = ""
 	if is_defeated:
-		summary_txt = "💀 %s DEFEATED! %d Skull%s vs %d %s%s -> %d WOUND%s!" % [
+		summary_txt = "%s DEFEATED! %d Skull%s vs %d %s%s -> %d WOUND%s!" % [
 			defender_name,
 			skulls, "s" if skulls != 1 else "",
 			shields, def_shield_name, "s" if shields != 1 else "",

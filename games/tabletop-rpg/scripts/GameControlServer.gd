@@ -14,9 +14,9 @@ func _ready() -> void:
 	tcp_server = TCPServer.new()
 	var err = tcp_server.listen(port, "127.0.0.1")
 	if err == OK:
-		print("📡 [GameControlServer] Listening on http://127.0.0.1:%d" % port)
+		print("[GameControlServer] Listening on http://127.0.0.1:%d" % port)
 	else:
-		print("⚠️ [GameControlServer] Could not bind port %d: %d" % [port, err])
+		print("[GameControlServer] Warning: Could not bind port %d: %d" % [port, err])
 
 func _process(_delta: float) -> void:
 	if not tcp_server or not tcp_server.is_listening():
