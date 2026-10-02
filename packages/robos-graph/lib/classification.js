@@ -30,7 +30,7 @@
     ['agents', 'Agents & MCP', 'MCPServer AgentPersona ContextSource PromptStrategy PromptOptimizer MCPTool MCPResource MCPPrompt AgentSkill'],
     ['documentation', 'Documentation & decisions', 'Documentation SystemDocumentation FlowDiagram DocumentationPage ArchitectureDecisionRecord ADR InteractiveWalkthrough CodeSnippet DocSection ADROption'],
     ['learning', 'Learning & assessment', 'ELearning CertificateOfCompletion LearningModule LearningLesson HandsOnLab QuizAssessment CurriculumDefinition'],
-    ['testing', 'Testing & behavior', 'Scenario ScenarioStep CRPGTestScenario CRPGBattleMap CRPGMapObject CRPGCombatant InfinityAIDirective CRPGPlayerInput GherkinFeature GherkinBackground GherkinRule ScenarioOutline ExamplesTable StepDefinition DataTable DocString TestingLibrary TestPlan TestSuite TestExecutionRecord'],
+    ['testing', 'Testing & behavior', 'Scenario ScenarioStep CRPGTestScenario CRPGBattleMap CRPGMapObject CRPGCombatant InfinityAIDirective CRPGPlayerInput TabletopAIEngine TabletopAIDirective TabletopTestScenario TabletopCombatant TabletopAICommand TabletopGame TabletopHero TabletopMonster TabletopQuestMap TabletopMapConfiguration TabletopTurnDAG TabletopTurnStep GherkinFeature GherkinBackground GherkinRule ScenarioOutline ExamplesTable StepDefinition DataTable DocString TestingLibrary TestPlan TestSuite TestExecutionRecord'],
     ['schema', 'Schema & graph metadata', 'SystemGraph KGraphPackage schema:CategoryCode schema:CategoryCodeSet rdfs:Class rdf:Property owl:Class owl:ObjectProperty owl:DatatypeProperty owl:Ontology sh:NodeShape sh:PropertyShape oslc:ServiceProvider'],
   ];
   const CATALOG = DEFINITIONS.map(([code, label], order) => ({ id: NS + 'classification/' + code, code, label, order, '@id': NS + 'classification/' + code, '@type': 'schema:CategoryCode', 'schema:codeValue': code, 'schema:name': label, 'schema:inCodeSet': { '@id': CODE_SET_ID } }));
@@ -1500,6 +1500,36 @@
       "testing"
     ],
     "robos:to": [
+      "testing"
+    ],
+    "robos:gridPos": [
+      "testing"
+    ],
+    "robos:actionPriority": [
+      "testing"
+    ],
+    "robos:movementTactic": [
+      "testing"
+    ],
+    "robos:decisionPipeline": [
+      "testing"
+    ],
+    "robos:proposalConfirmationRequired": [
+      "testing"
+    ],
+    "robos:scriptedCommands": [
+      "testing"
+    ],
+    "robos:engineId": [
+      "testing"
+    ],
+    "robos:controllerModes": [
+      "testing"
+    ],
+    "robos:humanGovernance": [
+      "testing"
+    ],
+    "robos:restApiPort": [
       "testing"
     ]
   });

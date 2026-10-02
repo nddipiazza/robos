@@ -273,5 +273,256 @@
       "robos:package": "game",
       "robos:namespace": "robos.game"
     }
+  ],
+  "@graph": [
+    {
+      "@id": "urn:robos:game:ruleset:dnd5e",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameRuleset",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "D&D 5th Edition System Reference Document (SRD)",
+      "robos:package": "game",
+      "robos:namespace": "robos.game"
+    },
+    {
+      "@id": "urn:robos:game:ruleset:heroquest",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameRuleset",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "HeroQuest Tabletop Combat & Movement Ruleset",
+      "robos:package": "game",
+      "robos:namespace": "robos.game"
+    },
+    {
+      "@id": "urn:robos:game:ruleset:d20-open",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameRuleset",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Open Gaming License D20 Mechanics",
+      "robos:package": "game",
+      "robos:namespace": "robos.game"
+    },
+    {
+      "@id": "urn:robos:game:dice:polyhedral",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameDiceSystem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Polyhedral Dice Set (d4, d6, d8, d10, d12, d20, d100)",
+      "robos:package": "game",
+      "robos:namespace": "robos.game"
+    },
+    {
+      "@id": "urn:robos:game:dice:combat-dice",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameDiceSystem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Tabletop Combat Dice (3 Skulls, 2 White Shields, 1 Black Shield)",
+      "robos:package": "game",
+      "robos:namespace": "robos.game"
+    },
+    {
+      "@id": "urn:robos:game:class:fighter",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameClass",
+        "schema:Role"
+      ],
+      "dcterms:title": "Fighter / Warrior",
+      "robos:primaryAbility": "STR",
+      "robos:package": "game",
+      "robos:namespace": "robos.game"
+    },
+    {
+      "@id": "urn:robos:game:class:wizard",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameClass",
+        "schema:Role"
+      ],
+      "dcterms:title": "Wizard / Mage",
+      "robos:primaryAbility": "INT",
+      "robos:package": "game",
+      "robos:namespace": "robos.game"
+    },
+    {
+      "@id": "urn:robos:game:class:rogue",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameClass",
+        "schema:Role"
+      ],
+      "dcterms:title": "Rogue / Thief",
+      "robos:primaryAbility": "DEX",
+      "robos:package": "game",
+      "robos:namespace": "robos.game"
+    },
+    {
+      "@id": "urn:robos:game:class:barbarian",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameClass",
+        "schema:Role"
+      ],
+      "dcterms:title": "Barbarian / Berserker",
+      "robos:primaryAbility": "STR",
+      "robos:package": "game",
+      "robos:namespace": "robos.game"
+    },
+    {
+      "@id": "urn:robos:game:class:dwarf",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameClass",
+        "schema:Role"
+      ],
+      "dcterms:title": "Dwarf Delver",
+      "robos:primaryAbility": "CON",
+      "robos:package": "game",
+      "robos:namespace": "robos.game"
+    },
+    {
+      "@id": "urn:robos:game:class:elf",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameClass",
+        "schema:Role"
+      ],
+      "dcterms:title": "Elf Champion",
+      "robos:primaryAbility": "DEX",
+      "robos:package": "game",
+      "robos:namespace": "robos.game"
+    },
+    {
+      "@id": "urn:robos:game:item:broadsword",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Broadsword",
+      "robos:itemCategory": "weapon",
+      "robos:cost": 250,
+      "robos:package": "game",
+      "robos:namespace": "robos.game"
+    },
+    {
+      "@id": "urn:robos:game:item:shortsword",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Shortsword",
+      "robos:itemCategory": "weapon",
+      "robos:cost": 150,
+      "robos:package": "game",
+      "robos:namespace": "robos.game"
+    },
+    {
+      "@id": "urn:robos:game:item:dagger",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Dagger",
+      "robos:itemCategory": "weapon",
+      "robos:cost": 25,
+      "robos:package": "game",
+      "robos:namespace": "robos.game"
+    },
+    {
+      "@id": "urn:robos:game:item:shield",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Shield",
+      "robos:itemCategory": "shield",
+      "robos:cost": 100,
+      "robos:package": "game",
+      "robos:namespace": "robos.game"
+    },
+    {
+      "@id": "urn:robos:game:item:plate-armor",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Plate Armor",
+      "robos:itemCategory": "armor",
+      "robos:cost": 850,
+      "robos:package": "game",
+      "robos:namespace": "robos.game"
+    },
+    {
+      "@id": "urn:robos:game:item:potion-healing",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Potion of Healing",
+      "robos:itemCategory": "consumable",
+      "robos:cost": 50,
+      "robos:package": "game",
+      "robos:namespace": "robos.game"
+    },
+    {
+      "@id": "urn:robos:game:spell:fireball",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Fireball",
+      "robos:package": "game",
+      "robos:namespace": "robos.game"
+    },
+    {
+      "@id": "urn:robos:game:spell:cure-wounds",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Cure Wounds",
+      "robos:package": "game",
+      "robos:namespace": "robos.game"
+    },
+    {
+      "@id": "urn:robos:game:spell:sleep",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Sleep",
+      "robos:package": "game",
+      "robos:namespace": "robos.game"
+    },
+    {
+      "@id": "urn:robos:game:spell:pass-through-rock",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Pass Through Rock",
+      "robos:package": "game",
+      "robos:namespace": "robos.game"
+    }
   ]
 }

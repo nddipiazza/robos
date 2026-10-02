@@ -947,6 +947,1989 @@
       ],
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:ai-engine:mentor-autonomous-harness",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopAIEngine",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:title": "Mentor Autonomous Tabletop RPG Agent Harness",
+      "dcterms:description": "Autonomous party AI engine governing the 4-hero party (Barbarian, Dwarf, Elf, Wizard) through turn navigation, tactical movement, door breaches, and combat, with human-in-the-loop proposal confirmation governance.",
+      "robos:engineId": "mentor-autonomous-harness",
+      "robos:role": "autonomous_player",
+      "robos:controllerModes": [
+        "autonomous_ai",
+        "proposal_confirmed",
+        "scripted",
+        "idle"
+      ],
+      "robos:decisionPipeline": [
+        "heal_allies",
+        "roll_movement_dice",
+        "breach_doors",
+        "melee_strike",
+        "cast_spells",
+        "search_clear_room",
+        "end_turn"
+      ],
+      "robos:humanGovernance": "proposal_preview_modal",
+      "robos:restApiPort": 18092,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:ai-engine:zargon-dungeon-master",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopAIEngine",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:title": "Zargon Dungeon Master AI Engine",
+      "dcterms:description": "Adversarial AI engine activating surviving monsters during the Zargon phase to track hero positions, advance through open doorways, and coordinate melee counterattacks.",
+      "robos:engineId": "zargon-dungeon-master",
+      "robos:role": "game_master",
+      "robos:controllerModes": [
+        "autonomous_ai",
+        "scripted",
+        "idle"
+      ],
+      "robos:decisionPipeline": [
+        "detect_hero_in_room",
+        "advance_to_hero",
+        "melee_attack_hero",
+        "cast_dread_spell",
+        "end_phase"
+      ],
+      "robos:humanGovernance": "automated",
+      "robos:restApiPort": 18092,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:ai-directive:hero-standard-exploration",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopAIDirective",
+        "schema:ControlAction"
+      ],
+      "dcterms:title": "Standard Hero Exploration Directive",
+      "robos:controller": "proposal_confirmed",
+      "robos:side": "hero_party",
+      "robos:targetPriority": "nearest",
+      "robos:movementTactic": "explore_corridor",
+      "robos:actionPriority": "open_doors",
+      "robos:proposalConfirmationRequired": true,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:ai-directive:barbarian-frontline-striker",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopAIDirective",
+        "schema:ControlAction"
+      ],
+      "dcterms:title": "Barbarian Frontline Striker Directive",
+      "robos:controller": "proposal_confirmed",
+      "robos:actor": "barbarian",
+      "robos:targetPriority": "highest_threat",
+      "robos:movementTactic": "advance",
+      "robos:actionPriority": "melee_strike",
+      "robos:proposalConfirmationRequired": true,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:ai-directive:dwarf-trap-searcher",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopAIDirective",
+        "schema:ControlAction"
+      ],
+      "dcterms:title": "Dwarf Trap & Treasure Scout Directive",
+      "robos:controller": "proposal_confirmed",
+      "robos:actor": "dwarf",
+      "robos:targetPriority": "nearest",
+      "robos:movementTactic": "advance",
+      "robos:actionPriority": "search_room",
+      "robos:proposalConfirmationRequired": true,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:ai-directive:wizard-arcane-support",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopAIDirective",
+        "schema:ControlAction"
+      ],
+      "dcterms:title": "Wizard Arcane Support & Spellcaster Directive",
+      "robos:controller": "proposal_confirmed",
+      "robos:actor": "wizard",
+      "robos:targetPriority": "spellcaster",
+      "robos:movementTactic": "kite",
+      "robos:actionPriority": "cast_spell",
+      "robos:proposalConfirmationRequired": true,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:ai-directive:zargon-monster-retaliation",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopAIDirective",
+        "schema:ControlAction"
+      ],
+      "dcterms:title": "Zargon Monster Retaliation Directive",
+      "robos:controller": "autonomous_ai",
+      "robos:side": "zargon_monsters",
+      "robos:targetPriority": "lowest_bp",
+      "robos:movementTactic": "advance",
+      "robos:actionPriority": "melee_strike",
+      "robos:proposalConfirmationRequired": false,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:scenario:the-trial-crypt-breach",
+      "@type": [
+        "oslc_qm:TestCase",
+        "robos:TabletopTestScenario",
+        "schema:CheckAction"
+      ],
+      "dcterms:title": "The Trial: First Crypt Breach & Skeleton Melee",
+      "dcterms:description": "The 4 heroes start at the dungeon stairway. Barbarian rolls movement, traverses corridor, kicks open the Northwest Crypt door, and engages Crypt Skeletons with Broadsword while Dwarf follows to search for treasure.",
+      "robos:seed": 42,
+      "robos:cartridge": "heroquest-the-trial",
+      "robos:quest": "heroquest-the-trial",
+      "robos:mapConfiguration": "fan-dungeon-28x21",
+      "robos:startingStair": [
+        0,
+        1
+      ],
+      "robos:maxRounds": 30,
+      "robos:executionMode": "human",
+      "robos:party": [
+        {
+          "@type": "robos:TabletopCombatant",
+          "robos:actorId": "barbarian",
+          "dcterms:title": "Barbarian",
+          "robos:characterClass": "barbarian",
+          "robos:gridPos": [
+            0,
+            1
+          ],
+          "robos:currentBp": 8,
+          "robos:maxBp": 8,
+          "robos:attackDice": 3,
+          "robos:defendDice": 2
+        },
+        {
+          "@type": "robos:TabletopCombatant",
+          "robos:actorId": "dwarf",
+          "dcterms:title": "Dwarf",
+          "robos:characterClass": "dwarf",
+          "robos:gridPos": [
+            0,
+            1
+          ],
+          "robos:currentBp": 7,
+          "robos:maxBp": 7,
+          "robos:attackDice": 2,
+          "robos:defendDice": 2
+        },
+        {
+          "@type": "robos:TabletopCombatant",
+          "robos:actorId": "elf",
+          "dcterms:title": "Elf",
+          "robos:characterClass": "elf",
+          "robos:gridPos": [
+            0,
+            1
+          ],
+          "robos:currentBp": 6,
+          "robos:maxBp": 6,
+          "robos:attackDice": 2,
+          "robos:defendDice": 2
+        },
+        {
+          "@type": "robos:TabletopCombatant",
+          "robos:actorId": "wizard",
+          "dcterms:title": "Wizard",
+          "robos:characterClass": "wizard",
+          "robos:gridPos": [
+            0,
+            1
+          ],
+          "robos:currentBp": 4,
+          "robos:maxBp": 4,
+          "robos:attackDice": 1,
+          "robos:defendDice": 2
+        }
+      ],
+      "robos:monsters": [
+        {
+          "@type": "robos:TabletopCombatant",
+          "robos:actorId": "mon-skel-1",
+          "dcterms:title": "Crypt Skeleton #1",
+          "robos:monster": "skeleton",
+          "robos:gridPos": [
+            4,
+            3
+          ],
+          "robos:currentBp": 1,
+          "robos:maxBp": 1,
+          "robos:attackDice": 2,
+          "robos:defendDice": 2
+        },
+        {
+          "@type": "robos:TabletopCombatant",
+          "robos:actorId": "mon-skel-2",
+          "dcterms:title": "Crypt Skeleton #2",
+          "robos:monster": "skeleton",
+          "robos:gridPos": [
+            5,
+            4
+          ],
+          "robos:currentBp": 1,
+          "robos:maxBp": 1,
+          "robos:attackDice": 2,
+          "robos:defendDice": 2
+        }
+      ],
+      "robos:doors": [
+        {
+          "from": [
+            4,
+            1
+          ],
+          "to": [
+            4,
+            2
+          ],
+          "open": false
+        }
+      ],
+      "robos:directives": [
+        "urn:robos:tabletop:ai-directive:hero-standard-exploration",
+        "urn:robos:tabletop:ai-directive:barbarian-frontline-striker",
+        "urn:robos:tabletop:ai-directive:zargon-monster-retaliation"
+      ],
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:scenario:rescue-sir-ragnar-prison",
+      "@type": [
+        "oslc_qm:TestCase",
+        "robos:TabletopTestScenario",
+        "schema:CheckAction"
+      ],
+      "dcterms:title": "The Rescue of Sir Ragnar: Fortress Prison Infiltration",
+      "dcterms:description": "Infiltrate the Greenskin stronghold to locate Sir Ragnar in the fortress prison cell, neutralize orc sentries, and escort Sir Ragnar to safety.",
+      "robos:seed": 101,
+      "robos:cartridge": "heroquest-the-trial",
+      "robos:quest": "heroquest-rescue-sir-ragnar",
+      "robos:mapConfiguration": "heroquest-classic",
+      "robos:startingStair": [
+        1,
+        1
+      ],
+      "robos:maxRounds": 40,
+      "robos:executionMode": "human",
+      "robos:party": [
+        {
+          "@type": "robos:TabletopCombatant",
+          "robos:actorId": "barbarian",
+          "dcterms:title": "Barbarian",
+          "robos:characterClass": "barbarian",
+          "robos:gridPos": [
+            1,
+            1
+          ],
+          "robos:currentBp": 8,
+          "robos:maxBp": 8,
+          "robos:attackDice": 3,
+          "robos:defendDice": 2
+        },
+        {
+          "@type": "robos:TabletopCombatant",
+          "robos:actorId": "dwarf",
+          "dcterms:title": "Dwarf",
+          "robos:characterClass": "dwarf",
+          "robos:gridPos": [
+            1,
+            1
+          ],
+          "robos:currentBp": 7,
+          "robos:maxBp": 7,
+          "robos:attackDice": 2,
+          "robos:defendDice": 2
+        },
+        {
+          "@type": "robos:TabletopCombatant",
+          "robos:actorId": "elf",
+          "dcterms:title": "Elf",
+          "robos:characterClass": "elf",
+          "robos:gridPos": [
+            1,
+            1
+          ],
+          "robos:currentBp": 6,
+          "robos:maxBp": 6,
+          "robos:attackDice": 2,
+          "robos:defendDice": 2
+        },
+        {
+          "@type": "robos:TabletopCombatant",
+          "robos:actorId": "wizard",
+          "dcterms:title": "Wizard",
+          "robos:characterClass": "wizard",
+          "robos:gridPos": [
+            1,
+            1
+          ],
+          "robos:currentBp": 4,
+          "robos:maxBp": 4,
+          "robos:attackDice": 1,
+          "robos:defendDice": 2
+        }
+      ],
+      "robos:monsters": [
+        {
+          "@type": "robos:TabletopCombatant",
+          "robos:actorId": "mon-orc-1",
+          "dcterms:title": "Orc Guard",
+          "robos:monster": "orc",
+          "robos:gridPos": [
+            13,
+            9
+          ],
+          "robos:currentBp": 1,
+          "robos:maxBp": 1,
+          "robos:attackDice": 3,
+          "robos:defendDice": 2
+        },
+        {
+          "@type": "robos:TabletopCombatant",
+          "robos:actorId": "mon-orc-2",
+          "dcterms:title": "Orc Sentry",
+          "robos:monster": "orc",
+          "robos:gridPos": [
+            20,
+            3
+          ],
+          "robos:currentBp": 1,
+          "robos:maxBp": 1,
+          "robos:attackDice": 3,
+          "robos:defendDice": 2
+        }
+      ],
+      "robos:doors": [
+        {
+          "from": [
+            12,
+            5
+          ],
+          "to": [
+            13,
+            5
+          ],
+          "open": false
+        }
+      ],
+      "robos:directives": [
+        "urn:robos:tabletop:ai-directive:hero-standard-exploration",
+        "urn:robos:tabletop:ai-directive:dwarf-trap-searcher",
+        "urn:robos:tabletop:ai-directive:zargon-monster-retaliation"
+      ],
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:scenario:orc-warlord-caverns",
+      "@type": [
+        "oslc_qm:TestCase",
+        "robos:TabletopTestScenario",
+        "schema:CheckAction"
+      ],
+      "dcterms:title": "Lair of the Orc Warlord: Great Cavern Assault",
+      "dcterms:description": "Assault Ulag's cavern lair in First Light Caverns, disarm falling block traps, and defeat the Orc Warlord on his throne.",
+      "robos:seed": 202,
+      "robos:cartridge": "heroquest-the-trial",
+      "robos:quest": "heroquest-lair-orc-warlord",
+      "robos:mapConfiguration": "first-light-caverns",
+      "robos:startingStair": [
+        1,
+        1
+      ],
+      "robos:maxRounds": 35,
+      "robos:executionMode": "human",
+      "robos:party": [
+        {
+          "@type": "robos:TabletopCombatant",
+          "robos:actorId": "barbarian",
+          "dcterms:title": "Barbarian",
+          "robos:characterClass": "barbarian",
+          "robos:gridPos": [
+            1,
+            1
+          ],
+          "robos:currentBp": 8,
+          "robos:maxBp": 8,
+          "robos:attackDice": 3,
+          "robos:defendDice": 2
+        },
+        {
+          "@type": "robos:TabletopCombatant",
+          "robos:actorId": "dwarf",
+          "dcterms:title": "Dwarf",
+          "robos:characterClass": "dwarf",
+          "robos:gridPos": [
+            1,
+            1
+          ],
+          "robos:currentBp": 7,
+          "robos:maxBp": 7,
+          "robos:attackDice": 2,
+          "robos:defendDice": 2
+        },
+        {
+          "@type": "robos:TabletopCombatant",
+          "robos:actorId": "elf",
+          "dcterms:title": "Elf",
+          "robos:characterClass": "elf",
+          "robos:gridPos": [
+            1,
+            1
+          ],
+          "robos:currentBp": 6,
+          "robos:maxBp": 6,
+          "robos:attackDice": 2,
+          "robos:defendDice": 2
+        },
+        {
+          "@type": "robos:TabletopCombatant",
+          "robos:actorId": "wizard",
+          "dcterms:title": "Wizard",
+          "robos:characterClass": "wizard",
+          "robos:gridPos": [
+            1,
+            1
+          ],
+          "robos:currentBp": 4,
+          "robos:maxBp": 4,
+          "robos:attackDice": 1,
+          "robos:defendDice": 2
+        }
+      ],
+      "robos:monsters": [
+        {
+          "@type": "robos:TabletopCombatant",
+          "robos:actorId": "mon-warlord-ulag",
+          "dcterms:title": "Orc Warlord Ulag",
+          "robos:monster": "warlord",
+          "robos:gridPos": [
+            13,
+            9
+          ],
+          "robos:currentBp": 3,
+          "robos:maxBp": 3,
+          "robos:attackDice": 4,
+          "robos:defendDice": 3
+        },
+        {
+          "@type": "robos:TabletopCombatant",
+          "robos:actorId": "mon-goblin-scout",
+          "dcterms:title": "Goblin Scout",
+          "robos:monster": "goblin",
+          "robos:gridPos": [
+            5,
+            5
+          ],
+          "robos:currentBp": 1,
+          "robos:maxBp": 1,
+          "robos:attackDice": 2,
+          "robos:defendDice": 1
+        }
+      ],
+      "robos:doors": [
+        {
+          "from": [
+            10,
+            5
+          ],
+          "to": [
+            10,
+            6
+          ],
+          "open": false
+        }
+      ],
+      "robos:directives": [
+        "urn:robos:tabletop:ai-directive:barbarian-frontline-striker",
+        "urn:robos:tabletop:ai-directive:wizard-arcane-support",
+        "urn:robos:tabletop:ai-directive:zargon-monster-retaliation"
+      ],
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    }
+  ],
+  "@graph": [
+    {
+      "@id": "urn:robos:tabletop:game:heroquest",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopGame",
+        "robos:Game",
+        "schema:Game"
+      ],
+      "dcterms:title": "HeroQuest: The Gathering of Heroes",
+      "robos:ruleset": "heroquest",
+      "robos:gameType": "tabletop",
+      "robos:gridDimensions": [
+        26,
+        19
+      ],
+      "robos:movementFormula": "2d6",
+      "robos:startingZone": "urn:robos:tabletop:map:the-trial",
+      "robos:combatDice": "3 skulls, 2 white shields, 1 black shield",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:hero:barbarian",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopHero",
+        "robos:GameCharacter",
+        "schema:Person"
+      ],
+      "dcterms:title": "Barbarian",
+      "robos:bodyPoints": 8,
+      "robos:mindPoints": 2,
+      "robos:attackDice": 3,
+      "robos:defendDice": 2,
+      "robos:startingWeapon": "urn:robos:game:item:broadsword",
+      "robos:tokenColor": "#b91c1c",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:hero:dwarf",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopHero",
+        "robos:GameCharacter",
+        "schema:Person"
+      ],
+      "dcterms:title": "Dwarf",
+      "robos:bodyPoints": 7,
+      "robos:mindPoints": 3,
+      "robos:attackDice": 2,
+      "robos:defendDice": 2,
+      "robos:specialAbility": "Disarm Traps",
+      "robos:startingWeapon": "urn:robos:game:item:shortsword",
+      "robos:tokenColor": "#b45309",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:hero:elf",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopHero",
+        "robos:GameCharacter",
+        "schema:Person"
+      ],
+      "dcterms:title": "Elf",
+      "robos:bodyPoints": 6,
+      "robos:mindPoints": 4,
+      "robos:attackDice": 2,
+      "robos:defendDice": 2,
+      "robos:specialAbility": "Spellcaster (1 College)",
+      "robos:startingWeapon": "urn:robos:game:item:shortsword",
+      "robos:tokenColor": "#15803d",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:hero:wizard",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopHero",
+        "robos:GameCharacter",
+        "schema:Person"
+      ],
+      "dcterms:title": "Wizard",
+      "robos:bodyPoints": 4,
+      "robos:mindPoints": 6,
+      "robos:attackDice": 1,
+      "robos:defendDice": 2,
+      "robos:specialAbility": "Master Spellcaster (3 Colleges, 9 Spells)",
+      "robos:startingWeapon": "urn:robos:game:item:dagger",
+      "robos:tokenColor": "#1d4ed8",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop",
+      "robos:heroClass": "Wizard",
+      "robos:gold": 100,
+      "robos:equippedWeapon": "Dagger (1 Combat Die)",
+      "robos:equippedArmor": "Wizard Cloak (2 Defend Dice)",
+      "robos:inventory": [
+        {
+          "id": "item-holy-water-1",
+          "name": "Holy Water",
+          "type": "relic",
+          "effect": "Destroys undead instantly",
+          "value": 200
+        },
+        {
+          "id": "item-pot-heal-3",
+          "name": "Potion of Healing",
+          "type": "potion",
+          "effect": "Restores up to 4 BP",
+          "value": 100
+        }
+      ],
+      "robos:icon": "🛡️",
+      "robos:startingPosition": [
+        1,
+        1
+      ]
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:goblin",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Goblin",
+      "robos:bodyPoints": 1,
+      "robos:attackDice": 2,
+      "robos:defendDice": 1,
+      "robos:movementSquares": 10,
+      "robos:tokenColor": "#15803d",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:orc",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Orc",
+      "robos:bodyPoints": 1,
+      "robos:attackDice": 3,
+      "robos:defendDice": 2,
+      "robos:movementSquares": 8,
+      "robos:tokenColor": "#047857",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:fimir",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Fimir",
+      "robos:bodyPoints": 2,
+      "robos:attackDice": 3,
+      "robos:defendDice": 3,
+      "robos:movementSquares": 6,
+      "robos:tokenColor": "#0f766e",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:skeleton",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Skeleton",
+      "robos:bodyPoints": 1,
+      "robos:attackDice": 2,
+      "robos:defendDice": 2,
+      "robos:movementSquares": 6,
+      "robos:monsterType": "undead",
+      "robos:tokenColor": "#e2e8f0",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:zombie",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Zombie",
+      "robos:bodyPoints": 1,
+      "robos:attackDice": 2,
+      "robos:defendDice": 3,
+      "robos:movementSquares": 4,
+      "robos:monsterType": "undead",
+      "robos:tokenColor": "#94a3b8",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:mummy",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Mummy",
+      "robos:bodyPoints": 2,
+      "robos:attackDice": 3,
+      "robos:defendDice": 4,
+      "robos:movementSquares": 4,
+      "robos:monsterType": "undead",
+      "robos:tokenColor": "#d97706",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:chaos-warrior",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Chaos Warrior",
+      "robos:bodyPoints": 3,
+      "robos:attackDice": 4,
+      "robos:defendDice": 4,
+      "robos:movementSquares": 7,
+      "robos:tokenColor": "#334155",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:gargoyle",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Gargoyle",
+      "robos:bodyPoints": 3,
+      "robos:attackDice": 4,
+      "robos:defendDice": 5,
+      "robos:movementSquares": 6,
+      "robos:tokenColor": "#64748b",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:verag-orc-warlord",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Verag the Orc Warlord",
+      "robos:bodyPoints": 3,
+      "robos:attackDice": 4,
+      "robos:defendDice": 3,
+      "robos:movementSquares": 8,
+      "robos:isBoss": true,
+      "robos:isSpellcaster": true,
+      "robos:spells": [
+        "urn:robos:tabletop:spell:lightning-bolt",
+        "urn:robos:tabletop:spell:fear"
+      ],
+      "robos:tokenColor": "#15803d",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:chaos-sorcerer",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Chaos Sorcerer",
+      "robos:bodyPoints": 3,
+      "robos:attackDice": 3,
+      "robos:defendDice": 4,
+      "robos:movementSquares": 7,
+      "robos:isBoss": true,
+      "robos:isSpellcaster": true,
+      "robos:spells": [
+        "urn:robos:tabletop:spell:lightning-bolt",
+        "urn:robos:tabletop:spell:firestorm",
+        "urn:robos:tabletop:spell:summon-undead",
+        "urn:robos:tabletop:spell:cloud-of-chaos"
+      ],
+      "robos:tokenColor": "#7c3aed",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:witch-lord",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "The Witch Lord",
+      "robos:bodyPoints": 4,
+      "robos:attackDice": 4,
+      "robos:defendDice": 5,
+      "robos:movementSquares": 7,
+      "robos:isBoss": true,
+      "robos:isUndead": true,
+      "robos:isSpellcaster": true,
+      "robos:spells": [
+        "urn:robos:tabletop:spell:fear",
+        "urn:robos:tabletop:spell:sleep-dread",
+        "urn:robos:tabletop:spell:summon-undead",
+        "urn:robos:tabletop:spell:lightning-bolt",
+        "urn:robos:tabletop:spell:firestorm",
+        "urn:robos:tabletop:spell:escape"
+      ],
+      "robos:tokenColor": "#4c1d95",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:orc-shaman",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Orc Shaman",
+      "robos:bodyPoints": 2,
+      "robos:attackDice": 2,
+      "robos:defendDice": 3,
+      "robos:movementSquares": 8,
+      "robos:isBoss": false,
+      "robos:isSpellcaster": true,
+      "robos:spells": [
+        "urn:robos:tabletop:spell:fear",
+        "urn:robos:tabletop:spell:rust",
+        "urn:robos:tabletop:spell:lightning-bolt"
+      ],
+      "robos:tokenColor": "#15803d",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:ball-of-flame",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Ball of Flame",
+      "robos:element": "fire",
+      "robos:damageDice": 2,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:courage",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Courage",
+      "robos:element": "fire",
+      "robos:buffAttackDice": 2,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:fire-of-wrath",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Fire of Wrath",
+      "robos:element": "fire",
+      "robos:damageDice": 1,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:heal-body",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Heal Body",
+      "robos:element": "earth",
+      "robos:healingPoints": 4,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:pass-through-rock",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Pass Through Rock",
+      "robos:element": "earth",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:rock-skin",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Rock Skin",
+      "robos:element": "earth",
+      "robos:buffDefendDice": 1,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:water-of-healing",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Water of Healing",
+      "robos:element": "water",
+      "robos:healingPoints": 4,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:sleep",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Sleep",
+      "robos:element": "water",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:veil-of-mist",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Veil of Mist",
+      "robos:element": "water",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:genie",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Genie",
+      "robos:element": "air",
+      "robos:attackDice": 5,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:swift-wind",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Swift Wind",
+      "robos:element": "air",
+      "robos:doubleMovement": true,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:tempest",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Tempest",
+      "robos:element": "air",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:lightning-bolt",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:TabletopDreadSpell",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Lightning Bolt",
+      "robos:element": "dread",
+      "robos:damageDice": 2,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:firestorm",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:TabletopDreadSpell",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Firestorm",
+      "robos:element": "dread",
+      "robos:damageDice": 3,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:fear",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:TabletopDreadSpell",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Fear",
+      "robos:element": "dread",
+      "robos:debuffAttackDice": 1,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:sleep-dread",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:TabletopDreadSpell",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Sleep of Dread",
+      "robos:element": "dread",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:cloud-of-chaos",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:TabletopDreadSpell",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Cloud of Chaos",
+      "robos:element": "dread",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:summon-undead",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:TabletopDreadSpell",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Summon Undead",
+      "robos:element": "dread",
+      "robos:summonCount": 2,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:rust",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:TabletopDreadSpell",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Rust",
+      "robos:element": "dread",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:escape",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:TabletopDreadSpell",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Escape",
+      "robos:element": "dread",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:furniture:chest",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopFurniture",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Treasure Chest",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:furniture:tomb",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopFurniture",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Stone Tomb",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:furniture:weapons-rack",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopFurniture",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Weapons Rack",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:furniture:alchemists-bench",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopFurniture",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Alchemist's Bench",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:furniture:bookcase",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopFurniture",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Bookcase (3-Tile Library Wall)",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:furniture:bookshelf",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopFurniture",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Bookshelf (2-Tile Study Shelf)",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:furniture:altar",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopFurniture",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Sorcerer's Altar / Desk (3x2 Tiles)",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:furniture:boulder",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopFurniture",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Boulder Tile Obstacle",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:furniture:table",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopFurniture",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Wooden Table / Council Desk",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:furniture:cupboard",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopFurniture",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Cupboard (2-Tile Cabinet)",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:furniture:fireplace",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopFurniture",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Stone Fireplace",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:map:the-trial",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopQuestMap",
+        "robos:GameMap",
+        "schema:Place"
+      ],
+      "dcterms:title": "The Trial — Quest 1: Lair of the Orc Warlord",
+      "robos:width": 26,
+      "robos:height": 19,
+      "robos:startingSpawn": [
+        1,
+        1
+      ],
+      "robos:backgroundImage": "res://assets/boards/heroquest_board.png",
+      "robos:boss": "urn:robos:tabletop:monster:verag-orc-warlord",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:mapconfig:heroquest-classic",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMapConfiguration",
+        "schema:Place"
+      ],
+      "dcterms:title": "HeroQuest Classic Stone Dungeon (Side A)",
+      "robos:boardSide": "A",
+      "robos:gridDimensions": [
+        26,
+        19
+      ],
+      "robos:backgroundImage": "res://assets/boards/heroquest_board.png",
+      "robos:roomsCount": 17,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:mapconfig:first-light-caverns",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMapConfiguration",
+        "schema:Place"
+      ],
+      "dcterms:title": "HeroQuest: First Light Subterranean Caverns (Side B)",
+      "robos:boardSide": "B",
+      "robos:gridDimensions": [
+        26,
+        19
+      ],
+      "robos:backgroundImage": "res://assets/boards/first_light_caverns.png",
+      "robos:roomsCount": 17,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:mapconfig:fan-dungeon-28x21",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMapConfiguration",
+        "schema:Place"
+      ],
+      "dcterms:title": "HeroQuest Fan Dungeon & Cavern Citadel (28×21)",
+      "robos:boardSide": "Custom",
+      "robos:gridDimensions": [
+        28,
+        21
+      ],
+      "robos:backgroundImage": "res://assets/boards/fan_dungeon_28x21.png",
+      "robos:roomsCount": 19,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:flow:heroquest-turn-cycle",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopTurnDAG",
+        "schema:Action"
+      ],
+      "dcterms:title": "HeroQuest Authentic Turn Cycle & Action State Machine",
+      "dcterms:description": "Directed Acyclic Graph governing turn progression: active hero selection, movement dice roll, spatial navigation, conditional action choice (melee attack, door breach, treasure search, spellcasting), and Zargon GM phase transition.",
+      "robos:rootStepId": "step-turn-start",
+      "robos:turnSteps": [
+        {
+          "@type": "robos:TabletopTurnStep",
+          "id": "step-turn-start",
+          "dcterms:title": "Active Hero Turn Start & Awaiting Movement",
+          "robos:stepType": "awaiting_roll",
+          "robos:primaryAction": "roll_movement_dice",
+          "robos:allowedActions": [
+            "roll_movement_dice",
+            "melee_attack",
+            "cast_spell"
+          ],
+          "robos:prompt": "Roll 2d6 to determine movement, or perform an immediate action."
+        },
+        {
+          "@type": "robos:TabletopTurnStep",
+          "id": "step-movement-phase",
+          "dcterms:title": "Movement & Spatial Exploration",
+          "robos:stepType": "moving",
+          "robos:primaryAction": "move_hero",
+          "robos:allowedActions": [
+            "move_hero",
+            "open_door",
+            "melee_attack",
+            "search_room",
+            "cast_spell",
+            "end_turn"
+          ],
+          "robos:prompt": "Spend movement squares on the board, or execute an available action."
+        },
+        {
+          "@type": "robos:TabletopTurnStep",
+          "id": "step-action-selection",
+          "dcterms:title": "Situational Action Execution",
+          "robos:stepType": "action_execution",
+          "robos:allowedActions": [
+            "melee_attack",
+            "search_room",
+            "cast_spell",
+            "open_door"
+          ],
+          "robos:prompt": "Perform one combat, search, or spell action allowed per turn."
+        },
+        {
+          "@type": "robos:TabletopTurnStep",
+          "id": "step-post-action",
+          "dcterms:title": "Post-Action Movement & Turn Conclusion",
+          "robos:stepType": "action_taken",
+          "robos:allowedActions": [
+            "move_hero",
+            "end_turn"
+          ],
+          "robos:prompt": "Action completed. Spend remaining movement squares or end turn."
+        },
+        {
+          "@type": "robos:TabletopTurnStep",
+          "id": "step-turn-end",
+          "dcterms:title": "Turn Resolution & Party Progression",
+          "robos:stepType": "turn_complete",
+          "robos:allowedActions": [
+            "next_hero",
+            "trigger_gm_phase"
+          ],
+          "robos:prompt": "Turn finished. Pass control to next hero or begin Zargon phase."
+        }
+      ],
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:ai-engine:mentor-autonomous-harness",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopAIEngine",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:title": "Mentor Autonomous Tabletop RPG Agent Harness",
+      "dcterms:description": "Autonomous party AI engine governing the 4-hero party (Barbarian, Dwarf, Elf, Wizard) through turn navigation, tactical movement, door breaches, and combat, with human-in-the-loop proposal confirmation governance.",
+      "robos:engineId": "mentor-autonomous-harness",
+      "robos:role": "autonomous_player",
+      "robos:controllerModes": [
+        "autonomous_ai",
+        "proposal_confirmed",
+        "scripted",
+        "idle"
+      ],
+      "robos:decisionPipeline": [
+        "heal_allies",
+        "roll_movement_dice",
+        "breach_doors",
+        "melee_strike",
+        "cast_spells",
+        "search_clear_room",
+        "end_turn"
+      ],
+      "robos:humanGovernance": "proposal_preview_modal",
+      "robos:restApiPort": 18092,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:ai-engine:zargon-dungeon-master",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopAIEngine",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:title": "Zargon Dungeon Master AI Engine",
+      "dcterms:description": "Adversarial AI engine activating surviving monsters during the Zargon phase to track hero positions, advance through open doorways, and coordinate melee counterattacks.",
+      "robos:engineId": "zargon-dungeon-master",
+      "robos:role": "game_master",
+      "robos:controllerModes": [
+        "autonomous_ai",
+        "scripted",
+        "idle"
+      ],
+      "robos:decisionPipeline": [
+        "detect_hero_in_room",
+        "advance_to_hero",
+        "melee_attack_hero",
+        "cast_dread_spell",
+        "end_phase"
+      ],
+      "robos:humanGovernance": "automated",
+      "robos:restApiPort": 18092,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:ai-directive:hero-standard-exploration",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopAIDirective",
+        "schema:ControlAction"
+      ],
+      "dcterms:title": "Standard Hero Exploration Directive",
+      "robos:controller": "proposal_confirmed",
+      "robos:side": "hero_party",
+      "robos:targetPriority": "nearest",
+      "robos:movementTactic": "explore_corridor",
+      "robos:actionPriority": "open_doors",
+      "robos:proposalConfirmationRequired": true,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:ai-directive:barbarian-frontline-striker",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopAIDirective",
+        "schema:ControlAction"
+      ],
+      "dcterms:title": "Barbarian Frontline Striker Directive",
+      "robos:controller": "proposal_confirmed",
+      "robos:actor": "barbarian",
+      "robos:targetPriority": "highest_threat",
+      "robos:movementTactic": "advance",
+      "robos:actionPriority": "melee_strike",
+      "robos:proposalConfirmationRequired": true,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:ai-directive:dwarf-trap-searcher",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopAIDirective",
+        "schema:ControlAction"
+      ],
+      "dcterms:title": "Dwarf Trap & Treasure Scout Directive",
+      "robos:controller": "proposal_confirmed",
+      "robos:actor": "dwarf",
+      "robos:targetPriority": "nearest",
+      "robos:movementTactic": "advance",
+      "robos:actionPriority": "search_room",
+      "robos:proposalConfirmationRequired": true,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:ai-directive:wizard-arcane-support",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopAIDirective",
+        "schema:ControlAction"
+      ],
+      "dcterms:title": "Wizard Arcane Support & Spellcaster Directive",
+      "robos:controller": "proposal_confirmed",
+      "robos:actor": "wizard",
+      "robos:targetPriority": "spellcaster",
+      "robos:movementTactic": "kite",
+      "robos:actionPriority": "cast_spell",
+      "robos:proposalConfirmationRequired": true,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:ai-directive:zargon-monster-retaliation",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopAIDirective",
+        "schema:ControlAction"
+      ],
+      "dcterms:title": "Zargon Monster Retaliation Directive",
+      "robos:controller": "autonomous_ai",
+      "robos:side": "zargon_monsters",
+      "robos:targetPriority": "lowest_bp",
+      "robos:movementTactic": "advance",
+      "robos:actionPriority": "melee_strike",
+      "robos:proposalConfirmationRequired": false,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:scenario:the-trial-crypt-breach",
+      "@type": [
+        "oslc_qm:TestCase",
+        "robos:TabletopTestScenario",
+        "schema:CheckAction"
+      ],
+      "dcterms:title": "The Trial: First Crypt Breach & Skeleton Melee",
+      "dcterms:description": "The 4 heroes start at the dungeon stairway. Barbarian rolls movement, traverses corridor, kicks open the Northwest Crypt door, and engages Crypt Skeletons with Broadsword while Dwarf follows to search for treasure.",
+      "robos:seed": 42,
+      "robos:cartridge": "heroquest-the-trial",
+      "robos:quest": "heroquest-the-trial",
+      "robos:mapConfiguration": "fan-dungeon-28x21",
+      "robos:startingStair": [
+        0,
+        1
+      ],
+      "robos:maxRounds": 30,
+      "robos:executionMode": "human",
+      "robos:party": [
+        {
+          "@type": "robos:TabletopCombatant",
+          "robos:actorId": "barbarian",
+          "dcterms:title": "Barbarian",
+          "robos:characterClass": "barbarian",
+          "robos:gridPos": [
+            0,
+            1
+          ],
+          "robos:currentBp": 8,
+          "robos:maxBp": 8,
+          "robos:attackDice": 3,
+          "robos:defendDice": 2
+        },
+        {
+          "@type": "robos:TabletopCombatant",
+          "robos:actorId": "dwarf",
+          "dcterms:title": "Dwarf",
+          "robos:characterClass": "dwarf",
+          "robos:gridPos": [
+            0,
+            1
+          ],
+          "robos:currentBp": 7,
+          "robos:maxBp": 7,
+          "robos:attackDice": 2,
+          "robos:defendDice": 2
+        },
+        {
+          "@type": "robos:TabletopCombatant",
+          "robos:actorId": "elf",
+          "dcterms:title": "Elf",
+          "robos:characterClass": "elf",
+          "robos:gridPos": [
+            0,
+            1
+          ],
+          "robos:currentBp": 6,
+          "robos:maxBp": 6,
+          "robos:attackDice": 2,
+          "robos:defendDice": 2
+        },
+        {
+          "@type": "robos:TabletopCombatant",
+          "robos:actorId": "wizard",
+          "dcterms:title": "Wizard",
+          "robos:characterClass": "wizard",
+          "robos:gridPos": [
+            0,
+            1
+          ],
+          "robos:currentBp": 4,
+          "robos:maxBp": 4,
+          "robos:attackDice": 1,
+          "robos:defendDice": 2
+        }
+      ],
+      "robos:monsters": [
+        {
+          "@type": "robos:TabletopCombatant",
+          "robos:actorId": "mon-skel-1",
+          "dcterms:title": "Crypt Skeleton #1",
+          "robos:monster": "skeleton",
+          "robos:gridPos": [
+            4,
+            3
+          ],
+          "robos:currentBp": 1,
+          "robos:maxBp": 1,
+          "robos:attackDice": 2,
+          "robos:defendDice": 2
+        },
+        {
+          "@type": "robos:TabletopCombatant",
+          "robos:actorId": "mon-skel-2",
+          "dcterms:title": "Crypt Skeleton #2",
+          "robos:monster": "skeleton",
+          "robos:gridPos": [
+            5,
+            4
+          ],
+          "robos:currentBp": 1,
+          "robos:maxBp": 1,
+          "robos:attackDice": 2,
+          "robos:defendDice": 2
+        }
+      ],
+      "robos:doors": [
+        {
+          "from": [
+            4,
+            1
+          ],
+          "to": [
+            4,
+            2
+          ],
+          "open": false
+        }
+      ],
+      "robos:directives": [
+        "urn:robos:tabletop:ai-directive:hero-standard-exploration",
+        "urn:robos:tabletop:ai-directive:barbarian-frontline-striker",
+        "urn:robos:tabletop:ai-directive:zargon-monster-retaliation"
+      ],
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:scenario:rescue-sir-ragnar-prison",
+      "@type": [
+        "oslc_qm:TestCase",
+        "robos:TabletopTestScenario",
+        "schema:CheckAction"
+      ],
+      "dcterms:title": "The Rescue of Sir Ragnar: Fortress Prison Infiltration",
+      "dcterms:description": "Infiltrate the Greenskin stronghold to locate Sir Ragnar in the fortress prison cell, neutralize orc sentries, and escort Sir Ragnar to safety.",
+      "robos:seed": 101,
+      "robos:cartridge": "heroquest-the-trial",
+      "robos:quest": "heroquest-rescue-sir-ragnar",
+      "robos:mapConfiguration": "heroquest-classic",
+      "robos:startingStair": [
+        1,
+        1
+      ],
+      "robos:maxRounds": 40,
+      "robos:executionMode": "human",
+      "robos:party": [
+        {
+          "@type": "robos:TabletopCombatant",
+          "robos:actorId": "barbarian",
+          "dcterms:title": "Barbarian",
+          "robos:characterClass": "barbarian",
+          "robos:gridPos": [
+            1,
+            1
+          ],
+          "robos:currentBp": 8,
+          "robos:maxBp": 8,
+          "robos:attackDice": 3,
+          "robos:defendDice": 2
+        },
+        {
+          "@type": "robos:TabletopCombatant",
+          "robos:actorId": "dwarf",
+          "dcterms:title": "Dwarf",
+          "robos:characterClass": "dwarf",
+          "robos:gridPos": [
+            1,
+            1
+          ],
+          "robos:currentBp": 7,
+          "robos:maxBp": 7,
+          "robos:attackDice": 2,
+          "robos:defendDice": 2
+        },
+        {
+          "@type": "robos:TabletopCombatant",
+          "robos:actorId": "elf",
+          "dcterms:title": "Elf",
+          "robos:characterClass": "elf",
+          "robos:gridPos": [
+            1,
+            1
+          ],
+          "robos:currentBp": 6,
+          "robos:maxBp": 6,
+          "robos:attackDice": 2,
+          "robos:defendDice": 2
+        },
+        {
+          "@type": "robos:TabletopCombatant",
+          "robos:actorId": "wizard",
+          "dcterms:title": "Wizard",
+          "robos:characterClass": "wizard",
+          "robos:gridPos": [
+            1,
+            1
+          ],
+          "robos:currentBp": 4,
+          "robos:maxBp": 4,
+          "robos:attackDice": 1,
+          "robos:defendDice": 2
+        }
+      ],
+      "robos:monsters": [
+        {
+          "@type": "robos:TabletopCombatant",
+          "robos:actorId": "mon-orc-1",
+          "dcterms:title": "Orc Guard",
+          "robos:monster": "orc",
+          "robos:gridPos": [
+            13,
+            9
+          ],
+          "robos:currentBp": 1,
+          "robos:maxBp": 1,
+          "robos:attackDice": 3,
+          "robos:defendDice": 2
+        },
+        {
+          "@type": "robos:TabletopCombatant",
+          "robos:actorId": "mon-orc-2",
+          "dcterms:title": "Orc Sentry",
+          "robos:monster": "orc",
+          "robos:gridPos": [
+            20,
+            3
+          ],
+          "robos:currentBp": 1,
+          "robos:maxBp": 1,
+          "robos:attackDice": 3,
+          "robos:defendDice": 2
+        }
+      ],
+      "robos:doors": [
+        {
+          "from": [
+            12,
+            5
+          ],
+          "to": [
+            13,
+            5
+          ],
+          "open": false
+        }
+      ],
+      "robos:directives": [
+        "urn:robos:tabletop:ai-directive:hero-standard-exploration",
+        "urn:robos:tabletop:ai-directive:dwarf-trap-searcher",
+        "urn:robos:tabletop:ai-directive:zargon-monster-retaliation"
+      ],
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:scenario:orc-warlord-caverns",
+      "@type": [
+        "oslc_qm:TestCase",
+        "robos:TabletopTestScenario",
+        "schema:CheckAction"
+      ],
+      "dcterms:title": "Lair of the Orc Warlord: Great Cavern Assault",
+      "dcterms:description": "Assault Ulag's cavern lair in First Light Caverns, disarm falling block traps, and defeat the Orc Warlord on his throne.",
+      "robos:seed": 202,
+      "robos:cartridge": "heroquest-the-trial",
+      "robos:quest": "heroquest-lair-orc-warlord",
+      "robos:mapConfiguration": "first-light-caverns",
+      "robos:startingStair": [
+        1,
+        1
+      ],
+      "robos:maxRounds": 35,
+      "robos:executionMode": "human",
+      "robos:party": [
+        {
+          "@type": "robos:TabletopCombatant",
+          "robos:actorId": "barbarian",
+          "dcterms:title": "Barbarian",
+          "robos:characterClass": "barbarian",
+          "robos:gridPos": [
+            1,
+            1
+          ],
+          "robos:currentBp": 8,
+          "robos:maxBp": 8,
+          "robos:attackDice": 3,
+          "robos:defendDice": 2
+        },
+        {
+          "@type": "robos:TabletopCombatant",
+          "robos:actorId": "dwarf",
+          "dcterms:title": "Dwarf",
+          "robos:characterClass": "dwarf",
+          "robos:gridPos": [
+            1,
+            1
+          ],
+          "robos:currentBp": 7,
+          "robos:maxBp": 7,
+          "robos:attackDice": 2,
+          "robos:defendDice": 2
+        },
+        {
+          "@type": "robos:TabletopCombatant",
+          "robos:actorId": "elf",
+          "dcterms:title": "Elf",
+          "robos:characterClass": "elf",
+          "robos:gridPos": [
+            1,
+            1
+          ],
+          "robos:currentBp": 6,
+          "robos:maxBp": 6,
+          "robos:attackDice": 2,
+          "robos:defendDice": 2
+        },
+        {
+          "@type": "robos:TabletopCombatant",
+          "robos:actorId": "wizard",
+          "dcterms:title": "Wizard",
+          "robos:characterClass": "wizard",
+          "robos:gridPos": [
+            1,
+            1
+          ],
+          "robos:currentBp": 4,
+          "robos:maxBp": 4,
+          "robos:attackDice": 1,
+          "robos:defendDice": 2
+        }
+      ],
+      "robos:monsters": [
+        {
+          "@type": "robos:TabletopCombatant",
+          "robos:actorId": "mon-warlord-ulag",
+          "dcterms:title": "Orc Warlord Ulag",
+          "robos:monster": "warlord",
+          "robos:gridPos": [
+            13,
+            9
+          ],
+          "robos:currentBp": 3,
+          "robos:maxBp": 3,
+          "robos:attackDice": 4,
+          "robos:defendDice": 3
+        },
+        {
+          "@type": "robos:TabletopCombatant",
+          "robos:actorId": "mon-goblin-scout",
+          "dcterms:title": "Goblin Scout",
+          "robos:monster": "goblin",
+          "robos:gridPos": [
+            5,
+            5
+          ],
+          "robos:currentBp": 1,
+          "robos:maxBp": 1,
+          "robos:attackDice": 2,
+          "robos:defendDice": 1
+        }
+      ],
+      "robos:doors": [
+        {
+          "from": [
+            10,
+            5
+          ],
+          "to": [
+            10,
+            6
+          ],
+          "open": false
+        }
+      ],
+      "robos:directives": [
+        "urn:robos:tabletop:ai-directive:barbarian-frontline-striker",
+        "urn:robos:tabletop:ai-directive:wizard-arcane-support",
+        "urn:robos:tabletop:ai-directive:zargon-monster-retaliation"
+      ],
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
     }
   ]
 }

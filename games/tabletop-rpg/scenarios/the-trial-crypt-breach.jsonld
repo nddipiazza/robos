@@ -1,0 +1,230 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "tabletop": "https://robos.dev/ns/tabletop#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "oslc_qm": "http://open-services.net/ns/qm#"
+  },
+  "@id": "urn:robos:tabletop:scenario:the-trial-crypt-breach",
+  "@type": [
+    "robos:TabletopTestScenario",
+    "oslc_qm:TestCase",
+    "schema:CheckAction"
+  ],
+  "dcterms:title": "The Trial: First Crypt Breach & Skeleton Melee",
+  "dcterms:description": "The four HeroQuest adventurers start at the subterranean staircase. The Mentor AI drives the Barbarian down the corridor, breaches the Northwest Crypt door, lifts the Fog of War, and engages two Crypt Skeletons while the Dwarf enters to search for gold and chests.",
+  "robos:seed": 42,
+  "robos:cartridge": "heroquest-the-trial",
+  "robos:quest": "heroquest-the-trial",
+  "robos:mapConfiguration": "fan-dungeon-28x21",
+  "robos:startingStair": [
+    0,
+    1
+  ],
+  "robos:maxRounds": 30,
+  "robos:executionMode": "human",
+  "robos:party": [
+    {
+      "@type": "robos:TabletopCombatant",
+      "robos:actorId": "barbarian",
+      "dcterms:title": "Barbarian",
+      "robos:characterClass": "barbarian",
+      "robos:gridPos": [
+        0,
+        1
+      ],
+      "robos:currentBp": 8,
+      "robos:maxBp": 8,
+      "robos:attackDice": 3,
+      "robos:defendDice": 2,
+      "robos:equipment": [
+        "urn:robos:game:item:broadsword"
+      ]
+    },
+    {
+      "@type": "robos:TabletopCombatant",
+      "robos:actorId": "dwarf",
+      "dcterms:title": "Dwarf",
+      "robos:characterClass": "dwarf",
+      "robos:gridPos": [
+        0,
+        1
+      ],
+      "robos:currentBp": 7,
+      "robos:maxBp": 7,
+      "robos:attackDice": 2,
+      "robos:defendDice": 2,
+      "robos:equipment": [
+        "urn:robos:game:item:shortsword"
+      ]
+    },
+    {
+      "@type": "robos:TabletopCombatant",
+      "robos:actorId": "elf",
+      "dcterms:title": "Elf",
+      "robos:characterClass": "elf",
+      "robos:gridPos": [
+        0,
+        1
+      ],
+      "robos:currentBp": 6,
+      "robos:maxBp": 6,
+      "robos:attackDice": 2,
+      "robos:defendDice": 2,
+      "robos:spells": [
+        "urn:robos:tabletop:spell:water:water-of-healing",
+        "urn:robos:tabletop:spell:water:veil-of-mist",
+        "urn:robos:tabletop:spell:water:sleep"
+      ]
+    },
+    {
+      "@type": "robos:TabletopCombatant",
+      "robos:actorId": "wizard",
+      "dcterms:title": "Wizard",
+      "robos:characterClass": "wizard",
+      "robos:gridPos": [
+        0,
+        1
+      ],
+      "robos:currentBp": 4,
+      "robos:maxBp": 4,
+      "robos:attackDice": 1,
+      "robos:defendDice": 2,
+      "robos:spells": [
+        "urn:robos:tabletop:spell:fire:courage",
+        "urn:robos:tabletop:spell:fire:fire-of-wrath",
+        "urn:robos:tabletop:spell:fire:ball-of-flame",
+        "urn:robos:tabletop:spell:earth:rock-skin",
+        "urn:robos:tabletop:spell:earth:heal-body",
+        "urn:robos:tabletop:spell:earth:pass-through-rock"
+      ]
+    }
+  ],
+  "robos:monsters": [
+    {
+      "@type": "robos:TabletopCombatant",
+      "robos:actorId": "mon-skel-1",
+      "dcterms:title": "Crypt Skeleton #1",
+      "robos:monster": "skeleton",
+      "robos:gridPos": [
+        4,
+        3
+      ],
+      "robos:currentBp": 1,
+      "robos:maxBp": 1,
+      "robos:attackDice": 2,
+      "robos:defendDice": 2
+    },
+    {
+      "@type": "robos:TabletopCombatant",
+      "robos:actorId": "mon-skel-2",
+      "dcterms:title": "Crypt Skeleton #2",
+      "robos:monster": "skeleton",
+      "robos:gridPos": [
+        5,
+        4
+      ],
+      "robos:currentBp": 1,
+      "robos:maxBp": 1,
+      "robos:attackDice": 2,
+      "robos:defendDice": 2
+    }
+  ],
+  "robos:doors": [
+    {
+      "from": [
+        4,
+        1
+      ],
+      "to": [
+        4,
+        2
+      ],
+      "open": false
+    }
+  ],
+  "robos:furniture": [
+    {
+      "id": "furn-tomb-1",
+      "name": "Stone Tomb",
+      "type": "tomb",
+      "x": 3,
+      "y": 4,
+      "width": 1,
+      "height": 2,
+      "roomId": "room-nw-1"
+    }
+  ],
+  "robos:traps": [],
+  "robos:directives": [
+    {
+      "@type": "robos:TabletopAIDirective",
+      "robos:side": "hero_party",
+      "robos:controller": "proposal_confirmed",
+      "robos:targetPriority": "nearest",
+      "robos:movementTactic": "explore_corridor",
+      "robos:actionPriority": "open_doors",
+      "robos:proposalConfirmationRequired": true
+    },
+    {
+      "@type": "robos:TabletopAIDirective",
+      "robos:actor": "barbarian",
+      "robos:controller": "proposal_confirmed",
+      "robos:targetPriority": "highest_threat",
+      "robos:movementTactic": "advance",
+      "robos:actionPriority": "melee_strike",
+      "robos:proposalConfirmationRequired": true
+    },
+    {
+      "@type": "robos:TabletopAIDirective",
+      "robos:actor": "dwarf",
+      "robos:controller": "proposal_confirmed",
+      "robos:targetPriority": "nearest",
+      "robos:movementTactic": "advance",
+      "robos:actionPriority": "search_room",
+      "robos:proposalConfirmationRequired": true
+    },
+    {
+      "@type": "robos:TabletopAIDirective",
+      "robos:side": "zargon_monsters",
+      "robos:controller": "autonomous_ai",
+      "robos:targetPriority": "lowest_bp",
+      "robos:movementTactic": "advance",
+      "robos:actionPriority": "melee_strike",
+      "robos:proposalConfirmationRequired": false
+    }
+  ],
+  "robos:scriptedCommands": [
+    {
+      "@type": "robos:TabletopAICommand",
+      "robos:action": "roll_movement",
+      "robos:hero": "barbarian",
+      "robos:rationale": "Roll movement dice at start of turn."
+    },
+    {
+      "@type": "robos:TabletopAICommand",
+      "robos:action": "move",
+      "robos:hero": "barbarian",
+      "robos:destination": [
+        4,
+        1
+      ],
+      "robos:rationale": "Advance down corridor to closed door."
+    },
+    {
+      "@type": "robos:TabletopAICommand",
+      "robos:action": "open_door",
+      "robos:hero": "barbarian",
+      "robos:from": [
+        4,
+        1
+      ],
+      "robos:to": [
+        4,
+        2
+      ],
+      "robos:rationale": "Kick open crypt door to reveal chamber."
+    }
+  ]
+}
