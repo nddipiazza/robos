@@ -3522,3 +3522,6 @@ review-markdown-editor { display: block; margin: 8px 0 20px; }
 .review-publish-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:20px; }
 .review-publish-actions > button { margin-right:0; }
 .review-publish-actions > button[hidden] { display:none; }
+
+/* Keep the app label centered on the quick-action row. */
+.theater-topbar-left > .theater-branding { display:flex; align-items:center; padding-bottom:0; }
