@@ -3479,3 +3479,12 @@ review-markdown-editor { display: block; margin: 8px 0 20px; }
 .ci-tail-status { margin:8px 0; font-size:11px; color:#aebdcc; }
 .ci-tail-output { height:220px; overflow:auto; white-space:pre-wrap; overflow-wrap:anywhere; padding:10px; border-radius:5px; background:#090f16; color:#cad6e2; font:12px/1.5 monospace; }
 @media(max-width:800px){.ci-jobs-content { grid-template-columns:1fr; }.ci-jobs-list{max-height:130px;}}
+
+.review-live-ci button {background:#252a30;color:#d5d9df;border-color:#59616d;}
+.pr-ready-button {background:#238636;color:#fff;border:1px solid #46a758;border-radius:6px;padding:12px 22px;font-size:16px;font-weight:700;cursor:pointer;}
+.pr-ready-button[hidden] {display:none;}
+.pr-ready-button:disabled {opacity:.6;cursor:wait;}
+.pr-ready-dialog {margin:auto;max-width:660px;width:90vw;max-height:85vh;overflow:auto;padding:24px;background:#202327;color:#f2f3f5;border:1px solid #555;border-radius:8px;}
+.pr-ready-dialog::backdrop {background:#0009;}
+.pr-ready-dialog h2,.pr-ready-dialog p {margin-bottom:16px;}
+.pr-ready-dialog button {padding:10px 16px;margin:8px 8px 0 0;cursor:pointer;}

@@ -57,3 +57,17 @@ test('a send response without actual mentions remains uncertain',async()=>{
  await assert.rejects(n.send({serverId:'slack',channel:'C1',reviewers}),/mentions was not confirmed/);
  assert.equal(JSON.parse(fs.readFileSync(f.file)).reviewNotification.status,'uncertain');
 });
+test('ready notification is separate from draft notification and deduplicates retries',async()=>{
+ const f=fixture(),input={serverId:'slack',channel:'C1',reviewers};
+ await f.n.send(input);f.review.pullRequest.state='OPEN';f.review.pullRequest.isDraft=true;
+ await assert.rejects(f.n.send({...input,occasion:'ready'}),/must be ready/);
+ f.review.pullRequest.isDraft=false;
+ await f.n.send({...input,occasion:'ready'});await f.n.send({...input,occasion:'ready'});
+ assert.equal(f.sends(),2);
+});
+test('GitHub reviewers persist separately from chat mentions',()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'github-reviewers-'));
+ settings.save('org/repo',{...settings.read('org/repo',root),githubReviewers:['@alice','org/backend'],reviewers},root);
+ assert.deepEqual(settings.read('org/repo',root).githubReviewers,['alice','org/backend']);
+ assert.throws(()=>settings.validateGitHubReviewers(['--bad']),/usernames/);
+});

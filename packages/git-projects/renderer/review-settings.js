@@ -18,6 +18,9 @@ window.mountProjectReviewSettings = async function(project) {
       const hint=document.createElement('p');hint.className='review-template-hint';hint.textContent='Available fields: {{title}}, {{url}}, {{repo}}, {{branch}}, {{description}}';host.append(hint);
       return input;
     };
+    const githubLabel=document.createElement('label');githubLabel.textContent='Default GitHub PR reviewers';
+    const githubReviewers=document.createElement('input');githubReviewers.type='text';githubReviewers.value=(result.settings.githubReviewers||[]).join(', ');githubReviewers.placeholder='username, organization/team';githubLabel.append(githubReviewers);prHost.append(githubLabel);
+    const githubHint=document.createElement('p');githubHint.textContent='Review requests when moving a draft PR to ready. Separate usernames or teams with commas; you can change them for each PR.';prHost.append(githubHint);
     const prEditor=editor(prHost,'PR description template',result.settings.prTemplate,'Start each pull request with a clear description of the change and how it was verified.');
     const messageEditor=editor(messageHost,result.appName+' review notification template',result.settings.messageTemplate,'Invite your team to review the PR. Include {{url}} so they can open it directly.');
     const server=document.createElement('select'),channel=document.createElement('select');
@@ -31,7 +34,7 @@ window.mountProjectReviewSettings = async function(project) {
     const load=async()=>{const mine=++generation;channel.replaceChildren(new Option('Choose channel',''));await reviewers.load(server.value,result.settings.reviewers || []);if(mine!==generation||prHost.dataset.repo!==selected)return;if(!server.value)return;messageStatus.textContent='Loading channels…';const r=await gp.reviewChannels(server.value);if(mine!==generation||prHost.dataset.repo!==selected)return;if(!r.ok){messageStatus.textContent=r.error;return;}for(const c of r.channels)channel.add(new Option('#'+c.name,c.id));channel.value=result.settings.channel;messageStatus.textContent='';};
     server.onchange=()=>load().catch(e=>messageStatus.textContent=e.message);
     const saveButton=(host,text,status,changes)=>{const save=document.createElement('button');save.className='btn btn-primary';save.textContent=text;save.onclick=async()=>{save.disabled=true;try{const next={...result.settings,...changes()};const r=await gp.saveReviewSettings({repo:selected,settings:next});status.textContent=r.ok?'Review settings saved.':r.error;if(r.ok)Object.assign(result.settings,next);}catch(e){status.textContent=e.message;}finally{save.disabled=false;}};host.append(save);};
-    saveButton(prHost,'Save PR template',prStatus,()=>({prTemplate:prEditor.value}));
+    saveButton(prHost,'Save PR settings',prStatus,()=>({prTemplate:prEditor.value,githubReviewers:githubReviewers.value.split(/[\s,]+/).filter(Boolean)}));
     saveButton(messageHost,'Save notification settings',messageStatus,()=>({messageTemplate:messageEditor.value,serverId:server.value,channel:channel.value,reviewers:[...(result.settings.reviewers || []).filter(r=>r.serverId!==server.value),...reviewers.configured()]}));
     await load();if(prHost.dataset.repo!==selected)return;
     if(!result.servers.length)messageStatus.textContent='Configure a workspace in Team Chat Servers to enable notifications.';

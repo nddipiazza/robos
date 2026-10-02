@@ -15,7 +15,7 @@ function file(repo, root = path.join(os.homedir(), '.robos', 'project-review-set
 }
 function read(repo, root) {
   let value = {}; try { value = JSON.parse(fs.readFileSync(file(repo, root), 'utf8')); } catch(e) { if(e.code !== 'ENOENT') throw e; }
-  return { prTemplate: DEFAULT_PR, messageTemplate: DEFAULT_MESSAGE, serverId: '', channel: '', reviewers: [], ...value };
+  return { prTemplate: DEFAULT_PR, messageTemplate: DEFAULT_MESSAGE, serverId: '', channel: '', reviewers: [], githubReviewers: [], ...value };
 }
 function save(repo, input, root) {
   const value = {};
@@ -23,11 +23,19 @@ function save(repo, input, root) {
     if (typeof input[key] !== 'string' || input[key].length > (key === 'prTemplate' ? 65000 : 4000)) throw Error('Invalid review settings.');
     value[key] = input[key];
   }
+  value.githubReviewers = validateGitHubReviewers(input.githubReviewers || []);
   value.reviewers = validateReviewers(input.reviewers || []);
   if (!value.messageTemplate.includes('{{url}}')) throw Error('The notification template must include {{url}}.');
   const target = file(repo, root); fs.mkdirSync(path.dirname(target), {recursive:true, mode:0o700});
   fs.writeFileSync(target+'.tmp', JSON.stringify(value,null,2)+'\n', {mode:0o600}); fs.renameSync(target+'.tmp',target);
   return value;
+}
+function validateGitHubReviewers(values) {
+ if(!Array.isArray(values)||values.length>50)throw Error('Choose at most 50 GitHub reviewers.');
+ return [...new Set(values.map(value=>{
+ if(typeof value!=='string'||!/^[@]?[a-zA-Z0-9][a-zA-Z0-9-]*(?:\/[a-zA-Z0-9][a-zA-Z0-9_-]*)?$/.test(value))throw Error('Use GitHub usernames or organization/team names.');
+ return value.replace(/^@/,'');
+ }))];
 }
 function format(template, data) { return template.replace(/\{\{(title|url|repo|branch|description)\}\}/g, (_, key) => String(data[key] || '')); }
 function service() {
@@ -86,4 +94,4 @@ async function resolveReviewers(serverId, reviewers, call = service()) {
     return member;
   });
 }
-module.exports={members,resolveReviewers,validateReviewers,read,save,format,service,options,channels,DEFAULT_PR,DEFAULT_MESSAGE};
+module.exports={validateGitHubReviewers,members,resolveReviewers,validateReviewers,read,save,format,service,options,channels,DEFAULT_PR,DEFAULT_MESSAGE};
