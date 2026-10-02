@@ -76,19 +76,18 @@ window.offerReadyNotification = function(pr,ready,notice) {
  const defaults=window.api.reviewGitHubReviewers?window.api.reviewGitHubReviewers():window.api.reviewMessageOptions?window.api.reviewMessageOptions(pr.url).then(r=>({...r,reviewers:r.settings?.githubReviewers||[],source:'Git Projects'})):Promise.resolve({ok:true,reviewers:[],source:'Git Projects'});
  defaults.then(r=>{if(!r.ok)throw Error(r.error);reviewers.value=(r.reviewers||[]).join(', ');help.textContent=(r.reviewers?.length?'Defaults from '+r.source+'. ':'No default reviewers configured. ')+'Add or remove reviewers for this PR only. Uncheck to assign none.';}).catch(e=>{loadError=e.message;help.textContent=e.message+' Enter reviewers here or uncheck Request GitHub reviews.';}).finally(()=>{loading=false;updateSelection();});
  confirm.onclick=async()=>{
-  confirm.disabled=true;cancel.disabled=true;status.textContent='Checking GitHub…';
+  confirm.disabled=true;cancel.disabled=true;status.textContent='Checking GitHub…';let promoted=false;
   try{
    await options?.ready;options?.validate();
    const selected=assign.checked?reviewers.value.split(/[\s,]+/).filter(Boolean):[];
    if(assign.checked&&!selected.length)throw Error(loadError||'Add a GitHub reviewer, or uncheck Request GitHub reviews to assign none.');
    const result=await window.api.readyReviewPR(pr.headRefOid,pr.url,selected);if(!result.ok)throw Error(result.error);
-   Object.assign(pr,result.pr);ready.hidden=true;
+   Object.assign(pr,result.pr);ready.hidden=true;promoted=true;dialog.close();
    if(window.openPRReviewTheater)await window.openPRReviewTheater(pr);else window.configureReviewPublish(pr);
    status.textContent=result.pr.reviewerError||'PR is ready for review.';
    if(notice)notice.textContent=status.textContent;
-   const message=await options?.send();if(message)status.textContent+=' '+message;
-   confirm.hidden=true;cancel.textContent='Done';
-  }catch(e){status.textContent=e.message;confirm.disabled=false;}finally{cancel.disabled=false;}
+   const message=await options?.send();if(message&&notice)notice.textContent+=' '+message;
+  }catch(e){if(promoted){if(notice)notice.textContent='PR is ready for review. '+e.message;}else{status.textContent=e.message;confirm.disabled=false;}}finally{cancel.disabled=false;}
  };
  const footer=document.createElement('footer');footer.className='pr-ready-actions';footer.append(cancel,confirm);dialog.append(heading,text,field,host,status,footer);dialog.onclose=()=>dialog.remove();document.body.append(dialog);dialog.showModal();
 };
