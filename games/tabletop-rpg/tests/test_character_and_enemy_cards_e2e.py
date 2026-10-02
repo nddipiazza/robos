@@ -199,6 +199,7 @@ class TestCharacterAndEnemyCardsE2E(unittest.TestCase):
                  mouse_info="Cast 'rock_skin' & 'courage' on target 'barbarian'")
 
         self.player.cast_spell("rock_skin", target="barbarian")
+        self.player.execute_action("set_state", hasActed=False, turnState="awaiting_action")
         self.player.cast_spell("courage", target="barbarian")
 
         st = self.player.get_state()
@@ -221,6 +222,7 @@ class TestCharacterAndEnemyCardsE2E(unittest.TestCase):
         bdd_step("WHEN", "Wizard casts 'Sleep' on Crypt Skeleton #1",
                  mouse_info="Cast 'sleep' on 'mon-skel-1'")
 
+        self.player.execute_action("set_state", hasActed=False, turnState="awaiting_action")
         self.player.cast_spell("sleep", target="mon-skel-1")
 
         st = self.player.get_state()

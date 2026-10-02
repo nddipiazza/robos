@@ -31,6 +31,7 @@ var monsters: Array[Dictionary] = []
 var doors: Array[Dictionary] = []
 var door_closed_tex: Texture2D = null
 var door_open_tex: Texture2D = null
+var hero_token_textures: Dictionary = {}
 var furniture: Array[Dictionary] = []
 var wall_blocks: Array[Dictionary] = []
 var traps: Array[Dictionary] = []
@@ -180,6 +181,7 @@ func _ready() -> void:
 	_setup_ai_modal_styles()
 	_setup_elf_spell_modal()
 	_load_door_textures()
+	_load_hero_token_textures()
 	_update_ui()
 	_log("=== Welcome to HeroQuest: The Trial ===")
 	if is_gm_role():
@@ -193,6 +195,86 @@ func _load_door_textures() -> void:
 		door_closed_tex = _load_texture_safe("res://assets/doors/door_closed.png")
 	if not door_open_tex:
 		door_open_tex = _load_texture_safe("res://assets/doors/door_open.png")
+
+func _load_hero_token_textures() -> void:
+	var token_map = {
+		"barbarian": "res://assets/tokens/token_barbarian.png",
+		"dwarf": "res://assets/tokens/token_dwarf.png",
+		"elf": "res://assets/tokens/token_elf.png",
+		"wizard": "res://assets/tokens/token_wizard.png"
+	}
+	for k in token_map:
+		if not hero_token_textures.has(k) or hero_token_textures[k] == null:
+			var tex = _load_texture_safe(token_map[k])
+			if tex:
+				hero_token_textures[k] = tex
+
+func get_hero_token_path(h: Dictionary) -> String:
+	var custom_asset = str(h.get("tokenAsset", h.get("token_asset", "")))
+	if custom_asset != "":
+		return custom_asset
+
+	var h_id = str(h.get("id", "")).to_lower()
+	var h_cls = str(h.get("heroClass", h.get("hero_class", ""))).to_lower()
+	var h_name = str(h.get("name", "")).to_lower()
+	var char_name = str(h.get("characterName", h.get("character_name", ""))).to_lower()
+
+	var key = "barbarian"
+	if "barbarian" in h_id or "barbarian" in h_cls or "barbarian" in h_name or "berserker" in h_cls:
+		key = "barbarian"
+	elif "dwarf" in h_id or "dwarf" in h_cls or "dwarf" in h_name or "dorgan" in char_name:
+		key = "dwarf"
+	elif "elf" in h_id or "elf" in h_cls or "elf" in h_name or "ladril" in char_name or "ranger" in h_cls:
+		key = "elf"
+	elif "wizard" in h_id or "wizard" in h_cls or "wizard" in h_name or "telor" in char_name or "mage" in h_cls:
+		key = "wizard"
+
+	return "res://assets/tokens/token_%s.png" % key
+
+func get_hero_token_texture(h: Dictionary) -> Texture2D:
+	var custom_asset = str(h.get("tokenAsset", h.get("token_asset", "")))
+	if custom_asset != "":
+		if not hero_token_textures.has(custom_asset):
+			hero_token_textures[custom_asset] = _load_texture_safe(custom_asset)
+		if hero_token_textures.get(custom_asset) != null:
+			return hero_token_textures[custom_asset]
+
+	var h_id = str(h.get("id", "")).to_lower()
+	var h_cls = str(h.get("heroClass", h.get("hero_class", ""))).to_lower()
+	var h_name = str(h.get("name", "")).to_lower()
+	var char_name = str(h.get("characterName", h.get("character_name", ""))).to_lower()
+
+	var key = "barbarian"
+	if "barbarian" in h_id or "barbarian" in h_cls or "barbarian" in h_name or "berserker" in h_cls:
+		key = "barbarian"
+	elif "dwarf" in h_id or "dwarf" in h_cls or "dwarf" in h_name or "dorgan" in char_name:
+		key = "dwarf"
+	elif "elf" in h_id or "elf" in h_cls or "elf" in h_name or "ladril" in char_name or "ranger" in h_cls:
+		key = "elf"
+	elif "wizard" in h_id or "wizard" in h_cls or "wizard" in h_name or "telor" in char_name or "mage" in h_cls:
+		key = "wizard"
+
+	if hero_token_textures.has(key) and hero_token_textures[key] != null:
+		return hero_token_textures[key]
+
+	var candidates = [
+		"res://assets/tokens/token_%s.png" % key,
+		"res://../crpg-realm/assets/tokens/token_%s.png" % key
+	]
+	if key == "elf":
+		candidates.append("res://assets/tokens/token_elora_ranger.png")
+		candidates.append("res://../crpg-realm/assets/tokens/token_elora_ranger.png")
+	elif key == "dwarf":
+		candidates.append("res://assets/tokens/token_cleric.png")
+		candidates.append("res://../crpg-realm/assets/tokens/token_cleric.png")
+
+	for p in candidates:
+		var tex = _load_texture_safe(p)
+		if tex:
+			hero_token_textures[key] = tex
+			return tex
+
+	return null
 
 func _load_texture_safe(res_path: String) -> Texture2D:
 	if ResourceLoader.exists(res_path):
@@ -2990,15 +3072,30 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 	card.add_theme_stylebox_override("panel", sb)
 
 	var margin = MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 8)
-	margin.add_theme_constant_override("margin_right", 8)
+	margin.add_theme_constant_override("margin_left", 6)
+	margin.add_theme_constant_override("margin_right", 6)
 	margin.add_theme_constant_override("margin_top", 5)
 	margin.add_theme_constant_override("margin_bottom", 5)
 	card.add_child(margin)
 
+	var main_hbox = HBoxContainer.new()
+	main_hbox.add_theme_constant_override("separation", 7)
+	margin.add_child(main_hbox)
+
+	var token_tex = get_hero_token_texture(h)
+	if token_tex:
+		var token_rect = TextureRect.new()
+		token_rect.texture = token_tex
+		token_rect.custom_minimum_size = Vector2(38, 38)
+		token_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		token_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		token_rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		main_hbox.add_child(token_rect)
+
 	var vbox = VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 2)
-	margin.add_child(vbox)
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	main_hbox.add_child(vbox)
 
 	# Row 1: Header (Name + Class & Status Badge)
 	var hdr_row = HBoxContainer.new()
@@ -3453,7 +3550,9 @@ func get_telemetry_state() -> Dictionary:
 			"isAlive": cur_bp > 0,
 			"weapon": str(h.get("equipped_weapon", "unarmed")),
 			"armor": h.get("equipped_armor", []),
-			"statusEffects": effs
+			"statusEffects": effs,
+			"tokenAsset": get_hero_token_path(h),
+			"hasTokenTexture": (get_hero_token_texture(h) != null)
 		})
 
 	var monsters_copy: Array = []
@@ -4351,10 +4450,34 @@ func _draw_board(canvas: CanvasItem) -> void:
 				font_size = 10
 
 		var col = Color.from_string(h.get("tokenColor", "#b91c1c"), Color.RED)
+		var token_tex = get_hero_token_texture(h)
 
-		# Draw token base circle
-		canvas.draw_circle(screen_pos, token_radius, col)
-		canvas.draw_arc(screen_pos, token_radius, 0, TAU, 32, Color(0.95, 0.95, 0.95, 0.9), 1.5)
+		if token_tex:
+			# Draw subtle drop shadow under circular token
+			canvas.draw_circle(screen_pos + Vector2(1.5, 2.0), token_radius, Color(0.0, 0.0, 0.0, 0.52))
+			var dest_rect = Rect2(screen_pos.x - token_radius, screen_pos.y - token_radius, token_radius * 2.0, token_radius * 2.0)
+			canvas.draw_texture_rect(token_tex, dest_rect, false)
+		else:
+			# Draw token base circle (fallback)
+			canvas.draw_circle(screen_pos, token_radius, col)
+			canvas.draw_arc(screen_pos, token_radius, 0, TAU, 32, Color(0.95, 0.95, 0.95, 0.9), 1.5)
+
+			# Token Initial (B, D, E, W)
+			var h_name = str(h.get("name", "Hero")).to_lower()
+			var h_initial = "H"
+			if "barbarian" in h_name:
+				h_initial = "B"
+			elif "dwarf" in h_name:
+				h_initial = "D"
+			elif "elf" in h_name:
+				h_initial = "E"
+			elif "wizard" in h_name:
+				h_initial = "W"
+			else:
+				h_initial = h_name.substr(0, 1).to_upper()
+
+			var init_w = ThemeDB.fallback_font.get_string_size(h_initial, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size).x
+			canvas.draw_string(ThemeDB.fallback_font, Vector2(screen_pos.x - init_w * 0.5, screen_pos.y + font_size * 0.38), h_initial, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, Color.WHITE)
 
 		# Draw Hero Active Status Auras
 		if h.get("rock_skin_active", false):
@@ -4393,23 +4516,6 @@ func _draw_board(canvas: CanvasItem) -> void:
 			canvas.draw_rect(badge_rect, Color(0.1, 0.12, 0.16, 0.95))
 			canvas.draw_rect(badge_rect, Color(1.0, 0.85, 0.1, 1.0), false, 1.5)
 			canvas.draw_string(ThemeDB.fallback_font, Vector2(badge_rect.position.x + 6, badge_rect.position.y + 12), badge_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 11, Color(1.0, 0.9, 0.2, 1.0))
-
-		# Token Initial (B, D, E, W)
-		var h_name = str(h.get("name", "Hero")).to_lower()
-		var h_initial = "H"
-		if "barbarian" in h_name:
-			h_initial = "B"
-		elif "dwarf" in h_name:
-			h_initial = "D"
-		elif "elf" in h_name:
-			h_initial = "E"
-		elif "wizard" in h_name:
-			h_initial = "W"
-		else:
-			h_initial = h_name.substr(0, 1).to_upper()
-
-		var init_w = ThemeDB.fallback_font.get_string_size(h_initial, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size).x
-		canvas.draw_string(ThemeDB.fallback_font, Vector2(screen_pos.x - init_w * 0.5, screen_pos.y + font_size * 0.38), h_initial, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, Color.WHITE)
 
 	# Draw active dynamic VFX and floating text banners
 	_draw_vfx_effects(canvas)

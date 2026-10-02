@@ -55,6 +55,7 @@
         }
       ],
       "tokenColor": "#b91c1c",
+      "tokenAsset": "res://assets/tokens/token_barbarian.png",
       "spells": [],
       "position": [
         0,
@@ -91,6 +92,7 @@
         }
       ],
       "tokenColor": "#b45309",
+      "tokenAsset": "res://assets/tokens/token_dwarf.png",
       "spells": [],
       "position": [
         0,
@@ -127,6 +129,7 @@
         }
       ],
       "tokenColor": "#15803d",
+      "tokenAsset": "res://assets/tokens/token_elf.png",
       "spells": [
         {
           "id": "urn:robos:tabletop:spell:heal-body",
@@ -194,6 +197,7 @@
         }
       ],
       "tokenColor": "#1d4ed8",
+      "tokenAsset": "res://assets/tokens/token_wizard.png",
       "spells": [
         {
           "id": "urn:robos:tabletop:spell:ball-of-flame",
