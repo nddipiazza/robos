@@ -1,8 +1,16 @@
 [Desktop Entry]
-Name=RobOS Tabletop Studio
-Comment=HeroQuest & Tabletop RPG Cartridge Form Editor
-Exec=electron /usr/local/share/robos/robos-tabletop --no-sandbox --disable-gpu --disable-dev-shm-usage
-Icon=robos-tabletop
-Terminal=false
+Version=1.5
 Type=Application
-Categories=Development;Game;
+Name=RobOS Tabletop Studio
+GenericName=HeroQuest & Tabletop RPG Studio
+Comment=HeroQuest & Tabletop RPG Cartridge Form Editor, Multi-Map Battlemat Studio, and Godot Player
+Exec=/home/ndipiazza/.local/bin/robos-tabletop %U
+Icon=robos-tabletop
+Path=/home/ndipiazza/source/robos/packages/robos-tabletop
+Terminal=false
+Categories=Development;Game;RolePlaying;
+Keywords=robos;tabletop;heroquest;rpg;editor;cartridge;quest;dungeon;cavern;
+StartupWMClass=RobOS Tabletop Studio
+StartupNotify=true
+X-RobOS-App=true
+X-RobOS-Category=Games

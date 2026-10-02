@@ -79,6 +79,12 @@ const BUILTIN_APPS = [
     iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="36" height="36" rx="4" stroke="#00bcd4" stroke-width="2"/><line x1="18" y1="6" x2="18" y2="42" stroke="#00bcd4" stroke-width="1.5" stroke-dasharray="2 2" stroke-opacity="0.6"/><line x1="6" y1="18" x2="42" y2="18" stroke="#00bcd4" stroke-width="1.5" stroke-dasharray="2 2" stroke-opacity="0.6"/><circle cx="12" cy="11" r="2.5" fill="#00bcd4" fill-opacity="0.3" stroke="#00bcd4" stroke-width="1.2"/><path d="M8.5 16c0-1.8 1.5-3 3.5-3s3.5 1.2 3.5 3" stroke="#00bcd4" stroke-width="1.2"/><path d="M26 10h8v6h-8z" fill="#00bcd4" fill-opacity="0.2" stroke="#00bcd4" stroke-width="1.2"/><path d="M28 10V8a2 2 0 0 1 4 0v2" stroke="#00bcd4" stroke-width="1.2"/><path d="M9 25h6a2 2 0 0 1 2 2v10a2 2 0 0 1-2-2H9" stroke="#00bcd4" stroke-width="1.4"/><line x1="11" y1="28" x2="15" y2="28" stroke="#00bcd4" stroke-width="1.2"/><line x1="11" y1="32" x2="15" y2="32" stroke="#00bcd4" stroke-width="1.2"/><rect x="23" y="23" width="14" height="14" rx="2" fill="#00bcd4" fill-opacity="0.15" stroke="#00bcd4" stroke-width="1.5"/><line x1="30" y1="23" x2="30" y2="37" stroke="#00bcd4" stroke-width="1" stroke-dasharray="2 2"/><line x1="23" y1="30" x2="37" y2="30" stroke="#00bcd4" stroke-width="1" stroke-dasharray="2 2"/><circle cx="30" cy="30" r="1.5" fill="#00bcd4"/></svg>'
   },
   {
+    appId: 'robos-tabletop',
+    label: 'RobOS Tabletop Studio',
+    category: 'Game Development',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#00bcd4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M24 4 L40 10 V24 C40 33 33 41 24 44 C15 41 8 33 8 24 V10 Z" /><rect x="18" y="16" width="12" height="12" rx="2" /><circle cx="21" cy="19" r="1" fill="#00bcd4" /><circle cx="27" cy="19" r="1" fill="#00bcd4" /><circle cx="24" cy="22" r="1" fill="#00bcd4" /><circle cx="21" cy="25" r="1" fill="#00bcd4" /><circle cx="27" cy="25" r="1" fill="#00bcd4" /><line x1="24" y1="28" x2="24" y2="38" /><line x1="16" y1="38" x2="32" y2="38" /></svg>'
+  },
+  {
     appId: 'context-manager',
     label: 'Context Manager',
     category: 'RobOS AI',

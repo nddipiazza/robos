@@ -8,25 +8,26 @@
     "gameType": "tabletop",
     "genre": "Tabletop Dungeon Crawler",
     "ruleset": "heroquest",
-    "description": "Seek out the foul Orc Warlord Verag in his catacombs, slay him, and return to the stairwell alive.",
+    "description": "You have learned well, my apprentices. Now comes your final test. Seek out the foul Orc Warlord Verag in his hidden catacombs, slay him, and return to the stairwell alive.",
     "coverColor": "#78350f",
     "icon": "🛡️",
     "mapCount": 1,
     "heroCount": 4,
-    "monsterCount": 4,
+    "monsterCount": 6,
     "spellCount": 0,
     "itemCount": 0,
     "questCount": 1,
-    "startingMap": "the-trial",
+    "startingMap": "heroquest-the-trial",
     "startingPosition": [
-      1,
-      0
+      0,
+      1
     ],
-    "createdDate": "2026-10-02T11:23:06.712Z"
+    "createdDate": "2026-10-02T12:02:11.515Z"
   },
   "heroes": {
     "barbarian": {
       "id": "barbarian",
+      "slug": "barbarian",
       "name": "Barbarian",
       "bodyPoints": 8,
       "mindPoints": 2,
@@ -40,6 +41,7 @@
     },
     "dwarf": {
       "id": "dwarf",
+      "slug": "dwarf",
       "name": "Dwarf",
       "bodyPoints": 7,
       "mindPoints": 3,
@@ -48,11 +50,12 @@
       "tokenColor": "#b45309",
       "position": [
         1,
-        2
+        1
       ]
     },
     "elf": {
       "id": "elf",
+      "slug": "elf",
       "name": "Elf",
       "bodyPoints": 6,
       "mindPoints": 4,
@@ -60,12 +63,13 @@
       "defendDice": 2,
       "tokenColor": "#15803d",
       "position": [
-        2,
+        1,
         1
       ]
     },
     "wizard": {
       "id": "wizard",
+      "slug": "wizard",
       "name": "Wizard",
       "bodyPoints": 4,
       "mindPoints": 6,
@@ -73,499 +77,541 @@
       "defendDice": 2,
       "tokenColor": "#1d4ed8",
       "position": [
-        2,
-        2
+        1,
+        1
       ]
     }
   },
   "monsters": {
-    "verag-boss": {
-      "id": "verag-boss",
+    "mon-verag": {
+      "id": "mon-verag",
       "slug": "verag-boss",
       "name": "Verag the Orc Warlord",
-      "bodyPoints": 3,
+      "bodyPoints": 4,
       "attackDice": 4,
-      "defendDice": 3,
-      "movementSquares": 8,
-      "isBoss": true,
-      "tokenColor": "#15803d",
-      "icon": "👹",
-      "position": [
-        12,
-        9
-      ],
-      "roomId": "room-center"
-    },
-    "fellmarg-gargoyle": {
-      "id": "fellmarg-gargoyle",
-      "slug": "fellmarg-gargoyle",
-      "name": "Fellmarg Gargoyle",
-      "bodyPoints": 3,
-      "attackDice": 4,
-      "defendDice": 5,
+      "defendDice": 4,
       "movementSquares": 6,
-      "tokenColor": "#475569",
-      "icon": "🗿",
+      "isBoss": true,
       "position": [
-        13,
-        9
+        4,
+        10
       ],
-      "roomId": "room-center"
+      "roomId": "room-grand-fossil"
     },
-    "goblin-scout-1": {
-      "id": "goblin-scout-1",
+    "mon-skel-1": {
+      "id": "mon-skel-1",
+      "slug": "skeleton-1",
+      "name": "Crypt Skeleton",
+      "bodyPoints": 1,
+      "attackDice": 2,
+      "defendDice": 2,
+      "movementSquares": 6,
+      "isBoss": false,
+      "position": [
+        3,
+        3
+      ],
+      "roomId": "room-nw-crypt"
+    },
+    "mon-skel-2": {
+      "id": "mon-skel-2",
+      "slug": "skeleton-2",
+      "name": "Crypt Skeleton",
+      "bodyPoints": 1,
+      "attackDice": 2,
+      "defendDice": 2,
+      "movementSquares": 6,
+      "isBoss": false,
+      "position": [
+        5,
+        3
+      ],
+      "roomId": "room-nw-crypt"
+    },
+    "mon-zombie-1": {
+      "id": "mon-zombie-1",
+      "slug": "zombie-1",
+      "name": "Cellar Zombie",
+      "bodyPoints": 2,
+      "attackDice": 3,
+      "defendDice": 3,
+      "movementSquares": 6,
+      "isBoss": false,
+      "position": [
+        4,
+        16
+      ],
+      "roomId": "room-sw-cellar"
+    },
+    "mon-orc-1": {
+      "id": "mon-orc-1",
+      "slug": "orc-warrior-1",
+      "name": "Orc Guard",
+      "bodyPoints": 1,
+      "attackDice": 3,
+      "defendDice": 2,
+      "movementSquares": 6,
+      "isBoss": false,
+      "position": [
+        14,
+        10
+      ],
+      "roomId": "room-center-mid"
+    },
+    "mon-goblin-1": {
+      "id": "mon-goblin-1",
       "slug": "goblin-scout-1",
       "name": "Goblin Scout",
       "bodyPoints": 1,
       "attackDice": 2,
       "defendDice": 1,
-      "movementSquares": 10,
-      "tokenColor": "#16a34a",
-      "icon": "👺",
+      "movementSquares": 6,
+      "isBoss": false,
       "position": [
-        2,
-        2
+        15,
+        10
       ],
-      "roomId": "room-nw-1"
-    },
-    "orc-warrior-1": {
-      "id": "orc-warrior-1",
-      "slug": "orc-warrior-1",
-      "name": "Orc Warrior",
-      "bodyPoints": 1,
-      "attackDice": 3,
-      "defendDice": 2,
-      "movementSquares": 8,
-      "tokenColor": "#15803d",
-      "icon": "👹",
-      "position": [
-        8,
-        2
-      ],
-      "roomId": "room-nw-2"
+      "roomId": "room-center-mid"
     }
   },
   "spells": {},
   "items": {},
   "maps": {
-    "the-trial": {
-      "id": "the-trial",
-      "title": "The Trial: Dungeon of Verag",
-      "mapConfigurationId": "heroquest-classic",
-      "width": 26,
-      "height": 19,
-      "backgroundImage": "res://assets/boards/heroquest_board.png",
+    "heroquest-the-trial": {
+      "id": "heroquest-the-trial",
+      "title": "HeroQuest: The Trial",
+      "mapConfigurationId": "fan-dungeon-28x21",
+      "width": 28,
+      "height": 21,
+      "backgroundImage": "res://assets/boards/fan_dungeon_28x21.png",
       "startingStair": [
-        1,
-        0
+        0,
+        1
       ],
       "activeRooms": [
-        "room-center",
-        "room-nw-1",
-        "room-nw-2",
-        "room-nw-3",
-        "room-nw-4",
-        "room-sw-1",
-        "room-sw-2",
-        "room-sw-3",
-        "room-sw-4",
-        "room-ne-1",
-        "room-ne-2",
-        "room-ne-3",
-        "room-ne-4",
-        "room-se-1",
-        "room-se-2",
-        "room-se-3",
-        "room-se-4"
+        "room-grand-fossil",
+        "room-nw-crypt",
+        "room-sw-cellar",
+        "room-n-armory",
+        "room-upper-cell",
+        "room-lower-cell",
+        "room-s-barracks",
+        "room-center-n",
+        "room-center-mid",
+        "room-center-s",
+        "room-ne-inner",
+        "room-e-upper-cell",
+        "room-e-lower-cell",
+        "room-se-inner",
+        "room-ne-vault",
+        "room-e-parlor",
+        "room-e-forge",
+        "room-se-sanctum",
+        "room-se-tomb"
       ],
       "rooms": [
         {
-          "id": "room-center",
-          "name": "Central Chamber",
-          "x": 11,
-          "y": 7,
+          "id": "room-grand-fossil",
+          "name": "Grand Fossil Hall",
+          "x": 1,
+          "y": 6,
+          "w": 7,
+          "h": 9,
+          "quadrant": "w"
+        },
+        {
+          "id": "room-nw-crypt",
+          "name": "Northwest Crypt",
+          "x": 2,
+          "y": 2,
+          "w": 5,
+          "h": 4,
+          "quadrant": "nw"
+        },
+        {
+          "id": "room-sw-cellar",
+          "name": "Southwest Cellar",
+          "x": 2,
+          "y": 15,
+          "w": 5,
+          "h": 4,
+          "quadrant": "sw"
+        },
+        {
+          "id": "room-n-armory",
+          "name": "North Armory",
+          "x": 8,
+          "y": 1,
+          "w": 4,
+          "h": 4,
+          "quadrant": "nw"
+        },
+        {
+          "id": "room-upper-cell",
+          "name": "Upper Guard Room",
+          "x": 9,
+          "y": 6,
+          "w": 3,
+          "h": 3,
+          "quadrant": "nw"
+        },
+        {
+          "id": "room-lower-cell",
+          "name": "Lower Guard Room",
+          "x": 9,
+          "y": 12,
+          "w": 3,
+          "h": 3,
+          "quadrant": "sw"
+        },
+        {
+          "id": "room-s-barracks",
+          "name": "South Barracks",
+          "x": 8,
+          "y": 16,
+          "w": 4,
+          "h": 4,
+          "quadrant": "sw"
+        },
+        {
+          "id": "room-center-n",
+          "name": "North Central Chamber",
+          "x": 13,
+          "y": 2,
           "w": 4,
           "h": 5,
           "quadrant": "center"
         },
         {
-          "id": "room-nw-1",
-          "name": "Northwest Corner Chamber",
-          "x": 1,
-          "y": 1,
+          "id": "room-center-mid",
+          "name": "Great Center Chamber",
+          "x": 13,
+          "y": 8,
           "w": 4,
-          "h": 4,
-          "quadrant": "nw"
+          "h": 5,
+          "quadrant": "center"
         },
         {
-          "id": "room-nw-2",
-          "name": "Upper North Hall",
-          "x": 6,
-          "y": 1,
-          "w": 4,
-          "h": 4,
-          "quadrant": "nw"
-        },
-        {
-          "id": "room-nw-3",
-          "name": "West Upper Barracks",
-          "x": 1,
-          "y": 6,
-          "w": 5,
-          "h": 3,
-          "quadrant": "nw"
-        },
-        {
-          "id": "room-nw-4",
-          "name": "Northwest Inner Sanctum",
-          "x": 7,
-          "y": 6,
-          "w": 3,
-          "h": 3,
-          "quadrant": "nw"
-        },
-        {
-          "id": "room-sw-1",
-          "name": "West Lower Armory",
-          "x": 1,
-          "y": 10,
-          "w": 5,
-          "h": 3,
-          "quadrant": "sw"
-        },
-        {
-          "id": "room-sw-2",
-          "name": "Southwest Guardpost",
-          "x": 7,
-          "y": 10,
-          "w": 3,
-          "h": 3,
-          "quadrant": "sw"
-        },
-        {
-          "id": "room-sw-3",
-          "name": "Southwest Crypt",
-          "x": 1,
+          "id": "room-center-s",
+          "name": "South Central Chamber",
+          "x": 13,
           "y": 14,
           "w": 4,
-          "h": 4,
-          "quadrant": "sw"
+          "h": 5,
+          "quadrant": "center"
         },
         {
-          "id": "room-sw-4",
-          "name": "Lower South Vault",
-          "x": 6,
-          "y": 14,
-          "w": 4,
-          "h": 4,
-          "quadrant": "sw"
-        },
-        {
-          "id": "room-ne-1",
-          "name": "Northeast Inner Library",
-          "x": 16,
-          "y": 1,
-          "w": 4,
+          "id": "room-ne-inner",
+          "name": "Northeast Antechamber",
+          "x": 18,
+          "y": 2,
+          "w": 3,
           "h": 4,
           "quadrant": "ne"
         },
         {
-          "id": "room-ne-2",
-          "name": "Northeast Corner Tomb",
-          "x": 21,
-          "y": 1,
-          "w": 4,
-          "h": 4,
-          "quadrant": "ne"
-        },
-        {
-          "id": "room-ne-3",
-          "name": "East Upper Crypt",
-          "x": 16,
-          "y": 6,
+          "id": "room-e-upper-cell",
+          "name": "East Upper Alcove",
+          "x": 18,
+          "y": 7,
           "w": 3,
           "h": 3,
           "quadrant": "ne"
         },
         {
-          "id": "room-ne-4",
+          "id": "room-e-lower-cell",
+          "name": "East Lower Alcove",
+          "x": 18,
+          "y": 11,
+          "w": 3,
+          "h": 3,
+          "quadrant": "se"
+        },
+        {
+          "id": "room-se-inner",
+          "name": "Southeast Antechamber",
+          "x": 18,
+          "y": 15,
+          "w": 3,
+          "h": 4,
+          "quadrant": "se"
+        },
+        {
+          "id": "room-ne-vault",
+          "name": "Northeast Vault",
+          "x": 22,
+          "y": 1,
+          "w": 4,
+          "h": 3,
+          "quadrant": "ne"
+        },
+        {
+          "id": "room-e-parlor",
           "name": "East Grand Parlor",
-          "x": 20,
-          "y": 6,
+          "x": 22,
+          "y": 5,
           "w": 5,
           "h": 3,
           "quadrant": "ne"
         },
         {
-          "id": "room-se-1",
-          "name": "East Lower Torture Chamber",
-          "x": 16,
-          "y": 10,
-          "w": 3,
+          "id": "room-e-forge",
+          "name": "East Forge",
+          "x": 22,
+          "y": 9,
+          "w": 4,
           "h": 3,
           "quadrant": "se"
         },
         {
-          "id": "room-se-2",
-          "name": "East Lower Forge",
-          "x": 20,
-          "y": 10,
+          "id": "room-se-sanctum",
+          "name": "Southeast Sanctum",
+          "x": 22,
+          "y": 13,
           "w": 5,
           "h": 3,
           "quadrant": "se"
         },
         {
-          "id": "room-se-3",
-          "name": "Lower Southeast Laboratory",
-          "x": 16,
-          "y": 14,
+          "id": "room-se-tomb",
+          "name": "Southeast Tomb",
+          "x": 22,
+          "y": 17,
           "w": 4,
-          "h": 4,
-          "quadrant": "se"
-        },
-        {
-          "id": "room-se-4",
-          "name": "Southeast Corner Lair",
-          "x": 21,
-          "y": 14,
-          "w": 4,
-          "h": 4,
+          "h": 3,
           "quadrant": "se"
         }
       ],
       "doors": [
         {
-          "id": "door-center-n",
+          "id": "fdoor-fossil-n",
+          "from": [
+            4,
+            5
+          ],
+          "to": [
+            4,
+            6
+          ],
+          "state": "closed",
+          "room": "room-grand-fossil"
+        },
+        {
+          "id": "fdoor-fossil-s",
+          "from": [
+            4,
+            15
+          ],
+          "to": [
+            4,
+            14
+          ],
+          "state": "closed",
+          "room": "room-grand-fossil"
+        },
+        {
+          "id": "fdoor-fossil-e",
+          "from": [
+            8,
+            10
+          ],
+          "to": [
+            7,
+            10
+          ],
+          "state": "closed",
+          "room": "room-grand-fossil"
+        },
+        {
+          "id": "fdoor-nw-crypt",
+          "from": [
+            4,
+            1
+          ],
+          "to": [
+            4,
+            2
+          ],
+          "state": "closed",
+          "room": "room-nw-crypt"
+        },
+        {
+          "id": "fdoor-sw-cellar",
+          "from": [
+            4,
+            19
+          ],
+          "to": [
+            4,
+            18
+          ],
+          "state": "closed",
+          "room": "room-sw-cellar"
+        },
+        {
+          "id": "fdoor-center-n",
           "from": [
             12,
+            4
+          ],
+          "to": [
+            13,
+            4
+          ],
+          "state": "closed",
+          "room": "room-center-n"
+        },
+        {
+          "id": "fdoor-center-mid-w",
+          "from": [
+            12,
+            10
+          ],
+          "to": [
+            13,
+            10
+          ],
+          "state": "closed",
+          "room": "room-center-mid"
+        },
+        {
+          "id": "fdoor-center-mid-e",
+          "from": [
+            17,
+            10
+          ],
+          "to": [
+            16,
+            10
+          ],
+          "state": "closed",
+          "room": "room-center-mid"
+        },
+        {
+          "id": "fdoor-center-s",
+          "from": [
+            12,
+            16
+          ],
+          "to": [
+            13,
+            16
+          ],
+          "state": "closed",
+          "room": "room-center-s"
+        },
+        {
+          "id": "fdoor-e-parlor",
+          "from": [
+            21,
             6
           ],
           "to": [
-            12,
-            7
+            22,
+            6
           ],
-          "room": "room-center"
+          "state": "closed",
+          "room": "room-e-parlor"
         },
         {
-          "id": "door-center-s",
+          "id": "fdoor-se-sanctum",
           "from": [
-            13,
-            12
+            21,
+            14
           ],
           "to": [
-            13,
-            11
+            22,
+            14
           ],
-          "room": "room-center"
-        },
-        {
-          "id": "door-nw-1",
-          "from": [
-            2,
-            0
-          ],
-          "to": [
-            2,
-            1
-          ],
-          "room": "room-nw-1"
-        },
-        {
-          "id": "door-nw-2",
-          "from": [
-            8,
-            0
-          ],
-          "to": [
-            8,
-            1
-          ],
-          "room": "room-nw-2"
-        },
-        {
-          "id": "door-nw-3",
-          "from": [
-            0,
-            7
-          ],
-          "to": [
-            1,
-            7
-          ],
-          "room": "room-nw-3"
-        },
-        {
-          "id": "door-sw-1",
-          "from": [
-            0,
-            11
-          ],
-          "to": [
-            1,
-            11
-          ],
-          "room": "room-sw-1"
-        },
-        {
-          "id": "door-sw-3",
-          "from": [
-            2,
-            18
-          ],
-          "to": [
-            2,
-            17
-          ],
-          "room": "room-sw-3"
-        },
-        {
-          "id": "door-ne-1",
-          "from": [
-            18,
-            0
-          ],
-          "to": [
-            18,
-            1
-          ],
-          "room": "room-ne-1"
-        },
-        {
-          "id": "door-ne-2",
-          "from": [
-            23,
-            0
-          ],
-          "to": [
-            23,
-            1
-          ],
-          "room": "room-ne-2"
-        },
-        {
-          "id": "door-ne-4",
-          "from": [
-            25,
-            7
-          ],
-          "to": [
-            24,
-            7
-          ],
-          "room": "room-ne-4"
-        },
-        {
-          "id": "door-se-2",
-          "from": [
-            25,
-            11
-          ],
-          "to": [
-            24,
-            11
-          ],
-          "room": "room-se-2"
-        },
-        {
-          "id": "door-se-4",
-          "from": [
-            23,
-            18
-          ],
-          "to": [
-            23,
-            17
-          ],
-          "room": "room-se-4"
+          "state": "closed",
+          "room": "room-se-sanctum"
         }
       ],
       "wallBlocks": [
         {
           "id": "block-1",
-          "x": 4,
+          "x": 12,
           "y": 0,
           "type": "single"
         },
         {
           "id": "block-2",
-          "x": 20,
-          "y": 0,
+          "x": 12,
+          "y": 20,
+          "type": "single"
+        },
+        {
+          "id": "block-3",
+          "x": 0,
+          "y": 10,
+          "type": "single"
+        },
+        {
+          "id": "block-4",
+          "x": 27,
+          "y": 10,
           "type": "single"
         }
       ],
       "furniture": [
         {
-          "id": "furn-tomb-center",
+          "id": "furn-tomb-1",
           "name": "Ancient Stone Tomb",
           "type": "tomb",
-          "position": [
-            12,
-            8
-          ],
-          "roomId": "room-center"
+          "x": 4,
+          "y": 2,
+          "roomId": "room-nw-crypt"
         },
         {
-          "id": "furn-chest-center",
-          "name": "Verag Chest of Gold",
+          "id": "furn-chest-1",
+          "name": "Vault Chest of Gold",
           "type": "chest",
-          "position": [
-            13,
-            8
-          ],
-          "roomId": "room-center"
+          "x": 23,
+          "y": 2,
+          "roomId": "room-ne-vault"
         },
         {
-          "id": "furn-rack-sw",
+          "id": "furn-table-1",
+          "name": "Alchemist Table",
+          "type": "table",
+          "x": 14,
+          "y": 4,
+          "roomId": "room-center-n"
+        },
+        {
+          "id": "furn-rack-1",
           "name": "Weapons Rack",
           "type": "weapons-rack",
-          "position": [
-            1,
-            14
-          ],
-          "roomId": "room-sw-3"
-        },
-        {
-          "id": "furn-bench-se",
-          "name": "Alchemist Bench",
-          "type": "alchemists-bench",
-          "position": [
-            21,
-            14
-          ],
-          "roomId": "room-se-4"
+          "x": 9,
+          "y": 2,
+          "roomId": "room-n-armory"
         }
       ],
       "traps": [
         {
           "id": "trap-pit-1",
           "trapType": "pit",
-          "position": [
-            5,
-            0
-          ],
+          "x": 0,
+          "y": 5,
           "damageDice": 1,
-          "detected": false,
-          "disarmed": false
-        },
-        {
-          "id": "trap-falling-1",
-          "trapType": "falling-block",
-          "position": [
-            12,
-            5
-          ],
-          "damageDice": 3,
           "detected": false,
           "disarmed": false
         },
         {
           "id": "trap-spear-1",
           "trapType": "spear",
-          "position": [
-            2,
-            16
-          ],
-          "damageDice": 1,
+          "x": 7,
+          "y": 5,
+          "damageDice": 2,
+          "detected": false,
+          "disarmed": false
+        },
+        {
+          "id": "trap-falling-1",
+          "trapType": "falling-block",
+          "x": 21,
+          "y": 10,
+          "damageDice": 3,
           "detected": false,
           "disarmed": false
         }
@@ -575,7 +621,7 @@
   "quests": [
     {
       "id": "quest-1",
-      "title": "The Trial: Slay Orc Warlord Verag"
+      "title": "HeroQuest: The Trial"
     }
   ]
 }

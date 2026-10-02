@@ -10,6 +10,11 @@ const KGRAPH_TABLETOP = path.join(REPO_ROOT, ".robos/kgraphs/tabletop-game/packa
 const KGRAPH_GAME = path.join(REPO_ROOT, ".robos/kgraphs/game/package.jsonld");
 const TABLETOP_GAME_DIR = path.join(REPO_ROOT, "games/tabletop-rpg");
 
+// Standard RobOS flags for VM / container stability
+app.commandLine.appendSwitch('no-sandbox');
+app.commandLine.appendSwitch('disable-gpu');
+app.commandLine.appendSwitch('disable-dev-shm-usage');
+
 let mainWindow = null;
 
 function createWindow() {
@@ -29,10 +34,25 @@ function createWindow() {
 
   mainWindow.loadFile(path.join(__dirname, "renderer/index.html"));
 
+  // Wire up snapshot debug server for DOM snapshots and test harness
+  try {
+    const { registerSnapshotIPC, startDebugServer } = require('/usr/local/share/robos/robos-lib/dom-snapshot');
+    registerSnapshotIPC(mainWindow);
+    startDebugServer(mainWindow, 19198, 'robos-tabletop');
+  } catch (err) {
+    try {
+      const localDom = require('../robos-lib/dom-snapshot');
+      localDom.registerSnapshotIPC(mainWindow);
+      localDom.startDebugServer(mainWindow, 19198, 'robos-tabletop');
+    } catch {}
+  }
+
   mainWindow.on("closed", () => {
     mainWindow = null;
   });
 }
+
+app.setName("RobOS Tabletop Studio");
 
 app.whenReady().then(createWindow);
 

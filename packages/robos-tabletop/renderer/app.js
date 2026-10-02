@@ -20,28 +20,32 @@ let currentData = {
     mapConfigId: 'fan-dungeon-28x21',
     activeRooms: new Set(),
     wallBlocks: [
-      { id: 'block-1', x: 4, y: 0, type: 'single' },
-      { id: 'block-2', x: 20, y: 0, type: 'single' }
+      { id: 'block-1', x: 12, y: 0, type: 'single' },
+      { id: 'block-2', x: 12, y: 20, type: 'single' },
+      { id: 'block-3', x: 0, y: 10, type: 'single' },
+      { id: 'block-4', x: 27, y: 10, type: 'single' }
     ],
     doors: [],
     furniture: [
-      { id: 'furn-tomb-1', name: 'Ancient Stone Tomb', type: 'tomb', x: 12, y: 8, roomId: 'room-center' },
-      { id: 'furn-chest-1', name: 'Verag Chest of Gold', type: 'chest', x: 13, y: 8, roomId: 'room-center' },
-      { id: 'furn-rack-1', name: 'Weapons Rack', type: 'weapons-rack', x: 1, y: 14, roomId: 'room-sw-3' },
-      { id: 'furn-bench-1', name: 'Alchemist Bench', type: 'alchemists-bench', x: 21, y: 14, roomId: 'room-se-4' }
+      { id: 'furn-tomb-1', name: 'Ancient Stone Tomb', type: 'tomb', x: 4, y: 2, roomId: 'room-nw-crypt' },
+      { id: 'furn-chest-1', name: 'Vault Chest of Gold', type: 'chest', x: 23, y: 2, roomId: 'room-ne-vault' },
+      { id: 'furn-table-1', name: 'Alchemist Table', type: 'table', x: 14, y: 4, roomId: 'room-center-n' },
+      { id: 'furn-rack-1', name: 'Weapons Rack', type: 'weapons-rack', x: 9, y: 2, roomId: 'room-n-armory' }
     ],
     monsters: [
-      { id: 'mon-verag', name: 'Verag the Orc Warlord', monsterType: 'verag-boss', x: 12, y: 9, bp: 3, atk: 4, def: 3, isBoss: true, roomId: 'room-center' },
-      { id: 'mon-gargoyle', name: 'Fellmarg Gargoyle', monsterType: 'fellmarg-gargoyle', x: 13, y: 9, bp: 3, atk: 4, def: 5, isBoss: false, roomId: 'room-center' },
-      { id: 'mon-goblin-1', name: 'Goblin Scout', monsterType: 'goblin-scout-1', x: 2, y: 2, bp: 1, atk: 2, def: 1, isBoss: false, roomId: 'room-nw-1' },
-      { id: 'mon-orc-1', name: 'Orc Guard', monsterType: 'orc-warrior-1', x: 8, y: 2, bp: 1, atk: 3, def: 2, isBoss: false, roomId: 'room-nw-2' }
+      { id: 'mon-verag', name: 'Verag the Orc Warlord', monsterType: 'verag-boss', x: 4, y: 10, bp: 4, atk: 4, def: 4, isBoss: true, roomId: 'room-grand-fossil' },
+      { id: 'mon-skel-1', name: 'Crypt Skeleton', monsterType: 'skeleton-1', x: 3, y: 3, bp: 1, atk: 2, def: 2, isBoss: false, roomId: 'room-nw-crypt' },
+      { id: 'mon-skel-2', name: 'Crypt Skeleton', monsterType: 'skeleton-2', x: 5, y: 3, bp: 1, atk: 2, def: 2, isBoss: false, roomId: 'room-nw-crypt' },
+      { id: 'mon-zombie-1', name: 'Cellar Zombie', monsterType: 'zombie-1', x: 4, y: 16, bp: 2, atk: 3, def: 3, isBoss: false, roomId: 'room-sw-cellar' },
+      { id: 'mon-orc-1', name: 'Orc Guard', monsterType: 'orc-warrior-1', x: 14, y: 10, bp: 1, atk: 3, def: 2, isBoss: false, roomId: 'room-center-mid' },
+      { id: 'mon-goblin-1', name: 'Goblin Scout', monsterType: 'goblin-scout-1', x: 15, y: 10, bp: 1, atk: 2, def: 1, isBoss: false, roomId: 'room-center-mid' }
     ],
     traps: [
-      { id: 'trap-pit-1', trapType: 'pit', x: 5, y: 0, damageDice: 1, detected: false, disarmed: false },
-      { id: 'trap-falling-1', trapType: 'falling-block', x: 12, y: 5, damageDice: 3, detected: false, disarmed: false },
-      { id: 'trap-spear-1', trapType: 'spear', x: 2, y: 16, damageDice: 1, detected: false, disarmed: false }
+      { id: 'trap-pit-1', trapType: 'pit', x: 0, y: 5, damageDice: 1, detected: false, disarmed: false },
+      { id: 'trap-spear-1', trapType: 'spear', x: 7, y: 5, damageDice: 2, detected: false, disarmed: false },
+      { id: 'trap-falling-1', trapType: 'falling-block', x: 21, y: 10, damageDice: 3, detected: false, disarmed: false }
     ],
-    startingStairs: [1, 0]
+    startingStairs: [0, 1]
   },
   activeTool: 'inspect',
   selectedSquare: null,
@@ -49,12 +53,11 @@ let currentData = {
   hoverSquare: null,
   zoom: 1.0,
   boardImage: null,
-  boardImageLoading: false,
   calibration: {
-    insetLeft: 82,
-    insetTop: 65,
-    insetRight: 78,
-    insetBottom: 43,
+    insetLeft: 0,
+    insetTop: 0,
+    insetRight: 0,
+    insetBottom: 0,
     gridOpacity: 0.85,
     artOpacity: 1.0,
     showCoords: true,
@@ -229,10 +232,10 @@ async function switchMapConfiguration(configId) {
 
   // Apply default calibration for this map
   if (config.calibration) {
-    currentData.calibration.insetLeft = config.calibration.insetLeft || 82;
-    currentData.calibration.insetTop = config.calibration.insetTop || 65;
-    currentData.calibration.insetRight = config.calibration.insetRight || 78;
-    currentData.calibration.insetBottom = config.calibration.insetBottom || 43;
+    currentData.calibration.insetLeft = Number.isFinite(config.calibration.insetLeft) ? config.calibration.insetLeft : 0;
+    currentData.calibration.insetTop = Number.isFinite(config.calibration.insetTop) ? config.calibration.insetTop : 0;
+    currentData.calibration.insetRight = Number.isFinite(config.calibration.insetRight) ? config.calibration.insetRight : 0;
+    currentData.calibration.insetBottom = Number.isFinite(config.calibration.insetBottom) ? config.calibration.insetBottom : 0;
 
     document.getElementById("cal-inset-left").value = currentData.calibration.insetLeft;
     document.getElementById("val-inset-left").textContent = currentData.calibration.insetLeft;
@@ -278,6 +281,11 @@ async function loadBoardArtwork(relPath) {
       img.onload = () => {
         currentData.boardImage = img;
         currentData.boardImageLoading = false;
+        const canvas = document.getElementById("board-canvas");
+        if (canvas && img.naturalWidth && img.naturalHeight) {
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+        }
         drawBoard();
       };
       img.src = res.dataUrl;
@@ -332,7 +340,6 @@ async function exportCanvasSnapshot() {
   const res = await window.robosTabletop.saveBoardSnapshot({ dataUrl, filename });
   if (res.success) {
     setStatus(`Saved snapshot: ${res.filePath}`);
-    alert(`Grid snapshot exported successfully!\nPath: ${res.filePath}`);
   } else {
     setStatus("Snapshot export error: " + res.error);
   }
