@@ -10,7 +10,8 @@ async function refreshReviewCI(){
   ciBanner.hidden=false;ciBanner.dataset.state=result.state;ciBanner.replaceChildren();
   const title=document.createElement('strong');title.textContent={failed:'CI checks failed',pending:'CI checks are running',passed:'CI checks passed',unknown:'CI status unavailable'}[result.state]||'CI status unavailable';ciBanner.append(title);
   const detail=document.createElement('span'),jobs=result.checks.flatMap(c=>c.jobs||[]);
-  detail.textContent=jobs.length?`${jobs.filter(j=>j.status==='in_progress').length} running · ${jobs.filter(j=>j.status==='queued').length} queued · ${jobs.filter(j=>j.conclusion==='failure').length} failed · ${jobs.filter(j=>j.conclusion==='success').length} passed`:result.error||`${result.checks.length} checks`;ciBanner.append(detail);
+  const counts=[['running',jobs.filter(j=>j.status==='in_progress').length],['queued',jobs.filter(j=>j.status==='queued').length],['failed',jobs.filter(j=>j.conclusion==='failure').length],['blocked',jobs.filter(j=>j.status==='blocked').length]];
+  detail.textContent=result.state==='passed'?'':result.error||counts.filter(([,count])=>count>0).map(([label,count])=>`${count} ${label}`).join(' · ');ciBanner.append(detail);
   if(result.checks.some(c=>c.provider==='buildkite')){const monitor=document.createElement('button');monitor.textContent='Jobs & live logs';monitor.onclick=()=>window.openCIJobs?.();ciBanner.append(monitor);}
   if(window.openCIRecovery&&result.state==='failed'){const recover=document.createElement('button');recover.className='ci-recover-trigger';recover.textContent='Get CI back to green';recover.onclick=window.openCIRecovery;ciBanner.append(recover);}
   if(result.url){const link=document.createElement('button');link.textContent='View checks';link.onclick=()=>window.api.openUrl(result.url+'/checks');ciBanner.append(link);}
