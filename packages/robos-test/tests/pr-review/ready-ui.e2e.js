@@ -35,7 +35,7 @@ test('draft action opens reviewer dialog; promotion updates state and errors rem
   await p.locator('#pr-ready-button').click();
   await p.getByRole('dialog').getByRole('button',{name:'Move PR to Ready',exact:true}).click();
   await p.locator('#pr-ready-status').filter({hasText:'PR is ready for review.'}).waitFor();
-  await p.getByRole('button',{name:'Done',exact:true}).click();
+  await p.getByRole('dialog').waitFor({state:'hidden'});
   assert.equal(await p.locator('#pr-ready-button').isVisible(),false);assert.equal(await p.evaluate(()=>window.head),'abc');
   await p.evaluate(()=>{window.api.readyReviewPR=async()=>({ok:false,error:'CI checks must finish successfully.'});window.configureReviewPublish(window.pr);});
   await p.locator('#pr-ready-button').click();
@@ -47,7 +47,7 @@ test('draft action opens reviewer dialog; promotion updates state and errors rem
 test('configured reviewers are prefilled, editable for one PR, and explicit opt-out assigns none',async()=>{
  const b=await chromium.launch({headless:true});try{const p=await b.newPage();await p.setContent('<button id="ready">Ready</button><p id="notice"></p>');await p.addScriptTag({path:path.resolve(__dirname,'../../../pr-review/renderer/publish-ui.js')});
  await p.evaluate(()=>{window.received=[];window.api={reviewGitHubReviewers:async()=>({ok:true,source:'RobOS · Code Reviewers',reviewers:['alice','bob']}),readyReviewPR:async(h,u,reviewers)=>{received.push(reviewers);return {ok:true,pr:{isDraft:false}};}};window.openPRReviewTheater=async()=>{};window.openDialog=()=>offerReadyNotification({title:'Example',body:'',headRefOid:'abc',url:'https://github.com/org/repo/pull/1'},document.getElementById('ready'),document.getElementById('notice'));openDialog();});
- await p.waitForFunction(()=>document.getElementById('pr-ready-reviewers').value==='alice, bob');assert.equal(await p.getByLabel('Request GitHub reviews').isChecked(),true);await p.getByLabel('GitHub reviewers',{exact:true}).fill('alice, bob, one-off');await p.getByRole('button',{name:'Move PR to Ready',exact:true}).click();await p.getByRole('button',{name:'Done',exact:true}).click();assert.deepEqual(await p.evaluate(()=>received[0]),['alice','bob','one-off']);
+ await p.waitForFunction(()=>document.getElementById('pr-ready-reviewers').value==='alice, bob');assert.equal(await p.getByLabel('Request GitHub reviews').isChecked(),true);await p.getByLabel('GitHub reviewers',{exact:true}).fill('alice, bob, one-off');await p.getByRole('button',{name:'Move PR to Ready',exact:true}).click();await p.getByRole('dialog').waitFor({state:'hidden'});assert.deepEqual(await p.evaluate(()=>received[0]),['alice','bob','one-off']);
  await p.evaluate(()=>openDialog());await p.waitForFunction(()=>document.getElementById('pr-ready-reviewers').value==='alice, bob');await p.getByLabel('Request GitHub reviews').uncheck();assert.equal(await p.getByLabel('GitHub reviewers',{exact:true}).isDisabled(),true);await p.getByRole('button',{name:'Move PR to Ready',exact:true}).click();assert.deepEqual(await p.evaluate(()=>received[1]),[]);
  }finally{await b.close();}
 });
