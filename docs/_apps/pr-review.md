@@ -14,3 +14,12 @@ Autonomous AI-driven code review, audit hub, and Review Theater for pull request
 - **IntelliJ IDEA Pull Request Review Plugin**: Communicates over RobOS port `63343` IPC bridge and native JetBrains CLI integration to jump straight to modified files, set live breakpoints at change sites, and launch JetBrains' native Pull Request review tool window.
 - **VS Code Pull Request Review Plugin**: Deeply integrates with the industry-standard `GitHub Pull Requests and Issues` extension (`vscode://github.vscode-pull-request-github/open-pr`) to review diffs, leave inline line comments, and approve PRs right inside Visual Studio Code.
 ![PR Review Theater]({{ '/assets/images/screenshots/pr-review-theater-02-pr-detail.png' | relative_url }})
+
+## Mention reviewers in a PR notification
+
+Enable **Send PR review notification**, select its destination, and use
+**Reviewers to @mention** to choose recipients. Defaults come from the project's
+messaging settings in Git Projects. Search `@name` to find a person; the preview
+shows who will be notified. The sender is excluded, and Slack receives stable
+member-ID mentions rather than plain display names. Recipient changes here apply
+only to this request. Save project defaults in Git Projects.
