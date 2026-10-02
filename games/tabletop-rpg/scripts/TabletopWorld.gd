@@ -30,6 +30,7 @@ var traps: Array[Dictionary] = []
 var rooms: Array[Dictionary] = []
 var revealed_rooms: Array[String] = []
 var explored_tiles: Dictionary = {}
+var discovered_monster_ids: Dictionary = {}
 var grid_cols: int = GRID_COLS
 var grid_rows: int = GRID_ROWS
 var starting_stair: Vector2i = Vector2i(1, 1)
@@ -63,6 +64,11 @@ var auto_play_step: int = 0
 @onready var role_badge: Button = $UI/TitleBar/BtnToggleRole
 @onready var log_label: RichTextLabel = $UI/LogPanel/LogLabel
 @onready var hero_card: Label = $UI/StatsPanel/HeroLabel
+@onready var hero_cards_grid: GridContainer = get_node_or_null("UI/StatsPanel/HeroCardsGrid")
+@onready var enemies_panel: Panel = get_node_or_null("UI/EnemiesPanel")
+@onready var enemies_header_label: Label = get_node_or_null("UI/EnemiesPanel/HeaderLabel")
+@onready var enemies_empty_label: Label = get_node_or_null("UI/EnemiesPanel/EmptyLabel")
+@onready var enemy_cards_grid: GridContainer = get_node_or_null("UI/EnemiesPanel/ScrollContainer/EnemyCardsGrid")
 @onready var dice_label: Label = $UI/DicePanel/DiceLabel
 @onready var btn_roll: Button = $UI/Actions/BtnRoll
 @onready var btn_attack: Button = $UI/Actions/BtnAttack
@@ -262,6 +268,10 @@ func _load_active_cartridge() -> void:
 	# Fog of War: initially, cast ray vision from hero starting stairwell
 	revealed_rooms.clear()
 	explored_tiles.clear()
+	discovered_monster_ids.clear()
+	if is_gm_role():
+		for m in monsters:
+			discovered_monster_ids[str(m.get("id"))] = true
 	update_party_vision()
 	_update_ui()
 	queue_redraw_all()
@@ -471,6 +481,31 @@ func update_party_vision() -> void:
 					explored_tiles[tile] = true
 					break
 
+	# Check for any monsters newly brought into line of sight
+	for m in monsters:
+		if is_monster_currently_visible(m):
+			discovered_monster_ids[str(m.get("id"))] = true
+
+func is_monster_currently_visible(m: Dictionary) -> bool:
+	if is_gm_role():
+		return true
+
+	var r_id = str(m.get("roomId", ""))
+	var pos = m.get("grid_pos", Vector2i(-1, -1))
+	var rm = _get_room_at(pos)
+	var effective_room = r_id if r_id != "" else str(rm.get("id", ""))
+	if effective_room != "":
+		return revealed_rooms.has(effective_room)
+
+	# Corridor monster: must have line of sight from at least one living hero on the board
+	for h in heroes:
+		if h.get("is_on_board", false) and int(h.get("current_bp", 1)) > 0:
+			var h_pos = h.get("grid_pos", Vector2i(-1, -1))
+			if has_line_of_sight(h_pos, pos):
+				return true
+
+	return false
+
 func reveal_room_by_id(r_id: String) -> void:
 	if r_id == "" or revealed_rooms.has(r_id):
 		return
@@ -488,11 +523,17 @@ func reveal_room_by_id(r_id: String) -> void:
 		for y in range(ry, ry + rh):
 			explored_tiles[Vector2i(x, y)] = true
 
-	# Log spotted monsters in the chamber
+	# Discover and log any monsters residing in this newly revealed chamber
 	var found_m: Array[String] = []
 	for m in monsters:
-		if m.get("roomId", "") == r_id and m.get("is_alive", false):
-			found_m.append(str(m.get("name", "Monster")))
+		var pos = m.get("grid_pos", Vector2i(0, 0))
+		var rm = _get_room_at(pos)
+		var m_room = str(m.get("roomId", ""))
+		var eff_room = m_room if m_room != "" else str(rm.get("id", ""))
+		if eff_room == r_id:
+			discovered_monster_ids[str(m.get("id"))] = true
+			if m.get("is_alive", false):
+				found_m.append(str(m.get("name", "Monster")))
 	if found_m.size() > 0:
 		_log("⚠️ Danger! Spotted inside: %s!" % ", ".join(found_m))
 	else:
@@ -1836,6 +1877,7 @@ func _update_ui() -> void:
 				btn_end_turn.text = "⏹️ End Turn"
 
 	# Character card
+	# Character card legacy label update for backwards compatibility
 	if hero.size() > 0 and hero_card:
 		var turn_badge = "★ YOUR TURN ★\n" if current_phase == "hero_phase" and current_role == "player" else ""
 		hero_card.text = "%s%s (%s)\nBP: %d/%d | MP: %d/%d\nAtk Dice: %d | Def Dice: %d\nGold: %d gp" % [
@@ -1847,11 +1889,448 @@ func _update_ui() -> void:
 			hero.get("gold", 0)
 		]
 
+	# Render Rich Hero Party Cards & Discovered Enemy Cards
+	_update_character_and_enemy_cards()
+
 	var log_text = ""
 	for i in range(maxi(0, combat_log.size() - 8), combat_log.size()):
 		log_text += combat_log[i] + "\n"
 	if log_label:
 		log_label.text = log_text
+
+func _update_character_and_enemy_cards() -> void:
+	if not hero_cards_grid:
+		hero_cards_grid = get_node_or_null("UI/StatsPanel/HeroCardsGrid")
+	if not enemies_header_label:
+		enemies_header_label = get_node_or_null("UI/EnemiesPanel/HeaderLabel")
+	if not enemies_empty_label:
+		enemies_empty_label = get_node_or_null("UI/EnemiesPanel/EmptyLabel")
+	if not enemy_cards_grid:
+		enemy_cards_grid = get_node_or_null("UI/EnemiesPanel/ScrollContainer/EnemyCardsGrid")
+
+	# Render Hero Party Cards (all 4 heroes in party)
+	if hero_cards_grid:
+		for c in hero_cards_grid.get_children():
+			hero_cards_grid.remove_child(c)
+			c.queue_free()
+		for i in range(heroes.size()):
+			var h = heroes[i]
+			var is_act = (i == active_hero_idx and current_phase == "hero_phase" and current_role == "player")
+			var card = _create_hero_card(h, is_act)
+			hero_cards_grid.add_child(card)
+
+	# Discover any currently visible monsters
+	for m in monsters:
+		if is_monster_currently_visible(m):
+			discovered_monster_ids[str(m.get("id"))] = true
+
+	var vis_count = 0
+	var dead_count = 0
+	var discovered_list: Array[Dictionary] = []
+
+	for m in monsters:
+		var mid = str(m.get("id"))
+		if discovered_monster_ids.has(mid):
+			var cur_bp = int(m.get("current_bp", 1))
+			var alive = bool(m.get("is_alive", true)) and cur_bp > 0
+			var vis = is_monster_currently_visible(m)
+			if not alive:
+				dead_count += 1
+			elif vis:
+				vis_count += 1
+			discovered_list.append({ "monster": m, "is_visible": vis })
+
+	if enemies_header_label:
+		if discovered_list.is_empty():
+			enemies_header_label.text = "👹 DISCOVERED FOES (0 Sighted)"
+		else:
+			enemies_header_label.text = "👹 DISCOVERED FOES (%d Sighted | %d Defeated)" % [vis_count, dead_count]
+
+	if enemies_empty_label:
+		enemies_empty_label.visible = discovered_list.is_empty()
+
+	if enemy_cards_grid:
+		for c in enemy_cards_grid.get_children():
+			enemy_cards_grid.remove_child(c)
+			c.queue_free()
+		for item in discovered_list:
+			var card = _create_enemy_card(item.monster, item.is_visible)
+			enemy_cards_grid.add_child(card)
+
+func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
+	var card = PanelContainer.new()
+	card.custom_minimum_size = Vector2(272, 116)
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+
+	var cur_bp = int(h.get("current_bp", 8))
+	var max_bp = int(h.get("bodyPoints", 8))
+	var cur_mp = int(h.get("current_mp", 2))
+	var max_mp = int(h.get("mindPoints", 2))
+	var is_dead = cur_bp <= 0
+	var is_on_board = bool(h.get("is_on_board", false))
+
+	var sb = StyleBoxFlat.new()
+	sb.corner_radius_top_left = 6
+	sb.corner_radius_top_right = 6
+	sb.corner_radius_bottom_left = 6
+	sb.corner_radius_bottom_right = 6
+
+	if is_dead:
+		sb.bg_color = Color(0.24, 0.05, 0.05, 0.95)
+		sb.border_color = Color(0.9, 0.15, 0.15, 1.0)
+		sb.border_width_left = 2; sb.border_width_top = 2; sb.border_width_right = 2; sb.border_width_bottom = 2
+		sb.shadow_color = Color(0.9, 0.1, 0.1, 0.4)
+		sb.shadow_size = 4
+	elif is_active:
+		sb.bg_color = Color(0.14, 0.18, 0.26, 0.96)
+		sb.border_color = Color(1.0, 0.82, 0.2, 1.0) # Golden active turn glow
+		sb.border_width_left = 2; sb.border_width_top = 2; sb.border_width_right = 2; sb.border_width_bottom = 2
+		sb.shadow_color = Color(1.0, 0.8, 0.2, 0.45)
+		sb.shadow_size = 4
+	elif not is_on_board:
+		sb.bg_color = Color(0.09, 0.11, 0.16, 0.75)
+		sb.border_color = Color(0.25, 0.30, 0.38, 0.5)
+		sb.border_width_left = 1; sb.border_width_top = 1; sb.border_width_right = 1; sb.border_width_bottom = 1
+	else:
+		sb.bg_color = Color(0.11, 0.14, 0.20, 0.92)
+		sb.border_color = Color(0.28, 0.38, 0.50, 0.85)
+		sb.border_width_left = 1; sb.border_width_top = 1; sb.border_width_right = 1; sb.border_width_bottom = 1
+
+	card.add_theme_stylebox_override("panel", sb)
+
+	var margin = MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 8)
+	margin.add_theme_constant_override("margin_right", 8)
+	margin.add_theme_constant_override("margin_top", 5)
+	margin.add_theme_constant_override("margin_bottom", 5)
+	card.add_child(margin)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 2)
+	margin.add_child(vbox)
+
+	# Row 1: Header (Name & Status Badge)
+	var hdr_row = HBoxContainer.new()
+	var name_lbl = Label.new()
+	name_lbl.text = str(h.get("name", "Hero"))
+	name_lbl.add_theme_font_size_override("font_size", 12)
+	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_lbl.clip_text = true
+	if is_dead:
+		name_lbl.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3, 1.0))
+		name_lbl.text = "💀 " + name_lbl.text
+	elif is_active:
+		name_lbl.add_theme_color_override("font_color", Color(1.0, 0.9, 0.3, 1.0))
+	else:
+		name_lbl.add_theme_color_override("font_color", Color(0.9, 0.95, 1.0, 1.0))
+	hdr_row.add_child(name_lbl)
+
+	var status_tag = Label.new()
+	status_tag.add_theme_font_size_override("font_size", 10)
+	if is_dead:
+		status_tag.text = "[DEAD]"
+		status_tag.add_theme_color_override("font_color", Color(1.0, 0.2, 0.2, 1.0))
+	elif is_active:
+		status_tag.text = "★ ACTIVE"
+		status_tag.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2, 1.0))
+	elif not is_on_board:
+		status_tag.text = "[Off Board]"
+		status_tag.add_theme_color_override("font_color", Color(0.55, 0.60, 0.70, 0.8))
+	else:
+		status_tag.text = "[On Board]"
+		status_tag.add_theme_color_override("font_color", Color(0.3, 0.85, 0.45, 0.9))
+	hdr_row.add_child(status_tag)
+	vbox.add_child(hdr_row)
+
+	# Row 2: BP Bar & Text
+	var bp_row = HBoxContainer.new()
+	bp_row.add_theme_constant_override("separation", 6)
+	var bp_lbl = Label.new()
+	bp_lbl.text = "BP %d/%d" % [cur_bp, max_bp]
+	bp_lbl.add_theme_font_size_override("font_size", 10)
+	bp_lbl.custom_minimum_size = Vector2(55, 0)
+	bp_row.add_child(bp_lbl)
+
+	var bp_bar = ProgressBar.new()
+	bp_bar.custom_minimum_size = Vector2(0, 7)
+	bp_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bp_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	bp_bar.show_percentage = false
+	bp_bar.max_value = max_bp
+	bp_bar.value = max(0, cur_bp)
+	var bp_pct = float(cur_bp) / max(1.0, float(max_bp))
+	var bp_col = Color(0.2, 0.85, 0.35, 1.0)
+	if is_dead:
+		bp_col = Color(0.85, 0.15, 0.15, 1.0)
+	elif bp_pct <= 0.25:
+		bp_col = Color(0.95, 0.25, 0.25, 1.0)
+	elif bp_pct <= 0.5:
+		bp_col = Color(1.0, 0.75, 0.2, 1.0)
+	var bp_fill = StyleBoxFlat.new()
+	bp_fill.bg_color = bp_col
+	bp_fill.corner_radius_top_left = 2; bp_fill.corner_radius_top_right = 2
+	bp_fill.corner_radius_bottom_left = 2; bp_fill.corner_radius_bottom_right = 2
+	bp_bar.add_theme_stylebox_override("fill", bp_fill)
+	var bp_bg = StyleBoxFlat.new()
+	bp_bg.bg_color = Color(0.08, 0.10, 0.14, 0.9)
+	bp_bar.add_theme_stylebox_override("background", bp_bg)
+	bp_row.add_child(bp_bar)
+	vbox.add_child(bp_row)
+
+	# Row 3: MP Bar & Text
+	var mp_row = HBoxContainer.new()
+	mp_row.add_theme_constant_override("separation", 6)
+	var mp_lbl = Label.new()
+	mp_lbl.text = "MP %d/%d" % [cur_mp, max_mp]
+	mp_lbl.add_theme_font_size_override("font_size", 10)
+	mp_lbl.custom_minimum_size = Vector2(55, 0)
+	mp_row.add_child(mp_lbl)
+
+	var mp_bar = ProgressBar.new()
+	mp_bar.custom_minimum_size = Vector2(0, 7)
+	mp_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	mp_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	mp_bar.show_percentage = false
+	mp_bar.max_value = max_mp
+	mp_bar.value = max(0, cur_mp)
+	var mp_fill = StyleBoxFlat.new()
+	mp_fill.bg_color = Color(0.2, 0.7, 0.95, 1.0)
+	mp_fill.corner_radius_top_left = 2; mp_fill.corner_radius_top_right = 2
+	mp_fill.corner_radius_bottom_left = 2; mp_fill.corner_radius_bottom_right = 2
+	mp_bar.add_theme_stylebox_override("fill", mp_fill)
+	var mp_bg = StyleBoxFlat.new()
+	mp_bg.bg_color = Color(0.08, 0.10, 0.14, 0.9)
+	mp_bar.add_theme_stylebox_override("background", mp_bg)
+	mp_row.add_child(mp_bar)
+	vbox.add_child(mp_row)
+
+	# Row 4: Combat stats & equipment
+	var atk_d = get_hero_attack_dice(h)
+	var def_d = get_hero_defend_dice(h)
+	var wep = str(h.get("equipped_weapon", "unarmed")).capitalize()
+	var arm = h.get("equipped_armor", [])
+	var stat_row = HBoxContainer.new()
+	var dice_stat = Label.new()
+	dice_stat.text = "⚔️%dd  🛡️%dd" % [atk_d, def_d]
+	dice_stat.add_theme_font_size_override("font_size", 10)
+	dice_stat.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	dice_stat.add_theme_color_override("font_color", Color(0.85, 0.88, 0.95, 0.95))
+	stat_row.add_child(dice_stat)
+
+	var eq_str = wep
+	if arm.size() > 0:
+		eq_str += " | " + arm[0].capitalize()
+	var eq_lbl = Label.new()
+	eq_lbl.text = eq_str
+	eq_lbl.clip_text = true
+	eq_lbl.add_theme_font_size_override("font_size", 10)
+	eq_lbl.add_theme_color_override("font_color", Color(0.7, 0.78, 0.88, 0.85))
+	stat_row.add_child(eq_lbl)
+	vbox.add_child(stat_row)
+
+	# Row 5: Status Effects / Buffs pills
+	var eff_list: Array[String] = []
+	if h.get("rock_skin_active", false):
+		eff_list.append("Rock Skin")
+	if h.get("courage_active", false):
+		eff_list.append("Courage")
+	if h.get("swift_wind_active", false):
+		eff_list.append("Swift Wind")
+	if h.get("pass_through_rock_active", false):
+		eff_list.append("Pass Rock")
+	if h.get("veil_of_mist_active", false):
+		eff_list.append("Veil Mist")
+	if h.get("is_sleeping", false):
+		eff_list.append("Sleep")
+
+	if eff_list.size() > 0:
+		var eff_row = HBoxContainer.new()
+		eff_row.add_theme_constant_override("separation", 4)
+		for eff in eff_list:
+			var pill = PanelContainer.new()
+			var psb = StyleBoxFlat.new()
+			psb.bg_color = Color(0.18, 0.28, 0.42, 0.9)
+			psb.border_color = Color(0.35, 0.65, 0.95, 0.9)
+			psb.border_width_left = 1; psb.border_width_top = 1; psb.border_width_right = 1; psb.border_width_bottom = 1
+			psb.corner_radius_top_left = 3; psb.corner_radius_top_right = 3
+			psb.corner_radius_bottom_left = 3; psb.corner_radius_bottom_right = 3
+			pill.add_theme_stylebox_override("panel", psb)
+			var plbl = Label.new()
+			plbl.text = eff
+			plbl.add_theme_font_size_override("font_size", 9)
+			plbl.add_theme_color_override("font_color", Color(0.85, 0.95, 1.0, 1.0))
+			var pmarg = MarginContainer.new()
+			pmarg.add_theme_constant_override("margin_left", 4)
+			pmarg.add_theme_constant_override("margin_right", 4)
+			pmarg.add_theme_constant_override("margin_top", 1)
+			pmarg.add_theme_constant_override("margin_bottom", 1)
+			pmarg.add_child(plbl)
+			pill.add_child(pmarg)
+			eff_row.add_child(pill)
+		vbox.add_child(eff_row)
+
+	return card
+
+func _create_enemy_card(m: Dictionary, is_visible: bool) -> PanelContainer:
+	var card = PanelContainer.new()
+	card.custom_minimum_size = Vector2(272, 105)
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+
+	var cur_bp = int(m.get("current_bp", 1))
+	var max_bp = int(m.get("bodyPoints", 1))
+	var is_alive = bool(m.get("is_alive", true)) and cur_bp > 0
+	var is_sleeping = bool(m.get("is_sleeping", false))
+	var is_stunned = bool(m.get("tempest_stunned", false))
+
+	var sb = StyleBoxFlat.new()
+	sb.corner_radius_top_left = 6
+	sb.corner_radius_top_right = 6
+	sb.corner_radius_bottom_left = 6
+	sb.corner_radius_bottom_right = 6
+
+	if not is_alive:
+		# Defeated monster styling
+		sb.bg_color = Color(0.20, 0.08, 0.08, 0.85)
+		sb.border_color = Color(0.70, 0.20, 0.20, 0.75)
+		sb.border_width_left = 1; sb.border_width_top = 1; sb.border_width_right = 1; sb.border_width_bottom = 1
+		card.modulate = Color(0.85, 0.85, 0.85, 0.75)
+	elif is_visible:
+		# Currently visible enemy
+		sb.bg_color = Color(0.12, 0.18, 0.16, 0.95)
+		sb.border_color = Color(0.20, 0.85, 0.50, 1.0) # Emerald sightline glow
+		sb.border_width_left = 2; sb.border_width_top = 2; sb.border_width_right = 2; sb.border_width_bottom = 2
+		sb.shadow_color = Color(0.1, 0.8, 0.4, 0.3)
+		sb.shadow_size = 3
+		card.modulate = Color(1.0, 1.0, 1.0, 1.0)
+	else:
+		# No longer visible enemy
+		sb.bg_color = Color(0.10, 0.12, 0.16, 0.75)
+		sb.border_color = Color(0.35, 0.42, 0.52, 0.6)
+		sb.border_width_left = 1; sb.border_width_top = 1; sb.border_width_right = 1; sb.border_width_bottom = 1
+		card.modulate = Color(0.75, 0.75, 0.80, 0.65) # Dimmed opacity for out-of-sight
+
+	card.add_theme_stylebox_override("panel", sb)
+
+	var margin = MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 8)
+	margin.add_theme_constant_override("margin_right", 8)
+	margin.add_theme_constant_override("margin_top", 5)
+	margin.add_theme_constant_override("margin_bottom", 5)
+	card.add_child(margin)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 2)
+	margin.add_child(vbox)
+
+	# Row 1: Header (Name & Visibility Badge)
+	var hdr_row = HBoxContainer.new()
+	var name_lbl = Label.new()
+	var m_name = str(m.get("name", "Monster"))
+	name_lbl.text = m_name
+	name_lbl.add_theme_font_size_override("font_size", 12)
+	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_lbl.clip_text = true
+
+	var vis_badge = Label.new()
+	vis_badge.add_theme_font_size_override("font_size", 10)
+
+	if not is_alive:
+		name_lbl.add_theme_color_override("font_color", Color(0.85, 0.4, 0.4, 0.9))
+		vis_badge.text = "[💀 DEFEATED]"
+		vis_badge.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3, 1.0))
+	elif is_visible:
+		name_lbl.add_theme_color_override("font_color", Color(0.9, 1.0, 0.95, 1.0))
+		vis_badge.text = "[👁️ VISIBLE]"
+		vis_badge.add_theme_color_override("font_color", Color(0.3, 0.95, 0.6, 1.0))
+	else:
+		name_lbl.add_theme_color_override("font_color", Color(0.75, 0.78, 0.85, 0.8))
+		vis_badge.text = "[👁️‍🗨️ (not visible)]"
+		vis_badge.add_theme_color_override("font_color", Color(0.65, 0.70, 0.80, 0.8))
+
+	hdr_row.add_child(name_lbl)
+	hdr_row.add_child(vis_badge)
+	vbox.add_child(hdr_row)
+
+	# Row 2: BP Bar & Text
+	var bp_row = HBoxContainer.new()
+	bp_row.add_theme_constant_override("separation", 6)
+	var bp_lbl = Label.new()
+	bp_lbl.text = "BP %d/%d" % [cur_bp, max_bp]
+	bp_lbl.add_theme_font_size_override("font_size", 10)
+	bp_lbl.custom_minimum_size = Vector2(55, 0)
+	bp_row.add_child(bp_lbl)
+
+	var bp_bar = ProgressBar.new()
+	bp_bar.custom_minimum_size = Vector2(0, 7)
+	bp_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bp_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	bp_bar.show_percentage = false
+	bp_bar.max_value = max_bp
+	bp_bar.value = max(0, cur_bp)
+	var bp_fill = StyleBoxFlat.new()
+	if not is_alive:
+		bp_fill.bg_color = Color(0.6, 0.15, 0.15, 0.8)
+	elif is_visible:
+		bp_fill.bg_color = Color(0.85, 0.25, 0.25, 1.0)
+	else:
+		bp_fill.bg_color = Color(0.65, 0.4, 0.4, 0.7)
+	bp_fill.corner_radius_top_left = 2; bp_fill.corner_radius_top_right = 2
+	bp_fill.corner_radius_bottom_left = 2; bp_fill.corner_radius_bottom_right = 2
+	bp_bar.add_theme_stylebox_override("fill", bp_fill)
+	var bp_bg = StyleBoxFlat.new()
+	bp_bg.bg_color = Color(0.08, 0.10, 0.14, 0.9)
+	bp_bar.add_theme_stylebox_override("background", bp_bg)
+	bp_row.add_child(bp_bar)
+	vbox.add_child(bp_row)
+
+	# Row 3: Stats row
+	var atk_d = int(m.get("attackDice", 2))
+	var def_d = int(m.get("defendDice", 2))
+	var mv_sq = int(m.get("moveSquares", 6))
+	var stat_row = HBoxContainer.new()
+	var stat_lbl = Label.new()
+	stat_lbl.text = "⚔️%dd  🛡️%dd  👣%d mv" % [atk_d, def_d, mv_sq]
+	stat_lbl.add_theme_font_size_override("font_size", 10)
+	stat_lbl.add_theme_color_override("font_color", Color(0.8, 0.85, 0.92, 0.9))
+	stat_row.add_child(stat_lbl)
+	vbox.add_child(stat_row)
+
+	# Row 4: Conditions (Sleep, Stun, etc.)
+	var eff_list: Array[String] = []
+	if is_sleeping:
+		eff_list.append("💤 Sleeping")
+	if is_stunned:
+		eff_list.append("⚡ Stunned")
+
+	if eff_list.size() > 0:
+		var eff_row = HBoxContainer.new()
+		eff_row.add_theme_constant_override("separation", 4)
+		for eff in eff_list:
+			var pill = PanelContainer.new()
+			var psb = StyleBoxFlat.new()
+			psb.bg_color = Color(0.35, 0.20, 0.10, 0.9) if "Sleep" in eff else Color(0.15, 0.25, 0.4, 0.9)
+			psb.border_color = Color(0.9, 0.65, 0.2, 0.9) if "Sleep" in eff else Color(0.3, 0.7, 1.0, 0.9)
+			psb.border_width_left = 1; psb.border_width_top = 1; psb.border_width_right = 1; psb.border_width_bottom = 1
+			psb.corner_radius_top_left = 3; psb.corner_radius_top_right = 3
+			psb.corner_radius_bottom_left = 3; psb.corner_radius_bottom_right = 3
+			pill.add_theme_stylebox_override("panel", psb)
+			var plbl = Label.new()
+			plbl.text = eff
+			plbl.add_theme_font_size_override("font_size", 9)
+			plbl.add_theme_color_override("font_color", Color(1.0, 0.95, 0.8, 1.0))
+			var pmarg = MarginContainer.new()
+			pmarg.add_theme_constant_override("margin_left", 4)
+			pmarg.add_theme_constant_override("margin_right", 4)
+			pmarg.add_theme_constant_override("margin_top", 1)
+			pmarg.add_theme_constant_override("margin_bottom", 1)
+			pmarg.add_child(plbl)
+			pill.add_child(pmarg)
+			eff_row.add_child(pill)
+		vbox.add_child(eff_row)
+
+	return card
 
 func _log(msg: String) -> void:
 	print("[Tabletop] ", msg)
@@ -1868,20 +2347,96 @@ func get_telemetry_state() -> Dictionary:
 	var active_center = board_offset + Vector2(h_pos.x * tile_size + tile_size * 0.5, h_pos.y * tile_size + tile_size * 0.5)
 
 	var heroes_copy: Array = []
-	for h in heroes:
+	var char_cards: Array = []
+	for i in range(heroes.size()):
+		var h = heroes[i]
 		var hc = h.duplicate(true)
 		var gp = h.get("grid_pos", Vector2i(-1, -1))
 		hc["grid_pos"] = [gp.x, gp.y]
-		hc["attackDice"] = get_hero_attack_dice(h)
-		hc["defendDice"] = get_hero_defend_dice(h)
+		var atk_dice = get_hero_attack_dice(h)
+		var def_dice = get_hero_defend_dice(h)
+		hc["attackDice"] = atk_dice
+		hc["defendDice"] = def_dice
 		heroes_copy.append(hc)
 
+		var cur_bp = int(h.get("current_bp", 8))
+		var max_bp = int(h.get("bodyPoints", 8))
+		var cur_mp = int(h.get("current_mp", 2))
+		var max_mp = int(h.get("mindPoints", 2))
+		var is_act = (i == active_hero_idx and current_phase == "hero_phase" and current_role == "player")
+		var effs: Array[String] = []
+		if h.get("rock_skin_active", false): effs.append("rock_skin")
+		if h.get("courage_active", false): effs.append("courage")
+		if h.get("swift_wind_active", false): effs.append("swift_wind")
+		if h.get("pass_through_rock_active", false): effs.append("pass_through_rock")
+		if h.get("veil_of_mist_active", false): effs.append("veil_of_mist")
+		if h.get("is_sleeping", false): effs.append("sleep")
+
+		char_cards.append({
+			"id": str(h.get("id")),
+			"name": str(h.get("name")),
+			"title": str(h.get("title", "")),
+			"current_bp": cur_bp,
+			"max_bp": max_bp,
+			"current_mp": cur_mp,
+			"max_mp": max_mp,
+			"attackDice": atk_dice,
+			"defendDice": def_dice,
+			"gold": int(h.get("gold", 0)),
+			"isActive": is_act,
+			"isOnBoard": bool(h.get("is_on_board", false)),
+			"isAlive": cur_bp > 0,
+			"weapon": str(h.get("equipped_weapon", "unarmed")),
+			"armor": h.get("equipped_armor", []),
+			"statusEffects": effs
+		})
+
 	var monsters_copy: Array = []
+	var enemy_cards: Array = []
+	var vis_count = 0
+	var dead_count = 0
 	for m in monsters:
 		var mc = m.duplicate(true)
 		var mp = m.get("grid_pos", Vector2i(-1, -1))
 		mc["grid_pos"] = [mp.x, mp.y]
 		monsters_copy.append(mc)
+
+		var mid = str(m.get("id"))
+		if discovered_monster_ids.has(mid):
+			var vis = is_monster_currently_visible(m)
+			var cur_bp = int(m.get("current_bp", 1))
+			var max_bp = int(m.get("bodyPoints", 1))
+			var alive = bool(m.get("is_alive", true)) and cur_bp > 0
+			var effs: Array[String] = []
+			if m.get("is_sleeping", false): effs.append("sleep")
+			if m.get("tempest_stunned", false): effs.append("tempest_stunned")
+
+			var badge = "visible"
+			if not alive:
+				badge = "defeated"
+				dead_count += 1
+			elif vis:
+				badge = "visible"
+				vis_count += 1
+			else:
+				badge = "not_visible"
+
+			enemy_cards.append({
+				"id": mid,
+				"name": str(m.get("name")),
+				"type": str(m.get("type", "monster")),
+				"current_bp": cur_bp,
+				"max_bp": max_bp,
+				"attackDice": int(m.get("attackDice", 2)),
+				"defendDice": int(m.get("defendDice", 2)),
+				"moveSquares": int(m.get("moveSquares", 6)),
+				"isVisible": vis,
+				"isAlive": alive,
+				"statusBadge": badge,
+				"statusEffects": effs,
+				"grid_pos": [mp.x, mp.y],
+				"roomId": str(m.get("roomId", ""))
+			})
 
 	return {
 		"role": current_role,
@@ -1908,6 +2463,11 @@ func get_telemetry_state() -> Dictionary:
 		"floatingTexts": floating_texts,
 		"lastSpellResult": last_spell_result,
 		"lastCombatResult": last_combat_result,
+		"characterCards": char_cards,
+		"enemyCards": enemy_cards,
+		"discoveredEnemiesCount": discovered_monster_ids.size(),
+		"visibleEnemiesCount": vis_count,
+		"defeatedEnemiesCount": dead_count,
 		"activeDiceRoll": {
 			"type": active_dice_animation.get("type", ""),
 			"title": active_dice_animation.get("title", ""),
@@ -1984,6 +2544,44 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			var m_name = str(action_data.get("name", "Wandering Orc"))
 			var res = summon_wandering_monster(Vector2i(sx, sy), bp, m_name)
 			return res
+		"set_monster_pos":
+			var m_id = str(action_data.get("monsterId", ""))
+			var px = int(action_data.get("x", 0))
+			var py = int(action_data.get("y", 0))
+			for m in monsters:
+				if str(m.get("id")) == m_id:
+					m["grid_pos"] = Vector2i(px, py)
+					m["roomId"] = ""
+					break
+			update_party_vision()
+			_update_ui()
+			queue_redraw_all()
+			return { "success": true }
+		"discover_monster":
+			var m_id = str(action_data.get("monsterId", ""))
+			discovered_monster_ids[m_id] = true
+			_update_ui()
+			return { "success": true }
+		"set_hero_bp":
+			var h_id = str(action_data.get("heroId", "barbarian"))
+			var bp_val = int(action_data.get("bp", 1))
+			for h in heroes:
+				if str(h.get("id")) == h_id:
+					h["current_bp"] = bp_val
+					break
+			_update_ui()
+			return { "success": true }
+		"set_monster_bp":
+			var m_id = str(action_data.get("monsterId", ""))
+			var bp_val = int(action_data.get("bp", 1))
+			for m in monsters:
+				if str(m.get("id")) == m_id:
+					m["current_bp"] = bp_val
+					if bp_val <= 0:
+						m["is_alive"] = false
+					break
+			_update_ui()
+			return { "success": true }
 		"search":
 			var res = search_room()
 			return res
@@ -2202,18 +2800,9 @@ func _draw_board(canvas: CanvasItem) -> void:
 	# Draw Monsters
 	for m in monsters:
 		if m.get("is_alive", false):
-			var r_id = m.get("roomId", "")
-			var pos = m.get("grid_pos", Vector2i(0, 0))
-			var rm = _get_room_at(pos)
-			var effective_room = r_id if r_id != "" else str(rm.get("id", ""))
-			var is_visible = false
-			if is_gm_role():
-				is_visible = true
-			elif effective_room != "":
-				is_visible = revealed_rooms.has(effective_room)
-			else:
-				is_visible = explored_tiles.has(pos)
+			var is_visible = is_monster_currently_visible(m)
 			if is_visible:
+				var pos = m.get("grid_pos", Vector2i(0, 0))
 				var screen_pos = board_offset + Vector2(pos.x * tile_size + tile_size * 0.5, pos.y * tile_size + tile_size * 0.5)
 				var col = Color.from_string(m.get("tokenColor", "#15803d"), Color.GREEN)
 				canvas.draw_circle(screen_pos, tile_size * 0.4, col)
