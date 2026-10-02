@@ -44,7 +44,10 @@ ipcMain.handle('demo-clear-chat', () => { if (!demoSession) return { ok: false, 
 ipcMain.handle('demo-save-process', (_, value) => { try { if (!demoSession) throw new Error('No project demo process configured.'); return { ok: true, state: demoSession.saveProcess(value) }; } catch (e) { return { ok: false, error: e.message }; } });
 app.on('before-quit', () => demoSession?.stop());
 app.on('before-quit', () => showMeSession.stop());
-ipcMain.handle('get-local-review', async () => {if(!localReview)return null;try{return {ok:true,pr:await prState.refresh()};}catch(e){return {ok:true,pr:{...localReview.pr,stateError:e.message,isAuthor:false}};}});
+ipcMain.handle('get-local-review', async () => {if(!localReview){
+ if(!process.env.ROBOS_REVIEW_URL)return null;
+ try{const {run,fields,parseURL}=require('../dev-central/lib/pull-requests');const url=process.env.ROBOS_REVIEW_URL,identity=parseURL(url);const pr=JSON.parse(await run(['pr','view',url,'--json',fields]));return {ok:true,pr:{...pr,...identity,published:true,author:pr.author.login,headBranch:pr.headRefName,baseBranch:pr.baseRefName}};}catch(e){return {ok:false,error:e.message};}
+ }try{return {ok:true,pr:await prState.refresh()};}catch(e){return {ok:true,pr:{...localReview.pr,stateError:e.message,isAuthor:false}};}});
 
 const SETTINGS_FILE = path.join(os.homedir(), '.config', 'robos', 'settings.json');
 

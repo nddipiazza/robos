@@ -683,7 +683,8 @@ async function fetchLatestData() {
   const ts = activeTS(settings);
 
   let issues = getSampleIssues();
-  let prs = getSamplePRs();
+  const prResult=await myPRs();
+  let prs=prResult.data||[];
   let reviews = getSampleReviewRequests();
   let activity = getSampleActivity();
 
@@ -698,18 +699,6 @@ async function fetchLatestData() {
       if (r.status === 0) {
         const parsed = JSON.parse(r.stdout);
         if (parsed && parsed.length) issues = parsed;
-      }
-    } catch {}
-
-    try {
-      const r = cp.spawnSync('gh', [
-        'pr', 'list', '--repo', repo, '--author', '@me',
-        '--json', 'number,title,state,url,headRefName,statusCheckRollup,reviewDecision,updatedAt,additions,deletions',
-        '--limit', '30',
-      ], { encoding: 'utf8', timeout: 15000 });
-      if (r.status === 0) {
-        const parsed = JSON.parse(r.stdout);
-        if (parsed && parsed.length) prs = parsed;
       }
     } catch {}
 
@@ -732,7 +721,7 @@ async function fetchLatestData() {
     if (events && events.length) activity = events.slice(0, 20);
   } catch {}
 
-  return { issues, prs, reviews, activity, features: loadFeatures() };
+  return { issues, prs, prWarning:prResult.warning, reviews, activity, features: loadFeatures() };
 }
 
 // ── Anti-Spam & Respam Control State ──────────────────────────────────────────
@@ -1012,28 +1001,19 @@ ipcMain.handle('dc-get-my-issues', async () => {
   return { ok: true, data: getSampleIssues() };
 });
 
-ipcMain.handle('dc-get-my-prs', async () => {
-  const settings = readSettings();
-  const ts = activeTS(settings);
-  if (!ts.repos || !ts.repos.length) {
-    if (isTestMode && settings.name !== 'no-task-servers') {
-      return { ok: true, data: getSamplePRs() };
-    }
-    return { ok: false, error: 'No task server configured' };
-  }
-  const repo = `${ts.repos[0].org}/${ts.repos[0].repo}`;
-  try {
-    const r = cp.spawnSync('gh', [
-      'pr', 'list', '--repo', repo, '--author', '@me',
-      '--json', 'number,title,state,url,headRefName,statusCheckRollup,reviewDecision,updatedAt,additions,deletions',
-      '--limit', '30',
-    ], { encoding: 'utf8', timeout: 15000 });
-    if (r.status === 0) {
-      const parsed = JSON.parse(r.stdout);
-      if (parsed && parsed.length) return { ok: true, data: parsed };
-    }
-  } catch (e) {}
-  return { ok: true, data: getSamplePRs() };
+const pullRequests=require('./lib/pull-requests');
+async function myPRs(){
+ const settings=readSettings(),ts=activeTS(settings);
+ if(isTestMode && !ts.repos?.length && settings.name!=='no-task-servers')return {ok:true,data:getSamplePRs()};
+ return pullRequests.list(ts.repos||[]);
+}
+ipcMain.handle('dc-get-my-prs',myPRs);
+ipcMain.handle('dc-ready-pr',async(_, {url,head}={})=>{try{return {ok:true,pr:await pullRequests.ready(url,head)};}catch(e){return {ok:false,error:e.message};}});
+ipcMain.handle('dc-open-review',async(_,url)=>{
+ try{
+  const child=cp.spawn(process.execPath,[path.join(__dirname,'../pr-review'),'--no-sandbox','--disable-gpu'],{detached:true,stdio:'ignore',env:pullRequests.reviewEnvironment(url)});
+  await new Promise((resolve,reject)=>{child.once('spawn',resolve);child.once('error',reject);});child.unref();return {ok:true};
+ }catch(e){return {ok:false,error:e.message};}
 });
 
 ipcMain.handle('dc-get-review-requests', async () => {

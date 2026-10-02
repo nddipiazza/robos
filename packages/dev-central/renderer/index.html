@@ -24,7 +24,7 @@
               <h1 id="title">Dev Central</h1>
               <span class="version-tag">v0.8.2</span>
             </div>
-            <span class="subtitle">AI Developer Cockpit & Mission Control</span>
+            <span class="subtitle">Your tasks, pull requests, and reviews</span>
           </div>
         </div>
       </div>
@@ -44,7 +44,7 @@
         <span id="sprint-pill" class="sprint-pill">🏃 Sprint 42 • 4d left</span>
         <div class="server-badge-wrap">
           <span class="status-dot-pulse"></span>
-          <span id="server-badge" class="badge">Acme GitHub</span>
+          <span id="server-badge" class="badge">GitHub</span>
         </div>
         <button id="btn-header-notifs" class="header-notif-btn" title="Open Notifications" onclick="window.switchTab('notifications')">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -70,7 +70,7 @@
         </div>
         <div class="kpi-info">
           <div class="kpi-top">
-            <span class="kpi-value" id="kpi-feature-val">FEAT-201</span>
+            <span class="kpi-value" id="kpi-feature-val">—</span>
             <span class="kpi-delta positive" id="kpi-feature-status">IN PROGRESS</span>
           </div>
           <span class="kpi-label">Active Feature</span>
@@ -138,7 +138,7 @@
             <span class="kpi-value" id="kpi-notifs-val">0</span>
             <span class="kpi-delta neutral" id="kpi-notifs-delta">0 unread</span>
           </div>
-          <span class="kpi-label">Notifications Hub</span>
+          <span class="kpi-label">Notifications</span>
         </div>
       </div>
 
@@ -155,7 +155,7 @@
             <span class="kpi-value" id="kpi-blockers-val">0</span>
             <span class="kpi-delta alert">Active Blocker</span>
           </div>
-          <span class="kpi-label">Blocker Radar</span>
+          <span class="kpi-label">Blockers</span>
         </div>
       </div>
 
@@ -168,7 +168,7 @@
         </div>
         <div class="kpi-info">
           <div class="kpi-top">
-            <span class="kpi-value" id="kpi-ci-health">92%</span>
+            <span class="kpi-value" id="kpi-ci-health">—</span>
             <span class="kpi-delta positive">All Healthy</span>
           </div>
           <span class="kpi-label">Pipeline Health</span>
@@ -180,7 +180,7 @@
     <nav class="view-tabs" id="tab-bar">
       <button class="tab-btn active" data-tab="all" id="tab-btn-all">
         <span class="tab-icon">📊</span>
-        <span>Mission Control</span>
+        <span>Overview</span>
       </button>
       <button class="tab-btn" data-tab="feature" id="tab-btn-feature">
         <span class="tab-icon">🎯</span>
@@ -189,12 +189,12 @@
       </button>
       <button class="tab-btn" data-tab="tasks" id="tab-btn-tasks">
         <span class="tab-icon">📋</span>
-        <span>My Tasks & Sprint</span>
+        <span>My Tasks</span>
         <span class="tab-badge" id="tab-tasks-badge">0</span>
       </button>
       <button class="tab-btn" data-tab="prs" id="tab-btn-prs">
         <span class="tab-icon">🌿</span>
-        <span>Pull Requests & CI</span>
+        <span>My PRs</span>
         <span class="tab-badge" id="tab-prs-badge">0</span>
       </button>
       <button class="tab-btn" data-tab="notifications" id="tab-btn-notifications">
@@ -204,20 +204,20 @@
       </button>
       <button class="tab-btn" data-tab="blockers" id="tab-btn-blockers">
         <span class="tab-icon">🚨</span>
-        <span>Blocker Radar</span>
+        <span>Blockers</span>
         <span class="tab-badge alert" id="tab-blockers-badge">0</span>
       </button>
       <button class="tab-btn" data-tab="standup" id="tab-btn-standup">
         <span class="tab-icon">🤖</span>
-        <span>AI Standup</span>
+        <span>Standup</span>
       </button>
       <button class="tab-btn" data-tab="activity" id="tab-btn-activity">
         <span class="tab-icon">📜</span>
-        <span>Desktop Activity</span>
+        <span>Activity</span>
       </button>
     </nav>
 
-    <!-- Main Mission Control Grid -->
+    <!-- Main Overview Grid -->
     <main id="dashboard">
 
       <!-- Active Feature In-Progress Section -->
@@ -241,7 +241,7 @@
           <div class="feature-banner" id="feature-banner">
             <div class="feature-header-info">
               <div class="feature-title-row">
-                <span class="feature-code" id="feature-code">FEAT-201</span>
+                <span class="feature-code" id="feature-code">—</span>
                 <h2 class="feature-name" id="feature-name">Loading feature...</h2>
               </div>
               <p class="feature-desc" id="feature-desc">Feature specification and delivery plan...</p>
@@ -270,12 +270,12 @@
         </div>
       </section>
 
-      <!-- Absorbed Notifications Hub Section -->
+      <!-- Absorbed Notifications Section -->
       <section class="card wide" id="notifications-card" data-section="notifications">
         <div class="card-header">
           <div class="card-title-group">
             <span class="card-icon">🔔</span>
-            <span class="card-title">RobOS Notifications Hub</span>
+            <span class="card-title">RobOS Notifications</span>
             <span class="card-count" id="notif-unread-count-badge">0 Unread</span>
           </div>
           <div class="card-actions notif-header-tabs">
@@ -461,7 +461,7 @@
             <span class="card-count" id="prs-count">0</span>
           </div>
           <div class="card-actions">
-            <span class="badge-subtle">Target: main</span>
+            <label class="pr-filter"><input id="prs-passing-only" type="checkbox"> Passing CI only</label>
           </div>
         </div>
         <div class="card-body" id="prs-list">
@@ -486,12 +486,12 @@
         </div>
       </section>
 
-      <!-- Blocker Radar Card -->
+      <!-- Blockers Card -->
       <section class="card" id="blockers-card" data-section="blockers">
         <div class="card-header">
           <div class="card-title-group">
             <span class="card-icon alert-pulse">🚨</span>
-            <span class="card-title">Blocker Radar</span>
+            <span class="card-title">Blockers</span>
             <span class="badge-alert" id="blockers-count">0 Alert</span>
           </div>
           <div class="card-actions">
@@ -503,17 +503,17 @@
         </div>
       </section>
 
-      <!-- AI Standup Summary Card -->
+      <!-- Standup Summary Card -->
       <section class="card wide" id="standup-card" data-section="standup">
         <div class="card-header">
           <div class="card-title-group">
             <span class="card-icon">🤖</span>
-            <span class="card-title">AI Standup Summary</span>
+            <span class="card-title">Standup Summary</span>
             <span class="badge-ai">Auto-Synthesized</span>
           </div>
           <div class="card-actions">
             <button class="btn btn-secondary-sm" id="btn-copy-standup" onclick="window.copyStandupToClipboard()">
-              📋 Copy Standup
+              Copy Standup
             </button>
             <button class="btn btn-secondary-sm" id="btn-refresh-standup" onclick="window.regenerateStandup()">
               🔄 Regenerate
@@ -525,7 +525,7 @@
         </div>
       </section>
 
-      <!-- Recent Desktop Activity Card -->
+      <!-- Recent Activity Card -->
       <section class="card" id="activity-card" data-section="activity">
         <div class="card-header">
           <div class="card-title-group">

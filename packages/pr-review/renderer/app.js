@@ -71,6 +71,7 @@ document.getElementById("header-btn-request-changes")?.addEventListener("click",
 
 async function init() {
   const local = await window.api.getLocalReview?.();
+  if(local?.error){showError(local.error);return;}
   if (local?.ok) {
     serverBadge.textContent = local.pr.published ? (local.pr.isAuthor?'PR author mode':'PR reviewer mode') : 'Local review — PR not created';
     const opened=await window.openPRReviewTheater(local.pr);
