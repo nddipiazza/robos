@@ -1,0 +1,15 @@
+review-markdown-editor { display:block; }
+review-markdown-editor .review-editor-modes { display:flex; width:fit-content; flex-wrap:wrap; gap:2px; padding:3px; margin:0 0 8px; border:1px solid #303b49; border-radius:7px; background:#111820; }
+review-markdown-editor .review-editor-modes button { appearance:none; border:0; border-radius:4px; background:transparent; color:#98a6b6; font:500 12px/20px system-ui,sans-serif; padding:2px 10px; cursor:pointer; white-space:nowrap; }
+review-markdown-editor .review-editor-modes button:hover { color:#e0e8f1; background:#202b38; }
+review-markdown-editor .review-editor-modes button[aria-pressed=true] { background:#303e4f; color:#f0f5fa; box-shadow:0 1px 2px #0004; }
+review-markdown-editor .review-editor-modes button:focus-visible { outline:2px solid #84d0fc; outline-offset:1px; }
+review-markdown-editor:is([data-edit-mode=markdown],[data-edit-mode=split]) .toastui-editor-md-container { display:flex!important; }
+review-markdown-editor[data-edit-mode=markdown] .toastui-editor-md-container>.toastui-editor { width:100%; }
+review-markdown-editor[data-edit-mode=markdown] .toastui-editor-md-preview,
+review-markdown-editor[data-edit-mode=markdown] .toastui-editor-md-splitter { display:none!important; }
+review-markdown-editor[data-edit-mode=split] .toastui-editor-md-container>.toastui-editor { flex:0 0 calc(var(--markdown-width,50%) - 4px); min-width:0; width:auto; }
+review-markdown-editor[data-edit-mode=split] .toastui-editor-md-preview { flex:1; min-width:0; width:auto; }
+review-markdown-editor[data-edit-mode=split] .toastui-editor-md-splitter { position:relative; left:auto; flex:0 0 8px; width:8px; background:#263748; cursor:col-resize; touch-action:none; user-select:none; }
+review-markdown-editor[data-edit-mode=split] .toastui-editor-md-splitter:hover,
+review-markdown-editor[data-edit-mode=split] .toastui-editor-md-splitter:focus-visible { background:#628bab; outline:none; }
