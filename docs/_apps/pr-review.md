@@ -45,3 +45,16 @@ Buildkite checks use the shared CI connection to show actual job failures. In
 CI recovery, **Read failure** loads the failed job logs directly. Missing token
 access or a mismatched build commit is shown explicitly. Configure the connection
 in CI Monitor; tokens are resolved from `pass`, never sent to the renderer.
+
+### Live CI jobs and logs
+
+**Jobs & live logs** opens an inline panel beneath the review toolbar. Buildkite
+job states refresh every 10 seconds directly from the CI integration. Select a
+job to follow its latest 64 KiB of output, refreshed every 3 seconds. Turn off
+**Live** to pause requests or **Follow** to read earlier lines without automatic
+scrolling. Closing the panel stops log polling. A changed PR revision clears
+old selections, and failed refreshes explicitly mark output as potentially stale.
+
+Monitoring never launches an agent. Agents stop after completing their local
+repair; pushing a reviewed repair opens the CI panel so RobOS can show its
+progress. An agent is used only when the reviewer requests investigation or fixes.
