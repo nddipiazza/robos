@@ -675,6 +675,69 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
     const dmgRes = castSpell(heroElf, { name: "Ball of Flame", effect: "damage-bp", val: 2 });
     assert.strictEqual(dmgRes.damageDealt, 2, "Must deal 2 damage");
   });
+
+  it("verifies game start spell selection draft equips Elf and Wizard in compiled cartridge payload", () => {
+    const { GameCartridgeBundler } = require(path.join(REPO_ROOT, "packages/robos-gaming"));
+    const bundler = new GameCartridgeBundler({ baseDir: path.join(REPO_ROOT, "games/tabletop-rpg") });
+
+    const testPayload = {
+      cartridgeId: "heroquest-test-spells",
+      title: "HeroQuest: Spell Draft Test",
+      description: "Testing start-of-quest spell draft",
+      spellAllocation: {
+        elfElement: "earth",
+        wizardElements: ["water", "fire", "air"],
+        confirmed: true
+      },
+      maps: {
+        "the-trial": { id: "the-trial", name: "The Trial", width: 26, height: 19 }
+      },
+      heroes: [
+        {
+          id: "barbarian",
+          name: "Barbarian",
+          heroClass: "Barbarian",
+          bodyPoints: 8,
+          mindPoints: 2,
+          attackDice: 3,
+          defendDice: 2,
+          spells: []
+        },
+        {
+          id: "elf",
+          name: "Elf",
+          heroClass: "Elf",
+          bodyPoints: 6,
+          mindPoints: 4,
+          attackDice: 2,
+          defendDice: 2,
+          spells: ["heal-body", "pass-through-rock", "rock-skin"]
+        },
+        {
+          id: "wizard",
+          name: "Wizard",
+          heroClass: "Wizard",
+          bodyPoints: 4,
+          mindPoints: 6,
+          attackDice: 1,
+          defendDice: 2,
+          spells: [
+            "water-of-healing", "sleep", "veil-of-mist",
+            "ball-of-flame", "fire-of-wrath", "courage",
+            "genie", "swift-wind", "tempest"
+          ]
+        }
+      ]
+    };
+
+    const cart = bundler.bundleTabletop(testPayload);
+    assert.ok(cart.spellAllocation, "Cartridge must contain spellAllocation");
+    assert.strictEqual(cart.spellAllocation.elfElement, "earth");
+    assert.strictEqual(cart.spellAllocation.confirmed, true);
+    assert.strictEqual(cart.heroes.elf.spells.length, 3, "Elf must have 3 Earth spells");
+    assert.strictEqual(cart.heroes.wizard.spells.length, 9, "Wizard must have 9 spells");
+  });
 });
+
 
 

@@ -99,6 +99,70 @@ var auto_play_step: int = 0
 @onready var btn_ai_confirm: Button = $UI/AIConfirmModal/Card/Margin/VBox/ButtonBox/BtnConfirm
 @onready var btn_ai_cancel: Button = $UI/AIConfirmModal/Card/Margin/VBox/ButtonBox/BtnCancel
 
+@onready var elf_spell_modal: ColorRect = get_node_or_null("UI/ElfSpellSelectModal")
+@onready var elf_spell_card: PanelContainer = get_node_or_null("UI/ElfSpellSelectModal/Card")
+@onready var elf_spell_decks_grid: GridContainer = get_node_or_null("UI/ElfSpellSelectModal/Card/Margin/VBox/DecksGrid")
+@onready var elf_spell_summary_banner: PanelContainer = get_node_or_null("UI/ElfSpellSelectModal/Card/Margin/VBox/SummaryBanner")
+@onready var elf_spell_summary_text: Label = get_node_or_null("UI/ElfSpellSelectModal/Card/Margin/VBox/SummaryBanner/SummaryMargin/SummaryText")
+@onready var btn_elf_spell_close: Button = get_node_or_null("UI/ElfSpellSelectModal/Card/Margin/VBox/ButtonBox/BtnClose")
+@onready var btn_elf_spell_confirm: Button = get_node_or_null("UI/ElfSpellSelectModal/Card/Margin/VBox/ButtonBox/BtnConfirm")
+
+const ELEMENTAL_DECKS: Dictionary = {
+	"water": ["water_of_healing", "sleep", "veil_of_mist"],
+	"earth": ["heal_body", "pass_through_rock", "rock_skin"],
+	"fire": ["ball_of_flame", "fire_of_wrath", "courage"],
+	"air": ["genie", "swift_wind", "tempest"]
+}
+
+const ELEMENTAL_DECK_INFO: Dictionary = {
+	"water": {
+		"name": "Water Magic",
+		"icon": "💧",
+		"role": "Restoration & Stealth",
+		"color": Color(0.02, 0.71, 0.83, 1.0),
+		"spells": [
+			{"name": "Water of Healing", "desc": "Restore up to 4 lost BP"},
+			{"name": "Sleep", "desc": "Put monster into magical slumber"},
+			{"name": "Veil of Mist", "desc": "Move unseen past monsters"}
+		]
+	},
+	"earth": {
+		"name": "Earth Magic",
+		"icon": "🪨",
+		"role": "Defense & Healing",
+		"color": Color(0.13, 0.77, 0.36, 1.0),
+		"spells": [
+			{"name": "Heal Body", "desc": "Restore up to 4 lost BP"},
+			{"name": "Pass Through Rock", "desc": "Move through solid stone walls"},
+			{"name": "Rock Skin", "desc": "+1 extra Combat Defend Die"}
+		]
+	},
+	"fire": {
+		"name": "Fire Magic",
+		"icon": "🔥",
+		"role": "Direct Damage & Buffs",
+		"color": Color(0.98, 0.45, 0.08, 1.0),
+		"spells": [
+			{"name": "Ball of Flame", "desc": "Deal 2 BP damage (roll 2 def)"},
+			{"name": "Fire of Wrath", "desc": "Deal 1 BP damage (roll 1 def)"},
+			{"name": "Courage", "desc": "+2 extra Combat Attack Dice"}
+		]
+	},
+	"air": {
+		"name": "Air Magic",
+		"icon": "🌪️",
+		"role": "Speed & Summons",
+		"color": Color(0.22, 0.74, 0.97, 1.0),
+		"spells": [
+			{"name": "Genie", "desc": "Attack with 5 dice or open any door"},
+			{"name": "Swift Wind", "desc": "Roll double movement dice (4d6)"},
+			{"name": "Tempest", "desc": "Trap a monster in whirlwind"}
+		]
+	}
+}
+
+var current_elf_element: String = "water"
+
 var is_ai_step_pending: bool = false
 var pending_ai_command: Dictionary = {}
 
@@ -110,12 +174,14 @@ func _ready() -> void:
 	CartridgeManager.cartridge_inserted.connect(_on_cartridge_inserted)
 	_setup_ui_signals()
 	_setup_ai_modal_styles()
+	_setup_elf_spell_modal()
 	_update_ui()
 	_log("=== Welcome to HeroQuest: The Trial ===")
 	if is_gm_role():
 		_log("👑 [Game Master / DunMaster Mode Active] You are Zargon, Master of Darkness. Full dungeon visibility granted.")
 	else:
 		_log("⚔️ [Player Mode Active] You lead the four heroes into the catacombs of Verag!")
+		_check_start_elf_spell_selection()
 
 func _check_cli_role() -> void:
 	var cmd_args = OS.get_cmdline_user_args() + OS.get_cmdline_args()
@@ -228,16 +294,12 @@ func _load_active_cartridge() -> void:
 				h["equipped_weapon"] = "shortsword"
 				h["equipped_armor"] = []
 				h["inventory"] = ["shortsword"]
-				h["spells"] = ["genie", "swift_wind", "tempest"]
+				h["spells"] = _extract_cartridge_spells(h, "elf", cart)
 			"wizard":
 				h["equipped_weapon"] = "dagger"
 				h["equipped_armor"] = []
 				h["inventory"] = ["dagger", "staff"]
-				h["spells"] = [
-					"ball_of_flame", "fire_of_wrath", "courage",
-					"rock_skin", "heal_body", "pass_through_rock",
-					"water_of_healing", "sleep", "veil_of_mist"
-				]
+				h["spells"] = _extract_cartridge_spells(h, "wizard", cart)
 			_:
 				h["equipped_weapon"] = "broadsword"
 				h["equipped_armor"] = []
@@ -740,6 +802,284 @@ func _setup_ai_modal_styles() -> void:
 		canc_sb.border_width_bottom = 1
 		canc_sb.border_color = Color(0.35, 0.4, 0.48, 0.8)
 		btn_ai_cancel.add_theme_stylebox_override("normal", canc_sb)
+
+func is_headless_mode() -> bool:
+	if DisplayServer.get_name() == "headless":
+		return true
+	var cmd_args = OS.get_cmdline_user_args() + OS.get_cmdline_args()
+	for a in cmd_args:
+		if a == "--headless" or a == "--no-spell-select" or a == "--skip-spell-select":
+			return true
+	return OS.get_environment("TABLETOP_NO_SPELL_SELECT") == "1"
+
+func _check_start_elf_spell_selection() -> void:
+	if current_role != "player":
+		return
+	if is_headless_mode() or CartridgeManager.auto_play_enabled:
+		return
+	var cart = CartridgeManager.active_cartridge
+	var alloc = cart.get("spellAllocation", {})
+	if alloc.get("confirmed", false):
+		return
+	show_elf_spell_selection_modal()
+
+func _setup_elf_spell_modal() -> void:
+	if not elf_spell_card:
+		return
+	var card_sb = StyleBoxFlat.new()
+	card_sb.bg_color = Color(0.09, 0.12, 0.17, 0.98)
+	card_sb.set_corner_radius_all(12)
+	card_sb.border_width_left = 2
+	card_sb.border_width_top = 2
+	card_sb.border_width_right = 2
+	card_sb.border_width_bottom = 2
+	card_sb.border_color = Color(0.0, 0.74, 0.83, 0.8)
+	card_sb.shadow_color = Color(0, 0, 0, 0.75)
+	card_sb.shadow_size = 20
+	elf_spell_card.add_theme_stylebox_override("panel", card_sb)
+
+	if elf_spell_summary_banner:
+		var sum_sb = StyleBoxFlat.new()
+		sum_sb.bg_color = Color(0.05, 0.07, 0.11, 1.0)
+		sum_sb.set_corner_radius_all(6)
+		sum_sb.border_width_left = 4
+		sum_sb.border_color = Color(0.0, 0.74, 0.83, 0.9)
+		elf_spell_summary_banner.add_theme_stylebox_override("panel", sum_sb)
+
+	if btn_elf_spell_confirm:
+		var conf_sb = StyleBoxFlat.new()
+		conf_sb.bg_color = Color(0.06, 0.45, 0.28, 1.0)
+		conf_sb.set_corner_radius_all(6)
+		conf_sb.border_width_left = 1
+		conf_sb.border_width_top = 1
+		conf_sb.border_width_right = 1
+		conf_sb.border_width_bottom = 1
+		conf_sb.border_color = Color(0.1, 0.7, 0.4, 1.0)
+		btn_elf_spell_confirm.add_theme_stylebox_override("normal", conf_sb)
+		if not btn_elf_spell_confirm.pressed.is_connected(_on_confirm_spell_modal_pressed):
+			btn_elf_spell_confirm.pressed.connect(_on_confirm_spell_modal_pressed)
+
+	if btn_elf_spell_close:
+		var canc_sb = StyleBoxFlat.new()
+		canc_sb.bg_color = Color(0.18, 0.22, 0.28, 1.0)
+		canc_sb.set_corner_radius_all(6)
+		canc_sb.border_width_left = 1
+		canc_sb.border_width_top = 1
+		canc_sb.border_width_right = 1
+		canc_sb.border_width_bottom = 1
+		canc_sb.border_color = Color(0.35, 0.4, 0.48, 0.8)
+		btn_elf_spell_close.add_theme_stylebox_override("normal", canc_sb)
+		if not btn_elf_spell_close.pressed.is_connected(_on_close_spell_modal_pressed):
+			btn_elf_spell_close.pressed.connect(_on_close_spell_modal_pressed)
+
+	_populate_elf_spell_decks()
+	_update_elf_spell_modal_ui()
+
+func _populate_elf_spell_decks() -> void:
+	if not elf_spell_decks_grid:
+		return
+	for c in elf_spell_decks_grid.get_children():
+		elf_spell_decks_grid.remove_child(c)
+		c.queue_free()
+
+	for elem_key in ["water", "earth", "fire", "air"]:
+		var info = ELEMENTAL_DECK_INFO.get(elem_key, {})
+		var card = PanelContainer.new()
+		card.name = "DeckCard_" + elem_key
+		card.custom_minimum_size = Vector2(400, 160)
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+		var margin = MarginContainer.new()
+		margin.add_theme_constant_override("margin_left", 14)
+		margin.add_theme_constant_override("margin_right", 14)
+		margin.add_theme_constant_override("margin_top", 12)
+		margin.add_theme_constant_override("margin_bottom", 12)
+		card.add_child(margin)
+
+		var vbox = VBoxContainer.new()
+		vbox.add_theme_constant_override("separation", 6)
+		margin.add_child(vbox)
+
+		# Header
+		var hdr = HBoxContainer.new()
+		var icon_lbl = Label.new()
+		icon_lbl.text = str(info.get("icon", "🔮"))
+		icon_lbl.add_theme_font_size_override("font_size", 22)
+		hdr.add_child(icon_lbl)
+
+		var title_vbox = VBoxContainer.new()
+		title_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var title_lbl = Label.new()
+		title_lbl.text = str(info.get("name", elem_key.capitalize()))
+		title_lbl.add_theme_font_size_override("font_size", 16)
+		title_lbl.add_theme_color_override("font_color", info.get("color", Color.WHITE))
+		title_vbox.add_child(title_lbl)
+
+		var role_lbl = Label.new()
+		role_lbl.text = str(info.get("role", ""))
+		role_lbl.add_theme_font_size_override("font_size", 11)
+		role_lbl.add_theme_color_override("font_color", Color(0.7, 0.75, 0.82, 0.8))
+		title_vbox.add_child(role_lbl)
+		hdr.add_child(title_vbox)
+
+		var btn_select = Button.new()
+		btn_select.name = "BtnSelect"
+		btn_select.text = "Draft for Elf"
+		btn_select.custom_minimum_size = Vector2(110, 32)
+		var deck_name = elem_key
+		btn_select.pressed.connect(func(): select_elf_element(deck_name))
+		hdr.add_child(btn_select)
+
+		vbox.add_child(hdr)
+
+		# Spells list
+		var spells = info.get("spells", [])
+		for sp in spells:
+			var s_lbl = Label.new()
+			s_lbl.text = "• %s — %s" % [sp.get("name", ""), sp.get("desc", "")]
+			s_lbl.add_theme_font_size_override("font_size", 11)
+			s_lbl.add_theme_color_override("font_color", Color(0.82, 0.86, 0.92, 0.9))
+			s_lbl.clip_text = true
+			vbox.add_child(s_lbl)
+
+		elf_spell_decks_grid.add_child(card)
+
+func _update_elf_spell_modal_ui() -> void:
+	if not elf_spell_decks_grid:
+		return
+	for elem_key in ["water", "earth", "fire", "air"]:
+		var card = elf_spell_decks_grid.get_node_or_null("DeckCard_" + elem_key)
+		if not card:
+			continue
+		var is_selected = (elem_key == current_elf_element)
+		var csb = StyleBoxFlat.new()
+		csb.bg_color = Color(0.07, 0.10, 0.15, 0.95) if not is_selected else Color(0.08, 0.15, 0.22, 1.0)
+		csb.set_corner_radius_all(8)
+		csb.border_width_left = 2 if is_selected else 1
+		csb.border_width_top = 2 if is_selected else 1
+		csb.border_width_right = 2 if is_selected else 1
+		csb.border_width_bottom = 2 if is_selected else 1
+		csb.border_color = Color(0.0, 0.85, 1.0, 1.0) if is_selected else Color(0.2, 0.26, 0.35, 0.6)
+		card.add_theme_stylebox_override("panel", csb)
+
+		var btn_select = card.find_child("BtnSelect", true, false)
+		if btn_select:
+			if is_selected:
+				btn_select.text = "✓ Drafted"
+				var bsb = StyleBoxFlat.new()
+				bsb.bg_color = Color(0.06, 0.45, 0.28, 1.0)
+				bsb.set_corner_radius_all(4)
+				btn_select.add_theme_stylebox_override("normal", bsb)
+			else:
+				btn_select.text = "Draft for Elf"
+				var bsb = StyleBoxFlat.new()
+				bsb.bg_color = Color(0.15, 0.20, 0.28, 0.9)
+				bsb.set_corner_radius_all(4)
+				btn_select.add_theme_stylebox_override("normal", bsb)
+
+	if elf_spell_summary_text:
+		var cur_info = ELEMENTAL_DECK_INFO.get(current_elf_element, {})
+		var wiz_names: Array = []
+		for k in ["water", "earth", "fire", "air"]:
+			if k != current_elf_element:
+				var wi = ELEMENTAL_DECK_INFO.get(k, {})
+				wiz_names.append("%s %s" % [wi.get("icon", ""), wi.get("name", k).replace(" Magic", "")])
+		elf_spell_summary_text.text = "Selected: %s %s (Elf: 3 Spells) | Wizard takes: %s (9 Spells)" % [
+			cur_info.get("icon", ""),
+			cur_info.get("name", current_elf_element),
+			", ".join(wiz_names)
+		]
+
+func show_elf_spell_selection_modal() -> void:
+	if elf_spell_modal:
+		elf_spell_modal.visible = true
+		_update_elf_spell_modal_ui()
+
+func close_elf_spell_selection_modal() -> void:
+	if elf_spell_modal:
+		elf_spell_modal.visible = false
+
+func select_elf_element(elem_key: String) -> Dictionary:
+	elem_key = elem_key.to_lower().strip_edges()
+	if not ELEMENTAL_DECKS.has(elem_key):
+		return { "success": false, "error": "Unknown elemental deck: " + elem_key }
+	current_elf_element = elem_key
+	var elf_spells: Array = ELEMENTAL_DECKS[elem_key].duplicate()
+	var wiz_spells: Array = []
+	for k in ["water", "earth", "fire", "air"]:
+		if k != elem_key:
+			wiz_spells.append_array(ELEMENTAL_DECKS[k])
+
+	for h in heroes:
+		if str(h.get("id")) == "elf":
+			h["spells"] = elf_spells
+		elif str(h.get("id")) == "wizard":
+			h["spells"] = wiz_spells
+
+	_update_ui()
+	_update_elf_spell_modal_ui()
+	return {
+		"success": true,
+		"elf_element": elem_key,
+		"elf_spells": elf_spells,
+		"wizard_spells": wiz_spells
+	}
+
+func confirm_elf_spell_selection() -> Dictionary:
+	var res = select_elf_element(current_elf_element)
+	close_elf_spell_selection_modal()
+	var info = ELEMENTAL_DECK_INFO.get(current_elf_element, {})
+	_log("🔮 Spell Selection Confirmed! Elf memorizes %s %s. Wizard takes the remaining 3 decks." % [
+		info.get("icon", ""),
+		info.get("name", current_elf_element)
+	])
+	return res
+
+func _on_confirm_spell_modal_pressed() -> void:
+	confirm_elf_spell_selection()
+
+func _on_close_spell_modal_pressed() -> void:
+	close_elf_spell_selection_modal()
+
+func _get_hero_spells_by_id(hero_id: String) -> Array:
+	for h in heroes:
+		if str(h.get("id")) == hero_id:
+			return h.get("spells", []).duplicate()
+	return []
+
+func _extract_cartridge_spells(hero_data: Dictionary, hero_type: String, cart: Dictionary) -> Array:
+	var raw_spells = hero_data.get("spells", [])
+	if raw_spells is Array and raw_spells.size() > 0:
+		var result: Array = []
+		for s in raw_spells:
+			if s is String:
+				result.append(s.replace("-", "_").to_lower())
+			elif s is Dictionary:
+				var slug = str(s.get("slug", s.get("id", "")))
+				if slug != "":
+					result.append(slug.replace("-", "_").to_lower())
+		if result.size() > 0:
+			return result
+
+	var alloc = cart.get("spellAllocation", {})
+	var elf_elem = str(alloc.get("elfElement", current_elf_element)).to_lower()
+	if hero_type == "elf":
+		return ELEMENTAL_DECKS.get(elf_elem, ELEMENTAL_DECKS["water"]).duplicate()
+	elif hero_type == "wizard":
+		var wiz_spells: Array = []
+		var wiz_elems = alloc.get("wizardElements", [])
+		if wiz_elems is Array and wiz_elems.size() > 0:
+			for elem in wiz_elems:
+				var el_str = str(elem).to_lower()
+				if ELEMENTAL_DECKS.has(el_str):
+					wiz_spells.append_array(ELEMENTAL_DECKS[el_str])
+		else:
+			for elem in ["water", "earth", "fire", "air"]:
+				if elem != elf_elem:
+					wiz_spells.append_array(ELEMENTAL_DECKS[elem])
+		return wiz_spells
+
+	return []
 
 func get_next_ai_step_command() -> Dictionary:
 	var next_step = auto_play_step + 1
@@ -2718,6 +3058,24 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 			eff_row.add_child(pill)
 		vbox.add_child(eff_row)
 
+	var hero_spells: Array = h.get("spells", [])
+	if hero_spells.size() > 0:
+		var spells_row = HBoxContainer.new()
+		spells_row.add_theme_constant_override("separation", 4)
+		var sp_lbl = Label.new()
+		var sp_preview: Array = []
+		for s in hero_spells.slice(0, 3):
+			sp_preview.append(str(s).replace("_", " ").capitalize())
+		sp_lbl.text = "🔮 Spells (%d): %s" % [hero_spells.size(), ", ".join(sp_preview)]
+		if hero_spells.size() > 3:
+			sp_lbl.text += " +%d" % (hero_spells.size() - 3)
+		sp_lbl.add_theme_font_size_override("font_size", 9)
+		sp_lbl.add_theme_color_override("font_color", Color(0.75, 0.70, 0.95, 0.95))
+		sp_lbl.clip_text = true
+		sp_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		spells_row.add_child(sp_lbl)
+		vbox.add_child(spells_row)
+
 	return card
 
 func _create_enemy_card(m: Dictionary, is_visible: bool) -> PanelContainer:
@@ -3059,6 +3417,7 @@ func get_telemetry_state() -> Dictionary:
 		},
 		"modal": {
 			"aiConfirmModalVisible": ai_confirm_modal.visible if ai_confirm_modal else false,
+			"elfSpellSelectModalVisible": elf_spell_modal.visible if elf_spell_modal else false,
 			"stepBadge": ai_modal_step_badge.text if (ai_confirm_modal and ai_confirm_modal.visible and ai_modal_step_badge) else "",
 			"commandText": ai_modal_cmd_text.text if (ai_confirm_modal and ai_confirm_modal.visible and ai_modal_cmd_text) else "",
 			"actionTitle": ai_modal_action_title.text if (ai_confirm_modal and ai_confirm_modal.visible and ai_modal_action_title) else ""
@@ -3082,6 +3441,14 @@ func get_telemetry_state() -> Dictionary:
 		"movedBeforeAction": moved_before_action,
 		"movementClosed": movement_closed,
 		"turnState": turn_state,
+		"elfElement": current_elf_element,
+		"elfSpellModalVisible": elf_spell_modal.visible if elf_spell_modal else false,
+		"spellAllocation": {
+			"elfElement": current_elf_element,
+			"elfSpells": _get_hero_spells_by_id("elf"),
+			"wizardSpells": _get_hero_spells_by_id("wizard"),
+			"modalVisible": elf_spell_modal.visible if elf_spell_modal else false
+		},
 		"heroes": heroes_copy,
 		"monsters": monsters_copy,
 		"doors": doors,
@@ -3297,6 +3664,19 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			var mid = str(action_data.get("monsterId", action_data.get("target", "")))
 			var weapon = str(action_data.get("weapon", action_data.get("weaponId", "")))
 			var res = attack_adjacent_monster(mid, weapon)
+			return res
+		"open_spell_selection", "open_elf_spell_selection":
+			show_elf_spell_selection_modal()
+			return { "success": true, "modal_visible": true, "elf_element": current_elf_element }
+		"close_spell_selection", "close_elf_spell_selection":
+			close_elf_spell_selection_modal()
+			return { "success": true, "modal_visible": false }
+		"select_elf_element":
+			var elem = str(action_data.get("element", action_data.get("deck", "water")))
+			var confirm_flag = bool(action_data.get("confirm", true))
+			var res = select_elf_element(elem)
+			if confirm_flag:
+				close_elf_spell_selection_modal()
 			return res
 		"cast_spell":
 			var spell_id = str(action_data.get("spell", action_data.get("spellId", "")))

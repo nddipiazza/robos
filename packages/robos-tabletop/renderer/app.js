@@ -2259,6 +2259,10 @@ function openSpellSelectionModal(onConfirmCallback = null) {
   const modal = document.getElementById("modal-spell-pick");
   if (!modal) return;
   modal.style.display = "flex";
+  const confirmBtn = document.getElementById("btn-confirm-spell-modal");
+  if (confirmBtn) {
+    confirmBtn.textContent = onConfirmCallback ? "⚔️ Confirm & Launch Quest" : "✨ Confirm Spell Selection";
+  }
   renderSpellSelectionModalUI();
 }
 
@@ -4133,7 +4137,8 @@ function compileCurrentCartridgePayload() {
     maps: mapsPayload,
     spellAllocation: {
       elfElement: currentData.spellAllocation.elfElement,
-      wizardElements: currentData.spellAllocation.wizardElements
+      wizardElements: currentData.spellAllocation.wizardElements,
+      confirmed: !!currentData.spellAllocation.confirmed
     },
     quests: currentData.campaign.quests.map(qst => ({
       id: qst.id,
@@ -4179,25 +4184,15 @@ document.getElementById("btn-bundle")?.addEventListener("click", async () => {
   }
 });
 
-// Action: Play as Hero (Launches spell draft modal first if unconfirmed)
-document.getElementById("btn-play-hero")?.addEventListener("click", async () => {
-  if (!currentData.spellAllocation.confirmed) {
-    openSpellSelectionModal(async () => {
-      await autoBundleAndLaunch("player");
-    });
-    return;
-  }
-  await autoBundleAndLaunch("player");
+// Action: Play as Hero (Always presents Elf Elemental Spell Draft modal on start)
+document.getElementById("btn-play-hero")?.addEventListener("click", () => {
+  openSpellSelectionModal(async () => {
+    await autoBundleAndLaunch("player");
+  });
 });
 
-// Action: Play as Game Master (Launches spell draft modal first if unconfirmed)
+// Action: Play as Game Master
 document.getElementById("btn-play-dm")?.addEventListener("click", async () => {
-  if (!currentData.spellAllocation.confirmed) {
-    openSpellSelectionModal(async () => {
-      await autoBundleAndLaunch("gm");
-    });
-    return;
-  }
   await autoBundleAndLaunch("gm");
 });
 

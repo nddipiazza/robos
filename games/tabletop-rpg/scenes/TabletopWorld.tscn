@@ -296,3 +296,98 @@ layout_mode = 2
 size_flags_horizontal = 3
 custom_minimum_size = Vector2(0, 42)
 text = "✅ Confirm & Execute"
+
+[node name="ElfSpellSelectModal" type="ColorRect" parent="UI"]
+visible = false
+offset_right = 1920.0
+offset_bottom = 1080.0
+color = Color(0.02, 0.04, 0.07, 0.85)
+
+[node name="Card" type="PanelContainer" parent="UI/ElfSpellSelectModal"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -460.0
+offset_top = -290.0
+offset_right = 460.0
+offset_bottom = 290.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="UI/ElfSpellSelectModal/Card"]
+layout_mode = 2
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 22
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_bottom = 22
+
+[node name="VBox" type="VBoxContainer" parent="UI/ElfSpellSelectModal/Card/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Header" type="HBoxContainer" parent="UI/ElfSpellSelectModal/Card/Margin/VBox"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="UI/ElfSpellSelectModal/Card/Margin/VBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
+text = "🔮 HeroQuest: Elf Elemental Spell Selection"
+
+[node name="Badge" type="Label" parent="UI/ElfSpellSelectModal/Card/Margin/VBox/Header"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
+text = "QUEST START"
+
+[node name="Separator" type="HSeparator" parent="UI/ElfSpellSelectModal/Card/Margin/VBox"]
+layout_mode = 2
+
+[node name="Instruction" type="Label" parent="UI/ElfSpellSelectModal/Card/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.85, 0.88, 0.95, 1)
+text = "The Elf chooses 1 Elemental Deck (3 spells) first. The Wizard memorizes the remaining 3 decks (9 spells)."
+
+[node name="DecksGrid" type="GridContainer" parent="UI/ElfSpellSelectModal/Card/Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 12
+columns = 2
+
+[node name="SummaryBanner" type="PanelContainer" parent="UI/ElfSpellSelectModal/Card/Margin/VBox"]
+layout_mode = 2
+
+[node name="SummaryMargin" type="MarginContainer" parent="UI/ElfSpellSelectModal/Card/Margin/VBox/SummaryBanner"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 8
+
+[node name="SummaryText" type="Label" parent="UI/ElfSpellSelectModal/Card/Margin/VBox/SummaryBanner/SummaryMargin"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.3, 0.9, 0.6, 1)
+text = "Selected: 💧 Water Magic (Elf: 3 Spells) | Wizard takes: Earth, Fire, Air (9 Spells)"
+
+[node name="ButtonBox" type="HBoxContainer" parent="UI/ElfSpellSelectModal/Card/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="BtnClose" type="Button" parent="UI/ElfSpellSelectModal/Card/Margin/VBox/ButtonBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 42)
+text = "Skip / Default"
+
+[node name="BtnConfirm" type="Button" parent="UI/ElfSpellSelectModal/Card/Margin/VBox/ButtonBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 42)
+text = "⚔️ Enter the Dungeon"
+
