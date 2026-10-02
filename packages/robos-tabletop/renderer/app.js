@@ -4061,10 +4061,11 @@ document.getElementById("btn-save-kgraph")?.addEventListener("click", async () =
   }
 });
 
-// Action: Bundle Cartridge
-document.getElementById("btn-bundle")?.addEventListener("click", async () => {
+// Helper: Compile active campaign & current quest into cartridge payload
+function compileCurrentCartridgePayload() {
   const q = currentData.currentQuest;
   const cfg = currentData.activeMapConfig;
+  const cartSlug = document.getElementById("quest-slug")?.value || q?.slug || "heroquest-the-trial";
 
   // Build maps object for all quests in campaign
   const mapsPayload = {};
@@ -4077,7 +4078,7 @@ document.getElementById("btn-bundle")?.addEventListener("click", async () => {
       width: qCfg?.gridDimensions?.[0] || 26,
       height: qCfg?.gridDimensions?.[1] || 19,
       backgroundImage: qCfg?.backgroundImage || "res://assets/boards/heroquest_board.png",
-      startingStair: qst.startingStairs || [1, 1],
+      startingStair: qst.startingStairs || [0, 1],
       activeRooms: Array.from(qst.activeRooms || []),
       rooms: qCfg?.rooms || [],
       doors: qst.doors || [],
@@ -4087,14 +4088,14 @@ document.getElementById("btn-bundle")?.addEventListener("click", async () => {
     };
   });
 
-  const payload = {
-    cartridgeId: document.getElementById("quest-slug").value || q.slug,
+  return {
+    cartridgeId: cartSlug,
     campaignId: currentData.campaign.id,
     title: document.getElementById("campaign-name-input")?.value || currentData.campaign.title,
     description: currentData.campaign.description || q.briefing,
-    ruleset: document.getElementById("quest-ruleset").value || "heroquest",
+    ruleset: document.getElementById("quest-ruleset")?.value || "heroquest",
     startingMap: q.slug,
-    startingPosition: q.startingStairs || [1, 0],
+    startingPosition: q.startingStairs || [0, 1],
     heroes: currentData.heroes.map(h => ({
       id: h["@id"].split(":").pop(),
       slug: h["@id"].split(":").pop(),
@@ -4110,7 +4111,7 @@ document.getElementById("btn-bundle")?.addEventListener("click", async () => {
       inventory: getHeroInventory(h),
       tokenColor: h["robos:tokenColor"] || "#b91c1c",
       spells: getHeroSpells(h),
-      position: (h["robos:startingPosition"] && h["robos:startingPosition"].length === 2) ? h["robos:startingPosition"] : [1, 1]
+      position: (h["robos:startingPosition"] && h["robos:startingPosition"].length === 2) ? h["robos:startingPosition"] : (q.startingStairs || [0, 1])
     })),
     monsters: q.monsters.map(m => {
       const kMonster = currentData.monsters?.find(km => km["@id"].endsWith(m.monsterType) || km["dcterms:title"] === m.name);
@@ -4146,7 +4147,30 @@ document.getElementById("btn-bundle")?.addEventListener("click", async () => {
       startingPosition: qst.startingStairs
     }))
   };
+}
 
+// Helper: Auto-bundle current quest & launch player
+async function autoBundleAndLaunch(role) {
+  const payload = compileCurrentCartridgePayload();
+  const slug = payload.cartridgeId;
+  setStatus(`Bundling active quest "${slug}" for Tabletop Player...`);
+  const bundleRes = await window.robosTabletop.bundleCartridge(payload);
+  if (!bundleRes.success) {
+    setStatus("Failed to bundle quest cartridge: " + bundleRes.error);
+    return;
+  }
+  setStatus(`Launching Tabletop Player (${role.toUpperCase()} MODE)...`);
+  const res = await window.robosTabletop.launchGame({ cartridgeSlug: slug, role: role });
+  if (res.success) {
+    setStatus(`Launched ${role.toUpperCase()} Mode (PID: ${res.pid})`);
+  } else {
+    setStatus("Error launching game: " + res.error);
+  }
+}
+
+// Action: Bundle Cartridge
+document.getElementById("btn-bundle")?.addEventListener("click", async () => {
+  const payload = compileCurrentCartridgePayload();
   setStatus("Bundling Tabletop RPG Cartridge...");
   const res = await window.robosTabletop.bundleCartridge(payload);
   if (res.success) {
@@ -4158,50 +4182,24 @@ document.getElementById("btn-bundle")?.addEventListener("click", async () => {
 
 // Action: Play as Hero (Launches spell draft modal first if unconfirmed)
 document.getElementById("btn-play-hero")?.addEventListener("click", async () => {
-  const slug = document.getElementById("quest-slug").value || currentData.currentQuest.slug;
   if (!currentData.spellAllocation.confirmed) {
     openSpellSelectionModal(async () => {
-      setStatus(`Launching Tabletop Player (PLAYER MODE)...`);
-      const res = await window.robosTabletop.launchGame({ cartridgeSlug: slug, role: "player" });
-      if (res.success) {
-        setStatus(`Launched Player Mode (PID: ${res.pid})`);
-      } else {
-        setStatus("Error launching game: " + res.error);
-      }
+      await autoBundleAndLaunch("player");
     });
     return;
   }
-  setStatus(`Launching Tabletop Player (PLAYER MODE)...`);
-  const res = await window.robosTabletop.launchGame({ cartridgeSlug: slug, role: "player" });
-  if (res.success) {
-    setStatus(`Launched Player Mode (PID: ${res.pid})`);
-  } else {
-    setStatus("Error launching game: " + res.error);
-  }
+  await autoBundleAndLaunch("player");
 });
 
 // Action: Play as Game Master (Launches spell draft modal first if unconfirmed)
 document.getElementById("btn-play-dm")?.addEventListener("click", async () => {
-  const slug = document.getElementById("quest-slug").value || currentData.currentQuest.slug;
   if (!currentData.spellAllocation.confirmed) {
     openSpellSelectionModal(async () => {
-      setStatus(`Launching Tabletop Player (GAME MASTER MODE)...`);
-      const res = await window.robosTabletop.launchGame({ cartridgeSlug: slug, role: "gm" });
-      if (res.success) {
-        setStatus(`Launched Game Master Mode (PID: ${res.pid})`);
-      } else {
-        setStatus("Error launching game: " + res.error);
-      }
+      await autoBundleAndLaunch("gm");
     });
     return;
   }
-  setStatus(`Launching Tabletop Player (GAME MASTER MODE)...`);
-  const res = await window.robosTabletop.launchGame({ cartridgeSlug: slug, role: "gm" });
-  if (res.success) {
-    setStatus(`Launched Game Master Mode (PID: ${res.pid})`);
-  } else {
-    setStatus("Error launching game: " + res.error);
-  }
+  await autoBundleAndLaunch("gm");
 });
 
 // Map Undo & Redo Toolbar Actions

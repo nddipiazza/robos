@@ -56,7 +56,14 @@ func _handle_request(client: StreamPeerTCP) -> void:
 				body_dict = json.data
 
 	# Routing
-	if method == "GET" and (path_str == "/api/v1/state" or path_str == "/state"):
+	if method == "GET" and (path_str == "/api/v1/health" or path_str == "/health"):
+		_send_json(client, 200, {
+			"status": "ok",
+			"service": "tabletop-game-control-server",
+			"port": port
+		})
+
+	elif method == "GET" and (path_str == "/api/v1/state" or path_str == "/state"):
 		var world = get_tree().root.get_node_or_null("TabletopWorld")
 		var state: Dictionary = {}
 		if world and world.has_method("get_telemetry_state"):
@@ -90,10 +97,11 @@ func _handle_request(client: StreamPeerTCP) -> void:
 		_send_json(client, 404, { "error": "Not Found", "path": path_str })
 
 func _send_json(client: StreamPeerTCP, code: int, data: Dictionary) -> void:
-	var body = JSON.stringify(data)
+	var body_bytes = JSON.stringify(data).to_utf8_buffer()
 	var status_text = "OK" if code == 200 else "Not Found"
-	var response = "HTTP/1.1 %d %s\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %d\r\n\r\n%s" % [
-		code, status_text, body.length(), body
+	var response = "HTTP/1.1 %d %s\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\nConnection: close\r\nContent-Length: %d\r\n\r\n" % [
+		code, status_text, body_bytes.size()
 	]
 	client.put_data(response.to_utf8_buffer())
-	client.disconnect_from_host()
+	client.put_data(body_bytes)
+	client.poll()
