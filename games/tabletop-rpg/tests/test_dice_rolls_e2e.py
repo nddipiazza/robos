@@ -78,6 +78,17 @@ class TestTabletopDiceRolls(unittest.TestCase):
         print("🏁 SCENARIOS COMPLETED: All Animated Dice Roll Scenarios Verified Successfully!")
         print("=" * 90 + "\n")
 
+    def setUp(self):
+        # Reset hero turn state so each test scenario can test its specific roll independently
+        self.player.execute_action("set_state",
+                                   hasActed=False,
+                                   hasMoved=False,
+                                   movedBeforeAction=False,
+                                   movementRolled=False,
+                                   movementClosed=False,
+                                   movementRemaining=0,
+                                   turnState="awaiting_roll")
+
     def test_01_movement_dice_standard_2d6(self):
         """SCENARIO 1: Standard 2d6 movement roll triggers animated red dice with white pips."""
         print("\n" + "-" * 80)
