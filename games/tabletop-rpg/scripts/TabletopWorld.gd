@@ -2237,9 +2237,9 @@ func ai_monster_turn() -> Dictionary:
 func _update_ui() -> void:
 	var role_name = "Player Mode (Playing Heroes)" if current_role == "player" else "Game Master Mode (Zargon GM)"
 	if title_label:
-		title_label.text = "⚔️ HEROQUEST"
+		title_label.text = "HEROQUEST"
 	if role_badge:
-		role_badge.text = "Role: " + ("⚔️ Player" if current_role == "player" else "👑 GM")
+		role_badge.text = "Role: " + ("Player" if current_role == "player" else "GM")
 
 	var hero = get_active_hero()
 	var h_name = str(hero.get("name", "Hero"))
@@ -2311,10 +2311,10 @@ func _update_ui() -> void:
 			if movement_remaining > 0:
 				if has_acted_this_turn:
 					if dice_label:
-						dice_label.text = "👣 Action used! Spend remaining %d movement or click End Turn." % movement_remaining
+						dice_label.text = "Action used! Spend remaining %d movement or click End Turn." % movement_remaining
 				else:
 					if dice_label:
-						dice_label.text = "👣 %s: Move %d squares on board, or execute action." % [h_name, movement_remaining]
+						dice_label.text = "%s: Move %d squares on board, or execute action." % [h_name, movement_remaining]
 				if btn_roll:
 					btn_roll.visible = true
 					btn_roll.disabled = true
@@ -2322,10 +2322,10 @@ func _update_ui() -> void:
 			else:
 				if has_acted_this_turn:
 					if dice_label:
-						dice_label.text = "🏁 Turn complete! Click End Turn to proceed."
+						dice_label.text = "Turn complete! Click End Turn to proceed."
 				else:
 					if dice_label:
-						dice_label.text = "⚠️ Out of movement! You may still take an action or End Turn."
+						dice_label.text = "Out of movement! You may still take an action or End Turn."
 				if btn_roll:
 					btn_roll.visible = true
 					btn_roll.disabled = true
@@ -2423,9 +2423,9 @@ func _update_character_and_enemy_cards() -> void:
 
 	if enemies_header_label:
 		if discovered_list.is_empty():
-			enemies_header_label.text = "👹 DISCOVERED FOES (0 Sighted)"
+			enemies_header_label.text = "DISCOVERED FOES (0 Sighted)"
 		else:
-			enemies_header_label.text = "👹 DISCOVERED FOES (%d Sighted | %d Defeated)" % [vis_count, dead_count]
+			enemies_header_label.text = "DISCOVERED FOES (%d Sighted | %d Defeated)" % [vis_count, dead_count]
 
 	if enemies_empty_label:
 		enemies_empty_label.visible = discovered_list.is_empty()
@@ -2500,7 +2500,6 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 	name_lbl.clip_text = true
 	if is_dead:
 		name_lbl.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3, 1.0))
-		name_lbl.text = "💀 " + name_lbl.text
 	elif is_active:
 		name_lbl.add_theme_color_override("font_color", Color(1.0, 0.9, 0.3, 1.0))
 	else:
@@ -2593,9 +2592,8 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 	var arm = h.get("equipped_armor", [])
 	var stat_row = HBoxContainer.new()
 	var dice_stat = Label.new()
-	dice_stat.text = "⚔️%dd  🛡️%dd" % [atk_d, def_d]
+	dice_stat.text = "ATK %dd   DEF %dd" % [atk_d, def_d]
 	dice_stat.add_theme_font_size_override("font_size", 10)
-	dice_stat.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	dice_stat.add_theme_color_override("font_color", Color(0.85, 0.88, 0.95, 0.95))
 	stat_row.add_child(dice_stat)
 
@@ -2605,6 +2603,8 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 	var eq_lbl = Label.new()
 	eq_lbl.text = eq_str
 	eq_lbl.clip_text = true
+	eq_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	eq_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	eq_lbl.add_theme_font_size_override("font_size", 10)
 	eq_lbl.add_theme_color_override("font_color", Color(0.7, 0.78, 0.88, 0.85))
 	stat_row.add_child(eq_lbl)
@@ -2719,15 +2719,15 @@ func _create_enemy_card(m: Dictionary, is_visible: bool) -> PanelContainer:
 
 	if not is_alive:
 		name_lbl.add_theme_color_override("font_color", Color(0.85, 0.4, 0.4, 0.9))
-		vis_badge.text = "[💀 DEFEATED]"
+		vis_badge.text = "[DEFEATED]"
 		vis_badge.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3, 1.0))
 	elif is_visible:
 		name_lbl.add_theme_color_override("font_color", Color(0.9, 1.0, 0.95, 1.0))
-		vis_badge.text = "[👁️ VISIBLE]"
+		vis_badge.text = "[VISIBLE]"
 		vis_badge.add_theme_color_override("font_color", Color(0.3, 0.95, 0.6, 1.0))
 	else:
 		name_lbl.add_theme_color_override("font_color", Color(0.75, 0.78, 0.85, 0.8))
-		vis_badge.text = "[👁️‍🗨️ (not visible)]"
+		vis_badge.text = "[OUT OF SIGHT]"
 		vis_badge.add_theme_color_override("font_color", Color(0.65, 0.70, 0.80, 0.8))
 
 	hdr_row.add_child(name_lbl)
@@ -2772,7 +2772,7 @@ func _create_enemy_card(m: Dictionary, is_visible: bool) -> PanelContainer:
 	var mv_sq = int(m.get("moveSquares", 6))
 	var stat_row = HBoxContainer.new()
 	var stat_lbl = Label.new()
-	stat_lbl.text = "⚔️%dd  🛡️%dd  👣%d mv" % [atk_d, def_d, mv_sq]
+	stat_lbl.text = "ATK %dd   DEF %dd   MOV %d" % [atk_d, def_d, mv_sq]
 	stat_lbl.add_theme_font_size_override("font_size", 10)
 	stat_lbl.add_theme_color_override("font_color", Color(0.8, 0.85, 0.92, 0.9))
 	stat_row.add_child(stat_lbl)
@@ -2781,9 +2781,9 @@ func _create_enemy_card(m: Dictionary, is_visible: bool) -> PanelContainer:
 	# Row 4: Conditions (Sleep, Stun, etc.)
 	var eff_list: Array[String] = []
 	if is_sleeping:
-		eff_list.append("💤 Sleeping")
+		eff_list.append("Sleeping")
 	if is_stunned:
-		eff_list.append("⚡ Stunned")
+		eff_list.append("Stunned")
 
 	if eff_list.size() > 0:
 		var eff_row = HBoxContainer.new()
