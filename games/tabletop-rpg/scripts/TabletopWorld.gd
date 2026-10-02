@@ -36,6 +36,11 @@ var starting_stair: Vector2i = Vector2i(1, 1)
 var tile_size: float = TILE_SIZE
 var board_offset: Vector2 = BOARD_OFFSET
 
+var active_vfx: Array[Dictionary] = []
+var floating_texts: Array[Dictionary] = []
+var last_spell_result: Dictionary = {}
+var last_combat_result: Dictionary = {}
+
 func _update_board_metrics() -> void:
 	if board_sprite and board_sprite.texture:
 		var tex_size = board_sprite.texture.get_size()
@@ -163,24 +168,61 @@ func _load_active_cartridge() -> void:
 
 	var cart_heroes = cart.get("heroes", {})
 	heroes.clear()
-	var occupied_starts: Dictionary = {}
+	var h_idx = 0
 	for h_id in cart_heroes:
 		var h = cart_heroes[h_id].duplicate(true)
 		h["current_bp"] = h.get("bodyPoints", 8)
 		h["current_mp"] = h.get("mindPoints", 2)
 		h["gold"] = 0
-		var pos_arr = h.get("position", [starting_stair.x, starting_stair.y])
-		var h_pos = Vector2i(pos_arr[0], pos_arr[1])
-		if occupied_starts.has(h_pos):
-			# Standard HeroQuest rule: No sharing squares! Find adjacent unoccupied corridor tile
-			for offset in [Vector2i(1, 0), Vector2i(0, 1), Vector2i(0, 2), Vector2i(2, 0), Vector2i(1, 1)]:
-				var cand = starting_stair + offset
-				if not occupied_starts.has(cand) and not is_tile_wall_blocked(cand) and _get_room_at(cand).is_empty():
-					h_pos = cand
-					break
-		occupied_starts[h_pos] = true
-		h["grid_pos"] = h_pos
+
+		# Standard HeroQuest Loadouts
+		match str(h.get("id")):
+			"barbarian":
+				h["equipped_weapon"] = "broadsword"
+				h["equipped_armor"] = []
+				h["inventory"] = ["broadsword"]
+				h["spells"] = []
+			"dwarf":
+				h["equipped_weapon"] = "shortsword"
+				h["equipped_armor"] = []
+				h["inventory"] = ["shortsword"]
+				h["spells"] = []
+			"elf":
+				h["equipped_weapon"] = "shortsword"
+				h["equipped_armor"] = []
+				h["inventory"] = ["shortsword"]
+				h["spells"] = ["genie", "swift_wind", "tempest"]
+			"wizard":
+				h["equipped_weapon"] = "dagger"
+				h["equipped_armor"] = []
+				h["inventory"] = ["dagger", "staff"]
+				h["spells"] = [
+					"ball_of_flame", "fire_of_wrath", "courage",
+					"rock_skin", "heal_body", "pass_through_rock",
+					"water_of_healing", "sleep", "veil_of_mist"
+				]
+			_:
+				h["equipped_weapon"] = "broadsword"
+				h["equipped_armor"] = []
+				h["inventory"] = ["broadsword"]
+				h["spells"] = []
+
+		h["courage_active"] = false
+		h["rock_skin_active"] = false
+		h["pass_through_rock_active"] = false
+		h["veil_of_mist_active"] = false
+		h["swift_wind_active"] = false
+
+		if h_idx == 0:
+			# The active starting hero begins on the board at the spiral staircase
+			h["is_on_board"] = true
+			h["grid_pos"] = starting_stair
+		else:
+			# Other heroes remain OFF the board until their first turn arrives
+			h["is_on_board"] = false
+			h["grid_pos"] = Vector2i(-1, -1)
 		heroes.append(h)
+		h_idx += 1
 
 	var cart_monsters = cart.get("monsters", {})
 	monsters.clear()
@@ -190,6 +232,8 @@ func _load_active_cartridge() -> void:
 		var pos = m.get("position", [12, 9])
 		m["grid_pos"] = Vector2i(pos[0], pos[1])
 		m["is_alive"] = true
+		m["is_sleeping"] = false
+		m["tempest_stunned"] = false
 		monsters.append(m)
 
 	rooms.clear()
@@ -236,10 +280,13 @@ func is_tile_wall_blocked(tile: Vector2i) -> bool:
 			return true
 	return false
 
+func is_border_tile(tile: Vector2i) -> bool:
+	return tile.x <= 0 or tile.x >= grid_cols - 1 or tile.y <= 0 or tile.y >= grid_rows - 1
+
 # --- HeroQuest Miniature Occupancy Rules ---
 func get_hero_at(tile: Vector2i) -> Dictionary:
 	for h in heroes:
-		if h.get("current_bp", 0) > 0 and h.get("grid_pos") == tile:
+		if h.get("is_on_board", false) and h.get("current_bp", 0) > 0 and h.get("grid_pos") == tile:
 			return h
 	return {}
 
@@ -254,7 +301,7 @@ func is_tile_occupied_by_hero(tile: Vector2i, exclude_hero_idx: int = -1) -> boo
 		if i == exclude_hero_idx:
 			continue
 		var h = heroes[i]
-		if h.get("current_bp", 0) > 0 and h.get("grid_pos") == tile:
+		if h.get("is_on_board", false) and h.get("current_bp", 0) > 0 and h.get("grid_pos") == tile:
 			return true
 	return false
 
@@ -385,7 +432,7 @@ func update_party_vision() -> void:
 
 	var vision_sources: Array[Vector2i] = []
 	for h in heroes:
-		if h.get("current_bp", 1) > 0:
+		if h.get("is_on_board", false) and h.get("current_bp", 1) > 0:
 			vision_sources.append(h.get("grid_pos", starting_stair))
 
 	if vision_sources.is_empty():
@@ -482,6 +529,38 @@ func _process(delta: float) -> void:
 		if auto_play_timer >= 1.2:
 			auto_play_timer = 0.0
 			_execute_auto_play_step()
+
+	var needs_redraw = false
+	if active_vfx.size() > 0:
+		var remaining_vfx: Array[Dictionary] = []
+		for vfx in active_vfx:
+			vfx["time"] = float(vfx.get("time", 0.0)) + delta
+			if vfx["time"] < float(vfx.get("duration", 0.5)):
+				remaining_vfx.append(vfx)
+			else:
+				var on_comp = str(vfx.get("on_complete", ""))
+				if on_comp == "fire_burst":
+					spawn_burst_vfx(vfx.get("to", Vector2.ZERO), Color(0.95, 0.4, 0.1), 48.0, 0.4)
+				elif on_comp == "genie_burst":
+					spawn_burst_vfx(vfx.get("to", Vector2.ZERO), Color(0.1, 0.7, 0.9), 60.0, 0.5)
+		active_vfx = remaining_vfx
+		needs_redraw = true
+
+	if floating_texts.size() > 0:
+		var remaining_texts: Array[Dictionary] = []
+		for ft in floating_texts:
+			ft["time"] = float(ft.get("time", 0.0)) + delta
+			var dur = float(ft.get("duration", 1.0))
+			if ft["time"] < dur:
+				var vel = ft.get("vel", Vector2(0, -35))
+				ft["pos"] = ft.get("pos", Vector2.ZERO) + vel * delta
+				ft["alpha"] = clampf(1.0 - (ft["time"] / dur), 0.0, 1.0)
+				remaining_texts.append(ft)
+		floating_texts = remaining_texts
+		needs_redraw = true
+
+	if needs_redraw:
+		queue_redraw_all()
 
 func _execute_auto_play_step() -> void:
 	auto_play_step += 1
@@ -625,13 +704,36 @@ func _handle_tile_click(tile: Vector2i) -> void:
 		move_hero(tile)
 
 func roll_movement_dice() -> Dictionary:
-	var roll = TabletopDice.roll_movement()
+	var hero = get_active_hero()
+	var armors: Array = hero.get("equipped_armor", [])
+	var has_plate = armors.has("plate_mail")
+	var is_swift = hero.get("swift_wind_active", false)
+	var roll = {}
+
+	if has_plate:
+		var d1 = randi_range(1, 6)
+		roll = { "total": d1, "d1": d1, "d2": 0, "plate_mail": true }
+		_log("🎲 %s wears Plate Mail: movement restricted to 1d6: [%d] = %d squares!" % [
+			hero.get("name", "Hero"), d1, d1
+		])
+	elif is_swift:
+		var r1 = TabletopDice.roll_movement()
+		var r2 = TabletopDice.roll_movement()
+		var total = r1.total + r2.total
+		roll = { "total": total, "d1": r1.total, "d2": r2.total, "swift_wind": true }
+		hero["swift_wind_active"] = false
+		_log("💨 Swift Wind carries %s forward at double speed: 4d6 = %d squares!" % [
+			hero.get("name", "Hero"), total
+		])
+	else:
+		roll = TabletopDice.roll_movement()
+		_log("🎲 %s rolled 2d6 movement: [%d, %d] = %d squares!" % [
+			hero.get("name", "Hero"), roll.d1, roll.d2, roll.total
+		])
+
 	movement_remaining = roll.total
 	movement_rolled = true
 	turn_state = "moving"
-	_log("🎲 %s rolled 2d6 movement: [%d, %d] = %d squares!" % [
-		get_active_hero().get("name", "Hero"), roll.d1, roll.d2, roll.total
-	])
 	_update_ui()
 	queue_redraw_all()
 	return roll
@@ -642,6 +744,12 @@ func find_path(start: Vector2i, goal: Vector2i, moving_hero_idx: int = -1) -> Ar
 	# Rule 1: No sharing squares! Characters cannot finish their turn on a square occupied by another model.
 	if is_tile_occupied(goal, moving_hero_idx):
 		return []
+
+	var pass_rock = false
+	var veil_mist = false
+	if moving_hero_idx >= 0 and moving_hero_idx < heroes.size():
+		pass_rock = heroes[moving_hero_idx].get("pass_through_rock_active", false)
+		veil_mist = heroes[moving_hero_idx].get("veil_of_mist_active", false)
 
 	var queue: Array[Vector2i] = [start]
 	var came_from: Dictionary = { start: start }
@@ -665,18 +773,17 @@ func find_path(start: Vector2i, goal: Vector2i, moving_hero_idx: int = -1) -> Ar
 				continue
 			if came_from.has(nxt):
 				continue
-			if has_wall_between(cur, nxt) or is_tile_wall_blocked(nxt):
-				continue
-			var rm = _get_room_at(nxt)
-			var rm_id = str(rm.get("id", ""))
-			if rm_id != "" and not revealed_rooms.has(rm_id):
-				continue
-			# Rule 2: Heroes generally cannot move through squares occupied by monsters.
-			# Monsters create tactical bottlenecks in narrow corridors and doorways!
-			if is_tile_occupied_by_monster(nxt):
+			if not pass_rock:
+				if has_wall_between(cur, nxt) or is_tile_wall_blocked(nxt):
+					continue
+				var rm = _get_room_at(nxt)
+				var rm_id = str(rm.get("id", ""))
+				if rm_id != "" and not revealed_rooms.has(rm_id):
+					continue
+			# Rule 2: Heroes generally cannot move through squares occupied by monsters unless Veil of Mist is active
+			if not veil_mist and is_tile_occupied_by_monster(nxt):
 				continue
 			# Rule 3: Heroes CAN pass through friendly heroes, but cannot end on them
-			# (which is enforced at goal check above).
 			came_from[nxt] = cur
 			queue.append(nxt)
 
@@ -722,6 +829,14 @@ func move_hero(target_pos: Vector2i) -> bool:
 			turn_state = "turn_complete"
 		else:
 			turn_state = "moving"
+
+	if hero.get("pass_through_rock_active", false):
+		hero["pass_through_rock_active"] = false
+		_log("👻 Pass Through Rock fades away as %s materializes in solid space." % hero.get("name"))
+	if hero.get("veil_of_mist_active", false):
+		hero["veil_of_mist_active"] = false
+		_log("🌫️ The Veil of Mist dissipates from around %s." % hero.get("name"))
+
 	update_party_vision()
 	_log("👣 %s moved to (%d, %d). Remaining movement: %d" % [
 		hero.get("name"), target_pos.x, target_pos.y, movement_remaining
@@ -764,48 +879,226 @@ func open_door(from_pos: Vector2i, to_pos: Vector2i) -> bool:
 	queue_redraw_all()
 	return true
 
-func attack_adjacent_monster(monster_id: String = "") -> Dictionary:
-	var hero = get_active_hero()
-	var target_m: Dictionary = {}
+# --- HeroQuest Combat & Equipment Calculations ---
+func get_hero_attack_dice(h: Dictionary) -> int:
+	var w_id = str(h.get("equipped_weapon", ""))
+	var w = HeroQuestEquipment.get_weapon(w_id)
+	var base_atk = int(w.get("attack_dice", h.get("attackDice", 1)))
+	if h.get("courage_active", false):
+		base_atk += 2
+	return base_atk
 
+func get_hero_defend_dice(h: Dictionary) -> int:
+	var armors: Array = h.get("equipped_armor", [])
+	var base_def = 2
+	if armors.has("plate_mail"):
+		base_def = 4
+	elif armors.has("chain_mail"):
+		base_def = 3
+	else:
+		base_def = int(h.get("defendDice", 2))
+
+	if armors.has("helmet"):
+		base_def += 1
+	if armors.has("shield"):
+		base_def += 1
+	if h.get("rock_skin_active", false):
+		base_def += 1
+
+	return base_def
+
+func equip_item(hero_id: String, item_id: String) -> Dictionary:
+	var hero: Dictionary = {}
+	for h in heroes:
+		if h.get("id") == hero_id:
+			hero = h
+			break
+	if hero.is_empty():
+		return { "success": false, "error": "Hero not found: " + hero_id }
+
+	var can_res = HeroQuestEquipment.can_hero_equip(hero_id, item_id)
+	if not can_res.get("can_equip", false):
+		_log("❌ %s" % can_res.get("reason", "Cannot equip"))
+		return { "success": false, "error": can_res.get("reason") }
+
+	var w = HeroQuestEquipment.get_weapon(item_id)
+	if not w.is_empty():
+		var armors: Array = hero.get("equipped_armor", [])
+		if w.get("two_handed", false) and armors.has("shield"):
+			_log("❌ Cannot equip two-handed weapon %s while wielding a Shield!" % w.get("name"))
+			return { "success": false, "error": "Cannot equip two-handed weapon while wielding a Shield" }
+		hero["equipped_weapon"] = item_id
+		var inv: Array = hero.get("inventory", [])
+		if not inv.has(item_id):
+			inv.append(item_id)
+			hero["inventory"] = inv
+		_log("⚔️ %s equipped %s (Attack Dice: %d)!" % [hero.get("name"), w.get("name"), get_hero_attack_dice(hero)])
+		_update_ui()
+		queue_redraw_all()
+		return { "success": true, "equipped": item_id, "attackDice": get_hero_attack_dice(hero) }
+
+	var a = HeroQuestEquipment.get_armor(item_id)
+	if not a.is_empty():
+		var slot = str(a.get("slot", "body"))
+		var armors: Array = hero.get("equipped_armor", [])
+		if a.get("incompatible_with_two_handed", false):
+			var cur_w = HeroQuestEquipment.get_weapon(hero.get("equipped_weapon", ""))
+			if cur_w.get("two_handed", false):
+				_log("❌ Cannot equip Shield while wielding two-handed %s!" % cur_w.get("name"))
+				return { "success": false, "error": "Cannot equip Shield while wielding a two-handed weapon" }
+		if slot == "body":
+			armors.erase("chain_mail")
+			armors.erase("plate_mail")
+		if not armors.has(item_id):
+			armors.append(item_id)
+		hero["equipped_armor"] = armors
+		var inv: Array = hero.get("inventory", [])
+		if not inv.has(item_id):
+			inv.append(item_id)
+			hero["inventory"] = inv
+		_log("🛡️ %s equipped %s (Defend Dice: %d)!" % [hero.get("name"), a.get("name"), get_hero_defend_dice(hero)])
+		_update_ui()
+		queue_redraw_all()
+		return { "success": true, "equipped": item_id, "defendDice": get_hero_defend_dice(hero) }
+
+	return { "success": false, "error": "Unknown item: " + item_id }
+
+func unequip_item(hero_id: String, item_id: String) -> Dictionary:
+	var hero: Dictionary = {}
+	for h in heroes:
+		if h.get("id") == hero_id:
+			hero = h
+			break
+	if hero.is_empty():
+		return { "success": false, "error": "Hero not found: " + hero_id }
+
+	if hero.get("equipped_weapon") == item_id:
+		hero["equipped_weapon"] = "dagger" if hero.get("id") == "wizard" else "broadsword"
+		_log("⚔️ %s unequipped weapon %s." % [hero.get("name"), item_id])
+		_update_ui()
+		queue_redraw_all()
+		return { "success": true, "unequipped": item_id }
+
+	var armors: Array = hero.get("equipped_armor", [])
+	if armors.has(item_id):
+		armors.erase(item_id)
+		hero["equipped_armor"] = armors
+		_log("🛡️ %s unequipped armor %s." % [hero.get("name"), item_id])
+		_update_ui()
+		queue_redraw_all()
+		return { "success": true, "unequipped": item_id }
+
+	return { "success": false, "error": "Item not equipped" }
+
+# --- Hero & Monster Combat Resolution ---
+func attack_adjacent_monster(monster_id: String = "", weapon_id: String = "") -> Dictionary:
+	var hero = get_active_hero()
+	if hero.is_empty():
+		return { "success": false, "error": "No active hero" }
+
+	if weapon_id != "":
+		hero["equipped_weapon"] = weapon_id
+
+	var cur_w_id = str(hero.get("equipped_weapon", "broadsword"))
+	var w_def = HeroQuestEquipment.get_weapon(cur_w_id)
+	var hero_pos = hero.get("grid_pos", Vector2i(-1, -1))
+
+	var target_m: Dictionary = {}
 	for m in monsters:
 		if m.get("is_alive", false):
 			if monster_id != "" and m.get("id") == monster_id:
 				target_m = m
 				break
 			elif monster_id == "":
-				target_m = m
-				break
+				var m_pos = m.get("grid_pos", Vector2i(-1, -1))
+				var dx = absi(hero_pos.x - m_pos.x)
+				var dy = absi(hero_pos.y - m_pos.y)
+				if w_def.get("ranged", false):
+					if not (dx <= 1 and dy <= 1) and has_line_of_sight(hero_pos, m_pos):
+						target_m = m
+						break
+				elif w_def.get("diagonal", false):
+					if dx <= 1 and dy <= 1 and (dx + dy > 0):
+						target_m = m
+						break
+				else:
+					if dx + dy == 1:
+						target_m = m
+						break
 
-	if target_m.size() == 0:
-		_log("No monster to attack!")
-		return {}
+	if target_m.is_empty():
+		_log("No monster in reach of %s!" % w_def.get("name", "weapon"))
+		return { "success": false, "error": "No monster in weapon range" }
 
-	var atk_dice = hero.get("attackDice", 3)
-	var def_dice = target_m.get("defendDice", 2)
+	var m_pos = target_m.get("grid_pos", Vector2i(-1, -1))
+	var dx = absi(hero_pos.x - m_pos.x)
+	var dy = absi(hero_pos.y - m_pos.y)
+
+	# Validate weapon rules strictly
+	if w_def.get("ranged", false):
+		if cur_w_id == "crossbow":
+			if dx <= 1 and dy <= 1:
+				_log("❌ Crossbow cannot target adjacent monsters!")
+				return { "success": false, "error": "Crossbow cannot target adjacent monsters" }
+			if not has_line_of_sight(hero_pos, m_pos):
+				_log("❌ No clear line of sight to target for Crossbow!")
+				return { "success": false, "error": "No line of sight to target" }
+			spawn_projectile_vfx(hero_pos, m_pos, Color(0.8, 0.7, 0.5), 0.3)
+		elif cur_w_id == "dagger":
+			if dx > 1 or dy > 1:
+				if not has_line_of_sight(hero_pos, m_pos):
+					_log("❌ No line of sight to throw Dagger!")
+					return { "success": false, "error": "No line of sight to target" }
+				spawn_projectile_vfx(hero_pos, m_pos, Color(0.85, 0.85, 0.95), 0.25)
+				_log("🗡️ %s throws a dagger at %s!" % [hero.get("name"), target_m.get("name")])
+	elif w_def.get("diagonal", false):
+		if not (dx <= 1 and dy <= 1 and (dx + dy > 0)):
+			_log("❌ Target is out of reach of %s!" % w_def.get("name"))
+			return { "success": false, "error": "Target out of reach" }
+		var center_screen = board_offset + Vector2((m_pos.x + 0.5) * tile_size, (m_pos.y + 0.5) * tile_size)
+		spawn_slash_vfx(center_screen, 0.785)
+	else:
+		if dx + dy != 1:
+			_log("❌ %s cannot attack diagonally or at range!" % w_def.get("name", "Broadsword"))
+			return { "success": false, "error": "Weapon requires orthogonal adjacency" }
+		var center_screen = board_offset + Vector2((m_pos.x + 0.5) * tile_size, (m_pos.y + 0.5) * tile_size)
+		spawn_slash_vfx(center_screen, 0.0)
+
+	var atk_dice = get_hero_attack_dice(hero)
+	var def_dice = int(target_m.get("defendDice", 2))
+	if target_m.get("is_sleeping", false):
+		def_dice = 0
 
 	var res = TabletopDice.resolve_combat(atk_dice, def_dice, false)
-	_log("⚔️ %s attacks %s with %d dice! Rolled %d Skulls. %s defended with %d Black Shields." % [
-		hero.get("name"), target_m.get("name"), atk_dice, res.total_skulls, target_m.get("name"), res.effective_shields
+	_log("⚔️ %s attacks %s with %s (%d dice)! Rolled %d Skulls. %s defended with %d Black Shields." % [
+		hero.get("name"), target_m.get("name"), w_def.get("name", "weapon"), atk_dice, res.total_skulls, target_m.get("name"), res.effective_shields
 	])
 
 	if res.wounds > 0:
 		target_m["current_bp"] = maxi(0, target_m.get("current_bp", 1) - res.wounds)
 		_log("💥 Wounds inflicted: %d! %s HP: %d" % [res.wounds, target_m.get("name"), target_m.get("current_bp")])
+		spawn_floating_text(m_pos, "-%d HP" % res.wounds, Color(0.95, 0.2, 0.2))
 		if target_m.get("current_bp") <= 0:
 			target_m["is_alive"] = false
 			_log("💀 %s is DEFEATED!" % target_m.get("name"))
+			spawn_floating_text(m_pos, "DEFEATED!", Color(1.0, 0.1, 0.1), 1.5)
 	else:
 		_log("🛡️ Attack was completely blocked by %s!" % target_m.get("name"))
+		spawn_floating_text(m_pos, "BLOCKED!", Color(0.7, 0.8, 1.0))
+
+	if cur_w_id == "dagger" and (dx > 1 or dy > 1):
+		hero["equipped_weapon"] = "fists"
 
 	has_acted_this_turn = true
 	if movement_remaining == 0:
 		turn_state = "turn_complete"
 	else:
 		turn_state = "action_taken"
+
+	last_combat_result = res
 	_update_ui()
 	queue_redraw_all()
-	return res
+	return { "success": true, "result": res, "target": target_m.get("id"), "remaining_bp": target_m.get("current_bp") }
 
 # DunMaster Action: Monster attacks Hero!
 func dm_attack_hero(hero_id: String = "") -> Dictionary:
@@ -829,25 +1122,388 @@ func dm_attack_hero(hero_id: String = "") -> Dictionary:
 		return {}
 
 	var atk_dice = monster.get("attackDice", 3)
-	var def_dice = target_h.get("defendDice", 2)
+	var def_dice = get_hero_defend_dice(target_h)
+	var h_pos = target_h.get("grid_pos", Vector2i(-1, -1))
 
 	var res = TabletopDice.resolve_combat(atk_dice, def_dice, true)
-	_log("👑 [Game Master] %s attacks %s! Rolled %d Skulls. %s rolled %d White Shields." % [
-		monster.get("name"), target_h.get("name"), res.total_skulls, target_h.get("name"), res.effective_shields
+	_log("👑 [Game Master] %s attacks %s! Rolled %d Skulls. %s rolled %d White Shields (Defend Dice: %d)." % [
+		monster.get("name"), target_h.get("name"), res.total_skulls, target_h.get("name"), res.effective_shields, def_dice
 	])
 
 	if res.wounds > 0:
 		target_h["current_bp"] = maxi(0, target_h.get("current_bp", 8) - res.wounds)
 		_log("💥 %s takes %d wound(s)! Remaining HP: %d" % [target_h.get("name"), res.wounds, target_h.get("current_bp")])
+		spawn_floating_text(h_pos, "-%d HP" % res.wounds, Color(0.95, 0.2, 0.2))
+		if target_h.get("rock_skin_active", false):
+			target_h["rock_skin_active"] = false
+			_log("🪨 The wound shatters %s's Rock Skin spell!" % target_h.get("name"))
+			spawn_floating_text(h_pos, "SHATTERED!", Color(0.8, 0.8, 0.8))
 	else:
 		_log("🛡️ %s successfully blocked the monster attack!" % target_h.get("name"))
+		spawn_floating_text(h_pos, "BLOCKED!", Color(0.3, 0.8, 1.0))
 
+	last_combat_result = res
 	_update_ui()
 	queue_redraw_all()
 	return res
 
+# --- HeroQuest Standard Spells System ---
+func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i = Vector2i(-1, -1)) -> Dictionary:
+	var hero = get_active_hero()
+	if hero.is_empty():
+		return { "success": false, "error": "No active hero to cast spell" }
+
+	var spell = HeroQuestSpells.get_spell(spell_id)
+	if spell.is_empty():
+		return { "success": false, "error": "Unknown spell: " + spell_id }
+
+	var hero_pos = hero.get("grid_pos", Vector2i(-1, -1))
+	var hero_screen = board_offset + Vector2((hero_pos.x + 0.5) * tile_size, (hero_pos.y + 0.5) * tile_size)
+	var spell_name = str(spell.get("name", spell_id))
+	var s_id = str(spell.get("id"))
+
+	_log("🔮 %s invokes the ancient incantation: [b]%s[/b]!" % [hero.get("name"), spell_name])
+	var res: Dictionary = { "success": true, "spell": s_id, "name": spell_name }
+
+	match s_id:
+		"ball_of_flame":
+			var target_m = _find_spell_target_monster(target_id, hero_pos)
+			if target_m.is_empty():
+				return { "success": false, "error": "No target monster in line of sight for Ball of Flame" }
+			var m_pos = target_m.get("grid_pos", Vector2i(-1, -1))
+			spawn_projectile_vfx(hero_pos, m_pos, Color(1.0, 0.45, 0.1), 0.35, "fire_burst")
+			var def = TabletopDice.roll_combat_dice(2)
+			var shields = def.black_shields
+			var wounds = maxi(0, 2 - shields)
+			target_m["current_bp"] = maxi(0, target_m.get("current_bp", 1) - wounds)
+			_log("🔥 Ball of Flame engulfs %s! Rolled %d Black Shields. Wounds: %d (Remaining BP: %d)" % [
+				target_m.get("name"), shields, wounds, target_m.get("current_bp")
+			])
+			if wounds > 0:
+				spawn_floating_text(m_pos, "-%d HP" % wounds, Color(1.0, 0.3, 0.1))
+			else:
+				spawn_floating_text(m_pos, "BLOCKED!", Color(0.6, 0.8, 1.0))
+			if target_m.get("current_bp") <= 0:
+				target_m["is_alive"] = false
+				_log("💀 %s is incinerated by the Ball of Flame!" % target_m.get("name"))
+				spawn_floating_text(m_pos, "INCINERATED!", Color(1.0, 0.2, 0.1), 1.5)
+			res["target"] = target_m.get("id")
+			res["wounds"] = wounds
+			res["defended"] = shields
+			res["killed"] = not target_m.get("is_alive", true)
+
+		"fire_of_wrath":
+			var target_m = _find_spell_target_monster(target_id, hero_pos)
+			if target_m.is_empty():
+				return { "success": false, "error": "No target monster in line of sight for Fire of Wrath" }
+			var m_pos = target_m.get("grid_pos", Vector2i(-1, -1))
+			var m_screen = board_offset + Vector2((m_pos.x + 0.5) * tile_size, (m_pos.y + 0.5) * tile_size)
+			spawn_beam_vfx(hero_screen, m_screen, Color(1.0, 0.4, 0.1), 0.3)
+			spawn_burst_vfx(m_screen, Color(1.0, 0.5, 0.1), 35.0, 0.3)
+			var def = TabletopDice.roll_combat_dice(1)
+			var shields = def.black_shields
+			var wounds = maxi(0, 1 - shields)
+			target_m["current_bp"] = maxi(0, target_m.get("current_bp", 1) - wounds)
+			_log("⚡ Fire of Wrath strikes %s! Shield roll: %d. Wounds: %d (BP: %d)" % [
+				target_m.get("name"), shields, wounds, target_m.get("current_bp")
+			])
+			if wounds > 0:
+				spawn_floating_text(m_pos, "-%d HP" % wounds, Color(1.0, 0.4, 0.1))
+			else:
+				spawn_floating_text(m_pos, "BLOCKED!", Color(0.6, 0.8, 1.0))
+			if target_m.get("current_bp") <= 0:
+				target_m["is_alive"] = false
+				_log("💀 %s was consumed by Fire of Wrath!" % target_m.get("name"))
+			res["target"] = target_m.get("id")
+			res["wounds"] = wounds
+			res["defended"] = shields
+			res["killed"] = not target_m.get("is_alive", true)
+
+		"courage":
+			var target_h = _find_spell_target_hero(target_id)
+			target_h["courage_active"] = true
+			var th_pos = target_h.get("grid_pos", hero_pos)
+			var th_screen = board_offset + Vector2((th_pos.x + 0.5) * tile_size, (th_pos.y + 0.5) * tile_size)
+			spawn_burst_vfx(th_screen, Color(0.9, 0.2, 0.2), 40.0, 0.4)
+			spawn_floating_text(th_pos, "+2 ATK DICE", Color(1.0, 0.3, 0.3))
+			_log("🦁 %s is filled with Courage! +2 extra combat dice on attacks." % target_h.get("name"))
+			res["target"] = target_h.get("id")
+			res["courage_active"] = true
+
+		"rock_skin":
+			var target_h = _find_spell_target_hero(target_id)
+			target_h["rock_skin_active"] = true
+			var th_pos = target_h.get("grid_pos", hero_pos)
+			var th_screen = board_offset + Vector2((th_pos.x + 0.5) * tile_size, (th_pos.y + 0.5) * tile_size)
+			spawn_burst_vfx(th_screen, Color(0.5, 0.5, 0.55), 38.0, 0.4)
+			spawn_floating_text(th_pos, "+1 DEF DIE", Color(0.7, 0.7, 0.8))
+			_log("🪨 %s's skin hardens like granite! +1 extra defend die until wounded." % target_h.get("name"))
+			res["target"] = target_h.get("id")
+			res["rock_skin_active"] = true
+
+		"heal_body":
+			var target_h = _find_spell_target_hero(target_id)
+			var max_bp = int(target_h.get("bodyPoints", 8))
+			var cur_bp = int(target_h.get("current_bp", 8))
+			var healed = mini(4, max_bp - cur_bp)
+			target_h["current_bp"] = cur_bp + healed
+			var th_pos = target_h.get("grid_pos", hero_pos)
+			var th_screen = board_offset + Vector2((th_pos.x + 0.5) * tile_size, (th_pos.y + 0.5) * tile_size)
+			spawn_heal_vfx(th_screen, Color(0.2, 0.9, 0.4), 0.6)
+			spawn_floating_text(th_pos, "+%d HP" % healed, Color(0.3, 1.0, 0.4))
+			_log("💚 Heal Body restores %d Body Points to %s (Current: %d/%d)." % [
+				healed, target_h.get("name"), target_h.get("current_bp"), max_bp
+			])
+			res["target"] = target_h.get("id")
+			res["healed"] = healed
+			res["current_bp"] = target_h.get("current_bp")
+
+		"pass_through_rock":
+			var target_h = _find_spell_target_hero(target_id)
+			target_h["pass_through_rock_active"] = true
+			var th_pos = target_h.get("grid_pos", hero_pos)
+			var th_screen = board_offset + Vector2((th_pos.x + 0.5) * tile_size, (th_pos.y + 0.5) * tile_size)
+			spawn_burst_vfx(th_screen, Color(0.7, 0.7, 0.9), 35.0, 0.4)
+			spawn_floating_text(th_pos, "PHASE SHIFT", Color(0.8, 0.8, 1.0))
+			_log("👻 %s turns ethereal! Can phase through solid rock walls on next movement." % target_h.get("name"))
+			res["target"] = target_h.get("id")
+			res["pass_through_rock_active"] = true
+
+		"water_of_healing":
+			var target_h = _find_spell_target_hero(target_id)
+			var max_bp = int(target_h.get("bodyPoints", 8))
+			var cur_bp = int(target_h.get("current_bp", 8))
+			var healed = mini(4, max_bp - cur_bp)
+			target_h["current_bp"] = cur_bp + healed
+			var th_pos = target_h.get("grid_pos", hero_pos)
+			var th_screen = board_offset + Vector2((th_pos.x + 0.5) * tile_size, (th_pos.y + 0.5) * tile_size)
+			spawn_heal_vfx(th_screen, Color(0.1, 0.75, 0.95), 0.6)
+			spawn_floating_text(th_pos, "+%d HP" % healed, Color(0.2, 0.8, 1.0))
+			_log("💧 Pure waters of healing bathe %s! Restored %d Body Points (Current: %d/%d)." % [
+				healed, target_h.get("name"), target_h.get("current_bp"), max_bp
+			])
+			res["target"] = target_h.get("id")
+			res["healed"] = healed
+			res["current_bp"] = target_h.get("current_bp")
+
+		"sleep":
+			var target_m = _find_spell_target_monster(target_id, hero_pos)
+			if target_m.is_empty():
+				return { "success": false, "error": "No target monster in line of sight for Sleep" }
+			target_m["is_sleeping"] = true
+			var m_pos = target_m.get("grid_pos", Vector2i(-1, -1))
+			var m_screen = board_offset + Vector2((m_pos.x + 0.5) * tile_size, (m_pos.y + 0.5) * tile_size)
+			spawn_burst_vfx(m_screen, Color(0.4, 0.4, 0.9), 35.0, 0.5)
+			spawn_floating_text(m_pos, "💤 SLEEP", Color(0.5, 0.5, 1.0))
+			_log("💤 %s falls into deep enchanted sleep! Cannot move, attack, or defend." % target_m.get("name"))
+			res["target"] = target_m.get("id")
+			res["is_sleeping"] = true
+
+		"veil_of_mist":
+			var target_h = _find_spell_target_hero(target_id)
+			target_h["veil_of_mist_active"] = true
+			var th_pos = target_h.get("grid_pos", hero_pos)
+			var th_screen = board_offset + Vector2((th_pos.x + 0.5) * tile_size, (th_pos.y + 0.5) * tile_size)
+			spawn_burst_vfx(th_screen, Color(0.65, 0.7, 0.8), 35.0, 0.4)
+			spawn_floating_text(th_pos, "MIST SHROUD", Color(0.7, 0.8, 0.9))
+			_log("🌫️ %s is enveloped in mist! Can move through monsters unseen." % target_h.get("name"))
+			res["target"] = target_h.get("id")
+			res["veil_of_mist_active"] = true
+
+		"genie":
+			if target_id.begins_with("door") or (target_pos.x >= 0 and is_door_at(target_pos)):
+				for d in doors:
+					if not d.get("is_open", false):
+						d["is_open"] = true
+						var tr = d.get("toRoom", "")
+						if tr != "":
+							reveal_room_by_id(tr)
+						_log("🧞 Genie gestures and magically forces open the door!")
+						spawn_burst_vfx(hero_screen, Color(0.2, 0.8, 1.0), 55.0, 0.5)
+						res["door_opened"] = true
+						break
+			else:
+				var target_m = _find_spell_target_monster(target_id, hero_pos)
+				if target_m.is_empty():
+					return { "success": false, "error": "No target monster in line of sight for Genie" }
+				var m_pos = target_m.get("grid_pos", Vector2i(-1, -1))
+				spawn_projectile_vfx(hero_pos, m_pos, Color(0.1, 0.8, 1.0), 0.35, "genie_burst")
+				var combat_res = TabletopDice.resolve_combat(5, target_m.get("defendDice", 2), false)
+				target_m["current_bp"] = maxi(0, target_m.get("current_bp", 1) - combat_res.wounds)
+				_log("🧞 Genie manifests and attacks %s with 5 dice! Skulls: %d, Defended: %d, Wounds: %d (BP: %d)" % [
+					target_m.get("name"), combat_res.total_skulls, combat_res.effective_shields, combat_res.wounds, target_m.get("current_bp")
+				])
+				if combat_res.wounds > 0:
+					spawn_floating_text(m_pos, "-%d HP" % combat_res.wounds, Color(0.2, 0.8, 1.0))
+				if target_m.get("current_bp") <= 0:
+					target_m["is_alive"] = false
+					_log("💀 %s is crushed by the Genie's wrath!" % target_m.get("name"))
+					spawn_floating_text(m_pos, "OBLITERATED!", Color(0.3, 0.9, 1.0), 1.5)
+				res["target"] = target_m.get("id")
+				res["wounds"] = combat_res.wounds
+				res["killed"] = not target_m.get("is_alive", true)
+
+		"swift_wind":
+			var target_h = _find_spell_target_hero(target_id)
+			target_h["swift_wind_active"] = true
+			var th_pos = target_h.get("grid_pos", hero_pos)
+			var th_screen = board_offset + Vector2((th_pos.x + 0.5) * tile_size, (th_pos.y + 0.5) * tile_size)
+			spawn_cyclone_vfx(th_screen, Color(0.3, 0.8, 1.0), 0.5)
+			spawn_floating_text(th_pos, "2X SPEED (4d6)", Color(0.3, 0.9, 1.0))
+			_log("💨 Swift Wind envelopes %s! Movement dice doubled to 4d6 on next turn." % target_h.get("name"))
+			res["target"] = target_h.get("id")
+			res["swift_wind_active"] = true
+
+		"tempest":
+			var target_m = _find_spell_target_monster(target_id, hero_pos)
+			if target_m.is_empty():
+				return { "success": false, "error": "No target monster in line of sight for Tempest" }
+			target_m["tempest_stunned"] = true
+			var m_pos = target_m.get("grid_pos", Vector2i(-1, -1))
+			var m_screen = board_offset + Vector2((m_pos.x + 0.5) * tile_size, (m_pos.y + 0.5) * tile_size)
+			spawn_cyclone_vfx(m_screen, Color(0.1, 0.7, 0.9), 0.6)
+			spawn_floating_text(m_pos, "🌪️ STUNNED", Color(0.2, 0.8, 1.0))
+			_log("🌪️ Tempest whirlwind traps %s! It will miss its next turn." % target_m.get("name"))
+			res["target"] = target_m.get("id")
+			res["tempest_stunned"] = true
+
+		"command":
+			var target_h = _find_spell_target_hero(target_id)
+			var th_pos = target_h.get("grid_pos", hero_pos)
+			var th_screen = board_offset + Vector2((th_pos.x + 0.5) * tile_size, (th_pos.y + 0.5) * tile_size)
+			spawn_burst_vfx(th_screen, Color(0.6, 0.1, 0.8), 40.0, 0.5)
+			spawn_floating_text(th_pos, "CONTROLLED!", Color(0.7, 0.2, 0.9))
+			_log("👁️ Dread Sorcery: %s is commanded by Zargon to strike an ally!" % target_h.get("name"))
+			res["target"] = target_h.get("id")
+			res["commanded"] = true
+
+		"summon_undead":
+			var spawn_pos = target_pos if target_pos.x >= 0 else Vector2i(hero_pos.x + 1, hero_pos.y)
+			summon_wandering_monster(spawn_pos)
+			var s_screen = board_offset + Vector2((spawn_pos.x + 0.5) * tile_size, (spawn_pos.y + 0.5) * tile_size)
+			spawn_burst_vfx(s_screen, Color(0.4, 0.1, 0.6), 45.0, 0.5)
+			res["summoned_pos"] = [spawn_pos.x, spawn_pos.y]
+
+	has_acted_this_turn = true
+	if movement_remaining == 0:
+		turn_state = "turn_complete"
+	else:
+		turn_state = "action_taken"
+
+	last_spell_result = res
+	_update_ui()
+	queue_redraw_all()
+	return res
+
+func _find_spell_target_monster(target_id: String, from_pos: Vector2i) -> Dictionary:
+	for m in monsters:
+		if m.get("is_alive", false):
+			if target_id != "" and m.get("id") == target_id:
+				return m
+			elif target_id == "":
+				var mp = m.get("grid_pos", Vector2i(-1, -1))
+				if has_line_of_sight(from_pos, mp):
+					return m
+	return {}
+
+func _find_spell_target_hero(target_id: String) -> Dictionary:
+	if target_id != "":
+		for h in heroes:
+			if h.get("id") == target_id:
+				return h
+	return get_active_hero()
+
+func is_door_at(tile: Vector2i) -> bool:
+	for d in doors:
+		var f = d.get("from", [-1, -1])
+		var t = d.get("to", [-1, -1])
+		if (tile.x == f[0] and tile.y == f[1]) or (tile.x == t[0] and tile.y == t[1]):
+			return true
+	return false
+
+# --- Visual Effects & Animation Helpers ---
+func spawn_projectile_vfx(from_tile: Vector2i, to_tile: Vector2i, color: Color, duration: float = 0.35, on_complete: String = "") -> void:
+	var from_screen = board_offset + Vector2((from_tile.x + 0.5) * tile_size, (from_tile.y + 0.5) * tile_size)
+	var to_screen = board_offset + Vector2((to_tile.x + 0.5) * tile_size, (to_tile.y + 0.5) * tile_size)
+	active_vfx.append({
+		"type": "projectile",
+		"from": from_screen,
+		"to": to_screen,
+		"color": color,
+		"time": 0.0,
+		"duration": duration,
+		"on_complete": on_complete
+	})
+	queue_redraw_all()
+
+func spawn_burst_vfx(center_screen: Vector2, color: Color, max_radius: float = 45.0, duration: float = 0.4) -> void:
+	active_vfx.append({
+		"type": "burst",
+		"center": center_screen,
+		"color": color,
+		"max_radius": max_radius,
+		"time": 0.0,
+		"duration": duration
+	})
+	queue_redraw_all()
+
+func spawn_heal_vfx(center_screen: Vector2, color: Color = Color(0.2, 0.9, 0.4), duration: float = 0.6) -> void:
+	active_vfx.append({
+		"type": "heal",
+		"center": center_screen,
+		"color": color,
+		"time": 0.0,
+		"duration": duration
+	})
+	queue_redraw_all()
+
+func spawn_cyclone_vfx(center_screen: Vector2, color: Color = Color(0.1, 0.7, 0.9), duration: float = 0.6) -> void:
+	active_vfx.append({
+		"type": "cyclone",
+		"center": center_screen,
+		"color": color,
+		"time": 0.0,
+		"duration": duration
+	})
+	queue_redraw_all()
+
+func spawn_beam_vfx(from_screen: Vector2, to_screen: Vector2, color: Color = Color(1.0, 0.5, 0.1), duration: float = 0.3) -> void:
+	active_vfx.append({
+		"type": "beam",
+		"from": from_screen,
+		"to": to_screen,
+		"color": color,
+		"time": 0.0,
+		"duration": duration
+	})
+	queue_redraw_all()
+
+func spawn_slash_vfx(center_screen: Vector2, rotation: float = 0.0, duration: float = 0.25) -> void:
+	active_vfx.append({
+		"type": "slash",
+		"center": center_screen,
+		"rotation": rotation,
+		"color": Color.WHITE,
+		"time": 0.0,
+		"duration": duration
+	})
+	queue_redraw_all()
+
+func spawn_floating_text(tile: Vector2i, text: String, color: Color = Color.WHITE, duration: float = 1.0) -> void:
+	var screen_pos = board_offset + Vector2((tile.x + 0.5) * tile_size, (tile.y + 0.2) * tile_size)
+	floating_texts.append({
+		"text": text,
+		"pos": screen_pos,
+		"vel": Vector2(0, -40),
+		"color": color,
+		"alpha": 1.0,
+		"time": 0.0,
+		"duration": duration
+	})
+	queue_redraw_all()
+
 # Game Master Action: Summon Wandering Monster Ambush
-func summon_wandering_monster(spawn_pos: Vector2i = Vector2i(3, 0)) -> Dictionary:
+func summon_wandering_monster(spawn_pos: Vector2i = Vector2i(3, 0), bp: int = 1, m_name: String = "Wandering Orc") -> Dictionary:
 	if is_tile_occupied(spawn_pos):
 		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, 1), Vector2i(-1, 1)]:
 			var cand = spawn_pos + d
@@ -857,9 +1513,9 @@ func summon_wandering_monster(spawn_pos: Vector2i = Vector2i(3, 0)) -> Dictionar
 
 	var new_m = {
 		"id": "wandering-orc-" + str(monsters.size() + 1),
-		"name": "Wandering Orc",
-		"bodyPoints": 1,
-		"current_bp": 1,
+		"name": m_name,
+		"bodyPoints": bp,
+		"current_bp": bp,
 		"attackDice": 3,
 		"defendDice": 2,
 		"movementSquares": 8,
@@ -869,10 +1525,11 @@ func summon_wandering_monster(spawn_pos: Vector2i = Vector2i(3, 0)) -> Dictionar
 		"is_alive": true
 	}
 	monsters.append(new_m)
-	_log("👑 [Game Master] An evil laugh echoes! A Wandering Orc appears at (%d, %d)!" % [spawn_pos.x, spawn_pos.y])
 	_update_ui()
 	queue_redraw_all()
-	return { "success": true, "monster": new_m }
+	var ret_m = new_m.duplicate(true)
+	ret_m["grid_pos"] = [spawn_pos.x, spawn_pos.y]
+	return { "success": true, "monster": ret_m }
 
 func search_room() -> Dictionary:
 	var hero = get_active_hero()
@@ -890,6 +1547,25 @@ func search_room() -> Dictionary:
 	queue_redraw_all()
 	return { "success": true, "goldFound": found_gold }
 
+func _check_hero_enter_board(idx: int) -> void:
+	if idx < 0 or idx >= heroes.size():
+		return
+	var h = heroes[idx]
+	if not h.get("is_on_board", false):
+		h["is_on_board"] = true
+		var spawn_tile = starting_stair
+		if is_tile_occupied(spawn_tile):
+			# If the stairway tile is currently occupied, enter on adjacent unoccupied corridor tile
+			for offset in [Vector2i(1, 0), Vector2i(0, 1), Vector2i(0, 2), Vector2i(2, 0), Vector2i(1, 1)]:
+				var cand = starting_stair + offset
+				if not is_tile_occupied(cand) and not is_tile_wall_blocked(cand) and _get_room_at(cand).is_empty():
+					spawn_tile = cand
+					break
+		h["grid_pos"] = spawn_tile
+		_log("🌟 %s descends the spiral stairway and enters the dungeon at (%d, %d)!" % [
+			h.get("name"), spawn_tile.x, spawn_tile.y
+		])
+
 func end_turn() -> void:
 	if current_phase == "hero_phase":
 		active_hero_idx = (active_hero_idx + 1) % maxi(1, heroes.size())
@@ -900,16 +1576,19 @@ func end_turn() -> void:
 				call_deferred("ai_monster_turn")
 		else:
 			_log("--- Next Hero: %s ---" % get_active_hero().get("name", "Hero"))
+			_check_hero_enter_board(active_hero_idx)
 	else:
 		current_phase = "hero_phase"
 		current_round += 1
 		_log("--- Round %d begins (Heroes Turn) ---" % current_round)
 		_log("Active hero: %s" % get_active_hero().get("name", "Hero"))
+		_check_hero_enter_board(active_hero_idx)
 
 	movement_remaining = 0
 	movement_rolled = false
 	has_acted_this_turn = false
 	turn_state = "awaiting_roll"
+	update_party_vision()
 	_update_ui()
 	queue_redraw_all()
 
@@ -1121,6 +1800,22 @@ func get_telemetry_state() -> Dictionary:
 	var h_pos = h_act.get("grid_pos", Vector2i(-1, -1))
 	var active_center = board_offset + Vector2(h_pos.x * tile_size + tile_size * 0.5, h_pos.y * tile_size + tile_size * 0.5)
 
+	var heroes_copy: Array = []
+	for h in heroes:
+		var hc = h.duplicate(true)
+		var gp = h.get("grid_pos", Vector2i(-1, -1))
+		hc["grid_pos"] = [gp.x, gp.y]
+		hc["attackDice"] = get_hero_attack_dice(h)
+		hc["defendDice"] = get_hero_defend_dice(h)
+		heroes_copy.append(hc)
+
+	var monsters_copy: Array = []
+	for m in monsters:
+		var mc = m.duplicate(true)
+		var mp = m.get("grid_pos", Vector2i(-1, -1))
+		mc["grid_pos"] = [mp.x, mp.y]
+		monsters_copy.append(mc)
+
 	return {
 		"role": current_role,
 		"round": current_round,
@@ -1135,19 +1830,31 @@ func get_telemetry_state() -> Dictionary:
 		"movementRolled": movement_rolled,
 		"hasActed": has_acted_this_turn,
 		"turnState": turn_state,
-		"heroes": heroes,
-		"monsters": monsters,
+		"heroes": heroes_copy,
+		"monsters": monsters_copy,
 		"doors": doors,
 		"rooms": rooms,
 		"revealedRooms": revealed_rooms,
 		"exploredCount": explored_tiles.size(),
 		"exploredTiles": exp_tiles,
+		"activeVfx": active_vfx,
+		"floatingTexts": floating_texts,
+		"lastSpellResult": last_spell_result,
+		"lastCombatResult": last_combat_result,
 		"combatLog": combat_log.slice(-10),
 		"cartridge": CartridgeManager.active_cartridge.get("cartridgeId", "")
 	}
 
 func execute_action(action_data: Dictionary) -> Dictionary:
-	var action_type = str(action_data.get("action", ""))
+	var action_val = action_data.get("action", "")
+	var action_type = ""
+	if action_val is Dictionary:
+		action_type = str(action_val.get("action", ""))
+		for k in action_val:
+			if not action_data.has(k):
+				action_data[k] = action_val[k]
+	else:
+		action_type = str(action_val)
 	match action_type:
 		"toggle_role":
 			toggle_role()
@@ -1172,8 +1879,26 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			return { "success": ok }
 		"attack":
 			var mid = str(action_data.get("monsterId", action_data.get("target", "")))
-			var res = attack_adjacent_monster(mid)
-			return { "success": true, "result": res }
+			var weapon = str(action_data.get("weapon", action_data.get("weaponId", "")))
+			var res = attack_adjacent_monster(mid, weapon)
+			return res
+		"cast_spell":
+			var spell_id = str(action_data.get("spell", action_data.get("spellId", "")))
+			var target_id = str(action_data.get("target", action_data.get("targetId", "")))
+			var tx = int(action_data.get("tile_x", -1))
+			var ty = int(action_data.get("tile_y", -1))
+			var res = cast_spell(spell_id, target_id, Vector2i(tx, ty))
+			return res
+		"equip", "equip_item":
+			var h_id = str(action_data.get("heroId", action_data.get("hero", get_active_hero().get("id", ""))))
+			var item_id = str(action_data.get("itemId", action_data.get("item", "")))
+			var res = equip_item(h_id, item_id)
+			return res
+		"unequip", "unequip_item":
+			var h_id = str(action_data.get("heroId", action_data.get("hero", get_active_hero().get("id", ""))))
+			var item_id = str(action_data.get("itemId", action_data.get("item", "")))
+			var res = unequip_item(h_id, item_id)
+			return res
 		"dm_attack":
 			var hid = str(action_data.get("heroId", action_data.get("target", "")))
 			var res = dm_attack_hero(hid)
@@ -1181,7 +1906,9 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 		"summon_monster":
 			var sx = int(action_data.get("x", 3))
 			var sy = int(action_data.get("y", 0))
-			var res = summon_wandering_monster(Vector2i(sx, sy))
+			var bp = int(action_data.get("bp", 1))
+			var m_name = str(action_data.get("name", "Wandering Orc"))
+			var res = summon_wandering_monster(Vector2i(sx, sy), bp, m_name)
 			return res
 		"search":
 			var res = search_room()
@@ -1215,7 +1942,7 @@ func _draw_board(canvas: CanvasItem) -> void:
 
 	# Dynamic Fog of War: Unrevealed rooms and unexplored corridor tiles
 	if current_role == "player":
-		# Unrevealed rooms shroud
+		# 1. Atmospheric translucent fog over unrevealed rooms (room's real image visible underneath, no objects, no "shrouded" text)
 		for rm in rooms:
 			var r_id = str(rm.get("id", ""))
 			if not revealed_rooms.has(r_id):
@@ -1224,18 +1951,17 @@ func _draw_board(canvas: CanvasItem) -> void:
 				var rw = int(rm.get("w", 1))
 				var rh = int(rm.get("h", 1))
 				var r_rect = Rect2(board_offset + Vector2(rx * tile_size, ry * tile_size), Vector2(rw * tile_size, rh * tile_size))
-				canvas.draw_rect(r_rect, Color(0.04, 0.05, 0.08, 0.96))
-				canvas.draw_rect(r_rect, Color(0.14, 0.18, 0.25, 0.8), false, 2.0)
-				var center = r_rect.get_center()
-				var txt = "Shrouded"
-				var f_size = 13
-				var s_w = ThemeDB.fallback_font.get_string_size(txt, HORIZONTAL_ALIGNMENT_CENTER, -1, f_size).x
-				canvas.draw_string(ThemeDB.fallback_font, Vector2(center.x - s_w * 0.5, center.y + 4), txt, HORIZONTAL_ALIGNMENT_CENTER, -1, f_size, Color(0.45, 0.55, 0.65, 0.7))
+				# Atmospheric translucent fog layer over the authentic room floor art
+				canvas.draw_rect(r_rect, Color(0.04, 0.06, 0.10, 0.58))
+				canvas.draw_rect(r_rect, Color(0.12, 0.18, 0.28, 0.35), false, 1.5)
 
-		# Unexplored corridor tiles shroud
+		# 2. Unexplored corridor tiles shroud (always show border tiles!)
 		for c in range(grid_cols):
 			for r in range(grid_rows):
 				var t = Vector2i(c, r)
+				# Always show the perimeter border tiles of the board
+				if is_border_tile(t):
+					continue
 				if not _is_inside_any_room(t):
 					if not explored_tiles.has(t):
 						var c_rect = Rect2(board_offset + Vector2(c * tile_size, r * tile_size), Vector2(tile_size, tile_size))
@@ -1300,7 +2026,17 @@ func _draw_board(canvas: CanvasItem) -> void:
 		var r_id = f.get("roomId", "")
 		var px = f.get("x", f.get("position", [0, 0])[0])
 		var py = f.get("y", f.get("position", [0, 0])[1])
-		if is_gm_role() or revealed_rooms.has(r_id) or (r_id == "" and explored_tiles.has(Vector2i(px, py))):
+		var f_pos = Vector2i(px, py)
+		var rm = _get_room_at(f_pos)
+		var effective_room = r_id if r_id != "" else str(rm.get("id", ""))
+		var is_visible = false
+		if is_gm_role():
+			is_visible = true
+		elif effective_room != "":
+			is_visible = revealed_rooms.has(effective_room)
+		else:
+			is_visible = explored_tiles.has(f_pos)
+		if is_visible:
 			var f_type = str(f.get("type", "chest"))
 			var w = int(f.get("width", 1))
 			var h = int(f.get("height", 1))
@@ -1379,8 +2115,16 @@ func _draw_board(canvas: CanvasItem) -> void:
 		if m.get("is_alive", false):
 			var r_id = m.get("roomId", "")
 			var pos = m.get("grid_pos", Vector2i(0, 0))
-			# Visible if GM mode OR room is revealed OR explored corridor tile
-			if is_gm_role() or revealed_rooms.has(r_id) or (r_id == "" and explored_tiles.has(pos)):
+			var rm = _get_room_at(pos)
+			var effective_room = r_id if r_id != "" else str(rm.get("id", ""))
+			var is_visible = false
+			if is_gm_role():
+				is_visible = true
+			elif effective_room != "":
+				is_visible = revealed_rooms.has(effective_room)
+			else:
+				is_visible = explored_tiles.has(pos)
+			if is_visible:
 				var screen_pos = board_offset + Vector2(pos.x * tile_size + tile_size * 0.5, pos.y * tile_size + tile_size * 0.5)
 				var col = Color.from_string(m.get("tokenColor", "#15803d"), Color.GREEN)
 				canvas.draw_circle(screen_pos, tile_size * 0.4, col)
@@ -1408,6 +2152,13 @@ func _draw_board(canvas: CanvasItem) -> void:
 				var cd_w = ThemeDB.fallback_font.get_string_size(m_code, HORIZONTAL_ALIGNMENT_CENTER, -1, 12).x
 				canvas.draw_string(ThemeDB.fallback_font, Vector2(screen_pos.x - cd_w * 0.5, screen_pos.y + 4), m_code, HORIZONTAL_ALIGNMENT_CENTER, -1, 12, Color.WHITE)
 
+				if m.get("is_sleeping", false):
+					var z_txt = "💤 Zzz"
+					var zw = ThemeDB.fallback_font.get_string_size(z_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 11).x
+					canvas.draw_string(ThemeDB.fallback_font, Vector2(screen_pos.x - zw * 0.5, screen_pos.y - tile_size * 0.45), z_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 11, Color(0.6, 0.7, 1.0))
+				if m.get("tempest_stunned", false):
+					canvas.draw_arc(screen_pos, tile_size * 0.46, 0, TAU, 16, Color(0.2, 0.8, 1.0, 0.85), 2.0)
+
 	# Draw Starting Staircase Tile (Entrance / Exit)
 	var stair_rect = Rect2(board_offset + Vector2(starting_stair.x * tile_size + 2, starting_stair.y * tile_size + 2), Vector2(tile_size - 4, tile_size - 4))
 	canvas.draw_rect(stair_rect, Color(0.18, 0.22, 0.28, 0.95))
@@ -1417,11 +2168,12 @@ func _draw_board(canvas: CanvasItem) -> void:
 	var st_w = ThemeDB.fallback_font.get_string_size("STAIR", HORIZONTAL_ALIGNMENT_CENTER, -1, 8).x
 	canvas.draw_string(ThemeDB.fallback_font, Vector2(stair_rect.get_center().x - st_w * 0.5, stair_rect.get_center().y + 3), "STAIR", HORIZONTAL_ALIGNMENT_CENTER, -1, 8, Color(0.85, 0.9, 1.0, 0.85))
 
-	# Draw Heroes
-	# Group heroes by grid position so tokens on shared tiles (e.g. starting stairwell) are all visible
+	# Draw Heroes (only heroes currently on the board are drawn)
 	var heroes_by_tile: Dictionary = {}
 	for idx in range(heroes.size()):
 		var h = heroes[idx]
+		if not h.get("is_on_board", false):
+			continue
 		var pos = h.get("grid_pos", Vector2i(0, 0))
 		if not heroes_by_tile.has(pos):
 			heroes_by_tile[pos] = []
@@ -1438,13 +2190,17 @@ func _draw_board(canvas: CanvasItem) -> void:
 	# Draw non-active heroes first, and active hero LAST so active hero is always on top!
 	var draw_indices: Array[int] = []
 	for idx in range(heroes.size()):
+		if not heroes[idx].get("is_on_board", false):
+			continue
 		if idx != active_hero_idx:
 			draw_indices.append(idx)
-	if active_hero_idx >= 0 and active_hero_idx < heroes.size():
+	if active_hero_idx >= 0 and active_hero_idx < heroes.size() and heroes[active_hero_idx].get("is_on_board", false):
 		draw_indices.append(active_hero_idx)
 
 	for idx in draw_indices:
 		var h = heroes[idx]
+		if not h.get("is_on_board", false):
+			continue
 		var pos = h.get("grid_pos", Vector2i(0, 0))
 		var is_active = (idx == active_hero_idx and current_phase == "hero_phase")
 		var tile_heroes = heroes_by_tile.get(pos, [idx])
@@ -1471,6 +2227,23 @@ func _draw_board(canvas: CanvasItem) -> void:
 		# Draw token base circle
 		canvas.draw_circle(screen_pos, token_radius, col)
 		canvas.draw_arc(screen_pos, token_radius, 0, TAU, 32, Color(0.95, 0.95, 0.95, 0.9), 1.5)
+
+		# Draw Hero Active Status Auras
+		if h.get("rock_skin_active", false):
+			for s in range(6):
+				var a1 = (float(s) / 6.0) * TAU
+				var a2 = (float(s + 1) / 6.0) * TAU
+				var p1 = screen_pos + Vector2(cos(a1), sin(a1)) * (token_radius + 4.0)
+				var p2 = screen_pos + Vector2(cos(a2), sin(a2)) * (token_radius + 4.0)
+				canvas.draw_line(p1, p2, Color(0.7, 0.75, 0.85, 0.9), 2.5)
+		if h.get("courage_active", false):
+			canvas.draw_arc(screen_pos, token_radius + 5.0, 0, TAU, 24, Color(1.0, 0.25, 0.1, 0.8), 2.0)
+			for s in range(6):
+				var fa = (float(s) / 6.0) * TAU
+				var fp = screen_pos + Vector2(cos(fa), sin(fa)) * (token_radius + 8.0)
+				canvas.draw_line(screen_pos + Vector2(cos(fa), sin(fa)) * (token_radius + 4.0), fp, Color(1.0, 0.8, 0.2, 0.9), 2.0)
+		if h.get("veil_of_mist_active", false):
+			canvas.draw_arc(screen_pos, token_radius + 5.0, 0, TAU, 32, Color(0.8, 0.85, 0.95, 0.6), 3.0)
 
 		# Active Hero prominent highlight and pulsing turn badge
 		if is_active:
@@ -1509,3 +2282,81 @@ func _draw_board(canvas: CanvasItem) -> void:
 
 		var init_w = ThemeDB.fallback_font.get_string_size(h_initial, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size).x
 		canvas.draw_string(ThemeDB.fallback_font, Vector2(screen_pos.x - init_w * 0.5, screen_pos.y + font_size * 0.38), h_initial, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, Color.WHITE)
+
+	# Draw active dynamic VFX and floating text banners
+	_draw_vfx_effects(canvas)
+	_draw_floating_texts(canvas)
+
+func _draw_vfx_effects(canvas: CanvasItem) -> void:
+	for vfx in active_vfx:
+		var vfx_type = str(vfx.get("type", ""))
+		var t = clampf(float(vfx.get("time", 0.0)) / maxf(0.001, float(vfx.get("duration", 0.5))), 0.0, 1.0)
+		var col = vfx.get("color", Color.ORANGE)
+
+		match vfx_type:
+			"projectile":
+				var from_pos = vfx.get("from", Vector2.ZERO)
+				var to_pos = vfx.get("to", Vector2.ZERO)
+				var cur_pos = from_pos.lerp(to_pos, t)
+				canvas.draw_circle(cur_pos, 16.0 * (1.0 - t * 0.2), Color(col.r, col.g, col.b, 0.35))
+				canvas.draw_circle(cur_pos, 8.0, col)
+				canvas.draw_circle(cur_pos, 4.0, Color.WHITE)
+				var dir = (from_pos - to_pos).normalized()
+				var trail_len = 35.0 * (1.0 - t)
+				canvas.draw_line(cur_pos, cur_pos + dir * trail_len, Color(col.r, col.g, col.b, 0.6), 4.0)
+
+			"burst", "explosion":
+				var center = vfx.get("center", Vector2.ZERO)
+				var max_r = float(vfx.get("max_radius", 45.0))
+				var cur_r = max_r * t
+				var alpha = 1.0 - t
+				canvas.draw_arc(center, cur_r, 0, TAU, 32, Color(col.r, col.g, col.b, alpha * 0.9), 3.0)
+				if t < 0.6:
+					canvas.draw_circle(center, cur_r * 0.7, Color(col.r, col.g, col.b, (1.0 - t / 0.6) * 0.5))
+				for i in range(8):
+					var angle = (float(i) / 8.0) * TAU + t * 2.0
+					var spike_dir = Vector2(cos(angle), sin(angle))
+					var spike_end = center + spike_dir * (cur_r * 1.25)
+					canvas.draw_line(center + spike_dir * (cur_r * 0.5), spike_end, Color(1.0, 0.9, 0.4, alpha), 2.5)
+
+			"heal":
+				var center = vfx.get("center", Vector2.ZERO)
+				var alpha = 1.0 - t
+				var h = 60.0 * t
+				var rect = Rect2(center.x - 20.0, center.y - h, 40.0, h)
+				canvas.draw_rect(rect, Color(col.r, col.g, col.b, alpha * 0.35))
+				var cross_col = Color(1.0, 1.0, 1.0, alpha)
+				canvas.draw_line(Vector2(center.x, center.y - 30.0), Vector2(center.x, center.y - 10.0), cross_col, 4.0)
+				canvas.draw_line(Vector2(center.x - 10.0, center.y - 20.0), Vector2(center.x + 10.0, center.y - 20.0), cross_col, 4.0)
+
+			"cyclone", "whirlwind":
+				var center = vfx.get("center", Vector2.ZERO)
+				var alpha = 1.0 - t
+				var spin = t * TAU * 4.0
+				for r_step in [12.0, 22.0, 32.0]:
+					var start_a = spin + r_step
+					canvas.draw_arc(center, r_step, start_a, start_a + PI * 1.2, 16, Color(col.r, col.g, col.b, alpha * 0.8), 2.5)
+
+			"beam":
+				var from_pos = vfx.get("from", Vector2.ZERO)
+				var to_pos = vfx.get("to", Vector2.ZERO)
+				var alpha = 1.0 - t
+				canvas.draw_line(from_pos, to_pos, Color(col.r, col.g, col.b, alpha * 0.4), 8.0)
+				canvas.draw_line(from_pos, to_pos, Color.WHITE, 2.5)
+
+			"slash":
+				var center = vfx.get("center", Vector2.ZERO)
+				var alpha = 1.0 - t
+				var rot = float(vfx.get("rotation", 0.0))
+				var p1 = center + Vector2(cos(rot - 0.8), sin(rot - 0.8)) * 26.0
+				var p2 = center + Vector2(cos(rot + 0.8), sin(rot + 0.8)) * 26.0
+				canvas.draw_line(p1, p2, Color(1.0, 1.0, 1.0, alpha), 3.5)
+
+func _draw_floating_texts(canvas: CanvasItem) -> void:
+	for ft in floating_texts:
+		var font = ThemeDB.fallback_font
+		var f_size = 18
+		var col = Color(ft.color.r, ft.color.g, ft.color.b, ft.alpha)
+		var txt = str(ft.get("text", ""))
+		var tw = font.get_string_size(txt, HORIZONTAL_ALIGNMENT_CENTER, -1, f_size).x
+		canvas.draw_string(font, Vector2(ft.pos.x - tw * 0.5, ft.pos.y), txt, HORIZONTAL_ALIGNMENT_CENTER, -1, f_size, col)
