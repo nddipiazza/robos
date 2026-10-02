@@ -447,6 +447,29 @@ if (typeof document !== 'undefined') {
     }
   });
 
+  const saveAsButton = document.getElementById('btn-save-as');
+  saveAsButton?.addEventListener('click', async () => {
+    const status = document.getElementById('export-status');
+    const messages = [...(chatFeed?.querySelectorAll('.dictation-bubble') || [])].map(bubble => {
+      const text = bubble.querySelector('.bubble-text')?.textContent?.trim();
+      if (!text) return '';
+      const time = bubble.querySelector('.bubble-time')?.textContent || 'In progress';
+      const result = bubble.querySelector('.command-card-result')?.textContent?.trim();
+      return `[${time}] ${text}${result ? '\nRobOS: ' + result : ''}`;
+    }).filter(Boolean);
+    if (!messages.length) { status.textContent = 'There are no messages to save.'; return; }
+    saveAsButton.disabled = true;
+    status.textContent = '';
+    try {
+      const result = await window.robosVoiceHud.saveChatAs(`RobOS Voice chat history\n\n${messages.join('\n\n')}\n`);
+      status.textContent = result.error || (result.ok ? `Saved to ${result.filePath}` : 'Save canceled.');
+    } catch (error) {
+      status.textContent = `Could not save chat history: ${error.message}`;
+    } finally {
+      saveAsButton.disabled = false;
+    }
+  });
+
   // Copy All Button Click
   btnCopyAll?.addEventListener('click', async () => {
     const bubbles = chatFeed?.querySelectorAll('.dictation-bubble:not(.interim)');

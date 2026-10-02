@@ -195,12 +195,69 @@
   <!-- PR Review Theater Overlay -->
   <div id="pr-review-theater" class="theater-overlay hidden">
     <div class="theater-window">
-      <!-- Theater Top Bar -->
+      <!-- Theater Top Bar (Row 1: Logo, Quick Actions Near Logo, Stepper, Exit) -->
       <div class="theater-topbar">
-        <div class="theater-branding">
-          <span class="theater-badge">Code review</span>
-          <h2 id="theater-pr-title">PR #12: feat(service): verify rabies certificate over mTLS</h2>
-          <span class="theater-app-badge" id="theater-target-app">PetStore API</span>
+        <div class="theater-topbar-left">
+          <!-- Logo (non-clickable branding badge) -->
+          <div class="theater-branding">
+            <span class="theater-badge" id="theater-badge-logo">🎭 PR REVIEW THEATER</span>
+          </div>
+
+          <div class="topbar-divider"></div>
+
+          <!-- Actions Clickable Near Logo -->
+          <div class="theater-topbar-actions" id="theater-topbar-actions">
+            <!-- Open PR in Browser -->
+            <button id="theater-btn-open-browser" class="theater-action-btn btn-browser" title="Open PR in browser (GitHub)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+              <span>Open in Browser</span>
+            </button>
+
+            <!-- Open PR in IDEs -->
+            <div class="theater-ide-btn-group">
+              <button id="theater-btn-open-intellij" class="theater-action-btn btn-ide-intellij" title="Review PR in IntelliJ IDEA (Port 63343 IPC)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 17l6-6-6-6M12 19h8"/></svg>
+                <span>IntelliJ</span>
+              </button>
+              <button id="theater-btn-open-vscode" class="theater-action-btn btn-ide-vscode" title="Review PR in VS Code (GitHub Pull Requests Extension)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+                <span>VS Code</span>
+              </button>
+            </div>
+
+            <!-- Copy Actions Dropdown -->
+            <div class="theater-dropdown" id="theater-copy-dropdown-container">
+              <button id="theater-btn-copy-dropdown" class="theater-action-btn btn-copy" title="Copy PR URL, Title, or Description">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                <span>Copy ▾</span>
+              </button>
+              <div class="theater-dropdown-menu hidden" id="theater-copy-menu">
+                <button class="dropdown-item" id="theater-menu-copy-url" data-theater-action="copyPRUrl">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                  <span>Copy PR URL</span>
+                </button>
+                <button class="dropdown-item" id="theater-menu-copy-title" data-theater-action="copyPRTitle">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                  <span>Copy PR Title</span>
+                </button>
+                <button class="dropdown-item" id="theater-menu-copy-desc" data-theater-action="copyPRDescription">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                  <span>Copy PR Description</span>
+                </button>
+                <div class="dropdown-divider" id="theater-menu-wi-divider"></div>
+                <button class="dropdown-item" id="theater-menu-copy-wi" data-theater-action="copyWorkItemUrl">
+                  <span class="wi-icon">🎫</span>
+                  <span id="theater-menu-wi-text">Copy Work-Item URL</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- View Checks Tab -->
+            <button id="theater-btn-checks" class="theater-action-btn btn-checks" title="View CI Checks Tab and Status" data-theater-action="viewChecksTab">
+              <span id="theater-checks-dot" class="checks-dot dot-success">&#10003;</span>
+              <span id="theater-checks-label">Checks (4/4)</span>
+            </button>
+          </div>
         </div>
 
         <!-- Stage Navigation Stepper -->
@@ -248,6 +305,120 @@
           </button>
           <button id="btn-exit-theater" class="btn-theater-exit" data-theater-action="exitTheater" data-theater-event="click" title="Close review" aria-label="Close review">&times;</button>
         </div>
+      </div>
+
+      <!-- Theater PR & Work-Items Header (Row 2: Improved PR Title & Work-Items Display) -->
+      <div class="theater-pr-header" id="theater-pr-header">
+        <div class="theater-pr-header-main">
+          <!-- Row A: PR Number Badge + State Pill + Work-Items + Title + Inline Quick-Copy Actions -->
+          <div class="theater-pr-title-row">
+            <!-- Clickable PR Number Badge -->
+            <button id="theater-pr-number-btn" class="pr-number-pill" title="Click to open PR in browser" data-theater-action="openPRInBrowser">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+              <span id="theater-pr-num">PR #12</span>
+            </button>
+
+            <!-- State Pill -->
+            <span id="theater-pr-state-pill" class="pr-state-pill state-open">Open</span>
+
+            <!-- Work-Items (if applicable, clickable to open in browser / copy URL) -->
+            <div id="theater-work-items-container" class="theater-work-items-container">
+              <!-- Rendered dynamically, e.g. PET-105 chip -->
+            </div>
+
+            <!-- Improved PR Title Display -->
+            <div class="theater-pr-title-wrap">
+              <h2 id="theater-pr-title" class="theater-pr-title" title="PR Title">
+                <!-- Dynamically rendered with commit type accenting and clean full title -->
+              </h2>
+            </div>
+
+            <!-- Quick Inline Copy Buttons -->
+            <div class="theater-inline-copy-actions">
+              <button class="theater-mini-action-btn" title="Copy PR URL" data-theater-action="copyPRUrl">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                <span>URL</span>
+              </button>
+              <button class="theater-mini-action-btn" title="Copy PR Title" data-theater-action="copyPRTitle">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                <span>Title</span>
+              </button>
+              <button class="theater-mini-action-btn" title="Copy PR Description" data-theater-action="copyPRDescription">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                <span>Desc</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Row B: Metadata Chips (Repo, Branch Flow, Author, App, Diff Stats, KGraph Branch, CI Status) -->
+          <div class="theater-pr-meta-row">
+            <span class="pr-meta-chip repo-chip" id="theater-meta-repo" title="Repository">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+              <span id="theater-pr-repo-text">acme/petstore-api</span>
+            </span>
+
+            <span class="pr-meta-chip branch-chip" title="Git Branch Flow">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>
+              <code id="theater-pr-head-branch">feature/PET-105-rabies-verification</code>
+              <span class="branch-arrow">&rarr;</span>
+              <code id="theater-pr-base-branch">main</code>
+            </span>
+
+            <span class="pr-meta-chip author-chip" title="PR Author">
+              <span>by</span> <strong id="theater-pr-author">robos</strong>
+            </span>
+
+            <span class="pr-meta-chip diff-stats-chip" title="Changes">
+              <span class="stat-add" id="theater-pr-adds">+42</span>
+              <span class="stat-del" id="theater-pr-dels">-3</span>
+            </span>
+
+            <span class="pr-meta-chip app-badge-chip" title="Target Application">
+              <span class="theater-app-badge" id="theater-target-app">PetStore API</span>
+            </span>
+
+            <span class="pr-meta-chip kg-chip" title="Knowledge Graph Branch">
+              <span class="kg-branch-symbol">☊</span>
+              <code id="theater-pr-kg-branch">kgraph/PET-105-rabies-verification</code>
+            </span>
+
+            <button id="theater-meta-ci-chip" class="pr-meta-chip ci-status-chip" title="Click to view CI checks tab" data-theater-action="viewChecksTab">
+              <span id="theater-ci-chip-dot" class="ci-dot ci-success"></span>
+              <span id="theater-ci-chip-text">CI Checks Passing</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Theater CI Checks Modal Drawer (Inline inside theater) -->
+      <div id="theater-checks-modal" class="theater-checks-modal hidden">
+        <div class="checks-modal-backdrop" data-theater-action="toggleChecksModal" data-theater-arg="false"></div>
+        <div class="checks-modal-dialog">
+          <div class="checks-modal-header">
+            <div class="checks-modal-title-area">
+              <h3>Automated CI Checks</h3>
+              <span id="theater-checks-modal-summary" class="checks-summary-pill">All checks passing</span>
+            </div>
+            <div class="checks-modal-actions">
+              <button class="btn-checks-external" data-theater-action="openGitHubChecks" title="Open Checks on GitHub">
+                <span>View on GitHub ↗</span>
+              </button>
+              <button class="btn-checks-switch-tab" data-theater-action="switchToMainChecksTab" title="Exit Theater and jump to main CI Checks tab">
+                <span>Switch to Main Tab</span>
+              </button>
+              <button class="btn-checks-close" data-theater-action="toggleChecksModal" data-theater-arg="false" title="Close">&times;</button>
+            </div>
+          </div>
+          <div class="checks-modal-body" id="theater-checks-modal-list">
+            <!-- Checks list populated dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Toast Feedback Popup -->
+      <div id="theater-toast" class="theater-toast hidden">
+        <span class="toast-icon">✓</span>
+        <span class="toast-message" id="theater-toast-message">Copied to clipboard</span>
       </div>
 
       <!-- Theater Stage Content Area -->

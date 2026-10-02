@@ -273,3 +273,13 @@ test('RobOS Voice Activated Commands & Configuration', async (t) => {
     });
   });
 });
+
+
+test('e-learning speech variants open the elearning app', () => {
+  for (const phrase of ['Open E-learning.', 'Open E-learning', 'open e learning', 'open elearning', 'Open E–learning.', 'Please open E‑learning']) {
+    const match = defaultRegistry.matchCommand(phrase);
+    assert.equal(match.matched, true, phrase);
+    assert.equal(match.command.targetId, 'robos-elearning', phrase);
+    assert.equal(match.command.targetType, 'app', phrase);
+  }
+});

@@ -21,6 +21,9 @@ const fs = require('fs');
 const http = require('http');
 const promptStore = require('./lib/prompt-store');
 const contextProvider = require('./lib/context-provider');
+const { MicrophoneTest } = require('./lib/microphone-test');
+const microphoneTest = new MicrophoneTest();
+app.on('before-quit', () => microphoneTest.stop());
 const { STTEngine } = require('./lib/stt-engine');
 const { TTSEngine } = require('./lib/tts-engine');
 const { WakeWordDetector } = require('./lib/wake-word');
@@ -59,7 +62,18 @@ function broadcastToWindows(channel, data) {
   }
 }
 
-const sttEngine = new STTEngine(promptStore.loadPrefs());
+const voicePrefs = promptStore.loadPrefs();
+if (/^\d+$/.test(String(voicePrefs.configuredDevice))) {
+  try {
+    const { pipewireSources } = require('./lib/capture-device');
+    const source = pipewireSources().find(source => source.legacyId === String(voicePrefs.configuredDevice));
+    if (source) {
+      voicePrefs.configuredDevice = source.id;
+      promptStore.savePrefs({ configuredDevice: source.id });
+    }
+  } catch {} // Preserve an unavailable selection; never replace it with default.
+}
+const sttEngine = new STTEngine(voicePrefs);
 const ttsEngine = new TTSEngine((promptStore.loadPrefs() && promptStore.loadPrefs().tts) || {});
 const wakeDetector = new WakeWordDetector({ enabled: true, cooldownMs: 4000 });
 const desktopAssistant = new DesktopAssistant({ ttsEngine, wakeDetector, promptStore });
@@ -912,7 +926,7 @@ function createVoiceCommandsWindow() {
   }
 
   voiceCommandsWindow = new BrowserWindow({
-    title: 'Voice Activated Commands — RobOS Voice',
+    title: 'RobOS Voice Settings',
     icon: getAppIcon(),
     width: 720,
     height: 640,
@@ -931,6 +945,7 @@ function createVoiceCommandsWindow() {
     autoHideMenuBar: true,
   });
 
+  voiceCommandsWindow.webContents.on('render-process-gone', () => microphoneTest.stop());
   voiceCommandsWindow.loadFile(path.join(__dirname, 'renderer', 'commands-window.html'));
 
   voiceCommandsWindow.once('ready-to-show', () => {
@@ -939,6 +954,7 @@ function createVoiceCommandsWindow() {
   });
 
   voiceCommandsWindow.on('closed', () => {
+    microphoneTest.stop();
     voiceCommandsWindow = null;
     if (mainWindow && !mainWindow.isDestroyed()) {
       try { mainWindow.webContents.send('vp-voice-commands-window-closed'); } catch {}
@@ -1005,6 +1021,23 @@ function repositionHudWindow(position) {
 
 // ── IPC Handlers ─────────────────────────────────────────────────────────────
 
+ipcMain.handle('vp-save-chat-as', async (event, text) => {
+  if (!mainWindow || event.sender !== mainWindow.webContents) throw new Error('Open RobOS Voice to save chat history.');
+  if (typeof text !== 'string' || !text.trim()) return { error: 'There are no messages to save.' };
+  try {
+    const result = await dialog.showSaveDialog(mainWindow, {
+      title: 'Save voice chat history',
+      defaultPath: path.join(app.getPath('documents'), `robos-voice-${new Date().toISOString().replace(/[:.]/g, '-')}.txt`),
+      filters: [{ name: 'Text files', extensions: ['txt'] }],
+    });
+    if (result.canceled || !result.filePath) return { canceled: true };
+    await fs.promises.writeFile(result.filePath, text, 'utf8');
+    return { ok: true, filePath: result.filePath };
+  } catch (error) {
+    return { error: `Could not save chat history: ${error.message}` };
+  }
+});
+
 ipcMain.handle('vp-get-status', async () => {
   const activeWin = await contextProvider.getActiveWindow();
   const prefs = promptStore.loadPrefs();
@@ -1023,6 +1056,19 @@ ipcMain.handle('vp-get-status', async () => {
 
 ipcMain.handle('vp-get-app-context', async () => {
   return contextProvider.getAggregatedContext();
+});
+
+ipcMain.handle('vp-microphone-test-start', (event, device, generation) => {
+  if (!voiceCommandsWindow || event.sender !== voiceCommandsWindow.webContents) {
+    throw new Error('Open Voice settings to test a microphone.');
+  }
+  microphoneTest.start(device, data => {
+    if (!event.sender.isDestroyed()) event.sender.send('vp-microphone-test-data', { ...data, generation });
+  });
+  return { ok: true };
+});
+ipcMain.handle('vp-microphone-test-stop', event => {
+  if (voiceCommandsWindow && event.sender === voiceCommandsWindow.webContents) microphoneTest.stop();
 });
 
 ipcMain.handle('vp-list-devices', async () => {

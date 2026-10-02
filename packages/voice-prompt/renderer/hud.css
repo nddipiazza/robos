@@ -547,3 +547,14 @@ html, body {
 }
 
 
+
+#export-status:not(:empty) { padding: 6px 12px; color: var(--cyan-primary); font-size: 11px; }
+.hud-title-group { min-width: 0; }
+.hud-title { white-space: nowrap; }
+.hud-window-controls { gap: 4px; flex-shrink: 0; }
+
+#export-status { overflow-wrap: anywhere; }
+@media (max-width: 420px) {
+  #copy-all-label { display: none; }
+  #btn-copy-all { padding: 5px; }
+}

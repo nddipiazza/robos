@@ -9,6 +9,7 @@ const fs = require('fs');
 function normalizeText(str) {
   return (str || '')
     .toLowerCase()
+    .replace(/\be[\s\u2010-\u2015-]+learning\b/g, 'elearning')
     .replace(/[^\w\s]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();

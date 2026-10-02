@@ -583,7 +583,7 @@ function hideError() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// PR REVIEW THEATER CONTROLLER
+// PR REVIEW THEATER CONTROLLER & HEADER
 // ═══════════════════════════════════════════════════════════════════════════
 // ── PR Review Theater & Interactive Multi-Stage Validation ─────────────────
 // ═══════════════════════════════════════════════════════════════════════════
@@ -594,6 +594,448 @@ let activeDiffFileIndex = 0;
 let currentDiffMode = 'unified';
 let activeFixTargetType = 'auto';
 let theaterConfigData = null;
+let theaterToastTimer = null;
+
+// ── Theater Toast & Clipboard Helpers ─────────────────────────────────────
+
+function showTheaterToast(msg, icon = '✓') {
+  const toastEl = document.getElementById('theater-toast');
+  const msgEl = document.getElementById('theater-toast-message');
+  const iconEl = toastEl ? toastEl.querySelector('.toast-icon') : null;
+  if (!toastEl || !msgEl) return;
+
+  if (iconEl) iconEl.textContent = icon;
+  msgEl.textContent = msg;
+  toastEl.classList.remove('hidden');
+
+  if (theaterToastTimer) clearTimeout(theaterToastTimer);
+  theaterToastTimer = setTimeout(() => {
+    toastEl.classList.add('hidden');
+  }, 2500);
+}
+
+async function copyTextToClipboard(text) {
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {}
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// ── Work-Items Extraction & URL Resolution ────────────────────────────────
+
+function extractWorkItemsFromPR(pr, ctx) {
+  const target = pr || ctx?.pr || {};
+  const items = [];
+  const seenKeys = new Set();
+
+  // 1. Explicit workItems
+  const explicit = target.workItems || ctx?.pr?.workItems || ctx?.workItems;
+  if (Array.isArray(explicit)) {
+    for (const wi of explicit) {
+      const key = (wi.key || wi.id || '').toUpperCase();
+      if (key && !seenKeys.has(key)) {
+        seenKeys.add(key);
+        items.push({
+          key,
+          title: wi.title || key,
+          url: wi.url || buildWorkItemUrl(key, target.repo),
+          type: wi.type || 'story',
+          status: wi.status || 'In Review'
+        });
+      }
+    }
+  }
+
+  // 2. Parse from text (title, headBranch, body)
+  const textSources = [
+    target.title || '',
+    target.headBranch || '',
+    target.body || ''
+  ].join(' ');
+
+  // Jira/RobOS issue keys like PET-105, ROBOS-42, PROJ-123
+  const jiraRegex = /\b([A-Z][A-Z0-9_]{1,10}-\d+)\b/g;
+  let match;
+  while ((match = jiraRegex.exec(textSources)) !== null) {
+    const key = match[1].toUpperCase();
+    if (!seenKeys.has(key)) {
+      seenKeys.add(key);
+      items.push({
+        key,
+        title: `Work-Item: ${key}`,
+        url: buildWorkItemUrl(key, target.repo),
+        type: 'jira',
+        status: 'Linked'
+      });
+    }
+  }
+
+  // GitHub issue numbers like #105, GH-105 (if not matching current PR number)
+  const ghRegex = /(?:close[sd]?|fixe?[sd]?|resolve[sd]?|refs?|issue)?\s*(?:#|GH-)(\d+)\b/gi;
+  while ((match = ghRegex.exec(textSources)) !== null) {
+    const num = match[1];
+    const key = `#${num}`;
+    if (!seenKeys.has(key) && !seenKeys.has(`GH-${num}`) && String(num) !== String(target.number)) {
+      seenKeys.add(key);
+      items.push({
+        key,
+        title: `Issue #${num}`,
+        url: `https://github.com/${target.repo || 'acme/petstore-api'}/issues/${num}`,
+        type: 'github',
+        status: 'Linked'
+      });
+    }
+  }
+
+  return items;
+}
+
+function buildWorkItemUrl(key, repo) {
+  if (key.startsWith('#')) {
+    const num = key.replace('#', '');
+    return `https://github.com/${repo || 'acme/petstore-api'}/issues/${num}`;
+  }
+  if (serverConfig?.server?.baseUrl && serverConfig.server.type === 'jira') {
+    return `${serverConfig.server.baseUrl.replace(/\/$/, '')}/browse/${key}`;
+  }
+  return `https://github.com/${repo || 'acme/petstore-api'}/issues?q=${encodeURIComponent(key)}`;
+}
+
+// ── Conventional Commit Title Formatter ───────────────────────────────────
+
+function formatPRTitleHtml(title) {
+  if (!title) return '';
+  const match = String(title).match(/^([a-z]+(?:\([a-z0-9_\-\./]+\))?!?:\s*)(.+)$/i);
+  if (match) {
+    const prefix = match[1];
+    const rest = match[2];
+    return `<span class="pr-title-prefix">${esc(prefix)}</span><span class="pr-title-main">${esc(rest)}</span>`;
+  }
+  return `<span class="pr-title-main">${esc(title)}</span>`;
+}
+
+// ── Render Theater Header & Dynamic Actions ───────────────────────────────
+
+function renderTheaterHeader(targetPR, ctx) {
+  const pr = targetPR || ctx?.pr || selectedPR;
+  if (!pr) return;
+
+  const repo = pr.repo || 'acme/petstore-api';
+  const number = pr.number || 12;
+  const title = pr.title || 'Pull Request';
+  const url = pr.url || ctx?.pr?.url || `https://github.com/${repo}/pull/${number}`;
+  const headBranch = pr.headBranch || ctx?.pr?.headBranch || 'feature/branch';
+  const baseBranch = pr.baseBranch || ctx?.pr?.baseBranch || 'main';
+  const author = pr.author || ctx?.pr?.author || 'robos';
+  const state = (pr.state || 'open').toLowerCase();
+  const additions = pr.additions !== undefined ? pr.additions : (ctx?.pr?.additions || 0);
+  const deletions = pr.deletions !== undefined ? pr.deletions : (ctx?.pr?.deletions || 0);
+  const appTitle = ctx?.targetApp?.title || 'Application';
+  const kgBranch = kgraphDetail?.branch || ('kgraph/' + headBranch.replace(/^feature\//, ''));
+
+  // 1. Clickable PR Number Pill
+  const prNumEl = document.getElementById('theater-pr-num');
+  if (prNumEl) prNumEl.textContent = `PR #${number}`;
+
+  const prNumBtn = document.getElementById('theater-pr-number-btn');
+  if (prNumBtn) {
+    prNumBtn.title = `Open PR #${number} in browser (GitHub: ${url})`;
+  }
+
+  // 2. State Pill
+  const statePill = document.getElementById('theater-pr-state-pill');
+  if (statePill) {
+    statePill.className = `pr-state-pill state-${state}`;
+    statePill.textContent = state.charAt(0).toUpperCase() + state.slice(1);
+  }
+
+  // 3. Work-Items (if applicable, clickable to open in browser / copy URL)
+  const workItems = extractWorkItemsFromPR(pr, ctx);
+  const wiContainer = document.getElementById('theater-work-items-container');
+  if (wiContainer) {
+    if (workItems.length > 0) {
+      wiContainer.innerHTML = workItems.map(wi => `
+        <div class="work-item-chip" title="Linked Work-Item: ${esc(wi.key)} (Click to open in browser, 📋 to copy URL)" data-theater-action="openWorkItemInBrowser" data-theater-arg="${esc(wi.url)}">
+          <span class="wi-icon">🎫</span>
+          <span class="wi-key">${esc(wi.key)}</span>
+          <button class="wi-copy-mini-btn" title="Copy Work-Item URL (${esc(wi.key)})" data-theater-action="copyWorkItemUrl" data-theater-arg="${esc(wi.url)}">📋</button>
+        </div>
+      `).join('');
+    } else {
+      wiContainer.innerHTML = '';
+    }
+  }
+
+  // Work-Item Copy option in dropdown
+  const wiDropdownBtn = document.getElementById('theater-menu-copy-wi');
+  const wiDivider = document.getElementById('theater-menu-wi-divider');
+  if (workItems.length > 0) {
+    if (wiDropdownBtn) {
+      wiDropdownBtn.classList.remove('hidden');
+      const textEl = document.getElementById('theater-menu-wi-text');
+      if (textEl) textEl.textContent = `Copy Work-Item URL (${workItems[0].key})`;
+    }
+    if (wiDivider) wiDivider.classList.remove('hidden');
+  } else {
+    if (wiDropdownBtn) wiDropdownBtn.classList.add('hidden');
+    if (wiDivider) wiDivider.classList.add('hidden');
+  }
+
+  // 4. Improved PR Title Display (with conventional commit highlighting and full readability)
+  const titleEl = document.getElementById('theater-pr-title');
+  if (titleEl) {
+    titleEl.innerHTML = formatPRTitleHtml(title);
+    titleEl.title = `#${number} - ${title}`;
+  }
+
+  // 5. Metadata Row
+  const repoEl = document.getElementById('theater-pr-repo-text');
+  if (repoEl) repoEl.textContent = repo;
+
+  const headEl = document.getElementById('theater-pr-head-branch');
+  if (headEl) headEl.textContent = headBranch;
+
+  const baseEl = document.getElementById('theater-pr-base-branch');
+  if (baseEl) baseEl.textContent = baseBranch;
+
+  const authorEl = document.getElementById('theater-pr-author');
+  if (authorEl) authorEl.textContent = `@${author}`;
+
+  const addsEl = document.getElementById('theater-pr-adds');
+  if (addsEl) addsEl.textContent = `+${additions}`;
+
+  const delsEl = document.getElementById('theater-pr-dels');
+  if (delsEl) delsEl.textContent = `-${deletions}`;
+
+  const appBadge = document.getElementById('theater-target-app');
+  if (appBadge) appBadge.textContent = appTitle;
+
+  const kgEl = document.getElementById('theater-pr-kg-branch');
+  if (kgEl) kgEl.textContent = kgBranch;
+
+  // 6. CI Checks Status & Modal List
+  const checks = ctx?.checks || (prDetail && prDetail.checks) || [
+    { name: 'Unit Tests (JUnit 5 & Mockito)', state: 'success', description: '48 tests passing in 3.4s' },
+    { name: 'mTLS Handshake Contract (Pact 4.0)', state: 'success', description: '14/14 pact interactions verified' },
+    { name: 'Knowledge Graph SHACL Validation', state: 'success', description: '0 shape violations, 4 nodes verified' },
+    { name: 'Security Audit (Gitleaks & Trivy)', state: 'success', description: 'No secrets or high CVEs detected' }
+  ];
+
+  renderTheaterChecksUI(checks, url);
+}
+
+function renderTheaterChecksUI(checks, prUrl) {
+  const total = checks.length;
+  const passed = checks.filter(c => (c.state || '').toLowerCase() === 'success').length;
+  const failed = checks.filter(c => (c.state || '').toLowerCase() === 'failure' || (c.state || '').toLowerCase() === 'error').length;
+  const pending = total - passed - failed;
+
+  const statusType = failed > 0 ? 'failure' : (pending > 0 ? 'pending' : 'success');
+
+  // Update button near logo
+  const checksDot = document.getElementById('theater-checks-dot');
+  if (checksDot) {
+    checksDot.className = `checks-dot dot-${statusType}`;
+    checksDot.innerHTML = statusType === 'success' ? '&#10003;' : (statusType === 'failure' ? '&#10007;' : '&#9679;');
+  }
+  const checksLabel = document.getElementById('theater-checks-label');
+  if (checksLabel) {
+    checksLabel.textContent = `Checks (${passed}/${total})`;
+  }
+
+  // Update metadata chip
+  const metaDot = document.getElementById('theater-ci-chip-dot');
+  if (metaDot) {
+    metaDot.className = `ci-dot ci-${statusType}`;
+  }
+  const metaText = document.getElementById('theater-ci-chip-text');
+  if (metaText) {
+    metaText.textContent = statusType === 'success' ? `${passed}/${total} CI Checks Passing` :
+                           statusType === 'failure' ? `${failed} Check(s) Failed` : 'Checks Running...';
+  }
+
+  // Update modal summary
+  const modalSummary = document.getElementById('theater-checks-modal-summary');
+  if (modalSummary) {
+    modalSummary.textContent = `${passed} of ${total} checks passing`;
+    modalSummary.style.color = statusType === 'success' ? '#3fb950' : (statusType === 'failure' ? '#f85149' : '#d29922');
+  }
+
+  // Populate modal list
+  const modalList = document.getElementById('theater-checks-modal-list');
+  if (modalList) {
+    modalList.innerHTML = checks.map(c => {
+      const state = (c.state || '').toLowerCase();
+      const icon = state === 'success' ? '✓' : (state === 'failure' ? '✕' : '⏳');
+      const detailsUrl = c.detailsUrl || `${prUrl}/checks`;
+      return `
+        <div class="check-item-card">
+          <div class="check-item-info">
+            <span class="check-item-status-icon ${state}">${icon}</span>
+            <div class="check-item-texts">
+              <span class="check-item-title">${esc(c.name || 'CI Check')}</span>
+              <span class="check-item-desc">${esc(c.description || (state === 'success' ? 'Completed successfully' : 'In progress'))}</span>
+            </div>
+          </div>
+          <button class="check-item-link-btn" data-theater-action="openWorkItemInBrowser" data-theater-arg="${esc(detailsUrl)}">
+            Details ↗
+          </button>
+        </div>
+      `;
+    }).join('');
+  }
+}
+
+// ── Window Actions for Theater Header ─────────────────────────────────────
+
+window.openPRInBrowser = function() {
+  const pr = selectedPR || theaterContext?.pr;
+  if (!pr) return;
+  const url = pr.url || `https://github.com/${pr.repo}/pull/${pr.number}`;
+  window.api.openUrl(url);
+  showTheaterToast(`Opening PR #${pr.number} in browser...`, '🌐');
+};
+
+window.openWorkItemInBrowser = function(url) {
+  if (url) {
+    window.api.openUrl(url);
+    showTheaterToast('Opening Work-Item in browser...', '🎫');
+  }
+};
+
+window.copyPRUrl = async function() {
+  const pr = selectedPR || theaterContext?.pr;
+  if (!pr) return;
+  const url = pr.url || `https://github.com/${pr.repo}/pull/${pr.number}`;
+  await copyTextToClipboard(url);
+  showTheaterToast('Copied PR URL to clipboard!', '🔗');
+  closeTheaterDropdown();
+};
+
+window.copyPRTitle = async function() {
+  const pr = selectedPR || theaterContext?.pr;
+  if (!pr) return;
+  await copyTextToClipboard(pr.title || '');
+  showTheaterToast('Copied PR Title to clipboard!', '📝');
+  closeTheaterDropdown();
+};
+
+window.copyPRDescription = async function() {
+  const pr = selectedPR || theaterContext?.pr;
+  if (!pr) return;
+  const body = pr.body || theaterContext?.pr?.body || '';
+  await copyTextToClipboard(body);
+  showTheaterToast('Copied PR Description to clipboard!', '📄');
+  closeTheaterDropdown();
+};
+
+window.copyWorkItemUrl = async function(customUrl, customKey) {
+  let url = customUrl;
+  let key = customKey;
+  if (!url) {
+    const workItems = extractWorkItemsFromPR(selectedPR, theaterContext);
+    if (workItems.length > 0) {
+      url = workItems[0].url;
+      key = workItems[0].key;
+    }
+  }
+  if (url) {
+    await copyTextToClipboard(url);
+    showTheaterToast(`Copied Work-Item ${key ? `(${key}) ` : ''}URL to clipboard!`, '🎫');
+  } else {
+    showTheaterToast('No linked work-item URL found', '⚠️');
+  }
+  closeTheaterDropdown();
+};
+
+window.viewChecksTab = function() {
+  window.toggleChecksModal(true);
+};
+
+window.toggleChecksModal = function(show) {
+  const modal = document.getElementById('theater-checks-modal');
+  if (!modal) return;
+  if (show === undefined) {
+    modal.classList.toggle('hidden');
+  } else if (show) {
+    modal.classList.remove('hidden');
+  } else {
+    modal.classList.add('hidden');
+  }
+};
+
+window.openGitHubChecks = function() {
+  const pr = selectedPR || theaterContext?.pr;
+  if (!pr) return;
+  const url = (pr.url || `https://github.com/${pr.repo}/pull/${pr.number}`) + '/checks';
+  window.api.openUrl(url);
+  showTheaterToast('Opening checks on GitHub...', '↗');
+};
+
+window.switchToMainChecksTab = function() {
+  window.toggleChecksModal(false);
+  window.exitTheater();
+  const checksTab = document.querySelector('.tab-btn[data-tab="checks"]');
+  if (checksTab) checksTab.click();
+};
+
+function closeTheaterDropdown() {
+  const menu = document.getElementById('theater-copy-menu');
+  if (menu) menu.classList.add('hidden');
+}
+
+// ── Setup Action Listeners Near Logo ──────────────────────────────────────
+
+document.addEventListener('DOMContentLoaded', () => {
+  setupTheaterHeaderEventListeners();
+});
+
+let theaterHeaderListenersReady = false;
+function setupTheaterHeaderEventListeners() {
+  if (theaterHeaderListenersReady) return;
+  theaterHeaderListenersReady = true;
+  document.getElementById('theater-btn-open-browser')?.addEventListener('click', window.openPRInBrowser);
+
+  document.getElementById('theater-btn-open-intellij')?.addEventListener('click', () => {
+    openInIDE('intellij');
+    showTheaterToast('Launching PR in IntelliJ IDEA...', '⚡');
+  });
+
+  document.getElementById('theater-btn-open-vscode')?.addEventListener('click', () => {
+    openInIDE('vscode');
+    showTheaterToast('Launching PR in VS Code...', '🔵');
+  });
+
+  document.getElementById('theater-btn-copy-dropdown')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.getElementById('theater-copy-menu')?.classList.toggle('hidden');
+  });
+
+  document.addEventListener('click', (e) => {
+    const container = document.getElementById('theater-copy-dropdown-container');
+    if (container && !container.contains(e.target)) {
+      closeTheaterDropdown();
+    }
+  });
+}
+setupTheaterHeaderEventListeners();
+
+// ── Open PR Review Theater ────────────────────────────────────────────────
 
 window.openPRReviewTheater = async function(pr) {
   const targetPR = pr || selectedPR;
@@ -604,18 +1046,9 @@ window.openPRReviewTheater = async function(pr) {
   if (!theaterEl) return;
   theaterEl.classList.remove('hidden');
 
-  // Set header info
-  const titleEl = document.getElementById('theater-pr-title');
-  if (titleEl) {
-    titleEl.replaceChildren(); titleEl.title = targetPR.title;
-    if ((!targetPR.local || targetPR.published) && /^\d+$/.test(String(targetPR.number)) && /^[\w.-]+\/[\w.-]+$/.test(targetPR.repo || '')) {
-      const link = document.createElement('a');
-      link.href = `https://github.com/${targetPR.repo}/pull/${targetPR.number}`;
-      link.textContent = `#${targetPR.number} · ${targetPR.title}`;
-      link.addEventListener('click', async event => { event.preventDefault();try{const result=await window.api.openUrl(link.href);if(result?.ok===false)throw Error(result.error);}catch(e){window.setTheaterStage(8);const status=document.querySelector('#stage-8 [role=alert]');if(status)status.textContent=e.message+' '+link.href;} });
-      titleEl.append(link);
-    } else titleEl.textContent = targetPR.title;
-  }
+  // Initial immediate header rendering
+  renderTheaterHeader(targetPR, null);
+
 
   window.configureReviewPublish?.(targetPR);
 
@@ -628,6 +1061,9 @@ window.openPRReviewTheater = async function(pr) {
     headBranch: targetPR.headBranch,
     baseBranch: targetPR.baseBranch,
     changedFiles: prDetail ? prDetail.changedFiles : [],
+    checks: prDetail ? prDetail.checks : [],
+    url: targetPR.url,
+    author: targetPR.author,
   });
 
   if (!res.ok) {
@@ -638,6 +1074,20 @@ window.openPRReviewTheater = async function(pr) {
   theaterContext = res;
   theaterConfigData = res.theaterConfig || {};
 
+  // Complete header rendering with loaded context (work-items, checks, app info)
+  renderTheaterHeader(targetPR, res);
+  // Set header info
+  const titleEl = document.getElementById('theater-pr-title');
+  if (titleEl) {
+    titleEl.replaceChildren(); titleEl.title = targetPR.title;
+    if ((!targetPR.local || targetPR.published) && /^\d+$/.test(String(targetPR.number)) && /^[\w.-]+\/[\w.-]+$/.test(targetPR.repo || '')) {
+      const link = document.createElement('a');
+      link.href = `https://github.com/${targetPR.repo}/pull/${targetPR.number}`;
+      link.textContent = `#${targetPR.number} · ${targetPR.title}`;
+      link.addEventListener('click', async event => { event.preventDefault();try{const result=await window.api.openUrl(link.href);if(result?.ok===false)throw Error(result.error);}catch(e){window.setTheaterStage(8);const status=document.querySelector('#stage-8 [role=alert]');if(status)status.textContent=e.message+' '+link.href;} });
+      titleEl.append(link);
+    } else titleEl.textContent = targetPR.title;
+  }
   // Set target app badge
   const appBadge = document.getElementById('theater-target-app');
   if (appBadge) appBadge.textContent = [targetPR.repo, targetPR.headBranch, targetPR.local && !targetPR.published ? 'Local review' : ''].filter(Boolean).join(' · ');
@@ -2067,7 +2517,7 @@ window.saveTheaterConfigFromModal = async function() {
 // ── Init ──────────────────────────────────────────────────────────────────
 
 // Delegated events work with the app's strict script CSP, including dynamic diffs.
-const theaterActions = new Set(["applyTheaterPreset", "closeTheaterConfigModal", "completeBrowserHandoff", "executeAgentShowFix", "executeTheaterRestCall", "exitTheater", "focusBrowserHandoff", "launchTheaterBreakpoint", "launchTheaterIDE", "openAppCourseInHub", "openTheaterConfigModal", "resumeBackendFix", "resumeTheaterBreakpoint", "runLiveDesktopSession", "saveTheaterConfigFromModal", "selectDiffFile", "setDiffMode", "setFixTypeTarget", "setProofCanvasMode", "setTheaterStage", "stepBackendFix", "submitTheaterQuiz", "submitTheaterReviewAction", "switchConfigTeam", "toggleFixDemonstrated", "toggleTheaterFullscreen"]);
+const theaterActions = new Set(["copyPRUrl", "copyPRTitle", "copyPRDescription", "copyWorkItemUrl", "openWorkItemInBrowser", "viewChecksTab", "openPRInBrowser", "toggleChecksModal", "openGitHubChecks", "switchToMainChecksTab", "applyTheaterPreset", "closeTheaterConfigModal", "completeBrowserHandoff", "executeAgentShowFix", "executeTheaterRestCall", "exitTheater", "focusBrowserHandoff", "launchTheaterBreakpoint", "launchTheaterIDE", "openAppCourseInHub", "openTheaterConfigModal", "resumeBackendFix", "resumeTheaterBreakpoint", "runLiveDesktopSession", "saveTheaterConfigFromModal", "selectDiffFile", "setDiffMode", "setFixTypeTarget", "setProofCanvasMode", "setTheaterStage", "stepBackendFix", "submitTheaterQuiz", "submitTheaterReviewAction", "switchConfigTeam", "toggleFixDemonstrated", "toggleTheaterFullscreen"]);
 for (const eventType of ['click', 'change']) document.addEventListener(eventType, event => {
   const control = event.target.closest('[data-theater-action]');
   if (!control || (control.dataset.theaterEvent || 'click') !== eventType) return;
@@ -2077,8 +2527,8 @@ for (const eventType of ['click', 'change']) document.addEventListener(eventType
   if (control.dataset.theaterValue === 'checked') arg = control.checked;
   if (control.dataset.theaterValue === 'value') arg = control.value;
   if (arg !== undefined && /^\d+$/.test(arg)) arg = Number(arg);
+  if (arg === "false") arg = false;
   window[action](arg);
 });
 
 window.startCodeReview(init);
-

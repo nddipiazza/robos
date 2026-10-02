@@ -513,4 +513,25 @@ index 1234..5678 100644
     // Provide reviewer notes -> approval unlocks!
     assert.strictEqual(canSubmitApproval(ctx.validationGates, ctx.theaterConfig, 'Verified mTLS in IDE!'), true);
   });
+
+  it('14. Includes work-items, CI checks telemetry, and browser/IDE metadata in theater context', () => {
+    const ctx = store.generatePRReviewTheaterContext({
+      repo: 'acme/petstore-api',
+      prNumber: 12,
+      title: 'feat(service): verify rabies certificate over mTLS before adoption [PET-105]',
+      headBranch: 'feature/PET-105-rabies-verification',
+    });
+
+    // Work-items
+    assert.ok(Array.isArray(ctx.pr.workItems), 'pr.workItems is an array');
+    assert.strictEqual(ctx.pr.workItems.length, 1);
+    assert.strictEqual(ctx.pr.workItems[0].key, 'PET-105');
+    assert.ok(ctx.pr.workItems[0].url.includes('acme/petstore-api'));
+
+    // CI Checks
+    assert.ok(Array.isArray(ctx.checks), 'ctx.checks is an array');
+    assert.strictEqual(ctx.checks.length, 4);
+    assert.ok(ctx.checks.every(c => c.state === 'success'));
+    assert.ok(ctx.checks.some(c => c.name.includes('mTLS Handshake Contract')));
+  });
 });
