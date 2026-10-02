@@ -1,5 +1,19 @@
 'use strict';
 window.configureReviewPublish = function(pr) {
+  const ready=document.getElementById('pr-ready-button'),notice=document.getElementById('pr-ready-status');
+  if(ready){
+    ready.hidden=!(pr.local && pr.published && pr.isAuthor && pr.state==='OPEN' && pr.isDraft && pr.ciPassing && !pr.stateError);
+    ready.disabled=false;ready.textContent='Ready for review';if(notice)notice.textContent='';
+    ready.onclick=async()=>{
+      ready.disabled=true;ready.textContent='Marking ready…';if(notice)notice.textContent='Checking the latest CI results…';
+      try{
+        const result=await window.api.readyReviewPR(pr.headRefOid);if(!result.ok)throw Error(result.error);
+        Object.assign(pr,result.pr);
+        if(window.openPRReviewTheater)await window.openPRReviewTheater(pr);else window.configureReviewPublish(pr);
+        if(notice)notice.textContent='PR is ready for review.';
+      }catch(e){if(notice)notice.textContent=e.message;ready.disabled=false;ready.textContent='Ready for review';}
+    };
+  }
   const trigger=document.getElementById('step-btn-8');trigger.hidden=!pr.local;
   const status=pr.stateError||pr.published&&!pr.state?'unknown':!pr.published?'not-created':pr.state==='MERGED'?'merged':pr.state==='CLOSED'?'closed':pr.isDraft?'draft':'review';
   const labels={'unknown':'Status Unavailable','not-created':'Not Created',draft:'In Draft',review:'In Review',merged:'Merged',closed:'Closed'};

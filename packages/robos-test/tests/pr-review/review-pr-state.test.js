@@ -26,3 +26,16 @@ test('non-author, closed PR, and concurrent GitHub edits cannot be overwritten',
 test('author can push committed adjustments without forcing the remote',async()=>{
  const f=fixture();await f.api.push();assert.deepEqual(f.calls.find(c=>c[1]==='push'),['git','push','origin','HEAD:refs/heads/codex/filters']);
 });
+test('ready rechecks head, CI, author and draft state before mutating GitHub',async()=>{
+ for(const checks of [[],[{state:'PENDING'}],[{state:'FAILURE'}],[{status:'IN_PROGRESS',conclusion:null}],[{state:'SUCCESS'},{state:'ERROR'}]]){
+  const f=fixture();f.remote.isDraft=true;f.remote.statusCheckRollup=checks;
+  await assert.rejects(f.api.ready('abc'),/CI checks/);assert.ok(!f.calls.some(c=>c[2]==='ready'));
+ }
+ const f=fixture();f.remote.isDraft=true;f.remote.statusCheckRollup=[{state:'SUCCESS'},{status:'COMPLETED',conclusion:'SKIPPED'}];
+ await assert.rejects(f.api.ready('old'),/branch changed/);
+ const run=f.api.run;f.api.run=async(bin,args,opts)=>{if(args[1]==='ready'){f.calls.push([bin,...args]);f.remote.isDraft=false;return '';}return run(bin,args,opts);};
+ assert.equal((await f.api.ready('abc')).isDraft,false);
+ assert.deepEqual(f.calls.find(c=>c[2]==='ready'),['gh','pr','ready',f.remote.url]);
+ await assert.rejects(f.api.ready('abc'),/already ready/);
+ for(const other of [fixture('CLOSED'),fixture('MERGED'),fixture('OPEN','reviewer')])await assert.rejects(other.api.ready('abc'),/author of an open PR/);
+});

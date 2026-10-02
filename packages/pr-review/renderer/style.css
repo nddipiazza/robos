@@ -3419,3 +3419,10 @@ review-markdown-editor { display: block; margin: 8px 0 20px; }
 #step-btn-8[data-pr-status="closed"] {--pr-color:#f08080;}
 #step-btn-8 .pr-tab-icon[hidden] {display:none;}
 .pr-state-icon {font-size:20px;line-height:1;}
+
+.pr-ready-button {background:#238636;color:#fff;border:1px solid #46a758;border-radius:7px;padding:12px 22px;font-size:16px;font-weight:700;white-space:nowrap;cursor:pointer;}
+.pr-ready-button:hover {background:#2ea043;}
+.pr-ready-button:focus-visible {outline:3px solid #90d8ff;outline-offset:3px;}
+.pr-ready-button:disabled {opacity:.65;cursor:wait;}
+.pr-ready-button[hidden] {display:none;}
+#pr-ready-status {font-size:12px;max-width:280px;}

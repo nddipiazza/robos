@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld('api', {
   onPublishProgress: callback => { const handler=(_,text)=>callback(text);ipcRenderer.on('review-publish-progress',handler);return ()=>ipcRenderer.removeListener('review-publish-progress',handler); },
   generatePRDescription: input => ipcRenderer.invoke('generate-pr-description', input),
   onDescriptionProgress: cb => {const listener=(_,text)=>cb(text);ipcRenderer.on('review-description-progress',listener);return ()=>ipcRenderer.removeListener('review-description-progress',listener);},
+  readyReviewPR:head=>ipcRenderer.invoke('ready-review-pr',head),
   refreshReviewPR:()=>ipcRenderer.invoke('refresh-review-pr'),
   updateReviewPR:input=>ipcRenderer.invoke('update-review-pr',input),
   pushReviewAdjustments:()=>ipcRenderer.invoke('push-review-adjustments'),

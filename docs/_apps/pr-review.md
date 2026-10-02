@@ -37,3 +37,8 @@ The Pull Request tab shows **Not Created**, **In Draft**, **In Review**,
 refreshes the status and description. Closed/merged PRs and reviewer mode keep
 the description read-only. If someone changes the description on GitHub during
 editing, reload before saving rather than overwriting their work.
+
+For an author's draft PR, a green **Ready for review** button appears in the
+header when CI passes. Use **Reload PR** after checks finish to refresh it.
+Clicking the button checks GitHub again and takes the PR out of draft. A changed
+branch or pending/failed checks leave it in draft.
