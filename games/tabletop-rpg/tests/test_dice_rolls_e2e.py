@@ -146,6 +146,7 @@ class TestTabletopDiceRolls(unittest.TestCase):
 
         # Cleanup plate mail
         self.player.unequip("plate_mail", "barbarian")
+        time.sleep(0.3)
 
     def test_03_movement_dice_swift_wind_4d6(self):
         """SCENARIO 3: Swift Wind spell carries hero with 4d6 double movement."""

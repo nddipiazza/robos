@@ -386,10 +386,10 @@ class TestHeroQuestEquipmentAndBattle(unittest.TestCase):
         print("SCENARIO 11: Battle Resolution - Skulls vs Black Shields, Wounds & Death")
         print("-" * 80)
 
-        # Summon a living target in the crypt
-        s_res = self.player.execute_action("summon_monster", x=3, y=4, name="Crypt Champion", bp=1)
+        # Summon a living target in the crypt at empty tile (4, 3) adjacent to hero at (4, 4)
+        s_res = self.player.execute_action("summon_monster", x=4, y=3, name="Crypt Champion", bp=1)
         champ_id = s_res.get("monster", {}).get("id")
-        m_pos = to_coords(s_res.get("monster", {}).get("grid_pos", [3, 4]))
+        m_pos = to_coords(s_res.get("monster", {}).get("grid_pos", [4, 3]))
 
         # Equip Broadsword and Courage for maximum attack power
         self.player.equip("broadsword", "barbarian")
@@ -401,7 +401,7 @@ class TestHeroQuestEquipmentAndBattle(unittest.TestCase):
         h_pos = to_coords(barb.get("grid_pos", [4, 4]))
         if abs(h_pos[0] - m_pos[0]) + abs(h_pos[1] - m_pos[1]) != 1:
             self.player.execute_action("roll_movement")
-            self.player.move(m_pos[0] + 1, m_pos[1])
+            self.player.move(m_pos[0], m_pos[1] + 1)
 
         bdd_step("GIVEN", f"Barbarian is buffed with Courage (5 attack dice) targeting '{champ_id}'",
                  assertions=["5 Attack Dice rolled against Crypt Champion"])
@@ -457,9 +457,9 @@ class TestHeroQuestEquipmentAndBattle(unittest.TestCase):
         print("-" * 80)
 
         # Summon a fresh monster in the crypt
-        s_res = self.player.execute_action("summon_monster", x=3, y=4, name="Sleeping Orc", bp=3)
+        s_res = self.player.execute_action("summon_monster", x=4, y=3, name="Sleeping Orc", bp=3)
         sleep_id = s_res.get("monster", {}).get("id")
-        m_pos = to_coords(s_res.get("monster", {}).get("grid_pos", [3, 4]))
+        m_pos = to_coords(s_res.get("monster", {}).get("grid_pos", [4, 3]))
 
         # Ensure hero is orthogonally adjacent to m_pos
         st = self.player.get_state()
@@ -467,7 +467,7 @@ class TestHeroQuestEquipmentAndBattle(unittest.TestCase):
         h_pos = to_coords(barb.get("grid_pos", [4, 4]))
         if abs(h_pos[0] - m_pos[0]) + abs(h_pos[1] - m_pos[1]) != 1:
             self.player.execute_action("roll_movement")
-            self.player.move(m_pos[0] + 1, m_pos[1])
+            self.player.move(m_pos[0], m_pos[1] + 1)
 
         # Put Sleeping Orc to sleep
         self.player.cast_spell("sleep", sleep_id)
