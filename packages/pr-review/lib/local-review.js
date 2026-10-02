@@ -19,7 +19,7 @@ function loadLocalReview(file) {
   if (config.runner && (!path.isAbsolute(config.runner.command || '') || !Array.isArray(config.runner.args))) throw new Error('Runner requires an absolute executable and argument array');
   return { ...config, base, head, diffPatch, changedFiles,
     videoUrl: config.videoPath ? pathToFileURL(fs.realpathSync(config.videoPath)).href : null,
-    pr: { local: true, published: !!config.pullRequest, number: config.pullRequest?.number || 'local', url: config.pullRequest?.url, repo: config.repo || 'Local workspace', title: config.pullRequest?.title || config.title, headBranch: git(['branch', '--show-current']).trim(), baseBranch: (config.baseBranch || config.baseRef).replace(/^origin\//, ''), body: config.summary || '', changedFiles }
+    pr: { local: true, published: !!config.pullRequest, number: config.pullRequest?.number || 'local', url: config.pullRequest?.url, repo: config.repo || 'Local workspace', title: config.pullRequest?.title || config.title, headBranch: git(['branch', '--show-current']).trim(), baseBranch: (config.baseBranch || config.baseRef).replace(/^origin\//, ''), body: config.pullRequest?.body ?? config.summary ?? '', changedFiles }
   };
 }
 

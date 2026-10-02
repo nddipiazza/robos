@@ -14,3 +14,17 @@ Autonomous AI-driven code review, audit hub, and Review Theater for pull request
 - **IntelliJ IDEA Pull Request Review Plugin**: Communicates over RobOS port `63343` IPC bridge and native JetBrains CLI integration to jump straight to modified files, set live breakpoints at change sites, and launch JetBrains' native Pull Request review tool window.
 - **VS Code Pull Request Review Plugin**: Deeply integrates with the industry-standard `GitHub Pull Requests and Issues` extension (`vscode://github.vscode-pull-request-github/open-pr`) to review diffs, leave inline line comments, and approve PRs right inside Visual Studio Code.
 ![PR Review Theater]({{ '/assets/images/screenshots/pr-review-theater-02-pr-detail.png' | relative_url }})
+
+## Author mode after publication
+
+Creating a PR reloads it from GitHub and compares its author with the connected
+GitHub account. The author keeps the same evidence, diff, and walkthrough, with
+an editable description and **Update PR** action while the PR remains open.
+Use the walkthrough discussion for further changes, then **Push walkthrough
+adjustments** to publish the committed branch changes without a force push.
+
+The Pull Request tab shows **Not Created**, **In Draft**, **In Review**,
+**Merged**, or **Closed**, each with its own icon and color. **Reload PR**
+refreshes the status and description. Closed/merged PRs and reviewer mode keep
+the description read-only. If someone changes the description on GitHub during
+editing, reload before saving rather than overwriting their work.
