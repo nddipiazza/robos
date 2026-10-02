@@ -13,7 +13,9 @@ var active_hero_idx: int = 0
 var active_monster_idx: int = 0
 var current_phase: String = "hero_phase" # "hero_phase" or "gm_phase"
 var movement_remaining: int = 0
+var movement_rolled: bool = false
 var has_acted_this_turn: bool = false
+var turn_state: String = "awaiting_roll" # "awaiting_roll", "moving", "action_taken", "turn_complete"
 var combat_log: Array[String] = []
 
 func is_gm_role() -> bool:
@@ -122,6 +124,15 @@ func toggle_role() -> void:
 	queue_redraw_all()
 
 func _on_attack_pressed() -> void:
+	if btn_attack and "Open Door" in btn_attack.text:
+		var adj_d = get_adjacent_closed_doors()
+		if adj_d.size() > 0:
+			var d = adj_d[0]
+			var from_pos = Vector2i(d.get("from", [0, 0])[0], d.get("from", [0, 0])[1])
+			var to_pos = Vector2i(d.get("to", [0, 0])[0], d.get("to", [0, 0])[1])
+			open_door(from_pos, to_pos)
+			return
+
 	if is_gm_role() or current_phase == "dm_phase" or current_phase == "gm_phase":
 		dm_attack_hero()
 	else:
@@ -196,6 +207,7 @@ func _load_active_cartridge() -> void:
 	revealed_rooms.clear()
 	explored_tiles.clear()
 	update_party_vision()
+	_update_ui()
 	queue_redraw_all()
 
 func is_tile_wall_blocked(tile: Vector2i) -> bool:
@@ -489,14 +501,100 @@ func get_active_monster() -> Dictionary:
 		return {}
 	return live_monsters[active_monster_idx % live_monsters.size()]
 
+func get_adjacent_monsters() -> Array[Dictionary]:
+	var hero = get_active_hero()
+	if hero.is_empty():
+		return []
+	var h_pos: Vector2i = hero.get("grid_pos", Vector2i(-1, -1))
+	var res: Array[Dictionary] = []
+	for m in monsters:
+		if m.get("is_alive", false):
+			var m_pos: Vector2i = m.get("grid_pos", Vector2i(-1, -1))
+			if absi(m_pos.x - h_pos.x) + absi(m_pos.y - h_pos.y) == 1:
+				res.append(m)
+	return res
+
+func get_adjacent_closed_doors() -> Array[Dictionary]:
+	var hero = get_active_hero()
+	if hero.is_empty():
+		return []
+	var h_pos: Vector2i = hero.get("grid_pos", Vector2i(-1, -1))
+	var res: Array[Dictionary] = []
+	for d in doors:
+		if not d.get("is_open", false):
+			var from_pos = Vector2i(d.get("from", [0, 0])[0], d.get("from", [0, 0])[1])
+			var to_pos = Vector2i(d.get("to", [0, 0])[0], d.get("to", [0, 0])[1])
+			if (h_pos == from_pos and absi(h_pos.x - to_pos.x) + absi(h_pos.y - to_pos.y) == 1) or \
+			   (h_pos == to_pos and absi(h_pos.x - from_pos.x) + absi(h_pos.y - from_pos.y) == 1):
+				res.append(d)
+	return res
+
+func can_search_room() -> bool:
+	var hero = get_active_hero()
+	if hero.is_empty() or has_acted_this_turn:
+		return false
+	var h_pos: Vector2i = hero.get("grid_pos", Vector2i(-1, -1))
+	var rm = _get_room_at(h_pos)
+	var r_id = str(rm.get("id", ""))
+	if r_id == "" or not revealed_rooms.has(r_id):
+		return false
+	for m in monsters:
+		if m.get("is_alive", false) and m.get("roomId", "") == r_id:
+			return false
+	return true
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		var mouse_pos = event.position
+		var local_pos = mouse_pos - board_offset
+		var tx = int(floor(local_pos.x / tile_size))
+		var ty = int(floor(local_pos.y / tile_size))
+		if tx >= 0 and tx < grid_cols and ty >= 0 and ty < grid_rows:
+			_handle_tile_click(Vector2i(tx, ty))
+
+func _handle_tile_click(tile: Vector2i) -> void:
+	if current_phase != "hero_phase" or current_role != "player":
+		return
+	var hero = get_active_hero()
+	if hero.is_empty():
+		return
+	var h_pos: Vector2i = hero.get("grid_pos", Vector2i(-1, -1))
+
+	# If clicked on adjacent closed door, open it!
+	for d in doors:
+		if not d.get("is_open", false):
+			var from_pos = Vector2i(d.get("from", [0, 0])[0], d.get("from", [0, 0])[1])
+			var to_pos = Vector2i(d.get("to", [0, 0])[0], d.get("to", [0, 0])[1])
+			if (tile == from_pos or tile == to_pos) and (h_pos == from_pos or h_pos == to_pos):
+				open_door(from_pos, to_pos)
+				return
+
+	# If clicked on adjacent monster, attack!
+	for m in monsters:
+		if m.get("is_alive", false) and m.get("grid_pos") == tile:
+			if absi(tile.x - h_pos.x) + absi(tile.y - h_pos.y) == 1:
+				if not has_acted_this_turn:
+					attack_adjacent_monster(str(m.get("id", "")))
+				return
+
+	# If haven't rolled movement yet, roll dice first!
+	if not movement_rolled:
+		roll_movement_dice()
+
+	# If hero has movement, move to tile
+	if movement_remaining > 0:
+		move_hero(tile)
+
 func roll_movement_dice() -> Dictionary:
 	var roll = TabletopDice.roll_movement()
 	movement_remaining = roll.total
+	movement_rolled = true
+	turn_state = "moving"
 	_log("🎲 %s rolled 2d6 movement: [%d, %d] = %d squares!" % [
 		get_active_hero().get("name", "Hero"), roll.d1, roll.d2, roll.total
 	])
-	dice_label.text = "Move: %d (%d+%d)" % [roll.total, roll.d1, roll.d2]
 	_update_ui()
+	queue_redraw_all()
 	return roll
 
 func move_hero(target_pos: Vector2i) -> bool:
@@ -513,6 +611,11 @@ func move_hero(target_pos: Vector2i) -> bool:
 
 	hero["grid_pos"] = target_pos
 	movement_remaining = maxi(0, movement_remaining - dist)
+	if movement_remaining == 0:
+		if has_acted_this_turn:
+			turn_state = "turn_complete"
+		else:
+			turn_state = "moving"
 	update_party_vision()
 	_log("👣 %s moved to (%d, %d). Remaining movement: %d" % [
 		hero.get("name"), target_pos.x, target_pos.y, movement_remaining
@@ -590,6 +693,10 @@ func attack_adjacent_monster(monster_id: String = "") -> Dictionary:
 		_log("🛡️ Attack was completely blocked by %s!" % target_m.get("name"))
 
 	has_acted_this_turn = true
+	if movement_remaining == 0:
+		turn_state = "turn_complete"
+	else:
+		turn_state = "action_taken"
 	_update_ui()
 	queue_redraw_all()
 	return res
@@ -662,7 +769,12 @@ func search_room() -> Dictionary:
 		hero.get("name"), found_gold, hero.get("gold")
 	])
 	has_acted_this_turn = true
+	if movement_remaining == 0:
+		turn_state = "turn_complete"
+	else:
+		turn_state = "action_taken"
 	_update_ui()
+	queue_redraw_all()
 	return { "success": true, "goldFound": found_gold }
 
 func end_turn() -> void:
@@ -674,7 +786,7 @@ func end_turn() -> void:
 			if current_role == "player":
 				call_deferred("ai_monster_turn")
 		else:
-			_log("Next hero: %s" % get_active_hero().get("name", "Hero"))
+			_log("--- Next Hero: %s ---" % get_active_hero().get("name", "Hero"))
 	else:
 		current_phase = "hero_phase"
 		current_round += 1
@@ -682,7 +794,9 @@ func end_turn() -> void:
 		_log("Active hero: %s" % get_active_hero().get("name", "Hero"))
 
 	movement_remaining = 0
+	movement_rolled = false
 	has_acted_this_turn = false
+	turn_state = "awaiting_roll"
 	_update_ui()
 	queue_redraw_all()
 
@@ -746,14 +860,127 @@ func _update_ui() -> void:
 	if role_badge:
 		role_badge.text = "Role: " + ("Player" if current_role == "player" else "Game Master")
 
-	if btn_summon:
-		btn_summon.visible = is_gm_role()
-	if btn_attack:
-		btn_attack.text = "Hero Attack" if current_role == "player" else "Monster Attack"
-
 	var hero = get_active_hero()
+	var h_name = str(hero.get("name", "Hero"))
+
+	if is_gm_role():
+		# Game Master / Zargon controls
+		if btn_summon:
+			btn_summon.visible = true
+		if btn_roll:
+			btn_roll.visible = true
+			btn_roll.disabled = false
+			btn_roll.text = "🎲 Roll Monster"
+		if btn_attack:
+			btn_attack.visible = true
+			btn_attack.disabled = false
+			btn_attack.text = "Monster Attack"
+		if btn_search:
+			btn_search.visible = false
+		if btn_end_turn:
+			btn_end_turn.visible = true
+			btn_end_turn.text = "End GM Turn"
+		if dice_label:
+			dice_label.text = "👑 Zargon Game Master Mode: Full Dungeon Control"
+	elif current_phase == "gm_phase":
+		# Watching Game Master / AI turn
+		if btn_summon:
+			btn_summon.visible = false
+		if btn_roll:
+			btn_roll.visible = false
+		if btn_attack:
+			btn_attack.visible = false
+		if btn_search:
+			btn_search.visible = false
+		if btn_end_turn:
+			btn_end_turn.visible = false
+		if dice_label:
+			dice_label.text = "👑 Minions of Zargon stir in the darkness..."
+	else:
+		# Hero Phase (Player)
+		if btn_summon:
+			btn_summon.visible = false
+
+		var adj_monsters = get_adjacent_monsters()
+		var adj_doors = get_adjacent_closed_doors()
+		var in_room_clean = can_search_room()
+
+		if not movement_rolled:
+			# Awaiting Roll state
+			if dice_label:
+				dice_label.text = "👉 %s's Turn: ROLL DICE to determine movement!" % h_name
+			if btn_roll:
+				btn_roll.visible = true
+				btn_roll.disabled = false
+				btn_roll.text = "🎲 Roll Movement (2d6)"
+			if btn_attack:
+				if adj_monsters.size() > 0 and not has_acted_this_turn:
+					btn_attack.visible = true
+					btn_attack.disabled = false
+					btn_attack.text = "⚔️ Attack %s" % adj_monsters[0].get("name", "Monster")
+				else:
+					btn_attack.visible = false
+			if btn_search:
+				btn_search.visible = false
+			if btn_end_turn:
+				btn_end_turn.visible = true
+				btn_end_turn.text = "Skip Turn"
+		else:
+			# Movement rolled
+			if movement_remaining > 0:
+				if has_acted_this_turn:
+					if dice_label:
+						dice_label.text = "👣 Action used! Spend remaining %d movement or click End Turn." % movement_remaining
+				else:
+					if dice_label:
+						dice_label.text = "👣 %s: Move %d squares on board, or execute action." % [h_name, movement_remaining]
+				if btn_roll:
+					btn_roll.visible = true
+					btn_roll.disabled = true
+					btn_roll.text = "Move: %d left" % movement_remaining
+			else:
+				if has_acted_this_turn:
+					if dice_label:
+						dice_label.text = "🏁 Turn complete! Click End Turn to proceed."
+				else:
+					if dice_label:
+						dice_label.text = "⚠️ Out of movement! You may still take an action or End Turn."
+				if btn_roll:
+					btn_roll.visible = true
+					btn_roll.disabled = true
+					btn_roll.text = "Move: 0"
+
+			# Contextual attack / door button
+			if btn_attack:
+				if adj_monsters.size() > 0 and not has_acted_this_turn:
+					btn_attack.visible = true
+					btn_attack.disabled = false
+					btn_attack.text = "⚔️ Attack %s" % adj_monsters[0].get("name", "Monster")
+				elif adj_doors.size() > 0:
+					btn_attack.visible = true
+					btn_attack.disabled = false
+					btn_attack.text = "🚪 Open Door"
+				else:
+					btn_attack.visible = false
+
+			# Contextual search button
+			if btn_search:
+				if in_room_clean and not has_acted_this_turn:
+					btn_search.visible = true
+					btn_search.disabled = false
+					btn_search.text = "🔍 Search Room"
+				else:
+					btn_search.visible = false
+
+			if btn_end_turn:
+				btn_end_turn.visible = true
+				btn_end_turn.text = "⏹️ End Turn"
+
+	# Character card
 	if hero.size() > 0 and hero_card:
-		hero_card.text = "%s (%s)\nBP: %d/%d | MP: %d/%d\nAtk Dice: %d | Def Dice: %d\nGold: %d gp" % [
+		var turn_badge = "★ YOUR TURN ★\n" if current_phase == "hero_phase" and current_role == "player" else ""
+		hero_card.text = "%s%s (%s)\nBP: %d/%d | MP: %d/%d\nAtk Dice: %d | Def Dice: %d\nGold: %d gp" % [
+			turn_badge,
 			hero.get("name"), hero.get("title", ""),
 			hero.get("current_bp", 8), hero.get("bodyPoints", 8),
 			hero.get("current_mp", 2), hero.get("mindPoints", 2),
@@ -780,6 +1007,9 @@ func get_telemetry_state() -> Dictionary:
 		"activeHero": get_active_hero().get("id", ""),
 		"activeHeroIndex": active_hero_idx,
 		"movementRemaining": movement_remaining,
+		"movementRolled": movement_rolled,
+		"hasActed": has_acted_this_turn,
+		"turnState": turn_state,
 		"heroes": heroes,
 		"monsters": monsters,
 		"doors": doors,
@@ -1049,16 +1279,87 @@ func _draw_board(canvas: CanvasItem) -> void:
 				var cd_w = ThemeDB.fallback_font.get_string_size(m_code, HORIZONTAL_ALIGNMENT_CENTER, -1, 12).x
 				canvas.draw_string(ThemeDB.fallback_font, Vector2(screen_pos.x - cd_w * 0.5, screen_pos.y + 4), m_code, HORIZONTAL_ALIGNMENT_CENTER, -1, 12, Color.WHITE)
 
+	# Draw Starting Staircase Tile (Entrance / Exit)
+	var stair_rect = Rect2(board_offset + Vector2(starting_stair.x * tile_size + 2, starting_stair.y * tile_size + 2), Vector2(tile_size - 4, tile_size - 4))
+	canvas.draw_rect(stair_rect, Color(0.18, 0.22, 0.28, 0.95))
+	canvas.draw_rect(stair_rect, Color(0.45, 0.60, 0.75, 1.0), false, 1.5)
+	canvas.draw_arc(stair_rect.get_center(), tile_size * 0.36, 0, TAU, 24, Color(0.35, 0.45, 0.58, 0.8), 1.5)
+	canvas.draw_arc(stair_rect.get_center(), tile_size * 0.20, 0, TAU, 16, Color(0.55, 0.68, 0.82, 0.9), 1.5)
+	var st_w = ThemeDB.fallback_font.get_string_size("STAIR", HORIZONTAL_ALIGNMENT_CENTER, -1, 8).x
+	canvas.draw_string(ThemeDB.fallback_font, Vector2(stair_rect.get_center().x - st_w * 0.5, stair_rect.get_center().y + 3), "STAIR", HORIZONTAL_ALIGNMENT_CENTER, -1, 8, Color(0.85, 0.9, 1.0, 0.85))
+
 	# Draw Heroes
+	# Group heroes by grid position so tokens on shared tiles (e.g. starting stairwell) are all visible
+	var heroes_by_tile: Dictionary = {}
 	for idx in range(heroes.size()):
 		var h = heroes[idx]
 		var pos = h.get("grid_pos", Vector2i(0, 0))
-		var screen_pos = board_offset + Vector2(pos.x * tile_size + tile_size * 0.5, pos.y * tile_size + tile_size * 0.5)
+		if not heroes_by_tile.has(pos):
+			heroes_by_tile[pos] = []
+		heroes_by_tile[pos].append(idx)
+
+	# 4 standard quadrant offsets when multiple heroes share a tile
+	var quad_offsets = [
+		Vector2(-tile_size * 0.18, -tile_size * 0.18),
+		Vector2(tile_size * 0.18, -tile_size * 0.18),
+		Vector2(-tile_size * 0.18, tile_size * 0.18),
+		Vector2(tile_size * 0.18, tile_size * 0.18)
+	]
+
+	# Draw non-active heroes first, and active hero LAST so active hero is always on top!
+	var draw_indices: Array[int] = []
+	for idx in range(heroes.size()):
+		if idx != active_hero_idx:
+			draw_indices.append(idx)
+	if active_hero_idx >= 0 and active_hero_idx < heroes.size():
+		draw_indices.append(active_hero_idx)
+
+	for idx in draw_indices:
+		var h = heroes[idx]
+		var pos = h.get("grid_pos", Vector2i(0, 0))
+		var is_active = (idx == active_hero_idx and current_phase == "hero_phase")
+		var tile_heroes = heroes_by_tile.get(pos, [idx])
+		var tile_center = board_offset + Vector2(pos.x * tile_size + tile_size * 0.5, pos.y * tile_size + tile_size * 0.5)
+
+		var screen_pos = tile_center
+		var token_radius = tile_size * 0.42
+		var font_size = 14
+
+		if tile_heroes.size() > 1:
+			var slot = tile_heroes.find(idx)
+			if slot >= 0 and slot < quad_offsets.size():
+				screen_pos = tile_center + quad_offsets[slot]
+				token_radius = tile_size * 0.23
+				font_size = 10
+
 		var col = Color.from_string(h.get("tokenColor", "#b91c1c"), Color.RED)
-		canvas.draw_circle(screen_pos, tile_size * 0.42, col)
-		canvas.draw_arc(screen_pos, tile_size * 0.42, 0, TAU, 32, Color(0.9, 0.9, 0.9, 0.8), 1.5)
-		if idx == active_hero_idx and current_phase == "hero_phase":
-			canvas.draw_arc(screen_pos, tile_size * 0.48, 0, TAU, 32, Color.YELLOW, 3.0)
+
+		# Draw token base circle
+		canvas.draw_circle(screen_pos, token_radius, col)
+		canvas.draw_arc(screen_pos, token_radius, 0, TAU, 32, Color(0.95, 0.95, 0.95, 0.9), 1.5)
+
+		# Active Hero prominent highlight and pulsing turn badge
+		if is_active:
+			# High-contrast golden outer glow
+			canvas.draw_arc(screen_pos, token_radius + 4.0, 0, TAU, 32, Color(1.0, 0.85, 0.1, 1.0), 3.0)
+			canvas.draw_arc(screen_pos, token_radius + 7.0, 0, TAU, 32, Color(1.0, 0.95, 0.4, 0.6), 1.5)
+
+			# Floating Turn Marker badge above or below the tile
+			var active_name = str(h.get("name", "Hero")).to_upper()
+			var badge_text = "▼ ACTIVE: " + active_name
+			var badge_w = ThemeDB.fallback_font.get_string_size(badge_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 11).x
+
+			var badge_y = tile_center.y - tile_size * 0.5 - 18
+			if badge_y < 55:
+				badge_y = tile_center.y + tile_size * 0.5 + 4
+
+			var badge_x = maxf(10.0, tile_center.x - badge_w * 0.5 - 6)
+			var badge_rect = Rect2(Vector2(badge_x, badge_y), Vector2(badge_w + 12, 16))
+			canvas.draw_rect(badge_rect, Color(0.1, 0.12, 0.16, 0.95))
+			canvas.draw_rect(badge_rect, Color(1.0, 0.85, 0.1, 1.0), false, 1.5)
+			canvas.draw_string(ThemeDB.fallback_font, Vector2(badge_rect.position.x + 6, badge_rect.position.y + 12), badge_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 11, Color(1.0, 0.9, 0.2, 1.0))
+
+		# Token Initial (B, D, E, W)
 		var h_name = str(h.get("name", "Hero")).to_lower()
 		var h_initial = "H"
 		if "barbarian" in h_name:
@@ -1071,5 +1372,6 @@ func _draw_board(canvas: CanvasItem) -> void:
 			h_initial = "W"
 		else:
 			h_initial = h_name.substr(0, 1).to_upper()
-		var init_w = ThemeDB.fallback_font.get_string_size(h_initial, HORIZONTAL_ALIGNMENT_CENTER, -1, 14).x
-		canvas.draw_string(ThemeDB.fallback_font, Vector2(screen_pos.x - init_w * 0.5, screen_pos.y + 5), h_initial, HORIZONTAL_ALIGNMENT_CENTER, -1, 14, Color.WHITE)
+
+		var init_w = ThemeDB.fallback_font.get_string_size(h_initial, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size).x
+		canvas.draw_string(ThemeDB.fallback_font, Vector2(screen_pos.x - init_w * 0.5, screen_pos.y + font_size * 0.38), h_initial, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, Color.WHITE)

@@ -2928,6 +2928,51 @@ const BUILTIN_SHACL_SHAPES = [
     "domainStandard": "https://robos.dev/ns/tabletop#MapConfiguration"
   },
   {
+    "shapeId": "urn:robos:shape:TabletopTurnDAGShape",
+    "targetClass": "robos:TabletopTurnDAG",
+    "targetClasses": ["robos:TabletopTurnDAG"],
+    "properties": [
+      {
+        "path": "dcterms:title",
+        "minCount": 1,
+        "message": "Tabletop turn DAG must declare a title."
+      },
+      {
+        "path": "robos:rootStepId",
+        "minCount": 1,
+        "message": "Tabletop turn DAG must declare a root entry step ID."
+      },
+      {
+        "path": "robos:turnSteps",
+        "minCount": 1,
+        "message": "Tabletop turn DAG must declare turn steps."
+      }
+    ],
+    "refersFrom": "https://schema.org/Action",
+    "schemaOrgType": "https://schema.org/Action",
+    "domainStandard": "https://robos.dev/ns/tabletop#TurnDAG"
+  },
+  {
+    "shapeId": "urn:robos:shape:TabletopTurnStepShape",
+    "targetClass": "robos:TabletopTurnStep",
+    "targetClasses": ["robos:TabletopTurnStep"],
+    "properties": [
+      {
+        "path": "dcterms:title",
+        "minCount": 1,
+        "message": "Tabletop turn step must have a title."
+      },
+      {
+        "path": "robos:stepType",
+        "minCount": 1,
+        "message": "Tabletop turn step must declare a step type."
+      }
+    ],
+    "refersFrom": "https://schema.org/Action",
+    "schemaOrgType": "https://schema.org/Action",
+    "domainStandard": "https://robos.dev/ns/tabletop#TurnStep"
+  },
+  {
     "shapeId": "urn:robos:shape:WebRouteShape",
     "targetClass": "robos:WebRoute",
     "properties": [

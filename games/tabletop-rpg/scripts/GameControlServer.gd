@@ -93,6 +93,12 @@ func _handle_request(client: StreamPeerTCP) -> void:
 		var ok = CartridgeManager.insert_cartridge(target)
 		_send_json(client, 200, { "success": ok, "cartridge": CartridgeManager.current_cartridge_slug })
 
+	elif method == "POST" and (path_str == "/api/v1/screenshot" or path_str == "/screenshot"):
+		var img = get_viewport().get_texture().get_image()
+		var out_path = str(body_dict.get("path", "/tmp/tabletop_screenshot.png"))
+		var err = img.save_png(out_path)
+		_send_json(client, 200, { "success": err == OK, "path": out_path, "error": err })
+
 	else:
 		_send_json(client, 404, { "error": "Not Found", "path": path_str })
 
