@@ -188,3 +188,114 @@ offset_right = 568.0
 offset_bottom = 308.0
 theme_override_font_sizes/normal_font_size = 14
 text = "Log loaded..."
+
+[node name="AIConfirmModal" type="ColorRect" parent="UI"]
+visible = false
+offset_right = 1920.0
+offset_bottom = 1080.0
+color = Color(0, 0, 0, 0.65)
+
+[node name="Card" type="PanelContainer" parent="UI/AIConfirmModal"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -340.0
+offset_top = -220.0
+offset_right = 340.0
+offset_bottom = 220.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="UI/AIConfirmModal/Card"]
+layout_mode = 2
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_bottom = 24
+
+[node name="VBox" type="VBoxContainer" parent="UI/AIConfirmModal/Card/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Header" type="HBoxContainer" parent="UI/AIConfirmModal/Card/Margin/VBox"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="UI/AIConfirmModal/Card/Margin/VBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
+text = "⚡ AI Step Proposal"
+
+[node name="StepBadge" type="Label" parent="UI/AIConfirmModal/Card/Margin/VBox/Header"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
+text = "STEP 1 OF 10"
+
+[node name="Separator" type="HSeparator" parent="UI/AIConfirmModal/Card/Margin/VBox"]
+layout_mode = 2
+
+[node name="CommandBanner" type="PanelContainer" parent="UI/AIConfirmModal/Card/Margin/VBox"]
+layout_mode = 2
+
+[node name="CommandMargin" type="MarginContainer" parent="UI/AIConfirmModal/Card/Margin/VBox/CommandBanner"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 8
+
+[node name="CommandText" type="Label" parent="UI/AIConfirmModal/Card/Margin/VBox/CommandBanner/CommandMargin"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.2, 0.85, 1, 1)
+text = "Command: roll_movement_dice"
+
+[node name="ActionTitle" type="Label" parent="UI/AIConfirmModal/Card/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "🎲 Roll 2d6 Movement Dice"
+
+[node name="ActionDescription" type="Label" parent="UI/AIConfirmModal/Card/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.8, 0.85, 0.9, 1)
+text = "Barbarian rolls 2d6 red acrylic dice to determine available movement squares for this turn."
+autowrap_mode = 3
+
+[node name="DetailsPanel" type="PanelContainer" parent="UI/AIConfirmModal/Card/Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="DetailsMargin" type="MarginContainer" parent="UI/AIConfirmModal/Card/Margin/VBox/DetailsPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 8
+
+[node name="DetailsText" type="Label" parent="UI/AIConfirmModal/Card/Margin/VBox/DetailsPanel/DetailsMargin"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.7, 0.75, 0.82, 1)
+text = "• Active Hero: Barbarian\n• Action: Roll 2d6 movement\n• Rationale: Turn start requires rolling movement"
+autowrap_mode = 3
+
+[node name="ButtonBox" type="HBoxContainer" parent="UI/AIConfirmModal/Card/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="BtnCancel" type="Button" parent="UI/AIConfirmModal/Card/Margin/VBox/ButtonBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 42)
+text = "❌ Cancel"
+
+[node name="BtnConfirm" type="Button" parent="UI/AIConfirmModal/Card/Margin/VBox/ButtonBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 42)
+text = "✅ Confirm & Execute"

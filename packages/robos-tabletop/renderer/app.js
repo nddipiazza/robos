@@ -2366,19 +2366,18 @@ function setupSpellDraftControls() {
     });
   });
 
-  document.getElementById("btn-confirm-spell-modal")?.addEventListener("click", () => {
+  document.getElementById("btn-confirm-spell-modal")?.addEventListener("click", async () => {
     currentData.spellAllocation.confirmed = true;
     applySpellAllocationToHeroes();
     renderSpellsAndItems();
     renderSpellDraftSummaryBadges();
+    const cb = pendingSpellDraftCallback;
     closeSpellSelectionModal();
     const elfDeckName = ELEMENTAL_DECKS[currentData.spellAllocation.elfElement]?.name || currentData.spellAllocation.elfElement;
     setStatus(`Spell Selection Confirmed: Elf memorizes ${elfDeckName}; Wizard takes remaining 3 decks.`);
     logCombatAction(`🔮 Spell Selection Confirmed! Elf memorizes ${elfDeckName}. Wizard takes remaining 3 decks.`, "system");
-    if (typeof pendingSpellDraftCallback === "function") {
-      const cb = pendingSpellDraftCallback;
-      pendingSpellDraftCallback = null;
-      cb();
+    if (typeof cb === "function") {
+      await cb();
     }
   });
 
