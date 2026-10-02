@@ -237,9 +237,7 @@ html, body { background: #0d1117; color: #e6edf3; font-family: -apple-system, Bl
 
 /* ── Chat input ── */
 .chat-input-wrap { display: flex; align-items: flex-end; gap: 8px; padding: 10px 14px; border-top: 1px solid #21262d; flex-shrink: 0; background: #0d1117; }
-.chat-input { flex: 1; background: #161b22; border: 1px solid #30363d; border-radius: 8px; color: #e6edf3; padding: 9px 12px; font-size: 13px; font-family: inherit; resize: none; outline: none; line-height: 1.5; max-height: 150px; overflow-y: auto; }
-.chat-input:focus { border-color: #388bfd; }
-.chat-input:disabled { opacity: .5; }
+.chat-input-wrap robos-ai-textarea { flex: 1; }
 .chat-input-btns { display: flex; gap: 6px; flex-shrink: 0; padding-bottom: 2px; }
 .btn-send { padding: 9px 18px; font-size: 13px; }
 

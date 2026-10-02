@@ -9,6 +9,7 @@ let streamingBubble = null;     // DOM element for the active streaming bubble
 let _claudeTextAcc = '';        // accumulated text for current Claude text run
 let _claudeTextEl = null;       // DOM element for current Claude text run
 let _claudeToolBlocks = {};     // toolId -> DOM element for Claude tool calls
+let _isNewCopilotSession = false; // true when the open chat is a new unsaved Copilot session
 
 // ── Copilot CLI flag definitions ─────────────────────────────────────────────
 // type: 'bool' | 'text' | 'number' | 'select'
@@ -240,6 +241,21 @@ async function init() {
   window.agents.onOpenProvider((id) => selectProvider(id));
 
   setupStreamingHandlers();
+
+  // Wire @mention file typeahead for robos-ai-textarea
+  if (typeof customElements !== 'undefined') {
+    customElements.whenDefined('robos-ai-textarea').then(() => {
+      const inputEl = document.getElementById('chat-input');
+      if (inputEl) {
+        inputEl.addEventListener('robos-path-query', async (e) => {
+          try {
+            const r = await window.robos.searchIndex(e.detail.query);
+            if (r && r.ok && inputEl._showMentions) inputEl._showMentions(r.items);
+          } catch (_) {}
+        });
+      }
+    }).catch(() => {});
+  }
 
   setInterval(() => refreshCurrentSessions(), 5000);
   setInterval(() => refreshProviderStatus(), 5000);
@@ -1308,7 +1324,7 @@ async function openSession(session) {
   const inputEl = document.getElementById('chat-input');
   sendBtn.onclick = sendMessage;
   stopBtn.onclick = stopStreaming;
-  inputEl.onkeydown = (e) => { if (e.ctrlKey && e.key === 'Enter') { e.preventDefault(); sendMessage(); } };
+  inputEl.addEventListener('keydown', (e) => { if (e.ctrlKey && e.key === 'Enter') { e.preventDefault(); sendMessage(); } });
 
   await loadConversationHistory();
 }
@@ -1523,6 +1539,7 @@ function setupStreamingHandlers() {
   window.agents.onSessionDone(handleSessionDone);
   window.agents.onSessionStderr(handleSessionStderr);
   window.agents.onSessionEventsRefresh(handleSessionEventsRefresh);
+  window.agents.onSessionNewCreated(handleSessionNewCreated);
 }
 
 function handleSessionChunk(data) {
@@ -1593,14 +1610,26 @@ function handlePlainTextChunk(text) {
   scrollToBottom();
 }
 
+function isCopilotStatsLine(text) {
+  // Copilot prints summary stats to stderr — not errors
+  return /^\s*(Changes|Requests|Tokens|Premium|Duration|Model)\s/.test(text) ||
+         /[↑↓]\s*[\d.]+[km]?/i.test(text);
+}
+
 function handleSessionStderr(data) {
   if (!selectedSession || data.sessionId !== selectedSession.session_id) return;
   if (!streamingBubble) return;
+  const text = data.text || '';
   const bContent = streamingBubble.querySelector('.bubble-content');
-  const errEl = document.createElement('div');
-  errEl.className = 'stream-stderr';
-  errEl.textContent = data.text || '';
-  bContent.appendChild(errEl);
+  const el = document.createElement('div');
+  if (isCopilotStatsLine(text)) {
+    el.className = 'stream-stats';
+    el.textContent = text.trim();
+  } else {
+    el.className = 'stream-stderr';
+    el.textContent = text;
+  }
+  bContent.appendChild(el);
   scrollToBottom();
 }
 
@@ -1632,6 +1661,27 @@ function handleSessionEventsRefresh(data) {
   }
 }
 
+async function handleSessionNewCreated({ provider, sessionId }) {
+  if (provider !== 'github-copilot') return;
+  // Refresh sessions list for copilot
+  const sessions = await window.agents.copilotSessions();
+  renderSessionsList(sessions, provider);
+  // Find new session and update selectedSession so future history loads work
+  const found = sessions.find(s => s.session_id === sessionId);
+  if (found && selectedSession && selectedSession.session_id === '_new_copilot') {
+    selectedSession = { ...found, provider: 'github-copilot' };
+    _isNewCopilotSession = false;
+    // Update header
+    const nameEl = document.getElementById('chat-session-name');
+    if (nameEl) nameEl.textContent = found.name || sessionId.slice(0, 8);
+    const cwdEl = document.getElementById('chat-session-cwd');
+    if (cwdEl) cwdEl.textContent = found.cwd || '';
+    // Highlight in sessions list
+    document.querySelectorAll('.session-item').forEach(el =>
+      el.classList.toggle('active', el.dataset.sessionId === sessionId));
+  }
+}
+
 // ── Send / Stop ──────────────────────────────────────────────────────────────
 
 async function sendMessage() {
@@ -1645,22 +1695,35 @@ async function sendMessage() {
   _claudeTextEl = null; _claudeTextAcc = ''; _claudeToolBlocks = {};
 
   const msgs = document.getElementById('chat-messages');
+  // Clear placeholder on first message for new session
+  if (_isNewCopilotSession) {
+    msgs.innerHTML = '';
+    input.setAttribute('placeholder', 'Type a message… Ctrl+Enter to send');
+  }
   appendBubble(msgs, 'user', renderMarkdown(prompt));
   streamingBubble = createStreamingBubble(msgs);
   scrollToBottom();
 
-  window.agents.sessionSend({
-    provider: selectedProviderId,
-    sessionId: selectedSession.session_id,
-    prompt,
-    cwd: selectedSession.cwd || '',
-  });
+  if (_isNewCopilotSession) {
+    window.agents.copilotStartNew(prompt, buildCopilotArgs(), selectedSession.cwd || '');
+  } else {
+    window.agents.sessionSend({
+      provider: selectedProviderId,
+      sessionId: selectedSession.session_id,
+      prompt,
+      cwd: selectedSession.cwd || '',
+    });
+  }
 }
 
 function stopStreaming() {
-  if (selectedSession) window.agents.sessionKill(selectedSession.session_id);
+  if (selectedSession) {
+    const killId = _isNewCopilotSession ? '_new_copilot' : selectedSession.session_id;
+    window.agents.sessionKill(killId);
+  }
   finishStreamingBubble();
   _claudeTextEl = null; _claudeTextAcc = ''; _claudeToolBlocks = {};
+  _isNewCopilotSession = false;
   setStreaming(false);
 }
 
@@ -1711,7 +1774,36 @@ function openSessionInTerminal() {
 
 function startNewSession(providerId) {
   if (providerId === 'github-copilot') {
-    window.agents.copilotLaunchTerminal(null, buildCopilotArgs(), copilotFlagValues['cwd'] || null);
+    // Show an empty in-app chat — user's first message will spawn copilot and stream it here
+    _isNewCopilotSession = true;
+    selectedSession = {
+      session_id: '_new_copilot',
+      provider: 'github-copilot',
+      name: 'New Copilot Session',
+      cwd: copilotFlagValues['cwd'] || null,
+      first_message: '',
+    };
+    selectedProviderId = 'github-copilot';
+    document.querySelectorAll('.session-item').forEach(el => el.classList.remove('active'));
+    document.getElementById('chat-empty').classList.add('hidden');
+    const view = document.getElementById('chat-view');
+    view.classList.remove('hidden');
+    document.getElementById('chat-session-name').textContent = 'New Copilot Session';
+    document.getElementById('chat-session-cwd').textContent = copilotFlagValues['cwd'] || '';
+    document.getElementById('btn-chat-refresh').onclick = () => {};
+    document.getElementById('btn-chat-terminal').onclick = () =>
+      window.agents.copilotLaunchTerminal(null, buildCopilotArgs(), copilotFlagValues['cwd'] || null);
+    const sendBtn = document.getElementById('btn-send');
+    const stopBtn = document.getElementById('btn-stop');
+    const inputEl = document.getElementById('chat-input');
+    sendBtn.onclick = sendMessage;
+    stopBtn.onclick = stopStreaming;
+    inputEl.addEventListener('keydown', (e) => { if (e.ctrlKey && e.key === 'Enter') { e.preventDefault(); sendMessage(); } });
+    document.querySelector('.chat-input-wrap').classList.remove('hidden');
+    const msgs = document.getElementById('chat-messages');
+    msgs.innerHTML = '<div class="chat-no-history">💬 Type your first message to start a new Copilot session.<br><span style="font-size:11px;color:#484f58">Ctrl+Enter or click Send</span></div>';
+    inputEl.setAttribute('placeholder', 'Start a new Copilot conversation…');
+    inputEl.focus();
   } else if (providerId === 'claude-code') {
     window.agents.claudeLaunchTerminal(null, buildClaudeArgs(), claudeFlagValues['cwd'] || null);
   } else if (providerId === 'codex') {
