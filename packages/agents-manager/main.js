@@ -23,6 +23,22 @@ try {
 
 // ── Provider paths ──────────────────────────────────────────────────────────
 
+function resolveCopilotBin() {
+  const candidates = [
+    '/home/linuxbrew/.linuxbrew/bin/copilot',
+    '/usr/local/bin/copilot',
+    '/usr/bin/copilot',
+  ];
+  for (const p of candidates) {
+    try { fs.accessSync(p, fs.constants.X_OK); return p; } catch {}
+  }
+  // fall back to PATH lookup
+  try {
+    return cp.execSync('which copilot 2>/dev/null', { encoding: 'utf8' }).trim() || 'copilot';
+  } catch { return 'copilot'; }
+}
+const COPILOT_BIN = resolveCopilotBin();
+
 const COPILOT_SESSION_DIR = path.join(os.homedir(), '.copilot', 'session-state');
 const CLAUDE_DIR          = path.join(os.homedir(), '.claude');
 const CLAUDE_SESSIONS_DIR = path.join(CLAUDE_DIR, 'sessions');
@@ -1084,6 +1100,51 @@ ipcMain.handle('harness-router-toggle-docker', async (_, action) => {
 
 
 
+// ── am-list-path: @-mention file typeahead for robos-ai-textarea ─────────────
+ipcMain.handle('am-list-path', (_, prefix) => {
+  try {
+    const home     = os.homedir();
+    const expanded = prefix.replace(/^~/, home);
+    const isDir    = expanded.endsWith('/');
+    const dir      = isDir ? expanded : path.dirname(expanded);
+    const partial  = isDir ? '' : path.basename(expanded);
+    const isRecursive = partial && !expanded.slice(home.length + 1).includes('/');
+    if (isRecursive) {
+      const INDEX_DIR = path.join(home, '.config', 'robos', 'search-index');
+      let items = [];
+      if (fs.existsSync(INDEX_DIR)) {
+        const indexFiles = fs.readdirSync(INDEX_DIR).filter(f => f.endsWith('.txt'));
+        const seen = new Set();
+        for (const indexFile of indexFiles) {
+          const fp = path.join(INDEX_DIR, indexFile);
+          const lines = fs.readFileSync(fp, 'utf8').split('\n');
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed || seen.has(trimmed)) continue;
+            const bn = path.basename(trimmed).toLowerCase();
+            if (!bn.includes(partial.toLowerCase())) continue;
+            seen.add(trimmed);
+            items.push({ name: path.basename(trimmed), path: trimmed });
+            if (items.length >= 12) break;
+          }
+          if (items.length >= 12) break;
+        }
+      }
+      return { ok: true, items };
+    }
+    if (!fs.existsSync(dir)) return { ok: true, items: [] };
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    const items = entries
+      .filter(e => !partial || e.name.toLowerCase().startsWith(partial.toLowerCase()))
+      .slice(0, 12)
+      .map(e => ({
+        name: e.name + (e.isDirectory() ? '/' : ''),
+        path: path.join(dir, e.name) + (e.isDirectory() ? '/' : ''),
+      }));
+    return { ok: true, items };
+  } catch { return { ok: true, items: [] }; }
+});
+
 // ── Session Events + Streaming ───────────────────────────────────────────────
 
 const _runningProcs = new Map();
@@ -1143,7 +1204,7 @@ ipcMain.handle('session-send', (event, { provider, sessionId, prompt, cwd }) => 
     );
   } else if (provider === 'github-copilot') {
     proc = cp.spawn(
-      '/usr/bin/copilot',
+      COPILOT_BIN,
       ['--resume', sessionId, '--no-auto-update', '--no-color'],
       {
         cwd: cwdDir,
@@ -1216,4 +1277,82 @@ ipcMain.handle('session-kill', (_, sessionId) => {
     try { _runningProcs.get(sessionId).kill('SIGTERM'); } catch {}
     _runningProcs.delete(sessionId);
   }
+});
+
+// ── Copilot new session (in-app, no terminal) ───────────────────────────────
+
+ipcMain.handle('copilot-start-new', (event, { prompt, extraArgs, cwd }) => {
+  const wc = event.sender;
+  const TEMP_ID = '_new_copilot';
+
+  if (_runningProcs.has(TEMP_ID)) {
+    try { _runningProcs.get(TEMP_ID).kill('SIGTERM'); } catch {}
+    _runningProcs.delete(TEMP_ID);
+  }
+
+  const cwdDir = (cwd && typeof cwd === 'string' && cwd.trim()) ? cwd.trim() : os.homedir();
+
+  // Snapshot existing session dirs before spawning so we can detect the new one
+  let existingIds;
+  try {
+    existingIds = new Set(
+      fs.readdirSync(COPILOT_SESSION_DIR)
+        .filter(f => !f.endsWith('.jsonl') && /^[0-9a-f-]{36}$/.test(f))
+    );
+  } catch { existingIds = new Set(); }
+
+  const args = ['--no-auto-update', '--no-color'];
+  if (Array.isArray(extraArgs)) {
+    for (const a of extraArgs) {
+      if (a !== '--no-auto-update' && a !== '--no-color') args.push(a);
+    }
+  }
+
+  const proc = cp.spawn(COPILOT_BIN, args, {
+    cwd: cwdDir,
+    env: { ...process.env, TERM: 'dumb', NO_COLOR: '1', COLORTERM: '' },
+    stdio: ['pipe', 'pipe', 'pipe'],
+  });
+
+  if (proc.stdin) {
+    try { proc.stdin.write(prompt + '\n'); proc.stdin.end(); } catch {}
+  }
+
+  _runningProcs.set(TEMP_ID, proc);
+
+  proc.stdout.on('data', chunk => {
+    const clean = chunk.toString()
+      .replace(/\x1b\][^\x07\x1b]*(\x07|\x1b\\)/g, '')
+      .replace(/\x1b\[[0-9;?]*[ -/]*[@-~]/g, '')
+      .replace(/\x1b[A-Z\\^_]/g, '')
+      .replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    if (clean.trim()) try { wc.send('session-chunk', { sessionId: TEMP_ID, text: clean }); } catch {}
+  });
+
+  proc.stderr.on('data', chunk => {
+    const text = chunk.toString().replace(/\x1b\[[0-9;?]*[ -/]*[@-~]/g, '');
+    if (text.trim()) try { wc.send('session-stderr', { sessionId: TEMP_ID, text }); } catch {}
+  });
+
+  proc.on('close', code => {
+    _runningProcs.delete(TEMP_ID);
+    try { wc.send('session-done', { sessionId: TEMP_ID, code }); } catch {}
+
+    // Detect the newly created session dir
+    setTimeout(() => {
+      try {
+        const all = fs.readdirSync(COPILOT_SESSION_DIR)
+          .filter(f => !f.endsWith('.jsonl') && /^[0-9a-f-]{36}$/.test(f));
+        const newId = all.find(id => !existingIds.has(id));
+        if (newId) {
+          try { wc.send('session-new-created', { provider: 'github-copilot', sessionId: newId }); } catch {}
+        }
+      } catch {}
+    }, 800);
+  });
+
+  proc.on('error', err => {
+    _runningProcs.delete(TEMP_ID);
+    try { wc.send('session-done', { sessionId: TEMP_ID, error: err.message }); } catch {}
+  });
 });

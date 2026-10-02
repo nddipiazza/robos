@@ -96,20 +96,22 @@ class JiraAdapter {
   }
 
   // ── Search — POST /rest/api/3/search/jql ─────────────────────────────────
+  // Jira Cloud requires /search/jql (old /search endpoint removed per CHANGE-2046).
+  // This endpoint uses nextPageToken pagination — startAt is not accepted.
 
-  async searchIssues({ jql, maxResults = 50, startAt = 0, fields } = {}) {
-    const defaultFields = ['summary', 'description', 'status', 'assignee', 'priority', 'issuetype', 'created', 'updated', 'labels', 'parent'];
+  async searchIssues({ jql, maxResults = 50, nextPageToken, fields } = {}) {
+    const defaultFields = ['summary', 'description', 'status', 'assignee', 'priority', 'issuetype', 'created', 'updated', 'labels', 'parent', 'issuelinks'];
     const body = {
       jql: jql || (this.projects.length ? `project IN (${this.projects.join(',')})` : ''),
       maxResults,
-      startAt,
       fields: fields ? (Array.isArray(fields) ? fields : fields.split(',').map(f => f.trim())) : defaultFields,
     };
+    if (nextPageToken) body.nextPageToken = nextPageToken;
     const result = await this._request('POST', '/search/jql', body);
     return {
       issues: (result.issues || []).map(i => this._mapIssue(i)),
       total: result.total || 0,
-      startAt: result.startAt || 0,
+      nextPageToken: result.nextPageToken || null,
       maxResults: result.maxResults || maxResults,
     };
   }
@@ -213,6 +215,21 @@ class JiraAdapter {
     return { ok: true };
   }
 
+  // ── Issue Links ──────────────────────────────────────────────────────────
+
+  /**
+   * Create a "Blocks" issue link: blockerKey blocks blockedKey.
+   * In Jira semantics: outwardIssue (blocker) "blocks" inwardIssue (blocked).
+   */
+  async createIssueLink(blockerKey, blockedKey) {
+    await this._request('POST', '/issueLink', {
+      type: { name: 'Blocks' },
+      outwardIssue: { key: blockerKey },
+      inwardIssue:  { key: blockedKey },
+    });
+    return { ok: true };
+  }
+
   // ── Projects ─────────────────────────────────────────────────────────────
 
   async listProjects() {
@@ -285,6 +302,12 @@ class JiraAdapter {
       created: f.created,
       updated: f.updated,
       parent: f.parent ? { key: f.parent.key, summary: f.parent.fields?.summary } : null,
+      blockedBy: (f.issuelinks || [])
+        .filter(l => l.outwardIssue && (l.type?.inward || '').toLowerCase().includes('blocked'))
+        .map(l => ({ key: l.outwardIssue.key, summary: l.outwardIssue.fields?.summary || '', status: l.outwardIssue.fields?.status?.name || '' })),
+      blocks: (f.issuelinks || [])
+        .filter(l => l.inwardIssue && (l.type?.outward || '').toLowerCase().includes('blocks'))
+        .map(l => ({ key: l.inwardIssue.key, summary: l.inwardIssue.fields?.summary || '', status: l.inwardIssue.fields?.status?.name || '' })),
       url: `${this.baseUrl}/browse/${raw.key}`,
     };
   }

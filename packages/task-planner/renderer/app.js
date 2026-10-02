@@ -1254,6 +1254,7 @@ async function handleSubmitAnswers() {
     ticketKey:      null,
     ticketUrl:      null,
     ticketStatus:   null,
+    dependsOn:      Array.isArray(t.dependsOn) ? t.dependsOn : [],
   }));
 
   const rawPrompt = getPromptValue().toLowerCase();
@@ -1402,6 +1403,9 @@ function buildCard(i, indent) {
   const directivesBtnHtml = `
     <button class="task-directives-btn" data-idx="${i}" title="View / customize prompt directives for this agent">🤖 Directives</button>
   `;
+  const depsRow = (task.dependsOn && task.dependsOn.length > 0)
+    ? `<div class="task-deps-row">⛓ Depends on: ${task.dependsOn.map(d => `<span class="dep-badge">#${d + 1}</span>`).join(' ')}</div>`
+    : '';
 
   card.innerHTML = `
     <div class="task-card-header">
@@ -1424,6 +1428,7 @@ function buildCard(i, indent) {
       </div>
       <textarea class="task-directives-input" rows="2" placeholder="Custom instructions for ${escHtml(currentRole)}...">${escHtml(task.implementationGuidance || '')}</textarea>
     </div>
+    ${depsRow}
     <div class="task-body-preview md-body" title="Click to edit">${renderMd(task.body)}</div>
     <textarea class="task-body-input" rows="5" placeholder="Description…" style="display:none">${escHtml(task.body)}</textarea>
     <div class="task-labels">
@@ -1492,6 +1497,11 @@ function buildCard(i, indent) {
       if (t.parentEpicIdx !== null) {
         if (t.parentEpicIdx === i) t.parentEpicIdx = null;
         else if (t.parentEpicIdx > i) t.parentEpicIdx--;
+      }
+      if (Array.isArray(t.dependsOn)) {
+        t.dependsOn = t.dependsOn
+          .filter(d => d !== i)
+          .map(d => d > i ? d - 1 : d);
       }
     });
     renderTasks();
@@ -1602,6 +1612,22 @@ async function handleSyncAll() {
   const msg = `✓ Synced ${successCount} task${successCount !== 1 ? 's' : ''}` + (failCount ? `, ${failCount} failed` : '');
   showCreateStatus(msg, failCount > 0);
 
+  // Create Jira "Blocks" issue links for dependsOn relationships
+  if (serverInfo && serverInfo.type === 'jira') {
+    for (let idx = 0; idx < tasks.length; idx++) {
+      const task = tasks[idx];
+      if (!Array.isArray(task.dependsOn) || !task.dependsOn.length) continue;
+      const blockedKey = task.ticketKey;
+      if (!blockedKey) continue;
+      for (const depIdx of task.dependsOn) {
+        const blockerKey = tasks[depIdx] && tasks[depIdx].ticketKey;
+        if (!blockerKey) continue;
+        try {
+          await window.robos.createIssueLink({ serverInfo, blockerKey, blockedKey });
+        } catch {}
+      }
+    }
+  }
   if (results.length > 0) {
     renderResults(results);
     document.getElementById('preview-section').style.display = 'none';
