@@ -57,6 +57,7 @@ class GameCartridgeBundler {
     items = [],
     quests = [],
     maps = {},
+    spellAllocation = null,
     startingMap = "the-trial",
     startingPosition = [1, 1],
     coverColor = "#78350f",
@@ -94,6 +95,9 @@ class GameCartridgeBundler {
       maps,
       quests
     };
+    if (spellAllocation) {
+      cartridge.spellAllocation = spellAllocation;
+    }
 
     const validation = this.validateCartridge(cartridge);
     if (!validation.valid) {
