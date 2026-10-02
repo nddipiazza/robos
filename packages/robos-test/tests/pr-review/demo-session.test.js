@@ -105,3 +105,13 @@ test('reviewer can continue after an unverified step without claiming it passed'
  pass=true;await s.act('continue');assert.equal(s.index,1);assert.equal(s.status,'paused');
  assert.ok(s.messages.some(m=>m.role==='system' && /remains unverified/.test(m.text)));
 });
+
+test('walkthrough prompt commits verified improvements on the existing branch without unrelated edits',async()=>{
+ const prompts=[];const s=session(async p=>{prompts.push(p);return {reply:'Verified',checkpointReached:true};});
+ await s.act('start');await s.act('message','Improve the filter spacing');
+ assert.match(prompts.at(-1),/commit each completed improvement on the existing feature branch before returning/);
+ assert.match(prompts.at(-1),/never include unrelated pre-existing edits/);
+ assert.match(prompts.at(-1),/report the commit hash/);
+ assert.match(prompts.at(-1),/BEFORE CHANGE mode and explain-only requests are read-only/);
+ assert.doesNotMatch(prompts.at(-1),/Never commit, push/);
+});
