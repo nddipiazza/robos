@@ -20,3 +20,11 @@ test('reads checks using the review account and returns the current head',async(
  assert.equal(r.state,'failed');assert.equal(r.head,'abc');assert.equal(calls[1].opts.env.GH_TOKEN,'private-token');assert.deepEqual(calls[0].args,['auth','token','--user','reviewer']);
 });
 test('unpublished reviews do not invoke GitHub',async()=>{assert.equal((await readCI({}, {run:()=>{throw Error('unexpected')}})).state,'unpublished');});
+test('Buildkite checks include actual failed jobs only for the matching PR revision',async()=>{
+ const review={repo:'org/repo',pullRequest:{number:222}};
+ const run=async()=>({stdout:JSON.stringify({headRefOid:'abc',statusCheckRollup:[{context:'buildkite/cloud-native',state:'FAILURE',targetUrl:'https://buildkite.com/hermetiq/cloud-native/builds/1130'}]})});
+ const buildkiteDetail=async()=>({number:1130,head:'abc',jobs:[{name:'Browser',conclusion:'failure'}]});
+ const result=await readCI(review,{refresh:true,run,buildkiteDetail});assert.equal(result.checks[0].jobs[0].name,'Browser');
+ const stale=await readCI(review,{refresh:true,run,buildkiteDetail:async()=>({head:'old',jobs:[]})});assert.match(stale.checks[0].providerError,/different commit/);assert.equal(stale.checks[0].jobs,undefined);
+ const unavailable=await readCI(review,{refresh:true,run,buildkiteDetail:async()=>{throw Error('Token unavailable');}});assert.equal(unavailable.state,'failed');assert.match(unavailable.checks[0].providerError,/Token unavailable/);
+});

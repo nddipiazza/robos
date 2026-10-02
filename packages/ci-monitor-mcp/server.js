@@ -141,18 +141,18 @@ class CIMonitorService {
 }
 
 function createCIMonitorMCPServer(options = {}) {
-  const service = new CIMonitorService(options);
+  const service = options.liveService || (options.runsFile || options.demo === true ? new CIMonitorService(options) : new (require('./live-buildkite').LiveBuildkiteService)());
 
   const server = createMCPServer({
     appId: 'ci-monitor',
     name: 'CI Monitor MCP Server',
-    version: '1.2.0',
+    version: '1.3.0',
     description: 'RobOS Continuous Integration & Deployment Pipeline MCP Server',
     port: options.port || null,
     tools: [
       {
         name: 'robos_ci_get_status',
-        description: 'Get CI build and test pipeline status for a repository branch.',
+        description: 'Get the latest configured Buildkite run on an exact branch. Returns null if no matching recent run exists.',
         inputSchema: {
           type: 'object',
           properties: { branch: { type: 'string', description: 'Branch name (e.g. main, feat/task-101-flow)' } },
@@ -161,7 +161,7 @@ function createCIMonitorMCPServer(options = {}) {
       },
       {
         name: 'robos_ci_list_runs',
-        description: 'List recent CI pipeline runs with execution outcomes and durations.',
+        description: 'List up to 30 real builds from the configured Buildkite organization/pipeline. Returns stable run IDs for log and failure tools.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -173,37 +173,37 @@ function createCIMonitorMCPServer(options = {}) {
       },
       {
         name: 'robos_ci_get_logs',
-        description: 'Fetch complete build and test logs for a CI run.',
+        description: 'Fetch actual failed-job logs for a Buildkite run. Individual log access failures are reported, not hidden.',
         inputSchema: {
           type: 'object',
-          properties: { runId: { type: 'string', description: 'CI Run ID (e.g. run-101)' } },
+          properties: { runId: { type: 'string', description: 'Run ID returned by robos_ci_list_runs (buildkite:organization:pipeline:number)' } },
           required: ['runId'],
         },
         handler: async (args) => service.getLogs(args.runId),
       },
       {
         name: 'robos_ci_get_failures',
-        description: 'Retrieve failed test assertions and stacktraces for failure diagnosis.',
+        description: 'Retrieve failed Buildkite jobs, commit, observed log excerpts and artifact link. Excerpts are log text, not an inferred root cause.',
         inputSchema: {
           type: 'object',
-          properties: { runId: { type: 'string', description: 'CI Run ID' } },
+          properties: { runId: { type: 'string', description: 'Run ID returned by robos_ci_list_runs' } },
           required: ['runId'],
         },
         handler: async (args) => service.getFailures(args.runId),
       },
       {
         name: 'robos_ci_retry_run',
-        description: 'Trigger a re-run of a failed CI pipeline.',
+        description: 'Buildkite retries are not supported by this read-only integration. Returns an explicit error without retrying or changing status.',
         inputSchema: {
           type: 'object',
-          properties: { runId: { type: 'string', description: 'CI Run ID' } },
+          properties: { runId: { type: 'string', description: 'Run ID returned by robos_ci_list_runs' } },
           required: ['runId'],
         },
         handler: async (args) => service.retryRun(args.runId),
       },
       {
         name: 'robos_ci_get_deployments',
-        description: 'List recent deployments and active staging/production environments.',
+        description: 'Deployments are not tracked by the Buildkite integration; returns an empty list.',
         inputSchema: { type: 'object', properties: {} },
         handler: async () => service.getDeployments(),
       },

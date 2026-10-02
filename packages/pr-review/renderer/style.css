@@ -3454,3 +3454,5 @@ review-markdown-editor { display: block; margin: 8px 0 20px; }
 
 #push-walkthrough-adjustments[hidden] { display: none; }
 #push-walkthrough-adjustments:disabled { opacity: .5; cursor: not-allowed; }
+
+.ci-buildkite-log pre { max-height: 320px; overflow: auto; white-space: pre-wrap; font-size: 12px; padding: 12px; background: #0d1117; }

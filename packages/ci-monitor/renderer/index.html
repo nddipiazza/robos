@@ -15,6 +15,8 @@
     </div>
     <div class="header-right">
       <div class="filter-bar">
+        <select id="ci-provider" aria-label="CI provider"><option value="github">GitHub Actions</option><option value="buildkite">Buildkite</option></select>
+        <button id="ci-settings" class="btn-action">Connection</button>
         <select id="filter-status">
           <option value="all">All Runs</option>
           <option value="in_progress">In Progress</option>
@@ -28,7 +30,14 @@
     </div>
   </header>
 
-  <div id="error-bar" class="hidden"></div>
+  <dialog id="ci-connection"><form id="buildkite-settings">
+<h2>Buildkite connection</h2><p>Use an existing encrypted pass entry. RobOS never stores the token here.</p>
+<label>Organization<input name="org" required placeholder="hermetiq"></label>
+<label>Pipeline (optional)<input name="pipeline" placeholder="cloud-native"></label>
+<label>Pass entry<input name="passPath" required value="buildkite-api-access-token"></label>
+<p role="status" id="connection-status"></p><footer><button type="button" id="connection-close">Cancel</button><button type="submit">Verify &amp; save</button></footer>
+</form></dialog>
+<div id="error-bar" class="hidden"></div>
 
   <div id="main-content">
     <!-- Run List Panel -->
@@ -64,6 +73,7 @@
           <div id="detail-meta"></div>
         </div>
         <div id="detail-actions-bar">
+          <button id="btn-artifacts" class="btn-action" hidden>Artifacts</button>
           <button id="btn-rerun" class="btn-action btn-rerun">Re-run</button>
           <button id="btn-open-gh" class="btn-action btn-gh">View on GitHub</button>
         </div>
@@ -72,7 +82,7 @@
       <div id="detail-tabs">
         <button class="tab-btn active" data-tab="jobs">Jobs</button>
         <button class="tab-btn" data-tab="log">Failed Log</button>
-        <button class="tab-btn" data-tab="diagnosis">AI Diagnosis</button>
+        <button class="tab-btn" data-tab="diagnosis">Log summary</button>
       </div>
 
       <div id="tab-jobs" class="tab-content active">
@@ -80,11 +90,12 @@
       </div>
 
       <div id="tab-log" class="tab-content">
+        <button id="full-log" class="btn-action" hidden>Show full log</button>
         <pre id="log-output" class="log-viewer"></pre>
       </div>
 
       <div id="tab-diagnosis" class="tab-content">
-        <button id="btn-diagnose" class="btn-primary">Run AI Diagnosis</button>
+        <button id="btn-diagnose" class="btn-primary">Run Log summary</button>
         <div id="diagnosis-output"></div>
       </div>
     </div>

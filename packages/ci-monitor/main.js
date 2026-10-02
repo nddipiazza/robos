@@ -66,6 +66,11 @@ app.whenReady().then(() => {
 });
 app.on('window-all-closed', () => app.quit());
 
+const connections=require('../robos-lib/ci/connections');
+const {Buildkite}=require('../robos-lib/ci/buildkite');
+ipcMain.handle('ci-connections',()=>connections.read());
+ipcMain.handle('save-buildkite',async(_,input)=>{try{const client=new Buildkite(input);await client.list();return {ok:true,config:connections.saveBuildkite(input)};}catch(e){return {ok:false,error:e.message};}});
+function buildkiteFor(repo){const config=connections.read().buildkite;if(!config)throw Error('Configure Buildkite first.');const [org,pipeline]=String(repo).split('/');if(org!==config.org||!pipeline||config.pipeline&&pipeline!==config.pipeline)throw Error('Build is outside the configured Buildkite connection.');return new Buildkite({...config,pipeline});}
 // ── IPC: config ───────────────────────────────────────────────────────────
 
 ipcMain.handle('get-config', () => {
@@ -84,7 +89,9 @@ ipcMain.handle('get-config', () => {
 
 // ── IPC: fetch workflow runs (GitHub Actions) ─────────────────────────────
 
-ipcMain.handle('fetch-runs', async (_, { status } = {}) => {
+ipcMain.handle('fetch-runs', async (_, { status, provider } = {}) => {
+  if(provider==='buildkite'){try{const runs=await new Buildkite(connections.read().buildkite||{}).list();return {ok:true,runs:runs.filter(r=>!status||status==='all'||r.status===status||r.conclusion===status)};}catch(e){return {ok:false,error:e.message};}}
+
   const server = getActiveServer();
   if (!server) return { ok: false, error: 'No task server configured' };
 
@@ -113,8 +120,9 @@ ipcMain.handle('fetch-runs', async (_, { status } = {}) => {
 
 // ── IPC: fetch run detail (jobs + logs) ──────────────────────────────────
 
-ipcMain.handle('fetch-run-detail', async (_, { repo, runId }) => {
+ipcMain.handle('fetch-run-detail', async (_, { repo, runId, provider }) => {
   try {
+    if(provider==='buildkite')return {ok:true,...await buildkiteFor(repo).detail(runId)};
     // Fetch jobs
     const jobsCmd = `gh run view --repo ${repo} ${runId} --json jobs`;
     let jobs = [];
@@ -159,7 +167,8 @@ ipcMain.handle('ai-diagnose-failure', async (_, { repo, runId, failedLog, jobNam
 
 // ── IPC: re-run workflow ─────────────────────────────────────────────────
 
-ipcMain.handle('rerun-workflow', async (_, { repo, runId }) => {
+ipcMain.handle('rerun-workflow', async (_, { repo, runId, provider }) => {
+  if(provider==='buildkite')return {ok:false,error:'Use Buildkite to explicitly retry this build.'};
   try {
     execSync(`gh run rerun --repo ${repo} ${runId}`, { encoding: 'utf8', timeout: 15000 });
     return { ok: true };
