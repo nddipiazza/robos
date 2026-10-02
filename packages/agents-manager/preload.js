@@ -1,6 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('agents', {
+  openQuestionnaire:id=>ipcRenderer.invoke('agent-question-open',id),
   sessionTarget:()=>ipcRenderer.invoke('agent-session-target'),
   onOpenSession:cb=>ipcRenderer.on('open-agent-session',(_,target)=>cb(target)),
   // Provider detection

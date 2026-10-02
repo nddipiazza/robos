@@ -5,6 +5,7 @@ const fs   = require('fs');
 const os   = require('os');
 const cp   = require('child_process');
 
+require('../robos-lib/agent-question-window').register();
 const SETTINGS_FILE = path.join(os.homedir(), '.config', 'robos', 'settings.json');
 
 // Debug server (optional)
