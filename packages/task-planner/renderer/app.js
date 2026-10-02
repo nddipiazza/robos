@@ -323,6 +323,18 @@ function renderFeatureTabs() {
     btn.className = `feature-tab ${feat.id === activeFeatureId ? 'active' : ''}`;
     btn.textContent = feat.name;
     btn.addEventListener('click', () => switchFeature(feat.id));
+    btn.setAttribute('aria-haspopup', 'menu');
+    btn.addEventListener('contextmenu', event => {
+      event.preventDefault();
+      showFeatureContextMenu(event, feat.id, btn);
+    });
+    btn.addEventListener('keydown', event => {
+      if (event.key === 'ContextMenu' || (event.shiftKey && event.key === 'F10')) {
+        event.preventDefault();
+        const rect = btn.getBoundingClientRect();
+        showFeatureContextMenu({ clientX: rect.left, clientY: rect.bottom }, feat.id, btn);
+      }
+    });
     container.appendChild(btn);
   });
   const addBtn = document.createElement('button');
@@ -331,6 +343,80 @@ function renderFeatureTabs() {
   addBtn.textContent = '+ Plan New Feature';
   addBtn.addEventListener('click', () => addNewFeature());
   container.appendChild(addBtn);
+}
+
+let closeFeatureContextMenu = null;
+
+function showFeatureContextMenu(event, featureId, trigger) {
+  if (closeFeatureContextMenu) closeFeatureContextMenu();
+  const menu = document.createElement('div');
+  menu.className = 'feature-context-menu';
+  menu.setAttribute('role', 'menu');
+  menu.setAttribute('aria-label', 'Feature actions');
+  const item = document.createElement('button');
+  item.textContent = 'Add epic';
+  item.setAttribute('role', 'menuitem');
+  menu.appendChild(item);
+  document.body.appendChild(menu);
+  trigger.setAttribute('aria-expanded', 'true');
+  const menuRect = menu.getBoundingClientRect();
+  menu.style.left = `${Math.max(0, Math.min(event.clientX, window.innerWidth - menuRect.width))}px`;
+  menu.style.top = `${Math.max(0, Math.min(event.clientY, window.innerHeight - menuRect.height))}px`;
+
+  const close = (restoreFocus = false) => {
+    menu.remove();
+    trigger.setAttribute('aria-expanded', 'false');
+    document.removeEventListener('pointerdown', outside);
+    document.removeEventListener('keydown', keydown);
+    window.removeEventListener('blur', dismiss);
+    window.removeEventListener('resize', dismiss);
+    document.removeEventListener('scroll', dismiss, true);
+    closeFeatureContextMenu = null;
+    if (restoreFocus) trigger.focus();
+  };
+  const outside = event => { if (!menu.contains(event.target)) close(); };
+  const dismiss = () => close();
+  const keydown = event => {
+    if (event.key === 'Escape') { event.preventDefault(); close(true); }
+    else if (event.key === 'Tab') { close(true); }
+    else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      item.focus();
+    }
+  };
+  closeFeatureContextMenu = close;
+  document.addEventListener('pointerdown', outside);
+  document.addEventListener('keydown', keydown);
+  window.addEventListener('blur', dismiss);
+  window.addEventListener('resize', dismiss);
+  document.addEventListener('scroll', dismiss, true);
+  item.addEventListener('click', () => {
+    close();
+    if (!projectFeatures.some(feature => feature.id === featureId)) return;
+    switchFeature(featureId);
+    addEpic();
+  });
+  item.focus();
+}
+
+function addEpic() {
+  tasks.push({
+    title: 'New Architecture Epic',
+    body: 'Define epic scope, architectural boundaries, and deliverables.',
+    labels: ['epic'],
+    isEpic: true,
+    epicName: 'New Epic',
+    parentEpicIdx: null,
+    issueType: 'Epic',
+    ticketKey: null,
+    ticketUrl: null,
+    ticketStatus: null
+  });
+  renderTasks();
+  document.getElementById('preview-section').style.display = 'block';
+  updateCount();
+  const title = document.querySelector(`#task-list [data-task-index="${tasks.length - 1}"] .task-title-input`);
+  if (title) { title.focus(); title.select(); }
 }
 
 function switchFeature(featId) {
@@ -507,23 +593,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }).catch(() => {});
   }
 
-  document.getElementById('btn-add-epic').addEventListener('click', () => {
-    tasks.push({
-      title: 'New Architecture Epic',
-      body: 'Define epic scope, architectural boundaries, and deliverables.',
-      labels: ['epic'],
-      isEpic: true,
-      epicName: 'New Epic',
-      parentEpicIdx: null,
-      issueType: 'Epic',
-      ticketKey: null,
-      ticketUrl: null,
-      ticketStatus: null
-    });
-    renderTasks();
-    document.getElementById('preview-section').style.display = 'block';
-    updateCount();
-  });
+  document.getElementById('btn-add-epic').addEventListener('click', addEpic);
 
   document.getElementById('btn-add-task').addEventListener('click', () => {
     tasks.push({
@@ -1287,6 +1357,7 @@ function buildCard(i, indent) {
   let cardClass = 'task-card' + (task.isEpic ? ' task-epic' : '') + (indent ? ' task-child' : '');
   if (task.ticketKey) cardClass += ' task-synced';
   card.className = cardClass;
+  card.dataset.taskIndex = i;
 
   const epicTypeBadge = isJira
     ? `<span class="issue-type-badge ${task.isEpic ? 'badge-epic' : 'badge-story'}">${task.isEpic ? '⬡ Epic' : (task.issueType || 'Story')}</span>`

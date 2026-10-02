@@ -1,5 +1,5 @@
 /**
- * GitHub Copilot CLI backend — spawns `gh copilot` with a prompt and
+ * GitHub Copilot CLI backend — spawns `copilot` with a prompt and
  * parses its text-based output.
  */
 'use strict';
@@ -12,7 +12,7 @@ class CopilotBackend {
   }
 
   /**
-   * Spawn the gh copilot CLI process.
+   * Spawn Copilot using the selected RobOS account.
    *
    * @param {string} workspaceDir   — cwd for the child process
    * @param {string[]} contextFiles — files to reference (appended to prompt)
@@ -28,7 +28,7 @@ class CopilotBackend {
       }
     }
 
-    return spawn('gh', ['copilot', 'suggest', '--target', 'shell', fullPrompt], {
+    return spawn('bash', ['-lc', 'exec node "$@"', 'copilot', require('node:path').join(__dirname, '../robos-lib/run-copilot.js'), '-p', fullPrompt], {
       cwd: workspaceDir || process.cwd(),
       stdio: ['ignore', 'pipe', 'pipe'],
       env: { ...process.env },

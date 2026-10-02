@@ -401,9 +401,9 @@ class EmbeddedHarnessRouter extends EventEmitter {
         object: 'harness',
         name: 'GitHub Copilot CLI',
         base: 'github-copilot',
-        installed: isCommandAvailable('copilot') || isCommandAvailable('gh'),
+        installed: isCommandAvailable('copilot'),
         command: 'copilot',
-        status: (isCommandAvailable('copilot') || isCommandAvailable('gh')) ? 'ready' : 'not_installed',
+        status: isCommandAvailable('copilot') ? 'ready' : 'not_installed',
         description: 'GitHub Copilot CLI terminal harness',
       },
       {
@@ -572,9 +572,9 @@ class EmbeddedHarnessRouter extends EventEmitter {
     } else if (harnessId && harnessId.includes('codex') && isCommandAvailable('codex')) {
       cmd = 'codex';
       args = ['exec', effectiveInput];
-    } else if (harnessId && harnessId.includes('copilot') && (isCommandAvailable('copilot') || isCommandAvailable('gh'))) {
-      cmd = isCommandAvailable('copilot') ? 'copilot' : 'gh';
-      args = cmd === 'gh' ? ['copilot', 'suggest', '-t', 'shell', effectiveInput] : ['suggest', effectiveInput];
+    } else if (harnessId && harnessId.includes('copilot') && isCommandAvailable('copilot')) {
+      cmd = 'bash';
+      args = ['-lc', 'exec node "$@"', 'copilot', require('node:path').join(__dirname, '../robos-lib/run-copilot.js'), '-p', effectiveInput];
     }
 
     // Execute or fallback to simulation if specific CLI is not installed
@@ -582,7 +582,7 @@ class EmbeddedHarnessRouter extends EventEmitter {
       let outputAcc = '';
 
       if (cmd) {
-        const proc = spawn(cmd, args, { cwd, env: { ...process.env }, shell: true });
+        const proc = spawn(cmd, args, { cwd, env: { ...process.env }, shell: cmd !== 'bash' });
         this.activeTasks.set(responseId, proc);
 
         proc.stdout.on('data', chunk => {

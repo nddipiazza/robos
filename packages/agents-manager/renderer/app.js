@@ -716,6 +716,22 @@ async function renderHarnessRouterDetail(provider) {
 
 // ── GitHub Copilot Detail ───────────────────────────────────────────────────
 
+async function launchCopilotTerminal(sessionId, extraArgs, cwd) {
+  try {
+    const result = await window.agents.copilotLaunchTerminal(sessionId, extraArgs, cwd);
+    if (result && result.error) alert(`Could not open Copilot CLI Terminal: ${result.error}`);
+  } catch (error) {
+    alert(`Could not open Copilot CLI Terminal: ${error.message}`);
+  }
+}
+
+async function copilotAccountAction(method) {
+  try {
+    const result = await window.agents[method]();
+    if (result?.error) alert(`Could not open Copilot sign-in: ${result.error}`);
+  } catch (error) { alert(`Could not open Copilot sign-in: ${error.message}`); }
+}
+
 async function renderCopilotDetail(provider) {
   const detail = document.getElementById('provider-detail');
   const isActive = activeProviderId === 'github-copilot';
@@ -735,19 +751,19 @@ async function renderCopilotDetail(provider) {
       <div class="detail-section">
         <h3 class="section-title">Status</h3>
         <div class="info-grid">
-          <span class="info-label">gh CLI</span>
+          <span class="info-label">Copilot CLI</span>
           <span class="info-value mono">${esc(provider.version || 'not installed')}</span>
-          <span class="info-label">Logged in as</span>
-          <span class="info-value">${esc(provider.user || 'not logged in')}</span>
+          <span class="info-label">Copilot account</span>
+          <span class="info-value">${esc(provider.user || (provider.authenticated ? 'Signed in (account name unavailable)' : 'Not logged in'))}</span>
           <span class="info-label">Status</span>
           <span class="info-value" style="color:${provider.authenticated ? '#3fb950' : '#e3b341'}">
-            ${provider.authenticated ? 'Connected' : provider.installed ? 'Not authenticated' : 'Not installed'}
+            ${provider.authenticated ? 'Connected' : esc(provider.authStatus || (provider.installed ? 'Not authenticated' : 'Not installed'))}
           </span>
         </div>
+        <p class="text-muted">Choose the Copilot account in Preferences → GitHub accounts. Git Projects and task servers use the separate Git client selection.</p>
         <div class="section-actions">
           <button class="btn btn-sm" id="btn-cop-refresh">Refresh</button>
-          <button class="btn btn-primary btn-sm" id="btn-cop-login">${provider.authenticated ? 'Re-auth to GitHub' : 'Login to GitHub'}</button>
-          ${provider.authenticated ? '<button class="btn btn-danger btn-sm" id="btn-cop-logout">Logout</button>' : ''}
+          <button class="btn btn-primary btn-sm" id="btn-cop-login">Account settings</button>
           <div class="split-btn-group" id="cop-terminal-group">
             <button class="btn btn-ai btn-sm" id="btn-cop-terminal">Open Copilot CLI Terminal</button>
             <button class="btn btn-ai btn-sm split-btn-arrow" id="btn-cop-flags-toggle" title="Configure launch flags">
@@ -805,11 +821,11 @@ async function renderCopilotDetail(provider) {
     await renderCopilotDetail(updated);
   };
 
-  document.getElementById('btn-cop-login').onclick = () => window.agents.copilotLogin();
+  document.getElementById('btn-cop-login').onclick = () => copilotAccountAction('copilotLogin');
   const copLogoutBtn = document.getElementById('btn-cop-logout');
-  if (copLogoutBtn) copLogoutBtn.onclick = () => window.agents.copilotLogout();
+  if (copLogoutBtn) copLogoutBtn.onclick = () => copilotAccountAction('copilotLogout');
   document.getElementById('btn-cop-terminal').onclick = () =>
-    window.agents.copilotLaunchTerminal(null, buildCopilotArgs(), copilotFlagValues['cwd'] || null);
+    launchCopilotTerminal(null, buildCopilotArgs(), copilotFlagValues['cwd'] || null);
 
   // Flags dropdown toggle
   document.getElementById('btn-cop-flags-toggle').onclick = (e) => {
@@ -1041,7 +1057,7 @@ function renderCopilotSessions(sessions) {
       </div>`;
 
     card.querySelector('.btn-resume').onclick = () =>
-      window.agents.copilotLaunchTerminal(s.session_id);
+      launchCopilotTerminal(s.session_id);
     card.querySelector('.btn-delete').onclick = async () => {
       if (!confirm(`Delete session "${s.name}"?`)) return;
       await window.agents.copilotDeleteSession(s.session_id);

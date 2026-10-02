@@ -86,21 +86,7 @@ function run(cmd, args, timeout = 8000) {
 
 ipcMain.handle('detect-providers', async () => {
   const [copilotRes, claudeRes, codexRes] = await Promise.all([
-    (async () => {
-      const ghVer = await run('gh', ['--version'], 1200);
-      const copNpm = await run('sh', ['-c', 'which copilot 2>/dev/null || (test -f /usr/bin/copilot && echo /usr/bin/copilot)'], 1200);
-      const ghUser = await run('gh', ['api', 'user', '--jq', "'.login'"], 1200);
-      const copilotInstalled = !!(copNpm.output && copNpm.output.trim());
-      return {
-        id: 'github-copilot',
-        name: 'GitHub Copilot',
-        installed: copilotInstalled,
-        ghInstalled: !!(ghVer.output && !ghVer.output.includes('not found')),
-        authenticated: !!(ghUser.output && !ghUser.output.startsWith('{')),
-        version: ghVer.output.split('\n')[0] || '',
-        user: ghUser.output && !ghUser.output.startsWith('{') ? ghUser.output : '',
-      };
-    })(),
+    require('./copilot-auth').detect(),
     (async () => {
       const clVer = await run('claude', ['--version'], 1200);
       const clInstalled = !!(clVer.output && !clVer.output.includes('not found') && !clVer.output.includes('No such file'));
@@ -225,61 +211,13 @@ ipcMain.handle('copilot-delete-session', (_, sessionId) => {
 });
 
 ipcMain.handle('copilot-launch-terminal', (_, sessionId, extraArgs, cwd) => {
-  const parts = ['/usr/bin/copilot'];
-  if (Array.isArray(extraArgs) && extraArgs.length) parts.push(...extraArgs);
-  if (sessionId) parts.push('--resume', sessionId);
-  const dqEscape = s => String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\$/g, '\\$').replace(/`/g, '\\`');
-  const shellCmd = parts.map(a => `"${dqEscape(a)}"`).join(' ');
-  const cwdPrefix = (cwd && typeof cwd === 'string' && cwd.trim())
-    ? `cd "${dqEscape(cwd.trim())}" && `
-    : '';
-  cp.spawn('x-terminal-emulator', ['-e', `bash -lc '${cwdPrefix}${shellCmd}; read -p "Press Enter to close..." x'`], {
-    env: { ...process.env, DISPLAY: ':0' }, detached: true,
-  });
+  const args = Array.isArray(extraArgs) ? extraArgs.map(String) : [];
+  if (sessionId) args.push('--resume', String(sessionId));
+  return require('./copilot-auth').launch('open', args, cwd);
 });
-
-ipcMain.handle('copilot-fetch-models', async () => {
-  return new Promise(res => {
-    const homeDir = os.homedir();
-    const env = { ...process.env, HOME: homeDir, GH_CONFIG_DIR: path.join(homeDir, '.config', 'gh') };
-    cp.exec('bash -lc "gh auth token 2>/dev/null"', { timeout: 5000, env }, (err, token) => {
-      if (err || !token.trim()) return res({ error: 'Not authenticated with gh CLI' });
-      const t = token.trim();
-      cp.exec(
-        `curl -sf -H "Authorization: Bearer ${t}" -H "Copilot-Integration-Id: vscode-chat" -H "Editor-Version: vscode/1.90.0" https://api.githubcopilot.com/models`,
-        { timeout: 15000 }, (err2, stdout) => {
-          if (err2) return res({ error: err2.message });
-          try {
-            const data = JSON.parse(stdout);
-            const list = Array.isArray(data) ? data : (data.data || data.models || []);
-            // Only return models the user actually has access to (policy=enabled)
-            const models = list
-              .filter(m => (m.policy || {}).state === 'enabled')
-              .map(m => m.id || m.name)
-              .filter(Boolean)
-              .sort();
-            res({ models });
-          } catch (e) {
-            res({ error: 'Could not parse response: ' + stdout.slice(0, 200) });
-          }
-        }
-      );
-    });
-  });
-});
-
-
-ipcMain.handle('copilot-login', () => {
-  cp.spawn('x-terminal-emulator', ['-e', 'gh auth login'], {
-    env: { ...process.env, DISPLAY: ':0' }, detached: true,
-  });
-});
-
-ipcMain.handle('copilot-logout', () => {
-  cp.spawn('x-terminal-emulator', ['-e', `bash -lc 'gh auth logout; read -p "Press Enter to close..." x'`], {
-    env: { ...process.env, DISPLAY: ':0' }, detached: true,
-  });
-});
+ipcMain.handle('copilot-fetch-models', () => require('./copilot-auth').models());
+ipcMain.handle('copilot-login', () => require('../robos-lib/github-accounts').openPreferences());
+ipcMain.handle('copilot-logout', () => require('../robos-lib/github-accounts').openPreferences());
 
 ipcMain.handle('copilot-update', async () => {
   return new Promise(res => {

@@ -1235,3 +1235,33 @@ robos-ai-textarea {
   border-color: var(--accent);
   outline: none;
 }
+
+/* Feature tab actions */
+.feature-context-menu {
+  position: fixed;
+  z-index: 10000;
+  min-width: 160px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-card, #161b22);
+  box-shadow: 0 6px 20px #0006;
+}
+.feature-context-menu button {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.feature-context-menu button:hover,
+.feature-context-menu button:focus-visible {
+  background: var(--accent);
+  color: #0d1117;
+  outline: none;
+}

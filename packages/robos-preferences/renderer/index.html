@@ -9,15 +9,15 @@
 <body>
   <div class="app">
     <header class="header">
-      <div class="header-title">RobOS Preferences</div>
+      <h1 class="header-title">RobOS Preferences</h1>
       <div class="header-actions">
         <button id="btn-save" class="btn btn-primary">Save All</button>
       </div>
     </header>
     <div class="body">
-      <aside class="sidebar" id="sidebar"></aside>
+      <nav class="sidebar" id="sidebar" aria-label="Preferences sections"></nav>
       <main class="content" id="content">
-        <div id="status-msg" class="status-msg hidden"></div>
+        <div id="status-msg" class="status-msg hidden" role="status"></div>
         <div id="sections"></div>
       </main>
     </div>

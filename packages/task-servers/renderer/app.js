@@ -173,7 +173,7 @@ function githubForm(s) {
     </div>
     <div class="form-row" style="flex-direction:row;align-items:center;gap:8px;padding:4px 0">
       <input type="checkbox" id="f-use-gh-cli" style="width:auto;margin:0;accent-color:#58a6ff"${useGhCli ? ' checked' : ''}>
-      <label for="f-use-gh-cli" style="margin:0;font-size:13px;cursor:pointer">Use gh CLI <span style="color:#484f58;font-size:11px">(recommended — uses your existing <code>gh auth login</code> session)</span></label>
+      <label for="f-use-gh-cli" style="margin:0;font-size:13px;cursor:pointer">Use Git client account <span style="color:#484f58;font-size:11px">(shared with Git Projects; choose in Preferences → GitHub accounts)</span></label>
     </div>
     <div id="token-section"${useGhCli ? ' style="display:none"' : ''}>
       <div class="form-row">

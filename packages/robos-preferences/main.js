@@ -1,7 +1,8 @@
 let app, BrowserWindow, ipcMain;
 try {
   ({ app, BrowserWindow, ipcMain } = require('electron'));
-} catch {
+} catch (error) {
+  if(process.versions.electron)throw error;
   app = {
     requestSingleInstanceLock: () => true,
     commandLine: { appendSwitch: () => {} },
@@ -105,6 +106,8 @@ function syncSettingsToKGraph(settings) {
 // Settings schema with defaults and sections
 const SETTINGS_SCHEMA = {
   sections: [
+    { id: 'github_accounts', label: 'GitHub accounts', fields: [] },
+    {id:'code_review',label:'Code Review',fields:[{key:'default_code_reviewer_group',label:'Default code reviewer group',type:'select',options:[],default:''}]},
     {
       id: 'ai',
       label: 'AI Provider & Models',
@@ -193,6 +196,8 @@ const SETTINGS_SCHEMA = {
   ],
 };
 
+app.setPath?.('userData', path.join(CONFIG_DIR, 'electron', 'robos-preferences'));
+
 // Single-instance lock (bypassed in test mode)
 if (process.env.ROBOS_TEST !== '1' && process.env.ROBOS_TEST_MODE !== '1') {
   const gotLock = app.requestSingleInstanceLock();
@@ -233,14 +238,16 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => app.quit());
+app.on('second-instance', () => { if (win) { if (win.isMinimized()) win.restore(); win.show(); win.focus(); win.webContents.send('show-github-accounts'); } });
 
 // ── IPC Handlers ─────────────────────────────────────────────────────────────
 
-ipcMain.handle('get-schema', () => SETTINGS_SCHEMA);
+ipcMain.handle('get-schema', () => {const schema=JSON.parse(JSON.stringify(SETTINGS_SCHEMA));schema.sections.find(s=>s.id==='code_review').fields[0].options=[{value:'',label:'Choose a group…'},...require('../robos-lib/code-reviewer-group').groups().map(g=>({value:g.id,label:g.name+' ('+g.members+' members)'}))];return schema;});
 
 ipcMain.handle('load-settings', () => loadSettings());
 
 ipcMain.handle('save-settings', (_, data) => {
+  if(Object.hasOwn(data,'default_code_reviewer_group'))require('../robos-lib/code-reviewer-group').validate(data.default_code_reviewer_group);
   const current = loadSettings();
   const merged = { ...current, ...data };
   saveSettings(merged);
@@ -255,9 +262,36 @@ ipcMain.handle('get-setting', (_, key) => {
 
 ipcMain.handle('set-setting', (_, key, value) => {
   const s = loadSettings();
+  if(key==='default_code_reviewer_group')require('../robos-lib/code-reviewer-group').validate(value);
   s[key] = value;
   saveSettings(s);
   return { ok: true };
 });
 
 module.exports = { loadSettings, saveSettings, SETTINGS_SCHEMA };
+
+// Account selectors use the existing GitHub CLI credential store, never renderer tokens.
+ipcMain.handle('github-accounts-list', async () => {
+  try { return { ok: true, ...await require('../robos-lib/github-accounts').list() }; }
+  catch (error) { return { ok: false, error: error.message }; }
+});
+ipcMain.handle('github-accounts-save', async (_, selection) => {
+  try {
+    const result = await require('../robos-lib/github-accounts').save(selection, async env => {
+      const status = await require('../agents-manager/copilot-auth').rpc(['auth.getStatus', 'models.list'], { env });
+      if (!status['auth.getStatus'].isAuthenticated || status['auth.getStatus'].login?.toLowerCase() !== selection.copilot.toLowerCase() || !status['models.list'].models?.length)
+        throw Error('The selected account could not access Copilot. Choose an account with Copilot access.');
+    });
+    return { ok: true, ...result };
+  } catch (error) { return { ok: false, error: error.message }; }
+});
+ipcMain.handle('github-accounts-add', async () => {
+  try {
+    return await new Promise((resolve, reject) => {
+      const child = require('node:child_process').spawn('x-terminal-emulator', ['-e', 'bash', '-lc',
+        'node "$1"; read -r -p "Press Enter to close..."', 'github-login', path.join(__dirname, '../robos-lib/add-github-account.js')],
+        { detached: true, stdio: 'ignore', env: { ...process.env } });
+      child.on('error', reject); child.on('spawn', () => { child.unref(); resolve({ ok: true }); });
+    });
+  } catch (error) { return { ok: false, error: error.message }; }
+});
