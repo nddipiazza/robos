@@ -13,3 +13,11 @@ review-markdown-editor[data-edit-mode=split] .toastui-editor-md-preview { flex:1
 review-markdown-editor[data-edit-mode=split] .toastui-editor-md-splitter { position:relative; left:auto; flex:0 0 8px; width:8px; background:#263748; cursor:col-resize; touch-action:none; user-select:none; }
 review-markdown-editor[data-edit-mode=split] .toastui-editor-md-splitter:hover,
 review-markdown-editor[data-edit-mode=split] .toastui-editor-md-splitter:focus-visible { background:#628bab; outline:none; }
+
+/* Keep raw Markdown readable as source in both editing layouts. */
+review-markdown-editor .toastui-editor-md-container .toastui-editor .ProseMirror {
+  font-family: "JetBrains Mono", "Cascadia Code", "DejaVu Sans Mono", Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.65;
+  font-variant-ligatures: none;
+}
