@@ -9,6 +9,8 @@ const { execSync } = require('child_process');
 const { loadLocalReview, ShowMeSession } = require('./lib/local-review');
 ipcMain.handle('robos-skills-list',()=>{try{return {ok:true,skills:require('../robos-lib/skill-catalog').listSkills()};}catch(e){return {ok:false,error:e.message};}});
 const localReview = loadLocalReview(process.env.ROBOS_LOCAL_REVIEW);
+if(localReview)require('../robos-lib/saved-code-reviews').register(process.env.ROBOS_LOCAL_REVIEW);
+ipcMain.handle('review-ci-status',async()=>localReview?require('../robos-lib/review-ci').readCI(localReview,{refresh:true}):{state:'unknown',checks:[]});
 ipcMain.handle('review-ides',()=>({ok:true,workspace:localReview?.workspace||'',ides:require('./lib/open-review-ide').available().map(({id,name})=>({id,name}))}));
 ipcMain.handle('review-open-ide',async(_,id)=>{try{return await require('./lib/open-review-ide').open(localReview?.workspace,id);}catch(e){return {ok:false,error:e.message};}});
 const { ReviewPRPublisher } = require('./lib/create-review-pr');
@@ -108,7 +110,7 @@ function getRepos(server) {
 
 let win;
 app.setName('pr-review');
-app.setPath('userData', path.join(process.env.HOME || '/home/robos', '.config', 'robos', 'electron', localReview ? 'pr-review-local' : 'pr-review'));
+app.setPath('userData', path.join(process.env.HOME || '/home/robos', '.config', 'robos', 'electron', localReview ? 'pr-review-local-' + require('node:crypto').createHash('sha256').update(fs.realpathSync(process.env.ROBOS_LOCAL_REVIEW)).digest('hex').slice(0,20) : 'pr-review'));
 if (!app.requestSingleInstanceLock()) { app.quit(); process.exit(0); }
 app.on('second-instance', () => {
   const w = require('electron').BrowserWindow.getAllWindows()[0];
@@ -581,12 +583,7 @@ ipcMain.handle('fetch-pr-theater-context', async (_, opts = {}) => {
           }
         ]
       },
-      checks: opts.checks || [
-        { name: 'Unit Tests (JUnit 5 & Mockito)', state: 'success', description: '48 tests passing in 3.4s' },
-        { name: 'mTLS Handshake Contract (Pact 4.0)', state: 'success', description: '14/14 pact interactions verified' },
-        { name: 'Knowledge Graph SHACL Validation', state: 'success', description: '0 shape violations, 4 nodes verified' },
-        { name: 'Security Audit (Gitleaks & Trivy)', state: 'success', description: 'No secrets or high CVEs detected' }
-      ],
+      checks: opts.checks || [],
       targetApp: {
         id: 'urn:robos:service:forms-api',
         title: 'PetStore API',
