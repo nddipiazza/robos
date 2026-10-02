@@ -12,7 +12,7 @@ var auto_play_enabled: bool = false
 var current_cartridge_slug: String = ""
 
 func _ready() -> void:
-	print("🛡️ [TabletopCartridgeManager] Ready for Tabletop Player Cartridges.")
+	print("[TabletopCartridgeManager] Ready for Tabletop Player Cartridges.")
 	call_deferred("_check_cli_cartridge")
 
 func _check_cli_cartridge() -> void:
@@ -87,14 +87,14 @@ func insert_cartridge(target: String) -> bool:
 				break
 
 	if loaded_cart.size() == 0:
-		print("❌ [TabletopCartridgeManager] Could not find cartridge: ", target)
+		print("[ERROR] [TabletopCartridgeManager] Could not find cartridge: ", target)
 		return false
 
 	active_cartridge = loaded_cart
 	is_cartridge_active = true
 	current_cartridge_slug = clean_slug
 
-	print("📼 [TabletopCartridgeManager] Plugged in cartridge: ", loaded_cart.get("header", {}).get("title", clean_slug))
+	print("[TabletopCartridgeManager] Plugged in cartridge: ", loaded_cart.get("header", {}).get("title", clean_slug))
 	cartridge_inserted.emit(active_cartridge)
 	return true
 
