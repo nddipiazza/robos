@@ -46,6 +46,13 @@ var last_combat_result: Dictionary = {}
 func _update_board_metrics() -> void:
 	if board_sprite and board_sprite.texture:
 		var tex_size = board_sprite.texture.get_size()
+		# Maximize board in the viewport area left of the sidebar (x: 14 to 1400, y: 16 to 1064)
+		var avail_w = 1386.0
+		var avail_h = 1048.0
+		var fit_scale = min(avail_w / max(1.0, tex_size.x), avail_h / max(1.0, tex_size.y))
+		board_sprite.scale = Vector2(fit_scale, fit_scale)
+		board_sprite.position = Vector2(14.0 + avail_w * 0.5, 16.0 + avail_h * 0.5)
+
 		var scaled_w = tex_size.x * board_sprite.scale.x
 		var scaled_h = tex_size.y * board_sprite.scale.y
 		board_offset = board_sprite.position - Vector2(scaled_w * 0.5, scaled_h * 0.5)
@@ -60,8 +67,8 @@ var auto_play_timer: float = 0.0
 var auto_play_step: int = 0
 
 @onready var board_sprite: Sprite2D = $BoardSprite
-@onready var title_label: Label = $UI/TitleBar/TitleLabel
-@onready var role_badge: Button = $UI/TitleBar/BtnToggleRole
+@onready var title_label: Label = get_node_or_null("UI/SidebarHeader/TitleLabel")
+@onready var role_badge: Button = get_node_or_null("UI/SidebarHeader/BtnToggleRole")
 @onready var log_label: RichTextLabel = $UI/LogPanel/LogLabel
 @onready var hero_card: Label = $UI/StatsPanel/HeroLabel
 @onready var hero_cards_grid: GridContainer = get_node_or_null("UI/StatsPanel/HeroCardsGrid")
@@ -2230,9 +2237,9 @@ func ai_monster_turn() -> Dictionary:
 func _update_ui() -> void:
 	var role_name = "Player Mode (Playing Heroes)" if current_role == "player" else "Game Master Mode (Zargon GM)"
 	if title_label:
-		title_label.text = "RobOS Tabletop RPG: HeroQuest — %s" % role_name
+		title_label.text = "⚔️ HEROQUEST"
 	if role_badge:
-		role_badge.text = "Role: " + ("Player" if current_role == "player" else "Game Master")
+		role_badge.text = "Role: " + ("⚔️ Player" if current_role == "player" else "👑 GM")
 
 	var hero = get_active_hero()
 	var h_name = str(hero.get("name", "Hero"))
@@ -2433,7 +2440,7 @@ func _update_character_and_enemy_cards() -> void:
 
 func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 	var card = PanelContainer.new()
-	card.custom_minimum_size = Vector2(272, 116)
+	card.custom_minimum_size = Vector2(228, 116)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 
@@ -2648,7 +2655,7 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 
 func _create_enemy_card(m: Dictionary, is_visible: bool) -> PanelContainer:
 	var card = PanelContainer.new()
-	card.custom_minimum_size = Vector2(272, 105)
+	card.custom_minimum_size = Vector2(228, 105)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 

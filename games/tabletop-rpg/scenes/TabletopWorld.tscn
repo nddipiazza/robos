@@ -14,8 +14,8 @@ mouse_filter = 2
 color = Color(0.06, 0.08, 0.12, 1)
 
 [node name="BoardSprite" type="Sprite2D" parent="."]
-position = Vector2(648, 507)
-scale = Vector2(1.15, 1.15)
+position = Vector2(707, 540)
+scale = Vector2(1.354, 1.354)
 texture = ExtResource("2_board")
 
 [node name="BoardOverlay" type="Node2D" parent="."]
@@ -23,47 +23,44 @@ script = ExtResource("3_overlay")
 
 [node name="UI" type="CanvasLayer" parent="."]
 
-[node name="TitleBar" type="Panel" parent="UI"]
-offset_right = 1920.0
-offset_bottom = 50.0
+[node name="SidebarHeader" type="HBoxContainer" parent="UI"]
+offset_left = 1416.0
+offset_top = 14.0
+offset_right = 1904.0
+offset_bottom = 46.0
 
-[node name="TitleLabel" type="Label" parent="UI/TitleBar"]
-layout_mode = 0
-offset_left = 20.0
-offset_top = 10.0
-offset_right = 1000.0
-offset_bottom = 40.0
-theme_override_font_sizes/font_size = 22
-text = "🛡️ RobOS Tabletop RPG: HeroQuest"
+[node name="TitleLabel" type="Label" parent="UI/SidebarHeader"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
+text = "⚔️ HEROQUEST"
 
-[node name="BtnToggleRole" type="Button" parent="UI/TitleBar"]
-layout_mode = 0
-offset_left = 1680.0
-offset_top = 8.0
-offset_right = 1890.0
-offset_bottom = 42.0
+[node name="BtnToggleRole" type="Button" parent="UI/SidebarHeader"]
+custom_minimum_size = Vector2(130, 30)
+layout_mode = 2
 text = "Role: ⚔️ Player"
 
 [node name="DicePanel" type="Panel" parent="UI"]
-offset_left = 1300.0
-offset_top = 56.0
-offset_right = 1880.0
-offset_bottom = 104.0
+offset_left = 1416.0
+offset_top = 52.0
+offset_right = 1904.0
+offset_bottom = 96.0
 
 [node name="DiceLabel" type="Label" parent="UI/DicePanel"]
 layout_mode = 0
-offset_left = 12.0
-offset_top = 8.0
-offset_right = 568.0
-offset_bottom = 40.0
-theme_override_font_sizes/font_size = 15
+offset_left = 10.0
+offset_top = 6.0
+offset_right = 478.0
+offset_bottom = 38.0
+theme_override_font_sizes/font_size = 14
 text = "🎲 Dice: Ready (Roll 2d6 movement)"
 
 [node name="Actions" type="HBoxContainer" parent="UI"]
-offset_left = 1300.0
-offset_top = 110.0
-offset_right = 1880.0
-offset_bottom = 152.0
+offset_left = 1416.0
+offset_top = 102.0
+offset_right = 1904.0
+offset_bottom = 144.0
 theme_override_constants/separation = 6
 
 [node name="BtnRoll" type="Button" parent="UI/Actions"]
@@ -97,28 +94,28 @@ size_flags_horizontal = 3
 text = "⏭️ End Turn"
 
 [node name="StatsPanel" type="Panel" parent="UI"]
-offset_left = 1300.0
-offset_top = 158.0
-offset_right = 1880.0
-offset_bottom = 448.0
+offset_left = 1416.0
+offset_top = 150.0
+offset_right = 1904.0
+offset_bottom = 440.0
 
 [node name="HeaderLabel" type="Label" parent="UI/StatsPanel"]
 layout_mode = 0
-offset_left = 12.0
+offset_left = 10.0
 offset_top = 6.0
-offset_right = 568.0
-offset_bottom = 28.0
+offset_right = 478.0
+offset_bottom = 26.0
 theme_override_font_sizes/font_size = 14
 text = "🛡️ HERO PARTY (4)"
 
 [node name="HeroCardsGrid" type="GridContainer" parent="UI/StatsPanel"]
 layout_mode = 0
-offset_left = 10.0
-offset_top = 30.0
-offset_right = 570.0
+offset_left = 8.0
+offset_top = 28.0
+offset_right = 480.0
 offset_bottom = 282.0
-theme_override_constants/h_separation = 8
-theme_override_constants/v_separation = 8
+theme_override_constants/h_separation = 6
+theme_override_constants/v_separation = 6
 columns = 2
 
 [node name="HeroLabel" type="Label" parent="UI/StatsPanel"]
@@ -126,32 +123,32 @@ visible = false
 layout_mode = 0
 offset_left = 15.0
 offset_top = 15.0
-offset_right = 560.0
+offset_right = 470.0
 offset_bottom = 175.0
 theme_override_font_sizes/font_size = 18
 text = "Barbarian (Conan the Barbarian)"
 
 [node name="EnemiesPanel" type="Panel" parent="UI"]
-offset_left = 1300.0
-offset_top = 454.0
-offset_right = 1880.0
-offset_bottom = 744.0
+offset_left = 1416.0
+offset_top = 446.0
+offset_right = 1904.0
+offset_bottom = 736.0
 
 [node name="HeaderLabel" type="Label" parent="UI/EnemiesPanel"]
 layout_mode = 0
-offset_left = 12.0
+offset_left = 10.0
 offset_top = 6.0
-offset_right = 568.0
-offset_bottom = 28.0
+offset_right = 478.0
+offset_bottom = 26.0
 theme_override_font_sizes/font_size = 14
 text = "👹 DISCOVERED FOES"
 
 [node name="EmptyLabel" type="Label" parent="UI/EnemiesPanel"]
 layout_mode = 0
-offset_left = 20.0
-offset_top = 60.0
-offset_right = 560.0
-offset_bottom = 140.0
+offset_left = 16.0
+offset_top = 50.0
+offset_right = 472.0
+offset_bottom = 130.0
 theme_override_font_sizes/font_size = 14
 theme_override_colors/font_color = Color(0.65, 0.7, 0.78, 0.8)
 text = "No enemies sighted yet.
@@ -160,9 +157,9 @@ autowrap_mode = 3
 
 [node name="ScrollContainer" type="ScrollContainer" parent="UI/EnemiesPanel"]
 layout_mode = 0
-offset_left = 8.0
-offset_top = 30.0
-offset_right = 572.0
+offset_left = 6.0
+offset_top = 28.0
+offset_right = 482.0
 offset_bottom = 284.0
 horizontal_scroll_mode = 0
 
@@ -170,23 +167,23 @@ horizontal_scroll_mode = 0
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_constants/h_separation = 8
-theme_override_constants/v_separation = 8
+theme_override_constants/h_separation = 6
+theme_override_constants/v_separation = 6
 columns = 2
 
 [node name="LogPanel" type="Panel" parent="UI"]
-offset_left = 1300.0
-offset_top = 750.0
-offset_right = 1880.0
-offset_bottom = 1068.0
+offset_left = 1416.0
+offset_top = 742.0
+offset_right = 1904.0
+offset_bottom = 1066.0
 
 [node name="LogLabel" type="RichTextLabel" parent="UI/LogPanel"]
 layout_mode = 0
-offset_left = 12.0
-offset_top = 10.0
-offset_right = 568.0
-offset_bottom = 308.0
-theme_override_font_sizes/normal_font_size = 14
+offset_left = 10.0
+offset_top = 8.0
+offset_right = 478.0
+offset_bottom = 316.0
+theme_override_font_sizes/normal_font_size = 13
 text = "Log loaded..."
 
 [node name="AIConfirmModal" type="ColorRect" parent="UI"]
