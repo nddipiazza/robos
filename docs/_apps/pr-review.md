@@ -40,3 +40,8 @@ The Pull Request tab shows **Not Created**, **In Draft**, **In Review**,
 refreshes the status and description. Closed/merged PRs and reviewer mode keep
 the description read-only. If someone changes the description on GitHub during
 editing, reload before saving rather than overwriting their work.
+
+Buildkite checks use the shared CI connection to show actual job failures. In
+CI recovery, **Read failure** loads the failed job logs directly. Missing token
+access or a mismatched build commit is shown explicitly. Configure the connection
+in CI Monitor; tokens are resolved from `pass`, never sent to the renderer.

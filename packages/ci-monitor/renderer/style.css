@@ -200,3 +200,15 @@ header h1 { font-size: 15px; font-weight: 600; }
 .error-text { color: var(--red); }
 
 .hidden { display: none !important; }
+
+#ci-connection { color:#e6edf3; background:#161b22; border:1px solid #30363d; border-radius:12px; max-width:500px; padding:24px; margin:auto; }
+#ci-connection::backdrop { background:#0009; }
+#ci-connection p { color:#a0adba; line-height:1.5; margin-top:12px; }
+#ci-connection label { display:grid; gap:6px; margin:14px 0; }
+#ci-connection input { background:#0d1117; border:1px solid #30363d; border-radius:6px; color:#e6edf3; padding:9px; }
+#ci-connection footer { display:flex; justify-content:flex-end; gap:8px; }
+#ci-connection button { padding:8px 12px; border:1px solid #30363d; background:#212b38; color:#e6edf3; border-radius:6px; }
+#btn-rerun[hidden], #btn-artifacts[hidden] { display:none; }
+
+.btn-action { background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:5px; }
+#full-log { margin-bottom:10px; } #full-log[hidden] { display:none; }

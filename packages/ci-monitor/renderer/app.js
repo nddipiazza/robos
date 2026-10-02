@@ -22,6 +22,8 @@ document.getElementById('btn-rerun').addEventListener('click', rerunWorkflow);
 document.getElementById('btn-open-gh').addEventListener('click', () => {
   if (selectedRun && selectedRun.url) window.api.openUrl(selectedRun.url);
 });
+document.getElementById('full-log').onclick=()=>{document.getElementById('log-output').textContent=runDetail?.failedLog||'';document.getElementById('full-log').hidden=true;};
+document.getElementById('btn-artifacts').onclick=()=>runDetail?.artifactsUrl&&window.api.openUrl(runDetail.artifactsUrl);
 document.getElementById('btn-diagnose').addEventListener('click', runDiagnosis);
 
 document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -35,7 +37,16 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
 // ── Init ──────────────────────────────────────────────────────────────────
 
+const providerSelect=document.getElementById('ci-provider');
+providerSelect.onchange=()=>{showList();loadRuns();};
+const connectionDialog=document.getElementById('ci-connection');
+document.getElementById('ci-settings').onclick=async()=>{const config=await window.api.ciConnections();for(const [key,value] of Object.entries(config.buildkite||{})){const field=document.querySelector('#buildkite-settings [name="'+key+'"]');if(field)field.value=value;}connectionDialog.showModal();};
+document.getElementById('connection-close').onclick=()=>connectionDialog.close();
+document.getElementById('buildkite-settings').onsubmit=async event=>{event.preventDefault();const button=event.submitter;button.disabled=true;const status=document.getElementById('connection-status');status.textContent='Checking Buildkite access…';try{const result=await window.api.saveBuildkite(Object.fromEntries(new FormData(event.target)));if(!result.ok)throw Error(result.error);status.textContent='Connected.';connectionDialog.close();providerSelect.value='buildkite';showList();await loadRuns();}catch(e){status.textContent=e.message;}finally{button.disabled=false;}};
 async function init() {
+  const connections=await window.api.ciConnections?.();
+  if(connections?.buildkite){providerSelect.value='buildkite';await loadRuns();setInterval(loadRuns,30000);return;}
+
   serverConfig = await window.api.getConfig();
   if (!serverConfig.ok) {
     showError(serverConfig.error || 'No task server configured. Open Task Servers to set one up.');
@@ -52,8 +63,9 @@ async function init() {
 
 async function loadRuns() {
   hideError();
+  serverBadge.textContent=providerSelect.value==='buildkite'?'Buildkite':serverConfig?.server?.name||'GitHub Actions';
   const status = document.getElementById('filter-status').value;
-  const result = await window.api.fetchRuns({ status: status === 'all' ? undefined : status });
+  const result = await window.api.fetchRuns({ provider:providerSelect.value, status: status === 'all' ? undefined : status });
 
   if (!result.ok) {
     showError(result.error);
@@ -197,11 +209,18 @@ async function showDetail(run) {
   document.getElementById('diagnosis-output').innerHTML = '';
 
   // Fetch detail
-  const detail = await window.api.fetchRunDetail({ repo: run.repo, runId: run.id });
+  document.getElementById('btn-open-gh').textContent=run.provider==='buildkite'?'View on Buildkite':'View on GitHub';
+  document.getElementById('btn-rerun').hidden=run.provider==='buildkite';
+  document.getElementById('btn-artifacts').hidden=run.provider!=='buildkite';
+  document.getElementById('jobs-list').textContent='Loading jobs…';
+  document.getElementById('log-output').textContent='Loading logs…';runDetail=null;
+  const detail = await window.api.fetchRunDetail({ provider:run.provider, repo: run.repo, runId: run.id });
+  if(selectedRun!==run)return;
   if (detail.ok) {
     runDetail = detail;
+    document.getElementById('full-log').hidden=!detail.failureExcerpt;
     renderJobs(detail.jobs);
-    document.getElementById('log-output').textContent = detail.failedLog || 'No failed log available.';
+    document.getElementById('log-output').textContent = detail.failureExcerpt || detail.failedLog || 'No failed log available.';
   } else {
     document.getElementById('jobs-list').innerHTML = `<div class="muted">Failed to load: ${esc(detail.error)}</div>`;
     document.getElementById('log-output').textContent = 'Failed to load log.';
@@ -215,7 +234,7 @@ function renderJobs(jobs) {
     return;
   }
 
-  el.innerHTML = jobs.map(job => {
+  el.innerHTML = jobs.map((job,index) => {
     const icon = getStatusIcon(job.status, job.conclusion);
     const cls = getStatusClass(job.status, job.conclusion);
     const stepsHtml = (job.steps || []).map(s => {
@@ -230,9 +249,11 @@ function renderJobs(jobs) {
         <span class="job-name">${esc(job.name)}</span>
         <span class="job-status">${esc(job.conclusion || job.status)}</span>
       </div>
+      ${job.url ? `<button class="btn-action job-link" data-index="${index}">Open job log</button>` : ''}
       ${stepsHtml ? `<div class="job-steps">${stepsHtml}</div>` : ''}
     </div>`;
   }).join('');
+  el.querySelectorAll('.job-link').forEach(button=>button.onclick=()=>window.api.openUrl(jobs[Number(button.dataset.index)].url));
 }
 
 // ── Actions ───────────────────────────────────────────────────────────────
@@ -242,7 +263,7 @@ async function rerunWorkflow() {
   const btn = document.getElementById('btn-rerun');
   btn.disabled = true;
   btn.textContent = 'Re-running...';
-  const result = await window.api.rerunWorkflow({ repo: selectedRun.repo, runId: selectedRun.id });
+  const result = await window.api.rerunWorkflow({ provider:selectedRun.provider, repo: selectedRun.repo, runId: selectedRun.id });
   btn.disabled = false;
   btn.textContent = 'Re-run';
   if (!result.ok) showError(result.error);
@@ -265,7 +286,7 @@ async function runDiagnosis() {
   });
 
   btn.disabled = false;
-  btn.textContent = 'Run AI Diagnosis';
+  btn.textContent = 'Summarize log';
 
   if (!result.ok) {
     document.getElementById('diagnosis-output').innerHTML = `<div class="error-text">${esc(result.error)}</div>`;

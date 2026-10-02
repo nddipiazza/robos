@@ -192,7 +192,8 @@ const DEVOPS_PROVIDERS = [
     fields: [
       { id: 'accountSlug', label: 'Organization Identifier', type: 'text', default: 'buildkite-acme', required: true },
       { id: 'orgSlug', label: 'Organization Slug', type: 'text', default: 'acme-corp', required: true },
-      { id: 'apiToken', label: 'Buildkite GraphQL Access Token', type: 'password', secret: true, required: true },
+      { id: 'pipeline', label: 'Pipeline slug (optional)', type: 'text', default: '' },
+      { id: 'passPath', label: 'Existing pass entry for the REST API token', type: 'text', default: 'buildkite-api-access-token', required: true },
     ],
   },
   {
@@ -475,6 +476,9 @@ class DevOpsIntegrationManager {
     const accountSlug = (explicitSlug || formValues.accountSlug || provider.id).trim().toLowerCase().replace(/[^a-z0-9_-]/g, '-');
     const integrationNodeId = `urn:robos:devops:${provider.category}:${provider.id}:${accountSlug}`;
 
+    if(providerId==='buildkite'){
+      try{require('../../robos-lib/ci/buildkite').validate({org:formValues.orgSlug,pipeline:formValues.pipeline,passPath:formValues.passPath});}catch(e){return {ok:false,error:e.message};}
+    }
     const settings = {};
     const credentialNodes = [];
     const createdPassPaths = [];
@@ -517,6 +521,12 @@ class DevOpsIntegrationManager {
       }
     }
 
+    if(providerId==='buildkite'){
+      const config=require('../../robos-lib/ci/connections').saveBuildkite({org:settings.orgSlug,pipeline:settings.pipeline,passPath:settings.passPath});
+      const id=integrationNodeId+':token';
+      pkgMgr.upsertNode({'@id':id,'@type':['robos:PassCredential','robos:SecretReference'],'dcterms:title':'Buildkite REST API token','robos:passPath':config.passPath,'robos:credentialType':'apiToken','robos:managedByPass':true,'robos:externallyManaged':true,'robos:package':'devops','robos:namespace':'robos.devops'},'devops');credentialNodes.push(id);
+      settings.serverUrl='https://buildkite.com/'+config.org;
+    }
     // Capitalize provider name for RDF type e.g. robos:GitHubIntegration
     const providerPascal = provider.id.split('-').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join('');
     const title = formValues.accountTitle || `${provider.name} (${accountSlug})`;
@@ -585,6 +595,9 @@ class DevOpsIntegrationManager {
       return { ok: false, error: `Missing required fields: ${missing.join(', ')}` };
     }
 
+    if(providerId==='buildkite'){
+      try{const client=new (require('../../robos-lib/ci/buildkite').Buildkite)({org:formValues.orgSlug,pipeline:formValues.pipeline,passPath:formValues.passPath});await client.list();return {ok:true,authenticated:true,provider:provider.name,message:'Buildkite access verified.',endpoint:'https://buildkite.com/'+formValues.orgSlug};}catch(e){return {ok:false,error:e.message};}
+    }
     // In a test/offline environment or when endpoint is mock/internal, return structured success
     const endpoint = formValues.serverUrl || formValues.clusterUrl || formValues.registryUrl || formValues.domain || 'https://api.provider.com';
     return {
@@ -609,7 +622,7 @@ class DevOpsIntegrationManager {
     const credIds = Array.isArray(node['robos:hasCredential']) ? node['robos:hasCredential'] : [];
     for (const cId of credIds) {
       const cNode = pkgMgr.getNode(cId);
-      if (cNode && cNode['robos:passPath']) {
+      if (cNode && cNode['robos:passPath'] && !cNode['robos:externallyManaged']) {
         this.deletePassSecret(cNode['robos:passPath']);
       }
       pkgMgr.removeNode(cId);

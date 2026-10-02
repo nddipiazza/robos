@@ -11,6 +11,7 @@ ipcMain.handle('robos-skills-list',()=>{try{return {ok:true,skills:require('../r
 const localReview = loadLocalReview(process.env.ROBOS_LOCAL_REVIEW);
 if(localReview)require('../robos-lib/saved-code-reviews').register(process.env.ROBOS_LOCAL_REVIEW);
 ipcMain.handle('open-agent-session',async(_,input)=>{try{return await require('../robos-lib/agent-session-link').open(input);}catch(e){return {ok:false,error:e.message};}});
+ipcMain.handle('buildkite-failure-detail',async(_,url)=>{try{const ci=await require('../robos-lib/review-ci').readCI(localReview);if(!ci.checks.some(c=>c.detailsUrl===url))throw Error('Choose a Buildkite check from this review.');const config=require('../robos-lib/ci/connections').forBuild(url);if(!config)throw Error('Invalid Buildkite build link.');const detail=await new (require('../robos-lib/ci/buildkite').Buildkite)(config).detail(config.number);if(detail.head!==ci.head)throw Error('Buildkite is reporting a different commit.');return {ok:true,...detail};}catch(e){return {ok:false,error:e.message};}});
 ipcMain.handle('review-ci-status',async()=>localReview?require('../robos-lib/review-ci').readCI(localReview,{refresh:true}):{state:'unknown',checks:[]});
 ipcMain.handle('review-ides',()=>({ok:true,workspace:localReview?.workspace||'',ides:require('./lib/open-review-ide').available().map(({id,name})=>({id,name}))}));
 ipcMain.handle('review-open-ide',async(_,id)=>{try{return await require('./lib/open-review-ide').open(localReview?.workspace,id);}catch(e){return {ok:false,error:e.message};}});
