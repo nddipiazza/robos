@@ -62,14 +62,14 @@ window.configureReviewPublish = function(pr) {
 };
 
 window.offerReadyNotification = function(pr,ready,notice) {
- const dialog=document.createElement('dialog');dialog.className='pr-ready-dialog';
- const heading=document.createElement('h2');heading.textContent='Move PR to Ready';
- const text=document.createElement('p');text.textContent='Choose GitHub reviewers and optionally send the team another review message.';
- const label=document.createElement('label');label.textContent='GitHub reviewers';const reviewers=document.createElement('input');reviewers.placeholder='username, organization/team';label.append(reviewers);
- const host=document.createElement('div'),status=document.createElement('p');status.role='status';
+ const dialog=document.createElement('dialog');dialog.className='pr-ready-dialog';dialog.setAttribute('aria-labelledby','pr-ready-heading');
+ const heading=document.createElement('h2');heading.id='pr-ready-heading';heading.textContent='Ready for review';
+ const text=document.createElement('p');text.className='pr-ready-intro';text.textContent='Take this PR out of draft. You can request reviewers and notify your team below.';
+ const field=document.createElement('div');field.className='pr-ready-field';const label=document.createElement('label');label.htmlFor='pr-ready-reviewers';label.textContent='GitHub reviewers';const reviewers=document.createElement('input');reviewers.id='pr-ready-reviewers';reviewers.placeholder='username, organization/team';reviewers.autocomplete='off';reviewers.setAttribute('aria-describedby','pr-ready-help');const help=document.createElement('p');help.id='pr-ready-help';help.textContent='Optional. Separate GitHub usernames or teams with commas.';field.append(label,reviewers,help);
+ const host=document.createElement('div'),status=document.createElement('p');status.role='status';status.className='pr-ready-feedback';
  const title=document.createElement('input'),body=document.createElement('textarea');title.value=pr.title||'';body.value=pr.body||'';
  const options=window.mountReviewMessageOptions?.(host,pr,title,body,{}, {url:pr.url,occasion:'ready'});
- const cancel=document.createElement('button');cancel.textContent='Cancel';cancel.onclick=()=>dialog.close();
+ const cancel=document.createElement('button');cancel.className='pr-ready-cancel';cancel.textContent='Cancel';cancel.onclick=()=>dialog.close();
  const confirm=document.createElement('button');confirm.className='pr-ready-button';confirm.textContent='Move PR to Ready';confirm.disabled=true;
  window.api.reviewMessageOptions?.(pr.url).then(r=>{if(r.ok)reviewers.value=(r.settings.githubReviewers||[]).join(', ');else status.textContent=r.error;}).catch(e=>status.textContent=e.message).finally(()=>confirm.disabled=false);
  if(!window.api.reviewMessageOptions)confirm.disabled=false;
@@ -86,5 +86,5 @@ window.offerReadyNotification = function(pr,ready,notice) {
    confirm.hidden=true;cancel.textContent='Done';
   }catch(e){status.textContent=e.message;confirm.disabled=false;}finally{cancel.disabled=false;}
  };
- dialog.append(heading,text,label,host,status,confirm,cancel);dialog.onclose=()=>dialog.remove();document.body.append(dialog);dialog.showModal();
+ const footer=document.createElement('footer');footer.className='pr-ready-actions';footer.append(cancel,confirm);dialog.append(heading,text,field,host,status,footer);dialog.onclose=()=>dialog.remove();document.body.append(dialog);dialog.showModal();
 };
