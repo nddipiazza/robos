@@ -58,3 +58,9 @@ old selections, and failed refreshes explicitly mark output as potentially stale
 Monitoring never launches an agent. Agents stop after completing their local
 repair; pushing a reviewed repair opens the CI panel so RobOS can show its
 progress. An agent is used only when the reviewer requests investigation or fixes.
+
+When moving a draft into review, **Request GitHub reviews** starts checked.
+The reviewer list uses Git Projects defaults, falling back to the configured
+RobOS Code Reviewers group. The PR author is excluded. Edits affect this request
+only; unchecking the option disables the field and assigns no reviewers. Slack
+notification remains a separate option.
