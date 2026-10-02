@@ -25,9 +25,9 @@ class ReviewNotification {
     const template=project.messageTemplate;
     const text=recipients.map(r=>'<@'+r.userId+'>').join(' ')+'\n'+settings.format(template,{...pr,repo:this.review.repo,branch:this.review.pr.headBranch,description:this.review.pr.body});
     if(!text.trim()||text.length>4000)throw Error('Notification must be between 1 and 4000 characters. Update the project template.');
-    const record={reviewers:recipients,prUrl:pr.url,serverId,channel,text,requestId:randomUUID(),status:'pending'};
+    const record={reviewers:recipients,prUrl:pr.url,serverId,channel,text,requestId:requestId||randomUUID(),status:'pending'};
     config[notificationKey]=record;save();
-    try {const result=await this.call('send',record);if(!result.sent || typeof result.text !== 'string' || recipients.some(r=>!result.text.includes('<@'+r.userId+'>')))throw Error('Message delivery with reviewer mentions was not confirmed.');record.status='sent';record.ts=result.ts;record.sentAt=new Date().toISOString();save();return record;}
+    try {const result=await this.call('send',record);if(!result.sent || typeof result.text !== 'string' || recipients.some(r=>!result.text.includes('<@'+r.userId+'>')))throw Error('Message delivery with reviewer mentions was not confirmed.');record.status='sent';record.ts=result.ts;record.sentAt=new Date().toISOString();record.conversationUrl=require('../../robos-lib/team-conversation-link').conversationLink(servers.find(s=>s.id===serverId),{...result,channel});save();return record;}
     catch(e){record.status='uncertain';save();throw e;}
   }
 }
