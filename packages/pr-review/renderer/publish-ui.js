@@ -65,19 +65,23 @@ window.offerReadyNotification = function(pr,ready,notice) {
  const dialog=document.createElement('dialog');dialog.className='pr-ready-dialog';dialog.setAttribute('aria-labelledby','pr-ready-heading');
  const heading=document.createElement('h2');heading.id='pr-ready-heading';heading.textContent='Ready for review';
  const text=document.createElement('p');text.className='pr-ready-intro';text.textContent='Take this PR out of draft. You can request reviewers and notify your team below.';
- const field=document.createElement('div');field.className='pr-ready-field';const label=document.createElement('label');label.htmlFor='pr-ready-reviewers';label.textContent='GitHub reviewers';const reviewers=document.createElement('input');reviewers.id='pr-ready-reviewers';reviewers.placeholder='username, organization/team';reviewers.autocomplete='off';reviewers.setAttribute('aria-describedby','pr-ready-help');const help=document.createElement('p');help.id='pr-ready-help';help.textContent='Optional. Separate GitHub usernames or teams with commas.';field.append(label,reviewers,help);
+ const field=document.createElement('div');field.className='pr-ready-field';const label=document.createElement('label');label.htmlFor='pr-ready-reviewers';label.textContent='GitHub reviewers';const reviewers=document.createElement('input');reviewers.id='pr-ready-reviewers';reviewers.placeholder='username, organization/team';reviewers.autocomplete='off';reviewers.setAttribute('aria-describedby','pr-ready-help');const help=document.createElement('p');help.id='pr-ready-help';help.textContent='Optional. Separate GitHub usernames or teams with commas.';const assignLabel=document.createElement('label');assignLabel.className='pr-assign-reviewers';const assign=document.createElement('input');assign.type='checkbox';assign.checked=true;assignLabel.append(assign,' Request GitHub reviews');field.append(assignLabel,label,reviewers,help);
  const host=document.createElement('div'),status=document.createElement('p');status.role='status';status.className='pr-ready-feedback';
  const title=document.createElement('input'),body=document.createElement('textarea');title.value=pr.title||'';body.value=pr.body||'';
  const options=window.mountReviewMessageOptions?.(host,pr,title,body,{}, {url:pr.url,occasion:'ready'});
  const cancel=document.createElement('button');cancel.className='pr-ready-cancel';cancel.textContent='Cancel';cancel.onclick=()=>dialog.close();
  const confirm=document.createElement('button');confirm.className='pr-ready-button';confirm.textContent='Move PR to Ready';confirm.disabled=true;
- window.api.reviewMessageOptions?.(pr.url).then(r=>{if(r.ok)reviewers.value=(r.settings.githubReviewers||[]).join(', ');else status.textContent=r.error;}).catch(e=>status.textContent=e.message).finally(()=>confirm.disabled=false);
- if(!window.api.reviewMessageOptions)confirm.disabled=false;
+ let loading=true,loadError='';reviewers.disabled=true;help.textContent='Loading configured reviewers…';
+ const updateSelection=()=>{reviewers.disabled=loading||!assign.checked;confirm.disabled=loading;};assign.onchange=updateSelection;
+ const defaults=window.api.reviewGitHubReviewers?window.api.reviewGitHubReviewers():window.api.reviewMessageOptions?window.api.reviewMessageOptions(pr.url).then(r=>({...r,reviewers:r.settings?.githubReviewers||[],source:'Git Projects'})):Promise.resolve({ok:true,reviewers:[],source:'Git Projects'});
+ defaults.then(r=>{if(!r.ok)throw Error(r.error);reviewers.value=(r.reviewers||[]).join(', ');help.textContent=(r.reviewers?.length?'Defaults from '+r.source+'. ':'No default reviewers configured. ')+'Add or remove reviewers for this PR only. Uncheck to assign none.';}).catch(e=>{loadError=e.message;help.textContent=e.message+' Enter reviewers here or uncheck Request GitHub reviews.';}).finally(()=>{loading=false;updateSelection();});
  confirm.onclick=async()=>{
   confirm.disabled=true;cancel.disabled=true;status.textContent='Checking GitHub…';
   try{
    await options?.ready;options?.validate();
-   const result=await window.api.readyReviewPR(pr.headRefOid,pr.url,reviewers.value.split(/[\s,]+/).filter(Boolean));if(!result.ok)throw Error(result.error);
+   const selected=assign.checked?reviewers.value.split(/[\s,]+/).filter(Boolean):[];
+   if(assign.checked&&!selected.length)throw Error(loadError||'Add a GitHub reviewer, or uncheck Request GitHub reviews to assign none.');
+   const result=await window.api.readyReviewPR(pr.headRefOid,pr.url,selected);if(!result.ok)throw Error(result.error);
    Object.assign(pr,result.pr);ready.hidden=true;
    if(window.openPRReviewTheater)await window.openPRReviewTheater(pr);else window.configureReviewPublish(pr);
    status.textContent=result.pr.reviewerError||'PR is ready for review.';

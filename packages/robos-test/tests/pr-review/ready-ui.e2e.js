@@ -11,7 +11,7 @@ test('draft action opens reviewer dialog; promotion updates state and errors rem
   await p.addStyleTag({path:path.join(renderer,'style.css')});
   await require('./editor-test-helper')(p);
   await p.addScriptTag({path:path.resolve(__dirname,'../../../pr-review/renderer/publish-ui.js')});
-  await p.evaluate(()=>{window.pr={local:true,published:true,isAuthor:true,state:'OPEN',isDraft:true,ciPassing:true,headRefOid:'abc',repo:'org/repo',headBranch:'feature',baseBranch:'main',title:'Fix',body:'Details'};window.calls=0;window.api={readyReviewPR:async head=>{window.calls++;window.head=head;return {ok:true,pr:{...window.pr,isDraft:false}};}};});
+  await p.evaluate(()=>{window.pr={local:true,published:true,isAuthor:true,state:'OPEN',isDraft:true,ciPassing:true,headRefOid:'abc',repo:'org/repo',headBranch:'feature',baseBranch:'main',title:'Fix',body:'Details'};window.calls=0;window.api={reviewGitHubReviewers:async()=>({ok:true,reviewers:['alice'],source:'RobOS · Code Reviewers'}),readyReviewPR:async head=>{window.calls++;window.head=head;return {ok:true,pr:{...window.pr,isDraft:false}};}};});
   for(const overrides of [{isDraft:false},{state:'MERGED'},{stateError:'offline'},{}]){
    await p.evaluate(o=>window.configureReviewPublish({...window.pr,...o}),overrides);
    assert.equal(await p.locator('#pr-ready-button').isVisible(),Object.keys(overrides).length===0);
@@ -42,5 +42,12 @@ test('draft action opens reviewer dialog; promotion updates state and errors rem
   await p.getByRole('dialog').getByRole('button',{name:'Move PR to Ready',exact:true}).click();
   await p.getByRole('dialog').getByRole('status').filter({hasText:'CI checks must finish successfully.'}).waitFor();
   assert.equal(await p.locator('#pr-ready-button').isEnabled(),true);
+ }finally{await b.close();}
+});
+test('configured reviewers are prefilled, editable for one PR, and explicit opt-out assigns none',async()=>{
+ const b=await chromium.launch({headless:true});try{const p=await b.newPage();await p.setContent('<button id="ready">Ready</button><p id="notice"></p>');await p.addScriptTag({path:path.resolve(__dirname,'../../../pr-review/renderer/publish-ui.js')});
+ await p.evaluate(()=>{window.received=[];window.api={reviewGitHubReviewers:async()=>({ok:true,source:'RobOS · Code Reviewers',reviewers:['alice','bob']}),readyReviewPR:async(h,u,reviewers)=>{received.push(reviewers);return {ok:true,pr:{isDraft:false}};}};window.openPRReviewTheater=async()=>{};window.openDialog=()=>offerReadyNotification({title:'Example',body:'',headRefOid:'abc',url:'https://github.com/org/repo/pull/1'},document.getElementById('ready'),document.getElementById('notice'));openDialog();});
+ await p.waitForFunction(()=>document.getElementById('pr-ready-reviewers').value==='alice, bob');assert.equal(await p.getByLabel('Request GitHub reviews').isChecked(),true);await p.getByLabel('GitHub reviewers',{exact:true}).fill('alice, bob, one-off');await p.getByRole('button',{name:'Move PR to Ready',exact:true}).click();await p.getByRole('button',{name:'Done',exact:true}).click();assert.deepEqual(await p.evaluate(()=>received[0]),['alice','bob','one-off']);
+ await p.evaluate(()=>openDialog());await p.waitForFunction(()=>document.getElementById('pr-ready-reviewers').value==='alice, bob');await p.getByLabel('Request GitHub reviews').uncheck();assert.equal(await p.getByLabel('GitHub reviewers',{exact:true}).isDisabled(),true);await p.getByRole('button',{name:'Move PR to Ready',exact:true}).click();assert.deepEqual(await p.evaluate(()=>received[1]),[]);
  }finally{await b.close();}
 });

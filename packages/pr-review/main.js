@@ -1299,6 +1299,7 @@ function getCIStatus(rollup) {
 
 const projectReviewSettings = require('../robos-lib/project-review-settings');
 const notification = localReview ? new (require('./lib/review-notification').ReviewNotification)(localReview, process.env.ROBOS_LOCAL_REVIEW) : null;
+ipcMain.handle('review-github-reviewers',async()=>{try{const pr=await prState.refresh();return {ok:true,...require('../robos-lib/github-reviewer-defaults').resolve(localReview.repo,pr.author)};}catch(e){return {ok:false,error:e.message};}});
 ipcMain.handle('review-message-options', async () => {try {if(!localReview)throw Error('No local review.');return {ok:true,...await projectReviewSettings.options(localReview.repo)};}catch(e){return {ok:false,error:e.message};}});
 ipcMain.handle('review-message-channels', async (_,serverId) => {try{return {ok:true,channels:await projectReviewSettings.channels(serverId)};}catch(e){return {ok:false,error:e.message};}});
 ipcMain.handle('review-message-send', async (_,input) => {try{if(!notification)throw Error('No local review.');return {ok:true,notification:await notification.send(input)};}catch(e){return {ok:false,error:e.message};}});

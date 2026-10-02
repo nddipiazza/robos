@@ -3515,3 +3515,6 @@ review-markdown-editor { display: block; margin: 8px 0 20px; }
 .pr-ready-dialog fieldset label:hover { background:#203040; }
 .pr-ready-dialog fieldset p { font-size:12px; line-height:1.5; color:#9aafc1; margin:10px 0 0; }
 .pr-ready-actions { position:sticky; bottom:-28px; background:#101923; padding-bottom:4px; }
+
+.pr-ready-field .pr-assign-reviewers { display:flex; align-items:center; gap:10px; margin-bottom:6px; font-size:14px; }
+.pr-ready-field>input:disabled { opacity:.5; cursor:not-allowed; }
