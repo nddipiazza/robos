@@ -1,0 +1,3 @@
+'use strict';
+const {test}=require('node:test'),assert=require('node:assert/strict');const guidance=require('../../../robos-lib/agent-recovery-guidance');const {recoveryPrompt}=require('../../../pr-review/lib/ci-recovery');
+test('CI prompt requires independent recovery and honest commits before escalation',()=>{const prompt=recoveryPrompt({repo:'org/repo',workspace:'/tmp',pullRequest:{number:1,url:'https://example.test'}},{head:'abc',checks:[]});assert.ok(prompt.includes(guidance));for(const text of ['access-dev-google-secrets','approved cached credentials','noninteractive renewal','tests that never ran','focused local commit','Keep questions empty'])assert.ok(prompt.includes(text),text);assert.match(prompt,/checkpointReached false/);});
