@@ -1293,6 +1293,57 @@ class TestHeroQuestE2EScenarios(unittest.TestCase):
         diff_move.assert_scalar("movementRemaining", 2, 0)
         diff_move.assert_scalar("turnState", "action_taken", "turn_complete")
 
+    def test_44_hero_movement_trail_and_remaining_moves_display(self):
+        """Scenario 44: Green line from where character came from with moves remaining in middle."""
+        bdd_scenario_header(44, "Movement Trail Line from Origin with Moves Remaining")
+
+        bdd_step("GIVEN", "Barbarian starts at (0, 1) and rolls 6 movement")
+        self.ai.set_state(
+            activeHeroIndex=0,
+            activeHero="barbarian",
+            movementRemaining=6,
+            movementRolled=True,
+            turnState="moving",
+            hasMoved=False,
+            heroes=[{"id": "barbarian", "grid_pos": [0, 1], "is_on_board": True}]
+        )
+
+        bdd_step("WHEN", "Barbarian moves 2 squares to (2, 1)")
+        res1 = self.ai.move(2, 1)
+        st1 = self.ai.get_state()
+
+        bdd_step("THEN", "Movement trail records path from origin and 4 moves remain",
+                 assertions=[
+                     f"Move 1 success: {res1.get('success')}",
+                     f"Remaining moves: {st1.get('movementRemaining')} (expected 4)",
+                     f"Movement trail: {st1.get('movementTrail')}"
+                 ])
+        self.assertTrue(res1.get("success"))
+        self.assertEqual(st1.get("movementRemaining"), 4)
+        self.assertEqual(st1.get("movementTrail"), [[0, 1], [1, 1], [2, 1]])
+
+        bdd_step("WHEN", "Barbarian moves further to (5, 1)")
+        res2 = self.ai.move(5, 1)
+        st2 = self.ai.get_state()
+
+        bdd_step("THEN", "Movement trail extends along full path and 1 move remains",
+                 assertions=[
+                     f"Move 2 success: {res2.get('success')}",
+                     f"Remaining moves: {st2.get('movementRemaining')} (expected 1)",
+                     f"Movement trail: {st2.get('movementTrail')}"
+                 ])
+        self.assertTrue(res2.get("success"))
+        self.assertEqual(st2.get("movementRemaining"), 1)
+        self.assertEqual(st2.get("movementTrail"), [[0, 1], [1, 1], [2, 1], [3, 1], [4, 1], [5, 1]])
+
+        bdd_step("WHEN", "Barbarian ends turn")
+        self.ai.end_turn()
+        st3 = self.ai.get_state()
+
+        bdd_step("THEN", "Movement trail clears for next companion",
+                 assertions=[f"Trail cleared: {st3.get('movementTrail') == []}"])
+        self.assertEqual(st3.get("movementTrail"), [])
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

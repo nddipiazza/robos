@@ -18,6 +18,8 @@ var has_acted_this_turn: bool = false
 var has_moved_this_turn: bool = false
 var moved_before_action: bool = false
 var movement_closed: bool = false
+var movement_start_pos: Vector2i = Vector2i(-1, -1)
+var movement_trail: Array[Vector2i] = []
 var turn_state: String = "awaiting_roll" # "awaiting_roll", "moving", "action_taken", "turn_complete"
 var combat_log: Array[String] = []
 
@@ -399,6 +401,8 @@ func _load_active_cartridge() -> void:
 	has_moved_this_turn = false
 	moved_before_action = false
 	movement_closed = false
+	movement_start_pos = Vector2i(-1, -1)
+	movement_trail.clear()
 	turn_state = "awaiting_roll"
 
 	update_party_vision()
@@ -1573,6 +1577,8 @@ func roll_movement_dice() -> Dictionary:
 	movement_remaining = roll.total
 	movement_rolled = true
 	turn_state = "moving"
+	movement_start_pos = hero.get("grid_pos", Vector2i(-1, -1))
+	movement_trail = [movement_start_pos]
 	trigger_movement_dice_roll(roll, str(hero.get("name", "Hero")), dice_vals)
 	_update_ui()
 	queue_redraw_all()
@@ -1638,6 +1644,10 @@ func move_hero(target_pos: Vector2i) -> bool:
 	if curr == target_pos:
 		return true
 
+	if movement_trail.is_empty():
+		movement_start_pos = curr
+		movement_trail = [curr]
+
 	# HeroQuest Turn Structure: Movement and Action No-Splitting Rule
 	# You cannot split movement before and after an attack/action.
 	# If the hero moved before taking an action, any action taken closes movement permanently.
@@ -1691,6 +1701,13 @@ func move_hero(target_pos: Vector2i) -> bool:
 			break
 
 	hero["grid_pos"] = final_pos
+
+	for step_idx in range(1, actual_cost + 1):
+		var step_pos = path[step_idx]
+		if movement_trail.size() > 1 and movement_trail[movement_trail.size() - 2] == step_pos:
+			movement_trail.pop_back()
+		else:
+			movement_trail.append(step_pos)
 
 	if not sprung_trap.is_empty():
 		sprung_trap["detected"] = true
@@ -2591,6 +2608,8 @@ func end_turn() -> void:
 	has_moved_this_turn = false
 	moved_before_action = false
 	movement_closed = false
+	movement_start_pos = Vector2i(-1, -1)
+	movement_trail.clear()
 	turn_state = "awaiting_roll"
 	update_party_vision()
 	_update_ui()
@@ -3465,6 +3484,8 @@ func get_telemetry_state() -> Dictionary:
 		"hasMoved": has_moved_this_turn,
 		"movedBeforeAction": moved_before_action,
 		"movementClosed": movement_closed,
+		"movementStartPos": [movement_start_pos.x, movement_start_pos.y],
+		"movementTrail": movement_trail.map(func(v): return [v.x, v.y]),
 		"turnState": turn_state,
 		"elfElement": current_elf_element,
 		"elfSpellModalVisible": elf_spell_modal.visible if elf_spell_modal else false,
@@ -3554,6 +3575,14 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				moved_before_action = bool(action_data.get("hasMoved"))
 			if action_data.has("movementClosed"):
 				movement_closed = bool(action_data.get("movementClosed"))
+			if action_data.has("movementTrail") and action_data.movementTrail is Array:
+				movement_trail.clear()
+				for pt in action_data.movementTrail:
+					if pt is Array and pt.size() >= 2:
+						movement_trail.append(Vector2i(int(pt[0]), int(pt[1])))
+			elif action_data.has("hasMoved") and not bool(action_data.get("hasMoved")):
+				movement_trail.clear()
+				movement_start_pos = Vector2i(-1, -1)
 			if action_data.has("turnState"):
 				turn_state = str(action_data.get("turnState"))
 			if action_data.has("heroes") and action_data.heroes is Array:
@@ -4070,6 +4099,70 @@ func _draw_board(canvas: CanvasItem) -> void:
 	canvas.draw_arc(stair_rect.get_center(), tile_size * 0.20, 0, TAU, 16, Color(0.55, 0.68, 0.82, 0.9), 1.5)
 	var st_w = ThemeDB.fallback_font.get_string_size("STAIR", HORIZONTAL_ALIGNMENT_CENTER, -1, 8).x
 	canvas.draw_string(ThemeDB.fallback_font, Vector2(stair_rect.get_center().x - st_w * 0.5, stair_rect.get_center().y + 3), "STAIR", HORIZONTAL_ALIGNMENT_CENTER, -1, 8, Color(0.85, 0.9, 1.0, 0.85))
+
+	# Draw Hero Movement Trail (Green line from where hero came from with moves remaining in middle)
+	if movement_trail.size() >= 2 and (has_moved_this_turn or movement_remaining > 0):
+		var pts: Array[Vector2] = []
+		for tile_coord in movement_trail:
+			pts.append(board_offset + Vector2(tile_coord.x * tile_size + tile_size * 0.5, tile_coord.y * tile_size + tile_size * 0.5))
+
+		# 1. Start origin footprint ring (where the hero came from)
+		canvas.draw_circle(pts[0], 5.0, Color(0.2, 0.92, 0.38, 0.9))
+		canvas.draw_arc(pts[0], tile_size * 0.24, 0, TAU, 16, Color(0.2, 0.92, 0.38, 0.65), 1.5)
+
+		# 2. Draw glowing green line segments along the traveled path
+		for i in range(pts.size() - 1):
+			var p_from = pts[i]
+			var p_to = pts[i + 1]
+			# Outer glow
+			canvas.draw_line(p_from, p_to, Color(0.06, 0.55, 0.22, 0.4), 6.0, true)
+			# Sharp emerald green core
+			canvas.draw_line(p_from, p_to, Color(0.2, 0.95, 0.4, 0.95), 3.0, true)
+			# Waypoint node
+			if i > 0:
+				canvas.draw_circle(p_from, 3.0, Color(0.7, 1.0, 0.8, 0.9))
+
+		# 3. Compute middle point along the traveled path
+		var total_len: float = 0.0
+		var seg_lens: Array[float] = []
+		for i in range(pts.size() - 1):
+			var seg_len = pts[i].distance_to(pts[i + 1])
+			seg_lens.append(seg_len)
+			total_len += seg_len
+
+		var mid_pt = (pts[0] + pts[pts.size() - 1]) * 0.5
+		if total_len > 0.0:
+			var half_target = total_len * 0.5
+			var accumulated = 0.0
+			for i in range(seg_lens.size()):
+				if accumulated + seg_lens[i] >= half_target:
+					var remain = half_target - accumulated
+					var fraction = remain / maxf(0.001, seg_lens[i])
+					mid_pt = pts[i].lerp(pts[i + 1], fraction)
+					break
+				accumulated += seg_lens[i]
+
+		# 4. Draw moves remaining badge in the middle of the line
+		var badge_txt = ""
+		if total_len >= 75.0:
+			badge_txt = ("%d MOVES LEFT" % movement_remaining) if movement_remaining != 1 else "1 MOVE LEFT"
+		else:
+			badge_txt = "%d LEFT" % movement_remaining
+
+		var font = ThemeDB.fallback_font
+		var txt_size = font.get_string_size(badge_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 10)
+		var badge_w = txt_size.x + 14.0
+		var badge_h = 19.0
+		var badge_rect = Rect2(mid_pt.x - badge_w * 0.5, mid_pt.y - badge_h * 0.5, badge_w, badge_h)
+
+		# Drop shadow
+		canvas.draw_rect(Rect2(badge_rect.position + Vector2(1, 1), badge_rect.size), Color(0.0, 0.0, 0.0, 0.6), true)
+		# Background pill
+		canvas.draw_rect(badge_rect, Color(0.04, 0.10, 0.16, 0.95), true)
+		# Green border
+		canvas.draw_rect(badge_rect, Color(0.2, 0.92, 0.38, 1.0), false, 1.5)
+		# Text label
+		canvas.draw_string(font, Vector2(mid_pt.x - txt_size.x * 0.5, mid_pt.y + 4), badge_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color.WHITE)
 
 	# Draw Heroes (only heroes currently on the board are drawn)
 	var heroes_by_tile: Dictionary = {}
