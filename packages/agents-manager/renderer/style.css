@@ -194,3 +194,6 @@ html, body { background: #0d1117; color: #e6edf3; font-family: -apple-system, Bl
 
 
 
+
+.session-card.session-selected { border:1px solid #58bce8; background:#142d3c; box-shadow:0 0 0 2px #58bce822; }
+.session-selected-label { color:#86d7f7;font:11px monospace;margin:7px 0;overflow-wrap:anywhere; }

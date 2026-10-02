@@ -5,6 +5,7 @@ window.mountWalkthrough = async function () {
   stage.replaceChildren(); stage.classList.add('walkthrough');
   const bar = document.createElement('div'); bar.className = 'walkthrough-bar';
   const title = document.createElement('strong'); title.textContent = 'Walk me through it';
+  const jobStatus=document.createElement('robos-agent-job-status');jobStatus.openSession=value=>window.api.openAgentSession(value);stage.append(jobStatus);
   const badge = document.createElement('span'); badge.className = 'walkthrough-status';
   const start = button('Start', 'Start the live walkthrough', () => act('start'));
   const restart = button('Start over', 'Rerun setup and return to checkpoint 1; keep code changes and chat', () => act('restart'));
@@ -96,6 +97,7 @@ window.mountWalkthrough = async function () {
   let state; let lastNarration = ''; let lastActionStart;
   function button(text, label, fn) { const b = document.createElement('button'); b.type = 'button'; b.textContent = text; b.title = label; b.addEventListener('click', fn); return b; }
   function render(value) {
+    jobStatus.value={...value,activity:value.activitySummary?.text};
     const currentIds = new Set(value.messages.map(m => m.id));
     for (const id of receivedTimes.keys()) if (!currentIds.has(id)) receivedTimes.delete(id);
     for (const m of value.messages) if (m.id && !receivedTimes.has(m.id)) receivedTimes.set(m.id, historyInitialized ? Date.now() : null);

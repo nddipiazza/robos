@@ -27,7 +27,7 @@ class DemoSession extends EventEmitter {
     this.index = -1; this.status = 'idle'; this.messages = []; this.child = null; this.progress = []; this.startedAt = null; this.activitySummary = null;
     this.steering = []; this.droppedMessages = 0;
     this.runAgent = runAgent || this.executeAgent.bind(this);
-    this.store = store; this.agentThreads = {}; this.restored = false; this.persistenceError = null;
+    this.store = store; this.agentThreads = {}; this.lastSessionId=null; this.restored = false; this.persistenceError = null;
     if (store) {
       try {
         const page = store.page(); this.messages = page.messages; const saved = store.read();
@@ -42,6 +42,7 @@ class DemoSession extends EventEmitter {
             this.status = saved.status === 'running' ? 'error' : ['paused','error','idle'].includes(saved.status) ? saved.status : 'idle';
             this.guidance = saved.guidance || '';
           }
+          this.lastSessionId=saved.agentThreads?.[saved.mode||'feature']||null;
           if (saved.agentConfig === createHash('sha256').update(JSON.stringify(this.agent || null)).digest('hex')) this.agentThreads = saved.agentThreads || {};
           if (saved.status === 'running') this.addMessage({role:'system',text:'This review was closed during an agent action. Resume to inspect the current app and continue; that action was not marked complete.'});
         }
@@ -58,7 +59,7 @@ class DemoSession extends EventEmitter {
   }
   clearChat() { this.store?.clear(); this.messages = []; this.droppedMessages = 0; this.publish(); return this.state(); }
   activeProcess() { return this.mode === 'before' ? this.process.before : this.process; }
-  state() { return { restored: this.restored, historyAvailable: !!this.store, persistenceError: this.persistenceError, agentName: this.agentName(), droppedMessages: this.droppedMessages, activitySummary: this.activitySummary, progress: this.progress, startedAt: this.startedAt, failedIndex: this.failedIndex, mode: this.mode, baseline: this.mode === 'before' ? this.baseline : null, guidance: this.guidance, status: this.status, index: this.index, total: this.activeProcess().checkpoints.length, checkpoint: this.activeProcess().checkpoints[['running', 'error'].includes(this.status) ? this.failedIndex : this.index] || null, messages: this.messages, process: this.process }; }
+  state() { return { sessionId:this.agentThreads[this.mode]||this.lastSessionId||null, provider:'codex', restored: this.restored, historyAvailable: !!this.store, persistenceError: this.persistenceError, agentName: this.agentName(), droppedMessages: this.droppedMessages, activitySummary: this.activitySummary, progress: this.progress, startedAt: this.startedAt, failedIndex: this.failedIndex, mode: this.mode, baseline: this.mode === 'before' ? this.baseline : null, guidance: this.guidance, status: this.status, index: this.index, total: this.activeProcess().checkpoints.length, checkpoint: this.activeProcess().checkpoints[['running', 'error'].includes(this.status) ? this.failedIndex : this.index] || null, messages: this.messages, process: this.process }; }
   reportProgress(text, headline = true) {
     if (this.status !== 'running' || !text || this.progress.at(-1)?.text === text) return;
     const event = { text: text.replace(/\s+/g, ' ').trim().slice(0, 600), at: Date.now() };
@@ -67,7 +68,7 @@ class DemoSession extends EventEmitter {
     this.progress = this.progress.slice(-6); this.publish();
   }
   handleAgentEvent(e) {
-    if (e.type === 'thread.started' && /^[a-f0-9-]{36}$/i.test(e.thread_id || '')) { this.agentThreads[this.mode] = e.thread_id; this.publish(); }
+    if (e.type === 'thread.started' && /^[a-f0-9-]{36}$/i.test(e.thread_id || '')) { this.agentThreads[this.mode] = e.thread_id;this.lastSessionId=e.thread_id; this.publish(); }
     const item = e.item;
     if (!item || !['item.started', 'item.completed'].includes(e.type)) return;
     if (item.type === 'agent_message') {
