@@ -20,10 +20,16 @@ test('draft action opens reviewer dialog; promotion updates state and errors rem
   for(const width of [1024,1440]){
    await p.setViewportSize({width,height:900});
    const bounds=await p.locator('#pr-ready-button').boundingBox();
-   assert.ok(bounds.height>=44 && bounds.width>=150,'ready action should be prominent');
+   assert.ok(bounds.height>=32 && bounds.width>=140,'ready action should fit the requested compact size');
    assert.ok(bounds.x>=0 && bounds.x+bounds.width<=width,'ready action must fit the header');
   }
   await p.locator('#pr-ready-button').click();
+  for(const width of [375,1024]){
+   await p.setViewportSize({width,height:800});const dialog=p.getByRole('dialog',{name:'Ready for review',exact:true});const box=await dialog.boundingBox();assert.ok(box.x>=0&&box.x+box.width<=width);
+   assert.equal(await dialog.evaluate(e=>e.scrollWidth<=e.clientWidth),true);
+   const cancel=await dialog.getByRole('button',{name:'Cancel',exact:true}).boundingBox(),confirm=await dialog.getByRole('button',{name:'Move PR to Ready',exact:true}).boundingBox();assert.ok(cancel.x+cancel.width<confirm.x,'actions must have a visible gap');
+   assert.equal(await dialog.getByLabel('GitHub reviewers',{exact:true}).isVisible(),true);
+  }
   await p.getByRole('button',{name:'Cancel',exact:true}).click();
   assert.equal(await p.evaluate(()=>window.calls),0);
   await p.locator('#pr-ready-button').click();
