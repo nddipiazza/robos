@@ -26,3 +26,5 @@ test('non-author, closed PR, and concurrent GitHub edits cannot be overwritten',
 test('author can push committed adjustments without forcing the remote',async()=>{
  const f=fixture();await f.api.push();assert.deepEqual(f.calls.find(c=>c[1]==='push'),['git','push','origin','HEAD:refs/heads/codex/filters']);
 });
+
+test('repair push uses the isolated checkout and refuses a changed remote head',async()=>{const f=fixture();const run=f.api.run;let pushCwd;f.api.run=async(bin,args,opts)=>{if(bin==='git'&&args[0]==='branch')return '';if(bin==='git'&&args[0]==='push')pushCwd=opts.cwd;return run(bin,args,opts);};await f.api.push({workspace:'/tmp/repair',expectedHead:'abc'});assert.equal(pushCwd,'/tmp/repair');f.remote.headRefOid='newer';await assert.rejects(()=>f.api.push({workspace:'/tmp/repair',expectedHead:'abc'}),/newer commits/);});
