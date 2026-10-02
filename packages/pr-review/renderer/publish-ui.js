@@ -2,17 +2,10 @@
 window.configureReviewPublish = function(pr) {
   const ready=document.getElementById('pr-ready-button'),notice=document.getElementById('pr-ready-status');
   if(ready){
-    ready.hidden=!(pr.local && pr.published && pr.isAuthor && pr.state==='OPEN' && pr.isDraft && pr.ciPassing && !pr.stateError);
-    ready.disabled=false;ready.textContent='Ready for review';if(notice)notice.textContent='';
-    ready.onclick=async()=>{
-      ready.disabled=true;ready.textContent='Marking ready…';if(notice)notice.textContent='Checking the latest CI results…';
-      try{
-        const result=await window.api.readyReviewPR(pr.headRefOid);if(!result.ok)throw Error(result.error);
-        Object.assign(pr,result.pr);
-        if(window.openPRReviewTheater)await window.openPRReviewTheater(pr);else window.configureReviewPublish(pr);
-        if(notice)notice.textContent='PR is ready for review.';
-      }catch(e){if(notice)notice.textContent=e.message;ready.disabled=false;ready.textContent='Ready for review';}
-    };
+    ready.hidden=!(pr.state==='OPEN' && pr.isDraft && !pr.stateError);
+    ready.disabled=false;ready.textContent='Move PR to Ready';if(notice)notice.textContent='';
+    ready.onclick=()=>window.offerReadyNotification(pr,ready,notice);
+
   }
   const trigger=document.getElementById('step-btn-8');trigger.hidden=!pr.local;
   const status=pr.stateError||pr.published&&!pr.state?'unknown':!pr.published?'not-created':pr.state==='MERGED'?'merged':pr.state==='CLOSED'?'closed':pr.isDraft?'draft':'review';
@@ -59,9 +52,38 @@ window.configureReviewPublish = function(pr) {
     const refresh=document.createElement('button');refresh.textContent='Reload PR';refresh.hidden=!pr.published;refresh.onclick=async()=>{refresh.disabled=true;try{const r=await window.api.refreshReviewPR();if(!r.ok)throw Error(r.error);if(window.openPRReviewTheater)await window.openPRReviewTheater(r.pr);else window.configureReviewPublish(r.pr);window.setTheaterStage?.(8);}catch(e){error.textContent=e.message;}finally{refresh.disabled=false;}};
     const update=document.createElement('button');update.textContent='Update PR';update.hidden=!editable;update.onclick=async()=>{update.disabled=true;error.textContent='Updating the PR…';try{const r=await window.api.updateReviewPR({title:title.value,body:body.value,expectedTitle:pr.title,expectedBody:pr.body});if(!r.ok)throw Error(r.error);Object.assign(pr,r.pr);title.value=pr.title;body.value=pr.body;const header=document.querySelector('#theater-pr-title a');if(header)header.textContent='#'+pr.number+' · '+pr.title;error.textContent='PR description updated on GitHub.';}catch(e){error.textContent=e.message;}finally{update.disabled=false;}};
     const push=document.createElement('button');push.textContent='Push walkthrough adjustments';push.hidden=!editable;push.onclick=async()=>{push.disabled=true;try{const r=await window.api.pushReviewAdjustments();if(!r.ok)throw Error(r.error);error.textContent='Walkthrough adjustments pushed to the PR.';}catch(e){error.textContent=e.message;}finally{push.disabled=false;}};
+    if(pr.isDraft && ready && !ready.hidden){const promote=document.createElement('button');promote.className='pr-ready-button';promote.textContent='Move PR to Ready';promote.onclick=()=>ready.click();dialog.append(promote);}
     dialog.append(heading,branch,titleLabel,aiHost,bodyLabel,draftLabel,messagingHost,error,create,update,push,refresh,open);stage.append(dialog);
     body.addEventListener('editor-warning',e=>error.textContent=e.detail);
     aiDescription=window.mountAIDescription?.(aiHost,{pr,title,body,saved,save,ready:messaging?.ready});
     if(pr.published){create.hidden=true;title.disabled=!editable;body.disabled=!editable;draftLabel.hidden=true;open.hidden=false;error.textContent=pr.stateError|| (editable?'Review the evidence and walkthrough, revise the description, or discuss further adjustments.':pr.state==='CLOSED'||pr.state==='MERGED'?'This PR is '+labels[status].toLowerCase()+'. Evidence and changes remain available.':'Description edits are available to the author of an open PR.');}
   }
+};
+
+window.offerReadyNotification = function(pr,ready,notice) {
+ const dialog=document.createElement('dialog');dialog.className='pr-ready-dialog';
+ const heading=document.createElement('h2');heading.textContent='Move PR to Ready';
+ const text=document.createElement('p');text.textContent='Choose GitHub reviewers and optionally send the team another review message.';
+ const label=document.createElement('label');label.textContent='GitHub reviewers';const reviewers=document.createElement('input');reviewers.placeholder='username, organization/team';label.append(reviewers);
+ const host=document.createElement('div'),status=document.createElement('p');status.role='status';
+ const title=document.createElement('input'),body=document.createElement('textarea');title.value=pr.title||'';body.value=pr.body||'';
+ const options=window.mountReviewMessageOptions?.(host,pr,title,body,{}, {url:pr.url,occasion:'ready'});
+ const cancel=document.createElement('button');cancel.textContent='Cancel';cancel.onclick=()=>dialog.close();
+ const confirm=document.createElement('button');confirm.className='pr-ready-button';confirm.textContent='Move PR to Ready';confirm.disabled=true;
+ window.api.reviewMessageOptions?.(pr.url).then(r=>{if(r.ok)reviewers.value=(r.settings.githubReviewers||[]).join(', ');else status.textContent=r.error;}).catch(e=>status.textContent=e.message).finally(()=>confirm.disabled=false);
+ if(!window.api.reviewMessageOptions)confirm.disabled=false;
+ confirm.onclick=async()=>{
+  confirm.disabled=true;cancel.disabled=true;status.textContent='Checking GitHub…';
+  try{
+   await options?.ready;options?.validate();
+   const result=await window.api.readyReviewPR(pr.headRefOid,pr.url,reviewers.value.split(/[\s,]+/).filter(Boolean));if(!result.ok)throw Error(result.error);
+   Object.assign(pr,result.pr);ready.hidden=true;
+   if(window.openPRReviewTheater)await window.openPRReviewTheater(pr);else window.configureReviewPublish(pr);
+   status.textContent=result.pr.reviewerError||'PR is ready for review.';
+   if(notice)notice.textContent=status.textContent;
+   const message=await options?.send();if(message)status.textContent+=' '+message;
+   confirm.hidden=true;cancel.textContent='Done';
+  }catch(e){status.textContent=e.message;confirm.disabled=false;}finally{cancel.disabled=false;}
+ };
+ dialog.append(heading,text,label,host,status,confirm,cancel);dialog.onclose=()=>dialog.remove();document.body.append(dialog);dialog.showModal();
 };

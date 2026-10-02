@@ -15,16 +15,18 @@ async function list(repos,gh=run){
  return {ok:true,data,warning:errors.join('\n')};
 }
 const pending=new Set();
-async function ready(url,head,gh=run){
+async function ready(url,head,gh=run,reviewers=[]){
  parseURL(url);if(pending.has(url))throw Error('This PR is already being updated.');pending.add(url);
  try{
   const pr=JSON.parse(await gh(['pr','view',url,'--json',fields]));const login=JSON.parse(await gh(['api','user'])).login;
   if(pr.url!==url||pr.state!=='OPEN'||!pr.isDraft||!login||pr.author?.login?.toLowerCase()!==login.toLowerCase())throw Error('Only your open draft PRs can be marked ready here.');
+  const selected=require('../../robos-lib/project-review-settings').validateGitHubReviewers(reviewers).filter(r=>r.toLowerCase()!==pr.author.login.toLowerCase());
   if(!head||pr.headRefOid!==head)throw Error('The PR branch changed. Refresh the list before trying again.');
   if(!passing(pr.statusCheckRollup))throw Error('CI has not passed. Refresh the list to see the latest checks.');
   await gh(['pr','ready',url]);const updated=JSON.parse(await gh(['pr','view',url,'--json',fields]));
   if(updated.isDraft)throw Error('GitHub did not confirm the PR is ready. Refresh before retrying.');
-  return {...updated,...parseURL(url)};
+  if(selected.length){try{await gh(['pr','edit',url,'--add-reviewer',selected.join(',')]);}catch(e){updated.reviewerError='PR is ready, but reviewer requests failed: '+e.message;}}
+  return {...updated,...parseURL(url),author:updated.author?.login,headBranch:updated.headRefName,baseBranch:updated.baseRefName};
  }finally{pending.delete(url);}
 }
 function reviewEnvironment(url,root=path.join(os.homedir(),'.robos','local-reviews')){

@@ -39,3 +39,10 @@ test('ready rechecks head, CI, author and draft state before mutating GitHub',as
  await assert.rejects(f.api.ready('abc'),/already ready/);
  for(const other of [fixture('CLOSED'),fixture('MERGED'),fixture('OPEN','reviewer')])await assert.rejects(other.api.ready('abc'),/author of an open PR/);
 });
+
+test('ready requests selected GitHub reviewers and excludes the author',async()=>{
+ const f=fixture();f.remote.isDraft=true;f.remote.statusCheckRollup=[{state:'SUCCESS'}];const run=f.api.run;
+ f.api.run=async(bin,args,opts)=>{if(args[1]==='ready'){f.remote.isDraft=false;return '';}if(args.includes('--add-reviewer')){f.calls.push([bin,...args]);return '';}return run(bin,args,opts);};
+ await f.api.ready('abc',['author','teammate','org/backend']);
+ assert.deepEqual(f.calls.find(c=>c.includes('--add-reviewer')),['gh','pr','edit',f.remote.url,'--add-reviewer','teammate,org/backend']);
+});

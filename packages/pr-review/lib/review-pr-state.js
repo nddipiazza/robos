@@ -34,17 +34,20 @@ class ReviewPRState {
   await this.run('gh',['pr','edit',pr.url,'--title',title.trim(),'--body-file',file],await this.options());
   const result=await this.refresh();if(result.body!==body||result.title!==title.trim())throw Error('GitHub did not confirm the updated description. Reload before retrying.');return result;
  }
- async ready(expectedHead){
+ async ready(expectedHead,reviewers=[]){
   if(this.pending)throw Error('A PR update is already in progress.');
-  this.pending=this.markReady(expectedHead);try{return await this.pending;}finally{this.pending=null;}
+  this.pending=this.markReady(expectedHead,reviewers);try{return await this.pending;}finally{this.pending=null;}
  }
- async markReady(expectedHead){
+ async markReady(expectedHead,reviewers){
   const pr=await this.assertAuthor();
+  const selected=require('../../robos-lib/project-review-settings').validateGitHubReviewers(reviewers).filter(r=>r.toLowerCase()!==pr.author.toLowerCase());
   if(!pr.isDraft)throw Error('This PR is already ready for review.');
   if(!expectedHead || pr.headRefOid!==expectedHead)throw Error('The PR branch changed. Reload it before marking it ready.');
   if(!pr.ciPassing)throw Error('CI checks must finish successfully before marking this PR ready.');
   await this.run('gh',['pr','ready',pr.url],await this.options());
-  const result=await this.refresh();if(result.isDraft)throw Error('GitHub did not confirm the PR is ready. Reload before retrying.');return result;
+  const result=await this.refresh();if(result.isDraft)throw Error('GitHub did not confirm the PR is ready. Reload before retrying.');
+  if(selected.length){try{await this.run('gh',['pr','edit',pr.url,'--add-reviewer',selected.join(',')],await this.options());}catch(e){result.reviewerError='PR is ready, but reviewer requests failed: '+e.message;}}
+  return result;
  }
  async push(){
   const pr=await this.assertAuthor(),opts=await this.options();const git=async args=>(await this.run('git',args,opts)).trim();
