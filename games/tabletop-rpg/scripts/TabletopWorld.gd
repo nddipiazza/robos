@@ -117,6 +117,7 @@ func toggle_role() -> void:
 	else:
 		current_role = "player"
 		_log("⚔️ Switched to Player Mode! You control the hero party.")
+		update_party_vision()
 	_update_ui()
 	queue_redraw_all()
 
@@ -191,19 +192,212 @@ func _load_active_cartridge() -> void:
 	for tr in map_data.get("traps", []):
 		traps.append(tr.duplicate(true))
 
-	# Fog of War: initially, only starting stairwell and surrounding corridor are explored
+	# Fog of War: initially, cast ray vision from hero starting stairwell
 	revealed_rooms.clear()
 	explored_tiles.clear()
-	_reveal_corridor_around(starting_stair, 3)
+	update_party_vision()
 	queue_redraw_all()
 
-func _reveal_corridor_around(center: Vector2i, radius: int) -> void:
-	for dx in range(-radius, radius + 1):
-		for dy in range(-radius, radius + 1):
-			var tile = center + Vector2i(dx, dy)
-			if tile.x >= 0 and tile.x < grid_cols and tile.y >= 0 and tile.y < grid_rows:
-				if not _is_inside_any_room(tile):
+func is_tile_wall_blocked(tile: Vector2i) -> bool:
+	for wb in wall_blocks:
+		var px = int(wb.get("x", wb.get("position", [0, 0])[0]))
+		var py = int(wb.get("y", wb.get("position", [0, 0])[1]))
+		var w = int(wb.get("width", 1))
+		var h = int(wb.get("height", 1))
+		var b_type = str(wb.get("type", "1-tile-wall"))
+		if b_type == "2-tile-wall-h" or b_type == "double-h":
+			w = 2; h = 1
+		elif b_type == "2-tile-wall-v" or b_type == "double-v":
+			w = 1; h = 2
+		if tile.x >= px and tile.x < px + w and tile.y >= py and tile.y < py + h:
+			return true
+	return false
+
+func _get_door_between(a: Vector2i, b: Vector2i) -> Dictionary:
+	for d in doors:
+		var f = d.get("from", [0, 0])
+		var t = d.get("to", [0, 0])
+		if (f[0] == a.x and f[1] == a.y and t[0] == b.x and t[1] == b.y) or \
+		   (t[0] == a.x and t[1] == a.y and f[0] == b.x and f[1] == b.y):
+			return d
+	return {}
+
+func has_wall_between(a: Vector2i, b: Vector2i) -> bool:
+	# 1. Out of bounds check
+	if a.x < 0 or a.x >= grid_cols or a.y < 0 or a.y >= grid_rows:
+		return true
+	if b.x < 0 or b.x >= grid_cols or b.y < 0 or b.y >= grid_rows:
+		return true
+
+	# 2. Check doors
+	var d = _get_door_between(a, b)
+	if d.size() > 0:
+		# If door is open, line of sight passes through
+		# If door is closed, line of sight is blocked
+		return not d.get("is_open", false)
+
+	# 3. Check room boundaries
+	var ra = _get_room_at(a)
+	var rb = _get_room_at(b)
+	var ra_id = str(ra.get("id", ""))
+	var rb_id = str(rb.get("id", ""))
+
+	# If crossing between a room and a corridor, or between two different rooms:
+	if ra_id != rb_id:
+		return true
+
+	return false
+
+func has_line_of_sight(from_pos: Vector2i, to_pos: Vector2i) -> bool:
+	if from_pos == to_pos:
+		return true
+
+	# Target inside an unrevealed room cannot be seen
+	var rt = _get_room_at(to_pos)
+	var rt_id = str(rt.get("id", ""))
+	if rt_id != "" and not revealed_rooms.has(rt_id):
+		return false
+
+	var rf = _get_room_at(from_pos)
+	var rf_id = str(rf.get("id", ""))
+	if rf_id != "" and not revealed_rooms.has(rf_id):
+		return false
+
+	var p0 = Vector2(from_pos.x + 0.5, from_pos.y + 0.5)
+	var p1 = Vector2(to_pos.x + 0.5, to_pos.y + 0.5)
+	var dx = p1.x - p0.x
+	var dy = p1.y - p0.y
+
+	var step_x = 1 if dx > 0.0 else (-1 if dx < 0.0 else 0)
+	var step_y = 1 if dy > 0.0 else (-1 if dy < 0.0 else 0)
+
+	var t_delta_x = 1.0e20 if absf(dx) < 1.0e-7 else absf(1.0 / dx)
+	var t_delta_y = 1.0e20 if absf(dy) < 1.0e-7 else absf(1.0 / dy)
+
+	var t_max_x: float = 0.0
+	var t_max_y: float = 0.0
+
+	if step_x > 0:
+		t_max_x = (float(from_pos.x + 1) - p0.x) * t_delta_x
+	elif step_x < 0:
+		t_max_x = (p0.x - float(from_pos.x)) * t_delta_x
+	else:
+		t_max_x = 1.0e20
+
+	if step_y > 0:
+		t_max_y = (float(from_pos.y + 1) - p0.y) * t_delta_y
+	elif step_y < 0:
+		t_max_y = (p0.y - float(from_pos.y)) * t_delta_y
+	else:
+		t_max_y = 1.0e20
+
+	var current = from_pos
+	var max_steps = grid_cols + grid_rows + 5
+
+	for _i in range(max_steps):
+		if current == to_pos:
+			return true
+
+		# Intermediate stone blocks block passage
+		if current != from_pos and is_tile_wall_blocked(current):
+			return false
+
+		var eps = 1.0e-5
+		if t_max_x < t_max_y - eps:
+			var next_tile = Vector2i(current.x + step_x, current.y)
+			t_max_x += t_delta_x
+			if has_wall_between(current, next_tile):
+				return false
+			current = next_tile
+		elif t_max_y < t_max_x - eps:
+			var next_tile = Vector2i(current.x, current.y + step_y)
+			t_max_y += t_delta_y
+			if has_wall_between(current, next_tile):
+				return false
+			current = next_tile
+		else:
+			var next_x = Vector2i(current.x + step_x, current.y)
+			var next_y = Vector2i(current.x, current.y + step_y)
+			var diag = Vector2i(current.x + step_x, current.y + step_y)
+			if has_wall_between(current, next_x) or has_wall_between(current, next_y) or \
+			   has_wall_between(next_x, diag) or has_wall_between(next_y, diag):
+				return false
+			t_max_x += t_delta_x
+			t_max_y += t_delta_y
+			current = diag
+
+	return current == to_pos
+
+func update_party_vision() -> void:
+	if is_gm_role():
+		return
+
+	var vision_sources: Array[Vector2i] = []
+	for h in heroes:
+		if h.get("current_bp", 1) > 0:
+			vision_sources.append(h.get("grid_pos", starting_stair))
+
+	if vision_sources.is_empty():
+		vision_sources.append(starting_stair)
+
+	explored_tiles[starting_stair] = true
+
+	# Ensure all tiles in revealed rooms are permanently explored
+	for r_id in revealed_rooms:
+		var rm = _get_room_by_id(r_id)
+		if rm.size() > 0:
+			var rx = int(rm.get("x", 0))
+			var ry = int(rm.get("y", 0))
+			var rw = int(rm.get("w", 1))
+			var rh = int(rm.get("h", 1))
+			for x in range(rx, rx + rw):
+				for y in range(ry, ry + rh):
+					explored_tiles[Vector2i(x, y)] = true
+
+	# Cast rays from all living heroes to find all visible corridor and revealed room tiles
+	for c in range(grid_cols):
+		for r in range(grid_rows):
+			var tile = Vector2i(c, r)
+			if explored_tiles.has(tile):
+				continue
+
+			var rm = _get_room_at(tile)
+			var r_id = str(rm.get("id", ""))
+			# Unrevealed room tiles can never be seen by rays
+			if r_id != "" and not revealed_rooms.has(r_id):
+				continue
+
+			for src in vision_sources:
+				if has_line_of_sight(src, tile):
 					explored_tiles[tile] = true
+					break
+
+func reveal_room_by_id(r_id: String) -> void:
+	if r_id == "" or revealed_rooms.has(r_id):
+		return
+	revealed_rooms.append(r_id)
+	var room_obj = _get_room_by_id(r_id)
+	var room_name = room_obj.get("name", r_id)
+	_log("🚪 Door kicked open! Revealed chamber: %s!" % room_name)
+
+	# Reveal all tiles of this room immediately
+	var rx = int(room_obj.get("x", 0))
+	var ry = int(room_obj.get("y", 0))
+	var rw = int(room_obj.get("w", 1))
+	var rh = int(room_obj.get("h", 1))
+	for x in range(rx, rx + rw):
+		for y in range(ry, ry + rh):
+			explored_tiles[Vector2i(x, y)] = true
+
+	# Log spotted monsters in the chamber
+	var found_m: Array[String] = []
+	for m in monsters:
+		if m.get("roomId", "") == r_id and m.get("is_alive", false):
+			found_m.append(str(m.get("name", "Monster")))
+	if found_m.size() > 0:
+		_log("⚠️ Danger! Spotted inside: %s!" % ", ".join(found_m))
+	else:
+		_log("✨ The chamber appears calm... for now.")
 
 func _is_inside_any_room(tile: Vector2i) -> bool:
 	for r in rooms:
@@ -319,7 +513,7 @@ func move_hero(target_pos: Vector2i) -> bool:
 
 	hero["grid_pos"] = target_pos
 	movement_remaining = maxi(0, movement_remaining - dist)
-	_reveal_corridor_around(target_pos, 2)
+	update_party_vision()
 	_log("👣 %s moved to (%d, %d). Remaining movement: %d" % [
 		hero.get("name"), target_pos.x, target_pos.y, movement_remaining
 	])
@@ -328,41 +522,38 @@ func move_hero(target_pos: Vector2i) -> bool:
 	return true
 
 func open_door(from_pos: Vector2i, to_pos: Vector2i) -> bool:
-	for d in doors:
-		var f = d.get("from", [0, 0])
-		var t = d.get("to", [0, 0])
-		if (f[0] == from_pos.x and f[1] == from_pos.y and t[0] == to_pos.x and t[1] == to_pos.y) or \
-		   (t[0] == from_pos.x and t[1] == from_pos.y and f[0] == to_pos.x and f[1] == to_pos.y):
-			d["is_open"] = true
-			var r_id = str(d.get("room", ""))
-			if r_id == "":
-				var r1 = _get_room_at(Vector2i(f[0], f[1]))
-				var r2 = _get_room_at(Vector2i(t[0], t[1]))
-				if r1.size() > 0:
-					r_id = str(r1.get("id", ""))
-				elif r2.size() > 0:
-					r_id = str(r2.get("id", ""))
+	var d = _get_door_between(from_pos, to_pos)
+	if d.is_empty():
+		return false
 
-			if r_id != "" and not revealed_rooms.has(r_id):
-				revealed_rooms.append(r_id)
-				var room_obj = _get_room_by_id(r_id)
-				var room_name = room_obj.get("name", r_id)
-				_log("🚪 Door kicked open! Revealed chamber: %s!" % room_name)
-				
-				# Log spotted monsters in the chamber
-				var found_m: Array[String] = []
-				for m in monsters:
-					if m.get("roomId", "") == r_id and m.get("is_alive", false):
-						found_m.append(str(m.get("name", "Monster")))
-				if found_m.size() > 0:
-					_log("⚠️ Danger! Spotted inside: %s!" % ", ".join(found_m))
-				else:
-					_log("✨ The chamber appears calm... for now.")
+	d["is_open"] = true
 
-			_update_ui()
-			queue_redraw_all()
-			return true
-	return false
+	var f = d.get("from", [0, 0])
+	var t = d.get("to", [0, 0])
+
+	var rooms_to_reveal: Array[String] = []
+	var explicit_room = str(d.get("room", ""))
+	if explicit_room != "":
+		rooms_to_reveal.append(explicit_room)
+
+	var r1 = _get_room_at(Vector2i(f[0], f[1]))
+	var r2 = _get_room_at(Vector2i(t[0], t[1]))
+	if r1.size() > 0:
+		var r1_id = str(r1.get("id", ""))
+		if not rooms_to_reveal.has(r1_id):
+			rooms_to_reveal.append(r1_id)
+	if r2.size() > 0:
+		var r2_id = str(r2.get("id", ""))
+		if not rooms_to_reveal.has(r2_id):
+			rooms_to_reveal.append(r2_id)
+
+	for r_id in rooms_to_reveal:
+		reveal_room_by_id(r_id)
+
+	update_party_vision()
+	_update_ui()
+	queue_redraw_all()
+	return true
 
 func attack_adjacent_monster(monster_id: String = "") -> Dictionary:
 	var hero = get_active_hero()
@@ -706,20 +897,22 @@ func _draw_board(canvas: CanvasItem) -> void:
 	for wb in wall_blocks:
 		var px = wb.get("x", wb.get("position", [0, 0])[0])
 		var py = wb.get("y", wb.get("position", [0, 0])[1])
-		var w = int(wb.get("width", 1))
-		var h = int(wb.get("height", 1))
-		var b_type = str(wb.get("type", "1-tile-wall"))
-		if b_type == "2-tile-wall-h" or b_type == "double-h":
-			w = 2; h = 1
-		elif b_type == "2-tile-wall-v" or b_type == "double-v":
-			w = 1; h = 2
-		var block_rect = Rect2(board_offset + Vector2(px * tile_size + 2, py * tile_size + 2), Vector2(w * tile_size - 4, h * tile_size - 4))
-		# Base stone
-		canvas.draw_rect(block_rect, Color(0.18, 0.20, 0.24, 0.95))
-		# Bevel border
-		canvas.draw_rect(block_rect, Color(0.45, 0.50, 0.58, 1.0), false, 2.0)
-		# Inner masonry accent
-		canvas.draw_string(ThemeDB.fallback_font, block_rect.position + Vector2(w * tile_size * 0.5 - 6, h * tile_size * 0.5 + 5), "🧱", HORIZONTAL_ALIGNMENT_CENTER, -1, 14)
+		var pos = Vector2i(px, py)
+		if is_gm_role() or explored_tiles.has(pos):
+			var w = int(wb.get("width", 1))
+			var h = int(wb.get("height", 1))
+			var b_type = str(wb.get("type", "1-tile-wall"))
+			if b_type == "2-tile-wall-h" or b_type == "double-h":
+				w = 2; h = 1
+			elif b_type == "2-tile-wall-v" or b_type == "double-v":
+				w = 1; h = 2
+			var block_rect = Rect2(board_offset + Vector2(px * tile_size + 2, py * tile_size + 2), Vector2(w * tile_size - 4, h * tile_size - 4))
+			# Base stone
+			canvas.draw_rect(block_rect, Color(0.18, 0.20, 0.24, 0.95))
+			# Bevel border
+			canvas.draw_rect(block_rect, Color(0.45, 0.50, 0.58, 1.0), false, 2.0)
+			# Inner masonry accent
+			canvas.draw_string(ThemeDB.fallback_font, block_rect.position + Vector2(w * tile_size * 0.5 - 6, h * tile_size * 0.5 + 5), "🧱", HORIZONTAL_ALIGNMENT_CENTER, -1, 14)
 
 	# Draw Traps (visible in GM mode or if detected/revealed)
 	for tr in traps:
@@ -807,12 +1000,15 @@ func _draw_board(canvas: CanvasItem) -> void:
 	for d in doors:
 		var f = d.get("from", [0, 0])
 		var t = d.get("to", [0, 0])
-		var p1 = board_offset + Vector2(f[0] * tile_size + tile_size * 0.5, f[1] * tile_size + tile_size * 0.5)
-		var p2 = board_offset + Vector2(t[0] * tile_size + tile_size * 0.5, t[1] * tile_size + tile_size * 0.5)
-		var mid = (p1 + p2) * 0.5
-		var is_open = d.get("is_open", false)
-		var col = Color(0.2, 0.8, 0.2, 0.9) if is_open else Color(0.8, 0.5, 0.1, 0.9)
-		canvas.draw_rect(Rect2(mid.x - 8, mid.y - 8, 16, 16), col)
+		var f_pos = Vector2i(f[0], f[1])
+		var t_pos = Vector2i(t[0], t[1])
+		if is_gm_role() or explored_tiles.has(f_pos) or explored_tiles.has(t_pos):
+			var p1 = board_offset + Vector2(f[0] * tile_size + tile_size * 0.5, f[1] * tile_size + tile_size * 0.5)
+			var p2 = board_offset + Vector2(t[0] * tile_size + tile_size * 0.5, t[1] * tile_size + tile_size * 0.5)
+			var mid = (p1 + p2) * 0.5
+			var is_open = d.get("is_open", false)
+			var col = Color(0.2, 0.8, 0.2, 0.9) if is_open else Color(0.8, 0.5, 0.1, 0.9)
+			canvas.draw_rect(Rect2(mid.x - 8, mid.y - 8, 16, 16), col)
 
 	# Draw Monsters
 	for m in monsters:
