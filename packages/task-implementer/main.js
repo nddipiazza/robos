@@ -182,7 +182,7 @@ ipcMain.handle('list-tasks', async (_, { filter } = {}) => {
       const result = await adapter.searchIssues({
         jql,
         maxResults: 50,
-        fields: ['summary', 'description', 'status', 'assignee', 'priority', 'issuetype', 'created', 'updated', 'labels', 'parent'],
+        fields: ['summary', 'description', 'status', 'assignee', 'priority', 'issuetype', 'created', 'updated', 'labels', 'parent', 'issuelinks'],
       });
       return {
         ok: true,
@@ -197,6 +197,9 @@ ipcMain.handle('list-tasks', async (_, { filter } = {}) => {
           url: i.url,
           issueType: i.issueType,
           priority: i.priority,
+          parent: i.parent || null,
+          blockedBy: i.blockedBy || [],
+          blocks: i.blocks || [],
         })),
       };
     } catch (e) {
@@ -285,9 +288,18 @@ ipcMain.handle('open-url', (_, url) => {
 });
 
 ipcMain.handle('open-task-servers', () => {
-  cp.spawn('/usr/bin/electron', [
-    '/usr/local/share/robos/task-servers/main.js',
-    '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage',
+  const taskServersPaths = [
+    path.resolve(__dirname, '..', 'task-servers'),
+    '/usr/local/share/robos/task-servers',
+  ];
+  let appPath = null;
+  for (const p of taskServersPaths) {
+    if (fs.existsSync(path.join(p, 'main.js'))) { appPath = p; break; }
+  }
+  if (!appPath) return { ok: false, error: 'task-servers app not found' };
+  const electronBin = path.resolve(__dirname, 'node_modules', '.bin', 'electron');
+  cp.spawn(fs.existsSync(electronBin) ? electronBin : '/usr/bin/electron', [
+    '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', appPath,
   ], { detached: true, stdio: 'ignore', env: { ...process.env, DISPLAY: ':0' } }).unref();
   return { ok: true };
 });
@@ -423,3 +435,125 @@ ipcMain.handle('ti-list-path', (_, prefix) => {
     return { ok: true, items: [...taskServers, ...items] };
   } catch { return { ok: true, items: [] }; }
 });
+
+// ── Plan generation ───────────────────────────────────────────────────────────
+const activePlanProcs = new Map(); // runId → child
+
+ipcMain.handle('generate-plan', (event, { tasks, context, serverId }) => {
+  const runId = Date.now().toString();
+
+  // Compact task representation for the prompt
+  const taskSummary = tasks.map(t => ({
+    key: t.key,
+    title: t.title,
+    status: t.status,
+    priority: t.priority || null,
+    issueType: t.issueType || null,
+    labels: t.labels || [],
+    parent: t.parent ? t.parent.key : null,
+    body: t.body ? t.body.substring(0, 300) : '',
+  }));
+
+  const prompt = buildPlanPrompt(taskSummary, context);
+  const child = cp.spawn('claude', [
+    '-p', prompt,
+    '--output-format', 'stream-json',
+  ], { encoding: 'utf8', env: { ...process.env, DISPLAY: ':0' } });
+
+  activePlanProcs.set(runId, child);
+
+  let stdoutBuf = '';
+  let fullText = '';
+
+  child.stdout.on('data', d => {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+    stdoutBuf += d.toString();
+    const lines = stdoutBuf.split('\n');
+    stdoutBuf = lines.pop();
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      let text = '';
+      try {
+        const obj = JSON.parse(line);
+        if (obj.type === 'assistant' && Array.isArray(obj.message?.content)) {
+          text = obj.message.content.filter(b => b.type === 'text').map(b => b.text).join('');
+        } else if (obj.type === 'text') {
+          text = obj.text;
+        } else if (obj.type === 'result') {
+          text = obj.result || '';
+        } else { continue; }
+      } catch { continue; }
+      if (text) {
+        fullText += text;
+        mainWindow.webContents.send('plan-stream', { runId, text });
+      }
+    }
+  });
+
+  child.stderr.on('data', d => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('plan-stream', { runId, text: d.toString(), isErr: true });
+    }
+  });
+
+  child.on('close', code => {
+    activePlanProcs.delete(runId);
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('plan-done', { runId, code, fullText });
+    }
+  });
+
+  return { ok: true, runId };
+});
+
+ipcMain.handle('stop-plan', (_, { runId }) => {
+  const child = activePlanProcs.get(runId);
+  if (child) { try { child.kill(); } catch {} activePlanProcs.delete(runId); }
+  return { ok: true };
+});
+
+const PLANS_DIR = path.join(os.homedir(), '.config', 'robos', 'plans');
+
+ipcMain.handle('save-plan', (_, { serverId, plan, meta }) => {
+  try {
+    fs.mkdirSync(PLANS_DIR, { recursive: true });
+    const file = path.join(PLANS_DIR, `${serverId}.json`);
+    fs.writeFileSync(file, JSON.stringify({ serverId, plan, meta, savedAt: new Date().toISOString() }, null, 2));
+    return { ok: true };
+  } catch (e) { return { ok: false, error: e.message }; }
+});
+
+ipcMain.handle('load-plan', (_, { serverId }) => {
+  try {
+    const file = path.join(PLANS_DIR, `${serverId}.json`);
+    if (!fs.existsSync(file)) return { ok: true, plan: null };
+    return { ok: true, ...JSON.parse(fs.readFileSync(file, 'utf8')) };
+  } catch (e) { return { ok: false, error: e.message }; }
+});
+
+function buildPlanPrompt(tasks, context) {
+  const lines = [
+    'You are a software engineering technical lead. Analyze the following Jira tasks and produce an optimal implementation order.',
+    '',
+    'Consider:',
+    '- Parent-child dependencies (parent issues should come before their children)',
+    '- Issue types: Epics first, then Stories, then Sub-tasks',
+    '- Priority fields (higher priority tasks earlier)',
+    '- Logical sequencing: infrastructure before features, blockers before dependent work',
+    '- Labels that indicate grouping or ordering',
+  ];
+  if (context && context.trim()) {
+    lines.push('', 'Developer notes and context:', context.trim());
+  }
+  lines.push(
+    '',
+    'Tasks to order:',
+    JSON.stringify(tasks, null, 2),
+    '',
+    'Return ONLY a valid JSON array — no markdown, no code fences, no extra explanation:',
+    '[{"key":"PROJ-1","title":"Task title","rationale":"One sentence reason for this position in the plan"}]',
+    '',
+    'Include every task key exactly once. Order from first-to-implement to last.',
+  );
+  return lines.join('\n');
+}
