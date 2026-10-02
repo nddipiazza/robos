@@ -1,5 +1,11 @@
 'use strict';
 
+const doorClosedImg = typeof Image !== "undefined" ? new Image() : null;
+if (doorClosedImg) doorClosedImg.src = "../assets/door_closed.png";
+
+const doorOpenImg = typeof Image !== "undefined" ? new Image() : null;
+if (doorOpenImg) doorOpenImg.src = "../assets/door_open.png";
+
 // RobOS Tabletop Studio Client Application
 let currentData = {
   tabletopNodes: [],
@@ -1641,30 +1647,44 @@ function drawBoard() {
     const midX = (d1x + d2x) / 2;
     const midY = (d1y + d2y) / 2;
 
-    ctx.save();
-    if (d.state === 'open') {
-      ctx.fillStyle = "#22c55e";
-      ctx.strokeStyle = "#86efac";
-    } else if (d.state === 'secret') {
-      ctx.fillStyle = "#a855f7";
-      ctx.strokeStyle = "#d8b4fe";
+    const isVert = d.from[1] === d.to[1];
+    const img = (d.state === 'open') ? doorOpenImg : doorClosedImg;
+    const sz = cellW * 0.85;
+
+    if (img && img.complete && img.naturalWidth > 0 && d.state !== 'secret') {
+      ctx.save();
+      ctx.translate(midX, midY);
+      if (isVert) {
+        ctx.rotate(Math.PI / 2);
+      }
+      ctx.drawImage(img, -sz / 2, -sz / 2, sz, sz);
+      ctx.restore();
     } else {
-      ctx.fillStyle = "#b45309";
-      ctx.strokeStyle = "#fde68a";
+      ctx.save();
+      if (d.state === 'open') {
+        ctx.fillStyle = "#22c55e";
+        ctx.strokeStyle = "#86efac";
+      } else if (d.state === 'secret') {
+        ctx.fillStyle = "#a855f7";
+        ctx.strokeStyle = "#d8b4fe";
+      } else {
+        ctx.fillStyle = "#b45309";
+        ctx.strokeStyle = "#fde68a";
+      }
+
+      ctx.beginPath();
+      ctx.arc(midX, midY, cellW * 0.28, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      const doorIcon = d.state === 'secret' ? '👁️' : (d.state === 'open' ? '🪟' : '🚪');
+      ctx.font = "10px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(doorIcon, midX, midY);
+      ctx.restore();
     }
-
-    ctx.beginPath();
-    ctx.arc(midX, midY, cellW * 0.28, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-
-    const doorIcon = d.state === 'secret' ? '👁️' : (d.state === 'open' ? '🪟' : '🚪');
-    ctx.font = "10px sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(doorIcon, midX, midY);
-    ctx.restore();
   });
 
   // 10. Draw Monsters
