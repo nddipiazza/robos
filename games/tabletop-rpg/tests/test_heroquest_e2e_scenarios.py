@@ -1344,6 +1344,69 @@ class TestHeroQuestE2EScenarios(unittest.TestCase):
                  assertions=[f"Trail cleared: {st3.get('movementTrail') == []}"])
         self.assertEqual(st3.get("movementTrail"), [])
 
+    def test_45_hero_cards_display_name_and_class(self):
+        """Scenario 45: Hero cards display both character Name and Class."""
+        bdd_scenario_header(45, "Hero Cards Display Name and Class")
+
+        bdd_step("GIVEN", "Game is running with classic party of four heroes")
+        st = self.ai.get_state()
+        char_cards = st.get("characterCards", [])
+
+        bdd_step("THEN", "Every hero card provides both character name and class",
+                 assertions=[
+                     f"Total character cards: {len(char_cards)} (expected 4)"
+                 ])
+        self.assertEqual(len(char_cards), 4)
+
+        # 1. Barbarian: Name "Rogar", Class "Barbarian"
+        barb = next((c for c in char_cards if c.get("id") == "barbarian"), None)
+        self.assertIsNotNone(barb)
+        self.assertEqual(barb.get("characterName"), "Rogar")
+        self.assertEqual(barb.get("heroClass"), "Barbarian")
+        self.assertEqual(barb.get("displayName"), "Rogar (Barbarian)")
+
+        # 2. Dwarf: Name "Dorgan", Class "Dwarf"
+        dwarf = next((c for c in char_cards if c.get("id") == "dwarf"), None)
+        self.assertIsNotNone(dwarf)
+        self.assertEqual(dwarf.get("characterName"), "Dorgan")
+        self.assertEqual(dwarf.get("heroClass"), "Dwarf")
+        self.assertEqual(dwarf.get("displayName"), "Dorgan (Dwarf)")
+
+        # 3. Elf: Name "Ladril", Class "Elf"
+        elf = next((c for c in char_cards if c.get("id") == "elf"), None)
+        self.assertIsNotNone(elf)
+        self.assertEqual(elf.get("characterName"), "Ladril")
+        self.assertEqual(elf.get("heroClass"), "Elf")
+        self.assertEqual(elf.get("displayName"), "Ladril (Elf)")
+
+        # 4. Wizard: Name "Telor", Class "Wizard"
+        wiz = next((c for c in char_cards if c.get("id") == "wizard"), None)
+        self.assertIsNotNone(wiz)
+        self.assertEqual(wiz.get("characterName"), "Telor")
+        self.assertEqual(wiz.get("heroClass"), "Wizard")
+        self.assertEqual(wiz.get("displayName"), "Telor (Wizard)")
+
+        bdd_step("WHEN", "A hero is configured with a custom character name")
+        self.ai.set_state(
+            heroes=[{
+                "id": "barbarian",
+                "characterName": "Grimjaw",
+                "heroClass": "Berserker"
+            }]
+        )
+        st_custom = self.ai.get_state()
+        barb_custom = next((c for c in st_custom.get("characterCards", []) if c.get("id") == "barbarian"), None)
+
+        bdd_step("THEN", "Hero card reflects the custom name and class: 'Grimjaw (Berserker)'",
+                 assertions=[
+                     f"Custom characterName: {barb_custom.get('characterName')}",
+                     f"Custom heroClass: {barb_custom.get('heroClass')}",
+                     f"Custom displayName: {barb_custom.get('displayName')}"
+                 ])
+        self.assertEqual(barb_custom.get("characterName"), "Grimjaw")
+        self.assertEqual(barb_custom.get("heroClass"), "Berserker")
+        self.assertEqual(barb_custom.get("displayName"), "Grimjaw (Berserker)")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

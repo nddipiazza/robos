@@ -304,6 +304,10 @@ func _load_active_cartridge() -> void:
 		h["current_bp"] = h.get("bodyPoints", 8)
 		h["current_mp"] = h.get("mindPoints", 2)
 		h["gold"] = 0
+		h["characterName"] = h.get("characterName", "")
+		h["character_name"] = h.get("characterName", "")
+		h["heroClass"] = h.get("heroClass", "")
+		h["hero_class"] = h.get("heroClass", "")
 
 		# Standard HeroQuest Loadouts
 		match str(h.get("id")):
@@ -1781,6 +1785,51 @@ func open_door(from_pos: Vector2i, to_pos: Vector2i) -> bool:
 	queue_redraw_all()
 	return true
 
+# --- Hero Identification Helpers (Name + Class) ---
+func get_hero_character_name(h: Dictionary) -> String:
+	if h.has("characterName") and str(h.get("characterName")).strip_edges() != "":
+		return str(h.get("characterName")).strip_edges()
+	if h.has("character_name") and str(h.get("character_name")).strip_edges() != "":
+		return str(h.get("character_name")).strip_edges()
+
+	var h_id = str(h.get("id", "")).to_lower()
+	var raw_name = str(h.get("name", "")).strip_edges()
+	var h_class = get_hero_class_name(h)
+
+	if raw_name != "" and raw_name.to_lower() != h_id and raw_name.to_lower() != h_class.to_lower():
+		return raw_name
+
+	match h_id:
+		"barbarian": return "Rogar"
+		"dwarf": return "Dorgan"
+		"elf": return "Ladril"
+		"wizard": return "Telor"
+		_: return raw_name if raw_name != "" else "Hero"
+
+func get_hero_class_name(h: Dictionary) -> String:
+	if h.has("heroClass") and str(h.get("heroClass")).strip_edges() != "":
+		return str(h.get("heroClass")).strip_edges()
+	if h.has("hero_class") and str(h.get("hero_class")).strip_edges() != "":
+		return str(h.get("hero_class")).strip_edges()
+	if h.has("class") and str(h.get("class")).strip_edges() != "":
+		return str(h.get("class")).strip_edges()
+	var h_id = str(h.get("id", "")).to_lower()
+	match h_id:
+		"barbarian": return "Barbarian"
+		"dwarf": return "Dwarf"
+		"elf": return "Elf"
+		"wizard": return "Wizard"
+		_: return "Hero"
+
+func get_hero_display_title(h: Dictionary) -> String:
+	var h_name = get_hero_character_name(h)
+	var h_class = get_hero_class_name(h)
+	if h_name.to_lower() == h_class.to_lower():
+		return h_class
+	if h_name.to_lower().contains(h_class.to_lower()):
+		return h_name
+	return "%s (%s)" % [h_name, h_class]
+
 # --- HeroQuest Combat & Equipment Calculations ---
 func get_hero_attack_dice(h: Dictionary) -> int:
 	var w_id = str(h.get("equipped_weapon", ""))
@@ -2812,9 +2861,10 @@ func _update_ui() -> void:
 	# Character card legacy label update for backwards compatibility
 	if hero.size() > 0 and hero_card:
 		var turn_badge = "★ YOUR TURN ★\n" if current_phase == "hero_phase" and current_role == "player" else ""
-		hero_card.text = "%s%s (%s)\nBP: %d/%d | MP: %d/%d\nAtk Dice: %d | Def Dice: %d\nGold: %d gp" % [
+		var h_disp = get_hero_display_title(hero)
+		hero_card.text = "%s%s\nBP: %d/%d | MP: %d/%d\nAtk Dice: %d | Def Dice: %d\nGold: %d gp" % [
 			turn_badge,
-			hero.get("name"), hero.get("title", ""),
+			h_disp,
 			hero.get("current_bp", 8), hero.get("bodyPoints", 8),
 			hero.get("current_mp", 2), hero.get("mindPoints", 2),
 			hero.get("attackDice", 3), hero.get("defendDice", 2),
@@ -2942,10 +2992,11 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 	vbox.add_theme_constant_override("separation", 2)
 	margin.add_child(vbox)
 
-	# Row 1: Header (Name & Status Badge)
+	# Row 1: Header (Name + Class & Status Badge)
 	var hdr_row = HBoxContainer.new()
 	var name_lbl = Label.new()
-	name_lbl.text = str(h.get("name", "Hero"))
+	name_lbl.text = get_hero_display_title(h)
+	name_lbl.tooltip_text = "Name: %s | Class: %s" % [get_hero_character_name(h), get_hero_class_name(h)]
 	name_lbl.add_theme_font_size_override("font_size", 12)
 	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_lbl.clip_text = true
@@ -3325,6 +3376,9 @@ func get_telemetry_state() -> Dictionary:
 		char_cards.append({
 			"id": str(h.get("id")),
 			"name": str(h.get("name")),
+			"characterName": get_hero_character_name(h),
+			"heroClass": get_hero_class_name(h),
+			"displayName": get_hero_display_title(h),
 			"title": str(h.get("title", "")),
 			"current_bp": cur_bp,
 			"max_bp": max_bp,
@@ -3599,6 +3653,12 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 									h["current_mp"] = int(h_patch[k])
 								elif k == "gold":
 									h["gold"] = int(h_patch[k])
+								elif k == "characterName" or k == "character_name":
+									h["characterName"] = str(h_patch[k])
+									h["character_name"] = str(h_patch[k])
+								elif k == "heroClass" or k == "hero_class" or k == "class":
+									h["heroClass"] = str(h_patch[k])
+									h["hero_class"] = str(h_patch[k])
 								else:
 									h[k] = h_patch[k]
 							break
