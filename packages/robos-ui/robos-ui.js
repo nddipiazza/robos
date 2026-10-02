@@ -2397,10 +2397,10 @@ robos-person-selector-textbox {
       this._render();
     }
 
-    setQuestions(questions) {
+    setQuestions(questions,answers={}) {
       this._questions = Array.isArray(questions) ? questions : [];
       this._currentIndex = 0;
-      this._answers = {};
+      this._answers = {...answers};
       this._render();
     }
 
@@ -2409,6 +2409,9 @@ robos-person-selector-textbox {
     }
 
     _render() {
+      if(this.getAttribute('mode')==='agent-input'){
+        this.replaceChildren();for(const q of this._questions){const label=document.createElement('label'),input=document.createElement('textarea');label.textContent=q.prompt||q.title;input.id='answer-'+q.id;label.htmlFor=input.id;input.maxLength=8000;input.value=this._answers[q.id]||'';input.oninput=()=>{this._answers[q.id]=input.value;};this.append(label,input);}if(this._questions.length){const submit=document.createElement('button');submit.textContent='Send answers & resume';submit.onclick=()=>{this.dispatchEvent(new CustomEvent('robos-wizard-complete',{detail:{answers:this.getAnswers()},bubbles:true}));};this.append(submit);}return;
+      }
       if (!this._questions || this._questions.length === 0) {
         this.innerHTML = '';
         return;

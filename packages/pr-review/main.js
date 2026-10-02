@@ -30,6 +30,11 @@ const ciRecovery = localReview && reviewStore ? new (require('./lib/ci-recovery'
 ipcMain.handle('ci-recovery-providers',async(_,options)=>{const providers=await require('../robos-agent-client/providers').options({refresh:options?.refresh===true});return providers.filter(p=>p.id==='codex');});
 ipcMain.handle('ci-recovery-state',async()=>{try{if(!ciRecovery)throw Error('Open a saved PR review first.');return {ok:true,...await ciRecovery.state()};}catch(e){return {ok:false,error:e.message};}});
 ipcMain.handle('ci-recovery-action',async(_,input)=>{try{if(!ciRecovery)throw Error('Open a saved PR review first.');if(demoSession?.status==='running'||prState?.pending||reviewPublisher?.pending)throw Error('Finish the active review action first.');return input.action==='start'?await ciRecovery.start(input):input.action==='push'?await ciRecovery.push():{ok:false,error:'Unknown recovery action.'};}catch(e){return {ok:false,error:e.message};}});
+const questionnaire=require('../robos-lib/agent-question-window');questionnaire.register();
+const questionHooks=[];
+if(localReview){for(const [kind,session,resume] of [['ci',ciRecovery?.session,async text=>{if(demoSession?.status==='running'||prState?.pending||reviewPublisher?.pending)throw Error('Finish the current review action before resuming.');return ciRecovery.answer(text);}],['walkthrough',demoSession,async text=>{if(ciRecovery?.busy||prState?.pending||reviewPublisher?.pending)throw Error('Finish the current review action before resuming.');if(localReview.pullRequest)await prState.assertAuthor();return demoSession.act('message',text);}]]){if(session)questionHooks.push(require('./lib/agent-questionnaire').attach({session,source:process.env.ROBOS_LOCAL_REVIEW,kind,resume,show:id=>{if(app.isReady())questionnaire.open(id);else app.once('ready',()=>questionnaire.open(id));},notify:item=>questionnaire.notify(item)}));}}
+app.whenReady().then(()=>questionHooks.forEach(h=>h.observeCurrent()));
+app.on('before-quit',()=>questionHooks.forEach(h=>h.stop()));
 // Optional workstation snapshot for restarting the theater without losing a paused review.
 if (demoSession && localReview.resumeStatePath) {
   const saved = JSON.parse(fs.readFileSync(localReview.resumeStatePath, 'utf8'));

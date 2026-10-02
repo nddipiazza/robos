@@ -1,0 +1,1 @@
+const {contextBridge,ipcRenderer}=require('electron');contextBridge.exposeInMainWorld('questionnaire',{read:id=>ipcRenderer.invoke('agent-question-read',id),answer:(id,answers)=>ipcRenderer.invoke('agent-question-answer',id,answers)});

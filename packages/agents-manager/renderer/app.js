@@ -1684,6 +1684,7 @@ function renderCodexSessions(sessions) {
         <button class="btn btn-ai btn-sm btn-resume" title="Resume in terminal">Resume</button>
       </div>`;
     window.renderAgentJobBadge(card.querySelector('.agent-job-badge'),s.job);
+    if(s.questionId){const answer=document.createElement('button');answer.className='btn btn-ai btn-sm';answer.textContent='Answer questions';answer.onclick=()=>window.agents.openQuestionnaire(s.questionId);card.querySelector('.session-card-actions').prepend(answer);}
     if(s.job?.status==='running'){card.querySelector('.btn-resume').disabled=true;card.querySelector('.btn-resume').title='This session is already running.';}
     card.querySelector('.btn-resume').onclick = () =>
       window.agents.codexLaunchTerminal(s.session_id);
