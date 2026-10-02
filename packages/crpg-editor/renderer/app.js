@@ -10114,6 +10114,105 @@ function resetSim() {
 }
 
 // ========================================================
+// MODULE 4: cRPG BLOCKMAP EDITOR — UNDO / REDO HISTORY
+// ========================================================
+const MAX_CRPG_MAP_HISTORY = 50;
+const crpgMapUndoStack = [];
+const crpgMapRedoStack = [];
+
+function getCrpgMapSnapshot() {
+  if (!state.activeMapData) return null;
+  return {
+    mapObjects: JSON.parse(JSON.stringify(state.activeMapData['robos:mapObjects'] || [])),
+    terrain: state.activeMapData['robos:terrain'] || 'stone',
+    width: state.activeMapData['robos:width'] || 120,
+    height: state.activeMapData['robos:height'] || 80,
+    backgroundImage: state.activeMapData['robos:backgroundImage'] || '',
+    backgroundOpacity: state.activeMapData['robos:backgroundOpacity'] ?? 1.0,
+    blockout: JSON.parse(JSON.stringify(state.activeMapData['robos:blockout'] || {}))
+  };
+}
+
+function updateCrpgMapUndoRedoUI() {
+  const btnUndo = document.getElementById('btn-map-undo');
+  const btnRedo = document.getElementById('btn-map-redo');
+  if (btnUndo) btnUndo.disabled = crpgMapUndoStack.length === 0;
+  if (btnRedo) btnRedo.disabled = crpgMapRedoStack.length === 0;
+}
+
+function pushCrpgMapUndoState() {
+  const snapshot = getCrpgMapSnapshot();
+  if (!snapshot) return;
+  crpgMapUndoStack.push(snapshot);
+  if (crpgMapUndoStack.length > MAX_CRPG_MAP_HISTORY) {
+    crpgMapUndoStack.shift();
+  }
+  crpgMapRedoStack.length = 0;
+  updateCrpgMapUndoRedoUI();
+}
+
+function applyCrpgMapSnapshot(snapshot) {
+  if (!state.activeMapData || !snapshot) return;
+  state.activeMapData['robos:mapObjects'] = JSON.parse(JSON.stringify(snapshot.mapObjects || []));
+  state.activeMapData['robos:terrain'] = snapshot.terrain;
+  state.activeMapData['robos:width'] = snapshot.width;
+  state.activeMapData['robos:height'] = snapshot.height;
+  state.activeMapData['robos:backgroundImage'] = snapshot.backgroundImage;
+  state.activeMapData['robos:backgroundOpacity'] = snapshot.backgroundOpacity;
+  state.activeMapData['robos:blockout'] = JSON.parse(JSON.stringify(snapshot.blockout || {}));
+
+  // Sync UI form fields if visible
+  const terrainSelect = document.getElementById('map-terrain');
+  if (terrainSelect) terrainSelect.value = snapshot.terrain;
+  const widthInput = document.getElementById('map-width');
+  if (widthInput) widthInput.value = snapshot.width;
+  const heightInput = document.getElementById('map-height');
+  if (heightInput) heightInput.value = snapshot.height;
+
+  canvasRenderer?.setMapData(state.activeMapData);
+  canvasRenderer?.render();
+  renderMapObjectsHierarchy();
+
+  // If selected object no longer exists, deselect
+  if (state.selectedObjectId) {
+    const exists = (state.activeMapData['robos:mapObjects'] || []).some(o => normalizeMapObj(o).id === state.selectedObjectId);
+    if (!exists) {
+      deselectMapObject();
+    }
+  }
+}
+
+function undoCrpgMapAction() {
+  if (crpgMapUndoStack.length === 0 || !state.activeMapData) return;
+  const currentSnapshot = getCrpgMapSnapshot();
+  crpgMapRedoStack.push(currentSnapshot);
+  const prevSnapshot = crpgMapUndoStack.pop();
+  applyCrpgMapSnapshot(prevSnapshot);
+  updateCrpgMapUndoRedoUI();
+  setStatus('Undid map edit. (Ctrl+Z)');
+}
+
+function redoCrpgMapAction() {
+  if (crpgMapRedoStack.length === 0 || !state.activeMapData) return;
+  const currentSnapshot = getCrpgMapSnapshot();
+  crpgMapUndoStack.push(currentSnapshot);
+  const nextSnapshot = crpgMapRedoStack.pop();
+  applyCrpgMapSnapshot(nextSnapshot);
+  updateCrpgMapUndoRedoUI();
+  setStatus('Redid map edit. (Ctrl+Y)');
+}
+
+if (typeof window !== 'undefined') {
+  window._crpgMapHistory = {
+    undo: undoCrpgMapAction,
+    redo: redoCrpgMapAction,
+    push: pushCrpgMapUndoState,
+    getUndoStack: () => crpgMapUndoStack,
+    getRedoStack: () => crpgMapRedoStack
+  };
+}
+
+// ========================================================
 // MODULE 4: cRPG BLOCKMAP EDITOR
 // ========================================================
 function setupBlockmapHandlers() {
@@ -10124,6 +10223,10 @@ function setupBlockmapHandlers() {
   const btnSaveMap = document.getElementById('btn-save-map');
   const btnBuildMap = document.getElementById('btn-build-map');
   const btnExportPng = document.getElementById('btn-export-png');
+
+  // Toolbar undo / redo buttons
+  document.getElementById('btn-map-undo')?.addEventListener('click', undoCrpgMapAction);
+  document.getElementById('btn-map-redo')?.addEventListener('click', redoCrpgMapAction);
 
   mapSelect?.addEventListener('change', (e) => {
     if (e.target.value) {
@@ -10191,11 +10294,38 @@ function setupBlockmapHandlers() {
     renderMapModalTree(e.target.value);
   });
 
-  // Global keydown for Escape
+  // Global keydown for Escape, Undo, and Redo
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       closeMapModal();
       fileDropdown?.classList.add('hidden');
+    }
+
+    // Only process map undo/redo when on the maps/blockmap pane
+    if (state.activeModule !== 'pane-maps' && state.activeModule !== 'pane-blockmap') {
+      return;
+    }
+
+    const tag = (e.target?.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || e.target?.isContentEditable) {
+      return;
+    }
+
+    const isCtrlOrMeta = e.ctrlKey || e.metaKey;
+    if (!isCtrlOrMeta) return;
+
+    // Redo: Ctrl+Y or Ctrl+Shift+Z
+    if (e.key === 'y' || e.key === 'Y' || ((e.key === 'z' || e.key === 'Z') && e.shiftKey)) {
+      e.preventDefault();
+      redoCrpgMapAction();
+      return;
+    }
+
+    // Undo: Ctrl+Z (without shift)
+    if ((e.key === 'z' || e.key === 'Z') && !e.shiftKey) {
+      e.preventDefault();
+      undoCrpgMapAction();
+      return;
     }
   });
 
@@ -10228,7 +10358,8 @@ function setupBlockmapHandlers() {
   document.getElementById('map-width')?.addEventListener('input', updateMapDimensionsFromForm);
   document.getElementById('map-height')?.addEventListener('input', updateMapDimensionsFromForm);
   document.getElementById('map-terrain')?.addEventListener('change', (e) => {
-    if (state.activeMapData) {
+    if (state.activeMapData && state.activeMapData['robos:terrain'] !== e.target.value) {
+      pushCrpgMapUndoState();
       state.activeMapData['robos:terrain'] = e.target.value;
       canvasRenderer?.render();
     }
@@ -10253,7 +10384,7 @@ function setupBlockmapHandlers() {
   });
 
   // Map Object Form Buttons
-  document.getElementById('btn-apply-obj')?.addEventListener('click', applyMapObjectForm);
+  document.getElementById('btn-apply-obj')?.addEventListener('click', () => applyMapObjectForm(false));
   document.getElementById('btn-duplicate-obj')?.addEventListener('click', duplicateSelectedMapObject);
   document.getElementById('btn-delete-obj')?.addEventListener('click', deleteSelectedMapObject);
   document.getElementById('btn-deselect-obj')?.addEventListener('click', deselectMapObject);
@@ -10283,7 +10414,7 @@ function updateShapeCoordinateInputs(shape) {
   document.getElementById('shape-line-fields').classList.toggle('hidden', shape !== 'line');
 }
 
-function updateMapDimensionsFromForm() {
+function updateMapDimensionsFromForm(skipPushUndo = false) {
   const w = Number(document.getElementById('map-width').value || 120);
   const h = Number(document.getElementById('map-height').value || 80);
   const cols = Math.floor(w / 5);
@@ -10295,6 +10426,9 @@ function updateMapDimensionsFromForm() {
   document.getElementById('lbl-png-res').textContent = `${pxW} × ${pxH} px (16 px/ft)`;
 
   if (state.activeMapData) {
+    if (!skipPushUndo && (state.activeMapData['robos:width'] !== w || state.activeMapData['robos:height'] !== h)) {
+      pushCrpgMapUndoState();
+    }
     state.activeMapData['robos:width'] = w;
     state.activeMapData['robos:height'] = h;
     canvasRenderer?.setMapData(state.activeMapData);
@@ -10570,6 +10704,11 @@ async function loadMap(slug) {
       state.activeMapSlug = slug;
       state.activeMapData = res.data;
 
+      // Reset Undo/Redo stacks for new active map
+      crpgMapUndoStack.length = 0;
+      crpgMapRedoStack.length = 0;
+      updateCrpgMapUndoRedoUI();
+
       // Select in dropdown
       const select = document.getElementById('map-select');
       if (select) select.value = slug;
@@ -10582,7 +10721,7 @@ async function loadMap(slug) {
       document.getElementById('map-height').value = res.data['robos:height'] || res.data.height || 80;
       document.getElementById('map-bg-image').value = res.data['robos:backgroundImage'] || res.data.backgroundImage || '';
 
-      updateMapDimensionsFromForm();
+      updateMapDimensionsFromForm(true);
       renderMapObjectsHierarchy();
       updateCollisionStats();
 
@@ -10609,6 +10748,11 @@ async function loadMap(slug) {
 function createNewMap() {
   const emptyOverlay = document.getElementById('map-empty-state');
   if (emptyOverlay) emptyOverlay.classList.add('hidden');
+
+  // Reset Undo/Redo stacks
+  crpgMapUndoStack.length = 0;
+  crpgMapRedoStack.length = 0;
+  updateCrpgMapUndoRedoUI();
 
   const safeSlug = `map-${Date.now().toString().slice(-4)}`;
   state.activeMapSlug = safeSlug;
@@ -10828,8 +10972,11 @@ function deselectMapObject() {
   document.getElementById('obj-label').value = '';
 }
 
-function applyMapObjectForm() {
+function applyMapObjectForm(skipPushUndo = false) {
   if (!state.activeMapData) return;
+  if (!skipPushUndo) {
+    pushCrpgMapUndoState();
+  }
   const objects = state.activeMapData['robos:mapObjects'] || [];
 
   const id = document.getElementById('obj-id').value.trim() || `obj_${Date.now().toString().slice(-4)}`;
@@ -10916,6 +11063,7 @@ function applyMapObjectForm() {
 
 function duplicateSelectedMapObject() {
   if (!state.selectedObjectId || !state.activeMapData) return;
+  pushCrpgMapUndoState();
   const objects = state.activeMapData['robos:mapObjects'] || [];
   const obj = objects.find(o => normalizeMapObj(o).id === state.selectedObjectId);
   if (!obj) return;
@@ -10940,6 +11088,7 @@ function duplicateSelectedMapObject() {
 
 function deleteSelectedMapObject() {
   if (!state.selectedObjectId || !state.activeMapData) return;
+  pushCrpgMapUndoState();
   const objects = state.activeMapData['robos:mapObjects'] || [];
   const idx = objects.findIndex(o => normalizeMapObj(o).id === state.selectedObjectId);
   if (idx >= 0) {
@@ -11027,18 +11176,21 @@ function setupCanvasInteractions(canvas) {
           selectMapObject(hit.id);
           state.isDraggingObject = true;
           state.dragStart = { x: worldPos.x, y: worldPos.y };
+          state.dragObjStartSnapshot = getCrpgMapSnapshot();
+          state.hasDraggedObject = false;
         } else {
           deselectMapObject();
         }
       } else if (state.activeTool === 'place') {
         // Place new object at clicked coordinate
+        pushCrpgMapUndoState();
         const snap = document.getElementById('chk-snap-grid')?.checked;
         const x = snap ? Math.floor(worldPos.x / 5) * 5 : Math.round(worldPos.x);
         const y = snap ? Math.floor(worldPos.y / 5) * 5 : Math.round(worldPos.y);
         
         document.getElementById('obj-x').value = x;
         document.getElementById('obj-y').value = y;
-        applyMapObjectForm();
+        applyMapObjectForm(true);
       }
     }
   });
@@ -11063,8 +11215,13 @@ function setupCanvasInteractions(canvas) {
       const obj = (state.activeMapData['robos:mapObjects'] || []).find(o => o.id === state.selectedObjectId);
       if (obj && obj.shape === 'rect') {
         const snap = document.getElementById('chk-snap-grid')?.checked;
-        obj.x = snap ? Math.floor((obj.x + dx) / 5) * 5 : obj.x + dx;
-        obj.y = snap ? Math.floor((obj.y + dy) / 5) * 5 : obj.y + dy;
+        const newX = snap ? Math.floor((obj.x + dx) / 5) * 5 : obj.x + dx;
+        const newY = snap ? Math.floor((obj.y + dy) / 5) * 5 : obj.y + dy;
+        if (newX !== obj.x || newY !== obj.y) {
+          state.hasDraggedObject = true;
+        }
+        obj.x = newX;
+        obj.y = newY;
         state.dragStart = { x: worldPos.x, y: worldPos.y };
         selectMapObject(obj.id); // sync form
         canvasRenderer.render();
@@ -11075,6 +11232,16 @@ function setupCanvasInteractions(canvas) {
   // Mouse up
   window.addEventListener('mouseup', () => {
     state.isPanning = false;
+    if (state.isDraggingObject && state.hasDraggedObject && state.dragObjStartSnapshot) {
+      crpgMapUndoStack.push(state.dragObjStartSnapshot);
+      if (crpgMapUndoStack.length > MAX_CRPG_MAP_HISTORY) {
+        crpgMapUndoStack.shift();
+      }
+      crpgMapRedoStack.length = 0;
+      updateCrpgMapUndoRedoUI();
+      state.dragObjStartSnapshot = null;
+      state.hasDraggedObject = false;
+    }
     state.isDraggingObject = false;
   });
 

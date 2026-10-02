@@ -465,6 +465,80 @@ function isTrapCovering(t, col, row) {
   return col >= t.x && col < t.x + w && row >= t.y && row < t.y + h;
 }
 
+// ========================================================
+// MAP HISTORY & UNDO / REDO CONTROLLER
+// ========================================================
+const MAX_MAP_HISTORY = 50;
+const mapUndoStack = [];
+const mapRedoStack = [];
+
+function getQuestSnapshot() {
+  const q = currentData.currentQuest;
+  return {
+    activeRooms: Array.from(q.activeRooms),
+    doors: JSON.parse(JSON.stringify(q.doors || [])),
+    wallBlocks: JSON.parse(JSON.stringify(q.wallBlocks || [])),
+    furniture: JSON.parse(JSON.stringify(q.furniture || [])),
+    monsters: JSON.parse(JSON.stringify(q.monsters || [])),
+    traps: JSON.parse(JSON.stringify(q.traps || [])),
+    startingStairs: [...(q.startingStairs || [0, 1])]
+  };
+}
+
+function updateUndoRedoUI() {
+  const btnUndo = document.getElementById("btn-map-undo");
+  const btnRedo = document.getElementById("btn-map-redo");
+  if (btnUndo) btnUndo.disabled = mapUndoStack.length === 0;
+  if (btnRedo) btnRedo.disabled = mapRedoStack.length === 0;
+}
+
+function pushUndoState() {
+  mapUndoStack.push(getQuestSnapshot());
+  if (mapUndoStack.length > MAX_MAP_HISTORY) {
+    mapUndoStack.shift();
+  }
+  mapRedoStack.length = 0;
+  updateUndoRedoUI();
+}
+
+function applySnapshot(snapshot) {
+  const q = currentData.currentQuest;
+  q.activeRooms = new Set(snapshot.activeRooms || []);
+  q.doors = JSON.parse(JSON.stringify(snapshot.doors || []));
+  q.wallBlocks = JSON.parse(JSON.stringify(snapshot.wallBlocks || []));
+  q.furniture = JSON.parse(JSON.stringify(snapshot.furniture || []));
+  q.monsters = JSON.parse(JSON.stringify(snapshot.monsters || []));
+  q.traps = JSON.parse(JSON.stringify(snapshot.traps || []));
+  q.startingStairs = [...(snapshot.startingStairs || [0, 1])];
+
+  updateSummaryStats();
+  renderMiniList();
+  drawBoard();
+  if (currentData.selectedSquare) {
+    inspectSquare(currentData.selectedSquare.col, currentData.selectedSquare.row);
+  }
+}
+
+function undoMapAction() {
+  if (mapUndoStack.length === 0) return;
+  const currentSnapshot = getQuestSnapshot();
+  mapRedoStack.push(currentSnapshot);
+  const prevSnapshot = mapUndoStack.pop();
+  applySnapshot(prevSnapshot);
+  updateUndoRedoUI();
+  setStatus("Undid last map action. (Ctrl+Z)");
+}
+
+function redoMapAction() {
+  if (mapRedoStack.length === 0) return;
+  const currentSnapshot = getQuestSnapshot();
+  mapUndoStack.push(currentSnapshot);
+  const nextSnapshot = mapRedoStack.pop();
+  applySnapshot(nextSnapshot);
+  updateUndoRedoUI();
+  setStatus("Redid last map action. (Ctrl+Y)");
+}
+
 // Handle Editor Tool Clicks
 function handleSquareClick(col, row) {
   const tool = currentData.activeTool;
@@ -478,6 +552,9 @@ function handleSquareClick(col, row) {
     drawBoard();
     return;
   }
+
+  // Record undo snapshot before applying any modification
+  pushUndoState();
 
   if (tool === 'room-toggle') {
     if (room) {
@@ -505,9 +582,7 @@ function handleSquareClick(col, row) {
   }
 
   if (tool === 'erase') {
-    eraseAt(col, row);
-    updateSummaryStats();
-    drawBoard();
+    eraseAt(col, row, true);
     return;
   }
 
@@ -635,7 +710,10 @@ function handleSquareClick(col, row) {
   }
 }
 
-function eraseAt(col, row) {
+function eraseAt(col, row, skipPushUndo = false) {
+  if (!skipPushUndo) {
+    pushUndoState();
+  }
   currentData.currentQuest.wallBlocks = currentData.currentQuest.wallBlocks.filter(b => !isBlockCovering(b, col, row));
   currentData.currentQuest.furniture = currentData.currentQuest.furniture.filter(f => !isFurnitureCovering(f, col, row));
   currentData.currentQuest.monsters = currentData.currentQuest.monsters.filter(m => !(m.x === col && m.y === row));
@@ -644,6 +722,12 @@ function eraseAt(col, row) {
     return !(d.from[0] === col && d.from[1] === row) && !(d.to[0] === col && d.to[1] === row);
   });
   setStatus(`Erased items covering [${col}, ${row}]`);
+  updateSummaryStats();
+  renderMiniList();
+  drawBoard();
+  if (currentData.selectedSquare && currentData.selectedSquare.col === col && currentData.selectedSquare.row === row) {
+    inspectSquare(col, row);
+  }
 }
 
 function inspectSquare(col, row) {
@@ -829,6 +913,7 @@ function renderMiniList(type) {
 
 // Toggle all rooms active/inactive
 document.getElementById("btn-toggle-all-rooms")?.addEventListener("click", () => {
+  pushUndoState();
   const rooms = currentData.activeMapConfig?.rooms || [];
   if (currentData.currentQuest.activeRooms.size === rooms.length) {
     currentData.currentQuest.activeRooms.clear();
@@ -1796,6 +1881,46 @@ document.getElementById("btn-play-dm")?.addEventListener("click", async () => {
     setStatus("Error launching game: " + res.error);
   }
 });
+
+// Map Undo & Redo Toolbar Actions
+document.getElementById("btn-map-undo")?.addEventListener("click", undoMapAction);
+document.getElementById("btn-map-redo")?.addEventListener("click", redoMapAction);
+
+// Global Keyboard Shortcuts (Ctrl+Z / Cmd+Z, Ctrl+Y / Cmd+Y, Ctrl+Shift+Z / Cmd+Shift+Z)
+window.addEventListener("keydown", (e) => {
+  const activeTag = document.activeElement ? document.activeElement.tagName.toUpperCase() : "";
+  if (activeTag === "INPUT" || activeTag === "TEXTAREA" || document.activeElement?.isContentEditable) {
+    return;
+  }
+
+  const isCtrlOrMeta = e.ctrlKey || e.metaKey;
+  if (!isCtrlOrMeta) return;
+
+  // Redo: Ctrl+Y or Ctrl+Shift+Z
+  if (e.key === "y" || e.key === "Y" || ((e.key === "z" || e.key === "Z") && e.shiftKey)) {
+    e.preventDefault();
+    redoMapAction();
+    return;
+  }
+
+  // Undo: Ctrl+Z (without shift)
+  if ((e.key === "z" || e.key === "Z") && !e.shiftKey) {
+    e.preventDefault();
+    undoMapAction();
+    return;
+  }
+});
+
+// Expose on window for programmatic testing & debugging
+if (typeof window !== "undefined") {
+  window._tabletopMapHistory = {
+    undo: undoMapAction,
+    redo: redoMapAction,
+    push: pushUndoState,
+    getUndoStack: () => mapUndoStack,
+    getRedoStack: () => mapRedoStack
+  };
+}
 
 // Initialize on DOM ready
 window.addEventListener("DOMContentLoaded", initKGraphData);

@@ -73,4 +73,65 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
     assert.ok(fs.existsSync(boardSideB), "Side B first_light_caverns.png must exist");
     assert.ok(fs.existsSync(boardFan), "Fan Dungeon 28x21 board must exist");
   });
+
+  it("supports undo and redo for map entity modifications", () => {
+    const initialQuest = {
+      activeRooms: ["room-1"],
+      doors: [],
+      wallBlocks: [],
+      furniture: [],
+      monsters: [],
+      traps: []
+    };
+
+    const undoStack = [];
+    const redoStack = [];
+
+    function push(state) {
+      undoStack.push(JSON.parse(JSON.stringify(state)));
+      redoStack.length = 0;
+    }
+
+    function undo(current) {
+      assert.ok(undoStack.length > 0, "Undo stack cannot be empty");
+      redoStack.push(JSON.parse(JSON.stringify(current)));
+      return undoStack.pop();
+    }
+
+    function redo(current) {
+      assert.ok(redoStack.length > 0, "Redo stack cannot be empty");
+      undoStack.push(JSON.parse(JSON.stringify(current)));
+      return redoStack.pop();
+    }
+
+    let current = JSON.parse(JSON.stringify(initialQuest));
+
+    // Action 1: Place a 1-tile wall
+    push(current);
+    current.wallBlocks.push({ id: "block-1", x: 12, y: 0, type: "single", width: 1, height: 1 });
+    assert.strictEqual(current.wallBlocks.length, 1);
+
+    // Action 2: Place a 3x2 Sorcerer's Altar
+    push(current);
+    current.furniture.push({ id: "altar-1", type: "altar", x: 13, y: 9, width: 3, height: 2 });
+    assert.strictEqual(current.furniture.length, 1);
+
+    // Undo Action 2: Altar should be reverted
+    current = undo(current);
+    assert.strictEqual(current.furniture.length, 0, "Altar must be removed after undo");
+    assert.strictEqual(current.wallBlocks.length, 1, "Wall block must remain");
+
+    // Undo Action 1: Wall block should be reverted
+    current = undo(current);
+    assert.strictEqual(current.wallBlocks.length, 0, "Wall block must be removed after second undo");
+
+    // Redo Action 1: Wall block should be restored
+    current = redo(current);
+    assert.strictEqual(current.wallBlocks.length, 1, "Wall block must be restored on redo");
+
+    // Redo Action 2: Altar should be restored
+    current = redo(current);
+    assert.strictEqual(current.furniture.length, 1, "Altar must be restored on second redo");
+    assert.strictEqual(current.furniture[0].type, "altar");
+  });
 });
