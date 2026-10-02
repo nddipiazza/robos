@@ -1,0 +1,160 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "tabletop": "https://robos.dev/ns/tabletop#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "oslc_qm": "http://open-services.net/ns/qm#"
+  },
+  "@id": "urn:robos:tabletop:scenario:orc-warlord-caverns",
+  "@type": [
+    "robos:TabletopTestScenario",
+    "oslc_qm:TestCase",
+    "schema:CheckAction"
+  ],
+  "dcterms:title": "Lair of the Orc Warlord: Great Cavern Assault",
+  "dcterms:description": "The four adventurers traverse the rugged First Light Caverns, disarming boulder hazards and confronting the Orc Warlord Ulag and goblin minions.",
+  "robos:seed": 202,
+  "robos:cartridge": "heroquest-the-trial",
+  "robos:quest": "heroquest-lair-orc-warlord",
+  "robos:mapConfiguration": "first-light-caverns",
+  "robos:startingStair": [
+    1,
+    1
+  ],
+  "robos:maxRounds": 35,
+  "robos:executionMode": "human",
+  "robos:party": [
+    {
+      "@type": "robos:TabletopCombatant",
+      "robos:actorId": "barbarian",
+      "dcterms:title": "Barbarian",
+      "robos:characterClass": "barbarian",
+      "robos:gridPos": [
+        1,
+        1
+      ],
+      "robos:currentBp": 8,
+      "robos:maxBp": 8,
+      "robos:attackDice": 3,
+      "robos:defendDice": 2
+    },
+    {
+      "@type": "robos:TabletopCombatant",
+      "robos:actorId": "dwarf",
+      "dcterms:title": "Dwarf",
+      "robos:characterClass": "dwarf",
+      "robos:gridPos": [
+        1,
+        1
+      ],
+      "robos:currentBp": 7,
+      "robos:maxBp": 7,
+      "robos:attackDice": 2,
+      "robos:defendDice": 2
+    },
+    {
+      "@type": "robos:TabletopCombatant",
+      "robos:actorId": "elf",
+      "dcterms:title": "Elf",
+      "robos:characterClass": "elf",
+      "robos:gridPos": [
+        1,
+        1
+      ],
+      "robos:currentBp": 6,
+      "robos:maxBp": 6,
+      "robos:attackDice": 2,
+      "robos:defendDice": 2
+    },
+    {
+      "@type": "robos:TabletopCombatant",
+      "robos:actorId": "wizard",
+      "dcterms:title": "Wizard",
+      "robos:characterClass": "wizard",
+      "robos:gridPos": [
+        1,
+        1
+      ],
+      "robos:currentBp": 4,
+      "robos:maxBp": 4,
+      "robos:attackDice": 1,
+      "robos:defendDice": 2
+    }
+  ],
+  "robos:monsters": [
+    {
+      "@type": "robos:TabletopCombatant",
+      "robos:actorId": "mon-warlord-ulag",
+      "dcterms:title": "Orc Warlord Ulag",
+      "robos:monster": "warlord",
+      "robos:gridPos": [
+        13,
+        9
+      ],
+      "robos:currentBp": 3,
+      "robos:maxBp": 3,
+      "robos:attackDice": 4,
+      "robos:defendDice": 3
+    },
+    {
+      "@type": "robos:TabletopCombatant",
+      "robos:actorId": "mon-goblin-scout",
+      "dcterms:title": "Goblin Scout",
+      "robos:monster": "goblin",
+      "robos:gridPos": [
+        5,
+        5
+      ],
+      "robos:currentBp": 1,
+      "robos:maxBp": 1,
+      "robos:attackDice": 2,
+      "robos:defendDice": 1
+    }
+  ],
+  "robos:doors": [
+    {
+      "from": [
+        10,
+        5
+      ],
+      "to": [
+        10,
+        6
+      ],
+      "open": false
+    }
+  ],
+  "robos:furniture": [],
+  "robos:traps": [],
+  "robos:directives": [
+    {
+      "@type": "robos:TabletopAIDirective",
+      "robos:actor": "barbarian",
+      "robos:controller": "proposal_confirmed",
+      "robos:targetPriority": "highest_threat",
+      "robos:movementTactic": "advance",
+      "robos:actionPriority": "melee_strike",
+      "robos:proposalConfirmationRequired": true
+    },
+    {
+      "@type": "robos:TabletopAIDirective",
+      "robos:actor": "wizard",
+      "robos:controller": "proposal_confirmed",
+      "robos:targetPriority": "spellcaster",
+      "robos:movementTactic": "kite",
+      "robos:actionPriority": "cast_spell",
+      "robos:proposalConfirmationRequired": true
+    },
+    {
+      "@type": "robos:TabletopAIDirective",
+      "robos:side": "zargon_monsters",
+      "robos:controller": "autonomous_ai",
+      "robos:targetPriority": "lowest_bp",
+      "robos:movementTactic": "advance",
+      "robos:actionPriority": "melee_strike",
+      "robos:proposalConfirmationRequired": false
+    }
+  ],
+  "robos:scriptedCommands": []
+}

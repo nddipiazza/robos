@@ -2973,6 +2973,121 @@ const BUILTIN_SHACL_SHAPES = [
     "domainStandard": "https://robos.dev/ns/tabletop#TurnStep"
   },
   {
+    "shapeId": "urn:robos:shape:TabletopAIEngineShape",
+    "targetClass": "robos:TabletopAIEngine",
+    "targetClasses": [
+      "robos:TabletopAIEngine"
+    ],
+    "properties": [
+      {
+        "path": "dcterms:title",
+        "minCount": 1,
+        "message": "Tabletop AI Engine must have a title."
+      },
+      {
+        "path": "robos:engineId",
+        "minCount": 1,
+        "message": "Tabletop AI Engine must declare an engine id."
+      },
+      {
+        "path": "robos:role",
+        "minCount": 1,
+        "message": "Tabletop AI Engine must declare a role (hero_companion, game_master, autonomous_player)."
+      },
+      {
+        "path": "robos:controllerModes",
+        "minCount": 1,
+        "message": "Tabletop AI Engine must declare supported controller modes."
+      },
+      {
+        "path": "robos:decisionPipeline",
+        "minCount": 1,
+        "message": "Tabletop AI Engine must declare its tactical decision pipeline."
+      }
+    ],
+    "refersFrom": "https://schema.org/SoftwareApplication",
+    "schemaOrgType": "https://schema.org/SoftwareApplication",
+    "domainStandard": "https://robos.dev/ns/tabletop#AIEngine"
+  },
+  {
+    "shapeId": "urn:robos:shape:TabletopAIDirectiveShape",
+    "targetClass": "robos:TabletopAIDirective",
+    "targetClasses": [
+      "robos:TabletopAIDirective"
+    ],
+    "properties": [
+      {
+        "path": "robos:controller",
+        "minCount": 1,
+        "message": "Tabletop AI Directive must declare a controller (autonomous_ai, proposal_confirmed, scripted, idle)."
+      }
+    ],
+    "refersFrom": "https://schema.org/ControlAction",
+    "schemaOrgType": "https://schema.org/ControlAction",
+    "domainStandard": "https://robos.dev/ns/tabletop#AIDirective"
+  },
+  {
+    "shapeId": "urn:robos:shape:TabletopTestScenarioShape",
+    "targetClass": "robos:TabletopTestScenario",
+    "targetClasses": [
+      "robos:TabletopTestScenario"
+    ],
+    "properties": [
+      {
+        "path": "dcterms:title",
+        "minCount": 1,
+        "message": "Tabletop Test Scenario must have a title."
+      },
+      {
+        "path": "robos:seed",
+        "minCount": 1,
+        "message": "Tabletop Test Scenario must declare a dice seed for reproducibility."
+      },
+      {
+        "path": "robos:party",
+        "minCount": 1,
+        "message": "Tabletop Test Scenario must declare party combatants."
+      }
+    ],
+    "refersFrom": "http://open-services.net/ns/qm#TestCase",
+    "schemaOrgType": "https://schema.org/CheckAction",
+    "domainStandard": "https://robos.dev/ns/tabletop#TestScenario"
+  },
+  {
+    "shapeId": "urn:robos:shape:TabletopCombatantShape",
+    "targetClass": "robos:TabletopCombatant",
+    "targetClasses": [
+      "robos:TabletopCombatant"
+    ],
+    "properties": [
+      {
+        "path": "robos:actorId",
+        "minCount": 1,
+        "message": "Tabletop Combatant must have an actor id."
+      }
+    ],
+    "refersFrom": "https://schema.org/Person",
+    "schemaOrgType": "https://schema.org/Person",
+    "domainStandard": "https://robos.dev/ns/tabletop#Combatant"
+  },
+  {
+    "shapeId": "urn:robos:shape:TabletopAICommandShape",
+    "targetClass": "robos:TabletopAICommand",
+    "targetClasses": [
+      "robos:TabletopAICommand"
+    ],
+    "properties": [
+      {
+        "path": "robos:action",
+        "minCount": 1,
+        "message": "Tabletop AI Command must specify an action."
+      }
+    ],
+    "refersFrom": "https://schema.org/InteractAction",
+    "schemaOrgType": "https://schema.org/InteractAction",
+    "domainStandard": "https://robos.dev/ns/tabletop#AICommand"
+  },
+  {
     "shapeId": "urn:robos:shape:WebRouteShape",
     "targetClass": "robos:WebRoute",
     "properties": [

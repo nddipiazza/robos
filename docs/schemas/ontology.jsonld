@@ -7540,6 +7540,76 @@
       ]
     },
     {
+      "@id": "robos:TabletopAIEngine",
+      "@type": "rdfs:Class",
+      "rdfs:label": "TabletopAIEngine",
+      "robos:shaclShape": "urn:robos:shape:TabletopAIEngineShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/SoftwareApplication"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:TabletopAIDirective",
+      "@type": "rdfs:Class",
+      "rdfs:label": "TabletopAIDirective",
+      "robos:shaclShape": "urn:robos:shape:TabletopAIDirectiveShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/ControlAction"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:TabletopTestScenario",
+      "@type": "rdfs:Class",
+      "rdfs:label": "TabletopTestScenario",
+      "robos:shaclShape": "urn:robos:shape:TabletopTestScenarioShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/CheckAction"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:TabletopCombatant",
+      "@type": "rdfs:Class",
+      "rdfs:label": "TabletopCombatant",
+      "robos:shaclShape": "urn:robos:shape:TabletopCombatantShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Person"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:TabletopAICommand",
+      "@type": "rdfs:Class",
+      "rdfs:label": "TabletopAICommand",
+      "robos:shaclShape": "urn:robos:shape:TabletopAICommandShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/InteractAction"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
       "@id": "robos:seed",
       "@type": "rdf:Property",
       "rdfs:label": "seed",

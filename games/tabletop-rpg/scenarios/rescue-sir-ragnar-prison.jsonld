@@ -1,0 +1,151 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "tabletop": "https://robos.dev/ns/tabletop#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "oslc_qm": "http://open-services.net/ns/qm#"
+  },
+  "@id": "urn:robos:tabletop:scenario:rescue-sir-ragnar-prison",
+  "@type": [
+    "robos:TabletopTestScenario",
+    "oslc_qm:TestCase",
+    "schema:CheckAction"
+  ],
+  "dcterms:title": "The Rescue of Sir Ragnar: Fortress Prison Infiltration",
+  "dcterms:description": "Sir Ragnar is trapped inside the fortress prison cells. The AI controls the adventuring party through stealth corridor navigation, neutralizing orc sentries, and escorting Sir Ragnar back to the stairs.",
+  "robos:seed": 101,
+  "robos:cartridge": "heroquest-the-trial",
+  "robos:quest": "heroquest-rescue-sir-ragnar",
+  "robos:mapConfiguration": "heroquest-classic",
+  "robos:startingStair": [
+    1,
+    1
+  ],
+  "robos:maxRounds": 40,
+  "robos:executionMode": "human",
+  "robos:party": [
+    {
+      "@type": "robos:TabletopCombatant",
+      "robos:actorId": "barbarian",
+      "dcterms:title": "Barbarian",
+      "robos:characterClass": "barbarian",
+      "robos:gridPos": [
+        1,
+        1
+      ],
+      "robos:currentBp": 8,
+      "robos:maxBp": 8,
+      "robos:attackDice": 3,
+      "robos:defendDice": 2
+    },
+    {
+      "@type": "robos:TabletopCombatant",
+      "robos:actorId": "dwarf",
+      "dcterms:title": "Dwarf",
+      "robos:characterClass": "dwarf",
+      "robos:gridPos": [
+        1,
+        1
+      ],
+      "robos:currentBp": 7,
+      "robos:maxBp": 7,
+      "robos:attackDice": 2,
+      "robos:defendDice": 2
+    },
+    {
+      "@type": "robos:TabletopCombatant",
+      "robos:actorId": "elf",
+      "dcterms:title": "Elf",
+      "robos:characterClass": "elf",
+      "robos:gridPos": [
+        1,
+        1
+      ],
+      "robos:currentBp": 6,
+      "robos:maxBp": 6,
+      "robos:attackDice": 2,
+      "robos:defendDice": 2
+    },
+    {
+      "@type": "robos:TabletopCombatant",
+      "robos:actorId": "wizard",
+      "dcterms:title": "Wizard",
+      "robos:characterClass": "wizard",
+      "robos:gridPos": [
+        1,
+        1
+      ],
+      "robos:currentBp": 4,
+      "robos:maxBp": 4,
+      "robos:attackDice": 1,
+      "robos:defendDice": 2
+    }
+  ],
+  "robos:monsters": [
+    {
+      "@type": "robos:TabletopCombatant",
+      "robos:actorId": "mon-orc-1",
+      "dcterms:title": "Orc Guard",
+      "robos:monster": "orc",
+      "robos:gridPos": [
+        13,
+        9
+      ],
+      "robos:currentBp": 1,
+      "robos:maxBp": 1,
+      "robos:attackDice": 3,
+      "robos:defendDice": 2
+    },
+    {
+      "@type": "robos:TabletopCombatant",
+      "robos:actorId": "mon-orc-2",
+      "dcterms:title": "Orc Sentry",
+      "robos:monster": "orc",
+      "robos:gridPos": [
+        20,
+        3
+      ],
+      "robos:currentBp": 1,
+      "robos:maxBp": 1,
+      "robos:attackDice": 3,
+      "robos:defendDice": 2
+    }
+  ],
+  "robos:doors": [
+    {
+      "from": [
+        12,
+        5
+      ],
+      "to": [
+        13,
+        5
+      ],
+      "open": false
+    }
+  ],
+  "robos:furniture": [],
+  "robos:traps": [],
+  "robos:directives": [
+    {
+      "@type": "robos:TabletopAIDirective",
+      "robos:side": "hero_party",
+      "robos:controller": "proposal_confirmed",
+      "robos:targetPriority": "nearest",
+      "robos:movementTactic": "explore_corridor",
+      "robos:actionPriority": "open_doors",
+      "robos:proposalConfirmationRequired": true
+    },
+    {
+      "@type": "robos:TabletopAIDirective",
+      "robos:actor": "dwarf",
+      "robos:controller": "proposal_confirmed",
+      "robos:targetPriority": "nearest",
+      "robos:movementTactic": "advance",
+      "robos:actionPriority": "search_room",
+      "robos:proposalConfirmationRequired": true
+    }
+  ],
+  "robos:scriptedCommands": []
+}

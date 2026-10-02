@@ -2455,7 +2455,8 @@
         "oslc_am:Resource",
         "robos:CRPGGame",
         "robos:PCGame",
-        "schema:VideoGame"
+        "schema:VideoGame",
+        "robos:Game"
       ],
       "dcterms:title": "Realm of Heroes: A Night Without Memory",
       "robos:repository": "github.com/nddipiazza/realm-of-heroes",
@@ -2499,14 +2500,16 @@
         "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muicpmge",
         "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muimlank",
         "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muimmiax"
-      ]
+      ],
+      "robos:gameType": "crpg"
     },
     {
       "@id": "urn:robos:crpg:class:fighter",
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGClass",
-        "schema:Role"
+        "schema:Role",
+        "robos:GameClass"
       ],
       "dcterms:title": "Fighter",
       "robos:hitDie": "d10",
@@ -2524,7 +2527,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGClass",
-        "schema:Role"
+        "schema:Role",
+        "robos:GameClass"
       ],
       "dcterms:title": "Wizard",
       "robos:hitDie": "d6",
@@ -2542,7 +2546,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGClass",
-        "schema:Role"
+        "schema:Role",
+        "robos:GameClass"
       ],
       "dcterms:title": "Rogue",
       "robos:hitDie": "d8",
@@ -2560,7 +2565,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGClass",
-        "schema:Role"
+        "schema:Role",
+        "robos:GameClass"
       ],
       "dcterms:title": "Cleric",
       "robos:hitDie": "d8",
@@ -2604,7 +2610,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGMonster",
-        "schema:Person"
+        "schema:Person",
+        "robos:GameMonster"
       ],
       "dcterms:title": "Corrupted Shadow Hound",
       "robos:challengeRating": "1/4",
@@ -2628,7 +2635,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGMonster",
-        "schema:Person"
+        "schema:Person",
+        "robos:GameMonster"
       ],
       "dcterms:title": "Feral Guard Skirmisher",
       "robos:challengeRating": "1/2",
@@ -2652,7 +2660,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGMonster",
-        "schema:Person"
+        "schema:Person",
+        "robos:GameMonster"
       ],
       "dcterms:title": "Captain Malakor (Corrupted Commander)",
       "robos:challengeRating": "3",
@@ -2676,7 +2685,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGMonster",
-        "schema:Person"
+        "schema:Person",
+        "robos:GameMonster"
       ],
       "dcterms:title": "Skeleton Warrior",
       "robos:challengeRating": "1/4",
@@ -2700,7 +2710,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGMonster",
-        "schema:Person"
+        "schema:Person",
+        "robos:GameMonster"
       ],
       "dcterms:title": "Shambling Zombie",
       "robos:challengeRating": "1/4",
@@ -2724,7 +2735,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGSpell",
-        "schema:Action"
+        "schema:Action",
+        "robos:GameSpell"
       ],
       "dcterms:title": "Magic Missile",
       "robos:spellLevel": 1,
@@ -2733,6 +2745,9 @@
       "robos:range": "120 feet",
       "robos:damageFormula": "3d4+3",
       "robos:damageType": "force",
+      "robos:deliveryType": "projectile",
+      "robos:modelAssetRef": "res://assets/models/spell_magic_missile_orb.glb",
+      "robos:vfxColor": "#2ea6fa",
       "robos:package": "crpg",
       "robos:namespace": "robos.crpg"
     },
@@ -2741,7 +2756,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGSpell",
-        "schema:Action"
+        "schema:Action",
+        "robos:GameSpell"
       ],
       "dcterms:title": "Cure Wounds",
       "robos:spellLevel": 1,
@@ -2750,6 +2766,9 @@
       "robos:range": "Touch",
       "robos:damageFormula": "1d8+WIS",
       "robos:damageType": "healing",
+      "robos:deliveryType": "aura",
+      "robos:modelAssetRef": "res://assets/models/spell_healing_glyph.glb",
+      "robos:vfxColor": "#26f273",
       "robos:package": "crpg",
       "robos:namespace": "robos.crpg"
     },
@@ -2758,7 +2777,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGSpell",
-        "schema:Action"
+        "schema:Action",
+        "robos:GameSpell"
       ],
       "dcterms:title": "Fireball",
       "robos:spellLevel": 3,
@@ -2767,6 +2787,73 @@
       "robos:range": "150 feet",
       "robos:damageFormula": "8d6",
       "robos:damageType": "fire",
+      "robos:deliveryType": "projectile",
+      "robos:modelAssetRef": "res://assets/models/spell_fireball_projectile.glb",
+      "robos:burstModelAssetRef": "res://assets/models/spell_fireball_explosion.glb",
+      "robos:vfxColor": "#fa6414",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:spell:blizzard",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGSpell",
+        "schema:Action",
+        "robos:GameSpell"
+      ],
+      "dcterms:title": "Blizzard",
+      "robos:spellLevel": 3,
+      "robos:magicSchool": "Evocation",
+      "robos:castingTime": "1 action",
+      "robos:range": "120 feet",
+      "robos:damageFormula": "8d6",
+      "robos:damageType": "cold",
+      "robos:deliveryType": "aura",
+      "robos:modelAssetRef": "res://assets/models/spell_blizzard_vortex.glb",
+      "robos:vfxColor": "#bfe6ff",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:spell:dispel-magic",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGSpell",
+        "schema:Action",
+        "robos:GameSpell"
+      ],
+      "dcterms:title": "Dispel Magic",
+      "robos:spellLevel": 3,
+      "robos:magicSchool": "Abjuration",
+      "robos:castingTime": "1 action",
+      "robos:range": "120 feet",
+      "robos:damageFormula": "dispel",
+      "robos:damageType": "purge",
+      "robos:deliveryType": "burst",
+      "robos:modelAssetRef": "res://assets/models/spell_dispel_purge.glb",
+      "robos:vfxColor": "#bf66fa",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:spell:water-splash",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGSpell",
+        "schema:Action",
+        "robos:GameSpell"
+      ],
+      "dcterms:title": "Tidal Wave",
+      "robos:spellLevel": 3,
+      "robos:magicSchool": "Conjuration",
+      "robos:castingTime": "1 action",
+      "robos:range": "120 feet",
+      "robos:damageFormula": "4d8",
+      "robos:damageType": "bludgeoning",
+      "robos:deliveryType": "burst",
+      "robos:modelAssetRef": "res://assets/models/spell_water_splash.glb",
+      "robos:vfxColor": "#26a6f2",
       "robos:package": "crpg",
       "robos:namespace": "robos.crpg"
     },
@@ -2775,7 +2862,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Royal Guard Service Sword",
       "robos:itemCategory": "weapon",
@@ -2790,7 +2878,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Garrison Side-Gate Key",
       "robos:itemCategory": "quest",
@@ -2804,7 +2893,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Blood-Stained Watch Journal",
       "robos:itemCategory": "quest",
@@ -2818,7 +2908,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Commander's Void Signet",
       "robos:itemCategory": "accessory",
@@ -2833,7 +2924,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Guard Chain Mail",
       "robos:itemCategory": "armor",
@@ -2848,7 +2940,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGItem",
-        "schema:Product"
+        "schema:Product",
+        "robos:GameItem"
       ],
       "dcterms:title": "Potion of Healing",
       "robos:itemCategory": "consumable",
@@ -2862,7 +2955,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGMapZone",
-        "schema:Place"
+        "schema:Place",
+        "robos:GameMap"
       ],
       "dcterms:title": "Guard's Homestead",
       "robos:zoneType": "interior",
@@ -2877,7 +2971,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGMapZone",
-        "schema:Place"
+        "schema:Place",
+        "robos:GameMap"
       ],
       "dcterms:title": "Oakhaven Village Square",
       "robos:zoneType": "wilderness",
@@ -2892,7 +2987,8 @@
       "@type": [
         "oslc_am:Resource",
         "robos:CRPGMapZone",
-        "schema:Place"
+        "schema:Place",
+        "robos:GameMap"
       ],
       "dcterms:title": "Royal Garrison Keep & War Room",
       "robos:zoneType": "dungeon",
@@ -2958,6 +3054,11 @@
         "oslc_cm:ChangeRequest"
       ],
       "dcterms:title": "A Night Without Memory",
+      "robos:questType": "main",
+      "robos:questCategory": "Main Questline",
+      "robos:questGiver": "Elora",
+      "robos:targetMap": "homestead",
+      "robos:status": "active",
       "robos:questStages": [
         {
           "stage": 1,
@@ -2980,6 +3081,173 @@
           "description": "Confront Captain Malakor in the War Room, defeat his corrupted form, and seal the Azrath vault breach."
         }
       ],
+      "robos:questObjectives": [
+        {
+          "id": "obj-wake-partner",
+          "text": "Converse with partner Elora about the midnight summons",
+          "isOptional": false,
+          "status": "completed",
+          "targetEntity": "elora"
+        },
+        {
+          "id": "obj-retrieve-blade",
+          "text": "Retrieve service blade from footlocker",
+          "isOptional": false,
+          "status": "active",
+          "targetEntity": "footlocker"
+        },
+        {
+          "id": "obj-investigate-village",
+          "text": "Investigate disturbance in Village Square and speak with Blacksmith Brand",
+          "isOptional": false,
+          "status": "unstarted",
+          "targetEntity": "blacksmith-brand"
+        },
+        {
+          "id": "obj-defeat-malakor",
+          "text": "Infiltrate Garrison Keep and defeat Captain Malakor",
+          "isOptional": false,
+          "status": "unstarted",
+          "targetEntity": "captain-malakor"
+        }
+      ],
+      "robos:rewards": {
+        "experience": 500,
+        "gold": 120,
+        "items": [
+          "service-sword",
+          "potion-healing"
+        ]
+      },
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:quest:firebead-scroll",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGQuest",
+        "oslc_cm:ChangeRequest"
+      ],
+      "dcterms:title": "Firebead's Identification Scroll",
+      "robos:questType": "side",
+      "robos:questCategory": "Candlekeep Side Quests",
+      "robos:questGiver": "Firebead Elfmirk",
+      "robos:targetMap": "candlekeep",
+      "robos:status": "active",
+      "robos:questStages": [
+        {
+          "stage": 1,
+          "description": "Fetch the scroll of identify from Tethtoril and bring it to Firebead inside Candlekeep Inn."
+        },
+        {
+          "stage": 2,
+          "description": "Deliver the identified scroll back to Firebead for a protection ward."
+        }
+      ],
+      "robos:questObjectives": [
+        {
+          "id": "obj-fetch-scroll",
+          "text": "Obtain scroll of identify from Tethtoril",
+          "isOptional": false,
+          "status": "active",
+          "targetEntity": "tethtoril"
+        },
+        {
+          "id": "obj-deliver-firebead",
+          "text": "Deliver scroll to Firebead at Candlekeep Inn",
+          "isOptional": false,
+          "status": "unstarted",
+          "targetEntity": "firebead"
+        }
+      ],
+      "robos:rewards": {
+        "experience": 150,
+        "gold": 50,
+        "items": [
+          "potion-healing"
+        ]
+      },
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:quest:harpers-covert-rendezvous",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGQuest",
+        "oslc_cm:ChangeRequest"
+      ],
+      "dcterms:title": "Covert Harpers Rendezvous",
+      "robos:questType": "faction",
+      "robos:questCategory": "Harpers Guild",
+      "robos:questGiver": "Gorion",
+      "robos:targetMap": "candlekeep",
+      "robos:status": "active",
+      "robos:questStages": [
+        {
+          "stage": 1,
+          "description": "Meet Harper contacts Jaheira and Khalid at the Friendly Arm Inn along the Coast Way."
+        }
+      ],
+      "robos:questObjectives": [
+        {
+          "id": "obj-rendezvous-harpers",
+          "text": "Rendezvous with Khalid and Jaheira at the Friendly Arm Inn",
+          "isOptional": false,
+          "status": "active",
+          "targetEntity": "jaheira"
+        }
+      ],
+      "robos:rewards": {
+        "experience": 250,
+        "gold": 75,
+        "reputation": {
+          "Harpers": 15
+        }
+      },
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:quest:dreppin-sick-cow",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGQuest",
+        "oslc_cm:ChangeRequest"
+      ],
+      "dcterms:title": "Dreppin's Sick Cow",
+      "robos:questType": "miscellaneous",
+      "robos:questCategory": "Miscellaneous Favors",
+      "robos:questGiver": "Dreppin",
+      "robos:targetMap": "candlekeep",
+      "robos:status": "active",
+      "robos:questStages": [
+        {
+          "stage": 1,
+          "description": "Retrieve an antidote potion from the temple stores to cure Nessa the cow."
+        }
+      ],
+      "robos:questObjectives": [
+        {
+          "id": "obj-get-antidote",
+          "text": "Collect antidote from the temple pantry",
+          "isOptional": false,
+          "status": "active",
+          "targetEntity": "temple-cabinet"
+        },
+        {
+          "id": "obj-cure-nessa",
+          "text": "Administer antidote to Nessa the cow",
+          "isOptional": false,
+          "status": "unstarted",
+          "targetEntity": "nessa"
+        }
+      ],
+      "robos:rewards": {
+        "experience": 50,
+        "gold": 15
+      },
       "robos:package": "crpg",
       "robos:namespace": "robos.crpg"
     },
@@ -3256,6 +3524,1352 @@
       "robos:evidenceVideo": "games/crpg-realm/tests/e2e/reports/videos/qa_evidence_character_creation_and_homestead.mp4",
       "robos:package": "crpg",
       "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:event:evt-gorion-awakening",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGGameEvent",
+        "schema:Event"
+      ],
+      "dcterms:title": "Gorion's Departure Directive",
+      "dcterms:description": "Gorion summons his ward to the library steps with urgent warnings of an imminent departure from Candlekeep.",
+      "robos:eventType": "dialogue",
+      "robos:infinityInteraction": {
+        "robos:interactionType": "dialogue_branch",
+        "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+        "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+        "robos:bcsTrigger": "NumTimesTalkedTo(0) && Range(Player1, 15)",
+        "robos:bcsAction": "SetGlobal(\"spoke_to_gorion\", \"GLOBAL\", 1)\nAddJournalEntry(3001, QUEST)",
+        "robos:dialogueRef": "GORION.DLG:1:1",
+        "robos:journalEntry": "Gorion urgently demands we gather provisions and depart Candlekeep before nightfall."
+      },
+      "robos:stateMutations": {
+        "setFlags": {
+          "spoke_to_gorion": true
+        },
+        "xpAward": 50
+      },
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:event:evt-winthrop-supplies",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGGameEvent",
+        "schema:Event"
+      ],
+      "dcterms:title": "Winthrop's Hospitality & Provisions",
+      "dcterms:description": "Winthrop provides travel provisions and advice inside the bustling Candlekeep Inn.",
+      "robos:eventType": "dialogue",
+      "robos:infinityInteraction": {
+        "robos:interactionType": "dialogue_branch",
+        "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+        "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+        "robos:bcsTrigger": "See(Player1) && AreaCheck(\"candlekeep-inn-interior\")",
+        "robos:bcsAction": "SetGlobal(\"spoke_to_winthrop\", \"GLOBAL\", 1)\nGiveGoldForce(15)\nStartStore(\"WINTHROP\", LastTalkedToBy)",
+        "robos:dialogueRef": "WINTHROP.DLG:3:1",
+        "robos:journalEntry": "Purchased travel rations and iron daggers from innkeeper Winthrop."
+      },
+      "robos:stateMutations": {
+        "setFlags": {
+          "spoke_to_winthrop": true
+        },
+        "goldChange": -10
+      },
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:event:evt-hasty-departure",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGGameEvent",
+        "schema:Event"
+      ],
+      "dcterms:title": "Hasty Departure to Gates",
+      "dcterms:description": "Choosing not to linger for preparations, heading directly to the monastery gates.",
+      "robos:eventType": "area_transition",
+      "robos:infinityInteraction": {
+        "robos:interactionType": "bcs_script_action",
+        "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+        "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+        "robos:bcsTrigger": "True()",
+        "robos:bcsAction": "SetGlobal(\"hasty_departure\", \"GLOBAL\", 1)\nMoveToPoint([1450, 920])",
+        "robos:journalEntry": "Decided not to linger for provisions; heading straight for the monastery gates."
+      },
+      "robos:stateMutations": {
+        "setFlags": {
+          "hasty_departure": true
+        }
+      },
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:event:evt-sanctuary-cutthroats-slain",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGGameEvent",
+        "schema:Event"
+      ],
+      "dcterms:title": "Cutthroats Shank & Carbos Slain",
+      "dcterms:description": "Defeating the two assassins lying in ambush within the darkened Candlekeep storehouse.",
+      "robos:eventType": "combat_victory",
+      "robos:infinityInteraction": {
+        "robos:interactionType": "combat_encounter",
+        "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+        "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+        "robos:bcsTrigger": "Dead(\"shank\") && Dead(\"carbos\")",
+        "robos:bcsAction": "SetGlobal(\"shank_defeated\", \"GLOBAL\", 1)\nSetGlobal(\"carbos_defeated\", \"GLOBAL\", 1)\nGiveItemCreate(\"SCRL_BOUNTY\", Player1, 1, 0, 0)\nAddJournalEntry(3002, QUEST)",
+        "robos:journalEntry": "Slain cutthroats Shank and Carbos in the storehouse; recovered an assassin contract scroll.",
+        "robos:scenarioRef": "urn:robos:crpg:scenario:homestead-hound-pack"
+      },
+      "robos:stateMutations": {
+        "setFlags": {
+          "shank_defeated": true,
+          "carbos_defeated": true,
+          "bounty_scroll_found": true
+        },
+        "xpAward": 150
+      },
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:event:evt-candlekeep-gate-departure",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGGameEvent",
+        "schema:Event"
+      ],
+      "dcterms:title": "The Iron Gates Clang Shut",
+      "dcterms:description": "Passing through Candlekeep main gate onto the Coast Way as night envelops the monastery.",
+      "robos:eventType": "area_transition",
+      "robos:infinityInteraction": {
+        "robos:interactionType": "area_transition",
+        "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+        "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+        "robos:bcsTrigger": "AreaCheck(\"candlekeep-exterior\") && Entered(\"ExitCoastWay\")",
+        "robos:bcsAction": "SetGlobal(\"gate_unlocked\", \"GLOBAL\", 1)\nSetGlobal(\"Chapter\", \"GLOBAL\", 1)\nStartCutSceneMode()\nStartCutScene(\"Cut01A\")",
+        "robos:journalEntry": "Departed Candlekeep into the dark fog of the Coast Way alongside Gorion.",
+        "robos:cutsceneRef": "Cut01A"
+      },
+      "robos:stateMutations": {
+        "setFlags": {
+          "gate_unlocked": true,
+          "departed_candlekeep": true
+        }
+      },
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:event:evt-coastway-stand-with-gorion",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGGameEvent",
+        "schema:Event"
+      ],
+      "dcterms:title": "The Valorous Stand Alongside Gorion",
+      "dcterms:description": "Standing firm with weapons drawn to confront Sarevok and his ogre mercenaries.",
+      "robos:eventType": "decision_branch",
+      "robos:infinityInteraction": {
+        "robos:interactionType": "dialogue_branch",
+        "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+        "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+        "robos:bcsTrigger": "Global(\"SarevokAmbush\", \"GLOBAL\", 1)",
+        "robos:bcsAction": "SetGlobal(\"stood_with_gorion\", \"GLOBAL\", 1)\nAttack(\"sarevok\")\nPlaySong(22)",
+        "robos:dialogueRef": "SAREVOK.DLG:1:3",
+        "robos:journalEntry": "Refused Gorion's command to flee; stood with him against the armored warlord Sarevok."
+      },
+      "robos:stateMutations": {
+        "setFlags": {
+          "stood_with_gorion": true
+        }
+      },
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:event:evt-coastway-flee-wilderness",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGGameEvent",
+        "schema:Event"
+      ],
+      "dcterms:title": "Flight into the Foggy Wilderness",
+      "dcterms:description": "Heeding Gorion desperate order and escaping into the dense Coast Way woods.",
+      "robos:eventType": "area_transition",
+      "robos:infinityInteraction": {
+        "robos:interactionType": "bcs_script_action",
+        "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+        "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+        "robos:bcsTrigger": "HPPercentLT(Player1, 100) || Global(\"GorionCommandsFlee\", \"GLOBAL\", 1)",
+        "robos:bcsAction": "SetGlobal(\"fled_into_woods\", \"GLOBAL\", 1)\nEscapeAreaMove(\"AR2700\", 350, 420, 0)",
+        "robos:journalEntry": "Fled into the dark forest as lightning ripped through the tree canopy.",
+        "robos:cutsceneRef": "Cut01B"
+      },
+      "robos:stateMutations": {
+        "setFlags": {
+          "fled_into_woods": true
+        }
+      },
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:event:evt-guardian-sarevok-vanquished",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGGameEvent",
+        "schema:Event"
+      ],
+      "dcterms:title": "Sarevok Vanquished: Savior of Candlekeep",
+      "dcterms:description": "Defeating the armored warlord Sarevok and saving Candlekeep from the mercenary conspiracy.",
+      "robos:eventType": "combat_victory",
+      "robos:infinityInteraction": {
+        "robos:interactionType": "combat_encounter",
+        "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+        "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+        "robos:bcsTrigger": "Dead(\"sarevok\") && Global(\"stood_with_gorion\", \"GLOBAL\", 1)",
+        "robos:bcsAction": "SetGlobal(\"sarevok_vanquished\", \"GLOBAL\", 1)\nSetGlobal(\"realm_saved\", \"GLOBAL\", 1)\nStartMovie(\"ENDMOVIE\")",
+        "robos:journalEntry": "Sarevok lies defeated. Candlekeep and the Sword Coast are delivered from darkness."
+      },
+      "robos:stateMutations": {
+        "setFlags": {
+          "sarevok_vanquished": true,
+          "realm_saved": true
+        },
+        "xpAward": 1000
+      },
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:event:evt-martyr-sacrifice",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGGameEvent",
+        "schema:Event"
+      ],
+      "dcterms:title": "The Martyr's Sacrifice",
+      "dcterms:description": "Interposing yourself to shield Gorion from Sarevok lethal spear thrust.",
+      "robos:eventType": "cutscene",
+      "robos:infinityInteraction": {
+        "robos:interactionType": "cutscene_trigger",
+        "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+        "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+        "robos:bcsTrigger": "Range(\"sarevok\", 5) && HP(\"gorion\", 1)",
+        "robos:bcsAction": "SetGlobal(\"sacrificed_for_gorion\", \"GLOBAL\", 1)\nKill(Player1)\nStartCutScene(\"CutSacrifice\")",
+        "robos:journalEntry": "Gave my mortal life to save Gorion; the prophecy is broken by selflessness.",
+        "robos:cutsceneRef": "CutSacrifice"
+      },
+      "robos:stateMutations": {
+        "setFlags": {
+          "sacrificed_for_gorion": true
+        }
+      },
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:event:evt-iron-throne-ascension",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGGameEvent",
+        "schema:Event"
+      ],
+      "dcterms:title": "Embrace of Bhaal: Sovereign of Murder",
+      "dcterms:description": "Unlocking the dormant divine spark to seize command of the Iron Throne syndicates.",
+      "robos:eventType": "quest_milestone",
+      "robos:infinityInteraction": {
+        "robos:interactionType": "bcs_script_action",
+        "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+        "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+        "robos:bcsTrigger": "Global(\"fled_into_woods\", \"GLOBAL\", 1) && Dead(\"sarevok\")",
+        "robos:bcsAction": "SetGlobal(\"embraced_dark_heritage\", \"GLOBAL\", 1)\nSetGlobal(\"tyrant_ascension\", \"GLOBAL\", 1)\nAddSpecialAbility(\"SPIN101\")",
+        "robos:journalEntry": "Claimed the dark divine heritage and subjugated the Iron Throne syndicates under iron tyranny."
+      },
+      "robos:stateMutations": {
+        "setFlags": {
+          "embraced_dark_heritage": true,
+          "tyrant_ascension": true
+        }
+      },
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:event:evt-shadow-succumb-defeat",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGGameEvent",
+        "schema:Event"
+      ],
+      "dcterms:title": "Consumed by Shadows: Game Over",
+      "dcterms:description": "Falling in the dark wilderness without allies or guidance.",
+      "robos:eventType": "cutscene",
+      "robos:infinityInteraction": {
+        "robos:interactionType": "cutscene_trigger",
+        "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+        "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+        "robos:bcsTrigger": "HP(Player1, 0)",
+        "robos:bcsAction": "SetGlobal(\"lost_in_wilds\", \"GLOBAL\", 1)\nGameOver(DEFEAT)",
+        "robos:journalEntry": "Succumbed in the cold wilderness of the Coast Way."
+      },
+      "robos:stateMutations": {
+        "setFlags": {
+          "lost_in_wilds": true
+        }
+      },
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:event:evt-dw-loric-decree",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGGameEvent",
+        "schema:Event"
+      ],
+      "dcterms:title": "King Loric's Royal Mandate",
+      "dcterms:description": "King Loric charges the descendant of Erdrick with retrieving the stolen Ball of Light.",
+      "robos:eventType": "dialogue",
+      "robos:infinityInteraction": {
+        "robos:interactionType": "dialogue_branch",
+        "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+        "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+        "robos:bcsTrigger": "NumTimesTalkedTo(0) && AreaCheck(\"tantegel-throne-room\")",
+        "robos:bcsAction": "SetGlobal(\"received_royal_blessing\", \"GLOBAL\", 1)\nGiveGoldForce(120)\nGiveItemCreate(\"TORCH\", Player1, 1, 0, 0)\nGiveItemCreate(\"HERB\", Player1, 1, 0, 0)",
+        "robos:dialogueRef": "LORIC.DLG:1:1",
+        "robos:journalEntry": "King Loric blessed our quest and provided 120 gold, a torch, and healing herbs."
+      },
+      "robos:stateMutations": {
+        "setFlags": {
+          "received_royal_blessing": true,
+          "spoke_to_king_loric": true
+        },
+        "goldChange": 120
+      },
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:event:evt-dw-swamp-cave-discovery",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGGameEvent",
+        "schema:Event"
+      ],
+      "dcterms:title": "Descent into the Swamp Cave",
+      "dcterms:description": "Descending into the noxious swamp cave south of Tantegel Castle.",
+      "robos:eventType": "area_transition",
+      "robos:infinityInteraction": {
+        "robos:interactionType": "area_transition",
+        "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+        "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+        "robos:bcsTrigger": "AreaCheck(\"tantegel-exterior\") && Entered(\"ExitSwampCave\")",
+        "robos:bcsAction": "SetGlobal(\"discovered_swamp_cave\", \"GLOBAL\", 1)\nAddJournalEntry(4002, QUEST)",
+        "robos:journalEntry": "Entered the subterranean swamp cave searching for Princess Gwaelin."
+      },
+      "robos:stateMutations": {
+        "setFlags": {
+          "discovered_swamp_cave": true
+        }
+      },
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:event:evt-dw-relic-search",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGGameEvent",
+        "schema:Event"
+      ],
+      "dcterms:title": "Quest for Erdrick's Sacred Relics",
+      "dcterms:description": "Setting out across Rimuldar and Cantlin to unearth the Staff of Rain and Sunstone.",
+      "robos:eventType": "quest_milestone",
+      "robos:infinityInteraction": {
+        "robos:interactionType": "bcs_script_action",
+        "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+        "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+        "robos:bcsTrigger": "PartyHasItem(\"erdrick-tablet\")",
+        "robos:bcsAction": "SetGlobal(\"quest_for_relics\", \"GLOBAL\", 1)\nAddJournalEntry(4003, QUEST)",
+        "robos:journalEntry": "Set out across Alefgard to locate the sacred Staff of Rain and Sunstone."
+      },
+      "robos:stateMutations": {
+        "setFlags": {
+          "quest_for_relics": true
+        }
+      },
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:event:evt-dw-green-dragon-slain",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGGameEvent",
+        "schema:Event"
+      ],
+      "dcterms:title": "Green Dragon Slain & Princess Rescued",
+      "dcterms:description": "Slaying the fearsome Green Dragon deep in the swamp cave and freeing Princess Gwaelin.",
+      "robos:eventType": "combat_victory",
+      "robos:infinityInteraction": {
+        "robos:interactionType": "combat_encounter",
+        "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+        "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+        "robos:bcsTrigger": "Dead(\"green-dragon\")",
+        "robos:bcsAction": "SetGlobal(\"green_dragon_slain\", \"GLOBAL\", 1)\nSetGlobal(\"princess_rescued\", \"GLOBAL\", 1)\nGiveItemCreate(\"GWAELIN_LOVE\", Player1, 1, 0, 0)\nAddJournalEntry(4004, QUEST_DONE)",
+        "robos:journalEntry": "Slew the Green Dragon and rescued Princess Gwaelin from her cage."
+      },
+      "robos:stateMutations": {
+        "setFlags": {
+          "green_dragon_slain": true,
+          "princess_rescued": true
+        },
+        "xpAward": 950
+      },
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:event:evt-dw-rainbow-bridge-created",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGGameEvent",
+        "schema:Event"
+      ],
+      "dcterms:title": "The Rainbow Bridge Spanned",
+      "dcterms:description": "Combining the Staff of Rain and Sunstone at the sacred shrine to forge the Rainbow Drop.",
+      "robos:eventType": "item_acquisition",
+      "robos:infinityInteraction": {
+        "robos:interactionType": "bcs_script_action",
+        "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+        "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+        "robos:bcsTrigger": "PartyHasItem(\"staff-of-rain\") && PartyHasItem(\"sunstone\")",
+        "robos:bcsAction": "SetGlobal(\"rainbow_bridge_created\", \"GLOBAL\", 1)\nTakePartyItem(\"staff-of-rain\")\nTakePartyItem(\"sunstone\")\nGiveItemCreate(\"RAINBOW_DROP\", Player1, 1, 0, 0)\nStartCutScene(\"CutRainbowBridge\")",
+        "robos:journalEntry": "Forged the Rainbow Drop and created the bridge of light across the sea to Castle Charlock.",
+        "robos:cutsceneRef": "CutRainbowBridge"
+      },
+      "robos:stateMutations": {
+        "setFlags": {
+          "rainbow_bridge_created": true
+        }
+      },
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:event:evt-dw-dragonlord-slain",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGGameEvent",
+        "schema:Event"
+      ],
+      "dcterms:title": "Dragonlord Defeated & Ball of Light Restored",
+      "dcterms:description": "Striking down the Dragonlord atop Charlock throne and recovering the radiant Ball of Light.",
+      "robos:eventType": "combat_victory",
+      "robos:infinityInteraction": {
+        "robos:interactionType": "combat_encounter",
+        "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+        "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+        "robos:bcsTrigger": "Dead(\"dragonlord\")",
+        "robos:bcsAction": "SetGlobal(\"dragonlord_slain\", \"GLOBAL\", 1)\nSetGlobal(\"ball_of_light_restored\", \"GLOBAL\", 1)\nGiveItemCreate(\"BALL_OF_LIGHT\", Player1, 1, 0, 0)\nStartMovie(\"ALEFGARD_RESTORED\")",
+        "robos:journalEntry": "Vanquished the Dragonlord! The Ball of Light returns radiant dawn to Alefgard."
+      },
+      "robos:stateMutations": {
+        "setFlags": {
+          "dragonlord_slain": true,
+          "ball_of_light_restored": true
+        },
+        "xpAward": 2500
+      },
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:event:evt-dw-dark-pact-accepted",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGGameEvent",
+        "schema:Event"
+      ],
+      "dcterms:title": "The Dark Pact of Charlock",
+      "dcterms:description": "Accepting the Dragonlord offer to rule half the realm in shadow.",
+      "robos:eventType": "dialogue",
+      "robos:infinityInteraction": {
+        "robos:interactionType": "dialogue_branch",
+        "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+        "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+        "robos:bcsTrigger": "Global(\"DRAGONLORD_OFFER\", \"GLOBAL\", 1)",
+        "robos:bcsAction": "SetGlobal(\"dark_pact_accepted\", \"GLOBAL\", 1)\nKill(\"king-loric\")\nStartCutScene(\"CutDarkReign\")",
+        "robos:dialogueRef": "DRAGONLORD.DLG:2:2",
+        "robos:journalEntry": "Accepted the Dragonlord bargain; betrayed King Loric to rule Alefgard in shadow."
+      },
+      "robos:stateMutations": {
+        "setFlags": {
+          "dark_pact_accepted": true
+        }
+      },
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:event:evt-dw-hero-slain-charlock",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGGameEvent",
+        "schema:Event"
+      ],
+      "dcterms:title": "Ashes in Charlock",
+      "dcterms:description": "Falling in battle against the Dragonlord infernal breath.",
+      "robos:eventType": "cutscene",
+      "robos:infinityInteraction": {
+        "robos:interactionType": "cutscene_trigger",
+        "robos:scriptVm": "urn:robos:infinity:subsystem:bcs-script-vm",
+        "robos:dialogueMachine": "urn:robos:infinity:subsystem:dialogue-state-machine",
+        "robos:bcsTrigger": "HP(Player1, 0) && AreaCheck(\"castle-charlock-throne\")",
+        "robos:bcsAction": "SetGlobal(\"hero_slain_charlock\", \"GLOBAL\", 1)\nGameOver(DEFEAT)",
+        "robos:journalEntry": "Fell in Charlock Castle; darkness claims Alefgard."
+      },
+      "robos:stateMutations": {
+        "setFlags": {
+          "hero_slain_charlock": true
+        }
+      },
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg"
+    },
+    {
+      "@id": "urn:robos:crpg:item:longsword",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product",
+        "robos:GameItem"
+      ],
+      "dcterms:title": "Longsword",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 15,
+      "robos:modelAssetRef": "res://assets/models/weapon_sword_iron.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1,
+      "robos:weight": 3,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d8",
+      "robos:damageType": "slashing",
+      "robos:properties": [
+        "versatile"
+      ]
+    },
+    {
+      "@id": "urn:robos:crpg:item:shortsword",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product",
+        "robos:GameItem"
+      ],
+      "dcterms:title": "Shortsword",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 10,
+      "robos:modelAssetRef": "res://assets/models/weapon_sword_iron.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 0.82,
+      "robos:weight": 2,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d6",
+      "robos:damageType": "piercing",
+      "robos:properties": [
+        "finesse",
+        "light"
+      ]
+    },
+    {
+      "@id": "urn:robos:crpg:item:greatsword",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product",
+        "robos:GameItem"
+      ],
+      "dcterms:title": "Greatsword",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 50,
+      "robos:modelAssetRef": "res://assets/models/weapon_greatsword.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1.15,
+      "robos:weight": 6,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "2d6",
+      "robos:damageType": "slashing",
+      "robos:properties": [
+        "heavy",
+        "two-handed"
+      ]
+    },
+    {
+      "@id": "urn:robos:crpg:item:sword-hero",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product",
+        "robos:GameItem"
+      ],
+      "dcterms:title": "Mythril Hero Sword (Excalibur)",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 2500,
+      "robos:modelAssetRef": "res://assets/models/weapon_sword_hero.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1.05,
+      "robos:weight": 4,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d10+2",
+      "robos:damageType": "slashing",
+      "robos:properties": [
+        "versatile",
+        "magical"
+      ]
+    },
+    {
+      "@id": "urn:robos:crpg:item:dagger",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product",
+        "robos:GameItem"
+      ],
+      "dcterms:title": "Dagger",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 2,
+      "robos:modelAssetRef": "res://assets/models/weapon_dagger_rogue.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 0.95,
+      "robos:weight": 1,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d4",
+      "robos:damageType": "piercing",
+      "robos:properties": [
+        "finesse",
+        "light",
+        "thrown"
+      ],
+      "robos:rangeFeet": 20
+    },
+    {
+      "@id": "urn:robos:crpg:item:rapier",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product",
+        "robos:GameItem"
+      ],
+      "dcterms:title": "Rapier",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 25,
+      "robos:modelAssetRef": "res://assets/models/weapon_rapier.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1,
+      "robos:weight": 2,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d8",
+      "robos:damageType": "piercing",
+      "robos:properties": [
+        "finesse"
+      ]
+    },
+    {
+      "@id": "urn:robos:crpg:item:mace",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product",
+        "robos:GameItem"
+      ],
+      "dcterms:title": "Flanged Mace",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 5,
+      "robos:modelAssetRef": "res://assets/models/weapon_mace_flanged.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1,
+      "robos:weight": 4,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d6",
+      "robos:damageType": "bludgeoning"
+    },
+    {
+      "@id": "urn:robos:crpg:item:warhammer",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product",
+        "robos:GameItem"
+      ],
+      "dcterms:title": "Warhammer",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 15,
+      "robos:modelAssetRef": "res://assets/models/weapon_warhammer.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1,
+      "robos:weight": 2,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d8",
+      "robos:damageType": "bludgeoning",
+      "robos:properties": [
+        "versatile"
+      ]
+    },
+    {
+      "@id": "urn:robos:crpg:item:morningstar",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product",
+        "robos:GameItem"
+      ],
+      "dcterms:title": "Morningstar",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 15,
+      "robos:modelAssetRef": "res://assets/models/weapon_mace_flanged.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1.05,
+      "robos:weight": 4,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d8",
+      "robos:damageType": "piercing"
+    },
+    {
+      "@id": "urn:robos:crpg:item:battleaxe",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product",
+        "robos:GameItem"
+      ],
+      "dcterms:title": "Battleaxe",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 10,
+      "robos:modelAssetRef": "res://assets/models/weapon_battleaxe.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1,
+      "robos:weight": 4,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d8",
+      "robos:damageType": "slashing",
+      "robos:properties": [
+        "versatile"
+      ]
+    },
+    {
+      "@id": "urn:robos:crpg:item:spear",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product",
+        "robos:GameItem"
+      ],
+      "dcterms:title": "Spear",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 1,
+      "robos:modelAssetRef": "res://assets/models/weapon_spear.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1,
+      "robos:weight": 3,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d6",
+      "robos:damageType": "piercing",
+      "robos:properties": [
+        "thrown",
+        "versatile"
+      ],
+      "robos:rangeFeet": 20
+    },
+    {
+      "@id": "urn:robos:crpg:item:quarterstaff",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product",
+        "robos:GameItem"
+      ],
+      "dcterms:title": "Quarterstaff",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 1,
+      "robos:modelAssetRef": "res://assets/models/weapon_staff_wizard.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 0.95,
+      "robos:weight": 4,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d6",
+      "robos:damageType": "bludgeoning",
+      "robos:properties": [
+        "versatile"
+      ]
+    },
+    {
+      "@id": "urn:robos:crpg:item:club",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product",
+        "robos:GameItem"
+      ],
+      "dcterms:title": "Hardwood Club",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 1,
+      "robos:modelAssetRef": "res://assets/models/weapon_club_wood.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1,
+      "robos:weight": 2,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d4",
+      "robos:damageType": "bludgeoning",
+      "robos:properties": [
+        "light"
+      ]
+    },
+    {
+      "@id": "urn:robos:crpg:item:bamboo-pole",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product",
+        "robos:GameItem"
+      ],
+      "dcterms:title": "Bamboo Pole",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 1,
+      "robos:modelAssetRef": "res://assets/models/weapon_bamboo_pole.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1,
+      "robos:weight": 2,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d4",
+      "robos:damageType": "bludgeoning",
+      "robos:properties": [
+        "versatile"
+      ]
+    },
+    {
+      "@id": "urn:robos:crpg:item:shortbow",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product",
+        "robos:GameItem"
+      ],
+      "dcterms:title": "Shortbow",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 25,
+      "robos:modelAssetRef": "res://assets/models/weapon_bow_recurve.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 0.9,
+      "robos:weight": 2,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d6",
+      "robos:damageType": "piercing",
+      "robos:properties": [
+        "ammunition",
+        "two-handed"
+      ],
+      "robos:rangeFeet": 80
+    },
+    {
+      "@id": "urn:robos:crpg:item:hunting-bow",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product",
+        "robos:GameItem"
+      ],
+      "dcterms:title": "Oak Hunting Bow",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 25,
+      "robos:modelAssetRef": "res://assets/models/weapon_bow_recurve.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1,
+      "robos:weight": 2,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d8",
+      "robos:damageType": "piercing",
+      "robos:properties": [
+        "ammunition",
+        "two-handed"
+      ],
+      "robos:rangeFeet": 80
+    },
+    {
+      "@id": "urn:robos:crpg:item:longbow",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product",
+        "robos:GameItem"
+      ],
+      "dcterms:title": "Longbow",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 50,
+      "robos:modelAssetRef": "res://assets/models/weapon_bow_recurve.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1.2,
+      "robos:weight": 2,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d8",
+      "robos:damageType": "piercing",
+      "robos:properties": [
+        "ammunition",
+        "heavy",
+        "two-handed"
+      ],
+      "robos:rangeFeet": 150
+    },
+    {
+      "@id": "urn:robos:crpg:item:light-crossbow",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product",
+        "robos:GameItem"
+      ],
+      "dcterms:title": "Light Crossbow",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 25,
+      "robos:modelAssetRef": "res://assets/models/weapon_crossbow.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 0.95,
+      "robos:weight": 5,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d8",
+      "robos:damageType": "piercing",
+      "robos:properties": [
+        "ammunition",
+        "loading",
+        "two-handed"
+      ],
+      "robos:rangeFeet": 80
+    },
+    {
+      "@id": "urn:robos:crpg:item:heavy-crossbow",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product",
+        "robos:GameItem"
+      ],
+      "dcterms:title": "Heavy Crossbow",
+      "robos:itemCategory": "weapon",
+      "robos:equipSlot": "main_hand",
+      "robos:cost": 50,
+      "robos:modelAssetRef": "res://assets/models/weapon_crossbow.glb",
+      "robos:modelSocket": "main_hand",
+      "robos:modelScale": 1.15,
+      "robos:weight": 9,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:damageDice": "1d10",
+      "robos:damageType": "piercing",
+      "robos:properties": [
+        "ammunition",
+        "heavy",
+        "loading",
+        "two-handed"
+      ],
+      "robos:rangeFeet": 100
+    },
+    {
+      "@id": "urn:robos:crpg:item:shield",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product",
+        "robos:GameItem"
+      ],
+      "dcterms:title": "Knightly Shield",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "off_hand",
+      "robos:cost": 10,
+      "robos:modelAssetRef": "res://assets/models/armor_shield_heater.glb",
+      "robos:modelSocket": "off_hand",
+      "robos:modelScale": 1,
+      "robos:weight": 6,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 2
+    },
+    {
+      "@id": "urn:robos:crpg:item:shield-round",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product",
+        "robos:GameItem"
+      ],
+      "dcterms:title": "Norse Round Shield",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "off_hand",
+      "robos:cost": 8,
+      "robos:modelAssetRef": "res://assets/models/armor_shield_round.glb",
+      "robos:modelSocket": "off_hand",
+      "robos:modelScale": 1,
+      "robos:weight": 5,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 2
+    },
+    {
+      "@id": "urn:robos:crpg:item:shield-tower",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product",
+        "robos:GameItem"
+      ],
+      "dcterms:title": "Pavise Tower Shield",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "off_hand",
+      "robos:cost": 35,
+      "robos:modelAssetRef": "res://assets/models/armor_shield_tower.glb",
+      "robos:modelSocket": "off_hand",
+      "robos:modelScale": 1.05,
+      "robos:weight": 15,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 3
+    },
+    {
+      "@id": "urn:robos:crpg:item:helm-knight",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product",
+        "robos:GameItem"
+      ],
+      "dcterms:title": "Knight Greathelm",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "head",
+      "robos:cost": 40,
+      "robos:modelAssetRef": "res://assets/models/armor_helm_knight.glb",
+      "robos:modelSocket": "head",
+      "robos:modelScale": 1,
+      "robos:weight": 6,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 1
+    },
+    {
+      "@id": "urn:robos:crpg:item:helm-iron",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product",
+        "robos:GameItem"
+      ],
+      "dcterms:title": "Iron Nasal Helm",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "head",
+      "robos:cost": 20,
+      "robos:modelAssetRef": "res://assets/models/armor_helm_iron.glb",
+      "robos:modelSocket": "head",
+      "robos:modelScale": 1,
+      "robos:weight": 4,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 1
+    },
+    {
+      "@id": "urn:robos:crpg:item:plate-armor",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product",
+        "robos:GameItem"
+      ],
+      "dcterms:title": "Full Plate Armor",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "chest",
+      "robos:cost": 1500,
+      "robos:modelAssetRef": "res://assets/models/armor_suit_plate.glb",
+      "robos:modelSocket": "chest",
+      "robos:modelScale": 1,
+      "robos:weight": 65,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 18
+    },
+    {
+      "@id": "urn:robos:crpg:item:half-plate",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product",
+        "robos:GameItem"
+      ],
+      "dcterms:title": "Half Plate Armor",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "chest",
+      "robos:cost": 750,
+      "robos:modelAssetRef": "res://assets/models/armor_suit_plate.glb",
+      "robos:modelSocket": "chest",
+      "robos:modelScale": 0.95,
+      "robos:weight": 40,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 15
+    },
+    {
+      "@id": "urn:robos:crpg:item:breastplate",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product",
+        "robos:GameItem"
+      ],
+      "dcterms:title": "Steel Breastplate",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "chest",
+      "robos:cost": 400,
+      "robos:modelAssetRef": "res://assets/models/armor_suit_plate.glb",
+      "robos:modelSocket": "chest",
+      "robos:modelScale": 0.9,
+      "robos:weight": 20,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 14
+    },
+    {
+      "@id": "urn:robos:crpg:item:splint-armor",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product",
+        "robos:GameItem"
+      ],
+      "dcterms:title": "Splint Armor",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "chest",
+      "robos:cost": 200,
+      "robos:modelAssetRef": "res://assets/models/armor_suit_plate.glb",
+      "robos:modelSocket": "chest",
+      "robos:modelScale": 0.98,
+      "robos:weight": 60,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 17
+    },
+    {
+      "@id": "urn:robos:crpg:item:chain-shirt",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product",
+        "robos:GameItem"
+      ],
+      "dcterms:title": "Chain Shirt",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "chest",
+      "robos:cost": 50,
+      "robos:modelAssetRef": "res://assets/models/armor_suit_chainmail.glb",
+      "robos:modelSocket": "chest",
+      "robos:modelScale": 0.9,
+      "robos:weight": 20,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 13
+    },
+    {
+      "@id": "urn:robos:crpg:item:ring-mail",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product",
+        "robos:GameItem"
+      ],
+      "dcterms:title": "Ring Mail",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "chest",
+      "robos:cost": 30,
+      "robos:modelAssetRef": "res://assets/models/armor_suit_chainmail.glb",
+      "robos:modelSocket": "chest",
+      "robos:modelScale": 0.95,
+      "robos:weight": 40,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 14
+    },
+    {
+      "@id": "urn:robos:crpg:item:scale-mail",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product",
+        "robos:GameItem"
+      ],
+      "dcterms:title": "Scale Mail",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "chest",
+      "robos:cost": 50,
+      "robos:modelAssetRef": "res://assets/models/armor_suit_chainmail.glb",
+      "robos:modelSocket": "chest",
+      "robos:modelScale": 0.95,
+      "robos:weight": 45,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 14
+    },
+    {
+      "@id": "urn:robos:crpg:item:leather-armor",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product",
+        "robos:GameItem"
+      ],
+      "dcterms:title": "Cured Leather Armor",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "chest",
+      "robos:cost": 10,
+      "robos:modelAssetRef": "res://assets/models/armor_suit_leather.glb",
+      "robos:modelSocket": "chest",
+      "robos:modelScale": 1,
+      "robos:weight": 10,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 11
+    },
+    {
+      "@id": "urn:robos:crpg:item:studded-leather",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product",
+        "robos:GameItem"
+      ],
+      "dcterms:title": "Studded Leather Armor",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "chest",
+      "robos:cost": 45,
+      "robos:modelAssetRef": "res://assets/models/armor_suit_leather.glb",
+      "robos:modelSocket": "chest",
+      "robos:modelScale": 1.02,
+      "robos:weight": 13,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 12
+    },
+    {
+      "@id": "urn:robos:crpg:item:padded",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product",
+        "robos:GameItem"
+      ],
+      "dcterms:title": "Padded Armor",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "chest",
+      "robos:cost": 5,
+      "robos:modelAssetRef": "res://assets/models/armor_suit_leather.glb",
+      "robos:modelSocket": "chest",
+      "robos:modelScale": 0.95,
+      "robos:weight": 8,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 11
+    },
+    {
+      "@id": "urn:robos:crpg:item:hide-armor",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:CRPGItem",
+        "schema:Product",
+        "robos:GameItem"
+      ],
+      "dcterms:title": "Hide Armor",
+      "robos:itemCategory": "armor",
+      "robos:equipSlot": "chest",
+      "robos:cost": 10,
+      "robos:modelAssetRef": "res://assets/models/armor_suit_leather.glb",
+      "robos:modelSocket": "chest",
+      "robos:modelScale": 1.05,
+      "robos:weight": 12,
+      "robos:provenance": "RobOS / CC0 Open-Source (CC0)",
+      "robos:package": "crpg",
+      "robos:namespace": "robos.crpg",
+      "robos:acBonus": 12
     }
   ]
 }

@@ -8,6 +8,7 @@ resolving HeroQuest combat, treasure searching, and AI monster retaliation.
 
 from __future__ import annotations
 
+import json
 import time
 from .tabletop_qa_player import TabletopQAPlayer
 
@@ -157,6 +158,67 @@ class TabletopRPCAI(TabletopQAPlayer):
 
         return {
             "success": True,
+            "final_state": final_st
+        }
+
+    def load_scenario(self, scenario_source: str | dict) -> dict:
+        """Loads a robos:TabletopTestScenario JSON-LD file or dict."""
+        if isinstance(scenario_source, str):
+            with open(scenario_source, "r", encoding="utf-8") as f:
+                return json.load(f)
+        return scenario_source
+
+    def execute_scenario_command(self, cmd: dict) -> dict:
+        """Executes a single robos:TabletopAICommand from a scenario."""
+        action = cmd.get("robos:action", cmd.get("action", ""))
+        hero = cmd.get("robos:hero", cmd.get("hero", "active_hero"))
+        rationale = cmd.get("robos:rationale", cmd.get("rationale", ""))
+        self.log_ai(f"Executing scenario command '{action}' for {hero} (Rationale: {rationale})...")
+
+        if action in ("roll_movement", "roll_movement_dice"):
+            return self.roll_movement()
+        elif action in ("move", "move_hero"):
+            dest = cmd.get("robos:destination", cmd.get("destination", [0, 0]))
+            return self.move(int(dest[0]), int(dest[1]))
+        elif action == "open_door":
+            from_pt = cmd.get("robos:from", cmd.get("from", [0, 0]))
+            to_pt = cmd.get("robos:to", cmd.get("to", [0, 0]))
+            return self.open_door(int(from_pt[0]), int(from_pt[1]), int(to_pt[0]), int(to_pt[1]))
+        elif action in ("attack", "attack_adjacent_monster"):
+            target = str(cmd.get("robos:target", cmd.get("target", "")))
+            weapon = str(cmd.get("robos:weapon", cmd.get("weapon", "")))
+            return self.attack(monster_id=target, weapon=weapon)
+        elif action in ("search", "search_room"):
+            return self.search()
+        elif action == "end_turn":
+            return self.end_turn()
+        elif action in ("monster_turn", "ai_monster_turn"):
+            return self.monster_turn()
+        elif action == "ai_step":
+            confirm = bool(cmd.get("confirm", True))
+            return self.ai_step(confirm=confirm)
+        else:
+            return self.execute_action(action, **cmd)
+
+    def execute_scenario(self, scenario_source: str | dict) -> dict:
+        """Loads and executes a full robos:TabletopTestScenario."""
+        scen = self.load_scenario(scenario_source)
+        title = scen.get("dcterms:title", scen.get("title", "Unnamed Tabletop Scenario"))
+        self.log_ai(f"=== Loading & Executing KGraph Scenario: '{title}' ===")
+
+        commands = scen.get("robos:scriptedCommands", scen.get("scriptedCommands", []))
+        results = []
+        for cmd in commands:
+            res = self.execute_scenario_command(cmd)
+            results.append(res)
+            time.sleep(self.human_delay)
+
+        final_st = self.get_state()
+        self.log_ai(f"✔ Scenario '{title}' completed. Round: {final_st.get('round')}, Revealed Rooms: {len(final_st.get('revealedRooms', []))}")
+        return {
+            "success": True,
+            "scenario": scen,
+            "results": results,
             "final_state": final_st
         }
 
