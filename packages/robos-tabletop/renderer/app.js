@@ -2436,6 +2436,22 @@ function getHeroClass(h) {
   return "Warrior";
 }
 
+function getHeroName(h) {
+  if (!h) return "Hero";
+  if (h["robos:characterName"]) return h["robos:characterName"];
+  if (h.characterName) return h.characterName;
+  const title = h["dcterms:title"] || "";
+  const heroClass = getHeroClass(h);
+  if (!title || title.toLowerCase() === heroClass.toLowerCase() || title.toLowerCase() === (h["@id"] || "").toLowerCase()) {
+    const id = (h["@id"] || "").toLowerCase();
+    if (id.includes("barbarian")) return "Rogar";
+    if (id.includes("dwarf")) return "Dorgan";
+    if (id.includes("elf")) return "Ladril";
+    if (id.includes("wizard")) return "Telor";
+  }
+  return title || heroClass;
+}
+
 function getHeroWeapon(h) {
   if (h["robos:equippedWeapon"]) return h["robos:equippedWeapon"];
   if (h["robos:startingWeapon"]) {
@@ -2501,7 +2517,7 @@ function renderHeroesList() {
     div.dataset.heroId = h["@id"];
 
     const heroClass = getHeroClass(h);
-    const heroName = h["dcterms:title"] || h["@id"];
+    const heroName = getHeroName(h);
     const tokenColor = h["robos:tokenColor"] || "#b91c1c";
     const gold = h["robos:gold"] !== undefined ? h["robos:gold"] : 100;
 
@@ -2543,9 +2559,10 @@ function selectHero(heroId) {
   renderHeroesList();
 
   // Populate Hero Form
-  document.getElementById("hero-editor-title").textContent = "Edit Hero: " + (hero["dcterms:title"] || "");
+  const heroName = getHeroName(hero);
+  document.getElementById("hero-editor-title").textContent = "Edit Hero: " + heroName;
   document.getElementById("hero-id").value = hero["@id"] || "";
-  document.getElementById("hero-name").value = hero["dcterms:title"] || "";
+  document.getElementById("hero-name").value = heroName;
   document.getElementById("hero-class").value = hero["robos:heroClass"] || "";
   document.getElementById("hero-bp").value = hero["robos:bodyPoints"] || 8;
   document.getElementById("hero-mp").value = hero["robos:mindPoints"] || 2;
@@ -2649,7 +2666,7 @@ function renderHeroActionScreen(hero) {
   const defStat = document.getElementById("act-def-stat");
   const defArmor = document.getElementById("act-def-armor");
 
-  const heroName = hero["dcterms:title"] || "Hero";
+  const heroName = getHeroName(hero);
   const heroClass = getHeroClass(hero);
   const heroGold = hero["robos:gold"] !== undefined ? hero["robos:gold"] : 100;
 
