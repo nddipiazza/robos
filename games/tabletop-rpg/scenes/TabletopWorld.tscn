@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://tabletopworld01"]
+[gd_scene load_steps=4 format=3 uid="uid://tabletopworld01"]
 
 [ext_resource type="Script" path="res://scripts/TabletopWorld.gd" id="1_world"]
 [ext_resource type="Texture2D" path="res://assets/boards/heroquest_board.png" id="2_board"]
+[ext_resource type="Script" path="res://scripts/BoardOverlay.gd" id="3_overlay"]
 
 [node name="TabletopWorld" type="Node2D"]
 script = ExtResource("1_world")
@@ -14,8 +15,11 @@ color = Color(0.06, 0.08, 0.12, 1)
 
 [node name="BoardSprite" type="Sprite2D" parent="."]
 position = Vector2(648, 507)
-scale = Vector2(0.92, 0.88)
+scale = Vector2(1.15, 1.15)
 texture = ExtResource("2_board")
+
+[node name="BoardOverlay" type="Node2D" parent="."]
+script = ExtResource("3_overlay")
 
 [node name="UI" type="CanvasLayer" parent="."]
 
