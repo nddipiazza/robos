@@ -26,6 +26,7 @@ const reviewStore = localReview ? new ReviewSessionStore({repo:localReview.repo,
 const { DemoSession } = require('./lib/demo-session');
 const demoSession = localReview?.demoProcess ? new DemoSession({ workspace: localReview.workspace, processFile: localReview.demoProcess, agent: localReview.demoAgent, beforeWorkspace: localReview.beforeWorkspace, store: reviewStore }) : null;
 const ciRecovery = localReview && reviewStore ? new (require('./lib/ci-recovery').CIRecovery)(localReview,prState,path.join(reviewStore.directory,'ci-recovery')) : null;
+ipcMain.handle('ci-recovery-providers',async(_,options)=>{const providers=await require('../robos-agent-client/providers').options({refresh:options?.refresh===true});return providers.filter(p=>p.id==='codex');});
 ipcMain.handle('ci-recovery-state',async()=>{try{if(!ciRecovery)throw Error('Open a saved PR review first.');return {ok:true,...await ciRecovery.state()};}catch(e){return {ok:false,error:e.message};}});
 ipcMain.handle('ci-recovery-action',async(_,input)=>{try{if(!ciRecovery)throw Error('Open a saved PR review first.');if(demoSession?.status==='running'||prState?.pending||reviewPublisher?.pending)throw Error('Finish the active review action first.');return input.action==='start'?await ciRecovery.start(input):input.action==='push'?await ciRecovery.push():{ok:false,error:'Unknown recovery action.'};}catch(e){return {ok:false,error:e.message};}});
 // Optional workstation snapshot for restarting the theater without losing a paused review.

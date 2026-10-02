@@ -1,4 +1,5 @@
 const { contextBridge, ipcRenderer } = require('electron');
+contextBridge.exposeInMainWorld('robosProviders',{list:options=>ipcRenderer.invoke('ci-recovery-providers',options)});
 contextBridge.exposeInMainWorld('api', {
   ciRecoveryState:()=>ipcRenderer.invoke('ci-recovery-state'),
   ciRecoveryAction:input=>ipcRenderer.invoke('ci-recovery-action',input),

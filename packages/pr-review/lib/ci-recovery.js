@@ -37,6 +37,7 @@ class CIRecovery {
     this.session=new DemoSession({workspace:review.workspace,processFile,agent:review.demoAgent,store:new ReviewSessionStore({repo:review.repo,branch:'ci-recovery',workspace:review.workspace,root:path.join(directory,'history')})});
     this.readCI=options.readCI||(()=>require('../../robos-lib/review-ci').readCI(review));
     this.git=options.git||(args=>execFileSync('git',args,{cwd:review.workspace,encoding:'utf8'}).trim());
+    this.providers=options.providers||(()=>require('../../robos-agent-client/providers').options());
     this.run=options.run||(prompt=>this.session.executeAgent(prompt));this.busy=false;
   }
   save(){fs.writeFileSync(this.file+'.tmp',JSON.stringify(this.meta),{mode:0o600});fs.renameSync(this.file+'.tmp',this.file);}
@@ -46,19 +47,24 @@ class CIRecovery {
     const diff=ready?this.git(['diff','--no-ext-diff',this.meta.baselineHead,this.meta.fixedHead,'--']).slice(0,100000):'';
     return {diff,ci,phase:recoveryPhase(this.meta,ci,this.busy,ready),meta:this.meta,session:this.session.state(),localHead};
   }
-  async start({model='',effort='high'}={}) {
+  async start({provider='codex',model='',effort=''}={}) {
     if(this.busy)throw Error('A CI recovery action is already running.');
-    if(!/^[a-zA-Z0-9._-]{0,100}$/.test(model)||!['low','medium','high','xhigh'].includes(effort))throw Error('Choose a valid model and reasoning effort.');
+    if(provider!=='codex')throw Error('CI recovery currently supports Codex.');
     this.busy=true;
     try {
+      const selected=(await this.providers()).find(p=>p.id===provider);
+      if(!selected?.available)throw Error(selected?.error||'Selected agent is unavailable.');
+      const modelInfo=selected.models.find(m=>m.id===model);
+      if(model&&!modelInfo)throw Error('Choose a model from the current RobOS catalog.');
+      if(effort&&!modelInfo?.reasoningEfforts?.some(e=>e.id===effort))throw Error('Choose a supported reasoning effort for this model.');
       const pr=await this.prState.assertAuthor();const ci=await this.readCI();
       if(ci.state!=='failed')throw Error('Refresh checks first. There is no confirmed CI failure to repair.');
       if(this.git(['branch','--show-current'])!==pr.headBranch)throw Error('Open the PR branch checkout before repairing CI.');
       if(this.git(['status','--porcelain']))throw Error('Commit or stash existing edits before starting CI recovery.');
       if(this.git(['rev-parse','HEAD'])!==ci.head)throw Error('The checkout differs from the failed revision. Sync the PR branch before starting recovery.');
       const agent=this.review.demoAgent;if(!agent||agent.args?.[0]!=='exec')throw Error('CI recovery currently requires a configured Codex exec agent.');
-      const args=[];for(let i=0;i<agent.args.length;i++){const flag=agent.args[i];if((model&&['--model','-m'].includes(flag))||(['--config','-c'].includes(flag)&&String(agent.args[i+1]).startsWith('model_reasoning_effort='))){i++;continue;}args.push(flag);}
-      if(model)args.push('--model',model);args.push('-c',`model_reasoning_effort="${effort}"`);
+      const args=[];for(let i=0;i<agent.args.length;i++){const flag=agent.args[i];if((['--model','-m'].includes(flag))||(['--config','-c'].includes(flag)&&/^(model|model_reasoning_effort)=/.test(String(agent.args[i+1])))){i++;continue;}args.push(flag);}
+      if(model)args.push('--model',model);if(effort)args.push('-c',`model_reasoning_effort="${effort}"`);
       this.session.agent={...agent,args};this.session.agentThreads={};
       this.meta={baselineHead:ci.head,startedAt:Date.now()};this.save();
       this.session.status='running';this.session.startedAt=Date.now();this.session.addMessage({role:'user',text:'Investigate the failed checks, verify a focused fix, and commit it for my review.'});this.session.reportProgress('Reading failed checks and preparing the CI investigation.');
