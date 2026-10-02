@@ -195,7 +195,7 @@ robos-ai-textarea {
 /* Toolbar */
 .robos-ai-toolbar {
   position: relative;
-  padding: 8px 10px;
+  padding: 2px 10px;
   border-top: 1px solid #30363d;
   flex-wrap: wrap;
   display: flex;
