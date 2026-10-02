@@ -543,6 +543,24 @@
       "robos:roomsCount": 17,
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:mapconfig:fan-dungeon-28x21",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMapConfiguration",
+        "schema:Place"
+      ],
+      "dcterms:title": "HeroQuest Fan Dungeon & Cavern Citadel (28×21)",
+      "robos:boardSide": "Custom",
+      "robos:gridDimensions": [
+        28,
+        21
+      ],
+      "robos:backgroundImage": "res://assets/boards/fan_dungeon_28x21.png",
+      "robos:roomsCount": 19,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
     }
   ]
 }

@@ -117,13 +117,89 @@ const HEROQUEST_FIRST_LIGHT_CONFIG = {
 };
 
 // Map Configuration Registry
+// 3. HeroQuest Fan Dungeon & Cavern Citadel (28×21)
+const FAN_DUNGEON_28x21_ROOMS = [
+  // West Cluster:
+  { id: 'room-grand-fossil', name: 'Grand Fossil Hall', x: 1, y: 6, w: 7, h: 9, quadrant: 'w' },
+  { id: 'room-nw-crypt', name: 'Northwest Crypt', x: 2, y: 2, w: 5, h: 4, quadrant: 'nw' },
+  { id: 'room-sw-cellar', name: 'Southwest Cellar', x: 2, y: 15, w: 5, h: 4, quadrant: 'sw' },
+
+  // Inner West Column:
+  { id: 'room-n-armory', name: 'North Armory', x: 8, y: 1, w: 4, h: 4, quadrant: 'nw' },
+  { id: 'room-upper-cell', name: 'Upper Guard Room', x: 9, y: 6, w: 3, h: 3, quadrant: 'nw' },
+  { id: 'room-lower-cell', name: 'Lower Guard Room', x: 9, y: 12, w: 3, h: 3, quadrant: 'sw' },
+  { id: 'room-s-barracks', name: 'South Barracks', x: 8, y: 16, w: 4, h: 4, quadrant: 'sw' },
+
+  // Central Column:
+  { id: 'room-center-n', name: 'North Central Chamber', x: 13, y: 2, w: 4, h: 5, quadrant: 'center' },
+  { id: 'room-center-mid', name: 'Great Center Chamber', x: 13, y: 8, w: 4, h: 5, quadrant: 'center' },
+  { id: 'room-center-s', name: 'South Central Chamber', x: 13, y: 14, w: 4, h: 5, quadrant: 'center' },
+
+  // Inner East Column:
+  { id: 'room-ne-inner', name: 'Northeast Antechamber', x: 18, y: 2, w: 3, h: 4, quadrant: 'ne' },
+  { id: 'room-e-upper-cell', name: 'East Upper Alcove', x: 18, y: 7, w: 3, h: 3, quadrant: 'ne' },
+  { id: 'room-e-lower-cell', name: 'East Lower Alcove', x: 18, y: 11, w: 3, h: 3, quadrant: 'se' },
+  { id: 'room-se-inner', name: 'Southeast Antechamber', x: 18, y: 15, w: 3, h: 4, quadrant: 'se' },
+
+  // Far East Column:
+  { id: 'room-ne-vault', name: 'Northeast Vault', x: 22, y: 1, w: 4, h: 3, quadrant: 'ne' },
+  { id: 'room-e-parlor', name: 'East Grand Parlor', x: 22, y: 5, w: 5, h: 3, quadrant: 'ne' },
+  { id: 'room-e-forge', name: 'East Forge', x: 22, y: 9, w: 4, h: 3, quadrant: 'se' },
+  { id: 'room-se-sanctum', name: 'Southeast Sanctum', x: 22, y: 13, w: 5, h: 3, quadrant: 'se' },
+  { id: 'room-se-tomb', name: 'Southeast Tomb', x: 22, y: 17, w: 4, h: 3, quadrant: 'se' }
+];
+
+const FAN_DUNGEON_28x21_DOORS = [
+  { id: 'fdoor-fossil-n', from: [4, 5], to: [4, 6], room: 'room-grand-fossil' },
+  { id: 'fdoor-fossil-s', from: [4, 15], to: [4, 14], room: 'room-grand-fossil' },
+  { id: 'fdoor-fossil-e', from: [8, 10], to: [7, 10], room: 'room-grand-fossil' },
+  { id: 'fdoor-nw-crypt', from: [4, 1], to: [4, 2], room: 'room-nw-crypt' },
+  { id: 'fdoor-sw-cellar', from: [4, 19], to: [4, 18], room: 'room-sw-cellar' },
+  { id: 'fdoor-center-n', from: [12, 4], to: [13, 4], room: 'room-center-n' },
+  { id: 'fdoor-center-mid-w', from: [12, 10], to: [13, 10], room: 'room-center-mid' },
+  { id: 'fdoor-center-mid-e', from: [17, 10], to: [16, 10], room: 'room-center-mid' },
+  { id: 'fdoor-center-s', from: [12, 16], to: [13, 16], room: 'room-center-s' },
+  { id: 'fdoor-e-parlor', from: [21, 6], to: [22, 6], room: 'room-e-parlor' },
+  { id: 'fdoor-se-sanctum', from: [21, 14], to: [22, 14], room: 'room-se-sanctum' }
+];
+
+const FAN_DUNGEON_28x21_CONFIG = {
+  id: 'fan-dungeon-28x21',
+  title: 'HeroQuest Fan Dungeon & Cavern Citadel (28×21)',
+  description: 'Fan-generated 28x21 tactical dungeon board featuring 19 rooms including the Grand Fossil Hall, 3 central chambers, torches, and seamless 0-margin square grid.',
+  boardSide: 'Custom',
+  theme: 'cavern-citadel',
+  gridDimensions: [28, 21],
+  backgroundImage: 'res://assets/boards/fan_dungeon_28x21.png',
+  localImageFile: 'assets/boards/fan_dungeon_28x21.png',
+  calibration: {
+    insetLeft: 0,
+    insetTop: 0,
+    insetRight: 0,
+    insetBottom: 0,
+    cellWidth: 36.5714,
+    cellHeight: 36.5714
+  },
+  rooms: FAN_DUNGEON_28x21_ROOMS,
+  doors: FAN_DUNGEON_28x21_DOORS,
+  defaultStartingStair: [0, 1],
+  outerCorridor: {
+    top: { y: 0, fromX: 0, toX: 27 },
+    bottom: { y: 20, fromX: 0, toX: 27 },
+    left: { x: 0, fromY: 0, toY: 20 },
+    right: { x: 27, fromY: 0, toY: 20 }
+  }
+};
+
+// Map Configuration Registry
 const MAP_CONFIGURATIONS = new Map();
+MAP_CONFIGURATIONS.set(FAN_DUNGEON_28x21_CONFIG.id, FAN_DUNGEON_28x21_CONFIG);
 MAP_CONFIGURATIONS.set(HEROQUEST_CLASSIC_CONFIG.id, HEROQUEST_CLASSIC_CONFIG);
 MAP_CONFIGURATIONS.set(HEROQUEST_FIRST_LIGHT_CONFIG.id, HEROQUEST_FIRST_LIGHT_CONFIG);
 
 function getMapConfiguration(id) {
-  if (!id) return HEROQUEST_CLASSIC_CONFIG;
-  return MAP_CONFIGURATIONS.get(id) || HEROQUEST_CLASSIC_CONFIG;
+  if (!id) return FAN_DUNGEON_28x21_CONFIG;
+  return MAP_CONFIGURATIONS.get(id) || FAN_DUNGEON_28x21_CONFIG;
 }
 
 function listMapConfigurations() {
@@ -139,9 +215,11 @@ function registerMapConfiguration(config) {
 }
 
 module.exports = {
+  FAN_DUNGEON_28x21_CONFIG,
   HEROQUEST_CLASSIC_CONFIG,
   HEROQUEST_FIRST_LIGHT_CONFIG,
   getMapConfiguration,
   listMapConfigurations,
   registerMapConfiguration
 };
+

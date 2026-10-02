@@ -43,10 +43,16 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
     assert.strictEqual(map["robos:height"], 19);
   });
 
-  it("loads multiple map configurations including First Light Caverns", () => {
+  it("loads multiple map configurations including First Light Caverns and Fan Dungeon 28x21", () => {
     const { listMapConfigurations, getMapConfiguration } = require(path.join(REPO_ROOT, "packages/robos-gaming"));
     const configs = listMapConfigurations();
-    assert.ok(configs.length >= 2, "Must support at least 2 map configurations");
+    assert.ok(configs.length >= 3, "Must support at least 3 map configurations");
+
+    const fanDungeon = getMapConfiguration("fan-dungeon-28x21");
+    assert.ok(fanDungeon, "Fan Dungeon 28x21 must be registered");
+    assert.strictEqual(fanDungeon.boardSide, "Custom");
+    assert.deepEqual(fanDungeon.gridDimensions, [28, 21]);
+    assert.strictEqual(fanDungeon.rooms.length, 19, "Fan Dungeon must define 19 rooms");
 
     const classic = getMapConfiguration("heroquest-classic");
     assert.strictEqual(classic.boardSide, "A");
@@ -58,11 +64,13 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
     assert.ok(firstLight.rooms.length > 10, "First Light must define cavern rooms");
   });
 
-  it("verifies board image assets exist for both sides of the board", () => {
+  it("verifies board image assets exist for all registered configurations", () => {
     const boardSideA = path.join(REPO_ROOT, "games/tabletop-rpg/assets/boards/heroquest_board.png");
     const boardSideB = path.join(REPO_ROOT, "games/tabletop-rpg/assets/boards/first_light_caverns.png");
+    const boardFan = path.join(REPO_ROOT, "games/tabletop-rpg/assets/boards/fan_dungeon_28x21.png");
 
     assert.ok(fs.existsSync(boardSideA), "Side A heroquest_board.png must exist");
     assert.ok(fs.existsSync(boardSideB), "Side B first_light_caverns.png must exist");
+    assert.ok(fs.existsSync(boardFan), "Fan Dungeon 28x21 board must exist");
   });
 });

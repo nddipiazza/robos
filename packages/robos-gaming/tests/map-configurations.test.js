@@ -29,6 +29,17 @@ describe('RobOS Gaming: Multi-Map Configurations & Quest Grid', () => {
     assert.ok(config.rooms.some(r => r.id === 'cavern-center'));
   });
 
+  it('retrieves Fan Dungeon 28x21 configuration with 19 rooms and 0-margin calibration', () => {
+    const config = getMapConfiguration('fan-dungeon-28x21');
+    assert.equal(config.id, 'fan-dungeon-28x21');
+    assert.equal(config.boardSide, 'Custom');
+    assert.deepEqual(config.gridDimensions, [28, 21]);
+    assert.equal(config.rooms.length, 19);
+    assert.equal(config.calibration.insetLeft, 0);
+    assert.equal(config.calibration.insetTop, 0);
+    assert.ok(config.rooms.some(r => r.id === 'room-grand-fossil'));
+  });
+
   it('allows registering custom map configurations', () => {
     const custom = {
       id: 'custom-arena-12x12',

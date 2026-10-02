@@ -17,7 +17,7 @@ let currentData = {
     slug: 'heroquest-the-trial',
     title: 'HeroQuest: The Trial',
     briefing: 'Seek out the foul Orc Warlord Verag in his catacombs, slay him, and return alive.',
-    mapConfigId: 'heroquest-classic',
+    mapConfigId: 'fan-dungeon-28x21',
     activeRooms: new Set(),
     wallBlocks: [
       { id: 'block-1', x: 4, y: 0, type: 'single' },
@@ -832,27 +832,25 @@ function drawBoard() {
   }
   ctx.restore();
 
-  // 5. Draw Coordinate Labels (A–Z top / 1–19 left)
+  // 5. Draw Coordinate Labels
   if (currentData.calibration.showCoords) {
     ctx.save();
     ctx.fillStyle = "#38bdf8";
-    ctx.font = "bold 10px monospace";
+    ctx.font = "bold 9px monospace";
     ctx.textAlign = "center";
-    ctx.textBaseline = "bottom";
+    ctx.textBaseline = "middle";
 
-    // Top Letters A..Z
+    const topY = insetT >= 16 ? (insetT - 6) : (insetT + 8);
     for (let c = 0; c < cols; c++) {
       const x = insetL + c * cellW + cellW / 2;
-      const letter = String.fromCharCode(65 + (c % 26));
-      ctx.fillText(letter, x, insetT - 4);
+      const label = c < 26 ? String.fromCharCode(65 + c) : `A${String.fromCharCode(65 + c - 26)}`;
+      ctx.fillText(label, x, topY);
     }
 
-    // Left Numbers 1..19
-    ctx.textAlign = "right";
-    ctx.textBaseline = "middle";
+    const leftX = insetL >= 20 ? (insetL - 8) : (insetL + 8);
     for (let r = 0; r < rows; r++) {
       const y = insetT + r * cellH + cellH / 2;
-      ctx.fillText(String(r + 1), insetL - 6, y);
+      ctx.fillText(String(r + 1), leftX, y);
     }
     ctx.restore();
   }
@@ -1101,7 +1099,7 @@ async function initKGraphData() {
     }
 
     // 3. Switch to default map configuration
-    await switchMapConfiguration("heroquest-classic");
+    await switchMapConfiguration("fan-dungeon-28x21");
     initBoard();
     setStatus("Tabletop RPG Quest Editor Ready.");
   } catch (err) {

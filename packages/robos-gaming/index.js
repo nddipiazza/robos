@@ -10,6 +10,7 @@ const {
   buildHeroQuestGrid
 } = require("./lib/heroquest-board-spec");
 const {
+  FAN_DUNGEON_28x21_CONFIG,
   HEROQUEST_CLASSIC_CONFIG,
   HEROQUEST_FIRST_LIGHT_CONFIG,
   getMapConfiguration,
@@ -40,6 +41,7 @@ module.exports = {
   buildHeroQuestGrid,
 
   // Multi-Map Configurations
+  FAN_DUNGEON_28x21_CONFIG,
   HEROQUEST_CLASSIC_CONFIG,
   HEROQUEST_FIRST_LIGHT_CONFIG,
   getMapConfiguration,
