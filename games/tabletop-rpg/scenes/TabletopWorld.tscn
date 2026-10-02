@@ -34,12 +34,12 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 15
 theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
-text = "⚔️ HEROQUEST"
+text = "HEROQUEST"
 
 [node name="BtnToggleRole" type="Button" parent="UI/SidebarHeader"]
 custom_minimum_size = Vector2(130, 30)
 layout_mode = 2
-text = "Role: ⚔️ Player"
+text = "Role: Player"
 
 [node name="DicePanel" type="Panel" parent="UI"]
 offset_left = 1416.0
@@ -54,7 +54,7 @@ offset_top = 6.0
 offset_right = 478.0
 offset_bottom = 38.0
 theme_override_font_sizes/font_size = 14
-text = "🎲 Dice: Ready (Roll 2d6 movement)"
+text = "Dice: Ready (Roll 2d6 movement)"
 
 [node name="Actions" type="HBoxContainer" parent="UI"]
 offset_left = 1416.0
@@ -66,32 +66,32 @@ theme_override_constants/separation = 6
 [node name="BtnRoll" type="Button" parent="UI/Actions"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "🎲 Move"
+text = "Roll"
 
 [node name="BtnAttack" type="Button" parent="UI/Actions"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "⚔️ Attack"
+text = "Attack"
 
 [node name="BtnSearch" type="Button" parent="UI/Actions"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "🔍 Search"
+text = "Search"
 
 [node name="BtnSummon" type="Button" parent="UI/Actions"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "👹 Summon"
+text = "Summon"
 
 [node name="BtnAIStep" type="Button" parent="UI/Actions"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "⚡ AI Step"
+text = "AI Step"
 
 [node name="BtnEndTurn" type="Button" parent="UI/Actions"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "⏭️ End Turn"
+text = "End Turn"
 
 [node name="StatsPanel" type="Panel" parent="UI"]
 offset_left = 1416.0
@@ -106,7 +106,7 @@ offset_top = 6.0
 offset_right = 478.0
 offset_bottom = 26.0
 theme_override_font_sizes/font_size = 14
-text = "🛡️ HERO PARTY (4)"
+text = "HERO PARTY (4)"
 
 [node name="HeroCardsGrid" type="GridContainer" parent="UI/StatsPanel"]
 layout_mode = 0
@@ -141,7 +141,7 @@ offset_top = 6.0
 offset_right = 478.0
 offset_bottom = 26.0
 theme_override_font_sizes/font_size = 14
-text = "👹 DISCOVERED FOES"
+text = "DISCOVERED FOES"
 
 [node name="EmptyLabel" type="Label" parent="UI/EnemiesPanel"]
 layout_mode = 0
