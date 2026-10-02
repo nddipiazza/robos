@@ -3409,3 +3409,13 @@ review-markdown-editor { display: block; margin: 8px 0 20px; }
 .review-ide-dialog button:disabled { opacity:.55;cursor:wait; }
 .review-ide-dialog .review-ide-note { font-size:12px;margin-bottom:0; }
 #open-review-ide { white-space:nowrap;font-size:12px;padding:6px 10px; }
+
+/* Pull request lifecycle, independently of the active theater stage. */
+#step-btn-8 {color:var(--pr-color,#9da7b3);border-color:var(--pr-color,#9da7b3);background:#20252d;}
+#step-btn-8:hover,#step-btn-8.active {color:var(--pr-color,#9da7b3);border-color:var(--pr-color,#9da7b3);background:#29313c;}
+#step-btn-8[data-pr-status="draft"] {--pr-color:#d4a855;}
+#step-btn-8[data-pr-status="review"] {--pr-color:#68bf92;}
+#step-btn-8[data-pr-status="merged"] {--pr-color:#bc98ed;}
+#step-btn-8[data-pr-status="closed"] {--pr-color:#f08080;}
+#step-btn-8 .pr-tab-icon[hidden] {display:none;}
+.pr-state-icon {font-size:20px;line-height:1;}

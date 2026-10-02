@@ -23,3 +23,17 @@ messaging settings in Git Projects. Search `@name` to find a person; the preview
 shows who will be notified. The sender is excluded, and Slack receives stable
 member-ID mentions rather than plain display names. Recipient changes here apply
 only to this request. Save project defaults in Git Projects.
+
+## Author mode after publication
+
+Creating a PR reloads it from GitHub and compares its author with the connected
+GitHub account. The author keeps the same evidence, diff, and walkthrough, with
+an editable description and **Update PR** action while the PR remains open.
+Use the walkthrough discussion for further changes, then **Push walkthrough
+adjustments** to publish the committed branch changes without a force push.
+
+The Pull Request tab shows **Not Created**, **In Draft**, **In Review**,
+**Merged**, or **Closed**, each with its own icon and color. **Reload PR**
+refreshes the status and description. Closed/merged PRs and reviewer mode keep
+the description read-only. If someone changes the description on GitHub during
+editing, reload before saving rather than overwriting their work.

@@ -72,7 +72,7 @@ document.getElementById("header-btn-request-changes")?.addEventListener("click",
 async function init() {
   const local = await window.api.getLocalReview?.();
   if (local?.ok) {
-    serverBadge.textContent = 'Local draft — no GitHub PR created';
+    serverBadge.textContent = local.pr.published ? (local.pr.isAuthor?'PR author mode':'PR reviewer mode') : 'Local review — PR not created';
     const opened=await window.openPRReviewTheater(local.pr);
     if(opened===false)throw Error('Could not load the review. Please try again.');
     return;
@@ -1090,7 +1090,7 @@ window.openPRReviewTheater = async function(pr) {
   }
   // Set target app badge
   const appBadge = document.getElementById('theater-target-app');
-  if (appBadge) appBadge.textContent = [targetPR.repo, targetPR.headBranch, targetPR.local && !targetPR.published ? 'Local review' : ''].filter(Boolean).join(' · ');
+  if (appBadge) appBadge.textContent = [targetPR.repo, targetPR.headBranch, targetPR.local && !targetPR.published ? 'Local review' : targetPR.isAuthor ? 'Author mode' : 'Reviewer mode'].filter(Boolean).join(' · ');
 
   if (res.local) {
     renderTheaterDiffViewer(); renderTheaterShowTheFix(); renderTheaterVideo();
@@ -1099,7 +1099,7 @@ window.openPRReviewTheater = async function(pr) {
     document.querySelector('.fix-type-selector-bar').style.display = 'none';
     document.querySelectorAll('[id^="btn-fix-type-"]').forEach(el => el.hidden = true);
     document.querySelectorAll('.stage-nav-footer').forEach(el => el.style.display = 'none');
-    updateTheaterStepper(); window.setProofCanvasMode('video'); window.setTheaterStage(6);
+    updateTheaterStepper(); window.setProofCanvasMode('video'); window.setTheaterStage(targetPR.published?8:6);
     if (res.interactiveDemo) await window.mountWalkthrough();
     return;
   }
