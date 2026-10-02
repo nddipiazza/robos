@@ -42,4 +42,27 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
     assert.strictEqual(map["robos:width"], 26);
     assert.strictEqual(map["robos:height"], 19);
   });
+
+  it("loads multiple map configurations including First Light Caverns", () => {
+    const { listMapConfigurations, getMapConfiguration } = require(path.join(REPO_ROOT, "packages/robos-gaming"));
+    const configs = listMapConfigurations();
+    assert.ok(configs.length >= 2, "Must support at least 2 map configurations");
+
+    const classic = getMapConfiguration("heroquest-classic");
+    assert.strictEqual(classic.boardSide, "A");
+    assert.deepEqual(classic.gridDimensions, [26, 19]);
+
+    const firstLight = getMapConfiguration("first-light-caverns");
+    assert.strictEqual(firstLight.boardSide, "B");
+    assert.deepEqual(firstLight.gridDimensions, [26, 19]);
+    assert.ok(firstLight.rooms.length > 10, "First Light must define cavern rooms");
+  });
+
+  it("verifies board image assets exist for both sides of the board", () => {
+    const boardSideA = path.join(REPO_ROOT, "games/tabletop-rpg/assets/boards/heroquest_board.png");
+    const boardSideB = path.join(REPO_ROOT, "games/tabletop-rpg/assets/boards/first_light_caverns.png");
+
+    assert.ok(fs.existsSync(boardSideA), "Side A heroquest_board.png must exist");
+    assert.ok(fs.existsSync(boardSideB), "Side B first_light_caverns.png must exist");
+  });
 });

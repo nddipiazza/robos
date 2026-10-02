@@ -9,6 +9,13 @@ const {
   HEROQUEST_STANDARD_DOORS,
   buildHeroQuestGrid
 } = require("./lib/heroquest-board-spec");
+const {
+  HEROQUEST_CLASSIC_CONFIG,
+  HEROQUEST_FIRST_LIGHT_CONFIG,
+  getMapConfiguration,
+  listMapConfigurations,
+  registerMapConfiguration
+} = require("./lib/map-configurations");
 const { GameCartridgeBundler } = require("./lib/cartridge-bundler");
 const {
   NS_GAME,
@@ -31,6 +38,13 @@ module.exports = {
   HEROQUEST_ROOMS,
   HEROQUEST_STANDARD_DOORS,
   buildHeroQuestGrid,
+
+  // Multi-Map Configurations
+  HEROQUEST_CLASSIC_CONFIG,
+  HEROQUEST_FIRST_LIGHT_CONFIG,
+  getMapConfiguration,
+  listMapConfigurations,
+  registerMapConfiguration,
 
   // Cartridge Engine
   GameCartridgeBundler,

@@ -507,6 +507,42 @@
       "robos:boss": "urn:robos:tabletop:monster:verag-orc-warlord",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:mapconfig:heroquest-classic",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMapConfiguration",
+        "schema:Place"
+      ],
+      "dcterms:title": "HeroQuest Classic Stone Dungeon (Side A)",
+      "robos:boardSide": "A",
+      "robos:gridDimensions": [
+        26,
+        19
+      ],
+      "robos:backgroundImage": "res://assets/boards/heroquest_board.png",
+      "robos:roomsCount": 17,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:mapconfig:first-light-caverns",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMapConfiguration",
+        "schema:Place"
+      ],
+      "dcterms:title": "HeroQuest: First Light Subterranean Caverns (Side B)",
+      "robos:boardSide": "B",
+      "robos:gridDimensions": [
+        26,
+        19
+      ],
+      "robos:backgroundImage": "res://assets/boards/first_light_caverns.png",
+      "robos:roomsCount": 17,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
     }
   ]
 }

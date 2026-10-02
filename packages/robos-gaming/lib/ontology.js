@@ -122,6 +122,16 @@ const GAMING_SHACL_SHAPES = [
       { path: 'dcterms:title', minCount: 1, message: 'Quest map must declare a title.' },
       { path: 'robos:startingSpawn', minCount: 1, message: 'Quest map must declare starting stair/spawn coordinate [x, y].' }
     ]
+  },
+  {
+    shapeId: 'urn:robos:shape:TabletopMapConfigurationShape',
+    targetClass: 'robos:TabletopMapConfiguration',
+    refersFrom: 'https://schema.org/Place',
+    domainStandard: 'https://robos.dev/ns/tabletop#MapConfiguration',
+    properties: [
+      { path: 'dcterms:title', minCount: 1, message: 'Tabletop map configuration must declare a title.' },
+      { path: 'robos:gridDimensions', minCount: 1, message: 'Tabletop map configuration must declare grid dimensions [width, height].' }
+    ]
   }
 ];
 

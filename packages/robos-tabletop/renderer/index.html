@@ -263,27 +263,164 @@
         </div>
       </section>
 
-      <!-- 4. Board & Map Studio Tab -->
+      <!-- 4. Quest & Map Studio Tab -->
       <section id="tab-board" class="tab-pane">
+        <!-- Editor Control Bar -->
+        <div class="editor-toolbar card">
+          <div class="toolbar-group">
+            <label class="toolbar-label">Map Configuration:</label>
+            <select id="map-config-select" class="dropdown form-input-sm">
+              <option value="heroquest-classic">HeroQuest Classic Dungeon (Side A — 26×19)</option>
+              <option value="first-light-caverns">HeroQuest First Light Caverns (Side B — 26×19)</option>
+            </select>
+          </div>
+
+          <div class="toolbar-group">
+            <span class="toolbar-label">Tools:</span>
+            <div class="btn-group" id="tool-palette">
+              <button class="btn btn-sm btn-tool active" data-tool="inspect" title="Inspect tile / entity">👁️ Select</button>
+              <button class="btn btn-sm btn-tool" data-tool="room-toggle" title="Toggle room active / in-use">🏷️ Room</button>
+              <button class="btn btn-sm btn-tool" data-tool="door" title="Place or toggle door on wall border">🚪 Door</button>
+              <button class="btn btn-sm btn-tool" data-tool="wall-block" title="Place stone block tile in corridor/room">🧱 Block</button>
+              <button class="btn btn-sm btn-tool" data-tool="furniture" title="Place furniture">📦 Furn</button>
+              <button class="btn btn-sm btn-tool" data-tool="monster" title="Place monster / boss">👹 Monster</button>
+              <button class="btn btn-sm btn-tool" data-tool="trap" title="Place dungeon trap">⚠️ Trap</button>
+              <button class="btn btn-sm btn-tool" data-tool="stairs" title="Place player starting stairs">🏁 Stairs</button>
+              <button class="btn btn-sm btn-tool btn-danger" data-tool="erase" title="Erase item at square">🗑️ Erase</button>
+            </div>
+          </div>
+
+          <div class="toolbar-group" id="subtool-options">
+            <!-- Dynamic subtool selectors -->
+            <select id="select-door-type" class="dropdown form-input-sm">
+              <option value="closed">Wood Door (Closed)</option>
+              <option value="open">Wood Door (Open)</option>
+              <option value="secret">Secret Door (Hidden)</option>
+            </select>
+            <select id="select-furniture-type" class="dropdown form-input-sm" style="display:none;">
+              <option value="chest">Treasure Chest</option>
+              <option value="tomb">Stone Tomb</option>
+              <option value="alchemists-bench">Alchemist's Bench</option>
+              <option value="weapons-rack">Weapons Rack</option>
+              <option value="table">Wooden Table</option>
+              <option value="throne">King's Throne</option>
+              <option value="cupboard">Cupboard</option>
+              <option value="bookcase">Bookcase</option>
+              <option value="fireplace">Fireplace</option>
+              <option value="torture-rack">Torture Rack</option>
+            </select>
+            <select id="select-monster-type" class="dropdown form-input-sm" style="display:none;">
+              <option value="goblin-scout-1">Goblin Scout (BP: 1, Atk: 2)</option>
+              <option value="orc-warrior-1">Orc Warrior (BP: 1, Atk: 3)</option>
+              <option value="fimir-1">Fimir (BP: 2, Atk: 3)</option>
+              <option value="skeleton-1">Skeleton (BP: 1, Atk: 2)</option>
+              <option value="zombie-1">Zombie (BP: 1, Atk: 2)</option>
+              <option value="mummy-1">Mummy (BP: 2, Atk: 3)</option>
+              <option value="chaos-warrior-1">Chaos Warrior (BP: 3, Atk: 4)</option>
+              <option value="fellmarg-gargoyle">Fellmarg Gargoyle (BP: 3, Atk: 4)</option>
+              <option value="verag-boss">Verag Orc Warlord [Boss] (BP: 3, Atk: 4)</option>
+            </select>
+            <select id="select-trap-type" class="dropdown form-input-sm" style="display:none;">
+              <option value="pit">Pit Trap (1 Body Point)</option>
+              <option value="falling-block">Falling Rock Block (Blocks Tile & 3 Atk)</option>
+              <option value="spear">Spear Trap (1 Atk Dice)</option>
+              <option value="chest-trap">Trapped Chest (Poison Needle)</option>
+            </select>
+          </div>
+
+          <div class="toolbar-group toolbar-right">
+            <button id="btn-toggle-calibration" class="btn btn-sm btn-secondary" title="Open Board Grid Inset & Calibration Drawer">
+              ⚙️ Calibration
+            </button>
+            <div class="zoom-controls">
+              <button id="btn-zoom-out" class="btn btn-sm btn-secondary" title="Zoom Out">-</button>
+              <span id="zoom-text" class="zoom-badge">100%</span>
+              <button id="btn-zoom-in" class="btn btn-sm btn-secondary" title="Zoom In">+</button>
+              <button id="btn-zoom-reset" class="btn btn-sm btn-secondary" title="Reset View">Reset</button>
+            </div>
+            <span id="board-hover-coords" class="badge">Square: [0, 0] | Corridor</span>
+          </div>
+        </div>
+
+        <!-- Calibration Drawer (Collapsible) -->
+        <div id="calibration-drawer" class="card calibration-panel" style="display: none;">
+          <div class="calibration-grid">
+            <div class="cal-control">
+              <label>Inset Left (px): <span id="val-inset-left">82</span></label>
+              <input type="range" id="cal-inset-left" min="0" max="250" value="82">
+            </div>
+            <div class="cal-control">
+              <label>Inset Top (px): <span id="val-inset-top">65</span></label>
+              <input type="range" id="cal-inset-top" min="0" max="250" value="65">
+            </div>
+            <div class="cal-control">
+              <label>Inset Right (px): <span id="val-inset-right">78</span></label>
+              <input type="range" id="cal-inset-right" min="0" max="250" value="78">
+            </div>
+            <div class="cal-control">
+              <label>Inset Bottom (px): <span id="val-inset-bottom">43</span></label>
+              <input type="range" id="cal-inset-bottom" min="0" max="250" value="43">
+            </div>
+            <div class="cal-control">
+              <label>Grid Opacity: <span id="val-grid-opacity">80%</span></label>
+              <input type="range" id="cal-grid-opacity" min="0" max="100" value="80">
+            </div>
+            <div class="cal-control">
+              <label>Artwork Opacity: <span id="val-art-opacity">100%</span></label>
+              <input type="range" id="cal-art-opacity" min="0" max="100" value="100">
+            </div>
+          </div>
+          <div class="cal-options">
+            <label class="checkbox-label"><input type="checkbox" id="cal-show-coords" checked> Coordinates (A–Z, 1–19)</label>
+            <label class="checkbox-label"><input type="checkbox" id="cal-show-room-outlines" checked> Highlight Active Rooms</label>
+            <label class="checkbox-label"><input type="checkbox" id="cal-show-wall-outlines" checked> Room Walls</label>
+            <button id="btn-reset-calibration" class="btn btn-sm btn-secondary">Reset to Map Defaults</button>
+            <button id="btn-export-snapshot" class="btn btn-sm btn-primary">📸 Export Grid Snapshot (PNG)</button>
+          </div>
+        </div>
+
+        <!-- Main Workspace: Interactive Canvas + Quest Inspector Sidebar -->
         <div class="board-studio-layout">
           <div class="board-canvas-card card">
-            <div class="board-header">
-              <h3>HeroQuest 26×19 Tactical Board Visualizer</h3>
-              <span id="board-hover-coords" class="badge">Square: [0, 0] | Corridor</span>
-            </div>
-            <div class="board-container">
-              <canvas id="board-canvas" width="780" height="570"></canvas>
+            <div class="board-viewport-container" id="board-viewport">
+              <canvas id="board-canvas" width="1200" height="896"></canvas>
             </div>
           </div>
 
           <div class="board-side-panel">
+            <!-- Quest Manifest Summary -->
             <div class="card">
-              <h3>Furniture & Objects</h3>
-              <div id="furniture-list" class="mini-list"></div>
+              <div class="summary-header">
+                <h3>Quest Elements in Use</h3>
+                <button id="btn-toggle-all-rooms" class="btn btn-xs btn-secondary" title="Activate or deactivate all rooms">All Rooms Active</button>
+              </div>
+              <div class="summary-stats-grid">
+                <div class="stat-pill"><span class="stat-label">Active Rooms:</span> <strong id="summary-active-rooms">17 / 17</strong></div>
+                <div class="stat-pill"><span class="stat-label">Wall Blocks:</span> <strong id="summary-wall-blocks">0</strong></div>
+                <div class="stat-pill"><span class="stat-label">Doors:</span> <strong id="summary-doors">12</strong></div>
+                <div class="stat-pill"><span class="stat-label">Furniture:</span> <strong id="summary-furniture">4</strong></div>
+                <div class="stat-pill"><span class="stat-label">Monsters:</span> <strong id="summary-monsters">3</strong></div>
+                <div class="stat-pill"><span class="stat-label">Traps:</span> <strong id="summary-traps">0</strong></div>
+              </div>
             </div>
-            <div class="card">
-              <h3>Doors & Portals</h3>
-              <div id="doors-list" class="mini-list"></div>
+
+            <!-- Selected Entity Inspector -->
+            <div class="card inspector-card">
+              <h3>Square & Entity Inspector</h3>
+              <div id="inspector-body" class="inspector-content">
+                <p class="text-muted">Click any square or item on the board to inspect or edit.</p>
+              </div>
+            </div>
+
+            <!-- Placed Items Mini-Lists -->
+            <div class="card mini-list-card">
+              <div class="list-tab-row">
+                <span class="mini-tab active" data-mini="doors">Doors (<span id="count-doors">12</span>)</span>
+                <span class="mini-tab" data-mini="furniture">Furn (<span id="count-furn">4</span>)</span>
+                <span class="mini-tab" data-mini="monsters">Monsters (<span id="count-monsters">3</span>)</span>
+                <span class="mini-tab" data-mini="traps">Traps (<span id="count-traps">0</span>)</span>
+              </div>
+              <div id="placed-entities-list" class="mini-list"></div>
             </div>
           </div>
         </div>

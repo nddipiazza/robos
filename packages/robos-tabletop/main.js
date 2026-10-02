@@ -197,3 +197,55 @@ ipcMain.handle("tabletop:launch-game", async (_event, payload) => {
     return { success: false, error: err.message };
   }
 });
+
+// IPC: Get Map Configurations
+ipcMain.handle("tabletop:get-map-configs", async () => {
+  try {
+    const { listMapConfigurations } = require(path.join(REPO_ROOT, "packages/robos-gaming"));
+    const configs = listMapConfigurations();
+    return { success: true, configs };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+// IPC: Get Board Image as Data URL
+ipcMain.handle("tabletop:get-board-image", async (_event, relPath) => {
+  try {
+    const cleanPath = (relPath || "").replace(/^res:\/\//, "");
+    let fullPath = path.resolve(TABLETOP_GAME_DIR, cleanPath);
+    if (!fs.existsSync(fullPath)) {
+      fullPath = path.resolve(REPO_ROOT, cleanPath);
+    }
+    if (!fs.existsSync(fullPath)) {
+      return { success: false, error: `Image not found: ${relPath}` };
+    }
+    const ext = path.extname(fullPath).toLowerCase();
+    const mime = ext === ".jpg" || ext === ".jpeg" ? "image/jpeg" : "image/png";
+    const data = fs.readFileSync(fullPath).toString("base64");
+    return {
+      success: true,
+      dataUrl: `data:${mime};base64,${data}`,
+      filePath: fullPath
+    };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+// IPC: Save Board Snapshot
+ipcMain.handle("tabletop:save-board-snapshot", async (_event, payload) => {
+  try {
+    const { dataUrl, filename } = payload || {};
+    if (!dataUrl) throw new Error("Data URL is required.");
+    const base64Data = dataUrl.replace(/^data:image\/\w+;base64,/, "");
+    const buffer = Buffer.from(base64Data, "base64");
+    const outName = filename || `tabletop-snapshot-${Date.now()}.png`;
+    const outPath = path.join("/tmp", outName);
+    fs.writeFileSync(outPath, buffer);
+    return { success: true, filePath: outPath };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+

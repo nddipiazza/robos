@@ -423,3 +423,246 @@ body {
   font-size: 0.75rem;
   color: var(--text-muted);
 }
+
+/* Quest & Map Editor Toolbar */
+.editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 16px;
+  margin-bottom: 12px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toolbar-right {
+  margin-left: auto;
+}
+
+.toolbar-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.form-input-sm {
+  height: 32px;
+  padding: 4px 10px;
+  font-size: 0.85rem;
+}
+
+.btn-group {
+  display: flex;
+  gap: 2px;
+  background: var(--bg-dark);
+  padding: 2px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+
+.btn-tool {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 5px 10px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-tool:hover {
+  color: var(--text-main);
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.btn-tool.active {
+  background-color: var(--accent-cyan);
+  color: #030712;
+  font-weight: 700;
+}
+
+.btn-tool.btn-danger.active {
+  background-color: #ef4444;
+  color: #ffffff;
+}
+
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.zoom-badge {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  color: var(--accent-cyan);
+  min-width: 42px;
+  text-align: center;
+}
+
+.btn-xs {
+  padding: 3px 8px;
+  font-size: 0.75rem;
+  border-radius: 4px;
+}
+
+/* Calibration Drawer */
+.calibration-panel {
+  margin-bottom: 12px;
+  padding: 12px 18px;
+  background-color: #0b1329;
+  border: 1px solid var(--accent-cyan);
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 188, 212, 0.15);
+}
+
+.calibration-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.cal-control {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cal-control label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  display: flex;
+  justify-content: space-between;
+}
+
+.cal-control input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent-cyan);
+  cursor: pointer;
+}
+
+.cal-options {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 10px;
+  flex-wrap: wrap;
+}
+
+/* Board Viewport Container */
+.board-viewport-container {
+  width: 100%;
+  height: calc(100vh - 220px);
+  min-height: 480px;
+  overflow: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #030712;
+  border-radius: 6px;
+  padding: 10px;
+}
+
+#board-canvas {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--border-color);
+  max-width: 100%;
+  height: auto;
+  cursor: crosshair;
+}
+
+/* Side Panel & Summary */
+.summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.summary-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.stat-pill {
+  background: var(--bg-dark);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 0.8rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+.stat-label {
+  color: var(--text-muted);
+}
+
+.inspector-card {
+  min-height: 140px;
+}
+
+.inspector-content {
+  font-size: 0.85rem;
+  line-height: 1.4;
+  margin-top: 8px;
+}
+
+.entity-badge-large {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.mini-list-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.list-tab-row {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+}
+
+.mini-tab {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 3px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.mini-tab:hover {
+  color: var(--text-main);
+}
+
+.mini-tab.active {
+  background-color: var(--bg-dark);
+  color: var(--accent-cyan);
+  border: 1px solid var(--border-color);
+}
+

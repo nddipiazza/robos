@@ -8,97 +8,74 @@
     "gameType": "tabletop",
     "genre": "Tabletop Dungeon Crawler",
     "ruleset": "heroquest",
-    "description": "You have learned well, my apprentices. Now comes your final test. Seek out the foul Orc Warlord Verag in his hidden catacombs, slay him, and return to the stairwell alive.",
+    "description": "Seek out the foul Orc Warlord Verag in his catacombs, slay him, and return to the stairwell alive.",
     "coverColor": "#78350f",
     "icon": "🛡️",
     "mapCount": 1,
     "heroCount": 4,
-    "monsterCount": 6,
-    "spellCount": 4,
-    "itemCount": 4,
+    "monsterCount": 4,
+    "spellCount": 0,
+    "itemCount": 0,
     "questCount": 1,
     "startingMap": "the-trial",
     "startingPosition": [
       1,
-      1
+      0
     ],
-    "createdDate": "2026-10-01T20:04:05.953Z"
+    "createdDate": "2026-10-02T11:23:06.712Z"
   },
   "heroes": {
     "barbarian": {
       "id": "barbarian",
-      "slug": "barbarian",
       "name": "Barbarian",
-      "title": "Conan the Barbarian",
       "bodyPoints": 8,
       "mindPoints": 2,
       "attackDice": 3,
       "defendDice": 2,
-      "movementFormula": "2d6",
       "tokenColor": "#b91c1c",
-      "icon": "⚔️",
       "position": [
         1,
         1
-      ],
-      "startingWeapon": "Broadsword"
+      ]
     },
     "dwarf": {
       "id": "dwarf",
-      "slug": "dwarf",
       "name": "Dwarf",
-      "title": "Gimli the Dwarf",
       "bodyPoints": 7,
       "mindPoints": 3,
       "attackDice": 2,
       "defendDice": 2,
-      "movementFormula": "2d6",
       "tokenColor": "#b45309",
-      "specialAbility": "Disarm Traps",
-      "icon": "⛏️",
       "position": [
         1,
         2
-      ],
-      "startingWeapon": "Shortsword"
+      ]
     },
     "elf": {
       "id": "elf",
-      "slug": "elf",
       "name": "Elf",
-      "title": "Legolas the Elf",
       "bodyPoints": 6,
       "mindPoints": 4,
       "attackDice": 2,
       "defendDice": 2,
-      "movementFormula": "2d6",
       "tokenColor": "#15803d",
-      "specialAbility": "Spellcaster (Earth)",
-      "icon": "🏹",
       "position": [
         2,
         1
-      ],
-      "startingWeapon": "Shortsword"
+      ]
     },
     "wizard": {
       "id": "wizard",
-      "slug": "wizard",
       "name": "Wizard",
-      "title": "Gandalf the Wizard",
       "bodyPoints": 4,
       "mindPoints": 6,
       "attackDice": 1,
       "defendDice": 2,
-      "movementFormula": "2d6",
       "tokenColor": "#1d4ed8",
-      "specialAbility": "Master Spellcaster (Fire, Water, Air)",
-      "icon": "🔮",
       "position": [
         2,
         2
-      ],
-      "startingWeapon": "Dagger"
+      ]
     }
   },
   "monsters": {
@@ -146,126 +123,60 @@
       "tokenColor": "#16a34a",
       "icon": "👺",
       "position": [
-        3,
+        2,
         2
       ],
       "roomId": "room-nw-1"
     },
-    "orc-guard-1": {
-      "id": "orc-guard-1",
-      "slug": "orc-guard-1",
-      "name": "Orc Guard",
+    "orc-warrior-1": {
+      "id": "orc-warrior-1",
+      "slug": "orc-warrior-1",
+      "name": "Orc Warrior",
       "bodyPoints": 1,
       "attackDice": 3,
       "defendDice": 2,
       "movementSquares": 8,
-      "tokenColor": "#059669",
-      "icon": "🧌",
+      "tokenColor": "#15803d",
+      "icon": "👹",
       "position": [
         8,
         2
       ],
       "roomId": "room-nw-2"
-    },
-    "skeleton-guard-1": {
-      "id": "skeleton-guard-1",
-      "slug": "skeleton-guard-1",
-      "name": "Skeleton Warrior",
-      "bodyPoints": 1,
-      "attackDice": 2,
-      "defendDice": 2,
-      "movementSquares": 6,
-      "tokenColor": "#e2e8f0",
-      "icon": "💀",
-      "position": [
-        2,
-        15
-      ],
-      "roomId": "room-sw-3"
-    },
-    "chaos-warrior-1": {
-      "id": "chaos-warrior-1",
-      "slug": "chaos-warrior-1",
-      "name": "Chaos Warrior",
-      "bodyPoints": 3,
-      "attackDice": 4,
-      "defendDice": 4,
-      "movementSquares": 7,
-      "tokenColor": "#334155",
-      "icon": "🛡️",
-      "position": [
-        22,
-        15
-      ],
-      "roomId": "room-se-4"
     }
   },
-  "spells": {
-    "ball-of-flame": {
-      "id": "ball-of-flame",
-      "name": "Ball of Flame",
-      "college": "fire",
-      "damageDice": 2
-    },
-    "heal-body": {
-      "id": "heal-body",
-      "name": "Heal Body",
-      "college": "earth",
-      "restoresBp": 4
-    },
-    "water-of-healing": {
-      "id": "water-of-healing",
-      "name": "Water of Healing",
-      "college": "water",
-      "restoresBp": 4
-    },
-    "genie": {
-      "id": "genie",
-      "name": "Genie",
-      "college": "air",
-      "attackDice": 5
-    }
-  },
-  "items": {
-    "broadsword": {
-      "id": "broadsword",
-      "name": "Broadsword",
-      "category": "weapon",
-      "attackDice": 3,
-      "cost": 250
-    },
-    "shortsword": {
-      "id": "shortsword",
-      "name": "Shortsword",
-      "category": "weapon",
-      "attackDice": 2,
-      "cost": 150
-    },
-    "dagger": {
-      "id": "dagger",
-      "name": "Dagger",
-      "category": "weapon",
-      "attackDice": 1,
-      "cost": 25
-    },
-    "healing-potion": {
-      "id": "healing-potion",
-      "name": "Potion of Healing",
-      "category": "consumable",
-      "restoresBp": 4,
-      "cost": 50
-    }
-  },
+  "spells": {},
+  "items": {},
   "maps": {
     "the-trial": {
       "id": "the-trial",
       "title": "The Trial: Dungeon of Verag",
+      "mapConfigurationId": "heroquest-classic",
       "width": 26,
       "height": 19,
       "backgroundImage": "res://assets/boards/heroquest_board.png",
       "startingStair": [
         1,
         0
+      ],
+      "activeRooms": [
+        "room-center",
+        "room-nw-1",
+        "room-nw-2",
+        "room-nw-3",
+        "room-nw-4",
+        "room-sw-1",
+        "room-sw-2",
+        "room-sw-3",
+        "room-sw-4",
+        "room-ne-1",
+        "room-ne-2",
+        "room-ne-3",
+        "room-ne-4",
+        "room-se-1",
+        "room-se-2",
+        "room-se-3",
+        "room-se-4"
       ],
       "rooms": [
         {
@@ -568,6 +479,20 @@
           "room": "room-se-4"
         }
       ],
+      "wallBlocks": [
+        {
+          "id": "block-1",
+          "x": 4,
+          "y": 0,
+          "type": "single"
+        },
+        {
+          "id": "block-2",
+          "x": 20,
+          "y": 0,
+          "type": "single"
+        }
+      ],
       "furniture": [
         {
           "id": "furn-tomb-center",
@@ -580,57 +505,77 @@
           "roomId": "room-center"
         },
         {
-          "id": "furn-chest-nw1",
-          "name": "Treasure Chest",
+          "id": "furn-chest-center",
+          "name": "Verag Chest of Gold",
           "type": "chest",
           "position": [
-            4,
-            1
+            13,
+            8
           ],
-          "gold": 50,
-          "roomId": "room-nw-1"
+          "roomId": "room-center"
         },
         {
-          "id": "furn-alchemist-nw2",
-          "name": "Alchemist's Bench",
-          "type": "alchemist_bench",
-          "position": [
-            9,
-            3
-          ],
-          "roomId": "room-nw-2"
-        },
-        {
-          "id": "furn-weapons-sw3",
+          "id": "furn-rack-sw",
           "name": "Weapons Rack",
-          "type": "weapons_rack",
+          "type": "weapons-rack",
           "position": [
-            3,
-            16
+            1,
+            14
           ],
           "roomId": "room-sw-3"
         },
         {
-          "id": "furn-chest-se4",
-          "name": "Warlord's Hoard Chest",
-          "type": "chest",
+          "id": "furn-bench-se",
+          "name": "Alchemist Bench",
+          "type": "alchemists-bench",
           "position": [
-            23,
+            21,
+            14
+          ],
+          "roomId": "room-se-4"
+        }
+      ],
+      "traps": [
+        {
+          "id": "trap-pit-1",
+          "trapType": "pit",
+          "position": [
+            5,
+            0
+          ],
+          "damageDice": 1,
+          "detected": false,
+          "disarmed": false
+        },
+        {
+          "id": "trap-falling-1",
+          "trapType": "falling-block",
+          "position": [
+            12,
+            5
+          ],
+          "damageDice": 3,
+          "detected": false,
+          "disarmed": false
+        },
+        {
+          "id": "trap-spear-1",
+          "trapType": "spear",
+          "position": [
+            2,
             16
           ],
-          "gold": 200,
-          "roomId": "room-se-4"
+          "damageDice": 1,
+          "detected": false,
+          "disarmed": false
         }
       ]
     }
   },
   "quests": [
     {
-      "id": "quest-the-trial",
-      "title": "The Trial",
-      "description": "Slay the Orc Warlord Verag and return to the stairwell alive.",
-      "targetBoss": "verag-boss",
-      "rewardGold": 100
+      "id": "quest-1",
+      "title": "The Trial: Slay Orc Warlord Verag"
     }
   ]
 }

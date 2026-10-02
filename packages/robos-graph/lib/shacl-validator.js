@@ -2908,6 +2908,26 @@ const BUILTIN_SHACL_SHAPES = [
     "domainStandard": "https://robos.dev/ns/tabletop#QuestMap"
   },
   {
+    "shapeId": "urn:robos:shape:TabletopMapConfigurationShape",
+    "targetClass": "robos:TabletopMapConfiguration",
+    "targetClasses": ["robos:TabletopMapConfiguration"],
+    "properties": [
+      {
+        "path": "dcterms:title",
+        "minCount": 1,
+        "message": "Tabletop map configuration must declare a title."
+      },
+      {
+        "path": "robos:gridDimensions",
+        "minCount": 1,
+        "message": "Tabletop map configuration must declare grid dimensions [width, height]."
+      }
+    ],
+    "refersFrom": "https://schema.org/Place",
+    "schemaOrgType": "https://schema.org/Place",
+    "domainStandard": "https://robos.dev/ns/tabletop#MapConfiguration"
+  },
+  {
     "shapeId": "urn:robos:shape:WebRouteShape",
     "targetClass": "robos:WebRoute",
     "properties": [

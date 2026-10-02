@@ -14,6 +14,8 @@ class BoardGrid {
     this.blockedTiles = new Set();
     this.walls = new Set(); // e.g. "x,y->x2,y2"
     this.doors = new Map(); // "x,y->x2,y2" -> { isOpen: false, isLocked: false, keyRequired: null }
+    this.traps = new Map(); // "x,y" -> { id, trapType, damageDice, detected, disarmed }
+    this.wallBlocks = new Map(); // "x,y" -> { id, type }
   }
 
   key(x, y) {
@@ -178,6 +180,121 @@ class BoardGrid {
         if (!door || !door.isOpen) return false;
       }
     }
+  }
+
+  addTrap(x, y, data = {}) {
+    const k = this.key(x, y);
+    const trap = {
+      id: data.id || `trap-${x}-${y}`,
+      trapType: data.trapType || 'pit',
+      damageDice: data.damageDice || 1,
+      detected: data.detected || false,
+      disarmed: data.disarmed || false,
+      ...data
+    };
+    this.traps.set(k, trap);
+    return trap;
+  }
+
+  getTrap(x, y) {
+    return this.traps.get(this.key(x, y)) || null;
+  }
+
+  hasTrap(x, y) {
+    return this.traps.has(this.key(x, y));
+  }
+
+  removeTrap(x, y) {
+    return this.traps.delete(this.key(x, y));
+  }
+
+  listTraps() {
+    return Array.from(this.traps.values());
+  }
+
+  addWallBlock(x, y, data = {}) {
+    const k = this.key(x, y);
+    const block = {
+      id: data.id || `block-${x}-${y}`,
+      type: data.type || 'stone-block',
+      ...data
+    };
+    this.wallBlocks.set(k, block);
+    this.setBlocked(x, y, true);
+    return block;
+  }
+
+  hasWallBlock(x, y) {
+    return this.wallBlocks.has(this.key(x, y));
+  }
+
+  removeWallBlock(x, y) {
+    this.setBlocked(x, y, false);
+    return this.wallBlocks.delete(this.key(x, y));
+  }
+
+  listWallBlocks() {
+    return Array.from(this.wallBlocks.values());
+  }
+
+  static fromMapConfiguration(config, quest = {}) {
+    const [w, h] = config.gridDimensions || [26, 19];
+    const grid = new BoardGrid(w, h);
+
+    // Perimeter walls
+    for (let x = 0; x < w; x++) {
+      grid.addWall(x, 0, x, -1);
+      grid.addWall(x, h - 1, x, h);
+    }
+    for (let y = 0; y < h; y++) {
+      grid.addWall(0, y, -1, y);
+      grid.addWall(w - 1, y, w, y);
+    }
+
+    // Room bounding walls
+    for (const r of (config.rooms || [])) {
+      const rx2 = r.x + r.w;
+      const ry2 = r.y + r.h;
+      for (let x = r.x; x < rx2; x++) {
+        grid.addWall(x, r.y - 1, x, r.y);
+        grid.addWall(x, ry2 - 1, x, ry2);
+      }
+      for (let y = r.y; y < ry2; y++) {
+        grid.addWall(r.x - 1, y, r.x, y);
+        grid.addWall(rx2 - 1, y, rx2, y);
+      }
+    }
+
+    // Doors
+    const doors = quest.doors || config.doors || [];
+    for (const d of doors) {
+      if (d.from && d.to) {
+        grid.addDoor(d.from[0], d.from[1], d.to[0], d.to[1], {
+          isOpen: d.isOpen || d.is_open || false,
+          isLocked: d.isLocked || false
+        });
+      }
+    }
+
+    // Stone wall blocks
+    for (const b of (quest.wallBlocks || [])) {
+      if (Array.isArray(b.position)) {
+        grid.addWallBlock(b.position[0], b.position[1], b);
+      } else if (b.x !== undefined && b.y !== undefined) {
+        grid.addWallBlock(b.x, b.y, b);
+      }
+    }
+
+    // Traps
+    for (const t of (quest.traps || [])) {
+      if (Array.isArray(t.position)) {
+        grid.addTrap(t.position[0], t.position[1], t);
+      } else if (t.x !== undefined && t.y !== undefined) {
+        grid.addTrap(t.x, t.y, t);
+      }
+    }
+
+    return grid;
   }
 }
 
