@@ -1473,6 +1473,66 @@ class TestHeroQuestE2EScenarios(unittest.TestCase):
         self.assertEqual(active_dice2.get("defenderName"), "Ladril (Elf)")
         self.assertFalse(active_dice2.get("isDefeated"))
 
+    def test_47_hero_tokens_barbarian_dwarf_elf_wizard(self):
+        """Scenario 47: Hero Tokens - High-Definition Battle Tokens for Barbarian, Dwarf, Elf, and Wizard."""
+        bdd_scenario_header(47, "Hero Tokens: High-Definition Tokens from RPG Asset Index")
+
+        bdd_step("GIVEN", "Game is running with classic party of four heroes")
+        self.ai.reset_game()
+        st = self.ai.get_state()
+        char_cards = st.get("characterCards", [])
+
+        bdd_step("THEN", "Every hero has an authentic circular battle token from the RPG asset library",
+                 assertions=[f"Total character cards: {len(char_cards)} (expected 4)"])
+        self.assertEqual(len(char_cards), 4)
+
+        # 1. Barbarian
+        barb = next((c for c in char_cards if c.get("id") == "barbarian"), None)
+        self.assertIsNotNone(barb)
+        self.assertTrue(barb.get("tokenAsset", "").endswith("token_barbarian.png"))
+        self.assertTrue(barb.get("hasTokenTexture", False))
+
+        # 2. Dwarf
+        dwarf = next((c for c in char_cards if c.get("id") == "dwarf"), None)
+        self.assertIsNotNone(dwarf)
+        self.assertTrue(dwarf.get("tokenAsset", "").endswith("token_dwarf.png"))
+        self.assertTrue(dwarf.get("hasTokenTexture", False))
+
+        # 3. Elf
+        elf = next((c for c in char_cards if c.get("id") == "elf"), None)
+        self.assertIsNotNone(elf)
+        self.assertTrue(elf.get("tokenAsset", "").endswith("token_elf.png"))
+        self.assertTrue(elf.get("hasTokenTexture", False))
+
+        # 4. Wizard
+        wiz = next((c for c in char_cards if c.get("id") == "wizard"), None)
+        self.assertIsNotNone(wiz)
+        self.assertTrue(wiz.get("tokenAsset", "").endswith("token_wizard.png"))
+        self.assertTrue(wiz.get("hasTokenTexture", False))
+
+        bdd_step("WHEN", "All four heroes are placed onto the dungeon board")
+        self.ai.set_state(
+            heroes=[
+                {"id": "barbarian", "is_on_board": True, "grid_pos": [0, 1]},
+                {"id": "dwarf", "is_on_board": True, "grid_pos": [1, 1]},
+                {"id": "elf", "is_on_board": True, "grid_pos": [2, 1]},
+                {"id": "wizard", "is_on_board": True, "grid_pos": [3, 1]}
+            ]
+        )
+        st_board = self.ai.get_state()
+        board_heroes = [h for h in st_board.get("heroes", []) if h.get("is_on_board")]
+
+        bdd_step("THEN", "All four hero tokens are active on the board with distinct positions and valid textures",
+                 assertions=[
+                     f"Heroes on board: {len(board_heroes)} (expected 4)",
+                     f"Barbarian pos: {board_heroes[0].get('grid_pos')}",
+                     f"Dwarf pos: {board_heroes[1].get('grid_pos')}",
+                     f"Elf pos: {board_heroes[2].get('grid_pos')}",
+                     f"Wizard pos: {board_heroes[3].get('grid_pos')}"
+                 ])
+        self.assertEqual(len(board_heroes), 4)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+

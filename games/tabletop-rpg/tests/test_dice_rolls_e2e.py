@@ -63,10 +63,10 @@ class TestTabletopDiceRolls(unittest.TestCase):
             raise RuntimeError(f"Could not connect to GameControlServer on port {cls.port}")
 
         # Setup: Move Barbarian to reveal crypt door and monsters
-        cls.player.execute_action("roll_movement")
+        cls.player.execute_action("set_state", movementRemaining=10)
         cls.player.move(4, 1)
         cls.player.open_door(4, 1, 4, 2)
-        cls.player.execute_action("roll_movement")
+        cls.player.execute_action("set_state", movementRemaining=10)
         cls.player.move(4, 4)
 
     @classmethod
