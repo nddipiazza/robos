@@ -3534,3 +3534,5 @@ review-markdown-editor { display: block; margin: 8px 0 20px; }
 .review-activity summary { cursor:pointer; }
 .review-activity ol { position:absolute; right:0; top:20px; z-index:110; width:400px; max-height:240px; overflow:auto; margin:0; padding:14px 14px 14px 30px; background:#18222e; border:1px solid #405064; border-radius:8px; box-shadow:0 8px 24px #0006; }
 .review-activity li { padding:5px 0; line-height:1.5; }
+.review-activity a[href], .pr-ready-intro a[href] { color:#8fc9fa; text-decoration:underline; text-underline-offset:3px; }
+.review-activity a[href]:hover, .pr-ready-intro a[href]:hover { color:#c1e4ff; }

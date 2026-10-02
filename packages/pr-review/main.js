@@ -1303,7 +1303,7 @@ ipcMain.handle('review-github-reviewers',async()=>{try{const pr=await prState.re
 ipcMain.handle('review-message-options', async () => {try {if(!localReview)throw Error('No local review.');return {ok:true,...await projectReviewSettings.options(localReview.repo)};}catch(e){return {ok:false,error:e.message};}});
 ipcMain.handle('review-message-channels', async (_,serverId) => {try{return {ok:true,channels:await projectReviewSettings.channels(serverId)};}catch(e){return {ok:false,error:e.message};}});
 function reviewActivity(){if(!localReview?.pullRequest?.url)throw Error('Open a published PR first.');return new (require('./lib/review-activity').ReviewActivity)(localReview.pullRequest.url);}
-ipcMain.handle('review-activity',async()=>{try{const pr=await prState.refresh();const activity=reviewActivity();activity.importNotifications(JSON.parse(fs.readFileSync(process.env.ROBOS_LOCAL_REVIEW,'utf8')));return {ok:true,pr,...activity.observe(pr)};}catch(e){return {ok:false,error:e.message};}});
+ipcMain.handle('review-activity',async()=>{try{const pr=await prState.refresh();const activity=reviewActivity();const call=projectReviewSettings.service();const servers=call?(await call('servers')).servers:[];activity.importNotifications(JSON.parse(fs.readFileSync(process.env.ROBOS_LOCAL_REVIEW,'utf8')),servers);return {ok:true,pr,...activity.observe(pr)};}catch(e){return {ok:false,error:e.message};}});
 let reviewPingPending=false;
 ipcMain.handle('review-ping',async(_,input)=>{
  if(reviewPingPending)return {ok:false,error:'A review ping is already being sent.'};
@@ -1311,7 +1311,7 @@ ipcMain.handle('review-ping',async(_,input)=>{
  try{return {ok:true,...await require('./lib/review-ping').pingReview(input,prState,notification,reviewActivity())};}
  catch(e){return {ok:false,error:e.message};}finally{reviewPingPending=false;}
 });
-ipcMain.handle('review-message-send', async (_,input) => {try{if(!notification)throw Error('No local review.');const n=await notification.send(input);const activity=reviewActivity();if(!activity.read().history.some(h=>h.requestId===n.requestId))activity.record({kind:'message',status:'sent',serverId:n.serverId,channel:n.channel,requestId:n.requestId,at:n.sentAt||new Date(Number(n.ts)*1000).toISOString(),reviewers:n.reviewers});return {ok:true,notification:n};}catch(e){return {ok:false,error:e.message};}});
+ipcMain.handle('review-message-send', async (_,input) => {try{if(!notification)throw Error('No local review.');const n=await notification.send(input);const activity=reviewActivity();if(!activity.read().history.some(h=>h.requestId===n.requestId))activity.record({kind:'message',status:'sent',serverId:n.serverId,channel:n.channel,ts:n.ts,conversationUrl:n.conversationUrl,requestId:n.requestId,at:n.sentAt||new Date(Number(n.ts)*1000).toISOString(),reviewers:n.reviewers});return {ok:true,notification:n};}catch(e){return {ok:false,error:e.message};}});
 
 const descriptionGenerator = localReview ? new (require('./lib/pr-description').PRDescriptionGenerator)(localReview, reviewStore, text => {for(const window of BrowserWindow.getAllWindows())window.webContents.send('review-description-progress',text);}) : null;
 ipcMain.handle('generate-pr-description',async(_,input)=>{try{if(!descriptionGenerator)throw Error('No local review is open.');if(ciRecovery?.busy||demoSession?.status==='running')throw Error('Wait for the current demo edit to finish before generating its description.');return {ok:true,...await descriptionGenerator.generate(input)};}catch(e){return {ok:false,error:e.message};}});

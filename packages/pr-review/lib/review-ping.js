@@ -15,7 +15,7 @@ async function pingReview(input,prState,notification,activity){
   try{
    let details={reviewers:selected};
    if(kind==='github')await prState.run('gh',['pr','edit',pr.url,'--add-reviewer',selected.join(',')],await prState.options());
-   else{const n=await notification.send({...input.message,occasion:'ping',requestId:input.requestId});details={serverId:n.serverId,channel:n.channel,reviewers:n.reviewers};}
+   else{const n=await notification.send({...input.message,occasion:'ping',requestId:input.requestId});details={serverId:n.serverId,channel:n.channel,ts:n.ts,conversationUrl:n.conversationUrl,reviewers:n.reviewers};}
    activity.finish(input.requestId,kind,{status:'sent',...details});results.push(kind==='github'?'GitHub reviews requested.':'Team review notification sent.');
   }catch(e){activity.finish(input.requestId,kind,{status:'unconfirmed',error:e.message});results.push((kind==='github'?'GitHub requests':'Team notification')+' not confirmed: '+e.message);}
  }
