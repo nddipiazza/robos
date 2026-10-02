@@ -537,8 +537,10 @@ For Jira, organize tasks into a hierarchy of Epics with child issues:
 - Place Epics BEFORE their children in the array
 - If a task doesn't belong under any epic, omit "parentEpicIndex"
 - Each task/story/bug should have "issueType": one of the issue type ids above (e.g. "Story", "Bug", "Task"); Epics use "Epic"
+- Each task may have "dependsOn": an array of 0-based indices of other tasks that MUST be completed before this task can start. Only include real blocking dependencies (not just related tasks). Epics can depend on other Epics; stories can depend on other stories or epics.
 ` : `
 - Each task should have "issueType": one of the issue type ids above if applicable
+- Each task may have "dependsOn": array of 0-based indices of tasks that must complete before this one
 `;
 
   const personaList = agentPersonasLib
@@ -819,6 +821,28 @@ ipcMain.handle('create-tasks', async (_, { tasks, serverInfo, parentEpicKey }) =
       if (!results[idx]) results[idx] = { ok: false, error: 'Task not processed', title: task.title };
     });
 
+    // Create Jira "Blocks" issue links for dependsOn relationships
+    for (let idx = 0; idx < tasks.length; idx++) {
+      const task = tasks[idx];
+      if (!Array.isArray(task.dependsOn) || !task.dependsOn.length) continue;
+      const blockedKey = results[idx]?.key;
+      if (!blockedKey) continue;
+      for (const depIdx of task.dependsOn) {
+        const blockerKey = results[depIdx]?.key;
+        if (!blockerKey) continue;
+        try {
+          await jiraRequest('POST', baseUrl, jiraUsername, token, '/rest/api/3/issueLink', {
+            type: { name: 'Blocks' },
+            outwardIssue: { key: blockerKey },
+            inwardIssue:  { key: blockedKey },
+          });
+          log.info('issue-link-created', `Linked ${blockerKey} blocks ${blockedKey}`, { blockerKey, blockedKey });
+        } catch (e) {
+          log.warn('issue-link-failed', `Failed to link ${blockerKey} → ${blockedKey}: ${e.message}`, { blockerKey, blockedKey });
+        }
+      }
+    }
+
     return { ok: true, results };
   }
 
@@ -978,6 +1002,23 @@ ipcMain.handle('delete-custom-template', (_, id) => {
 ipcMain.handle('generate-template-plan', (_, { id, answers }) => {
   try {
     return templateManager.generatePlan(id, answers);
+  } catch (e) { return { ok: false, error: e.message }; }
+});
+
+// ── Create a single Jira "Blocks" issue link ──────────────────────────────────
+ipcMain.handle('create-issue-link', async (_, { serverInfo, blockerKey, blockedKey }) => {
+  if (serverInfo.type !== 'jira') return { ok: false, error: 'Issue links only supported for Jira' };
+  try {
+    const token = readPassSecret(serverInfo.jiraTokenPassPath);
+    if (!token) return { ok: false, error: 'Could not load Jira API token.' };
+    const baseUrl = serverInfo.jiraUrl.replace(/\/$/, '');
+    await jiraRequest('POST', baseUrl, serverInfo.jiraUsername, token, '/rest/api/3/issueLink', {
+      type: { name: 'Blocks' },
+      outwardIssue: { key: blockerKey },
+      inwardIssue:  { key: blockedKey },
+    });
+    log.info('issue-link-created', `Linked ${blockerKey} blocks ${blockedKey}`, { blockerKey, blockedKey });
+    return { ok: true };
   } catch (e) {
     return { ok: false, error: e.message };
   }

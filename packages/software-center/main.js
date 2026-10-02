@@ -16,6 +16,31 @@ app.on('second-instance', () => {
 let mainWindow = null;
 const installLogs = {};
 
+// Generates a robust install command for JetBrains snap IDEs.
+// - Installs via snap --classic
+// - Waits for snapd to write the desktop file
+// - Copies or creates the .desktop file with correct Exec path (/snap/bin/<id>)
+// - Refreshes GNOME's app database so the launcher appears immediately
+function snapIdeInstallCmd(snapId, appName, wmClass) {
+  const desktopSrc = `/var/lib/snapd/desktop/applications/${snapId}_${snapId}.desktop`;
+  const desktopDst = `/usr/share/applications/${snapId}.desktop`;
+  const iconPath = `/snap/${snapId}/current/bin/${snapId}.svg`;
+  const fallbackDesktop = [
+    '[Desktop Entry]', 'Version=1.0', 'Type=Application',
+    `Name=${appName}`, `Exec=/snap/bin/${snapId} %f`, `Icon=${iconPath}`,
+    'Categories=Development;IDE;', `StartupWMClass=${wmClass}`,
+    'Terminal=false', 'StartupNotify=true',
+  ].join('\\n');
+  return [
+    `sudo snap install ${snapId} --classic`,
+    // Give snapd up to 10 s to write its desktop file
+    `for i in $(seq 1 10); do [ -f "${desktopSrc}" ] && break; sleep 1; done`,
+    // Copy snapd desktop file if present, otherwise write a minimal one
+    `if [ -f "${desktopSrc}" ]; then sudo cp "${desktopSrc}" "${desktopDst}"; else printf "${fallbackDesktop}\\n" | sudo tee "${desktopDst}" > /dev/null; fi`,
+    `sudo update-desktop-database /usr/share/applications/`,
+  ].join(' && ');
+}
+
 // Tool registry — each tool has an install command and a check command
 const TOOLS = [
   // ── AI ──
@@ -105,8 +130,8 @@ const TOOLS = [
     category: 'IDE',
     source: 'snap (pycharm-community)',
     checkCmd: 'ls /snap/pycharm-community/current 2>/dev/null',
-    installCmd: 'sudo snap install pycharm-community --classic && sudo cp /var/lib/snapd/desktop/applications/pycharm-community_pycharm-community.desktop /usr/share/applications/ 2>/dev/null || sudo bash -c \'echo "[Desktop Entry]\nType=Application\nName=PyCharm Community\nExec=pycharm-community %f\nIcon=/snap/pycharm-community/current/bin/pycharm.svg\nCategories=Development;IDE;\nStartupWMClass=jetbrains-pycharm-ce\nTerminal=false" > /usr/share/applications/pycharm-community.desktop\'',
-    uninstallCmd: 'sudo snap remove pycharm-community && sudo rm -f /usr/share/applications/pycharm-community*.desktop',
+    installCmd: snapIdeInstallCmd('pycharm-community', 'PyCharm Community', 'jetbrains-pycharm-ce'),
+    uninstallCmd: 'sudo snap remove pycharm-community && sudo rm -f /usr/share/applications/pycharm-community*.desktop && sudo update-desktop-database /usr/share/applications/',
   },
   {
     id: 'webstorm',
@@ -115,8 +140,8 @@ const TOOLS = [
     category: 'IDE',
     source: 'snap (webstorm)',
     checkCmd: 'ls /snap/webstorm/current 2>/dev/null',
-    installCmd: 'sudo snap install webstorm --classic && sudo cp /var/lib/snapd/desktop/applications/webstorm_webstorm.desktop /usr/share/applications/ 2>/dev/null || sudo bash -c \'echo "[Desktop Entry]\nType=Application\nName=WebStorm\nExec=webstorm %f\nIcon=/snap/webstorm/current/bin/webstorm.svg\nCategories=Development;IDE;\nStartupWMClass=jetbrains-webstorm\nTerminal=false" > /usr/share/applications/webstorm.desktop\'',
-    uninstallCmd: 'sudo snap remove webstorm && sudo rm -f /usr/share/applications/webstorm*.desktop',
+    installCmd: snapIdeInstallCmd('webstorm', 'WebStorm', 'jetbrains-webstorm'),
+    uninstallCmd: 'sudo snap remove webstorm && sudo rm -f /usr/share/applications/webstorm*.desktop && sudo update-desktop-database /usr/share/applications/',
   },
   {
     id: 'goland',
@@ -125,8 +150,8 @@ const TOOLS = [
     category: 'IDE',
     source: 'snap (goland)',
     checkCmd: 'ls /snap/goland/current 2>/dev/null',
-    installCmd: 'sudo snap install goland --classic && sudo cp /var/lib/snapd/desktop/applications/goland_goland.desktop /usr/share/applications/ 2>/dev/null || sudo bash -c \'echo "[Desktop Entry]\nType=Application\nName=GoLand\nExec=goland %f\nIcon=/snap/goland/current/bin/goland.svg\nCategories=Development;IDE;\nStartupWMClass=jetbrains-goland\nTerminal=false" > /usr/share/applications/goland.desktop\'',
-    uninstallCmd: 'sudo snap remove goland && sudo rm -f /usr/share/applications/goland*.desktop',
+    installCmd: snapIdeInstallCmd('goland', 'GoLand', 'jetbrains-goland'),
+    uninstallCmd: 'sudo snap remove goland && sudo rm -f /usr/share/applications/goland*.desktop && sudo update-desktop-database /usr/share/applications/',
   },
   {
     id: 'clion',
@@ -135,8 +160,8 @@ const TOOLS = [
     category: 'IDE',
     source: 'snap (clion)',
     checkCmd: 'ls /snap/clion/current 2>/dev/null',
-    installCmd: 'sudo snap install clion --classic && sudo cp /var/lib/snapd/desktop/applications/clion_clion.desktop /usr/share/applications/ 2>/dev/null || sudo bash -c \'echo "[Desktop Entry]\nType=Application\nName=CLion\nExec=clion %f\nIcon=/snap/clion/current/bin/clion.svg\nCategories=Development;IDE;\nStartupWMClass=jetbrains-clion\nTerminal=false" > /usr/share/applications/clion.desktop\'',
-    uninstallCmd: 'sudo snap remove clion && sudo rm -f /usr/share/applications/clion*.desktop',
+    installCmd: snapIdeInstallCmd('clion', 'CLion', 'jetbrains-clion'),
+    uninstallCmd: 'sudo snap remove clion && sudo rm -f /usr/share/applications/clion*.desktop && sudo update-desktop-database /usr/share/applications/',
   },
   {
     id: 'rider',
@@ -145,8 +170,8 @@ const TOOLS = [
     category: 'IDE',
     source: 'snap (rider)',
     checkCmd: 'ls /snap/rider/current 2>/dev/null',
-    installCmd: 'sudo snap install rider --classic && sudo cp /var/lib/snapd/desktop/applications/rider_rider.desktop /usr/share/applications/ 2>/dev/null || sudo bash -c \'echo "[Desktop Entry]\nType=Application\nName=Rider\nExec=rider %f\nIcon=/snap/rider/current/bin/rider.svg\nCategories=Development;IDE;\nStartupWMClass=jetbrains-rider\nTerminal=false" > /usr/share/applications/rider.desktop\'',
-    uninstallCmd: 'sudo snap remove rider && sudo rm -f /usr/share/applications/rider*.desktop',
+    installCmd: snapIdeInstallCmd('rider', 'Rider', 'jetbrains-rider'),
+    uninstallCmd: 'sudo snap remove rider && sudo rm -f /usr/share/applications/rider*.desktop && sudo update-desktop-database /usr/share/applications/',
   },
   {
     id: 'rustrover',
@@ -155,8 +180,8 @@ const TOOLS = [
     category: 'IDE',
     source: 'snap (rustrover)',
     checkCmd: 'ls /snap/rustrover/current 2>/dev/null',
-    installCmd: 'sudo snap install rustrover --classic && sudo cp /var/lib/snapd/desktop/applications/rustrover_rustrover.desktop /usr/share/applications/ 2>/dev/null || sudo bash -c \'echo "[Desktop Entry]\nType=Application\nName=RustRover\nExec=rustrover %f\nIcon=/snap/rustrover/current/bin/rustrover.svg\nCategories=Development;IDE;\nStartupWMClass=jetbrains-rustrover\nTerminal=false" > /usr/share/applications/rustrover.desktop\'',
-    uninstallCmd: 'sudo snap remove rustrover && sudo rm -f /usr/share/applications/rustrover*.desktop',
+    installCmd: snapIdeInstallCmd('rustrover', 'RustRover', 'jetbrains-rustrover'),
+    uninstallCmd: 'sudo snap remove rustrover && sudo rm -f /usr/share/applications/rustrover*.desktop && sudo update-desktop-database /usr/share/applications/',
   },
 
   // ── Browsers ──
@@ -358,6 +383,36 @@ function getToolsWithStatus() {
   }));
 }
 
+// Builds a shell preamble that ensures sudo works non-interactively.
+// Strategy:
+//   1. Try sudo -n (NOPASSWD — works on the RobOS VM out of the box).
+//   2. Fall back to a zenity password dialog so GUI users can authenticate
+//      without needing a terminal.
+// The temporary askpass helper opens the password dialog directly, so passwords
+// are never written into shell source or stored on disk.
+const SUDO_PREAMBLE = `
+__ROBOS_ASKPASS=$(mktemp /tmp/robos-askpass.XXXXXX) || exit 1
+__robos_cleanup() { rm -f "$__ROBOS_ASKPASS"; }
+trap __robos_cleanup EXIT
+cat > "$__ROBOS_ASKPASS" <<'ROBOS_ASKPASS'
+#!/bin/sh
+exec zenity --password --title="RobOS Software Center" --text="Administrator password required to install software."
+ROBOS_ASKPASS
+chmod 700 "$__ROBOS_ASKPASS"
+export SUDO_ASKPASS="$__ROBOS_ASKPASS"
+if ! sudo -n true 2>/dev/null && ! sudo -A true; then
+  echo "Authentication failed or cancelled."
+  exit 1
+fi
+`;
+
+function makeSudoCmd(cmd) {
+  // Replace bare `sudo` with `sudo -A` so it uses SUDO_ASKPASS set by the preamble.
+  // Already-flagged forms like `sudo -n`, `sudo -S` are left as-is.
+  const patched = cmd.replace(/\bsudo\b(?!\s+-)/g, 'sudo -A');
+  return `${SUDO_PREAMBLE}\n${patched}`;
+}
+
 function runInstall(tool, action) {
   const cmd = action === 'uninstall' ? tool.uninstallCmd : tool.installCmd;
   const src = tool.source ? ` from ${tool.source}` : '';
@@ -372,7 +427,8 @@ function runInstall(tool, action) {
     });
   }
 
-  const proc = spawn('bash', ['-c', cmd], { env: { ...process.env, DEBIAN_FRONTEND: 'noninteractive' } });
+  const fullCmd = makeSudoCmd(cmd);
+  const proc = spawn('bash', ['-c', fullCmd], { env: { ...process.env, DEBIAN_FRONTEND: 'noninteractive' } });
 
   proc.stdout.on('data', (data) => {
     const text = data.toString();
@@ -408,7 +464,9 @@ function runInstall(tool, action) {
     }
     if (code === 0) {
       const postCmd = action === 'uninstall' ? tool.postUninstallCmd : tool.postInstallCmd;
-      if (postCmd) spawn('bash', ['-c', postCmd], { env: { ...process.env, DEBIAN_FRONTEND: 'noninteractive' }, detached: true, stdio: 'ignore' }).unref();
+      if (postCmd) {
+        spawn('bash', ['-c', makeSudoCmd(postCmd)], { env: { ...process.env, DEBIAN_FRONTEND: 'noninteractive' }, detached: true, stdio: 'ignore' }).unref();
+      }
     }
   });
 }

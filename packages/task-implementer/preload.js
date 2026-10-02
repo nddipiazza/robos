@@ -15,11 +15,21 @@ contextBridge.exposeInMainWorld('robos', {
   listAgentPersonas:  ()  => ipcRenderer.invoke('list-agent-personas'),
   saveAgentPersona:   (p) => ipcRenderer.invoke('save-agent-persona', p),
   resetAgentPersonas: ()  => ipcRenderer.invoke('reset-agent-personas'),
+  generatePlan:    (p)   => ipcRenderer.invoke('generate-plan', p),
+  stopPlan:        (p)   => ipcRenderer.invoke('stop-plan', p),
+  savePlan:        (p)   => ipcRenderer.invoke('save-plan', p),
+  loadPlan:        (p)   => ipcRenderer.invoke('load-plan', p),
 
   onAgentStream: (cb) => ipcRenderer.on('agent-stream', (_, data) => cb(data)),
   onAgentDone:   (cb) => ipcRenderer.on('agent-done',   (_, data) => cb(data)),
+  onPlanStream:  (cb) => ipcRenderer.on('plan-stream',  (_, data) => cb(data)),
+  onPlanDone:    (cb) => ipcRenderer.on('plan-done',    (_, data) => cb(data)),
   removeAgentListeners: () => {
     ipcRenderer.removeAllListeners('agent-stream');
     ipcRenderer.removeAllListeners('agent-done');
+  },
+  removePlanListeners: () => {
+    ipcRenderer.removeAllListeners('plan-stream');
+    ipcRenderer.removeAllListeners('plan-done');
   },
 });

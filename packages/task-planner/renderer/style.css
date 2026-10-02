@@ -1265,3 +1265,21 @@ robos-ai-textarea {
   color: #0d1117;
   outline: none;
 }
+
+.task-deps-row {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin: 4px 0 2px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.dep-badge {
+  background: rgba(0, 188, 212, 0.15);
+  border: 1px solid rgba(0, 188, 212, 0.35);
+  border-radius: 10px;
+  color: var(--accent);
+  font-size: 11px;
+  padding: 1px 7px;
+}

@@ -21,6 +21,7 @@
       </div>
     </header>
 
+    <!-- No server state -->
     <div id="no-server" class="empty-state" style="display:none">
       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#6e7681" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <rect width="20" height="8" x="2" y="2" rx="2"/><rect width="20" height="8" x="2" y="14" rx="2"/>
@@ -30,57 +31,75 @@
       <button class="btn btn-accent" id="btn-open-task-servers">Open Task Servers</button>
     </div>
 
-    <div id="main-layout" class="main-layout" style="display:none">
-      <!-- Left panel: task list -->
-      <aside class="task-panel">
-        <div class="task-panel-header">
-          <span class="panel-title">Tasks</span>
-          <button class="btn btn-sm btn-outline" id="btn-refresh" title="Refresh">↻</button>
-        </div>
-        <div class="filter-row">
-          <select id="filter-state" class="select-sm">
-            <option value="open">Open</option>
-            <option value="closed">Closed</option>
-            <option value="all">All</option>
-          </select>
-          <input type="text" id="filter-search" class="input-sm" placeholder="Search…"/>
-        </div>
-        <div id="task-list" class="task-list">
-          <div class="loading-row">Loading tasks…</div>
-        </div>
-      </aside>
+    <!-- Tab bar -->
+    <div id="tab-bar" class="tab-bar" style="display:none">
+      <button class="tab-btn active" data-tab="tasks">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Tasks
+      </button>
+      <button class="tab-btn" data-tab="deps">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><line x1="12" y1="7" x2="5" y2="17"/><line x1="12" y1="7" x2="19" y2="17"/></svg>
+        Dependencies
+      </button>
+      <button class="tab-btn" data-tab="plan">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        Plan
+      </button>
+    </div>
 
-      <!-- Right panel: agent workspace -->
-      <main class="workspace-panel">
-        <div id="workspace-empty" class="workspace-empty">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#6e7681" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
-          </svg>
-          <p>Select a task to implement with AI</p>
-        </div>
+    <!-- ── Tab 1: Tasks ─────────────────────────────────────────────────────── -->
+    <div id="tab-tasks" class="tab-panel active">
+      <div class="main-layout">
+        <!-- Left panel: task list -->
+        <aside class="task-panel">
+          <div class="task-panel-header">
+            <span class="panel-title">Tasks</span>
+            <button class="btn btn-sm btn-outline" id="btn-refresh" title="Refresh">↻</button>
+          </div>
+          <div class="filter-row">
+            <select id="filter-state" class="select-sm">
+              <option value="open">Open</option>
+              <option value="closed">Closed</option>
+              <option value="all">All</option>
+            </select>
+            <input type="text" id="filter-search" class="input-sm" placeholder="Search…"/>
+          </div>
+          <div id="task-list" class="task-list">
+            <div class="loading-row">Loading tasks…</div>
+          </div>
+        </aside>
 
-        <div id="workspace-active" style="display:none; flex:1; min-height:0; flex-direction:column; overflow:hidden;">
-          <div class="workspace-header">
-            <div class="workspace-task-info">
-              <span id="ws-task-key" class="task-key"></span>
-              <span id="ws-task-title" class="workspace-title"></span>
-            </div>
-            <div class="workspace-controls">
-              <div class="persona-select-container">
+        <!-- Right panel: agent workspace -->
+        <main class="workspace-panel">
+          <div id="workspace-empty" class="workspace-empty">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#6e7681" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+            </svg>
+            <p>Select a task to implement with AI</p>
+          </div>
+
+          <div id="workspace-active" style="display:none; flex:1; min-height:0; flex-direction:column; overflow:hidden;">
+            <div class="workspace-header">
+              <div class="workspace-task-info">
+                <span id="ws-task-key" class="task-key"></span>
+                <span id="ws-task-title" class="workspace-title"></span>
+              </div>
+              <div class="workspace-controls">
+                <div class="persona-select-container">
                 <span class="persona-icon-label" title="Assigned Agent Persona">🤖</span>
                 <select id="ws-agent-persona-select" class="select-sm persona-select" title="Assigned Agent Persona"></select>
                 <button id="btn-toggle-directives" class="btn btn-sm btn-outline" title="Toggle prompt directives & guidance">Directives</button>
               </div>
               <a href="#" id="ws-open-url" class="link-btn" style="display:none">↗ Open</a>
-              <button id="btn-start-agent" class="btn btn-accent">
-                <span id="btn-start-text">▶ Start Agent</span>
-                <span id="btn-start-spinner" class="spinner" style="display:none"></span>
-              </button>
-              <button id="btn-stop-agent" class="btn btn-danger" style="display:none">■ Stop</button>
+                <button id="btn-start-agent" class="btn btn-accent">
+                  <span id="btn-start-text">▶ Start Agent</span>
+                  <span id="btn-start-spinner" class="spinner" style="display:none"></span>
+                </button>
+                <button id="btn-stop-agent" class="btn btn-danger" style="display:none">■ Stop</button>
+              </div>
             </div>
-          </div>
 
-          <!-- Role Prompt & Directives Expandable Drawer -->
+            <!-- Role Prompt & Directives Expandable Drawer -->
           <div class="persona-directives-box" id="persona-directives-box" style="display:none">
             <div class="directives-header">
               <div class="directives-title-row">
@@ -95,24 +114,84 @@
           </div>
 
           <div class="context-row">
-            <robos-ai-textarea id="extra-context" show-submit="false" show-commands="false"
-              placeholder="Optional: add context for the AI agent (e.g. approach hints, file paths, constraints)…" min-height="56"></robos-ai-textarea>
-          </div>
+              <robos-ai-textarea id="extra-context" show-submit="false" show-commands="false"
+                placeholder="Optional: add context for the AI agent (e.g. approach hints, file paths, constraints)…" min-height="56"></robos-ai-textarea>
+            </div>
 
-          <div class="task-description-box" id="task-description-box" style="display:none">
-            <div class="desc-toggle" id="desc-toggle">▾ Task Description</div>
-            <div id="task-description" class="task-description"></div>
-          </div>
+            <div class="task-description-box" id="task-description-box" style="display:none">
+              <div class="desc-toggle" id="desc-toggle">▾ Task Description</div>
+              <div id="task-description" class="task-description"></div>
+            </div>
 
-          <div class="agent-output-header">
-            <span>Agent Output</span>
-            <button class="btn btn-sm btn-outline" id="btn-clear-output">Clear</button>
+            <div class="agent-output-header">
+              <span>Agent Output</span>
+              <button class="btn btn-sm btn-outline" id="btn-clear-output">Clear</button>
+            </div>
+            <div id="agent-output" class="agent-output"></div>
+            <div id="agent-status" class="agent-status"></div>
           </div>
-          <div id="agent-output" class="agent-output"></div>
-          <div id="agent-status" class="agent-status"></div>
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
+
+    <!-- ── Tab 2: Dependencies ──────────────────────────────────────────────── -->
+    <div id="tab-deps" class="tab-panel" style="display:none">
+      <div class="deps-toolbar">
+        <span class="panel-title">Task Dependencies</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="deps-search" class="input-sm" placeholder="Filter…" style="width:180px"/>
+          <button class="btn btn-sm btn-outline" id="btn-expand-all">Expand All</button>
+          <button class="btn btn-sm btn-outline" id="btn-collapse-all">Collapse All</button>
+        </div>
+      </div>
+      <div id="deps-tree" class="deps-tree">
+        <div class="loading-row">Load tasks first (Tasks tab).</div>
+      </div>
+    </div>
+
+    <!-- ── Tab 3: Plan ─────────────────────────────────────────────────────── -->
+    <div id="tab-plan" class="tab-panel" style="display:none">
+      <div class="plan-layout">
+        <!-- Left: controls -->
+        <div class="plan-controls">
+          <div class="plan-controls-header">
+            <span class="panel-title">AI Plan Generator</span>
+          </div>
+          <div class="plan-context-wrap">
+            <div class="plan-label">Context &amp; Suggestions</div>
+            <robos-ai-textarea id="plan-context" show-submit="false" show-commands="false"
+              placeholder="Describe priorities, constraints, technical approach, or any context to help the AI order these tasks…"
+              min-height="120"></robos-ai-textarea>
+          </div>
+          <div class="plan-actions">
+            <button class="btn btn-accent" id="btn-generate-plan">
+              <span id="btn-plan-text">✦ Generate Plan</span>
+              <span id="btn-plan-spinner" class="spinner" style="display:none"></span>
+            </button>
+            <button class="btn btn-danger" id="btn-stop-plan" style="display:none">■ Stop</button>
+          </div>
+          <div id="plan-log-wrap" class="plan-log-wrap" style="display:none">
+            <div class="plan-log-header" id="plan-log-toggle">▾ Generation Log</div>
+            <div id="plan-log" class="plan-log"></div>
+          </div>
+          <div id="plan-tasks-count" class="plan-tasks-count"></div>
+        </div>
+
+        <!-- Right: plan output -->
+        <div class="plan-output-panel">
+          <div class="plan-output-header">
+            <span class="panel-title">Implementation Plan</span>
+            <span id="plan-item-count" class="plan-item-count"></span>
+          </div>
+          <div id="plan-empty" class="plan-empty">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#6e7681" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            <p>Generate a plan to see the ordered task list</p>
+          </div>
+          <div id="plan-list" class="plan-list" style="display:none"></div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <!-- Agent Personas Management Overlay -->
@@ -170,7 +249,7 @@
     </div>
   </div>
 
-  <script src="/usr/local/share/robos/robos-ui/robos-ui.js"></script>
+  <script src="../../robos-ui/robos-ui.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
