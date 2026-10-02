@@ -15,6 +15,6 @@ else: print('[]')
 `;
 function list(selected='',{root=process.env.CODEX_HOME||path.join(os.homedir(),'.codex'),run=execFileSync}={}){
  const rows=JSON.parse(run('python3',['-c',script,root,selected],{encoding:'utf8',timeout:5000,maxBuffer:2*1024*1024}));
- return rows.map(r=>({session_id:r.id,name:r.title||path.basename(r.cwd||'')||r.id,cwd:r.cwd||'',first_message:(r.first_user_message||'').slice(0,120),model:r.model||'',updated_at:r.updated_at?new Date(r.updated_at*1000).toISOString():''}));
+ return rows.map(r=>({session_id:r.id,job:require('../robos-lib/agent-job-state').read(r.id),name:r.title||path.basename(r.cwd||'')||r.id,cwd:r.cwd||'',first_message:(r.first_user_message||'').slice(0,120),model:r.model||'',updated_at:r.updated_at?new Date(r.updated_at*1000).toISOString():''}));
 }
 module.exports={list};

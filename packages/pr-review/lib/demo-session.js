@@ -86,6 +86,7 @@ class DemoSession extends EventEmitter {
     }
   }
   publish() {
+    try { if(this.status!=='running'||this.agentThreads[this.mode]&&this.child?.pid)require('../../robos-lib/agent-job-state').write({provider:'codex',sessionId:this.agentThreads[this.mode]||this.lastSessionId,status:this.status,agentName:this.agentName(),activity:this.activitySummary?.text||'',childPid:this.child?.pid||null}); } catch(error) { this.persistenceError='Agent job status could not be saved: '+error.message; }
     try { this.store?.save({process:this.process, index:this.index, failedIndex:this.failedIndex, status:this.status, mode:this.mode, baseline:this.baseline, guidance:this.guidance, agentThreads:this.agentThreads, agentConfig:createHash('sha256').update(JSON.stringify(this.agent || null)).digest('hex'), updatedAt:Date.now()}); }
     catch(error) { this.persistenceError = `Review state could not be saved: ${error.message}`; }
     this.emit('state', this.state());
@@ -159,6 +160,7 @@ class DemoSession extends EventEmitter {
       const resume = /^[a-f0-9-]{36}$/i.test(thread || '') && this.agent.args[0] === 'exec';
       const args = [...this.agent.args, '--output-schema', schema, '--output-last-message', output, ...(resume ? ['resume', thread] : []), '-'];
       const child = this.child = spawn(this.agent.command, args, { cwd: this.mode === 'before' ? this.baseline.workspace : this.workspace, stdio: ['pipe', 'pipe', 'pipe'], shell: false, detached: process.platform !== 'win32' });
+      this.publish();
       let detail = ''; let settled = false; let interrupted = false; let killTimer;
       const signal = sig => { try { if (process.platform !== 'win32') process.kill(-child.pid, sig); else child.kill(sig); } catch (error) { if (error.code !== 'ESRCH') throw error; } };
       this.interruptRun = () => { if (interrupted || settled) return; interrupted = true; signal('SIGTERM'); killTimer = setTimeout(() => signal('SIGKILL'), 2000); };

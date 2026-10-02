@@ -1672,7 +1672,7 @@ function renderCodexSessions(sessions) {
     if(s.session_id===selectedAgentSession){card.classList.add('session-selected');card.setAttribute('aria-label','Selected agent session '+s.session_id);}
     card.innerHTML = `
       <div class="session-card-main">
-        <div class="session-card-name">${esc(s.name)}</div>${s.session_id===selectedAgentSession?'<div class="session-selected-label">Selected session · '+esc(s.session_id)+'</div>':''}
+        <div class="session-card-name">${esc(s.name)}</div><span class="agent-job-badge" hidden></span>${s.session_id===selectedAgentSession?'<div class="session-selected-label">Selected session · '+esc(s.session_id)+'</div>':''}
         <div class="session-card-message">${esc(s.first_message || 'No messages')}</div>
         <div class="session-card-meta">
           <span class="mono text-muted">${esc(s.cwd || '')}</span>
@@ -1683,6 +1683,8 @@ function renderCodexSessions(sessions) {
       <div class="session-card-actions">
         <button class="btn btn-ai btn-sm btn-resume" title="Resume in terminal">Resume</button>
       </div>`;
+    window.renderAgentJobBadge(card.querySelector('.agent-job-badge'),s.job);
+    if(s.job?.status==='running'){card.querySelector('.btn-resume').disabled=true;card.querySelector('.btn-resume').title='This session is already running.';}
     card.querySelector('.btn-resume').onclick = () =>
       window.agents.codexLaunchTerminal(s.session_id);
     container.appendChild(card);
