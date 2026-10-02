@@ -22,7 +22,7 @@
       0,
       1
     ],
-    "createdDate": "2026-10-02T12:02:11.515Z"
+    "createdDate": "2026-10-02T13:11:34.978Z"
   },
   "heroes": {
     "barbarian": {
@@ -109,7 +109,7 @@
       "isBoss": false,
       "position": [
         3,
-        3
+        4
       ],
       "roomId": "room-nw-crypt"
     },
@@ -124,7 +124,7 @@
       "isBoss": false,
       "position": [
         5,
-        3
+        4
       ],
       "roomId": "room-nw-crypt"
     },
@@ -154,7 +154,7 @@
       "isBoss": false,
       "position": [
         14,
-        10
+        11
       ],
       "roomId": "room-center-mid"
     },
@@ -169,7 +169,7 @@
       "isBoss": false,
       "position": [
         15,
-        10
+        11
       ],
       "roomId": "room-center-mid"
     }
@@ -532,34 +532,84 @@
           "id": "block-1",
           "x": 12,
           "y": 0,
-          "type": "single"
+          "type": "single",
+          "width": 1,
+          "height": 1
         },
         {
           "id": "block-2",
           "x": 12,
           "y": 20,
-          "type": "single"
+          "type": "single",
+          "width": 1,
+          "height": 1
         },
         {
-          "id": "block-3",
+          "id": "block-double-v",
           "x": 0,
           "y": 10,
-          "type": "single"
+          "type": "double-v",
+          "width": 1,
+          "height": 2
         },
         {
-          "id": "block-4",
-          "x": 27,
+          "id": "block-double-h",
+          "x": 26,
           "y": 10,
-          "type": "single"
+          "type": "double-h",
+          "width": 2,
+          "height": 1
         }
       ],
       "furniture": [
         {
+          "id": "furn-altar-1",
+          "name": "Sorcerer's Altar / Desk",
+          "type": "altar",
+          "x": 13,
+          "y": 9,
+          "width": 3,
+          "height": 2,
+          "roomId": "room-center-mid"
+        },
+        {
+          "id": "furn-bookcase-1",
+          "name": "Grand Bookcase",
+          "type": "bookcase",
+          "x": 13,
+          "y": 3,
+          "width": 3,
+          "height": 1,
+          "roomId": "room-center-n"
+        },
+        {
+          "id": "furn-bookshelf-1",
+          "name": "Study Bookshelf",
+          "type": "bookshelf",
+          "x": 23,
+          "y": 5,
+          "width": 2,
+          "height": 1,
+          "roomId": "room-e-parlor"
+        },
+        {
+          "id": "furn-boulder-1",
+          "name": "Fossil Boulder Tile",
+          "type": "boulder",
+          "x": 2,
+          "y": 7,
+          "width": 1,
+          "height": 1,
+          "roomId": "room-grand-fossil"
+        },
+        {
           "id": "furn-tomb-1",
           "name": "Ancient Stone Tomb",
           "type": "tomb",
-          "x": 4,
+          "x": 3,
           "y": 2,
+          "width": 2,
+          "height": 3,
           "roomId": "room-nw-crypt"
         },
         {
@@ -568,22 +618,28 @@
           "type": "chest",
           "x": 23,
           "y": 2,
+          "width": 1,
+          "height": 1,
           "roomId": "room-ne-vault"
         },
         {
           "id": "furn-table-1",
-          "name": "Alchemist Table",
+          "name": "Council Table",
           "type": "table",
-          "x": 14,
-          "y": 4,
-          "roomId": "room-center-n"
+          "x": 13,
+          "y": 15,
+          "width": 3,
+          "height": 2,
+          "roomId": "room-center-s"
         },
         {
           "id": "furn-rack-1",
           "name": "Weapons Rack",
           "type": "weapons-rack",
-          "x": 9,
+          "x": 8,
           "y": 2,
+          "width": 3,
+          "height": 1,
           "roomId": "room-n-armory"
         }
       ],
@@ -598,11 +654,11 @@
           "disarmed": false
         },
         {
-          "id": "trap-spear-1",
-          "trapType": "spear",
+          "id": "trap-boulder-1",
+          "trapType": "boulder",
           "x": 7,
           "y": 5,
-          "damageDice": 2,
+          "damageDice": 3,
           "detected": false,
           "disarmed": false
         },

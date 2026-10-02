@@ -74,4 +74,35 @@ describe('RobOS Gaming: Multi-Map Configurations & Quest Grid', () => {
     assert.ok(grid.hasTrap(5, 0));
     assert.equal(grid.getTrap(5, 0).trapType, 'pit');
   });
+
+  it('supports 1-tile and 2-tile wall blocks blocking contiguous squares', () => {
+    const grid = new BoardGrid(10, 10);
+    // 1-tile wall
+    grid.addWallBlock(1, 1, { type: 'single' });
+    assert.ok(grid.hasWallBlock(1, 1));
+    assert.ok(grid.isBlocked(1, 1));
+    assert.ok(!grid.isBlocked(1, 2));
+
+    // 2-tile horizontal wall
+    grid.addWallBlock(3, 3, { type: 'double-h', width: 2, height: 1 });
+    assert.ok(grid.hasWallBlock(3, 3));
+    assert.ok(grid.hasWallBlock(4, 3));
+    assert.ok(grid.isBlocked(3, 3));
+    assert.ok(grid.isBlocked(4, 3));
+    assert.ok(!grid.isBlocked(5, 3));
+
+    // 2-tile vertical wall
+    grid.addWallBlock(6, 6, { type: 'double-v', width: 1, height: 2 });
+    assert.ok(grid.hasWallBlock(6, 6));
+    assert.ok(grid.hasWallBlock(6, 7));
+    assert.ok(grid.isBlocked(6, 6));
+    assert.ok(grid.isBlocked(6, 7));
+
+    // Remove 2-tile wall
+    grid.removeWallBlock(4, 3);
+    assert.ok(!grid.hasWallBlock(3, 3));
+    assert.ok(!grid.hasWallBlock(4, 3));
+    assert.ok(!grid.isBlocked(3, 3));
+    assert.ok(!grid.isBlocked(4, 3));
+  });
 });

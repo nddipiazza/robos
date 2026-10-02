@@ -20,29 +20,33 @@ let currentData = {
     mapConfigId: 'fan-dungeon-28x21',
     activeRooms: new Set(),
     wallBlocks: [
-      { id: 'block-1', x: 12, y: 0, type: 'single' },
-      { id: 'block-2', x: 12, y: 20, type: 'single' },
-      { id: 'block-3', x: 0, y: 10, type: 'single' },
-      { id: 'block-4', x: 27, y: 10, type: 'single' }
+      { id: 'block-1', x: 12, y: 0, type: 'single', width: 1, height: 1 },
+      { id: 'block-2', x: 12, y: 20, type: 'single', width: 1, height: 1 },
+      { id: 'block-double-v', x: 0, y: 10, type: 'double-v', width: 1, height: 2 },
+      { id: 'block-double-h', x: 26, y: 10, type: 'double-h', width: 2, height: 1 }
     ],
     doors: [],
     furniture: [
-      { id: 'furn-tomb-1', name: 'Ancient Stone Tomb', type: 'tomb', x: 4, y: 2, roomId: 'room-nw-crypt' },
-      { id: 'furn-chest-1', name: 'Vault Chest of Gold', type: 'chest', x: 23, y: 2, roomId: 'room-ne-vault' },
-      { id: 'furn-table-1', name: 'Alchemist Table', type: 'table', x: 14, y: 4, roomId: 'room-center-n' },
-      { id: 'furn-rack-1', name: 'Weapons Rack', type: 'weapons-rack', x: 9, y: 2, roomId: 'room-n-armory' }
+      { id: 'furn-altar-1', name: "Sorcerer's Altar / Desk", type: 'altar', x: 13, y: 9, width: 3, height: 2, roomId: 'room-center-mid' },
+      { id: 'furn-bookcase-1', name: 'Grand Bookcase', type: 'bookcase', x: 13, y: 3, width: 3, height: 1, roomId: 'room-center-n' },
+      { id: 'furn-bookshelf-1', name: 'Study Bookshelf', type: 'bookshelf', x: 23, y: 5, width: 2, height: 1, roomId: 'room-e-parlor' },
+      { id: 'furn-boulder-1', name: 'Fossil Boulder Tile', type: 'boulder', x: 2, y: 7, width: 1, height: 1, roomId: 'room-grand-fossil' },
+      { id: 'furn-tomb-1', name: 'Ancient Stone Tomb', type: 'tomb', x: 3, y: 2, width: 2, height: 3, roomId: 'room-nw-crypt' },
+      { id: 'furn-chest-1', name: 'Vault Chest of Gold', type: 'chest', x: 23, y: 2, width: 1, height: 1, roomId: 'room-ne-vault' },
+      { id: 'furn-table-1', name: 'Council Table', type: 'table', x: 13, y: 15, width: 3, height: 2, roomId: 'room-center-s' },
+      { id: 'furn-rack-1', name: 'Weapons Rack', type: 'weapons-rack', x: 8, y: 2, width: 3, height: 1, roomId: 'room-n-armory' }
     ],
     monsters: [
       { id: 'mon-verag', name: 'Verag the Orc Warlord', monsterType: 'verag-boss', x: 4, y: 10, bp: 4, atk: 4, def: 4, isBoss: true, roomId: 'room-grand-fossil' },
-      { id: 'mon-skel-1', name: 'Crypt Skeleton', monsterType: 'skeleton-1', x: 3, y: 3, bp: 1, atk: 2, def: 2, isBoss: false, roomId: 'room-nw-crypt' },
-      { id: 'mon-skel-2', name: 'Crypt Skeleton', monsterType: 'skeleton-2', x: 5, y: 3, bp: 1, atk: 2, def: 2, isBoss: false, roomId: 'room-nw-crypt' },
+      { id: 'mon-skel-1', name: 'Crypt Skeleton', monsterType: 'skeleton-1', x: 3, y: 4, bp: 1, atk: 2, def: 2, isBoss: false, roomId: 'room-nw-crypt' },
+      { id: 'mon-skel-2', name: 'Crypt Skeleton', monsterType: 'skeleton-2', x: 5, y: 4, bp: 1, atk: 2, def: 2, isBoss: false, roomId: 'room-nw-crypt' },
       { id: 'mon-zombie-1', name: 'Cellar Zombie', monsterType: 'zombie-1', x: 4, y: 16, bp: 2, atk: 3, def: 3, isBoss: false, roomId: 'room-sw-cellar' },
-      { id: 'mon-orc-1', name: 'Orc Guard', monsterType: 'orc-warrior-1', x: 14, y: 10, bp: 1, atk: 3, def: 2, isBoss: false, roomId: 'room-center-mid' },
-      { id: 'mon-goblin-1', name: 'Goblin Scout', monsterType: 'goblin-scout-1', x: 15, y: 10, bp: 1, atk: 2, def: 1, isBoss: false, roomId: 'room-center-mid' }
+      { id: 'mon-orc-1', name: 'Orc Guard', monsterType: 'orc-warrior-1', x: 14, y: 11, bp: 1, atk: 3, def: 2, isBoss: false, roomId: 'room-center-mid' },
+      { id: 'mon-goblin-1', name: 'Goblin Scout', monsterType: 'goblin-scout-1', x: 15, y: 11, bp: 1, atk: 2, def: 1, isBoss: false, roomId: 'room-center-mid' }
     ],
     traps: [
       { id: 'trap-pit-1', trapType: 'pit', x: 0, y: 5, damageDice: 1, detected: false, disarmed: false },
-      { id: 'trap-spear-1', trapType: 'spear', x: 7, y: 5, damageDice: 2, detected: false, disarmed: false },
+      { id: 'trap-boulder-1', trapType: 'boulder', x: 7, y: 5, damageDice: 3, detected: false, disarmed: false },
       { id: 'trap-falling-1', trapType: 'falling-block', x: 21, y: 10, damageDice: 3, detected: false, disarmed: false }
     ],
     startingStairs: [0, 1]
@@ -99,6 +103,7 @@ document.querySelectorAll("#tool-palette .btn-tool").forEach(btn => {
 
     // Show/hide relevant subtool dropdowns
     document.getElementById("select-door-type").style.display = currentData.activeTool === "door" ? "inline-block" : "none";
+    document.getElementById("select-block-type").style.display = currentData.activeTool === "wall-block" ? "inline-block" : "none";
     document.getElementById("select-furniture-type").style.display = currentData.activeTool === "furniture" ? "inline-block" : "none";
     document.getElementById("select-monster-type").style.display = currentData.activeTool === "monster" ? "inline-block" : "none";
     document.getElementById("select-trap-type").style.display = currentData.activeTool === "trap" ? "inline-block" : "none";
@@ -418,6 +423,48 @@ function findRoomAt(col, row) {
   }) || null;
 }
 
+// Helper dimensions & coverage checks for multi-tile items
+function getBlockDimensions(b) {
+  const type = b.type || 'single';
+  const w = b.width || (type === 'double-h' ? 2 : 1);
+  const h = b.height || (type === 'double-v' ? 2 : 1);
+  return { w, h };
+}
+
+function isBlockCovering(b, col, row) {
+  const { w, h } = getBlockDimensions(b);
+  return col >= b.x && col < b.x + w && row >= b.y && row < b.y + h;
+}
+
+function getFurnitureDimensions(f) {
+  if (f.width && f.height) return { w: f.width, h: f.height };
+  const type = f.type || '';
+  if (type === 'bookcase' || type === 'bookcase-3x1' || type === 'weapons-rack' || type === 'weapons-rack-3x1' || type === 'fireplace') return { w: 3, h: 1 };
+  if (type === 'bookcase-1x3' || type === 'weapons-rack-1x3') return { w: 1, h: 3 };
+  if (type === 'bookshelf' || type === 'bookshelf-2x1' || type === 'cupboard' || type === 'cupboard-2x1') return { w: 2, h: 1 };
+  if (type === 'bookshelf-1x2' || type === 'cupboard-1x2') return { w: 1, h: 2 };
+  if (type === 'altar' || type === 'altar-3x2' || type === 'table' || type === 'table-3x2' || type === 'alchemists-bench' || type === 'torture-rack') return { w: 3, h: 2 };
+  if (type === 'altar-2x3' || type === 'table-2x3' || type === 'tomb') return { w: 2, h: 3 };
+  if (type === 'boulder-2x2') return { w: 2, h: 2 };
+  return { w: 1, h: 1 };
+}
+
+function isFurnitureCovering(f, col, row) {
+  const { w, h } = getFurnitureDimensions(f);
+  return col >= f.x && col < f.x + w && row >= f.y && row < f.y + h;
+}
+
+function getTrapDimensions(t) {
+  const type = typeof t === 'string' ? t : (t.trapType || '');
+  if (type === 'boulder-2x2') return { w: 2, h: 2 };
+  return { w: 1, h: 1 };
+}
+
+function isTrapCovering(t, col, row) {
+  const { w, h } = getTrapDimensions(t);
+  return col >= t.x && col < t.x + w && row >= t.y && row < t.y + h;
+}
+
 // Handle Editor Tool Clicks
 function handleSquareClick(col, row) {
   const tool = currentData.activeTool;
@@ -465,18 +512,27 @@ function handleSquareClick(col, row) {
   }
 
   if (tool === 'wall-block') {
-    const existingIdx = currentData.currentQuest.wallBlocks.findIndex(b => b.x === col && b.y === row);
+    const blockType = document.getElementById("select-block-type")?.value || '1-tile-wall';
+    const isDoubleH = blockType === '2-tile-wall-h';
+    const isDoubleV = blockType === '2-tile-wall-v';
+    const width = isDoubleH ? 2 : 1;
+    const height = isDoubleV ? 2 : 1;
+    const type = isDoubleH ? 'double-h' : (isDoubleV ? 'double-v' : 'single');
+
+    const existingIdx = currentData.currentQuest.wallBlocks.findIndex(b => isBlockCovering(b, col, row));
     if (existingIdx >= 0) {
       currentData.currentQuest.wallBlocks.splice(existingIdx, 1);
-      setStatus(`Removed stone block at [${col}, ${row}]`);
+      setStatus(`Removed wall block covering [${col}, ${row}]`);
     } else {
       currentData.currentQuest.wallBlocks.push({
         id: `block-${col}-${row}`,
         x: col,
         y: row,
-        type: 'single'
+        type,
+        width,
+        height
       });
-      setStatus(`Placed stone block at [${col}, ${row}]`);
+      setStatus(`Placed ${width}×${height} ${type === 'single' ? '1-Tile Wall Block' : '2-Tile Wall Block'} at [${col}, ${row}]`);
     }
     updateSummaryStats();
     drawBoard();
@@ -486,17 +542,21 @@ function handleSquareClick(col, row) {
   if (tool === 'furniture') {
     const furnType = document.getElementById("select-furniture-type").value || 'chest';
     const furnName = document.getElementById("select-furniture-type").selectedOptions[0]?.text || furnType;
-    // Remove any existing furniture at this tile
-    currentData.currentQuest.furniture = currentData.currentQuest.furniture.filter(f => !(f.x === col && f.y === row));
+    const dims = getFurnitureDimensions({ type: furnType });
+
+    // Remove any existing furniture covering this square
+    currentData.currentQuest.furniture = currentData.currentQuest.furniture.filter(f => !isFurnitureCovering(f, col, row));
     currentData.currentQuest.furniture.push({
       id: `furn-${furnType}-${col}-${row}`,
-      name: furnName,
+      name: furnName.split('(')[0].trim(),
       type: furnType,
       x: col,
       y: row,
+      width: dims.w,
+      height: dims.h,
       roomId
     });
-    setStatus(`Placed ${furnName} at [${col}, ${row}]`);
+    setStatus(`Placed ${furnName} at [${col}, ${row}] (${dims.w}×${dims.h} tiles)`);
     updateSummaryStats();
     drawBoard();
     return;
@@ -527,17 +587,22 @@ function handleSquareClick(col, row) {
 
   if (tool === 'trap') {
     const trapType = document.getElementById("select-trap-type").value || 'pit';
-    currentData.currentQuest.traps = currentData.currentQuest.traps.filter(t => !(t.x === col && t.y === row));
+    const trapName = document.getElementById("select-trap-type").selectedOptions[0]?.text || trapType;
+    const dims = getTrapDimensions(trapType);
+    currentData.currentQuest.traps = currentData.currentQuest.traps.filter(t => !isTrapCovering(t, col, row));
     currentData.currentQuest.traps.push({
       id: `trap-${trapType}-${col}-${row}`,
+      name: trapName.split('(')[0].trim(),
       trapType,
       x: col,
       y: row,
-      damageDice: trapType === 'falling-block' ? 3 : 1,
+      width: dims.w,
+      height: dims.h,
+      damageDice: (trapType === 'falling-block' || trapType.startsWith('boulder')) ? 3 : (trapType === 'spear' ? 2 : 1),
       detected: false,
       disarmed: false
     });
-    setStatus(`Placed ${trapType.toUpperCase()} trap at [${col}, ${row}]`);
+    setStatus(`Placed ${trapName} at [${col}, ${row}]`);
     updateSummaryStats();
     drawBoard();
     return;
@@ -571,14 +636,14 @@ function handleSquareClick(col, row) {
 }
 
 function eraseAt(col, row) {
-  currentData.currentQuest.wallBlocks = currentData.currentQuest.wallBlocks.filter(b => !(b.x === col && b.y === row));
-  currentData.currentQuest.furniture = currentData.currentQuest.furniture.filter(f => !(f.x === col && f.y === row));
+  currentData.currentQuest.wallBlocks = currentData.currentQuest.wallBlocks.filter(b => !isBlockCovering(b, col, row));
+  currentData.currentQuest.furniture = currentData.currentQuest.furniture.filter(f => !isFurnitureCovering(f, col, row));
   currentData.currentQuest.monsters = currentData.currentQuest.monsters.filter(m => !(m.x === col && m.y === row));
-  currentData.currentQuest.traps = currentData.currentQuest.traps.filter(t => !(t.x === col && t.y === row));
+  currentData.currentQuest.traps = currentData.currentQuest.traps.filter(t => !isTrapCovering(t, col, row));
   currentData.currentQuest.doors = currentData.currentQuest.doors.filter(d => {
     return !(d.from[0] === col && d.from[1] === row) && !(d.to[0] === col && d.to[1] === row);
   });
-  setStatus(`Erased items at [${col}, ${row}]`);
+  setStatus(`Erased items covering [${col}, ${row}]`);
 }
 
 function inspectSquare(col, row) {
@@ -586,10 +651,10 @@ function inspectSquare(col, row) {
   const colLetter = String.fromCharCode(65 + (col % 26));
   const squareId = `${colLetter}-${row + 1}`;
 
-  const block = currentData.currentQuest.wallBlocks.find(b => b.x === col && b.y === row);
-  const furn = currentData.currentQuest.furniture.find(f => f.x === col && f.y === row);
+  const block = currentData.currentQuest.wallBlocks.find(b => isBlockCovering(b, col, row));
+  const furn = currentData.currentQuest.furniture.find(f => isFurnitureCovering(f, col, row));
   const mon = currentData.currentQuest.monsters.find(m => m.x === col && m.y === row);
-  const trap = currentData.currentQuest.traps.find(t => t.x === col && t.y === row);
+  const trap = currentData.currentQuest.traps.find(t => isTrapCovering(t, col, row));
   const door = currentData.currentQuest.doors.find(d => (d.from[0] === col && d.from[1] === row) || (d.to[0] === col && d.to[1] === row));
   const isStairs = currentData.currentQuest.startingStairs[0] === col && currentData.currentQuest.startingStairs[1] === row;
 
@@ -608,12 +673,15 @@ function inspectSquare(col, row) {
     html += `<div class="stat-pill" style="margin-top:6px;"><span>🏁 <strong>Player Starting Stairs</strong></span></div>`;
   }
   if (block) {
-    html += `<div class="stat-pill" style="margin-top:6px;"><span>🧱 <strong>Stone Block Tile</strong></span><button onclick="eraseAt(${col}, ${row})" class="btn btn-xs btn-danger">Remove</button></div>`;
+    const bDims = getBlockDimensions(block);
+    const blockLabel = bDims.w === 1 && bDims.h === 1 ? '1-Tile Wall Block' : (bDims.w === 2 ? '2-Tile Wall Block (Horizontal)' : '2-Tile Wall Block (Vertical)');
+    html += `<div class="stat-pill" style="margin-top:6px;"><span>🧱 <strong>${blockLabel}</strong> (${bDims.w}×${bDims.h})</span><button onclick="eraseAt(${col}, ${row})" class="btn btn-xs btn-danger">Remove</button></div>`;
   }
   if (furn) {
+    const fDims = getFurnitureDimensions(furn);
     html += `
       <div class="stat-pill" style="margin-top:6px;">
-        <span>📦 <strong>${furn.name}</strong> (${furn.type})</span>
+        <span>📦 <strong>${furn.name}</strong> (${fDims.w}×${fDims.h} ${furn.type})</span>
         <button onclick="eraseAt(${col}, ${row})" class="btn btn-xs btn-danger">Remove</button>
       </div>`;
   }
@@ -625,9 +693,10 @@ function inspectSquare(col, row) {
       </div>`;
   }
   if (trap) {
+    const tDims = getTrapDimensions(trap);
     html += `
       <div class="stat-pill" style="margin-top:6px;">
-        <span>⚠️ <strong>${trap.trapType.toUpperCase()} TRAP</strong> (${trap.damageDice} dice)</span>
+        <span>⚠️ <strong>${(trap.name || trap.trapType).toUpperCase()}</strong> (${tDims.w}×${tDims.h} | ${trap.damageDice} dice)</span>
         <button onclick="eraseAt(${col}, ${row})" class="btn btn-xs btn-danger">Remove</button>
       </div>`;
   }
@@ -673,6 +742,8 @@ function updateSummaryStats() {
   // Mini counts
   const cDoors = document.getElementById("count-doors");
   if (cDoors) cDoors.textContent = q.doors.length;
+  const cBlocks = document.getElementById("count-blocks");
+  if (cBlocks) cBlocks.textContent = q.wallBlocks.length;
   const cFurn = document.getElementById("count-furn");
   if (cFurn) cFurn.textContent = q.furniture.length;
   const cMon = document.getElementById("count-monsters");
@@ -698,13 +769,27 @@ function renderMiniList(type) {
       col: d.from[0],
       row: d.from[1]
     }));
+  } else if (type === "blocks") {
+    items = q.wallBlocks.map(b => {
+      const { w, h } = getBlockDimensions(b);
+      const name = (w === 1 && h === 1) ? '1-Tile Wall' : (w === 2 ? '2-Tile Wall (H)' : '2-Tile Wall (V)');
+      return {
+        label: `${name} (${w}×${h})`,
+        coords: `[${b.x}, ${b.y}]`,
+        col: b.x,
+        row: b.y
+      };
+    });
   } else if (type === "furniture") {
-    items = q.furniture.map(f => ({
-      label: f.name,
-      coords: `[${f.x}, ${f.y}]`,
-      col: f.x,
-      row: f.y
-    }));
+    items = q.furniture.map(f => {
+      const dims = getFurnitureDimensions(f);
+      return {
+        label: `${f.name} (${dims.w}×${dims.h})`,
+        coords: `[${f.x}, ${f.y}]`,
+        col: f.x,
+        row: f.y
+      };
+    });
   } else if (type === "monsters") {
     items = q.monsters.map(m => ({
       label: `${m.name} ${m.isBoss ? '👑' : ''}`,
@@ -713,12 +798,15 @@ function renderMiniList(type) {
       row: m.y
     }));
   } else if (type === "traps") {
-    items = q.traps.map(t => ({
-      label: `${t.trapType.toUpperCase()} Trap`,
-      coords: `[${t.x}, ${t.y}]`,
-      col: t.x,
-      row: t.y
-    }));
+    items = q.traps.map(t => {
+      const dims = getTrapDimensions(t);
+      return {
+        label: `${(t.name || t.trapType).toUpperCase()} (${dims.w}×${dims.h})`,
+        coords: `[${t.x}, ${t.y}]`,
+        col: t.x,
+        row: t.y
+      };
+    });
   }
 
   if (items.length === 0) {
@@ -862,79 +950,455 @@ function drawBoard() {
     ctx.restore();
   }
 
-  // 6. Draw Wall Blocks (HeroQuest stone blocks)
+  // 6. Draw Wall Blocks (1-Tile & 2-Tile HeroQuest stone blocks)
   const q = currentData.currentQuest;
   q.wallBlocks.forEach(b => {
+    const { w, h } = getBlockDimensions(b);
     const bx = insetL + b.x * cellW;
     const by = insetT + b.y * cellH;
-
-    ctx.fillStyle = "#334155";
-    ctx.fillRect(bx + 2, by + 2, cellW - 4, cellH - 4);
-
-    ctx.strokeStyle = "#64748b";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(bx + 2, by + 2, cellW - 4, cellH - 4);
-
-    // Stone block cross hatch
-    ctx.beginPath();
-    ctx.moveTo(bx + 4, by + 4);
-    ctx.lineTo(bx + cellW - 4, by + cellH - 4);
-    ctx.moveTo(bx + cellW - 4, by + 4);
-    ctx.lineTo(bx + 4, by + cellH - 4);
-    ctx.strokeStyle = "rgba(148, 163, 184, 0.4)";
-    ctx.lineWidth = 1;
-    ctx.stroke();
-  });
-
-  // 7. Draw Traps
-  q.traps.forEach(t => {
-    const tx = insetL + t.x * cellW + cellW / 2;
-    const ty = insetT + t.y * cellH + cellH / 2;
+    const totalW = w * cellW;
+    const totalH = h * cellH;
 
     ctx.save();
-    ctx.fillStyle = t.trapType === 'pit' ? '#dc2626' : (t.trapType === 'falling-block' ? '#ea580c' : '#7c3aed');
-    ctx.beginPath();
-    ctx.arc(tx, ty, cellW * 0.32, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
+    // Drop shadow
+    ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+    ctx.fillRect(bx + 3, by + 3, totalW - 4, totalH - 4);
 
-    const icon = t.trapType === 'pit' ? '🕳️' : (t.trapType === 'falling-block' ? '🪨' : '🗡️');
-    ctx.font = "12px sans-serif";
+    // Stone block outer casing
+    ctx.fillStyle = "#1e293b";
+    ctx.fillRect(bx + 1, by + 1, totalW - 2, totalH - 2);
+    ctx.strokeStyle = "#94a3b8";
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(bx + 1, by + 1, totalW - 2, totalH - 2);
+
+    // Draw individual tiles within the block
+    for (let dx = 0; dx < w; dx++) {
+      for (let dy = 0; dy < h; dy++) {
+        const tx = bx + dx * cellW;
+        const ty = by + dy * cellH;
+
+        // Tile bevel
+        ctx.fillStyle = "#334155";
+        ctx.fillRect(tx + 3, ty + 3, cellW - 6, cellH - 6);
+
+        // Masonry cross-hatch
+        ctx.beginPath();
+        ctx.moveTo(tx + 5, ty + 5);
+        ctx.lineTo(tx + cellW - 5, ty + cellH - 5);
+        ctx.moveTo(tx + cellW - 5, ty + 5);
+        ctx.lineTo(tx + 5, ty + cellH - 5);
+        ctx.strokeStyle = "rgba(148, 163, 184, 0.35)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Inner border
+        ctx.strokeStyle = "rgba(100, 116, 139, 0.8)";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(tx + 3, ty + 3, cellW - 6, cellH - 6);
+      }
+    }
+
+    // Seam line between tiles if multi-tile
+    if (w > 1) {
+      ctx.beginPath();
+      ctx.moveTo(bx + cellW, by + 2);
+      ctx.lineTo(bx + cellW, by + totalH - 2);
+      ctx.strokeStyle = "#0f172a";
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+    }
+    if (h > 1) {
+      ctx.beginPath();
+      ctx.moveTo(bx + 2, by + cellH);
+      ctx.lineTo(bx + totalW - 2, by + cellH);
+      ctx.strokeStyle = "#0f172a";
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+    }
+
+    // Label in center
+    const midX = bx + totalW / 2;
+    const midY = by + totalH / 2;
+    ctx.fillStyle = "#f8fafc";
+    ctx.font = "bold 9px sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(icon, tx, ty);
+    const label = (w > 1 || h > 1) ? "🧱 2-TILE WALL" : "🧱 WALL";
+    ctx.fillText(label, midX, midY);
+
     ctx.restore();
   });
 
-  // 8. Draw Furniture
-  q.furniture.forEach(f => {
-    const fx = insetL + f.x * cellW + cellW / 2;
-    const fy = insetT + f.y * cellH + cellH / 2;
+  // 7. Draw Traps & Boulder Tiles
+  q.traps.forEach(t => {
+    const { w, h } = getTrapDimensions(t);
+    const tx = insetL + t.x * cellW;
+    const ty = insetT + t.y * cellH;
+    const totalW = w * cellW;
+    const totalH = h * cellH;
+    const midX = tx + totalW / 2;
+    const midY = ty + totalH / 2;
 
     ctx.save();
-    ctx.fillStyle = "rgba(120, 53, 15, 0.9)";
-    ctx.beginPath();
-    ctx.roundRect(fx - cellW * 0.42, fy - cellH * 0.42, cellW * 0.84, cellH * 0.84, 4);
-    ctx.fill();
-    ctx.strokeStyle = "#fbbf24";
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
+    if (t.trapType === 'boulder' || t.trapType === 'boulder-2x2') {
+      // 3D Shaded Stone Boulder Tile
+      const radius = Math.min(totalW, totalH) * 0.42;
 
-    let icon = '📦';
-    if (f.type === 'tomb') icon = '🪦';
-    else if (f.type === 'alchemists-bench') icon = '🧪';
-    else if (f.type === 'weapons-rack') icon = '⚔️';
-    else if (f.type === 'table') icon = '🪵';
-    else if (f.type === 'throne') icon = '👑';
-    else if (f.type === 'bookcase') icon = '📚';
-    else if (f.type === 'fireplace') icon = '🔥';
+      // Drop shadow
+      ctx.beginPath();
+      ctx.ellipse(midX + 2, midY + 4, radius, radius * 0.85, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+      ctx.fill();
 
-    ctx.font = "13px sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(icon, fx, fy);
+      // Spherical radial gradient
+      const grad = ctx.createRadialGradient(midX - radius * 0.35, midY - radius * 0.35, radius * 0.08, midX, midY, radius);
+      grad.addColorStop(0, "#e2e8f0");
+      grad.addColorStop(0.25, "#94a3b8");
+      grad.addColorStop(0.65, "#475569");
+      grad.addColorStop(1, "#0f172a");
+
+      ctx.beginPath();
+      ctx.arc(midX, midY, radius, 0, Math.PI * 2);
+      ctx.fillStyle = grad;
+      ctx.fill();
+      ctx.strokeStyle = "#1e293b";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Stone fissures
+      ctx.beginPath();
+      ctx.moveTo(midX - radius * 0.4, midY - radius * 0.2);
+      ctx.lineTo(midX - radius * 0.1, midY + radius * 0.1);
+      ctx.lineTo(midX + radius * 0.3, midY - radius * 0.05);
+      ctx.strokeStyle = "rgba(15, 23, 42, 0.65)";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Label
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 9px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(t.trapType === 'boulder-2x2' ? "🪨 MEGA BOULDER" : "🪨 BOULDER", midX, midY + radius * 0.55);
+    } else {
+      // Standard traps
+      const radius = cellW * 0.32;
+      ctx.fillStyle = t.trapType === 'pit' ? '#dc2626' : (t.trapType === 'falling-block' ? '#ea580c' : '#7c3aed');
+      ctx.beginPath();
+      ctx.arc(midX, midY, radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      const icon = t.trapType === 'pit' ? '🕳️' : (t.trapType === 'falling-block' ? '🧱' : (t.trapType === 'spear' ? '🗡️' : '☠️'));
+      ctx.font = "12px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(icon, midX, midY);
+    }
+    ctx.restore();
+  });
+
+  // 8. Draw Furniture (Multi-tile and authentic HeroQuest pieces)
+  q.furniture.forEach(f => {
+    const dims = getFurnitureDimensions(f);
+    const fx = insetL + f.x * cellW;
+    const fy = insetT + f.y * cellH;
+    const totalW = dims.w * cellW;
+    const totalH = dims.h * cellH;
+    const midX = fx + totalW / 2;
+    const midY = fy + totalH / 2;
+
+    ctx.save();
+
+    // Drop shadow
+    ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+    ctx.fillRect(fx + 3, fy + 3, totalW - 4, totalH - 4);
+
+    const type = f.type || '';
+
+    if (type.startsWith('altar')) {
+      // 🔮 Sorcerer's Altar / Desk (3x2 or 2x3)
+      ctx.fillStyle = "#1e1b4b"; // Deep obsidian / dark purple
+      ctx.fillRect(fx + 2, fy + 2, totalW - 4, totalH - 4);
+      ctx.strokeStyle = "#a855f7"; // Arcane purple border
+      ctx.lineWidth = 2;
+      ctx.strokeRect(fx + 2, fy + 2, totalW - 4, totalH - 4);
+
+      // Arcane pentagram / summoning circle in center
+      ctx.beginPath();
+      ctx.arc(midX, midY, Math.min(totalW, totalH) * 0.32, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(216, 180, 254, 0.4)";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Candles on the corners
+      const cornerOffsets = [
+        [fx + 8, fy + 8],
+        [fx + totalW - 8, fy + 8],
+        [fx + 8, fy + totalH - 8],
+        [fx + totalW - 8, fy + totalH - 8]
+      ];
+      cornerOffsets.forEach(([cx, cy]) => {
+        ctx.fillStyle = "#fef08a";
+        ctx.beginPath();
+        ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#f97316";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 2, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Grimoire & Skull icon in center
+      ctx.font = "14px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("📖 💀", midX, midY - 4);
+
+      ctx.fillStyle = "#e9d5ff";
+      ctx.font = "bold 9px sans-serif";
+      ctx.fillText("SORCERER'S ALTAR", midX, midY + 12);
+
+    } else if (type.startsWith('bookcase')) {
+      // 📚 Grand Bookcase (3x1 or 1x3)
+      ctx.fillStyle = "#3f1704"; // Dark mahogany
+      ctx.fillRect(fx + 2, fy + 2, totalW - 4, totalH - 4);
+      ctx.strokeStyle = "#d97706"; // Amber / gold frame
+      ctx.lineWidth = 2;
+      ctx.strokeRect(fx + 2, fy + 2, totalW - 4, totalH - 4);
+
+      // Shelf lines and colored book spines
+      const bookColors = ["#b91c1c", "#047857", "#1d4ed8", "#d97706", "#7c3aed", "#be123c", "#0284c7"];
+      if (dims.w >= dims.h) {
+        // Horizontal shelves (3x1)
+        const numBooks = 12;
+        const bWidth = (totalW - 12) / numBooks;
+        for (let i = 0; i < numBooks; i++) {
+          ctx.fillStyle = bookColors[i % bookColors.length];
+          const bkX = fx + 6 + i * bWidth;
+          const bkY = fy + 5;
+          const bkH = totalH - 18;
+          ctx.fillRect(bkX, bkY, bWidth - 1, bkH);
+          // Gold ribbing on spine
+          ctx.fillStyle = "rgba(254, 240, 138, 0.6)";
+          ctx.fillRect(bkX, bkY + bkH * 0.3, bWidth - 1, 1);
+          ctx.fillRect(bkX, bkY + bkH * 0.7, bWidth - 1, 1);
+        }
+        ctx.fillStyle = "#fef3c7";
+        ctx.font = "bold 9px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("📚 BOOKCASE", midX, fy + totalH - 6);
+      } else {
+        // Vertical shelves (1x3)
+        for (let shelf = 0; shelf < 3; shelf++) {
+          const sy = fy + shelf * (totalH / 3) + 4;
+          for (let b = 0; b < 4; b++) {
+            ctx.fillStyle = bookColors[(shelf * 4 + b) % bookColors.length];
+            ctx.fillRect(fx + 6 + b * 6, sy, 5, (totalH / 3) - 8);
+          }
+        }
+        ctx.fillStyle = "#fef3c7";
+        ctx.font = "bold 8px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("📚 BOOKCASE", midX, fy + totalH - 6);
+      }
+
+    } else if (type.startsWith('bookshelf')) {
+      // 📖 Study Bookshelf (2x1, 1x2, or 1x1)
+      ctx.fillStyle = "#78350f"; // Warm polished oak
+      ctx.fillRect(fx + 2, fy + 2, totalW - 4, totalH - 4);
+      ctx.strokeStyle = "#fbbf24";
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(fx + 2, fy + 2, totalW - 4, totalH - 4);
+
+      // Book spines & scroll
+      const bookColors = ["#1e40af", "#065f46", "#991b1b", "#b45309", "#581c87"];
+      const count = dims.w >= 2 ? 8 : 4;
+      const bWidth = (totalW - 10) / count;
+      for (let i = 0; i < count; i++) {
+        ctx.fillStyle = bookColors[i % bookColors.length];
+        ctx.fillRect(fx + 5 + i * bWidth, fy + 5, bWidth - 1, totalH - 16);
+      }
+      ctx.fillStyle = "#fef3c7";
+      ctx.font = "bold 9px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("📖 BOOKSHELF", midX, fy + totalH - 6);
+
+    } else if (type.startsWith('boulder')) {
+      // 🪨 Boulder Obstacle
+      const radius = Math.min(totalW, totalH) * 0.42;
+      const grad = ctx.createRadialGradient(midX - radius * 0.35, midY - radius * 0.35, radius * 0.08, midX, midY, radius);
+      grad.addColorStop(0, "#e2e8f0");
+      grad.addColorStop(0.3, "#64748b");
+      grad.addColorStop(0.7, "#334155");
+      grad.addColorStop(1, "#0f172a");
+
+      ctx.beginPath();
+      ctx.arc(midX, midY, radius, 0, Math.PI * 2);
+      ctx.fillStyle = grad;
+      ctx.fill();
+      ctx.strokeStyle = "#1e293b";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Fissures
+      ctx.beginPath();
+      ctx.moveTo(midX - radius * 0.4, midY - radius * 0.2);
+      ctx.lineTo(midX - radius * 0.1, midY + radius * 0.1);
+      ctx.lineTo(midX + radius * 0.3, midY - radius * 0.05);
+      ctx.strokeStyle = "rgba(15, 23, 42, 0.65)";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 9px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("🪨 BOULDER", midX, midY + radius * 0.55);
+
+    } else if (type.startsWith('table')) {
+      // 🪵 Wooden Table / Council Desk (3x2 or 2x3)
+      ctx.fillStyle = "#451a03"; // Dark oak
+      ctx.fillRect(fx + 3, fy + 3, totalW - 6, totalH - 6);
+      ctx.strokeStyle = "#92400e";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(fx + 3, fy + 3, totalW - 6, totalH - 6);
+
+      // Wood plank lines
+      ctx.strokeStyle = "rgba(146, 64, 14, 0.4)";
+      ctx.lineWidth = 1;
+      const plankStep = (totalH - 8) / 4;
+      for (let p = 1; p < 4; p++) {
+        ctx.beginPath();
+        ctx.moveTo(fx + 4, fy + 4 + p * plankStep);
+        ctx.lineTo(fx + totalW - 4, fy + 4 + p * plankStep);
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = "#fef3c7";
+      ctx.font = "bold 10px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("🪵 TABLE", midX, midY);
+
+    } else if (type.startsWith('alchemists-bench')) {
+      // 🧪 Alchemist's Bench (3x2)
+      ctx.fillStyle = "#334155";
+      ctx.fillRect(fx + 3, fy + 3, totalW - 6, totalH - 6);
+      ctx.strokeStyle = "#38bdf8";
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(fx + 3, fy + 3, totalW - 6, totalH - 6);
+
+      ctx.font = "14px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("🧪 ⚗️ 📜", midX, midY - 4);
+
+      ctx.fillStyle = "#bae6fd";
+      ctx.font = "bold 9px sans-serif";
+      ctx.fillText("ALCHEMIST'S BENCH", midX, midY + 12);
+
+    } else if (type.startsWith('tomb')) {
+      // 🪦 Stone Tomb / Sarcophagus (2x3 or 2x1)
+      ctx.fillStyle = "#1e293b";
+      ctx.fillRect(fx + 3, fy + 3, totalW - 6, totalH - 6);
+      ctx.strokeStyle = "#cbd5e1";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(fx + 3, fy + 3, totalW - 6, totalH - 6);
+
+      // Carved lid effigy
+      ctx.strokeStyle = "rgba(203, 213, 225, 0.4)";
+      ctx.strokeRect(fx + 7, fy + 7, totalW - 14, totalH - 14);
+
+      ctx.font = "16px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("🪦", midX, midY - 6);
+
+      ctx.fillStyle = "#e2e8f0";
+      ctx.font = "bold 9px sans-serif";
+      ctx.fillText("STONE TOMB", midX, midY + 12);
+
+    } else if (type.startsWith('weapons-rack')) {
+      // ⚔️ Weapons Rack (3x1)
+      ctx.fillStyle = "#5c2b0c";
+      ctx.fillRect(fx + 2, fy + 2, totalW - 4, totalH - 4);
+      ctx.strokeStyle = "#ea580c";
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(fx + 2, fy + 2, totalW - 4, totalH - 4);
+
+      ctx.font = "12px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("⚔️ 🛡️ ⚔️", midX, midY - 4);
+
+      ctx.fillStyle = "#ffedd5";
+      ctx.font = "bold 8px sans-serif";
+      ctx.fillText("WEAPONS RACK", midX, midY + 9);
+
+    } else if (type.startsWith('fireplace')) {
+      // 🔥 Stone Fireplace (3x1)
+      ctx.fillStyle = "#1c1917";
+      ctx.fillRect(fx + 2, fy + 2, totalW - 4, totalH - 4);
+      ctx.strokeStyle = "#f97316";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(fx + 2, fy + 2, totalW - 4, totalH - 4);
+
+      ctx.font = "14px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("🔥 🔥 🔥", midX, midY - 3);
+
+      ctx.fillStyle = "#ffedd5";
+      ctx.font = "bold 8px sans-serif";
+      ctx.fillText("FIREPLACE", midX, midY + 10);
+
+    } else if (type.startsWith('cupboard')) {
+      // 🚪 Cupboard (2x1)
+      ctx.fillStyle = "#5c2b0c";
+      ctx.fillRect(fx + 2, fy + 2, totalW - 4, totalH - 4);
+      ctx.strokeStyle = "#ca8a04";
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(fx + 2, fy + 2, totalW - 4, totalH - 4);
+
+      // Dual doors
+      ctx.beginPath();
+      ctx.moveTo(midX, fy + 3);
+      ctx.lineTo(midX, fy + totalH - 3);
+      ctx.strokeStyle = "#291003";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.fillStyle = "#fef08a";
+      ctx.font = "bold 9px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("🚪 CUPBOARD", midX, midY);
+
+    } else {
+      // Generic (Chest, Throne, Torture Rack, etc.)
+      ctx.fillStyle = "rgba(120, 53, 15, 0.9)";
+      ctx.fillRect(fx + 2, fy + 2, totalW - 4, totalH - 4);
+      ctx.strokeStyle = "#fbbf24";
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(fx + 2, fy + 2, totalW - 4, totalH - 4);
+
+      let icon = '📦';
+      if (type.startsWith('throne')) icon = '👑';
+      else if (type.startsWith('chest')) icon = '📦';
+      else if (type.startsWith('torture-rack')) icon = '⛓️';
+
+      ctx.font = "14px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(icon, midX, midY);
+    }
+
     ctx.restore();
   });
 
@@ -1238,7 +1702,6 @@ document.getElementById("btn-save-kgraph")?.addEventListener("click", async () =
   const res = await window.robosTabletop.saveKGraphEntity({ entity: questMapNode });
   if (res.success) {
     setStatus(`Successfully saved Quest Map '${questMapNode["dcterms:title"]}' to KGraph.`);
-    alert(`Saved Quest to Knowledge Graph!\nEntity: ${questMapNode["@id"]}`);
   } else {
     setStatus("Error saving quest to KGraph: " + res.error);
   }
@@ -1304,8 +1767,7 @@ document.getElementById("btn-bundle")?.addEventListener("click", async () => {
   setStatus("Bundling Tabletop RPG Cartridge...");
   const res = await window.robosTabletop.bundleCartridge(payload);
   if (res.success) {
-    setStatus(`Cartridge generated: ${res.cartridgeId}.cartridge.json`);
-    alert(`Tabletop RPG Cartridge compiled successfully!\nPath: ${res.cartridgePath}`);
+    setStatus(`Cartridge compiled successfully! Path: ${res.cartridgePath}`);
   } else {
     setStatus("Failed to bundle: " + res.error);
   }

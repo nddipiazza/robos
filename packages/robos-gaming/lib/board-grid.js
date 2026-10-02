@@ -214,13 +214,29 @@ class BoardGrid {
 
   addWallBlock(x, y, data = {}) {
     const k = this.key(x, y);
+    const type = data.type || 'single';
+    const width = data.width || (type === 'double-h' ? 2 : 1);
+    const height = data.height || (type === 'double-v' ? 2 : 1);
     const block = {
       id: data.id || `block-${x}-${y}`,
-      type: data.type || 'stone-block',
+      x,
+      y,
+      type,
+      width,
+      height,
       ...data
     };
-    this.wallBlocks.set(k, block);
-    this.setBlocked(x, y, true);
+    for (let dx = 0; dx < width; dx++) {
+      for (let dy = 0; dy < height; dy++) {
+        const subKey = this.key(x + dx, y + dy);
+        this.wallBlocks.set(subKey, {
+          ...block,
+          isOrigin: dx === 0 && dy === 0,
+          originKey: k
+        });
+        this.setBlocked(x + dx, y + dy, true);
+      }
+    }
     return block;
   }
 
@@ -229,12 +245,35 @@ class BoardGrid {
   }
 
   removeWallBlock(x, y) {
-    this.setBlocked(x, y, false);
-    return this.wallBlocks.delete(this.key(x, y));
+    const existing = this.wallBlocks.get(this.key(x, y));
+    if (!existing) return false;
+    const originKey = existing.originKey || this.key(existing.x, existing.y);
+    const origin = this.wallBlocks.get(originKey) || existing;
+    const ox = origin.x;
+    const oy = origin.y;
+    const width = origin.width || 1;
+    const height = origin.height || 1;
+    for (let dx = 0; dx < width; dx++) {
+      for (let dy = 0; dy < height; dy++) {
+        const subKey = this.key(ox + dx, oy + dy);
+        this.wallBlocks.delete(subKey);
+        this.setBlocked(ox + dx, oy + dy, false);
+      }
+    }
+    return true;
   }
 
   listWallBlocks() {
-    return Array.from(this.wallBlocks.values());
+    const seen = new Set();
+    const result = [];
+    for (const block of this.wallBlocks.values()) {
+      const origKey = block.originKey || this.key(block.x, block.y);
+      if (!seen.has(origKey)) {
+        seen.add(origKey);
+        result.push(block);
+      }
+    }
+    return result;
   }
 
   static fromMapConfiguration(config, quest = {}) {

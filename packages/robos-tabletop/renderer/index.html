@@ -298,17 +298,33 @@
               <option value="open">Wood Door (Open)</option>
               <option value="secret">Secret Door (Hidden)</option>
             </select>
+            <select id="select-block-type" class="dropdown form-input-sm" style="display:none;">
+              <option value="1-tile-wall">🧱 1-Tile Wall Block (Single 1×1)</option>
+              <option value="2-tile-wall-h">🧱 2-Tile Wall Block (Horizontal 2×1)</option>
+              <option value="2-tile-wall-v">🧱 2-Tile Wall Block (Vertical 1×2)</option>
+            </select>
             <select id="select-furniture-type" class="dropdown form-input-sm" style="display:none;">
-              <option value="chest">Treasure Chest</option>
-              <option value="tomb">Stone Tomb</option>
-              <option value="alchemists-bench">Alchemist's Bench</option>
-              <option value="weapons-rack">Weapons Rack</option>
-              <option value="table">Wooden Table</option>
-              <option value="throne">King's Throne</option>
-              <option value="cupboard">Cupboard</option>
-              <option value="bookcase">Bookcase</option>
-              <option value="fireplace">Fireplace</option>
-              <option value="torture-rack">Torture Rack</option>
+              <option value="bookcase">📚 Bookcase (3-Tile Library Wall 3×1)</option>
+              <option value="bookcase-1x3">📚 Bookcase (Vertical 3-Tile 1×3)</option>
+              <option value="bookshelf">📖 Bookshelf (2-Tile Study Shelf 2×1)</option>
+              <option value="bookshelf-1x2">📖 Bookshelf (Vertical 2-Tile 1×2)</option>
+              <option value="bookshelf-1x1">📖 Bookshelf (Single 1×1 Shelf)</option>
+              <option value="altar">🔮 Sorcerer's Altar / Desk (3×2 Altar)</option>
+              <option value="altar-2x3">🔮 Sorcerer's Altar / Desk (Vertical 2×3)</option>
+              <option value="boulder">🪨 Boulder Tile (1×1 Stone Obstacle)</option>
+              <option value="boulder-2x2">🪨 Giant Boulder (2×2 Mega Obstacle)</option>
+              <option value="table">🪵 Wooden Table / Council Desk (3×2)</option>
+              <option value="table-2x3">🪵 Wooden Table / Desk (Vertical 2×3)</option>
+              <option value="alchemists-bench">🧪 Alchemist's Bench (3×2)</option>
+              <option value="cupboard">🚪 Cupboard (2-Tile Cabinet 2×1)</option>
+              <option value="cupboard-1x2">🚪 Cupboard (Vertical 1×2 Cabinet)</option>
+              <option value="weapons-rack">⚔️ Weapons Rack (3×1)</option>
+              <option value="weapons-rack-1x3">⚔️ Weapons Rack (Vertical 1×3)</option>
+              <option value="tomb">🪦 Stone Tomb / Sarcophagus (2×3)</option>
+              <option value="fireplace">🔥 Stone Fireplace (3×1)</option>
+              <option value="throne">👑 King's Throne (1×1)</option>
+              <option value="chest">📦 Treasure Chest (1×1)</option>
+              <option value="torture-rack">⛓️ Torture Rack (3×2)</option>
             </select>
             <select id="select-monster-type" class="dropdown form-input-sm" style="display:none;">
               <option value="goblin-scout-1">Goblin Scout (BP: 1, Atk: 2)</option>
@@ -322,10 +338,12 @@
               <option value="verag-boss">Verag Orc Warlord [Boss] (BP: 3, Atk: 4)</option>
             </select>
             <select id="select-trap-type" class="dropdown form-input-sm" style="display:none;">
-              <option value="pit">Pit Trap (1 Body Point)</option>
-              <option value="falling-block">Falling Rock Block (Blocks Tile & 3 Atk)</option>
-              <option value="spear">Spear Trap (1 Atk Dice)</option>
-              <option value="chest-trap">Trapped Chest (Poison Needle)</option>
+              <option value="pit">🕳️ Pit Trap (1 Body Point)</option>
+              <option value="boulder">🪨 Rolling Boulder Tile (Blocks Passage & 3 Atk)</option>
+              <option value="boulder-2x2">🪨 Giant Boulder (2×2 Crushing Boulder)</option>
+              <option value="falling-block">🧱 Falling Rock Block (Blocks Tile & 3 Atk)</option>
+              <option value="spear">🗡️ Spear Trap (1 Atk Dice)</option>
+              <option value="chest-trap">☠️ Trapped Chest (Poison Needle)</option>
             </select>
           </div>
 
@@ -417,6 +435,7 @@
             <div class="card mini-list-card">
               <div class="list-tab-row">
                 <span class="mini-tab active" data-mini="doors">Doors (<span id="count-doors">12</span>)</span>
+                <span class="mini-tab" data-mini="blocks">Blocks (<span id="count-blocks">4</span>)</span>
                 <span class="mini-tab" data-mini="furniture">Furn (<span id="count-furn">4</span>)</span>
                 <span class="mini-tab" data-mini="monsters">Monsters (<span id="count-monsters">3</span>)</span>
                 <span class="mini-tab" data-mini="traps">Traps (<span id="count-traps">0</span>)</span>

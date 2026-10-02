@@ -489,6 +489,90 @@
       "robos:namespace": "robos.tabletop"
     },
     {
+      "@id": "urn:robos:tabletop:furniture:bookcase",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopFurniture",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Bookcase (3-Tile Library Wall)",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:furniture:bookshelf",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopFurniture",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Bookshelf (2-Tile Study Shelf)",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:furniture:altar",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopFurniture",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Sorcerer's Altar / Desk (3x2 Tiles)",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:furniture:boulder",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopFurniture",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Boulder Tile Obstacle",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:furniture:table",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopFurniture",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Wooden Table / Council Desk",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:furniture:cupboard",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopFurniture",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Cupboard (2-Tile Cabinet)",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:furniture:fireplace",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopFurniture",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Stone Fireplace",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
       "@id": "urn:robos:tabletop:map:the-trial",
       "@type": [
         "oslc_am:Resource",

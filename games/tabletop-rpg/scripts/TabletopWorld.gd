@@ -23,6 +23,8 @@ var heroes: Array[Dictionary] = []
 var monsters: Array[Dictionary] = []
 var doors: Array[Dictionary] = []
 var furniture: Array[Dictionary] = []
+var wall_blocks: Array[Dictionary] = []
+var traps: Array[Dictionary] = []
 var revealed_rooms: Array[String] = []
 
 var auto_play_timer: float = 0.0
@@ -144,6 +146,14 @@ func _load_active_cartridge() -> void:
 	furniture.clear()
 	for f in map_data.get("furniture", []):
 		furniture.append(f.duplicate(true))
+
+	wall_blocks.clear()
+	for wb in map_data.get("wallBlocks", []):
+		wall_blocks.append(wb.duplicate(true))
+
+	traps.clear()
+	for tr in map_data.get("traps", []):
+		traps.append(tr.duplicate(true))
 
 	revealed_rooms = ["room-corridor"]
 	queue_redraw()
@@ -505,14 +515,114 @@ func _draw() -> void:
 		draw_rect(center_rect, Color(0.7, 0.2, 0.8, 0.15))
 		draw_rect(center_rect, Color(0.8, 0.3, 0.9, 0.8), false, 2.0)
 
+	# Draw Wall Blocks (1-tile and 2-tile walls)
+	for wb in wall_blocks:
+		var px = wb.get("x", wb.get("position", [0, 0])[0])
+		var py = wb.get("y", wb.get("position", [0, 0])[1])
+		var w = int(wb.get("width", 1))
+		var h = int(wb.get("height", 1))
+		var b_type = str(wb.get("type", "1-tile-wall"))
+		if b_type == "2-tile-wall-h" or b_type == "double-h":
+			w = 2; h = 1
+		elif b_type == "2-tile-wall-v" or b_type == "double-v":
+			w = 1; h = 2
+		var block_rect = Rect2(BOARD_OFFSET + Vector2(px * TILE_SIZE + 2, py * TILE_SIZE + 2), Vector2(w * TILE_SIZE - 4, h * TILE_SIZE - 4))
+		# Base stone
+		draw_rect(block_rect, Color(0.18, 0.20, 0.24, 0.95))
+		# Bevel border
+		draw_rect(block_rect, Color(0.45, 0.50, 0.58, 1.0), false, 2.0)
+		# Inner masonry accent
+		draw_string(ThemeDB.fallback_font, block_rect.position + Vector2(w * TILE_SIZE * 0.5 - 6, h * TILE_SIZE * 0.5 + 5), "🧱", HORIZONTAL_ALIGNMENT_CENTER, -1, 14)
+
+	# Draw Traps (visible in GM mode or if detected/revealed)
+	for tr in traps:
+		var r_id = tr.get("roomId", "")
+		if is_gm_role() or tr.get("detected", false) or tr.get("is_revealed", false):
+			var px = tr.get("x", tr.get("position", [0, 0])[0])
+			var py = tr.get("y", tr.get("position", [0, 0])[1])
+			var w = int(tr.get("width", 1))
+			var h = int(tr.get("height", 1))
+			var t_type = str(tr.get("type", tr.get("trapType", "pit")))
+			var trap_rect = Rect2(BOARD_OFFSET + Vector2(px * TILE_SIZE + 3, py * TILE_SIZE + 3), Vector2(w * TILE_SIZE - 6, h * TILE_SIZE - 6))
+			if "boulder" in t_type:
+				draw_circle(trap_rect.get_center(), TILE_SIZE * 0.42 * min(w, h), Color(0.35, 0.38, 0.42, 0.95))
+				draw_arc(trap_rect.get_center(), TILE_SIZE * 0.42 * min(w, h), 0, TAU, 32, Color(0.65, 0.70, 0.75), 2.0)
+				draw_string(ThemeDB.fallback_font, trap_rect.position + Vector2(w * TILE_SIZE * 0.5 - 6, h * TILE_SIZE * 0.5 + 5), "🪨", HORIZONTAL_ALIGNMENT_CENTER, -1, 14)
+			else:
+				draw_rect(trap_rect, Color(0.6, 0.1, 0.1, 0.6))
+				draw_rect(trap_rect, Color(0.9, 0.2, 0.2, 0.9), false, 1.5)
+				draw_string(ThemeDB.fallback_font, trap_rect.position + Vector2(w * TILE_SIZE * 0.5 - 6, h * TILE_SIZE * 0.5 + 5), "⚠️", HORIZONTAL_ALIGNMENT_CENTER, -1, 14)
+
 	# Draw Furniture
 	for f in furniture:
 		var r_id = f.get("roomId", "")
 		if is_gm_role() or revealed_rooms.has(r_id) or r_id == "":
-			var pos = f.get("position", [0, 0])
-			var screen_pos = BOARD_OFFSET + Vector2(pos[0] * TILE_SIZE + TILE_SIZE * 0.5, pos[1] * TILE_SIZE + TILE_SIZE * 0.5)
-			draw_circle(screen_pos, TILE_SIZE * 0.35, Color(0.5, 0.35, 0.2, 0.8))
-			draw_string(ThemeDB.fallback_font, screen_pos + Vector2(-6, 5), "📦", HORIZONTAL_ALIGNMENT_CENTER, -1, 14)
+			var px = f.get("x", f.get("position", [0, 0])[0])
+			var py = f.get("y", f.get("position", [0, 0])[1])
+			var f_type = str(f.get("type", "chest"))
+			var w = int(f.get("width", 1))
+			var h = int(f.get("height", 1))
+			if f_type == "altar" and w == 1 and h == 1:
+				w = 3; h = 2
+			elif f_type == "bookcase" and w == 1 and h == 1:
+				w = 3; h = 1
+			elif (f_type == "bookshelf" or f_type == "cupboard") and w == 1 and h == 1:
+				w = 2; h = 1
+			elif f_type == "table" and w == 1 and h == 1:
+				w = 3; h = 2
+			elif f_type == "tomb" and w == 1 and h == 1:
+				w = 2; h = 3
+
+			var f_rect = Rect2(BOARD_OFFSET + Vector2(px * TILE_SIZE + 2, py * TILE_SIZE + 2), Vector2(w * TILE_SIZE - 4, h * TILE_SIZE - 4))
+			var icon_char = "📦"
+
+			if f_type == "altar":
+				# Arcane Sorcerer's Altar / Desk
+				draw_rect(f_rect, Color(0.14, 0.10, 0.20, 0.95))
+				draw_rect(f_rect, Color(0.68, 0.35, 0.95, 0.9), false, 2.0)
+				draw_arc(f_rect.get_center(), min(w, h) * TILE_SIZE * 0.28, 0, TAU, 24, Color(0.85, 0.45, 1.0, 0.6), 1.5)
+				icon_char = "🔮"
+			elif f_type == "bookcase":
+				# Grand Bookcase (Mahogany library shelf)
+				draw_rect(f_rect, Color(0.24, 0.12, 0.08, 0.95))
+				draw_rect(f_rect, Color(0.62, 0.36, 0.20, 1.0), false, 2.0)
+				icon_char = "📚"
+			elif f_type == "bookshelf":
+				# Study Bookshelf (Warm Oak)
+				draw_rect(f_rect, Color(0.32, 0.20, 0.10, 0.95))
+				draw_rect(f_rect, Color(0.72, 0.48, 0.24, 1.0), false, 2.0)
+				icon_char = "📖"
+			elif f_type == "boulder":
+				# Boulder obstacle
+				draw_circle(f_rect.get_center(), TILE_SIZE * 0.42 * min(w, h), Color(0.32, 0.35, 0.38, 0.95))
+				draw_arc(f_rect.get_center(), TILE_SIZE * 0.42 * min(w, h), 0, TAU, 32, Color(0.65, 0.70, 0.75), 2.0)
+				icon_char = "🪨"
+			elif f_type == "tomb":
+				# Ancient Stone Tomb
+				draw_rect(f_rect, Color(0.25, 0.28, 0.32, 0.95))
+				draw_rect(f_rect, Color(0.55, 0.60, 0.68, 1.0), false, 2.0)
+				icon_char = "⚰️"
+			elif f_type == "table":
+				# Wooden Table
+				draw_rect(f_rect, Color(0.35, 0.22, 0.12, 0.95))
+				draw_rect(f_rect, Color(0.58, 0.38, 0.22, 1.0), false, 1.5)
+				icon_char = "🪵"
+			elif f_type == "chest":
+				# Golden Chest
+				draw_rect(f_rect, Color(0.45, 0.32, 0.08, 0.95))
+				draw_rect(f_rect, Color(0.9, 0.75, 0.2, 1.0), false, 1.5)
+				icon_char = "💰"
+			elif f_type == "weapons-rack" or f_type == "rack":
+				# Weapons Rack
+				draw_rect(f_rect, Color(0.25, 0.25, 0.28, 0.95))
+				draw_rect(f_rect, Color(0.6, 0.6, 0.7, 1.0), false, 1.5)
+				icon_char = "⚔️"
+			else:
+				draw_rect(f_rect, Color(0.4, 0.28, 0.16, 0.85))
+				draw_rect(f_rect, Color(0.6, 0.45, 0.25, 1.0), false, 1.5)
+				icon_char = "📦"
+
+			draw_string(ThemeDB.fallback_font, f_rect.position + Vector2(w * TILE_SIZE * 0.5 - 6, h * TILE_SIZE * 0.5 + 5), icon_char, HORIZONTAL_ALIGNMENT_CENTER, -1, 14)
 
 	# Draw Doors
 	for d in doors:
