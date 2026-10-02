@@ -67,55 +67,125 @@
     <main class="main-content">
       <!-- 1. Quest & Campaign Tab -->
       <section id="tab-quest" class="tab-pane active">
-        <div class="pane-header">
-          <h2>Quest & Campaign Blueprint</h2>
-          <p>Configure dungeon objectives, win conditions, starting spawn, and lore briefing.</p>
-        </div>
-        <div class="form-grid">
-          <div class="card form-card">
-            <h3>Basic Quest Metadata</h3>
-            <div class="form-group">
-              <label>Cartridge Identifier (Slug):</label>
-              <input type="text" id="quest-slug" value="heroquest-the-trial" class="form-input">
+        <div class="pane-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;">
+          <div>
+            <h2>Quest & Campaign Blueprint</h2>
+            <p>Campaigns contain 1 or more quests. Select, edit, complete, and track quest progression.</p>
+          </div>
+          <div class="campaign-summary-card card" style="min-width:320px; padding:10px 14px; background:var(--bg-card); border:1px solid var(--border-color); border-radius:6px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <strong id="campaign-title-display">HeroQuest: The Gathering Storm</strong>
+              <span id="campaign-progress-pct" class="badge badge-cyan" style="font-weight:700;">0% Completed</span>
             </div>
-            <div class="form-group">
-              <label>Quest Title:</label>
-              <input type="text" id="quest-title" value="HeroQuest: The Trial" class="form-input">
+            <div class="campaign-progress-bar-container" style="background:#0f172a; height:8px; border-radius:4px; overflow:hidden; border:1px solid #334155;">
+              <div id="campaign-progress-bar" style="width:0%; height:100%; background:linear-gradient(90deg, #00bcd4, #10b981); transition:width 0.3s ease;"></div>
             </div>
-            <div class="form-group">
-              <label>Ruleset Engine:</label>
-              <select id="quest-ruleset" class="form-input">
-                <option value="heroquest" selected>HeroQuest Classic (2d6 Movement, Combat Dice)</option>
-                <option value="dnd5e">D&D 5e SRD Tabletop Grid</option>
-                <option value="d20-open">OGL D20 Tabletop</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Starting Spawn Square [X, Y]:</label>
-              <div class="coord-inputs">
-                <input type="number" id="quest-spawn-x" value="1" min="0" max="25" class="form-input">
-                <input type="number" id="quest-spawn-y" value="1" min="0" max="18" class="form-input">
-              </div>
-            </div>
-            <div class="form-group">
-              <label>Gold Reward:</label>
-              <input type="number" id="quest-gold" value="100" class="form-input">
+            <div style="display:flex; justify-content:space-between; font-size:11px; color:#94a3b8; margin-top:4px;">
+              <span id="campaign-progress-count">0 / 3 Quests Finished</span>
+              <span id="campaign-total-gold-pot">Total Bounty: 550g</span>
             </div>
           </div>
+        </div>
 
-          <div class="card form-card">
-            <h3>Dungeon Briefing & Win State</h3>
-            <div class="form-group">
-              <label>Story Briefing (Parchment Parchment):</label>
-              <textarea id="quest-briefing" rows="6" class="form-textarea">You have learned well, my apprentices. Now comes your final test. Seek out the foul Orc Warlord Verag in his hidden catacombs, slay him, and return to the stairwell alive.</textarea>
+        <div class="split-view campaign-split-view">
+          <aside class="sidebar-list campaign-quests-sidebar">
+            <div class="list-header" style="display:flex; justify-content:space-between; align-items:center;">
+              <h3>Campaign Quests</h3>
+              <button id="btn-add-quest" class="btn btn-sm btn-secondary" title="Add a new quest to campaign">+ New Quest</button>
             </div>
-            <div class="form-group">
-              <label>Boss Monster Target:</label>
-              <input type="text" id="quest-boss-target" value="verag-boss" class="form-input">
+            <div class="form-group" style="padding:8px 12px 6px 12px; margin:0; border-bottom:1px solid var(--border-color);">
+              <label style="font-size:11px; text-transform:uppercase; color:#64748b; font-weight:700;">Campaign Name:</label>
+              <input type="text" id="campaign-name-input" class="form-input" value="HeroQuest: The Gathering Storm" style="padding:4px 8px; font-size:12px; margin-top:4px;">
             </div>
-            <div class="form-group">
-              <label>Board Theme / Background:</label>
-              <input type="text" id="quest-bg-ref" value="res://assets/boards/heroquest_board.png" class="form-input">
+            <div id="campaign-quests-list" class="item-list"></div>
+          </aside>
+
+          <div class="editor-panel campaign-editor-panel">
+            <!-- Victory Banner (Hidden by default, shown when quest is completed) -->
+            <div id="quest-victory-banner" class="quest-victory-banner" style="display:none;">
+              <div class="victory-banner-content" style="display:flex; align-items:center; gap:12px;">
+                <span class="victory-icon" style="font-size:1.8rem;">🏆</span>
+                <div>
+                  <h4 id="victory-quest-title" style="margin:0 0 4px 0; color:#10b981; font-size:1rem;">Quest Completed!</h4>
+                  <p id="victory-quest-desc" style="margin:0; font-size:12px; color:#cbd5e1;">All party heroes have been awarded the quest bounty.</p>
+                </div>
+              </div>
+              <button id="btn-next-quest-banner" class="btn btn-sm btn-primary">Proceed to Next Quest ➔</button>
+            </div>
+
+            <div class="card form-card" style="margin-bottom:16px;">
+              <div class="editor-card-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <h3 id="quest-editor-title" style="margin:0;">Quest 1: The Trial</h3>
+                  <span id="quest-status-badge" class="badge badge-gray">⏳ In Progress</span>
+                </div>
+                <div style="display:flex; gap:8px; align-items:center;">
+                  <button id="btn-complete-quest" class="btn btn-sm btn-success" title="Complete quest and award gold bounty to party">🏆 Complete Quest</button>
+                  <button id="btn-reset-quest" class="btn btn-sm btn-secondary" title="Reopen quest">↩️ Reset</button>
+                  <button id="btn-delete-quest" class="btn btn-sm btn-danger" title="Delete quest from campaign">🗑️ Delete</button>
+                </div>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-card-inner">
+                  <h4 style="margin-top:0; color:#e2e8f0; font-size:0.9rem;">Basic Quest Metadata</h4>
+                  <div class="form-group">
+                    <label>Cartridge Identifier (Slug):</label>
+                    <input type="text" id="quest-slug" value="heroquest-the-trial" class="form-input">
+                  </div>
+                  <div class="form-group">
+                    <label>Quest Title:</label>
+                    <input type="text" id="quest-title" value="Quest 1: The Trial" class="form-input">
+                  </div>
+                  <div class="form-group">
+                    <label>Ruleset Engine:</label>
+                    <select id="quest-ruleset" class="form-input">
+                      <option value="heroquest" selected>HeroQuest Classic (2d6 Movement, Combat Dice)</option>
+                      <option value="dnd5e">D&D 5e SRD Tabletop Grid</option>
+                      <option value="d20-open">OGL D20 Tabletop</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>Starting Spawn Square [X, Y]:</label>
+                    <div class="coord-inputs">
+                      <input type="number" id="quest-spawn-x" value="1" min="0" max="25" class="form-input">
+                      <input type="number" id="quest-spawn-y" value="1" min="0" max="18" class="form-input">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label>Gold Bounty / Reward (Awarded on Completion):</label>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                      <input type="number" id="quest-gold" value="100" class="form-input" style="flex:1;">
+                      <span class="gold-badge" style="background:#eab30822; color:#eab308; border:1px solid #eab30844; padding:4px 8px; border-radius:4px; font-weight:700;">🪙 Gold</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-card-inner">
+                  <h4 style="margin-top:0; color:#e2e8f0; font-size:0.9rem;">Dungeon Briefing & Win State</h4>
+                  <div class="form-group">
+                    <label>Story Briefing (Parchment):</label>
+                    <textarea id="quest-briefing" rows="5" class="form-textarea">You have learned well, my apprentices. Now comes your final test. Seek out the foul Orc Warlord Verag in his hidden catacombs, slay him, and return to the stairwell alive.</textarea>
+                  </div>
+                  <div class="form-group">
+                    <label>Boss Monster Target:</label>
+                    <input type="text" id="quest-boss-target" value="verag-boss" class="form-input">
+                  </div>
+                  <div class="form-group">
+                    <label>Board Theme / Background (Maps Studio):</label>
+                    <select id="quest-bg-ref" class="form-select">
+                      <option value="fan-dungeon-28x21">HeroQuest Fan Dungeon & Cavern Citadel (28×21)</option>
+                      <option value="heroquest-classic">HeroQuest Classic Side A - Stone Dungeon (26×19)</option>
+                      <option value="first-light-caverns">HeroQuest First Light Side B - Caverns (26×19)</option>
+                    </select>
+                    <div id="quest-bg-meta" class="theme-meta-badges" style="margin-top:6px; display:flex; gap:8px;">
+                      <span id="quest-bg-dims" class="badge">28 × 21 squares</span>
+                      <span id="quest-bg-rooms" class="badge">19 active rooms</span>
+                      <span id="quest-bg-calib" class="badge">Inset: 0px (Battlemat)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -133,15 +203,26 @@
           </aside>
           <div class="editor-panel">
             <div class="card form-card">
-              <h3 id="hero-editor-title">Edit Hero: Barbarian</h3>
+              <div class="editor-card-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                <h3 id="hero-editor-title" style="margin:0;">Edit Hero: Barbarian</h3>
+                <div style="display:flex; gap:8px; align-items:center;">
+                  <span id="hero-autosave-indicator" class="autosave-tag">● Saved</span>
+                  <button id="btn-save-hero" class="btn btn-sm btn-primary">💾 Save Hero</button>
+                  <button id="btn-delete-hero" class="btn btn-sm btn-danger">🗑️ Delete</button>
+                </div>
+              </div>
               <div class="form-row">
-                <div class="form-group">
+                <div class="form-group" style="flex:1;">
                   <label>Hero ID:</label>
                   <input type="text" id="hero-id" class="form-input" readonly>
                 </div>
-                <div class="form-group">
+                <div class="form-group" style="flex:2;">
                   <label>Hero Name:</label>
-                  <input type="text" id="hero-name" class="form-input">
+                  <input type="text" id="hero-name" class="form-input" placeholder="e.g. Grimjaw the Slayer">
+                </div>
+                <div class="form-group" style="flex:2;">
+                  <label>Hero Class / Archetype:</label>
+                  <input type="text" id="hero-class" class="form-input" placeholder="e.g. Barbarian, Dwarf, Elf, Wizard">
                 </div>
               </div>
               <div class="form-row stats-row">
@@ -163,31 +244,144 @@
                 </div>
               </div>
               <div class="form-row">
-                <div class="form-group">
-                  <label>Starting Weapon:</label>
-                  <input type="text" id="hero-weapon" class="form-input">
+                <div class="form-group" style="flex:1;">
+                  <label>Gold Purse (💰 GP):</label>
+                  <div style="display:flex; gap:6px;">
+                    <input type="number" id="hero-gold" min="0" value="0" class="form-input" style="flex:1;">
+                    <button type="button" class="btn btn-sm btn-secondary btn-quick-gold" data-amount="10">+10</button>
+                    <button type="button" class="btn btn-sm btn-secondary btn-quick-gold" data-amount="50">+50</button>
+                    <button type="button" class="btn btn-sm btn-secondary btn-quick-gold" data-amount="100">+100</button>
+                  </div>
                 </div>
-                <div class="form-group">
-                  <label>Special Trait / Ability:</label>
-                  <input type="text" id="hero-ability" class="form-input">
+                <div class="form-group" style="flex:1;">
+                  <label>Equipped Weapon:</label>
+                  <input type="text" id="hero-weapon" class="form-input" placeholder="e.g. Broadsword (3 Attack Dice)">
+                </div>
+                <div class="form-group" style="flex:1;">
+                  <label>Equipped Armor / Shield:</label>
+                  <input type="text" id="hero-armor" class="form-input" placeholder="e.g. Shield & Chainmail (+2 Defend Dice)">
                 </div>
               </div>
               <div class="form-row">
-                <div class="form-group">
+                <div class="form-group" style="flex:2;">
+                  <label>Special Trait / Ability:</label>
+                  <input type="text" id="hero-ability" class="form-input">
+                </div>
+                <div class="form-group" style="flex:1;">
                   <label>Token Color:</label>
                   <input type="color" id="hero-color" class="form-color">
                 </div>
-                <div class="form-group">
+                <div class="form-group" style="flex:1;">
                   <label>Emoji / Icon:</label>
                   <input type="text" id="hero-icon" class="form-input">
                 </div>
-                <div class="form-group">
+                <div class="form-group" style="flex:1;">
                   <label>Spawn Pos [X, Y]:</label>
                   <div class="coord-inputs">
                     <input type="number" id="hero-pos-x" min="0" max="25" class="form-input">
                     <input type="number" id="hero-pos-y" min="0" max="18" class="form-input">
                   </div>
                 </div>
+              </div>
+
+              <!-- Hero Inventory Section -->
+              <div class="hero-inventory-section" style="margin-top:16px; border-top: 1px solid var(--border-color); padding-top:14px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                  <h4 style="margin:0; font-size:13px; color:#94a3b8; text-transform:uppercase;">🎒 Backpack Inventory & Items</h4>
+                  <div style="display:flex; gap:6px;">
+                    <select id="hero-preset-item" class="form-select" style="font-size:12px; padding:3px 8px;">
+                      <option value="potion-healing">Potion of Healing (Restores up to 4 BP)</option>
+                      <option value="holy-water">Holy Water (Dispel/Kill Undead)</option>
+                      <option value="tool-kit">Trap Disarm Toolkit</option>
+                      <option value="heavy-rope">Heavy Rope (30 ft)</option>
+                      <option value="torch">Dungeon Torch (3 Turns)</option>
+                      <option value="potion-strength">Potion of Strength (+2 Atk Dice)</option>
+                    </select>
+                    <button id="btn-add-inventory-item" class="btn btn-sm btn-secondary">+ Add Item</button>
+                  </div>
+                </div>
+                <div id="hero-inventory-list" class="inventory-table-container"></div>
+              </div>
+            </div>
+
+            <!-- Hero Action & Combat HUD Screen -->
+            <div class="card form-card hero-action-screen" id="hero-action-screen" style="margin-top:16px;">
+              <div class="action-screen-header">
+                <div class="action-hero-identity">
+                  <span id="act-hero-icon" class="act-icon">🛡️</span>
+                  <div>
+                    <h3 id="act-hero-name" style="margin:0;">Barbarian</h3>
+                    <div style="display:flex; gap:8px; align-items:center; margin-top:2px;">
+                      <span id="act-hero-class" class="hero-class-tag">Barbarian</span>
+                      <span id="act-hero-gold" class="gold-badge">💰 0 GP</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="vitality-pips-container">
+                  <div class="vitality-group">
+                    <span class="vitality-label">❤️ Body Points (BP):</span>
+                    <span id="act-bp-track" class="pips-track"></span>
+                    <div class="vitality-btns">
+                      <button id="btn-act-dmg-bp" class="btn btn-xs btn-danger" title="Take 1 Damage">-1</button>
+                      <button id="btn-act-heal-bp" class="btn btn-xs btn-success" title="Heal 1 BP">+1</button>
+                    </div>
+                  </div>
+                  <div class="vitality-group">
+                    <span class="vitality-label">🧠 Mind Points (MP):</span>
+                    <span id="act-mp-track" class="pips-track"></span>
+                    <div class="vitality-btns">
+                      <button id="btn-act-dmg-mp" class="btn btn-xs btn-danger" title="Spend 1 MP">-1</button>
+                      <button id="btn-act-heal-mp" class="btn btn-xs btn-primary" title="Restore 1 MP">+1</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Action Roll Modules -->
+              <div class="action-modules-grid">
+                <!-- ⚔️ Attack Module -->
+                <div class="action-module-card attack-card">
+                  <div class="module-title">⚔️ ATTACK ACTION</div>
+                  <div class="module-stat" id="act-atk-stat">3 Combat Dice</div>
+                  <div class="module-weapon" id="act-atk-weapon">Broadsword</div>
+                  <button id="btn-roll-hero-attack" class="btn btn-danger btn-roll-action">
+                    🎲 Roll Attack
+                  </button>
+                  <div id="act-atk-result" class="roll-result-box">
+                    <span class="result-placeholder">Ready to strike</span>
+                  </div>
+                </div>
+
+                <!-- 🛡️ Defend Module -->
+                <div class="action-module-card defend-card">
+                  <div class="module-title">🛡️ DEFEND ACTION</div>
+                  <div class="module-stat" id="act-def-stat">2 Combat Dice</div>
+                  <div class="module-armor" id="act-def-armor">Natural Reflexes</div>
+                  <button id="btn-roll-hero-defend" class="btn btn-primary btn-roll-action">
+                    🛡️ Roll Defend
+                  </button>
+                  <div id="act-def-result" class="roll-result-box">
+                    <span class="result-placeholder">Ready to block</span>
+                  </div>
+                </div>
+
+                <!-- 👟 Movement Module -->
+                <div class="action-module-card move-card">
+                  <div class="module-title">👟 MOVEMENT</div>
+                  <div class="module-stat">2 Red D6 Dice</div>
+                  <div class="module-speed" id="act-move-speed">Roll 2d6 squares</div>
+                  <button id="btn-roll-hero-move" class="btn btn-secondary btn-roll-action">
+                    🏃 Roll Move (2d6)
+                  </button>
+                  <div id="act-move-result" class="roll-result-box">
+                    <span class="result-placeholder">Ready to move</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Combat & Action Log -->
+              <div class="combat-roll-log" id="combat-roll-log">
+                <div class="log-entry system">⚔️ Hero action screen ready. Roll combat dice or adjust state above.</div>
               </div>
             </div>
           </div>

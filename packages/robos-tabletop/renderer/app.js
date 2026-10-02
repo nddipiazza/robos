@@ -13,44 +13,116 @@ let currentData = {
   doors: [],
   activeHeroId: null,
   activeMonsterId: null,
-  currentQuest: {
-    slug: 'heroquest-the-trial',
-    title: 'HeroQuest: The Trial',
-    briefing: 'Seek out the foul Orc Warlord Verag in his catacombs, slay him, and return alive.',
-    mapConfigId: 'fan-dungeon-28x21',
-    activeRooms: new Set(),
-    wallBlocks: [
-      { id: 'block-1', x: 12, y: 0, type: 'single', width: 1, height: 1 },
-      { id: 'block-2', x: 12, y: 20, type: 'single', width: 1, height: 1 },
-      { id: 'block-double-v', x: 0, y: 10, type: 'double-v', width: 1, height: 2 },
-      { id: 'block-double-h', x: 26, y: 10, type: 'double-h', width: 2, height: 1 }
-    ],
-    doors: [],
-    furniture: [
-      { id: 'furn-altar-1', name: "Sorcerer's Altar / Desk", type: 'altar', x: 13, y: 9, width: 3, height: 2, roomId: 'room-center-mid' },
-      { id: 'furn-bookcase-1', name: 'Grand Bookcase', type: 'bookcase', x: 13, y: 3, width: 3, height: 1, roomId: 'room-center-n' },
-      { id: 'furn-bookshelf-1', name: 'Study Bookshelf', type: 'bookshelf', x: 23, y: 5, width: 2, height: 1, roomId: 'room-e-parlor' },
-      { id: 'furn-boulder-1', name: 'Fossil Boulder Tile', type: 'boulder', x: 2, y: 7, width: 1, height: 1, roomId: 'room-grand-fossil' },
-      { id: 'furn-tomb-1', name: 'Ancient Stone Tomb', type: 'tomb', x: 3, y: 2, width: 2, height: 3, roomId: 'room-nw-crypt' },
-      { id: 'furn-chest-1', name: 'Vault Chest of Gold', type: 'chest', x: 23, y: 2, width: 1, height: 1, roomId: 'room-ne-vault' },
-      { id: 'furn-table-1', name: 'Council Table', type: 'table', x: 13, y: 15, width: 3, height: 2, roomId: 'room-center-s' },
-      { id: 'furn-rack-1', name: 'Weapons Rack', type: 'weapons-rack', x: 8, y: 2, width: 3, height: 1, roomId: 'room-n-armory' }
-    ],
-    monsters: [
-      { id: 'mon-verag', name: 'Verag the Orc Warlord', monsterType: 'verag-boss', x: 4, y: 10, bp: 4, atk: 4, def: 4, isBoss: true, roomId: 'room-grand-fossil' },
-      { id: 'mon-skel-1', name: 'Crypt Skeleton', monsterType: 'skeleton-1', x: 3, y: 4, bp: 1, atk: 2, def: 2, isBoss: false, roomId: 'room-nw-crypt' },
-      { id: 'mon-skel-2', name: 'Crypt Skeleton', monsterType: 'skeleton-2', x: 5, y: 4, bp: 1, atk: 2, def: 2, isBoss: false, roomId: 'room-nw-crypt' },
-      { id: 'mon-zombie-1', name: 'Cellar Zombie', monsterType: 'zombie-1', x: 4, y: 16, bp: 2, atk: 3, def: 3, isBoss: false, roomId: 'room-sw-cellar' },
-      { id: 'mon-orc-1', name: 'Orc Guard', monsterType: 'orc-warrior-1', x: 14, y: 11, bp: 1, atk: 3, def: 2, isBoss: false, roomId: 'room-center-mid' },
-      { id: 'mon-goblin-1', name: 'Goblin Scout', monsterType: 'goblin-scout-1', x: 15, y: 11, bp: 1, atk: 2, def: 1, isBoss: false, roomId: 'room-center-mid' }
-    ],
-    traps: [
-      { id: 'trap-pit-1', trapType: 'pit', x: 0, y: 5, damageDice: 1, detected: false, disarmed: false },
-      { id: 'trap-boulder-1', trapType: 'boulder', x: 7, y: 5, damageDice: 3, detected: false, disarmed: false },
-      { id: 'trap-falling-1', trapType: 'falling-block', x: 21, y: 10, damageDice: 3, detected: false, disarmed: false }
-    ],
-    startingStairs: [0, 1]
+  campaign: {
+    id: 'campaign-heroquest-gathering-storm',
+    title: 'HeroQuest: The Gathering Storm',
+    description: "The Emperor calls upon the kingdom's greatest champions to defeat the armies of Morcar and the Witch Lord.",
+    quests: [
+      {
+        id: 'quest-1',
+        slug: 'heroquest-the-trial',
+        title: 'Quest 1: The Trial',
+        briefing: 'You have learned well, my apprentices. Now comes your final test. Seek out the foul Orc Warlord Verag in his hidden catacombs, slay him, and return to the stairwell alive.',
+        mapConfigId: 'fan-dungeon-28x21',
+        ruleset: 'heroquest',
+        goldReward: 100,
+        bossTarget: 'verag-boss',
+        completed: false,
+        startingStairs: [0, 1],
+        activeRooms: new Set(),
+        wallBlocks: [
+          { id: 'block-1', x: 12, y: 0, type: 'single', width: 1, height: 1 },
+          { id: 'block-2', x: 12, y: 20, type: 'single', width: 1, height: 1 },
+          { id: 'block-double-v', x: 0, y: 10, type: 'double-v', width: 1, height: 2 },
+          { id: 'block-double-h', x: 26, y: 10, type: 'double-h', width: 2, height: 1 }
+        ],
+        doors: [],
+        furniture: [
+          { id: 'furn-altar-1', name: "Sorcerer's Altar / Desk", type: 'altar', x: 13, y: 9, width: 3, height: 2, roomId: 'room-center-mid' },
+          { id: 'furn-bookcase-1', name: 'Grand Bookcase', type: 'bookcase', x: 13, y: 3, width: 3, height: 1, roomId: 'room-center-n' },
+          { id: 'furn-bookshelf-1', name: 'Study Bookshelf', type: 'bookshelf', x: 23, y: 5, width: 2, height: 1, roomId: 'room-e-parlor' },
+          { id: 'furn-boulder-1', name: 'Fossil Boulder Tile', type: 'boulder', x: 2, y: 7, width: 1, height: 1, roomId: 'room-grand-fossil' },
+          { id: 'furn-tomb-1', name: 'Ancient Stone Tomb', type: 'tomb', x: 3, y: 2, width: 2, height: 3, roomId: 'room-nw-crypt' },
+          { id: 'furn-chest-1', name: 'Vault Chest of Gold', type: 'chest', x: 23, y: 2, width: 1, height: 1, roomId: 'room-ne-vault' },
+          { id: 'furn-table-1', name: 'Council Table', type: 'table', x: 13, y: 15, width: 3, height: 2, roomId: 'room-center-s' },
+          { id: 'furn-rack-1', name: 'Weapons Rack', type: 'weapons-rack', x: 8, y: 2, width: 3, height: 1, roomId: 'room-n-armory' }
+        ],
+        monsters: [
+          { id: 'mon-verag', name: 'Verag the Orc Warlord', monsterType: 'verag-boss', x: 4, y: 10, bp: 4, atk: 4, def: 4, isBoss: true, roomId: 'room-grand-fossil' },
+          { id: 'mon-skel-1', name: 'Crypt Skeleton', monsterType: 'skeleton-1', x: 3, y: 4, bp: 1, atk: 2, def: 2, isBoss: false, roomId: 'room-nw-crypt' },
+          { id: 'mon-skel-2', name: 'Crypt Skeleton', monsterType: 'skeleton-2', x: 5, y: 4, bp: 1, atk: 2, def: 2, isBoss: false, roomId: 'room-nw-crypt' },
+          { id: 'mon-zombie-1', name: 'Cellar Zombie', monsterType: 'zombie-1', x: 4, y: 16, bp: 2, atk: 3, def: 3, isBoss: false, roomId: 'room-sw-cellar' },
+          { id: 'mon-orc-1', name: 'Orc Guard', monsterType: 'orc-warrior-1', x: 14, y: 11, bp: 1, atk: 3, def: 2, isBoss: false, roomId: 'room-center-mid' },
+          { id: 'mon-goblin-1', name: 'Goblin Scout', monsterType: 'goblin-scout-1', x: 15, y: 11, bp: 1, atk: 2, def: 1, isBoss: false, roomId: 'room-center-mid' }
+        ],
+        traps: [
+          { id: 'trap-pit-1', trapType: 'pit', x: 0, y: 5, damageDice: 1, detected: false, disarmed: false },
+          { id: 'trap-boulder-1', trapType: 'boulder', x: 7, y: 5, damageDice: 3, detected: false, disarmed: false },
+          { id: 'trap-falling-1', trapType: 'falling-block', x: 21, y: 10, damageDice: 3, detected: false, disarmed: false }
+        ]
+      },
+      {
+        id: 'quest-2',
+        slug: 'heroquest-rescue-sir-ragnar',
+        title: 'Quest 2: The Rescue of Sir Ragnar',
+        briefing: "Sir Ragnar, one of the Emperor's most trusted knights, has been captured by the Greenskins. Infiltrate the fortress prison, locate his cell, and escort him safely to the surface.",
+        mapConfigId: 'heroquest-classic',
+        ruleset: 'heroquest',
+        goldReward: 200,
+        bossTarget: 'orc-jailer-boss',
+        completed: false,
+        startingStairs: [1, 1],
+        activeRooms: new Set(),
+        wallBlocks: [
+          { id: 'block-r-1', x: 12, y: 0, type: 'single', width: 1, height: 1 },
+          { id: 'block-r-2', x: 12, y: 18, type: 'single', width: 1, height: 1 }
+        ],
+        doors: [],
+        furniture: [
+          { id: 'furn-torture-1', name: 'Iron Torture Rack', type: 'weapons-rack', x: 13, y: 9, width: 3, height: 1, roomId: 'room-center' },
+          { id: 'furn-chest-ragnar', name: "Jailer's Iron Strongbox", type: 'chest', x: 20, y: 3, width: 1, height: 1, roomId: 'room-ne-armory' }
+        ],
+        monsters: [
+          { id: 'mon-jailer', name: 'Gorg the Orc Jailer', monsterType: 'orc-warrior-1', x: 13, y: 8, bp: 3, atk: 3, def: 3, isBoss: true, roomId: 'room-center' },
+          { id: 'mon-guard-1', name: 'Goblin Warden', monsterType: 'goblin-scout-1', x: 14, y: 8, bp: 1, atk: 2, def: 1, isBoss: false, roomId: 'room-center' },
+          { id: 'mon-guard-2', name: 'Goblin Warden', monsterType: 'goblin-scout-1', x: 12, y: 8, bp: 1, atk: 2, def: 1, isBoss: false, roomId: 'room-center' }
+        ],
+        traps: [
+          { id: 'trap-pit-r-1', trapType: 'pit', x: 10, y: 5, damageDice: 1, detected: false, disarmed: false }
+        ]
+      },
+      {
+        id: 'quest-3',
+        slug: 'heroquest-lair-orc-warlord',
+        title: 'Quest 3: Lair of the Orc Warlord',
+        briefing: 'Deep within the sunken caverns lies the seat of the Orc Chieftain Ulag. Purge his foul guards, shatter his command throne, and reclaim the stolen royal treasure.',
+        mapConfigId: 'first-light-caverns',
+        ruleset: 'heroquest',
+        goldReward: 250,
+        bossTarget: 'ulag-warlord',
+        completed: false,
+        startingStairs: [1, 1],
+        activeRooms: new Set(),
+        wallBlocks: [
+          { id: 'block-u-1', x: 12, y: 0, type: 'single', width: 1, height: 1 }
+        ],
+        doors: [],
+        furniture: [
+          { id: 'furn-throne-1', name: 'Warlord Throne', type: 'altar', x: 13, y: 9, width: 3, height: 2, roomId: 'room-center' },
+          { id: 'furn-cavern-boulder', name: 'Massive Stalagmite', type: 'boulder', x: 5, y: 5, width: 1, height: 1, roomId: 'room-cavern' }
+        ],
+        monsters: [
+          { id: 'mon-ulag', name: 'Ulag the Orc Chieftain', monsterType: 'verag-boss', x: 13, y: 10, bp: 5, atk: 4, def: 5, isBoss: true, roomId: 'room-center' },
+          { id: 'mon-fimir-1', name: 'Swamp Fimir Mystic', monsterType: 'zombie-1', x: 15, y: 9, bp: 2, atk: 3, def: 3, isBoss: false, roomId: 'room-center' }
+        ],
+        traps: [
+          { id: 'trap-cave-in', trapType: 'falling-block', x: 12, y: 7, damageDice: 3, detected: false, disarmed: false }
+        ]
+      }
+    ]
   },
+  currentQuestIndex: 0,
+  currentQuest: null,
   activeTool: 'inspect',
   selectedSquare: null,
   selectedEntity: null,
@@ -69,12 +141,23 @@ let currentData = {
     showWalls: true
   }
 };
+currentData.currentQuest = currentData.campaign.quests[0];
 
 // DOM references
 const statusBar = document.getElementById("status-text");
 
 function setStatus(msg) {
   if (statusBar) statusBar.textContent = msg;
+}
+
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 // Setup Main Navigation Tabs
@@ -222,18 +305,43 @@ function updateZoomDisplay() {
   }
 }
 
-// Map Configuration Switcher
+// Map Configuration Switcher (Board & Map Studio)
 document.getElementById("map-config-select")?.addEventListener("change", async (e) => {
   const configId = e.target.value;
   await switchMapConfiguration(configId);
 });
 
-async function switchMapConfiguration(configId) {
-  const config = currentData.mapConfigs.find(c => c.id === configId);
+// Map Theme Switcher (Campaign Editor)
+document.getElementById("quest-bg-ref")?.addEventListener("change", async (e) => {
+  const configId = e.target.value;
+  await switchMapConfiguration(configId, false);
+  if (typeof renderCampaignQuestsList === "function") {
+    renderCampaignQuestsList();
+  }
+});
+
+async function switchMapConfiguration(configId, preserveQuestEntities = false) {
+  const config = currentData.mapConfigs?.find(c => c.id === configId);
   if (!config) return;
 
   currentData.activeMapConfig = config;
-  currentData.currentQuest.mapConfigId = config.id;
+  if (currentData.currentQuest) {
+    currentData.currentQuest.mapConfigId = config.id;
+  }
+
+  // Synchronize dropdowns across Campaign Editor and Board Studio
+  const mapSelect = document.getElementById("map-config-select");
+  const questBgSelect = document.getElementById("quest-bg-ref");
+  if (mapSelect && mapSelect.value !== config.id) mapSelect.value = config.id;
+  if (questBgSelect && questBgSelect.value !== config.id) questBgSelect.value = config.id;
+
+  // Update Campaign Editor Theme Metadata Badges
+  const dimsEl = document.getElementById("quest-bg-dims");
+  const roomsEl = document.getElementById("quest-bg-rooms");
+  const calibEl = document.getElementById("quest-bg-calib");
+  if (dimsEl && config.gridDimensions) dimsEl.textContent = `${config.gridDimensions[0]} × ${config.gridDimensions[1]} squares`;
+  if (roomsEl) roomsEl.textContent = `${(config.rooms || []).length} active rooms`;
+  if (calibEl) calibEl.textContent = `Inset: ${config.calibration?.insetLeft || 0}px`;
 
   // Apply default calibration for this map
   if (config.calibration) {
@@ -242,31 +350,62 @@ async function switchMapConfiguration(configId) {
     currentData.calibration.insetRight = Number.isFinite(config.calibration.insetRight) ? config.calibration.insetRight : 0;
     currentData.calibration.insetBottom = Number.isFinite(config.calibration.insetBottom) ? config.calibration.insetBottom : 0;
 
-    document.getElementById("cal-inset-left").value = currentData.calibration.insetLeft;
-    document.getElementById("val-inset-left").textContent = currentData.calibration.insetLeft;
-    document.getElementById("cal-inset-top").value = currentData.calibration.insetTop;
-    document.getElementById("val-inset-top").textContent = currentData.calibration.insetTop;
-    document.getElementById("cal-inset-right").value = currentData.calibration.insetRight;
-    document.getElementById("val-inset-right").textContent = currentData.calibration.insetRight;
-    document.getElementById("cal-inset-bottom").value = currentData.calibration.insetBottom;
-    document.getElementById("val-inset-bottom").textContent = currentData.calibration.insetBottom;
+    const inL = document.getElementById("cal-inset-left");
+    const valL = document.getElementById("val-inset-left");
+    if (inL) inL.value = currentData.calibration.insetLeft;
+    if (valL) valL.textContent = currentData.calibration.insetLeft;
+
+    const inT = document.getElementById("cal-inset-top");
+    const valT = document.getElementById("val-inset-top");
+    if (inT) inT.value = currentData.calibration.insetTop;
+    if (valT) valT.textContent = currentData.calibration.insetTop;
+
+    const inR = document.getElementById("cal-inset-right");
+    const valR = document.getElementById("val-inset-right");
+    if (inR) inR.value = currentData.calibration.insetRight;
+    if (valR) valR.textContent = currentData.calibration.insetRight;
+
+    const inB = document.getElementById("cal-inset-bottom");
+    const valB = document.getElementById("val-inset-bottom");
+    if (inB) inB.value = currentData.calibration.insetBottom;
+    if (valB) valB.textContent = currentData.calibration.insetBottom;
   }
 
-  // Populate active rooms
-  currentData.currentQuest.activeRooms = new Set((config.rooms || []).map(r => r.id));
+  if (currentData.currentQuest) {
+    if (!preserveQuestEntities) {
+      // Populate active rooms
+      currentData.currentQuest.activeRooms = new Set((config.rooms || []).map(r => r.id));
 
-  // Initialize doors
-  currentData.currentQuest.doors = (config.doors || []).map(d => ({
-    id: d.id,
-    from: [...d.from],
-    to: [...d.to],
-    state: 'closed',
-    room: d.room
-  }));
+      // Initialize doors
+      currentData.currentQuest.doors = (config.doors || []).map(d => ({
+        id: d.id,
+        from: [...d.from],
+        to: [...d.to],
+        state: 'closed',
+        room: d.room
+      }));
 
-  // Update starting stair
-  if (config.defaultStartingStair) {
-    currentData.currentQuest.startingStairs = [...config.defaultStartingStair];
+      // Update starting stair
+      if (config.defaultStartingStair) {
+        currentData.currentQuest.startingStairs = [...config.defaultStartingStair];
+      }
+    } else {
+      if (!currentData.currentQuest.activeRooms || !(currentData.currentQuest.activeRooms instanceof Set) || currentData.currentQuest.activeRooms.size === 0) {
+        currentData.currentQuest.activeRooms = new Set((config.rooms || []).map(r => r.id));
+      }
+      if (!currentData.currentQuest.doors || currentData.currentQuest.doors.length === 0) {
+        currentData.currentQuest.doors = (config.doors || []).map(d => ({
+          id: d.id,
+          from: [...d.from],
+          to: [...d.to],
+          state: 'closed',
+          room: d.room
+        }));
+      }
+      if (!currentData.currentQuest.startingStairs && config.defaultStartingStair) {
+        currentData.currentQuest.startingStairs = [...config.defaultStartingStair];
+      }
+    }
   }
 
   setStatus(`Loading artwork for ${config.title}...`);
@@ -1612,15 +1751,17 @@ async function initKGraphData() {
     if (mapRes.success && mapRes.configs) {
       currentData.mapConfigs = mapRes.configs;
       const select = document.getElementById("map-config-select");
-      if (select) {
-        select.innerHTML = "";
+      const questBgSelect = document.getElementById("quest-bg-ref");
+      [select, questBgSelect].forEach(sel => {
+        if (!sel) return;
+        sel.innerHTML = "";
         currentData.mapConfigs.forEach(c => {
           const opt = document.createElement("option");
           opt.value = c.id;
-          opt.textContent = c.title;
-          select.appendChild(opt);
+          opt.textContent = `${c.title} (${c.gridDimensions ? c.gridDimensions[0] + '×' + c.gridDimensions[1] : ''})`;
+          sel.appendChild(opt);
         });
-      }
+      });
     }
 
     // 2. Load KGraph
@@ -1649,13 +1790,19 @@ async function initKGraphData() {
         return t.includes("robos:TabletopFurniture");
       });
 
+      setupHeroEditorControls();
       renderHeroesList();
       renderMonstersList();
       renderSpellsAndItems();
+
+      // Initialize Campaign & Multi-Quest Blueprint
+      setupCampaignQuestControls();
+      renderCampaignQuestsList();
+      updateCampaignProgress();
     }
 
-    // 3. Switch to default map configuration
-    await switchMapConfiguration("fan-dungeon-28x21");
+    // 3. Switch to default map configuration and select active quest
+    await selectQuest(currentData.currentQuestIndex || 0, true);
     initBoard();
     setStatus("Tabletop RPG Quest Editor Ready.");
   } catch (err) {
@@ -1663,7 +1810,81 @@ async function initKGraphData() {
   }
 }
 
-// Render Heroes
+// ==========================================
+// 2. HERO EDITOR & CHARACTER STATE ENGINE
+// ==========================================
+
+function getActiveHero() {
+  if (!currentData.activeHeroId && currentData.heroes.length > 0) {
+    currentData.activeHeroId = currentData.heroes[0]["@id"];
+  }
+  return currentData.heroes.find(h => h["@id"] === currentData.activeHeroId);
+}
+
+function getHeroClass(h) {
+  if (h["robos:heroClass"]) return h["robos:heroClass"];
+  const title = (h["dcterms:title"] || "").toLowerCase();
+  if (title.includes("barbarian")) return "Barbarian";
+  if (title.includes("dwarf")) return "Dwarf";
+  if (title.includes("elf")) return "Elf";
+  if (title.includes("wizard")) return "Wizard";
+  return "Warrior";
+}
+
+function getHeroWeapon(h) {
+  if (h["robos:equippedWeapon"]) return h["robos:equippedWeapon"];
+  if (h["robos:startingWeapon"]) {
+    const sw = h["robos:startingWeapon"];
+    if (sw.includes("broadsword")) return "Broadsword (3 Combat Dice)";
+    if (sw.includes("shortsword")) return "Shortsword (2 Combat Dice)";
+    if (sw.includes("dagger")) return "Dagger (1 Combat Die)";
+    return sw;
+  }
+  return "Broadsword (3 Combat Dice)";
+}
+
+function getHeroArmor(h) {
+  if (h["robos:equippedArmor"]) return h["robos:equippedArmor"];
+  const heroClass = getHeroClass(h);
+  if (heroClass === "Barbarian") return "Natural Toughness (2 Defend Dice)";
+  if (heroClass === "Dwarf") return "Shield & Chainmail (+2 Defend Dice)";
+  if (heroClass === "Elf") return "Elven Leather & Cloak (+2 Defend Dice)";
+  if (heroClass === "Wizard") return "Wizard Cloak (2 Defend Dice)";
+  return "Chainmail & Shield (+2 Defend Dice)";
+}
+
+function getHeroInventory(h) {
+  if (Array.isArray(h["robos:inventory"])) return h["robos:inventory"];
+  const heroClass = getHeroClass(h);
+  if (heroClass === "Barbarian") {
+    h["robos:inventory"] = [
+      { id: "item-pot-heal-1", name: "Potion of Healing", type: "potion", effect: "Restores up to 4 BP", value: 100 },
+      { id: "item-rope-1", name: "Heavy Rope (30 ft)", type: "tool", effect: "Climb pits & gaps", value: 25 }
+    ];
+  } else if (heroClass === "Dwarf") {
+    h["robos:inventory"] = [
+      { id: "item-toolkit-1", name: "Trap Disarm Toolkit", type: "tool", effect: "Disarm traps without rolling skull", value: 75 },
+      { id: "item-pot-heal-2", name: "Potion of Healing", type: "potion", effect: "Restores up to 4 BP", value: 100 }
+    ];
+  } else if (heroClass === "Elf") {
+    h["robos:inventory"] = [
+      { id: "item-torch-1", name: "Dungeon Torch", type: "tool", effect: "Detect hidden traps in room", value: 15 },
+      { id: "item-strength-1", name: "Potion of Strength", type: "potion", effect: "+2 Attack Dice for 1 turn", value: 150 }
+    ];
+  } else if (heroClass === "Wizard") {
+    h["robos:inventory"] = [
+      { id: "item-holy-water-1", name: "Holy Water", type: "relic", effect: "Destroys undead instantly", value: 200 },
+      { id: "item-pot-heal-3", name: "Potion of Healing", type: "potion", effect: "Restores up to 4 BP", value: 100 }
+    ];
+  } else {
+    h["robos:inventory"] = [
+      { id: "item-pot-heal-def", name: "Potion of Healing", type: "potion", effect: "Restores up to 4 BP", value: 100 }
+    ];
+  }
+  return h["robos:inventory"];
+}
+
+// Render Heroes Sidebar List
 function renderHeroesList() {
   const container = document.getElementById("heroes-list");
   if (!container) return;
@@ -1672,7 +1893,22 @@ function renderHeroesList() {
   currentData.heroes.forEach(h => {
     const div = document.createElement("div");
     div.className = "list-item" + (h["@id"] === currentData.activeHeroId ? " active" : "");
-    div.innerHTML = `<span>${h["robos:tokenColor"] ? '<span style="color:' + h["robos:tokenColor"] + '">●</span>' : "🛡️"}</span> <strong>${h["dcterms:title"] || h["@id"]}</strong>`;
+    div.dataset.heroId = h["@id"];
+
+    const heroClass = getHeroClass(h);
+    const heroName = h["dcterms:title"] || h["@id"];
+    const tokenColor = h["robos:tokenColor"] || "#b91c1c";
+    const gold = h["robos:gold"] !== undefined ? h["robos:gold"] : 100;
+
+    div.innerHTML = `
+      <span style="font-size:1.1rem; color:${tokenColor};">●</span>
+      <div class="hero-item-details">
+        <strong class="hero-item-name">${heroName}</strong>
+        <span class="hero-class-tag">${heroClass}</span>
+      </div>
+      <span class="gold-badge hero-item-gold">${gold}gp</span>
+    `;
+
     div.onclick = () => selectHero(h["@id"]);
     container.appendChild(div);
   });
@@ -1687,20 +1923,548 @@ function selectHero(heroId) {
   const hero = currentData.heroes.find(h => h["@id"] === heroId);
   if (!hero) return;
 
+  // Ensure default state properties
+  if (hero["robos:heroClass"] === undefined) hero["robos:heroClass"] = getHeroClass(hero);
+  if (hero["robos:gold"] === undefined) hero["robos:gold"] = 100;
+  if (hero["robos:equippedWeapon"] === undefined) hero["robos:equippedWeapon"] = getHeroWeapon(hero);
+  if (hero["robos:equippedArmor"] === undefined) hero["robos:equippedArmor"] = getHeroArmor(hero);
+  if (!Array.isArray(hero["robos:inventory"])) hero["robos:inventory"] = getHeroInventory(hero);
+
+  const maxBP = parseInt(hero["robos:bodyPoints"], 10) || 8;
+  const maxMP = parseInt(hero["robos:mindPoints"], 10) || 2;
+  if (hero["robos:currentBP"] === undefined) hero["robos:currentBP"] = maxBP;
+  if (hero["robos:currentMP"] === undefined) hero["robos:currentMP"] = maxMP;
+
   renderHeroesList();
+
+  // Populate Hero Form
   document.getElementById("hero-editor-title").textContent = "Edit Hero: " + (hero["dcterms:title"] || "");
   document.getElementById("hero-id").value = hero["@id"] || "";
   document.getElementById("hero-name").value = hero["dcterms:title"] || "";
+  document.getElementById("hero-class").value = hero["robos:heroClass"] || "";
   document.getElementById("hero-bp").value = hero["robos:bodyPoints"] || 8;
   document.getElementById("hero-mp").value = hero["robos:mindPoints"] || 2;
   document.getElementById("hero-atk").value = hero["robos:attackDice"] || 3;
   document.getElementById("hero-def").value = hero["robos:defendDice"] || 2;
-  document.getElementById("hero-weapon").value = hero["robos:startingWeapon"] || "";
+  document.getElementById("hero-gold").value = hero["robos:gold"] !== undefined ? hero["robos:gold"] : 100;
+  document.getElementById("hero-weapon").value = hero["robos:equippedWeapon"] || hero["robos:startingWeapon"] || "";
+  document.getElementById("hero-armor").value = hero["robos:equippedArmor"] || "";
   document.getElementById("hero-ability").value = hero["robos:specialAbility"] || "";
   document.getElementById("hero-color").value = hero["robos:tokenColor"] || "#b91c1c";
   document.getElementById("hero-icon").value = hero["robos:icon"] || "🛡️";
   document.getElementById("hero-pos-x").value = (hero["robos:startingPosition"] && hero["robos:startingPosition"][0]) || 1;
   document.getElementById("hero-pos-y").value = (hero["robos:startingPosition"] && hero["robos:startingPosition"][1]) || 1;
+
+  // Render Inventory & Action Screen
+  renderHeroInventory(hero);
+  renderHeroActionScreen(hero);
+}
+
+// Render Backpack Inventory
+function renderHeroInventory(hero) {
+  const container = document.getElementById("hero-inventory-list");
+  if (!container) return;
+  const items = hero["robos:inventory"] || [];
+  if (items.length === 0) {
+    container.innerHTML = `<div style="text-align:center; padding:12px; color:var(--text-muted); font-size:0.8rem; font-style:italic;">Backpack is empty. Select an item above and click "+ Add Item".</div>`;
+    return;
+  }
+  container.innerHTML = "";
+  items.forEach((item, idx) => {
+    const row = document.createElement("div");
+    row.className = "inventory-item-row";
+    row.innerHTML = `
+      <div class="inventory-item-info">
+        <span style="font-size:1.1rem;">🎒</span>
+        <div>
+          <strong>${item.name}</strong>
+          <div class="inventory-item-type">${item.type || 'item'} • ${item.effect || ''}</div>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center;">
+        <span class="inventory-item-val">${item.value ? item.value + ' GP' : ''}</span>
+        <button class="btn btn-xs btn-danger btn-del-item" data-idx="${idx}" title="Remove Item">✕</button>
+      </div>
+    `;
+    container.appendChild(row);
+  });
+
+  container.querySelectorAll(".btn-del-item").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const idx = parseInt(btn.dataset.idx, 10);
+      const removed = hero["robos:inventory"].splice(idx, 1)[0];
+      renderHeroInventory(hero);
+      logCombatAction(`🎒 Removed ${removed?.name || 'item'} from inventory.`, "system");
+      triggerHeroAutosave();
+    });
+  });
+}
+
+const PRESET_ITEMS = {
+  "potion-healing": { id: "item-pot-heal", name: "Potion of Healing", type: "potion", effect: "Restores up to 4 BP", value: 100 },
+  "holy-water": { id: "item-holy-water", name: "Holy Water", type: "relic", effect: "Dispel/Kill Undead", value: 200 },
+  "tool-kit": { id: "item-tool-kit", name: "Trap Disarm Toolkit", type: "tool", effect: "Disarm traps without rolling skull", value: 75 },
+  "heavy-rope": { id: "item-rope", name: "Heavy Rope (30 ft)", type: "tool", effect: "Cross pits or climb chasms", value: 25 },
+  "torch": { id: "item-torch", name: "Dungeon Torch", type: "tool", effect: "Light darkness for 3 turns", value: 15 },
+  "potion-strength": { id: "item-strength", name: "Potion of Strength", type: "potion", effect: "+2 Attack Dice for 1 turn", value: 150 }
+};
+
+function addHeroInventoryItem() {
+  const hero = getActiveHero();
+  if (!hero) return;
+  const select = document.getElementById("hero-preset-item");
+  const key = select?.value || "potion-healing";
+  const preset = PRESET_ITEMS[key] || PRESET_ITEMS["potion-healing"];
+  if (!hero["robos:inventory"]) hero["robos:inventory"] = [];
+  hero["robos:inventory"].push({ ...preset, id: `${preset.id}-${Date.now().toString(36)}` });
+  renderHeroInventory(hero);
+  logCombatAction(`🎒 Added ${preset.name} to ${hero["dcterms:title"]}'s backpack.`, "system");
+  triggerHeroAutosave();
+}
+
+function removeHeroInventoryItem(index) {
+  const hero = getActiveHero();
+  if (!hero || !hero["robos:inventory"]) return;
+  const removed = hero["robos:inventory"].splice(index, 1)[0];
+  renderHeroInventory(hero);
+  logCombatAction(`🎒 Removed ${removed?.name || 'item'} from inventory.`, "system");
+  triggerHeroAutosave();
+}
+
+// Render Action Screen & Combat HUD
+function renderHeroActionScreen(hero) {
+  if (!hero) return;
+  const nameEl = document.getElementById("act-hero-name");
+  const classEl = document.getElementById("act-hero-class");
+  const goldEl = document.getElementById("act-hero-gold");
+  const iconEl = document.getElementById("act-hero-icon");
+  const atkStat = document.getElementById("act-atk-stat");
+  const atkWeapon = document.getElementById("act-atk-weapon");
+  const defStat = document.getElementById("act-def-stat");
+  const defArmor = document.getElementById("act-def-armor");
+
+  const heroName = hero["dcterms:title"] || "Hero";
+  const heroClass = getHeroClass(hero);
+  const heroGold = hero["robos:gold"] !== undefined ? hero["robos:gold"] : 100;
+
+  if (nameEl) nameEl.textContent = heroName;
+  if (classEl) classEl.textContent = heroClass;
+  if (goldEl) goldEl.textContent = `💰 ${heroGold} GP`;
+  if (iconEl) {
+    iconEl.textContent = hero["robos:icon"] || "🛡️";
+    iconEl.style.borderColor = hero["robos:tokenColor"] || "#b91c1c";
+  }
+
+  const atkDice = hero["robos:attackDice"] || 3;
+  const defDice = hero["robos:defendDice"] || 2;
+  const weapon = getHeroWeapon(hero);
+  const armor = getHeroArmor(hero);
+
+  if (atkStat) atkStat.textContent = `${atkDice} Combat Dice`;
+  if (atkWeapon) atkWeapon.textContent = weapon;
+  if (defStat) defStat.textContent = `${defDice} Combat Dice`;
+  if (defArmor) defArmor.textContent = armor;
+
+  renderVitalityPips(hero);
+}
+
+function renderVitalityPips(hero) {
+  const bpTrack = document.getElementById("act-bp-track");
+  const mpTrack = document.getElementById("act-mp-track");
+  const maxBP = parseInt(hero["robos:bodyPoints"], 10) || 8;
+  const curBP = Math.max(0, Math.min(maxBP, hero["robos:currentBP"] !== undefined ? hero["robos:currentBP"] : maxBP));
+  const maxMP = parseInt(hero["robos:mindPoints"], 10) || 2;
+  const curMP = Math.max(0, Math.min(maxMP, hero["robos:currentMP"] !== undefined ? hero["robos:currentMP"] : maxMP));
+
+  hero["robos:currentBP"] = curBP;
+  hero["robos:currentMP"] = curMP;
+
+  if (bpTrack) {
+    bpTrack.innerHTML = "";
+    for (let i = 0; i < maxBP; i++) {
+      const pip = document.createElement("span");
+      pip.className = `pip ${i < curBP ? 'bp-active' : 'bp-lost'}`;
+      pip.title = `BP ${i + 1}/${maxBP}`;
+      bpTrack.appendChild(pip);
+    }
+  }
+
+  if (mpTrack) {
+    mpTrack.innerHTML = "";
+    for (let i = 0; i < maxMP; i++) {
+      const pip = document.createElement("span");
+      pip.className = `pip ${i < curMP ? 'mp-active' : 'mp-lost'}`;
+      pip.title = `MP ${i + 1}/${maxMP}`;
+      mpTrack.appendChild(pip);
+    }
+  }
+}
+
+// Combat Roll Actions
+function rollHeroCombatDie() {
+  const r = Math.floor(Math.random() * 6) + 1;
+  if (r <= 3) return { type: "skull", label: "💀 Skull", faceClass: "dice-skull" };
+  if (r <= 5) return { type: "white-shield", label: "🛡️ Shield", faceClass: "dice-shield" };
+  return { type: "black-shield", label: "⬛ Black Shield", faceClass: "dice-black-shield" };
+}
+
+function rollHeroAttack() {
+  const hero = getActiveHero();
+  if (!hero) return null;
+  const numDice = parseInt(hero["robos:attackDice"], 10) || 3;
+  const rolls = [];
+  let skulls = 0;
+  for (let i = 0; i < numDice; i++) {
+    const die = rollHeroCombatDie();
+    rolls.push(die);
+    if (die.type === "skull") skulls++;
+  }
+
+  const resultBox = document.getElementById("act-atk-result");
+  if (resultBox) {
+    resultBox.innerHTML = rolls.map(r => `<span class="dice-badge ${r.faceClass}">${r.label}</span>`).join(" ");
+  }
+
+  const weapon = getHeroWeapon(hero);
+  logCombatAction(`⚔️ ${hero["dcterms:title"]} rolled Attack (${numDice} dice with ${weapon}): ${rolls.map(r => r.type === "skull" ? "💀" : (r.type === "white-shield" ? "🛡️" : "⬛")).join(" ")} — [${skulls} Skull${skulls !== 1 ? 's' : ''} Hit!]`, "attack");
+  return { numDice, rolls, skulls };
+}
+
+function rollHeroDefend() {
+  const hero = getActiveHero();
+  if (!hero) return null;
+  const numDice = parseInt(hero["robos:defendDice"], 10) || 2;
+  const rolls = [];
+  let shields = 0;
+  for (let i = 0; i < numDice; i++) {
+    const die = rollHeroCombatDie();
+    rolls.push(die);
+    if (die.type === "white-shield") shields++;
+  }
+
+  const resultBox = document.getElementById("act-def-result");
+  if (resultBox) {
+    resultBox.innerHTML = rolls.map(r => `<span class="dice-badge ${r.faceClass}">${r.label}</span>`).join(" ");
+  }
+
+  const armor = getHeroArmor(hero);
+  logCombatAction(`🛡️ ${hero["dcterms:title"]} rolled Defend (${numDice} dice with ${armor}): ${rolls.map(r => r.type === "skull" ? "💀" : (r.type === "white-shield" ? "🛡️" : "⬛")).join(" ")} — [${shields} White Shield${shields !== 1 ? 's' : ''} Blocked!]`, "defend");
+  return { numDice, rolls, shields };
+}
+
+function rollHeroMove() {
+  const hero = getActiveHero();
+  if (!hero) return null;
+  const d1 = Math.floor(Math.random() * 6) + 1;
+  const d2 = Math.floor(Math.random() * 6) + 1;
+  const total = d1 + d2;
+
+  const resultBox = document.getElementById("act-move-result");
+  if (resultBox) {
+    resultBox.innerHTML = `<span class="dice-badge dice-d6">🎲 ${d1}</span> + <span class="dice-badge dice-d6">🎲 ${d2}</span> = <strong>${total} Squares</strong>`;
+  }
+
+  logCombatAction(`🏃 ${hero["dcterms:title"]} rolled 2d6 Movement: [${d1}] + [${d2}] = ${total} squares available.`, "move");
+  return { d1, d2, total };
+}
+
+function logCombatAction(msg, type = "system") {
+  const logEl = document.getElementById("combat-roll-log");
+  if (!logEl) return;
+  const entry = document.createElement("div");
+  entry.className = `log-entry ${type}`;
+  const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  entry.textContent = `[${time}] ${msg}`;
+  logEl.prepend(entry);
+}
+
+// Auto-save & Manual Save to KGraph
+async function saveActiveHeroToKGraph(explicit = false) {
+  const hero = getActiveHero();
+  if (!hero) return { success: false, error: "No active hero" };
+
+  const indicator = document.getElementById("hero-autosave-indicator");
+  if (indicator) {
+    indicator.textContent = "● Saving...";
+    indicator.classList.add("saving");
+  }
+
+  const heroNode = {
+    "@id": hero["@id"],
+    "@type": [
+      "oslc_am:Resource",
+      "robos:TabletopHero",
+      "robos:GameCharacter",
+      "schema:Person"
+    ],
+    "dcterms:title": hero["dcterms:title"] || "Hero",
+    "robos:heroClass": hero["robos:heroClass"] || getHeroClass(hero),
+    "robos:bodyPoints": parseInt(hero["robos:bodyPoints"], 10) || 8,
+    "robos:mindPoints": parseInt(hero["robos:mindPoints"], 10) || 2,
+    "robos:attackDice": parseInt(hero["robos:attackDice"], 10) || 3,
+    "robos:defendDice": parseInt(hero["robos:defendDice"], 10) || 2,
+    "robos:gold": parseInt(hero["robos:gold"], 10) || 0,
+    "robos:startingWeapon": hero["robos:startingWeapon"] || getHeroWeapon(hero),
+    "robos:equippedWeapon": hero["robos:equippedWeapon"] || getHeroWeapon(hero),
+    "robos:equippedArmor": hero["robos:equippedArmor"] || getHeroArmor(hero),
+    "robos:inventory": hero["robos:inventory"] || [],
+    "robos:specialAbility": hero["robos:specialAbility"] || "",
+    "robos:tokenColor": hero["robos:tokenColor"] || "#b91c1c",
+    "robos:icon": hero["robos:icon"] || "🛡️",
+    "robos:startingPosition": hero["robos:startingPosition"] || [1, 1],
+    "robos:package": "tabletop-game",
+    "robos:namespace": "robos.tabletop"
+  };
+
+  try {
+    const res = await window.robosTabletop.saveKGraphEntity({ entity: heroNode });
+    if (indicator) {
+      setTimeout(() => {
+        indicator.textContent = "● Saved";
+        indicator.classList.remove("saving");
+      }, 250);
+    }
+    if (explicit) {
+      if (res && res.success) {
+        setStatus(`Saved hero '${heroNode["dcterms:title"]}' (${heroNode["robos:heroClass"]}) to Knowledge Graph.`);
+        logCombatAction(`💾 Hero '${heroNode["dcterms:title"]}' saved to Knowledge Graph package 'tabletop-game'.`, "system");
+      } else {
+        setStatus(`Error saving hero: ${res ? res.error : "Unknown"}`);
+      }
+    }
+    return res;
+  } catch (err) {
+    if (indicator) {
+      indicator.textContent = "● Error";
+      indicator.classList.remove("saving");
+    }
+    if (explicit) setStatus(`Save failed: ${err.message}`);
+    return { success: false, error: err.message };
+  }
+}
+
+let heroAutosaveTimer = null;
+function triggerHeroAutosave() {
+  const indicator = document.getElementById("hero-autosave-indicator");
+  if (indicator) {
+    indicator.textContent = "● Editing...";
+    indicator.classList.add("saving");
+  }
+  clearTimeout(heroAutosaveTimer);
+  heroAutosaveTimer = setTimeout(() => {
+    saveActiveHeroToKGraph(false);
+  }, 400);
+}
+
+// Setup Event Listeners for Hero Editor
+let heroControlsInitialized = false;
+function setupHeroEditorControls() {
+  if (heroControlsInitialized) return;
+  heroControlsInitialized = true;
+
+  // Live Name Updates
+  document.getElementById("hero-name")?.addEventListener("input", (e) => {
+    const hero = getActiveHero();
+    if (!hero) return;
+    const newName = e.target.value;
+    hero["dcterms:title"] = newName;
+    document.getElementById("hero-editor-title").textContent = "Edit Hero: " + newName;
+
+    const listItemName = document.querySelector(`#heroes-list .list-item[data-hero-id="${hero["@id"]}"] .hero-item-name`);
+    if (listItemName) listItemName.textContent = newName;
+
+    const actName = document.getElementById("act-hero-name");
+    if (actName) actName.textContent = newName;
+
+    triggerHeroAutosave();
+  });
+
+  // Live Class Updates
+  document.getElementById("hero-class")?.addEventListener("input", (e) => {
+    const hero = getActiveHero();
+    if (!hero) return;
+    const newClass = e.target.value;
+    hero["robos:heroClass"] = newClass;
+
+    const listClassTag = document.querySelector(`#heroes-list .list-item[data-hero-id="${hero["@id"]}"] .hero-class-tag`);
+    if (listClassTag) listClassTag.textContent = newClass;
+
+    const actClass = document.getElementById("act-hero-class");
+    if (actClass) actClass.textContent = newClass;
+
+    triggerHeroAutosave();
+  });
+
+  // Numeric Stats & String Inputs Live Auto-save
+  const bindStatInput = (id, prop, isInt = true) => {
+    document.getElementById(id)?.addEventListener("input", (e) => {
+      const hero = getActiveHero();
+      if (!hero) return;
+      hero[prop] = isInt ? (parseInt(e.target.value, 10) || 0) : e.target.value;
+      renderHeroActionScreen(hero);
+      triggerHeroAutosave();
+    });
+  };
+
+  bindStatInput("hero-bp", "robos:bodyPoints", true);
+  bindStatInput("hero-mp", "robos:mindPoints", true);
+  bindStatInput("hero-atk", "robos:attackDice", true);
+  bindStatInput("hero-def", "robos:defendDice", true);
+  bindStatInput("hero-gold", "robos:gold", true);
+  bindStatInput("hero-weapon", "robos:equippedWeapon", false);
+  bindStatInput("hero-armor", "robos:equippedArmor", false);
+  bindStatInput("hero-ability", "robos:specialAbility", false);
+  bindStatInput("hero-color", "robos:tokenColor", false);
+  bindStatInput("hero-icon", "robos:icon", false);
+
+  // Position inputs
+  ["hero-pos-x", "hero-pos-y"].forEach(posId => {
+    document.getElementById(posId)?.addEventListener("input", () => {
+      const hero = getActiveHero();
+      if (!hero) return;
+      const x = parseInt(document.getElementById("hero-pos-x").value, 10) || 1;
+      const y = parseInt(document.getElementById("hero-pos-y").value, 10) || 1;
+      hero["robos:startingPosition"] = [x, y];
+      triggerHeroAutosave();
+    });
+  });
+
+  // Quick Gold Buttons
+  document.querySelectorAll(".btn-quick-gold").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const hero = getActiveHero();
+      if (!hero) return;
+      const amount = parseInt(btn.dataset.amount, 10) || 0;
+      const currentGold = parseInt(document.getElementById("hero-gold").value, 10) || 0;
+      const nextGold = Math.max(0, currentGold + amount);
+      document.getElementById("hero-gold").value = nextGold;
+      hero["robos:gold"] = nextGold;
+
+      const actGold = document.getElementById("act-hero-gold");
+      if (actGold) actGold.textContent = `💰 ${nextGold} GP`;
+
+      const listGold = document.querySelector(`#heroes-list .list-item[data-hero-id="${hero["@id"]}"] .hero-item-gold`);
+      if (listGold) listGold.textContent = `${nextGold}gp`;
+
+      logCombatAction(`💰 ${hero["dcterms:title"]} received +${amount} gold coins (Total: ${nextGold} GP).`, "system");
+      triggerHeroAutosave();
+    });
+  });
+
+  // Add Item to Inventory Button
+  document.getElementById("btn-add-inventory-item")?.addEventListener("click", addHeroInventoryItem);
+
+  // Save Hero Button
+  document.getElementById("btn-save-hero")?.addEventListener("click", () => {
+    saveActiveHeroToKGraph(true);
+  });
+
+  // Add Hero Button
+  document.getElementById("btn-add-hero")?.addEventListener("click", () => {
+    const timestamp = Date.now().toString(36);
+    const newHeroId = `urn:robos:tabletop:hero:hero-${timestamp}`;
+    const newHero = {
+      "@id": newHeroId,
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopHero",
+        "robos:GameCharacter",
+        "schema:Person"
+      ],
+      "dcterms:title": "New Hero",
+      "robos:heroClass": "Paladin",
+      "robos:bodyPoints": 7,
+      "robos:mindPoints": 3,
+      "robos:attackDice": 3,
+      "robos:defendDice": 2,
+      "robos:gold": 50,
+      "robos:startingWeapon": "Longsword (3 Combat Dice)",
+      "robos:equippedWeapon": "Longsword (3 Combat Dice)",
+      "robos:equippedArmor": "Chainmail & Shield (+2 Defend Dice)",
+      "robos:inventory": [
+        { id: `item-pot-${timestamp}`, name: "Potion of Healing", type: "potion", effect: "Restores up to 4 BP", value: 100 }
+      ],
+      "robos:tokenColor": "#8b5cf6",
+      "robos:icon": "🛡️",
+      "robos:startingPosition": [1, 1],
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    };
+
+    currentData.heroes.push(newHero);
+    renderHeroesList();
+    selectHero(newHeroId);
+    saveActiveHeroToKGraph(false);
+    setStatus(`Created new hero: ${newHero["dcterms:title"]}`);
+    logCombatAction(`✨ Created new hero: ${newHero["dcterms:title"]} (${newHero["robos:heroClass"]}).`, "system");
+    document.getElementById("hero-name")?.focus();
+  });
+
+  // Delete Hero Button
+  document.getElementById("btn-delete-hero")?.addEventListener("click", () => {
+    if (currentData.heroes.length <= 1) {
+      alert("Cannot delete the last remaining hero.");
+      return;
+    }
+    const hero = getActiveHero();
+    if (!hero) return;
+    const name = hero["dcterms:title"] || "Hero";
+    if (!confirm(`Are you sure you want to delete ${name}?`)) return;
+
+    const idx = currentData.heroes.findIndex(h => h["@id"] === currentData.activeHeroId);
+    if (idx >= 0) {
+      currentData.heroes.splice(idx, 1);
+      currentData.activeHeroId = currentData.heroes[0]["@id"];
+      renderHeroesList();
+      selectHero(currentData.activeHeroId);
+      setStatus(`Deleted hero: ${name}`);
+      logCombatAction(`🗑️ Deleted hero: ${name}.`, "system");
+    }
+  });
+
+  // Vitality Track Damage & Heal Buttons
+  document.getElementById("btn-act-dmg-bp")?.addEventListener("click", () => {
+    const hero = getActiveHero();
+    if (!hero || hero["robos:currentBP"] <= 0) return;
+    hero["robos:currentBP"]--;
+    renderVitalityPips(hero);
+    logCombatAction(`💔 ${hero["dcterms:title"]} took 1 Damage! (BP: ${hero["robos:currentBP"]}/${hero["robos:bodyPoints"]})`, "attack");
+    triggerHeroAutosave();
+  });
+
+  document.getElementById("btn-act-heal-bp")?.addEventListener("click", () => {
+    const hero = getActiveHero();
+    const maxBP = parseInt(hero["robos:bodyPoints"], 10) || 8;
+    if (!hero || hero["robos:currentBP"] >= maxBP) return;
+    hero["robos:currentBP"]++;
+    renderVitalityPips(hero);
+    logCombatAction(`❤️ ${hero["dcterms:title"]} healed 1 BP! (BP: ${hero["robos:currentBP"]}/${maxBP})`, "defend");
+    triggerHeroAutosave();
+  });
+
+  document.getElementById("btn-act-dmg-mp")?.addEventListener("click", () => {
+    const hero = getActiveHero();
+    if (!hero || hero["robos:currentMP"] <= 0) return;
+    hero["robos:currentMP"]--;
+    renderVitalityPips(hero);
+    logCombatAction(`🔮 ${hero["dcterms:title"]} spent 1 Mind Point! (MP: ${hero["robos:currentMP"]}/${hero["robos:mindPoints"]})`, "attack");
+    triggerHeroAutosave();
+  });
+
+  document.getElementById("btn-act-heal-mp")?.addEventListener("click", () => {
+    const hero = getActiveHero();
+    const maxMP = parseInt(hero["robos:mindPoints"], 10) || 2;
+    if (!hero || hero["robos:currentMP"] >= maxMP) return;
+    hero["robos:currentMP"]++;
+    renderVitalityPips(hero);
+    logCombatAction(`✨ ${hero["dcterms:title"]} restored 1 Mind Point! (MP: ${hero["robos:currentMP"]}/${maxMP})`, "defend");
+    triggerHeroAutosave();
+  });
+
+  // Action Roll Buttons
+  document.getElementById("btn-roll-hero-attack")?.addEventListener("click", rollHeroAttack);
+  document.getElementById("btn-roll-hero-defend")?.addEventListener("click", rollHeroDefend);
+  document.getElementById("btn-roll-hero-move")?.addEventListener("click", rollHeroMove);
 }
 
 // Render Monsters
@@ -1758,6 +2522,331 @@ function renderSpellsAndItems() {
   }
 }
 
+// ==========================================
+// 3. CAMPAIGN & MULTI-QUEST ENGINE
+// ==========================================
+
+function getCampaign() {
+  return currentData.campaign;
+}
+
+function getActiveQuest() {
+  return currentData.currentQuest || currentData.campaign.quests[currentData.currentQuestIndex || 0];
+}
+
+function updateQuestStatusUI(q) {
+  const statusBadge = document.getElementById("quest-status-badge");
+  const victoryBanner = document.getElementById("quest-victory-banner");
+  const completeBtn = document.getElementById("btn-complete-quest");
+  const vicTitle = document.getElementById("victory-quest-title");
+  const vicDesc = document.getElementById("victory-quest-desc");
+
+  if (q.completed) {
+    if (statusBadge) {
+      statusBadge.className = "badge badge-success";
+      statusBadge.textContent = "🏆 Completed";
+    }
+    if (victoryBanner) {
+      victoryBanner.style.display = "flex";
+      if (vicTitle) vicTitle.textContent = `🏆 ${q.title} Completed!`;
+      if (vicDesc) vicDesc.textContent = `All heroes in the adventuring party have received their ${q.goldReward || 100}g quest bounty.`;
+    }
+    if (completeBtn) {
+      completeBtn.innerHTML = "✓ Completed";
+      completeBtn.className = "btn btn-sm btn-secondary";
+      completeBtn.title = "Quest is already completed. Click Reset to replay.";
+    }
+  } else {
+    if (statusBadge) {
+      statusBadge.className = "badge badge-gray";
+      statusBadge.textContent = "⏳ In Progress";
+    }
+    if (victoryBanner) {
+      victoryBanner.style.display = "none";
+    }
+    if (completeBtn) {
+      completeBtn.innerHTML = "🏆 Complete Quest";
+      completeBtn.className = "btn btn-sm btn-success";
+      completeBtn.title = "Complete quest and award gold bounty to party";
+    }
+  }
+}
+
+async function selectQuest(index, preserveBoard = false) {
+  if (index < 0 || index >= currentData.campaign.quests.length) return;
+  currentData.currentQuestIndex = index;
+  const q = currentData.campaign.quests[index];
+  currentData.currentQuest = q;
+
+  // Populate form fields
+  const slugEl = document.getElementById("quest-slug");
+  const titleEl = document.getElementById("quest-title");
+  const editorTitleEl = document.getElementById("quest-editor-title");
+  const rulesetEl = document.getElementById("quest-ruleset");
+  const spawnXEl = document.getElementById("quest-spawn-x");
+  const spawnYEl = document.getElementById("quest-spawn-y");
+  const goldEl = document.getElementById("quest-gold");
+  const briefingEl = document.getElementById("quest-briefing");
+  const bossEl = document.getElementById("quest-boss-target");
+  const bgSelectEl = document.getElementById("quest-bg-ref");
+
+  if (slugEl) slugEl.value = q.slug || "";
+  if (titleEl) titleEl.value = q.title || "";
+  if (editorTitleEl) editorTitleEl.textContent = q.title || `Quest ${index + 1}`;
+  if (rulesetEl) rulesetEl.value = q.ruleset || "heroquest";
+  if (spawnXEl) spawnXEl.value = q.startingStairs?.[0] ?? 1;
+  if (spawnYEl) spawnYEl.value = q.startingStairs?.[1] ?? 1;
+  if (goldEl) goldEl.value = q.goldReward !== undefined ? q.goldReward : 100;
+  if (briefingEl) briefingEl.value = q.briefing || "";
+  if (bossEl) bossEl.value = q.bossTarget || "";
+
+  // Update Status Badge & Victory Banner
+  updateQuestStatusUI(q);
+
+  // Update Delete Button state (cannot delete if only 1 quest remains)
+  const delBtn = document.getElementById("btn-delete-quest");
+  if (delBtn) {
+    delBtn.disabled = currentData.campaign.quests.length <= 1;
+    delBtn.style.opacity = currentData.campaign.quests.length <= 1 ? "0.4" : "1";
+    delBtn.style.cursor = currentData.campaign.quests.length <= 1 ? "not-allowed" : "pointer";
+  }
+
+  // Switch map configuration if different
+  if (q.mapConfigId && (!currentData.activeMapConfig || currentData.activeMapConfig.id !== q.mapConfigId)) {
+    await switchMapConfiguration(q.mapConfigId, true);
+  } else if (bgSelectEl && q.mapConfigId) {
+    bgSelectEl.value = q.mapConfigId;
+  }
+
+  renderCampaignQuestsList();
+  updateCampaignProgress();
+  updateSummaryStats();
+  drawBoard();
+}
+
+function renderCampaignQuestsList() {
+  const listEl = document.getElementById("campaign-quests-list");
+  if (!listEl) return;
+
+  listEl.innerHTML = "";
+  currentData.campaign.quests.forEach((q, idx) => {
+    const item = document.createElement("div");
+    item.className = `quest-list-item ${idx === currentData.currentQuestIndex ? "active" : ""}`;
+    item.onclick = () => selectQuest(idx);
+
+    const isCompleted = !!q.completed;
+    const statusIcon = isCompleted ? "🏆" : "⏳";
+    const statusClass = isCompleted ? "badge-success" : "badge-progress";
+    const statusText = isCompleted ? "Completed" : "Active";
+
+    item.innerHTML = `
+      <div class="quest-list-item-header">
+        <span class="quest-list-item-title">${escapeHtml(q.title || `Quest ${idx + 1}`)}</span>
+        <span class="badge ${statusClass}" style="font-size:10px; padding:2px 6px;">${statusIcon} ${statusText}</span>
+      </div>
+      <div class="quest-list-item-footer">
+        <span style="color:#94a3b8; font-size:11px;">🗺️ ${escapeHtml(q.mapConfigId || "map")}</span>
+        <span class="gold-badge" style="font-size:11px; padding:1px 5px; background:rgba(234,179,8,0.15); color:#fde047; border-radius:3px;">🪙 ${q.goldReward || 0}g</span>
+      </div>
+    `;
+    listEl.appendChild(item);
+  });
+}
+
+function updateCampaignProgress() {
+  const quests = currentData.campaign.quests;
+  const total = quests.length;
+  const completed = quests.filter(q => q.completed).length;
+  const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+  const totalGold = quests.reduce((acc, q) => acc + (Number(q.goldReward) || 0), 0);
+
+  const barEl = document.getElementById("campaign-progress-bar");
+  const pctEl = document.getElementById("campaign-progress-pct");
+  const countEl = document.getElementById("campaign-progress-count");
+  const goldPotEl = document.getElementById("campaign-total-gold-pot");
+  const titleDisplayEl = document.getElementById("campaign-title-display");
+
+  if (barEl) barEl.style.width = `${pct}%`;
+  if (pctEl) {
+    pctEl.textContent = `${pct}% Completed`;
+    pctEl.className = pct === 100 ? "badge badge-success" : "badge badge-cyan";
+  }
+  if (countEl) countEl.textContent = `${completed} / ${total} Quests Finished`;
+  if (goldPotEl) goldPotEl.textContent = `Total Bounty: ${totalGold}g`;
+  if (titleDisplayEl && currentData.campaign.title) titleDisplayEl.textContent = currentData.campaign.title;
+}
+
+function completeQuest(index = currentData.currentQuestIndex) {
+  if (index < 0 || index >= currentData.campaign.quests.length) return null;
+  const q = currentData.campaign.quests[index];
+  q.completed = true;
+
+  // Award gold bounty to all heroes
+  const bounty = Number(q.goldReward) || 100;
+  if (Array.isArray(currentData.heroes)) {
+    currentData.heroes.forEach(h => {
+      h["robos:gold"] = (Number(h["robos:gold"]) || 0) + bounty;
+    });
+  }
+
+  // Update hero UI if active
+  const heroGoldEl = document.getElementById("hero-gold");
+  const actHeroGoldEl = document.getElementById("act-hero-gold");
+  const activeH = getActiveHero();
+  if (activeH) {
+    if (heroGoldEl) heroGoldEl.value = activeH["robos:gold"] || 0;
+    if (actHeroGoldEl) actHeroGoldEl.textContent = `${activeH["robos:gold"] || 0}g`;
+  }
+  renderHeroesList();
+  if (typeof renderHeroActionScreen === "function") {
+    renderHeroActionScreen();
+  }
+
+  // Update Quest UI
+  updateQuestStatusUI(q);
+  renderCampaignQuestsList();
+  updateCampaignProgress();
+
+  setStatus(`🏆 Victory! Completed '${q.title}' and awarded ${bounty}g bounty to all party members!`);
+  return { success: true, quest: q, goldAwarded: bounty };
+}
+
+function resetQuest(index = currentData.currentQuestIndex) {
+  if (index < 0 || index >= currentData.campaign.quests.length) return null;
+  const q = currentData.campaign.quests[index];
+  q.completed = false;
+
+  updateQuestStatusUI(q);
+  renderCampaignQuestsList();
+  updateCampaignProgress();
+
+  setStatus(`Reopened quest '${q.title}'. Ready for adventure.`);
+  return { success: true, quest: q };
+}
+
+function addQuest(customProps = {}) {
+  const nextNum = currentData.campaign.quests.length + 1;
+  const newQuest = {
+    id: `quest-${nextNum}`,
+    slug: customProps.slug || `heroquest-quest-${nextNum}`,
+    title: customProps.title || `Quest ${nextNum}: New Adventure`,
+    briefing: customProps.briefing || `A dark shadow looms over the realm. Brave heroes must explore the dungeon depths and vanquish the lurking evil.`,
+    mapConfigId: customProps.mapConfigId || currentData.activeMapConfig?.id || "fan-dungeon-28x21",
+    ruleset: customProps.ruleset || "heroquest",
+    goldReward: customProps.goldReward !== undefined ? customProps.goldReward : 150,
+    bossTarget: customProps.bossTarget || "dungeon-boss",
+    completed: false,
+    startingStairs: customProps.startingStairs ? [...customProps.startingStairs] : [1, 1],
+    activeRooms: new Set(),
+    wallBlocks: [],
+    doors: [],
+    furniture: [],
+    monsters: [],
+    traps: []
+  };
+
+  currentData.campaign.quests.push(newQuest);
+  selectQuest(currentData.campaign.quests.length - 1);
+  updateCampaignProgress();
+  setStatus(`Created new quest: '${newQuest.title}'`);
+  return newQuest;
+}
+
+function deleteQuest(index = currentData.currentQuestIndex) {
+  if (currentData.campaign.quests.length <= 1) {
+    setStatus("Cannot delete: Campaign must have at least 1 quest.");
+    return false;
+  }
+  if (index < 0 || index >= currentData.campaign.quests.length) return false;
+
+  const deleted = currentData.campaign.quests.splice(index, 1)[0];
+  const nextIdx = Math.max(0, Math.min(index, currentData.campaign.quests.length - 1));
+  selectQuest(nextIdx);
+  updateCampaignProgress();
+  setStatus(`Deleted quest: '${deleted.title}'`);
+  return true;
+}
+
+function advanceToNextQuest() {
+  const nextIdx = currentData.currentQuestIndex + 1;
+  if (nextIdx < currentData.campaign.quests.length) {
+    selectQuest(nextIdx);
+  } else {
+    setStatus("Campaign complete! All quests in the campaign have been finished!");
+  }
+}
+
+function setupCampaignQuestControls() {
+  // Campaign Name Input
+  const cNameInput = document.getElementById("campaign-name-input");
+  if (cNameInput) {
+    cNameInput.value = currentData.campaign.title;
+    cNameInput.addEventListener("input", (e) => {
+      currentData.campaign.title = e.target.value;
+      const titleDisplay = document.getElementById("campaign-title-display");
+      if (titleDisplay) titleDisplay.textContent = e.target.value;
+    });
+  }
+
+  // Quest Title Live Sync
+  document.getElementById("quest-title")?.addEventListener("input", (e) => {
+    if (!currentData.currentQuest) return;
+    currentData.currentQuest.title = e.target.value;
+    const editorTitle = document.getElementById("quest-editor-title");
+    if (editorTitle) editorTitle.textContent = e.target.value || "Edit Quest";
+    renderCampaignQuestsList();
+  });
+
+  // Quest Slug Live Sync
+  document.getElementById("quest-slug")?.addEventListener("input", (e) => {
+    if (currentData.currentQuest) currentData.currentQuest.slug = e.target.value;
+  });
+
+  // Quest Ruleset Live Sync
+  document.getElementById("quest-ruleset")?.addEventListener("change", (e) => {
+    if (currentData.currentQuest) currentData.currentQuest.ruleset = e.target.value;
+  });
+
+  // Starting Spawn X, Y
+  document.getElementById("quest-spawn-x")?.addEventListener("input", (e) => {
+    if (!currentData.currentQuest) return;
+    if (!currentData.currentQuest.startingStairs) currentData.currentQuest.startingStairs = [1, 1];
+    currentData.currentQuest.startingStairs[0] = parseInt(e.target.value, 10) || 0;
+    drawBoard();
+  });
+
+  document.getElementById("quest-spawn-y")?.addEventListener("input", (e) => {
+    if (!currentData.currentQuest) return;
+    if (!currentData.currentQuest.startingStairs) currentData.currentQuest.startingStairs = [1, 1];
+    currentData.currentQuest.startingStairs[1] = parseInt(e.target.value, 10) || 0;
+    drawBoard();
+  });
+
+  // Quest Gold Reward
+  document.getElementById("quest-gold")?.addEventListener("input", (e) => {
+    if (!currentData.currentQuest) return;
+    currentData.currentQuest.goldReward = parseInt(e.target.value, 10) || 0;
+    renderCampaignQuestsList();
+    updateCampaignProgress();
+  });
+
+  // Story Briefing & Boss Target
+  document.getElementById("quest-briefing")?.addEventListener("input", (e) => {
+    if (currentData.currentQuest) currentData.currentQuest.briefing = e.target.value;
+  });
+
+  document.getElementById("quest-boss-target")?.addEventListener("input", (e) => {
+    if (currentData.currentQuest) currentData.currentQuest.bossTarget = e.target.value;
+  });
+
+  // Campaign Buttons
+  document.getElementById("btn-add-quest")?.addEventListener("click", () => addQuest());
+  document.getElementById("btn-delete-quest")?.addEventListener("click", () => deleteQuest());
+  document.getElementById("btn-complete-quest")?.addEventListener("click", () => completeQuest());
+  document.getElementById("btn-reset-quest")?.addEventListener("click", () => resetQuest());
+  document.getElementById("btn-next-quest-banner")?.addEventListener("click", () => advanceToNextQuest());
+}
+
 // Action: Save to KGraph
 document.getElementById("btn-save-kgraph")?.addEventListener("click", async () => {
   setStatus("Saving Tabletop Quest to Knowledge Graph package 'tabletop-game'...");
@@ -1797,10 +2886,32 @@ document.getElementById("btn-bundle")?.addEventListener("click", async () => {
   const q = currentData.currentQuest;
   const cfg = currentData.activeMapConfig;
 
+  // Build maps object for all quests in campaign
+  const mapsPayload = {};
+  currentData.campaign.quests.forEach(qst => {
+    const qCfg = currentData.mapConfigs?.find(c => c.id === qst.mapConfigId) || cfg;
+    mapsPayload[qst.slug] = {
+      id: qst.slug,
+      title: qst.title,
+      mapConfigurationId: qst.mapConfigId,
+      width: qCfg?.gridDimensions?.[0] || 26,
+      height: qCfg?.gridDimensions?.[1] || 19,
+      backgroundImage: qCfg?.backgroundImage || "res://assets/boards/heroquest_board.png",
+      startingStair: qst.startingStairs || [1, 1],
+      activeRooms: Array.from(qst.activeRooms || []),
+      rooms: qCfg?.rooms || [],
+      doors: qst.doors || [],
+      wallBlocks: qst.wallBlocks || [],
+      furniture: qst.furniture || [],
+      traps: qst.traps || []
+    };
+  });
+
   const payload = {
     cartridgeId: document.getElementById("quest-slug").value || q.slug,
-    title: document.getElementById("quest-title").value || q.title,
-    description: document.getElementById("quest-briefing").value || q.briefing,
+    campaignId: currentData.campaign.id,
+    title: document.getElementById("campaign-name-input")?.value || currentData.campaign.title,
+    description: currentData.campaign.description || q.briefing,
     ruleset: document.getElementById("quest-ruleset").value || "heroquest",
     startingMap: q.slug,
     startingPosition: q.startingStairs || [1, 0],
@@ -1808,12 +2919,17 @@ document.getElementById("btn-bundle")?.addEventListener("click", async () => {
       id: h["@id"].split(":").pop(),
       slug: h["@id"].split(":").pop(),
       name: h["dcterms:title"],
+      heroClass: getHeroClass(h),
       bodyPoints: h["robos:bodyPoints"] || 8,
       mindPoints: h["robos:mindPoints"] || 2,
       attackDice: h["robos:attackDice"] || 3,
       defendDice: h["robos:defendDice"] || 2,
+      gold: h["robos:gold"] !== undefined ? h["robos:gold"] : 100,
+      weapon: getHeroWeapon(h),
+      armor: getHeroArmor(h),
+      inventory: getHeroInventory(h),
       tokenColor: h["robos:tokenColor"] || "#b91c1c",
-      position: [1, 1]
+      position: (h["robos:startingPosition"] && h["robos:startingPosition"].length === 2) ? h["robos:startingPosition"] : [1, 1]
     })),
     monsters: q.monsters.map(m => ({
       id: m.id,
@@ -1827,26 +2943,17 @@ document.getElementById("btn-bundle")?.addEventListener("click", async () => {
       position: [m.x, m.y],
       roomId: m.roomId
     })),
-    maps: {
-      [q.slug]: {
-        id: q.slug,
-        title: q.title,
-        mapConfigurationId: q.mapConfigId,
-        width: cfg?.gridDimensions?.[0] || 26,
-        height: cfg?.gridDimensions?.[1] || 19,
-        backgroundImage: cfg?.backgroundImage || "res://assets/boards/heroquest_board.png",
-        startingStair: q.startingStairs,
-        activeRooms: Array.from(q.activeRooms),
-        rooms: cfg?.rooms || [],
-        doors: q.doors,
-        wallBlocks: q.wallBlocks,
-        furniture: q.furniture,
-        traps: q.traps
-      }
-    },
-    quests: [
-      { id: "quest-1", title: q.title }
-    ]
+    maps: mapsPayload,
+    quests: currentData.campaign.quests.map(qst => ({
+      id: qst.id,
+      slug: qst.slug,
+      title: qst.title,
+      briefing: qst.briefing,
+      goldReward: qst.goldReward,
+      completed: !!qst.completed,
+      mapConfigId: qst.mapConfigId,
+      startingPosition: qst.startingStairs
+    }))
   };
 
   setStatus("Bundling Tabletop RPG Cartridge...");
@@ -1920,7 +3027,36 @@ if (typeof window !== "undefined") {
     getUndoStack: () => mapUndoStack,
     getRedoStack: () => mapRedoStack
   };
+
+  window._tabletopHeroEditor = {
+    getActiveHero,
+    getHeroClass,
+    getHeroWeapon,
+    getHeroArmor,
+    getHeroInventory,
+    selectHero,
+    saveActiveHeroToKGraph,
+    rollHeroAttack,
+    rollHeroDefend,
+    rollHeroMove,
+    addHeroInventoryItem,
+    removeHeroInventoryItem
+  };
+
+  window._tabletopCampaign = {
+    getCampaign,
+    getActiveQuest,
+    getActiveQuestIndex: () => currentData.currentQuestIndex,
+    selectQuest,
+    addQuest,
+    deleteQuest,
+    completeQuest,
+    resetQuest,
+    advanceToNextQuest,
+    updateCampaignProgress
+  };
 }
 
 // Initialize on DOM ready
 window.addEventListener("DOMContentLoaded", initKGraphData);
+

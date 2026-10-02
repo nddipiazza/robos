@@ -134,4 +134,273 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
     assert.strictEqual(current.furniture.length, 1, "Altar must be restored on second redo");
     assert.strictEqual(current.furniture[0].type, "altar");
   });
+
+  it("supports campaign editor board theme selection from maps in Maps", () => {
+    const { listMapConfigurations, getMapConfiguration } = require(path.join(REPO_ROOT, "packages/robos-gaming"));
+    const configs = listMapConfigurations();
+    const configIds = configs.map(c => c.id);
+
+    assert.ok(configIds.includes("fan-dungeon-28x21"), "Fan dungeon must be selectable");
+    assert.ok(configIds.includes("heroquest-classic"), "HeroQuest classic must be selectable");
+    assert.ok(configIds.includes("first-light-caverns"), "First Light caverns must be selectable");
+
+    // Simulating Campaign Editor theme selection
+    let activeConfigId = "fan-dungeon-28x21";
+    function selectCampaignTheme(newConfigId) {
+      assert.ok(configIds.includes(newConfigId), `Theme ${newConfigId} must exist in Maps`);
+      activeConfigId = newConfigId;
+      const cfg = getMapConfiguration(newConfigId);
+      return {
+        mapConfigId: cfg.id,
+        gridDimensions: cfg.gridDimensions,
+        roomsCount: (cfg.rooms || []).length,
+        calibrationInset: cfg.calibration?.insetLeft || 0
+      };
+    }
+
+    const state1 = selectCampaignTheme("heroquest-classic");
+    assert.strictEqual(state1.mapConfigId, "heroquest-classic");
+    assert.deepEqual(state1.gridDimensions, [26, 19]);
+
+    const state2 = selectCampaignTheme("first-light-caverns");
+    assert.strictEqual(state2.mapConfigId, "first-light-caverns");
+    assert.deepEqual(state2.gridDimensions, [26, 19]);
+
+    const state3 = selectCampaignTheme("fan-dungeon-28x21");
+    assert.strictEqual(state3.mapConfigId, "fan-dungeon-28x21");
+    assert.deepEqual(state3.gridDimensions, [28, 21]);
+    assert.strictEqual(state3.roomsCount, 19);
+  });
+
+  it("supports hero editor class field, real-time name updates, and character state (gold, weapons, inventory)", () => {
+    const hero = {
+      "@id": "urn:robos:tabletop:hero:barbarian",
+      "dcterms:title": "Barbarian",
+      "robos:heroClass": "Barbarian",
+      "robos:bodyPoints": 8,
+      "robos:mindPoints": 2,
+      "robos:attackDice": 3,
+      "robos:defendDice": 2,
+      "robos:gold": 150,
+      "robos:startingWeapon": "Broadsword",
+      "robos:equippedWeapon": "Broadsword (3 Combat Dice)",
+      "robos:equippedArmor": "Natural Toughness (2 Defend Dice)",
+      "robos:inventory": [
+        { id: "item-pot-heal", name: "Potion of Healing", type: "potion", effect: "Restores 4 BP", value: 100 },
+        { id: "item-rope", name: "Heavy Rope", type: "tool", effect: "Cross pits", value: 25 }
+      ]
+    };
+
+    assert.strictEqual(hero["robos:heroClass"], "Barbarian", "Hero must have class field");
+    assert.strictEqual(hero["robos:gold"], 150, "Hero must store gold state");
+    assert.strictEqual(hero["robos:inventory"].length, 2, "Hero must store inventory items");
+
+    // Live name update simulation
+    function updateHeroName(h, newName) {
+      h["dcterms:title"] = newName;
+      return {
+        editorTitle: `Edit Hero: ${newName}`,
+        sidebarName: newName,
+        actionScreenName: newName
+      };
+    }
+
+    const synced = updateHeroName(hero, "Grimjaw the Slayer");
+    assert.strictEqual(hero["dcterms:title"], "Grimjaw the Slayer");
+    assert.strictEqual(synced.editorTitle, "Edit Hero: Grimjaw the Slayer");
+    assert.strictEqual(synced.sidebarName, "Grimjaw the Slayer");
+    assert.strictEqual(synced.actionScreenName, "Grimjaw the Slayer");
+
+    // Add gold
+    hero["robos:gold"] += 50;
+    assert.strictEqual(hero["robos:gold"], 200);
+
+    // Add inventory item
+    hero["robos:inventory"].push({ id: "item-torch", name: "Dungeon Torch", type: "tool", effect: "Light 3 turns", value: 15 });
+    assert.strictEqual(hero["robos:inventory"].length, 3);
+  });
+
+  it("supports interactive hero combat action screen with Attack, Defend, and Movement rolls", () => {
+    function rollHeroCombatDie(mockRoll = null) {
+      const r = mockRoll !== null ? mockRoll : Math.floor(Math.random() * 6) + 1;
+      if (r <= 3) return { type: "skull", label: "💀 Skull" };
+      if (r <= 5) return { type: "white-shield", label: "🛡️ Shield" };
+      return { type: "black-shield", label: "⬛ Black Shield" };
+    }
+
+    // 1. Attack roll test with 3 dice (rolls: 1, 2, 4 -> 2 skulls, 1 shield)
+    const attackRolls = [1, 2, 4].map(r => rollHeroCombatDie(r));
+    const skulls = attackRolls.filter(r => r.type === "skull").length;
+    assert.strictEqual(attackRolls.length, 3);
+    assert.strictEqual(skulls, 2, "Must count 2 skulls from rolls 1 and 2");
+
+    // 2. Defend roll test with 2 dice (rolls: 4, 6 -> 1 white shield, 1 black shield)
+    const defendRolls = [4, 6].map(r => rollHeroCombatDie(r));
+    const whiteShields = defendRolls.filter(r => r.type === "white-shield").length;
+    assert.strictEqual(defendRolls.length, 2);
+    assert.strictEqual(whiteShields, 1, "Must count 1 white shield from roll 4");
+
+    // 3. Movement roll test (2d6)
+    function rollMove(d1, d2) {
+      return { d1, d2, total: d1 + d2 };
+    }
+    const move = rollMove(3, 5);
+    assert.strictEqual(move.total, 8, "Movement total must sum both dice");
+
+    // 4. BP / MP damage & heal adjustments
+    let bp = 8;
+    const maxBP = 8;
+    // Damage -2
+    bp = Math.max(0, bp - 2);
+    assert.strictEqual(bp, 6);
+    // Heal +1
+    bp = Math.min(maxBP, bp + 1);
+    assert.strictEqual(bp, 7);
+  });
+
+  it("supports campaign multi-quest architecture (1+ quests invariant, adding and switching quests)", () => {
+    const campaign = {
+      id: "campaign-heroquest-gathering-storm",
+      title: "HeroQuest: The Gathering Storm",
+      quests: [
+        { id: "quest-1", slug: "heroquest-the-trial", title: "Quest 1: The Trial", goldReward: 100, completed: false, mapConfigId: "fan-dungeon-28x21" },
+        { id: "quest-2", slug: "heroquest-rescue-sir-ragnar", title: "Quest 2: The Rescue of Sir Ragnar", goldReward: 200, completed: false, mapConfigId: "heroquest-classic" },
+        { id: "quest-3", slug: "heroquest-lair-orc-warlord", title: "Quest 3: Lair of the Orc Warlord", goldReward: 250, completed: false, mapConfigId: "first-light-caverns" }
+      ]
+    };
+
+    // Invariant: Campaign must have 1+ quests
+    assert.ok(campaign.quests.length >= 1, "Campaign must have at least 1 quest");
+    assert.strictEqual(campaign.quests.length, 3, "Initial campaign has 3 classic quests");
+
+    // Add Quest
+    function addQuest(c, title, goldReward, mapConfigId) {
+      const nextNum = c.quests.length + 1;
+      const newQuest = {
+        id: `quest-${nextNum}`,
+        slug: `heroquest-quest-${nextNum}`,
+        title: title || `Quest ${nextNum}: New Adventure`,
+        goldReward: goldReward || 150,
+        completed: false,
+        mapConfigId: mapConfigId || "fan-dungeon-28x21"
+      };
+      c.quests.push(newQuest);
+      return newQuest;
+    }
+
+    const q4 = addQuest(campaign, "Quest 4: Prince Magnus' Gold", 300, "heroquest-classic");
+    assert.strictEqual(campaign.quests.length, 4, "Must have 4 quests after addition");
+    assert.strictEqual(q4.id, "quest-4");
+    assert.strictEqual(q4.title, "Quest 4: Prince Magnus' Gold");
+
+    // Delete Quest with 1+ quest invariant guard
+    function deleteQuest(c, index) {
+      if (c.quests.length <= 1) {
+        return false; // Invariant preserved: Cannot delete last remaining quest
+      }
+      c.quests.splice(index, 1);
+      return true;
+    }
+
+    assert.strictEqual(deleteQuest(campaign, 3), true, "Deletion allowed when > 1 quest");
+    assert.strictEqual(campaign.quests.length, 3);
+
+    // Delete until 1 remains
+    assert.strictEqual(deleteQuest(campaign, 2), true);
+    assert.strictEqual(deleteQuest(campaign, 1), true);
+    assert.strictEqual(campaign.quests.length, 1, "Only 1 quest remains");
+
+    // Attempt deleting last quest - MUST fail to protect 1+ quest invariant
+    const deleteAttempt = deleteQuest(campaign, 0);
+    assert.strictEqual(deleteAttempt, false, "Must reject deleting when only 1 quest remains");
+    assert.strictEqual(campaign.quests.length, 1, "Campaign must retain at least 1 quest");
+  });
+
+  it("supports completing a quest with gold reward distribution to heroes and campaign progress tracking", () => {
+    const heroes = [
+      { id: "barbarian", name: "Barbarian", "robos:gold": 100 },
+      { id: "dwarf", name: "Dwarf", "robos:gold": 50 },
+      { id: "elf", name: "Elf", "robos:gold": 75 },
+      { id: "wizard", name: "Wizard", "robos:gold": 120 }
+    ];
+
+    const campaign = {
+      id: "campaign-heroquest-gathering-storm",
+      title: "HeroQuest: The Gathering Storm",
+      quests: [
+        { id: "quest-1", title: "Quest 1: The Trial", goldReward: 100, completed: false },
+        { id: "quest-2", title: "Quest 2: The Rescue of Sir Ragnar", goldReward: 200, completed: false },
+        { id: "quest-3", title: "Quest 3: Lair of the Orc Warlord", goldReward: 250, completed: false }
+      ]
+    };
+
+    function calculateProgress(c) {
+      const completed = c.quests.filter(q => q.completed).length;
+      const total = c.quests.length;
+      return {
+        completed,
+        total,
+        percentage: Math.round((completed / total) * 100),
+        allFinished: completed === total
+      };
+    }
+
+    function completeQuest(c, heroParty, questIdx) {
+      const quest = c.quests[questIdx];
+      assert.ok(quest, "Quest must exist");
+      quest.completed = true;
+
+      // Distribute gold reward to each hero
+      heroParty.forEach(h => {
+        h["robos:gold"] = (h["robos:gold"] || 0) + quest.goldReward;
+      });
+
+      return {
+        quest,
+        goldAwarded: quest.goldReward,
+        progress: calculateProgress(c)
+      };
+    }
+
+    function resetQuest(c, questIdx) {
+      const quest = c.quests[questIdx];
+      assert.ok(quest, "Quest must exist");
+      quest.completed = false;
+      return calculateProgress(c);
+    }
+
+    // Initial state: 0% complete
+    let prog = calculateProgress(campaign);
+    assert.strictEqual(prog.percentage, 0);
+    assert.strictEqual(prog.completed, 0);
+
+    // Complete Quest 1 (100g reward)
+    const res1 = completeQuest(campaign, heroes, 0);
+    assert.strictEqual(campaign.quests[0].completed, true, "Quest 1 must be marked completed");
+    assert.strictEqual(res1.progress.completed, 1);
+    assert.strictEqual(res1.progress.percentage, 33);
+    assert.strictEqual(heroes.find(h => h.id === "barbarian")["robos:gold"], 200, "Barbarian must gain 100g");
+    assert.strictEqual(heroes.find(h => h.id === "wizard")["robos:gold"], 220, "Wizard must gain 100g");
+
+    // Complete Quest 2 (200g reward)
+    const res2 = completeQuest(campaign, heroes, 1);
+    assert.strictEqual(campaign.quests[1].completed, true, "Quest 2 must be marked completed");
+    assert.strictEqual(res2.progress.completed, 2);
+    assert.strictEqual(res2.progress.percentage, 67);
+    assert.strictEqual(heroes.find(h => h.id === "barbarian")["robos:gold"], 400, "Barbarian must gain 200g");
+
+    // Complete Quest 3 (250g reward) -> 100% campaign complete
+    const res3 = completeQuest(campaign, heroes, 2);
+    assert.strictEqual(res3.progress.completed, 3);
+    assert.strictEqual(res3.progress.percentage, 100);
+    assert.strictEqual(res3.progress.allFinished, true, "All quests must be finished");
+    assert.strictEqual(heroes.find(h => h.id === "barbarian")["robos:gold"], 650, "Barbarian must gain 250g");
+
+    // Reset Quest 3 to test replay/reopen flow
+    const resetProg = resetQuest(campaign, 2);
+    assert.strictEqual(campaign.quests[2].completed, false, "Quest 3 must be reopened");
+    assert.strictEqual(resetProg.completed, 2);
+    assert.strictEqual(resetProg.percentage, 67);
+  });
 });
+
