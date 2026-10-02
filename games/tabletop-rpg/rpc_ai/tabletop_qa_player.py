@@ -59,6 +59,20 @@ class TabletopQAPlayer:
     def get_state(self) -> dict:
         return self._get("/state")
 
+    def snapshot(self) -> dict:
+        """Alias for get_state capturing complete game and scene snapshot."""
+        return self.get_state()
+
+    def set_state(self, **kwargs) -> dict:
+        """Deterministically configure game/scene state (heroes, monsters, doors, traps, turn, etc.)."""
+        self.log(f"Configuring game state: {list(kwargs.keys())}...")
+        return self.execute_action("set_state", **kwargs)
+
+    def reset_game(self) -> dict:
+        """Reload pristine cartridge state."""
+        self.log("Resetting game to pristine cartridge state...")
+        return self.execute_action("reset_game")
+
     def execute_action(self, action, **kwargs) -> dict:
         if isinstance(action, dict):
             payload = {**action, **kwargs}
@@ -105,8 +119,16 @@ class TabletopQAPlayer:
         return self.execute_action("dm_attack", heroId=hero_id)
 
     def search(self) -> dict:
-        self.log("Searching chamber for treasure and traps...")
+        self.log("Searching chamber for treasure...")
         return self.execute_action("search")
+
+    def search_traps(self) -> dict:
+        self.log("Searching area for hidden traps and secret doors...")
+        return self.execute_action("search_traps")
+
+    def disarm_trap(self, trap_id: str = "") -> dict:
+        self.log(f"Disarming trap{' ' + trap_id if trap_id else ''}...")
+        return self.execute_action("disarm_trap", trapId=trap_id)
 
     def end_turn(self) -> dict:
         self.log("Ending active turn...")
