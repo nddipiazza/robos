@@ -66,6 +66,20 @@ contextBridge.exposeInMainWorld('agents', {
   writeSettings:  (d)   => ipcRenderer.invoke('write-settings', d),
   openDirDialog:  ()    => ipcRenderer.invoke('open-dir-dialog'),
 
+  // Session conversation events (one-shot read)
+  copilotSessionEvents: (id)   => ipcRenderer.invoke('copilot-session-events', id),
+  claudeSessionEvents:  (id)   => ipcRenderer.invoke('claude-session-events', id),
+
+  // Session streaming control
+  sessionSend: (opts) => ipcRenderer.invoke('session-send', opts),
+  sessionKill: (id)   => ipcRenderer.invoke('session-kill', id),
+
+  // Streaming event forwarding — register once in init(), no stacking
+  onSessionChunk:         (cb) => ipcRenderer.on('session-chunk',          (_, d) => cb(d)),
+  onSessionDone:          (cb) => ipcRenderer.on('session-done',           (_, d) => cb(d)),
+  onSessionStderr:        (cb) => ipcRenderer.on('session-stderr',         (_, d) => cb(d)),
+  onSessionEventsRefresh: (cb) => ipcRenderer.on('session-events-refresh', (_, d) => cb(d)),
+
   // Events
   onOpenProvider: (cb) => ipcRenderer.on('open-provider', (_, id) => cb(id)),
 });
