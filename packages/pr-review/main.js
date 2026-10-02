@@ -18,13 +18,16 @@ const reviewPublisher = localReview ? new ReviewPRPublisher(localReview, process
 ipcMain.handle('create-review-pr', async (_, input) => { try { if (!reviewPublisher) throw new Error('No local review is open.'); if (demoSession?.status === 'running') throw new Error('Wait for the current edit to finish before creating the PR.'); const evidence=await require('./lib/publish-inline-evidence').publishInlineEvidence(input.body,localReview,reviewStore,require('./lib/review-evidence').evidenceFor(localReview,reviewStore).evidence,{progress:text=>{for(const window of BrowserWindow.getAllWindows())window.webContents.send('review-publish-progress',text);}}); return {ok:true,pr:await reviewPublisher.create({...input,body:require('./lib/inline-evidence').resolveEvidence(input.body,evidence)})}; } catch(error) { return {ok:false,error:error.message}; } });
 const prState=localReview?new (require('./lib/review-pr-state').ReviewPRState)(localReview,process.env.ROBOS_LOCAL_REVIEW):null;
 ipcMain.handle('refresh-review-pr',async()=>{try{return {ok:true,pr:await prState.refresh()};}catch(e){return {ok:false,error:e.message};}});
-ipcMain.handle('update-review-pr',async(_,input)=>{try{if(demoSession?.status==='running')throw Error('Wait for the walkthrough adjustment to finish.');await prState.assertAuthor();const evidence=await require('./lib/publish-inline-evidence').publishInlineEvidence(input.body,localReview,reviewStore,require('./lib/review-evidence').evidenceFor(localReview,reviewStore).evidence);return {ok:true,pr:await prState.update({...input,body:require('./lib/inline-evidence').resolveEvidence(input.body,evidence)})};}catch(e){return {ok:false,error:e.message};}});
-ipcMain.handle('push-review-adjustments',async()=>{try{if(demoSession?.status==='running')throw Error('Wait for the walkthrough adjustment to finish.');return {ok:true,pr:await prState.push()};}catch(e){return {ok:false,error:e.message};}});
+ipcMain.handle('update-review-pr',async(_,input)=>{try{if(ciRecovery?.busy||demoSession?.status==='running')throw Error('Wait for the walkthrough adjustment to finish.');await prState.assertAuthor();const evidence=await require('./lib/publish-inline-evidence').publishInlineEvidence(input.body,localReview,reviewStore,require('./lib/review-evidence').evidenceFor(localReview,reviewStore).evidence);return {ok:true,pr:await prState.update({...input,body:require('./lib/inline-evidence').resolveEvidence(input.body,evidence)})};}catch(e){return {ok:false,error:e.message};}});
+ipcMain.handle('push-review-adjustments',async()=>{try{if(ciRecovery?.busy||demoSession?.status==='running')throw Error('Wait for the walkthrough adjustment to finish.');return {ok:true,pr:await prState.push()};}catch(e){return {ok:false,error:e.message};}});
 const showMeSession = new ShowMeSession(localReview?.runner);
 const { ReviewSessionStore } = require('./lib/review-session-store');
 const reviewStore = localReview ? new ReviewSessionStore({repo:localReview.repo,number:localReview.number,branch:localReview.pr.headBranch,workspace:localReview.workspace}) : null;
 const { DemoSession } = require('./lib/demo-session');
 const demoSession = localReview?.demoProcess ? new DemoSession({ workspace: localReview.workspace, processFile: localReview.demoProcess, agent: localReview.demoAgent, beforeWorkspace: localReview.beforeWorkspace, store: reviewStore }) : null;
+const ciRecovery = localReview && reviewStore ? new (require('./lib/ci-recovery').CIRecovery)(localReview,prState,path.join(reviewStore.directory,'ci-recovery')) : null;
+ipcMain.handle('ci-recovery-state',async()=>{try{if(!ciRecovery)throw Error('Open a saved PR review first.');return {ok:true,...await ciRecovery.state()};}catch(e){return {ok:false,error:e.message};}});
+ipcMain.handle('ci-recovery-action',async(_,input)=>{try{if(!ciRecovery)throw Error('Open a saved PR review first.');if(demoSession?.status==='running'||prState?.pending||reviewPublisher?.pending)throw Error('Finish the active review action first.');return input.action==='start'?await ciRecovery.start(input):input.action==='push'?await ciRecovery.push():{ok:false,error:'Unknown recovery action.'};}catch(e){return {ok:false,error:e.message};}});
 // Optional workstation snapshot for restarting the theater without losing a paused review.
 if (demoSession && localReview.resumeStatePath) {
   const saved = JSON.parse(fs.readFileSync(localReview.resumeStatePath, 'utf8'));
@@ -38,12 +41,12 @@ if (demoSession && localReview.resumeStatePath) {
 }
 demoSession?.on('state', state => { if (win && !win.isDestroyed()) win.webContents.send('demo-state', state); });
 ipcMain.handle('demo-state', () => demoSession?.state() || null);
-ipcMain.handle('demo-action', async (_, { action, text } = {}) => { try { if (!demoSession) throw new Error('No project demo process configured.'); if (reviewPublisher?.pending || prState?.pending) throw new Error('A PR update is in progress.');if(localReview?.pullRequest && action!=='explain')await prState.assertAuthor(); return { ok: true, state: await demoSession.act(action, text) }; } catch (e) { return { ok: false, error: e.message }; } });
+ipcMain.handle('demo-action', async (_, { action, text } = {}) => { try { if (ciRecovery?.busy) throw new Error('Wait for CI recovery to finish.'); if (!demoSession) throw new Error('No project demo process configured.'); if (reviewPublisher?.pending || prState?.pending) throw new Error('A PR update is in progress.');if(localReview?.pullRequest && action!=='explain')await prState.assertAuthor(); return { ok: true, state: await demoSession.act(action, text) }; } catch (e) { return { ok: false, error: e.message }; } });
 ipcMain.handle('demo-open-session-file', async () => { try { await require('./lib/open-session-file').openSessionFile(reviewStore?.transcript, shell); return { ok: true }; } catch (error) { return { ok: false, error: error.message }; } });
 ipcMain.handle('demo-history', (_, before) => reviewStore?.page(before, {includeCleared:true}) || {messages:[],before:0});
 ipcMain.handle('demo-clear-chat', () => { if (!demoSession) return { ok: false, error: 'No walkthrough configured.' }; return { ok: true, state: demoSession.clearChat() }; });
-ipcMain.handle('demo-save-process', (_, value) => { try { if (!demoSession) throw new Error('No project demo process configured.'); return { ok: true, state: demoSession.saveProcess(value) }; } catch (e) { return { ok: false, error: e.message }; } });
-app.on('before-quit', () => demoSession?.stop());
+ipcMain.handle('demo-save-process', (_, value) => { try { if (ciRecovery?.busy) throw new Error('Wait for CI recovery to finish.'); if (!demoSession) throw new Error('No project demo process configured.'); return { ok: true, state: demoSession.saveProcess(value) }; } catch (e) { return { ok: false, error: e.message }; } });
+app.on('before-quit', () => { demoSession?.stop(); ciRecovery?.session.stop(); });
 app.on('before-quit', () => showMeSession.stop());
 ipcMain.handle('get-local-review', async () => {if(!localReview)return null;try{return {ok:true,pr:await prState.refresh()};}catch(e){return {ok:true,pr:{...localReview.pr,stateError:e.message,isAuthor:false}};}});
 
@@ -1290,7 +1293,7 @@ ipcMain.handle('review-message-channels', async (_,serverId) => {try{return {ok:
 ipcMain.handle('review-message-send', async (_,input) => {try{if(!notification)throw Error('No local review.');return {ok:true,notification:await notification.send(input)};}catch(e){return {ok:false,error:e.message};}});
 
 const descriptionGenerator = localReview ? new (require('./lib/pr-description').PRDescriptionGenerator)(localReview, reviewStore, text => {for(const window of BrowserWindow.getAllWindows())window.webContents.send('review-description-progress',text);}) : null;
-ipcMain.handle('generate-pr-description',async(_,input)=>{try{if(!descriptionGenerator)throw Error('No local review is open.');if(demoSession?.status==='running')throw Error('Wait for the current demo edit to finish before generating its description.');return {ok:true,...await descriptionGenerator.generate(input)};}catch(e){return {ok:false,error:e.message};}});
+ipcMain.handle('generate-pr-description',async(_,input)=>{try{if(!descriptionGenerator)throw Error('No local review is open.');if(ciRecovery?.busy||demoSession?.status==='running')throw Error('Wait for the current demo edit to finish before generating its description.');return {ok:true,...await descriptionGenerator.generate(input)};}catch(e){return {ok:false,error:e.message};}});
 
 app.on('before-quit',()=>descriptionGenerator?.stop());
 
