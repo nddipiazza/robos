@@ -313,6 +313,19 @@ robos-ai-textarea {
 }
 .robos-ask-btn:hover { background: #1c2a3a; color: #58a6ff; border-color: #388bfd; }
 
+/* Match compact toolbar controls to the 22px quick-ask button. */
+.robos-ai-toolbar .robos-cmd-pill,
+.robos-ai-toolbar .robos-submit-btn {
+  box-sizing: border-box;
+  height: 22px;
+  min-height: 22px;
+  padding: 0 7px;
+  font-size: 11px;
+  line-height: 1;
+  border-radius: 5px;
+  justify-content: center;
+}
+
 /* Quick-ask floating dialog */
 .robos-ask-dialog {
   position: fixed;
