@@ -1,5 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('api', {
+  reviewIDEs:()=>ipcRenderer.invoke('review-ides'),
+  openReviewIDE:id=>ipcRenderer.invoke('review-open-ide',id),
   listSkills:()=>ipcRenderer.invoke('robos-skills-list'),
   getDemoState: () => ipcRenderer.invoke('demo-state'),
   demoAction: opts => ipcRenderer.invoke('demo-action', opts),

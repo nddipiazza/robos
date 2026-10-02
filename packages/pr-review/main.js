@@ -9,6 +9,8 @@ const { execSync } = require('child_process');
 const { loadLocalReview, ShowMeSession } = require('./lib/local-review');
 ipcMain.handle('robos-skills-list',()=>{try{return {ok:true,skills:require('../robos-lib/skill-catalog').listSkills()};}catch(e){return {ok:false,error:e.message};}});
 const localReview = loadLocalReview(process.env.ROBOS_LOCAL_REVIEW);
+ipcMain.handle('review-ides',()=>({ok:true,workspace:localReview?.workspace||'',ides:require('./lib/open-review-ide').available().map(({id,name})=>({id,name}))}));
+ipcMain.handle('review-open-ide',async(_,id)=>{try{return await require('./lib/open-review-ide').open(localReview?.workspace,id);}catch(e){return {ok:false,error:e.message};}});
 const { ReviewPRPublisher } = require('./lib/create-review-pr');
 const reviewPublisher = localReview ? new ReviewPRPublisher(localReview, process.env.ROBOS_LOCAL_REVIEW) : null;
 ipcMain.handle('create-review-pr', async (_, input) => { try { if (!reviewPublisher) throw new Error('No local review is open.'); if (demoSession?.status === 'running') throw new Error('Wait for the current edit to finish before creating the PR.'); const evidence=await require('./lib/publish-inline-evidence').publishInlineEvidence(input.body,localReview,reviewStore,require('./lib/review-evidence').evidenceFor(localReview,reviewStore).evidence,{progress:text=>{for(const window of BrowserWindow.getAllWindows())window.webContents.send('review-publish-progress',text);}}); return {ok:true,pr:await reviewPublisher.create({...input,body:require('./lib/inline-evidence').resolveEvidence(input.body,evidence)})}; } catch(error) { return {ok:false,error:error.message}; } });

@@ -2796,3 +2796,22 @@ review-markdown-editor { display: block; margin: 8px 0 20px; }
 
 .walkthrough-follow-latest { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 12px; cursor: pointer; }
 .walkthrough-follow-latest input { margin: 0; accent-color: #58a6ff; }
+
+.review-ide-dialog { margin:auto;width:min(500px,calc(100vw - 40px));max-height:85vh;overflow:auto;box-sizing:border-box;padding:24px;background:#131d27;color:#dce6f0;border:1px solid #3a4b5c;border-radius:14px;box-shadow:0 24px 80px #0008;font:14px/1.5 system-ui; }
+.review-ide-dialog::backdrop { background:#070d15bb;backdrop-filter:blur(3px); }
+.review-ide-dialog header { display:flex;align-items:center;justify-content:space-between;background:none;padding:0;border:0; }
+.review-ide-dialog h2 { margin:0;font-size:22px;font-weight:600;letter-spacing:-.4px; }
+.review-ide-dialog p { margin:10px 0;color:#a6b8ca; }
+.review-ide-dialog .review-ide-workspace { background:#0d151d;border:1px solid #2c3c4d;border-radius:6px;padding:10px;font:12px/1.5 ui-monospace,monospace;overflow-wrap:anywhere; }
+.review-ide-dialog button { cursor:pointer;color:inherit; }
+.review-ide-dialog .review-ide-close { border:0;background:transparent;font-size:24px;padding:0 6px;color:#96aabd; }
+.review-ide-dialog .review-ide-list { display:grid;gap:8px;margin:16px 0; }
+.review-ide-dialog .review-ide-option { display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:12px;background:#192633;border:1px solid #344759;border-radius:9px; }
+.review-ide-option > span:nth-child(2) { flex:1;font-size:14px;font-weight:600; }
+.review-ide-dialog small { display:block;font-size:11px;color:#92a9bd;font-weight:400;margin-top:3px; }
+.review-ide-dialog .review-ide-icon { display:grid;place-items:center;width:34px;height:34px;border-radius:7px;background:#243f55;color:#abd8fa;font:600 13px ui-monospace,monospace; }
+.review-ide-dialog .review-ide-option:hover { background:#23394d;border-color:#5985a9; }
+.review-ide-dialog :focus-visible { outline:2px solid #79c4fa;outline-offset:2px; }
+.review-ide-dialog button:disabled { opacity:.55;cursor:wait; }
+.review-ide-dialog .review-ide-note { font-size:12px;margin-bottom:0; }
+#open-review-ide { white-space:nowrap;font-size:12px;padding:6px 10px; }
