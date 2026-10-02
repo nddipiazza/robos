@@ -34,6 +34,15 @@ window.mountWalkthrough = async function () {
   const chatHeader = document.createElement('div'); chatHeader.className = 'walkthrough-chat-header';
   const clearChat = button('Clear chat', 'Clear this conversation', () => clearDialog.showModal()); const savedHistory = button('Saved history', 'Browse the saved conversation', () => { historyDialog.showModal(); loadHistory(); }); chatHeader.append(historyNotice, savedHistory, clearChat);
   const chat = document.createElement('div'); chat.className = 'walkthrough-chat'; chat.setAttribute('role', 'log'); chat.setAttribute('aria-label', 'Live demo conversation');
+  let followLatest=true;
+  try { followLatest=localStorage.getItem('robos-walkthrough-follow-latest')!=='false'; } catch {}
+  const followButton=button('Follow latest', 'Keep new messages in view',()=>{
+    followLatest=!followLatest;updateFollowButton();
+    try { localStorage.setItem('robos-walkthrough-follow-latest',String(followLatest)); } catch {}
+    if(followLatest)chat.scrollTop=chat.scrollHeight;
+  });
+  function updateFollowButton(){followButton.setAttribute('aria-pressed',String(followLatest));followButton.title=followLatest?'Following new messages. Turn off to read earlier messages.':'Following paused. Turn on to jump to the latest message.';}
+  updateFollowButton();chatHeader.insertBefore(followButton,clearChat);
   let pendingMessage = null;
   const receipt = document.createElement('div'); receipt.className = 'walkthrough-receipt'; receipt.setAttribute('role', 'status');
   const form = document.createElement('div'); form.className = 'walkthrough-compose';
@@ -124,10 +133,12 @@ window.mountWalkthrough = async function () {
     else checkpoint.textContent = 'Start the dev app and demonstrate one checkpoint at a time. You decide when we move on.';
     if (value.status === 'error') { const reason = document.createElement('p'); reason.className = 'walkthrough-blocker'; reason.textContent = (value.messages.filter(m => m.kind !== 'progress' && m.role !== 'user').at(-1)?.text || 'This step could not be verified.') + (lastStep ? ' You can recheck or ask for a change below.' : ' Recheck this step, ask for a change below, or continue with this check marked unverified.'); checkpoint.append(reason); }
     if (value.status === 'paused' && lastStep) { const done = document.createElement('p'); done.textContent = 'You’ve reached the end of this walkthrough. You can keep asking for changes, or use More to start over. This does not approve or merge the PR.'; checkpoint.append(done); }
-    const followTail = chat.scrollHeight - chat.scrollTop - chat.clientHeight < 60;
+    const previousTop=chat.scrollTop;
+    const anchor=[...chat.children].find(el=>el.getBoundingClientRect().bottom>chat.getBoundingClientRect().top);
+    const anchorId=anchor?.dataset.messageId,anchorOffset=anchor?anchor.getBoundingClientRect().top-chat.getBoundingClientRect().top:0;
     historyNotice.textContent = value.historyAvailable ? 'Conversation saved locally · Recent messages shown here. Open Saved history for earlier messages.' : 'History keeps the newest 120 entries, up to 128 KB; oldest entries are removed first.';
     chat.replaceChildren();
-    for (const message of value.messages) { const bubble = document.createElement('div'); bubble.className = 'walkthrough-bubble ' + message.role + (message.kind === 'progress' ? ' progress-entry' : ''); const label = document.createElement('strong'); label.textContent = message.role === 'user' ? 'You' : message.role === 'assistant' ? message.agentName || value.agentName || 'Demo agent' : 'Status'; label.textContent = label.textContent.replace(/ · configured default$/, '');
+    for (const message of value.messages) { const bubble = document.createElement('div'); bubble.dataset.messageId=String(message.id); bubble.className = 'walkthrough-bubble ' + message.role + (message.kind === 'progress' ? ' progress-entry' : ''); const label = document.createElement('strong'); label.textContent = message.role === 'user' ? 'You' : message.role === 'assistant' ? message.agentName || value.agentName || 'Demo agent' : 'Status'; label.textContent = label.textContent.replace(/ · configured default$/, '');
       const timestamp = document.createElement('time');
       const recordedTime = message.timestamp ?? receivedTimes.get(message.id);
       if (Number.isFinite(recordedTime)) {
@@ -137,7 +148,8 @@ window.mountWalkthrough = async function () {
       const timestampLink = button('', 'Open saved session in your default text editor', openSessionFile); timestampLink.className = 'walkthrough-timestamp'; timestampLink.append(timestamp);
       const header = document.createElement('div'); header.className = 'walkthrough-bubble-header'; header.append(label, timestampLink);
       const body = document.createElement('p'); body.textContent = message.text; bubble.append(header, body); chat.append(bubble); }
-    if (followTail) chat.scrollTop = chat.scrollHeight;
+    if (followLatest) chat.scrollTop = chat.scrollHeight;
+    else {chat.scrollTop=previousTop;const retained=[...chat.children].find(el=>el.dataset.messageId===anchorId);if(retained)chat.scrollTop+=retained.getBoundingClientRect().top-chat.getBoundingClientRect().top-anchorOffset;}
   }
   async function act(action, text) { error.textContent = ''; try { const result = await window.api.demoAction({ action, text }); if (!result.ok) throw new Error(result.error); render(result.state); return true; } catch (e) { error.textContent = e.message; return false; } }
   input.addEventListener('robos-submit', async event => {

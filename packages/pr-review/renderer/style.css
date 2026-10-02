@@ -2793,3 +2793,5 @@ review-markdown-editor { display: block; margin: 8px 0 20px; }
 .review-evidence-grid figure { margin:0; }
 .review-evidence-grid img { width:100%; max-height:300px; object-fit:contain; background:#0a1118; border:1px solid #384758; }
 .review-evidence-grid figcaption { font-size:12px; line-height:1.5; color:#aab9c8; }
+
+.walkthrough-chat-header button[aria-pressed="true"] { background: #193b50; border-color: #58a6ff; color: #b9ddff; }
