@@ -23,7 +23,8 @@ class TabletopSnapshotDiff:
         self.scalars: Dict[str, Tuple[Any, Any]] = {}
         for key in [
             "round", "phase", "turnState", "activeHero", "activeHeroIndex",
-            "movementRemaining", "movementRolled", "hasActed", "role",
+            "movementRemaining", "movementRolled", "hasActed", "hasMoved",
+            "movedBeforeAction", "movementClosed", "role",
             "discoveredEnemiesCount", "visibleEnemiesCount", "defeatedEnemiesCount",
             "exploredCount", "aiStepPending"
         ]:
