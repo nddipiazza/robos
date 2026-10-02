@@ -49,9 +49,12 @@ function createWindow() {
 app.setName('agents-manager');
 app.setPath('userData', path.join(process.env.HOME || '/home/robos', '.config', 'robos', 'electron', 'agents-manager'));
 if (!app.requestSingleInstanceLock()) { app.quit(); process.exit(0); }
-app.on('second-instance', () => {
+let requestedSession=require('../robos-lib/agent-session-link').parse(process.argv);
+ipcMain.handle('agent-session-target',()=>requestedSession);
+app.on('second-instance', (_,argv) => {
+  const target=require('../robos-lib/agent-session-link').parse(argv);if(target)requestedSession=target;
   const w = require('electron').BrowserWindow.getAllWindows()[0];
-  if (w) { if (w.isMinimized()) w.restore(); w.focus(); }
+  if (w) { if (w.isMinimized()) w.restore(); w.show();w.focus();if(target)w.webContents.send('open-agent-session',target); }
 });
 app.commandLine.appendSwitch('no-sandbox');
 app.commandLine.appendSwitch('disable-gpu');
@@ -241,45 +244,7 @@ ipcMain.handle('copilot-install-extension', async () => {
 
 const CODEX_DIR = path.join(os.homedir(), '.codex');
 
-ipcMain.handle('codex-sessions', () => {
-  // Codex stores sessions in ~/.codex/state_N.sqlite (versioned name).
-  // Schema: threads(id, title, first_user_message, cwd, model, updated_at, archived)
-  const sessions = [];
-
-  // Find state_*.sqlite files (skip WAL/SHM helper files and logs_*.sqlite)
-  const dbCandidates = [];
-  try {
-    for (const f of fs.readdirSync(CODEX_DIR)) {
-      if (/^state_\d+\.sqlite$/.test(f)) {
-        dbCandidates.push(path.join(CODEX_DIR, f));
-      }
-    }
-  } catch {}
-
-  for (const dbPath of dbCandidates) {
-    try {
-      const result = cp.execSync(
-        `sqlite3 -readonly -json "${dbPath}" "SELECT id, title, first_user_message, cwd, model, updated_at FROM threads WHERE archived = 0 ORDER BY updated_at DESC LIMIT 50" 2>/dev/null`,
-        { timeout: 5000 }
-      );
-      const rows = JSON.parse(result.toString().trim() || '[]');
-      for (const row of rows) {
-        sessions.push({
-          session_id: row.id,
-          name: row.title || row.cwd ? path.basename(row.cwd || '') || (row.id || '').slice(0, 8) : (row.id || '').slice(0, 8),
-          cwd: row.cwd || '',
-          first_message: (row.first_user_message || '').slice(0, 120),
-          model: row.model || '',
-          updated_at: row.updated_at ? new Date(row.updated_at * 1000).toISOString() : '',
-        });
-      }
-      if (sessions.length) break;
-    } catch {}
-  }
-
-  sessions.sort((a, b) => (b.updated_at || '').localeCompare(a.updated_at || ''));
-  return sessions;
-});
+ipcMain.handle('codex-sessions',()=>require('./codex-sessions').list(requestedSession?.sessionId));
 
 ipcMain.handle('codex-launch-terminal', (_, sessionId, extraArgs) => {
   let parts;

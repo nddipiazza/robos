@@ -266,6 +266,8 @@ function saveAgyFlagState() {
 
 // ── Init ────────────────────────────────────────────────────────────────────
 
+let selectedAgentSession=null;
+async function openAgentSession(target){if(!target)return;selectedAgentSession=target.sessionId;await selectProvider(target.provider);document.querySelector('[data-session-id="'+selectedAgentSession+'"]')?.scrollIntoView({block:'center'});}
 async function init() {
   activeProviderId = await window.agents.getActiveProvider();
   providers = await window.agents.detectProviders();
@@ -275,7 +277,9 @@ async function init() {
 
   // Auto-select first installed provider
   const firstInstalled = providers.find(p => p.installed);
-  if (firstInstalled) selectProvider(firstInstalled.id);
+  window.agents.onOpenSession(openAgentSession);
+  const target=await window.agents.sessionTarget();
+  if(target)await openAgentSession(target);else if(firstInstalled)await selectProvider(firstInstalled.id);
 
   // Handle --check-provider mode
   window.agents.onOpenProvider((id) => selectProvider(id));
@@ -1661,12 +1665,14 @@ function renderCodexSessions(sessions) {
   }
 
   container.innerHTML = '';
+  if(selectedAgentSession&&!sessions.some(s=>s.session_id===selectedAgentSession)){const note=document.createElement('p');note.textContent='Waiting for session '+selectedAgentSession+' to appear. Refreshing automatically…';container.append(note);}
   for (const s of sessions) {
     const card = document.createElement('div');
-    card.className = 'session-card';
+    card.className = 'session-card';card.dataset.sessionId=s.session_id;
+    if(s.session_id===selectedAgentSession){card.classList.add('session-selected');card.setAttribute('aria-label','Selected agent session '+s.session_id);}
     card.innerHTML = `
       <div class="session-card-main">
-        <div class="session-card-name">${esc(s.name)}</div>
+        <div class="session-card-name">${esc(s.name)}</div>${s.session_id===selectedAgentSession?'<div class="session-selected-label">Selected session · '+esc(s.session_id)+'</div>':''}
         <div class="session-card-message">${esc(s.first_message || 'No messages')}</div>
         <div class="session-card-meta">
           <span class="mono text-muted">${esc(s.cwd || '')}</span>

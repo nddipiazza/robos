@@ -3,6 +3,7 @@ contextBridge.exposeInMainWorld('robosProviders',{list:options=>ipcRenderer.invo
 contextBridge.exposeInMainWorld('api', {
   ciRecoveryState:()=>ipcRenderer.invoke('ci-recovery-state'),
   ciRecoveryAction:input=>ipcRenderer.invoke('ci-recovery-action',input),
+  openAgentSession:input=>ipcRenderer.invoke('open-agent-session',input),
   reviewCIStatus:()=>ipcRenderer.invoke('review-ci-status'),
   reviewIDEs:()=>ipcRenderer.invoke('review-ides'),
   openReviewIDE:id=>ipcRenderer.invoke('review-open-ide',id),

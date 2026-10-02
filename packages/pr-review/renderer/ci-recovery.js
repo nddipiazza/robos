@@ -6,14 +6,16 @@
  <ol class="ci-track"><li>1<span>Investigate & fix</span></li><li>2<span>Review & push</span></li><li>3<span>Watch CI</span></li></ol>
  <section class="ci-context"><strong class="ci-headline">Loading current checks…</strong><span class="ci-revision"></span><div class="ci-checks"></div></section>
  <section class="ci-config"><h3>Choose your repair agent</h3><p>The agent will read the failed logs, test a focused fix, and commit it locally for review.</p><robos-agent-selector></robos-agent-selector></section>
- <details class="ci-diff" hidden><summary>Recovery commit changes</summary><pre></pre></details><section class="ci-journal" aria-label="CI recovery conversation"></section><p class="ci-error" role="alert"></p>
+ <details class="ci-diff" hidden><summary>Recovery commit changes</summary><pre></pre></details><robos-agent-job-status></robos-agent-job-status><section class="ci-journal" aria-label="CI recovery conversation"></section><p class="ci-error" role="alert"></p>
  <footer><span class="ci-next">Your branch stays local until you push.</span><button class="ci-refresh">Refresh</button><button class="ci-primary">Investigate & fix</button></footer>`;
  document.body.append(dialog);let state,busy=false,timer;
  const $=selector=>dialog.querySelector(selector),primary=$('.ci-primary'),agentSelector=$('robos-agent-selector');
  const updateLaunch=()=>{primary.disabled=busy||(state?.phase!=='ready'&&!agentSelector.ready);};
  agentSelector.addEventListener('change',updateLaunch);
+ const jobStatus=$('robos-agent-job-status');jobStatus.openSession=value=>window.api.openAgentSession(value);
  $('.ci-close').onclick=()=>dialog.close();dialog.addEventListener('close',()=>clearTimeout(timer));
  function render(value){state=value;const {phase,ci,session}=value;
+  jobStatus.value={...session,activity:session.activitySummary?.text};
   dialog.dataset.phase=phase;$('.ci-headline').textContent={diagnose:'Let’s find what broke',working:'Working toward a verified fix',ready:'A fix is ready for your review',waiting:'Watching the new commit',passed:'Back to green',failed:'The new run still needs attention',unknown:'Waiting for confirmed CI results'}[phase];
   $('.ci-diff').hidden=!value.diff;$('.ci-diff pre').textContent=value.diff||'';
   $('.ci-revision').textContent='Current CI commit · '+(ci.head?.slice(0,8)||'unavailable');

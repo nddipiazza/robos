@@ -10,6 +10,7 @@ const { loadLocalReview, ShowMeSession } = require('./lib/local-review');
 ipcMain.handle('robos-skills-list',()=>{try{return {ok:true,skills:require('../robos-lib/skill-catalog').listSkills()};}catch(e){return {ok:false,error:e.message};}});
 const localReview = loadLocalReview(process.env.ROBOS_LOCAL_REVIEW);
 if(localReview)require('../robos-lib/saved-code-reviews').register(process.env.ROBOS_LOCAL_REVIEW);
+ipcMain.handle('open-agent-session',async(_,input)=>{try{return await require('../robos-lib/agent-session-link').open(input);}catch(e){return {ok:false,error:e.message};}});
 ipcMain.handle('review-ci-status',async()=>localReview?require('../robos-lib/review-ci').readCI(localReview,{refresh:true}):{state:'unknown',checks:[]});
 ipcMain.handle('review-ides',()=>({ok:true,workspace:localReview?.workspace||'',ides:require('./lib/open-review-ide').available().map(({id,name})=>({id,name}))}));
 ipcMain.handle('review-open-ide',async(_,id)=>{try{return await require('./lib/open-review-ide').open(localReview?.workspace,id);}catch(e){return {ok:false,error:e.message};}});
