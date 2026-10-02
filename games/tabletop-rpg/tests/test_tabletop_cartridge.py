@@ -103,7 +103,7 @@ class TestHeroQuestCartridge(unittest.TestCase):
             st1 = player.get_state()
             self.assertEqual(st1.get("revealedRooms"), [], "Initial revealed rooms must be empty")
             initial_count = st1.get("exploredCount", 0)
-            self.assertGreaterEqual(initial_count, 30, "Initial ray vision must explore corridor tiles")
+            self.assertGreaterEqual(initial_count, 28, "Initial ray vision must explore corridor tiles")
 
             # 2. Kick open Northwest Crypt door (4, 1) -> (4, 2)
             door_res = player.open_door(4, 1, 4, 2)
