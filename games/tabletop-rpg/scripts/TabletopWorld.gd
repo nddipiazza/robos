@@ -292,6 +292,15 @@ func _load_active_cartridge() -> void:
 	if is_gm_role():
 		for m in monsters:
 			discovered_monster_ids[str(m.get("id"))] = true
+
+	active_hero_idx = 0
+	current_round = 1
+	current_phase = "hero_phase"
+	movement_remaining = 0
+	movement_rolled = false
+	has_acted_this_turn = false
+	turn_state = "awaiting_roll"
+
 	update_party_vision()
 	_update_ui()
 	queue_redraw_all()
@@ -1269,8 +1278,38 @@ func move_hero(target_pos: Vector2i) -> bool:
 		_log("⚠️ Target out of movement range (need %d, have %d)" % [cost, movement_remaining])
 		return false
 
-	hero["grid_pos"] = target_pos
-	movement_remaining = maxi(0, movement_remaining - cost)
+	var final_pos = target_pos
+	var actual_cost = cost
+	var sprung_trap: Dictionary = {}
+
+	# Check each step along the path for traps
+	for step_idx in range(1, path.size()):
+		var step_tile = path[step_idx]
+		for tr in traps:
+			var tx = int(tr.get("x", tr.get("position", [0, 0])[0]))
+			var ty = int(tr.get("y", tr.get("position", [0, 0])[1]))
+			if Vector2i(tx, ty) == step_tile and not tr.get("disarmed", false):
+				sprung_trap = tr
+				final_pos = step_tile
+				actual_cost = step_idx
+				break
+		if not sprung_trap.is_empty():
+			break
+
+	hero["grid_pos"] = final_pos
+
+	if not sprung_trap.is_empty():
+		sprung_trap["detected"] = true
+		movement_remaining = 0 # Stepping into a trap ends remaining movement
+		var dmg = int(sprung_trap.get("damageDice", 1))
+		hero["current_bp"] = maxi(0, hero.get("current_bp", 1) - dmg)
+		_log("💥 Trap sprung at (%d, %d)! %s suffers %d damage (Remaining BP: %d). Movement halts!" % [
+			final_pos.x, final_pos.y, hero.get("name"), dmg, hero.get("current_bp")
+		])
+		spawn_floating_text(final_pos, "-%d HP TRAP" % dmg, Color(1.0, 0.2, 0.2), 1.5)
+	else:
+		movement_remaining = maxi(0, movement_remaining - actual_cost)
+
 	if movement_remaining == 0:
 		if has_acted_this_turn:
 			turn_state = "turn_complete"
@@ -1286,7 +1325,7 @@ func move_hero(target_pos: Vector2i) -> bool:
 
 	update_party_vision()
 	_log("👣 %s moved to (%d, %d). Remaining movement: %d" % [
-		hero.get("name"), target_pos.x, target_pos.y, movement_remaining
+		hero.get("name"), final_pos.x, final_pos.y, movement_remaining
 	])
 	_update_ui()
 	queue_redraw_all()
@@ -1453,7 +1492,9 @@ func attack_adjacent_monster(monster_id: String = "", weapon_id: String = "") ->
 	var target_m: Dictionary = {}
 	for m in monsters:
 		if m.get("is_alive", false):
-			if monster_id != "" and m.get("id") == monster_id:
+			var mid = str(m.get("id", ""))
+			var mslug = str(m.get("slug", ""))
+			if monster_id != "" and (mid == monster_id or mslug == monster_id or mid.ends_with(monster_id) or monster_id.ends_with(mid)):
 				target_m = m
 				break
 			elif monster_id == "":
@@ -1864,7 +1905,9 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 func _find_spell_target_monster(target_id: String, from_pos: Vector2i) -> Dictionary:
 	for m in monsters:
 		if m.get("is_alive", false):
-			if target_id != "" and m.get("id") == target_id:
+			var mid = str(m.get("id", ""))
+			var mslug = str(m.get("slug", ""))
+			if target_id != "" and (mid == target_id or mslug == target_id or mid.ends_with(target_id) or target_id.ends_with(mid)):
 				return m
 			elif target_id == "":
 				var mp = m.get("grid_pos", Vector2i(-1, -1))
@@ -2012,6 +2055,79 @@ func search_room() -> Dictionary:
 	_update_ui()
 	queue_redraw_all()
 	return { "success": true, "goldFound": found_gold }
+
+func search_traps() -> Dictionary:
+	var hero = get_active_hero()
+	if hero.is_empty():
+		return { "success": false, "error": "No active hero" }
+	var h_pos = hero.get("grid_pos", Vector2i(-1, -1))
+	var h_room = _get_room_at(h_pos)
+	var found_traps: Array[String] = []
+
+	if not h_room.is_empty():
+		var r_id = str(h_room.get("id", ""))
+		for tr in traps:
+			var tx = int(tr.get("x", tr.get("position", [0, 0])[0]))
+			var ty = int(tr.get("y", tr.get("position", [0, 0])[1]))
+			if _get_room_at(Vector2i(tx, ty)).get("id", "") == r_id:
+				tr["detected"] = true
+				found_traps.append(str(tr.get("id", "trap")))
+	else:
+		for tr in traps:
+			var tx = int(tr.get("x", tr.get("position", [0, 0])[0]))
+			var ty = int(tr.get("y", tr.get("position", [0, 0])[1]))
+			var t_pos = Vector2i(tx, ty)
+			if abs(t_pos.x - h_pos.x) + abs(t_pos.y - h_pos.y) <= 4:
+				tr["detected"] = true
+				found_traps.append(str(tr.get("id", "trap")))
+
+	has_acted_this_turn = true
+	if movement_remaining == 0:
+		turn_state = "turn_complete"
+	else:
+		turn_state = "action_taken"
+
+	_log("🔍 %s searches carefully for traps and secret doors: Found %d hidden trap(s)!" % [
+		hero.get("name"), found_traps.size()
+	])
+	_update_ui()
+	queue_redraw_all()
+	return { "success": true, "foundTraps": found_traps, "trapsCount": found_traps.size() }
+
+func disarm_trap(trap_id: String) -> Dictionary:
+	var hero = get_active_hero()
+	if hero.is_empty():
+		return { "success": false, "error": "No active hero" }
+	var h_pos = hero.get("grid_pos", Vector2i(-1, -1))
+	var target_trap: Dictionary = {}
+	for tr in traps:
+		if str(tr.get("id")) == trap_id:
+			target_trap = tr
+			break
+	if target_trap.is_empty():
+		for tr in traps:
+			var tx = int(tr.get("x", tr.get("position", [0, 0])[0]))
+			var ty = int(tr.get("y", tr.get("position", [0, 0])[1]))
+			if abs(tx - h_pos.x) + abs(ty - h_pos.y) <= 1:
+				target_trap = tr
+				break
+	if target_trap.is_empty():
+		return { "success": false, "error": "No trap found with id: " + trap_id }
+
+	target_trap["detected"] = true
+	target_trap["disarmed"] = true
+	has_acted_this_turn = true
+	if movement_remaining == 0:
+		turn_state = "turn_complete"
+	else:
+		turn_state = "action_taken"
+
+	_log("🛠️ %s disarms the %s at (%d, %d) safely!" % [
+		hero.get("name"), target_trap.get("type", target_trap.get("trapType", "trap")), target_trap.get("x", 0), target_trap.get("y", 0)
+	])
+	_update_ui()
+	queue_redraw_all()
+	return { "success": true, "trapId": target_trap.get("id"), "disarmed": true }
 
 func _check_hero_enter_board(idx: int) -> void:
 	if idx < 0 or idx >= heroes.size():
@@ -2796,6 +2912,85 @@ func get_telemetry_state() -> Dictionary:
 				"roomId": str(m.get("roomId", ""))
 			})
 
+	var traps_copy: Array = []
+	for tr in traps:
+		var tc = tr.duplicate(true)
+		var tx = int(tr.get("x", tr.get("position", [0, 0])[0]))
+		var ty = int(tr.get("y", tr.get("position", [0, 0])[1]))
+		tc["x"] = tx
+		tc["y"] = ty
+		tc["grid_pos"] = [tx, ty]
+		tc["type"] = str(tr.get("type", tr.get("trapType", "pit")))
+		tc["detected"] = bool(tr.get("detected", false) or tr.get("is_revealed", false))
+		tc["disarmed"] = bool(tr.get("disarmed", false))
+		traps_copy.append(tc)
+
+	var furniture_copy: Array = []
+	for f in furniture:
+		furniture_copy.append(f.duplicate(true))
+
+	var wall_blocks_copy: Array = []
+	for wb in wall_blocks:
+		wall_blocks_copy.append(wb.duplicate(true))
+
+	var scene_tokens: Dictionary = {}
+	for h in heroes:
+		if h.get("is_on_board", false) and int(h.get("current_bp", 0)) > 0:
+			var gp = h.get("grid_pos", Vector2i(-1, -1))
+			var pixel_pos = board_offset + Vector2((gp.x + 0.5) * tile_size, (gp.y + 0.5) * tile_size)
+			scene_tokens[str(h.get("id"))] = {
+				"type": "hero",
+				"grid_pos": [gp.x, gp.y],
+				"pixelPos": [pixel_pos.x, pixel_pos.y],
+				"visible": true
+			}
+	for m in monsters:
+		var mid = str(m.get("id"))
+		var gp = m.get("grid_pos", Vector2i(-1, -1))
+		var pixel_pos = board_offset + Vector2((gp.x + 0.5) * tile_size, (gp.y + 0.5) * tile_size)
+		var is_vis = is_monster_currently_visible(m)
+		var is_alv = bool(m.get("is_alive", true)) and int(m.get("current_bp", 1)) > 0
+		scene_tokens[mid] = {
+			"type": "monster",
+			"grid_pos": [gp.x, gp.y],
+			"pixelPos": [pixel_pos.x, pixel_pos.y],
+			"visible": is_vis and is_alv,
+			"alive": is_alv
+		}
+
+	var scene_doors: Array = []
+	for d in doors:
+		var f = d.get("from", [0, 0])
+		var t = d.get("to", [0, 0])
+		var mid_x = (float(f[0]) + float(t[0])) * 0.5 + 0.5
+		var mid_y = (float(f[1]) + float(t[1])) * 0.5 + 0.5
+		var pixel_pos = board_offset + Vector2(mid_x * tile_size, mid_y * tile_size)
+		scene_doors.append({
+			"id": str(d.get("id", "")),
+			"isOpen": bool(d.get("is_open", false)),
+			"from": f,
+			"to": t,
+			"pixelPos": [pixel_pos.x, pixel_pos.y]
+		})
+
+	var scene_ui: Dictionary = {
+		"title": title_label.text if title_label else "",
+		"diceLabel": dice_label.text if dice_label else "",
+		"buttons": {
+			"roll": { "visible": btn_roll.visible, "disabled": btn_roll.disabled } if btn_roll else {},
+			"attack": { "visible": btn_attack.visible, "disabled": btn_attack.disabled } if btn_attack else {},
+			"search": { "visible": btn_search.visible, "disabled": btn_search.disabled } if btn_search else {},
+			"end_turn": { "visible": btn_end_turn.visible, "disabled": btn_end_turn.disabled } if btn_end_turn else {},
+			"ai_step": { "visible": btn_ai_step.visible, "disabled": btn_ai_step.disabled } if btn_ai_step else {}
+		},
+		"modal": {
+			"aiConfirmModalVisible": ai_confirm_modal.visible if ai_confirm_modal else false,
+			"stepBadge": ai_modal_step_badge.text if (ai_confirm_modal and ai_confirm_modal.visible and ai_modal_step_badge) else "",
+			"commandText": ai_modal_cmd_text.text if (ai_confirm_modal and ai_confirm_modal.visible and ai_modal_cmd_text) else "",
+			"actionTitle": ai_modal_action_title.text if (ai_confirm_modal and ai_confirm_modal.visible and ai_modal_action_title) else ""
+		}
+	}
+
 	return {
 		"role": current_role,
 		"round": current_round,
@@ -2813,10 +3008,18 @@ func get_telemetry_state() -> Dictionary:
 		"heroes": heroes_copy,
 		"monsters": monsters_copy,
 		"doors": doors,
+		"traps": traps_copy,
+		"furniture": furniture_copy,
+		"wallBlocks": wall_blocks_copy,
 		"rooms": rooms,
 		"revealedRooms": revealed_rooms,
 		"exploredCount": explored_tiles.size(),
 		"exploredTiles": exp_tiles,
+		"scene": {
+			"tokens": scene_tokens,
+			"doors": scene_doors,
+			"ui": scene_ui
+		},
 		"activeVfx": active_vfx,
 		"floatingTexts": floating_texts,
 		"lastSpellResult": last_spell_result,
@@ -2851,6 +3054,137 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 	else:
 		action_type = str(action_val)
 	match action_type:
+		"set_state":
+			if action_data.has("role"):
+				current_role = str(action_data.get("role"))
+			if action_data.has("round"):
+				current_round = int(action_data.get("round"))
+			if action_data.has("phase"):
+				current_phase = str(action_data.get("phase"))
+			if action_data.has("activeHeroIndex"):
+				active_hero_idx = int(action_data.get("activeHeroIndex"))
+			if action_data.has("activeHero"):
+				var req_h = str(action_data.get("activeHero"))
+				for i in range(heroes.size()):
+					if str(heroes[i].get("id")) == req_h:
+						active_hero_idx = i
+						break
+			if action_data.has("movementRemaining"):
+				movement_remaining = int(action_data.get("movementRemaining"))
+			if action_data.has("movementRolled"):
+				movement_rolled = bool(action_data.get("movementRolled"))
+			if action_data.has("hasActed"):
+				has_acted_this_turn = bool(action_data.get("hasActed"))
+			if action_data.has("turnState"):
+				turn_state = str(action_data.get("turnState"))
+			if action_data.has("heroes") and action_data.heroes is Array:
+				for h_patch in action_data.heroes:
+					var h_id = str(h_patch.get("id", ""))
+					for h in heroes:
+						if str(h.get("id")) == h_id:
+							for k in h_patch:
+								if k == "grid_pos" and h_patch[k] is Array:
+									h["grid_pos"] = Vector2i(int(h_patch[k][0]), int(h_patch[k][1]))
+								elif k == "current_bp":
+									h["current_bp"] = int(h_patch[k])
+								elif k == "current_mp":
+									h["current_mp"] = int(h_patch[k])
+								elif k == "gold":
+									h["gold"] = int(h_patch[k])
+								else:
+									h[k] = h_patch[k]
+							break
+			if action_data.has("monsters") and action_data.monsters is Array:
+				for m_patch in action_data.monsters:
+					var m_id = str(m_patch.get("id", ""))
+					var found_m: Dictionary = {}
+					for m in monsters:
+						var mid = str(m.get("id", ""))
+						var mslug = str(m.get("slug", ""))
+						if mid == m_id or mslug == m_id or mid.ends_with(m_id) or m_id.ends_with(mid):
+							found_m = m
+							break
+					if not found_m.is_empty():
+						for k in m_patch:
+							if (k == "grid_pos" or k == "position") and m_patch[k] is Array:
+								found_m["grid_pos"] = Vector2i(int(m_patch[k][0]), int(m_patch[k][1]))
+							elif k == "current_bp":
+								found_m["current_bp"] = int(m_patch[k])
+								if int(m_patch[k]) <= 0:
+									found_m["is_alive"] = false
+							else:
+								found_m[k] = m_patch[k]
+					else:
+						var new_m = m_patch.duplicate(true)
+						if new_m.has("grid_pos") and new_m["grid_pos"] is Array:
+							new_m["grid_pos"] = Vector2i(int(new_m["grid_pos"][0]), int(new_m["grid_pos"][1]))
+						if not new_m.has("is_alive"):
+							new_m["is_alive"] = true
+						if not new_m.has("attackDice"):
+							new_m["attackDice"] = 2
+						if not new_m.has("defendDice"):
+							new_m["defendDice"] = 2
+						monsters.append(new_m)
+
+			if action_data.has("doors") and action_data.doors is Array:
+				for d_patch in action_data.doors:
+					var d_id = str(d_patch.get("id", ""))
+					var df = d_patch.get("from", [])
+					var dt = d_patch.get("to", [])
+					for d in doors:
+						var did = str(d.get("id", ""))
+						var is_match = (did == d_id)
+						if not is_match and df.size() >= 2 and dt.size() >= 2:
+							var cur_f = d.get("from", [])
+							var cur_t = d.get("to", [])
+							if (cur_f == df and cur_t == dt) or (cur_f == dt and cur_t == df):
+								is_match = true
+						if is_match:
+							for k in d_patch:
+								d[k] = d_patch[k]
+							break
+
+			if action_data.has("traps") and action_data.traps is Array:
+				for t_patch in action_data.traps:
+					var t_id = str(t_patch.get("id", ""))
+					var found_tr = false
+					for t in traps:
+						if str(t.get("id")) == t_id:
+							for k in t_patch:
+								t[k] = t_patch[k]
+							found_tr = true
+							break
+					if not found_tr:
+						traps.append(t_patch.duplicate(true))
+
+			if action_data.has("wallBlocks") and action_data.wallBlocks is Array:
+				for wb in action_data.wallBlocks:
+					wall_blocks.append(wb.duplicate(true))
+
+			if action_data.has("revealedRooms") and action_data.revealedRooms is Array:
+				revealed_rooms.clear()
+				for r in action_data.revealedRooms:
+					revealed_rooms.append(str(r))
+			if action_data.has("discoveredMonsterIds") and action_data.discoveredMonsterIds is Array:
+				discovered_monster_ids.clear()
+				for mid in action_data.discoveredMonsterIds:
+					discovered_monster_ids[str(mid)] = true
+			if action_data.has("resetExplored") and bool(action_data.resetExplored):
+				explored_tiles.clear()
+			update_party_vision()
+			_update_ui()
+			queue_redraw_all()
+			return { "success": true }
+		"reset_game":
+			_load_active_cartridge()
+			return { "success": true }
+		"search_traps":
+			var res = search_traps()
+			return res
+		"disarm_trap":
+			var t_id = str(action_data.get("trapId", action_data.get("id", "")))
+			var res = disarm_trap(t_id)
+			return res
 		"toggle_role":
 			toggle_role()
 			return { "success": true, "role": current_role }
