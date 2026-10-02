@@ -1299,3 +1299,5 @@ ipcMain.handle('review-evidence-image',(_,id)=>{try {
   const mime=/\.jpe?g$/i.test(item.path)?'image/jpeg':/\.webp$/i.test(item.path)?'image/webp':'image/png';
   return {ok:true,url:'data:'+mime+';base64,'+fs.readFileSync(item.path).toString('base64')};
 }catch(e){return {ok:false,error:e.message};}});
+
+ipcMain.handle('review-message-members', async (_,serverId) => {try{return {ok:true,members:await projectReviewSettings.members(serverId)};}catch(e){return {ok:false,error:e.message};}});

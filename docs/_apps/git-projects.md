@@ -9,3 +9,21 @@ description: "Central repository hub with one-click dev-setup.sh scripts, Monaco
 
 Connect all your company's Git repositories in one place. RobOS securely injects environment passwords from your encrypted vault and writes one-click setup scripts (`dev-setup.sh`) to get code building in seconds.
 ![Git Projects]({{ '/assets/images/screenshots/acme-petshop-step4-projects_open_frame.png' | relative_url }})
+
+## Review notification recipients
+
+Open a project's messaging tab, choose the Slack workspace and review channel,
+then search `@name` under **Reviewers to @mention**. Select the people who should
+review this project and save the notification settings. The directory excludes
+the account sending the message.
+
+The project's review metadata stores `reviewers` alongside its templates and
+destination. Each entry contains `serverId`, `userId` (the stable Slack member
+ID), and `name` for display. Reviewers remain scoped to their workspace and
+repository; a display-name change does not change the person being notified.
+
+PR Review preselects the project's saved reviewers and lets you adjust them for
+that request. Its preview shows the selected names. Sending resolves those IDs
+against the current workspace directory and writes actual Slack mentions. Empty,
+unavailable, or wrong-workspace selections block sending. The Slack connection
+needs permission to read members (`users:read`) as well as send messages.

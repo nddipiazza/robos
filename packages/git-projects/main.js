@@ -987,3 +987,5 @@ const reviewSettings = require('../robos-lib/project-review-settings');
 ipcMain.handle('project-review-options', async (_, repo) => {try {return {ok:true,...await reviewSettings.options(repo)};}catch(e){return {ok:false,error:e.message};}});
 ipcMain.handle('project-review-save', (_, {repo,settings}) => {try {return {ok:true,settings:reviewSettings.save(repo,settings)};}catch(e){return {ok:false,error:e.message};}});
 ipcMain.handle('project-review-channels', async (_, serverId) => {try {return {ok:true,channels:await reviewSettings.channels(serverId)};}catch(e){return {ok:false,error:e.message};}});
+
+ipcMain.handle('project-review-members', async (_,serverId) => {try{return {ok:true,members:await reviewSettings.members(serverId)};}catch(e){return {ok:false,error:e.message};}});
