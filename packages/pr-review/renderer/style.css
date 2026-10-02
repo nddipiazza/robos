@@ -3456,3 +3456,26 @@ review-markdown-editor { display: block; margin: 8px 0 20px; }
 #push-walkthrough-adjustments:disabled { opacity: .5; cursor: not-allowed; }
 
 .ci-buildkite-log pre { max-height: 320px; overflow: auto; white-space: pre-wrap; font-size: 12px; padding: 12px; background: #0d1117; }
+
+.review-ci-jobs { background:#101923; border-bottom:1px solid #354557; padding:12px 24px; flex-shrink:0; }
+.review-ci-jobs[hidden] { display:none; }
+.review-ci-jobs header,.ci-tail-toolbar { display:flex; align-items:center; gap:12px; }
+.ci-jobs-updated { flex:1; color:#95a8ba; font-size:12px; }
+.review-ci-jobs button { background:#172330; color:#dce6ef; border:1px solid #354557; border-radius:5px; padding:6px 10px; cursor:pointer; }
+.ci-jobs-content { display:grid; grid-template-columns:minmax(220px,32%) minmax(0,1fr); gap:16px; margin-top:10px; }
+.ci-jobs-list { max-height:280px; overflow:auto; }
+.ci-jobs-build { margin:8px 0; font-size:12px; color:#aebdcc; }
+.review-ci-jobs .ci-job { display:flex; align-items:center; width:100%; gap:8px; margin:4px 0; text-align:left; }
+.ci-job>span:first-child { flex:1; overflow-wrap:anywhere; }
+.ci-job-state { font-size:11px; color:#9fb2c6; }
+.ci-job[data-state=running] .ci-job-state { color:#8ccefa; }
+.ci-job[data-state=running] .ci-job-state::before { content:''; display:inline-block; width:9px; height:9px; margin-right:5px; border:2px solid #8ccefa44; border-top-color:#8ccefa; border-radius:50%; animation:ci-spin 1s linear infinite; }
+@keyframes ci-spin { to { transform:rotate(360deg); } }
+.ci-job[data-state=failed] .ci-job-state { color:#ff9fa9; }
+.ci-job[data-state=passed] .ci-job-state { color:#88d8b9; }
+.review-ci-jobs .ci-job[aria-pressed=true] { border-color:#84d0fc; background:#203448; }
+.ci-tail { min-width:0; }.ci-tail-title { flex:1; font-size:12px; overflow-wrap:anywhere; }
+.ci-tail-toolbar label { display:flex; align-items:center; gap:5px; font-size:12px; white-space:nowrap; }
+.ci-tail-status { margin:8px 0; font-size:11px; color:#aebdcc; }
+.ci-tail-output { height:220px; overflow:auto; white-space:pre-wrap; overflow-wrap:anywhere; padding:10px; border-radius:5px; background:#090f16; color:#cad6e2; font:12px/1.5 monospace; }
+@media(max-width:800px){.ci-jobs-content { grid-template-columns:1fr; }.ci-jobs-list{max-height:130px;}}
