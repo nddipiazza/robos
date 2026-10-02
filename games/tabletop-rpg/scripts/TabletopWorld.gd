@@ -780,6 +780,9 @@ func _process(delta: float) -> void:
 						die["current_face"] = die.get("final_face", "skull")
 		needs_redraw = true
 
+	if needs_redraw:
+		queue_redraw_all()
+
 func _setup_ai_modal_styles() -> void:
 	if not ai_modal_card:
 		return
@@ -2045,7 +2048,8 @@ func attack_adjacent_monster(monster_id: String = "", weapon_id: String = "") ->
 		def_dice = 0
 
 	var res = TabletopDice.resolve_combat(atk_dice, def_dice, false)
-	trigger_combat_dice_roll(res, str(hero.get("name", "Hero")), str(target_m.get("name", "Monster")), false)
+	var will_defeat = (res.wounds >= int(target_m.get("current_bp", 1)))
+	trigger_combat_dice_roll(res, get_hero_display_title(hero), str(target_m.get("name", "Monster")), false, will_defeat)
 	_log("⚔️ %s attacks %s with %s (%d dice)! Rolled %d Skulls. %s defended with %d Black Shields." % [
 		hero.get("name"), target_m.get("name"), w_def.get("name", "weapon"), atk_dice, res.total_skulls, target_m.get("name"), res.effective_shields
 	])
@@ -2098,7 +2102,8 @@ func dm_attack_hero(hero_id: String = "") -> Dictionary:
 	var h_pos = target_h.get("grid_pos", Vector2i(-1, -1))
 
 	var res = TabletopDice.resolve_combat(atk_dice, def_dice, true)
-	trigger_combat_dice_roll(res, str(monster.get("name", "Monster")), str(target_h.get("name", "Hero")), true)
+	var will_defeat = (res.wounds >= int(target_h.get("current_bp", 8)))
+	trigger_combat_dice_roll(res, str(monster.get("name", "Monster")), get_hero_display_title(target_h), true, will_defeat)
 	_log("👑 [Game Master] %s attacks %s! Rolled %d Skulls. %s rolled %d White Shields (Defend Dice: %d)." % [
 		monster.get("name"), target_h.get("name"), res.total_skulls, target_h.get("name"), res.effective_shields, def_dice
 	])
@@ -2159,7 +2164,8 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 				"effective_shields": shields,
 				"wounds": wounds
 			}
-			trigger_combat_dice_roll(c_res, "Ball of Flame", str(target_m.get("name", "Monster")), false)
+			var will_defeat = (wounds >= int(target_m.get("current_bp", 1)))
+			trigger_combat_dice_roll(c_res, "Ball of Flame", str(target_m.get("name", "Monster")), false, will_defeat)
 			target_m["current_bp"] = maxi(0, target_m.get("current_bp", 1) - wounds)
 			_log("🔥 Ball of Flame engulfs %s! Rolled %d Black Shields. Wounds: %d (Remaining BP: %d)" % [
 				target_m.get("name"), shields, wounds, target_m.get("current_bp")
@@ -2195,7 +2201,8 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 				"effective_shields": shields,
 				"wounds": wounds
 			}
-			trigger_combat_dice_roll(c_res, "Fire of Wrath", str(target_m.get("name", "Monster")), false)
+			var will_defeat_fow = (wounds >= int(target_m.get("current_bp", 1)))
+			trigger_combat_dice_roll(c_res, "Fire of Wrath", str(target_m.get("name", "Monster")), false, will_defeat_fow)
 			target_m["current_bp"] = maxi(0, target_m.get("current_bp", 1) - wounds)
 			_log("⚡ Fire of Wrath strikes %s! Shield roll: %d. Wounds: %d (BP: %d)" % [
 				target_m.get("name"), shields, wounds, target_m.get("current_bp")
@@ -2322,7 +2329,8 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 				var m_pos = target_m.get("grid_pos", Vector2i(-1, -1))
 				spawn_projectile_vfx(hero_pos, m_pos, Color(0.1, 0.8, 1.0), 0.35, "genie_burst")
 				var combat_res = TabletopDice.resolve_combat(5, target_m.get("defendDice", 2), false)
-				trigger_combat_dice_roll(combat_res, "Genie", str(target_m.get("name", "Monster")), false)
+				var will_defeat = (combat_res.wounds >= int(target_m.get("current_bp", 1)))
+				trigger_combat_dice_roll(combat_res, "Genie", str(target_m.get("name", "Monster")), false, will_defeat)
 				target_m["current_bp"] = maxi(0, target_m.get("current_bp", 1) - combat_res.wounds)
 				_log("🧞 Genie manifests and attacks %s with 5 dice! Skulls: %d, Defended: %d, Wounds: %d (BP: %d)" % [
 					target_m.get("name"), combat_res.total_skulls, combat_res.effective_shields, combat_res.wounds, target_m.get("current_bp")
@@ -3578,7 +3586,13 @@ func get_telemetry_state() -> Dictionary:
 			"title": active_dice_animation.get("title", ""),
 			"settled": active_dice_animation.get("settled", false),
 			"diceCount": active_dice_animation.get("dice", []).size(),
-			"summary": active_dice_animation.get("summary", "")
+			"summary": active_dice_animation.get("summary", ""),
+			"isDefeated": active_dice_animation.get("is_defeated", false),
+			"skulls": active_dice_animation.get("skulls", 0),
+			"shields": active_dice_animation.get("shields", 0),
+			"wounds": active_dice_animation.get("wounds", 0),
+			"attackerName": active_dice_animation.get("attacker_name", ""),
+			"defenderName": active_dice_animation.get("defender_name", "")
 		} if not active_dice_animation.is_empty() else {},
 		"combatLog": combat_log.slice(-10),
 		"aiStepPending": is_ai_step_pending,
@@ -3758,6 +3772,8 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			return { "success": true, "role": current_role }
 		"roll_movement", "roll_dice":
 			var r = roll_movement_dice()
+			if r.is_empty():
+				return { "success": false, "error": "Movement phase closed or already concluded" }
 			return { "success": true, "roll": r }
 		"move":
 			var tx = int(action_data.get("x", 0))
@@ -3891,9 +3907,12 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				var atk_cnt = int(action_data.get("attackDice", 3))
 				var def_cnt = int(action_data.get("defendDice", 2))
 				var is_hero_def = bool(action_data.get("isHeroDefending", false))
+				var is_def = bool(action_data.get("isDefeated", action_data.get("defeated", false)))
 				var c_res = TabletopDice.resolve_combat(atk_cnt, def_cnt, is_hero_def)
-				trigger_combat_dice_roll(c_res, str(action_data.get("attacker", "Barbarian")), str(action_data.get("defender", "Crypt Skeleton")), is_hero_def)
-				return { "success": true, "type": "combat", "result": c_res }
+				if not action_data.has("isDefeated") and not action_data.has("defeated") and action_data.has("current_bp"):
+					is_def = (c_res.wounds >= int(action_data.get("current_bp", 999)))
+				trigger_combat_dice_roll(c_res, str(action_data.get("attacker", "Barbarian")), str(action_data.get("defender", "Crypt Skeleton")), is_hero_def, is_def)
+				return { "success": true, "type": "combat", "result": c_res, "isDefeated": is_def }
 	return { "success": false, "error": "Unknown action: " + action_type }
 
 func _draw() -> void:
@@ -4423,24 +4442,25 @@ func trigger_movement_dice_roll(roll_data: Dictionary, hero_name: String, dice_v
 	var center = board_offset + Vector2(grid_cols * tile_size * 0.5, grid_rows * tile_size * 0.45)
 	var num_dice = dice_values.size()
 	var dice_arr: Array = []
-	var spacing = 72.0
+	var spacing = 76.0
 	var start_x = center.x - (float(maxi(1, num_dice) - 1) * spacing * 0.5)
 
 	for i in range(num_dice):
 		var target_pos = Vector2(start_x + i * spacing, center.y + 10.0)
-		var init_pos = target_pos + Vector2(randf_range(-140.0, 140.0), -180.0 - randf_range(20.0, 80.0))
+		var init_pos = Vector2(target_pos.x + randf_range(-4.0, 4.0), target_pos.y - 140.0 - randf_range(20.0, 60.0))
 		var val = int(dice_values[i])
 		dice_arr.append({
 			"type": "movement_red",
+			"lane_index": i,
 			"init_pos": init_pos,
 			"target_pos": target_pos,
 			"pos": init_pos,
 			"final_value": val,
 			"current_face": randi_range(1, 6),
-			"angle": randf_range(-PI, PI),
-			"spin_speed": randf_range(8.0, 16.0) * (1.0 if randf() > 0.5 else -1.0),
-			"bounces": 2.5 + randf() * 0.5,
-			"z": 45.0 + randf() * 15.0,
+			"angle": randf_range(-0.5, 0.5),
+			"spin_speed": randf_range(6.0, 14.0) * (1.0 if randf() > 0.5 else -1.0),
+			"bounces": 2.2 + randf() * 0.4,
+			"z": 20.0 + randf() * 5.0,
 			"current_z": 0.0,
 			"settled": false
 		})
@@ -4460,7 +4480,7 @@ func trigger_movement_dice_roll(roll_data: Dictionary, hero_name: String, dice_v
 	}
 	queue_redraw_all()
 
-func trigger_combat_dice_roll(combat_res: Dictionary, attacker_name: String, defender_name: String, is_hero_defending: bool) -> void:
+func trigger_combat_dice_roll(combat_res: Dictionary, attacker_name: String, defender_name: String, is_hero_defending: bool, is_defeated: bool = false, _extra_opts: Dictionary = {}) -> void:
 	_update_board_metrics()
 	var center = board_offset + Vector2(grid_cols * tile_size * 0.5, grid_rows * tile_size * 0.45)
 	var atk_res = combat_res.get("attack", {})
@@ -4472,53 +4492,60 @@ func trigger_combat_dice_roll(combat_res: Dictionary, attacker_name: String, def
 	var shields = int(combat_res.get("effective_shields", 0))
 
 	var dice_arr: Array = []
-	var spacing = 64.0
-
-	# Attack dice row (centered vertically above centerline)
+	var spacing = 78.0 # Generous 26px gap between 52px dice prevents touching or overlap
 	var n_atk = atk_faces.size()
+	var n_def = def_faces.size()
+	var max_dice_row = maxi(n_atk, n_def)
+
+	var tray_width = maxf(420.0, max_dice_row * spacing + 80.0)
+	var tray_height = 270.0 if n_def > 0 else 190.0
+	var top_y = center.y - tray_height * 0.5
+
+	# Top row: Attacker dice (drops straight down in dedicated column lanes)
 	var start_x_atk = center.x - (float(maxi(1, n_atk) - 1) * spacing * 0.5)
 	for i in range(n_atk):
 		var face = str(atk_faces[i])
-		var target_pos = Vector2(start_x_atk + i * spacing, center.y - 25.0 if def_faces.size() > 0 else center.y + 10.0)
-		var init_pos = target_pos + Vector2(randf_range(-120.0, 120.0), -200.0 - randf_range(10.0, 60.0))
+		var target_pos = Vector2(start_x_atk + i * spacing, top_y + 70.0 if n_def > 0 else center.y - 10.0)
+		var init_pos = Vector2(target_pos.x + randf_range(-4.0, 4.0), target_pos.y - 120.0 - randf_range(10.0, 30.0))
 		dice_arr.append({
 			"type": "combat_white",
 			"group": "attack",
+			"lane_index": i,
 			"init_pos": init_pos,
 			"target_pos": target_pos,
 			"pos": init_pos,
 			"final_face": face,
 			"current_face": ["skull", "white_shield", "black_shield"][randi() % 3],
-			"angle": randf_range(-PI, PI),
-			"spin_speed": randf_range(8.0, 16.0) * (1.0 if randf() > 0.5 else -1.0),
-			"bounces": 2.5 + randf() * 0.5,
-			"z": 45.0 + randf() * 15.0,
+			"angle": randf_range(-0.5, 0.5),
+			"spin_speed": randf_range(6.0, 12.0) * (1.0 if randf() > 0.5 else -1.0),
+			"bounces": 2.0 + randf() * 0.4,
+			"z": 18.0 + randf() * 5.0, # Controlled bounce prevents rising into adjacent row
 			"current_z": 0.0,
 			"settled": false,
 			"is_hit": face == "skull",
 			"is_block": false
 		})
 
-	# Defend dice row (centered vertically below centerline)
-	var n_def = def_faces.size()
+	# Bottom row: Defender dice (drops straight up/down in dedicated column lanes)
 	var start_x_def = center.x - (float(maxi(1, n_def) - 1) * spacing * 0.5)
 	for i in range(n_def):
 		var face = str(def_faces[i])
-		var target_pos = Vector2(start_x_def + i * spacing, center.y + 45.0)
-		var init_pos = target_pos + Vector2(randf_range(-120.0, 120.0), 180.0 + randf_range(10.0, 60.0))
+		var target_pos = Vector2(start_x_def + i * spacing, top_y + 172.0)
+		var init_pos = Vector2(target_pos.x + randf_range(-4.0, 4.0), target_pos.y + 120.0 + randf_range(10.0, 30.0))
 		var is_block = (face == "white_shield" if is_hero_defending else face == "black_shield")
 		dice_arr.append({
 			"type": "combat_white",
 			"group": "defense",
+			"lane_index": i,
 			"init_pos": init_pos,
 			"target_pos": target_pos,
 			"pos": init_pos,
 			"final_face": face,
 			"current_face": ["skull", "white_shield", "black_shield"][randi() % 3],
-			"angle": randf_range(-PI, PI),
-			"spin_speed": randf_range(8.0, 16.0) * (1.0 if randf() > 0.5 else -1.0),
-			"bounces": 2.5 + randf() * 0.5,
-			"z": 45.0 + randf() * 15.0,
+			"angle": randf_range(-0.5, 0.5),
+			"spin_speed": randf_range(6.0, 12.0) * (1.0 if randf() > 0.5 else -1.0),
+			"bounces": 2.0 + randf() * 0.4,
+			"z": 18.0 + randf() * 5.0,
 			"current_z": 0.0,
 			"settled": false,
 			"is_hit": false,
@@ -4527,7 +4554,14 @@ func trigger_combat_dice_roll(combat_res: Dictionary, attacker_name: String, def
 
 	var def_shield_name = "White Shield" if is_hero_defending else "Black Shield"
 	var summary_txt = ""
-	if wounds > 0:
+	if is_defeated:
+		summary_txt = "💀 %s DEFEATED! %d Skull%s vs %d %s%s -> %d WOUND%s!" % [
+			defender_name,
+			skulls, "s" if skulls != 1 else "",
+			shields, def_shield_name, "s" if shields != 1 else "",
+			wounds, "S" if wounds != 1 else ""
+		]
+	elif wounds > 0:
 		summary_txt = "%d Skull%s vs %d %s%s -> %d WOUND%s!" % [
 			skulls, "s" if skulls != 1 else "",
 			shields, def_shield_name, "s" if shields != 1 else "",
@@ -4539,7 +4573,6 @@ func trigger_combat_dice_roll(combat_res: Dictionary, attacker_name: String, def
 			shields, def_shield_name, "s" if shields != 1 else ""
 		]
 
-	var max_dice_row = maxi(n_atk, n_def)
 	active_dice_animation = {
 		"type": "combat",
 		"title": "%s attacks %s!" % [attacker_name, defender_name],
@@ -4547,15 +4580,18 @@ func trigger_combat_dice_roll(combat_res: Dictionary, attacker_name: String, def
 		"dice": dice_arr,
 		"time": 0.0,
 		"roll_duration": 0.8,
-		"total_duration": 2.6,
+		"total_duration": 2.8,
 		"settled": false,
 		"center": center,
-		"tray_width": maxf(360.0, max_dice_row * spacing + 120.0),
-		"tray_height": 230.0 if n_def > 0 else 180.0,
+		"tray_width": tray_width,
+		"tray_height": tray_height,
 		"wounds": wounds,
 		"skulls": skulls,
 		"shields": shields,
-		"is_hero_defending": is_hero_defending
+		"is_hero_defending": is_hero_defending,
+		"attacker_name": attacker_name,
+		"defender_name": defender_name,
+		"is_defeated": is_defeated
 	}
 	queue_redraw_all()
 
@@ -4570,6 +4606,7 @@ func _draw_active_dice_roll(canvas: CanvasItem) -> void:
 	var tray_rect = Rect2(center.x - tray_w * 0.5, center.y - tray_h * 0.5, tray_w, tray_h)
 	var settled = bool(anim.get("settled", false))
 	var font = ThemeDB.fallback_font
+	var anim_type = str(anim.get("type", "movement"))
 
 	# 1. Outer Tray Shadow
 	canvas.draw_rect(Rect2(tray_rect.position + Vector2(5.0, 7.0), tray_rect.size), Color(0.0, 0.0, 0.0, 0.65))
@@ -4580,35 +4617,72 @@ func _draw_active_dice_roll(canvas: CanvasItem) -> void:
 
 	# 3. Inner Tabletop Velvet/Felt Inlay
 	var felt_rect = Rect2(tray_rect.position + Vector2(8.0, 8.0), tray_rect.size - Vector2(16.0, 16.0))
-	var felt_color = Color(0.05, 0.14, 0.08, 0.97) if anim.get("type") == "movement" else Color(0.06, 0.08, 0.15, 0.97)
+	var felt_color = Color(0.05, 0.14, 0.08, 0.97) if anim_type == "movement" else Color(0.06, 0.08, 0.14, 0.98)
 	canvas.draw_rect(felt_rect, felt_color)
 
 	# Gold/Brass Inlay Filigree Trim
 	canvas.draw_rect(felt_rect, Color(0.85, 0.72, 0.25, 0.75), false, 1.8)
 
-	# 4. Title Header Banner
-	var title = str(anim.get("title", ""))
-	var title_w = font.get_string_size(title, HORIZONTAL_ALIGNMENT_CENTER, -1, 14).x
-	canvas.draw_string(font, Vector2(center.x - title_w * 0.5, tray_rect.position.y + 24.0), title, HORIZONTAL_ALIGNMENT_CENTER, -1, 14, Color(1.0, 0.90, 0.45, 1.0))
+	if anim_type == "movement":
+		# Movement Header Banner
+		var title = str(anim.get("title", ""))
+		var title_w = font.get_string_size(title, HORIZONTAL_ALIGNMENT_CENTER, -1, 14).x
+		canvas.draw_string(font, Vector2(center.x - title_w * 0.5, tray_rect.position.y + 24.0), title, HORIZONTAL_ALIGNMENT_CENTER, -1, 14, Color(1.0, 0.90, 0.45, 1.0))
+	else:
+		# COMBAT TRAY: Attacker on TOP with skulls that matter, Defender on BOTTOM with shields that matter
+		var attacker_name = str(anim.get("attacker_name", "Attacker"))
+		var defender_name = str(anim.get("defender_name", "Defender"))
+		var skulls = int(anim.get("skulls", 0))
+		var shields = int(anim.get("shields", 0))
+		var is_hero_defending = bool(anim.get("is_hero_defending", false))
+		var def_shield_name = "WHITE SHIELDS" if is_hero_defending else "BLACK SHIELDS"
+		var single_shield_name = "WHITE SHIELD" if is_hero_defending else "BLACK SHIELD"
 
-	# 5. Combat Section Labels (ATK / DEF) if applicable
-	if anim.get("type") == "combat" and anim.get("dice", []).size() > 0:
-		var has_def = false
+		var n_atk = 0
+		var n_def = 0
 		for d in anim.get("dice", []):
-			if d.get("group") == "defense":
-				has_def = true
-				break
-		if has_def:
-			canvas.draw_string(font, Vector2(tray_rect.position.x + 14.0, center.y - 20.0), "ATK", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(1.0, 0.45, 0.45, 0.85))
-			canvas.draw_string(font, Vector2(tray_rect.position.x + 14.0, center.y + 50.0), "DEF", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.45, 0.80, 1.0, 0.85))
+			if d.get("group") == "attack":
+				n_atk += 1
+			elif d.get("group") == "defense":
+				n_def += 1
 
-	# 6. Draw Dice
+		# TOP HEADER: Attacker section with skulls that matter
+		var atk_header = ""
+		if settled:
+			var skull_word = "SKULL" if skulls == 1 else "SKULLS"
+			atk_header = "ATTACK: %s — %d %s (%d Dice)" % [attacker_name, skulls, skull_word, n_atk]
+		else:
+			atk_header = "ATTACK: %s — ATTACK ROLL (%d Dice)" % [attacker_name, n_atk]
+
+		var atk_h_rect = Rect2(felt_rect.position.x + 12.0, felt_rect.position.y + 6.0, felt_rect.size.x - 24.0, 24.0)
+		canvas.draw_rect(atk_h_rect, Color(0.20, 0.08, 0.08, 0.85))
+		canvas.draw_rect(atk_h_rect, Color(0.85, 0.45, 0.20, 0.80), false, 1.2)
+		var atk_w = font.get_string_size(atk_header, HORIZONTAL_ALIGNMENT_CENTER, -1, 13).x
+		canvas.draw_string(font, Vector2(center.x - atk_w * 0.5, atk_h_rect.position.y + 17.0), atk_header, HORIZONTAL_ALIGNMENT_CENTER, -1, 13, Color(1.0, 0.92, 0.65, 1.0))
+
+		# BOTTOM HEADER: Defender section with shields that matter
+		if n_def > 0:
+			var def_header = ""
+			if settled:
+				var shield_word = single_shield_name if shields == 1 else def_shield_name
+				def_header = "DEFENSE: %s — %d %s (%d Dice)" % [defender_name, shields, shield_word, n_def]
+			else:
+				def_header = "DEFENSE: %s — DEFEND ROLL (%d Dice)" % [defender_name, n_def]
+
+			var def_h_rect = Rect2(felt_rect.position.x + 12.0, felt_rect.position.y + 104.0, felt_rect.size.x - 24.0, 24.0)
+			canvas.draw_rect(def_h_rect, Color(0.08, 0.14, 0.22, 0.85))
+			canvas.draw_rect(def_h_rect, Color(0.30, 0.70, 0.95, 0.80), false, 1.2)
+			var def_w = font.get_string_size(def_header, HORIZONTAL_ALIGNMENT_CENTER, -1, 13).x
+			canvas.draw_string(font, Vector2(center.x - def_w * 0.5, def_h_rect.position.y + 17.0), def_header, HORIZONTAL_ALIGNMENT_CENTER, -1, 13, Color(0.70, 0.90, 1.0, 1.0))
+
+	# 6. Draw Dice (with distinct focus on the dice that matter)
 	for die in anim.get("dice", []):
 		var d_type = str(die.get("type", "movement_red"))
 		var d_pos = die.get("pos", center)
 		var angle = float(die.get("angle", 0.0))
 		var z = float(die.get("current_z", 0.0))
 		var d_settled = bool(die.get("settled", false))
+		var group = str(die.get("group", ""))
 
 		if d_type == "movement_red":
 			var pips = int(die.get("current_face", 1))
@@ -4617,17 +4691,42 @@ func _draw_active_dice_roll(canvas: CanvasItem) -> void:
 			var face = str(die.get("current_face", "skull"))
 			var is_hit = bool(die.get("is_hit", false))
 			var is_block = bool(die.get("is_block", false))
-			_draw_white_combat_die(canvas, d_pos, 52.0, face, angle, z, 1.0, d_settled, is_hit, is_block)
+			# Focus: when settled, non-matching dice are dimmed to 0.58 so the dice that matter pop!
+			var die_alpha = 1.0
+			if settled:
+				if group == "attack" and not is_hit:
+					die_alpha = 0.58
+				elif group == "defense" and not is_block:
+					die_alpha = 0.58
+			_draw_white_combat_die(canvas, d_pos, 52.0, face, angle, z, die_alpha, d_settled, is_hit, is_block)
 
-	# 7. Settled Outcome Summary Badge at Bottom of Tray
+	# 7. Settled Outcome Summary Badge or Defeated Banner at Bottom of Tray
 	if settled:
-		var summary = str(anim.get("summary", ""))
-		var sum_w = font.get_string_size(summary, HORIZONTAL_ALIGNMENT_CENTER, -1, 13).x
-		var badge_rect = Rect2(center.x - sum_w * 0.5 - 12.0, tray_rect.end.y - 28.0, sum_w + 24.0, 20.0)
-		canvas.draw_rect(badge_rect, Color(0.08, 0.10, 0.14, 0.95))
-		var outline_col = Color(1.0, 0.85, 0.25, 0.9) if "WOUND" in summary or "square" in summary else Color(0.4, 0.8, 1.0, 0.9)
-		canvas.draw_rect(badge_rect, outline_col, false, 1.5)
-		canvas.draw_string(font, Vector2(center.x - sum_w * 0.5, tray_rect.end.y - 13.0), summary, HORIZONTAL_ALIGNMENT_CENTER, -1, 13, outline_col)
+		var is_def = bool(anim.get("is_defeated", false))
+		var wounds = int(anim.get("wounds", 0))
+		var defender_name = str(anim.get("defender_name", "Target"))
+
+		if is_def:
+			# Bold Defeated Creature Banner: "{Creature} DEFEATED! ({N} Wounds)"
+			var def_banner_text = "%s DEFEATED! (%d Wound%s)" % [
+				defender_name.to_upper(), wounds, "s" if wounds != 1 else ""
+			]
+			var sum_w = font.get_string_size(def_banner_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 14).x
+			var badge_rect = Rect2(center.x - sum_w * 0.5 - 18.0, tray_rect.end.y - 34.0, sum_w + 36.0, 26.0)
+			# Crimson background
+			canvas.draw_rect(badge_rect, Color(0.35, 0.04, 0.04, 0.98))
+			# Radiant Gold & Ruby Border
+			canvas.draw_rect(badge_rect, Color(1.0, 0.85, 0.25, 1.0), false, 2.0)
+			canvas.draw_rect(Rect2(badge_rect.position + Vector2(2, 2), badge_rect.size - Vector2(4, 4)), Color(0.85, 0.15, 0.15, 0.8), false, 1.0)
+			canvas.draw_string(font, Vector2(center.x - sum_w * 0.5, tray_rect.end.y - 16.0), def_banner_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 14, Color(1.0, 0.96, 0.65, 1.0))
+		else:
+			var summary = str(anim.get("summary", ""))
+			var sum_w = font.get_string_size(summary, HORIZONTAL_ALIGNMENT_CENTER, -1, 13).x
+			var badge_rect = Rect2(center.x - sum_w * 0.5 - 12.0, tray_rect.end.y - 28.0, sum_w + 24.0, 20.0)
+			canvas.draw_rect(badge_rect, Color(0.08, 0.10, 0.14, 0.95))
+			var outline_col = Color(1.0, 0.85, 0.25, 0.9) if ("WOUND" in summary or "square" in summary) else Color(0.4, 0.8, 1.0, 0.9)
+			canvas.draw_rect(badge_rect, outline_col, false, 1.5)
+			canvas.draw_string(font, Vector2(center.x - sum_w * 0.5, tray_rect.end.y - 13.0), summary, HORIZONTAL_ALIGNMENT_CENTER, -1, 13, outline_col)
 
 func _draw_red_movement_die(canvas: CanvasItem, center: Vector2, size: float, pips: int, angle: float, z: float, alpha: float, settled: bool) -> void:
 	var hs = size * 0.5

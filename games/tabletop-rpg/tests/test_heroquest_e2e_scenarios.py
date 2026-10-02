@@ -1407,6 +1407,72 @@ class TestHeroQuestE2EScenarios(unittest.TestCase):
         self.assertEqual(barb_custom.get("heroClass"), "Berserker")
         self.assertEqual(barb_custom.get("displayName"), "Grimjaw (Berserker)")
 
+    def test_46_combat_dice_layout_top_skulls_bottom_shields_and_defeated_banner(self):
+        """Scenario 46: Combat Dice Layout - Top Skulls, Bottom Shields, and Creature Defeated Banner."""
+        bdd_scenario_header(46, "Combat Dice Layout: Top Skulls, Bottom Shields & Creature Defeated Banner")
+
+        bdd_step("GIVEN", "Rogar (Barbarian) faces a 1-BP Crypt Skeleton with Broadsword")
+        self.ai.set_state(
+            activeHeroIndex=0,
+            activeHero="barbarian",
+            heroes=[{"id": "barbarian", "characterName": "Rogar", "heroClass": "Barbarian", "grid_pos": [4, 4], "is_on_board": True}],
+            monsters=[{"id": "mon-test-skel", "name": "Crypt Skeleton", "grid_pos": [4, 5], "current_bp": 1, "is_alive": True, "defendDice": 2}]
+        )
+
+        bdd_step("WHEN", "Triggering a custom lethal combat roll against the Crypt Skeleton",
+                 info="3 Attack Dice vs 2 Defend Dice (Creature Defeated)")
+        res = self.ai.execute_action("test_dice_roll",
+                                     type="combat",
+                                     attacker="Rogar (Barbarian)",
+                                     defender="Crypt Skeleton",
+                                     attackDice=3,
+                                     defendDice=2,
+                                     isHeroDefending=False,
+                                     isDefeated=True)
+        self.assertTrue(res.get("success", False))
+
+        st = self.ai.get_state()
+        active_dice = st.get("activeDiceRoll", {})
+
+        bdd_step("THEN", "Combat dice tray places attacker on top, defender on bottom, and announces creature defeat",
+                 assertions=[
+                     f"type: {active_dice.get('type')} (expected 'combat')",
+                     f"attacker: '{active_dice.get('attackerName')}' (Rogar (Barbarian))",
+                     f"defender: '{active_dice.get('defenderName')}' (Crypt Skeleton)",
+                     f"isDefeated: {active_dice.get('isDefeated')} (expected True)",
+                     f"summary: '{active_dice.get('summary')}'"
+                 ])
+        self.assertEqual(active_dice.get("type"), "combat")
+        self.assertEqual(active_dice.get("attackerName"), "Rogar (Barbarian)")
+        self.assertEqual(active_dice.get("defenderName"), "Crypt Skeleton")
+        self.assertTrue(active_dice.get("isDefeated"))
+        self.assertIn("DEFEATED!", active_dice.get("summary", ""))
+        self.assertIn("Skull", active_dice.get("summary", ""))
+
+        bdd_step("WHEN", "Game Master monster attacks Elf defending with 3 White Shields",
+                 info="Monster Attacker (Top) vs Hero Defender (Bottom)")
+        res2 = self.ai.execute_action("test_dice_roll",
+                                      type="combat",
+                                      attacker="Orc Warlord",
+                                      defender="Ladril (Elf)",
+                                      attackDice=4,
+                                      defendDice=3,
+                                      isHeroDefending=True,
+                                      isDefeated=False)
+        self.assertTrue(res2.get("success", False))
+
+        st2 = self.ai.get_state()
+        active_dice2 = st2.get("activeDiceRoll", {})
+        bdd_step("THEN", "Attacker Orc Warlord is on top and defender Ladril (Elf) is on bottom",
+                 assertions=[
+                     f"attacker: '{active_dice2.get('attackerName')}'",
+                     f"defender: '{active_dice2.get('defenderName')}'",
+                     f"isDefeated: {active_dice2.get('isDefeated')} (expected False)"
+                 ])
+        self.assertEqual(active_dice2.get("attackerName"), "Orc Warlord")
+        self.assertEqual(active_dice2.get("defenderName"), "Ladril (Elf)")
+        self.assertFalse(active_dice2.get("isDefeated"))
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
