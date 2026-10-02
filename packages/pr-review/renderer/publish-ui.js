@@ -73,7 +73,7 @@ window.offerReadyNotification = function(pr,ready,notice) {
  const confirm=document.createElement('button');confirm.className='pr-ready-button';confirm.textContent='Move PR to Ready';confirm.disabled=true;
  let loading=true,loadError='';reviewers.disabled=true;help.textContent='Loading configured reviewers…';
  const updateSelection=()=>{reviewers.disabled=loading||!assign.checked;confirm.disabled=loading;};assign.onchange=updateSelection;
- const defaults=window.api.reviewGitHubReviewers?window.api.reviewGitHubReviewers():window.api.reviewMessageOptions?window.api.reviewMessageOptions(pr.url).then(r=>({...r,reviewers:r.settings?.githubReviewers||[],source:'Git Projects'})):Promise.resolve({ok:true,reviewers:[],source:'Git Projects'});
+ const defaults=window.api.reviewGitHubReviewers?window.api.reviewGitHubReviewers(pr.url):window.api.reviewMessageOptions?window.api.reviewMessageOptions(pr.url).then(r=>({...r,reviewers:r.settings?.githubReviewers||[],source:'Git Projects'})):Promise.resolve({ok:true,reviewers:[],source:'Git Projects'});
  defaults.then(r=>{if(!r.ok)throw Error(r.error);reviewers.value=(r.reviewers||[]).join(', ');help.textContent=(r.reviewers?.length?'Defaults from '+r.source+'. ':'No default reviewers configured. ')+'Add or remove reviewers for this PR only. Uncheck to assign none.';}).catch(e=>{loadError=e.message;help.textContent=e.message+' Enter reviewers here or uncheck Request GitHub reviews.';}).finally(()=>{loading=false;updateSelection();});
  confirm.onclick=async()=>{
   confirm.disabled=true;cancel.disabled=true;status.textContent='Checking GitHub…';let promoted=false;

@@ -64,3 +64,7 @@ The reviewer list uses Git Projects defaults, falling back to the configured
 RobOS Code Reviewers group. The PR author is excluded. Edits affect this request
 only; unchecking the option disables the field and assigns no reviewers. Slack
 notification remains a separate option.
+For an author's draft PR, a green **Ready for review** button appears in the
+header when CI passes. Use **Reload PR** after checks finish to refresh it.
+Clicking the button checks GitHub again and takes the PR out of draft. A changed
+branch or pending/failed checks leave it in draft.
