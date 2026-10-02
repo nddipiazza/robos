@@ -21,3 +21,9 @@ review-markdown-editor .toastui-editor-md-container .toastui-editor .ProseMirror
   line-height: 1.65;
   font-variant-ligatures: none;
 }
+
+/* Include the mode tabs in layout so following controls stay below the editor. */
+review-markdown-editor { height:auto!important; }
+review-markdown-editor > .toastui-editor-defaultUI { height:440px; }
+review-markdown-editor .toastui-editor-main { overflow:hidden; }
+review-markdown-editor .toastui-editor-ww-container { height:100%; overflow:auto; }

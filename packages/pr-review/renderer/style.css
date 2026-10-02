@@ -3525,3 +3525,12 @@ review-markdown-editor { display: block; margin: 8px 0 20px; }
 
 /* Keep the app label centered on the quick-action row. */
 .theater-topbar-left > .theater-branding { display:flex; align-items:center; padding-bottom:0; }
+
+.review-activity { display:flex; align-items:center; gap:12px; flex-wrap:wrap; font-size:12px; }
+.review-activity[hidden] { display:none; }
+.review-wait-timer { color:#a9c7b6; font-variant-numeric:tabular-nums; }
+.review-activity > button { padding:5px 10px; border:1px solid #3c4b5c; border-radius:6px; background:#202c39; color:#d9e6f3; cursor:pointer; }
+.review-activity details { position:relative; color:#9aafc2; }
+.review-activity summary { cursor:pointer; }
+.review-activity ol { position:absolute; right:0; top:20px; z-index:110; width:400px; max-height:240px; overflow:auto; margin:0; padding:14px 14px 14px 30px; background:#18222e; border:1px solid #405064; border-radius:8px; box-shadow:0 8px 24px #0006; }
+.review-activity li { padding:5px 0; line-height:1.5; }
