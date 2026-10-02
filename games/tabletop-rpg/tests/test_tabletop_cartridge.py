@@ -81,5 +81,46 @@ class TestHeroQuestCartridge(unittest.TestCase):
         self.assertIn("DunMaster Mode Active", res.stdout)
         self.assertIn("Zargon, Master of Darkness", res.stdout)
 
+    def test_raycasting_vision_and_room_revelation(self):
+        sys.path.insert(0, ROOT_DIR)
+        from rpc_ai.tabletop_qa_player import TabletopQAPlayer
+        import time
+
+        play_script = os.path.join(ROOT_DIR, "play.sh")
+        proc = subprocess.Popen([play_script, "--headless", "--role=player"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        try:
+            player = TabletopQAPlayer(port=18092)
+            connected = False
+            for _ in range(15):
+                if player.check_health():
+                    connected = True
+                    break
+                time.sleep(0.4)
+            self.assertTrue(connected, "GameControlServer must be reachable on :18092")
+
+            # 1. Initial State: Starting stairs explored via rays down corridor; crypt unrevealed
+            st1 = player.get_state()
+            self.assertEqual(st1.get("revealedRooms"), [], "Initial revealed rooms must be empty")
+            initial_count = st1.get("exploredCount", 0)
+            self.assertGreaterEqual(initial_count, 30, "Initial ray vision must explore corridor tiles")
+
+            # 2. Kick open Northwest Crypt door (4, 1) -> (4, 2)
+            door_res = player.open_door(4, 1, 4, 2)
+            self.assertTrue(door_res.get("success"), "Door open action must succeed")
+
+            # 3. Whole room immediately becomes visible
+            st2 = player.get_state()
+            self.assertIn("room-nw-crypt", st2.get("revealedRooms", []), "Northwest Crypt must immediately be revealed")
+            # 20 tiles in Northwest Crypt (5x4)
+            self.assertEqual(st2.get("exploredCount"), initial_count + 20, "Explored count must increase by all 20 room tiles")
+
+            # 4. Combat log logs room reveal and spotted monsters
+            combat_log = " ".join(st2.get("combatLog", []))
+            self.assertIn("Northwest Crypt", combat_log)
+            self.assertIn("Crypt Skeleton", combat_log)
+        finally:
+            proc.terminate()
+            proc.wait()
+
 if __name__ == "__main__":
     unittest.main()
