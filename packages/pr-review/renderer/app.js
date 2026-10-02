@@ -73,7 +73,8 @@ async function init() {
   const local = await window.api.getLocalReview?.();
   if (local?.ok) {
     serverBadge.textContent = 'Local draft — no GitHub PR created';
-    await window.openPRReviewTheater(local.pr);
+    const opened=await window.openPRReviewTheater(local.pr);
+    if(opened===false)throw Error('Could not load the review. Please try again.');
     return;
   }
   serverConfig = await window.api.getConfig();
@@ -631,7 +632,7 @@ window.openPRReviewTheater = async function(pr) {
 
   if (!res.ok) {
     showError(res.error || 'Failed to load PR Review Theater context');
-    return;
+    return false;
   }
 
   theaterContext = res;
@@ -2079,5 +2080,5 @@ for (const eventType of ['click', 'change']) document.addEventListener(eventType
   window[action](arg);
 });
 
-init();
+window.startCodeReview(init);
 

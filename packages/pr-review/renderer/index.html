@@ -1,14 +1,23 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-startup="loading">
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data: robos-evidence:;">
+  <style>
+    html[data-startup] body > :not(#startup-screen) { visibility: hidden !important; }
+    #startup-screen { position:fixed;inset:0;z-index:2147483647;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#0d1117;color:#c9d1d9;font:15px system-ui; }
+    #startup-screen[hidden] { display:none; }
+    #startup-screen h1 { font-size:22px;font-weight:600;margin:0; }
+    #startup-screen p { max-width:560px;text-align:center;line-height:1.5;margin:0; }
+    #startup-screen button { background:#21262d;color:#c9d1d9;border:1px solid #484f58;border-radius:6px;padding:8px 16px;cursor:pointer; }
+  </style>
   <title>RobOS Agent-Generated Code Review Platform</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="../node_modules/@toast-ui/editor/dist/toastui-editor.css">
   <link rel="stylesheet" href="../node_modules/@toast-ui/editor/dist/theme/toastui-editor-dark.css">
 </head>
 <body>
+<section id="startup-screen" aria-label="Opening Code Review" role="status"><h1>Code Review</h1><p id="startup-message">Loading your review…</p><button id="startup-retry" hidden>Try again</button></section>
 <div id="app">
   <header>
     <div class="header-left">
@@ -1131,6 +1140,7 @@
   <script src="ai-description.js"></script>
   <script src="message-options.js"></script>
   <script src="publish-ui.js"></script>
+  <script src="startup.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

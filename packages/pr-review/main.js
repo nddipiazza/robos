@@ -117,6 +117,7 @@ app.whenReady().then(() => {
     return net.fetch(require('node:url').pathToFileURL(item.path).href);
   });
   win = new BrowserWindow({
+    show: false,
     width: 1400, height: 900,
     minWidth: 900, minHeight: 600,
     title: 'RobOS Agent-Generated Code Review Platform',
@@ -127,6 +128,7 @@ app.whenReady().then(() => {
       nodeIntegration: false,
     },
   });
+  win.once('ready-to-show',()=>win.show());
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
   win.setMenuBarVisibility(false);
   if (_debugServer) _debugServer.startDebugServer(win, 19129);
