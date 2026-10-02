@@ -32,7 +32,7 @@ var revealed_rooms: Array[String] = []
 var explored_tiles: Dictionary = {}
 var grid_cols: int = GRID_COLS
 var grid_rows: int = GRID_ROWS
-var starting_stair: Vector2i = Vector2i(0, 1)
+var starting_stair: Vector2i = Vector2i(1, 1)
 var tile_size: float = TILE_SIZE
 var board_offset: Vector2 = BOARD_OFFSET
 
@@ -163,12 +163,23 @@ func _load_active_cartridge() -> void:
 
 	var cart_heroes = cart.get("heroes", {})
 	heroes.clear()
+	var occupied_starts: Dictionary = {}
 	for h_id in cart_heroes:
 		var h = cart_heroes[h_id].duplicate(true)
 		h["current_bp"] = h.get("bodyPoints", 8)
 		h["current_mp"] = h.get("mindPoints", 2)
 		h["gold"] = 0
-		h["grid_pos"] = starting_stair
+		var pos_arr = h.get("position", [starting_stair.x, starting_stair.y])
+		var h_pos = Vector2i(pos_arr[0], pos_arr[1])
+		if occupied_starts.has(h_pos):
+			# Standard HeroQuest rule: No sharing squares! Find adjacent unoccupied corridor tile
+			for offset in [Vector2i(1, 0), Vector2i(0, 1), Vector2i(0, 2), Vector2i(2, 0), Vector2i(1, 1)]:
+				var cand = starting_stair + offset
+				if not occupied_starts.has(cand) and not is_tile_wall_blocked(cand) and _get_room_at(cand).is_empty():
+					h_pos = cand
+					break
+		occupied_starts[h_pos] = true
+		h["grid_pos"] = h_pos
 		heroes.append(h)
 
 	var cart_monsters = cart.get("monsters", {})
@@ -225,6 +236,37 @@ func is_tile_wall_blocked(tile: Vector2i) -> bool:
 			return true
 	return false
 
+# --- HeroQuest Miniature Occupancy Rules ---
+func get_hero_at(tile: Vector2i) -> Dictionary:
+	for h in heroes:
+		if h.get("current_bp", 0) > 0 and h.get("grid_pos") == tile:
+			return h
+	return {}
+
+func get_monster_at(tile: Vector2i) -> Dictionary:
+	for m in monsters:
+		if m.get("is_alive", false) and m.get("grid_pos") == tile:
+			return m
+	return {}
+
+func is_tile_occupied_by_hero(tile: Vector2i, exclude_hero_idx: int = -1) -> bool:
+	for i in range(heroes.size()):
+		if i == exclude_hero_idx:
+			continue
+		var h = heroes[i]
+		if h.get("current_bp", 0) > 0 and h.get("grid_pos") == tile:
+			return true
+	return false
+
+func is_tile_occupied_by_monster(tile: Vector2i) -> bool:
+	for m in monsters:
+		if m.get("is_alive", false) and m.get("grid_pos") == tile:
+			return true
+	return false
+
+func is_tile_occupied(tile: Vector2i, exclude_hero_idx: int = -1) -> bool:
+	return is_tile_occupied_by_hero(tile, exclude_hero_idx) or is_tile_occupied_by_monster(tile)
+
 func _get_door_between(a: Vector2i, b: Vector2i) -> Dictionary:
 	for d in doors:
 		var f = d.get("from", [0, 0])
@@ -260,85 +302,82 @@ func has_wall_between(a: Vector2i, b: Vector2i) -> bool:
 
 	return false
 
+func is_tile_solid(tile: Vector2i) -> bool:
+	if tile.x < 0 or tile.x >= grid_cols or tile.y < 0 or tile.y >= grid_rows:
+		return true
+	if is_tile_wall_blocked(tile):
+		return true
+	var rm = _get_room_at(tile)
+	var rm_id = str(rm.get("id", ""))
+	if rm_id != "" and not revealed_rooms.has(rm_id):
+		return true
+	return false
+
 func has_line_of_sight(from_pos: Vector2i, to_pos: Vector2i) -> bool:
 	if from_pos == to_pos:
 		return true
 
-	# Target inside an unrevealed room cannot be seen
-	var rt = _get_room_at(to_pos)
-	var rt_id = str(rt.get("id", ""))
-	if rt_id != "" and not revealed_rooms.has(rt_id):
+	# Target or source inside an unrevealed room is always occluded
+	if is_tile_solid(to_pos) or is_tile_solid(from_pos):
 		return false
 
-	var rf = _get_room_at(from_pos)
-	var rf_id = str(rf.get("id", ""))
-	if rf_id != "" and not revealed_rooms.has(rf_id):
-		return false
-
-	var p0 = Vector2(from_pos.x + 0.5, from_pos.y + 0.5)
-	var p1 = Vector2(to_pos.x + 0.5, to_pos.y + 0.5)
-	var dx = p1.x - p0.x
-	var dy = p1.y - p0.y
-
-	var step_x = 1 if dx > 0.0 else (-1 if dx < 0.0 else 0)
-	var step_y = 1 if dy > 0.0 else (-1 if dy < 0.0 else 0)
-
-	var t_delta_x = 1.0e20 if absf(dx) < 1.0e-7 else absf(1.0 / dx)
-	var t_delta_y = 1.0e20 if absf(dy) < 1.0e-7 else absf(1.0 / dy)
-
-	var t_max_x: float = 0.0
-	var t_max_y: float = 0.0
-
-	if step_x > 0:
-		t_max_x = (float(from_pos.x + 1) - p0.x) * t_delta_x
-	elif step_x < 0:
-		t_max_x = (p0.x - float(from_pos.x)) * t_delta_x
-	else:
-		t_max_x = 1.0e20
-
-	if step_y > 0:
-		t_max_y = (float(from_pos.y + 1) - p0.y) * t_delta_y
-	elif step_y < 0:
-		t_max_y = (p0.y - float(from_pos.y)) * t_delta_y
-	else:
-		t_max_y = 1.0e20
-
-	var current = from_pos
-	var max_steps = grid_cols + grid_rows + 5
-
-	for _i in range(max_steps):
-		if current == to_pos:
-			return true
-
-		# Intermediate stone blocks block passage
-		if current != from_pos and is_tile_wall_blocked(current):
-			return false
-
-		var eps = 1.0e-5
-		if t_max_x < t_max_y - eps:
-			var next_tile = Vector2i(current.x + step_x, current.y)
-			t_max_x += t_delta_x
-			if has_wall_between(current, next_tile):
+	# 1. Fast Cardinal Check (Straight orthogonal corridor sightlines)
+	if from_pos.x == to_pos.x:
+		var step = 1 if to_pos.y > from_pos.y else -1
+		var y = from_pos.y
+		while y != to_pos.y:
+			var next_y = y + step
+			var cur = Vector2i(from_pos.x, y)
+			var nxt = Vector2i(from_pos.x, next_y)
+			if has_wall_between(cur, nxt):
 				return false
-			current = next_tile
-		elif t_max_y < t_max_x - eps:
-			var next_tile = Vector2i(current.x, current.y + step_y)
-			t_max_y += t_delta_y
-			if has_wall_between(current, next_tile):
+			if nxt != to_pos and is_tile_solid(nxt):
 				return false
-			current = next_tile
-		else:
-			var next_x = Vector2i(current.x + step_x, current.y)
-			var next_y = Vector2i(current.x, current.y + step_y)
-			var diag = Vector2i(current.x + step_x, current.y + step_y)
-			if has_wall_between(current, next_x) or has_wall_between(current, next_y) or \
-			   has_wall_between(next_x, diag) or has_wall_between(next_y, diag):
-				return false
-			t_max_x += t_delta_x
-			t_max_y += t_delta_y
-			current = diag
+			y = next_y
+		return true
 
-	return current == to_pos
+	if from_pos.y == to_pos.y:
+		var step = 1 if to_pos.x > from_pos.x else -1
+		var x = from_pos.x
+		while x != to_pos.x:
+			var next_x = x + step
+			var cur = Vector2i(x, from_pos.y)
+			var nxt = Vector2i(next_x, from_pos.y)
+			if has_wall_between(cur, nxt):
+				return false
+			if nxt != to_pos and is_tile_solid(nxt):
+				return false
+			x = next_x
+		return true
+
+	# 2. Angled Beam Check (prevents corner-cutting and leaking into parallel corridors)
+	var p0 = Vector2(float(from_pos.x) + 0.5, float(from_pos.y) + 0.5)
+	var p1 = Vector2(float(to_pos.x) + 0.5, float(to_pos.y) + 0.5)
+	var delta = p1 - p0
+	var dist = delta.length()
+	var steps = int(dist * 20.0) + 1
+	var beam_radius: float = 0.15
+	var prev_tile = from_pos
+
+	for i in range(1, steps):
+		var t = float(i) / float(steps)
+		var c = p0 + delta * t
+		var cur_tile = Vector2i(int(floor(c.x)), int(floor(c.y)))
+
+		if cur_tile != prev_tile:
+			if has_wall_between(prev_tile, cur_tile):
+				return false
+			prev_tile = cur_tile
+
+		# Check solid collision within beam thickness
+		for ox in [-beam_radius, beam_radius]:
+			for oy in [-beam_radius, beam_radius]:
+				var chk_tile = Vector2i(int(floor(c.x + ox)), int(floor(c.y + oy)))
+				if chk_tile != from_pos and chk_tile != to_pos:
+					if is_tile_solid(chk_tile):
+						return false
+
+	return true
 
 func update_party_vision() -> void:
 	if is_gm_role():
@@ -545,7 +584,7 @@ func can_search_room() -> bool:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		var mouse_pos = event.position
+		var mouse_pos = get_global_mouse_position()
 		var local_pos = mouse_pos - board_offset
 		var tx = int(floor(local_pos.x / tile_size))
 		var ty = int(floor(local_pos.y / tile_size))
@@ -597,20 +636,87 @@ func roll_movement_dice() -> Dictionary:
 	queue_redraw_all()
 	return roll
 
+func find_path(start: Vector2i, goal: Vector2i, moving_hero_idx: int = -1) -> Array[Vector2i]:
+	if start == goal:
+		return [start]
+	# Rule 1: No sharing squares! Characters cannot finish their turn on a square occupied by another model.
+	if is_tile_occupied(goal, moving_hero_idx):
+		return []
+
+	var queue: Array[Vector2i] = [start]
+	var came_from: Dictionary = { start: start }
+	var dirs = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
+
+	while queue.size() > 0:
+		var cur = queue.pop_front()
+		if cur == goal:
+			var path: Array[Vector2i] = []
+			var trace = goal
+			while trace != start:
+				path.append(trace)
+				trace = came_from[trace]
+			path.append(start)
+			path.reverse()
+			return path
+
+		for d in dirs:
+			var nxt = cur + d
+			if nxt.x < 0 or nxt.x >= grid_cols or nxt.y < 0 or nxt.y >= grid_rows:
+				continue
+			if came_from.has(nxt):
+				continue
+			if has_wall_between(cur, nxt) or is_tile_wall_blocked(nxt):
+				continue
+			var rm = _get_room_at(nxt)
+			var rm_id = str(rm.get("id", ""))
+			if rm_id != "" and not revealed_rooms.has(rm_id):
+				continue
+			# Rule 2: Heroes generally cannot move through squares occupied by monsters.
+			# Monsters create tactical bottlenecks in narrow corridors and doorways!
+			if is_tile_occupied_by_monster(nxt):
+				continue
+			# Rule 3: Heroes CAN pass through friendly heroes, but cannot end on them
+			# (which is enforced at goal check above).
+			came_from[nxt] = cur
+			queue.append(nxt)
+
+	return []
+
 func move_hero(target_pos: Vector2i) -> bool:
 	var hero = get_active_hero()
 	if hero.size() == 0:
 		return false
 
 	var curr = hero.get("grid_pos", Vector2i(1, 1))
-	var dist = absi(curr.x - target_pos.x) + absi(curr.y - target_pos.y)
+	if curr == target_pos:
+		return true
 
-	if movement_remaining > 0 and dist > movement_remaining:
-		_log("⚠️ Target out of movement range (need %d, have %d)" % [dist, movement_remaining])
+	# Standard HeroQuest Rule: No Sharing Squares
+	if is_tile_occupied(target_pos, active_hero_idx):
+		if is_tile_occupied_by_hero(target_pos, active_hero_idx):
+			var occ_hero = get_hero_at(target_pos)
+			_log("⚠️ Square (%d, %d) is occupied by %s! HeroQuest rules strictly forbid sharing a space." % [
+				target_pos.x, target_pos.y, occ_hero.get("name", "another hero")
+			])
+		else:
+			var occ_monster = get_monster_at(target_pos)
+			_log("⚠️ Square (%d, %d) is occupied by %s! Cannot end movement on monster squares." % [
+				target_pos.x, target_pos.y, occ_monster.get("name", "monster")
+			])
+		return false
+
+	var path = find_path(curr, target_pos, active_hero_idx)
+	if path.is_empty():
+		_log("⚠️ Path to (%d, %d) is blocked!" % [target_pos.x, target_pos.y])
+		return false
+
+	var cost = path.size() - 1
+	if movement_remaining > 0 and cost > movement_remaining:
+		_log("⚠️ Target out of movement range (need %d, have %d)" % [cost, movement_remaining])
 		return false
 
 	hero["grid_pos"] = target_pos
-	movement_remaining = maxi(0, movement_remaining - dist)
+	movement_remaining = maxi(0, movement_remaining - cost)
 	if movement_remaining == 0:
 		if has_acted_this_turn:
 			turn_state = "turn_complete"
@@ -742,6 +848,13 @@ func dm_attack_hero(hero_id: String = "") -> Dictionary:
 
 # Game Master Action: Summon Wandering Monster Ambush
 func summon_wandering_monster(spawn_pos: Vector2i = Vector2i(3, 0)) -> Dictionary:
+	if is_tile_occupied(spawn_pos):
+		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, 1), Vector2i(-1, 1)]:
+			var cand = spawn_pos + d
+			if not is_tile_occupied(cand) and not is_tile_wall_blocked(cand):
+				spawn_pos = cand
+				break
+
 	var new_m = {
 		"id": "wandering-orc-" + str(monsters.size() + 1),
 		"name": "Wandering Orc",
@@ -843,7 +956,7 @@ func ai_monster_turn() -> Dictionary:
 				clampi(h_pos.y - m_pos.y, -1, 1) if absi(h_pos.y - m_pos.y) > absi(h_pos.x - m_pos.x) else 0
 			)
 			var next_pos = m_pos + step_dir
-			if next_pos != h_pos:
+			if not has_wall_between(m_pos, next_pos) and not is_tile_wall_blocked(next_pos) and not is_tile_occupied(next_pos):
 				m["grid_pos"] = next_pos
 				_log("👣 %s moves towards %s to (%d, %d)." % [m.get("name"), nearest_hero.get("name"), next_pos.x, next_pos.y])
 				acts += 1
@@ -1000,12 +1113,24 @@ func _log(msg: String) -> void:
 	_update_ui()
 
 func get_telemetry_state() -> Dictionary:
+	var exp_tiles: Array = []
+	for t in explored_tiles.keys():
+		exp_tiles.append([t.x, t.y])
+
+	var h_act = get_active_hero()
+	var h_pos = h_act.get("grid_pos", Vector2i(-1, -1))
+	var active_center = board_offset + Vector2(h_pos.x * tile_size + tile_size * 0.5, h_pos.y * tile_size + tile_size * 0.5)
+
 	return {
 		"role": current_role,
 		"round": current_round,
 		"phase": current_phase,
-		"activeHero": get_active_hero().get("id", ""),
+		"activeHero": h_act.get("id", ""),
 		"activeHeroIndex": active_hero_idx,
+		"activeHeroPos": [h_pos.x, h_pos.y],
+		"activeHeroTokenPos": [active_center.x, active_center.y],
+		"boardOffset": [board_offset.x, board_offset.y],
+		"tileSize": tile_size,
 		"movementRemaining": movement_remaining,
 		"movementRolled": movement_rolled,
 		"hasActed": has_acted_this_turn,
@@ -1016,6 +1141,7 @@ func get_telemetry_state() -> Dictionary:
 		"rooms": rooms,
 		"revealedRooms": revealed_rooms,
 		"exploredCount": explored_tiles.size(),
+		"exploredTiles": exp_tiles,
 		"combatLog": combat_log.slice(-10),
 		"cartridge": CartridgeManager.active_cartridge.get("cartridgeId", "")
 	}
@@ -1032,6 +1158,9 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 		"move":
 			var tx = int(action_data.get("x", 0))
 			var ty = int(action_data.get("y", 0))
+			if action_data.has("target") and action_data.target is Array and action_data.target.size() >= 2:
+				tx = int(action_data.target[0])
+				ty = int(action_data.target[1])
 			var ok = move_hero(Vector2i(tx, ty))
 			return { "success": ok }
 		"open_door":
@@ -1325,11 +1454,16 @@ func _draw_board(canvas: CanvasItem) -> void:
 		var token_radius = tile_size * 0.42
 		var font_size = 14
 
-		if tile_heroes.size() > 1:
+		if is_active:
+			# Active hero is always front, center, and full size! Never displaced!
+			screen_pos = tile_center
+			token_radius = tile_size * 0.42
+			font_size = 14
+		elif tile_heroes.size() > 1:
 			var slot = tile_heroes.find(idx)
 			if slot >= 0 and slot < quad_offsets.size():
 				screen_pos = tile_center + quad_offsets[slot]
-				token_radius = tile_size * 0.23
+				token_radius = tile_size * 0.22
 				font_size = 10
 
 		var col = Color.from_string(h.get("tokenColor", "#b91c1c"), Color.RED)

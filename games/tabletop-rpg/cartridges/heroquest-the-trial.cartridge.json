@@ -19,7 +19,7 @@
     "questCount": 1,
     "startingMap": "heroquest-the-trial",
     "startingPosition": [
-      0,
+      1,
       1
     ],
     "createdDate": "2026-10-02T13:11:34.978Z"
@@ -49,7 +49,7 @@
       "defendDice": 2,
       "tokenColor": "#b45309",
       "position": [
-        1,
+        2,
         1
       ]
     },
@@ -64,7 +64,7 @@
       "tokenColor": "#15803d",
       "position": [
         1,
-        1
+        2
       ]
     },
     "wizard": {
@@ -78,7 +78,7 @@
       "tokenColor": "#1d4ed8",
       "position": [
         1,
-        1
+        3
       ]
     }
   },
@@ -185,7 +185,7 @@
       "height": 21,
       "backgroundImage": "res://assets/boards/fan_dungeon_28x21.png",
       "startingStair": [
-        0,
+        1,
         1
       ],
       "activeRooms": [
