@@ -87,9 +87,10 @@ class TestHeroQuestCartridge(unittest.TestCase):
         import time
 
         play_script = os.path.join(ROOT_DIR, "play.sh")
-        proc = subprocess.Popen([play_script, "--headless", "--role=player"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        env = dict(os.environ, TABLETOP_SERVER_PORT="18099")
+        proc = subprocess.Popen([play_script, "--headless", "--role=player"], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         try:
-            player = TabletopQAPlayer(port=18092)
+            player = TabletopQAPlayer(port=18099)
             connected = False
             for _ in range(15):
                 if player.check_health():
