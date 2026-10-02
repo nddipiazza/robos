@@ -71,3 +71,9 @@ test('GitHub reviewers persist separately from chat mentions',()=>{
  assert.deepEqual(settings.read('org/repo',root).githubReviewers,['alice','org/backend']);
  assert.throws(()=>settings.validateGitHubReviewers(['--bad']),/usernames/);
 });
+test('explicit pings can repeat while the same ping ID deduplicates retries',async()=>{
+ const f=fixture();f.review.pullRequest.state='OPEN';f.review.pullRequest.isDraft=false;
+ const input={serverId:'slack',channel:'C1',reviewers,occasion:'ping',requestId:'00000000-0000-4000-8000-000000000001'};
+ await f.n.send(input);await f.n.send(input);assert.equal(f.sends(),1);
+ await f.n.send({...input,requestId:'00000000-0000-4000-8000-000000000002'});assert.equal(f.sends(),2);
+});
