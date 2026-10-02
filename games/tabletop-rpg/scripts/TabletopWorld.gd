@@ -27,6 +27,8 @@ func is_gm_role() -> bool:
 var heroes: Array[Dictionary] = []
 var monsters: Array[Dictionary] = []
 var doors: Array[Dictionary] = []
+var door_closed_tex: Texture2D = null
+var door_open_tex: Texture2D = null
 var furniture: Array[Dictionary] = []
 var wall_blocks: Array[Dictionary] = []
 var traps: Array[Dictionary] = []
@@ -175,6 +177,7 @@ func _ready() -> void:
 	_setup_ui_signals()
 	_setup_ai_modal_styles()
 	_setup_elf_spell_modal()
+	_load_door_textures()
 	_update_ui()
 	_log("=== Welcome to HeroQuest: The Trial ===")
 	if is_gm_role():
@@ -182,6 +185,28 @@ func _ready() -> void:
 	else:
 		_log("⚔️ [Player Mode Active] You lead the four heroes into the catacombs of Verag!")
 		_check_start_elf_spell_selection()
+
+func _load_door_textures() -> void:
+	if not door_closed_tex:
+		door_closed_tex = _load_texture_safe("res://assets/doors/door_closed.png")
+	if not door_open_tex:
+		door_open_tex = _load_texture_safe("res://assets/doors/door_open.png")
+
+func _load_texture_safe(res_path: String) -> Texture2D:
+	if ResourceLoader.exists(res_path):
+		var res = ResourceLoader.load(res_path)
+		if res is Texture2D:
+			return res
+	var global_path = ProjectSettings.globalize_path(res_path)
+	if FileAccess.file_exists(global_path):
+		var img = Image.load_from_file(global_path)
+		if img and not img.is_empty():
+			return ImageTexture.create_from_image(img)
+	if FileAccess.file_exists(res_path):
+		var img = Image.load_from_file(res_path)
+		if img and not img.is_empty():
+			return ImageTexture.create_from_image(img)
+	return null
 
 func _check_cli_role() -> void:
 	var cmd_args = OS.get_cmdline_user_args() + OS.get_cmdline_args()
@@ -3965,8 +3990,37 @@ func _draw_board(canvas: CanvasItem) -> void:
 			var p2 = board_offset + Vector2(t[0] * tile_size + tile_size * 0.5, t[1] * tile_size + tile_size * 0.5)
 			var mid = (p1 + p2) * 0.5
 			var is_open = d.get("is_open", false)
-			var col = Color(0.2, 0.8, 0.2, 0.9) if is_open else Color(0.8, 0.5, 0.1, 0.9)
-			canvas.draw_rect(Rect2(mid.x - 8, mid.y - 8, 16, 16), col)
+			var tex: Texture2D = door_open_tex if is_open else door_closed_tex
+			var d_size = tile_size * 0.85
+			var is_vert = (f[1] == t[1])
+			var rot = PI * 0.5 if is_vert else 0.0
+
+			if tex:
+				var orig_w = float(tex.get_width())
+				var orig_h = float(tex.get_height())
+				var scale_v = Vector2(d_size / orig_w, d_size / orig_h)
+				canvas.draw_set_transform(mid, rot, scale_v)
+				canvas.draw_texture(tex, -Vector2(orig_w, orig_h) * 0.5)
+				canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+			else:
+				# Clean vector fallback if texture unavailable
+				var col = Color(0.2, 0.8, 0.2, 0.9) if is_open else Color(0.65, 0.42, 0.18, 0.95)
+				if is_vert:
+					canvas.draw_rect(Rect2(mid.x - 5, mid.y - d_size * 0.45, 10, d_size * 0.9), col)
+					canvas.draw_rect(Rect2(mid.x - 5, mid.y - d_size * 0.45, 10, d_size * 0.9), Color(0.2, 0.15, 0.1), false, 1.5)
+				else:
+					canvas.draw_rect(Rect2(mid.x - d_size * 0.45, mid.y - 5, d_size * 0.9, 10), col)
+					canvas.draw_rect(Rect2(mid.x - d_size * 0.45, mid.y - 5, d_size * 0.9, 10), Color(0.2, 0.15, 0.1), false, 1.5)
+
+			# If active hero is adjacent to a closed door, render interactive golden highlight
+			if not is_open and current_role == "player":
+				var adj_doors = get_adjacent_closed_doors()
+				for ad in adj_doors:
+					var ad_f = ad.get("from", [-1, -1])
+					var ad_t = ad.get("to", [-1, -1])
+					if (ad_f == f and ad_t == t) or (ad_f == t and ad_t == f):
+						canvas.draw_arc(mid, d_size * 0.52, 0, TAU, 24, Color(1.0, 0.85, 0.2, 0.9), 2.0)
+						break
 
 	# Draw Monsters
 	for m in monsters:
