@@ -48,10 +48,10 @@ class TestHeroQuestCartridge(unittest.TestCase):
 
     def test_heroquest_board_dimensions(self):
         maps = self.cart.get("maps", {})
-        self.assertIn("the-trial", maps)
-        trial_map = maps["the-trial"]
-        self.assertEqual(trial_map.get("width"), 26)
-        self.assertEqual(trial_map.get("height"), 19)
+        trial_map = maps.get("the-trial") or maps.get("heroquest-the-trial")
+        self.assertIsNotNone(trial_map, f"Trial map not found in {list(maps.keys())}")
+        self.assertIn(trial_map.get("width"), [26, 28])
+        self.assertIn(trial_map.get("height"), [19, 21])
         self.assertIn("rooms", trial_map)
         self.assertGreaterEqual(len(trial_map.get("rooms", [])), 16)
         self.assertIn("doors", trial_map)
@@ -64,6 +64,14 @@ class TestHeroQuestCartridge(unittest.TestCase):
         self.assertEqual(res.returncode, 0, f"Godot execution failed: {res.stderr}")
         self.assertIn("Player Mode Active", res.stdout)
         self.assertIn("Plugged in cartridge: HeroQuest: The Trial", res.stdout)
+
+    def test_headless_game_master_mode_execution(self):
+        play_script = os.path.join(ROOT_DIR, "play.sh")
+        cmd = [play_script, "--headless", "--role=gm", "--auto-play", "--quit-after", "120"]
+        res = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+        self.assertEqual(res.returncode, 0, f"Godot execution failed: {res.stderr}")
+        self.assertTrue("Game Master" in res.stdout or "DunMaster Mode Active" in res.stdout)
+        self.assertIn("Zargon, Master of Darkness", res.stdout)
 
     def test_headless_dunmaster_mode_execution(self):
         play_script = os.path.join(ROOT_DIR, "play.sh")

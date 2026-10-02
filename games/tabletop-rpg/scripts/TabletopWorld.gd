@@ -7,14 +7,17 @@ const GRID_ROWS = 19
 const TILE_SIZE = 46.0
 const BOARD_OFFSET = Vector2(50.0, 70.0)
 
-var current_role: String = "player" # "player" or "dm" / "dunmaster"
+var current_role: String = "player" # "player" or "gm" / "gamemaster" / "dm" / "dunmaster"
 var current_round: int = 1
 var active_hero_idx: int = 0
 var active_monster_idx: int = 0
-var current_phase: String = "hero_phase" # "hero_phase" or "dm_phase"
+var current_phase: String = "hero_phase" # "hero_phase" or "gm_phase"
 var movement_remaining: int = 0
 var has_acted_this_turn: bool = false
 var combat_log: Array[String] = []
+
+func is_gm_role() -> bool:
+	return current_role == "gm" or current_role == "gamemaster" or current_role == "dm" or current_role == "dunmaster"
 
 var heroes: Array[Dictionary] = []
 var monsters: Array[Dictionary] = []
@@ -46,8 +49,8 @@ func _ready() -> void:
 	_setup_ui_signals()
 	_update_ui()
 	_log("=== Welcome to HeroQuest: The Trial ===")
-	if current_role == "dm" or current_role == "dunmaster":
-		_log("👑 [DunMaster Mode Active] You are Zargon, Master of Darkness. Full dungeon visibility granted.")
+	if is_gm_role():
+		_log("👑 [Game Master / DunMaster Mode Active] You are Zargon, Master of Darkness. Full dungeon visibility granted.")
 	else:
 		_log("⚔️ [Player Mode Active] You lead the four heroes into the catacombs of Verag!")
 
@@ -63,8 +66,8 @@ func _check_cli_role() -> void:
 			current_role = cmd_args[i + 1].to_lower()
 		elif a.begins_with("--role="):
 			current_role = a.split("=")[1].to_lower()
-		elif a == "--dm" or a == "--dunmaster":
-			current_role = "dm"
+		elif a == "--dm" or a == "--dunmaster" or a == "--gm" or a == "--gamemaster":
+			current_role = "gm"
 		elif a == "--player":
 			current_role = "player"
 
@@ -86,8 +89,8 @@ func _setup_ui_signals() -> void:
 
 func toggle_role() -> void:
 	if current_role == "player":
-		current_role = "dm"
-		_log("👑 Switched to DunMaster Mode! You command Morcar's minions and see all hidden rooms.")
+		current_role = "gm"
+		_log("👑 Switched to Game Master Mode! You command Morcar's minions and see all hidden rooms.")
 	else:
 		current_role = "player"
 		_log("⚔️ Switched to Player Mode! You control the hero party.")
@@ -95,7 +98,7 @@ func toggle_role() -> void:
 	queue_redraw()
 
 func _on_attack_pressed() -> void:
-	if current_role == "dm" or current_phase == "dm_phase":
+	if is_gm_role() or current_phase == "dm_phase" or current_phase == "gm_phase":
 		dm_attack_hero()
 	else:
 		attack_adjacent_monster()
@@ -185,14 +188,14 @@ func _execute_auto_play_step() -> void:
 			_log("⚡ [Auto-Play] Step 8: Dwarf searches room for treasure and hidden traps!")
 			search_room()
 		9:
-			if current_role == "dm" or current_role == "dunmaster":
-				_log("⚡ [Auto-Play] Step 9: DunMaster summons wandering monster ambush!")
+			if is_gm_role():
+				_log("⚡ [Auto-Play] Step 9: Game Master summons wandering monster ambush!")
 				summon_wandering_monster()
 			else:
 				_log("⚡ [Auto-Play] Step 9: Quest demonstration complete! Telemetry verified.")
 				CartridgeManager.auto_play_enabled = false
 		10:
-			_log("⚡ [Auto-Play] Step 10: DunMaster demonstration complete! Telemetry verified.")
+			_log("⚡ [Auto-Play] Step 10: Game Master / DunMaster demonstration complete! Telemetry verified.")
 			CartridgeManager.auto_play_enabled = false
 
 func get_active_hero() -> Dictionary:
@@ -317,7 +320,7 @@ func dm_attack_hero(hero_id: String = "") -> Dictionary:
 	var def_dice = target_h.get("defendDice", 2)
 
 	var res = TabletopDice.resolve_combat(atk_dice, def_dice, true)
-	_log("👑 [DunMaster] %s attacks %s! Rolled %d Skulls. %s rolled %d White Shields." % [
+	_log("👑 [Game Master] %s attacks %s! Rolled %d Skulls. %s rolled %d White Shields." % [
 		monster.get("name"), target_h.get("name"), res.total_skulls, target_h.get("name"), res.effective_shields
 	])
 
@@ -331,7 +334,7 @@ func dm_attack_hero(hero_id: String = "") -> Dictionary:
 	queue_redraw()
 	return res
 
-# DunMaster Action: Summon Wandering Monster Ambush
+# Game Master Action: Summon Wandering Monster Ambush
 func summon_wandering_monster(spawn_pos: Vector2i = Vector2i(3, 0)) -> Dictionary:
 	var new_m = {
 		"id": "wandering-orc-" + str(monsters.size() + 1),
@@ -347,7 +350,7 @@ func summon_wandering_monster(spawn_pos: Vector2i = Vector2i(3, 0)) -> Dictionar
 		"is_alive": true
 	}
 	monsters.append(new_m)
-	_log("👑 [DunMaster] An evil laugh echoes! A Wandering Orc appears at (%d, %d)!" % [spawn_pos.x, spawn_pos.y])
+	_log("👑 [Game Master] An evil laugh echoes! A Wandering Orc appears at (%d, %d)!" % [spawn_pos.x, spawn_pos.y])
 	_update_ui()
 	queue_redraw()
 	return { "success": true, "monster": new_m }
@@ -367,8 +370,8 @@ func end_turn() -> void:
 	if current_phase == "hero_phase":
 		active_hero_idx = (active_hero_idx + 1) % maxi(1, heroes.size())
 		if active_hero_idx == 0:
-			current_phase = "dm_phase"
-			_log("=== Zargon / DunMaster Phase Begins ===")
+			current_phase = "gm_phase"
+			_log("=== Zargon / Game Master Phase Begins ===")
 			if current_role == "player":
 				# In Player Mode, monsters take quick automated turn
 				call_deferred("_run_automated_monster_turn")
@@ -391,14 +394,14 @@ func _run_automated_monster_turn() -> void:
 	end_turn()
 
 func _update_ui() -> void:
-	var role_name = "Player Mode (Playing Heroes)" if current_role == "player" else "DunMaster Mode (Zargon DM)"
+	var role_name = "Player Mode (Playing Heroes)" if current_role == "player" else "Game Master Mode (Zargon GM)"
 	if title_label:
 		title_label.text = "🛡️ RobOS Tabletop RPG: HeroQuest — %s" % role_name
 	if role_badge:
-		role_badge.text = "Role: " + ("⚔️ Player" if current_role == "player" else "👑 DunMaster")
+		role_badge.text = "Role: " + ("⚔️ Player" if current_role == "player" else "👑 Game Master")
 
 	if btn_summon:
-		btn_summon.visible = (current_role == "dm" or current_role == "dunmaster")
+		btn_summon.visible = is_gm_role()
 	if btn_attack:
 		btn_attack.text = "⚔️ Hero Attack" if current_role == "player" else "👹 Monster Attack"
 
@@ -496,8 +499,8 @@ func _draw() -> void:
 	if current_role == "player" and not revealed_rooms.has("room-center"):
 		var fog_rect = Rect2(BOARD_OFFSET + Vector2(11 * TILE_SIZE, 7 * TILE_SIZE), Vector2(4 * TILE_SIZE, 5 * TILE_SIZE))
 		draw_rect(fog_rect, Color(0.04, 0.06, 0.09, 0.85))
-	elif current_role == "dm" or current_role == "dunmaster":
-		# In DunMaster Mode, show DM halo outline around the central chamber
+	elif is_gm_role():
+		# In Game Master Mode, show GM halo outline around the central chamber
 		var center_rect = Rect2(BOARD_OFFSET + Vector2(11 * TILE_SIZE, 7 * TILE_SIZE), Vector2(4 * TILE_SIZE, 5 * TILE_SIZE))
 		draw_rect(center_rect, Color(0.7, 0.2, 0.8, 0.15))
 		draw_rect(center_rect, Color(0.8, 0.3, 0.9, 0.8), false, 2.0)
@@ -505,7 +508,7 @@ func _draw() -> void:
 	# Draw Furniture
 	for f in furniture:
 		var r_id = f.get("roomId", "")
-		if current_role == "dm" or revealed_rooms.has(r_id) or r_id == "":
+		if is_gm_role() or revealed_rooms.has(r_id) or r_id == "":
 			var pos = f.get("position", [0, 0])
 			var screen_pos = BOARD_OFFSET + Vector2(pos[0] * TILE_SIZE + TILE_SIZE * 0.5, pos[1] * TILE_SIZE + TILE_SIZE * 0.5)
 			draw_circle(screen_pos, TILE_SIZE * 0.35, Color(0.5, 0.35, 0.2, 0.8))

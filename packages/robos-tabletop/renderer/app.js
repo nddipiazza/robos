@@ -1323,13 +1323,13 @@ document.getElementById("btn-play-hero")?.addEventListener("click", async () => 
   }
 });
 
-// Action: Play as DunMaster
+// Action: Play as Game Master
 document.getElementById("btn-play-dm")?.addEventListener("click", async () => {
   const slug = document.getElementById("quest-slug").value || currentData.currentQuest.slug;
-  setStatus(`Launching Tabletop Player (DUNMASTER MODE)...`);
-  const res = await window.robosTabletop.launchGame({ cartridgeSlug: slug, role: "dm" });
+  setStatus(`Launching Tabletop Player (GAME MASTER MODE)...`);
+  const res = await window.robosTabletop.launchGame({ cartridgeSlug: slug, role: "gm" });
   if (res.success) {
-    setStatus(`Launched DunMaster Mode (PID: ${res.pid})`);
+    setStatus(`Launched Game Master Mode (PID: ${res.pid})`);
   } else {
     setStatus("Error launching game: " + res.error);
   }

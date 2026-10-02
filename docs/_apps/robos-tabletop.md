@@ -3,8 +3,8 @@ title: "RobOS Tabletop Studio"
 package: robos-tabletop
 category: "games"
 icon: robos-tabletop.svg
-summary: "Tabletop RPG & HeroQuest cartridge form editor, 26x19 board studio, and Godot 4 Player & DunMaster runner"
-description: "Visual form editor for HeroQuest and tabletop RPG cartridges backed by RobOS Knowledge Graph, featuring dual Player and DunMaster runtime modes in Godot 4."
+summary: "Tabletop RPG & HeroQuest cartridge form editor, 26x19 board studio, and Godot 4 Player & Game Master runner"
+description: "Visual form editor for HeroQuest and tabletop RPG cartridges backed by RobOS Knowledge Graph, featuring dual Player and Game Master runtime modes in Godot 4."
 ---
 
 # RobOS Tabletop Studio
@@ -22,12 +22,12 @@ RobOS Tabletop Studio is the visual authoring environment and cartridge manager 
 - **26×19 Board Studio**: Interactive tile grid previewer highlighting outer corridors, rooms, doors, and the central chamber.
 - **Dual Execution Roles**:
   - **Player Mode**: Play as the heroic adventurers exploring rooms, opening doors to lift fog of war, and fighting monsters.
-  - **DunMaster (Dungeon Master / Zargon) Mode**: Play as the Evil Wizard! View all hidden rooms behind the DM screen, summon wandering monsters, and command monster attacks against the heroes.
+  - **Game Master (GM / Zargon) Mode**: Play as the Evil Wizard! View all hidden rooms behind the GM screen, summon wandering monsters, and command monster attacks against the heroes.
 
 ```mermaid
 flowchart LR
     Editor["RobOS Tabletop Studio<br/>(Electron GUI)"] -->|Bundles| Cart["heroquest-the-trial.cartridge.json"]
     Editor -->|Saves| KGraph[".robos/kgraphs/tabletop-game/"]
     Cart --> Player["Godot 4 Player Mode<br/>(Heroes vs Fog of War)"]
-    Cart --> DM["Godot 4 DunMaster Mode<br/>(Zargon DM vs Autonomous Heroes)"]
+    Cart --> GM["Godot 4 Game Master Mode<br/>(Zargon GM vs Autonomous Heroes)"]
 ```
