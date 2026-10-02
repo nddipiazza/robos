@@ -3427,3 +3427,26 @@ review-markdown-editor { display: block; margin: 8px 0 20px; }
 .review-live-ci button { border:1px solid currentColor;border-radius:5px;padding:5px 10px;background:transparent;color:inherit;cursor:pointer; }
 
 .review-refresh-ci { border: 1px solid #394656; background: #202b36; color: #d5e0eb; border-radius: 5px; padding: 5px 9px; cursor: pointer; }
+/* CI recovery keeps investigation, human review and the new run in one place. */
+.ci-recovery { color:#dce6ef;background:#101923;border:1px solid #354557;border-radius:16px;width:min(850px,92vw);max-height:88vh;padding:28px;box-shadow:0 24px 100px #0009;overflow:auto; }
+.ci-recovery::backdrop { background:#050a13bb;backdrop-filter:blur(5px); }
+.ci-recovery header { display:flex;justify-content:space-between;align-items:start; }
+.ci-eyebrow { color:#84a5bd;font-size:10px;letter-spacing:1.8px;font-weight:700; }
+.ci-recovery h2 { font-size:29px;letter-spacing:-.7px;margin:7px 0 0; }
+.ci-recovery .ci-intro { color:#a0b3c6;margin:10px 0 24px; }
+.ci-recovery button { background:#1c2b3a;color:#dce6ef;border:1px solid #3d5064;border-radius:7px;padding:8px 12px;cursor:pointer; }
+.ci-recovery .ci-close { background:transparent;border:0;font-size:25px;padding:0 5px; }
+.ci-track { display:flex;list-style:none;padding:0;margin:0 0 24px;gap:8px; }
+.ci-track li { flex:1;border-top:2px solid #304052;padding:12px 0;color:#73899f;font-size:12px; }
+.ci-track span { margin-left:10px; }.ci-track li.current { border-color:#65bff2;color:#cdeeff; }.ci-track li.done { border-color:#54c69a;color:#89dfbd; }
+.ci-context { background:#152230;border:1px solid #304152;border-radius:10px;padding:16px; }
+.ci-headline { display:block;font-size:17px; }.ci-revision { display:block;font:11px monospace;color:#8aa2b7;margin:7px 0 16px; }
+.ci-check { display:flex;align-items:center;gap:12px;padding:9px 0;border-top:1px solid #2a3c4c;font-size:12px; }.ci-check>span:first-child { flex:1; }.ci-check[data-state=failure] { color:#ffacb5; }.ci-check[data-state=success] { color:#88debb; }.ci-check button { font-size:11px;padding:5px 8px; }
+.ci-config h3 { margin:22px 0 6px;font-size:15px; }.ci-config p { color:#9cb0c3;font-size:12px;margin:0 0 14px; }.ci-fields { display:flex;gap:14px; }.ci-fields label { flex:1;font-size:12px;color:#a4b9cb; }.ci-fields input,.ci-fields select { display:block;box-sizing:border-box;width:100%;margin-top:7px;padding:10px;border:1px solid #3b5064;border-radius:7px;background:#0c1520;color:#e2edf5; }
+.ci-journal { margin-top:18px;max-height:230px;overflow:auto; }.ci-journal article { border-left:2px solid #36536a;padding:7px 12px;margin:8px 0;background:#13202c; }.ci-journal strong { font-size:10px;color:#87afca; }.ci-journal p { white-space:pre-wrap;font-size:12px;line-height:1.6;margin:6px 0; }
+.ci-recovery footer { display:flex;gap:8px;align-items:center;margin-top:20px; }.ci-next { flex:1;color:#91a9bf;font-size:12px;line-height:1.5; }.ci-recovery .ci-primary { color:#071827;background:#84d0fc;border-color:#84d0fc;font-weight:700; }.ci-error { color:#ffacb5;white-space:pre-wrap;font-size:12px; }.ci-recovery [hidden] { display:none!important; }.ci-recovery button:disabled { opacity:.5;cursor:wait; }.ci-recovery[data-phase=passed] .ci-headline { color:#89dfbd; }.review-live-ci .ci-recover-trigger { background:#e4b0b6;color:#291019;font-weight:700;margin-left:0; }
+@media(max-width:650px){.ci-recovery footer,.ci-fields { flex-wrap:wrap; }.ci-next { flex-basis:100%; }}
+
+.ci-recovery { margin:auto; }
+
+.ci-diff { margin-top:18px; color:#9ecbe7; font-size:12px; }.ci-diff summary { cursor:pointer; }.ci-diff pre { max-height:260px;overflow:auto;white-space:pre;background:#09131e;padding:14px;color:#d6e5f0;font:11px/1.6 monospace;border-radius:8px;margin-top:10px; }
