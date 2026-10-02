@@ -3350,9 +3350,9 @@ header h1 { font-size: 15px; font-weight: 600; }
 .review-publish-stage::backdrop { background: #0009; }
 .review-publish-stage label { display: block; margin: 14px 0; }
 .review-publish-stage input:not([type=checkbox]), .review-publish-stage textarea { display: block; box-sizing: border-box; width: 100%; margin-top: 6px; background: #0d1117; color: #e6edf3; border: 1px solid #384758; border-radius: 6px; padding: 9px; }
-.review-publish-stage > button, .review-ai-description > button { background: #212a36; color: #e6edf3; border: 1px solid #384758; border-radius: 6px; padding: 8px 14px; margin-right: 8px; cursor: pointer; }
+.review-publish-stage > button, .review-publish-actions > button, .review-ai-description > button { background: #212a36; color: #e6edf3; border: 1px solid #384758; border-radius: 6px; padding: 8px 14px; margin-right: 8px; cursor: pointer; }
 
-.review-publish-stage > button:last-child { background: #204737; border-color: #38634e; }
+.review-publish-stage > button:last-child, .review-publish-actions > button:last-child { background: #204737; border-color: #38634e; }
 .review-publish-stage button:disabled { opacity: .55; cursor: wait; }
 .review-publish-stage textarea { font: inherit; resize: vertical; }
 
@@ -3518,3 +3518,7 @@ review-markdown-editor { display: block; margin: 8px 0 20px; }
 
 .pr-ready-field .pr-assign-reviewers { display:flex; align-items:center; gap:10px; margin-bottom:6px; font-size:14px; }
 .pr-ready-field>input:disabled { opacity:.5; cursor:not-allowed; }
+
+.review-publish-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:20px; }
+.review-publish-actions > button { margin-right:0; }
+.review-publish-actions > button[hidden] { display:none; }
