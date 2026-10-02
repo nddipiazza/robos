@@ -20,6 +20,7 @@ ipcMain.handle('create-review-pr', async (_, input) => { try { if (!reviewPublis
 const prState=localReview?new (require('./lib/review-pr-state').ReviewPRState)(localReview,process.env.ROBOS_LOCAL_REVIEW):null;
 ipcMain.handle('refresh-review-pr',async()=>{try{return {ok:true,pr:await prState.refresh()};}catch(e){return {ok:false,error:e.message};}});
 ipcMain.handle('update-review-pr',async(_,input)=>{try{if(ciRecovery?.busy||demoSession?.status==='running')throw Error('Wait for the walkthrough adjustment to finish.');await prState.assertAuthor();const evidence=await require('./lib/publish-inline-evidence').publishInlineEvidence(input.body,localReview,reviewStore,require('./lib/review-evidence').evidenceFor(localReview,reviewStore).evidence);return {ok:true,pr:await prState.update({...input,body:require('./lib/inline-evidence').resolveEvidence(input.body,evidence)})};}catch(e){return {ok:false,error:e.message};}});
+ipcMain.handle('review-adjustment-status',async()=>{try{return {ok:true,...await prState.adjustmentStatus(),busy:!!ciRecovery?.busy||demoSession?.status==='running'};}catch(e){return {ok:false,error:e.message};}});
 ipcMain.handle('push-review-adjustments',async()=>{try{if(ciRecovery?.busy||demoSession?.status==='running')throw Error('Wait for the walkthrough adjustment to finish.');return {ok:true,pr:await prState.push()};}catch(e){return {ok:false,error:e.message};}});
 const showMeSession = new ShowMeSession(localReview?.runner);
 const { ReviewSessionStore } = require('./lib/review-session-store');

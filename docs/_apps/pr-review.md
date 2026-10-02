@@ -30,7 +30,10 @@ Creating a PR reloads it from GitHub and compares its author with the connected
 GitHub account. The author keeps the same evidence, diff, and walkthrough, with
 an editable description and **Update PR** action while the PR remains open.
 Use the walkthrough discussion for further changes, then **Push walkthrough
-adjustments** to publish the committed branch changes without a force push.
+adjustments** in the top toolbar to publish the committed branch changes without
+a force push. The command appears only for unpushed commits, disables while
+pushing, and hides once the branch is up to date. New commits restore it
+automatically; unfinished edits or a newer remote revision must be resolved first.
 
 The Pull Request tab shows **Not Created**, **In Draft**, **In Review**,
 **Merged**, or **Closed**, each with its own icon and color. **Reload PR**
