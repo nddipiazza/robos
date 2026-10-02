@@ -637,6 +637,8 @@ function createWindow() {
     const argv = process.argv;
     if (argv.includes('--notifications') || argv.includes('--tab=notifications')) {
       win.webContents.send('dc-switch-tab', 'notifications');
+    } else if (argv.includes('--tab=tasks')) {
+      win.webContents.send('dc-switch-tab', 'tasks');
     } else if (argv.includes('--feature') || argv.includes('--tab=feature')) {
       win.webContents.send('dc-switch-tab', 'feature');
     }
@@ -650,6 +652,8 @@ app.on('second-instance', (_, commandLine) => {
   showWindow();
   if (commandLine.includes('--notifications') || commandLine.includes('--tab=notifications')) {
     if (win && win.webContents) win.webContents.send('dc-switch-tab', 'notifications');
+  } else if (commandLine.includes('--tab=tasks')) {
+    if (win && win.webContents) win.webContents.send('dc-switch-tab', 'tasks');
   } else if (commandLine.includes('--feature') || commandLine.includes('--tab=feature')) {
     if (win && win.webContents) win.webContents.send('dc-switch-tab', 'feature');
   }
@@ -682,10 +686,10 @@ async function fetchLatestData() {
   const settings = readSettings();
   const ts = activeTS(settings);
 
-  let issues = getSampleIssues();
-  let prs = getSamplePRs();
-  let reviews = getSampleReviewRequests();
-  let activity = getSampleActivity();
+  let issues = isTestMode ? getSampleIssues() : [];
+  let prs = isTestMode ? getSamplePRs() : [];
+  let reviews = isTestMode ? getSampleReviewRequests() : [];
+  let activity = isTestMode ? getSampleActivity() : [];
 
   if (ts.repos && ts.repos.length) {
     const repo = `${ts.repos[0].org}/${ts.repos[0].repo}`;
@@ -986,6 +990,17 @@ function startBackgroundMonitor() {
 
 // ── IPC Handlers ─────────────────────────────────────────────────────────────
 
+ipcMain.handle('dc-saved-reviews',async()=>{
+ const records=require('../robos-lib/saved-code-reviews').list();
+ const data=await Promise.all(records.map(async({id,config})=>({id,title:config.title,taskUrl:config.taskUrl,taskTitle:config.taskTitle,repo:config.repo,pr:config.pullRequest||null,ci:await require('../robos-lib/review-ci').readCI(config,{refresh:true})})));
+ return {ok:true,data};
+});
+ipcMain.handle('dc-open-code-review',async(_,id)=>{try{
+ const {manifest}=require('../robos-lib/saved-code-reviews').get(id);const env={...process.env,ROBOS_LOCAL_REVIEW:manifest};delete env.ELECTRON_RUN_AS_NODE;
+ const child=cp.spawn(process.execPath,[path.join(__dirname,'../pr-review'),'--no-sandbox','--disable-gpu'],{env,detached:true,stdio:'ignore'});
+ await new Promise((resolve,reject)=>{child.once('spawn',resolve);child.once('error',reject);});child.unref();return {ok:true};
+ }catch(e){return {ok:false,error:e.message};}});
+
 ipcMain.handle('dc-read-settings', () => readSettings());
 
 ipcMain.handle('dc-get-my-issues', async () => {
@@ -1006,10 +1021,10 @@ ipcMain.handle('dc-get-my-issues', async () => {
     ], { encoding: 'utf8', timeout: 15000 });
     if (r.status === 0) {
       const parsed = JSON.parse(r.stdout);
-      if (parsed && parsed.length) return { ok: true, data: parsed };
+      if (Array.isArray(parsed)) return { ok: true, data: parsed };
     }
   } catch (e) {}
-  return { ok: true, data: getSampleIssues() };
+  return isTestMode ? {ok:true,data:getSampleIssues()} : {ok:false,error:'Could not load your GitHub tasks.'};
 });
 
 ipcMain.handle('dc-get-my-prs', async () => {
@@ -1030,10 +1045,10 @@ ipcMain.handle('dc-get-my-prs', async () => {
     ], { encoding: 'utf8', timeout: 15000 });
     if (r.status === 0) {
       const parsed = JSON.parse(r.stdout);
-      if (parsed && parsed.length) return { ok: true, data: parsed };
+      if (Array.isArray(parsed)) return { ok: true, data: parsed };
     }
   } catch (e) {}
-  return { ok: true, data: getSamplePRs() };
+  return isTestMode ? {ok:true,data:getSamplePRs()} : {ok:false,error:'Could not load your GitHub pull requests.'};
 });
 
 ipcMain.handle('dc-get-review-requests', async () => {

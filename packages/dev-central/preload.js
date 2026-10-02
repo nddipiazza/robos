@@ -17,6 +17,8 @@ const notificationApi = {
 };
 
 contextBridge.exposeInMainWorld('robos', {
+  savedReviews:()=>ipcRenderer.invoke('dc-saved-reviews'),
+  openCodeReview:id=>ipcRenderer.invoke('dc-open-code-review',id),
   readSettings:           ()       => ipcRenderer.invoke('dc-read-settings'),
   getMyIssues:            ()       => ipcRenderer.invoke('dc-get-my-issues'),
   getMyPRs:               ()       => ipcRenderer.invoke('dc-get-my-prs'),

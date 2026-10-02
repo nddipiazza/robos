@@ -3419,3 +3419,11 @@ review-markdown-editor { display: block; margin: 8px 0 20px; }
 #step-btn-8[data-pr-status="closed"] {--pr-color:#f08080;}
 #step-btn-8 .pr-tab-icon[hidden] {display:none;}
 .pr-state-icon {font-size:20px;line-height:1;}
+.review-live-ci { display:flex;align-items:center;gap:16px;padding:12px 28px;background:#282218;color:#edd19b;border-bottom:1px solid #6b562e;font-size:13px; }
+.review-live-ci[hidden] { display:none; }
+.review-live-ci[data-state=failed] { background:#351c23;color:#ffc1c6;border-color:#873745;border-left:4px solid #f46d79; }
+.review-live-ci[data-state=passed] { background:#142c25;color:#a6dec9;border-color:#306953; }
+.review-live-ci span { flex:1;overflow-wrap:anywhere; }
+.review-live-ci button { border:1px solid currentColor;border-radius:5px;padding:5px 10px;background:transparent;color:inherit;cursor:pointer; }
+
+.review-refresh-ci { border: 1px solid #394656; background: #202b36; color: #d5e0eb; border-radius: 5px; padding: 5px 9px; cursor: pointer; }

@@ -829,12 +829,7 @@ function renderTheaterHeader(targetPR, ctx) {
   if (kgEl) kgEl.textContent = kgBranch;
 
   // 6. CI Checks Status & Modal List
-  const checks = ctx?.checks || (prDetail && prDetail.checks) || [
-    { name: 'Unit Tests (JUnit 5 & Mockito)', state: 'success', description: '48 tests passing in 3.4s' },
-    { name: 'mTLS Handshake Contract (Pact 4.0)', state: 'success', description: '14/14 pact interactions verified' },
-    { name: 'Knowledge Graph SHACL Validation', state: 'success', description: '0 shape violations, 4 nodes verified' },
-    { name: 'Security Audit (Gitleaks & Trivy)', state: 'success', description: 'No secrets or high CVEs detected' }
-  ];
+  const checks = window.latestReviewCI?.checks || ctx?.checks || (prDetail && prDetail.checks) || [];
 
   renderTheaterChecksUI(checks, url);
 }
@@ -845,7 +840,7 @@ function renderTheaterChecksUI(checks, prUrl) {
   const failed = checks.filter(c => (c.state || '').toLowerCase() === 'failure' || (c.state || '').toLowerCase() === 'error').length;
   const pending = total - passed - failed;
 
-  const statusType = failed > 0 ? 'failure' : (pending > 0 ? 'pending' : 'success');
+  const statusType = failed > 0 ? 'failure' : (pending > 0 || !total ? 'pending' : 'success');
 
   // Update button near logo
   const checksDot = document.getElementById('theater-checks-dot');
@@ -855,7 +850,7 @@ function renderTheaterChecksUI(checks, prUrl) {
   }
   const checksLabel = document.getElementById('theater-checks-label');
   if (checksLabel) {
-    checksLabel.textContent = `Checks (${passed}/${total})`;
+    checksLabel.textContent = failed ? `CI failed · ${failed} checks` : !total ? 'CI status unavailable' : `Checks (${passed}/${total})`;
   }
 
   // Update metadata chip
@@ -866,7 +861,7 @@ function renderTheaterChecksUI(checks, prUrl) {
   const metaText = document.getElementById('theater-ci-chip-text');
   if (metaText) {
     metaText.textContent = statusType === 'success' ? `${passed}/${total} CI Checks Passing` :
-                           statusType === 'failure' ? `${failed} Check(s) Failed` : 'Checks Running...';
+                           statusType === 'failure' ? `${failed} Check(s) Failed` : checks.length ? 'Checks Running...' : 'CI status unavailable';
   }
 
   // Update modal summary

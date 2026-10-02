@@ -216,6 +216,7 @@ function updateKPIRibbon() {
 // ── Tab Navigation ───────────────────────────────────────────────────────────
 function applyViewTab(tab) {
   appState.activeTab = tab;
+  document.body.dataset.view = tab;
   document.querySelectorAll('.view-tabs .tab-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.tab === tab);
   });
@@ -245,7 +246,6 @@ function applyViewTab(tab) {
   } else if (tab === 'tasks') {
     Object.values(cards).forEach(c => { if (c) c.style.display = 'none'; });
     if (cards.tasks) cards.tasks.style.display = '';
-    if (cards.standup) cards.standup.style.display = '';
   } else if (tab === 'prs') {
     Object.values(cards).forEach(c => { if (c) c.style.display = 'none'; });
     if (cards.prs) cards.prs.style.display = '';
