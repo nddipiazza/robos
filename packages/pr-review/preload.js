@@ -1,5 +1,6 @@
 const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('api', {
+  listSkills:()=>ipcRenderer.invoke('robos-skills-list'),
   getDemoState: () => ipcRenderer.invoke('demo-state'),
   demoAction: opts => ipcRenderer.invoke('demo-action', opts),
   openDemoSessionFile: () => ipcRenderer.invoke('demo-open-session-file'),

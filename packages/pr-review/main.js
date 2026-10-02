@@ -7,6 +7,7 @@ const os   = require('os');
 const { execSync } = require('child_process');
 
 const { loadLocalReview, ShowMeSession } = require('./lib/local-review');
+ipcMain.handle('robos-skills-list',()=>{try{return {ok:true,skills:require('../robos-lib/skill-catalog').listSkills()};}catch(e){return {ok:false,error:e.message};}});
 const localReview = loadLocalReview(process.env.ROBOS_LOCAL_REVIEW);
 const { ReviewPRPublisher } = require('./lib/create-review-pr');
 const reviewPublisher = localReview ? new ReviewPRPublisher(localReview, process.env.ROBOS_LOCAL_REVIEW) : null;

@@ -30,18 +30,7 @@
   'use strict';
 
   // ── Slash commands registry ──────────────────────────────────────────────────
-  const DEFAULT_COMMANDS = [
-    { name: 'generate',  icon: '✦', desc: 'Generate code or content from description' },
-    { name: 'refine',    icon: '🔄', desc: 'Refine or improve existing content' },
-    { name: 'fix',       icon: '🔧', desc: 'Fix a bug or problem' },
-    { name: 'explain',   icon: '💡', desc: 'Explain code or a concept' },
-    { name: 'summarize', icon: '📋', desc: 'Summarize long content' },
-    { name: 'test',      icon: '🧪', desc: 'Generate tests for code' },
-    { name: 'review',    icon: '👁',  desc: 'Review code for issues' },
-    { name: 'document',  icon: '📝', desc: 'Add documentation or comments' },
-    { name: 'optimize',  icon: '⚡', desc: 'Optimize performance' },
-    { name: 'translate', icon: '🌐', desc: 'Translate between languages or formats' },
-  ];
+  const DEFAULT_COMMANDS = [];
 
   // ── Agent registry ────────────────────────────────────────────────────────────
   const DEFAULT_AGENTS = [
@@ -52,6 +41,19 @@
 
   // ── Styles (injected once) ────────────────────────────────────────────────────
   const STYLES = `
+.robos-skills-dialog { margin:auto; width: min(850px,90vw); max-height: 85vh; background:#161b22; color:#c9d1d9; border:1px solid #484f58; border-radius:10px; padding:20px; }
+.robos-skills-dialog::backdrop { background:#0009; }
+.robos-skills-dialog input,.robos-skills-dialog select,.robos-skills-dialog button { background:#21262d;color:#c9d1d9;border:1px solid #484f58;border-radius:5px;padding:8px; }
+.robos-skills-dialog input { width:60%;margin-right:10px; }
+.robos-skills-columns { display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:12px 0; }
+.robos-skills-results,.robos-skills-detail { max-height:48vh;overflow:auto;min-width:0; }
+.robos-skills-results button { display:block;width:100%;text-align:left;margin-bottom:6px; }
+.robos-skills-results button[aria-pressed=true] { border-color:#58a6ff;background:#193b50; }
+.robos-skills-results span { display:block;white-space:normal;margin-top:5px;font-size:12px;line-height:1.5;color:#aeb9c6; }
+.robos-skills-detail pre { white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;line-height:1.5; }
+.robos-skills-dialog :focus-visible { outline:2px solid #58a6ff;outline-offset:2px; }
+@media(max-width:600px){.robos-skills-columns{grid-template-columns:1fr}.robos-skills-results,.robos-skills-detail{max-height:25vh}}
+
 robos-ai-textarea {
   display: block;
   position: relative;
@@ -109,7 +111,9 @@ robos-ai-textarea {
   min-height: 80px;
   max-height: none;
   overflow-y: auto;
-  padding: 12px 40px 36px 12px;
+  padding: 12px;
+  max-height: 300px;
+  overflow-y: auto;
   font-size: 13px;
   line-height: 1.6;
   color: #c9d1d9;
@@ -190,10 +194,10 @@ robos-ai-textarea {
 
 /* Toolbar */
 .robos-ai-toolbar {
-  position: absolute;
-  bottom: 8px;
-  left: 10px;
-  right: 10px;
+  position: relative;
+  padding: 8px 10px;
+  border-top: 1px solid #30363d;
+  flex-wrap: wrap;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -800,7 +804,7 @@ robos-question-wizard {
       if (this._inner) this._inner.innerText = v;
     }
 
-    get placeholder() { return this.getAttribute('placeholder') || (this._showCommands ? 'Type your message… (/ for commands, @ for files)' : 'Type your message… (@ for files)'); }
+    get placeholder() { return this.getAttribute('placeholder') || (this._showCommands ? 'Type your message… (/skills to browse skills, @ for files)' : 'Type your message… (@ for files)'); }
 
     connectedCallback() {
       injectStyles();
@@ -1039,10 +1043,11 @@ robos-question-wizard {
       }
 
       // Slash hint pill
-      this._hintPill = document.createElement('div');
+      this._hintPill = document.createElement('button');
+      this._hintPill.type='button';
       this._hintPill.className = 'robos-cmd-pill';
-      this._hintPill.innerHTML = '<span>/ commands</span>';
-      this._hintPill.title = 'Type / for AI command palette';
+      this._hintPill.innerHTML = '<span>/skills</span>';
+      this._hintPill.title = 'Browse installed RobOS skills';
       this._hintPill.addEventListener('click', () => { this._inner.focus(); this._triggerPalette(''); });
       if (this._showCommands) this._toolbarLeft.appendChild(this._hintPill);
 
@@ -1056,7 +1061,7 @@ robos-question-wizard {
           this._showSecurityBanner(this._lastSecResult);
         }
       });
-      this._toolbarRight.appendChild(this._securityBadge);
+      // Security checks still run; do not display an unqualified Secure badge.
 
       // Char count
       if (this._maxChars) {
@@ -1107,6 +1112,7 @@ robos-question-wizard {
     }
 
     disconnectedCallback() {
+      this._skillsDialog?.remove();
       // Clean up body-appended popups when element is removed
       if (this._palette && this._palette.parentNode === document.body) document.body.removeChild(this._palette);
       if (this._mentionList && this._mentionList.parentNode === document.body) document.body.removeChild(this._mentionList);
@@ -1154,7 +1160,7 @@ robos-question-wizard {
 
       // /command trigger
       const slashMatch = lineText.match(/(?:^|\s)\/([\w]*)$/);
-      if (this._showCommands && slashMatch) {
+      if (this._showCommands && slashMatch && slashMatch[1]==='skills') {
         this._triggerPalette(slashMatch[1]);
         return;
       } else if (this._paletteOpen) {
@@ -1241,40 +1247,38 @@ robos-question-wizard {
     }
 
     // ── Command palette ──────────────────────────────────────────────────────────
-    _triggerPalette(filter) {
-      this._paletteFilter = filter.toLowerCase();
-      const filtered = this._commands.filter(c =>
-        !filter || c.name.startsWith(filter) || c.desc.toLowerCase().includes(filter)
-      );
-      if (!filtered.length) { this._closePalette(); return; }
-
-      this._paletteOpen = true;
-      this._paletteIdx  = 0;
-      this._palette.classList.add('open');
-      this._palette.innerHTML = `<div class="robos-palette-hdr">AI Commands</div>` +
-        filtered.map((c, i) => `
-          <div class="robos-palette-item${i === 0 ? ' highlighted' : ''}" data-cmd="${c.name}">
-            <span class="robos-palette-icon">${c.icon}</span>
-            <span class="robos-palette-name">/${c.name}</span>
-            <span class="robos-palette-sep"></span>
-            <span class="robos-palette-desc">${c.desc}</span>
-            <span class="robos-palette-kbd">↵</span>
-          </div>`
-        ).join('');
-
-      this._palette.querySelectorAll('.robos-palette-item').forEach((item, i) => {
-        item.addEventListener('click', () => {
-          this._paletteIdx = i;
-          this._paletteSelect();
-        });
-        item.addEventListener('mouseenter', () => {
-          this._paletteIdx = i;
-          this._highlightPalette();
-        });
-      });
-      this._paletteItems = filtered;
-      // Position after render so offsetHeight is correct
-      requestAnimationFrame(() => this._positionPopup(this._palette));
+    async _triggerPalette() {
+      if(this._skillsDialog?.open)return;
+      const dialog=this._skillsDialog=document.createElement('dialog');dialog.className='robos-skills-dialog';dialog.setAttribute('aria-label','Browse RobOS skills');
+      const heading=document.createElement('h2');heading.textContent='RobOS skills';
+      const close=document.createElement('button');close.textContent='Close';close.onclick=()=>dialog.close();
+      const search=document.createElement('input');search.type='search';search.placeholder='Search names and descriptions';search.setAttribute('aria-label','Search skills');
+      const category=document.createElement('select');category.setAttribute('aria-label','Skill category');category.add(new Option('All categories',''));
+      const status=document.createElement('p');status.setAttribute('role','status');status.textContent='Loading installed skills…';
+      const columns=document.createElement('div');columns.className='robos-skills-columns';
+      const list=document.createElement('div');list.className='robos-skills-results';list.setAttribute('aria-label','Matching skills');
+      const detail=document.createElement('section');detail.className='robos-skills-detail';detail.textContent='Select a skill to read its description and instructions.';
+      columns.append(list,detail);dialog.append(heading,search,category,status,columns,close);document.body.append(dialog);
+      dialog.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();dialog.close();}});
+      dialog.addEventListener('close',()=>{dialog.remove();this._inner.focus();});dialog.showModal();search.focus();
+      try{
+        const api=window.api?.listSkills||window.robos?.skillsList;
+        if(!api)throw Error('Skills are not connected in this app yet. Open RobOS Skills Manager to browse installed skills.');
+        const result=await api();if(result.ok===false)throw Error(result.error);
+        const skills=result.skills||[...(result.builtin||[]),...(result.custom||[])];
+        for(const name of [...new Set(skills.map(s=>s.category||'Other'))].sort())category.add(new Option(name,name));
+        const select=skill=>{
+          detail.replaceChildren();const name=document.createElement('h3');name.textContent=skill.name;
+          const description=document.createElement('p');description.textContent=skill.description||'No description provided.';
+          const source=document.createElement('small');source.textContent=[skill.category,skill.source,skill.id].filter(Boolean).join(' · ');
+          const instructions=document.createElement('pre');instructions.textContent=skill.instructions||skill.prompt||skill.content||skill.command||'';
+          const add=document.createElement('button');add.textContent='Add to prompt';add.disabled=!instructions.textContent;
+          add.onclick=()=>{const current=this.value.replace(/\/skills\s*$/,'');this.value=current+(current&&!/\s$/.test(current)?'\n\n':'')+'Use the RobOS skill "'+skill.name+'" ('+skill.id+'):\n'+instructions.textContent+'\n';this.dispatchEvent(new Event('input',{bubbles:true}));dialog.close();};
+          detail.append(name,source,description,add,instructions);
+        };
+        const render=()=>{const query=search.value.trim().toLowerCase();const matches=skills.filter(s=>(!category.value||(s.category||'Other')===category.value)&&[s.name,s.description,s.id,...(s.tags||[])].join(' ').toLowerCase().includes(query));list.replaceChildren();detail.textContent='Select a skill to read its description and instructions.';status.textContent=matches.length?matches.length+' skills':'No matching skills. Try another search or category.';for(const skill of matches){const item=document.createElement('button');const name=document.createElement('strong');name.textContent=skill.name;const description=document.createElement('span');description.textContent=skill.description||'No description provided.';item.append(name,description);item.onclick=()=>{for(const row of list.children)row.setAttribute('aria-pressed','false');item.setAttribute('aria-pressed','true');select(skill);};list.append(item);}};
+        search.oninput=render;category.onchange=render;list.onkeydown=e=>{if(!['ArrowDown','ArrowUp'].includes(e.key))return;const buttons=[...list.children];const i=buttons.indexOf(document.activeElement);e.preventDefault();buttons[Math.max(0,Math.min(buttons.length-1,i+(e.key==='ArrowDown'?1:-1)))]?.focus();};render();
+      }catch(e){status.textContent=e.message;}
     }
 
     _paletteMove(delta) {
@@ -1925,7 +1929,7 @@ robos-question-wizard {
     clear() {
       this._inner.innerText = '';
       this._activeCommand = null;
-      this._hintPill.innerHTML = '<span>/ commands</span>';
+      this._hintPill.innerHTML = '<span>/skills</span>';
       this._hintPill.classList.remove('active');
       this._contextItems = [];
       this._renderChips();
