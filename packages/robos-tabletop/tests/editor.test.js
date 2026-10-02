@@ -403,6 +403,48 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
     assert.strictEqual(resetProg.percentage, 67);
   });
 
+  it("supports header active quest selector in place of cartridge select", () => {
+    const campaign = {
+      id: "campaign-heroquest-gathering-storm",
+      title: "HeroQuest: The Gathering Storm",
+      quests: [
+        { id: "quest-1", title: "Quest 1: The Trial", mapConfigId: "fan-dungeon-28x21", completed: false },
+        { id: "quest-2", title: "Quest 2: The Rescue of Sir Ragnar", mapConfigId: "heroquest-classic", completed: true },
+        { id: "quest-3", title: "Quest 3: Lair of the Orc Warlord", mapConfigId: "first-light-caverns", completed: false }
+      ]
+    };
+
+    function generateHeaderQuestOptions(c, activeIndex) {
+      return c.quests.map((q, idx) => {
+        const statusIcon = q.completed ? "🏆" : "⏳";
+        return {
+          value: idx,
+          selected: idx === activeIndex,
+          label: `${statusIcon} ${q.title} (${q.mapConfigId})`
+        };
+      });
+    }
+
+    const options0 = generateHeaderQuestOptions(campaign, 0);
+    assert.strictEqual(options0.length, 3);
+    assert.strictEqual(options0[0].selected, true);
+    assert.strictEqual(options0[0].label, "⏳ Quest 1: The Trial (fan-dungeon-28x21)");
+    assert.strictEqual(options0[1].selected, false);
+    assert.strictEqual(options0[1].label, "🏆 Quest 2: The Rescue of Sir Ragnar (heroquest-classic)");
+
+    // Switch active quest to index 1
+    const options1 = generateHeaderQuestOptions(campaign, 1);
+    assert.strictEqual(options1[1].selected, true);
+    assert.strictEqual(options1[0].selected, false);
+
+    // Verify template markup replaces cartridge select with header-quest-select
+    const indexHtml = fs.readFileSync(path.resolve(__dirname, "../renderer/index.html"), "utf8");
+    assert.ok(indexHtml.includes('id="header-quest-select"'), "index.html must include #header-quest-select");
+    assert.ok(!indexHtml.includes('id="cartridge-select"'), "index.html must not contain legacy #cartridge-select");
+    assert.ok(indexHtml.includes("📜 Active Quest:"), "index.html must display '📜 Active Quest:' label");
+    assert.ok(indexHtml.includes("📦 Export Quest Pack"), "index.html must display '📦 Export Quest Pack' button");
+  });
+
   it("verifies all 12 authentic HeroQuest elemental spells are defined across 4 colleges", () => {
     assert.ok(fs.existsSync(KGRAPH_TABLETOP), "tabletop-game package.jsonld must exist");
     const data = JSON.parse(fs.readFileSync(KGRAPH_TABLETOP, "utf8"));

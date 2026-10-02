@@ -109,12 +109,38 @@ body {
   gap: 10px;
 }
 
+.header-quest-select-wrap,
 .cartridge-select-wrap {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 0.85rem;
   color: var(--text-muted);
+}
+
+.header-quest-select-wrap .label {
+  font-weight: 600;
+  color: var(--accent-cyan);
+  white-space: nowrap;
+}
+
+.form-select-quest {
+  font-weight: 600;
+  color: #f8fafc;
+  background-color: #0f172a;
+  border: 1px solid rgba(0, 188, 212, 0.4);
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  min-width: 220px;
+  transition: all 0.15s ease;
+}
+
+.form-select-quest:focus,
+.form-select-quest:hover {
+  border-color: var(--accent-cyan);
+  outline: none;
+  box-shadow: 0 0 8px rgba(0, 188, 212, 0.25);
 }
 
 .dropdown {

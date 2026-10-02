@@ -23,7 +23,7 @@
           </svg>
           <div class="brand-text">
             <span class="brand-title">RobOS Tabletop Studio</span>
-            <span class="brand-subtitle">HeroQuest & Tabletop Cartridge Form Editor</span>
+            <span class="brand-subtitle">HeroQuest & Tabletop RPG Adventure Studio</span>
           </div>
         </div>
 
@@ -37,10 +37,10 @@
       </div>
 
       <div class="header-actions">
-        <div class="cartridge-select-wrap">
-          <span class="label">Cartridge:</span>
-          <select id="cartridge-select" class="dropdown">
-            <option value="heroquest-the-trial">HeroQuest: The Trial</option>
+        <div class="header-quest-select-wrap">
+          <span class="label">📜 Active Quest:</span>
+          <select id="header-quest-select" class="dropdown form-select-quest" title="Select active quest to view or edit">
+            <!-- Dynamically populated from campaign quests -->
           </select>
         </div>
         <button id="btn-open-spell-pick" class="btn btn-secondary" title="Pick spells for Elf vs Wizard (HeroQuest elemental spell draft)">
@@ -49,8 +49,8 @@
         <button id="btn-save-kgraph" class="btn btn-secondary" title="Save current form changes directly into .robos/kgraphs/tabletop-game/package.jsonld">
           💾 Save to KGraph
         </button>
-        <button id="btn-bundle" class="btn btn-secondary" title="Compile campaign data into standalone Player Cartridge (.cartridge.json)">
-          📼 Bundle Cartridge
+        <button id="btn-bundle" class="btn btn-secondary" title="Compile campaign data into a playable Tabletop Adventure Pack (.cartridge.json)">
+          📦 Export Quest Pack
         </button>
         <button id="btn-play-hero" class="btn btn-accent" title="Launch Godot 4 Tabletop Player in Player Mode (Play Heroes)">
           ⚔️ Play as Hero
@@ -133,7 +133,7 @@
                 <div class="form-card-inner">
                   <h4 style="margin-top:0; color:#e2e8f0; font-size:0.9rem;">Basic Quest Metadata</h4>
                   <div class="form-group">
-                    <label>Cartridge Identifier (Slug):</label>
+                    <label>Quest Identifier (Slug):</label>
                     <input type="text" id="quest-slug" value="heroquest-the-trial" class="form-input">
                   </div>
                   <div class="form-group">

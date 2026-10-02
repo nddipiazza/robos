@@ -3798,6 +3798,28 @@ function renderCampaignQuestsList() {
     `;
     listEl.appendChild(item);
   });
+
+  renderHeaderQuestSelect();
+}
+
+function renderHeaderQuestSelect() {
+  const select = document.getElementById("header-quest-select") || document.getElementById("cartridge-select");
+  if (!select) return;
+
+  select.innerHTML = "";
+  if (!Array.isArray(currentData.campaign?.quests)) return;
+
+  currentData.campaign.quests.forEach((q, idx) => {
+    const opt = document.createElement("option");
+    opt.value = idx;
+    const isCompleted = !!q.completed;
+    const statusIcon = isCompleted ? "🏆" : "⏳";
+    opt.textContent = `${statusIcon} ${q.title || `Quest ${idx + 1}`} (${q.mapConfigId || "26×19"})`;
+    if (idx === currentData.currentQuestIndex) {
+      opt.selected = true;
+    }
+    select.appendChild(opt);
+  });
 }
 
 function updateCampaignProgress() {
@@ -3932,6 +3954,17 @@ function setupCampaignQuestControls() {
       currentData.campaign.title = e.target.value;
       const titleDisplay = document.getElementById("campaign-title-display");
       if (titleDisplay) titleDisplay.textContent = e.target.value;
+    });
+  }
+
+  // Header Active Quest Dropdown Live Sync
+  const headerQuestSelect = document.getElementById("header-quest-select") || document.getElementById("cartridge-select");
+  if (headerQuestSelect) {
+    headerQuestSelect.addEventListener("change", (e) => {
+      const idx = parseInt(e.target.value, 10);
+      if (!isNaN(idx) && idx >= 0 && idx < currentData.campaign.quests.length) {
+        selectQuest(idx);
+      }
     });
   }
 
@@ -4246,7 +4279,8 @@ if (typeof window !== "undefined") {
     completeQuest,
     resetQuest,
     advanceToNextQuest,
-    updateCampaignProgress
+    updateCampaignProgress,
+    renderHeaderQuestSelect
   };
 
   window._tabletopMonsterGrimoire = {
