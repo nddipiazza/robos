@@ -28,3 +28,19 @@ test('author can push committed adjustments without forcing the remote',async()=
 });
 
 test('repair push uses the isolated checkout and refuses a changed remote head',async()=>{const f=fixture();const run=f.api.run;let pushCwd;f.api.run=async(bin,args,opts)=>{if(bin==='git'&&args[0]==='branch')return '';if(bin==='git'&&args[0]==='push')pushCwd=opts.cwd;return run(bin,args,opts);};await f.api.push({workspace:'/tmp/repair',expectedHead:'abc'});assert.equal(pushCwd,'/tmp/repair');f.remote.headRefOid='newer';await assert.rejects(()=>f.api.push({workspace:'/tmp/repair',expectedHead:'abc'}),/newer commits/);});
+
+test('adjustment command counts unpushed commits, not uncommitted edits',async()=>{
+ const f=fixture(),run=f.api.run;let counts='0\t2',dirty='';
+ f.api.run=async(bin,args,opts)=>args[0]==='rev-list'?counts:args[0]==='status'?dirty:run(bin,args,opts);
+ assert.deepEqual(await f.api.adjustmentStatus(),{eligible:true,ahead:2,behind:0,dirty:false});
+ counts='0\t0';dirty=' M file';assert.equal((await f.api.adjustmentStatus()).ahead,0);
+ counts='1\t2';assert.equal((await f.api.adjustmentStatus()).behind,1);
+ f.remote.state='MERGED';assert.equal((await f.api.adjustmentStatus()).eligible,false);
+});
+test('missing remote objects fail visibly and duplicate pushes are blocked',async()=>{
+ const f=fixture(),run=f.api.run;let release;
+ f.api.run=async(bin,args,opts)=>{if(args[0]==='rev-list')throw Error('missing object');if(args[0]==='push')await new Promise(r=>release=r);return run(bin,args,opts);};
+ await assert.rejects(f.api.adjustmentStatus(),/missing object/);
+ const push=f.api.push();await assert.rejects(f.api.push(),/already in progress/);
+ while(!release)await new Promise(r=>setImmediate(r));release();await push;
+});

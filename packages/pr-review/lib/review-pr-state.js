@@ -29,7 +29,22 @@ class ReviewPRState {
   await this.run('gh',['pr','edit',pr.url,'--title',title.trim(),'--body-file',file],await this.options());
   const result=await this.refresh();if(result.body!==body||result.title!==title.trim())throw Error('GitHub did not confirm the updated description. Reload before retrying.');return result;
  }
- async push({workspace=this.review.workspace,expectedHead}={}){
+ async adjustmentStatus(){
+  const pr=await this.refresh();
+  if(!pr.published||!pr.isAuthor||pr.state!=='OPEN')return {eligible:false,ahead:0};
+  const opts=await this.options(),git=async args=>(await this.run('git',args,opts)).trim();
+  if(await git(['branch','--show-current'])!==pr.headBranch)return {eligible:false,ahead:0};
+  const [behind,ahead]=(await git(['rev-list','--left-right','--count',pr.headRefOid+'...HEAD'])).split(/\s+/).map(Number);
+  if(!Number.isInteger(ahead)||!Number.isInteger(behind))throw Error('Could not determine unpushed commits.');
+  const dirty=!!await git(['status','--porcelain']);
+  return {eligible:true,ahead,behind,dirty};
+ }
+ async push(input={}){
+  if(this.pushPending)throw Error('A push is already in progress.');
+  this.pushPending=true;
+  try{return await this.pushCommits(input);}finally{this.pushPending=false;}
+ }
+ async pushCommits({workspace=this.review.workspace,expectedHead}={}){
   const pr=await this.assertAuthor(),opts={...await this.options(),cwd:workspace};
   if(expectedHead&&pr.headRefOid!==expectedHead)throw Error('The PR has newer commits. Refresh CI and start a new repair workspace before pushing.');
   const git=async args=>(await this.run('git',args,opts)).trim();

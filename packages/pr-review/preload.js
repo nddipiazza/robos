@@ -25,6 +25,7 @@ contextBridge.exposeInMainWorld('api', {
   onDescriptionProgress: cb => {const listener=(_,text)=>cb(text);ipcRenderer.on('review-description-progress',listener);return ()=>ipcRenderer.removeListener('review-description-progress',listener);},
   refreshReviewPR:()=>ipcRenderer.invoke('refresh-review-pr'),
   updateReviewPR:input=>ipcRenderer.invoke('update-review-pr',input),
+  reviewAdjustmentStatus:()=>ipcRenderer.invoke('review-adjustment-status'),
   pushReviewAdjustments:()=>ipcRenderer.invoke('push-review-adjustments'),
   createReviewPR: input => ipcRenderer.invoke('create-review-pr', input),
   getLocalReview: () => ipcRenderer.invoke('get-local-review'),
