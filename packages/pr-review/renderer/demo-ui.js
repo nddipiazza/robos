@@ -36,13 +36,16 @@ window.mountWalkthrough = async function () {
   const chat = document.createElement('div'); chat.className = 'walkthrough-chat'; chat.setAttribute('role', 'log'); chat.setAttribute('aria-label', 'Live demo conversation');
   let followLatest=true;
   try { followLatest=localStorage.getItem('robos-walkthrough-follow-latest')!=='false'; } catch {}
-  const followButton=button('Follow latest', 'Keep new messages in view',()=>{
-    followLatest=!followLatest;updateFollowButton();
+  const followLabel=document.createElement('label');followLabel.className='walkthrough-follow-latest';
+  const followCheckbox=document.createElement('input');followCheckbox.type='checkbox';
+  followLabel.append(followCheckbox,' Follow latest');
+  followCheckbox.addEventListener('change',()=>{
+    followLatest=followCheckbox.checked;updateFollowCheckbox();
     try { localStorage.setItem('robos-walkthrough-follow-latest',String(followLatest)); } catch {}
     if(followLatest)chat.scrollTop=chat.scrollHeight;
   });
-  function updateFollowButton(){followButton.setAttribute('aria-pressed',String(followLatest));followButton.title=followLatest?'Following new messages. Turn off to read earlier messages.':'Following paused. Turn on to jump to the latest message.';}
-  updateFollowButton();chatHeader.insertBefore(followButton,clearChat);
+  function updateFollowCheckbox(){followCheckbox.checked=followLatest;followLabel.title=followLatest?'Following new messages. Uncheck to read earlier messages.':'Following paused. Check to jump to the latest message.';}
+  updateFollowCheckbox();chatHeader.insertBefore(followLabel,clearChat);
   let pendingMessage = null;
   const receipt = document.createElement('div'); receipt.className = 'walkthrough-receipt'; receipt.setAttribute('role', 'status');
   const form = document.createElement('div'); form.className = 'walkthrough-compose';
