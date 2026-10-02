@@ -29,9 +29,12 @@ class ReviewPRState {
   await this.run('gh',['pr','edit',pr.url,'--title',title.trim(),'--body-file',file],await this.options());
   const result=await this.refresh();if(result.body!==body||result.title!==title.trim())throw Error('GitHub did not confirm the updated description. Reload before retrying.');return result;
  }
- async push(){
-  const pr=await this.assertAuthor(),opts=await this.options();const git=async args=>(await this.run('git',args,opts)).trim();
-  if(await git(['branch','--show-current'])!==pr.headBranch)throw Error('The checkout is not on the PR branch.');
+ async push({workspace=this.review.workspace,expectedHead}={}){
+  const pr=await this.assertAuthor(),opts={...await this.options(),cwd:workspace};
+  if(expectedHead&&pr.headRefOid!==expectedHead)throw Error('The PR has newer commits. Refresh CI and start a new repair workspace before pushing.');
+  const git=async args=>(await this.run('git',args,opts)).trim();
+  const branch=await git(['branch','--show-current']);
+  if(branch!==pr.headBranch&&!(expectedHead&&!branch))throw Error('The checkout is not on the PR branch.');
   const remote=await git(['remote','get-url','origin']);if(remote.match(/github\.com[:/]([^/]+\/[^/]+?)(?:\.git)?$/)?.[1]?.toLowerCase()!==this.review.repo.toLowerCase())throw Error('The checkout origin does not match the PR repository.');
   if(await git(['status','--porcelain']))throw Error('Commit the walkthrough adjustments before pushing.');
   await git(['push','origin','HEAD:refs/heads/'+pr.headBranch]);return this.refresh();

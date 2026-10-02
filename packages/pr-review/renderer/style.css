@@ -3450,3 +3450,4 @@ review-markdown-editor { display: block; margin: 8px 0 20px; }
 .ci-recovery { margin:auto; }
 
 .ci-diff { margin-top:18px; color:#9ecbe7; font-size:12px; }.ci-diff summary { cursor:pointer; }.ci-diff pre { max-height:260px;overflow:auto;white-space:pre;background:#09131e;padding:14px;color:#d6e5f0;font:11px/1.6 monospace;border-radius:8px;margin-top:10px; }
+.ci-recovery footer { position:sticky;bottom:-28px;background:#101923;padding:14px 0;box-shadow:0 -12px 20px #101923;z-index:2; }

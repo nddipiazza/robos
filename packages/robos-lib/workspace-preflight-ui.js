@@ -1,0 +1,7 @@
+'use strict';
+class RobosWorkspacePreflight extends HTMLElement {
+ connectedCallback(){if(this.shadowRoot)return;const root=this.attachShadow({mode:'open'});root.innerHTML=`<style>:host{display:block;margin-top:16px}section{padding:16px;border:1px solid #3e647b;border-radius:9px;background:#142836;font:12px system-ui;color:#dce6ef}p,small{display:block;color:#a4bed1;margin:8px 0;line-height:1.5}summary{cursor:pointer}ul{max-height:130px;overflow:auto;padding:8px 18px;font:11px/1.8 monospace}</style><section><strong>Keep your work. Repair in a clean workspace.</strong><p></p><details><summary>Existing local changes</summary><ul></ul></details><small>A separate worktree starts at the failed commit. Your current files and staging stay untouched. RobOS keeps the repair workspace so you can return to it.</small></section>`;this.render();}
+ set value(value){this._value=value;this.render();}
+ render(){if(!this.shadowRoot)return;const value=this._value;this.hidden=!value?.needsIsolation;if(!value)return;this.shadowRoot.querySelector('p').textContent=value.reason;const list=this.shadowRoot.querySelector('ul');list.replaceChildren();for(const change of value.changes||[]){const li=document.createElement('li');li.textContent=change.status+' '+change.path;list.append(li);}this.shadowRoot.querySelector('details').hidden=!value.changes?.length;}
+}
+customElements.define('robos-workspace-preflight',RobosWorkspacePreflight);
