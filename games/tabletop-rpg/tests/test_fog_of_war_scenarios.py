@@ -94,10 +94,13 @@ class TestFogOfWarScenarios(unittest.TestCase):
 
     def test_03_no_diagonal_leak_around_corners(self):
         """Moving to hallway (7, 2) must NOT reveal disconnected random squares like (8, 8)."""
-        # Give hero movement and move to (7, 2)
-        self.player.execute_action({"action": "roll_movement"})
-        # Step hero to (7, 2)
-        move_res = self.player.move(7, 2)
+        # Ensure hero reaches (7, 2) even on low random movement rolls
+        move_res = {"success": False}
+        for _ in range(5):
+            self.player.execute_action({"action": "roll_movement"})
+            move_res = self.player.move(7, 2)
+            if move_res.get("success"):
+                break
         self.assertTrue(move_res.get("success"), "Moving to (7, 2) should succeed")
 
         st = self.player.get_state()
