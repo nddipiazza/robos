@@ -41,18 +41,39 @@
 
   // ── Styles (injected once) ────────────────────────────────────────────────────
   const STYLES = `
-.robos-skills-dialog { margin:auto; width: min(850px,90vw); max-height: 85vh; background:#161b22; color:#c9d1d9; border:1px solid #484f58; border-radius:10px; padding:20px; }
-.robos-skills-dialog::backdrop { background:#0009; }
-.robos-skills-dialog input,.robos-skills-dialog select,.robos-skills-dialog button { background:#21262d;color:#c9d1d9;border:1px solid #484f58;border-radius:5px;padding:8px; }
-.robos-skills-dialog input { width:60%;margin-right:10px; }
-.robos-skills-columns { display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:12px 0; }
-.robos-skills-results,.robos-skills-detail { max-height:48vh;overflow:auto;min-width:0; }
-.robos-skills-results button { display:block;width:100%;text-align:left;margin-bottom:6px; }
-.robos-skills-results button[aria-pressed=true] { border-color:#58a6ff;background:#193b50; }
-.robos-skills-results span { display:block;white-space:normal;margin-top:5px;font-size:12px;line-height:1.5;color:#aeb9c6; }
-.robos-skills-detail pre { white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;line-height:1.5; }
-.robos-skills-dialog :focus-visible { outline:2px solid #58a6ff;outline-offset:2px; }
-@media(max-width:600px){.robos-skills-columns{grid-template-columns:1fr}.robos-skills-results,.robos-skills-detail{max-height:25vh}}
+/* Skills browser: scoped styles avoid host application resets. */
+.robos-skills-dialog { margin:auto; width:min(980px,calc(100vw - 48px)); max-height:calc(100vh - 48px); box-sizing:border-box; padding:0; overflow:hidden; background:#111820; color:#dce5ef; border:1px solid #364553; border-radius:14px; box-shadow:0 24px 90px #0009; font:14px/1.5 system-ui,sans-serif; }
+.robos-skills-dialog::backdrop { background:#060b12bb;backdrop-filter:blur(3px); }
+.robos-skills-dialog .robos-skills-header { display:flex;align-items:flex-start;justify-content:space-between;gap:24px;padding:24px 26px 18px;background:#17212c;border:0; }
+.robos-skills-dialog h2 { font-size:22px;letter-spacing:-.4px;font-weight:650;margin:0 0 5px;color:#f0f6fc; }
+.robos-skills-dialog .robos-skills-intro { margin:0;color:#9eafc2;font-size:13px; }
+.robos-skills-dialog button,.robos-skills-dialog input,.robos-skills-dialog select { box-sizing:border-box;border:1px solid #3b4b5d;border-radius:7px;background:#192531;color:#dce5ef;font:inherit; }
+.robos-skills-dialog button { cursor:pointer;padding:7px 13px;transition:background .12s,border-color .12s; }
+.robos-skills-dialog button:hover { background:#25384b;border-color:#6685a5; }
+.robos-skills-dialog .robos-skills-filters { display:flex;gap:12px;padding:18px 26px 10px; }
+.robos-skills-dialog input { flex:1;min-width:0;padding:10px 13px;background:#0b121a; }
+.robos-skills-dialog select { width:210px;padding:10px; }
+.robos-skills-dialog > [role=status] { margin:0;padding:0 26px 12px;font-size:12px;color:#93a8bf; }
+.robos-skills-dialog .robos-skills-columns { display:grid;grid-template-columns:40% 60%;height:min(490px,55vh);border-top:1px solid #2c3b4b; }
+.robos-skills-dialog .robos-skills-results { overflow:auto;padding:10px;border-right:1px solid #2c3b4b;scrollbar-color:#42566b transparent; }
+.robos-skills-dialog .robos-skills-results button { display:block;width:100%;text-align:left;margin:0 0 6px;padding:12px;border:1px solid transparent;background:transparent; }
+.robos-skills-dialog .robos-skills-results button:hover { background:#1b2937; }
+.robos-skills-dialog .robos-skills-results button[aria-pressed=true] { background:#17314b;border-color:#4383b7;box-shadow:inset 3px 0 #69b7f5; }
+.robos-skills-dialog .robos-skills-results strong { font-size:13px;font-weight:600;overflow-wrap:anywhere; }
+.robos-skills-dialog .robos-skills-results span { display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:#a0b2c5;font-size:12px;line-height:1.6;margin-top:5px; }
+.robos-skills-dialog .robos-skills-detail { min-width:0;overflow:auto;padding:26px;scrollbar-color:#42566b transparent; }
+.robos-skills-dialog .robos-skills-detail h3 { font-size:23px;line-height:1.3;overflow-wrap:anywhere;letter-spacing:-.4px;margin:12px 0 14px;color:#f0f6fc; }
+.robos-skills-dialog .robos-skills-detail small { color:#92bddd;font-size:11px;overflow-wrap:anywhere; }
+.robos-skills-dialog .robos-skills-detail p { margin:0 0 22px;color:#b9c8d8;line-height:1.7; }
+.robos-skills-dialog .robos-skills-detail > button { background:#286598;border-color:#4286ba;color:white;font-weight:600;padding:9px 18px; }
+.robos-skills-dialog .robos-skills-detail > button:hover { background:#3278b2; }
+.robos-skills-dialog .robos-skills-detail .robos-skills-reference-note { font-size:12px;color:#8fa5bc;margin:10px 0 24px; }
+.robos-skills-dialog details { border-top:1px solid #2b3b4c;padding-top:16px; }
+.robos-skills-dialog summary { cursor:pointer;color:#a6c9e8;font-size:12px; }
+.robos-skills-dialog pre { white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.7 ui-monospace,monospace;padding:14px;background:#0b121a;border-radius:6px;color:#adbdce;margin-top:12px; }
+.robos-skills-dialog .robos-skills-footer { border-top:1px solid #2b3b4c;padding:12px 26px;background:#141e28;font-size:11px;color:#8fa5bc; }
+.robos-skills-dialog :focus-visible { outline:2px solid #79c3ff;outline-offset:2px; }
+@media(max-width:650px){.robos-skills-dialog{width:calc(100vw - 20px)}.robos-skills-dialog .robos-skills-columns{grid-template-columns:1fr;height:55vh;overflow:auto}.robos-skills-dialog .robos-skills-results{max-height:24vh;border-bottom:1px solid #2b3b4c}.robos-skills-dialog .robos-skills-detail{overflow:visible;padding:18px}.robos-skills-dialog .robos-skills-filters{flex-wrap:wrap}.robos-skills-dialog select{width:100%}.robos-skills-dialog .robos-skills-header{padding:18px}}
 
 robos-ai-textarea {
   display: block;
@@ -1250,7 +1271,8 @@ robos-question-wizard {
     async _triggerPalette() {
       if(this._skillsDialog?.open)return;
       const dialog=this._skillsDialog=document.createElement('dialog');dialog.className='robos-skills-dialog';dialog.setAttribute('aria-label','Browse RobOS skills');
-      const heading=document.createElement('h2');heading.textContent='RobOS skills';
+      const heading=document.createElement('h2');heading.textContent='Choose a skill';
+      const intro=document.createElement('p');intro.className='robos-skills-intro';intro.textContent='Find a workflow, preview what it does, and attach it to your message.';
       const close=document.createElement('button');close.textContent='Close';close.onclick=()=>dialog.close();
       const search=document.createElement('input');search.type='search';search.placeholder='Search names and descriptions';search.setAttribute('aria-label','Search skills');
       const category=document.createElement('select');category.setAttribute('aria-label','Skill category');category.add(new Option('All categories',''));
@@ -1258,7 +1280,10 @@ robos-question-wizard {
       const columns=document.createElement('div');columns.className='robos-skills-columns';
       const list=document.createElement('div');list.className='robos-skills-results';list.setAttribute('aria-label','Matching skills');
       const detail=document.createElement('section');detail.className='robos-skills-detail';detail.textContent='Select a skill to read its description and instructions.';
-      columns.append(list,detail);dialog.append(heading,search,category,status,columns,close);document.body.append(dialog);
+      const header=document.createElement('header');header.className='robos-skills-header';const titles=document.createElement('div');titles.append(heading,intro);header.append(titles,close);
+      const filters=document.createElement('div');filters.className='robos-skills-filters';filters.append(search,category);
+      const footer=document.createElement('footer');footer.className='robos-skills-footer';footer.textContent='↑ ↓ Browse skills · Enter Preview · Esc Close. Skills run only when you send your message.';
+      columns.append(list,detail);dialog.append(header,filters,status,columns,footer);document.body.append(dialog);
       dialog.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();dialog.close();}});
       dialog.addEventListener('close',()=>{dialog.remove();this._inner.focus();});dialog.showModal();search.focus();
       try{
@@ -1272,11 +1297,11 @@ robos-question-wizard {
           const description=document.createElement('p');description.textContent=skill.description||'No description provided.';
           const source=document.createElement('small');source.textContent=[skill.category,skill.source,skill.id].filter(Boolean).join(' · ');
           const instructions=document.createElement('pre');instructions.textContent=skill.instructions||skill.prompt||skill.content||skill.command||'';
-          const add=document.createElement('button');add.textContent='Add to prompt';add.disabled=!instructions.textContent;
-          add.onclick=()=>{const current=this.value.replace(/\/skills\s*$/,'');this.value=current+(current&&!/\s$/.test(current)?'\n\n':'')+'Use the RobOS skill "'+skill.name+'" ('+skill.id+'):\n'+instructions.textContent+'\n';this.dispatchEvent(new Event('input',{bubbles:true}));dialog.close();};
-          detail.append(name,source,description,add,instructions);
+          const add=document.createElement('button');add.textContent='Use skill';add.disabled=!instructions.textContent;
+          add.onclick=()=>{const current=this.value.replace(/\/skills\s*$/,'');this.value=current+(current&&!/\s$/.test(current)?'\n\n':'')+'@skill('+skill.id+') ';this.dispatchEvent(new Event('input',{bubbles:true}));dialog.close();};
+          const disclosure=document.createElement('details');const summary=document.createElement('summary');summary.textContent='View full instructions';disclosure.append(summary,instructions);const note=document.createElement('p');note.className='robos-skills-reference-note';note.textContent='Adds a short skill reference. Instructions are supplied to the agent when you send.';detail.append(source,name,description,add,note,disclosure);
         };
-        const render=()=>{const query=search.value.trim().toLowerCase();const matches=skills.filter(s=>(!category.value||(s.category||'Other')===category.value)&&[s.name,s.description,s.id,...(s.tags||[])].join(' ').toLowerCase().includes(query));list.replaceChildren();detail.textContent='Select a skill to read its description and instructions.';status.textContent=matches.length?matches.length+' skills':'No matching skills. Try another search or category.';for(const skill of matches){const item=document.createElement('button');const name=document.createElement('strong');name.textContent=skill.name;const description=document.createElement('span');description.textContent=skill.description||'No description provided.';item.append(name,description);item.onclick=()=>{for(const row of list.children)row.setAttribute('aria-pressed','false');item.setAttribute('aria-pressed','true');select(skill);};list.append(item);}};
+        const render=()=>{const query=search.value.trim().toLowerCase();const matches=skills.filter(s=>(!category.value||(s.category||'Other')===category.value)&&[s.name,s.description,s.id,...(s.tags||[])].join(' ').toLowerCase().includes(query));list.replaceChildren();detail.textContent='Select a skill to read its description and instructions.';status.textContent=matches.length?matches.length+(matches.length===1?' skill':' skills'):'No matching skills. Try another search or category.';for(const skill of matches){const item=document.createElement('button');const name=document.createElement('strong');name.textContent=skill.name;const description=document.createElement('span');description.textContent=skill.description||'No description provided.';item.append(name,description);item.onclick=()=>{for(const row of list.children)row.setAttribute('aria-pressed','false');item.setAttribute('aria-pressed','true');select(skill);};list.append(item);}};
         search.oninput=render;category.onchange=render;list.onkeydown=e=>{if(!['ArrowDown','ArrowUp'].includes(e.key))return;const buttons=[...list.children];const i=buttons.indexOf(document.activeElement);e.preventDefault();buttons[Math.max(0,Math.min(buttons.length-1,i+(e.key==='ArrowDown'?1:-1)))]?.focus();};render();
       }catch(e){status.textContent=e.message;}
     }

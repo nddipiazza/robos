@@ -115,3 +115,7 @@ test('walkthrough prompt commits verified improvements on the existing branch wi
  assert.match(prompts.at(-1),/BEFORE CHANGE mode and explain-only requests are read-only/);
  assert.doesNotMatch(prompts.at(-1),/Never commit, push/);
 });
+test('compact skill references resolve for the agent without expanding saved chat',async()=>{
+ const prompts=[];const s=session(async p=>{prompts.push(p);return {reply:'Ready',checkpointReached:true};});await s.act('start');await s.act('message','@skill(kgraph-search) Find the filter component');
+ assert.match(prompts.at(-1),/Selected skill: Search Knowledge Graph/);assert.match(prompts.at(-1),/kgraph-cli\.js search/);assert.equal(s.messages.filter(m=>m.role==='user').at(-1).text,'@skill(kgraph-search) Find the filter component');
+});
