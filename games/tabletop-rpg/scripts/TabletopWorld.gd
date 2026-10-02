@@ -77,6 +77,21 @@ var auto_play_step: int = 0
 @onready var btn_summon: Button = $UI/Actions/BtnSummon
 @onready var btn_ai_step: Button = $UI/Actions/BtnAIStep
 
+@onready var ai_confirm_modal: ColorRect = $UI/AIConfirmModal
+@onready var ai_modal_card: PanelContainer = $UI/AIConfirmModal/Card
+@onready var ai_modal_step_badge: Label = $UI/AIConfirmModal/Card/Margin/VBox/Header/StepBadge
+@onready var ai_modal_cmd_banner: PanelContainer = $UI/AIConfirmModal/Card/Margin/VBox/CommandBanner
+@onready var ai_modal_cmd_text: Label = $UI/AIConfirmModal/Card/Margin/VBox/CommandBanner/CommandMargin/CommandText
+@onready var ai_modal_action_title: Label = $UI/AIConfirmModal/Card/Margin/VBox/ActionTitle
+@onready var ai_modal_action_desc: Label = $UI/AIConfirmModal/Card/Margin/VBox/ActionDescription
+@onready var ai_modal_details_panel: PanelContainer = $UI/AIConfirmModal/Card/Margin/VBox/DetailsPanel
+@onready var ai_modal_details_text: Label = $UI/AIConfirmModal/Card/Margin/VBox/DetailsPanel/DetailsMargin/DetailsText
+@onready var btn_ai_confirm: Button = $UI/AIConfirmModal/Card/Margin/VBox/ButtonBox/BtnConfirm
+@onready var btn_ai_cancel: Button = $UI/AIConfirmModal/Card/Margin/VBox/ButtonBox/BtnCancel
+
+var is_ai_step_pending: bool = false
+var pending_ai_command: Dictionary = {}
+
 func _ready() -> void:
 	print("🛡️ [TabletopWorld] Initializing HeroQuest Cartridge Player...")
 	_check_cli_role()
@@ -84,6 +99,7 @@ func _ready() -> void:
 	_load_active_cartridge()
 	CartridgeManager.cartridge_inserted.connect(_on_cartridge_inserted)
 	_setup_ui_signals()
+	_setup_ai_modal_styles()
 	_update_ui()
 	_log("=== Welcome to HeroQuest: The Trial ===")
 	if is_gm_role():
@@ -121,8 +137,12 @@ func _setup_ui_signals() -> void:
 		btn_end_turn.pressed.connect(end_turn)
 	if btn_summon and not btn_summon.pressed.is_connected(summon_wandering_monster):
 		btn_summon.pressed.connect(summon_wandering_monster)
-	if btn_ai_step and not btn_ai_step.pressed.is_connected(_execute_auto_play_step):
-		btn_ai_step.pressed.connect(_execute_auto_play_step)
+	if btn_ai_step and not btn_ai_step.pressed.is_connected(propose_ai_step):
+		btn_ai_step.pressed.connect(propose_ai_step)
+	if btn_ai_confirm and not btn_ai_confirm.pressed.is_connected(confirm_and_execute_ai_step):
+		btn_ai_confirm.pressed.connect(confirm_and_execute_ai_step)
+	if btn_ai_cancel and not btn_ai_cancel.pressed.is_connected(cancel_ai_step):
+		btn_ai_cancel.pressed.connect(cancel_ai_step)
 
 func toggle_role() -> void:
 	if current_role == "player":
@@ -643,8 +663,334 @@ func _process(delta: float) -> void:
 						die["current_face"] = die.get("final_face", "skull")
 		needs_redraw = true
 
-	if needs_redraw:
-		queue_redraw_all()
+func _setup_ai_modal_styles() -> void:
+	if not ai_modal_card:
+		return
+	var card_sb = StyleBoxFlat.new()
+	card_sb.bg_color = Color(0.09, 0.12, 0.17, 0.98)
+	card_sb.set_corner_radius_all(12)
+	card_sb.border_width_left = 2
+	card_sb.border_width_top = 2
+	card_sb.border_width_right = 2
+	card_sb.border_width_bottom = 2
+	card_sb.border_color = Color(0.0, 0.74, 0.83, 0.8)
+	card_sb.shadow_color = Color(0, 0, 0, 0.75)
+	card_sb.shadow_size = 20
+	ai_modal_card.add_theme_stylebox_override("panel", card_sb)
+
+	if ai_modal_cmd_banner:
+		var cmd_sb = StyleBoxFlat.new()
+		cmd_sb.bg_color = Color(0.05, 0.07, 0.11, 1.0)
+		cmd_sb.set_corner_radius_all(6)
+		cmd_sb.border_width_left = 4
+		cmd_sb.border_color = Color(0.0, 0.74, 0.83, 0.9)
+		ai_modal_cmd_banner.add_theme_stylebox_override("panel", cmd_sb)
+
+	if ai_modal_details_panel:
+		var det_sb = StyleBoxFlat.new()
+		det_sb.bg_color = Color(0.06, 0.08, 0.12, 0.9)
+		det_sb.set_corner_radius_all(6)
+		det_sb.border_width_left = 1
+		det_sb.border_width_top = 1
+		det_sb.border_width_right = 1
+		det_sb.border_width_bottom = 1
+		det_sb.border_color = Color(0.25, 0.3, 0.4, 0.6)
+		ai_modal_details_panel.add_theme_stylebox_override("panel", det_sb)
+
+	if btn_ai_confirm:
+		var conf_sb = StyleBoxFlat.new()
+		conf_sb.bg_color = Color(0.06, 0.45, 0.28, 1.0)
+		conf_sb.set_corner_radius_all(6)
+		conf_sb.border_width_left = 1
+		conf_sb.border_width_top = 1
+		conf_sb.border_width_right = 1
+		conf_sb.border_width_bottom = 1
+		conf_sb.border_color = Color(0.1, 0.7, 0.4, 1.0)
+		btn_ai_confirm.add_theme_stylebox_override("normal", conf_sb)
+
+	if btn_ai_cancel:
+		var canc_sb = StyleBoxFlat.new()
+		canc_sb.bg_color = Color(0.18, 0.22, 0.28, 1.0)
+		canc_sb.set_corner_radius_all(6)
+		canc_sb.border_width_left = 1
+		canc_sb.border_width_top = 1
+		canc_sb.border_width_right = 1
+		canc_sb.border_width_bottom = 1
+		canc_sb.border_color = Color(0.35, 0.4, 0.48, 0.8)
+		btn_ai_cancel.add_theme_stylebox_override("normal", canc_sb)
+
+func get_next_ai_step_command() -> Dictionary:
+	var next_step = auto_play_step + 1
+	var hero = get_active_hero()
+	var h_name = str(hero.get("name", "Hero"))
+	var h_id = str(hero.get("id", "barbarian"))
+
+	match next_step:
+		1:
+			return {
+				"step": 1,
+				"max_steps": 10,
+				"action": "roll_movement",
+				"command": "roll_movement_dice",
+				"hero": h_name,
+				"title": "🎲 %s Rolls 2d6 Movement Dice" % h_name,
+				"action_name": "Roll Movement",
+				"description": "%s rolls two red acrylic dice to determine available movement squares for this turn." % h_name,
+				"parameters": {
+					"action": "roll_movement_dice",
+					"dice": "2d6",
+					"hero": h_id
+				},
+				"rationale": "At the start of the turn, the active hero must roll movement dice before traversing dungeon corridors."
+			}
+		2:
+			var target = Vector2i(4, 1) if starting_stair == Vector2i(0, 1) else Vector2i(2, 0)
+			return {
+				"step": 2,
+				"max_steps": 10,
+				"action": "move",
+				"command": "move_hero",
+				"hero": h_name,
+				"title": "👣 Advance Along Corridor to (%d, %d)" % [target.x, target.y],
+				"action_name": "Move Hero",
+				"description": "%s advances through the corridor toward the heavy wooden crypt door at (%d, %d)." % [h_name, target.x, target.y],
+				"parameters": {
+					"action": "move_hero",
+					"destination": [target.x, target.y],
+					"hero": h_id
+				},
+				"rationale": "Moving adjacent to the crypt door allows the hero to inspect and kick it open."
+			}
+		3:
+			var door_from = Vector2i(4, 1) if starting_stair == Vector2i(0, 1) else Vector2i(2, 0)
+			var door_to = Vector2i(4, 2) if starting_stair == Vector2i(0, 1) else Vector2i(2, 1)
+			return {
+				"step": 3,
+				"max_steps": 10,
+				"action": "open_door",
+				"command": "open_door",
+				"hero": h_name,
+				"title": "🚪 Kick Open Crypt Door (%d, %d) ➔ (%d, %d)" % [door_from.x, door_from.y, door_to.x, door_to.y],
+				"action_name": "Open Door",
+				"description": "%s kicks open the reinforced dungeon door, lifting the Fog of War and revealing the Northwest Crypt." % h_name,
+				"parameters": {
+					"action": "open_door",
+					"from": [door_from.x, door_from.y],
+					"to": [door_to.x, door_to.y]
+				},
+				"rationale": "Opening doors reveals interior rooms and exposes lurking enemy monsters."
+			}
+		4:
+			var room_target = Vector2i(4, 3) if starting_stair == Vector2i(0, 1) else Vector2i(2, 2)
+			return {
+				"step": 4,
+				"max_steps": 10,
+				"action": "move",
+				"command": "move_hero",
+				"hero": h_name,
+				"title": "👣 Enter Northwest Crypt at (%d, %d)" % [room_target.x, room_target.y],
+				"action_name": "Move Into Room",
+				"description": "%s strides through the doorway into the crypt chamber to engage the spotted skeletons." % h_name,
+				"parameters": {
+					"action": "move_hero",
+					"destination": [room_target.x, room_target.y],
+					"hero": h_id
+				},
+				"rationale": "Positioning adjacent to enemy skeletons enables melee weapon strikes."
+			}
+		5:
+			return {
+				"step": 5,
+				"max_steps": 10,
+				"action": "attack",
+				"command": "attack_adjacent_monster",
+				"hero": h_name,
+				"title": "⚔️ Attack Crypt Skeleton with Broadsword",
+				"action_name": "Melee Attack",
+				"description": "%s swings Broadsword at adjacent Crypt Skeleton rolling combat dice (Skulls vs Black Shields)." % h_name,
+				"parameters": {
+					"action": "attack_adjacent_monster",
+					"weapon": "broadsword",
+					"target": "mon-skel-1"
+				},
+				"rationale": "Melee strike deals combat wounds and neutralizes dungeon threats."
+			}
+		6:
+			return {
+				"step": 6,
+				"max_steps": 10,
+				"action": "end_turn",
+				"command": "end_turn",
+				"hero": h_name,
+				"title": "⏭️ Conclude Barbarian Turn & Handover to Dwarf",
+				"action_name": "End Turn",
+				"description": "%s concludes their turn. Active turn control advances to Dwarf at the dungeon stair." % h_name,
+				"parameters": {
+					"action": "end_turn",
+					"current_hero": h_id,
+					"next_hero": "dwarf"
+				},
+				"rationale": "Finishing turn allows next party member to enter and act."
+			}
+		7:
+			var dwarf_pos = Vector2i(3, 3) if starting_stair == Vector2i(0, 1) else Vector2i(3, 1)
+			return {
+				"step": 7,
+				"max_steps": 10,
+				"action": "roll_and_move",
+				"command": "roll_and_move",
+				"hero": "Dwarf",
+				"title": "🎲 Advance Dwarf into Crypt at (%d, %d)" % [dwarf_pos.x, dwarf_pos.y],
+				"action_name": "Roll & Move",
+				"description": "Dwarf rolls movement dice and advances into the crypt to support Barbarian.",
+				"parameters": {
+					"action": "roll_movement_and_move",
+					"destination": [dwarf_pos.x, dwarf_pos.y],
+					"hero": "dwarf"
+				},
+				"rationale": "Dwarf brings backup into the crypt chamber to assist in clearing threats."
+			}
+		8:
+			return {
+				"step": 8,
+				"max_steps": 10,
+				"action": "search",
+				"command": "search_room",
+				"hero": "Dwarf",
+				"title": "🔍 Search Crypt for Treasure & Hidden Traps",
+				"action_name": "Search Room",
+				"description": "Dwarf searches the crypt chamber for gold coins, hidden loot chests, and traps.",
+				"parameters": {
+					"action": "search_room",
+					"hero": "dwarf"
+				},
+				"rationale": "Searching explored chambers yields gold and rewards the party."
+			}
+		9:
+			return {
+				"step": 9,
+				"max_steps": 10,
+				"action": "monster_turn",
+				"command": "ai_monster_turn",
+				"hero": "Game Master (Zargon)",
+				"title": "👑 Conclude Hero Phase & Begin Zargon AI Phase",
+				"action_name": "Game Master Turn",
+				"description": "All heroes finish their turns. Zargon AI activates surviving dungeon monsters for tactical counterattacks.",
+				"parameters": {
+					"action": "ai_monster_turn",
+					"phase": "gm_phase"
+				},
+				"rationale": "Monsters take their turn after heroes conclude their actions."
+			}
+		10:
+			return {
+				"step": 10,
+				"max_steps": 10,
+				"action": "conclude_auto_play",
+				"command": "conclude_auto_play",
+				"hero": "System",
+				"title": "🏁 Conclude Auto-Play & Begin Round 2",
+				"action_name": "Finish Auto-Play",
+				"description": "Completes the 10-step autonomous gameplay demonstration and transitions to active free-play mode.",
+				"parameters": {
+					"action": "conclude_auto_play"
+				},
+				"rationale": "Full turn cycle and tactical mechanics verified."
+			}
+		_:
+			var cmd_name = "end_turn"
+			var act_title = "⏭️ End Turn"
+			var act_desc = "%s ends their turn." % h_name
+			if turn_state == "awaiting_roll":
+				cmd_name = "roll_movement_dice"
+				act_title = "🎲 Roll Movement Dice"
+				act_desc = "%s rolls 2d6 movement dice." % h_name
+			elif get_adjacent_monsters().size() > 0 and not has_acted_this_turn:
+				cmd_name = "attack_adjacent_monster"
+				act_title = "⚔️ Attack Adjacent Monster"
+				act_desc = "%s attacks adjacent monster." % h_name
+			elif get_adjacent_closed_doors().size() > 0:
+				cmd_name = "open_door"
+				act_title = "🚪 Open Adjacent Door"
+				act_desc = "%s opens adjacent door." % h_name
+			elif can_search_room():
+				cmd_name = "search_room"
+				act_title = "🔍 Search Room"
+				act_desc = "%s searches room for treasure." % h_name
+
+			return {
+				"step": next_step,
+				"max_steps": next_step,
+				"action": cmd_name,
+				"command": cmd_name,
+				"hero": h_name,
+				"title": act_title,
+				"action_name": act_title,
+				"description": act_desc,
+				"parameters": { "action": cmd_name, "hero": h_id },
+				"rationale": "Dynamic AI behavior based on tactical situation."
+			}
+
+func propose_ai_step() -> Dictionary:
+	var cmd_info = get_next_ai_step_command()
+	pending_ai_command = cmd_info
+	is_ai_step_pending = true
+
+	if ai_modal_step_badge:
+		ai_modal_step_badge.text = "STEP %d OF %d" % [int(cmd_info.get("step", 1)), int(cmd_info.get("max_steps", 10))]
+	if ai_modal_cmd_text:
+		ai_modal_cmd_text.text = "Command: %s" % str(cmd_info.get("command", ""))
+	if ai_modal_action_title:
+		ai_modal_action_title.text = str(cmd_info.get("title", ""))
+	if ai_modal_action_desc:
+		ai_modal_action_desc.text = str(cmd_info.get("description", ""))
+	if ai_modal_details_text:
+		var params_str = ""
+		var p_dict: Dictionary = cmd_info.get("parameters", {})
+		for k in p_dict.keys():
+			params_str += "• %s: %s\n" % [str(k), str(p_dict[k])]
+		ai_modal_details_text.text = "• Hero: %s\n• Action: %s\n%s• Rationale: %s" % [
+			str(cmd_info.get("hero", "")),
+			str(cmd_info.get("action_name", "")),
+			params_str,
+			str(cmd_info.get("rationale", ""))
+		]
+
+	if ai_confirm_modal:
+		ai_confirm_modal.visible = true
+
+	_log("🤖 [AI Step Proposal] Step %d: %s (Command: %s). Awaiting user confirmation..." % [
+		int(cmd_info.get("step", 1)),
+		str(cmd_info.get("title", "")),
+		str(cmd_info.get("command", ""))
+	])
+	return { "success": true, "pending": true, "proposal": cmd_info }
+
+func confirm_and_execute_ai_step() -> Dictionary:
+	if not is_ai_step_pending and pending_ai_command.is_empty():
+		propose_ai_step()
+
+	var executed_cmd = pending_ai_command.duplicate(true)
+	is_ai_step_pending = false
+	if ai_confirm_modal:
+		ai_confirm_modal.visible = false
+
+	_log("⚡ [AI Step Confirmed] Executing Step %d: %s" % [
+		int(executed_cmd.get("step", auto_play_step + 1)),
+		str(executed_cmd.get("title", ""))
+	])
+	_execute_auto_play_step()
+	pending_ai_command = {}
+	return { "success": true, "executed": true, "step": auto_play_step, "command": executed_cmd }
+
+func cancel_ai_step() -> Dictionary:
+	var cancelled_step = int(pending_ai_command.get("step", auto_play_step + 1))
+	is_ai_step_pending = false
+	pending_ai_command = {}
+	if ai_confirm_modal:
+		ai_confirm_modal.visible = false
+	_log("❌ [AI Step Cancelled] Proposal for Step %d cancelled by user." % cancelled_step)
+	return { "success": true, "cancelled": true, "step": cancelled_step }
 
 func _execute_auto_play_step() -> void:
 	auto_play_step += 1
@@ -746,6 +1092,18 @@ func can_search_room() -> bool:
 	return true
 
 func _unhandled_input(event: InputEvent) -> void:
+	if is_ai_step_pending:
+		if event is InputEventKey and event.pressed:
+			if event.keycode == KEY_ESCAPE:
+				cancel_ai_step()
+				get_viewport().set_input_as_handled()
+				return
+			elif event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
+				confirm_and_execute_ai_step()
+				get_viewport().set_input_as_handled()
+				return
+		return
+
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		var mouse_pos = get_global_mouse_position()
 		var local_pos = mouse_pos - board_offset
@@ -2476,6 +2834,9 @@ func get_telemetry_state() -> Dictionary:
 			"summary": active_dice_animation.get("summary", "")
 		} if not active_dice_animation.is_empty() else {},
 		"combatLog": combat_log.slice(-10),
+		"aiStepPending": is_ai_step_pending,
+		"pendingAiCommand": pending_ai_command,
+		"nextAiStep": get_next_ai_step_command(),
 		"cartridge": CartridgeManager.active_cartridge.get("cartridgeId", "")
 	}
 
@@ -2589,8 +2950,17 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			end_turn()
 			return { "success": true }
 		"ai_step":
-			_execute_auto_play_step()
-			return { "success": true, "step": auto_play_step }
+			var auto_confirm = bool(action_data.get("confirm", false))
+			if auto_confirm:
+				return confirm_and_execute_ai_step()
+			else:
+				return propose_ai_step()
+		"ai_step_propose":
+			return propose_ai_step()
+		"ai_step_confirm":
+			return confirm_and_execute_ai_step()
+		"ai_step_cancel":
+			return cancel_ai_step()
 		"monster_turn", "ai_monster_turn":
 			var res = ai_monster_turn()
 			return res

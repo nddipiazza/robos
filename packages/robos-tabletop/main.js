@@ -165,6 +165,7 @@ ipcMain.handle("tabletop:launch-game", async (_event, payload) => {
     // Candidate binaries
     const candidateBins = [
       process.env.GODOT_BIN,
+      path.join(process.env.HOME || "", ".local/bin/godot4"),
       path.join(process.env.HOME || "", ".local/bin/godot"),
       path.join(process.env.HOME || "", "apps/godot4"),
       "/usr/bin/godot4",
@@ -179,8 +180,8 @@ ipcMain.handle("tabletop:launch-game", async (_event, payload) => {
       }
     }
 
+    const playScript = path.join(TABLETOP_GAME_DIR, "play.sh");
     if (!godotBin) {
-      const playScript = path.join(TABLETOP_GAME_DIR, "play.sh");
       if (fs.existsSync(playScript)) {
         godotBin = playScript;
       } else {
@@ -188,11 +189,9 @@ ipcMain.handle("tabletop:launch-game", async (_event, payload) => {
       }
     }
 
-    const spawnArgs = [
-      "--path", `"${TABLETOP_GAME_DIR}"`,
-      "--cartridge", `"${slug}"`,
-      "--role", `"${role}"`
-    ];
+    const spawnArgs = (godotBin === playScript)
+      ? ["--cartridge", `"${slug}"`, "--role", `"${role}"`]
+      : ["--path", `"${TABLETOP_GAME_DIR}"`, "--cartridge", `"${slug}"`, "--role", `"${role}"`];
 
     const display = process.env.DISPLAY || ":0";
     const childEnv = {
@@ -207,6 +206,11 @@ ipcMain.handle("tabletop:launch-game", async (_event, payload) => {
     console.log(`[robos-tabletop] Launching: ${cmd} on ${display} (Role: ${role})`);
 
     const child = exec(cmd, { cwd: TABLETOP_GAME_DIR, env: childEnv });
+    child.stdout?.on("data", (data) => console.log(`[tabletop-game] ${data}`));
+    child.stderr?.on("data", (data) => console.error(`[tabletop-game:err] ${data}`));
+    child.on("error", (err) => console.error(`[tabletop-game:proc-err] ${err}`));
+    child.on("exit", (code, signal) => console.log(`[tabletop-game:exit] code=${code} signal=${signal}`));
+
     return {
       success: true,
       pid: child.pid,

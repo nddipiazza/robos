@@ -112,9 +112,21 @@ class TabletopQAPlayer:
         self.log("Ending active turn...")
         return self.execute_action("end_turn")
 
-    def ai_step(self) -> dict:
-        self.log("Triggering autonomous AI step...")
-        return self.execute_action("ai_step")
+    def ai_step(self, confirm: bool = False) -> dict:
+        self.log(f"Triggering AI step (confirm={confirm})...")
+        return self.execute_action("ai_step", confirm=confirm)
+
+    def propose_ai_step(self) -> dict:
+        self.log("Proposing AI step for user preview...")
+        return self.execute_action("ai_step_propose")
+
+    def confirm_ai_step(self) -> dict:
+        self.log("Confirming and executing pending AI step...")
+        return self.execute_action("ai_step_confirm")
+
+    def cancel_ai_step(self) -> dict:
+        self.log("Cancelling pending AI step...")
+        return self.execute_action("ai_step_cancel")
 
     def monster_turn(self) -> dict:
         self.log("Triggering Zargon monster phase turn...")
