@@ -1,7 +1,12 @@
 'use strict';
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
 const {execFile}=require('node:child_process');const {promisify}=require('node:util');
-const fields='number,url,title,body,state,isDraft,author,headRefName,headRefOid,baseRefName';
+const fields='number,url,title,body,state,isDraft,author,headRefName,headRefOid,baseRefName,statusCheckRollup';
+function checksPassing(checks) {
+ if (!Array.isArray(checks) || !checks.length) return false;
+ const states=checks.map(c=>c.status==='COMPLETED'?c.conclusion:c.status?c.status:c.state);
+ return states.includes('SUCCESS') && states.every(s=>['SUCCESS','NEUTRAL','SKIPPED'].includes(s));
+}
 class ReviewPRState {
  constructor(review,manifest,run=async(bin,args,opts)=>(await promisify(execFile)(bin,args,{...opts,maxBuffer:4*1024*1024})).stdout){this.review=review;this.manifest=manifest;this.run=run;this.pending=null;}
  async options(){const opts={cwd:this.review.workspace,env:{...process.env}};if(this.review.githubAccount)opts.env.GH_TOKEN=(await this.run('gh',['auth','token','--user',this.review.githubAccount],opts)).trim();return opts;}
@@ -10,7 +15,7 @@ class ReviewPRState {
   const opts=await this.options();const pr=JSON.parse(await this.run('gh',['pr','view',this.review.pullRequest.url,'--json',fields],opts));
   const login=JSON.parse(await this.run('gh',['api','user'],opts)).login;
   if(!['OPEN','CLOSED','MERGED'].includes(pr.state)||typeof pr.isDraft!=='boolean'||!pr.author?.login||!login||pr.url!==this.review.pullRequest.url)throw Error('Could not verify the PR state and author.');
-  Object.assign(this.review.pr,{published:true,number:pr.number,url:pr.url,title:pr.title,body:pr.body,state:pr.state,isDraft:pr.isDraft,author:pr.author.login,isAuthor:pr.author.login.toLowerCase()===login.toLowerCase(),headBranch:pr.headRefName,headRefOid:pr.headRefOid,baseBranch:pr.baseRefName});
+  Object.assign(this.review.pr,{ciPassing:checksPassing(pr.statusCheckRollup),published:true,number:pr.number,url:pr.url,title:pr.title,body:pr.body,state:pr.state,isDraft:pr.isDraft,author:pr.author.login,isAuthor:pr.author.login.toLowerCase()===login.toLowerCase(),headBranch:pr.headRefName,headRefOid:pr.headRefOid,baseBranch:pr.baseRefName});
   if(this.review.base){this.review.diffPatch=await this.run('git',['diff',this.review.base,'HEAD','--'],opts);this.review.changedFiles=(await this.run('git',['diff','--name-only',this.review.base,'HEAD','--'],opts)).trim().split('\n').filter(Boolean);this.review.pr.changedFiles=this.review.changedFiles;}
   this.review.pullRequest=pr;
   const config=JSON.parse(fs.readFileSync(this.manifest,'utf8'));config.pullRequest=pr;fs.writeFileSync(this.manifest+'.tmp',JSON.stringify(config,null,2)+'\n',{mode:0o600});fs.renameSync(this.manifest+'.tmp',this.manifest);
@@ -29,27 +34,24 @@ class ReviewPRState {
   await this.run('gh',['pr','edit',pr.url,'--title',title.trim(),'--body-file',file],await this.options());
   const result=await this.refresh();if(result.body!==body||result.title!==title.trim())throw Error('GitHub did not confirm the updated description. Reload before retrying.');return result;
  }
- async adjustmentStatus(){
-  const pr=await this.refresh();
-  if(!pr.published||!pr.isAuthor||pr.state!=='OPEN')return {eligible:false,ahead:0};
-  const opts=await this.options(),git=async args=>(await this.run('git',args,opts)).trim();
-  if(await git(['branch','--show-current'])!==pr.headBranch)return {eligible:false,ahead:0};
-  const [behind,ahead]=(await git(['rev-list','--left-right','--count',pr.headRefOid+'...HEAD'])).split(/\s+/).map(Number);
-  if(!Number.isInteger(ahead)||!Number.isInteger(behind))throw Error('Could not determine unpushed commits.');
-  const dirty=!!await git(['status','--porcelain']);
-  return {eligible:true,ahead,behind,dirty};
+ async ready(expectedHead,reviewers=[]){
+  if(this.pending)throw Error('A PR update is already in progress.');
+  this.pending=this.markReady(expectedHead,reviewers);try{return await this.pending;}finally{this.pending=null;}
  }
- async push(input={}){
-  if(this.pushPending)throw Error('A push is already in progress.');
-  this.pushPending=true;
-  try{return await this.pushCommits(input);}finally{this.pushPending=false;}
+ async markReady(expectedHead,reviewers){
+  const pr=await this.assertAuthor();
+  const selected=require('../../robos-lib/project-review-settings').validateGitHubReviewers(reviewers).filter(r=>r.toLowerCase()!==pr.author.toLowerCase());
+  if(!pr.isDraft)throw Error('This PR is already ready for review.');
+  if(!expectedHead || pr.headRefOid!==expectedHead)throw Error('The PR branch changed. Reload it before marking it ready.');
+  if(!pr.ciPassing)throw Error('CI checks must finish successfully before marking this PR ready.');
+  await this.run('gh',['pr','ready',pr.url],await this.options());
+  const result=await this.refresh();if(result.isDraft)throw Error('GitHub did not confirm the PR is ready. Reload before retrying.');
+  if(selected.length){try{await this.run('gh',['pr','edit',pr.url,'--add-reviewer',selected.join(',')],await this.options());}catch(e){result.reviewerError='PR is ready, but reviewer requests failed: '+e.message;}}
+  return result;
  }
- async pushCommits({workspace=this.review.workspace,expectedHead}={}){
-  const pr=await this.assertAuthor(),opts={...await this.options(),cwd:workspace};
-  if(expectedHead&&pr.headRefOid!==expectedHead)throw Error('The PR has newer commits. Refresh CI and start a new repair workspace before pushing.');
-  const git=async args=>(await this.run('git',args,opts)).trim();
-  const branch=await git(['branch','--show-current']);
-  if(branch!==pr.headBranch&&!(expectedHead&&!branch))throw Error('The checkout is not on the PR branch.');
+ async push(){
+  const pr=await this.assertAuthor(),opts=await this.options();const git=async args=>(await this.run('git',args,opts)).trim();
+  if(await git(['branch','--show-current'])!==pr.headBranch)throw Error('The checkout is not on the PR branch.');
   const remote=await git(['remote','get-url','origin']);if(remote.match(/github\.com[:/]([^/]+\/[^/]+?)(?:\.git)?$/)?.[1]?.toLowerCase()!==this.review.repo.toLowerCase())throw Error('The checkout origin does not match the PR repository.');
   if(await git(['status','--porcelain']))throw Error('Commit the walkthrough adjustments before pushing.');
   await git(['push','origin','HEAD:refs/heads/'+pr.headBranch]);return this.refresh();

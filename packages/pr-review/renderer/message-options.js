@@ -1,5 +1,5 @@
 'use strict';
-window.mountReviewMessageOptions = function(host, pr, title, body, saved) {
+window.mountReviewMessageOptions = function(host, pr, title, body, saved, context={}) {
   const box=document.createElement('div');box.className='review-message-options';box.hidden=true;host.append(box);
   const checkbox=document.createElement('input');checkbox.type='checkbox'; // Explicit opt-in for each publication.
   const label=document.createElement('label');label.append(checkbox);box.append(label);
@@ -17,11 +17,11 @@ window.mountReviewMessageOptions = function(host, pr, title, body, saved) {
   server.onchange=()=>load().catch(e=>status.textContent=e.message);
   checkbox.onchange=()=>{detail.hidden=!checkbox.checked;};
   title.addEventListener('input',update);body.addEventListener('input',update);
-  const ready=(async()=>{if(!window.api.reviewMessageOptions)return;const r=await window.api.reviewMessageOptions();if(!r.ok)throw Error(r.error);config=r;
+  const ready=(async()=>{if(!window.api.reviewMessageOptions)return;const r=await window.api.reviewMessageOptions(context.url);if(!r.ok)throw Error(r.error);config=r;
     if(saved.body===undefined&&!pr.published&&body.value===initialBody){body.value=format(r.settings.prTemplate,{description:pr.body||'',title:title.value,repo:pr.repo,branch:pr.headBranch,url:pr.url||''});}
     if(!r.servers.length)return;box.hidden=false;label.append(' Send PR review notification to '+r.appName);
     server.add(new Option('Choose workspace',''));for(const s of r.servers)server.add(new Option(s.name,s.id));server.value=r.settings.serverId||(r.servers.length===1?r.servers[0].id:'');server.hidden=r.servers.length===1;
     update();await load();
   })().catch(e=>{box.hidden=false;status.textContent=e.message;detail.hidden=false;checkbox.disabled=true;label.append(' Messaging setup unavailable');});
-  return {ready,validate(){if(checkbox.checked&&(!server.value||!channel.value))throw Error('Choose a notification workspace and review channel before creating the PR.');if(checkbox.checked)reviewers.validate();selection=checkbox.checked?{serverId:server.value,channel:channel.value,reviewers:reviewers.value()}:null;},async send(){if(!selection)return '';status.textContent='Sending review notification…';const r=await window.api.sendReviewMessage(selection);if(!r.ok){status.textContent='PR created. Notification not confirmed: '+r.error;return status.textContent;}checkbox.disabled=true;server.disabled=true;channel.disabled=true;detail.querySelector('fieldset').disabled=true;status.textContent='Review notification sent.';return status.textContent;}};
+  return {ready,validate(){if(checkbox.checked&&(!server.value||!channel.value))throw Error('Choose a notification workspace and review channel before creating the PR.');if(checkbox.checked)reviewers.validate();selection=checkbox.checked?{serverId:server.value,channel:channel.value,reviewers:reviewers.value()}:null;},async send(){if(!selection)return '';status.textContent='Sending review notification…';const r=await window.api.sendReviewMessage({...selection,...context});if(!r.ok){status.textContent='Notification not confirmed: '+r.error;return status.textContent;}checkbox.disabled=true;server.disabled=true;channel.disabled=true;detail.querySelector('fieldset').disabled=true;status.textContent='Review notification sent.';return status.textContent;}};
 };

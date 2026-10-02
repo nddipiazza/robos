@@ -26,21 +26,23 @@ test('non-author, closed PR, and concurrent GitHub edits cannot be overwritten',
 test('author can push committed adjustments without forcing the remote',async()=>{
  const f=fixture();await f.api.push();assert.deepEqual(f.calls.find(c=>c[1]==='push'),['git','push','origin','HEAD:refs/heads/codex/filters']);
 });
-
-test('repair push uses the isolated checkout and refuses a changed remote head',async()=>{const f=fixture();const run=f.api.run;let pushCwd;f.api.run=async(bin,args,opts)=>{if(bin==='git'&&args[0]==='branch')return '';if(bin==='git'&&args[0]==='push')pushCwd=opts.cwd;return run(bin,args,opts);};await f.api.push({workspace:'/tmp/repair',expectedHead:'abc'});assert.equal(pushCwd,'/tmp/repair');f.remote.headRefOid='newer';await assert.rejects(()=>f.api.push({workspace:'/tmp/repair',expectedHead:'abc'}),/newer commits/);});
-
-test('adjustment command counts unpushed commits, not uncommitted edits',async()=>{
- const f=fixture(),run=f.api.run;let counts='0\t2',dirty='';
- f.api.run=async(bin,args,opts)=>args[0]==='rev-list'?counts:args[0]==='status'?dirty:run(bin,args,opts);
- assert.deepEqual(await f.api.adjustmentStatus(),{eligible:true,ahead:2,behind:0,dirty:false});
- counts='0\t0';dirty=' M file';assert.equal((await f.api.adjustmentStatus()).ahead,0);
- counts='1\t2';assert.equal((await f.api.adjustmentStatus()).behind,1);
- f.remote.state='MERGED';assert.equal((await f.api.adjustmentStatus()).eligible,false);
+test('ready rechecks head, CI, author and draft state before mutating GitHub',async()=>{
+ for(const checks of [[],[{state:'PENDING'}],[{state:'FAILURE'}],[{status:'IN_PROGRESS',conclusion:null}],[{state:'SUCCESS'},{state:'ERROR'}]]){
+  const f=fixture();f.remote.isDraft=true;f.remote.statusCheckRollup=checks;
+  await assert.rejects(f.api.ready('abc'),/CI checks/);assert.ok(!f.calls.some(c=>c[2]==='ready'));
+ }
+ const f=fixture();f.remote.isDraft=true;f.remote.statusCheckRollup=[{state:'SUCCESS'},{status:'COMPLETED',conclusion:'SKIPPED'}];
+ await assert.rejects(f.api.ready('old'),/branch changed/);
+ const run=f.api.run;f.api.run=async(bin,args,opts)=>{if(args[1]==='ready'){f.calls.push([bin,...args]);f.remote.isDraft=false;return '';}return run(bin,args,opts);};
+ assert.equal((await f.api.ready('abc')).isDraft,false);
+ assert.deepEqual(f.calls.find(c=>c[2]==='ready'),['gh','pr','ready',f.remote.url]);
+ await assert.rejects(f.api.ready('abc'),/already ready/);
+ for(const other of [fixture('CLOSED'),fixture('MERGED'),fixture('OPEN','reviewer')])await assert.rejects(other.api.ready('abc'),/author of an open PR/);
 });
-test('missing remote objects fail visibly and duplicate pushes are blocked',async()=>{
- const f=fixture(),run=f.api.run;let release;
- f.api.run=async(bin,args,opts)=>{if(args[0]==='rev-list')throw Error('missing object');if(args[0]==='push')await new Promise(r=>release=r);return run(bin,args,opts);};
- await assert.rejects(f.api.adjustmentStatus(),/missing object/);
- const push=f.api.push();await assert.rejects(f.api.push(),/already in progress/);
- while(!release)await new Promise(r=>setImmediate(r));release();await push;
+
+test('ready requests selected GitHub reviewers and excludes the author',async()=>{
+ const f=fixture();f.remote.isDraft=true;f.remote.statusCheckRollup=[{state:'SUCCESS'}];const run=f.api.run;
+ f.api.run=async(bin,args,opts)=>{if(args[1]==='ready'){f.remote.isDraft=false;return '';}if(args.includes('--add-reviewer')){f.calls.push([bin,...args]);return '';}return run(bin,args,opts);};
+ await f.api.ready('abc',['author','teammate','org/backend']);
+ assert.deepEqual(f.calls.find(c=>c.includes('--add-reviewer')),['gh','pr','edit',f.remote.url,'--add-reviewer','teammate,org/backend']);
 });
