@@ -10,7 +10,7 @@ Every scenario follows the exact snapshot-diff verification pattern:
 4. New snapshot game (including scene) state
 5. Diff with baseline to compute mutations and assert agreement with expected behavior
 
-Covers 40 scenarios across all core HeroQuest quest gameplay systems:
+Covers 43 scenarios across all core HeroQuest quest gameplay systems:
 - Movement, pathfinding & blockages
 - Doors, corridors, and Fog of War chamber reveals
 - Melee combat, damage mitigation, multi-BP bosses, hero knockout
@@ -21,6 +21,7 @@ Covers 40 scenarios across all core HeroQuest quest gameplay systems:
 - Turn lifecycles, hero rotations, Zargon monster phase
 - AI step proposal preview & confirmation governance
 - Cartridge and multi-quest progression
+- Authentic HeroQuest turn structure & non-splittable movement
 """
 
 import os
@@ -1134,6 +1135,163 @@ class TestHeroQuestE2EScenarios(unittest.TestCase):
         diff.assert_hero_pos("barbarian", [10, 10], [0, 1])
         self.assertEqual(diff.heroes["barbarian"]["gold"][1], 0)
         self.assertIn("room-nw-crypt", diff.rooms_revealed_removed)
+
+    # =========================================================================
+    # DOMAIN 11: AUTHENTIC TURN STRUCTURE & NON-SPLITTABLE MOVEMENT (Scenarios 41-43)
+    # =========================================================================
+
+    def test_41_move_then_attack_forfeits_remaining_movement(self):
+        """Scenario 41: Moving first and then attacking immediately concludes movement phase."""
+        bdd_scenario_header(41, "Move Then Attack Concludes Movement Phase (No Splitting)")
+
+        bdd_step("GIVEN", "Barbarian has 6 movement, advances 2 squares to (2, 1) adjacent to monster at (3, 1)",
+                 info="Hero moves before action; 4 movement points remain")
+        self.ai.set_state(
+            activeHero="barbarian",
+            turnState="moving",
+            movementRemaining=6,
+            movementRolled=True,
+            hasActed=False,
+            hasMoved=False,
+            movedBeforeAction=False,
+            movementClosed=False,
+            heroes=[{"id": "barbarian", "grid_pos": [0, 1], "is_on_board": True}],
+            monsters=[{
+                "id": "mon-orc-split",
+                "name": "Orc Guard",
+                "grid_pos": [3, 1],
+                "current_bp": 2,
+                "bodyPoints": 2,
+                "is_alive": True,
+                "roomId": ""
+            }]
+        )
+
+        # Move 2 squares toward monster: (0, 1) ➔ (2, 1)
+        self.ai.move(2, 1)
+        st_after_move = self.ai.snapshot()
+        self.assertEqual(st_after_move["movementRemaining"], 4)
+        self.assertTrue(st_after_move["hasMoved"])
+        self.assertTrue(st_after_move["movedBeforeAction"])
+
+        bdd_step("WHEN", "Capturing baseline and Barbarian attacks adjacent Orc Guard at (3, 1)")
+        baseline = self.ai.snapshot()
+        atk_res = self.ai.attack(monster_id="mon-orc-split", weapon="broadsword")
+        current = self.ai.snapshot()
+        diff = diff_snapshots(baseline, current)
+
+        bdd_step("THEN", "Action succeeds, movementRemaining drops to 0 (forfeited), and turnState transitions to turn_complete",
+                 assertions=[
+                     f"Attack success: {atk_res.get('success')}",
+                     f"hasActed: False ➔ {diff.scalars.get('hasActed', (None, None))[1]}",
+                     f"movementRemaining: 4 ➔ {diff.scalars.get('movementRemaining', (None, None))[1]} (remaining movement forfeited)",
+                     f"movementClosed: False ➔ {diff.scalars.get('movementClosed', (None, None))[1]}",
+                     f"turnState: moving ➔ {diff.scalars.get('turnState', (None, None))[1]}"
+                 ])
+        self.assertTrue(atk_res.get("success"))
+        diff.assert_scalar("hasActed", False, True)
+        diff.assert_scalar("movementRemaining", 4, 0)
+        diff.assert_scalar("movementClosed", False, True)
+        diff.assert_scalar("turnState", "moving", "turn_complete")
+
+    def test_42_movement_after_move_and_attack_is_strictly_rejected(self):
+        """Scenario 42: Attempting to move after completing Move + Attack is rejected under no-split rules."""
+        bdd_scenario_header(42, "Movement After Move + Attack Is Forbidden")
+
+        bdd_step("GIVEN", "Barbarian has moved and acted; turn is complete and movement is permanently closed",
+                 info="hasActed = True, hasMoved = True, movedBeforeAction = True, movementClosed = True, movementRemaining = 0")
+        self.ai.set_state(
+            activeHero="barbarian",
+            turnState="turn_complete",
+            movementRemaining=0,
+            movementRolled=True,
+            hasActed=True,
+            hasMoved=True,
+            movedBeforeAction=True,
+            movementClosed=True,
+            heroes=[{"id": "barbarian", "grid_pos": [2, 1], "is_on_board": True}]
+        )
+
+        bdd_step("WHEN", "Barbarian attempts illegal movement to (1, 1)")
+        baseline = self.ai.snapshot()
+        res = self.ai.move(1, 1)
+        current = self.ai.snapshot()
+        diff = diff_snapshots(baseline, current)
+
+        bdd_step("THEN", "Move is rejected (success: False), hero position remains unchanged, and board state has 0 mutations",
+                 assertions=[
+                     f"Success: {res.get('success')} (expected False)",
+                     f"Barbarian position unchanged: {current.get('activeHeroPos')}",
+                     f"Movement remaining unchanged: {'movementRemaining' not in diff.scalars}"
+                 ])
+        self.assertFalse(res.get("success"))
+        self.assertNotIn("grid_pos", diff.heroes.get("barbarian", {}))
+        self.assertNotIn("movementRemaining", diff.scalars)
+        self.assertEqual(current.get("activeHeroPos"), [2, 1])
+
+    def test_43_action_then_move_permits_full_movement_phase(self):
+        """Scenario 43: Hero attacks first without moving, then takes full movement phase."""
+        bdd_scenario_header(43, "Action Then Move Permits Full Movement Phase")
+
+        bdd_step("GIVEN", "Barbarian begins turn adjacent to monster at (0, 2) without moving",
+                 info="hasActed = False, hasMoved = False, movedBeforeAction = False, turnState = awaiting_roll")
+        self.ai.set_state(
+            activeHero="barbarian",
+            turnState="awaiting_roll",
+            movementRemaining=0,
+            movementRolled=False,
+            hasActed=False,
+            hasMoved=False,
+            movedBeforeAction=False,
+            movementClosed=False,
+            heroes=[{"id": "barbarian", "grid_pos": [0, 1], "is_on_board": True}],
+            monsters=[{
+                "id": "mon-orc-action-first",
+                "name": "Orc Sentry",
+                "grid_pos": [0, 2],
+                "current_bp": 2,
+                "bodyPoints": 2,
+                "is_alive": True,
+                "roomId": ""
+            }]
+        )
+
+        bdd_step("WHEN", "Barbarian attacks adjacent monster FIRST before rolling or moving")
+        baseline = self.ai.snapshot()
+        atk_res = self.ai.attack(monster_id="mon-orc-action-first", weapon="broadsword")
+        post_atk = self.ai.snapshot()
+        diff_atk = diff_snapshots(baseline, post_atk)
+
+        bdd_step("THEN", "Action succeeds and turnState transitions to action_taken (movement still available)",
+                 assertions=[
+                     f"Attack success: {atk_res.get('success')}",
+                     f"hasActed: False ➔ {diff_atk.scalars.get('hasActed', (None, None))[1]}",
+                     f"hasMoved: {post_atk.get('hasMoved')} (expected False)",
+                     f"turnState: awaiting_roll ➔ {diff_atk.scalars.get('turnState', (None, None))[1]}"
+                 ])
+        self.assertTrue(atk_res.get("success"))
+        diff_atk.assert_scalar("hasActed", False, True)
+        self.assertFalse(post_atk.get("hasMoved"))
+        diff_atk.assert_scalar("turnState", "awaiting_roll", "action_taken")
+
+        bdd_step("WHEN", "Barbarian has 2 movement remaining and advances 2 squares to (2, 1)")
+        self.ai.set_state(movementRemaining=2, movementRolled=True)
+        base_move = self.ai.snapshot()
+        move_res = self.ai.move(2, 1)
+        post_move = self.ai.snapshot()
+        diff_move = diff_snapshots(base_move, post_move)
+
+        bdd_step("THEN", "Move succeeds, position becomes (2, 1), movementRemaining drops to 0, and turnState becomes turn_complete",
+                 assertions=[
+                     f"Move success: {move_res.get('success')}",
+                     f"Grid pos: [0, 1] ➔ {diff_move.heroes['barbarian']['grid_pos'][1]}",
+                     f"movementRemaining: 2 ➔ {diff_move.scalars.get('movementRemaining', (None, None))[1]}",
+                     f"turnState: action_taken ➔ {diff_move.scalars.get('turnState', (None, None))[1]}"
+                 ])
+        self.assertTrue(move_res.get("success"))
+        diff_move.assert_hero_pos("barbarian", [0, 1], [2, 1])
+        diff_move.assert_scalar("movementRemaining", 2, 0)
+        diff_move.assert_scalar("turnState", "action_taken", "turn_complete")
 
 
 if __name__ == "__main__":

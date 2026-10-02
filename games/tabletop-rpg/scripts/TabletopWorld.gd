@@ -15,6 +15,9 @@ var current_phase: String = "hero_phase" # "hero_phase" or "gm_phase"
 var movement_remaining: int = 0
 var movement_rolled: bool = false
 var has_acted_this_turn: bool = false
+var has_moved_this_turn: bool = false
+var moved_before_action: bool = false
+var movement_closed: bool = false
 var turn_state: String = "awaiting_roll" # "awaiting_roll", "moving", "action_taken", "turn_complete"
 var combat_log: Array[String] = []
 
@@ -306,6 +309,9 @@ func _load_active_cartridge() -> void:
 	movement_remaining = 0
 	movement_rolled = false
 	has_acted_this_turn = false
+	has_moved_this_turn = false
+	moved_before_action = false
+	movement_closed = false
 	turn_state = "awaiting_roll"
 
 	update_party_vision()
@@ -1155,6 +1161,8 @@ func _handle_tile_click(tile: Vector2i) -> void:
 
 	# If haven't rolled movement yet, roll dice first!
 	if not movement_rolled:
+		if movement_closed or (moved_before_action and has_acted_this_turn):
+			return
 		roll_movement_dice()
 
 	# If hero has movement, move to tile
@@ -1162,6 +1170,10 @@ func _handle_tile_click(tile: Vector2i) -> void:
 		move_hero(tile)
 
 func roll_movement_dice() -> Dictionary:
+	if movement_closed or (moved_before_action and has_acted_this_turn):
+		_log("⚠️ HeroQuest Rule: Movement phase has concluded for this turn!")
+		return {}
+
 	var hero = get_active_hero()
 	var armors: Array = hero.get("equipped_armor", [])
 	var has_plate = armors.has("plate_mail")
@@ -1261,6 +1273,13 @@ func move_hero(target_pos: Vector2i) -> bool:
 	if curr == target_pos:
 		return true
 
+	# HeroQuest Turn Structure: Movement and Action No-Splitting Rule
+	# You cannot split movement before and after an attack/action.
+	# If the hero moved before taking an action, any action taken closes movement permanently.
+	if movement_closed or (moved_before_action and has_acted_this_turn):
+		_log("⚠️ HeroQuest Rule: Movement cannot be split before and after an action! Turn is complete.")
+		return false
+
 	# Standard HeroQuest Rule: No Sharing Squares
 	if is_tile_occupied(target_pos, active_hero_idx):
 		if is_tile_occupied_by_hero(target_pos, active_hero_idx):
@@ -1281,7 +1300,10 @@ func move_hero(target_pos: Vector2i) -> bool:
 		return false
 
 	var cost = path.size() - 1
-	if movement_remaining > 0 and cost > movement_remaining:
+	if movement_remaining <= 0:
+		_log("⚠️ No movement remaining this turn!")
+		return false
+	if cost > movement_remaining:
 		_log("⚠️ Target out of movement range (need %d, have %d)" % [cost, movement_remaining])
 		return false
 
@@ -1317,9 +1339,14 @@ func move_hero(target_pos: Vector2i) -> bool:
 	else:
 		movement_remaining = maxi(0, movement_remaining - actual_cost)
 
+	has_moved_this_turn = true
+	if not has_acted_this_turn:
+		moved_before_action = true
+
 	if movement_remaining == 0:
 		if has_acted_this_turn:
 			turn_state = "turn_complete"
+			movement_closed = true
 		else:
 			turn_state = "moving"
 
@@ -1483,11 +1510,33 @@ func unequip_item(hero_id: String, item_id: String) -> Dictionary:
 
 	return { "success": false, "error": "Item not equipped" }
 
+func _conclude_action_turn_state() -> void:
+	has_acted_this_turn = true
+	if moved_before_action:
+		# Authentic HeroQuest Turn Structure:
+		# If the hero moved before taking an action, taking the action immediately
+		# concludes their movement phase. Any remaining movement roll is forfeited.
+		# Movement cannot be split before and after an attack/action.
+		movement_remaining = 0
+		movement_closed = true
+		turn_state = "turn_complete"
+		_log("⚔️ HeroQuest Rules: Action taken after moving. Movement phase permanently concluded.")
+	elif movement_rolled and movement_remaining == 0:
+		turn_state = "turn_complete"
+		movement_closed = true
+	else:
+		# Action taken first: hero can still roll and/or complete movement phase
+		turn_state = "action_taken"
+
 # --- Hero & Monster Combat Resolution ---
 func attack_adjacent_monster(monster_id: String = "", weapon_id: String = "") -> Dictionary:
 	var hero = get_active_hero()
 	if hero.is_empty():
 		return { "success": false, "error": "No active hero" }
+
+	if has_acted_this_turn:
+		_log("❌ %s has already taken an action this turn!" % hero.get("name", "Hero"))
+		return { "success": false, "error": "Already acted this turn" }
 
 	if weapon_id != "":
 		hero["equipped_weapon"] = weapon_id
@@ -1585,11 +1634,7 @@ func attack_adjacent_monster(monster_id: String = "", weapon_id: String = "") ->
 	if cur_w_id == "dagger" and (dx > 1 or dy > 1):
 		hero["equipped_weapon"] = "fists"
 
-	has_acted_this_turn = true
-	if movement_remaining == 0:
-		turn_state = "turn_complete"
-	else:
-		turn_state = "action_taken"
+	_conclude_action_turn_state()
 
 	last_combat_result = res
 	_update_ui()
@@ -1649,6 +1694,10 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 	var hero = get_active_hero()
 	if hero.is_empty():
 		return { "success": false, "error": "No active hero to cast spell" }
+
+	if has_acted_this_turn:
+		_log("❌ %s has already taken an action this turn!" % hero.get("name", "Hero"))
+		return { "success": false, "error": "Already acted this turn" }
 
 	var spell = HeroQuestSpells.get_spell(spell_id)
 	if spell.is_empty():
@@ -1898,11 +1947,7 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 			spawn_burst_vfx(s_screen, Color(0.4, 0.1, 0.6), 45.0, 0.5)
 			res["summoned_pos"] = [spawn_pos.x, spawn_pos.y]
 
-	has_acted_this_turn = true
-	if movement_remaining == 0:
-		turn_state = "turn_complete"
-	else:
-		turn_state = "action_taken"
+	_conclude_action_turn_state()
 
 	last_spell_result = res
 	_update_ui()
@@ -2049,16 +2094,18 @@ func summon_wandering_monster(spawn_pos: Vector2i = Vector2i(3, 0), bp: int = 1,
 
 func search_room() -> Dictionary:
 	var hero = get_active_hero()
+	if hero.is_empty():
+		return { "success": false, "error": "No active hero" }
+	if has_acted_this_turn:
+		_log("❌ %s has already taken an action this turn!" % hero.get("name", "Hero"))
+		return { "success": false, "error": "Already acted this turn" }
+
 	var found_gold = 50
 	hero["gold"] = hero.get("gold", 0) + found_gold
 	_log("💰 %s searches room for treasure: Discovered a chest with %d Gold Coins! Total Gold: %d" % [
 		hero.get("name"), found_gold, hero.get("gold")
 	])
-	has_acted_this_turn = true
-	if movement_remaining == 0:
-		turn_state = "turn_complete"
-	else:
-		turn_state = "action_taken"
+	_conclude_action_turn_state()
 	_update_ui()
 	queue_redraw_all()
 	return { "success": true, "goldFound": found_gold }
@@ -2067,6 +2114,10 @@ func search_traps() -> Dictionary:
 	var hero = get_active_hero()
 	if hero.is_empty():
 		return { "success": false, "error": "No active hero" }
+	if has_acted_this_turn:
+		_log("❌ %s has already taken an action this turn!" % hero.get("name", "Hero"))
+		return { "success": false, "error": "Already acted this turn" }
+
 	var h_pos = hero.get("grid_pos", Vector2i(-1, -1))
 	var h_room = _get_room_at(h_pos)
 	var found_traps: Array[String] = []
@@ -2088,11 +2139,7 @@ func search_traps() -> Dictionary:
 				tr["detected"] = true
 				found_traps.append(str(tr.get("id", "trap")))
 
-	has_acted_this_turn = true
-	if movement_remaining == 0:
-		turn_state = "turn_complete"
-	else:
-		turn_state = "action_taken"
+	_conclude_action_turn_state()
 
 	_log("🔍 %s searches carefully for traps and secret doors: Found %d hidden trap(s)!" % [
 		hero.get("name"), found_traps.size()
@@ -2105,6 +2152,10 @@ func disarm_trap(trap_id: String) -> Dictionary:
 	var hero = get_active_hero()
 	if hero.is_empty():
 		return { "success": false, "error": "No active hero" }
+	if has_acted_this_turn:
+		_log("❌ %s has already taken an action this turn!" % hero.get("name", "Hero"))
+		return { "success": false, "error": "Already acted this turn" }
+
 	var h_pos = hero.get("grid_pos", Vector2i(-1, -1))
 	var target_trap: Dictionary = {}
 	for tr in traps:
@@ -2123,11 +2174,7 @@ func disarm_trap(trap_id: String) -> Dictionary:
 
 	target_trap["detected"] = true
 	target_trap["disarmed"] = true
-	has_acted_this_turn = true
-	if movement_remaining == 0:
-		turn_state = "turn_complete"
-	else:
-		turn_state = "action_taken"
+	_conclude_action_turn_state()
 
 	_log("🛠️ %s disarms the %s at (%d, %d) safely!" % [
 		hero.get("name"), target_trap.get("type", target_trap.get("trapType", "trap")), target_trap.get("x", 0), target_trap.get("y", 0)
@@ -2176,6 +2223,9 @@ func end_turn() -> void:
 	movement_remaining = 0
 	movement_rolled = false
 	has_acted_this_turn = false
+	has_moved_this_turn = false
+	moved_before_action = false
+	movement_closed = false
 	turn_state = "awaiting_roll"
 	update_party_vision()
 	_update_ui()
@@ -2286,10 +2336,27 @@ func _update_ui() -> void:
 		var adj_doors = get_adjacent_closed_doors()
 		var in_room_clean = can_search_room()
 
-		if not movement_rolled:
+		if movement_closed or (moved_before_action and has_acted_this_turn):
+			if dice_label:
+				dice_label.text = "Turn complete! Click End Turn to proceed."
+			if btn_roll:
+				btn_roll.visible = true
+				btn_roll.disabled = true
+				btn_roll.text = "Move: 0"
+			if btn_attack:
+				btn_attack.visible = false
+			if btn_search:
+				btn_search.visible = false
+			if btn_end_turn:
+				btn_end_turn.visible = true
+				btn_end_turn.text = "End Turn"
+		elif not movement_rolled:
 			# Awaiting Roll state
 			if dice_label:
-				dice_label.text = "👉 %s's Turn: ROLL DICE to determine movement!" % h_name
+				if has_acted_this_turn:
+					dice_label.text = "⚔️ Action taken! %s may now ROLL DICE to move or click End Turn." % h_name
+				else:
+					dice_label.text = "👉 %s's Turn: ROLL DICE to determine movement!" % h_name
 			if btn_roll:
 				btn_roll.visible = true
 				btn_roll.disabled = false
@@ -2305,7 +2372,7 @@ func _update_ui() -> void:
 				btn_search.visible = false
 			if btn_end_turn:
 				btn_end_turn.visible = true
-				btn_end_turn.text = "Skip Turn"
+				btn_end_turn.text = "Skip Turn" if not has_acted_this_turn else "End Turn"
 		else:
 			# Movement rolled
 			if movement_remaining > 0:
@@ -3011,6 +3078,9 @@ func get_telemetry_state() -> Dictionary:
 		"movementRemaining": movement_remaining,
 		"movementRolled": movement_rolled,
 		"hasActed": has_acted_this_turn,
+		"hasMoved": has_moved_this_turn,
+		"movedBeforeAction": moved_before_action,
+		"movementClosed": movement_closed,
 		"turnState": turn_state,
 		"heroes": heroes_copy,
 		"monsters": monsters_copy,
@@ -3078,10 +3148,20 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 						break
 			if action_data.has("movementRemaining"):
 				movement_remaining = int(action_data.get("movementRemaining"))
+				if movement_remaining > 0 and not action_data.has("movementClosed"):
+					movement_closed = false
 			if action_data.has("movementRolled"):
 				movement_rolled = bool(action_data.get("movementRolled"))
 			if action_data.has("hasActed"):
 				has_acted_this_turn = bool(action_data.get("hasActed"))
+			if action_data.has("hasMoved"):
+				has_moved_this_turn = bool(action_data.get("hasMoved"))
+			if action_data.has("movedBeforeAction"):
+				moved_before_action = bool(action_data.get("movedBeforeAction"))
+			elif action_data.has("hasMoved") and action_data.has("hasActed"):
+				moved_before_action = bool(action_data.get("hasMoved"))
+			if action_data.has("movementClosed"):
+				movement_closed = bool(action_data.get("movementClosed"))
 			if action_data.has("turnState"):
 				turn_state = str(action_data.get("turnState"))
 			if action_data.has("heroes") and action_data.heroes is Array:
