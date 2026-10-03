@@ -11,7 +11,7 @@ const WEAPONS: Dictionary = {
 		"two_handed": false,
 		"ranged": false,
 		"cost": 250,
-		"icon": "🗡️",
+		"icon": "⚔️",
 		"description": "Standard heavy steel blade. Rolls 3 combat dice in adjacent melee combat.",
 		"allowed_heroes": ["barbarian", "dwarf", "elf"]
 	},

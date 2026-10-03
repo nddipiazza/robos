@@ -5716,6 +5716,7 @@ func get_telemetry_state() -> Dictionary:
 			"isOnBoard": bool(h.get("is_on_board", false)),
 			"isAlive": cur_bp > 0,
 			"weapon": str(h.get("equipped_weapon", "unarmed")),
+			"weaponIcon": HeroQuestEquipment.get_weapon(str(h.get("equipped_weapon", ""))).get("icon", "⚔️"),
 			"armor": h.get("equipped_armor", []),
 			"statusEffects": effs,
 			"tokenAsset": get_hero_token_path(h),
