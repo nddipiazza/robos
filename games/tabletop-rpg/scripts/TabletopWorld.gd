@@ -54,6 +54,7 @@ var board_offset: Vector2 = BOARD_OFFSET
 var active_vfx: Array[Dictionary] = []
 var floating_texts: Array[Dictionary] = []
 var active_dice_animation: Dictionary = {}
+var active_trap_overlay: Dictionary = {}
 var last_spell_result: Dictionary = {}
 var last_combat_result: Dictionary = {}
 
@@ -1002,6 +1003,8 @@ func _load_active_cartridge() -> void:
 	movement_start_pos = Vector2i(-1, -1)
 	movement_trail.clear()
 	turn_state = "awaiting_roll"
+	active_trap_overlay = {}
+	active_dice_animation = {}
 
 	update_party_vision()
 	_update_ui()
@@ -1391,6 +1394,9 @@ func _process(delta: float) -> void:
 		if enemy_turn_wait_timer <= 0.0:
 			_finish_current_enemy_turn()
 
+	if not active_trap_overlay.is_empty():
+		needs_redraw = true
+
 	if not active_dice_animation.is_empty():
 		var t = float(active_dice_animation.get("time", 0.0)) + delta
 		active_dice_animation["time"] = t
@@ -1398,11 +1404,18 @@ func _process(delta: float) -> void:
 		var tot_dur = float(active_dice_animation.get("total_duration", 2.2))
 		
 		if t >= tot_dur:
+			if not active_dice_animation.get("effects_applied", false) and active_dice_animation.has("pending_trap_resolution"):
+				active_dice_animation["effects_applied"] = true
+				_apply_pending_trap_resolution(active_dice_animation.get("pending_trap_resolution", {}))
 			active_dice_animation = {}
 		else:
 			var progress = clampf(t / roll_dur, 0.0, 1.0)
 			var is_settled = (progress >= 1.0)
 			active_dice_animation["settled"] = is_settled
+			
+			if is_settled and not active_dice_animation.get("effects_applied", false) and active_dice_animation.has("pending_trap_resolution"):
+				active_dice_animation["effects_applied"] = true
+				_apply_pending_trap_resolution(active_dice_animation.get("pending_trap_resolution", {}))
 			
 			for die in active_dice_animation.get("dice", []):
 				if not is_settled:
@@ -2698,6 +2711,12 @@ func can_search_room() -> bool:
 	return true
 
 func _input(event: InputEvent) -> void:
+	if not active_trap_overlay.is_empty():
+		if (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed) or \
+		   (event is InputEventKey and event.pressed and (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER)):
+			resolve_trap_overlay_click()
+			get_viewport().set_input_as_handled()
+			return
 	if is_enemy_turn_waiting:
 		if (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed) or \
 		   (event is InputEventKey and event.pressed and (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER or event.keycode == KEY_ESCAPE)):
@@ -2706,6 +2725,12 @@ func _input(event: InputEvent) -> void:
 			return
 
 func _unhandled_input(event: InputEvent) -> void:
+	if not active_trap_overlay.is_empty():
+		if (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed) or \
+		   (event is InputEventKey and event.pressed and (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER)):
+			resolve_trap_overlay_click()
+			get_viewport().set_input_as_handled()
+			return
 	if is_enemy_turn_waiting:
 		if (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed) or \
 		   (event is InputEventKey and event.pressed and (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER or event.keycode == KEY_ESCAPE)):
@@ -2752,6 +2777,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			_handle_tile_click(Vector2i(tx, ty))
 
 func _handle_tile_click(tile: Vector2i) -> void:
+	if not active_trap_overlay.is_empty():
+		resolve_trap_overlay_click()
+		return
 	if current_phase != "hero_phase" or current_role != "player":
 		return
 	var hero = get_active_hero()
@@ -2792,10 +2820,13 @@ func _handle_tile_click(tile: Vector2i) -> void:
 
 	# If hero has movement, move to tile
 	if movement_remaining > 0:
-		move_hero(tile)
+		move_hero(tile, true)
 
 func dismiss_active_dice_roll() -> void:
 	if not active_dice_animation.is_empty():
+		if not active_dice_animation.get("effects_applied", false) and active_dice_animation.has("pending_trap_resolution"):
+			active_dice_animation["effects_applied"] = true
+			_apply_pending_trap_resolution(active_dice_animation.get("pending_trap_resolution", {}))
 		active_dice_animation = {}
 		queue_redraw_all()
 
@@ -2897,7 +2928,7 @@ func find_path(start: Vector2i, goal: Vector2i, moving_hero_idx: int = -1) -> Ar
 
 	return []
 
-func move_hero(target_pos: Vector2i) -> bool:
+func move_hero(target_pos: Vector2i, is_interactive: bool = false) -> bool:
 	var hero = get_active_hero()
 	if hero.size() == 0:
 		return false
@@ -2975,6 +3006,27 @@ func move_hero(target_pos: Vector2i) -> bool:
 		sprung_trap["detected"] = true
 		sprung_trap["sprung"] = true
 		movement_remaining = 0 # Stepping into a trap ends remaining movement
+
+		if is_interactive:
+			_setup_trap_sprung_overlay(sprung_trap, hero, final_pos, path, actual_cost, false)
+			has_moved_this_turn = true
+			if not has_acted_this_turn:
+				moved_before_action = true
+			if has_acted_this_turn:
+				turn_state = "turn_complete"
+				movement_closed = true
+			else:
+				turn_state = "moving"
+			if hero.get("pass_through_rock_active", false):
+				hero["pass_through_rock_active"] = false
+				_log("[SPELL] Pass Through Rock fades away as %s materializes in solid space." % hero.get("name"))
+			if hero.get("veil_of_mist_active", false):
+				hero["veil_of_mist_active"] = false
+				_log("[SPELL] The Veil of Mist dissipates from around %s." % hero.get("name"))
+			_update_ui()
+			queue_redraw_all()
+			return true
+
 		var t_type = str(sprung_trap.get("type", sprung_trap.get("trapType", "pit"))).to_lower()
 
 		if "spear" in t_type:
@@ -4105,7 +4157,7 @@ func summon_wandering_monster(spawn_pos: Vector2i = Vector2i(3, 0), bp: int = 1,
 	ret_m["grid_pos"] = [spawn_pos.x, spawn_pos.y]
 	return { "success": true, "monster": ret_m }
 
-func search_room() -> Dictionary:
+func search_room(is_interactive: bool = false) -> Dictionary:
 	var hero = get_active_hero()
 	if hero.is_empty():
 		return { "success": false, "error": "No active hero" }
@@ -4135,6 +4187,13 @@ func search_room() -> Dictionary:
 			# Chest trap springs! Poison needle / gas deals damage!
 			trapped_chest["sprung"] = true
 			trapped_chest["detected"] = true
+			if is_interactive:
+				_setup_trap_sprung_overlay(trapped_chest, hero, h_pos, [], 0, true)
+				_conclude_action_turn_state()
+				_update_ui()
+				queue_redraw_all()
+				return { "success": true, "trapTriggered": true, "waitingForClick": true, "goldFound": 0 }
+
 			var dmg = int(trapped_chest.get("damageDice", 2))
 			hero["current_bp"] = maxi(0, hero.get("current_bp", 1) - dmg)
 			_log("[TRAP] ☠️ CHEST TRAP SPRUNG! A poison needle fires from the locked chest! %s suffers %d damage (Remaining BP: %d)!" % [
@@ -6024,7 +6083,18 @@ func get_telemetry_state() -> Dictionary:
 				"value": flashy_number_val,
 				"alpha": flashy_number_panel.modulate.a if flashy_number_panel else 0.0
 			}
-		}
+		},
+		"trapOverlay": {
+			"active": not active_trap_overlay.is_empty(),
+			"type": active_trap_overlay.get("type", ""),
+			"trapName": active_trap_overlay.get("trap_name", ""),
+			"heroName": active_trap_overlay.get("hero_name", ""),
+			"title": active_trap_overlay.get("title", ""),
+			"description": active_trap_overlay.get("description", ""),
+			"flavor": active_trap_overlay.get("flavor", ""),
+			"diceCount": active_trap_overlay.get("dice_count", 1),
+			"waitingForClick": not active_trap_overlay.is_empty()
+		} if not active_trap_overlay.is_empty() else {}
 	}
 
 func execute_action(action_data: Dictionary) -> Dictionary:
@@ -6041,6 +6111,17 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 		"dismiss_dice_roll":
 			dismiss_active_dice_roll()
 			return { "success": true }
+		"click_trap_overlay", "confirm_trap_roll":
+			if not active_trap_overlay.is_empty():
+				var res = resolve_trap_overlay_click()
+				return res
+			return { "success": false, "error": "No active trap overlay" }
+		"skip_trap_overlay":
+			if not active_trap_overlay.is_empty():
+				resolve_trap_overlay_click()
+				dismiss_active_dice_roll()
+				return { "success": true }
+			return { "success": false, "error": "No active trap overlay" }
 		"hover_action_button":
 			var btn_key = str(action_data.get("button", "roll"))
 			var target_btn: Button = null
@@ -6121,10 +6202,16 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			return { "success": false }
 		"take_screenshot":
 			var out_p = str(action_data.get("path", "/tmp/tabletop_hotbar.png"))
-			var v_img = get_viewport().get_texture().get_image()
+			var v_img = get_viewport().get_texture().get_image() if get_viewport() and get_viewport().get_texture() else null
+			if not v_img:
+				var vp_size = get_viewport().get_visible_rect().size if get_viewport() else Vector2(1280, 720)
+				var img_w = int(maxf(100.0, vp_size.x))
+				var img_h = int(maxf(100.0, vp_size.y))
+				v_img = Image.create(img_w, img_h, false, Image.FORMAT_RGBA8)
+				v_img.fill(Color(0.08, 0.05, 0.06, 1.0))
 			if v_img:
-				v_img.save_png(out_p)
-				return { "success": true, "path": out_p }
+				var err = v_img.save_png(out_p)
+				return { "success": err == OK, "path": out_p }
 			return { "success": false }
 		"toggle_defeated":
 			toggle_show_defeated_monsters()
@@ -6224,6 +6311,11 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				movement_start_pos = Vector2i(-1, -1)
 			if action_data.has("turnState"):
 				turn_state = str(action_data.get("turnState"))
+			if action_data.has("trapOverlay"):
+				if action_data.trapOverlay is Dictionary:
+					active_trap_overlay = action_data.trapOverlay
+				elif not bool(action_data.trapOverlay):
+					active_trap_overlay = {}
 			if action_data.has("heroes") and action_data.heroes is Array:
 				for h_patch in action_data.heroes:
 					var h_id = str(h_patch.get("id", ""))
@@ -6374,7 +6466,8 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			if action_data.has("target") and action_data.target is Array and action_data.target.size() >= 2:
 				tx = int(action_data.target[0])
 				ty = int(action_data.target[1])
-			var ok = move_hero(Vector2i(tx, ty))
+			var is_interactive = bool(action_data.get("interactive", false))
+			var ok = move_hero(Vector2i(tx, ty), is_interactive)
 			return { "success": ok }
 		"open_door":
 			var fx = int(action_data.get("from_x", action_data.get("from", [0, 0])[0] if action_data.get("from") is Array and action_data.from.size() > 0 else 0))
@@ -6493,7 +6586,8 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			_update_ui()
 			return { "success": true }
 		"search":
-			var res = search_room()
+			var is_interactive = bool(action_data.get("interactive", false))
+			var res = search_room(is_interactive)
 			return res
 		"end_turn":
 			end_turn()
@@ -7175,6 +7269,7 @@ func _draw_board(canvas: CanvasItem) -> void:
 	_draw_damage_hit_auras(canvas)
 	_draw_active_enemy_turn_highlight(canvas)
 	_draw_floating_texts(canvas)
+	_draw_trap_sprung_overlay(canvas)
 	_draw_active_dice_roll(canvas)
 
 func _draw_vfx_effects(canvas: CanvasItem) -> void:
@@ -7373,6 +7468,392 @@ func _draw_floating_texts(canvas: CanvasItem) -> void:
 			canvas.draw_rect(bg_rect, Color(col.r, col.g, col.b, 0.65 * ft.alpha), false, 1.2)
 			canvas.draw_string(font, Vector2(ft.pos.x - tw * 0.5, ft.pos.y), txt, HORIZONTAL_ALIGNMENT_CENTER, -1, f_size, col)
 
+func _setup_trap_sprung_overlay(trap: Dictionary, hero: Dictionary, final_pos: Vector2i, path: Array, actual_cost: int, is_chest: bool = false) -> void:
+	var t_type = str(trap.get("type", trap.get("trapType", "pit"))).to_lower()
+	var h_char = get_hero_character_name(hero)
+	var h_cls = get_hero_class_name(hero)
+	var h_full = ("%s the %s" % [h_char, h_cls]) if h_cls != "" else (h_char if h_char != "" else "Hero")
+
+	var overlay_type = "pit"
+	var trap_title = "Pit Trap"
+	var icon = "🕳️"
+	var desc = "The dungeon floor collapses into a spike-lined pit!"
+	var flavor = "Roll 1 Hazard Die! Movement halts in the pit."
+	var dice_count = 1
+
+	if "spear" in t_type:
+		overlay_type = "spear"
+		trap_title = "Spear Trap"
+		icon = "🔺"
+		desc = "Spring-loaded iron spears erupt from the stone walls!"
+		flavor = "Roll 1 Combat Die! Skull = 1 Damage; White Shield = Dodged!"
+		dice_count = 1
+	elif "falling" in t_type or "boulder" in t_type or "rock" in t_type:
+		overlay_type = "falling_block"
+		trap_title = "Falling Block Trap"
+		icon = "🪨"
+		desc = "A colossal stone block crashes down from the ceiling!"
+		flavor = "Roll 3 Hazard Combat Dice! Each Skull inflicts 1 Damage. Path is blocked!"
+		dice_count = int(trap.get("damageDice", 3))
+	elif is_chest or "chest" in t_type or "furniture" in t_type:
+		overlay_type = "chest"
+		trap_title = "Poison Needle Chest Trap"
+		icon = "☠️"
+		desc = "A concealed poison needle darts from the locked chest lid!"
+		flavor = "Roll 2 Hazard Combat Dice! Toxic poison inflicts 2 Body Points."
+		dice_count = int(trap.get("damageDice", 2))
+	else:
+		overlay_type = "pit"
+		trap_title = "Pit Trap"
+		icon = "🕳️"
+		desc = "The dungeon floor collapses into a spike-lined pit!"
+		flavor = "Roll 1 Hazard Die! Inflicts 1 Body Point damage."
+		dice_count = int(trap.get("damageDice", 1))
+
+	active_trap_overlay = {
+		"type": overlay_type,
+		"trap_name": trap_title,
+		"icon": icon,
+		"hero_name": h_full,
+		"title": "%s SPRUNG!" % trap_title.to_upper(),
+		"description": desc,
+		"flavor": flavor,
+		"dice_count": dice_count,
+		"trap": trap,
+		"hero": hero,
+		"final_pos": final_pos,
+		"path": path,
+		"actual_cost": actual_cost,
+		"is_chest": is_chest
+	}
+	_log("[TRAP] ⚠️ %s SPRUNG! %s must roll hazard dice!" % [trap_title.to_upper(), h_full])
+	queue_redraw_all()
+
+func resolve_trap_overlay_click() -> Dictionary:
+	if active_trap_overlay.is_empty():
+		return { "success": false, "error": "No active trap overlay" }
+
+	var overlay = active_trap_overlay.duplicate(false)
+	active_trap_overlay = {}
+
+	trigger_hazard_dice_roll(overlay)
+	queue_redraw_all()
+	return { "success": true, "diceStarted": true, "trapType": overlay.get("type", "") }
+
+func trigger_hazard_dice_roll(overlay: Dictionary) -> void:
+	_update_board_metrics()
+	var center = board_offset + Vector2(grid_cols * tile_size * 0.5, grid_rows * tile_size * 0.45)
+	var t_type = str(overlay.get("type", "pit"))
+	var hero = overlay.get("hero", {})
+	var trap = overlay.get("trap", {})
+	var hero_name = str(overlay.get("hero_name", "Hero"))
+	var trap_name = str(overlay.get("trap_name", "Trap"))
+	var icon = str(overlay.get("icon", "⚠️"))
+	var num_dice = int(overlay.get("dice_count", 1))
+	var final_pos = overlay.get("final_pos", Vector2i.ZERO)
+	var path = overlay.get("path", [])
+	var actual_cost = int(overlay.get("actual_cost", 0))
+
+	var faces: Array = []
+	var summary_txt = ""
+	var total_wounds = 0
+	var skulls = 0
+	var shields = 0
+	var pending_res: Dictionary = {}
+
+	if t_type == "spear":
+		var roll_skull = (randi() % 2 == 0)
+		var base_dmg = int(trap.get("damageDice", 1))
+		var dmg = base_dmg if roll_skull else 0
+		total_wounds = dmg
+		if roll_skull:
+			faces.append("skull")
+			skulls = 1
+			summary_txt = "1 SKULL -> 1 WOUND! Spear strikes %s!" % hero_name
+		else:
+			faces.append("white_shield")
+			shields = 1
+			summary_txt = "WHITE SHIELD -> DODGED! %s avoids the spears!" % hero_name
+		pending_res = {
+			"type": "spear",
+			"trap": trap,
+			"hero": hero,
+			"final_pos": final_pos,
+			"damage": dmg,
+			"roll_skull": roll_skull
+		}
+	elif t_type == "falling_block":
+		for _d in range(num_dice):
+			if randi() % 2 == 0:
+				faces.append("skull")
+				skulls += 1
+			else:
+				faces.append("white_shield")
+				shields += 1
+		var dmg = maxi(1, skulls)
+		total_wounds = dmg
+		summary_txt = "%d SKULL%s -> %d WOUND%s! Crushing masonry crashes down!" % [
+			skulls, "S" if skulls != 1 else "", dmg, "S" if dmg != 1 else ""
+		]
+		var trap_tile = final_pos
+		var safe_pos = path[maxi(0, actual_cost - 1)] if path.size() > 0 else final_pos
+		pending_res = {
+			"type": "falling_block",
+			"trap": trap,
+			"hero": hero,
+			"trap_tile": trap_tile,
+			"safe_pos": safe_pos,
+			"damage": dmg,
+			"skulls": skulls
+		}
+	elif t_type == "chest":
+		faces = ["skull", "skull"]
+		skulls = 2
+		total_wounds = 2
+		summary_txt = "2 SKULLS -> 2 WOUNDS! Poison needle strikes %s!" % hero_name
+		pending_res = {
+			"type": "chest",
+			"trap": trap,
+			"hero": hero,
+			"final_pos": final_pos,
+			"damage": 2
+		}
+	else:
+		# Pit trap
+		faces = ["skull"]
+		skulls = 1
+		total_wounds = 1
+		summary_txt = "1 SKULL -> 1 WOUND! %s plunges into the pit!" % hero_name
+		pending_res = {
+			"type": "pit",
+			"trap": trap,
+			"hero": hero,
+			"final_pos": final_pos,
+			"damage": 1
+		}
+
+	var dice_arr: Array = []
+	var spacing = 78.0
+	var n_dice = faces.size()
+	var tray_width = maxf(400.0, float(n_dice) * spacing + 120.0)
+	var tray_height = 200.0
+	var top_y = center.y - tray_height * 0.5
+	var start_x = center.x - (float(maxi(1, n_dice) - 1) * spacing * 0.5)
+
+	for i in range(n_dice):
+		var face = str(faces[i])
+		var target_pos = Vector2(start_x + float(i) * spacing, top_y + 90.0)
+		var init_pos = Vector2(target_pos.x + randf_range(-4.0, 4.0), target_pos.y - 120.0 - randf_range(15.0, 35.0))
+		var is_hit = (face == "skull")
+		var is_block = (face == "white_shield")
+		dice_arr.append({
+			"type": "combat_white",
+			"group": "hazard",
+			"lane_index": i,
+			"init_pos": init_pos,
+			"target_pos": target_pos,
+			"pos": init_pos,
+			"final_face": face,
+			"current_face": ["skull", "white_shield", "black_shield"][randi() % 3],
+			"angle": randf_range(-0.5, 0.5),
+			"spin_speed": randf_range(7.0, 13.0) * (1.0 if randf() > 0.5 else -1.0),
+			"bounces": 2.2 + randf() * 0.4,
+			"z": 20.0 + randf() * 5.0,
+			"current_z": 0.0,
+			"settled": false,
+			"is_hit": is_hit,
+			"is_block": is_block
+		})
+
+	active_dice_animation = {
+		"type": "hazard",
+		"title": "%s %s - %s HAZARD ROLL (%d Dice)" % [icon, hero_name, trap_name.to_upper(), n_dice],
+		"summary": summary_txt,
+		"dice": dice_arr,
+		"time": 0.0,
+		"roll_duration": 0.8,
+		"total_duration": 5.5,
+		"settled": false,
+		"center": center,
+		"tray_width": tray_width,
+		"tray_height": tray_height,
+		"skulls": skulls,
+		"shields": shields,
+		"wounds": total_wounds,
+		"attacker_name": trap_name,
+		"defender_name": hero_name,
+		"pending_trap_resolution": pending_res,
+		"effects_applied": false
+	}
+	queue_redraw_all()
+
+func _apply_pending_trap_resolution(res: Dictionary) -> void:
+	if res.is_empty():
+		return
+	var r_type = str(res.get("type", ""))
+	var dmg = int(res.get("damage", 0))
+
+	# Directly access canonical active hero reference
+	var hero = get_active_hero()
+	if hero.is_empty():
+		return
+
+	# Directly locate canonical trap reference from traps array
+	var trap_id = str(res.get("trap", {}).get("id", ""))
+	var final_pos = res.get("final_pos", Vector2i.ZERO)
+	if final_pos == Vector2i.ZERO and res.has("trap_tile"):
+		final_pos = res.get("trap_tile", Vector2i.ZERO)
+	var trap: Dictionary = {}
+	for tr in traps:
+		var tr_id = str(tr.get("id", ""))
+		var tx = int(tr.get("x", tr.get("position", [0, 0])[0]))
+		var ty = int(tr.get("y", tr.get("position", [0, 0])[1]))
+		if (trap_id != "" and tr_id == trap_id) or (final_pos != Vector2i.ZERO and Vector2i(tx, ty) == final_pos):
+			trap = tr
+			break
+
+	if r_type == "spear":
+		if not trap.is_empty():
+			trap["spent"] = true
+			trap["sprung"] = true
+		if dmg > 0:
+			hero["current_bp"] = maxi(0, hero.get("current_bp", 1) - dmg)
+			_log("[TRAP] 🔺 Spear trap springs at (%d, %d)! %s suffers %d damage (Remaining BP: %d). The spears are now spent and the tile is safe." % [
+				final_pos.x, final_pos.y, hero.get("name"), dmg, hero.get("current_bp")
+			])
+			spawn_floating_text(final_pos, "-%d HP SPEAR TRAP" % dmg, Color(1.0, 0.25, 0.2), 1.6)
+		else:
+			_log("[TRAP] 🔺 Spear trap springs at (%d, %d)! %s swiftly dodges the spears (0 damage)! The spears are now spent and the tile is safe." % [
+				final_pos.x, final_pos.y, hero.get("name")
+			])
+			spawn_floating_text(final_pos, "0 DMG DODGED!", Color(0.2, 0.9, 0.4), 1.6)
+
+	elif r_type == "falling_block":
+		hero["current_bp"] = maxi(0, hero.get("current_bp", 1) - dmg)
+		var trap_tile = res.get("trap_tile", final_pos)
+		var safe_pos = res.get("safe_pos", Vector2i.ZERO)
+		hero["grid_pos"] = safe_pos
+		wall_blocks.append({
+			"x": trap_tile.x,
+			"y": trap_tile.y,
+			"type": "falling-block",
+			"width": 1,
+			"height": 1
+		})
+		_blocked_wall_tiles[trap_tile] = true
+		if not trap.is_empty():
+			trap["blocked"] = true
+			trap["sprung"] = true
+		_log("[TRAP] 🪨 FALLING BLOCK TRAP! Rubble crashes down at (%d, %d)! %s suffers %d damage (Remaining BP: %d). The path is permanently blocked by fallen rock!" % [
+			trap_tile.x, trap_tile.y, hero.get("name"), dmg, hero.get("current_bp")
+		])
+		spawn_floating_text(trap_tile, "FALLEN BLOCK!", Color(0.9, 0.6, 0.1), 1.8)
+		if dmg > 0:
+			spawn_floating_text(safe_pos, "-%d HP" % dmg, Color(1.0, 0.2, 0.2), 1.6)
+
+	elif r_type == "pit":
+		hero["current_bp"] = maxi(0, hero.get("current_bp", 1) - dmg)
+		if not trap.is_empty():
+			trap["sprung"] = true
+		_log("[TRAP] 🕳️ Pit trap sprung at (%d, %d)! %s plunges into the pit and suffers %d damage (Remaining BP: %d). Movement halts!" % [
+			final_pos.x, final_pos.y, hero.get("name"), dmg, hero.get("current_bp")
+		])
+		spawn_floating_text(final_pos, "-%d HP PIT TRAP" % dmg, Color(1.0, 0.2, 0.2), 1.5)
+
+	elif r_type == "chest":
+		hero["current_bp"] = maxi(0, hero.get("current_bp", 1) - dmg)
+		if not trap.is_empty():
+			trap["sprung"] = true
+		_log("[TRAP] ☠️ CHEST TRAP SPRUNG! A poison needle fires from the locked chest! %s suffers %d damage (Remaining BP: %d)!" % [
+			hero.get("name"), dmg, hero.get("current_bp")
+		])
+		spawn_floating_text(final_pos, "-%d HP POISON NEEDLE" % dmg, Color(0.85, 0.25, 0.85), 1.8)
+
+	_update_ui()
+	queue_redraw_all()
+
+func _draw_trap_sprung_overlay(canvas: CanvasItem) -> void:
+	if active_trap_overlay.is_empty():
+		return
+
+	var overlay = active_trap_overlay
+	var font = ThemeDB.fallback_font
+	_update_board_metrics()
+	var center = board_offset + Vector2(grid_cols * tile_size * 0.5, grid_rows * tile_size * 0.44)
+
+	# 1. Full Board Dark Vignette / Backdrop Dimmer
+	var total_w = float(grid_cols * tile_size)
+	var total_h = float(grid_rows * tile_size)
+	canvas.draw_rect(Rect2(board_offset, Vector2(total_w, total_h)), Color(0.0, 0.0, 0.0, 0.65))
+
+	# 2. Modal Box (580x270)
+	var box_w = 580.0
+	var box_h = 270.0
+	var box_rect = Rect2(center.x - box_w * 0.5, center.y - box_h * 0.5, box_w, box_h)
+
+	# Outer Drop Shadow
+	canvas.draw_rect(Rect2(box_rect.position + Vector2(8.0, 10.0), box_rect.size), Color(0.0, 0.0, 0.0, 0.75))
+
+	# Main Obsidian Slate Body
+	canvas.draw_rect(box_rect, Color(0.08, 0.05, 0.06, 0.98))
+
+	# Fiery / Amber Hazard Border (Triple-layer for intense pop)
+	canvas.draw_rect(box_rect, Color(0.85, 0.15, 0.10, 1.0), false, 3.0)
+	var inner_border = Rect2(box_rect.position + Vector2(4.0, 4.0), box_rect.size - Vector2(8.0, 8.0))
+	canvas.draw_rect(inner_border, Color(1.0, 0.75, 0.15, 0.85), false, 1.8)
+	var innermost = Rect2(box_rect.position + Vector2(8.0, 8.0), box_rect.size - Vector2(16.0, 16.0))
+	canvas.draw_rect(innermost, Color(0.35, 0.08, 0.08, 0.60), false, 1.0)
+
+	# Corner Hazard Accents
+	var corner_len = 24.0
+	canvas.draw_line(box_rect.position + Vector2(2, corner_len), box_rect.position + Vector2(corner_len, 2), Color(1.0, 0.85, 0.2, 0.9), 3.0)
+	canvas.draw_line(Vector2(box_rect.end.x - corner_len, box_rect.position.y + 2), Vector2(box_rect.end.x - 2, box_rect.position.y + corner_len), Color(1.0, 0.85, 0.2, 0.9), 3.0)
+	canvas.draw_line(Vector2(box_rect.position.x + 2, box_rect.end.y - corner_len), Vector2(box_rect.position.x + corner_len, box_rect.end.y - 2), Color(1.0, 0.85, 0.2, 0.9), 3.0)
+	canvas.draw_line(Vector2(box_rect.end.x - corner_len, box_rect.end.y - 2), Vector2(box_rect.end.x - 2, box_rect.end.y - corner_len), Color(1.0, 0.85, 0.2, 0.9), 3.0)
+
+	# 3. Top Banner: ⚠️ TRAP SPRUNG!
+	var banner_rect = Rect2(box_rect.position.x + 20.0, box_rect.position.y + 16.0, box_w - 40.0, 42.0)
+	canvas.draw_rect(banner_rect, Color(0.38, 0.06, 0.06, 0.95))
+	canvas.draw_rect(banner_rect, Color(1.0, 0.30, 0.20, 0.90), false, 2.0)
+	var banner_text = "⚠️ TRAP SPRUNG!"
+	var b_sz = font.get_string_size(banner_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 22)
+	canvas.draw_string(font, Vector2(center.x - b_sz.x * 0.5, banner_rect.position.y + 29.0), banner_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 22, Color(1.0, 0.92, 0.40, 1.0))
+
+	# 4. Trap Type & Icon Badge
+	var icon = str(overlay.get("icon", "⚠️"))
+	var trap_title = str(overlay.get("trap_name", "Trap"))
+	var badge_text = "%s %s" % [icon, trap_title.to_upper()]
+	var trap_sz = font.get_string_size(badge_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 16)
+	var badge_w = trap_sz.x + 32.0
+	var badge_rect = Rect2(center.x - badge_w * 0.5, banner_rect.end.y + 14.0, badge_w, 28.0)
+	canvas.draw_rect(badge_rect, Color(0.18, 0.08, 0.12, 0.90))
+	canvas.draw_rect(badge_rect, Color(0.95, 0.60, 0.20, 0.80), false, 1.4)
+	canvas.draw_string(font, Vector2(center.x - trap_sz.x * 0.5, badge_rect.position.y + 20.0), badge_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 16, Color(1.0, 0.80, 0.30, 1.0))
+
+	# 5. Victim Line
+	var hero_name = str(overlay.get("hero_name", "Hero"))
+	var victim_text = "%s has triggered a hidden trap!" % hero_name
+	var v_sz = font.get_string_size(victim_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 14)
+	canvas.draw_string(font, Vector2(center.x - v_sz.x * 0.5, badge_rect.end.y + 24.0), victim_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 14, Color(0.96, 0.96, 0.96, 1.0))
+
+	# 6. Description / Flavor Text
+	var desc = str(overlay.get("description", ""))
+	var flavor = str(overlay.get("flavor", ""))
+	var desc_sz = font.get_string_size(desc, HORIZONTAL_ALIGNMENT_CENTER, -1, 12)
+	canvas.draw_string(font, Vector2(center.x - desc_sz.x * 0.5, badge_rect.end.y + 44.0), desc, HORIZONTAL_ALIGNMENT_CENTER, -1, 12, Color(0.85, 0.85, 0.82, 0.95))
+	if flavor != "":
+		var flv_sz = font.get_string_size(flavor, HORIZONTAL_ALIGNMENT_CENTER, -1, 11)
+		canvas.draw_string(font, Vector2(center.x - flv_sz.x * 0.5, badge_rect.end.y + 60.0), flavor, HORIZONTAL_ALIGNMENT_CENTER, -1, 11, Color(1.0, 0.65, 0.35, 0.90))
+
+	# 7. CTA Action Bar: 👉 CLICK ANYWHERE TO ROLL HAZARD DICE 🎲
+	var pulse = 0.85 + 0.15 * sin(Time.get_ticks_msec() * 0.005)
+	var cta_rect = Rect2(box_rect.position.x + 30.0, box_rect.end.y - 56.0, box_w - 60.0, 42.0)
+	canvas.draw_rect(cta_rect, Color(0.25, 0.08, 0.06, 0.96))
+	canvas.draw_rect(cta_rect, Color(1.0, 0.80, 0.20, pulse), false, 2.2)
+	var cta_text = "👉 CLICK ANYWHERE TO ROLL HAZARD DICE 🎲"
+	var cta_sz = font.get_string_size(cta_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 15)
+	canvas.draw_string(font, Vector2(center.x - cta_sz.x * 0.5, cta_rect.position.y + 27.0), cta_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 15, Color(1.0, 0.94, 0.60, pulse))
+
 func trigger_movement_dice_roll(roll_data: Dictionary, hero_name: String, dice_values: Array) -> void:
 	_update_board_metrics()
 	var center = board_offset + Vector2(grid_cols * tile_size * 0.5, grid_rows * tile_size * 0.45)
@@ -7553,7 +8034,7 @@ func _draw_active_dice_roll(canvas: CanvasItem) -> void:
 
 	# 3. Inner Tabletop Velvet/Felt Inlay
 	var felt_rect = Rect2(tray_rect.position + Vector2(8.0, 8.0), tray_rect.size - Vector2(16.0, 16.0))
-	var felt_color = Color(0.05, 0.14, 0.08, 0.97) if anim_type == "movement" else Color(0.06, 0.08, 0.14, 0.98)
+	var felt_color = Color(0.05, 0.14, 0.08, 0.97) if anim_type == "movement" else (Color(0.14, 0.04, 0.05, 0.98) if anim_type == "hazard" else Color(0.06, 0.08, 0.14, 0.98))
 	canvas.draw_rect(felt_rect, felt_color)
 
 	# Gold/Brass Inlay Filigree Trim
@@ -7564,6 +8045,14 @@ func _draw_active_dice_roll(canvas: CanvasItem) -> void:
 		var title = str(anim.get("title", ""))
 		var title_w = font.get_string_size(title, HORIZONTAL_ALIGNMENT_CENTER, -1, 14).x
 		canvas.draw_string(font, Vector2(center.x - title_w * 0.5, tray_rect.position.y + 24.0), title, HORIZONTAL_ALIGNMENT_CENTER, -1, 14, Color(1.0, 0.90, 0.45, 1.0))
+	elif anim_type == "hazard":
+		# Hazard Tray Header Banner
+		var title = str(anim.get("title", "HAZARD ROLL"))
+		var title_w = font.get_string_size(title, HORIZONTAL_ALIGNMENT_CENTER, -1, 14).x
+		var h_rect = Rect2(felt_rect.position.x + 12.0, felt_rect.position.y + 6.0, felt_rect.size.x - 24.0, 24.0)
+		canvas.draw_rect(h_rect, Color(0.32, 0.06, 0.06, 0.92))
+		canvas.draw_rect(h_rect, Color(1.0, 0.40, 0.15, 0.85), false, 1.2)
+		canvas.draw_string(font, Vector2(center.x - title_w * 0.5, h_rect.position.y + 17.0), title, HORIZONTAL_ALIGNMENT_CENTER, -1, 14, Color(1.0, 0.92, 0.65, 1.0))
 	else:
 		# COMBAT TRAY: Attacker on TOP with skulls that matter, Defender on BOTTOM with shields that matter
 		var attacker_name = str(anim.get("attacker_name", "Attacker"))
@@ -7629,7 +8118,7 @@ func _draw_active_dice_roll(canvas: CanvasItem) -> void:
 			var is_block = bool(die.get("is_block", false))
 			# Focus: when settled, non-matching dice are dimmed to 0.58 so the dice that matter pop!
 			var die_alpha = 1.0
-			if settled:
+			if settled and anim_type == "combat":
 				if group == "attack" and not is_hit:
 					die_alpha = 0.58
 				elif group == "defense" and not is_block:
@@ -7660,7 +8149,7 @@ func _draw_active_dice_roll(canvas: CanvasItem) -> void:
 			var sum_w = font.get_string_size(summary, HORIZONTAL_ALIGNMENT_CENTER, -1, 13).x
 			var badge_rect = Rect2(center.x - sum_w * 0.5 - 12.0, tray_rect.end.y - 28.0, sum_w + 24.0, 20.0)
 			canvas.draw_rect(badge_rect, Color(0.08, 0.10, 0.14, 0.95))
-			var outline_col = Color(1.0, 0.85, 0.25, 0.9) if ("WOUND" in summary or "square" in summary) else Color(0.4, 0.8, 1.0, 0.9)
+			var outline_col = Color(1.0, 0.85, 0.25, 0.9) if ("WOUND" in summary or "square" in summary or "SKULL" in summary or "DODGED" in summary) else Color(0.4, 0.8, 1.0, 0.9)
 			canvas.draw_rect(badge_rect, outline_col, false, 1.5)
 			canvas.draw_string(font, Vector2(center.x - sum_w * 0.5, tray_rect.end.y - 13.0), summary, HORIZONTAL_ALIGNMENT_CENTER, -1, 13, outline_col)
 

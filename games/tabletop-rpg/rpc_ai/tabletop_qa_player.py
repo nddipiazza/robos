@@ -94,9 +94,21 @@ class TabletopQAPlayer:
         self.log("Clicking turn overlay banner on screen...")
         return self.execute_action("click_turn_overlay")
 
-    def move(self, x: int, y: int) -> dict:
-        self.log(f"Advancing hero to grid square ({x}, {y})...")
-        return self.execute_action("move", x=x, y=y)
+    def click_trap_overlay(self) -> dict:
+        self.log("Clicking trap sprung overlay banner to roll hazard dice...")
+        return self.execute_action("click_trap_overlay")
+
+    def confirm_trap_roll(self) -> dict:
+        self.log("Confirming trap roll and triggering hazard dice...")
+        return self.execute_action("confirm_trap_roll")
+
+    def skip_trap_overlay(self) -> dict:
+        self.log("Skipping trap overlay and instantly settling hazard...")
+        return self.execute_action("skip_trap_overlay")
+
+    def move(self, x: int, y: int, interactive: bool = False) -> dict:
+        self.log(f"Advancing hero to grid square ({x}, {y}) (interactive={interactive})...")
+        return self.execute_action("move", x=x, y=y, interactive=interactive)
 
     def click_tile(self, x: int, y: int) -> dict:
         self.log(f"Clicking tabletop tile at ({x}, {y})...")
@@ -149,9 +161,9 @@ class TabletopQAPlayer:
             kwargs["monsterId"] = monster_id
         return self.execute_action("dm_attack", **kwargs)
 
-    def search(self) -> dict:
-        self.log("Searching chamber for treasure...")
-        return self.execute_action("search")
+    def search(self, interactive: bool = False) -> dict:
+        self.log(f"Searching chamber for treasure (interactive={interactive})...")
+        return self.execute_action("search", interactive=interactive)
 
     def search_traps(self) -> dict:
         self.log("Searching area for hidden traps and secret doors...")
