@@ -104,6 +104,15 @@ var auto_play_step: int = 0
 @onready var btn_ai_confirm: Button = $UI/AIConfirmModal/Card/Margin/VBox/ButtonBox/BtnConfirm
 @onready var btn_ai_cancel: Button = $UI/AIConfirmModal/Card/Margin/VBox/ButtonBox/BtnCancel
 
+var turn_overlay_btn: Button = null
+var flashy_number_panel: PanelContainer = null
+var flashy_number_label: Label = null
+var flashy_subtitle_label: Label = null
+var flashy_number_time: float = 0.0
+var flashy_number_duration: float = 2.4
+var flashy_number_val: int = 0
+var turn_overlay_mode: String = "none" # "roll_prompt", "turn_complete", "none"
+
 @onready var elf_spell_modal: ColorRect = get_node_or_null("UI/ElfSpellSelectModal")
 @onready var elf_spell_card: PanelContainer = get_node_or_null("UI/ElfSpellSelectModal/Card")
 @onready var elf_spell_decks_grid: GridContainer = get_node_or_null("UI/ElfSpellSelectModal/Card/Margin/VBox/DecksGrid")
@@ -180,6 +189,7 @@ func _ready() -> void:
 	_setup_ui_signals()
 	_setup_ai_modal_styles()
 	_setup_elf_spell_modal()
+	_setup_turn_overlay_ui()
 	_load_door_textures()
 	_load_hero_token_textures()
 	_update_ui()
@@ -873,6 +883,20 @@ func _process(delta: float) -> void:
 						die["current_face"] = die.get("final_face", "skull")
 		needs_redraw = true
 
+	if flashy_number_panel and flashy_number_panel.visible:
+		flashy_number_time += delta
+		if flashy_number_time >= flashy_number_duration:
+			flashy_number_panel.visible = false
+		else:
+			var pop_prog = clampf(flashy_number_time / 0.22, 0.0, 1.0)
+			var s = lerpf(1.35, 1.0, ease(pop_prog, -2.5))
+			flashy_number_panel.scale = Vector2(s, s)
+			if flashy_number_time <= 0.9:
+				flashy_number_panel.modulate.a = 1.0
+			else:
+				var fade_prog = (flashy_number_time - 0.9) / (flashy_number_duration - 0.9)
+				flashy_number_panel.modulate.a = clampf(1.0 - fade_prog, 0.0, 1.0)
+
 	if needs_redraw:
 		queue_redraw_all()
 
@@ -1128,6 +1152,7 @@ func show_elf_spell_selection_modal() -> void:
 func close_elf_spell_selection_modal() -> void:
 	if elf_spell_modal:
 		elf_spell_modal.visible = false
+	_update_ui()
 
 func select_elf_element(elem_key: String) -> Dictionary:
 	elem_key = elem_key.to_lower().strip_edges()
@@ -1679,6 +1704,7 @@ func roll_movement_dice() -> Dictionary:
 	turn_state = "moving"
 	movement_start_pos = hero.get("grid_pos", Vector2i(-1, -1))
 	movement_trail = [movement_start_pos]
+	show_flashy_roll_number(int(roll.get("total", 0)))
 	trigger_movement_dice_roll(roll, str(hero.get("name", "Hero")), dice_vals)
 	_update_ui()
 	queue_redraw_all()
@@ -3063,6 +3089,186 @@ func _update_ui() -> void:
 	if log_label:
 		log_label.text = log_text
 
+	_update_turn_overlay()
+
+func _setup_turn_overlay_ui() -> void:
+	var ui = get_node_or_null("UI")
+	if not ui:
+		return
+
+	if turn_overlay_btn and is_instance_valid(turn_overlay_btn):
+		turn_overlay_btn.queue_free()
+	if flashy_number_panel and is_instance_valid(flashy_number_panel):
+		flashy_number_panel.queue_free()
+
+	# 1. Turn Overlay Button ("Rogar (Barbarian)'s turn... Click to roll!" or "turn complete, next turn Dorgan")
+	turn_overlay_btn = Button.new()
+	turn_overlay_btn.name = "TurnOverlayBtn"
+	turn_overlay_btn.custom_minimum_size = Vector2(580, 56)
+	turn_overlay_btn.position = Vector2(417, 100) # Centered at X=707 over the board (417 = 707 - 290)
+	turn_overlay_btn.size = Vector2(580, 56)
+	turn_overlay_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	turn_overlay_btn.visible = false
+	turn_overlay_btn.add_theme_font_size_override("font_size", 18)
+	turn_overlay_btn.add_theme_color_override("font_color", Color(1.0, 0.94, 0.65, 1.0))
+	turn_overlay_btn.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 0.85, 1.0))
+	turn_overlay_btn.add_theme_color_override("font_pressed_color", Color(0.95, 0.85, 0.4, 1.0))
+
+	var sb_normal = StyleBoxFlat.new()
+	sb_normal.bg_color = Color(0.06, 0.08, 0.14, 0.94)
+	sb_normal.border_color = Color(1.0, 0.82, 0.20, 0.95)
+	sb_normal.set_border_width_all(2)
+	sb_normal.set_corner_radius_all(12)
+	sb_normal.shadow_color = Color(0, 0, 0, 0.65)
+	sb_normal.shadow_size = 14
+	sb_normal.shadow_offset = Vector2(0, 4)
+	turn_overlay_btn.add_theme_stylebox_override("normal", sb_normal)
+
+	var sb_hover = StyleBoxFlat.new()
+	sb_hover.bg_color = Color(0.10, 0.13, 0.22, 0.98)
+	sb_hover.border_color = Color(1.0, 0.95, 0.45, 1.0)
+	sb_hover.set_border_width_all(2)
+	sb_hover.set_corner_radius_all(12)
+	sb_hover.shadow_color = Color(1.0, 0.85, 0.2, 0.35)
+	sb_hover.shadow_size = 20
+	sb_hover.shadow_offset = Vector2(0, 4)
+	turn_overlay_btn.add_theme_stylebox_override("hover", sb_hover)
+
+	var sb_pressed = StyleBoxFlat.new()
+	sb_pressed.bg_color = Color(0.04, 0.06, 0.10, 1.0)
+	sb_pressed.border_color = Color(0.85, 0.70, 0.15, 1.0)
+	sb_pressed.set_border_width_all(2)
+	sb_pressed.set_corner_radius_all(12)
+	turn_overlay_btn.add_theme_stylebox_override("pressed", sb_pressed)
+
+	turn_overlay_btn.pressed.connect(_on_turn_overlay_pressed)
+	ui.add_child(turn_overlay_btn)
+
+	# 2. Flashy Big Number Panel (Top of Screen)
+	flashy_number_panel = PanelContainer.new()
+	flashy_number_panel.name = "FlashyNumberPanel"
+	flashy_number_panel.custom_minimum_size = Vector2(320, 100)
+	flashy_number_panel.position = Vector2(547, 36) # Centered at X=707 over the board, top of screen (547 = 707 - 160)
+	flashy_number_panel.size = Vector2(320, 100)
+	flashy_number_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	flashy_number_panel.visible = false
+
+	var sb_flashy = StyleBoxFlat.new()
+	sb_flashy.bg_color = Color(0.08, 0.04, 0.04, 0.96)
+	sb_flashy.border_color = Color(1.0, 0.84, 0.25, 1.0)
+	sb_flashy.set_border_width_all(2)
+	sb_flashy.set_corner_radius_all(16)
+	sb_flashy.shadow_color = Color(1.0, 0.8, 0.15, 0.45)
+	sb_flashy.shadow_size = 24
+	flashy_number_panel.add_theme_stylebox_override("panel", sb_flashy)
+
+	var vbox = VBoxContainer.new()
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	flashy_number_panel.add_child(vbox)
+
+	flashy_subtitle_label = Label.new()
+	flashy_subtitle_label.text = "🎲 MOVEMENT ROLL"
+	flashy_subtitle_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	flashy_subtitle_label.add_theme_font_size_override("font_size", 13)
+	flashy_subtitle_label.add_theme_color_override("font_color", Color(1.0, 0.82, 0.3, 0.95))
+	flashy_subtitle_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vbox.add_child(flashy_subtitle_label)
+
+	flashy_number_label = Label.new()
+	flashy_number_label.text = "0"
+	flashy_number_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	flashy_number_label.add_theme_font_size_override("font_size", 68)
+	flashy_number_label.add_theme_color_override("font_color", Color(1.0, 0.95, 0.45, 1.0))
+	flashy_number_label.add_theme_color_override("font_shadow_color", Color(0.2, 0.05, 0.0, 0.95))
+	flashy_number_label.add_theme_constant_override("shadow_offset_x", 2)
+	flashy_number_label.add_theme_constant_override("shadow_offset_y", 3)
+	flashy_number_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vbox.add_child(flashy_number_label)
+
+	ui.add_child(flashy_number_panel)
+
+func show_flashy_roll_number(total: int) -> void:
+	flashy_number_val = total
+	if flashy_number_label:
+		flashy_number_label.text = str(total)
+	if flashy_subtitle_label:
+		flashy_subtitle_label.text = "🎲 ROLLED %d SQUARES" % total
+	flashy_number_time = 0.0
+	if flashy_number_panel:
+		flashy_number_panel.visible = true
+		flashy_number_panel.modulate.a = 1.0
+		flashy_number_panel.pivot_offset = flashy_number_panel.size * 0.5
+		flashy_number_panel.scale = Vector2(1.35, 1.35)
+
+func get_next_turn_name() -> String:
+	if heroes.is_empty():
+		return "Zargon"
+	if active_hero_idx >= heroes.size() - 1:
+		return "Zargon"
+	var next_idx = active_hero_idx + 1
+	var next_h = heroes[next_idx]
+	return get_hero_character_name(next_h)
+
+func _update_turn_overlay() -> void:
+	if not turn_overlay_btn:
+		return
+
+	if current_phase != "hero_phase":
+		turn_overlay_btn.visible = false
+		turn_overlay_mode = "none"
+		return
+
+	if is_ai_step_pending:
+		turn_overlay_btn.visible = false
+		return
+	if elf_spell_modal and elf_spell_modal.visible:
+		turn_overlay_btn.visible = false
+		return
+
+	var hero = get_active_hero()
+	if hero.is_empty():
+		turn_overlay_btn.visible = false
+		turn_overlay_mode = "none"
+		return
+
+	var h_name = get_hero_character_name(hero)
+	var h_class = get_hero_class_name(hero)
+
+	# Keep centered at X=707
+	turn_overlay_btn.position.x = 707.0 - turn_overlay_btn.size.x * 0.5
+	if flashy_number_panel:
+		flashy_number_panel.position.x = 707.0 - flashy_number_panel.size.x * 0.5
+
+	# Case 1: Time to roll dice
+	var can_roll = (not movement_rolled) and (not movement_closed) and not (moved_before_action and has_acted_this_turn)
+	if turn_state == "awaiting_roll" or (can_roll and not has_acted_this_turn):
+		turn_overlay_mode = "roll_prompt"
+		turn_overlay_btn.visible = true
+		turn_overlay_btn.text = "%s (%s)'s turn... Click to roll!" % [h_name, h_class]
+		return
+
+	# Case 2: Turn complete (no more turn remaining)
+	var is_turn_done = (turn_state == "turn_complete") or (movement_closed and has_acted_this_turn) or (movement_rolled and movement_remaining <= 0 and has_acted_this_turn)
+	if is_turn_done:
+		turn_overlay_mode = "turn_complete"
+		turn_overlay_btn.visible = true
+		if flashy_number_panel:
+			flashy_number_panel.visible = false
+		var next_name = get_next_turn_name()
+		turn_overlay_btn.text = "turn complete, next turn %s" % next_name
+		return
+
+	# Otherwise, hero is currently moving or has action available
+	turn_overlay_btn.visible = false
+	turn_overlay_mode = "none"
+
+func _on_turn_overlay_pressed() -> void:
+	if turn_overlay_mode == "roll_prompt":
+		roll_movement_dice()
+	elif turn_overlay_mode == "turn_complete":
+		end_turn()
+
 func _update_character_and_enemy_cards() -> void:
 	if not hero_cards_grid:
 		hero_cards_grid = get_node_or_null("UI/StatsPanel/HeroCardsGrid")
@@ -3772,6 +3978,11 @@ func get_telemetry_state() -> Dictionary:
 			"stepBadge": ai_modal_step_badge.text if (ai_confirm_modal and ai_confirm_modal.visible and ai_modal_step_badge) else "",
 			"commandText": ai_modal_cmd_text.text if (ai_confirm_modal and ai_confirm_modal.visible and ai_modal_cmd_text) else "",
 			"actionTitle": ai_modal_action_title.text if (ai_confirm_modal and ai_confirm_modal.visible and ai_modal_action_title) else ""
+		},
+		"turnOverlay": {
+			"visible": turn_overlay_btn.visible if turn_overlay_btn else false,
+			"mode": turn_overlay_mode,
+			"text": turn_overlay_btn.text if turn_overlay_btn else ""
 		}
 	}
 
@@ -3843,7 +4054,20 @@ func get_telemetry_state() -> Dictionary:
 		"aiStepPending": is_ai_step_pending,
 		"pendingAiCommand": pending_ai_command,
 		"nextAiStep": get_next_ai_step_command(),
-		"cartridge": CartridgeManager.active_cartridge.get("cartridgeId", "")
+		"cartridge": CartridgeManager.active_cartridge.get("cartridgeId", ""),
+		"turnOverlay": {
+			"visible": turn_overlay_btn.visible if turn_overlay_btn else false,
+			"mode": turn_overlay_mode,
+			"text": turn_overlay_btn.text if turn_overlay_btn else "",
+			"activeHero": get_hero_character_name(get_active_hero()),
+			"activeClass": get_hero_class_name(get_active_hero()),
+			"nextTurnName": get_next_turn_name(),
+			"flashyNumber": {
+				"visible": flashy_number_panel.visible if flashy_number_panel else false,
+				"value": flashy_number_val,
+				"alpha": flashy_number_panel.modulate.a if flashy_number_panel else 0.0
+			}
+		}
 	}
 
 func execute_action(action_data: Dictionary) -> Dictionary:
@@ -4126,6 +4350,15 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 		"end_turn":
 			end_turn()
 			return { "success": true }
+		"click_turn_overlay":
+			if turn_overlay_btn and turn_overlay_btn.visible:
+				if turn_overlay_mode == "roll_prompt":
+					var roll_res = roll_movement_dice()
+					return { "success": true, "mode": "roll_prompt", "roll": roll_res }
+				elif turn_overlay_mode == "turn_complete":
+					end_turn()
+					return { "success": true, "mode": "turn_complete", "activeHero": get_active_hero().get("id", "") }
+			return { "success": false, "error": "Turn overlay not visible or active" }
 		"ai_step":
 			var auto_confirm = bool(action_data.get("confirm", false))
 			if auto_confirm:

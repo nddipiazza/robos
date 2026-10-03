@@ -90,6 +90,10 @@ class TabletopQAPlayer:
         self.log(f"🎲 Rolled: [{roll.get('d1', 0)}, {roll.get('d2', 0)}] = {roll.get('total', 0)} squares")
         return res
 
+    def click_turn_overlay(self) -> dict:
+        self.log("Clicking turn overlay banner on screen...")
+        return self.execute_action("click_turn_overlay")
+
     def move(self, x: int, y: int) -> dict:
         self.log(f"Advancing hero to grid square ({x}, {y})...")
         return self.execute_action("move", x=x, y=y)

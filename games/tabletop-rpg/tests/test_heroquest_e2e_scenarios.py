@@ -1587,6 +1587,113 @@ class TestHeroQuestE2EScenarios(unittest.TestCase):
         self.assertIn("Skeleton", log_text)
         self.assertNotIn("Verag the Orc Warlord attacks", log_text)
 
+    def test_49_turn_overlay_click_to_roll_flashy_number_and_turn_complete(self):
+        """Scenario 49: Turn Overlay Banner - Click to Roll, Big Flashy Number at Top, and Turn Complete."""
+        bdd_scenario_header(49, "Turn Overlay: Click to Roll, Top Flashy Number & Turn Complete")
+
+        bdd_step("GIVEN", "Barbarian starts turn awaiting roll")
+        self.ai.reset_game()
+        st = self.ai.get_state()
+        overlay = st.get("turnOverlay", {})
+
+        bdd_step("THEN", "Screen displays roll overlay: 'Rogar (Barbarian)'s turn... Click to roll!'",
+                 assertions=[
+                     f"Overlay visible: {overlay.get('visible')}",
+                     f"Overlay mode: '{overlay.get('mode')}' (expected 'roll_prompt')",
+                     f"Overlay text: '{overlay.get('text')}'"
+                 ])
+        self.assertTrue(overlay.get("visible"))
+        self.assertEqual(overlay.get("mode"), "roll_prompt")
+        self.assertEqual(overlay.get("text"), "Rogar (Barbarian)'s turn... Click to roll!")
+
+        bdd_step("WHEN", "Player clicks the turn overlay banner")
+        res = self.ai.click_turn_overlay()
+        st_after_roll = self.ai.get_state()
+        overlay_after_roll = st_after_roll.get("turnOverlay", {})
+        flashy = overlay_after_roll.get("flashyNumber", {})
+
+        bdd_step("THEN", "Movement dice are rolled, roll overlay hides, and big flashy number appears at top of screen",
+                 assertions=[
+                     f"Action success: {res.get('success')}",
+                     f"Movement rolled: {st_after_roll.get('movementRolled')}",
+                     f"Movement remaining: {st_after_roll.get('movementRemaining')}",
+                     f"Roll prompt overlay hidden: {not overlay_after_roll.get('visible')}",
+                     f"Flashy number panel visible: {flashy.get('visible')}",
+                     f"Flashy number value: {flashy.get('value')} (expected {st_after_roll.get('movementRemaining')})",
+                     f"Flashy number alpha: {flashy.get('alpha')}"
+                 ])
+        self.assertTrue(res.get("success"))
+        self.assertTrue(st_after_roll.get("movementRolled"))
+        self.assertGreater(st_after_roll.get("movementRemaining", 0), 0)
+        self.assertFalse(overlay_after_roll.get("visible"))
+        self.assertTrue(flashy.get("visible"))
+        self.assertEqual(flashy.get("value"), st_after_roll.get("movementRemaining"))
+        self.assertGreater(flashy.get("alpha", 0.0), 0.0)
+
+        bdd_step("WHEN", "Barbarian completes all movement and takes an action (turn ends)",
+                 info="Setting turnState to 'turn_complete'")
+        self.ai.set_state(turnState="turn_complete", movementRemaining=0, hasActed=True, movementClosed=True)
+        st_complete = self.ai.get_state()
+        overlay_complete = st_complete.get("turnOverlay", {})
+
+        bdd_step("THEN", "Overlay displays: 'turn complete, next turn Dorgan'",
+                 assertions=[
+                     f"Overlay visible: {overlay_complete.get('visible')}",
+                     f"Overlay mode: '{overlay_complete.get('mode')}' (expected 'turn_complete')",
+                     f"Overlay text: '{overlay_complete.get('text')}'"
+                 ])
+        self.assertTrue(overlay_complete.get("visible"))
+        self.assertEqual(overlay_complete.get("mode"), "turn_complete")
+        self.assertEqual(overlay_complete.get("text"), "turn complete, next turn Dorgan")
+
+        bdd_step("WHEN", "Player clicks the turn complete overlay")
+        res_next = self.ai.click_turn_overlay()
+        st_next = self.ai.get_state()
+        overlay_next = st_next.get("turnOverlay", {})
+
+        bdd_step("THEN", "Turn advances to Dwarf and displays: 'Dorgan (Dwarf)'s turn... Click to roll!'",
+                 assertions=[
+                     f"Active hero index: {st_next.get('activeHeroIndex')} (expected 1)",
+                     f"Active hero: '{st_next.get('activeHero')}' (expected 'dwarf')",
+                     f"Turn state: '{st_next.get('turnState')}' (expected 'awaiting_roll')",
+                     f"Dwarf overlay text: '{overlay_next.get('text')}'"
+                 ])
+        self.assertEqual(st_next.get("activeHeroIndex"), 1)
+        self.assertEqual(st_next.get("activeHero"), "dwarf")
+        self.assertEqual(st_next.get("turnState"), "awaiting_roll")
+        self.assertTrue(overlay_next.get("visible"))
+        self.assertEqual(overlay_next.get("text"), "Dorgan (Dwarf)'s turn... Click to roll!")
+
+        bdd_step("WHEN", "Configuring custom hero names and classes (e.g. Grimjaw the Berserker)")
+        self.ai.set_state(
+            activeHeroIndex=0,
+            turnState="awaiting_roll",
+            movementRolled=False,
+            movementRemaining=0,
+            hasActed=False,
+            movementClosed=False,
+            heroes=[{"id": "barbarian", "characterName": "Grimjaw", "heroClass": "Berserker"}]
+        )
+        st_custom = self.ai.get_state()
+        overlay_custom = st_custom.get("turnOverlay", {})
+        bdd_step("THEN", "Overlay dynamically adapts to custom hero: 'Grimjaw (Berserker)'s turn... Click to roll!'",
+                 assertions=[f"Custom overlay text: '{overlay_custom.get('text')}'"])
+        self.assertEqual(overlay_custom.get("text"), "Grimjaw (Berserker)'s turn... Click to roll!")
+
+        bdd_step("WHEN", "Wizard (last hero) concludes turn")
+        self.ai.set_state(
+            activeHeroIndex=3,
+            turnState="turn_complete",
+            movementRemaining=0,
+            hasActed=True,
+            movementClosed=True
+        )
+        st_wiz = self.ai.get_state()
+        overlay_wiz = st_wiz.get("turnOverlay", {})
+        bdd_step("THEN", "Overlay attributes next turn to Zargon: 'turn complete, next turn Zargon'",
+                 assertions=[f"Last hero complete text: '{overlay_wiz.get('text')}'"])
+        self.assertEqual(overlay_wiz.get("text"), "turn complete, next turn Zargon")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
