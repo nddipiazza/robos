@@ -114,9 +114,12 @@ class TabletopQAPlayer:
         self.log(f"Unequipping item '{item_id}'{' from ' + hero_id if hero_id else ''}...")
         return self.execute_action("unequip", itemId=item_id, heroId=hero_id)
 
-    def dm_attack(self, hero_id: str = "") -> dict:
-        self.log(f"Zargon monster strikes at hero{' ' + hero_id if hero_id else ''}...")
-        return self.execute_action("dm_attack", heroId=hero_id)
+    def dm_attack(self, hero_id: str = "", monster_id: str = "") -> dict:
+        self.log(f"Zargon monster{' ' + monster_id if monster_id else ''} strikes at hero{' ' + hero_id if hero_id else ''}...")
+        kwargs = {"heroId": hero_id}
+        if monster_id:
+            kwargs["monsterId"] = monster_id
+        return self.execute_action("dm_attack", **kwargs)
 
     def search(self) -> dict:
         self.log("Searching chamber for treasure...")
