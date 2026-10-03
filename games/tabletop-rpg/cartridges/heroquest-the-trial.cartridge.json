@@ -10,7 +10,7 @@
     "ruleset": "heroquest",
     "description": "The Emperor calls upon the kingdom's greatest champions to defeat the armies of Morcar and the Witch Lord.",
     "coverColor": "#78350f",
-    "icon": "🛡️",
+    "icon": "\ud83d\udee1\ufe0f",
     "mapCount": 3,
     "heroCount": 4,
     "monsterCount": 6,
@@ -130,7 +130,7 @@
           "slug": "heal-body",
           "name": "Heal Body",
           "element": "earth",
-          "icon": "💖",
+          "icon": "\ud83d\udc96",
           "description": "Restores up to 4 lost Body Points to any Hero, including yourself.",
           "effect": "heal-bp",
           "val": 4
@@ -140,7 +140,7 @@
           "slug": "pass-through-rock",
           "name": "Pass Through Rock",
           "element": "earth",
-          "icon": "🧱",
+          "icon": "\ud83e\uddf1",
           "description": "Allows the caster or ally to move through solid stone walls on their next turn.",
           "effect": "phase-walls",
           "val": 1
@@ -150,7 +150,7 @@
           "slug": "rock-skin",
           "name": "Rock Skin",
           "element": "earth",
-          "icon": "🛡️",
+          "icon": "\ud83d\udee1\ufe0f",
           "description": "Hardens the caster's skin, granting +1 extra Combat Defend Die until damaged.",
           "effect": "buff-def",
           "val": 1
@@ -196,7 +196,7 @@
           "slug": "ball-of-flame",
           "name": "Ball of Flame",
           "element": "fire",
-          "icon": "☄️",
+          "icon": "\u2604\ufe0f",
           "description": "Hurls a blazing sphere dealing 2 BP damage. Target defends with 2 dice.",
           "effect": "damage-bp",
           "val": 2
@@ -206,7 +206,7 @@
           "slug": "courage",
           "name": "Courage",
           "element": "fire",
-          "icon": "🦁",
+          "icon": "\ud83e\udd81",
           "description": "Fills a hero with magical bravado, granting +2 extra Combat Attack Dice until no monsters remain.",
           "effect": "buff-atk",
           "val": 2
@@ -216,7 +216,7 @@
           "slug": "fire-of-wrath",
           "name": "Fire of Wrath",
           "element": "fire",
-          "icon": "🔥",
+          "icon": "\ud83d\udd25",
           "description": "Strikes any visible monster with darts of flame, causing 1 BP damage. Target defends with 1 die.",
           "effect": "damage-bp",
           "val": 1
@@ -226,7 +226,7 @@
           "slug": "water-of-healing",
           "name": "Water of Healing",
           "element": "water",
-          "icon": "💧",
+          "icon": "\ud83d\udca7",
           "description": "Restores up to 4 lost Body Points to any Hero.",
           "effect": "heal-bp",
           "val": 4
@@ -236,7 +236,7 @@
           "slug": "sleep",
           "name": "Sleep",
           "element": "water",
-          "icon": "💤",
+          "icon": "\ud83d\udca4",
           "description": "Puts a monster into magical slumber. It cannot move or attack until it rolls a 6 to wake up.",
           "effect": "status-sleep",
           "val": 1
@@ -246,7 +246,7 @@
           "slug": "veil-of-mist",
           "name": "Veil of Mist",
           "element": "water",
-          "icon": "🌫️",
+          "icon": "\ud83c\udf2b\ufe0f",
           "description": "Envelops the caster in thick fog, allowing movement unseen past monsters.",
           "effect": "status-stealth",
           "val": 1
@@ -256,7 +256,7 @@
           "slug": "genie",
           "name": "Genie",
           "element": "air",
-          "icon": "🧞",
+          "icon": "\ud83e\uddde",
           "description": "Summons an ancient djinn to attack any visible monster with 5 combat dice, or to open any locked door.",
           "effect": "summon-attack",
           "val": 5
@@ -266,7 +266,7 @@
           "slug": "swift-wind",
           "name": "Swift Wind",
           "element": "air",
-          "icon": "💨",
+          "icon": "\ud83d\udca8",
           "description": "Bestows the speed of the tempest, allowing the hero to roll double movement dice (4d6).",
           "effect": "buff-move",
           "val": 2
@@ -276,7 +276,7 @@
           "slug": "tempest",
           "name": "Tempest",
           "element": "air",
-          "icon": "🌪️",
+          "icon": "\ud83c\udf2a\ufe0f",
           "description": "Creates a localized vortex trapping a monster for 1 turn. It misses its next turn.",
           "effect": "status-freeze",
           "val": 1
@@ -442,7 +442,10 @@
           "id": "trigger-a-emperor-letter",
           "marker": "A",
           "room": "room-grand-fossil",
-          "tile": [3, 9],
+          "tile": [
+            3,
+            9
+          ],
           "condition": "search_treasure",
           "title": "The Emperor's Hidden Epistle",
           "banner": "QUEST NOTE [A]",
@@ -453,7 +456,7 @@
             "id": "item-emperor-letter",
             "name": "Letter from the Emperor",
             "type": "quest_item",
-            "icon": "📜",
+            "icon": "\ud83d\udcdc",
             "description": "An urgent parchment bearing the Emperor's royal wax crest, calling for Verag's defeat."
           },
           "onceOnly": true,
@@ -463,7 +466,10 @@
           "id": "trigger-b-crypt-ambush",
           "marker": "B",
           "room": "room-nw-crypt",
-          "tile": [4, 3],
+          "tile": [
+            4,
+            3
+          ],
           "condition": "enter_room",
           "title": "Restless Dead of the Catacomb",
           "banner": "QUEST NOTE [B]",
@@ -475,7 +481,10 @@
               "name": "Ambush Skeleton",
               "monsterType": "skeleton",
               "tokenColor": "#b91c1c",
-              "grid_pos": [6, 4],
+              "grid_pos": [
+                6,
+                4
+              ],
               "roomId": "room-nw-crypt",
               "current_bp": 1,
               "bodyPoints": 1,
@@ -502,7 +511,7 @@
             "type": "quest_note",
             "title": "Dragon Skull Altar Hoard",
             "gold": 100,
-            "icon": "💎",
+            "icon": "\ud83d\udc8e",
             "description": "Beneath the dragon skull altar lies a velvet pouch containing 100 Gold Coins!",
             "flavor": "Unclaimed loot from fallen adventurers of ages past."
           }
@@ -520,7 +529,7 @@
             "type": "quest_note",
             "title": "Ancient Crypt Stone Chest",
             "gold": 50,
-            "icon": "💰",
+            "icon": "\ud83d\udcb0",
             "description": "An ancient stone chest contains 50 Gold Coins.",
             "flavor": "Carved with the runes of the ancient kings, the heavy stone lid gives way to reveal a cache of gold."
           }
@@ -548,7 +557,7 @@
             "title": "Armory Weapons Chest",
             "gold": 30,
             "item": "healing_potion",
-            "icon": "🧪",
+            "icon": "\ud83e\uddea",
             "description": "Inside a reinforced weapons chest, you find a Potion of Healing and 30 Gold Coins.",
             "flavor": "Left behind by the garrison, this sealed elixir restores up to 4 Body Points."
           }
@@ -656,7 +665,7 @@
             "type": "quest_note",
             "title": "Hidden Vault Strongbox",
             "gold": 150,
-            "icon": "👑",
+            "icon": "\ud83d\udc51",
             "description": "A magnificent gilded chest contains 150 Gold Coins!",
             "flavor": "The secret vault guarded by the hidden doorway yields its grand prize."
           }
@@ -882,9 +891,9 @@
           "id": "furn-altar-1",
           "name": "Sorcerer's Altar / Desk",
           "type": "altar",
-          "x": 13,
-          "y": 9,
-          "width": 3,
+          "x": 14,
+          "y": 8,
+          "width": 2,
           "height": 2,
           "roomId": "room-center-mid"
         },
@@ -942,9 +951,9 @@
           "id": "furn-table-1",
           "name": "Council Table",
           "type": "table",
-          "x": 13,
-          "y": 15,
-          "width": 3,
+          "x": 14,
+          "y": 14,
+          "width": 2,
           "height": 2,
           "roomId": "room-center-s"
         },

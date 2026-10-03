@@ -49,13 +49,13 @@ let currentData = {
         ],
         doors: [],
         furniture: [
-          { id: 'furn-altar-1', name: "Sorcerer's Altar / Desk", type: 'altar', x: 13, y: 9, width: 3, height: 2, roomId: 'room-center-mid' },
+          { id: 'furn-altar-1', name: "Sorcerer's Altar / Desk", type: 'altar', x: 14, y: 8, width: 2, height: 2, roomId: 'room-center-mid' },
           { id: 'furn-bookcase-1', name: 'Grand Bookcase', type: 'bookcase', x: 13, y: 3, width: 3, height: 1, roomId: 'room-center-n' },
           { id: 'furn-bookshelf-1', name: 'Study Bookshelf', type: 'bookshelf', x: 23, y: 5, width: 2, height: 1, roomId: 'room-e-parlor' },
           { id: 'furn-boulder-1', name: 'Fossil Boulder Tile', type: 'boulder', x: 2, y: 7, width: 1, height: 1, roomId: 'room-grand-fossil' },
-          { id: 'furn-tomb-1', name: 'Ancient Stone Tomb', type: 'tomb', x: 3, y: 2, width: 2, height: 3, roomId: 'room-nw-crypt' },
+          { id: 'furn-tomb-1', name: 'Ancient Stone Tomb', type: 'tomb', x: 5, y: 2, width: 2, height: 2, roomId: 'room-nw-crypt' },
           { id: 'furn-chest-1', name: 'Vault Chest of Gold', type: 'chest', x: 23, y: 2, width: 1, height: 1, roomId: 'room-ne-vault' },
-          { id: 'furn-table-1', name: 'Council Table', type: 'table', x: 13, y: 15, width: 3, height: 2, roomId: 'room-center-s' },
+          { id: 'furn-table-1', name: 'Council Table', type: 'table', x: 14, y: 14, width: 2, height: 2, roomId: 'room-center-s' },
           { id: 'furn-rack-1', name: 'Weapons Rack', type: 'weapons-rack', x: 8, y: 2, width: 3, height: 1, roomId: 'room-n-armory' }
         ],
         monsters: [
