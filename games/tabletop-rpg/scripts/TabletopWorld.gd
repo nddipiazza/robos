@@ -219,6 +219,14 @@ var turn_overlay_mode: String = "none" # "roll_prompt", "turn_complete", "none"
 @onready var hero_detail_abilities_section: VBoxContainer = get_node_or_null("UI/HeroDetailModal/Card/Margin/VBox/ContentHBox/RightCol/ScrollContainer/DetailsVBox/AbilitiesSection")
 @onready var hero_detail_btn_close: Button = get_node_or_null("UI/HeroDetailModal/Card/Margin/VBox/ButtonBox/BtnClose")
 
+@onready var unavailable_notice_panel: PanelContainer = get_node_or_null("UI/UnavailableNotice")
+@onready var unavailable_notice_label: Label = get_node_or_null("UI/UnavailableNotice/Margin/HBox/NoticeLabel")
+@onready var unavailable_notice_icon: Label = get_node_or_null("UI/UnavailableNotice/Margin/HBox/Icon")
+
+var unavailable_notice_text: String = ""
+var unavailable_notice_timer: float = 0.0
+var unavailable_notice_duration: float = 2.5
+
 var active_detail_hero_id: String = ""
 var _hero_card_bg_cache: Dictionary = {}
 
@@ -295,6 +303,7 @@ func _ready() -> void:
 	_setup_turn_overlay_ui()
 	_setup_log_panel()
 	_setup_hero_detail_modal()
+	_setup_unavailable_notice_style()
 	_load_door_textures()
 	_load_hero_token_textures()
 	_load_monster_token_textures()
@@ -452,6 +461,17 @@ func _setup_action_button_style(btn: Button) -> void:
 		badge.visible = false
 		btn.add_child(badge)
 
+	var shield = btn.get_node_or_null("DisabledClickShield") as Control
+	if not shield:
+		shield = Control.new()
+		shield.name = "DisabledClickShield"
+		shield.set_anchors_preset(Control.PRESET_FULL_RECT)
+		shield.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		shield.gui_input.connect(func(ev: InputEvent):
+			_on_disabled_action_button_clicked(ev, btn)
+		)
+		btn.add_child(shield)
+
 func _update_action_tile(btn: Button, icon_key: String, count: int, title: String, desc: String, badge_color: Color = Color(0.88, 0.15, 0.28, 0.92)) -> void:
 	if not btn:
 		return
@@ -523,6 +543,157 @@ func _update_scroll_buttons_visibility() -> void:
 		btn_scroll_left.visible = has_overflow and actions_scroll.scroll_horizontal > 4
 	if btn_scroll_right:
 		btn_scroll_right.visible = has_overflow and (actions_scroll.scroll_horizontal < (content_w - view_w - 4.0))
+
+func _setup_unavailable_notice_style() -> void:
+	if not unavailable_notice_panel:
+		unavailable_notice_panel = get_node_or_null("UI/UnavailableNotice")
+	if not unavailable_notice_label:
+		unavailable_notice_label = get_node_or_null("UI/UnavailableNotice/Margin/HBox/NoticeLabel")
+	if not unavailable_notice_icon:
+		unavailable_notice_icon = get_node_or_null("UI/UnavailableNotice/Margin/HBox/Icon")
+
+	if unavailable_notice_panel:
+		unavailable_notice_panel.visible = false
+		unavailable_notice_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var sb = StyleBoxFlat.new()
+		sb.bg_color = Color(0.12, 0.08, 0.02, 0.95)
+		sb.border_color = Color(1.0, 0.75, 0.2, 0.95)
+		sb.set_border_width_all(2)
+		sb.set_corner_radius_all(8)
+		sb.shadow_color = Color(1.0, 0.65, 0.1, 0.4)
+		sb.shadow_size = 6
+		unavailable_notice_panel.add_theme_stylebox_override("panel", sb)
+
+	if unavailable_notice_label:
+		unavailable_notice_label.add_theme_font_size_override("font_size", 14)
+		unavailable_notice_label.add_theme_color_override("font_color", Color(1.0, 0.92, 0.45, 1.0))
+
+	if unavailable_notice_icon:
+		unavailable_notice_icon.text = "⚠️"
+		unavailable_notice_icon.add_theme_font_size_override("font_size", 16)
+
+func show_unavailable_notice(notice_text: String, tile: Vector2i = Vector2i(-1, -1), custom_pos: Vector2 = Vector2.ZERO) -> void:
+	unavailable_notice_text = notice_text
+	unavailable_notice_timer = unavailable_notice_duration
+
+	if unavailable_notice_panel:
+		unavailable_notice_panel.visible = true
+		unavailable_notice_panel.modulate.a = 1.0
+	if unavailable_notice_label:
+		unavailable_notice_label.text = notice_text
+
+	var f_pos = Vector2.ZERO
+	if custom_pos != Vector2.ZERO:
+		f_pos = custom_pos
+	elif tile != Vector2i(-1, -1):
+		f_pos = board_offset + Vector2((tile.x + 0.5) * tile_size, (tile.y + 0.5) * tile_size)
+	else:
+		var hero = get_active_hero()
+		if not hero.is_empty():
+			var h_pos: Vector2i = hero.get("grid_pos", Vector2i(1, 1))
+			f_pos = board_offset + Vector2((h_pos.x + 0.5) * tile_size, (h_pos.y + 0.5) * tile_size)
+		else:
+			f_pos = Vector2(700, 300)
+
+	var ft = {
+		"text": notice_text,
+		"pos": f_pos - Vector2(0, 15),
+		"vel": Vector2(0, -12),
+		"time": 0.0,
+		"duration": 2.5,
+		"hold_duration": 2.0,
+		"alpha": 1.0,
+		"color": Color(1.0, 0.8, 0.2),
+		"is_unavailable": true
+	}
+	floating_texts.append(ft)
+	_log("[NOTICE] ⚠️ %s" % notice_text)
+	queue_redraw_all()
+
+func _get_button_unavailable_reason(btn: Button) -> String:
+	if not btn:
+		return ""
+	var hero = get_active_hero()
+	if btn == btn_roll:
+		if movement_closed or (moved_before_action and has_acted_this_turn):
+			return "Not enough movement"
+		if movement_rolled and movement_remaining <= 0:
+			return "Not enough movement"
+		if movement_rolled and movement_remaining > 0:
+			return "Movement already rolled"
+		return "Movement unavailable"
+	elif btn == btn_attack:
+		if has_acted_this_turn:
+			return "Not enough actions"
+		return "No targets in range"
+	elif btn == btn_cast_spell:
+		if has_acted_this_turn or movement_closed or (moved_before_action and has_acted_this_turn):
+			return "Not enough actions"
+		if hero.get("spells", []).size() == 0:
+			return "No spells available"
+		return "Not enough actions"
+	elif btn == btn_use_item:
+		if hero.get("inventory", []).size() == 0:
+			return "No items in inventory"
+		return "No items available"
+	elif btn == btn_search:
+		if has_acted_this_turn:
+			return "Not enough actions"
+		return _get_search_unavailable_reason()
+	elif btn == btn_search_traps:
+		if has_acted_this_turn:
+			return "Not enough actions"
+		if not can_search_for_traps():
+			return "Monsters present in room"
+		return "Cannot search for traps"
+	elif btn == btn_disarm_trap:
+		if has_acted_this_turn:
+			return "Not enough actions"
+		var adj_traps = get_adjacent_detected_traps()
+		if adj_traps.is_empty():
+			return "No adjacent detected trap"
+		var disarm_check = can_hero_disarm(hero)
+		if not disarm_check.get("can_disarm", false):
+			return "Tool Kit required to disarm"
+		return "Cannot disarm trap"
+	return "Action unavailable"
+
+func _get_search_unavailable_reason() -> String:
+	var hero = get_active_hero()
+	if hero.is_empty():
+		return "No active hero"
+	var h_pos = hero.get("grid_pos", Vector2i(-1, -1))
+	var h_room = _get_room_at(h_pos)
+	var r_id = str(h_room.get("id", "")) if not h_room.is_empty() else ""
+	if r_id == "":
+		return "Cannot search in corridor"
+	for m in monsters:
+		if bool(m.get("is_alive", true)) and int(m.get("current_bp", 1)) > 0:
+			var m_pos = _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
+			var m_room = str(_get_room_at(m_pos).get("id", ""))
+			var m_room_id = str(m.get("roomId", ""))
+			if (m_room != "" and m_room == r_id) or (m_room_id != "" and m_room_id == r_id):
+				return "Monsters present in room"
+	var hero_id = str(hero.get("id", ""))
+	var room_searches: Array = searched_rooms.get(r_id, [])
+	if hero_id in room_searches or room_searches.size() >= 4:
+		return "Room already searched"
+	return "Cannot search room"
+
+func _sync_disabled_click_shields() -> void:
+	var btns = [btn_roll, btn_attack, btn_cast_spell, btn_use_item, btn_search, btn_end_turn, btn_summon, btn_ai_step, btn_search_traps, btn_disarm_trap]
+	for btn in btns:
+		if not btn:
+			continue
+		var shield = btn.get_node_or_null("DisabledClickShield") as Control
+		if shield:
+			shield.mouse_filter = Control.MOUSE_FILTER_STOP if btn.disabled else Control.MOUSE_FILTER_IGNORE
+
+func _on_disabled_action_button_clicked(event: InputEvent, btn: Button) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		var reason = _get_button_unavailable_reason(btn)
+		if reason != "":
+			show_unavailable_notice(reason, Vector2i(-1, -1), btn.global_position + btn.size * 0.5)
 
 func _setup_enemies_panel() -> void:
 	if not btn_toggle_defeated:
@@ -1497,7 +1668,7 @@ func _process(delta: float) -> void:
 			if ft["time"] < dur:
 				var vel = ft.get("vel", Vector2(0, -35))
 				ft["pos"] = ft.get("pos", Vector2.ZERO) + vel * delta
-				var fade_start = dur * 0.65
+				var fade_start = float(ft.get("hold_duration", dur * 0.65))
 				if ft["time"] <= fade_start:
 					ft["alpha"] = 1.0
 				else:
@@ -1597,6 +1768,18 @@ func _process(delta: float) -> void:
 			else:
 				var fade_prog = (flashy_number_time - 0.9) / (flashy_number_duration - 0.9)
 				flashy_number_panel.modulate.a = clampf(1.0 - fade_prog, 0.0, 1.0)
+
+	if unavailable_notice_timer > 0.0:
+		unavailable_notice_timer = maxf(0.0, unavailable_notice_timer - delta)
+		if unavailable_notice_panel:
+			if unavailable_notice_timer <= 0.0:
+				unavailable_notice_panel.visible = false
+			else:
+				unavailable_notice_panel.visible = true
+				if unavailable_notice_timer > 0.5:
+					unavailable_notice_panel.modulate.a = 1.0
+				else:
+					unavailable_notice_panel.modulate.a = clampf(unavailable_notice_timer / 0.5, 0.0, 1.0)
 
 	if needs_redraw:
 		queue_redraw_all()
@@ -2979,6 +3162,8 @@ func _handle_tile_click(tile: Vector2i) -> void:
 			if absi(tile.x - h_pos.x) + absi(tile.y - h_pos.y) == 1:
 				if not has_acted_this_turn:
 					attack_adjacent_monster(str(m.get("id", "")))
+				else:
+					show_unavailable_notice("Not enough actions", tile)
 				return
 
 	# If clicked on furniture, provide immediate feedback
@@ -2988,23 +3173,28 @@ func _handle_tile_click(tile: Vector2i) -> void:
 			tile.x, tile.y, furn.get("name", "furniture")
 		])
 		spawn_floating_text(tile, "FURNITURE BLOCKED!", Color(0.95, 0.6, 0.2), 1.2)
+		show_unavailable_notice("Blocked by furniture", tile)
 		return
 
 	# If clicked on a wall block tile, provide immediate feedback
 	if is_tile_wall_blocked(tile):
 		_log("[MOVE] Square (%d, %d) is blocked by solid stone masonry!" % [tile.x, tile.y])
 		spawn_floating_text(tile, "WALL BLOCKED!", Color(0.95, 0.4, 0.3), 1.2)
+		show_unavailable_notice("Blocked by wall", tile)
 		return
 
 	# If haven't rolled movement yet, roll dice first!
 	if not movement_rolled:
 		if movement_closed or (moved_before_action and has_acted_this_turn):
+			show_unavailable_notice("Not enough movement", tile)
 			return
 		roll_movement_dice()
 
 	# If hero has movement, move to tile
 	if movement_remaining > 0:
 		move_hero(tile, true)
+	else:
+		show_unavailable_notice("Not enough movement", tile)
 
 func dismiss_active_dice_roll() -> void:
 	if not active_dice_animation.is_empty():
@@ -3017,6 +3207,11 @@ func dismiss_active_dice_roll() -> void:
 func roll_movement_dice() -> Dictionary:
 	if movement_closed or (moved_before_action and has_acted_this_turn):
 		_log("[RULE] HeroQuest Rule: Movement phase has concluded for this turn!")
+		show_unavailable_notice("Not enough movement")
+		return {}
+
+	if movement_rolled:
+		show_unavailable_notice("Movement already rolled")
 		return {}
 
 	var hero = get_active_hero()
@@ -3132,6 +3327,7 @@ func move_hero(target_pos: Vector2i, is_interactive: bool = false) -> bool:
 	# If the hero moved before taking an action, any action taken closes movement permanently.
 	if movement_closed or (moved_before_action and has_acted_this_turn):
 		_log("[RULE] HeroQuest Rule: Movement cannot be split before and after an action! Turn is complete.")
+		show_unavailable_notice("Not enough movement", target_pos)
 		return false
 
 	# Standard HeroQuest Rule: No Sharing Squares
@@ -3142,31 +3338,37 @@ func move_hero(target_pos: Vector2i, is_interactive: bool = false) -> bool:
 				target_pos.x, target_pos.y, occ_furn.get("name", "furniture")
 			])
 			spawn_floating_text(target_pos, "BLOCKED BY FURNITURE", Color(0.95, 0.6, 0.2), 1.2)
+			show_unavailable_notice("Blocked by furniture", target_pos)
 			return false
 		elif is_tile_occupied_by_hero(target_pos, active_hero_idx):
 			var occ_hero = get_hero_at(target_pos)
 			_log("[WARNING] Square (%d, %d) is occupied by %s! HeroQuest rules strictly forbid sharing a space." % [
 				target_pos.x, target_pos.y, occ_hero.get("name", "another hero")
 			])
+			show_unavailable_notice("Tile occupied by hero", target_pos)
 			return false
 		else:
 			var occ_monster = get_monster_at(target_pos)
 			_log("[WARNING] Square (%d, %d) is occupied by %s! Cannot end movement on monster squares." % [
 				target_pos.x, target_pos.y, occ_monster.get("name", "monster")
 			])
+			show_unavailable_notice("Tile occupied by monster", target_pos)
 			return false
 
 	var path = find_path(curr, target_pos, active_hero_idx)
 	if path.is_empty():
 		_log("[WARNING] Path to (%d, %d) is blocked!" % [target_pos.x, target_pos.y])
+		show_unavailable_notice("Tile unreachable", target_pos)
 		return false
 
 	var cost = path.size() - 1
 	if movement_remaining <= 0:
 		_log("[WARNING] No movement remaining this turn!")
+		show_unavailable_notice("Not enough movement", target_pos)
 		return false
 	if cost > movement_remaining:
 		_log("[WARNING] Target out of movement range (need %d, have %d)" % [cost, movement_remaining])
+		show_unavailable_notice("Not enough movement", target_pos)
 		return false
 
 	var final_pos = target_pos
@@ -3669,6 +3871,7 @@ func attack_adjacent_monster(monster_id: String = "", weapon_id: String = "") ->
 
 	if has_acted_this_turn:
 		_log("[ERROR] %s has already taken an action this turn!" % hero.get("name", "Hero"))
+		show_unavailable_notice("Not enough actions", hero.get("grid_pos", Vector2i(-1, -1)))
 		return { "success": false, "error": "Already acted this turn" }
 
 	if weapon_id != "":
@@ -3705,6 +3908,7 @@ func attack_adjacent_monster(monster_id: String = "", weapon_id: String = "") ->
 
 	if target_m.is_empty():
 		_log("No monster in reach of %s!" % w_def.get("name", "weapon"))
+		show_unavailable_notice("No targets in range", hero.get("grid_pos", Vector2i(-1, -1)))
 		return { "success": false, "error": "No monster in weapon range" }
 
 	var m_pos = target_m.get("grid_pos", Vector2i(-1, -1))
@@ -3882,6 +4086,7 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 
 	if has_acted_this_turn:
 		_log("[ACTION] %s has already taken an action this turn!" % hero.get("name", "Hero"))
+		show_unavailable_notice("Not enough actions", hero.get("grid_pos", Vector2i(-1, -1)))
 		return { "success": false, "error": "Already acted this turn" }
 
 	var spell = HeroQuestSpells.get_spell(spell_id)
@@ -4623,11 +4828,12 @@ func search_room(is_interactive: bool = false) -> Dictionary:
 	var hero = get_active_hero()
 	if hero.is_empty():
 		return { "success": false, "error": "No active hero" }
+	var h_pos = hero.get("grid_pos", Vector2i(-1, -1))
 	if has_acted_this_turn:
 		_log("[ACTION] %s has already taken an action this turn!" % hero.get("name", "Hero"))
+		show_unavailable_notice("Not enough actions", h_pos)
 		return { "success": false, "error": "Already acted this turn" }
 
-	var h_pos = hero.get("grid_pos", Vector2i(-1, -1))
 	var h_room = _get_room_at(h_pos)
 	var r_id = str(h_room.get("id", "")) if not h_room.is_empty() else ""
 
@@ -4635,6 +4841,7 @@ func search_room(is_interactive: bool = false) -> Dictionary:
 	if r_id == "":
 		_log("[TREASURE] ❌ Cannot search for treasure in corridors! You must be inside a room.")
 		spawn_floating_text(h_pos, "NO SEARCH IN CORRIDOR", Color(1.0, 0.4, 0.4), 1.5)
+		show_unavailable_notice("Cannot search in corridor", h_pos)
 		return { "success": false, "error": "Cannot search for treasure in corridors! You must be inside a room." }
 
 	# 2. Reject if room is inhabited by living monsters
@@ -4647,6 +4854,7 @@ func search_room(is_interactive: bool = false) -> Dictionary:
 				var m_name = str(m.get("name", "Monster"))
 				_log("[TREASURE] ❌ Cannot search for treasure while monsters are present! (%s is in the room)" % m_name)
 				spawn_floating_text(h_pos, "MONSTERS IN ROOM!", Color(1.0, 0.4, 0.4), 1.5)
+				show_unavailable_notice("Monsters present in room", h_pos)
 				return { "success": false, "error": "Cannot search room while monsters are present!" }
 
 	# 3. Reject if hero already searched this room or room searches exhausted
@@ -4655,11 +4863,13 @@ func search_room(is_interactive: bool = false) -> Dictionary:
 	if hero_id in room_searches:
 		_log("[TREASURE] ❌ %s has already searched this room for treasure!" % hero.get("name", "Hero"))
 		spawn_floating_text(h_pos, "ALREADY SEARCHED!", Color(1.0, 0.6, 0.3), 1.5)
+		show_unavailable_notice("Room already searched", h_pos)
 		return { "success": false, "error": "%s has already searched this room for treasure!" % hero.get("name", "Hero") }
 
 	if room_searches.size() >= 4:
 		_log("[TREASURE] ❌ This room has been thoroughly searched and holds no more treasure!")
 		spawn_floating_text(h_pos, "ROOM EXHAUSTED", Color(1.0, 0.6, 0.3), 1.5)
+		show_unavailable_notice("Room already searched", h_pos)
 		return { "success": false, "error": "This room has been thoroughly searched and holds no more treasure!" }
 
 	# 4. Check for chest/furniture traps in this room (preserves Scenario 51 behavior)
@@ -4866,11 +5076,12 @@ func search_traps() -> Dictionary:
 	var hero = get_active_hero()
 	if hero.is_empty():
 		return { "success": false, "error": "No active hero" }
+	var h_pos = hero.get("grid_pos", Vector2i(-1, -1))
 	if has_acted_this_turn:
 		_log("[ACTION] %s has already taken an action this turn!" % hero.get("name", "Hero"))
+		show_unavailable_notice("Not enough actions", h_pos)
 		return { "success": false, "error": "Already acted this turn" }
 
-	var h_pos = hero.get("grid_pos", Vector2i(-1, -1))
 	var h_room = _get_room_at(h_pos)
 	var found_traps: Array[String] = []
 	var found_secret_doors: Array[String] = []
@@ -4966,11 +5177,12 @@ func disarm_trap(trap_id: String) -> Dictionary:
 	var hero = get_active_hero()
 	if hero.is_empty():
 		return { "success": false, "error": "No active hero" }
+	var h_pos = hero.get("grid_pos", Vector2i(-1, -1))
 	if has_acted_this_turn:
 		_log("[ACTION] %s has already taken an action this turn!" % hero.get("name", "Hero"))
+		show_unavailable_notice("Not enough actions", h_pos)
 		return { "success": false, "error": "Already acted this turn" }
 
-	var h_pos = hero.get("grid_pos", Vector2i(-1, -1))
 	var target_trap: Dictionary = {}
 	if trap_id != "":
 		for tr in traps:
@@ -4986,6 +5198,7 @@ func disarm_trap(trap_id: String) -> Dictionary:
 					target_trap = tr
 					break
 	if target_trap.is_empty():
+		show_unavailable_notice("No adjacent detected trap", h_pos)
 		return { "success": false, "error": "No trap found with id: " + trap_id }
 
 	if target_trap.get("sprung", false) or target_trap.get("is_sprung", false):
@@ -4995,6 +5208,7 @@ func disarm_trap(trap_id: String) -> Dictionary:
 	var disarm_check = can_hero_disarm(hero)
 	if not disarm_check.get("can_disarm", false):
 		_log("[DISARM] %s cannot disarm traps without a Tool Kit! (Only the Dwarf has innate disarm mastery)." % hero.get("name"))
+		show_unavailable_notice("Tool Kit required to disarm", h_pos)
 		return { "success": false, "error": "Requires Tool Kit or Dwarf to disarm" }
 
 	target_trap["detected"] = true
@@ -5727,6 +5941,7 @@ func _update_ui() -> void:
 	_update_log_display()
 
 	_update_turn_overlay()
+	_sync_disabled_click_shields()
 
 func _setup_turn_overlay_ui() -> void:
 	var ui = get_node_or_null("UI")
@@ -6273,6 +6488,16 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 			if is_active:
 				sp_btn.disabled = has_acted_this_turn
 				sp_btn.pressed.connect(toggle_spell_cast_modal)
+				if sp_btn.disabled:
+					var s_shield = Control.new()
+					s_shield.name = "DisabledClickShield"
+					s_shield.set_anchors_preset(Control.PRESET_FULL_RECT)
+					s_shield.mouse_filter = Control.MOUSE_FILTER_STOP
+					s_shield.gui_input.connect(func(ev: InputEvent):
+						if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
+							show_unavailable_notice("Not enough actions", Vector2i(-1, -1), sp_btn.global_position + sp_btn.size * 0.5)
+					)
+					sp_btn.add_child(s_shield)
 			else:
 				sp_btn.pressed.connect(func(): open_hero_detail_modal(h))
 			icon_bar.add_child(sp_btn)
@@ -6336,6 +6561,16 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 			btn_disarm_mini.tooltip_text = "Disarm adjacent detected trap"
 			btn_disarm_mini.disabled = has_acted_this_turn
 			btn_disarm_mini.pressed.connect(_on_disarm_trap_button_pressed)
+			if btn_disarm_mini.disabled:
+				var d_shield = Control.new()
+				d_shield.name = "DisabledClickShield"
+				d_shield.set_anchors_preset(Control.PRESET_FULL_RECT)
+				d_shield.mouse_filter = Control.MOUSE_FILTER_STOP
+				d_shield.gui_input.connect(func(ev: InputEvent):
+					if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
+						show_unavailable_notice("Not enough actions", Vector2i(-1, -1), btn_disarm_mini.global_position + btn_disarm_mini.size * 0.5)
+				)
+				btn_disarm_mini.add_child(d_shield)
 			icon_bar.add_child(btn_disarm_mini)
 
 	# Sheet Inspect Button
@@ -7563,7 +7798,9 @@ func get_telemetry_state() -> Dictionary:
 		"movementRemaining": movement_remaining,
 		"movementRolled": movement_rolled,
 		"hasActed": has_acted_this_turn,
+		"hasActedThisTurn": has_acted_this_turn,
 		"hasMoved": has_moved_this_turn,
+		"hasMovedThisTurn": has_moved_this_turn,
 		"movedBeforeAction": moved_before_action,
 		"movementClosed": movement_closed,
 		"movementStartPos": [movement_start_pos.x, movement_start_pos.y],
@@ -7607,6 +7844,14 @@ func get_telemetry_state() -> Dictionary:
 		},
 		"activeVfx": active_vfx,
 		"floatingTexts": floating_texts,
+		"unavailableNotice": {
+			"active": unavailable_notice_timer > 0.0,
+			"text": unavailable_notice_text,
+			"timer": unavailable_notice_timer,
+			"duration": unavailable_notice_duration,
+			"alpha": (unavailable_notice_panel.modulate.a if unavailable_notice_panel else 0.0),
+			"isFading": (unavailable_notice_timer > 0.0 and unavailable_notice_timer <= 0.5)
+		},
 		"activeEnemyTurnMonsterId": active_enemy_turn_monster_id,
 		"isEnemyTurnWaiting": is_enemy_turn_waiting,
 		"enemyTurnWaitRemaining": enemy_turn_wait_timer,
@@ -7935,7 +8180,7 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				"totalMonsters": monsters.size(),
 				"displayedCount": enemy_cards_grid.get_child_count() if enemy_cards_grid else 0
 			}
-		"set_state":
+		"set_state", "patch_state":
 			if action_data.has("role"):
 				current_role = str(action_data.get("role"))
 			if action_data.has("round"):
@@ -7958,12 +8203,16 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				movement_rolled = bool(action_data.get("movementRolled"))
 			if action_data.has("hasActed"):
 				has_acted_this_turn = bool(action_data.get("hasActed"))
+			elif action_data.has("hasActedThisTurn"):
+				has_acted_this_turn = bool(action_data.get("hasActedThisTurn"))
 			if action_data.has("hasMoved"):
 				has_moved_this_turn = bool(action_data.get("hasMoved"))
+			elif action_data.has("hasMovedThisTurn"):
+				has_moved_this_turn = bool(action_data.get("hasMovedThisTurn"))
 			if action_data.has("movedBeforeAction"):
 				moved_before_action = bool(action_data.get("movedBeforeAction"))
-			elif action_data.has("hasMoved") and action_data.has("hasActed"):
-				moved_before_action = bool(action_data.get("hasMoved"))
+			elif (action_data.has("hasMoved") or action_data.has("hasMovedThisTurn")) and (action_data.has("hasActed") or action_data.has("hasActedThisTurn")):
+				moved_before_action = bool(action_data.get("hasMoved", action_data.get("hasMovedThisTurn")))
 			if action_data.has("movementClosed"):
 				movement_closed = bool(action_data.get("movementClosed"))
 			if action_data.has("movementTrail") and action_data.movementTrail is Array:
@@ -8321,7 +8570,7 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 					break
 			_update_ui()
 			return { "success": true }
-		"search":
+		"search", "search_room", "search_treasure":
 			var is_interactive = bool(action_data.get("interactive", false))
 			var res = search_room(is_interactive)
 			return res
@@ -8342,6 +8591,37 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			var ty = int(action_data.get("y", action_data.get("tile", [0, 0])[1]))
 			_handle_tile_click(Vector2i(tx, ty))
 			return { "success": true, "tile": [tx, ty] }
+		"trigger_unavailable_notice", "show_unavailable_notice":
+			var n_text = str(action_data.get("text", action_data.get("notice", "Not enough actions")))
+			var tx = int(action_data.get("tile_x", action_data.get("x", -1)))
+			var ty = int(action_data.get("tile_y", action_data.get("y", -1)))
+			var t_pos = Vector2i(tx, ty) if tx >= 0 and ty >= 0 else Vector2i(-1, -1)
+			show_unavailable_notice(n_text, t_pos)
+			return { "success": true, "text": n_text }
+		"click_action_button":
+			var btn_name = str(action_data.get("button", action_data.get("name", "")))
+			var target_btn: Button = null
+			match btn_name.to_lower():
+				"roll", "btnroll": target_btn = btn_roll
+				"attack", "btnattack": target_btn = btn_attack
+				"spell", "btncastspell", "cast_spell": target_btn = btn_cast_spell
+				"item", "btnuseitem", "use_item": target_btn = btn_use_item
+				"search", "btnsearch": target_btn = btn_search
+				"traps", "btnsearchtraps", "search_traps": target_btn = btn_search_traps
+				"disarm", "btndisarmtrap", "disarm_trap": target_btn = btn_disarm_trap
+				"end_turn", "btnendturn": target_btn = btn_end_turn
+				"summon", "btnsummon": target_btn = btn_summon
+				"ai_step", "btnaistep": target_btn = btn_ai_step
+			if target_btn:
+				if target_btn.disabled:
+					var reason = _get_button_unavailable_reason(target_btn)
+					if reason != "":
+						show_unavailable_notice(reason, Vector2i(-1, -1), target_btn.global_position + target_btn.size * 0.5)
+					return { "success": false, "clicked": false, "disabled": true, "reason": reason }
+				else:
+					target_btn.emit_signal("pressed")
+					return { "success": true, "clicked": true, "disabled": false }
+			return { "success": false, "error": "Button not found: " + btn_name }
 		"ai_step":
 			var auto_confirm = bool(action_data.get("confirm", false))
 			if auto_confirm:
@@ -9198,6 +9478,30 @@ func _draw_floating_texts(canvas: CanvasItem) -> void:
 			var line3_y = line2_y + 15.0
 			var stat_col = Color(1.0, 0.3, 0.3, ft.alpha) if is_def else Color(0.85, 0.95, 1.0, ft.alpha)
 			canvas.draw_string(font, Vector2(plaque_x + (plaque_w - status_size.x) * 0.5, line3_y), status_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 12, stat_col)
+		elif ft.get("is_unavailable", false):
+			var f_size = 14
+			var txt = str(ft.get("text", ""))
+			var full_txt = "⚠️ " + txt
+			var str_size = font.get_string_size(full_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, f_size)
+			var pad_x = 12.0
+			var pad_y = 6.0
+			var plaque_w = str_size.x + pad_x * 2.0
+			var plaque_h = str_size.y + pad_y * 2.0
+			var plaque_x = ft.pos.x - plaque_w * 0.5
+			var plaque_y = ft.pos.y - plaque_h * 0.5
+
+			# Drop shadow
+			canvas.draw_rect(Rect2(plaque_x + 2.0, plaque_y + 2.0, plaque_w, plaque_h), Color(0.0, 0.0, 0.0, 0.65 * ft.alpha))
+			# Plaque Background (deep obsidian amber)
+			var plaque_rect = Rect2(plaque_x, plaque_y, plaque_w, plaque_h)
+			canvas.draw_rect(plaque_rect, Color(0.12, 0.08, 0.02, 0.95 * ft.alpha))
+			# Border (warm warning amber)
+			canvas.draw_rect(plaque_rect, Color(1.0, 0.75, 0.2, 0.95 * ft.alpha), false, 1.5)
+			# Inner subtle trim
+			canvas.draw_rect(Rect2(plaque_x + 2.0, plaque_y + 2.0, plaque_w - 4.0, plaque_h - 4.0), Color(1.0, 0.85, 0.3, 0.25 * ft.alpha), false, 1.0)
+			# Text
+			var text_y = plaque_y + pad_y + str_size.y * 0.85
+			canvas.draw_string(font, Vector2(plaque_x + pad_x, text_y), full_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, f_size, Color(1.0, 0.92, 0.45, ft.alpha))
 		else:
 			var f_size = 18
 			var col = Color(ft.color.r, ft.color.g, ft.color.b, ft.alpha)
