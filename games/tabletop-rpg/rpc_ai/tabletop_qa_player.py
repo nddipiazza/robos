@@ -185,9 +185,17 @@ class TabletopQAPlayer:
         self.log("Cancelling pending AI step...")
         return self.execute_action("ai_step_cancel")
 
-    def monster_turn(self) -> dict:
-        self.log("Triggering Zargon monster phase turn...")
-        return self.execute_action("monster_turn")
+    def monster_turn(self, async_mode: bool = False) -> dict:
+        self.log(f"Triggering Zargon monster phase turn (async={async_mode})...")
+        return self.execute_action("monster_turn", **({"async": True} if async_mode else {}))
+
+    def start_enemy_turn(self) -> dict:
+        self.log("Triggering interactive Zargon monster turn sequence with 1.5s timeout...")
+        return self.execute_action("start_enemy_turn")
+
+    def skip_enemy_turn_timeout(self) -> dict:
+        self.log("Skipping active enemy turn 1.5s timeout...")
+        return self.execute_action("skip_enemy_timeout")
 
     def toggle_role(self) -> dict:
         self.log("Toggling player / GM role...")

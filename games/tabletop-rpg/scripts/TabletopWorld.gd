@@ -57,6 +57,14 @@ var active_dice_animation: Dictionary = {}
 var last_spell_result: Dictionary = {}
 var last_combat_result: Dictionary = {}
 
+var active_enemy_turn_monster_id: String = ""
+var is_enemy_turn_waiting: bool = false
+var enemy_turn_wait_timer: float = 0.0
+var enemy_turn_wait_duration: float = 1.5
+var pending_enemy_turn_monsters: Array[Dictionary] = []
+var damage_events: Array[Dictionary] = []
+var last_damage_event: Dictionary = {}
+
 func _update_board_metrics() -> void:
 	if board_sprite and board_sprite.texture:
 		var tex_size = board_sprite.texture.get_size()
@@ -1345,10 +1353,29 @@ func _process(delta: float) -> void:
 			if ft["time"] < dur:
 				var vel = ft.get("vel", Vector2(0, -35))
 				ft["pos"] = ft.get("pos", Vector2.ZERO) + vel * delta
-				ft["alpha"] = clampf(1.0 - (ft["time"] / dur), 0.0, 1.0)
+				var fade_start = dur * 0.65
+				if ft["time"] <= fade_start:
+					ft["alpha"] = 1.0
+				else:
+					ft["alpha"] = clampf((dur - ft["time"]) / maxf(0.001, dur - fade_start), 0.0, 1.0)
 				remaining_texts.append(ft)
 		floating_texts = remaining_texts
 		needs_redraw = true
+
+	if damage_events.size() > 0:
+		var remaining_evts: Array[Dictionary] = []
+		for evt in damage_events:
+			evt["time"] = float(evt.get("time", 0.0)) + delta
+			if evt["time"] < float(evt.get("duration", 3.5)):
+				remaining_evts.append(evt)
+		damage_events = remaining_evts
+		needs_redraw = true
+
+	if is_enemy_turn_waiting:
+		enemy_turn_wait_timer -= delta
+		needs_redraw = true
+		if enemy_turn_wait_timer <= 0.0:
+			_finish_current_enemy_turn()
 
 	if not active_dice_animation.is_empty():
 		var t = float(active_dice_animation.get("time", 0.0)) + delta
@@ -2656,7 +2683,21 @@ func can_search_room() -> bool:
 			return false
 	return true
 
+func _input(event: InputEvent) -> void:
+	if is_enemy_turn_waiting:
+		if (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed) or \
+		   (event is InputEventKey and event.pressed and (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER or event.keycode == KEY_ESCAPE)):
+			skip_enemy_turn_timeout()
+			get_viewport().set_input_as_handled()
+			return
+
 func _unhandled_input(event: InputEvent) -> void:
+	if is_enemy_turn_waiting:
+		if (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed) or \
+		   (event is InputEventKey and event.pressed and (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER or event.keycode == KEY_ESCAPE)):
+			skip_enemy_turn_timeout()
+			get_viewport().set_input_as_handled()
+			return
 	if is_ai_step_pending:
 		if event is InputEventKey and event.pressed:
 			if event.keycode == KEY_ESCAPE:
@@ -3448,11 +3489,20 @@ func attack_adjacent_monster(monster_id: String = "", weapon_id: String = "") ->
 		target_m["current_bp"] = maxi(0, prev_bp - res.wounds)
 		hp_subtracted = prev_bp - int(target_m.get("current_bp", 0))
 		_log("[HIT] Wounds inflicted: %d! %s HP: %d" % [res.wounds, target_m.get("name"), target_m.get("current_bp")])
-		spawn_floating_text(m_pos, "-%d HP" % res.wounds, Color(0.95, 0.2, 0.2))
-		if target_m.get("current_bp") <= 0:
+		var is_m_def = int(target_m.get("current_bp", 0)) <= 0
+		if is_m_def:
 			target_m["is_alive"] = false
 			_log("[DEFEATED] %s is DEFEATED!" % target_m.get("name"))
-			spawn_floating_text(m_pos, "DEFEATED!", Color(1.0, 0.1, 0.1), 1.5)
+		record_damage_event(
+			str(target_m.get("name", "Monster")),
+			str(target_m.get("id", "monster")),
+			res.wounds,
+			int(target_m.get("current_bp", 0)),
+			int(target_m.get("bodyPoints", 1)),
+			m_pos,
+			false,
+			is_m_def
+		)
 	elif hp_subtracted == 0 and res.wounds == 0:
 		_log("[BLOCKED] Attack was completely blocked by %s!" % target_m.get("name"))
 		spawn_floating_text(m_pos, "BLOCKED!", Color(0.7, 0.8, 1.0))
@@ -3523,7 +3573,16 @@ func dm_attack_hero(hero_id: String = "", attacker_monster: Variant = null) -> D
 		target_h["current_bp"] = maxi(0, prev_h_bp - res.wounds)
 		h_hp_subtracted = prev_h_bp - int(target_h.get("current_bp", 0))
 		_log("[HIT] %s takes %d wound(s)! Remaining HP: %d" % [target_h.get("name"), res.wounds, target_h.get("current_bp")])
-		spawn_floating_text(h_pos, "-%d HP" % res.wounds, Color(0.95, 0.2, 0.2))
+		record_damage_event(
+			str(target_h.get("name", "Hero")),
+			str(target_h.get("id", "hero")),
+			res.wounds,
+			int(target_h.get("current_bp", 0)),
+			int(target_h.get("bodyPoints", 8)),
+			h_pos,
+			true,
+			int(target_h.get("current_bp", 0)) <= 0
+		)
 		if target_h.get("rock_skin_active", false):
 			target_h["rock_skin_active"] = false
 			_log("[SPELL] The wound shatters %s's Rock Skin spell!" % target_h.get("name"))
@@ -3588,7 +3647,17 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 				target_m.get("name"), shields, wounds, target_m.get("current_bp")
 			])
 			if wounds > 0:
-				spawn_floating_text(m_pos, "-%d HP" % wounds, Color(1.0, 0.3, 0.1))
+				var is_m_def = int(target_m.get("current_bp", 0)) <= 0
+				record_damage_event(
+					str(target_m.get("name", "Monster")),
+					str(target_m.get("id", "monster")),
+					wounds,
+					int(target_m.get("current_bp", 0)),
+					int(target_m.get("bodyPoints", 1)),
+					m_pos,
+					false,
+					is_m_def
+				)
 			else:
 				spawn_floating_text(m_pos, "BLOCKED!", Color(0.6, 0.8, 1.0))
 			if target_m.get("current_bp") <= 0:
@@ -3625,7 +3694,17 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 				target_m.get("name"), shields, wounds, target_m.get("current_bp")
 			])
 			if wounds > 0:
-				spawn_floating_text(m_pos, "-%d HP" % wounds, Color(1.0, 0.4, 0.1))
+				var is_m_def = int(target_m.get("current_bp", 0)) <= 0
+				record_damage_event(
+					str(target_m.get("name", "Monster")),
+					str(target_m.get("id", "monster")),
+					wounds,
+					int(target_m.get("current_bp", 0)),
+					int(target_m.get("bodyPoints", 1)),
+					m_pos,
+					false,
+					is_m_def
+				)
 			else:
 				spawn_floating_text(m_pos, "BLOCKED!", Color(0.6, 0.8, 1.0))
 			if target_m.get("current_bp") <= 0:
@@ -3753,7 +3832,17 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 					target_m.get("name"), combat_res.total_skulls, combat_res.effective_shields, combat_res.wounds, target_m.get("current_bp")
 				])
 				if combat_res.wounds > 0:
-					spawn_floating_text(m_pos, "-%d HP" % combat_res.wounds, Color(0.2, 0.8, 1.0))
+					var is_m_def = int(target_m.get("current_bp", 0)) <= 0
+					record_damage_event(
+						str(target_m.get("name", "Monster")),
+						str(target_m.get("id", "monster")),
+						combat_res.wounds,
+						int(target_m.get("current_bp", 0)),
+						int(target_m.get("bodyPoints", 1)),
+						m_pos,
+						false,
+						is_m_def
+					)
 				else:
 					spawn_floating_text(m_pos, "BLOCKED!", Color(0.6, 0.8, 1.0))
 				if target_m.get("current_bp") <= 0:
@@ -3910,18 +3999,62 @@ func spawn_slash_vfx(center_screen: Vector2, rotation: float = 0.0, duration: fl
 	})
 	queue_redraw_all()
 
-func spawn_floating_text(tile: Vector2i, text: String, color: Color = Color.WHITE, duration: float = 1.0) -> void:
+func spawn_floating_text(tile: Vector2i, text: String, color: Color = Color.WHITE, duration: float = 1.0, extra_data: Dictionary = {}) -> void:
 	var screen_pos = board_offset + Vector2((tile.x + 0.5) * tile_size, (tile.y + 0.2) * tile_size)
-	floating_texts.append({
+	var vel_y = -20.0 if extra_data.get("is_damage", false) else -40.0
+	var item = {
 		"text": text,
 		"pos": screen_pos,
-		"vel": Vector2(0, -40),
+		"vel": Vector2(0, vel_y),
 		"color": color,
 		"alpha": 1.0,
 		"time": 0.0,
 		"duration": duration
-	})
+	}
+	for k in extra_data:
+		item[k] = extra_data[k]
+	floating_texts.append(item)
 	queue_redraw_all()
+
+func record_damage_event(target_name: String, target_id: String, wounds: int, cur_bp: int, max_bp: int, tile: Vector2i, is_hero: bool = false, is_defeat: bool = false) -> Dictionary:
+	var evt = {
+		"target_name": target_name,
+		"target_id": target_id,
+		"wounds": wounds,
+		"current_bp": cur_bp,
+		"max_bp": max_bp,
+		"tile": tile,
+		"is_hero": is_hero,
+		"is_defeat": is_defeat or cur_bp <= 0,
+		"time": 0.0,
+		"duration": 3.5
+	}
+	damage_events.append(evt)
+	last_damage_event = evt
+
+	if dice_label:
+		if is_defeat or cur_bp <= 0:
+			dice_label.text = "💥 [DEFEATED] %s takes %d wound(s) and is DEFEATED!" % [target_name, wounds]
+		else:
+			dice_label.text = "💥 [DAMAGE] %s takes %d wound(s)! Remaining HP: %d/%d" % [target_name, wounds, cur_bp, max_bp]
+
+	spawn_floating_text(
+		tile,
+		"-%d HP" % wounds,
+		Color(0.95, 0.25, 0.25),
+		3.5,
+		{
+			"is_damage": true,
+			"target_name": target_name,
+			"target_id": target_id,
+			"wounds": wounds,
+			"current_bp": cur_bp,
+			"max_bp": max_bp,
+			"is_defeat": is_defeat or cur_bp <= 0,
+			"is_hero": is_hero
+		}
+	)
+	return evt
 
 # Game Master Action: Summon Wandering Monster Ambush
 func summon_wandering_monster(spawn_pos: Vector2i = Vector2i(3, 0), bp: int = 1, m_name: String = "Wandering Orc") -> Dictionary:
@@ -4169,7 +4302,7 @@ func end_turn() -> void:
 			current_phase = "gm_phase"
 			_log("=== Zargon / Game Master Phase Begins ===")
 			if current_role == "player" and not is_headless_mode():
-				call_deferred("ai_monster_turn")
+				call_deferred("start_ai_monster_turn_sequence")
 		else:
 			_log("--- Next Hero: %s ---" % get_active_hero().get("name", "Hero"))
 			_check_hero_enter_board(active_hero_idx)
@@ -4193,6 +4326,103 @@ func end_turn() -> void:
 	_update_ui()
 	queue_redraw_all()
 
+func _execute_single_monster_action(m: Dictionary) -> int:
+	if not m.get("is_alive", false):
+		return 0
+	if m.get("is_sleeping", false):
+		_log("[SLEEP] %s is sound asleep and cannot move or attack." % m.get("name"))
+		return 0
+	if m.get("tempest_stunned", false):
+		m["tempest_stunned"] = false # Recovers at end of missed turn
+		_log("[TEMPEST] %s is caught in the howling winds and misses its turn!" % m.get("name"))
+		return 0
+
+	var m_pos: Vector2i = _to_grid_pos(m.get("grid_pos", Vector2i(0, 0)))
+	var nearest_hero: Dictionary = {}
+	var min_dist: int = 9999
+	for h in heroes:
+		# ONLY consider living heroes currently on the board
+		if h.get("is_on_board", false) and int(h.get("current_bp", 0)) > 0:
+			var h_pos: Vector2i = _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
+			if h_pos.x < 0 or h_pos.y < 0:
+				continue
+			var dist = absi(h_pos.x - m_pos.x) + absi(h_pos.y - m_pos.y)
+			if dist < min_dist:
+				min_dist = dist
+				nearest_hero = h
+
+	if nearest_hero.is_empty():
+		return 0
+
+	var h_pos: Vector2i = _to_grid_pos(nearest_hero.get("grid_pos", Vector2i(0, 0)))
+	var mid = str(m.get("id", ""))
+	var acts = 0
+
+	if min_dist == 1:
+		_log("[MONSTER] %s roars and attacks %s!" % [m.get("name"), nearest_hero.get("name")])
+		dm_attack_hero(str(nearest_hero.get("id", "")), m)
+		acts += 1
+	elif min_dist > 1:
+		# Monster advances towards hero up to movementSquares, stopping upon becoming adjacent
+		var max_moves = int(m.get("movementSquares", 4))
+		var curr_pos = m_pos
+		var steps_taken = 0
+
+		while steps_taken < max_moves:
+			var curr_dist = absi(h_pos.x - curr_pos.x) + absi(h_pos.y - curr_pos.y)
+			if curr_dist <= 1:
+				# Stop immediately upon reaching adjacent tile; monsters NEVER enter a hero's square!
+				break
+
+			var dx = h_pos.x - curr_pos.x
+			var dy = h_pos.y - curr_pos.y
+			var step_options: Array[Vector2i] = []
+			if absi(dx) >= absi(dy):
+				if dx != 0:
+					step_options.append(Vector2i(clampi(dx, -1, 1), 0))
+				if dy != 0:
+					step_options.append(Vector2i(0, clampi(dy, -1, 1)))
+			else:
+				if dy != 0:
+					step_options.append(Vector2i(0, clampi(dy, -1, 1)))
+				if dx != 0:
+					step_options.append(Vector2i(clampi(dx, -1, 1), 0))
+
+			var moved_this_step = false
+			for step_dir in step_options:
+				var cand_pos = curr_pos + step_dir
+				# Strictly forbid entering any hero's tile
+				if cand_pos == h_pos or is_tile_occupied_by_hero(cand_pos):
+					continue
+				# Cannot enter tile occupied by another monster
+				if is_tile_occupied_by_monster(cand_pos, mid):
+					continue
+				# Cannot pass through walls, closed doors, or blockages
+				if has_wall_between(curr_pos, cand_pos) or is_tile_wall_blocked(cand_pos):
+					continue
+
+				curr_pos = cand_pos
+				moved_this_step = true
+				break
+
+			if not moved_this_step:
+				break
+			steps_taken += 1
+
+		if curr_pos != m_pos:
+			m["grid_pos"] = curr_pos
+			_log("[MOVE] %s moves towards %s to (%d, %d)." % [m.get("name"), nearest_hero.get("name"), curr_pos.x, curr_pos.y])
+			acts += 1
+
+		# If monster arrived adjacent to hero, execute melee attack!
+		var final_dist = absi(h_pos.x - curr_pos.x) + absi(h_pos.y - curr_pos.y)
+		if final_dist == 1:
+			_log("[MONSTER] %s engages and attacks %s!" % [m.get("name"), nearest_hero.get("name")])
+			dm_attack_hero(str(nearest_hero.get("id", "")), m)
+			acts += 1
+
+	return acts
+
 func ai_monster_turn() -> Dictionary:
 	_log("[GM] Minions of Zargon stir in the darkness...")
 	var live_monsters = monsters.filter(func(m): return m.get("is_alive", false))
@@ -4209,101 +4439,99 @@ func ai_monster_turn() -> Dictionary:
 		return { "success": true, "acted": 0 }
 
 	var acts = 0
+	var last_acted_id = ""
 	for m in active_monsters:
-		# Check if monster is incapacitated
-		if m.get("is_sleeping", false):
-			_log("[SLEEP] %s is sound asleep and cannot move or attack." % m.get("name"))
-			continue
-		if m.get("tempest_stunned", false):
-			m["tempest_stunned"] = false # Recovers at end of missed turn
-			_log("[TEMPEST] %s is caught in the howling winds and misses its turn!" % m.get("name"))
-			continue
-
-		var m_pos: Vector2i = _to_grid_pos(m.get("grid_pos", Vector2i(0, 0)))
-		var nearest_hero: Dictionary = {}
-		var min_dist: int = 9999
-		for h in heroes:
-			# ONLY consider living heroes currently on the board
-			if h.get("is_on_board", false) and int(h.get("current_bp", 0)) > 0:
-				var h_pos: Vector2i = _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
-				if h_pos.x < 0 or h_pos.y < 0:
-					continue
-				var dist = absi(h_pos.x - m_pos.x) + absi(h_pos.y - m_pos.y)
-				if dist < min_dist:
-					min_dist = dist
-					nearest_hero = h
-
-		if nearest_hero.is_empty():
-			continue
-
-		var h_pos: Vector2i = _to_grid_pos(nearest_hero.get("grid_pos", Vector2i(0, 0)))
-		var mid = str(m.get("id", ""))
-
-		if min_dist == 1:
-			_log("[MONSTER] %s roars and attacks %s!" % [m.get("name"), nearest_hero.get("name")])
-			dm_attack_hero(str(nearest_hero.get("id", "")), m)
-			acts += 1
-		elif min_dist > 1:
-			# Monster advances towards hero up to movementSquares, stopping upon becoming adjacent
-			var max_moves = int(m.get("movementSquares", 4))
-			var curr_pos = m_pos
-			var steps_taken = 0
-
-			while steps_taken < max_moves:
-				var curr_dist = absi(h_pos.x - curr_pos.x) + absi(h_pos.y - curr_pos.y)
-				if curr_dist <= 1:
-					# Stop immediately upon reaching adjacent tile; monsters NEVER enter a hero's square!
-					break
-
-				var dx = h_pos.x - curr_pos.x
-				var dy = h_pos.y - curr_pos.y
-				var step_options: Array[Vector2i] = []
-				if absi(dx) >= absi(dy):
-					if dx != 0:
-						step_options.append(Vector2i(clampi(dx, -1, 1), 0))
-					if dy != 0:
-						step_options.append(Vector2i(0, clampi(dy, -1, 1)))
-				else:
-					if dy != 0:
-						step_options.append(Vector2i(0, clampi(dy, -1, 1)))
-					if dx != 0:
-						step_options.append(Vector2i(clampi(dx, -1, 1), 0))
-
-				var moved_this_step = false
-				for step_dir in step_options:
-					var cand_pos = curr_pos + step_dir
-					# Strictly forbid entering any hero's tile
-					if cand_pos == h_pos or is_tile_occupied_by_hero(cand_pos):
-						continue
-					# Cannot enter tile occupied by another monster
-					if is_tile_occupied_by_monster(cand_pos, mid):
-						continue
-					# Cannot pass through walls, closed doors, or blockages
-					if has_wall_between(curr_pos, cand_pos) or is_tile_wall_blocked(cand_pos):
-						continue
-
-					curr_pos = cand_pos
-					moved_this_step = true
-					break
-
-				if not moved_this_step:
-					break
-				steps_taken += 1
-
-			if curr_pos != m_pos:
-				m["grid_pos"] = curr_pos
-				_log("[MOVE] %s moves towards %s to (%d, %d)." % [m.get("name"), nearest_hero.get("name"), curr_pos.x, curr_pos.y])
-				acts += 1
-
-			# If monster arrived adjacent to hero, execute melee attack!
-			var final_dist = absi(h_pos.x - curr_pos.x) + absi(h_pos.y - curr_pos.y)
-			if final_dist == 1:
-				_log("[MONSTER] %s engages and attacks %s!" % [m.get("name"), nearest_hero.get("name")])
-				dm_attack_hero(str(nearest_hero.get("id", "")), m)
-				acts += 1
+		var a = _execute_single_monster_action(m)
+		acts += a
+		if a > 0 or last_acted_id == "":
+			last_acted_id = str(m.get("id", ""))
+	if last_acted_id != "":
+		active_enemy_turn_monster_id = last_acted_id
+		is_enemy_turn_waiting = false
+		enemy_turn_wait_timer = 0.0
+		_update_ui()
+		queue_redraw_all()
 
 	end_turn()
-	return { "success": true, "acted": acts }
+	return { "success": true, "acted": acts, "highlighted_monster_id": last_acted_id }
+
+func start_ai_monster_turn_sequence() -> Dictionary:
+	_log("[GM] Minions of Zargon stir in the darkness...")
+	var live_monsters = monsters.filter(func(m): return m.get("is_alive", false))
+	var active_monsters = live_monsters.filter(func(m):
+		var r_id = str(m.get("roomId", ""))
+		return r_id == "" or revealed_rooms.has(r_id)
+	)
+
+	if active_monsters.is_empty():
+		_log("[GM] No active monsters in sight. The dungeon echoes with distant whispers.")
+		end_turn()
+		return { "success": true, "acted": 0 }
+
+	pending_enemy_turn_monsters.clear()
+	for m in active_monsters:
+		pending_enemy_turn_monsters.append(m)
+
+	_begin_next_enemy_turn_in_sequence()
+	return {
+		"success": true,
+		"pending_count": pending_enemy_turn_monsters.size(),
+		"active_monster_id": active_enemy_turn_monster_id,
+		"is_waiting": is_enemy_turn_waiting,
+		"wait_duration": enemy_turn_wait_duration
+	}
+
+func _begin_next_enemy_turn_in_sequence() -> void:
+	if pending_enemy_turn_monsters.is_empty():
+		active_enemy_turn_monster_id = ""
+		is_enemy_turn_waiting = false
+		enemy_turn_wait_timer = 0.0
+		end_turn()
+		return
+
+	var current_m = pending_enemy_turn_monsters.pop_front()
+	active_enemy_turn_monster_id = str(current_m.get("id", ""))
+	is_enemy_turn_waiting = true
+	enemy_turn_wait_timer = enemy_turn_wait_duration
+
+	_log("[ENEMY TURN] %s prepares to act! (1.5s timeout - click anywhere to skip)" % current_m.get("name"))
+	if dice_label:
+		dice_label.text = "⚔️ [ENEMY TURN] %s's Turn! (1.5s - Click to Skip)" % current_m.get("name")
+
+	_update_ui()
+	queue_redraw_all()
+
+func skip_enemy_turn_timeout() -> Dictionary:
+	if not is_enemy_turn_waiting:
+		return { "success": false, "message": "No enemy turn timeout active" }
+	_log("[SKIP] Enemy turn 1.5s timeout skipped by user!")
+	var m_id = active_enemy_turn_monster_id
+	_finish_current_enemy_turn()
+	return { "success": true, "skipped_monster_id": m_id }
+
+func _finish_current_enemy_turn() -> void:
+	if not is_enemy_turn_waiting:
+		return
+	is_enemy_turn_waiting = false
+	enemy_turn_wait_timer = 0.0
+
+	var acting_m: Dictionary = {}
+	for m in monsters:
+		if str(m.get("id", "")) == active_enemy_turn_monster_id:
+			acting_m = m
+			break
+
+	if not acting_m.is_empty():
+		_execute_single_monster_action(acting_m)
+
+	_update_ui()
+	queue_redraw_all()
+
+	if pending_enemy_turn_monsters.size() > 0:
+		_begin_next_enemy_turn_in_sequence()
+	else:
+		active_enemy_turn_monster_id = ""
+		end_turn()
 
 func _update_ui() -> void:
 	var role_name = "Player Mode (Playing Heroes)" if current_role == "player" else "Game Master Mode (Zargon GM)"
@@ -5173,7 +5401,17 @@ func _create_enemy_card(m: Dictionary, is_visible: bool) -> PanelContainer:
 	sb.corner_radius_bottom_left = 6
 	sb.corner_radius_bottom_right = 6
 
-	if not is_alive:
+	var is_turn_active = is_enemy_turn_waiting and str(m.get("id")) == active_enemy_turn_monster_id
+
+	if is_turn_active:
+		# Monster currently taking its 1.5s active turn
+		sb.bg_color = Color(0.28, 0.10, 0.08, 0.98)
+		sb.border_color = Color(1.0, 0.78, 0.20, 1.0) # Glowing radiant gold
+		sb.border_width_left = 3; sb.border_width_top = 3; sb.border_width_right = 3; sb.border_width_bottom = 3
+		sb.shadow_color = Color(1.0, 0.5, 0.1, 0.6)
+		sb.shadow_size = 6
+		card.modulate = Color(1.0, 1.0, 1.0, 1.0)
+	elif not is_alive:
 		# Defeated monster styling
 		sb.bg_color = Color(0.20, 0.08, 0.08, 0.85)
 		sb.border_color = Color(0.70, 0.20, 0.20, 0.75)
@@ -5251,6 +5489,12 @@ func _create_enemy_card(m: Dictionary, is_visible: bool) -> PanelContainer:
 		vis_badge.text = "[OUT OF SIGHT]"
 		vis_badge.add_theme_color_override("font_color", Color(0.65, 0.70, 0.80, 0.8))
 
+	if is_turn_active:
+		var turn_badge = Label.new()
+		turn_badge.text = "⚔️ ACTIVE"
+		turn_badge.add_theme_font_size_override("font_size", 9)
+		turn_badge.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
+		hdr_row.add_child(turn_badge)
 	hdr_row.add_child(name_lbl)
 	hdr_row.add_child(vis_badge)
 	vbox.add_child(hdr_row)
@@ -5690,6 +5934,11 @@ func get_telemetry_state() -> Dictionary:
 		},
 		"activeVfx": active_vfx,
 		"floatingTexts": floating_texts,
+		"activeEnemyTurnMonsterId": active_enemy_turn_monster_id,
+		"isEnemyTurnWaiting": is_enemy_turn_waiting,
+		"enemyTurnWaitRemaining": enemy_turn_wait_timer,
+		"lastDamageEvent": last_damage_event,
+		"damageEvents": damage_events,
 		"lastSpellResult": last_spell_result,
 		"lastCombatResult": last_combat_result,
 		"characterCards": char_cards,
@@ -6041,6 +6290,16 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 					discovered_monster_ids[str(mid)] = true
 			if action_data.has("resetExplored") and bool(action_data.resetExplored):
 				explored_tiles.clear()
+			if action_data.has("isEnemyTurnWaiting"):
+				is_enemy_turn_waiting = bool(action_data.get("isEnemyTurnWaiting"))
+				if not is_enemy_turn_waiting:
+					pending_enemy_turn_monsters.clear()
+			if action_data.has("activeEnemyTurnMonsterId"):
+				active_enemy_turn_monster_id = str(action_data.get("activeEnemyTurnMonsterId"))
+			if action_data.has("enemyTurnWaitTimer"):
+				enemy_turn_wait_timer = float(action_data.get("enemyTurnWaitTimer"))
+			if action_data.has("enemyTurnWaitDuration"):
+				enemy_turn_wait_duration = float(action_data.get("enemyTurnWaitDuration"))
 			_rebuild_spatial_caches()
 			update_party_vision()
 			_update_ui()
@@ -6216,8 +6475,29 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 		"ai_step_cancel":
 			return cancel_ai_step()
 		"monster_turn", "ai_monster_turn":
-			var res = ai_monster_turn()
-			return res
+			if action_data.get("async", false) or action_data.get("interactive", false):
+				return start_ai_monster_turn_sequence()
+			else:
+				var res = ai_monster_turn()
+				return res
+		"start_enemy_turn", "start_ai_monster_turn", "trigger_enemy_turn":
+			return start_ai_monster_turn_sequence()
+		"skip_enemy_timeout", "skip_enemy_turn_timeout":
+			return skip_enemy_turn_timeout()
+		"set_enemy_turn_timeout":
+			enemy_turn_wait_duration = float(action_data.get("duration", 1.5))
+			return { "success": true, "duration": enemy_turn_wait_duration }
+		"trigger_damage_event":
+			var t_name = str(action_data.get("target_name", "Target"))
+			var t_id = str(action_data.get("target_id", "target"))
+			var wounds = int(action_data.get("wounds", 1))
+			var cur_bp = int(action_data.get("current_bp", 5))
+			var max_bp = int(action_data.get("max_bp", 8))
+			var tile = Vector2i(int(action_data.get("x", 2)), int(action_data.get("y", 2)))
+			var is_hero = bool(action_data.get("is_hero", true))
+			var is_def = bool(action_data.get("is_defeat", cur_bp <= 0))
+			var evt = record_damage_event(t_name, t_id, wounds, cur_bp, max_bp, tile, is_hero, is_def)
+			return { "success": true, "event": evt }
 		"test_dice_roll":
 			var d_type = str(action_data.get("type", "movement"))
 			if d_type == "movement":
@@ -6824,6 +7104,8 @@ func _draw_board(canvas: CanvasItem) -> void:
 
 	# Draw active dynamic VFX and floating text banners
 	_draw_vfx_effects(canvas)
+	_draw_damage_hit_auras(canvas)
+	_draw_active_enemy_turn_highlight(canvas)
 	_draw_floating_texts(canvas)
 	_draw_active_dice_roll(canvas)
 
@@ -6892,14 +7174,136 @@ func _draw_vfx_effects(canvas: CanvasItem) -> void:
 				var p2 = center + Vector2(cos(rot + 0.8), sin(rot + 0.8)) * 26.0
 				canvas.draw_line(p1, p2, Color(1.0, 1.0, 1.0, alpha), 3.5)
 
+func _draw_damage_hit_auras(canvas: CanvasItem) -> void:
+	for evt in damage_events:
+		var evt_time = float(evt.get("time", 0.0))
+		var evt_dur = float(evt.get("duration", 3.5))
+		if evt_time < evt_dur:
+			var tile_pos: Vector2i = _to_grid_pos(evt.get("tile", Vector2i(-1, -1)))
+			if tile_pos.x >= 0 and tile_pos.y >= 0:
+				var center = board_offset + Vector2((tile_pos.x + 0.5) * tile_size, (tile_pos.y + 0.5) * tile_size)
+				var alpha = clampf(1.0 - (evt_time / evt_dur), 0.0, 1.0)
+				var pulse = 0.5 + 0.5 * sin(evt_time * 12.0)
+				var r = tile_size * (0.42 + 0.06 * pulse)
+				canvas.draw_arc(center, r, 0, TAU, 32, Color(1.0, 0.15, 0.15, alpha * 0.9), 2.5)
+				canvas.draw_arc(center, tile_size * 0.35, 0, TAU, 24, Color(1.0, 0.45, 0.2, alpha * 0.6), 1.5)
+
+func _draw_active_enemy_turn_highlight(canvas: CanvasItem) -> void:
+	if not is_enemy_turn_waiting or active_enemy_turn_monster_id == "":
+		return
+
+	var m: Dictionary = {}
+	for monster in monsters:
+		if str(monster.get("id", "")) == active_enemy_turn_monster_id:
+			m = monster
+			break
+
+	if m.is_empty():
+		return
+
+	var pos: Vector2i = _to_grid_pos(m.get("grid_pos", Vector2i(0, 0)))
+	var screen_pos = board_offset + Vector2((pos.x + 0.5) * tile_size, (pos.y + 0.5) * tile_size)
+	var token_radius = tile_size * 0.42
+
+	# 1. Pulsing golden/crimson halo aura
+	var t_msec = Time.get_ticks_msec()
+	var pulse = 0.5 + 0.5 * sin(t_msec * 0.008)
+	var halo_radius = token_radius * (1.30 + 0.20 * pulse)
+	canvas.draw_circle(screen_pos, halo_radius, Color(0.95, 0.25, 0.15, 0.28 * pulse))
+	canvas.draw_arc(screen_pos, halo_radius, 0, TAU, 36, Color(1.0, 0.78, 0.2, 0.95), 2.8)
+	canvas.draw_arc(screen_pos, token_radius * 1.12, 0, TAU, 32, Color(0.95, 0.2, 0.2, 0.9), 2.0)
+
+	# 2. Rotating reticle corner crosshairs
+	var angle_rot = t_msec * 0.002
+	for i in range(4):
+		var ang = angle_rot + i * (PI * 0.5)
+		var p1 = screen_pos + Vector2(cos(ang), sin(ang)) * (halo_radius + 2.0)
+		var p2 = screen_pos + Vector2(cos(ang), sin(ang)) * (halo_radius + 9.0)
+		canvas.draw_line(p1, p2, Color(1.0, 0.85, 0.25, 0.9), 2.5)
+
+	# 3. Floating billboard badge above token: [ ⚔️ ENEMY TURN ]
+	var font = ThemeDB.fallback_font
+	var m_name = str(m.get("name", "Monster")).to_upper()
+	var badge_title = "⚔️ ENEMY TURN: " + m_name
+	var sub_text = "(Click to Skip)"
+	var b_size = font.get_string_size(badge_title, HORIZONTAL_ALIGNMENT_CENTER, -1, 13)
+	var sub_size = font.get_string_size(sub_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 10)
+	var badge_w = maxf(b_size.x, sub_size.x) + 24.0
+	var badge_h = 36.0
+	var badge_x = screen_pos.x - badge_w * 0.5
+	var badge_y = screen_pos.y - halo_radius - badge_h - 6.0
+	if badge_y < 10.0:
+		badge_y = screen_pos.y + halo_radius + 8.0
+
+	var bg_rect = Rect2(badge_x, badge_y, badge_w, badge_h)
+	# Drop shadow
+	canvas.draw_rect(Rect2(badge_x + 2, badge_y + 2, badge_w, badge_h), Color(0.0, 0.0, 0.0, 0.6))
+	# Main box
+	canvas.draw_rect(bg_rect, Color(0.18, 0.04, 0.05, 0.96))
+	# Crimson/gold border
+	canvas.draw_rect(bg_rect, Color(1.0, 0.75, 0.2, 0.95), false, 2.0)
+	# Title
+	canvas.draw_string(font, Vector2(badge_x + (badge_w - b_size.x) * 0.5, badge_y + 16.0), badge_title, HORIZONTAL_ALIGNMENT_CENTER, -1, 13, Color(1.0, 0.9, 0.3, 1.0))
+	# Subtitle
+	canvas.draw_string(font, Vector2(badge_x + (badge_w - sub_size.x) * 0.5, badge_y + 30.0), sub_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(0.85, 0.85, 0.9, 0.85))
+
 func _draw_floating_texts(canvas: CanvasItem) -> void:
 	for ft in floating_texts:
 		var font = ThemeDB.fallback_font
-		var f_size = 18
-		var col = Color(ft.color.r, ft.color.g, ft.color.b, ft.alpha)
-		var txt = str(ft.get("text", ""))
-		var tw = font.get_string_size(txt, HORIZONTAL_ALIGNMENT_CENTER, -1, f_size).x
-		canvas.draw_string(font, Vector2(ft.pos.x - tw * 0.5, ft.pos.y), txt, HORIZONTAL_ALIGNMENT_CENTER, -1, f_size, col)
+		if ft.get("is_damage", false):
+			var t_name = str(ft.get("target_name", "Target")).to_upper()
+			var wounds_txt = "-%d HP" % int(ft.get("wounds", 1))
+			var is_def = bool(ft.get("is_defeat", false))
+			var cur_bp = int(ft.get("current_bp", 0))
+			var max_bp = int(ft.get("max_bp", 1))
+			var status_txt = "💀 DEFEATED!" if is_def else "❤️ %d / %d BP" % [cur_bp, max_bp]
+
+			var t_name_size = font.get_string_size("💥 " + t_name, HORIZONTAL_ALIGNMENT_CENTER, -1, 13)
+			var wounds_size = font.get_string_size(wounds_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 17)
+			var status_size = font.get_string_size(status_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 12)
+
+			var max_content_w = maxf(t_name_size.x, maxf(wounds_size.x, status_size.x))
+			var plaque_w = maxf(150.0, max_content_w + 24.0)
+			var plaque_h = 58.0
+			var plaque_x = ft.pos.x - plaque_w * 0.5
+			var plaque_y = ft.pos.y - plaque_h * 0.5
+
+			# Drop shadow
+			canvas.draw_rect(Rect2(plaque_x + 2.0, plaque_y + 3.0, plaque_w, plaque_h), Color(0.0, 0.0, 0.0, 0.6 * ft.alpha))
+
+			# Plaque Background (deep crimson charcoal)
+			var plaque_rect = Rect2(plaque_x, plaque_y, plaque_w, plaque_h)
+			canvas.draw_rect(plaque_rect, Color(0.12, 0.03, 0.04, 0.95 * ft.alpha))
+
+			# Plaque Border (vibrant crimson)
+			var border_col = Color(0.95, 0.25, 0.22, 0.95 * ft.alpha) if not is_def else Color(1.0, 0.15, 0.15, 0.95 * ft.alpha)
+			canvas.draw_rect(plaque_rect, border_col, false, 2.0)
+
+			# Inner gold trim line
+			var inner_rect = Rect2(plaque_x + 2.0, plaque_y + 2.0, plaque_w - 4.0, plaque_h - 4.0)
+			canvas.draw_rect(inner_rect, Color(0.95, 0.75, 0.2, 0.35 * ft.alpha), false, 1.0)
+
+			# Line 1: Target Name (Amber)
+			var line1_y = plaque_y + 16.0
+			canvas.draw_string(font, Vector2(plaque_x + (plaque_w - t_name_size.x) * 0.5, line1_y), "💥 " + t_name, HORIZONTAL_ALIGNMENT_CENTER, -1, 13, Color(1.0, 0.85, 0.3, ft.alpha))
+
+			# Line 2: Wounds / Damage (Red)
+			var line2_y = line1_y + 20.0
+			canvas.draw_string(font, Vector2(plaque_x + (plaque_w - wounds_size.x) * 0.5, line2_y), wounds_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 17, Color(1.0, 0.25, 0.25, ft.alpha))
+
+			# Line 3: Status / Remaining BP
+			var line3_y = line2_y + 15.0
+			var stat_col = Color(1.0, 0.3, 0.3, ft.alpha) if is_def else Color(0.85, 0.95, 1.0, ft.alpha)
+			canvas.draw_string(font, Vector2(plaque_x + (plaque_w - status_size.x) * 0.5, line3_y), status_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 12, stat_col)
+		else:
+			var f_size = 18
+			var col = Color(ft.color.r, ft.color.g, ft.color.b, ft.alpha)
+			var txt = str(ft.get("text", ""))
+			var tw = font.get_string_size(txt, HORIZONTAL_ALIGNMENT_CENTER, -1, f_size).x
+			var bg_rect = Rect2(ft.pos.x - tw * 0.5 - 6.0, ft.pos.y - 15.0, tw + 12.0, 20.0)
+			canvas.draw_rect(bg_rect, Color(0.05, 0.05, 0.08, 0.85 * ft.alpha))
+			canvas.draw_rect(bg_rect, Color(col.r, col.g, col.b, 0.65 * ft.alpha), false, 1.2)
+			canvas.draw_string(font, Vector2(ft.pos.x - tw * 0.5, ft.pos.y), txt, HORIZONTAL_ALIGNMENT_CENTER, -1, f_size, col)
 
 func trigger_movement_dice_roll(roll_data: Dictionary, hero_name: String, dice_values: Array) -> void:
 	_update_board_metrics()
