@@ -88,9 +88,13 @@ var auto_play_step: int = 0
 @onready var hero_cards_grid: GridContainer = get_node_or_null("UI/StatsPanel/HeroCardsGrid")
 @onready var enemies_panel: Panel = get_node_or_null("UI/EnemiesPanel")
 @onready var enemies_header_label: Label = get_node_or_null("UI/EnemiesPanel/HeaderLabel")
+@onready var btn_toggle_defeated: Button = get_node_or_null("UI/EnemiesPanel/BtnToggleDefeated")
 @onready var enemies_empty_label: Label = get_node_or_null("UI/EnemiesPanel/EmptyLabel")
+@onready var enemies_scroll: ScrollContainer = get_node_or_null("UI/EnemiesPanel/ScrollContainer")
 @onready var enemy_cards_grid: GridContainer = get_node_or_null("UI/EnemiesPanel/ScrollContainer/EnemyCardsGrid")
 @onready var dice_label: Label = $UI/DicePanel/DiceLabel
+
+var show_defeated_monsters: bool = false
 
 func _find_action_button(btn_name: String) -> Button:
 	for p in [
@@ -234,6 +238,7 @@ func _ready() -> void:
 	_load_active_cartridge()
 	CartridgeManager.cartridge_inserted.connect(_on_cartridge_inserted)
 	_setup_action_hotbar()
+	_setup_enemies_panel()
 	_setup_ui_signals()
 	_setup_ai_modal_styles()
 	_setup_elf_spell_modal()
@@ -466,6 +471,130 @@ func _update_scroll_buttons_visibility() -> void:
 		btn_scroll_left.visible = has_overflow and actions_scroll.scroll_horizontal > 4
 	if btn_scroll_right:
 		btn_scroll_right.visible = has_overflow and (actions_scroll.scroll_horizontal < (content_w - view_w - 4.0))
+
+func _setup_enemies_panel() -> void:
+	if not btn_toggle_defeated:
+		btn_toggle_defeated = get_node_or_null("UI/EnemiesPanel/BtnToggleDefeated")
+	if not enemies_scroll:
+		enemies_scroll = get_node_or_null("UI/EnemiesPanel/ScrollContainer")
+	if not enemy_cards_grid:
+		enemy_cards_grid = get_node_or_null("UI/EnemiesPanel/ScrollContainer/EnemyCardsGrid")
+
+	if btn_toggle_defeated:
+		if not btn_toggle_defeated.pressed.is_connected(_on_btn_toggle_defeated_pressed):
+			btn_toggle_defeated.pressed.connect(_on_btn_toggle_defeated_pressed)
+		_setup_toggle_defeated_button_style(btn_toggle_defeated)
+
+	if enemies_scroll:
+		enemies_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		enemies_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+		if not enemies_scroll.gui_input.is_connected(_on_enemies_scroll_gui_input):
+			enemies_scroll.gui_input.connect(_on_enemies_scroll_gui_input)
+		_setup_enemies_scrollbar_style()
+
+func _setup_toggle_defeated_button_style(btn: Button) -> void:
+	btn.focus_mode = Control.FOCUS_NONE
+	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	btn.add_theme_font_size_override("font_size", 11)
+	_update_toggle_defeated_button_style()
+
+func _update_toggle_defeated_button_style() -> void:
+	if not btn_toggle_defeated:
+		return
+	
+	var sb_normal = StyleBoxFlat.new()
+	var sb_hover = StyleBoxFlat.new()
+	var sb_pressed = StyleBoxFlat.new()
+	var sb_disabled = StyleBoxFlat.new()
+	
+	for sb in [sb_normal, sb_hover, sb_pressed, sb_disabled]:
+		sb.set_corner_radius_all(5)
+		sb.set_border_width_all(1)
+		sb.content_margin_left = 6
+		sb.content_margin_right = 6
+		sb.content_margin_top = 2
+		sb.content_margin_bottom = 2
+
+	if show_defeated_monsters:
+		# Active / showing defeated (crimson/amber combat theme)
+		sb_normal.bg_color = Color(0.24, 0.08, 0.10, 0.95)
+		sb_normal.border_color = Color(0.85, 0.30, 0.30, 0.9)
+		sb_hover.bg_color = Color(0.32, 0.10, 0.12, 1.0)
+		sb_hover.border_color = Color(1.0, 0.45, 0.45, 1.0)
+		sb_pressed.bg_color = Color(0.18, 0.05, 0.07, 1.0)
+		sb_pressed.border_color = Color(1.0, 0.6, 0.6, 1.0)
+		btn_toggle_defeated.add_theme_color_override("font_color", Color(1.0, 0.85, 0.85))
+		btn_toggle_defeated.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 1.0))
+		btn_toggle_defeated.tooltip_text = "Fallen monsters are currently visible. Click to hide defeated foes."
+	else:
+		# Inactive / hidden defeated (subtle slate/cyan theme)
+		sb_normal.bg_color = Color(0.09, 0.12, 0.18, 0.9)
+		sb_normal.border_color = Color(0.25, 0.35, 0.48, 0.75)
+		sb_hover.bg_color = Color(0.13, 0.18, 0.26, 1.0)
+		sb_hover.border_color = Color(0.0, 0.74, 0.83, 0.9)
+		sb_pressed.bg_color = Color(0.07, 0.10, 0.15, 1.0)
+		sb_pressed.border_color = Color(1.0, 0.82, 0.2, 1.0)
+		btn_toggle_defeated.add_theme_color_override("font_color", Color(0.75, 0.82, 0.92))
+		btn_toggle_defeated.add_theme_color_override("font_hover_color", Color(0.95, 0.98, 1.0))
+		btn_toggle_defeated.tooltip_text = "Click to show defeated monsters in the Discovered Foes list."
+
+	sb_disabled.bg_color = Color(0.08, 0.10, 0.14, 0.5)
+	sb_disabled.border_color = Color(0.2, 0.25, 0.32, 0.4)
+
+	btn_toggle_defeated.add_theme_stylebox_override("normal", sb_normal)
+	btn_toggle_defeated.add_theme_stylebox_override("hover", sb_hover)
+	btn_toggle_defeated.add_theme_stylebox_override("pressed", sb_pressed)
+	btn_toggle_defeated.add_theme_stylebox_override("disabled", sb_disabled)
+
+func _setup_enemies_scrollbar_style() -> void:
+	if not enemies_scroll:
+		return
+	var vsb = enemies_scroll.get_v_scroll_bar()
+	if not vsb:
+		return
+	vsb.custom_minimum_size.x = 8
+	
+	var track_sb = StyleBoxFlat.new()
+	track_sb.bg_color = Color(0.06, 0.08, 0.12, 0.85)
+	track_sb.set_corner_radius_all(4)
+	vsb.add_theme_stylebox_override("scroll", track_sb)
+	
+	var grab_sb = StyleBoxFlat.new()
+	grab_sb.bg_color = Color(0.0, 0.74, 0.83, 0.6)
+	grab_sb.set_corner_radius_all(4)
+	vsb.add_theme_stylebox_override("grabber", grab_sb)
+	
+	var grab_hl = StyleBoxFlat.new()
+	grab_hl.bg_color = Color(0.2, 0.85, 0.95, 0.9)
+	grab_hl.set_corner_radius_all(4)
+	vsb.add_theme_stylebox_override("grabber_highlight", grab_hl)
+	
+	var grab_pr = StyleBoxFlat.new()
+	grab_pr.bg_color = Color(1.0, 0.82, 0.2, 0.95)
+	grab_pr.set_corner_radius_all(4)
+	vsb.add_theme_stylebox_override("grabber_pressed", grab_pr)
+
+func _on_enemies_scroll_gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed:
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			enemies_scroll.scroll_vertical = max(0, enemies_scroll.scroll_vertical - 48)
+			get_viewport().set_input_as_handled()
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			var max_v = int(enemies_scroll.get_v_scroll_bar().max_value)
+			enemies_scroll.scroll_vertical = min(max_v, enemies_scroll.scroll_vertical + 48)
+			get_viewport().set_input_as_handled()
+
+func toggle_show_defeated_monsters() -> void:
+	show_defeated_monsters = !show_defeated_monsters
+	_update_character_and_enemy_cards()
+
+func set_show_defeated_monsters(val: bool) -> void:
+	if show_defeated_monsters != val:
+		show_defeated_monsters = val
+		_update_character_and_enemy_cards()
+
+func _on_btn_toggle_defeated_pressed() -> void:
+	toggle_show_defeated_monsters()
 
 func _load_door_textures() -> void:
 	if not door_closed_tex:
@@ -909,6 +1038,10 @@ func _rebuild_spatial_caches() -> void:
 		var t = d.get("to", [0, 0])
 		_doors_by_edge[Vector4i(f[0], f[1], t[0], t[1])] = d
 		_doors_by_edge[Vector4i(t[0], t[1], f[0], f[1])] = d
+
+	show_defeated_monsters = false
+	if enemies_scroll:
+		enemies_scroll.scroll_vertical = 0
 
 func is_tile_wall_blocked(tile: Vector2i) -> bool:
 	return _blocked_wall_tiles.has(tile)
@@ -4660,7 +4793,7 @@ func _update_character_and_enemy_cards() -> void:
 				dead_count += 1
 			elif vis:
 				vis_count += 1
-			discovered_list.append({ "monster": m, "is_visible": vis })
+			discovered_list.append({ "monster": m, "is_visible": vis, "is_alive": alive })
 
 	if enemies_header_label:
 		if discovered_list.is_empty():
@@ -4668,16 +4801,42 @@ func _update_character_and_enemy_cards() -> void:
 		else:
 			enemies_header_label.text = "DISCOVERED FOES (%d Sighted | %d Defeated)" % [vis_count, dead_count]
 
-	if enemies_empty_label:
-		enemies_empty_label.visible = discovered_list.is_empty()
+	if not btn_toggle_defeated:
+		btn_toggle_defeated = get_node_or_null("UI/EnemiesPanel/BtnToggleDefeated")
+	if btn_toggle_defeated:
+		if dead_count == 0:
+			btn_toggle_defeated.text = "💀 Defeated (0)"
+			btn_toggle_defeated.disabled = true
+			btn_toggle_defeated.modulate = Color(0.7, 0.7, 0.7, 0.6)
+		else:
+			btn_toggle_defeated.disabled = false
+			btn_toggle_defeated.modulate = Color(1.0, 1.0, 1.0, 1.0)
+			if show_defeated_monsters:
+				btn_toggle_defeated.text = "💀 Hide Defeated (%d)" % dead_count
+			else:
+				btn_toggle_defeated.text = "💀 Show Defeated (%d)" % dead_count
+		_update_toggle_defeated_button_style()
 
+	var displayed_count = 0
 	if enemy_cards_grid:
 		for c in enemy_cards_grid.get_children():
 			enemy_cards_grid.remove_child(c)
 			c.queue_free()
 		for item in discovered_list:
-			var card = _create_enemy_card(item.monster, item.is_visible)
-			enemy_cards_grid.add_child(card)
+			if item.get("is_alive", true) or show_defeated_monsters:
+				var card = _create_enemy_card(item.monster, item.is_visible)
+				enemy_cards_grid.add_child(card)
+				displayed_count += 1
+
+	if enemies_empty_label:
+		if discovered_list.is_empty():
+			enemies_empty_label.text = "No enemies sighted yet.\nOpen doors and explore the dungeon to reveal foes."
+			enemies_empty_label.visible = true
+		elif displayed_count == 0 and dead_count > 0:
+			enemies_empty_label.text = "All sighted foes have been defeated! ⚔️\nClick 'Show Defeated' above to view fallen enemies."
+			enemies_empty_label.visible = true
+		else:
+			enemies_empty_label.visible = false
 
 func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 	var card = PanelContainer.new()
@@ -4997,9 +5156,10 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 
 func _create_enemy_card(m: Dictionary, is_visible: bool) -> PanelContainer:
 	var card = PanelContainer.new()
-	card.custom_minimum_size = Vector2(228, 105)
+	card.custom_minimum_size = Vector2(224, 105)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	card.mouse_filter = Control.MOUSE_FILTER_PASS
 
 	var cur_bp = int(m.get("current_bp", 1))
 	var max_bp = int(m.get("bodyPoints", 1))
@@ -5041,10 +5201,12 @@ func _create_enemy_card(m: Dictionary, is_visible: bool) -> PanelContainer:
 	margin.add_theme_constant_override("margin_right", 8)
 	margin.add_theme_constant_override("margin_top", 5)
 	margin.add_theme_constant_override("margin_bottom", 5)
+	margin.mouse_filter = Control.MOUSE_FILTER_PASS
 	card.add_child(margin)
 
 	var main_hbox = HBoxContainer.new()
 	main_hbox.add_theme_constant_override("separation", 7)
+	main_hbox.mouse_filter = Control.MOUSE_FILTER_PASS
 	margin.add_child(main_hbox)
 
 	var token_tex = get_monster_token_texture(m)
@@ -5055,11 +5217,13 @@ func _create_enemy_card(m: Dictionary, is_visible: bool) -> PanelContainer:
 		token_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		token_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		token_rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		token_rect.mouse_filter = Control.MOUSE_FILTER_PASS
 		main_hbox.add_child(token_rect)
 
 	var vbox = VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 2)
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.mouse_filter = Control.MOUSE_FILTER_PASS
 	main_hbox.add_child(vbox)
 
 	# Row 1: Header (Name & Visibility Badge)
@@ -5335,6 +5499,7 @@ func get_telemetry_state() -> Dictionary:
 				"moveSquares": int(m.get("moveSquares", 6)),
 				"isVisible": vis,
 				"isAlive": alive,
+				"displayedInUi": (alive or show_defeated_monsters),
 				"statusBadge": badge,
 				"statusEffects": effs,
 				"grid_pos": [mp.x, mp.y],
@@ -5342,6 +5507,11 @@ func get_telemetry_state() -> Dictionary:
 				"tokenAsset": get_monster_token_path(m),
 				"hasTokenTexture": (get_monster_token_texture(m) != null)
 			})
+
+	var displayed_enemy_cards: Array = []
+	for ec in enemy_cards:
+		if ec.get("displayedInUi", false):
+			displayed_enemy_cards.append(ec)
 
 	var traps_copy: Array = []
 	for tr in traps:
@@ -5457,6 +5627,17 @@ func get_telemetry_state() -> Dictionary:
 			"visible": turn_overlay_btn.visible if turn_overlay_btn else false,
 			"mode": turn_overlay_mode,
 			"text": turn_overlay_btn.text if turn_overlay_btn else ""
+		},
+		"enemiesPanel": {
+			"showDefeated": show_defeated_monsters,
+			"displayedCount": enemy_cards_grid.get_child_count() if enemy_cards_grid else 0,
+			"defeatedCount": dead_count,
+			"visibleCount": vis_count,
+			"totalDiscovered": discovered_monster_ids.size(),
+			"canScroll": (enemies_scroll.get_v_scroll_bar().max_value > enemies_scroll.size.y) if enemies_scroll else false,
+			"scrollVertical": enemies_scroll.scroll_vertical if enemies_scroll else 0,
+			"toggleButtonText": btn_toggle_defeated.text if btn_toggle_defeated else "",
+			"toggleButtonDisabled": btn_toggle_defeated.disabled if btn_toggle_defeated else false
 		}
 	}
 
@@ -5513,9 +5694,12 @@ func get_telemetry_state() -> Dictionary:
 		"lastCombatResult": last_combat_result,
 		"characterCards": char_cards,
 		"enemyCards": enemy_cards,
+		"displayedEnemyCards": displayed_enemy_cards,
+		"showDefeated": show_defeated_monsters,
 		"discoveredEnemiesCount": discovered_monster_ids.size(),
 		"visibleEnemiesCount": vis_count,
 		"defeatedEnemiesCount": dead_count,
+		"displayedEnemiesCount": displayed_enemy_cards.size(),
 		"activeDiceRoll": {
 			"type": active_dice_animation.get("type", ""),
 			"title": active_dice_animation.get("title", ""),
@@ -5648,6 +5832,63 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				v_img.save_png(out_p)
 				return { "success": true, "path": out_p }
 			return { "success": false }
+		"toggle_defeated":
+			toggle_show_defeated_monsters()
+			return {
+				"success": true,
+				"showDefeated": show_defeated_monsters,
+				"displayedCount": enemy_cards_grid.get_child_count() if enemy_cards_grid else 0,
+				"buttonText": btn_toggle_defeated.text if btn_toggle_defeated else ""
+			}
+		"set_show_defeated":
+			var show_val = bool(action_data.get("show", action_data.get("value", false)))
+			set_show_defeated_monsters(show_val)
+			return {
+				"success": true,
+				"showDefeated": show_defeated_monsters,
+				"displayedCount": enemy_cards_grid.get_child_count() if enemy_cards_grid else 0,
+				"buttonText": btn_toggle_defeated.text if btn_toggle_defeated else ""
+			}
+		"scroll_enemies":
+			var delta = int(action_data.get("delta", 60))
+			var new_scroll = 0
+			if enemies_scroll:
+				enemies_scroll.scroll_vertical = max(0, enemies_scroll.scroll_vertical + delta)
+				new_scroll = enemies_scroll.scroll_vertical
+			return {
+				"success": true,
+				"scrollVertical": new_scroll,
+				"canScroll": (enemies_scroll.get_v_scroll_bar().max_value > enemies_scroll.size.y) if enemies_scroll else false
+			}
+		"add_dynamic_monsters":
+			var count = int(action_data.get("count", 10))
+			var is_all_dead = bool(action_data.get("allDead", false))
+			var is_half_dead = bool(action_data.get("halfDead", false))
+			for i in range(count):
+				var idx = monsters.size() + 1
+				var dead = is_all_dead or (is_half_dead and (i % 2 == 1))
+				var m_id = "test-mon-%d" % idx
+				var m_data = {
+					"id": m_id,
+					"name": "Dungeon Fiend #%d" % idx,
+					"type": "orc" if (i % 2 == 0) else "skeleton",
+					"bodyPoints": 2,
+					"current_bp": 0 if dead else 2,
+					"is_alive": not dead,
+					"attackDice": 3,
+					"defendDice": 2,
+					"moveSquares": 8,
+					"grid_pos": Vector2i(1, 1),
+					"roomId": "test_room"
+				}
+				monsters.append(m_data)
+				discovered_monster_ids[m_id] = true
+			_update_character_and_enemy_cards()
+			return {
+				"success": true,
+				"totalMonsters": monsters.size(),
+				"displayedCount": enemy_cards_grid.get_child_count() if enemy_cards_grid else 0
+			}
 		"set_state":
 			if action_data.has("role"):
 				current_role = str(action_data.get("role"))

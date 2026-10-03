@@ -186,10 +186,21 @@ offset_bottom = 736.0
 layout_mode = 0
 offset_left = 10.0
 offset_top = 6.0
-offset_right = 478.0
+offset_right = 320.0
 offset_bottom = 26.0
 theme_override_font_sizes/font_size = 14
 text = "DISCOVERED FOES"
+
+[node name="BtnToggleDefeated" type="Button" parent="UI/EnemiesPanel"]
+layout_mode = 0
+offset_left = 325.0
+offset_top = 4.0
+offset_right = 478.0
+offset_bottom = 26.0
+focus_mode = 0
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 11
+text = "💀 Show Defeated (0)"
 
 [node name="EmptyLabel" type="Label" parent="UI/EnemiesPanel"]
 layout_mode = 0
