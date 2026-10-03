@@ -64,6 +64,15 @@ text = "Not enough movement"
 horizontal_alignment = 1
 vertical_alignment = 1
 
+[node name="BtnMapEndTurn" type="Button" parent="UI"]
+offset_left = 1260.0
+offset_top = 14.0
+offset_right = 1400.0
+offset_bottom = 50.0
+tooltip_text = "Conclude active turn and pass initiative (Map Shortcut)"
+theme_override_font_sizes/font_size = 13
+text = "⏭️ End Turn"
+
 [node name="SidebarHeader" type="HBoxContainer" parent="UI"]
 offset_left = 1416.0
 offset_top = 14.0

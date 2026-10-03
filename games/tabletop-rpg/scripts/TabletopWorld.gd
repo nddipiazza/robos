@@ -155,6 +155,7 @@ func _find_action_button(btn_name: String) -> Button:
 @onready var btn_use_item: Button = _find_action_button("BtnUseItem")
 @onready var btn_search: Button = _find_action_button("BtnSearch")
 @onready var btn_end_turn: Button = _find_action_button("BtnEndTurn")
+@onready var btn_map_end_turn: Button = get_node_or_null("UI/BtnMapEndTurn")
 @onready var btn_summon: Button = _find_action_button("BtnSummon")
 @onready var btn_ai_step: Button = _find_action_button("BtnAIStep")
 
@@ -392,6 +393,75 @@ func _setup_action_hotbar() -> void:
 	for b in btns:
 		if b:
 			_setup_action_button_style(b)
+
+	if btn_map_end_turn:
+		_setup_map_end_turn_button_style()
+		if not btn_map_end_turn.pressed.is_connected(end_turn):
+			btn_map_end_turn.pressed.connect(end_turn)
+
+func _setup_map_end_turn_button_style() -> void:
+	if not btn_map_end_turn:
+		return
+	btn_map_end_turn.custom_minimum_size = Vector2(136, 36)
+	btn_map_end_turn.add_theme_font_size_override("font_size", 13)
+	btn_map_end_turn.add_theme_color_override("font_color", Color(1.0, 0.9, 0.5, 1.0))
+	btn_map_end_turn.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 0.8, 1.0))
+	btn_map_end_turn.add_theme_color_override("font_disabled_color", Color(0.5, 0.5, 0.6, 0.5))
+
+	var sb_normal = StyleBoxFlat.new()
+	sb_normal.bg_color = Color(0.09, 0.12, 0.18, 0.92)
+	sb_normal.border_width_left = 1
+	sb_normal.border_width_top = 1
+	sb_normal.border_width_right = 1
+	sb_normal.border_width_bottom = 2
+	sb_normal.border_color = Color(0.92, 0.75, 0.22, 0.85)
+	sb_normal.set_corner_radius_all(6)
+	sb_normal.shadow_color = Color(0, 0, 0, 0.5)
+	sb_normal.shadow_size = 4
+	btn_map_end_turn.add_theme_stylebox_override("normal", sb_normal)
+
+	var sb_hover = StyleBoxFlat.new()
+	sb_hover.bg_color = Color(0.14, 0.19, 0.28, 0.96)
+	sb_hover.border_width_left = 2
+	sb_hover.border_width_top = 2
+	sb_hover.border_width_right = 2
+	sb_hover.border_width_bottom = 2
+	sb_hover.border_color = Color(1.0, 0.85, 0.3, 1.0)
+	sb_hover.set_corner_radius_all(6)
+	sb_hover.shadow_color = Color(0.92, 0.75, 0.22, 0.4)
+	sb_hover.shadow_size = 6
+	btn_map_end_turn.add_theme_stylebox_override("hover", sb_hover)
+
+	var sb_pressed = StyleBoxFlat.new()
+	sb_pressed.bg_color = Color(0.06, 0.08, 0.12, 1.0)
+	sb_pressed.border_width_all(2)
+	sb_pressed.border_color = Color(1.0, 0.6, 0.1, 1.0)
+	sb_pressed.set_corner_radius_all(6)
+	btn_map_end_turn.add_theme_stylebox_override("pressed", sb_pressed)
+
+	var sb_disabled = StyleBoxFlat.new()
+	sb_disabled.bg_color = Color(0.07, 0.08, 0.11, 0.7)
+	sb_disabled.border_width_all(1)
+	sb_disabled.border_color = Color(0.3, 0.35, 0.4, 0.4)
+	sb_disabled.set_corner_radius_all(6)
+	btn_map_end_turn.add_theme_stylebox_override("disabled", sb_disabled)
+
+func _sync_map_end_turn_button() -> void:
+	if not btn_map_end_turn:
+		return
+	if btn_end_turn:
+		btn_map_end_turn.visible = btn_end_turn.visible
+		btn_map_end_turn.disabled = btn_end_turn.disabled
+		var t = btn_end_turn.text
+		if not t.begins_with("⏭️") and not t.begins_with("⌛"):
+			btn_map_end_turn.text = "⏭️ " + t
+		else:
+			btn_map_end_turn.text = t
+		btn_map_end_turn.tooltip_text = btn_end_turn.tooltip_text
+	else:
+		btn_map_end_turn.visible = (current_phase == "hero_phase" or current_role == "gm")
+		btn_map_end_turn.disabled = false
+		btn_map_end_turn.text = "⏭️ End Turn"
 
 func _setup_scroll_arrow_style(btn: Button) -> void:
 	btn.add_theme_font_size_override("font_size", 12)
@@ -679,6 +749,8 @@ func _get_button_unavailable_reason(btn: Button) -> String:
 		if get_total_party_gold() <= 0:
 			return "Party has no gold"
 		return "Armory unavailable"
+	elif btn == btn_end_turn or btn == btn_map_end_turn:
+		return "Cannot end turn"
 	return "Action unavailable"
 
 func _get_search_unavailable_reason() -> String:
@@ -704,7 +776,7 @@ func _get_search_unavailable_reason() -> String:
 	return "Cannot search room"
 
 func _sync_disabled_click_shields() -> void:
-	var btns = [btn_roll, btn_attack, btn_cast_spell, btn_use_item, btn_search, btn_end_turn, btn_summon, btn_ai_step, btn_search_traps, btn_disarm_trap, btn_armory]
+	var btns = [btn_roll, btn_attack, btn_cast_spell, btn_use_item, btn_search, btn_end_turn, btn_summon, btn_ai_step, btn_search_traps, btn_disarm_trap, btn_armory, btn_map_end_turn]
 	for btn in btns:
 		if not btn:
 			continue
@@ -1085,6 +1157,8 @@ func _setup_ui_signals() -> void:
 		btn_search.pressed.connect(search_room)
 	if btn_end_turn and not btn_end_turn.pressed.is_connected(end_turn):
 		btn_end_turn.pressed.connect(end_turn)
+	if btn_map_end_turn and not btn_map_end_turn.pressed.is_connected(end_turn):
+		btn_map_end_turn.pressed.connect(end_turn)
 	if btn_summon and not btn_summon.pressed.is_connected(summon_wandering_monster):
 		btn_summon.pressed.connect(summon_wandering_monster)
 	if btn_ai_step and not btn_ai_step.pressed.is_connected(propose_ai_step):
@@ -6800,6 +6874,7 @@ func _update_ui() -> void:
 	_update_log_display()
 
 	_update_turn_overlay()
+	_sync_map_end_turn_button()
 	_sync_disabled_click_shields()
 
 func _setup_turn_overlay_ui() -> void:
@@ -8611,7 +8686,8 @@ func get_telemetry_state() -> Dictionary:
 			"end_turn": { "visible": btn_end_turn.visible, "disabled": btn_end_turn.disabled, "tooltip": btn_end_turn.tooltip_text, "icon": "action_end_turn" } if btn_end_turn else {},
 			"ai_step": { "visible": btn_ai_step.visible, "disabled": btn_ai_step.disabled, "tooltip": btn_ai_step.tooltip_text, "icon": "action_ai_step" } if btn_ai_step else {},
 			"summon": { "visible": btn_summon.visible, "disabled": btn_summon.disabled, "tooltip": btn_summon.tooltip_text, "icon": "action_summon" } if btn_summon else {},
-			"armory": { "visible": btn_armory.visible, "disabled": btn_armory.disabled, "tooltip": btn_armory.tooltip_text, "icon": "action_armory" } if btn_armory else {}
+			"armory": { "visible": btn_armory.visible, "disabled": btn_armory.disabled, "tooltip": btn_armory.tooltip_text, "icon": "action_armory" } if btn_armory else {},
+			"map_end_turn": { "visible": btn_map_end_turn.visible, "disabled": btn_map_end_turn.disabled, "text": btn_map_end_turn.text, "tooltip": btn_map_end_turn.tooltip_text, "icon": "action_end_turn" } if btn_map_end_turn else {}
 		},
 		"hotbar": {
 			"actionsCount": actions_container.get_child_count() if actions_container else 10,
@@ -8696,6 +8772,12 @@ func get_telemetry_state() -> Dictionary:
 		"selectedArmoryHeroId": selected_armory_hero_id,
 		"armoryCatalog": ARMORY_CATALOG,
 		"partyTotalGold": get_total_party_gold(),
+		"mapEndTurnButton": {
+			"visible": btn_map_end_turn.visible if btn_map_end_turn else false,
+			"disabled": btn_map_end_turn.disabled if btn_map_end_turn else false,
+			"text": btn_map_end_turn.text if btn_map_end_turn else "",
+			"tooltip": btn_map_end_turn.tooltip_text if btn_map_end_turn else ""
+		},
 		"heroes": heroes_copy,
 		"monsters": monsters_copy,
 		"doors": doors_copy,
@@ -8958,6 +9040,7 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				"ai_step": target_btn = btn_ai_step
 				"armory": target_btn = btn_armory
 				"end_turn": target_btn = btn_end_turn
+				"map_end_turn", "btnmapendturn": target_btn = btn_map_end_turn
 				_:
 					target_btn = _find_action_button(btn_key)
 			if target_btn:
@@ -8985,6 +9068,7 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				"ai_step": target_btn = btn_ai_step
 				"armory": target_btn = btn_armory
 				"end_turn": target_btn = btn_end_turn
+				"map_end_turn", "btnmapendturn": target_btn = btn_map_end_turn
 				_:
 					target_btn = _find_action_button(btn_key)
 			if target_btn:
@@ -9102,6 +9186,10 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				current_round = int(action_data.get("round"))
 			if action_data.has("phase"):
 				current_phase = str(action_data.get("phase"))
+			elif action_data.has("current_phase"):
+				current_phase = str(action_data.get("current_phase"))
+			elif action_data.has("currentPhase"):
+				current_phase = str(action_data.get("currentPhase"))
 			if action_data.has("activeHeroIndex"):
 				active_hero_idx = int(action_data.get("activeHeroIndex"))
 			if action_data.has("activeHero"):
@@ -9574,6 +9662,7 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				"summon", "btnsummon": target_btn = btn_summon
 				"ai_step", "btnaistep": target_btn = btn_ai_step
 				"armory", "btnarmory": target_btn = btn_armory
+				"map_end_turn", "btnmapendturn", "end_turn_top_right", "map_end": target_btn = btn_map_end_turn
 			if target_btn:
 				if target_btn.disabled:
 					var reason = _get_button_unavailable_reason(target_btn)
@@ -9581,9 +9670,21 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 						show_unavailable_notice(reason, Vector2i(-1, -1), target_btn.global_position + target_btn.size * 0.5)
 					return { "success": false, "clicked": false, "disabled": true, "reason": reason }
 				else:
-					target_btn.emit_signal("pressed")
+					if target_btn == btn_end_turn or target_btn == btn_map_end_turn:
+						end_turn()
+					else:
+						target_btn.emit_signal("pressed")
 					return { "success": true, "clicked": true, "disabled": false }
 			return { "success": false, "error": "Button not found: " + btn_name }
+		"click_map_end_turn", "map_end_turn":
+			if btn_map_end_turn:
+				if btn_map_end_turn.disabled:
+					var reason = _get_button_unavailable_reason(btn_map_end_turn)
+					if reason != "":
+						show_unavailable_notice(reason, Vector2i(-1, -1), btn_map_end_turn.global_position + btn_map_end_turn.size * 0.5)
+					return { "success": false, "clicked": false, "disabled": true, "reason": reason }
+			end_turn()
+			return { "success": true, "clicked": true, "disabled": false }
 		"ai_step":
 			var auto_confirm = bool(action_data.get("confirm", false))
 			if auto_confirm:
