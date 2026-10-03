@@ -386,4 +386,13 @@ class TabletopQAPlayer:
         self.log("Closing Elf spell draft modal...")
         return self.execute_action("close_elf_spell_modal")
 
+    # --- Map Top-Right Convenience End Turn Button ---
+    def click_map_end_turn(self) -> dict:
+        self.log("Clicking top-right map convenience 'End Turn' button...")
+        return self.execute_action("click_map_end_turn")
+
+    def get_map_end_turn_button(self) -> dict:
+        st = self.get_state()
+        return st.get("mapEndTurnButton", st.get("scene", {}).get("ui", {}).get("buttons", {}).get("map_end_turn", {}))
+
 
