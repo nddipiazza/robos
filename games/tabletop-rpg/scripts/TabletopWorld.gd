@@ -39,6 +39,11 @@ var rooms: Array[Dictionary] = []
 var revealed_rooms: Array[String] = []
 var explored_tiles: Dictionary = {}
 var discovered_monster_ids: Dictionary = {}
+var _tile_to_room: Dictionary = {}
+var _tile_to_room_id: Dictionary = {}
+var _rooms_by_id: Dictionary = {}
+var _blocked_wall_tiles: Dictionary = {}
+var _doors_by_edge: Dictionary = {}
 var grid_cols: int = GRID_COLS
 var grid_rows: int = GRID_ROWS
 var starting_stair: Vector2i = Vector2i(1, 1)
@@ -518,6 +523,8 @@ func _load_active_cartridge() -> void:
 	for tr in map_data.get("traps", []):
 		traps.append(tr.duplicate(true))
 
+	_rebuild_spatial_caches()
+
 	# Fog of War: initially, cast ray vision from hero starting stairwell
 	revealed_rooms.clear()
 	explored_tiles.clear()
@@ -544,7 +551,25 @@ func _load_active_cartridge() -> void:
 	_update_ui()
 	queue_redraw_all()
 
-func is_tile_wall_blocked(tile: Vector2i) -> bool:
+func _rebuild_spatial_caches() -> void:
+	_tile_to_room.clear()
+	_tile_to_room_id.clear()
+	_rooms_by_id.clear()
+	for r in rooms:
+		var r_id = str(r.get("id", ""))
+		if r_id != "":
+			_rooms_by_id[r_id] = r
+		var rx = int(r.get("x", 0))
+		var ry = int(r.get("y", 0))
+		var rw = int(r.get("w", 1))
+		var rh = int(r.get("h", 1))
+		for x in range(rx, rx + rw):
+			for y in range(ry, ry + rh):
+				var pos = Vector2i(x, y)
+				_tile_to_room[pos] = r
+				_tile_to_room_id[pos] = r_id
+
+	_blocked_wall_tiles.clear()
 	for wb in wall_blocks:
 		var px = int(wb.get("x", wb.get("position", [0, 0])[0]))
 		var py = int(wb.get("y", wb.get("position", [0, 0])[1]))
@@ -555,9 +580,19 @@ func is_tile_wall_blocked(tile: Vector2i) -> bool:
 			w = 2; h = 1
 		elif b_type == "2-tile-wall-v" or b_type == "double-v":
 			w = 1; h = 2
-		if tile.x >= px and tile.x < px + w and tile.y >= py and tile.y < py + h:
-			return true
-	return false
+		for bx in range(px, px + w):
+			for by in range(py, py + h):
+				_blocked_wall_tiles[Vector2i(bx, by)] = true
+
+	_doors_by_edge.clear()
+	for d in doors:
+		var f = d.get("from", [0, 0])
+		var t = d.get("to", [0, 0])
+		_doors_by_edge[Vector4i(f[0], f[1], t[0], t[1])] = d
+		_doors_by_edge[Vector4i(t[0], t[1], f[0], f[1])] = d
+
+func is_tile_wall_blocked(tile: Vector2i) -> bool:
+	return _blocked_wall_tiles.has(tile)
 
 func is_border_tile(tile: Vector2i) -> bool:
 	return tile.x <= 0 or tile.x >= grid_cols - 1 or tile.y <= 0 or tile.y >= grid_rows - 1
@@ -605,13 +640,7 @@ func is_tile_occupied(tile: Vector2i, exclude_hero_idx: int = -1, exclude_monste
 	return is_tile_occupied_by_hero(tile, exclude_hero_idx) or is_tile_occupied_by_monster(tile, exclude_monster_id)
 
 func _get_door_between(a: Vector2i, b: Vector2i) -> Dictionary:
-	for d in doors:
-		var f = d.get("from", [0, 0])
-		var t = d.get("to", [0, 0])
-		if (f[0] == a.x and f[1] == a.y and t[0] == b.x and t[1] == b.y) or \
-		   (t[0] == a.x and t[1] == a.y and f[0] == b.x and f[1] == b.y):
-			return d
-	return {}
+	return _doors_by_edge.get(Vector4i(a.x, a.y, b.x, b.y), {})
 
 func has_wall_between(a: Vector2i, b: Vector2i) -> bool:
 	# 1. Out of bounds check
@@ -631,10 +660,8 @@ func has_wall_between(a: Vector2i, b: Vector2i) -> bool:
 		return not d.get("is_open", false)
 
 	# 3. Check room boundaries
-	var ra = _get_room_at(a)
-	var rb = _get_room_at(b)
-	var ra_id = str(ra.get("id", ""))
-	var rb_id = str(rb.get("id", ""))
+	var ra_id = _tile_to_room_id.get(a, "")
+	var rb_id = _tile_to_room_id.get(b, "")
 
 	# If crossing between a room and a corridor, or between two different rooms:
 	if ra_id != rb_id:
@@ -645,10 +672,9 @@ func has_wall_between(a: Vector2i, b: Vector2i) -> bool:
 func is_tile_solid(tile: Vector2i) -> bool:
 	if tile.x < 0 or tile.x >= grid_cols or tile.y < 0 or tile.y >= grid_rows:
 		return true
-	if is_tile_wall_blocked(tile):
+	if _blocked_wall_tiles.has(tile):
 		return true
-	var rm = _get_room_at(tile)
-	var rm_id = str(rm.get("id", ""))
+	var rm_id = _tile_to_room_id.get(tile, "")
 	if rm_id != "" and not revealed_rooms.has(rm_id):
 		return true
 	return false
@@ -695,27 +721,34 @@ func has_line_of_sight(from_pos: Vector2i, to_pos: Vector2i) -> bool:
 	var p1 = Vector2(float(to_pos.x) + 0.5, float(to_pos.y) + 0.5)
 	var delta = p1 - p0
 	var dist = delta.length()
-	var steps = int(dist * 20.0) + 1
+	var steps = int(dist * 4.0) + 1
 	var beam_radius: float = 0.15
 	var prev_tile = from_pos
 
 	for i in range(1, steps):
 		var t = float(i) / float(steps)
 		var c = p0 + delta * t
-		var cur_tile = Vector2i(int(floor(c.x)), int(floor(c.y)))
+		var ix = int(floor(c.x))
+		var iy = int(floor(c.y))
+		var cur_tile = Vector2i(ix, iy)
 
 		if cur_tile != prev_tile:
 			if has_wall_between(prev_tile, cur_tile):
 				return false
+			if cur_tile != to_pos and is_tile_solid(cur_tile):
+				return false
 			prev_tile = cur_tile
 
-		# Check solid collision within beam thickness
-		for ox in [-beam_radius, beam_radius]:
-			for oy in [-beam_radius, beam_radius]:
-				var chk_tile = Vector2i(int(floor(c.x + ox)), int(floor(c.y + oy)))
-				if chk_tile != from_pos and chk_tile != to_pos:
-					if is_tile_solid(chk_tile):
-						return false
+		# Check solid collision within beam thickness only near tile edges
+		var fx = c.x - float(ix)
+		var fy = c.y - float(iy)
+		if fx < beam_radius or fx > (1.0 - beam_radius) or fy < beam_radius or fy > (1.0 - beam_radius):
+			for ox in [-beam_radius, beam_radius]:
+				for oy in [-beam_radius, beam_radius]:
+					var chk_tile = Vector2i(int(floor(c.x + ox)), int(floor(c.y + oy)))
+					if chk_tile != from_pos and chk_tile != to_pos and chk_tile != cur_tile:
+						if is_tile_solid(chk_tile):
+							return false
 
 	return true
 
@@ -749,11 +782,10 @@ func update_party_vision() -> void:
 	for c in range(grid_cols):
 		for r in range(grid_rows):
 			var tile = Vector2i(c, r)
-			if explored_tiles.has(tile):
+			if explored_tiles.has(tile) or _blocked_wall_tiles.has(tile):
 				continue
 
-			var rm = _get_room_at(tile)
-			var r_id = str(rm.get("id", ""))
+			var r_id = _tile_to_room_id.get(tile, "")
 			# Unrevealed room tiles can never be seen by rays
 			if r_id != "" and not revealed_rooms.has(r_id):
 				continue
@@ -822,30 +854,13 @@ func reveal_room_by_id(r_id: String) -> void:
 		_log("[CALM] The chamber appears calm... for now.")
 
 func _is_inside_any_room(tile: Vector2i) -> bool:
-	for r in rooms:
-		var rx = int(r.get("x", 0))
-		var ry = int(r.get("y", 0))
-		var rw = int(r.get("w", 1))
-		var rh = int(r.get("h", 1))
-		if tile.x >= rx and tile.x < rx + rw and tile.y >= ry and tile.y < ry + rh:
-			return true
-	return false
+	return _tile_to_room.has(tile)
 
 func _get_room_at(tile: Vector2i) -> Dictionary:
-	for r in rooms:
-		var rx = int(r.get("x", 0))
-		var ry = int(r.get("y", 0))
-		var rw = int(r.get("w", 1))
-		var rh = int(r.get("h", 1))
-		if tile.x >= rx and tile.x < rx + rw and tile.y >= ry and tile.y < ry + rh:
-			return r
-	return {}
+	return _tile_to_room.get(tile, {})
 
 func _get_room_by_id(r_id: String) -> Dictionary:
-	for r in rooms:
-		if str(r.get("id", "")) == r_id:
-			return r
-	return {}
+	return _rooms_by_id.get(r_id, {})
 
 func _process(delta: float) -> void:
 	if CartridgeManager.auto_play_enabled:
@@ -2468,6 +2483,7 @@ func move_hero(target_pos: Vector2i) -> bool:
 				"width": 1,
 				"height": 1
 			})
+			_blocked_wall_tiles[trap_tile] = true
 			sprung_trap["blocked"] = true
 			_log("[TRAP] 🪨 FALLING BLOCK TRAP! Rubble crashes down at (%d, %d)! %s suffers %d damage (Remaining BP: %d). The path is permanently blocked by fallen rock!" % [
 				trap_tile.x, trap_tile.y, hero.get("name"), dmg, hero.get("current_bp")
@@ -4039,11 +4055,7 @@ func _update_ui() -> void:
 	# Render Rich Hero Party Cards & Discovered Enemy Cards
 	_update_character_and_enemy_cards()
 
-	var log_text = ""
-	for i in range(maxi(0, combat_log.size() - 8), combat_log.size()):
-		log_text += _sanitize_ui_text(combat_log[i]) + "\n"
-	if log_label:
-		log_label.text = log_text
+	_update_log_display()
 
 	_update_turn_overlay()
 
@@ -4246,21 +4258,19 @@ func _update_character_and_enemy_cards() -> void:
 			var card = _create_hero_card(h, is_act)
 			hero_cards_grid.add_child(card)
 
-	# Discover any currently visible monsters
-	for m in monsters:
-		if is_monster_currently_visible(m):
-			discovered_monster_ids[str(m.get("id"))] = true
-
 	var vis_count = 0
 	var dead_count = 0
 	var discovered_list: Array[Dictionary] = []
 
 	for m in monsters:
 		var mid = str(m.get("id"))
+		var vis = is_monster_currently_visible(m)
+		if vis:
+			discovered_monster_ids[mid] = true
+
 		if discovered_monster_ids.has(mid):
 			var cur_bp = int(m.get("current_bp", 1))
 			var alive = bool(m.get("is_alive", true)) and cur_bp > 0
-			var vis = is_monster_currently_visible(m)
 			if not alive:
 				dead_count += 1
 			elif vis:
@@ -4812,11 +4822,18 @@ func _sanitize_ui_text(text: String) -> String:
 		out += s[i]
 	return out
 
+func _update_log_display() -> void:
+	if log_label:
+		var log_text = ""
+		for i in range(maxi(0, combat_log.size() - 8), combat_log.size()):
+			log_text += _sanitize_ui_text(combat_log[i]) + "\n"
+		log_label.text = log_text
+
 func _log(msg: String) -> void:
 	var clean_msg = _sanitize_ui_text(msg)
 	print("[Tabletop] ", clean_msg)
 	combat_log.append(clean_msg)
-	_update_ui()
+	_update_log_display()
 
 func get_telemetry_state() -> Dictionary:
 	var exp_tiles: Array = []
@@ -5283,6 +5300,7 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 					discovered_monster_ids[str(mid)] = true
 			if action_data.has("resetExplored") and bool(action_data.resetExplored):
 				explored_tiles.clear()
+			_rebuild_spatial_caches()
 			update_party_vision()
 			_update_ui()
 			queue_redraw_all()
