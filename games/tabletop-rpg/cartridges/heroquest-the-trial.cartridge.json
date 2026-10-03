@@ -437,6 +437,57 @@
         "room-se-sanctum",
         "room-se-tomb"
       ],
+      "storyTriggers": [
+        {
+          "id": "trigger-a-emperor-letter",
+          "marker": "A",
+          "room": "room-grand-fossil",
+          "tile": [3, 9],
+          "condition": "search_treasure",
+          "title": "The Emperor's Hidden Epistle",
+          "banner": "QUEST NOTE [A]",
+          "narrative": "Stop. Do not draw a card. As your hand searches along the cold damp wall behind the dragon skull altar, a loose mortar stone gives way! Inside a hollow recess lies a velvet-wrapped pouch containing 50 gold pieces and an urgent letter bearing the Emperor's royal seal: 'Champions of the Realm: Beware the foul Orc Warlord Verag in his catacombs. Take this gold to steel your courage and vanquish the gathering storm.'",
+          "consequence": "The hero does not draw a treasure card. Instead, they receive 50 Gold Coins and the Emperor's Epistle.",
+          "gold": 50,
+          "item": {
+            "id": "item-emperor-letter",
+            "name": "Letter from the Emperor",
+            "type": "quest_item",
+            "icon": "📜",
+            "description": "An urgent parchment bearing the Emperor's royal wax crest, calling for Verag's defeat."
+          },
+          "onceOnly": true,
+          "triggered": false
+        },
+        {
+          "id": "trigger-b-crypt-ambush",
+          "marker": "B",
+          "room": "room-nw-crypt",
+          "tile": [4, 3],
+          "condition": "enter_room",
+          "title": "Restless Dead of the Catacomb",
+          "banner": "QUEST NOTE [B]",
+          "narrative": "As your boot crosses the stone threshold into the crypt, an icy draft chills you to the marrow! A hollow, mocking laughter echoes from the ceiling vaults as the heavy flagstones rattle. An ancient Crypt Skeleton bursts from the earth, scythe raised in deadly fury!",
+          "consequence": "AMBUSH! 1 Crypt Skeleton bursts from the floor tiles and enters the fray!",
+          "spawnMonsters": [
+            {
+              "id": "mon-skel-ambush",
+              "name": "Ambush Skeleton",
+              "monsterType": "skeleton",
+              "tokenColor": "#b91c1c",
+              "grid_pos": [6, 4],
+              "roomId": "room-nw-crypt",
+              "current_bp": 1,
+              "bodyPoints": 1,
+              "attackDice": 2,
+              "defendDice": 2,
+              "is_alive": true
+            }
+          ],
+          "onceOnly": true,
+          "triggered": false
+        }
+      ],
       "rooms": [
         {
           "id": "room-grand-fossil",

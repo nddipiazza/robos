@@ -58,6 +58,8 @@ var floating_texts: Array[Dictionary] = []
 var active_dice_animation: Dictionary = {}
 var active_trap_overlay: Dictionary = {}
 var active_treasure_overlay: Dictionary = {}
+var story_triggers: Array[Dictionary] = []
+var active_story_trigger_overlay: Dictionary = {}
 var flashing_item: Dictionary = {}
 var pending_flash_item: Dictionary = {}
 var searched_rooms: Dictionary = {}
@@ -1229,6 +1231,11 @@ func _load_active_cartridge() -> void:
 	traps.clear()
 	for tr in map_data.get("traps", []):
 		traps.append(tr.duplicate(true))
+
+	story_triggers.clear()
+	active_story_trigger_overlay.clear()
+	for st in map_data.get("storyTriggers", []):
+		story_triggers.append(st.duplicate(true))
 
 	_rebuild_spatial_caches()
 
@@ -3138,6 +3145,12 @@ func _input(event: InputEvent) -> void:
 			close_hero_detail_modal()
 			get_viewport().set_input_as_handled()
 			return
+	if not active_story_trigger_overlay.is_empty():
+		if (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed) or \
+		   (event is InputEventKey and event.pressed and (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER or event.keycode == KEY_ESCAPE)):
+			resolve_story_trigger_overlay_click()
+			get_viewport().set_input_as_handled()
+			return
 	if not active_treasure_overlay.is_empty():
 		if (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed) or \
 		   (event is InputEventKey and event.pressed and (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER)):
@@ -3158,6 +3171,12 @@ func _input(event: InputEvent) -> void:
 			return
 
 func _unhandled_input(event: InputEvent) -> void:
+	if not active_story_trigger_overlay.is_empty():
+		if (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed) or \
+		   (event is InputEventKey and event.pressed and (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER or event.keycode == KEY_ESCAPE)):
+			resolve_story_trigger_overlay_click()
+			get_viewport().set_input_as_handled()
+			return
 	if hero_detail_modal and hero_detail_modal.visible:
 		if (event is InputEventKey and event.pressed and (event.keycode == KEY_ESCAPE or event.keycode == KEY_SPACE or event.keycode == KEY_ENTER)):
 			close_hero_detail_modal()
@@ -3610,6 +3629,17 @@ func move_hero(target_pos: Vector2i, is_interactive: bool = false) -> bool:
 		_log("[SPELL] The Veil of Mist dissipates from around %s." % hero.get("name"))
 
 	update_party_vision()
+
+	# Check for Story Triggers: enter_room or step_on_tile
+	var cur_room = _get_room_at(final_pos)
+	var cur_room_id = str(cur_room.get("id", ""))
+	var move_story_tr = _find_untriggered_story_trigger("enter_room", cur_room_id, final_pos)
+	if move_story_tr.is_empty():
+		move_story_tr = _find_untriggered_story_trigger("step_on_tile", cur_room_id, final_pos)
+	if not move_story_tr.is_empty():
+		move_story_tr["triggered"] = true
+		_setup_story_trigger_overlay(move_story_tr, hero)
+
 	_log("[MOVE] %s moved to (%d, %d). Remaining movement: %d" % [
 		hero.get("name"), final_pos.x, final_pos.y, movement_remaining
 	])
@@ -3648,6 +3678,10 @@ func open_door(from_pos: Vector2i, to_pos: Vector2i) -> bool:
 
 	for r_id in rooms_to_reveal:
 		reveal_room_by_id(r_id)
+		var los_tr = _find_untriggered_story_trigger("line_of_sight", r_id)
+		if not los_tr.is_empty():
+			los_tr["triggered"] = true
+			_setup_story_trigger_overlay(los_tr, get_active_hero())
 
 	var hero = get_active_hero()
 	var hero_name = get_hero_character_name(hero) if not hero.is_empty() else "Hero"
@@ -4925,6 +4959,121 @@ func resolve_treasure_overlay_click() -> Dictionary:
 	queue_redraw_all()
 	return { "success": true, "card": overlay.get("card", {}) }
 
+func _find_untriggered_story_trigger(condition: String, room_id: String, tile: Vector2i = Vector2i(-1, -1)) -> Dictionary:
+	for st in story_triggers:
+		if st.get("triggered", false) and st.get("onceOnly", true):
+			continue
+		var cond = str(st.get("condition", ""))
+		if cond != condition:
+			continue
+		var st_room = str(st.get("room", ""))
+		var st_tile = st.get("tile", [])
+		var has_tile = (st_tile is Array and st_tile.size() >= 2)
+		var matches_room = (st_room != "" and st_room == room_id)
+		var matches_tile = (has_tile and Vector2i(int(st_tile[0]), int(st_tile[1])) == tile)
+
+		if has_tile and matches_tile:
+			return st
+		elif not has_tile and matches_room:
+			return st
+		elif matches_room and (tile == Vector2i(-1, -1) or not has_tile):
+			return st
+	return {}
+
+func _setup_story_trigger_overlay(trigger: Dictionary, hero: Dictionary) -> void:
+	active_story_trigger_overlay = {
+		"trigger": trigger,
+		"hero": hero,
+		"hero_id": str(hero.get("id", "")),
+		"hero_name": str(hero.get("characterName", hero.get("name", "Hero"))),
+		"marker": str(trigger.get("marker", "A")),
+		"title": str(trigger.get("title", "Story Event")),
+		"banner": str(trigger.get("banner", "QUEST NOTE [%s]" % str(trigger.get("marker", "A")))),
+		"narrative": str(trigger.get("narrative", "")),
+		"consequence": str(trigger.get("consequence", "")),
+		"gold": int(trigger.get("gold", 0)),
+		"item": trigger.get("item", null),
+		"spawnMonsters": trigger.get("spawnMonsters", []),
+		"waitingForClick": true
+	}
+	_log("[STORY TRIGGER %s] 📜 Zargon reads Quest Note: '%s'!" % [
+		active_story_trigger_overlay.marker,
+		active_story_trigger_overlay.title
+	])
+	queue_redraw_all()
+
+func resolve_story_trigger_overlay_click() -> Dictionary:
+	if active_story_trigger_overlay.is_empty():
+		return { "success": false, "error": "No active story trigger overlay" }
+
+	var overlay = active_story_trigger_overlay.duplicate(true)
+	active_story_trigger_overlay = {}
+
+	var trigger = overlay.get("trigger", {})
+	var hero_id = str(overlay.get("hero_id", ""))
+	var hero: Dictionary = {}
+	for h in heroes:
+		if str(h.get("id")) == hero_id:
+			hero = h
+			break
+	if hero.is_empty():
+		hero = get_active_hero()
+
+	var marker = str(trigger.get("marker", "A"))
+	var title = str(trigger.get("title", "Story Event"))
+	var narrative = str(trigger.get("narrative", ""))
+
+	# 1. Award Gold
+	var gold_val = int(trigger.get("gold", 0))
+	if gold_val > 0 and not hero.is_empty():
+		hero["gold"] = int(hero.get("gold", 0)) + gold_val
+		_log("[STORY TRIGGER %s] 💰 %s receives %d Gold Coins! (Total: %d)" % [marker, hero.get("name"), gold_val, hero.get("gold")])
+		spawn_floating_text(hero.get("grid_pos", Vector2i(1, 1)), "+%d GOLD" % gold_val, Color(1.0, 0.85, 0.2), 2.0)
+
+	# 2. Award Quest Item
+	var item_data = trigger.get("item", null)
+	if item_data != null and not hero.is_empty():
+		if not (hero.get("inventory", []) is Array):
+			hero["inventory"] = []
+		var item_name = ""
+		if item_data is Dictionary:
+			hero["inventory"].append(item_data)
+			item_name = str(item_data.get("name", "Quest Item"))
+		else:
+			hero["inventory"].append(str(item_data))
+			item_name = str(item_data)
+		_log("[STORY TRIGGER %s] 📜 %s obtained quest item: '%s'!" % [marker, hero.get("name"), item_name])
+		spawn_floating_text(hero.get("grid_pos", Vector2i(1, 1)), "FOUND: %s" % item_name.to_upper(), Color(0.3, 0.85, 1.0), 2.2)
+
+	# 3. Spawn Ambush Monsters
+	var spawns = trigger.get("spawnMonsters", [])
+	if spawns is Array and spawns.size() > 0:
+		for m in spawns:
+			var m_copy = m.duplicate(true)
+			if not m_copy.has("grid_pos") and m_copy.has("position"):
+				m_copy["grid_pos"] = Vector2i(m_copy["position"][0], m_copy["position"][1])
+			elif m_copy.has("grid_pos") and m_copy["grid_pos"] is Array:
+				m_copy["grid_pos"] = Vector2i(m_copy["grid_pos"][0], m_copy["grid_pos"][1])
+			if not m_copy.has("is_alive"):
+				m_copy["is_alive"] = true
+			var mid = str(m_copy.get("id", "ambush-%d" % randi()))
+			discovered_monster_ids[mid] = true
+			monsters.append(m_copy)
+			var m_pos: Vector2i = m_copy.get("grid_pos", Vector2i(1, 1))
+			spawn_burst_vfx(board_offset + Vector2((m_pos.x + 0.5) * tile_size, (m_pos.y + 0.5) * tile_size), Color(0.9, 0.2, 0.2), 55.0, 0.5)
+			spawn_floating_text(m_pos, "AMBUSH!", Color(1.0, 0.15, 0.15), 2.2)
+			_log("[AMBUSH %s] ⚔️ A %s bursts into battle at (%d, %d)!" % [marker, m_copy.get("name", "Monster"), m_pos.x, m_pos.y])
+
+	_update_ui()
+	queue_redraw_all()
+	return {
+		"success": true,
+		"trigger": trigger,
+		"goldAwarded": gold_val,
+		"itemAwarded": item_data != null,
+		"monstersSpawned": spawns.size()
+	}
+
 func search_room(is_interactive: bool = false) -> Dictionary:
 	var hero = get_active_hero()
 	if hero.is_empty():
@@ -5015,6 +5164,21 @@ func search_room(is_interactive: bool = false) -> Dictionary:
 	if not searched_rooms.has(r_id):
 		searched_rooms[r_id] = []
 	searched_rooms[r_id].append(hero_id)
+
+	# 4. Check Story Triggers (Quest Book Notes) for this room / tile
+	var story_tr = _find_untriggered_story_trigger("search_treasure", r_id, h_pos)
+	if not story_tr.is_empty():
+		story_tr["triggered"] = true
+		_conclude_action_turn_state()
+		_setup_story_trigger_overlay(story_tr, hero)
+		_update_ui()
+		queue_redraw_all()
+		return {
+			"success": true,
+			"storyTrigger": true,
+			"trigger": story_tr,
+			"waitingForClick": true
+		}
 
 	# 5. Check Quest Notes (Special Room Treasure) on First Search
 	var spec_tr: Dictionary = {}
@@ -7888,6 +8052,7 @@ func get_telemetry_state() -> Dictionary:
 
 	return {
 		"role": current_role,
+		"currentRole": current_role,
 		"round": current_round,
 		"phase": current_phase,
 		"activeHero": h_act.get("id", ""),
@@ -7957,6 +8122,8 @@ func get_telemetry_state() -> Dictionary:
 		"isMouseOverBoard": (hovered_tile.x >= 0 and hovered_tile.x < grid_cols and hovered_tile.y >= 0 and hovered_tile.y < grid_rows),
 		"isShowingReachableIndicators": (movement_rolled and movement_remaining > 0 and not movement_closed and current_phase == "hero_phase" and hovered_tile.x >= 0 and hovered_tile.x < grid_cols and hovered_tile.y >= 0 and hovered_tile.y < grid_rows),
 		"reachableWalkTiles": (get_reachable_walk_tiles().map(func(v): return [v.x, v.y])),
+		"storyTriggers": story_triggers,
+		"activeStoryTrigger": active_story_trigger_overlay,
 		"activeEnemyTurnMonsterId": active_enemy_turn_monster_id,
 		"isEnemyTurnWaiting": is_enemy_turn_waiting,
 		"enemyTurnWaitRemaining": enemy_turn_wait_timer,
@@ -8157,6 +8324,22 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				"isMouseOverBoard": false,
 				"isShowingReachableIndicators": false
 			}
+		"click_story_trigger", "resolve_story_trigger", "dismiss_story_trigger":
+			if not active_story_trigger_overlay.is_empty():
+				return resolve_story_trigger_overlay_click()
+			return { "success": false, "error": "No active story trigger overlay" }
+		"trigger_story_event":
+			var target_id = str(action_data.get("id", action_data.get("marker", "")))
+			var found_tr: Dictionary = {}
+			for st in story_triggers:
+				if str(st.get("id", "")) == target_id or str(st.get("marker", "")) == target_id:
+					found_tr = st
+					break
+			if not found_tr.is_empty():
+				found_tr["triggered"] = true
+				_setup_story_trigger_overlay(found_tr, get_active_hero())
+				return { "success": true, "trigger": found_tr }
+			return { "success": false, "error": "Story trigger not found: " + target_id }
 		"hover_action_button":
 			var btn_key = str(action_data.get("button", "roll"))
 			var target_btn: Button = null
@@ -8308,6 +8491,8 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 		"set_state", "patch_state":
 			if action_data.has("role"):
 				current_role = str(action_data.get("role"))
+			if action_data.has("currentRole"):
+				current_role = str(action_data.get("currentRole"))
 			if action_data.has("round"):
 				current_round = int(action_data.get("round"))
 			if action_data.has("phase"):
@@ -8428,7 +8613,11 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 								else:
 									h[k] = h_patch[k]
 							break
+			if action_data.has("clearMonsters") and bool(action_data.get("clearMonsters")):
+				monsters.clear()
 			if action_data.has("monsters") and action_data.monsters is Array:
+				if action_data.monsters.is_empty() or action_data.get("clearMonsters", false) or action_data.get("resetMonsters", false):
+					monsters.clear()
 				for m_patch in action_data.monsters:
 					var m_id = str(m_patch.get("id", ""))
 					var found_m: Dictionary = {}
@@ -8859,6 +9048,9 @@ func _draw_board(canvas: CanvasItem) -> void:
 				canvas.draw_rect(r_rect, Color(0.35, 0.1, 0.5, 0.22))
 				canvas.draw_rect(r_rect, Color(0.7, 0.25, 0.9, 0.8), false, 1.5)
 				canvas.draw_string(ThemeDB.fallback_font, r_rect.position + Vector2(8, 18), "Hidden from Players", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.85, 0.6, 1.0, 0.8))
+
+		# Game Master Mode: Draw Story Trigger Markers ([A], [B], etc.)
+		_draw_gm_story_trigger_markers(canvas)
 
 	# Draw Reachable Walk Tile Indicators (Green outline around walkable tiles on revealed map when hovering over map)
 	_draw_reachable_walk_indicators(canvas)
@@ -9417,6 +9609,7 @@ func _draw_board(canvas: CanvasItem) -> void:
 	_draw_floating_texts(canvas)
 	_draw_trap_sprung_overlay(canvas)
 	_draw_treasure_card_overlay(canvas)
+	_draw_story_trigger_overlay(canvas)
 	_draw_item_flash_banner(canvas)
 	_draw_active_dice_roll(canvas)
 
@@ -10633,6 +10826,168 @@ func _draw_treasure_card_overlay(canvas: CanvasItem) -> void:
 
 	var c_sz = font.get_string_size(cta_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 11)
 	canvas.draw_string(font, Vector2(center.x - c_sz.x * 0.5, cta_y), cta_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 11, Color(0.36, 0.20, 0.10, pulse))
+
+func _draw_gm_story_trigger_markers(canvas: CanvasItem) -> void:
+	var font = ThemeDB.fallback_font
+	for st in story_triggers:
+		var marker = str(st.get("marker", "?"))
+		var is_trig = bool(st.get("triggered", false))
+		var marker_tile = Vector2i(-1, -1)
+		if st.has("tile") and st.tile is Array and st.tile.size() >= 2:
+			marker_tile = Vector2i(int(st.tile[0]), int(st.tile[1]))
+		elif st.has("room"):
+			var rm = _get_room_by_id(str(st.room))
+			if rm.size() > 0:
+				marker_tile = Vector2i(int(rm.get("x", 0)) + int(rm.get("w", 1) / 2), int(rm.get("y", 0)) + int(rm.get("h", 1) / 2))
+		if marker_tile.x < 0 or marker_tile.y < 0:
+			continue
+
+		var center = board_offset + Vector2((marker_tile.x + 0.5) * tile_size, (marker_tile.y + 0.5) * tile_size)
+		var radius = tile_size * 0.36
+		# Drop shadow
+		canvas.draw_circle(center + Vector2(1.5, 2.0), radius, Color(0.0, 0.0, 0.0, 0.6))
+		# Circular seal body
+		var bg_col = Color(0.35, 0.15, 0.15, 0.75) if is_trig else Color(0.72, 0.12, 0.16, 0.95)
+		canvas.draw_circle(center, radius, bg_col)
+		# Gold border
+		var rim_col = Color(0.65, 0.55, 0.35, 0.7) if is_trig else Color(1.0, 0.85, 0.25, 1.0)
+		canvas.draw_arc(center, radius, 0, TAU, 24, rim_col, 2.0)
+		canvas.draw_arc(center, radius * 0.75, 0, TAU, 18, Color(rim_col.r, rim_col.g, rim_col.b, 0.5), 1.0)
+		# Letter label
+		var txt = marker if not is_trig else "%s✓" % marker
+		var txt_w = font.get_string_size(txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 13).x
+		canvas.draw_string(font, Vector2(center.x - txt_w * 0.5, center.y + 5), txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 13, Color.WHITE)
+
+func _draw_story_trigger_overlay(canvas: CanvasItem) -> void:
+	if active_story_trigger_overlay.is_empty():
+		return
+
+	var overlay = active_story_trigger_overlay
+	var font = ThemeDB.fallback_font
+	_update_board_metrics()
+	var center = board_offset + Vector2(grid_cols * tile_size * 0.5, grid_rows * tile_size * 0.44)
+
+	# 1. Full Board Dark Vignette / Backdrop Dimmer
+	var total_w = float(grid_cols * tile_size)
+	var total_h = float(grid_rows * tile_size)
+	canvas.draw_rect(Rect2(board_offset, Vector2(total_w, total_h)), Color(0.02, 0.03, 0.06, 0.84))
+
+	# 2. Deluxe Parchment Folio Card (440 x 580)
+	var card_w = 440.0
+	var card_h = 580.0
+	var card_rect = Rect2(center.x - card_w * 0.5, center.y - card_h * 0.5, card_w, card_h)
+
+	# Drop shadow
+	canvas.draw_rect(Rect2(card_rect.position + Vector2(10.0, 12.0), card_rect.size), Color(0.0, 0.0, 0.0, 0.85))
+
+	# Outer Card Margin (Dark gothic obsidian leather border)
+	var leather_col = Color(0.12, 0.08, 0.05, 1.0)
+	canvas.draw_rect(card_rect, leather_col)
+	canvas.draw_rect(card_rect, Color(0.85, 0.68, 0.25, 0.95), false, 2.0)
+
+	# Parchment Body (Rich aged parchment)
+	var parchment_rect = Rect2(card_rect.position + Vector2(14.0, 14.0), card_rect.size - Vector2(28.0, 28.0))
+	var parchment_fill = Color(0.94, 0.88, 0.74, 1.0)
+	canvas.draw_rect(parchment_rect, parchment_fill)
+
+	# Vintage edge aging
+	canvas.draw_rect(Rect2(parchment_rect.position, Vector2(parchment_rect.size.x, 3.0)), Color(0.80, 0.70, 0.52, 0.45))
+	canvas.draw_rect(Rect2(Vector2(parchment_rect.position.x, parchment_rect.end.y - 3.0), Vector2(parchment_rect.size.x, 3.0)), Color(0.80, 0.70, 0.52, 0.45))
+	canvas.draw_rect(Rect2(parchment_rect.position, Vector2(3.0, parchment_rect.size.y)), Color(0.80, 0.70, 0.52, 0.45))
+	canvas.draw_rect(Rect2(Vector2(parchment_rect.end.x - 3.0, parchment_rect.position.y), Vector2(3.0, parchment_rect.size.y)), Color(0.80, 0.70, 0.52, 0.45))
+
+	# Inner double border frame
+	var inner_frame = Rect2(parchment_rect.position + Vector2(8.0, 8.0), parchment_rect.size - Vector2(16.0, 16.0))
+	var ink_col = Color(0.22, 0.12, 0.07, 0.95)
+	canvas.draw_rect(inner_frame, ink_col, false, 2.0)
+	var inner_hairline = Rect2(inner_frame.position + Vector2(3.0, 3.0), inner_frame.size - Vector2(6.0, 6.0))
+	canvas.draw_rect(inner_hairline, Color(0.70, 0.55, 0.30, 0.70), false, 1.0)
+
+	# 3. Top Banner: Royal Crimson Ribbon
+	var banner_w = 260.0
+	var banner_h = 24.0
+	var banner_rect = Rect2(center.x - banner_w * 0.5, parchment_rect.position.y + 12.0, banner_w, banner_h)
+	canvas.draw_rect(banner_rect, Color(0.60, 0.10, 0.14, 0.98))
+	canvas.draw_rect(banner_rect, Color(0.95, 0.80, 0.30, 1.0), false, 1.5)
+	var banner_text = str(overlay.get("banner", "QUEST BOOK NOTE"))
+	var b_sz = font.get_string_size(banner_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 11)
+	canvas.draw_string(font, Vector2(center.x - b_sz.x * 0.5, banner_rect.position.y + 16.0), banner_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 11, Color(1.0, 0.95, 0.85))
+
+	# 4. Circular Wax Seal Medallion (with marker letter e.g. "A" or "B")
+	var seal_center = Vector2(center.x, banner_rect.end.y + 36.0)
+	var seal_radius = 24.0
+	# Seal drop shadow
+	canvas.draw_circle(seal_center + Vector2(1.5, 2.5), seal_radius, Color(0.0, 0.0, 0.0, 0.5))
+	# Seal body
+	canvas.draw_circle(seal_center, seal_radius, Color(0.72, 0.12, 0.16, 1.0))
+	canvas.draw_arc(seal_center, seal_radius, 0, TAU, 32, Color(0.95, 0.80, 0.25, 1.0), 2.0)
+	canvas.draw_arc(seal_center, seal_radius * 0.76, 0, TAU, 24, Color(0.95, 0.80, 0.25, 0.6), 1.0)
+	var marker_letter = str(overlay.get("marker", "A"))
+	var m_sz = font.get_string_size(marker_letter, HORIZONTAL_ALIGNMENT_CENTER, -1, 22)
+	canvas.draw_string(font, Vector2(seal_center.x - m_sz.x * 0.5, seal_center.y + 8.0), marker_letter, HORIZONTAL_ALIGNMENT_CENTER, -1, 22, Color(1.0, 0.95, 0.80))
+
+	# 5. Story Title
+	var title_text = str(overlay.get("title", "Story Event"))
+	var t_sz = font.get_string_size(title_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 18)
+	var title_y = seal_center.y + seal_radius + 24.0
+	canvas.draw_string(font, Vector2(center.x - t_sz.x * 0.5, title_y), title_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 18, ink_col)
+
+	# Decorative divider
+	var div_y = title_y + 8.0
+	var div_w = 280.0
+	canvas.draw_line(Vector2(center.x - div_w * 0.5, div_y), Vector2(center.x + div_w * 0.5, div_y), Color(0.60, 0.45, 0.30, 0.8), 1.0)
+	canvas.draw_circle(Vector2(center.x, div_y), 3.0, Color(0.60, 0.10, 0.14, 0.9))
+
+	# 6. Narrative Folio Box (Zargon's Read-Aloud Text)
+	var text_box_y = div_y + 14.0
+	var text_box_w = card_w - 64.0
+	var text_box_h = 210.0
+	var text_box_rect = Rect2(center.x - text_box_w * 0.5, text_box_y, text_box_w, text_box_h)
+	# Subtle parchment inset
+	canvas.draw_rect(text_box_rect, Color(0.90, 0.83, 0.68, 0.95))
+	canvas.draw_rect(text_box_rect, Color(0.70, 0.55, 0.38, 0.8), false, 1.0)
+
+	# Render word-wrapped narrative
+	var narrative = str(overlay.get("narrative", ""))
+	var lines = _wrap_card_text(narrative, font, 12, text_box_w - 24.0)
+	var line_y = text_box_rect.position.y + 24.0
+	for l in lines:
+		if line_y > text_box_rect.end.y - 12.0:
+			break
+		var l_sz = font.get_string_size(l, HORIZONTAL_ALIGNMENT_LEFT, -1, 12)
+		canvas.draw_string(font, Vector2(text_box_rect.position.x + 12.0, line_y), l, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(0.18, 0.10, 0.06, 0.95))
+		line_y += 18.0
+
+	# 7. Rewards / Consequences Section
+	var reward_y = text_box_rect.end.y + 12.0
+	var gold_val = int(overlay.get("gold", 0))
+	var item_data = overlay.get("item", null)
+	var spawns = overlay.get("spawnMonsters", [])
+
+	var loot_items: Array[String] = []
+	if gold_val > 0:
+		loot_items.append("💰 +%d Gold Coins" % gold_val)
+	if item_data != null:
+		var iname = item_data.get("name", "Quest Item") if item_data is Dictionary else str(item_data)
+		loot_items.append("📜 %s" % iname)
+	if spawns is Array and spawns.size() > 0:
+		loot_items.append("⚔️ AMBUSH! %d Monster(s) appear!" % spawns.size())
+
+	if loot_items.size() > 0:
+		var loot_str = "  •  ".join(loot_items)
+		var loot_sz = font.get_string_size(loot_str, HORIZONTAL_ALIGNMENT_CENTER, -1, 12)
+		var loot_box_w = minf(card_w - 64.0, loot_sz.x + 24.0)
+		var loot_rect = Rect2(center.x - loot_box_w * 0.5, reward_y, loot_box_w, 28.0)
+		canvas.draw_rect(loot_rect, Color(0.12, 0.24, 0.16, 0.95) if spawns.is_empty() else Color(0.35, 0.10, 0.12, 0.95))
+		canvas.draw_rect(loot_rect, Color(0.95, 0.80, 0.30, 1.0), false, 1.5)
+		canvas.draw_string(font, Vector2(center.x - loot_sz.x * 0.5, reward_y + 19.0), loot_str, HORIZONTAL_ALIGNMENT_CENTER, -1, 12, Color.WHITE)
+
+	# 8. Dismiss Action Prompt
+	var pulse = 0.82 + 0.18 * sin(Time.get_ticks_msec() * 0.006)
+	var prompt_text = "[ CLICK ANYWHERE OR PRESS SPACE / ENTER TO PROCEED ]"
+	var p_sz = font.get_string_size(prompt_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 10)
+	var prompt_y = parchment_rect.end.y - 14.0
+	canvas.draw_string(font, Vector2(center.x - p_sz.x * 0.5, prompt_y), prompt_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(0.36, 0.20, 0.10, pulse))
 
 func _draw_item_flash_banner(canvas: CanvasItem) -> void:
 	if flashing_item.is_empty() or not bool(flashing_item.get("active", false)):

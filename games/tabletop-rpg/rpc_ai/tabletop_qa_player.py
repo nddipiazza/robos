@@ -324,4 +324,20 @@ class TabletopQAPlayer:
         st = self.get_state()
         return st.get("hoveredTile", [-1, -1])
 
+    def get_story_triggers(self) -> list:
+        st = self.get_state()
+        return st.get("storyTriggers", [])
+
+    def get_active_story_trigger(self) -> dict:
+        st = self.get_state()
+        return st.get("activeStoryTrigger", {})
+
+    def dismiss_story_trigger(self) -> dict:
+        self.log("Dismissing Quest Note story trigger overlay card...")
+        return self.execute_action("dismiss_story_trigger")
+
+    def trigger_story_event(self, marker_or_id: str) -> dict:
+        self.log(f"Manually triggering story event '{marker_or_id}'...")
+        return self.execute_action("trigger_story_event", id=marker_or_id)
+
 
