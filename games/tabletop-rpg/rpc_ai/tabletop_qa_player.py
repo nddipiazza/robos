@@ -524,9 +524,15 @@ class TabletopQAPlayer:
         self.log("Saving game state to disk...")
         return self.execute_action("save_game")
 
+    def save_game_state(self) -> dict:
+        return self.save_game()
+
     def load_game(self) -> dict:
         self.log("Restoring game state from disk save...")
         return self.execute_action("load_game")
+
+    def load_game_state(self) -> dict:
+        return self.load_game()
 
     def has_save_game(self) -> dict:
         return self.execute_action("has_save_game")
@@ -538,6 +544,26 @@ class TabletopQAPlayer:
     def reset_quest(self, clear_save: bool = True) -> dict:
         self.log(f"Force reloading current quest from cartridge (clear_save={clear_save})...")
         return self.execute_action("reset_game", clear_save=clear_save)
+
+    def restart_quest(self, clear_save: bool = True) -> dict:
+        return self.reset_quest(clear_save=clear_save)
+
+    # --- Game Menu Helpers ---
+    def open_game_menu(self) -> dict:
+        self.log("Opening Game Menu...")
+        return self.execute_action("open_game_menu")
+
+    def close_game_menu(self) -> dict:
+        self.log("Closing Game Menu...")
+        return self.execute_action("close_game_menu")
+
+    def toggle_game_menu(self) -> dict:
+        self.log("Toggling Game Menu...")
+        return self.execute_action("toggle_game_menu")
+
+    def is_game_menu_open(self) -> bool:
+        st = self.get_state()
+        return bool(st.get("gameMenuVisible", False) or st.get("isGameMenuOpen", False))
 
     # --- Autonomous AI Demo Helpers ---
     def start_demo(self) -> dict:
