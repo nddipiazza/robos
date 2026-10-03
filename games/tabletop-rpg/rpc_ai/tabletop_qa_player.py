@@ -539,6 +539,25 @@ class TabletopQAPlayer:
         self.log(f"Force reloading current quest from cartridge (clear_save={clear_save})...")
         return self.execute_action("reset_game", clear_save=clear_save)
 
+    # --- Autonomous AI Demo Helpers ---
+    def start_demo(self) -> dict:
+        self.log("Starting Autonomous Tabletop AI Demo (Mentor vs Zargon)...")
+        return self.execute_action("start_demo")
+
+    def stop_demo(self) -> dict:
+        self.log("Pausing Autonomous Tabletop AI Demo...")
+        return self.execute_action("stop_demo")
+
+    def toggle_demo(self) -> dict:
+        return self.execute_action("toggle_demo")
+
+    def step_ai(self) -> dict:
+        return self.execute_action("step_ai")
+
+    def is_demo_active(self) -> bool:
+        st = self.get_state()
+        return bool(st.get("isDemoActive", False) or st.get("autoPlayEnabled", False))
+
 
 
 
