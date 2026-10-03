@@ -110,6 +110,26 @@ class TabletopQAPlayer:
         self.log(f"Casting spell '{spell}'{' on ' + target if target else ''}...")
         return self.execute_action("cast_spell", spell=spell, target=target, tile_x=tile_x, tile_y=tile_y)
 
+    def open_spell_panel(self) -> dict:
+        self.log("Opening HUD spell casting modal...")
+        return self.execute_action("open_spell_panel")
+
+    def close_spell_panel(self) -> dict:
+        self.log("Closing HUD spell casting modal...")
+        return self.execute_action("close_spell_panel")
+
+    def use_item(self, item_id: str, hero_id: str = "", target_id: str = "") -> dict:
+        self.log(f"Using item '{item_id}'{' by ' + hero_id if hero_id else ''}{' on ' + target_id if target_id else ''}...")
+        return self.execute_action("use_item", itemId=item_id, heroId=hero_id, targetId=target_id)
+
+    def open_item_panel(self) -> dict:
+        self.log("Opening HUD backpack / item modal...")
+        return self.execute_action("open_item_panel")
+
+    def close_item_panel(self) -> dict:
+        self.log("Closing HUD backpack / item modal...")
+        return self.execute_action("close_item_panel")
+
     def equip(self, item_id: str, hero_id: str = "") -> dict:
         self.log(f"Equipping item '{item_id}'{' on ' + hero_id if hero_id else ''}...")
         return self.execute_action("equip", itemId=item_id, heroId=hero_id)

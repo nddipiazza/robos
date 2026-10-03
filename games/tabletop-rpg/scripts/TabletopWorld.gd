@@ -87,6 +87,8 @@ var auto_play_step: int = 0
 @onready var dice_label: Label = $UI/DicePanel/DiceLabel
 @onready var btn_roll: Button = $UI/Actions/BtnRoll
 @onready var btn_attack: Button = $UI/Actions/BtnAttack
+@onready var btn_cast_spell: Button = get_node_or_null("UI/Actions/BtnCastSpell")
+@onready var btn_use_item: Button = get_node_or_null("UI/Actions/BtnUseItem")
 @onready var btn_search: Button = $UI/Actions/BtnSearch
 @onready var btn_end_turn: Button = $UI/Actions/BtnEndTurn
 @onready var btn_summon: Button = $UI/Actions/BtnSummon
@@ -120,6 +122,17 @@ var turn_overlay_mode: String = "none" # "roll_prompt", "turn_complete", "none"
 @onready var elf_spell_summary_text: Label = get_node_or_null("UI/ElfSpellSelectModal/Card/Margin/VBox/SummaryBanner/SummaryMargin/SummaryText")
 @onready var btn_elf_spell_close: Button = get_node_or_null("UI/ElfSpellSelectModal/Card/Margin/VBox/ButtonBox/BtnClose")
 @onready var btn_elf_spell_confirm: Button = get_node_or_null("UI/ElfSpellSelectModal/Card/Margin/VBox/ButtonBox/BtnConfirm")
+
+@onready var spell_cast_modal: ColorRect = get_node_or_null("UI/SpellCastModal")
+@onready var spell_cast_title: Label = get_node_or_null("UI/SpellCastModal/Card/Margin/VBox/Header/Title")
+@onready var spell_cast_badge: Label = get_node_or_null("UI/SpellCastModal/Card/Margin/VBox/Header/ActionBadge")
+@onready var spell_cast_grid: GridContainer = get_node_or_null("UI/SpellCastModal/Card/Margin/VBox/ScrollContainer/SpellsGrid")
+@onready var btn_spell_cast_close: Button = get_node_or_null("UI/SpellCastModal/Card/Margin/VBox/ButtonBox/BtnClose")
+
+@onready var item_use_modal: ColorRect = get_node_or_null("UI/ItemUseModal")
+@onready var item_use_title: Label = get_node_or_null("UI/ItemUseModal/Card/Margin/VBox/Header/Title")
+@onready var item_use_grid: GridContainer = get_node_or_null("UI/ItemUseModal/Card/Margin/VBox/ScrollContainer/ItemsGrid")
+@onready var btn_item_use_close: Button = get_node_or_null("UI/ItemUseModal/Card/Margin/VBox/ButtonBox/BtnClose")
 
 const ELEMENTAL_DECKS: Dictionary = {
 	"water": ["water_of_healing", "sleep", "veil_of_mist"],
@@ -326,6 +339,10 @@ func _setup_ui_signals() -> void:
 		btn_roll.pressed.connect(roll_movement_dice)
 	if btn_attack and not btn_attack.pressed.is_connected(_on_attack_pressed):
 		btn_attack.pressed.connect(_on_attack_pressed)
+	if btn_cast_spell and not btn_cast_spell.pressed.is_connected(toggle_spell_cast_modal):
+		btn_cast_spell.pressed.connect(toggle_spell_cast_modal)
+	if btn_use_item and not btn_use_item.pressed.is_connected(toggle_item_use_modal):
+		btn_use_item.pressed.connect(toggle_item_use_modal)
 	if btn_search and not btn_search.pressed.is_connected(search_room):
 		btn_search.pressed.connect(search_room)
 	if btn_end_turn and not btn_end_turn.pressed.is_connected(end_turn):
@@ -338,6 +355,10 @@ func _setup_ui_signals() -> void:
 		btn_ai_confirm.pressed.connect(confirm_and_execute_ai_step)
 	if btn_ai_cancel and not btn_ai_cancel.pressed.is_connected(cancel_ai_step):
 		btn_ai_cancel.pressed.connect(cancel_ai_step)
+	if btn_spell_cast_close and not btn_spell_cast_close.pressed.is_connected(close_spell_cast_modal):
+		btn_spell_cast_close.pressed.connect(close_spell_cast_modal)
+	if btn_item_use_close and not btn_item_use_close.pressed.is_connected(close_item_use_modal):
+		btn_item_use_close.pressed.connect(close_item_use_modal)
 
 func toggle_role() -> void:
 	if current_role == "player":
@@ -406,27 +427,27 @@ func _load_active_cartridge() -> void:
 			"barbarian":
 				h["equipped_weapon"] = "broadsword"
 				h["equipped_armor"] = []
-				h["inventory"] = ["broadsword"]
+				h["inventory"] = ["broadsword", "healing_potion"]
 				h["spells"] = []
 			"dwarf":
 				h["equipped_weapon"] = "shortsword"
 				h["equipped_armor"] = []
-				h["inventory"] = ["shortsword"]
+				h["inventory"] = ["shortsword", "healing_potion"]
 				h["spells"] = []
 			"elf":
 				h["equipped_weapon"] = "shortsword"
 				h["equipped_armor"] = []
-				h["inventory"] = ["shortsword"]
+				h["inventory"] = ["shortsword", "healing_potion"]
 				h["spells"] = _extract_cartridge_spells(h, "elf", cart)
 			"wizard":
 				h["equipped_weapon"] = "dagger"
 				h["equipped_armor"] = []
-				h["inventory"] = ["dagger", "staff"]
+				h["inventory"] = ["dagger", "staff", "healing_potion"]
 				h["spells"] = _extract_cartridge_spells(h, "wizard", cart)
 			_:
 				h["equipped_weapon"] = "broadsword"
 				h["equipped_armor"] = []
-				h["inventory"] = ["broadsword"]
+				h["inventory"] = ["broadsword", "healing_potion"]
 				h["spells"] = []
 
 		h["courage_active"] = false
@@ -488,6 +509,7 @@ func _load_active_cartridge() -> void:
 		for m in monsters:
 			discovered_monster_ids[str(m.get("id"))] = true
 
+	current_role = "player"
 	active_hero_idx = 0
 	current_round = 1
 	current_phase = "hero_phase"
@@ -1234,6 +1256,335 @@ func _extract_cartridge_spells(hero_data: Dictionary, hero_type: String, cart: D
 		return wiz_spells
 
 	return []
+
+# --- Spell Casting Modal & UI ---
+func show_spell_cast_modal() -> void:
+	if spell_cast_modal:
+		spell_cast_modal.visible = true
+		_update_spell_cast_modal_ui()
+
+func close_spell_cast_modal() -> void:
+	if spell_cast_modal:
+		spell_cast_modal.visible = false
+	_update_ui()
+
+func toggle_spell_cast_modal() -> void:
+	if spell_cast_modal and spell_cast_modal.visible:
+		close_spell_cast_modal()
+	else:
+		show_spell_cast_modal()
+
+func _update_spell_cast_modal_ui() -> void:
+	if not spell_cast_modal or not spell_cast_modal.visible:
+		return
+
+	var hero = get_active_hero()
+	var h_disp = get_hero_display_title(hero) if not hero.is_empty() else "Hero"
+	if spell_cast_title:
+		spell_cast_title.text = "🔮 Cast Spell — %s" % h_disp
+
+	if spell_cast_badge:
+		if has_acted_this_turn:
+			spell_cast_badge.text = "ACTION ALREADY USED"
+			spell_cast_badge.add_theme_color_override("font_color", Color(0.85, 0.35, 0.35, 1.0))
+		else:
+			spell_cast_badge.text = "ACTION READY"
+			spell_cast_badge.add_theme_color_override("font_color", Color(0.2, 0.9, 0.4, 1.0))
+
+	if not spell_cast_grid:
+		return
+
+	# Clear previous spell cards
+	for child in spell_cast_grid.get_children():
+		child.queue_free()
+
+	var hero_spells: Array = hero.get("spells", [])
+	if hero_spells.is_empty():
+		var empty_lbl = Label.new()
+		empty_lbl.text = "This hero has no memorized spells."
+		empty_lbl.add_theme_font_size_override("font_size", 14)
+		empty_lbl.add_theme_color_override("font_color", Color(0.7, 0.75, 0.8, 0.8))
+		spell_cast_grid.add_child(empty_lbl)
+		return
+
+	var h_pos = hero.get("grid_pos", Vector2i(-1, -1))
+	var visible_monsters: Array = []
+	for m in monsters:
+		if bool(m.get("is_alive", true)) and int(m.get("current_bp", 1)) > 0:
+			var mp = m.get("grid_pos", Vector2i(-1, -1))
+			if has_line_of_sight(h_pos, mp):
+				visible_monsters.append(m)
+
+	for spell_id in hero_spells:
+		var s_data = HeroQuestSpells.get_spell(spell_id)
+		var s_name = str(s_data.get("name", spell_id))
+		var s_deck = str(s_data.get("deck", "magic")).capitalize()
+		var s_icon = str(s_data.get("icon", "✨"))
+		var s_desc = str(s_data.get("description", ""))
+		var s_target = str(s_data.get("target_type", "monster"))
+
+		var card = PanelContainer.new()
+		card.custom_minimum_size = Vector2(430, 110)
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+		var csb = StyleBoxFlat.new()
+		csb.set_corner_radius_all(6)
+		csb.bg_color = Color(0.08, 0.11, 0.16, 0.95)
+
+		# elemental border color
+		match str(s_data.get("deck", "")).to_lower():
+			"fire":
+				csb.border_color = Color(0.9, 0.35, 0.1, 0.9)
+			"water":
+				csb.border_color = Color(0.05, 0.7, 0.85, 0.9)
+			"earth":
+				csb.border_color = Color(0.55, 0.52, 0.48, 0.9)
+			"air":
+				csb.border_color = Color(0.3, 0.8, 1.0, 0.9)
+			_:
+				csb.border_color = Color(0.4, 0.5, 0.7, 0.8)
+		csb.border_width_left = 1; csb.border_width_top = 1; csb.border_width_right = 1; csb.border_width_bottom = 1
+		card.add_theme_stylebox_override("panel", csb)
+
+		var marg = MarginContainer.new()
+		marg.add_theme_constant_override("margin_left", 12)
+		marg.add_theme_constant_override("margin_top", 10)
+		marg.add_theme_constant_override("margin_right", 12)
+		marg.add_theme_constant_override("margin_bottom", 10)
+		card.add_child(marg)
+
+		var vbox = VBoxContainer.new()
+		vbox.add_theme_constant_override("separation", 6)
+		marg.add_child(vbox)
+
+		# Row 1: Icon + Name + Deck badge
+		var hrow = HBoxContainer.new()
+		var nlbl = Label.new()
+		nlbl.text = "%s %s" % [s_icon, s_name]
+		nlbl.add_theme_font_size_override("font_size", 14)
+		nlbl.add_theme_color_override("font_color", Color(1.0, 0.95, 0.85, 1.0))
+		nlbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hrow.add_child(nlbl)
+
+		var badge = Label.new()
+		badge.text = "[%s]" % s_deck.to_upper()
+		badge.add_theme_font_size_override("font_size", 11)
+		badge.add_theme_color_override("font_color", csb.border_color)
+		hrow.add_child(badge)
+		vbox.add_child(hrow)
+
+		# Row 2: Description
+		var dlbl = Label.new()
+		dlbl.text = s_desc
+		dlbl.add_theme_font_size_override("font_size", 11)
+		dlbl.add_theme_color_override("font_color", Color(0.78, 0.82, 0.9, 0.9))
+		dlbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		vbox.add_child(dlbl)
+
+		# Row 3: Target & Cast action buttons
+		var btn_row = HBoxContainer.new()
+		btn_row.add_theme_constant_override("separation", 6)
+
+		if s_target == "monster":
+			if visible_monsters.is_empty():
+				var no_target = Button.new()
+				no_target.text = "No Foes in Line of Sight"
+				no_target.disabled = true
+				no_target.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				btn_row.add_child(no_target)
+			else:
+				for vm in visible_monsters:
+					var cbtn = Button.new()
+					cbtn.text = "⚡ Cast on %s" % str(vm.get("name", "Monster"))
+					cbtn.disabled = has_acted_this_turn
+					var mid = str(vm.get("id"))
+					var sp_id = spell_id
+					cbtn.pressed.connect(func():
+						cast_spell(sp_id, mid)
+						close_spell_cast_modal()
+					)
+					cbtn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+					btn_row.add_child(cbtn)
+		else:
+			# Targets hero
+			for th in heroes:
+				var cbtn = Button.new()
+				var th_bp = int(th.get("current_bp", 8))
+				var th_max = int(th.get("bodyPoints", 8))
+				var th_id = str(th.get("id"))
+				if th_id == str(hero.get("id")):
+					cbtn.text = "⚡ Self (%d/%d BP)" % [th_bp, th_max]
+				else:
+					cbtn.text = "⚡ %s (%d/%d)" % [str(th.get("name")), th_bp, th_max]
+				cbtn.disabled = has_acted_this_turn
+				var sp_id = spell_id
+				cbtn.pressed.connect(func():
+					cast_spell(sp_id, th_id)
+					close_spell_cast_modal()
+				)
+				cbtn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				btn_row.add_child(cbtn)
+
+		vbox.add_child(btn_row)
+		spell_cast_grid.add_child(card)
+
+# --- Item Usage Modal & UI ---
+func show_item_use_modal() -> void:
+	if item_use_modal:
+		item_use_modal.visible = true
+		_update_item_use_modal_ui()
+
+func close_item_use_modal() -> void:
+	if item_use_modal:
+		item_use_modal.visible = false
+	_update_ui()
+
+func toggle_item_use_modal() -> void:
+	if item_use_modal and item_use_modal.visible:
+		close_item_use_modal()
+	else:
+		show_item_use_modal()
+
+func _update_item_use_modal_ui() -> void:
+	if not item_use_modal or not item_use_modal.visible:
+		return
+
+	var hero = get_active_hero()
+	var h_disp = get_hero_display_title(hero) if not hero.is_empty() else "Hero"
+	var hid = str(hero.get("id"))
+	if item_use_title:
+		item_use_title.text = "🎒 Backpack & Inventory — %s" % h_disp
+
+	if not item_use_grid:
+		return
+
+	# Clear previous item cards
+	for child in item_use_grid.get_children():
+		child.queue_free()
+
+	var hero_inv: Array = hero.get("inventory", [])
+	if hero_inv.is_empty():
+		var empty_lbl = Label.new()
+		empty_lbl.text = "Backpack is empty. Search rooms for treasure chests and potions!"
+		empty_lbl.add_theme_font_size_override("font_size", 14)
+		empty_lbl.add_theme_color_override("font_color", Color(0.7, 0.75, 0.8, 0.8))
+		item_use_grid.add_child(empty_lbl)
+		return
+
+	for item_id in hero_inv:
+		var item_str = str(item_id)
+		var item_info = HeroQuestEquipment.get_item(item_str)
+		var i_name = str(item_info.get("name", item_str.replace("_", " ").capitalize()))
+		var i_icon = str(item_info.get("icon", "📦"))
+		var i_desc = str(item_info.get("description", ""))
+		var is_cons = HeroQuestEquipment.is_consumable(item_str) or item_str.contains("potion")
+
+		var card = PanelContainer.new()
+		card.custom_minimum_size = Vector2(400, 100)
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+		var csb = StyleBoxFlat.new()
+		csb.set_corner_radius_all(6)
+		csb.bg_color = Color(0.08, 0.11, 0.16, 0.95)
+
+		var is_wep = not HeroQuestEquipment.get_weapon(item_str).is_empty()
+		var is_arm = not HeroQuestEquipment.get_armor(item_str).is_empty()
+		var is_equipped = (hero.get("equipped_weapon") == item_str) or (hero.get("equipped_armor", []).has(item_str))
+
+		if is_cons:
+			csb.border_color = Color(0.2, 0.85, 0.45, 0.9) # Emerald
+		elif is_equipped:
+			csb.border_color = Color(1.0, 0.8, 0.2, 0.9) # Gold equipped
+		else:
+			csb.border_color = Color(0.35, 0.55, 0.8, 0.8) # Blue
+		csb.border_width_left = 1; csb.border_width_top = 1; csb.border_width_right = 1; csb.border_width_bottom = 1
+		card.add_theme_stylebox_override("panel", csb)
+
+		var marg = MarginContainer.new()
+		marg.add_theme_constant_override("margin_left", 12)
+		marg.add_theme_constant_override("margin_top", 10)
+		marg.add_theme_constant_override("margin_right", 12)
+		marg.add_theme_constant_override("margin_bottom", 10)
+		card.add_child(marg)
+
+		var vbox = VBoxContainer.new()
+		vbox.add_theme_constant_override("separation", 6)
+		marg.add_child(vbox)
+
+		# Row 1: Header (Icon + Name + Category badge)
+		var hrow = HBoxContainer.new()
+		var nlbl = Label.new()
+		nlbl.text = "%s %s" % [i_icon, i_name]
+		nlbl.add_theme_font_size_override("font_size", 14)
+		nlbl.add_theme_color_override("font_color", Color(1.0, 0.95, 0.85, 1.0))
+		nlbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hrow.add_child(nlbl)
+
+		var badge = Label.new()
+		if is_cons:
+			badge.text = "[CONSUMABLE]"
+			badge.add_theme_color_override("font_color", Color(0.2, 0.85, 0.45, 1.0))
+		elif is_equipped:
+			badge.text = "[EQUIPPED]"
+			badge.add_theme_color_override("font_color", Color(1.0, 0.8, 0.2, 1.0))
+		elif is_wep:
+			badge.text = "[WEAPON]"
+			badge.add_theme_color_override("font_color", Color(0.4, 0.7, 1.0, 1.0))
+		elif is_arm:
+			badge.text = "[ARMOR]"
+			badge.add_theme_color_override("font_color", Color(0.7, 0.7, 0.9, 1.0))
+		badge.add_theme_font_size_override("font_size", 11)
+		hrow.add_child(badge)
+		vbox.add_child(hrow)
+
+		# Row 2: Description
+		var dlbl = Label.new()
+		dlbl.text = i_desc
+		dlbl.add_theme_font_size_override("font_size", 11)
+		dlbl.add_theme_color_override("font_color", Color(0.78, 0.82, 0.9, 0.9))
+		dlbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		vbox.add_child(dlbl)
+
+		# Row 3: Action Buttons
+		var btn_row = HBoxContainer.new()
+		btn_row.add_theme_constant_override("separation", 6)
+
+		if is_cons:
+			var ubtn = Button.new()
+			ubtn.text = "🧪 Drink / Use (%s)" % str(hero.get("name"))
+			ubtn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			var cur_item_id = item_str
+			ubtn.pressed.connect(func():
+				use_item(hid, cur_item_id)
+			)
+			btn_row.add_child(ubtn)
+		elif is_equipped:
+			var eq_lbl = Button.new()
+			eq_lbl.text = "✓ Currently Equipped"
+			eq_lbl.disabled = true
+			eq_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			btn_row.add_child(eq_lbl)
+			if is_arm:
+				var uq_btn = Button.new()
+				uq_btn.text = "Unequip"
+				var cur_item_id = item_str
+				uq_btn.pressed.connect(func():
+					unequip_item(hid, cur_item_id)
+					_update_item_use_modal_ui()
+				)
+				btn_row.add_child(uq_btn)
+		else:
+			var eq_btn = Button.new()
+			eq_btn.text = "⚔️ Equip %s" % i_name if is_wep else "🛡️ Equip %s" % i_name
+			eq_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			var cur_item_id = item_str
+			eq_btn.pressed.connect(func():
+				use_item(hid, cur_item_id)
+			)
+			btn_row.add_child(eq_btn)
+
+		vbox.add_child(btn_row)
+		item_use_grid.add_child(card)
 
 func get_next_ai_step_command() -> Dictionary:
 	var next_step = auto_play_step + 1
@@ -2063,6 +2414,132 @@ func unequip_item(hero_id: String, item_id: String) -> Dictionary:
 
 	return { "success": false, "error": "Item not equipped" }
 
+func use_item(hero_id: String = "", item_id: String = "", target_id: String = "") -> Dictionary:
+	var hero: Dictionary = {}
+	if hero_id != "":
+		for h in heroes:
+			if str(h.get("id")) == hero_id:
+				hero = h
+				break
+	if hero.is_empty():
+		hero = get_active_hero()
+	if hero.is_empty():
+		return { "success": false, "error": "No active hero to use item" }
+
+	var hid = str(hero.get("id"))
+	var h_name = str(hero.get("name", "Hero"))
+	var inv: Array = hero.get("inventory", []).duplicate()
+	var item_key = item_id.to_lower().strip_edges()
+
+	# Check if item exists in hero's inventory
+	var found_idx = -1
+	for i in range(inv.size()):
+		if str(inv[i]).to_lower().strip_edges() == item_key:
+			found_idx = i
+			break
+
+	if found_idx == -1:
+		# If not in inventory, check if it's currently equipped weapon or armor
+		if hero.get("equipped_weapon", "") == item_id or hero.get("equipped_armor", []).has(item_id):
+			return unequip_item(hid, item_id)
+		return { "success": false, "error": "Item '%s' not in %s's inventory" % [item_id, h_name] }
+
+	var hero_pos = hero.get("grid_pos", Vector2i(-1, -1))
+	var hero_screen = board_offset + Vector2((hero_pos.x + 0.5) * tile_size, (hero_pos.y + 0.5) * tile_size)
+
+	# 1. Consumable items
+	if item_key == "healing_potion" or item_key == "potion_of_healing":
+		var target_h = hero
+		if target_id != "":
+			for h in heroes:
+				if str(h.get("id")) == target_id:
+					target_h = h
+					break
+		var cur_bp = int(target_h.get("current_bp", 1))
+		var max_bp = int(target_h.get("bodyPoints", 8))
+		var heal_amount = 4
+		var new_bp = mini(max_bp, cur_bp + heal_amount)
+		var healed = new_bp - cur_bp
+		target_h["current_bp"] = new_bp
+
+		inv.remove_at(found_idx)
+		hero["inventory"] = inv
+
+		var th_pos = target_h.get("grid_pos", hero_pos)
+		var th_screen = board_offset + Vector2((th_pos.x + 0.5) * tile_size, (th_pos.y + 0.5) * tile_size)
+		spawn_burst_vfx(th_screen, Color(0.2, 0.9, 0.4), 45.0, 0.45)
+		spawn_floating_text(th_pos, "+%d BP" % healed, Color(0.2, 0.9, 0.3))
+		_log("[ITEM] %s drinks %s! Restores %d Body Points (%d/%d BP)." % [
+			target_h.get("name"), "Potion of Healing", healed, new_bp, max_bp
+		])
+
+		_update_ui()
+		if item_use_modal and item_use_modal.visible:
+			_update_item_use_modal_ui()
+		queue_redraw_all()
+		return {
+			"success": true,
+			"item": item_id,
+			"action": "heal",
+			"healed": healed,
+			"current_bp": new_bp,
+			"max_bp": max_bp,
+			"target": str(target_h.get("id"))
+		}
+
+	elif item_key == "potion_of_strength":
+		hero["courage_active"] = true
+		inv.remove_at(found_idx)
+		hero["inventory"] = inv
+		spawn_burst_vfx(hero_screen, Color(0.9, 0.3, 0.2), 40.0, 0.4)
+		spawn_floating_text(hero_pos, "+2 ATK DICE", Color(1.0, 0.4, 0.3))
+		_log("[ITEM] %s quaffs Potion of Strength! Attack dice increased by +2." % h_name)
+		_update_ui()
+		if item_use_modal and item_use_modal.visible:
+			_update_item_use_modal_ui()
+		queue_redraw_all()
+		return { "success": true, "item": item_id, "action": "strength_bonus" }
+
+	elif item_key == "potion_of_speed":
+		hero["swift_wind_active"] = true
+		inv.remove_at(found_idx)
+		hero["inventory"] = inv
+		spawn_cyclone_vfx(hero_screen, Color(0.3, 0.8, 1.0), 0.5)
+		spawn_floating_text(hero_pos, "2X SPEED", Color(0.3, 0.9, 1.0))
+		_log("[ITEM] %s quaffs Potion of Speed! Movement dice doubled to 4d6 on next turn." % h_name)
+		_update_ui()
+		if item_use_modal and item_use_modal.visible:
+			_update_item_use_modal_ui()
+		queue_redraw_all()
+		return { "success": true, "item": item_id, "action": "speed_bonus" }
+
+	# 2. Weapons
+	var w = HeroQuestEquipment.get_weapon(item_id)
+	if not w.is_empty():
+		if hero.get("equipped_weapon") == item_id:
+			_log("[ITEM] %s already has %s equipped." % [h_name, w.get("name")])
+			return { "success": true, "equipped": item_id, "already_equipped": true }
+		var eq_res = equip_item(hid, item_id)
+		if item_use_modal and item_use_modal.visible:
+			_update_item_use_modal_ui()
+		return eq_res
+
+	# 3. Armor
+	var a = HeroQuestEquipment.get_armor(item_id)
+	if not a.is_empty():
+		var armors: Array = hero.get("equipped_armor", [])
+		if armors.has(item_id):
+			var uq_res = unequip_item(hid, item_id)
+			if item_use_modal and item_use_modal.visible:
+				_update_item_use_modal_ui()
+			return uq_res
+		var eq_res = equip_item(hid, item_id)
+		if item_use_modal and item_use_modal.visible:
+			_update_item_use_modal_ui()
+		return eq_res
+
+	return { "success": false, "error": "Unknown item effect: " + item_id }
+
 func _conclude_action_turn_state() -> void:
 	has_acted_this_turn = true
 	if moved_before_action:
@@ -2789,7 +3266,7 @@ func end_turn() -> void:
 		if active_hero_idx == 0:
 			current_phase = "gm_phase"
 			_log("=== Zargon / Game Master Phase Begins ===")
-			if current_role == "player":
+			if current_role == "player" and not is_headless_mode():
 				call_deferred("ai_monster_turn")
 		else:
 			_log("--- Next Hero: %s ---" % get_active_hero().get("name", "Hero"))
@@ -2948,6 +3425,10 @@ func _update_ui() -> void:
 			btn_attack.visible = true
 			btn_attack.disabled = false
 			btn_attack.text = "Monster Attack"
+		if btn_cast_spell:
+			btn_cast_spell.visible = false
+		if btn_use_item:
+			btn_use_item.visible = false
 		if btn_search:
 			btn_search.visible = false
 		if btn_end_turn:
@@ -2963,6 +3444,10 @@ func _update_ui() -> void:
 			btn_roll.visible = false
 		if btn_attack:
 			btn_attack.visible = false
+		if btn_cast_spell:
+			btn_cast_spell.visible = false
+		if btn_use_item:
+			btn_use_item.visible = false
 		if btn_search:
 			btn_search.visible = false
 		if btn_end_turn:
@@ -2973,6 +3458,26 @@ func _update_ui() -> void:
 		# Hero Phase (Player)
 		if btn_summon:
 			btn_summon.visible = false
+
+		# Spell Casting Action Button
+		if btn_cast_spell:
+			var h_spells: Array = hero.get("spells", [])
+			if h_spells.size() > 0:
+				btn_cast_spell.visible = true
+				btn_cast_spell.disabled = has_acted_this_turn or movement_closed or (moved_before_action and has_acted_this_turn)
+				btn_cast_spell.text = "🔮 Spell (%d)" % h_spells.size()
+			else:
+				btn_cast_spell.visible = false
+
+		# Item Usage Action Button
+		if btn_use_item:
+			var h_inv: Array = hero.get("inventory", [])
+			if h_inv.size() > 0:
+				btn_use_item.visible = true
+				btn_use_item.disabled = false
+				btn_use_item.text = "🎒 Item (%d)" % h_inv.size()
+			else:
+				btn_use_item.visible = false
 
 		var adj_monsters = get_adjacent_monsters()
 		var adj_doors = get_adjacent_closed_doors()
@@ -3573,7 +4078,46 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 		sp_lbl.clip_text = true
 		sp_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		spells_row.add_child(sp_lbl)
+
+		if is_active:
+			var btn_cast = Button.new()
+			btn_cast.text = "Cast"
+			btn_cast.add_theme_font_size_override("font_size", 9)
+			btn_cast.custom_minimum_size = Vector2(36, 16)
+			btn_cast.disabled = has_acted_this_turn
+			btn_cast.pressed.connect(toggle_spell_cast_modal)
+			spells_row.add_child(btn_cast)
 		vbox.add_child(spells_row)
+
+	var hero_inv: Array = h.get("inventory", [])
+	if hero_inv.size() > 0:
+		var inv_row = HBoxContainer.new()
+		inv_row.add_theme_constant_override("separation", 4)
+		var inv_lbl = Label.new()
+		var inv_preview: Array = []
+		for item in hero_inv.slice(0, 3):
+			var item_str = str(item)
+			var item_meta = HeroQuestEquipment.get_item(item_str)
+			var iname = str(item_meta.get("name", item_str.replace("_", " ").capitalize()))
+			var icon = str(item_meta.get("icon", "📦"))
+			inv_preview.append("%s %s" % [icon, iname])
+		inv_lbl.text = "Items (%d): %s" % [hero_inv.size(), ", ".join(inv_preview)]
+		if hero_inv.size() > 3:
+			inv_lbl.text += " +%d" % (hero_inv.size() - 3)
+		inv_lbl.add_theme_font_size_override("font_size", 9)
+		inv_lbl.add_theme_color_override("font_color", Color(0.65, 0.88, 0.82, 0.95))
+		inv_lbl.clip_text = true
+		inv_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		inv_row.add_child(inv_lbl)
+
+		if is_active:
+			var btn_inv = Button.new()
+			btn_inv.text = "Items"
+			btn_inv.add_theme_font_size_override("font_size", 9)
+			btn_inv.custom_minimum_size = Vector2(38, 16)
+			btn_inv.pressed.connect(toggle_item_use_modal)
+			inv_row.add_child(btn_inv)
+		vbox.add_child(inv_row)
 
 	return card
 
@@ -3968,6 +4512,8 @@ func get_telemetry_state() -> Dictionary:
 		"buttons": {
 			"roll": { "visible": btn_roll.visible, "disabled": btn_roll.disabled } if btn_roll else {},
 			"attack": { "visible": btn_attack.visible, "disabled": btn_attack.disabled } if btn_attack else {},
+			"cast_spell": { "visible": btn_cast_spell.visible, "disabled": btn_cast_spell.disabled } if btn_cast_spell else {},
+			"use_item": { "visible": btn_use_item.visible, "disabled": btn_use_item.disabled } if btn_use_item else {},
 			"search": { "visible": btn_search.visible, "disabled": btn_search.disabled } if btn_search else {},
 			"end_turn": { "visible": btn_end_turn.visible, "disabled": btn_end_turn.disabled } if btn_end_turn else {},
 			"ai_step": { "visible": btn_ai_step.visible, "disabled": btn_ai_step.disabled } if btn_ai_step else {}
@@ -3975,6 +4521,8 @@ func get_telemetry_state() -> Dictionary:
 		"modal": {
 			"aiConfirmModalVisible": ai_confirm_modal.visible if ai_confirm_modal else false,
 			"elfSpellSelectModalVisible": elf_spell_modal.visible if elf_spell_modal else false,
+			"spellCastModalVisible": spell_cast_modal.visible if spell_cast_modal else false,
+			"itemUseModalVisible": item_use_modal.visible if item_use_modal else false,
 			"stepBadge": ai_modal_step_badge.text if (ai_confirm_modal and ai_confirm_modal.visible and ai_modal_step_badge) else "",
 			"commandText": ai_modal_cmd_text.text if (ai_confirm_modal and ai_confirm_modal.visible and ai_modal_cmd_text) else "",
 			"actionTitle": ai_modal_action_title.text if (ai_confirm_modal and ai_confirm_modal.visible and ai_modal_action_title) else ""
@@ -4007,6 +4555,10 @@ func get_telemetry_state() -> Dictionary:
 		"turnState": turn_state,
 		"elfElement": current_elf_element,
 		"elfSpellModalVisible": elf_spell_modal.visible if elf_spell_modal else false,
+		"spellPanelOpen": spell_cast_modal.visible if spell_cast_modal else false,
+		"itemPanelOpen": item_use_modal.visible if item_use_modal else false,
+		"activeHeroSpells": h_act.get("spells", []),
+		"activeHeroInventory": h_act.get("inventory", []),
 		"spellAllocation": {
 			"elfElement": current_elf_element,
 			"elfSpells": _get_hero_spells_by_id("elf"),
@@ -4284,6 +4836,24 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			var ty = int(action_data.get("tile_y", -1))
 			var res = cast_spell(spell_id, target_id, Vector2i(tx, ty))
 			return res
+		"open_spell_panel", "open_spell_modal":
+			show_spell_cast_modal()
+			return { "success": true, "spell_panel_open": true }
+		"close_spell_panel", "close_spell_modal":
+			close_spell_cast_modal()
+			return { "success": true, "spell_panel_open": false }
+		"use_item":
+			var h_id = str(action_data.get("heroId", action_data.get("hero", get_active_hero().get("id", ""))))
+			var item_id = str(action_data.get("itemId", action_data.get("item", "")))
+			var target_id = str(action_data.get("targetId", action_data.get("target", "")))
+			var res = use_item(h_id, item_id, target_id)
+			return res
+		"open_item_panel", "open_item_modal":
+			show_item_use_modal()
+			return { "success": true, "item_panel_open": true }
+		"close_item_panel", "close_item_modal":
+			close_item_use_modal()
+			return { "success": true, "item_panel_open": false }
 		"equip", "equip_item":
 			var h_id = str(action_data.get("heroId", action_data.get("hero", get_active_hero().get("id", ""))))
 			var item_id = str(action_data.get("itemId", action_data.get("item", "")))

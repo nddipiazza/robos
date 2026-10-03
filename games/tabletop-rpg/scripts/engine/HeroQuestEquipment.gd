@@ -122,16 +122,82 @@ const ARMOR: Dictionary = {
 	}
 }
 
+const CONSUMABLES: Dictionary = {
+	"healing_potion": {
+		"id": "healing_potion",
+		"name": "Potion of Healing",
+		"type": "consumable",
+		"heal_amount": 4,
+		"icon": "🧪",
+		"description": "Restores up to 4 lost Body Points to target hero (cannot exceed maximum BP).",
+		"cost": 200
+	},
+	"potion_of_healing": {
+		"id": "potion_of_healing",
+		"name": "Potion of Healing",
+		"type": "consumable",
+		"heal_amount": 4,
+		"icon": "🧪",
+		"description": "Restores up to 4 lost Body Points to target hero (cannot exceed maximum BP).",
+		"cost": 200
+	},
+	"potion_of_strength": {
+		"id": "potion_of_strength",
+		"name": "Potion of Strength",
+		"type": "consumable",
+		"attack_bonus": 2,
+		"icon": "💪",
+		"description": "Grants +2 extra Combat Dice on your next attack.",
+		"cost": 300
+	},
+	"potion_of_speed": {
+		"id": "potion_of_speed",
+		"name": "Potion of Speed",
+		"type": "consumable",
+		"movement_bonus": 4,
+		"icon": "⚡",
+		"description": "Doubles movement or grants swift speed on your turn.",
+		"cost": 250
+	},
+	"holy_water": {
+		"id": "holy_water",
+		"name": "Holy Water",
+		"type": "consumable",
+		"damage": 3,
+		"target_type": "undead",
+		"icon": "💧",
+		"description": "Discards to inflict 3 direct damage on an undead creature in line of sight.",
+		"cost": 400
+	}
+}
+
 func get_weapon(weapon_id: String) -> Dictionary:
 	return WEAPONS.get(weapon_id.to_lower().strip_edges(), {})
 
 func get_armor(armor_id: String) -> Dictionary:
 	return ARMOR.get(armor_id.to_lower().strip_edges(), {})
 
+func get_consumable(item_id: String) -> Dictionary:
+	return CONSUMABLES.get(item_id.to_lower().strip_edges(), {})
+
+func is_consumable(item_id: String) -> bool:
+	return CONSUMABLES.has(item_id.to_lower().strip_edges())
+
+func get_item(item_id: String) -> Dictionary:
+	var key = item_id.to_lower().strip_edges()
+	if CONSUMABLES.has(key):
+		return CONSUMABLES[key]
+	if WEAPONS.has(key):
+		return WEAPONS[key]
+	if ARMOR.has(key):
+		return ARMOR[key]
+	return {}
+
 func get_all_equipment() -> Dictionary:
 	return {
 		"weapons": WEAPONS,
-		"armor": ARMOR
+		"armor": ARMOR,
+		"consumables": CONSUMABLES
 	}
 
 func can_hero_equip(hero_id: String, item_id: String) -> Dictionary:

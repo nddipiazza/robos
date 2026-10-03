@@ -1694,6 +1694,119 @@ class TestHeroQuestE2EScenarios(unittest.TestCase):
                  assertions=[f"Last hero complete text: '{overlay_wiz.get('text')}'"])
         self.assertEqual(overlay_wiz.get("text"), "turn complete, next turn Zargon")
 
+    def test_50_hud_spell_casting_and_item_usage(self):
+        """Scenario 50: HUD Spell Casting and Item Usage Controls."""
+        bdd_scenario_header(50, "HUD Spell Casting & Inventory Item Usage")
+
+        bdd_step("GIVEN", "Wizard active turn with memorized spells and visible Goblin in line of sight")
+        self.ai.reset_game()
+        self.ai.set_state(
+            role="player",
+            phase="hero_phase",
+            activeHeroIndex=3,
+            activeHero="wizard",
+            turnState="awaiting_roll",
+            movementClosed=False,
+            hasActed=False,
+            heroes=[{"id": "wizard", "grid_pos": [4, 1], "spells": ["ball_of_flame", "heal_body", "fire_of_wrath"]}],
+            monsters=[{"id": "mon-goblin-1", "name": "Goblin", "grid_pos": [4, 3], "current_bp": 1, "is_alive": True}],
+            discoveredMonsterIds=["mon-goblin-1"]
+        )
+
+        st1 = self.ai.get_state()
+        btns1 = st1.get("scene", {}).get("ui", {}).get("buttons", {})
+        cast_btn1 = btns1.get("cast_spell", {})
+        bdd_step("THEN", "HUD exposes visible and enabled 'Cast Spell' action button for Wizard",
+                 assertions=[
+                     f"Cast button visible: {cast_btn1.get('visible')}",
+                     f"Cast button disabled: {cast_btn1.get('disabled')}",
+                     f"Wizard memorized spells: {len(st1.get('activeHeroSpells', []))}"
+                 ])
+        self.assertTrue(cast_btn1.get("visible"))
+        self.assertFalse(cast_btn1.get("disabled"))
+        self.assertEqual(len(st1.get("activeHeroSpells", [])), 3)
+
+        bdd_step("WHEN", "Player clicks 'Cast Spell' action button to open spellbook modal")
+        self.ai.open_spell_panel()
+        st_modal = self.ai.get_state()
+        bdd_step("THEN", "Spellbook modal opens with spell panel flag set to True",
+                 assertions=[
+                     f"spellPanelOpen: {st_modal.get('spellPanelOpen')}",
+                     f"spellCastModalVisible: {st_modal.get('scene', {}).get('ui', {}).get('modal', {}).get('spellCastModalVisible')}"
+                 ])
+        self.assertTrue(st_modal.get("spellPanelOpen"))
+        self.assertTrue(st_modal.get("scene", {}).get("ui", {}).get("modal", {}).get("spellCastModalVisible"))
+
+        bdd_step("WHEN", "Wizard casts Ball of Flame on visible Goblin through HUD action")
+        spell_res = self.ai.cast_spell("ball_of_flame", target="mon-goblin-1")
+        self.ai.close_spell_panel()
+        st_after_spell = self.ai.get_state()
+        btns_after = st_after_spell.get("scene", {}).get("ui", {}).get("buttons", {})
+        cast_btn_after = btns_after.get("cast_spell", {})
+        bdd_step("THEN", "Goblin takes damage/is incinerated, hasActed is marked True, and Cast Spell button becomes disabled",
+                 assertions=[
+                     f"Spell result success: {spell_res.get('success')}",
+                     f"hasActed: {st_after_spell.get('hasActed')}",
+                     f"Cast button disabled after action: {cast_btn_after.get('disabled')}"
+                 ])
+        self.assertTrue(spell_res.get("success"))
+        self.assertTrue(st_after_spell.get("hasActed"))
+        self.assertTrue(cast_btn_after.get("disabled"))
+
+        bdd_step("GIVEN", "Barbarian active turn with wounded BP (3/8) and Potion of Healing in inventory")
+        self.ai.set_state(
+            activeHeroIndex=0,
+            activeHero="barbarian",
+            hasActed=False,
+            heroes=[{
+                "id": "barbarian",
+                "current_bp": 3,
+                "bodyPoints": 8,
+                "inventory": ["broadsword", "healing_potion"]
+            }]
+        )
+
+        st_barb = self.ai.get_state()
+        btns_barb = st_barb.get("scene", {}).get("ui", {}).get("buttons", {})
+        item_btn = btns_barb.get("use_item", {})
+        bdd_step("THEN", "HUD exposes visible and enabled 'Use Item' action button for Barbarian",
+                 assertions=[
+                     f"Item button visible: {item_btn.get('visible')}",
+                     f"Item button disabled: {item_btn.get('disabled')}",
+                     f"Inventory size: {len(st_barb.get('activeHeroInventory', []))}"
+                 ])
+        self.assertTrue(item_btn.get("visible"))
+        self.assertFalse(item_btn.get("disabled"))
+        self.assertIn("healing_potion", st_barb.get("activeHeroInventory", []))
+
+        bdd_step("WHEN", "Player opens the backpack / item modal")
+        self.ai.open_item_panel()
+        st_item_modal = self.ai.get_state()
+        bdd_step("THEN", "Item panel opens with itemPanelOpen set to True",
+                 assertions=[
+                     f"itemPanelOpen: {st_item_modal.get('itemPanelOpen')}",
+                     f"itemUseModalVisible: {st_item_modal.get('scene', {}).get('ui', {}).get('modal', {}).get('itemUseModalVisible')}"
+                 ])
+        self.assertTrue(st_item_modal.get("itemPanelOpen"))
+        self.assertTrue(st_item_modal.get("scene", {}).get("ui", {}).get("modal", {}).get("itemUseModalVisible"))
+
+        bdd_step("WHEN", "Barbarian drinks Potion of Healing from backpack")
+        item_res = self.ai.use_item("healing_potion", hero_id="barbarian")
+        self.ai.close_item_panel()
+        st_after_item = self.ai.get_state()
+        barb_card = next((c for c in st_after_item.get("characterCards", []) if c.get("id") == "barbarian"), {})
+        bdd_step("THEN", "Body Points restored from 3 to 7, potion consumed from inventory, and combat log records drink",
+                 assertions=[
+                     f"Item use success: {item_res.get('success')}",
+                     f"Healed amount: {item_res.get('healed')}",
+                     f"Barbarian new BP: {barb_card.get('current_bp')}/8",
+                     f"Potion removed from inventory: {'healing_potion' not in st_after_item.get('activeHeroInventory', [])}"
+                 ])
+        self.assertTrue(item_res.get("success"))
+        self.assertEqual(item_res.get("healed"), 4)
+        self.assertEqual(barb_card.get("current_bp"), 7)
+        self.assertNotIn("healing_potion", st_after_item.get("activeHeroInventory", []))
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
