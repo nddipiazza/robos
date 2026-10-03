@@ -328,6 +328,40 @@ class TestTabletopDiceRolls(unittest.TestCase):
         self.assertEqual(active_combat.get("diceCount"), 7)
         self.assertIn("Zargon attacks Dwarf", active_combat.get("title", ""))
 
+    def test_08_combat_damage_roll_extended_duration_and_dismissal(self):
+        """SCENARIO 8: Damage roll dice dialog stays visible comfortably and supports early dismissal."""
+        print("\n" + "-" * 80)
+        print("SCENARIO 08: Combat Damage Roll Extended Duration & Early Dismissal")
+        print("-" * 80)
+
+        bdd_step("GIVEN", "Combat damage roll is triggered between Barbarian and Crypt Skeleton")
+        res = self.player.execute_action("test_dice_roll", type="combat", attacker="Barbarian", defender="Crypt Skeleton", attackDice=3, defendDice=2)
+        self.assertTrue(res.get("success", False))
+
+        bdd_step("WHEN", "3.0 seconds elapse (past old 2.8s timeout)")
+        time.sleep(3.0)
+
+        state = self.player.get_state()
+        active_dice = state.get("activeDiceRoll", {})
+        bdd_step("THEN", "Combat damage dice dialog is STILL comfortably visible on screen",
+                 assertions=[
+                     f"activeDiceRoll not empty: {bool(active_dice)} (expected True)",
+                     f"activeDiceRoll settled: {active_dice.get('settled')} (expected True)",
+                     f"activeDiceRoll title: '{active_dice.get('title')}'"
+                 ])
+        self.assertTrue(bool(active_dice), "Damage roll dice dialog must still be active after 3.0s")
+        self.assertTrue(active_dice.get("settled", False), "Damage roll dice must be settled")
+
+        bdd_step("WHEN", "Player dismisses the dice dialog early (click, Space, Esc, or dismiss_dice_roll)")
+        dismiss_res = self.player.execute_action("dismiss_dice_roll")
+        self.assertTrue(dismiss_res.get("success", False))
+
+        state_after = self.player.get_state()
+        active_after = state_after.get("activeDiceRoll", {})
+        bdd_step("THEN", "Damage roll dialog is immediately dismissed",
+                 assertions=[f"activeDiceRoll after dismiss is empty: {not bool(active_after)}"])
+        self.assertFalse(bool(active_after), "Damage roll dialog must be dismissed after dismiss action")
+
 
 if __name__ == "__main__":
     unittest.main()
