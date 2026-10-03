@@ -22,14 +22,13 @@
       0,
       1
     ],
-    "createdDate": "2026-10-02T19:12:46.902Z"
+    "createdDate": "2026-10-03T02:55:16.281Z"
   },
   "heroes": {
     "barbarian": {
       "id": "barbarian",
       "slug": "barbarian",
       "name": "Barbarian",
-      "characterName": "Rogar",
       "heroClass": "Barbarian",
       "bodyPoints": 8,
       "mindPoints": 2,
@@ -55,7 +54,6 @@
         }
       ],
       "tokenColor": "#b91c1c",
-      "tokenAsset": "res://assets/tokens/token_barbarian.png",
       "spells": [],
       "position": [
         0,
@@ -66,7 +64,6 @@
       "id": "dwarf",
       "slug": "dwarf",
       "name": "Dwarf",
-      "characterName": "Dorgan",
       "heroClass": "Dwarf",
       "bodyPoints": 7,
       "mindPoints": 3,
@@ -92,7 +89,6 @@
         }
       ],
       "tokenColor": "#b45309",
-      "tokenAsset": "res://assets/tokens/token_dwarf.png",
       "spells": [],
       "position": [
         0,
@@ -103,7 +99,6 @@
       "id": "elf",
       "slug": "elf",
       "name": "Elf",
-      "characterName": "Ladril",
       "heroClass": "Elf",
       "bodyPoints": 6,
       "mindPoints": 4,
@@ -129,7 +124,6 @@
         }
       ],
       "tokenColor": "#15803d",
-      "tokenAsset": "res://assets/tokens/token_elf.png",
       "spells": [
         {
           "id": "urn:robos:tabletop:spell:heal-body",
@@ -171,7 +165,6 @@
       "id": "wizard",
       "slug": "wizard",
       "name": "Wizard",
-      "characterName": "Telor",
       "heroClass": "Wizard",
       "bodyPoints": 4,
       "mindPoints": 6,
@@ -197,7 +190,6 @@
         }
       ],
       "tokenColor": "#1d4ed8",
-      "tokenAsset": "res://assets/tokens/token_wizard.png",
       "spells": [
         {
           "id": "urn:robos:tabletop:spell:ball-of-flame",
@@ -760,21 +752,6 @@
           ],
           "state": "closed",
           "room": "room-se-sanctum"
-        },
-        {
-          "id": "sdoor-ne-vault",
-          "from": [
-            21,
-            2
-          ],
-          "to": [
-            22,
-            2
-          ],
-          "state": "closed",
-          "is_secret": true,
-          "is_revealed": false,
-          "room": "room-ne-vault"
         }
       ],
       "wallBlocks": [
