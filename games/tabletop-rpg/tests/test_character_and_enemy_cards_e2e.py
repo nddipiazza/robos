@@ -109,6 +109,7 @@ class TestCharacterAndEnemyCardsE2E(unittest.TestCase):
         self.assertTrue(barb.get("isActive"), "Barbarian begins as active hero")
         self.assertTrue(barb.get("isOnBoard"), "Barbarian starts on the board")
         self.assertEqual(barb.get("weapon"), "broadsword")
+        self.assertEqual(barb.get("weaponIcon"), "⚔️", "Broadsword icon must be valid ⚔️ (not broken dagger 🗡️)")
 
         # Verify Dwarf
         dwarf = next((c for c in char_cards if c.get("id") == "dwarf"), None)
