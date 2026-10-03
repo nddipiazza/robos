@@ -340,4 +340,50 @@ class TabletopQAPlayer:
         self.log(f"Manually triggering story event '{marker_or_id}'...")
         return self.execute_action("trigger_story_event", id=marker_or_id)
 
+    # --- Armory & Equipment Shop ---
+    def open_armory(self, hero_id: str = "") -> dict:
+        self.log(f"Opening Armory Equipment Shop{' for hero ' + hero_id if hero_id else ''}...")
+        return self.execute_action("open_armory", heroId=hero_id)
+
+    def close_armory(self) -> dict:
+        self.log("Closing Armory Equipment Shop...")
+        return self.execute_action("close_armory")
+
+    def toggle_armory(self) -> dict:
+        self.log("Toggling Armory Equipment Shop...")
+        return self.execute_action("toggle_armory")
+
+    def select_armory_hero(self, hero_id: str) -> dict:
+        self.log(f"Selecting hero '{hero_id}' in Armory Equipment Shop...")
+        return self.execute_action("select_armory_hero", heroId=hero_id)
+
+    def buy_armory_item(self, hero_id: str, item_id: str) -> dict:
+        self.log(f"Hero '{hero_id}' purchasing Armory item '{item_id}'...")
+        return self.execute_action("buy_armory_item", heroId=hero_id, itemId=item_id)
+
+    def is_armory_open(self) -> bool:
+        st = self.get_state()
+        return bool(st.get("armoryOpen", False) or st.get("armoryModalVisible", False))
+
+    def get_armory_catalog(self) -> list:
+        st = self.get_state()
+        return st.get("armoryCatalog", [])
+
+    def get_party_total_gold(self) -> int:
+        st = self.get_state()
+        return int(st.get("partyTotalGold", 0))
+
+    # --- Elf Spell Draft ---
+    def select_elf_element(self, element: str, confirm: bool = True) -> dict:
+        self.log(f"Selecting Elf spell element '{element}' (confirm={confirm})...")
+        return self.execute_action("select_elf_element", element=element, confirm=confirm)
+
+    def open_elf_spell_modal(self) -> dict:
+        self.log("Opening Elf spell draft modal...")
+        return self.execute_action("open_elf_spell_modal")
+
+    def close_elf_spell_modal(self) -> dict:
+        self.log("Closing Elf spell draft modal...")
+        return self.execute_action("close_elf_spell_modal")
+
 

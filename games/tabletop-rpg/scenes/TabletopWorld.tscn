@@ -161,6 +161,11 @@ custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
 text = "🔧 Disarm"
 
+[node name="BtnArmory" type="Button" parent="UI/ActionsBar/HotbarHBox/ActionsScroll/Actions"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+text = "🛡️ Armory"
+
 [node name="BtnSummon" type="Button" parent="UI/ActionsBar/HotbarHBox/ActionsScroll/Actions"]
 custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
@@ -850,5 +855,109 @@ layout_mode = 2
 size_flags_horizontal = 3
 custom_minimum_size = Vector2(0, 36)
 text = "✕ Close Character Sheet (Esc)"
+
+[node name="ArmoryModal" type="ColorRect" parent="UI"]
+visible = false
+offset_right = 1920.0
+offset_bottom = 1080.0
+color = Color(0.02, 0.03, 0.06, 0.9)
+
+[node name="Card" type="PanelContainer" parent="UI/ArmoryModal"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -560.0
+offset_top = -340.0
+offset_right = 560.0
+offset_bottom = 340.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="UI/ArmoryModal/Card"]
+layout_mode = 2
+theme_override_constants/margin_left = 26
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 26
+theme_override_constants/margin_bottom = 20
+
+[node name="VBox" type="VBoxContainer" parent="UI/ArmoryModal/Card/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Header" type="HBoxContainer" parent="UI/ArmoryModal/Card/Margin/VBox"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="UI/ArmoryModal/Card/Margin/VBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 22
+text = "🛡️ HeroQuest Imperial Armory"
+
+[node name="PartyGoldBadge" type="Label" parent="UI/ArmoryModal/Card/Margin/VBox/Header"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(1.0, 0.85, 0.2, 1)
+text = "PARTY TREASURY: 400 GP"
+
+[node name="BtnCloseHeader" type="Button" parent="UI/ArmoryModal/Card/Margin/VBox/Header"]
+layout_mode = 2
+custom_minimum_size = Vector2(32, 28)
+text = "✕"
+
+[node name="Separator" type="HSeparator" parent="UI/ArmoryModal/Card/Margin/VBox"]
+layout_mode = 2
+
+[node name="Instruction" type="Label" parent="UI/ArmoryModal/Card/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.85, 0.88, 0.95, 1)
+text = "Equip your party with authentic weapons, armor, and gear before entering the dungeon. Select a hero to equip:"
+
+[node name="HeroTabs" type="HBoxContainer" parent="UI/ArmoryModal/Card/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="HeroInfoBanner" type="PanelContainer" parent="UI/ArmoryModal/Card/Margin/VBox"]
+layout_mode = 2
+
+[node name="HeroInfoMargin" type="MarginContainer" parent="UI/ArmoryModal/Card/Margin/VBox/HeroInfoBanner"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 6
+
+[node name="HeroInfoText" type="Label" parent="UI/ArmoryModal/Card/Margin/VBox/HeroInfoBanner/HeroInfoMargin"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.3, 0.9, 0.6, 1)
+text = "Rogar the Barbarian | 💰 100 Gold | Attack: 3 Dice | Defend: 2 Dice"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="UI/ArmoryModal/Card/Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="ItemsGrid" type="GridContainer" parent="UI/ArmoryModal/Card/Margin/VBox/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
+columns = 3
+
+[node name="ButtonBox" type="HBoxContainer" parent="UI/ArmoryModal/Card/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BtnClose" type="Button" parent="UI/ArmoryModal/Card/Margin/VBox/ButtonBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 38)
+text = "⚔️ Enter the Dungeon / Close Armory"
+
 
 
