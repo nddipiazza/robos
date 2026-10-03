@@ -110,9 +110,14 @@ class TestArmoryNoBrokenEmojisE2E(unittest.TestCase):
             lines = f.readlines()
 
         armory_emoji_matches = []
+        in_armory_section = False
         for i, line in enumerate(lines, 1):
-            # Check lines 2595-3140 (Armory section) and action button line ~7064
-            if (2595 <= i <= 3140) or ("btn_armory" in line and "text" in line) or ("Imperial Armory" in line):
+            if "HEROQUEST ARMORY & EQUIPMENT SHOP" in line:
+                in_armory_section = True
+            elif in_armory_section and line.startswith("func _get_hero_spells_by_id"):
+                in_armory_section = False
+
+            if in_armory_section or ("btn_armory" in line and "text" in line) or ("Imperial Armory" in line):
                 if self.emoji_regex.search(line):
                     armory_emoji_matches.append(f"Line {i}: {line.strip()}")
 
