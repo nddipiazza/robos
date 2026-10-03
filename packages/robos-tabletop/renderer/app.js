@@ -6,6 +6,67 @@ if (doorClosedImg) doorClosedImg.src = "../assets/door_closed.png";
 const doorOpenImg = typeof Image !== "undefined" ? new Image() : null;
 if (doorOpenImg) doorOpenImg.src = "../assets/door_open.png";
 
+// AI Generated Furniture & Tile Textures
+const FURNITURE_TEXTURES = {};
+const TILE_TEXTURES = {};
+
+const FURNITURE_ASSET_MAP = {
+  altar: "../assets/furniture/altar.png",
+  table: "../assets/furniture/table.png",
+  bookcase: "../assets/furniture/bookcase.png",
+  bookshelf: "../assets/furniture/bookshelf.png",
+  tomb: "../assets/furniture/tomb.png",
+  chest: "../assets/furniture/chest.png",
+  cupboard: "../assets/furniture/cupboard.png",
+  weapons_rack: "../assets/furniture/weapons_rack.png",
+  fireplace: "../assets/furniture/fireplace.png",
+  throne: "../assets/furniture/throne.png",
+  torture_rack: "../assets/furniture/torture_rack.png",
+  alchemists_bench: "../assets/furniture/alchemists_bench.png"
+};
+
+const TILE_ASSET_MAP = {
+  wall_block: "../assets/tiles/wall_block.png",
+  stairs: "../assets/tiles/stairs.png",
+  pit: "../assets/tiles/trap_pit.png",
+  spear: "../assets/tiles/trap_spear.png",
+  "falling-block": "../assets/tiles/trap_falling_block.png",
+  boulder: "../assets/tiles/boulder.png"
+};
+
+if (typeof Image !== "undefined") {
+  for (const [k, src] of Object.entries(FURNITURE_ASSET_MAP)) {
+    const img = new Image();
+    img.src = src;
+    FURNITURE_TEXTURES[k] = img;
+  }
+  for (const [k, src] of Object.entries(TILE_ASSET_MAP)) {
+    const img = new Image();
+    img.src = src;
+    TILE_TEXTURES[k] = img;
+  }
+}
+
+function getFurnitureImage(type) {
+  const clean = (type || '').toLowerCase();
+  for (const [k, img] of Object.entries(FURNITURE_TEXTURES)) {
+    if (clean.includes(k) || k.includes(clean)) {
+      if (img && img.complete && img.naturalWidth > 0) return img;
+    }
+  }
+  return getTileImage(clean);
+}
+
+function getTileImage(type) {
+  const clean = (type || '').toLowerCase();
+  for (const [k, img] of Object.entries(TILE_TEXTURES)) {
+    if (clean.includes(k) || k.includes(clean)) {
+      if (img && img.complete && img.naturalWidth > 0) return img;
+    }
+  }
+  return null;
+}
+
 // RobOS Tabletop Studio Client Application
 let currentData = {
   tabletopNodes: [],
@@ -1193,73 +1254,116 @@ function drawBoard() {
     const by = insetT + b.y * cellH;
     const totalW = w * cellW;
     const totalH = h * cellH;
+    const midX = bx + totalW / 2;
+    const midY = by + totalH / 2;
 
     ctx.save();
     // Drop shadow
     ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
     ctx.fillRect(bx + 3, by + 3, totalW - 4, totalH - 4);
 
-    // Stone block outer casing
-    ctx.fillStyle = "#1e293b";
-    ctx.fillRect(bx + 1, by + 1, totalW - 2, totalH - 2);
-    ctx.strokeStyle = "#94a3b8";
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(bx + 1, by + 1, totalW - 2, totalH - 2);
-
-    // Draw individual tiles within the block
-    for (let dx = 0; dx < w; dx++) {
-      for (let dy = 0; dy < h; dy++) {
-        const tx = bx + dx * cellW;
-        const ty = by + dy * cellH;
-
-        // Tile bevel
-        ctx.fillStyle = "#334155";
-        ctx.fillRect(tx + 3, ty + 3, cellW - 6, cellH - 6);
-
-        // Masonry cross-hatch
-        ctx.beginPath();
-        ctx.moveTo(tx + 5, ty + 5);
-        ctx.lineTo(tx + cellW - 5, ty + cellH - 5);
-        ctx.moveTo(tx + cellW - 5, ty + 5);
-        ctx.lineTo(tx + 5, ty + cellH - 5);
-        ctx.strokeStyle = "rgba(148, 163, 184, 0.35)";
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
-        // Inner border
-        ctx.strokeStyle = "rgba(100, 116, 139, 0.8)";
-        ctx.lineWidth = 1;
-        ctx.strokeRect(tx + 3, ty + 3, cellW - 6, cellH - 6);
+    const wbImg = getTileImage('wall_block');
+    if (wbImg) {
+      // Draw authentic AI wall block texture per cell
+      for (let dx = 0; dx < w; dx++) {
+        for (let dy = 0; dy < h; dy++) {
+          const tx = bx + dx * cellW;
+          const ty = by + dy * cellH;
+          ctx.drawImage(wbImg, tx + 1, ty + 1, cellW - 2, cellH - 2);
+        }
       }
-    }
+      ctx.strokeStyle = "#94a3b8";
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(bx + 1, by + 1, totalW - 2, totalH - 2);
 
-    // Seam line between tiles if multi-tile
-    if (w > 1) {
-      ctx.beginPath();
-      ctx.moveTo(bx + cellW, by + 2);
-      ctx.lineTo(bx + cellW, by + totalH - 2);
-      ctx.strokeStyle = "#0f172a";
-      ctx.lineWidth = 2.5;
-      ctx.stroke();
-    }
-    if (h > 1) {
-      ctx.beginPath();
-      ctx.moveTo(bx + 2, by + cellH);
-      ctx.lineTo(bx + totalW - 2, by + cellH);
-      ctx.strokeStyle = "#0f172a";
-      ctx.lineWidth = 2.5;
-      ctx.stroke();
-    }
+      if (w > 1) {
+        ctx.beginPath();
+        ctx.moveTo(bx + cellW, by + 2);
+        ctx.lineTo(bx + cellW, by + totalH - 2);
+        ctx.strokeStyle = "#0f172a";
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+      }
+      if (h > 1) {
+        ctx.beginPath();
+        ctx.moveTo(bx + 2, by + cellH);
+        ctx.lineTo(bx + totalW - 2, by + cellH);
+        ctx.strokeStyle = "#0f172a";
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+      }
 
-    // Label in center
-    const midX = bx + totalW / 2;
-    const midY = by + totalH / 2;
-    ctx.fillStyle = "#f8fafc";
-    ctx.font = "bold 9px sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    const label = (w > 1 || h > 1) ? "🧱 2-TILE WALL" : "🧱 WALL";
-    ctx.fillText(label, midX, midY);
+      // Center pill label
+      const label = (w > 1 || h > 1) ? "🧱 2-TILE WALL" : "🧱 WALL";
+      ctx.font = "bold 9px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      const tw = ctx.measureText(label).width;
+      ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+      ctx.fillRect(midX - tw / 2 - 4, midY - 6, tw + 8, 12);
+      ctx.fillStyle = "#f8fafc";
+      ctx.fillText(label, midX, midY);
+    } else {
+      // Stone block outer casing
+      ctx.fillStyle = "#1e293b";
+      ctx.fillRect(bx + 1, by + 1, totalW - 2, totalH - 2);
+      ctx.strokeStyle = "#94a3b8";
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(bx + 1, by + 1, totalW - 2, totalH - 2);
+
+      // Draw individual tiles within the block
+      for (let dx = 0; dx < w; dx++) {
+        for (let dy = 0; dy < h; dy++) {
+          const tx = bx + dx * cellW;
+          const ty = by + dy * cellH;
+
+          // Tile bevel
+          ctx.fillStyle = "#334155";
+          ctx.fillRect(tx + 3, ty + 3, cellW - 6, cellH - 6);
+
+          // Masonry cross-hatch
+          ctx.beginPath();
+          ctx.moveTo(tx + 5, ty + 5);
+          ctx.lineTo(tx + cellW - 5, ty + cellH - 5);
+          ctx.moveTo(tx + cellW - 5, ty + 5);
+          ctx.lineTo(tx + 5, ty + cellH - 5);
+          ctx.strokeStyle = "rgba(148, 163, 184, 0.35)";
+          ctx.lineWidth = 1;
+          ctx.stroke();
+
+          // Inner border
+          ctx.strokeStyle = "rgba(100, 116, 139, 0.8)";
+          ctx.lineWidth = 1;
+          ctx.strokeRect(tx + 3, ty + 3, cellW - 6, cellH - 6);
+        }
+      }
+
+      // Seam line between tiles if multi-tile
+      if (w > 1) {
+        ctx.beginPath();
+        ctx.moveTo(bx + cellW, by + 2);
+        ctx.lineTo(bx + cellW, by + totalH - 2);
+        ctx.strokeStyle = "#0f172a";
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+      }
+      if (h > 1) {
+        ctx.beginPath();
+        ctx.moveTo(bx + 2, by + cellH);
+        ctx.lineTo(bx + totalW - 2, by + cellH);
+        ctx.strokeStyle = "#0f172a";
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+      }
+
+      // Label in center
+      ctx.fillStyle = "#f8fafc";
+      ctx.font = "bold 9px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      const label = (w > 1 || h > 1) ? "🧱 2-TILE WALL" : "🧱 WALL";
+      ctx.fillText(label, midX, midY);
+    }
 
     ctx.restore();
   });
@@ -1275,7 +1379,28 @@ function drawBoard() {
     const midY = ty + totalH / 2;
 
     ctx.save();
-    if (t.trapType === 'boulder' || t.trapType === 'boulder-2x2') {
+    const trapKey = (t.trapType === 'boulder' || t.trapType === 'boulder-2x2') ? 'boulder' : t.trapType;
+    const trImg = getTileImage(trapKey);
+    if (trImg) {
+      // Drop shadow
+      ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+      ctx.fillRect(tx + 3, ty + 3, totalW - 4, totalH - 4);
+      // AI Image
+      ctx.drawImage(trImg, tx + 2, ty + 2, totalW - 4, totalH - 4);
+      ctx.strokeStyle = t.trapType === 'pit' ? '#dc2626' : (t.trapType === 'falling-block' ? '#ea580c' : '#7c3aed');
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(tx + 2, ty + 2, totalW - 4, totalH - 4);
+      // Label pill
+      const lbl = t.trapType === 'boulder-2x2' ? 'MEGA BOULDER' : (t.trapType || 'TRAP').toUpperCase();
+      ctx.font = "bold 8px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      const tw = ctx.measureText(lbl).width;
+      ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+      ctx.fillRect(midX - tw / 2 - 3, midY + totalH * 0.32 - 5, tw + 6, 11);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(lbl, midX, midY + totalH * 0.32);
+    } else if (t.trapType === 'boulder' || t.trapType === 'boulder-2x2') {
       // 3D Shaded Stone Boulder Tile
       const radius = Math.min(totalW, totalH) * 0.42;
 
@@ -1352,8 +1477,25 @@ function drawBoard() {
     ctx.fillRect(fx + 3, fy + 3, totalW - 4, totalH - 4);
 
     const type = f.type || '';
+    const furnImg = getFurnitureImage(type);
 
-    if (type.startsWith('altar')) {
+    if (furnImg) {
+      // Authentic AI furniture texture
+      ctx.drawImage(furnImg, fx + 2, fy + 2, totalW - 4, totalH - 4);
+      ctx.strokeStyle = "rgba(217, 119, 6, 0.8)";
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(fx + 2, fy + 2, totalW - 4, totalH - 4);
+
+      const furnName = (f.name || type.replace(/^furn(iture)?-/, '').replace(/_/g, ' ')).toUpperCase();
+      ctx.font = "bold 8px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      const tw = ctx.measureText(furnName).width;
+      ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+      ctx.fillRect(midX - tw / 2 - 3, midY + totalH * 0.35 - 5, tw + 6, 11);
+      ctx.fillStyle = "#fef08a";
+      ctx.fillText(furnName, midX, midY + totalH * 0.35);
+    } else if (type.startsWith('altar')) {
       // 🔮 Sorcerer's Altar / Desk (3x2 or 2x3)
       ctx.fillStyle = "#1e1b4b"; // Deep obsidian / dark purple
       ctx.fillRect(fx + 2, fy + 2, totalW - 4, totalH - 4);
@@ -1721,22 +1863,44 @@ function drawBoard() {
 
   // 11. Draw Starting Stairs
   if (q.startingStairs) {
-    const sx = insetL + q.startingStairs[0] * cellW + cellW / 2;
-    const sy = insetT + q.startingStairs[1] * cellH + cellH / 2;
+    const sx = insetL + q.startingStairs[0] * cellW;
+    const sy = insetT + q.startingStairs[1] * cellH;
+    const midX = sx + cellW / 2;
+    const midY = sy + cellH / 2;
 
     ctx.save();
-    ctx.fillStyle = "#1e40af";
-    ctx.beginPath();
-    ctx.arc(sx, sy, cellW * 0.4, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = "#60a5fa";
-    ctx.lineWidth = 2;
-    ctx.stroke();
+    const stImg = getTileImage('stairs');
+    if (stImg) {
+      // Drop shadow
+      ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+      ctx.fillRect(sx + 3, sy + 3, cellW - 4, cellH - 4);
+      // AI Image
+      ctx.drawImage(stImg, sx + 2, sy + 2, cellW - 4, cellH - 4);
+      ctx.strokeStyle = "#60a5fa";
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(sx + 2, sy + 2, cellW - 4, cellH - 4);
+      // Label pill
+      ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+      ctx.fillRect(midX - 18, midY - 6, 36, 12);
+      ctx.fillStyle = "#93c5fd";
+      ctx.font = "bold 8px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("STAIRS", midX, midY);
+    } else {
+      ctx.fillStyle = "#1e40af";
+      ctx.beginPath();
+      ctx.arc(midX, midY, cellW * 0.4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#60a5fa";
+      ctx.lineWidth = 2;
+      ctx.stroke();
 
-    ctx.font = "14px sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("🪜", sx, sy);
+      ctx.font = "14px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("🪜", midX, midY);
+    }
     ctx.restore();
   }
 
@@ -4329,5 +4493,16 @@ if (typeof window !== "undefined") {
 }
 
 // Initialize on DOM ready
-window.addEventListener("DOMContentLoaded", initKGraphData);
+if (typeof window !== "undefined") {
+  window.addEventListener("DOMContentLoaded", initKGraphData);
+}
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = {
+    FURNITURE_ASSET_MAP,
+    TILE_ASSET_MAP,
+    getFurnitureImage,
+    getTileImage
+  };
+}
 
