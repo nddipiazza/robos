@@ -88,6 +88,16 @@ layout_mode = 2
 size_flags_horizontal = 3
 text = "Search"
 
+[node name="BtnSearchTraps" type="Button" parent="UI/Actions"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "⚠️ Traps"
+
+[node name="BtnDisarmTrap" type="Button" parent="UI/Actions"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "🔧 Disarm"
+
 [node name="BtnSummon" type="Button" parent="UI/Actions"]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -548,4 +558,81 @@ layout_mode = 2
 size_flags_horizontal = 3
 custom_minimum_size = Vector2(0, 38)
 text = "✕ Close Inventory"
+
+[node name="DisarmTrapModal" type="ColorRect" parent="UI"]
+visible = false
+offset_right = 1920.0
+offset_bottom = 1080.0
+color = Color(0.02, 0.04, 0.07, 0.85)
+
+[node name="Card" type="PanelContainer" parent="UI/DisarmTrapModal"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -440.0
+offset_top = -280.0
+offset_right = 440.0
+offset_bottom = 280.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="UI/DisarmTrapModal/Card"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 20
+
+[node name="VBox" type="VBoxContainer" parent="UI/DisarmTrapModal/Card/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Header" type="HBoxContainer" parent="UI/DisarmTrapModal/Card/Margin/VBox"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="UI/DisarmTrapModal/Card/Margin/VBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
+text = "🔧 Disarm Trap"
+
+[node name="Badge" type="Label" parent="UI/DisarmTrapModal/Card/Margin/VBox/Header"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.2, 0.8, 0.4, 1)
+text = "ACTION READY"
+
+[node name="Separator" type="HSeparator" parent="UI/DisarmTrapModal/Card/Margin/VBox"]
+layout_mode = 2
+
+[node name="Instruction" type="Label" parent="UI/DisarmTrapModal/Card/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.85, 0.88, 0.95, 1)
+text = "Select an adjacent detected trap to disarm safely. The Dwarf possesses innate disarm mastery."
+
+[node name="ScrollContainer" type="ScrollContainer" parent="UI/DisarmTrapModal/Card/Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="TrapsGrid" type="GridContainer" parent="UI/DisarmTrapModal/Card/Margin/VBox/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
+columns = 2
+
+[node name="ButtonBox" type="HBoxContainer" parent="UI/DisarmTrapModal/Card/Margin/VBox"]
+layout_mode = 2
+
+[node name="BtnClose" type="Button" parent="UI/DisarmTrapModal/Card/Margin/VBox/ButtonBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 38)
+text = "✕ Close"
 

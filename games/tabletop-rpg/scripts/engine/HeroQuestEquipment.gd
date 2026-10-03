@@ -171,6 +171,27 @@ const CONSUMABLES: Dictionary = {
 	}
 }
 
+const TOOLS: Dictionary = {
+	"tool_kit": {
+		"id": "tool_kit",
+		"name": "Tool Kit",
+		"type": "tool",
+		"icon": "🧰",
+		"description": "Enables non-Dwarf heroes to disarm discovered traps. The Dwarf possesses innate disarm skill and does not require a tool kit.",
+		"cost": 250,
+		"allowed_heroes": ["barbarian", "dwarf", "elf", "wizard"]
+	},
+	"toolbox": {
+		"id": "toolbox",
+		"name": "Tool Kit",
+		"type": "tool",
+		"icon": "🧰",
+		"description": "Enables non-Dwarf heroes to disarm discovered traps. The Dwarf possesses innate disarm skill and does not require a tool kit.",
+		"cost": 250,
+		"allowed_heroes": ["barbarian", "dwarf", "elf", "wizard"]
+	}
+}
+
 func get_weapon(weapon_id: String) -> Dictionary:
 	return WEAPONS.get(weapon_id.to_lower().strip_edges(), {})
 
@@ -183,10 +204,18 @@ func get_consumable(item_id: String) -> Dictionary:
 func is_consumable(item_id: String) -> bool:
 	return CONSUMABLES.has(item_id.to_lower().strip_edges())
 
+func get_tool(tool_id: String) -> Dictionary:
+	return TOOLS.get(tool_id.to_lower().strip_edges(), {})
+
+func is_tool(tool_id: String) -> bool:
+	return TOOLS.has(tool_id.to_lower().strip_edges())
+
 func get_item(item_id: String) -> Dictionary:
 	var key = item_id.to_lower().strip_edges()
 	if CONSUMABLES.has(key):
 		return CONSUMABLES[key]
+	if TOOLS.has(key):
+		return TOOLS[key]
 	if WEAPONS.has(key):
 		return WEAPONS[key]
 	if ARMOR.has(key):
@@ -197,7 +226,8 @@ func get_all_equipment() -> Dictionary:
 	return {
 		"weapons": WEAPONS,
 		"armor": ARMOR,
-		"consumables": CONSUMABLES
+		"consumables": CONSUMABLES,
+		"tools": TOOLS
 	}
 
 func can_hero_equip(hero_id: String, item_id: String) -> Dictionary:

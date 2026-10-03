@@ -134,6 +134,15 @@ var turn_overlay_mode: String = "none" # "roll_prompt", "turn_complete", "none"
 @onready var item_use_grid: GridContainer = get_node_or_null("UI/ItemUseModal/Card/Margin/VBox/ScrollContainer/ItemsGrid")
 @onready var btn_item_use_close: Button = get_node_or_null("UI/ItemUseModal/Card/Margin/VBox/ButtonBox/BtnClose")
 
+@onready var btn_search_traps: Button = get_node_or_null("UI/Actions/BtnSearchTraps")
+@onready var btn_disarm_trap: Button = get_node_or_null("UI/Actions/BtnDisarmTrap")
+
+@onready var disarm_trap_modal: ColorRect = get_node_or_null("UI/DisarmTrapModal")
+@onready var disarm_trap_title: Label = get_node_or_null("UI/DisarmTrapModal/Card/Margin/VBox/Header/Title")
+@onready var disarm_trap_badge: Label = get_node_or_null("UI/DisarmTrapModal/Card/Margin/VBox/Header/Badge")
+@onready var disarm_trap_grid: GridContainer = get_node_or_null("UI/DisarmTrapModal/Card/Margin/VBox/ScrollContainer/TrapsGrid")
+@onready var btn_disarm_trap_close: Button = get_node_or_null("UI/DisarmTrapModal/Card/Margin/VBox/ButtonBox/BtnClose")
+
 const ELEMENTAL_DECKS: Dictionary = {
 	"water": ["water_of_healing", "sleep", "veil_of_mist"],
 	"earth": ["heal_body", "pass_through_rock", "rock_skin"],
@@ -359,6 +368,12 @@ func _setup_ui_signals() -> void:
 		btn_spell_cast_close.pressed.connect(close_spell_cast_modal)
 	if btn_item_use_close and not btn_item_use_close.pressed.is_connected(close_item_use_modal):
 		btn_item_use_close.pressed.connect(close_item_use_modal)
+	if btn_search_traps and not btn_search_traps.pressed.is_connected(search_traps):
+		btn_search_traps.pressed.connect(search_traps)
+	if btn_disarm_trap and not btn_disarm_trap.pressed.is_connected(_on_disarm_trap_button_pressed):
+		btn_disarm_trap.pressed.connect(_on_disarm_trap_button_pressed)
+	if btn_disarm_trap_close and not btn_disarm_trap_close.pressed.is_connected(close_disarm_modal):
+		btn_disarm_trap_close.pressed.connect(close_disarm_modal)
 
 func toggle_role() -> void:
 	if current_role == "player":
@@ -1586,6 +1601,215 @@ func _update_item_use_modal_ui() -> void:
 		vbox.add_child(btn_row)
 		item_use_grid.add_child(card)
 
+# --- Trap Disarming & Detection Helpers ---
+func can_search_for_traps() -> bool:
+	var hero = get_active_hero()
+	if hero.is_empty() or has_acted_this_turn:
+		return false
+	var h_pos: Vector2i = hero.get("grid_pos", Vector2i(-1, -1))
+	var rm = _get_room_at(h_pos)
+	var r_id = str(rm.get("id", ""))
+	if r_id != "":
+		if not revealed_rooms.has(r_id):
+			return false
+		for m in monsters:
+			if m.get("is_alive", false) and int(m.get("current_bp", 1)) > 0 and str(m.get("roomId", "")) == r_id:
+				return false
+		return true
+	else:
+		for m in monsters:
+			if m.get("is_alive", false) and int(m.get("current_bp", 1)) > 0:
+				var mp = m.get("grid_pos", Vector2i(-1, -1))
+				if has_line_of_sight(h_pos, mp):
+					return false
+		return true
+
+func can_hero_disarm(hero: Dictionary) -> Dictionary:
+	if hero.is_empty():
+		return { "can_disarm": false, "reason": "No active hero" }
+	var h_id = str(hero.get("id", "")).to_lower()
+	if h_id == "dwarf":
+		return { "can_disarm": true, "is_dwarf": true }
+	var inv = hero.get("inventory", [])
+	for it in inv:
+		var it_str = str(it).to_lower().strip_edges()
+		if it_str == "tool_kit" or it_str == "toolbox" or it_str == "tools":
+			return { "can_disarm": true, "is_dwarf": false, "has_tool_kit": true }
+	return { "can_disarm": false, "is_dwarf": false, "reason": "Requires Tool Kit or Dwarf to disarm" }
+
+func get_adjacent_detected_traps() -> Array[Dictionary]:
+	var hero = get_active_hero()
+	if hero.is_empty():
+		return []
+	var h_pos = hero.get("grid_pos", Vector2i(-1, -1))
+	var res: Array[Dictionary] = []
+	for tr in traps:
+		var is_det = bool(tr.get("detected", false) or tr.get("is_revealed", false))
+		var is_dis = bool(tr.get("disarmed", false))
+		var is_spr = bool(tr.get("sprung", false) or tr.get("is_sprung", false))
+		var is_spn = bool(tr.get("spent", false))
+		if is_det and not is_dis and not is_spr and not is_spn:
+			var tx = int(tr.get("x", tr.get("position", [0, 0])[0]))
+			var ty = int(tr.get("y", tr.get("position", [0, 0])[1]))
+			if abs(tx - h_pos.x) + abs(ty - h_pos.y) <= 1:
+				res.append(tr)
+	return res
+
+# --- Disarm Trap Modal & UI ---
+func show_disarm_modal() -> void:
+	if disarm_trap_modal:
+		disarm_trap_modal.visible = true
+		_update_disarm_modal_ui()
+
+func close_disarm_modal() -> void:
+	if disarm_trap_modal:
+		disarm_trap_modal.visible = false
+	_update_ui()
+
+func toggle_disarm_modal() -> void:
+	if disarm_trap_modal and disarm_trap_modal.visible:
+		close_disarm_modal()
+	else:
+		show_disarm_modal()
+
+func _on_disarm_trap_button_pressed() -> void:
+	var adjacent_traps = get_adjacent_detected_traps()
+	if adjacent_traps.size() == 1:
+		disarm_trap(str(adjacent_traps[0].get("id", "")))
+	else:
+		toggle_disarm_modal()
+
+func _update_disarm_modal_ui() -> void:
+	if not disarm_trap_modal or not disarm_trap_modal.visible:
+		return
+
+	var hero = get_active_hero()
+	var h_disp = get_hero_display_title(hero) if not hero.is_empty() else "Hero"
+	if disarm_trap_title:
+		disarm_trap_title.text = "🔧 Disarm Trap — %s" % h_disp
+
+	var disarm_check = can_hero_disarm(hero)
+	var can_dis = disarm_check.get("can_disarm", false)
+	var is_dwarf = disarm_check.get("is_dwarf", false)
+
+	if disarm_trap_badge:
+		if has_acted_this_turn:
+			disarm_trap_badge.text = "ACTION ALREADY USED"
+			disarm_trap_badge.add_theme_color_override("font_color", Color(0.85, 0.35, 0.35, 1.0))
+		elif is_dwarf:
+			disarm_trap_badge.text = "DWARF TRAP MASTERY"
+			disarm_trap_badge.add_theme_color_override("font_color", Color(0.2, 0.9, 0.4, 1.0))
+		elif can_dis:
+			disarm_trap_badge.text = "TOOL KIT READY"
+			disarm_trap_badge.add_theme_color_override("font_color", Color(0.3, 0.8, 1.0, 1.0))
+		else:
+			disarm_trap_badge.text = "REQUIRES TOOL KIT OR DWARF"
+			disarm_trap_badge.add_theme_color_override("font_color", Color(0.9, 0.6, 0.2, 1.0))
+
+	if not disarm_trap_grid:
+		return
+
+	for child in disarm_trap_grid.get_children():
+		child.queue_free()
+
+	var adjacent_traps = get_adjacent_detected_traps()
+	if adjacent_traps.is_empty():
+		var empty_lbl = Label.new()
+		empty_lbl.text = "No detected adjacent traps to disarm. Search the room or corridor first!"
+		empty_lbl.add_theme_font_size_override("font_size", 13)
+		empty_lbl.add_theme_color_override("font_color", Color(0.7, 0.75, 0.8, 0.8))
+		disarm_trap_grid.add_child(empty_lbl)
+		return
+
+	for tr in adjacent_traps:
+		var tr_id = str(tr.get("id", "trap"))
+		var t_type = str(tr.get("type", tr.get("trapType", "pit"))).to_lower()
+		var tx = int(tr.get("x", tr.get("position", [0, 0])[0]))
+		var ty = int(tr.get("y", tr.get("position", [0, 0])[1]))
+
+		var t_name = "Pit Trap"
+		var t_icon = "🕳️"
+		var t_desc = "Covered hole in the floor. Disarming bridges the gap safely with iron crossbars."
+		var border_color = Color(0.8, 0.3, 0.2, 0.9)
+
+		if "spear" in t_type:
+			t_name = "Spear Trap"
+			t_icon = "🔺"
+			t_desc = "Concealed spears. Disarming jams the mechanical pressure trigger."
+			border_color = Color(0.9, 0.4, 0.2, 0.9)
+		elif "falling" in t_type or "boulder" in t_type or "rock" in t_type:
+			t_name = "Falling Block Trap"
+			t_icon = "🪨"
+			t_desc = "Overhead masonry counterweight. Disarming disables the ceiling drop trigger."
+			border_color = Color(0.9, 0.6, 0.1, 0.9)
+		elif "chest" in t_type or "furniture" in t_type:
+			t_name = "Poison Needle Chest Trap"
+			t_icon = "☠️"
+			t_desc = "Spring-loaded needle mechanism on treasure chest. Disarming clears the lock."
+			border_color = Color(0.7, 0.3, 0.9, 0.9)
+
+		var card = PanelContainer.new()
+		card.custom_minimum_size = Vector2(430, 110)
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+		var csb = StyleBoxFlat.new()
+		csb.set_corner_radius_all(6)
+		csb.bg_color = Color(0.08, 0.11, 0.16, 0.95)
+		csb.border_color = border_color
+		csb.set_border_width_all(1)
+		card.add_theme_stylebox_override("panel", csb)
+
+		var marg = MarginContainer.new()
+		marg.add_theme_constant_override("margin_left", 12)
+		marg.add_theme_constant_override("margin_top", 10)
+		marg.add_theme_constant_override("margin_right", 12)
+		marg.add_theme_constant_override("margin_bottom", 10)
+		card.add_child(marg)
+
+		var vbox = VBoxContainer.new()
+		vbox.add_theme_constant_override("separation", 6)
+		marg.add_child(vbox)
+
+		# Row 1: Header
+		var hrow = HBoxContainer.new()
+		var nlbl = Label.new()
+		nlbl.text = "%s %s at (%d, %d)" % [t_icon, t_name, tx, ty]
+		nlbl.add_theme_font_size_override("font_size", 14)
+		nlbl.add_theme_color_override("font_color", Color(1.0, 0.95, 0.85, 1.0))
+		nlbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hrow.add_child(nlbl)
+
+		var badge = Label.new()
+		badge.text = "[DETECTED]"
+		badge.add_theme_color_override("font_color", Color(1.0, 0.75, 0.2, 1.0))
+		badge.add_theme_font_size_override("font_size", 11)
+		hrow.add_child(badge)
+		vbox.add_child(hrow)
+
+		# Row 2: Description
+		var dlbl = Label.new()
+		dlbl.text = t_desc
+		dlbl.add_theme_font_size_override("font_size", 11)
+		dlbl.add_theme_color_override("font_color", Color(0.78, 0.82, 0.9, 0.9))
+		dlbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		vbox.add_child(dlbl)
+
+		# Row 3: Disarm Button
+		var btn_row = HBoxContainer.new()
+		var dbtn = Button.new()
+		dbtn.text = "🔧 Disarm %s (%s)" % [t_name, str(hero.get("name"))]
+		dbtn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		dbtn.disabled = has_acted_this_turn or not can_dis
+		var cur_tr_id = tr_id
+		dbtn.pressed.connect(func():
+			close_disarm_modal()
+			disarm_trap(cur_tr_id)
+		)
+		btn_row.add_child(dbtn)
+		vbox.add_child(btn_row)
+
+		disarm_trap_grid.add_child(card)
+
 func get_next_ai_step_command() -> Dictionary:
 	var next_step = auto_play_step + 1
 	var hero = get_active_hero()
@@ -2169,7 +2393,7 @@ func move_hero(target_pos: Vector2i) -> bool:
 		for tr in traps:
 			var tx = int(tr.get("x", tr.get("position", [0, 0])[0]))
 			var ty = int(tr.get("y", tr.get("position", [0, 0])[1]))
-			if Vector2i(tx, ty) == step_tile and not tr.get("disarmed", false):
+			if Vector2i(tx, ty) == step_tile and not tr.get("disarmed", false) and not tr.get("spent", false):
 				sprung_trap = tr
 				final_pos = step_tile
 				actual_cost = step_idx
@@ -2188,13 +2412,69 @@ func move_hero(target_pos: Vector2i) -> bool:
 
 	if not sprung_trap.is_empty():
 		sprung_trap["detected"] = true
+		sprung_trap["sprung"] = true
 		movement_remaining = 0 # Stepping into a trap ends remaining movement
-		var dmg = int(sprung_trap.get("damageDice", 1))
-		hero["current_bp"] = maxi(0, hero.get("current_bp", 1) - dmg)
-		_log("[TRAP] Trap sprung at (%d, %d)! %s suffers %d damage (Remaining BP: %d). Movement halts!" % [
-			final_pos.x, final_pos.y, hero.get("name"), dmg, hero.get("current_bp")
-		])
-		spawn_floating_text(final_pos, "-%d HP TRAP" % dmg, Color(1.0, 0.2, 0.2), 1.5)
+		var t_type = str(sprung_trap.get("type", sprung_trap.get("trapType", "pit"))).to_lower()
+
+		if "spear" in t_type:
+			# Spear Trap: Rolls 1 combat die. Skull = 1 damage, Shield = 0 damage (dodged).
+			# Trap is spent and square becomes safe!
+			sprung_trap["spent"] = true
+			var roll_skull = (randi() % 2 == 0)
+			var base_dmg = int(sprung_trap.get("damageDice", 1))
+			var dmg = base_dmg if roll_skull else 0
+			if dmg > 0:
+				hero["current_bp"] = maxi(0, hero.get("current_bp", 1) - dmg)
+				_log("[TRAP] 🔺 Spear trap springs at (%d, %d)! %s suffers %d damage (Remaining BP: %d). The spears are now spent and the tile is safe." % [
+					final_pos.x, final_pos.y, hero.get("name"), dmg, hero.get("current_bp")
+				])
+				spawn_floating_text(final_pos, "-%d HP SPEAR TRAP" % dmg, Color(1.0, 0.25, 0.2), 1.6)
+			else:
+				_log("[TRAP] 🔺 Spear trap springs at (%d, %d)! %s swiftly dodges the spears (0 damage)! The spears are now spent and the tile is safe." % [
+					final_pos.x, final_pos.y, hero.get("name")
+				])
+				spawn_floating_text(final_pos, "0 DMG DODGED!", Color(0.2, 0.9, 0.4), 1.6)
+
+		elif "falling" in t_type or "boulder" in t_type or "rock" in t_type:
+			# Falling Block Trap: drops rubble / solid masonry block on the tile!
+			var num_dice = int(sprung_trap.get("damageDice", 3))
+			var skulls = 0
+			for _d in range(num_dice):
+				if randi() % 2 == 0:
+					skulls += 1
+			var dmg = maxi(1, skulls)
+			hero["current_bp"] = maxi(0, hero.get("current_bp", 1) - dmg)
+
+			# Hero pushed back to safe entry tile along path before falling block!
+			var trap_tile = final_pos
+			var safe_pos = path[maxi(0, actual_cost - 1)]
+			hero["grid_pos"] = safe_pos
+			final_pos = safe_pos
+
+			# Permanently place a wall block at the trap tile!
+			wall_blocks.append({
+				"x": trap_tile.x,
+				"y": trap_tile.y,
+				"type": "falling-block",
+				"width": 1,
+				"height": 1
+			})
+			sprung_trap["blocked"] = true
+			_log("[TRAP] 🪨 FALLING BLOCK TRAP! Rubble crashes down at (%d, %d)! %s suffers %d damage (Remaining BP: %d). The path is permanently blocked by fallen rock!" % [
+				trap_tile.x, trap_tile.y, hero.get("name"), dmg, hero.get("current_bp")
+			])
+			spawn_floating_text(trap_tile, "FALLEN BLOCK!", Color(0.9, 0.6, 0.1), 1.8)
+			if dmg > 0:
+				spawn_floating_text(safe_pos, "-%d HP" % dmg, Color(1.0, 0.2, 0.2), 1.6)
+
+		else:
+			# Pit Trap: 1 BP damage with NO defense roll, movement ends, cannot be disarmed once sprung
+			var dmg = int(sprung_trap.get("damageDice", 1))
+			hero["current_bp"] = maxi(0, hero.get("current_bp", 1) - dmg)
+			_log("[TRAP] 🕳️ Pit trap sprung at (%d, %d)! %s plunges into the pit and suffers %d damage (Remaining BP: %d). Movement halts!" % [
+				final_pos.x, final_pos.y, hero.get("name"), dmg, hero.get("current_bp")
+			])
+			spawn_floating_text(final_pos, "-%d HP PIT TRAP" % dmg, Color(1.0, 0.2, 0.2), 1.5)
 	else:
 		movement_remaining = maxi(0, movement_remaining - actual_cost)
 
@@ -3158,6 +3438,42 @@ func search_room() -> Dictionary:
 		_log("[ACTION] %s has already taken an action this turn!" % hero.get("name", "Hero"))
 		return { "success": false, "error": "Already acted this turn" }
 
+	var h_pos = hero.get("grid_pos", Vector2i(-1, -1))
+	var h_room = _get_room_at(h_pos)
+	var r_id = str(h_room.get("id", "")) if not h_room.is_empty() else ""
+
+	# Check for chest/furniture traps in this room
+	var trapped_chest: Dictionary = {}
+	for tr in traps:
+		var t_type = str(tr.get("type", tr.get("trapType", ""))).to_lower()
+		if "chest" in t_type or "furniture" in t_type:
+			var tx = int(tr.get("x", tr.get("position", [0, 0])[0]))
+			var ty = int(tr.get("y", tr.get("position", [0, 0])[1]))
+			var t_room = str(_get_room_at(Vector2i(tx, ty)).get("id", ""))
+			var matches_room = (r_id != "" and t_room == r_id) or (abs(tx - h_pos.x) + abs(ty - h_pos.y) <= 4)
+			if matches_room and not tr.get("disarmed", false) and not tr.get("sprung", false):
+				trapped_chest = tr
+				break
+
+	if not trapped_chest.is_empty():
+		if not trapped_chest.get("detected", false):
+			# Chest trap springs! Poison needle / gas deals damage!
+			trapped_chest["sprung"] = true
+			trapped_chest["detected"] = true
+			var dmg = int(trapped_chest.get("damageDice", 2))
+			hero["current_bp"] = maxi(0, hero.get("current_bp", 1) - dmg)
+			_log("[TRAP] ☠️ CHEST TRAP SPRUNG! A poison needle fires from the locked chest! %s suffers %d damage (Remaining BP: %d)!" % [
+				hero.get("name"), dmg, hero.get("current_bp")
+			])
+			spawn_floating_text(h_pos, "-%d HP POISON NEEDLE" % dmg, Color(0.85, 0.25, 0.85), 1.8)
+			_conclude_action_turn_state()
+			_update_ui()
+			queue_redraw_all()
+			return { "success": true, "trapTriggered": true, "damage": dmg, "goldFound": 0 }
+		else:
+			_log("[WARNING] The chest in this room has a detected trap! Disarm it before searching for treasure.")
+			return { "success": false, "error": "Trapped chest detected. Disarm it first!" }
+
 	var found_gold = 50
 	hero["gold"] = hero.get("gold", 0) + found_gold
 	_log("[TREASURE] %s searches room for treasure: Discovered a chest with %d Gold Coins! Total Gold: %d" % [
@@ -3188,6 +3504,7 @@ func search_traps() -> Dictionary:
 			if _get_room_at(Vector2i(tx, ty)).get("id", "") == r_id:
 				tr["detected"] = true
 				found_traps.append(str(tr.get("id", "trap")))
+				spawn_floating_text(Vector2i(tx, ty), "⚠️ TRAP DETECTED", Color(1.0, 0.8, 0.2), 1.6)
 	else:
 		for tr in traps:
 			var tx = int(tr.get("x", tr.get("position", [0, 0])[0]))
@@ -3196,6 +3513,7 @@ func search_traps() -> Dictionary:
 			if abs(t_pos.x - h_pos.x) + abs(t_pos.y - h_pos.y) <= 4:
 				tr["detected"] = true
 				found_traps.append(str(tr.get("id", "trap")))
+				spawn_floating_text(t_pos, "⚠️ TRAP DETECTED", Color(1.0, 0.8, 0.2), 1.6)
 
 	_conclude_action_turn_state()
 
@@ -3216,26 +3534,41 @@ func disarm_trap(trap_id: String) -> Dictionary:
 
 	var h_pos = hero.get("grid_pos", Vector2i(-1, -1))
 	var target_trap: Dictionary = {}
-	for tr in traps:
-		if str(tr.get("id")) == trap_id:
-			target_trap = tr
-			break
+	if trap_id != "":
+		for tr in traps:
+			if str(tr.get("id")) == trap_id:
+				target_trap = tr
+				break
 	if target_trap.is_empty():
 		for tr in traps:
 			var tx = int(tr.get("x", tr.get("position", [0, 0])[0]))
 			var ty = int(tr.get("y", tr.get("position", [0, 0])[1]))
 			if abs(tx - h_pos.x) + abs(ty - h_pos.y) <= 1:
-				target_trap = tr
-				break
+				if not tr.get("disarmed", false) and not tr.get("sprung", false):
+					target_trap = tr
+					break
 	if target_trap.is_empty():
 		return { "success": false, "error": "No trap found with id: " + trap_id }
+
+	if target_trap.get("sprung", false) or target_trap.get("is_sprung", false):
+		_log("[DISARM] The %s is already sprung and cannot be disarmed!" % str(target_trap.get("type", "trap")))
+		return { "success": false, "error": "Trap is already sprung and cannot be disarmed" }
+
+	var disarm_check = can_hero_disarm(hero)
+	if not disarm_check.get("can_disarm", false):
+		_log("[DISARM] %s cannot disarm traps without a Tool Kit! (Only the Dwarf has innate disarm mastery)." % hero.get("name"))
+		return { "success": false, "error": "Requires Tool Kit or Dwarf to disarm" }
 
 	target_trap["detected"] = true
 	target_trap["disarmed"] = true
 	_conclude_action_turn_state()
 
-	_log("[DISARM] %s disarms the %s at (%d, %d) safely!" % [
-		hero.get("name"), target_trap.get("type", target_trap.get("trapType", "trap")), target_trap.get("x", 0), target_trap.get("y", 0)
+	var tx = int(target_trap.get("x", target_trap.get("position", [0, 0])[0]))
+	var ty = int(target_trap.get("y", target_trap.get("position", [0, 0])[1]))
+	spawn_floating_text(Vector2i(tx, ty), "TRAP DISARMED!", Color(0.2, 0.9, 0.5), 1.6)
+
+	_log("[DISARM] 🔧 %s disarms the %s at (%d, %d) safely!" % [
+		hero.get("name"), target_trap.get("type", target_trap.get("trapType", "trap")), tx, ty
 	])
 	_update_ui()
 	queue_redraw_all()
@@ -3431,6 +3764,10 @@ func _update_ui() -> void:
 			btn_use_item.visible = false
 		if btn_search:
 			btn_search.visible = false
+		if btn_search_traps:
+			btn_search_traps.visible = false
+		if btn_disarm_trap:
+			btn_disarm_trap.visible = false
 		if btn_end_turn:
 			btn_end_turn.visible = true
 			btn_end_turn.text = "End GM Turn"
@@ -3450,6 +3787,10 @@ func _update_ui() -> void:
 			btn_use_item.visible = false
 		if btn_search:
 			btn_search.visible = false
+		if btn_search_traps:
+			btn_search_traps.visible = false
+		if btn_disarm_trap:
+			btn_disarm_trap.visible = false
 		if btn_end_turn:
 			btn_end_turn.visible = false
 		if dice_label:
@@ -3479,6 +3820,21 @@ func _update_ui() -> void:
 			else:
 				btn_use_item.visible = false
 
+		# Trap Action Buttons
+		var can_search_t = can_search_for_traps()
+		if btn_search_traps:
+			btn_search_traps.visible = true
+			btn_search_traps.disabled = has_acted_this_turn or not can_search_t
+			btn_search_traps.text = "⚠️ Traps"
+
+		var adj_traps = get_adjacent_detected_traps()
+		var disarm_check = can_hero_disarm(hero)
+		var can_dis = (adj_traps.size() > 0) and not has_acted_this_turn and disarm_check.get("can_disarm", false)
+		if btn_disarm_trap:
+			btn_disarm_trap.visible = true
+			btn_disarm_trap.disabled = not can_dis
+			btn_disarm_trap.text = "🔧 Disarm (%d)" % adj_traps.size() if adj_traps.size() > 0 else "🔧 Disarm"
+
 		var adj_monsters = get_adjacent_monsters()
 		var adj_doors = get_adjacent_closed_doors()
 		var in_room_clean = can_search_room()
@@ -3494,6 +3850,10 @@ func _update_ui() -> void:
 				btn_attack.visible = false
 			if btn_search:
 				btn_search.visible = false
+			if btn_search_traps:
+				btn_search_traps.disabled = true
+			if btn_disarm_trap:
+				btn_disarm_trap.disabled = true
 			if btn_end_turn:
 				btn_end_turn.visible = true
 				btn_end_turn.text = "End Turn"
@@ -4119,6 +4479,34 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 			inv_row.add_child(btn_inv)
 		vbox.add_child(inv_row)
 
+	# Row 7: Trap Disarming Capability
+	var disarm_check = can_hero_disarm(h)
+	if disarm_check.get("can_disarm", false):
+		var trap_row = HBoxContainer.new()
+		trap_row.add_theme_constant_override("separation", 4)
+		var trap_lbl = Label.new()
+		if disarm_check.get("is_dwarf", false):
+			trap_lbl.text = "Trap Mastery: Innate"
+			trap_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.4, 0.95))
+		else:
+			trap_lbl.text = "Trap Disarm: Tool Kit"
+			trap_lbl.add_theme_color_override("font_color", Color(0.4, 0.9, 0.7, 0.95))
+		trap_lbl.add_theme_font_size_override("font_size", 9)
+		trap_lbl.clip_text = true
+		trap_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		trap_row.add_child(trap_lbl)
+
+		if is_active:
+			var btn_disarm = Button.new()
+			btn_disarm.text = "Disarm"
+			btn_disarm.add_theme_font_size_override("font_size", 9)
+			btn_disarm.custom_minimum_size = Vector2(42, 16)
+			var adj_traps = get_adjacent_detected_traps()
+			btn_disarm.disabled = has_acted_this_turn or adj_traps.is_empty()
+			btn_disarm.pressed.connect(_on_disarm_trap_button_pressed)
+			trap_row.add_child(btn_disarm)
+		vbox.add_child(trap_row)
+
 	return card
 
 func _create_enemy_card(m: Dictionary, is_visible: bool) -> PanelContainer:
@@ -4456,6 +4844,9 @@ func get_telemetry_state() -> Dictionary:
 		tc["type"] = str(tr.get("type", tr.get("trapType", "pit")))
 		tc["detected"] = bool(tr.get("detected", false) or tr.get("is_revealed", false))
 		tc["disarmed"] = bool(tr.get("disarmed", false))
+		tc["sprung"] = bool(tr.get("sprung", false) or tr.get("is_sprung", false))
+		tc["spent"] = bool(tr.get("spent", false))
+		tc["blocked"] = bool(tr.get("blocked", false))
 		traps_copy.append(tc)
 
 	var furniture_copy: Array = []
@@ -4515,6 +4906,8 @@ func get_telemetry_state() -> Dictionary:
 			"cast_spell": { "visible": btn_cast_spell.visible, "disabled": btn_cast_spell.disabled } if btn_cast_spell else {},
 			"use_item": { "visible": btn_use_item.visible, "disabled": btn_use_item.disabled } if btn_use_item else {},
 			"search": { "visible": btn_search.visible, "disabled": btn_search.disabled } if btn_search else {},
+			"search_traps": { "visible": btn_search_traps.visible, "disabled": btn_search_traps.disabled } if btn_search_traps else {},
+			"disarm_trap": { "visible": btn_disarm_trap.visible, "disabled": btn_disarm_trap.disabled } if btn_disarm_trap else {},
 			"end_turn": { "visible": btn_end_turn.visible, "disabled": btn_end_turn.disabled } if btn_end_turn else {},
 			"ai_step": { "visible": btn_ai_step.visible, "disabled": btn_ai_step.disabled } if btn_ai_step else {}
 		},
@@ -4523,6 +4916,7 @@ func get_telemetry_state() -> Dictionary:
 			"elfSpellSelectModalVisible": elf_spell_modal.visible if elf_spell_modal else false,
 			"spellCastModalVisible": spell_cast_modal.visible if spell_cast_modal else false,
 			"itemUseModalVisible": item_use_modal.visible if item_use_modal else false,
+			"disarmTrapModalVisible": disarm_trap_modal.visible if disarm_trap_modal else false,
 			"stepBadge": ai_modal_step_badge.text if (ai_confirm_modal and ai_confirm_modal.visible and ai_modal_step_badge) else "",
 			"commandText": ai_modal_cmd_text.text if (ai_confirm_modal and ai_confirm_modal.visible and ai_modal_cmd_text) else "",
 			"actionTitle": ai_modal_action_title.text if (ai_confirm_modal and ai_confirm_modal.visible and ai_modal_action_title) else ""
@@ -4557,6 +4951,7 @@ func get_telemetry_state() -> Dictionary:
 		"elfSpellModalVisible": elf_spell_modal.visible if elf_spell_modal else false,
 		"spellPanelOpen": spell_cast_modal.visible if spell_cast_modal else false,
 		"itemPanelOpen": item_use_modal.visible if item_use_modal else false,
+		"disarmModalOpen": disarm_trap_modal.visible if disarm_trap_modal else false,
 		"activeHeroSpells": h_act.get("spells", []),
 		"activeHeroInventory": h_act.get("inventory", []),
 		"spellAllocation": {
@@ -4854,6 +5249,12 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 		"close_item_panel", "close_item_modal":
 			close_item_use_modal()
 			return { "success": true, "item_panel_open": false }
+		"open_disarm_modal", "open_disarm_panel":
+			show_disarm_modal()
+			return { "success": true, "modal_visible": true, "disarm_modal_open": true }
+		"close_disarm_modal", "close_disarm_panel":
+			close_disarm_modal()
+			return { "success": true, "modal_visible": false, "disarm_modal_open": false }
 		"equip", "equip_item":
 			var h_id = str(action_data.get("heroId", action_data.get("hero", get_active_hero().get("id", ""))))
 			var item_id = str(action_data.get("itemId", action_data.get("item", "")))
@@ -5043,23 +5444,81 @@ func _draw_board(canvas: CanvasItem) -> void:
 			canvas.draw_line(block_rect.position + Vector2(4, 4), block_rect.end - Vector2(4, 4), Color(0.35, 0.40, 0.48, 0.6), 1.5)
 			canvas.draw_line(Vector2(block_rect.end.x - 4, block_rect.position.y + 4), Vector2(block_rect.position.x + 4, block_rect.end.y - 4), Color(0.35, 0.40, 0.48, 0.6), 1.5)
 
-	# Draw Traps (visible in GM mode or if detected/revealed)
+	# Draw Traps (visible in GM mode or if detected/revealed/sprung/disarmed/spent/blocked)
 	for tr in traps:
-		var r_id = tr.get("roomId", "")
-		if is_gm_role() or tr.get("detected", false) or tr.get("is_revealed", false):
+		var is_gm = is_gm_role()
+		var is_det = bool(tr.get("detected", false) or tr.get("is_revealed", false))
+		var is_dis = bool(tr.get("disarmed", false))
+		var is_spr = bool(tr.get("sprung", false) or tr.get("is_sprung", false))
+		var is_spn = bool(tr.get("spent", false))
+		var is_blk = bool(tr.get("blocked", false))
+
+		if is_gm or is_det or is_dis or is_spr or is_spn or is_blk:
 			var px = tr.get("x", tr.get("position", [0, 0])[0])
 			var py = tr.get("y", tr.get("position", [0, 0])[1])
 			var w = int(tr.get("width", 1))
 			var h = int(tr.get("height", 1))
-			var t_type = str(tr.get("type", tr.get("trapType", "pit")))
+			var t_type = str(tr.get("type", tr.get("trapType", "pit"))).to_lower()
 			var trap_rect = Rect2(board_offset + Vector2(px * tile_size + 3, py * tile_size + 3), Vector2(w * tile_size - 6, h * tile_size - 6))
-			if "boulder" in t_type:
-				canvas.draw_circle(trap_rect.get_center(), tile_size * 0.42 * min(w, h), Color(0.35, 0.38, 0.42, 0.95))
-				canvas.draw_arc(trap_rect.get_center(), tile_size * 0.42 * min(w, h), 0, TAU, 32, Color(0.65, 0.70, 0.75), 2.0)
+
+			if is_dis:
+				# Disarmed trap: safe bridged floor / green border
+				canvas.draw_rect(trap_rect, Color(0.12, 0.28, 0.16, 0.75))
+				canvas.draw_rect(trap_rect, Color(0.25, 0.85, 0.45, 0.9), false, 1.5)
+				# Crossbar planks
+				canvas.draw_line(trap_rect.position + Vector2(2, 6), Vector2(trap_rect.end.x - 2, trap_rect.position.y + 6), Color(0.35, 0.75, 0.45, 0.5), 1.0)
+				canvas.draw_line(Vector2(trap_rect.position.x + 2, trap_rect.end.y - 6), trap_rect.end - Vector2(2, 6), Color(0.35, 0.75, 0.45, 0.5), 1.0)
+				canvas.draw_string(ThemeDB.fallback_font, trap_rect.get_center() + Vector2(-12, 4), "SAFE", HORIZONTAL_ALIGNMENT_CENTER, -1, 9, Color(0.4, 1.0, 0.6, 0.95))
+			elif "spear" in t_type:
+				if is_spn or is_spr:
+					# Spent spear trap: grey safe plate
+					canvas.draw_rect(trap_rect, Color(0.22, 0.24, 0.28, 0.75))
+					canvas.draw_rect(trap_rect, Color(0.55, 0.60, 0.68, 0.75), false, 1.5)
+					canvas.draw_string(ThemeDB.fallback_font, trap_rect.get_center() + Vector2(-15, 4), "SPENT", HORIZONTAL_ALIGNMENT_CENTER, -1, 9, Color(0.7, 0.75, 0.82, 0.9))
+				elif is_det:
+					# Detected spear trap: amber hazard with spikes glyph
+					canvas.draw_rect(trap_rect, Color(0.65, 0.35, 0.08, 0.7))
+					canvas.draw_rect(trap_rect, Color(1.0, 0.55, 0.15, 0.95), false, 1.5)
+					var c = trap_rect.get_center()
+					canvas.draw_line(c + Vector2(-6, 6), c + Vector2(-6, -4), Color(1.0, 0.8, 0.2, 0.9), 1.5)
+					canvas.draw_line(c + Vector2(0, 6), c + Vector2(0, -6), Color(1.0, 0.8, 0.2, 0.9), 1.5)
+					canvas.draw_line(c + Vector2(6, 6), c + Vector2(6, -4), Color(1.0, 0.8, 0.2, 0.9), 1.5)
+					canvas.draw_string(ThemeDB.fallback_font, trap_rect.get_center() + Vector2(-16, 12), "SPEAR", HORIZONTAL_ALIGNMENT_CENTER, -1, 8, Color(1.0, 0.85, 0.5, 0.95))
+				elif is_gm:
+					canvas.draw_rect(trap_rect, Color(0.5, 0.1, 0.4, 0.4))
+					canvas.draw_rect(trap_rect, Color(0.85, 0.3, 0.85, 0.85), false, 1.5)
+					canvas.draw_string(ThemeDB.fallback_font, trap_rect.get_center() + Vector2(-22, 4), "GM: SPEAR", HORIZONTAL_ALIGNMENT_CENTER, -1, 8, Color(0.9, 0.6, 1.0, 0.9))
+			elif "falling" in t_type or "boulder" in t_type or "rock" in t_type:
+				if is_blk or is_spr:
+					# Sprung falling block: rubble stone
+					canvas.draw_rect(trap_rect, Color(0.18, 0.20, 0.24, 0.95))
+					canvas.draw_rect(trap_rect, Color(0.55, 0.60, 0.68, 1.0), false, 2.0)
+					canvas.draw_string(ThemeDB.fallback_font, trap_rect.get_center() + Vector2(-16, 4), "BLOCK", HORIZONTAL_ALIGNMENT_CENTER, -1, 9, Color(0.85, 0.88, 0.95, 0.9))
+				elif is_det:
+					canvas.draw_circle(trap_rect.get_center(), tile_size * 0.40 * min(w, h), Color(0.45, 0.28, 0.15, 0.85))
+					canvas.draw_arc(trap_rect.get_center(), tile_size * 0.40 * min(w, h), 0, TAU, 32, Color(0.95, 0.55, 0.2, 0.95), 2.0)
+					canvas.draw_string(ThemeDB.fallback_font, trap_rect.get_center() + Vector2(-16, 4), "BLOCK", HORIZONTAL_ALIGNMENT_CENTER, -1, 9, Color(1.0, 0.85, 0.6, 0.95))
+				elif is_gm:
+					canvas.draw_rect(trap_rect, Color(0.5, 0.1, 0.4, 0.4))
+					canvas.draw_rect(trap_rect, Color(0.85, 0.3, 0.85, 0.85), false, 1.5)
+					canvas.draw_string(ThemeDB.fallback_font, trap_rect.get_center() + Vector2(-22, 4), "GM: BLOCK", HORIZONTAL_ALIGNMENT_CENTER, -1, 8, Color(0.9, 0.6, 1.0, 0.9))
 			else:
-				canvas.draw_rect(trap_rect, Color(0.6, 0.1, 0.1, 0.6))
-				canvas.draw_rect(trap_rect, Color(0.9, 0.2, 0.2, 0.9), false, 1.5)
-				canvas.draw_string(ThemeDB.fallback_font, trap_rect.get_center() + Vector2(-12, 4), "TRAP", HORIZONTAL_ALIGNMENT_CENTER, -1, 9, Color(1, 0.8, 0.8, 0.9))
+				# Pit Trap
+				if is_spr:
+					# Sprung Pit Trap: Black abyss hole with red inner outline
+					canvas.draw_rect(trap_rect, Color(0.02, 0.02, 0.03, 0.98))
+					canvas.draw_rect(trap_rect, Color(0.85, 0.15, 0.15, 0.95), false, 2.0)
+					canvas.draw_line(trap_rect.position + Vector2(4, 4), trap_rect.end - Vector2(4, 4), Color(0.2, 0.05, 0.05, 0.8), 1.0)
+					canvas.draw_string(ThemeDB.fallback_font, trap_rect.get_center() + Vector2(-10, 4), "PIT", HORIZONTAL_ALIGNMENT_CENTER, -1, 9, Color(1.0, 0.3, 0.3, 0.95))
+				elif is_det:
+					# Detected Pit Trap: Hazard warning
+					canvas.draw_rect(trap_rect, Color(0.65, 0.12, 0.12, 0.7))
+					canvas.draw_rect(trap_rect, Color(1.0, 0.3, 0.2, 0.95), false, 1.5)
+					canvas.draw_string(ThemeDB.fallback_font, trap_rect.get_center() + Vector2(-10, 4), "PIT", HORIZONTAL_ALIGNMENT_CENTER, -1, 9, Color(1.0, 0.85, 0.8, 0.95))
+				elif is_gm:
+					canvas.draw_rect(trap_rect, Color(0.5, 0.1, 0.4, 0.4))
+					canvas.draw_rect(trap_rect, Color(0.85, 0.3, 0.85, 0.85), false, 1.5)
+					canvas.draw_string(ThemeDB.fallback_font, trap_rect.get_center() + Vector2(-18, 4), "GM: PIT", HORIZONTAL_ALIGNMENT_CENTER, -1, 8, Color(0.9, 0.6, 1.0, 0.9))
 
 	# Draw Furniture
 	for f in furniture:
@@ -5123,6 +5582,32 @@ func _draw_board(canvas: CanvasItem) -> void:
 				canvas.draw_rect(f_rect, Color(0.45, 0.32, 0.08, 0.95))
 				canvas.draw_rect(f_rect, Color(0.9, 0.75, 0.2, 1.0), false, 1.5)
 				label_text = "CHEST"
+				# Check if this chest is trapped
+				var is_trapped = bool(f.get("trapped", false))
+				var is_dis = bool(f.get("disarmed", false))
+				var is_det = bool(f.get("detected", false))
+				for tr in traps:
+					var tx = int(tr.get("x", tr.get("position", [0, 0])[0]))
+					var ty = int(tr.get("y", tr.get("position", [0, 0])[1]))
+					if tx == px and ty == py:
+						var tt = str(tr.get("type", tr.get("trapType", ""))).to_lower()
+						if "chest" in tt or "furniture" in tt:
+							is_trapped = true
+							if tr.get("disarmed", false): is_dis = true
+							if tr.get("detected", false): is_det = true
+				if is_trapped:
+					if is_dis:
+						var b_rect = Rect2(f_rect.end.x - 22, f_rect.position.y + 2, 20, 9)
+						canvas.draw_rect(b_rect, Color(0.12, 0.55, 0.22, 0.95))
+						canvas.draw_string(ThemeDB.fallback_font, b_rect.position + Vector2(2, 7), "SAFE", HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color(0.8, 1.0, 0.8))
+					elif is_det:
+						var b_rect = Rect2(f_rect.end.x - 22, f_rect.position.y + 2, 20, 9)
+						canvas.draw_rect(b_rect, Color(0.85, 0.2, 0.15, 0.95))
+						canvas.draw_string(ThemeDB.fallback_font, b_rect.position + Vector2(2, 7), "TRAP", HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color(1.0, 0.95, 0.9))
+					elif is_gm_role():
+						var b_rect = Rect2(f_rect.end.x - 26, f_rect.position.y + 2, 24, 9)
+						canvas.draw_rect(b_rect, Color(0.55, 0.15, 0.6, 0.95))
+						canvas.draw_string(ThemeDB.fallback_font, b_rect.position + Vector2(2, 7), "GM:T", HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color(1.0, 0.85, 1.0))
 			elif f_type == "weapons-rack" or f_type == "rack":
 				canvas.draw_rect(f_rect, Color(0.25, 0.25, 0.28, 0.95))
 				canvas.draw_rect(f_rect, Color(0.6, 0.6, 0.7, 1.0), false, 1.5)

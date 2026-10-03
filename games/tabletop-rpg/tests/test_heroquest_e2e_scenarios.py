@@ -1807,6 +1807,272 @@ class TestHeroQuestE2EScenarios(unittest.TestCase):
         self.assertEqual(barb_card.get("current_bp"), 7)
         self.assertNotIn("healing_potion", st_after_item.get("activeHeroInventory", []))
 
+    def test_51_heroquest_trap_types_mechanics(self):
+        """Scenario 51: HeroQuest Trap Types and Hazard Mechanics (Pit, Spear, Falling Block, Chest Trap)."""
+        bdd_scenario_header(51, "HeroQuest Trap Types & Hazard Mechanics")
+
+        # --- A. Pit Trap Mechanics ---
+        bdd_step("GIVEN", "Barbarian at (1, 1) with 5 movement; hidden Pit Trap placed at (2, 1)")
+        self.ai.reset_game()
+        self.ai.set_state(
+            activeHero="barbarian",
+            movementRemaining=5,
+            movementRolled=True,
+            turnState="moving",
+            hasActed=False,
+            heroes=[{"id": "barbarian", "grid_pos": [1, 1], "current_bp": 8, "bodyPoints": 8}],
+            traps=[{"id": "pit-trap-test", "x": 2, "y": 1, "type": "pit", "damageDice": 1, "detected": False, "disarmed": False, "sprung": False}]
+        )
+
+        bdd_step("WHEN", "Barbarian moves toward (3, 1), stepping directly into the Pit Trap")
+        res_pit = self.ai.move(3, 1)
+        st_pit = self.ai.get_state()
+        barb_pit = next((h for h in st_pit.get("heroes", []) if h.get("id") == "barbarian"), {})
+        pit_obj = next((t for t in st_pit.get("traps", []) if t.get("id") == "pit-trap-test"), {})
+
+        bdd_step("THEN", "Barbarian plunges into pit, takes 1 BP damage with no defense roll, movement drops to 0, and trap is sprung",
+                 assertions=[
+                     f"Move result: {res_pit.get('success')}",
+                     f"Barbarian position halted at [2, 1]: {barb_pit.get('grid_pos')}",
+                     f"Barbarian BP (8 -> 7): {barb_pit.get('current_bp')}",
+                     f"Movement remaining (5 -> 0): {st_pit.get('movementRemaining')}",
+                     f"Trap sprung: {pit_obj.get('sprung')}"
+                 ])
+        self.assertTrue(res_pit.get("success"))
+        self.assertEqual(barb_pit.get("grid_pos"), [2, 1])
+        self.assertEqual(barb_pit.get("current_bp"), 7)
+        self.assertEqual(st_pit.get("movementRemaining"), 0)
+        self.assertTrue(pit_obj.get("sprung"))
+
+        bdd_step("WHEN", "Attempting to disarm a sprung pit trap")
+        disarm_fail = self.ai.disarm_trap("pit-trap-test")
+        bdd_step("THEN", "Disarm fails because a sprung pit trap remains open and cannot be disarmed",
+                 assertions=[f"Disarm success: {disarm_fail.get('success')}", f"Error: {disarm_fail.get('error')}"])
+        self.assertFalse(disarm_fail.get("success"))
+        self.assertIn("already sprung", disarm_fail.get("error", ""))
+
+        # --- B. Spear Trap Mechanics ---
+        bdd_step("GIVEN", "Barbarian at (1, 1) with 5 movement; hidden Spear Trap placed at (2, 1)")
+        self.ai.reset_game()
+        self.ai.set_state(
+            activeHero="barbarian",
+            movementRemaining=5,
+            movementRolled=True,
+            turnState="moving",
+            hasActed=False,
+            heroes=[{"id": "barbarian", "grid_pos": [1, 1], "current_bp": 8, "bodyPoints": 8}],
+            traps=[{"id": "spear-trap-test", "x": 2, "y": 1, "type": "spear", "damageDice": 1, "detected": False, "disarmed": False, "spent": False, "sprung": False}]
+        )
+
+        bdd_step("WHEN", "Barbarian steps into the Spear Trap at (2, 1)")
+        res_spear = self.ai.move(3, 1)
+        st_spear = self.ai.get_state()
+        barb_spear = next((h for h in st_spear.get("heroes", []) if h.get("id") == "barbarian"), {})
+        spear_obj = next((t for t in st_spear.get("traps", []) if t.get("id") == "spear-trap-test"), {})
+
+        bdd_step("THEN", "Spear trap springs, halts movement, and becomes spent/safe",
+                 assertions=[
+                     f"Barbarian position at [2, 1]: {barb_spear.get('grid_pos')}",
+                     f"Spear trap spent: {spear_obj.get('spent')}",
+                     f"Spear trap sprung: {spear_obj.get('sprung')}",
+                     f"Movement remaining: {st_spear.get('movementRemaining')}"
+                 ])
+        self.assertEqual(barb_spear.get("grid_pos"), [2, 1])
+        self.assertTrue(spear_obj.get("spent"))
+        self.assertTrue(spear_obj.get("sprung"))
+        self.assertEqual(st_spear.get("movementRemaining"), 0)
+
+        bdd_step("WHEN", "Barbarian on subsequent turn moves past the spent spear trap tile to (3, 1)")
+        self.ai.set_state(movementRemaining=5, movementRolled=True, turnState="moving")
+        res_safe_move = self.ai.move(3, 1)
+        st_safe = self.ai.get_state()
+        barb_safe = next((h for h in st_safe.get("heroes", []) if h.get("id") == "barbarian"), {})
+        bdd_step("THEN", "Hero traverses spent spear trap safely without suffering damage",
+                 assertions=[f"Barbarian reached target [3, 1]: {barb_safe.get('grid_pos')}"])
+        self.assertTrue(res_safe_move.get("success"))
+        self.assertEqual(barb_safe.get("grid_pos"), [3, 1])
+
+        # --- C. Falling Block Trap Mechanics ---
+        bdd_step("GIVEN", "Barbarian at (1, 1) with 5 movement; hidden Falling Block Trap placed at (2, 1)")
+        self.ai.reset_game()
+        self.ai.set_state(
+            activeHero="barbarian",
+            movementRemaining=5,
+            movementRolled=True,
+            turnState="moving",
+            hasActed=False,
+            heroes=[{"id": "barbarian", "grid_pos": [1, 1], "current_bp": 8, "bodyPoints": 8}],
+            traps=[{"id": "falling-block-test", "x": 2, "y": 1, "type": "falling_block", "damageDice": 3, "detected": False, "disarmed": False, "sprung": False}]
+        )
+
+        bdd_step("WHEN", "Barbarian steps toward (2, 1), triggering falling block trap")
+        res_block = self.ai.move(2, 1)
+        st_block = self.ai.get_state()
+        barb_block = next((h for h in st_block.get("heroes", []) if h.get("id") == "barbarian"), {})
+        wall_blocks = st_block.get("wallBlocks", [])
+        block_trap_obj = next((t for t in st_block.get("traps", []) if t.get("id") == "falling-block-test"), {})
+
+        bdd_step("THEN", "Rubble crashes down, pushes hero back to safe preceding tile (1, 1), and places permanent masonry block at (2, 1)",
+                 assertions=[
+                     f"Hero pushed back to safe tile [1, 1]: {barb_block.get('grid_pos')}",
+                     f"Trap blocked flag: {block_trap_obj.get('blocked')}",
+                     f"Wall block added at [2, 1]: {any(wb.get('x') == 2 and wb.get('y') == 1 for wb in wall_blocks)}",
+                     f"Movement remaining: {st_block.get('movementRemaining')}"
+                 ])
+        self.assertEqual(barb_block.get("grid_pos"), [1, 1])
+        self.assertTrue(block_trap_obj.get("blocked"))
+        self.assertEqual(st_block.get("movementRemaining"), 0)
+        self.assertTrue(any(wb.get("x") == 2 and wb.get("y") == 1 for wb in wall_blocks))
+
+        # --- D. Chest / Furniture Trap Mechanics ---
+        bdd_step("GIVEN", "Hero inside crypt at (4, 3) with an undetected trapped treasure chest at (4, 4)")
+        self.ai.reset_game()
+        self.ai.set_state(
+            activeHero="barbarian",
+            hasActed=False,
+            revealedRooms=["room-nw-crypt"],
+            heroes=[{"id": "barbarian", "grid_pos": [4, 3], "current_bp": 8, "gold": 0}],
+            traps=[{"id": "chest-trap-test", "x": 4, "y": 4, "type": "chest_trap", "damageDice": 2, "detected": False, "disarmed": False, "sprung": False}]
+        )
+
+        bdd_step("WHEN", "Hero searches for treasure WITHOUT searching for traps first")
+        res_chest_trap = self.ai.search()
+        st_chest = self.ai.get_state()
+        barb_chest = next((h for h in st_chest.get("heroes", []) if h.get("id") == "barbarian"), {})
+
+        bdd_step("THEN", "Poison needle trap springs, inflicts 2 damage, awards 0 gold, and marks hasActed True",
+                 assertions=[
+                     f"Trap triggered: {res_chest_trap.get('trapTriggered')}",
+                     f"Damage dealt: {res_chest_trap.get('damage')}",
+                     f"Gold found: {res_chest_trap.get('goldFound')}",
+                     f"Barbarian BP: {barb_chest.get('current_bp')}/8",
+                     f"hasActed: {st_chest.get('hasActed')}"
+                 ])
+        self.assertTrue(res_chest_trap.get("trapTriggered"))
+        self.assertEqual(res_chest_trap.get("damage"), 2)
+        self.assertEqual(res_chest_trap.get("goldFound"), 0)
+        self.assertEqual(barb_chest.get("current_bp"), 6)
+        self.assertTrue(st_chest.get("hasActed"))
+
+    def test_52_dwarf_and_party_trap_hud_controls(self):
+        """Scenario 52: Dwarf Innate Disarm Mastery and Party Trap HUD Controls."""
+        bdd_scenario_header(52, "Dwarf Trap Mastery & Party Trap HUD Controls")
+
+        bdd_step("GIVEN", "Dwarf stands at (4, 3) adjacent to detected trap at (4, 4); Dwarf has no tool kit")
+        self.ai.reset_game()
+        self.ai.set_state(
+            activeHeroIndex=1,
+            activeHero="dwarf",
+            hasActed=False,
+            movementClosed=False,
+            revealedRooms=["room-nw-crypt"],
+            heroes=[{"id": "dwarf", "grid_pos": [4, 3], "inventory": ["shortsword"]}],
+            monsters=[
+                {"id": "mon-skel-1", "is_alive": False, "current_bp": 0, "roomId": "room-nw-crypt"},
+                {"id": "mon-skel-2", "is_alive": False, "current_bp": 0, "roomId": "room-nw-crypt"}
+            ],
+            traps=[{"id": "trap-dwarf-test", "x": 4, "y": 4, "type": "pit", "detected": True, "disarmed": False, "sprung": False}]
+        )
+
+        st_dwarf = self.ai.get_state()
+        btns_dwarf = st_dwarf.get("scene", {}).get("ui", {}).get("buttons", {})
+        dwarf_disarm_btn = btns_dwarf.get("disarm_trap", {})
+        dwarf_search_btn = btns_dwarf.get("search_traps", {})
+
+        bdd_step("THEN", "Dwarf HUD shows active and enabled 🔧 Disarm and ⚠️ Traps action buttons",
+                 assertions=[
+                     f"Disarm button visible: {dwarf_disarm_btn.get('visible')}",
+                     f"Disarm button disabled: {dwarf_disarm_btn.get('disabled')}",
+                     f"Search traps visible: {dwarf_search_btn.get('visible')}",
+                     f"Search traps disabled: {dwarf_search_btn.get('disabled')}"
+                 ])
+        self.assertTrue(dwarf_disarm_btn.get("visible"))
+        self.assertFalse(dwarf_disarm_btn.get("disabled"))
+        self.assertTrue(dwarf_search_btn.get("visible"))
+        self.assertFalse(dwarf_search_btn.get("disabled"))
+
+        bdd_step("WHEN", "Dwarf executes disarm without tool kit")
+        res_dwarf_dis = self.ai.disarm_trap("trap-dwarf-test")
+        st_after_dwarf = self.ai.get_state()
+        trap_after_dwarf = next((t for t in st_after_dwarf.get("traps", []) if t.get("id") == "trap-dwarf-test"), {})
+
+        bdd_step("THEN", "Dwarf's innate mastery successfully disarms the trap",
+                 assertions=[
+                     f"Disarm success: {res_dwarf_dis.get('success')}",
+                     f"Trap disarmed flag: {trap_after_dwarf.get('disarmed')}",
+                     f"hasActed: {st_after_dwarf.get('hasActed')}"
+                 ])
+        self.assertTrue(res_dwarf_dis.get("success"))
+        self.assertTrue(trap_after_dwarf.get("disarmed"))
+        self.assertTrue(st_after_dwarf.get("hasActed"))
+
+        # --- Non-Dwarf (Barbarian) Tool Kit Requirement ---
+        bdd_step("GIVEN", "Barbarian stands at (4, 3) adjacent to detected trap at (4, 4) WITHOUT a Tool Kit")
+        self.ai.set_state(
+            activeHeroIndex=0,
+            activeHero="barbarian",
+            hasActed=False,
+            movementClosed=False,
+            heroes=[{"id": "barbarian", "grid_pos": [4, 3], "inventory": ["broadsword"]}],
+            traps=[{"id": "trap-barb-test", "x": 4, "y": 4, "type": "pit", "detected": True, "disarmed": False, "sprung": False}]
+        )
+
+        st_barb_no_kit = self.ai.get_state()
+        barb_disarm_btn = st_barb_no_kit.get("scene", {}).get("ui", {}).get("buttons", {}).get("disarm_trap", {})
+        bdd_step("THEN", "Disarm button is disabled for Barbarian who lacks tool kit",
+                 assertions=[f"Disarm button disabled: {barb_disarm_btn.get('disabled')}"])
+        self.assertTrue(barb_disarm_btn.get("disabled"))
+
+        bdd_step("WHEN", "Barbarian attempts to disarm without a Tool Kit")
+        res_fail_kit = self.ai.disarm_trap("trap-barb-test")
+        bdd_step("THEN", "Disarm fails with requirement notice",
+                 assertions=[f"Success: {res_fail_kit.get('success')}", f"Error: {res_fail_kit.get('error')}"])
+        self.assertFalse(res_fail_kit.get("success"))
+        self.assertIn("Requires Tool Kit or Dwarf", res_fail_kit.get("error", ""))
+
+        bdd_step("WHEN", "Barbarian acquires a Tool Kit ('tool_kit') in inventory")
+        self.ai.set_state(heroes=[{"id": "barbarian", "inventory": ["broadsword", "tool_kit"]}])
+        st_barb_kit = self.ai.get_state()
+        barb_disarm_btn_ready = st_barb_kit.get("scene", {}).get("ui", {}).get("buttons", {}).get("disarm_trap", {})
+        bdd_step("THEN", "Disarm button becomes enabled for Barbarian",
+                 assertions=[f"Disarm button disabled: {barb_disarm_btn_ready.get('disabled')}"])
+        self.assertFalse(barb_disarm_btn_ready.get("disabled"))
+
+        bdd_step("WHEN", "Barbarian uses Tool Kit to disarm trap")
+        res_barb_dis = self.ai.disarm_trap("trap-barb-test")
+        st_after_barb = self.ai.get_state()
+        trap_after_barb = next((t for t in st_after_barb.get("traps", []) if t.get("id") == "trap-barb-test"), {})
+        bdd_step("THEN", "Barbarian successfully disarms trap using tool kit",
+                 assertions=[
+                     f"Disarm success: {res_barb_dis.get('success')}",
+                     f"Trap disarmed flag: {trap_after_barb.get('disarmed')}"
+                 ])
+        self.assertTrue(res_barb_dis.get("success"))
+        self.assertTrue(trap_after_barb.get("disarmed"))
+
+        # --- HUD Disarm Modal Controls ---
+        bdd_step("WHEN", "Player opens the HUD Disarm Trap modal")
+        self.ai.open_disarm_modal()
+        st_modal = self.ai.get_state()
+        bdd_step("THEN", "Disarm modal is opened with disarmModalOpen and disarmTrapModalVisible set to True",
+                 assertions=[
+                     f"disarmModalOpen: {st_modal.get('disarmModalOpen')}",
+                     f"disarmTrapModalVisible: {st_modal.get('scene', {}).get('ui', {}).get('modal', {}).get('disarmTrapModalVisible')}"
+                 ])
+        self.assertTrue(st_modal.get("disarmModalOpen"))
+        self.assertTrue(st_modal.get("scene", {}).get("ui", {}).get("modal", {}).get("disarmTrapModalVisible"))
+
+        bdd_step("WHEN", "Player closes the HUD Disarm Trap modal")
+        self.ai.close_disarm_modal()
+        st_modal_closed = self.ai.get_state()
+        bdd_step("THEN", "Disarm modal closes successfully",
+                 assertions=[
+                     f"disarmModalOpen: {st_modal_closed.get('disarmModalOpen')}",
+                     f"disarmTrapModalVisible: {st_modal_closed.get('scene', {}).get('ui', {}).get('modal', {}).get('disarmTrapModalVisible')}"
+                 ])
+        self.assertFalse(st_modal_closed.get("disarmModalOpen"))
+        self.assertFalse(st_modal_closed.get("scene", {}).get("ui", {}).get("modal", {}).get("disarmTrapModalVisible"))
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
