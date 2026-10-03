@@ -286,6 +286,10 @@ class TabletopQAPlayer:
         self.log(f"Opening full Character Sheet dialog for hero '{hero_id}'...")
         return self.execute_action("open_hero_detail", heroId=hero_id)
 
+    def click_hero_portrait(self, hero_id: str = "") -> dict:
+        self.log(f"Clicking on portrait for hero '{hero_id}' to open Character Sheet...")
+        return self.execute_action("click_hero_portrait", heroId=hero_id)
+
     def close_hero_detail(self) -> dict:
         self.log("Closing full Character Sheet dialog...")
         return self.execute_action("close_hero_detail")

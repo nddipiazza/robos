@@ -248,6 +248,7 @@ var unavailable_notice_duration: float = 2.5
 
 var active_detail_hero_id: String = ""
 var _hero_card_bg_cache: Dictionary = {}
+var _ai_icon_cache: Dictionary = {}
 
 const ELEMENTAL_DECKS: Dictionary = {
 	"water": ["water_of_healing", "sleep", "veil_of_mist"],
@@ -1124,6 +1125,64 @@ func get_hero_card_bg_texture(hero_id: String) -> Texture2D:
 		_hero_card_bg_cache[clean_id] = tex
 		return tex
 	return null
+
+func get_ai_icon_texture(category: String, id_name: String) -> Texture2D:
+	var clean_id = id_name.to_lower().strip_edges().replace(" ", "_").replace("-", "_")
+	var key = "%s:%s" % [category.to_lower(), clean_id]
+	if _ai_icon_cache.has(key) and _ai_icon_cache[key] != null:
+		return _ai_icon_cache[key]
+
+	var file_name = ""
+	match category.to_lower():
+		"weapon":
+			match clean_id:
+				"broadsword", "sword", "greatsword", "longsword": file_name = "weapon_broadsword.png"
+				"shortsword", "short_sword": file_name = "weapon_shortsword.png"
+				"battle_axe", "axe", "greataxe": file_name = "weapon_battle_axe.png"
+				"crossbow", "heavy_crossbow", "bow", "shortbow", "longbow": file_name = "weapon_crossbow.png"
+				"dagger", "knife": file_name = "weapon_dagger.png"
+				"staff", "quarterstaff", "wand": file_name = "weapon_staff.png"
+				_: file_name = "weapon_broadsword.png"
+		"armor":
+			match clean_id:
+				"shield", "large_shield": file_name = "armor_shield.png"
+				"helmet", "helm": file_name = "armor_helmet.png"
+				"chain_mail", "chainmail", "chain_shirt", "ring_mail": file_name = "armor_chain_mail.png"
+				"plate_mail", "platemail", "plate_armor", "half_plate", "breastplate": file_name = "armor_plate_mail.png"
+				_: file_name = "armor_shield.png"
+		"spell":
+			match clean_id:
+				"ball_of_flame", "fireball": file_name = "spell_ball_of_flame.png"
+				"fire_of_wrath", "flame_wrath", "burning_hands": file_name = "spell_fire_of_wrath.png"
+				"courage": file_name = "spell_courage.png"
+				"rock_skin", "stoneskin": file_name = "spell_rock_skin.png"
+				"heal_body", "cure_wounds", "healing_word": file_name = "spell_heal_body.png"
+				"pass_through_rock", "pass_rock": file_name = "spell_pass_through_rock.png"
+				"water_of_healing": file_name = "spell_water_of_healing.png"
+				"sleep": file_name = "spell_sleep.png"
+				"veil_of_mist", "invisibility": file_name = "spell_veil_of_mist.png"
+				"genie": file_name = "spell_genie.png"
+				"swift_wind", "haste": file_name = "spell_swift_wind.png"
+				"tempest", "lightning_bolt", "thunderwave", "blizzard": file_name = "spell_tempest.png"
+				_: file_name = "spell_ball_of_flame.png"
+		"item", "consumable", "tool", "ability":
+			match clean_id:
+				"healing_potion", "potion_of_healing", "cure_potion": file_name = "item_healing_potion.png"
+				"potion_of_strength", "strength_potion": file_name = "item_potion_of_strength.png"
+				"potion_of_speed", "speed_potion": file_name = "item_potion_of_speed.png"
+				"tool_kit", "toolbox", "tools", "lockpick", "trap_mastery", "disarm": file_name = "item_tool_kit.png"
+				"holy_water": file_name = "spell_water_of_healing.png"
+				_: file_name = "item_healing_potion.png"
+		_:
+			file_name = "weapon_broadsword.png"
+
+	var path = "res://assets/icons/ai/" + file_name
+	var tex = _load_texture_safe(path)
+	if tex:
+		_ai_icon_cache[key] = tex
+		return tex
+	return null
+
 
 func _check_cli_role() -> void:
 	var cmd_args = OS.get_cmdline_user_args() + OS.get_cmdline_args()
@@ -7291,15 +7350,42 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 	main_hbox.add_theme_constant_override("separation", 6)
 	margin.add_child(main_hbox)
 
+	# Hero Portrait Button (Clicking inspects character sheet, replacing legacy INFO button)
+	var portrait_btn = Button.new()
+	portrait_btn.name = "HeroPortraitButton"
+	portrait_btn.custom_minimum_size = Vector2(38, 38)
+	portrait_btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	portrait_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	portrait_btn.tooltip_text = "Click portrait to inspect %s's full Character Sheet" % get_hero_display_title(h)
+
 	var token_tex = get_hero_token_texture(h)
 	if token_tex:
-		var token_rect = TextureRect.new()
-		token_rect.texture = token_tex
-		token_rect.custom_minimum_size = Vector2(34, 34)
-		token_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		token_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		token_rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		main_hbox.add_child(token_rect)
+		portrait_btn.icon = token_tex
+		portrait_btn.expand_icon = true
+		portrait_btn.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	else:
+		portrait_btn.text = h_id.substr(0, 3).to_upper()
+
+	var port_sb = StyleBoxFlat.new()
+	port_sb.set_corner_radius_all(6)
+	if is_active:
+		port_sb.bg_color = Color(0.2, 0.18, 0.08, 0.8)
+		port_sb.border_color = Color(1.0, 0.85, 0.25, 0.95)
+		port_sb.set_border_width_all(2)
+	elif is_dead:
+		port_sb.bg_color = Color(0.2, 0.05, 0.05, 0.8)
+		port_sb.border_color = Color(0.8, 0.2, 0.2, 0.7)
+		port_sb.set_border_width_all(1)
+	else:
+		port_sb.bg_color = Color(0.08, 0.12, 0.18, 0.8)
+		port_sb.border_color = Color(0.35, 0.50, 0.65, 0.75)
+		port_sb.set_border_width_all(1)
+	portrait_btn.add_theme_stylebox_override("normal", port_sb)
+	portrait_btn.add_theme_stylebox_override("hover", port_sb)
+	portrait_btn.add_theme_stylebox_override("pressed", port_sb)
+
+	portrait_btn.pressed.connect(func(): open_hero_detail_modal(h))
+	main_hbox.add_child(portrait_btn)
 
 	var vbox = VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 2)
@@ -7328,7 +7414,7 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 		status_tag.text = "[DEAD]"
 		status_tag.add_theme_color_override("font_color", Color(1.0, 0.2, 0.2, 1.0))
 	elif is_active:
-		status_tag.text = "★ ACTIVE"
+		status_tag.text = "[ACTIVE]"
 		status_tag.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2, 1.0))
 	elif not is_on_board:
 		status_tag.text = "[Off Board]"
@@ -7399,11 +7485,11 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 	vitals_row.add_child(mp_box)
 	vbox.add_child(vitals_row)
 
-	# Row 3: Combat Stats & Gold Line
+	# Row 3: Combat Stats, Status Buffs & Gold Line
 	var atk_d = get_hero_attack_dice(h)
 	var def_d = get_hero_defend_dice(h)
 	var stat_row = HBoxContainer.new()
-	stat_row.add_theme_constant_override("separation", 6)
+	stat_row.add_theme_constant_override("separation", 5)
 
 	var dice_stat = Label.new()
 	dice_stat.text = "ATK %dd  DEF %dd" % [atk_d, def_d]
@@ -7411,44 +7497,7 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 	dice_stat.add_theme_color_override("font_color", Color(0.85, 0.88, 0.95, 0.95))
 	stat_row.add_child(dice_stat)
 
-	var gold_lbl = Label.new()
-	var cur_gold = int(h.get("gold", 0))
-	if is_item_flashing and str(flashing_item.get("type")) == "gold":
-		gold_lbl.text = "+%d GP! (Total %d)" % [int(flashing_item.get("amount", 0)), cur_gold]
-		gold_lbl.add_theme_color_override("font_color", Color(1.0, 0.95, 0.25, 1.0))
-	else:
-		gold_lbl.text = "%d GP" % cur_gold
-		gold_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.35, 0.9))
-	gold_lbl.add_theme_font_size_override("font_size", 9)
-	gold_lbl.clip_text = true
-	gold_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	gold_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	stat_row.add_child(gold_lbl)
-	vbox.add_child(stat_row)
-
-	# Row 4: Compact Action & Resource Mini-Icon Bar
-	var icon_bar = HBoxContainer.new()
-	icon_bar.add_theme_constant_override("separation", 3)
-	icon_bar.custom_minimum_size = Vector2(0, 20)
-
-	# 1. Abilities / Traps
-	var disarm_check = can_hero_disarm(h)
-	if disarm_check.get("is_dwarf", false):
-		var ab_btn = Button.new()
-		ab_btn.custom_minimum_size = Vector2(22, 20)
-		var disarm_tex = action_icons.get("disarm")
-		if disarm_tex:
-			ab_btn.icon = disarm_tex
-			ab_btn.expand_icon = true
-			ab_btn.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		else:
-			ab_btn.text = "TRP"
-			ab_btn.add_theme_font_size_override("font_size", 8)
-		ab_btn.tooltip_text = "Trap Mastery (Innate Dwarf Ability)\nClass: Dwarf\nEffect: Automatically disarms adjacent detected traps without requiring a Tool Kit."
-		ab_btn.pressed.connect(func(): open_hero_detail_modal(h))
-		icon_bar.add_child(ab_btn)
-
-	# 2. Status Effects / Active Buffs Badges
+	# Active Buff Badges (Pills)
 	var buff_badges: Array[Dictionary] = []
 	if h.get("rock_skin_active", false):
 		buff_badges.append({ "code": "RS", "desc": "Rock Skin (Active Earth Spell Buff)\nEffect: Grants +1 Defend Die. Lasts until hero suffers damage.", "color": Color(0.65, 0.60, 0.55) })
@@ -7486,139 +7535,231 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 		pill.add_child(pmarg)
 		pill.tooltip_text = bb.desc
 		pill.mouse_filter = Control.MOUSE_FILTER_PASS
-		icon_bar.add_child(pill)
+		stat_row.add_child(pill)
 
-	# 3. Spells (Mini-Icons with rich tooltip)
+	var gold_lbl = Label.new()
+	var cur_gold = int(h.get("gold", 0))
+	if is_item_flashing and str(flashing_item.get("type")) == "gold":
+		gold_lbl.text = "+%d GP! (Total %d)" % [int(flashing_item.get("amount", 0)), cur_gold]
+		gold_lbl.add_theme_color_override("font_color", Color(1.0, 0.95, 0.25, 1.0))
+	else:
+		gold_lbl.text = "%d GP" % cur_gold
+		gold_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.35, 0.9))
+	gold_lbl.add_theme_font_size_override("font_size", 9)
+	gold_lbl.clip_text = true
+	gold_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	gold_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	stat_row.add_child(gold_lbl)
+	vbox.add_child(stat_row)
+
+	# Row 4: AI Art Equipment, Weapon, Armor, and Spell Icons (Up to 3 rows of 7 icons with {+NUM} overflow)
+	var icon_grid = GridContainer.new()
+	icon_grid.name = "HeroIconGrid"
+	icon_grid.columns = 7
+	icon_grid.add_theme_constant_override("h_separation", 2)
+	icon_grid.add_theme_constant_override("v_separation", 2)
+
+	var icon_items: Array[Dictionary] = []
+
+	# 1. Equipped Weapon(s)
+	var eq_wep = str(h.get("equipped_weapon", "")).strip_edges().to_lower()
+	if eq_wep != "" and eq_wep != "unarmed" and eq_wep != "fists":
+		var w_meta = HeroQuestEquipment.get_weapon(eq_wep)
+		var w_name = str(w_meta.get("name", eq_wep.replace("_", " ").capitalize()))
+		var w_dice = int(w_meta.get("attack_dice", 2))
+		var w_cost = int(w_meta.get("cost", 150))
+		var w_desc = str(w_meta.get("description", ""))
+		icon_items.append({
+			"type": "weapon",
+			"category": "weapon",
+			"id": eq_wep,
+			"name": w_name,
+			"icon": get_ai_icon_texture("weapon", eq_wep),
+			"tooltip": "[EQUIPPED WEAPON]\n%s\nAttack: %d Combat Dice\nCost: %d GP\n%s" % [w_name, w_dice, w_cost, w_desc]
+		})
+
+	# 2. Equipped Armor
+	var eq_armor = h.get("equipped_armor", [])
+	for a_id in eq_armor:
+		var a_str = str(a_id).strip_edges().to_lower()
+		var a_meta = HeroQuestEquipment.get_armor(a_str)
+		var a_name = str(a_meta.get("name", a_str.replace("_", " ").capitalize()))
+		var a_bonus = a_meta.get("defend_bonus", a_meta.get("base_defend_dice", 1))
+		var a_slot = str(a_meta.get("slot", "body")).capitalize()
+		var a_desc = str(a_meta.get("description", ""))
+		icon_items.append({
+			"type": "armor",
+			"category": "armor",
+			"id": a_str,
+			"name": a_name,
+			"icon": get_ai_icon_texture("armor", a_str),
+			"tooltip": "[EQUIPPED ARMOR]\n%s (Slot: %s)\nDefense: %s\n%s" % [a_name, a_slot, str(a_bonus), a_desc]
+		})
+
+	# 3. Memorized Spells
 	var hero_spells: Array = h.get("spells", [])
-	if hero_spells.size() > 0:
-		var sp_count = min(3, hero_spells.size())
-		var spell_tex = action_icons.get("spell")
-		for idx in range(sp_count):
-			var s_id = str(hero_spells[idx])
-			var s_meta = HeroQuestSpells.get_spell(s_id)
-			var s_name = str(s_meta.get("name", s_id.capitalize()))
-			var s_deck = str(s_meta.get("deck", "magic")).capitalize()
-			var s_desc = str(s_meta.get("description", ""))
+	for s_id in hero_spells:
+		var s_str = str(s_id).strip_edges().to_lower()
+		var s_meta = HeroQuestSpells.get_spell(s_str)
+		var s_name = str(s_meta.get("name", s_str.replace("_", " ").capitalize()))
+		var s_deck = str(s_meta.get("deck", "magic")).capitalize()
+		var s_desc = str(s_meta.get("description", ""))
+		icon_items.append({
+			"type": "spell",
+			"category": "spell",
+			"id": s_str,
+			"name": s_name,
+			"icon": get_ai_icon_texture("spell", s_str),
+			"tooltip": "[SPELL]\n%s (%s Magic)\n%s\nClick to cast spell." % [s_name, s_deck, s_desc]
+		})
 
-			var sp_btn = Button.new()
-			sp_btn.custom_minimum_size = Vector2(22, 20)
-			if spell_tex:
-				sp_btn.icon = spell_tex
-				sp_btn.expand_icon = true
-				sp_btn.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			else:
-				sp_btn.text = "SPL"
-				sp_btn.add_theme_font_size_override("font_size", 8)
-			sp_btn.tooltip_text = "%s (%s Magic)\n%s\nClick to cast spell." % [s_name, s_deck, s_desc]
+	# 4. Inventory Items / Potions / Tools
+	var hero_inv: Array = h.get("inventory", [])
+	for it in hero_inv:
+		var it_str = str(it).strip_edges().to_lower()
+		if it_str == eq_wep or eq_armor.has(it_str):
+			continue
+		var it_meta = HeroQuestEquipment.get_item(it_str)
+		var iname = str(it_meta.get("name", it_str.replace("_", " ").capitalize()))
+		var ival = int(it_meta.get("cost", it_meta.get("value", 50)))
+		var idesc = str(it_meta.get("description", it_meta.get("effect", "")))
+		var is_this_flashing = is_item_flashing and str(flashing_item.get("type")) == "item" and (str(flashing_item.get("name")) == iname or it_str == str(flashing_item.get("item_id", "")))
+		var tip = ""
+		if is_this_flashing:
+			tip = "[NEW ITEM ACQUIRED!]\n%s\nValue: %d GP\n%s\nClick to use item." % [iname, ival, idesc]
+		else:
+			tip = "[INVENTORY ITEM]\n%s\nValue: %d GP\n%s\nClick to use item." % [iname, ival, idesc]
+		icon_items.append({
+			"type": "item",
+			"category": "item",
+			"id": it_str,
+			"name": iname,
+			"icon": get_ai_icon_texture("item", it_str),
+			"tooltip": tip,
+			"flashing": is_this_flashing
+		})
+
+	# 5. Innate Abilities (e.g. Dwarf Trap Mastery)
+	var disarm_check = can_hero_disarm(h)
+	if disarm_check.get("is_dwarf", false):
+		icon_items.append({
+			"type": "ability",
+			"category": "item",
+			"id": "tool_kit",
+			"name": "Trap Mastery",
+			"icon": get_ai_icon_texture("item", "tool_kit"),
+			"tooltip": "[INNATE ABILITY]\nTrap Mastery (Innate Dwarf Ability)\nClass: Dwarf\nEffect: Automatically disarms adjacent detected traps without requiring a Tool Kit."
+		})
+
+	# 6. Adjacent Detected Trap Disarm Button
+	if is_active and disarm_check.get("can_disarm", false):
+		var adj_traps = get_adjacent_detected_traps()
+		if not adj_traps.is_empty():
+			icon_items.append({
+				"type": "disarm_action",
+				"category": "item",
+				"id": "tool_kit",
+				"name": "Disarm Trap",
+				"icon": get_ai_icon_texture("item", "tool_kit"),
+				"tooltip": "Disarm adjacent detected trap"
+			})
+
+	# Up to 3 rows of 7 icons (21 slots max) then {+NUM} overflow
+	var total_icons = icon_items.size()
+	var max_visible_slots = 21
+	var num_to_render = total_icons
+	var overflow_count = 0
+
+	if total_icons > max_visible_slots:
+		num_to_render = max_visible_slots - 1
+		overflow_count = total_icons - num_to_render
+
+	for idx in range(num_to_render):
+		var itm = icon_items[idx]
+		var itype = itm.get("type", "item")
+		var ibtn = Button.new()
+		ibtn.custom_minimum_size = Vector2(20, 20)
+		var itex: Texture2D = itm.get("icon")
+		if itex:
+			ibtn.icon = itex
+			ibtn.expand_icon = true
+			ibtn.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		else:
+			ibtn.text = str(itm.get("name", "")).substr(0, 3).to_upper()
+			ibtn.add_theme_font_size_override("font_size", 7)
+		ibtn.tooltip_text = itm.get("tooltip", "")
+
+		var b_sb = StyleBoxFlat.new()
+		b_sb.set_corner_radius_all(3)
+		b_sb.bg_color = Color(0.10, 0.13, 0.18, 0.85)
+		b_sb.border_color = Color(0.3, 0.45, 0.6, 0.6)
+		b_sb.set_border_width_all(1)
+		ibtn.add_theme_stylebox_override("normal", b_sb)
+
+		if bool(itm.get("flashing", false)):
+			ibtn.modulate = Color(1.0, 0.95, 0.25, 1.0)
+
+		# Button interactions
+		if itype == "spell":
 			if is_active:
-				sp_btn.disabled = has_acted_this_turn
-				sp_btn.pressed.connect(toggle_spell_cast_modal)
-				if sp_btn.disabled:
+				ibtn.disabled = has_acted_this_turn
+				ibtn.pressed.connect(toggle_spell_cast_modal)
+				if ibtn.disabled:
 					var s_shield = Control.new()
 					s_shield.name = "DisabledClickShield"
 					s_shield.set_anchors_preset(Control.PRESET_FULL_RECT)
 					s_shield.mouse_filter = Control.MOUSE_FILTER_STOP
 					s_shield.gui_input.connect(func(ev: InputEvent):
 						if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
-							show_unavailable_notice("Not enough actions", Vector2i(-1, -1), sp_btn.global_position + sp_btn.size * 0.5)
+							show_unavailable_notice("Not enough actions", Vector2i(-1, -1), ibtn.global_position + ibtn.size * 0.5)
 					)
-					sp_btn.add_child(s_shield)
+					ibtn.add_child(s_shield)
 			else:
-				sp_btn.pressed.connect(func(): open_hero_detail_modal(h))
-			icon_bar.add_child(sp_btn)
-
-		if hero_spells.size() > 3:
-			var more_sp = Label.new()
-			more_sp.text = "+%d" % (hero_spells.size() - 3)
-			more_sp.add_theme_font_size_override("font_size", 9)
-			more_sp.add_theme_color_override("font_color", Color(0.8, 0.75, 1.0, 0.9))
-			more_sp.tooltip_text = "Spells (%d total). Click to view all memorized spells." % hero_spells.size()
-			more_sp.mouse_filter = Control.MOUSE_FILTER_PASS
-			icon_bar.add_child(more_sp)
-
-	# 4. Items (Mini-Icons with rich tooltip)
-	var hero_inv: Array = h.get("inventory", [])
-	if hero_inv.size() > 0:
-		var it_count = min(3, hero_inv.size())
-		var item_tex = action_icons.get("item")
-		for idx in range(it_count):
-			var item_str = str(hero_inv[idx])
-			var it_meta = HeroQuestEquipment.get_item(item_str)
-			var iname = str(it_meta.get("name", item_str.replace("_", " ").capitalize()))
-			var idesc = str(it_meta.get("description", it_meta.get("effect", "")))
-			var ival = int(it_meta.get("cost", it_meta.get("value", 50)))
-
-			var it_btn = Button.new()
-			it_btn.custom_minimum_size = Vector2(22, 20)
-			if item_tex:
-				it_btn.icon = item_tex
-				it_btn.expand_icon = true
-				it_btn.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			else:
-				it_btn.text = "ITM"
-				it_btn.add_theme_font_size_override("font_size", 8)
-
-			var is_this_flashing = is_item_flashing and str(flashing_item.get("type")) == "item" and (str(flashing_item.get("name")) == iname or idx == 0)
-			if is_this_flashing:
-				it_btn.tooltip_text = "[NEW ITEM ACQUIRED!]\n%s\nValue: %d gp\n%s" % [iname, ival, idesc]
-				it_btn.modulate = Color(1.0, 0.95, 0.25, 1.0)
-			else:
-				it_btn.tooltip_text = "%s\nValue: %d gp\n%s" % [iname, ival, idesc]
-
+				ibtn.pressed.connect(func(): open_hero_detail_modal(h))
+		elif itype == "item":
 			if is_active:
-				it_btn.pressed.connect(toggle_item_use_modal)
+				ibtn.pressed.connect(toggle_item_use_modal)
 			else:
-				it_btn.pressed.connect(func(): open_hero_detail_modal(h))
-			icon_bar.add_child(it_btn)
-
-		if hero_inv.size() > 3:
-			var more_it = Label.new()
-			more_it.text = "+%d" % (hero_inv.size() - 3)
-			more_it.add_theme_font_size_override("font_size", 9)
-			more_it.add_theme_color_override("font_color", Color(0.7, 0.9, 0.85, 0.9))
-			more_it.tooltip_text = "Backpack (%d items total). Click to view all items." % hero_inv.size()
-			more_it.mouse_filter = Control.MOUSE_FILTER_PASS
-			icon_bar.add_child(more_it)
-
-	# 5. Trap Disarm Button (if active & adjacent detected trap)
-	if is_active and disarm_check.get("can_disarm", false):
-		var adj_traps = get_adjacent_detected_traps()
-		if not adj_traps.is_empty():
-			var btn_disarm_mini = Button.new()
-			btn_disarm_mini.custom_minimum_size = Vector2(22, 20)
-			var disarm_tex = action_icons.get("disarm")
-			if disarm_tex:
-				btn_disarm_mini.icon = disarm_tex
-				btn_disarm_mini.expand_icon = true
-				btn_disarm_mini.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			else:
-				btn_disarm_mini.text = "DIS"
-				btn_disarm_mini.add_theme_font_size_override("font_size", 8)
-			btn_disarm_mini.tooltip_text = "Disarm adjacent detected trap"
-			btn_disarm_mini.disabled = has_acted_this_turn
-			btn_disarm_mini.pressed.connect(_on_disarm_trap_button_pressed)
-			if btn_disarm_mini.disabled:
+				ibtn.pressed.connect(func(): open_hero_detail_modal(h))
+		elif itype == "disarm_action":
+			ibtn.disabled = has_acted_this_turn
+			ibtn.pressed.connect(_on_disarm_trap_button_pressed)
+			if ibtn.disabled:
 				var d_shield = Control.new()
 				d_shield.name = "DisabledClickShield"
 				d_shield.set_anchors_preset(Control.PRESET_FULL_RECT)
 				d_shield.mouse_filter = Control.MOUSE_FILTER_STOP
 				d_shield.gui_input.connect(func(ev: InputEvent):
 					if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
-						show_unavailable_notice("Not enough actions", Vector2i(-1, -1), btn_disarm_mini.global_position + btn_disarm_mini.size * 0.5)
+						show_unavailable_notice("Not enough actions", Vector2i(-1, -1), ibtn.global_position + ibtn.size * 0.5)
 				)
-				btn_disarm_mini.add_child(d_shield)
-			icon_bar.add_child(btn_disarm_mini)
+				ibtn.add_child(d_shield)
+		else:
+			# Weapon, Armor, Innate Ability
+			ibtn.pressed.connect(func(): open_hero_detail_modal(h))
 
-	# Sheet Inspect Button
-	var btn_sheet = Button.new()
-	btn_sheet.text = "INFO"
-	btn_sheet.custom_minimum_size = Vector2(28, 20)
-	btn_sheet.add_theme_font_size_override("font_size", 8)
-	btn_sheet.tooltip_text = "Inspect %s's full Character Sheet" % get_hero_display_title(h)
-	btn_sheet.pressed.connect(func(): open_hero_detail_modal(h))
-	icon_bar.add_child(btn_sheet)
+		icon_grid.add_child(ibtn)
 
-	vbox.add_child(icon_bar)
+	# Overflow Slot (+NUM) if total icons exceeded 21 slots
+	if overflow_count > 0:
+		var over_btn = Button.new()
+		over_btn.name = "OverflowBadge"
+		over_btn.custom_minimum_size = Vector2(20, 20)
+		over_btn.text = "+%d" % overflow_count
+		over_btn.add_theme_font_size_override("font_size", 8)
+		over_btn.tooltip_text = "+%d more items & spells\nClick to inspect full Character Sheet" % overflow_count
+		var o_sb = StyleBoxFlat.new()
+		o_sb.set_corner_radius_all(3)
+		o_sb.bg_color = Color(0.22, 0.18, 0.08, 0.95)
+		o_sb.border_color = Color(1.0, 0.85, 0.3, 0.85)
+		o_sb.set_border_width_all(1)
+		over_btn.add_theme_stylebox_override("normal", o_sb)
+		over_btn.add_theme_color_override("font_color", Color(1.0, 0.9, 0.35, 1.0))
+		over_btn.pressed.connect(func(): open_hero_detail_modal(h))
+		icon_grid.add_child(over_btn)
+
+	vbox.add_child(icon_grid)
+
 
 	return card
 
@@ -7881,6 +8022,16 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 
 				var ivbox = VBoxContainer.new()
 				var it_top = HBoxContainer.new()
+				it_top.add_theme_constant_override("separation", 6)
+				var it_icon_tex = get_ai_icon_texture("item", item_str)
+				if it_icon_tex:
+					var it_ico = TextureRect.new()
+					it_ico.texture = it_icon_tex
+					it_ico.custom_minimum_size = Vector2(20, 20)
+					it_ico.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+					it_ico.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+					it_top.add_child(it_ico)
+
 				var it_name_lbl = Label.new()
 				it_name_lbl.text = iname
 				it_name_lbl.add_theme_font_size_override("font_size", 11)
@@ -7901,6 +8052,7 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 				it_desc_lbl.add_theme_color_override("font_color", Color(0.75, 0.8, 0.88, 0.85))
 				ivbox.add_child(it_desc_lbl)
 
+				imarg.add_child(ivbox)
 				inv_grid.add_child(it_panel)
 
 	# 3. Spells Section
@@ -7947,6 +8099,16 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 
 				var svbox = VBoxContainer.new()
 				var sp_top = HBoxContainer.new()
+				sp_top.add_theme_constant_override("separation", 6)
+				var sp_icon_tex = get_ai_icon_texture("spell", str(s_id))
+				if sp_icon_tex:
+					var sp_ico = TextureRect.new()
+					sp_ico.texture = sp_icon_tex
+					sp_ico.custom_minimum_size = Vector2(20, 20)
+					sp_ico.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+					sp_ico.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+					sp_top.add_child(sp_ico)
+
 				var sp_name_lbl = Label.new()
 				sp_name_lbl.text = s_name
 				sp_name_lbl.add_theme_font_size_override("font_size", 11)
@@ -8562,6 +8724,21 @@ func get_telemetry_state() -> Dictionary:
 		if h.get("veil_of_mist_active", false): effs.append("veil_of_mist")
 		if h.get("is_sleeping", false): effs.append("sleep")
 
+		var eq_w = str(h.get("equipped_weapon", "")).strip_edges().to_lower()
+		var eq_a = h.get("equipped_armor", [])
+		var h_sp = h.get("spells", [])
+		var h_inv = h.get("inventory", [])
+		var total_ic = 0
+		if eq_w != "" and eq_w != "unarmed" and eq_w != "fists": total_ic += 1
+		total_ic += eq_a.size()
+		total_ic += h_sp.size()
+		for it in h_inv:
+			var it_s = str(it).strip_edges().to_lower()
+			if it_s != eq_w and not eq_a.has(it_s): total_ic += 1
+		if can_hero_disarm(h).get("is_dwarf", false): total_ic += 1
+
+		var ov_cnt = max(0, total_ic - 20) if total_ic > 21 else 0
+
 		char_cards.append({
 			"id": str(h.get("id")),
 			"name": str(h.get("name")),
@@ -8586,6 +8763,9 @@ func get_telemetry_state() -> Dictionary:
 			"tokenAsset": get_hero_token_path(h),
 			"hasTokenTexture": (get_hero_token_texture(h) != null),
 			"hasAiBackground": (get_hero_card_bg_texture(str(h.get("id"))) != null),
+			"hasPortraitButton": true,
+			"aiIconsCount": total_ic,
+			"overflowCount": ov_cnt,
 			"spells": h.get("spells", []),
 			"inventory": h.get("inventory", [])
 		})
@@ -9038,7 +9218,7 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 	else:
 		action_type = str(action_val)
 	match action_type:
-		"open_hero_detail", "show_hero_detail":
+		"open_hero_detail", "show_hero_detail", "click_hero_portrait":
 			var h_id = str(action_data.get("heroId", action_data.get("id", "")))
 			var target_hero: Dictionary = {}
 			if not h_id.is_empty():
