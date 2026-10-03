@@ -181,6 +181,7 @@ class TestFurnitureOccupancyE2E(unittest.TestCase):
             movementClosed=False,
             revealedRooms=["room-nw-crypt"],
             heroes=[{"id": "barbarian", "grid_pos": [4, 2], "current_bp": 8, "is_on_board": True}],
+            storyTriggers=[{"marker": "B", "triggered": True}],
             monsters=[
                 {"id": "mon-skel-1", "is_alive": False, "current_bp": 0, "roomId": "room-nw-crypt"},
                 {"id": "mon-skel-2", "is_alive": False, "current_bp": 0, "roomId": "room-nw-crypt"}

@@ -178,7 +178,7 @@ class TestStoryTriggersE2E(unittest.TestCase):
         self.assertTrue(any("Letter from the Emperor" in n for n in inv_names), "Must have Letter from the Emperor in inventory")
 
     def test_04_trigger_b_enter_room_ambush(self):
-        """Scenario 4: Entering the Northwest Crypt triggers Story Trigger [B] and spawns an Ambush Skeleton."""
+        """Scenario 4: Entering the Northwest Crypt (landing on tile) triggers Story Trigger [B] and spawns an Ambush Skeleton."""
         bdd_step("GIVEN", "Northwest Crypt is closed and hero Rogar stands at threshold (4, 1)",
                  action_info="Position Rogar outside crypt door")
         self.ai.execute_action("patch_state",
@@ -193,21 +193,25 @@ class TestStoryTriggersE2E(unittest.TestCase):
         # Open door to crypt
         self.ai.open_door(4, 1, 4, 2)
 
-        bdd_step("WHEN", "Rogar steps through the doorway into Northwest Crypt at (4, 3)",
+        bdd_step("WHEN", "Rogar steps through the doorway and lands directly on Northwest Crypt tile (4, 3)",
                  action_info="ai.move(4, 3)")
         self.ai.move(4, 3)
 
-        bdd_step("THEN", "Story Trigger [B] is activated pausing the game with Quest Note [B] card",
+        bdd_step("THEN", "Story Trigger [B] is activated pausing the game with Quest Note [B] card on top of dice",
                  assertions=[
                      "activeStoryTrigger card is open",
                      "Marker is 'B'",
                      "Title is 'Restless Dead of the Catacomb'",
-                     "Contains ambush warning"
+                     "onTopOfDice is True",
+                     "Remaining movement is 2 (4 - 2)"
                  ])
         active_card = self.ai.get_active_story_trigger()
         self.assertFalse(active_card.is_empty() if hasattr(active_card, "is_empty") else len(active_card) == 0)
         self.assertEqual(active_card.get("marker"), "B")
         self.assertIn("Restless Dead", active_card.get("title", ""))
+        self.assertTrue(active_card.get("onTopOfDice"), "Overlay must be flagged to render on top of dice")
+        st_mid = self.ai.get_state()
+        self.assertEqual(st_mid.get("movementRemaining"), 2, "Hero must have remaining movement deducted")
 
         bdd_step("WHEN", "Player clicks to dismiss the Quest Note [B] announcement card",
                  action_info="ai.dismiss_story_trigger()")
@@ -223,6 +227,116 @@ class TestStoryTriggersE2E(unittest.TestCase):
         st_after = self.ai.get_state()
         m_ids = [m.get("id") for m in st_after.get("monsters", [])]
         self.assertIn("mon-skel-ambush", m_ids, "Ambush skeleton must be spawned on the board")
+
+    def test_04b_trigger_b_walks_through_square(self):
+        """Scenario 4b: Walking through a square with a ground story trigger halts movement and activates the event."""
+        bdd_step("GIVEN", "Northwest Crypt door is open and hero Rogar stands at (4, 1) with 6 movement points",
+                 action_info="Reset and prepare hero at (4, 1) with 6 movement")
+        self.ai.execute_action("patch_state",
+                               activeHero="barbarian",
+                               movementRemaining=6,
+                               movementRolled=True,
+                               movementClosed=False,
+                               revealedRooms=[],
+                               heroes=[{"id": "barbarian", "grid_pos": [4, 1], "current_bp": 8}],
+                               monsters=[])
+        self.ai.open_door(4, 1, 4, 2)
+
+        bdd_step("WHEN", "Rogar commands a long move to (4, 5) passing through trigger square (4, 3)",
+                 action_info="ai.move(4, 5)")
+        self.ai.move(4, 5)
+
+        bdd_step("THEN", "Movement halts immediately at (4, 3) and Story Trigger [B] card pops up",
+                 assertions=[
+                     "Hero grid_pos is [4, 3] (halted along path)",
+                     "movementRemaining is 4 (6 - 2)",
+                     "activeStoryTrigger marker is 'B'",
+                     "activeStoryTrigger onTopOfDice is True"
+                 ])
+        st_halt = self.ai.get_state()
+        hero_pos = st_halt.get("heroes", [{}])[0].get("grid_pos")
+        self.assertEqual(hero_pos, [4, 3], "Hero movement must halt at the story trigger tile (4, 3)")
+        self.assertEqual(st_halt.get("movementRemaining"), 4, "Movement must deduct cost to trigger tile (6 - 2 = 4)")
+
+        active_card = self.ai.get_active_story_trigger()
+        self.assertFalse(active_card.is_empty() if hasattr(active_card, "is_empty") else len(active_card) == 0)
+        self.assertEqual(active_card.get("marker"), "B")
+        self.assertTrue(active_card.get("onTopOfDice"), "Overlay must be flagged to render on top of dice")
+
+        bdd_step("WHEN", "Player dismisses the Quest Note [B] announcement card",
+                 action_info="ai.dismiss_story_trigger()")
+        d_res = self.ai.dismiss_story_trigger()
+        self.assertTrue(d_res.get("success"))
+        self.assertEqual(d_res.get("monstersSpawned"), 1, "Must spawn 1 Ambush Skeleton")
+
+        bdd_step("AND", "Rogar spends remaining 4 movement points to advance to (4, 5)",
+                 action_info="ai.move(4, 5)")
+        self.ai.move(4, 5)
+
+        bdd_step("THEN", "Rogar successfully completes journey to (4, 5) with 2 movement remaining",
+                 assertions=[
+                     "Hero grid_pos is [4, 5]",
+                     "movementRemaining is 2 (4 - 2)"
+                 ])
+        st_final = self.ai.get_state()
+        final_hero_pos = st_final.get("heroes", [{}])[0].get("grid_pos")
+        self.assertEqual(final_hero_pos, [4, 5], "Hero must arrive at target square (4, 5)")
+        self.assertEqual(st_final.get("movementRemaining"), 2, "Hero must retain remaining movement points (4 - 2 = 2)")
+
+    def test_04c_story_trigger_on_top_of_dice(self):
+        """Scenario 4c: Story trigger overlay card displays on top of active dice roll tray."""
+        bdd_step("GIVEN", "Hero Rogar stands at (4, 1) and rolls movement dice",
+                 action_info="ai.roll_movement() -> active dice animation started")
+        self.ai.execute_action("patch_state",
+                               activeHero="barbarian",
+                               movementRemaining=0,
+                               movementRolled=False,
+                               movementClosed=False,
+                               revealedRooms=[],
+                               heroes=[{"id": "barbarian", "grid_pos": [4, 1], "current_bp": 8}],
+                               monsters=[])
+        self.ai.open_door(4, 1, 4, 2)
+
+        # Roll movement
+        roll_res = self.ai.roll_movement()
+        self.assertTrue(roll_res.get("success"), "Movement roll must succeed")
+
+        # Verify active dice roll is running
+        dice_info = self.ai.get_active_dice_roll()
+        bdd_step("THEN", "Active dice tray is visible on screen",
+                 assertions=[
+                     f"Dice tray type: {dice_info.get('type')}",
+                     f"Dice count: {dice_info.get('diceCount')}"
+                 ])
+        self.assertEqual(dice_info.get("type"), "movement")
+
+        bdd_step("WHEN", "Rogar steps through into Northwest Crypt at (4, 3) triggering Note [B]",
+                 action_info="ai.move(4, 3)")
+        self.ai.move(4, 3)
+
+        bdd_step("THEN", "Quest Note [B] card appears on top of the dice",
+                 assertions=[
+                     "activeStoryTrigger is open",
+                     "Marker is 'B'",
+                     "onTopOfDice is True"
+                 ])
+        active_card = self.ai.get_active_story_trigger()
+        self.assertFalse(active_card.is_empty() if hasattr(active_card, "is_empty") else len(active_card) == 0)
+        self.assertEqual(active_card.get("marker"), "B")
+        self.assertTrue(active_card.get("onTopOfDice"), "Story card must sit on top of dice tray")
+
+        out_screenshot = "/tmp/tabletop_story_trigger_on_top_of_dice.png"
+        bdd_step("WHEN", "QA captures screenshot of story trigger card over dice",
+                 action_info=f"take_screenshot -> {out_screenshot}")
+        shot_res = self.ai.take_screenshot(out_screenshot)
+        self.assertTrue(shot_res.get("success"), "Screenshot must succeed")
+        self.assertTrue(os.path.exists(out_screenshot), "Screenshot file must exist")
+        self.assertGreater(os.path.getsize(out_screenshot), 10000, "Screenshot size must be > 10KB")
+        print(f"\n    📸 Visual proof captured: {out_screenshot} ({os.path.getsize(out_screenshot)} bytes)")
+
+        # Dismiss card
+        self.ai.dismiss_story_trigger()
+
 
     def test_05_once_only_trigger_enforcement(self):
         """Scenario 5: Once triggered, a onceOnly story trigger will not activate a second time."""

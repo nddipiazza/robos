@@ -4703,10 +4703,14 @@ func move_hero(target_pos: Vector2i, is_interactive: bool = false) -> bool:
 	var final_pos = target_pos
 	var actual_cost = cost
 	var sprung_trap: Dictionary = {}
+	var hit_story_trigger: Dictionary = {}
 
-	# Check each step along the path for traps
+	# Check each step along the path for traps and ground story triggers
 	for step_idx in range(1, path.size()):
 		var step_tile = path[step_idx]
+		var prev_tile = path[step_idx - 1]
+
+		# 1. Traps along path take priority
 		for tr in traps:
 			var tx = int(tr.get("x", tr.get("position", [0, 0])[0]))
 			var ty = int(tr.get("y", tr.get("position", [0, 0])[1]))
@@ -4716,6 +4720,14 @@ func move_hero(target_pos: Vector2i, is_interactive: bool = false) -> bool:
 				actual_cost = step_idx
 				break
 		if not sprung_trap.is_empty():
+			break
+
+		# 2. Ground story triggers along path (landing on square OR walking through square)
+		var st = _find_ground_story_trigger(step_tile, prev_tile)
+		if not st.is_empty():
+			hit_story_trigger = st
+			final_pos = step_tile
+			actual_cost = step_idx
 			break
 
 	hero["grid_pos"] = final_pos
@@ -4840,15 +4852,10 @@ func move_hero(target_pos: Vector2i, is_interactive: bool = false) -> bool:
 
 	update_party_vision()
 
-	# Check for Story Triggers: enter_room or step_on_tile
-	var cur_room = _get_room_at(final_pos)
-	var cur_room_id = str(cur_room.get("id", ""))
-	var move_story_tr = _find_untriggered_story_trigger("enter_room", cur_room_id, final_pos)
-	if move_story_tr.is_empty():
-		move_story_tr = _find_untriggered_story_trigger("step_on_tile", cur_room_id, final_pos)
-	if not move_story_tr.is_empty():
-		move_story_tr["triggered"] = true
-		_setup_story_trigger_overlay(move_story_tr, hero)
+	# Trigger ground story event if hit along the path or upon landing
+	if not hit_story_trigger.is_empty():
+		hit_story_trigger["triggered"] = true
+		_setup_story_trigger_overlay(hit_story_trigger, hero)
 
 	_log("[MOVE] %s moved to (%d, %d). Remaining movement: %d" % [
 		hero.get("name"), final_pos.x, final_pos.y, movement_remaining
@@ -6206,6 +6213,38 @@ func _find_untriggered_story_trigger(condition: String, room_id: String, tile: V
 			return st
 	return {}
 
+func _find_ground_story_trigger(step_tile: Vector2i, prev_tile: Vector2i = Vector2i(-1, -1)) -> Dictionary:
+	var cur_room = _get_room_at(step_tile)
+	var cur_room_id = str(cur_room.get("id", "")) if not cur_room.is_empty() else ""
+	var prev_room_id = ""
+	if prev_tile != Vector2i(-1, -1):
+		var prev_room = _get_room_at(prev_tile)
+		prev_room_id = str(prev_room.get("id", "")) if not prev_room.is_empty() else ""
+
+	for st in story_triggers:
+		if st.get("triggered", false) and st.get("onceOnly", true):
+			continue
+		var cond = str(st.get("condition", ""))
+		# Ground triggers exclude purely interactive/action-based triggers:
+		if cond in ["search_treasure", "search_traps", "line_of_sight", "dialogue", "combat", "interact"]:
+			continue
+
+		var st_room = str(st.get("room", ""))
+		var st_tile = st.get("tile", [])
+		var has_tile = (st_tile is Array and st_tile.size() >= 2)
+
+		if has_tile:
+			var target_tile = Vector2i(int(st_tile[0]), int(st_tile[1]))
+			if target_tile == step_tile:
+				if st_room == "" or cur_room_id == st_room:
+					return st
+		else:
+			# Room-level trigger without a specific tile: fires upon crossing the room threshold from outside
+			if st_room != "" and cur_room_id == st_room:
+				if prev_room_id != st_room:
+					return st
+	return {}
+
 func _setup_story_trigger_overlay(trigger: Dictionary, hero: Dictionary) -> void:
 	active_story_trigger_overlay = {
 		"trigger": trigger,
@@ -6220,7 +6259,8 @@ func _setup_story_trigger_overlay(trigger: Dictionary, hero: Dictionary) -> void
 		"gold": int(trigger.get("gold", 0)),
 		"item": trigger.get("item", null),
 		"spawnMonsters": trigger.get("spawnMonsters", []),
-		"waitingForClick": true
+		"waitingForClick": true,
+		"onTopOfDice": true
 	}
 	_log("[STORY TRIGGER %s] 📜 Zargon reads Quest Note: '%s'!" % [
 		active_story_trigger_overlay.marker,
@@ -10916,6 +10956,19 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				for wb in action_data.wallBlocks:
 					wall_blocks.append(wb.duplicate(true))
 
+			if action_data.has("storyTriggers") and action_data.storyTriggers is Array:
+				for st_patch in action_data.storyTriggers:
+					var st_id = str(st_patch.get("id", st_patch.get("marker", "")))
+					var found_st = false
+					for st in story_triggers:
+						if str(st.get("id")) == st_id or str(st.get("marker")) == st_id:
+							for k in st_patch:
+								st[k] = st_patch[k]
+							found_st = true
+							break
+					if not found_st:
+						story_triggers.append(st_patch.duplicate(true))
+
 			if action_data.has("revealedRooms") and action_data.revealedRooms is Array:
 				revealed_rooms.clear()
 				for r in action_data.revealedRooms:
@@ -12002,11 +12055,11 @@ func _draw_board(canvas: CanvasItem) -> void:
 	_draw_damage_hit_auras(canvas)
 	_draw_active_enemy_turn_highlight(canvas)
 	_draw_floating_texts(canvas)
+	_draw_active_dice_roll(canvas)
 	_draw_trap_sprung_overlay(canvas)
 	_draw_treasure_card_overlay(canvas)
 	_draw_story_trigger_overlay(canvas)
 	_draw_item_flash_banner(canvas)
-	_draw_active_dice_roll(canvas)
 
 func _draw_vfx_effects(canvas: CanvasItem) -> void:
 	for vfx in active_vfx:
