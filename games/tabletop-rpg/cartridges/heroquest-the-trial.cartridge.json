@@ -760,6 +760,21 @@
           ],
           "state": "closed",
           "room": "room-se-sanctum"
+        },
+        {
+          "id": "sdoor-ne-vault",
+          "from": [
+            21,
+            2
+          ],
+          "to": [
+            22,
+            2
+          ],
+          "state": "closed",
+          "is_secret": true,
+          "is_revealed": false,
+          "room": "room-ne-vault"
         }
       ],
       "wallBlocks": [

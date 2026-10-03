@@ -95,10 +95,12 @@ class TabletopSnapshotDiff:
         for did in set(b_doors.keys()).union(c_doors.keys()):
             bd = b_doors.get(did, {})
             cd = c_doors.get(did, {})
-            if bd.get("is_open") != cd.get("is_open"):
-                self.doors[did] = {
-                    "is_open": (bd.get("is_open"), cd.get("is_open"))
-                }
+            d_diffs = {}
+            for stat in ["is_open", "is_revealed", "is_secret"]:
+                if bd.get(stat) != cd.get(stat):
+                    d_diffs[stat] = (bd.get(stat), cd.get(stat))
+            if d_diffs:
+                self.doors[did] = d_diffs
 
         # 5. Traps diffs (keyed by id)
         self.traps: Dict[str, Dict[str, Tuple[Any, Any]]] = {}
@@ -269,6 +271,14 @@ class TabletopSnapshotDiff:
         else:
             opened = [did for did, d in self.doors.items() if d.get("is_open") == (False, True)]
             assert len(opened) > 0, f"No door was opened.\n{self.format_diff()}"
+
+    def assert_secret_door_revealed(self, door_id: Optional[str] = None):
+        if door_id:
+            assert door_id in self.doors, f"Door '{door_id}' did not change state.\n{self.format_diff()}"
+            assert self.doors[door_id].get("is_revealed") == (False, True), f"Door '{door_id}' was not revealed.\n{self.format_diff()}"
+        else:
+            revealed = [did for did, d in self.doors.items() if d.get("is_revealed") == (False, True)]
+            assert len(revealed) > 0, f"No secret door was revealed.\n{self.format_diff()}"
 
     def assert_room_revealed(self, room_id: str):
         assert room_id in self.rooms_revealed_added, f"Room '{room_id}' was not revealed. Revealed: {self.rooms_revealed_added}"

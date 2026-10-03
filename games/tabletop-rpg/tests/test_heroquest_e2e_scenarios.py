@@ -2073,6 +2073,183 @@ class TestHeroQuestE2EScenarios(unittest.TestCase):
         self.assertFalse(st_modal_closed.get("disarmModalOpen"))
         self.assertFalse(st_modal_closed.get("scene", {}).get("ui", {}).get("modal", {}).get("disarmTrapModalVisible"))
 
+    def test_53_heroquest_secret_door_mechanism(self):
+        """Scenario 53: HeroQuest Secret Door Mechanism (Undiscovered barrier, Search discovery, Room reveal, Path traversal)."""
+        bdd_scenario_header(53, "HeroQuest Secret Door Mechanism")
+
+        # --- 1. Undiscovered Secret Door Acts as Impassable Solid Wall ---
+        bdd_step("GIVEN", "Barbarian stands at corridor (21, 2) adjacent to undiscovered secret door 'sdoor-ne-vault' leading to (22, 2)")
+        self.ai.reset_game()
+        self.ai.set_state(
+            activeHeroIndex=0,
+            activeHero="barbarian",
+            hasActed=False,
+            hasMoved=False,
+            movementRolled=True,
+            movementRemaining=6,
+            movementClosed=False,
+            heroes=[{"id": "barbarian", "grid_pos": [21, 2], "is_on_board": True}],
+            doors=[
+                {
+                    "id": "sdoor-ne-vault",
+                    "from": [21, 2],
+                    "to": [22, 2],
+                    "is_secret": True,
+                    "is_revealed": False,
+                    "is_open": False,
+                    "room": "room-ne-vault"
+                }
+            ],
+            revealedRooms=[]
+        )
+
+        st_init = self.ai.get_state()
+        btns_init = st_init.get("scene", {}).get("ui", {}).get("buttons", {})
+        btn_attack_init = btns_init.get("attack", {})
+        secret_door_init = next((d for d in st_init.get("doors", []) if d.get("id") == "sdoor-ne-vault"), {})
+
+        bdd_step("THEN", "Secret door is initially unrevealed and closed, and HUD shows no door opening button",
+                 assertions=[
+                     f"is_secret: {secret_door_init.get('is_secret')}",
+                     f"is_revealed: {secret_door_init.get('is_revealed')}",
+                     f"is_open: {secret_door_init.get('is_open')}",
+                     f"Attack/door button visible: {btn_attack_init.get('visible')}"
+                 ])
+        self.assertTrue(secret_door_init.get("is_secret"))
+        self.assertFalse(secret_door_init.get("is_revealed"))
+        self.assertFalse(secret_door_init.get("is_open"))
+        self.assertFalse(btn_attack_init.get("visible", False))
+
+        bdd_step("WHEN", "Barbarian attempts to open undiscovered wall segment directly")
+        open_fail_res = self.ai.open_door(21, 2, 22, 2)
+        bdd_step("THEN", "Door opening fails because secret door is not yet discovered",
+                 assertions=[f"Success: {open_fail_res.get('success')}"])
+        self.assertFalse(open_fail_res.get("success"))
+
+        bdd_step("WHEN", "Barbarian attempts to move through unrevealed secret door into unrevealed room at (22, 2)")
+        move_fail_res = self.ai.move(22, 2)
+        bdd_step("THEN", "Movement is blocked by solid wall barrier",
+                 assertions=[f"Success: {move_fail_res.get('success')}"])
+        self.assertFalse(move_fail_res.get("success"))
+
+        # --- 2. Searching for Traps & Secret Doors Uncovers the Door ---
+        bdd_step("WHEN", "Barbarian conducts search_traps action from corridor at (21, 2)")
+        baseline = self.ai.snapshot()
+        search_res = self.ai.search_traps()
+        current = self.ai.snapshot()
+        diff = diff_snapshots(baseline, current)
+
+        st_after_search = self.ai.get_state()
+        secret_door_revealed = next((d for d in st_after_search.get("doors", []) if d.get("id") == "sdoor-ne-vault"), {})
+
+        bdd_step("THEN", "Secret door is discovered and marked is_revealed=True",
+                 assertions=[
+                     f"Search success: {search_res.get('success')}",
+                     f"Found secret doors: {search_res.get('foundSecretDoors')}",
+                     f"Secret doors count: {search_res.get('secretDoorsCount')}",
+                     f"Door is_revealed: {secret_door_revealed.get('is_revealed')}",
+                     f"hasActed: {st_after_search.get('hasActed')}"
+                 ])
+        self.assertTrue(search_res.get("success"))
+        self.assertIn("sdoor-ne-vault", search_res.get("foundSecretDoors", []))
+        self.assertEqual(search_res.get("secretDoorsCount"), 1)
+        self.assertTrue(secret_door_revealed.get("is_revealed"))
+        diff.assert_secret_door_revealed("sdoor-ne-vault")
+        diff.assert_scalar("hasActed", False, True)
+
+        # --- 3. Contextual HUD Action Shows 'Open Secret Door' ---
+        bdd_step("GIVEN", "Barbarian is ready to act adjacent to revealed secret door")
+        self.ai.set_state(
+            hasActed=False,
+            movementRemaining=4,
+            movementRolled=True
+        )
+        st_ready = self.ai.get_state()
+        btns_ready = st_ready.get("scene", {}).get("ui", {}).get("buttons", {})
+        btn_door = btns_ready.get("attack", {})
+
+        bdd_step("THEN", "Contextual action button displays 'Open Secret Door'",
+                 assertions=[
+                     f"Button visible: {btn_door.get('visible')}",
+                     f"Button disabled: {btn_door.get('disabled')}",
+                     f"Button text: {btn_door.get('text')}"
+                 ])
+        self.assertTrue(btn_door.get("visible"))
+        self.assertFalse(btn_door.get("disabled"))
+        self.assertEqual(btn_door.get("text"), "Open Secret Door")
+
+        # --- 4. Opening the Secret Door Reveals Room and Clears Fog of War ---
+        bdd_step("WHEN", "Barbarian opens the revealed secret door")
+        base_open = self.ai.snapshot()
+        open_res = self.ai.open_door(21, 2, 22, 2)
+        post_open = self.ai.snapshot()
+        diff_open = diff_snapshots(base_open, post_open)
+
+        st_open = self.ai.get_state()
+        door_open = next((d for d in st_open.get("doors", []) if d.get("id") == "sdoor-ne-vault"), {})
+
+        bdd_step("THEN", "Secret door is open and 'room-ne-vault' is revealed in revealedRooms",
+                 assertions=[
+                     f"Open success: {open_res.get('success')}",
+                     f"Door is_open: {door_open.get('is_open')}",
+                     f"Revealed rooms: {st_open.get('revealedRooms')}"
+                 ])
+        self.assertTrue(open_res.get("success"))
+        self.assertTrue(door_open.get("is_open"))
+        diff_open.assert_door_opened("sdoor-ne-vault")
+        diff_open.assert_room_revealed("room-ne-vault")
+        self.assertIn("room-ne-vault", st_open.get("revealedRooms", []))
+
+        # --- 5. Movement Through Open Secret Door ---
+        bdd_step("WHEN", "Barbarian walks through open secret doorway into the Northeast Vault at (22, 2)")
+        move_res = self.ai.move(22, 2)
+        st_final = self.ai.get_state()
+        barb_final = next((h for h in st_final.get("heroes", []) if h.get("id") == "barbarian"), {})
+
+        bdd_step("THEN", "Barbarian successfully steps inside the revealed Northeast Vault",
+                 assertions=[
+                     f"Move success: {move_res.get('success')}",
+                     f"Hero position: {barb_final.get('grid_pos')}"
+                 ])
+        self.assertTrue(move_res.get("success"))
+        self.assertEqual(barb_final.get("grid_pos"), [22, 2])
+
+        # --- 6. Searching from Inside a Room Detects Room Secret Doors ---
+        bdd_step("GIVEN", "Dwarf is inside Northwest Crypt 'room-nw-crypt' at (4, 3) with an undiscovered secret door connecting to (4, 1)")
+        self.ai.set_state(
+            activeHeroIndex=1,
+            activeHero="dwarf",
+            hasActed=False,
+            revealedRooms=["room-nw-crypt"],
+            heroes=[{"id": "dwarf", "grid_pos": [4, 3], "is_on_board": True}],
+            monsters=[],
+            doors=[
+                {
+                    "id": "sdoor-crypt-secret",
+                    "from": [4, 2],
+                    "to": [4, 1],
+                    "is_secret": True,
+                    "is_revealed": False,
+                    "is_open": False,
+                    "room": "room-nw-crypt"
+                }
+            ]
+        )
+        bdd_step("WHEN", "Dwarf conducts search_traps from inside room-nw-crypt")
+        search_room_res = self.ai.search_traps()
+        st_room_search = self.ai.get_state()
+        crypt_secret_door = next((d for d in st_room_search.get("doors", []) if d.get("id") == "sdoor-crypt-secret"), {})
+
+        bdd_step("THEN", "Secret door connecting to the room is discovered",
+                 assertions=[
+                     f"Search success: {search_room_res.get('success')}",
+                     f"Found secret doors: {search_room_res.get('foundSecretDoors')}",
+                     f"is_revealed: {crypt_secret_door.get('is_revealed')}"
+                 ])
+        self.assertTrue(search_room_res.get("success"))
+        self.assertIn("sdoor-crypt-secret", search_room_res.get("foundSecretDoors", []))
+        self.assertTrue(crypt_secret_door.get("is_revealed"))
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

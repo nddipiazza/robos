@@ -387,7 +387,7 @@ func toggle_role() -> void:
 	queue_redraw_all()
 
 func _on_attack_pressed() -> void:
-	if btn_attack and "Open Door" in btn_attack.text:
+	if btn_attack and ("Open Door" in btn_attack.text or "Open Secret Door" in btn_attack.text):
 		var adj_d = get_adjacent_closed_doors()
 		if adj_d.size() > 0:
 			var d = adj_d[0]
@@ -501,7 +501,9 @@ func _load_active_cartridge() -> void:
 	doors.clear()
 	for d in map_data.get("doors", []):
 		var door_entry = d.duplicate(true)
-		door_entry["is_open"] = false
+		door_entry["is_open"] = bool(d.get("is_open", false) or d.get("state", "closed") == "open")
+		door_entry["is_secret"] = bool(d.get("is_secret", false))
+		door_entry["is_revealed"] = bool(d.get("is_revealed", not door_entry["is_secret"]))
 		doors.append(door_entry)
 
 	furniture.clear()
@@ -621,6 +623,9 @@ func has_wall_between(a: Vector2i, b: Vector2i) -> bool:
 	# 2. Check doors
 	var d = _get_door_between(a, b)
 	if d.size() > 0:
+		# Undiscovered secret door behaves as a solid wall
+		if d.get("is_secret", false) and not d.get("is_revealed", false):
+			return true
 		# If door is open, line of sight passes through
 		# If door is closed, line of sight is blocked
 		return not d.get("is_open", false)
@@ -2161,6 +2166,8 @@ func get_adjacent_closed_doors() -> Array[Dictionary]:
 	var res: Array[Dictionary] = []
 	for d in doors:
 		if not d.get("is_open", false):
+			if d.get("is_secret", false) and not d.get("is_revealed", false):
+				continue
 			var from_pos = Vector2i(d.get("from", [0, 0])[0], d.get("from", [0, 0])[1])
 			var to_pos = Vector2i(d.get("to", [0, 0])[0], d.get("to", [0, 0])[1])
 			if (h_pos == from_pos and absi(h_pos.x - to_pos.x) + absi(h_pos.y - to_pos.y) == 1) or \
@@ -2214,6 +2221,8 @@ func _handle_tile_click(tile: Vector2i) -> void:
 	# If clicked on adjacent closed door, open it!
 	for d in doors:
 		if not d.get("is_open", false):
+			if d.get("is_secret", false) and not d.get("is_revealed", false):
+				continue
 			var from_pos = Vector2i(d.get("from", [0, 0])[0], d.get("from", [0, 0])[1])
 			var to_pos = Vector2i(d.get("to", [0, 0])[0], d.get("to", [0, 0])[1])
 			if (tile == from_pos or tile == to_pos) and (h_pos == from_pos or h_pos == to_pos):
@@ -2508,6 +2517,9 @@ func open_door(from_pos: Vector2i, to_pos: Vector2i) -> bool:
 	var d = _get_door_between(from_pos, to_pos)
 	if d.is_empty():
 		return false
+	if d.get("is_secret", false) and not d.get("is_revealed", false):
+		_log("[WARNING] Cannot open an undiscovered wall segment.")
+		return false
 
 	d["is_open"] = true
 
@@ -2532,6 +2544,14 @@ func open_door(from_pos: Vector2i, to_pos: Vector2i) -> bool:
 
 	for r_id in rooms_to_reveal:
 		reveal_room_by_id(r_id)
+
+	var hero = get_active_hero()
+	var hero_name = get_hero_character_name(hero) if not hero.is_empty() else "Hero"
+	if d.get("is_secret", false):
+		_log("[SECRET DOOR] %s swings open the concealed revolving stone secret door!" % hero_name)
+		spawn_floating_text(Vector2i(t[0], t[1]), "🚪 SECRET DOOR OPENED", Color(1.0, 0.85, 0.2), 1.8)
+	else:
+		_log("[DOOR] %s opens the door." % hero_name)
 
 	update_party_vision()
 	_update_ui()
@@ -3314,6 +3334,8 @@ func _find_spell_target_hero(target_id: String) -> Dictionary:
 
 func is_door_at(tile: Vector2i) -> bool:
 	for d in doors:
+		if d.get("is_secret", false) and not d.get("is_revealed", false):
+			continue
 		var f = d.get("from", [-1, -1])
 		var t = d.get("to", [-1, -1])
 		if (tile.x == f[0] and tile.y == f[1]) or (tile.x == t[0] and tile.y == t[1]):
@@ -3495,6 +3517,7 @@ func search_traps() -> Dictionary:
 	var h_pos = hero.get("grid_pos", Vector2i(-1, -1))
 	var h_room = _get_room_at(h_pos)
 	var found_traps: Array[String] = []
+	var found_secret_doors: Array[String] = []
 
 	if not h_room.is_empty():
 		var r_id = str(h_room.get("id", ""))
@@ -3505,6 +3528,22 @@ func search_traps() -> Dictionary:
 				tr["detected"] = true
 				found_traps.append(str(tr.get("id", "trap")))
 				spawn_floating_text(Vector2i(tx, ty), "⚠️ TRAP DETECTED", Color(1.0, 0.8, 0.2), 1.6)
+
+		for d in doors:
+			if d.get("is_secret", false) and not d.get("is_revealed", false):
+				var f = d.get("from", [0, 0])
+				var t = d.get("to", [0, 0])
+				var f_pos = Vector2i(f[0], f[1])
+				var t_pos = Vector2i(t[0], t[1])
+				var d_room = str(d.get("room", ""))
+				var r1_id = str(_get_room_at(f_pos).get("id", ""))
+				var r2_id = str(_get_room_at(t_pos).get("id", ""))
+				if d_room == r_id or r1_id == r_id or r2_id == r_id:
+					d["is_revealed"] = true
+					var s_id = str(d.get("id", "secret_door"))
+					found_secret_doors.append(s_id)
+					var reveal_pos = f_pos if r1_id == r_id else t_pos
+					spawn_floating_text(reveal_pos, "🚪 SECRET DOOR DISCOVERED", Color(0.9, 0.7, 1.0), 1.8)
 	else:
 		for tr in traps:
 			var tx = int(tr.get("x", tr.get("position", [0, 0])[0]))
@@ -3515,14 +3554,44 @@ func search_traps() -> Dictionary:
 				found_traps.append(str(tr.get("id", "trap")))
 				spawn_floating_text(t_pos, "⚠️ TRAP DETECTED", Color(1.0, 0.8, 0.2), 1.6)
 
+		for d in doors:
+			if d.get("is_secret", false) and not d.get("is_revealed", false):
+				var f = d.get("from", [0, 0])
+				var t = d.get("to", [0, 0])
+				var f_pos = Vector2i(f[0], f[1])
+				var t_pos = Vector2i(t[0], t[1])
+				var corridor_pos: Vector2i = Vector2i(-1, -1)
+				var min_dist = 999
+				if _get_room_at(f_pos).is_empty():
+					var df = abs(f_pos.x - h_pos.x) + abs(f_pos.y - h_pos.y)
+					if df <= 4 and has_line_of_sight(h_pos, f_pos):
+						corridor_pos = f_pos
+						min_dist = df
+				if _get_room_at(t_pos).is_empty():
+					var dt = abs(t_pos.x - h_pos.x) + abs(t_pos.y - h_pos.y)
+					if dt <= 4 and has_line_of_sight(h_pos, t_pos) and dt < min_dist:
+						corridor_pos = t_pos
+						min_dist = dt
+				if corridor_pos != Vector2i(-1, -1):
+					d["is_revealed"] = true
+					var s_id = str(d.get("id", "secret_door"))
+					found_secret_doors.append(s_id)
+					spawn_floating_text(corridor_pos, "🚪 SECRET DOOR DISCOVERED", Color(0.9, 0.7, 1.0), 1.8)
+
 	_conclude_action_turn_state()
 
-	_log("[SEARCH] %s searches carefully for traps and secret doors: Found %d hidden trap(s)!" % [
-		hero.get("name"), found_traps.size()
+	_log("[SEARCH] %s searches carefully for traps and secret doors: Found %d hidden trap(s) and %d secret door(s)!" % [
+		hero.get("name"), found_traps.size(), found_secret_doors.size()
 	])
 	_update_ui()
 	queue_redraw_all()
-	return { "success": true, "foundTraps": found_traps, "trapsCount": found_traps.size() }
+	return {
+		"success": true,
+		"foundTraps": found_traps,
+		"trapsCount": found_traps.size(),
+		"foundSecretDoors": found_secret_doors,
+		"secretDoorsCount": found_secret_doors.size()
+	}
 
 func disarm_trap(trap_id: String) -> Dictionary:
 	var hero = get_active_hero()
@@ -3873,6 +3942,15 @@ func _update_ui() -> void:
 					btn_attack.visible = true
 					btn_attack.disabled = false
 					btn_attack.text = "Attack %s" % adj_monsters[0].get("name", "Monster")
+				elif adj_doors.size() > 0:
+					btn_attack.visible = true
+					btn_attack.disabled = false
+					var is_secret_adj = false
+					for ad in adj_doors:
+						if ad.get("is_secret", false):
+							is_secret_adj = true
+							break
+					btn_attack.text = "Open Secret Door" if is_secret_adj else "Open Door"
 				else:
 					btn_attack.visible = false
 			if btn_search:
@@ -3914,7 +3992,12 @@ func _update_ui() -> void:
 				elif adj_doors.size() > 0:
 					btn_attack.visible = true
 					btn_attack.disabled = false
-					btn_attack.text = "Open Door"
+					var is_secret_adj = false
+					for ad in adj_doors:
+						if ad.get("is_secret", false):
+							is_secret_adj = true
+							break
+					btn_attack.text = "Open Secret Door" if is_secret_adj else "Open Door"
 				else:
 					btn_attack.visible = false
 
@@ -4882,8 +4965,18 @@ func get_telemetry_state() -> Dictionary:
 			"alive": is_alv
 		}
 
+	var doors_copy: Array = []
 	var scene_doors: Array = []
 	for d in doors:
+		var is_sec = bool(d.get("is_secret", false))
+		var is_rev = bool(d.get("is_revealed", not is_sec))
+		var is_op = bool(d.get("is_open", false))
+		var dc = d.duplicate(true)
+		dc["is_open"] = is_op
+		dc["is_secret"] = is_sec
+		dc["is_revealed"] = is_rev
+		doors_copy.append(dc)
+
 		var f = d.get("from", [0, 0])
 		var t = d.get("to", [0, 0])
 		var mid_x = (float(f[0]) + float(t[0])) * 0.5 + 0.5
@@ -4891,7 +4984,9 @@ func get_telemetry_state() -> Dictionary:
 		var pixel_pos = board_offset + Vector2(mid_x * tile_size, mid_y * tile_size)
 		scene_doors.append({
 			"id": str(d.get("id", "")),
-			"isOpen": bool(d.get("is_open", false)),
+			"isOpen": is_op,
+			"isSecret": is_sec,
+			"isRevealed": is_rev,
 			"from": f,
 			"to": t,
 			"pixelPos": [pixel_pos.x, pixel_pos.y]
@@ -4902,7 +4997,7 @@ func get_telemetry_state() -> Dictionary:
 		"diceLabel": dice_label.text if dice_label else "",
 		"buttons": {
 			"roll": { "visible": btn_roll.visible, "disabled": btn_roll.disabled } if btn_roll else {},
-			"attack": { "visible": btn_attack.visible, "disabled": btn_attack.disabled } if btn_attack else {},
+			"attack": { "visible": btn_attack.visible, "disabled": btn_attack.disabled, "text": btn_attack.text } if btn_attack else {},
 			"cast_spell": { "visible": btn_cast_spell.visible, "disabled": btn_cast_spell.disabled } if btn_cast_spell else {},
 			"use_item": { "visible": btn_use_item.visible, "disabled": btn_use_item.disabled } if btn_use_item else {},
 			"search": { "visible": btn_search.visible, "disabled": btn_search.disabled } if btn_search else {},
@@ -4962,7 +5057,7 @@ func get_telemetry_state() -> Dictionary:
 		},
 		"heroes": heroes_copy,
 		"monsters": monsters_copy,
-		"doors": doors,
+		"doors": doors_copy,
 		"traps": traps_copy,
 		"furniture": furniture_copy,
 		"wallBlocks": wall_blocks_copy,
@@ -5129,6 +5224,7 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 					var d_id = str(d_patch.get("id", ""))
 					var df = d_patch.get("from", [])
 					var dt = d_patch.get("to", [])
+					var matched = false
 					for d in doors:
 						var did = str(d.get("id", ""))
 						var is_match = (did == d_id)
@@ -5140,7 +5236,17 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 						if is_match:
 							for k in d_patch:
 								d[k] = d_patch[k]
+							matched = true
 							break
+					if not matched and d_patch.has("from") and d_patch.has("to"):
+						var new_d = d_patch.duplicate(true)
+						if not new_d.has("is_open"):
+							new_d["is_open"] = false
+						if not new_d.has("is_secret"):
+							new_d["is_secret"] = false
+						if not new_d.has("is_revealed"):
+							new_d["is_revealed"] = not new_d["is_secret"]
+						doors.append(new_d)
 
 			if action_data.has("traps") and action_data.traps is Array:
 				for t_patch in action_data.traps:
@@ -5200,10 +5306,10 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			var ok = move_hero(Vector2i(tx, ty))
 			return { "success": ok }
 		"open_door":
-			var fx = int(action_data.get("from_x", 0))
-			var fy = int(action_data.get("from_y", 0))
-			var tx = int(action_data.get("to_x", 0))
-			var ty = int(action_data.get("to_y", 0))
+			var fx = int(action_data.get("from_x", action_data.get("from", [0, 0])[0] if action_data.get("from") is Array and action_data.from.size() > 0 else 0))
+			var fy = int(action_data.get("from_y", action_data.get("from", [0, 0])[1] if action_data.get("from") is Array and action_data.from.size() > 1 else 0))
+			var tx = int(action_data.get("to_x", action_data.get("to", [0, 0])[0] if action_data.get("to") is Array and action_data.to.size() > 0 else 0))
+			var ty = int(action_data.get("to_y", action_data.get("to", [0, 0])[1] if action_data.get("to") is Array and action_data.to.size() > 1 else 0))
 			var ok = open_door(Vector2i(fx, fy), Vector2i(tx, ty))
 			return { "success": ok }
 		"attack":
@@ -5627,35 +5733,74 @@ func _draw_board(canvas: CanvasItem) -> void:
 		var t = d.get("to", [0, 0])
 		var f_pos = Vector2i(f[0], f[1])
 		var t_pos = Vector2i(t[0], t[1])
+		var is_secret = bool(d.get("is_secret", false))
+		var is_revealed = bool(d.get("is_revealed", not is_secret))
+		var is_open = bool(d.get("is_open", false))
+
+		# Visibility rules:
+		# Undiscovered secret doors are invisible to players
+		if is_secret and not is_revealed and not is_gm_role():
+			continue
+
 		if is_gm_role() or explored_tiles.has(f_pos) or explored_tiles.has(t_pos):
 			var p1 = board_offset + Vector2(f[0] * tile_size + tile_size * 0.5, f[1] * tile_size + tile_size * 0.5)
 			var p2 = board_offset + Vector2(t[0] * tile_size + tile_size * 0.5, t[1] * tile_size + tile_size * 0.5)
 			var mid = (p1 + p2) * 0.5
-			var is_open = d.get("is_open", false)
-			var tex: Texture2D = door_open_tex if is_open else door_closed_tex
 			var d_size = tile_size * 0.85
 			var is_vert = (f[1] == t[1])
 			var rot = PI * 0.5 if is_vert else 0.0
 
-			if tex:
-				var orig_w = float(tex.get_width())
-				var orig_h = float(tex.get_height())
-				var scale_v = Vector2(d_size / orig_w, d_size / orig_h)
-				canvas.draw_set_transform(mid, rot, scale_v)
-				canvas.draw_texture(tex, -Vector2(orig_w, orig_h) * 0.5)
-				canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-			else:
-				# Clean vector fallback if texture unavailable
-				var col = Color(0.2, 0.8, 0.2, 0.9) if is_open else Color(0.65, 0.42, 0.18, 0.95)
-				if is_vert:
-					canvas.draw_rect(Rect2(mid.x - 5, mid.y - d_size * 0.45, 10, d_size * 0.9), col)
-					canvas.draw_rect(Rect2(mid.x - 5, mid.y - d_size * 0.45, 10, d_size * 0.9), Color(0.2, 0.15, 0.1), false, 1.5)
+			if is_secret and not is_revealed:
+				# GM view of hidden secret door
+				var gm_rect = Rect2(mid.x - 6, mid.y - d_size * 0.45, 12, d_size * 0.9) if is_vert else Rect2(mid.x - d_size * 0.45, mid.y - 6, d_size * 0.9, 12)
+				canvas.draw_rect(gm_rect, Color(0.35, 0.10, 0.45, 0.85))
+				canvas.draw_rect(gm_rect, Color(0.85, 0.35, 1.0, 0.95), false, 1.5)
+				var gm_txt = "GM: SECRET"
+				var gm_w = ThemeDB.fallback_font.get_string_size(gm_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 7).x
+				canvas.draw_string(ThemeDB.fallback_font, Vector2(mid.x - gm_w * 0.5, mid.y + 3), gm_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 7, Color(1.0, 0.8, 1.0))
+			elif is_secret and is_revealed:
+				# Discovered secret door (revolving stone slab)
+				if is_open:
+					# Discovered and Open: clear passageway through stone arch
+					var arch_rect = Rect2(mid.x - 5, mid.y - d_size * 0.45, 10, d_size * 0.9) if is_vert else Rect2(mid.x - d_size * 0.45, mid.y - 5, d_size * 0.9, 10)
+					canvas.draw_rect(arch_rect, Color(0.12, 0.22, 0.28, 0.85))
+					canvas.draw_rect(arch_rect, Color(0.25, 0.85, 0.75, 0.95), false, 1.5)
+					var op_txt = "OPEN"
+					var op_w = ThemeDB.fallback_font.get_string_size(op_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 7).x
+					canvas.draw_string(ThemeDB.fallback_font, Vector2(mid.x - op_w * 0.5, mid.y + 3), op_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 7, Color(0.8, 1.0, 0.95))
 				else:
-					canvas.draw_rect(Rect2(mid.x - d_size * 0.45, mid.y - 5, d_size * 0.9, 10), col)
-					canvas.draw_rect(Rect2(mid.x - d_size * 0.45, mid.y - 5, d_size * 0.9, 10), Color(0.2, 0.15, 0.1), false, 1.5)
+					# Discovered and Closed: revolving stone slab with golden runic border & SECRET label
+					var slab_rect = Rect2(mid.x - 7, mid.y - d_size * 0.45, 14, d_size * 0.9) if is_vert else Rect2(mid.x - d_size * 0.45, mid.y - 7, d_size * 0.9, 14)
+					canvas.draw_rect(slab_rect, Color(0.22, 0.20, 0.24, 0.95))
+					canvas.draw_rect(slab_rect, Color(0.95, 0.75, 0.20, 1.0), false, 2.0)
+					if is_vert:
+						canvas.draw_line(Vector2(mid.x, slab_rect.position.y + 2), Vector2(mid.x, slab_rect.end.y - 2), Color(0.65, 0.55, 0.25, 0.7), 1.0)
+					else:
+						canvas.draw_line(Vector2(slab_rect.position.x + 2, mid.y), Vector2(slab_rect.end.x - 2, mid.y), Color(0.65, 0.55, 0.25, 0.7), 1.0)
+					var sec_txt = "SECRET"
+					var sec_w = ThemeDB.fallback_font.get_string_size(sec_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 7).x
+					canvas.draw_string(ThemeDB.fallback_font, Vector2(mid.x - sec_w * 0.5, mid.y + 3), sec_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 7, Color(1.0, 0.9, 0.4))
+			else:
+				var tex: Texture2D = door_open_tex if is_open else door_closed_tex
+				if tex:
+					var orig_w = float(tex.get_width())
+					var orig_h = float(tex.get_height())
+					var scale_v = Vector2(d_size / orig_w, d_size / orig_h)
+					canvas.draw_set_transform(mid, rot, scale_v)
+					canvas.draw_texture(tex, -Vector2(orig_w, orig_h) * 0.5)
+					canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+				else:
+					# Clean vector fallback if texture unavailable
+					var col = Color(0.2, 0.8, 0.2, 0.9) if is_open else Color(0.65, 0.42, 0.18, 0.95)
+					if is_vert:
+						canvas.draw_rect(Rect2(mid.x - 5, mid.y - d_size * 0.45, 10, d_size * 0.9), col)
+						canvas.draw_rect(Rect2(mid.x - 5, mid.y - d_size * 0.45, 10, d_size * 0.9), Color(0.2, 0.15, 0.1), false, 1.5)
+					else:
+						canvas.draw_rect(Rect2(mid.x - d_size * 0.45, mid.y - 5, d_size * 0.9, 10), col)
+						canvas.draw_rect(Rect2(mid.x - d_size * 0.45, mid.y - 5, d_size * 0.9, 10), Color(0.2, 0.15, 0.1), false, 1.5)
 
 			# If active hero is adjacent to a closed door, render interactive golden highlight
-			if not is_open and current_role == "player":
+			if not is_open and current_role == "player" and is_revealed:
 				var adj_doors = get_adjacent_closed_doors()
 				for ad in adj_doors:
 					var ad_f = ad.get("from", [-1, -1])
