@@ -737,7 +737,41 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
     assert.strictEqual(cart.heroes.elf.spells.length, 3, "Elf must have 3 Earth spells");
     assert.strictEqual(cart.heroes.wizard.spells.length, 9, "Wizard must have 9 spells");
   });
+
+  it("verifies all 12 authentic HeroQuest furniture textures and 6 tile textures exist in editor and runtime assets", () => {
+    const furnitureTypes = [
+      "altar", "table", "bookcase", "bookshelf", "tomb", "chest",
+      "cupboard", "weapons_rack", "fireplace", "throne", "torture_rack", "alchemists_bench"
+    ];
+    const tileTypes = [
+      "wall_block", "stairs", "trap_pit", "trap_spear", "trap_falling_block", "boulder"
+    ];
+
+    const editorFurnDir = path.join(__dirname, "../assets/furniture");
+    const runtimeFurnDir = path.join(REPO_ROOT, "games/tabletop-rpg/assets/furniture");
+    const editorTilesDir = path.join(__dirname, "../assets/tiles");
+    const runtimeTilesDir = path.join(REPO_ROOT, "games/tabletop-rpg/assets/tiles");
+
+    for (const f of furnitureTypes) {
+      const eFile = path.join(editorFurnDir, `${f}.png`);
+      const rFile = path.join(runtimeFurnDir, `${f}.png`);
+      assert.ok(fs.existsSync(eFile), `Editor furniture texture must exist: ${f}.png`);
+      assert.ok(fs.existsSync(rFile), `Runtime furniture texture must exist: ${f}.png`);
+      assert.ok(fs.statSync(eFile).size > 1000, `Editor texture ${f}.png must be non-empty image`);
+      assert.ok(fs.statSync(rFile).size > 1000, `Runtime texture ${f}.png must be non-empty image`);
+    }
+
+    for (const t of tileTypes) {
+      const eFile = path.join(editorTilesDir, `${t}.png`);
+      const rFile = path.join(runtimeTilesDir, `${t}.png`);
+      assert.ok(fs.existsSync(eFile), `Editor tile texture must exist: ${t}.png`);
+      assert.ok(fs.existsSync(rFile), `Runtime tile texture must exist: ${t}.png`);
+      assert.ok(fs.statSync(eFile).size > 1000, `Editor texture ${t}.png must be non-empty image`);
+      assert.ok(fs.statSync(rFile).size > 1000, `Runtime texture ${t}.png must be non-empty image`);
+    }
+  });
 });
+
 
 
 

@@ -33,6 +33,8 @@ var door_closed_tex: Texture2D = null
 var door_open_tex: Texture2D = null
 var hero_token_textures: Dictionary = {}
 var monster_token_textures: Dictionary = {}
+var furniture_textures: Dictionary = {}
+var tile_textures: Dictionary = {}
 var furniture: Array[Dictionary] = []
 var wall_blocks: Array[Dictionary] = []
 var traps: Array[Dictionary] = []
@@ -366,6 +368,8 @@ func _ready() -> void:
 	_load_door_textures()
 	_load_hero_token_textures()
 	_load_monster_token_textures()
+	_load_furniture_textures()
+	_load_tile_textures()
 	_update_ui()
 	_log("=== Welcome to HeroQuest: The Trial ===")
 	if is_gm_role():
@@ -1147,6 +1151,84 @@ func get_monster_token_texture(m: Dictionary) -> Texture2D:
 				monster_token_textures[key] = tex
 				return tex
 
+	return null
+
+func _load_furniture_textures() -> void:
+	var furn_map = {
+		"altar": "res://assets/furniture/altar.png",
+		"table": "res://assets/furniture/table.png",
+		"bookcase": "res://assets/furniture/bookcase.png",
+		"bookshelf": "res://assets/furniture/bookshelf.png",
+		"tomb": "res://assets/furniture/tomb.png",
+		"chest": "res://assets/furniture/chest.png",
+		"cupboard": "res://assets/furniture/cupboard.png",
+		"weapons-rack": "res://assets/furniture/weapons_rack.png",
+		"rack": "res://assets/furniture/weapons_rack.png",
+		"fireplace": "res://assets/furniture/fireplace.png",
+		"throne": "res://assets/furniture/throne.png",
+		"torture-rack": "res://assets/furniture/torture_rack.png",
+		"alchemists-bench": "res://assets/furniture/alchemists_bench.png"
+	}
+	for k in furn_map:
+		if not furniture_textures.has(k) or furniture_textures[k] == null:
+			var tex = _load_texture_safe(furn_map[k])
+			if tex:
+				furniture_textures[k] = tex
+
+func _load_tile_textures() -> void:
+	var tile_map = {
+		"wall_block": "res://assets/tiles/wall_block.png",
+		"stairs": "res://assets/tiles/stairs.png",
+		"stair": "res://assets/tiles/stairs.png",
+		"starting_stairs": "res://assets/tiles/stairs.png",
+		"pit": "res://assets/tiles/trap_pit.png",
+		"trap_pit": "res://assets/tiles/trap_pit.png",
+		"spear": "res://assets/tiles/trap_spear.png",
+		"trap_spear": "res://assets/tiles/trap_spear.png",
+		"falling-block": "res://assets/tiles/trap_falling_block.png",
+		"falling_block": "res://assets/tiles/trap_falling_block.png",
+		"trap_falling_block": "res://assets/tiles/trap_falling_block.png",
+		"boulder": "res://assets/tiles/boulder.png"
+	}
+	for k in tile_map:
+		if not tile_textures.has(k) or tile_textures[k] == null:
+			var tex = _load_texture_safe(tile_map[k])
+			if tex:
+				tile_textures[k] = tex
+
+func get_furniture_texture(f_type: String) -> Texture2D:
+	var clean = f_type.to_lower().strip_edges()
+	if clean.begins_with("furn-") or clean.begins_with("furniture-"):
+		clean = clean.split("-")[1]
+	if furniture_textures.has(clean) and furniture_textures[clean] != null:
+		return furniture_textures[clean]
+	for k in furniture_textures:
+		if k in clean or clean in k:
+			return furniture_textures[k]
+	var tile_fallback = get_tile_texture(clean)
+	if tile_fallback:
+		return tile_fallback
+	return null
+
+func get_tile_texture(t_type: String) -> Texture2D:
+	var clean = t_type.to_lower().strip_edges()
+	if tile_textures.has(clean) and tile_textures[clean] != null:
+		return tile_textures[clean]
+	if "spear" in clean:
+		return tile_textures.get("spear")
+	if "pit" in clean:
+		return tile_textures.get("pit")
+	if "falling" in clean:
+		return tile_textures.get("falling-block")
+	if "boulder" in clean or "rock" in clean:
+		return tile_textures.get("boulder")
+	if "stair" in clean:
+		return tile_textures.get("stairs")
+	if "wall" in clean:
+		return tile_textures.get("wall_block")
+	for k in tile_textures:
+		if k in clean or clean in k:
+			return tile_textures[k]
 	return null
 
 func _load_texture_safe(res_path: String) -> Texture2D:
@@ -9922,6 +10004,9 @@ func get_telemetry_state() -> Dictionary:
 		tc["sprung"] = bool(tr.get("sprung", false) or tr.get("is_sprung", false))
 		tc["spent"] = bool(tr.get("spent", false))
 		tc["blocked"] = bool(tr.get("blocked", false))
+		var tr_tex = get_tile_texture(tc["type"])
+		tc["hasTexture"] = (tr_tex != null)
+		tc["texturePath"] = tr_tex.resource_path if tr_tex != null else ""
 		traps_copy.append(tc)
 
 	var furniture_copy: Array = []
@@ -9952,6 +10037,9 @@ func get_telemetry_state() -> Dictionary:
 			for ty in range(fy, fy + fh):
 				f_tiles.append([tx, ty])
 		fc["tiles"] = f_tiles
+		var f_tex = get_furniture_texture(f_type)
+		fc["hasTexture"] = (f_tex != null)
+		fc["texturePath"] = f_tex.resource_path if f_tex != null else ""
 		furniture_copy.append(fc)
 
 	var wall_blocks_copy: Array = []
@@ -9980,6 +10068,9 @@ func get_telemetry_state() -> Dictionary:
 					break
 		wbc["is_revealed"] = is_rev
 		wbc["isRevealed"] = is_rev
+		var wb_tex = get_tile_texture("wall_block")
+		wbc["hasTexture"] = (wb_tex != null)
+		wbc["texturePath"] = wb_tex.resource_path if wb_tex != null else ""
 		wall_blocks_copy.append(wbc)
 
 	var scene_tokens: Dictionary = {}
@@ -10166,6 +10257,12 @@ func get_telemetry_state() -> Dictionary:
 			"tooltip": btn_map_end_turn.tooltip_text if btn_map_end_turn else ""
 		},
 		"startingStair": [starting_stair.x, starting_stair.y],
+		"hasStartingStairTexture": (get_tile_texture("stairs") != null),
+		"startingStairTexturePath": (get_tile_texture("stairs").resource_path if get_tile_texture("stairs") != null else ""),
+		"textureManifest": {
+			"furnitureLoadedCount": furniture_textures.size(),
+			"tilesLoadedCount": tile_textures.size()
+		},
 		"isStartingTileSpecial": true,
 		"heroes": heroes_copy,
 		"monsters": monsters_copy,
@@ -11276,21 +11373,28 @@ func _draw_board(canvas: CanvasItem) -> void:
 
 		if is_visible:
 			var block_rect = Rect2(board_offset + Vector2(px * tile_size + 2, py * tile_size + 2), Vector2(w * tile_size - 4, h * tile_size - 4))
-			# Base stone (dark masonry)
-			canvas.draw_rect(block_rect, Color(0.18, 0.20, 0.24, 0.98))
-			# Bevel border (carved stone)
-			canvas.draw_rect(block_rect, Color(0.48, 0.54, 0.62, 1.0), false, 2.0)
-			# Inner masonry lines (clean geometric X crossbar)
-			canvas.draw_line(block_rect.position + Vector2(4, 4), block_rect.end - Vector2(4, 4), Color(0.35, 0.40, 0.48, 0.7), 1.5)
-			canvas.draw_line(Vector2(block_rect.end.x - 4, block_rect.position.y + 4), Vector2(block_rect.position.x + 4, block_rect.end.y - 4), Color(0.35, 0.40, 0.48, 0.7), 1.5)
-			# Clean embossed [BLOCK] label
-			var font = ThemeDB.fallback_font
-			var lbl = "BLOCK"
-			var lbl_size = font.get_string_size(lbl, HORIZONTAL_ALIGNMENT_CENTER, -1, 10)
-			var lbl_bg = Rect2(block_rect.get_center().x - lbl_size.x * 0.5 - 4, block_rect.get_center().y - lbl_size.y * 0.5 - 2, lbl_size.x + 8, lbl_size.y + 4)
-			canvas.draw_rect(lbl_bg, Color(0.10, 0.12, 0.16, 0.90))
-			canvas.draw_rect(lbl_bg, Color(0.55, 0.60, 0.70, 0.8), false, 1.0)
-			canvas.draw_string(font, Vector2(block_rect.get_center().x - lbl_size.x * 0.5, block_rect.get_center().y + lbl_size.y * 0.35), lbl, HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(0.90, 0.92, 0.98, 0.95))
+			var wb_tex = get_tile_texture("wall_block")
+			if wb_tex:
+				for bx in range(w):
+					for by in range(h):
+						var c_rect = Rect2(board_offset + Vector2((px + bx) * tile_size + 1, (py + by) * tile_size + 1), Vector2(tile_size - 2, tile_size - 2))
+						canvas.draw_texture_rect(wb_tex, c_rect, false)
+						canvas.draw_rect(c_rect, Color(0.1, 0.1, 0.15, 0.6), false, 1.0)
+			else:
+				# Base stone (dark masonry)
+				canvas.draw_rect(block_rect, Color(0.18, 0.20, 0.24, 0.98))
+				canvas.draw_rect(block_rect, Color(0.48, 0.54, 0.62, 1.0), false, 2.0)
+				# Inner masonry lines (clean geometric X crossbar)
+				canvas.draw_line(block_rect.position + Vector2(4, 4), block_rect.end - Vector2(4, 4), Color(0.35, 0.40, 0.48, 0.7), 1.5)
+				canvas.draw_line(Vector2(block_rect.end.x - 4, block_rect.position.y + 4), Vector2(block_rect.position.x + 4, block_rect.end.y - 4), Color(0.35, 0.40, 0.48, 0.7), 1.5)
+				# Clean embossed [BLOCK] label
+				var font = ThemeDB.fallback_font
+				var lbl = "BLOCK"
+				var lbl_size = font.get_string_size(lbl, HORIZONTAL_ALIGNMENT_CENTER, -1, 10)
+				var lbl_bg = Rect2(block_rect.get_center().x - lbl_size.x * 0.5 - 4, block_rect.get_center().y - lbl_size.y * 0.5 - 2, lbl_size.x + 8, lbl_size.y + 4)
+				canvas.draw_rect(lbl_bg, Color(0.10, 0.12, 0.16, 0.90))
+				canvas.draw_rect(lbl_bg, Color(0.55, 0.60, 0.70, 0.8), false, 1.0)
+				canvas.draw_string(font, Vector2(block_rect.get_center().x - lbl_size.x * 0.5, block_rect.get_center().y + lbl_size.y * 0.35), lbl, HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(0.90, 0.92, 0.98, 0.95))
 
 	# Draw Traps (visible in GM mode or if detected/revealed/sprung/disarmed/spent/blocked)
 	for tr in traps:
@@ -11309,7 +11413,77 @@ func _draw_board(canvas: CanvasItem) -> void:
 			var t_type = str(tr.get("type", tr.get("trapType", "pit"))).to_lower()
 			var trap_rect = Rect2(board_offset + Vector2(px * tile_size + 3, py * tile_size + 3), Vector2(w * tile_size - 6, h * tile_size - 6))
 
-			if is_dis:
+			var tr_tex = get_tile_texture(t_type)
+			if tr_tex:
+				# Drop shadow
+				canvas.draw_rect(Rect2(trap_rect.position + Vector2(1, 1), trap_rect.size), Color(0.0, 0.0, 0.0, 0.5))
+				# Authentic AI Texture
+				canvas.draw_texture_rect(tr_tex, trap_rect, false)
+
+				if is_dis:
+					canvas.draw_rect(trap_rect, Color(0.25, 0.85, 0.45, 0.9), false, 1.5)
+					var b_rect = Rect2(trap_rect.get_center().x - 14, trap_rect.get_center().y - 6, 28, 12)
+					canvas.draw_rect(b_rect, Color(0.10, 0.22, 0.12, 0.85))
+					canvas.draw_rect(b_rect, Color(0.25, 0.85, 0.45, 0.9), false, 1.0)
+					canvas.draw_string(ThemeDB.fallback_font, trap_rect.get_center() + Vector2(-11, 3), "SAFE", HORIZONTAL_ALIGNMENT_CENTER, -1, 9, Color(0.4, 1.0, 0.6, 0.95))
+				elif "spear" in t_type:
+					if is_spn or is_spr:
+						canvas.draw_rect(trap_rect, Color(0.55, 0.60, 0.68, 0.75), false, 1.5)
+						var b_rect = Rect2(trap_rect.get_center().x - 17, trap_rect.get_center().y - 6, 34, 12)
+						canvas.draw_rect(b_rect, Color(0.15, 0.17, 0.20, 0.85))
+						canvas.draw_rect(b_rect, Color(0.55, 0.60, 0.68, 0.75), false, 1.0)
+						canvas.draw_string(ThemeDB.fallback_font, trap_rect.get_center() + Vector2(-15, 3), "SPENT", HORIZONTAL_ALIGNMENT_CENTER, -1, 9, Color(0.7, 0.75, 0.82, 0.9))
+					elif is_det:
+						canvas.draw_rect(trap_rect, Color(1.0, 0.55, 0.15, 0.95), false, 1.5)
+						var b_rect = Rect2(trap_rect.get_center().x - 18, trap_rect.get_center().y - 6, 36, 12)
+						canvas.draw_rect(b_rect, Color(0.25, 0.12, 0.05, 0.85))
+						canvas.draw_rect(b_rect, Color(1.0, 0.55, 0.15, 0.95), false, 1.0)
+						canvas.draw_string(ThemeDB.fallback_font, trap_rect.get_center() + Vector2(-15, 3), "SPEAR", HORIZONTAL_ALIGNMENT_CENTER, -1, 8, Color(1.0, 0.85, 0.5, 0.95))
+					elif is_gm:
+						canvas.draw_rect(trap_rect, Color(0.85, 0.3, 0.85, 0.85), false, 1.5)
+						var b_rect = Rect2(trap_rect.get_center().x - 24, trap_rect.get_center().y - 6, 48, 12)
+						canvas.draw_rect(b_rect, Color(0.25, 0.05, 0.25, 0.85))
+						canvas.draw_rect(b_rect, Color(0.85, 0.3, 0.85, 0.85), false, 1.0)
+						canvas.draw_string(ThemeDB.fallback_font, trap_rect.get_center() + Vector2(-22, 3), "GM: SPEAR", HORIZONTAL_ALIGNMENT_CENTER, -1, 8, Color(0.9, 0.6, 1.0, 0.9))
+				elif "falling" in t_type or "boulder" in t_type or "rock" in t_type:
+					if is_blk or is_spr:
+						canvas.draw_rect(trap_rect, Color(0.55, 0.60, 0.68, 1.0), false, 2.0)
+						var b_rect = Rect2(trap_rect.get_center().x - 18, trap_rect.get_center().y - 6, 36, 12)
+						canvas.draw_rect(b_rect, Color(0.12, 0.14, 0.18, 0.85))
+						canvas.draw_rect(b_rect, Color(0.55, 0.60, 0.68, 1.0), false, 1.0)
+						canvas.draw_string(ThemeDB.fallback_font, trap_rect.get_center() + Vector2(-16, 3), "BLOCK", HORIZONTAL_ALIGNMENT_CENTER, -1, 9, Color(0.85, 0.88, 0.95, 0.9))
+					elif is_det:
+						canvas.draw_rect(trap_rect, Color(0.95, 0.55, 0.2, 0.95), false, 1.5)
+						var b_rect = Rect2(trap_rect.get_center().x - 18, trap_rect.get_center().y - 6, 36, 12)
+						canvas.draw_rect(b_rect, Color(0.25, 0.12, 0.05, 0.85))
+						canvas.draw_rect(b_rect, Color(0.95, 0.55, 0.2, 0.95), false, 1.0)
+						canvas.draw_string(ThemeDB.fallback_font, trap_rect.get_center() + Vector2(-16, 3), "BLOCK", HORIZONTAL_ALIGNMENT_CENTER, -1, 9, Color(1.0, 0.85, 0.6, 0.95))
+					elif is_gm:
+						canvas.draw_rect(trap_rect, Color(0.85, 0.3, 0.85, 0.85), false, 1.5)
+						var b_rect = Rect2(trap_rect.get_center().x - 24, trap_rect.get_center().y - 6, 48, 12)
+						canvas.draw_rect(b_rect, Color(0.25, 0.05, 0.25, 0.85))
+						canvas.draw_rect(b_rect, Color(0.85, 0.3, 0.85, 0.85), false, 1.0)
+						canvas.draw_string(ThemeDB.fallback_font, trap_rect.get_center() + Vector2(-22, 3), "GM: BLOCK", HORIZONTAL_ALIGNMENT_CENTER, -1, 8, Color(0.9, 0.6, 1.0, 0.9))
+				else:
+					if is_spr:
+						canvas.draw_rect(trap_rect, Color(0.85, 0.15, 0.15, 0.95), false, 2.0)
+						var b_rect = Rect2(trap_rect.get_center().x - 12, trap_rect.get_center().y - 6, 24, 12)
+						canvas.draw_rect(b_rect, Color(0.20, 0.05, 0.05, 0.85))
+						canvas.draw_rect(b_rect, Color(0.85, 0.15, 0.15, 0.95), false, 1.0)
+						canvas.draw_string(ThemeDB.fallback_font, trap_rect.get_center() + Vector2(-10, 3), "PIT", HORIZONTAL_ALIGNMENT_CENTER, -1, 9, Color(1.0, 0.3, 0.3, 0.95))
+					elif is_det:
+						canvas.draw_rect(trap_rect, Color(1.0, 0.3, 0.2, 0.95), false, 1.5)
+						var b_rect = Rect2(trap_rect.get_center().x - 12, trap_rect.get_center().y - 6, 24, 12)
+						canvas.draw_rect(b_rect, Color(0.25, 0.05, 0.05, 0.85))
+						canvas.draw_rect(b_rect, Color(1.0, 0.3, 0.2, 0.95), false, 1.0)
+						canvas.draw_string(ThemeDB.fallback_font, trap_rect.get_center() + Vector2(-10, 3), "PIT", HORIZONTAL_ALIGNMENT_CENTER, -1, 9, Color(1.0, 0.85, 0.8, 0.95))
+					elif is_gm:
+						canvas.draw_rect(trap_rect, Color(0.85, 0.3, 0.85, 0.85), false, 1.5)
+						var b_rect = Rect2(trap_rect.get_center().x - 20, trap_rect.get_center().y - 6, 40, 12)
+						canvas.draw_rect(b_rect, Color(0.25, 0.05, 0.25, 0.85))
+						canvas.draw_rect(b_rect, Color(0.85, 0.3, 0.85, 0.85), false, 1.0)
+						canvas.draw_string(ThemeDB.fallback_font, trap_rect.get_center() + Vector2(-18, 3), "GM: PIT", HORIZONTAL_ALIGNMENT_CENTER, -1, 8, Color(0.9, 0.6, 1.0, 0.9))
+			elif is_dis:
 				# Disarmed trap: safe bridged floor / green border
 				canvas.draw_rect(trap_rect, Color(0.12, 0.28, 0.16, 0.75))
 				canvas.draw_rect(trap_rect, Color(0.25, 0.85, 0.45, 0.9), false, 1.5)
@@ -11400,37 +11574,61 @@ func _draw_board(canvas: CanvasItem) -> void:
 
 			var f_rect = Rect2(board_offset + Vector2(px * tile_size + 2, py * tile_size + 2), Vector2(w * tile_size - 4, h * tile_size - 4))
 			var label_text = ""
+			var f_tex = get_furniture_texture(f_type)
+			if f_type == "boulder":
+				f_tex = get_tile_texture("boulder")
 
-			if f_type == "altar":
-				canvas.draw_rect(f_rect, Color(0.14, 0.10, 0.20, 0.95))
-				canvas.draw_rect(f_rect, Color(0.68, 0.35, 0.95, 0.9), false, 2.0)
-				canvas.draw_arc(f_rect.get_center(), min(w, h) * tile_size * 0.28, 0, TAU, 24, Color(0.85, 0.45, 1.0, 0.6), 1.5)
-				label_text = "ALTAR"
-			elif f_type == "bookcase":
-				canvas.draw_rect(f_rect, Color(0.24, 0.12, 0.08, 0.95))
-				canvas.draw_rect(f_rect, Color(0.62, 0.36, 0.20, 1.0), false, 2.0)
-				label_text = "BOOKS"
-			elif f_type == "bookshelf" or f_type == "cupboard":
-				canvas.draw_rect(f_rect, Color(0.32, 0.20, 0.10, 0.95))
-				canvas.draw_rect(f_rect, Color(0.72, 0.48, 0.24, 1.0), false, 2.0)
-				label_text = "SHELF"
-			elif f_type == "boulder":
-				canvas.draw_circle(f_rect.get_center(), tile_size * 0.42 * min(w, h), Color(0.32, 0.35, 0.38, 0.95))
-				canvas.draw_arc(f_rect.get_center(), tile_size * 0.42 * min(w, h), 0, TAU, 32, Color(0.65, 0.70, 0.75), 2.0)
-				label_text = ""
-			elif f_type == "tomb":
-				canvas.draw_rect(f_rect, Color(0.25, 0.28, 0.32, 0.95))
-				canvas.draw_rect(f_rect, Color(0.55, 0.60, 0.68, 1.0), false, 2.0)
-				label_text = "TOMB"
-			elif f_type == "table":
-				canvas.draw_rect(f_rect, Color(0.35, 0.22, 0.12, 0.95))
-				canvas.draw_rect(f_rect, Color(0.58, 0.38, 0.22, 1.0), false, 1.5)
-				label_text = "TABLE"
-			elif f_type == "chest":
-				canvas.draw_rect(f_rect, Color(0.45, 0.32, 0.08, 0.95))
-				canvas.draw_rect(f_rect, Color(0.9, 0.75, 0.2, 1.0), false, 1.5)
-				label_text = "CHEST"
-				# Check if this chest is trapped
+			if f_tex:
+				# Drop shadow under furniture
+				canvas.draw_rect(Rect2(f_rect.position + Vector2(2, 2), f_rect.size), Color(0.0, 0.0, 0.0, 0.55))
+				canvas.draw_texture_rect(f_tex, f_rect, false)
+				# Subtle border highlight
+				canvas.draw_rect(f_rect, Color(0.65, 0.55, 0.35, 0.4), false, 1.0)
+			else:
+				if f_type == "altar":
+					canvas.draw_rect(f_rect, Color(0.14, 0.10, 0.20, 0.95))
+					canvas.draw_rect(f_rect, Color(0.68, 0.35, 0.95, 0.9), false, 2.0)
+					canvas.draw_arc(f_rect.get_center(), min(w, h) * tile_size * 0.28, 0, TAU, 24, Color(0.85, 0.45, 1.0, 0.6), 1.5)
+					label_text = "ALTAR"
+				elif f_type == "bookcase":
+					canvas.draw_rect(f_rect, Color(0.24, 0.12, 0.08, 0.95))
+					canvas.draw_rect(f_rect, Color(0.62, 0.36, 0.20, 1.0), false, 2.0)
+					label_text = "BOOKS"
+				elif f_type == "bookshelf" or f_type == "cupboard":
+					canvas.draw_rect(f_rect, Color(0.32, 0.20, 0.10, 0.95))
+					canvas.draw_rect(f_rect, Color(0.72, 0.48, 0.24, 1.0), false, 2.0)
+					label_text = "SHELF"
+				elif f_type == "boulder":
+					canvas.draw_circle(f_rect.get_center(), tile_size * 0.42 * min(w, h), Color(0.32, 0.35, 0.38, 0.95))
+					canvas.draw_arc(f_rect.get_center(), tile_size * 0.42 * min(w, h), 0, TAU, 32, Color(0.65, 0.70, 0.75), 2.0)
+					label_text = ""
+				elif f_type == "tomb":
+					canvas.draw_rect(f_rect, Color(0.25, 0.28, 0.32, 0.95))
+					canvas.draw_rect(f_rect, Color(0.55, 0.60, 0.68, 1.0), false, 2.0)
+					label_text = "TOMB"
+				elif f_type == "table":
+					canvas.draw_rect(f_rect, Color(0.35, 0.22, 0.12, 0.95))
+					canvas.draw_rect(f_rect, Color(0.58, 0.38, 0.22, 1.0), false, 1.5)
+					label_text = "TABLE"
+				elif f_type == "chest":
+					canvas.draw_rect(f_rect, Color(0.45, 0.32, 0.08, 0.95))
+					canvas.draw_rect(f_rect, Color(0.9, 0.75, 0.2, 1.0), false, 1.5)
+					label_text = "CHEST"
+				elif f_type == "weapons-rack" or f_type == "rack":
+					canvas.draw_rect(f_rect, Color(0.25, 0.25, 0.28, 0.95))
+					canvas.draw_rect(f_rect, Color(0.6, 0.6, 0.7, 1.0), false, 1.5)
+					label_text = "ARMS"
+				else:
+					canvas.draw_rect(f_rect, Color(0.4, 0.28, 0.16, 0.85))
+					canvas.draw_rect(f_rect, Color(0.6, 0.45, 0.25, 1.0), false, 1.5)
+					label_text = f_type.to_upper().substr(0, 5)
+
+				if label_text != "":
+					var lbl_w = ThemeDB.fallback_font.get_string_size(label_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 10).x
+					canvas.draw_string(ThemeDB.fallback_font, Vector2(f_rect.get_center().x - lbl_w * 0.5, f_rect.get_center().y + 3), label_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(0.9, 0.9, 0.9, 0.85))
+
+			# Check if this chest or furniture is trapped
+			if f_type == "chest" or "chest" in f_type:
 				var is_trapped = bool(f.get("trapped", false))
 				var is_dis = bool(f.get("disarmed", false))
 				var is_det = bool(f.get("detected", false))
@@ -11456,18 +11654,6 @@ func _draw_board(canvas: CanvasItem) -> void:
 						var b_rect = Rect2(f_rect.end.x - 26, f_rect.position.y + 2, 24, 9)
 						canvas.draw_rect(b_rect, Color(0.55, 0.15, 0.6, 0.95))
 						canvas.draw_string(ThemeDB.fallback_font, b_rect.position + Vector2(2, 7), "GM:T", HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color(1.0, 0.85, 1.0))
-			elif f_type == "weapons-rack" or f_type == "rack":
-				canvas.draw_rect(f_rect, Color(0.25, 0.25, 0.28, 0.95))
-				canvas.draw_rect(f_rect, Color(0.6, 0.6, 0.7, 1.0), false, 1.5)
-				label_text = "ARMS"
-			else:
-				canvas.draw_rect(f_rect, Color(0.4, 0.28, 0.16, 0.85))
-				canvas.draw_rect(f_rect, Color(0.6, 0.45, 0.25, 1.0), false, 1.5)
-				label_text = f_type.to_upper().substr(0, 5)
-
-			if label_text != "":
-				var lbl_w = ThemeDB.fallback_font.get_string_size(label_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 10).x
-				canvas.draw_string(ThemeDB.fallback_font, Vector2(f_rect.get_center().x - lbl_w * 0.5, f_rect.get_center().y + 3), label_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(0.9, 0.9, 0.9, 0.85))
 
 	# Draw Doors
 	for d in doors:
@@ -11604,12 +11790,24 @@ func _draw_board(canvas: CanvasItem) -> void:
 
 	# Draw Starting Staircase Tile (Entrance / Exit)
 	var stair_rect = Rect2(board_offset + Vector2(starting_stair.x * tile_size + 2, starting_stair.y * tile_size + 2), Vector2(tile_size - 4, tile_size - 4))
-	canvas.draw_rect(stair_rect, Color(0.18, 0.22, 0.28, 0.95))
-	canvas.draw_rect(stair_rect, Color(0.45, 0.60, 0.75, 1.0), false, 1.5)
-	canvas.draw_arc(stair_rect.get_center(), tile_size * 0.36, 0, TAU, 24, Color(0.35, 0.45, 0.58, 0.8), 1.5)
-	canvas.draw_arc(stair_rect.get_center(), tile_size * 0.20, 0, TAU, 16, Color(0.55, 0.68, 0.82, 0.9), 1.5)
-	var st_w = ThemeDB.fallback_font.get_string_size("STAIR", HORIZONTAL_ALIGNMENT_CENTER, -1, 8).x
-	canvas.draw_string(ThemeDB.fallback_font, Vector2(stair_rect.get_center().x - st_w * 0.5, stair_rect.get_center().y + 3), "STAIR", HORIZONTAL_ALIGNMENT_CENTER, -1, 8, Color(0.85, 0.9, 1.0, 0.85))
+	var st_tex = get_tile_texture("stairs")
+	if st_tex:
+		# Drop shadow and texture
+		canvas.draw_rect(Rect2(stair_rect.position + Vector2(2, 2), stair_rect.size), Color(0.0, 0.0, 0.0, 0.5))
+		canvas.draw_texture_rect(st_tex, stair_rect, false)
+		canvas.draw_rect(stair_rect, Color(0.45, 0.60, 0.75, 0.9), false, 1.5)
+		var st_w = ThemeDB.fallback_font.get_string_size("STAIR", HORIZONTAL_ALIGNMENT_CENTER, -1, 8).x
+		var b_rect = Rect2(stair_rect.get_center().x - st_w * 0.5 - 3, stair_rect.get_center().y - 4, st_w + 6, 12)
+		canvas.draw_rect(b_rect, Color(0.10, 0.12, 0.18, 0.85))
+		canvas.draw_rect(b_rect, Color(0.45, 0.60, 0.75, 0.8), false, 1.0)
+		canvas.draw_string(ThemeDB.fallback_font, Vector2(stair_rect.get_center().x - st_w * 0.5, stair_rect.get_center().y + 5), "STAIR", HORIZONTAL_ALIGNMENT_CENTER, -1, 8, Color(0.85, 0.9, 1.0, 0.95))
+	else:
+		canvas.draw_rect(stair_rect, Color(0.18, 0.22, 0.28, 0.95))
+		canvas.draw_rect(stair_rect, Color(0.45, 0.60, 0.75, 1.0), false, 1.5)
+		canvas.draw_arc(stair_rect.get_center(), tile_size * 0.36, 0, TAU, 24, Color(0.35, 0.45, 0.58, 0.8), 1.5)
+		canvas.draw_arc(stair_rect.get_center(), tile_size * 0.20, 0, TAU, 16, Color(0.55, 0.68, 0.82, 0.9), 1.5)
+		var st_w = ThemeDB.fallback_font.get_string_size("STAIR", HORIZONTAL_ALIGNMENT_CENTER, -1, 8).x
+		canvas.draw_string(ThemeDB.fallback_font, Vector2(stair_rect.get_center().x - st_w * 0.5, stair_rect.get_center().y + 3), "STAIR", HORIZONTAL_ALIGNMENT_CENTER, -1, 8, Color(0.85, 0.9, 1.0, 0.85))
 
 	# Draw Movement Trail (Green line from where hero or monster came from with moves remaining in middle)
 	var is_enemy_moving = (is_enemy_turn_waiting or active_enemy_turn_monster_id != "") and (enemy_turn_stage in ["moving", "pause_after_move", "acting", "waiting_for_action"])
