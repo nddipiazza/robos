@@ -243,6 +243,8 @@ offset_top = 8.0
 offset_right = 478.0
 offset_bottom = 316.0
 theme_override_font_sizes/normal_font_size = 13
+bbcode_enabled = true
+scroll_active = true
 text = "Log loaded..."
 
 [node name="AIConfirmModal" type="ColorRect" parent="UI"]

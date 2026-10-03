@@ -117,8 +117,13 @@ var auto_play_step: int = 0
 @onready var enemies_scroll: ScrollContainer = get_node_or_null("UI/EnemiesPanel/ScrollContainer")
 @onready var enemy_cards_grid: GridContainer = get_node_or_null("UI/EnemiesPanel/ScrollContainer/EnemyCardsGrid")
 @onready var dice_label: Label = $UI/DicePanel/DiceLabel
+@onready var log_panel: Panel = get_node_or_null("UI/LogPanel")
 
 var show_defeated_monsters: bool = false
+var last_player_attack_hit: Dictionary = {}
+var turn_player_losses: Dictionary = {}
+var turn_losses_active: bool = false
+var log_display_mode: String = "damage_report"
 
 func _find_action_button(btn_name: String) -> Button:
 	for p in [
@@ -267,6 +272,7 @@ func _ready() -> void:
 	_setup_ai_modal_styles()
 	_setup_elf_spell_modal()
 	_setup_turn_overlay_ui()
+	_setup_log_panel()
 	_load_door_textures()
 	_load_hero_token_textures()
 	_load_monster_token_textures()
@@ -1026,6 +1032,10 @@ func _load_active_cartridge() -> void:
 	_initialize_treasure_deck()
 	active_dice_animation = {}
 	floating_texts.clear()
+	turn_player_losses.clear()
+	last_player_attack_hit.clear()
+	turn_losses_active = false
+	log_display_mode = "damage_report"
 	active_enemy_turn_monster_id = ""
 	is_enemy_turn_waiting = false
 	enemy_turn_wait_timer = 0.0
@@ -2801,6 +2811,11 @@ func _unhandled_input(event: InputEvent) -> void:
 				return
 		return
 
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_L:
+		toggle_log_display_mode()
+		get_viewport().set_input_as_handled()
+		return
+
 	if not active_dice_animation.is_empty():
 		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 			if active_dice_animation.get("settled", false):
@@ -3707,10 +3722,13 @@ func dm_attack_hero(hero_id: String = "", attacker_monster: Variant = null) -> D
 			true,
 			int(target_h.get("current_bp", 0)) <= 0
 		)
+		var rock_skin_shattered = false
 		if target_h.get("rock_skin_active", false):
 			target_h["rock_skin_active"] = false
+			rock_skin_shattered = true
 			_log("[SPELL] The wound shatters %s's Rock Skin spell!" % target_h.get("name"))
 			spawn_floating_text(h_pos, "SHATTERED!", Color(0.8, 0.8, 0.8))
+		record_player_attack_hit(target_h, monster, res, prev_h_bp, rock_skin_shattered)
 	elif h_hp_subtracted == 0 and res.wounds == 0:
 		_log("[BLOCKED] %s successfully blocked the monster attack!" % target_h.get("name"))
 		spawn_floating_text(h_pos, "BLOCKED!", Color(0.3, 0.8, 1.0))
@@ -4732,6 +4750,8 @@ func end_turn() -> void:
 		active_hero_idx = (active_hero_idx + 1) % maxi(1, heroes.size())
 		if active_hero_idx == 0:
 			current_phase = "gm_phase"
+			turn_player_losses.clear()
+			turn_losses_active = false
 			_log("=== Zargon / Game Master Phase Begins ===")
 			if current_role == "player" and not is_headless_mode():
 				call_deferred("start_ai_monster_turn_sequence")
@@ -6240,11 +6260,229 @@ func _sanitize_ui_text(text: String) -> String:
 		out += s[i]
 	return out
 
-func _update_log_display() -> void:
+func _setup_log_panel() -> void:
+	if log_panel:
+		var sb = StyleBoxFlat.new()
+		sb.bg_color = Color("#0b0f16")
+		sb.set_border_width_all(1)
+		sb.border_color = Color("#223344")
+		sb.set_corner_radius_all(6)
+		sb.content_margin_left = 8
+		sb.content_margin_right = 8
+		sb.content_margin_top = 8
+		sb.content_margin_bottom = 8
+		log_panel.add_theme_stylebox_override("panel", sb)
+		if not log_panel.gui_input.is_connected(_on_log_panel_gui_input):
+			log_panel.gui_input.connect(_on_log_panel_gui_input)
+
 	if log_label:
+		log_label.bbcode_enabled = true
+		log_label.scroll_active = true
+		if not log_label.gui_input.is_connected(_on_log_panel_gui_input):
+			log_label.gui_input.connect(_on_log_panel_gui_input)
+
+func _on_log_panel_gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		if turn_losses_active:
+			toggle_log_display_mode()
+
+func toggle_log_display_mode() -> String:
+	if log_display_mode == "damage_report":
+		log_display_mode = "combat_log"
+	else:
+		log_display_mode = "damage_report"
+	_update_log_display()
+	return log_display_mode
+
+func _repeat_char(ch: String, count: int) -> String:
+	var res = ""
+	for i in range(maxi(0, count)):
+		res += ch
+	return res
+
+func _generate_ascii_health_bar(cur: int, max_val: int, length: int = 8) -> String:
+	if max_val <= 0:
+		return "[░░░░░░░░]"
+	var fill_ratio = clampf(float(cur) / float(max_val), 0.0, 1.0)
+	var filled_count = int(round(fill_ratio * length))
+	var empty_count = maxi(0, length - filled_count)
+	var bar_color = "#44ff44"
+	if fill_ratio <= 0.25:
+		bar_color = "#ff3333"
+	elif fill_ratio <= 0.5:
+		bar_color = "#ffaa00"
+	var filled_str = _repeat_char("█", filled_count)
+	var empty_str = _repeat_char("░", empty_count)
+	return "[color=%s][%s%s][/color]" % [bar_color, filled_str, empty_str]
+
+func _format_log_line_bbcode(msg: String) -> String:
+	var clean = _sanitize_ui_text(msg)
+	if clean.begins_with("[HIT]"):
+		return "[color=#ff4444][b][HIT][/b][/color]" + clean.substr(5)
+	elif clean.begins_with("[BLOCKED]"):
+		return "[color=#33ccff][b][BLOCKED][/b][/color]" + clean.substr(9)
+	elif clean.begins_with("[SPELL]"):
+		return "[color=#bb88ff][b][SPELL][/b][/color]" + clean.substr(7)
+	elif clean.begins_with("[TRAP]"):
+		return "[color=#ffaa33][b][TRAP][/b][/color]" + clean.substr(6)
+	elif clean.begins_with("[TREASURE]"):
+		return "[color=#ffd700][b][TREASURE][/b][/color]" + clean.substr(10)
+	elif clean.begins_with("[MOVE]"):
+		return "[color=#66bb6a][b][MOVE][/b][/color]" + clean.substr(6)
+	elif clean.begins_with("[DOOR]"):
+		return "[color=#d4a373][b][DOOR][/b][/color]" + clean.substr(6)
+	elif clean.begins_with("[GM]"):
+		return "[color=#ff77aa][b][GM][/b][/color]" + clean.substr(4)
+	elif clean.begins_with("[PLAYER]"):
+		return "[color=#55ddff][b][PLAYER][/b][/color]" + clean.substr(8)
+	return clean
+
+func _build_turn_damage_report_bbcode() -> String:
+	if not turn_losses_active or last_player_attack_hit.is_empty():
+		return ""
+
+	var out = ""
+	var round_num = last_player_attack_hit.get("round", current_round)
+	out += "[b][color=#ff4444]► ATTACK DAMAGE REPORT (ROUND %d) ◄[/color][/b]\n" % round_num
+
+	# 1. Latest Attack Hit That Just Happened
+	var hit = last_player_attack_hit
+	var att_name = str(hit.get("attacker_name", "Monster"))
+	var tgt_name = str(hit.get("target_name", "Hero"))
+	var char_name = str(hit.get("character_name", tgt_name))
+	var hero_cls = str(hit.get("hero_class", ""))
+	var wounds = int(hit.get("wounds_inflicted", 0))
+	var skulls = int(hit.get("skulls_rolled", 0))
+	var shields = int(hit.get("shields_rolled", 0))
+	var prev_bp = int(hit.get("prev_bp", 0))
+	var cur_bp = int(hit.get("current_bp", 0))
+	var max_bp = int(hit.get("max_bp", 8))
+	var is_def = bool(hit.get("is_defeated", false))
+	var rock_shattered = bool(hit.get("rock_skin_shattered", false))
+
+	out += "[color=#ff6666][b]LATEST ATTACK HIT:[/b][/color] [b]%s[/b] struck [b][color=#ffffff]%s[/color][/b]!\n" % [att_name, tgt_name]
+	out += "  [color=#aaaaaa]Dice Roll:[/color] %d Skulls vs %d White Shields\n" % [skulls, shields]
+	out += "  [color=#ff4444]Damage Lost:[/color] [b][color=#ff3333]-%d WOUNDS[/color][/b] (BP: %d -> [b]%d/%d[/b])\n" % [wounds, prev_bp, cur_bp, max_bp]
+
+	if rock_shattered:
+		out += "  [color=#ffd700][b][BUFF LOST] Rock Skin was shattered by the blow![/b][/color]\n"
+	if is_def:
+		out += "  [color=#ff2222][b][DEFEATED] %s has fallen in combat![/b][/color]\n"
+
+	out += "[color=#445566]────────────────────────────────────────────────[/color]\n"
+
+	# 2. Cumulative Character(s) Lost What From The Turn
+	out += "[b][color=#ffcc00]CHARACTER LOSSES THIS TURN:[/color][/b]\n"
+	var total_wounds = 0
+	var char_count = 0
+	for hid in turn_player_losses.keys():
+		var loss = turn_player_losses[hid]
+		var c_name = str(loss.get("hero_name", hid))
+		var c_class = str(loss.get("hero_class", ""))
+		var w_lost = int(loss.get("wounds_lost", 0))
+		var c_cur = int(loss.get("current_bp", 0))
+		var c_max = int(loss.get("max_bp", 8))
+		var c_shattered = bool(loss.get("rock_skin_shattered", false))
+		var c_def = bool(loss.get("is_defeated", false))
+		var c_hits = int(loss.get("hit_count", 1))
+		total_wounds += w_lost
+		char_count += 1
+
+		var bar = _generate_ascii_health_bar(c_cur, c_max, 8)
+		var status_str = "[color=#ff2222][DEFEATED][/color]" if c_def else "[color=#44ff44][ALIVE][/color]"
+		var hit_info = " (Hit %dx)" % c_hits if c_hits > 1 else ""
+		out += "• [b]%s[/b] (%s): [color=#ff4444][b]-%d BP[/b][/color] | Health: [b]%d/%d BP[/b] %s %s%s\n" % [
+			c_name, c_class, w_lost, c_cur, c_max, bar, status_str, hit_info
+		]
+		if c_shattered:
+			out += "   ↳ [color=#ffd700][BUFF LOST] Rock Skin Shattered[/color]\n"
+
+	out += "[color=#ff9999]Turn Total: -%d Body Points lost across %d Hero(es)[/color]\n" % [total_wounds, char_count]
+	out += "[color=#445566]────────────────────────────────────────────────[/color]\n"
+
+	# 3. Recent Log
+	out += "[b][color=#8899aa]RECENT LOG:[/color][/b]\n"
+	var recent_lines: Array[String] = []
+	for i in range(maxi(0, combat_log.size() - 3), combat_log.size()):
+		recent_lines.append(_format_log_line_bbcode(combat_log[i]))
+	out += "\n".join(recent_lines)
+
+	return out
+
+func record_player_attack_hit(target_h: Dictionary, monster: Dictionary, res: Dictionary, prev_h_bp: int, rock_shattered: bool) -> void:
+	var h_id = str(target_h.get("id", ""))
+	var h_name = str(target_h.get("name", "Hero"))
+	var c_name = get_hero_character_name(target_h)
+	var h_class = get_hero_class_name(target_h)
+	var wounds = int(res.get("wounds", 1))
+	var cur_bp = int(target_h.get("current_bp", 0))
+	var max_bp = int(target_h.get("bodyPoints", 8))
+	var is_def = (cur_bp <= 0)
+
+	last_player_attack_hit = {
+		"attacker_id": str(monster.get("id", "")),
+		"attacker_name": str(monster.get("name", "Monster")),
+		"target_id": h_id,
+		"target_name": h_name,
+		"character_name": c_name,
+		"hero_class": h_class,
+		"wounds_inflicted": wounds,
+		"skulls_rolled": int(res.get("total_skulls", 0)),
+		"shields_rolled": int(res.get("effective_shields", 0)),
+		"attack_dice": int(monster.get("attackDice", 2)),
+		"defend_dice": get_hero_defend_dice(target_h),
+		"prev_bp": prev_h_bp,
+		"current_bp": cur_bp,
+		"max_bp": max_bp,
+		"is_defeated": is_def,
+		"rock_skin_shattered": rock_shattered,
+		"round": current_round,
+		"phase": current_phase,
+		"timestamp": Time.get_ticks_msec()
+	}
+
+	if turn_player_losses.has(h_id):
+		var prev_loss = turn_player_losses[h_id]
+		prev_loss["wounds_lost"] = int(prev_loss.get("wounds_lost", 0)) + wounds
+		prev_loss["current_bp"] = cur_bp
+		prev_loss["is_defeated"] = is_def
+		if rock_shattered:
+			prev_loss["rock_skin_shattered"] = true
+		prev_loss["hit_count"] = int(prev_loss.get("hit_count", 1)) + 1
+	else:
+		turn_player_losses[h_id] = {
+			"hero_id": h_id,
+			"hero_name": h_name,
+			"character_name": c_name,
+			"hero_class": h_class,
+			"wounds_lost": wounds,
+			"start_bp": prev_h_bp,
+			"current_bp": cur_bp,
+			"max_bp": max_bp,
+			"rock_skin_shattered": rock_shattered,
+			"is_defeated": is_def,
+			"hit_count": 1
+		}
+
+	turn_losses_active = true
+	log_display_mode = "damage_report"
+	_update_log_display()
+
+func _get_total_turn_wounds_lost() -> int:
+	var total = 0
+	for loss in turn_player_losses.values():
+		total += int(loss.get("wounds_lost", 0))
+	return total
+
+func _update_log_display() -> void:
+	if not log_label:
+		return
+	if turn_losses_active and log_display_mode == "damage_report" and not last_player_attack_hit.is_empty():
+		log_label.text = _build_turn_damage_report_bbcode()
+	else:
 		var log_text = ""
 		for i in range(maxi(0, combat_log.size() - 8), combat_log.size()):
-			log_text += _sanitize_ui_text(combat_log[i]) + "\n"
+			log_text += _format_log_line_bbcode(combat_log[i]) + "\n"
 		log_label.text = log_text
 
 func _log(msg: String) -> void:
@@ -6647,7 +6885,21 @@ func get_telemetry_state() -> Dictionary:
 		"searchedRooms": searched_rooms,
 		"roomSpecialTreasureCollected": room_special_treasure_collected,
 		"lastTreasureCard": last_treasure_card,
-		"treasureDeckCount": treasure_deck.size()
+		"treasureDeckCount": treasure_deck.size(),
+		"lastPlayerAttackHit": last_player_attack_hit,
+		"turnPlayerLosses": turn_player_losses,
+		"turnDamageSummary": {
+			"active": turn_losses_active,
+			"displayMode": log_display_mode,
+			"lastAttackHit": last_player_attack_hit,
+			"characterLosses": turn_player_losses,
+			"totalPartyWoundsLost": _get_total_turn_wounds_lost(),
+			"damagedCharactersCount": turn_player_losses.size(),
+			"displayedLogText": log_label.text if log_label else "",
+			"parsedLogText": log_label.get_parsed_text() if log_label else ""
+		},
+		"displayedLogText": log_label.text if log_label else "",
+		"parsedLogText": log_label.get_parsed_text() if log_label else ""
 	}
 
 func execute_action(action_data: Dictionary) -> Dictionary:
@@ -6663,6 +6915,19 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 	match action_type:
 		"dismiss_dice_roll":
 			dismiss_active_dice_roll()
+			return { "success": true }
+		"toggle_log_view", "toggle_log_display_mode":
+			var mode = toggle_log_display_mode()
+			return { "success": true, "mode": mode, "displayedLogText": log_label.text if log_label else "" }
+		"set_log_display_mode":
+			log_display_mode = str(action_data.get("mode", "damage_report"))
+			_update_log_display()
+			return { "success": true, "mode": log_display_mode, "displayedLogText": log_label.text if log_label else "" }
+		"clear_turn_damage", "reset_turn_damage":
+			turn_player_losses.clear()
+			last_player_attack_hit.clear()
+			turn_losses_active = false
+			_update_log_display()
 			return { "success": true }
 		"click_treasure_overlay", "resolve_treasure_overlay_click", "dismiss_treasure_overlay":
 			if not active_treasure_overlay.is_empty():
@@ -6889,6 +7154,25 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				treasure_deck.clear()
 				for c in action_data.treasureDeck:
 					treasure_deck.append(c.duplicate(true))
+			if action_data.has("resetTurnLosses") and bool(action_data.get("resetTurnLosses")):
+				turn_player_losses.clear()
+				last_player_attack_hit.clear()
+				turn_losses_active = false
+				_update_log_display()
+			if action_data.has("turnLossesActive"):
+				turn_losses_active = bool(action_data.get("turnLossesActive"))
+				_update_log_display()
+			if action_data.has("logDisplayMode"):
+				log_display_mode = str(action_data.get("logDisplayMode"))
+				_update_log_display()
+			if action_data.has("turnPlayerLosses") and action_data.turnPlayerLosses is Dictionary:
+				turn_player_losses = action_data.get("turnPlayerLosses").duplicate(true)
+				turn_losses_active = true
+				_update_log_display()
+			if action_data.has("lastPlayerAttackHit") and action_data.lastPlayerAttackHit is Dictionary:
+				last_player_attack_hit = action_data.get("lastPlayerAttackHit").duplicate(true)
+				turn_losses_active = true
+				_update_log_display()
 			if action_data.has("heroes") and action_data.heroes is Array:
 				for h_patch in action_data.heroes:
 					var h_id = str(h_patch.get("id", ""))
