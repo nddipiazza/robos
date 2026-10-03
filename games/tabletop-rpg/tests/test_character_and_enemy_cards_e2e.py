@@ -119,7 +119,8 @@ class TestCharacterAndEnemyCardsE2E(unittest.TestCase):
         self.assertEqual(dwarf.get("current_mp"), 3)
         self.assertEqual(dwarf.get("max_mp"), 3)
         self.assertFalse(dwarf.get("isActive"), "Dwarf is not active yet")
-        self.assertFalse(dwarf.get("isOnBoard"), "Dwarf remains off-board until his turn")
+        self.assertTrue(dwarf.get("isOnBoard"), "Dwarf is on board coexisting at starting stair")
+        self.assertFalse(dwarf.get("hasDepartedStart"), "Dwarf has not departed starting stair yet")
 
         # Verify Elf
         elf = next((c for c in char_cards if c.get("id") == "elf"), None)

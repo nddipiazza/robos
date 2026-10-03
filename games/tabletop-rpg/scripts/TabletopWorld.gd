@@ -7168,16 +7168,16 @@ func _update_character_and_enemy_cards() -> void:
 		btn_toggle_defeated = get_node_or_null("UI/EnemiesPanel/BtnToggleDefeated")
 	if btn_toggle_defeated:
 		if dead_count == 0:
-			btn_toggle_defeated.text = "💀 Defeated (0)"
+			btn_toggle_defeated.text = "Defeated (0)"
 			btn_toggle_defeated.disabled = true
 			btn_toggle_defeated.modulate = Color(0.7, 0.7, 0.7, 0.6)
 		else:
 			btn_toggle_defeated.disabled = false
 			btn_toggle_defeated.modulate = Color(1.0, 1.0, 1.0, 1.0)
 			if show_defeated_monsters:
-				btn_toggle_defeated.text = "💀 Hide Defeated (%d)" % dead_count
+				btn_toggle_defeated.text = "Hide Defeated (%d)" % dead_count
 			else:
-				btn_toggle_defeated.text = "💀 Show Defeated (%d)" % dead_count
+				btn_toggle_defeated.text = "Show Defeated (%d)" % dead_count
 		_update_toggle_defeated_button_style()
 
 	var displayed_count = 0
@@ -7196,7 +7196,7 @@ func _update_character_and_enemy_cards() -> void:
 			enemies_empty_label.text = "No enemies sighted yet.\nOpen doors and explore the dungeon to reveal foes."
 			enemies_empty_label.visible = true
 		elif displayed_count == 0 and dead_count > 0:
-			enemies_empty_label.text = "All sighted foes have been defeated! ⚔️\nClick 'Show Defeated' above to view fallen enemies."
+			enemies_empty_label.text = "All sighted foes have been defeated!\nClick 'Show Defeated' above to view fallen enemies."
 			enemies_empty_label.visible = true
 		else:
 			enemies_empty_label.visible = false
@@ -7406,7 +7406,7 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 	stat_row.add_theme_constant_override("separation", 6)
 
 	var dice_stat = Label.new()
-	dice_stat.text = "⚔️%dd  🛡️%dd" % [atk_d, def_d]
+	dice_stat.text = "ATK %dd  DEF %dd" % [atk_d, def_d]
 	dice_stat.add_theme_font_size_override("font_size", 9)
 	dice_stat.add_theme_color_override("font_color", Color(0.85, 0.88, 0.95, 0.95))
 	stat_row.add_child(dice_stat)
@@ -7414,10 +7414,10 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 	var gold_lbl = Label.new()
 	var cur_gold = int(h.get("gold", 0))
 	if is_item_flashing and str(flashing_item.get("type")) == "gold":
-		gold_lbl.text = "💰 +%d! (Total %d)" % [int(flashing_item.get("amount", 0)), cur_gold]
+		gold_lbl.text = "+%d GP! (Total %d)" % [int(flashing_item.get("amount", 0)), cur_gold]
 		gold_lbl.add_theme_color_override("font_color", Color(1.0, 0.95, 0.25, 1.0))
 	else:
-		gold_lbl.text = "💰 %d gp" % cur_gold
+		gold_lbl.text = "%d GP" % cur_gold
 		gold_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.35, 0.9))
 	gold_lbl.add_theme_font_size_override("font_size", 9)
 	gold_lbl.clip_text = true
@@ -7435,9 +7435,15 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 	var disarm_check = can_hero_disarm(h)
 	if disarm_check.get("is_dwarf", false):
 		var ab_btn = Button.new()
-		ab_btn.text = "⚙️"
-		ab_btn.custom_minimum_size = Vector2(20, 20)
-		ab_btn.add_theme_font_size_override("font_size", 10)
+		ab_btn.custom_minimum_size = Vector2(22, 20)
+		var disarm_tex = action_icons.get("disarm")
+		if disarm_tex:
+			ab_btn.icon = disarm_tex
+			ab_btn.expand_icon = true
+			ab_btn.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		else:
+			ab_btn.text = "TRP"
+			ab_btn.add_theme_font_size_override("font_size", 8)
 		ab_btn.tooltip_text = "Trap Mastery (Innate Dwarf Ability)\nClass: Dwarf\nEffect: Automatically disarms adjacent detected traps without requiring a Tool Kit."
 		ab_btn.pressed.connect(func(): open_hero_detail_modal(h))
 		icon_bar.add_child(ab_btn)
@@ -7445,43 +7451,65 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 	# 2. Status Effects / Active Buffs Badges
 	var buff_badges: Array[Dictionary] = []
 	if h.get("rock_skin_active", false):
-		buff_badges.append({ "icon": "🪨", "desc": "Rock Skin (Active Earth Spell Buff)\nEffect: Grants +1 Defend Die. Lasts until hero suffers damage." })
+		buff_badges.append({ "code": "RS", "desc": "Rock Skin (Active Earth Spell Buff)\nEffect: Grants +1 Defend Die. Lasts until hero suffers damage.", "color": Color(0.65, 0.60, 0.55) })
 	if h.get("courage_active", false):
-		buff_badges.append({ "icon": "🦁", "desc": "Courage (Active Fire Spell Buff)\nEffect: Grants +2 Attack Dice on melee attacks while monsters are visible." })
+		buff_badges.append({ "code": "CR", "desc": "Courage (Active Fire Spell Buff)\nEffect: Grants +2 Attack Dice on melee attacks while monsters are visible.", "color": Color(0.95, 0.35, 0.25) })
 	if h.get("swift_wind_active", false):
-		buff_badges.append({ "icon": "💨", "desc": "Swift Wind (Active Air Spell Buff)\nEffect: Doubles movement roll for this turn." })
+		buff_badges.append({ "code": "SW", "desc": "Swift Wind (Active Air Spell Buff)\nEffect: Doubles movement roll for this turn.", "color": Color(0.35, 0.85, 0.95) })
 	if h.get("pass_through_rock_active", false):
-		buff_badges.append({ "icon": "🧱", "desc": "Pass Through Rock (Active Earth Spell Buff)\nEffect: Allows hero to traverse solid rock walls for 1 turn." })
+		buff_badges.append({ "code": "PR", "desc": "Pass Through Rock (Active Earth Spell Buff)\nEffect: Allows hero to traverse solid rock walls for 1 turn.", "color": Color(0.75, 0.70, 0.65) })
 	if h.get("veil_of_mist_active", false):
-		buff_badges.append({ "icon": "🌫️", "desc": "Veil of Mist (Active Water Spell Buff)\nEffect: Allows hero to move unseen through enemy squares." })
+		buff_badges.append({ "code": "VM", "desc": "Veil of Mist (Active Water Spell Buff)\nEffect: Allows hero to move unseen through enemy squares.", "color": Color(0.40, 0.70, 0.85) })
 	if h.get("is_sleeping", false):
-		buff_badges.append({ "icon": "💤", "desc": "Sleep (Status Condition)\nEffect: Hero is asleep and cannot move or take actions." })
+		buff_badges.append({ "code": "ZZ", "desc": "Sleep (Status Condition)\nEffect: Hero is asleep and cannot move or take actions.", "color": Color(0.60, 0.50, 0.80) })
 
 	for bb in buff_badges:
+		var pill = PanelContainer.new()
+		var psb = StyleBoxFlat.new()
+		psb.bg_color = bb.color * Color(1, 1, 1, 0.30)
+		psb.border_color = bb.color
+		psb.set_border_width_all(1)
+		psb.set_corner_radius_all(3)
+		pill.add_theme_stylebox_override("panel", psb)
 		var bb_lbl = Label.new()
-		bb_lbl.text = bb.icon
-		bb_lbl.add_theme_font_size_override("font_size", 10)
-		bb_lbl.tooltip_text = bb.desc
-		bb_lbl.mouse_filter = Control.MOUSE_FILTER_PASS
-		icon_bar.add_child(bb_lbl)
+		bb_lbl.text = bb.code
+		bb_lbl.add_theme_font_size_override("font_size", 8)
+		bb_lbl.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 1.0))
+		bb_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		bb_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		var pmarg = MarginContainer.new()
+		pmarg.add_theme_constant_override("margin_left", 3)
+		pmarg.add_theme_constant_override("margin_right", 3)
+		pmarg.add_theme_constant_override("margin_top", 1)
+		pmarg.add_theme_constant_override("margin_bottom", 1)
+		pmarg.add_child(bb_lbl)
+		pill.add_child(pmarg)
+		pill.tooltip_text = bb.desc
+		pill.mouse_filter = Control.MOUSE_FILTER_PASS
+		icon_bar.add_child(pill)
 
 	# 3. Spells (Mini-Icons with rich tooltip)
 	var hero_spells: Array = h.get("spells", [])
 	if hero_spells.size() > 0:
 		var sp_count = min(3, hero_spells.size())
+		var spell_tex = action_icons.get("spell")
 		for idx in range(sp_count):
 			var s_id = str(hero_spells[idx])
 			var s_meta = HeroQuestSpells.get_spell(s_id)
-			var s_icon = str(s_meta.get("icon", "🔮"))
 			var s_name = str(s_meta.get("name", s_id.capitalize()))
 			var s_deck = str(s_meta.get("deck", "magic")).capitalize()
 			var s_desc = str(s_meta.get("description", ""))
 
 			var sp_btn = Button.new()
-			sp_btn.text = s_icon
-			sp_btn.custom_minimum_size = Vector2(20, 20)
-			sp_btn.add_theme_font_size_override("font_size", 10)
-			sp_btn.tooltip_text = "%s %s (%s Magic)\n%s\nClick to cast spell." % [s_icon, s_name, s_deck, s_desc]
+			sp_btn.custom_minimum_size = Vector2(22, 20)
+			if spell_tex:
+				sp_btn.icon = spell_tex
+				sp_btn.expand_icon = true
+				sp_btn.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			else:
+				sp_btn.text = "SPL"
+				sp_btn.add_theme_font_size_override("font_size", 8)
+			sp_btn.tooltip_text = "%s (%s Magic)\n%s\nClick to cast spell." % [s_name, s_deck, s_desc]
 			if is_active:
 				sp_btn.disabled = has_acted_this_turn
 				sp_btn.pressed.connect(toggle_spell_cast_modal)
@@ -7512,25 +7540,30 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 	var hero_inv: Array = h.get("inventory", [])
 	if hero_inv.size() > 0:
 		var it_count = min(3, hero_inv.size())
+		var item_tex = action_icons.get("item")
 		for idx in range(it_count):
 			var item_str = str(hero_inv[idx])
 			var it_meta = HeroQuestEquipment.get_item(item_str)
-			var icon = str(it_meta.get("icon", "📦"))
 			var iname = str(it_meta.get("name", item_str.replace("_", " ").capitalize()))
 			var idesc = str(it_meta.get("description", it_meta.get("effect", "")))
 			var ival = int(it_meta.get("cost", it_meta.get("value", 50)))
 
 			var it_btn = Button.new()
-			it_btn.text = icon
-			it_btn.custom_minimum_size = Vector2(20, 20)
-			it_btn.add_theme_font_size_override("font_size", 10)
+			it_btn.custom_minimum_size = Vector2(22, 20)
+			if item_tex:
+				it_btn.icon = item_tex
+				it_btn.expand_icon = true
+				it_btn.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			else:
+				it_btn.text = "ITM"
+				it_btn.add_theme_font_size_override("font_size", 8)
 
 			var is_this_flashing = is_item_flashing and str(flashing_item.get("type")) == "item" and (str(flashing_item.get("name")) == iname or idx == 0)
 			if is_this_flashing:
-				it_btn.text = "✨"
-				it_btn.tooltip_text = "✨ NEW ITEM ACQUIRED!\n%s %s\nValue: %d gp\n%s" % [icon, iname, ival, idesc]
+				it_btn.tooltip_text = "[NEW ITEM ACQUIRED!]\n%s\nValue: %d gp\n%s" % [iname, ival, idesc]
+				it_btn.modulate = Color(1.0, 0.95, 0.25, 1.0)
 			else:
-				it_btn.tooltip_text = "%s %s\nValue: %d gp\n%s" % [icon, iname, ival, idesc]
+				it_btn.tooltip_text = "%s\nValue: %d gp\n%s" % [iname, ival, idesc]
 
 			if is_active:
 				it_btn.pressed.connect(toggle_item_use_modal)
@@ -7552,9 +7585,15 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 		var adj_traps = get_adjacent_detected_traps()
 		if not adj_traps.is_empty():
 			var btn_disarm_mini = Button.new()
-			btn_disarm_mini.text = "🔧"
-			btn_disarm_mini.custom_minimum_size = Vector2(20, 20)
-			btn_disarm_mini.add_theme_font_size_override("font_size", 10)
+			btn_disarm_mini.custom_minimum_size = Vector2(22, 20)
+			var disarm_tex = action_icons.get("disarm")
+			if disarm_tex:
+				btn_disarm_mini.icon = disarm_tex
+				btn_disarm_mini.expand_icon = true
+				btn_disarm_mini.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			else:
+				btn_disarm_mini.text = "DIS"
+				btn_disarm_mini.add_theme_font_size_override("font_size", 8)
 			btn_disarm_mini.tooltip_text = "Disarm adjacent detected trap"
 			btn_disarm_mini.disabled = has_acted_this_turn
 			btn_disarm_mini.pressed.connect(_on_disarm_trap_button_pressed)
@@ -7572,10 +7611,10 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 
 	# Sheet Inspect Button
 	var btn_sheet = Button.new()
-	btn_sheet.text = "📜"
-	btn_sheet.custom_minimum_size = Vector2(20, 20)
-	btn_sheet.add_theme_font_size_override("font_size", 10)
-	btn_sheet.tooltip_text = "Open %s's full Character Sheet" % get_hero_display_title(h)
+	btn_sheet.text = "INFO"
+	btn_sheet.custom_minimum_size = Vector2(28, 20)
+	btn_sheet.add_theme_font_size_override("font_size", 8)
+	btn_sheet.tooltip_text = "Inspect %s's full Character Sheet" % get_hero_display_title(h)
 	btn_sheet.pressed.connect(func(): open_hero_detail_modal(h))
 	icon_bar.add_child(btn_sheet)
 
@@ -7651,20 +7690,20 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 	var is_on_board = bool(h.get("is_on_board", false))
 
 	if hero_detail_title:
-		hero_detail_title.text = "🛡️ Character Sheet — %s" % disp_title
+		hero_detail_title.text = "Character Sheet — %s" % disp_title
 
 	if hero_detail_status_badge:
 		if is_dead:
-			hero_detail_status_badge.text = "💀 DEFEATED"
+			hero_detail_status_badge.text = "[DEFEATED]"
 			hero_detail_status_badge.add_theme_color_override("font_color", Color(1.0, 0.25, 0.25, 1.0))
 		elif is_act:
-			hero_detail_status_badge.text = "★ ACTIVE TURN"
+			hero_detail_status_badge.text = "[ACTIVE TURN]"
 			hero_detail_status_badge.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2, 1.0))
 		elif is_on_board:
-			hero_detail_status_badge.text = "🟢 READY ON BOARD"
+			hero_detail_status_badge.text = "[READY ON BOARD]"
 			hero_detail_status_badge.add_theme_color_override("font_color", Color(0.3, 0.85, 0.45, 1.0))
 		else:
-			hero_detail_status_badge.text = "⚪ IN RESERVE"
+			hero_detail_status_badge.text = "[IN RESERVE]"
 			hero_detail_status_badge.add_theme_color_override("font_color", Color(0.6, 0.65, 0.75, 1.0))
 
 	# Left Column: Portrait & Lore
@@ -7734,7 +7773,7 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 
 		var bp_vbox = VBoxContainer.new()
 		var bp_title = Label.new()
-		bp_title.text = "❤️ Body Points: %d / %d" % [cur_bp, max_bp]
+		bp_title.text = "Body Points (BP): %d / %d" % [cur_bp, max_bp]
 		bp_title.add_theme_font_size_override("font_size", 12)
 		bp_vbox.add_child(bp_title)
 		var bp_bar = ProgressBar.new()
@@ -7751,7 +7790,7 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 
 		var mp_vbox = VBoxContainer.new()
 		var mp_title = Label.new()
-		mp_title.text = "🧠 Mind Points: %d / %d" % [cur_mp, max_mp]
+		mp_title.text = "Mind Points (MP): %d / %d" % [cur_mp, max_mp]
 		mp_title.add_theme_font_size_override("font_size", 12)
 		mp_vbox.add_child(mp_title)
 		var mp_bar = ProgressBar.new()
@@ -7767,24 +7806,24 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 		stats_grid.add_child(mp_vbox)
 
 		var atk_lbl = Label.new()
-		atk_lbl.text = "⚔️ Attack: %d Combat Dice (%s)" % [atk_dice, wep_str]
+		atk_lbl.text = "Attack: %d Combat Dice (%s)" % [atk_dice, wep_str]
 		atk_lbl.add_theme_font_size_override("font_size", 12)
 		stats_grid.add_child(atk_lbl)
 
 		var def_lbl = Label.new()
-		def_lbl.text = "🛡️ Defend: %d Combat Dice (%s)" % [def_dice, arm_str]
+		def_lbl.text = "Defend: %d Combat Dice (%s)" % [def_dice, arm_str]
 		def_lbl.add_theme_font_size_override("font_size", 12)
 		stats_grid.add_child(def_lbl)
 
 		var gold_lbl = Label.new()
-		gold_lbl.text = "💰 Gold Purse: %d Gold Coins" % cur_gold
+		gold_lbl.text = "Gold Purse: %d Gold Coins" % cur_gold
 		gold_lbl.add_theme_font_size_override("font_size", 12)
 		gold_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3, 1.0))
 		stats_grid.add_child(gold_lbl)
 
 		var move_lbl = Label.new()
 		var is_swift = h.get("swift_wind_active", false)
-		move_lbl.text = "🏃 Movement: %s" % ("2d6 x2 (Swift Wind Active!)" if is_swift else "2 Red Dice (2d6)")
+		move_lbl.text = "Movement: %s" % ("2d6 x2 (Swift Wind Active!)" if is_swift else "2 Red Dice (2d6)")
 		move_lbl.add_theme_font_size_override("font_size", 12)
 		stats_grid.add_child(move_lbl)
 
@@ -7797,7 +7836,7 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 
 		var hero_inv = h.get("inventory", [])
 		var inv_hdr = Label.new()
-		inv_hdr.text = "🎒 EQUIPMENT & BACKPACK INVENTORY (%d)" % hero_inv.size()
+		inv_hdr.text = "EQUIPMENT & BACKPACK INVENTORY (%d)" % hero_inv.size()
 		inv_hdr.add_theme_font_size_override("font_size", 13)
 		inv_hdr.add_theme_color_override("font_color", Color(0.7, 0.9, 0.85, 1.0))
 		hero_detail_equipment_section.add_child(inv_hdr)
@@ -7820,7 +7859,6 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 				var item_str = str(it)
 				var it_meta = HeroQuestEquipment.get_item(item_str)
 				var iname = str(it_meta.get("name", item_str.replace("_", " ").capitalize()))
-				var icon = str(it_meta.get("icon", "📦"))
 				var itype = str(it_meta.get("type", "Item")).capitalize()
 				var ival = int(it_meta.get("cost", it_meta.get("value", 50)))
 				var idesc = str(it_meta.get("description", it_meta.get("effect", "")))
@@ -7844,7 +7882,7 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 				var ivbox = VBoxContainer.new()
 				var it_top = HBoxContainer.new()
 				var it_name_lbl = Label.new()
-				it_name_lbl.text = "%s %s" % [icon, iname]
+				it_name_lbl.text = iname
 				it_name_lbl.add_theme_font_size_override("font_size", 11)
 				it_name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 				it_top.add_child(it_name_lbl)
@@ -7873,7 +7911,7 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 		var hero_spells = h.get("spells", [])
 		if hero_spells.size() > 0:
 			var sp_hdr = Label.new()
-			sp_hdr.text = "🔮 MEMORIZED SPELLS (%d)" % hero_spells.size()
+			sp_hdr.text = "MEMORIZED SPELLS (%d)" % hero_spells.size()
 			sp_hdr.add_theme_font_size_override("font_size", 13)
 			sp_hdr.add_theme_color_override("font_color", Color(0.85, 0.75, 1.0, 1.0))
 			hero_detail_spells_section.add_child(sp_hdr)
@@ -7889,7 +7927,6 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 				var s_data = HeroQuestSpells.get_spell(str(s_id))
 				var s_name = str(s_data.get("name", s_id))
 				var s_deck = str(s_data.get("deck", "Magic")).capitalize()
-				var s_icon = str(s_data.get("icon", "✨"))
 				var s_desc = str(s_data.get("description", ""))
 
 				var sp_panel = PanelContainer.new()
@@ -7911,7 +7948,7 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 				var svbox = VBoxContainer.new()
 				var sp_top = HBoxContainer.new()
 				var sp_name_lbl = Label.new()
-				sp_name_lbl.text = "%s %s" % [s_icon, s_name]
+				sp_name_lbl.text = s_name
 				sp_name_lbl.add_theme_font_size_override("font_size", 11)
 				sp_name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 				sp_top.add_child(sp_name_lbl)
@@ -7938,7 +7975,7 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 			child.queue_free()
 
 		var ab_hdr = Label.new()
-		ab_hdr.text = "⚡ TRAITS & ACTIVE STATUS EFFECTS"
+		ab_hdr.text = "TRAITS & ACTIVE STATUS EFFECTS"
 		ab_hdr.add_theme_font_size_override("font_size", 13)
 		ab_hdr.add_theme_color_override("font_color", Color(1.0, 0.85, 0.4, 1.0))
 		hero_detail_abilities_section.add_child(ab_hdr)
@@ -7960,7 +7997,7 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 			dm.add_theme_constant_override("margin_left", 8); dm.add_theme_constant_override("margin_right", 8); dm.add_theme_constant_override("margin_top", 6); dm.add_theme_constant_override("margin_bottom", 6)
 			d_panel.add_child(dm)
 			var d_lbl = Label.new()
-			d_lbl.text = "⚙️ Trap Mastery (Innate Dwarf Ability)\nDorgan has spent centuries studying the subterranean machinations of stone and steel. He automatically detects and disarms adjacent traps without requiring tools or dice checks."
+			d_lbl.text = "Trap Mastery (Innate Dwarf Ability)\nDorgan has spent centuries studying the subterranean machinations of stone and steel. He automatically detects and disarms adjacent traps without requiring tools or dice checks."
 			d_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			d_lbl.add_theme_font_size_override("font_size", 10)
 			dm.add_child(d_lbl)
@@ -7969,17 +8006,17 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 		# Active Buffs
 		var buffs: Array[Dictionary] = []
 		if h.get("rock_skin_active", false):
-			buffs.append({ "name": "🪨 Rock Skin", "desc": "Earth spell buff: Skin hardened like granite. +1 extra Defend Die until hero suffers damage." })
+			buffs.append({ "name": "[Rock Skin]", "desc": "Earth spell buff: Skin hardened like granite. +1 extra Defend Die until hero suffers damage." })
 		if h.get("courage_active", false):
-			buffs.append({ "name": "🦁 Courage", "desc": "Fire spell buff: Inspires heroic ferocity. +2 extra Attack Dice on attacks while monsters visible." })
+			buffs.append({ "name": "[Courage]", "desc": "Fire spell buff: Inspires heroic ferocity. +2 extra Attack Dice on attacks while monsters visible." })
 		if h.get("swift_wind_active", false):
-			buffs.append({ "name": "💨 Swift Wind", "desc": "Air spell buff: Feet as swift as a gale. Movement dice roll is doubled this turn." })
+			buffs.append({ "name": "[Swift Wind]", "desc": "Air spell buff: Feet as swift as a gale. Movement dice roll is doubled this turn." })
 		if h.get("pass_through_rock_active", false):
-			buffs.append({ "name": "🧱 Pass Through Rock", "desc": "Earth spell buff: Phase through solid stone walls for 1 turn." })
+			buffs.append({ "name": "[Pass Through Rock]", "desc": "Earth spell buff: Phase through solid stone walls for 1 turn." })
 		if h.get("veil_of_mist_active", false):
-			buffs.append({ "name": "🌫️ Veil of Mist", "desc": "Water spell buff: Enveloped in ethereal fog; can move through enemy spaces." })
+			buffs.append({ "name": "[Veil of Mist]", "desc": "Water spell buff: Enveloped in ethereal fog; can move through enemy spaces." })
 		if h.get("is_sleeping", false):
-			buffs.append({ "name": "💤 Sleep", "desc": "Enchanted slumber: Cannot move or take actions until awakened." })
+			buffs.append({ "name": "[Sleep]", "desc": "Enchanted slumber: Cannot move or take actions until awakened." })
 
 		if buffs.is_empty() and h_id != "dwarf":
 			var no_buffs = Label.new()
@@ -8115,7 +8152,7 @@ func _create_enemy_card(m: Dictionary, is_visible: bool) -> PanelContainer:
 
 	if is_turn_active:
 		var turn_badge = Label.new()
-		turn_badge.text = "⚔️ ACTIVE"
+		turn_badge.text = "[ACTIVE]"
 		turn_badge.add_theme_font_size_override("font_size", 9)
 		turn_badge.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
 		hdr_row.add_child(turn_badge)
