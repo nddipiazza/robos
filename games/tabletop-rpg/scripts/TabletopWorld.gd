@@ -262,6 +262,15 @@ var _ai_icon_paths: Dictionary = {}
 var armory_open: bool = false
 var selected_armory_hero_id: String = "barbarian"
 
+var game_menu_modal: ColorRect = null
+var game_menu_card: PanelContainer = null
+var game_menu_info_label: Label = null
+var game_menu_status_label: Label = null
+var btn_menu_restart_quest: Button = null
+var btn_menu_save_game: Button = null
+var btn_menu_load_game: Button = null
+var btn_menu_close: Button = null
+
 @onready var treasure_modal: ColorRect = get_node_or_null("UI/TreasureModal")
 @onready var treasure_modal_card: PanelContainer = get_node_or_null("UI/TreasureModal/Card")
 @onready var treasure_deck_badge: Label = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/Header/DeckRatioBadge")
@@ -367,6 +376,7 @@ func _ready() -> void:
 	_setup_ai_modal_styles()
 	_setup_elf_spell_modal()
 	_setup_armory_modal()
+	_setup_game_menu_modal()
 	_setup_turn_overlay_ui()
 	_setup_log_panel()
 	_setup_hero_detail_modal()
@@ -1613,30 +1623,31 @@ func _check_cli_role() -> void:
 
 func _setup_ui_signals() -> void:
 	var header_hbox = get_node_or_null("UI/SidebarHeader")
-	if header_hbox and not header_hbox.has_node("BtnResetQuest"):
-		var r_btn = Button.new()
-		r_btn.name = "BtnResetQuest"
-		r_btn.text = "↺ Reset"
-		r_btn.tooltip_text = "Force reload current quest from cartridge (clears saved game)"
-		r_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-		var r_sb = StyleBoxFlat.new()
-		r_sb.bg_color = Color(0.18, 0.08, 0.1, 0.85)
-		r_sb.border_color = Color(0.85, 0.35, 0.35, 0.7)
-		r_sb.set_border_width_all(1)
-		r_sb.set_corner_radius_all(4)
-		r_sb.content_margin_left = 6
-		r_sb.content_margin_right = 6
-		r_sb.content_margin_top = 2
-		r_sb.content_margin_bottom = 2
-		r_btn.add_theme_stylebox_override("normal", r_sb)
-		r_btn.add_theme_color_override("font_color", Color(0.95, 0.65, 0.65, 0.95))
-		r_btn.add_theme_font_size_override("font_size", 11)
-		r_btn.pressed.connect(func():
-			_log("[RESET] Player requested manual quest reset.")
-			delete_save_game()
-			_load_active_cartridge(true)
-		)
-		header_hbox.add_child(r_btn)
+	if header_hbox and header_hbox.has_node("BtnResetQuest"):
+		var old_r_btn = header_hbox.get_node("BtnResetQuest")
+		header_hbox.remove_child(old_r_btn)
+		old_r_btn.queue_free()
+
+	if header_hbox and not header_hbox.has_node("BtnGameMenu"):
+		var menu_btn = Button.new()
+		menu_btn.name = "BtnGameMenu"
+		menu_btn.text = "⚙️ Game Menu"
+		menu_btn.tooltip_text = "Open Game Menu: Restart Quest, Save Game State, Load Game State [Esc]"
+		menu_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		var m_sb = StyleBoxFlat.new()
+		m_sb.bg_color = Color(0.12, 0.16, 0.22, 0.92)
+		m_sb.border_color = Color(0.0, 0.74, 0.83, 0.85)
+		m_sb.set_border_width_all(1)
+		m_sb.set_corner_radius_all(4)
+		m_sb.content_margin_left = 8
+		m_sb.content_margin_right = 8
+		m_sb.content_margin_top = 2
+		m_sb.content_margin_bottom = 2
+		menu_btn.add_theme_stylebox_override("normal", m_sb)
+		menu_btn.add_theme_color_override("font_color", Color(0.88, 0.95, 1.0, 0.95))
+		menu_btn.add_theme_font_size_override("font_size", 11)
+		menu_btn.pressed.connect(toggle_game_menu)
+		header_hbox.add_child(menu_btn)
 
 	if header_hbox and not header_hbox.has_node("BtnToggleDemo"):
 		var demo_btn = Button.new()
@@ -2268,7 +2279,8 @@ func _load_active_cartridge(force_fresh: bool = false) -> void:
 		if armory_modal:
 			armory_modal.visible = false
 			armory_open = false
-	auto_save_game()
+	if not should_reset and not force_fresh:
+		auto_save_game()
 
 func _rebuild_spatial_caches() -> void:
 	_tile_to_room.clear()
@@ -3187,6 +3199,12 @@ func _update_elf_spell_modal_ui() -> void:
 			btn_elf_spell_confirm.text = "Enter the Dungeon"
 
 func show_elf_spell_selection_modal() -> void:
+	if CartridgeManager.auto_play_enabled:
+		select_elf_element("water")
+		confirm_elf_spell_selection()
+		if elf_spell_modal:
+			elf_spell_modal.visible = false
+		return
 	if elf_spell_modal:
 		elf_spell_modal.visible = true
 		_update_elf_spell_modal_ui()
@@ -3806,6 +3824,273 @@ func buy_armory_item(hero_id: String, item_id: String) -> Dictionary:
 		"attackDice": get_hero_attack_dice(hero),
 		"defendDice": get_hero_defend_dice(hero)
 	}
+
+# ==============================================================================
+# ROBOS TABLETOP RPG: GAME MENU (RESTART QUEST, SAVE GAME STATE, LOAD GAME STATE)
+# ==============================================================================
+func _setup_game_menu_modal() -> void:
+	var ui_node = get_node_or_null("UI")
+	if not ui_node:
+		return
+	if ui_node.has_node("GameMenuModal"):
+		game_menu_modal = ui_node.get_node("GameMenuModal")
+		return
+
+	game_menu_modal = ColorRect.new()
+	game_menu_modal.name = "GameMenuModal"
+	game_menu_modal.visible = false
+	game_menu_modal.color = Color(0.02, 0.04, 0.07, 0.78)
+	game_menu_modal.set_anchors_preset(Control.PRESET_FULL_RECT)
+	game_menu_modal.mouse_filter = Control.MOUSE_FILTER_STOP
+
+	# Clicking background dim overlay closes the menu
+	game_menu_modal.gui_input.connect(func(ev: InputEvent):
+		if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
+			close_game_menu()
+	)
+
+	game_menu_card = PanelContainer.new()
+	game_menu_card.name = "Card"
+	game_menu_card.set_anchors_preset(Control.PRESET_CENTER)
+	game_menu_card.custom_minimum_size = Vector2(490, 360)
+	game_menu_card.offset_left = -245
+	game_menu_card.offset_top = -180
+	game_menu_card.offset_right = 245
+	game_menu_card.offset_bottom = 180
+	game_menu_card.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	game_menu_card.grow_vertical = Control.GROW_DIRECTION_BOTH
+	game_menu_card.mouse_filter = Control.MOUSE_FILTER_STOP
+
+	var card_sb = StyleBoxFlat.new()
+	card_sb.bg_color = Color(0.08, 0.11, 0.16, 0.98)
+	card_sb.border_color = Color(0.0, 0.74, 0.83, 0.85)
+	card_sb.set_border_width_all(2)
+	card_sb.set_corner_radius_all(12)
+	card_sb.shadow_color = Color(0, 0, 0, 0.8)
+	card_sb.shadow_size = 24
+	game_menu_card.add_theme_stylebox_override("panel", card_sb)
+
+	var margin = MarginContainer.new()
+	margin.name = "Margin"
+	margin.add_theme_constant_override("margin_left", 24)
+	margin.add_theme_constant_override("margin_top", 20)
+	margin.add_theme_constant_override("margin_right", 24)
+	margin.add_theme_constant_override("margin_bottom", 20)
+	game_menu_card.add_child(margin)
+
+	var vbox = VBoxContainer.new()
+	vbox.name = "VBox"
+	vbox.add_theme_constant_override("separation", 10)
+	margin.add_child(vbox)
+
+	# 1. Header
+	var header = HBoxContainer.new()
+	header.name = "Header"
+	var title = Label.new()
+	title.name = "Title"
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title.text = "⚙️ HEROQUEST : GAME MENU"
+	title.add_theme_font_size_override("font_size", 18)
+	title.add_theme_color_override("font_color", Color(1.0, 0.85, 0.25, 1.0))
+	header.add_child(title)
+
+	var badge = Label.new()
+	badge.name = "Badge"
+	badge.text = "SESSION CONTROLS"
+	badge.add_theme_font_size_override("font_size", 11)
+	badge.add_theme_color_override("font_color", Color(0.0, 0.74, 0.83, 0.95))
+	header.add_child(badge)
+	vbox.add_child(header)
+
+	var sep = HSeparator.new()
+	vbox.add_child(sep)
+
+	# 2. Info Banner
+	var info_panel = PanelContainer.new()
+	info_panel.name = "InfoPanel"
+	var info_sb = StyleBoxFlat.new()
+	info_sb.bg_color = Color(0.04, 0.06, 0.09, 0.95)
+	info_sb.border_color = Color(0.18, 0.26, 0.36, 0.7)
+	info_sb.set_border_width_all(1)
+	info_sb.set_corner_radius_all(6)
+	info_panel.add_theme_stylebox_override("panel", info_sb)
+	var info_margin = MarginContainer.new()
+	info_margin.add_theme_constant_override("margin_left", 12)
+	info_margin.add_theme_constant_override("margin_top", 8)
+	info_margin.add_theme_constant_override("margin_right", 12)
+	info_margin.add_theme_constant_override("margin_bottom", 8)
+	info_panel.add_child(info_margin)
+
+	game_menu_info_label = Label.new()
+	game_menu_info_label.name = "InfoLabel"
+	game_menu_info_label.add_theme_font_size_override("font_size", 12)
+	game_menu_info_label.add_theme_color_override("font_color", Color(0.8, 0.88, 0.96, 0.9))
+	game_menu_info_label.text = "Quest: Active | Round: 1 | Mode: Player"
+	info_margin.add_child(game_menu_info_label)
+	vbox.add_child(info_panel)
+
+	# 3. Action Buttons Container
+	var btns_vbox = VBoxContainer.new()
+	btns_vbox.name = "ButtonsVBox"
+	btns_vbox.add_theme_constant_override("separation", 8)
+
+	# Restart Quest Button
+	btn_menu_restart_quest = Button.new()
+	btn_menu_restart_quest.name = "BtnRestartQuest"
+	btn_menu_restart_quest.text = "↺  Restart Quest"
+	btn_menu_restart_quest.tooltip_text = "Force reload current quest from cartridge (clears saved game and restores Round 1)"
+	btn_menu_restart_quest.custom_minimum_size = Vector2(0, 38)
+	btn_menu_restart_quest.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	var rst_sb = StyleBoxFlat.new()
+	rst_sb.bg_color = Color(0.2, 0.08, 0.1, 0.95)
+	rst_sb.border_color = Color(0.9, 0.35, 0.35, 0.85)
+	rst_sb.set_border_width_all(1)
+	rst_sb.set_corner_radius_all(6)
+	btn_menu_restart_quest.add_theme_stylebox_override("normal", rst_sb)
+	btn_menu_restart_quest.add_theme_color_override("font_color", Color(1.0, 0.75, 0.75, 1.0))
+	btn_menu_restart_quest.add_theme_font_size_override("font_size", 13)
+	btn_menu_restart_quest.pressed.connect(restart_quest_from_menu)
+	btns_vbox.add_child(btn_menu_restart_quest)
+
+	# Save Game State Button
+	btn_menu_save_game = Button.new()
+	btn_menu_save_game.name = "BtnSaveGameState"
+	btn_menu_save_game.text = "💾  Save Game State"
+	btn_menu_save_game.tooltip_text = "Save current hero vitals, spent spells, inventory, and explored tiles to disk"
+	btn_menu_save_game.custom_minimum_size = Vector2(0, 38)
+	btn_menu_save_game.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	var sav_sb = StyleBoxFlat.new()
+	sav_sb.bg_color = Color(0.08, 0.18, 0.12, 0.95)
+	sav_sb.border_color = Color(0.25, 0.8, 0.45, 0.85)
+	sav_sb.set_border_width_all(1)
+	sav_sb.set_corner_radius_all(6)
+	btn_menu_save_game.add_theme_stylebox_override("normal", sav_sb)
+	btn_menu_save_game.add_theme_color_override("font_color", Color(0.75, 1.0, 0.82, 1.0))
+	btn_menu_save_game.add_theme_font_size_override("font_size", 13)
+	btn_menu_save_game.pressed.connect(save_game_from_menu)
+	btns_vbox.add_child(btn_menu_save_game)
+
+	# Load Game State Button
+	btn_menu_load_game = Button.new()
+	btn_menu_load_game.name = "BtnLoadGameState"
+	btn_menu_load_game.text = "📂  Load Game State"
+	btn_menu_load_game.tooltip_text = "Restore saved quest session from disk"
+	btn_menu_load_game.custom_minimum_size = Vector2(0, 38)
+	btn_menu_load_game.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	var lod_sb = StyleBoxFlat.new()
+	lod_sb.bg_color = Color(0.08, 0.15, 0.22, 0.95)
+	lod_sb.border_color = Color(0.0, 0.74, 0.83, 0.85)
+	lod_sb.set_border_width_all(1)
+	lod_sb.set_corner_radius_all(6)
+	btn_menu_load_game.add_theme_stylebox_override("normal", lod_sb)
+	btn_menu_load_game.add_theme_color_override("font_color", Color(0.75, 0.95, 1.0, 1.0))
+	btn_menu_load_game.add_theme_font_size_override("font_size", 13)
+	btn_menu_load_game.pressed.connect(load_game_from_menu)
+	btns_vbox.add_child(btn_menu_load_game)
+
+	# Close / Resume Button
+	btn_menu_close = Button.new()
+	btn_menu_close.name = "BtnCloseGameMenu"
+	btn_menu_close.text = "▶  Resume Quest"
+	btn_menu_close.tooltip_text = "Dismiss Game Menu and return to quest [Esc]"
+	btn_menu_close.custom_minimum_size = Vector2(0, 36)
+	btn_menu_close.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	var cls_sb = StyleBoxFlat.new()
+	cls_sb.bg_color = Color(0.12, 0.15, 0.19, 0.9)
+	cls_sb.border_color = Color(0.45, 0.52, 0.62, 0.7)
+	cls_sb.set_border_width_all(1)
+	cls_sb.set_corner_radius_all(6)
+	btn_menu_close.add_theme_stylebox_override("normal", cls_sb)
+	btn_menu_close.add_theme_color_override("font_color", Color(0.9, 0.92, 0.95, 0.95))
+	btn_menu_close.add_theme_font_size_override("font_size", 13)
+	btn_menu_close.pressed.connect(close_game_menu)
+	btns_vbox.add_child(btn_menu_close)
+
+	vbox.add_child(btns_vbox)
+
+	# 4. Status / Feedback Label
+	game_menu_status_label = Label.new()
+	game_menu_status_label.name = "StatusLabel"
+	game_menu_status_label.text = "[Esc] to resume • Autosave active"
+	game_menu_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	game_menu_status_label.add_theme_font_size_override("font_size", 11)
+	game_menu_status_label.add_theme_color_override("font_color", Color(0.6, 0.7, 0.8, 0.8))
+	vbox.add_child(game_menu_status_label)
+
+	game_menu_modal.add_child(game_menu_card)
+	ui_node.add_child(game_menu_modal)
+
+func is_game_menu_open() -> bool:
+	return game_menu_modal != null and game_menu_modal.visible
+
+func open_game_menu() -> void:
+	if not game_menu_modal:
+		_setup_game_menu_modal()
+	if not game_menu_modal:
+		return
+	_update_game_menu_info()
+	game_menu_modal.visible = true
+	_log("[GAME MENU] Opened.")
+
+func close_game_menu() -> void:
+	if game_menu_modal:
+		game_menu_modal.visible = false
+
+func toggle_game_menu() -> void:
+	if is_game_menu_open():
+		close_game_menu()
+	else:
+		open_game_menu()
+
+func _update_game_menu_info() -> void:
+	if not game_menu_info_label:
+		return
+	var cart = CartridgeManager.active_cartridge
+	var q_title = cart.get("header", {}).get("title", "HeroQuest")
+	var h_id = heroes[active_hero_idx].get("id", "hero") if active_hero_idx >= 0 and active_hero_idx < heroes.size() else "None"
+	var save_exists = has_saved_game()
+	var save_text = "Save Present (%s)" % get_save_file_path().get_file() if save_exists else "No Save On Disk"
+	game_menu_info_label.text = "Quest: %s  •  Round: %d  •  Active: %s\nStorage: %s" % [
+		q_title, current_round, h_id.capitalize(), save_text
+	]
+	if game_menu_status_label:
+		game_menu_status_label.text = "[Esc] to resume • Changes auto-save on every move"
+		game_menu_status_label.add_theme_color_override("font_color", Color(0.6, 0.7, 0.8, 0.8))
+
+func restart_quest_from_menu() -> void:
+	_log("[GAME MENU] Player requested Restart Quest from Game Menu.")
+	delete_save_game()
+	_load_active_cartridge(true)
+	close_game_menu()
+	_log("[RESET] Quest restarted from cartridge to Round 1.")
+
+func save_game_from_menu() -> void:
+	auto_save_game()
+	var path = get_save_file_path()
+	_log("[GAME MENU] Game state successfully saved to disk: %s" % path)
+	if game_menu_status_label:
+		game_menu_status_label.text = "✔ Saved successfully! (%s)" % Time.get_time_string_from_system()
+		game_menu_status_label.add_theme_color_override("font_color", Color(0.3, 0.95, 0.5, 1.0))
+	_update_game_menu_info()
+
+func load_game_from_menu() -> void:
+	if not has_saved_game():
+		_log("[GAME MENU] Cannot load: No saved game file found on disk.")
+		if game_menu_status_label:
+			game_menu_status_label.text = "✖ No saved game found on disk!"
+			game_menu_status_label.add_theme_color_override("font_color", Color(0.95, 0.4, 0.4, 1.0))
+		return
+	var ok = restore_saved_game()
+	if ok:
+		_log("[GAME MENU] Game state restored successfully from disk.")
+		_update_ui()
+		queue_redraw_all()
+		close_game_menu()
+	else:
+		_log("[GAME MENU] Failed to restore saved game.")
+		if game_menu_status_label:
+			game_menu_status_label.text = "✖ Failed to restore saved game!"
+			game_menu_status_label.add_theme_color_override("font_color", Color(0.95, 0.4, 0.4, 1.0))
 
 func _get_hero_spells_by_id(hero_id: String) -> Array:
 	for h in heroes:
@@ -4674,6 +4959,14 @@ func cancel_ai_step() -> Dictionary:
 	return { "success": true, "cancelled": true, "step": cancelled_step }
 
 func _execute_auto_play_step() -> void:
+	if elf_spell_modal and elf_spell_modal.visible:
+		select_elf_element("water")
+		confirm_elf_spell_selection()
+		if elf_spell_modal:
+			elf_spell_modal.visible = false
+		_log("[MENTOR AI] 💧 Elf selects Water Magic (Water of Healing, Veil of Mist, Sleep).")
+		return
+
 	auto_play_step += 1
 	var hero = get_active_hero()
 	if hero.size() == 0:
@@ -5070,6 +5363,12 @@ func _input(event: InputEvent) -> void:
 				targeting_cursor.queue_redraw()
 			queue_redraw_all()
 
+	if game_menu_modal and game_menu_modal.visible:
+		if (event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE):
+			close_game_menu()
+			get_viewport().set_input_as_handled()
+			return
+
 	if armory_modal and armory_modal.visible:
 		if (event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE):
 			close_armory()
@@ -5110,7 +5409,18 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 
+	if (event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE):
+		open_game_menu()
+		get_viewport().set_input_as_handled()
+		return
+
 func _unhandled_input(event: InputEvent) -> void:
+	if game_menu_modal and game_menu_modal.visible:
+		if (event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE):
+			close_game_menu()
+			get_viewport().set_input_as_handled()
+			return
+
 	if is_targeting_active():
 		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 			cancel_targeting()
@@ -5160,6 +5470,12 @@ func _unhandled_input(event: InputEvent) -> void:
 			skip_enemy_turn_timeout()
 			get_viewport().set_input_as_handled()
 			return
+
+	if (event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE):
+		open_game_menu()
+		get_viewport().set_input_as_handled()
+		return
+
 	if is_ai_step_pending:
 		if event is InputEventKey and event.pressed:
 			if event.keycode == KEY_ESCAPE:
@@ -11614,14 +11930,21 @@ func get_telemetry_state() -> Dictionary:
 				"badge": (btn_armory.get_node_or_null("Badge") as Label).text if (btn_armory and btn_armory.get_node_or_null("Badge") and (btn_armory.get_node_or_null("Badge") as Label).visible) else "",
 				"badgeVisible": (btn_armory.get_node_or_null("Badge") as Label).visible if (btn_armory and btn_armory.get_node_or_null("Badge")) else false
 			} if btn_armory else {},
-			"map_end_turn": { "visible": btn_map_end_turn.visible, "disabled": btn_map_end_turn.disabled, "text": btn_map_end_turn.text, "tooltip": btn_map_end_turn.tooltip_text, "icon": "action_end_turn" } if btn_map_end_turn else {}
+			"map_end_turn": { "visible": btn_map_end_turn.visible, "disabled": btn_map_end_turn.disabled, "text": btn_map_end_turn.text, "tooltip": btn_map_end_turn.tooltip_text, "icon": "action_end_turn" } if btn_map_end_turn else {},
+			"game_menu": {
+				"visible": get_node_or_null("UI/SidebarHeader/BtnGameMenu").visible if get_node_or_null("UI/SidebarHeader/BtnGameMenu") else false,
+				"text": get_node_or_null("UI/SidebarHeader/BtnGameMenu").text if get_node_or_null("UI/SidebarHeader/BtnGameMenu") else "",
+				"tooltip": get_node_or_null("UI/SidebarHeader/BtnGameMenu").tooltip_text if get_node_or_null("UI/SidebarHeader/BtnGameMenu") else ""
+			} if get_node_or_null("UI/SidebarHeader/BtnGameMenu") else {}
 		},
+		"headerButtons": (get_node_or_null("UI/SidebarHeader").get_children().map(func(c): return c.name) if get_node_or_null("UI/SidebarHeader") else []),
 		"hotbar": {
 			"actionsCount": actions_container.get_child_count() if actions_container else 10,
 			"scrollHorizontal": actions_scroll.scroll_horizontal if actions_scroll else 0,
 			"overflow": (btn_scroll_right.visible or btn_scroll_left.visible) if (btn_scroll_right and btn_scroll_left) else false
 		},
 		"modal": {
+			"gameMenuModalVisible": is_game_menu_open(),
 			"aiConfirmModalVisible": ai_confirm_modal.visible if ai_confirm_modal else false,
 			"elfSpellSelectModalVisible": elf_spell_modal.visible if elf_spell_modal else false,
 			"armoryModalVisible": armory_modal.visible if armory_modal else false,
@@ -11737,6 +12060,8 @@ func get_telemetry_state() -> Dictionary:
 			"tooltip": btn_map_end_turn.tooltip_text if btn_map_end_turn else ""
 		},
 		"startingStair": [starting_stair.x, starting_stair.y],
+		"gameMenuVisible": is_game_menu_open(),
+		"isGameMenuOpen": is_game_menu_open(),
 		"hasSaveGame": has_saved_game(),
 		"saveFilePath": get_save_file_path(),
 		"isDemoActive": CartridgeManager.auto_play_enabled,
@@ -12540,19 +12865,33 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			update_party_vision()
 			_update_ui()
 			queue_redraw_all()
-			auto_save_game()
+			if not bool(action_data.get("skip_save", action_data.get("skipSave", false))):
+				auto_save_game()
 			return { "success": true }
-		"reset_game", "reset_quest", "force_reload":
+		"open_game_menu", "show_game_menu":
+			open_game_menu()
+			return { "success": true, "menu_open": true }
+		"close_game_menu", "hide_game_menu":
+			close_game_menu()
+			return { "success": true, "menu_open": false }
+		"toggle_game_menu":
+			toggle_game_menu()
+			return { "success": true, "menu_open": is_game_menu_open() }
+		"restart_quest", "reset_game", "reset_quest", "force_reload":
 			var clear_save = bool(action_data.get("clear_save", action_data.get("clearSave", true)))
 			if clear_save:
 				delete_save_game()
 			_load_active_cartridge(true)
+			close_game_menu()
 			return { "success": true }
-		"save_game", "autosave":
+		"save_game_state", "save_game", "autosave":
 			auto_save_game()
+			_update_game_menu_info()
 			return { "success": true, "path": get_save_file_path() }
-		"load_game", "restore_game":
+		"load_game_state", "load_game", "restore_game":
 			var ok = restore_saved_game()
+			if ok:
+				close_game_menu()
 			return { "success": ok, "path": get_save_file_path() }
 		"has_save_game":
 			return { "success": true, "has_save": has_saved_game(), "path": get_save_file_path() }
