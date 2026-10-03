@@ -373,6 +373,11 @@ class TabletopQAPlayer:
         self.log(f"Manually triggering story event '{marker_or_id}'...")
         return self.execute_action("trigger_story_event", id=marker_or_id)
 
+    def get_active_dice_roll(self) -> dict:
+        st = self.get_state()
+        return st.get("activeDiceRoll", {})
+
+
     # --- Armory & Equipment Shop ---
     def open_armory(self, hero_id: str = "") -> dict:
         self.log(f"Opening Armory Equipment Shop{' for hero ' + hero_id if hero_id else ''}...")
