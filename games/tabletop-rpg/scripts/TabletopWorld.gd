@@ -45,6 +45,7 @@ var _tile_to_room_id: Dictionary = {}
 var _rooms_by_id: Dictionary = {}
 var _blocked_wall_tiles: Dictionary = {}
 var _doors_by_edge: Dictionary = {}
+var _furniture_by_tile: Dictionary = {}
 var grid_cols: int = GRID_COLS
 var grid_rows: int = GRID_ROWS
 var starting_stair: Vector2i = Vector2i(1, 1)
@@ -1096,9 +1097,36 @@ func _rebuild_spatial_caches() -> void:
 		_doors_by_edge[Vector4i(f[0], f[1], t[0], t[1])] = d
 		_doors_by_edge[Vector4i(t[0], t[1], f[0], f[1])] = d
 
+	_furniture_by_tile.clear()
+	for furn in furniture:
+		var fx = int(furn.get("x", furn.get("position", [0, 0])[0]))
+		var fy = int(furn.get("y", furn.get("position", [0, 0])[1]))
+		var fw = int(furn.get("width", furn.get("w", 1)))
+		var fh = int(furn.get("height", furn.get("h", 1)))
+		var f_type = str(furn.get("type", "chest"))
+		if f_type == "altar" and fw == 1 and fh == 1:
+			fw = 3; fh = 2
+		elif f_type == "bookcase" and fw == 1 and fh == 1:
+			fw = 3; fh = 1
+		elif (f_type == "bookshelf" or f_type == "cupboard") and fw == 1 and fh == 1:
+			fw = 2; fh = 1
+		elif f_type == "table" and fw == 1 and fh == 1:
+			fw = 3; fh = 2
+		elif f_type == "tomb" and fw == 1 and fh == 1:
+			fw = 2; fh = 3
+		for bx in range(fx, fx + fw):
+			for by in range(fy, fy + fh):
+				_furniture_by_tile[Vector2i(bx, by)] = furn
+
 	show_defeated_monsters = false
 	if enemies_scroll:
 		enemies_scroll.scroll_vertical = 0
+
+func get_furniture_at(tile: Vector2i) -> Dictionary:
+	return _furniture_by_tile.get(tile, {})
+
+func is_tile_occupied_by_furniture(tile: Vector2i) -> bool:
+	return _furniture_by_tile.has(tile)
 
 func is_tile_wall_blocked(tile: Vector2i) -> bool:
 	return _blocked_wall_tiles.has(tile)
@@ -1146,7 +1174,7 @@ func is_tile_occupied_by_monster(tile: Vector2i, exclude_monster_id: String = ""
 	return false
 
 func is_tile_occupied(tile: Vector2i, exclude_hero_idx: int = -1, exclude_monster_id: String = "") -> bool:
-	return is_tile_occupied_by_hero(tile, exclude_hero_idx) or is_tile_occupied_by_monster(tile, exclude_monster_id)
+	return is_tile_occupied_by_hero(tile, exclude_hero_idx) or is_tile_occupied_by_monster(tile, exclude_monster_id) or is_tile_occupied_by_furniture(tile)
 
 func _get_door_between(a: Vector2i, b: Vector2i) -> Dictionary:
 	return _doors_by_edge.get(Vector4i(a.x, a.y, b.x, b.y), {})
@@ -2890,6 +2918,15 @@ func _handle_tile_click(tile: Vector2i) -> void:
 					attack_adjacent_monster(str(m.get("id", "")))
 				return
 
+	# If clicked on furniture, provide immediate feedback
+	if is_tile_occupied_by_furniture(tile):
+		var furn = get_furniture_at(tile)
+		_log("[MOVE] Square (%d, %d) is blocked by %s! Characters cannot inhabit or move onto furniture." % [
+			tile.x, tile.y, furn.get("name", "furniture")
+		])
+		spawn_floating_text(tile, "FURNITURE BLOCKED!", Color(0.95, 0.6, 0.2), 1.2)
+		return
+
 	# If clicked on a wall block tile, provide immediate feedback
 	if is_tile_wall_blocked(tile):
 		_log("[MOVE] Square (%d, %d) is blocked by solid stone masonry!" % [tile.x, tile.y])
@@ -2999,6 +3036,8 @@ func find_path(start: Vector2i, goal: Vector2i, moving_hero_idx: int = -1) -> Ar
 			if not pass_rock:
 				if has_wall_between(cur, nxt) or is_tile_wall_blocked(nxt):
 					continue
+				if is_tile_occupied_by_furniture(nxt):
+					continue
 				var rm = _get_room_at(nxt)
 				var rm_id = str(rm.get("id", ""))
 				if rm_id != "" and not revealed_rooms.has(rm_id):
@@ -3034,17 +3073,25 @@ func move_hero(target_pos: Vector2i, is_interactive: bool = false) -> bool:
 
 	# Standard HeroQuest Rule: No Sharing Squares
 	if is_tile_occupied(target_pos, active_hero_idx):
-		if is_tile_occupied_by_hero(target_pos, active_hero_idx):
+		if is_tile_occupied_by_furniture(target_pos):
+			var occ_furn = get_furniture_at(target_pos)
+			_log("[WARNING] Square (%d, %d) is blocked by %s! HeroQuest rules strictly forbid heroes from inhabiting furniture spaces." % [
+				target_pos.x, target_pos.y, occ_furn.get("name", "furniture")
+			])
+			spawn_floating_text(target_pos, "BLOCKED BY FURNITURE", Color(0.95, 0.6, 0.2), 1.2)
+			return false
+		elif is_tile_occupied_by_hero(target_pos, active_hero_idx):
 			var occ_hero = get_hero_at(target_pos)
 			_log("[WARNING] Square (%d, %d) is occupied by %s! HeroQuest rules strictly forbid sharing a space." % [
 				target_pos.x, target_pos.y, occ_hero.get("name", "another hero")
 			])
+			return false
 		else:
 			var occ_monster = get_monster_at(target_pos)
 			_log("[WARNING] Square (%d, %d) is occupied by %s! Cannot end movement on monster squares." % [
 				target_pos.x, target_pos.y, occ_monster.get("name", "monster")
 			])
-		return false
+			return false
 
 	var path = find_path(curr, target_pos, active_hero_idx)
 	if path.is_empty():
@@ -4999,6 +5046,9 @@ func _calculate_monster_movement_path(m: Dictionary, target_hero: Dictionary, ma
 			# Cannot enter tile occupied by another monster
 			if is_tile_occupied_by_monster(cand_pos, mid):
 				continue
+			# Cannot enter tile occupied by furniture
+			if is_tile_occupied_by_furniture(cand_pos):
+				continue
 			# Cannot pass through walls, closed doors, or blockages
 			if has_wall_between(curr_pos, cand_pos) or is_tile_wall_blocked(cand_pos):
 				continue
@@ -6837,7 +6887,33 @@ func get_telemetry_state() -> Dictionary:
 
 	var furniture_copy: Array = []
 	for f in furniture:
-		furniture_copy.append(f.duplicate(true))
+		var fc = f.duplicate(true)
+		var fx = int(f.get("x", f.get("position", [0, 0])[0]))
+		var fy = int(f.get("y", f.get("position", [0, 0])[1]))
+		var fw = int(f.get("width", f.get("w", 1)))
+		var fh = int(f.get("height", f.get("h", 1)))
+		var f_type = str(f.get("type", "chest"))
+		if f_type == "altar" and fw == 1 and fh == 1:
+			fw = 3; fh = 2
+		elif f_type == "bookcase" and fw == 1 and fh == 1:
+			fw = 3; fh = 1
+		elif (f_type == "bookshelf" or f_type == "cupboard") and fw == 1 and fh == 1:
+			fw = 2; fh = 1
+		elif f_type == "table" and fw == 1 and fh == 1:
+			fw = 3; fh = 2
+		elif f_type == "tomb" and fw == 1 and fh == 1:
+			fw = 2; fh = 3
+		fc["x"] = fx
+		fc["y"] = fy
+		fc["width"] = fw
+		fc["height"] = fh
+		fc["grid_pos"] = [fx, fy]
+		var f_tiles: Array = []
+		for tx in range(fx, fx + fw):
+			for ty in range(fy, fy + fh):
+				f_tiles.append([tx, ty])
+		fc["tiles"] = f_tiles
+		furniture_copy.append(fc)
 
 	var wall_blocks_copy: Array = []
 	for wb in wall_blocks:
@@ -7395,6 +7471,11 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				treasure_deck.clear()
 				for c in action_data.treasureDeck:
 					treasure_deck.append(c.duplicate(true))
+			if action_data.has("furniture") and action_data.furniture is Array:
+				furniture.clear()
+				for f in action_data.furniture:
+					furniture.append(f.duplicate(true))
+				_rebuild_spatial_caches()
 			if action_data.has("resetTurnLosses") and bool(action_data.get("resetTurnLosses")):
 				turn_player_losses.clear()
 				last_player_attack_hit.clear()

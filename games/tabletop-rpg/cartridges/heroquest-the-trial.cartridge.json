@@ -871,10 +871,10 @@
           "id": "furn-tomb-1",
           "name": "Ancient Stone Tomb",
           "type": "tomb",
-          "x": 3,
+          "x": 5,
           "y": 2,
           "width": 2,
-          "height": 3,
+          "height": 2,
           "roomId": "room-nw-crypt"
         },
         {
