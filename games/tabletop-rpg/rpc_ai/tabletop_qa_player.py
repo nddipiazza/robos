@@ -558,6 +558,14 @@ class TabletopQAPlayer:
         st = self.get_state()
         return bool(st.get("isDemoActive", False) or st.get("autoPlayEnabled", False))
 
+    def get_game_state(self) -> str:
+        st = self.get_state()
+        return str(st.get("gameState", "in_progress"))
+
+    def is_quest_begin(self) -> bool:
+        st = self.get_state()
+        return bool(st.get("isQuestBegin", False))
+
 
 
 
