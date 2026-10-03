@@ -1532,7 +1532,63 @@ class TestHeroQuestE2EScenarios(unittest.TestCase):
                  ])
         self.assertEqual(len(board_heroes), 4)
 
+    def test_48_monster_ai_turn_correct_attacker_and_movement(self):
+        """Scenario 48: Zargon Monster AI Turn - Correct Attacker Attribution and Stoppage Adjacent to Hero."""
+        bdd_scenario_header(48, "Monster AI Turn: Attacker Attribution & Stop Adjacent to Hero")
+
+        bdd_step("GIVEN", "Barbarian stands at (4, 2) in crypt doorway; Crypt Skeleton is at (4, 4); Boss Verag is at (4, 10)")
+        self.ai.reset_game()
+        self.ai.set_state(
+            revealedRooms=["room-nw-crypt"],
+            heroes=[
+                {"id": "barbarian", "is_on_board": True, "grid_pos": [4, 2], "current_bp": 8},
+                {"id": "dwarf", "is_on_board": False, "grid_pos": [-1, -1]},
+                {"id": "elf", "is_on_board": False, "grid_pos": [-1, -1]},
+                {"id": "wizard", "is_on_board": False, "grid_pos": [-1, -1]}
+            ],
+            monsters=[
+                {"id": "mon-skel-1", "grid_pos": [4, 4], "current_bp": 1, "is_alive": True, "roomId": "room-nw-crypt"},
+                {"id": "mon-skel-2", "grid_pos": [1, 1], "current_bp": 1, "is_alive": False, "roomId": "room-nw-crypt"}, # Defeated so only skel-1 acts
+                {"id": "mon-verag", "grid_pos": [4, 10], "current_bp": 4, "is_alive": True, "roomId": "room-grand-fossil"}
+            ]
+        )
+
+        bdd_step("WHEN", "Zargon initiates monster turn")
+        baseline = self.ai.snapshot()
+        res = self.ai.monster_turn()
+        current = self.ai.snapshot()
+        diff = diff_snapshots(baseline, current)
+
+        # Retrieve skel-1 and hero positions
+        skel = next((m for m in current.get("monsters", []) if m.get("id") == "mon-skel-1"), {})
+        barb = next((h for h in current.get("heroes", []) if h.get("id") == "barbarian"), {})
+        active_dice = current.get("activeDiceRoll", {})
+
+        bdd_step("THEN", "Skeleton advances to adjacent tile (4, 3) and NEVER enters Barbarian tile (4, 2)",
+                 assertions=[
+                     f"Barbarian position preserved at [4, 2]: {barb.get('grid_pos') == [4, 2]}",
+                     f"Skeleton position is adjacent [4, 3]: {skel.get('grid_pos')}",
+                     f"Skeleton did NOT enter hero square: {skel.get('grid_pos') != barb.get('grid_pos')}"
+                 ])
+        self.assertEqual(barb.get("grid_pos"), [4, 2])
+        self.assertEqual(skel.get("grid_pos"), [4, 3])
+        self.assertNotEqual(skel.get("grid_pos"), barb.get("grid_pos"))
+
+        bdd_step("AND", "Attacker is Crypt Skeleton (2 attack dice), NOT Verag the Orc Warlord (4 attack dice)",
+                 assertions=[
+                     f"Attacker name in dice roll: '{active_dice.get('attackerName')}'",
+                     f"Attacking dice count: {active_dice.get('attackDiceCount') or active_dice.get('diceCount')}",
+                     f"Verag did NOT attack: {'Verag' not in str(diff.combat_log_added)}"
+                 ])
+        self.assertIn("Skeleton", active_dice.get("attackerName", ""))
+        self.assertNotIn("Verag", active_dice.get("attackerName", ""))
+        # Verify combat log additions attribute attack to Skeleton and never Verag
+        log_text = " ".join(diff.combat_log_added)
+        self.assertIn("Skeleton", log_text)
+        self.assertNotIn("Verag the Orc Warlord attacks", log_text)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
 

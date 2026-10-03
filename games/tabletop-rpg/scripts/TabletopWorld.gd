@@ -514,15 +514,24 @@ func is_border_tile(tile: Vector2i) -> bool:
 	return tile.x <= 0 or tile.x >= grid_cols - 1 or tile.y <= 0 or tile.y >= grid_rows - 1
 
 # --- HeroQuest Miniature Occupancy Rules ---
+func _to_grid_pos(val: Variant) -> Vector2i:
+	if val is Vector2i:
+		return val
+	elif val is Vector2:
+		return Vector2i(int(val.x), int(val.y))
+	elif val is Array and val.size() >= 2:
+		return Vector2i(int(val[0]), int(val[1]))
+	return Vector2i(-1, -1)
+
 func get_hero_at(tile: Vector2i) -> Dictionary:
 	for h in heroes:
-		if h.get("is_on_board", false) and h.get("current_bp", 0) > 0 and h.get("grid_pos") == tile:
+		if h.get("is_on_board", false) and int(h.get("current_bp", 0)) > 0 and _to_grid_pos(h.get("grid_pos")) == tile:
 			return h
 	return {}
 
 func get_monster_at(tile: Vector2i) -> Dictionary:
 	for m in monsters:
-		if m.get("is_alive", false) and m.get("grid_pos") == tile:
+		if m.get("is_alive", false) and _to_grid_pos(m.get("grid_pos")) == tile:
 			return m
 	return {}
 
@@ -531,18 +540,20 @@ func is_tile_occupied_by_hero(tile: Vector2i, exclude_hero_idx: int = -1) -> boo
 		if i == exclude_hero_idx:
 			continue
 		var h = heroes[i]
-		if h.get("is_on_board", false) and h.get("current_bp", 0) > 0 and h.get("grid_pos") == tile:
+		if h.get("is_on_board", false) and int(h.get("current_bp", 0)) > 0 and _to_grid_pos(h.get("grid_pos")) == tile:
 			return true
 	return false
 
-func is_tile_occupied_by_monster(tile: Vector2i) -> bool:
+func is_tile_occupied_by_monster(tile: Vector2i, exclude_monster_id: String = "") -> bool:
 	for m in monsters:
-		if m.get("is_alive", false) and m.get("grid_pos") == tile:
+		if exclude_monster_id != "" and (str(m.get("id")) == exclude_monster_id or str(m.get("slug")) == exclude_monster_id):
+			continue
+		if m.get("is_alive", false) and _to_grid_pos(m.get("grid_pos")) == tile:
 			return true
 	return false
 
-func is_tile_occupied(tile: Vector2i, exclude_hero_idx: int = -1) -> bool:
-	return is_tile_occupied_by_hero(tile, exclude_hero_idx) or is_tile_occupied_by_monster(tile)
+func is_tile_occupied(tile: Vector2i, exclude_hero_idx: int = -1, exclude_monster_id: String = "") -> bool:
+	return is_tile_occupied_by_hero(tile, exclude_hero_idx) or is_tile_occupied_by_monster(tile, exclude_monster_id)
 
 func _get_door_between(a: Vector2i, b: Vector2i) -> Dictionary:
 	for d in doors:
@@ -2159,16 +2170,34 @@ func attack_adjacent_monster(monster_id: String = "", weapon_id: String = "") ->
 	return { "success": true, "result": res, "target": target_m.get("id"), "remaining_bp": target_m.get("current_bp") }
 
 # DunMaster Action: Monster attacks Hero!
-func dm_attack_hero(hero_id: String = "") -> Dictionary:
-	var monster = get_active_monster()
+func dm_attack_hero(hero_id: String = "", attacker_monster: Variant = null) -> Dictionary:
+	var monster: Dictionary = {}
+	if attacker_monster is Dictionary and not attacker_monster.is_empty():
+		monster = attacker_monster
+	elif attacker_monster is String and attacker_monster != "":
+		for m in monsters:
+			var mid = str(m.get("id", ""))
+			var mslug = str(m.get("slug", ""))
+			if mid == attacker_monster or mslug == attacker_monster or mid.ends_with(attacker_monster) or attacker_monster.ends_with(mid):
+				monster = m
+				break
+	if monster.is_empty():
+		monster = get_active_monster()
+
 	if monster.size() == 0:
 		_log("No living monster to attack with!")
 		return {}
 
+	# Align active_monster_idx with the attacking monster
+	for idx in range(monsters.size()):
+		if str(monsters[idx].get("id")) == str(monster.get("id")):
+			active_monster_idx = idx
+			break
+
 	var target_h: Dictionary = {}
 	for h in heroes:
-		if h.get("current_bp", 1) > 0:
-			if hero_id != "" and h.get("id") == hero_id:
+		if int(h.get("current_bp", 1)) > 0:
+			if hero_id != "" and str(h.get("id")) == hero_id:
 				target_h = h
 				break
 			elif hero_id == "":
@@ -2179,9 +2208,9 @@ func dm_attack_hero(hero_id: String = "") -> Dictionary:
 		_log("No living hero to attack!")
 		return {}
 
-	var atk_dice = monster.get("attackDice", 3)
+	var atk_dice = int(monster.get("attackDice", 2))
 	var def_dice = get_hero_defend_dice(target_h)
-	var h_pos = target_h.get("grid_pos", Vector2i(-1, -1))
+	var h_pos = _to_grid_pos(target_h.get("grid_pos", Vector2i(-1, -1)))
 
 	var res = TabletopDice.resolve_combat(atk_dice, def_dice, true)
 	var will_defeat = (res.wounds >= int(target_h.get("current_bp", 8)))
@@ -2191,7 +2220,7 @@ func dm_attack_hero(hero_id: String = "") -> Dictionary:
 	])
 
 	if res.wounds > 0:
-		target_h["current_bp"] = maxi(0, target_h.get("current_bp", 8) - res.wounds)
+		target_h["current_bp"] = maxi(0, int(target_h.get("current_bp", 8)) - res.wounds)
 		_log("[HIT] %s takes %d wound(s)! Remaining HP: %d" % [target_h.get("name"), res.wounds, target_h.get("current_bp")])
 		spawn_floating_text(h_pos, "-%d HP" % res.wounds, Color(0.95, 0.2, 0.2))
 		if target_h.get("rock_skin_active", false):
@@ -2201,6 +2230,11 @@ func dm_attack_hero(hero_id: String = "") -> Dictionary:
 	else:
 		_log("[BLOCKED] %s successfully blocked the monster attack!" % target_h.get("name"))
 		spawn_floating_text(h_pos, "BLOCKED!", Color(0.3, 0.8, 1.0))
+
+	res["attacker"] = monster.get("id")
+	res["attacker_name"] = monster.get("name")
+	res["target"] = target_h.get("id")
+	res["target_name"] = target_h.get("name")
 
 	last_combat_result = res
 	_update_ui()
@@ -2771,12 +2805,24 @@ func ai_monster_turn() -> Dictionary:
 
 	var acts = 0
 	for m in active_monsters:
-		var m_pos: Vector2i = m.get("grid_pos", Vector2i(0, 0))
+		# Check if monster is incapacitated
+		if m.get("is_sleeping", false):
+			_log("[SLEEP] %s is sound asleep and cannot move or attack." % m.get("name"))
+			continue
+		if m.get("tempest_stunned", false):
+			m["tempest_stunned"] = false # Recovers at end of missed turn
+			_log("[TEMPEST] %s is caught in the howling winds and misses its turn!" % m.get("name"))
+			continue
+
+		var m_pos: Vector2i = _to_grid_pos(m.get("grid_pos", Vector2i(0, 0)))
 		var nearest_hero: Dictionary = {}
 		var min_dist: int = 9999
 		for h in heroes:
-			if h.get("current_bp", 0) > 0:
-				var h_pos: Vector2i = h.get("grid_pos", Vector2i(0, 0))
+			# ONLY consider living heroes currently on the board
+			if h.get("is_on_board", false) and int(h.get("current_bp", 0)) > 0:
+				var h_pos: Vector2i = _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
+				if h_pos.x < 0 or h_pos.y < 0:
+					continue
 				var dist = absi(h_pos.x - m_pos.x) + absi(h_pos.y - m_pos.y)
 				if dist < min_dist:
 					min_dist = dist
@@ -2785,24 +2831,71 @@ func ai_monster_turn() -> Dictionary:
 		if nearest_hero.is_empty():
 			continue
 
-		var h_pos: Vector2i = nearest_hero.get("grid_pos", Vector2i(0, 0))
+		var h_pos: Vector2i = _to_grid_pos(nearest_hero.get("grid_pos", Vector2i(0, 0)))
+		var mid = str(m.get("id", ""))
 
 		if min_dist == 1:
 			_log("[MONSTER] %s roars and attacks %s!" % [m.get("name"), nearest_hero.get("name")])
-			dm_attack_hero(str(nearest_hero.get("id", "")))
+			dm_attack_hero(str(nearest_hero.get("id", "")), m)
 			acts += 1
 		elif min_dist > 1:
-			var step_dir = Vector2i(
-				clampi(h_pos.x - m_pos.x, -1, 1) if absi(h_pos.x - m_pos.x) >= absi(h_pos.y - m_pos.y) else 0,
-				clampi(h_pos.y - m_pos.y, -1, 1) if absi(h_pos.y - m_pos.y) > absi(h_pos.x - m_pos.x) else 0
-			)
-			var next_pos = m_pos + step_dir
-			if not has_wall_between(m_pos, next_pos) and not is_tile_wall_blocked(next_pos) and not is_tile_occupied(next_pos):
-				m["grid_pos"] = next_pos
-				_log("[MOVE] %s moves towards %s to (%d, %d)." % [m.get("name"), nearest_hero.get("name"), next_pos.x, next_pos.y])
+			# Monster advances towards hero up to movementSquares, stopping upon becoming adjacent
+			var max_moves = int(m.get("movementSquares", 4))
+			var curr_pos = m_pos
+			var steps_taken = 0
+
+			while steps_taken < max_moves:
+				var curr_dist = absi(h_pos.x - curr_pos.x) + absi(h_pos.y - curr_pos.y)
+				if curr_dist <= 1:
+					# Stop immediately upon reaching adjacent tile; monsters NEVER enter a hero's square!
+					break
+
+				var dx = h_pos.x - curr_pos.x
+				var dy = h_pos.y - curr_pos.y
+				var step_options: Array[Vector2i] = []
+				if absi(dx) >= absi(dy):
+					if dx != 0:
+						step_options.append(Vector2i(clampi(dx, -1, 1), 0))
+					if dy != 0:
+						step_options.append(Vector2i(0, clampi(dy, -1, 1)))
+				else:
+					if dy != 0:
+						step_options.append(Vector2i(0, clampi(dy, -1, 1)))
+					if dx != 0:
+						step_options.append(Vector2i(clampi(dx, -1, 1), 0))
+
+				var moved_this_step = false
+				for step_dir in step_options:
+					var cand_pos = curr_pos + step_dir
+					# Strictly forbid entering any hero's tile
+					if cand_pos == h_pos or is_tile_occupied_by_hero(cand_pos):
+						continue
+					# Cannot enter tile occupied by another monster
+					if is_tile_occupied_by_monster(cand_pos, mid):
+						continue
+					# Cannot pass through walls, closed doors, or blockages
+					if has_wall_between(curr_pos, cand_pos) or is_tile_wall_blocked(cand_pos):
+						continue
+
+					curr_pos = cand_pos
+					moved_this_step = true
+					break
+
+				if not moved_this_step:
+					break
+				steps_taken += 1
+
+			if curr_pos != m_pos:
+				m["grid_pos"] = curr_pos
+				_log("[MOVE] %s moves towards %s to (%d, %d)." % [m.get("name"), nearest_hero.get("name"), curr_pos.x, curr_pos.y])
 				acts += 1
-				if absi(h_pos.x - next_pos.x) + absi(h_pos.y - next_pos.y) == 1:
-					dm_attack_hero(str(nearest_hero.get("id", "")))
+
+			# If monster arrived adjacent to hero, execute melee attack!
+			var final_dist = absi(h_pos.x - curr_pos.x) + absi(h_pos.y - curr_pos.y)
+			if final_dist == 1:
+				_log("[MONSTER] %s engages and attacks %s!" % [m.get("name"), nearest_hero.get("name")])
+				dm_attack_hero(str(nearest_hero.get("id", "")), m)
+				acts += 1
 
 	end_turn()
 	return { "success": true, "acted": acts }
@@ -3979,7 +4072,8 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			return res
 		"dm_attack":
 			var hid = str(action_data.get("heroId", action_data.get("target", "")))
-			var res = dm_attack_hero(hid)
+			var mid = str(action_data.get("monsterId", action_data.get("attacker", action_data.get("monster", ""))))
+			var res = dm_attack_hero(hid, mid)
 			return { "success": true, "result": res }
 		"summon_monster":
 			var sx = int(action_data.get("x", 3))
