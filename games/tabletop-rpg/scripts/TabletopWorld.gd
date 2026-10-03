@@ -222,6 +222,21 @@ var turn_overlay_mode: String = "none" # "roll_prompt", "turn_complete", "none"
 @onready var hero_detail_abilities_section: VBoxContainer = get_node_or_null("UI/HeroDetailModal/Card/Margin/VBox/ContentHBox/RightCol/ScrollContainer/DetailsVBox/AbilitiesSection")
 @onready var hero_detail_btn_close: Button = get_node_or_null("UI/HeroDetailModal/Card/Margin/VBox/ButtonBox/BtnClose")
 
+@onready var btn_armory: Button = _find_action_button("BtnArmory")
+
+@onready var armory_modal: ColorRect = get_node_or_null("UI/ArmoryModal")
+@onready var armory_card: PanelContainer = get_node_or_null("UI/ArmoryModal/Card")
+@onready var armory_party_gold_badge: Label = get_node_or_null("UI/ArmoryModal/Card/Margin/VBox/Header/PartyGoldBadge")
+@onready var armory_btn_close_header: Button = get_node_or_null("UI/ArmoryModal/Card/Margin/VBox/Header/BtnCloseHeader")
+@onready var armory_hero_tabs: HBoxContainer = get_node_or_null("UI/ArmoryModal/Card/Margin/VBox/HeroTabs")
+@onready var armory_hero_info_banner: PanelContainer = get_node_or_null("UI/ArmoryModal/Card/Margin/VBox/HeroInfoBanner")
+@onready var armory_hero_info_text: Label = get_node_or_null("UI/ArmoryModal/Card/Margin/VBox/HeroInfoBanner/HeroInfoMargin/HeroInfoText")
+@onready var armory_items_grid: GridContainer = get_node_or_null("UI/ArmoryModal/Card/Margin/VBox/ScrollContainer/ItemsGrid")
+@onready var btn_armory_close: Button = get_node_or_null("UI/ArmoryModal/Card/Margin/VBox/ButtonBox/BtnClose")
+
+var armory_open: bool = false
+var selected_armory_hero_id: String = "barbarian"
+
 @onready var unavailable_notice_panel: PanelContainer = get_node_or_null("UI/UnavailableNotice")
 @onready var unavailable_notice_label: Label = get_node_or_null("UI/UnavailableNotice/Margin/HBox/NoticeLabel")
 @onready var unavailable_notice_icon: Label = get_node_or_null("UI/UnavailableNotice/Margin/HBox/Icon")
@@ -303,6 +318,7 @@ func _ready() -> void:
 	_setup_ui_signals()
 	_setup_ai_modal_styles()
 	_setup_elf_spell_modal()
+	_setup_armory_modal()
 	_setup_turn_overlay_ui()
 	_setup_log_panel()
 	_setup_hero_detail_modal()
@@ -371,7 +387,7 @@ func _setup_action_hotbar() -> void:
 
 	var btns = [
 		btn_roll, btn_attack, btn_cast_spell, btn_use_item, btn_search,
-		btn_search_traps, btn_disarm_trap, btn_summon, btn_ai_step, btn_end_turn
+		btn_search_traps, btn_disarm_trap, btn_armory, btn_summon, btn_ai_step, btn_end_turn
 	]
 	for b in btns:
 		if b:
@@ -659,6 +675,10 @@ func _get_button_unavailable_reason(btn: Button) -> String:
 		if not disarm_check.get("can_disarm", false):
 			return "Tool Kit required to disarm"
 		return "Cannot disarm trap"
+	elif btn == btn_armory:
+		if get_total_party_gold() <= 0:
+			return "Party has no gold"
+		return "Armory unavailable"
 	return "Action unavailable"
 
 func _get_search_unavailable_reason() -> String:
@@ -684,7 +704,7 @@ func _get_search_unavailable_reason() -> String:
 	return "Cannot search room"
 
 func _sync_disabled_click_shields() -> void:
-	var btns = [btn_roll, btn_attack, btn_cast_spell, btn_use_item, btn_search, btn_end_turn, btn_summon, btn_ai_step, btn_search_traps, btn_disarm_trap]
+	var btns = [btn_roll, btn_attack, btn_cast_spell, btn_use_item, btn_search, btn_end_turn, btn_summon, btn_ai_step, btn_search_traps, btn_disarm_trap, btn_armory]
 	for btn in btns:
 		if not btn:
 			continue
@@ -1087,6 +1107,12 @@ func _setup_ui_signals() -> void:
 		hero_detail_btn_close.pressed.connect(close_hero_detail_modal)
 	if hero_detail_btn_close_header and not hero_detail_btn_close_header.pressed.is_connected(close_hero_detail_modal):
 		hero_detail_btn_close_header.pressed.connect(close_hero_detail_modal)
+	if btn_armory and not btn_armory.pressed.is_connected(toggle_armory):
+		btn_armory.pressed.connect(toggle_armory)
+	if btn_armory_close and not btn_armory_close.pressed.is_connected(close_armory):
+		btn_armory_close.pressed.connect(close_armory)
+	if armory_btn_close_header and not armory_btn_close_header.pressed.is_connected(close_armory):
+		armory_btn_close_header.pressed.connect(close_armory)
 
 func toggle_role() -> void:
 	if current_role == "player":
@@ -2125,6 +2151,11 @@ func _update_elf_spell_modal_ui() -> void:
 			cur_info.get("name", current_elf_element),
 			", ".join(wiz_names)
 		]
+	if btn_elf_spell_confirm:
+		if has_party_gold_for_armory():
+			btn_elf_spell_confirm.text = "⚔️ Confirm Spells & Visit Armory"
+		else:
+			btn_elf_spell_confirm.text = "⚔️ Enter the Dungeon"
 
 func show_elf_spell_selection_modal() -> void:
 	if elf_spell_modal:
@@ -2169,6 +2200,9 @@ func confirm_elf_spell_selection() -> Dictionary:
 	_log("[SPELLS] Spell Selection Confirmed! Elf memorizes %s. Wizard takes the remaining 3 decks." % [
 		info.get("name", current_elf_element)
 	])
+	if has_party_gold_for_armory():
+		open_armory()
+		res["armory_opened"] = true
 	return res
 
 func _on_confirm_spell_modal_pressed() -> void:
@@ -2176,6 +2210,544 @@ func _on_confirm_spell_modal_pressed() -> void:
 
 func _on_close_spell_modal_pressed() -> void:
 	close_elf_spell_selection_modal()
+	if has_party_gold_for_armory():
+		open_armory()
+
+# ==============================================================================
+# HEROQUEST ARMORY & EQUIPMENT SHOP
+# ==============================================================================
+
+const ARMORY_CATALOG: Array = [
+	{
+		"id": "dagger",
+		"name": "Dagger",
+		"type": "weapon",
+		"category": "Weapon",
+		"cost": 25,
+		"icon": "🗡️",
+		"attackDice": 1,
+		"effect": "1 Combat Die (Melee or Thrown)",
+		"description": "Swift hunting knife. Rolls 1 combat die. Can be used in melee or thrown in line of sight.",
+		"allowedHeroes": ["barbarian", "dwarf", "elf", "wizard"]
+	},
+	{
+		"id": "dungeon_torch",
+		"name": "Dungeon Torch",
+		"type": "gear",
+		"category": "Gear",
+		"cost": 15,
+		"icon": "🔥",
+		"effect": "Detect hidden traps in room",
+		"description": "Illuminates dark recesses. Detects hidden dungeon traps.",
+		"allowedHeroes": ["barbarian", "dwarf", "elf", "wizard"]
+	},
+	{
+		"id": "heavy_rope",
+		"name": "Heavy Rope",
+		"type": "gear",
+		"category": "Gear",
+		"cost": 25,
+		"icon": "🪢",
+		"effect": "Climb pits & gaps",
+		"description": "Stout coiled rope (30 ft) to escape pit traps or scale chasms.",
+		"allowedHeroes": ["barbarian", "dwarf", "elf", "wizard"]
+	},
+	{
+		"id": "shield",
+		"name": "Shield",
+		"type": "armor",
+		"category": "Armor",
+		"cost": 100,
+		"icon": "🛡️",
+		"defendBonus": 1,
+		"effect": "+1 Defend Die",
+		"description": "Sturdy steel or iron shield. Adds 1 extra combat die in defense. Wizard cannot use.",
+		"allowedHeroes": ["barbarian", "dwarf", "elf"]
+	},
+	{
+		"id": "staff",
+		"name": "Staff",
+		"type": "weapon",
+		"category": "Weapon",
+		"cost": 100,
+		"icon": "🪄",
+		"attackDice": 1,
+		"diagonal": true,
+		"twoHanded": true,
+		"effect": "1 Combat Die (Diagonal Melee)",
+		"description": "Carved hardwood staff. Rolls 1 combat die and strikes diagonally. Wizard can use.",
+		"allowedHeroes": ["barbarian", "dwarf", "elf", "wizard"]
+	},
+	{
+		"id": "potion_of_healing",
+		"name": "Potion of Healing",
+		"type": "potion",
+		"category": "Potion",
+		"cost": 100,
+		"icon": "🧪",
+		"effect": "Restores up to 4 BP",
+		"description": "Magical elixir that restores up to 4 lost Body Points.",
+		"allowedHeroes": ["barbarian", "dwarf", "elf", "wizard"]
+	},
+	{
+		"id": "tool_kit",
+		"name": "Tool Kit",
+		"type": "tool",
+		"category": "Tool",
+		"cost": 100,
+		"icon": "🧰",
+		"effect": "Disarm Traps without Skull",
+		"description": "Enables non-Dwarf heroes to disarm discovered traps safely without setting them off.",
+		"allowedHeroes": ["barbarian", "dwarf", "elf", "wizard"]
+	},
+	{
+		"id": "helmet",
+		"name": "Helmet",
+		"type": "armor",
+		"category": "Armor",
+		"cost": 120,
+		"icon": "🪖",
+		"defendBonus": 1,
+		"effect": "+1 Defend Die",
+		"description": "Forged iron helm protecting the head. Adds 1 combat die in defense. Wizard cannot use.",
+		"allowedHeroes": ["barbarian", "dwarf", "elf"]
+	},
+	{
+		"id": "shortsword",
+		"name": "Shortsword",
+		"type": "weapon",
+		"category": "Weapon",
+		"cost": 150,
+		"icon": "⚔️",
+		"attackDice": 2,
+		"diagonal": true,
+		"effect": "2 Combat Dice (Diagonal Melee)",
+		"description": "Swift thrusting short blade. Rolls 2 combat dice and can strike diagonally. Wizard cannot use.",
+		"allowedHeroes": ["barbarian", "dwarf", "elf"]
+	},
+	{
+		"id": "broadsword",
+		"name": "Broadsword",
+		"type": "weapon",
+		"category": "Weapon",
+		"cost": 250,
+		"icon": "🗡️",
+		"attackDice": 3,
+		"effect": "3 Combat Dice (Adjacent Melee)",
+		"description": "Standard heavy steel blade. Rolls 3 combat dice in adjacent melee combat. Wizard cannot use.",
+		"allowedHeroes": ["barbarian", "dwarf", "elf"]
+	},
+	{
+		"id": "crossbow",
+		"name": "Crossbow",
+		"type": "weapon",
+		"category": "Weapon",
+		"cost": 350,
+		"icon": "🏹",
+		"attackDice": 3,
+		"ranged": true,
+		"twoHanded": true,
+		"effect": "3 Combat Dice (Ranged LOS)",
+		"description": "Deadly missile weapon. Rolls 3 combat dice at any target in line of sight. Cannot shoot adjacent. Wizard cannot use.",
+		"allowedHeroes": ["barbarian", "dwarf", "elf"]
+	},
+	{
+		"id": "battle_axe",
+		"name": "Battle Axe",
+		"type": "weapon",
+		"category": "Weapon",
+		"cost": 450,
+		"icon": "🪓",
+		"attackDice": 4,
+		"twoHanded": true,
+		"effect": "4 Combat Dice (Two-Handed)",
+		"description": "Massive two-handed greataxe. Rolls 4 combat dice. Requires two hands (cannot use shield). Wizard cannot use.",
+		"allowedHeroes": ["barbarian", "dwarf", "elf"]
+	},
+	{
+		"id": "chain_mail",
+		"name": "Chain Mail",
+		"type": "armor",
+		"category": "Armor",
+		"cost": 500,
+		"icon": "⛓️",
+		"baseDefendDice": 3,
+		"effect": "Sets Base Defense to 3 Dice",
+		"description": "Interlocking metal rings. Increases base defense to 3 combat dice. Wizard cannot use.",
+		"allowedHeroes": ["barbarian", "dwarf", "elf"]
+	},
+	{
+		"id": "plate_mail",
+		"name": "Plate Mail",
+		"type": "armor",
+		"category": "Armor",
+		"cost": 850,
+		"icon": "🥋",
+		"baseDefendDice": 4,
+		"movementDice": 1,
+		"effect": "Sets Base Defense to 4 Dice (1d6 Movement)",
+		"description": "Heavy fitted steel plate armor. Grants 4 combat dice in defense, but slows movement to 1 die. Wizard cannot use.",
+		"allowedHeroes": ["barbarian", "dwarf", "elf"]
+	}
+]
+
+func get_total_party_gold() -> int:
+	var tot = 0
+	for h in heroes:
+		tot += int(h.get("gold", 0))
+	return tot
+
+func has_party_gold_for_armory() -> bool:
+	return get_total_party_gold() > 0
+
+func _setup_armory_modal() -> void:
+	if not armory_card:
+		return
+	var card_sb = StyleBoxFlat.new()
+	card_sb.bg_color = Color(0.08, 0.11, 0.16, 0.98)
+	card_sb.set_corner_radius_all(12)
+	card_sb.border_width_left = 2
+	card_sb.border_width_top = 2
+	card_sb.border_width_right = 2
+	card_sb.border_width_bottom = 2
+	card_sb.border_color = Color(0.92, 0.75, 0.22, 0.9)
+	card_sb.shadow_color = Color(0, 0, 0, 0.8)
+	card_sb.shadow_size = 24
+	armory_card.add_theme_stylebox_override("panel", card_sb)
+
+	if armory_hero_info_banner:
+		var inf_sb = StyleBoxFlat.new()
+		inf_sb.bg_color = Color(0.05, 0.08, 0.12, 1.0)
+		inf_sb.set_corner_radius_all(6)
+		inf_sb.border_width_left = 4
+		inf_sb.border_color = Color(0.92, 0.75, 0.22, 0.9)
+		armory_hero_info_banner.add_theme_stylebox_override("panel", inf_sb)
+
+	if btn_armory_close:
+		var btn_sb = StyleBoxFlat.new()
+		btn_sb.bg_color = Color(0.08, 0.45, 0.25, 1.0)
+		btn_sb.set_corner_radius_all(6)
+		btn_sb.border_width_left = 1
+		btn_sb.border_width_top = 1
+		btn_sb.border_width_right = 1
+		btn_sb.border_width_bottom = 1
+		btn_sb.border_color = Color(0.2, 0.75, 0.45, 1.0)
+		btn_armory_close.add_theme_stylebox_override("normal", btn_sb)
+		if not btn_armory_close.pressed.is_connected(close_armory):
+			btn_armory_close.pressed.connect(close_armory)
+
+	if armory_btn_close_header:
+		if not armory_btn_close_header.pressed.is_connected(close_armory):
+			armory_btn_close_header.pressed.connect(close_armory)
+
+func show_armory_modal(hero_id: String = "") -> Dictionary:
+	return open_armory(hero_id)
+
+func open_armory(hero_id: String = "") -> Dictionary:
+	armory_open = true
+	if hero_id != "":
+		for h in heroes:
+			if str(h.get("id")) == hero_id:
+				selected_armory_hero_id = hero_id
+				break
+	elif selected_armory_hero_id == "":
+		var act = get_active_hero()
+		selected_armory_hero_id = str(act.get("id", "barbarian"))
+
+	if armory_modal:
+		armory_modal.visible = true
+		_update_armory_ui()
+
+	_log("[ARMORY] 🛡️ The Imperial Armory is open! Party Treasury: %d Gold Coins. Select gear for your heroes." % get_total_party_gold())
+	_update_ui()
+	queue_redraw_all()
+	return {
+		"success": true,
+		"armory_open": true,
+		"selected_hero": selected_armory_hero_id,
+		"party_gold": get_total_party_gold()
+	}
+
+func close_armory() -> Dictionary:
+	armory_open = false
+	if armory_modal:
+		armory_modal.visible = false
+	_log("[ARMORY] ⚔️ Closed Armory. The party ventures forth into the dungeon!")
+	_update_ui()
+	queue_redraw_all()
+	return {
+		"success": true,
+		"armory_open": false
+	}
+
+func toggle_armory() -> Dictionary:
+	if armory_open:
+		return close_armory()
+	return open_armory()
+
+func select_armory_hero(hero_id: String) -> Dictionary:
+	var found = false
+	for h in heroes:
+		if str(h.get("id")) == hero_id:
+			selected_armory_hero_id = hero_id
+			found = true
+			break
+	if not found:
+		return { "success": false, "error": "Hero not found: " + hero_id }
+	_update_armory_ui()
+	return { "success": true, "selected_hero": selected_armory_hero_id }
+
+func _update_armory_ui() -> void:
+	if not armory_modal or not armory_modal.visible:
+		return
+
+	var tot_gold = get_total_party_gold()
+	if armory_party_gold_badge:
+		armory_party_gold_badge.text = "PARTY TREASURY: %d GP" % tot_gold
+
+	var sel_hero: Dictionary = {}
+	for h in heroes:
+		if str(h.get("id")) == selected_armory_hero_id:
+			sel_hero = h
+			break
+	if sel_hero.is_empty() and heroes.size() > 0:
+		sel_hero = heroes[0]
+		selected_armory_hero_id = str(sel_hero.get("id", "barbarian"))
+
+	# Populate Hero Tabs
+	if armory_hero_tabs:
+		for c in armory_hero_tabs.get_children():
+			armory_hero_tabs.remove_child(c)
+			c.queue_free()
+
+		for h in heroes:
+			var hid = str(h.get("id", ""))
+			var hname = str(h.get("characterName", h.get("name", hid.capitalize())))
+			var hgold = int(h.get("gold", 0))
+			var is_sel = (hid == selected_armory_hero_id)
+
+			var btn_tab = Button.new()
+			btn_tab.custom_minimum_size = Vector2(160, 36)
+			var icon_marker = "🔴"
+			if hid == "dwarf": icon_marker = "🟤"
+			elif hid == "elf": icon_marker = "🟢"
+			elif hid == "wizard": icon_marker = "🔵"
+
+			var tab_sb = StyleBoxFlat.new()
+			tab_sb.set_corner_radius_all(6)
+			if is_sel:
+				tab_sb.bg_color = Color(0.18, 0.25, 0.36, 1.0)
+				tab_sb.border_color = Color(1.0, 0.85, 0.2, 1.0)
+				tab_sb.set_border_width_all(2)
+				btn_tab.text = "%s %s (💰 %d)" % [icon_marker, hname, hgold]
+			else:
+				tab_sb.bg_color = Color(0.1, 0.13, 0.18, 0.9)
+				tab_sb.border_color = Color(0.25, 0.32, 0.42, 0.6)
+				tab_sb.set_border_width_all(1)
+				btn_tab.text = "%s %s (%d)" % [icon_marker, hname, hgold]
+
+			btn_tab.add_theme_stylebox_override("normal", tab_sb)
+			btn_tab.pressed.connect(func(): select_armory_hero(hid))
+			armory_hero_tabs.add_child(btn_tab)
+
+	# Update Selected Hero Banner
+	if armory_hero_info_text and not sel_hero.is_empty():
+		var hname = str(sel_hero.get("characterName", sel_hero.get("name", "Hero")))
+		var hclass = str(sel_hero.get("heroClass", "Hero"))
+		var hgold = int(sel_hero.get("gold", 0))
+		var atk_dice = get_hero_attack_dice(sel_hero)
+		var def_dice = get_hero_defend_dice(sel_hero)
+		var inv_count = sel_hero.get("inventory", []).size()
+		armory_hero_info_text.text = "%s (%s) | 💰 %d Gold | ⚔️ %d Attack Dice | 🛡️ %d Defend Dice | 🎒 %d Items in Pack" % [
+			hname, hclass, hgold, atk_dice, def_dice, inv_count
+		]
+
+	# Populate Items Grid
+	if armory_items_grid:
+		for c in armory_items_grid.get_children():
+			armory_items_grid.remove_child(c)
+			c.queue_free()
+
+		for it in ARMORY_CATALOG:
+			var card = _create_armory_item_card(it, sel_hero)
+			armory_items_grid.add_child(card)
+
+func _create_armory_item_card(item: Dictionary, hero: Dictionary) -> Control:
+	var p = PanelContainer.new()
+	p.custom_minimum_size = Vector2(280, 110)
+	var card_sb = StyleBoxFlat.new()
+	card_sb.bg_color = Color(0.10, 0.13, 0.18, 0.95)
+	card_sb.set_corner_radius_all(6)
+	card_sb.border_width_left = 1
+	card_sb.border_width_top = 1
+	card_sb.border_width_right = 1
+	card_sb.border_width_bottom = 1
+	card_sb.border_color = Color(0.25, 0.35, 0.45, 0.7)
+	p.add_theme_stylebox_override("panel", card_sb)
+
+	var margin = MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 10)
+	margin.add_theme_constant_override("margin_top", 8)
+	margin.add_theme_constant_override("margin_right", 10)
+	margin.add_theme_constant_override("margin_bottom", 8)
+	p.add_child(margin)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 4)
+	margin.add_child(vbox)
+
+	# Header: Name + Cost
+	var top_box = HBoxContainer.new()
+	vbox.add_child(top_box)
+
+	var lbl_name = Label.new()
+	lbl_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_name.add_theme_font_size_override("font_size", 13)
+	lbl_name.text = "%s %s" % [item.get("icon", "⚔️"), item.get("name", "Item")]
+	top_box.add_child(lbl_name)
+
+	var cost = int(item.get("cost", 0))
+	var lbl_cost = Label.new()
+	lbl_cost.add_theme_font_size_override("font_size", 12)
+	lbl_cost.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2, 1.0))
+	lbl_cost.text = "💰 %d GP" % cost
+	top_box.add_child(lbl_cost)
+
+	# Effect / Category
+	var lbl_effect = Label.new()
+	lbl_effect.add_theme_font_size_override("font_size", 11)
+	lbl_effect.add_theme_color_override("font_color", Color(0.2, 0.85, 0.95, 1.0))
+	lbl_effect.text = "%s • %s" % [item.get("category", "Gear"), item.get("effect", "")]
+	vbox.add_child(lbl_effect)
+
+	# Description
+	var lbl_desc = Label.new()
+	lbl_desc.add_theme_font_size_override("font_size", 10)
+	lbl_desc.add_theme_color_override("font_color", Color(0.7, 0.75, 0.82, 0.8))
+	lbl_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	lbl_desc.text = item.get("description", "")
+	vbox.add_child(lbl_desc)
+
+	# Buy Button & Restrictions
+	var btn_buy = Button.new()
+	btn_buy.custom_minimum_size = Vector2(0, 26)
+	btn_buy.add_theme_font_size_override("font_size", 11)
+
+	var hid = str(hero.get("id", ""))
+	var allowed: Array = item.get("allowedHeroes", [])
+	var is_allowed = allowed.is_empty() or allowed.has(hid)
+	var hero_gold = int(hero.get("gold", 0))
+	var can_afford = (hero_gold >= cost)
+
+	var b_sb = StyleBoxFlat.new()
+	b_sb.set_corner_radius_all(4)
+
+	if not is_allowed:
+		btn_buy.disabled = true
+		btn_buy.text = "Class Restricted"
+		b_sb.bg_color = Color(0.25, 0.12, 0.12, 0.8)
+		b_sb.border_color = Color(0.6, 0.2, 0.2, 0.6)
+		b_sb.set_border_width_all(1)
+	elif not can_afford:
+		btn_buy.disabled = true
+		btn_buy.text = "Need %d GP" % (cost - hero_gold)
+		b_sb.bg_color = Color(0.18, 0.20, 0.25, 0.6)
+		b_sb.border_color = Color(0.3, 0.35, 0.42, 0.5)
+		b_sb.set_border_width_all(1)
+	else:
+		btn_buy.disabled = false
+		btn_buy.text = "Buy for %d GP" % cost
+		b_sb.bg_color = Color(0.10, 0.45, 0.25, 1.0)
+		b_sb.border_color = Color(0.2, 0.8, 0.45, 0.9)
+		b_sb.set_border_width_all(1)
+		var it_id = str(item.get("id"))
+		btn_buy.pressed.connect(func(): buy_armory_item(hid, it_id))
+
+	btn_buy.add_theme_stylebox_override("normal", b_sb)
+	btn_buy.add_theme_stylebox_override("disabled", b_sb)
+	vbox.add_child(btn_buy)
+
+	return p
+
+func buy_armory_item(hero_id: String, item_id: String) -> Dictionary:
+	var hero: Dictionary = {}
+	for h in heroes:
+		if str(h.get("id")) == hero_id:
+			hero = h
+			break
+	if hero.is_empty():
+		return { "success": false, "error": "Hero not found: " + hero_id }
+
+	var item_data: Dictionary = {}
+	for it in ARMORY_CATALOG:
+		if str(it.get("id")).to_lower() == item_id.to_lower():
+			item_data = it
+			break
+	if item_data.is_empty():
+		return { "success": false, "error": "Item not found in Armory: " + item_id }
+
+	var cost = int(item_data.get("cost", 0))
+	var h_gold = int(hero.get("gold", 0))
+	if h_gold < cost:
+		return {
+			"success": false,
+			"error": "Insufficient gold: %s has %d GP but %s costs %d GP" % [
+				hero.get("name"), h_gold, item_data.get("name"), cost
+			]
+		}
+
+	var allowed: Array = item_data.get("allowedHeroes", [])
+	if allowed.size() > 0 and not allowed.has(hero_id):
+		return {
+			"success": false,
+			"error": "%s cannot equip %s due to class restrictions!" % [
+				hero.get("name"), item_data.get("name")
+			]
+		}
+
+	# Deduct gold
+	hero["gold"] = h_gold - cost
+
+	# Add to inventory
+	if not (hero.get("inventory", []) is Array):
+		hero["inventory"] = []
+	hero["inventory"].append(item_data.get("name", item_id))
+
+	# Auto-equip weapons / armors
+	var i_type = str(item_data.get("type", "")).to_lower()
+	var it_id = str(item_data.get("id", "")).to_lower()
+	if i_type == "weapon":
+		hero["equipped_weapon"] = it_id
+		hero["weapon"] = it_id
+	elif i_type == "armor":
+		var armors: Array = hero.get("equipped_armor", [])
+		if not (armors is Array):
+			armors = []
+		if not armors.has(it_id):
+			armors.append(it_id)
+		hero["equipped_armor"] = armors
+
+	var h_pos = hero.get("grid_pos", Vector2i(1, 1))
+	spawn_floating_text(h_pos, "+%s (-%d GP)" % [item_data.get("name").to_upper(), cost], Color(1.0, 0.85, 0.2), 2.2)
+	_log("[ARMORY] 🛡️ %s purchased %s for %d Gold! (Remaining: %d Gold)" % [
+		hero.get("name"), item_data.get("name"), cost, hero.get("gold")
+	])
+
+	_update_ui()
+	_update_armory_ui()
+	queue_redraw_all()
+
+	return {
+		"success": true,
+		"heroId": hero_id,
+		"itemId": it_id,
+		"itemName": item_data.get("name"),
+		"cost": cost,
+		"remainingGold": hero.get("gold"),
+		"inventory": hero.get("inventory"),
+		"attackDice": get_hero_attack_dice(hero),
+		"defendDice": get_hero_defend_dice(hero)
+	}
 
 func _get_hero_spells_by_id(hero_id: String) -> Array:
 	for h in heroes:
@@ -3140,6 +3712,11 @@ func can_search_room() -> bool:
 	return true
 
 func _input(event: InputEvent) -> void:
+	if armory_modal and armory_modal.visible:
+		if (event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE):
+			close_armory()
+			get_viewport().set_input_as_handled()
+			return
 	if hero_detail_modal and hero_detail_modal.visible:
 		if (event is InputEventKey and event.pressed and (event.keycode == KEY_ESCAPE or event.keycode == KEY_SPACE or event.keycode == KEY_ENTER)):
 			close_hero_detail_modal()
@@ -3175,6 +3752,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		if (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed) or \
 		   (event is InputEventKey and event.pressed and (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER or event.keycode == KEY_ESCAPE)):
 			resolve_story_trigger_overlay_click()
+			get_viewport().set_input_as_handled()
+			return
+	if armory_modal and armory_modal.visible:
+		if (event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE):
+			close_armory()
 			get_viewport().set_input_as_handled()
 			return
 	if hero_detail_modal and hero_detail_modal.visible:
@@ -5972,6 +6554,8 @@ func _update_ui() -> void:
 			btn_search_traps.visible = false
 		if btn_disarm_trap:
 			btn_disarm_trap.visible = false
+		if btn_armory:
+			btn_armory.visible = false
 		if btn_end_turn:
 			btn_end_turn.visible = true
 			btn_end_turn.disabled = false
@@ -5997,6 +6581,8 @@ func _update_ui() -> void:
 			btn_search_traps.visible = false
 		if btn_disarm_trap:
 			btn_disarm_trap.visible = false
+		if btn_armory:
+			btn_armory.visible = false
 		if btn_end_turn:
 			btn_end_turn.visible = false
 		if dice_label:
@@ -6005,6 +6591,14 @@ func _update_ui() -> void:
 		# Hero Phase (Player)
 		if btn_summon:
 			btn_summon.visible = false
+
+		# Armory Equipment Action Button
+		if btn_armory:
+			var party_g = get_total_party_gold()
+			btn_armory.visible = true
+			btn_armory.disabled = (party_g <= 0)
+			btn_armory.text = "🛡️ Armory (%d)" % party_g
+			_update_action_tile(btn_armory, "armory", party_g, "🛡️ Imperial Armory (%d GP)" % party_g, "Visit the Imperial Armory to buy weapons, armor, and gear.", Color(0.92, 0.75, 0.22, 0.95))
 
 		# Spell Casting Action Button
 		if btn_cast_spell:
@@ -7773,6 +8367,8 @@ func get_telemetry_state() -> Dictionary:
 		var def_dice = get_hero_defend_dice(h)
 		hc["attackDice"] = atk_dice
 		hc["defendDice"] = def_dice
+		hc["equipped_weapon"] = str(h.get("equipped_weapon", "unarmed"))
+		hc["weapon"] = str(h.get("equipped_weapon", h.get("weapon", "unarmed")))
 		heroes_copy.append(hc)
 
 		var cur_bp = int(h.get("current_bp", 8))
@@ -8014,7 +8610,8 @@ func get_telemetry_state() -> Dictionary:
 			"disarm_trap": { "visible": btn_disarm_trap.visible, "disabled": btn_disarm_trap.disabled, "tooltip": btn_disarm_trap.tooltip_text, "icon": "action_disarm" } if btn_disarm_trap else {},
 			"end_turn": { "visible": btn_end_turn.visible, "disabled": btn_end_turn.disabled, "tooltip": btn_end_turn.tooltip_text, "icon": "action_end_turn" } if btn_end_turn else {},
 			"ai_step": { "visible": btn_ai_step.visible, "disabled": btn_ai_step.disabled, "tooltip": btn_ai_step.tooltip_text, "icon": "action_ai_step" } if btn_ai_step else {},
-			"summon": { "visible": btn_summon.visible, "disabled": btn_summon.disabled, "tooltip": btn_summon.tooltip_text, "icon": "action_summon" } if btn_summon else {}
+			"summon": { "visible": btn_summon.visible, "disabled": btn_summon.disabled, "tooltip": btn_summon.tooltip_text, "icon": "action_summon" } if btn_summon else {},
+			"armory": { "visible": btn_armory.visible, "disabled": btn_armory.disabled, "tooltip": btn_armory.tooltip_text, "icon": "action_armory" } if btn_armory else {}
 		},
 		"hotbar": {
 			"actionsCount": actions_container.get_child_count() if actions_container else 10,
@@ -8024,6 +8621,7 @@ func get_telemetry_state() -> Dictionary:
 		"modal": {
 			"aiConfirmModalVisible": ai_confirm_modal.visible if ai_confirm_modal else false,
 			"elfSpellSelectModalVisible": elf_spell_modal.visible if elf_spell_modal else false,
+			"armoryModalVisible": armory_modal.visible if armory_modal else false,
 			"spellCastModalVisible": spell_cast_modal.visible if spell_cast_modal else false,
 			"itemUseModalVisible": item_use_modal.visible if item_use_modal else false,
 			"disarmTrapModalVisible": disarm_trap_modal.visible if disarm_trap_modal else false,
@@ -8093,6 +8691,11 @@ func get_telemetry_state() -> Dictionary:
 			"wizardSpells": _get_hero_spells_by_id("wizard"),
 			"modalVisible": elf_spell_modal.visible if elf_spell_modal else false
 		},
+		"armoryOpen": armory_open,
+		"armoryModalVisible": armory_modal.visible if armory_modal else false,
+		"selectedArmoryHeroId": selected_armory_hero_id,
+		"armoryCatalog": ARMORY_CATALOG,
+		"partyTotalGold": get_total_party_gold(),
 		"heroes": heroes_copy,
 		"monsters": monsters_copy,
 		"doors": doors_copy,
@@ -8353,6 +8956,7 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				"disarm_trap": target_btn = btn_disarm_trap
 				"summon": target_btn = btn_summon
 				"ai_step": target_btn = btn_ai_step
+				"armory": target_btn = btn_armory
 				"end_turn": target_btn = btn_end_turn
 				_:
 					target_btn = _find_action_button(btn_key)
@@ -8379,6 +8983,7 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				"disarm_trap": target_btn = btn_disarm_trap
 				"summon": target_btn = btn_summon
 				"ai_step": target_btn = btn_ai_step
+				"armory": target_btn = btn_armory
 				"end_turn": target_btn = btn_end_turn
 				_:
 					target_btn = _find_action_button(btn_key)
@@ -8785,13 +9390,17 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			return { "success": true, "modal_visible": true, "elf_element": current_elf_element }
 		"close_spell_selection", "close_elf_spell_selection":
 			close_elf_spell_selection_modal()
-			return { "success": true, "modal_visible": false }
+			if has_party_gold_for_armory():
+				open_armory()
+			return { "success": true, "modal_visible": false, "armory_opened": armory_open }
+		"confirm_spell_selection", "confirm_elf_spell_selection":
+			return confirm_elf_spell_selection()
 		"select_elf_element":
 			var elem = str(action_data.get("element", action_data.get("deck", "water")))
 			var confirm_flag = bool(action_data.get("confirm", true))
 			var res = select_elf_element(elem)
 			if confirm_flag:
-				close_elf_spell_selection_modal()
+				res = confirm_elf_spell_selection()
 			return res
 		"cast_spell":
 			var spell_id = str(action_data.get("spell", action_data.get("spellId", "")))
@@ -8833,6 +9442,44 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			var h_id = str(action_data.get("heroId", action_data.get("hero", get_active_hero().get("id", ""))))
 			var item_id = str(action_data.get("itemId", action_data.get("item", "")))
 			var res = unequip_item(h_id, item_id)
+			return res
+		"open_armory":
+			var h_id = str(action_data.get("heroId", action_data.get("hero", "")))
+			open_armory(h_id)
+			return {
+				"success": true,
+				"armoryOpen": armory_open,
+				"modalVisible": armory_modal.visible if armory_modal else false,
+				"selectedHeroId": selected_armory_hero_id,
+				"partyTotalGold": get_total_party_gold()
+			}
+		"close_armory":
+			close_armory()
+			return {
+				"success": true,
+				"armoryOpen": armory_open,
+				"modalVisible": armory_modal.visible if armory_modal else false
+			}
+		"toggle_armory":
+			toggle_armory()
+			return {
+				"success": true,
+				"armoryOpen": armory_open,
+				"modalVisible": armory_modal.visible if armory_modal else false,
+				"selectedHeroId": selected_armory_hero_id,
+				"partyTotalGold": get_total_party_gold()
+			}
+		"select_armory_hero":
+			var h_id = str(action_data.get("heroId", action_data.get("hero", "barbarian")))
+			select_armory_hero(h_id)
+			return {
+				"success": true,
+				"selectedHeroId": selected_armory_hero_id
+			}
+		"buy_armory_item", "buy_item":
+			var h_id = str(action_data.get("heroId", action_data.get("hero", selected_armory_hero_id)))
+			var item_id = str(action_data.get("itemId", action_data.get("item", "")))
+			var res = buy_armory_item(h_id, item_id)
 			return res
 		"dm_attack":
 			var hid = str(action_data.get("heroId", action_data.get("target", "")))
@@ -8926,6 +9573,7 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				"end_turn", "btnendturn": target_btn = btn_end_turn
 				"summon", "btnsummon": target_btn = btn_summon
 				"ai_step", "btnaistep": target_btn = btn_ai_step
+				"armory", "btnarmory": target_btn = btn_armory
 			if target_btn:
 				if target_btn.disabled:
 					var reason = _get_button_unavailable_reason(target_btn)
