@@ -91,14 +91,33 @@ var auto_play_step: int = 0
 @onready var enemies_empty_label: Label = get_node_or_null("UI/EnemiesPanel/EmptyLabel")
 @onready var enemy_cards_grid: GridContainer = get_node_or_null("UI/EnemiesPanel/ScrollContainer/EnemyCardsGrid")
 @onready var dice_label: Label = $UI/DicePanel/DiceLabel
-@onready var btn_roll: Button = $UI/Actions/BtnRoll
-@onready var btn_attack: Button = $UI/Actions/BtnAttack
-@onready var btn_cast_spell: Button = get_node_or_null("UI/Actions/BtnCastSpell")
-@onready var btn_use_item: Button = get_node_or_null("UI/Actions/BtnUseItem")
-@onready var btn_search: Button = $UI/Actions/BtnSearch
-@onready var btn_end_turn: Button = $UI/Actions/BtnEndTurn
-@onready var btn_summon: Button = $UI/Actions/BtnSummon
-@onready var btn_ai_step: Button = $UI/Actions/BtnAIStep
+
+func _find_action_button(btn_name: String) -> Button:
+	for p in [
+		"UI/ActionsBar/HotbarHBox/ActionsScroll/Actions/" + btn_name,
+		"UI/ActionsPanel/ActionsScroll/Actions/" + btn_name,
+		"UI/ActionsScroll/Actions/" + btn_name,
+		"UI/Actions/" + btn_name
+	]:
+		var n = get_node_or_null(p)
+		if n:
+			return n as Button
+	return null
+
+@onready var actions_bar: PanelContainer = get_node_or_null("UI/ActionsBar")
+@onready var actions_scroll: ScrollContainer = get_node_or_null("UI/ActionsBar/HotbarHBox/ActionsScroll")
+@onready var actions_container: HBoxContainer = get_node_or_null("UI/ActionsBar/HotbarHBox/ActionsScroll/Actions")
+@onready var btn_scroll_left: Button = get_node_or_null("UI/ActionsBar/HotbarHBox/BtnScrollLeft")
+@onready var btn_scroll_right: Button = get_node_or_null("UI/ActionsBar/HotbarHBox/BtnScrollRight")
+
+@onready var btn_roll: Button = _find_action_button("BtnRoll")
+@onready var btn_attack: Button = _find_action_button("BtnAttack")
+@onready var btn_cast_spell: Button = _find_action_button("BtnCastSpell")
+@onready var btn_use_item: Button = _find_action_button("BtnUseItem")
+@onready var btn_search: Button = _find_action_button("BtnSearch")
+@onready var btn_end_turn: Button = _find_action_button("BtnEndTurn")
+@onready var btn_summon: Button = _find_action_button("BtnSummon")
+@onready var btn_ai_step: Button = _find_action_button("BtnAIStep")
 
 @onready var ai_confirm_modal: ColorRect = $UI/AIConfirmModal
 @onready var ai_modal_card: PanelContainer = $UI/AIConfirmModal/Card
@@ -140,8 +159,8 @@ var turn_overlay_mode: String = "none" # "roll_prompt", "turn_complete", "none"
 @onready var item_use_grid: GridContainer = get_node_or_null("UI/ItemUseModal/Card/Margin/VBox/ScrollContainer/ItemsGrid")
 @onready var btn_item_use_close: Button = get_node_or_null("UI/ItemUseModal/Card/Margin/VBox/ButtonBox/BtnClose")
 
-@onready var btn_search_traps: Button = get_node_or_null("UI/Actions/BtnSearchTraps")
-@onready var btn_disarm_trap: Button = get_node_or_null("UI/Actions/BtnDisarmTrap")
+@onready var btn_search_traps: Button = _find_action_button("BtnSearchTraps")
+@onready var btn_disarm_trap: Button = _find_action_button("BtnDisarmTrap")
 
 @onready var disarm_trap_modal: ColorRect = get_node_or_null("UI/DisarmTrapModal")
 @onready var disarm_trap_title: Label = get_node_or_null("UI/DisarmTrapModal/Card/Margin/VBox/Header/Title")
@@ -214,6 +233,7 @@ func _ready() -> void:
 	_update_board_metrics()
 	_load_active_cartridge()
 	CartridgeManager.cartridge_inserted.connect(_on_cartridge_inserted)
+	_setup_action_hotbar()
 	_setup_ui_signals()
 	_setup_ai_modal_styles()
 	_setup_elf_spell_modal()
@@ -228,6 +248,224 @@ func _ready() -> void:
 	else:
 		_log("[PLAYER] [Player Mode Active] You lead the four heroes into the catacombs of Verag!")
 		_check_start_elf_spell_selection()
+
+var action_icons: Dictionary = {}
+var default_guidance_text: String = ""
+
+func _load_action_icons() -> void:
+	var icon_map = {
+		"move": "res://assets/icons/action_move.png",
+		"attack": "res://assets/icons/action_attack.png",
+		"door": "res://assets/icons/action_door.png",
+		"spell": "res://assets/icons/action_spell.png",
+		"item": "res://assets/icons/action_item.png",
+		"search": "res://assets/icons/action_search.png",
+		"traps": "res://assets/icons/action_traps.png",
+		"disarm": "res://assets/icons/action_disarm.png",
+		"summon": "res://assets/icons/action_summon.png",
+		"ai_step": "res://assets/icons/action_ai_step.png",
+		"end_turn": "res://assets/icons/action_end_turn.png",
+	}
+	for k in icon_map:
+		if not action_icons.has(k) or action_icons[k] == null:
+			var tex = _load_texture_safe(icon_map[k])
+			if tex:
+				action_icons[k] = tex
+
+func _setup_action_hotbar() -> void:
+	_load_action_icons()
+	if actions_bar:
+		var bar_sb = StyleBoxFlat.new()
+		bar_sb.bg_color = Color("#0b0f16")
+		bar_sb.set_border_width_all(1)
+		bar_sb.border_color = Color("#1e293b")
+		bar_sb.set_corner_radius_all(6)
+		bar_sb.content_margin_left = 3
+		bar_sb.content_margin_right = 3
+		bar_sb.content_margin_top = 3
+		bar_sb.content_margin_bottom = 3
+		actions_bar.add_theme_stylebox_override("panel", bar_sb)
+
+	if actions_scroll:
+		if not actions_scroll.gui_input.is_connected(_on_actions_scroll_gui_input):
+			actions_scroll.gui_input.connect(_on_actions_scroll_gui_input)
+
+	if btn_scroll_left:
+		_setup_scroll_arrow_style(btn_scroll_left)
+		if not btn_scroll_left.pressed.is_connected(_on_scroll_left_pressed):
+			btn_scroll_left.pressed.connect(_on_scroll_left_pressed)
+
+	if btn_scroll_right:
+		_setup_scroll_arrow_style(btn_scroll_right)
+		if not btn_scroll_right.pressed.is_connected(_on_scroll_right_pressed):
+			btn_scroll_right.pressed.connect(_on_scroll_right_pressed)
+
+	var btns = [
+		btn_roll, btn_attack, btn_cast_spell, btn_use_item, btn_search,
+		btn_search_traps, btn_disarm_trap, btn_summon, btn_ai_step, btn_end_turn
+	]
+	for b in btns:
+		if b:
+			_setup_action_button_style(b)
+
+func _setup_scroll_arrow_style(btn: Button) -> void:
+	btn.add_theme_font_size_override("font_size", 12)
+	btn.add_theme_color_override("font_color", Color(0, 0.89, 1.0, 0.9))
+	var sb = StyleBoxFlat.new()
+	sb.bg_color = Color("#111722")
+	sb.set_border_width_all(1)
+	sb.border_color = Color("#1f2c3d")
+	sb.set_corner_radius_all(4)
+	btn.add_theme_stylebox_override("normal", sb)
+
+	var sb_hov = StyleBoxFlat.new()
+	sb_hov.bg_color = Color("#182333")
+	sb_hov.set_border_width_all(1)
+	sb_hov.border_color = Color("#00e5ff")
+	sb_hov.set_corner_radius_all(4)
+	btn.add_theme_stylebox_override("hover", sb_hov)
+
+func _setup_action_button_style(btn: Button) -> void:
+	if not btn:
+		return
+	btn.custom_minimum_size = Vector2(40, 40)
+	btn.expand_icon = true
+	btn.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	btn.vertical_icon_alignment = VERTICAL_ALIGNMENT_CENTER
+
+	# Transparent font color so underlying .text is kept for API/tests but does not overlap icon
+	btn.add_theme_color_override("font_color", Color(1, 1, 1, 0))
+	btn.add_theme_color_override("font_hover_color", Color(1, 1, 1, 0))
+	btn.add_theme_color_override("font_pressed_color", Color(1, 1, 1, 0))
+	btn.add_theme_color_override("font_disabled_color", Color(1, 1, 1, 0))
+	btn.add_theme_color_override("font_focus_color", Color(1, 1, 1, 0))
+	btn.add_theme_font_size_override("font_size", 1)
+
+	var sb_normal = StyleBoxFlat.new()
+	sb_normal.bg_color = Color("#131924")
+	sb_normal.set_border_width_all(1)
+	sb_normal.border_color = Color("#2a374a")
+	sb_normal.set_corner_radius_all(6)
+
+	var sb_hover = StyleBoxFlat.new()
+	sb_hover.bg_color = Color("#1c2637")
+	sb_hover.set_border_width_all(2)
+	sb_hover.border_color = Color("#00e5ff")
+	sb_hover.set_corner_radius_all(6)
+	sb_hover.shadow_color = Color(0, 0.9, 1.0, 0.3)
+	sb_hover.shadow_size = 3
+
+	var sb_pressed = StyleBoxFlat.new()
+	sb_pressed.bg_color = Color("#0d121b")
+	sb_pressed.set_border_width_all(2)
+	sb_pressed.border_color = Color("#ffc107")
+	sb_pressed.set_corner_radius_all(6)
+
+	var sb_disabled = StyleBoxFlat.new()
+	sb_disabled.bg_color = Color("#0e1219")
+	sb_disabled.set_border_width_all(1)
+	sb_disabled.border_color = Color("#1a2230")
+	sb_disabled.set_corner_radius_all(6)
+
+	btn.add_theme_stylebox_override("normal", sb_normal)
+	btn.add_theme_stylebox_override("hover", sb_hover)
+	btn.add_theme_stylebox_override("pressed", sb_pressed)
+	btn.add_theme_stylebox_override("disabled", sb_disabled)
+	btn.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+
+	# Create corner BadgeLabel if missing
+	var badge = btn.get_node_or_null("Badge") as Label
+	if not badge:
+		badge = Label.new()
+		badge.name = "Badge"
+		badge.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+		badge.offset_left = -18
+		badge.offset_top = -16
+		badge.offset_right = -1
+		badge.offset_bottom = -1
+		badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		badge.add_theme_font_size_override("font_size", 10)
+		badge.add_theme_color_override("font_color", Color(1, 1, 1, 1))
+		badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var b_sb = StyleBoxFlat.new()
+		b_sb.bg_color = Color(0.88, 0.15, 0.28, 0.92)
+		b_sb.set_corner_radius_all(4)
+		badge.add_theme_stylebox_override("panel", b_sb)
+		badge.visible = false
+		btn.add_child(badge)
+
+func _update_action_tile(btn: Button, icon_key: String, count: int, title: String, desc: String, badge_color: Color = Color(0.88, 0.15, 0.28, 0.92)) -> void:
+	if not btn:
+		return
+	if action_icons.has(icon_key):
+		btn.icon = action_icons[icon_key]
+
+	var badge = btn.get_node_or_null("Badge") as Label
+	if badge:
+		if count > 0:
+			badge.text = str(count)
+			badge.visible = true
+			var b_sb = badge.get_theme_stylebox("panel") as StyleBoxFlat
+			if b_sb:
+				b_sb.bg_color = badge_color
+		else:
+			badge.visible = false
+
+	btn.tooltip_text = "%s\n%s" % [title, desc]
+	btn.set_meta("action_title", title)
+	btn.set_meta("action_desc", desc)
+
+	if not btn.mouse_entered.is_connected(_on_action_button_hovered.bind(btn)):
+		btn.mouse_entered.connect(_on_action_button_hovered.bind(btn))
+	if not btn.mouse_exited.is_connected(_on_action_button_unhovered.bind(btn)):
+		btn.mouse_exited.connect(_on_action_button_unhovered.bind(btn))
+
+func _on_action_button_hovered(btn: Button) -> void:
+	if not btn or not dice_label:
+		return
+	var title = btn.get_meta("action_title", "")
+	var desc = btn.get_meta("action_desc", "")
+	if title != "":
+		dice_label.text = "[ %s ]  %s" % [title, desc]
+
+func _on_action_button_unhovered(btn: Button) -> void:
+	if dice_label and default_guidance_text != "":
+		dice_label.text = default_guidance_text
+
+func _on_scroll_left_pressed() -> void:
+	if actions_scroll:
+		actions_scroll.scroll_horizontal = max(0, actions_scroll.scroll_horizontal - 60)
+		_update_scroll_buttons_visibility()
+
+func _on_scroll_right_pressed() -> void:
+	if actions_scroll:
+		actions_scroll.scroll_horizontal += 60
+		_update_scroll_buttons_visibility()
+
+func _on_actions_scroll_gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed:
+		if event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			if actions_scroll:
+				actions_scroll.scroll_horizontal += 48
+				_update_scroll_buttons_visibility()
+				get_viewport().set_input_as_handled()
+		elif event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			if actions_scroll:
+				actions_scroll.scroll_horizontal = max(0, actions_scroll.scroll_horizontal - 48)
+				_update_scroll_buttons_visibility()
+				get_viewport().set_input_as_handled()
+
+func _update_scroll_buttons_visibility() -> void:
+	if not actions_scroll or not actions_container:
+		return
+	var content_w = actions_container.size.x
+	var view_w = actions_scroll.size.x
+	var has_overflow = content_w > view_w + 4.0
+	if btn_scroll_left:
+		btn_scroll_left.visible = has_overflow and actions_scroll.scroll_horizontal > 4
+	if btn_scroll_right:
+		btn_scroll_right.visible = has_overflow and (actions_scroll.scroll_horizontal < (content_w - view_w - 4.0))
 
 func _load_door_textures() -> void:
 	if not door_closed_tex:
@@ -3948,14 +4186,19 @@ func _update_ui() -> void:
 		# Game Master / Zargon controls
 		if btn_summon:
 			btn_summon.visible = true
+			btn_summon.disabled = false
+			btn_summon.text = "Summon"
+			_update_action_tile(btn_summon, "summon", 0, "👹 Summon Monster (GM)", "Spawn a wandering monster minion of Zargon in the dungeon.")
 		if btn_roll:
 			btn_roll.visible = true
 			btn_roll.disabled = false
 			btn_roll.text = "Roll Monster"
+			_update_action_tile(btn_roll, "move", 0, "🎲 Roll Monster Movement", "Roll movement dice for active Zargon monster.")
 		if btn_attack:
 			btn_attack.visible = true
 			btn_attack.disabled = false
 			btn_attack.text = "Monster Attack"
+			_update_action_tile(btn_attack, "attack", 0, "⚔️ Monster Attack", "Order monster minion to strike adjacent hero.")
 		if btn_cast_spell:
 			btn_cast_spell.visible = false
 		if btn_use_item:
@@ -3968,7 +4211,9 @@ func _update_ui() -> void:
 			btn_disarm_trap.visible = false
 		if btn_end_turn:
 			btn_end_turn.visible = true
+			btn_end_turn.disabled = false
 			btn_end_turn.text = "End GM Turn"
+			_update_action_tile(btn_end_turn, "end_turn", 0, "⏭️ End GM Turn", "Conclude Zargon's turn and pass initiative to Heroes.")
 		if dice_label:
 			dice_label.text = "Zargon Game Master Mode: Full Dungeon Control"
 	elif current_phase == "gm_phase":
@@ -4005,6 +4250,7 @@ func _update_ui() -> void:
 				btn_cast_spell.visible = true
 				btn_cast_spell.disabled = has_acted_this_turn or movement_closed or (moved_before_action and has_acted_this_turn)
 				btn_cast_spell.text = "🔮 Spell (%d)" % h_spells.size()
+				_update_action_tile(btn_cast_spell, "spell", h_spells.size(), "🔮 Cast Spell (%d Memorized)" % h_spells.size(), "Open spellbook to select and cast arcane or elemental spells.", Color(0.55, 0.25, 0.95, 0.92))
 			else:
 				btn_cast_spell.visible = false
 
@@ -4015,6 +4261,7 @@ func _update_ui() -> void:
 				btn_use_item.visible = true
 				btn_use_item.disabled = false
 				btn_use_item.text = "🎒 Item (%d)" % h_inv.size()
+				_update_action_tile(btn_use_item, "item", h_inv.size(), "🎒 Use Item (%d in Pack)" % h_inv.size(), "Open backpack to use potions, tool kits, and equipment.", Color(0.95, 0.60, 0.10, 0.92))
 			else:
 				btn_use_item.visible = false
 
@@ -4024,6 +4271,7 @@ func _update_ui() -> void:
 			btn_search_traps.visible = true
 			btn_search_traps.disabled = has_acted_this_turn or not can_search_t
 			btn_search_traps.text = "⚠️ Traps"
+			_update_action_tile(btn_search_traps, "traps", 0, "⚠️ Search for Traps & Secret Doors", "Inspect room or corridor for hidden hazards and secret passages.")
 
 		var adj_traps = get_adjacent_detected_traps()
 		var disarm_check = can_hero_disarm(hero)
@@ -4032,6 +4280,7 @@ func _update_ui() -> void:
 			btn_disarm_trap.visible = true
 			btn_disarm_trap.disabled = not can_dis
 			btn_disarm_trap.text = "🔧 Disarm (%d)" % adj_traps.size() if adj_traps.size() > 0 else "🔧 Disarm"
+			_update_action_tile(btn_disarm_trap, "disarm", adj_traps.size(), "🔧 Disarm Trap (%d Adjacent)" % adj_traps.size(), "Attempt to safely disarm adjacent trap with Tool Kit.", Color(0.15, 0.75, 0.70, 0.92))
 
 		var adj_monsters = get_adjacent_monsters()
 		var adj_doors = get_adjacent_closed_doors()
@@ -4044,6 +4293,7 @@ func _update_ui() -> void:
 				btn_roll.visible = true
 				btn_roll.disabled = true
 				btn_roll.text = "Move: 0"
+				_update_action_tile(btn_roll, "move", 0, "🎲 Movement Complete (0)", "Movement has concluded for this turn.")
 			if btn_attack:
 				btn_attack.visible = false
 			if btn_search:
@@ -4054,7 +4304,9 @@ func _update_ui() -> void:
 				btn_disarm_trap.disabled = true
 			if btn_end_turn:
 				btn_end_turn.visible = true
+				btn_end_turn.disabled = false
 				btn_end_turn.text = "End Turn"
+				_update_action_tile(btn_end_turn, "end_turn", 0, "⏭️ End Turn", "Conclude active hero's turn and pass initiative to next hero or GM.")
 		elif not movement_rolled:
 			# Awaiting Roll state
 			if dice_label:
@@ -4066,11 +4318,14 @@ func _update_ui() -> void:
 				btn_roll.visible = true
 				btn_roll.disabled = false
 				btn_roll.text = "Roll Movement (2d6)"
+				_update_action_tile(btn_roll, "move", 0, "🎲 Roll Movement (2d6)", "Roll 2 red dice to determine movement squares for this turn.")
 			if btn_attack:
 				if adj_monsters.size() > 0 and not has_acted_this_turn:
 					btn_attack.visible = true
 					btn_attack.disabled = false
-					btn_attack.text = "Attack %s" % adj_monsters[0].get("name", "Monster")
+					var m_tgt_name = adj_monsters[0].get("name", "Monster")
+					btn_attack.text = "Attack %s" % m_tgt_name
+					_update_action_tile(btn_attack, "attack", 0, "⚔️ Attack %s" % m_tgt_name, "Strike adjacent foe with equipped weapon (Roll %d attack dice)." % hero.get("attackDice", 3))
 				elif adj_doors.size() > 0:
 					btn_attack.visible = true
 					btn_attack.disabled = false
@@ -4080,13 +4335,20 @@ func _update_ui() -> void:
 							is_secret_adj = true
 							break
 					btn_attack.text = "Open Secret Door" if is_secret_adj else "Open Door"
+					if is_secret_adj:
+						_update_action_tile(btn_attack, "door", 0, "🚪 Open Secret Door", "Unseal the discovered secret stone door to reveal hidden chamber.")
+					else:
+						_update_action_tile(btn_attack, "door", 0, "🚪 Open Door", "Kick open adjacent dungeon door to reveal room and foes.")
 				else:
 					btn_attack.visible = false
 			if btn_search:
 				btn_search.visible = false
 			if btn_end_turn:
 				btn_end_turn.visible = true
-				btn_end_turn.text = "Skip Turn" if not has_acted_this_turn else "End Turn"
+				btn_end_turn.disabled = false
+				var skip_lbl = "Skip Turn" if (not has_acted_this_turn and not has_moved_this_turn) else "End Turn"
+				btn_end_turn.text = skip_lbl
+				_update_action_tile(btn_end_turn, "end_turn", 0, "⏭️ " + skip_lbl, "Conclude current hero's turn and pass initiative.")
 		else:
 			# Movement rolled
 			if movement_remaining > 0:
@@ -4100,6 +4362,7 @@ func _update_ui() -> void:
 					btn_roll.visible = true
 					btn_roll.disabled = true
 					btn_roll.text = "Move: %d left" % movement_remaining
+					_update_action_tile(btn_roll, "move", movement_remaining, "🎲 Movement (%d Remaining)" % movement_remaining, "Click adjacent highlighted grid tiles to move %s." % h_name, Color(0.0, 0.75, 0.95, 0.92))
 			else:
 				if has_acted_this_turn:
 					if dice_label:
@@ -4111,13 +4374,16 @@ func _update_ui() -> void:
 					btn_roll.visible = true
 					btn_roll.disabled = true
 					btn_roll.text = "Move: 0"
+					_update_action_tile(btn_roll, "move", 0, "🎲 Movement Exhausted (0)", "All rolled movement points have been spent.")
 
 			# Contextual attack / door button
 			if btn_attack:
 				if adj_monsters.size() > 0 and not has_acted_this_turn:
 					btn_attack.visible = true
 					btn_attack.disabled = false
-					btn_attack.text = "Attack %s" % adj_monsters[0].get("name", "Monster")
+					var m_tgt_name = adj_monsters[0].get("name", "Monster")
+					btn_attack.text = "Attack %s" % m_tgt_name
+					_update_action_tile(btn_attack, "attack", 0, "⚔️ Attack %s" % m_tgt_name, "Strike adjacent foe with equipped weapon (Roll %d attack dice)." % hero.get("attackDice", 3))
 				elif adj_doors.size() > 0:
 					btn_attack.visible = true
 					btn_attack.disabled = false
@@ -4127,6 +4393,10 @@ func _update_ui() -> void:
 							is_secret_adj = true
 							break
 					btn_attack.text = "Open Secret Door" if is_secret_adj else "Open Door"
+					if is_secret_adj:
+						_update_action_tile(btn_attack, "door", 0, "🚪 Open Secret Door", "Unseal the discovered secret stone door to reveal hidden chamber.")
+					else:
+						_update_action_tile(btn_attack, "door", 0, "🚪 Open Door", "Kick open adjacent dungeon door to reveal room and foes.")
 				else:
 					btn_attack.visible = false
 
@@ -4136,12 +4406,22 @@ func _update_ui() -> void:
 					btn_search.visible = true
 					btn_search.disabled = false
 					btn_search.text = "Search Room"
+					_update_action_tile(btn_search, "search", 0, "🔍 Search Room for Treasure", "Search this chamber for hidden chests, gems, or gold.")
 				else:
 					btn_search.visible = false
 
 			if btn_end_turn:
 				btn_end_turn.visible = true
+				btn_end_turn.disabled = false
 				btn_end_turn.text = "End Turn"
+				_update_action_tile(btn_end_turn, "end_turn", 0, "⏭️ End Turn", "Conclude current hero's turn and pass initiative.")
+
+		# AI Step button
+		if btn_ai_step:
+			_update_action_tile(btn_ai_step, "ai_step", 0, "🤖 AI Step (Autonomous Agent)", "Execute next step planned by autonomous AI agent.")
+
+		default_guidance_text = dice_label.text if dice_label else ""
+		_update_scroll_buttons_visibility()
 
 	# Character card
 	# Character card legacy label update for backwards compatibility
@@ -5147,15 +5427,21 @@ func get_telemetry_state() -> Dictionary:
 		"title": title_label.text if title_label else "",
 		"diceLabel": dice_label.text if dice_label else "",
 		"buttons": {
-			"roll": { "visible": btn_roll.visible, "disabled": btn_roll.disabled } if btn_roll else {},
-			"attack": { "visible": btn_attack.visible, "disabled": btn_attack.disabled, "text": btn_attack.text } if btn_attack else {},
-			"cast_spell": { "visible": btn_cast_spell.visible, "disabled": btn_cast_spell.disabled } if btn_cast_spell else {},
-			"use_item": { "visible": btn_use_item.visible, "disabled": btn_use_item.disabled } if btn_use_item else {},
-			"search": { "visible": btn_search.visible, "disabled": btn_search.disabled } if btn_search else {},
-			"search_traps": { "visible": btn_search_traps.visible, "disabled": btn_search_traps.disabled } if btn_search_traps else {},
-			"disarm_trap": { "visible": btn_disarm_trap.visible, "disabled": btn_disarm_trap.disabled } if btn_disarm_trap else {},
-			"end_turn": { "visible": btn_end_turn.visible, "disabled": btn_end_turn.disabled } if btn_end_turn else {},
-			"ai_step": { "visible": btn_ai_step.visible, "disabled": btn_ai_step.disabled } if btn_ai_step else {}
+			"roll": { "visible": btn_roll.visible, "disabled": btn_roll.disabled, "tooltip": btn_roll.tooltip_text, "icon": "action_move" } if btn_roll else {},
+			"attack": { "visible": btn_attack.visible, "disabled": btn_attack.disabled, "text": btn_attack.text, "tooltip": btn_attack.tooltip_text, "icon": ("action_door" if ("Door" in btn_attack.text) else "action_attack") } if btn_attack else {},
+			"cast_spell": { "visible": btn_cast_spell.visible, "disabled": btn_cast_spell.disabled, "tooltip": btn_cast_spell.tooltip_text, "icon": "action_spell" } if btn_cast_spell else {},
+			"use_item": { "visible": btn_use_item.visible, "disabled": btn_use_item.disabled, "tooltip": btn_use_item.tooltip_text, "icon": "action_item" } if btn_use_item else {},
+			"search": { "visible": btn_search.visible, "disabled": btn_search.disabled, "tooltip": btn_search.tooltip_text, "icon": "action_search" } if btn_search else {},
+			"search_traps": { "visible": btn_search_traps.visible, "disabled": btn_search_traps.disabled, "tooltip": btn_search_traps.tooltip_text, "icon": "action_traps" } if btn_search_traps else {},
+			"disarm_trap": { "visible": btn_disarm_trap.visible, "disabled": btn_disarm_trap.disabled, "tooltip": btn_disarm_trap.tooltip_text, "icon": "action_disarm" } if btn_disarm_trap else {},
+			"end_turn": { "visible": btn_end_turn.visible, "disabled": btn_end_turn.disabled, "tooltip": btn_end_turn.tooltip_text, "icon": "action_end_turn" } if btn_end_turn else {},
+			"ai_step": { "visible": btn_ai_step.visible, "disabled": btn_ai_step.disabled, "tooltip": btn_ai_step.tooltip_text, "icon": "action_ai_step" } if btn_ai_step else {},
+			"summon": { "visible": btn_summon.visible, "disabled": btn_summon.disabled, "tooltip": btn_summon.tooltip_text, "icon": "action_summon" } if btn_summon else {}
+		},
+		"hotbar": {
+			"actionsCount": actions_container.get_child_count() if actions_container else 10,
+			"scrollHorizontal": actions_scroll.scroll_horizontal if actions_scroll else 0,
+			"overflow": (btn_scroll_right.visible or btn_scroll_left.visible) if (btn_scroll_right and btn_scroll_left) else false
 		},
 		"modal": {
 			"aiConfirmModalVisible": ai_confirm_modal.visible if ai_confirm_modal else false,
@@ -5277,6 +5563,91 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 		"dismiss_dice_roll":
 			dismiss_active_dice_roll()
 			return { "success": true }
+		"hover_action_button":
+			var btn_key = str(action_data.get("button", "roll"))
+			var target_btn: Button = null
+			match btn_key:
+				"roll": target_btn = btn_roll
+				"attack": target_btn = btn_attack
+				"cast_spell": target_btn = btn_cast_spell
+				"use_item": target_btn = btn_use_item
+				"search": target_btn = btn_search
+				"search_traps": target_btn = btn_search_traps
+				"disarm_trap": target_btn = btn_disarm_trap
+				"summon": target_btn = btn_summon
+				"ai_step": target_btn = btn_ai_step
+				"end_turn": target_btn = btn_end_turn
+				_:
+					target_btn = _find_action_button(btn_key)
+			if target_btn:
+				_on_action_button_hovered(target_btn)
+				return {
+					"success": true,
+					"hoveredTitle": target_btn.get_meta("action_title", ""),
+					"hoveredDesc": target_btn.get_meta("action_desc", ""),
+					"tooltipText": target_btn.tooltip_text,
+					"diceLabel": dice_label.text if dice_label else ""
+				}
+			return { "success": false, "error": "Button not found: " + btn_key }
+		"unhover_action_button":
+			var btn_key = str(action_data.get("button", "roll"))
+			var target_btn: Button = null
+			match btn_key:
+				"roll": target_btn = btn_roll
+				"attack": target_btn = btn_attack
+				"cast_spell": target_btn = btn_cast_spell
+				"use_item": target_btn = btn_use_item
+				"search": target_btn = btn_search
+				"search_traps": target_btn = btn_search_traps
+				"disarm_trap": target_btn = btn_disarm_trap
+				"summon": target_btn = btn_summon
+				"ai_step": target_btn = btn_ai_step
+				"end_turn": target_btn = btn_end_turn
+				_:
+					target_btn = _find_action_button(btn_key)
+			if target_btn:
+				_on_action_button_unhovered(target_btn)
+				return { "success": true, "diceLabel": dice_label.text if dice_label else "" }
+			return { "success": false }
+		"scroll_hotbar":
+			var delta = int(action_data.get("delta", 60))
+			if actions_scroll:
+				actions_scroll.scroll_horizontal = max(0, actions_scroll.scroll_horizontal + delta)
+				_update_scroll_buttons_visibility()
+				return {
+					"success": true,
+					"scrollHorizontal": actions_scroll.scroll_horizontal,
+					"overflow": (btn_scroll_left.visible or btn_scroll_right.visible) if (btn_scroll_left and btn_scroll_right) else false
+				}
+			return { "success": false }
+		"add_dynamic_action":
+			var act_id = str(action_data.get("id", "custom_action"))
+			var act_title = str(action_data.get("title", "Custom Action"))
+			var act_desc = str(action_data.get("desc", "Dynamic action button"))
+			var act_icon = str(action_data.get("icon", "item"))
+			var act_count = int(action_data.get("count", 0))
+			if actions_container:
+				var new_btn = Button.new()
+				new_btn.name = "BtnDynamic_" + act_id
+				new_btn.text = act_title
+				actions_container.add_child(new_btn)
+				_setup_action_button_style(new_btn)
+				_update_action_tile(new_btn, act_icon, act_count, act_title, act_desc)
+				_update_scroll_buttons_visibility()
+				return {
+					"success": true,
+					"actionId": act_id,
+					"totalButtons": actions_container.get_child_count(),
+					"overflow": (btn_scroll_right.visible or btn_scroll_left.visible) if (btn_scroll_right and btn_scroll_left) else false
+				}
+			return { "success": false }
+		"take_screenshot":
+			var out_p = str(action_data.get("path", "/tmp/tabletop_hotbar.png"))
+			var v_img = get_viewport().get_texture().get_image()
+			if v_img:
+				v_img.save_png(out_p)
+				return { "success": true, "path": out_p }
+			return { "success": false }
 		"set_state":
 			if action_data.has("role"):
 				current_role = str(action_data.get("role"))

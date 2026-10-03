@@ -56,62 +56,90 @@ offset_bottom = 38.0
 theme_override_font_sizes/font_size = 14
 text = "Dice: Ready (Roll 2d6 movement)"
 
-[node name="Actions" type="HBoxContainer" parent="UI"]
+[node name="ActionsBar" type="PanelContainer" parent="UI"]
 offset_left = 1416.0
-offset_top = 102.0
+offset_top = 98.0
 offset_right = 1904.0
-offset_bottom = 144.0
-theme_override_constants/separation = 6
+offset_bottom = 148.0
 
-[node name="BtnRoll" type="Button" parent="UI/Actions"]
+[node name="HotbarHBox" type="HBoxContainer" parent="UI/ActionsBar"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="BtnScrollLeft" type="Button" parent="UI/ActionsBar/HotbarHBox"]
+visible = false
+custom_minimum_size = Vector2(18, 42)
+layout_mode = 2
+text = "◀"
+
+[node name="ActionsScroll" type="ScrollContainer" parent="UI/ActionsBar/HotbarHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 1
+vertical_scroll_mode = 0
+
+[node name="Actions" type="HBoxContainer" parent="UI/ActionsBar/HotbarHBox/ActionsScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 4
+
+[node name="BtnRoll" type="Button" parent="UI/ActionsBar/HotbarHBox/ActionsScroll/Actions"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
 text = "Roll"
 
-[node name="BtnAttack" type="Button" parent="UI/Actions"]
+[node name="BtnAttack" type="Button" parent="UI/ActionsBar/HotbarHBox/ActionsScroll/Actions"]
+custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
-size_flags_horizontal = 3
 text = "Attack"
 
-[node name="BtnCastSpell" type="Button" parent="UI/Actions"]
+[node name="BtnCastSpell" type="Button" parent="UI/ActionsBar/HotbarHBox/ActionsScroll/Actions"]
+custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
-size_flags_horizontal = 3
 text = "🔮 Spell"
 
-[node name="BtnUseItem" type="Button" parent="UI/Actions"]
+[node name="BtnUseItem" type="Button" parent="UI/ActionsBar/HotbarHBox/ActionsScroll/Actions"]
+custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
-size_flags_horizontal = 3
 text = "🎒 Item"
 
-[node name="BtnSearch" type="Button" parent="UI/Actions"]
+[node name="BtnSearch" type="Button" parent="UI/ActionsBar/HotbarHBox/ActionsScroll/Actions"]
+custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
-size_flags_horizontal = 3
 text = "Search"
 
-[node name="BtnSearchTraps" type="Button" parent="UI/Actions"]
+[node name="BtnSearchTraps" type="Button" parent="UI/ActionsBar/HotbarHBox/ActionsScroll/Actions"]
+custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
-size_flags_horizontal = 3
 text = "⚠️ Traps"
 
-[node name="BtnDisarmTrap" type="Button" parent="UI/Actions"]
+[node name="BtnDisarmTrap" type="Button" parent="UI/ActionsBar/HotbarHBox/ActionsScroll/Actions"]
+custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
-size_flags_horizontal = 3
 text = "🔧 Disarm"
 
-[node name="BtnSummon" type="Button" parent="UI/Actions"]
+[node name="BtnSummon" type="Button" parent="UI/ActionsBar/HotbarHBox/ActionsScroll/Actions"]
+custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
-size_flags_horizontal = 3
 text = "Summon"
 
-[node name="BtnAIStep" type="Button" parent="UI/Actions"]
+[node name="BtnAIStep" type="Button" parent="UI/ActionsBar/HotbarHBox/ActionsScroll/Actions"]
+custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
-size_flags_horizontal = 3
 text = "AI Step"
 
-[node name="BtnEndTurn" type="Button" parent="UI/Actions"]
+[node name="BtnEndTurn" type="Button" parent="UI/ActionsBar/HotbarHBox/ActionsScroll/Actions"]
+custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
-size_flags_horizontal = 3
 text = "End Turn"
+
+[node name="BtnScrollRight" type="Button" parent="UI/ActionsBar/HotbarHBox"]
+visible = false
+custom_minimum_size = Vector2(18, 42)
+layout_mode = 2
+text = "▶"
 
 [node name="StatsPanel" type="Panel" parent="UI"]
 offset_left = 1416.0
