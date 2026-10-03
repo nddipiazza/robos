@@ -98,6 +98,10 @@ class TabletopQAPlayer:
         self.log(f"Advancing hero to grid square ({x}, {y})...")
         return self.execute_action("move", x=x, y=y)
 
+    def click_tile(self, x: int, y: int) -> dict:
+        self.log(f"Clicking tabletop tile at ({x}, {y})...")
+        return self.execute_action("click_tile", x=x, y=y)
+
     def open_door(self, from_x: int, from_y: int, to_x: int, to_y: int) -> dict:
         self.log(f"Kicking open door between ({from_x}, {from_y}) and ({to_x}, {to_y})...")
         return self.execute_action("open_door", from_x=from_x, from_y=from_y, to_x=to_x, to_y=to_y)
