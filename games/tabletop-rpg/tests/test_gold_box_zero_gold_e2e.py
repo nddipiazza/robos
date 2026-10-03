@@ -66,7 +66,7 @@ class TestGoldBoxZeroGoldE2E(unittest.TestCase):
         if not cls.player.check_health():
             print(f"Launching Godot test player on port {cls.port}...")
             cls.godot_proc = subprocess.Popen(
-                ["/home/ndipiazza/.local/bin/godot", "--path", ROOT_DIR, "--player"],
+                ["/home/ndipiazza/.local/bin/godot", "--path", ROOT_DIR, "--player", "--skip-spell-select"],
                 env=cls.env,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL
@@ -253,7 +253,7 @@ class TestGoldBoxZeroGoldE2E(unittest.TestCase):
         # Verify no empty names or awkward "(0)" without hero name
         for tab_text in tabs:
             self.assertFalse(tab_text.startswith(" ("), f"Tab must have a hero name, got: {tab_text}")
-            self.assertTrue(any(marker in tab_text for marker in ["🔴", "🟤", "🟢", "🔵"]), f"Tab must have class marker: {tab_text}")
+            self.assertTrue(any(marker in tab_text for marker in ["[B]", "[D]", "[E]", "[W]"]), f"Tab must have class marker: {tab_text}")
             self.assertTrue("GP)" in tab_text, f"Tab must specify GP, got: {tab_text}")
 
         # Check Rogar, Dorgan, Ladril, Telor

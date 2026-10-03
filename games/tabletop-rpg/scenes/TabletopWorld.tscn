@@ -173,7 +173,7 @@ text = "🔧 Disarm"
 [node name="BtnArmory" type="Button" parent="UI/ActionsBar/HotbarHBox/ActionsScroll/Actions"]
 custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
-text = "🛡️ Armory"
+text = "Armory"
 
 [node name="BtnSummon" type="Button" parent="UI/ActionsBar/HotbarHBox/ActionsScroll/Actions"]
 custom_minimum_size = Vector2(40, 40)
@@ -1036,7 +1036,7 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 22
-text = "🛡️ HeroQuest Imperial Armory"
+text = "HeroQuest Imperial Armory"
 
 [node name="PartyGoldBadge" type="Label" parent="UI/ArmoryModal/Card/Margin/VBox/Header"]
 layout_mode = 2
@@ -1076,7 +1076,7 @@ theme_override_constants/margin_bottom = 6
 layout_mode = 2
 theme_override_font_sizes/font_size = 13
 theme_override_colors/font_color = Color(0.3, 0.9, 0.6, 1)
-text = "Rogar the Barbarian | 💰 100 Gold | Attack: 3 Dice | Defend: 2 Dice"
+text = "Rogar the Barbarian | 100 GP | Attack: 3 Dice | Defend: 2 Dice"
 
 [node name="ScrollContainer" type="ScrollContainer" parent="UI/ArmoryModal/Card/Margin/VBox"]
 layout_mode = 2
@@ -1099,7 +1099,7 @@ theme_override_constants/separation = 12
 layout_mode = 2
 size_flags_horizontal = 3
 custom_minimum_size = Vector2(0, 38)
-text = "⚔️ Enter the Dungeon / Close Armory"
+text = "Enter the Dungeon / Close Armory"
 
 [node name="TreasureModal" type="ColorRect" parent="UI"]
 visible = false

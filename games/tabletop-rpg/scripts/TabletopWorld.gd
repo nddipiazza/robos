@@ -1385,13 +1385,15 @@ func get_ai_icon_texture(category: String, id_name: String) -> Texture2D:
 				"swift_wind", "haste": file_name = "spell_swift_wind.png"
 				"tempest", "lightning_bolt", "thunderwave", "blizzard": file_name = "spell_tempest.png"
 				_: file_name = "spell_ball_of_flame.png"
-		"item", "consumable", "tool", "ability":
+		"item", "consumable", "tool", "ability", "gear", "potion":
 			match clean_id:
 				"healing_potion", "potion_of_healing", "cure_potion": file_name = "item_healing_potion.png"
 				"potion_of_strength", "strength_potion": file_name = "item_potion_of_strength.png"
 				"potion_of_speed", "speed_potion": file_name = "item_potion_of_speed.png"
 				"tool_kit", "toolbox", "tools", "lockpick", "trap_mastery", "disarm": file_name = "item_tool_kit.png"
 				"holy_water": file_name = "spell_water_of_healing.png"
+				"dungeon_torch", "torch": file_name = "spell_fire_of_wrath.png"
+				"heavy_rope", "rope": file_name = "item_tool_kit.png"
 				_: file_name = "item_healing_potion.png"
 		_:
 			file_name = "weapon_broadsword.png"
@@ -2534,9 +2536,9 @@ func _update_elf_spell_modal_ui() -> void:
 		]
 	if btn_elf_spell_confirm:
 		if has_party_gold_for_armory():
-			btn_elf_spell_confirm.text = "⚔️ Confirm Spells & Visit Armory"
+			btn_elf_spell_confirm.text = "Confirm Spells & Visit Armory"
 		else:
-			btn_elf_spell_confirm.text = "⚔️ Enter the Dungeon"
+			btn_elf_spell_confirm.text = "Enter the Dungeon"
 
 func show_elf_spell_selection_modal() -> void:
 	if elf_spell_modal:
@@ -2605,7 +2607,7 @@ const ARMORY_CATALOG: Array = [
 		"type": "weapon",
 		"category": "Weapon",
 		"cost": 25,
-		"icon": "🗡️",
+		"icon": "weapon_dagger",
 		"attackDice": 1,
 		"effect": "1 Combat Die (Melee or Thrown)",
 		"description": "Swift hunting knife. Rolls 1 combat die. Can be used in melee or thrown in line of sight.",
@@ -2617,7 +2619,7 @@ const ARMORY_CATALOG: Array = [
 		"type": "gear",
 		"category": "Gear",
 		"cost": 15,
-		"icon": "🔥",
+		"icon": "gear_torch",
 		"effect": "Detect hidden traps in room",
 		"description": "Illuminates dark recesses. Detects hidden dungeon traps.",
 		"allowedHeroes": ["barbarian", "dwarf", "elf", "wizard"]
@@ -2628,7 +2630,7 @@ const ARMORY_CATALOG: Array = [
 		"type": "gear",
 		"category": "Gear",
 		"cost": 25,
-		"icon": "🪢",
+		"icon": "gear_rope",
 		"effect": "Climb pits & gaps",
 		"description": "Stout coiled rope (30 ft) to escape pit traps or scale chasms.",
 		"allowedHeroes": ["barbarian", "dwarf", "elf", "wizard"]
@@ -2639,7 +2641,7 @@ const ARMORY_CATALOG: Array = [
 		"type": "armor",
 		"category": "Armor",
 		"cost": 100,
-		"icon": "🛡️",
+		"icon": "armor_shield",
 		"defendBonus": 1,
 		"effect": "+1 Defend Die",
 		"description": "Sturdy steel or iron shield. Adds 1 extra combat die in defense. Wizard cannot use.",
@@ -2651,7 +2653,7 @@ const ARMORY_CATALOG: Array = [
 		"type": "weapon",
 		"category": "Weapon",
 		"cost": 100,
-		"icon": "🪄",
+		"icon": "weapon_staff",
 		"attackDice": 1,
 		"diagonal": true,
 		"twoHanded": true,
@@ -2665,7 +2667,7 @@ const ARMORY_CATALOG: Array = [
 		"type": "potion",
 		"category": "Potion",
 		"cost": 100,
-		"icon": "🧪",
+		"icon": "item_healing_potion",
 		"effect": "Restores up to 4 BP",
 		"description": "Magical elixir that restores up to 4 lost Body Points.",
 		"allowedHeroes": ["barbarian", "dwarf", "elf", "wizard"]
@@ -2676,7 +2678,7 @@ const ARMORY_CATALOG: Array = [
 		"type": "tool",
 		"category": "Tool",
 		"cost": 100,
-		"icon": "🧰",
+		"icon": "item_tool_kit",
 		"effect": "Disarm Traps without Skull",
 		"description": "Enables non-Dwarf heroes to disarm discovered traps safely without setting them off.",
 		"allowedHeroes": ["barbarian", "dwarf", "elf", "wizard"]
@@ -2687,7 +2689,7 @@ const ARMORY_CATALOG: Array = [
 		"type": "armor",
 		"category": "Armor",
 		"cost": 120,
-		"icon": "🪖",
+		"icon": "armor_helmet",
 		"defendBonus": 1,
 		"effect": "+1 Defend Die",
 		"description": "Forged iron helm protecting the head. Adds 1 combat die in defense. Wizard cannot use.",
@@ -2699,7 +2701,7 @@ const ARMORY_CATALOG: Array = [
 		"type": "weapon",
 		"category": "Weapon",
 		"cost": 150,
-		"icon": "⚔️",
+		"icon": "weapon_shortsword",
 		"attackDice": 2,
 		"diagonal": true,
 		"effect": "2 Combat Dice (Diagonal Melee)",
@@ -2712,7 +2714,7 @@ const ARMORY_CATALOG: Array = [
 		"type": "weapon",
 		"category": "Weapon",
 		"cost": 250,
-		"icon": "🗡️",
+		"icon": "weapon_broadsword",
 		"attackDice": 3,
 		"effect": "3 Combat Dice (Adjacent Melee)",
 		"description": "Standard heavy steel blade. Rolls 3 combat dice in adjacent melee combat. Wizard cannot use.",
@@ -2724,7 +2726,7 @@ const ARMORY_CATALOG: Array = [
 		"type": "weapon",
 		"category": "Weapon",
 		"cost": 350,
-		"icon": "🏹",
+		"icon": "weapon_crossbow",
 		"attackDice": 3,
 		"ranged": true,
 		"twoHanded": true,
@@ -2738,7 +2740,7 @@ const ARMORY_CATALOG: Array = [
 		"type": "weapon",
 		"category": "Weapon",
 		"cost": 450,
-		"icon": "🪓",
+		"icon": "weapon_battle_axe",
 		"attackDice": 4,
 		"twoHanded": true,
 		"effect": "4 Combat Dice (Two-Handed)",
@@ -2751,7 +2753,7 @@ const ARMORY_CATALOG: Array = [
 		"type": "armor",
 		"category": "Armor",
 		"cost": 500,
-		"icon": "⛓️",
+		"icon": "armor_chain_mail",
 		"baseDefendDice": 3,
 		"effect": "Sets Base Defense to 3 Dice",
 		"description": "Interlocking metal rings. Increases base defense to 3 combat dice. Wizard cannot use.",
@@ -2763,7 +2765,7 @@ const ARMORY_CATALOG: Array = [
 		"type": "armor",
 		"category": "Armor",
 		"cost": 850,
-		"icon": "🥋",
+		"icon": "armor_plate_mail",
 		"baseDefendDice": 4,
 		"movementDice": 1,
 		"effect": "Sets Base Defense to 4 Dice (1d6 Movement)",
@@ -2839,7 +2841,7 @@ func open_armory(hero_id: String = "") -> Dictionary:
 		armory_modal.visible = true
 		_update_armory_ui()
 
-	_log("[ARMORY] 🛡️ The Imperial Armory is open! Party Treasury: %d Gold Coins. Select gear for your heroes." % get_total_party_gold())
+	_log("[ARMORY] The Imperial Armory is open! Party Treasury: %d Gold Coins. Select gear for your heroes." % get_total_party_gold())
 	_update_ui()
 	queue_redraw_all()
 	return {
@@ -2853,7 +2855,7 @@ func close_armory() -> Dictionary:
 	armory_open = false
 	if armory_modal:
 		armory_modal.visible = false
-	_log("[ARMORY] ⚔️ Closed Armory. The party ventures forth into the dungeon!")
+	_log("[ARMORY] Closed Armory. The party ventures forth into the dungeon!")
 	_update_ui()
 	queue_redraw_all()
 	return {
@@ -2911,10 +2913,10 @@ func _update_armory_ui() -> void:
 
 			var btn_tab = Button.new()
 			btn_tab.custom_minimum_size = Vector2(160, 36)
-			var icon_marker = "🔴"
-			if hid == "dwarf": icon_marker = "🟤"
-			elif hid == "elf": icon_marker = "🟢"
-			elif hid == "wizard": icon_marker = "🔵"
+			var icon_marker = "[B]"
+			if hid == "dwarf": icon_marker = "[D]"
+			elif hid == "elf": icon_marker = "[E]"
+			elif hid == "wizard": icon_marker = "[W]"
 
 			var tab_sb = StyleBoxFlat.new()
 			tab_sb.set_corner_radius_all(6)
@@ -2922,7 +2924,7 @@ func _update_armory_ui() -> void:
 				tab_sb.bg_color = Color(0.18, 0.25, 0.36, 1.0)
 				tab_sb.border_color = Color(1.0, 0.85, 0.2, 1.0)
 				tab_sb.set_border_width_all(2)
-				btn_tab.text = "%s %s (💰 %d GP)" % [icon_marker, hname, hgold]
+				btn_tab.text = "%s %s (%d GP)" % [icon_marker, hname, hgold]
 			else:
 				tab_sb.bg_color = Color(0.1, 0.13, 0.18, 0.9)
 				tab_sb.border_color = Color(0.25, 0.32, 0.42, 0.6)
@@ -2943,7 +2945,7 @@ func _update_armory_ui() -> void:
 		var atk_dice = get_hero_attack_dice(sel_hero)
 		var def_dice = get_hero_defend_dice(sel_hero)
 		var inv_count = sel_hero.get("inventory", []).size()
-		armory_hero_info_text.text = "%s (%s) | 💰 %d GP | ⚔️ %d Attack Dice | 🛡️ %d Defend Dice | 🎒 %d Items in Pack" % [
+		armory_hero_info_text.text = "%s (%s) | Treasury: %d GP | ATK: %dd | DEF: %dd | Pack: %d items" % [
 			hname, hclass, hgold, atk_dice, def_dice, inv_count
 		]
 
@@ -2981,21 +2983,33 @@ func _create_armory_item_card(item: Dictionary, hero: Dictionary) -> Control:
 	vbox.add_theme_constant_override("separation", 4)
 	margin.add_child(vbox)
 
-	# Header: Name + Cost
+	# Header: Icon + Name + Cost
 	var top_box = HBoxContainer.new()
+	top_box.add_theme_constant_override("separation", 6)
 	vbox.add_child(top_box)
+
+	var it_type = str(item.get("type", "item"))
+	var it_id = str(item.get("id", ""))
+	var icon_tex = get_ai_icon_texture(it_type, it_id)
+	if icon_tex:
+		var icon_rect = TextureRect.new()
+		icon_rect.texture = icon_tex
+		icon_rect.custom_minimum_size = Vector2(20, 20)
+		icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		top_box.add_child(icon_rect)
 
 	var lbl_name = Label.new()
 	lbl_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lbl_name.add_theme_font_size_override("font_size", 13)
-	lbl_name.text = "%s %s" % [item.get("icon", "⚔️"), item.get("name", "Item")]
+	lbl_name.text = str(item.get("name", "Item"))
 	top_box.add_child(lbl_name)
 
 	var cost = int(item.get("cost", 0))
 	var lbl_cost = Label.new()
 	lbl_cost.add_theme_font_size_override("font_size", 12)
 	lbl_cost.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2, 1.0))
-	lbl_cost.text = "💰 %d GP" % cost
+	lbl_cost.text = "%d GP" % cost
 	top_box.add_child(lbl_cost)
 
 	# Effect / Category
@@ -3045,7 +3059,6 @@ func _create_armory_item_card(item: Dictionary, hero: Dictionary) -> Control:
 		b_sb.bg_color = Color(0.10, 0.45, 0.25, 1.0)
 		b_sb.border_color = Color(0.2, 0.8, 0.45, 0.9)
 		b_sb.set_border_width_all(1)
-		var it_id = str(item.get("id"))
 		btn_buy.pressed.connect(func(): buy_armory_item(hid, it_id))
 
 	btn_buy.add_theme_stylebox_override("normal", b_sb)
@@ -3053,6 +3066,17 @@ func _create_armory_item_card(item: Dictionary, hero: Dictionary) -> Control:
 	vbox.add_child(btn_buy)
 
 	return p
+
+func _get_armory_item_cards_telemetry() -> Array:
+	if not armory_items_grid or not armory_modal or not armory_modal.visible:
+		return []
+	var res: Array = []
+	for card in armory_items_grid.get_children():
+		var texts: Array = []
+		for lbl in card.find_children("*", "Label", true, false):
+			texts.append((lbl as Label).text)
+		res.append(texts)
+	return res
 
 func buy_armory_item(hero_id: String, item_id: String) -> Dictionary:
 	var hero: Dictionary = {}
@@ -3114,7 +3138,7 @@ func buy_armory_item(hero_id: String, item_id: String) -> Dictionary:
 
 	var h_pos = hero.get("grid_pos", Vector2i(1, 1))
 	spawn_floating_text(h_pos, "+%s (-%d GP)" % [item_data.get("name").to_upper(), cost], Color(1.0, 0.85, 0.2), 2.2)
-	_log("[ARMORY] 🛡️ %s purchased %s for %d Gold! (Remaining: %d Gold)" % [
+	_log("[ARMORY] %s purchased %s for %d Gold! (Remaining: %d Gold)" % [
 		hero.get("name"), item_data.get("name"), cost, hero.get("gold")
 	])
 
@@ -7047,8 +7071,8 @@ func _update_ui() -> void:
 			var party_g = get_total_party_gold()
 			btn_armory.visible = true
 			btn_armory.disabled = (party_g <= 0)
-			btn_armory.text = "🛡️ Armory (%d)" % party_g
-			_update_action_tile(btn_armory, "armory", party_g, "🛡️ Imperial Armory (%d GP)" % party_g, "Visit the Imperial Armory to buy weapons, armor, and gear.", Color(0.92, 0.75, 0.22, 0.95))
+			btn_armory.text = "Armory (%d)" % party_g
+			_update_action_tile(btn_armory, "armory", party_g, "Imperial Armory (%d GP)" % party_g, "Visit the Imperial Armory to buy weapons, armor, and gear.", Color(0.92, 0.75, 0.22, 0.95))
 
 		# Spell Casting Action Button
 		if btn_cast_spell:
@@ -9893,6 +9917,7 @@ func get_telemetry_state() -> Dictionary:
 		"armoryTabs": (armory_hero_tabs.get_children().map(func(btn): return (btn as Button).text) if (armory_hero_tabs and armory_modal and armory_modal.visible) else []),
 		"armoryPartyGoldText": armory_party_gold_badge.text if (armory_party_gold_badge and armory_modal and armory_modal.visible) else "",
 		"armoryHeroInfoText": armory_hero_info_text.text if (armory_hero_info_text and armory_modal and armory_modal.visible) else "",
+		"armoryItemCards": _get_armory_item_cards_telemetry(),
 		"mapEndTurnButton": {
 			"visible": btn_map_end_turn.visible if btn_map_end_turn else false,
 			"disabled": btn_map_end_turn.disabled if btn_map_end_turn else false,
@@ -10747,8 +10772,8 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				"selectedHeroId": selected_armory_hero_id
 			}
 		"buy_armory_item", "buy_item":
-			var h_id = str(action_data.get("heroId", action_data.get("hero", selected_armory_hero_id)))
-			var item_id = str(action_data.get("itemId", action_data.get("item", "")))
+			var h_id = str(action_data.get("heroId", action_data.get("hero_id", action_data.get("hero", selected_armory_hero_id))))
+			var item_id = str(action_data.get("itemId", action_data.get("item_id", action_data.get("item", ""))))
 			var res = buy_armory_item(h_id, item_id)
 			return res
 		"dm_attack":
