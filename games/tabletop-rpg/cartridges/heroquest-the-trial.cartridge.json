@@ -411,6 +411,7 @@
       "width": 28,
       "height": 21,
       "backgroundImage": "res://assets/boards/fan_dungeon_28x21.png",
+      "wanderingMonster": "orc",
       "startingStair": [
         0,
         1
@@ -444,7 +445,16 @@
           "y": 6,
           "w": 7,
           "h": 9,
-          "quadrant": "w"
+          "quadrant": "w",
+          "specialTreasure": {
+            "id": "quest-treasure-fossil",
+            "type": "quest_note",
+            "title": "Dragon Skull Altar Hoard",
+            "gold": 100,
+            "icon": "💎",
+            "description": "Beneath the dragon skull altar lies a velvet pouch containing 100 Gold Coins!",
+            "flavor": "Unclaimed loot from fallen adventurers of ages past."
+          }
         },
         {
           "id": "room-nw-crypt",
@@ -453,7 +463,16 @@
           "y": 2,
           "w": 5,
           "h": 4,
-          "quadrant": "nw"
+          "quadrant": "nw",
+          "specialTreasure": {
+            "id": "quest-treasure-crypt",
+            "type": "quest_note",
+            "title": "Ancient Crypt Stone Chest",
+            "gold": 50,
+            "icon": "💰",
+            "description": "An ancient stone chest contains 50 Gold Coins.",
+            "flavor": "Carved with the runes of the ancient kings, the heavy stone lid gives way to reveal a cache of gold."
+          }
         },
         {
           "id": "room-sw-cellar",
@@ -471,7 +490,17 @@
           "y": 1,
           "w": 4,
           "h": 4,
-          "quadrant": "nw"
+          "quadrant": "nw",
+          "specialTreasure": {
+            "id": "quest-treasure-armory",
+            "type": "quest_note",
+            "title": "Armory Weapons Chest",
+            "gold": 30,
+            "item": "healing_potion",
+            "icon": "🧪",
+            "description": "Inside a reinforced weapons chest, you find a Potion of Healing and 30 Gold Coins.",
+            "flavor": "Left behind by the garrison, this sealed elixir restores up to 4 Body Points."
+          }
         },
         {
           "id": "room-upper-cell",
@@ -570,7 +599,16 @@
           "y": 1,
           "w": 4,
           "h": 3,
-          "quadrant": "ne"
+          "quadrant": "ne",
+          "specialTreasure": {
+            "id": "quest-treasure-vault",
+            "type": "quest_note",
+            "title": "Hidden Vault Strongbox",
+            "gold": 150,
+            "icon": "👑",
+            "description": "A magnificent gilded chest contains 150 Gold Coins!",
+            "flavor": "The secret vault guarded by the hidden doorway yields its grand prize."
+          }
         },
         {
           "id": "room-e-parlor",

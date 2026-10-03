@@ -165,6 +165,10 @@ class TabletopQAPlayer:
         self.log(f"Searching chamber for treasure (interactive={interactive})...")
         return self.execute_action("search", interactive=interactive)
 
+    def resolve_treasure_overlay(self) -> dict:
+        self.log("Dismissing / collecting active treasure card overlay...")
+        return self.execute_action("click_treasure_overlay")
+
     def search_traps(self) -> dict:
         self.log("Searching area for hidden traps and secret doors...")
         return self.execute_action("search_traps")
