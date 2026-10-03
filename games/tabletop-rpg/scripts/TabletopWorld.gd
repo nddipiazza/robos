@@ -259,6 +259,24 @@ var _ai_icon_cache: Dictionary = {}
 var armory_open: bool = false
 var selected_armory_hero_id: String = "barbarian"
 
+@onready var treasure_modal: ColorRect = get_node_or_null("UI/TreasureModal")
+@onready var treasure_modal_card: PanelContainer = get_node_or_null("UI/TreasureModal/Card")
+@onready var treasure_deck_badge: Label = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/Header/DeckRatioBadge")
+@onready var treasure_btn_close_header: Button = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/Header/BtnCloseHeader")
+@onready var treasure_deck_texture: TextureRect = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/StageHBox/DeckColumn/DeckFrame/DeckTexture")
+@onready var treasure_deck_stats: Label = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/StageHBox/DeckColumn/DeckStats")
+@onready var treasure_card_stage: Control = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl")
+@onready var treasure_drawn_card: PanelContainer = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard")
+@onready var treasure_card_type_badge: Label = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox/CardHeader/CardTypeBadge")
+@onready var treasure_card_source: Label = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox/CardHeader/CardSource")
+@onready var treasure_card_title: Label = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox/CardTitle")
+@onready var treasure_card_illustration: TextureRect = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox/IllustrationFrame/CardIllustration")
+@onready var treasure_card_desc: RichTextLabel = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox/CardDescription")
+@onready var treasure_card_flavor: Label = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox/CardFlavor")
+@onready var treasure_outcome_text: Label = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox/OutcomeBanner/OutcomeMargin/OutcomeText")
+@onready var treasure_btn_resolve: Button = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/ButtonBox/BtnResolve")
+var _treasure_deck_texture_res: Texture2D = null
+
 @onready var unavailable_notice_panel: PanelContainer = get_node_or_null("UI/UnavailableNotice")
 @onready var unavailable_notice_label: Label = get_node_or_null("UI/UnavailableNotice/Margin/HBox/NoticeLabel")
 @onready var unavailable_notice_icon: Label = get_node_or_null("UI/UnavailableNotice/Margin/HBox/Icon")
@@ -342,6 +360,7 @@ func _ready() -> void:
 	_setup_log_panel()
 	_setup_hero_detail_modal()
 	_setup_monster_detail_modal()
+	_setup_treasure_modal()
 	_setup_unavailable_notice_style()
 	_load_door_textures()
 	_load_hero_token_textures()
@@ -5687,22 +5706,36 @@ func _initialize_treasure_deck() -> void:
 
 func _draw_treasure_card() -> Dictionary:
 	if treasure_deck.is_empty():
-		if not treasure_discard.is_empty():
-			treasure_deck = treasure_discard.duplicate(true)
-			treasure_discard.clear()
-			treasure_deck.shuffle()
-		else:
-			_initialize_treasure_deck()
+		return {}
 
 	var card: Dictionary = treasure_deck.pop_front()
-	var c_type = str(card.get("type", ""))
+	var c_type = str(card.get("type", "")).to_lower()
 	if c_type == "wandering_monster" or c_type == "hazard":
-		var insert_idx = randi_range(0, treasure_deck.size())
-		treasure_deck.insert(insert_idx, card.duplicate(true))
+		treasure_deck.append(card.duplicate(true))
+		treasure_deck.shuffle()
 	else:
 		treasure_discard.append(card.duplicate(true))
 
 	return card
+
+func get_treasure_deck_stats() -> Dictionary:
+	var total = treasure_deck.size()
+	var hazards = 0
+	var goods = 0
+	for c in treasure_deck:
+		var ct = str(c.get("type", "")).to_lower()
+		if ct == "hazard" or ct == "wandering_monster":
+			hazards += 1
+		else:
+			goods += 1
+	var ratio: float = (float(hazards) / float(total)) if total > 0 else 0.0
+	return {
+		"total": total,
+		"goods": goods,
+		"hazards": hazards,
+		"hazardRatio": ratio,
+		"discardCount": treasure_discard.size()
+	}
 
 func _spawn_wandering_monster(hero: Dictionary, room_id: String) -> Dictionary:
 	var h_pos: Vector2i = hero.get("grid_pos", Vector2i(-1, -1))
@@ -5874,8 +5907,10 @@ func _setup_treasure_card_overlay(card: Dictionary, hero: Dictionary, is_quest_n
 		"item_found": item_str,
 		"waitingForClick": true
 	}
+	open_treasure_modal(card, hero, is_quest_note)
 
 func resolve_treasure_overlay_click() -> Dictionary:
+	close_treasure_modal()
 	if active_treasure_overlay.is_empty():
 		return { "success": false, "error": "No active treasure overlay" }
 
@@ -8389,6 +8424,189 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 				bm.add_child(b_lbl)
 				ab_vbox.add_child(b_panel)
 
+func _setup_treasure_modal() -> void:
+	if not treasure_modal:
+		treasure_modal = get_node_or_null("UI/TreasureModal")
+	if not treasure_modal:
+		return
+
+	if not treasure_modal_card:
+		treasure_modal_card = get_node_or_null("UI/TreasureModal/Card")
+	if treasure_modal_card:
+		var card_sb = StyleBoxFlat.new()
+		card_sb.bg_color = Color(0.06, 0.08, 0.12, 0.98)
+		card_sb.set_corner_radius_all(10)
+		card_sb.set_border_width_all(2)
+		card_sb.border_color = Color(0.9, 0.75, 0.3, 0.9)
+		card_sb.shadow_color = Color(0, 0, 0, 0.9)
+		card_sb.shadow_size = 24
+		treasure_modal_card.add_theme_stylebox_override("panel", card_sb)
+
+	if not treasure_drawn_card:
+		treasure_drawn_card = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard")
+	if treasure_drawn_card:
+		var drawn_sb = StyleBoxFlat.new()
+		drawn_sb.bg_color = Color(0.93, 0.87, 0.75, 1.0)
+		drawn_sb.set_corner_radius_all(8)
+		drawn_sb.set_border_width_all(3)
+		drawn_sb.border_color = Color(0.32, 0.20, 0.12, 1.0)
+		drawn_sb.shadow_color = Color(0, 0, 0, 0.65)
+		drawn_sb.shadow_size = 16
+		drawn_sb.shadow_offset = Vector2(4, 6)
+		treasure_drawn_card.add_theme_stylebox_override("panel", drawn_sb)
+
+	if not treasure_deck_texture:
+		treasure_deck_texture = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/StageHBox/DeckColumn/DeckFrame/DeckTexture")
+	if _treasure_deck_texture_res == null:
+		if ResourceLoader.exists("res://assets/cards/treasure_card_deck.png"):
+			_treasure_deck_texture_res = load("res://assets/cards/treasure_card_deck.png")
+	if treasure_deck_texture and _treasure_deck_texture_res:
+		treasure_deck_texture.texture = _treasure_deck_texture_res
+
+	if not treasure_btn_resolve:
+		treasure_btn_resolve = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/ButtonBox/BtnResolve")
+	if treasure_btn_resolve and not treasure_btn_resolve.pressed.is_connected(resolve_treasure_overlay_click):
+		treasure_btn_resolve.pressed.connect(resolve_treasure_overlay_click)
+
+	if not treasure_btn_close_header:
+		treasure_btn_close_header = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/Header/BtnCloseHeader")
+	if treasure_btn_close_header and not treasure_btn_close_header.pressed.is_connected(resolve_treasure_overlay_click):
+		treasure_btn_close_header.pressed.connect(resolve_treasure_overlay_click)
+
+	if treasure_modal and not treasure_modal.gui_input.is_connected(_on_treasure_modal_backdrop_gui_input):
+		treasure_modal.gui_input.connect(_on_treasure_modal_backdrop_gui_input)
+
+func _on_treasure_modal_backdrop_gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		resolve_treasure_overlay_click()
+
+func open_treasure_modal(card: Dictionary, hero: Dictionary, is_quest_note: bool) -> void:
+	_setup_treasure_modal()
+	_populate_treasure_modal(card, hero, is_quest_note)
+	if treasure_modal:
+		treasure_modal.visible = true
+
+	# Animate card swipe-in from deck stack to center stage
+	if treasure_drawn_card:
+		treasure_drawn_card.position = Vector2(-260.0, 0.0)
+		treasure_drawn_card.modulate.a = 0.0
+		treasure_drawn_card.rotation = -0.06
+		var tween = create_tween()
+		tween.set_parallel(true)
+		tween.tween_property(treasure_drawn_card, "position", Vector2(0.0, 0.0), 0.42).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		tween.tween_property(treasure_drawn_card, "modulate:a", 1.0, 0.32)
+		tween.tween_property(treasure_drawn_card, "rotation", 0.0, 0.42).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+func close_treasure_modal() -> void:
+	if treasure_modal:
+		treasure_modal.visible = false
+
+func _populate_treasure_modal(card: Dictionary, hero: Dictionary, is_quest_note: bool) -> void:
+	var stats = get_treasure_deck_stats()
+	var pct_str = "%d%%" % int(round(stats.hazardRatio * 100.0))
+
+	if not treasure_deck_badge:
+		treasure_deck_badge = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/Header/DeckRatioBadge")
+	if treasure_deck_badge:
+		treasure_deck_badge.text = "[DECK: %d CARDS | %s HAZARD]" % [stats.total, pct_str]
+
+	if not treasure_deck_stats:
+		treasure_deck_stats = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/StageHBox/DeckColumn/DeckStats")
+	if treasure_deck_stats:
+		treasure_deck_stats.text = "Treasures Remaining: %d\nHazards & Wandering Foes: %d\nPermanently Discarded: %d" % [stats.goods, stats.hazards, stats.discardCount]
+
+	if not treasure_drawn_card:
+		treasure_drawn_card = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard")
+	if not treasure_drawn_card:
+		return
+
+	if not treasure_card_title:
+		treasure_card_title = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox/CardTitle")
+	if not treasure_card_type_badge:
+		treasure_card_type_badge = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox/CardHeader/CardTypeBadge")
+	if not treasure_card_illustration:
+		treasure_card_illustration = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox/IllustrationFrame/CardIllustration")
+	if not treasure_card_desc:
+		treasure_card_desc = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox/CardDescription")
+	if not treasure_card_flavor:
+		treasure_card_flavor = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox/CardFlavor")
+	if not treasure_outcome_text:
+		treasure_outcome_text = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox/OutcomeBanner/OutcomeMargin/OutcomeText")
+	if not treasure_btn_resolve:
+		treasure_btn_resolve = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/ButtonBox/BtnResolve")
+
+	var raw_title = str(card.get("title", "Treasure"))
+	var c_type = str(card.get("type", "gold")).to_lower()
+
+	if treasure_card_title:
+		treasure_card_title.text = raw_title
+		treasure_card_title.add_theme_color_override("font_color", Color(0.18, 0.10, 0.05, 1.0))
+
+	if treasure_card_type_badge:
+		if is_quest_note:
+			treasure_card_type_badge.text = "[SPECIAL QUEST TREASURE]"
+			treasure_card_type_badge.add_theme_color_override("font_color", Color(0.85, 0.55, 0.05, 1.0))
+		elif c_type == "hazard":
+			treasure_card_type_badge.text = "[HAZARD]"
+			treasure_card_type_badge.add_theme_color_override("font_color", Color(0.85, 0.2, 0.2, 1.0))
+		elif c_type == "wandering_monster":
+			treasure_card_type_badge.text = "[WANDERING MONSTER]"
+			treasure_card_type_badge.add_theme_color_override("font_color", Color(0.9, 0.4, 0.1, 1.0))
+		else:
+			treasure_card_type_badge.text = "[TREASURE]"
+			treasure_card_type_badge.add_theme_color_override("font_color", Color(0.15, 0.65, 0.35, 1.0))
+
+	if treasure_card_illustration:
+		var tex: Texture2D = null
+		if c_type == "wandering_monster":
+			var cart = CartridgeManager.active_cartridge
+			var starting_map_id = cart.get("header", {}).get("startingMap", "heroquest-the-trial")
+			var map_data = cart.get("maps", {}).get(starting_map_id, {})
+			var wm_name = str(map_data.get("wanderingMonster", cart.get("wanderingMonster", "orc"))).to_lower()
+			tex = get_monster_token_texture({"monsterType": wm_name, "type": wm_name})
+		elif c_type == "potion" or card.has("item"):
+			var item_name = str(card.get("item", "healing_potion"))
+			tex = get_ai_icon_texture("potions", item_name)
+			if not tex:
+				tex = get_ai_icon_texture("items", item_name)
+		elif ResourceLoader.exists("res://assets/cards/treasure_card_template.png"):
+			tex = load("res://assets/cards/treasure_card_template.png")
+		treasure_card_illustration.texture = tex
+		treasure_card_illustration.visible = (tex != null)
+
+	if treasure_card_desc:
+		var desc_text = str(card.get("description", ""))
+		treasure_card_desc.text = "[color=#2a180e]%s[/color]" % desc_text
+
+	if treasure_card_flavor:
+		var flv = str(card.get("flavor", ""))
+		treasure_card_flavor.text = "— %s —" % flv if flv != "" else ""
+		treasure_card_flavor.add_theme_color_override("font_color", Color(0.42, 0.28, 0.16, 0.95))
+
+	if treasure_outcome_text:
+		var h_name = str(hero.get("name", "Hero"))
+		if is_quest_note:
+			treasure_outcome_text.text = "Rule: Room-specific Special Treasure claimed by %s! (Marked as claimed for this Quest)." % h_name
+			treasure_outcome_text.add_theme_color_override("font_color", Color(0.9, 0.7, 0.2, 1.0))
+		elif c_type == "hazard":
+			var dmg = int(card.get("damage", 1))
+			treasure_outcome_text.text = "Rule: %s suffers %d BP damage! Card resolved, returned to deck, and shuffled." % [h_name, dmg]
+			treasure_outcome_text.add_theme_color_override("font_color", Color(1.0, 0.35, 0.35, 1.0))
+		elif c_type == "wandering_monster":
+			treasure_outcome_text.text = "Rule: Wandering monster ambushes adjacent to %s! Card resolved, returned to deck, and shuffled." % h_name
+			treasure_outcome_text.add_theme_color_override("font_color", Color(1.0, 0.5, 0.2, 1.0))
+		else:
+			treasure_outcome_text.text = "Rule: Awarded to %s. Card is permanently discarded from the deck for the quest." % h_name
+			treasure_outcome_text.add_theme_color_override("font_color", Color(0.3, 0.9, 0.5, 1.0))
+
+	if treasure_btn_resolve:
+		if c_type == "hazard":
+			treasure_btn_resolve.text = "Endure Hazard (Space / Enter)"
+		elif c_type == "wandering_monster":
+			treasure_btn_resolve.text = "Engage Ambush (Space / Enter)"
+		else:
+			treasure_btn_resolve.text = "Claim Treasure (Space / Enter)"
+
 func _setup_monster_detail_modal() -> void:
 	if not monster_detail_modal:
 		monster_detail_modal = get_node_or_null("UI/MonsterDetailModal")
@@ -9709,6 +9927,7 @@ func get_telemetry_state() -> Dictionary:
 		} if not active_trap_overlay.is_empty() else {},
 		"treasureOverlay": {
 			"active": not active_treasure_overlay.is_empty(),
+			"modalVisible": treasure_modal.visible if treasure_modal else false,
 			"title": active_treasure_overlay.get("title", ""),
 			"icon": active_treasure_overlay.get("icon", "💎"),
 			"heroName": active_treasure_overlay.get("hero_name", ""),
@@ -9718,7 +9937,12 @@ func get_telemetry_state() -> Dictionary:
 			"isQuestNote": active_treasure_overlay.get("is_quest_note", false),
 			"goldFound": active_treasure_overlay.get("gold_found", 0),
 			"waitingForClick": not active_treasure_overlay.is_empty(),
-			"card": active_treasure_overlay.get("card", {})
+			"card": active_treasure_overlay.get("card", {}),
+			"deckCount": get_treasure_deck_stats().total,
+			"goodsCount": get_treasure_deck_stats().goods,
+			"hazardsCount": get_treasure_deck_stats().hazards,
+			"hazardRatio": get_treasure_deck_stats().hazardRatio,
+			"discardCount": get_treasure_deck_stats().discardCount
 		} if not active_treasure_overlay.is_empty() else {},
 		"flashItem": {
 			"active": not flashing_item.is_empty() and bool(flashing_item.get("active", false)),
@@ -9742,6 +9966,11 @@ func get_telemetry_state() -> Dictionary:
 		"roomSpecialTreasureCollected": room_special_treasure_collected,
 		"lastTreasureCard": last_treasure_card,
 		"treasureDeckCount": treasure_deck.size(),
+		"treasureGoodsCount": get_treasure_deck_stats().goods,
+		"treasureHazardsCount": get_treasure_deck_stats().hazards,
+		"treasureHazardRatio": get_treasure_deck_stats().hazardRatio,
+		"treasureDiscardCount": treasure_discard.size(),
+		"treasureModalOpen": treasure_modal.visible if treasure_modal else false,
 		"lastPlayerAttackHit": last_player_attack_hit,
 		"turnPlayerLosses": turn_player_losses,
 		"turnDamageSummary": {
@@ -10120,6 +10349,10 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				treasure_deck.clear()
 				for c in action_data.treasureDeck:
 					treasure_deck.append(c.duplicate(true))
+			if action_data.has("treasureDiscard") and action_data.treasureDiscard is Array:
+				treasure_discard.clear()
+				for c in action_data.treasureDiscard:
+					treasure_discard.append(c.duplicate(true))
 			if action_data.has("furniture") and action_data.furniture is Array:
 				furniture.clear()
 				for f in action_data.furniture:
@@ -12325,6 +12558,8 @@ func _draw_woodcut_illustration(canvas: CanvasItem, rect: Rect2, card_type: Stri
 
 func _draw_treasure_card_overlay(canvas: CanvasItem) -> void:
 	if active_treasure_overlay.is_empty():
+		return
+	if treasure_modal and treasure_modal.visible:
 		return
 
 	var overlay = active_treasure_overlay
