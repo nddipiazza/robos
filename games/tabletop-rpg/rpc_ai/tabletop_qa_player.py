@@ -304,4 +304,24 @@ class TabletopQAPlayer:
         self.log(f"Clicking hotbar action button '{button_name}'...")
         return self.execute_action("click_action_button", button=button_name)
 
+    def hover_tile(self, x: int, y: int) -> dict:
+        self.log(f"Hovering mouse over tile ({x}, {y})...")
+        return self.execute_action("hover_tile", x=x, y=y)
+
+    def unhover_tile(self) -> dict:
+        self.log("Unhovering mouse from map board...")
+        return self.execute_action("unhover_tile")
+
+    def get_reachable_walk_tiles(self) -> list:
+        st = self.get_state()
+        return st.get("reachableWalkTiles", [])
+
+    def is_showing_reachable_indicators(self) -> bool:
+        st = self.get_state()
+        return bool(st.get("isShowingReachableIndicators", False))
+
+    def get_hovered_tile(self) -> list:
+        st = self.get_state()
+        return st.get("hoveredTile", [-1, -1])
+
 

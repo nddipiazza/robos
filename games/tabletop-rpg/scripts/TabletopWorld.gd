@@ -51,6 +51,7 @@ var grid_rows: int = GRID_ROWS
 var starting_stair: Vector2i = Vector2i(1, 1)
 var tile_size: float = TILE_SIZE
 var board_offset: Vector2 = BOARD_OFFSET
+var hovered_tile: Vector2i = Vector2i(-1, -1)
 
 var active_vfx: Array[Dictionary] = []
 var floating_texts: Array[Dictionary] = []
@@ -1126,6 +1127,7 @@ func _load_active_cartridge() -> void:
 
 	grid_cols = map_data.get("width", GRID_COLS)
 	grid_rows = map_data.get("height", GRID_ROWS)
+	hovered_tile = Vector2i(-1, -1)
 
 	var bg_img = map_data.get("backgroundImage", "")
 	if bg_img != "" and ResourceLoader.exists(bg_img):
@@ -1636,6 +1638,95 @@ func _get_room_at(tile: Vector2i) -> Dictionary:
 
 func _get_room_by_id(r_id: String) -> Dictionary:
 	return _rooms_by_id.get(r_id, {})
+
+func is_tile_revealed(tile: Vector2i) -> bool:
+	if is_gm_role():
+		return true
+	var rm = _get_room_at(tile)
+	var rm_id = str(rm.get("id", ""))
+	if rm_id != "":
+		return revealed_rooms.has(rm_id)
+	return explored_tiles.has(tile)
+
+func get_reachable_walk_tiles() -> Array[Vector2i]:
+	var result: Array[Vector2i] = []
+	if not movement_rolled or movement_remaining <= 0 or movement_closed:
+		return result
+	if current_phase != "hero_phase":
+		return result
+	var hero = get_active_hero()
+	if hero.is_empty():
+		return result
+	var start_pos: Vector2i = hero.get("grid_pos", Vector2i(-1, -1))
+	if start_pos == Vector2i(-1, -1):
+		return result
+
+	var pass_rock = hero.get("pass_through_rock_active", false)
+	var veil_mist = hero.get("veil_of_mist_active", false)
+
+	# Breadth-first search queue: items with pos and dist
+	var queue: Array[Dictionary] = [{ "pos": start_pos, "dist": 0 }]
+	var min_cost: Dictionary = { start_pos: 0 }
+	var dirs = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
+
+	while queue.size() > 0:
+		var item = queue.pop_front()
+		var cur: Vector2i = item["pos"]
+		var dist: int = item["dist"]
+
+		if dist >= movement_remaining:
+			continue
+
+		for d in dirs:
+			var nxt = cur + d
+			if nxt.x < 0 or nxt.x >= grid_cols or nxt.y < 0 or nxt.y >= grid_rows:
+				continue
+
+			# Must be within the revealed map
+			if not is_tile_revealed(nxt):
+				continue
+
+			# Obstacle checks for traversal into nxt
+			if not pass_rock:
+				if has_wall_between(cur, nxt) or is_tile_wall_blocked(nxt):
+					continue
+				if is_tile_occupied_by_furniture(nxt):
+					continue
+				var rm = _get_room_at(nxt)
+				var rm_id = str(rm.get("id", ""))
+				if rm_id != "" and not revealed_rooms.has(rm_id):
+					continue
+
+			if not veil_mist and is_tile_occupied_by_monster(nxt):
+				continue
+
+			var next_dist = dist + 1
+			if min_cost.has(nxt) and min_cost[nxt] <= next_dist:
+				continue
+
+			min_cost[nxt] = next_dist
+			queue.append({ "pos": nxt, "dist": next_dist })
+
+	# Filter destination tiles that the hero can end their movement on:
+	# Cannot end on the start pos
+	# Cannot end on another hero (Rule: HeroQuest strictly forbids sharing squares)
+	# Cannot end on monster
+	# Cannot end on furniture
+	# Cannot end on wall block
+	for tile in min_cost.keys():
+		if tile == start_pos:
+			continue
+		if is_tile_occupied_by_hero(tile, active_hero_idx):
+			continue
+		if is_tile_occupied_by_monster(tile):
+			continue
+		if is_tile_occupied_by_furniture(tile):
+			continue
+		if is_tile_wall_blocked(tile):
+			continue
+		result.append(tile)
+
+	return result
 
 func _process(delta: float) -> void:
 	if CartridgeManager.auto_play_enabled:
@@ -3125,6 +3216,16 @@ func _unhandled_input(event: InputEvent) -> void:
 					dismiss_active_dice_roll()
 					get_viewport().set_input_as_handled()
 					return
+
+	if event is InputEventMouseMotion:
+		var mouse_pos = get_global_mouse_position()
+		var local_pos = mouse_pos - board_offset
+		var tx = int(floor(local_pos.x / tile_size))
+		var ty = int(floor(local_pos.y / tile_size))
+		var new_hover = Vector2i(tx, ty) if (tx >= 0 and tx < grid_cols and ty >= 0 and ty < grid_rows) else Vector2i(-1, -1)
+		if new_hover != hovered_tile:
+			hovered_tile = new_hover
+			queue_redraw_all()
 
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		var mouse_pos = get_global_mouse_position()
@@ -7852,6 +7953,10 @@ func get_telemetry_state() -> Dictionary:
 			"alpha": (unavailable_notice_panel.modulate.a if unavailable_notice_panel else 0.0),
 			"isFading": (unavailable_notice_timer > 0.0 and unavailable_notice_timer <= 0.5)
 		},
+		"hoveredTile": [hovered_tile.x, hovered_tile.y],
+		"isMouseOverBoard": (hovered_tile.x >= 0 and hovered_tile.x < grid_cols and hovered_tile.y >= 0 and hovered_tile.y < grid_rows),
+		"isShowingReachableIndicators": (movement_rolled and movement_remaining > 0 and not movement_closed and current_phase == "hero_phase" and hovered_tile.x >= 0 and hovered_tile.x < grid_cols and hovered_tile.y >= 0 and hovered_tile.y < grid_rows),
+		"reachableWalkTiles": (get_reachable_walk_tiles().map(func(v): return [v.x, v.y])),
 		"activeEnemyTurnMonsterId": active_enemy_turn_monster_id,
 		"isEnemyTurnWaiting": is_enemy_turn_waiting,
 		"enemyTurnWaitRemaining": enemy_turn_wait_timer,
@@ -8031,7 +8136,27 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				resolve_trap_overlay_click()
 				dismiss_active_dice_roll()
 				return { "success": true }
-			return { "success": false, "error": "No active trap overlay" }
+		"hover_tile":
+			var tx = int(action_data.get("x", action_data.get("tile", [0, 0])[0]))
+			var ty = int(action_data.get("y", action_data.get("tile", [0, 0])[1]))
+			hovered_tile = Vector2i(tx, ty)
+			queue_redraw_all()
+			return {
+				"success": true,
+				"hoveredTile": [hovered_tile.x, hovered_tile.y],
+				"isMouseOverBoard": (hovered_tile.x >= 0 and hovered_tile.x < grid_cols and hovered_tile.y >= 0 and hovered_tile.y < grid_rows),
+				"isShowingReachableIndicators": (movement_rolled and movement_remaining > 0 and not movement_closed and current_phase == "hero_phase" and hovered_tile.x >= 0 and hovered_tile.x < grid_cols and hovered_tile.y >= 0 and hovered_tile.y < grid_rows),
+				"reachableWalkTiles": get_reachable_walk_tiles().map(func(v): return [v.x, v.y])
+			}
+		"unhover_tile":
+			hovered_tile = Vector2i(-1, -1)
+			queue_redraw_all()
+			return {
+				"success": true,
+				"hoveredTile": [-1, -1],
+				"isMouseOverBoard": false,
+				"isShowingReachableIndicators": false
+			}
 		"hover_action_button":
 			var btn_key = str(action_data.get("button", "roll"))
 			var target_btn: Button = null
@@ -8735,6 +8860,9 @@ func _draw_board(canvas: CanvasItem) -> void:
 				canvas.draw_rect(r_rect, Color(0.7, 0.25, 0.9, 0.8), false, 1.5)
 				canvas.draw_string(ThemeDB.fallback_font, r_rect.position + Vector2(8, 18), "Hidden from Players", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.85, 0.6, 1.0, 0.8))
 
+	# Draw Reachable Walk Tile Indicators (Green outline around walkable tiles on revealed map when hovering over map)
+	_draw_reachable_walk_indicators(canvas)
+
 	# Draw Wall Blocks (1-tile and 2-tile walls)
 	for wb in wall_blocks:
 		var px = int(wb.get("x", wb.get("position", [0, 0])[0]))
@@ -9356,6 +9484,59 @@ func _draw_vfx_effects(canvas: CanvasItem) -> void:
 				var p1 = center + Vector2(cos(rot - 0.8), sin(rot - 0.8)) * 26.0
 				var p2 = center + Vector2(cos(rot + 0.8), sin(rot + 0.8)) * 26.0
 				canvas.draw_line(p1, p2, Color(1.0, 1.0, 1.0, alpha), 3.5)
+
+func _draw_reachable_walk_indicators(canvas: CanvasItem) -> void:
+	if not movement_rolled or movement_remaining <= 0 or movement_closed:
+		return
+	if current_phase != "hero_phase" or (current_role != "player" and not is_gm_role()):
+		return
+	if hovered_tile.x < 0 or hovered_tile.x >= grid_cols or hovered_tile.y < 0 or hovered_tile.y >= grid_rows:
+		return
+
+	var reachable_tiles = get_reachable_walk_tiles()
+	if reachable_tiles.is_empty():
+		return
+
+	var normal_border = Color(0.20, 0.95, 0.42, 0.88)
+	var normal_fill = Color(0.12, 0.75, 0.35, 0.16)
+	var hover_border = Color(0.35, 1.0, 0.55, 1.0)
+	var hover_fill = Color(0.25, 0.95, 0.48, 0.32)
+	var bracket_len: float = 6.0
+
+	for t in reachable_tiles:
+		var is_hovered = (t == hovered_tile)
+		var b_col = hover_border if is_hovered else normal_border
+		var f_col = hover_fill if is_hovered else normal_fill
+		var line_w: float = 2.5 if is_hovered else 1.8
+
+		var t_pos = board_offset + Vector2(t.x * tile_size, t.y * tile_size)
+		var inset: float = 2.0
+		var r = Rect2(t_pos.x + inset, t_pos.y + inset, tile_size - inset * 2.0, tile_size - inset * 2.0)
+
+		# 1. Subtle glowing translucent fill
+		canvas.draw_rect(r, f_col, true)
+
+		# 2. Crisp perimeter contour outline
+		canvas.draw_rect(r, b_col, false, line_w)
+
+		# 3. Tactical corner brackets
+		# Top-Left corner
+		canvas.draw_line(Vector2(r.position.x, r.position.y), Vector2(r.position.x + bracket_len, r.position.y), b_col, line_w + 0.8)
+		canvas.draw_line(Vector2(r.position.x, r.position.y), Vector2(r.position.x, r.position.y + bracket_len), b_col, line_w + 0.8)
+		# Top-Right corner
+		canvas.draw_line(Vector2(r.end.x, r.position.y), Vector2(r.end.x - bracket_len, r.position.y), b_col, line_w + 0.8)
+		canvas.draw_line(Vector2(r.end.x, r.position.y), Vector2(r.end.x, r.position.y + bracket_len), b_col, line_w + 0.8)
+		# Bottom-Left corner
+		canvas.draw_line(Vector2(r.position.x, r.end.y), Vector2(r.position.x + bracket_len, r.end.y), b_col, line_w + 0.8)
+		canvas.draw_line(Vector2(r.position.x, r.end.y), Vector2(r.position.x, r.end.y - bracket_len), b_col, line_w + 0.8)
+		# Bottom-Right corner
+		canvas.draw_line(Vector2(r.end.x, r.end.y), Vector2(r.end.x - bracket_len, r.end.y), b_col, line_w + 0.8)
+		canvas.draw_line(Vector2(r.end.x, r.end.y), Vector2(r.end.x, r.end.y - bracket_len), b_col, line_w + 0.8)
+
+		# 4. Central micro pip on currently hovered tile
+		if is_hovered:
+			canvas.draw_circle(r.get_center(), 3.5, Color(0.9, 1.0, 0.9, 0.95))
+			canvas.draw_arc(r.get_center(), 7.0, 0, TAU, 16, Color(0.35, 1.0, 0.55, 0.9), 1.5)
 
 func _draw_damage_hit_auras(canvas: CanvasItem) -> void:
 	for evt in damage_events:
