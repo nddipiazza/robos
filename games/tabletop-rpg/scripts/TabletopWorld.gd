@@ -55,6 +55,12 @@ var active_vfx: Array[Dictionary] = []
 var floating_texts: Array[Dictionary] = []
 var active_dice_animation: Dictionary = {}
 var active_trap_overlay: Dictionary = {}
+var active_treasure_overlay: Dictionary = {}
+var searched_rooms: Dictionary = {}
+var room_special_treasure_collected: Dictionary = {}
+var treasure_deck: Array[Dictionary] = []
+var treasure_discard: Array[Dictionary] = []
+var last_treasure_card: Dictionary = {}
 var last_spell_result: Dictionary = {}
 var last_combat_result: Dictionary = {}
 
@@ -1013,6 +1019,11 @@ func _load_active_cartridge() -> void:
 	movement_trail.clear()
 	turn_state = "awaiting_roll"
 	active_trap_overlay = {}
+	active_treasure_overlay = {}
+	searched_rooms.clear()
+	room_special_treasure_collected.clear()
+	last_treasure_card = {}
+	_initialize_treasure_deck()
 	active_dice_animation = {}
 	active_enemy_turn_monster_id = ""
 	is_enemy_turn_waiting = false
@@ -2724,11 +2735,27 @@ func can_search_room() -> bool:
 	if r_id == "" or not revealed_rooms.has(r_id):
 		return false
 	for m in monsters:
-		if m.get("is_alive", false) and m.get("roomId", "") == r_id:
-			return false
+		if bool(m.get("is_alive", true)) and int(m.get("current_bp", 1)) > 0:
+			var m_pos = _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
+			var m_room = str(_get_room_at(m_pos).get("id", ""))
+			var m_room_id = str(m.get("roomId", ""))
+			if (m_room != "" and m_room == r_id) or (m_room_id != "" and m_room_id == r_id):
+				return false
+	var hero_id = str(hero.get("id", ""))
+	var room_searches: Array = searched_rooms.get(r_id, [])
+	if hero_id in room_searches:
+		return false
+	if room_searches.size() >= 4:
+		return false
 	return true
 
 func _input(event: InputEvent) -> void:
+	if not active_treasure_overlay.is_empty():
+		if (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed) or \
+		   (event is InputEventKey and event.pressed and (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER)):
+			resolve_treasure_overlay_click()
+			get_viewport().set_input_as_handled()
+			return
 	if not active_trap_overlay.is_empty():
 		if (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed) or \
 		   (event is InputEventKey and event.pressed and (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER)):
@@ -2743,6 +2770,12 @@ func _input(event: InputEvent) -> void:
 			return
 
 func _unhandled_input(event: InputEvent) -> void:
+	if not active_treasure_overlay.is_empty():
+		if (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed) or \
+		   (event is InputEventKey and event.pressed and (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER)):
+			resolve_treasure_overlay_click()
+			get_viewport().set_input_as_handled()
+			return
 	if not active_trap_overlay.is_empty():
 		if (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed) or \
 		   (event is InputEventKey and event.pressed and (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER)):
@@ -4175,6 +4208,163 @@ func summon_wandering_monster(spawn_pos: Vector2i = Vector2i(3, 0), bp: int = 1,
 	ret_m["grid_pos"] = [spawn_pos.x, spawn_pos.y]
 	return { "success": true, "monster": ret_m }
 
+func _initialize_treasure_deck() -> void:
+	treasure_deck.clear()
+	treasure_discard.clear()
+	var raw_cards: Array[Dictionary] = [
+		{ "id": "gold-25-a", "type": "gold", "title": "Gold! (25 Gold Coins)", "gold": 25, "icon": "💰", "description": "You search old urns and find a hidden purse containing 25 Gold Coins.", "flavor": "Every coin helps outfit the party for survival." },
+		{ "id": "gold-25-b", "type": "gold", "title": "Gold! (25 Gold Coins)", "gold": 25, "icon": "💰", "description": "Tucked behind a loose wall brick, you find 25 Gold Coins.", "flavor": "A modest hoard left by previous explorers." },
+		{ "id": "gold-50-a", "type": "gold", "title": "Gold! (50 Gold Coins)", "gold": 50, "icon": "💰", "description": "Hidden beneath stone flagstones, you uncover 50 Gold Coins.", "flavor": "A glittering reward tucked away from prying eyes." },
+		{ "id": "gold-50-b", "type": "gold", "title": "Gold! (50 Gold Coins)", "gold": 50, "icon": "💰", "description": "A copper strongbox yields 50 gleaming Gold Coins!", "flavor": "The lock crumbled centuries ago." },
+		{ "id": "gold-100", "type": "gold", "title": "Gold! (100 Gold Coins)", "gold": 100, "icon": "💰", "description": "A concealed iron strongbox contains 100 gleaming Gold Coins!", "flavor": "A hefty hoard forgotten by the dungeon's masters." },
+		{ "id": "gem-50", "type": "gem", "title": "Gems! (50 Gold Coins)", "gold": 50, "icon": "💎", "description": "You pry loose precious rubies and amethysts worth 50 Gold Coins.", "flavor": "Their brilliant facets catch the flickering torchlight." },
+		{ "id": "jewels-100", "type": "gem", "title": "Jewels! (100 Gold Coins)", "gold": 100, "icon": "💎", "description": "An ornate jeweled pendant and sapphire ring worth 100 Gold Coins!", "flavor": "Ancient heirloom jewelry crafted before the darkness fell." },
+		{ "id": "potion-healing-a", "type": "potion", "title": "Potion of Healing", "item": "healing_potion", "gold": 0, "icon": "🧪", "description": "A vial of shimmering golden liquid that restores up to 4 Body Points.", "flavor": "Brewed by the Emperor's court alchemists to mend mortal wounds." },
+		{ "id": "potion-healing-b", "type": "potion", "title": "Potion of Healing", "item": "healing_potion", "gold": 0, "icon": "🧪", "description": "A restorative elixir sealed in crystal. Restores up to 4 Body Points.", "flavor": "The sweet scent of mountain herbs fills the air." },
+		{ "id": "potion-strength", "type": "potion", "title": "Potion of Strength", "item": "potion_strength", "gold": 0, "icon": "🍷", "description": "A ruby draught granting +2 Attack Dice on your next attack.", "flavor": "Raw magical adrenaline surges through your limbs." },
+		{ "id": "potion-defense", "type": "potion", "title": "Potion of Defense", "item": "potion_defense", "gold": 0, "icon": "🛡️", "description": "A liquid iron elixir granting +2 Defend Dice on your next defense.", "flavor": "Your armor and flesh resonate with impenetrable warding." },
+		{ "id": "holy-water", "type": "potion", "title": "Holy Water", "item": "holy_water", "gold": 0, "icon": "✨", "description": "A consecrated vial of holy water. Purges evil or restores 2 BP.", "flavor": "Blessed by the High Clerics of Lileath." },
+		{ "id": "hazard-pit", "type": "hazard", "title": "Hazard! (Pit Trap)", "damage": 1, "icon": "🕳️", "gold": 0, "description": "The stone floor collapses beneath you into a spike pit! You lose 1 Body Point.", "flavor": "Loose rubble clatters into the darkness as you hit the bottom." },
+		{ "id": "hazard-poison", "type": "hazard", "title": "Hazard! (Poison Dart)", "damage": 2, "icon": "☠️", "gold": 0, "description": "A hidden spring-loaded needle fires from the wall! You suffer 2 Body Points of damage.", "flavor": "Venom burns through your veins before you can pull the needle out." },
+		{ "id": "wandering-monster-a", "type": "wandering_monster", "title": "Wandering Monster!", "icon": "👹", "gold": 0, "description": "A wandering monster ambushes you while your guard is down!", "flavor": "A guttural roar echoes as an enemy emerges from the gloom!" },
+		{ "id": "wandering-monster-b", "type": "wandering_monster", "title": "Wandering Monster!", "icon": "👹", "gold": 0, "description": "A wandering monster stalks into the chamber and strikes!", "flavor": "Cold steel glints in the darkness!" }
+	]
+	for c in raw_cards:
+		treasure_deck.append(c.duplicate(true))
+	treasure_deck.shuffle()
+
+func _draw_treasure_card() -> Dictionary:
+	if treasure_deck.is_empty():
+		if not treasure_discard.is_empty():
+			treasure_deck = treasure_discard.duplicate(true)
+			treasure_discard.clear()
+			treasure_deck.shuffle()
+		else:
+			_initialize_treasure_deck()
+
+	var card: Dictionary = treasure_deck.pop_front()
+	var c_type = str(card.get("type", ""))
+	if c_type == "wandering_monster" or c_type == "hazard":
+		var insert_idx = randi_range(0, treasure_deck.size())
+		treasure_deck.insert(insert_idx, card.duplicate(true))
+	else:
+		treasure_discard.append(card.duplicate(true))
+
+	return card
+
+func _spawn_wandering_monster(hero: Dictionary, room_id: String) -> Dictionary:
+	var h_pos: Vector2i = hero.get("grid_pos", Vector2i(-1, -1))
+	var cart = CartridgeManager.active_cartridge
+	var starting_map_id = cart.get("header", {}).get("startingMap", "heroquest-the-trial")
+	var map_data = cart.get("maps", {}).get(starting_map_id, {})
+	var wm_type = str(map_data.get("wanderingMonster", cart.get("wanderingMonster", "orc"))).to_lower()
+
+	var candidates: Array[Vector2i] = [
+		Vector2i(h_pos.x + 1, h_pos.y),
+		Vector2i(h_pos.x - 1, h_pos.y),
+		Vector2i(h_pos.x, h_pos.y + 1),
+		Vector2i(h_pos.x, h_pos.y - 1),
+		Vector2i(h_pos.x + 1, h_pos.y + 1),
+		Vector2i(h_pos.x - 1, h_pos.y - 1),
+		Vector2i(h_pos.x + 1, h_pos.y - 1),
+		Vector2i(h_pos.x - 1, h_pos.y + 1)
+	]
+
+	var spawn_pos: Vector2i = Vector2i(-1, -1)
+	for pt in candidates:
+		if pt.x < 0 or pt.x >= grid_cols or pt.y < 0 or pt.y >= grid_rows:
+			continue
+		var pt_room = str(_get_room_at(pt).get("id", ""))
+		if room_id != "" and pt_room != room_id:
+			continue
+		var blocked = false
+		for wb in wall_blocks:
+			var wbx = int(wb.get("x", 0))
+			var wby = int(wb.get("y", 0))
+			if wbx == pt.x and wby == pt.y:
+				blocked = true
+				break
+		if blocked:
+			continue
+		for h in heroes:
+			if h.get("is_on_board", false) and int(h.get("current_bp", 0)) > 0:
+				var hp: Vector2i = h.get("grid_pos", Vector2i(-1, -1))
+				if hp == pt:
+					blocked = true
+					break
+		if blocked:
+			continue
+		for m in monsters:
+			if bool(m.get("is_alive", true)) and int(m.get("current_bp", 1)) > 0:
+				var mp: Vector2i = _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
+				if mp == pt:
+					blocked = true
+					break
+		if blocked:
+			continue
+
+		spawn_pos = pt
+		break
+
+	if spawn_pos == Vector2i(-1, -1):
+		spawn_pos = Vector2i(maxi(0, h_pos.x - 1), h_pos.y)
+
+	var wm_id = "wm_%s_%d" % [wm_type, monsters.size() + 1]
+	var wm_name = "Wandering %s" % wm_type.capitalize()
+	var bp = 1 if wm_type == "goblin" else 2
+	var atk = 2 if wm_type == "goblin" else 3
+	var def_d = 1 if wm_type == "goblin" else 2
+
+	var wm: Dictionary = {
+		"id": wm_id,
+		"slug": "%s-wm" % wm_type,
+		"name": wm_name,
+		"monsterType": wm_type,
+		"type": wm_type,
+		"bodyPoints": bp,
+		"current_bp": bp,
+		"attackDice": atk,
+		"defendDice": def_d,
+		"movementSquares": 6,
+		"position": [spawn_pos.x, spawn_pos.y],
+		"grid_pos": spawn_pos,
+		"is_alive": true,
+		"is_sleeping": false,
+		"tempest_stunned": false,
+		"roomId": room_id
+	}
+
+	monsters.append(wm)
+	discovered_monster_ids[wm_id] = true
+	var ret_wm = wm.duplicate(true)
+	ret_wm["grid_pos"] = [spawn_pos.x, spawn_pos.y]
+	return ret_wm
+
+func _setup_treasure_card_overlay(card: Dictionary, hero: Dictionary, is_quest_note: bool) -> void:
+	active_treasure_overlay = {
+		"card": card,
+		"hero": hero,
+		"hero_name": str(hero.get("characterName", hero.get("name", "Hero"))),
+		"title": str(card.get("title", "Treasure Found!")),
+		"icon": str(card.get("icon", "💎")),
+		"description": str(card.get("description", "")),
+		"flavor": str(card.get("flavor", "")),
+		"card_type": str(card.get("type", "gold")),
+		"is_quest_note": is_quest_note,
+		"gold_found": int(card.get("gold", 0)),
+		"waitingForClick": true
+	}
+
+func resolve_treasure_overlay_click() -> Dictionary:
+	if active_treasure_overlay.is_empty():
+		return { "success": false, "error": "No active treasure overlay" }
+
+	var overlay = active_treasure_overlay.duplicate(true)
+	active_treasure_overlay = {}
+	_update_ui()
+	queue_redraw_all()
+	return { "success": true, "card": overlay.get("card", {}) }
+
 func search_room(is_interactive: bool = false) -> Dictionary:
 	var hero = get_active_hero()
 	if hero.is_empty():
@@ -4187,7 +4377,38 @@ func search_room(is_interactive: bool = false) -> Dictionary:
 	var h_room = _get_room_at(h_pos)
 	var r_id = str(h_room.get("id", "")) if not h_room.is_empty() else ""
 
-	# Check for chest/furniture traps in this room
+	# 1. Reject if standing in a corridor
+	if r_id == "":
+		_log("[TREASURE] ❌ Cannot search for treasure in corridors! You must be inside a room.")
+		spawn_floating_text(h_pos, "NO SEARCH IN CORRIDOR", Color(1.0, 0.4, 0.4), 1.5)
+		return { "success": false, "error": "Cannot search for treasure in corridors! You must be inside a room." }
+
+	# 2. Reject if room is inhabited by living monsters
+	for m in monsters:
+		if bool(m.get("is_alive", true)) and int(m.get("current_bp", 1)) > 0:
+			var m_pos = _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
+			var m_room = str(_get_room_at(m_pos).get("id", ""))
+			var m_room_id = str(m.get("roomId", ""))
+			if (m_room != "" and m_room == r_id) or (m_room_id != "" and m_room_id == r_id):
+				var m_name = str(m.get("name", "Monster"))
+				_log("[TREASURE] ❌ Cannot search for treasure while monsters are present! (%s is in the room)" % m_name)
+				spawn_floating_text(h_pos, "MONSTERS IN ROOM!", Color(1.0, 0.4, 0.4), 1.5)
+				return { "success": false, "error": "Cannot search room while monsters are present!" }
+
+	# 3. Reject if hero already searched this room or room searches exhausted
+	var hero_id = str(hero.get("id", ""))
+	var room_searches: Array = searched_rooms.get(r_id, [])
+	if hero_id in room_searches:
+		_log("[TREASURE] ❌ %s has already searched this room for treasure!" % hero.get("name", "Hero"))
+		spawn_floating_text(h_pos, "ALREADY SEARCHED!", Color(1.0, 0.6, 0.3), 1.5)
+		return { "success": false, "error": "%s has already searched this room for treasure!" % hero.get("name", "Hero") }
+
+	if room_searches.size() >= 4:
+		_log("[TREASURE] ❌ This room has been thoroughly searched and holds no more treasure!")
+		spawn_floating_text(h_pos, "ROOM EXHAUSTED", Color(1.0, 0.6, 0.3), 1.5)
+		return { "success": false, "error": "This room has been thoroughly searched and holds no more treasure!" }
+
+	# 4. Check for chest/furniture traps in this room (preserves Scenario 51 behavior)
 	var trapped_chest: Dictionary = {}
 	for tr in traps:
 		var t_type = str(tr.get("type", tr.get("trapType", ""))).to_lower()
@@ -4202,7 +4423,6 @@ func search_room(is_interactive: bool = false) -> Dictionary:
 
 	if not trapped_chest.is_empty():
 		if not trapped_chest.get("detected", false):
-			# Chest trap springs! Poison needle / gas deals damage!
 			trapped_chest["sprung"] = true
 			trapped_chest["detected"] = true
 			if is_interactive:
@@ -4226,15 +4446,116 @@ func search_room(is_interactive: bool = false) -> Dictionary:
 			_log("[WARNING] The chest in this room has a detected trap! Disarm it before searching for treasure.")
 			return { "success": false, "error": "Trapped chest detected. Disarm it first!" }
 
-	var found_gold = 50
-	hero["gold"] = hero.get("gold", 0) + found_gold
-	_log("[TREASURE] %s searches room for treasure: Discovered a chest with %d Gold Coins! Total Gold: %d" % [
-		hero.get("name"), found_gold, hero.get("gold")
-	])
+	# Record that active hero searched this room
+	if not searched_rooms.has(r_id):
+		searched_rooms[r_id] = []
+	searched_rooms[r_id].append(hero_id)
+
+	# 5. Check Quest Notes (Special Room Treasure) on First Search
+	var spec_tr: Dictionary = {}
+	if not room_special_treasure_collected.get(r_id, false):
+		if h_room.has("specialTreasure") and h_room["specialTreasure"] is Dictionary:
+			spec_tr = h_room["specialTreasure"]
+		elif h_room.has("questTreasure") and h_room["questTreasure"] is Dictionary:
+			spec_tr = h_room["questTreasure"]
+		else:
+			var cart = CartridgeManager.active_cartridge
+			var qn = cart.get("questNotes", {})
+			if qn.has(r_id) and qn[r_id] is Dictionary:
+				spec_tr = qn[r_id]
+
+	if not spec_tr.is_empty():
+		room_special_treasure_collected[r_id] = true
+		last_treasure_card = spec_tr
+		var found_gold = int(spec_tr.get("gold", spec_tr.get("amount", 0)))
+		hero["gold"] = hero.get("gold", 0) + found_gold
+		var item_reward = str(spec_tr.get("item", ""))
+		if item_reward != "":
+			if not (hero.get("inventory", []) is Array):
+				hero["inventory"] = []
+			hero["inventory"].append(item_reward)
+
+		var tr_title = str(spec_tr.get("title", "Quest Note Treasure"))
+		_log("[QUEST TREASURE] 📜 %s searches %s: Discovered Quest Note treasure: %s! (+%d Gold Coins, Total: %d)" % [
+			hero.get("name"), h_room.get("name", r_id), tr_title, found_gold, hero.get("gold")
+		])
+		spawn_floating_text(h_pos, "+%d GOLD QUEST TREASURE" % found_gold if found_gold > 0 else "QUEST TREASURE!", Color(1.0, 0.85, 0.2), 2.0)
+
+		if is_interactive:
+			_setup_treasure_card_overlay(spec_tr, hero, true)
+			_conclude_action_turn_state()
+			_update_ui()
+			queue_redraw_all()
+			return { "success": true, "questTreasure": true, "goldFound": found_gold, "card": spec_tr, "waitingForClick": true }
+
+		_conclude_action_turn_state()
+		_update_ui()
+		queue_redraw_all()
+		return { "success": true, "questTreasure": true, "goldFound": found_gold, "card": spec_tr }
+
+	# 6. Subsequent searches or rooms without quest notes draw from Treasure Deck
+	var card = _draw_treasure_card()
+	last_treasure_card = card
+	var card_type = str(card.get("type", "gold"))
+	var found_gold = 0
+	var spawned_wm: Dictionary = {}
+
+	match card_type:
+		"gold", "gem":
+			found_gold = int(card.get("gold", 0))
+			hero["gold"] = hero.get("gold", 0) + found_gold
+			_log("[TREASURE] 💰 %s searches room: Drew %s! Found %d Gold Coins! Total Gold: %d" % [
+				hero.get("name"), card.get("title"), found_gold, hero.get("gold")
+			])
+			spawn_floating_text(h_pos, "+%d GOLD" % found_gold, Color(1.0, 0.85, 0.2), 1.8)
+		"potion":
+			var item_id = str(card.get("item", "healing_potion"))
+			if not (hero.get("inventory", []) is Array):
+				hero["inventory"] = []
+			hero["inventory"].append(item_id)
+			_log("[TREASURE] 🧪 %s searches room: Drew %s! Added to backpack." % [
+				hero.get("name"), card.get("title")
+			])
+			spawn_floating_text(h_pos, "+%s" % card.get("title"), Color(0.3, 0.9, 0.5), 1.8)
+		"hazard":
+			var dmg = int(card.get("damage", 1))
+			hero["current_bp"] = maxi(0, hero.get("current_bp", 1) - dmg)
+			_log("[HAZARD] ☠️ %s searches room: Drew %s! Suffers %d damage (Remaining BP: %d)!" % [
+				hero.get("name"), card.get("title"), dmg, hero.get("current_bp")
+			])
+			spawn_floating_text(h_pos, "-%d HP HAZARD" % dmg, Color(0.9, 0.25, 0.25), 1.8)
+		"wandering_monster":
+			spawned_wm = _spawn_wandering_monster(hero, r_id)
+			var wm_pos = _to_grid_pos(spawned_wm.get("grid_pos", Vector2i(-1, -1)))
+			_log("[WANDERING MONSTER] ⚠️ AMBUSH! %s draws a Wandering Monster card! A %s appears at (%d, %d)!" % [
+				hero.get("name"), spawned_wm.get("name"), wm_pos.x, wm_pos.y
+			])
+			spawn_floating_text(wm_pos, "⚠️ WANDERING %s!" % str(spawned_wm.get("name")).to_upper(), Color(1.0, 0.25, 0.2), 2.0)
+
+	if is_interactive:
+		_setup_treasure_card_overlay(card, hero, false)
+		_conclude_action_turn_state()
+		_update_ui()
+		queue_redraw_all()
+		return {
+			"success": true,
+			"questTreasure": false,
+			"goldFound": found_gold,
+			"card": card,
+			"wanderingMonster": (spawned_wm if not spawned_wm.is_empty() else null),
+			"waitingForClick": true
+		}
+
 	_conclude_action_turn_state()
 	_update_ui()
 	queue_redraw_all()
-	return { "success": true, "goldFound": found_gold }
+	return {
+		"success": true,
+		"questTreasure": false,
+		"goldFound": found_gold,
+		"card": card,
+		"wanderingMonster": (spawned_wm if not spawned_wm.is_empty() else null)
+	}
 
 func search_traps() -> Dictionary:
 	var hero = get_active_hero()
@@ -6295,7 +6616,24 @@ func get_telemetry_state() -> Dictionary:
 			"flavor": active_trap_overlay.get("flavor", ""),
 			"diceCount": active_trap_overlay.get("dice_count", 1),
 			"waitingForClick": not active_trap_overlay.is_empty()
-		} if not active_trap_overlay.is_empty() else {}
+		} if not active_trap_overlay.is_empty() else {},
+		"treasureOverlay": {
+			"active": not active_treasure_overlay.is_empty(),
+			"title": active_treasure_overlay.get("title", ""),
+			"icon": active_treasure_overlay.get("icon", "💎"),
+			"heroName": active_treasure_overlay.get("hero_name", ""),
+			"description": active_treasure_overlay.get("description", ""),
+			"flavor": active_treasure_overlay.get("flavor", ""),
+			"cardType": active_treasure_overlay.get("card_type", "gold"),
+			"isQuestNote": active_treasure_overlay.get("is_quest_note", false),
+			"goldFound": active_treasure_overlay.get("gold_found", 0),
+			"waitingForClick": not active_treasure_overlay.is_empty(),
+			"card": active_treasure_overlay.get("card", {})
+		} if not active_treasure_overlay.is_empty() else {},
+		"searchedRooms": searched_rooms,
+		"roomSpecialTreasureCollected": room_special_treasure_collected,
+		"lastTreasureCard": last_treasure_card,
+		"treasureDeckCount": treasure_deck.size()
 	}
 
 func execute_action(action_data: Dictionary) -> Dictionary:
@@ -6312,6 +6650,10 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 		"dismiss_dice_roll":
 			dismiss_active_dice_roll()
 			return { "success": true }
+		"click_treasure_overlay", "resolve_treasure_overlay_click", "dismiss_treasure_overlay":
+			if not active_treasure_overlay.is_empty():
+				return resolve_treasure_overlay_click()
+			return { "success": false, "error": "No active treasure overlay" }
 		"click_trap_overlay", "confirm_trap_roll":
 			if not active_trap_overlay.is_empty():
 				var res = resolve_trap_overlay_click()
@@ -6517,6 +6859,22 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 					active_trap_overlay = action_data.trapOverlay
 				elif not bool(action_data.trapOverlay):
 					active_trap_overlay = {}
+			if action_data.has("treasureOverlay"):
+				if action_data.treasureOverlay is Dictionary:
+					active_treasure_overlay = action_data.treasureOverlay.duplicate(true)
+				elif not bool(action_data.treasureOverlay):
+					active_treasure_overlay = {}
+			if action_data.has("searchedRooms"):
+				searched_rooms = action_data.get("searchedRooms").duplicate(true)
+			elif not action_data.has("preserveSearchedRooms") and (action_data.has("activeHero") or action_data.has("hasActed")):
+				searched_rooms.clear()
+				room_special_treasure_collected.clear()
+			if action_data.has("roomSpecialTreasureCollected"):
+				room_special_treasure_collected = action_data.get("roomSpecialTreasureCollected").duplicate(true)
+			if action_data.has("treasureDeck") and action_data.treasureDeck is Array:
+				treasure_deck.clear()
+				for c in action_data.treasureDeck:
+					treasure_deck.append(c.duplicate(true))
 			if action_data.has("heroes") and action_data.heroes is Array:
 				for h_patch in action_data.heroes:
 					var h_id = str(h_patch.get("id", ""))
@@ -7479,6 +7837,7 @@ func _draw_board(canvas: CanvasItem) -> void:
 	_draw_active_enemy_turn_highlight(canvas)
 	_draw_floating_texts(canvas)
 	_draw_trap_sprung_overlay(canvas)
+	_draw_treasure_card_overlay(canvas)
 	_draw_active_dice_roll(canvas)
 
 func _draw_vfx_effects(canvas: CanvasItem) -> void:
@@ -8062,6 +8421,121 @@ func _draw_trap_sprung_overlay(canvas: CanvasItem) -> void:
 	var cta_text = "👉 CLICK ANYWHERE TO ROLL HAZARD DICE 🎲"
 	var cta_sz = font.get_string_size(cta_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 15)
 	canvas.draw_string(font, Vector2(center.x - cta_sz.x * 0.5, cta_rect.position.y + 27.0), cta_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 15, Color(1.0, 0.94, 0.60, pulse))
+
+func _draw_treasure_card_overlay(canvas: CanvasItem) -> void:
+	if active_treasure_overlay.is_empty():
+		return
+
+	var overlay = active_treasure_overlay
+	var font = ThemeDB.fallback_font
+	_update_board_metrics()
+	var center = board_offset + Vector2(grid_cols * tile_size * 0.5, grid_rows * tile_size * 0.44)
+
+	# 1. Full Board Dark Vignette / Backdrop Dimmer
+	var total_w = float(grid_cols * tile_size)
+	var total_h = float(grid_rows * tile_size)
+	canvas.draw_rect(Rect2(board_offset, Vector2(total_w, total_h)), Color(0.0, 0.0, 0.0, 0.68))
+
+	# 2. Card Modal Box (580x280)
+	var box_w = 580.0
+	var box_h = 280.0
+	var box_rect = Rect2(center.x - box_w * 0.5, center.y - box_h * 0.5, box_w, box_h)
+
+	# Drop shadow
+	canvas.draw_rect(Rect2(box_rect.position + Vector2(8.0, 10.0), box_rect.size), Color(0.0, 0.0, 0.0, 0.75))
+
+	# Main card body
+	canvas.draw_rect(box_rect, Color(0.08, 0.07, 0.09, 0.98))
+
+	var card_type = str(overlay.get("card_type", "gold"))
+	var is_quest_note = bool(overlay.get("is_quest_note", false))
+
+	# Choose border & header accent colors based on card category
+	var primary_border = Color(1.0, 0.82, 0.20, 1.0)
+	var secondary_border = Color(0.40, 0.85, 0.50, 0.85)
+	var banner_bg = Color(0.18, 0.14, 0.04, 0.95)
+	var banner_title = "💎 TREASURE CARD"
+
+	if is_quest_note:
+		primary_border = Color(1.0, 0.85, 0.25, 1.0)
+		secondary_border = Color(0.90, 0.65, 0.15, 0.85)
+		banner_bg = Color(0.24, 0.16, 0.04, 0.95)
+		banner_title = "📜 QUEST NOTE TREASURE!"
+	elif card_type == "wandering_monster":
+		primary_border = Color(0.95, 0.20, 0.15, 1.0)
+		secondary_border = Color(1.0, 0.60, 0.10, 0.85)
+		banner_bg = Color(0.35, 0.06, 0.06, 0.95)
+		banner_title = "⚠️ WANDERING MONSTER AMBUSH!"
+	elif card_type == "hazard":
+		primary_border = Color(0.85, 0.25, 0.85, 1.0)
+		secondary_border = Color(0.95, 0.30, 0.20, 0.85)
+		banner_bg = Color(0.28, 0.06, 0.22, 0.95)
+		banner_title = "☠️ TREASURE HAZARD!"
+	elif card_type == "potion":
+		primary_border = Color(0.25, 0.85, 0.95, 1.0)
+		secondary_border = Color(0.30, 0.90, 0.50, 0.85)
+		banner_bg = Color(0.04, 0.18, 0.22, 0.95)
+		banner_title = "🧪 ALCHEMICAL TREASURE"
+
+	# Triple-layer ornate borders
+	canvas.draw_rect(box_rect, primary_border, false, 3.0)
+	var inner_border = Rect2(box_rect.position + Vector2(4.0, 4.0), box_rect.size - Vector2(8.0, 8.0))
+	canvas.draw_rect(inner_border, secondary_border, false, 1.8)
+	var innermost = Rect2(box_rect.position + Vector2(8.0, 8.0), box_rect.size - Vector2(16.0, 16.0))
+	canvas.draw_rect(innermost, Color(primary_border.r * 0.4, primary_border.g * 0.4, primary_border.b * 0.4, 0.5), false, 1.0)
+
+	# Corner accents
+	var corner_len = 24.0
+	canvas.draw_line(box_rect.position + Vector2(2, corner_len), box_rect.position + Vector2(corner_len, 2), primary_border, 3.0)
+	canvas.draw_line(Vector2(box_rect.end.x - corner_len, box_rect.position.y + 2), Vector2(box_rect.end.x - 2, box_rect.position.y + corner_len), primary_border, 3.0)
+	canvas.draw_line(Vector2(box_rect.position.x + 2, box_rect.end.y - corner_len), Vector2(box_rect.position.x + corner_len, box_rect.end.y - 2), primary_border, 3.0)
+	canvas.draw_line(Vector2(box_rect.end.x - corner_len, box_rect.end.y - 2), Vector2(box_rect.end.x - 2, box_rect.end.y - corner_len), primary_border, 3.0)
+
+	# 3. Top Banner
+	var banner_rect = Rect2(box_rect.position.x + 20.0, box_rect.position.y + 16.0, box_w - 40.0, 40.0)
+	canvas.draw_rect(banner_rect, banner_bg)
+	canvas.draw_rect(banner_rect, primary_border, false, 2.0)
+	var b_sz = font.get_string_size(banner_title, HORIZONTAL_ALIGNMENT_CENTER, -1, 20)
+	canvas.draw_string(font, Vector2(center.x - b_sz.x * 0.5, banner_rect.position.y + 27.0), banner_title, HORIZONTAL_ALIGNMENT_CENTER, -1, 20, Color(1.0, 0.95, 0.70, 1.0))
+
+	# 4. Icon & Card Title Badge
+	var icon = str(overlay.get("icon", "💎"))
+	var card_title = str(overlay.get("title", "Treasure"))
+	var badge_text = "%s %s" % [icon, card_title.to_upper()]
+	var card_sz = font.get_string_size(badge_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 16)
+	var badge_w = card_sz.x + 32.0
+	var badge_rect = Rect2(center.x - badge_w * 0.5, banner_rect.end.y + 12.0, badge_w, 28.0)
+	canvas.draw_rect(badge_rect, Color(0.12, 0.10, 0.14, 0.90))
+	canvas.draw_rect(badge_rect, secondary_border, false, 1.4)
+	canvas.draw_string(font, Vector2(center.x - card_sz.x * 0.5, badge_rect.position.y + 20.0), badge_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 16, Color(1.0, 0.92, 0.50, 1.0))
+
+	# 5. Searcher Line
+	var hero_name = str(overlay.get("hero_name", "Hero"))
+	var finder_text = "%s searches the chamber and discovers:" % hero_name
+	var f_sz = font.get_string_size(finder_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 13)
+	canvas.draw_string(font, Vector2(center.x - f_sz.x * 0.5, badge_rect.end.y + 24.0), finder_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 13, Color(0.92, 0.92, 0.92, 1.0))
+
+	# 6. Description & Flavor Text
+	var desc = str(overlay.get("description", ""))
+	var flavor = str(overlay.get("flavor", ""))
+	var desc_sz = font.get_string_size(desc, HORIZONTAL_ALIGNMENT_CENTER, -1, 12)
+	canvas.draw_string(font, Vector2(center.x - desc_sz.x * 0.5, badge_rect.end.y + 44.0), desc, HORIZONTAL_ALIGNMENT_CENTER, -1, 12, Color(0.90, 0.90, 0.85, 0.95))
+	if flavor != "":
+		var flv_sz = font.get_string_size(flavor, HORIZONTAL_ALIGNMENT_CENTER, -1, 11)
+		canvas.draw_string(font, Vector2(center.x - flv_sz.x * 0.5, badge_rect.end.y + 62.0), flavor, HORIZONTAL_ALIGNMENT_CENTER, -1, 11, Color(1.0, 0.75, 0.40, 0.90))
+
+	# 7. CTA Action Bar
+	var pulse = 0.85 + 0.15 * sin(Time.get_ticks_msec() * 0.005)
+	var cta_rect = Rect2(box_rect.position.x + 30.0, box_rect.end.y - 54.0, box_w - 60.0, 40.0)
+	canvas.draw_rect(cta_rect, Color(0.12, 0.10, 0.08, 0.96))
+	canvas.draw_rect(cta_rect, primary_border * pulse, false, 2.0)
+	var cta_text = "👉 CLICK ANYWHERE OR PRESS SPACE TO COLLECT 👈"
+	if card_type == "wandering_monster":
+		cta_text = "⚔️ CLICK ANYWHERE OR PRESS SPACE TO ENGAGE ⚔️"
+	elif card_type == "hazard":
+		cta_text = "☠️ CLICK ANYWHERE OR PRESS SPACE TO CONTINUE ☠️"
+	var cta_sz = font.get_string_size(cta_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 14)
+	canvas.draw_string(font, Vector2(center.x - cta_sz.x * 0.5, cta_rect.position.y + 26.0), cta_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 14, Color(1.0, 0.95, 0.70, pulse))
 
 func trigger_movement_dice_roll(roll_data: Dictionary, hero_name: String, dice_values: Array) -> void:
 	_update_board_metrics()

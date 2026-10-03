@@ -835,6 +835,10 @@ class TestHeroQuestE2EScenarios(unittest.TestCase):
             activeHero="barbarian",
             hasActed=False,
             heroes=[{"id": "barbarian", "grid_pos": [4, 3], "gold": 0}],
+            monsters=[
+                {"id": "mon-skel-1", "is_alive": False, "current_bp": 0, "roomId": "room-nw-crypt"},
+                {"id": "mon-skel-2", "is_alive": False, "current_bp": 0, "roomId": "room-nw-crypt"}
+            ],
             revealedRooms=["room-nw-crypt"]
         )
 
@@ -863,6 +867,11 @@ class TestHeroQuestE2EScenarios(unittest.TestCase):
             turnState="moving",
             hasActed=False,
             movementRemaining=3,
+            heroes=[{"id": "barbarian", "grid_pos": [4, 3]}],
+            monsters=[
+                {"id": "mon-skel-1", "is_alive": False, "current_bp": 0, "roomId": "room-nw-crypt"},
+                {"id": "mon-skel-2", "is_alive": False, "current_bp": 0, "roomId": "room-nw-crypt"}
+            ],
             revealedRooms=["room-nw-crypt"]
         )
 
@@ -1932,6 +1941,10 @@ class TestHeroQuestE2EScenarios(unittest.TestCase):
             hasActed=False,
             revealedRooms=["room-nw-crypt"],
             heroes=[{"id": "barbarian", "grid_pos": [4, 3], "current_bp": 8, "gold": 0}],
+            monsters=[
+                {"id": "mon-skel-1", "is_alive": False, "current_bp": 0, "roomId": "room-nw-crypt"},
+                {"id": "mon-skel-2", "is_alive": False, "current_bp": 0, "roomId": "room-nw-crypt"}
+            ],
             traps=[{"id": "chest-trap-test", "x": 4, "y": 4, "type": "chest_trap", "damageDice": 2, "detected": False, "disarmed": False, "sprung": False}]
         )
 
