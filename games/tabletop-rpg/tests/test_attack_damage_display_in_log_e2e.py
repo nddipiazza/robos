@@ -146,7 +146,7 @@ class TestAttackDamageDisplayInLogE2E(unittest.TestCase):
             role="gm",
             phase="gm_phase",
             heroes=[{"id": "dwarf", "name": "Dwarf", "characterName": "Dorgan", "heroClass": "Dwarf", "current_bp": 7, "bodyPoints": 7, "rock_skin_active": True, "defendDice": 0, "grid_pos": [2, 1], "is_on_board": True}],
-            monsters=[{"id": "mon-fimir", "name": "Fimir", "attackDice": 4, "current_bp": 4, "bodyPoints": 4, "grid_pos": [2, 2], "is_alive": True}],
+            monsters=[{"id": "mon-fimir", "name": "Fimir", "attackDice": 6, "current_bp": 4, "bodyPoints": 4, "grid_pos": [2, 2], "is_alive": True}],
             resetTurnLosses=True
         )
 
@@ -234,8 +234,8 @@ class TestAttackDamageDisplayInLogE2E(unittest.TestCase):
             phase="gm_phase",
             heroes=[{"id": "barbarian", "name": "Barbarian", "characterName": "Rogar", "heroClass": "Barbarian", "current_bp": 8, "bodyPoints": 8, "defendDice": 0, "grid_pos": [2, 1], "is_on_board": True}],
             monsters=[
-                {"id": "mon-goblin-1", "name": "Goblin 1", "attackDice": 2, "current_bp": 1, "bodyPoints": 1, "grid_pos": [2, 2], "is_alive": True},
-                {"id": "mon-goblin-2", "name": "Goblin 2", "attackDice": 2, "current_bp": 1, "bodyPoints": 1, "grid_pos": [1, 1], "is_alive": True}
+                {"id": "mon-goblin-1", "name": "Goblin 1", "attackDice": 6, "current_bp": 1, "bodyPoints": 1, "grid_pos": [2, 2], "is_alive": True},
+                {"id": "mon-goblin-2", "name": "Goblin 2", "attackDice": 6, "current_bp": 1, "bodyPoints": 1, "grid_pos": [1, 1], "is_alive": True}
             ],
             resetTurnLosses=True
         )
@@ -310,7 +310,7 @@ class TestAttackDamageDisplayInLogE2E(unittest.TestCase):
             role="gm",
             phase="gm_phase",
             heroes=[{"id": "wizard", "name": "Wizard", "characterName": "Solas", "heroClass": "Wizard", "current_bp": 1, "bodyPoints": 4, "defendDice": 0, "grid_pos": [2, 1], "is_on_board": True}],
-            monsters=[{"id": "mon-boss", "name": "Gargoyle", "attackDice": 4, "current_bp": 3, "bodyPoints": 3, "grid_pos": [2, 2], "is_alive": True}],
+            monsters=[{"id": "mon-boss", "name": "Gargoyle", "attackDice": 6, "current_bp": 3, "bodyPoints": 3, "grid_pos": [2, 2], "is_alive": True}],
             resetTurnLosses=True
         )
 
