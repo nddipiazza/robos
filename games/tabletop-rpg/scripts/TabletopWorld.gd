@@ -1143,8 +1143,22 @@ func has_line_of_sight(from_pos: Vector2i, to_pos: Vector2i) -> bool:
 	if from_pos == to_pos:
 		return true
 
+	# Out of bounds check
+	if from_pos.x < 0 or from_pos.x >= grid_cols or from_pos.y < 0 or from_pos.y >= grid_rows:
+		return false
+	if to_pos.x < 0 or to_pos.x >= grid_cols or to_pos.y < 0 or to_pos.y >= grid_rows:
+		return false
+
 	# Target or source inside an unrevealed room is always occluded
-	if is_tile_solid(to_pos) or is_tile_solid(from_pos):
+	var from_rm = _tile_to_room_id.get(from_pos, "")
+	if from_rm != "" and not revealed_rooms.has(from_rm):
+		return false
+	var to_rm = _tile_to_room_id.get(to_pos, "")
+	if to_rm != "" and not revealed_rooms.has(to_rm):
+		return false
+
+	# Source cannot see out from inside a solid wall block
+	if _blocked_wall_tiles.has(from_pos):
 		return false
 
 	# 1. Fast Cardinal Check (Straight orthogonal corridor sightlines)
@@ -1242,7 +1256,7 @@ func update_party_vision() -> void:
 	for c in range(grid_cols):
 		for r in range(grid_rows):
 			var tile = Vector2i(c, r)
-			if explored_tiles.has(tile) or _blocked_wall_tiles.has(tile):
+			if explored_tiles.has(tile):
 				continue
 
 			var r_id = _tile_to_room_id.get(tile, "")
@@ -2763,6 +2777,12 @@ func _handle_tile_click(tile: Vector2i) -> void:
 				if not has_acted_this_turn:
 					attack_adjacent_monster(str(m.get("id", "")))
 				return
+
+	# If clicked on a wall block tile, provide immediate feedback
+	if is_tile_wall_blocked(tile):
+		_log("[MOVE] Square (%d, %d) is blocked by solid stone masonry!" % [tile.x, tile.y])
+		spawn_floating_text(tile, "WALL BLOCKED!", Color(0.95, 0.4, 0.3), 1.2)
+		return
 
 	# If haven't rolled movement yet, roll dice first!
 	if not movement_rolled:
@@ -5779,7 +5799,31 @@ func get_telemetry_state() -> Dictionary:
 
 	var wall_blocks_copy: Array = []
 	for wb in wall_blocks:
-		wall_blocks_copy.append(wb.duplicate(true))
+		var wbc = wb.duplicate(true)
+		var px = int(wb.get("x", wb.get("position", [0, 0])[0]))
+		var py = int(wb.get("y", wb.get("position", [0, 0])[1]))
+		var w = int(wb.get("width", 1))
+		var h = int(wb.get("height", 1))
+		var b_type = str(wb.get("type", "1-tile-wall"))
+		if b_type == "2-tile-wall-h" or b_type == "double-h":
+			w = 2; h = 1
+		elif b_type == "2-tile-wall-v" or b_type == "double-v":
+			w = 1; h = 2
+		wbc["x"] = px
+		wbc["y"] = py
+		wbc["grid_pos"] = [px, py]
+		var is_rev = is_gm_role()
+		if not is_rev:
+			for bx in range(px, px + w):
+				for by in range(py, py + h):
+					if explored_tiles.has(Vector2i(bx, by)):
+						is_rev = true
+						break
+				if is_rev:
+					break
+		wbc["is_revealed"] = is_rev
+		wbc["isRevealed"] = is_rev
+		wall_blocks_copy.append(wbc)
 
 	var scene_tokens: Dictionary = {}
 	for h in heroes:
@@ -6462,6 +6506,11 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 					end_turn()
 					return { "success": true, "mode": "turn_complete", "activeHero": get_active_hero().get("id", "") }
 			return { "success": false, "error": "Turn overlay not visible or active" }
+		"click_tile":
+			var tx = int(action_data.get("x", action_data.get("tile", [0, 0])[0]))
+			var ty = int(action_data.get("y", action_data.get("tile", [0, 0])[1]))
+			_handle_tile_click(Vector2i(tx, ty))
+			return { "success": true, "tile": [tx, ty] }
 		"ai_step":
 			var auto_confirm = bool(action_data.get("confirm", false))
 			if auto_confirm:
@@ -6577,25 +6626,43 @@ func _draw_board(canvas: CanvasItem) -> void:
 
 	# Draw Wall Blocks (1-tile and 2-tile walls)
 	for wb in wall_blocks:
-		var px = wb.get("x", wb.get("position", [0, 0])[0])
-		var py = wb.get("y", wb.get("position", [0, 0])[1])
-		var pos = Vector2i(px, py)
-		if is_gm_role() or explored_tiles.has(pos):
-			var w = int(wb.get("width", 1))
-			var h = int(wb.get("height", 1))
-			var b_type = str(wb.get("type", "1-tile-wall"))
-			if b_type == "2-tile-wall-h" or b_type == "double-h":
-				w = 2; h = 1
-			elif b_type == "2-tile-wall-v" or b_type == "double-v":
-				w = 1; h = 2
+		var px = int(wb.get("x", wb.get("position", [0, 0])[0]))
+		var py = int(wb.get("y", wb.get("position", [0, 0])[1]))
+		var w = int(wb.get("width", 1))
+		var h = int(wb.get("height", 1))
+		var b_type = str(wb.get("type", "1-tile-wall"))
+		if b_type == "2-tile-wall-h" or b_type == "double-h":
+			w = 2; h = 1
+		elif b_type == "2-tile-wall-v" or b_type == "double-v":
+			w = 1; h = 2
+
+		var is_visible = is_gm_role()
+		if not is_visible:
+			for bx in range(px, px + w):
+				for by in range(py, py + h):
+					if explored_tiles.has(Vector2i(bx, by)):
+						is_visible = true
+						break
+				if is_visible:
+					break
+
+		if is_visible:
 			var block_rect = Rect2(board_offset + Vector2(px * tile_size + 2, py * tile_size + 2), Vector2(w * tile_size - 4, h * tile_size - 4))
-			# Base stone
-			canvas.draw_rect(block_rect, Color(0.18, 0.20, 0.24, 0.95))
-			# Bevel border
-			canvas.draw_rect(block_rect, Color(0.45, 0.50, 0.58, 1.0), false, 2.0)
+			# Base stone (dark masonry)
+			canvas.draw_rect(block_rect, Color(0.18, 0.20, 0.24, 0.98))
+			# Bevel border (carved stone)
+			canvas.draw_rect(block_rect, Color(0.48, 0.54, 0.62, 1.0), false, 2.0)
 			# Inner masonry lines (clean geometric X crossbar)
-			canvas.draw_line(block_rect.position + Vector2(4, 4), block_rect.end - Vector2(4, 4), Color(0.35, 0.40, 0.48, 0.6), 1.5)
-			canvas.draw_line(Vector2(block_rect.end.x - 4, block_rect.position.y + 4), Vector2(block_rect.position.x + 4, block_rect.end.y - 4), Color(0.35, 0.40, 0.48, 0.6), 1.5)
+			canvas.draw_line(block_rect.position + Vector2(4, 4), block_rect.end - Vector2(4, 4), Color(0.35, 0.40, 0.48, 0.7), 1.5)
+			canvas.draw_line(Vector2(block_rect.end.x - 4, block_rect.position.y + 4), Vector2(block_rect.position.x + 4, block_rect.end.y - 4), Color(0.35, 0.40, 0.48, 0.7), 1.5)
+			# Clean embossed [BLOCK] label
+			var font = ThemeDB.fallback_font
+			var lbl = "BLOCK"
+			var lbl_size = font.get_string_size(lbl, HORIZONTAL_ALIGNMENT_CENTER, -1, 10)
+			var lbl_bg = Rect2(block_rect.get_center().x - lbl_size.x * 0.5 - 4, block_rect.get_center().y - lbl_size.y * 0.5 - 2, lbl_size.x + 8, lbl_size.y + 4)
+			canvas.draw_rect(lbl_bg, Color(0.10, 0.12, 0.16, 0.90))
+			canvas.draw_rect(lbl_bg, Color(0.55, 0.60, 0.70, 0.8), false, 1.0)
+			canvas.draw_string(font, Vector2(block_rect.get_center().x - lbl_size.x * 0.5, block_rect.get_center().y + lbl_size.y * 0.35), lbl, HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(0.90, 0.92, 0.98, 0.95))
 
 	# Draw Traps (visible in GM mode or if detected/revealed/sprung/disarmed/spent/blocked)
 	for tr in traps:
