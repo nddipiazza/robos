@@ -192,6 +192,20 @@ class TabletopQAPlayer:
         self.log("Dismissing / collecting active treasure card overlay...")
         return self.execute_action("click_treasure_overlay")
 
+    def get_treasure_overlay(self) -> dict:
+        return self.get_state().get("treasureOverlay", {})
+
+    def get_treasure_deck_stats(self) -> dict:
+        st = self.get_state()
+        return {
+            "deckCount": st.get("treasureDeckCount", 0),
+            "goodsCount": st.get("treasureGoodsCount", 0),
+            "hazardsCount": st.get("treasureHazardsCount", 0),
+            "hazardRatio": st.get("treasureHazardRatio", 0.0),
+            "discardCount": st.get("treasureDiscardCount", 0),
+            "modalOpen": st.get("treasureModalOpen", False)
+        }
+
     def get_flash_item(self) -> dict:
         return self.get_state().get("flashItem", {})
 

@@ -1101,5 +1101,194 @@ size_flags_horizontal = 3
 custom_minimum_size = Vector2(0, 38)
 text = "⚔️ Enter the Dungeon / Close Armory"
 
+[node name="TreasureModal" type="ColorRect" parent="UI"]
+visible = false
+offset_right = 1920.0
+offset_bottom = 1080.0
+color = Color(0.02, 0.03, 0.06, 0.9)
+
+[node name="Card" type="PanelContainer" parent="UI/TreasureModal"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -520.0
+offset_top = -340.0
+offset_right = 520.0
+offset_bottom = 340.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="UI/TreasureModal/Card"]
+layout_mode = 2
+theme_override_constants/margin_left = 26
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 26
+theme_override_constants/margin_bottom = 20
+
+[node name="VBox" type="VBoxContainer" parent="UI/TreasureModal/Card/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Header" type="HBoxContainer" parent="UI/TreasureModal/Card/Margin/VBox"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="UI/TreasureModal/Card/Margin/VBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 22
+text = "Search for Treasure"
+
+[node name="DeckRatioBadge" type="Label" parent="UI/TreasureModal/Card/Margin/VBox/Header"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(1.0, 0.85, 0.25, 1)
+text = "[DECK: 16 CARDS | 25% HAZARD]"
+
+[node name="BtnCloseHeader" type="Button" parent="UI/TreasureModal/Card/Margin/VBox/Header"]
+layout_mode = 2
+custom_minimum_size = Vector2(32, 28)
+text = "✕"
+
+[node name="Separator" type="HSeparator" parent="UI/TreasureModal/Card/Margin/VBox"]
+layout_mode = 2
+
+[node name="StageHBox" type="HBoxContainer" parent="UI/TreasureModal/Card/Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 24
+
+[node name="DeckColumn" type="VBoxContainer" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(330, 0)
+theme_override_constants/separation = 8
+
+[node name="DeckFrame" type="PanelContainer" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/DeckColumn"]
+layout_mode = 2
+custom_minimum_size = Vector2(330, 360)
+
+[node name="DeckTexture" type="TextureRect" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/DeckColumn/DeckFrame"]
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 6
+
+[node name="DeckTitle" type="Label" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/DeckColumn"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+text = "Treasure Draw Pile"
+horizontal_alignment = 1
+
+[node name="DeckStats" type="Label" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/DeckColumn"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.85, 0.88, 0.92, 0.9)
+text = "Good Treasures: 12\nHazards & Wandering Foes: 4"
+horizontal_alignment = 1
+
+[node name="CardStageControl" type="Control" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+clip_contents = true
+
+[node name="DrawnCard" type="PanelContainer" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -240.0
+offset_top = -225.0
+offset_right = 240.0
+offset_bottom = 225.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CardMargin" type="MarginContainer" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 16
+
+[node name="CardVBox" type="VBoxContainer" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="CardHeader" type="HBoxContainer" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox"]
+layout_mode = 2
+
+[node name="CardTypeBadge" type="Label" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox/CardHeader"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.4, 0.9, 0.6, 1)
+text = "[TREASURE]"
+
+[node name="CardSource" type="Label" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox/CardHeader"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.7, 0.75, 0.85, 0.8)
+text = "HeroQuest Treasure Deck"
+horizontal_alignment = 2
+
+[node name="CardTitle" type="Label" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Potion of Healing"
+
+[node name="IllustrationFrame" type="PanelContainer" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 160)
+
+[node name="CardIllustration" type="TextureRect" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox/IllustrationFrame"]
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 6
+
+[node name="CardDescription" type="RichTextLabel" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/normal_font_size = 13
+bbcode_enabled = true
+text = "Card description..."
+
+[node name="CardFlavor" type="Label" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.8, 0.65, 0.45, 0.9)
+text = "Flavor text..."
+autowrap_mode = 2
+
+[node name="OutcomeBanner" type="PanelContainer" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox"]
+layout_mode = 2
+
+[node name="OutcomeMargin" type="MarginContainer" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox/OutcomeBanner"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 4
+
+[node name="OutcomeText" type="Label" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox/OutcomeBanner/OutcomeMargin"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "Rule: Awarded to Hero. Card is permanently discarded from the deck for the quest."
+autowrap_mode = 2
+
+[node name="ButtonBox" type="HBoxContainer" parent="UI/TreasureModal/Card/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BtnResolve" type="Button" parent="UI/TreasureModal/Card/Margin/VBox/ButtonBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 38)
+text = "Claim Treasure (Space / Enter)"
+
+
 
 
