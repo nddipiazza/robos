@@ -1025,6 +1025,7 @@ func _load_active_cartridge() -> void:
 	last_treasure_card = {}
 	_initialize_treasure_deck()
 	active_dice_animation = {}
+	floating_texts.clear()
 	active_enemy_turn_monster_id = ""
 	is_enemy_turn_waiting = false
 	enemy_turn_wait_timer = 0.0
@@ -4573,12 +4574,15 @@ func search_traps() -> Dictionary:
 	if not h_room.is_empty():
 		var r_id = str(h_room.get("id", ""))
 		for tr in traps:
+			var is_known = bool(tr.get("detected", false) or tr.get("is_revealed", false) or tr.get("sprung", false) or tr.get("is_sprung", false) or tr.get("disarmed", false) or tr.get("spent", false) or tr.get("blocked", false))
+			if is_known:
+				continue
 			var tx = int(tr.get("x", tr.get("position", [0, 0])[0]))
 			var ty = int(tr.get("y", tr.get("position", [0, 0])[1]))
 			if _get_room_at(Vector2i(tx, ty)).get("id", "") == r_id:
 				tr["detected"] = true
 				found_traps.append(str(tr.get("id", "trap")))
-				spawn_floating_text(Vector2i(tx, ty), "⚠️ TRAP DETECTED", Color(1.0, 0.8, 0.2), 1.6)
+				spawn_floating_text(Vector2i(tx, ty), "⚠️ TRAP DISCOVERED", Color(1.0, 0.8, 0.2), 1.6)
 
 		for d in doors:
 			if d.get("is_secret", false) and not d.get("is_revealed", false):
@@ -4597,13 +4601,16 @@ func search_traps() -> Dictionary:
 					spawn_floating_text(reveal_pos, "🚪 SECRET DOOR DISCOVERED", Color(0.9, 0.7, 1.0), 1.8)
 	else:
 		for tr in traps:
+			var is_known = bool(tr.get("detected", false) or tr.get("is_revealed", false) or tr.get("sprung", false) or tr.get("is_sprung", false) or tr.get("disarmed", false) or tr.get("spent", false) or tr.get("blocked", false))
+			if is_known:
+				continue
 			var tx = int(tr.get("x", tr.get("position", [0, 0])[0]))
 			var ty = int(tr.get("y", tr.get("position", [0, 0])[1]))
 			var t_pos = Vector2i(tx, ty)
 			if abs(t_pos.x - h_pos.x) + abs(t_pos.y - h_pos.y) <= 4:
 				tr["detected"] = true
 				found_traps.append(str(tr.get("id", "trap")))
-				spawn_floating_text(t_pos, "⚠️ TRAP DETECTED", Color(1.0, 0.8, 0.2), 1.6)
+				spawn_floating_text(t_pos, "⚠️ TRAP DISCOVERED", Color(1.0, 0.8, 0.2), 1.6)
 
 		for d in doors:
 			if d.get("is_secret", false) and not d.get("is_revealed", false):
@@ -4631,9 +4638,16 @@ func search_traps() -> Dictionary:
 
 	_conclude_action_turn_state()
 
-	_log("[SEARCH] %s searches carefully for traps and secret doors: Found %d hidden trap(s) and %d secret door(s)!" % [
-		hero.get("name"), found_traps.size(), found_secret_doors.size()
-	])
+	if found_traps.size() > 0 or found_secret_doors.size() > 0:
+		_log("[SEARCH] %s searches carefully for traps and secret doors: Found %d hidden trap(s) and %d secret door(s)!" % [
+			hero.get("name"), found_traps.size(), found_secret_doors.size()
+		])
+	else:
+		_log("[SEARCH] %s searches carefully for traps and secret doors: No new traps or secret doors found." % [
+			hero.get("name")
+		])
+		spawn_floating_text(h_pos, "NO NEW TRAPS", Color(0.7, 0.7, 0.7), 1.4)
+
 	_update_ui()
 	queue_redraw_all()
 	return {
@@ -6986,6 +7000,8 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 					discovered_monster_ids[str(mid)] = true
 			if action_data.has("resetExplored") and bool(action_data.resetExplored):
 				explored_tiles.clear()
+			if action_data.has("resetFloatingTexts") and bool(action_data.resetFloatingTexts):
+				floating_texts.clear()
 			if action_data.has("isEnemyTurnWaiting"):
 				is_enemy_turn_waiting = bool(action_data.get("isEnemyTurnWaiting"))
 				if not is_enemy_turn_waiting:
