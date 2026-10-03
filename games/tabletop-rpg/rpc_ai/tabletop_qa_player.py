@@ -282,3 +282,14 @@ class TabletopQAPlayer:
     def is_tile_occupied_by_furniture(self, x: int, y: int) -> bool:
         return bool(self.get_furniture_at(x, y))
 
+    def open_hero_detail(self, hero_id: str = "") -> dict:
+        self.log(f"Opening full Character Sheet dialog for hero '{hero_id}'...")
+        return self.execute_action("open_hero_detail", heroId=hero_id)
+
+    def close_hero_detail(self) -> dict:
+        self.log("Closing full Character Sheet dialog...")
+        return self.execute_action("close_hero_detail")
+
+    def get_hero_detail_modal(self) -> dict:
+        return self.get_state().get("heroDetailModal", {})
+
