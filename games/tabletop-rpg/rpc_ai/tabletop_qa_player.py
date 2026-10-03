@@ -461,5 +461,38 @@ class TabletopQAPlayer:
                 return bool(h.get("hasDepartedStart", False) or h.get("has_departed_start", False))
         return False
 
+    # --- BG1 Style Targeting Mode & Cursor Methods ---
+    def get_active_targeting(self) -> dict:
+        st = self.get_state()
+        return st.get("activeTargeting", {})
+
+    def is_targeting_active(self) -> bool:
+        return bool(self.get_active_targeting().get("active", False))
+
+    def start_targeting(self, action_type: str, action_id: str, hero_id: str = "") -> dict:
+        self.log(f"Starting targeting for {action_type} '{action_id}' (hero={hero_id})...")
+        return self.execute_action("start_targeting", type=action_type, id=action_id, hero_id=hero_id)
+
+    def toggle_targeting(self, action_type: str, action_id: str, hero_id: str = "") -> dict:
+        self.log(f"Toggling targeting for {action_type} '{action_id}' (hero={hero_id})...")
+        return self.execute_action("toggle_targeting", type=action_type, id=action_id, hero_id=hero_id)
+
+    def cancel_targeting(self) -> dict:
+        self.log("Cancelling targeting mode...")
+        return self.execute_action("cancel_targeting")
+
+    def select_target(self, target_id: str = "", tile: list = None, target_type: str = "") -> dict:
+        self.log(f"Selecting target: id={target_id}, tile={tile}...")
+        return self.execute_action("select_target", target_id=target_id, tile=tile, target_type=target_type)
+
+    def click_toolbar_icon(self, hero_id: str, item_id: str, action_type: str = "spell") -> dict:
+        self.log(f"Clicking toolbar icon for {hero_id}: {action_type} '{item_id}'...")
+        return self.execute_action("click_toolbar_icon", hero_id=hero_id, id=item_id, type=action_type)
+
+    def close_all_dialogs(self) -> dict:
+        self.log("Closing all dialog boxes...")
+        return self.execute_action("close_all_dialogs")
+
+
 
 
