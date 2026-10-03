@@ -297,6 +297,21 @@ class TabletopQAPlayer:
     def get_hero_detail_modal(self) -> dict:
         return self.get_state().get("heroDetailModal", {})
 
+    def open_monster_detail(self, monster_id: str = "") -> dict:
+        self.log(f"Opening full Monster Bestiary dialog for monster '{monster_id}'...")
+        return self.execute_action("open_monster_detail", monsterId=monster_id)
+
+    def click_monster_portrait(self, monster_id: str = "") -> dict:
+        self.log(f"Clicking on portrait for monster '{monster_id}' to open Bestiary...")
+        return self.execute_action("click_monster_portrait", monsterId=monster_id)
+
+    def close_monster_detail(self) -> dict:
+        self.log("Closing Monster Bestiary dialog...")
+        return self.execute_action("close_monster_detail")
+
+    def get_monster_detail_modal(self) -> dict:
+        return self.get_state().get("monsterDetailModal", {})
+
     def get_unavailable_notice(self) -> dict:
         return self.get_state().get("unavailableNotice", {})
 

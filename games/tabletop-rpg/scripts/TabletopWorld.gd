@@ -223,6 +223,27 @@ var turn_overlay_mode: String = "none" # "roll_prompt", "turn_complete", "none"
 @onready var hero_detail_abilities_section: VBoxContainer = get_node_or_null("UI/HeroDetailModal/Card/Margin/VBox/ContentHBox/RightCol/ScrollContainer/DetailsVBox/AbilitiesSection")
 @onready var hero_detail_btn_close: Button = get_node_or_null("UI/HeroDetailModal/Card/Margin/VBox/ButtonBox/BtnClose")
 
+@onready var monster_detail_modal: ColorRect = get_node_or_null("UI/MonsterDetailModal")
+@onready var monster_detail_card: PanelContainer = get_node_or_null("UI/MonsterDetailModal/Card")
+@onready var monster_detail_title: Label = get_node_or_null("UI/MonsterDetailModal/Card/Margin/VBox/Header/Title")
+@onready var monster_detail_status_badge: Label = get_node_or_null("UI/MonsterDetailModal/Card/Margin/VBox/Header/StatusBadge")
+@onready var monster_detail_btn_close_header: Button = get_node_or_null("UI/MonsterDetailModal/Card/Margin/VBox/Header/BtnCloseHeader")
+@onready var monster_detail_portrait: TextureRect = get_node_or_null("UI/MonsterDetailModal/Card/Margin/VBox/ContentHBox/LeftCol/PortraitFrame/PortraitTexture")
+@onready var monster_detail_name: Label = get_node_or_null("UI/MonsterDetailModal/Card/Margin/VBox/ContentHBox/LeftCol/MonsterName")
+@onready var monster_detail_type: Label = get_node_or_null("UI/MonsterDetailModal/Card/Margin/VBox/ContentHBox/LeftCol/MonsterType")
+@onready var monster_detail_lore: RichTextLabel = get_node_or_null("UI/MonsterDetailModal/Card/Margin/VBox/ContentHBox/LeftCol/LoreLabel")
+@onready var monster_detail_stats_box: HBoxContainer = get_node_or_null("UI/MonsterDetailModal/Card/Margin/VBox/ContentHBox/RightCol/ScrollContainer/DetailsVBox/StatsBox")
+@onready var monster_detail_tactical_section: VBoxContainer = get_node_or_null("UI/MonsterDetailModal/Card/Margin/VBox/ContentHBox/RightCol/ScrollContainer/DetailsVBox/TacticalSection")
+@onready var monster_detail_abilities_section: VBoxContainer = get_node_or_null("UI/MonsterDetailModal/Card/Margin/VBox/ContentHBox/RightCol/ScrollContainer/DetailsVBox/AbilitiesSection")
+@onready var monster_detail_spells_section: VBoxContainer = get_node_or_null("UI/MonsterDetailModal/Card/Margin/VBox/ContentHBox/RightCol/ScrollContainer/DetailsVBox/SpellsSection")
+@onready var monster_detail_btn_close: Button = get_node_or_null("UI/MonsterDetailModal/Card/Margin/VBox/ButtonBox/BtnClose")
+
+var active_detail_hero_id: String = ""
+var active_detail_monster_id: String = ""
+var _hero_card_bg_cache: Dictionary = {}
+var _monster_card_bg_cache: Dictionary = {}
+var _ai_icon_cache: Dictionary = {}
+
 @onready var btn_armory: Button = _find_action_button("BtnArmory")
 
 @onready var armory_modal: ColorRect = get_node_or_null("UI/ArmoryModal")
@@ -245,10 +266,6 @@ var selected_armory_hero_id: String = "barbarian"
 var unavailable_notice_text: String = ""
 var unavailable_notice_timer: float = 0.0
 var unavailable_notice_duration: float = 2.5
-
-var active_detail_hero_id: String = ""
-var _hero_card_bg_cache: Dictionary = {}
-var _ai_icon_cache: Dictionary = {}
 
 const ELEMENTAL_DECKS: Dictionary = {
 	"water": ["water_of_healing", "sleep", "veil_of_mist"],
@@ -324,6 +341,7 @@ func _ready() -> void:
 	_setup_turn_overlay_ui()
 	_setup_log_panel()
 	_setup_hero_detail_modal()
+	_setup_monster_detail_modal()
 	_setup_unavailable_notice_style()
 	_load_door_textures()
 	_load_hero_token_textures()
@@ -435,14 +453,14 @@ func _setup_map_end_turn_button_style() -> void:
 
 	var sb_pressed = StyleBoxFlat.new()
 	sb_pressed.bg_color = Color(0.06, 0.08, 0.12, 1.0)
-	sb_pressed.border_width_all(2)
+	sb_pressed.set_border_width_all(2)
 	sb_pressed.border_color = Color(1.0, 0.6, 0.1, 1.0)
 	sb_pressed.set_corner_radius_all(6)
 	btn_map_end_turn.add_theme_stylebox_override("pressed", sb_pressed)
 
 	var sb_disabled = StyleBoxFlat.new()
 	sb_disabled.bg_color = Color(0.07, 0.08, 0.11, 0.7)
-	sb_disabled.border_width_all(1)
+	sb_disabled.set_border_width_all(1)
 	sb_disabled.border_color = Color(0.3, 0.35, 0.4, 0.4)
 	sb_disabled.set_corner_radius_all(6)
 	btn_map_end_turn.add_theme_stylebox_override("disabled", sb_disabled)
@@ -1126,6 +1144,158 @@ func get_hero_card_bg_texture(hero_id: String) -> Texture2D:
 		return tex
 	return null
 
+func get_monster_card_bg_texture(m_or_id) -> Texture2D:
+	var clean_key = ""
+	if m_or_id is Dictionary:
+		clean_key = get_monster_token_key(m_or_id)
+	elif m_or_id is String:
+		var dummy = {"id": m_or_id, "slug": m_or_id, "name": m_or_id}
+		clean_key = get_monster_token_key(dummy)
+		if clean_key == "":
+			clean_key = m_or_id.to_lower().strip_edges()
+
+	if clean_key.is_empty():
+		clean_key = "orc"
+
+	if _monster_card_bg_cache.has(clean_key) and _monster_card_bg_cache[clean_key] != null:
+		return _monster_card_bg_cache[clean_key]
+
+	var path = "res://assets/monster_cards/card_bg_%s.png" % clean_key
+	var tex = _load_texture_safe(path)
+	if tex:
+		_monster_card_bg_cache[clean_key] = tex
+		return tex
+	return null
+
+func get_monster_lore(m: Dictionary) -> Dictionary:
+	var key = get_monster_token_key(m)
+	var m_name = str(m.get("name", "Monster"))
+	var is_boss = bool(m.get("isBoss", false)) or key == "verag"
+
+	match key:
+		"goblin":
+			return {
+				"title": "Goblin Skirmisher",
+				"subtitle": "Subterranean Scavenger & Scimitar Ambusher",
+				"archetype": "Fast Hit-and-Run Skirmisher",
+				"flavor": "[i]\"Small, wiry, and malevolent, Goblins infest the dank corridors of Morcar's subterranean dominions. While lacking the sheer physical mass of their Orcish overseers, Goblins compensate with cruel cunning, swift footwork, and jagged scimitars dipped in subterranean filth. They lurk in dark alcoves and behind moldering masonry, preferring to swarm isolated heroes or strike from behind before scurrying back into the shadows. Their shrill cackles echo through the catacombs as a chilling harbinger of sudden ambush.\"[/i]",
+				"tactics": "Boasting a blazing 10-square movement speed, Goblins outpace every hero. They exploit corridor corners and doorways to deliver rapid scimitar strikes before retreating behind beefier frontline monsters.",
+				"abilities": [
+					{"name": "Scimitar Slash", "desc": "Swift jagged blade attack rolling 2 Combat Dice."},
+					{"name": "Dungeon Skulker", "desc": "Exceptional 10-square movement allows rapid repositioning and flanking maneuvers."},
+					{"name": "Craven Swarm", "desc": "Deadly when attacking alongside Orcish allies; easily scattered when cornered alone."}
+				]
+			}
+		"orc":
+			return {
+				"title": "Orc Legionnaire",
+				"subtitle": "Brutal Front-Line Soldier of the Dread Vanguard",
+				"archetype": "Heavy Melee Brawler",
+				"flavor": "[i]\"Bred for slaughter and conquest, Orcs form the savage backbone of Morcar's vanguard. Towering over men with sinewy green-black hides, protruding tusks, and bloodshot eyes burning with hatred for civilized kingdoms, they wield heavy cleaving notched broadswords and iron-studded shields. Orcs revel in the din of melee combat, driving their blades forward with crushing force. Disciplined under dread warlords yet prone to bloodthirsty berserker fury, an Orc guard will hold choke points and dungeon gates to the bitter end.\"[/i]",
+				"tactics": "Aggressive room anchor and brawler. Rolls 3 Combat Dice in attack and moves 8 squares, relentlessly pressing melee combat against unarmored heroes.",
+				"abilities": [
+					{"name": "Cleaving Broadsword", "desc": "Heavy downward strike delivering 3 Combat Dice of slashing damage."},
+					{"name": "Brutal Resilience", "desc": "Defends with 2 Combat Dice, absorbing glancing hero strikes with spiked iron vambraces."},
+					{"name": "Vanguard Rush", "desc": "Swift 8-square movement allowing quick rushes into line-of-sight."}
+				]
+			}
+		"skeleton":
+			return {
+				"title": "Crypt Skeleton",
+				"subtitle": "Necromantic Thrall & Tireless Bone Guardian",
+				"archetype": "Relentless Undead Guardian",
+				"flavor": "[i]\"Animated by the fell necromancy of Morcar, Skeletons are the restless remains of ancient dungeon defenders and fallen warriors bound into eternal servitude. Clattering through dusty crypts and cobwebbed sepulchers with hollow eye sockets burning with cold spectral balefire, they feel neither fear, pain, fatigue, nor mercy. Their rusted iron blades and cracked wooden shields strike with mechanical precision. Skeletons cannot be influenced by mortal terror or mental charms, marching endlessly until their bones are pulverized into dust.\"[/i]",
+				"tactics": "Tireless crypt guardian. Immune to mind-affecting magic, sleep, and psychological fear; defends tombs with stubborn precision.",
+				"abilities": [
+					{"name": "Rusted Broadsword", "desc": "Methodical necromantic strike rolling 2 Combat Dice."},
+					{"name": "Mindless Undead", "desc": "Possesses 0 Mind Points; immune to Sleep, Fear, and psychic enchantments."},
+					{"name": "Bone Phalanx", "desc": "Defends with 2 Combat Dice; piercing weapons glance off hollow ribcages."}
+				]
+			}
+		"zombie":
+			return {
+				"title": "Cellar Zombie",
+				"subtitle": "Shambling Dread Corpse & Meat Shield",
+				"archetype": "Resilient Damage Sponge",
+				"flavor": "[i]\"Slow, rotting, and horribly inexorable, Zombies are corpses reanimated by Morcar's dark dread magic before their earthly flesh could decay. Shambling forward through stagnant dungeon mire with outstretched rotting claws, they emit a sickening stench of putrefaction and grave-dust. Though ponderous and slow to react, their desiccated muscles and numbness to physical trauma make them surprisingly difficult to strike down. A single zombie can absorb punishing blows while anchoring heroes in narrow passages, allowing faster horrors to encircle them.\"[/i]",
+				"tactics": "Heavy roadblock. Rolls 3 Defend Dice, allowing it to tie up heroes in doorways and protect vulnerable casters despite slow 4-square movement.",
+				"abilities": [
+					{"name": "Putrid Grasp", "desc": "Rotting claw strike delivering 2 Combat Dice with crushing force."},
+					{"name": "Desiccated Flesh", "desc": "Rolls 3 Defend Dice; decaying sinew dampens weapon impacts."},
+					{"name": "Undead Terror", "desc": "0 Mind Points; immune to Sleep, morale breaks, and mental sorcery."}
+				]
+			}
+		"mummy":
+			return {
+				"title": "Ancient Mummy",
+				"subtitle": "Embalmed Dread Guardian & Tomb Pharaoh",
+				"archetype": "Elite Undead Tank",
+				"flavor": "[i]\"Preserved for millennia in foul alchemical natron and inscribed funerary bandages, Mummies are dread guardians consecrated to protect Morcar's deepest subterranean vaults and forgotten tomb sanctums. Ancient dark curses pulse within their desiccated hearts, granting them unnatural supernatural endurance and terrifying physical strength. Wrapped in brittle funerary linen marked with glyphs of Doom, a Mummy strides forward relentlessly, crushing armor and bone with petrified fists that carry the ancient rot of forgotten pharaohs.\"[/i]",
+				"tactics": "Devastating elite juggernaut. 3 Attack Dice, 4 Defend Dice, and 2 Body Points make the Mummy an immense physical threat that demands ranged spells or focused party attacks.",
+				"abilities": [
+					{"name": "Tomb Smite", "desc": "Devastating slam from embalmed stone-hard fists rolling 3 Combat Dice."},
+					{"name": "Alchemical Wrappings", "desc": "Resin-hardened funerary linen deflects steel, granting 4 Defend Dice."},
+					{"name": "Dread Vitality", "desc": "Boasts 2 Body Points; survives mortal killing blows."},
+					{"name": "Curse of the Crypt", "desc": "Immune to Sleep and psychic spells; strikes fear into living hearts."}
+				]
+			}
+		"fimir":
+			return {
+				"title": "Fimir Bog-Beast",
+				"subtitle": "Cyclopean Amphibian Brute & Dark Sorcerer",
+				"archetype": "Amphibious Shock-Trooper",
+				"flavor": "[i]\"Lurking in the stagnant, mist-shrouded subterranean waterways and flooded dungeons of the Old World, the Fimir are monstrous, cyclopean amphibian brutes. Possessing a single, baleful yellow eye that pierces magical darkness, impenetrable leathery scales, and a muscular mace-tipped tail capable of shattering stone, the Fimir are savage yet intelligent shock troops of Chaos. They wield massive bone-hewn battleaxes and harbor ancient knowledge of swamp witchcraft, making them both physically lethal and cunningly elusive foes.\"[/i]",
+				"tactics": "Formidable dual threat. 3 Attack Dice, 3 Defend Dice, 2 Body Points, and 3 Mind Points allow it to shrug off magical disruption while crushing heroes with heavy axe swings.",
+				"abilities": [
+					{"name": "Bone Battleaxe", "desc": "Massive two-handed cleave rolling 3 Combat Dice."},
+					{"name": "Mace Tail Swipe", "desc": "Barbed tail sweeps away flankers, contributing to 3 Defend Dice."},
+					{"name": "Cyclopean Gaze", "desc": "3 Mind Points resist arcane sleep and mental charms."},
+					{"name": "Swamp Predator", "desc": "Navigates murky dungeon water and obstacles without penalty."}
+				]
+			}
+		"chaos_warrior":
+			return {
+				"title": "Chaos Warrior",
+				"subtitle": "Black-Iron Champion of Dread & Chaos Runemaster",
+				"archetype": "Apex Dread Champion",
+				"flavor": "[i]\"Clad head-to-toe in unholy obsidian plate armor fused directly to flesh and bone, Chaos Warriors are mortal champions who have traded their souls to Morcar and the Dark Gods in exchange for terrifying martial perfection. Their dark dread armor deflects tempered steel with ease, while ornate horned greathelms hide faces twisted by centuries of unholy slaughter. Wielding runic dread halberds and bastard swords crackling with corrupted sorcery, they march into battle with disciplined, implacable fury. A lone Chaos Warrior can rout an entire squad of lesser heroes.\"[/i]",
+				"tactics": "Apex melee powerhouse. 4 Attack Dice, 4 Defend Dice, and 3 Body Points. Demands tactical kiting, heavy spells, and coordinated focus fire.",
+				"abilities": [
+					{"name": "Runic Halberd", "desc": "Dark-infused polearm strike dealing 4 Combat Dice of lethal damage."},
+					{"name": "Obsidian Dreadplate", "desc": "Unholy Chaos-forged plate mail rolling 4 Defend Dice."},
+					{"name": "Ironclad Resolve", "desc": "3 Body Points and 3 Mind Points ensure supreme combat endurance."},
+					{"name": "Aura of Dread", "desc": "Intimidating presence unnerves heroes in adjacent tiles."}
+				]
+			}
+		"gargoyle":
+			return {
+				"title": "Stone Gargoyle",
+				"subtitle": "Petrified Demon Prince & Guardian of the Catacombs",
+				"archetype": "Boss-Tier Dungeon Predator",
+				"flavor": "[i]\"Carved from enchanted living granite and infused with demonic blood by ancient sorcerers, the Gargoyle is the supreme guardian of Morcar's deepest strongholds. By day or in dormancy, it perches motionless upon dungeon plinths and vaulted archways, masquerading as ornate architecture. When trespassers enter its sanctum, its stony skin flexes, leathery wings snap outward with a roar of cracking bedrock, and its eyes ignite with hellfire. Striking with razor-sharp granite claws and sweeping barbed wings, the Gargoyle is the pinnacle of dungeon terror.\"[/i]",
+				"tactics": "Highest defense in the game. 4 Attack Dice, 5 Defend Dice, 3 Body Points, and 4 Mind Points. Can absorb relentless punishment while threatening instant hero incapacitation.",
+				"abilities": [
+					{"name": "Granite Talons", "desc": "Razor stone claws tearing armor and flesh for 4 Combat Dice."},
+					{"name": "Living Stone Hide", "desc": "Nearly impenetrable granite exterior rolling 5 Defend Dice."},
+					{"name": "Demonic Wings", "desc": "Enormous bat wings grant superior battlefield repositioning."},
+					{"name": "Arch-Demonic Will", "desc": "4 Mind Points; effortlessly resists elemental spells and enchantments."}
+				]
+			}
+		"verag", _:
+			return {
+				"title": "Verag the Orc Warlord" if is_boss else m_name,
+				"subtitle": "Chieftain of the Black Fang & Warlord of Morcar's Vanguard",
+				"archetype": "Quest 1 Final Boss & Spellcaster",
+				"flavor": "[i]\"Supreme chieftain of the subterranean hordes occupying the catacombs of the Trial, Verag is a legendary Orc Warlord of towering stature and vicious tactical intellect. Covered in ritual scars, draped in the skulls of fallen imperial champions, and wielding the Dread Greatsword 'Soulcleaver' crackling with dark lightning, Verag has slaughtered dozens of foolish adventuring parties sent by the Emperor. In combat, he bellows thunderous battle cries that bolster nearby minions while channeling destructive Dread Spells to incinerate his foes.\"[/i]",
+				"tactics": "Quest 1 Final Boss. 4 Attack Dice, 4 Defend Dice, 4 Body Points, 8 Movement Squares, and wields devastating Dread Spells (Lightning Bolt and Fear).",
+				"abilities": [
+					{"name": "Soulcleaver Strike", "desc": "Enormous dread greatsword sweep rolling 4 Combat Dice."},
+					{"name": "Warlord Dreadplate", "desc": "Heavy spiked armor and seasoned battle instincts rolling 4 Defend Dice."},
+					{"name": "Dread Spellcasting", "desc": "Harnesses dark sorcery to cast Lightning Bolt and Fear."},
+					{"name": "Warlord's Rally", "desc": "Commands the catacomb hordes with 4 Body Points and 8 movement squares."}
+				]
+			}
+
 func get_ai_icon_texture(category: String, id_name: String) -> Texture2D:
 	var clean_id = id_name.to_lower().strip_edges().replace(" ", "_").replace("-", "_")
 	var key = "%s:%s" % [category.to_lower(), clean_id]
@@ -1240,6 +1410,10 @@ func _setup_ui_signals() -> void:
 		hero_detail_btn_close.pressed.connect(close_hero_detail_modal)
 	if hero_detail_btn_close_header and not hero_detail_btn_close_header.pressed.is_connected(close_hero_detail_modal):
 		hero_detail_btn_close_header.pressed.connect(close_hero_detail_modal)
+	if monster_detail_btn_close and not monster_detail_btn_close.pressed.is_connected(close_monster_detail_modal):
+		monster_detail_btn_close.pressed.connect(close_monster_detail_modal)
+	if monster_detail_btn_close_header and not monster_detail_btn_close_header.pressed.is_connected(close_monster_detail_modal):
+		monster_detail_btn_close_header.pressed.connect(close_monster_detail_modal)
 	if btn_armory and not btn_armory.pressed.is_connected(toggle_armory):
 		btn_armory.pressed.connect(toggle_armory)
 	if btn_armory_close and not btn_armory_close.pressed.is_connected(close_armory):
@@ -3879,6 +4053,11 @@ func _input(event: InputEvent) -> void:
 			close_hero_detail_modal()
 			get_viewport().set_input_as_handled()
 			return
+	if monster_detail_modal and monster_detail_modal.visible:
+		if (event is InputEventKey and event.pressed and (event.keycode == KEY_ESCAPE or event.keycode == KEY_SPACE or event.keycode == KEY_ENTER)):
+			close_monster_detail_modal()
+			get_viewport().set_input_as_handled()
+			return
 	if not active_story_trigger_overlay.is_empty():
 		if (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed) or \
 		   (event is InputEventKey and event.pressed and (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER or event.keycode == KEY_ESCAPE)):
@@ -3919,6 +4098,11 @@ func _unhandled_input(event: InputEvent) -> void:
 	if hero_detail_modal and hero_detail_modal.visible:
 		if (event is InputEventKey and event.pressed and (event.keycode == KEY_ESCAPE or event.keycode == KEY_SPACE or event.keycode == KEY_ENTER)):
 			close_hero_detail_modal()
+			get_viewport().set_input_as_handled()
+			return
+	if monster_detail_modal and monster_detail_modal.visible:
+		if (event is InputEventKey and event.pressed and (event.keycode == KEY_ESCAPE or event.keycode == KEY_SPACE or event.keycode == KEY_ENTER)):
+			close_monster_detail_modal()
 			get_viewport().set_input_as_handled()
 			return
 	if not active_treasure_overlay.is_empty():
@@ -8205,18 +8389,313 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 				bm.add_child(b_lbl)
 				ab_vbox.add_child(b_panel)
 
+func _setup_monster_detail_modal() -> void:
+	if not monster_detail_modal:
+		monster_detail_modal = get_node_or_null("UI/MonsterDetailModal")
+	if not monster_detail_modal:
+		return
+	if not monster_detail_card:
+		monster_detail_card = get_node_or_null("UI/MonsterDetailModal/Card")
+	if monster_detail_card:
+		var card_sb = StyleBoxFlat.new()
+		card_sb.bg_color = Color(0.08, 0.06, 0.08, 0.98) # Dark obsidian dungeon stone
+		card_sb.set_corner_radius_all(10)
+		card_sb.border_width_left = 2
+		card_sb.border_width_top = 2
+		card_sb.border_width_right = 2
+		card_sb.border_width_bottom = 2
+		card_sb.border_color = Color(0.9, 0.25, 0.2, 0.9) # Crimson dread rune glow
+		card_sb.shadow_color = Color(0, 0, 0, 0.9)
+		card_sb.shadow_size = 24
+		monster_detail_card.add_theme_stylebox_override("panel", card_sb)
+
+	if not monster_detail_btn_close:
+		monster_detail_btn_close = get_node_or_null("UI/MonsterDetailModal/Card/Margin/VBox/ButtonBox/BtnClose")
+	if monster_detail_btn_close and not monster_detail_btn_close.pressed.is_connected(close_monster_detail_modal):
+		monster_detail_btn_close.pressed.connect(close_monster_detail_modal)
+
+	if not monster_detail_btn_close_header:
+		monster_detail_btn_close_header = get_node_or_null("UI/MonsterDetailModal/Card/Margin/VBox/Header/BtnCloseHeader")
+	if monster_detail_btn_close_header and not monster_detail_btn_close_header.pressed.is_connected(close_monster_detail_modal):
+		monster_detail_btn_close_header.pressed.connect(close_monster_detail_modal)
+
+	if monster_detail_modal and not monster_detail_modal.gui_input.is_connected(_on_monster_detail_backdrop_gui_input):
+		monster_detail_modal.gui_input.connect(_on_monster_detail_backdrop_gui_input)
+
+func _on_monster_detail_backdrop_gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		close_monster_detail_modal()
+
+func open_monster_detail_modal(m: Dictionary) -> void:
+	if m.is_empty():
+		return
+	active_detail_monster_id = str(m.get("id", ""))
+	_setup_monster_detail_modal()
+	_populate_monster_detail_modal(m)
+	if monster_detail_modal:
+		monster_detail_modal.visible = true
+	_update_ui()
+
+func close_monster_detail_modal() -> void:
+	if monster_detail_modal:
+		monster_detail_modal.visible = false
+	active_detail_monster_id = ""
+	_update_ui()
+
+func _populate_monster_detail_modal(m: Dictionary) -> void:
+	var lore = get_monster_lore(m)
+	var m_name = str(m.get("name", lore.get("title", "Monster")))
+	var cur_bp = int(m.get("current_bp", m.get("bodyPoints", 1)))
+	var max_bp = int(m.get("bodyPoints", 1))
+	var is_alive = bool(m.get("is_alive", true)) and cur_bp > 0
+	var is_turn_active = is_enemy_turn_waiting and str(m.get("id")) == active_enemy_turn_monster_id
+	var is_vis = is_monster_currently_visible(m)
+	var is_boss = bool(m.get("isBoss", false)) or get_monster_token_key(m) == "verag"
+
+	if monster_detail_title:
+		monster_detail_title.text = "Monster Bestiary — %s" % lore.get("title", m_name)
+
+	if monster_detail_status_badge:
+		if not is_alive:
+			monster_detail_status_badge.text = "[DEFEATED]"
+			monster_detail_status_badge.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3, 1.0))
+		elif is_turn_active:
+			monster_detail_status_badge.text = "[ACTIVE TURN]"
+			monster_detail_status_badge.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2, 1.0))
+		elif is_vis:
+			monster_detail_status_badge.text = "[BOSS FOE]" if is_boss else "[VISIBLE FOE]"
+			monster_detail_status_badge.add_theme_color_override("font_color", Color(1.0, 0.75, 0.2, 1.0) if is_boss else Color(0.3, 0.95, 0.6, 1.0))
+		else:
+			monster_detail_status_badge.text = "[OUT OF SIGHT]"
+			monster_detail_status_badge.add_theme_color_override("font_color", Color(0.65, 0.70, 0.80, 0.8))
+
+	# Left Column: High-Res Portrait & Lore
+	if monster_detail_portrait:
+		var bg_tex = get_monster_card_bg_texture(m)
+		if bg_tex:
+			monster_detail_portrait.texture = bg_tex
+		else:
+			monster_detail_portrait.texture = get_monster_token_texture(m)
+
+	if monster_detail_name:
+		monster_detail_name.text = m_name
+
+	if monster_detail_type:
+		monster_detail_type.text = "Classification: %s (%s)" % [lore.get("subtitle", "Dread Minion"), lore.get("archetype", "Monster")]
+
+	if monster_detail_lore:
+		monster_detail_lore.text = lore.get("flavor", "")
+
+	# Right Column: DetailsVBox
+	# 1. Stats Box
+	if monster_detail_stats_box:
+		for child in monster_detail_stats_box.get_children():
+			child.queue_free()
+
+		var atk_dice = int(m.get("attackDice", 2))
+		var def_dice = int(m.get("defendDice", 2))
+		var move_sq = int(m.get("moveSquares", m.get("movementSquares", 6)))
+		var mind_pts = int(m.get("mindPoints", 0))
+
+		var stats_panel = PanelContainer.new()
+		stats_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var sp_sb = StyleBoxFlat.new()
+		sp_sb.bg_color = Color(0.12, 0.09, 0.11, 0.95)
+		sp_sb.set_corner_radius_all(6)
+		sp_sb.border_width_left = 1; sp_sb.border_width_top = 1; sp_sb.border_width_right = 1; sp_sb.border_width_bottom = 1
+		sp_sb.border_color = Color(0.65, 0.25, 0.25, 0.8)
+		stats_panel.add_theme_stylebox_override("panel", sp_sb)
+
+		var sp_marg = MarginContainer.new()
+		sp_marg.add_theme_constant_override("margin_left", 12)
+		sp_marg.add_theme_constant_override("margin_right", 12)
+		sp_marg.add_theme_constant_override("margin_top", 10)
+		sp_marg.add_theme_constant_override("margin_bottom", 10)
+		stats_panel.add_child(sp_marg)
+
+		var stats_grid = GridContainer.new()
+		stats_grid.columns = 2
+		stats_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		stats_grid.add_theme_constant_override("h_separation", 18)
+		stats_grid.add_theme_constant_override("v_separation", 8)
+		sp_marg.add_child(stats_grid)
+
+		# BP Box with bar
+		var bp_vbox = VBoxContainer.new()
+		var bp_title = Label.new()
+		bp_title.text = "Body Points (BP): %d / %d" % [cur_bp, max_bp]
+		bp_title.add_theme_font_size_override("font_size", 12)
+		bp_vbox.add_child(bp_title)
+		var bp_bar = ProgressBar.new()
+		bp_bar.custom_minimum_size = Vector2(0, 10)
+		bp_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		bp_bar.show_percentage = false
+		bp_bar.max_value = max_bp
+		bp_bar.value = max(0, cur_bp)
+		var bp_fill = StyleBoxFlat.new()
+		bp_fill.bg_color = Color(0.85, 0.2, 0.2, 1.0) if is_alive else Color(0.5, 0.15, 0.15, 0.7)
+		bp_fill.set_corner_radius_all(3)
+		bp_bar.add_theme_stylebox_override("fill", bp_fill)
+		var bp_bg = StyleBoxFlat.new()
+		bp_bg.bg_color = Color(0.08, 0.08, 0.1, 0.9)
+		bp_bar.add_theme_stylebox_override("background", bp_bg)
+		bp_vbox.add_child(bp_bar)
+		stats_grid.add_child(bp_vbox)
+
+		# MP Box
+		var mp_vbox = VBoxContainer.new()
+		var mp_title = Label.new()
+		mp_title.text = "Mind Points (MP): %d" % mind_pts
+		mp_title.add_theme_font_size_override("font_size", 12)
+		mp_vbox.add_child(mp_title)
+		var mp_desc = Label.new()
+		mp_desc.text = "Resists magic & mental charms" if mind_pts > 0 else "Mindless thrall (Sleep/Fear immune)"
+		mp_desc.add_theme_font_size_override("font_size", 10)
+		mp_desc.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85, 0.8))
+		mp_vbox.add_child(mp_desc)
+		stats_grid.add_child(mp_vbox)
+
+		# Attack Dice
+		var atk_lbl = Label.new()
+		atk_lbl.text = "Attack Strength: %d Combat Dice" % atk_dice
+		atk_lbl.add_theme_font_size_override("font_size", 11)
+		atk_lbl.add_theme_color_override("font_color", Color(1.0, 0.5, 0.4, 1.0))
+		stats_grid.add_child(atk_lbl)
+
+		# Defend Dice
+		var def_lbl = Label.new()
+		def_lbl.text = "Defense Armor: %d Combat Dice" % def_dice
+		def_lbl.add_theme_font_size_override("font_size", 11)
+		def_lbl.add_theme_color_override("font_color", Color(0.4, 0.8, 1.0, 1.0))
+		stats_grid.add_child(def_lbl)
+
+		# Movement
+		var mv_lbl = Label.new()
+		mv_lbl.text = "Movement Speed: %d Squares" % move_sq
+		mv_lbl.add_theme_font_size_override("font_size", 11)
+		mv_lbl.add_theme_color_override("font_color", Color(0.9, 0.85, 0.5, 1.0))
+		stats_grid.add_child(mv_lbl)
+
+		# Boss / Threat level
+		var th_lbl = Label.new()
+		th_lbl.text = "Threat Rating: %s" % ("Catacomb Warlord Boss" if is_boss else ("Apex Dungeon Champion" if (atk_dice >= 4 or def_dice >= 4) else "Standard Dungeon Monster"))
+		th_lbl.add_theme_font_size_override("font_size", 11)
+		th_lbl.add_theme_color_override("font_color", Color(1.0, 0.75, 0.2, 1.0) if is_boss else Color(0.8, 0.8, 0.85, 0.9))
+		stats_grid.add_child(th_lbl)
+
+		monster_detail_stats_box.add_child(stats_panel)
+
+	# 2. Tactical Section
+	if monster_detail_tactical_section:
+		for child in monster_detail_tactical_section.get_children():
+			child.queue_free()
+
+		var sec_lbl = Label.new()
+		sec_lbl.text = "TACTICAL DIRECTIVES & BEHAVIOR"
+		sec_lbl.add_theme_font_size_override("font_size", 11)
+		sec_lbl.add_theme_color_override("font_color", Color(1.0, 0.82, 0.2, 0.9))
+		monster_detail_tactical_section.add_child(sec_lbl)
+
+		var t_panel = PanelContainer.new()
+		var t_sb = StyleBoxFlat.new()
+		t_sb.bg_color = Color(0.10, 0.08, 0.10, 0.85)
+		t_sb.set_corner_radius_all(5)
+		t_sb.border_width_left = 1; t_sb.border_width_top = 1; t_sb.border_width_right = 1; t_sb.border_width_bottom = 1
+		t_sb.border_color = Color(0.5, 0.3, 0.4, 0.6)
+		t_panel.add_theme_stylebox_override("panel", t_sb)
+		var tm = MarginContainer.new()
+		tm.add_theme_constant_override("margin_left", 8); tm.add_theme_constant_override("margin_right", 8); tm.add_theme_constant_override("margin_top", 6); tm.add_theme_constant_override("margin_bottom", 6)
+		t_panel.add_child(tm)
+
+		var t_text = Label.new()
+		t_text.text = str(lore.get("tactics", "Lurks in dungeon halls serving Morcar."))
+		t_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		t_text.add_theme_font_size_override("font_size", 10)
+		t_text.add_theme_color_override("font_color", Color(0.85, 0.88, 0.92, 0.95))
+		tm.add_child(t_text)
+		monster_detail_tactical_section.add_child(t_panel)
+
+	# 3. Abilities Section
+	if monster_detail_abilities_section:
+		for child in monster_detail_abilities_section.get_children():
+			child.queue_free()
+
+		var ab_title = Label.new()
+		ab_title.text = "COMBAT TRAITS & INNATE ABILITIES"
+		ab_title.add_theme_font_size_override("font_size", 11)
+		ab_title.add_theme_color_override("font_color", Color(1.0, 0.82, 0.2, 0.9))
+		monster_detail_abilities_section.add_child(ab_title)
+
+		var abilities_list = lore.get("abilities", [])
+		for ab in abilities_list:
+			var ab_panel = PanelContainer.new()
+			var ab_sb = StyleBoxFlat.new()
+			ab_sb.bg_color = Color(0.11, 0.08, 0.10, 0.85)
+			ab_sb.set_corner_radius_all(5)
+			ab_sb.border_width_left = 1; ab_sb.border_width_top = 1; ab_sb.border_width_right = 1; ab_sb.border_width_bottom = 1
+			ab_sb.border_color = Color(0.7, 0.3, 0.25, 0.7)
+			ab_panel.add_theme_stylebox_override("panel", ab_sb)
+			var am = MarginContainer.new()
+			am.add_theme_constant_override("margin_left", 8); am.add_theme_constant_override("margin_right", 8); am.add_theme_constant_override("margin_top", 4); am.add_theme_constant_override("margin_bottom", 4)
+			ab_panel.add_child(am)
+			var ab_lbl = Label.new()
+			ab_lbl.text = "[%s]: %s" % [ab.get("name", "Ability"), ab.get("desc", "")]
+			ab_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			ab_lbl.add_theme_font_size_override("font_size", 10)
+			am.add_child(ab_lbl)
+			monster_detail_abilities_section.add_child(ab_panel)
+
+	# 4. Spells Section (if spellcaster)
+	if monster_detail_spells_section:
+		for child in monster_detail_spells_section.get_children():
+			child.queue_free()
+
+		var spells_list = m.get("spells", [])
+		if bool(m.get("isSpellcaster", false)) or spells_list.size() > 0:
+			var sp_title = Label.new()
+			sp_title.text = "FELL DREAD SORCERY"
+			sp_title.add_theme_font_size_override("font_size", 11)
+			sp_title.add_theme_color_override("font_color", Color(0.9, 0.3, 0.85, 1.0))
+			monster_detail_spells_section.add_child(sp_title)
+
+			for sp in spells_list:
+				var sp_panel = PanelContainer.new()
+				var sp_sb = StyleBoxFlat.new()
+				sp_sb.bg_color = Color(0.18, 0.08, 0.18, 0.85)
+				sp_sb.set_corner_radius_all(5)
+				sp_sb.border_width_left = 1; sp_sb.border_width_top = 1; sp_sb.border_width_right = 1; sp_sb.border_width_bottom = 1
+				sp_sb.border_color = Color(0.8, 0.2, 0.8, 0.7)
+				sp_panel.add_theme_stylebox_override("panel", sp_sb)
+				var sm = MarginContainer.new()
+				sm.add_theme_constant_override("margin_left", 8); sm.add_theme_constant_override("margin_right", 8); sm.add_theme_constant_override("margin_top", 4); sm.add_theme_constant_override("margin_bottom", 4)
+				sp_panel.add_child(sm)
+				var sp_lbl = Label.new()
+				var sp_desc = "Commands fell dread magic to strike heroes across rooms."
+				if "lightning" in str(sp).to_lower():
+					sp_desc = "Crackling dark lightning bolts inflicting heavy magical damage."
+				elif "fear" in str(sp).to_lower():
+					sp_desc = "Overwhelming terror reducing hero attack capability."
+				sp_lbl.text = "[Dread Spell: %s]: %s" % [str(sp).capitalize(), sp_desc]
+				sp_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+				sp_lbl.add_theme_font_size_override("font_size", 10)
+				sm.add_child(sp_lbl)
+				monster_detail_spells_section.add_child(sp_panel)
+
 func _create_enemy_card(m: Dictionary, is_visible: bool) -> PanelContainer:
 	var card = PanelContainer.new()
-	card.custom_minimum_size = Vector2(224, 105)
+	card.custom_minimum_size = Vector2(236, 118)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	card.mouse_filter = Control.MOUSE_FILTER_PASS
 
-	var cur_bp = int(m.get("current_bp", 1))
+	var cur_bp = int(m.get("current_bp", m.get("bodyPoints", 1)))
 	var max_bp = int(m.get("bodyPoints", 1))
 	var is_alive = bool(m.get("is_alive", true)) and cur_bp > 0
 	var is_sleeping = bool(m.get("is_sleeping", false))
 	var is_stunned = bool(m.get("tempest_stunned", false))
+	var m_name = str(m.get("name", "Monster"))
+	var is_boss = bool(m.get("isBoss", false)) or get_monster_token_key(m) == "verag"
+	var lore = get_monster_lore(m)
 
 	var sb = StyleBoxFlat.new()
 	sb.corner_radius_top_left = 6
@@ -8243,10 +8722,10 @@ func _create_enemy_card(m: Dictionary, is_visible: bool) -> PanelContainer:
 	elif is_visible:
 		# Currently visible enemy
 		sb.bg_color = Color(0.12, 0.18, 0.16, 0.95)
-		sb.border_color = Color(0.20, 0.85, 0.50, 1.0) # Emerald sightline glow
+		sb.border_color = Color(1.0, 0.75, 0.2, 1.0) if is_boss else Color(0.20, 0.85, 0.50, 1.0) # Emerald sightline glow / Boss Gold
 		sb.border_width_left = 2; sb.border_width_top = 2; sb.border_width_right = 2; sb.border_width_bottom = 2
-		sb.shadow_color = Color(0.1, 0.8, 0.4, 0.3)
-		sb.shadow_size = 3
+		sb.shadow_color = Color(0.9, 0.5, 0.1, 0.4) if is_boss else Color(0.1, 0.8, 0.4, 0.3)
+		sb.shadow_size = 4 if is_boss else 3
 		card.modulate = Color(1.0, 1.0, 1.0, 1.0)
 	else:
 		# No longer visible enemy
@@ -8256,6 +8735,33 @@ func _create_enemy_card(m: Dictionary, is_visible: bool) -> PanelContainer:
 		card.modulate = Color(0.75, 0.75, 0.80, 0.65) # Dimmed opacity for out-of-sight
 
 	card.add_theme_stylebox_override("panel", sb)
+
+	# AI Generated Image Background Underlay
+	var bg_tex = get_monster_card_bg_texture(m)
+	if bg_tex:
+		var bg_rect = TextureRect.new()
+		bg_rect.name = "MonsterCardBg"
+		bg_rect.texture = bg_tex
+		bg_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		bg_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		bg_rect.anchor_right = 1.0
+		bg_rect.anchor_bottom = 1.0
+		bg_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		if not is_alive:
+			bg_rect.modulate = Color(0.65, 0.2, 0.2, 0.22)
+		elif is_visible:
+			bg_rect.modulate = Color(1.0, 0.95, 0.85, 0.40)
+		else:
+			bg_rect.modulate = Color(0.60, 0.65, 0.75, 0.20)
+		card.add_child(bg_rect)
+
+	# Click card to open full monster detail dialog
+	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	card.tooltip_text = "Click to inspect %s's Bestiary Codex" % m_name
+	card.gui_input.connect(func(event: InputEvent):
+		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			open_monster_detail_modal(m)
+	)
 
 	var margin = MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", 8)
@@ -8270,16 +8776,40 @@ func _create_enemy_card(m: Dictionary, is_visible: bool) -> PanelContainer:
 	main_hbox.mouse_filter = Control.MOUSE_FILTER_PASS
 	margin.add_child(main_hbox)
 
+	# Clickable Monster Portrait Button
+	var portrait_btn = Button.new()
+	portrait_btn.name = "MonsterPortraitButton"
+	portrait_btn.custom_minimum_size = Vector2(42, 42)
+	portrait_btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	portrait_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	portrait_btn.tooltip_text = "Click portrait to inspect %s's Bestiary Codex" % m_name
+
+	var p_sb = StyleBoxFlat.new()
+	p_sb.bg_color = Color(0.12, 0.08, 0.08, 0.85) if not is_alive else (Color(0.18, 0.24, 0.22, 0.9) if is_visible else Color(0.12, 0.14, 0.18, 0.85))
+	p_sb.set_corner_radius_all(6)
+	p_sb.border_width_left = 1; p_sb.border_width_top = 1; p_sb.border_width_right = 1; p_sb.border_width_bottom = 1
+	p_sb.border_color = Color(0.85, 0.3, 0.3, 0.8) if not is_alive else (Color(1.0, 0.75, 0.2, 0.9) if is_boss else Color(0.3, 0.9, 0.5, 0.8))
+	portrait_btn.add_theme_stylebox_override("normal", p_sb)
+	portrait_btn.add_theme_stylebox_override("hover", p_sb)
+	portrait_btn.add_theme_stylebox_override("pressed", p_sb)
+
 	var token_tex = get_monster_token_texture(m)
 	if token_tex:
 		var token_rect = TextureRect.new()
+		token_rect.name = "MonsterPortraitTexture"
 		token_rect.texture = token_tex
 		token_rect.custom_minimum_size = Vector2(38, 38)
 		token_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		token_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		token_rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		token_rect.mouse_filter = Control.MOUSE_FILTER_PASS
-		main_hbox.add_child(token_rect)
+		token_rect.anchor_right = 1.0
+		token_rect.anchor_bottom = 1.0
+		token_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		portrait_btn.add_child(token_rect)
+
+	portrait_btn.pressed.connect(func():
+		open_monster_detail_modal(m)
+	)
+	main_hbox.add_child(portrait_btn)
 
 	var vbox = VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 2)
@@ -8287,10 +8817,9 @@ func _create_enemy_card(m: Dictionary, is_visible: bool) -> PanelContainer:
 	vbox.mouse_filter = Control.MOUSE_FILTER_PASS
 	main_hbox.add_child(vbox)
 
-	# Row 1: Header (Name & Visibility Badge)
+	# Row 1: Header (Name & Badges)
 	var hdr_row = HBoxContainer.new()
 	var name_lbl = Label.new()
-	var m_name = str(m.get("name", "Monster"))
 	name_lbl.text = m_name
 	name_lbl.add_theme_font_size_override("font_size", 12)
 	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -8304,9 +8833,9 @@ func _create_enemy_card(m: Dictionary, is_visible: bool) -> PanelContainer:
 		vis_badge.text = "[DEFEATED]"
 		vis_badge.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3, 1.0))
 	elif is_visible:
-		name_lbl.add_theme_color_override("font_color", Color(0.9, 1.0, 0.95, 1.0))
-		vis_badge.text = "[VISIBLE]"
-		vis_badge.add_theme_color_override("font_color", Color(0.3, 0.95, 0.6, 1.0))
+		name_lbl.add_theme_color_override("font_color", Color(1.0, 0.88, 0.4, 1.0) if is_boss else Color(0.9, 1.0, 0.95, 1.0))
+		vis_badge.text = "[BOSS]" if is_boss else "[VISIBLE]"
+		vis_badge.add_theme_color_override("font_color", Color(1.0, 0.75, 0.2, 1.0) if is_boss else Color(0.3, 0.95, 0.6, 1.0))
 	else:
 		name_lbl.add_theme_color_override("font_color", Color(0.75, 0.78, 0.85, 0.8))
 		vis_badge.text = "[OUT OF SIGHT]"
@@ -8322,7 +8851,14 @@ func _create_enemy_card(m: Dictionary, is_visible: bool) -> PanelContainer:
 	hdr_row.add_child(vis_badge)
 	vbox.add_child(hdr_row)
 
-	# Row 2: BP Bar & Text
+	# Row 2: Archetype / Subtitle (Fantasy RPG flavor)
+	var sub_lbl = Label.new()
+	sub_lbl.text = str(lore.get("archetype", "Dread Monster"))
+	sub_lbl.add_theme_font_size_override("font_size", 9)
+	sub_lbl.add_theme_color_override("font_color", Color(0.9, 0.7, 0.4, 0.85) if is_boss else Color(0.7, 0.75, 0.82, 0.75))
+	vbox.add_child(sub_lbl)
+
+	# Row 3: BP Bar & Text
 	var bp_row = HBoxContainer.new()
 	bp_row.add_theme_constant_override("separation", 6)
 	var bp_lbl = Label.new()
@@ -8354,19 +8890,20 @@ func _create_enemy_card(m: Dictionary, is_visible: bool) -> PanelContainer:
 	bp_row.add_child(bp_bar)
 	vbox.add_child(bp_row)
 
-	# Row 3: Stats row
+	# Row 4: Stats row (ATK, DEF, MOV, MP)
 	var atk_d = int(m.get("attackDice", 2))
 	var def_d = int(m.get("defendDice", 2))
-	var mv_sq = int(m.get("moveSquares", 6))
+	var mv_sq = int(m.get("moveSquares", m.get("movementSquares", 6)))
+	var mind_p = int(m.get("mindPoints", 0))
 	var stat_row = HBoxContainer.new()
 	var stat_lbl = Label.new()
-	stat_lbl.text = "ATK %dd   DEF %dd   MOV %d" % [atk_d, def_d, mv_sq]
+	stat_lbl.text = "ATK %dd   DEF %dd   MOV %d   MP %d" % [atk_d, def_d, mv_sq, mind_p]
 	stat_lbl.add_theme_font_size_override("font_size", 10)
 	stat_lbl.add_theme_color_override("font_color", Color(0.8, 0.85, 0.92, 0.9))
 	stat_row.add_child(stat_lbl)
 	vbox.add_child(stat_row)
 
-	# Row 4: Conditions (Sleep, Stun, etc.)
+	# Row 5: Conditions (Sleep, Stun, etc.)
 	var eff_list: Array[String] = []
 	if is_sleeping:
 		eff_list.append("Sleeping")
@@ -8817,7 +9354,12 @@ func get_telemetry_state() -> Dictionary:
 				"grid_pos": [mp.x, mp.y],
 				"roomId": str(m.get("roomId", "")),
 				"tokenAsset": get_monster_token_path(m),
-				"hasTokenTexture": (get_monster_token_texture(m) != null)
+				"hasTokenTexture": (get_monster_token_texture(m) != null),
+				"hasAiBackground": (get_monster_card_bg_texture(m) != null),
+				"hasPortraitButton": true,
+				"monsterKey": get_monster_token_key(m),
+				"loreTitle": get_monster_lore(m).get("title", ""),
+				"loreArchetype": get_monster_lore(m).get("archetype", "")
 			})
 
 	var displayed_enemy_cards: Array = []
@@ -9042,6 +9584,15 @@ func get_telemetry_state() -> Dictionary:
 			"heroClass": hero_detail_class.text if (hero_detail_modal and hero_detail_modal.visible and hero_detail_class) else "",
 			"statusBadge": hero_detail_status_badge.text if (hero_detail_modal and hero_detail_modal.visible and hero_detail_status_badge) else ""
 		},
+		"monsterDetailModalOpen": monster_detail_modal.visible if monster_detail_modal else false,
+		"monsterDetailModal": {
+			"visible": monster_detail_modal.visible if monster_detail_modal else false,
+			"monsterId": active_detail_monster_id,
+			"monsterName": monster_detail_name.text if (monster_detail_modal and monster_detail_modal.visible and monster_detail_name) else "",
+			"monsterType": monster_detail_type.text if (monster_detail_modal and monster_detail_modal.visible and monster_detail_type) else "",
+			"statusBadge": monster_detail_status_badge.text if (monster_detail_modal and monster_detail_modal.visible and monster_detail_status_badge) else "",
+			"hasPortrait": (monster_detail_portrait != null and monster_detail_portrait.texture != null)
+		},
 		"activeHeroSpells": h_act.get("spells", []),
 		"activeHeroInventory": h_act.get("inventory", []),
 		"spellAllocation": {
@@ -9242,6 +9793,31 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			return {
 				"success": true,
 				"modalVisible": hero_detail_modal.visible if hero_detail_modal else false
+			}
+		"open_monster_detail", "show_monster_detail", "click_monster_portrait":
+			var m_id = str(action_data.get("monsterId", action_data.get("id", "")))
+			var target_monster: Dictionary = {}
+			if not m_id.is_empty():
+				for m in monsters:
+					if str(m.get("id")) == m_id or str(m.get("slug")) == m_id:
+						target_monster = m
+						break
+			if target_monster.is_empty() and monsters.size() > 0:
+				target_monster = monsters[0]
+			if not target_monster.is_empty():
+				open_monster_detail_modal(target_monster)
+				return {
+					"success": true,
+					"monsterId": str(target_monster.get("id", "")),
+					"monsterName": str(target_monster.get("name", "")),
+					"modalVisible": monster_detail_modal.visible if monster_detail_modal else false
+				}
+			return { "success": false, "error": "Monster not found" }
+		"close_monster_detail", "dismiss_monster_detail":
+			close_monster_detail_modal()
+			return {
+				"success": true,
+				"modalVisible": monster_detail_modal.visible if monster_detail_modal else false
 			}
 		"dismiss_dice_roll":
 			dismiss_active_dice_roll()
@@ -9679,10 +10255,14 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				revealed_rooms.clear()
 				for r in action_data.revealedRooms:
 					revealed_rooms.append(str(r))
-			if action_data.has("discoveredMonsterIds") and action_data.discoveredMonsterIds is Array:
-				discovered_monster_ids.clear()
-				for mid in action_data.discoveredMonsterIds:
-					discovered_monster_ids[str(mid)] = true
+			if action_data.has("discoveredMonsterIds") or action_data.has("discovered_monster_ids"):
+				var dm_arr = action_data.get("discoveredMonsterIds", action_data.get("discovered_monster_ids", []))
+				if dm_arr is Array:
+					discovered_monster_ids.clear()
+					for mid in dm_arr:
+						discovered_monster_ids[str(mid)] = true
+			if action_data.has("showDefeatedMonsters") or action_data.has("show_defeated_monsters"):
+				show_defeated_monsters = bool(action_data.get("showDefeatedMonsters", action_data.get("show_defeated_monsters", false)))
 			if action_data.has("resetExplored") and bool(action_data.resetExplored):
 				explored_tiles.clear()
 			if action_data.has("resetFloatingTexts") and bool(action_data.resetFloatingTexts):
@@ -9716,6 +10296,19 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 					open_hero_detail_modal(target_hero)
 			if action_data.has("closeHeroDetail") and bool(action_data.get("closeHeroDetail")):
 				close_hero_detail_modal()
+			if action_data.has("showMonsterDetail") or action_data.has("monsterDetail"):
+				var req_m_id = str(action_data.get("showMonsterDetail", action_data.get("monsterDetail", "")))
+				var target_monster: Dictionary = {}
+				for m in monsters:
+					if str(m.get("id")) == req_m_id or str(m.get("slug")) == req_m_id:
+						target_monster = m
+						break
+				if target_monster.is_empty() and monsters.size() > 0:
+					target_monster = monsters[0]
+				if not target_monster.is_empty():
+					open_monster_detail_modal(target_monster)
+			if action_data.has("closeMonsterDetail") and bool(action_data.get("closeMonsterDetail")):
+				close_monster_detail_modal()
 			_rebuild_spatial_caches()
 			update_party_vision()
 			_update_ui()
