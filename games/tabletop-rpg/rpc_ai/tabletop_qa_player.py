@@ -157,6 +157,14 @@ class TabletopQAPlayer:
         self.log(f"Disarming trap{' ' + trap_id if trap_id else ''}...")
         return self.execute_action("disarm_trap", trapId=trap_id)
 
+    def open_disarm_modal(self) -> dict:
+        self.log("Opening HUD trap disarm modal...")
+        return self.execute_action("open_disarm_modal")
+
+    def close_disarm_modal(self) -> dict:
+        self.log("Closing HUD trap disarm modal...")
+        return self.execute_action("close_disarm_modal")
+
     def end_turn(self) -> dict:
         self.log("Ending active turn...")
         return self.execute_action("end_turn")
