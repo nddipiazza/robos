@@ -219,14 +219,18 @@ class TabletopQAPlayer:
 
     def take_screenshot(self, out_path: str = "/tmp/tabletop_screenshot.png") -> dict:
         self.log(f"Capturing game viewport screenshot to {out_path}...")
-        url = f"{self.base_url}/screenshot"
-        req = urllib.request.Request(
-            url,
-            data=json.dumps({"path": out_path}).encode("utf-8"),
-            headers={"Content-Type": "application/json"}
-        )
-        try:
-            with urllib.request.urlopen(req, timeout=3.0) as resp:
-                return json.loads(resp.read().decode("utf-8"))
-        except Exception as e:
-            return {"success": False, "error": str(e)}
+        res = self.execute_action("take_screenshot", path=out_path)
+        if not res.get("success"):
+            # Fallback to direct HTTP endpoint
+            url = f"{self.base_url}/screenshot"
+            req = urllib.request.Request(
+                url,
+                data=json.dumps({"path": out_path}).encode("utf-8"),
+                headers={"Content-Type": "application/json"}
+            )
+            try:
+                with urllib.request.urlopen(req, timeout=3.0) as resp:
+                    return json.loads(resp.read().decode("utf-8"))
+            except Exception as e:
+                return {"success": False, "error": str(e)}
+        return res
