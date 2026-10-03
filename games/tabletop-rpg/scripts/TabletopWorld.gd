@@ -2950,15 +2950,18 @@ func attack_adjacent_monster(monster_id: String = "", weapon_id: String = "") ->
 		hero.get("name"), target_m.get("name"), w_def.get("name", "weapon"), atk_dice, res.total_skulls, target_m.get("name"), res.effective_shields
 	])
 
+	var hp_subtracted = 0
+	var prev_bp = int(target_m.get("current_bp", 1))
 	if res.wounds > 0:
-		target_m["current_bp"] = maxi(0, target_m.get("current_bp", 1) - res.wounds)
+		target_m["current_bp"] = maxi(0, prev_bp - res.wounds)
+		hp_subtracted = prev_bp - int(target_m.get("current_bp", 0))
 		_log("[HIT] Wounds inflicted: %d! %s HP: %d" % [res.wounds, target_m.get("name"), target_m.get("current_bp")])
 		spawn_floating_text(m_pos, "-%d HP" % res.wounds, Color(0.95, 0.2, 0.2))
 		if target_m.get("current_bp") <= 0:
 			target_m["is_alive"] = false
 			_log("[DEFEATED] %s is DEFEATED!" % target_m.get("name"))
 			spawn_floating_text(m_pos, "DEFEATED!", Color(1.0, 0.1, 0.1), 1.5)
-	else:
+	elif hp_subtracted == 0 and res.wounds == 0:
 		_log("[BLOCKED] Attack was completely blocked by %s!" % target_m.get("name"))
 		spawn_floating_text(m_pos, "BLOCKED!", Color(0.7, 0.8, 1.0))
 
@@ -3022,15 +3025,18 @@ func dm_attack_hero(hero_id: String = "", attacker_monster: Variant = null) -> D
 		monster.get("name"), target_h.get("name"), res.total_skulls, target_h.get("name"), res.effective_shields, def_dice
 	])
 
+	var h_hp_subtracted = 0
+	var prev_h_bp = int(target_h.get("current_bp", 8))
 	if res.wounds > 0:
-		target_h["current_bp"] = maxi(0, int(target_h.get("current_bp", 8)) - res.wounds)
+		target_h["current_bp"] = maxi(0, prev_h_bp - res.wounds)
+		h_hp_subtracted = prev_h_bp - int(target_h.get("current_bp", 0))
 		_log("[HIT] %s takes %d wound(s)! Remaining HP: %d" % [target_h.get("name"), res.wounds, target_h.get("current_bp")])
 		spawn_floating_text(h_pos, "-%d HP" % res.wounds, Color(0.95, 0.2, 0.2))
 		if target_h.get("rock_skin_active", false):
 			target_h["rock_skin_active"] = false
 			_log("[SPELL] The wound shatters %s's Rock Skin spell!" % target_h.get("name"))
 			spawn_floating_text(h_pos, "SHATTERED!", Color(0.8, 0.8, 0.8))
-	else:
+	elif h_hp_subtracted == 0 and res.wounds == 0:
 		_log("[BLOCKED] %s successfully blocked the monster attack!" % target_h.get("name"))
 		spawn_floating_text(h_pos, "BLOCKED!", Color(0.3, 0.8, 1.0))
 
@@ -3256,6 +3262,8 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 				])
 				if combat_res.wounds > 0:
 					spawn_floating_text(m_pos, "-%d HP" % combat_res.wounds, Color(0.2, 0.8, 1.0))
+				else:
+					spawn_floating_text(m_pos, "BLOCKED!", Color(0.6, 0.8, 1.0))
 				if target_m.get("current_bp") <= 0:
 					target_m["is_alive"] = false
 					_log("[DEFEATED] %s is crushed by the Genie's wrath!" % target_m.get("name"))
@@ -4755,7 +4763,7 @@ func _create_enemy_card(m: Dictionary, is_visible: bool) -> PanelContainer:
 func _sanitize_ui_text(text: String) -> String:
 	var s = text
 	# Replace emojis with clean thematic bracket tags or text
-	s = s.replace("🛡️", "[BLOCKED]").replace("🛡", "[BLOCKED]")
+	s = s.replace("🛡️", "[SHIELD]").replace("🛡", "[SHIELD]")
 	s = s.replace("⚔️", "[ATTACK]").replace("⚔", "[ATTACK]")
 	s = s.replace("💥", "[HIT]")
 	s = s.replace("💀", "[DEFEATED]")

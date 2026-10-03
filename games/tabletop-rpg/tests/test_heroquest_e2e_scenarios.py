@@ -2250,6 +2250,124 @@ class TestHeroQuestE2EScenarios(unittest.TestCase):
         self.assertIn("sdoor-crypt-secret", search_room_res.get("foundSecretDoors", []))
         self.assertTrue(crypt_secret_door.get("is_revealed"))
 
+    def test_54_attack_subtracting_hp_never_displays_blocked_message(self):
+        """Scenario 54: Attacks that subtract HP strictly suppress any 'blocked' message or floating text."""
+        bdd_scenario_header(54, "Attacks Subtracting HP Strictly Suppress Blocked Message")
+
+        # --- 1. Hero Melee Attack Subtracting HP (Wounds Inflicted) ---
+        bdd_step("GIVEN", "Barbarian adjacent to Orc Warlord Verag with guaranteed attack advantage (10 Atk vs 0 Def)")
+        self.ai.set_state(
+            activeHero="barbarian",
+            hasActed=False,
+            heroes=[{"id": "barbarian", "grid_pos": [13, 8], "attackDice": 10, "equipped_weapon": ""}],
+            monsters=[{"id": "mon-verag", "grid_pos": [13, 9], "current_bp": 6, "defendDice": 0, "is_alive": True}],
+            discoveredMonsterIds=["mon-verag"]
+        )
+
+        bdd_step("WHEN", "Barbarian attacks Orc Warlord Verag dealing damage and subtracting HP")
+        baseline = self.ai.snapshot()
+        res = self.ai.attack("mon-verag")
+        current = self.ai.snapshot()
+        diff = diff_snapshots(baseline, current)
+
+        st_post = self.ai.get_state()
+        m_post = next((m for m in st_post.get("monsters", []) if m.get("id") == "mon-verag"), {})
+        ft_texts = [ft.get("text", "") for ft in st_post.get("floatingTexts", [])]
+        active_dice = st_post.get("activeDiceRoll", {})
+        dice_summary = active_dice.get("summary", "")
+
+        bdd_step("THEN", "HP is subtracted and NO 'blocked' message or floating text is displayed",
+                 assertions=[
+                     f"Attack success: {res.get('success')}",
+                     f"Wounds inflicted: {res.get('result', {}).get('wounds')}",
+                     f"Remaining BP: {m_post.get('current_bp')} (was 6)",
+                     f"Combat log added: {diff.combat_log_added}",
+                     f"Floating texts: {ft_texts}",
+                     f"Dice summary: {dice_summary}"
+                 ])
+        self.assertTrue(res.get("success"))
+        wounds = res.get("result", {}).get("wounds", 0)
+        self.assertGreater(wounds, 0)
+        self.assertLess(m_post.get("current_bp", 6), 6)
+        for log_entry in diff.combat_log_added:
+            self.assertNotIn("[BLOCKED]", log_entry)
+            self.assertNotIn("completely blocked", log_entry.lower())
+        self.assertNotIn("BLOCKED!", ft_texts)
+        self.assertNotIn("BLOCKED!", dice_summary)
+
+        # --- 2. Monster Attack Subtracting HP (Wounds Inflicted) ---
+        bdd_step("GIVEN", "Zargon monster with 10 Atk attacks Dwarf with 0 Def")
+        self.ai.set_state(
+            role="gm",
+            phase="gm_phase",
+            heroes=[{"id": "dwarf", "current_bp": 7, "defendDice": 0, "grid_pos": [2, 1], "equipped_armor": []}],
+            monsters=[{"id": "mon-attacker", "attackDice": 10, "current_bp": 4, "grid_pos": [2, 2], "is_alive": True}]
+        )
+
+        bdd_step("WHEN", "Monster launches attack against Dwarf inflicting wounds")
+        baseline_dm = self.ai.snapshot()
+        dm_res = self.ai.dm_attack(hero_id="dwarf", monster_id="mon-attacker")
+        current_dm = self.ai.snapshot()
+        diff_dm = diff_snapshots(baseline_dm, current_dm)
+
+        st_dm_post = self.ai.get_state()
+        dwarf_post = next((h for h in st_dm_post.get("heroes", []) if h.get("id") == "dwarf"), {})
+        ft_dm_texts = [ft.get("text", "") for ft in st_dm_post.get("floatingTexts", [])]
+
+        dm_wounds = dm_res.get("result", {}).get("wounds", dm_res.get("wounds", 0))
+        bdd_step("THEN", "Dwarf takes damage and NO 'blocked' message or floating text is displayed",
+                 assertions=[
+                     f"DM attack wounds: {dm_wounds}",
+                     f"Dwarf remaining BP: {dwarf_post.get('current_bp')} (was 7)",
+                     f"Combat log added: {diff_dm.combat_log_added}",
+                     f"Floating texts: {ft_dm_texts}"
+                 ])
+        self.assertGreater(dm_wounds, 0)
+        self.assertLess(dwarf_post.get("current_bp", 7), 7)
+        for log_entry in diff_dm.combat_log_added:
+            self.assertNotIn("[BLOCKED]", log_entry)
+            self.assertNotIn("successfully blocked", log_entry.lower())
+        self.assertNotIn("BLOCKED!", ft_dm_texts)
+
+        # --- 3. Attack Completely Blocked (0 HP Subtracted) DOES Show Blocked Message ---
+        bdd_step("GIVEN", "Barbarian with 0 attack dice attacks monster with 4 defend dice")
+        self.ai.set_state(
+            role="player",
+            phase="hero_phase",
+            activeHero="barbarian",
+            hasActed=False,
+            heroes=[{"id": "barbarian", "grid_pos": [13, 8], "attackDice": 0, "equipped_weapon": ""}],
+            monsters=[{"id": "mon-verag", "grid_pos": [13, 9], "current_bp": 6, "defendDice": 4, "is_alive": True}],
+            discoveredMonsterIds=["mon-verag"]
+        )
+
+        bdd_step("WHEN", "Barbarian attacks dealing 0 wounds (0 HP subtracted)")
+        baseline_blk = self.ai.snapshot()
+        res_blk = self.ai.attack("mon-verag")
+        current_blk = self.ai.snapshot()
+        diff_blk = diff_snapshots(baseline_blk, current_blk)
+
+        st_blk_post = self.ai.get_state()
+        m_blk_post = next((m for m in st_blk_post.get("monsters", []) if m.get("id") == "mon-verag"), {})
+        ft_blk_texts = [ft.get("text", "") for ft in st_blk_post.get("floatingTexts", [])]
+        active_blk_dice = st_blk_post.get("activeDiceRoll", {})
+        dice_blk_summary = active_blk_dice.get("summary", "")
+
+        bdd_step("THEN", "0 HP is subtracted and 'BLOCKED' message and floating text are displayed",
+                 assertions=[
+                     f"Wounds: {res_blk.get('result', {}).get('wounds')}",
+                     f"Remaining BP: {m_blk_post.get('current_bp')} (unchanged 6)",
+                     f"Combat log added: {diff_blk.combat_log_added}",
+                     f"Floating texts: {ft_blk_texts}",
+                     f"Dice summary: {dice_blk_summary}"
+                 ])
+        self.assertEqual(res_blk.get("result", {}).get("wounds", 0), 0)
+        self.assertEqual(m_blk_post.get("current_bp"), 6)
+        has_blocked_log = any("[BLOCKED]" in entry or "completely blocked" in entry.lower() for entry in diff_blk.combat_log_added)
+        self.assertTrue(has_blocked_log)
+        self.assertIn("BLOCKED!", ft_blk_texts)
+        self.assertIn("BLOCKED!", dice_blk_summary)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

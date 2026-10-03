@@ -2772,7 +2772,7 @@ function rollHeroDefend() {
   }
 
   const armor = getHeroArmor(hero);
-  logCombatAction(`🛡️ ${hero["dcterms:title"]} rolled Defend (${numDice} dice with ${armor}): ${rolls.map(r => r.type === "skull" ? "💀" : (r.type === "white-shield" ? "🛡️" : "⬛")).join(" ")} — [${shields} White Shield${shields !== 1 ? 's' : ''} Blocked!]`, "defend");
+  logCombatAction(`🛡️ ${hero["dcterms:title"]} rolled Defend (${numDice} dice with ${armor}): ${rolls.map(r => r.type === "skull" ? "💀" : (r.type === "white-shield" ? "🛡️" : "⬛")).join(" ")} — [${shields} White Shield${shields !== 1 ? 's' : ''} Defended]`, "defend");
   return { numDice, rolls, shields };
 }
 
@@ -3338,7 +3338,7 @@ function rollMonsterDefend() {
     resultBox.innerHTML = rolls.map(r => `<span class="dice-badge ${r.faceClass}">${r.label}</span>`).join(" ");
   }
 
-  logMonsterCombatAction(`⬛ ${monster["dcterms:title"]} rolled Monster Defend (${numDice} dice): ${rolls.map(r => r.type === "skull" ? "💀" : (r.type === "white-shield" ? "🛡️" : "⬛")).join(" ")} — [${blackShields} Black Shield${blackShields !== 1 ? 's' : ''} Blocked!]`, "defend");
+  logMonsterCombatAction(`⬛ ${monster["dcterms:title"]} rolled Monster Defend (${numDice} dice): ${rolls.map(r => r.type === "skull" ? "💀" : (r.type === "white-shield" ? "🛡️" : "⬛")).join(" ")} — [${blackShields} Black Shield${blackShields !== 1 ? 's' : ''} Defended]`, "defend");
   return { numDice, rolls, blackShields };
 }
 
