@@ -1285,14 +1285,11 @@ func _load_active_cartridge() -> void:
 		h["veil_of_mist_active"] = false
 		h["swift_wind_active"] = false
 
-		if h_idx == 0:
-			# The active starting hero begins on the board at the spiral staircase
-			h["is_on_board"] = true
-			h["grid_pos"] = starting_stair
-		else:
-			# Other heroes remain OFF the board until their first turn arrives
-			h["is_on_board"] = false
-			h["grid_pos"] = Vector2i(-1, -1)
+		# All heroes start on the board at the spiral staircase and coexist there
+		# until their first turn is not skipped.
+		h["is_on_board"] = true
+		h["grid_pos"] = starting_stair
+		h["has_departed_start"] = false
 		heroes.append(h)
 		h_idx += 1
 
@@ -1467,6 +1464,22 @@ func is_tile_wall_blocked(tile: Vector2i) -> bool:
 func is_border_tile(tile: Vector2i) -> bool:
 	return tile.x <= 0 or tile.x >= grid_cols - 1 or tile.y <= 0 or tile.y >= grid_rows - 1
 
+func is_edge_tile(tile: Vector2i) -> bool:
+	return is_border_tile(tile)
+
+func is_tile_walkable(tile: Vector2i) -> bool:
+	if tile.x < 0 or tile.x >= grid_cols or tile.y < 0 or tile.y >= grid_rows:
+		return false
+	if is_border_tile(tile):
+		return false
+	if tile == starting_stair:
+		return false
+	if is_tile_wall_blocked(tile):
+		return false
+	if is_tile_occupied_by_furniture(tile):
+		return false
+	return true
+
 # --- HeroQuest Miniature Occupancy Rules ---
 func _to_grid_pos(val: Variant) -> Vector2i:
 	if val is Vector2i:
@@ -1495,6 +1508,9 @@ func is_tile_occupied_by_hero(tile: Vector2i, exclude_hero_idx: int = -1) -> boo
 			continue
 		var h = heroes[i]
 		if h.get("is_on_board", false) and int(h.get("current_bp", 0)) > 0 and _to_grid_pos(h.get("grid_pos")) == tile:
+			# Heroes coexisting at the starting staircase do not block each other
+			if tile == starting_stair and not h.get("has_departed_start", false):
+				continue
 			return true
 	return false
 
@@ -1788,6 +1804,12 @@ func get_reachable_walk_tiles() -> Array[Vector2i]:
 			var nxt = cur + d
 			if nxt.x < 0 or nxt.x >= grid_cols or nxt.y < 0 or nxt.y >= grid_rows:
 				continue
+			# Rule: Edge / border tiles are strictly non-walkable
+			if is_border_tile(nxt):
+				continue
+			# Rule: Starting stair tile cannot be stepped back onto
+			if nxt == starting_stair:
+				continue
 
 			# Must be within the revealed map
 			if not is_tile_revealed(nxt):
@@ -1816,12 +1838,14 @@ func get_reachable_walk_tiles() -> Array[Vector2i]:
 
 	# Filter destination tiles that the hero can end their movement on:
 	# Cannot end on the start pos
+	# Cannot end on starting stair
+	# Cannot end on edge / border tiles
 	# Cannot end on another hero (Rule: HeroQuest strictly forbids sharing squares)
 	# Cannot end on monster
 	# Cannot end on furniture
 	# Cannot end on wall block
 	for tile in min_cost.keys():
-		if tile == start_pos:
+		if tile == start_pos or tile == starting_stair or is_border_tile(tile):
 			continue
 		if is_tile_occupied_by_hero(tile, active_hero_idx):
 			continue
@@ -3959,6 +3983,20 @@ func _handle_tile_click(tile: Vector2i) -> void:
 		show_unavailable_notice("Blocked by wall", tile)
 		return
 
+	# If clicked on starting stair tile, provide immediate feedback: cannot step back onto start tile
+	if tile == starting_stair:
+		_log("[MOVE] Square (%d, %d) is the starting staircase! HeroQuest rules strictly forbid stepping back onto the starting tile." % [tile.x, tile.y])
+		spawn_floating_text(tile, "START TILE NOT WALKABLE!", Color(0.95, 0.4, 0.3), 1.2)
+		show_unavailable_notice("Cannot return to start tile", tile)
+		return
+
+	# If clicked on edge tile, provide immediate feedback: edge tiles are not walkable
+	if is_border_tile(tile):
+		_log("[MOVE] Square (%d, %d) is on the board edge! Edge tiles are not walkable." % [tile.x, tile.y])
+		spawn_floating_text(tile, "EDGE TILE NOT WALKABLE!", Color(0.95, 0.4, 0.3), 1.2)
+		show_unavailable_notice("Edge tiles not walkable", tile)
+		return
+
 	# If haven't rolled movement yet, roll dice first!
 	if not movement_rolled:
 		if movement_closed or (moved_before_action and has_acted_this_turn):
@@ -4035,6 +4073,12 @@ func roll_movement_dice() -> Dictionary:
 func find_path(start: Vector2i, goal: Vector2i, moving_hero_idx: int = -1) -> Array[Vector2i]:
 	if start == goal:
 		return [start]
+	# Rule: Cannot target starting_stair (starting tile cannot be stepped back onto)
+	if goal == starting_stair:
+		return []
+	# Rule: Edge / border tiles of the map are strictly non-walkable
+	if is_border_tile(goal):
+		return []
 	# Rule 1: No sharing squares! Characters cannot finish their turn on a square occupied by another model.
 	if is_tile_occupied(goal, moving_hero_idx):
 		return []
@@ -4065,6 +4109,12 @@ func find_path(start: Vector2i, goal: Vector2i, moving_hero_idx: int = -1) -> Ar
 			var nxt = cur + d
 			if nxt.x < 0 or nxt.x >= grid_cols or nxt.y < 0 or nxt.y >= grid_rows:
 				continue
+			# Rule: Edge / border tiles of the map are strictly non-walkable
+			if is_border_tile(nxt):
+				continue
+			# Rule: Starting stair tile cannot be stepped back onto
+			if nxt == starting_stair:
+				continue
 			if came_from.has(nxt):
 				continue
 			if not pass_rock:
@@ -4093,6 +4143,18 @@ func move_hero(target_pos: Vector2i, is_interactive: bool = false) -> bool:
 	var curr = hero.get("grid_pos", Vector2i(1, 1))
 	if curr == target_pos:
 		return true
+
+	# Rule: Cannot step back onto the starting tile
+	if target_pos == starting_stair:
+		_log("[WARNING] Cannot step back upon the starting stairway! The starting tile is not walkable.")
+		show_unavailable_notice("Cannot return to start tile", target_pos)
+		return false
+
+	# Rule: Edge / border tiles are strictly non-walkable
+	if is_border_tile(target_pos):
+		_log("[WARNING] Square (%d, %d) is on the board edge! Edge tiles are not walkable." % [target_pos.x, target_pos.y])
+		show_unavailable_notice("Edge tiles not walkable", target_pos)
+		return false
 
 	if movement_trail.is_empty():
 		movement_start_pos = curr
@@ -4166,6 +4228,7 @@ func move_hero(target_pos: Vector2i, is_interactive: bool = false) -> bool:
 			break
 
 	hero["grid_pos"] = final_pos
+	hero["has_departed_start"] = true
 
 	for step_idx in range(1, actual_cost + 1):
 		var step_pos = path[step_idx]
@@ -6153,17 +6216,10 @@ func _check_hero_enter_board(idx: int) -> void:
 	var h = heroes[idx]
 	if not h.get("is_on_board", false):
 		h["is_on_board"] = true
-		var spawn_tile = starting_stair
-		if is_tile_occupied(spawn_tile):
-			# If the stairway tile is currently occupied, enter on adjacent unoccupied corridor tile
-			for offset in [Vector2i(1, 0), Vector2i(0, 1), Vector2i(0, 2), Vector2i(2, 0), Vector2i(1, 1)]:
-				var cand = starting_stair + offset
-				if not is_tile_occupied(cand) and not is_tile_wall_blocked(cand) and _get_room_at(cand).is_empty():
-					spawn_tile = cand
-					break
-		h["grid_pos"] = spawn_tile
-		_log("[ENTER] %s descends the spiral stairway and enters the dungeon at (%d, %d)!" % [
-			h.get("name"), spawn_tile.x, spawn_tile.y
+		h["grid_pos"] = starting_stair
+		h["has_departed_start"] = false
+		_log("[ENTER] %s descends the spiral stairway and joins the party at (%d, %d)!" % [
+			h.get("name"), starting_stair.x, starting_stair.y
 		])
 
 func end_turn() -> void:
@@ -6172,6 +6228,10 @@ func end_turn() -> void:
 		pending_flash_item = {}
 		trigger_flash_new_item(p)
 	if current_phase == "hero_phase":
+		var cur_hero = get_active_hero()
+		if cur_hero.size() > 0:
+			if has_moved_this_turn or has_acted_this_turn:
+				cur_hero["has_departed_start"] = true
 		active_hero_idx = (active_hero_idx + 1) % maxi(1, heroes.size())
 		if active_hero_idx == 0:
 			current_phase = "gm_phase"
@@ -6238,6 +6298,9 @@ func _calculate_monster_movement_path(m: Dictionary, target_hero: Dictionary, ma
 		var moved_this_step = false
 		for step_dir in step_options:
 			var cand_pos = curr_pos + step_dir
+			# Strictly forbid entering edge tiles or starting stair
+			if is_border_tile(cand_pos) or cand_pos == starting_stair:
+				continue
 			# Strictly forbid entering any hero's tile
 			if cand_pos == h_pos or is_tile_occupied_by_hero(cand_pos):
 				continue
@@ -8444,6 +8507,9 @@ func get_telemetry_state() -> Dictionary:
 		hc["defendDice"] = def_dice
 		hc["equipped_weapon"] = str(h.get("equipped_weapon", "unarmed"))
 		hc["weapon"] = str(h.get("equipped_weapon", h.get("weapon", "unarmed")))
+		hc["hasDepartedStart"] = bool(h.get("has_departed_start", false))
+		hc["has_departed_start"] = bool(h.get("has_departed_start", false))
+		hc["isOnBoard"] = bool(h.get("is_on_board", false))
 		heroes_copy.append(hc)
 
 		var cur_bp = int(h.get("current_bp", 8))
@@ -8778,6 +8844,8 @@ func get_telemetry_state() -> Dictionary:
 			"text": btn_map_end_turn.text if btn_map_end_turn else "",
 			"tooltip": btn_map_end_turn.tooltip_text if btn_map_end_turn else ""
 		},
+		"startingStair": [starting_stair.x, starting_stair.y],
+		"isStartingTileSpecial": true,
 		"heroes": heroes_copy,
 		"monsters": monsters_copy,
 		"doors": doors_copy,
@@ -9303,6 +9371,8 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 								elif k == "heroClass" or k == "hero_class" or k == "class":
 									h["heroClass"] = str(h_patch[k])
 									h["hero_class"] = str(h_patch[k])
+								elif k == "hasDepartedStart" or k == "has_departed_start":
+									h["has_departed_start"] = bool(h_patch[k])
 								else:
 									h[k] = h_patch[k]
 							break
