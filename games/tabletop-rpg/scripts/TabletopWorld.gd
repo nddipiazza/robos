@@ -386,6 +386,7 @@ func _load_action_icons() -> void:
 		"search": "res://assets/icons/action_search.png",
 		"traps": "res://assets/icons/action_traps.png",
 		"disarm": "res://assets/icons/action_disarm.png",
+		"armory": "res://assets/icons/action_armory.png",
 		"summon": "res://assets/icons/action_summon.png",
 		"ai_step": "res://assets/icons/action_ai_step.png",
 		"end_turn": "res://assets/icons/action_end_turn.png",
@@ -526,13 +527,20 @@ func _setup_action_button_style(btn: Button) -> void:
 	btn.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	btn.vertical_icon_alignment = VERTICAL_ALIGNMENT_CENTER
 
-	# Transparent font color so underlying .text is kept for API/tests but does not overlap icon
-	btn.add_theme_color_override("font_color", Color(1, 1, 1, 0))
-	btn.add_theme_color_override("font_hover_color", Color(1, 1, 1, 0))
-	btn.add_theme_color_override("font_pressed_color", Color(1, 1, 1, 0))
-	btn.add_theme_color_override("font_disabled_color", Color(1, 1, 1, 0))
-	btn.add_theme_color_override("font_focus_color", Color(1, 1, 1, 0))
-	btn.add_theme_font_size_override("font_size", 1)
+	# Transparent font color if icon is present; if icon is missing, show fallback text so button is never an empty box
+	if btn.icon != null:
+		btn.add_theme_color_override("font_color", Color(1, 1, 1, 0))
+		btn.add_theme_color_override("font_hover_color", Color(1, 1, 1, 0))
+		btn.add_theme_color_override("font_pressed_color", Color(1, 1, 1, 0))
+		btn.add_theme_color_override("font_disabled_color", Color(1, 1, 1, 0))
+		btn.add_theme_color_override("font_focus_color", Color(1, 1, 1, 0))
+		btn.add_theme_font_size_override("font_size", 1)
+	else:
+		btn.add_theme_color_override("font_color", Color(0.9, 0.85, 0.7, 1.0))
+		btn.add_theme_color_override("font_hover_color", Color(1.0, 0.95, 0.8, 1.0))
+		btn.add_theme_color_override("font_pressed_color", Color(0.8, 0.75, 0.6, 1.0))
+		btn.add_theme_color_override("font_disabled_color", Color(0.5, 0.5, 0.55, 0.8))
+		btn.add_theme_font_size_override("font_size", 9)
 
 	var sb_normal = StyleBoxFlat.new()
 	sb_normal.bg_color = Color("#131924")
@@ -602,8 +610,24 @@ func _setup_action_button_style(btn: Button) -> void:
 func _update_action_tile(btn: Button, icon_key: String, count: int, title: String, desc: String, badge_color: Color = Color(0.88, 0.15, 0.28, 0.92)) -> void:
 	if not btn:
 		return
-	if action_icons.has(icon_key):
+	if action_icons.has(icon_key) and action_icons[icon_key] != null:
 		btn.icon = action_icons[icon_key]
+	elif ResourceLoader.exists("res://assets/icons/action_%s.png" % icon_key):
+		btn.icon = load("res://assets/icons/action_%s.png" % icon_key)
+
+	if btn.icon != null:
+		btn.add_theme_color_override("font_color", Color(1, 1, 1, 0))
+		btn.add_theme_color_override("font_hover_color", Color(1, 1, 1, 0))
+		btn.add_theme_color_override("font_pressed_color", Color(1, 1, 1, 0))
+		btn.add_theme_color_override("font_disabled_color", Color(1, 1, 1, 0))
+		btn.add_theme_color_override("font_focus_color", Color(1, 1, 1, 0))
+		btn.add_theme_font_size_override("font_size", 1)
+	else:
+		btn.add_theme_color_override("font_color", Color(0.9, 0.85, 0.7, 1.0))
+		btn.add_theme_color_override("font_hover_color", Color(1.0, 0.95, 0.8, 1.0))
+		btn.add_theme_color_override("font_pressed_color", Color(0.8, 0.75, 0.6, 1.0))
+		btn.add_theme_color_override("font_disabled_color", Color(0.5, 0.5, 0.55, 0.8))
+		btn.add_theme_font_size_override("font_size", 9)
 
 	var badge = btn.get_node_or_null("Badge") as Label
 	if badge:
@@ -613,6 +637,13 @@ func _update_action_tile(btn: Button, icon_key: String, count: int, title: Strin
 			var b_sb = badge.get_theme_stylebox("panel") as StyleBoxFlat
 			if b_sb:
 				b_sb.bg_color = badge_color
+		elif btn == btn_armory:
+			# Imperial Armory gold box: when 0 gold, display "0" in a muted bronze/gold badge so it never appears empty
+			badge.text = "0"
+			badge.visible = true
+			var b_sb = badge.get_theme_stylebox("panel") as StyleBoxFlat
+			if b_sb:
+				b_sb.bg_color = Color(0.38, 0.30, 0.16, 0.85)
 		else:
 			badge.visible = false
 
@@ -2872,7 +2903,9 @@ func _update_armory_ui() -> void:
 
 		for h in heroes:
 			var hid = str(h.get("id", ""))
-			var hname = str(h.get("characterName", h.get("name", hid.capitalize())))
+			var hname = get_hero_character_name(h)
+			if hname.is_empty():
+				hname = get_hero_display_title(h)
 			var hgold = int(h.get("gold", 0))
 			var is_sel = (hid == selected_armory_hero_id)
 
@@ -2889,12 +2922,12 @@ func _update_armory_ui() -> void:
 				tab_sb.bg_color = Color(0.18, 0.25, 0.36, 1.0)
 				tab_sb.border_color = Color(1.0, 0.85, 0.2, 1.0)
 				tab_sb.set_border_width_all(2)
-				btn_tab.text = "%s %s (💰 %d)" % [icon_marker, hname, hgold]
+				btn_tab.text = "%s %s (💰 %d GP)" % [icon_marker, hname, hgold]
 			else:
 				tab_sb.bg_color = Color(0.1, 0.13, 0.18, 0.9)
 				tab_sb.border_color = Color(0.25, 0.32, 0.42, 0.6)
 				tab_sb.set_border_width_all(1)
-				btn_tab.text = "%s %s (%d)" % [icon_marker, hname, hgold]
+				btn_tab.text = "%s %s (%d GP)" % [icon_marker, hname, hgold]
 
 			btn_tab.add_theme_stylebox_override("normal", tab_sb)
 			btn_tab.pressed.connect(func(): select_armory_hero(hid))
@@ -2902,13 +2935,15 @@ func _update_armory_ui() -> void:
 
 	# Update Selected Hero Banner
 	if armory_hero_info_text and not sel_hero.is_empty():
-		var hname = str(sel_hero.get("characterName", sel_hero.get("name", "Hero")))
-		var hclass = str(sel_hero.get("heroClass", "Hero"))
+		var hname = get_hero_character_name(sel_hero)
+		if hname.is_empty():
+			hname = get_hero_display_title(sel_hero)
+		var hclass = get_hero_class_name(sel_hero)
 		var hgold = int(sel_hero.get("gold", 0))
 		var atk_dice = get_hero_attack_dice(sel_hero)
 		var def_dice = get_hero_defend_dice(sel_hero)
 		var inv_count = sel_hero.get("inventory", []).size()
-		armory_hero_info_text.text = "%s (%s) | 💰 %d Gold | ⚔️ %d Attack Dice | 🛡️ %d Defend Dice | 🎒 %d Items in Pack" % [
+		armory_hero_info_text.text = "%s (%s) | 💰 %d GP | ⚔️ %d Attack Dice | 🛡️ %d Defend Dice | 🎒 %d Items in Pack" % [
 			hname, hclass, hgold, atk_dice, def_dice, inv_count
 		]
 
@@ -7756,19 +7791,41 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 		pill.mouse_filter = Control.MOUSE_FILTER_PASS
 		stat_row.add_child(pill)
 
-	var gold_lbl = Label.new()
 	var cur_gold = int(h.get("gold", 0))
+	var gold_box = PanelContainer.new()
+	gold_box.name = "GoldBox"
+	var gb_sb = StyleBoxFlat.new()
+	gb_sb.bg_color = Color(0.14, 0.11, 0.05, 0.88) if cur_gold == 0 else Color(0.18, 0.14, 0.05, 0.95)
+	gb_sb.border_color = Color(0.40, 0.34, 0.18, 0.65) if cur_gold == 0 else Color(0.95, 0.80, 0.25, 0.85)
+	gb_sb.set_border_width_all(1)
+	gb_sb.set_corner_radius_all(3)
+	gold_box.add_theme_stylebox_override("panel", gb_sb)
+
+	var gb_marg = MarginContainer.new()
+	gb_marg.add_theme_constant_override("margin_left", 4)
+	gb_marg.add_theme_constant_override("margin_right", 4)
+	gb_marg.add_theme_constant_override("margin_top", 1)
+	gb_marg.add_theme_constant_override("margin_bottom", 1)
+
+	var gold_lbl = Label.new()
+	gold_lbl.name = "GoldLabel"
 	if is_item_flashing and str(flashing_item.get("type")) == "gold":
-		gold_lbl.text = "+%d GP! (Total %d)" % [int(flashing_item.get("amount", 0)), cur_gold]
+		gold_lbl.text = "+%d GP! (%d)" % [int(flashing_item.get("amount", 0)), cur_gold]
 		gold_lbl.add_theme_color_override("font_color", Color(1.0, 0.95, 0.25, 1.0))
 	else:
 		gold_lbl.text = "%d GP" % cur_gold
-		gold_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.35, 0.9))
+		gold_lbl.add_theme_color_override("font_color", Color(0.85, 0.78, 0.62, 0.95) if cur_gold == 0 else Color(1.0, 0.85, 0.35, 1.0))
 	gold_lbl.add_theme_font_size_override("font_size", 9)
-	gold_lbl.clip_text = true
-	gold_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	gold_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	stat_row.add_child(gold_lbl)
+	gold_lbl.clip_text = false
+	gold_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	gold_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+
+	gb_marg.add_child(gold_lbl)
+	gold_box.add_child(gb_marg)
+	gold_box.tooltip_text = "Gold Stash: %d Gold Coins" % cur_gold
+	gold_box.size_flags_horizontal = Control.SIZE_SHRINK_END
+	gold_box.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	stat_row.add_child(gold_box)
 	vbox.add_child(stat_row)
 
 	# Row 4: AI Art Equipment, Weapon, Armor, and Spell Icons (Up to 3 rows of 7 icons with {+NUM} overflow)
@@ -9508,6 +9565,8 @@ func get_telemetry_state() -> Dictionary:
 			"attackDice": atk_dice,
 			"defendDice": def_dice,
 			"gold": int(h.get("gold", 0)),
+			"hasGoldBox": true,
+			"goldBoxText": ("%d GP" % int(h.get("gold", 0))),
 			"isActive": is_act,
 			"isOnBoard": bool(h.get("is_on_board", false)),
 			"isAlive": cur_bp > 0,
@@ -9729,7 +9788,14 @@ func get_telemetry_state() -> Dictionary:
 			"end_turn": { "visible": btn_end_turn.visible, "disabled": btn_end_turn.disabled, "tooltip": btn_end_turn.tooltip_text, "icon": "action_end_turn" } if btn_end_turn else {},
 			"ai_step": { "visible": btn_ai_step.visible, "disabled": btn_ai_step.disabled, "tooltip": btn_ai_step.tooltip_text, "icon": "action_ai_step" } if btn_ai_step else {},
 			"summon": { "visible": btn_summon.visible, "disabled": btn_summon.disabled, "tooltip": btn_summon.tooltip_text, "icon": "action_summon" } if btn_summon else {},
-			"armory": { "visible": btn_armory.visible, "disabled": btn_armory.disabled, "tooltip": btn_armory.tooltip_text, "icon": "action_armory" } if btn_armory else {},
+			"armory": {
+				"visible": btn_armory.visible,
+				"disabled": btn_armory.disabled,
+				"tooltip": btn_armory.tooltip_text,
+				"icon": "action_armory",
+				"badge": (btn_armory.get_node_or_null("Badge") as Label).text if (btn_armory and btn_armory.get_node_or_null("Badge") and (btn_armory.get_node_or_null("Badge") as Label).visible) else "",
+				"badgeVisible": (btn_armory.get_node_or_null("Badge") as Label).visible if (btn_armory and btn_armory.get_node_or_null("Badge")) else false
+			} if btn_armory else {},
 			"map_end_turn": { "visible": btn_map_end_turn.visible, "disabled": btn_map_end_turn.disabled, "text": btn_map_end_turn.text, "tooltip": btn_map_end_turn.tooltip_text, "icon": "action_end_turn" } if btn_map_end_turn else {}
 		},
 		"hotbar": {
@@ -9824,6 +9890,9 @@ func get_telemetry_state() -> Dictionary:
 		"selectedArmoryHeroId": selected_armory_hero_id,
 		"armoryCatalog": ARMORY_CATALOG,
 		"partyTotalGold": get_total_party_gold(),
+		"armoryTabs": (armory_hero_tabs.get_children().map(func(btn): return (btn as Button).text) if (armory_hero_tabs and armory_modal and armory_modal.visible) else []),
+		"armoryPartyGoldText": armory_party_gold_badge.text if (armory_party_gold_badge and armory_modal and armory_modal.visible) else "",
+		"armoryHeroInfoText": armory_hero_info_text.text if (armory_hero_info_text and armory_modal and armory_modal.visible) else "",
 		"mapEndTurnButton": {
 			"visible": btn_map_end_turn.visible if btn_map_end_turn else false,
 			"disabled": btn_map_end_turn.disabled if btn_map_end_turn else false,
