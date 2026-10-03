@@ -31,8 +31,10 @@ func _check_cli_cartridge() -> void:
 	var wants_auto = (
 		"--auto-play" in cmd_args or
 		"--demo" in cmd_args or
+		"-d" in cmd_args or
 		OS.get_environment("CRPG_AUTO_PLAY") == "1" or
-		OS.get_environment("TABLETOP_AUTO_PLAY") == "1"
+		OS.get_environment("TABLETOP_AUTO_PLAY") == "1" or
+		OS.get_environment("TABLETOP_DEMO") == "1"
 	)
 	auto_play_enabled = wants_auto
 

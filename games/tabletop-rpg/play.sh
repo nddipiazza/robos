@@ -27,6 +27,10 @@ for arg in "$@"; do
   if [[ "$arg" == "--reset" || "$arg" == "-r" || "$arg" == "--force-reload" ]]; then
     export TABLETOP_RESET=1
   fi
+  if [[ "$arg" == "--demo" || "$arg" == "-d" || "$arg" == "--auto-play" ]]; then
+    export TABLETOP_DEMO=1
+    export TABLETOP_AUTO_PLAY=1
+  fi
   if [[ "$arg" == "--player" ]]; then
     export TABLETOP_ROLE=player
   fi

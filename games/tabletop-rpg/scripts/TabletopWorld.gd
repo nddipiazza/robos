@@ -1630,6 +1630,18 @@ func _setup_ui_signals() -> void:
 		)
 		header_hbox.add_child(r_btn)
 
+	if header_hbox and not header_hbox.has_node("BtnToggleDemo"):
+		var demo_btn = Button.new()
+		demo_btn.name = "BtnToggleDemo"
+		demo_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		demo_btn.pressed.connect(func():
+			CartridgeManager.auto_play_enabled = not CartridgeManager.auto_play_enabled
+			_update_demo_button_ui()
+			_log("[DEMO] AI Auto-Play toggled: %s" % ("ENABLED" if CartridgeManager.auto_play_enabled else "PAUSED"))
+		)
+		header_hbox.add_child(demo_btn)
+		_update_demo_button_ui()
+
 	if role_badge and not role_badge.pressed.is_connected(toggle_role):
 		role_badge.pressed.connect(toggle_role)
 	if btn_roll and not btn_roll.pressed.is_connected(roll_movement_dice):
@@ -2600,6 +2612,9 @@ func is_tile_revealed(tile: Vector2i) -> bool:
 		return revealed_rooms.has(rm_id)
 	return explored_tiles.has(tile)
 
+func is_tile_explored(tile: Vector2i) -> bool:
+	return explored_tiles.has(tile)
+
 func get_reachable_walk_tiles() -> Array[Vector2i]:
 	var result: Array[Vector2i] = []
 	if not movement_rolled or movement_remaining <= 0 or movement_closed:
@@ -2690,10 +2705,13 @@ func get_reachable_walk_tiles() -> Array[Vector2i]:
 
 func _process(delta: float) -> void:
 	if CartridgeManager.auto_play_enabled:
-		auto_play_timer += delta
-		if auto_play_timer >= 1.2:
-			auto_play_timer = 0.0
-			_execute_auto_play_step()
+		var is_enemy_animating = (current_phase == "gm_phase" and enemy_turn_stage in ["rolling", "moving", "pause_after_move", "acting", "waiting_for_action"])
+		if not is_enemy_animating:
+			auto_play_timer += delta
+			var interval = 0.05 if is_headless_mode() else 0.75
+			if auto_play_timer >= interval:
+				auto_play_timer = 0.0
+				_execute_auto_play_step()
 
 	var needs_redraw = false
 	if active_vfx.size() > 0:
@@ -4577,45 +4595,315 @@ func _execute_auto_play_step() -> void:
 	if hero.size() == 0:
 		return
 
-	match auto_play_step:
-		1:
-			_log("[AUTO-PLAY] Step 1: %s rolls 2d6 movement dice..." % str(hero.get("name")))
-			roll_movement_dice()
-		2:
-			var target = Vector2i(4, 1) if starting_stair == Vector2i(0, 1) else Vector2i(2, 0)
-			_log("[AUTO-PLAY] Step 2: %s advances down the corridor toward heavy dungeon door at (%d, %d)." % [hero.get("name"), target.x, target.y])
-			move_hero(target)
-		3:
-			var door_from = Vector2i(4, 1) if starting_stair == Vector2i(0, 1) else Vector2i(2, 0)
-			var door_to = Vector2i(4, 2) if starting_stair == Vector2i(0, 1) else Vector2i(2, 1)
-			_log("[AUTO-PLAY] Step 3: %s kicks open the ancient wooden door! Fog of War lifts!" % str(hero.get("name")))
-			open_door(door_from, door_to)
-		4:
-			var room_target = Vector2i(4, 3) if starting_stair == Vector2i(0, 1) else Vector2i(2, 2)
-			_log("[AUTO-PLAY] Step 4: %s strides boldly into the revealed chamber!" % str(hero.get("name")))
-			move_hero(room_target)
-		5:
-			_log("[AUTO-PLAY] Step 5: %s swings Broadsword at enemy monster!" % str(hero.get("name")))
-			attack_adjacent_monster()
-		6:
-			_log("[AUTO-PLAY] Step 6: Barbarian ends turn. Next hero: Dwarf.")
-			end_turn()
-		7:
-			_log("[AUTO-PLAY] Step 7: Dwarf rolls movement and enters the chamber.")
-			roll_movement_dice()
-			var dwarf_pos = Vector2i(3, 3) if starting_stair == Vector2i(0, 1) else Vector2i(3, 1)
-			move_hero(dwarf_pos)
-		8:
-			_log("[AUTO-PLAY] Step 8: Dwarf searches room for treasure and hidden traps!")
-			search_room()
-		9:
-			_log("[AUTO-PLAY] Step 9: Hero phase concludes! Game Master / Zargon AI Phase begins!")
-			end_turn()
-			current_phase = "gm_phase"
+	# If pristine starting sequence (Round 1 at start stairwell), run opening gambit 1-10
+	var is_opening_stair = (current_round == 1 and not bool(heroes[0].get("has_departed_start", false)))
+	if is_opening_stair and auto_play_step <= 10:
+		match auto_play_step:
+			1:
+				_log("[AUTO-PLAY] Step 1: %s rolls 2d6 movement dice..." % str(hero.get("name")))
+				roll_movement_dice()
+			2:
+				var target = Vector2i(4, 1) if starting_stair == Vector2i(0, 1) else Vector2i(2, 0)
+				_log("[AUTO-PLAY] Step 2: %s advances down the corridor toward heavy dungeon door at (%d, %d)." % [hero.get("name"), target.x, target.y])
+				move_hero(target)
+			3:
+				var door_from = Vector2i(4, 1) if starting_stair == Vector2i(0, 1) else Vector2i(2, 0)
+				var door_to = Vector2i(4, 2) if starting_stair == Vector2i(0, 1) else Vector2i(2, 1)
+				_log("[AUTO-PLAY] Step 3: %s kicks open the ancient wooden door! Fog of War lifts!" % str(hero.get("name")))
+				open_door(door_from, door_to)
+			4:
+				var room_target = Vector2i(4, 3) if starting_stair == Vector2i(0, 1) else Vector2i(2, 2)
+				_log("[AUTO-PLAY] Step 4: %s strides boldly into the revealed chamber!" % str(hero.get("name")))
+				move_hero(room_target)
+			5:
+				_log("[AUTO-PLAY] Step 5: %s swings Broadsword at enemy monster!" % str(hero.get("name")))
+				attack_adjacent_monster()
+			6:
+				_log("[AUTO-PLAY] Step 6: Barbarian ends turn. Next hero: Dwarf.")
+				end_turn()
+			7:
+				_log("[AUTO-PLAY] Step 7: Dwarf rolls movement and enters the chamber.")
+				roll_movement_dice()
+				var dwarf_pos = Vector2i(3, 3) if starting_stair == Vector2i(0, 1) else Vector2i(3, 1)
+				move_hero(dwarf_pos)
+			8:
+				_log("[AUTO-PLAY] Step 8: Dwarf searches room for treasure and hidden traps!")
+				search_room()
+			9:
+				_log("[AUTO-PLAY] Step 9: Hero phase concludes! Game Master / Zargon AI Phase begins!")
+				end_turn()
+				current_phase = "gm_phase"
+				ai_monster_turn()
+			10:
+				_log("[AUTO-PLAY] Step 10: Round 2 begins! Opening gambit verified. Engaging continuous Mentor Party AI vs Zargon AI...")
+	else:
+		_execute_mentor_ai_party_step()
+
+func _execute_mentor_ai_party_step() -> void:
+	# 1. Modals: Auto-resolve Elf Spell Selection so gameplay never hangs
+	if elf_spell_modal and elf_spell_modal.visible:
+		select_elf_element("water")
+		confirm_elf_spell_selection()
+		_log("[MENTOR AI] 💧 Elf selects Water Magic (Water of Healing, Veil of Mist, Sleep).")
+		return
+
+	if ai_confirm_modal and ai_confirm_modal.visible:
+		confirm_and_execute_ai_step()
+		return
+
+	if treasure_modal and treasure_modal.visible:
+		close_treasure_modal()
+		return
+
+	# 2. Phase Check: Zargon / Game Master Phase
+	if current_phase == "gm_phase":
+		if is_headless_mode():
 			ai_monster_turn()
-		10:
-			_log("[AUTO-PLAY] Step 10: Round 2 begins! E2E Gameplay & Turn Cycle verified.")
-			CartridgeManager.auto_play_enabled = false
+		else:
+			if pending_enemy_turn_monsters.is_empty() and enemy_turn_stage == "idle":
+				start_ai_monster_turn_sequence()
+		return
+
+	# 3. Quest Outcome Evaluation: Check living heroes and monsters
+	var living_heroes = heroes.filter(func(h): return int(h.get("current_bp", 0)) > 0 and bool(h.get("is_on_board", false)))
+	if living_heroes.is_empty():
+		_log("💀 [QUEST DEFEAT] All heroes have fallen in battle. Zargon claims total victory!")
+		CartridgeManager.auto_play_enabled = false
+		_update_ui()
+		return
+
+	var live_monsters = monsters.filter(func(m): return bool(m.get("is_alive", false)) and int(m.get("current_bp", 1)) > 0)
+	if live_monsters.is_empty():
+		_log("🏆 [QUEST VICTORY] All minions of Zargon have been defeated! The heroes triumph and cleanse the catacombs of Verag!")
+		CartridgeManager.auto_play_enabled = false
+		_update_ui()
+		return
+
+	# 4. Active Hero Evaluation
+	var hero = get_active_hero()
+	if hero.is_empty() or int(hero.get("current_bp", 0)) <= 0:
+		_log("[MENTOR AI] Active hero is incapacitated. Advancing turn.")
+		end_turn()
+		return
+
+	var hero_id = str(hero.get("id", "barbarian"))
+	var hero_name = str(hero.get("name", "Hero"))
+	var h_pos: Vector2i = _to_grid_pos(hero.get("grid_pos", Vector2i(-1, -1)))
+
+	# 5. Roll Movement if Awaiting Roll
+	if turn_state == "awaiting_roll":
+		_log("[MENTOR AI] %s rolls 2d6 movement dice..." % hero_name)
+		roll_movement_dice()
+		return
+
+	# 6. Action: Emergency Healing (Priority 1 for Elf / Wizard)
+	if not has_acted_this_turn:
+		if hero_id == "elf" and _can_hero_cast_spell(hero, "water_of_healing"):
+			var injured = _find_most_injured_ally(4)
+			if not injured.is_empty():
+				_log("[MENTOR AI] 💧 Elf casts Water of Healing on wounded %s (+4 BP)!" % injured.get("name"))
+				cast_spell("water_of_healing", str(injured.get("id", "")))
+				return
+		elif hero_id == "wizard" and _can_hero_cast_spell(hero, "heal_body"):
+			var injured = _find_most_injured_ally(4)
+			if not injured.is_empty():
+				_log("[MENTOR AI] 🌿 Wizard casts Heal Body on wounded %s (+4 BP)!" % injured.get("name"))
+				cast_spell("heal_body", str(injured.get("id", "")))
+				return
+
+	# 7. Action: Adjacent Melee Strike (Priority 2)
+	if not has_acted_this_turn:
+		var adj_monsters = get_adjacent_monsters()
+		if adj_monsters.size() > 0:
+			adj_monsters.sort_custom(func(a, b): return int(a.get("current_bp", 1)) < int(b.get("current_bp", 1)))
+			var target_m = adj_monsters[0]
+			_log("[MENTOR AI] ⚔️ %s attacks adjacent %s!" % [hero_name, target_m.get("name", "Monster")])
+			attack_adjacent_monster(str(target_m.get("id", "")))
+			return
+
+	# 8. Action: Ranged Offensive Spells (Priority 3 for Wizard / Elf)
+	if not has_acted_this_turn and (hero_id == "wizard" or hero_id == "elf"):
+		var vis_monsters = _get_visible_living_monsters()
+		if vis_monsters.size() > 0:
+			var target_m = vis_monsters[0]
+			if hero_id == "wizard":
+				if _can_hero_cast_spell(hero, "ball_of_flame"):
+					_log("[MENTOR AI] 🔥 Wizard casts Ball of Flame at %s!" % target_m.get("name", "Monster"))
+					cast_spell("ball_of_flame", str(target_m.get("id", "")))
+					return
+				elif _can_hero_cast_spell(hero, "fire_of_wrath"):
+					_log("[MENTOR AI] 🔥 Wizard casts Fire of Wrath at %s!" % target_m.get("name", "Monster"))
+					cast_spell("fire_of_wrath", str(target_m.get("id", "")))
+					return
+			elif hero_id == "elf":
+				if _can_hero_cast_spell(hero, "sleep") and not target_m.get("is_sleeping", false):
+					_log("[MENTOR AI] 💤 Elf casts Sleep on %s!" % target_m.get("name", "Monster"))
+					cast_spell("sleep", str(target_m.get("id", "")))
+					return
+
+	# 9. Action: Door Breach (Priority 4 if adjacent)
+	var adj_doors = get_adjacent_closed_doors()
+	if adj_doors.size() > 0:
+		var d = adj_doors[0]
+		var d_from = Vector2i(d.get("from", [0, 0])[0], d.get("from", [0, 0])[1])
+		var d_to = Vector2i(d.get("to", [0, 0])[0], d.get("to", [0, 0])[1])
+		_log("[MENTOR AI] 🚪 %s kicks open the door! Revealing the chamber..." % hero_name)
+		open_door(d_from, d_to)
+		return
+
+	# 10. Tactical Movement (Priority 5)
+	if movement_remaining > 0 and not movement_closed and not (moved_before_action and has_acted_this_turn):
+		var target_info = _find_best_hero_movement_target(hero, h_pos)
+		if not target_info.is_empty() and target_info.has("path"):
+			var path: Array[Vector2i] = target_info.get("path")
+			if path.size() > 1:
+				var max_steps = mini(movement_remaining, path.size() - 1)
+				var dest = path[max_steps]
+				var reason = str(target_info.get("reason", "advance"))
+				_log("[MENTOR AI] 🏃 %s moves toward %s (stepping to (%d, %d))." % [hero_name, reason, dest.x, dest.y])
+				move_hero(dest)
+				return
+
+	# 11. Actions After Movement (if hero moved without acting yet)
+	if not has_acted_this_turn:
+		var adj_m = get_adjacent_monsters()
+		if adj_m.size() > 0:
+			adj_m.sort_custom(func(a, b): return int(a.get("current_bp", 1)) < int(b.get("current_bp", 1)))
+			var target_m = adj_m[0]
+			_log("[MENTOR AI] ⚔️ %s attacks adjacent %s!" % [hero_name, target_m.get("name", "Monster")])
+			attack_adjacent_monster(str(target_m.get("id", "")))
+			return
+
+		var doors_now = get_adjacent_closed_doors()
+		if doors_now.size() > 0:
+			var d = doors_now[0]
+			var d_from = Vector2i(d.get("from", [0, 0])[0], d.get("from", [0, 0])[1])
+			var d_to = Vector2i(d.get("to", [0, 0])[0], d.get("to", [0, 0])[1])
+			_log("[MENTOR AI] 🚪 %s breaches closed door!" % hero_name)
+			open_door(d_from, d_to)
+			return
+
+		if can_search_room():
+			_log("[MENTOR AI] 💎 %s searches room for treasure and traps!" % hero_name)
+			search_room()
+			return
+
+	# 12. Turn Conclusion
+	_log("[MENTOR AI] ⏭️ %s concludes turn." % hero_name)
+	end_turn()
+
+func _can_hero_cast_spell(hero: Dictionary, spell_id: String) -> bool:
+	if is_spell_used(hero, spell_id):
+		return false
+	var s_clean = spell_id.strip_edges().to_lower().replace("-", "_")
+	for s in hero.get("spells", []):
+		if str(s).strip_edges().to_lower().replace("-", "_") == s_clean:
+			return true
+	return false
+
+func _find_most_injured_ally(threshold_bp: int = 4) -> Dictionary:
+	var injured: Array[Dictionary] = []
+	for h in heroes:
+		var cur_bp = int(h.get("current_bp", 0))
+		var max_bp = int(h.get("bodyPoints", 8))
+		if cur_bp > 0 and cur_bp <= threshold_bp and cur_bp < max_bp:
+			injured.append(h)
+	if injured.is_empty():
+		return {}
+	injured.sort_custom(func(a, b): return int(a.get("current_bp", 0)) < int(b.get("current_bp", 0)))
+	return injured[0]
+
+func _get_visible_living_monsters() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for m in monsters:
+		if bool(m.get("is_alive", false)) and int(m.get("current_bp", 1)) > 0:
+			var r_id = str(m.get("roomId", ""))
+			var m_pos = _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
+			if is_gm_role() or discovered_monster_ids.has(str(m.get("id", ""))) or (r_id != "" and revealed_rooms.has(r_id)) or is_tile_explored(m_pos):
+				result.append(m)
+	return result
+
+func _find_best_hero_movement_target(hero: Dictionary, h_pos: Vector2i) -> Dictionary:
+	var hero_id = str(hero.get("id", "barbarian"))
+	var h_idx = active_hero_idx
+
+	# 1. Target: Visible living monsters
+	var vis_monsters = _get_visible_living_monsters()
+	var best_m_path: Array[Vector2i] = []
+	var best_m_name = ""
+	for m in vis_monsters:
+		var m_pos = _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
+		var m_name = str(m.get("name", "Monster"))
+		var adj_tiles = [m_pos + Vector2i(1, 0), m_pos + Vector2i(-1, 0), m_pos + Vector2i(0, 1), m_pos + Vector2i(0, -1)]
+		for tile in adj_tiles:
+			if tile.x < 0 or tile.x >= grid_cols or tile.y < 0 or tile.y >= grid_rows:
+				continue
+			if is_border_tile(tile) or tile == starting_stair:
+				continue
+			if is_tile_occupied_by_hero(tile, h_idx) or is_tile_occupied_by_furniture(tile) or is_tile_wall_blocked(tile):
+				continue
+			var p = find_path(h_pos, tile, h_idx)
+			if p.size() > 1:
+				if best_m_path.is_empty() or p.size() < best_m_path.size():
+					best_m_path = p
+					best_m_name = m_name
+
+	if not best_m_path.is_empty():
+		return { "path": best_m_path, "reason": "engage " + best_m_name }
+
+	# 2. Target: Unopened / closed doors
+	var best_door_path: Array[Vector2i] = []
+	var best_door_desc = ""
+	for d in doors:
+		if not bool(d.get("is_open", false)):
+			if bool(d.get("is_secret", false)) and not bool(d.get("is_revealed", false)):
+				continue
+			var f_pt = Vector2i(d.get("from", [0, 0])[0], d.get("from", [0, 0])[1])
+			var t_pt = Vector2i(d.get("to", [0, 0])[0], d.get("to", [0, 0])[1])
+			for pt in [f_pt, t_pt]:
+				if pt == h_pos:
+					continue
+				if is_border_tile(pt) or pt == starting_stair or is_tile_occupied_by_hero(pt, h_idx):
+					continue
+				var p = find_path(h_pos, pt, h_idx)
+				if p.size() > 1:
+					if best_door_path.is_empty() or p.size() < best_door_path.size():
+						best_door_path = p
+						best_door_desc = "closed door at (%d, %d)" % [pt.x, pt.y]
+
+	if not best_door_path.is_empty():
+		return { "path": best_door_path, "reason": best_door_desc }
+
+	# 3. Target: Unsearched rooms (especially Dwarf)
+	if hero_id == "dwarf":
+		for r in rooms:
+			var r_id = str(r.get("id", ""))
+			if r_id != "" and revealed_rooms.has(r_id):
+				var rx = int(r.get("x", 0))
+				var ry = int(r.get("y", 0))
+				var rw = int(r.get("w", 1))
+				var rh = int(r.get("h", 1))
+				var center = Vector2i(rx + rw / 2, ry + rh / 2)
+				if center != h_pos and not is_tile_occupied_by_hero(center, h_idx):
+					var p = find_path(h_pos, center, h_idx)
+					if p.size() > 1:
+						return { "path": p, "reason": "search room " + r_id }
+
+	# 4. Target: Marching Order / Follow Vanguard
+	if hero_id != "barbarian" and heroes.size() > 0:
+		var lead_hero = heroes[0] # Barbarian
+		var lead_pos = _to_grid_pos(lead_hero.get("grid_pos", Vector2i(-1, -1)))
+		var lead_dist = absi(lead_pos.x - h_pos.x) + absi(lead_pos.y - h_pos.y)
+		if lead_dist > 2:
+			var lead_adjs = [lead_pos + Vector2i(1, 0), lead_pos + Vector2i(-1, 0), lead_pos + Vector2i(0, 1), lead_pos + Vector2i(0, -1)]
+			for l_tile in lead_adjs:
+				if is_border_tile(l_tile) or l_tile == starting_stair or is_tile_occupied_by_hero(l_tile, h_idx):
+					continue
+				var p = find_path(h_pos, l_tile, h_idx)
+				if p.size() > 1:
+					return { "path": p, "reason": "march formation with Barbarian" }
+
+	return {}
 
 func get_active_hero() -> Dictionary:
 	if heroes.size() == 0:
@@ -8108,7 +8396,33 @@ func _finish_current_enemy_turn() -> void:
 		active_enemy_turn_monster_id = ""
 		end_turn()
 
+func _update_demo_button_ui() -> void:
+	var demo_btn: Button = get_node_or_null("UI/SidebarHeader/BtnToggleDemo")
+	if not demo_btn:
+		return
+	var is_active = CartridgeManager.auto_play_enabled
+	demo_btn.text = "🤖 Demo: ON" if is_active else "🤖 Demo"
+	demo_btn.tooltip_text = "Pause Autonomous Tabletop Engine AI Demo" if is_active else "Start Autonomous Tabletop Engine AI Demo (Mentor vs Zargon)"
+	var sb = StyleBoxFlat.new()
+	if is_active:
+		sb.bg_color = Color(0.06, 0.22, 0.24, 0.9)
+		sb.border_color = Color(0.0, 0.85, 0.85, 0.9)
+		demo_btn.add_theme_color_override("font_color", Color(0.6, 1.0, 1.0))
+	else:
+		sb.bg_color = Color(0.12, 0.15, 0.2, 0.8)
+		sb.border_color = Color(0.4, 0.5, 0.65, 0.7)
+		demo_btn.add_theme_color_override("font_color", Color(0.8, 0.85, 0.9))
+	sb.set_border_width_all(1)
+	sb.set_corner_radius_all(4)
+	sb.content_margin_left = 6
+	sb.content_margin_right = 6
+	sb.content_margin_top = 2
+	sb.content_margin_bottom = 2
+	demo_btn.add_theme_stylebox_override("normal", sb)
+	demo_btn.add_theme_font_size_override("font_size", 11)
+
 func _update_ui() -> void:
+	_update_demo_button_ui()
 	var role_name = "Player Mode (Playing Heroes)" if current_role == "player" else "Game Master Mode (Zargon GM)"
 	if title_label:
 		title_label.text = "HEROQUEST"
@@ -11335,6 +11649,11 @@ func get_telemetry_state() -> Dictionary:
 		"startingStair": [starting_stair.x, starting_stair.y],
 		"hasSaveGame": has_saved_game(),
 		"saveFilePath": get_save_file_path(),
+		"isDemoActive": CartridgeManager.auto_play_enabled,
+		"autoPlayEnabled": CartridgeManager.auto_play_enabled,
+		"autoPlayStep": auto_play_step,
+		"aiEngine": "Mentor Autonomous Party Harness vs Zargon DM",
+		"aiRole": "autonomous_player",
 		"hasStartingStairTexture": (get_tile_texture("stairs") != null),
 		"startingStairTexturePath": (get_tile_texture("stairs").resource_path if get_tile_texture("stairs") != null else ""),
 		"textureManifest": {
@@ -12153,6 +12472,21 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 		"reset_quest_spells", "reset_spells":
 			reset_all_heroes_spells_for_quest()
 			return { "success": true }
+		"start_demo", "enable_demo", "start_auto_play":
+			CartridgeManager.auto_play_enabled = true
+			_update_ui()
+			return { "success": true, "demo_active": true, "auto_play": true }
+		"stop_demo", "pause_demo", "stop_auto_play":
+			CartridgeManager.auto_play_enabled = false
+			_update_ui()
+			return { "success": true, "demo_active": false, "auto_play": false }
+		"toggle_demo", "toggle_auto_play":
+			CartridgeManager.auto_play_enabled = not CartridgeManager.auto_play_enabled
+			_update_ui()
+			return { "success": true, "demo_active": CartridgeManager.auto_play_enabled }
+		"step_ai", "execute_ai_step":
+			_execute_auto_play_step()
+			return { "success": true, "stepped": true, "step": auto_play_step, "phase": current_phase, "round": current_round }
 		"search_traps":
 			var res = search_traps()
 			return res
@@ -12189,7 +12523,7 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			var weapon = str(action_data.get("weapon", action_data.get("weaponId", "")))
 			var res = attack_adjacent_monster(mid, weapon)
 			return res
-		"open_spell_selection", "open_elf_spell_selection":
+		"open_spell_selection", "open_elf_spell_selection", "open_elf_spell_modal", "show_elf_spell_modal":
 			show_elf_spell_selection_modal()
 			return { "success": true, "modal_visible": true, "elf_element": current_elf_element }
 		"close_spell_selection", "close_elf_spell_selection":
