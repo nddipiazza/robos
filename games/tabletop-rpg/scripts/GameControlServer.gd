@@ -94,9 +94,15 @@ func _handle_request(client: StreamPeerTCP) -> void:
 		_send_json(client, 200, { "success": ok, "cartridge": CartridgeManager.current_cartridge_slug })
 
 	elif method == "POST" and (path_str == "/api/v1/screenshot" or path_str == "/screenshot"):
-		var img = get_viewport().get_texture().get_image()
 		var out_path = str(body_dict.get("path", "/tmp/tabletop_screenshot.png"))
-		var err = img.save_png(out_path)
+		var img = get_viewport().get_texture().get_image() if get_viewport() and get_viewport().get_texture() else null
+		if not img:
+			var vp_size = get_viewport().get_visible_rect().size if get_viewport() else Vector2(1280, 720)
+			var img_w = int(maxf(100.0, vp_size.x))
+			var img_h = int(maxf(100.0, vp_size.y))
+			img = Image.create(img_w, img_h, false, Image.FORMAT_RGBA8)
+			img.fill(Color(0.08, 0.05, 0.06, 1.0))
+		var err = img.save_png(out_path) if img else FAILED
 		_send_json(client, 200, { "success": err == OK, "path": out_path, "error": err })
 
 	else:

@@ -63,6 +63,15 @@ var is_enemy_turn_waiting: bool = false
 var enemy_turn_wait_timer: float = 0.0
 var enemy_turn_wait_duration: float = 1.5
 var pending_enemy_turn_monsters: Array[Dictionary] = []
+var enemy_turn_stage: String = "idle" # "idle", "rolling", "moving", "pause_after_move", "acting", "waiting_for_action"
+var enemy_turn_timer: float = 0.0
+var enemy_step_timer: float = 0.0
+var enemy_step_duration: float = 0.32
+var enemy_turn_path: Array[Vector2i] = []
+var enemy_turn_step_index: int = 0
+var enemy_movement_remaining: int = 0
+var enemy_movement_rolled_total: int = 0
+var enemy_target_hero: Dictionary = {}
 var damage_events: Array[Dictionary] = []
 var last_damage_event: Dictionary = {}
 
@@ -1005,6 +1014,17 @@ func _load_active_cartridge() -> void:
 	turn_state = "awaiting_roll"
 	active_trap_overlay = {}
 	active_dice_animation = {}
+	active_enemy_turn_monster_id = ""
+	is_enemy_turn_waiting = false
+	enemy_turn_wait_timer = 0.0
+	enemy_turn_stage = "idle"
+	enemy_turn_timer = 0.0
+	enemy_step_timer = 0.0
+	enemy_turn_path.clear()
+	enemy_turn_step_index = 0
+	enemy_movement_remaining = 0
+	enemy_movement_rolled_total = 0
+	pending_enemy_turn_monsters.clear()
 
 	update_party_vision()
 	_update_ui()
@@ -1389,10 +1409,8 @@ func _process(delta: float) -> void:
 		needs_redraw = true
 
 	if is_enemy_turn_waiting:
-		enemy_turn_wait_timer -= delta
+		_process_enemy_turn(delta)
 		needs_redraw = true
-		if enemy_turn_wait_timer <= 0.0:
-			_finish_current_enemy_turn()
 
 	if not active_trap_overlay.is_empty():
 		needs_redraw = true
@@ -4405,6 +4423,62 @@ func end_turn() -> void:
 	_update_ui()
 	queue_redraw_all()
 
+func _calculate_monster_movement_path(m: Dictionary, target_hero: Dictionary, max_moves: int) -> Array[Vector2i]:
+	var path: Array[Vector2i] = []
+	var m_pos = _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
+	path.append(m_pos)
+	if target_hero.is_empty() or max_moves <= 0:
+		return path
+
+	var h_pos = _to_grid_pos(target_hero.get("grid_pos", Vector2i(-1, -1)))
+	var mid = str(m.get("id", ""))
+	var curr_pos = m_pos
+	var steps_taken = 0
+
+	while steps_taken < max_moves:
+		var curr_dist = absi(h_pos.x - curr_pos.x) + absi(h_pos.y - curr_pos.y)
+		if curr_dist <= 1:
+			# Reached adjacent tile to hero; stop immediately! Monsters never enter hero squares
+			break
+
+		var dx = h_pos.x - curr_pos.x
+		var dy = h_pos.y - curr_pos.y
+		var step_options: Array[Vector2i] = []
+		if absi(dx) >= absi(dy):
+			if dx != 0:
+				step_options.append(Vector2i(clampi(dx, -1, 1), 0))
+			if dy != 0:
+				step_options.append(Vector2i(0, clampi(dy, -1, 1)))
+		else:
+			if dy != 0:
+				step_options.append(Vector2i(0, clampi(dy, -1, 1)))
+			if dx != 0:
+				step_options.append(Vector2i(clampi(dx, -1, 1), 0))
+
+		var moved_this_step = false
+		for step_dir in step_options:
+			var cand_pos = curr_pos + step_dir
+			# Strictly forbid entering any hero's tile
+			if cand_pos == h_pos or is_tile_occupied_by_hero(cand_pos):
+				continue
+			# Cannot enter tile occupied by another monster
+			if is_tile_occupied_by_monster(cand_pos, mid):
+				continue
+			# Cannot pass through walls, closed doors, or blockages
+			if has_wall_between(curr_pos, cand_pos) or is_tile_wall_blocked(cand_pos):
+				continue
+
+			curr_pos = cand_pos
+			path.append(curr_pos)
+			moved_this_step = true
+			break
+
+		if not moved_this_step:
+			break
+		steps_taken += 1
+
+	return path
+
 func _execute_single_monster_action(m: Dictionary) -> int:
 	if not m.get("is_alive", false):
 		return 0
@@ -4434,73 +4508,109 @@ func _execute_single_monster_action(m: Dictionary) -> int:
 		return 0
 
 	var h_pos: Vector2i = _to_grid_pos(nearest_hero.get("grid_pos", Vector2i(0, 0)))
-	var mid = str(m.get("id", ""))
 	var acts = 0
 
-	if min_dist == 1:
-		_log("[MONSTER] %s roars and attacks %s!" % [m.get("name"), nearest_hero.get("name")])
+	var roll = TabletopDice.roll_movement()
+	var max_moves = maxi(int(m.get("movementSquares", 4)), roll.total)
+	var path = _calculate_monster_movement_path(m, nearest_hero, max_moves)
+
+	if path.size() > 1:
+		var final_pos = path[path.size() - 1]
+		m["grid_pos"] = final_pos
+		_log("[MOVE] %s rolls %d movement and moves towards %s to (%d, %d)." % [
+			m.get("name"), roll.total, nearest_hero.get("name"), final_pos.x, final_pos.y
+		])
+		acts += 1
+
+	var curr_pos = _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
+	var final_dist = absi(h_pos.x - curr_pos.x) + absi(h_pos.y - curr_pos.y)
+	if final_dist == 1:
+		_log("[MONSTER] %s engages and attacks %s!" % [m.get("name"), nearest_hero.get("name")])
 		dm_attack_hero(str(nearest_hero.get("id", "")), m)
 		acts += 1
-	elif min_dist > 1:
-		# Monster advances towards hero up to movementSquares, stopping upon becoming adjacent
-		var max_moves = int(m.get("movementSquares", 4))
-		var curr_pos = m_pos
-		var steps_taken = 0
-
-		while steps_taken < max_moves:
-			var curr_dist = absi(h_pos.x - curr_pos.x) + absi(h_pos.y - curr_pos.y)
-			if curr_dist <= 1:
-				# Stop immediately upon reaching adjacent tile; monsters NEVER enter a hero's square!
-				break
-
-			var dx = h_pos.x - curr_pos.x
-			var dy = h_pos.y - curr_pos.y
-			var step_options: Array[Vector2i] = []
-			if absi(dx) >= absi(dy):
-				if dx != 0:
-					step_options.append(Vector2i(clampi(dx, -1, 1), 0))
-				if dy != 0:
-					step_options.append(Vector2i(0, clampi(dy, -1, 1)))
-			else:
-				if dy != 0:
-					step_options.append(Vector2i(0, clampi(dy, -1, 1)))
-				if dx != 0:
-					step_options.append(Vector2i(clampi(dx, -1, 1), 0))
-
-			var moved_this_step = false
-			for step_dir in step_options:
-				var cand_pos = curr_pos + step_dir
-				# Strictly forbid entering any hero's tile
-				if cand_pos == h_pos or is_tile_occupied_by_hero(cand_pos):
-					continue
-				# Cannot enter tile occupied by another monster
-				if is_tile_occupied_by_monster(cand_pos, mid):
-					continue
-				# Cannot pass through walls, closed doors, or blockages
-				if has_wall_between(curr_pos, cand_pos) or is_tile_wall_blocked(cand_pos):
-					continue
-
-				curr_pos = cand_pos
-				moved_this_step = true
-				break
-
-			if not moved_this_step:
-				break
-			steps_taken += 1
-
-		if curr_pos != m_pos:
-			m["grid_pos"] = curr_pos
-			_log("[MOVE] %s moves towards %s to (%d, %d)." % [m.get("name"), nearest_hero.get("name"), curr_pos.x, curr_pos.y])
-			acts += 1
-
-		# If monster arrived adjacent to hero, execute melee attack!
-		var final_dist = absi(h_pos.x - curr_pos.x) + absi(h_pos.y - curr_pos.y)
-		if final_dist == 1:
-			_log("[MONSTER] %s engages and attacks %s!" % [m.get("name"), nearest_hero.get("name")])
-			dm_attack_hero(str(nearest_hero.get("id", "")), m)
-			acts += 1
 
 	return acts
+
+func _process_enemy_turn(delta: float) -> void:
+	if not is_enemy_turn_waiting or active_enemy_turn_monster_id == "":
+		return
+
+	enemy_turn_wait_timer -= delta
+
+	var acting_m: Dictionary = {}
+	for m in monsters:
+		if str(m.get("id", "")) == active_enemy_turn_monster_id:
+			acting_m = m
+			break
+
+	if acting_m.is_empty() or not acting_m.get("is_alive", false):
+		_finish_current_enemy_turn()
+		return
+
+	match enemy_turn_stage:
+		"rolling":
+			enemy_turn_timer -= delta
+			if enemy_turn_timer <= 0.0 or (active_dice_animation.get("settled", false) and enemy_turn_timer <= 0.25):
+				# Dismiss movement dice roll tray
+				if active_dice_animation.get("type", "") == "movement":
+					active_dice_animation = {}
+				if enemy_turn_path.size() > 1:
+					enemy_turn_stage = "moving"
+					enemy_turn_step_index = 0
+					enemy_step_timer = enemy_step_duration
+					_log("[MOVE] %s begins moving towards %s..." % [acting_m.get("name"), enemy_target_hero.get("name")])
+				else:
+					enemy_turn_stage = "pause_after_move"
+					enemy_turn_timer = 0.8
+				queue_redraw_all()
+
+		"moving":
+			enemy_step_timer -= delta
+			if enemy_step_timer <= 0.0:
+				enemy_turn_step_index += 1
+				if enemy_turn_step_index < enemy_turn_path.size():
+					var next_pos = enemy_turn_path[enemy_turn_step_index]
+					acting_m["grid_pos"] = next_pos
+					movement_trail.append(next_pos)
+					enemy_movement_remaining = maxi(0, enemy_movement_remaining - 1)
+					enemy_step_timer = enemy_step_duration
+					_log("[MOVE] %s steps to (%d, %d)." % [acting_m.get("name"), next_pos.x, next_pos.y])
+					_update_ui()
+					queue_redraw_all()
+
+				if enemy_turn_step_index >= enemy_turn_path.size() - 1:
+					# Step-by-step movement finished! Enter post-move pause
+					enemy_turn_stage = "pause_after_move"
+					enemy_turn_timer = 0.9 # "with a nice pause so the user can see the enemy moved... pause... then the enemy action."
+					if dice_label:
+						dice_label.text = "⚔️ %s moved to (%d, %d)..." % [acting_m.get("name"), acting_m["grid_pos"].x, acting_m["grid_pos"].y]
+					queue_redraw_all()
+
+		"pause_after_move":
+			enemy_turn_timer -= delta
+			if enemy_turn_timer <= 0.0:
+				# Pause finished! Proceed to enemy action
+				enemy_turn_stage = "acting"
+
+		"acting":
+			# Execute enemy action (melee attack if adjacent to hero)
+			var m_pos = _to_grid_pos(acting_m.get("grid_pos", Vector2i(-1, -1)))
+			var h_pos = _to_grid_pos(enemy_target_hero.get("grid_pos", Vector2i(-1, -1)))
+			var dist = absi(h_pos.x - m_pos.x) + absi(h_pos.y - m_pos.y)
+
+			if dist == 1 and int(enemy_target_hero.get("current_bp", 0)) > 0:
+				_log("[MONSTER] %s engages and attacks %s!" % [acting_m.get("name"), enemy_target_hero.get("name")])
+				dm_attack_hero(str(enemy_target_hero.get("id", "")), acting_m)
+				enemy_turn_stage = "waiting_for_action"
+				enemy_turn_timer = 2.4 # allow combat dice tray and damage plaque to display
+			else:
+				# No melee attack possible
+				_finish_current_enemy_turn()
+
+		"waiting_for_action":
+			enemy_turn_timer -= delta
+			if enemy_turn_timer <= 0.0 or active_dice_animation.is_empty():
+				_finish_current_enemy_turn()
 
 func ai_monster_turn() -> Dictionary:
 	_log("[GM] Minions of Zargon stir in the darkness...")
@@ -4565,17 +4675,77 @@ func _begin_next_enemy_turn_in_sequence() -> void:
 		active_enemy_turn_monster_id = ""
 		is_enemy_turn_waiting = false
 		enemy_turn_wait_timer = 0.0
+		enemy_turn_stage = "idle"
+		movement_trail.clear()
 		end_turn()
 		return
 
 	var current_m = pending_enemy_turn_monsters.pop_front()
 	active_enemy_turn_monster_id = str(current_m.get("id", ""))
+
+	if not current_m.get("is_alive", false):
+		_begin_next_enemy_turn_in_sequence()
+		return
+	if current_m.get("is_sleeping", false):
+		_log("[SLEEP] %s is sound asleep and cannot move or attack." % current_m.get("name"))
+		_begin_next_enemy_turn_in_sequence()
+		return
+	if current_m.get("tempest_stunned", false):
+		current_m["tempest_stunned"] = false # Recovers at end of missed turn
+		_log("[TEMPEST] %s is caught in the howling winds and misses its turn!" % current_m.get("name"))
+		_begin_next_enemy_turn_in_sequence()
+		return
+
+	# Find nearest living hero on board
+	var m_pos = _to_grid_pos(current_m.get("grid_pos", Vector2i(0, 0)))
+	var nearest_hero: Dictionary = {}
+	var min_dist: int = 9999
+	for h in heroes:
+		if h.get("is_on_board", false) and int(h.get("current_bp", 0)) > 0:
+			var h_pos = _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
+			if h_pos.x < 0 or h_pos.y < 0:
+				continue
+			var dist = absi(h_pos.x - m_pos.x) + absi(h_pos.y - m_pos.y)
+			if dist < min_dist:
+				min_dist = dist
+				nearest_hero = h
+
+	if nearest_hero.is_empty():
+		_begin_next_enemy_turn_in_sequence()
+		return
+
+	enemy_target_hero = nearest_hero
+
+	# 1. Roll 2d6 movement dice for enemy character!
+	var roll = TabletopDice.roll_movement()
+	var dice_vals = [roll.d1, roll.d2]
+	enemy_movement_rolled_total = roll.total
+	var max_moves = maxi(int(current_m.get("movementSquares", 4)), roll.total)
+	enemy_movement_remaining = max_moves
+
+	_log("[ENEMY TURN] %s prepares to act! (Rolling 2d6 movement: [%d, %d] = %d squares)" % [
+		current_m.get("name"), roll.d1, roll.d2, roll.total
+	])
+	if dice_label:
+		dice_label.text = "⚔️ [ENEMY TURN] %s: Rolled %d squares!" % [current_m.get("name"), roll.total]
+
+	trigger_movement_dice_roll(roll, str(current_m.get("name", "Enemy")), dice_vals)
+	show_flashy_roll_number(roll.total)
+	if not active_dice_animation.is_empty():
+		active_dice_animation["total_duration"] = 1.0
+
+	# 2. Compute movement path
+	enemy_turn_path = _calculate_monster_movement_path(current_m, nearest_hero, max_moves)
+	enemy_turn_step_index = 0
+
+	# 3. Initialize movement trail at origin tile
+	movement_trail = [m_pos]
+
+	# 4. Set state
 	is_enemy_turn_waiting = true
 	enemy_turn_wait_timer = enemy_turn_wait_duration
-
-	_log("[ENEMY TURN] %s prepares to act! (1.5s timeout - click anywhere to skip)" % current_m.get("name"))
-	if dice_label:
-		dice_label.text = "⚔️ [ENEMY TURN] %s's Turn! (1.5s - Click to Skip)" % current_m.get("name")
+	enemy_turn_stage = "rolling"
+	enemy_turn_timer = 1.0
 
 	_update_ui()
 	queue_redraw_all()
@@ -4583,25 +4753,51 @@ func _begin_next_enemy_turn_in_sequence() -> void:
 func skip_enemy_turn_timeout() -> Dictionary:
 	if not is_enemy_turn_waiting:
 		return { "success": false, "message": "No enemy turn timeout active" }
-	_log("[SKIP] Enemy turn 1.5s timeout skipped by user!")
+
 	var m_id = active_enemy_turn_monster_id
+	_log("[SKIP] Enemy turn sequence skipped by user for monster: %s" % m_id)
+
+	var acting_m: Dictionary = {}
+	for m in monsters:
+		if str(m.get("id", "")) == m_id:
+			acting_m = m
+			break
+
+	if not acting_m.is_empty() and acting_m.get("is_alive", false):
+		# If monster has not yet completed its move, snap to final destination on path
+		if enemy_turn_path.size() > 1:
+			var final_pos = enemy_turn_path[enemy_turn_path.size() - 1]
+			acting_m["grid_pos"] = final_pos
+			movement_trail = enemy_turn_path.duplicate()
+			_log("[MOVE] %s immediately moves to (%d, %d)." % [acting_m.get("name"), final_pos.x, final_pos.y])
+
+		# Dismiss any active movement dice animation
+		if active_dice_animation.get("type", "") == "movement":
+			active_dice_animation = {}
+
+		# If adjacent to target hero, perform melee attack immediately
+		if not enemy_target_hero.is_empty():
+			var m_pos = _to_grid_pos(acting_m.get("grid_pos", Vector2i(-1, -1)))
+			var h_pos = _to_grid_pos(enemy_target_hero.get("grid_pos", Vector2i(-1, -1)))
+			var dist = absi(h_pos.x - m_pos.x) + absi(h_pos.y - m_pos.y)
+			if dist == 1 and int(enemy_target_hero.get("current_bp", 0)) > 0:
+				_log("[MONSTER] %s engages and attacks %s!" % [acting_m.get("name"), enemy_target_hero.get("name")])
+				dm_attack_hero(str(enemy_target_hero.get("id", "")), acting_m)
+
 	_finish_current_enemy_turn()
 	return { "success": true, "skipped_monster_id": m_id }
 
 func _finish_current_enemy_turn() -> void:
 	if not is_enemy_turn_waiting:
 		return
+
 	is_enemy_turn_waiting = false
 	enemy_turn_wait_timer = 0.0
-
-	var acting_m: Dictionary = {}
-	for m in monsters:
-		if str(m.get("id", "")) == active_enemy_turn_monster_id:
-			acting_m = m
-			break
-
-	if not acting_m.is_empty():
-		_execute_single_monster_action(acting_m)
+	enemy_turn_stage = "idle"
+	movement_trail.clear()
+	enemy_turn_path.clear()
+	enemy_turn_step_index = 0
+	enemy_movement_remaining = 0
 
 	_update_ui()
 	queue_redraw_all()
@@ -6041,6 +6237,11 @@ func get_telemetry_state() -> Dictionary:
 		"activeEnemyTurnMonsterId": active_enemy_turn_monster_id,
 		"isEnemyTurnWaiting": is_enemy_turn_waiting,
 		"enemyTurnWaitRemaining": enemy_turn_wait_timer,
+		"enemyTurnStage": enemy_turn_stage,
+		"enemyTurnStepIndex": enemy_turn_step_index,
+		"enemyTurnPath": enemy_turn_path.map(func(v): return [v.x, v.y]),
+		"enemyMovementRemaining": enemy_movement_remaining,
+		"enemyMovementRolledTotal": enemy_movement_rolled_total,
 		"lastDamageEvent": last_damage_event,
 		"damageEvents": damage_events,
 		"lastSpellResult": last_spell_result,
@@ -6431,6 +6632,12 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				is_enemy_turn_waiting = bool(action_data.get("isEnemyTurnWaiting"))
 				if not is_enemy_turn_waiting:
 					pending_enemy_turn_monsters.clear()
+					enemy_turn_stage = "idle"
+					enemy_turn_path.clear()
+					enemy_turn_step_index = 0
+					movement_trail.clear()
+					if active_dice_animation.get("type", "") == "movement":
+						active_dice_animation = {}
 			if action_data.has("activeEnemyTurnMonsterId"):
 				active_enemy_turn_monster_id = str(action_data.get("activeEnemyTurnMonsterId"))
 			if action_data.has("enemyTurnWaitTimer"):
@@ -7078,13 +7285,14 @@ func _draw_board(canvas: CanvasItem) -> void:
 	var st_w = ThemeDB.fallback_font.get_string_size("STAIR", HORIZONTAL_ALIGNMENT_CENTER, -1, 8).x
 	canvas.draw_string(ThemeDB.fallback_font, Vector2(stair_rect.get_center().x - st_w * 0.5, stair_rect.get_center().y + 3), "STAIR", HORIZONTAL_ALIGNMENT_CENTER, -1, 8, Color(0.85, 0.9, 1.0, 0.85))
 
-	# Draw Hero Movement Trail (Green line from where hero came from with moves remaining in middle)
-	if movement_trail.size() >= 2 and (has_moved_this_turn or movement_remaining > 0):
+	# Draw Movement Trail (Green line from where hero or monster came from with moves remaining in middle)
+	var is_enemy_moving = (is_enemy_turn_waiting or active_enemy_turn_monster_id != "") and (enemy_turn_stage in ["moving", "pause_after_move", "acting", "waiting_for_action"])
+	if movement_trail.size() >= 2 and (has_moved_this_turn or movement_remaining > 0 or is_enemy_moving):
 		var pts: Array[Vector2] = []
 		for tile_coord in movement_trail:
 			pts.append(board_offset + Vector2(tile_coord.x * tile_size + tile_size * 0.5, tile_coord.y * tile_size + tile_size * 0.5))
 
-		# 1. Start origin footprint ring (where the hero came from)
+		# 1. Start origin footprint ring (where the character came from)
 		canvas.draw_circle(pts[0], 5.0, Color(0.2, 0.92, 0.38, 0.9))
 		canvas.draw_arc(pts[0], tile_size * 0.24, 0, TAU, 16, Color(0.2, 0.92, 0.38, 0.65), 1.5)
 
@@ -7122,10 +7330,11 @@ func _draw_board(canvas: CanvasItem) -> void:
 
 		# 4. Draw moves remaining badge in the middle of the line
 		var badge_txt = ""
+		var moves_num = movement_remaining if current_phase == "hero_phase" else enemy_movement_remaining
 		if total_len >= 75.0:
-			badge_txt = ("%d MOVES LEFT" % movement_remaining) if movement_remaining != 1 else "1 MOVE LEFT"
+			badge_txt = ("%d MOVES LEFT" % moves_num) if moves_num != 1 else "1 MOVE LEFT"
 		else:
-			badge_txt = "%d LEFT" % movement_remaining
+			badge_txt = "%d LEFT" % moves_num
 
 		var font = ThemeDB.fallback_font
 		var txt_size = font.get_string_size(badge_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 10)
