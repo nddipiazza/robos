@@ -192,26 +192,62 @@ const TOOLS: Dictionary = {
 	}
 }
 
+func _normalize_eq_key(raw_id: String, prefix_strip: String = "") -> String:
+	var key = raw_id.to_lower().strip_edges()
+	if key.contains(":"):
+		key = key.split(":")[-1]
+	if prefix_strip != "" and key.begins_with(prefix_strip):
+		key = key.substr(prefix_strip.length())
+	if key.begins_with("weapon_") or key.begins_with("armor_") or key.begins_with("item_") or key.begins_with("spell_"):
+		key = key.substr(key.find("_") + 1)
+	if "(" in key:
+		key = key.split("(")[0].strip_edges()
+	return key.replace(" ", "_").replace("-", "_")
+
 func get_weapon(weapon_id: String) -> Dictionary:
-	return WEAPONS.get(weapon_id.to_lower().strip_edges(), {})
+	var key = _normalize_eq_key(weapon_id, "weapon_")
+	if WEAPONS.has(key):
+		return WEAPONS[key]
+	for k in WEAPONS:
+		if k in key or key in k:
+			return WEAPONS[k]
+	return {}
 
 func get_armor(armor_id: String) -> Dictionary:
-	return ARMOR.get(armor_id.to_lower().strip_edges(), {})
+	var key = _normalize_eq_key(armor_id, "armor_")
+	if ARMOR.has(key):
+		return ARMOR[key]
+	for k in ARMOR:
+		if k in key or key in k:
+			return ARMOR[k]
+	return {}
 
 func get_consumable(item_id: String) -> Dictionary:
-	return CONSUMABLES.get(item_id.to_lower().strip_edges(), {})
+	var key = _normalize_eq_key(item_id, "item_")
+	if CONSUMABLES.has(key):
+		return CONSUMABLES[key]
+	for k in CONSUMABLES:
+		if k in key or key in k:
+			return CONSUMABLES[k]
+	return {}
 
 func is_consumable(item_id: String) -> bool:
-	return CONSUMABLES.has(item_id.to_lower().strip_edges())
+	return get_consumable(item_id).size() > 0
 
 func get_tool(tool_id: String) -> Dictionary:
-	return TOOLS.get(tool_id.to_lower().strip_edges(), {})
+	var key = _normalize_eq_key(tool_id, "item_")
+	if TOOLS.has(key):
+		return TOOLS[key]
+	for k in TOOLS:
+		if k in key or key in k:
+			return TOOLS[k]
+	return {}
 
 func is_tool(tool_id: String) -> bool:
-	return TOOLS.has(tool_id.to_lower().strip_edges())
+	return get_tool(tool_id).size() > 0
 
 func get_item(item_id: String) -> Dictionary:
-	var key = item_id.to_lower().strip_edges()
+	var key = _normalize_eq_key(item_id)
 	if CONSUMABLES.has(key):
 		return CONSUMABLES[key]
 	if TOOLS.has(key):
@@ -220,6 +256,18 @@ func get_item(item_id: String) -> Dictionary:
 		return WEAPONS[key]
 	if ARMOR.has(key):
 		return ARMOR[key]
+	var w = get_weapon(item_id)
+	if w.size() > 0:
+		return w
+	var a = get_armor(item_id)
+	if a.size() > 0:
+		return a
+	var c = get_consumable(item_id)
+	if c.size() > 0:
+		return c
+	var t = get_tool(item_id)
+	if t.size() > 0:
+		return t
 	return {}
 
 func get_all_equipment() -> Dictionary:

@@ -243,6 +243,7 @@ var active_detail_monster_id: String = ""
 var _hero_card_bg_cache: Dictionary = {}
 var _monster_card_bg_cache: Dictionary = {}
 var _ai_icon_cache: Dictionary = {}
+var _ai_icon_paths: Dictionary = {}
 
 @onready var btn_armory: Button = _find_action_button("BtnArmory")
 
@@ -1160,7 +1161,9 @@ func _load_texture_safe(res_path: String) -> Texture2D:
 			var img = Image.new()
 			var err = img.load(p)
 			if err == OK and not img.is_empty():
-				return ImageTexture.create_from_image(img)
+				var tex = ImageTexture.create_from_image(img)
+				tex.take_over_path(res_path)
+				return tex
 			var f = FileAccess.open(p, FileAccess.READ)
 			if f:
 				var buf = f.get_buffer(f.get_length())
@@ -1168,10 +1171,14 @@ func _load_texture_safe(res_path: String) -> Texture2D:
 				if buf.size() > 8:
 					if buf[0] == 0x89 and buf[1] == 0x50: # PNG magic
 						if img.load_png_from_buffer(buf) == OK:
-							return ImageTexture.create_from_image(img)
+							var tex = ImageTexture.create_from_image(img)
+							tex.take_over_path(res_path)
+							return tex
 					elif buf[0] == 0xFF and buf[1] == 0xD8: # JPEG magic
 						if img.load_jpg_from_buffer(buf) == OK:
-							return ImageTexture.create_from_image(img)
+							var tex = ImageTexture.create_from_image(img)
+							tex.take_over_path(res_path)
+							return tex
 	return null
 
 func get_hero_card_bg_texture(hero_id: String) -> Texture2D:
@@ -1347,61 +1354,142 @@ func get_monster_lore(m: Dictionary) -> Dictionary:
 			}
 
 func get_ai_icon_texture(category: String, id_name: String) -> Texture2D:
-	var clean_id = id_name.to_lower().strip_edges().replace(" ", "_").replace("-", "_")
+	var raw_id = id_name.to_lower().strip_edges()
+	if raw_id.contains(":"):
+		raw_id = raw_id.split(":")[-1]
+	if raw_id.begins_with("weapon_") or raw_id.begins_with("armor_") or raw_id.begins_with("item_") or raw_id.begins_with("spell_"):
+		raw_id = raw_id.substr(raw_id.find("_") + 1)
+	if "(" in raw_id:
+		raw_id = raw_id.split("(")[0].strip_edges()
+	var clean_id = raw_id.replace(" ", "_").replace("-", "_")
+
 	var key = "%s:%s" % [category.to_lower(), clean_id]
 	if _ai_icon_cache.has(key) and _ai_icon_cache[key] != null:
 		return _ai_icon_cache[key]
 
+	# Auto-detect category if clean_id represents a known weapon, armor, spell, potion, or tool
+	var cat = category.to_lower().strip_edges()
+	if cat in ["", "item", "items", "gear", "inventory", "equipment", "potions", "potion", "consumable", "ability"]:
+		if "broadsword" in clean_id or "shortsword" in clean_id or "battle_axe" in clean_id or "crossbow" in clean_id or "dagger" in clean_id or "staff" in clean_id or clean_id in ["sword", "axe", "bow", "blade"]:
+			cat = "weapon"
+		elif "shield" in clean_id or "helmet" in clean_id or "helm" in clean_id or "chain_mail" in clean_id or "chainmail" in clean_id or "plate_mail" in clean_id or "platemail" in clean_id:
+			cat = "armor"
+		elif "flame" in clean_id or "fire" in clean_id or "courage" in clean_id or "rock_skin" in clean_id or "heal_body" in clean_id or "pass_through_rock" in clean_id or "water_of_healing" in clean_id or "sleep" in clean_id or "veil_of_mist" in clean_id or "genie" in clean_id or "swift_wind" in clean_id or "tempest" in clean_id:
+			cat = "spell"
+
 	var file_name = ""
-	match category.to_lower():
+	match cat:
 		"weapon":
-			match clean_id:
-				"broadsword", "sword", "greatsword", "longsword": file_name = "weapon_broadsword.png"
-				"shortsword", "short_sword": file_name = "weapon_shortsword.png"
-				"battle_axe", "axe", "greataxe": file_name = "weapon_battle_axe.png"
-				"crossbow", "heavy_crossbow", "bow", "shortbow", "longbow": file_name = "weapon_crossbow.png"
-				"dagger", "knife": file_name = "weapon_dagger.png"
-				"staff", "quarterstaff", "wand": file_name = "weapon_staff.png"
-				_: file_name = "weapon_broadsword.png"
+			if "shortsword" in clean_id or "short_sword" in clean_id:
+				file_name = "weapon_shortsword.png"
+			elif "broadsword" in clean_id or "greatsword" in clean_id or "longsword" in clean_id or "blade" in clean_id or "sword" in clean_id:
+				file_name = "weapon_broadsword.png"
+			elif "battle_axe" in clean_id or "greataxe" in clean_id or "axe" in clean_id:
+				file_name = "weapon_battle_axe.png"
+			elif "crossbow" in clean_id or "bow" in clean_id:
+				file_name = "weapon_crossbow.png"
+			elif "dagger" in clean_id or "knife" in clean_id:
+				file_name = "weapon_dagger.png"
+			elif "staff" in clean_id or "quarterstaff" in clean_id or "wand" in clean_id:
+				file_name = "weapon_staff.png"
+			else:
+				file_name = "weapon_broadsword.png"
 		"armor":
-			match clean_id:
-				"shield", "large_shield": file_name = "armor_shield.png"
-				"helmet", "helm": file_name = "armor_helmet.png"
-				"chain_mail", "chainmail", "chain_shirt", "ring_mail": file_name = "armor_chain_mail.png"
-				"plate_mail", "platemail", "plate_armor", "half_plate", "breastplate": file_name = "armor_plate_mail.png"
-				_: file_name = "armor_shield.png"
+			if "shield" in clean_id:
+				file_name = "armor_shield.png"
+			elif "helmet" in clean_id or "helm" in clean_id:
+				file_name = "armor_helmet.png"
+			elif "chain_mail" in clean_id or "chainmail" in clean_id or "ring_mail" in clean_id or "chain_shirt" in clean_id:
+				file_name = "armor_chain_mail.png"
+			elif "plate_mail" in clean_id or "platemail" in clean_id or "plate_armor" in clean_id or "breastplate" in clean_id:
+				file_name = "armor_plate_mail.png"
+			else:
+				file_name = "armor_shield.png"
 		"spell":
-			match clean_id:
-				"ball_of_flame", "fireball": file_name = "spell_ball_of_flame.png"
-				"fire_of_wrath", "flame_wrath", "burning_hands": file_name = "spell_fire_of_wrath.png"
-				"courage": file_name = "spell_courage.png"
-				"rock_skin", "stoneskin": file_name = "spell_rock_skin.png"
-				"heal_body", "cure_wounds", "healing_word": file_name = "spell_heal_body.png"
-				"pass_through_rock", "pass_rock": file_name = "spell_pass_through_rock.png"
-				"water_of_healing": file_name = "spell_water_of_healing.png"
-				"sleep": file_name = "spell_sleep.png"
-				"veil_of_mist", "invisibility": file_name = "spell_veil_of_mist.png"
-				"genie": file_name = "spell_genie.png"
-				"swift_wind", "haste": file_name = "spell_swift_wind.png"
-				"tempest", "lightning_bolt", "thunderwave", "blizzard": file_name = "spell_tempest.png"
-				_: file_name = "spell_ball_of_flame.png"
-		"item", "consumable", "tool", "ability", "gear", "potion":
-			match clean_id:
-				"healing_potion", "potion_of_healing", "cure_potion": file_name = "item_healing_potion.png"
-				"potion_of_strength", "strength_potion": file_name = "item_potion_of_strength.png"
-				"potion_of_speed", "speed_potion": file_name = "item_potion_of_speed.png"
-				"tool_kit", "toolbox", "tools", "lockpick", "trap_mastery", "disarm": file_name = "item_tool_kit.png"
-				"holy_water": file_name = "spell_water_of_healing.png"
-				"dungeon_torch", "torch": file_name = "spell_fire_of_wrath.png"
-				"heavy_rope", "rope": file_name = "item_tool_kit.png"
-				_: file_name = "item_healing_potion.png"
+			if "ball_of_flame" in clean_id or "fireball" in clean_id:
+				file_name = "spell_ball_of_flame.png"
+			elif "fire_of_wrath" in clean_id or "flame_wrath" in clean_id or "burning_hands" in clean_id:
+				file_name = "spell_fire_of_wrath.png"
+			elif "courage" in clean_id:
+				file_name = "spell_courage.png"
+			elif "rock_skin" in clean_id or "stoneskin" in clean_id:
+				file_name = "spell_rock_skin.png"
+			elif "heal_body" in clean_id or "cure_wounds" in clean_id or "healing_word" in clean_id:
+				file_name = "spell_heal_body.png"
+			elif "pass_through_rock" in clean_id or "pass_rock" in clean_id:
+				file_name = "spell_pass_through_rock.png"
+			elif "water_of_healing" in clean_id:
+				file_name = "spell_water_of_healing.png"
+			elif "sleep" in clean_id:
+				file_name = "spell_sleep.png"
+			elif "veil_of_mist" in clean_id or "invisibility" in clean_id:
+				file_name = "spell_veil_of_mist.png"
+			elif "genie" in clean_id:
+				file_name = "spell_genie.png"
+			elif "swift_wind" in clean_id or "haste" in clean_id:
+				file_name = "spell_swift_wind.png"
+			elif "tempest" in clean_id or "lightning" in clean_id or "thunderwave" in clean_id or "blizzard" in clean_id:
+				file_name = "spell_tempest.png"
+			else:
+				file_name = "spell_ball_of_flame.png"
+		"item", "consumable", "tool", "ability", "gear", "potion", "potions":
+			if "strength" in clean_id:
+				file_name = "item_potion_of_strength.png"
+			elif "speed" in clean_id:
+				file_name = "item_potion_of_speed.png"
+			elif "tool" in clean_id or "lockpick" in clean_id or "disarm" in clean_id or "trap" in clean_id or "rope" in clean_id:
+				file_name = "item_tool_kit.png"
+			elif "holy_water" in clean_id:
+				file_name = "spell_water_of_healing.png"
+			elif "torch" in clean_id:
+				file_name = "spell_fire_of_wrath.png"
+			elif "potion" in clean_id or "healing" in clean_id or "cure" in clean_id:
+				file_name = "item_healing_potion.png"
+			elif "shortsword" in clean_id or "short_sword" in clean_id:
+				file_name = "weapon_shortsword.png"
+			elif "broadsword" in clean_id or "greatsword" in clean_id or "longsword" in clean_id or "blade" in clean_id or "sword" in clean_id:
+				file_name = "weapon_broadsword.png"
+			elif "battle_axe" in clean_id or "axe" in clean_id:
+				file_name = "weapon_battle_axe.png"
+			elif "crossbow" in clean_id or "bow" in clean_id:
+				file_name = "weapon_crossbow.png"
+			elif "dagger" in clean_id or "knife" in clean_id:
+				file_name = "weapon_dagger.png"
+			elif "staff" in clean_id or "wand" in clean_id:
+				file_name = "weapon_staff.png"
+			elif "shield" in clean_id:
+				file_name = "armor_shield.png"
+			elif "helmet" in clean_id or "helm" in clean_id:
+				file_name = "armor_helmet.png"
+			elif "chain" in clean_id:
+				file_name = "armor_chain_mail.png"
+			elif "plate" in clean_id:
+				file_name = "armor_plate_mail.png"
+			else:
+				file_name = "item_healing_potion.png"
 		_:
-			file_name = "weapon_broadsword.png"
+			if "shortsword" in clean_id or "short_sword" in clean_id:
+				file_name = "weapon_shortsword.png"
+			elif "broadsword" in clean_id or "greatsword" in clean_id or "longsword" in clean_id or "blade" in clean_id or "sword" in clean_id:
+				file_name = "weapon_broadsword.png"
+			elif "battle_axe" in clean_id or "axe" in clean_id:
+				file_name = "weapon_battle_axe.png"
+			elif "crossbow" in clean_id or "bow" in clean_id:
+				file_name = "weapon_crossbow.png"
+			elif "dagger" in clean_id or "knife" in clean_id:
+				file_name = "weapon_dagger.png"
+			elif "staff" in clean_id or "wand" in clean_id:
+				file_name = "weapon_staff.png"
+			else:
+				file_name = "weapon_broadsword.png"
 
 	var path = "res://assets/icons/ai/" + file_name
 	var tex = _load_texture_safe(path)
 	if tex:
 		_ai_icon_cache[key] = tex
+		_ai_icon_cache["%s:%s" % [cat, clean_id]] = tex
+		_ai_icon_paths[key] = path
+		_ai_icon_paths["%s:%s" % [cat, clean_id]] = path
 		return tex
 	return null
 
@@ -2511,7 +2599,7 @@ func _update_elf_spell_modal_ui() -> void:
 		var btn_select = card.find_child("BtnSelect", true, false)
 		if btn_select:
 			if is_selected:
-				btn_select.text = "✓ Drafted"
+				btn_select.text = "Drafted"
 				var bsb = StyleBoxFlat.new()
 				bsb.bg_color = Color(0.06, 0.45, 0.28, 1.0)
 				bsb.set_corner_radius_all(4)
@@ -7354,7 +7442,7 @@ func _setup_turn_overlay_ui() -> void:
 	flashy_number_panel.add_child(vbox)
 
 	flashy_subtitle_label = Label.new()
-	flashy_subtitle_label.text = "🎲 MOVEMENT ROLL"
+	flashy_subtitle_label.text = "MOVEMENT ROLL"
 	flashy_subtitle_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	flashy_subtitle_label.add_theme_font_size_override("font_size", 13)
 	flashy_subtitle_label.add_theme_color_override("font_color", Color(1.0, 0.82, 0.3, 0.95))
@@ -7379,7 +7467,7 @@ func show_flashy_roll_number(total: int) -> void:
 	if flashy_number_label:
 		flashy_number_label.text = str(total)
 	if flashy_subtitle_label:
-		flashy_subtitle_label.text = "🎲 ROLLED %d SQUARES" % total
+		flashy_subtitle_label.text = "ROLLED %d SQUARES" % total
 	flashy_number_time = 0.0
 	if flashy_number_panel:
 		flashy_number_panel.visible = true
@@ -7862,7 +7950,7 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 	var icon_items: Array[Dictionary] = []
 
 	# 1. Equipped Weapon(s)
-	var eq_wep = str(h.get("equipped_weapon", "")).strip_edges().to_lower()
+	var eq_wep = str(h.get("equipped_weapon", h.get("weapon", ""))).strip_edges().to_lower()
 	if eq_wep != "" and eq_wep != "unarmed" and eq_wep != "fists":
 		var w_meta = HeroQuestEquipment.get_weapon(eq_wep)
 		var w_name = str(w_meta.get("name", eq_wep.replace("_", " ").capitalize()))
@@ -7913,28 +8001,44 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 			"tooltip": "[SPELL]\n%s (%s Magic)\n%s\nClick to cast spell." % [s_name, s_deck, s_desc]
 		})
 
-	# 4. Inventory Items / Potions / Tools
+	# 4. Inventory Items / Potions / Tools / Backup Weapons
 	var hero_inv: Array = h.get("inventory", [])
 	for it in hero_inv:
-		var it_str = str(it).strip_edges().to_lower()
+		var it_str = ""
+		if it is Dictionary:
+			it_str = str(it.get("id", it.get("item", it.get("name", "")))).strip_edges().to_lower()
+		else:
+			it_str = str(it).strip_edges().to_lower()
 		if it_str == eq_wep or eq_armor.has(it_str):
 			continue
 		var it_meta = HeroQuestEquipment.get_item(it_str)
 		var iname = str(it_meta.get("name", it_str.replace("_", " ").capitalize()))
 		var ival = int(it_meta.get("cost", it_meta.get("value", 50)))
 		var idesc = str(it_meta.get("description", it_meta.get("effect", "")))
+		var it_cat = "item"
+		if HeroQuestEquipment.get_weapon(it_str).size() > 0 or "broadsword" in it_str or "shortsword" in it_str or "axe" in it_str or "bow" in it_str or "dagger" in it_str or "staff" in it_str:
+			it_cat = "weapon"
+		elif HeroQuestEquipment.get_armor(it_str).size() > 0 or "shield" in it_str or "helm" in it_str or "mail" in it_str:
+			it_cat = "armor"
+		elif HeroQuestSpells.get_spell(it_str).size() > 0:
+			it_cat = "spell"
+
 		var is_this_flashing = is_item_flashing and str(flashing_item.get("type")) == "item" and (str(flashing_item.get("name")) == iname or it_str == str(flashing_item.get("item_id", "")))
 		var tip = ""
 		if is_this_flashing:
 			tip = "[NEW ITEM ACQUIRED!]\n%s\nValue: %d GP\n%s\nClick to use item." % [iname, ival, idesc]
+		elif it_cat == "weapon":
+			tip = "[INVENTORY WEAPON]\n%s\nAttack: %d Combat Dice\nCost: %d GP\n%s" % [iname, int(it_meta.get("attack_dice", 2)), ival, idesc]
+		elif it_cat == "armor":
+			tip = "[INVENTORY ARMOR]\n%s\nCost: %d GP\n%s" % [iname, ival, idesc]
 		else:
 			tip = "[INVENTORY ITEM]\n%s\nValue: %d GP\n%s\nClick to use item." % [iname, ival, idesc]
 		icon_items.append({
-			"type": "item",
-			"category": "item",
+			"type": it_cat,
+			"category": it_cat,
 			"id": it_str,
 			"name": iname,
-			"icon": get_ai_icon_texture("item", it_str),
+			"icon": get_ai_icon_texture(it_cat, it_str),
 			"tooltip": tip,
 			"flashing": is_this_flashing
 		})
@@ -8297,12 +8401,26 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 			hero_detail_equipment_section.add_child(inv_grid)
 
 			for it in hero_inv:
-				var item_str = str(it)
+				var item_str = ""
+				if it is Dictionary:
+					item_str = str(it.get("id", it.get("item", it.get("name", "")))).strip_edges().to_lower()
+				else:
+					item_str = str(it).strip_edges().to_lower()
 				var it_meta = HeroQuestEquipment.get_item(item_str)
 				var iname = str(it_meta.get("name", item_str.replace("_", " ").capitalize()))
 				var itype = str(it_meta.get("type", "Item")).capitalize()
 				var ival = int(it_meta.get("cost", it_meta.get("value", 50)))
 				var idesc = str(it_meta.get("description", it_meta.get("effect", "")))
+				var it_cat = "item"
+				if HeroQuestEquipment.get_weapon(item_str).size() > 0 or "broadsword" in item_str or "shortsword" in item_str or "axe" in item_str or "bow" in item_str or "dagger" in item_str or "staff" in item_str:
+					it_cat = "weapon"
+					itype = "Weapon"
+				elif HeroQuestEquipment.get_armor(item_str).size() > 0 or "shield" in item_str or "helm" in item_str or "mail" in item_str:
+					it_cat = "armor"
+					itype = "Armor"
+				elif HeroQuestSpells.get_spell(item_str).size() > 0:
+					it_cat = "spell"
+					itype = "Spell"
 
 				var it_panel = PanelContainer.new()
 				it_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -8323,7 +8441,7 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 				var ivbox = VBoxContainer.new()
 				var it_top = HBoxContainer.new()
 				it_top.add_theme_constant_override("separation", 6)
-				var it_icon_tex = get_ai_icon_texture("item", item_str)
+				var it_icon_tex = get_ai_icon_texture(it_cat, item_str)
 				if it_icon_tex:
 					var it_ico = TextureRect.new()
 					it_ico.texture = it_icon_tex
@@ -9520,6 +9638,122 @@ func _log(msg: String) -> void:
 	combat_log.append(clean_msg)
 	_update_log_display()
 
+func _get_hero_weapon_texture_path(h: Dictionary) -> String:
+	var eq_w = str(h.get("equipped_weapon", h.get("weapon", ""))).strip_edges().to_lower()
+	if eq_w == "" or eq_w == "unarmed" or eq_w == "fists":
+		return ""
+	var tex = get_ai_icon_texture("weapon", eq_w)
+	if tex and tex.resource_path != "":
+		return tex.resource_path
+	return str(_ai_icon_paths.get("weapon:%s" % eq_w, ""))
+
+func _get_hero_card_icons_telemetry(h: Dictionary) -> Array:
+	var icons_out: Array = []
+	var eq_w = str(h.get("equipped_weapon", h.get("weapon", ""))).strip_edges().to_lower()
+	if eq_w != "" and eq_w != "unarmed" and eq_w != "fists":
+		var w_tex = get_ai_icon_texture("weapon", eq_w)
+		var w_meta = HeroQuestEquipment.get_weapon(eq_w)
+		var w_name = str(w_meta.get("name", eq_w.replace("_", " ").capitalize()))
+		var w_path = (w_tex.resource_path if (w_tex and w_tex.resource_path != "") else str(_ai_icon_paths.get("weapon:%s" % eq_w, "")))
+		icons_out.append({
+			"type": "weapon",
+			"category": "weapon",
+			"id": eq_w,
+			"name": w_name,
+			"texture": w_path,
+			"isPotion": ("potion" in w_path)
+		})
+	for a_id in h.get("equipped_armor", []):
+		var a_s = str(a_id).strip_edges().to_lower()
+		var a_tex = get_ai_icon_texture("armor", a_s)
+		var a_meta = HeroQuestEquipment.get_armor(a_s)
+		var a_name = str(a_meta.get("name", a_s.replace("_", " ").capitalize()))
+		var a_path = (a_tex.resource_path if (a_tex and a_tex.resource_path != "") else str(_ai_icon_paths.get("armor:%s" % a_s, "")))
+		icons_out.append({
+			"type": "armor",
+			"category": "armor",
+			"id": a_s,
+			"name": a_name,
+			"texture": a_path,
+			"isPotion": false
+		})
+	for s_id in h.get("spells", []):
+		var s_s = str(s_id).strip_edges().to_lower()
+		var s_tex = get_ai_icon_texture("spell", s_s)
+		var s_meta = HeroQuestSpells.get_spell(s_s)
+		var s_name = str(s_meta.get("name", s_s.replace("_", " ").capitalize()))
+		var s_path = (s_tex.resource_path if (s_tex and s_tex.resource_path != "") else str(_ai_icon_paths.get("spell:%s" % s_s, "")))
+		icons_out.append({
+			"type": "spell",
+			"category": "spell",
+			"id": s_s,
+			"name": s_name,
+			"texture": s_path,
+			"isPotion": false
+		})
+	for it in h.get("inventory", []):
+		var it_s = ""
+		if it is Dictionary:
+			it_s = str(it.get("id", it.get("item", it.get("name", "")))).strip_edges().to_lower()
+		else:
+			it_s = str(it).strip_edges().to_lower()
+		if it_s == eq_w or h.get("equipped_armor", []).has(it_s):
+			continue
+		var it_cat = "item"
+		if HeroQuestEquipment.get_weapon(it_s).size() > 0 or "broadsword" in it_s or "shortsword" in it_s or "axe" in it_s or "bow" in it_s or "dagger" in it_s or "staff" in it_s:
+			it_cat = "weapon"
+		elif HeroQuestEquipment.get_armor(it_s).size() > 0 or "shield" in it_s or "helm" in it_s or "mail" in it_s:
+			it_cat = "armor"
+		elif HeroQuestSpells.get_spell(it_s).size() > 0:
+			it_cat = "spell"
+		var i_tex = get_ai_icon_texture(it_cat, it_s)
+		var i_meta = HeroQuestEquipment.get_item(it_s)
+		var i_name = str(i_meta.get("name", it_s.replace("_", " ").capitalize()))
+		var i_path = (i_tex.resource_path if (i_tex and i_tex.resource_path != "") else str(_ai_icon_paths.get("%s:%s" % [it_cat, it_s], "")))
+		icons_out.append({
+			"type": it_cat,
+			"category": it_cat,
+			"id": it_s,
+			"name": i_name,
+			"texture": i_path,
+			"isPotion": ("potion" in i_path)
+		})
+	return icons_out
+
+func _get_hero_detail_items_telemetry() -> Array:
+	var items_out: Array = []
+	var h = null
+	for hero in heroes:
+		if str(hero.get("id")) == active_detail_hero_id:
+			h = hero
+			break
+	if not h:
+		return items_out
+	for it in h.get("inventory", []):
+		var it_s = ""
+		if it is Dictionary:
+			it_s = str(it.get("id", it.get("item", it.get("name", "")))).strip_edges().to_lower()
+		else:
+			it_s = str(it).strip_edges().to_lower()
+		var it_cat = "item"
+		if HeroQuestEquipment.get_weapon(it_s).size() > 0 or "broadsword" in it_s or "shortsword" in it_s or "axe" in it_s or "bow" in it_s or "dagger" in it_s or "staff" in it_s:
+			it_cat = "weapon"
+		elif HeroQuestEquipment.get_armor(it_s).size() > 0 or "shield" in it_s or "helm" in it_s or "mail" in it_s:
+			it_cat = "armor"
+		elif HeroQuestSpells.get_spell(it_s).size() > 0:
+			it_cat = "spell"
+		var i_tex = get_ai_icon_texture(it_cat, it_s)
+		var i_meta = HeroQuestEquipment.get_item(it_s)
+		var i_path = (i_tex.resource_path if (i_tex and i_tex.resource_path != "") else str(_ai_icon_paths.get("%s:%s" % [it_cat, it_s], "")))
+		items_out.append({
+			"id": it_s,
+			"name": str(i_meta.get("name", it_s.replace("_", " ").capitalize())),
+			"category": it_cat,
+			"texture": i_path,
+			"isPotion": ("potion" in i_path)
+		})
+	return items_out
+
 func get_telemetry_state() -> Dictionary:
 	var exp_tiles: Array = []
 	for t in explored_tiles.keys():
@@ -9560,7 +9794,7 @@ func get_telemetry_state() -> Dictionary:
 		if h.get("veil_of_mist_active", false): effs.append("veil_of_mist")
 		if h.get("is_sleeping", false): effs.append("sleep")
 
-		var eq_w = str(h.get("equipped_weapon", "")).strip_edges().to_lower()
+		var eq_w = str(h.get("equipped_weapon", h.get("weapon", ""))).strip_edges().to_lower()
 		var eq_a = h.get("equipped_armor", [])
 		var h_sp = h.get("spells", [])
 		var h_inv = h.get("inventory", [])
@@ -9569,7 +9803,11 @@ func get_telemetry_state() -> Dictionary:
 		total_ic += eq_a.size()
 		total_ic += h_sp.size()
 		for it in h_inv:
-			var it_s = str(it).strip_edges().to_lower()
+			var it_s = ""
+			if it is Dictionary:
+				it_s = str(it.get("id", it.get("item", it.get("name", "")))).strip_edges().to_lower()
+			else:
+				it_s = str(it).strip_edges().to_lower()
 			if it_s != eq_w and not eq_a.has(it_s): total_ic += 1
 		if can_hero_disarm(h).get("is_dwarf", false): total_ic += 1
 
@@ -9594,8 +9832,10 @@ func get_telemetry_state() -> Dictionary:
 			"isActive": is_act,
 			"isOnBoard": bool(h.get("is_on_board", false)),
 			"isAlive": cur_bp > 0,
-			"weapon": str(h.get("equipped_weapon", "unarmed")),
-			"weaponIcon": HeroQuestEquipment.get_weapon(str(h.get("equipped_weapon", ""))).get("icon", "⚔️"),
+			"weapon": str(h.get("equipped_weapon", h.get("weapon", "unarmed"))),
+			"weaponIcon": HeroQuestEquipment.get_weapon(str(h.get("equipped_weapon", h.get("weapon", "")))).get("icon", "⚔️"),
+			"weaponTexture": _get_hero_weapon_texture_path(h),
+			"cardIcons": _get_hero_card_icons_telemetry(h),
 			"armor": h.get("equipped_armor", []),
 			"statusEffects": effs,
 			"tokenAsset": get_hero_token_path(h),
@@ -9890,7 +10130,8 @@ func get_telemetry_state() -> Dictionary:
 			"heroId": active_detail_hero_id,
 			"heroName": hero_detail_name.text if (hero_detail_modal and hero_detail_modal.visible and hero_detail_name) else "",
 			"heroClass": hero_detail_class.text if (hero_detail_modal and hero_detail_modal.visible and hero_detail_class) else "",
-			"statusBadge": hero_detail_status_badge.text if (hero_detail_modal and hero_detail_modal.visible and hero_detail_status_badge) else ""
+			"statusBadge": hero_detail_status_badge.text if (hero_detail_modal and hero_detail_modal.visible and hero_detail_status_badge) else "",
+			"inventoryItems": _get_hero_detail_items_telemetry()
 		},
 		"monsterDetailModalOpen": monster_detail_modal.visible if monster_detail_modal else false,
 		"monsterDetailModal": {
