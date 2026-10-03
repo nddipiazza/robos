@@ -519,6 +519,27 @@ class TabletopQAPlayer:
         self.log("Resetting all hero spells for a new quest...")
         return self.execute_action("reset_quest_spells")
 
+    # --- Autosave & Quest Reset Helpers ---
+    def save_game(self) -> dict:
+        self.log("Saving game state to disk...")
+        return self.execute_action("save_game")
+
+    def load_game(self) -> dict:
+        self.log("Restoring game state from disk save...")
+        return self.execute_action("load_game")
+
+    def has_save_game(self) -> dict:
+        return self.execute_action("has_save_game")
+
+    def delete_save_game(self) -> dict:
+        self.log("Deleting saved game file...")
+        return self.execute_action("delete_save_game")
+
+    def reset_quest(self, clear_save: bool = True) -> dict:
+        self.log(f"Force reloading current quest from cartridge (clear_save={clear_save})...")
+        return self.execute_action("reset_game", clear_save=clear_save)
+
+
 
 
 

@@ -350,6 +350,10 @@ var current_elf_element: String = "water"
 var is_ai_step_pending: bool = false
 var pending_ai_command: Dictionary = {}
 
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		auto_save_game()
+
 func _ready() -> void:
 	print("[TabletopWorld] Initializing HeroQuest Cartridge Player...")
 	_check_cli_role()
@@ -1600,6 +1604,32 @@ func _check_cli_role() -> void:
 			current_role = "player"
 
 func _setup_ui_signals() -> void:
+	var header_hbox = get_node_or_null("UI/SidebarHeader")
+	if header_hbox and not header_hbox.has_node("BtnResetQuest"):
+		var r_btn = Button.new()
+		r_btn.name = "BtnResetQuest"
+		r_btn.text = "↺ Reset"
+		r_btn.tooltip_text = "Force reload current quest from cartridge (clears saved game)"
+		r_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		var r_sb = StyleBoxFlat.new()
+		r_sb.bg_color = Color(0.18, 0.08, 0.1, 0.85)
+		r_sb.border_color = Color(0.85, 0.35, 0.35, 0.7)
+		r_sb.set_border_width_all(1)
+		r_sb.set_corner_radius_all(4)
+		r_sb.content_margin_left = 6
+		r_sb.content_margin_right = 6
+		r_sb.content_margin_top = 2
+		r_sb.content_margin_bottom = 2
+		r_btn.add_theme_stylebox_override("normal", r_sb)
+		r_btn.add_theme_color_override("font_color", Color(0.95, 0.65, 0.65, 0.95))
+		r_btn.add_theme_font_size_override("font_size", 11)
+		r_btn.pressed.connect(func():
+			_log("[RESET] Player requested manual quest reset.")
+			delete_save_game()
+			_load_active_cartridge(true)
+		)
+		header_hbox.add_child(r_btn)
+
 	if role_badge and not role_badge.pressed.is_connected(toggle_role):
 		role_badge.pressed.connect(toggle_role)
 	if btn_roll and not btn_roll.pressed.is_connected(roll_movement_dice):
@@ -1675,13 +1705,343 @@ func _on_attack_pressed() -> void:
 	else:
 		attack_adjacent_monster()
 
+
+# ==============================================================================
+# ROBOS TABLETOP RPG: AUTOSAVE & QUEST RESUME / RESET ENGINE
+# ==============================================================================
+
+var _cli_reset_consumed: bool = false
+var _is_restoring_state: bool = false
+
+func is_reset_requested() -> bool:
+	if _cli_reset_consumed:
+		return false
+	if OS.get_environment("TABLETOP_RESET") == "1":
+		return true
+	var cmd_args = OS.get_cmdline_user_args() + OS.get_cmdline_args()
+	for a in cmd_args:
+		if a == "--reset" or a == "-r" or a == "--force-reload" or a == "--new-game":
+			return true
+	return false
+
+func get_save_file_path() -> String:
+	var env_path = OS.get_environment("TABLETOP_SAVE_PATH")
+	if env_path != "":
+		return env_path
+	var slug = CartridgeManager.current_cartridge_slug
+	if slug == "":
+		var cart = CartridgeManager.active_cartridge
+		slug = str(cart.get("cartridgeId", cart.get("header", {}).get("startingMap", "heroquest-the-trial")))
+	if slug == "":
+		slug = "heroquest-the-trial"
+	return "user://tabletop_autosave_%s.json" % slug.replace("/", "_").replace("\\", "_")
+
+func has_saved_game() -> bool:
+	var path = get_save_file_path()
+	if not FileAccess.file_exists(path):
+		return false
+	var f = FileAccess.open(path, FileAccess.READ)
+	if not f:
+		return false
+	var content = f.get_as_text()
+	f.close()
+	if content.strip_edges() == "":
+		return false
+	var parsed = JSON.parse_string(content)
+	return (parsed is Dictionary and parsed.has("heroes") and parsed.get("heroes", []).size() > 0)
+
+func delete_save_game() -> bool:
+	var path = get_save_file_path()
+	if FileAccess.file_exists(path):
+		var err = DirAccess.remove_absolute(path)
+		if err == OK:
+			print("[TabletopAutosave] Deleted save file: ", path)
+			return true
+		else:
+			print("[TabletopAutosave] Warning: failed to delete save file: ", path, " (Error code: ", err, ")")
+			return false
+	return true
+
+func serialize_game_state() -> Dictionary:
+	var heroes_save: Array = []
+	for h in heroes:
+		var hc = h.duplicate(true)
+		var gp = h.get("grid_pos", Vector2i(-1, -1))
+		if gp is Vector2i:
+			hc["grid_pos"] = [gp.x, gp.y]
+		elif gp is Array:
+			hc["grid_pos"] = gp
+		heroes_save.append(hc)
+
+	var monsters_save: Array = []
+	for m in monsters:
+		var mc = m.duplicate(true)
+		var mp = m.get("grid_pos", Vector2i(-1, -1))
+		if mp is Vector2i:
+			mc["grid_pos"] = [mp.x, mp.y]
+		elif mp is Array:
+			mc["grid_pos"] = mp
+		monsters_save.append(mc)
+
+	var doors_save: Array = []
+	for d in doors:
+		doors_save.append(d.duplicate(true))
+
+	var traps_save: Array = []
+	for tr in traps:
+		traps_save.append(tr.duplicate(true))
+
+	var furniture_save: Array = []
+	for f in furniture:
+		furniture_save.append(f.duplicate(true))
+
+	var story_triggers_save: Array = []
+	for st in story_triggers:
+		story_triggers_save.append(st.duplicate(true))
+
+	var explored_arr: Array = []
+	for t in explored_tiles.keys():
+		if t is Vector2i:
+			explored_arr.append([t.x, t.y])
+		elif t is Array:
+			explored_arr.append(t)
+
+	var cart = CartridgeManager.active_cartridge
+	var cart_slug = CartridgeManager.current_cartridge_slug
+	var starting_map_id = cart.get("header", {}).get("startingMap", "heroquest-the-trial")
+
+	var msp = movement_start_pos
+	var msp_arr = [msp.x, msp.y] if msp is Vector2i else [-1, -1]
+
+	var trail_arr: Array = []
+	for v in movement_trail:
+		trail_arr.append([v.x, v.y])
+
+	var s_alloc = cart.get("spellAllocation", {})
+
+	return {
+		"version": 1,
+		"timestamp": Time.get_unix_time_from_system(),
+		"cartridge_slug": cart_slug,
+		"map_id": starting_map_id,
+		"current_role": current_role,
+		"active_hero_idx": active_hero_idx,
+		"current_round": current_round,
+		"current_phase": current_phase,
+		"movement_remaining": movement_remaining,
+		"movement_rolled": movement_rolled,
+		"has_acted_this_turn": has_acted_this_turn,
+		"has_moved_this_turn": has_moved_this_turn,
+		"moved_before_action": moved_before_action,
+		"movement_closed": movement_closed,
+		"movement_start_pos": msp_arr,
+		"movement_trail": trail_arr,
+		"turn_state": turn_state,
+		"heroes": heroes_save,
+		"monsters": monsters_save,
+		"doors": doors_save,
+		"traps": traps_save,
+		"furniture": furniture_save,
+		"story_triggers": story_triggers_save,
+		"explored_tiles": explored_arr,
+		"revealed_rooms": revealed_rooms.duplicate(true),
+		"discovered_monster_ids": discovered_monster_ids.duplicate(true),
+		"searched_rooms": searched_rooms.duplicate(true),
+		"room_special_treasure_collected": room_special_treasure_collected.duplicate(true),
+		"treasure_deck": treasure_deck.duplicate(true),
+		"treasure_discard": treasure_discard.duplicate(true),
+		"spell_allocation": s_alloc.duplicate(true),
+		"current_elf_element": current_elf_element
+	}
+
+func auto_save_game() -> void:
+	if _is_restoring_state:
+		return
+	if heroes.is_empty():
+		return
+	var data = serialize_game_state()
+	var json_str = JSON.stringify(data, "\t")
+	var path = get_save_file_path()
+	var f = FileAccess.open(path, FileAccess.WRITE)
+	if f:
+		f.store_string(json_str)
+		f.close()
+	else:
+		print("[TabletopAutosave] Error opening save file for writing: ", path)
+
+func restore_saved_game(save_dict: Dictionary = {}) -> bool:
+	var data = save_dict
+	if data.is_empty():
+		var path = get_save_file_path()
+		if not FileAccess.file_exists(path):
+			return false
+		var f = FileAccess.open(path, FileAccess.READ)
+		if not f:
+			return false
+		var txt = f.get_as_text()
+		f.close()
+		var parsed = JSON.parse_string(txt)
+		if not (parsed is Dictionary):
+			return false
+		data = parsed
+
+	if not data.has("heroes") or data.get("heroes", []).is_empty():
+		return false
+
+	_is_restoring_state = true
+	print("[TabletopAutosave] Restoring game state from save (Round: ", data.get("current_round", 1), ")...")
+
+	# Restore Heroes
+	var saved_heroes = data.get("heroes", [])
+	if saved_heroes.size() > 0:
+		heroes.clear()
+		for sh in saved_heroes:
+			var h = sh.duplicate(true)
+			var gp = sh.get("grid_pos", [0, 0])
+			if gp is Array and gp.size() >= 2:
+				h["grid_pos"] = Vector2i(int(gp[0]), int(gp[1]))
+			elif gp is Vector2i:
+				h["grid_pos"] = gp
+			else:
+				h["grid_pos"] = starting_stair
+			heroes.append(h)
+
+	# Restore Monsters
+	var saved_monsters = data.get("monsters", [])
+	if saved_monsters.size() > 0:
+		monsters.clear()
+		for sm in saved_monsters:
+			var m = sm.duplicate(true)
+			var gp = sm.get("grid_pos", [0, 0])
+			if gp is Array and gp.size() >= 2:
+				m["grid_pos"] = Vector2i(int(gp[0]), int(gp[1]))
+			elif gp is Vector2i:
+				m["grid_pos"] = gp
+			monsters.append(m)
+
+	# Restore Doors
+	if data.has("doors"):
+		doors.clear()
+		for d in data.get("doors", []):
+			doors.append(d.duplicate(true))
+
+	# Restore Traps
+	if data.has("traps"):
+		traps.clear()
+		for tr in data.get("traps", []):
+			traps.append(tr.duplicate(true))
+
+	# Restore Furniture
+	if data.has("furniture"):
+		furniture.clear()
+		for f in data.get("furniture", []):
+			furniture.append(f.duplicate(true))
+
+	# Restore Story Triggers
+	if data.has("story_triggers"):
+		story_triggers.clear()
+		for st in data.get("story_triggers", []):
+			story_triggers.append(st.duplicate(true))
+
+	# Rebuild caches with restored entities
+	_rebuild_spatial_caches()
+
+	# Restore Explored Tiles & Vision
+	if data.has("explored_tiles"):
+		explored_tiles.clear()
+		for pt in data.get("explored_tiles", []):
+			if pt is Array and pt.size() >= 2:
+				explored_tiles[Vector2i(int(pt[0]), int(pt[1]))] = true
+			elif pt is Vector2i:
+				explored_tiles[pt] = true
+
+	if data.has("revealed_rooms"):
+		revealed_rooms.clear()
+		for r in data.get("revealed_rooms", []):
+			revealed_rooms.append(str(r))
+
+	if data.has("discovered_monster_ids"):
+		discovered_monster_ids.clear()
+		var dmi = data.get("discovered_monster_ids", {})
+		if dmi is Dictionary:
+			for k in dmi.keys():
+				discovered_monster_ids[str(k)] = true
+		elif dmi is Array:
+			for k in dmi:
+				discovered_monster_ids[str(k)] = true
+
+	# Restore Turn State
+	current_role = str(data.get("current_role", current_role))
+	active_hero_idx = int(data.get("active_hero_idx", active_hero_idx))
+	current_round = int(data.get("current_round", current_round))
+	current_phase = str(data.get("current_phase", current_phase))
+	movement_remaining = int(data.get("movement_remaining", movement_remaining))
+	movement_rolled = bool(data.get("movement_rolled", movement_rolled))
+	has_acted_this_turn = bool(data.get("has_acted_this_turn", has_acted_this_turn))
+	has_moved_this_turn = bool(data.get("has_moved_this_turn", has_moved_this_turn))
+	moved_before_action = bool(data.get("moved_before_action", moved_before_action))
+	movement_closed = bool(data.get("movement_closed", movement_closed))
+	turn_state = str(data.get("turn_state", turn_state))
+
+	var msp = data.get("movement_start_pos", [-1, -1])
+	if msp is Array and msp.size() >= 2:
+		movement_start_pos = Vector2i(int(msp[0]), int(msp[1]))
+
+	movement_trail.clear()
+	for pt in data.get("movement_trail", []):
+		if pt is Array and pt.size() >= 2:
+			movement_trail.append(Vector2i(int(pt[0]), int(pt[1])))
+
+	# Restore Searched Rooms & Treasure Deck
+	if data.has("searched_rooms"):
+		searched_rooms = data.get("searched_rooms", {}).duplicate(true)
+	if data.has("room_special_treasure_collected"):
+		room_special_treasure_collected = data.get("room_special_treasure_collected", {}).duplicate(true)
+	if data.has("treasure_deck"):
+		treasure_deck.clear()
+		for td in data.get("treasure_deck", []):
+			if td is Dictionary:
+				treasure_deck.append(td.duplicate(true))
+	if data.has("treasure_discard"):
+		treasure_discard.clear()
+		for td in data.get("treasure_discard", []):
+			if td is Dictionary:
+				treasure_discard.append(td.duplicate(true))
+
+	# Restore Spell Allocation
+	if data.has("spell_allocation"):
+		var s_alloc = data.get("spell_allocation", {})
+		if not CartridgeManager.active_cartridge.is_empty():
+			CartridgeManager.active_cartridge["spellAllocation"] = s_alloc.duplicate(true)
+		if data.has("current_elf_element"):
+			current_elf_element = str(data.get("current_elf_element", ""))
+		elif s_alloc.has("elfElement"):
+			current_elf_element = str(s_alloc.get("elfElement", ""))
+
+	_is_restoring_state = false
+
+	update_party_vision()
+	_update_ui()
+	queue_redraw_all()
+
+	var h_act = get_active_hero()
+	var h_name = str(h_act.get("name", "Hero"))
+	_log("[AUTOSAVE] Restored saved quest state (Round %d, Hero: %s)" % [current_round, h_name])
+	return true
+
 func _on_cartridge_inserted(_cart: Dictionary) -> void:
 	_load_active_cartridge()
 
-func _load_active_cartridge() -> void:
+func _load_active_cartridge(force_fresh: bool = false) -> void:
 	var cart = CartridgeManager.active_cartridge
 	if cart.size() == 0:
 		return
+
+	var should_reset = force_fresh or is_reset_requested()
+	if should_reset:
+		_cli_reset_consumed = true
+		delete_save_game()
+		_log("[RESET] Force reloading current quest from cartridge...")
 
 	var starting_map_id = cart.get("header", {}).get("startingMap", "heroquest-the-trial")
 	var map_data = cart.get("maps", {}).get(starting_map_id, {})
@@ -1845,9 +2205,16 @@ func _load_active_cartridge() -> void:
 	enemy_movement_rolled_total = 0
 	pending_enemy_turn_monsters.clear()
 
+	# If a saved game exists and not resetting, restore it over the baseline map state
+	if not should_reset and has_saved_game():
+		if restore_saved_game():
+			return
+
 	update_party_vision()
 	_update_ui()
 	queue_redraw_all()
+	_check_start_elf_spell_selection()
+	auto_save_game()
 
 func _rebuild_spatial_caches() -> void:
 	_tile_to_room.clear()
@@ -2765,6 +3132,7 @@ func confirm_elf_spell_selection() -> Dictionary:
 	if has_party_gold_for_armory():
 		open_armory()
 		res["armory_opened"] = true
+	auto_save_game()
 	return res
 
 func _on_confirm_spell_modal_pressed() -> void:
@@ -4611,6 +4979,7 @@ func roll_movement_dice() -> Dictionary:
 	trigger_movement_dice_roll(roll, str(hero.get("name", "Hero")), dice_vals)
 	_update_ui()
 	queue_redraw_all()
+	auto_save_game()
 	return roll
 
 func find_path(start: Vector2i, goal: Vector2i, moving_hero_idx: int = -1) -> Array[Vector2i]:
@@ -4914,6 +5283,7 @@ func move_hero(target_pos: Vector2i, is_interactive: bool = false) -> bool:
 	])
 	_update_ui()
 	queue_redraw_all()
+	auto_save_game()
 	return true
 
 func open_door(from_pos: Vector2i, to_pos: Vector2i) -> bool:
@@ -4963,6 +5333,7 @@ func open_door(from_pos: Vector2i, to_pos: Vector2i) -> bool:
 	update_party_vision()
 	_update_ui()
 	queue_redraw_all()
+	auto_save_game()
 	return true
 
 # --- Hero Identification Helpers (Name + Class) ---
@@ -5239,10 +5610,12 @@ func use_item(hero_id: String = "", item_id: String = "", target_id: String = ""
 			var uq_res = unequip_item(hid, item_id)
 			if item_use_modal and item_use_modal.visible:
 				_update_item_use_modal_ui()
+			auto_save_game()
 			return uq_res
 		var eq_res = equip_item(hid, item_id)
 		if item_use_modal and item_use_modal.visible:
 			_update_item_use_modal_ui()
+		auto_save_game()
 		return eq_res
 
 	return { "success": false, "error": "Unknown item effect: " + item_id }
@@ -5266,6 +5639,7 @@ func _conclude_action_turn_state() -> void:
 	else:
 		# Action taken first: hero can still roll and/or complete movement phase
 		turn_state = "action_taken"
+	auto_save_game()
 
 # --- Hero & Monster Combat Resolution ---
 func attack_adjacent_monster(monster_id: String = "", weapon_id: String = "") -> Dictionary:
@@ -5480,6 +5854,7 @@ func dm_attack_hero(hero_id: String = "", attacker_monster: Variant = null) -> D
 	last_combat_result = res
 	_update_ui()
 	queue_redraw_all()
+	auto_save_game()
 	return res
 
 # --- HeroQuest Standard Spells System & Quest Exhaustion ---
@@ -7340,6 +7715,7 @@ func end_turn() -> void:
 	update_party_vision()
 	_update_ui()
 	queue_redraw_all()
+	auto_save_game()
 
 func _calculate_monster_movement_path(m: Dictionary, target_hero: Dictionary, max_moves: int) -> Array[Vector2i]:
 	var path: Array[Vector2i] = []
@@ -10880,6 +11256,7 @@ func get_telemetry_state() -> Dictionary:
 		"round": current_round,
 		"phase": current_phase,
 		"activeHero": h_act.get("id", ""),
+		"activeHeroId": h_act.get("id", ""),
 		"activeHeroIndex": active_hero_idx,
 		"activeHeroPos": [h_pos.x, h_pos.y],
 		"activeHeroTokenPos": [active_center.x, active_center.y],
@@ -10956,6 +11333,8 @@ func get_telemetry_state() -> Dictionary:
 			"tooltip": btn_map_end_turn.tooltip_text if btn_map_end_turn else ""
 		},
 		"startingStair": [starting_stair.x, starting_stair.y],
+		"hasSaveGame": has_saved_game(),
+		"saveFilePath": get_save_file_path(),
 		"hasStartingStairTexture": (get_tile_texture("stairs") != null),
 		"startingStairTexturePath": (get_tile_texture("stairs").resource_path if get_tile_texture("stairs") != null else ""),
 		"textureManifest": {
@@ -11459,6 +11838,10 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				current_role = str(action_data.get("currentRole"))
 			if action_data.has("round"):
 				current_round = int(action_data.get("round"))
+			elif action_data.has("current_round"):
+				current_round = int(action_data.get("current_round"))
+			elif action_data.has("currentRound"):
+				current_round = int(action_data.get("currentRound"))
 			if action_data.has("phase"):
 				current_phase = str(action_data.get("phase"))
 			elif action_data.has("current_phase"):
@@ -11748,10 +12131,25 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			update_party_vision()
 			_update_ui()
 			queue_redraw_all()
+			auto_save_game()
 			return { "success": true }
-		"reset_game":
-			_load_active_cartridge()
+		"reset_game", "reset_quest", "force_reload":
+			var clear_save = bool(action_data.get("clear_save", action_data.get("clearSave", true)))
+			if clear_save:
+				delete_save_game()
+			_load_active_cartridge(true)
 			return { "success": true }
+		"save_game", "autosave":
+			auto_save_game()
+			return { "success": true, "path": get_save_file_path() }
+		"load_game", "restore_game":
+			var ok = restore_saved_game()
+			return { "success": ok, "path": get_save_file_path() }
+		"has_save_game":
+			return { "success": true, "has_save": has_saved_game(), "path": get_save_file_path() }
+		"delete_save_game", "clear_save":
+			var ok = delete_save_game()
+			return { "success": ok, "path": get_save_file_path() }
 		"reset_quest_spells", "reset_spells":
 			reset_all_heroes_spells_for_quest()
 			return { "success": true }
