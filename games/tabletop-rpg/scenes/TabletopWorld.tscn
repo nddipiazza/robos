@@ -770,7 +770,7 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 22
-text = "🛡️ Character Sheet"
+text = "Character Sheet"
 
 [node name="StatusBadge" type="Label" parent="UI/HeroDetailModal/Card/Margin/VBox/Header"]
 layout_mode = 2
@@ -864,6 +864,139 @@ layout_mode = 2
 size_flags_horizontal = 3
 custom_minimum_size = Vector2(0, 36)
 text = "✕ Close Character Sheet (Esc)"
+
+[node name="MonsterDetailModal" type="ColorRect" parent="UI"]
+visible = false
+offset_right = 1920.0
+offset_bottom = 1080.0
+color = Color(0.02, 0.03, 0.06, 0.88)
+
+[node name="Card" type="PanelContainer" parent="UI/MonsterDetailModal"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -480.0
+offset_top = -320.0
+offset_right = 480.0
+offset_bottom = 320.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="UI/MonsterDetailModal/Card"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 20
+
+[node name="VBox" type="VBoxContainer" parent="UI/MonsterDetailModal/Card/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Header" type="HBoxContainer" parent="UI/MonsterDetailModal/Card/Margin/VBox"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="UI/MonsterDetailModal/Card/Margin/VBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 22
+text = "Monster Bestiary Codex"
+
+[node name="StatusBadge" type="Label" parent="UI/MonsterDetailModal/Card/Margin/VBox/Header"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(1.0, 0.4, 0.4, 1)
+text = "DUNGEON FOE"
+
+[node name="BtnCloseHeader" type="Button" parent="UI/MonsterDetailModal/Card/Margin/VBox/Header"]
+layout_mode = 2
+custom_minimum_size = Vector2(32, 28)
+text = "✕"
+
+[node name="Separator" type="HSeparator" parent="UI/MonsterDetailModal/Card/Margin/VBox"]
+layout_mode = 2
+
+[node name="ContentHBox" type="HBoxContainer" parent="UI/MonsterDetailModal/Card/Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 18
+
+[node name="LeftCol" type="VBoxContainer" parent="UI/MonsterDetailModal/Card/Margin/VBox/ContentHBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(300, 0)
+theme_override_constants/separation = 8
+
+[node name="PortraitFrame" type="PanelContainer" parent="UI/MonsterDetailModal/Card/Margin/VBox/ContentHBox/LeftCol"]
+layout_mode = 2
+custom_minimum_size = Vector2(300, 200)
+
+[node name="PortraitTexture" type="TextureRect" parent="UI/MonsterDetailModal/Card/Margin/VBox/ContentHBox/LeftCol/PortraitFrame"]
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 6
+
+[node name="MonsterName" type="Label" parent="UI/MonsterDetailModal/Card/Margin/VBox/ContentHBox/LeftCol"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Orc Vanguard"
+
+[node name="MonsterType" type="Label" parent="UI/MonsterDetailModal/Card/Margin/VBox/ContentHBox/LeftCol"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.9, 0.65, 0.4, 1)
+text = "Classification: Dread Legionnaire"
+
+[node name="LoreLabel" type="RichTextLabel" parent="UI/MonsterDetailModal/Card/Margin/VBox/ContentHBox/LeftCol"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/normal_font_size = 11
+theme_override_colors/default_color = Color(0.85, 0.88, 0.92, 0.95)
+bbcode_enabled = true
+text = "Monster lore..."
+
+[node name="RightCol" type="VBoxContainer" parent="UI/MonsterDetailModal/Card/Margin/VBox/ContentHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="ScrollContainer" type="ScrollContainer" parent="UI/MonsterDetailModal/Card/Margin/VBox/ContentHBox/RightCol"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="DetailsVBox" type="VBoxContainer" parent="UI/MonsterDetailModal/Card/Margin/VBox/ContentHBox/RightCol/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="StatsBox" type="HBoxContainer" parent="UI/MonsterDetailModal/Card/Margin/VBox/ContentHBox/RightCol/ScrollContainer/DetailsVBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TacticalSection" type="VBoxContainer" parent="UI/MonsterDetailModal/Card/Margin/VBox/ContentHBox/RightCol/ScrollContainer/DetailsVBox"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="AbilitiesSection" type="VBoxContainer" parent="UI/MonsterDetailModal/Card/Margin/VBox/ContentHBox/RightCol/ScrollContainer/DetailsVBox"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="SpellsSection" type="VBoxContainer" parent="UI/MonsterDetailModal/Card/Margin/VBox/ContentHBox/RightCol/ScrollContainer/DetailsVBox"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ButtonBox" type="HBoxContainer" parent="UI/MonsterDetailModal/Card/Margin/VBox"]
+layout_mode = 2
+
+[node name="BtnClose" type="Button" parent="UI/MonsterDetailModal/Card/Margin/VBox/ButtonBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 36)
+text = "✕ Close Monster Bestiary (Esc)"
 
 [node name="ArmoryModal" type="ColorRect" parent="UI"]
 visible = false
