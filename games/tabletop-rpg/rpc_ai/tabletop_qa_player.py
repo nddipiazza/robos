@@ -293,3 +293,15 @@ class TabletopQAPlayer:
     def get_hero_detail_modal(self) -> dict:
         return self.get_state().get("heroDetailModal", {})
 
+    def get_unavailable_notice(self) -> dict:
+        return self.get_state().get("unavailableNotice", {})
+
+    def trigger_unavailable_notice(self, text: str, tile_x: int = -1, tile_y: int = -1) -> dict:
+        self.log(f"Triggering unavailable notice '{text}' at tile ({tile_x}, {tile_y})...")
+        return self.execute_action("trigger_unavailable_notice", text=text, tile_x=tile_x, tile_y=tile_y)
+
+    def click_action_button(self, button_name: str) -> dict:
+        self.log(f"Clicking hotbar action button '{button_name}'...")
+        return self.execute_action("click_action_button", button=button_name)
+
+

@@ -23,6 +23,47 @@ script = ExtResource("3_overlay")
 
 [node name="UI" type="CanvasLayer" parent="."]
 
+[node name="UnavailableNotice" type="PanelContainer" parent="UI"]
+visible = false
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -175.0
+offset_top = 18.0
+offset_right = 175.0
+offset_bottom = 58.0
+grow_horizontal = 2
+mouse_filter = 2
+
+[node name="Margin" type="MarginContainer" parent="UI/UnavailableNotice"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 6
+
+[node name="HBox" type="HBoxContainer" parent="UI/UnavailableNotice/Margin"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="Icon" type="Label" parent="UI/UnavailableNotice/Margin/HBox"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/font_size = 15
+text = "⚠️"
+
+[node name="NoticeLabel" type="Label" parent="UI/UnavailableNotice/Margin/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(1, 0.9, 0.4, 1)
+text = "Not enough movement"
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="SidebarHeader" type="HBoxContainer" parent="UI"]
 offset_left = 1416.0
 offset_top = 14.0
