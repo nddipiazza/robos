@@ -161,6 +161,26 @@ class TabletopQAPlayer:
             kwargs["monsterId"] = monster_id
         return self.execute_action("dm_attack", **kwargs)
 
+    def toggle_log_view(self) -> dict:
+        self.log("Toggling log panel display mode between damage report and combat history...")
+        return self.execute_action("toggle_log_view")
+
+    def set_log_display_mode(self, mode: str) -> dict:
+        self.log(f"Setting log display mode to '{mode}'...")
+        return self.execute_action("set_log_display_mode", mode=mode)
+
+    def get_turn_damage_summary(self) -> dict:
+        st = self.get_state()
+        return st.get("turnDamageSummary", {})
+
+    def get_displayed_log_text(self) -> str:
+        st = self.get_state()
+        return st.get("displayedLogText", "")
+
+    def get_parsed_log_text(self) -> str:
+        st = self.get_state()
+        return st.get("parsedLogText", "")
+
     def search(self, interactive: bool = False) -> dict:
         self.log(f"Searching chamber for treasure (interactive={interactive})...")
         return self.execute_action("search", interactive=interactive)
