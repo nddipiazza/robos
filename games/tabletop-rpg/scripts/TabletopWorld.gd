@@ -798,6 +798,8 @@ func _get_button_unavailable_reason(btn: Button) -> String:
 			return "Not enough actions"
 		if hero.get("spells", []).size() == 0:
 			return "No spells available"
+		if _get_available_spells(hero).size() == 0:
+			return "All spells exhausted this quest"
 		return "Not enough actions"
 	elif btn == btn_use_item:
 		if hero.get("inventory", []).size() == 0:
@@ -1738,6 +1740,7 @@ func _load_active_cartridge() -> void:
 				h["inventory"] = ["broadsword", "healing_potion"]
 				h["spells"] = []
 
+		h["used_spells"] = []
 		h["courage_active"] = false
 		h["rock_skin_active"] = false
 		h["pass_through_rock_active"] = false
@@ -2738,8 +2741,10 @@ func select_elf_element(elem_key: String) -> Dictionary:
 	for h in heroes:
 		if str(h.get("id")) == "elf":
 			h["spells"] = elf_spells
+			h["used_spells"] = []
 		elif str(h.get("id")) == "wizard":
 			h["spells"] = wiz_spells
+			h["used_spells"] = []
 
 	_update_ui()
 	_update_elf_spell_modal_ui()
@@ -3481,10 +3486,19 @@ func _update_spell_cast_modal_ui() -> void:
 		nlbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		hrow.add_child(nlbl)
 
+		var is_spent = is_spell_used(hero, spell_id)
 		var badge = Label.new()
-		badge.text = "[%s]" % s_deck.to_upper()
-		badge.add_theme_font_size_override("font_size", 11)
-		badge.add_theme_color_override("font_color", csb.border_color)
+		if is_spent:
+			badge.text = "[EXHAUSTED]"
+			badge.add_theme_font_size_override("font_size", 11)
+			badge.add_theme_color_override("font_color", Color(0.95, 0.35, 0.35, 1.0))
+			csb.bg_color = Color(0.06, 0.07, 0.09, 0.90)
+			csb.border_color = Color(0.4, 0.22, 0.28, 0.5)
+			card.modulate = Color(0.6, 0.6, 0.65, 0.75)
+		else:
+			badge.text = "[%s]" % s_deck.to_upper()
+			badge.add_theme_font_size_override("font_size", 11)
+			badge.add_theme_color_override("font_color", csb.border_color)
 		hrow.add_child(badge)
 		vbox.add_child(hrow)
 
@@ -3500,7 +3514,13 @@ func _update_spell_cast_modal_ui() -> void:
 		var btn_row = HBoxContainer.new()
 		btn_row.add_theme_constant_override("separation", 6)
 
-		if s_target == "monster":
+		if is_spent:
+			var no_target = Button.new()
+			no_target.text = "Exhausted (Used This Quest)"
+			no_target.disabled = true
+			no_target.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			btn_row.add_child(no_target)
+		elif s_target == "monster":
 			if visible_monsters.is_empty():
 				var no_target = Button.new()
 				no_target.text = "No Foes in Line of Sight"
@@ -5462,9 +5482,56 @@ func dm_attack_hero(hero_id: String = "", attacker_monster: Variant = null) -> D
 	queue_redraw_all()
 	return res
 
-# --- HeroQuest Standard Spells System ---
-func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i = Vector2i(-1, -1)) -> Dictionary:
-	var hero = get_active_hero()
+# --- HeroQuest Standard Spells System & Quest Exhaustion ---
+func is_spell_used(hero: Dictionary, spell_id: String) -> bool:
+	if hero.is_empty():
+		return false
+	var s_clean = spell_id.strip_edges().to_lower().replace("-", "_")
+	var used: Array = hero.get("used_spells", [])
+	for u in used:
+		if str(u).strip_edges().to_lower().replace("-", "_") == s_clean:
+			return true
+	return false
+
+func mark_spell_used(hero: Dictionary, spell_id: String) -> void:
+	if hero.is_empty():
+		return
+	var s_clean = spell_id.strip_edges().to_lower().replace("-", "_")
+	if not hero.has("used_spells") or not (hero["used_spells"] is Array):
+		hero["used_spells"] = []
+	if not is_spell_used(hero, s_clean):
+		hero["used_spells"].append(s_clean)
+
+func _get_available_spells(hero: Dictionary) -> Array:
+	if hero.is_empty():
+		return []
+	var sp: Array = hero.get("spells", [])
+	var avail: Array = []
+	for s in sp:
+		var sid = str(s).strip_edges().to_lower().replace("-", "_")
+		if not is_spell_used(hero, sid):
+			avail.append(s)
+	return avail
+
+func reset_hero_spells(hero: Dictionary) -> void:
+	if not hero.is_empty():
+		hero["used_spells"] = []
+
+func reset_all_heroes_spells_for_quest() -> void:
+	for h in heroes:
+		h["used_spells"] = []
+	_update_ui()
+	queue_redraw_all()
+
+func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i = Vector2i(-1, -1), caster_id: String = "") -> Dictionary:
+	var hero: Dictionary = {}
+	if caster_id != "":
+		for h in heroes:
+			if str(h.get("id")) == caster_id:
+				hero = h
+				break
+	if hero.is_empty():
+		hero = get_active_hero()
 	if hero.is_empty():
 		return { "success": false, "error": "No active hero to cast spell" }
 
@@ -5481,6 +5548,11 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 	var hero_screen = board_offset + Vector2((hero_pos.x + 0.5) * tile_size, (hero_pos.y + 0.5) * tile_size)
 	var spell_name = str(spell.get("name", spell_id))
 	var s_id = str(spell.get("id"))
+
+	if is_spell_used(hero, s_id):
+		_log("[SPELL EXHAUSTED] %s has already cast %s this quest! Spells cannot be recast until the quest concludes." % [hero.get("name"), spell_name])
+		show_unavailable_notice("Spell exhausted this quest", hero.get("grid_pos", Vector2i(-1, -1)))
+		return { "success": false, "error": "Spell '%s' already used this quest" % spell_name }
 
 	_log("[SPELL] %s invokes the ancient incantation: [b]%s[/b]!" % [hero.get("name"), spell_name])
 	var res: Dictionary = { "success": true, "spell": s_id, "name": spell_name }
@@ -5756,6 +5828,11 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 			spawn_burst_vfx(s_screen, Color(0.4, 0.1, 0.6), 45.0, 0.5)
 			res["summoned_pos"] = [spawn_pos.x, spawn_pos.y]
 
+	mark_spell_used(hero, s_id)
+	_log("[SPELL EXHAUSTED] %s's incantation of %s is spent until the end of the quest." % [hero.get("name"), spell_name])
+	res["used_spells"] = hero.get("used_spells", []).duplicate()
+	res["available_spells"] = _get_available_spells(hero)
+
 	_conclude_action_turn_state()
 
 	last_spell_result = res
@@ -5821,6 +5898,18 @@ func toggle_targeting(action_type: String, action_id: String, hero_id: String = 
 	if is_targeting_active() and str(active_targeting.get("type")) == action_type and str(active_targeting.get("id")) == action_id:
 		cancel_targeting()
 		return
+	if action_type == "spell":
+		var h: Dictionary = {}
+		if hero_id != "":
+			for hero_entry in heroes:
+				if str(hero_entry.get("id")) == hero_id:
+					h = hero_entry
+					break
+		if h.is_empty():
+			h = get_active_hero()
+		if is_spell_used(h, action_id):
+			show_unavailable_notice("Spell exhausted this quest", h.get("grid_pos", Vector2i(-1, -1)))
+			return
 	start_targeting(action_type, action_id, hero_id)
 
 func start_targeting(action_type: String, action_id: String, hero_id: String = "") -> Dictionary:
@@ -5846,6 +5935,10 @@ func start_targeting(action_type: String, action_id: String, hero_id: String = "
 	if action_type in ["spell", "attack"] and has_acted_this_turn:
 		show_unavailable_notice("Not enough actions", hero.get("grid_pos", Vector2i(-1, -1)))
 		return { "success": false, "error": "Already acted this turn" }
+
+	if action_type == "spell" and is_spell_used(hero, action_id):
+		show_unavailable_notice("Spell exhausted this quest", hero.get("grid_pos", Vector2i(-1, -1)))
+		return { "success": false, "error": "Spell '%s' already used this quest" % action_id }
 
 	# 4. Resolve metadata (name, deck, target_type, icons)
 	var t_name = action_id
@@ -7725,11 +7818,16 @@ func _update_ui() -> void:
 		# Spell Casting Action Button
 		if btn_cast_spell:
 			var h_spells: Array = hero.get("spells", [])
+			var avail_spells: Array = _get_available_spells(hero)
 			if h_spells.size() > 0:
 				btn_cast_spell.visible = true
-				btn_cast_spell.disabled = has_acted_this_turn or movement_closed or (moved_before_action and has_acted_this_turn)
-				btn_cast_spell.text = "🔮 Spell (%d)" % h_spells.size()
-				_update_action_tile(btn_cast_spell, "spell", h_spells.size(), "🔮 Cast Spell (%d Memorized)" % h_spells.size(), "Open spellbook to select and cast arcane or elemental spells.", Color(0.55, 0.25, 0.95, 0.92))
+				var all_spent = (avail_spells.size() == 0)
+				btn_cast_spell.disabled = has_acted_this_turn or movement_closed or (moved_before_action and has_acted_this_turn) or all_spent
+				btn_cast_spell.text = "🔮 Spell (%d/%d)" % [avail_spells.size(), h_spells.size()]
+				var tip_desc = "Open spellbook to select and cast arcane or elemental spells."
+				if all_spent:
+					tip_desc = "All memorized spells have been cast and are exhausted until the quest concludes."
+				_update_action_tile(btn_cast_spell, "spell", avail_spells.size(), "🔮 Cast Spell (%d/%d Available)" % [avail_spells.size(), h_spells.size()], tip_desc, Color(0.55, 0.25, 0.95, 0.92))
 			else:
 				btn_cast_spell.visible = false
 
@@ -8560,13 +8658,20 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 		var s_name = str(s_meta.get("name", s_str.replace("_", " ").capitalize()))
 		var s_deck = str(s_meta.get("deck", "magic")).capitalize()
 		var s_desc = str(s_meta.get("description", ""))
+		var is_spent = is_spell_used(h, s_str)
+		var sp_tooltip = ""
+		if is_spent:
+			sp_tooltip = "[SPENT SPELL — EXHAUSTED]\n%s (%s Magic)\n%s\nThis spell has already been cast and is exhausted until the end of the quest." % [s_name, s_deck, s_desc]
+		else:
+			sp_tooltip = "[SPELL]\n%s (%s Magic)\n%s\nClick to select target and cast spell." % [s_name, s_deck, s_desc]
 		icon_items.append({
 			"type": "spell",
 			"category": "spell",
 			"id": s_str,
 			"name": s_name,
 			"icon": get_ai_icon_texture("spell", s_str),
-			"tooltip": "[SPELL]\n%s (%s Magic)\n%s\nClick to cast spell." % [s_name, s_deck, s_desc]
+			"tooltip": sp_tooltip,
+			"is_spent": is_spent
 		})
 
 	# 4. Inventory Items / Potions / Tools / Backup Weapons
@@ -8649,6 +8754,7 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 	for idx in range(num_to_render):
 		var itm = icon_items[idx]
 		var itype = itm.get("type", "item")
+		var is_spent = bool(itm.get("is_spent", false))
 		var ibtn = Button.new()
 		ibtn.custom_minimum_size = Vector2(20, 20)
 		var itex: Texture2D = itm.get("icon")
@@ -8663,9 +8769,14 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 
 		var b_sb = StyleBoxFlat.new()
 		b_sb.set_corner_radius_all(3)
-		b_sb.bg_color = Color(0.10, 0.13, 0.18, 0.85)
-		b_sb.border_color = Color(0.3, 0.45, 0.6, 0.6)
-		b_sb.set_border_width_all(1)
+		if is_spent:
+			b_sb.bg_color = Color(0.06, 0.07, 0.09, 0.85)
+			b_sb.border_color = Color(0.35, 0.22, 0.25, 0.5)
+			b_sb.set_border_width_all(1)
+		else:
+			b_sb.bg_color = Color(0.10, 0.13, 0.18, 0.85)
+			b_sb.border_color = Color(0.3, 0.45, 0.6, 0.6)
+			b_sb.set_border_width_all(1)
 
 		var is_btn_targeted = (is_targeting_active() and str(active_targeting.get("id")) == str(itm.get("id")) and str(active_targeting.get("hero_id")) == str(h.get("id")))
 		if is_btn_targeted:
@@ -8675,26 +8786,40 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 
 		ibtn.add_theme_stylebox_override("normal", b_sb)
 
-		if bool(itm.get("flashing", false)):
+		if is_spent:
+			ibtn.modulate = Color(0.38, 0.38, 0.42, 0.60)
+		elif bool(itm.get("flashing", false)):
 			ibtn.modulate = Color(1.0, 0.95, 0.25, 1.0)
 
 		# Button interactions
 		if itype == "spell":
 			if is_active:
-				ibtn.disabled = has_acted_this_turn
-				var sp_id = str(itm.get("id"))
-				var hid = str(h.get("id"))
-				ibtn.pressed.connect(func(): toggle_targeting("spell", sp_id, hid))
-				if ibtn.disabled:
+				if is_spent:
+					ibtn.disabled = true
 					var s_shield = Control.new()
 					s_shield.name = "DisabledClickShield"
 					s_shield.set_anchors_preset(Control.PRESET_FULL_RECT)
 					s_shield.mouse_filter = Control.MOUSE_FILTER_STOP
 					s_shield.gui_input.connect(func(ev: InputEvent):
 						if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
-							show_unavailable_notice("Not enough actions", Vector2i(-1, -1), ibtn.global_position + ibtn.size * 0.5)
+							show_unavailable_notice("Spell exhausted this quest", Vector2i(-1, -1), ibtn.global_position + ibtn.size * 0.5)
 					)
 					ibtn.add_child(s_shield)
+				else:
+					ibtn.disabled = has_acted_this_turn
+					var sp_id = str(itm.get("id"))
+					var hid = str(h.get("id"))
+					ibtn.pressed.connect(func(): toggle_targeting("spell", sp_id, hid))
+					if ibtn.disabled:
+						var s_shield = Control.new()
+						s_shield.name = "DisabledClickShield"
+						s_shield.set_anchors_preset(Control.PRESET_FULL_RECT)
+						s_shield.mouse_filter = Control.MOUSE_FILTER_STOP
+						s_shield.gui_input.connect(func(ev: InputEvent):
+							if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
+								show_unavailable_notice("Not enough actions", Vector2i(-1, -1), ibtn.global_position + ibtn.size * 0.5)
+						)
+						ibtn.add_child(s_shield)
 			else:
 				ibtn.pressed.connect(func(): open_hero_detail_modal(h))
 		elif itype == "item":
@@ -9106,13 +9231,18 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 				var s_deck = str(s_data.get("deck", "Magic")).capitalize()
 				var s_desc = str(s_data.get("description", ""))
 
+				var is_spent = is_spell_used(h, str(s_id))
 				var sp_panel = PanelContainer.new()
 				sp_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 				var spsb = StyleBoxFlat.new()
-				spsb.bg_color = Color(0.14, 0.12, 0.22, 0.9)
+				if is_spent:
+					spsb.bg_color = Color(0.08, 0.08, 0.12, 0.85)
+					spsb.border_color = Color(0.4, 0.22, 0.28, 0.5)
+				else:
+					spsb.bg_color = Color(0.14, 0.12, 0.22, 0.9)
+					spsb.border_color = Color(0.6, 0.45, 0.85, 0.7)
 				spsb.set_corner_radius_all(5)
 				spsb.border_width_left = 1; spsb.border_width_top = 1; spsb.border_width_right = 1; spsb.border_width_bottom = 1
-				spsb.border_color = Color(0.6, 0.45, 0.85, 0.7)
 				sp_panel.add_theme_stylebox_override("panel", spsb)
 
 				var smarg = MarginContainer.new()
@@ -9141,9 +9271,13 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 				sp_top.add_child(sp_name_lbl)
 
 				var sp_deck_lbl = Label.new()
-				sp_deck_lbl.text = "%s Magic" % s_deck
+				if is_spent:
+					sp_deck_lbl.text = "[EXHAUSTED]"
+					sp_deck_lbl.add_theme_color_override("font_color", Color(0.9, 0.35, 0.35, 0.9))
+				else:
+					sp_deck_lbl.text = "%s Magic" % s_deck
+					sp_deck_lbl.add_theme_color_override("font_color", Color(0.85, 0.7, 1.0, 0.9))
 				sp_deck_lbl.add_theme_font_size_override("font_size", 10)
-				sp_deck_lbl.add_theme_color_override("font_color", Color(0.85, 0.7, 1.0, 0.9))
 				sp_top.add_child(sp_deck_lbl)
 				svbox.add_child(sp_top)
 
@@ -9151,10 +9285,16 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 				sp_desc_lbl.text = s_desc
 				sp_desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 				sp_desc_lbl.add_theme_font_size_override("font_size", 10)
-				sp_desc_lbl.add_theme_color_override("font_color", Color(0.8, 0.82, 0.9, 0.85))
+				if is_spent:
+					sp_desc_lbl.add_theme_color_override("font_color", Color(0.55, 0.55, 0.6, 0.7))
+				else:
+					sp_desc_lbl.add_theme_color_override("font_color", Color(0.8, 0.82, 0.9, 0.85))
 				svbox.add_child(sp_desc_lbl)
 
-				if is_act:
+				if is_spent:
+					sp_panel.tooltip_text = "%s (Exhausted — already cast this quest)" % s_name
+					sp_panel.modulate = Color(0.55, 0.55, 0.6, 0.75)
+				elif is_act:
 					sp_panel.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 					sp_panel.tooltip_text = "Click to select target for %s (closes sheet)" % s_name
 					var cur_sp_id = str(s_id)
@@ -10306,13 +10446,16 @@ func _get_hero_card_icons_telemetry(h: Dictionary) -> Array:
 		var s_meta = HeroQuestSpells.get_spell(s_s)
 		var s_name = str(s_meta.get("name", s_s.replace("_", " ").capitalize()))
 		var s_path = (s_tex.resource_path if (s_tex and s_tex.resource_path != "") else str(_ai_icon_paths.get("spell:%s" % s_s, "")))
+		var is_spent = is_spell_used(h, s_s)
 		icons_out.append({
 			"type": "spell",
 			"category": "spell",
 			"id": s_s,
 			"name": s_name,
 			"texture": s_path,
-			"isPotion": false
+			"isPotion": false,
+			"isSpent": is_spent,
+			"disabled": is_spent
 		})
 	for it in h.get("inventory", []):
 		var it_s = ""
@@ -10468,6 +10611,8 @@ func get_telemetry_state() -> Dictionary:
 			"aiIconsCount": total_ic,
 			"overflowCount": ov_cnt,
 			"spells": h.get("spells", []),
+			"usedSpells": h.get("used_spells", []).duplicate(),
+			"availableSpells": _get_available_spells(h),
 			"inventory": h.get("inventory", [])
 		})
 
@@ -10786,6 +10931,8 @@ func get_telemetry_state() -> Dictionary:
 			"hasPortrait": (monster_detail_portrait != null and monster_detail_portrait.texture != null)
 		},
 		"activeHeroSpells": h_act.get("spells", []),
+		"activeHeroUsedSpells": h_act.get("used_spells", []).duplicate(),
+		"activeHeroAvailableSpells": _get_available_spells(h_act),
 		"activeHeroInventory": h_act.get("inventory", []),
 		"spellAllocation": {
 			"elfElement": current_elf_element,
@@ -11318,10 +11465,10 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				current_phase = str(action_data.get("current_phase"))
 			elif action_data.has("currentPhase"):
 				current_phase = str(action_data.get("currentPhase"))
-			if action_data.has("activeHeroIndex"):
-				active_hero_idx = int(action_data.get("activeHeroIndex"))
-			if action_data.has("activeHero"):
-				var req_h = str(action_data.get("activeHero"))
+			if action_data.has("activeHeroIndex") or action_data.has("active_hero_index"):
+				active_hero_idx = int(action_data.get("activeHeroIndex", action_data.get("active_hero_index", 0)))
+			if action_data.has("activeHero") or action_data.has("active_hero"):
+				var req_h = str(action_data.get("activeHero", action_data.get("active_hero", "")))
 				for i in range(heroes.size()):
 					if str(heroes[i].get("id")) == req_h:
 						active_hero_idx = i
@@ -11336,6 +11483,8 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				has_acted_this_turn = bool(action_data.get("hasActed"))
 			elif action_data.has("hasActedThisTurn"):
 				has_acted_this_turn = bool(action_data.get("hasActedThisTurn"))
+			elif action_data.has("has_acted_this_turn"):
+				has_acted_this_turn = bool(action_data.get("has_acted_this_turn"))
 			if action_data.has("hasMoved"):
 				has_moved_this_turn = bool(action_data.get("hasMoved"))
 			elif action_data.has("hasMovedThisTurn"):
@@ -11437,6 +11586,8 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 									h["hero_class"] = str(h_patch[k])
 								elif k == "hasDepartedStart" or k == "has_departed_start":
 									h["has_departed_start"] = bool(h_patch[k])
+								elif k == "used_spells" or k == "usedSpells":
+									h["used_spells"] = h_patch[k].duplicate(true) if (h_patch[k] is Array) else []
 								else:
 									h[k] = h_patch[k]
 							break
@@ -11601,6 +11752,9 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 		"reset_game":
 			_load_active_cartridge()
 			return { "success": true }
+		"reset_quest_spells", "reset_spells":
+			reset_all_heroes_spells_for_quest()
+			return { "success": true }
 		"search_traps":
 			var res = search_traps()
 			return res
@@ -11657,9 +11811,10 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 		"cast_spell":
 			var spell_id = str(action_data.get("spell", action_data.get("spellId", "")))
 			var target_id = str(action_data.get("target", action_data.get("targetId", "")))
+			var caster_id = str(action_data.get("caster", action_data.get("heroId", action_data.get("hero", ""))))
 			var tx = int(action_data.get("tile_x", -1))
 			var ty = int(action_data.get("tile_y", -1))
-			var res = cast_spell(spell_id, target_id, Vector2i(tx, ty))
+			var res = cast_spell(spell_id, target_id, Vector2i(tx, ty), caster_id)
 			return res
 		"open_spell_panel", "open_spell_modal":
 			show_spell_cast_modal()

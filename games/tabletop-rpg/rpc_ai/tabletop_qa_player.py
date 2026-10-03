@@ -125,9 +125,12 @@ class TabletopQAPlayer:
         self.log(f"Attacking with {weapon if weapon else 'equipped weapon'}{' against ' + monster_id if monster_id else ''}...")
         return self.execute_action("attack", monsterId=monster_id, weapon=weapon)
 
-    def cast_spell(self, spell: str, target: str = "", tile_x: int = -1, tile_y: int = -1) -> dict:
+    def cast_spell(self, spell: str, target: str = "", tile_x: int = -1, tile_y: int = -1, caster_id: str = "") -> dict:
         self.log(f"Casting spell '{spell}'{' on ' + target if target else ''}...")
-        return self.execute_action("cast_spell", spell=spell, target=target, tile_x=tile_x, tile_y=tile_y)
+        kwargs = {"spell": spell, "target": target, "tile_x": tile_x, "tile_y": tile_y}
+        if caster_id:
+            kwargs["caster_id"] = caster_id
+        return self.execute_action("cast_spell", **kwargs)
 
     def open_spell_panel(self) -> dict:
         self.log("Opening HUD spell casting modal...")
@@ -492,6 +495,30 @@ class TabletopQAPlayer:
     def close_all_dialogs(self) -> dict:
         self.log("Closing all dialog boxes...")
         return self.execute_action("close_all_dialogs")
+
+    # --- Spell Quest Exhaustion Helpers ---
+    def get_hero_spells(self, hero_id: str = "wizard") -> dict:
+        """Returns memorized, used, and available spells for a hero."""
+        st = self.get_state()
+        for h in st.get("characterCards", []):
+            if h.get("id") == hero_id:
+                return {
+                    "spells": h.get("spells", []),
+                    "usedSpells": h.get("usedSpells", []),
+                    "availableSpells": h.get("availableSpells", []),
+                    "cardIcons": h.get("cardIcons", [])
+                }
+        return {"spells": [], "usedSpells": [], "availableSpells": [], "cardIcons": []}
+
+    def is_spell_spent(self, spell_id: str, hero_id: str = "wizard") -> bool:
+        sp_data = self.get_hero_spells(hero_id)
+        s_clean = spell_id.lower().replace("-", "_")
+        return s_clean in [s.lower().replace("-", "_") for s in sp_data.get("usedSpells", [])]
+
+    def reset_quest_spells(self) -> dict:
+        self.log("Resetting all hero spells for a new quest...")
+        return self.execute_action("reset_quest_spells")
+
 
 
 
