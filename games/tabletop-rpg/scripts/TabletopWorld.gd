@@ -346,6 +346,7 @@ const ELEMENTAL_DECK_INFO: Dictionary = {
 }
 
 var current_elf_element: String = "water"
+var quest_begun: bool = false
 
 var is_ai_step_pending: bool = false
 var pending_ai_command: Dictionary = {}
@@ -384,7 +385,14 @@ func _ready() -> void:
 		_log("[GM] [Game Master / DunMaster Mode Active] You are Zargon, Master of Darkness. Full dungeon visibility granted.")
 	else:
 		_log("[PLAYER] [Player Mode Active] You lead the four heroes into the catacombs of Verag!")
-		_check_start_elf_spell_selection()
+		if is_quest_begin():
+			_check_start_elf_spell_selection()
+		else:
+			if elf_spell_modal:
+				elf_spell_modal.visible = false
+			if armory_modal:
+				armory_modal.visible = false
+				armory_open = false
 
 var action_icons: Dictionary = {}
 var default_guidance_text: String = ""
@@ -1863,7 +1871,9 @@ func serialize_game_state() -> Dictionary:
 		"treasure_deck": treasure_deck.duplicate(true),
 		"treasure_discard": treasure_discard.duplicate(true),
 		"spell_allocation": s_alloc.duplicate(true),
-		"current_elf_element": current_elf_element
+		"current_elf_element": current_elf_element,
+		"quest_begun": quest_begun,
+		"game_state": get_game_state()
 	}
 
 func auto_save_game() -> void:
@@ -2030,6 +2040,21 @@ func restore_saved_game(save_dict: Dictionary = {}) -> bool:
 		elif s_alloc.has("elfElement"):
 			current_elf_element = str(s_alloc.get("elfElement", ""))
 
+	quest_begun = bool(data.get("quest_begun", false))
+	if current_round > 1 or active_hero_idx > 0 or has_moved_this_turn or has_acted_this_turn or not revealed_rooms.is_empty():
+		quest_begun = true
+	for h in heroes:
+		if bool(h.get("has_departed_start", false)) or _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1))) != starting_stair:
+			quest_begun = true
+			break
+
+	if not is_quest_begin():
+		if elf_spell_modal:
+			elf_spell_modal.visible = false
+		if armory_modal:
+			armory_modal.visible = false
+			armory_open = false
+
 	_is_restoring_state = false
 
 	update_party_vision()
@@ -2053,6 +2078,7 @@ func _load_active_cartridge(force_fresh: bool = false) -> void:
 	if should_reset:
 		_cli_reset_consumed = true
 		delete_save_game()
+		quest_begun = false
 		_log("[RESET] Force reloading current quest from cartridge...")
 
 	var starting_map_id = cart.get("header", {}).get("startingMap", "heroquest-the-trial")
@@ -2220,12 +2246,28 @@ func _load_active_cartridge(force_fresh: bool = false) -> void:
 	# If a saved game exists and not resetting, restore it over the baseline map state
 	if not should_reset and has_saved_game():
 		if restore_saved_game():
+			if not is_quest_begin():
+				if elf_spell_modal:
+					elf_spell_modal.visible = false
+				if armory_modal:
+					armory_modal.visible = false
+					armory_open = false
+			else:
+				_check_start_elf_spell_selection()
 			return
 
+	quest_begun = false
 	update_party_vision()
 	_update_ui()
 	queue_redraw_all()
-	_check_start_elf_spell_selection()
+	if is_quest_begin():
+		_check_start_elf_spell_selection()
+	else:
+		if elf_spell_modal:
+			elf_spell_modal.visible = false
+		if armory_modal:
+			armory_modal.visible = false
+			armory_open = false
 	auto_save_game()
 
 func _rebuild_spatial_caches() -> void:
@@ -2615,6 +2657,41 @@ func is_tile_revealed(tile: Vector2i) -> bool:
 func is_tile_explored(tile: Vector2i) -> bool:
 	return explored_tiles.has(tile)
 
+func get_game_state() -> String:
+	# 1. Defeat: All living heroes on board are dead (0 BP)
+	var living_heroes = heroes.filter(func(h): return int(h.get("current_bp", 0)) > 0 and bool(h.get("is_on_board", false)))
+	if not heroes.is_empty() and living_heroes.is_empty():
+		return "quest_defeat"
+
+	# 2. Victory: All monsters on board are defeated
+	var living_monsters = monsters.filter(func(m): return bool(m.get("is_alive", false)) and int(m.get("current_bp", 1)) > 0)
+	if not monsters.is_empty() and living_monsters.is_empty():
+		return "quest_victory"
+
+	# 3. Quest Begin: Pristine starting state before departure
+	if not quest_begun and current_round == 1 and current_phase == "hero_phase" and active_hero_idx == 0:
+		var any_hero_departed = false
+		for h in heroes:
+			if bool(h.get("has_departed_start", false)):
+				any_hero_departed = true
+				break
+			var h_pos = _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
+			if h_pos != starting_stair:
+				any_hero_departed = true
+				break
+		var any_door_open = false
+		for d in doors:
+			if bool(d.get("is_open", false)):
+				any_door_open = true
+				break
+		if not any_hero_departed and not any_door_open and not has_moved_this_turn and not has_acted_this_turn and not movement_rolled and revealed_rooms.is_empty():
+			return "quest_begin"
+
+	return "in_progress"
+
+func is_quest_begin() -> bool:
+	return get_game_state() == "quest_begin"
+
 func get_reachable_walk_tiles() -> Array[Vector2i]:
 	var result: Array[Vector2i] = []
 	if not movement_rolled or movement_remaining <= 0 or movement_closed:
@@ -2919,6 +2996,13 @@ func is_headless_mode() -> bool:
 	return OS.get_environment("TABLETOP_NO_SPELL_SELECT") == "1"
 
 func _check_start_elf_spell_selection() -> void:
+	if not is_quest_begin():
+		if elf_spell_modal:
+			elf_spell_modal.visible = false
+		if armory_modal:
+			armory_modal.visible = false
+			armory_open = false
+		return
 	if current_role != "player":
 		return
 	if is_headless_mode() or CartridgeManager.auto_play_enabled:
@@ -3147,7 +3231,7 @@ func confirm_elf_spell_selection() -> Dictionary:
 	_log("[SPELLS] Spell Selection Confirmed! Elf memorizes %s. Wizard takes the remaining 3 decks." % [
 		info.get("name", current_elf_element)
 	])
-	if has_party_gold_for_armory():
+	if is_quest_begin() and has_party_gold_for_armory():
 		open_armory()
 		res["armory_opened"] = true
 	auto_save_game()
@@ -3158,7 +3242,7 @@ func _on_confirm_spell_modal_pressed() -> void:
 
 func _on_close_spell_modal_pressed() -> void:
 	close_elf_spell_selection_modal()
-	if has_party_gold_for_armory():
+	if is_quest_begin() and has_party_gold_for_armory():
 		open_armory()
 
 # ==============================================================================
@@ -5260,6 +5344,7 @@ func roll_movement_dice() -> Dictionary:
 
 	movement_remaining = roll.total
 	movement_rolled = true
+	quest_begun = true
 	turn_state = "moving"
 	movement_start_pos = hero.get("grid_pos", Vector2i(-1, -1))
 	movement_trail = [movement_start_pos]
@@ -5441,6 +5526,7 @@ func move_hero(target_pos: Vector2i, is_interactive: bool = false) -> bool:
 
 	hero["grid_pos"] = final_pos
 	hero["has_departed_start"] = true
+	quest_begun = true
 
 	for step_idx in range(1, actual_cost + 1):
 		var step_pos = path[step_idx]
@@ -7964,6 +8050,7 @@ func _check_hero_enter_board(idx: int) -> void:
 		])
 
 func end_turn() -> void:
+	quest_begun = true
 	if not pending_flash_item.is_empty():
 		var p = pending_flash_item.duplicate(true)
 		pending_flash_item = {}
@@ -11569,6 +11656,9 @@ func get_telemetry_state() -> Dictionary:
 		"currentRole": current_role,
 		"round": current_round,
 		"phase": current_phase,
+		"gameState": get_game_state(),
+		"isQuestBegin": is_quest_begin(),
+		"questBegun": quest_begun,
 		"activeHero": h_act.get("id", ""),
 		"activeHeroId": h_act.get("id", ""),
 		"activeHeroIndex": active_hero_idx,
@@ -12528,7 +12618,7 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			return { "success": true, "modal_visible": true, "elf_element": current_elf_element }
 		"close_spell_selection", "close_elf_spell_selection":
 			close_elf_spell_selection_modal()
-			if has_party_gold_for_armory():
+			if is_quest_begin() and has_party_gold_for_armory():
 				open_armory()
 			return { "success": true, "modal_visible": false, "armory_opened": armory_open }
 		"confirm_spell_selection", "confirm_elf_spell_selection":
