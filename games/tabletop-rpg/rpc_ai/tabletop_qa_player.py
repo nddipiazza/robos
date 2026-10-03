@@ -386,13 +386,42 @@ class TabletopQAPlayer:
         self.log("Closing Elf spell draft modal...")
         return self.execute_action("close_elf_spell_modal")
 
-    # --- Map Top-Right Convenience End Turn Button ---
     def click_map_end_turn(self) -> dict:
         self.log("Clicking top-right map convenience 'End Turn' button...")
         return self.execute_action("click_map_end_turn")
 
+    def end_turn(self) -> dict:
+        self.log("Ending active turn...")
+        return self.execute_action("end_turn")
+
+    def click_end_turn(self) -> dict:
+        return self.click_action_button("end_turn")
+
     def get_map_end_turn_button(self) -> dict:
         st = self.get_state()
         return st.get("mapEndTurnButton", st.get("scene", {}).get("ui", {}).get("buttons", {}).get("map_end_turn", {}))
+
+    # --- Edge Tiles & Starting Stair ---
+    def get_starting_stair(self) -> list:
+        st = self.get_state()
+        return st.get("startingStair", [0, 1])
+
+    def is_edge_tile(self, pos: list) -> bool:
+        if not pos or len(pos) < 2:
+            return False
+        x, y = int(pos[0]), int(pos[1])
+        # Grid bounds in HeroQuest are typically 28 cols x 21 rows
+        st = self.get_state()
+        cols = 28
+        rows = 21
+        return x <= 0 or x >= cols - 1 or y <= 0 or y >= rows - 1
+
+    def has_hero_departed_start(self, hero_id: str) -> bool:
+        st = self.get_state()
+        for h in st.get("heroes", []):
+            if str(h.get("id")) == hero_id:
+                return bool(h.get("hasDepartedStart", False) or h.get("has_departed_start", False))
+        return False
+
 
 
