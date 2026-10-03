@@ -2298,6 +2298,25 @@ func _unhandled_input(event: InputEvent) -> void:
 				return
 		return
 
+	if not active_dice_animation.is_empty():
+		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			if active_dice_animation.get("settled", false):
+				var mouse_pos = get_global_mouse_position()
+				var anim_center = active_dice_animation.get("center", board_offset + Vector2(grid_cols * tile_size * 0.5, grid_rows * tile_size * 0.45))
+				var tray_w = float(active_dice_animation.get("tray_width", 380.0))
+				var tray_h = float(active_dice_animation.get("tray_height", 180.0))
+				var tray_rect = Rect2(anim_center.x - tray_w * 0.5, anim_center.y - tray_h * 0.5, tray_w, tray_h)
+				dismiss_active_dice_roll()
+				if tray_rect.has_point(mouse_pos):
+					get_viewport().set_input_as_handled()
+					return
+		elif event is InputEventKey and event.pressed:
+			if event.keycode == KEY_ESCAPE or event.keycode == KEY_SPACE or event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
+				if active_dice_animation.get("settled", false):
+					dismiss_active_dice_roll()
+					get_viewport().set_input_as_handled()
+					return
+
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		var mouse_pos = get_global_mouse_position()
 		var local_pos = mouse_pos - board_offset
@@ -2342,6 +2361,11 @@ func _handle_tile_click(tile: Vector2i) -> void:
 	# If hero has movement, move to tile
 	if movement_remaining > 0:
 		move_hero(tile)
+
+func dismiss_active_dice_roll() -> void:
+	if not active_dice_animation.is_empty():
+		active_dice_animation = {}
+		queue_redraw_all()
 
 func roll_movement_dice() -> Dictionary:
 	if movement_closed or (moved_before_action and has_acted_this_turn):
@@ -5250,6 +5274,9 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 	else:
 		action_type = str(action_val)
 	match action_type:
+		"dismiss_dice_roll":
+			dismiss_active_dice_roll()
+			return { "success": true }
 		"set_state":
 			if action_data.has("role"):
 				current_role = str(action_data.get("role"))
@@ -6297,7 +6324,7 @@ func trigger_movement_dice_roll(roll_data: Dictionary, hero_name: String, dice_v
 		"dice": dice_arr,
 		"time": 0.0,
 		"roll_duration": 0.75,
-		"total_duration": 2.4,
+		"total_duration": 4.5,
 		"settled": false,
 		"center": center,
 		"tray_width": maxf(320.0, num_dice * spacing + 120.0),
@@ -6405,7 +6432,7 @@ func trigger_combat_dice_roll(combat_res: Dictionary, attacker_name: String, def
 		"dice": dice_arr,
 		"time": 0.0,
 		"roll_duration": 0.8,
-		"total_duration": 2.8,
+		"total_duration": 6.5,
 		"settled": false,
 		"center": center,
 		"tray_width": tray_width,
@@ -6552,6 +6579,18 @@ func _draw_active_dice_roll(canvas: CanvasItem) -> void:
 			var outline_col = Color(1.0, 0.85, 0.25, 0.9) if ("WOUND" in summary or "square" in summary) else Color(0.4, 0.8, 1.0, 0.9)
 			canvas.draw_rect(badge_rect, outline_col, false, 1.5)
 			canvas.draw_string(font, Vector2(center.x - sum_w * 0.5, tray_rect.end.y - 13.0), summary, HORIZONTAL_ALIGNMENT_CENTER, -1, 13, outline_col)
+
+		# Close / Dismiss button [✕] in top right corner of tray
+		var close_btn_rect = Rect2(tray_rect.end.x - 28.0, tray_rect.position.y + 6.0, 22.0, 22.0)
+		canvas.draw_rect(close_btn_rect, Color(0.25, 0.08, 0.08, 0.90))
+		canvas.draw_rect(close_btn_rect, Color(0.85, 0.35, 0.35, 0.85), false, 1.2)
+		var x_w = font.get_string_size("✕", HORIZONTAL_ALIGNMENT_CENTER, -1, 12).x
+		canvas.draw_string(font, Vector2(close_btn_rect.get_center().x - x_w * 0.5, close_btn_rect.get_center().y + 4.5), "✕", HORIZONTAL_ALIGNMENT_CENTER, -1, 12, Color(1.0, 0.85, 0.85, 0.95))
+
+		# Subtle dismiss hint under outcome banner
+		var hint_txt = "(Click anywhere or press Space to continue)"
+		var hint_w = font.get_string_size(hint_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 9).x
+		canvas.draw_string(font, Vector2(center.x - hint_w * 0.5, tray_rect.end.y - 3.0), hint_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 9, Color(0.70, 0.75, 0.85, 0.70))
 
 func _draw_red_movement_die(canvas: CanvasItem, center: Vector2, size: float, pips: int, angle: float, z: float, alpha: float, settled: bool) -> void:
 	var hs = size * 0.5
