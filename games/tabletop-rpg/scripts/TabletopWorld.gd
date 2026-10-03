@@ -32,6 +32,7 @@ var doors: Array[Dictionary] = []
 var door_closed_tex: Texture2D = null
 var door_open_tex: Texture2D = null
 var hero_token_textures: Dictionary = {}
+var monster_token_textures: Dictionary = {}
 var furniture: Array[Dictionary] = []
 var wall_blocks: Array[Dictionary] = []
 var traps: Array[Dictionary] = []
@@ -219,6 +220,7 @@ func _ready() -> void:
 	_setup_turn_overlay_ui()
 	_load_door_textures()
 	_load_hero_token_textures()
+	_load_monster_token_textures()
 	_update_ui()
 	_log("=== Welcome to HeroQuest: The Trial ===")
 	if is_gm_role():
@@ -310,6 +312,85 @@ func get_hero_token_texture(h: Dictionary) -> Texture2D:
 		if tex:
 			hero_token_textures[key] = tex
 			return tex
+
+	return null
+
+func _load_monster_token_textures() -> void:
+	var token_map = {
+		"goblin": "res://assets/tokens/token_goblin.png",
+		"orc": "res://assets/tokens/token_orc.png",
+		"skeleton": "res://assets/tokens/token_skeleton.png",
+		"zombie": "res://assets/tokens/token_zombie.png",
+		"mummy": "res://assets/tokens/token_mummy.png",
+		"fimir": "res://assets/tokens/token_fimir.png",
+		"chaos_warrior": "res://assets/tokens/token_chaos_warrior.png",
+		"gargoyle": "res://assets/tokens/token_gargoyle.png",
+		"verag": "res://assets/tokens/token_verag.png"
+	}
+	for k in token_map:
+		if not monster_token_textures.has(k) or monster_token_textures[k] == null:
+			var tex = _load_texture_safe(token_map[k])
+			if tex:
+				monster_token_textures[k] = tex
+
+func get_monster_token_key(m: Dictionary) -> String:
+	var m_id = str(m.get("id", "")).to_lower()
+	var m_slug = str(m.get("slug", "")).to_lower()
+	var m_name = str(m.get("name", "")).to_lower()
+	var m_type = str(m.get("type", m.get("monster", ""))).to_lower()
+
+	# Check boss / warlord first
+	if "verag" in m_id or "verag" in m_slug or "verag" in m_name or "warlord" in m_name or "ulag" in m_id or "ulag" in m_slug:
+		return "verag"
+	if "chaos" in m_id or "chaos" in m_slug or "chaos" in m_name or "dread" in m_name:
+		return "chaos_warrior"
+	if "gargoyle" in m_id or "gargoyle" in m_slug or "gargoyle" in m_name:
+		return "gargoyle"
+	if "mummy" in m_id or "mummy" in m_slug or "mummy" in m_name:
+		return "mummy"
+	if "fimir" in m_id or "fimir" in m_slug or "fimir" in m_name or "abomination" in m_name:
+		return "fimir"
+	if "zombie" in m_id or "zombie" in m_slug or "zombie" in m_name:
+		return "zombie"
+	if "skeleton" in m_id or "skeleton" in m_slug or "skeleton" in m_name or "skel" in m_id or "skel" in m_slug:
+		return "skeleton"
+	if "goblin" in m_id or "goblin" in m_slug or "goblin" in m_name:
+		return "goblin"
+	if "orc" in m_id or "orc" in m_slug or "orc" in m_name:
+		return "orc"
+	return ""
+
+func get_monster_token_path(m: Dictionary) -> String:
+	var custom_asset = str(m.get("tokenAsset", m.get("token_asset", "")))
+	if custom_asset != "":
+		return custom_asset
+	var key = get_monster_token_key(m)
+	if key != "":
+		return "res://assets/tokens/token_%s.png" % key
+	return ""
+
+func get_monster_token_texture(m: Dictionary) -> Texture2D:
+	var custom_asset = str(m.get("tokenAsset", m.get("token_asset", "")))
+	if custom_asset != "":
+		if not monster_token_textures.has(custom_asset):
+			monster_token_textures[custom_asset] = _load_texture_safe(custom_asset)
+		if monster_token_textures.get(custom_asset) != null:
+			return monster_token_textures[custom_asset]
+
+	var key = get_monster_token_key(m)
+	if key != "":
+		if monster_token_textures.has(key) and monster_token_textures[key] != null:
+			return monster_token_textures[key]
+
+		var candidates = [
+			"res://assets/tokens/token_%s.png" % key,
+			"res://../crpg-realm/assets/tokens/token_%s.png" % key
+		]
+		for p in candidates:
+			var tex = _load_texture_safe(p)
+			if tex:
+				monster_token_textures[key] = tex
+				return tex
 
 	return null
 
@@ -4658,9 +4739,24 @@ func _create_enemy_card(m: Dictionary, is_visible: bool) -> PanelContainer:
 	margin.add_theme_constant_override("margin_bottom", 5)
 	card.add_child(margin)
 
+	var main_hbox = HBoxContainer.new()
+	main_hbox.add_theme_constant_override("separation", 7)
+	margin.add_child(main_hbox)
+
+	var token_tex = get_monster_token_texture(m)
+	if token_tex:
+		var token_rect = TextureRect.new()
+		token_rect.texture = token_tex
+		token_rect.custom_minimum_size = Vector2(38, 38)
+		token_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		token_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		token_rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		main_hbox.add_child(token_rect)
+
 	var vbox = VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 2)
-	margin.add_child(vbox)
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	main_hbox.add_child(vbox)
 
 	# Row 1: Header (Name & Visibility Badge)
 	var hdr_row = HBoxContainer.new()
@@ -4938,7 +5034,9 @@ func get_telemetry_state() -> Dictionary:
 				"statusBadge": badge,
 				"statusEffects": effs,
 				"grid_pos": [mp.x, mp.y],
-				"roomId": str(m.get("roomId", ""))
+				"roomId": str(m.get("roomId", "")),
+				"tokenAsset": get_monster_token_path(m),
+				"hasTokenTexture": (get_monster_token_texture(m) != null)
 			})
 
 	var traps_copy: Array = []
@@ -4974,7 +5072,9 @@ func get_telemetry_state() -> Dictionary:
 				"type": "hero",
 				"grid_pos": [gp.x, gp.y],
 				"pixelPos": [pixel_pos.x, pixel_pos.y],
-				"visible": true
+				"visible": true,
+				"tokenAsset": get_hero_token_path(h),
+				"hasTokenTexture": (get_hero_token_texture(h) != null)
 			}
 	for m in monsters:
 		var mid = str(m.get("id"))
@@ -4987,7 +5087,9 @@ func get_telemetry_state() -> Dictionary:
 			"grid_pos": [gp.x, gp.y],
 			"pixelPos": [pixel_pos.x, pixel_pos.y],
 			"visible": is_vis and is_alv,
-			"alive": is_alv
+			"alive": is_alv,
+			"tokenAsset": get_monster_token_path(m),
+			"hasTokenTexture": (get_monster_token_texture(m) != null)
 		}
 
 	var doors_copy: Array = []
@@ -5842,31 +5944,42 @@ func _draw_board(canvas: CanvasItem) -> void:
 			if is_visible:
 				var pos = m.get("grid_pos", Vector2i(0, 0))
 				var screen_pos = board_offset + Vector2(pos.x * tile_size + tile_size * 0.5, pos.y * tile_size + tile_size * 0.5)
-				var col = Color.from_string(m.get("tokenColor", "#15803d"), Color.GREEN)
-				canvas.draw_circle(screen_pos, tile_size * 0.4, col)
-				canvas.draw_arc(screen_pos, tile_size * 0.4, 0, TAU, 24, Color(0.1, 0.3, 0.1, 0.9), 1.5)
-				var m_name = str(m.get("name", "Monster")).to_lower()
-				var m_code = "M"
-				if "skeleton" in m_name:
-					m_code = "SK"
-				elif "orc" in m_name:
-					m_code = "OR"
-				elif "goblin" in m_name:
-					m_code = "GB"
-				elif "zombie" in m_name:
-					m_code = "ZM"
-				elif "verag" in m_name:
-					m_code = "VG"
-				elif "fimir" in m_name:
-					m_code = "FM"
-				elif "mummy" in m_name:
-					m_code = "MU"
-				elif "gargoyle" in m_name:
-					m_code = "GG"
+				var token_radius = tile_size * 0.4
+				var token_tex = get_monster_token_texture(m)
+
+				if token_tex:
+					# Draw subtle drop shadow under circular token
+					canvas.draw_circle(screen_pos + Vector2(1.5, 2.0), token_radius, Color(0.0, 0.0, 0.0, 0.52))
+					var dest_rect = Rect2(screen_pos.x - token_radius, screen_pos.y - token_radius, token_radius * 2.0, token_radius * 2.0)
+					canvas.draw_texture_rect(token_tex, dest_rect, false)
+					var rim_col = Color.from_string(m.get("tokenColor", "#b91c1c"), Color(0.8, 0.2, 0.2, 0.85))
+					canvas.draw_arc(screen_pos, token_radius, 0, TAU, 32, Color(rim_col.r, rim_col.g, rim_col.b, 0.85), 1.5)
 				else:
-					m_code = m_name.substr(0, 2).to_upper()
-				var cd_w = ThemeDB.fallback_font.get_string_size(m_code, HORIZONTAL_ALIGNMENT_CENTER, -1, 12).x
-				canvas.draw_string(ThemeDB.fallback_font, Vector2(screen_pos.x - cd_w * 0.5, screen_pos.y + 4), m_code, HORIZONTAL_ALIGNMENT_CENTER, -1, 12, Color.WHITE)
+					var col = Color.from_string(m.get("tokenColor", "#15803d"), Color.GREEN)
+					canvas.draw_circle(screen_pos, token_radius, col)
+					canvas.draw_arc(screen_pos, token_radius, 0, TAU, 24, Color(0.1, 0.3, 0.1, 0.9), 1.5)
+					var m_name = str(m.get("name", "Monster")).to_lower()
+					var m_code = "M"
+					if "skeleton" in m_name:
+						m_code = "SK"
+					elif "orc" in m_name:
+						m_code = "OR"
+					elif "goblin" in m_name:
+						m_code = "GB"
+					elif "zombie" in m_name:
+						m_code = "ZM"
+					elif "verag" in m_name:
+						m_code = "VG"
+					elif "fimir" in m_name:
+						m_code = "FM"
+					elif "mummy" in m_name:
+						m_code = "MU"
+					elif "gargoyle" in m_name:
+						m_code = "GG"
+					else:
+						m_code = m_name.substr(0, 2).to_upper()
+					var cd_w = ThemeDB.fallback_font.get_string_size(m_code, HORIZONTAL_ALIGNMENT_CENTER, -1, 12).x
+					canvas.draw_string(ThemeDB.fallback_font, Vector2(screen_pos.x - cd_w * 0.5, screen_pos.y + 4), m_code, HORIZONTAL_ALIGNMENT_CENTER, -1, 12, Color.WHITE)
 
 				if m.get("is_sleeping", false):
 					var z_txt = "Zzz"

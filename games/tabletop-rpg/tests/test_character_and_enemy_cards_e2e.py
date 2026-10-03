@@ -352,6 +352,57 @@ class TestCharacterAndEnemyCardsE2E(unittest.TestCase):
         self.assertFalse(barb.get("isActive"), "Barbarian is no longer active")
         self.assertTrue(barb.get("isOnBoard"), "Barbarian remains on the board")
 
+    def test_07_monster_tokens_roster(self):
+        """Scenario 7: Full HeroQuest monster roster has loaded tokens across enemy cards and scene tokens."""
+        import os
+        print("\n" + "-" * 80)
+        print("SCENARIO 07: Full HeroQuest Monster Roster Tokens Loaded & Validated")
+        print("-" * 80)
+
+        bdd_step("GIVEN", "All 9 HeroQuest canonical monster token PNGs exist on disk")
+        expected_tokens = [
+            "token_goblin.png",
+            "token_orc.png",
+            "token_skeleton.png",
+            "token_zombie.png",
+            "token_mummy.png",
+            "token_fimir.png",
+            "token_chaos_warrior.png",
+            "token_gargoyle.png",
+            "token_verag.png"
+        ]
+        tokens_dir = os.path.join(os.path.dirname(__file__), "..", "assets", "tokens")
+        for t in expected_tokens:
+            p = os.path.join(tokens_dir, t)
+            self.assertTrue(os.path.exists(p), f"Monster token asset {t} must exist at {p}")
+
+        bdd_step("WHEN", "Cartridge initializes monsters (Crypt Skeletons & Verag the Orc Warlord)")
+        # Move to door and open it to reveal Northwest Crypt
+        for _ in range(3):
+            self.player.execute_action("roll_movement")
+            self.player.move(4, 1)
+        open_res = self.player.open_door(4, 1, 4, 2)
+        st = self.player.get_state()
+        enemy_cards = st.get("enemyCards", [])
+        skel1 = next((e for e in enemy_cards if e.get("id") == "mon-skel-1"), None)
+        self.assertIsNotNone(skel1, "mon-skel-1 card must exist")
+
+        bdd_step("THEN", "Enemy card for Crypt Skeleton contains tokenAsset and hasTokenTexture=True",
+                 card_info=f"Skeleton tokenAsset: {skel1.get('tokenAsset')}, hasTokenTexture: {skel1.get('hasTokenTexture')}",
+                 assertions=[
+                     f"tokenAsset: {skel1.get('tokenAsset')} (ends with token_skeleton.png)",
+                     f"hasTokenTexture: {skel1.get('hasTokenTexture')} (expected True)"
+                 ])
+        self.assertTrue(skel1.get("hasTokenTexture"), "Crypt skeleton must have loaded token texture")
+        self.assertTrue(skel1.get("tokenAsset", "").endswith("token_skeleton.png"))
+
+        # Verify scene tokens contains monster token information
+        scene_tokens = st.get("scene", {}).get("tokens", {})
+        mon_skel_token = scene_tokens.get("mon-skel-1")
+        self.assertIsNotNone(mon_skel_token, "mon-skel-1 must be in scene tokens")
+        self.assertTrue(mon_skel_token.get("hasTokenTexture"))
+        self.assertTrue(mon_skel_token.get("tokenAsset", "").endswith("token_skeleton.png"))
+
 
 if __name__ == "__main__":
     unittest.main()
