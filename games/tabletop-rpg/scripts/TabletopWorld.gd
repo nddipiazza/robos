@@ -56,6 +56,8 @@ var floating_texts: Array[Dictionary] = []
 var active_dice_animation: Dictionary = {}
 var active_trap_overlay: Dictionary = {}
 var active_treasure_overlay: Dictionary = {}
+var flashing_item: Dictionary = {}
+var pending_flash_item: Dictionary = {}
 var searched_rooms: Dictionary = {}
 var room_special_treasure_collected: Dictionary = {}
 var treasure_deck: Array[Dictionary] = []
@@ -1026,6 +1028,8 @@ func _load_active_cartridge() -> void:
 	turn_state = "awaiting_roll"
 	active_trap_overlay = {}
 	active_treasure_overlay = {}
+	flashing_item.clear()
+	pending_flash_item.clear()
 	searched_rooms.clear()
 	room_special_treasure_collected.clear()
 	last_treasure_card = {}
@@ -1436,6 +1440,19 @@ func _process(delta: float) -> void:
 
 	if not active_trap_overlay.is_empty():
 		needs_redraw = true
+
+	if not active_treasure_overlay.is_empty():
+		needs_redraw = true
+
+	if not flashing_item.is_empty() and bool(flashing_item.get("active", false)):
+		var f_timer = float(flashing_item.get("timer", 0.0)) - delta
+		flashing_item["timer"] = f_timer
+		if f_timer <= 0.0:
+			flashing_item = {}
+			_update_ui()
+			needs_redraw = true
+		else:
+			needs_redraw = true
 
 	if not active_dice_animation.is_empty():
 		var t = float(active_dice_animation.get("time", 0.0)) + delta
@@ -3073,6 +3090,7 @@ func move_hero(target_pos: Vector2i, is_interactive: bool = false) -> bool:
 		sprung_trap["detected"] = true
 		sprung_trap["sprung"] = true
 		movement_remaining = 0 # Stepping into a trap ends remaining movement
+		_check_and_trigger_out_of_movement_item_flash()
 
 		if is_interactive:
 			_setup_trap_sprung_overlay(sprung_trap, hero, final_pos, path, actual_cost, false)
@@ -3169,6 +3187,7 @@ func move_hero(target_pos: Vector2i, is_interactive: bool = false) -> bool:
 			movement_closed = true
 		else:
 			turn_state = "moving"
+		_check_and_trigger_out_of_movement_item_flash()
 
 	if hero.get("pass_through_rock_active", false):
 		hero["pass_through_rock_active"] = false
@@ -3523,9 +3542,11 @@ func _conclude_action_turn_state() -> void:
 		movement_closed = true
 		turn_state = "turn_complete"
 		_log("[RULE] HeroQuest Rules: Action taken after moving. Movement phase permanently concluded.")
+		_check_and_trigger_out_of_movement_item_flash()
 	elif movement_rolled and movement_remaining == 0:
 		turn_state = "turn_complete"
 		movement_closed = true
+		_check_and_trigger_out_of_movement_item_flash()
 	else:
 		# Action taken first: hero can still roll and/or complete movement phase
 		turn_state = "action_taken"
@@ -4359,10 +4380,77 @@ func _spawn_wandering_monster(hero: Dictionary, room_id: String) -> Dictionary:
 	ret_wm["grid_pos"] = [spawn_pos.x, spawn_pos.y]
 	return ret_wm
 
+func is_hero_out_of_movement() -> bool:
+	if movement_closed:
+		return true
+	if turn_state == "turn_complete":
+		return true
+	if moved_before_action and has_acted_this_turn:
+		return true
+	if movement_rolled and movement_remaining <= 0:
+		return true
+	return false
+
+func trigger_flash_new_item(reward_data: Dictionary) -> void:
+	if reward_data.is_empty():
+		return
+
+	var r_name = str(reward_data.get("name", "Treasure"))
+	var r_type = str(reward_data.get("type", "item"))
+	var r_amount = int(reward_data.get("amount", 1))
+	var r_icon = str(reward_data.get("icon", "✨"))
+	var hero_id = str(reward_data.get("hero_id", ""))
+	var hero_name = str(reward_data.get("hero_name", "Hero"))
+
+	var msg = ""
+	if r_type == "gold":
+		msg = "💰 TREASURE COLLECTED: +%d Gold Coins added to Purse! 💰" % r_amount
+	else:
+		msg = "✨ NEW ITEM ACQUIRED: %s added to Backpack! ✨" % r_name
+
+	flashing_item = {
+		"active": true,
+		"name": r_name,
+		"type": r_type,
+		"amount": r_amount,
+		"icon": r_icon,
+		"hero_id": hero_id,
+		"hero_name": hero_name,
+		"timer": 3.0,
+		"message": msg
+	}
+
+	# Spawn floating sparkle text above hero on the board
+	var h_pos = Vector2i(-1, -1)
+	for h in heroes:
+		if str(h.get("id")) == hero_id:
+			h_pos = _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
+			break
+	if h_pos.x >= 0 and h_pos.y >= 0:
+		if r_type == "gold":
+			spawn_floating_text(h_pos, "💰 +%d GOLD 💰" % r_amount, Color(1.0, 0.88, 0.2), 2.2)
+		else:
+			spawn_floating_text(h_pos, "✨ +%s ✨" % r_name, Color(0.3, 1.0, 0.6), 2.2)
+
+	_log("[TREASURE] %s (Hero is out of movement)" % msg)
+	_update_ui()
+	queue_redraw_all()
+
+func _check_and_trigger_out_of_movement_item_flash() -> void:
+	if pending_flash_item.is_empty():
+		return
+	if is_hero_out_of_movement():
+		var p = pending_flash_item.duplicate(true)
+		pending_flash_item = {}
+		trigger_flash_new_item(p)
+
 func _setup_treasure_card_overlay(card: Dictionary, hero: Dictionary, is_quest_note: bool) -> void:
+	var item_str = str(card.get("item", ""))
+	var gold_val = int(card.get("gold", card.get("amount", 0)))
 	active_treasure_overlay = {
 		"card": card,
 		"hero": hero,
+		"hero_id": str(hero.get("id", "")),
 		"hero_name": str(hero.get("characterName", hero.get("name", "Hero"))),
 		"title": str(card.get("title", "Treasure Found!")),
 		"icon": str(card.get("icon", "💎")),
@@ -4370,7 +4458,8 @@ func _setup_treasure_card_overlay(card: Dictionary, hero: Dictionary, is_quest_n
 		"flavor": str(card.get("flavor", "")),
 		"card_type": str(card.get("type", "gold")),
 		"is_quest_note": is_quest_note,
-		"gold_found": int(card.get("gold", 0)),
+		"gold_found": gold_val,
+		"item_found": item_str,
 		"waitingForClick": true
 	}
 
@@ -4380,6 +4469,42 @@ func resolve_treasure_overlay_click() -> Dictionary:
 
 	var overlay = active_treasure_overlay.duplicate(true)
 	active_treasure_overlay = {}
+
+	# Extract reward data
+	var reward: Dictionary = {}
+	var gold_found = int(overlay.get("gold_found", 0))
+	var item_found = str(overlay.get("item_found", ""))
+	var hero_id = str(overlay.get("hero_id", ""))
+	var hero_name = str(overlay.get("hero_name", "Hero"))
+	var title = str(overlay.get("title", ""))
+
+	if gold_found > 0:
+		reward = {
+			"type": "gold",
+			"name": title if title != "" else ("%d Gold Coins" % gold_found),
+			"amount": gold_found,
+			"icon": "💰",
+			"hero_id": hero_id,
+			"hero_name": hero_name
+		}
+	elif item_found != "":
+		reward = {
+			"type": "item",
+			"name": title if title != "" else item_found.capitalize(),
+			"item_id": item_found,
+			"amount": 1,
+			"icon": str(overlay.get("icon", "🧪")),
+			"hero_id": hero_id,
+			"hero_name": hero_name
+		}
+
+	if not reward.is_empty():
+		if is_hero_out_of_movement():
+			trigger_flash_new_item(reward)
+		else:
+			pending_flash_item = reward
+			_log("[TREASURE] %s acquired! (Will flash when out of movement)" % str(reward.get("name", "")))
+
 	_update_ui()
 	queue_redraw_all()
 	return { "success": true, "card": overlay.get("card", {}) }
@@ -4508,6 +4633,31 @@ func search_room(is_interactive: bool = false) -> Dictionary:
 			return { "success": true, "questTreasure": true, "goldFound": found_gold, "card": spec_tr, "waitingForClick": true }
 
 		_conclude_action_turn_state()
+		var non_int_q_reward: Dictionary = {}
+		if found_gold > 0:
+			non_int_q_reward = {
+				"type": "gold",
+				"name": tr_title if tr_title != "" else ("%d Gold Coins" % found_gold),
+				"amount": found_gold,
+				"icon": "💰",
+				"hero_id": hero_id,
+				"hero_name": hero.get("name", "Hero")
+			}
+		elif item_reward != "":
+			non_int_q_reward = {
+				"type": "item",
+				"name": tr_title if tr_title != "" else item_reward.capitalize(),
+				"item_id": item_reward,
+				"amount": 1,
+				"icon": "💎",
+				"hero_id": hero_id,
+				"hero_name": hero.get("name", "Hero")
+			}
+		if not non_int_q_reward.is_empty():
+			if is_hero_out_of_movement():
+				trigger_flash_new_item(non_int_q_reward)
+			else:
+				pending_flash_item = non_int_q_reward
 		_update_ui()
 		queue_redraw_all()
 		return { "success": true, "questTreasure": true, "goldFound": found_gold, "card": spec_tr }
@@ -4566,6 +4716,32 @@ func search_room(is_interactive: bool = false) -> Dictionary:
 		}
 
 	_conclude_action_turn_state()
+	var non_int_reward: Dictionary = {}
+	if found_gold > 0:
+		non_int_reward = {
+			"type": "gold",
+			"name": card.get("title", "%d Gold Coins" % found_gold),
+			"amount": found_gold,
+			"icon": "💰",
+			"hero_id": hero_id,
+			"hero_name": hero.get("name", "Hero")
+		}
+	elif card_type == "potion" or card.has("item"):
+		var item_id_str = str(card.get("item", "healing_potion"))
+		non_int_reward = {
+			"type": "item",
+			"name": card.get("title", item_id_str.capitalize()),
+			"item_id": item_id_str,
+			"amount": 1,
+			"icon": str(card.get("icon", "🧪")),
+			"hero_id": hero_id,
+			"hero_name": hero.get("name", "Hero")
+		}
+	if not non_int_reward.is_empty():
+		if is_hero_out_of_movement():
+			trigger_flash_new_item(non_int_reward)
+		else:
+			pending_flash_item = non_int_reward
 	_update_ui()
 	queue_redraw_all()
 	return {
@@ -4746,6 +4922,10 @@ func _check_hero_enter_board(idx: int) -> void:
 		])
 
 func end_turn() -> void:
+	if not pending_flash_item.is_empty():
+		var p = pending_flash_item.duplicate(true)
+		pending_flash_item = {}
+		trigger_flash_new_item(p)
 	if current_phase == "hero_phase":
 		active_hero_idx = (active_hero_idx + 1) % maxi(1, heroes.size())
 		if active_hero_idx == 0:
@@ -5698,9 +5878,11 @@ func _update_character_and_enemy_cards() -> void:
 
 func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 	var card = PanelContainer.new()
-	card.custom_minimum_size = Vector2(228, 116)
+	card.custom_minimum_size = Vector2(228, 126)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+
+	var is_item_flashing = not flashing_item.is_empty() and bool(flashing_item.get("active", false)) and str(h.get("id")) == str(flashing_item.get("hero_id"))
 
 	var cur_bp = int(h.get("current_bp", 8))
 	var max_bp = int(h.get("bodyPoints", 8))
@@ -5715,7 +5897,14 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 	sb.corner_radius_bottom_left = 6
 	sb.corner_radius_bottom_right = 6
 
-	if is_dead:
+	if is_item_flashing:
+		var pulse = 0.80 + 0.20 * sin(Time.get_ticks_msec() * 0.015)
+		sb.bg_color = Color(0.18, 0.16, 0.10, 0.98)
+		sb.border_color = Color(1.0, 0.85, 0.2, pulse) # Radiant golden pulse
+		sb.border_width_left = 3; sb.border_width_top = 3; sb.border_width_right = 3; sb.border_width_bottom = 3
+		sb.shadow_color = Color(1.0, 0.85, 0.2, 0.65 * pulse)
+		sb.shadow_size = 8
+	elif is_dead:
 		sb.bg_color = Color(0.24, 0.05, 0.05, 0.95)
 		sb.border_color = Color(0.9, 0.15, 0.15, 1.0)
 		sb.border_width_left = 2; sb.border_width_top = 2; sb.border_width_right = 2; sb.border_width_bottom = 2
@@ -5964,11 +6153,17 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 			var iname = str(item_meta.get("name", item_str.replace("_", " ").capitalize()))
 			var icon = str(item_meta.get("icon", "📦"))
 			inv_preview.append("%s %s" % [icon, iname])
-		inv_lbl.text = "Items (%d): %s" % [hero_inv.size(), ", ".join(inv_preview)]
+
+		if is_item_flashing and str(flashing_item.get("type")) == "item":
+			inv_lbl.text = "✨ NEW: %s | Items (%d): %s" % [flashing_item.get("name"), hero_inv.size(), ", ".join(inv_preview)]
+			inv_lbl.add_theme_color_override("font_color", Color(1.0, 0.95, 0.35, 1.0))
+			inv_lbl.add_theme_font_size_override("font_size", 10)
+		else:
+			inv_lbl.text = "Items (%d): %s" % [hero_inv.size(), ", ".join(inv_preview)]
+			inv_lbl.add_theme_color_override("font_color", Color(0.65, 0.88, 0.82, 0.95))
+			inv_lbl.add_theme_font_size_override("font_size", 9)
 		if hero_inv.size() > 3:
 			inv_lbl.text += " +%d" % (hero_inv.size() - 3)
-		inv_lbl.add_theme_font_size_override("font_size", 9)
-		inv_lbl.add_theme_color_override("font_color", Color(0.65, 0.88, 0.82, 0.95))
 		inv_lbl.clip_text = true
 		inv_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		inv_row.add_child(inv_lbl)
@@ -5981,6 +6176,24 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 			btn_inv.pressed.connect(toggle_item_use_modal)
 			inv_row.add_child(btn_inv)
 		vbox.add_child(inv_row)
+
+	# Row 7: Gold Purse & Flashing Gold Display
+	var gold_row = HBoxContainer.new()
+	gold_row.add_theme_constant_override("separation", 4)
+	var gold_lbl = Label.new()
+	var cur_gold = int(h.get("gold", 0))
+	if is_item_flashing and str(flashing_item.get("type")) == "gold":
+		gold_lbl.text = "💰 +%d GOLD! Total: %d gp ✨" % [int(flashing_item.get("amount", 0)), cur_gold]
+		gold_lbl.add_theme_color_override("font_color", Color(1.0, 0.95, 0.25, 1.0))
+		gold_lbl.add_theme_font_size_override("font_size", 10)
+	else:
+		gold_lbl.text = "💰 Gold: %d gp" % cur_gold
+		gold_lbl.add_theme_color_override("font_color", Color(1.0, 0.82, 0.35, 0.9))
+		gold_lbl.add_theme_font_size_override("font_size", 9)
+	gold_lbl.clip_text = true
+	gold_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	gold_row.add_child(gold_lbl)
+	vbox.add_child(gold_row)
 
 	# Row 7: Trap Disarming Capability
 	var disarm_check = can_hero_disarm(h)
@@ -6882,6 +7095,24 @@ func get_telemetry_state() -> Dictionary:
 			"waitingForClick": not active_treasure_overlay.is_empty(),
 			"card": active_treasure_overlay.get("card", {})
 		} if not active_treasure_overlay.is_empty() else {},
+		"flashItem": {
+			"active": not flashing_item.is_empty() and bool(flashing_item.get("active", false)),
+			"name": flashing_item.get("name", ""),
+			"type": flashing_item.get("type", ""),
+			"amount": flashing_item.get("amount", 0),
+			"icon": flashing_item.get("icon", ""),
+			"heroName": flashing_item.get("hero_name", ""),
+			"heroId": flashing_item.get("hero_id", ""),
+			"timer": flashing_item.get("timer", 0.0),
+			"message": flashing_item.get("message", "")
+		} if (not flashing_item.is_empty() and bool(flashing_item.get("active", false))) else {},
+		"pendingFlashItem": {
+			"active": not pending_flash_item.is_empty(),
+			"name": pending_flash_item.get("name", ""),
+			"type": pending_flash_item.get("type", ""),
+			"amount": pending_flash_item.get("amount", 0),
+			"heroId": pending_flash_item.get("hero_id", "")
+		} if not pending_flash_item.is_empty() else {},
 		"searchedRooms": searched_rooms,
 		"roomSpecialTreasureCollected": room_special_treasure_collected,
 		"lastTreasureCard": last_treasure_card,
@@ -7143,6 +7374,16 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 					active_treasure_overlay = action_data.treasureOverlay.duplicate(true)
 				elif not bool(action_data.treasureOverlay):
 					active_treasure_overlay = {}
+			if action_data.has("flashItem"):
+				if action_data.flashItem is Dictionary:
+					flashing_item = action_data.flashItem.duplicate(true)
+				elif not bool(action_data.flashItem):
+					flashing_item = {}
+			if action_data.has("pendingFlashItem"):
+				if action_data.pendingFlashItem is Dictionary:
+					pending_flash_item = action_data.pendingFlashItem.duplicate(true)
+				elif not bool(action_data.pendingFlashItem):
+					pending_flash_item = {}
 			if action_data.has("searchedRooms"):
 				searched_rooms = action_data.get("searchedRooms").duplicate(true)
 			elif not action_data.has("preserveSearchedRooms") and (action_data.has("activeHero") or action_data.has("hasActed")):
@@ -8138,6 +8379,7 @@ func _draw_board(canvas: CanvasItem) -> void:
 	_draw_floating_texts(canvas)
 	_draw_trap_sprung_overlay(canvas)
 	_draw_treasure_card_overlay(canvas)
+	_draw_item_flash_banner(canvas)
 	_draw_active_dice_roll(canvas)
 
 func _draw_vfx_effects(canvas: CanvasItem) -> void:
@@ -8722,6 +8964,428 @@ func _draw_trap_sprung_overlay(canvas: CanvasItem) -> void:
 	var cta_sz = font.get_string_size(cta_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 15)
 	canvas.draw_string(font, Vector2(center.x - cta_sz.x * 0.5, cta_rect.position.y + 27.0), cta_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 15, Color(1.0, 0.94, 0.60, pulse))
 
+func _draw_sparkle_star(canvas: CanvasItem, pos: Vector2, size: float, col: Color) -> void:
+	var pts: PackedVector2Array = [
+		pos + Vector2(0, -size),
+		pos + Vector2(size * 0.28, -size * 0.28),
+		pos + Vector2(size, 0),
+		pos + Vector2(size * 0.28, size * 0.28),
+		pos + Vector2(0, size),
+		pos + Vector2(-size * 0.28, size * 0.28),
+		pos + Vector2(-size, 0),
+		pos + Vector2(-size * 0.28, -size * 0.28)
+	]
+	canvas.draw_colored_polygon(pts, col)
+
+func _wrap_card_text(text: String, font: Font, font_size: int, max_width: float) -> Array[String]:
+	var result: Array[String] = []
+	var words = text.split(" ")
+	var current_line = ""
+	for w in words:
+		if w.is_empty():
+			continue
+		var test_line = (current_line + " " + w).strip_edges()
+		var sz = font.get_string_size(test_line, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size)
+		if sz.x <= max_width or current_line.is_empty():
+			current_line = test_line
+		else:
+			result.append(current_line)
+			current_line = w
+	if not current_line.is_empty():
+		result.append(current_line)
+	return result
+
+func _draw_woodcut_illustration(canvas: CanvasItem, rect: Rect2, card_type: String, is_quest_note: bool, overlay: Dictionary) -> void:
+	var cx = rect.position.x + rect.size.x * 0.5
+	var cy = rect.position.y + rect.size.y * 0.5
+	var ink = Color(0.18, 0.11, 0.06, 0.95)
+	var ink_shade = Color(0.18, 0.11, 0.06, 0.40)
+	var gold_fill = Color(0.98, 0.88, 0.55, 1.0)
+
+	# Ground / Flagstone line across bottom of window
+	var ground_y = rect.end.y - 18.0
+	canvas.draw_line(Vector2(rect.position.x + 8.0, ground_y), Vector2(rect.end.x - 8.0, ground_y), ink, 1.5)
+	canvas.draw_line(Vector2(rect.position.x + 14.0, ground_y + 6.0), Vector2(rect.end.x - 14.0, ground_y + 6.0), ink_shade, 1.0)
+	# Floor flagstone joints
+	canvas.draw_line(Vector2(cx - 50.0, ground_y), Vector2(cx - 65.0, rect.end.y - 4.0), ink_shade, 1.0)
+	canvas.draw_line(Vector2(cx + 25.0, ground_y), Vector2(cx + 15.0, rect.end.y - 4.0), ink_shade, 1.0)
+	canvas.draw_line(Vector2(cx + 80.0, ground_y), Vector2(cx + 70.0, rect.end.y - 4.0), ink_shade, 1.0)
+
+	if is_quest_note or card_type == "quest_note":
+		# Ancient Runic Sarcophagus / Quest Chest
+		var chest_rect = Rect2(cx - 52.0, cy - 8.0, 104.0, 48.0)
+		canvas.draw_rect(chest_rect, Color(0.88, 0.84, 0.78, 1.0))
+		canvas.draw_rect(chest_rect, ink, false, 2.0)
+		# Sarcophagus lid angled open
+		var lid_pts: PackedVector2Array = [
+			Vector2(cx - 56.0, cy - 8.0),
+			Vector2(cx - 30.0, cy - 32.0),
+			Vector2(cx + 72.0, cy - 32.0),
+			Vector2(cx + 56.0, cy - 8.0)
+		]
+		canvas.draw_colored_polygon(lid_pts, Color(0.92, 0.88, 0.82, 1.0))
+		canvas.draw_polyline(lid_pts, ink, 2.0)
+		canvas.draw_line(lid_pts[3], lid_pts[0], ink, 2.0)
+		# Light beam radiating out from opening
+		var beam_pts: PackedVector2Array = [
+			Vector2(cx - 35.0, cy - 8.0),
+			Vector2(cx - 18.0, rect.position.y + 12.0),
+			Vector2(cx + 38.0, rect.position.y + 12.0),
+			Vector2(cx + 45.0, cy - 8.0)
+		]
+		canvas.draw_colored_polygon(beam_pts, Color(1.0, 0.95, 0.60, 0.35))
+		# Carved Runes on Chest Front
+		canvas.draw_line(Vector2(cx - 28, cy + 8), Vector2(cx - 28, cy + 32), ink, 1.8)
+		canvas.draw_line(Vector2(cx - 28, cy + 14), Vector2(cx - 16, cy + 8), ink, 1.8)
+		canvas.draw_line(Vector2(cx - 28, cy + 24), Vector2(cx - 16, cy + 18), ink, 1.8)
+
+		canvas.draw_line(Vector2(cx, cy + 8), Vector2(cx, cy + 32), ink, 1.8)
+		canvas.draw_line(Vector2(cx - 8, cy + 14), Vector2(cx + 8, cy + 14), ink, 1.8)
+
+		canvas.draw_line(Vector2(cx + 26, cy + 8), Vector2(cx + 26, cy + 32), ink, 1.8)
+		canvas.draw_line(Vector2(cx + 26, cy + 12), Vector2(cx + 36, cy + 20), ink, 1.8)
+		canvas.draw_line(Vector2(cx + 36, cy + 20), Vector2(cx + 26, cy + 28), ink, 1.8)
+
+		_draw_sparkle_star(canvas, Vector2(cx, cy - 20), 7.0, Color(1.0, 0.85, 0.2))
+
+	elif card_type == "gold":
+		# Overflowing Cloth Money Sack & Spilling Gold Coins
+		var sack_cx = cx - 38.0
+		var sack_cy = cy + 6.0
+		# Body of cloth sack
+		var sack_pts: PackedVector2Array = [
+			Vector2(sack_cx - 12.0, sack_cy - 24.0),
+			Vector2(sack_cx - 32.0, sack_cy - 4.0),
+			Vector2(sack_cx - 36.0, sack_cy + 22.0),
+			Vector2(sack_cx - 22.0, sack_cy + 34.0),
+			Vector2(sack_cx + 18.0, sack_cy + 34.0),
+			Vector2(sack_cx + 30.0, sack_cy + 18.0),
+			Vector2(sack_cx + 14.0, sack_cy - 4.0),
+			Vector2(sack_cx + 12.0, sack_cy - 24.0)
+		]
+		canvas.draw_colored_polygon(sack_pts, Color(0.82, 0.72, 0.58, 1.0))
+		canvas.draw_polyline(sack_pts, ink, 2.0)
+		# Sack mouth bundle at top
+		var top_pts: PackedVector2Array = [
+			Vector2(sack_cx - 12.0, sack_cy - 24.0),
+			Vector2(sack_cx - 18.0, sack_cy - 38.0),
+			Vector2(sack_cx, sack_cy - 32.0),
+			Vector2(sack_cx + 18.0, sack_cy - 38.0),
+			Vector2(sack_cx + 12.0, sack_cy - 24.0)
+		]
+		canvas.draw_colored_polygon(top_pts, Color(0.85, 0.75, 0.62, 1.0))
+		canvas.draw_polyline(top_pts, ink, 1.8)
+		# Tie cord
+		canvas.draw_line(Vector2(sack_cx - 14.0, sack_cy - 24.0), Vector2(sack_cx + 14.0, sack_cy - 24.0), ink, 3.0)
+		canvas.draw_line(Vector2(sack_cx, sack_cy - 24.0), Vector2(sack_cx - 6.0, sack_cy - 12.0), ink, 1.8)
+		canvas.draw_line(Vector2(sack_cx + 2.0, sack_cy - 24.0), Vector2(sack_cx + 8.0, sack_cy - 10.0), ink, 1.8)
+		# Fabric wrinkles
+		canvas.draw_line(Vector2(sack_cx - 20.0, sack_cy + 6.0), Vector2(sack_cx - 6.0, sack_cy + 18.0), ink_shade, 1.2)
+		canvas.draw_line(Vector2(sack_cx - 14.0, sack_cy + 16.0), Vector2(sack_cx + 2.0, sack_cy + 26.0), ink_shade, 1.2)
+		canvas.draw_line(Vector2(sack_cx + 12.0, sack_cy + 4.0), Vector2(sack_cx + 4.0, sack_cy + 18.0), ink_shade, 1.2)
+
+		# Spilling Gold Coins pile
+		var coin_positions = [
+			Vector2(cx - 2.0, cy + 22.0),
+			Vector2(cx + 12.0, cy + 16.0),
+			Vector2(cx + 28.0, cy + 22.0),
+			Vector2(cx + 46.0, cy + 26.0),
+			Vector2(cx + 64.0, cy + 24.0),
+			Vector2(cx + 6.0, cy + 30.0),
+			Vector2(cx + 22.0, cy + 32.0),
+			Vector2(cx + 38.0, cy + 34.0),
+			Vector2(cx + 56.0, cy + 33.0),
+			Vector2(cx + 74.0, cy + 31.0),
+			Vector2(cx - 12.0, cy + 33.0),
+			Vector2(cx + 16.0, cy + 24.0),
+			Vector2(cx + 34.0, cy + 18.0),
+			Vector2(cx + 50.0, cy + 16.0)
+		]
+		for cpos in coin_positions:
+			canvas.draw_circle(cpos, 7.5, gold_fill)
+			canvas.draw_arc(cpos, 7.5, 0.0, TAU, 16, ink, 1.4)
+			canvas.draw_arc(cpos, 5.0, 0.0, TAU, 12, ink_shade, 0.9)
+			canvas.draw_line(cpos + Vector2(-2, 0), cpos + Vector2(2, 0), ink, 1.0)
+			canvas.draw_line(cpos + Vector2(0, -2), cpos + Vector2(0, 2), ink, 1.0)
+
+		# Twinkling stars
+		_draw_sparkle_star(canvas, Vector2(cx + 24.0, cy - 8.0), 6.5, ink)
+		_draw_sparkle_star(canvas, Vector2(cx + 58.0, cy + 2.0), 5.0, ink)
+		_draw_sparkle_star(canvas, Vector2(cx + 2.0, cy + 4.0), 4.0, ink)
+		_draw_sparkle_star(canvas, Vector2(cx + 80.0, cy + 12.0), 4.5, ink)
+
+	elif card_type == "gem" or card_type == "jewels":
+		# Open Velvet-Lined Jewelry Casket with Brilliant Faceted Gems & Pearls
+		var casket_rect = Rect2(cx - 55.0, cy - 2.0, 110.0, 42.0)
+		canvas.draw_rect(casket_rect, Color(0.48, 0.32, 0.20, 1.0))
+		canvas.draw_rect(casket_rect, ink, false, 2.0)
+		# Horizontal wood planks
+		canvas.draw_line(Vector2(casket_rect.position.x, cy + 12.0), Vector2(casket_rect.end.x, cy + 12.0), ink_shade, 1.2)
+		canvas.draw_line(Vector2(casket_rect.position.x, cy + 26.0), Vector2(casket_rect.end.x, cy + 26.0), ink_shade, 1.2)
+		# Brass corner corner braces
+		canvas.draw_line(casket_rect.position + Vector2(0, 14), casket_rect.position + Vector2(14, 0), ink, 2.0)
+		canvas.draw_line(Vector2(casket_rect.end.x - 14, casket_rect.position.y), Vector2(casket_rect.end.x, casket_rect.position.y + 14), ink, 2.0)
+		# Open lid angled back
+		var lid_pts: PackedVector2Array = [
+			Vector2(cx - 55.0, cy - 2.0),
+			Vector2(cx - 40.0, cy - 36.0),
+			Vector2(cx + 40.0, cy - 36.0),
+			Vector2(cx + 55.0, cy - 2.0)
+		]
+		canvas.draw_colored_polygon(lid_pts, Color(0.55, 0.36, 0.22, 1.0))
+		canvas.draw_polyline(lid_pts, ink, 2.0)
+		# Dark velvet interior
+		var velvet_rect = Rect2(cx - 48.0, cy - 2.0, 96.0, 14.0)
+		canvas.draw_rect(velvet_rect, Color(0.24, 0.08, 0.12, 1.0))
+		canvas.draw_rect(velvet_rect, ink, false, 1.2)
+
+		# Large faceted cut diamond in center
+		var gem_pts: PackedVector2Array = [
+			Vector2(cx - 14.0, cy - 4.0),
+			Vector2(cx - 8.0, cy - 18.0),
+			Vector2(cx + 8.0, cy - 18.0),
+			Vector2(cx + 14.0, cy - 4.0),
+			Vector2(cx, cy + 10.0)
+		]
+		canvas.draw_colored_polygon(gem_pts, Color(0.85, 0.96, 1.0, 1.0))
+		canvas.draw_polyline(gem_pts, ink, 1.8)
+		canvas.draw_line(gem_pts[4], gem_pts[0], ink, 1.8)
+		canvas.draw_line(gem_pts[0], gem_pts[3], ink, 1.2)
+		canvas.draw_line(gem_pts[1], Vector2(cx, cy - 4.0), ink, 1.2)
+		canvas.draw_line(gem_pts[2], Vector2(cx, cy - 4.0), ink, 1.2)
+		canvas.draw_line(gem_pts[4], Vector2(cx, cy - 4.0), ink, 1.4)
+
+		# Ruby on left
+		var ruby_pts: PackedVector2Array = [
+			Vector2(cx - 36.0, cy + 2.0),
+			Vector2(cx - 30.0, cy - 10.0),
+			Vector2(cx - 20.0, cy - 8.0),
+			Vector2(cx - 18.0, cy + 4.0),
+			Vector2(cx - 28.0, cy + 10.0)
+		]
+		canvas.draw_colored_polygon(ruby_pts, Color(0.95, 0.35, 0.40, 1.0))
+		canvas.draw_polyline(ruby_pts, ink, 1.5)
+		canvas.draw_line(ruby_pts[4], ruby_pts[0], ink, 1.5)
+
+		# Emerald on right
+		var emerald_pts: PackedVector2Array = [
+			Vector2(cx + 18.0, cy - 8.0),
+			Vector2(cx + 34.0, cy - 8.0),
+			Vector2(cx + 38.0, cy + 6.0),
+			Vector2(cx + 22.0, cy + 6.0)
+		]
+		canvas.draw_colored_polygon(emerald_pts, Color(0.35, 0.88, 0.55, 1.0))
+		canvas.draw_polyline(emerald_pts, ink, 1.5)
+		canvas.draw_line(emerald_pts[3], emerald_pts[0], ink, 1.5)
+
+		# Pearl necklace beads draping over rim
+		for i in range(8):
+			var px = cx - 24.0 + float(i) * 6.5
+			var py = cy + 12.0 + sin(float(i) * 0.45) * 4.0
+			canvas.draw_circle(Vector2(px, py), 3.2, Color(0.98, 0.98, 0.94, 1.0))
+			canvas.draw_arc(Vector2(px, py), 3.2, 0.0, TAU, 10, ink, 1.0)
+
+		# Starbursts
+		_draw_sparkle_star(canvas, Vector2(cx, cy - 24.0), 6.0, ink)
+		_draw_sparkle_star(canvas, Vector2(cx - 26.0, cy - 16.0), 4.5, ink)
+		_draw_sparkle_star(canvas, Vector2(cx + 32.0, cy - 14.0), 4.5, ink)
+
+	elif card_type == "potion":
+		# Classical Apothecary Glass Phial / Flask
+		var bottle_cy = cy + 10.0
+		var r = 32.0
+
+		# Liquid fill color based on potion title
+		var title_lower = str(overlay.get("title", "")).to_lower()
+		var p_fill = Color(0.98, 0.82, 0.40, 0.95)
+		if "strength" in title_lower:
+			p_fill = Color(0.92, 0.30, 0.30, 0.95)
+		elif "defense" in title_lower:
+			p_fill = Color(0.35, 0.70, 0.95, 0.95)
+		elif "holy" in title_lower:
+			p_fill = Color(0.90, 0.98, 1.0, 0.95)
+
+		# Spherical decanter bulb
+		canvas.draw_circle(Vector2(cx, bottle_cy), r, Color(0.96, 0.94, 0.90, 1.0))
+		canvas.draw_circle(Vector2(cx, bottle_cy), r - 2.5, p_fill)
+		# Meniscus cut-off in top third
+		var empty_top = Rect2(cx - r, bottle_cy - r, r * 2.0, r * 0.75)
+		canvas.draw_rect(empty_top, Color(0.96, 0.94, 0.90, 1.0))
+		canvas.draw_line(Vector2(cx - 24.0, bottle_cy - 8.0), Vector2(cx + 24.0, bottle_cy - 8.0), ink, 1.5)
+
+		# Neck of flask
+		var neck_rect = Rect2(cx - 8.0, bottle_cy - 48.0, 16.0, 26.0)
+		canvas.draw_rect(neck_rect, Color(0.96, 0.94, 0.90, 1.0))
+		canvas.draw_rect(neck_rect, ink, false, 1.8)
+
+		# Fluted lip rim
+		canvas.draw_rect(Rect2(cx - 12.0, bottle_cy - 52.0, 24.0, 5.0), Color(0.96, 0.94, 0.90, 1.0))
+		canvas.draw_rect(Rect2(cx - 12.0, bottle_cy - 52.0, 24.0, 5.0), ink, false, 1.8)
+
+		# Cork stopper inserted into neck
+		var cork_pts: PackedVector2Array = [
+			Vector2(cx - 7.0, bottle_cy - 52.0),
+			Vector2(cx - 9.0, bottle_cy - 64.0),
+			Vector2(cx + 9.0, bottle_cy - 64.0),
+			Vector2(cx + 7.0, bottle_cy - 52.0)
+		]
+		canvas.draw_colored_polygon(cork_pts, Color(0.76, 0.58, 0.40, 1.0))
+		canvas.draw_polyline(cork_pts, ink, 1.8)
+		canvas.draw_line(cork_pts[3], cork_pts[0], ink, 1.8)
+
+		# Outer bulb outline
+		canvas.draw_arc(Vector2(cx, bottle_cy), r, 0.0, TAU, 32, ink, 2.2)
+
+		# Glass reflection highlight
+		canvas.draw_arc(Vector2(cx, bottle_cy), r - 6.0, PI * 0.75, PI * 1.25, 12, Color.WHITE, 2.2)
+
+		# Emblem on bottle
+		if "strength" in title_lower:
+			canvas.draw_line(Vector2(cx, bottle_cy - 2.0), Vector2(cx, bottle_cy + 18.0), ink, 2.2)
+			canvas.draw_line(Vector2(cx - 6.0, bottle_cy + 4.0), Vector2(cx + 6.0, bottle_cy + 4.0), ink, 2.2)
+		elif "defense" in title_lower:
+			var s_pts: PackedVector2Array = [
+				Vector2(cx - 7.0, bottle_cy),
+				Vector2(cx + 7.0, bottle_cy),
+				Vector2(cx + 5.0, bottle_cy + 12.0),
+				Vector2(cx, bottle_cy + 18.0),
+				Vector2(cx - 5.0, bottle_cy + 12.0)
+			]
+			canvas.draw_colored_polygon(s_pts, Color(0.85, 0.85, 0.88, 1.0))
+			canvas.draw_polyline(s_pts, ink, 1.5)
+			canvas.draw_line(s_pts[4], s_pts[0], ink, 1.5)
+		else:
+			canvas.draw_line(Vector2(cx, bottle_cy + 1.0), Vector2(cx, bottle_cy + 17.0), ink, 3.2)
+			canvas.draw_line(Vector2(cx - 8.0, bottle_cy + 9.0), Vector2(cx + 8.0, bottle_cy + 9.0), ink, 3.2)
+
+		# Radiant aura rays
+		for ang in [0.2, 0.6, 1.0, 1.4, 1.8, 2.2, 2.6, 3.0]:
+			var dir = Vector2(cos(ang * PI), sin(ang * PI))
+			canvas.draw_line(Vector2(cx, bottle_cy) + dir * (r + 4.0), Vector2(cx, bottle_cy) + dir * (r + 14.0), ink_shade, 1.4)
+
+	elif card_type == "hazard":
+		# Spiked Pit Trap Opening in Cracked Dungeon Floor
+		var pit_pts: PackedVector2Array = [
+			Vector2(cx - 62.0, ground_y),
+			Vector2(cx - 48.0, ground_y + 4.0),
+			Vector2(cx - 24.0, ground_y - 2.0),
+			Vector2(cx, ground_y + 3.0),
+			Vector2(cx + 28.0, ground_y - 3.0),
+			Vector2(cx + 58.0, ground_y),
+			Vector2(cx + 44.0, ground_y + 30.0),
+			Vector2(cx + 18.0, ground_y + 36.0),
+			Vector2(cx - 18.0, ground_y + 36.0),
+			Vector2(cx - 48.0, ground_y + 28.0)
+		]
+		canvas.draw_colored_polygon(pit_pts, Color(0.12, 0.08, 0.06, 1.0))
+		canvas.draw_polyline(pit_pts, ink, 2.2)
+		canvas.draw_line(pit_pts[pit_pts.size() - 1], pit_pts[0], ink, 2.2)
+
+		# Spikes pointing upward
+		for sp_x in [cx - 36.0, cx - 18.0, cx, cx + 18.0, cx + 36.0]:
+			var spike_pts: PackedVector2Array = [
+				Vector2(sp_x - 5.0, ground_y + 32.0),
+				Vector2(sp_x, ground_y + 6.0),
+				Vector2(sp_x + 5.0, ground_y + 32.0)
+			]
+			canvas.draw_colored_polygon(spike_pts, Color(0.72, 0.60, 0.44, 1.0))
+			canvas.draw_polyline(spike_pts, ink, 1.6)
+
+		# Danger Warning Diamond above pit
+		var dia_pts: PackedVector2Array = [
+			Vector2(cx, cy - 42.0),
+			Vector2(cx + 18.0, cy - 24.0),
+			Vector2(cx, cy - 6.0),
+			Vector2(cx - 18.0, cy - 24.0)
+		]
+		canvas.draw_colored_polygon(dia_pts, Color(0.96, 0.88, 0.35, 1.0))
+		canvas.draw_polyline(dia_pts, ink, 2.0)
+		canvas.draw_line(dia_pts[3], dia_pts[0], ink, 2.0)
+		canvas.draw_line(Vector2(cx, cy - 34.0), Vector2(cx, cy - 20.0), ink, 3.0)
+		canvas.draw_circle(Vector2(cx, cy - 13.0), 2.2, ink)
+
+		# Falling pebbles
+		canvas.draw_circle(Vector2(cx - 42.0, ground_y + 8.0), 2.5, ink)
+		canvas.draw_circle(Vector2(cx + 38.0, ground_y + 12.0), 3.0, ink)
+		canvas.draw_line(Vector2(cx - 42.0, ground_y + 4.0), Vector2(cx - 42.0, ground_y - 4.0), ink_shade, 1.0)
+		canvas.draw_line(Vector2(cx + 38.0, ground_y + 8.0), Vector2(cx + 38.0, ground_y - 2.0), ink_shade, 1.0)
+
+	elif card_type == "wandering_monster":
+		# Snarling Orc Warrior Ambush with Spiked Helm & Raised Blade
+		for sh_i in range(12):
+			var sx = cx - 60.0 + float(sh_i) * 10.0
+			canvas.draw_line(Vector2(sx, cy - 35.0), Vector2(sx - 15.0, ground_y), ink_shade, 1.0)
+
+		# Spiked Conical Iron Helmet
+		var helm_pts: PackedVector2Array = [
+			Vector2(cx - 28.0, cy - 10.0),
+			Vector2(cx - 18.0, cy - 42.0),
+			Vector2(cx, cy - 54.0),
+			Vector2(cx + 18.0, cy - 42.0),
+			Vector2(cx + 28.0, cy - 10.0),
+			Vector2(cx, cy - 16.0)
+		]
+		canvas.draw_colored_polygon(helm_pts, Color(0.38, 0.40, 0.42, 1.0))
+		canvas.draw_polyline(helm_pts, ink, 2.2)
+		canvas.draw_line(helm_pts[5], helm_pts[0], ink, 2.2)
+		canvas.draw_line(Vector2(cx, cy - 54.0), Vector2(cx, cy - 64.0), ink, 3.0)
+
+		# Orc Face
+		var face_pts: PackedVector2Array = [
+			Vector2(cx - 26.0, cy - 10.0),
+			Vector2(cx - 32.0, cy + 12.0),
+			Vector2(cx - 18.0, cy + 28.0),
+			Vector2(cx + 18.0, cy + 28.0),
+			Vector2(cx + 32.0, cy + 12.0),
+			Vector2(cx + 26.0, cy - 10.0)
+		]
+		canvas.draw_colored_polygon(face_pts, Color(0.48, 0.60, 0.42, 1.0))
+		canvas.draw_polyline(face_pts, ink, 2.0)
+
+		# Menacing Eyes
+		canvas.draw_line(Vector2(cx - 16.0, cy - 2.0), Vector2(cx - 6.0, cy - 4.0), ink, 2.5)
+		canvas.draw_line(Vector2(cx + 6.0, cy - 4.0), Vector2(cx + 16.0, cy - 2.0), ink, 2.5)
+		canvas.draw_circle(Vector2(cx - 10.0, cy - 3.0), 1.5, Color.WHITE)
+		canvas.draw_circle(Vector2(cx + 10.0, cy - 3.0), 1.5, Color.WHITE)
+
+		# Snarling Mouth with Tusks
+		var mouth_pts: PackedVector2Array = [
+			Vector2(cx - 14.0, cy + 12.0),
+			Vector2(cx, cy + 10.0),
+			Vector2(cx + 14.0, cy + 12.0),
+			Vector2(cx + 10.0, cy + 20.0),
+			Vector2(cx - 10.0, cy + 20.0)
+		]
+		canvas.draw_colored_polygon(mouth_pts, Color(0.20, 0.08, 0.08, 1.0))
+		canvas.draw_polyline(mouth_pts, ink, 1.6)
+		var tusk_left: PackedVector2Array = [
+			Vector2(cx - 9.0, cy + 20.0),
+			Vector2(cx - 7.0, cy + 8.0),
+			Vector2(cx - 4.0, cy + 19.0)
+		]
+		canvas.draw_colored_polygon(tusk_left, Color(0.96, 0.94, 0.88, 1.0))
+		canvas.draw_polyline(tusk_left, ink, 1.2)
+		var tusk_right: PackedVector2Array = [
+			Vector2(cx + 4.0, cy + 19.0),
+			Vector2(cx + 7.0, cy + 8.0),
+			Vector2(cx + 9.0, cy + 20.0)
+		]
+		canvas.draw_colored_polygon(tusk_right, Color(0.96, 0.94, 0.88, 1.0))
+		canvas.draw_polyline(tusk_right, ink, 1.2)
+
+		# Raised Jagged Notched Scimitar
+		var blade_pts: PackedVector2Array = [
+			Vector2(cx + 38.0, ground_y),
+			Vector2(cx + 44.0, cy - 8.0),
+			Vector2(cx + 52.0, cy - 38.0),
+			Vector2(cx + 48.0, cy - 42.0),
+			Vector2(cx + 36.0, cy - 14.0),
+			Vector2(cx + 32.0, ground_y)
+		]
+		canvas.draw_colored_polygon(blade_pts, Color(0.70, 0.72, 0.74, 1.0))
+		canvas.draw_polyline(blade_pts, ink, 1.8)
+		canvas.draw_line(Vector2(cx + 46.0, cy - 22.0), Vector2(cx + 41.0, cy - 20.0), ink, 1.8)
+
 func _draw_treasure_card_overlay(canvas: CanvasItem) -> void:
 	if active_treasure_overlay.is_empty():
 		return
@@ -8734,108 +9398,168 @@ func _draw_treasure_card_overlay(canvas: CanvasItem) -> void:
 	# 1. Full Board Dark Vignette / Backdrop Dimmer
 	var total_w = float(grid_cols * tile_size)
 	var total_h = float(grid_rows * tile_size)
-	canvas.draw_rect(Rect2(board_offset, Vector2(total_w, total_h)), Color(0.0, 0.0, 0.0, 0.68))
+	canvas.draw_rect(Rect2(board_offset, Vector2(total_w, total_h)), Color(0.0, 0.0, 0.0, 0.72))
 
-	# 2. Card Modal Box (580x280)
-	var box_w = 580.0
-	var box_h = 280.0
-	var box_rect = Rect2(center.x - box_w * 0.5, center.y - box_h * 0.5, box_w, box_h)
+	# 2. Vertical Playing Card (340 x 520) - Authentic 1:1.5 playing card ratio
+	var card_w = 340.0
+	var card_h = 520.0
+	var card_rect = Rect2(center.x - card_w * 0.5, center.y - card_h * 0.5, card_w, card_h)
 
 	# Drop shadow
-	canvas.draw_rect(Rect2(box_rect.position + Vector2(8.0, 10.0), box_rect.size), Color(0.0, 0.0, 0.0, 0.75))
+	canvas.draw_rect(Rect2(card_rect.position + Vector2(10.0, 12.0), card_rect.size), Color(0.0, 0.0, 0.0, 0.75))
 
-	# Main card body
-	canvas.draw_rect(box_rect, Color(0.08, 0.07, 0.09, 0.98))
+	# Outer Card Margin (Dark chocolate brown border edge)
+	var card_edge_col = Color(0.15, 0.09, 0.06, 1.0)
+	canvas.draw_rect(card_rect, card_edge_col)
+	canvas.draw_rect(card_rect, Color(0.32, 0.20, 0.12, 0.9), false, 1.5)
+
+	# Parchment Body (Warm aged yellow-tan parchment)
+	var parchment_rect = Rect2(card_rect.position + Vector2(12.0, 12.0), card_rect.size - Vector2(24.0, 24.0))
+	var parchment_fill = Color(0.93, 0.86, 0.72, 1.0)
+	canvas.draw_rect(parchment_rect, parchment_fill)
+
+	# Subtle vintage edge aging
+	canvas.draw_rect(Rect2(parchment_rect.position, Vector2(parchment_rect.size.x, 3.0)), Color(0.80, 0.70, 0.55, 0.45))
+	canvas.draw_rect(Rect2(Vector2(parchment_rect.position.x, parchment_rect.end.y - 3.0), Vector2(parchment_rect.size.x, 3.0)), Color(0.80, 0.70, 0.55, 0.45))
+	canvas.draw_rect(Rect2(parchment_rect.position, Vector2(3.0, parchment_rect.size.y)), Color(0.80, 0.70, 0.55, 0.45))
+	canvas.draw_rect(Rect2(Vector2(parchment_rect.end.x - 3.0, parchment_rect.position.y), Vector2(3.0, parchment_rect.size.y)), Color(0.80, 0.70, 0.55, 0.45))
+
+	# Double-line hairline inner border frame
+	var inner_frame = Rect2(parchment_rect.position + Vector2(8.0, 8.0), parchment_rect.size - Vector2(16.0, 16.0))
+	var ink_col = Color(0.22, 0.13, 0.08, 0.95)
+	canvas.draw_rect(inner_frame, ink_col, false, 2.0)
+
+	var inner_hairline = Rect2(inner_frame.position + Vector2(3.0, 3.0), inner_frame.size - Vector2(6.0, 6.0))
+	canvas.draw_rect(inner_hairline, Color(0.38, 0.24, 0.15, 0.70), false, 1.0)
+
+	# Corner tick marks
+	var corners = [
+		inner_frame.position,
+		Vector2(inner_frame.end.x, inner_frame.position.y),
+		Vector2(inner_frame.position.x, inner_frame.end.y),
+		inner_frame.end
+	]
+	var tick = 6.0
+	canvas.draw_line(corners[0] + Vector2(tick, 0), corners[0] + Vector2(tick, tick), ink_col, 1.0)
+	canvas.draw_line(corners[0] + Vector2(0, tick), corners[0] + Vector2(tick, tick), ink_col, 1.0)
+	canvas.draw_line(corners[1] + Vector2(-tick, 0), corners[1] + Vector2(-tick, tick), ink_col, 1.0)
+	canvas.draw_line(corners[1] + Vector2(0, tick), corners[1] + Vector2(-tick, tick), ink_col, 1.0)
+	canvas.draw_line(corners[2] + Vector2(tick, 0), corners[2] + Vector2(tick, -tick), ink_col, 1.0)
+	canvas.draw_line(corners[2] + Vector2(0, -tick), corners[2] + Vector2(tick, -tick), ink_col, 1.0)
+	canvas.draw_line(corners[3] + Vector2(-tick, 0), corners[3] + Vector2(-tick, -tick), ink_col, 1.0)
+	canvas.draw_line(corners[3] + Vector2(0, -tick), corners[3] + Vector2(-tick, -tick), ink_col, 1.0)
+
+	# 3. Card Title (Antique classic serif font centered at top)
+	var raw_title = str(overlay.get("title", "Treasure"))
+	var title_display = raw_title
+	if "(" in title_display and ("gold" in raw_title.to_lower() or "gem" in raw_title.to_lower() or "hazard" in raw_title.to_lower()):
+		title_display = raw_title.split("(")[0].strip_edges()
+	if title_display.is_empty():
+		title_display = raw_title
+
+	var t_sz = font.get_string_size(title_display, HORIZONTAL_ALIGNMENT_CENTER, -1, 19)
+	var title_y = parchment_rect.position.y + 34.0
+	canvas.draw_string(font, Vector2(center.x - t_sz.x * 0.5, title_y), title_display, HORIZONTAL_ALIGNMENT_CENTER, -1, 19, ink_col)
+
+	# Decorative divider line under title
+	var div_y = title_y + 8.0
+	canvas.draw_line(Vector2(center.x - 70.0, div_y), Vector2(center.x + 70.0, div_y), Color(ink_col.r, ink_col.g, ink_col.b, 0.4), 1.0)
+	canvas.draw_circle(Vector2(center.x, div_y), 2.5, ink_col)
+
+	# 4. Framed Woodcut Illustration Window (250 x 160)
+	var illus_w = 250.0
+	var illus_h = 160.0
+	var illus_rect = Rect2(center.x - illus_w * 0.5, div_y + 10.0, illus_w, illus_h)
+
+	# Cream window fill
+	canvas.draw_rect(illus_rect, Color(0.97, 0.94, 0.88, 1.0))
+	# Frame border
+	canvas.draw_rect(illus_rect, ink_col, false, 2.0)
+	canvas.draw_rect(Rect2(illus_rect.position + Vector2(3, 3), illus_rect.size - Vector2(6, 6)), Color(ink_col.r, ink_col.g, ink_col.b, 0.4), false, 0.8)
 
 	var card_type = str(overlay.get("card_type", "gold"))
 	var is_quest_note = bool(overlay.get("is_quest_note", false))
+	_draw_woodcut_illustration(canvas, illus_rect, card_type, is_quest_note, overlay)
 
-	# Choose border & header accent colors based on card category
-	var primary_border = Color(1.0, 0.82, 0.20, 1.0)
-	var secondary_border = Color(0.40, 0.85, 0.50, 0.85)
-	var banner_bg = Color(0.18, 0.14, 0.04, 0.95)
-	var banner_title = "💎 TREASURE CARD"
-
-	if is_quest_note:
-		primary_border = Color(1.0, 0.85, 0.25, 1.0)
-		secondary_border = Color(0.90, 0.65, 0.15, 0.85)
-		banner_bg = Color(0.24, 0.16, 0.04, 0.95)
-		banner_title = "📜 QUEST NOTE TREASURE!"
-	elif card_type == "wandering_monster":
-		primary_border = Color(0.95, 0.20, 0.15, 1.0)
-		secondary_border = Color(1.0, 0.60, 0.10, 0.85)
-		banner_bg = Color(0.35, 0.06, 0.06, 0.95)
-		banner_title = "⚠️ WANDERING MONSTER AMBUSH!"
-	elif card_type == "hazard":
-		primary_border = Color(0.85, 0.25, 0.85, 1.0)
-		secondary_border = Color(0.95, 0.30, 0.20, 0.85)
-		banner_bg = Color(0.28, 0.06, 0.22, 0.95)
-		banner_title = "☠️ TREASURE HAZARD!"
-	elif card_type == "potion":
-		primary_border = Color(0.25, 0.85, 0.95, 1.0)
-		secondary_border = Color(0.30, 0.90, 0.50, 0.85)
-		banner_bg = Color(0.04, 0.18, 0.22, 0.95)
-		banner_title = "🧪 ALCHEMICAL TREASURE"
-
-	# Triple-layer ornate borders
-	canvas.draw_rect(box_rect, primary_border, false, 3.0)
-	var inner_border = Rect2(box_rect.position + Vector2(4.0, 4.0), box_rect.size - Vector2(8.0, 8.0))
-	canvas.draw_rect(inner_border, secondary_border, false, 1.8)
-	var innermost = Rect2(box_rect.position + Vector2(8.0, 8.0), box_rect.size - Vector2(16.0, 16.0))
-	canvas.draw_rect(innermost, Color(primary_border.r * 0.4, primary_border.g * 0.4, primary_border.b * 0.4, 0.5), false, 1.0)
-
-	# Corner accents
-	var corner_len = 24.0
-	canvas.draw_line(box_rect.position + Vector2(2, corner_len), box_rect.position + Vector2(corner_len, 2), primary_border, 3.0)
-	canvas.draw_line(Vector2(box_rect.end.x - corner_len, box_rect.position.y + 2), Vector2(box_rect.end.x - 2, box_rect.position.y + corner_len), primary_border, 3.0)
-	canvas.draw_line(Vector2(box_rect.position.x + 2, box_rect.end.y - corner_len), Vector2(box_rect.position.x + corner_len, box_rect.end.y - 2), primary_border, 3.0)
-	canvas.draw_line(Vector2(box_rect.end.x - corner_len, box_rect.end.y - 2), Vector2(box_rect.end.x - 2, box_rect.end.y - corner_len), primary_border, 3.0)
-
-	# 3. Top Banner
-	var banner_rect = Rect2(box_rect.position.x + 20.0, box_rect.position.y + 16.0, box_w - 40.0, 40.0)
-	canvas.draw_rect(banner_rect, banner_bg)
-	canvas.draw_rect(banner_rect, primary_border, false, 2.0)
-	var b_sz = font.get_string_size(banner_title, HORIZONTAL_ALIGNMENT_CENTER, -1, 20)
-	canvas.draw_string(font, Vector2(center.x - b_sz.x * 0.5, banner_rect.position.y + 27.0), banner_title, HORIZONTAL_ALIGNMENT_CENTER, -1, 20, Color(1.0, 0.95, 0.70, 1.0))
-
-	# 4. Icon & Card Title Badge
-	var icon = str(overlay.get("icon", "💎"))
-	var card_title = str(overlay.get("title", "Treasure"))
-	var badge_text = "%s %s" % [icon, card_title.to_upper()]
-	var card_sz = font.get_string_size(badge_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 16)
-	var badge_w = card_sz.x + 32.0
-	var badge_rect = Rect2(center.x - badge_w * 0.5, banner_rect.end.y + 12.0, badge_w, 28.0)
-	canvas.draw_rect(badge_rect, Color(0.12, 0.10, 0.14, 0.90))
-	canvas.draw_rect(badge_rect, secondary_border, false, 1.4)
-	canvas.draw_string(font, Vector2(center.x - card_sz.x * 0.5, badge_rect.position.y + 20.0), badge_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 16, Color(1.0, 0.92, 0.50, 1.0))
-
-	# 5. Searcher Line
-	var hero_name = str(overlay.get("hero_name", "Hero"))
-	var finder_text = "%s searches the chamber and discovers:" % hero_name
-	var f_sz = font.get_string_size(finder_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 13)
-	canvas.draw_string(font, Vector2(center.x - f_sz.x * 0.5, badge_rect.end.y + 24.0), finder_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 13, Color(0.92, 0.92, 0.92, 1.0))
-
-	# 6. Description & Flavor Text
+	# 5. Card Body Prose (Rules & Flavor)
+	var body_y = illus_rect.end.y + 18.0
 	var desc = str(overlay.get("description", ""))
 	var flavor = str(overlay.get("flavor", ""))
-	var desc_sz = font.get_string_size(desc, HORIZONTAL_ALIGNMENT_CENTER, -1, 12)
-	canvas.draw_string(font, Vector2(center.x - desc_sz.x * 0.5, badge_rect.end.y + 44.0), desc, HORIZONTAL_ALIGNMENT_CENTER, -1, 12, Color(0.90, 0.90, 0.85, 0.95))
-	if flavor != "":
-		var flv_sz = font.get_string_size(flavor, HORIZONTAL_ALIGNMENT_CENTER, -1, 11)
-		canvas.draw_string(font, Vector2(center.x - flv_sz.x * 0.5, badge_rect.end.y + 62.0), flavor, HORIZONTAL_ALIGNMENT_CENTER, -1, 11, Color(1.0, 0.75, 0.40, 0.90))
 
-	# 7. CTA Action Bar
-	var pulse = 0.85 + 0.15 * sin(Time.get_ticks_msec() * 0.005)
-	var cta_rect = Rect2(box_rect.position.x + 30.0, box_rect.end.y - 54.0, box_w - 60.0, 40.0)
-	canvas.draw_rect(cta_rect, Color(0.12, 0.10, 0.08, 0.96))
-	canvas.draw_rect(cta_rect, primary_border * pulse, false, 2.0)
-	var cta_text = "👉 CLICK ANYWHERE OR PRESS SPACE TO COLLECT 👈"
+	# Authentic text wrapping
+	var desc_lines = _wrap_card_text(desc, font, 12, illus_w)
+	var cur_y = body_y
+	for line in desc_lines:
+		var l_sz = font.get_string_size(line, HORIZONTAL_ALIGNMENT_CENTER, -1, 12)
+		canvas.draw_string(font, Vector2(center.x - l_sz.x * 0.5, cur_y), line, HORIZONTAL_ALIGNMENT_CENTER, -1, 12, ink_col)
+		cur_y += 16.0
+
+	if flavor != "":
+		cur_y += 4.0
+		var flv_divider = "— ✦ —"
+		var fd_sz = font.get_string_size(flv_divider, HORIZONTAL_ALIGNMENT_CENTER, -1, 10)
+		canvas.draw_string(font, Vector2(center.x - fd_sz.x * 0.5, cur_y), flv_divider, HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(ink_col.r, ink_col.g, ink_col.b, 0.5))
+		cur_y += 14.0
+
+		var flv_lines = _wrap_card_text(flavor, font, 11, illus_w)
+		for fline in flv_lines:
+			var fl_sz = font.get_string_size(fline, HORIZONTAL_ALIGNMENT_CENTER, -1, 11)
+			canvas.draw_string(font, Vector2(center.x - fl_sz.x * 0.5, cur_y), fline, HORIZONTAL_ALIGNMENT_CENTER, -1, 11, Color(0.35, 0.22, 0.12, 0.90))
+			cur_y += 15.0
+
+	# 6. Bottom CTA / Dismiss Prompt
+	var pulse = 0.82 + 0.18 * sin(Time.get_ticks_msec() * 0.006)
+	var cta_y = parchment_rect.end.y - 18.0
+	var cta_text = "[ CLICK ANYWHERE OR PRESS SPACE TO COLLECT ]"
 	if card_type == "wandering_monster":
-		cta_text = "⚔️ CLICK ANYWHERE OR PRESS SPACE TO ENGAGE ⚔️"
+		cta_text = "[ CLICK ANYWHERE OR PRESS SPACE TO ENGAGE ]"
 	elif card_type == "hazard":
-		cta_text = "☠️ CLICK ANYWHERE OR PRESS SPACE TO CONTINUE ☠️"
-	var cta_sz = font.get_string_size(cta_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 14)
-	canvas.draw_string(font, Vector2(center.x - cta_sz.x * 0.5, cta_rect.position.y + 26.0), cta_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 14, Color(1.0, 0.95, 0.70, pulse))
+		cta_text = "[ CLICK ANYWHERE OR PRESS SPACE TO CONTINUE ]"
+
+	var c_sz = font.get_string_size(cta_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 11)
+	canvas.draw_string(font, Vector2(center.x - c_sz.x * 0.5, cta_y), cta_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 11, Color(0.36, 0.20, 0.10, pulse))
+
+func _draw_item_flash_banner(canvas: CanvasItem) -> void:
+	if flashing_item.is_empty() or not bool(flashing_item.get("active", false)):
+		return
+
+	var font = ThemeDB.fallback_font
+	_update_board_metrics()
+	var center_x = board_offset.x + float(grid_cols * tile_size) * 0.5
+	var banner_y = board_offset.y + 24.0
+	var banner_w = 520.0
+	var banner_h = 56.0
+	var banner_rect = Rect2(center_x - banner_w * 0.5, banner_y, banner_w, banner_h)
+
+	var pulse = 0.80 + 0.20 * sin(Time.get_ticks_msec() * 0.015)
+
+	# Shadow
+	canvas.draw_rect(Rect2(banner_rect.position + Vector2(0, 4), banner_rect.size), Color(0.0, 0.0, 0.0, 0.65))
+
+	# Background (deep dark velvet navy)
+	canvas.draw_rect(banner_rect, Color(0.06, 0.08, 0.12, 0.96))
+
+	# Double glowing gold borders
+	canvas.draw_rect(banner_rect, Color(1.0, 0.84, 0.15, pulse), false, 2.5)
+	var inner_rect = Rect2(banner_rect.position + Vector2(3, 3), banner_rect.size - Vector2(6, 6))
+	canvas.draw_rect(inner_rect, Color(1.0, 0.95, 0.50, pulse * 0.6), false, 1.0)
+
+	# Text lines
+	var msg = str(flashing_item.get("message", ""))
+	if msg == "":
+		var itype = str(flashing_item.get("type", "item"))
+		if itype == "gold":
+			msg = "💰 TREASURE COLLECTED: +%d Gold Coins added to Purse! 💰" % int(flashing_item.get("amount", 0))
+		else:
+			msg = "✨ NEW ITEM ACQUIRED: %s added to Backpack! ✨" % str(flashing_item.get("name", "Item"))
+
+	var m_sz = font.get_string_size(msg, HORIZONTAL_ALIGNMENT_CENTER, -1, 14)
+	canvas.draw_string(font, Vector2(center_x - m_sz.x * 0.5, banner_rect.position.y + 24.0), msg, HORIZONTAL_ALIGNMENT_CENTER, -1, 14, Color(1.0, 0.95, 0.70, pulse))
+
+	var hero_name = str(flashing_item.get("hero_name", "Hero"))
+	var sub_msg = "⚡ [ OUT OF MOVEMENT — %s is ready for Action or End Turn ] ⚡" % hero_name
+	var s_sz = font.get_string_size(sub_msg, HORIZONTAL_ALIGNMENT_CENTER, -1, 11)
+	canvas.draw_string(font, Vector2(center_x - s_sz.x * 0.5, banner_rect.position.y + 44.0), sub_msg, HORIZONTAL_ALIGNMENT_CENTER, -1, 11, Color(0.65, 0.90, 1.0, 0.95))
 
 func trigger_movement_dice_roll(roll_data: Dictionary, hero_name: String, dice_values: Array) -> void:
 	_update_board_metrics()

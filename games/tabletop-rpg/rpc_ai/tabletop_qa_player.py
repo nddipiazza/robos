@@ -110,6 +110,9 @@ class TabletopQAPlayer:
         self.log(f"Advancing hero to grid square ({x}, {y}) (interactive={interactive})...")
         return self.execute_action("move", x=x, y=y, interactive=interactive)
 
+    def move_hero(self, pos: list, interactive: bool = False) -> dict:
+        return self.move(pos[0], pos[1], interactive=interactive)
+
     def click_tile(self, x: int, y: int) -> dict:
         self.log(f"Clicking tabletop tile at ({x}, {y})...")
         return self.execute_action("click_tile", x=x, y=y)
@@ -188,6 +191,12 @@ class TabletopQAPlayer:
     def resolve_treasure_overlay(self) -> dict:
         self.log("Dismissing / collecting active treasure card overlay...")
         return self.execute_action("click_treasure_overlay")
+
+    def get_flash_item(self) -> dict:
+        return self.get_state().get("flashItem", {})
+
+    def get_pending_flash_item(self) -> dict:
+        return self.get_state().get("pendingFlashItem", {})
 
     def search_traps(self) -> dict:
         self.log("Searching area for hidden traps and secret doors...")
