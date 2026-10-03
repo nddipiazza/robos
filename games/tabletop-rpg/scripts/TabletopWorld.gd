@@ -280,6 +280,9 @@ var selected_armory_hero_id: String = "barbarian"
 @onready var treasure_btn_resolve: Button = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/ButtonBox/BtnResolve")
 var _treasure_deck_texture_res: Texture2D = null
 
+var active_targeting: Dictionary = {}
+var targeting_cursor: Control = null
+
 @onready var unavailable_notice_panel: PanelContainer = get_node_or_null("UI/UnavailableNotice")
 @onready var unavailable_notice_label: Label = get_node_or_null("UI/UnavailableNotice/Margin/HBox/NoticeLabel")
 @onready var unavailable_notice_icon: Label = get_node_or_null("UI/UnavailableNotice/Margin/HBox/Icon")
@@ -365,6 +368,7 @@ func _ready() -> void:
 	_setup_monster_detail_modal()
 	_setup_treasure_modal()
 	_setup_unavailable_notice_style()
+	_setup_targeting_system()
 	_load_door_textures()
 	_load_hero_token_textures()
 	_load_monster_token_textures()
@@ -4291,6 +4295,21 @@ func can_search_room() -> bool:
 	return true
 
 func _input(event: InputEvent) -> void:
+	if is_targeting_active():
+		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+			cancel_targeting()
+			get_viewport().set_input_as_handled()
+			return
+		elif event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
+			cancel_targeting()
+			get_viewport().set_input_as_handled()
+			return
+		elif event is InputEventMouseMotion:
+			_update_targeting_hover_info(event.position)
+			if targeting_cursor:
+				targeting_cursor.queue_redraw()
+			queue_redraw_all()
+
 	if armory_modal and armory_modal.visible:
 		if (event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE):
 			close_armory()
@@ -4332,6 +4351,16 @@ func _input(event: InputEvent) -> void:
 			return
 
 func _unhandled_input(event: InputEvent) -> void:
+	if is_targeting_active():
+		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+			cancel_targeting()
+			get_viewport().set_input_as_handled()
+			return
+		elif event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
+			cancel_targeting()
+			get_viewport().set_input_as_handled()
+			return
+
 	if not active_story_trigger_overlay.is_empty():
 		if (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed) or \
 		   (event is InputEventKey and event.pressed and (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER or event.keycode == KEY_ESCAPE)):
@@ -4428,6 +4457,9 @@ func _unhandled_input(event: InputEvent) -> void:
 func _handle_tile_click(tile: Vector2i) -> void:
 	if not active_trap_overlay.is_empty():
 		resolve_trap_overlay_click()
+		return
+	if is_targeting_active():
+		resolve_targeting_click(tile)
 		return
 	if current_phase != "hero_phase" or current_role != "player":
 		return
@@ -5750,6 +5782,412 @@ func _find_spell_target_hero(target_id: String) -> Dictionary:
 			if h.get("id") == target_id:
 				return h
 	return get_active_hero()
+
+# --- Baldur's Gate 1 Style Action Targeting System ---
+
+func close_all_dialogs() -> void:
+	close_hero_detail_modal()
+	close_monster_detail_modal()
+	close_spell_cast_modal()
+	close_item_use_modal()
+	close_disarm_modal()
+	close_armory()
+	close_treasure_modal()
+	close_elf_spell_selection_modal()
+	if ai_confirm_modal and ai_confirm_modal.visible:
+		ai_confirm_modal.visible = false
+	if not active_story_trigger_overlay.is_empty():
+		active_story_trigger_overlay.clear()
+	_update_ui()
+	queue_redraw_all()
+
+func is_targeting_active() -> bool:
+	return bool(active_targeting.get("active", false))
+
+func get_active_targeting() -> Dictionary:
+	return active_targeting
+
+func cancel_targeting() -> void:
+	if is_targeting_active():
+		var act_name = str(active_targeting.get("name", "Action"))
+		_log("[TARGETING] Cancelled %s targeting mode." % act_name)
+	active_targeting.clear()
+	if targeting_cursor:
+		targeting_cursor.queue_redraw()
+	queue_redraw_all()
+	_update_ui()
+
+func toggle_targeting(action_type: String, action_id: String, hero_id: String = "") -> void:
+	if is_targeting_active() and str(active_targeting.get("type")) == action_type and str(active_targeting.get("id")) == action_id:
+		cancel_targeting()
+		return
+	start_targeting(action_type, action_id, hero_id)
+
+func start_targeting(action_type: String, action_id: String, hero_id: String = "") -> Dictionary:
+	# 1. Close any open dialog boxes immediately (just like BG1)
+	close_all_dialogs()
+
+	# 2. Determine casting / using hero
+	var hero: Dictionary = {}
+	if hero_id != "":
+		for h in heroes:
+			if str(h.get("id")) == hero_id:
+				hero = h
+				break
+	if hero.is_empty():
+		hero = get_active_hero()
+	if hero.is_empty():
+		return { "success": false, "error": "No active hero for targeting" }
+
+	var hid = str(hero.get("id"))
+	var hname = str(hero.get("name", "Hero"))
+
+	# 3. Check action economy for spell/attack
+	if action_type in ["spell", "attack"] and has_acted_this_turn:
+		show_unavailable_notice("Not enough actions", hero.get("grid_pos", Vector2i(-1, -1)))
+		return { "success": false, "error": "Already acted this turn" }
+
+	# 4. Resolve metadata (name, deck, target_type, icons)
+	var t_name = action_id
+	var t_deck = ""
+	var t_desc = ""
+	var t_type = "monster"
+	var t_icon: Texture2D = null
+	var t_char = "⚡"
+
+	match action_type:
+		"spell":
+			var s_meta = HeroQuestSpells.get_spell(action_id)
+			t_name = str(s_meta.get("name", action_id.capitalize()))
+			t_deck = str(s_meta.get("deck", "magic")).to_lower()
+			t_desc = str(s_meta.get("description", ""))
+			t_type = str(s_meta.get("target_type", "monster"))
+			t_icon = get_ai_icon_texture("spell", action_id)
+			t_char = str(s_meta.get("icon", "🔮"))
+		"item":
+			var it_clean = action_id.to_lower().strip_edges()
+			var it_meta = HeroQuestEquipment.get_item(it_clean)
+			t_name = str(it_meta.get("name", it_clean.replace("_", " ").capitalize()))
+			t_desc = str(it_meta.get("description", ""))
+			if it_clean.contains("potion"):
+				t_type = "hero"
+				t_char = "🧪"
+			elif it_clean == "holy_water":
+				t_type = "monster"
+				t_char = "💧"
+			elif not HeroQuestEquipment.get_weapon(it_clean).is_empty():
+				t_type = "monster"
+				t_char = "⚔️"
+			else:
+				t_type = "hero"
+				t_char = "📦"
+			t_icon = get_ai_icon_texture("item", it_clean)
+		"attack":
+			var w_clean = action_id.to_lower().strip_edges()
+			var w_meta = HeroQuestEquipment.get_weapon(w_clean)
+			var w_name = str(w_meta.get("name", w_clean.replace("_", " ").capitalize()))
+			t_name = "Attack (%s)" % w_name
+			t_desc = str(w_meta.get("description", ""))
+			t_type = "monster"
+			t_icon = get_ai_icon_texture("weapon", w_clean)
+			t_char = "⚔️"
+		_:
+			t_name = action_id.capitalize()
+			t_type = "monster"
+
+	active_targeting = {
+		"active": true,
+		"type": action_type,
+		"id": action_id,
+		"name": t_name,
+		"hero_id": hid,
+		"hero_name": hname,
+		"deck": t_deck,
+		"description": t_desc,
+		"target_type": t_type,
+		"icon": t_icon,
+		"token": get_hero_token_texture(hero),
+		"icon_char": t_char,
+		"hovered_target": {}
+	}
+
+	_log("[TARGETING] Targeting activated for [b]%s[/b] by %s. Click a %s on the board or portrait! (R-Click/ESC to cancel)" % [
+		t_name, hname, t_type.to_upper()
+	])
+
+	if targeting_cursor:
+		targeting_cursor.queue_redraw()
+	queue_redraw_all()
+	_update_ui()
+	return { "success": true, "targeting": active_targeting }
+
+func resolve_targeting_click(tile: Vector2i) -> Dictionary:
+	if not is_targeting_active():
+		return { "success": false, "error": "Targeting is not active" }
+
+	var t_type = str(active_targeting.get("target_type", "monster"))
+
+	var target_entity: Dictionary = {}
+
+	if t_type == "monster":
+		for m in monsters:
+			if bool(m.get("is_alive", false)) and m.get("grid_pos") == tile:
+				target_entity = m
+				break
+	elif t_type == "hero":
+		for h in heroes:
+			if bool(h.get("is_on_board", false)) and int(h.get("current_bp", 1)) > 0 and h.get("grid_pos") == tile:
+				target_entity = h
+				break
+
+	if target_entity.is_empty():
+		show_unavailable_notice("Invalid Target", tile)
+		return { "success": false, "error": "No valid %s target at tile (%d, %d)" % [t_type, tile.x, tile.y] }
+
+	var target_id = str(target_entity.get("id"))
+	return resolve_targeting_entity(t_type, target_id)
+
+func resolve_targeting_entity(entity_type: String, entity_id: String) -> Dictionary:
+	if not is_targeting_active():
+		return { "success": false, "error": "Targeting is not active" }
+
+	var expected_type = str(active_targeting.get("target_type", "monster"))
+	if entity_type != expected_type and expected_type != "any":
+		show_unavailable_notice("Requires %s" % expected_type.capitalize(), Vector2i(-1, -1))
+		return { "success": false, "error": "Entity %s is %s, but %s requires %s" % [entity_id, entity_type, active_targeting.get("name"), expected_type] }
+
+	var a_type = str(active_targeting.get("type", "spell"))
+	var a_id = str(active_targeting.get("id", ""))
+	var hid = str(active_targeting.get("hero_id", ""))
+
+	var result: Dictionary = {}
+	match a_type:
+		"spell":
+			result = cast_spell(a_id, entity_id)
+		"item":
+			result = use_item(hid, a_id, entity_id)
+		"attack":
+			result = attack_adjacent_monster(entity_id, a_id)
+		_:
+			result = { "success": false, "error": "Unknown targeting action type: " + a_type }
+
+	if result.get("success", false):
+		cancel_targeting()
+	return result
+
+func _update_targeting_hover_info(screen_pos: Vector2) -> void:
+	if not is_targeting_active():
+		return
+
+	var local_pos = screen_pos - board_offset
+	var tx = int(floor(local_pos.x / tile_size))
+	var ty = int(floor(local_pos.y / tile_size))
+	if tx < 0 or tx >= grid_cols or ty < 0 or ty >= grid_rows:
+		active_targeting["hovered_target"] = {}
+		return
+
+	var tile = Vector2i(tx, ty)
+	var t_type = str(active_targeting.get("target_type", "monster"))
+
+	if t_type == "monster":
+		for m in monsters:
+			if bool(m.get("is_alive", false)) and m.get("grid_pos") == tile and is_monster_currently_visible(m):
+				active_targeting["hovered_target"] = {
+					"type": "monster",
+					"id": str(m.get("id")),
+					"name": str(m.get("name")),
+					"bp": int(m.get("current_bp", 1)),
+					"max_bp": int(m.get("bodyPoints", 1)),
+					"valid": true,
+					"tile": [tile.x, tile.y]
+				}
+				return
+	elif t_type == "hero":
+		for h in heroes:
+			if bool(h.get("is_on_board", false)) and int(h.get("current_bp", 1)) > 0 and h.get("grid_pos") == tile:
+				active_targeting["hovered_target"] = {
+					"type": "hero",
+					"id": str(h.get("id")),
+					"name": str(h.get("name")),
+					"bp": int(h.get("current_bp", 1)),
+					"max_bp": int(h.get("bodyPoints", 1)),
+					"valid": true,
+					"tile": [tile.x, tile.y]
+				}
+				return
+
+	active_targeting["hovered_target"] = {}
+
+func _setup_targeting_system() -> void:
+	if not targeting_cursor:
+		targeting_cursor = Control.new()
+		targeting_cursor.name = "TargetingCursorOverlay"
+		targeting_cursor.set_anchors_preset(Control.PRESET_FULL_RECT)
+		targeting_cursor.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var ui_node = get_node_or_null("UI")
+		if ui_node:
+			ui_node.add_child(targeting_cursor)
+		else:
+			add_child(targeting_cursor)
+		targeting_cursor.draw.connect(_on_targeting_cursor_draw)
+
+func _on_targeting_cursor_draw() -> void:
+	if not is_targeting_active():
+		return
+
+	var mouse_pos = targeting_cursor.get_local_mouse_position()
+	if targeting_cursor.has_meta("test_mouse_pos"):
+		mouse_pos = targeting_cursor.get_meta("test_mouse_pos")
+
+	# 1. BG1 Style Targeting Pointer / Reticle
+	var reticle_col = Color(1.0, 0.85, 0.25, 0.95)
+	var deck = str(active_targeting.get("deck", "")).to_lower()
+	match deck:
+		"fire": reticle_col = Color(1.0, 0.45, 0.15, 0.98)
+		"water": reticle_col = Color(0.15, 0.80, 1.0, 0.98)
+		"earth": reticle_col = Color(0.55, 0.85, 0.45, 0.98)
+		"air": reticle_col = Color(0.60, 0.90, 1.0, 0.98)
+		_:
+			if active_targeting.get("target_type") == "hero":
+				reticle_col = Color(0.25, 0.95, 0.50, 0.98)
+			else:
+				reticle_col = Color(1.0, 0.82, 0.20, 0.98)
+
+	# Concentric targeting rings
+	targeting_cursor.draw_arc(mouse_pos, 13.0, 0, TAU, 32, reticle_col, 2.0)
+	targeting_cursor.draw_arc(mouse_pos, 7.0, 0, TAU, 24, Color(reticle_col.r, reticle_col.g, reticle_col.b, 0.6), 1.0)
+	targeting_cursor.draw_circle(mouse_pos, 2.5, Color.WHITE)
+
+	# Crosshair spikes
+	targeting_cursor.draw_line(mouse_pos + Vector2(0, -5), mouse_pos + Vector2(0, -18), reticle_col, 1.5)
+	targeting_cursor.draw_line(mouse_pos + Vector2(0, 5), mouse_pos + Vector2(0, 18), reticle_col, 1.5)
+	targeting_cursor.draw_line(mouse_pos + Vector2(-5, 0), mouse_pos + Vector2(-18, 0), reticle_col, 1.5)
+	targeting_cursor.draw_line(mouse_pos + Vector2(5, 0), mouse_pos + Vector2(18, 0), reticle_col, 1.5)
+
+	# 2. Token / Icon Badge floating at mouse_pos + Vector2(18, 16)
+	var badge_pos = mouse_pos + Vector2(18, 16)
+	var badge_size = Vector2(36, 36)
+
+	# Drop shadow and background
+	targeting_cursor.draw_rect(Rect2(badge_pos + Vector2(2, 2), badge_size), Color(0.0, 0.0, 0.0, 0.65), true)
+	targeting_cursor.draw_rect(Rect2(badge_pos, badge_size), Color(0.08, 0.11, 0.16, 0.96), true)
+	targeting_cursor.draw_rect(Rect2(badge_pos, badge_size), reticle_col, false, 2.0)
+
+	# Draw token/spell/item icon inside badge
+	var itex: Texture2D = active_targeting.get("icon", null)
+	if itex == null:
+		itex = active_targeting.get("token", null)
+
+	if itex:
+		var inner_rect = Rect2(badge_pos.x + 3, badge_pos.y + 3, 30, 30)
+		targeting_cursor.draw_texture_rect(itex, inner_rect, false)
+	else:
+		var char_glyph = str(active_targeting.get("icon_char", "⚡"))
+		var font = ThemeDB.fallback_font
+		var gw = font.get_string_size(char_glyph, HORIZONTAL_ALIGNMENT_CENTER, -1, 16).x
+		targeting_cursor.draw_string(font, Vector2(badge_pos.x + 18 - gw * 0.5, badge_pos.y + 24), char_glyph, HORIZONTAL_ALIGNMENT_CENTER, -1, 16, Color.WHITE)
+
+	# 3. Floating Targeting Text Banner
+	var act_name = str(active_targeting.get("name", "Action")).to_upper()
+	var line1 = "[TARGET: %s]" % act_name
+	var line2 = "[L-CLICK: SELECT  |  R-CLICK: CANCEL]"
+	var font = ThemeDB.fallback_font
+	var fsize1 = 11
+	var fsize2 = 9
+
+	var hovered_info = active_targeting.get("hovered_target", {})
+	var line3 = ""
+	var line3_col = Color.WHITE
+	if not hovered_info.is_empty():
+		var h_name = str(hovered_info.get("name", "Target"))
+		var h_bp = int(hovered_info.get("bp", 0))
+		var h_max = int(hovered_info.get("max_bp", 0))
+		line3 = "► LOCKED ON: %s (%d/%d BP)" % [h_name, h_bp, h_max]
+		line3_col = Color(0.3, 1.0, 0.45) if hovered_info.get("valid", true) else Color(1.0, 0.4, 0.4)
+
+	var s1 = font.get_string_size(line1, HORIZONTAL_ALIGNMENT_LEFT, -1, fsize1)
+	var s2 = font.get_string_size(line2, HORIZONTAL_ALIGNMENT_LEFT, -1, fsize2)
+	var s3 = font.get_string_size(line3, HORIZONTAL_ALIGNMENT_LEFT, -1, 10) if line3 != "" else Vector2.ZERO
+
+	var max_w = maxf(s1.x, maxf(s2.x, s3.x)) + 14.0
+	var total_h = (46.0 if line3 != "" else 34.0)
+	var pill_pos = badge_pos + Vector2(badge_size.x + 6, 0)
+
+	var vp_size = targeting_cursor.get_viewport_rect().size
+	if pill_pos.x + max_w > vp_size.x - 10:
+		pill_pos.x = badge_pos.x - max_w - 6
+
+	var pill_rect = Rect2(pill_pos, Vector2(max_w, total_h))
+	targeting_cursor.draw_rect(Rect2(pill_rect.position + Vector2(2, 2), pill_rect.size), Color(0.0, 0.0, 0.0, 0.65), true)
+	targeting_cursor.draw_rect(pill_rect, Color(0.06, 0.08, 0.13, 0.95), true)
+	targeting_cursor.draw_rect(pill_rect, Color(reticle_col.r, reticle_col.g, reticle_col.b, 0.85), false, 1.5)
+
+	targeting_cursor.draw_string(font, Vector2(pill_pos.x + 7, pill_pos.y + 14), line1, HORIZONTAL_ALIGNMENT_LEFT, -1, fsize1, reticle_col)
+	targeting_cursor.draw_string(font, Vector2(pill_pos.x + 7, pill_pos.y + 28), line2, HORIZONTAL_ALIGNMENT_LEFT, -1, fsize2, Color(0.8, 0.85, 0.92, 0.9))
+	if line3 != "":
+		targeting_cursor.draw_string(font, Vector2(pill_pos.x + 7, pill_pos.y + 42), line3, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, line3_col)
+
+func _draw_targeting_board_highlights(canvas: CanvasItem) -> void:
+	if not is_targeting_active():
+		return
+
+	var t_type = str(active_targeting.get("target_type", "monster"))
+	var pulse = (sin(Time.get_ticks_msec() * 0.006) + 1.0) * 0.5
+
+	if t_type == "monster":
+		for m in monsters:
+			if bool(m.get("is_alive", false)) and is_monster_currently_visible(m):
+				var m_pos: Vector2i = m.get("grid_pos", Vector2i(-1, -1))
+				if m_pos.x < 0 or m_pos.y < 0:
+					continue
+				var center = board_offset + Vector2((m_pos.x + 0.5) * tile_size, (m_pos.y + 0.5) * tile_size)
+				var is_hovered = (hovered_tile == m_pos)
+				var ring_col = Color(1.0, 0.25, 0.2, 0.70 + pulse * 0.25) if not is_hovered else Color(1.0, 0.85, 0.2, 0.95)
+				var r_size = tile_size * (0.46 if not is_hovered else 0.49)
+				canvas.draw_arc(center, r_size, 0, TAU, 32, ring_col, 2.5 if is_hovered else 1.8)
+				canvas.draw_arc(center, r_size + 4.0, 0, TAU, 24, Color(ring_col.r, ring_col.g, ring_col.b, 0.4), 1.0)
+				_draw_target_brackets(canvas, center, r_size, ring_col)
+
+	elif t_type == "hero":
+		for h in heroes:
+			if bool(h.get("is_on_board", false)) and int(h.get("current_bp", 1)) > 0:
+				var h_pos: Vector2i = h.get("grid_pos", Vector2i(-1, -1))
+				if h_pos.x < 0 or h_pos.y < 0:
+					continue
+				var center = board_offset + Vector2((h_pos.x + 0.5) * tile_size, (h_pos.y + 0.5) * tile_size)
+				var is_hovered = (hovered_tile == h_pos)
+				var ring_col = Color(0.2, 0.95, 0.45, 0.70 + pulse * 0.25) if not is_hovered else Color(1.0, 0.85, 0.2, 0.95)
+				var r_size = tile_size * (0.46 if not is_hovered else 0.49)
+				canvas.draw_arc(center, r_size, 0, TAU, 32, ring_col, 2.5 if is_hovered else 1.8)
+				canvas.draw_arc(center, r_size + 4.0, 0, TAU, 24, Color(ring_col.r, ring_col.g, ring_col.b, 0.4), 1.0)
+				_draw_target_brackets(canvas, center, r_size, ring_col)
+
+func _draw_target_brackets(canvas: CanvasItem, center: Vector2, radius: float, col: Color) -> void:
+	var b_len = 6.0
+	var offset = radius * 0.9
+	canvas.draw_line(center + Vector2(-offset, -offset), center + Vector2(-offset + b_len, -offset), col, 2.0)
+	canvas.draw_line(center + Vector2(-offset, -offset), center + Vector2(-offset, -offset + b_len), col, 2.0)
+	canvas.draw_line(center + Vector2(offset, -offset), center + Vector2(offset - b_len, -offset), col, 2.0)
+	canvas.draw_line(center + Vector2(offset, -offset), center + Vector2(offset - b_len, -offset + b_len), col, 2.0)
+	canvas.draw_line(center + Vector2(-offset, offset), center + Vector2(-offset + b_len, offset), col, 2.0)
+	canvas.draw_line(center + Vector2(-offset, offset), center + Vector2(-offset, offset - b_len), col, 2.0)
+	canvas.draw_line(center + Vector2(offset, offset), center + Vector2(offset - b_len, offset), col, 2.0)
+	canvas.draw_line(center + Vector2(offset, offset), center + Vector2(offset, offset - b_len), col, 2.0)
+
+func _get_valid_targeting_ids() -> Array:
+	var out: Array = []
+	if not is_targeting_active():
+		return out
+	var t_type = str(active_targeting.get("target_type", "monster"))
+	if t_type == "monster":
+		for m in monsters:
+			if bool(m.get("is_alive", false)) and int(m.get("current_bp", 1)) > 0:
+				out.append(str(m.get("id")))
+	elif t_type == "hero":
+		for h in heroes:
+			if int(h.get("current_bp", 1)) > 0 and bool(h.get("is_on_board", false)):
+				out.append(str(h.get("id")))
+	return out
 
 func is_door_at(tile: Vector2i) -> bool:
 	for d in doors:
@@ -7824,7 +8262,10 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 	card.tooltip_text = "Click to inspect %s's full character sheet" % get_hero_display_title(h)
 	card.gui_input.connect(func(event: InputEvent):
 		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			open_hero_detail_modal(h)
+			if is_targeting_active():
+				resolve_targeting_entity("hero", h_id)
+			else:
+				open_hero_detail_modal(h)
 	)
 
 	var margin = MarginContainer.new()
@@ -7872,7 +8313,12 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 	portrait_btn.add_theme_stylebox_override("hover", port_sb)
 	portrait_btn.add_theme_stylebox_override("pressed", port_sb)
 
-	portrait_btn.pressed.connect(func(): open_hero_detail_modal(h))
+	portrait_btn.pressed.connect(func():
+		if is_targeting_active():
+			resolve_targeting_entity("hero", h_id)
+		else:
+			open_hero_detail_modal(h)
+	)
 	main_hbox.add_child(portrait_btn)
 
 	var vbox = VBoxContainer.new()
@@ -8220,6 +8666,13 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 		b_sb.bg_color = Color(0.10, 0.13, 0.18, 0.85)
 		b_sb.border_color = Color(0.3, 0.45, 0.6, 0.6)
 		b_sb.set_border_width_all(1)
+
+		var is_btn_targeted = (is_targeting_active() and str(active_targeting.get("id")) == str(itm.get("id")) and str(active_targeting.get("hero_id")) == str(h.get("id")))
+		if is_btn_targeted:
+			b_sb.bg_color = Color(0.28, 0.22, 0.08, 0.95)
+			b_sb.border_color = Color(1.0, 0.85, 0.25, 1.0)
+			b_sb.set_border_width_all(2)
+
 		ibtn.add_theme_stylebox_override("normal", b_sb)
 
 		if bool(itm.get("flashing", false)):
@@ -8229,7 +8682,9 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 		if itype == "spell":
 			if is_active:
 				ibtn.disabled = has_acted_this_turn
-				ibtn.pressed.connect(toggle_spell_cast_modal)
+				var sp_id = str(itm.get("id"))
+				var hid = str(h.get("id"))
+				ibtn.pressed.connect(func(): toggle_targeting("spell", sp_id, hid))
 				if ibtn.disabled:
 					var s_shield = Control.new()
 					s_shield.name = "DisabledClickShield"
@@ -8244,7 +8699,27 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 				ibtn.pressed.connect(func(): open_hero_detail_modal(h))
 		elif itype == "item":
 			if is_active:
-				ibtn.pressed.connect(toggle_item_use_modal)
+				var item_id_str = str(itm.get("id"))
+				var hid = str(h.get("id"))
+				ibtn.pressed.connect(func(): toggle_targeting("item", item_id_str, hid))
+			else:
+				ibtn.pressed.connect(func(): open_hero_detail_modal(h))
+		elif itype == "weapon":
+			if is_active:
+				ibtn.disabled = has_acted_this_turn
+				var wep_id_str = str(itm.get("id"))
+				var hid = str(h.get("id"))
+				ibtn.pressed.connect(func(): toggle_targeting("attack", wep_id_str, hid))
+				if ibtn.disabled:
+					var w_shield = Control.new()
+					w_shield.name = "DisabledClickShield"
+					w_shield.set_anchors_preset(Control.PRESET_FULL_RECT)
+					w_shield.mouse_filter = Control.MOUSE_FILTER_STOP
+					w_shield.gui_input.connect(func(ev: InputEvent):
+						if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
+							show_unavailable_notice("Not enough actions", Vector2i(-1, -1), ibtn.global_position + ibtn.size * 0.5)
+					)
+					ibtn.add_child(w_shield)
 			else:
 				ibtn.pressed.connect(func(): open_hero_detail_modal(h))
 		elif itype == "disarm_action":
@@ -8261,7 +8736,7 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 				)
 				ibtn.add_child(d_shield)
 		else:
-			# Weapon, Armor, Innate Ability
+			# Armor, Innate Ability
 			ibtn.pressed.connect(func(): open_hero_detail_modal(h))
 
 		icon_grid.add_child(ibtn)
@@ -8593,6 +9068,16 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 				ivbox.add_child(it_desc_lbl)
 
 				imarg.add_child(ivbox)
+				if is_act and (it_cat in ["item", "weapon"]):
+					it_panel.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+					it_panel.tooltip_text = "Click to select target for %s (closes sheet)" % iname
+					var cur_item_id = item_str
+					var cur_act_type = "attack" if it_cat == "weapon" else "item"
+					var cur_h_id = h_id
+					it_panel.gui_input.connect(func(ev: InputEvent):
+						if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
+							start_targeting(cur_act_type, cur_item_id, cur_h_id)
+					)
 				inv_grid.add_child(it_panel)
 
 	# 3. Spells Section
@@ -8668,6 +9153,16 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 				sp_desc_lbl.add_theme_font_size_override("font_size", 10)
 				sp_desc_lbl.add_theme_color_override("font_color", Color(0.8, 0.82, 0.9, 0.85))
 				svbox.add_child(sp_desc_lbl)
+
+				if is_act:
+					sp_panel.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+					sp_panel.tooltip_text = "Click to select target for %s (closes sheet)" % s_name
+					var cur_sp_id = str(s_id)
+					var cur_h_id = h_id
+					sp_panel.gui_input.connect(func(ev: InputEvent):
+						if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
+							start_targeting("spell", cur_sp_id, cur_h_id)
+					)
 
 				sp_grid.add_child(sp_panel)
 
@@ -9299,7 +9794,10 @@ func _create_enemy_card(m: Dictionary, is_visible: bool) -> PanelContainer:
 	card.tooltip_text = "Click to inspect %s's Bestiary Codex" % m_name
 	card.gui_input.connect(func(event: InputEvent):
 		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			open_monster_detail_modal(m)
+			if is_targeting_active():
+				resolve_targeting_entity("monster", str(m.get("id")))
+			else:
+				open_monster_detail_modal(m)
 	)
 
 	var margin = MarginContainer.new()
@@ -9346,7 +9844,10 @@ func _create_enemy_card(m: Dictionary, is_visible: bool) -> PanelContainer:
 		portrait_btn.add_child(token_rect)
 
 	portrait_btn.pressed.connect(func():
-		open_monster_detail_modal(m)
+		if is_targeting_active():
+			resolve_targeting_entity("monster", str(m.get("id")))
+		else:
+			open_monster_detail_modal(m)
 	)
 	main_hbox.add_child(portrait_btn)
 
@@ -10252,6 +10753,17 @@ func get_telemetry_state() -> Dictionary:
 		"turnState": turn_state,
 		"elfElement": current_elf_element,
 		"elfSpellModalVisible": elf_spell_modal.visible if elf_spell_modal else false,
+		"activeTargeting": {
+			"active": is_targeting_active(),
+			"type": str(active_targeting.get("type", "")),
+			"id": str(active_targeting.get("id", "")),
+			"name": str(active_targeting.get("name", "")),
+			"heroId": str(active_targeting.get("hero_id", "")),
+			"heroName": str(active_targeting.get("hero_name", "")),
+			"targetType": str(active_targeting.get("target_type", "")),
+			"validTargets": _get_valid_targeting_ids(),
+			"hoveredTarget": active_targeting.get("hovered_target", {})
+		},
 		"spellPanelOpen": spell_cast_modal.visible if spell_cast_modal else false,
 		"itemPanelOpen": item_use_modal.visible if item_use_modal else false,
 		"disarmModalOpen": disarm_trap_modal.visible if disarm_trap_modal else false,
@@ -10523,6 +11035,60 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 		"dismiss_dice_roll":
 			dismiss_active_dice_roll()
 			return { "success": true }
+		"start_targeting":
+			var a_type = str(action_data.get("type", action_data.get("action_type", "spell")))
+			var a_id = str(action_data.get("id", action_data.get("action_id", "")))
+			var h_id = str(action_data.get("hero_id", action_data.get("heroId", "")))
+			return start_targeting(a_type, a_id, h_id)
+		"toggle_targeting":
+			var a_type = str(action_data.get("type", action_data.get("action_type", "spell")))
+			var a_id = str(action_data.get("id", action_data.get("action_id", "")))
+			var h_id = str(action_data.get("hero_id", action_data.get("heroId", "")))
+			toggle_targeting(a_type, a_id, h_id)
+			return {
+				"success": true,
+				"active": is_targeting_active(),
+				"targeting": active_targeting
+			}
+		"cancel_targeting":
+			cancel_targeting()
+			return {
+				"success": true,
+				"active": false
+			}
+		"select_target":
+			var t_id = str(action_data.get("target_id", action_data.get("targetId", action_data.get("id", ""))))
+			var tile_arr = action_data.get("tile", action_data.get("grid_pos", []))
+			if tile_arr is Array and tile_arr.size() >= 2:
+				return resolve_targeting_click(Vector2i(int(tile_arr[0]), int(tile_arr[1])))
+			elif t_id != "":
+				var t_type = str(action_data.get("target_type", action_data.get("type", "")))
+				if t_type == "":
+					t_type = str(active_targeting.get("target_type", "monster"))
+				return resolve_targeting_entity(t_type, t_id)
+			return { "success": false, "error": "No target specified for select_target" }
+		"click_toolbar_icon":
+			var h_id = str(action_data.get("hero_id", action_data.get("heroId", "")))
+			var a_type = str(action_data.get("type", "spell"))
+			var a_id = str(action_data.get("id", ""))
+			toggle_targeting(a_type, a_id, h_id)
+			return {
+				"success": true,
+				"active": is_targeting_active(),
+				"targeting": active_targeting
+			}
+		"close_all_dialogs":
+			close_all_dialogs()
+			return { "success": true }
+		"set_test_mouse_pos":
+			var px = float(action_data.get("x", 400.0))
+			var py = float(action_data.get("y", 300.0))
+			if targeting_cursor:
+				targeting_cursor.set_meta("test_mouse_pos", Vector2(px, py))
+				_update_targeting_hover_info(Vector2(px, py))
+				targeting_cursor.queue_redraw()
+			queue_redraw_all()
+			return { "success": true, "pos": [px, py] }
 		"toggle_log_view", "toggle_log_display_mode":
 			var mode = toggle_log_display_mode()
 			return { "success": true, "mode": mode, "displayedLogText": log_label.text if log_label else "" }
@@ -12051,6 +12617,7 @@ func _draw_board(canvas: CanvasItem) -> void:
 			canvas.draw_string(ThemeDB.fallback_font, Vector2(badge_rect.position.x + 6, badge_rect.position.y + 12), badge_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 11, Color(1.0, 0.9, 0.2, 1.0))
 
 	# Draw active dynamic VFX and floating text banners
+	_draw_targeting_board_highlights(canvas)
 	_draw_vfx_effects(canvas)
 	_draw_damage_hit_auras(canvas)
 	_draw_active_enemy_turn_highlight(canvas)
