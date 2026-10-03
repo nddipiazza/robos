@@ -267,3 +267,18 @@ class TabletopQAPlayer:
             except Exception as e:
                 return {"success": False, "error": str(e)}
         return res
+
+    def get_furniture_at(self, x: int, y: int) -> dict:
+        st = self.get_state()
+        for f in st.get("furniture", []):
+            fx = f.get("x", 0)
+            fy = f.get("y", 0)
+            fw = f.get("width", 1)
+            fh = f.get("height", 1)
+            if fx <= x < fx + fw and fy <= y < fy + fh:
+                return f
+        return {}
+
+    def is_tile_occupied_by_furniture(self, x: int, y: int) -> bool:
+        return bool(self.get_furniture_at(x, y))
+
