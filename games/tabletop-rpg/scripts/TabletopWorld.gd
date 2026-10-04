@@ -297,6 +297,19 @@ var tex_rpg_button_hover: Texture2D = null
 @onready var treasure_outcome_text: Label = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox/OutcomeBanner/OutcomeMargin/OutcomeText")
 @onready var treasure_btn_resolve: Button = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/ButtonBox/BtnResolve")
 var _treasure_deck_texture_res: Texture2D = null
+var _treasure_template_texture_res: Texture2D = null
+var _card_frame_treasure: Texture2D = null
+var _card_frame_hazard: Texture2D = null
+var _card_art_gold_coins: Texture2D = null
+var _card_art_gems_jewels: Texture2D = null
+var _card_art_potion_healing: Texture2D = null
+var _card_art_potion_strength: Texture2D = null
+var _card_art_potion_defense: Texture2D = null
+var _card_art_holy_water: Texture2D = null
+var _card_art_hazard_pit: Texture2D = null
+var _card_art_hazard_poison: Texture2D = null
+var _card_art_wandering_orc: Texture2D = null
+var _card_art_quest_chest: Texture2D = null
 
 var active_targeting: Dictionary = {}
 var targeting_cursor: Control = null
@@ -1861,8 +1874,8 @@ func _setup_ui_signals() -> void:
 		btn_cast_spell.pressed.connect(toggle_spell_cast_modal)
 	if btn_use_item and not btn_use_item.pressed.is_connected(toggle_item_use_modal):
 		btn_use_item.pressed.connect(toggle_item_use_modal)
-	if btn_search and not btn_search.pressed.is_connected(search_room):
-		btn_search.pressed.connect(search_room)
+	if btn_search and not btn_search.pressed.is_connected(_on_btn_search_pressed):
+		btn_search.pressed.connect(_on_btn_search_pressed)
 	if btn_end_turn and not btn_end_turn.pressed.is_connected(end_turn):
 		btn_end_turn.pressed.connect(end_turn)
 	if btn_map_end_turn and not btn_map_end_turn.pressed.is_connected(end_turn):
@@ -5488,7 +5501,7 @@ func _input(event: InputEvent) -> void:
 			return
 	if not active_treasure_overlay.is_empty():
 		if (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed) or \
-		   (event is InputEventKey and event.pressed and (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER)):
+		   (event is InputEventKey and event.pressed and (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER or event.keycode == KEY_ESCAPE)):
 			resolve_treasure_overlay_click()
 			get_viewport().set_input_as_handled()
 			return
@@ -5550,7 +5563,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 	if not active_treasure_overlay.is_empty():
 		if (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed) or \
-		   (event is InputEventKey and event.pressed and (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER)):
+		   (event is InputEventKey and event.pressed and (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER or event.keycode == KEY_ESCAPE)):
 			resolve_treasure_overlay_click()
 			get_viewport().set_input_as_handled()
 			return
@@ -8031,6 +8044,9 @@ func resolve_story_trigger_overlay_click() -> Dictionary:
 		"itemAwarded": item_data != null,
 		"monstersSpawned": spawns.size()
 	}
+
+func _on_btn_search_pressed() -> void:
+	search_room(true)
 
 func search_room(is_interactive: bool = false) -> Dictionary:
 	var hero = get_active_hero()
@@ -10535,11 +10551,102 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 				bm.add_child(b_lbl)
 				ab_vbox.add_child(b_panel)
 
+func _load_treasure_card_assets() -> void:
+	if _card_frame_treasure == null and ResourceLoader.exists("res://assets/cards/card_frame_treasure.png"):
+		_card_frame_treasure = load("res://assets/cards/card_frame_treasure.png")
+	if _card_frame_hazard == null and ResourceLoader.exists("res://assets/cards/card_frame_hazard.png"):
+		_card_frame_hazard = load("res://assets/cards/card_frame_hazard.png")
+	if _card_art_gold_coins == null and ResourceLoader.exists("res://assets/cards/card_art_gold_coins.png"):
+		_card_art_gold_coins = load("res://assets/cards/card_art_gold_coins.png")
+	if _card_art_gems_jewels == null and ResourceLoader.exists("res://assets/cards/card_art_gems_jewels.png"):
+		_card_art_gems_jewels = load("res://assets/cards/card_art_gems_jewels.png")
+	if _card_art_potion_healing == null and ResourceLoader.exists("res://assets/cards/card_art_potion_healing.png"):
+		_card_art_potion_healing = load("res://assets/cards/card_art_potion_healing.png")
+	if _card_art_potion_strength == null and ResourceLoader.exists("res://assets/cards/card_art_potion_strength.png"):
+		_card_art_potion_strength = load("res://assets/cards/card_art_potion_strength.png")
+	if _card_art_potion_defense == null and ResourceLoader.exists("res://assets/cards/card_art_potion_defense.png"):
+		_card_art_potion_defense = load("res://assets/cards/card_art_potion_defense.png")
+	if _card_art_holy_water == null and ResourceLoader.exists("res://assets/cards/card_art_holy_water.png"):
+		_card_art_holy_water = load("res://assets/cards/card_art_holy_water.png")
+	if _card_art_hazard_pit == null and ResourceLoader.exists("res://assets/cards/card_art_hazard_pit.png"):
+		_card_art_hazard_pit = load("res://assets/cards/card_art_hazard_pit.png")
+	if _card_art_hazard_poison == null and ResourceLoader.exists("res://assets/cards/card_art_hazard_poison.png"):
+		_card_art_hazard_poison = load("res://assets/cards/card_art_hazard_poison.png")
+	if _card_art_wandering_orc == null and ResourceLoader.exists("res://assets/cards/card_art_wandering_orc.png"):
+		_card_art_wandering_orc = load("res://assets/cards/card_art_wandering_orc.png")
+	if _card_art_quest_chest == null and ResourceLoader.exists("res://assets/cards/card_art_quest_chest.png"):
+		_card_art_quest_chest = load("res://assets/cards/card_art_quest_chest.png")
+	if _treasure_template_texture_res == null and ResourceLoader.exists("res://assets/cards/treasure_card_template.png"):
+		_treasure_template_texture_res = load("res://assets/cards/treasure_card_template.png")
+	if _treasure_deck_texture_res == null and ResourceLoader.exists("res://assets/cards/treasure_card_deck.png"):
+		_treasure_deck_texture_res = load("res://assets/cards/treasure_card_deck.png")
+
+func _get_treasure_card_art_texture(card: Dictionary, is_quest_note: bool = false) -> Texture2D:
+	_load_treasure_card_assets()
+	if is_quest_note:
+		if _card_art_quest_chest:
+			return _card_art_quest_chest
+	var c_id = str(card.get("id", "")).to_lower()
+	var c_type = str(card.get("type", "")).to_lower()
+	var c_title = str(card.get("title", "")).to_lower()
+	var c_item = str(card.get("item", "")).to_lower()
+
+	# Hazards & Wandering Monsters
+	if c_type == "wandering_monster" or "wandering" in c_id or "wandering" in c_title or "ambush" in c_title:
+		if _card_art_wandering_orc:
+			return _card_art_wandering_orc
+	elif c_type == "hazard" or "hazard" in c_id or "trap" in c_id or "trap" in c_title:
+		if "pit" in c_id or "pit" in c_title:
+			if _card_art_hazard_pit:
+				return _card_art_hazard_pit
+		elif "poison" in c_id or "needle" in c_id or "dart" in c_id or "poison" in c_title or "dart" in c_title:
+			if _card_art_hazard_poison:
+				return _card_art_hazard_poison
+		if _card_art_hazard_pit:
+			return _card_art_hazard_pit
+
+	# Potions & Holy Water
+	if c_item == "healing_potion" or "healing" in c_id or "healing" in c_title:
+		if _card_art_potion_healing:
+			return _card_art_potion_healing
+	elif c_item == "potion_strength" or "strength" in c_id or "strength" in c_title:
+		if _card_art_potion_strength:
+			return _card_art_potion_strength
+	elif c_item == "potion_defense" or "defense" in c_id or "defense" in c_title:
+		if _card_art_potion_defense:
+			return _card_art_potion_defense
+	elif c_item == "holy_water" or "holy" in c_id or "water" in c_id or "holy" in c_title or "water" in c_title:
+		if _card_art_holy_water:
+			return _card_art_holy_water
+
+	# Gems and Jewels
+	if c_type == "gem" or "gem" in c_id or "jewel" in c_id or "gem" in c_title or "jewel" in c_title:
+		if _card_art_gems_jewels:
+			return _card_art_gems_jewels
+
+	# Gold
+	if c_type == "gold" or "gold" in c_id or "gold" in c_title or int(card.get("gold", 0)) > 0:
+		if _card_art_gold_coins:
+			return _card_art_gold_coins
+
+	# Generic items or quest chest
+	if card.has("item"):
+		var itex = get_ai_icon_texture("items", c_item)
+		if itex:
+			return itex
+	if _card_art_quest_chest:
+		return _card_art_quest_chest
+	if _treasure_template_texture_res:
+		return _treasure_template_texture_res
+	return null
+
 func _setup_treasure_modal() -> void:
 	if not treasure_modal:
 		treasure_modal = get_node_or_null("UI/TreasureModal")
 	if not treasure_modal:
 		return
+
+	_load_treasure_card_assets()
 
 	if not treasure_modal_card:
 		treasure_modal_card = get_node_or_null("UI/TreasureModal/Card")
@@ -10549,26 +10656,15 @@ func _setup_treasure_modal() -> void:
 	if treasure_deck_badge:
 		apply_rpg_font_to_label(treasure_deck_badge, false, 11, Color(0.85, 0.72, 0.35, 0.95))
 
+	if not treasure_deck_texture:
+		treasure_deck_texture = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/StageHBox/DeckColumn/DeckFrame/DeckTexture")
+	if treasure_deck_texture and _treasure_deck_texture_res:
+		treasure_deck_texture.texture = _treasure_deck_texture_res
+
 	if not treasure_drawn_card:
 		treasure_drawn_card = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard")
 	if treasure_drawn_card:
-		var drawn_sb = StyleBoxFlat.new()
-		drawn_sb.bg_color = Color(0.93, 0.87, 0.75, 1.0)
-		drawn_sb.set_corner_radius_all(8)
-		drawn_sb.set_border_width_all(3)
-		drawn_sb.border_color = Color(0.32, 0.20, 0.12, 1.0)
-		drawn_sb.shadow_color = Color(0, 0, 0, 0.65)
-		drawn_sb.shadow_size = 16
-		drawn_sb.shadow_offset = Vector2(4, 6)
-		treasure_drawn_card.add_theme_stylebox_override("panel", drawn_sb)
-
-	if not treasure_deck_texture:
-		treasure_deck_texture = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/StageHBox/DeckColumn/DeckFrame/DeckTexture")
-	if _treasure_deck_texture_res == null:
-		if ResourceLoader.exists("res://assets/cards/treasure_card_deck.png"):
-			_treasure_deck_texture_res = load("res://assets/cards/treasure_card_deck.png")
-	if treasure_deck_texture and _treasure_deck_texture_res:
-		treasure_deck_texture.texture = _treasure_deck_texture_res
+		treasure_drawn_card.pivot_offset = Vector2(210.0, 280.0)
 
 	if not treasure_btn_resolve:
 		treasure_btn_resolve = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/ButtonBox/BtnResolve")
@@ -10598,16 +10694,19 @@ func open_treasure_modal(card: Dictionary, hero: Dictionary, is_quest_note: bool
 	if treasure_modal:
 		treasure_modal.visible = true
 
-	# Animate card swipe-in from deck stack to center stage
+	# Animate card rising UP from below into center stage with authentic physical card spring
 	if treasure_drawn_card:
-		treasure_drawn_card.position = Vector2(-260.0, 0.0)
-		treasure_drawn_card.modulate.a = 0.0
+		treasure_drawn_card.pivot_offset = Vector2(210.0, 280.0)
+		treasure_drawn_card.position = Vector2(0.0, 560.0)
+		treasure_drawn_card.scale = Vector2(0.72, 0.72)
 		treasure_drawn_card.rotation = -0.06
+		treasure_drawn_card.modulate.a = 0.0
 		var tween = create_tween()
 		tween.set_parallel(true)
-		tween.tween_property(treasure_drawn_card, "position", Vector2(0.0, 0.0), 0.42).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-		tween.tween_property(treasure_drawn_card, "modulate:a", 1.0, 0.32)
-		tween.tween_property(treasure_drawn_card, "rotation", 0.0, 0.42).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tween.tween_property(treasure_drawn_card, "position", Vector2(0.0, 0.0), 0.45).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		tween.tween_property(treasure_drawn_card, "scale", Vector2(1.0, 1.0), 0.45).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tween.tween_property(treasure_drawn_card, "rotation", 0.0, 0.45).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		tween.tween_property(treasure_drawn_card, "modulate:a", 1.0, 0.30)
 
 func close_treasure_modal() -> void:
 	if treasure_modal:
@@ -10636,6 +10735,8 @@ func _populate_treasure_modal(card: Dictionary, hero: Dictionary, is_quest_note:
 		treasure_card_title = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox/CardTitle")
 	if not treasure_card_type_badge:
 		treasure_card_type_badge = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox/CardHeader/CardTypeBadge")
+	if not treasure_card_source:
+		treasure_card_source = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox/CardHeader/CardSource")
 	if not treasure_card_illustration:
 		treasure_card_illustration = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox/IllustrationFrame/CardIllustration")
 	if not treasure_card_desc:
@@ -10649,51 +10750,90 @@ func _populate_treasure_modal(card: Dictionary, hero: Dictionary, is_quest_note:
 
 	var raw_title = str(card.get("title", "Treasure"))
 	var c_type = str(card.get("type", "gold")).to_lower()
+	var is_hazard = (c_type == "hazard" or c_type == "wandering_monster")
 
-	if treasure_card_title:
-		treasure_card_title.text = raw_title
-		treasure_card_title.add_theme_color_override("font_color", Color(0.18, 0.10, 0.05, 1.0))
+	# 1. Textured card frame (ornate gold filigree parchment or sinister spiked blood-iron)
+	var frame_tex: Texture2D = _card_frame_hazard if is_hazard else _card_frame_treasure
+	if frame_tex:
+		var frame_sb = StyleBoxTexture.new()
+		frame_sb.texture = frame_tex
+		treasure_drawn_card.add_theme_stylebox_override("panel", frame_sb)
+	else:
+		var drawn_sb = StyleBoxFlat.new()
+		drawn_sb.bg_color = Color(0.12, 0.08, 0.08, 1.0) if is_hazard else Color(0.93, 0.87, 0.75, 1.0)
+		drawn_sb.set_corner_radius_all(10)
+		drawn_sb.set_border_width_all(3)
+		drawn_sb.border_color = Color(0.85, 0.25, 0.20, 1.0) if is_hazard else Color(0.32, 0.20, 0.12, 1.0)
+		treasure_drawn_card.add_theme_stylebox_override("panel", drawn_sb)
+
+	# 2. Card Source & Type Badge
+	if treasure_card_source:
+		treasure_card_source.text = "HeroQuest Treasure Deck"
+		if is_hazard:
+			treasure_card_source.add_theme_color_override("font_color", Color(0.85, 0.70, 0.65, 0.8))
+		else:
+			treasure_card_source.add_theme_color_override("font_color", Color(0.40, 0.30, 0.22, 0.8))
 
 	if treasure_card_type_badge:
 		if is_quest_note:
-			treasure_card_type_badge.text = "[SPECIAL QUEST TREASURE]"
-			treasure_card_type_badge.add_theme_color_override("font_color", Color(0.85, 0.55, 0.05, 1.0))
+			treasure_card_type_badge.text = "✦ SPECIAL QUEST TREASURE ✦"
+			treasure_card_type_badge.add_theme_color_override("font_color", Color(1.0, 0.82, 0.2, 1.0))
 		elif c_type == "hazard":
-			treasure_card_type_badge.text = "[HAZARD]"
-			treasure_card_type_badge.add_theme_color_override("font_color", Color(0.85, 0.2, 0.2, 1.0))
+			treasure_card_type_badge.text = "☠ HAZARD TRAP ☠"
+			treasure_card_type_badge.add_theme_color_override("font_color", Color(1.0, 0.35, 0.35, 1.0))
 		elif c_type == "wandering_monster":
-			treasure_card_type_badge.text = "[WANDERING MONSTER]"
-			treasure_card_type_badge.add_theme_color_override("font_color", Color(0.9, 0.4, 0.1, 1.0))
+			treasure_card_type_badge.text = "👹 WANDERING MONSTER AMBUSH 👹"
+			treasure_card_type_badge.add_theme_color_override("font_color", Color(1.0, 0.55, 0.25, 1.0))
 		else:
-			treasure_card_type_badge.text = "[TREASURE]"
+			treasure_card_type_badge.text = "✦ TREASURE ✦"
 			treasure_card_type_badge.add_theme_color_override("font_color", Color(0.15, 0.65, 0.35, 1.0))
 
+	# 3. Card Title with Cinzel font
+	if treasure_card_title:
+		treasure_card_title.text = raw_title
+		var title_col = Color(0.98, 0.92, 0.86, 1.0) if is_hazard else Color(0.18, 0.10, 0.05, 1.0)
+		treasure_card_title.add_theme_color_override("font_color", title_col)
+		apply_rpg_font_to_label(treasure_card_title, true, 20, title_col)
+
+	# 4. Card Illustration Frame & Dedicated Texture
+	var if_node = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox/IllustrationFrame")
+	if if_node:
+		var if_sb = StyleBoxFlat.new()
+		if_sb.bg_color = Color(0.05, 0.04, 0.06, 0.95)
+		if_sb.set_corner_radius_all(6)
+		if_sb.set_border_width_all(2)
+		if_sb.border_color = Color(0.85, 0.32, 0.25, 0.85) if is_hazard else Color(0.72, 0.52, 0.25, 0.85)
+		if_node.add_theme_stylebox_override("panel", if_sb)
+
 	if treasure_card_illustration:
-		var tex: Texture2D = null
-		if c_type == "wandering_monster":
-			var cart = CartridgeManager.active_cartridge
-			var starting_map_id = cart.get("header", {}).get("startingMap", "heroquest-the-trial")
-			var map_data = cart.get("maps", {}).get(starting_map_id, {})
-			var wm_name = str(map_data.get("wanderingMonster", cart.get("wanderingMonster", "orc"))).to_lower()
-			tex = get_monster_token_texture({"monsterType": wm_name, "type": wm_name})
-		elif c_type == "potion" or card.has("item"):
-			var item_name = str(card.get("item", "healing_potion"))
-			tex = get_ai_icon_texture("potions", item_name)
-			if not tex:
-				tex = get_ai_icon_texture("items", item_name)
-		elif ResourceLoader.exists("res://assets/cards/treasure_card_template.png"):
-			tex = load("res://assets/cards/treasure_card_template.png")
+		var tex: Texture2D = _get_treasure_card_art_texture(card, is_quest_note)
 		treasure_card_illustration.texture = tex
 		treasure_card_illustration.visible = (tex != null)
 
+	# 5. Card Description
 	if treasure_card_desc:
 		var desc_text = str(card.get("description", ""))
-		treasure_card_desc.text = "[color=#2a180e]%s[/color]" % desc_text
+		var col_hex = "#f2e8dc" if is_hazard else "#2a180e"
+		treasure_card_desc.text = "[color=%s]%s[/color]" % [col_hex, desc_text]
 
+	# 6. Card Flavor
 	if treasure_card_flavor:
 		var flv = str(card.get("flavor", ""))
 		treasure_card_flavor.text = "— %s —" % flv if flv != "" else ""
-		treasure_card_flavor.add_theme_color_override("font_color", Color(0.42, 0.28, 0.16, 0.95))
+		if is_hazard:
+			treasure_card_flavor.add_theme_color_override("font_color", Color(0.88, 0.78, 0.68, 0.95))
+		else:
+			treasure_card_flavor.add_theme_color_override("font_color", Color(0.42, 0.28, 0.16, 0.95))
+
+	# 7. Outcome Banner
+	var ob_node = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox/OutcomeBanner")
+	if ob_node:
+		var ob_sb = StyleBoxFlat.new()
+		ob_sb.bg_color = Color(0.18, 0.06, 0.06, 0.85) if is_hazard else Color(0.12, 0.15, 0.10, 0.85)
+		ob_sb.set_corner_radius_all(5)
+		ob_sb.set_border_width_all(1)
+		ob_sb.border_color = Color(0.85, 0.35, 0.25, 0.8) if is_hazard else Color(0.3, 0.7, 0.4, 0.8)
+		ob_node.add_theme_stylebox_override("panel", ob_sb)
 
 	if treasure_outcome_text:
 		var h_name = str(hero.get("name", "Hero"))
@@ -10703,14 +10843,15 @@ func _populate_treasure_modal(card: Dictionary, hero: Dictionary, is_quest_note:
 		elif c_type == "hazard":
 			var dmg = int(card.get("damage", 1))
 			treasure_outcome_text.text = "Rule: %s suffers %d BP damage! Card resolved, returned to deck, and shuffled." % [h_name, dmg]
-			treasure_outcome_text.add_theme_color_override("font_color", Color(1.0, 0.35, 0.35, 1.0))
+			treasure_outcome_text.add_theme_color_override("font_color", Color(1.0, 0.45, 0.45, 1.0))
 		elif c_type == "wandering_monster":
 			treasure_outcome_text.text = "Rule: Wandering monster ambushes adjacent to %s! Card resolved, returned to deck, and shuffled." % h_name
-			treasure_outcome_text.add_theme_color_override("font_color", Color(1.0, 0.5, 0.2, 1.0))
+			treasure_outcome_text.add_theme_color_override("font_color", Color(1.0, 0.65, 0.3, 1.0))
 		else:
 			treasure_outcome_text.text = "Rule: Awarded to %s. Card is permanently discarded from the deck for the quest." % h_name
 			treasure_outcome_text.add_theme_color_override("font_color", Color(0.3, 0.9, 0.5, 1.0))
 
+	# 8. Action Button
 	if treasure_btn_resolve:
 		if c_type == "hazard":
 			treasure_btn_resolve.text = "Endure Hazard (Space / Enter)"
