@@ -271,6 +271,15 @@ var btn_menu_save_game: Button = null
 var btn_menu_load_game: Button = null
 var btn_menu_close: Button = null
 
+# RPG Font and Texture Theme Assets
+var font_rpg_cinzel: FontFile = null
+var font_rpg_medieval: FontFile = null
+var tex_rpg_menu_dungeon_bg: Texture2D = null
+var tex_rpg_dialog_panel_bg: Texture2D = null
+var tex_rpg_parchment_banner_bg: Texture2D = null
+var tex_rpg_button_normal: Texture2D = null
+var tex_rpg_button_hover: Texture2D = null
+
 @onready var treasure_modal: ColorRect = get_node_or_null("UI/TreasureModal")
 @onready var treasure_modal_card: PanelContainer = get_node_or_null("UI/TreasureModal/Card")
 @onready var treasure_deck_badge: Label = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/Header/DeckRatioBadge")
@@ -368,6 +377,7 @@ func _ready() -> void:
 	print("[TabletopWorld] Initializing HeroQuest Cartridge Player...")
 	_check_cli_role()
 	_update_board_metrics()
+	_load_rpg_ui_theme_assets()
 	_load_active_cartridge()
 	CartridgeManager.cartridge_inserted.connect(_on_cartridge_inserted)
 	_setup_action_hotbar()
@@ -384,6 +394,7 @@ func _ready() -> void:
 	_setup_treasure_modal()
 	_setup_unavailable_notice_style()
 	_setup_targeting_system()
+	_apply_rpg_theme_to_all_modals()
 	_load_door_textures()
 	_load_hero_token_textures()
 	_load_monster_token_textures()
@@ -1291,6 +1302,188 @@ func _load_texture_safe(res_path: String) -> Texture2D:
 							return tex
 	return null
 
+func _load_font_file_safe(path: String) -> FontFile:
+	var global_path = ProjectSettings.globalize_path(path)
+	var paths_to_try = [global_path, path]
+	for p in paths_to_try:
+		if FileAccess.file_exists(p):
+			var font = FontFile.new()
+			var err = font.load_dynamic_font(p)
+			if err == OK:
+				return font
+	return null
+
+func _load_rpg_ui_theme_assets() -> void:
+	font_rpg_cinzel = _load_font_file_safe("res://assets/fonts/Cinzel.ttf")
+	font_rpg_medieval = _load_font_file_safe("res://assets/fonts/MedievalSharp.ttf")
+	tex_rpg_menu_dungeon_bg = _load_texture_safe("res://assets/ui/rpg_menu_dungeon_bg.png")
+	tex_rpg_dialog_panel_bg = _load_texture_safe("res://assets/ui/rpg_dialog_panel_bg.png")
+	tex_rpg_parchment_banner_bg = _load_texture_safe("res://assets/ui/rpg_parchment_banner_bg.png")
+	tex_rpg_button_normal = _load_texture_safe("res://assets/ui/rpg_button_normal.png")
+	tex_rpg_button_hover = _load_texture_safe("res://assets/ui/rpg_button_hover.png")
+	print("[TabletopWorld] RPG Theme Assets Loaded: Fonts=%s,%s Textures: Dungeon=%s Panel=%s Parchment=%s Buttons=%s,%s" % [
+		"Cinzel" if font_rpg_cinzel else "None",
+		"MedievalSharp" if font_rpg_medieval else "None",
+		tex_rpg_menu_dungeon_bg != null,
+		tex_rpg_dialog_panel_bg != null,
+		tex_rpg_parchment_banner_bg != null,
+		tex_rpg_button_normal != null,
+		tex_rpg_button_hover != null
+	])
+
+func get_rpg_dialog_panel_stylebox(pad_left: int = 24, pad_top: int = 20, pad_right: int = 24, pad_bottom: int = 20) -> StyleBox:
+	if tex_rpg_dialog_panel_bg:
+		var sb = StyleBoxTexture.new()
+		sb.texture = tex_rpg_dialog_panel_bg
+		sb.texture_margin_left = 110
+		sb.texture_margin_top = 95
+		sb.texture_margin_right = 110
+		sb.texture_margin_bottom = 95
+		sb.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
+		sb.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
+		sb.content_margin_left = pad_left
+		sb.content_margin_top = pad_top
+		sb.content_margin_right = pad_right
+		sb.content_margin_bottom = pad_bottom
+		return sb
+	var fb = StyleBoxFlat.new()
+	fb.bg_color = Color(0.08, 0.11, 0.16, 0.98)
+	fb.border_color = Color(0.85, 0.72, 0.35, 0.9)
+	fb.set_border_width_all(2)
+	fb.set_corner_radius_all(10)
+	fb.content_margin_left = pad_left
+	fb.content_margin_top = pad_top
+	fb.content_margin_right = pad_right
+	fb.content_margin_bottom = pad_bottom
+	return fb
+
+func get_rpg_parchment_stylebox(pad_left: int = 12, pad_top: int = 8, pad_right: int = 12, pad_bottom: int = 8) -> StyleBox:
+	if tex_rpg_parchment_banner_bg:
+		var sb = StyleBoxTexture.new()
+		sb.texture = tex_rpg_parchment_banner_bg
+		sb.texture_margin_left = 32
+		sb.texture_margin_top = 28
+		sb.texture_margin_right = 32
+		sb.texture_margin_bottom = 28
+		sb.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
+		sb.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
+		sb.content_margin_left = pad_left
+		sb.content_margin_top = pad_top
+		sb.content_margin_right = pad_right
+		sb.content_margin_bottom = pad_bottom
+		return sb
+	var fb = StyleBoxFlat.new()
+	fb.bg_color = Color(0.18, 0.15, 0.10, 0.95)
+	fb.border_color = Color(0.65, 0.52, 0.30, 0.8)
+	fb.set_border_width_all(1)
+	fb.set_corner_radius_all(6)
+	fb.content_margin_left = pad_left
+	fb.content_margin_top = pad_top
+	fb.content_margin_right = pad_right
+	fb.content_margin_bottom = pad_bottom
+	return fb
+
+func get_rpg_button_stylebox(state: String = "normal", pad_h: int = 16, pad_v: int = 4) -> StyleBox:
+	var tex = tex_rpg_button_hover if (state == "hover" or state == "pressed") else tex_rpg_button_normal
+	if tex:
+		var sb = StyleBoxTexture.new()
+		sb.texture = tex
+		sb.texture_margin_left = 40
+		sb.texture_margin_top = 16
+		sb.texture_margin_right = 40
+		sb.texture_margin_bottom = 16
+		sb.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
+		sb.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
+		sb.content_margin_left = pad_h
+		sb.content_margin_right = pad_h
+		sb.content_margin_top = pad_v
+		sb.content_margin_bottom = pad_v
+		return sb
+	var fb = StyleBoxFlat.new()
+	if state == "hover" or state == "pressed":
+		fb.bg_color = Color(0.22, 0.18, 0.10, 0.98)
+		fb.border_color = Color(1.0, 0.85, 0.3, 1.0)
+	else:
+		fb.bg_color = Color(0.12, 0.14, 0.18, 0.95)
+		fb.border_color = Color(0.7, 0.6, 0.3, 0.8)
+	fb.set_border_width_all(1)
+	fb.set_corner_radius_all(6)
+	fb.content_margin_left = pad_h
+	fb.content_margin_right = pad_h
+	fb.content_margin_top = pad_v
+	fb.content_margin_bottom = pad_v
+	return fb
+
+func apply_rpg_font_to_label(lbl: Label, is_title: bool = false, font_size: int = 0, color: Color = Color.WHITE, use_medieval: bool = false) -> void:
+	if not lbl:
+		return
+	var f = font_rpg_medieval if use_medieval else font_rpg_cinzel
+	if f:
+		lbl.add_theme_font_override("font", f)
+	if font_size > 0:
+		lbl.add_theme_font_size_override("font_size", font_size)
+	if color != Color.WHITE:
+		lbl.add_theme_color_override("font_color", color)
+	if not use_medieval:
+		lbl.add_theme_constant_override("outline_size", 2 if not is_title else 3)
+		lbl.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.05, 0.95))
+
+func apply_rpg_font_to_button(btn: Button, font_size: int = 14, text_color: Color = Color(0.98, 0.94, 0.88, 1.0)) -> void:
+	if not btn:
+		return
+	if font_rpg_cinzel:
+		btn.add_theme_font_override("font", font_rpg_cinzel)
+	if font_size > 0:
+		btn.add_theme_font_size_override("font_size", font_size)
+	btn.add_theme_color_override("font_color", text_color)
+	btn.add_theme_color_override("font_hover_color", Color(1.0, 0.96, 0.65, 1.0))
+	btn.add_theme_color_override("font_pressed_color", Color(1.0, 0.82, 0.3, 1.0))
+	btn.add_theme_constant_override("outline_size", 3)
+	btn.add_theme_color_override("font_outline_color", Color(0.01, 0.01, 0.02, 0.95))
+	btn.add_theme_stylebox_override("normal", get_rpg_button_stylebox("normal"))
+	btn.add_theme_stylebox_override("hover", get_rpg_button_stylebox("hover"))
+	btn.add_theme_stylebox_override("pressed", get_rpg_button_stylebox("pressed"))
+	btn.add_theme_stylebox_override("disabled", get_rpg_button_stylebox("normal"))
+	btn.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+
+func _apply_rpg_theme_to_all_modals() -> void:
+	# 1. Spell Cast Modal
+	if spell_cast_modal:
+		var c = spell_cast_modal.get_node_or_null("Card")
+		if c is PanelContainer:
+			c.add_theme_stylebox_override("panel", get_rpg_dialog_panel_stylebox(28, 24, 28, 24))
+		if spell_cast_title:
+			apply_rpg_font_to_label(spell_cast_title, true, 18, Color(1.0, 0.88, 0.35, 1.0))
+		if spell_cast_badge:
+			apply_rpg_font_to_label(spell_cast_badge, false, 11, Color(0.85, 0.72, 0.35, 0.95))
+		if btn_spell_cast_close:
+			btn_spell_cast_close.custom_minimum_size = Vector2(0, 44)
+			apply_rpg_font_to_button(btn_spell_cast_close, 13)
+
+	# 2. Item Use Modal
+	if item_use_modal:
+		var c = item_use_modal.get_node_or_null("Card")
+		if c is PanelContainer:
+			c.add_theme_stylebox_override("panel", get_rpg_dialog_panel_stylebox(28, 24, 28, 24))
+		if item_use_title:
+			apply_rpg_font_to_label(item_use_title, true, 18, Color(1.0, 0.88, 0.35, 1.0))
+		if btn_item_use_close:
+			btn_item_use_close.custom_minimum_size = Vector2(0, 44)
+			apply_rpg_font_to_button(btn_item_use_close, 13)
+
+	# 3. Disarm Trap Modal
+	if disarm_trap_modal:
+		var c = disarm_trap_modal.get_node_or_null("Card")
+		if c is PanelContainer:
+			c.add_theme_stylebox_override("panel", get_rpg_dialog_panel_stylebox(28, 24, 28, 24))
+		if disarm_trap_title:
+			apply_rpg_font_to_label(disarm_trap_title, true, 18, Color(1.0, 0.88, 0.35, 1.0))
+		if disarm_trap_badge:
+			apply_rpg_font_to_label(disarm_trap_badge, false, 11, Color(0.85, 0.72, 0.35, 0.95))
+		if btn_disarm_trap_close:
+			btn_disarm_trap_close.custom_minimum_size = Vector2(0, 44)
+			apply_rpg_font_to_button(btn_disarm_trap_close, 13)
+
 func get_hero_card_bg_texture(hero_id: String) -> Texture2D:
 	var clean_id = hero_id.to_lower().strip_edges()
 	if "barbarian" in clean_id:
@@ -1634,25 +1827,22 @@ func _setup_ui_signals() -> void:
 		menu_btn.text = "⚙️ Game Menu"
 		menu_btn.tooltip_text = "Open Game Menu: Restart Quest, Save Game State, Load Game State [Esc]"
 		menu_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-		var m_sb = StyleBoxFlat.new()
-		m_sb.bg_color = Color(0.12, 0.16, 0.22, 0.92)
-		m_sb.border_color = Color(0.0, 0.74, 0.83, 0.85)
-		m_sb.set_border_width_all(1)
-		m_sb.set_corner_radius_all(4)
-		m_sb.content_margin_left = 8
-		m_sb.content_margin_right = 8
-		m_sb.content_margin_top = 2
-		m_sb.content_margin_bottom = 2
-		menu_btn.add_theme_stylebox_override("normal", m_sb)
-		menu_btn.add_theme_color_override("font_color", Color(0.88, 0.95, 1.0, 0.95))
-		menu_btn.add_theme_font_size_override("font_size", 11)
+		apply_rpg_font_to_button(menu_btn, 11, Color(0.96, 0.92, 0.85, 0.95))
 		menu_btn.pressed.connect(toggle_game_menu)
 		header_hbox.add_child(menu_btn)
+
+	if title_label:
+		apply_rpg_font_to_label(title_label, true, 16, Color(1.0, 0.85, 0.25, 1.0))
+	if role_badge:
+		apply_rpg_font_to_button(role_badge, 11, Color(0.96, 0.92, 0.85, 0.95))
+	if btn_map_end_turn:
+		apply_rpg_font_to_button(btn_map_end_turn, 12, Color(1.0, 0.9, 0.7, 1.0))
 
 	if header_hbox and not header_hbox.has_node("BtnToggleDemo"):
 		var demo_btn = Button.new()
 		demo_btn.name = "BtnToggleDemo"
 		demo_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		apply_rpg_font_to_button(demo_btn, 11, Color(0.96, 0.92, 0.85, 0.95))
 		demo_btn.pressed.connect(func():
 			CartridgeManager.auto_play_enabled = not CartridgeManager.auto_play_enabled
 			_update_demo_button_ui()
@@ -2945,58 +3135,26 @@ func _process(delta: float) -> void:
 func _setup_ai_modal_styles() -> void:
 	if not ai_modal_card:
 		return
-	var card_sb = StyleBoxFlat.new()
-	card_sb.bg_color = Color(0.09, 0.12, 0.17, 0.98)
-	card_sb.set_corner_radius_all(12)
-	card_sb.border_width_left = 2
-	card_sb.border_width_top = 2
-	card_sb.border_width_right = 2
-	card_sb.border_width_bottom = 2
-	card_sb.border_color = Color(0.0, 0.74, 0.83, 0.8)
-	card_sb.shadow_color = Color(0, 0, 0, 0.75)
-	card_sb.shadow_size = 20
-	ai_modal_card.add_theme_stylebox_override("panel", card_sb)
+	ai_modal_card.add_theme_stylebox_override("panel", get_rpg_dialog_panel_stylebox(28, 24, 28, 24))
+
+	var title_lbl = ai_modal_card.get_node_or_null("Margin/VBox/Header/Title")
+	if title_lbl is Label:
+		apply_rpg_font_to_label(title_lbl, true, 18, Color(1.0, 0.88, 0.35, 1.0))
 
 	if ai_modal_cmd_banner:
-		var cmd_sb = StyleBoxFlat.new()
-		cmd_sb.bg_color = Color(0.05, 0.07, 0.11, 1.0)
-		cmd_sb.set_corner_radius_all(6)
-		cmd_sb.border_width_left = 4
-		cmd_sb.border_color = Color(0.0, 0.74, 0.83, 0.9)
-		ai_modal_cmd_banner.add_theme_stylebox_override("panel", cmd_sb)
+		ai_modal_cmd_banner.add_theme_stylebox_override("panel", get_rpg_parchment_stylebox(14, 8, 14, 8))
 
 	if ai_modal_details_panel:
-		var det_sb = StyleBoxFlat.new()
-		det_sb.bg_color = Color(0.06, 0.08, 0.12, 0.9)
-		det_sb.set_corner_radius_all(6)
-		det_sb.border_width_left = 1
-		det_sb.border_width_top = 1
-		det_sb.border_width_right = 1
-		det_sb.border_width_bottom = 1
-		det_sb.border_color = Color(0.25, 0.3, 0.4, 0.6)
-		ai_modal_details_panel.add_theme_stylebox_override("panel", det_sb)
+		ai_modal_details_panel.add_theme_stylebox_override("panel", get_rpg_parchment_stylebox(12, 8, 12, 8))
+
+	if ai_modal_details_text:
+		apply_rpg_font_to_label(ai_modal_details_text, false, 12, Color(0.18, 0.12, 0.05, 1.0), true)
 
 	if btn_ai_confirm:
-		var conf_sb = StyleBoxFlat.new()
-		conf_sb.bg_color = Color(0.06, 0.45, 0.28, 1.0)
-		conf_sb.set_corner_radius_all(6)
-		conf_sb.border_width_left = 1
-		conf_sb.border_width_top = 1
-		conf_sb.border_width_right = 1
-		conf_sb.border_width_bottom = 1
-		conf_sb.border_color = Color(0.1, 0.7, 0.4, 1.0)
-		btn_ai_confirm.add_theme_stylebox_override("normal", conf_sb)
+		apply_rpg_font_to_button(btn_ai_confirm, 13, Color(0.82, 1.0, 0.86, 1.0))
 
 	if btn_ai_cancel:
-		var canc_sb = StyleBoxFlat.new()
-		canc_sb.bg_color = Color(0.18, 0.22, 0.28, 1.0)
-		canc_sb.set_corner_radius_all(6)
-		canc_sb.border_width_left = 1
-		canc_sb.border_width_top = 1
-		canc_sb.border_width_right = 1
-		canc_sb.border_width_bottom = 1
-		canc_sb.border_color = Color(0.35, 0.4, 0.48, 0.8)
-		btn_ai_cancel.add_theme_stylebox_override("normal", canc_sb)
+		apply_rpg_font_to_button(btn_ai_cancel, 13, Color(0.96, 0.92, 0.85, 1.0))
 
 func is_headless_mode() -> bool:
 	if DisplayServer.get_name() == "headless":
@@ -3028,49 +3186,32 @@ func _check_start_elf_spell_selection() -> void:
 func _setup_elf_spell_modal() -> void:
 	if not elf_spell_card:
 		return
-	var card_sb = StyleBoxFlat.new()
-	card_sb.bg_color = Color(0.09, 0.12, 0.17, 0.98)
-	card_sb.set_corner_radius_all(12)
-	card_sb.border_width_left = 2
-	card_sb.border_width_top = 2
-	card_sb.border_width_right = 2
-	card_sb.border_width_bottom = 2
-	card_sb.border_color = Color(0.0, 0.74, 0.83, 0.8)
-	card_sb.shadow_color = Color(0, 0, 0, 0.75)
-	card_sb.shadow_size = 20
-	elf_spell_card.add_theme_stylebox_override("panel", card_sb)
+	elf_spell_card.add_theme_stylebox_override("panel", get_rpg_dialog_panel_stylebox(28, 24, 28, 24))
+
+	var title_lbl = elf_spell_card.get_node_or_null("Margin/VBox/Header/Title")
+	if title_lbl is Label:
+		apply_rpg_font_to_label(title_lbl, true, 18, Color(1.0, 0.88, 0.35, 1.0))
+	var badge_lbl = elf_spell_card.get_node_or_null("Margin/VBox/Header/Badge")
+	if badge_lbl is Label:
+		apply_rpg_font_to_label(badge_lbl, false, 11, Color(0.85, 0.72, 0.35, 0.95))
+	var inst_lbl = elf_spell_card.get_node_or_null("Margin/VBox/Instruction")
+	if inst_lbl is Label:
+		apply_rpg_font_to_label(inst_lbl, false, 12, Color(0.88, 0.84, 0.75, 0.95))
 
 	if elf_spell_summary_banner:
-		var sum_sb = StyleBoxFlat.new()
-		sum_sb.bg_color = Color(0.05, 0.07, 0.11, 1.0)
-		sum_sb.set_corner_radius_all(6)
-		sum_sb.border_width_left = 4
-		sum_sb.border_color = Color(0.0, 0.74, 0.83, 0.9)
-		elf_spell_summary_banner.add_theme_stylebox_override("panel", sum_sb)
+		elf_spell_summary_banner.add_theme_stylebox_override("panel", get_rpg_parchment_stylebox(14, 8, 14, 8))
+	if elf_spell_summary_text:
+		apply_rpg_font_to_label(elf_spell_summary_text, false, 12, Color(0.18, 0.12, 0.05, 1.0), true)
 
 	if btn_elf_spell_confirm:
-		var conf_sb = StyleBoxFlat.new()
-		conf_sb.bg_color = Color(0.06, 0.45, 0.28, 1.0)
-		conf_sb.set_corner_radius_all(6)
-		conf_sb.border_width_left = 1
-		conf_sb.border_width_top = 1
-		conf_sb.border_width_right = 1
-		conf_sb.border_width_bottom = 1
-		conf_sb.border_color = Color(0.1, 0.7, 0.4, 1.0)
-		btn_elf_spell_confirm.add_theme_stylebox_override("normal", conf_sb)
+		btn_elf_spell_confirm.custom_minimum_size = Vector2(200, 44)
+		apply_rpg_font_to_button(btn_elf_spell_confirm, 13, Color(0.82, 1.0, 0.86, 1.0))
 		if not btn_elf_spell_confirm.pressed.is_connected(_on_confirm_spell_modal_pressed):
 			btn_elf_spell_confirm.pressed.connect(_on_confirm_spell_modal_pressed)
 
 	if btn_elf_spell_close:
-		var canc_sb = StyleBoxFlat.new()
-		canc_sb.bg_color = Color(0.18, 0.22, 0.28, 1.0)
-		canc_sb.set_corner_radius_all(6)
-		canc_sb.border_width_left = 1
-		canc_sb.border_width_top = 1
-		canc_sb.border_width_right = 1
-		canc_sb.border_width_bottom = 1
-		canc_sb.border_color = Color(0.35, 0.4, 0.48, 0.8)
-		btn_elf_spell_close.add_theme_stylebox_override("normal", canc_sb)
+		btn_elf_spell_close.custom_minimum_size = Vector2(160, 44)
+		apply_rpg_font_to_button(btn_elf_spell_close, 13, Color(0.96, 0.92, 0.85, 1.0))
 		if not btn_elf_spell_close.pressed.is_connected(_on_close_spell_modal_pressed):
 			btn_elf_spell_close.pressed.connect(_on_close_spell_modal_pressed)
 
@@ -3115,14 +3256,12 @@ func _populate_elf_spell_decks() -> void:
 		title_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var title_lbl = Label.new()
 		title_lbl.text = str(info.get("name", elem_key.capitalize()))
-		title_lbl.add_theme_font_size_override("font_size", 16)
-		title_lbl.add_theme_color_override("font_color", info.get("color", Color.WHITE))
+		apply_rpg_font_to_label(title_lbl, true, 16, info.get("color", Color.WHITE))
 		title_vbox.add_child(title_lbl)
 
 		var role_lbl = Label.new()
 		role_lbl.text = str(info.get("role", ""))
-		role_lbl.add_theme_font_size_override("font_size", 11)
-		role_lbl.add_theme_color_override("font_color", Color(0.7, 0.75, 0.82, 0.8))
+		apply_rpg_font_to_label(role_lbl, false, 11, Color(0.7, 0.75, 0.82, 0.8))
 		title_vbox.add_child(role_lbl)
 		hdr.add_child(title_vbox)
 
@@ -3130,6 +3269,7 @@ func _populate_elf_spell_decks() -> void:
 		btn_select.name = "BtnSelect"
 		btn_select.text = "Draft for Elf"
 		btn_select.custom_minimum_size = Vector2(110, 32)
+		apply_rpg_font_to_button(btn_select, 11)
 		var deck_name = elem_key
 		btn_select.pressed.connect(func(): select_elf_element(deck_name))
 		hdr.add_child(btn_select)
@@ -3141,8 +3281,7 @@ func _populate_elf_spell_decks() -> void:
 		for sp in spells:
 			var s_lbl = Label.new()
 			s_lbl.text = "• %s — %s" % [sp.get("name", ""), sp.get("desc", "")]
-			s_lbl.add_theme_font_size_override("font_size", 11)
-			s_lbl.add_theme_color_override("font_color", Color(0.82, 0.86, 0.92, 0.9))
+			apply_rpg_font_to_label(s_lbl, false, 11, Color(0.82, 0.86, 0.92, 0.9))
 			s_lbl.clip_text = true
 			vbox.add_child(s_lbl)
 
@@ -3453,40 +3592,30 @@ func has_party_gold_for_armory() -> bool:
 func _setup_armory_modal() -> void:
 	if not armory_card:
 		return
-	var card_sb = StyleBoxFlat.new()
-	card_sb.bg_color = Color(0.08, 0.11, 0.16, 0.98)
-	card_sb.set_corner_radius_all(12)
-	card_sb.border_width_left = 2
-	card_sb.border_width_top = 2
-	card_sb.border_width_right = 2
-	card_sb.border_width_bottom = 2
-	card_sb.border_color = Color(0.92, 0.75, 0.22, 0.9)
-	card_sb.shadow_color = Color(0, 0, 0, 0.8)
-	card_sb.shadow_size = 24
-	armory_card.add_theme_stylebox_override("panel", card_sb)
+	armory_card.add_theme_stylebox_override("panel", get_rpg_dialog_panel_stylebox(28, 24, 28, 24))
+
+	var armory_title = armory_card.get_node_or_null("Margin/VBox/Header/Title")
+	if armory_title is Label:
+		apply_rpg_font_to_label(armory_title, true, 18, Color(1.0, 0.88, 0.35, 1.0))
+	if armory_party_gold_badge:
+		apply_rpg_font_to_label(armory_party_gold_badge, false, 12, Color(1.0, 0.85, 0.25, 1.0))
+	var armory_inst = armory_card.get_node_or_null("Margin/VBox/Instruction")
+	if armory_inst is Label:
+		apply_rpg_font_to_label(armory_inst, false, 12, Color(0.88, 0.84, 0.75, 0.95))
 
 	if armory_hero_info_banner:
-		var inf_sb = StyleBoxFlat.new()
-		inf_sb.bg_color = Color(0.05, 0.08, 0.12, 1.0)
-		inf_sb.set_corner_radius_all(6)
-		inf_sb.border_width_left = 4
-		inf_sb.border_color = Color(0.92, 0.75, 0.22, 0.9)
-		armory_hero_info_banner.add_theme_stylebox_override("panel", inf_sb)
+		armory_hero_info_banner.add_theme_stylebox_override("panel", get_rpg_parchment_stylebox(14, 8, 14, 8))
+	if armory_hero_info_text:
+		apply_rpg_font_to_label(armory_hero_info_text, false, 12, Color(0.18, 0.12, 0.05, 1.0), true)
 
 	if btn_armory_close:
-		var btn_sb = StyleBoxFlat.new()
-		btn_sb.bg_color = Color(0.08, 0.45, 0.25, 1.0)
-		btn_sb.set_corner_radius_all(6)
-		btn_sb.border_width_left = 1
-		btn_sb.border_width_top = 1
-		btn_sb.border_width_right = 1
-		btn_sb.border_width_bottom = 1
-		btn_sb.border_color = Color(0.2, 0.75, 0.45, 1.0)
-		btn_armory_close.add_theme_stylebox_override("normal", btn_sb)
+		btn_armory_close.custom_minimum_size = Vector2(0, 44)
+		apply_rpg_font_to_button(btn_armory_close, 13, Color(0.96, 0.92, 0.85, 1.0))
 		if not btn_armory_close.pressed.is_connected(close_armory):
 			btn_armory_close.pressed.connect(close_armory)
 
 	if armory_btn_close_header:
+		apply_rpg_font_to_button(armory_btn_close_header, 11)
 		if not armory_btn_close_header.pressed.is_connected(close_armory):
 			armory_btn_close_header.pressed.connect(close_armory)
 
@@ -3839,9 +3968,21 @@ func _setup_game_menu_modal() -> void:
 	game_menu_modal = ColorRect.new()
 	game_menu_modal.name = "GameMenuModal"
 	game_menu_modal.visible = false
-	game_menu_modal.color = Color(0.02, 0.04, 0.07, 0.78)
+	game_menu_modal.color = Color(0.02, 0.03, 0.06, 0.78)
 	game_menu_modal.set_anchors_preset(Control.PRESET_FULL_RECT)
 	game_menu_modal.mouse_filter = Control.MOUSE_FILTER_STOP
+
+	# Atmospheric AI-generated dungeon hall backdrop
+	if tex_rpg_menu_dungeon_bg:
+		var dungeon_bg = TextureRect.new()
+		dungeon_bg.name = "DungeonBackdrop"
+		dungeon_bg.texture = tex_rpg_menu_dungeon_bg
+		dungeon_bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		dungeon_bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		dungeon_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+		dungeon_bg.modulate = Color(0.55, 0.55, 0.62, 0.90)
+		dungeon_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		game_menu_modal.add_child(dungeon_bg)
 
 	# Clicking background dim overlay closes the menu
 	game_menu_modal.gui_input.connect(func(ev: InputEvent):
@@ -3852,30 +3993,22 @@ func _setup_game_menu_modal() -> void:
 	game_menu_card = PanelContainer.new()
 	game_menu_card.name = "Card"
 	game_menu_card.set_anchors_preset(Control.PRESET_CENTER)
-	game_menu_card.custom_minimum_size = Vector2(490, 360)
-	game_menu_card.offset_left = -245
-	game_menu_card.offset_top = -180
-	game_menu_card.offset_right = 245
-	game_menu_card.offset_bottom = 180
+	game_menu_card.custom_minimum_size = Vector2(530, 440)
+	game_menu_card.offset_left = -265
+	game_menu_card.offset_top = -220
+	game_menu_card.offset_right = 265
+	game_menu_card.offset_bottom = 220
 	game_menu_card.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	game_menu_card.grow_vertical = Control.GROW_DIRECTION_BOTH
 	game_menu_card.mouse_filter = Control.MOUSE_FILTER_STOP
-
-	var card_sb = StyleBoxFlat.new()
-	card_sb.bg_color = Color(0.08, 0.11, 0.16, 0.98)
-	card_sb.border_color = Color(0.0, 0.74, 0.83, 0.85)
-	card_sb.set_border_width_all(2)
-	card_sb.set_corner_radius_all(12)
-	card_sb.shadow_color = Color(0, 0, 0, 0.8)
-	card_sb.shadow_size = 24
-	game_menu_card.add_theme_stylebox_override("panel", card_sb)
+	game_menu_card.add_theme_stylebox_override("panel", get_rpg_dialog_panel_stylebox(36, 30, 36, 30))
 
 	var margin = MarginContainer.new()
 	margin.name = "Margin"
-	margin.add_theme_constant_override("margin_left", 24)
-	margin.add_theme_constant_override("margin_top", 20)
-	margin.add_theme_constant_override("margin_right", 24)
-	margin.add_theme_constant_override("margin_bottom", 20)
+	margin.add_theme_constant_override("margin_left", 18)
+	margin.add_theme_constant_override("margin_top", 14)
+	margin.add_theme_constant_override("margin_right", 18)
+	margin.add_theme_constant_override("margin_bottom", 16)
 	game_menu_card.add_child(margin)
 
 	var vbox = VBoxContainer.new()
@@ -3889,43 +4022,35 @@ func _setup_game_menu_modal() -> void:
 	var title = Label.new()
 	title.name = "Title"
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title.text = "⚙️ HEROQUEST : GAME MENU"
-	title.add_theme_font_size_override("font_size", 18)
-	title.add_theme_color_override("font_color", Color(1.0, 0.85, 0.25, 1.0))
+	title.text = "HEROQUEST : GAME MENU"
+	apply_rpg_font_to_label(title, true, 19, Color(1.0, 0.88, 0.35, 1.0))
 	header.add_child(title)
 
 	var badge = Label.new()
 	badge.name = "Badge"
 	badge.text = "SESSION CONTROLS"
-	badge.add_theme_font_size_override("font_size", 11)
-	badge.add_theme_color_override("font_color", Color(0.0, 0.74, 0.83, 0.95))
+	apply_rpg_font_to_label(badge, false, 11, Color(0.85, 0.72, 0.35, 0.95))
 	header.add_child(badge)
 	vbox.add_child(header)
 
 	var sep = HSeparator.new()
 	vbox.add_child(sep)
 
-	# 2. Info Banner
+	# 2. Info Banner (Antique Weathered Parchment)
 	var info_panel = PanelContainer.new()
 	info_panel.name = "InfoPanel"
-	var info_sb = StyleBoxFlat.new()
-	info_sb.bg_color = Color(0.04, 0.06, 0.09, 0.95)
-	info_sb.border_color = Color(0.18, 0.26, 0.36, 0.7)
-	info_sb.set_border_width_all(1)
-	info_sb.set_corner_radius_all(6)
-	info_panel.add_theme_stylebox_override("panel", info_sb)
+	info_panel.add_theme_stylebox_override("panel", get_rpg_parchment_stylebox(18, 10, 18, 10))
 	var info_margin = MarginContainer.new()
-	info_margin.add_theme_constant_override("margin_left", 12)
-	info_margin.add_theme_constant_override("margin_top", 8)
-	info_margin.add_theme_constant_override("margin_right", 12)
-	info_margin.add_theme_constant_override("margin_bottom", 8)
+	info_margin.add_theme_constant_override("margin_left", 8)
+	info_margin.add_theme_constant_override("margin_top", 6)
+	info_margin.add_theme_constant_override("margin_right", 8)
+	info_margin.add_theme_constant_override("margin_bottom", 6)
 	info_panel.add_child(info_margin)
 
 	game_menu_info_label = Label.new()
 	game_menu_info_label.name = "InfoLabel"
-	game_menu_info_label.add_theme_font_size_override("font_size", 12)
-	game_menu_info_label.add_theme_color_override("font_color", Color(0.8, 0.88, 0.96, 0.9))
 	game_menu_info_label.text = "Quest: Active | Round: 1 | Mode: Player"
+	apply_rpg_font_to_label(game_menu_info_label, false, 12, Color(0.18, 0.12, 0.05, 1.0), true)
 	info_margin.add_child(game_menu_info_label)
 	vbox.add_child(info_panel)
 
@@ -3937,72 +4062,44 @@ func _setup_game_menu_modal() -> void:
 	# Restart Quest Button
 	btn_menu_restart_quest = Button.new()
 	btn_menu_restart_quest.name = "BtnRestartQuest"
-	btn_menu_restart_quest.text = "↺  Restart Quest"
+	btn_menu_restart_quest.text = "RESTART QUEST"
 	btn_menu_restart_quest.tooltip_text = "Force reload current quest from cartridge (clears saved game and restores Round 1)"
-	btn_menu_restart_quest.custom_minimum_size = Vector2(0, 38)
+	btn_menu_restart_quest.custom_minimum_size = Vector2(0, 46)
 	btn_menu_restart_quest.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	var rst_sb = StyleBoxFlat.new()
-	rst_sb.bg_color = Color(0.2, 0.08, 0.1, 0.95)
-	rst_sb.border_color = Color(0.9, 0.35, 0.35, 0.85)
-	rst_sb.set_border_width_all(1)
-	rst_sb.set_corner_radius_all(6)
-	btn_menu_restart_quest.add_theme_stylebox_override("normal", rst_sb)
-	btn_menu_restart_quest.add_theme_color_override("font_color", Color(1.0, 0.75, 0.75, 1.0))
-	btn_menu_restart_quest.add_theme_font_size_override("font_size", 13)
+	apply_rpg_font_to_button(btn_menu_restart_quest, 14, Color(1.0, 0.86, 0.86, 1.0))
 	btn_menu_restart_quest.pressed.connect(restart_quest_from_menu)
 	btns_vbox.add_child(btn_menu_restart_quest)
 
 	# Save Game State Button
 	btn_menu_save_game = Button.new()
 	btn_menu_save_game.name = "BtnSaveGameState"
-	btn_menu_save_game.text = "💾  Save Game State"
+	btn_menu_save_game.text = "SAVE GAME STATE"
 	btn_menu_save_game.tooltip_text = "Save current hero vitals, spent spells, inventory, and explored tiles to disk"
-	btn_menu_save_game.custom_minimum_size = Vector2(0, 38)
+	btn_menu_save_game.custom_minimum_size = Vector2(0, 46)
 	btn_menu_save_game.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	var sav_sb = StyleBoxFlat.new()
-	sav_sb.bg_color = Color(0.08, 0.18, 0.12, 0.95)
-	sav_sb.border_color = Color(0.25, 0.8, 0.45, 0.85)
-	sav_sb.set_border_width_all(1)
-	sav_sb.set_corner_radius_all(6)
-	btn_menu_save_game.add_theme_stylebox_override("normal", sav_sb)
-	btn_menu_save_game.add_theme_color_override("font_color", Color(0.75, 1.0, 0.82, 1.0))
-	btn_menu_save_game.add_theme_font_size_override("font_size", 13)
+	apply_rpg_font_to_button(btn_menu_save_game, 14, Color(0.88, 1.0, 0.90, 1.0))
 	btn_menu_save_game.pressed.connect(save_game_from_menu)
 	btns_vbox.add_child(btn_menu_save_game)
 
 	# Load Game State Button
 	btn_menu_load_game = Button.new()
 	btn_menu_load_game.name = "BtnLoadGameState"
-	btn_menu_load_game.text = "📂  Load Game State"
+	btn_menu_load_game.text = "LOAD GAME STATE"
 	btn_menu_load_game.tooltip_text = "Restore saved quest session from disk"
-	btn_menu_load_game.custom_minimum_size = Vector2(0, 38)
+	btn_menu_load_game.custom_minimum_size = Vector2(0, 46)
 	btn_menu_load_game.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	var lod_sb = StyleBoxFlat.new()
-	lod_sb.bg_color = Color(0.08, 0.15, 0.22, 0.95)
-	lod_sb.border_color = Color(0.0, 0.74, 0.83, 0.85)
-	lod_sb.set_border_width_all(1)
-	lod_sb.set_corner_radius_all(6)
-	btn_menu_load_game.add_theme_stylebox_override("normal", lod_sb)
-	btn_menu_load_game.add_theme_color_override("font_color", Color(0.75, 0.95, 1.0, 1.0))
-	btn_menu_load_game.add_theme_font_size_override("font_size", 13)
+	apply_rpg_font_to_button(btn_menu_load_game, 14, Color(0.88, 0.95, 1.0, 1.0))
 	btn_menu_load_game.pressed.connect(load_game_from_menu)
 	btns_vbox.add_child(btn_menu_load_game)
 
 	# Close / Resume Button
 	btn_menu_close = Button.new()
 	btn_menu_close.name = "BtnCloseGameMenu"
-	btn_menu_close.text = "▶  Resume Quest"
+	btn_menu_close.text = "RESUME QUEST"
 	btn_menu_close.tooltip_text = "Dismiss Game Menu and return to quest [Esc]"
-	btn_menu_close.custom_minimum_size = Vector2(0, 36)
+	btn_menu_close.custom_minimum_size = Vector2(0, 46)
 	btn_menu_close.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	var cls_sb = StyleBoxFlat.new()
-	cls_sb.bg_color = Color(0.12, 0.15, 0.19, 0.9)
-	cls_sb.border_color = Color(0.45, 0.52, 0.62, 0.7)
-	cls_sb.set_border_width_all(1)
-	cls_sb.set_corner_radius_all(6)
-	btn_menu_close.add_theme_stylebox_override("normal", cls_sb)
-	btn_menu_close.add_theme_color_override("font_color", Color(0.9, 0.92, 0.95, 0.95))
-	btn_menu_close.add_theme_font_size_override("font_size", 13)
+	apply_rpg_font_to_button(btn_menu_close, 14, Color(0.96, 0.92, 0.85, 1.0))
 	btn_menu_close.pressed.connect(close_game_menu)
 	btns_vbox.add_child(btn_menu_close)
 
@@ -4013,8 +4110,7 @@ func _setup_game_menu_modal() -> void:
 	game_menu_status_label.name = "StatusLabel"
 	game_menu_status_label.text = "[Esc] to resume • Autosave active"
 	game_menu_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	game_menu_status_label.add_theme_font_size_override("font_size", 11)
-	game_menu_status_label.add_theme_color_override("font_color", Color(0.6, 0.7, 0.8, 0.8))
+	apply_rpg_font_to_label(game_menu_status_label, false, 11, Color(0.82, 0.78, 0.68, 0.85))
 	vbox.add_child(game_menu_status_label)
 
 	game_menu_modal.add_child(game_menu_card)
@@ -8829,8 +8925,10 @@ func _update_ui() -> void:
 	var role_name = "Player Mode (Playing Heroes)" if current_role == "player" else "Game Master Mode (Zargon GM)"
 	if title_label:
 		title_label.text = "HEROQUEST"
+		apply_rpg_font_to_label(title_label, true, 16, Color(1.0, 0.85, 0.25, 1.0))
 	if role_badge:
 		role_badge.text = "Role: " + ("Player" if current_role == "player" else "GM")
+		apply_rpg_font_to_button(role_badge, 11, Color(0.96, 0.92, 0.85, 0.95))
 
 	var hero = get_active_hero()
 	var h_name = str(hero.get("name", "Hero"))
@@ -9134,37 +9232,7 @@ func _setup_turn_overlay_ui() -> void:
 	turn_overlay_btn.size = Vector2(580, 56)
 	turn_overlay_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	turn_overlay_btn.visible = false
-	turn_overlay_btn.add_theme_font_size_override("font_size", 18)
-	turn_overlay_btn.add_theme_color_override("font_color", Color(1.0, 0.94, 0.65, 1.0))
-	turn_overlay_btn.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 0.85, 1.0))
-	turn_overlay_btn.add_theme_color_override("font_pressed_color", Color(0.95, 0.85, 0.4, 1.0))
-
-	var sb_normal = StyleBoxFlat.new()
-	sb_normal.bg_color = Color(0.06, 0.08, 0.14, 0.94)
-	sb_normal.border_color = Color(1.0, 0.82, 0.20, 0.95)
-	sb_normal.set_border_width_all(2)
-	sb_normal.set_corner_radius_all(12)
-	sb_normal.shadow_color = Color(0, 0, 0, 0.65)
-	sb_normal.shadow_size = 14
-	sb_normal.shadow_offset = Vector2(0, 4)
-	turn_overlay_btn.add_theme_stylebox_override("normal", sb_normal)
-
-	var sb_hover = StyleBoxFlat.new()
-	sb_hover.bg_color = Color(0.10, 0.13, 0.22, 0.98)
-	sb_hover.border_color = Color(1.0, 0.95, 0.45, 1.0)
-	sb_hover.set_border_width_all(2)
-	sb_hover.set_corner_radius_all(12)
-	sb_hover.shadow_color = Color(1.0, 0.85, 0.2, 0.35)
-	sb_hover.shadow_size = 20
-	sb_hover.shadow_offset = Vector2(0, 4)
-	turn_overlay_btn.add_theme_stylebox_override("hover", sb_hover)
-
-	var sb_pressed = StyleBoxFlat.new()
-	sb_pressed.bg_color = Color(0.04, 0.06, 0.10, 1.0)
-	sb_pressed.border_color = Color(0.85, 0.70, 0.15, 1.0)
-	sb_pressed.set_border_width_all(2)
-	sb_pressed.set_corner_radius_all(12)
-	turn_overlay_btn.add_theme_stylebox_override("pressed", sb_pressed)
+	apply_rpg_font_to_button(turn_overlay_btn, 17, Color(1.0, 0.94, 0.65, 1.0))
 
 	turn_overlay_btn.pressed.connect(_on_turn_overlay_pressed)
 	ui.add_child(turn_overlay_btn)
@@ -9177,15 +9245,7 @@ func _setup_turn_overlay_ui() -> void:
 	flashy_number_panel.size = Vector2(320, 100)
 	flashy_number_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	flashy_number_panel.visible = false
-
-	var sb_flashy = StyleBoxFlat.new()
-	sb_flashy.bg_color = Color(0.08, 0.04, 0.04, 0.96)
-	sb_flashy.border_color = Color(1.0, 0.84, 0.25, 1.0)
-	sb_flashy.set_border_width_all(2)
-	sb_flashy.set_corner_radius_all(16)
-	sb_flashy.shadow_color = Color(1.0, 0.8, 0.15, 0.45)
-	sb_flashy.shadow_size = 24
-	flashy_number_panel.add_theme_stylebox_override("panel", sb_flashy)
+	flashy_number_panel.add_theme_stylebox_override("panel", get_rpg_dialog_panel_stylebox(16, 12, 16, 12))
 
 	var vbox = VBoxContainer.new()
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -9195,19 +9255,14 @@ func _setup_turn_overlay_ui() -> void:
 	flashy_subtitle_label = Label.new()
 	flashy_subtitle_label.text = "MOVEMENT ROLL"
 	flashy_subtitle_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	flashy_subtitle_label.add_theme_font_size_override("font_size", 13)
-	flashy_subtitle_label.add_theme_color_override("font_color", Color(1.0, 0.82, 0.3, 0.95))
+	apply_rpg_font_to_label(flashy_subtitle_label, false, 13, Color(1.0, 0.85, 0.35, 0.95))
 	flashy_subtitle_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vbox.add_child(flashy_subtitle_label)
 
 	flashy_number_label = Label.new()
 	flashy_number_label.text = "0"
 	flashy_number_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	flashy_number_label.add_theme_font_size_override("font_size", 68)
-	flashy_number_label.add_theme_color_override("font_color", Color(1.0, 0.95, 0.45, 1.0))
-	flashy_number_label.add_theme_color_override("font_shadow_color", Color(0.2, 0.05, 0.0, 0.95))
-	flashy_number_label.add_theme_constant_override("shadow_offset_x", 2)
-	flashy_number_label.add_theme_constant_override("shadow_offset_y", 3)
+	apply_rpg_font_to_label(flashy_number_label, true, 64, Color(1.0, 0.95, 0.45, 1.0))
 	flashy_number_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vbox.add_child(flashy_number_label)
 
@@ -9990,27 +10045,34 @@ func _setup_hero_detail_modal() -> void:
 	if not hero_detail_card:
 		hero_detail_card = get_node_or_null("UI/HeroDetailModal/Card")
 	if hero_detail_card:
-		var card_sb = StyleBoxFlat.new()
-		card_sb.bg_color = Color(0.07, 0.09, 0.14, 0.98)
-		card_sb.set_corner_radius_all(10)
-		card_sb.border_width_left = 2
-		card_sb.border_width_top = 2
-		card_sb.border_width_right = 2
-		card_sb.border_width_bottom = 2
-		card_sb.border_color = Color(1.0, 0.82, 0.2, 0.9)
-		card_sb.shadow_color = Color(0, 0, 0, 0.85)
-		card_sb.shadow_size = 24
-		hero_detail_card.add_theme_stylebox_override("panel", card_sb)
+		hero_detail_card.add_theme_stylebox_override("panel", get_rpg_dialog_panel_stylebox(28, 24, 28, 24))
+
+	if hero_detail_title:
+		apply_rpg_font_to_label(hero_detail_title, true, 18, Color(1.0, 0.88, 0.35, 1.0))
+	if hero_detail_status_badge:
+		apply_rpg_font_to_label(hero_detail_status_badge, false, 11)
+	if hero_detail_name:
+		apply_rpg_font_to_label(hero_detail_name, true, 18, Color(1.0, 0.92, 0.6, 1.0))
+	if hero_detail_class:
+		apply_rpg_font_to_label(hero_detail_class, false, 12, Color(0.85, 0.75, 0.5, 0.95))
+	if hero_detail_lore and font_rpg_medieval:
+		hero_detail_lore.add_theme_font_override("normal_font", font_rpg_medieval)
+		hero_detail_lore.add_theme_font_override("italic_font", font_rpg_medieval)
 
 	if not hero_detail_btn_close:
 		hero_detail_btn_close = get_node_or_null("UI/HeroDetailModal/Card/Margin/VBox/ButtonBox/BtnClose")
-	if hero_detail_btn_close and not hero_detail_btn_close.pressed.is_connected(close_hero_detail_modal):
-		hero_detail_btn_close.pressed.connect(close_hero_detail_modal)
+	if hero_detail_btn_close:
+		hero_detail_btn_close.custom_minimum_size = Vector2(0, 44)
+		apply_rpg_font_to_button(hero_detail_btn_close, 13)
+		if not hero_detail_btn_close.pressed.is_connected(close_hero_detail_modal):
+			hero_detail_btn_close.pressed.connect(close_hero_detail_modal)
 
 	if not hero_detail_btn_close_header:
 		hero_detail_btn_close_header = get_node_or_null("UI/HeroDetailModal/Card/Margin/VBox/Header/BtnCloseHeader")
-	if hero_detail_btn_close_header and not hero_detail_btn_close_header.pressed.is_connected(close_hero_detail_modal):
-		hero_detail_btn_close_header.pressed.connect(close_hero_detail_modal)
+	if hero_detail_btn_close_header:
+		apply_rpg_font_to_button(hero_detail_btn_close_header, 11)
+		if not hero_detail_btn_close_header.pressed.is_connected(close_hero_detail_modal):
+			hero_detail_btn_close_header.pressed.connect(close_hero_detail_modal)
 
 	if hero_detail_modal and not hero_detail_modal.gui_input.is_connected(_on_hero_detail_backdrop_gui_input):
 		hero_detail_modal.gui_input.connect(_on_hero_detail_backdrop_gui_input)
@@ -10482,14 +10544,10 @@ func _setup_treasure_modal() -> void:
 	if not treasure_modal_card:
 		treasure_modal_card = get_node_or_null("UI/TreasureModal/Card")
 	if treasure_modal_card:
-		var card_sb = StyleBoxFlat.new()
-		card_sb.bg_color = Color(0.06, 0.08, 0.12, 0.98)
-		card_sb.set_corner_radius_all(10)
-		card_sb.set_border_width_all(2)
-		card_sb.border_color = Color(0.9, 0.75, 0.3, 0.9)
-		card_sb.shadow_color = Color(0, 0, 0, 0.9)
-		card_sb.shadow_size = 24
-		treasure_modal_card.add_theme_stylebox_override("panel", card_sb)
+		treasure_modal_card.add_theme_stylebox_override("panel", get_rpg_dialog_panel_stylebox(28, 24, 28, 24))
+
+	if treasure_deck_badge:
+		apply_rpg_font_to_label(treasure_deck_badge, false, 11, Color(0.85, 0.72, 0.35, 0.95))
 
 	if not treasure_drawn_card:
 		treasure_drawn_card = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard")
@@ -10514,13 +10572,18 @@ func _setup_treasure_modal() -> void:
 
 	if not treasure_btn_resolve:
 		treasure_btn_resolve = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/ButtonBox/BtnResolve")
-	if treasure_btn_resolve and not treasure_btn_resolve.pressed.is_connected(resolve_treasure_overlay_click):
-		treasure_btn_resolve.pressed.connect(resolve_treasure_overlay_click)
+	if treasure_btn_resolve:
+		treasure_btn_resolve.custom_minimum_size = Vector2(0, 44)
+		apply_rpg_font_to_button(treasure_btn_resolve, 13, Color(1.0, 0.88, 0.35, 1.0))
+		if not treasure_btn_resolve.pressed.is_connected(resolve_treasure_overlay_click):
+			treasure_btn_resolve.pressed.connect(resolve_treasure_overlay_click)
 
 	if not treasure_btn_close_header:
 		treasure_btn_close_header = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/Header/BtnCloseHeader")
-	if treasure_btn_close_header and not treasure_btn_close_header.pressed.is_connected(resolve_treasure_overlay_click):
-		treasure_btn_close_header.pressed.connect(resolve_treasure_overlay_click)
+	if treasure_btn_close_header:
+		apply_rpg_font_to_button(treasure_btn_close_header, 11)
+		if not treasure_btn_close_header.pressed.is_connected(resolve_treasure_overlay_click):
+			treasure_btn_close_header.pressed.connect(resolve_treasure_overlay_click)
 
 	if treasure_modal and not treasure_modal.gui_input.is_connected(_on_treasure_modal_backdrop_gui_input):
 		treasure_modal.gui_input.connect(_on_treasure_modal_backdrop_gui_input)
@@ -10664,27 +10727,34 @@ func _setup_monster_detail_modal() -> void:
 	if not monster_detail_card:
 		monster_detail_card = get_node_or_null("UI/MonsterDetailModal/Card")
 	if monster_detail_card:
-		var card_sb = StyleBoxFlat.new()
-		card_sb.bg_color = Color(0.08, 0.06, 0.08, 0.98) # Dark obsidian dungeon stone
-		card_sb.set_corner_radius_all(10)
-		card_sb.border_width_left = 2
-		card_sb.border_width_top = 2
-		card_sb.border_width_right = 2
-		card_sb.border_width_bottom = 2
-		card_sb.border_color = Color(0.9, 0.25, 0.2, 0.9) # Crimson dread rune glow
-		card_sb.shadow_color = Color(0, 0, 0, 0.9)
-		card_sb.shadow_size = 24
-		monster_detail_card.add_theme_stylebox_override("panel", card_sb)
+		monster_detail_card.add_theme_stylebox_override("panel", get_rpg_dialog_panel_stylebox(28, 24, 28, 24))
+
+	if monster_detail_title:
+		apply_rpg_font_to_label(monster_detail_title, true, 18, Color(1.0, 0.45, 0.35, 1.0))
+	if monster_detail_status_badge:
+		apply_rpg_font_to_label(monster_detail_status_badge, false, 11)
+	if monster_detail_name:
+		apply_rpg_font_to_label(monster_detail_name, true, 18, Color(1.0, 0.85, 0.6, 1.0))
+	if monster_detail_type:
+		apply_rpg_font_to_label(monster_detail_type, false, 12, Color(0.9, 0.65, 0.5, 0.95))
+	if monster_detail_lore and font_rpg_medieval:
+		monster_detail_lore.add_theme_font_override("normal_font", font_rpg_medieval)
+		monster_detail_lore.add_theme_font_override("italic_font", font_rpg_medieval)
 
 	if not monster_detail_btn_close:
 		monster_detail_btn_close = get_node_or_null("UI/MonsterDetailModal/Card/Margin/VBox/ButtonBox/BtnClose")
-	if monster_detail_btn_close and not monster_detail_btn_close.pressed.is_connected(close_monster_detail_modal):
-		monster_detail_btn_close.pressed.connect(close_monster_detail_modal)
+	if monster_detail_btn_close:
+		monster_detail_btn_close.custom_minimum_size = Vector2(0, 44)
+		apply_rpg_font_to_button(monster_detail_btn_close, 13)
+		if not monster_detail_btn_close.pressed.is_connected(close_monster_detail_modal):
+			monster_detail_btn_close.pressed.connect(close_monster_detail_modal)
 
 	if not monster_detail_btn_close_header:
 		monster_detail_btn_close_header = get_node_or_null("UI/MonsterDetailModal/Card/Margin/VBox/Header/BtnCloseHeader")
-	if monster_detail_btn_close_header and not monster_detail_btn_close_header.pressed.is_connected(close_monster_detail_modal):
-		monster_detail_btn_close_header.pressed.connect(close_monster_detail_modal)
+	if monster_detail_btn_close_header:
+		apply_rpg_font_to_button(monster_detail_btn_close_header, 11)
+		if not monster_detail_btn_close_header.pressed.is_connected(close_monster_detail_modal):
+			monster_detail_btn_close_header.pressed.connect(close_monster_detail_modal)
 
 	if monster_detail_modal and not monster_detail_modal.gui_input.is_connected(_on_monster_detail_backdrop_gui_input):
 		monster_detail_modal.gui_input.connect(_on_monster_detail_backdrop_gui_input)
