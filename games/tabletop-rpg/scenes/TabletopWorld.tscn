@@ -1114,10 +1114,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -520.0
-offset_top = -340.0
-offset_right = 520.0
-offset_bottom = 340.0
+offset_left = -550.0
+offset_top = -375.0
+offset_right = 550.0
+offset_bottom = 375.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -1162,12 +1162,12 @@ theme_override_constants/separation = 24
 
 [node name="DeckColumn" type="VBoxContainer" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(330, 0)
+custom_minimum_size = Vector2(340, 0)
 theme_override_constants/separation = 8
 
 [node name="DeckFrame" type="PanelContainer" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/DeckColumn"]
 layout_mode = 2
-custom_minimum_size = Vector2(330, 360)
+custom_minimum_size = Vector2(340, 480)
 
 [node name="DeckTexture" type="TextureRect" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/DeckColumn/DeckFrame"]
 layout_mode = 2
@@ -1191,7 +1191,7 @@ horizontal_alignment = 1
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-clip_contents = true
+clip_contents = false
 
 [node name="DrawnCard" type="PanelContainer" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl"]
 layout_mode = 1
@@ -1200,19 +1200,20 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -240.0
-offset_top = -225.0
-offset_right = 240.0
-offset_bottom = 225.0
+offset_left = -210.0
+offset_top = -280.0
+offset_right = 210.0
+offset_bottom = 280.0
 grow_horizontal = 2
 grow_vertical = 2
+pivot_offset = Vector2(210, 280)
 
 [node name="CardMargin" type="MarginContainer" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard"]
 layout_mode = 2
-theme_override_constants/margin_left = 18
-theme_override_constants/margin_top = 16
-theme_override_constants/margin_right = 18
-theme_override_constants/margin_bottom = 16
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_bottom = 24
 
 [node name="CardVBox" type="VBoxContainer" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin"]
 layout_mode = 2
@@ -1242,7 +1243,7 @@ text = "Potion of Healing"
 
 [node name="IllustrationFrame" type="PanelContainer" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 160)
+custom_minimum_size = Vector2(0, 190)
 
 [node name="CardIllustration" type="TextureRect" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox/IllustrationFrame"]
 layout_mode = 2
