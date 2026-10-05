@@ -451,7 +451,7 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 20
-text = "🔮 HeroQuest: Elf Elemental Spell Selection"
+text = "HEROQUEST : ELF SPELL SELECTION"
 
 [node name="Badge" type="Label" parent="UI/ElfSpellSelectModal/Card/Margin/VBox/Header"]
 layout_mode = 2
@@ -489,7 +489,7 @@ theme_override_constants/margin_bottom = 8
 layout_mode = 2
 theme_override_font_sizes/font_size = 13
 theme_override_colors/font_color = Color(0.3, 0.9, 0.6, 1)
-text = "Selected: 💧 Water Magic (Elf: 3 Spells) | Wizard takes: Earth, Fire, Air (9 Spells)"
+text = "Selected: Water Magic (Elf: 3 Spells) | Wizard takes: Earth, Fire, Air (9 Spells)"
 
 [node name="ButtonBox" type="HBoxContainer" parent="UI/ElfSpellSelectModal/Card/Margin/VBox"]
 layout_mode = 2
@@ -505,7 +505,7 @@ text = "Skip / Default"
 layout_mode = 2
 size_flags_horizontal = 3
 custom_minimum_size = Vector2(0, 42)
-text = "⚔️ Enter the Dungeon"
+text = "Enter the Dungeon"
 
 [node name="SpellCastModal" type="ColorRect" parent="UI"]
 visible = false
@@ -545,7 +545,7 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 20
-text = "🔮 HeroQuest: Spell Casting"
+text = "HEROQUEST : SPELL CASTING"
 
 [node name="ActionBadge" type="Label" parent="UI/SpellCastModal/Card/Margin/VBox/Header"]
 layout_mode = 2
@@ -582,7 +582,7 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 custom_minimum_size = Vector2(0, 38)
-text = "✕ Close Spellbook"
+text = "Close Spellbook"
 
 [node name="ItemUseModal" type="ColorRect" parent="UI"]
 visible = false
@@ -622,7 +622,7 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 20
-text = "🎒 Backpack & Inventory"
+text = "HEROQUEST : BACKPACK & INVENTORY"
 
 [node name="Separator" type="HSeparator" parent="UI/ItemUseModal/Card/Margin/VBox"]
 layout_mode = 2
@@ -653,7 +653,7 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 custom_minimum_size = Vector2(0, 38)
-text = "✕ Close Inventory"
+text = "Close Inventory"
 
 [node name="DisarmTrapModal" type="ColorRect" parent="UI"]
 visible = false
@@ -693,7 +693,7 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 20
-text = "🔧 Disarm Trap"
+text = "HEROQUEST : DISARM TRAP"
 
 [node name="Badge" type="Label" parent="UI/DisarmTrapModal/Card/Margin/VBox/Header"]
 layout_mode = 2
@@ -730,7 +730,7 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 custom_minimum_size = Vector2(0, 38)
-text = "✕ Close"
+text = "Close"
 
 [node name="HeroDetailModal" type="ColorRect" parent="UI"]
 visible = false

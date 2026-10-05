@@ -71,7 +71,18 @@ try:
     ai.close_game_menu()
     time.sleep(0.4)
 
-    # 4. Open Hero Detail Modal for Rogar the Barbarian
+    # 4. Capture Quest Objective Modal
+    ai.execute_action("open_quest_objective")
+    time.sleep(0.5)
+    out_quest_obj = "/tmp/tabletop_rpg_quest_objective_modal.png"
+    ai.take_screenshot(out_quest_obj)
+    print(f"Captured {out_quest_obj}")
+
+    # Close quest objective
+    ai.execute_action("close_quest_objective")
+    time.sleep(0.4)
+
+    # 5. Open Hero Detail Modal for Rogar the Barbarian
     ai.execute_action("open_hero_detail", heroId="barbarian")
     time.sleep(0.5)
     out_hero = "/tmp/tabletop_rpg_hero_sheet.png"
@@ -82,12 +93,25 @@ try:
     ai.execute_action("close_hero_detail")
     time.sleep(0.4)
 
+    # 6. Open Monster Detail Modal for an enemy (Verag)
+    ai.execute_action("open_monster_detail", monsterId="verag")
+    time.sleep(0.5)
+    out_monster = "/tmp/tabletop_rpg_monster_sheet.png"
+    ai.take_screenshot(out_monster)
+    print(f"Captured {out_monster}")
+
+    # Close monster detail
+    ai.execute_action("close_monster_detail")
+    time.sleep(0.4)
+
     # Process and crop images
     screenshots = [
         (out_elf, "tabletop_rpg_elf_spell_modal.png", "tabletop_rpg_elf_spell_crop.png", (450, 150, 1470, 930)),
         (out_armory, "tabletop_rpg_armory_modal.png", "tabletop_rpg_armory_crop.png", (450, 140, 1470, 940)),
         (out_menu, "tabletop_rpg_game_menu.png", "tabletop_rpg_game_menu_crop.png", (660, 310, 1260, 770)),
-        (out_hero, "tabletop_rpg_hero_sheet.png", "tabletop_rpg_hero_sheet_crop.png", (450, 150, 1470, 930))
+        (out_quest_obj, "tabletop_quest_objective_modal.png", "tabletop_quest_objective_crop.png", (640, 260, 1280, 820)),
+        (out_hero, "tabletop_rpg_hero_sheet.png", "tabletop_rpg_hero_sheet_crop.png", (450, 150, 1470, 930)),
+        (out_monster, "tabletop_rpg_monster_sheet.png", "tabletop_rpg_monster_sheet_crop.png", (450, 150, 1470, 930))
     ]
 
     for full_src, full_name, crop_name, crop_box in screenshots:
