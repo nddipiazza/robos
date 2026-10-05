@@ -1370,24 +1370,10 @@ func get_rpg_dialog_panel_stylebox(pad_left: int = 24, pad_top: int = 20, pad_ri
 	fb.content_margin_bottom = pad_bottom
 	return fb
 
-func get_rpg_parchment_stylebox(pad_left: int = 12, pad_top: int = 8, pad_right: int = 12, pad_bottom: int = 8) -> StyleBox:
-	if tex_rpg_parchment_banner_bg:
-		var sb = StyleBoxTexture.new()
-		sb.texture = tex_rpg_parchment_banner_bg
-		sb.texture_margin_left = 32
-		sb.texture_margin_top = 28
-		sb.texture_margin_right = 32
-		sb.texture_margin_bottom = 28
-		sb.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
-		sb.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
-		sb.content_margin_left = pad_left
-		sb.content_margin_top = pad_top
-		sb.content_margin_right = pad_right
-		sb.content_margin_bottom = pad_bottom
-		return sb
+func get_rpg_plaque_stylebox(pad_left: int = 14, pad_top: int = 8, pad_right: int = 14, pad_bottom: int = 8) -> StyleBox:
 	var fb = StyleBoxFlat.new()
-	fb.bg_color = Color(0.18, 0.15, 0.10, 0.95)
-	fb.border_color = Color(0.65, 0.52, 0.30, 0.8)
+	fb.bg_color = Color(0.06, 0.08, 0.13, 0.96)
+	fb.border_color = Color(0.85, 0.72, 0.32, 0.90)
 	fb.set_border_width_all(1)
 	fb.set_corner_radius_all(6)
 	fb.content_margin_left = pad_left
@@ -1395,6 +1381,33 @@ func get_rpg_parchment_stylebox(pad_left: int = 12, pad_top: int = 8, pad_right:
 	fb.content_margin_right = pad_right
 	fb.content_margin_bottom = pad_bottom
 	return fb
+
+func get_rpg_badge_stylebox(border_color: Color = Color(0.95, 0.80, 0.30, 0.90), bg_color: Color = Color(0.12, 0.10, 0.06, 0.92)) -> StyleBoxFlat:
+	var fb = StyleBoxFlat.new()
+	fb.bg_color = bg_color
+	fb.border_color = border_color
+	fb.set_border_width_all(1)
+	fb.set_corner_radius_all(4)
+	fb.content_margin_left = 10
+	fb.content_margin_right = 10
+	fb.content_margin_top = 4
+	fb.content_margin_bottom = 4
+	return fb
+
+func get_rpg_instruction_stylebox() -> StyleBoxFlat:
+	var fb = StyleBoxFlat.new()
+	fb.bg_color = Color(0.04, 0.06, 0.10, 0.90)
+	fb.border_color = Color(0.35, 0.42, 0.52, 0.65)
+	fb.set_border_width_all(1)
+	fb.set_corner_radius_all(4)
+	fb.content_margin_left = 12
+	fb.content_margin_right = 12
+	fb.content_margin_top = 6
+	fb.content_margin_bottom = 6
+	return fb
+
+func get_rpg_parchment_stylebox(pad_left: int = 12, pad_top: int = 8, pad_right: int = 12, pad_bottom: int = 8) -> StyleBox:
+	return get_rpg_plaque_stylebox(pad_left, pad_top, pad_right, pad_bottom)
 
 func get_rpg_button_stylebox(state: String = "normal", pad_h: int = 16, pad_v: int = 4) -> StyleBox:
 	var tex = tex_rpg_button_hover if (state == "hover" or state == "pressed") else tex_rpg_button_normal
@@ -1469,7 +1482,8 @@ func _apply_rpg_theme_to_all_modals() -> void:
 		if spell_cast_title:
 			apply_rpg_font_to_label(spell_cast_title, true, 18, Color(1.0, 0.88, 0.35, 1.0))
 		if spell_cast_badge:
-			apply_rpg_font_to_label(spell_cast_badge, false, 11, Color(0.85, 0.72, 0.35, 0.95))
+			spell_cast_badge.add_theme_stylebox_override("normal", get_rpg_badge_stylebox())
+			apply_rpg_font_to_label(spell_cast_badge, false, 11, Color(1.0, 0.92, 0.55, 1.0))
 		if btn_spell_cast_close:
 			btn_spell_cast_close.custom_minimum_size = Vector2(0, 44)
 			apply_rpg_font_to_button(btn_spell_cast_close, 13)
@@ -1493,7 +1507,8 @@ func _apply_rpg_theme_to_all_modals() -> void:
 		if disarm_trap_title:
 			apply_rpg_font_to_label(disarm_trap_title, true, 18, Color(1.0, 0.88, 0.35, 1.0))
 		if disarm_trap_badge:
-			apply_rpg_font_to_label(disarm_trap_badge, false, 11, Color(0.85, 0.72, 0.35, 0.95))
+			disarm_trap_badge.add_theme_stylebox_override("normal", get_rpg_badge_stylebox())
+			apply_rpg_font_to_label(disarm_trap_badge, false, 11, Color(1.0, 0.92, 0.55, 1.0))
 		if btn_disarm_trap_close:
 			btn_disarm_trap_close.custom_minimum_size = Vector2(0, 44)
 			apply_rpg_font_to_button(btn_disarm_trap_close, 13)
@@ -3156,13 +3171,13 @@ func _setup_ai_modal_styles() -> void:
 		apply_rpg_font_to_label(title_lbl, true, 18, Color(1.0, 0.88, 0.35, 1.0))
 
 	if ai_modal_cmd_banner:
-		ai_modal_cmd_banner.add_theme_stylebox_override("panel", get_rpg_parchment_stylebox(14, 8, 14, 8))
+		ai_modal_cmd_banner.add_theme_stylebox_override("panel", get_rpg_plaque_stylebox(14, 8, 14, 8))
 
 	if ai_modal_details_panel:
-		ai_modal_details_panel.add_theme_stylebox_override("panel", get_rpg_parchment_stylebox(12, 8, 12, 8))
+		ai_modal_details_panel.add_theme_stylebox_override("panel", get_rpg_plaque_stylebox(12, 8, 12, 8))
 
 	if ai_modal_details_text:
-		apply_rpg_font_to_label(ai_modal_details_text, false, 12, Color(0.18, 0.12, 0.05, 1.0), true)
+		apply_rpg_font_to_label(ai_modal_details_text, false, 12, Color(1.0, 0.94, 0.76, 1.0), false)
 
 	if btn_ai_confirm:
 		apply_rpg_font_to_button(btn_ai_confirm, 13, Color(0.50, 1.0, 0.68, 1.0))
@@ -3200,22 +3215,29 @@ func _check_start_elf_spell_selection() -> void:
 func _setup_elf_spell_modal() -> void:
 	if not elf_spell_card:
 		return
-	elf_spell_card.add_theme_stylebox_override("panel", get_rpg_dialog_panel_stylebox(28, 24, 28, 24))
+	elf_spell_card.add_theme_stylebox_override("panel", get_rpg_dialog_panel_stylebox(28, 28, 28, 24))
 
 	var title_lbl = elf_spell_card.get_node_or_null("Margin/VBox/Header/Title")
 	if title_lbl is Label:
+		title_lbl.text = "HEROQUEST : ELF SPELL SELECTION"
 		apply_rpg_font_to_label(title_lbl, true, 18, Color(1.0, 0.88, 0.35, 1.0))
 	var badge_lbl = elf_spell_card.get_node_or_null("Margin/VBox/Header/Badge")
 	if badge_lbl is Label:
-		apply_rpg_font_to_label(badge_lbl, false, 11, Color(0.85, 0.72, 0.35, 0.95))
+		badge_lbl.text = "QUEST START"
+		badge_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		badge_lbl.add_theme_stylebox_override("normal", get_rpg_badge_stylebox())
+		apply_rpg_font_to_label(badge_lbl, false, 11, Color(1.0, 0.92, 0.55, 1.0))
 	var inst_lbl = elf_spell_card.get_node_or_null("Margin/VBox/Instruction")
 	if inst_lbl is Label:
-		apply_rpg_font_to_label(inst_lbl, false, 12, Color(0.88, 0.84, 0.75, 0.95))
+		inst_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		inst_lbl.add_theme_stylebox_override("normal", get_rpg_instruction_stylebox())
+		apply_rpg_font_to_label(inst_lbl, false, 12, Color(0.96, 0.96, 0.98, 1.0))
 
 	if elf_spell_summary_banner:
-		elf_spell_summary_banner.add_theme_stylebox_override("panel", get_rpg_parchment_stylebox(14, 8, 14, 8))
+		elf_spell_summary_banner.add_theme_stylebox_override("panel", get_rpg_plaque_stylebox(14, 8, 14, 8))
 	if elf_spell_summary_text:
-		apply_rpg_font_to_label(elf_spell_summary_text, false, 12, Color(0.18, 0.12, 0.05, 1.0), true)
+		elf_spell_summary_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		apply_rpg_font_to_label(elf_spell_summary_text, false, 13, Color(1.0, 0.94, 0.76, 1.0), false)
 
 	if btn_elf_spell_confirm:
 		btn_elf_spell_confirm.custom_minimum_size = Vector2(200, 44)
@@ -3331,13 +3353,14 @@ func _update_elf_spell_modal_ui() -> void:
 
 	if elf_spell_summary_text:
 		var cur_info = ELEMENTAL_DECK_INFO.get(current_elf_element, {})
+		var cur_name = cur_info.get("name", current_elf_element.capitalize() + " Magic")
 		var wiz_names: Array = []
 		for k in ["water", "earth", "fire", "air"]:
 			if k != current_elf_element:
 				var wi = ELEMENTAL_DECK_INFO.get(k, {})
 				wiz_names.append(wi.get("name", k).replace(" Magic", ""))
-		elf_spell_summary_text.text = "Selected: %s (Elf: 3 Spells) | Wizard takes: %s (9 Spells)" % [
-			cur_info.get("name", current_elf_element),
+		elf_spell_summary_text.text = "Selected: %s (Elf: 3 Spells)  •  Wizard takes: %s (9 Spells)" % [
+			cur_name,
 			", ".join(wiz_names)
 		]
 	if btn_elf_spell_confirm:
@@ -3607,15 +3630,18 @@ func _setup_armory_modal() -> void:
 	if armory_title is Label:
 		apply_rpg_font_to_label(armory_title, true, 18, Color(1.0, 0.88, 0.35, 1.0))
 	if armory_party_gold_badge:
+		armory_party_gold_badge.add_theme_stylebox_override("normal", get_rpg_badge_stylebox())
 		apply_rpg_font_to_label(armory_party_gold_badge, false, 12, Color(1.0, 0.85, 0.25, 1.0))
 	var armory_inst = armory_card.get_node_or_null("Margin/VBox/Instruction")
 	if armory_inst is Label:
-		apply_rpg_font_to_label(armory_inst, false, 12, Color(0.88, 0.84, 0.75, 0.95))
+		armory_inst.add_theme_stylebox_override("normal", get_rpg_instruction_stylebox())
+		apply_rpg_font_to_label(armory_inst, false, 12, Color(0.96, 0.96, 0.98, 1.0))
 
 	if armory_hero_info_banner:
-		armory_hero_info_banner.add_theme_stylebox_override("panel", get_rpg_parchment_stylebox(14, 8, 14, 8))
+		armory_hero_info_banner.add_theme_stylebox_override("panel", get_rpg_plaque_stylebox(14, 8, 14, 8))
 	if armory_hero_info_text:
-		apply_rpg_font_to_label(armory_hero_info_text, false, 12, Color(0.18, 0.12, 0.05, 1.0), true)
+		armory_hero_info_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		apply_rpg_font_to_label(armory_hero_info_text, false, 13, Color(1.0, 0.94, 0.76, 1.0), false)
 
 	if btn_armory_close:
 		btn_armory_close.custom_minimum_size = Vector2(0, 44)
@@ -4038,17 +4064,19 @@ func _setup_game_menu_modal() -> void:
 	var badge = Label.new()
 	badge.name = "Badge"
 	badge.text = "SESSION CONTROLS"
-	apply_rpg_font_to_label(badge, false, 11, Color(0.85, 0.72, 0.35, 0.95))
+	badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	badge.add_theme_stylebox_override("normal", get_rpg_badge_stylebox())
+	apply_rpg_font_to_label(badge, false, 11, Color(1.0, 0.92, 0.55, 1.0))
 	header.add_child(badge)
 	vbox.add_child(header)
 
 	var sep = HSeparator.new()
 	vbox.add_child(sep)
 
-	# 2. Info Banner (Antique Weathered Parchment)
+	# 2. Info Banner (Antique Plaque)
 	var info_panel = PanelContainer.new()
 	info_panel.name = "InfoPanel"
-	info_panel.add_theme_stylebox_override("panel", get_rpg_parchment_stylebox(18, 10, 18, 10))
+	info_panel.add_theme_stylebox_override("panel", get_rpg_plaque_stylebox(18, 10, 18, 10))
 	var info_margin = MarginContainer.new()
 	info_margin.add_theme_constant_override("margin_left", 8)
 	info_margin.add_theme_constant_override("margin_top", 6)
@@ -4059,7 +4087,8 @@ func _setup_game_menu_modal() -> void:
 	game_menu_info_label = Label.new()
 	game_menu_info_label.name = "InfoLabel"
 	game_menu_info_label.text = "Quest: Active | Round: 1 | Mode: Player"
-	apply_rpg_font_to_label(game_menu_info_label, false, 12, Color(0.18, 0.12, 0.05, 1.0), true)
+	game_menu_info_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	apply_rpg_font_to_label(game_menu_info_label, false, 13, Color(1.0, 0.94, 0.76, 1.0), false)
 	info_margin.add_child(game_menu_info_label)
 	vbox.add_child(info_panel)
 
