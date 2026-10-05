@@ -1401,10 +1401,10 @@ func get_rpg_button_stylebox(state: String = "normal", pad_h: int = 16, pad_v: i
 	if tex:
 		var sb = StyleBoxTexture.new()
 		sb.texture = tex
-		sb.texture_margin_left = 40
-		sb.texture_margin_top = 16
-		sb.texture_margin_right = 40
-		sb.texture_margin_bottom = 16
+		sb.texture_margin_left = 18
+		sb.texture_margin_top = 8
+		sb.texture_margin_right = 18
+		sb.texture_margin_bottom = 8
 		sb.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
 		sb.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
 		sb.content_margin_left = pad_h
@@ -1441,7 +1441,7 @@ func apply_rpg_font_to_label(lbl: Label, is_title: bool = false, font_size: int 
 		lbl.add_theme_constant_override("outline_size", 2 if not is_title else 3)
 		lbl.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.05, 0.95))
 
-func apply_rpg_font_to_button(btn: Button, font_size: int = 14, text_color: Color = Color(0.98, 0.94, 0.88, 1.0)) -> void:
+func apply_rpg_font_to_button(btn: Button, font_size: int = 14, text_color: Color = Color(1.0, 0.94, 0.76, 1.0)) -> void:
 	if not btn:
 		return
 	if font_rpg_cinzel:
@@ -1449,9 +1449,10 @@ func apply_rpg_font_to_button(btn: Button, font_size: int = 14, text_color: Colo
 	if font_size > 0:
 		btn.add_theme_font_size_override("font_size", font_size)
 	btn.add_theme_color_override("font_color", text_color)
-	btn.add_theme_color_override("font_hover_color", Color(1.0, 0.96, 0.65, 1.0))
-	btn.add_theme_color_override("font_pressed_color", Color(1.0, 0.82, 0.3, 1.0))
-	btn.add_theme_constant_override("outline_size", 3)
+	btn.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 0.90, 1.0))
+	btn.add_theme_color_override("font_pressed_color", Color(1.0, 0.85, 0.35, 1.0))
+	btn.add_theme_color_override("font_disabled_color", Color(0.55, 0.52, 0.48, 0.6))
+	btn.add_theme_constant_override("outline_size", 1)
 	btn.add_theme_color_override("font_outline_color", Color(0.01, 0.01, 0.02, 0.95))
 	btn.add_theme_stylebox_override("normal", get_rpg_button_stylebox("normal"))
 	btn.add_theme_stylebox_override("hover", get_rpg_button_stylebox("hover"))
@@ -1840,22 +1841,22 @@ func _setup_ui_signals() -> void:
 		menu_btn.text = "⚙️ Game Menu"
 		menu_btn.tooltip_text = "Open Game Menu: Restart Quest, Save Game State, Load Game State [Esc]"
 		menu_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-		apply_rpg_font_to_button(menu_btn, 11, Color(0.96, 0.92, 0.85, 0.95))
+		apply_rpg_font_to_button(menu_btn, 11, Color(1.0, 0.94, 0.76, 1.0))
 		menu_btn.pressed.connect(toggle_game_menu)
 		header_hbox.add_child(menu_btn)
 
 	if title_label:
 		apply_rpg_font_to_label(title_label, true, 16, Color(1.0, 0.85, 0.25, 1.0))
 	if role_badge:
-		apply_rpg_font_to_button(role_badge, 11, Color(0.96, 0.92, 0.85, 0.95))
+		apply_rpg_font_to_button(role_badge, 11, Color(1.0, 0.94, 0.76, 1.0))
 	if btn_map_end_turn:
-		apply_rpg_font_to_button(btn_map_end_turn, 12, Color(1.0, 0.9, 0.7, 1.0))
+		apply_rpg_font_to_button(btn_map_end_turn, 12, Color(1.0, 0.94, 0.76, 1.0))
 
 	if header_hbox and not header_hbox.has_node("BtnToggleDemo"):
 		var demo_btn = Button.new()
 		demo_btn.name = "BtnToggleDemo"
 		demo_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-		apply_rpg_font_to_button(demo_btn, 11, Color(0.96, 0.92, 0.85, 0.95))
+		apply_rpg_font_to_button(demo_btn, 11, Color(1.0, 0.94, 0.76, 1.0))
 		demo_btn.pressed.connect(func():
 			CartridgeManager.auto_play_enabled = not CartridgeManager.auto_play_enabled
 			_update_demo_button_ui()
@@ -3164,10 +3165,10 @@ func _setup_ai_modal_styles() -> void:
 		apply_rpg_font_to_label(ai_modal_details_text, false, 12, Color(0.18, 0.12, 0.05, 1.0), true)
 
 	if btn_ai_confirm:
-		apply_rpg_font_to_button(btn_ai_confirm, 13, Color(0.82, 1.0, 0.86, 1.0))
+		apply_rpg_font_to_button(btn_ai_confirm, 13, Color(0.50, 1.0, 0.68, 1.0))
 
 	if btn_ai_cancel:
-		apply_rpg_font_to_button(btn_ai_cancel, 13, Color(0.96, 0.92, 0.85, 1.0))
+		apply_rpg_font_to_button(btn_ai_cancel, 13, Color(1.0, 0.94, 0.76, 1.0))
 
 func is_headless_mode() -> bool:
 	if DisplayServer.get_name() == "headless":
@@ -3218,13 +3219,13 @@ func _setup_elf_spell_modal() -> void:
 
 	if btn_elf_spell_confirm:
 		btn_elf_spell_confirm.custom_minimum_size = Vector2(200, 44)
-		apply_rpg_font_to_button(btn_elf_spell_confirm, 13, Color(0.82, 1.0, 0.86, 1.0))
+		apply_rpg_font_to_button(btn_elf_spell_confirm, 15, Color(0.60, 1.0, 0.75, 1.0))
 		if not btn_elf_spell_confirm.pressed.is_connected(_on_confirm_spell_modal_pressed):
 			btn_elf_spell_confirm.pressed.connect(_on_confirm_spell_modal_pressed)
 
 	if btn_elf_spell_close:
 		btn_elf_spell_close.custom_minimum_size = Vector2(160, 44)
-		apply_rpg_font_to_button(btn_elf_spell_close, 13, Color(0.96, 0.92, 0.85, 1.0))
+		apply_rpg_font_to_button(btn_elf_spell_close, 15, Color(1.0, 0.94, 0.76, 1.0))
 		if not btn_elf_spell_close.pressed.is_connected(_on_close_spell_modal_pressed):
 			btn_elf_spell_close.pressed.connect(_on_close_spell_modal_pressed)
 
@@ -3321,17 +3322,12 @@ func _update_elf_spell_modal_ui() -> void:
 		var btn_select = card.find_child("BtnSelect", true, false)
 		if btn_select:
 			if is_selected:
-				btn_select.text = "Drafted"
-				var bsb = StyleBoxFlat.new()
-				bsb.bg_color = Color(0.06, 0.45, 0.28, 1.0)
-				bsb.set_corner_radius_all(4)
-				btn_select.add_theme_stylebox_override("normal", bsb)
+				btn_select.text = "✓ DRAFTED"
+				apply_rpg_font_to_button(btn_select, 11, Color(0.60, 1.0, 0.75, 1.0))
+				btn_select.add_theme_stylebox_override("normal", get_rpg_button_stylebox("hover"))
 			else:
 				btn_select.text = "Draft for Elf"
-				var bsb = StyleBoxFlat.new()
-				bsb.bg_color = Color(0.15, 0.20, 0.28, 0.9)
-				bsb.set_corner_radius_all(4)
-				btn_select.add_theme_stylebox_override("normal", bsb)
+				apply_rpg_font_to_button(btn_select, 11, Color(1.0, 0.94, 0.76, 1.0))
 
 	if elf_spell_summary_text:
 		var cur_info = ELEMENTAL_DECK_INFO.get(current_elf_element, {})
@@ -3623,7 +3619,7 @@ func _setup_armory_modal() -> void:
 
 	if btn_armory_close:
 		btn_armory_close.custom_minimum_size = Vector2(0, 44)
-		apply_rpg_font_to_button(btn_armory_close, 13, Color(0.96, 0.92, 0.85, 1.0))
+		apply_rpg_font_to_button(btn_armory_close, 15, Color(1.0, 0.94, 0.76, 1.0))
 		if not btn_armory_close.pressed.is_connected(close_armory):
 			btn_armory_close.pressed.connect(close_armory)
 
@@ -4079,7 +4075,7 @@ func _setup_game_menu_modal() -> void:
 	btn_menu_restart_quest.tooltip_text = "Force reload current quest from cartridge (clears saved game and restores Round 1)"
 	btn_menu_restart_quest.custom_minimum_size = Vector2(0, 46)
 	btn_menu_restart_quest.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	apply_rpg_font_to_button(btn_menu_restart_quest, 14, Color(1.0, 0.86, 0.86, 1.0))
+	apply_rpg_font_to_button(btn_menu_restart_quest, 15, Color(1.0, 0.62, 0.55, 1.0))
 	btn_menu_restart_quest.pressed.connect(restart_quest_from_menu)
 	btns_vbox.add_child(btn_menu_restart_quest)
 
@@ -4090,7 +4086,7 @@ func _setup_game_menu_modal() -> void:
 	btn_menu_save_game.tooltip_text = "Save current hero vitals, spent spells, inventory, and explored tiles to disk"
 	btn_menu_save_game.custom_minimum_size = Vector2(0, 46)
 	btn_menu_save_game.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	apply_rpg_font_to_button(btn_menu_save_game, 14, Color(0.88, 1.0, 0.90, 1.0))
+	apply_rpg_font_to_button(btn_menu_save_game, 15, Color(0.60, 1.0, 0.75, 1.0))
 	btn_menu_save_game.pressed.connect(save_game_from_menu)
 	btns_vbox.add_child(btn_menu_save_game)
 
@@ -4101,7 +4097,7 @@ func _setup_game_menu_modal() -> void:
 	btn_menu_load_game.tooltip_text = "Restore saved quest session from disk"
 	btn_menu_load_game.custom_minimum_size = Vector2(0, 46)
 	btn_menu_load_game.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	apply_rpg_font_to_button(btn_menu_load_game, 14, Color(0.88, 0.95, 1.0, 1.0))
+	apply_rpg_font_to_button(btn_menu_load_game, 15, Color(0.65, 0.94, 1.0, 1.0))
 	btn_menu_load_game.pressed.connect(load_game_from_menu)
 	btns_vbox.add_child(btn_menu_load_game)
 
@@ -4112,7 +4108,7 @@ func _setup_game_menu_modal() -> void:
 	btn_menu_close.tooltip_text = "Dismiss Game Menu and return to quest [Esc]"
 	btn_menu_close.custom_minimum_size = Vector2(0, 46)
 	btn_menu_close.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	apply_rpg_font_to_button(btn_menu_close, 14, Color(0.96, 0.92, 0.85, 1.0))
+	apply_rpg_font_to_button(btn_menu_close, 15, Color(1.0, 0.96, 0.82, 1.0))
 	btn_menu_close.pressed.connect(close_game_menu)
 	btns_vbox.add_child(btn_menu_close)
 
@@ -8944,7 +8940,7 @@ func _update_ui() -> void:
 		apply_rpg_font_to_label(title_label, true, 16, Color(1.0, 0.85, 0.25, 1.0))
 	if role_badge:
 		role_badge.text = "Role: " + ("Player" if current_role == "player" else "GM")
-		apply_rpg_font_to_button(role_badge, 11, Color(0.96, 0.92, 0.85, 0.95))
+		apply_rpg_font_to_button(role_badge, 11, Color(1.0, 0.94, 0.76, 1.0))
 
 	var hero = get_active_hero()
 	var h_name = str(hero.get("name", "Hero"))
