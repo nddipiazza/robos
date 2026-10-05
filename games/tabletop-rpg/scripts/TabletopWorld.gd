@@ -1867,18 +1867,10 @@ func _setup_ui_signals() -> void:
 	if btn_map_end_turn:
 		apply_rpg_font_to_button(btn_map_end_turn, 12, Color(1.0, 0.94, 0.76, 1.0))
 
-	if header_hbox and not header_hbox.has_node("BtnToggleDemo"):
-		var demo_btn = Button.new()
-		demo_btn.name = "BtnToggleDemo"
-		demo_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-		apply_rpg_font_to_button(demo_btn, 11, Color(1.0, 0.94, 0.76, 1.0))
-		demo_btn.pressed.connect(func():
-			CartridgeManager.auto_play_enabled = not CartridgeManager.auto_play_enabled
-			_update_demo_button_ui()
-			_log("[DEMO] AI Auto-Play toggled: %s" % ("ENABLED" if CartridgeManager.auto_play_enabled else "PAUSED"))
-		)
-		header_hbox.add_child(demo_btn)
-		_update_demo_button_ui()
+	if header_hbox and header_hbox.has_node("BtnToggleDemo"):
+		var old_demo = header_hbox.get_node("BtnToggleDemo")
+		header_hbox.remove_child(old_demo)
+		old_demo.queue_free()
 
 	if role_badge and not role_badge.pressed.is_connected(toggle_role):
 		role_badge.pressed.connect(toggle_role)
@@ -9219,28 +9211,8 @@ func _finish_current_enemy_turn() -> void:
 
 func _update_demo_button_ui() -> void:
 	var demo_btn: Button = get_node_or_null("UI/SidebarHeader/BtnToggleDemo")
-	if not demo_btn:
-		return
-	var is_active = CartridgeManager.auto_play_enabled
-	demo_btn.text = "🤖 Demo: ON" if is_active else "🤖 Demo"
-	demo_btn.tooltip_text = "Pause Autonomous Tabletop Engine AI Demo" if is_active else "Start Autonomous Tabletop Engine AI Demo (Mentor vs Zargon)"
-	var sb = StyleBoxFlat.new()
-	if is_active:
-		sb.bg_color = Color(0.06, 0.22, 0.24, 0.9)
-		sb.border_color = Color(0.0, 0.85, 0.85, 0.9)
-		demo_btn.add_theme_color_override("font_color", Color(0.6, 1.0, 1.0))
-	else:
-		sb.bg_color = Color(0.12, 0.15, 0.2, 0.8)
-		sb.border_color = Color(0.4, 0.5, 0.65, 0.7)
-		demo_btn.add_theme_color_override("font_color", Color(0.8, 0.85, 0.9))
-	sb.set_border_width_all(1)
-	sb.set_corner_radius_all(4)
-	sb.content_margin_left = 6
-	sb.content_margin_right = 6
-	sb.content_margin_top = 2
-	sb.content_margin_bottom = 2
-	demo_btn.add_theme_stylebox_override("normal", sb)
-	demo_btn.add_theme_font_size_override("font_size", 11)
+	if demo_btn:
+		demo_btn.visible = false
 
 func _update_ui() -> void:
 	_update_demo_button_ui()
