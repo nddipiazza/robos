@@ -1416,6 +1416,42 @@ func get_rpg_instruction_stylebox() -> StyleBoxFlat:
 	fb.content_margin_bottom = 6
 	return fb
 
+func get_rpg_title_plaque_stylebox(pad_h: int = 14, pad_v: int = 6) -> StyleBoxFlat:
+	var fb = StyleBoxFlat.new()
+	fb.bg_color = Color(0.04, 0.06, 0.10, 0.94)
+	fb.border_color = Color(0.85, 0.72, 0.32, 0.85)
+	fb.set_border_width_all(1)
+	fb.set_corner_radius_all(6)
+	fb.content_margin_left = pad_h
+	fb.content_margin_right = pad_h
+	fb.content_margin_top = pad_v
+	fb.content_margin_bottom = pad_v
+	return fb
+
+func get_rpg_section_header_stylebox(pad_h: int = 10, pad_v: int = 4) -> StyleBoxFlat:
+	var fb = StyleBoxFlat.new()
+	fb.bg_color = Color(0.05, 0.08, 0.13, 0.92)
+	fb.border_color = Color(0.40, 0.52, 0.68, 0.70)
+	fb.set_border_width_all(1)
+	fb.set_corner_radius_all(4)
+	fb.content_margin_left = pad_h
+	fb.content_margin_right = pad_h
+	fb.content_margin_top = pad_v
+	fb.content_margin_bottom = pad_v
+	return fb
+
+func get_rpg_lore_box_stylebox(pad_left: int = 12, pad_top: int = 10, pad_right: int = 12, pad_bottom: int = 10) -> StyleBoxFlat:
+	var fb = StyleBoxFlat.new()
+	fb.bg_color = Color(0.05, 0.07, 0.11, 0.94)
+	fb.border_color = Color(0.75, 0.62, 0.30, 0.75)
+	fb.set_border_width_all(1)
+	fb.set_corner_radius_all(6)
+	fb.content_margin_left = pad_left
+	fb.content_margin_top = pad_top
+	fb.content_margin_right = pad_right
+	fb.content_margin_bottom = pad_bottom
+	return fb
+
 func get_rpg_parchment_stylebox(pad_left: int = 12, pad_top: int = 8, pad_right: int = 12, pad_bottom: int = 8) -> StyleBox:
 	return get_rpg_plaque_stylebox(pad_left, pad_top, pad_right, pad_bottom)
 
@@ -1490,10 +1526,16 @@ func _apply_rpg_theme_to_all_modals() -> void:
 		if c is PanelContainer:
 			c.add_theme_stylebox_override("panel", get_rpg_dialog_panel_stylebox(28, 24, 28, 24))
 		if spell_cast_title:
+			spell_cast_title.text = "HEROQUEST : SPELL CASTING"
+			spell_cast_title.add_theme_stylebox_override("normal", get_rpg_title_plaque_stylebox(14, 6))
 			apply_rpg_font_to_label(spell_cast_title, true, 18, Color(1.0, 0.88, 0.35, 1.0))
 		if spell_cast_badge:
 			spell_cast_badge.add_theme_stylebox_override("normal", get_rpg_badge_stylebox())
 			apply_rpg_font_to_label(spell_cast_badge, false, 11, Color(1.0, 0.92, 0.55, 1.0))
+		var inst = spell_cast_modal.get_node_or_null("Card/Margin/VBox/Instruction")
+		if inst is Label:
+			inst.add_theme_stylebox_override("normal", get_rpg_instruction_stylebox())
+			apply_rpg_font_to_label(inst, false, 12, Color(0.96, 0.96, 0.98, 1.0))
 		if btn_spell_cast_close:
 			btn_spell_cast_close.custom_minimum_size = Vector2(0, 44)
 			apply_rpg_font_to_button(btn_spell_cast_close, 13)
@@ -1504,7 +1546,13 @@ func _apply_rpg_theme_to_all_modals() -> void:
 		if c is PanelContainer:
 			c.add_theme_stylebox_override("panel", get_rpg_dialog_panel_stylebox(28, 24, 28, 24))
 		if item_use_title:
+			item_use_title.text = "HEROQUEST : BACKPACK & INVENTORY"
+			item_use_title.add_theme_stylebox_override("normal", get_rpg_title_plaque_stylebox(14, 6))
 			apply_rpg_font_to_label(item_use_title, true, 18, Color(1.0, 0.88, 0.35, 1.0))
+		var inst = item_use_modal.get_node_or_null("Card/Margin/VBox/Instruction")
+		if inst is Label:
+			inst.add_theme_stylebox_override("normal", get_rpg_instruction_stylebox())
+			apply_rpg_font_to_label(inst, false, 12, Color(0.96, 0.96, 0.98, 1.0))
 		if btn_item_use_close:
 			btn_item_use_close.custom_minimum_size = Vector2(0, 44)
 			apply_rpg_font_to_button(btn_item_use_close, 13)
@@ -1515,10 +1563,16 @@ func _apply_rpg_theme_to_all_modals() -> void:
 		if c is PanelContainer:
 			c.add_theme_stylebox_override("panel", get_rpg_dialog_panel_stylebox(28, 24, 28, 24))
 		if disarm_trap_title:
+			disarm_trap_title.text = "HEROQUEST : DISARM TRAP"
+			disarm_trap_title.add_theme_stylebox_override("normal", get_rpg_title_plaque_stylebox(14, 6))
 			apply_rpg_font_to_label(disarm_trap_title, true, 18, Color(1.0, 0.88, 0.35, 1.0))
 		if disarm_trap_badge:
 			disarm_trap_badge.add_theme_stylebox_override("normal", get_rpg_badge_stylebox())
 			apply_rpg_font_to_label(disarm_trap_badge, false, 11, Color(1.0, 0.92, 0.55, 1.0))
+		var inst = disarm_trap_modal.get_node_or_null("Card/Margin/VBox/Instruction")
+		if inst is Label:
+			inst.add_theme_stylebox_override("normal", get_rpg_instruction_stylebox())
+			apply_rpg_font_to_label(inst, false, 12, Color(0.96, 0.96, 0.98, 1.0))
 		if btn_disarm_trap_close:
 			btn_disarm_trap_close.custom_minimum_size = Vector2(0, 44)
 			apply_rpg_font_to_button(btn_disarm_trap_close, 13)
@@ -3187,7 +3241,16 @@ func _setup_ai_modal_styles() -> void:
 
 	var title_lbl = ai_modal_card.get_node_or_null("Margin/VBox/Header/Title")
 	if title_lbl is Label:
+		title_lbl.add_theme_stylebox_override("normal", get_rpg_title_plaque_stylebox(14, 6))
 		apply_rpg_font_to_label(title_lbl, true, 18, Color(1.0, 0.88, 0.35, 1.0))
+
+	if ai_modal_step_badge:
+		ai_modal_step_badge.add_theme_stylebox_override("normal", get_rpg_badge_stylebox())
+		apply_rpg_font_to_label(ai_modal_step_badge, false, 11, Color(1.0, 0.92, 0.55, 1.0))
+
+	if ai_modal_action_title:
+		ai_modal_action_title.add_theme_stylebox_override("normal", get_rpg_section_header_stylebox(10, 4))
+		apply_rpg_font_to_label(ai_modal_action_title, true, 14, Color(1.0, 0.90, 0.5, 1.0))
 
 	if ai_modal_cmd_banner:
 		ai_modal_cmd_banner.add_theme_stylebox_override("panel", get_rpg_plaque_stylebox(14, 8, 14, 8))
@@ -3239,6 +3302,7 @@ func _setup_elf_spell_modal() -> void:
 	var title_lbl = elf_spell_card.get_node_or_null("Margin/VBox/Header/Title")
 	if title_lbl is Label:
 		title_lbl.text = "HEROQUEST : ELF SPELL SELECTION"
+		title_lbl.add_theme_stylebox_override("normal", get_rpg_title_plaque_stylebox(14, 6))
 		apply_rpg_font_to_label(title_lbl, true, 18, Color(1.0, 0.88, 0.35, 1.0))
 	var badge_lbl = elf_spell_card.get_node_or_null("Margin/VBox/Header/Badge")
 	if badge_lbl is Label:
@@ -3647,6 +3711,7 @@ func _setup_armory_modal() -> void:
 
 	var armory_title = armory_card.get_node_or_null("Margin/VBox/Header/Title")
 	if armory_title is Label:
+		armory_title.add_theme_stylebox_override("normal", get_rpg_title_plaque_stylebox(14, 6))
 		apply_rpg_font_to_label(armory_title, true, 18, Color(1.0, 0.88, 0.35, 1.0))
 	if armory_party_gold_badge:
 		armory_party_gold_badge.add_theme_stylebox_override("normal", get_rpg_badge_stylebox())
@@ -4077,6 +4142,7 @@ func _setup_game_menu_modal() -> void:
 	title.name = "Title"
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.text = "HEROQUEST : GAME MENU"
+	title.add_theme_stylebox_override("normal", get_rpg_title_plaque_stylebox(14, 6))
 	apply_rpg_font_to_label(title, true, 19, Color(1.0, 0.88, 0.35, 1.0))
 	header.add_child(title)
 
@@ -4167,6 +4233,7 @@ func _setup_game_menu_modal() -> void:
 	game_menu_status_label.name = "StatusLabel"
 	game_menu_status_label.text = "[Esc] to resume • Autosave active"
 	game_menu_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	game_menu_status_label.add_theme_stylebox_override("normal", get_rpg_instruction_stylebox())
 	apply_rpg_font_to_label(game_menu_status_label, false, 11, Color(0.82, 0.78, 0.68, 0.85))
 	vbox.add_child(game_menu_status_label)
 
@@ -4222,7 +4289,7 @@ func save_game_from_menu() -> void:
 	var path = get_save_file_path()
 	_log("[GAME MENU] Game state successfully saved to disk: %s" % path)
 	if game_menu_status_label:
-		game_menu_status_label.text = "✔ Saved successfully! (%s)" % Time.get_time_string_from_system()
+		game_menu_status_label.text = "[OK] Saved successfully! (%s)" % Time.get_time_string_from_system()
 		game_menu_status_label.add_theme_color_override("font_color", Color(0.3, 0.95, 0.5, 1.0))
 	_update_game_menu_info()
 
@@ -4230,7 +4297,7 @@ func load_game_from_menu() -> void:
 	if not has_saved_game():
 		_log("[GAME MENU] Cannot load: No saved game file found on disk.")
 		if game_menu_status_label:
-			game_menu_status_label.text = "✖ No saved game found on disk!"
+			game_menu_status_label.text = "[!] No saved game found on disk!"
 			game_menu_status_label.add_theme_color_override("font_color", Color(0.95, 0.4, 0.4, 1.0))
 		return
 	var ok = restore_saved_game()
@@ -4242,7 +4309,7 @@ func load_game_from_menu() -> void:
 	else:
 		_log("[GAME MENU] Failed to restore saved game.")
 		if game_menu_status_label:
-			game_menu_status_label.text = "✖ Failed to restore saved game!"
+			game_menu_status_label.text = "[!] Failed to restore saved game!"
 			game_menu_status_label.add_theme_color_override("font_color", Color(0.95, 0.4, 0.4, 1.0))
 
 func get_active_quest_objective() -> Dictionary:
@@ -4363,6 +4430,7 @@ func _setup_quest_objective_modal() -> void:
 	title.name = "Title"
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.text = "QUEST OBJECTIVE"
+	title.add_theme_stylebox_override("normal", get_rpg_title_plaque_stylebox(14, 6))
 	apply_rpg_font_to_label(title, true, 19, Color(1.0, 0.88, 0.35, 1.0))
 	header.add_child(title)
 
@@ -4376,7 +4444,7 @@ func _setup_quest_objective_modal() -> void:
 
 	var btn_x = Button.new()
 	btn_x.name = "BtnCloseHeader"
-	btn_x.text = "✕"
+	btn_x.text = "X"
 	btn_x.custom_minimum_size = Vector2(28, 28)
 	btn_x.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	apply_rpg_font_to_button(btn_x, 12, Color(0.85, 0.80, 0.70, 0.9))
@@ -4389,6 +4457,10 @@ func _setup_quest_objective_modal() -> void:
 	vbox.add_child(sep)
 
 	# 2. Quest Title and Campaign Banner
+	var title_panel = PanelContainer.new()
+	title_panel.name = "TitlePanel"
+	title_panel.add_theme_stylebox_override("panel", get_rpg_plaque_stylebox(16, 8, 16, 8))
+
 	var title_box = VBoxContainer.new()
 	title_box.name = "TitleBox"
 	title_box.add_theme_constant_override("separation", 2)
@@ -4405,7 +4477,8 @@ func _setup_quest_objective_modal() -> void:
 	apply_rpg_font_to_label(quest_objective_campaign_label, false, 11, Color(0.72, 0.76, 0.85, 0.85))
 	title_box.add_child(quest_objective_campaign_label)
 
-	vbox.add_child(title_box)
+	title_panel.add_child(title_box)
+	vbox.add_child(title_panel)
 
 	# 3. Mentor's Parchment Briefing Box
 	var briefing_panel = PanelContainer.new()
@@ -4490,6 +4563,7 @@ func _setup_quest_objective_modal() -> void:
 	hint.name = "HintLabel"
 	hint.text = "[Esc] or [O] to resume • Your party's honor awaits"
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hint.add_theme_stylebox_override("normal", get_rpg_instruction_stylebox())
 	apply_rpg_font_to_label(hint, false, 11, Color(0.80, 0.75, 0.65, 0.80))
 	vbox.add_child(hint)
 
@@ -10678,16 +10752,24 @@ func _setup_hero_detail_modal() -> void:
 		hero_detail_card.add_theme_stylebox_override("panel", get_rpg_dialog_panel_stylebox(28, 24, 28, 24))
 
 	if hero_detail_title:
+		hero_detail_title.add_theme_stylebox_override("normal", get_rpg_title_plaque_stylebox(14, 6))
 		apply_rpg_font_to_label(hero_detail_title, true, 18, Color(1.0, 0.88, 0.35, 1.0))
 	if hero_detail_status_badge:
+		hero_detail_status_badge.add_theme_stylebox_override("normal", get_rpg_badge_stylebox())
 		apply_rpg_font_to_label(hero_detail_status_badge, false, 11)
 	if hero_detail_name:
+		hero_detail_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		hero_detail_name.add_theme_stylebox_override("normal", get_rpg_title_plaque_stylebox(10, 4))
 		apply_rpg_font_to_label(hero_detail_name, true, 18, Color(1.0, 0.92, 0.6, 1.0))
 	if hero_detail_class:
+		hero_detail_class.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		hero_detail_class.add_theme_stylebox_override("normal", get_rpg_section_header_stylebox(10, 3))
 		apply_rpg_font_to_label(hero_detail_class, false, 12, Color(0.85, 0.75, 0.5, 0.95))
-	if hero_detail_lore and font_rpg_medieval:
-		hero_detail_lore.add_theme_font_override("normal_font", font_rpg_medieval)
-		hero_detail_lore.add_theme_font_override("italic_font", font_rpg_medieval)
+	if hero_detail_lore:
+		hero_detail_lore.add_theme_stylebox_override("normal", get_rpg_lore_box_stylebox(12, 10, 12, 10))
+		if font_rpg_medieval:
+			hero_detail_lore.add_theme_font_override("normal_font", font_rpg_medieval)
+			hero_detail_lore.add_theme_font_override("italic_font", font_rpg_medieval)
 
 	if not hero_detail_btn_close:
 		hero_detail_btn_close = get_node_or_null("UI/HeroDetailModal/Card/Margin/VBox/ButtonBox/BtnClose")
@@ -10891,6 +10973,7 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 		inv_hdr.text = "EQUIPMENT & BACKPACK INVENTORY (%d)" % hero_inv.size()
 		inv_hdr.add_theme_font_size_override("font_size", 13)
 		inv_hdr.add_theme_color_override("font_color", Color(0.7, 0.9, 0.85, 1.0))
+		inv_hdr.add_theme_stylebox_override("normal", get_rpg_section_header_stylebox(10, 4))
 		hero_detail_equipment_section.add_child(inv_hdr)
 
 		if hero_inv.is_empty():
@@ -10898,6 +10981,7 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 			empty_inv.text = "Backpack is empty."
 			empty_inv.add_theme_font_size_override("font_size", 11)
 			empty_inv.add_theme_color_override("font_color", Color(0.6, 0.65, 0.7, 0.8))
+			empty_inv.add_theme_stylebox_override("normal", get_rpg_instruction_stylebox())
 			hero_detail_equipment_section.add_child(empty_inv)
 		else:
 			var inv_grid = GridContainer.new()
@@ -11001,6 +11085,7 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 			sp_hdr.text = "MEMORIZED SPELLS (%d)" % hero_spells.size()
 			sp_hdr.add_theme_font_size_override("font_size", 13)
 			sp_hdr.add_theme_color_override("font_color", Color(0.85, 0.75, 1.0, 1.0))
+			sp_hdr.add_theme_stylebox_override("normal", get_rpg_section_header_stylebox(10, 4))
 			hero_detail_spells_section.add_child(sp_hdr)
 
 			var sp_grid = GridContainer.new()
@@ -11100,6 +11185,7 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 		ab_hdr.text = "TRAITS & ACTIVE STATUS EFFECTS"
 		ab_hdr.add_theme_font_size_override("font_size", 13)
 		ab_hdr.add_theme_color_override("font_color", Color(1.0, 0.85, 0.4, 1.0))
+		ab_hdr.add_theme_stylebox_override("normal", get_rpg_section_header_stylebox(10, 4))
 		hero_detail_abilities_section.add_child(ab_hdr)
 
 		var ab_vbox = VBoxContainer.new()
@@ -11145,6 +11231,7 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 			no_buffs.text = "No active magical buffs or conditions."
 			no_buffs.add_theme_font_size_override("font_size", 10)
 			no_buffs.add_theme_color_override("font_color", Color(0.65, 0.7, 0.75, 0.8))
+			no_buffs.add_theme_stylebox_override("normal", get_rpg_instruction_stylebox())
 			ab_vbox.add_child(no_buffs)
 		else:
 			for b in buffs:
@@ -11267,7 +11354,15 @@ func _setup_treasure_modal() -> void:
 	if treasure_modal_card:
 		treasure_modal_card.add_theme_stylebox_override("panel", get_rpg_dialog_panel_stylebox(28, 24, 28, 24))
 
+	var treasure_title = treasure_modal_card.get_node_or_null("Margin/VBox/Header/Title") if treasure_modal_card else null
+	if treasure_title is Label:
+		treasure_title.add_theme_stylebox_override("normal", get_rpg_title_plaque_stylebox(14, 6))
+		apply_rpg_font_to_label(treasure_title, true, 18, Color(1.0, 0.88, 0.35, 1.0))
+
+	if not treasure_deck_badge:
+		treasure_deck_badge = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/Header/DeckRatioBadge")
 	if treasure_deck_badge:
+		treasure_deck_badge.add_theme_stylebox_override("normal", get_rpg_badge_stylebox())
 		apply_rpg_font_to_label(treasure_deck_badge, false, 11, Color(0.85, 0.72, 0.35, 0.95))
 
 	if not treasure_deck_texture:
@@ -11338,6 +11433,7 @@ func _populate_treasure_modal(card: Dictionary, hero: Dictionary, is_quest_note:
 	if not treasure_deck_stats:
 		treasure_deck_stats = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/StageHBox/DeckColumn/DeckStats")
 	if treasure_deck_stats:
+		treasure_deck_stats.add_theme_stylebox_override("normal", get_rpg_instruction_stylebox())
 		treasure_deck_stats.text = "Treasures Remaining: %d\nHazards & Wandering Foes: %d\nPermanently Discarded: %d" % [stats.goods, stats.hazards, stats.discardCount]
 
 	if not treasure_drawn_card:
@@ -11485,16 +11581,24 @@ func _setup_monster_detail_modal() -> void:
 		monster_detail_card.add_theme_stylebox_override("panel", get_rpg_dialog_panel_stylebox(28, 24, 28, 24))
 
 	if monster_detail_title:
+		monster_detail_title.add_theme_stylebox_override("normal", get_rpg_title_plaque_stylebox(14, 6))
 		apply_rpg_font_to_label(monster_detail_title, true, 18, Color(1.0, 0.45, 0.35, 1.0))
 	if monster_detail_status_badge:
+		monster_detail_status_badge.add_theme_stylebox_override("normal", get_rpg_badge_stylebox())
 		apply_rpg_font_to_label(monster_detail_status_badge, false, 11)
 	if monster_detail_name:
+		monster_detail_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		monster_detail_name.add_theme_stylebox_override("normal", get_rpg_title_plaque_stylebox(10, 4))
 		apply_rpg_font_to_label(monster_detail_name, true, 18, Color(1.0, 0.85, 0.6, 1.0))
 	if monster_detail_type:
+		monster_detail_type.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		monster_detail_type.add_theme_stylebox_override("normal", get_rpg_section_header_stylebox(10, 3))
 		apply_rpg_font_to_label(monster_detail_type, false, 12, Color(0.9, 0.65, 0.5, 0.95))
-	if monster_detail_lore and font_rpg_medieval:
-		monster_detail_lore.add_theme_font_override("normal_font", font_rpg_medieval)
-		monster_detail_lore.add_theme_font_override("italic_font", font_rpg_medieval)
+	if monster_detail_lore:
+		monster_detail_lore.add_theme_stylebox_override("normal", get_rpg_lore_box_stylebox(12, 10, 12, 10))
+		if font_rpg_medieval:
+			monster_detail_lore.add_theme_font_override("normal_font", font_rpg_medieval)
+			monster_detail_lore.add_theme_font_override("italic_font", font_rpg_medieval)
 
 	if not monster_detail_btn_close:
 		monster_detail_btn_close = get_node_or_null("UI/MonsterDetailModal/Card/Margin/VBox/ButtonBox/BtnClose")
@@ -11686,6 +11790,7 @@ func _populate_monster_detail_modal(m: Dictionary) -> void:
 		sec_lbl.text = "TACTICAL DIRECTIVES & BEHAVIOR"
 		sec_lbl.add_theme_font_size_override("font_size", 11)
 		sec_lbl.add_theme_color_override("font_color", Color(1.0, 0.82, 0.2, 0.9))
+		sec_lbl.add_theme_stylebox_override("normal", get_rpg_section_header_stylebox(10, 4))
 		monster_detail_tactical_section.add_child(sec_lbl)
 
 		var t_panel = PanelContainer.new()
@@ -11716,6 +11821,7 @@ func _populate_monster_detail_modal(m: Dictionary) -> void:
 		ab_title.text = "COMBAT TRAITS & INNATE ABILITIES"
 		ab_title.add_theme_font_size_override("font_size", 11)
 		ab_title.add_theme_color_override("font_color", Color(1.0, 0.82, 0.2, 0.9))
+		ab_title.add_theme_stylebox_override("normal", get_rpg_section_header_stylebox(10, 4))
 		monster_detail_abilities_section.add_child(ab_title)
 
 		var abilities_list = lore.get("abilities", [])
@@ -11748,6 +11854,7 @@ func _populate_monster_detail_modal(m: Dictionary) -> void:
 			sp_title.text = "FELL DREAD SORCERY"
 			sp_title.add_theme_font_size_override("font_size", 11)
 			sp_title.add_theme_color_override("font_color", Color(0.9, 0.3, 0.85, 1.0))
+			sp_title.add_theme_stylebox_override("normal", get_rpg_section_header_stylebox(10, 4))
 			monster_detail_spells_section.add_child(sp_title)
 
 			for sp in spells_list:
