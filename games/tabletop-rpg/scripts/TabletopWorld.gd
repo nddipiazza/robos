@@ -8672,21 +8672,23 @@ func find_best_monster_attack_plan(m: Dictionary, max_moves: int, forced_target_
 	if not adjacent_heroes.is_empty():
 		adjacent_heroes.sort_custom(func(a, b): return int(a.get("current_bp", 0)) < int(b.get("current_bp", 0)))
 		var primary_target = adjacent_heroes[0]
+		var adj_path: Array[Vector2i] = [m_pos]
 		return {
 			"target_hero": primary_target,
 			"target_tile": m_pos,
-			"full_path": [m_pos],
-			"move_path": [m_pos],
+			"full_path": adj_path,
+			"move_path": adj_path,
 			"can_attack": true
 		}
 
 	# 3. If max_moves <= 0 and not adjacent, monster cannot move
 	if max_moves <= 0:
+		var still_path: Array[Vector2i] = [m_pos]
 		return {
 			"target_hero": living_heroes[0],
 			"target_tile": m_pos,
-			"full_path": [m_pos],
-			"move_path": [m_pos],
+			"full_path": still_path,
+			"move_path": still_path,
 			"can_attack": false
 		}
 
@@ -8805,19 +8807,24 @@ func find_best_monster_attack_plan(m: Dictionary, max_moves: int, forced_target_
 			"can_attack": can_attack
 		}
 
+	var base_path: Array[Vector2i] = [m_pos]
 	return {
 		"target_hero": living_heroes[0],
 		"target_tile": m_pos,
-		"full_path": [m_pos],
-		"move_path": [m_pos],
+		"full_path": base_path,
+		"move_path": base_path,
 		"can_attack": false
 	}
 
 func _calculate_monster_movement_path(m: Dictionary, target_hero: Dictionary, max_moves: int) -> Array[Vector2i]:
 	var plan = find_best_monster_attack_plan(m, max_moves, target_hero)
-	var move_path: Array[Vector2i] = plan.get("move_path", [])
-	if move_path.is_empty():
-		return [_to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))]
+	var move_path: Array[Vector2i] = []
+	var raw_path = plan.get("move_path", [])
+	if raw_path is Array and not raw_path.is_empty():
+		for p in raw_path:
+			move_path.append(_to_grid_pos(p))
+	else:
+		move_path.append(_to_grid_pos(m.get("grid_pos", Vector2i(-1, -1))))
 	return move_path
 
 func _execute_single_monster_action(m: Dictionary) -> int:
@@ -8838,7 +8845,12 @@ func _execute_single_monster_action(m: Dictionary) -> int:
 	if target_h.is_empty():
 		return 0
 
-	var move_path: Array[Vector2i] = plan.get("move_path", [])
+	var move_path: Array[Vector2i] = []
+	var raw_path = plan.get("move_path", [])
+	if raw_path is Array and not raw_path.is_empty():
+		for p in raw_path:
+			move_path.append(_to_grid_pos(p))
+
 	var acts = 0
 
 	if move_path.size() > 1:
@@ -9067,7 +9079,13 @@ func _begin_next_enemy_turn_in_sequence() -> void:
 		return
 
 	enemy_target_hero = target_h
-	enemy_turn_path = plan.get("move_path", [ m_pos ])
+	enemy_turn_path.clear()
+	var raw_turn_path = plan.get("move_path", [])
+	if raw_turn_path is Array and not raw_turn_path.is_empty():
+		for p in raw_turn_path:
+			enemy_turn_path.append(_to_grid_pos(p))
+	else:
+		enemy_turn_path.append(m_pos)
 	enemy_turn_step_index = 0
 
 	# 3. Initialize movement trail at origin tile
