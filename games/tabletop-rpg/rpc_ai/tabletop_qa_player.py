@@ -73,6 +73,16 @@ class TabletopQAPlayer:
         self.log("Resetting game to pristine cartridge state...")
         return self.execute_action("reset_game")
 
+    def set_hero_hp(self, hero_id: str, bp: int) -> dict:
+        """Update a hero's Body Points."""
+        self.log(f"Setting hero {hero_id} BP to {bp}...")
+        return self.execute_action("set_hero_hp", heroId=hero_id, current_bp=bp)
+
+    def defeat_hero(self, hero_id: str) -> dict:
+        """Mark a hero as dead with 0 Body Points."""
+        self.log(f"Defeating hero {hero_id} (BP = 0)...")
+        return self.execute_action("defeat_hero", heroId=hero_id, current_bp=0, is_dead=True)
+
     def execute_action(self, action, **kwargs) -> dict:
         if isinstance(action, dict):
             payload = {**action, **kwargs}
