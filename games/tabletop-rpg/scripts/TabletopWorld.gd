@@ -2657,7 +2657,7 @@ func has_wall_between(a: Vector2i, b: Vector2i) -> bool:
 			return true
 		# If door is open, line of sight passes through
 		# If door is closed, line of sight is blocked
-		return not d.get("is_open", false)
+		return not bool(d.get("is_open", false) or d.get("state", "closed") == "open")
 
 	# 3. Check room boundaries
 	var ra_id = _tile_to_room_id.get(a, "")
@@ -8545,67 +8545,280 @@ func end_turn() -> void:
 	queue_redraw_all()
 	auto_save_game()
 
-func _calculate_monster_movement_path(m: Dictionary, target_hero: Dictionary, max_moves: int) -> Array[Vector2i]:
-	var path: Array[Vector2i] = []
+## Intelligent A* Navigation & Attack Pathfinding for Tabletop Monsters (Inspired by cRPG Pathfinder)
+func find_monster_path(start: Vector2i, goal: Vector2i, monster_id: String = "", allow_pass_allies: bool = true) -> Array[Vector2i]:
+	if start == goal:
+		return [start]
+	if goal.x < 0 or goal.x >= grid_cols or goal.y < 0 or goal.y >= grid_rows:
+		return []
+	if is_border_tile(goal) or goal == starting_stair:
+		return []
+	if is_tile_wall_blocked(goal) or is_tile_occupied_by_furniture(goal):
+		return []
+	# Living heroes strictly block monster movement
+	if is_tile_occupied_by_hero(goal):
+		return []
+	# Destination square cannot be occupied by another monster
+	if is_tile_occupied_by_monster(goal, monster_id):
+		return []
+
+	# A* open_set containing nodes: { "pos": Vector2i, "f": float, "g": float }
+	var h_start = float(absi(goal.x - start.x) + absi(goal.y - start.y))
+	var open_set: Array[Dictionary] = [{ "pos": start, "g": 0.0, "f": h_start }]
+	var came_from: Dictionary = {}
+	var g_score: Dictionary = { start: 0.0 }
+	var closed_set: Dictionary = {}
+
+	var dirs = [Vector2i(0, -1), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(1, 0)]
+
+	while not open_set.is_empty():
+		# Pop lowest f-score
+		var best_idx = 0
+		var lowest_f = open_set[0]["f"]
+		for i in range(1, open_set.size()):
+			if open_set[i]["f"] < lowest_f:
+				lowest_f = open_set[i]["f"]
+				best_idx = i
+
+		var current_node = open_set[best_idx]
+		open_set.remove_at(best_idx)
+		var current: Vector2i = current_node["pos"]
+
+		if current == goal:
+			var path: Array[Vector2i] = [goal]
+			var trace = goal
+			while came_from.has(trace):
+				trace = came_from[trace]
+				path.append(trace)
+			path.reverse()
+			return path
+
+		closed_set[current] = true
+
+		for d in dirs:
+			var neighbor = current + d
+			if neighbor.x < 0 or neighbor.x >= grid_cols or neighbor.y < 0 or neighbor.y >= grid_rows:
+				continue
+			if is_border_tile(neighbor) or neighbor == starting_stair:
+				continue
+			if closed_set.has(neighbor):
+				continue
+			if has_wall_between(current, neighbor):
+				continue
+			if is_tile_wall_blocked(neighbor) or is_tile_occupied_by_furniture(neighbor):
+				continue
+			# Living heroes strictly block monster movement
+			if is_tile_occupied_by_hero(neighbor):
+				continue
+
+			var step_cost = 1.0
+			var is_ally = is_tile_occupied_by_monster(neighbor, monster_id)
+			if is_ally:
+				if not allow_pass_allies:
+					continue
+				if neighbor == goal:
+					continue
+				step_cost = 2.5
+
+			var tentative_g = g_score[current] + step_cost
+			if not g_score.has(neighbor) or tentative_g < g_score[neighbor]:
+				came_from[neighbor] = current
+				g_score[neighbor] = tentative_g
+				var h = float(absi(goal.x - neighbor.x) + absi(goal.y - neighbor.y))
+				var f = tentative_g + h
+
+				var existing_idx = -1
+				for i in range(open_set.size()):
+					if open_set[i]["pos"] == neighbor:
+						existing_idx = i
+						break
+
+				if existing_idx >= 0:
+					open_set[existing_idx]["g"] = tentative_g
+					open_set[existing_idx]["f"] = f
+				else:
+					open_set.append({ "pos": neighbor, "g": tentative_g, "f": f })
+
+	return []
+
+func find_best_monster_attack_plan(m: Dictionary, max_moves: int, forced_target_hero: Dictionary = {}) -> Dictionary:
 	var m_pos = _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
-	path.append(m_pos)
-	if target_hero.is_empty() or max_moves <= 0:
-		return path
-
-	var h_pos = _to_grid_pos(target_hero.get("grid_pos", Vector2i(-1, -1)))
 	var mid = str(m.get("id", ""))
-	var curr_pos = m_pos
-	var steps_taken = 0
+	if m_pos.x < 0 or m_pos.y < 0:
+		return {}
 
-	while steps_taken < max_moves:
-		var curr_dist = absi(h_pos.x - curr_pos.x) + absi(h_pos.y - curr_pos.y)
-		if curr_dist <= 1:
-			# Reached adjacent tile to hero; stop immediately! Monsters never enter hero squares
-			break
+	# 1. Gather living on-board heroes
+	var living_heroes: Array[Dictionary] = []
+	if not forced_target_hero.is_empty() and forced_target_hero.get("is_on_board", false) and int(forced_target_hero.get("current_bp", 0)) > 0:
+		living_heroes.append(forced_target_hero)
+	else:
+		for h in heroes:
+			if h.get("is_on_board", false) and int(h.get("current_bp", 0)) > 0:
+				var hp = _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
+				if hp.x >= 0 and hp.y >= 0:
+					living_heroes.append(h)
 
-		var dx = h_pos.x - curr_pos.x
-		var dy = h_pos.y - curr_pos.y
-		var step_options: Array[Vector2i] = []
-		if absi(dx) >= absi(dy):
-			if dx != 0:
-				step_options.append(Vector2i(clampi(dx, -1, 1), 0))
-			if dy != 0:
-				step_options.append(Vector2i(0, clampi(dy, -1, 1)))
+	if living_heroes.is_empty():
+		return {}
+
+	# 2. Check if ALREADY adjacent to any living hero (no movement needed!)
+	var adjacent_heroes: Array[Dictionary] = []
+	for h in living_heroes:
+		var hp = _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
+		var dist = absi(hp.x - m_pos.x) + absi(hp.y - m_pos.y)
+		if dist == 1 and not has_wall_between(m_pos, hp):
+			adjacent_heroes.append(h)
+
+	if not adjacent_heroes.is_empty():
+		adjacent_heroes.sort_custom(func(a, b): return int(a.get("current_bp", 0)) < int(b.get("current_bp", 0)))
+		var primary_target = adjacent_heroes[0]
+		return {
+			"target_hero": primary_target,
+			"target_tile": m_pos,
+			"full_path": [m_pos],
+			"move_path": [m_pos],
+			"can_attack": true
+		}
+
+	# 3. If max_moves <= 0 and not adjacent, monster cannot move
+	if max_moves <= 0:
+		return {
+			"target_hero": living_heroes[0],
+			"target_tile": m_pos,
+			"full_path": [m_pos],
+			"move_path": [m_pos],
+			"can_attack": false
+		}
+
+	# 4. Search all valid attack tiles adjacent to all candidate heroes
+	var candidate_routes: Array[Dictionary] = []
+	var dirs = [Vector2i(0, -1), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(1, 0)]
+
+	for h in living_heroes:
+		var hp = _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
+		for d in dirs:
+			var atk_tile = hp + d
+			if atk_tile == m_pos:
+				continue
+			if not is_tile_walkable(atk_tile):
+				continue
+			if has_wall_between(atk_tile, hp):
+				continue
+			if is_tile_occupied_by_hero(atk_tile):
+				continue
+			if is_tile_occupied_by_monster(atk_tile, mid):
+				continue
+
+			var p = find_monster_path(m_pos, atk_tile, mid, true)
+			if p.size() > 1:
+				var path_len = p.size() - 1
+				var can_reach_now = (path_len <= max_moves)
+				candidate_routes.append({
+					"target_hero": h,
+					"target_tile": atk_tile,
+					"path": p,
+					"path_len": path_len,
+					"can_reach_now": can_reach_now,
+					"hero_bp": int(h.get("current_bp", 0))
+				})
+
+	if not candidate_routes.is_empty():
+		candidate_routes.sort_custom(func(a, b):
+			if a["can_reach_now"] != b["can_reach_now"]:
+				return a["can_reach_now"]
+			if a["path_len"] != b["path_len"]:
+				return a["path_len"] < b["path_len"]
+			return a["hero_bp"] < b["hero_bp"]
+		)
+		var best_route = candidate_routes[0]
+		var full_path: Array[Vector2i] = best_route["path"]
+		var target_h: Dictionary = best_route["target_hero"]
+
+		# Truncate move_path up to max_moves
+		var dest_idx = mini(max_moves, full_path.size() - 1)
+		while dest_idx > 0 and is_tile_occupied_by_monster(full_path[dest_idx], mid):
+			dest_idx -= 1
+
+		var move_path: Array[Vector2i] = []
+		for i in range(dest_idx + 1):
+			move_path.append(full_path[i])
+
+		var final_pos = move_path[move_path.size() - 1]
+		var can_attack = false
+		var final_target = target_h
+		var th_pos = _to_grid_pos(target_h.get("grid_pos", Vector2i(-1, -1)))
+		if absi(th_pos.x - final_pos.x) + absi(th_pos.y - final_pos.y) == 1 and not has_wall_between(final_pos, th_pos):
+			can_attack = true
 		else:
-			if dy != 0:
-				step_options.append(Vector2i(0, clampi(dy, -1, 1)))
-			if dx != 0:
-				step_options.append(Vector2i(clampi(dx, -1, 1), 0))
+			for h in living_heroes:
+				var hp = _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
+				if absi(hp.x - final_pos.x) + absi(hp.y - final_pos.y) == 1 and not has_wall_between(final_pos, hp):
+					can_attack = true
+					final_target = h
+					break
 
-		var moved_this_step = false
-		for step_dir in step_options:
-			var cand_pos = curr_pos + step_dir
-			# Strictly forbid entering edge tiles or starting stair
-			if is_border_tile(cand_pos) or cand_pos == starting_stair:
-				continue
-			# Strictly forbid entering any hero's tile
-			if cand_pos == h_pos or is_tile_occupied_by_hero(cand_pos):
-				continue
-			# Cannot enter tile occupied by another monster
-			if is_tile_occupied_by_monster(cand_pos, mid):
-				continue
-			# Cannot enter tile occupied by furniture
-			if is_tile_occupied_by_furniture(cand_pos):
-				continue
-			# Cannot pass through walls, closed doors, or blockages
-			if has_wall_between(curr_pos, cand_pos) or is_tile_wall_blocked(cand_pos):
-				continue
+		return {
+			"target_hero": final_target,
+			"target_tile": best_route["target_tile"],
+			"full_path": full_path,
+			"move_path": move_path,
+			"can_attack": can_attack
+		}
 
-			curr_pos = cand_pos
-			path.append(curr_pos)
-			moved_this_step = true
-			break
+	# 5. Fallback: If all adjacent tiles are plugged, advance as close as possible towards the closest hero
+	var fallback_best_path: Array[Vector2i] = []
+	var fallback_target: Dictionary = {}
+	var min_fallback_dist = 9999
 
-		if not moved_this_step:
-			break
-		steps_taken += 1
+	for h in living_heroes:
+		var hp = _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
+		for d in dirs:
+			var candidate_tile = hp + d
+			if not is_tile_walkable(candidate_tile) or has_wall_between(candidate_tile, hp):
+				continue
+			var p = find_monster_path(m_pos, candidate_tile, mid, true)
+			if p.size() > 1 and p.size() < min_fallback_dist:
+				min_fallback_dist = p.size()
+				fallback_best_path = p
+				fallback_target = h
 
-	return path
+	if not fallback_best_path.is_empty():
+		var dest_idx = mini(max_moves, fallback_best_path.size() - 1)
+		while dest_idx > 0 and (is_tile_occupied_by_monster(fallback_best_path[dest_idx], mid) or is_tile_occupied_by_hero(fallback_best_path[dest_idx])):
+			dest_idx -= 1
+		var move_path: Array[Vector2i] = []
+		for i in range(dest_idx + 1):
+			move_path.append(fallback_best_path[i])
+		var final_pos = move_path[move_path.size() - 1]
+		var can_attack = false
+		for h in living_heroes:
+			var hp = _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
+			if absi(hp.x - final_pos.x) + absi(hp.y - final_pos.y) == 1 and not has_wall_between(final_pos, hp):
+				can_attack = true
+				fallback_target = h
+				break
+		return {
+			"target_hero": fallback_target,
+			"target_tile": fallback_best_path[fallback_best_path.size() - 1],
+			"full_path": fallback_best_path,
+			"move_path": move_path,
+			"can_attack": can_attack
+		}
+
+	return {
+		"target_hero": living_heroes[0],
+		"target_tile": m_pos,
+		"full_path": [m_pos],
+		"move_path": [m_pos],
+		"can_attack": false
+	}
+
+func _calculate_monster_movement_path(m: Dictionary, target_hero: Dictionary, max_moves: int) -> Array[Vector2i]:
+	var plan = find_best_monster_attack_plan(m, max_moves, target_hero)
+	var move_path: Array[Vector2i] = plan.get("move_path", [])
+	if move_path.is_empty():
+		return [_to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))]
+	return move_path
 
 func _execute_single_monster_action(m: Dictionary) -> int:
 	if not m.get("is_alive", false):
@@ -8618,44 +8831,32 @@ func _execute_single_monster_action(m: Dictionary) -> int:
 		_log("[TEMPEST] %s is caught in the howling winds and misses its turn!" % m.get("name"))
 		return 0
 
-	var m_pos: Vector2i = _to_grid_pos(m.get("grid_pos", Vector2i(0, 0)))
-	var nearest_hero: Dictionary = {}
-	var min_dist: int = 9999
-	for h in heroes:
-		# ONLY consider living heroes currently on the board
-		if h.get("is_on_board", false) and int(h.get("current_bp", 0)) > 0:
-			var h_pos: Vector2i = _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
-			if h_pos.x < 0 or h_pos.y < 0:
-				continue
-			var dist = absi(h_pos.x - m_pos.x) + absi(h_pos.y - m_pos.y)
-			if dist < min_dist:
-				min_dist = dist
-				nearest_hero = h
-
-	if nearest_hero.is_empty():
-		return 0
-
-	var h_pos: Vector2i = _to_grid_pos(nearest_hero.get("grid_pos", Vector2i(0, 0)))
-	var acts = 0
-
 	var roll = TabletopDice.roll_movement()
 	var max_moves = maxi(int(m.get("movementSquares", 4)), roll.total)
-	var path = _calculate_monster_movement_path(m, nearest_hero, max_moves)
+	var plan = find_best_monster_attack_plan(m, max_moves)
+	var target_h: Dictionary = plan.get("target_hero", {})
+	if target_h.is_empty():
+		return 0
 
-	if path.size() > 1:
-		var final_pos = path[path.size() - 1]
+	var move_path: Array[Vector2i] = plan.get("move_path", [])
+	var acts = 0
+
+	if move_path.size() > 1:
+		var final_pos = move_path[move_path.size() - 1]
 		m["grid_pos"] = final_pos
-		_log("[MOVE] %s rolls %d movement and moves towards %s to (%d, %d)." % [
-			m.get("name"), roll.total, nearest_hero.get("name"), final_pos.x, final_pos.y
+		_log("[MOVE] %s rolls %d movement and follows A* route towards %s to (%d, %d)." % [
+			m.get("name"), roll.total, target_h.get("name"), final_pos.x, final_pos.y
 		])
 		acts += 1
 
-	var curr_pos = _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
-	var final_dist = absi(h_pos.x - curr_pos.x) + absi(h_pos.y - curr_pos.y)
-	if final_dist == 1:
-		_log("[MONSTER] %s engages and attacks %s!" % [m.get("name"), nearest_hero.get("name")])
-		dm_attack_hero(str(nearest_hero.get("id", "")), m)
-		acts += 1
+	if plan.get("can_attack", false):
+		var curr_pos = _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
+		var h_pos = _to_grid_pos(target_h.get("grid_pos", Vector2i(-1, -1)))
+		var dist = absi(h_pos.x - curr_pos.x) + absi(h_pos.y - curr_pos.y)
+		if dist == 1 and not has_wall_between(curr_pos, h_pos) and int(target_h.get("current_bp", 0)) > 0:
+			_log("[MONSTER] %s engages and attacks %s!" % [m.get("name"), target_h.get("name")])
+			dm_attack_hero(str(target_h.get("id", "")), m)
+			acts += 1
 
 	return acts
 
@@ -8723,12 +8924,26 @@ func _process_enemy_turn(delta: float) -> void:
 		"acting":
 			# Execute enemy action (melee attack if adjacent to hero)
 			var m_pos = _to_grid_pos(acting_m.get("grid_pos", Vector2i(-1, -1)))
-			var h_pos = _to_grid_pos(enemy_target_hero.get("grid_pos", Vector2i(-1, -1)))
-			var dist = absi(h_pos.x - m_pos.x) + absi(h_pos.y - m_pos.y)
+			var attack_target = enemy_target_hero
+			var target_valid = false
+			if not attack_target.is_empty() and int(attack_target.get("current_bp", 0)) > 0:
+				var h_pos = _to_grid_pos(attack_target.get("grid_pos", Vector2i(-1, -1)))
+				if absi(h_pos.x - m_pos.x) + absi(h_pos.y - m_pos.y) == 1 and not has_wall_between(m_pos, h_pos):
+					target_valid = true
 
-			if dist == 1 and int(enemy_target_hero.get("current_bp", 0)) > 0:
-				_log("[MONSTER] %s engages and attacks %s!" % [acting_m.get("name"), enemy_target_hero.get("name")])
-				dm_attack_hero(str(enemy_target_hero.get("id", "")), acting_m)
+			if not target_valid:
+				for h in heroes:
+					if h.get("is_on_board", false) and int(h.get("current_bp", 0)) > 0:
+						var hp = _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
+						if absi(hp.x - m_pos.x) + absi(hp.y - m_pos.y) == 1 and not has_wall_between(m_pos, hp):
+							attack_target = h
+							target_valid = true
+							enemy_target_hero = h
+							break
+
+			if target_valid:
+				_log("[MONSTER] %s engages and attacks %s!" % [acting_m.get("name"), attack_target.get("name")])
+				dm_attack_hero(str(attack_target.get("id", "")), acting_m)
 				enemy_turn_stage = "waiting_for_action"
 				enemy_turn_timer = 2.4 # allow combat dice tray and damage plaque to display
 			else:
@@ -8824,25 +9039,7 @@ func _begin_next_enemy_turn_in_sequence() -> void:
 		_begin_next_enemy_turn_in_sequence()
 		return
 
-	# Find nearest living hero on board
 	var m_pos = _to_grid_pos(current_m.get("grid_pos", Vector2i(0, 0)))
-	var nearest_hero: Dictionary = {}
-	var min_dist: int = 9999
-	for h in heroes:
-		if h.get("is_on_board", false) and int(h.get("current_bp", 0)) > 0:
-			var h_pos = _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
-			if h_pos.x < 0 or h_pos.y < 0:
-				continue
-			var dist = absi(h_pos.x - m_pos.x) + absi(h_pos.y - m_pos.y)
-			if dist < min_dist:
-				min_dist = dist
-				nearest_hero = h
-
-	if nearest_hero.is_empty():
-		_begin_next_enemy_turn_in_sequence()
-		return
-
-	enemy_target_hero = nearest_hero
 
 	# 1. Roll 2d6 movement dice for enemy character!
 	var roll = TabletopDice.roll_movement()
@@ -8862,8 +9059,15 @@ func _begin_next_enemy_turn_in_sequence() -> void:
 	if not active_dice_animation.is_empty():
 		active_dice_animation["total_duration"] = 1.0
 
-	# 2. Compute movement path
-	enemy_turn_path = _calculate_monster_movement_path(current_m, nearest_hero, max_moves)
+	# 2. Compute intelligent A* movement plan
+	var plan = find_best_monster_attack_plan(current_m, max_moves)
+	var target_h: Dictionary = plan.get("target_hero", {})
+	if target_h.is_empty():
+		_begin_next_enemy_turn_in_sequence()
+		return
+
+	enemy_target_hero = target_h
+	enemy_turn_path = plan.get("move_path", [ m_pos ])
 	enemy_turn_step_index = 0
 
 	# 3. Initialize movement trail at origin tile
@@ -8903,14 +9107,27 @@ func skip_enemy_turn_timeout() -> Dictionary:
 		if active_dice_animation.get("type", "") == "movement":
 			active_dice_animation = {}
 
-		# If adjacent to target hero, perform melee attack immediately
-		if not enemy_target_hero.is_empty():
-			var m_pos = _to_grid_pos(acting_m.get("grid_pos", Vector2i(-1, -1)))
-			var h_pos = _to_grid_pos(enemy_target_hero.get("grid_pos", Vector2i(-1, -1)))
-			var dist = absi(h_pos.x - m_pos.x) + absi(h_pos.y - m_pos.y)
-			if dist == 1 and int(enemy_target_hero.get("current_bp", 0)) > 0:
-				_log("[MONSTER] %s engages and attacks %s!" % [acting_m.get("name"), enemy_target_hero.get("name")])
-				dm_attack_hero(str(enemy_target_hero.get("id", "")), acting_m)
+		# If adjacent to target hero (or any living hero), perform melee attack immediately
+		var m_pos = _to_grid_pos(acting_m.get("grid_pos", Vector2i(-1, -1)))
+		var attack_target = enemy_target_hero
+		var target_valid = false
+		if not attack_target.is_empty() and int(attack_target.get("current_bp", 0)) > 0:
+			var h_pos = _to_grid_pos(attack_target.get("grid_pos", Vector2i(-1, -1)))
+			if absi(h_pos.x - m_pos.x) + absi(h_pos.y - m_pos.y) == 1 and not has_wall_between(m_pos, h_pos):
+				target_valid = true
+
+		if not target_valid:
+			for h in heroes:
+				if h.get("is_on_board", false) and int(h.get("current_bp", 0)) > 0:
+					var hp = _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
+					if absi(hp.x - m_pos.x) + absi(hp.y - m_pos.y) == 1 and not has_wall_between(m_pos, hp):
+						attack_target = h
+						target_valid = true
+						break
+
+		if target_valid:
+			_log("[MONSTER] %s engages and attacks %s!" % [acting_m.get("name"), attack_target.get("name")])
+			dm_attack_hero(str(attack_target.get("id", "")), acting_m)
 
 	_finish_current_enemy_turn()
 	return { "success": true, "skipped_monster_id": m_id }
@@ -12997,12 +13214,18 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 						if is_match:
 							for k in d_patch:
 								d[k] = d_patch[k]
+							if d_patch.has("state") and not d_patch.has("is_open"):
+								d["is_open"] = (str(d_patch["state"]) == "open")
+							elif d_patch.has("is_open") and not d_patch.has("state"):
+								d["state"] = "open" if bool(d_patch["is_open"]) else "closed"
 							matched = true
 							break
 					if not matched and d_patch.has("from") and d_patch.has("to"):
 						var new_d = d_patch.duplicate(true)
 						if not new_d.has("is_open"):
-							new_d["is_open"] = false
+							new_d["is_open"] = (str(d_patch.get("state", "closed")) == "open")
+						if not new_d.has("state"):
+							new_d["state"] = "open" if bool(new_d["is_open"]) else "closed"
 						if not new_d.has("is_secret"):
 							new_d["is_secret"] = false
 						if not new_d.has("is_revealed"):
