@@ -2604,9 +2604,16 @@ func _to_grid_pos(val: Variant) -> Vector2i:
 		return Vector2i(int(val[0]), int(val[1]))
 	return Vector2i(-1, -1)
 
+func is_hero_alive(h: Dictionary) -> bool:
+	if h.is_empty():
+		return false
+	if bool(h.get("is_dead", false)):
+		return false
+	return int(h.get("current_bp", 0)) > 0
+
 func get_hero_at(tile: Vector2i) -> Dictionary:
 	for h in heroes:
-		if h.get("is_on_board", false) and int(h.get("current_bp", 0)) > 0 and _to_grid_pos(h.get("grid_pos")) == tile:
+		if is_hero_alive(h) and h.get("is_on_board", false) and _to_grid_pos(h.get("grid_pos")) == tile:
 			return h
 	return {}
 
@@ -2621,7 +2628,7 @@ func is_tile_occupied_by_hero(tile: Vector2i, exclude_hero_idx: int = -1) -> boo
 		if i == exclude_hero_idx:
 			continue
 		var h = heroes[i]
-		if h.get("is_on_board", false) and int(h.get("current_bp", 0)) > 0 and _to_grid_pos(h.get("grid_pos")) == tile:
+		if is_hero_alive(h) and h.get("is_on_board", false) and _to_grid_pos(h.get("grid_pos")) == tile:
 			# Heroes coexisting at the starting staircase do not block each other
 			if tile == starting_stair and not h.get("has_departed_start", false):
 				continue
@@ -5762,6 +5769,10 @@ func roll_movement_dice() -> Dictionary:
 		return {}
 
 	var hero = get_active_hero()
+	if hero.is_empty() or not is_hero_alive(hero):
+		_log("[RULE] Hero is fallen and cannot roll movement!")
+		show_unavailable_notice("Hero is dead")
+		return {}
 	var armors: Array = hero.get("equipped_armor", [])
 	var has_plate = armors.has("plate_mail")
 	var is_swift = hero.get("swift_wind_active", false)
@@ -5872,7 +5883,7 @@ func find_path(start: Vector2i, goal: Vector2i, moving_hero_idx: int = -1) -> Ar
 
 func move_hero(target_pos: Vector2i, is_interactive: bool = false) -> bool:
 	var hero = get_active_hero()
-	if hero.size() == 0:
+	if hero.size() == 0 or not is_hero_alive(hero):
 		return false
 
 	var curr = hero.get("grid_pos", Vector2i(1, 1))
@@ -6073,6 +6084,16 @@ func move_hero(target_pos: Vector2i, is_interactive: bool = false) -> bool:
 				final_pos.x, final_pos.y, hero.get("name"), dmg, hero.get("current_bp")
 			])
 			spawn_floating_text(final_pos, "-%d HP PIT TRAP" % dmg, Color(1.0, 0.2, 0.2), 1.5)
+
+		if int(hero.get("current_bp", 0)) <= 0:
+			hero["is_dead"] = true
+			hero["is_on_board"] = false
+			movement_remaining = 0
+			movement_closed = true
+			has_acted_this_turn = true
+			turn_state = "turn_complete"
+			_log("[HERO SLAIN] %s has fallen to a trap!" % hero.get("name"))
+			spawn_floating_text(final_pos, "SLAIN!", Color(0.9, 0.1, 0.1))
 	else:
 		movement_remaining = maxi(0, movement_remaining - actual_cost)
 
@@ -6620,7 +6641,7 @@ func dm_attack_hero(hero_id: String = "", attacker_monster: Variant = null) -> D
 
 	var target_h: Dictionary = {}
 	for h in heroes:
-		if int(h.get("current_bp", 1)) > 0:
+		if is_hero_alive(h):
 			if hero_id != "" and str(h.get("id")) == hero_id:
 				target_h = h
 				break
@@ -6649,6 +6670,11 @@ func dm_attack_hero(hero_id: String = "", attacker_monster: Variant = null) -> D
 		target_h["current_bp"] = maxi(0, prev_h_bp - res.wounds)
 		h_hp_subtracted = prev_h_bp - int(target_h.get("current_bp", 0))
 		_log("[HIT] %s takes %d wound(s)! Remaining HP: %d" % [target_h.get("name"), res.wounds, target_h.get("current_bp")])
+		if int(target_h.get("current_bp", 0)) <= 0:
+			target_h["is_dead"] = true
+			target_h["is_on_board"] = false
+			_log("[HERO SLAIN] %s has fallen in battle!" % target_h.get("name"))
+			spawn_floating_text(h_pos, "SLAIN!", Color(0.9, 0.1, 0.1))
 		record_damage_event(
 			str(target_h.get("name", "Hero")),
 			str(target_h.get("id", "hero")),
@@ -8494,6 +8520,8 @@ func _check_hero_enter_board(idx: int) -> void:
 	if idx < 0 or idx >= heroes.size():
 		return
 	var h = heroes[idx]
+	if not is_hero_alive(h):
+		return
 	if not h.get("is_on_board", false):
 		h["is_on_board"] = true
 		h["grid_pos"] = starting_stair
@@ -8513,8 +8541,15 @@ func end_turn() -> void:
 		if cur_hero.size() > 0:
 			if has_moved_this_turn or has_acted_this_turn:
 				cur_hero["has_departed_start"] = true
-		active_hero_idx = (active_hero_idx + 1) % maxi(1, heroes.size())
-		if active_hero_idx == 0:
+		
+		var next_hero_found = false
+		for next_i in range(active_hero_idx + 1, heroes.size()):
+			if is_hero_alive(heroes[next_i]):
+				active_hero_idx = next_i
+				next_hero_found = true
+				break
+		
+		if not next_hero_found:
 			current_phase = "gm_phase"
 			turn_player_losses.clear()
 			turn_losses_active = false
@@ -8527,9 +8562,20 @@ func end_turn() -> void:
 	else:
 		current_phase = "hero_phase"
 		current_round += 1
-		_log("--- Round %d begins (Heroes Turn) ---" % current_round)
-		_log("Active hero: %s" % get_active_hero().get("name", "Hero"))
-		_check_hero_enter_board(active_hero_idx)
+		
+		var first_hero_found = false
+		for i in range(heroes.size()):
+			if is_hero_alive(heroes[i]):
+				active_hero_idx = i
+				first_hero_found = true
+				break
+		
+		if not first_hero_found:
+			_log("=== All heroes have fallen in the dungeon! ===")
+		else:
+			_log("--- Round %d begins (Heroes Turn) ---" % current_round)
+			_log("Active hero: %s" % get_active_hero().get("name", "Hero"))
+			_check_hero_enter_board(active_hero_idx)
 
 	movement_remaining = 0
 	movement_rolled = false
@@ -9560,11 +9606,16 @@ func show_flashy_roll_number(total: int) -> void:
 func get_next_turn_name() -> String:
 	if heroes.is_empty():
 		return "Zargon"
-	if active_hero_idx >= heroes.size() - 1:
-		return "Zargon"
-	var next_idx = active_hero_idx + 1
-	var next_h = heroes[next_idx]
-	return get_hero_character_name(next_h)
+	if current_phase == "gm_phase":
+		for i in range(heroes.size()):
+			if is_hero_alive(heroes[i]):
+				return get_hero_character_name(heroes[i])
+		return "None"
+	for next_i in range(active_hero_idx + 1, heroes.size()):
+		var candidate = heroes[next_i]
+		if is_hero_alive(candidate):
+			return get_hero_character_name(candidate)
+	return "Zargon"
 
 func _update_turn_overlay() -> void:
 	if not turn_overlay_btn:
@@ -9642,7 +9693,7 @@ func _update_character_and_enemy_cards() -> void:
 			c.queue_free()
 		for i in range(heroes.size()):
 			var h = heroes[i]
-			var is_act = (i == active_hero_idx and current_phase == "hero_phase" and current_role == "player")
+			var is_act = (i == active_hero_idx and current_phase == "hero_phase" and current_role == "player" and is_hero_alive(h))
 			var card = _create_hero_card(h, is_act)
 			hero_cards_grid.add_child(card)
 
@@ -12107,15 +12158,19 @@ func get_telemetry_state() -> Dictionary:
 		hc["equipped_weapon"] = str(h.get("equipped_weapon", "unarmed"))
 		hc["weapon"] = str(h.get("equipped_weapon", h.get("weapon", "unarmed")))
 		hc["hasDepartedStart"] = bool(h.get("has_departed_start", false))
-		hc["has_departed_start"] = bool(h.get("has_departed_start", false))
-		hc["isOnBoard"] = bool(h.get("is_on_board", false))
+		var is_dead = not is_hero_alive(h)
+		hc["isOnBoard"] = bool(h.get("is_on_board", false)) and not is_dead
+		hc["isAlive"] = not is_dead
+		hc["isDead"] = is_dead
+		hc["is_alive"] = not is_dead
+		hc["is_dead"] = is_dead
 		heroes_copy.append(hc)
 
 		var cur_bp = int(h.get("current_bp", 8))
 		var max_bp = int(h.get("bodyPoints", 8))
 		var cur_mp = int(h.get("current_mp", 2))
 		var max_mp = int(h.get("mindPoints", 2))
-		var is_act = (i == active_hero_idx and current_phase == "hero_phase" and current_role == "player")
+		var is_act = (i == active_hero_idx and current_phase == "hero_phase" and current_role == "player" and not is_dead)
 		var effs: Array[String] = []
 		if h.get("rock_skin_active", false): effs.append("rock_skin")
 		if h.get("courage_active", false): effs.append("courage")
@@ -12160,8 +12215,9 @@ func get_telemetry_state() -> Dictionary:
 			"hasGoldBox": true,
 			"goldBoxText": ("%d GP" % int(h.get("gold", 0))),
 			"isActive": is_act,
-			"isOnBoard": bool(h.get("is_on_board", false)),
-			"isAlive": cur_bp > 0,
+			"isOnBoard": bool(h.get("is_on_board", false)) and not is_dead,
+			"isAlive": not is_dead,
+			"isDead": is_dead,
 			"weapon": str(h.get("equipped_weapon", h.get("weapon", "unarmed"))),
 			"weaponIcon": HeroQuestEquipment.get_weapon(str(h.get("equipped_weapon", h.get("weapon", "")))).get("icon", "⚔️"),
 			"weaponTexture": _get_hero_weapon_texture_path(h),
@@ -13036,6 +13092,24 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				"totalMonsters": monsters.size(),
 				"displayedCount": enemy_cards_grid.get_child_count() if enemy_cards_grid else 0
 			}
+		"set_hero_hp", "set_hero_state", "defeat_hero":
+			var h_id = str(action_data.get("heroId", action_data.get("id", "")))
+			var bp = int(action_data.get("current_bp", action_data.get("bp", 0)))
+			var is_def = bool(action_data.get("is_dead", bp <= 0))
+			var found = false
+			for h in heroes:
+				if str(h.get("id")) == h_id:
+					h["current_bp"] = bp
+					if is_def or bp <= 0:
+						h["is_dead"] = true
+						h["is_on_board"] = false
+					else:
+						h["is_dead"] = false
+					found = true
+					break
+			_update_ui()
+			queue_redraw_all()
+			return { "success": found, "heroId": h_id, "current_bp": bp, "isDead": is_def or bp <= 0 }
 		"set_state", "patch_state":
 			if action_data.has("role"):
 				current_role = str(action_data.get("role"))
@@ -14287,11 +14361,11 @@ func _draw_board(canvas: CanvasItem) -> void:
 		# Text label
 		canvas.draw_string(font, Vector2(mid_pt.x - txt_size.x * 0.5, mid_pt.y + 4), badge_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color.WHITE)
 
-	# Draw Heroes (only heroes currently on the board are drawn)
+	# Draw Heroes (only living heroes currently on the board are drawn)
 	var heroes_by_tile: Dictionary = {}
 	for idx in range(heroes.size()):
 		var h = heroes[idx]
-		if not h.get("is_on_board", false):
+		if not is_hero_alive(h) or not h.get("is_on_board", false):
 			continue
 		var pos = h.get("grid_pos", Vector2i(0, 0))
 		if not heroes_by_tile.has(pos):
@@ -14309,19 +14383,19 @@ func _draw_board(canvas: CanvasItem) -> void:
 	# Draw non-active heroes first, and active hero LAST so active hero is always on top!
 	var draw_indices: Array[int] = []
 	for idx in range(heroes.size()):
-		if not heroes[idx].get("is_on_board", false):
+		if not is_hero_alive(heroes[idx]) or not heroes[idx].get("is_on_board", false):
 			continue
 		if idx != active_hero_idx:
 			draw_indices.append(idx)
-	if active_hero_idx >= 0 and active_hero_idx < heroes.size() and heroes[active_hero_idx].get("is_on_board", false):
+	if active_hero_idx >= 0 and active_hero_idx < heroes.size() and is_hero_alive(heroes[active_hero_idx]) and heroes[active_hero_idx].get("is_on_board", false):
 		draw_indices.append(active_hero_idx)
 
 	for idx in draw_indices:
 		var h = heroes[idx]
-		if not h.get("is_on_board", false):
+		if not is_hero_alive(h) or not h.get("is_on_board", false):
 			continue
 		var pos = h.get("grid_pos", Vector2i(0, 0))
-		var is_active = (idx == active_hero_idx and current_phase == "hero_phase")
+		var is_active = (idx == active_hero_idx and current_phase == "hero_phase" and is_hero_alive(h))
 		var tile_heroes = heroes_by_tile.get(pos, [idx])
 		var tile_center = board_offset + Vector2(pos.x * tile_size + tile_size * 0.5, pos.y * tile_size + tile_size * 0.5)
 
