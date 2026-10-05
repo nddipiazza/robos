@@ -271,6 +271,15 @@ var btn_menu_save_game: Button = null
 var btn_menu_load_game: Button = null
 var btn_menu_close: Button = null
 
+var quest_objective_modal: ColorRect = null
+var quest_objective_card: PanelContainer = null
+var quest_objective_title_label: Label = null
+var quest_objective_campaign_label: Label = null
+var quest_objective_briefing_label: Label = null
+var quest_objective_goals_vbox: VBoxContainer = null
+var quest_objective_reward_label: Label = null
+var btn_quest_objective_close: Button = null
+
 # RPG Font and Texture Theme Assets
 var font_rpg_cinzel: FontFile = null
 var font_rpg_medieval: FontFile = null
@@ -400,6 +409,7 @@ func _ready() -> void:
 	_setup_elf_spell_modal()
 	_setup_armory_modal()
 	_setup_game_menu_modal()
+	_setup_quest_objective_modal()
 	_setup_turn_overlay_ui()
 	_setup_log_panel()
 	_setup_hero_detail_modal()
@@ -1859,6 +1869,16 @@ func _setup_ui_signals() -> void:
 		apply_rpg_font_to_button(menu_btn, 11, Color(1.0, 0.94, 0.76, 1.0))
 		menu_btn.pressed.connect(toggle_game_menu)
 		header_hbox.add_child(menu_btn)
+
+	if header_hbox and not header_hbox.has_node("BtnReviewQuestObjective"):
+		var obj_btn = Button.new()
+		obj_btn.name = "BtnReviewQuestObjective"
+		obj_btn.text = "Review Quest Objective"
+		obj_btn.tooltip_text = "Review current Quest Objectives, Mentor's Briefing, and Imperial Bounty [O]"
+		obj_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		apply_rpg_font_to_button(obj_btn, 11, Color(1.0, 0.94, 0.76, 1.0))
+		obj_btn.pressed.connect(toggle_quest_objective_modal)
+		header_hbox.add_child(obj_btn)
 
 	if title_label:
 		apply_rpg_font_to_label(title_label, true, 16, Color(1.0, 0.85, 0.25, 1.0))
@@ -4225,6 +4245,306 @@ func load_game_from_menu() -> void:
 			game_menu_status_label.text = "✖ Failed to restore saved game!"
 			game_menu_status_label.add_theme_color_override("font_color", Color(0.95, 0.4, 0.4, 1.0))
 
+func get_active_quest_objective() -> Dictionary:
+	var cart = CartridgeManager.active_cartridge
+	var quests = cart.get("quests", [])
+	var active_q: Dictionary = {}
+	var current_slug = CartridgeManager.current_cartridge_slug
+	for q in quests:
+		if q is Dictionary:
+			if str(q.get("slug")) == current_slug or str(q.get("id")) == current_slug:
+				active_q = q
+				break
+	if active_q.is_empty() and not quests.is_empty() and quests[0] is Dictionary:
+		active_q = quests[0]
+
+	var quest_title = str(active_q.get("title", cart.get("header", {}).get("title", "Quest 1: The Trial")))
+	var campaign_title = str(cart.get("header", {}).get("title", "HeroQuest: The Gathering Storm"))
+	var briefing = str(active_q.get("briefing", cart.get("header", {}).get("description", "You have learned well, my apprentices. Now comes your final test. Seek out the foul Orc Warlord Verag in his hidden catacombs, slay him, and return to the stairwell alive.")))
+	var gold_reward = int(active_q.get("goldReward", 100))
+	var map_id = str(active_q.get("mapConfigId", "fan-dungeon-28x21"))
+
+	var primary_goals: Array = []
+	if active_q.get("slug") == "heroquest-the-trial" or active_q.get("id") == "quest-1" or active_q.is_empty():
+		primary_goals = [
+			"Locate and defeat the Orc Warlord Verag in his inner catacombs.",
+			"Explore the ancient chambers and search for hidden treasures.",
+			"Ensure all living heroes return safely to the spiral stairway."
+		]
+	elif active_q.get("slug") == "heroquest-rescue-sir-ragnar":
+		primary_goals = [
+			"Infiltrate the prison fortress and locate Sir Ragnar's cell.",
+			"Vanquish the dungeon guards and unlock his holding cell.",
+			"Escort Sir Ragnar alive to the exit stairwell."
+		]
+	elif active_q.get("slug") == "heroquest-lair-orc-warlord":
+		primary_goals = [
+			"Purge Orc Chieftain Ulag's vanguard in the sunken caverns.",
+			"Shatter Ulag's command throne and recover the royal relics.",
+			"Survive the onslaught and escape back to the surface."
+		]
+	else:
+		primary_goals = [
+			"Fulfill Mentor's decree and vanquish Morcar's minions.",
+			"Recover all ancient artifacts and treasures.",
+			"Ensure the survival of the imperial adventurers."
+		]
+
+	return {
+		"campaign": campaign_title,
+		"title": quest_title,
+		"briefing": briefing,
+		"goldReward": gold_reward,
+		"mapConfigId": map_id,
+		"primaryGoals": primary_goals
+	}
+
+func _setup_quest_objective_modal() -> void:
+	var ui_node = get_node_or_null("UI")
+	if not ui_node:
+		return
+	if ui_node.has_node("QuestObjectiveModal"):
+		quest_objective_modal = ui_node.get_node("QuestObjectiveModal")
+		return
+
+	quest_objective_modal = ColorRect.new()
+	quest_objective_modal.name = "QuestObjectiveModal"
+	quest_objective_modal.visible = false
+	quest_objective_modal.color = Color(0.02, 0.03, 0.06, 0.82)
+	quest_objective_modal.set_anchors_preset(Control.PRESET_FULL_RECT)
+	quest_objective_modal.mouse_filter = Control.MOUSE_FILTER_STOP
+
+	if tex_rpg_menu_dungeon_bg:
+		var dungeon_bg = TextureRect.new()
+		dungeon_bg.name = "DungeonBackdrop"
+		dungeon_bg.texture = tex_rpg_menu_dungeon_bg
+		dungeon_bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		dungeon_bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		dungeon_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+		dungeon_bg.modulate = Color(0.48, 0.48, 0.55, 0.85)
+		dungeon_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		quest_objective_modal.add_child(dungeon_bg)
+
+	quest_objective_modal.gui_input.connect(func(ev: InputEvent):
+		if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
+			close_quest_objective_modal()
+	)
+
+	quest_objective_card = PanelContainer.new()
+	quest_objective_card.name = "Card"
+	quest_objective_card.set_anchors_preset(Control.PRESET_CENTER)
+	quest_objective_card.custom_minimum_size = Vector2(660, 560)
+	quest_objective_card.offset_left = -330
+	quest_objective_card.offset_top = -280
+	quest_objective_card.offset_right = 330
+	quest_objective_card.offset_bottom = 280
+	quest_objective_card.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	quest_objective_card.grow_vertical = Control.GROW_DIRECTION_BOTH
+	quest_objective_card.mouse_filter = Control.MOUSE_FILTER_STOP
+	quest_objective_card.add_theme_stylebox_override("panel", get_rpg_dialog_panel_stylebox(36, 28, 36, 28))
+
+	var margin = MarginContainer.new()
+	margin.name = "Margin"
+	margin.add_theme_constant_override("margin_left", 22)
+	margin.add_theme_constant_override("margin_top", 16)
+	margin.add_theme_constant_override("margin_right", 22)
+	margin.add_theme_constant_override("margin_bottom", 18)
+
+	var vbox = VBoxContainer.new()
+	vbox.name = "VBox"
+	vbox.add_theme_constant_override("separation", 10)
+	margin.add_child(vbox)
+
+	# 1. Header (Title, Badge, Close X)
+	var header = HBoxContainer.new()
+	header.name = "Header"
+
+	var title = Label.new()
+	title.name = "Title"
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title.text = "QUEST OBJECTIVE"
+	apply_rpg_font_to_label(title, true, 19, Color(1.0, 0.88, 0.35, 1.0))
+	header.add_child(title)
+
+	var badge = Label.new()
+	badge.name = "Badge"
+	badge.text = "IMPERIAL DECREE"
+	badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	badge.add_theme_stylebox_override("normal", get_rpg_badge_stylebox(Color(0.85, 0.72, 0.30, 0.90), Color(0.14, 0.10, 0.04, 0.92)))
+	apply_rpg_font_to_label(badge, false, 11, Color(1.0, 0.92, 0.55, 1.0))
+	header.add_child(badge)
+
+	var btn_x = Button.new()
+	btn_x.name = "BtnCloseHeader"
+	btn_x.text = "✕"
+	btn_x.custom_minimum_size = Vector2(28, 28)
+	btn_x.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	apply_rpg_font_to_button(btn_x, 12, Color(0.85, 0.80, 0.70, 0.9))
+	btn_x.pressed.connect(close_quest_objective_modal)
+	header.add_child(btn_x)
+
+	vbox.add_child(header)
+
+	var sep = HSeparator.new()
+	vbox.add_child(sep)
+
+	# 2. Quest Title and Campaign Banner
+	var title_box = VBoxContainer.new()
+	title_box.name = "TitleBox"
+	title_box.add_theme_constant_override("separation", 2)
+
+	quest_objective_title_label = Label.new()
+	quest_objective_title_label.name = "QuestTitleLabel"
+	quest_objective_title_label.text = "Quest 1: The Trial"
+	apply_rpg_font_to_label(quest_objective_title_label, true, 16, Color(1.0, 0.96, 0.82, 1.0))
+	title_box.add_child(quest_objective_title_label)
+
+	quest_objective_campaign_label = Label.new()
+	quest_objective_campaign_label.name = "CampaignLabel"
+	quest_objective_campaign_label.text = "Campaign: HeroQuest: The Gathering Storm"
+	apply_rpg_font_to_label(quest_objective_campaign_label, false, 11, Color(0.72, 0.76, 0.85, 0.85))
+	title_box.add_child(quest_objective_campaign_label)
+
+	vbox.add_child(title_box)
+
+	# 3. Mentor's Parchment Briefing Box
+	var briefing_panel = PanelContainer.new()
+	briefing_panel.name = "BriefingPanel"
+	briefing_panel.add_theme_stylebox_override("panel", get_rpg_plaque_stylebox(18, 12, 18, 12))
+
+	var briefing_vbox = VBoxContainer.new()
+	briefing_vbox.name = "BriefingVBox"
+	briefing_vbox.add_theme_constant_override("separation", 6)
+
+	var mentor_hdr = HBoxContainer.new()
+	mentor_hdr.name = "MentorHeader"
+	var mentor_tag = Label.new()
+	mentor_tag.name = "MentorTag"
+	mentor_tag.text = "MENTOR'S BRIEFING"
+	apply_rpg_font_to_label(mentor_tag, true, 12, Color(1.0, 0.85, 0.35, 1.0))
+	mentor_hdr.add_child(mentor_tag)
+	briefing_vbox.add_child(mentor_hdr)
+
+	quest_objective_briefing_label = Label.new()
+	quest_objective_briefing_label.name = "BriefingLabel"
+	quest_objective_briefing_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	quest_objective_briefing_label.text = "\"You have learned well, my apprentices. Now comes your final test. Seek out the foul Orc Warlord Verag in his hidden catacombs, slay him, and return to the stairwell alive.\""
+	apply_rpg_font_to_label(quest_objective_briefing_label, false, 13, Color(1.0, 0.94, 0.80, 1.0))
+	briefing_vbox.add_child(quest_objective_briefing_label)
+
+	briefing_panel.add_child(briefing_vbox)
+	vbox.add_child(briefing_panel)
+
+	# 4. Directives / Goals Panel
+	var goals_panel = PanelContainer.new()
+	goals_panel.name = "GoalsPanel"
+	goals_panel.add_theme_stylebox_override("panel", get_rpg_plaque_stylebox(16, 10, 16, 10))
+
+	quest_objective_goals_vbox = VBoxContainer.new()
+	quest_objective_goals_vbox.name = "GoalsVBox"
+	quest_objective_goals_vbox.add_theme_constant_override("separation", 5)
+
+	var goals_title = Label.new()
+	goals_title.name = "GoalsTitle"
+	goals_title.text = "DIRECTIVES FOR VICTORY"
+	apply_rpg_font_to_label(goals_title, true, 12, Color(0.95, 0.82, 0.35, 1.0))
+	quest_objective_goals_vbox.add_child(goals_title)
+
+	goals_panel.add_child(quest_objective_goals_vbox)
+	vbox.add_child(goals_panel)
+
+	# 5. Bounty / Reward Plaque
+	var reward_panel = PanelContainer.new()
+	reward_panel.name = "RewardPanel"
+	var r_style = get_rpg_badge_stylebox(Color(0.85, 0.72, 0.30, 0.90), Color(0.10, 0.08, 0.04, 0.92))
+	r_style.content_margin_top = 8
+	r_style.content_margin_bottom = 8
+	r_style.content_margin_left = 16
+	r_style.content_margin_right = 16
+	reward_panel.add_theme_stylebox_override("panel", r_style)
+
+	var reward_hbox = HBoxContainer.new()
+	reward_hbox.name = "RewardHBox"
+	reward_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+
+	quest_objective_reward_label = Label.new()
+	quest_objective_reward_label.name = "RewardLabel"
+	quest_objective_reward_label.text = "IMPERIAL BOUNTY: 100 Gold Coins awarded to the party upon survival"
+	apply_rpg_font_to_label(quest_objective_reward_label, true, 13, Color(1.0, 0.88, 0.35, 1.0))
+	reward_hbox.add_child(quest_objective_reward_label)
+	reward_panel.add_child(reward_hbox)
+	vbox.add_child(reward_panel)
+
+	# 6. Action Button
+	btn_quest_objective_close = Button.new()
+	btn_quest_objective_close.name = "BtnCloseQuestObjective"
+	btn_quest_objective_close.text = "RETURN TO QUEST"
+	btn_quest_objective_close.tooltip_text = "Dismiss Quest Objectives and return to the tabletop [Esc / O]"
+	btn_quest_objective_close.custom_minimum_size = Vector2(0, 42)
+	btn_quest_objective_close.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	apply_rpg_font_to_button(btn_quest_objective_close, 14, Color(1.0, 0.94, 0.76, 1.0))
+	btn_quest_objective_close.pressed.connect(close_quest_objective_modal)
+	vbox.add_child(btn_quest_objective_close)
+
+	var hint = Label.new()
+	hint.name = "HintLabel"
+	hint.text = "[Esc] or [O] to resume • Your party's honor awaits"
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	apply_rpg_font_to_label(hint, false, 11, Color(0.80, 0.75, 0.65, 0.80))
+	vbox.add_child(hint)
+
+	quest_objective_card.add_child(margin)
+	quest_objective_modal.add_child(quest_objective_card)
+	ui_node.add_child(quest_objective_modal)
+
+func is_quest_objective_open() -> bool:
+	return quest_objective_modal != null and quest_objective_modal.visible
+
+func open_quest_objective_modal() -> void:
+	if not quest_objective_modal:
+		_setup_quest_objective_modal()
+	if not quest_objective_modal:
+		return
+	_update_quest_objective_content()
+	quest_objective_modal.visible = true
+	_log("[QUEST OBJECTIVE] Reviewed quest objective: %s" % get_active_quest_objective().get("title", ""))
+
+func close_quest_objective_modal() -> void:
+	if quest_objective_modal:
+		quest_objective_modal.visible = false
+
+func toggle_quest_objective_modal() -> void:
+	if is_quest_objective_open():
+		close_quest_objective_modal()
+	else:
+		open_quest_objective_modal()
+
+func _update_quest_objective_content() -> void:
+	var obj = get_active_quest_objective()
+	if quest_objective_title_label:
+		quest_objective_title_label.text = str(obj.get("title", "HeroQuest"))
+	if quest_objective_campaign_label:
+		quest_objective_campaign_label.text = "Campaign: %s" % str(obj.get("campaign", "HeroQuest"))
+	if quest_objective_briefing_label:
+		quest_objective_briefing_label.text = "\"%s\"" % str(obj.get("briefing", ""))
+	if quest_objective_reward_label:
+		var reward = int(obj.get("goldReward", 100))
+		quest_objective_reward_label.text = "IMPERIAL BOUNTY: %d Gold Coins awarded to the party upon survival" % reward
+	if quest_objective_goals_vbox:
+		for child in quest_objective_goals_vbox.get_children():
+			if child.name != "GoalsTitle":
+				quest_objective_goals_vbox.remove_child(child)
+				child.queue_free()
+		var goals = obj.get("primaryGoals", [])
+		for g in goals:
+			var lbl = Label.new()
+			lbl.text = "• %s" % str(g)
+			lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			apply_rpg_font_to_label(lbl, false, 12, Color(0.90, 0.92, 0.96, 1.0))
+			quest_objective_goals_vbox.add_child(lbl)
+
+
+
 func _get_hero_spells_by_id(hero_id: String) -> Array:
 	for h in heroes:
 		if str(h.get("id")) == hero_id:
@@ -5548,6 +5868,12 @@ func _input(event: InputEvent) -> void:
 		return
 
 func _unhandled_input(event: InputEvent) -> void:
+	if quest_objective_modal and quest_objective_modal.visible:
+		if (event is InputEventKey and event.pressed and (event.keycode == KEY_ESCAPE or event.keycode == KEY_O or event.keycode == KEY_SPACE or event.keycode == KEY_ENTER)):
+			close_quest_objective_modal()
+			get_viewport().set_input_as_handled()
+			return
+
 	if game_menu_modal and game_menu_modal.visible:
 		if (event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE):
 			close_game_menu()
@@ -5623,6 +5949,11 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_L:
 		toggle_log_display_mode()
+		get_viewport().set_input_as_handled()
+		return
+
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_O:
+		toggle_quest_objective_modal()
 		get_viewport().set_input_as_handled()
 		return
 
@@ -12561,6 +12892,9 @@ func get_telemetry_state() -> Dictionary:
 		"startingStair": [starting_stair.x, starting_stair.y],
 		"gameMenuVisible": is_game_menu_open(),
 		"isGameMenuOpen": is_game_menu_open(),
+		"questObjectiveModalOpen": is_quest_objective_open(),
+		"isQuestObjectiveOpen": is_quest_objective_open(),
+		"questObjective": get_active_quest_objective(),
 		"hasSaveGame": has_saved_game(),
 		"saveFilePath": get_save_file_path(),
 		"isDemoActive": CartridgeManager.auto_play_enabled,
@@ -13391,6 +13725,17 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			if not bool(action_data.get("skip_save", action_data.get("skipSave", false))):
 				auto_save_game()
 			return { "success": true }
+		"open_quest_objective", "show_quest_objective", "review_quest_objective", "open_quest_objective_modal":
+			open_quest_objective_modal()
+			return { "success": true, "quest_objective_open": true, "objective": get_active_quest_objective() }
+		"close_quest_objective", "hide_quest_objective", "close_quest_objective_modal":
+			close_quest_objective_modal()
+			return { "success": true, "quest_objective_open": false }
+		"toggle_quest_objective", "toggle_quest_objective_modal":
+			toggle_quest_objective_modal()
+			return { "success": true, "quest_objective_open": is_quest_objective_open(), "objective": get_active_quest_objective() }
+		"get_quest_objective", "get_active_quest_objective":
+			return { "success": true, "objective": get_active_quest_objective() }
 		"open_game_menu", "show_game_menu":
 			open_game_menu()
 			return { "success": true, "menu_open": true }

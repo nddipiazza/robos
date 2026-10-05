@@ -575,6 +575,27 @@ class TabletopQAPlayer:
         st = self.get_state()
         return bool(st.get("gameMenuVisible", False) or st.get("isGameMenuOpen", False))
 
+    # --- Quest Objective Helpers ---
+    def open_quest_objective(self) -> dict:
+        self.log("Opening Quest Objective Modal...")
+        return self.execute_action("open_quest_objective")
+
+    def close_quest_objective(self) -> dict:
+        self.log("Closing Quest Objective Modal...")
+        return self.execute_action("close_quest_objective")
+
+    def toggle_quest_objective(self) -> dict:
+        self.log("Toggling Quest Objective Modal...")
+        return self.execute_action("toggle_quest_objective")
+
+    def is_quest_objective_open(self) -> bool:
+        st = self.get_state()
+        return bool(st.get("questObjectiveModalOpen", False) or st.get("isQuestObjectiveOpen", False))
+
+    def get_quest_objective(self) -> dict:
+        st = self.get_state()
+        return st.get("questObjective", {})
+
     # --- Autonomous AI Demo Helpers ---
     def start_demo(self) -> dict:
         self.log("Starting Autonomous Tabletop AI Demo (Mentor vs Zargon)...")
