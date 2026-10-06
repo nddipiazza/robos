@@ -182,7 +182,7 @@ function getSeedFeatures() {
           id: 'TASK-201',
           number: 201,
           title: 'Multi-Step Dynamic Form Submission with TypeSpec Validation',
-          status: 'IN_PROGRESS',
+          status: 'agent-implementing',
           priority: 'P0',
           assignee: 'Dev User',
           description: 'Implement client-side TypeSpec schema validation, multi-page step wizard state machine, and JSON-LD contract emission for forms-api.',
@@ -198,7 +198,7 @@ function getSeedFeatures() {
           lifetimeHistory: [
             { timestamp: '2026-09-10T09:00:00Z', state: 'CREATED', actor: 'sarah-lead', note: 'Issue created in backlog with TypeSpec requirement specifications' },
             { timestamp: '2026-09-11T10:15:00Z', state: 'TRIAGED', actor: 'alex-architect', note: 'Triaged for Sprint 42, assigned priority P0' },
-            { timestamp: '2026-09-12T14:30:00Z', state: 'IN_PROGRESS', actor: 'dev-user', note: 'Branch checked out: feature/TASK-201-multi-step in ephemeral sandbox' },
+            { timestamp: '2026-09-12T14:30:00Z', state: 'agent-implementing', actor: 'dev-user', note: 'Branch checked out: feature/TASK-201-multi-step in ephemeral sandbox' },
             { timestamp: '2026-09-13T16:45:00Z', state: 'PR_OPENED', actor: 'antigravity-agent', note: 'PR #84 opened targeting main with automated diffs' },
             { timestamp: '2026-09-14T08:20:00Z', state: 'CI_PASSED', actor: 'github-actions', note: 'Automated test suite, Pact contracts, and SHACL shape validator 100% green' },
             { timestamp: '2026-09-14T11:00:00Z', state: 'REVIEW_APPROVED', actor: 'sarah-lead', note: 'Approved with proof-of-work 1080p video review walkthrough' },
@@ -208,7 +208,7 @@ function getSeedFeatures() {
           id: 'TASK-198',
           number: 198,
           title: 'Kafka Event Stream Deduplication Filter & Idempotent Publisher',
-          status: 'REVIEW',
+          status: 'human-review',
           priority: 'P1',
           assignee: 'Dev User',
           description: 'Add in-memory SHA-256 deduplication cache and idempotent partition publishing to prevent duplicate events during rebalances.',
@@ -223,7 +223,7 @@ function getSeedFeatures() {
           },
           lifetimeHistory: [
             { timestamp: '2026-09-08T11:00:00Z', state: 'CREATED', actor: 'dave-k', note: 'Ticket created for Kafka duplicate message mitigation' },
-            { timestamp: '2026-09-09T13:00:00Z', state: 'IN_PROGRESS', actor: 'dev-user', note: 'Implemented dedup filter with LRU cache' },
+            { timestamp: '2026-09-09T13:00:00Z', state: 'agent-implementing', actor: 'dev-user', note: 'Implemented dedup filter with LRU cache' },
             { timestamp: '2026-09-11T15:00:00Z', state: 'PR_OPENED', actor: 'dev-user', note: 'PR #82 opened targeting main' },
             { timestamp: '2026-09-14T12:00:00Z', state: 'CHANGES_REQUESTED', actor: 'dave-k', note: 'Requested 3-year rabies booster exemption check' },
           ],
@@ -232,7 +232,7 @@ function getSeedFeatures() {
           id: 'TASK-204',
           number: 204,
           title: 'Fix Session Memory Leak in Ephemeral Agent Sandboxes',
-          status: 'TODO',
+          status: 'not-started',
           priority: 'P0',
           assignee: 'Dev User',
           description: 'Tmpfs mounts in virtual framebuffers are leaking memory across agent sessions.',
@@ -247,15 +247,42 @@ function getSeedFeatures() {
           },
           lifetimeHistory: [
             { timestamp: '2026-09-10T14:00:00Z', state: 'CREATED', actor: 'system-monitor', note: 'Bug reported: OOM kill on worker sandbox 4' },
-            { timestamp: '2026-09-12T09:00:00Z', state: 'TODO', actor: 'alex-architect', note: 'Flagged as P0 active blocker on sprint board' },
+            { timestamp: '2026-09-12T09:00:00Z', state: 'not-started', actor: 'alex-architect', note: 'Flagged as P0 active blocker on sprint board' },
             { timestamp: '2026-09-14T10:00:00Z', state: 'CI_FAILED', actor: 'github-actions', note: 'PR #85 CI failed on cleanup daemon test' },
+          ],
+        },
+        {
+          id: 'TASK-207',
+          number: 207,
+          title: 'Add Retry & Exponential Backoff to Form Webhook Dispatcher',
+          status: 'not-started',
+          priority: 'P1',
+          assignee: null,
+          description: 'Webhook deliveries fail permanently on a single 5xx. Add jittered exponential backoff with a dead-letter queue.',
+          taskServerUrl: 'https://github.com/acme-corp/buildbarn-forms/issues/207',
+          lifetimeHistory: [
+            { timestamp: '2026-09-13T09:00:00Z', state: 'CREATED', actor: 'sarah-lead', note: 'Raised after partner webhook outage' },
+          ],
+        },
+        {
+          id: 'TASK-210',
+          number: 210,
+          title: 'PostgreSQL Partition Pruning Optimization for Audit Logs',
+          status: 'agent-implementing',
+          priority: 'P2',
+          assignee: 'Priya N.',
+          description: 'Audit log queries scan all partitions; add constraint exclusion and a retention job.',
+          taskServerUrl: 'https://github.com/acme-corp/buildbarn-forms/issues/210',
+          lifetimeHistory: [
+            { timestamp: '2026-09-12T10:00:00Z', state: 'CREATED', actor: 'dave-k', note: 'Slow audit report query' },
+            { timestamp: '2026-09-14T09:00:00Z', state: 'agent-implementing', actor: 'priya-n', note: 'Picked up' },
           ],
         },
         {
           id: 'TASK-184',
           number: 184,
           title: 'OpenAPI 3.1 Contract Linting with Spectral Rulesets',
-          status: 'DONE',
+          status: 'closed',
           priority: 'P2',
           assignee: 'Dev User',
           description: 'Automated Spectral ruleset check for all REST contracts.',
@@ -271,8 +298,8 @@ function getSeedFeatures() {
           },
           lifetimeHistory: [
             { timestamp: '2026-09-05T08:00:00Z', state: 'CREATED', actor: 'sarah-lead', note: 'OAS 3.1 ruleset task logged' },
-            { timestamp: '2026-09-06T10:00:00Z', state: 'IN_PROGRESS', actor: 'dev-user', note: 'Spectral rules configured' },
-            { timestamp: '2026-09-07T14:00:00Z', state: 'DONE', actor: 'dev-user', note: 'Merged into main (Production Reality)' },
+            { timestamp: '2026-09-06T10:00:00Z', state: 'agent-implementing', actor: 'dev-user', note: 'Spectral rules configured' },
+            { timestamp: '2026-09-07T14:00:00Z', state: 'closed', actor: 'dev-user', note: 'Merged into main (Production Reality)' },
           ],
         },
       ],
@@ -292,7 +319,7 @@ function getSeedFeatures() {
           id: 'TASK-101',
           number: 101,
           title: 'Absorb Notifications in Dev Central & Background Tray',
-          status: 'IN_PROGRESS',
+          status: 'agent-implementing',
           priority: 'P0',
           assignee: 'Antigravity',
           description: 'Implement persistent tray and background sync for assigned tasks.',
@@ -307,7 +334,34 @@ function getSeedFeatures() {
           },
           lifetimeHistory: [
             { timestamp: '2026-09-14T08:00:00Z', state: 'CREATED', actor: 'lead-architect', note: 'Architecture spec approved' },
-            { timestamp: '2026-09-14T09:30:00Z', state: 'IN_PROGRESS', actor: 'antigravity-agent', note: 'Branch checked out' },
+            { timestamp: '2026-09-14T09:30:00Z', state: 'agent-implementing', actor: 'antigravity-agent', note: 'Branch checked out' },
+          ],
+        },
+        {
+          id: 'TASK-102',
+          number: 102,
+          title: 'Tray Icon Unread-Badge States (idle / unread / critical)',
+          status: 'not-started',
+          priority: 'P2',
+          assignee: null,
+          description: 'Render distinct tray icons for idle, unread and critical notification states.',
+          taskServerUrl: 'https://github.com/ndipiazza/robos/issues/102',
+          lifetimeHistory: [
+            { timestamp: '2026-09-14T09:45:00Z', state: 'CREATED', actor: 'lead-architect', note: 'Split out from TASK-101' },
+          ],
+        },
+        {
+          id: 'TASK-103',
+          number: 103,
+          title: 'Quiet-Hours Scheduler for Toast Delivery',
+          status: 'human-review',
+          priority: 'P1',
+          assignee: 'Antigravity',
+          description: 'Honor quiet hours and DND with queued critical alerts.',
+          taskServerUrl: 'https://github.com/ndipiazza/robos/issues/103',
+          lifetimeHistory: [
+            { timestamp: '2026-09-14T10:00:00Z', state: 'CREATED', actor: 'lead-architect', note: 'Quiet hours requirement' },
+            { timestamp: '2026-09-14T15:00:00Z', state: 'human-review', actor: 'antigravity-agent', note: 'Ready for review' },
           ],
         },
       ],
@@ -322,7 +376,32 @@ function getSeedFeatures() {
       description: 'Veterinary certificate upload, OCR extraction, and 3-year booster exemption logic.',
       createdAt: '2026-09-01T12:00:00Z',
       active: false,
-      tasks: [],
+      tasks: [
+        {
+          id: 'TASK-301', number: 301, status: 'not-started', priority: 'P1', assignee: null,
+          title: 'Veterinary Certificate OCR Extraction Pipeline',
+          description: 'Extract vaccine type, date and vet license from uploaded certificates.',
+          taskServerUrl: 'https://github.com/acme/petshop-api/issues/301',
+          lifetimeHistory: [{ timestamp: '2026-09-02T12:00:00Z', state: 'CREATED', actor: 'pm-jess', note: 'Scoped OCR vendor options' }],
+        },
+        {
+          id: 'TASK-302', number: 302, status: 'not-started', priority: 'P1', assignee: null,
+          title: '3-Year Rabies Booster Exemption Rules Engine',
+          description: 'Encode exemption logic and expiry calculation per jurisdiction.',
+          taskServerUrl: 'https://github.com/acme/petshop-api/issues/302',
+          lifetimeHistory: [{ timestamp: '2026-09-03T09:00:00Z', state: 'CREATED', actor: 'pm-jess', note: 'Rules captured from compliance doc' }],
+        },
+        {
+          id: 'TASK-303', number: 303, status: 'agent-implementing', priority: 'P2', assignee: 'Sam R.',
+          title: 'Certificate Upload UI with Drag-and-Drop & Preview',
+          description: 'Customer-facing upload step with client-side validation.',
+          taskServerUrl: 'https://github.com/acme/petshop-api/issues/303',
+          lifetimeHistory: [
+            { timestamp: '2026-09-04T09:00:00Z', state: 'CREATED', actor: 'pm-jess', note: 'Design approved' },
+            { timestamp: '2026-09-13T11:00:00Z', state: 'agent-implementing', actor: 'sam-r', note: 'Started' },
+          ],
+        },
+      ],
     },
   ];
 }
@@ -410,7 +489,7 @@ function getSampleIssues() {
     {
       number: 184,
       title: 'OpenAPI 3.1 Contract Linting with Spectral Rulesets',
-      state: 'DONE',
+      state: 'closed',
       labels: [{ name: 'state:done' }, { name: 'priority:P2' }, { name: 'sprint:42' }, { name: 'service:schema-studio' }],
       updatedAt: new Date(now - 24 * 3600000).toISOString(),
       url: 'https://github.com/acme-corp/buildbarn-forms/issues/184',
@@ -426,7 +505,7 @@ function getSampleIssues() {
     {
       number: 177,
       title: 'W3C SHACL Shape Conformance Validator Gate for Microservices',
-      state: 'DONE',
+      state: 'closed',
       labels: [{ name: 'state:done' }, { name: 'priority:P1' }, { name: 'sprint:41' }],
       updatedAt: new Date(now - 2 * 86400000).toISOString(),
       url: 'https://github.com/acme-corp/buildbarn-forms/issues/177',
@@ -629,7 +708,9 @@ function createWindow() {
     }
   });
 
-  win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
+  // v2 (task-tree) is the default UI. Use `--v1` or ROBOS_DEVCENTRAL_UI=v1 for the legacy dashboard.
+  const useV1 = process.argv.includes('--v1') || process.env.ROBOS_DEVCENTRAL_UI === 'v1';
+  win.loadFile(path.join(__dirname, useV1 ? 'renderer' : 'renderer-v2', 'index.html'));
   win.on('closed', () => { win = null; });
 
   win.webContents.once('did-finish-load', () => {
@@ -663,10 +744,41 @@ app.on('before-quit', () => {
   app.isQuitting = true;
 });
 
+// ── Dev mode: `npm run dev` (or --dev / ROBOS_DEV=1) live-reloads on file changes ──────────────
+//   renderer / renderer-v2 / preload.js  → window reloads instantly (no restart)
+//   main.js / lib/*.js                   → app relaunches itself
+const isDev = process.argv.includes('--dev') || process.env.ROBOS_DEV === '1';
+function startDevReload() {
+  if (!isDev) return;
+  const debounce = (fn, ms) => { let t; return () => { clearTimeout(t); t = setTimeout(fn, ms); }; };
+  const reloadWindow = debounce(() => {
+    if (win && !win.isDestroyed()) { win.webContents.reloadIgnoringCache(); console.log('[dev-central] reloaded UI'); }
+  }, 120);
+  const relaunch = debounce(() => {
+    console.log('[dev-central] main process changed — relaunching');
+    app.isQuitting = true; app.relaunch(); app.exit(0);
+  }, 300);
+  // fs.watch({recursive}) is unsupported on Linux in older Node/Electron, so watch each flat dir.
+  const watch = (dir, onChange, pattern) => {
+    try {
+      fs.watch(dir, (evt, file) => { if (file && pattern.test(file)) onChange(); });
+    } catch (e) { console.error('[dev-central] cannot watch', dir, e.message); }
+  };
+  watch(path.join(__dirname, 'renderer-v2'), reloadWindow, /\.(js|css|html)$/);
+  watch(path.join(__dirname, 'renderer'), reloadWindow, /\.(js|css|html)$/);
+  watch(__dirname, relaunch, /^main\.js$/);
+  watch(__dirname, reloadWindow, /^preload\.js$/);
+  watch(path.join(__dirname, 'lib'), relaunch, /\.js$/);
+  try { require('./lib/dev-probe').start({ getWindow: () => win, dir: path.join(__dirname, '.debug') }); } catch (e) { console.error('[dev-central] dev probe failed', e.message); }
+  console.log('[dev-central] dev mode: watching for changes');
+}
+
 app.whenReady().then(() => {
   createTray();
   createWindow();
   startBackgroundMonitor();
+  startDevReload();
+  if (isDev && win) win.webContents.once('did-finish-load', () => { if (!win.isVisible()) win.show(); });
 });
 
 app.on('window-all-closed', () => {
@@ -1140,6 +1252,12 @@ ipcMain.handle('dc-update-feature-status', (_, { featureId, status }) => {
 
 ipcMain.handle('dc-get-task-lifetime-history', (_, taskId) => {
   return getTaskLifetimeHistory(taskId);
+});
+
+// ── Dev Central v2 (task tree) IPC ───────────────────────────────────────────
+require('./lib/v2-tasks').register({
+  ipcMain, loadFeatures, saveFeatures, readSettings, activeTS,
+  getWindow: () => win, isTestMode, configDir: CONFIG_DIR, sampleIssues: getSampleIssues,
 });
 
 // ── Absorbed Notifications IPC Handlers ──────────────────────────────────────

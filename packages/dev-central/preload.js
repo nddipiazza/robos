@@ -36,6 +36,15 @@ contextBridge.exposeInMainWorld('robos', {
   updateFeatureStatus:    (id, st) => ipcRenderer.invoke('dc-update-feature-status', id, st),
   getTaskLifetimeHistory: (tid)    => ipcRenderer.invoke('dc-get-task-lifetime-history', tid),
 
+  // Dev Central v2 — task tree, search & assign
+  v2GetTree:              ()       => ipcRenderer.invoke('dc-v2-get-tree'),
+  v2Assign:               (p)      => ipcRenderer.invoke('dc-v2-assign', p),
+  v2SetStatus:            (p)      => ipcRenderer.invoke('dc-v2-set-status', p),
+  v2Sync:                 ()       => ipcRenderer.invoke('dc-v2-sync'),
+  v2CancelJob:            (id)     => ipcRenderer.invoke('dc-v2-job-cancel', id),
+  onV2Job:                (cb)     => ipcRenderer.on('dc-v2-job', (_, j) => cb(j)),
+  v2TouchRecent:          (id)     => ipcRenderer.invoke('dc-v2-touch-recent', id),
+
   // Background Sync & Traffic Simulator
   syncNow:                ()       => ipcRenderer.invoke('dc-sync-now'),
   simulateTraffic:        (p)      => ipcRenderer.invoke('dc-simulate-traffic', p),

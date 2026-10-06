@@ -1418,6 +1418,13 @@ html, body {
 .task-chip.review { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.4); }
 .task-chip.todo { background: rgba(148, 163, 184, 0.2); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.4); }
 .task-chip.done { background: rgba(35, 134, 54, 0.2); color: #3fb950; border: 1px solid rgba(63, 185, 80, 0.4); }
+/* RobOS workflow stages (robos-lib/default-workflow) */
+.task-chip.not-started { background: rgba(148, 163, 184, 0.2); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.4); }
+.task-chip.designed, .task-chip.human-review { background: rgba(88, 166, 255, 0.2); color: #58a6ff; border: 1px solid rgba(88, 166, 255, 0.4); }
+.task-chip.agent-implementing { background: rgba(163, 113, 247, 0.2); color: #a371f7; border: 1px solid rgba(163, 113, 247, 0.4); }
+.task-chip.local-evidence-review { background: rgba(210, 153, 34, 0.2); color: #d29922; border: 1px solid rgba(210, 153, 34, 0.4); }
+.task-chip.draft-pr-pipeline-review { background: rgba(219, 139, 84, 0.2); color: #db8b54; border: 1px solid rgba(219, 139, 84, 0.4); }
+.task-chip.closed { background: rgba(35, 134, 54, 0.2); color: #3fb950; border: 1px solid rgba(63, 185, 80, 0.4); }
 
 .task-heading {
   font-size: 13px;
