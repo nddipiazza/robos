@@ -293,7 +293,7 @@ function renderFeatures(features, activeFeature) {
   if (serviceTag) serviceTag.textContent = `Service: ${f.targetService || 'general'}`;
 
   const tasks = f.tasks || [];
-  const completed = tasks.filter(t => t.status === 'DONE').length;
+  const completed = tasks.filter(t => /^(done|closed)$/i.test(t.status || '')).length;
   const total = tasks.length || 1;
   const pct = Math.round((completed / total) * 100);
 
@@ -310,7 +310,7 @@ function renderFeatures(features, activeFeature) {
 
   tasksList.innerHTML = tasks.map(t => {
     const isLifetimeOpen = !!appState.taskLifetimeActive[t.id];
-    const statusClass = (t.status || 'todo').toLowerCase().replace('_', '-');
+    const statusClass = (t.status || 'not-started').toLowerCase().replace(/_/g, '-');
     const prCiClass = t.pr?.ci === 'pass' ? 'ci-pass' : t.pr?.ci === 'fail' ? 'ci-fail' : 'ci-pending';
     const prCiLabel = t.pr?.ci === 'pass' ? 'CI Pass' : t.pr?.ci === 'fail' ? 'CI Fail' : 'CI Pending';
     const prRevLabel = t.pr?.review === 'approved' ? 'Approved' : t.pr?.review === 'changes' ? 'Changes Req' : 'Review Pending';
@@ -319,7 +319,7 @@ function renderFeatures(features, activeFeature) {
       <div class="feature-task-card" id="card-${t.id}">
         <div class="feature-task-top">
           <div class="task-title-group">
-            <span class="task-chip ${statusClass}">${t.status}</span>
+            <span class="task-chip ${statusClass}">${String(t.status || '').replace(/[-_]/g, ' ')}</span>
             <span class="priority-tag priority-${(t.priority || 'p2').toLowerCase()}">${t.priority || 'P2'}</span>
             <span class="task-heading">#${t.number || t.id}: ${t.title}</span>
           </div>
@@ -602,7 +602,7 @@ function filterIssues(issues, filter, query) {
       const stage = stateLabel ? stateLabel.replace('state:', '').toLowerCase() : (issue.state || '').toLowerCase();
 
       if (filter === 'in_progress') {
-        const isProg = stage.includes('progress') || stage === 'in-progress' || stage === 'in_progress';
+        const isProg = stage.includes('progress') || stage.includes('implementing') || stage === 'in-progress' || stage === 'in_progress';
         if (!isProg) return false;
       }
       if (filter === 'review') {

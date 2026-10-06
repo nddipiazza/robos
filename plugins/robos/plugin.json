@@ -43,7 +43,8 @@
     "vm-ssh",
     "vm-status",
     "robos-voice",
-    "manage-agent-personas"
+    "manage-agent-personas",
+    "robos-github-auth"
   ],
   "commands": [
     "view-task-plan",
@@ -79,7 +80,8 @@
     "vm-ssh",
     "vm-status",
     "robos-voice",
-    "manage-agent-personas"
+    "manage-agent-personas",
+    "robos-github-auth"
   ],
   "compatibility": {
     "claude": ">=1.0.0",
