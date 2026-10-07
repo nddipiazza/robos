@@ -30,7 +30,7 @@ window.configureReviewPublish = function(pr) {
     const error=document.createElement('p');error.setAttribute('role','alert');
     window.cleanupPublishProgress?.();window.cleanupPublishProgress=window.api.onPublishProgress?.(text=>{error.textContent=text;});
     const remediate=document.createElement('button');remediate.textContent='Resolve uncommitted changes';remediate.hidden=true;
-    remediate.onclick=async()=>{save();remediate.disabled=true;try{window.setTheaterStage?.(6);const result=await window.api.demoAction({action:'remediate'});if(!result.ok)throw Error(result.error);}catch(e){error.textContent=e.message;window.setTheaterStage?.(8);}finally{remediate.disabled=false;}};
+    remediate.onclick=async()=>{save();remediate.hidden=true;error.textContent='';remediate.disabled=true;try{window.setTheaterStage?.(6);const result=await window.api.demoAction({action:'remediate'});if(!result.ok)throw Error(result.error);}catch(e){remediate.hidden=false;error.textContent=e.message;window.setTheaterStage?.(8);}finally{remediate.disabled=false;}};
     const open=document.createElement('button');open.textContent='Open pull request';open.hidden=!pr.published;
     const openPR=async()=>{open.disabled=true;error.textContent='Opening pull request in your browser…';try{const result=await window.api.openUrl(pr.url);if(result?.ok===false)throw Error(result.error);error.textContent='Opened in your default browser: '+pr.url;}catch(e){error.textContent=e.message+' '+pr.url;}finally{open.disabled=false;}};
     open.onclick=openPR;
@@ -41,10 +41,10 @@ window.configureReviewPublish = function(pr) {
     const messaging=!pr.published && window.mountReviewMessageOptions?.(messagingHost,pr,title,body,saved);
     const aiHost=document.createElement('div');
     const create=document.createElement('button');create.textContent='Create PR';create.onclick=async()=>{
-      create.disabled=true;create.textContent='Preparing PR…';error.textContent='Checking the description…';
+      remediate.hidden=true;create.disabled=true;create.textContent='Preparing PR…';error.textContent='Checking the description…';
       try{
         if(aiDescription && !await aiDescription.ensureReady()){error.textContent='The description needs your review. Check the description and its status above, then click Create PR when ready.';return;}
-        save();create.textContent='Creating PR…';error.textContent='Checking the branch and creating the PR…';
+        save();create.textContent='Creating PR…';error.textContent='Pushing branch commits and creating the PR…';
         await messaging?.ready;save();messaging?.validate();const result=await window.api.createReviewPR({title:title.value,body:body.value,draft:draft.checked});if(!result.ok){remediate.hidden=result.code!=='DIRTY_WORKTREE';throw new Error(result.error);}
         remediate.hidden=true;Object.assign(pr,result.pr);await messaging?.send();
         const fresh=await window.api.refreshReviewPR();if(!fresh.ok)throw Error('PR created, but refresh failed: '+fresh.error);
