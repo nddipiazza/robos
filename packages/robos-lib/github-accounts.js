@@ -7,7 +7,7 @@ const cp = require('node:child_process');
 const file = path.join(os.homedir(), '.config/robos/github-accounts.json');
 function cleanEnv(env = process.env) {
   const result = { ...env };
-  delete result.GH_TOKEN; delete result.GITHUB_TOKEN; delete result.GH_DEBUG;
+  delete result.GH_TOKEN; delete result.GITHUB_TOKEN; delete result.GH_ENTERPRISE_TOKEN; delete result.GITHUB_ENTERPRISE_TOKEN; delete result.GH_DEBUG;
   return result;
 }
 function command(args) {
@@ -15,7 +15,7 @@ function command(args) {
     env: cleanEnv(), encoding: 'utf8', timeout: 15000, maxBuffer: 1024 * 1024,
   }, (error, stdout) => error ? reject(Error('GitHub account command failed. Check the saved account in Git Login Manager.')) : resolve(stdout.trim())));
 }
-function create({ configFile = file, run = command } = {}) {
+function create({ configFile = file, run = command, runSync = args => cp.execFileSync('gh', args, {env:cleanEnv(),encoding:'utf8',timeout:15000,stdio:['ignore','pipe','pipe']}).trim() } = {}) {
   function read() {
     try { return JSON.parse(fs.readFileSync(configFile, 'utf8')); }
     catch (error) { if (error.code === 'ENOENT') return {}; throw error; }
@@ -26,6 +26,28 @@ function create({ configFile = file, run = command } = {}) {
       .map(a => ({ login: a.login, active: !!a.active, valid: a.state === 'success' }));
     const selected = read();
     return { accounts, selected: { git: selected.git || accounts.find(a => a.active)?.login || '', copilot: selected.copilot || '' } };
+  }
+  function gitEnvSync(host = 'github.com', env = process.env) {
+    const login=read().git;
+    if (!login || !/^[\w-]+$/.test(login)) throw Error('Choose a Git client account in RobOS Preferences → GitHub accounts.');
+    let token;
+    try { token=runSync(['auth','token','--hostname',host,'--user',login]); }
+    catch { throw Error(`The saved credential for ${login} on ${host} is unavailable. Check RobOS Preferences → GitHub accounts.`); }
+    if (!token?.trim()) throw Error(`No saved credential for ${login} on ${host}.`);
+    const result=cleanEnv(env);result.GH_HOST=host;
+    result[host==='github.com'?'GH_TOKEN':'GH_ENTERPRISE_TOKEN']=token.trim();
+    return result;
+  }
+  async function gitEnv(host = 'github.com', env = process.env) {
+    const login=read().git;
+    if (!login || !/^[\w-]+$/.test(login)) throw Error('Choose a Git client account in RobOS Preferences → GitHub accounts.');
+    let token;
+    try { token=await run(['auth','token','--hostname',host,'--user',login]); }
+    catch { throw Error(`The saved credential for ${login} on ${host} is unavailable. Check RobOS Preferences → GitHub accounts.`); }
+    if (!token?.trim()) throw Error(`No saved credential for ${login} on ${host}.`);
+    const result=cleanEnv(env);result.GH_HOST=host;
+    result[host==='github.com'?'GH_TOKEN':'GH_ENTERPRISE_TOKEN']=token.trim();
+    return result;
   }
   async function copilotEnv(login = read().copilot, env = process.env) {
     if (!login || !/^[\w-]+$/.test(login)) throw Error('Choose a Copilot account in Preferences → GitHub accounts.');
@@ -64,7 +86,7 @@ function create({ configFile = file, run = command } = {}) {
     }
     return list();
   }
-  return { read, list, copilotEnv, save };
+  return { read, list, gitEnv, gitEnvSync, copilotEnv, save };
 }
 function openPreferences() {
   let bundled; try { bundled = require('../robos-graph/node_modules/electron'); } catch {}
