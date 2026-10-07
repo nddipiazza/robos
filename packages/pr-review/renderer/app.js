@@ -1522,73 +1522,18 @@ window.executeTheaterRestCall = async function() {
 
 // ── Stage 3: File Diff Viewer ───────────────────────────────────────────────
 
-function renderTheaterDiffViewer() {
-  if (!theaterContext || !theaterContext.fileDiffs) return;
-  const files = theaterContext.fileDiffs;
-
-  const countEl = document.getElementById('diff-file-count');
-  if (countEl) countEl.textContent = files.length;
-
-  const fileListEl = document.getElementById('theater-diff-file-list');
-  if (fileListEl) {
-    fileListEl.innerHTML = files.map((f, idx) => `
-      <div class="diff-file-item ${idx === activeDiffFileIndex ? 'active' : ''}" data-theater-action="selectDiffFile" data-theater-arg="${idx}">
-        <span class="diff-file-path">${esc(f.filePath.split('/').pop())}</span>
-        <span class="diff-file-stats">
-          <span class="stat-add">+${f.additions}</span>
-          <span class="stat-del">-${f.deletions}</span>
-        </span>
-      </div>
-    `).join('');
-  }
-
-  renderCurrentFileDiff();
-}
-
-window.selectDiffFile = function(idx) {
-  activeDiffFileIndex = idx;
-  document.querySelectorAll('.diff-file-item').forEach((el, i) => {
-    el.classList.toggle('active', i === idx);
-  });
-  renderCurrentFileDiff();
-};
-
-window.setDiffMode = function(mode) {
-  currentDiffMode = mode;
-  document.getElementById('btn-diff-mode-unified')?.classList.toggle('active', mode === 'unified');
-  document.getElementById('btn-diff-mode-split')?.classList.toggle('active', mode === 'split');
-  renderCurrentFileDiff();
-};
-
-function renderCurrentFileDiff() {
-  if (!theaterContext || !theaterContext.fileDiffs || !theaterContext.fileDiffs.length) return;
-  const file = theaterContext.fileDiffs[activeDiffFileIndex] || theaterContext.fileDiffs[0];
-
-  const currentNameEl = document.getElementById('diff-current-file');
-  if (currentNameEl) currentNameEl.textContent = file.filePath;
-
-  const currentStatsEl = document.getElementById('diff-current-stats');
-  if (currentStatsEl) currentStatsEl.innerHTML = `<span class="stat-add">+${file.additions}</span> <span class="stat-del">-${file.deletions}</span>`;
-
-  const codeContainer = document.getElementById('diff-code-lines');
-  if (!codeContainer) return;
-
-  let html = '';
-  for (const hunk of file.hunks) {
-    html += `<div class="diff-hunk-bar">${esc(hunk.header)}</div>`;
-    for (const line of hunk.lines) {
-      const rowClass = line.type === 'add' ? 'diff-row-add' :
-                       line.type === 'del' ? 'diff-row-del' : 'diff-row-ctx';
-      const prefix = line.type === 'add' ? '+' : line.type === 'del' ? '-' : ' ';
-      html += `
-        <div class="diff-row ${rowClass}">
-          <span class="diff-line-prefix">${prefix}</span>
-          <span class="diff-line-content">${esc(line.text)}</span>
-        </div>
-      `;
-    }
-  }
-  codeContainer.innerHTML = html || '<div style="padding:12px; color:var(--muted);">No hunk changes in file</div>';
+let diffRenderGeneration=0;
+async function renderTheaterDiffViewer() {
+  const root=document.getElementById('stage-3');if(!root||!theaterContext)return;
+  const generation=++diffRenderGeneration;
+  const notice=document.createElement('p');notice.setAttribute('role','status');notice.textContent='Loading changes…';root.replaceChildren(notice);
+  try{
+    const pr=theaterContext.pr||selectedPR;
+    const result=await window.api.fetchPRDiffContent({repo:pr.repo,number:pr.number});
+    if(generation!==diffRenderGeneration)return;
+    if(!result.ok)throw Error(result.error);
+    await window.mountChanges(root,result.rawDiff||'',{identity:pr.repo+':'+(pr.headBranch||pr.number),onRefresh:renderTheaterDiffViewer});
+  }catch(error){if(generation===diffRenderGeneration){notice.textContent='Could not load changes: '+error.message;const retry=document.createElement('button');retry.textContent='Retry';retry.onclick=renderTheaterDiffViewer;root.replaceChildren(notice,retry);}}
 }
 
 // ── Stage 4: IDE Branch Diff Bridge & Breakpoint Debugger ───────────────────
