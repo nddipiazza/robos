@@ -585,7 +585,7 @@ ipcMain.handle('fetch-pr-theater-context', async (_, opts = {}) => {
         headBranch: opts.headBranch || 'feature/PET-105-rabies-verification',
         baseBranch: opts.baseBranch || 'main',
         changedFiles: fallbackFiles,
-        author: opts.author || 'robos',
+        author: opts.author || '',
         url: opts.url || `https://github.com/${opts.repo || 'acme/petstore-api'}/pull/${opts.number || 12}`,
         additions: 42,
         deletions: 3,
