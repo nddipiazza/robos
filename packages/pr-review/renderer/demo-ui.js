@@ -125,7 +125,7 @@ window.mountWalkthrough = async function () {
     next.hidden = busy || !['paused', 'error'].includes(value.status) || lastStep;
     next.disabled = busy;
     next.textContent = value.status === 'error' ? `Continue to step ${stepIndex + 2} →` : `Next step: ${(value.mode === 'before' ? value.process.before?.checkpoints : value.process.checkpoints)?.[value.index + 1]?.title || 'Continue'} →`;
-    retry.hidden = value.status !== 'error'; process.disabled = busy; send.disabled = !busy && value.status !== 'error' && value.index < 0; send.textContent = busy ? 'Steer' : 'Send';
+    retry.hidden = value.status !== 'error'; process.disabled = busy; send.disabled = !busy && value.status !== 'error' && value.index < 0 && !value.remediating; send.textContent = busy ? 'Steer' : 'Send';
     // Older running sessions can be upgraded without interrupting their agent.
     if (lastActionStart !== value.startedAt) { lastNarration = ''; lastActionStart = value.startedAt; }
     const meaningful = [...(value.progress || [])].reverse().find(e => !/^(Running a local setup|Local check finished|A local check failed)/.test(e.text));
@@ -137,7 +137,12 @@ window.mountWalkthrough = async function () {
     if (c) { const h = document.createElement('h3'); h.textContent = c.title; const p = document.createElement('p'); p.textContent = busy ? `I’m preparing “${c.title}”. I’ll show you what to try and pause when it’s ready.` : value.guidance || c.summary || 'Ask Explain for a walkthrough of this step, or try the app before moving on.'; checkpoint.append(h, p); if (value.baseline) { const note = document.createElement('small'); note.textContent = `Before the change · ${value.baseline.ref} · ${value.baseline.revision.slice(0, 8)}`; checkpoint.append(note); } }
     else checkpoint.textContent = 'Start the dev app and demonstrate one checkpoint at a time. You decide when we move on.';
     if (value.status === 'error') { const reason = document.createElement('p'); reason.className = 'walkthrough-blocker'; reason.textContent = (value.messages.filter(m => m.kind !== 'progress' && m.role !== 'user').at(-1)?.text || 'This step could not be verified.') + (lastStep ? ' You can recheck or ask for a change below.' : ' Recheck this step, ask for a change below, or continue with this check marked unverified.'); checkpoint.append(reason); }
-    if (value.status === 'paused' && lastStep) { const done = document.createElement('p'); done.textContent = 'You’ve reached the end of this walkthrough. You can keep asking for changes, or use More to start over. This does not approve or merge the PR.'; checkpoint.append(done); }
+    if(value.remediating){
+      title.textContent='Resolve uncommitted changes';badge.textContent=busy?'Inspecting changes':value.status==='error'?'Needs your input':'Ready to retry Create PR';
+      stepActions.hidden=true;more.hidden=true;checkpoint.textContent='Review the agent’s findings below. Answer its questionnaire if any files need a decision, then return to Pull Request and retry Create PR.';
+      input.setAttribute('placeholder','Discuss which files belong in this task…');
+    }else{title.textContent='Walk me through it';stepActions.hidden=false;}
+    if (!value.remediating && value.status === 'paused' && lastStep) { const done = document.createElement('p'); done.textContent = 'You’ve reached the end of this walkthrough. You can keep asking for changes, or use More to start over. This does not approve or merge the PR.'; checkpoint.append(done); }
     const previousTop=chat.scrollTop;
     const anchor=[...chat.children].find(el=>el.getBoundingClientRect().bottom>chat.getBoundingClientRect().top);
     const anchorId=anchor?.dataset.messageId,anchorOffset=anchor?anchor.getBoundingClientRect().top-chat.getBoundingClientRect().top:0;
@@ -159,7 +164,7 @@ window.mountWalkthrough = async function () {
   async function act(action, text) { error.textContent = ''; try { const result = await window.api.demoAction({ action, text }); if (!result.ok) throw new Error(result.error); render(result.state); return true; } catch (e) { error.textContent = e.message; return false; } }
   input.addEventListener('robos-submit', async event => {
     if (pendingMessage) return;
-    if (state.index < 0 && !['running', 'error'].includes(state.status)) { error.textContent = 'Start the walkthrough before sending a message.'; return; }
+    if (!state.remediating && state.index < 0 && !['running', 'error'].includes(state.status)) { error.textContent = 'Start the walkthrough before sending a message.'; return; }
     const text = event.detail.value.trim(); if (!text) return;
     if (text.length > 16000) { error.textContent = 'Keep your message under 16,000 characters.'; return; }
     pendingMessage = { text, lastId: state.messages.filter(m => m.role === 'user').at(-1)?.id }; receipt.textContent = 'Sending your message…';

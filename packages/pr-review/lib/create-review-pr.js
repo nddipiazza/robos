@@ -22,7 +22,7 @@ class ReviewPRPublisher {
     if(existing.length>1)throw new Error('More than one open PR matches this branch. Select the intended PR.');
     let pr=existing[0];
     if(!pr) {
-      if(await git(['status','--porcelain']))throw new Error('Commit your local review changes before creating the PR.');
+      if(await git(['status','--porcelain']))throw Object.assign(new Error('Uncommitted changes need review before creating the PR.'),{code:'DIRTY_WORKTREE'});
       const head=await git(['rev-parse','HEAD']);
       const remote=(await git(['ls-remote','origin',`refs/heads/${branch}`])).split(/\s/)[0];
       if(remote!==head)throw new Error('Push the latest branch commits before creating the PR.');
