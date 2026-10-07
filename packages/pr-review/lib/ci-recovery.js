@@ -17,7 +17,7 @@ function recoveryPhase(meta, ci, running, ready) {
   return ci.state==='failed'?'diagnose':ci.state==='passed'?'passed':ci.state==='pending'?'waiting':'unknown';
 }
 function recoveryPrompt(review, ci) {
-  return `You are repairing CI for ${review.repo} PR #${review.pullRequest.number} in ${review.workspace}.
+  return require('../../robos-lib/commit-completion').instructions+'\n\n'+`You are repairing CI for ${review.repo} PR #${review.pullRequest.number} in ${review.workspace}.
 PR: ${review.pullRequest.url}
 GitHub account: ${review.githubAccount||"current authenticated account"}
 Failed revision: ${ci.head}

@@ -3,7 +3,7 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
 const {DemoSession,validateProcess}=require('../../../pr-review/lib/demo-session');
-function session(run){const dir=fs.mkdtempSync(path.join(os.tmpdir(),'demo-session-test-'));const file=path.join(dir,'process.json');fs.writeFileSync(file,JSON.stringify({instructions:'Use local dev mode and Chrome DevTools MCP',checkpoints:[{title:'One',given:'Ready',when:'Open',then:'Visible'},{title:'Two',given:'Open',when:'Click',then:'Changed'}]}));return new DemoSession({workspace:dir,processFile:file},run);}
+function session(run){const dir=fs.mkdtempSync(path.join(os.tmpdir(),'demo-session-test-'));const file=path.join(dir,'process.json');fs.writeFileSync(file,JSON.stringify({instructions:'Use local dev mode and Chrome DevTools MCP',checkpoints:[{title:'One',given:'Ready',when:'Open',then:'Visible'},{title:'Two',given:'Open',when:'Click',then:'Changed'}]}));const git=args=>require('node:child_process').execFileSync('git',args,{cwd:dir,stdio:'pipe'});git(['init']);git(['add','process.json']);git(['-c','user.name=Test','-c','user.email=test@example.com','commit','-m','fixture']);return new DemoSession({workspace:dir,processFile:file},run);}
 test('start pauses at one checkpoint; only Next advances',async()=>{const prompts=[];const s=session(async p=>{prompts.push(p);return {reply:'Observed',checkpointReached:true};});await s.act('start');assert.equal(s.index,0);assert.equal(s.status,'paused');await s.act('explain');assert.equal(s.index,0);assert.match(prompts[1],/Do not edit code or move the browser/);await s.act('message','Make the label shorter');assert.equal(s.index,0);assert.match(prompts[2],/Make the label shorter/);await s.act('next');assert.equal(s.index,1);await assert.rejects(s.act('next'),/final checkpoint/);});
 test('failed assertion does not advance and Retry targets failed checkpoint',async()=>{let pass=true;const s=session(async()=>({reply:'result',checkpointReached:pass}));await s.act('start');pass=false;await s.act('next');assert.equal(s.index,0);assert.equal(s.status,'error');await assert.rejects(s.act('next'),/Reach/);pass=true;await s.act('retry');assert.equal(s.index,1);});
 test('startup failure can be retried without skipping first checkpoint',async()=>{let fail=true;const s=session(async()=>{if(fail)throw Error('Chrome unavailable');return {reply:'ready',checkpointReached:true};});await s.act('start');assert.equal(s.index,-1);assert.equal(s.status,'error');fail=false;await s.act('retry');assert.equal(s.index,0);});
@@ -118,4 +118,19 @@ test('walkthrough prompt commits verified improvements on the existing branch wi
 test('compact skill references resolve for the agent without expanding saved chat',async()=>{
  const prompts=[];const s=session(async p=>{prompts.push(p);return {reply:'Ready',checkpointReached:true};});await s.act('start');await s.act('message','@skill(kgraph-search) Find the filter component');
  assert.match(prompts.at(-1),/Selected skill: Search Knowledge Graph/);assert.match(prompts.at(-1),/kgraph-cli\.js search/);assert.equal(s.messages.filter(m=>m.role==='user').at(-1).text,'@skill(kgraph-search) Find the filter component');
+});
+test('uncommitted edit cannot report completion; recovery asks and resumes without starting a walkthrough',async()=>{
+ let count=0;const s=session(async prompt=>{
+  count++;
+  if(count===1){fs.writeFileSync(path.join(s.workspace,'feature.txt'),'change');return {reply:'Done',checkpointReached:true};}
+  assert.match(prompt,/repository recovery discussion/);assert.match(prompt,/Never discard or stash/);
+  if(count===2)return {reply:'feature.txt belongs to this task. Commit it?',questions:['Should feature.txt be committed to this task?'],checkpointReached:false};
+  assert.match(prompt,/Yes, commit feature.txt/);
+  const git=args=>require('node:child_process').execFileSync('git',args,{cwd:s.workspace});git(['add','feature.txt']);git(['-c','user.name=Test','-c','user.email=test@example.com','commit','-m','fix: feature']);
+  return {reply:'Committed feature.txt',questions:[],checkpointReached:false};
+ });
+ s.index=0;await s.act('message','Change feature');assert.equal(s.status,'error');assert.match(s.pendingQuestions[0],/feature.txt/);
+ s.index=-1;await s.act('remediate');assert.equal(s.status,'error');assert.equal(s.index,-1);assert.equal(s.pendingQuestions.length,1);
+ await s.act('message','Yes, commit feature.txt');assert.equal(s.status,'paused');assert.equal(s.index,-1);assert.equal(s.pendingQuestions.length,0);
+ assert.doesNotThrow(()=>require('../../../robos-lib/commit-completion').assertClean(s.workspace));
 });

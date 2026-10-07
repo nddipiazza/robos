@@ -29,6 +29,8 @@ window.configureReviewPublish = function(pr) {
     const draftLabel=document.createElement('label');const draft=document.createElement('input');draft.type='checkbox';draft.checked=!!saved.draft;draftLabel.append(draft,' Create as draft');
     const error=document.createElement('p');error.setAttribute('role','alert');
     window.cleanupPublishProgress?.();window.cleanupPublishProgress=window.api.onPublishProgress?.(text=>{error.textContent=text;});
+    const remediate=document.createElement('button');remediate.textContent='Resolve uncommitted changes';remediate.hidden=true;
+    remediate.onclick=async()=>{save();remediate.disabled=true;try{window.setTheaterStage?.(6);const result=await window.api.demoAction({action:'remediate'});if(!result.ok)throw Error(result.error);}catch(e){error.textContent=e.message;window.setTheaterStage?.(8);}finally{remediate.disabled=false;}};
     const open=document.createElement('button');open.textContent='Open pull request';open.hidden=!pr.published;
     const openPR=async()=>{open.disabled=true;error.textContent='Opening pull request in your browser…';try{const result=await window.api.openUrl(pr.url);if(result?.ok===false)throw Error(result.error);error.textContent='Opened in your default browser: '+pr.url;}catch(e){error.textContent=e.message+' '+pr.url;}finally{open.disabled=false;}};
     open.onclick=openPR;
@@ -43,8 +45,8 @@ window.configureReviewPublish = function(pr) {
       try{
         if(aiDescription && !await aiDescription.ensureReady()){error.textContent='The description needs your review. Check the description and its status above, then click Create PR when ready.';return;}
         save();create.textContent='Creating PR…';error.textContent='Checking the branch and creating the PR…';
-        await messaging?.ready;save();messaging?.validate();const result=await window.api.createReviewPR({title:title.value,body:body.value,draft:draft.checked});if(!result.ok)throw new Error(result.error);
-        Object.assign(pr,result.pr);await messaging?.send();
+        await messaging?.ready;save();messaging?.validate();const result=await window.api.createReviewPR({title:title.value,body:body.value,draft:draft.checked});if(!result.ok){remediate.hidden=result.code!=='DIRTY_WORKTREE';throw new Error(result.error);}
+        remediate.hidden=true;Object.assign(pr,result.pr);await messaging?.send();
         const fresh=await window.api.refreshReviewPR();if(!fresh.ok)throw Error('PR created, but refresh failed: '+fresh.error);
         try{localStorage.removeItem(key);}catch{}
         if(window.openPRReviewTheater)await window.openPRReviewTheater(fresh.pr);else window.configureReviewPublish(fresh.pr);
@@ -54,7 +56,7 @@ window.configureReviewPublish = function(pr) {
     const refresh=document.createElement('button');refresh.textContent='Reload PR';refresh.hidden=!pr.published;refresh.onclick=async()=>{refresh.disabled=true;try{const r=await window.api.refreshReviewPR();if(!r.ok)throw Error(r.error);if(window.openPRReviewTheater)await window.openPRReviewTheater(r.pr);else window.configureReviewPublish(r.pr);window.setTheaterStage?.(8);}catch(e){error.textContent=e.message;}finally{refresh.disabled=false;}};
     const update=document.createElement('button');update.textContent='Update PR';update.hidden=!editable;update.onclick=async()=>{update.disabled=true;error.textContent='Updating the PR…';try{const r=await window.api.updateReviewPR({title:title.value,body:body.value,expectedTitle:pr.title,expectedBody:pr.body});if(!r.ok)throw Error(r.error);Object.assign(pr,r.pr);title.value=pr.title;body.value=pr.body;const header=document.querySelector('#theater-pr-title a');if(header)header.textContent='#'+pr.number+' · '+pr.title;error.textContent='PR description updated on GitHub.';}catch(e){error.textContent=e.message;}finally{update.disabled=false;}};
     if(pr.isDraft && ready && !ready.hidden){const promote=document.createElement('button');promote.className='pr-ready-button';promote.textContent='Move PR to Ready';promote.onclick=()=>ready.click();dialog.append(promote);}
-    const actions=document.createElement('div');actions.className='review-publish-actions';actions.append(create,update,refresh,open);dialog.append(heading,branch,titleLabel,aiHost,bodyLabel,draftLabel,messagingHost,error,actions);stage.append(dialog);
+    const actions=document.createElement('div');actions.className='review-publish-actions';actions.append(create,remediate,update,refresh,open);dialog.append(heading,branch,titleLabel,aiHost,bodyLabel,draftLabel,messagingHost,error,actions);stage.append(dialog);
     body.addEventListener('editor-warning',e=>error.textContent=e.detail);
     aiDescription=window.mountAIDescription?.(aiHost,{pr,title,body,saved,save,ready:messaging?.ready});
     if(pr.published){create.hidden=true;title.disabled=!editable;body.disabled=!editable;draftLabel.hidden=true;open.hidden=false;error.textContent=pr.stateError|| (editable?'Review the evidence and walkthrough, revise the description, or discuss further adjustments.':pr.state==='CLOSED'||pr.state==='MERGED'?'This PR is '+labels[status].toLowerCase()+'. Evidence and changes remain available.':'Description edits are available to the author of an open PR.');}
