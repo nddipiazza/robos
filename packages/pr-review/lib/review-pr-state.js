@@ -46,6 +46,7 @@ class ReviewPRState {
   if(!pr.ciPassing)throw Error('CI checks must finish successfully before marking this PR ready.');
   await this.run('gh',['pr','ready',pr.url],await this.options());
   const result=await this.refresh();if(result.isDraft)throw Error('GitHub did not confirm the PR is ready. Reload before retrying.');
+  await require('../../robos-task-client/pr-task-status').syncReviewTask(this.review,this.review.pullRequest);
   if(selected.length){try{await this.run('gh',['pr','edit',pr.url,'--add-reviewer',selected.join(',')],await this.options());}catch(e){result.reviewerError='PR is ready, but reviewer requests failed: '+e.message;}}
   return result;
  }

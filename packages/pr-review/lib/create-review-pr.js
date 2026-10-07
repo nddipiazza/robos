@@ -18,7 +18,7 @@ class ReviewPRPublisher {
     const base=(this.review.baseBranch || this.review.baseRef).replace(/^origin\//,'');
     if (/^[a-f0-9]{7,40}$/i.test(base)) throw new Error('Configure baseBranch with the PR target branch; baseRef is a pinned diff commit.');
     if(!branch || branch===base || ['main','master'].includes(branch))throw new Error('Create PR requires a feature branch.');
-    const existing=JSON.parse(await this.run('gh',['pr','list','--repo',this.review.repo,'--head',branch,'--state','open','--json','number,url,title'],opts));
+    const existing=JSON.parse(await this.run('gh',['pr','list','--repo',this.review.repo,'--head',branch,'--state','open','--json','number,url,title,isDraft,state'],opts));
     if(existing.length>1)throw new Error('More than one open PR matches this branch. Select the intended PR.');
     let pr=existing[0];
     if(!pr) {
@@ -35,12 +35,13 @@ class ReviewPRPublisher {
       const dir=fs.mkdtempSync(path.join(os.tmpdir(),'robos-pr-'));const file=path.join(dir,'body.md');fs.writeFileSync(file,body,{mode:0o600});
       const args=['pr','create','--repo',this.review.repo,'--head',branch,'--base',base,'--title',title.trim(),'--body-file',file];if(draft)args.push('--draft');
       const url=(await this.run('gh',args,opts)).trim();
-      pr=JSON.parse(await this.run('gh',['pr','view',url,'--repo',this.review.repo,'--json','number,url,title'],opts));
+      pr=JSON.parse(await this.run('gh',['pr','view',url,'--repo',this.review.repo,'--json','number,url,title,isDraft,state'],opts));
     }
     if(!Number.isInteger(pr.number)||!pr.url?.startsWith(`https://github.com/${this.review.repo}/pull/`))throw new Error('GitHub returned an unexpected PR identity.');
     this.review.pullRequest=pr;Object.assign(this.review.pr,{number:pr.number,url:pr.url,title:pr.title,published:true});
     const config=JSON.parse(fs.readFileSync(this.manifestPath,'utf8'));config.pullRequest=pr;
     const temp=this.manifestPath+'.tmp';fs.writeFileSync(temp,JSON.stringify(config,null,2)+'\n',{mode:0o600});fs.renameSync(temp,this.manifestPath);
+    await require('../../robos-task-client/pr-task-status').syncReviewTask(this.review,pr);
     return this.review.pr;
   }
 }
