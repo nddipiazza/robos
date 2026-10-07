@@ -4,6 +4,7 @@ const kindFor=file=>/\.(png|jpe?g|webp)$/i.test(file)?'screenshot':/\.(webm|mp4)
 function evidenceFor(review,store){
   const evidence=[],seen=new Set(),sources=[],limits=[];
   const add=item=>{if(!item||typeof item!=='object')return;const key=item.path||item.url;if(!key||seen.has(key))return;seen.add(key);evidence.push({id:createHash('sha256').update(key).digest('hex').slice(0,16),...item,label:String(item.label||path.basename(key)),kind:item.kind||kindFor(key)||'report'});};
+  if(review.evidenceBundlePath)try{for(const item of require('./task-evidence-view').load(review).artifacts)add(item);}catch(error){limits.push(error.message);}
   for(const item of review.evidence||[])add(item);
   const readIndex=file=>{try{const c=JSON.parse(fs.readFileSync(file,'utf8'));sources.push(file);for(const item of c.evidence||[])add(item);}catch(e){if(e.code!=='ENOENT')limits.push(`Could not read evidence index: ${file}`);}};
   if(store?.directory)readIndex(path.join(store.directory,'evidence','index.json'));

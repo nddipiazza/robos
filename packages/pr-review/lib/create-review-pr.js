@@ -1,15 +1,12 @@
 'use strict';
 const fs=require('node:fs');const path=require('node:path');const os=require('node:os');
-const {execFile}=require('node:child_process');const {promisify}=require('node:util');
-const exec=promisify(execFile);
 class ReviewPRPublisher {
-  constructor(review, manifestPath, run=async (bin,args,opts)=> (await exec(bin,args,{...opts,maxBuffer:1024*1024})).stdout) { this.review=review;this.manifestPath=manifestPath;this.run=run;this.pending=null; }
+  constructor(review, manifestPath, run=require('./review-command')) { this.review=review;this.manifestPath=manifestPath;this.run=run;this.pending=null; }
   create(input) { if(this.pending)return this.pending;this.pending=this.publish(input).finally(()=>{this.pending=null;});return this.pending; }
   async publish({title,body,draft=false}={}) {
     if(typeof title!=='string'||!title.trim()||title.length>256||typeof body!=='string'||body.length>65000)throw new Error('Provide a PR title and description.');
     if(!/^[\w.-]+\/[\w.-]+$/.test(this.review.repo||''))throw new Error('Configure the GitHub repository for this review.');
-    const opts={cwd:this.review.workspace,env:{...process.env}};
-    if(this.review.githubAccount)opts.env.GH_TOKEN=(await this.run('gh',['auth','token','--user',this.review.githubAccount],opts)).trim();
+    const opts={cwd:this.review.workspace,repo:this.review.repo,env:require('../../robos-lib/github-accounts').cleanEnv()};
     const git=async args=>(await this.run('git',args,opts)).trim();
     const origin=await git(['remote','get-url','origin']);
     const originRepo=origin.match(/github\.com[:/]([^/]+\/[^/]+?)(?:\.git)?$/)?.[1];

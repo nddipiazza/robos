@@ -1,8 +1,13 @@
 const { contextBridge, ipcRenderer } = require('electron');
-contextBridge.exposeInMainWorld('robosProviders',{
-  reviewEpicNavigation:()=>ipcRenderer.invoke('review-epic-navigation'),
-  openEpicNeighbor:direction=>ipcRenderer.invoke('open-epic-neighbor',direction),list:options=>ipcRenderer.invoke('ci-recovery-providers',options)});
+contextBridge.exposeInMainWorld('robosProviders',{list:options=>ipcRenderer.invoke('ci-recovery-providers',options)});
 contextBridge.exposeInMainWorld('api', {
+  reviewEpicNavigation:()=>ipcRenderer.invoke('review-epic-navigation'),
+  openEpicNeighbor:direction=>ipcRenderer.invoke('open-epic-neighbor',direction),
+  listReviewTasks:()=>ipcRenderer.invoke('list-review-tasks'),
+  openReviewTask:id=>ipcRenderer.invoke('open-review-task',id),
+  returnToTaskPicker:()=>ipcRenderer.invoke('return-to-task-picker'),
+  taskEvidenceBundle:()=>ipcRenderer.invoke('task-evidence-bundle'),
+  taskEvidenceText:id=>ipcRenderer.invoke('task-evidence-text',id),
   ciRecoveryState:()=>ipcRenderer.invoke('ci-recovery-state'),
   ciRecoveryAction:input=>ipcRenderer.invoke('ci-recovery-action',input),
   openAgentSession:input=>ipcRenderer.invoke('open-agent-session',input),

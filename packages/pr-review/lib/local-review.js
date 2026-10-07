@@ -10,6 +10,7 @@ const { pathToFileURL } = require('node:url');
 function loadLocalReview(file) {
   if (!file) return null;
   const config = JSON.parse(fs.readFileSync(file, 'utf8'));
+  const taskLink = require('../../robos-task-client').workItemLink({...config.task, url:config.task?.url || config.taskUrl, title:config.task?.title || config.taskTitle});
   if (!path.isAbsolute(config.workspace || '') || !config.title || !config.baseRef) throw new Error('Local review requires workspace, title and baseRef');
   const git = args => execFileSync('git', ['-C', config.workspace, ...args], { encoding: 'utf8', maxBuffer: 20 * 1024 * 1024 });
   const base = git(['rev-parse', '--verify', config.baseRef + '^{commit}']).trim();
@@ -19,7 +20,7 @@ function loadLocalReview(file) {
   if (config.runner && (!path.isAbsolute(config.runner.command || '') || !Array.isArray(config.runner.args))) throw new Error('Runner requires an absolute executable and argument array');
   return { ...config, base, head, diffPatch, changedFiles,
     videoUrl: config.videoPath ? pathToFileURL(fs.realpathSync(config.videoPath)).href : null,
-    pr: { local: true, published: !!config.pullRequest, number: config.pullRequest?.number || 'local', url: config.pullRequest?.url, repo: config.repo || 'Local workspace', title: config.pullRequest?.title || config.title, headBranch: git(['branch', '--show-current']).trim(), baseBranch: (config.baseBranch || config.baseRef).replace(/^origin\//, ''), body: config.pullRequest?.body ?? config.summary ?? '', changedFiles }
+    pr: { workItems: taskLink ? [taskLink] : [], local: true, published: !!config.pullRequest, number: config.pullRequest?.number || 'local', url: config.pullRequest?.url, repo: config.repo || 'Local workspace', title: config.pullRequest?.title || config.title, headBranch: git(['branch', '--show-current']).trim(), baseBranch: (config.baseBranch || config.baseRef).replace(/^origin\//, ''), body: config.pullRequest?.body ?? config.summary ?? '', changedFiles }
   };
 }
 

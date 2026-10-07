@@ -23,6 +23,7 @@ function createAdapter(serverConfig) {
 
 module.exports = {
   createAdapter, JiraAdapter, GitHubAdapter,
+  workItemLink: require('./work-item-link').workItemLink,
   WORK_ITEM_TYPES, validateParentChild, calculateProgress, buildHierarchy, detectWorkItemType, statusBucket,
   SyncEngine, robosToExternal, externalToRobos, formatComment, COMMENT_TEMPLATES,
 };

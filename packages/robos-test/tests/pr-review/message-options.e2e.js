@@ -37,3 +37,20 @@ test('reviewer picker ignores a late workspace response and exposes directory fa
  assert.equal(await p.evaluate(()=>{try{window.picker.configured();}catch(e){return e.message;}}),'Directory unavailable');
  }finally{await b.close();}
 });
+
+test('Create PR preselects both project recipients without sending a message',async()=>{
+ const b=await chromium.launch({headless:true,executablePath:process.env.ROBOS_CHROMIUM_PATH||'/usr/bin/google-chrome'});
+ try{
+  const p=await b.newPage();await p.setContent('<div id="host"></div><input id="title"><textarea id="body"></textarea>');
+  await p.evaluate(()=>{
+   const reviewers=[{serverId:'slack',userId:'U1',name:'Cesar Andres'},{serverId:'slack',userId:'U2',name:'Tim Potter'}];
+   window.api={reviewMessageOptions:async()=>({ok:true,appName:'Slack',settings:{prTemplate:'{{description}}',messageTemplate:'Review {{url}}',serverId:'slack',channel:'C1',reviewers},servers:[{id:'slack',name:'Team'}]}),reviewMessageMembers:async()=>({ok:true,members:reviewers}),reviewMessageChannels:async()=>({ok:true,channels:[{id:'C1',name:'pr-review'}]}),sendReviewMessage:async()=>{throw Error('Must not send during setup');}};
+  });
+  for(const file of ['../../../robos-ui/reviewer-picker.js','../../../pr-review/renderer/message-options.js'])await p.addScriptTag({path:path.resolve(__dirname,file)});
+  await p.evaluate(async()=>{window.messageOptions=window.mountReviewMessageOptions(document.getElementById('host'),{repo:'Hermetiq/cloud-native'},document.getElementById('title'),document.getElementById('body'),{});await window.messageOptions.ready;});
+  await p.getByLabel('Send PR review notification to Slack').check();
+  assert.equal(await p.getByLabel('@Cesar Andres (U1)',{exact:true}).isChecked(),true);
+  assert.equal(await p.getByLabel('@Tim Potter (U2)',{exact:true}).isChecked(),true);
+  assert.equal((await p.evaluate(()=>window.messageOptions.selection())).reviewers.length,2);
+ }finally{await b.close();}
+});

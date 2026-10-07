@@ -221,6 +221,12 @@ function register({ ipcMain, loadFeatures, saveFeatures, readSettings, getWindow
     }
   }
 
+  const agentSummary = (epics, tasks) => {
+    if (!agents) return { runs: [], byTask: {}, running: 0 };
+    try { return agents.summary([...tasks, ...epics.map(e => ({ id: e.id, key: e.code, url: e.url, number: e.number, repo: e.repo }))]); }
+    catch { return { runs: [], byTask: {}, running: 0 }; }
+  };
+
   function buildTree() {
     const who = me();
     const epics = [], tasks = [], urls = new Set(), errors = [];
@@ -240,11 +246,13 @@ function register({ ipcMain, loadFeatures, saveFeatures, readSettings, getWindow
         description: f.description || '', active: !!f.active, createdAt: f.createdAt || null, url: f.issueUrl || null, number: null, local: true });
       for (const t of lt) tasks.push(normLocal(t, f, who));
     }
-    return { ok: true, me: who.name, workflow: workflowStates().map(x => ({ id: x.id, label: x.label, color: x.color, initial: !!x.is_initial, final: !!x.is_final })), epics, tasks, recent: loadState().recent || [], syncing: !!syncPromise, busy: [...busy.keys()], jobs: [...jobs.values()].filter(j => !j.finished).map(snap), errors,
+    return { ok: true, me: who.name, workflow: workflowStates().map(x => ({ id: x.id, label: x.label, color: x.color, initial: !!x.is_initial, final: !!x.is_final })), epics, tasks, recent: loadState().recent || [], syncing: !!syncPromise, busy: [...busy.keys()], agents: agentSummary(epics, tasks), jobs: [...jobs.values()].filter(j => !j.finished).map(snap), errors,
       servers: servers().map(x => ({ id: x.sid, name: x.ts.name || x.sid, type: x.ts.type })) };
   }
 
+  let agents = null;
   const notify = () => { try { const w = getWindow && getWindow(); if (w && w.webContents) w.webContents.send('dc-data-updated', { v2: true }); } catch {} };
+  try { agents = require('./v2-agents').create({ readSettings, notify: () => notify(), isTestMode }); } catch (e) { console.error('[dev-central] agent runs unavailable:', e.message); }
 
   // ── refresh from task servers ─────────────────────────────────────────────
   const fetchServer = (sid, ts) => serverCall(ts, { op: 'fetch' });
@@ -387,6 +395,25 @@ function register({ ipcMain, loadFeatures, saveFeatures, readSettings, getWindow
     notify();
     return buildTree();
   });
+
+  // ── agent runs (Options column) ──────────────────────────────────────────
+  const taskCtx = taskId => {
+    const t = buildTree();
+    const task = t.tasks.find(x => x.id === taskId) || null;
+    const epic = task ? t.epics.find(e => e.id === task.epicId) : t.epics.find(e => e.id === taskId);
+    const ts = task && servers().find(x => x.sid === task.serverId);
+    return { task: task || (epic ? { id: epic.id, key: epic.code, title: epic.name, url: epic.url, number: epic.number, repo: epic.repo, description: '', labels: [] } : null), epic, ts: ts && ts.ts };
+  };
+  const noAgents = { ok: false, error: 'Agent runs are unavailable' };
+  ipcMain.handle('dc-v2-agent-start', (_, { taskId, mode, note } = {}) => {
+    if (!agents) return noAgents;
+    const c = taskCtx(taskId); if (!c.task) return { ok: false, error: 'Task not found' };
+    return agents.start({ ...c, mode, note });
+  });
+  ipcMain.handle('dc-v2-agent-steer', async (_, { runId, message } = {}) => agents ? agents.steer(runId, message, {}) : noAgents);
+  ipcMain.handle('dc-v2-agent-kill', (_, { runId } = {}) => agents ? agents.kill(runId) : noAgents);
+  ipcMain.handle('dc-v2-agent-transcript', (_, { runId, since } = {}) => agents ? agents.transcript(runId, since) : noAgents);
+  ipcMain.handle('dc-v2-agent-open', (_, { runId } = {}) => agents ? agents.openSession(runId) : noAgents);
 
   if (!isTestMode) {
     fs.watchFile(require('../../robos-task-client/pr-task-status').notificationFile(),{persistent:false,interval:1000},(current,previous)=>{if(current.mtimeMs!==previous.mtimeMs)refresh().catch(()=>{});});

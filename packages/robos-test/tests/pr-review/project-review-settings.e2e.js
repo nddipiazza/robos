@@ -8,7 +8,7 @@ test('Git Projects offers editable PR and Slack templates with saved destination
  await p.getByLabel('Search reviewers').fill('@tim');await p.getByLabel('@Tim Potter (U2)',{exact:true}).check();
  assert.equal(await p.getByLabel('Review channel').inputValue(),'C1');await p.getByLabel('Slack review notification template').fill('Please review {{title}}: {{url}}');await p.getByRole('button',{name:'Save notification settings'}).click();assert.match(await p.locator('#tab-review-messaging > [role="status"]').innerText(),/saved/);assert.equal((await p.evaluate(()=>window.saved))[0].settings.messageTemplate,'Please review {{title}}: {{url}}');
  assert.equal(await p.locator('robos-ai-textarea').count(),2);
- await p.getByLabel('PR description template').fill('Changes and validation: {{description}}');await p.getByRole('button',{name:'Save PR template'}).click();
- const saves=await p.evaluate(()=>window.saved);assert.deepEqual(saves[0].settings.reviewers,[{serverId:'slack',userId:'U2',name:'Tim Potter'}]);assert.equal(saves[1].settings.prTemplate,'Changes and validation: {{description}}');assert.equal(saves[1].settings.messageTemplate,'Please review {{title}}: {{url}}');
+ await p.getByLabel('PR description template').fill('Changes and validation: {{description}}');await p.getByRole('button',{name:'Save PR settings'}).click();
+ const saves=await p.evaluate(()=>window.saved);assert.deepEqual(saves[0].settings.reviewers,[{serverId:'slack',userId:'U2',name:'Tim Potter'}]);assert.equal(saves[1].settings.prTemplate,'Changes and validation: {{description}}');assert.equal(saves[1].settings.messageTemplate,undefined);assert.equal(saves[1].settings.reviewers,undefined);
  }finally{await b.close();}
 });

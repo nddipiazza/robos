@@ -78,13 +78,7 @@ async function init() {
     if(opened===false)throw Error('Could not load the review. Please try again.');
     return;
   }
-  serverConfig = await window.api.getConfig();
-  if (!serverConfig.ok) {
-    showError(serverConfig.error || "No task server configured. Open Task Servers to set one up.");
-    return;
-  }
-  serverBadge.textContent = serverConfig.server.name || serverConfig.server.type;
-  await loadPRs();
+  await window.api.returnToTaskPicker();
 }
 
 // ── Load PRs ──────────────────────────────────────────────────────────────
@@ -640,81 +634,14 @@ async function copyTextToClipboard(text) {
 // ── Work-Items Extraction & URL Resolution ────────────────────────────────
 
 function extractWorkItemsFromPR(pr, ctx) {
-  const target = pr || ctx?.pr || {};
-  const items = [];
-  const seenKeys = new Set();
-
-  // 1. Explicit workItems
-  const explicit = target.workItems || ctx?.pr?.workItems || ctx?.workItems;
-  if (Array.isArray(explicit)) {
-    for (const wi of explicit) {
-      const key = (wi.key || wi.id || '').toUpperCase();
-      if (key && !seenKeys.has(key)) {
-        seenKeys.add(key);
-        items.push({
-          key,
-          title: wi.title || key,
-          url: wi.url || buildWorkItemUrl(key, target.repo),
-          type: wi.type || 'story',
-          status: wi.status || 'In Review'
-        });
-      }
-    }
-  }
-
-  // 2. Parse from text (title, headBranch, body)
-  const textSources = [
-    target.title || '',
-    target.headBranch || '',
-    target.body || ''
-  ].join(' ');
-
-  // Jira/RobOS issue keys like PET-105, ROBOS-42, PROJ-123
-  const jiraRegex = /\b([A-Z][A-Z0-9_]{1,10}-\d+)\b/g;
-  let match;
-  while ((match = jiraRegex.exec(textSources)) !== null) {
-    const key = match[1].toUpperCase();
-    if (!seenKeys.has(key)) {
-      seenKeys.add(key);
-      items.push({
-        key,
-        title: `Work-Item: ${key}`,
-        url: buildWorkItemUrl(key, target.repo),
-        type: 'jira',
-        status: 'Linked'
-      });
-    }
-  }
-
-  // GitHub issue numbers like #105, GH-105 (if not matching current PR number)
-  const ghRegex = /(?:close[sd]?|fixe?[sd]?|resolve[sd]?|refs?|issue)?\s*(?:#|GH-)(\d+)\b/gi;
-  while ((match = ghRegex.exec(textSources)) !== null) {
-    const num = match[1];
-    const key = `#${num}`;
-    if (!seenKeys.has(key) && !seenKeys.has(`GH-${num}`) && String(num) !== String(target.number)) {
-      seenKeys.add(key);
-      items.push({
-        key,
-        title: `Issue #${num}`,
-        url: `https://github.com/${target.repo || 'acme/petstore-api'}/issues/${num}`,
-        type: 'github',
-        status: 'Linked'
-      });
-    }
-  }
-
-  return items;
-}
-
-function buildWorkItemUrl(key, repo) {
-  if (key.startsWith('#')) {
-    const num = key.replace('#', '');
-    return `https://github.com/${repo || 'acme/petstore-api'}/issues/${num}`;
-  }
-  if (serverConfig?.server?.baseUrl && serverConfig.server.type === 'jira') {
-    return `${serverConfig.server.baseUrl.replace(/\/$/, '')}/browse/${key}`;
-  }
-  return `https://github.com/${repo || 'acme/petstore-api'}/issues?q=${encodeURIComponent(key)}`;
+  const explicit = pr?.workItems || ctx?.pr?.workItems || ctx?.workItems || [];
+  const seen = new Set();
+  return explicit.filter(item => {
+    // Render only the URL supplied by the task server. A bare number is not a URL.
+    try { if (!['https:', 'http:'].includes(new URL(item.url).protocol)) return false; } catch { return false; }
+    if (seen.has(item.url)) return false;
+    seen.add(item.url); return true;
+  }).map(item => ({...item, key:String(item.key || item.id || 'Task'), title:item.title || item.summary || item.key, status:item.status || 'Linked'}));
 }
 
 // ── Conventional Commit Title Formatter ───────────────────────────────────
@@ -1095,12 +1022,11 @@ window.openPRReviewTheater = async function(pr) {
 
   if (res.local) {
     renderTheaterDiffViewer(); renderTheaterShowTheFix(); renderTheaterVideo();
-    document.getElementById('btn-canvas-desktop').style.display = 'none';
     document.querySelector('[data-theater-action="openTheaterConfigModal"]').style.display = 'none';
     document.querySelector('.fix-type-selector-bar').style.display = 'none';
     document.querySelectorAll('[id^="btn-fix-type-"]').forEach(el => el.hidden = true);
     document.querySelectorAll('.stage-nav-footer').forEach(el => el.style.display = 'none');
-    updateTheaterStepper(); window.setProofCanvasMode('video'); window.setTheaterStage(9);
+    updateTheaterStepper(); window.setTheaterStage(res.initialStage === 5 ? 5 : 9);
     if (res.interactiveDemo) await window.mountWalkthrough();
     return;
   }
@@ -1121,6 +1047,7 @@ window.openPRReviewTheater = async function(pr) {
 };
 
 window.exitTheater = function() {
+  if (window.api.returnToTaskPicker) return window.api.returnToTaskPicker();
   const theaterEl = document.getElementById('pr-review-theater');
   if (theaterEl) theaterEl.classList.add('hidden');
 };
@@ -1142,7 +1069,7 @@ function updateTheaterStepper() {
     { num: 2, key: 'stage2_livingDocs', label: 'Living Docs & Flow', done: gates.docsReviewed },
     { num: 3, key: 'stage3_fileDiffs', label: 'File Diff Viewer', done: gates.diffsInspected },
     { num: 4, key: 'stage4_ideBridge', label: 'IDE Branch Diffs', done: gates.ideDiffLaunched },
-    { num: 5, key: 'stage5_proofCanvas', label: 'Evidence Video', done: theaterContext.local ? false : true },
+    { num: 5, key: 'stage5_proofCanvas', label: theaterContext.local ? 'Evidence' : 'Evidence Video', done: theaterContext.local ? false : true },
     { num: 6, key: 'stage6_showTheFix', label: 'Walk Me Through It', done: gates.fixDemonstrated },
     { num: 7, key: 'stage7_signOff', label: 'Sign-Off & Merge', done: false }
   ];
@@ -1910,16 +1837,9 @@ window.toggleFixDemonstrated = function(checked) {
 // ── Stage 6: Proof-of-Work Canvas (Video & Live Desktop Session) ────────────
 
 function renderTheaterVideo() {
+  if (theaterContext?.local) { window.renderTaskEvidence(); return; }
   if (!theaterContext || !theaterContext.proofOfWorkVideo) return;
   const { title, chapters, vttTranscript, url } = theaterContext.proofOfWorkVideo;
-  if (theaterContext.local) {
-    const container = document.getElementById('canvas-video-view');
-    container.replaceChildren(); container.style.display = 'block';
-    const video = document.createElement('video'); video.controls = true; video.src = url || ''; video.style.width = '100%'; video.style.maxHeight = '65vh';
-    const summary = document.createElement('p'); summary.textContent = vttTranscript;
-    container.append(video, summary);
-    return;
-  }
 
   const titleEl = document.getElementById('theater-video-title');
   if (titleEl) titleEl.textContent = title;

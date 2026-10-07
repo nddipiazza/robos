@@ -4,7 +4,7 @@
   const $ = s => document.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const api = window.robos;
-  const BUILD = 'columns-1';
+  const BUILD = 'resize-1';
 
   // Workflow stages come from the main process (robos-lib/default-workflow) — never hard-code stage names here.
   const FALLBACK_WF = [
@@ -49,6 +49,13 @@
     collapse: '<polyline points="17 11 12 6 7 11"/><polyline points="17 18 12 13 7 18"/>',
     filter: '<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>',
     info: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>',
+    bot: '<rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V4"/><circle cx="12" cy="3" r="1"/><circle cx="9" cy="14" r="1"/><circle cx="15" cy="14" r="1"/>',
+    steer: '<polygon points="3 11 22 2 13 21 11 13 3 11"/>',
+    stop: '<rect x="6" y="6" width="12" height="12" rx="2"/>',
+    pencil: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+    more: '<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>',
+    send: '<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>',
+    x: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
     git: '<circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><line x1="6" y1="9" x2="6" y2="21"/>',
   };
   const icon = (n, size = 16) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON_PATHS[n]}</svg>`;
@@ -76,7 +83,7 @@
     collapsed: new Set(),          // epic ids
     toggled: new Set(),            // tasks whose default expand state was flipped by the user
     showAll: new Set(),            // epics showing every child regardless of view/filters
-    cols: null, busy: new Set(), selected: null, rows: [], menu: null, loaded: false, narrow: false, syncing: false, errors: [],
+    colW: {}, cols: null, agents: { runs: [], byTask: {}, running: 0 }, agentBusy: new Set(), runStatus: null, busy: new Set(), selected: null, rows: [], menu: null, loaded: false, narrow: false, syncing: false, errors: [],
   };
 
   // ── small helpers ─────────────────────────────────────────────────────────
@@ -216,7 +223,7 @@
   const dateCell = iso => iso ? `<span title="${esc(iso)}">${esc(String(iso).slice(0, 10))}</span>` : '<span class="dim">—</span>';
   // id, label, width, narrow width, sort key, locked, wide-only (hidden on narrow windows), cell(t, ctx)
   const COLDEFS = [
-    { id: 'key', label: 'Issue', w: 150, wn: 136, sort: 'key', locked: true },
+    { id: 'key', label: 'Issue', w: 176, wn: 150, sort: 'key', locked: true },
     { id: 'title', label: 'Summary', sort: 'title', locked: true },
     { id: 'epic', label: 'Epic', w: 190, wn: 150, sort: 'epic', cell: t => { const re = realEpic(t); return re ? `<button class="epic-chip" data-selepic="${esc(re.id)}" title="${esc(re.code + ' — ' + re.name)}"><span class="epic-dot" style="background:${epicColor(re.id)}"></span><span class="ec">${esc(re.code)}</span><span class="en">${esc(re.name)}</span></button>` : '<span class="dim">—</span>'; } },
     { id: 'type', label: 'Type', w: 84, sort: 'type', wide: true, cell: t => `<span class="dim">${t.type === 'bug' ? 'Bug' : 'Task'}</span>` },
@@ -234,8 +241,9 @@
     { id: 'repo', label: 'Repository', w: 190, sort: 'repo', wide: true, cell: t => `<span class="dim ell" title="${esc(t.repo || '')}">${esc(t.repo || '—')}</span>` },
     { id: 'created', label: 'Created', w: 96, sort: 'created', wide: true, cell: t => dateCell(t.created) },
     { id: 'updated', label: 'Updated', w: 84, sort: 'updated', wide: true, cls: 'upd', cell: t => timeAgo(t.updated) },
+    { id: 'options', label: 'Options', w: 214, wn: 150, cls: 'opt-cell', cell: t => optionsCell(t) },
   ];
-  const DEFAULT_COLS = { epics: ['status', 'priority', 'assignee', 'pr', 'updated'], tasks: ['epic', 'status', 'priority', 'assignee', 'pr', 'updated'] };
+  const DEFAULT_COLS = { epics: ['status', 'priority', 'assignee', 'pr', 'updated', 'options'], tasks: ['epic', 'status', 'priority', 'assignee', 'pr', 'updated', 'options'] };
   const visibleColIds = () => { const m = S.mode === 'tasks' ? 'tasks' : 'epics'; return (S.cols && S.cols[m]) || DEFAULT_COLS[m]; };
   const activeCols = () => {
     const on = new Set(visibleColIds());
@@ -256,14 +264,39 @@
     if (def && !def.locked) items.push({ label: `Hide “${def.label}”`, icon: 'eye', run: () => toggleCol(def.id) });
     if (items.length) items.push({ sep: true });
     COLDEFS.forEach(c => items.push({ label: c.label, checked: c.locked || on.has(c.id), disabled: !!c.locked, keepOpen: true, run: () => { toggleCol(c.id); columnMenu(x, y, colId); } }));
-    items.push({ sep: true }, { label: 'Reset columns to default', icon: 'filter', run: () => { resetCols(); } });
+    items.push({ sep: true }, { label: 'Reset column widths', icon: 'expand', run: () => resetColWidths() }, { label: 'Reset columns to default', icon: 'filter', run: () => { resetCols(); } });
     showContextMenu(x, y, items);
   }
+  const colWidth = c => S.colW[c.id] || (S.narrow && c.wn ? c.wn : c.w);
   function renderHead() {
     const cols = activeCols();
-    $('#thead-row').innerHTML = cols.map(c => `<th data-col="${c.id}" ${c.sort ? `data-sort="${c.sort}"` : ''} style="${c.w ? `width:${S.narrow && c.wn ? c.wn : c.w}px` : ''}">${c.label}${c.sort && c.sort === S.sort.key ? `<span class="arrow">${S.sort.dir === 1 ? '▲' : '▼'}</span>` : ''}</th>`).join('');
-    const total = cols.reduce((n, c) => n + (c.w ? (S.narrow && c.wn ? c.wn : c.w) : 280), 0);
+    $('#thead-row').innerHTML = cols.map(c => `<th data-col="${c.id}" ${c.sort ? `data-sort="${c.sort}"` : ''} style="${colWidth(c) ? `width:${colWidth(c)}px` : ''}">${c.label}${c.sort && c.sort === S.sort.key ? `<span class="arrow">${S.sort.dir === 1 ? '▲' : '▼'}</span>` : ''}<span class="resizer" data-resize="${c.id}" title="Drag to resize · double-click to reset"></span></th>`).join('');
+    fitTable();
+  }
+  function fitTable() {
+    const total = activeCols().reduce((n, c) => n + (colWidth(c) || 280), 0);
     const tt = document.querySelector('#tt'); if (tt) tt.style.minWidth = total + 'px';
+  }
+  // Drag a header edge to resize; widths persist per column. Double-click an edge to reset that column.
+  function startResize(ev, id) {
+    ev.preventDefault(); ev.stopPropagation();
+    const th = ev.target.closest('th'), c = COLDEFS.find(x => x.id === id);
+    const startX = ev.clientX, startW = th.getBoundingClientRect().width;
+    document.body.classList.add('col-resizing');
+    const move = e => {
+      const w = Math.max(56, Math.round(startW + e.clientX - startX));
+      S.colW[id] = w; th.style.width = w + 'px'; fitTable();
+    };
+    const up = () => {
+      document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up);
+      document.body.classList.remove('col-resizing');
+      store.set('colw', S.colW); S.justResized = Date.now();
+    };
+    document.addEventListener('mousemove', move); document.addEventListener('mouseup', up);
+  }
+  function resetColWidths(id) {
+    if (id) delete S.colW[id]; else S.colW = {};
+    store.set('colw', S.colW); renderTable();
   }
 
   // ── render: tree table ────────────────────────────────────────────────────
@@ -279,7 +312,7 @@
     const quick = !t.mine && !isDone(t) && !isBusy ? `<button class="btn btn-sm assign-me" data-act="assign" data-id="${esc(t.id)}" title="Assign to me (a)">Assign me</button>` : '';
     const ctx = { asg, quick, busy: isBusy };
     const cells = activeCols().map(c => {
-      if (c.id === 'key') return `<td><div class="keycell" style="padding-left:${depth * 22}px"><button class="twisty ${expandable ? (open ? 'open' : '') : 'none'}" data-twist="${esc(t.id)}" data-kids="${nKids}" aria-label="Expand or collapse">${chev}</button>${typeBadge(t.type)}${openLink(t.url, esc(t.key || t.id))}${nKids ? `<span class="kidcount" title="${nKids} sub-issue${nKids === 1 ? '' : 's'}">${nKids}</span>` : ''}</div></td>`;
+      if (c.id === 'key') return `<td><div class="keycell" style="padding-left:${depth * 22}px"><button class="twisty ${expandable ? (open ? 'open' : '') : 'none'}" data-twist="${esc(t.id)}" data-kids="${nKids}" aria-label="Expand or collapse">${chev}</button>${typeBadge(t.type)}${openLink(t.url, esc(t.key || t.id))}${agentInd(liveRun(t.id))}${nKids ? `<span class="kidcount" title="${nKids} sub-issue${nKids === 1 ? '' : 's'}">${nKids}</span>` : ''}</div></td>`;
       if (c.id === 'title') return `<td><div class="titlecell ${done ? 'done' : ''}" title="${esc(t.title)}">${esc(t.title)}</div></td>`;
       return `<td class="${c.cls || ''}">${c.cell(t, ctx)}</td>`;
     }).join('');
@@ -302,7 +335,7 @@
     return `<tr class="row epic ${S.selected === 'epic:' + e.id ? 'sel' : ''}" data-row="${esc(e.id)}" data-kind="epic"><td class="epic-cell" colspan="${activeCols().length}"><div class="epic-line">
       <button class="twisty ${closed ? '' : 'open'}" data-etwist="${esc(e.id)}" aria-label="Toggle epic">${chev}</button>
       <span class="epic-dot" style="width:8px;height:8px;border-radius:2px;background:${epicColor(e.id)}"></span>${typeBadge('epic')}
-      ${e.url ? `<a class="key link" href="#" style="color:var(--purple)" data-open="${esc(e.url)}" title="Open in your browser">${esc(e.code)}</a>` : `<span class="key" style="color:var(--purple)">${esc(e.code)}</span>`}<span class="nm">${esc(e.name)}</span>
+      ${e.url ? `<a class="key link" href="#" style="color:var(--purple)" data-open="${esc(e.url)}" title="Open in your browser">${esc(e.code)}</a>` : `<span class="key" style="color:var(--purple)">${esc(e.code)}</span>`}${agentInd(epicLive(e))}<span class="nm">${esc(e.name)}</span>
       <span class="meta">${showingAll ? all.length : shown} of ${all.length} issue${all.length === 1 ? '' : 's'}${e.repo ? ' · ' + esc(e.repo) : ''}</span>${shown < all.length || showingAll ? `<button class="linkbtn" data-showall="${esc(e.id)}">${showingAll ? 'apply filters' : 'show all ' + all.length}</button>` : ''}
       <span class="prog"><span class="bar"><i style="width:${pct}%"></i></span>${done}/${all.length} done</span>${all.some(t => S.busy.has(t.id)) ? '<span class="spin" title="Updating…"></span>' : ''}</div></td></tr>`;
   }
@@ -466,20 +499,187 @@
 
   function renderAll() { renderSidebar(); renderFilters(); renderTable(); renderDetail(); const m = $('#me-chip'); m.innerHTML = S.me ? `${avatar(S.me)}<span>${esc(S.me)}</span>` : ''; }
 
+  // ── agents: running indicators, Options column, discussion panel ──────────────
+  const runsOf = id => S.agents.byTask[id] || [];
+  const liveRun = id => runsOf(id).find(r => r.status === 'running') || null;
+  const epicLive = e => liveRun(e.id) || S.tasks.filter(t => t.epicId === e.id).map(t => liveRun(t.id)).find(Boolean) || null;
+  const lastRun = id => runsOf(id)[0] || null;
+  const agentInd = run => run ? `<button class="agent-ind" data-agent="${esc(run.runId)}" title="Agent running — ${esc(run.activity || run.title || '')} (click to open the discussion)" aria-label="Agent running, open discussion">${icon('bot', 13)}<span class="agent-dots" aria-hidden="true"><i></i><i></i><i></i></span></button>` : '';
+  const launchApp = async (app, context = {}) => { try { const result = await api.notifications.openAppContext({ app, ...context }); if (!result?.ok) toast(result?.error || 'Could not open app', { err: true }); } catch (error) { toast(error.message, { err: true }); } };
+  const openTaskUrl = t => { const u = (t.pr && t.pr.url) || t.url; if (u) api.openUrl(u); else toast('No link for this task', { err: true }); };
+  const initialStage = () => WF.find(s => s.initial) || WF[0];
+
+  // The primary Options action follows the workflow stage.
+  function primaryAction(t) {
+    const live = liveRun(t.id);
+    if (live) return { label: 'Steer', icon: 'steer', kind: 'agent', title: 'Tell the running agent what to do differently', run: () => openAgentPanel(live.runId, { focus: true }) };
+    const last = lastRun(t.id);
+    switch (t.status) {
+      case 'not-started': return { label: 'Design', icon: 'pencil', kind: 'agent', title: 'Start a design agent for this task (read-only)', run: () => startAgent(t, 'design') };
+      case 'designed': return { label: 'Implement', icon: 'play', kind: 'agent', title: 'Start an implementation agent', run: () => startAgent(t, 'implement') };
+      case 'agent-implementing': return last && last.canSteer
+        ? { label: 'Resume', icon: 'play', kind: 'agent', title: 'Resume the last agent session', run: () => startAgent(t, 'resume') }
+        : { label: 'Implement', icon: 'play', kind: 'agent', title: 'Start an implementation agent', run: () => startAgent(t, 'implement') };
+      case 'local-evidence-review': return { label: 'Review evidence', icon: 'eye', title: 'Open PR Review to inspect changes, evidence and walkthrough', run: () => launchApp('pr-review', {taskEvidence: true, taskUrl: t.url}) };
+      case 'draft-pr-pipeline-review': return { label: 'Check pipeline', icon: 'git', title: 'Open the draft PR to check CI', run: () => openTaskUrl(t) };
+      case 'human-review': return { label: 'Review PR', icon: 'eye', title: 'Open the PR for human review', run: () => openTaskUrl(t) };
+      default:
+        if (isDone(t)) return { label: 'Reopen', icon: 'play', title: 'Move back to ' + initialStage().label, run: () => setStatus(t.id, initialStage().id) };
+        return { label: 'Open', icon: 'ext', title: 'Open in your browser', run: () => openTaskUrl(t) };
+    }
+  }
+  function optionsCell(t) {
+    const act = primaryAction(t), starting = S.agentBusy.has(t.id);
+    return `<div class="opt"><button class="btn btn-sm opt-main ${act.kind === 'agent' ? 'btn-primary' : ''}" data-opt="main" data-id="${esc(t.id)}" ${starting ? 'disabled' : ''} title="${esc(act.title)}">${starting ? '<span class="spin" style="margin:0"></span>' : icon(act.icon, 13)}<span>${esc(act.label)}</span></button><button class="btn btn-sm btn-ghost opt-more" data-opt="more" data-id="${esc(t.id)}" aria-label="More options" title="More options">${icon('more', 14)}</button></div>`;
+  }
+  function agentItems(t) {
+    const live = liveRun(t.id), last = lastRun(t.id), nx = nextStage(t.status);
+    const items = [{ sep: true }];
+    if (live) {
+      items.push({ label: 'Open agent discussion', icon: 'bot', run: () => openAgentPanel(live.runId) },
+        { label: 'Steer agent…', icon: 'steer', run: () => openAgentPanel(live.runId, { focus: true }) },
+        live.canOpen && { label: 'Open in RobOS Agents', icon: 'ext', run: () => openInAgents(live.runId) },
+        { label: 'Kill agent', icon: 'stop', run: () => killAgent(live.runId) });
+    } else {
+      items.push({ label: 'Design with agent', icon: 'pencil', run: () => startAgent(t, 'design') },
+        { label: 'Implement with agent', icon: 'play', run: () => startAgent(t, 'implement') },
+        last && last.canSteer && { label: 'Resume last agent session', icon: 'play', run: () => startAgent(t, 'resume') },
+        last && { label: 'Show last agent discussion', icon: 'bot', run: () => openAgentPanel(last.runId) });
+    }
+    if (nx) items.push({ sep: true }, { label: `Advance to ${nx.label}`, icon: 'play', run: () => setStatus(t.id, nx.id) });
+    items.push({ sep: true });
+    return items;
+  }
+  function optionsMenu(t, anchor) {
+    const r = anchor.getBoundingClientRect();
+    showContextMenu(Math.max(8, r.right - 230), r.bottom + 4, [
+      ...agentItems(t).slice(1),
+      t.pr && t.pr.url && { label: `Open PR #${t.pr.number}`, icon: 'git', run: () => api.openUrl(t.pr.url) },
+      t.url && { label: 'Open in browser', icon: 'ext', run: () => api.openUrl(t.url) },
+    ]);
+  }
+  async function startAgent(t, mode) {
+    if (S.agentBusy.has(t.id)) return;
+    S.agentBusy.add(t.id); renderTable();
+    try {
+      const r = await api.v2AgentStart({ taskId: t.id, mode });
+      if (r && r.ok) { toast(`${mode === 'design' ? 'Design' : mode === 'resume' ? 'Resume' : 'Implement'} agent started on ${t.key || t.id}`); await reload(); openAgentPanel(r.runId); }
+      else { toast((r && r.error) || 'Could not start the agent', { err: true }); if (r && r.runId) openAgentPanel(r.runId); }
+    } catch (e) { toast('Could not start the agent: ' + e.message, { err: true }); }
+    S.agentBusy.delete(t.id); renderTable();
+  }
+  async function killAgent(runId) {
+    const r = await api.v2AgentKill({ runId });
+    toast(r && r.ok ? 'Agent stopped' : ((r && r.error) || 'Could not stop the agent'), r && r.ok ? {} : { err: true });
+    reloadSoon();
+  }
+  async function openInAgents(runId) { const r = await api.v2AgentOpen({ runId }); if (!r || r.ok === false) toast((r && r.error) || 'Could not open RobOS Agents', { err: true }); }
+  function agentFinished(run) {
+    const t = run.taskId ? taskById(run.taskId) : null, name = (t && (t.key || t.id)) || run.taskKey || '';
+    const nx = t && nextStage(t.status);
+    const verb = run.status === 'done' ? 'finished' : run.status === 'error' ? 'failed' : run.status === 'stopped' ? 'was stopped' : 'was interrupted';
+    toast(`${run.title || 'Agent'} ${verb}`, run.status === 'done' && nx && t && !isDone(t) ? { action: { label: `Move to ${nx.label}`, run: () => setStatus(t.id, nx.id) } } : { err: run.status === 'error' });
+  }
+
+  // discussion panel (live transcript + steer / kill)
+  const AP = { open: false, runId: null, taskId: null, next: 0, timer: null, stick: true };
+  const apEl = () => $('#agent-panel');
+  const apStatus = r => ({ running: 'Running', done: 'Finished', error: 'Failed', stopped: 'Stopped', interrupted: 'Interrupted' }[r.status] || r.status);
+  function openAgentPanel(runId, opts = {}) {
+    const run = S.agents.runs.find(r => r.runId === runId);
+    AP.open = true; AP.runId = runId; AP.next = 0; AP.taskId = run ? run.taskId : null; AP.stick = true;
+    renderAgentPanel(run, opts);
+    pollAgent();
+    clearInterval(AP.timer); AP.timer = setInterval(pollAgent, 1000);
+  }
+  function closeAgentPanel() { AP.open = false; clearInterval(AP.timer); const el = apEl(); el.classList.add('hidden'); el.innerHTML = ''; }
+  function renderAgentPanel(run, opts = {}) {
+    const el = apEl(); el.classList.remove('hidden');
+    const sibs = run && run.taskId ? runsOf(run.taskId) : [];
+    el.innerHTML = `<div class="ap-head"><div class="ap-title">${icon('bot', 16)}<div><div class="ap-name" id="ap-name"></div><div class="ap-sub" id="ap-sub"></div></div></div>
+      <div class="ap-actions"><span class="ap-status" id="ap-status"></span>${sibs.length > 1 ? `<select class="sel" id="ap-run" aria-label="Agent run">${sibs.map(r => `<option value="${esc(r.runId)}" ${r.runId === AP.runId ? 'selected' : ''}>${esc(r.title)} · ${esc(apStatus(r))}</option>`).join('')}</select>` : ''}
+        <button class="btn btn-sm" id="ap-open" title="Open this session in RobOS Agents">${icon('ext', 13)} RobOS Agents</button>
+        <button class="btn btn-sm ap-kill" id="ap-kill">${icon('stop', 13)} Kill</button>
+        <button class="btn btn-sm btn-ghost" id="ap-close" aria-label="Close">${icon('x', 14)}</button></div></div>
+      <div class="ap-body" id="ap-body"><div class="ap-empty">Waiting for the agent…</div></div>
+      <div class="ap-foot"><textarea id="ap-input" rows="2" placeholder="Steer the agent — e.g. “use the existing adapter instead”"></textarea><button class="btn btn-primary" id="ap-send">${icon('send', 13)} Steer</button></div>`;
+    $('#ap-body').addEventListener('scroll', () => { const b = $('#ap-body'); AP.stick = b.scrollHeight - b.scrollTop - b.clientHeight < 40; });
+    $('#ap-close').addEventListener('click', closeAgentPanel);
+    $('#ap-kill').addEventListener('click', () => killAgent(AP.runId));
+    $('#ap-open').addEventListener('click', () => openInAgents(AP.runId));
+    $('#ap-send').addEventListener('click', sendSteer);
+    $('#ap-input').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); sendSteer(); } e.stopPropagation(); });
+    const sel = $('#ap-run'); if (sel) sel.addEventListener('change', e => openAgentPanel(e.target.value));
+    updateAgentHead(run);
+    if (opts.focus) setTimeout(() => $('#ap-input') && $('#ap-input').focus(), 50);
+  }
+  function updateAgentHead(run) {
+    if (!AP.open || !run) return;
+    const t = run.taskId ? taskById(run.taskId) : null;
+    $('#ap-name').textContent = run.title || 'Agent';
+    $('#ap-sub').textContent = [t ? t.title : run.taskKey, run.provider, run.launchedBy ? 'launched by ' + run.launchedBy + (run.launchedAs ? ' (' + run.launchedAs + ')' : '') : '', run.startedAt ? new Date(run.startedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''].filter(Boolean).join(' · ');
+    const st = $('#ap-status'); st.className = 'ap-status ' + run.status; st.innerHTML = (run.status === 'running' ? '<span class="spin" style="margin:0 6px 0 0"></span>' : '') + esc(apStatus(run));
+    const live = run.status === 'running';
+    $('#ap-kill').style.display = live ? '' : 'none';
+    $('#ap-open').style.display = run.canOpen ? '' : 'none';
+    const inp = $('#ap-input'), snd = $('#ap-send'), can = run.canSteer;
+    inp.disabled = !can; snd.disabled = !can;
+    inp.placeholder = can ? (live ? 'Steer the agent — e.g. “use the existing adapter instead”' : 'Send a follow-up — this resumes the session') : (run.external ? 'This session was started by another app — open it in RobOS Agents to steer it' : 'Waiting for the agent to report its session id…');
+    $('#ap-send').lastChild.textContent = live ? ' Steer' : ' Follow up';
+  }
+  async function pollAgent() {
+    if (!AP.open) return;
+    const id = AP.runId;
+    let r; try { r = await api.v2AgentTranscript({ runId: id, since: AP.next }); } catch { return; }
+    if (!AP.open || AP.runId !== id) return;
+    if (!r || !r.ok) { const b = $('#ap-body'); if (b && !AP.next) b.innerHTML = `<div class="ap-empty">${esc((r && r.error) || 'Run not found')}</div>`; return; }
+    updateAgentHead(r.run);
+    const b = $('#ap-body'); if (!b) return;
+    if (r.events.length) {
+      if (!AP.next) b.innerHTML = '';
+      b.insertAdjacentHTML('beforeend', r.events.map(apEvent).join(''));
+      AP.next = r.next;
+      if (AP.stick) b.scrollTop = b.scrollHeight;
+    } else if (r.external && !AP.next) b.innerHTML = '<div class="ap-empty">This session belongs to another RobOS app. Use “RobOS Agents” to read and continue it.</div>';
+    if (r.run.status !== 'running' && !r.events.length) { clearInterval(AP.timer); AP.timer = setInterval(pollAgent, 4000); }
+  }
+  function apEvent(e) {
+    const txt = esc(e.text);
+    if (e.role === 'tool') return `<details class="ap-tool"><summary>${icon('bot', 11)} ${esc(e.name || 'tool')}<span class="ap-tsum">${esc(String(e.text).split('\n')[0].slice(0, 90))}</span></summary><pre>${txt}</pre></details>`;
+    if (e.role === 'error') return `<div class="ap-msg err">${txt}</div>`;
+    if (e.role === 'log') return `<div class="ap-log">${txt}</div>`;
+    if (String(e.text).startsWith('↪ Steer from you:')) return `<div class="ap-msg me">${esc(String(e.text).replace('↪ Steer from you:', '').trim())}</div>`;
+    return `<div class="ap-msg ${e.role === 'milestones' ? 'ms' : ''}">${txt}</div>`;
+  }
+  async function sendSteer() {
+    const inp = $('#ap-input'), msg = inp.value.trim(); if (!msg) return;
+    const btn = $('#ap-send'); btn.disabled = true;
+    const r = await api.v2AgentSteer({ runId: AP.runId, message: msg });
+    if (r && r.ok) { inp.value = ''; AP.stick = true; setTimeout(pollAgent, 300); reloadSoon(); } else toast((r && r.error) || 'Could not steer the agent', { err: true });
+    btn.disabled = false;
+  }
+
   // ── actions ───────────────────────────────────────────────────────────────
   function toast(msg, opts = {}) {
     const el = document.createElement('div');
     el.className = 'toast' + (opts.err ? ' err' : '');
-    el.innerHTML = `<span>${esc(msg)}</span>${opts.undo ? '<button data-undo="1">Undo</button>' : ''}`;
+    el.innerHTML = `<span>${esc(msg)}</span>${opts.undo ? '<button data-undo="1">Undo</button>' : ''}${opts.action ? `<button data-tact="1">${esc(opts.action.label)}</button>` : ''}`;
     $('#toasts').appendChild(el);
     if (opts.undo) el.querySelector('[data-undo]').addEventListener('click', () => { opts.undo(); el.remove(); });
-    setTimeout(() => el.remove(), opts.undo ? 7000 : 3200);
+    if (opts.action) el.querySelector('[data-tact]').addEventListener('click', () => { opts.action.run(); el.remove(); });
+    setTimeout(() => el.remove(), opts.action ? 9000 : opts.undo ? 7000 : 3200);
   }
   function applyTree(r) {
     if (!r || !r.ok) return;
     if (Array.isArray(r.workflow) && r.workflow.length) { WF = r.workflow; buildViews(); if (!VIEWS.some(v => v.id === S.view)) S.view = 'mine'; }
     S.epics = r.epics; S.tasks = r.tasks; S.me = r.me; S.recent = r.recent || S.recent; S.loaded = true;
     S.syncing = !!r.syncing; S.errors = r.errors || []; S.busy = new Set(r.busy || []);
+    if (r.agents) {
+      const prev = S.runStatus, now = {};
+      r.agents.runs.forEach(x => { now[x.runId] = x.status; });
+      S.agents = r.agents; S.runStatus = now;
+      if (prev) r.agents.runs.forEach(x => { if (prev[x.runId] === 'running' && x.status !== 'running') setTimeout(() => agentFinished(x), 0); });
+    }
     if (S.selected && !taskById(S.selected)) S.selected = null;
   }
   async function reload() { applyTree(await api.v2GetTree()); renderAll(); if (P.open) renderPalette(); }
@@ -587,6 +787,7 @@
       nk && subOpen.length && { label: `Assign me + ${openLabel(subOpen.length)} below`, icon: 'userplus', run: () => assign([...(t.mine || isDone(t) ? [] : [t.id]), ...subOpen.map(c => c.id)]) },
       nk && subMine.length && { label: `Unassign me from ${subMine.length} below`, icon: 'userminus', run: () => assign(subMine.map(c => c.id), null, null) },
       nextStage(t.status) && { label: `Advance to ${nextStage(t.status).label}`, icon: 'play', run: () => setStatus(t.id, nextStage(t.status).id) },
+      ...agentItems(t),
       { label: 'Set status', icon: 'check', sub: WF.map(s => ({ label: s.label, dot: s.color, checked: t.status === s.id, run: () => setStatus(t.id, s.id) })) },
       (nk || t.pr) && { sep: true },
       (nk || t.pr) && { label: open ? 'Collapse' : 'Expand', icon: open ? 'collapse' : 'expand', hint: open ? '←' : '→', run: () => { S.toggled.has(t.id) ? S.toggled.delete(t.id) : S.toggled.add(t.id); renderTable(); } },
@@ -609,6 +810,7 @@
       { label: 'Open details', icon: 'info', run: () => selectEpic(e.id) },
       e.url && { label: 'Open in browser', icon: 'ext', run: () => api.openUrl(e.url) },
       { sep: true },
+      ...(epicLive(e) ? [{ label: 'Open agent discussion', icon: 'bot', run: () => openAgentPanel(epicLive(e).runId) }, { label: 'Kill agent', icon: 'stop', run: () => killAgent(epicLive(e).runId) }, { sep: true }] : []),
       { label: toAssign.length ? `Assign all to me (${openLabel(toAssign.length)})` : 'Assign all to me', icon: 'userplus', disabled: !toAssign.length, run: () => assign(toAssign.map(t => t.id)) },
       { label: mineOpen.length ? `Unassign all from me (${mineOpen.length})` : 'Unassign all from me', icon: 'userminus', disabled: !mineOpen.length, run: () => assign(mineOpen.map(t => t.id), null, null) },
       { sep: true },
@@ -824,6 +1026,13 @@
       if (inCtx) return;
 
       let el;
+      if ((el = tgt.closest('[data-agent]'))) { ev.preventDefault(); ev.stopPropagation(); openAgentPanel(el.dataset.agent); return; }
+      if ((el = tgt.closest('[data-opt]'))) {
+        ev.preventDefault(); ev.stopPropagation();
+        const t = taskById(el.dataset.id); if (!t) return;
+        if (el.dataset.opt === 'main') primaryAction(t).run(); else optionsMenu(t, el);
+        return;
+      }
       if ((el = tgt.closest('[data-open]'))) { ev.preventDefault(); ev.stopPropagation(); api.openUrl(el.dataset.open); return; }
       if ((el = tgt.closest('a[data-selectid]'))) { ev.preventDefault(); select(el.dataset.selectid); return; }
       if ((el = tgt.closest('[data-view]'))) { S.view = el.dataset.view; store.set('view', S.view); renderAll(); return; }
@@ -879,7 +1088,10 @@
       const real = S.epics.filter(e => !e.loose), all = real.every(e => S.collapsed.has(e.id));
       S.collapsed = all ? new Set() : new Set(real.map(e => e.id)); store.set('collapsed', [...S.collapsed]); renderTable();
     });
+    document.querySelector('#tt thead').addEventListener('mousedown', e => { const r = e.target.closest('.resizer'); if (r && e.button === 0) startResize(e, r.dataset.resize); });
+    document.querySelector('#tt thead').addEventListener('dblclick', e => { const r = e.target.closest('.resizer'); if (r) { e.preventDefault(); resetColWidths(r.dataset.resize); } });
     document.querySelector('#tt thead').addEventListener('click', e => {
+      if (e.target.closest('.resizer') || (S.justResized && Date.now() - S.justResized < 250)) return;
       const th = e.target.closest('th[data-sort]'); if (!th) return;
       const k = th.dataset.sort;
       S.sort = S.sort.key === k ? { key: k, dir: -S.sort.dir } : { key: k, dir: 1 };
@@ -948,6 +1160,7 @@
       if (row) { e.preventDefault(); const r = row.getBoundingClientRect(); const items = menuFor(row); if (items) { row.classList.add('ctx-target'); showContextMenu(r.left + 120, r.bottom - 6, items); } }
       return;
     }
+    if (e.key === 'Escape' && AP.open && !$('#palette') ) { }
     if (e.key === 'Escape') { if (S.selected) { S.selected = null; renderTable(); renderDetail(); } closePopover(); return; }
     const idx = S.rows.findIndex(r => (r.kind === 'task' ? r.id : 'epic:' + r.id) === S.selected);
     const move = d => {
@@ -972,7 +1185,7 @@
     filters: Object.fromEntries(Object.entries(S.filters).map(([k, v]) => [k, [...v]])),
     epics: S.epics.map(e => ({ id: e.id, code: e.code, number: e.number, name: e.name, status: e.status, loose: !!e.loose })),
     rows: [...document.querySelectorAll('#tbody tr.row')].slice(0, 150).map(r => r.dataset.kind + ' ' + (r.dataset.row || r.dataset.gkey)),
-    taskCount: S.tasks.length,
+    taskCount: S.tasks.length, agents: S.agents.runs.map(r => [r.runId, r.status, r.taskId]),
   });
 
   // ── boot ──────────────────────────────────────────────────────────────────
@@ -980,6 +1193,12 @@
     S.view = store.get('view', 'mine'); S.mode = ({ tree: 'epics', flat: 'tasks' })[store.get('mode', 'epics')] || store.get('mode', 'epics'); S.groupBy = store.get('groupBy', 'none');
     S.collapsed = new Set(store.get('collapsed', []));
     S.cols = store.get('cols', null);
+    S.colW = store.get('colw', {});
+    if (S.cols && store.get('colsV', 1) < 2) {            // v2 added the Options column: show it for people who already customised columns
+      for (const m of ['epics', 'tasks']) if (S.cols[m] && !S.cols[m].includes('options')) S.cols[m] = [...S.cols[m], 'options'];
+      store.set('cols', S.cols);
+    }
+    store.set('colsV', 2);
     if (!VIEWS.some(v => v.id === S.view)) S.view = 'mine';   // legacy ids (in_progress/review/done) fall back; stage views re-validated on first tree load
     wire(); renderAll();
     try {

@@ -81,3 +81,19 @@ Task status is the RobOS workflow stage, not `todo/in_progress/review/done`. The
 - Build stage lists, colors, "is final" checks and transition targets from that library (Dev Central v2 receives them as `workflow` in the tree payload). Do not write stage names or `status === 'done'` in UI code; use the stage's `is_final` flag.
 - Closed means the issue is actually closed in GitHub. On GitHub task servers a stage is written as a `state:<stage-id>` label, and moving to/from the final stage closes/reopens the issue.
 - Old words (`TODO`, `IN_PROGRESS`, `REVIEW`, `DONE`, `blocked`) may still appear in saved data or labels; map them at the edge (`canonStatus` in `dev-central/lib/v2-tasks.js`), `blocked` becomes a flag, not a stage.
+
+## Never block the UI on task-server calls
+
+`robos-task-client` adapters shell out to `gh` synchronously, so calling them on the Electron main thread freezes the whole app (assigning every issue in an epic takes ~30 s). All task-server and web-client work must run as a background job:
+
+- Run adapter calls in worker threads (see `dev-central/lib/v2-worker.js` and the pool in `v2-tasks.js`), never directly in an IPC handler.
+- IPC handlers that mutate return immediately with a `jobId`; progress is pushed to the window (`dc-v2-job` events) and the tree payload lists `busy` task ids.
+- The UI shows a spinner on each affected row, a live progress toast with Cancel, and updates rows as each item finishes. Refresh/sync also shows a spinner.
+
+## Agent runs carry task metadata
+
+Any RobOS agent session that works on a task must be traceable to it so Dev Central can show a running-agent icon on that task (and its epic) and let the user open, steer or kill the session.
+
+- Launch the agent with env vars: `ROBOS_AGENT_RUN_ID`, `ROBOS_LAUNCHED_BY` (app name), `ROBOS_TASK_ID`, `ROBOS_TASK_KEY`, `ROBOS_TASK_URL`, `ROBOS_TASK_REPO`, `ROBOS_TASK_SERVER`, `ROBOS_EPIC_KEY`, `ROBOS_TASK_STAGE`, `ROBOS_AGENT_MODE`; and say the task key in the prompt so branches and commits reference it.
+- Publish the session to `~/.robos/agent-jobs/<sessionId>.json` via `robos-lib/agent-job-state` with `launchedBy`, `taskId`/`taskKey`/`taskUrl`, `runId`, `status`, `activity`, `childPid`. Dev Central matches runs to tasks by those fields.
+- Dev Central's own launches are recorded in `~/.robos/agent-runs/<runId>.json` (+ `.log` of the agent's JSON lines); see `dev-central/lib/v2-agents.js`.
