@@ -46,3 +46,19 @@ test('ready requests selected GitHub reviewers and excludes the author',async()=
  await f.api.ready('abc',['author','teammate','org/backend']);
  assert.deepEqual(f.calls.find(c=>c.includes('--add-reviewer')),['gh','pr','edit',f.remote.url,'--add-reviewer','teammate,org/backend']);
 });
+
+test('refresh discovers and saves a PR created outside the review window',async()=>{
+ const f=fixture();delete f.api.review.pullRequest;f.api.review.pr.headBranch='codex/filters';
+ const run=f.api.run;f.api.run=async(bin,args,opts)=>args[1]==='list'?JSON.stringify([{number:f.remote.number,url:f.remote.url}]):run(bin,args,opts);
+ assert.equal((await f.api.refresh()).published,true);
+ assert.equal(JSON.parse(fs.readFileSync(f.api.manifest)).pullRequest.url,f.remote.url);
+ await f.api.update({title:'Filters',body:'Updated description',expectedBody:'Original',expectedTitle:'Filters'});
+ assert.equal(f.remote.body,'Updated description');
+});
+test('PR discovery distinguishes no PR from a failed lookup',async()=>{
+ const f=fixture();delete f.api.review.pullRequest;f.api.review.pr.headBranch='codex/filters';
+ f.api.run=async()=> '[]';
+ assert.equal((await f.api.refresh()).published,undefined);
+ f.api.run=async()=>{throw Error('GitHub unavailable');};
+ await assert.rejects(f.api.refresh(),/GitHub unavailable/);
+});

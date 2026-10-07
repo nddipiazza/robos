@@ -11,7 +11,17 @@ class ReviewPRState {
  constructor(review,manifest,run=async(bin,args,opts)=>(await promisify(execFile)(bin,args,{...opts,maxBuffer:4*1024*1024})).stdout){this.review=review;this.manifest=manifest;this.run=run;this.pending=null;}
  async options(){const opts={cwd:this.review.workspace,env:{...process.env}};if(this.review.githubAccount)opts.env.GH_TOKEN=(await this.run('gh',['auth','token','--user',this.review.githubAccount],opts)).trim();return opts;}
  async refresh(){
-  if(!this.review.pullRequest)return this.review.pr;
+  if(!this.review.pullRequest){
+   // A PR may have been created outside this review window.
+   const branch=this.review.pr.headBranch;
+   if(!branch||!this.review.repo)throw Error('Cannot check for a PR without a repository and branch.');
+   const matches=JSON.parse(await this.run('gh',['pr','list','--repo',this.review.repo,'--head',branch,'--state','open','--json','number,url'],await this.options()));
+   if(matches.length>1)throw Error('More than one open PR matches this branch. Select the intended PR.');
+   if(!matches.length)return this.review.pr;
+   const match=matches[0];
+   if(!Number.isInteger(match.number)||match.url!==`https://github.com/${this.review.repo}/pull/${match.number}`)throw Error('GitHub returned an unexpected PR identity.');
+   this.review.pullRequest=match;
+  }
   const opts=await this.options();const pr=JSON.parse(await this.run('gh',['pr','view',this.review.pullRequest.url,'--json',fields],opts));
   const login=JSON.parse(await this.run('gh',['api','user'],opts)).login;
   if(!['OPEN','CLOSED','MERGED'].includes(pr.state)||typeof pr.isDraft!=='boolean'||!pr.author?.login||!login||pr.url!==this.review.pullRequest.url)throw Error('Could not verify the PR state and author.');
