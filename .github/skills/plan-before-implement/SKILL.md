@@ -17,6 +17,16 @@ Reuse existing issues. A GitHub Feature represents an epic when the organization
 has no Epic type. Use `review-required` whenever design must be reviewed before code;
 record an explicit approval URL before changing the plan to `approved`.
 
+Write the issue for the person who will implement it: a short description of the
+change, concrete delivery steps, and a few observable checks. Keep source hashes,
+Figma node inventories, API access history, validation commands, and planner metadata
+in the saved plan or reference files unless they are needed to act on the issue.
+Do not paste the plan into the issue or repeat the same scope under several headings.
+Use actual controls and behaviors: “Click Suggest changes to focus the text area,”
+not “preserve contextual assistance affordances.” Titles describe the product change,
+not the planning process. Honor the requested release size; keep related work together
+when the user wants substantial releases rather than component-sized tasks.
+
 In Task Planner, open **KGraph Project Plans**, expand **Create or update a linked
 project plan**, paste the JSON, select **Preview plan**, inspect the delta and
 validation, and **Save reviewed plan**. The same workflow is available headlessly:
