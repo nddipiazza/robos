@@ -25,7 +25,13 @@ class ReviewPRPublisher {
       if(await git(['status','--porcelain']))throw Object.assign(new Error('Uncommitted changes need review before creating the PR.'),{code:'DIRTY_WORKTREE'});
       const head=await git(['rev-parse','HEAD']);
       const remote=(await git(['ls-remote','origin',`refs/heads/${branch}`])).split(/\s/)[0];
-      if(remote!==head)throw new Error('Push the latest branch commits before creating the PR.');
+      if(remote!==head) {
+        await git(['push','origin',`${head}:refs/heads/${branch}`]);
+        const pushed=(await git(['ls-remote','origin',`refs/heads/${branch}`])).split(/\s/)[0];
+        if(pushed!==head)throw new Error('The branch changed during the push. Retry Create PR to check its latest state.');
+      }
+      if(await git(['branch','--show-current'])!==branch || await git(['rev-parse','HEAD'])!==head)throw new Error('The checkout changed while preparing the PR. Retry Create PR.');
+      if(await git(['status','--porcelain']))throw Object.assign(new Error('Uncommitted changes need review before creating the PR.'),{code:'DIRTY_WORKTREE'});
       const dir=fs.mkdtempSync(path.join(os.tmpdir(),'robos-pr-'));const file=path.join(dir,'body.md');fs.writeFileSync(file,body,{mode:0o600});
       const args=['pr','create','--repo',this.review.repo,'--head',branch,'--base',base,'--title',title.trim(),'--body-file',file];if(draft)args.push('--draft');
       const url=(await this.run('gh',args,opts)).trim();
