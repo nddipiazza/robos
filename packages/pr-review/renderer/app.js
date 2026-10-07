@@ -1100,7 +1100,7 @@ window.openPRReviewTheater = async function(pr) {
     document.querySelector('.fix-type-selector-bar').style.display = 'none';
     document.querySelectorAll('[id^="btn-fix-type-"]').forEach(el => el.hidden = true);
     document.querySelectorAll('.stage-nav-footer').forEach(el => el.style.display = 'none');
-    updateTheaterStepper(); window.setProofCanvasMode('video'); window.setTheaterStage(targetPR.published?8:6);
+    updateTheaterStepper(); window.setProofCanvasMode('video'); window.setTheaterStage(9);
     if (res.interactiveDemo) await window.mountWalkthrough();
     return;
   }
