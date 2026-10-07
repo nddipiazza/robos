@@ -262,6 +262,7 @@
 
         <!-- Stage Navigation Stepper -->
         <nav class="theater-stepper" id="theater-stepper" aria-label="Review sections">
+          <button class="step-btn" data-stage="9" id="step-btn-9" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="9"><span class="step-label">Description</span></button>
           <button class="step-btn active" data-stage="1" id="step-btn-1" data-theater-action="setTheaterStage" data-theater-event="click" data-theater-arg="1">
             <span class="step-num">1</span> <span class="step-label">Overview</span>
             <span class="step-status" id="step-status-1">⏳</span>
@@ -820,6 +821,7 @@
         </div>
 
         <!-- STAGE 6: "Walk Me Through It" Interactive Walkthrough -->
+        <section class="theater-stage" id="stage-9" aria-label="Description"></section>
         <section class="theater-stage" id="stage-8" aria-label="Pull Request"></section>
         <div class="theater-stage" id="stage-6">
           <div class="stage-header">
@@ -1308,6 +1310,9 @@
   </div>
 
   <script src="../../robos-ui/robos-ui.js"></script>
+  <script src="../../robos-ui/agent-discussion.js"></script>
+  <link rel="stylesheet" href="review-agent-pane.css">
+  <script src="review-agent-pane.js"></script>
   <script src="demo-ui.js"></script>
   <script src="vendor/markdown-editor.js"></script>
   <link rel="stylesheet" href="markdown-editor.css">

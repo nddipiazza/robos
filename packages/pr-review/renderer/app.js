@@ -1117,7 +1117,7 @@ window.openPRReviewTheater = async function(pr) {
 
   // Reset to stage 1 and video mode
   window.setProofCanvasMode('video');
-  window.setTheaterStage(1);
+  window.setTheaterStage(9);
 };
 
 window.exitTheater = function() {
@@ -1193,7 +1193,7 @@ function updateTheaterStepper() {
 }
 
 window.setTheaterStage = function(stageNum) {
-  if (theaterContext?.local && ![3, 5, 6, 8].includes(stageNum)) return;
+  if (theaterContext?.local && ![3, 5, 6, 8, 9].includes(stageNum)) return;
   // If target stage is disabled in config, skip to next or previous available stage
   if (theaterContext && theaterContext.theaterConfig) {
     const cfg = theaterContext.theaterConfig;
