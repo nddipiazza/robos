@@ -16,7 +16,7 @@
   close(){pane.hidden=true;divider.hidden=true;},
   update(id,values){const c=contexts.get(id);if(!c)return;Object.assign(c,values);save(c);if(active===id)render();},
   append(id,role,text){const c=contexts.get(id);if(!c)return;c.messages.push({role,text,timestamp:Date.now()});save(c);if(active===id)render();},
-  async send(id,text){const c=contexts.get(id);if(!c||c.busy)return;if(api.busy()){api.open(id);api.append(id,'system','Wait for the current agent to finish.');return;}api.open(id);api.append(id,'user',text);api.update(id,{busy:true});try{const result=await c.send(text);if(result!==false)chat.clearInput();}catch(e){api.append(id,'system',e.message);}finally{api.update(id,{busy:false,activity:''});}},
+  async send(id,text){const c=contexts.get(id);if(!c||c.busy)return;if(api.busy()){api.open(id);api.append(id,'system','Wait for the current agent to finish.');return;}api.open(id);api.append(id,'user',text);chat.clearInput();api.update(id,{busy:true});try{await c.send(text);}catch(e){api.append(id,'system',e.message);}finally{api.update(id,{busy:false,activity:''});}},
   busy(){return [...contexts.values()].some(c=>c.busy);}
  };
  chat.addEventListener('agent-submit',e=>api.send(active,e.detail.text));select.onchange=()=>api.open(select.value);close.onclick=()=>api.close();
