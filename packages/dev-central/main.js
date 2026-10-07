@@ -1308,20 +1308,8 @@ ipcMain.handle('save-prefs', (_, prefs) => {
   return { ok: true };
 });
 
-ipcMain.handle('open-app-context', (_, action) => {
-  if (action && action.url) {
-    shell.openExternal(action.url);
-  } else if (action && action.app) {
-    const sockPath = process.env.ROBOS_DM_SOCKET || `/tmp/robos-dm-${process.getuid ? process.getuid() : 1000}.sock`;
-    try {
-      const client = net.connect(sockPath, () => {
-        client.write(JSON.stringify({ launch: action.app }));
-        client.end();
-      });
-    } catch {}
-  }
-  return { ok: true };
-});
+ipcMain.handle('open-app-context', (_, action) =>
+  require('./lib/open-app-context').openAppContext(action, {openExternal: url => shell.openExternal(url)}));
 
 // ── Background Sync & Traffic Simulator IPC Handlers ────────────────────────
 

@@ -18,6 +18,7 @@ function read(repo, root) {
   return { prTemplate: DEFAULT_PR, messageTemplate: DEFAULT_MESSAGE, serverId: '', channel: '', reviewers: [], githubReviewers: [], ...value };
 }
 function save(repo, input, root) {
+  input = {...read(repo, root), ...input};
   const value = {};
   for (const key of ['prTemplate', 'messageTemplate', 'serverId', 'channel']) {
     if (typeof input[key] !== 'string' || input[key].length > (key === 'prTemplate' ? 65000 : 4000)) throw Error('Invalid review settings.');

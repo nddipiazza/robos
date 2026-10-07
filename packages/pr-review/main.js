@@ -5,6 +5,7 @@ const path = require('path');
 const fs   = require('fs');
 const os   = require('os');
 const { execSync } = require('child_process');
+const githubCommand = args => require('../robos-task-client/github-command').runGitHub(args);
 
 const { loadLocalReview, ShowMeSession } = require('./lib/local-review');
 ipcMain.handle('robos-skills-list',()=>{try{return {ok:true,skills:require('../robos-lib/skill-catalog').listSkills()};}catch(e){return {ok:false,error:e.message};}});
@@ -154,7 +155,7 @@ app.whenReady().then(() => {
     },
   });
   win.once('ready-to-show',()=>win.show());
-  win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
+  win.loadFile(path.join(__dirname, 'renderer', !localReview && !process.env.ROBOS_REVIEW_URL ? 'task-picker.html' : 'index.html'));
   win.setMenuBarVisibility(false);
   if (_debugServer) _debugServer.startDebugServer(win, 19129);
 });
@@ -193,8 +194,7 @@ ipcMain.handle('fetch-prs', async (_, { state } = {}) => {
     for (const r of repos) {
       const repo = `${r.org}/${r.repo}`;
       const stateFlag = state || 'open';
-      const cmd = `gh pr list --repo ${repo} --state ${stateFlag} --limit 50 --json number,title,state,author,reviewRequests,statusCheckRollup,createdAt,updatedAt,headRefName,baseRefName,additions,deletions,url,isDraft,mergeable,body,labels,comments,reviewDecision`;
-      const out = execSync(cmd, { encoding: 'utf8', timeout: 20000 });
+      const out = await githubCommand(['pr','list','--repo',repo,'--state',stateFlag,'--limit','50','--json','number,title,state,author,reviewRequests,statusCheckRollup,createdAt,updatedAt,headRefName,baseRefName,additions,deletions,url,isDraft,mergeable,body,labels,comments,reviewDecision']);
       const prs = JSON.parse(out);
       allPRs.push(...prs.map(pr => mapGitHubPR(pr, repo)));
     }
@@ -209,30 +209,13 @@ ipcMain.handle('fetch-prs', async (_, { state } = {}) => {
 
 ipcMain.handle('fetch-pr-detail', async (_, { repo, number }) => {
   try {
-    // Fetch diff stats
-    const diffCmd = `gh pr diff --repo ${repo} ${number} --name-only`;
-    let changedFiles = [];
-    try {
-      changedFiles = execSync(diffCmd, { encoding: 'utf8', timeout: 15000 }).trim().split('\n').filter(Boolean);
-    } catch {}
-
-    // Fetch checks
-    const checksCmd = `gh pr checks --repo ${repo} ${number} --json name,state,description,startedAt,completedAt,detailsUrl 2>/dev/null || echo "[]"`;
-    let checks = [];
-    try {
-      const checksOut = execSync(checksCmd, { encoding: 'utf8', timeout: 15000 });
-      checks = JSON.parse(checksOut);
-    } catch {}
-
-    // Fetch review comments
-    const commentsCmd = `gh pr view --repo ${repo} ${number} --json reviews,comments`;
-    let reviews = [], comments = [];
-    try {
-      const commentsOut = execSync(commentsCmd, { encoding: 'utf8', timeout: 15000 });
-      const parsed = JSON.parse(commentsOut);
-      reviews = parsed.reviews || [];
-      comments = parsed.comments || [];
-    } catch {}
+    const [diff, checksOut, commentsOut] = await Promise.all([
+      githubCommand(['pr','diff','--repo',repo,String(number),'--name-only']),
+      githubCommand(['pr','checks','--repo',repo,String(number),'--json','name,state,description,startedAt,completedAt,detailsUrl']),
+      githubCommand(['pr','view','--repo',repo,String(number),'--json','reviews,comments'])
+    ]);
+    const changedFiles=diff.trim().split('\n').filter(Boolean),checks=JSON.parse(checksOut);
+    const {reviews=[],comments=[]}=JSON.parse(commentsOut);
 
     return { ok: true, changedFiles, checks, reviews, comments };
   } catch (e) {
@@ -246,9 +229,7 @@ ipcMain.handle('submit-review', async (_, { repo, number, action, body, kgraphBr
   try {
     const flag = action === 'approve' ? '--approve' :
                  action === 'request-changes' ? '--request-changes' : '--comment';
-    let cmd = `gh pr review --repo ${repo} ${number} ${flag}`;
-    if (body) cmd += ` --body "${body.replace(/"/g, '\\"')}"`;
-    execSync(cmd, { encoding: 'utf8', timeout: 15000 });
+    await githubCommand(['pr','review','--repo',repo,String(number),flag,...(body?['--body',body]:[])]);
 
     const kgBranch = kgraphBranch || 'kgraph/PET-105-rabies-verification';
     const isMerged = action === 'approve';
@@ -533,7 +514,7 @@ ipcMain.handle('get-ide-status', async () => {
 ipcMain.handle('fetch-pr-theater-context', async (_, opts = {}) => {
   try {
     if (localReview) return {
-      ok: true, local: true, interactiveDemo: !!demoSession, pr: localReview.pr,
+      ok: true, local: true, interactiveDemo: !!demoSession, pr: localReview.pr, initialStage: process.env.ROBOS_REVIEW_STAGE === 'evidence' ? 5 : undefined,
       targetApp: { title: localReview.title },
       fileDiffs: getGraphStore()?.parseUnifiedDiff(localReview.diffPatch, localReview.changedFiles) || [],
       proofOfWorkVideo: { title: 'Recorded local evidence', url: localReview.videoUrl, chapters: [], vttTranscript: localReview.summary || '' },
@@ -545,7 +526,7 @@ ipcMain.handle('fetch-pr-theater-context', async (_, opts = {}) => {
     let diffPatch = opts.diffPatch || null;
     if (!diffPatch && opts.repo && opts.number) {
       try {
-        diffPatch = execSync(`gh pr diff --repo ${opts.repo} ${opts.number} 2>/dev/null`, { encoding: 'utf8', timeout: 15000 });
+        diffPatch = await githubCommand(['pr','diff','--repo',opts.repo,String(opts.number)]);
       } catch {}
     }
 
@@ -589,16 +570,7 @@ ipcMain.handle('fetch-pr-theater-context', async (_, opts = {}) => {
         url: opts.url || `https://github.com/${opts.repo || 'acme/petstore-api'}/pull/${opts.number || 12}`,
         additions: 42,
         deletions: 3,
-        workItems: opts.workItems || [
-          {
-            id: 'PET-105',
-            key: 'PET-105',
-            title: 'Verify rabies certificate over mTLS before adoption',
-            url: `https://github.com/${opts.repo || 'acme/petstore-api'}/issues/105`,
-            type: 'story',
-            status: 'In Review'
-          }
-        ]
+        workItems: opts.workItems || []
       },
       checks: opts.checks || [],
       targetApp: {
@@ -887,11 +859,7 @@ ipcMain.handle('submit-pr-theater-review', async (_, { repo, number, action, bod
 
     const flag = action === 'approve' ? '--approve' :
                  action === 'request-changes' ? '--request-changes' : '--comment';
-    let cmd = `gh pr review --repo ${repo} ${number} ${flag}`;
-    if (body) cmd += ` --body "${body.replace(/"/g, '\\"')}"`;
-    try {
-      execSync(cmd, { encoding: 'utf8', timeout: 15000 });
-    } catch {}
+    await githubCommand(['pr','review','--repo',repo,String(number),flag,...(body?['--body',body]:[])]);
 
     const kgBranch = kgraphBranch || 'kgraph/PET-105-rabies-verification';
     const isMerged = action === 'approve';
@@ -1325,6 +1293,11 @@ ipcMain.handle('review-evidence-image',(_,id)=>{try {
 
 ipcMain.handle('review-message-members', async (_,serverId) => {try{return {ok:true,members:await projectReviewSettings.members(serverId)};}catch(e){return {ok:false,error:e.message};}});
 
+ipcMain.handle('task-evidence-bundle', () => { try { return {ok:true,bundle:require('./lib/task-evidence-view').load(localReview)}; } catch(error) { return {ok:false,error:error.message}; } });
+ipcMain.handle('task-evidence-text', (_, id) => { try { return {ok:true,...require('./lib/task-evidence-view').read(localReview,id)}; } catch(error) { return {ok:false,error:error.message}; } });
+
+ipcMain.handle('list-review-tasks', () => { try { return {ok:true,tasks:require('./lib/task-picker').savedTasks().map(({manifest,task,...row})=>row)}; } catch(error) { return {ok:false,error:error.message}; } });
+ipcMain.handle('return-to-task-picker', async () => { await win.loadFile(path.join(__dirname,'renderer','task-picker.html')); return {ok:true}; });
 async function openSavedReview(id,replace=false) {
  try {
   const row=require('./lib/task-picker').savedTasks().find(row=>row.id===id);
@@ -1335,7 +1308,7 @@ async function openSavedReview(id,replace=false) {
   await new Promise((resolve,reject)=>{child.once('spawn',resolve);child.once('error',reject);});child.unref();if(replace)win.close();return {ok:true};
  } catch(error) { return {ok:false,error:error.message}; }
 }
-
+ipcMain.handle('open-review-task',(_,id)=>openSavedReview(id));
 
 ipcMain.handle('review-epic-navigation',async()=>{try{return {ok:true,navigation:localReview?await require('./lib/epic-navigation').reviewNeighbors(localReview):null};}catch(error){return {ok:false,error:error.message};}});
 ipcMain.handle('open-epic-neighbor',async(_,direction)=>{

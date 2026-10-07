@@ -1,6 +1,5 @@
 'use strict';
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
-const {execFile}=require('node:child_process');const {promisify}=require('node:util');
 const fields='number,url,title,body,state,isDraft,author,headRefName,headRefOid,baseRefName,statusCheckRollup';
 function checksPassing(checks) {
  if (!Array.isArray(checks) || !checks.length) return false;
@@ -8,8 +7,8 @@ function checksPassing(checks) {
  return states.includes('SUCCESS') && states.every(s=>['SUCCESS','NEUTRAL','SKIPPED'].includes(s));
 }
 class ReviewPRState {
- constructor(review,manifest,run=async(bin,args,opts)=>(await promisify(execFile)(bin,args,{...opts,maxBuffer:4*1024*1024})).stdout){this.review=review;this.manifest=manifest;this.run=run;this.pending=null;}
- async options(){const opts={cwd:this.review.workspace,env:{...process.env}};if(this.review.githubAccount)opts.env.GH_TOKEN=(await this.run('gh',['auth','token','--user',this.review.githubAccount],opts)).trim();return opts;}
+ constructor(review,manifest,run=require('./review-command')){this.review=review;this.manifest=manifest;this.run=run;this.pending=null;}
+ async options(){return {cwd:this.review.workspace,repo:this.review.repo,env:require('../../robos-lib/github-accounts').cleanEnv()};}
  async refresh(){
   if(!this.review.pullRequest){
    // A PR may have been created outside this review window.

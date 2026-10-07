@@ -1,9 +1,7 @@
 'use strict';
-const {execFile}=require('node:child_process');
-const {promisify}=require('node:util');
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os');
 const fields='number,title,state,url,author,isDraft,headRefOid,headRefName,baseRefName,body,statusCheckRollup,reviewDecision,updatedAt,additions,deletions';
-const run=async args=>(await promisify(execFile)('gh',args,{timeout:30000,maxBuffer:8*1024*1024})).stdout;
+const run=args=>require('../../robos-task-client/github-command').runGitHub(args);
 function parseURL(url){const m=String(url).match(/^https:\/\/github\.com\/([\w.-]+\/[\w.-]+)\/pull\/([1-9]\d*)$/);if(!m)throw Error('Invalid GitHub PR URL.');return {repo:m[1],number:Number(m[2])};}
 function passing(checks){const states=(checks||[]).map(c=>c.status==='COMPLETED'?c.conclusion:c.status||c.state);return states.includes('SUCCESS')&&states.every(s=>['SUCCESS','SKIPPED','NEUTRAL'].includes(s));}
 async function list(repos,gh=run){

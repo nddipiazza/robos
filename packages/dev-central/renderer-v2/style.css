@@ -313,3 +313,64 @@ a.key.link:hover { text-decoration: underline; }
 .prs.closed { background: var(--red-bg); color: var(--red); }
 #tt thead th { cursor: pointer; }
 #btn-cols svg { vertical-align: -2px; margin-right: 4px; }
+
+/* ── Options column ──────────────────── */
+.opt { display: flex; align-items: center; gap: 4px; }
+.opt-main { gap: 6px; white-space: nowrap; }
+.opt-main svg { flex: none; }
+.opt-more { padding: 0 6px; }
+.opt-cell { white-space: nowrap; }
+
+/* ── agent running indicator ─────────── */
+.agent-ind { display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 6px; margin-left: 6px; border-radius: 10px; border: 1px solid color-mix(in srgb, var(--purple) 45%, transparent); background: color-mix(in srgb, var(--purple) 16%, transparent); color: var(--purple); cursor: pointer; flex: none; animation: agpulse 1.8s ease-in-out infinite; }
+.agent-ind:hover { background: color-mix(in srgb, var(--purple) 28%, transparent); }
+.agent-dots { display: inline-flex; gap: 2px; }
+.agent-dots i { width: 3px; height: 3px; border-radius: 50%; background: currentColor; animation: agdot 1.2s infinite; }
+.agent-dots i:nth-child(2) { animation-delay: .2s; } .agent-dots i:nth-child(3) { animation-delay: .4s; }
+@keyframes agdot { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+@keyframes agpulse { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--purple) 35%, transparent); } 50% { box-shadow: 0 0 0 4px transparent; } }
+@media (prefers-reduced-motion: reduce) { .agent-ind, .agent-dots i { animation: none; } }
+
+/* ── agent discussion panel ──────────── */
+.agent-panel { position: fixed; top: 52px; right: 0; bottom: 0; width: min(520px, 100vw); z-index: 70; background: var(--panel); border-left: 1px solid var(--border); box-shadow: -12px 0 32px rgba(0,0,0,.28); display: flex; flex-direction: column; }
+.agent-panel.hidden { display: none; }
+.ap-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.ap-title { display: flex; gap: 10px; align-items: center; color: var(--purple); min-width: 0; }
+.ap-name { font-weight: 650; color: var(--text); } .ap-sub { font-size: 12px; color: var(--muted); max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ap-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.ap-status { font-size: 11.5px; font-weight: 650; padding: 2px 8px; border-radius: 10px; background: var(--gray-bg); color: var(--muted); display: inline-flex; align-items: center; }
+.ap-status.running { background: color-mix(in srgb, var(--purple) 18%, transparent); color: var(--purple); }
+.ap-status.done { background: var(--green-bg); color: var(--green); }
+.ap-status.error, .ap-status.interrupted { background: var(--red-bg); color: var(--red); }
+.ap-kill { color: var(--red); }
+.ap-body { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.ap-empty { color: var(--muted); text-align: center; padding: 30px 10px; }
+.ap-msg { background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 8px 11px; white-space: pre-wrap; word-break: break-word; line-height: 1.5; max-width: 94%; }
+.ap-msg.me { align-self: flex-end; background: var(--accent-bg); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+.ap-msg.err { background: var(--red-bg); color: var(--red); border-color: transparent; }
+.ap-msg.ms { font-family: var(--mono); font-size: 12px; }
+.ap-log { font: 11px var(--mono); color: var(--faint); white-space: pre-wrap; }
+.ap-tool { font-size: 12px; color: var(--muted); border-left: 2px solid var(--border); padding-left: 8px; }
+.ap-tool summary { cursor: pointer; display: flex; gap: 6px; align-items: center; list-style: none; }
+.ap-tool summary::-webkit-details-marker { display: none; }
+.ap-tsum { font-family: var(--mono); color: var(--faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ap-tool pre { margin: 6px 0 2px; white-space: pre-wrap; word-break: break-word; max-height: 240px; overflow: auto; font: 11.5px var(--mono); color: var(--text); background: var(--panel-2); padding: 8px; border-radius: 6px; }
+.ap-foot { display: flex; gap: 8px; padding: 10px 14px 14px; border-top: 1px solid var(--border); align-items: flex-end; }
+.ap-foot textarea { flex: 1; resize: none; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font: inherit; }
+.ap-foot textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+.ap-foot textarea:disabled { opacity: .6; }
+.toast button[data-tact] { background: color-mix(in srgb, var(--bg) 20%, transparent); border: 1px solid color-mix(in srgb, var(--bg) 40%, transparent); border-radius: 5px; padding: 2px 8px; text-decoration: none; }
+
+/* ── resizable columns ───────────────── */
+.tt thead th .resizer { position: absolute; top: 0; right: 0; width: 8px; height: 100%; cursor: col-resize; z-index: 6; }
+.tt thead th .resizer::after { content: ''; position: absolute; top: 25%; bottom: 25%; left: 5px; width: 1px; background: var(--border); transition: background .12s, top .12s, bottom .12s; }
+.tt thead th:hover .resizer::after { background: var(--faint); }
+.tt thead th .resizer:hover::after, body.col-resizing .tt thead th .resizer::after { background: var(--accent); top: 15%; bottom: 15%; width: 2px; left: 3px; }
+body.col-resizing { cursor: col-resize; user-select: none; }
+body.col-resizing * { cursor: col-resize !important; }
+
+.pr-ind { display: inline-flex; align-items: center; gap: 3px; height: 20px; padding: 0 6px; margin-left: 6px; border-radius: 10px; border: 1px solid color-mix(in srgb, var(--green, #2da44e) 45%, transparent); background: color-mix(in srgb, var(--green, #2da44e) 14%, transparent); color: var(--green, #2da44e); text-decoration: none; flex: none; }
+.pr-ind:hover { background: color-mix(in srgb, var(--green, #2da44e) 26%, transparent); }
+.pr-ind.draft { color: var(--muted, #888); border-color: color-mix(in srgb, currentColor 40%, transparent); background: color-mix(in srgb, currentColor 12%, transparent); }
+.pr-ind.merged { color: var(--purple); border-color: color-mix(in srgb, var(--purple) 45%, transparent); background: color-mix(in srgb, var(--purple) 14%, transparent); }
+.pr-ind b { font-size: 10px; font-weight: 600; }

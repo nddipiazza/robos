@@ -14,10 +14,10 @@ test('GitHub failure is unavailable, not sample passing checks',async()=>{
  const r=await readCI({repo:'org/repo',pullRequest:{number:123}},{refresh:true,run:async()=>{throw Error('offline');}});
  assert.equal(r.state,'unknown');assert.deepEqual(r.checks,[]);
 });
-test('reads checks using the review account and returns the current head',async()=>{
+test('CI uses cleaned task-server credentials, ignoring a stale review account',async()=>{
  const calls=[];const run=async(cmd,args,opts)=>{calls.push({cmd,args,opts});return {stdout:args[0]==='auth'?'private-token':JSON.stringify({statusCheckRollup:[{context:'buildkite/cloud-native',state:'FAILURE'}],headRefOid:'abc',url:'https://github.com/org/repo/pull/123'})};};
  const r=await readCI({repo:'org/repo',githubAccount:'reviewer',pullRequest:{number:123}},{refresh:true,run});
- assert.equal(r.state,'failed');assert.equal(r.head,'abc');assert.equal(calls[1].opts.env.GH_TOKEN,'private-token');assert.deepEqual(calls[0].args,['auth','token','--user','reviewer']);
+ assert.equal(r.state,'failed');assert.equal(r.head,'abc');assert.equal(calls.length,1);assert.equal(calls[0].opts.env.GH_TOKEN,undefined);assert.equal(calls[0].opts.env.GITHUB_TOKEN,undefined);assert.equal(calls[0].args[0],'pr');
 });
 test('unpublished reviews do not invoke GitHub',async()=>{assert.equal((await readCI({}, {run:()=>{throw Error('unexpected')}})).state,'unpublished');});
 test('Buildkite checks include actual failed jobs only for the matching PR revision',async()=>{
