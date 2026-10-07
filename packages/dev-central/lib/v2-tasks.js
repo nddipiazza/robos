@@ -389,6 +389,7 @@ function register({ ipcMain, loadFeatures, saveFeatures, readSettings, getWindow
   });
 
   if (!isTestMode) {
+    fs.watchFile(require('../../robos-task-client/pr-task-status').notificationFile(),{persistent:false,interval:1000},(current,previous)=>{if(current.mtimeMs!==previous.mtimeMs)refresh().catch(()=>{});});
     setTimeout(() => refresh().catch(() => {}), 500);
     setInterval(() => refresh().catch(() => {}), 120000).unref();
   }

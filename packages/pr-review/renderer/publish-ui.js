@@ -59,7 +59,7 @@ window.configureReviewPublish = function(pr) {
     const actions=document.createElement('div');actions.className='review-publish-actions';actions.append(create,remediate,update,refresh,open);dialog.append(heading,branch,titleLabel,aiHost,bodyLabel,draftLabel,messagingHost,error,actions);stage.append(dialog);
     body.addEventListener('editor-warning',e=>error.textContent=e.detail);
     aiDescription=window.mountAIDescription?.(aiHost,{pr,title,body,saved,save,ready:messaging?.ready});
-    if(pr.published){create.hidden=true;title.disabled=!editable;body.disabled=!editable;draftLabel.hidden=true;open.hidden=false;error.textContent=pr.stateError|| (editable?'Review the evidence and walkthrough, revise the description, or discuss further adjustments.':pr.state==='CLOSED'||pr.state==='MERGED'?'This PR is '+labels[status].toLowerCase()+'. Evidence and changes remain available.':'Description edits are available to the author of an open PR.');}
+    if(pr.published){create.hidden=true;title.disabled=!editable;body.disabled=!editable;draftLabel.hidden=true;open.hidden=false;error.textContent=pr.taskSyncWarning||pr.stateError|| (editable?'Review the evidence and walkthrough, revise the description, or discuss further adjustments.':pr.state==='CLOSED'||pr.state==='MERGED'?'This PR is '+labels[status].toLowerCase()+'. Evidence and changes remain available.':'Description edits are available to the author of an open PR.');}
   }
 };
 
