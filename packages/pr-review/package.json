@@ -6,10 +6,12 @@
   "scripts": {
     "start": "electron --no-sandbox --disable-gpu --disable-dev-shm-usage .",
     "build:editor": "node build-editor.js",
-    "postinstall": "node build-editor.js"
+    "postinstall": "node build-editor.js && node build-changes.js",
+    "build:changes": "node build-changes.js"
   },
   "dependencies": {
     "@toast-ui/editor": "3.2.2",
+    "diff2html": "3.4.56",
     "dompurify": "3.4.16",
     "electron": "^30.0.0",
     "esbuild": "0.28.2"

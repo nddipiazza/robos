@@ -778,25 +778,13 @@ ipcMain.handle('fetch-pr-theater-context', async (_, opts = {}) => {
   }
 });
 
-ipcMain.handle('fetch-pr-diff-content', async (_, { repo, number, changedFiles } = {}) => {
+ipcMain.handle('fetch-pr-diff-content', async (_, { repo, number } = {}) => {
   try {
-    let diffPatch = '';
-    if (repo && number) {
-      try {
-        diffPatch = execSync(`gh pr diff --repo ${repo} ${number} 2>/dev/null`, { encoding: 'utf8', timeout: 15000 });
-      } catch {}
-    }
-
-    const store = getGraphStore();
-    let parsedFiles = [];
-    if (store && typeof store.parseUnifiedDiff === 'function') {
-      parsedFiles = store.parseUnifiedDiff(diffPatch, changedFiles);
-    }
-
-    return { ok: true, rawDiff: diffPatch, parsedFiles };
-  } catch (e) {
-    return { ok: false, error: e.message };
-  }
+    const rawDiff=localReview
+      ? await require('./lib/review-command')('git',['diff','--no-ext-diff','--no-textconv','--no-color','--find-renames',localReview.base,'HEAD','--'],{cwd:localReview.workspace})
+      : await githubCommand(['pr','diff','--repo',repo,String(number)]);
+    return {ok:true,rawDiff};
+  } catch(error) { return {ok:false,error:error.message}; }
 });
 
 ipcMain.handle('verify-pr-theater-quiz', async (_, { courseId, answers, reviewerId, appId, passThresholdScore } = {}) => {
