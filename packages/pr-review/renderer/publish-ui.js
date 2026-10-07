@@ -17,7 +17,7 @@ window.configureReviewPublish = function(pr) {
   trigger.querySelector('.pr-tab-icon')?.setAttribute('hidden','');
   const editable=!!pr.published && pr.isAuthor && pr.state==='OPEN' && !pr.stateError;
   const stage=document.getElementById('stage-8');stage.replaceChildren();
-  if (!pr.local) return;
+  if (!pr.local) {const description=document.getElementById('stage-9');if(description){description.replaceChildren();const editor=document.createElement('review-markdown-editor');editor.value=pr.body||'';editor.disabled=true;description.append(editor);}return;}
   const key='robos-pr-draft:'+pr.repo+':'+pr.headBranch+(pr.published?':'+pr.number:'');
   let saved={};try {saved=JSON.parse(localStorage.getItem(key)||'{}');} catch {}
   {
@@ -25,17 +25,17 @@ window.configureReviewPublish = function(pr) {
     const heading=document.createElement('h3');heading.textContent=pr.published?(pr.isAuthor?'Code review · Author mode':'Code review · Reviewer mode'):'Create pull request';
     const branch=document.createElement('p');branch.textContent=`${pr.repo} · ${pr.headBranch} → ${pr.baseBranch}`;
     const titleLabel=document.createElement('label');titleLabel.textContent='Title';const title=document.createElement('input');title.value=pr.published?pr.title:saved.title ?? pr.title;title.maxLength=256;titleLabel.append(title);
-    const bodyLabel=document.createElement('div');bodyLabel.className='review-description-field';const bodyHeading=document.createElement('p');bodyHeading.textContent='Description';bodyLabel.append(bodyHeading);const body=document.createElement('review-markdown-editor');body.value=pr.published?pr.body:saved.body ?? pr.body ?? '';bodyLabel.append(body);
+    const bodyLabel=document.createElement('div');bodyLabel.className='review-description-field';const bodyHeading=document.createElement('p');bodyHeading.textContent='Description';bodyLabel.append(bodyHeading);const body=document.createElement('review-markdown-editor');body.value=saved.body ?? pr.body ?? '';bodyLabel.append(body);
     const draftLabel=document.createElement('label');const draft=document.createElement('input');draft.type='checkbox';draft.checked=!!saved.draft;draftLabel.append(draft,' Create as draft');
     const error=document.createElement('p');error.setAttribute('role','alert');
     window.cleanupPublishProgress?.();window.cleanupPublishProgress=window.api.onPublishProgress?.(text=>{error.textContent=text;});
     const remediate=document.createElement('button');remediate.textContent='Resolve uncommitted changes';remediate.hidden=true;
-    remediate.onclick=async()=>{save();remediate.hidden=true;error.textContent='';remediate.disabled=true;try{window.setTheaterStage?.(6);const result=await window.api.demoAction({action:'remediate'});if(!result.ok)throw Error(result.error);}catch(e){remediate.hidden=false;error.textContent=e.message;window.setTheaterStage?.(8);}finally{remediate.disabled=false;}};
+    remediate.onclick=async()=>{save();remediate.hidden=true;error.textContent='';remediate.disabled=true;try{window.reviewAgent?.open('recovery');const result=await window.api.demoAction({action:'remediate'});if(!result.ok)throw Error(result.error);}catch(e){remediate.hidden=false;error.textContent=e.message;window.setTheaterStage?.(8);}finally{remediate.disabled=false;}};
     const open=document.createElement('button');open.textContent='Open pull request';open.hidden=!pr.published;
     const openPR=async()=>{open.disabled=true;error.textContent='Opening pull request in your browser…';try{const result=await window.api.openUrl(pr.url);if(result?.ok===false)throw Error(result.error);error.textContent='Opened in your default browser: '+pr.url;}catch(e){error.textContent=e.message+' '+pr.url;}finally{open.disabled=false;}};
     open.onclick=openPR;
     let aiDescription;
-    const save=()=>{try {localStorage.setItem(key,JSON.stringify({title:title.value,body:body.value,draft:draft.checked,...(aiDescription?.state()||{})}));} catch {error.textContent='Draft cannot be saved across restarts on this device.';}};
+    const save=()=>{try {localStorage.setItem(key,JSON.stringify({title:title.value,body:body.value,draft:draft.checked,...(aiDescription?.state()||{})}));return true;} catch {error.textContent='Draft cannot be saved across restarts on this device.';return false;}};
     for(const field of [title,body,draft])field.addEventListener('input',save);
     const messagingHost=document.createElement('div');
     const messaging=!pr.published && window.mountReviewMessageOptions?.(messagingHost,pr,title,body,saved);
@@ -57,6 +57,15 @@ window.configureReviewPublish = function(pr) {
     const update=document.createElement('button');update.textContent='Update PR';update.hidden=!editable;update.onclick=async()=>{update.disabled=true;error.textContent='Updating the PR…';try{const r=await window.api.updateReviewPR({title:title.value,body:body.value,expectedTitle:pr.title,expectedBody:pr.body});if(!r.ok)throw Error(r.error);Object.assign(pr,r.pr);title.value=pr.title;body.value=pr.body;const header=document.querySelector('#theater-pr-title a');if(header)header.textContent='#'+pr.number+' · '+pr.title;error.textContent='PR description updated on GitHub.';}catch(e){error.textContent=e.message;}finally{update.disabled=false;}};
     if(pr.isDraft && ready && !ready.hidden){const promote=document.createElement('button');promote.className='pr-ready-button';promote.textContent='Move PR to Ready';promote.onclick=()=>ready.click();dialog.append(promote);}
     const actions=document.createElement('div');actions.className='review-publish-actions';actions.append(create,remediate,update,refresh,open);dialog.append(heading,branch,titleLabel,aiHost,bodyLabel,draftLabel,messagingHost,error,actions);stage.append(dialog);
+    const descriptionStage=document.getElementById('stage-9');
+    if(descriptionStage){
+      descriptionStage.replaceChildren();const descriptionTitle=document.createElement('h3');descriptionTitle.textContent='Description';
+      const feedback=document.createElement('p');feedback.setAttribute('role','status');const saveDescription=document.createElement('button');saveDescription.textContent='Save description';saveDescription.disabled=!!pr.published&&!editable;
+      saveDescription.onclick=async()=>{saveDescription.disabled=true;try{if(save()===false)throw Error('The description could not be saved locally.');if(pr.published){const result=await window.api.updateReviewPR({title:title.value,body:body.value,expectedTitle:pr.title,expectedBody:pr.body});if(!result.ok)throw Error(result.error);Object.assign(pr,result.pr);}feedback.textContent=pr.published?'Description saved to GitHub.':'Description saved locally.';}catch(e){feedback.textContent=e.message;}finally{saveDescription.disabled=!!pr.published&&!editable;}};
+      const actions=document.createElement('div');actions.className='description-actions';actions.append(saveDescription,feedback);
+      descriptionStage.append(descriptionTitle,aiHost,bodyLabel,actions);body.addEventListener('editor-warning',e=>feedback.textContent=e.detail);update.hidden=true;
+      const editDescription=document.createElement('button');editDescription.textContent='Edit description';editDescription.onclick=()=>window.setTheaterStage?.(9);bodyHeading.textContent='';dialog.insertBefore(editDescription,draftLabel);
+    }
     body.addEventListener('editor-warning',e=>error.textContent=e.detail);
     aiDescription=window.mountAIDescription?.(aiHost,{pr,title,body,saved,save,ready:messaging?.ready});
     if(pr.published){create.hidden=true;title.disabled=!editable;body.disabled=!editable;draftLabel.hidden=true;open.hidden=false;error.textContent=pr.taskSyncWarning||pr.stateError|| (editable?'Review the evidence and walkthrough, revise the description, or discuss further adjustments.':pr.state==='CLOSED'||pr.state==='MERGED'?'This PR is '+labels[status].toLowerCase()+'. Evidence and changes remain available.':'Description edits are available to the author of an open PR.');}

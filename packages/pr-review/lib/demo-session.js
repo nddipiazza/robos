@@ -42,7 +42,7 @@ class DemoSession extends EventEmitter {
             this.status = saved.status === 'running' ? 'error' : ['paused','error','idle'].includes(saved.status) ? saved.status : 'idle';
             this.guidance = saved.guidance || '';
           }
-          this.pendingQuestions=saved.pendingQuestions||[];this.remediating=!!saved.remediating;
+          this.pendingQuestions=saved.pendingQuestions||[];this.remediating=!!saved.remediating;this.discussionPurpose=saved.discussionPurpose;
           this.lastSessionId=saved.agentThreads?.[saved.mode||'feature']||null;
           if (saved.agentConfig === createHash('sha256').update(JSON.stringify(this.agent || null)).digest('hex')) this.agentThreads = saved.agentThreads || {};
           if (saved.status === 'running') this.addMessage({role:'system',text:'This review was closed during an agent action. Resume to inspect the current app and continue; that action was not marked complete.'});
@@ -60,7 +60,7 @@ class DemoSession extends EventEmitter {
   }
   clearChat() { this.store?.clear(); this.messages = []; this.droppedMessages = 0; this.publish(); return this.state(); }
   activeProcess() { return this.mode === 'before' ? this.process.before : this.process; }
-  state() { return { remediating:!!this.remediating, sessionId:this.agentThreads[this.mode]||this.lastSessionId||null, provider:'codex', restored: this.restored, historyAvailable: !!this.store, persistenceError: this.persistenceError, agentName: this.agentName(), droppedMessages: this.droppedMessages, activitySummary: this.activitySummary, progress: this.progress, startedAt: this.startedAt, failedIndex: this.failedIndex, mode: this.mode, baseline: this.mode === 'before' ? this.baseline : null, guidance: this.guidance, status: this.status, index: this.index, total: this.activeProcess().checkpoints.length, checkpoint: this.activeProcess().checkpoints[['running', 'error'].includes(this.status) ? this.failedIndex : this.index] || null, messages: this.messages, process: this.process }; }
+  state() { return { discussionPurpose:this.discussionPurpose, remediating:!!this.remediating, sessionId:this.agentThreads[this.mode]||this.lastSessionId||null, provider:'codex', restored: this.restored, historyAvailable: !!this.store, persistenceError: this.persistenceError, agentName: this.agentName(), droppedMessages: this.droppedMessages, activitySummary: this.activitySummary, progress: this.progress, startedAt: this.startedAt, failedIndex: this.failedIndex, mode: this.mode, baseline: this.mode === 'before' ? this.baseline : null, guidance: this.guidance, status: this.status, index: this.index, total: this.activeProcess().checkpoints.length, checkpoint: this.activeProcess().checkpoints[['running', 'error'].includes(this.status) ? this.failedIndex : this.index] || null, messages: this.messages, process: this.process }; }
   reportProgress(text, headline = true) {
     if (this.status !== 'running' || !text || this.progress.at(-1)?.text === text) return;
     const event = { text: text.replace(/\s+/g, ' ').trim().slice(0, 600), at: Date.now() };
@@ -88,7 +88,7 @@ class DemoSession extends EventEmitter {
   }
   publish() {
     try { if(this.status!=='running'||this.agentThreads[this.mode]&&this.child?.pid)require('../../robos-lib/agent-job-state').write({provider:'codex',sessionId:this.agentThreads[this.mode]||this.lastSessionId,status:this.status,agentName:this.agentName(),activity:this.activitySummary?.text||'',childPid:this.child?.pid||null}); } catch(error) { this.persistenceError='Agent job status could not be saved: '+error.message; }
-    try { this.store?.save({remediating:!!this.remediating,pendingQuestions:this.pendingQuestions||[],process:this.process, index:this.index, failedIndex:this.failedIndex, status:this.status, mode:this.mode, baseline:this.baseline, guidance:this.guidance, agentThreads:this.agentThreads, agentConfig:createHash('sha256').update(JSON.stringify(this.agent || null)).digest('hex'), updatedAt:Date.now()}); }
+    try { this.store?.save({discussionPurpose:this.discussionPurpose,remediating:!!this.remediating,pendingQuestions:this.pendingQuestions||[],process:this.process, index:this.index, failedIndex:this.failedIndex, status:this.status, mode:this.mode, baseline:this.baseline, guidance:this.guidance, agentThreads:this.agentThreads, agentConfig:createHash('sha256').update(JSON.stringify(this.agent || null)).digest('hex'), updatedAt:Date.now()}); }
     catch(error) { this.persistenceError = `Review state could not be saved: ${error.message}`; }
     this.emit('state', this.state());
   }
@@ -98,12 +98,12 @@ class DemoSession extends EventEmitter {
     const temp = this.processFile + '.tmp'; fs.writeFileSync(temp, JSON.stringify(value, null, 2) + '\n'); fs.renameSync(temp, this.processFile);
     this.process = value; this.mode = 'feature'; this.guidance = ''; this.index = -1; this.status = 'idle'; this.progress = []; this.startedAt = null; this.activitySummary = null; this.publish(); return this.state();
   }
-  async remediate(text = 'Inspect and resolve the uncommitted changes blocking this task PR.') {
+  async remediate(text = 'Inspect and resolve the uncommitted changes blocking this task PR.', purpose = 'recovery') {
     if(this.status==='running')throw Error('Wait for the current agent action to finish.');
-    this.remediating=true;this.mode='feature';this.pendingQuestions=[];
+    this.remediating=true;this.discussionPurpose=purpose;this.mode='feature';this.pendingQuestions=[];
     this.addMessage({role:'user',text});this.status='running';this.startedAt=Date.now();this.publish();
     try {
-      const result=await this.runAgent(`You are helping the reviewer resolve uncommitted changes in ${this.workspace}. This is a repository recovery discussion, not a browser walkthrough. Do not launch the app or capture screenshots. Inspect the branch, status, staged/unstaged diffs, untracked files and recent history. Explain which files belong to this task and which may belong to another task or human. Ask concrete questions through the questions array whenever ownership or disposition is unclear; wait for answers before touching those files. Commit only clearly task-owned, verified work. Do not change branches, push, create a PR, or send external messages. Never discard or stash work. Report public progress while working.\n${require('../../robos-lib/commit-completion').instructions}\nTask review instructions: ${JSON.stringify(this.process)}\nConversation:\n${this.messages.slice(-30).map(m=>m.role+': '+m.text).join('\n')}\nReturn JSON with reply, guidance, checkpointReached:false, and questions (concrete questions for the questionnaire, or []).`);
+      const result=await this.runAgent(`You are helping the reviewer ${purpose==='changes'?'implement the requested code changes':'resolve uncommitted changes'} in ${this.workspace}. This is a repository recovery discussion, not a browser walkthrough. For requested code changes, implement and verify them, regenerate affected evidence and walkthroughs, then commit the complete iteration. ${purpose==='changes'?'Use the app and capture real evidence when needed to verify the requested change.':'Do not launch the app or capture screenshots.'} Inspect the branch, status, staged/unstaged diffs, untracked files and recent history. Explain which files belong to this task and which may belong to another task or human. Ask concrete questions through the questions array whenever ownership or disposition is unclear; wait for answers before touching those files. Commit only clearly task-owned, verified work. Do not change branches, push, create a PR, or send external messages. Never discard or stash work. Report public progress while working.\n${require('../../robos-lib/commit-completion').instructions}\nTask review instructions: ${JSON.stringify(this.process)}\nConversation:\n${this.messages.slice(-30).map(m=>m.role+': '+m.text).join('\n')}\nReturn JSON with reply, guidance, checkpointReached:false, and questions (concrete questions for the questionnaire, or []).`);
       if(typeof result.reply!=='string')throw Error('Agent returned an invalid recovery reply.');
       this.pendingQuestions=Array.isArray(result.questions)?result.questions:[];
       this.addMessage({role:'assistant',text:result.reply});
@@ -114,7 +114,8 @@ class DemoSession extends EventEmitter {
     this.publish();return this.state();
   }
   async act(action, text = '') {
-    if(action==='remediate'||(this.remediating&&action==='message'))return this.remediate(text||undefined);
+    if(action==='suggest')return this.remediate(text,'changes');
+    if(action==='remediate'||(this.remediating&&action==='message'))return this.remediate(text||undefined,action==='remediate'?'recovery':this.discussionPurpose);
     if (this.status === 'running') {
       if (action !== 'message') throw new Error('The agent is already working.');
       if (!text.trim() || text.length > 16000) throw new Error('Enter a message of 1–16000 characters.');
@@ -122,7 +123,7 @@ class DemoSession extends EventEmitter {
       this.reportProgress('Steering received — stopping the current action before applying your instructions.');
       this.interruptRun?.(); return this.state();
     }
-    this.remediating=false;
+    this.remediating=false;this.discussionPurpose=null;
     if (!['start', 'restart', 'before', 'feature', 'next', 'explain', 'message', 'retry', 'continue', 'resume'].includes(action)) throw new Error('Unknown demo action.');
     if (action === 'before') {
       if (!this.process.before) throw new Error('No before-change walkthrough configured.');
