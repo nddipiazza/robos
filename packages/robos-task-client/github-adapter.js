@@ -8,7 +8,7 @@
 const { execSync, exec } = require('child_process');
 
 // RobOS owns GitHub identity: the Git client account selected in Preferences → GitHub accounts.
-// Always run gh with the cleaned env (no ambient GH_TOKEN/GITHUB_TOKEN).
+// Resolve that account's saved credential per request; ambient tokens and gh's active login do not choose identity.
 let githubAccounts = null;
 try { githubAccounts = require('../robos-lib/github-accounts'); } catch {}
 
@@ -29,10 +29,30 @@ class GitHubAdapter {
     } catch { this._hostFlag = ''; }
   }
 
+  // Shared asynchronous command path for PR consumers. Never use a shell here.
+  async runGitHubCommand(args, execute = require('node:util').promisify(require('node:child_process').execFile), credentialEnv = host => githubAccounts.gitEnv(host)) {
+    if (!this.useGhCli) throw new Error('This task server uses a pass token. Enable “Use Git client account” in Task Servers; this PR operation does not support pass-token authentication yet.');
+    if (!githubAccounts) throw new Error('RobOS GitHub account library is unavailable.');
+    const host = new URL(this.apiUrl).hostname === 'api.github.com' ? 'github.com' : new URL(this.apiUrl).hostname;
+    const env = await credentialEnv(host);
+    try {
+      const result = await execute('gh', args, {encoding:'utf8',timeout:30000,maxBuffer:16*1024*1024,env});
+      return result.stdout;
+    } catch (error) {
+      // gh pr checks returns 1 for failed checks and 8 for pending checks.
+      if (args[0] === 'pr' && args[1] === 'checks' && [1,8].includes(error.code) && error.stdout) return error.stdout;
+      throw error;
+    }
+  }
+
   _gh(args, opts = {}) {
     const timeout = opts.timeout || 15000;
+    if (!this.useGhCli) throw new Error('Enable “Use Git client account” in Task Servers; pass-token authentication is not supported by this adapter yet.');
+    if (!githubAccounts) throw new Error('RobOS GitHub account library is unavailable.');
+    const host = new URL(this.apiUrl).hostname === 'api.github.com' ? 'github.com' : new URL(this.apiUrl).hostname;
+    const env = githubAccounts.gitEnvSync(host, {...process.env,...opts.env});
     try {
-      return execSync(`gh ${args}`, { encoding: 'utf8', timeout, maxBuffer: 16 * 1024 * 1024, env: { ...(githubAccounts ? githubAccounts.cleanEnv() : process.env), ...(opts.env || {}) } }).trim();
+      return execSync(`gh ${args}`, { encoding: 'utf8', timeout, maxBuffer: 16 * 1024 * 1024, env }).trim();
     } catch (e) {
       throw new Error((e.stderr || e.message || '').toString().trim());
     }
@@ -74,7 +94,7 @@ class GitHubAdapter {
 
   async getIssue(number) {
     const issue = this._ghJson(
-      `issue view ${number} --repo ${this._repoSlug} --json number,title,state,body,labels,assignees,comments,createdAt,updatedAt,milestone`
+      `issue view ${number} --repo ${this._repoSlug} --json number,title,state,body,labels,assignees,comments,createdAt,updatedAt,milestone,url`
     );
     return this._mapIssue(issue);
   }
@@ -278,7 +298,7 @@ class GitHubAdapter {
       created: raw.createdAt,
       updated: raw.updatedAt,
       parent: raw.milestone ? { key: raw.milestone.title, summary: raw.milestone.title } : null,
-      url: `https://github.com/${this._repoSlug}/issues/${raw.number}`,
+      url: raw.url || raw.html_url || `${this.apiUrl.includes('api.github.com') ? 'https://github.com' : new URL(this.apiUrl).origin}/${this._repoSlug}/issues/${raw.number}`,
       comments: raw.comments,
     };
   }

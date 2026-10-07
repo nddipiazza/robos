@@ -1336,3 +1336,26 @@ ipcMain.handle('review-evidence-image',(_,id)=>{try {
 }catch(e){return {ok:false,error:e.message};}});
 
 ipcMain.handle('review-message-members', async (_,serverId) => {try{return {ok:true,members:await projectReviewSettings.members(serverId)};}catch(e){return {ok:false,error:e.message};}});
+
+async function openSavedReview(id,replace=false) {
+ try {
+  const row=require('./lib/task-picker').savedTasks().find(row=>row.id===id);
+  if(!row?.available)throw Error('The saved task checkout is unavailable.');
+  const env={...process.env,ROBOS_LOCAL_REVIEW:row.manifest};
+  delete env.ELECTRON_RUN_AS_NODE;delete env.ROBOS_REVIEW_URL;delete env.ROBOS_REVIEW_STAGE;
+  const child=require('node:child_process').spawn(process.execPath,[__dirname,'--no-sandbox','--disable-gpu'],{env,detached:true,stdio:'ignore'});
+  await new Promise((resolve,reject)=>{child.once('spawn',resolve);child.once('error',reject);});child.unref();if(replace)win.close();return {ok:true};
+ } catch(error) { return {ok:false,error:error.message}; }
+}
+
+
+ipcMain.handle('review-epic-navigation',async()=>{try{return {ok:true,navigation:localReview?await require('./lib/epic-navigation').reviewNeighbors(localReview):null};}catch(error){return {ok:false,error:error.message};}});
+ipcMain.handle('open-epic-neighbor',async(_,direction)=>{
+ try{
+  if(!['previous','next'].includes(direction))throw Error('Choose Previous or Next.');
+  if(demoSession?.status==='running'||ciRecovery?.busy||reviewPublisher?.pending||prState?.pending)throw Error('Wait for the current review action to finish before changing tasks.');
+  const navigation=await require('./lib/epic-navigation').reviewNeighbors(localReview);
+  const task=navigation?.[direction];if(!task?.reviewId)throw Error('This task has no local review yet.');
+  return await openSavedReview(task.reviewId,true);
+ }catch(error){return {ok:false,error:error.message};}
+});
