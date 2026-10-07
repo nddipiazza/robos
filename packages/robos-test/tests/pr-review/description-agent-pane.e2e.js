@@ -28,3 +28,31 @@ test('description editing and code suggestions share one resizable conversation 
 });
 
 test('Description is the first review tab',()=>{const html=require('node:fs').readFileSync(path.resolve(__dirname,'../../../pr-review/renderer/index.html'),'utf8');const nav=html.slice(html.indexOf('id="theater-stepper"'));assert.equal(nav.match(/id="step-btn-(\d+)"/)[1],'9');});
+
+test('Save description finds an existing PR when the window still thinks it is local',async()=>{
+ const browser=await chromium.launch({headless:true,executablePath:'/usr/bin/google-chrome'});
+ try{
+  const p=await browser.newPage();
+  await p.route('http://review.test/',r=>r.fulfill({body:'<html></html>',contentType:'text/html'}));await p.goto('http://review.test/');
+  await p.setContent('<button id="step-btn-8"><span class="step-label"></span></button><section id="stage-9"></section><section id="stage-8"></section>');
+  await require('./editor-test-helper')(p);
+  await p.evaluate(()=>{
+   window.remote={local:true,published:true,isAuthor:true,state:'OPEN',number:511,title:'GitHub title',body:'Old GitHub description',repo:'org/repo',headBranch:'codex/task'};
+   window.api={
+    refreshReviewPR:async()=>window.lookupError?{ok:false,error:'GitHub unavailable'}:{ok:true,pr:window.remote},
+    updateReviewPR:async input=>{window.savedPR=input;return {ok:true,pr:{...window.remote,body:input.body}};}
+   };
+  });
+  await p.addScriptTag({path:path.resolve(__dirname,'../../../pr-review/renderer/publish-ui.js')});
+  const setup=()=>p.evaluate(()=>window.configureReviewPublish({local:true,published:false,title:'Local title',body:'Local description',repo:'org/repo',headBranch:'codex/task'}));
+  await setup();
+  await p.evaluate(()=>document.querySelector('review-markdown-editor').value='My edited description');
+  await p.getByRole('button',{name:'Save description',exact:true}).click();
+  await p.getByRole('status').filter({hasText:'Description saved to GitHub.'}).waitFor();
+  assert.deepEqual(await p.evaluate(()=>window.savedPR),{title:'GitHub title',body:'My edited description',expectedTitle:'GitHub title',expectedBody:'Old GitHub description'});
+  await setup();await p.evaluate(()=>{window.lookupError=true;window.savedPR=null;});
+  await p.getByRole('button',{name:'Save description',exact:true}).click();
+  await p.getByRole('status').filter({hasText:'GitHub unavailable'}).waitFor();
+  assert.equal(await p.evaluate(()=>window.savedPR),null);
+ }finally{await browser.close();}
+});
