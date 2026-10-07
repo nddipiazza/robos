@@ -742,7 +742,8 @@ function renderTheaterHeader(targetPR, ctx) {
   const url = pr.url || ctx?.pr?.url || `https://github.com/${repo}/pull/${number}`;
   const headBranch = pr.headBranch || ctx?.pr?.headBranch || 'feature/branch';
   const baseBranch = pr.baseBranch || ctx?.pr?.baseBranch || 'main';
-  const author = pr.author || ctx?.pr?.author || 'robos';
+  const rawAuthor = pr.author || ctx?.pr?.author;
+  const author = typeof rawAuthor === 'string' ? rawAuthor : rawAuthor?.login || '';
   const state = (pr.state || 'open').toLowerCase();
   const additions = pr.additions !== undefined ? pr.additions : (ctx?.pr?.additions || 0);
   const deletions = pr.deletions !== undefined ? pr.deletions : (ctx?.pr?.deletions || 0);
@@ -815,7 +816,11 @@ function renderTheaterHeader(targetPR, ctx) {
   if (baseEl) baseEl.textContent = baseBranch;
 
   const authorEl = document.getElementById('theater-pr-author');
-  if (authorEl) authorEl.textContent = `@${author}`;
+  if (authorEl) {
+    authorEl.textContent = author ? `@${author}` : '';
+    const chip = authorEl.closest('.author-chip');
+    if (chip) chip.hidden = !pr.published && !!pr.local || !author || /^@?robos$/i.test(author);
+  }
 
   const addsEl = document.getElementById('theater-pr-adds');
   if (addsEl) addsEl.textContent = `+${additions}`;
