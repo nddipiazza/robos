@@ -1,0 +1,114 @@
+[
+  {
+    "@id": "urn:robos:evidence-template:mcp-response:v1",
+    "@type": "robos:EvidenceTemplate",
+    "robos:package": "testing",
+    "dcterms:title": "MCP request and response",
+    "dcterms:description": "Use for MCP/API behavior. Capture the exact prompt or request and actual before/after replies against the same data. Label local, replayed and production observations.",
+    "robos:version": 1,
+    "robos:webElement": "robos-evidence-transcript",
+    "robos:collectionInstructions": "Use for MCP/API behavior. Capture the exact prompt or request and actual before/after replies against the same data. Label local, replayed and production observations.",
+    "robos:artifactSlots": [
+      {
+        "id": "request",
+        "name": "Prompt or tool call",
+        "kind": "text",
+        "required": true
+      },
+      {
+        "id": "before",
+        "name": "Before response",
+        "kind": "text",
+        "required": true
+      },
+      {
+        "id": "after",
+        "name": "After response",
+        "kind": "text",
+        "required": true
+      }
+    ],
+    "robos:refersFrom": "https://schema.org/CreativeWork"
+  },
+  {
+    "@id": "urn:robos:evidence-template:product-ui:v1",
+    "@type": "robos:EvidenceTemplate",
+    "robos:package": "testing",
+    "dcterms:title": "Product UI before and after",
+    "dcterms:description": "Use for visible product behavior. Capture real screens before and after the same action, plus the browser assertions.",
+    "robos:version": 1,
+    "robos:webElement": "robos-evidence-gallery",
+    "robos:collectionInstructions": "Use for visible product behavior. Capture real screens before and after the same action, plus the browser assertions.",
+    "robos:artifactSlots": [
+      {
+        "id": "before",
+        "name": "Before screen",
+        "kind": "screenshot",
+        "required": true
+      },
+      {
+        "id": "after",
+        "name": "After screen",
+        "kind": "screenshot",
+        "required": true
+      },
+      {
+        "id": "checks",
+        "name": "Browser checks",
+        "kind": "text",
+        "required": true
+      }
+    ],
+    "robos:refersFrom": "https://schema.org/CreativeWork"
+  },
+  {
+    "@id": "urn:robos:evidence-template:cli-result:v1",
+    "@type": "robos:EvidenceTemplate",
+    "robos:package": "testing",
+    "dcterms:title": "Command and output",
+    "dcterms:description": "Use for CLI and backend changes. Capture the command, its output before and after, exit status and tested revision.",
+    "robos:version": 1,
+    "robos:webElement": "robos-evidence-transcript",
+    "robos:collectionInstructions": "Use for CLI and backend changes. Capture the command, its output before and after, exit status and tested revision.",
+    "robos:artifactSlots": [
+      {
+        "id": "request",
+        "name": "Command",
+        "kind": "text",
+        "required": true
+      },
+      {
+        "id": "before",
+        "name": "Before output",
+        "kind": "text",
+        "required": true
+      },
+      {
+        "id": "after",
+        "name": "After output",
+        "kind": "text",
+        "required": true
+      }
+    ],
+    "robos:refersFrom": "https://schema.org/CreativeWork"
+  },
+  {
+    "@id": "urn:robos:evidence-template:task-checks:v1",
+    "@type": "robos:EvidenceTemplate",
+    "robos:package": "testing",
+    "dcterms:title": "Task checks and artifacts",
+    "dcterms:description": "Use for tasks without a useful before/after comparison. Capture actual execution output for each acceptance check.",
+    "robos:version": 1,
+    "robos:webElement": "robos-evidence-checks",
+    "robos:collectionInstructions": "Use for tasks without a useful before/after comparison. Capture actual execution output for each acceptance check.",
+    "robos:artifactSlots": [
+      {
+        "id": "result",
+        "name": "Observed result",
+        "kind": "text",
+        "required": true
+      }
+    ],
+    "robos:refersFrom": "https://schema.org/CreativeWork"
+  }
+]
