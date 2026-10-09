@@ -596,6 +596,22 @@ class TabletopQAPlayer:
         st = self.get_state()
         return st.get("questObjective", {})
 
+    def complete_quest(self, quit: bool = False) -> dict:
+        self.log("Completing active quest, awarding party bounty, saving state, and closing session...")
+        return self.execute_action("complete_quest", quit=quit)
+
+    def are_quest_objectives_completed(self) -> bool:
+        st = self.get_state()
+        return bool(st.get("questObjectivesCompleted", False) or st.get("areObjectivesCompleted", False))
+
+    def get_quest_objectives(self) -> list:
+        st = self.get_state()
+        return st.get("questObjectives", [])
+
+    def is_game_closed(self) -> bool:
+        st = self.get_state()
+        return bool(st.get("isGameClosed", False) or st.get("gameState") == "closed")
+
     # --- Autonomous AI Demo Helpers ---
     def start_demo(self) -> dict:
         self.log("Starting Autonomous Tabletop AI Demo (Mentor vs Zargon)...")

@@ -4373,6 +4373,38 @@ async function autoBundleAndLaunch(role) {
   }
 }
 
+// Game Exited & Quest Progression Listener
+if (window.robosTabletop?.onGameExited) {
+  window.robosTabletop.onGameExited(async ({ cartridgeSlug }) => {
+    const slug = cartridgeSlug || currentData.currentQuest?.slug || "heroquest-the-trial";
+    console.log(`[robos-tabletop] Game exited for cartridge "${slug}". Checking quest completion...`);
+    setStatus(`Tabletop Player session ended. Checking quest completion for "${slug}"...`);
+
+    try {
+      const res = await window.robosTabletop.checkCartridgeQuestStatus(slug);
+      if (res && res.success && Array.isArray(res.quests)) {
+        const activeQ = currentData.currentQuest || currentData.campaign.quests[currentData.currentQuestIndex || 0];
+        const matched = res.quests.find(q => q.id === activeQ.id || q.slug === activeQ.slug) || res.quests[0];
+
+        if (matched && matched.completed) {
+          console.log(`[robos-tabletop] Active quest "${activeQ.title}" marked completed!`);
+          completeQuest(currentData.currentQuestIndex);
+          setStatus(`🏆 Victory! Completed '${activeQ.title}'. Progressing to next quest...`);
+
+          // Automatically advance to the next quest in the campaign!
+          setTimeout(() => {
+            advanceToNextQuest();
+          }, 800);
+        } else {
+          setStatus(`Tabletop Player session closed. Quest remains in progress.`);
+        }
+      }
+    } catch (err) {
+      console.error("[robos-tabletop] Error checking quest status on game exit:", err);
+    }
+  });
+}
+
 // Action: Bundle Cartridge
 document.getElementById("btn-bundle")?.addEventListener("click", async () => {
   const payload = compileCurrentCartridgePayload();
