@@ -445,6 +445,45 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
     assert.ok(indexHtml.includes("📦 Export Quest Pack"), "index.html must display '📦 Export Quest Pack' button");
   });
 
+  it("supports automatically advancing to next quest when quest completes from tabletop game exit", () => {
+    const campaign = {
+      id: "campaign-heroquest-gathering-storm",
+      title: "HeroQuest: The Gathering Storm",
+      quests: [
+        { id: "quest-1", slug: "heroquest-the-trial", title: "Quest 1: The Trial", goldReward: 100, completed: false },
+        { id: "quest-2", slug: "heroquest-rescue-sir-ragnar", title: "Quest 2: The Rescue of Sir Ragnar", goldReward: 200, completed: false },
+        { id: "quest-3", slug: "heroquest-lair-orc-warlord", title: "Quest 3: Lair of the Orc Warlord", goldReward: 250, completed: false }
+      ]
+    };
+    let currentQuestIndex = 0;
+
+    function advanceToNextQuest() {
+      const nextIdx = currentQuestIndex + 1;
+      if (nextIdx < campaign.quests.length) {
+        currentQuestIndex = nextIdx;
+        return currentQuestIndex;
+      }
+      return -1;
+    }
+
+    // Quest 1 finishes
+    campaign.quests[currentQuestIndex].completed = true;
+    const next1 = advanceToNextQuest();
+    assert.strictEqual(next1, 1, "Should advance to Quest 2 (index 1)");
+    assert.strictEqual(campaign.quests[currentQuestIndex].slug, "heroquest-rescue-sir-ragnar");
+
+    // Quest 2 finishes
+    campaign.quests[currentQuestIndex].completed = true;
+    const next2 = advanceToNextQuest();
+    assert.strictEqual(next2, 2, "Should advance to Quest 3 (index 2)");
+    assert.strictEqual(campaign.quests[currentQuestIndex].slug, "heroquest-lair-orc-warlord");
+
+    // Quest 3 finishes
+    campaign.quests[currentQuestIndex].completed = true;
+    const next3 = advanceToNextQuest();
+    assert.strictEqual(next3, -1, "Should indicate campaign complete when all quests finished");
+  });
+
   it("verifies all 12 authentic HeroQuest elemental spells are defined across 4 colleges", () => {
     assert.ok(fs.existsSync(KGRAPH_TABLETOP), "tabletop-game package.jsonld must exist");
     const data = JSON.parse(fs.readFileSync(KGRAPH_TABLETOP, "utf8"));

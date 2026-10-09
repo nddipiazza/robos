@@ -279,6 +279,19 @@ var quest_objective_briefing_label: Label = null
 var quest_objective_goals_vbox: VBoxContainer = null
 var quest_objective_reward_label: Label = null
 var btn_quest_objective_close: Button = null
+var btn_modal_complete_quest: Button = null
+
+# Quest Objectives On-Screen HUD Tracker
+var quest_objectives_hud: PanelContainer = null
+var quest_hud_body: VBoxContainer = null
+var quest_hud_title_label: Label = null
+var quest_hud_goals_vbox: VBoxContainer = null
+var quest_hud_bounty_label: Label = null
+var btn_hud_complete_quest: Button = null
+var btn_hud_toggle_collapse: Button = null
+var is_quest_hud_collapsed: bool = false
+var is_game_closed: bool = false
+var _quest_completed: bool = false
 
 # RPG Font and Texture Theme Assets
 var font_rpg_cinzel: FontFile = null
@@ -410,6 +423,7 @@ func _ready() -> void:
 	_setup_armory_modal()
 	_setup_game_menu_modal()
 	_setup_quest_objective_modal()
+	_setup_quest_objectives_hud()
 	_setup_turn_overlay_ui()
 	_setup_log_panel()
 	_setup_hero_detail_modal()
@@ -1484,6 +1498,29 @@ func get_rpg_button_stylebox(state: String = "normal", pad_h: int = 16, pad_v: i
 	fb.content_margin_right = pad_h
 	fb.content_margin_top = pad_v
 	fb.content_margin_bottom = pad_v
+	return fb
+
+func get_rpg_complete_quest_stylebox(state: String = "normal") -> StyleBoxFlat:
+	var fb = StyleBoxFlat.new()
+	if state == "hover":
+		fb.bg_color = Color(0.34, 0.25, 0.07, 0.98)
+		fb.border_color = Color(1.0, 0.95, 0.50, 1.0)
+		fb.shadow_color = Color(1.0, 0.85, 0.20, 0.50)
+		fb.shadow_size = 6
+	elif state == "pressed":
+		fb.bg_color = Color(0.20, 0.14, 0.04, 0.98)
+		fb.border_color = Color(0.92, 0.76, 0.26, 1.0)
+	else:
+		fb.bg_color = Color(0.25, 0.18, 0.05, 0.96)
+		fb.border_color = Color(1.0, 0.84, 0.32, 0.95)
+		fb.shadow_color = Color(0.85, 0.70, 0.18, 0.35)
+		fb.shadow_size = 4
+	fb.set_border_width_all(2)
+	fb.set_corner_radius_all(6)
+	fb.content_margin_left = 14
+	fb.content_margin_right = 14
+	fb.content_margin_top = 6
+	fb.content_margin_bottom = 6
 	return fb
 
 func apply_rpg_font_to_label(lbl: Label, is_title: bool = false, font_size: int = 0, color: Color = Color.WHITE, use_medieval: bool = false) -> void:
@@ -2962,6 +2999,10 @@ func is_tile_explored(tile: Vector2i) -> bool:
 	return explored_tiles.has(tile)
 
 func get_game_state() -> String:
+	# 0. Closed: Quest completed and game state closed
+	if is_game_closed:
+		return "closed"
+
 	# 1. Defeat: All living heroes on board are dead (0 BP)
 	var living_heroes = heroes.filter(func(h): return int(h.get("current_bp", 0)) > 0 and bool(h.get("is_on_board", false)))
 	if not heroes.is_empty() and living_heroes.is_empty():
@@ -4548,7 +4589,23 @@ func _setup_quest_objective_modal() -> void:
 	reward_panel.add_child(reward_hbox)
 	vbox.add_child(reward_panel)
 
-	# 6. Action Button
+	# 6. Action Buttons
+	btn_modal_complete_quest = Button.new()
+	btn_modal_complete_quest.name = "BtnModalCompleteQuest"
+	btn_modal_complete_quest.text = "🏆 COMPLETE QUEST"
+	btn_modal_complete_quest.tooltip_text = "All objectives fulfilled! Complete the quest, award party bounty, save progress, and return to Tabletop Studio."
+	btn_modal_complete_quest.custom_minimum_size = Vector2(0, 42)
+	btn_modal_complete_quest.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	btn_modal_complete_quest.visible = false
+	btn_modal_complete_quest.add_theme_stylebox_override("normal", get_rpg_complete_quest_stylebox("normal"))
+	btn_modal_complete_quest.add_theme_stylebox_override("hover", get_rpg_complete_quest_stylebox("hover"))
+	btn_modal_complete_quest.add_theme_stylebox_override("pressed", get_rpg_complete_quest_stylebox("pressed"))
+	apply_rpg_font_to_button(btn_modal_complete_quest, 14, Color(1.0, 0.96, 0.82, 1.0))
+	btn_modal_complete_quest.pressed.connect(func():
+		complete_active_quest(true)
+	)
+	vbox.add_child(btn_modal_complete_quest)
+
 	btn_quest_objective_close = Button.new()
 	btn_quest_objective_close.name = "BtnCloseQuestObjective"
 	btn_quest_objective_close.text = "RETURN TO QUEST"
@@ -4609,13 +4666,362 @@ func _update_quest_objective_content() -> void:
 			if child.name != "GoalsTitle":
 				quest_objective_goals_vbox.remove_child(child)
 				child.queue_free()
-		var goals = obj.get("primaryGoals", [])
-		for g in goals:
-			var lbl = Label.new()
-			lbl.text = "• %s" % str(g)
-			lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			apply_rpg_font_to_label(lbl, false, 12, Color(0.90, 0.92, 0.96, 1.0))
-			quest_objective_goals_vbox.add_child(lbl)
+		var goals = get_quest_objectives()
+		for item in goals:
+			var hbox = HBoxContainer.new()
+			hbox.name = "Goal_" + str(item.get("id", "goal"))
+			hbox.add_theme_constant_override("separation", 8)
+
+			var is_done = bool(item.get("completed", false))
+
+			var status_lbl = Label.new()
+			status_lbl.name = "Status"
+			status_lbl.text = "[OK]" if is_done else "[ ]"
+			var st_col = Color(0.40, 0.90, 0.50, 1.0) if is_done else Color(0.70, 0.65, 0.50, 0.85)
+			apply_rpg_font_to_label(status_lbl, true, 11, st_col)
+			hbox.add_child(status_lbl)
+
+			var desc_lbl = Label.new()
+			desc_lbl.name = "Desc"
+			desc_lbl.text = str(item.get("title", ""))
+			desc_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			var txt_col = Color(0.85, 0.92, 0.88, 1.0) if is_done else Color(0.90, 0.92, 0.96, 1.0)
+			apply_rpg_font_to_label(desc_lbl, false, 12, txt_col)
+			hbox.add_child(desc_lbl)
+
+			quest_objective_goals_vbox.add_child(hbox)
+
+	var all_done = are_all_quest_objectives_completed()
+	if btn_modal_complete_quest:
+		btn_modal_complete_quest.visible = all_done
+
+func _setup_quest_objectives_hud() -> void:
+	var ui_node = get_node_or_null("UI")
+	if not ui_node:
+		return
+	if ui_node.has_node("QuestObjectivesHUD"):
+		quest_objectives_hud = ui_node.get_node("QuestObjectivesHUD")
+		return
+
+	quest_objectives_hud = PanelContainer.new()
+	quest_objectives_hud.name = "QuestObjectivesHUD"
+	quest_objectives_hud.offset_left = 18.0
+	quest_objectives_hud.offset_top = 16.0
+	quest_objectives_hud.custom_minimum_size = Vector2(340, 0)
+	quest_objectives_hud.size = Vector2(340, 0)
+	quest_objectives_hud.mouse_filter = Control.MOUSE_FILTER_PASS
+
+	var panel_sb = StyleBoxFlat.new()
+	panel_sb.bg_color = Color(0.05, 0.07, 0.12, 0.94)
+	panel_sb.border_color = Color(0.72, 0.60, 0.35, 0.90)
+	panel_sb.set_border_width_all(1)
+	panel_sb.set_corner_radius_all(6)
+	panel_sb.shadow_color = Color(0, 0, 0, 0.65)
+	panel_sb.shadow_size = 4
+	panel_sb.content_margin_left = 12
+	panel_sb.content_margin_top = 10
+	panel_sb.content_margin_right = 12
+	panel_sb.content_margin_bottom = 10
+	quest_objectives_hud.add_theme_stylebox_override("panel", panel_sb)
+
+	var margin = MarginContainer.new()
+	margin.name = "Margin"
+
+	var vbox = VBoxContainer.new()
+	vbox.name = "MainVBox"
+	vbox.add_theme_constant_override("separation", 6)
+
+	var header_hbox = HBoxContainer.new()
+	header_hbox.name = "HeaderHBox"
+	header_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+
+	var header_title = Label.new()
+	header_title.name = "HeaderTitle"
+	header_title.text = "QUEST OBJECTIVES"
+	header_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header_title.add_theme_stylebox_override("normal", get_rpg_title_plaque_stylebox(8, 3))
+	apply_rpg_font_to_label(header_title, true, 12, Color(1.0, 0.88, 0.35, 1.0))
+	header_hbox.add_child(header_title)
+
+	btn_hud_toggle_collapse = Button.new()
+	btn_hud_toggle_collapse.name = "BtnToggleCollapse"
+	btn_hud_toggle_collapse.text = "[-]"
+	btn_hud_toggle_collapse.tooltip_text = "Collapse / Expand Quest Tracker"
+	btn_hud_toggle_collapse.custom_minimum_size = Vector2(28, 22)
+	btn_hud_toggle_collapse.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	apply_rpg_font_to_button(btn_hud_toggle_collapse, 10, Color(0.85, 0.85, 0.90, 1.0))
+	btn_hud_toggle_collapse.pressed.connect(func():
+		is_quest_hud_collapsed = !is_quest_hud_collapsed
+		btn_hud_toggle_collapse.text = "[+]" if is_quest_hud_collapsed else "[-]"
+		if quest_hud_body:
+			quest_hud_body.visible = !is_quest_hud_collapsed
+	)
+	header_hbox.add_child(btn_hud_toggle_collapse)
+	vbox.add_child(header_hbox)
+
+	quest_hud_body = VBoxContainer.new()
+	quest_hud_body.name = "BodyVBox"
+	quest_hud_body.add_theme_constant_override("separation", 6)
+
+	quest_hud_title_label = Label.new()
+	quest_hud_title_label.name = "QuestTitleLabel"
+	quest_hud_title_label.text = "Quest 1: The Trial"
+	apply_rpg_font_to_label(quest_hud_title_label, false, 11, Color(0.78, 0.84, 0.94, 0.90))
+	quest_hud_body.add_child(quest_hud_title_label)
+
+	var goals_panel = PanelContainer.new()
+	goals_panel.name = "GoalsPanel"
+	goals_panel.add_theme_stylebox_override("panel", get_rpg_section_header_stylebox(8, 6))
+
+	quest_hud_goals_vbox = VBoxContainer.new()
+	quest_hud_goals_vbox.name = "GoalsVBox"
+	quest_hud_goals_vbox.add_theme_constant_override("separation", 4)
+	goals_panel.add_child(quest_hud_goals_vbox)
+	quest_hud_body.add_child(goals_panel)
+
+	quest_hud_bounty_label = Label.new()
+	quest_hud_bounty_label.name = "BountyLabel"
+	quest_hud_bounty_label.text = "Imperial Bounty: 100 Gold Coins"
+	apply_rpg_font_to_label(quest_hud_bounty_label, true, 10, Color(1.0, 0.85, 0.3, 0.95))
+	quest_hud_body.add_child(quest_hud_bounty_label)
+
+	btn_hud_complete_quest = Button.new()
+	btn_hud_complete_quest.name = "BtnCompleteQuest"
+	btn_hud_complete_quest.text = "🏆 COMPLETE QUEST"
+	btn_hud_complete_quest.tooltip_text = "All objectives fulfilled! Complete the quest, award party bounty, save progress, and return to Tabletop Studio."
+	btn_hud_complete_quest.custom_minimum_size = Vector2(0, 36)
+	btn_hud_complete_quest.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	btn_hud_complete_quest.visible = false
+	btn_hud_complete_quest.add_theme_stylebox_override("normal", get_rpg_complete_quest_stylebox("normal"))
+	btn_hud_complete_quest.add_theme_stylebox_override("hover", get_rpg_complete_quest_stylebox("hover"))
+	btn_hud_complete_quest.add_theme_stylebox_override("pressed", get_rpg_complete_quest_stylebox("pressed"))
+	apply_rpg_font_to_button(btn_hud_complete_quest, 12, Color(1.0, 0.96, 0.82, 1.0))
+	btn_hud_complete_quest.pressed.connect(func():
+		complete_active_quest(true)
+	)
+	quest_hud_body.add_child(btn_hud_complete_quest)
+
+	vbox.add_child(quest_hud_body)
+	margin.add_child(vbox)
+	quest_objectives_hud.add_child(margin)
+	ui_node.add_child(quest_objectives_hud)
+	_update_quest_objectives_hud()
+
+func _update_quest_objectives_hud() -> void:
+	if not quest_objectives_hud:
+		return
+	var obj_info = get_active_quest_objective()
+	if quest_hud_title_label:
+		quest_hud_title_label.text = str(obj_info.get("title", "HeroQuest Quest"))
+	if quest_hud_bounty_label:
+		quest_hud_bounty_label.text = "Imperial Bounty: %d Gold Coins" % int(obj_info.get("goldReward", 100))
+
+	var objs = get_quest_objectives()
+	if quest_hud_goals_vbox:
+		for c in quest_hud_goals_vbox.get_children():
+			quest_hud_goals_vbox.remove_child(c)
+			c.queue_free()
+
+		for item in objs:
+			var hbox = HBoxContainer.new()
+			hbox.name = "Goal_" + str(item.get("id", "goal"))
+			hbox.add_theme_constant_override("separation", 6)
+
+			var is_done = bool(item.get("completed", false))
+
+			var status_lbl = Label.new()
+			status_lbl.name = "Status"
+			status_lbl.text = "[OK]" if is_done else "[ ]"
+			var st_col = Color(0.40, 0.90, 0.50, 1.0) if is_done else Color(0.70, 0.65, 0.50, 0.85)
+			apply_rpg_font_to_label(status_lbl, true, 10, st_col)
+			hbox.add_child(status_lbl)
+
+			var desc_lbl = Label.new()
+			desc_lbl.name = "Desc"
+			desc_lbl.text = str(item.get("title", ""))
+			desc_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			var txt_col = Color(0.85, 0.92, 0.88, 1.0) if is_done else Color(0.90, 0.92, 0.96, 1.0)
+			apply_rpg_font_to_label(desc_lbl, false, 10, txt_col)
+			hbox.add_child(desc_lbl)
+
+			quest_hud_goals_vbox.add_child(hbox)
+
+	var all_done = are_all_quest_objectives_completed()
+	if btn_hud_complete_quest:
+		btn_hud_complete_quest.visible = all_done
+	if btn_modal_complete_quest:
+		btn_modal_complete_quest.visible = all_done
+
+func get_quest_objectives() -> Array[Dictionary]:
+	var cart = CartridgeManager.active_cartridge
+	var active_q = get_active_quest_objective()
+	var slug = str(active_q.get("slug", CartridgeManager.current_cartridge_slug))
+	var q_id = str(active_q.get("id", "quest-1"))
+	
+	var objs: Array[Dictionary] = []
+	
+	# Boss / Primary Target Check
+	var boss_target = str(active_q.get("bossTarget", "")).to_lower()
+	var living_monsters = monsters.filter(func(m): return bool(m.get("is_alive", false)) and int(m.get("current_bp", 1)) > 0)
+	var any_monster_alive = not living_monsters.is_empty()
+	
+	var is_boss_dead = false
+	if _quest_completed or get_game_state() == "quest_victory":
+		is_boss_dead = true
+	elif boss_target != "":
+		var boss_alive = monsters.any(func(m): 
+			return (boss_target in str(m.get("id", "")).to_lower() or boss_target in str(m.get("name", "")).to_lower()) \
+				and bool(m.get("is_alive", false)) and int(m.get("current_bp", 1)) > 0
+		)
+		is_boss_dead = not boss_alive
+	else:
+		if slug == "heroquest-the-trial" or q_id == "quest-1" or "trial" in slug or slug == "":
+			var verag_alive = monsters.any(func(m):
+				return ("verag" in str(m.get("id", "")).to_lower() or "verag" in str(m.get("name", "")).to_lower()) \
+					and bool(m.get("is_alive", false)) and int(m.get("current_bp", 1)) > 0
+			)
+			is_boss_dead = not verag_alive
+		else:
+			is_boss_dead = not any_monster_alive
+
+	if not any_monster_alive and not monsters.is_empty():
+		is_boss_dead = true
+
+	var obj1_text = "Defeat Orc Warlord Verag in his catacombs"
+	if slug == "heroquest-rescue-sir-ragnar":
+		obj1_text = "Vanquish the dungeon guards and locate Sir Ragnar"
+	elif slug == "heroquest-lair-orc-warlord":
+		obj1_text = "Slay Orc Chieftain Ulag and destroy his vanguard"
+	elif boss_target != "":
+		obj1_text = "Defeat the dungeon commander (%s)" % boss_target.capitalize()
+	elif not monsters.is_empty():
+		obj1_text = "Vanquish all monsters in the dungeon"
+
+	objs.append({
+		"id": "slay_boss",
+		"title": obj1_text,
+		"completed": is_boss_dead,
+		"required": true
+	})
+
+	var rooms_explored = revealed_rooms.size() >= 1 or searched_rooms.size() >= 1 or _quest_completed or get_game_state() == "quest_victory"
+	objs.append({
+		"id": "explore_dungeon",
+		"title": "Explore the ancient chambers and search for hidden treasures",
+		"completed": rooms_explored,
+		"required": true
+	})
+
+	var living_heroes = heroes.filter(func(h): return int(h.get("current_bp", 0)) > 0)
+	var party_surviving = living_heroes.size() > 0
+	objs.append({
+		"id": "party_survival",
+		"title": "Ensure all living heroes survive the trial",
+		"completed": party_surviving,
+		"required": true
+	})
+
+	return objs
+
+func are_all_quest_objectives_completed() -> bool:
+	if _quest_completed:
+		return true
+	if get_game_state() == "quest_victory":
+		return true
+	var objs = get_quest_objectives()
+	for obj in objs:
+		if bool(obj.get("required", true)) and not bool(obj.get("completed", false)):
+			return false
+	return true
+
+func complete_active_quest(quit_on_complete: bool = false) -> Dictionary:
+	var cart = CartridgeManager.active_cartridge
+	var active_q = get_active_quest_objective()
+	var slug = CartridgeManager.current_cartridge_slug
+	if slug == "":
+		slug = "heroquest-the-trial"
+	var q_id = str(active_q.get("id", "quest-1"))
+	var bounty = int(active_q.get("goldReward", 100))
+	
+	# 1. Award gold to living heroes
+	for h in heroes:
+		if int(h.get("current_bp", 0)) > 0:
+			var cur_g = int(h.get("gold", 0))
+			h["gold"] = cur_g + bounty
+
+	# 2. Mark memory cartridge completed
+	var quests = cart.get("quests", [])
+	for q in quests:
+		if q is Dictionary:
+			if str(q.get("slug")) == slug or str(q.get("id")) == q_id or (q == quests[0] and quests.size() > 0):
+				q["completed"] = true
+
+	# 3. Mark flags and state
+	_quest_completed = true
+	is_game_closed = true
+
+	# 4. Save game state
+	auto_save_game()
+
+	# 5. Persist to cartridge on disk
+	_save_cartridge_quest_completion(q_id)
+
+	_log("🏆 [QUEST COMPLETE] Quest '%s' successfully completed! Awarded %d gold bounty to party." % [str(active_q.get("title", "The Trial")), bounty])
+	_log("💾 Game state saved and marked as CLOSED.")
+
+	_update_ui()
+
+	if quit_on_complete or not is_headless_mode():
+		_log("🚪 Returning to RobOS Tabletop Studio...")
+		get_tree().create_timer(1.0).timeout.connect(func():
+			get_tree().quit(0)
+		)
+
+	return {
+		"success": true,
+		"gameState": "closed",
+		"isGameClosed": true,
+		"isQuestCompleted": true,
+		"bountyAwarded": bounty,
+		"questId": q_id,
+		"questSlug": slug
+	}
+
+func _save_cartridge_quest_completion(quest_id: String) -> void:
+	var slug = CartridgeManager.current_cartridge_slug
+	if slug == "":
+		slug = "heroquest-the-trial"
+	var paths = [
+		"res://cartridges/" + slug + ".cartridge.json",
+		"user://cartridges/" + slug + ".cartridge.json"
+	]
+	for p in paths:
+		if FileAccess.file_exists(p):
+			var f_read = FileAccess.open(p, FileAccess.READ)
+			if f_read:
+				var txt = f_read.get_as_text()
+				f_read.close()
+				var parsed = JSON.parse_string(txt)
+				if parsed is Dictionary and parsed.has("quests"):
+					var q_list = parsed.get("quests", [])
+					var updated = false
+					for q_entry in q_list:
+						if q_entry is Dictionary:
+							if str(q_entry.get("id")) == quest_id or str(q_entry.get("slug")) == slug:
+								q_entry["completed"] = true
+								updated = true
+							elif quest_id == "quest-1" and q_list.size() > 0 and q_entry == q_list[0]:
+								q_entry["completed"] = true
+								updated = true
+					if updated:
+						var f_write = FileAccess.open(p, FileAccess.WRITE)
+						if f_write:
+							f_write.store_string(JSON.stringify(parsed, "  "))
+							f_write.close()
+							print("[TabletopWorld] Persisted quest completion to cartridge: ", p)
+							break
 
 
 
@@ -9621,6 +10027,7 @@ func _update_demo_button_ui() -> void:
 
 func _update_ui() -> void:
 	_update_demo_button_ui()
+	_update_quest_objectives_hud()
 	var role_name = "Player Mode (Playing Heroes)" if current_role == "player" else "Game Master Mode (Zargon GM)"
 	if title_label:
 		title_label.text = "HEROQUEST"
@@ -13002,6 +13409,17 @@ func get_telemetry_state() -> Dictionary:
 		"questObjectiveModalOpen": is_quest_objective_open(),
 		"isQuestObjectiveOpen": is_quest_objective_open(),
 		"questObjective": get_active_quest_objective(),
+		"questObjectives": get_quest_objectives(),
+		"areObjectivesCompleted": are_all_quest_objectives_completed(),
+		"questObjectivesCompleted": are_all_quest_objectives_completed(),
+		"isGameClosed": is_game_closed,
+		"isQuestCompleted": _quest_completed,
+		"questObjectivesHUD": {
+			"visible": quest_objectives_hud.visible if quest_objectives_hud else false,
+			"collapsed": is_quest_hud_collapsed,
+			"hasCompleteQuestButton": (btn_hud_complete_quest != null and btn_hud_complete_quest.visible),
+			"objectivesCount": get_quest_objectives().size()
+		},
 		"hasSaveGame": has_saved_game(),
 		"saveFilePath": get_save_file_path(),
 		"isDemoActive": CartridgeManager.auto_play_enabled,
@@ -13767,10 +14185,12 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 					if not found_st:
 						story_triggers.append(st_patch.duplicate(true))
 
-			if action_data.has("revealedRooms") and action_data.revealedRooms is Array:
-				revealed_rooms.clear()
-				for r in action_data.revealedRooms:
-					revealed_rooms.append(str(r))
+			if action_data.has("revealedRooms") or action_data.has("revealed_rooms"):
+				var r_rooms = action_data.get("revealedRooms", action_data.get("revealed_rooms", []))
+				if r_rooms is Array:
+					revealed_rooms.clear()
+					for r in r_rooms:
+						revealed_rooms.append(str(r))
 			if action_data.has("discoveredMonsterIds") or action_data.has("discovered_monster_ids"):
 				var dm_arr = action_data.get("discoveredMonsterIds", action_data.get("discovered_monster_ids", []))
 				if dm_arr is Array:
@@ -13843,6 +14263,11 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			return { "success": true, "quest_objective_open": is_quest_objective_open(), "objective": get_active_quest_objective() }
 		"get_quest_objective", "get_active_quest_objective":
 			return { "success": true, "objective": get_active_quest_objective() }
+		"complete_quest", "complete_active_quest", "finish_quest":
+			var should_quit = bool(action_data.get("quit", false))
+			return complete_active_quest(should_quit)
+		"get_quest_objectives":
+			return { "success": true, "objectives": get_quest_objectives(), "areCompleted": are_all_quest_objectives_completed() }
 		"open_game_menu", "show_game_menu":
 			open_game_menu()
 			return { "success": true, "menu_open": true }

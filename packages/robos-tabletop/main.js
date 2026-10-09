@@ -209,13 +209,43 @@ ipcMain.handle("tabletop:launch-game", async (_event, payload) => {
     child.stdout?.on("data", (data) => console.log(`[tabletop-game] ${data}`));
     child.stderr?.on("data", (data) => console.error(`[tabletop-game:err] ${data}`));
     child.on("error", (err) => console.error(`[tabletop-game:proc-err] ${err}`));
-    child.on("exit", (code, signal) => console.log(`[tabletop-game:exit] code=${code} signal=${signal}`));
+    child.on("exit", (code, signal) => {
+      console.log(`[tabletop-game:exit] code=${code} signal=${signal}`);
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send("tabletop:game-exited", {
+          code,
+          signal,
+          cartridgeSlug: slug,
+          role: role
+        });
+      }
+    });
 
     return {
       success: true,
       pid: child.pid,
       cartridge: slug,
       role: role
+    };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+// IPC: Check Cartridge Quest Status
+ipcMain.handle("tabletop:check-cartridge-quest-status", async (_event, slug) => {
+  try {
+    const cartSlug = slug || "heroquest-the-trial";
+    const cartPath = path.join(TABLETOP_GAME_DIR, "cartridges", `${cartSlug}.cartridge.json`);
+    if (!fs.existsSync(cartPath)) {
+      return { success: false, error: `Cartridge file not found: ${cartPath}` };
+    }
+    const data = JSON.parse(fs.readFileSync(cartPath, "utf8"));
+    return {
+      success: true,
+      cartridgeSlug: cartSlug,
+      quests: data.quests || [],
+      header: data.header || {}
     };
   } catch (err) {
     return { success: false, error: err.message };
