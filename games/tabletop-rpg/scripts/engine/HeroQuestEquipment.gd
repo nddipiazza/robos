@@ -159,6 +159,24 @@ const CONSUMABLES: Dictionary = {
 		"description": "Doubles movement or grants swift speed on your turn.",
 		"cost": 250
 	},
+	"potion_defense": {
+		"id": "potion_defense",
+		"name": "Potion of Defense",
+		"type": "consumable",
+		"defense_bonus": 2,
+		"icon": "🛡️",
+		"description": "A liquid iron elixir granting +2 Defend Dice on your next defense.",
+		"cost": 300
+	},
+	"potion_of_defense": {
+		"id": "potion_of_defense",
+		"name": "Potion of Defense",
+		"type": "consumable",
+		"defense_bonus": 2,
+		"icon": "🛡️",
+		"description": "A liquid iron elixir granting +2 Defend Dice on your next defense.",
+		"cost": 300
+	},
 	"holy_water": {
 		"id": "holy_water",
 		"name": "Holy Water",

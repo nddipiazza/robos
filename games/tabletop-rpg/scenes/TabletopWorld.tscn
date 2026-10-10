@@ -1120,9 +1120,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -550.0
-offset_top = -375.0
+offset_top = -390.0
 offset_right = 550.0
-offset_bottom = 375.0
+offset_bottom = 390.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -1192,48 +1192,45 @@ theme_override_colors/font_color = Color(0.85, 0.88, 0.92, 0.9)
 text = "Good Treasures: 12\nHazards & Wandering Foes: 4"
 horizontal_alignment = 1
 
-[node name="CardStageControl" type="Control" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox"]
+[node name="CardColumn" type="VBoxContainer" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-clip_contents = false
+theme_override_constants/separation = 12
+alignment = 1
 
-[node name="DrawnCard" type="PanelContainer" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl"]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -210.0
-offset_top = -280.0
-offset_right = 210.0
-offset_bottom = 280.0
-grow_horizontal = 2
-grow_vertical = 2
-pivot_offset = Vector2(210, 280)
-
-[node name="CardMargin" type="MarginContainer" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard"]
+[node name="CardStageControl" type="CenterContainer" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardColumn"]
 layout_mode = 2
-theme_override_constants/margin_left = 28
-theme_override_constants/margin_top = 24
-theme_override_constants/margin_right = 28
-theme_override_constants/margin_bottom = 24
+size_flags_horizontal = 3
+size_flags_vertical = 3
 
-[node name="CardVBox" type="VBoxContainer" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin"]
+[node name="DrawnCard" type="PanelContainer" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardColumn/CardStageControl"]
+custom_minimum_size = Vector2(400, 560)
+layout_mode = 2
+pivot_offset = Vector2(200, 280)
+
+[node name="CardMargin" type="MarginContainer" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardColumn/CardStageControl/DrawnCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 50
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 36
+
+[node name="CardVBox" type="VBoxContainer" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardColumn/CardStageControl/DrawnCard/CardMargin"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="CardHeader" type="HBoxContainer" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox"]
+[node name="CardHeader" type="HBoxContainer" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardColumn/CardStageControl/DrawnCard/CardMargin/CardVBox"]
+visible = false
 layout_mode = 2
 
-[node name="CardTypeBadge" type="Label" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox/CardHeader"]
+[node name="CardTypeBadge" type="Label" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardColumn/CardStageControl/DrawnCard/CardMargin/CardVBox/CardHeader"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
 theme_override_colors/font_color = Color(0.4, 0.9, 0.6, 1)
 text = "[TREASURE]"
 
-[node name="CardSource" type="Label" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox/CardHeader"]
+[node name="CardSource" type="Label" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardColumn/CardStageControl/DrawnCard/CardMargin/CardVBox/CardHeader"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 11
@@ -1241,58 +1238,63 @@ theme_override_colors/font_color = Color(0.7, 0.75, 0.85, 0.8)
 text = "HeroQuest Treasure Deck"
 horizontal_alignment = 2
 
-[node name="CardTitle" type="Label" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox"]
+[node name="CardTitle" type="Label" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardColumn/CardStageControl/DrawnCard/CardMargin/CardVBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 17
 text = "Potion of Healing"
+horizontal_alignment = 1
 
-[node name="IllustrationFrame" type="PanelContainer" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox"]
+[node name="IllustrationFrame" type="PanelContainer" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardColumn/CardStageControl/DrawnCard/CardMargin/CardVBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 190)
+custom_minimum_size = Vector2(0, 160)
 
-[node name="CardIllustration" type="TextureRect" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox/IllustrationFrame"]
+[node name="CardIllustration" type="TextureRect" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardColumn/CardStageControl/DrawnCard/CardMargin/CardVBox/IllustrationFrame"]
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 6
 
-[node name="CardDescription" type="RichTextLabel" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox"]
+[node name="CardDescription" type="Label" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardColumn/CardStageControl/DrawnCard/CardMargin/CardVBox"]
 layout_mode = 2
-size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 13
-bbcode_enabled = true
+custom_minimum_size = Vector2(336, 0)
+theme_override_font_sizes/font_size = 11
 text = "Card description..."
+autowrap_mode = 2
+horizontal_alignment = 1
 
-[node name="CardFlavor" type="Label" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox"]
+[node name="CardFlavor" type="Label" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardColumn/CardStageControl/DrawnCard/CardMargin/CardVBox"]
+visible = false
 layout_mode = 2
 theme_override_font_sizes/font_size = 11
 theme_override_colors/font_color = Color(0.8, 0.65, 0.45, 0.9)
 text = "Flavor text..."
 autowrap_mode = 2
+horizontal_alignment = 1
 
-[node name="OutcomeBanner" type="PanelContainer" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox"]
+[node name="OutcomeBanner" type="PanelContainer" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardColumn/CardStageControl/DrawnCard/CardMargin/CardVBox"]
 layout_mode = 2
 
-[node name="OutcomeMargin" type="MarginContainer" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox/OutcomeBanner"]
+[node name="OutcomeMargin" type="MarginContainer" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardColumn/CardStageControl/DrawnCard/CardMargin/CardVBox/OutcomeBanner"]
 layout_mode = 2
-theme_override_constants/margin_left = 8
-theme_override_constants/margin_top = 4
-theme_override_constants/margin_right = 8
-theme_override_constants/margin_bottom = 4
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 6
 
-[node name="OutcomeText" type="Label" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardStageControl/DrawnCard/CardMargin/CardVBox/OutcomeBanner/OutcomeMargin"]
+[node name="OutcomeText" type="Label" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardColumn/CardStageControl/DrawnCard/CardMargin/CardVBox/OutcomeBanner/OutcomeMargin"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 10
 text = "Rule: Awarded to Hero. Card is permanently discarded from the deck for the quest."
 autowrap_mode = 2
+horizontal_alignment = 1
 
-[node name="ButtonBox" type="HBoxContainer" parent="UI/TreasureModal/Card/Margin/VBox"]
+[node name="ButtonBox" type="HBoxContainer" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardColumn"]
 layout_mode = 2
-theme_override_constants/separation = 12
+alignment = 1
 
-[node name="BtnResolve" type="Button" parent="UI/TreasureModal/Card/Margin/VBox/ButtonBox"]
+[node name="BtnResolve" type="Button" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardColumn/ButtonBox"]
 layout_mode = 2
-size_flags_horizontal = 3
-custom_minimum_size = Vector2(0, 38)
+size_flags_horizontal = 4
+custom_minimum_size = Vector2(400, 42)
 text = "Claim Treasure (Space / Enter)"
 
 
