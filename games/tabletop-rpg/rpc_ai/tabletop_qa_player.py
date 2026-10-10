@@ -424,6 +424,33 @@ class TabletopQAPlayer:
         st = self.get_state()
         return int(st.get("partyTotalGold", 0))
 
+    # --- Wandering Monster Card & Inspector ---
+    def open_wandering_monster(self) -> dict:
+        self.log("Opening Wandering Monster Card inspector modal...")
+        return self.execute_action("show_wandering_monster")
+
+    def show_wandering_monster(self) -> dict:
+        return self.open_wandering_monster()
+
+    def show_wondering_monster(self) -> dict:
+        return self.open_wandering_monster()
+
+    def close_wandering_monster(self) -> dict:
+        self.log("Closing Wandering Monster Card inspector modal...")
+        return self.execute_action("close_wandering_monster")
+
+    def toggle_wandering_monster(self) -> dict:
+        self.log("Toggling Wandering Monster Card inspector modal...")
+        return self.execute_action("toggle_wandering_monster")
+
+    def is_wandering_monster_open(self) -> bool:
+        st = self.get_state()
+        return bool(st.get("isWanderingMonsterCardOpen", st.get("wanderingMonsterCardModalOpen", False)))
+
+    def get_wandering_monster_card(self) -> dict:
+        st = self.get_state()
+        return st.get("wanderingMonsterCard", {})
+
     # --- Elf Spell Draft ---
     def select_elf_element(self, element: str, confirm: bool = True) -> dict:
         self.log(f"Selecting Elf spell element '{element}' (confirm={confirm})...")

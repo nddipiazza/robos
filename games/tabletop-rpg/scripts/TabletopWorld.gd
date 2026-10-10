@@ -252,6 +252,19 @@ var _ai_icon_cache: Dictionary = {}
 var _ai_icon_paths: Dictionary = {}
 
 @onready var btn_armory: Button = _find_action_button("BtnArmory")
+@onready var btn_wandering_monster: Button = _find_action_button("BtnWanderingMonster")
+
+var wandering_monster_modal: ColorRect = null
+var wandering_monster_card: PanelContainer = null
+var wandering_monster_title_label: Label = null
+var wandering_monster_badge_label: Label = null
+var wandering_monster_source_label: Label = null
+var wandering_monster_art_rect: TextureRect = null
+var wandering_monster_desc_label: RichTextLabel = null
+var wandering_monster_flavor_label: Label = null
+var wandering_monster_rule_label: Label = null
+var btn_wandering_monster_close: Button = null
+var btn_wandering_monster_close_header: Button = null
 
 @onready var armory_modal: ColorRect = get_node_or_null("UI/ArmoryModal")
 @onready var armory_card: PanelContainer = get_node_or_null("UI/ArmoryModal/Card")
@@ -471,6 +484,8 @@ func _load_action_icons() -> void:
 		"traps": "res://assets/icons/action_traps.png",
 		"disarm": "res://assets/icons/action_disarm.png",
 		"armory": "res://assets/icons/action_armory.png",
+		"wandering_monster": "res://assets/icons/action_wandering_monster.png",
+		"wondering_monster": "res://assets/icons/action_wandering_monster.png",
 		"summon": "res://assets/icons/action_summon.png",
 		"ai_step": "res://assets/icons/action_ai_step.png",
 		"end_turn": "res://assets/icons/action_end_turn.png",
@@ -509,9 +524,16 @@ func _setup_action_hotbar() -> void:
 		if not btn_scroll_right.pressed.is_connected(_on_scroll_right_pressed):
 			btn_scroll_right.pressed.connect(_on_scroll_right_pressed)
 
+	if not btn_wandering_monster and actions_container:
+		btn_wandering_monster = Button.new()
+		btn_wandering_monster.name = "BtnWanderingMonster"
+		btn_wandering_monster.custom_minimum_size = Vector2(40, 40)
+		btn_wandering_monster.text = "Show Wondering Monster"
+		actions_container.add_child(btn_wandering_monster)
+
 	var btns = [
 		btn_roll, btn_attack, btn_cast_spell, btn_use_item, btn_search,
-		btn_search_traps, btn_disarm_trap, btn_armory, btn_summon, btn_ai_step, btn_end_turn
+		btn_search_traps, btn_disarm_trap, btn_armory, btn_wandering_monster, btn_summon, btn_ai_step, btn_end_turn
 	]
 	for b in btns:
 		if b:
@@ -2051,6 +2073,8 @@ func _setup_ui_signals() -> void:
 		monster_detail_btn_close_header.pressed.connect(close_monster_detail_modal)
 	if btn_armory and not btn_armory.pressed.is_connected(toggle_armory):
 		btn_armory.pressed.connect(toggle_armory)
+	if btn_wandering_monster and not btn_wandering_monster.pressed.is_connected(toggle_wandering_monster_modal):
+		btn_wandering_monster.pressed.connect(toggle_wandering_monster_modal)
 	if btn_armory_close and not btn_armory_close.pressed.is_connected(close_armory):
 		btn_armory_close.pressed.connect(close_armory)
 	if armory_btn_close_header and not armory_btn_close_header.pressed.is_connected(close_armory):
@@ -4739,6 +4763,375 @@ func _update_quest_objective_content() -> void:
 	if btn_modal_complete_quest:
 		btn_modal_complete_quest.visible = all_done
 
+# -----------------------------------------------------------------------------
+# Wandering Monster Modal & Card Inspector
+# -----------------------------------------------------------------------------
+func get_wandering_monster_card_data() -> Dictionary:
+	var cart = CartridgeManager.active_cartridge if CartridgeManager else {}
+	var starting_map_id = cart.get("header", {}).get("startingMap", "heroquest-the-trial")
+	var map_data = cart.get("maps", {}).get(starting_map_id, {})
+	var wm_type = str(map_data.get("wanderingMonster", cart.get("wanderingMonster", "orc"))).to_lower()
+	var wm_name = "Wandering " + wm_type.capitalize()
+
+	var atk = 3
+	var def_d = 2
+	var bp = 1
+	var move_sq = 8
+	var lore_desc = "A brutal green-skinned warrior driven by bloodlust and iron, armed with a notched broadsword and spiked wooden shield."
+
+	match wm_type:
+		"goblin":
+			atk = 2
+			def_d = 1
+			bp = 1
+			move_sq = 10
+			lore_desc = "A cowardly but swift scoundrel armed with a short dagger."
+		"skeleton":
+			atk = 2
+			def_d = 2
+			bp = 1
+			move_sq = 6
+			lore_desc = "An animated ancient warrior wielding a rusted broadsword."
+		"zombie":
+			atk = 2
+			def_d = 3
+			bp = 1
+			move_sq = 4
+			lore_desc = "A rotting corpse driven by dread necromancy."
+		"mummy":
+			atk = 3
+			def_d = 4
+			bp = 2
+			move_sq = 4
+			lore_desc = "An ancient embalmed guardian cursed with dark longevity."
+		"fimir":
+			atk = 3
+			def_d = 3
+			bp = 2
+			move_sq = 6
+			lore_desc = "A terrifying cyclopean swamp-demon wielding a heavy stone battleaxe."
+		"chaos_warrior":
+			atk = 4
+			def_d = 4
+			bp = 3
+			move_sq = 7
+			lore_desc = "A towering plate-armored dread knight sworn to Zargon."
+		"gargoyle":
+			atk = 4
+			def_d = 5
+			bp = 3
+			move_sq = 6
+			lore_desc = "A fearsome winged beast of living granite."
+
+	var desc = "A wandering monster ambushes you while your guard is down!\n\nIn this quest, the Wandering Monster is an [b][color=#ffb74d]%s[/color][/b].\n%s\n\nWhen drawn from the Treasure Deck during a room search, Zargon places the %s in any square adjacent to the searching hero and it immediately attacks!" % [
+		wm_type.capitalize(), lore_desc, wm_type.capitalize()
+	]
+
+	return {
+		"id": "wandering-monster-card",
+		"type": "wandering_monster",
+		"title": "Wandering Monster!",
+		"icon": "👹",
+		"monster_type": wm_type,
+		"monster_name": wm_name,
+		"attack_dice": atk,
+		"defend_dice": def_d,
+		"body_points": bp,
+		"movement": move_sq,
+		"description": desc,
+		"flavor": "A guttural roar echoes as an enemy emerges from the gloom!",
+		"card_rule": "HeroQuest Rule: The Wandering Monster card is returned to the Treasure Deck and shuffled after an ambush."
+	}
+
+func is_wandering_monster_modal_open() -> bool:
+	return wandering_monster_modal != null and wandering_monster_modal.visible
+
+func open_wandering_monster_modal() -> void:
+	if not wandering_monster_modal:
+		_setup_wandering_monster_modal()
+	if not wandering_monster_modal:
+		return
+	_update_wandering_monster_content()
+	wandering_monster_modal.visible = true
+
+	if wandering_monster_card:
+		wandering_monster_card.pivot_offset = Vector2(215.0, 300.0)
+		wandering_monster_card.scale = Vector2(0.8, 0.8)
+		wandering_monster_card.modulate.a = 0.0
+		var tween = create_tween()
+		tween.set_parallel(true)
+		tween.tween_property(wandering_monster_card, "scale", Vector2(1.0, 1.0), 0.30).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tween.tween_property(wandering_monster_card, "modulate:a", 1.0, 0.20)
+
+	var wm_data = get_wandering_monster_card_data()
+	_log("[WANDERING MONSTER] Showing Wandering Monster card: %s (Atk: %d, Def: %d, BP: %d)." % [
+		wm_data.get("monster_name", "Wandering Monster"),
+		int(wm_data.get("attack_dice", 3)),
+		int(wm_data.get("defend_dice", 2)),
+		int(wm_data.get("body_points", 1))
+	])
+	_update_ui()
+
+func close_wandering_monster_modal() -> void:
+	if wandering_monster_modal:
+		wandering_monster_modal.visible = false
+	_update_ui()
+
+func toggle_wandering_monster_modal() -> void:
+	if is_wandering_monster_modal_open():
+		close_wandering_monster_modal()
+	else:
+		open_wandering_monster_modal()
+
+func _setup_wandering_monster_modal() -> void:
+	var ui_node = get_node_or_null("UI")
+	if not ui_node:
+		return
+	if ui_node.has_node("WanderingMonsterModal"):
+		wandering_monster_modal = ui_node.get_node("WanderingMonsterModal")
+		return
+
+	_load_treasure_card_assets()
+
+	wandering_monster_modal = ColorRect.new()
+	wandering_monster_modal.name = "WanderingMonsterModal"
+	wandering_monster_modal.visible = false
+	wandering_monster_modal.color = Color(0.02, 0.03, 0.06, 0.85)
+	wandering_monster_modal.set_anchors_preset(Control.PRESET_FULL_RECT)
+	wandering_monster_modal.mouse_filter = Control.MOUSE_FILTER_STOP
+
+	if tex_rpg_menu_dungeon_bg:
+		var dungeon_bg = TextureRect.new()
+		dungeon_bg.name = "DungeonBackdrop"
+		dungeon_bg.texture = tex_rpg_menu_dungeon_bg
+		dungeon_bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		dungeon_bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		dungeon_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+		dungeon_bg.modulate = Color(0.48, 0.48, 0.55, 0.85)
+		dungeon_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		wandering_monster_modal.add_child(dungeon_bg)
+
+	wandering_monster_modal.gui_input.connect(func(ev: InputEvent):
+		if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
+			close_wandering_monster_modal()
+	)
+
+	wandering_monster_card = PanelContainer.new()
+	wandering_monster_card.name = "Card"
+	wandering_monster_card.set_anchors_preset(Control.PRESET_CENTER)
+	wandering_monster_card.custom_minimum_size = Vector2(430, 600)
+	wandering_monster_card.offset_left = -215
+	wandering_monster_card.offset_top = -300
+	wandering_monster_card.offset_right = 215
+	wandering_monster_card.offset_bottom = 300
+	wandering_monster_card.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	wandering_monster_card.grow_vertical = Control.GROW_DIRECTION_BOTH
+	wandering_monster_card.mouse_filter = Control.MOUSE_FILTER_STOP
+
+	if _card_frame_hazard:
+		var frame_sb = StyleBoxTexture.new()
+		frame_sb.texture = _card_frame_hazard
+		wandering_monster_card.add_theme_stylebox_override("panel", frame_sb)
+	else:
+		wandering_monster_card.add_theme_stylebox_override("panel", get_rpg_dialog_panel_stylebox(32, 28, 32, 28))
+
+	var margin = MarginContainer.new()
+	margin.name = "Margin"
+	margin.add_theme_constant_override("margin_left", 30)
+	margin.add_theme_constant_override("margin_top", 24)
+	margin.add_theme_constant_override("margin_right", 30)
+	margin.add_theme_constant_override("margin_bottom", 24)
+
+	var vbox = VBoxContainer.new()
+	vbox.name = "VBox"
+	vbox.add_theme_constant_override("separation", 8)
+	margin.add_child(vbox)
+
+	# 1. Header (Badge, Source, Close button)
+	var header = HBoxContainer.new()
+	header.name = "Header"
+
+	wandering_monster_badge_label = Label.new()
+	wandering_monster_badge_label.name = "TypeBadge"
+	wandering_monster_badge_label.text = "👹 WANDERING MONSTER AMBUSH 👹"
+	wandering_monster_badge_label.add_theme_stylebox_override("normal", get_rpg_badge_stylebox(Color(0.85, 0.32, 0.20, 0.90), Color(0.18, 0.06, 0.06, 0.92)))
+	apply_rpg_font_to_label(wandering_monster_badge_label, false, 11, Color(1.0, 0.75, 0.40, 1.0))
+	header.add_child(wandering_monster_badge_label)
+
+	wandering_monster_source_label = Label.new()
+	wandering_monster_source_label.name = "Source"
+	wandering_monster_source_label.text = "HeroQuest Treasure Deck"
+	wandering_monster_source_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	wandering_monster_source_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	apply_rpg_font_to_label(wandering_monster_source_label, false, 10, Color(0.85, 0.70, 0.65, 0.8))
+	header.add_child(wandering_monster_source_label)
+
+	btn_wandering_monster_close_header = Button.new()
+	btn_wandering_monster_close_header.name = "BtnCloseHeader"
+	btn_wandering_monster_close_header.text = "✕"
+	btn_wandering_monster_close_header.custom_minimum_size = Vector2(26, 26)
+	btn_wandering_monster_close_header.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	apply_rpg_font_to_button(btn_wandering_monster_close_header, 11, Color(0.85, 0.80, 0.70, 0.9))
+	btn_wandering_monster_close_header.pressed.connect(close_wandering_monster_modal)
+	header.add_child(btn_wandering_monster_close_header)
+
+	vbox.add_child(header)
+
+	# 2. Title Plaque
+	wandering_monster_title_label = Label.new()
+	wandering_monster_title_label.name = "Title"
+	wandering_monster_title_label.text = "Wandering Monster!"
+	wandering_monster_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	wandering_monster_title_label.add_theme_stylebox_override("normal", get_rpg_title_plaque_stylebox(12, 4))
+	apply_rpg_font_to_label(wandering_monster_title_label, true, 20, Color(1.0, 0.92, 0.78, 1.0))
+	vbox.add_child(wandering_monster_title_label)
+
+	# 3. Arched Illustration Frame
+	var ill_frame = PanelContainer.new()
+	ill_frame.name = "IllustrationFrame"
+	ill_frame.custom_minimum_size = Vector2(0, 185)
+	var if_sb = StyleBoxFlat.new()
+	if_sb.bg_color = Color(0.05, 0.04, 0.06, 0.95)
+	if_sb.set_corner_radius_all(6)
+	if_sb.set_border_width_all(2)
+	if_sb.border_color = Color(0.85, 0.32, 0.25, 0.85)
+	ill_frame.add_theme_stylebox_override("panel", if_sb)
+
+	wandering_monster_art_rect = TextureRect.new()
+	wandering_monster_art_rect.name = "CardIllustration"
+	wandering_monster_art_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	wandering_monster_art_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	wandering_monster_art_rect.custom_minimum_size = Vector2(0, 185)
+	wandering_monster_art_rect.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	wandering_monster_art_rect.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	if _card_art_wandering_orc:
+		wandering_monster_art_rect.texture = _card_art_wandering_orc
+	ill_frame.add_child(wandering_monster_art_rect)
+	vbox.add_child(ill_frame)
+
+	# 4. Stats Row
+	var stats_hbox = HBoxContainer.new()
+	stats_hbox.name = "StatsHBox"
+	stats_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	stats_hbox.add_theme_constant_override("separation", 8)
+
+	var stat_keys = [
+		{"name": "Atk", "prefix": "⚔️ "},
+		{"name": "Def", "prefix": "🛡️ "},
+		{"name": "BP", "prefix": "❤️ "},
+		{"name": "Move", "prefix": "👟 "}
+	]
+	for sk in stat_keys:
+		var p_badge = Label.new()
+		p_badge.name = "Badge_" + sk["name"]
+		p_badge.add_theme_stylebox_override("normal", get_rpg_badge_stylebox())
+		apply_rpg_font_to_label(p_badge, true, 11, Color(1.0, 0.85, 0.35, 1.0))
+		stats_hbox.add_child(p_badge)
+	vbox.add_child(stats_hbox)
+
+	# 5. Description
+	wandering_monster_desc_label = RichTextLabel.new()
+	wandering_monster_desc_label.name = "Description"
+	wandering_monster_desc_label.custom_minimum_size = Vector2(0, 80)
+	wandering_monster_desc_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	wandering_monster_desc_label.bbcode_enabled = true
+	if font_rpg_medieval:
+		wandering_monster_desc_label.add_theme_font_override("normal_font", font_rpg_medieval)
+		wandering_monster_desc_label.add_theme_font_override("bold_font", font_rpg_medieval)
+	wandering_monster_desc_label.add_theme_font_size_override("normal_font_size", 12)
+	wandering_monster_desc_label.add_theme_font_size_override("bold_font_size", 12)
+	vbox.add_child(wandering_monster_desc_label)
+
+	# 6. Flavor Text
+	wandering_monster_flavor_label = Label.new()
+	wandering_monster_flavor_label.name = "Flavor"
+	wandering_monster_flavor_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	wandering_monster_flavor_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	apply_rpg_font_to_label(wandering_monster_flavor_label, false, 11, Color(0.88, 0.78, 0.68, 0.95))
+	vbox.add_child(wandering_monster_flavor_label)
+
+	# 7. Rule Banner
+	var rule_panel = PanelContainer.new()
+	rule_panel.name = "RuleBanner"
+	var r_sb = StyleBoxFlat.new()
+	r_sb.bg_color = Color(0.18, 0.06, 0.06, 0.85)
+	r_sb.set_corner_radius_all(5)
+	r_sb.set_border_width_all(1)
+	r_sb.border_color = Color(0.85, 0.35, 0.25, 0.8)
+	rule_panel.add_theme_stylebox_override("panel", r_sb)
+
+	var r_margin = MarginContainer.new()
+	r_margin.add_theme_constant_override("margin_left", 8)
+	r_margin.add_theme_constant_override("margin_top", 4)
+	r_margin.add_theme_constant_override("margin_right", 8)
+	r_margin.add_theme_constant_override("margin_bottom", 4)
+
+	wandering_monster_rule_label = Label.new()
+	wandering_monster_rule_label.name = "RuleText"
+	wandering_monster_rule_label.text = "HeroQuest Rule: The Wandering Monster card is returned to the Treasure Deck and shuffled after an ambush."
+	wandering_monster_rule_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	apply_rpg_font_to_label(wandering_monster_rule_label, false, 11, Color(1.0, 0.65, 0.35, 1.0))
+	r_margin.add_child(wandering_monster_rule_label)
+	rule_panel.add_child(r_margin)
+	vbox.add_child(rule_panel)
+
+	# 8. Button Box (Close Card)
+	var button_box = HBoxContainer.new()
+	button_box.name = "ButtonBox"
+
+	btn_wandering_monster_close = Button.new()
+	btn_wandering_monster_close.name = "BtnClose"
+	btn_wandering_monster_close.text = "Close Card (Space / Enter / ESC)"
+	btn_wandering_monster_close.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_wandering_monster_close.custom_minimum_size = Vector2(0, 36)
+	btn_wandering_monster_close.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	apply_rpg_font_to_button(btn_wandering_monster_close, 13, Color(1.0, 0.88, 0.35, 1.0))
+	btn_wandering_monster_close.pressed.connect(close_wandering_monster_modal)
+	button_box.add_child(btn_wandering_monster_close)
+	vbox.add_child(button_box)
+
+	wandering_monster_card.add_child(margin)
+	wandering_monster_modal.add_child(wandering_monster_card)
+	ui_node.add_child(wandering_monster_modal)
+
+func _update_wandering_monster_content() -> void:
+	var data = get_wandering_monster_card_data()
+	if wandering_monster_title_label:
+		wandering_monster_title_label.text = str(data.get("title", "Wandering Monster!"))
+	if wandering_monster_desc_label:
+		wandering_monster_desc_label.text = "[color=#f2e8dc]%s[/color]" % str(data.get("description", ""))
+	if wandering_monster_flavor_label:
+		wandering_monster_flavor_label.text = "— %s —" % str(data.get("flavor", ""))
+	if wandering_monster_rule_label:
+		wandering_monster_rule_label.text = str(data.get("card_rule", ""))
+
+	var stats_hbox = wandering_monster_card.find_child("StatsHBox", true, false) if wandering_monster_card else null
+	if stats_hbox:
+		var atk_l = stats_hbox.get_node_or_null("Badge_Atk") as Label
+		if atk_l:
+			atk_l.text = "⚔️ %d Attack" % int(data.get("attack_dice", 3))
+		var def_l = stats_hbox.get_node_or_null("Badge_Def") as Label
+		if def_l:
+			def_l.text = "🛡️ %d Defend" % int(data.get("defend_dice", 2))
+		var bp_l = stats_hbox.get_node_or_null("Badge_BP") as Label
+		if bp_l:
+			bp_l.text = "❤️ %d BP" % int(data.get("body_points", 1))
+		var mv_l = stats_hbox.get_node_or_null("Badge_Move") as Label
+		if mv_l:
+			mv_l.text = "👟 %d Move" % int(data.get("movement", 8))
+
+	if not _card_art_wandering_orc or not _card_frame_hazard:
+		_load_treasure_card_assets()
+
+	if wandering_monster_card and _card_frame_hazard:
+		var frame_sb = StyleBoxTexture.new()
+		frame_sb.texture = _card_frame_hazard
+		wandering_monster_card.add_theme_stylebox_override("panel", frame_sb)
+
+	if wandering_monster_art_rect and _card_art_wandering_orc:
+		wandering_monster_art_rect.texture = _card_art_wandering_orc
+
+
 func _setup_quest_objectives_hud() -> void:
 	var ui_node = get_node_or_null("UI")
 	if not ui_node:
@@ -6384,6 +6777,11 @@ func _input(event: InputEvent) -> void:
 			close_monster_detail_modal()
 			get_viewport().set_input_as_handled()
 			return
+	if wandering_monster_modal and wandering_monster_modal.visible:
+		if (event is InputEventKey and event.pressed and (event.keycode == KEY_ESCAPE or event.keycode == KEY_W or event.keycode == KEY_SPACE or event.keycode == KEY_ENTER)):
+			close_wandering_monster_modal()
+			get_viewport().set_input_as_handled()
+			return
 	if not active_story_trigger_overlay.is_empty():
 		if (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed) or \
 		   (event is InputEventKey and event.pressed and (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER or event.keycode == KEY_ESCAPE)):
@@ -6458,6 +6856,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			close_monster_detail_modal()
 			get_viewport().set_input_as_handled()
 			return
+	if wandering_monster_modal and wandering_monster_modal.visible:
+		if (event is InputEventKey and event.pressed and (event.keycode == KEY_ESCAPE or event.keycode == KEY_W or event.keycode == KEY_SPACE or event.keycode == KEY_ENTER)):
+			close_wandering_monster_modal()
+			get_viewport().set_input_as_handled()
+			return
 	if not active_treasure_overlay.is_empty():
 		if (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed) or \
 		   (event is InputEventKey and event.pressed and (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER or event.keycode == KEY_ESCAPE)):
@@ -6501,6 +6904,11 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_O:
 		toggle_quest_objective_modal()
+		get_viewport().set_input_as_handled()
+		return
+
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_W:
+		toggle_wandering_monster_modal()
 		get_viewport().set_input_as_handled()
 		return
 
@@ -10480,6 +10888,11 @@ func _update_ui() -> void:
 			btn_disarm_trap.visible = false
 		if btn_armory:
 			btn_armory.visible = false
+		if btn_wandering_monster:
+			btn_wandering_monster.visible = true
+			btn_wandering_monster.disabled = false
+			btn_wandering_monster.text = "Show Wondering Monster"
+			_update_action_tile(btn_wandering_monster, "wandering_monster", 0, "👹 Show Wondering Monster", "Inspect the current quest's Wandering Monster card and ambush profile [W].")
 		if btn_end_turn:
 			btn_end_turn.visible = true
 			btn_end_turn.disabled = false
@@ -10507,6 +10920,11 @@ func _update_ui() -> void:
 			btn_disarm_trap.visible = false
 		if btn_armory:
 			btn_armory.visible = false
+		if btn_wandering_monster:
+			btn_wandering_monster.visible = true
+			btn_wandering_monster.disabled = false
+			btn_wandering_monster.text = "Show Wondering Monster"
+			_update_action_tile(btn_wandering_monster, "wandering_monster", 0, "👹 Show Wondering Monster", "Inspect the current quest's Wandering Monster card and ambush profile [W].")
 		if btn_end_turn:
 			btn_end_turn.visible = false
 		if dice_label:
@@ -10515,6 +10933,13 @@ func _update_ui() -> void:
 		# Hero Phase (Player)
 		if btn_summon:
 			btn_summon.visible = false
+
+		# Wandering Monster Action Button
+		if btn_wandering_monster:
+			btn_wandering_monster.visible = true
+			btn_wandering_monster.disabled = false
+			btn_wandering_monster.text = "Show Wondering Monster"
+			_update_action_tile(btn_wandering_monster, "wandering_monster", 0, "👹 Show Wondering Monster", "Inspect the current quest's Wandering Monster card and ambush profile [W].")
 
 		# Armory Equipment Action Button
 		if btn_armory:
@@ -12072,34 +12497,34 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 				ab_vbox.add_child(b_panel)
 
 func _load_treasure_card_assets() -> void:
-	if _card_frame_treasure == null and ResourceLoader.exists("res://assets/cards/card_frame_treasure.png"):
-		_card_frame_treasure = load("res://assets/cards/card_frame_treasure.png")
-	if _card_frame_hazard == null and ResourceLoader.exists("res://assets/cards/card_frame_hazard.png"):
-		_card_frame_hazard = load("res://assets/cards/card_frame_hazard.png")
-	if _card_art_gold_coins == null and ResourceLoader.exists("res://assets/cards/card_art_gold_coins.png"):
-		_card_art_gold_coins = load("res://assets/cards/card_art_gold_coins.png")
-	if _card_art_gems_jewels == null and ResourceLoader.exists("res://assets/cards/card_art_gems_jewels.png"):
-		_card_art_gems_jewels = load("res://assets/cards/card_art_gems_jewels.png")
-	if _card_art_potion_healing == null and ResourceLoader.exists("res://assets/cards/card_art_potion_healing.png"):
-		_card_art_potion_healing = load("res://assets/cards/card_art_potion_healing.png")
-	if _card_art_potion_strength == null and ResourceLoader.exists("res://assets/cards/card_art_potion_strength.png"):
-		_card_art_potion_strength = load("res://assets/cards/card_art_potion_strength.png")
-	if _card_art_potion_defense == null and ResourceLoader.exists("res://assets/cards/card_art_potion_defense.png"):
-		_card_art_potion_defense = load("res://assets/cards/card_art_potion_defense.png")
-	if _card_art_holy_water == null and ResourceLoader.exists("res://assets/cards/card_art_holy_water.png"):
-		_card_art_holy_water = load("res://assets/cards/card_art_holy_water.png")
-	if _card_art_hazard_pit == null and ResourceLoader.exists("res://assets/cards/card_art_hazard_pit.png"):
-		_card_art_hazard_pit = load("res://assets/cards/card_art_hazard_pit.png")
-	if _card_art_hazard_poison == null and ResourceLoader.exists("res://assets/cards/card_art_hazard_poison.png"):
-		_card_art_hazard_poison = load("res://assets/cards/card_art_hazard_poison.png")
-	if _card_art_wandering_orc == null and ResourceLoader.exists("res://assets/cards/card_art_wandering_orc.png"):
-		_card_art_wandering_orc = load("res://assets/cards/card_art_wandering_orc.png")
-	if _card_art_quest_chest == null and ResourceLoader.exists("res://assets/cards/card_art_quest_chest.png"):
-		_card_art_quest_chest = load("res://assets/cards/card_art_quest_chest.png")
-	if _treasure_template_texture_res == null and ResourceLoader.exists("res://assets/cards/treasure_card_template.png"):
-		_treasure_template_texture_res = load("res://assets/cards/treasure_card_template.png")
-	if _treasure_deck_texture_res == null and ResourceLoader.exists("res://assets/cards/treasure_card_deck.png"):
-		_treasure_deck_texture_res = load("res://assets/cards/treasure_card_deck.png")
+	if _card_frame_treasure == null:
+		_card_frame_treasure = _load_texture_safe("res://assets/cards/card_frame_treasure.png")
+	if _card_frame_hazard == null:
+		_card_frame_hazard = _load_texture_safe("res://assets/cards/card_frame_hazard.png")
+	if _card_art_gold_coins == null:
+		_card_art_gold_coins = _load_texture_safe("res://assets/cards/card_art_gold_coins.png")
+	if _card_art_gems_jewels == null:
+		_card_art_gems_jewels = _load_texture_safe("res://assets/cards/card_art_gems_jewels.png")
+	if _card_art_potion_healing == null:
+		_card_art_potion_healing = _load_texture_safe("res://assets/cards/card_art_potion_healing.png")
+	if _card_art_potion_strength == null:
+		_card_art_potion_strength = _load_texture_safe("res://assets/cards/card_art_potion_strength.png")
+	if _card_art_potion_defense == null:
+		_card_art_potion_defense = _load_texture_safe("res://assets/cards/card_art_potion_defense.png")
+	if _card_art_holy_water == null:
+		_card_art_holy_water = _load_texture_safe("res://assets/cards/card_art_holy_water.png")
+	if _card_art_hazard_pit == null:
+		_card_art_hazard_pit = _load_texture_safe("res://assets/cards/card_art_hazard_pit.png")
+	if _card_art_hazard_poison == null:
+		_card_art_hazard_poison = _load_texture_safe("res://assets/cards/card_art_hazard_poison.png")
+	if _card_art_wandering_orc == null:
+		_card_art_wandering_orc = _load_texture_safe("res://assets/cards/card_art_wandering_orc.png")
+	if _card_art_quest_chest == null:
+		_card_art_quest_chest = _load_texture_safe("res://assets/cards/card_art_quest_chest.png")
+	if _treasure_template_texture_res == null:
+		_treasure_template_texture_res = _load_texture_safe("res://assets/cards/treasure_card_template.png")
+	if _treasure_deck_texture_res == null:
+		_treasure_deck_texture_res = _load_texture_safe("res://assets/cards/treasure_card_deck.png")
 
 func _get_treasure_card_art_texture(card: Dictionary, is_quest_note: bool = false) -> Texture2D:
 	_load_treasure_card_assets()
@@ -13686,6 +14111,20 @@ func get_telemetry_state() -> Dictionary:
 				"badge": (btn_armory.get_node_or_null("Badge") as Label).text if (btn_armory and btn_armory.get_node_or_null("Badge") and (btn_armory.get_node_or_null("Badge") as Label).visible) else "",
 				"badgeVisible": (btn_armory.get_node_or_null("Badge") as Label).visible if (btn_armory and btn_armory.get_node_or_null("Badge")) else false
 			} if btn_armory else {},
+			"wandering_monster": {
+				"visible": btn_wandering_monster.visible,
+				"disabled": btn_wandering_monster.disabled,
+				"text": btn_wandering_monster.text,
+				"tooltip": btn_wandering_monster.tooltip_text,
+				"icon": "action_wandering_monster"
+			} if btn_wandering_monster else {},
+			"wondering_monster": {
+				"visible": btn_wandering_monster.visible,
+				"disabled": btn_wandering_monster.disabled,
+				"text": btn_wandering_monster.text,
+				"tooltip": btn_wandering_monster.tooltip_text,
+				"icon": "action_wandering_monster"
+			} if btn_wandering_monster else {},
 			"map_end_turn": { "visible": btn_map_end_turn.visible, "disabled": btn_map_end_turn.disabled, "text": btn_map_end_turn.text, "tooltip": btn_map_end_turn.tooltip_text, "icon": "action_end_turn" } if btn_map_end_turn else {},
 			"game_menu": {
 				"visible": get_node_or_null("UI/SidebarHeader/BtnGameMenu").visible if get_node_or_null("UI/SidebarHeader/BtnGameMenu") else false,
@@ -13830,6 +14269,10 @@ func get_telemetry_state() -> Dictionary:
 		"isGameMenuOpen": is_game_menu_open(),
 		"questObjectiveModalOpen": is_quest_objective_open(),
 		"isQuestObjectiveOpen": is_quest_objective_open(),
+		"wanderingMonsterCardOpen": is_wandering_monster_modal_open(),
+		"isWanderingMonsterCardOpen": is_wandering_monster_modal_open(),
+		"wanderingMonsterCardModalOpen": is_wandering_monster_modal_open(),
+		"wanderingMonsterCard": get_wandering_monster_card_data(),
 		"questObjective": get_active_quest_objective(),
 		"questObjectives": get_quest_objectives(),
 		"areObjectivesCompleted": are_all_quest_objectives_completed(),
@@ -14877,6 +15320,26 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				"success": true,
 				"selectedHeroId": selected_armory_hero_id
 			}
+		"show_wandering_monster", "show_wandering_monster_card", "show_wondering_monster", "show_wondering_monster_card", "open_wandering_monster_modal", "open_wandering_monster":
+			open_wandering_monster_modal()
+			return {
+				"success": true,
+				"modalVisible": is_wandering_monster_modal_open(),
+				"card": get_wandering_monster_card_data()
+			}
+		"close_wandering_monster", "close_wandering_monster_card", "close_wondering_monster", "close_wondering_monster_card", "dismiss_wandering_monster":
+			close_wandering_monster_modal()
+			return {
+				"success": true,
+				"modalVisible": is_wandering_monster_modal_open()
+			}
+		"toggle_wandering_monster", "toggle_wandering_monster_card", "toggle_wondering_monster", "toggle_wondering_monster_card":
+			toggle_wandering_monster_modal()
+			return {
+				"success": true,
+				"modalVisible": is_wandering_monster_modal_open(),
+				"card": get_wandering_monster_card_data()
+			}
 		"buy_armory_item", "buy_item":
 			var h_id = str(action_data.get("heroId", action_data.get("hero_id", action_data.get("hero", selected_armory_hero_id))))
 			var item_id = str(action_data.get("itemId", action_data.get("item_id", action_data.get("item", ""))))
@@ -15003,6 +15466,7 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				"summon", "btnsummon": target_btn = btn_summon
 				"ai_step", "btnaistep": target_btn = btn_ai_step
 				"armory", "btnarmory": target_btn = btn_armory
+				"wandering_monster", "btnwanderingmonster", "wondering_monster", "btnwonderingmonster", "show_wandering_monster", "show_wondering_monster": target_btn = btn_wandering_monster
 				"map_end_turn", "btnmapendturn", "end_turn_top_right", "map_end": target_btn = btn_map_end_turn
 			if target_btn:
 				if target_btn.disabled:
