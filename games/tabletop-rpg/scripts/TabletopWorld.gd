@@ -1016,16 +1016,25 @@ func _get_search_status() -> Dictionary:
 	# 5. Hero already searched this room or room exhausted
 	var hero_id = str(hero.get("id", ""))
 	var room_searches: Array = searched_rooms.get(r_id, [])
-	if hero_id in room_searches:
+	var has_sly = room_has_sly_storage(r_id)
+	var max_searches_per_hero = 2 if has_sly else 1
+	var hero_searches_count = room_searches.count(hero_id)
+	if hero_searches_count >= max_searches_per_hero:
+		var desc_msg = ""
+		if has_sly:
+			desc_msg = "Unavailable: %s has already searched this room %d time(s) for treasure! (Sly Storage limit: 2 cards per hero reached)." % [h_name, hero_searches_count]
+		else:
+			desc_msg = "Unavailable: %s has already searched this room for treasure! Under HeroQuest rules, each hero may only search a room once." % h_name
 		return {
 			"can_search": false,
 			"reason_key": "already_searched",
 			"notice": "Room already searched",
 			"title": "🔍 Search Room (Already Searched)",
-			"desc": "Unavailable: %s has already searched this room for treasure! Under HeroQuest rules, each hero may only search a room once." % h_name
+			"desc": desc_msg
 		}
 
-	if room_searches.size() >= 4:
+	var max_total_searches = maxi(4, heroes.size() * 2) if has_sly else 4
+	if room_searches.size() >= max_total_searches:
 		return {
 			"can_search": false,
 			"reason_key": "room_exhausted",
@@ -1055,12 +1064,18 @@ func _get_search_status() -> Dictionary:
 		}
 
 	# All conditions satisfied!
+	var available_desc = "Search this chamber for hidden chests, gems, or gold."
+	if has_sly:
+		if hero_searches_count == 1:
+			available_desc += " (Sly Storage: 2nd search available for %s!)" % h_name
+		else:
+			available_desc += " (Sly Storage: allows 2 cards per hero)."
 	return {
 		"can_search": true,
 		"reason_key": "available",
 		"notice": "",
 		"title": "🔍 Search Room for Treasure",
-		"desc": "Search this chamber for hidden chests, gems, or gold."
+		"desc": available_desc
 	}
 
 func _get_search_unavailable_reason() -> String:
@@ -1386,6 +1401,12 @@ func _load_furniture_textures() -> void:
 		"weapons-rack": "res://assets/furniture/weapons_rack.png",
 		"rack": "res://assets/furniture/weapons_rack.png",
 		"fireplace": "res://assets/furniture/fireplace.png",
+		"healing_hearth": "res://assets/furniture/fireplace.png",
+		"healing-hearth": "res://assets/furniture/fireplace.png",
+		"hearth": "res://assets/furniture/fireplace.png",
+		"sly_storage": "res://assets/furniture/chest.png",
+		"sly-storage": "res://assets/furniture/chest.png",
+		"sly": "res://assets/furniture/chest.png",
 		"throne": "res://assets/furniture/throne.png",
 		"torture-rack": "res://assets/furniture/torture_rack.png",
 		"alchemists-bench": "res://assets/furniture/alchemists_bench.png"
@@ -2854,6 +2875,8 @@ func _rebuild_spatial_caches() -> void:
 			fw = 3; fh = 2
 		elif f_type == "tomb" and fw == 1 and fh == 1:
 			fw = 2; fh = 3
+		elif (f_type in ["healing_hearth", "healing-hearth", "healing hearth", "hearth"]) and fw == 1 and fh == 1:
+			fw = 1; fh = 3
 		for bx in range(fx, fx + fw):
 			for by in range(fy, fy + fh):
 				_furniture_by_tile[Vector2i(bx, by)] = furn
@@ -2867,6 +2890,53 @@ func get_furniture_at(tile: Vector2i) -> Dictionary:
 
 func is_tile_occupied_by_furniture(tile: Vector2i) -> bool:
 	return _furniture_by_tile.has(tile)
+
+func get_room_furniture(r_id: String) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	if r_id == "":
+		return result
+	for f in furniture:
+		var f_room_id = str(f.get("roomId", f.get("room_id", f.get("room", ""))))
+		if f_room_id != "" and f_room_id == r_id:
+			result.append(f)
+			continue
+		var fx = int(f.get("x", f.get("position", [0, 0])[0]))
+		var fy = int(f.get("y", f.get("position", [0, 0])[1]))
+		var fw = int(f.get("width", f.get("w", 1)))
+		var fh = int(f.get("height", f.get("h", 1)))
+		var f_type = str(f.get("type", "")).to_lower()
+		if (f_type in ["healing_hearth", "healing-hearth", "healing hearth", "hearth"]) and fw == 1 and fh == 1:
+			fw = 1; fh = 3
+		var in_room = false
+		for bx in range(fx, fx + fw):
+			for by in range(fy, fy + fh):
+				var rm = _get_room_at(Vector2i(bx, by))
+				if str(rm.get("id", "")) == r_id:
+					in_room = true
+					break
+			if in_room:
+				break
+		if in_room:
+			result.append(f)
+	return result
+
+func room_has_furniture_matching(r_id: String, patterns: Array[String]) -> bool:
+	var furns = get_room_furniture(r_id)
+	for f in furns:
+		var f_type = str(f.get("type", f.get("furniture_type", ""))).to_lower()
+		var f_id = str(f.get("id", "")).to_lower()
+		var f_name = str(f.get("name", "")).to_lower()
+		for pat in patterns:
+			var p = pat.to_lower()
+			if p in f_type or p in f_id or p in f_name or f_type.replace("-", "_") == p.replace("-", "_") or f_type.replace(" ", "_") == p.replace(" ", "_"):
+				return true
+	return false
+
+func room_has_healing_hearth(r_id: String) -> bool:
+	return room_has_furniture_matching(r_id, ["healing_hearth", "healing-hearth", "healing hearth", "hearth"])
+
+func room_has_sly_storage(r_id: String) -> bool:
+	return room_has_furniture_matching(r_id, ["sly_storage", "sly-storage", "sly storage", "sly"])
 
 func is_tile_wall_blocked(tile: Vector2i) -> bool:
 	return _blocked_wall_tiles.has(tile)
@@ -9433,6 +9503,19 @@ func _setup_treasure_card_overlay(card: Dictionary, hero: Dictionary, is_quest_n
 			card["flavor"] = wm_data.get("flavor", card.get("flavor", ""))
 			card["card_rule"] = wm_data.get("card_rule", "")
 
+	var h_pos = _to_grid_pos(hero.get("grid_pos", Vector2i(-1, -1)))
+	var h_room = _get_room_at(h_pos)
+	var r_id = str(h_room.get("id", ""))
+	var has_hearth = room_has_healing_hearth(r_id) if r_id != "" else false
+	var has_sly = room_has_sly_storage(r_id) if r_id != "" else false
+	var cur_bp = int(hero.get("current_bp", 0))
+	var max_bp = int(hero.get("bodyPoints", hero.get("max_bp", 8)))
+	var hearth_heal_applicable = has_hearth and (cur_bp < max_bp)
+	var room_searches: Array = searched_rooms.get(r_id, [])
+	var hero_id = str(hero.get("id", ""))
+	var hero_searches_count = room_searches.count(hero_id)
+	var max_searches = 2 if has_sly else 1
+
 	active_treasure_overlay = {
 		"card": card,
 		"hero": hero,
@@ -9448,7 +9531,14 @@ func _setup_treasure_card_overlay(card: Dictionary, hero: Dictionary, is_quest_n
 		"item_found": item_str,
 		"waitingForClick": true,
 		"isWanderingMonster": is_wm,
-		"wanderingMonsterCard": wm_data
+		"wanderingMonsterCard": wm_data,
+		"hasHealingHearth": has_hearth,
+		"healingHearthAvailable": hearth_heal_applicable,
+		"healingHearthUsed": false,
+		"hearthRoomId": r_id if has_hearth else "",
+		"slyStorageInRoom": has_sly,
+		"heroSearchCount": hero_searches_count,
+		"maxSearchesPerHero": max_searches
 	}
 	open_treasure_modal(card, hero, is_quest_note)
 
@@ -9498,6 +9588,63 @@ func resolve_treasure_overlay_click() -> Dictionary:
 	_update_ui()
 	queue_redraw_all()
 	return { "success": true, "card": overlay.get("card", {}) }
+
+func claim_hearth_heal() -> Dictionary:
+	var hero = active_treasure_overlay.get("hero", {})
+	if hero.is_empty():
+		hero = get_active_hero()
+	if hero.is_empty():
+		return { "success": false, "error": "No active hero" }
+
+	var cur_bp = int(hero.get("current_bp", 0))
+	var max_bp = int(hero.get("bodyPoints", hero.get("max_bp", 8)))
+	if cur_bp >= max_bp:
+		return { "success": false, "error": "Hero is already at maximum Body Points (%d/%d)" % [cur_bp, max_bp] }
+
+	var r_id = str(active_treasure_overlay.get("hearthRoomId", ""))
+	if r_id == "":
+		var h_pos = _to_grid_pos(hero.get("grid_pos", Vector2i(-1, -1)))
+		var rm = _get_room_at(h_pos)
+		r_id = str(rm.get("id", ""))
+
+	if not room_has_healing_hearth(r_id):
+		return { "success": false, "error": "No Healing Hearth in this room" }
+
+	if active_treasure_overlay.get("healingHearthUsed", false):
+		return { "success": false, "error": "Healing Hearth has already been used for this search" }
+
+	hero["current_bp"] = mini(max_bp, cur_bp + 1)
+	if not active_treasure_overlay.is_empty():
+		active_treasure_overlay["healingHearthUsed"] = true
+		active_treasure_overlay["healingHearthAvailable"] = false
+
+	var h_pos = _to_grid_pos(hero.get("grid_pos", Vector2i(-1, -1)))
+	spawn_floating_text(h_pos, "+1 HP HEARTH", Color(0.35, 0.95, 0.45), 2.0)
+	_log("[HEARTH] 🔥 %s rests by the Healing Hearth and restores 1 Body Point! (BP: %d/%d)" % [
+		hero.get("name", "Hero"), hero["current_bp"], max_bp
+	])
+
+	var btn_hearth = treasure_modal.find_child("BtnHearthHeal", true, false) if treasure_modal else null
+	if btn_hearth:
+		btn_hearth.disabled = true
+		btn_hearth.text = "🔥 Hearth Rested (+1 BP Claimed)"
+
+	_update_ui()
+	queue_redraw_all()
+	return {
+		"success": true,
+		"healed": 1,
+		"current_bp": hero["current_bp"],
+		"max_bp": max_bp,
+		"hero_id": str(hero.get("id", ""))
+	}
+
+func draw_second_treasure_card() -> Dictionary:
+	if active_treasure_overlay.is_empty():
+		return { "success": false, "error": "No active treasure overlay" }
+	resolve_treasure_overlay_click()
+	has_acted_this_turn = false
+	return search_room(true)
 
 func _find_untriggered_story_trigger(condition: String, room_id: String, tile: Vector2i = Vector2i(-1, -1)) -> Dictionary:
 	for st in story_triggers:
@@ -9686,13 +9833,27 @@ func search_room(is_interactive: bool = false) -> Dictionary:
 	# 3. Reject if hero already searched this room or room searches exhausted
 	var hero_id = str(hero.get("id", ""))
 	var room_searches: Array = searched_rooms.get(r_id, [])
-	if hero_id in room_searches:
-		_log("[TREASURE] ❌ %s has already searched this room for treasure!" % hero.get("name", "Hero"))
+	var has_sly = room_has_sly_storage(r_id)
+	var max_searches_per_hero = 2 if has_sly else 1
+	var hero_searches_count = room_searches.count(hero_id)
+	if hero_searches_count >= max_searches_per_hero:
+		var err_msg = ""
+		if has_sly:
+			err_msg = "%s has already searched this room %d time(s) for treasure! (Sly Storage allows 2 cards per hero)." % [hero.get("name", "Hero"), hero_searches_count]
+		else:
+			err_msg = "%s has already searched this room for treasure!" % hero.get("name", "Hero")
+		_log("[TREASURE] ❌ " + err_msg)
 		spawn_floating_text(h_pos, "ALREADY SEARCHED!", Color(1.0, 0.6, 0.3), 1.5)
 		show_unavailable_notice("Room already searched", h_pos)
-		return { "success": false, "error": "%s has already searched this room for treasure!" % hero.get("name", "Hero") }
+		return {
+			"success": false,
+			"error": err_msg,
+			"searches_used": hero_searches_count,
+			"max_searches": max_searches_per_hero
+		}
 
-	if room_searches.size() >= 4:
+	var max_total_searches = maxi(4, heroes.size() * 2) if has_sly else 4
+	if room_searches.size() >= max_total_searches:
 		_log("[TREASURE] ❌ This room has been thoroughly searched and holds no more treasure!")
 		spawn_floating_text(h_pos, "ROOM EXHAUSTED", Color(1.0, 0.6, 0.3), 1.5)
 		show_unavailable_notice("Room already searched", h_pos)
@@ -9740,6 +9901,7 @@ func search_room(is_interactive: bool = false) -> Dictionary:
 	if not searched_rooms.has(r_id):
 		searched_rooms[r_id] = []
 	searched_rooms[r_id].append(hero_id)
+	var final_search_count = searched_rooms[r_id].count(hero_id)
 
 	# 4. Check Story Triggers (Quest Book Notes) for this room / tile
 	var story_tr = _find_untriggered_story_trigger("search_treasure", r_id, h_pos)
@@ -9791,7 +9953,19 @@ func search_room(is_interactive: bool = false) -> Dictionary:
 			_conclude_action_turn_state()
 			_update_ui()
 			queue_redraw_all()
-			return { "success": true, "questTreasure": true, "goldFound": found_gold, "card": spec_tr, "waitingForClick": true }
+			return {
+				"success": true,
+				"questTreasure": true,
+				"goldFound": found_gold,
+				"card": spec_tr,
+				"waitingForClick": true,
+				"slyStorage": has_sly,
+				"heroSearches": final_search_count,
+				"maxHeroSearches": max_searches_per_hero,
+				"remainingSearchesForHero": maxi(0, max_searches_per_hero - final_search_count),
+				"healingHearthAvailable": (room_has_healing_hearth(r_id) and int(hero.get("current_bp", 0)) < int(hero.get("bodyPoints", hero.get("max_bp", 8)))),
+				"healingHearthInRoom": room_has_healing_hearth(r_id)
+			}
 
 		_conclude_action_turn_state()
 		var non_int_q_reward: Dictionary = {}
@@ -9821,7 +9995,18 @@ func search_room(is_interactive: bool = false) -> Dictionary:
 				pending_flash_item = non_int_q_reward
 		_update_ui()
 		queue_redraw_all()
-		return { "success": true, "questTreasure": true, "goldFound": found_gold, "card": spec_tr }
+		return {
+			"success": true,
+			"questTreasure": true,
+			"goldFound": found_gold,
+			"card": spec_tr,
+			"slyStorage": has_sly,
+			"heroSearches": final_search_count,
+			"maxHeroSearches": max_searches_per_hero,
+			"remainingSearchesForHero": maxi(0, max_searches_per_hero - final_search_count),
+			"healingHearthAvailable": (room_has_healing_hearth(r_id) and int(hero.get("current_bp", 0)) < int(hero.get("bodyPoints", hero.get("max_bp", 8)))),
+			"healingHearthInRoom": room_has_healing_hearth(r_id)
+		}
 
 	# 6. Subsequent searches or rooms without quest notes draw from Treasure Deck
 	var card = _draw_treasure_card()
@@ -9884,7 +10069,13 @@ func search_room(is_interactive: bool = false) -> Dictionary:
 			"goldFound": found_gold,
 			"card": card,
 			"wanderingMonster": (spawned_wm if not spawned_wm.is_empty() else null),
-			"waitingForClick": true
+			"waitingForClick": true,
+			"slyStorage": has_sly,
+			"heroSearches": final_search_count,
+			"maxHeroSearches": max_searches_per_hero,
+			"remainingSearchesForHero": maxi(0, max_searches_per_hero - final_search_count),
+			"healingHearthAvailable": (room_has_healing_hearth(r_id) and int(hero.get("current_bp", 0)) < int(hero.get("bodyPoints", hero.get("max_bp", 8)))),
+			"healingHearthInRoom": room_has_healing_hearth(r_id)
 		}
 
 	_conclude_action_turn_state()
@@ -9921,7 +10112,13 @@ func search_room(is_interactive: bool = false) -> Dictionary:
 		"questTreasure": false,
 		"goldFound": found_gold,
 		"card": card,
-		"wanderingMonster": (spawned_wm if not spawned_wm.is_empty() else null)
+		"wanderingMonster": (spawned_wm if not spawned_wm.is_empty() else null),
+		"slyStorage": has_sly,
+		"heroSearches": final_search_count,
+		"maxHeroSearches": max_searches_per_hero,
+		"remainingSearchesForHero": maxi(0, max_searches_per_hero - final_search_count),
+		"healingHearthAvailable": (room_has_healing_hearth(r_id) and int(hero.get("current_bp", 0)) < int(hero.get("bodyPoints", hero.get("max_bp", 8)))),
+		"healingHearthInRoom": room_has_healing_hearth(r_id)
 	}
 
 func search_traps() -> Dictionary:
@@ -13264,11 +13461,26 @@ func _populate_treasure_modal(card: Dictionary, hero: Dictionary, is_quest_note:
 		else:
 			treasure_outcome_text.text = "Rule: Awarded to %s. Card is permanently discarded from the deck for the quest." % h_name
 			out_col = Color(0.50, 0.98, 0.70, 1.0)
+
+		var has_sly_storage = active_treasure_overlay.get("slyStorageInRoom", false)
+		var cur_search_count = active_treasure_overlay.get("heroSearchCount", 1)
+		if has_sly_storage:
+			treasure_outcome_text.text += "\n[📦 Sly Storage: Card %d of 2 for %s]" % [cur_search_count, h_name]
+		if active_treasure_overlay.get("hasHealingHearth", false):
+			var h_avail = active_treasure_overlay.get("healingHearthAvailable", false)
+			var h_used = active_treasure_overlay.get("healingHearthUsed", false)
+			if h_avail:
+				treasure_outcome_text.text += "\n[🔥 Healing Hearth: Option to rest and heal 1 Body Point]"
+			elif h_used:
+				treasure_outcome_text.text += "\n[🔥 Healing Hearth: Rested (+1 BP Restored)]"
+			else:
+				treasure_outcome_text.text += "\n[🔥 Healing Hearth: %s is already at full health]" % h_name
+
 		apply_rpg_font_to_label(treasure_outcome_text, false, 10 if c_type == "wandering_monster" else 11, out_col)
 		treasure_outcome_text.add_theme_color_override("font_color", out_col)
 		treasure_outcome_text.add_theme_constant_override("outline_size", 0)
 
-	# 7. Action Button Box (Resolve & Inspect Monster Profile)
+	# 7. Action Button Box (Resolve & Inspect Monster Profile & Special Furniture Actions)
 	var btn_box = treasure_modal.find_child("ButtonBox", true, false) if treasure_modal else null
 	var btn_inspect = treasure_modal.find_child("BtnInspectWanderingMonster", true, false) if treasure_modal else null
 	if btn_box and not btn_inspect:
@@ -13285,6 +13497,50 @@ func _populate_treasure_modal(card: Dictionary, hero: Dictionary, is_quest_note:
 
 	if btn_inspect:
 		btn_inspect.visible = (c_type == "wandering_monster")
+
+	# Healing Hearth action button
+	var btn_hearth = treasure_modal.find_child("BtnHearthHeal", true, false) if treasure_modal else null
+	if btn_box and not btn_hearth:
+		btn_hearth = Button.new()
+		btn_hearth.name = "BtnHearthHeal"
+		btn_hearth.custom_minimum_size = Vector2(210, 42)
+		btn_hearth.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		apply_rpg_font_to_button(btn_hearth, 11, Color(1.0, 0.75, 0.35, 1.0))
+		btn_hearth.pressed.connect(func():
+			claim_hearth_heal()
+		)
+		btn_box.add_child(btn_hearth)
+
+	var hearth_avail = active_treasure_overlay.get("healingHearthAvailable", false)
+	var hearth_used = active_treasure_overlay.get("healingHearthUsed", false)
+	if btn_hearth:
+		btn_hearth.visible = (hearth_avail or hearth_used)
+		btn_hearth.disabled = hearth_used
+		if hearth_used:
+			btn_hearth.text = "🔥 Hearth Rested (+1 BP)"
+		else:
+			btn_hearth.text = "🔥 Rest by Hearth (+1 BP)"
+
+	# Sly Storage second draw button
+	var btn_sly_second = treasure_modal.find_child("BtnDrawSecondCard", true, false) if treasure_modal else null
+	if btn_box and not btn_sly_second:
+		btn_sly_second = Button.new()
+		btn_sly_second.name = "BtnDrawSecondCard"
+		btn_sly_second.custom_minimum_size = Vector2(220, 42)
+		btn_sly_second.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		apply_rpg_font_to_button(btn_sly_second, 11, Color(0.4, 0.9, 1.0, 1.0))
+		btn_sly_second.pressed.connect(func():
+			draw_second_treasure_card()
+		)
+		btn_box.add_child(btn_sly_second)
+
+	var has_sly_storage = active_treasure_overlay.get("slyStorageInRoom", false)
+	var cur_search_count = active_treasure_overlay.get("heroSearchCount", 1)
+	var can_draw_second = has_sly_storage and cur_search_count == 1 and c_type != "wandering_monster"
+	if btn_sly_second:
+		btn_sly_second.visible = can_draw_second
+		if can_draw_second:
+			btn_sly_second.text = "📦 Search Sly Storage (Card 2/2)"
 
 	if treasure_btn_resolve:
 		if c_type == "hazard":
@@ -14473,6 +14729,8 @@ func get_telemetry_state() -> Dictionary:
 			fw = 3; fh = 2
 		elif f_type == "tomb" and fw == 1 and fh == 1:
 			fw = 2; fh = 3
+		elif (f_type in ["healing_hearth", "healing-hearth", "healing hearth", "hearth"]) and fw == 1 and fh == 1:
+			fw = 1; fh = 3
 		fc["x"] = fx
 		fc["y"] = fy
 		fc["width"] = fw
@@ -14899,6 +15157,12 @@ func get_telemetry_state() -> Dictionary:
 			"card": active_treasure_overlay.get("card", {}),
 			"isWanderingMonster": active_treasure_overlay.get("isWanderingMonster", false),
 			"wanderingMonsterCard": active_treasure_overlay.get("wanderingMonsterCard", {}),
+			"healingHearthAvailable": active_treasure_overlay.get("healingHearthAvailable", false),
+			"healingHearthUsed": active_treasure_overlay.get("healingHearthUsed", false),
+			"hasHealingHearth": active_treasure_overlay.get("hasHealingHearth", false),
+			"slyStorageInRoom": active_treasure_overlay.get("slyStorageInRoom", false),
+			"heroSearchCount": active_treasure_overlay.get("heroSearchCount", 1),
+			"maxSearchesPerHero": active_treasure_overlay.get("maxSearchesPerHero", 1),
 			"deckCount": get_treasure_deck_stats().total,
 			"goodsCount": get_treasure_deck_stats().goods,
 			"hazardsCount": get_treasure_deck_stats().hazards,
@@ -15081,8 +15345,15 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			return { "success": true }
 		"click_treasure_overlay", "resolve_treasure_overlay_click", "dismiss_treasure_overlay":
 			if not active_treasure_overlay.is_empty():
+				var claim_heal = bool(action_data.get("claim_hearth_heal", action_data.get("heal_from_hearth", false)))
+				if claim_heal:
+					claim_hearth_heal()
 				return resolve_treasure_overlay_click()
 			return { "success": false, "error": "No active treasure overlay" }
+		"claim_hearth_heal", "heal_from_hearth", "use_healing_hearth":
+			return claim_hearth_heal()
+		"draw_second_treasure_card", "sly_storage_second_draw":
+			return draw_second_treasure_card()
 		"show_treasure_card", "debug_show_treasure_card":
 			var card_id = str(action_data.get("card_id", action_data.get("id", "gem-50")))
 			var is_qn = bool(action_data.get("is_quest_note", false))
@@ -15944,6 +16215,8 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 		"search", "search_room", "search_treasure":
 			var is_interactive = bool(action_data.get("interactive", false))
 			var res = search_room(is_interactive)
+			if not is_interactive and bool(action_data.get("claim_hearth_heal", false)):
+				claim_hearth_heal()
 			return res
 		"end_turn":
 			end_turn()
@@ -16349,6 +16622,8 @@ func _draw_board(canvas: CanvasItem) -> void:
 				w = 3; h = 2
 			elif f_type == "tomb" and w == 1 and h == 1:
 				w = 2; h = 3
+			elif (f_type in ["healing_hearth", "healing-hearth", "healing hearth", "hearth"]) and w == 1 and h == 1:
+				w = 1; h = 3
 
 			var f_rect = Rect2(board_offset + Vector2(px * tile_size + 2, py * tile_size + 2), Vector2(w * tile_size - 4, h * tile_size - 4))
 			var label_text = ""
