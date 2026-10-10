@@ -1964,7 +1964,7 @@ func _setup_ui_signals() -> void:
 	if header_hbox and not header_hbox.has_node("BtnReviewQuestObjective"):
 		var obj_btn = Button.new()
 		obj_btn.name = "BtnReviewQuestObjective"
-		obj_btn.text = "Review Quest Objective"
+		obj_btn.text = "Review Objective"
 		obj_btn.tooltip_text = "Review current Quest Objectives, Mentor's Briefing, and Imperial Bounty [O]"
 		obj_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		apply_rpg_font_to_button(obj_btn, 11, Color(1.0, 0.94, 0.76, 1.0))
@@ -13279,7 +13279,17 @@ func get_telemetry_state() -> Dictionary:
 				"visible": get_node_or_null("UI/SidebarHeader/BtnGameMenu").visible if get_node_or_null("UI/SidebarHeader/BtnGameMenu") else false,
 				"text": get_node_or_null("UI/SidebarHeader/BtnGameMenu").text if get_node_or_null("UI/SidebarHeader/BtnGameMenu") else "",
 				"tooltip": get_node_or_null("UI/SidebarHeader/BtnGameMenu").tooltip_text if get_node_or_null("UI/SidebarHeader/BtnGameMenu") else ""
-			} if get_node_or_null("UI/SidebarHeader/BtnGameMenu") else {}
+			} if get_node_or_null("UI/SidebarHeader/BtnGameMenu") else {},
+			"review_objective": {
+				"visible": get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective").visible if get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective") else false,
+				"text": get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective").text if get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective") else "",
+				"tooltip": get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective").tooltip_text if get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective") else ""
+			} if get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective") else {},
+			"review_quest_objective": {
+				"visible": get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective").visible if get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective") else false,
+				"text": get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective").text if get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective") else "",
+				"tooltip": get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective").tooltip_text if get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective") else ""
+			} if get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective") else {}
 		},
 		"headerButtons": (get_node_or_null("UI/SidebarHeader").get_children().map(func(c): return c.name) if get_node_or_null("UI/SidebarHeader") else []),
 		"hotbar": {
@@ -14252,7 +14262,7 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			if not bool(action_data.get("skip_save", action_data.get("skipSave", false))):
 				auto_save_game()
 			return { "success": true }
-		"open_quest_objective", "show_quest_objective", "review_quest_objective", "open_quest_objective_modal":
+		"open_quest_objective", "show_quest_objective", "review_quest_objective", "review_objective", "open_quest_objective_modal":
 			open_quest_objective_modal()
 			return { "success": true, "quest_objective_open": true, "objective": get_active_quest_objective() }
 		"close_quest_objective", "hide_quest_objective", "close_quest_objective_modal":
