@@ -137,7 +137,7 @@ class TestQuestObjectivesHUDAndCompleteQuestE2E(unittest.TestCase):
         # Boss is alive, no rooms explored initially
         self.assertFalse(slay_obj.get("completed", True), "Boss objective should initially be pending")
         self.assertFalse(explore_obj.get("completed", True), "Exploration objective should initially be pending")
-        self.assertTrue(survival_obj.get("completed", False), "Party survival should initially be true (heroes alive)")
+        self.assertFalse(survival_obj.get("completed", True), "Party survival should initially be pending until trial is completed")
 
         # Complete Quest button should NOT be displayed when objectives are pending
         self.assertFalse(hud_info.get("hasCompleteQuestButton", True),

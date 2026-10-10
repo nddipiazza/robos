@@ -2101,7 +2101,11 @@ func has_saved_game() -> bool:
 	if content.strip_edges() == "":
 		return false
 	var parsed = JSON.parse_string(content)
-	return (parsed is Dictionary and parsed.has("heroes") and parsed.get("heroes", []).size() > 0)
+	if not (parsed is Dictionary and parsed.has("heroes") and parsed.get("heroes", []).size() > 0):
+		return false
+	if str(parsed.get("game_state", "")) == "closed" or bool(parsed.get("is_game_closed", false)) or bool(parsed.get("quest_completed", false)):
+		return false
+	return true
 
 func delete_save_game() -> bool:
 	var path = get_save_file_path()
@@ -2241,6 +2245,9 @@ func restore_saved_game(save_dict: Dictionary = {}) -> bool:
 		data = parsed
 
 	if not data.has("heroes") or data.get("heroes", []).is_empty():
+		return false
+	if str(data.get("game_state", "")) == "closed" or bool(data.get("is_game_closed", false)) or bool(data.get("quest_completed", false)):
+		print("[TabletopAutosave] Saved game is from a completed/closed quest. Starting fresh quest.")
 		return false
 
 	_is_restoring_state = true
@@ -2488,15 +2495,27 @@ func _load_active_cartridge(force_fresh: bool = false) -> void:
 
 	var cart_monsters = cart.get("monsters", {})
 	monsters.clear()
-	for m_id in cart_monsters:
-		var m = cart_monsters[m_id].duplicate(true)
-		m["current_bp"] = m.get("bodyPoints", 1)
-		var pos = m.get("position", [12, 9])
-		m["grid_pos"] = Vector2i(pos[0], pos[1])
-		m["is_alive"] = true
-		m["is_sleeping"] = false
-		m["tempest_stunned"] = false
-		monsters.append(m)
+	if cart_monsters is Dictionary:
+		for m_id in cart_monsters:
+			var m = cart_monsters[m_id].duplicate(true)
+			m["current_bp"] = m.get("bodyPoints", 1)
+			var pos = m.get("position", [12, 9])
+			m["grid_pos"] = Vector2i(pos[0], pos[1])
+			m["is_alive"] = true
+			m["is_sleeping"] = false
+			m["tempest_stunned"] = false
+			monsters.append(m)
+	elif cart_monsters is Array:
+		for m_raw in cart_monsters:
+			if m_raw is Dictionary:
+				var m = m_raw.duplicate(true)
+				m["current_bp"] = m.get("bodyPoints", 1)
+				var pos = m.get("position", [12, 9])
+				m["grid_pos"] = Vector2i(pos[0], pos[1])
+				m["is_alive"] = true
+				m["is_sleeping"] = false
+				m["tempest_stunned"] = false
+				monsters.append(m)
 
 	rooms.clear()
 	for r in map_data.get("rooms", []):
@@ -4871,26 +4890,40 @@ func get_quest_objectives() -> Array[Dictionary]:
 	if _quest_completed or get_game_state() == "quest_victory":
 		is_boss_dead = true
 	elif boss_target != "":
-		var boss_alive = monsters.any(func(m): 
-			return (boss_target in str(m.get("id", "")).to_lower() or boss_target in str(m.get("name", "")).to_lower()) \
-				and bool(m.get("is_alive", false)) and int(m.get("current_bp", 1)) > 0
+		var has_target_monster = monsters.any(func(m):
+			return boss_target in str(m.get("id", "")).to_lower() or boss_target in str(m.get("name", "")).to_lower()
 		)
-		is_boss_dead = not boss_alive
-	else:
-		if slug == "heroquest-the-trial" or q_id == "quest-1" or "trial" in slug or slug == "":
-			var verag_alive = monsters.any(func(m):
-				return ("verag" in str(m.get("id", "")).to_lower() or "verag" in str(m.get("name", "")).to_lower()) \
+		if has_target_monster:
+			var target_alive = monsters.any(func(m): 
+				return (boss_target in str(m.get("id", "")).to_lower() or boss_target in str(m.get("name", "")).to_lower()) \
 					and bool(m.get("is_alive", false)) and int(m.get("current_bp", 1)) > 0
 			)
-			is_boss_dead = not verag_alive
+			is_boss_dead = not target_alive
 		else:
-			is_boss_dead = not any_monster_alive
+			is_boss_dead = not any_monster_alive and not monsters.is_empty()
+	else:
+		if slug == "heroquest-the-trial" or q_id == "quest-1" or "trial" in slug or slug == "":
+			var has_verag = monsters.any(func(m):
+				return "verag" in str(m.get("id", "")).to_lower() or "verag" in str(m.get("name", "")).to_lower()
+			)
+			if has_verag:
+				var verag_alive = monsters.any(func(m):
+					return ("verag" in str(m.get("id", "")).to_lower() or "verag" in str(m.get("name", "")).to_lower()) \
+						and bool(m.get("is_alive", false)) and int(m.get("current_bp", 1)) > 0
+				)
+				is_boss_dead = not verag_alive
+			else:
+				is_boss_dead = not any_monster_alive and not monsters.is_empty()
+		else:
+			is_boss_dead = not any_monster_alive and not monsters.is_empty()
 
 	if not any_monster_alive and not monsters.is_empty():
 		is_boss_dead = true
 
 	var obj1_text = "Defeat Orc Warlord Verag in his catacombs"
-	if slug == "heroquest-rescue-sir-ragnar":
+	if slug == "heroquest-the-trial" or q_id == "quest-1" or "trial" in slug or slug == "":
+		obj1_text = "Defeat Orc Warlord Verag in his catacombs"
+	elif slug == "heroquest-rescue-sir-ragnar":
 		obj1_text = "Vanquish the dungeon guards and locate Sir Ragnar"
 	elif slug == "heroquest-lair-orc-warlord":
 		obj1_text = "Slay Orc Chieftain Ulag and destroy his vanguard"
@@ -4906,7 +4939,7 @@ func get_quest_objectives() -> Array[Dictionary]:
 		"required": true
 	})
 
-	var rooms_explored = revealed_rooms.size() >= 1 or searched_rooms.size() >= 1 or _quest_completed or get_game_state() == "quest_victory"
+	var rooms_explored = revealed_rooms.size() >= 1 or searched_rooms.size() >= 1 or room_special_treasure_collected.size() >= 1 or _quest_completed or get_game_state() == "quest_victory"
 	objs.append({
 		"id": "explore_dungeon",
 		"title": "Explore the ancient chambers and search for hidden treasures",
@@ -4915,10 +4948,20 @@ func get_quest_objectives() -> Array[Dictionary]:
 	})
 
 	var living_heroes = heroes.filter(func(h): return int(h.get("current_bp", 0)) > 0)
-	var party_surviving = living_heroes.size() > 0
+	var has_living_heroes = living_heroes.size() > 0
+	var party_surviving = false
+	if _quest_completed or get_game_state() == "quest_victory":
+		party_surviving = has_living_heroes
+	elif is_boss_dead and has_living_heroes:
+		var hero_at_stairs = living_heroes.any(func(h):
+			return bool(h.get("has_departed_start", false)) and _to_grid_pos(h.get("grid_pos")) == starting_stair
+		)
+		if hero_at_stairs or not any_monster_alive:
+			party_surviving = true
+
 	objs.append({
 		"id": "party_survival",
-		"title": "Ensure all living heroes survive the trial",
+		"title": "Ensure all living heroes return safely to the spiral stairway",
 		"completed": party_surviving,
 		"required": true
 	})
