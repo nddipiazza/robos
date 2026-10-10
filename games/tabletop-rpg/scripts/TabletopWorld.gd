@@ -1325,7 +1325,8 @@ func _load_monster_token_textures() -> void:
 		"fimir": "res://assets/tokens/token_fimir.png",
 		"chaos_warrior": "res://assets/tokens/token_chaos_warrior.png",
 		"gargoyle": "res://assets/tokens/token_gargoyle.png",
-		"verag": "res://assets/tokens/token_verag.png"
+		"verag": "res://assets/tokens/token_verag.png",
+		"dragon": "res://assets/tokens/token_dragon.png"
 	}
 	for k in token_map:
 		if not monster_token_textures.has(k) or monster_token_textures[k] == null:
@@ -1339,7 +1340,9 @@ func get_monster_token_key(m: Dictionary) -> String:
 	var m_name = str(m.get("name", "")).to_lower()
 	var m_type = str(m.get("type", m.get("monster", ""))).to_lower()
 
-	# Check boss / warlord first
+	# Check boss / warlord / dragon first
+	if "dragon" in m_id or "dragon" in m_slug or "dragon" in m_name or "dragon" in m_type or "wyrm" in m_name:
+		return "dragon"
 	if "verag" in m_id or "verag" in m_slug or "verag" in m_name or "warlord" in m_name or "ulag" in m_id or "ulag" in m_slug:
 		return "verag"
 	if "chaos" in m_id or "chaos" in m_slug or "chaos" in m_name or "dread" in m_name:
@@ -1940,6 +1943,19 @@ func get_monster_lore(m: Dictionary) -> Dictionary:
 					{"name": "Living Stone Hide", "desc": "Nearly impenetrable granite exterior rolling 5 Defend Dice."},
 					{"name": "Demonic Wings", "desc": "Enormous bat wings grant superior battlefield repositioning."},
 					{"name": "Arch-Demonic Will", "desc": "4 Mind Points; effortlessly resists elemental spells and enchantments."}
+				]
+			}
+		"dragon":
+			return {
+				"title": "Ancient Wyrm Dragon",
+				"subtitle": "Colossal Fire-Breathing Apex Behemoth (2x1 Footprint [][])",
+				"archetype": "Colossal 2-Square Apex Boss",
+				"flavor": "[i]\"Towering over ordinary dungeon denizens, the Dragon is a terrifying colossal horror whose serpentine, armored bulk spans two full grid squares. With crimson scales harder than imperial steel, leathery wings spanning dungeon halls, and a furnace of molten hellfire burning within its gullet, it dominates any chamber it inhabits. Unlike lesser monsters confined to single tiles, the Dragon's sweeping tail, snapping jaws, and raking talons command the entire perimeter around its two-square footprint, allowing it to attack any hero standing in any of the 10 adjacent squares.\"[/i]",
+				"tactics": "Colossal 2-square behemoth. Spans 2x1 horizontal squares ([][]) (or 1x2 vertical) and can attack any hero touching any of its 10 adjacent perimeter squares. Features massive Body Points and devastating combat dice.",
+				"abilities": [
+					{"name": "Colossal 2-Square Reach", "desc": "Commands a 2-square footprint and can strike any hero touching any of the 10 adjacent squares."},
+					{"name": "Molten Hellfire Breath", "desc": "Incinerates targets with ferocious flame, rolling crushing combat dice."},
+					{"name": "Dragonscale Bastion", "desc": "Impenetrable ancient scales offering supreme defensive protection."}
 				]
 			}
 		"verag", _:
@@ -2988,10 +3004,83 @@ func get_hero_at(tile: Vector2i) -> Dictionary:
 			return h
 	return {}
 
+func get_monster_by_id(monster_id: String) -> Dictionary:
+	if monster_id == "":
+		return {}
+	for m in monsters:
+		var mid = str(m.get("id", ""))
+		var mslug = str(m.get("slug", ""))
+		if mid == monster_id or mslug == monster_id or mid.ends_with(monster_id) or monster_id.ends_with(mid):
+			return m
+	return {}
+
+func get_monster_size(m: Dictionary) -> Vector2i:
+	if m.is_empty():
+		return Vector2i(1, 1)
+	if m.has("size"):
+		var sz = m["size"]
+		if sz is Vector2i:
+			return sz
+		if sz is Array and sz.size() >= 2:
+			return Vector2i(int(sz[0]), int(sz[1]))
+	var w = int(m.get("width", m.get("w", 0)))
+	var h = int(m.get("height", m.get("h", 0)))
+	if w > 0 and h > 0:
+		return Vector2i(w, h)
+	var key = get_monster_token_key(m)
+	if key == "dragon" or bool(m.get("is_dragon", false)) or bool(m.get("is_two_square", false)):
+		if str(m.get("orientation", "horizontal")).to_lower() == "vertical":
+			return Vector2i(1, 2)
+		return Vector2i(2, 1)
+	return Vector2i(1, 1)
+
+func is_two_square_monster(m: Dictionary) -> bool:
+	var sz = get_monster_size(m)
+	return sz.x * sz.y == 2
+
+func get_monster_tiles_at(m: Dictionary, origin: Vector2i) -> Array[Vector2i]:
+	var sz = get_monster_size(m)
+	var tiles: Array[Vector2i] = []
+	for dx in range(sz.x):
+		for dy in range(sz.y):
+			tiles.append(origin + Vector2i(dx, dy))
+	return tiles
+
+func get_monster_tiles(m: Dictionary) -> Array[Vector2i]:
+	var origin = _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
+	return get_monster_tiles_at(m, origin)
+
+func get_monster_adjacent_tiles_at(m: Dictionary, origin: Vector2i) -> Array[Vector2i]:
+	var m_tiles = get_monster_tiles_at(m, origin)
+	var m_tiles_set: Dictionary = {}
+	for t in m_tiles:
+		m_tiles_set[t] = true
+
+	var adj_set: Dictionary = {}
+	for t in m_tiles:
+		for dx in range(-1, 2):
+			for dy in range(-1, 2):
+				if dx == 0 and dy == 0:
+					continue
+				var cand = t + Vector2i(dx, dy)
+				if not m_tiles_set.has(cand):
+					adj_set[cand] = true
+
+	var res: Array[Vector2i] = []
+	for cand in adj_set.keys():
+		res.append(cand)
+	return res
+
+func get_monster_adjacent_tiles(m: Dictionary) -> Array[Vector2i]:
+	var origin = _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
+	return get_monster_adjacent_tiles_at(m, origin)
+
 func get_monster_at(tile: Vector2i) -> Dictionary:
 	for m in monsters:
-		if m.get("is_alive", false) and _to_grid_pos(m.get("grid_pos")) == tile:
-			return m
+		if m.get("is_alive", false):
+			var m_tiles = get_monster_tiles(m)
+			if m_tiles.has(tile):
+				return m
 	return {}
 
 func is_tile_occupied_by_hero(tile: Vector2i, exclude_hero_idx: int = -1) -> bool:
@@ -3010,9 +3099,105 @@ func is_tile_occupied_by_monster(tile: Vector2i, exclude_monster_id: String = ""
 	for m in monsters:
 		if exclude_monster_id != "" and (str(m.get("id")) == exclude_monster_id or str(m.get("slug")) == exclude_monster_id):
 			continue
-		if m.get("is_alive", false) and _to_grid_pos(m.get("grid_pos")) == tile:
-			return true
+		if m.get("is_alive", false):
+			var m_tiles = get_monster_tiles(m)
+			if m_tiles.has(tile):
+				return true
 	return false
+
+func can_monster_fit_at(m: Dictionary, origin: Vector2i, exclude_monster_id: String = "") -> bool:
+	var m_tiles = get_monster_tiles_at(m, origin)
+	for t in m_tiles:
+		if t.x < 0 or t.x >= grid_cols or t.y < 0 or t.y >= grid_rows:
+			return false
+		if is_border_tile(t) or t == starting_stair:
+			return false
+		if is_tile_wall_blocked(t) or is_tile_occupied_by_furniture(t):
+			return false
+		if is_tile_occupied_by_hero(t):
+			return false
+		if is_tile_occupied_by_monster(t, exclude_monster_id):
+			return false
+	if m_tiles.size() > 1:
+		for i in range(m_tiles.size() - 1):
+			if has_wall_between(m_tiles[i], m_tiles[i+1]):
+				return false
+	return true
+
+func is_hero_adjacent_to_monster(h: Dictionary, m: Dictionary) -> bool:
+	if h.is_empty() or m.is_empty():
+		return false
+	if not is_hero_alive(h) or not bool(m.get("is_alive", false)):
+		return false
+	var hp = _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
+	if hp.x < 0 or hp.y < 0:
+		return false
+
+	var sz = get_monster_size(m)
+	if sz.x * sz.y > 1:
+		var adj_tiles = get_monster_adjacent_tiles(m)
+		if not adj_tiles.has(hp):
+			return false
+		var m_tiles = get_monster_tiles(m)
+		for mt in m_tiles:
+			if maxi(absi(hp.x - mt.x), absi(hp.y - mt.y)) <= 1:
+				if not has_wall_between(hp, mt) and not is_tile_wall_blocked(hp) and not is_tile_wall_blocked(mt):
+					return true
+		return false
+	else:
+		var mp = _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
+		var dx = absi(hp.x - mp.x)
+		var dy = absi(hp.y - mp.y)
+		if dx <= 1 and dy <= 1 and (dx + dy > 0):
+			return not has_wall_between(hp, mp) and not is_tile_wall_blocked(hp) and not is_tile_wall_blocked(mp)
+		return false
+
+func is_monster_adjacent_to_hero_at(m: Dictionary, origin: Vector2i, h: Dictionary) -> bool:
+	if m.is_empty() or h.is_empty():
+		return false
+	if not is_hero_alive(h):
+		return false
+	var hp = _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
+	if hp.x < 0 or hp.y < 0:
+		return false
+
+	var sz = get_monster_size(m)
+	if sz.x * sz.y > 1:
+		var adj_tiles = get_monster_adjacent_tiles_at(m, origin)
+		if not adj_tiles.has(hp):
+			return false
+		var m_tiles = get_monster_tiles_at(m, origin)
+		for mt in m_tiles:
+			if maxi(absi(hp.x - mt.x), absi(hp.y - mt.y)) <= 1:
+				if not has_wall_between(hp, mt) and not is_tile_wall_blocked(hp) and not is_tile_wall_blocked(mt):
+					return true
+		return false
+	else:
+		var dx = absi(hp.x - origin.x)
+		var dy = absi(hp.y - origin.y)
+		if bool(m.get("can_attack_diagonally", false)):
+			if dx <= 1 and dy <= 1 and (dx + dy > 0):
+				return not has_wall_between(origin, hp) and not is_tile_wall_blocked(origin) and not is_tile_wall_blocked(hp)
+			return false
+		else:
+			if dx + dy == 1:
+				return not has_wall_between(origin, hp) and not is_tile_wall_blocked(origin) and not is_tile_wall_blocked(hp)
+			return false
+
+func is_monster_adjacent_to_hero(m: Dictionary, h: Dictionary) -> bool:
+	if not bool(m.get("is_alive", false)):
+		return false
+	var origin = _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
+	return is_monster_adjacent_to_hero_at(m, origin, h)
+
+func get_heroes_adjacent_to_monster(m: Dictionary) -> Array[Dictionary]:
+	var res: Array[Dictionary] = []
+	if m.is_empty() or not bool(m.get("is_alive", false)):
+		return res
+	for h in heroes:
+		if is_monster_adjacent_to_hero(m, h):
+			res.append(h)
+	return res
 
 func is_tile_occupied(tile: Vector2i, exclude_hero_idx: int = -1, exclude_monster_id: String = "") -> bool:
 	return is_tile_occupied_by_hero(tile, exclude_hero_idx) or is_tile_occupied_by_monster(tile, exclude_monster_id) or is_tile_occupied_by_furniture(tile)
@@ -6963,13 +7148,10 @@ func get_adjacent_monsters() -> Array[Dictionary]:
 	var hero = get_active_hero()
 	if hero.is_empty():
 		return []
-	var h_pos: Vector2i = hero.get("grid_pos", Vector2i(-1, -1))
 	var res: Array[Dictionary] = []
 	for m in monsters:
-		if m.get("is_alive", false):
-			var m_pos: Vector2i = m.get("grid_pos", Vector2i(-1, -1))
-			if absi(m_pos.x - h_pos.x) + absi(m_pos.y - h_pos.y) == 1:
-				res.append(m)
+		if is_hero_adjacent_to_monster(hero, m):
+			res.append(m)
 	return res
 
 func get_adjacent_closed_doors() -> Array[Dictionary]:
@@ -7228,8 +7410,8 @@ func _handle_tile_click(tile: Vector2i) -> void:
 
 	# If clicked on adjacent monster, attack!
 	for m in monsters:
-		if m.get("is_alive", false) and m.get("grid_pos") == tile:
-			if absi(tile.x - h_pos.x) + absi(tile.y - h_pos.y) == 1:
+		if m.get("is_alive", false) and get_monster_tiles(m).has(tile):
+			if is_hero_adjacent_to_monster(hero, m):
 				if not has_acted_this_turn:
 					attack_adjacent_monster(str(m.get("id", "")))
 				else:
@@ -9013,21 +9195,37 @@ func attack_adjacent_monster(monster_id: String = "", weapon_id: String = "") ->
 				target_m = m
 				break
 			elif monster_id == "":
-				var m_pos = m.get("grid_pos", Vector2i(-1, -1))
-				var dx = absi(hero_pos.x - m_pos.x)
-				var dy = absi(hero_pos.y - m_pos.y)
-				if w_def.get("ranged", false):
-					if not (dx <= 1 and dy <= 1) and has_line_of_sight(hero_pos, m_pos):
-						target_m = m
-						break
-				elif w_def.get("diagonal", false):
-					if dx <= 1 and dy <= 1 and (dx + dy > 0):
-						target_m = m
-						break
+				if is_two_square_monster(m):
+					if w_def.get("ranged", false):
+						if not is_hero_adjacent_to_monster(hero, m):
+							var has_los = false
+							for mt in get_monster_tiles(m):
+								if has_line_of_sight(hero_pos, mt):
+									has_los = true
+									break
+							if has_los:
+								target_m = m
+								break
+					else:
+						if is_hero_adjacent_to_monster(hero, m):
+							target_m = m
+							break
 				else:
-					if dx + dy == 1:
-						target_m = m
-						break
+					var m_pos = m.get("grid_pos", Vector2i(-1, -1))
+					var dx = absi(hero_pos.x - m_pos.x)
+					var dy = absi(hero_pos.y - m_pos.y)
+					if w_def.get("ranged", false):
+						if not (dx <= 1 and dy <= 1) and has_line_of_sight(hero_pos, m_pos):
+							target_m = m
+							break
+					elif w_def.get("diagonal", false):
+						if dx <= 1 and dy <= 1 and (dx + dy > 0):
+							target_m = m
+							break
+					else:
+						if dx + dy == 1:
+							target_m = m
+							break
 
 	if target_m.is_empty():
 		_log("No monster in reach of %s!" % w_def.get("name", "weapon"))
@@ -9039,34 +9237,72 @@ func attack_adjacent_monster(monster_id: String = "", weapon_id: String = "") ->
 	var dy = absi(hero_pos.y - m_pos.y)
 
 	# Validate weapon rules strictly
-	if w_def.get("ranged", false):
-		if cur_w_id == "crossbow":
-			if dx <= 1 and dy <= 1:
-				_log("[ATTACK] Crossbow cannot target adjacent monsters!")
-				return { "success": false, "error": "Crossbow cannot target adjacent monsters" }
-			if not has_line_of_sight(hero_pos, m_pos):
-				_log("[ATTACK] No clear line of sight to target for Crossbow!")
-				return { "success": false, "error": "No line of sight to target" }
-			spawn_projectile_vfx(hero_pos, m_pos, Color(0.8, 0.7, 0.5), 0.3)
-		elif cur_w_id == "dagger":
-			if dx > 1 or dy > 1:
-				if not has_line_of_sight(hero_pos, m_pos):
-					_log("[ATTACK] No line of sight to throw Dagger!")
+	if is_two_square_monster(target_m):
+		var is_adj = is_hero_adjacent_to_monster(hero, target_m)
+		if w_def.get("ranged", false):
+			if cur_w_id == "crossbow":
+				if is_adj:
+					_log("[ATTACK] Crossbow cannot target adjacent monsters!")
+					return { "success": false, "error": "Crossbow cannot target adjacent monsters" }
+				var has_los = false
+				for mt in get_monster_tiles(target_m):
+					if has_line_of_sight(hero_pos, mt):
+						has_los = true
+						break
+				if not has_los:
+					_log("[ATTACK] No clear line of sight to target for Crossbow!")
 					return { "success": false, "error": "No line of sight to target" }
-				spawn_projectile_vfx(hero_pos, m_pos, Color(0.85, 0.85, 0.95), 0.25)
-				_log("[ATTACK] %s throws a dagger at %s!" % [hero.get("name"), target_m.get("name")])
-	elif w_def.get("diagonal", false):
-		if not (dx <= 1 and dy <= 1 and (dx + dy > 0)):
-			_log("[ATTACK] Target is out of reach of %s!" % w_def.get("name"))
-			return { "success": false, "error": "Target out of reach" }
-		var center_screen = board_offset + Vector2((m_pos.x + 0.5) * tile_size, (m_pos.y + 0.5) * tile_size)
-		spawn_slash_vfx(center_screen, 0.785)
+				spawn_projectile_vfx(hero_pos, m_pos, Color(0.8, 0.7, 0.5), 0.3)
+			elif cur_w_id == "dagger":
+				if is_adj:
+					var center_screen = board_offset + Vector2((m_pos.x + 0.5) * tile_size, (m_pos.y + 0.5) * tile_size)
+					spawn_slash_vfx(center_screen, 0.0)
+				else:
+					var has_los = false
+					for mt in get_monster_tiles(target_m):
+						if has_line_of_sight(hero_pos, mt):
+							has_los = true
+							break
+					if not has_los:
+						_log("[ATTACK] No line of sight to throw Dagger!")
+						return { "success": false, "error": "No line of sight to target" }
+					spawn_projectile_vfx(hero_pos, m_pos, Color(0.85, 0.85, 0.95), 0.25)
+					_log("[ATTACK] %s throws a dagger at %s!" % [hero.get("name"), target_m.get("name")])
+		else:
+			if not is_adj:
+				_log("[ATTACK] Target is out of reach of %s!" % w_def.get("name", "weapon"))
+				return { "success": false, "error": "Target out of reach" }
+			var center_screen = board_offset + Vector2((m_pos.x + 0.5) * tile_size, (m_pos.y + 0.5) * tile_size)
+			spawn_slash_vfx(center_screen, 0.0)
 	else:
-		if dx + dy != 1:
-			_log("[ATTACK] %s cannot attack diagonally or at range!" % w_def.get("name", "Broadsword"))
-			return { "success": false, "error": "Weapon requires orthogonal adjacency" }
-		var center_screen = board_offset + Vector2((m_pos.x + 0.5) * tile_size, (m_pos.y + 0.5) * tile_size)
-		spawn_slash_vfx(center_screen, 0.0)
+		if w_def.get("ranged", false):
+			if cur_w_id == "crossbow":
+				if dx <= 1 and dy <= 1:
+					_log("[ATTACK] Crossbow cannot target adjacent monsters!")
+					return { "success": false, "error": "Crossbow cannot target adjacent monsters" }
+				if not has_line_of_sight(hero_pos, m_pos):
+					_log("[ATTACK] No clear line of sight to target for Crossbow!")
+					return { "success": false, "error": "No line of sight to target" }
+				spawn_projectile_vfx(hero_pos, m_pos, Color(0.8, 0.7, 0.5), 0.3)
+			elif cur_w_id == "dagger":
+				if dx > 1 or dy > 1:
+					if not has_line_of_sight(hero_pos, m_pos):
+						_log("[ATTACK] No line of sight to throw Dagger!")
+						return { "success": false, "error": "No line of sight to target" }
+					spawn_projectile_vfx(hero_pos, m_pos, Color(0.85, 0.85, 0.95), 0.25)
+					_log("[ATTACK] %s throws a dagger at %s!" % [hero.get("name"), target_m.get("name")])
+		elif w_def.get("diagonal", false):
+			if not (dx <= 1 and dy <= 1 and (dx + dy > 0)):
+				_log("[ATTACK] Target is out of reach of %s!" % w_def.get("name"))
+				return { "success": false, "error": "Target out of reach" }
+			var center_screen = board_offset + Vector2((m_pos.x + 0.5) * tile_size, (m_pos.y + 0.5) * tile_size)
+			spawn_slash_vfx(center_screen, 0.785)
+		else:
+			if dx + dy != 1:
+				_log("[ATTACK] %s cannot attack diagonally or at range!" % w_def.get("name", "Broadsword"))
+				return { "success": false, "error": "Weapon requires orthogonal adjacency" }
+			var center_screen = board_offset + Vector2((m_pos.x + 0.5) * tile_size, (m_pos.y + 0.5) * tile_size)
+			spawn_slash_vfx(center_screen, 0.0)
 
 	var atk_dice = get_hero_attack_dice(hero)
 	var def_dice = get_monster_defend_dice(target_m)
@@ -9162,12 +9398,27 @@ func dm_attack_hero(hero_id: String = "", attacker_monster: Variant = null) -> D
 				target_h = h
 				break
 			elif hero_id == "":
+				if is_monster_adjacent_to_hero(monster, h):
+					target_h = h
+					break
+	if target_h.is_empty() and hero_id == "":
+		for h in heroes:
+			if is_hero_alive(h):
 				target_h = h
 				break
 
 	if target_h.size() == 0:
 		_log("No living hero to attack!")
 		return {}
+
+	if not is_monster_adjacent_to_hero(monster, target_h):
+		_log("Target hero is out of reach of monster!")
+		return { "success": false, "error": "Target out of reach" }
+
+	if is_two_square_monster(monster):
+		_log("[2-SQUARE MONSTER] 🐉 %s attacks %s touching one of its 10 adjacent squares!" % [
+			monster.get("name", "Dragon"), target_h.get("name", "Hero")
+		])
 
 	var atk_dice = get_monster_attack_dice(monster)
 	var def_dice = get_hero_defend_dice(target_h)
@@ -9801,7 +10052,7 @@ func resolve_targeting_click(tile: Vector2i) -> Dictionary:
 
 	if t_type == "monster":
 		for m in monsters:
-			if bool(m.get("is_alive", false)) and m.get("grid_pos") == tile:
+			if bool(m.get("is_alive", false)) and get_monster_tiles(m).has(tile):
 				target_entity = m
 				break
 	elif t_type == "hero":
@@ -9843,6 +10094,7 @@ func resolve_targeting_entity(entity_type: String, entity_id: String) -> Diction
 
 	if result.get("success", false):
 		cancel_targeting()
+
 	return result
 
 func _update_targeting_hover_info(screen_pos: Vector2) -> void:
@@ -9861,7 +10113,7 @@ func _update_targeting_hover_info(screen_pos: Vector2) -> void:
 
 	if t_type == "monster":
 		for m in monsters:
-			if bool(m.get("is_alive", false)) and m.get("grid_pos") == tile and is_monster_currently_visible(m):
+			if bool(m.get("is_alive", false)) and get_monster_tiles(m).has(tile) and is_monster_currently_visible(m):
 				active_targeting["hovered_target"] = {
 					"type": "monster",
 					"id": str(m.get("id")),
@@ -10010,13 +10262,30 @@ func _draw_targeting_board_highlights(canvas: CanvasItem) -> void:
 				var m_pos: Vector2i = m.get("grid_pos", Vector2i(-1, -1))
 				if m_pos.x < 0 or m_pos.y < 0:
 					continue
-				var center = board_offset + Vector2((m_pos.x + 0.5) * tile_size, (m_pos.y + 0.5) * tile_size)
-				var is_hovered = (hovered_tile == m_pos)
+				var sz = get_monster_size(m)
+				var m_tiles = get_monster_tiles(m)
+				var is_hovered = false
+				for mt in m_tiles:
+					if hovered_tile == mt:
+						is_hovered = true
+						break
 				var ring_col = Color(1.0, 0.25, 0.2, 0.70 + pulse * 0.25) if not is_hovered else Color(1.0, 0.85, 0.2, 0.95)
-				var r_size = tile_size * (0.46 if not is_hovered else 0.49)
-				canvas.draw_arc(center, r_size, 0, TAU, 32, ring_col, 2.5 if is_hovered else 1.8)
-				canvas.draw_arc(center, r_size + 4.0, 0, TAU, 24, Color(ring_col.r, ring_col.g, ring_col.b, 0.4), 1.0)
-				_draw_target_brackets(canvas, center, r_size, ring_col)
+				if sz.x * sz.y > 1:
+					var m_rect = Rect2(
+						board_offset.x + m_pos.x * tile_size + 2,
+						board_offset.y + m_pos.y * tile_size + 2,
+						sz.x * tile_size - 4,
+						sz.y * tile_size - 4
+					)
+					canvas.draw_rect(m_rect, ring_col, false, 2.5 if is_hovered else 1.8)
+					canvas.draw_rect(Rect2(m_rect.position - Vector2(2, 2), m_rect.size + Vector2(4, 4)), Color(ring_col.r, ring_col.g, ring_col.b, 0.4), false, 1.0)
+					_draw_target_box_brackets(canvas, m_rect, ring_col)
+				else:
+					var center = board_offset + Vector2((m_pos.x + 0.5) * tile_size, (m_pos.y + 0.5) * tile_size)
+					var r_size = tile_size * (0.46 if not is_hovered else 0.49)
+					canvas.draw_arc(center, r_size, 0, TAU, 32, ring_col, 2.5 if is_hovered else 1.8)
+					canvas.draw_arc(center, r_size + 4.0, 0, TAU, 24, Color(ring_col.r, ring_col.g, ring_col.b, 0.4), 1.0)
+					_draw_target_brackets(canvas, center, r_size, ring_col)
 
 	elif t_type == "hero":
 		for h in heroes:
@@ -10043,6 +10312,24 @@ func _draw_target_brackets(canvas: CanvasItem, center: Vector2, radius: float, c
 	canvas.draw_line(center + Vector2(-offset, offset), center + Vector2(-offset, offset - b_len), col, 2.0)
 	canvas.draw_line(center + Vector2(offset, offset), center + Vector2(offset - b_len, offset), col, 2.0)
 	canvas.draw_line(center + Vector2(offset, offset), center + Vector2(offset, offset - b_len), col, 2.0)
+
+func _draw_target_box_brackets(canvas: CanvasItem, rect: Rect2, col: Color) -> void:
+	var b_len = 8.0
+	# Top-Left corner
+	canvas.draw_line(rect.position, rect.position + Vector2(b_len, 0), col, 2.0)
+	canvas.draw_line(rect.position, rect.position + Vector2(0, b_len), col, 2.0)
+	# Top-Right corner
+	var tr = Vector2(rect.end.x, rect.position.y)
+	canvas.draw_line(tr, tr + Vector2(-b_len, 0), col, 2.0)
+	canvas.draw_line(tr, tr + Vector2(0, b_len), col, 2.0)
+	# Bottom-Left corner
+	var bl = Vector2(rect.position.x, rect.end.y)
+	canvas.draw_line(bl, bl + Vector2(b_len, 0), col, 2.0)
+	canvas.draw_line(bl, bl + Vector2(0, -b_len), col, 2.0)
+	# Bottom-Right corner
+	var br = rect.end
+	canvas.draw_line(br, br + Vector2(-b_len, 0), col, 2.0)
+	canvas.draw_line(br, br + Vector2(0, -b_len), col, 2.0)
 
 func _get_valid_targeting_ids() -> Array:
 	var out: Array = []
@@ -11322,18 +11609,25 @@ func end_turn() -> void:
 func find_monster_path(start: Vector2i, goal: Vector2i, monster_id: String = "", allow_pass_allies: bool = true) -> Array[Vector2i]:
 	if start == goal:
 		return [start]
-	if goal.x < 0 or goal.x >= grid_cols or goal.y < 0 or goal.y >= grid_rows:
-		return []
-	if is_border_tile(goal) or goal == starting_stair:
-		return []
-	if is_tile_wall_blocked(goal) or is_tile_occupied_by_furniture(goal):
-		return []
-	# Living heroes strictly block monster movement
-	if is_tile_occupied_by_hero(goal):
-		return []
-	# Destination square cannot be occupied by another monster
-	if is_tile_occupied_by_monster(goal, monster_id):
-		return []
+	var moving_m: Dictionary = get_monster_by_id(monster_id) if monster_id != "" else {}
+	var is_two_sq = is_two_square_monster(moving_m)
+
+	if is_two_sq:
+		if not can_monster_fit_at(moving_m, goal, monster_id):
+			return []
+	else:
+		if goal.x < 0 or goal.x >= grid_cols or goal.y < 0 or goal.y >= grid_rows:
+			return []
+		if is_border_tile(goal) or goal == starting_stair:
+			return []
+		if is_tile_wall_blocked(goal) or is_tile_occupied_by_furniture(goal):
+			return []
+		# Living heroes strictly block monster movement
+		if is_tile_occupied_by_hero(goal):
+			return []
+		# Destination square cannot be occupied by another monster
+		if is_tile_occupied_by_monster(goal, monster_id):
+			return []
 
 	# A* open_set containing nodes: { "pos": Vector2i, "f": float, "g": float }
 	var h_start = float(absi(goal.x - start.x) + absi(goal.y - start.y))
@@ -11372,17 +11666,22 @@ func find_monster_path(start: Vector2i, goal: Vector2i, monster_id: String = "",
 			var neighbor = current + d
 			if neighbor.x < 0 or neighbor.x >= grid_cols or neighbor.y < 0 or neighbor.y >= grid_rows:
 				continue
-			if is_border_tile(neighbor) or neighbor == starting_stair:
-				continue
 			if closed_set.has(neighbor):
 				continue
 			if has_wall_between(current, neighbor):
 				continue
-			if is_tile_wall_blocked(neighbor) or is_tile_occupied_by_furniture(neighbor):
-				continue
-			# Living heroes strictly block monster movement
-			if is_tile_occupied_by_hero(neighbor):
-				continue
+
+			if is_two_sq:
+				if not can_monster_fit_at(moving_m, neighbor, monster_id):
+					continue
+			else:
+				if is_border_tile(neighbor) or neighbor == starting_stair:
+					continue
+				if is_tile_wall_blocked(neighbor) or is_tile_occupied_by_furniture(neighbor):
+					continue
+				# Living heroes strictly block monster movement
+				if is_tile_occupied_by_hero(neighbor):
+					continue
 
 			var step_cost = 1.0
 			var is_ally = is_tile_occupied_by_monster(neighbor, monster_id)
@@ -11894,9 +12193,7 @@ func find_best_monster_attack_plan(m: Dictionary, max_moves: int, forced_target_
 	# 2. Check if ALREADY adjacent to any living hero (no movement needed!)
 	var adjacent_heroes: Array[Dictionary] = []
 	for h in living_heroes:
-		var hp = _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
-		var dist = absi(hp.x - m_pos.x) + absi(hp.y - m_pos.y)
-		if dist == 1 and not has_wall_between(m_pos, hp):
+		if is_monster_adjacent_to_hero(m, h):
 			adjacent_heroes.append(h)
 
 	if not adjacent_heroes.is_empty():
@@ -11930,22 +12227,37 @@ func find_best_monster_attack_plan(m: Dictionary, max_moves: int, forced_target_
 	# 4. Search all valid attack tiles adjacent to all candidate heroes
 	var candidate_routes: Array[Dictionary] = []
 	var dirs = [Vector2i(0, -1), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(1, 0)]
+	var is_two_sq = is_two_square_monster(m)
 
 	for h in living_heroes:
 		var hp = _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
-		for d in dirs:
-			var atk_tile = hp + d
-			if atk_tile == m_pos:
-				continue
-			if not is_tile_walkable(atk_tile):
-				continue
-			if has_wall_between(atk_tile, hp):
-				continue
-			if is_tile_occupied_by_hero(atk_tile):
-				continue
-			if is_tile_occupied_by_monster(atk_tile, mid):
-				continue
+		var cand_destinations: Array[Vector2i] = []
+		if is_two_sq:
+			var sz = get_monster_size(m)
+			for ox in range(hp.x - sz.x - 1, hp.x + 2):
+				for oy in range(hp.y - sz.y - 1, hp.y + 2):
+					var cand = Vector2i(ox, oy)
+					if cand == m_pos:
+						continue
+					if can_monster_fit_at(m, cand, mid) and is_monster_adjacent_to_hero_at(m, cand, h):
+						if not cand_destinations.has(cand):
+							cand_destinations.append(cand)
+		else:
+			for d in dirs:
+				var atk_tile = hp + d
+				if atk_tile == m_pos:
+					continue
+				if not is_tile_walkable(atk_tile):
+					continue
+				if has_wall_between(atk_tile, hp):
+					continue
+				if is_tile_occupied_by_hero(atk_tile):
+					continue
+				if is_tile_occupied_by_monster(atk_tile, mid):
+					continue
+				cand_destinations.append(atk_tile)
 
+		for atk_tile in cand_destinations:
 			var p = find_monster_path(m_pos, atk_tile, mid, true)
 			if p.size() > 1:
 				var path_len = p.size() - 1
@@ -12058,8 +12370,7 @@ func find_best_monster_attack_plan(m: Dictionary, max_moves: int, forced_target_
 		var final_pos = move_path[move_path.size() - 1]
 		var can_attack = false
 		for h in living_heroes:
-			var hp = _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
-			if absi(hp.x - final_pos.x) + absi(hp.y - final_pos.y) == 1 and not has_wall_between(final_pos, hp):
+			if is_monster_adjacent_to_hero_at(m, final_pos, h):
 				can_attack = true
 				fallback_target = h
 				break
@@ -12130,8 +12441,7 @@ func _execute_single_monster_action(m: Dictionary) -> int:
 
 	var curr_pos = _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
 	var h_pos = _to_grid_pos(target_h.get("grid_pos", Vector2i(-1, -1)))
-	var dist = absi(h_pos.x - curr_pos.x) + absi(h_pos.y - curr_pos.y)
-	var is_adjacent = (dist == 1 and not has_wall_between(curr_pos, h_pos) and int(target_h.get("current_bp", 0)) > 0)
+	var is_adjacent = is_monster_adjacent_to_hero(m, target_h)
 	var is_boss = is_boss_monster(m)
 	var is_caster = is_boss or bool(m.get("isSpellcaster", false)) or get_monster_available_spells(m).size() > 0
 
@@ -12246,16 +12556,14 @@ func _process_enemy_turn(delta: float) -> void:
 			var attack_target = enemy_target_hero
 			var target_valid = false
 			if not attack_target.is_empty() and int(attack_target.get("current_bp", 0)) > 0:
-				var h_pos = _to_grid_pos(attack_target.get("grid_pos", Vector2i(-1, -1)))
-				if absi(h_pos.x - m_pos.x) + absi(h_pos.y - m_pos.y) == 1 and not has_wall_between(m_pos, h_pos):
+				if is_monster_adjacent_to_hero(acting_m, attack_target):
 					target_valid = true
 
 			if not target_valid:
 				var potential_targets: Array[Dictionary] = []
 				for h in heroes:
 					if h.get("is_on_board", false) and int(h.get("current_bp", 0)) > 0:
-						var hp = _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
-						if absi(hp.x - m_pos.x) + absi(hp.y - m_pos.y) == 1 and not has_wall_between(m_pos, hp):
+						if is_monster_adjacent_to_hero(acting_m, h):
 							potential_targets.append(h)
 				if not potential_targets.is_empty():
 					if difficulty_mode == "hard":
@@ -12491,16 +12799,14 @@ func skip_enemy_turn_timeout() -> Dictionary:
 		var attack_target = enemy_target_hero
 		var target_valid = false
 		if not attack_target.is_empty() and int(attack_target.get("current_bp", 0)) > 0:
-			var h_pos = _to_grid_pos(attack_target.get("grid_pos", Vector2i(-1, -1)))
-			if absi(h_pos.x - m_pos.x) + absi(h_pos.y - m_pos.y) == 1 and not has_wall_between(m_pos, h_pos):
+			if is_monster_adjacent_to_hero(acting_m, attack_target):
 				target_valid = true
 
 		if not target_valid:
 			var potential_targets: Array[Dictionary] = []
 			for h in heroes:
 				if h.get("is_on_board", false) and int(h.get("current_bp", 0)) > 0:
-					var hp = _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
-					if absi(hp.x - m_pos.x) + absi(hp.y - m_pos.y) == 1 and not has_wall_between(m_pos, hp):
+					if is_monster_adjacent_to_hero(acting_m, h):
 						potential_targets.append(h)
 			if not potential_targets.is_empty():
 				if difficulty_mode == "hard":
@@ -15882,7 +16188,12 @@ func get_telemetry_state() -> Dictionary:
 	for m in monsters:
 		var mc = m.duplicate(true)
 		var mp = m.get("grid_pos", Vector2i(-1, -1))
+		var sz = get_monster_size(m)
 		mc["grid_pos"] = [mp.x, mp.y]
+		mc["size"] = [sz.x, sz.y]
+		mc["isTwoSquare"] = (sz.x * sz.y == 2)
+		mc["occupiedTiles"] = get_monster_tiles(m).map(func(t): return [t.x, t.y])
+		mc["adjacentTiles"] = get_monster_adjacent_tiles(m).map(func(t): return [t.x, t.y])
 		mc["statusEffects"] = get_monster_status_effects(m)
 		mc["attackDice"] = get_monster_attack_dice(m)
 		mc["defendDice"] = get_monster_defend_dice(m)
@@ -15915,6 +16226,10 @@ func get_telemetry_state() -> Dictionary:
 				"attackDice": get_monster_attack_dice(m),
 				"defendDice": get_monster_defend_dice(m),
 				"moveSquares": int(m.get("moveSquares", 6)),
+				"size": [sz.x, sz.y],
+				"isTwoSquare": (sz.x * sz.y == 2),
+				"occupiedTiles": get_monster_tiles(m).map(func(t): return [t.x, t.y]),
+				"adjacentTiles": get_monster_adjacent_tiles(m).map(func(t): return [t.x, t.y]),
 				"isVisible": vis,
 				"isAlive": alive,
 				"displayedInUi": (alive or show_defeated_monsters),
@@ -17313,11 +17628,28 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			var ty = int(action_data.get("to_y", action_data.get("to", [0, 0])[1] if action_data.get("to") is Array and action_data.to.size() > 1 else 0))
 			var ok = open_door(Vector2i(fx, fy), Vector2i(tx, ty))
 			return { "success": ok }
-		"attack":
+		"attack", "attack_adjacent", "attack_adjacent_monster", "hero_attack":
 			var mid = str(action_data.get("monsterId", action_data.get("target", "")))
 			var weapon = str(action_data.get("weapon", action_data.get("weaponId", "")))
 			var res = attack_adjacent_monster(mid, weapon)
 			return res
+		"get_monster_footprint", "get_monster_tiles":
+			var mid = str(action_data.get("monsterId", action_data.get("id", "")))
+			var target_m = get_monster_by_id(mid)
+			if target_m.is_empty():
+				return { "success": false, "error": "Monster not found: " + mid }
+			var sz = get_monster_size(target_m)
+			var tiles = get_monster_tiles(target_m).map(func(t): return [t.x, t.y])
+			var adj = get_monster_adjacent_tiles(target_m).map(func(t): return [t.x, t.y])
+			return {
+				"success": true,
+				"monsterId": str(target_m.get("id")),
+				"size": [sz.x, sz.y],
+				"isTwoSquare": is_two_square_monster(target_m),
+				"tiles": tiles,
+				"adjacentTiles": adj,
+				"adjacentCount": adj.size()
+			}
 		"open_spell_selection", "open_elf_spell_selection", "open_elf_spell_modal", "show_elf_spell_modal":
 			show_elf_spell_selection_modal()
 			return { "success": true, "modal_visible": true, "elf_element": current_elf_element }
@@ -17493,6 +17825,8 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			var hid = str(action_data.get("heroId", action_data.get("target_hero_id", action_data.get("target", ""))))
 			var mid = str(action_data.get("monsterId", action_data.get("monster_id", action_data.get("attacker", action_data.get("monster", "")))))
 			var res = dm_attack_hero(hid, mid)
+			if res.has("success") and not bool(res["success"]):
+				return res
 			return { "success": true, "result": res }
 		"dm_cast_spell", "monster_cast_spell":
 			var hid = str(action_data.get("heroId", action_data.get("target", "")))
@@ -18153,50 +18487,86 @@ func _draw_board(canvas: CanvasItem) -> void:
 			var is_visible = is_monster_currently_visible(m)
 			if is_visible:
 				var pos = m.get("grid_pos", Vector2i(0, 0))
-				var screen_pos = board_offset + Vector2(pos.x * tile_size + tile_size * 0.5, pos.y * tile_size + tile_size * 0.5)
-				var token_radius = tile_size * 0.4
+				var sz = get_monster_size(m)
 				var token_tex = get_monster_token_texture(m)
+				if sz.x * sz.y > 1:
+					# 2-square monster (e.g. Dragon 1x2 or 2x1)
+					var m_rect = Rect2(
+						board_offset.x + pos.x * tile_size + 3,
+						board_offset.y + pos.y * tile_size + 3,
+						sz.x * tile_size - 6,
+						sz.y * tile_size - 6
+					)
+					# Drop shadow
+					canvas.draw_rect(Rect2(m_rect.position + Vector2(2, 3), m_rect.size), Color(0.0, 0.0, 0.0, 0.55))
+					var bg_col = Color.from_string(m.get("tokenColor", "#881337"), Color(0.65, 0.1, 0.18, 0.95))
+					canvas.draw_rect(m_rect, bg_col)
+					if token_tex:
+						canvas.draw_texture_rect(token_tex, m_rect, false)
+					# Gold / crimson boss border
+					canvas.draw_rect(m_rect, Color(1.0, 0.78, 0.2, 0.95), false, 2.0)
+					canvas.draw_rect(Rect2(m_rect.position + Vector2(2, 2), m_rect.size - Vector2(4, 4)), Color(0.85, 0.2, 0.15, 0.5), false, 1.0)
 
-				if token_tex:
-					# Draw subtle drop shadow under circular token
-					canvas.draw_circle(screen_pos + Vector2(1.5, 2.0), token_radius, Color(0.0, 0.0, 0.0, 0.52))
-					var dest_rect = Rect2(screen_pos.x - token_radius, screen_pos.y - token_radius, token_radius * 2.0, token_radius * 2.0)
-					canvas.draw_texture_rect(token_tex, dest_rect, false)
-					var rim_col = Color.from_string(m.get("tokenColor", "#b91c1c"), Color(0.8, 0.2, 0.2, 0.85))
-					canvas.draw_arc(screen_pos, token_radius, 0, TAU, 32, Color(rim_col.r, rim_col.g, rim_col.b, 0.85), 1.5)
+					var lbl = "DRAGON" if get_monster_token_key(m) == "dragon" else str(m.get("name", "BOSS")).to_upper()
+					var ft_sz = 10
+					var lw = ThemeDB.fallback_font.get_string_size(lbl, HORIZONTAL_ALIGNMENT_CENTER, -1, ft_sz).x
+					var badge_rect = Rect2(m_rect.get_center().x - lw * 0.5 - 4, m_rect.end.y - 14, lw + 8, 12)
+					canvas.draw_rect(badge_rect, Color(0.08, 0.10, 0.15, 0.85))
+					canvas.draw_rect(badge_rect, Color(1.0, 0.78, 0.2, 0.8), false, 1.0)
+					canvas.draw_string(ThemeDB.fallback_font, Vector2(m_rect.get_center().x - lw * 0.5, m_rect.end.y - 4), lbl, HORIZONTAL_ALIGNMENT_CENTER, -1, ft_sz, Color(1.0, 0.95, 0.85))
+
+					if m.get("is_sleeping", false):
+						var z_txt = "Zzz"
+						var zw = ThemeDB.fallback_font.get_string_size(z_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 11).x
+						canvas.draw_string(ThemeDB.fallback_font, Vector2(m_rect.get_center().x - zw * 0.5, m_rect.position.y - 4), z_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 11, Color(0.6, 0.7, 1.0))
+					if m.get("tempest_stunned", false):
+						canvas.draw_rect(Rect2(m_rect.position - Vector2(2, 2), m_rect.size + Vector2(4, 4)), Color(0.2, 0.8, 1.0, 0.85), false, 2.0)
 				else:
-					var col = Color.from_string(m.get("tokenColor", "#15803d"), Color.GREEN)
-					canvas.draw_circle(screen_pos, token_radius, col)
-					canvas.draw_arc(screen_pos, token_radius, 0, TAU, 24, Color(0.1, 0.3, 0.1, 0.9), 1.5)
-					var m_name = str(m.get("name", "Monster")).to_lower()
-					var m_code = "M"
-					if "skeleton" in m_name:
-						m_code = "SK"
-					elif "orc" in m_name:
-						m_code = "OR"
-					elif "goblin" in m_name:
-						m_code = "GB"
-					elif "zombie" in m_name:
-						m_code = "ZM"
-					elif "verag" in m_name:
-						m_code = "VG"
-					elif "fimir" in m_name:
-						m_code = "FM"
-					elif "mummy" in m_name:
-						m_code = "MU"
-					elif "gargoyle" in m_name:
-						m_code = "GG"
-					else:
-						m_code = m_name.substr(0, 2).to_upper()
-					var cd_w = ThemeDB.fallback_font.get_string_size(m_code, HORIZONTAL_ALIGNMENT_CENTER, -1, 12).x
-					canvas.draw_string(ThemeDB.fallback_font, Vector2(screen_pos.x - cd_w * 0.5, screen_pos.y + 4), m_code, HORIZONTAL_ALIGNMENT_CENTER, -1, 12, Color.WHITE)
+					var screen_pos = board_offset + Vector2(pos.x * tile_size + tile_size * 0.5, pos.y * tile_size + tile_size * 0.5)
+					var token_radius = tile_size * 0.4
 
-				if m.get("is_sleeping", false):
-					var z_txt = "Zzz"
-					var zw = ThemeDB.fallback_font.get_string_size(z_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 11).x
-					canvas.draw_string(ThemeDB.fallback_font, Vector2(screen_pos.x - zw * 0.5, screen_pos.y - tile_size * 0.45), z_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 11, Color(0.6, 0.7, 1.0))
-				if m.get("tempest_stunned", false):
-					canvas.draw_arc(screen_pos, tile_size * 0.46, 0, TAU, 16, Color(0.2, 0.8, 1.0, 0.85), 2.0)
+					if token_tex:
+						# Draw subtle drop shadow under circular token
+						canvas.draw_circle(screen_pos + Vector2(1.5, 2.0), token_radius, Color(0.0, 0.0, 0.0, 0.52))
+						var dest_rect = Rect2(screen_pos.x - token_radius, screen_pos.y - token_radius, token_radius * 2.0, token_radius * 2.0)
+						canvas.draw_texture_rect(token_tex, dest_rect, false)
+						var rim_col = Color.from_string(m.get("tokenColor", "#b91c1c"), Color(0.8, 0.2, 0.2, 0.85))
+						canvas.draw_arc(screen_pos, token_radius, 0, TAU, 32, Color(rim_col.r, rim_col.g, rim_col.b, 0.85), 1.5)
+					else:
+						var col = Color.from_string(m.get("tokenColor", "#15803d"), Color.GREEN)
+						canvas.draw_circle(screen_pos, token_radius, col)
+						canvas.draw_arc(screen_pos, token_radius, 0, TAU, 24, Color(0.1, 0.3, 0.1, 0.9), 1.5)
+						var m_name = str(m.get("name", "Monster")).to_lower()
+						var m_code = "M"
+						if "skeleton" in m_name:
+							m_code = "SK"
+						elif "orc" in m_name:
+							m_code = "OR"
+						elif "goblin" in m_name:
+							m_code = "GB"
+						elif "zombie" in m_name:
+							m_code = "ZM"
+						elif "verag" in m_name:
+							m_code = "VG"
+						elif "fimir" in m_name:
+							m_code = "FM"
+						elif "mummy" in m_name:
+							m_code = "MU"
+						elif "gargoyle" in m_name:
+							m_code = "GG"
+						elif "dragon" in m_name:
+							m_code = "DG"
+						else:
+							m_code = m_name.substr(0, 2).to_upper()
+						var cd_w = ThemeDB.fallback_font.get_string_size(m_code, HORIZONTAL_ALIGNMENT_CENTER, -1, 12).x
+						canvas.draw_string(ThemeDB.fallback_font, Vector2(screen_pos.x - cd_w * 0.5, screen_pos.y + 4), m_code, HORIZONTAL_ALIGNMENT_CENTER, -1, 12, Color.WHITE)
+
+					if m.get("is_sleeping", false):
+						var z_txt = "Zzz"
+						var zw = ThemeDB.fallback_font.get_string_size(z_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 11).x
+						canvas.draw_string(ThemeDB.fallback_font, Vector2(screen_pos.x - zw * 0.5, screen_pos.y - tile_size * 0.45), z_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 11, Color(0.6, 0.7, 1.0))
+					if m.get("tempest_stunned", false):
+						canvas.draw_arc(screen_pos, tile_size * 0.46, 0, TAU, 16, Color(0.2, 0.8, 1.0, 0.85), 2.0)
 
 	# Draw Starting Staircase Tile (Entrance / Exit)
 	var stair_rect = Rect2(board_offset + Vector2(starting_stair.x * tile_size + 2, starting_stair.y * tile_size + 2), Vector2(tile_size - 4, tile_size - 4))
