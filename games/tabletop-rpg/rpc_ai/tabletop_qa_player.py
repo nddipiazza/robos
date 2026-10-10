@@ -197,16 +197,24 @@ class TabletopQAPlayer:
         st = self.get_state()
         return st.get("parsedLogText", "")
 
-    def search(self, interactive: bool = False) -> dict:
-        self.log(f"Searching chamber for treasure (interactive={interactive})...")
-        return self.execute_action("search", interactive=interactive)
+    def search(self, interactive: bool = False, claim_hearth_heal: bool = False) -> dict:
+        self.log(f"Searching chamber for treasure (interactive={interactive}, claim_hearth_heal={claim_hearth_heal})...")
+        return self.execute_action("search", interactive=interactive, claim_hearth_heal=claim_hearth_heal)
 
-    def resolve_treasure_overlay(self) -> dict:
-        self.log("Dismissing / collecting active treasure card overlay...")
-        return self.execute_action("click_treasure_overlay")
+    def resolve_treasure_overlay(self, claim_hearth_heal: bool = False) -> dict:
+        self.log(f"Dismissing / collecting active treasure card overlay (claim_hearth_heal={claim_hearth_heal})...")
+        return self.execute_action("click_treasure_overlay", claim_hearth_heal=claim_hearth_heal)
 
-    def dismiss_treasure_overlay(self) -> dict:
-        return self.resolve_treasure_overlay()
+    def dismiss_treasure_overlay(self, claim_hearth_heal: bool = False) -> dict:
+        return self.resolve_treasure_overlay(claim_hearth_heal=claim_hearth_heal)
+
+    def claim_hearth_heal(self) -> dict:
+        self.log("Claiming +1 Body Point heal from Healing Hearth...")
+        return self.execute_action("claim_hearth_heal")
+
+    def draw_second_treasure_card(self) -> dict:
+        self.log("Drawing second treasure card from Sly Storage...")
+        return self.execute_action("draw_second_treasure_card")
 
     def get_treasure_overlay(self) -> dict:
         return self.get_state().get("treasureOverlay", {})
