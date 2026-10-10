@@ -154,6 +154,24 @@ class TabletopQAPlayer:
         self.log(f"Using item '{item_id}'{' by ' + hero_id if hero_id else ''}{' on ' + target_id if target_id else ''}...")
         return self.execute_action("use_item", itemId=item_id, heroId=hero_id, targetId=target_id)
 
+    def oracle_lay_out_room(self, hero_id: str = "", target_door_or_room: str = "") -> dict:
+        self.log(f"Invoking Oracle's Blessing to lay out room beyond adjacent closed door{' ' + target_door_or_room if target_door_or_room else ''}{' for ' + hero_id if hero_id else ''}...")
+        kwargs = {}
+        if hero_id:
+            kwargs["heroId"] = hero_id
+        if target_door_or_room:
+            kwargs["targetId"] = target_door_or_room
+        return self.execute_action("oracle_lay_out_room", **kwargs)
+
+    def oracle_reroll_dice(self, hero_id: str = "", roll_type: str = "") -> dict:
+        self.log(f"Invoking Oracle's Blessing to re-roll dice (type='{roll_type}'){' for ' + hero_id if hero_id else ''}...")
+        kwargs = {}
+        if hero_id:
+            kwargs["heroId"] = hero_id
+        if roll_type:
+            kwargs["rollType"] = roll_type
+        return self.execute_action("oracle_reroll_dice", **kwargs)
+
     def open_item_panel(self) -> dict:
         self.log("Opening HUD backpack / item modal...")
         return self.execute_action("open_item_panel")

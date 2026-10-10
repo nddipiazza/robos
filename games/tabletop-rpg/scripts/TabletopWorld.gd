@@ -137,6 +137,11 @@ var turn_player_losses: Dictionary = {}
 var turn_losses_active: bool = false
 var log_display_mode: String = "damage_report"
 
+var last_roll_type: String = "" # "movement", "attack", "defend"
+var last_roll_hero_id: String = ""
+var last_roll_data: Dictionary = {}
+var last_roll_can_reroll: bool = false
+
 func _find_action_button(btn_name: String) -> Button:
 	for p in [
 		"UI/ActionsBar/HotbarHBox/ActionsScroll/Actions/" + btn_name,
@@ -5964,6 +5969,7 @@ func _update_item_use_modal_ui() -> void:
 		var i_name = str(item_info.get("name", item_str.replace("_", " ").capitalize()))
 		var i_icon = str(item_info.get("icon", "📦"))
 		var i_desc = str(item_info.get("description", ""))
+		var is_blessing = HeroQuestEquipment.is_blessing(item_str) or item_str.contains("blessing")
 		var is_cons = HeroQuestEquipment.is_consumable(item_str) or item_str.contains("potion")
 
 		var card = PanelContainer.new()
@@ -5978,7 +5984,9 @@ func _update_item_use_modal_ui() -> void:
 		var is_arm = not HeroQuestEquipment.get_armor(item_str).is_empty()
 		var is_equipped = (hero.get("equipped_weapon") == item_str) or (hero.get("equipped_armor", []).has(item_str))
 
-		if is_cons:
+		if is_blessing:
+			csb.border_color = Color(1.0, 0.85, 0.25, 0.95) # Amber/Gold
+		elif is_cons:
 			csb.border_color = Color(0.2, 0.85, 0.45, 0.9) # Emerald
 		elif is_equipped:
 			csb.border_color = Color(1.0, 0.8, 0.2, 0.9) # Gold equipped
@@ -6008,7 +6016,10 @@ func _update_item_use_modal_ui() -> void:
 		hrow.add_child(nlbl)
 
 		var badge = Label.new()
-		if is_cons:
+		if is_blessing:
+			badge.text = "[BLESSING]"
+			badge.add_theme_color_override("font_color", Color(1.0, 0.85, 0.25, 1.0))
+		elif is_cons:
 			badge.text = "[CONSUMABLE]"
 			badge.add_theme_color_override("font_color", Color(0.2, 0.85, 0.45, 1.0))
 		elif is_equipped:
@@ -6036,7 +6047,38 @@ func _update_item_use_modal_ui() -> void:
 		var btn_row = HBoxContainer.new()
 		btn_row.add_theme_constant_override("separation", 6)
 
-		if is_cons:
+		if is_blessing:
+			if item_str.contains("oracle"):
+				var rbtn = Button.new()
+				rbtn.text = "🔮 Lay Out Room"
+				rbtn.tooltip_text = "Ask Zargon to lay out the room beyond adjacent closed door."
+				rbtn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				rbtn.pressed.connect(func():
+					oracle_lay_out_room(hid)
+					_update_item_use_modal_ui()
+				)
+				btn_row.add_child(rbtn)
+
+				var roll_btn = Button.new()
+				roll_btn.text = "🎲 Re-Roll Dice"
+				roll_btn.tooltip_text = "Re-roll all dice from your last attack, defend, or move roll and keep the 2nd result."
+				roll_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				roll_btn.pressed.connect(func():
+					oracle_reroll_dice(hid)
+					_update_item_use_modal_ui()
+				)
+				btn_row.add_child(roll_btn)
+			else:
+				var ubtn = Button.new()
+				ubtn.text = "✨ Invoke Blessing (%s)" % str(hero.get("name"))
+				ubtn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				var cur_item_id = item_str
+				ubtn.pressed.connect(func():
+					use_item(hid, cur_item_id)
+					_update_item_use_modal_ui()
+				)
+				btn_row.add_child(ubtn)
+		elif is_cons:
 			var ubtn = Button.new()
 			ubtn.text = "🧪 Drink / Use (%s)" % str(hero.get("name"))
 			ubtn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -7297,6 +7339,19 @@ func roll_movement_dice() -> Dictionary:
 	turn_state = "moving"
 	movement_start_pos = hero.get("grid_pos", Vector2i(-1, -1))
 	movement_trail = [movement_start_pos]
+
+	last_roll_type = "movement"
+	last_roll_hero_id = str(hero.get("id"))
+	last_roll_data = {
+		"hero_id": str(hero.get("id")),
+		"hero_name": str(hero.get("name", "Hero")),
+		"has_plate": has_plate,
+		"is_swift": is_swift,
+		"roll": roll.duplicate(true),
+		"dice_vals": dice_vals.duplicate(true)
+	}
+	last_roll_can_reroll = true
+
 	show_flashy_roll_number(int(roll.get("total", 0)))
 	trigger_movement_dice_roll(roll, str(hero.get("name", "Hero")), dice_vals)
 	_update_ui()
@@ -7867,6 +7922,9 @@ func use_item(hero_id: String = "", item_id: String = "", target_id: String = ""
 		if (norm_item_key in ["holy_water", "holy-water"]) and (cur_inv_key in ["holy_water", "holy-water"]):
 			found_idx = i
 			break
+		if (norm_item_key in ["oracles_blessing", "oracle_blessing", "blessing_of_the_oracle"]) and (cur_inv_key in ["oracles_blessing", "oracle_blessing", "blessing_of_the_oracle"]):
+			found_idx = i
+			break
 
 	if found_idx == -1:
 		# If not in inventory, check if it's currently equipped weapon or armor
@@ -8050,6 +8108,28 @@ func use_item(hero_id: String = "", item_id: String = "", target_id: String = ""
 			auto_save_game()
 			return { "success": true, "item": item_id, "action": "heal", "healed": healed, "target": str(target_h.get("id")) }
 
+	elif norm_item_key in ["oracles_blessing", "oracle_blessing", "blessing_of_the_oracle"]:
+		if target_id == "reroll" or target_id == "roll":
+			return oracle_reroll_dice(hid)
+		elif target_id == "lay_out_room" or target_id == "door" or target_id == "room":
+			return oracle_lay_out_room(hid)
+		elif target_id != "":
+			var doors_now = get_adjacent_closed_doors()
+			if not doors_now.is_empty():
+				return oracle_lay_out_room(hid, target_id)
+			elif last_roll_can_reroll:
+				return oracle_reroll_dice(hid)
+			else:
+				return oracle_lay_out_room(hid, target_id)
+		else:
+			var doors_now = get_adjacent_closed_doors()
+			if not doors_now.is_empty():
+				return oracle_lay_out_room(hid)
+			elif last_roll_can_reroll:
+				return oracle_reroll_dice(hid)
+			else:
+				return oracle_lay_out_room(hid)
+
 	# 2. Weapons
 	var w = HeroQuestEquipment.get_weapon(item_id)
 	if not w.is_empty():
@@ -8078,6 +8158,306 @@ func use_item(hero_id: String = "", item_id: String = "", target_id: String = ""
 		return eq_res
 
 	return { "success": false, "error": "Unknown item effect: " + item_id }
+
+func get_unrevealed_room_beyond_door(d: Dictionary, h_pos: Vector2i) -> Dictionary:
+	var f = d.get("from", [0, 0])
+	var t = d.get("to", [0, 0])
+	var p_from = Vector2i(f[0], f[1])
+	var p_to = Vector2i(t[0], t[1])
+	var target_tile = p_to if h_pos == p_from else p_from
+
+	var room_at_target = _get_room_at(target_tile)
+	var room_id = ""
+	if room_at_target.size() > 0:
+		room_id = str(room_at_target.get("id", ""))
+	elif d.has("room") and str(d.get("room", "")) != "":
+		room_id = str(d.get("room"))
+	else:
+		var room_at_other = _get_room_at(p_from if target_tile == p_to else p_to)
+		if room_at_other.size() > 0:
+			room_id = str(room_at_other.get("id", ""))
+
+	var room_obj = _get_room_by_id(room_id)
+	return {
+		"room_id": room_id,
+		"room_obj": room_obj,
+		"target_tile": target_tile
+	}
+
+func oracle_lay_out_room(hero_id: String = "", door_or_room_id: String = "") -> Dictionary:
+	var hero: Dictionary = {}
+	if hero_id != "":
+		for h in heroes:
+			if str(h.get("id")) == hero_id:
+				hero = h
+				break
+	if hero.is_empty():
+		hero = get_active_hero()
+	if hero.is_empty():
+		return { "success": false, "error": "No valid hero for Oracle's Blessing" }
+
+	var hid = str(hero.get("id"))
+	var h_name = str(hero.get("name", "Hero"))
+	var inv: Array = hero.get("inventory", []).duplicate()
+	var found_idx = -1
+	for i in range(inv.size()):
+		var ikey = str(inv[i]).to_lower().strip_edges().replace("-", "_")
+		if ikey in ["oracles_blessing", "oracle_blessing", "blessing_of_the_oracle"]:
+			found_idx = i
+			break
+
+	if found_idx == -1:
+		return { "success": false, "error": "%s does not possess an Oracle's Blessing." % h_name }
+
+	var h_pos = _to_grid_pos(hero.get("grid_pos", Vector2i(-1, -1)))
+	var target_door: Dictionary = {}
+	var target_room_id: String = ""
+
+	# Check adjacent closed doors
+	var closed_doors = get_adjacent_closed_doors()
+	if door_or_room_id != "":
+		for d in doors:
+			if str(d.get("id", "")) == door_or_room_id or str(d.get("room", "")) == door_or_room_id:
+				target_door = d
+				break
+		if target_door.is_empty():
+			for r in rooms:
+				if str(r.get("id", "")) == door_or_room_id:
+					target_room_id = door_or_room_id
+					break
+
+	if target_door.is_empty() and not closed_doors.is_empty():
+		for cd in closed_doors:
+			var beyond = get_unrevealed_room_beyond_door(cd, h_pos)
+			var rid = str(beyond.get("room_id", ""))
+			if rid != "" and not revealed_rooms.has(rid):
+				target_door = cd
+				target_room_id = rid
+				break
+		if target_door.is_empty():
+			target_door = closed_doors[0]
+
+	if target_door.is_empty() and target_room_id == "":
+		_log("[WARNING] %s invokes Oracle's Blessing, but no adjacent closed door is near!" % h_name)
+		return { "success": false, "error": "Oracle's Blessing requires the hero to be adjacent to a closed door to ask Zargon to lay out the room beyond." }
+
+	if target_room_id == "" and not target_door.is_empty():
+		var beyond = get_unrevealed_room_beyond_door(target_door, h_pos)
+		target_room_id = str(beyond.get("room_id", ""))
+
+	if target_room_id == "":
+		return { "success": false, "error": "Could not identify a room beyond the adjacent door." }
+
+	var room_obj = _get_room_by_id(target_room_id)
+	var room_name = str(room_obj.get("name", target_room_id))
+
+	# Lay out the room!
+	reveal_room_by_id(target_room_id)
+
+	# Crucial: door remains CLOSED!
+	if not target_door.is_empty():
+		target_door["is_open"] = false
+
+	# Consume the blessing
+	inv.remove_at(found_idx)
+	hero["inventory"] = inv
+
+	var hero_screen = board_offset + Vector2((h_pos.x + 0.5) * tile_size, (h_pos.y + 0.5) * tile_size)
+	spawn_burst_vfx(hero_screen, Color(1.0, 0.85, 0.25), 60.0, 0.6)
+	spawn_floating_text(h_pos, "✨ CLAIRVOYANCE: %s" % room_name.to_upper(), Color(1.0, 0.88, 0.3), 2.2)
+
+	# Count discovered monsters inside the newly revealed room
+	var monsters_in_room = 0
+	for m in monsters:
+		if m.get("is_alive", false) and str(m.get("roomId", "")) == target_room_id:
+			monsters_in_room += 1
+
+	_log("[BLESSING] %s invokes the Oracle's Blessing! Zargon lays out %s beyond the closed door without opening it (revealing %d monster(s) and chamber secrets)!" % [
+		h_name, room_name, monsters_in_room
+	])
+
+	update_party_vision()
+	_update_ui()
+	queue_redraw_all()
+	auto_save_game()
+
+	return {
+		"success": true,
+		"action": "lay_out_room",
+		"room_id": target_room_id,
+		"room_name": room_name,
+		"door_closed": true,
+		"monsters_revealed": monsters_in_room
+	}
+
+func oracle_reroll_dice(hero_id: String = "", roll_type: String = "") -> Dictionary:
+	var hero: Dictionary = {}
+	if hero_id != "":
+		for h in heroes:
+			if str(h.get("id")) == hero_id:
+				hero = h
+				break
+	if hero.is_empty():
+		hero = get_active_hero()
+	if hero.is_empty():
+		return { "success": false, "error": "No valid hero for Oracle's Blessing" }
+
+	var hid = str(hero.get("id"))
+	var h_name = str(hero.get("name", "Hero"))
+	var inv: Array = hero.get("inventory", []).duplicate()
+	var found_idx = -1
+	for i in range(inv.size()):
+		var ikey = str(inv[i]).to_lower().strip_edges().replace("-", "_")
+		if ikey in ["oracles_blessing", "oracle_blessing", "blessing_of_the_oracle"]:
+			found_idx = i
+			break
+
+	if found_idx == -1:
+		return { "success": false, "error": "%s does not possess an Oracle's Blessing." % h_name }
+
+	if not last_roll_can_reroll or last_roll_data.is_empty():
+		return { "success": false, "error": "No eligible roll to re-roll with Oracle's Blessing. (Second result must be taken)." }
+
+	var eff_roll_type = roll_type.to_lower().strip_edges()
+	if eff_roll_type == "":
+		eff_roll_type = last_roll_type
+
+	if eff_roll_type != last_roll_type:
+		return { "success": false, "error": "Last roll was '%s', cannot re-roll as '%s'." % [last_roll_type, eff_roll_type] }
+
+	# Remove the consumed blessing
+	inv.remove_at(found_idx)
+	hero["inventory"] = inv
+	last_roll_can_reroll = false # Rule: second result must be taken, cannot reroll a reroll!
+
+	var hero_pos = _to_grid_pos(hero.get("grid_pos", Vector2i(-1, -1)))
+	var hero_screen = board_offset + Vector2((hero_pos.x + 0.5) * tile_size, (hero_pos.y + 0.5) * tile_size)
+	spawn_burst_vfx(hero_screen, Color(1.0, 0.85, 0.25), 50.0, 0.55)
+
+	if eff_roll_type == "movement":
+		var has_plate = bool(last_roll_data.get("has_plate", false))
+		var is_swift = bool(last_roll_data.get("is_swift", false))
+		var old_roll = last_roll_data.get("roll", {})
+		var old_total = int(old_roll.get("total", movement_remaining))
+
+		var new_roll = {}
+		var new_dice_vals: Array = []
+		if has_plate:
+			var d1 = randi_range(1, 6)
+			new_roll = { "total": d1, "d1": d1, "d2": 0, "plate_mail": true }
+			new_dice_vals = [d1]
+		elif is_swift:
+			var r1 = TabletopDice.roll_movement()
+			var r2 = TabletopDice.roll_movement()
+			var total = r1.total + r2.total
+			new_roll = { "total": total, "d1": r1.total, "d2": r2.total, "swift_wind": true }
+			new_dice_vals = [r1.d1, r1.d2, r2.d1, r2.d2]
+		else:
+			new_roll = TabletopDice.roll_movement()
+			new_dice_vals = [new_roll.d1, new_roll.d2]
+
+		var new_total = int(new_roll.get("total", 2))
+		movement_remaining = new_total
+		movement_rolled = true
+		show_flashy_roll_number(new_total)
+		trigger_movement_dice_roll(new_roll, h_name, new_dice_vals)
+		spawn_floating_text(hero_pos, "✨ RE-ROLL: %d MOV" % new_total, Color(1.0, 0.85, 0.2), 2.0)
+		_log("[BLESSING] %s invokes the Oracle's Blessing to re-roll movement dice! Discards first roll (%d squares) -> Takes second result: [%s] = %d squares. The second result must be taken!" % [
+			h_name, old_total, ", ".join(new_dice_vals.map(func(v): return str(v))), new_total
+		])
+		_update_ui()
+		queue_redraw_all()
+		auto_save_game()
+		return {
+			"success": true,
+			"action": "reroll_movement",
+			"first_roll": old_total,
+			"second_roll": new_total,
+			"squares": new_total,
+			"dice": new_dice_vals
+		}
+
+	elif eff_roll_type == "attack":
+		var target_m: Dictionary = {}
+		var tid = str(last_roll_data.get("target_m_id", ""))
+		for m in monsters:
+			if str(m.get("id")) == tid or str(m.get("slug")) == tid:
+				target_m = m
+				break
+		if target_m.is_empty():
+			target_m = last_roll_data.get("target_m", {})
+
+		var atk_dice = int(last_roll_data.get("atk_dice", 3))
+		var def_dice = int(last_roll_data.get("def_dice", 2))
+		var prev_m_bp = int(last_roll_data.get("prev_m_bp", 1))
+		var old_res = last_roll_data.get("res", {})
+		var old_skulls = int(old_res.get("total_skulls", 0))
+
+		var new_res = TabletopDice.resolve_combat(atk_dice, def_dice, false)
+		var will_defeat = (new_res.wounds >= prev_m_bp)
+		trigger_combat_dice_roll(new_res, get_hero_display_title(hero), str(target_m.get("name", "Monster")), false, will_defeat)
+
+		if not target_m.is_empty():
+			var m_pos = _to_grid_pos(target_m.get("grid_pos", Vector2i(-1, -1)))
+			target_m["current_bp"] = maxi(0, prev_m_bp - new_res.wounds)
+			target_m["is_alive"] = int(target_m.get("current_bp", 0)) > 0
+			if int(target_m.get("current_bp", 0)) <= 0:
+				_log("[DEFEATED] %s is DEFEATED by Oracle's fated strike!" % target_m.get("name"))
+			spawn_floating_text(m_pos, "✨ RE-ROLL: %d SKULLS" % new_res.total_skulls, Color(1.0, 0.85, 0.2), 2.0)
+
+		_log("[BLESSING] %s invokes the Oracle's Blessing to re-roll attack dice! Discards first roll (%d Skulls) -> Takes second result: %d Skulls (inflicting %d wound(s) on %s, %d BP remaining). The second result must be taken!" % [
+			h_name, old_skulls, new_res.total_skulls, new_res.wounds, target_m.get("name", "Monster"), target_m.get("current_bp", 0)
+		])
+		last_combat_result = new_res
+		_update_ui()
+		queue_redraw_all()
+		auto_save_game()
+		return {
+			"success": true,
+			"action": "reroll_attack",
+			"first_skulls": old_skulls,
+			"second_skulls": new_res.total_skulls,
+			"wounds": new_res.wounds,
+			"target_remaining_bp": target_m.get("current_bp", 0),
+			"target_is_alive": target_m.get("is_alive", true)
+		}
+
+	elif eff_roll_type == "defend":
+		var target_h = hero
+		var atk_skulls = int(last_roll_data.get("atk_skulls", 2))
+		var def_dice = int(last_roll_data.get("def_dice", 2))
+		var prev_h_bp = int(last_roll_data.get("prev_h_bp", 8))
+		var old_res = last_roll_data.get("res", {})
+		var old_shields = int(old_res.get("effective_shields", 0))
+		var m_name = str(last_roll_data.get("monster_name", "Monster"))
+
+		var new_def = TabletopDice.roll_combat_dice(def_dice)
+		var new_shields = new_def.white_shields
+		var new_wounds = maxi(0, atk_skulls - new_shields)
+
+		target_h["current_bp"] = maxi(0, prev_h_bp - new_wounds)
+		target_h["is_dead"] = int(target_h.get("current_bp", 0)) <= 0
+		target_h["is_on_board"] = int(target_h.get("current_bp", 0)) > 0
+
+		spawn_floating_text(hero_pos, "✨ RE-ROLL: %d SHIELDS" % new_shields, Color(0.3, 0.85, 1.0), 2.0)
+		_log("[BLESSING] %s invokes the Oracle's Blessing to re-roll defense dice! Discards first roll (%d White Shields) -> Takes second result: %d White Shields (wounds taken: %d, Remaining BP: %d). The second result must be taken!" % [
+			h_name, old_shields, new_shields, new_wounds, target_h.get("current_bp")
+		])
+
+		_update_ui()
+		queue_redraw_all()
+		auto_save_game()
+		return {
+			"success": true,
+			"action": "reroll_defend",
+			"first_shields": old_shields,
+			"second_shields": new_shields,
+			"wounds": new_wounds,
+			"remaining_bp": target_h.get("current_bp"),
+			"is_dead": target_h.get("is_dead", false)
+		}
+
+	return { "success": false, "error": "Unknown roll type: " + eff_roll_type }
 
 # --- Hero Item & Equipment Exchange (HeroQuest Adjacency Rule) ---
 func are_heroes_adjacent(h1: Dictionary, h2: Dictionary) -> bool:
@@ -8436,6 +8816,24 @@ func attack_adjacent_monster(monster_id: String = "", weapon_id: String = "") ->
 
 	var hp_subtracted = 0
 	var prev_bp = int(target_m.get("current_bp", 1))
+
+	last_roll_type = "attack"
+	last_roll_hero_id = str(hero.get("id"))
+	last_roll_data = {
+		"hero_id": str(hero.get("id")),
+		"hero_name": str(hero.get("name", "Hero")),
+		"target_m": target_m,
+		"target_m_id": str(target_m.get("id", "")),
+		"target_m_name": str(target_m.get("name", "Monster")),
+		"atk_dice": atk_dice,
+		"def_dice": def_dice,
+		"prev_m_bp": prev_bp,
+		"def_shields": res.effective_shields,
+		"wounds_dealt": res.wounds,
+		"res": res.duplicate(true)
+	}
+	last_roll_can_reroll = true
+
 	if res.wounds > 0:
 		target_m["current_bp"] = maxi(0, prev_bp - res.wounds)
 		hp_subtracted = prev_bp - int(target_m.get("current_bp", 0))
@@ -8520,6 +8918,22 @@ func dm_attack_hero(hero_id: String = "", attacker_monster: Variant = null) -> D
 
 	var h_hp_subtracted = 0
 	var prev_h_bp = int(target_h.get("current_bp", 8))
+
+	last_roll_type = "defend"
+	last_roll_hero_id = str(target_h.get("id"))
+	last_roll_data = {
+		"hero_id": str(target_h.get("id")),
+		"hero_name": str(target_h.get("name", "Hero")),
+		"monster": monster,
+		"monster_name": str(monster.get("name", "Monster")),
+		"atk_skulls": res.total_skulls,
+		"def_dice": def_dice,
+		"prev_h_bp": prev_h_bp,
+		"wounds_taken": res.wounds,
+		"res": res.duplicate(true)
+	}
+	last_roll_can_reroll = true
+
 	if res.wounds > 0:
 		target_h["current_bp"] = maxi(0, prev_h_bp - res.wounds)
 		h_hp_subtracted = prev_h_bp - int(target_h.get("current_bp", 0))
@@ -10611,6 +11025,10 @@ func end_turn() -> void:
 	movement_closed = false
 	movement_start_pos = Vector2i(-1, -1)
 	movement_trail.clear()
+	last_roll_type = ""
+	last_roll_hero_id = ""
+	last_roll_data.clear()
+	last_roll_can_reroll = false
 	turn_state = "awaiting_roll"
 	update_party_vision()
 	_update_ui()
@@ -11082,6 +11500,23 @@ func dm_cast_spell_on_hero(m: Dictionary, spell_id: String, target_hero: Diction
 	])
 
 	var prev_h_bp = int(target_hero.get("current_bp", 8))
+
+	last_roll_type = "defend"
+	last_roll_hero_id = str(target_hero.get("id"))
+	last_roll_data = {
+		"hero_id": str(target_hero.get("id")),
+		"hero_name": str(target_hero.get("name", "Hero")),
+		"monster": m,
+		"monster_name": str(m_name),
+		"spell_name": spell_name,
+		"atk_skulls": combat_res.total_skulls,
+		"def_dice": def_dice,
+		"prev_h_bp": prev_h_bp,
+		"wounds_taken": combat_res.wounds,
+		"res": combat_res.duplicate(true)
+	}
+	last_roll_can_reroll = true
+
 	if combat_res.wounds > 0:
 		target_hero["current_bp"] = maxi(0, prev_h_bp - combat_res.wounds)
 		_log("[SPELL HIT] %s takes %d wound(s) from %s! Remaining BP: %d" % [
@@ -16567,6 +17002,14 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			var target_id = str(action_data.get("targetId", action_data.get("target", "")))
 			var res = use_item(h_id, item_id, target_id)
 			return res
+		"oracle_lay_out_room", "blessing_lay_out_room":
+			var h_id = str(action_data.get("heroId", action_data.get("hero", get_active_hero().get("id", ""))))
+			var target_door_or_room = str(action_data.get("doorId", action_data.get("targetId", action_data.get("target", action_data.get("door", "")))))
+			return oracle_lay_out_room(h_id, target_door_or_room)
+		"oracle_reroll_dice", "blessing_reroll", "reroll_with_blessing":
+			var h_id = str(action_data.get("heroId", action_data.get("hero", get_active_hero().get("id", ""))))
+			var r_type = str(action_data.get("rollType", action_data.get("roll_type", action_data.get("type", ""))))
+			return oracle_reroll_dice(h_id, r_type)
 		"pass_item", "exchange_item", "give_item", "trade_item":
 			var from_id = str(action_data.get("fromHeroId", action_data.get("from_hero", action_data.get("from", action_data.get("heroId", get_active_hero().get("id", ""))))))
 			var to_id = str(action_data.get("toHeroId", action_data.get("to_hero", action_data.get("to", action_data.get("targetId", action_data.get("target", ""))))))

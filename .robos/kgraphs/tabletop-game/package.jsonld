@@ -1478,6 +1478,26 @@
       ],
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:blessing:oracles-blessing",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopBlessing",
+        "robos:ConsumableItem",
+        "schema:SpecialAnnouncement"
+      ],
+      "dcterms:title": "Oracle's Blessing",
+      "dcterms:description": "Consumable divine blessing. Invoked to ask Zargon to lay out the room beyond an adjacent closed door without opening it, or after rolling attack, defend, or move dice to re-roll all dice and take the second result.",
+      "robos:itemType": "blessing",
+      "robos:cost": 250,
+      "robos:isConsumable": true,
+      "robos:modes": [
+        "clairvoyance_lay_out_room",
+        "fated_reroll_dice"
+      ],
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
     }
   ],
   "@graph": [
@@ -2933,6 +2953,26 @@
         "urn:robos:tabletop:ai-directive:barbarian-frontline-striker",
         "urn:robos:tabletop:ai-directive:wizard-arcane-support",
         "urn:robos:tabletop:ai-directive:zargon-monster-retaliation"
+      ],
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:blessing:oracles-blessing",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopBlessing",
+        "robos:ConsumableItem",
+        "schema:SpecialAnnouncement"
+      ],
+      "dcterms:title": "Oracle's Blessing",
+      "dcterms:description": "Consumable divine blessing. Invoked to ask Zargon to lay out the room beyond an adjacent closed door without opening it, or after rolling attack, defend, or move dice to re-roll all dice and take the second result.",
+      "robos:itemType": "blessing",
+      "robos:cost": 250,
+      "robos:isConsumable": true,
+      "robos:modes": [
+        "clairvoyance_lay_out_room",
+        "fated_reroll_dice"
       ],
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"

@@ -210,6 +210,27 @@ const TOOLS: Dictionary = {
 	}
 }
 
+const BLESSINGS: Dictionary = {
+	"oracles_blessing": {
+		"id": "oracles_blessing",
+		"name": "Oracle's Blessing",
+		"type": "blessing",
+		"icon": "✨",
+		"description": "Invoke divine prophecy. Either ask Zargon to lay out the room beyond an adjacent closed door without opening it, OR re-roll all dice after rolling for attack, defend, or move (the second result must be taken).",
+		"cost": 300,
+		"allowed_heroes": ["barbarian", "dwarf", "elf", "wizard"]
+	},
+	"oracle_blessing": {
+		"id": "oracle_blessing",
+		"name": "Oracle's Blessing",
+		"type": "blessing",
+		"icon": "✨",
+		"description": "Invoke divine prophecy. Either ask Zargon to lay out the room beyond an adjacent closed door without opening it, OR re-roll all dice after rolling for attack, defend, or move (the second result must be taken).",
+		"cost": 300,
+		"allowed_heroes": ["barbarian", "dwarf", "elf", "wizard"]
+	}
+}
+
 func _normalize_eq_key(raw_id: String, prefix_strip: String = "") -> String:
 	var key = raw_id.to_lower().strip_edges()
 	if key.contains(":"):
@@ -264,8 +285,22 @@ func get_tool(tool_id: String) -> Dictionary:
 func is_tool(tool_id: String) -> bool:
 	return get_tool(tool_id).size() > 0
 
+func get_blessing(blessing_id: String) -> Dictionary:
+	var key = _normalize_eq_key(blessing_id, "blessing_")
+	if BLESSINGS.has(key):
+		return BLESSINGS[key]
+	for k in BLESSINGS:
+		if k in key or key in k:
+			return BLESSINGS[k]
+	return {}
+
+func is_blessing(item_id: String) -> bool:
+	return get_blessing(item_id).size() > 0
+
 func get_item(item_id: String) -> Dictionary:
 	var key = _normalize_eq_key(item_id)
+	if BLESSINGS.has(key):
+		return BLESSINGS[key]
 	if CONSUMABLES.has(key):
 		return CONSUMABLES[key]
 	if TOOLS.has(key):
@@ -274,6 +309,9 @@ func get_item(item_id: String) -> Dictionary:
 		return WEAPONS[key]
 	if ARMOR.has(key):
 		return ARMOR[key]
+	var b = get_blessing(item_id)
+	if b.size() > 0:
+		return b
 	var w = get_weapon(item_id)
 	if w.size() > 0:
 		return w
@@ -293,7 +331,8 @@ func get_all_equipment() -> Dictionary:
 		"weapons": WEAPONS,
 		"armor": ARMOR,
 		"consumables": CONSUMABLES,
-		"tools": TOOLS
+		"tools": TOOLS,
+		"blessings": BLESSINGS
 	}
 
 func can_hero_equip(hero_id: String, item_id: String) -> Dictionary:
