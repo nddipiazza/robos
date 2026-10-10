@@ -172,6 +172,18 @@ class TabletopQAPlayer:
             kwargs["rollType"] = roll_type
         return self.execute_action("oracle_reroll_dice", **kwargs)
 
+    def apply_status_effect(self, target_id: str, effect: str) -> dict:
+        self.log(f"Applying status effect '{effect}' to target '{target_id}'...")
+        return self.execute_action("apply_status_effect", targetId=target_id, effect=effect)
+
+    def remove_status_effect(self, target_id: str, effect: str) -> dict:
+        self.log(f"Removing status effect '{effect}' from target '{target_id}'...")
+        return self.execute_action("remove_status_effect", targetId=target_id, effect=effect)
+
+    def get_status_effects(self, target_id: str = "") -> dict:
+        self.log(f"Getting status effects for target '{target_id or 'active hero'}'...")
+        return self.execute_action("get_status_effects", targetId=target_id)
+
     def open_item_panel(self) -> dict:
         self.log("Opening HUD backpack / item modal...")
         return self.execute_action("open_item_panel")
