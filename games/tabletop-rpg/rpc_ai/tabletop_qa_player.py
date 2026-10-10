@@ -645,6 +645,32 @@ class TabletopQAPlayer:
         st = self.get_state()
         return bool(st.get("isQuestBegin", False))
 
+    # --- Difficulty & AI Tactics Helpers ---
+    def set_difficulty(self, difficulty: str = "normal") -> dict:
+        self.log(f"Setting game difficulty mode to '{difficulty}'...")
+        return self.execute_action("set_difficulty", difficulty=difficulty)
+
+    def set_hard_mode(self, enabled: bool = True) -> dict:
+        self.log(f"Setting hard mode to {enabled}...")
+        return self.execute_action("set_hard_mode", enabled=enabled)
+
+    def get_difficulty_mode(self) -> str:
+        st = self.get_state()
+        return str(st.get("difficultyMode", st.get("difficulty_mode", "normal")))
+
+    def is_hard_mode(self) -> bool:
+        st = self.get_state()
+        return bool(st.get("isHardMode", False) or st.get("is_hard_mode", False) or self.get_difficulty_mode() == "hard")
+
+    def execute_monster_action(self, monster_id: str) -> dict:
+        self.log(f"Executing single monster AI turn for: {monster_id}...")
+        return self.execute_action("execute_monster_action", monsterId=monster_id)
+
+    def dm_cast_spell(self, monster_id: str, spell_id: str, hero_id: str) -> dict:
+        self.log(f"Monster {monster_id} casting spell '{spell_id}' on {hero_id}...")
+        return self.execute_action("dm_cast_spell", monsterId=monster_id, spell=spell_id, heroId=hero_id)
+
+
 
 
 

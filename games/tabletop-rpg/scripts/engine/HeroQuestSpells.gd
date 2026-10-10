@@ -176,10 +176,39 @@ const SPELLS: Dictionary = {
 		"description": "Zargon summons a dread skeleton warrior into the dungeon.",
 		"vfx": "undead_burst",
 		"color": "#7e22ce"
+	},
+	"lightning_bolt": {
+		"id": "lightning_bolt",
+		"name": "Lightning Bolt",
+		"deck": "dread",
+		"target_type": "hero",
+		"range_type": "los",
+		"damage": 3,
+		"defend_dice": 2,
+		"icon": "⚡",
+		"description": "Crackling dark lightning bolts inflicting heavy magical damage on target hero.",
+		"vfx": "lightning_strike",
+		"color": "#eab308"
+	},
+	"fear": {
+		"id": "fear",
+		"name": "Fear",
+		"deck": "dread",
+		"target_type": "hero",
+		"range_type": "los",
+		"damage": 1,
+		"defend_dice": 1,
+		"icon": "😱",
+		"description": "Fills target hero's mind with dread terror, inflicting dark psychological trauma.",
+		"vfx": "fear_aura",
+		"color": "#a855f7"
 	}
 }
 
 func get_spell(spell_id: String) -> Dictionary:
+	var clean_id = spell_id.to_lower().strip_edges().replace("-", "_")
+	if SPELLS.has(clean_id):
+		return SPELLS[clean_id]
 	return SPELLS.get(spell_id.to_lower().strip_edges(), {})
 
 func get_spells_by_deck(deck: String) -> Array[Dictionary]:

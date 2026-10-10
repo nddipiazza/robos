@@ -8,6 +8,7 @@ const TILE_SIZE = 46.0
 const BOARD_OFFSET = Vector2(50.0, 70.0)
 
 var current_role: String = "player" # "player" or "gm" / "gamemaster" / "dm" / "dunmaster"
+var difficulty_mode: String = "normal" # "normal" or "hard"
 var current_round: int = 1
 var active_hero_idx: int = 0
 var active_monster_idx: int = 0
@@ -25,6 +26,9 @@ var combat_log: Array[String] = []
 
 func is_gm_role() -> bool:
 	return current_role == "gm" or current_role == "gamemaster" or current_role == "dm" or current_role == "dunmaster"
+
+func is_hard_mode() -> bool:
+	return difficulty_mode == "hard"
 
 var heroes: Array[Dictionary] = []
 var monsters: Array[Dictionary] = []
@@ -411,6 +415,7 @@ func _notification(what: int) -> void:
 func _ready() -> void:
 	print("[TabletopWorld] Initializing HeroQuest Cartridge Player...")
 	_check_cli_role()
+	_check_cli_difficulty()
 	_update_board_metrics()
 	_load_rpg_ui_theme_assets()
 	_load_active_cartridge()
@@ -1943,6 +1948,25 @@ func _check_cli_role() -> void:
 			current_role = "gm"
 		elif a == "--player":
 			current_role = "player"
+
+func _check_cli_difficulty() -> void:
+	var cmd_args = OS.get_cmdline_user_args() + OS.get_cmdline_args()
+	var diff_env = OS.get_environment("TABLETOP_DIFFICULTY").to_lower()
+	if diff_env != "":
+		difficulty_mode = diff_env
+	elif OS.get_environment("TABLETOP_HARD_MODE") == "1":
+		difficulty_mode = "hard"
+
+	for i in range(cmd_args.size()):
+		var a = cmd_args[i]
+		if (a == "--difficulty" or a == "--diff") and i + 1 < cmd_args.size():
+			difficulty_mode = cmd_args[i + 1].to_lower()
+		elif a.begins_with("--difficulty="):
+			difficulty_mode = a.split("=")[1].to_lower()
+		elif a == "--hard" or a == "--hard-mode":
+			difficulty_mode = "hard"
+		elif a == "--normal":
+			difficulty_mode = "normal"
 
 func _setup_ui_signals() -> void:
 	var header_hbox = get_node_or_null("UI/SidebarHeader")
@@ -9533,6 +9557,240 @@ func find_monster_path(start: Vector2i, goal: Vector2i, monster_id: String = "",
 
 	return []
 
+func _is_wizard(h: Dictionary) -> bool:
+	var h_id = str(h.get("id", "")).to_lower()
+	var h_name = str(h.get("name", "")).to_lower()
+	var h_class = str(h.get("class", h.get("hero_class", ""))).to_lower()
+	return h_id == "wizard" or "wizard" in h_id or "wizard" in h_name or "wizard" in h_class or "mage" in h_name
+
+func _is_hero_more_vulnerable(a: Dictionary, b: Dictionary) -> bool:
+	var a_bp = int(a.get("current_bp", 0))
+	var b_bp = int(b.get("current_bp", 0))
+	var a_critical = (a_bp <= 2)
+	var b_critical = (b_bp <= 2)
+	if a_critical != b_critical:
+		return a_critical # Target near death to secure kill!
+	if a_critical and b_critical:
+		if a_bp != b_bp:
+			return a_bp < b_bp
+
+	var a_wiz = _is_wizard(a)
+	var b_wiz = _is_wizard(b)
+	if a_wiz != b_wiz:
+		return a_wiz # Wizard is primary fragile caster target
+
+	var a_def = get_hero_defend_dice(a)
+	var b_def = get_hero_defend_dice(b)
+	if a_def != b_def:
+		return a_def < b_def # Lower defense takes more damage
+
+	if a_bp != b_bp:
+		return a_bp < b_bp # Lower BP
+
+	return false
+
+func is_boss_monster(m: Dictionary) -> bool:
+	if m.is_empty():
+		return false
+	if bool(m.get("isBoss", false)) or bool(m.get("is_boss", false)):
+		return true
+	var mid = str(m.get("id", "")).to_lower()
+	var mslug = str(m.get("slug", "")).to_lower()
+	var mname = str(m.get("name", "")).to_lower()
+	return mid.contains("verag") or mslug.contains("verag") or mname.contains("verag") or mslug.contains("boss") or mid.contains("boss") or get_monster_token_key(m) == "verag"
+
+func get_monster_available_spells(m: Dictionary) -> Array:
+	var spells = m.get("spells", [])
+	if not (spells is Array):
+		return []
+	var used = m.get("used_spells", [])
+	var available: Array = []
+	for s in spells:
+		var s_str = str(s).strip_edges().to_lower()
+		var s_norm = s_str.replace("-", "_")
+		var is_used = false
+		if used is Array:
+			for u in used:
+				var u_str = str(u).strip_edges().to_lower()
+				if u_str == s_str or u_str.replace("-", "_") == s_norm:
+					is_used = true
+					break
+		if not is_used:
+			available.append(s_str)
+	return available
+
+func boss_decide_spell_or_attack(m: Dictionary, target_h: Dictionary, is_adjacent: bool) -> Dictionary:
+	var forced = str(m.get("forced_next_action", "")).to_lower()
+	var avail_spells = get_monster_available_spells(m)
+	if avail_spells.is_empty():
+		if is_adjacent:
+			return { "action": "attack", "spell": "" }
+		else:
+			return { "action": "none", "spell": "" }
+
+	var chosen_spell = avail_spells[0]
+	for s in avail_spells:
+		if "lightning" in s or "flame" in s or "fear" in s:
+			chosen_spell = s
+			break
+
+	if forced == "spell":
+		return { "action": "spell", "spell": chosen_spell }
+	elif forced == "attack":
+		if is_adjacent:
+			return { "action": "attack", "spell": "" }
+		else:
+			return { "action": "none", "spell": "" }
+
+	if not is_adjacent:
+		return { "action": "spell", "spell": chosen_spell }
+
+	var spell_chance = 0.6 if difficulty_mode == "hard" else 0.5
+	if randf() < spell_chance:
+		return { "action": "spell", "spell": chosen_spell }
+	else:
+		return { "action": "attack", "spell": "" }
+
+func _find_best_spell_target_hero(m: Dictionary) -> Dictionary:
+	var m_pos = _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
+	var candidates: Array[Dictionary] = []
+	for h in heroes:
+		if h.get("is_on_board", false) and int(h.get("current_bp", 0)) > 0:
+			var hp = _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
+			if hp.x >= 0 and hp.y >= 0:
+				if not has_wall_between(m_pos, hp):
+					candidates.append(h)
+	if candidates.is_empty():
+		for h in heroes:
+			if h.get("is_on_board", false) and int(h.get("current_bp", 0)) > 0:
+				candidates.append(h)
+	if candidates.is_empty():
+		return {}
+
+	if difficulty_mode == "hard":
+		candidates.sort_custom(func(a, b): return _is_hero_more_vulnerable(a, b))
+	else:
+		candidates.sort_custom(func(a, b): return int(a.get("current_bp", 0)) < int(b.get("current_bp", 0)))
+
+	return candidates[0]
+
+func dm_cast_spell_on_hero(m: Dictionary, spell_id: String, target_hero: Dictionary) -> Dictionary:
+	if m.is_empty() or target_hero.is_empty():
+		return { "success": false, "error": "Invalid caster or target" }
+
+	var m_pos = _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
+	var h_pos = _to_grid_pos(target_hero.get("grid_pos", Vector2i(-1, -1)))
+	var m_screen = board_offset + Vector2((m_pos.x + 0.5) * tile_size, (m_pos.y + 0.5) * tile_size)
+	var h_screen = board_offset + Vector2((h_pos.x + 0.5) * tile_size, (h_pos.y + 0.5) * tile_size)
+
+	var s_clean = spell_id.strip_edges().to_lower().replace("-", "_")
+	var spell = HeroQuestSpells.get_spell(s_clean)
+	var spell_name = str(spell.get("name", spell_id.capitalize().replace("_", " ")))
+	var m_name = str(m.get("name", "Monster"))
+	var h_name = str(target_hero.get("name", "Hero"))
+
+	_log("[DREAD SPELL] %s unleashes the dark incantation: [b]%s[/b] upon %s!" % [m_name, spell_name, h_name])
+
+	# VFX
+	if "lightning" in s_clean:
+		spawn_projectile_vfx(m_pos, h_pos, Color(1.0, 0.9, 0.2), 0.35, "lightning")
+		spawn_burst_vfx(h_screen, Color(1.0, 0.95, 0.3), 45.0, 0.4)
+	elif "fear" in s_clean:
+		spawn_burst_vfx(h_screen, Color(0.7, 0.2, 0.8), 40.0, 0.4)
+		spawn_floating_text(h_pos, "FEAR!", Color(0.8, 0.3, 0.9))
+	elif "fire" in s_clean or "flame" in s_clean:
+		spawn_projectile_vfx(m_pos, h_pos, Color(1.0, 0.4, 0.1), 0.35, "fire_burst")
+		spawn_burst_vfx(h_screen, Color(1.0, 0.45, 0.1), 40.0, 0.4)
+	else:
+		spawn_beam_vfx(m_screen, h_screen, Color(0.8, 0.2, 0.8), 0.35)
+		spawn_burst_vfx(h_screen, Color(0.8, 0.2, 0.9), 35.0, 0.4)
+
+	var res: Dictionary = { "success": true, "spell": s_clean, "spell_name": spell_name, "caster": m.get("id"), "target": target_hero.get("id") }
+
+	var atk_dice = int(spell.get("damage", 2))
+	if "lightning" in s_clean:
+		atk_dice = 3
+	elif "fire" in s_clean:
+		atk_dice = 2
+	elif "fear" in s_clean:
+		atk_dice = 1
+
+	var def_dice = get_hero_defend_dice(target_hero)
+	var combat_res = TabletopDice.resolve_combat(atk_dice, def_dice, true)
+	var will_defeat = (combat_res.wounds >= int(target_hero.get("current_bp", 8)))
+	trigger_combat_dice_roll(combat_res, "%s (%s)" % [spell_name, m_name], get_hero_display_title(target_hero), true, will_defeat)
+
+	_log("[DREAD SPELL] %s rolled %d Skulls. %s rolled %d White Shields (Defend Dice: %d)." % [
+		spell_name, combat_res.total_skulls, h_name, combat_res.effective_shields, def_dice
+	])
+
+	var prev_h_bp = int(target_hero.get("current_bp", 8))
+	if combat_res.wounds > 0:
+		target_hero["current_bp"] = maxi(0, prev_h_bp - combat_res.wounds)
+		_log("[SPELL HIT] %s takes %d wound(s) from %s! Remaining BP: %d" % [
+			h_name, combat_res.wounds, spell_name, target_hero.get("current_bp")
+		])
+		if int(target_hero.get("current_bp", 0)) <= 0:
+			target_hero["is_dead"] = true
+			target_hero["is_on_board"] = false
+			_log("[HERO SLAIN] %s has fallen to %s's dark sorcery!" % [h_name, m_name])
+			spawn_floating_text(h_pos, "SLAIN!", Color(0.9, 0.1, 0.1))
+		record_damage_event(
+			h_name,
+			str(target_hero.get("id", "hero")),
+			combat_res.wounds,
+			int(target_hero.get("current_bp", 0)),
+			int(target_hero.get("bodyPoints", 8)),
+			h_pos,
+			true,
+			int(target_hero.get("current_bp", 0)) <= 0
+		)
+		if target_hero.get("rock_skin_active", false):
+			target_hero["rock_skin_active"] = false
+			_log("[SPELL] The wound shatters %s's Rock Skin spell!" % h_name)
+			spawn_floating_text(h_pos, "SHATTERED!", Color(0.8, 0.8, 0.8))
+	else:
+		_log("[BLOCKED] %s successfully warded off %s's %s!" % [h_name, m_name, spell_name])
+		spawn_floating_text(h_pos, "WARDED!", Color(0.3, 0.8, 1.0))
+
+	# Mark spell as used by monster
+	if not m.has("used_spells") or not (m["used_spells"] is Array):
+		m["used_spells"] = []
+	m["used_spells"].append(spell_id)
+	m["used_spells"].append(s_clean)
+
+	res["wounds"] = combat_res.wounds
+	res["combat_res"] = combat_res
+	res["remaining_bp"] = target_hero.get("current_bp")
+	res["killed"] = bool(target_hero.get("is_dead", false))
+
+	last_spell_result = res
+	_update_ui()
+	queue_redraw_all()
+	auto_save_game()
+	return res
+
+func dm_cast_spell_on_hero_by_ids(mid: String, sp: String, hid: String) -> Dictionary:
+	var monster: Dictionary = {}
+	for m in monsters:
+		if str(m.get("id")) == mid or str(m.get("slug")) == mid or mid.ends_with(str(m.get("id"))):
+			monster = m
+			break
+	if monster.is_empty():
+		monster = get_active_monster()
+	var target_h: Dictionary = {}
+	for h in heroes:
+		if is_hero_alive(h):
+			if hid != "" and (str(h.get("id")) == hid or str(h.get("name")).to_lower() == hid.to_lower()):
+				target_h = h
+				break
+			elif hid == "":
+				target_h = h
+				break
+	if monster.is_empty() or target_h.is_empty():
+		return { "success": false, "error": "Monster or hero not found" }
+	return dm_cast_spell_on_hero(monster, sp, target_h)
+
 func find_best_monster_attack_plan(m: Dictionary, max_moves: int, forced_target_hero: Dictionary = {}) -> Dictionary:
 	var m_pos = _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
 	var mid = str(m.get("id", ""))
@@ -9562,7 +9820,10 @@ func find_best_monster_attack_plan(m: Dictionary, max_moves: int, forced_target_
 			adjacent_heroes.append(h)
 
 	if not adjacent_heroes.is_empty():
-		adjacent_heroes.sort_custom(func(a, b): return int(a.get("current_bp", 0)) < int(b.get("current_bp", 0)))
+		if difficulty_mode == "hard":
+			adjacent_heroes.sort_custom(func(a, b): return _is_hero_more_vulnerable(a, b))
+		else:
+			adjacent_heroes.sort_custom(func(a, b): return int(a.get("current_bp", 0)) < int(b.get("current_bp", 0)))
 		var primary_target = adjacent_heroes[0]
 		var adj_path: Array[Vector2i] = [m_pos]
 		return {
@@ -9613,17 +9874,30 @@ func find_best_monster_attack_plan(m: Dictionary, max_moves: int, forced_target_
 					"path": p,
 					"path_len": path_len,
 					"can_reach_now": can_reach_now,
-					"hero_bp": int(h.get("current_bp", 0))
+					"hero_bp": int(h.get("current_bp", 0)),
+					"hero_defend_dice": get_hero_defend_dice(h),
+					"is_wizard": _is_wizard(h)
 				})
 
 	if not candidate_routes.is_empty():
-		candidate_routes.sort_custom(func(a, b):
-			if a["can_reach_now"] != b["can_reach_now"]:
-				return a["can_reach_now"]
-			if a["path_len"] != b["path_len"]:
+		if difficulty_mode == "hard":
+			candidate_routes.sort_custom(func(a, b):
+				if a["can_reach_now"] != b["can_reach_now"]:
+					return a["can_reach_now"]
+				var a_vuln = _is_hero_more_vulnerable(a["target_hero"], b["target_hero"])
+				var b_vuln = _is_hero_more_vulnerable(b["target_hero"], a["target_hero"])
+				if a_vuln != b_vuln:
+					return a_vuln
 				return a["path_len"] < b["path_len"]
-			return a["hero_bp"] < b["hero_bp"]
-		)
+			)
+		else:
+			candidate_routes.sort_custom(func(a, b):
+				if a["can_reach_now"] != b["can_reach_now"]:
+					return a["can_reach_now"]
+				if a["path_len"] != b["path_len"]:
+					return a["path_len"] < b["path_len"]
+				return a["hero_bp"] < b["hero_bp"]
+			)
 		var best_route = candidate_routes[0]
 		var full_path: Array[Vector2i] = best_route["path"]
 		var target_h: Dictionary = best_route["target_hero"]
@@ -9644,12 +9918,18 @@ func find_best_monster_attack_plan(m: Dictionary, max_moves: int, forced_target_
 		if absi(th_pos.x - final_pos.x) + absi(th_pos.y - final_pos.y) == 1 and not has_wall_between(final_pos, th_pos):
 			can_attack = true
 		else:
+			var adj_h: Array[Dictionary] = []
 			for h in living_heroes:
 				var hp = _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
 				if absi(hp.x - final_pos.x) + absi(hp.y - final_pos.y) == 1 and not has_wall_between(final_pos, hp):
-					can_attack = true
-					final_target = h
-					break
+					adj_h.append(h)
+			if not adj_h.is_empty():
+				can_attack = true
+				if difficulty_mode == "hard":
+					adj_h.sort_custom(func(a, b): return _is_hero_more_vulnerable(a, b))
+				else:
+					adj_h.sort_custom(func(a, b): return int(a.get("current_bp", 0)) < int(b.get("current_bp", 0)))
+				final_target = adj_h[0]
 
 		return {
 			"target_hero": final_target,
@@ -9753,14 +10033,45 @@ func _execute_single_monster_action(m: Dictionary) -> int:
 		])
 		acts += 1
 
-	if plan.get("can_attack", false):
-		var curr_pos = _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
-		var h_pos = _to_grid_pos(target_h.get("grid_pos", Vector2i(-1, -1)))
-		var dist = absi(h_pos.x - curr_pos.x) + absi(h_pos.y - curr_pos.y)
-		if dist == 1 and not has_wall_between(curr_pos, h_pos) and int(target_h.get("current_bp", 0)) > 0:
+	var curr_pos = _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
+	var h_pos = _to_grid_pos(target_h.get("grid_pos", Vector2i(-1, -1)))
+	var dist = absi(h_pos.x - curr_pos.x) + absi(h_pos.y - curr_pos.y)
+	var is_adjacent = (dist == 1 and not has_wall_between(curr_pos, h_pos) and int(target_h.get("current_bp", 0)) > 0)
+	var is_boss = is_boss_monster(m)
+
+	if is_boss:
+		var decision = boss_decide_spell_or_attack(m, target_h, is_adjacent)
+		if decision.action == "spell":
+			var sp_name = HeroQuestSpells.get_spell(decision.spell).get("name", decision.spell.capitalize())
+			_log("[BOSS TACTICS] %s decides to use a spell: casting %s on %s!" % [m.get("name"), sp_name, target_h.get("name")])
+			if difficulty_mode == "hard":
+				_log("[HARD MODE TACTICS] %s focuses on %s (weakest target: %d BP, %d Defend Dice) to maximize damage!" % [
+					m.get("name"), target_h.get("name"), int(target_h.get("current_bp", 0)), get_hero_defend_dice(target_h)
+				])
+			dm_cast_spell_on_hero(m, decision.spell, target_h)
+			acts += 1
+		elif decision.action == "attack" and is_adjacent:
+			_log("[BOSS TACTICS] %s decides to use an attack against %s!" % [m.get("name"), target_h.get("name")])
+			if difficulty_mode == "hard":
+				_log("[HARD MODE TACTICS] %s focuses on %s (weakest target: %d BP, %d Defend Dice) to maximize damage!" % [
+					m.get("name"), target_h.get("name"), int(target_h.get("current_bp", 0)), get_hero_defend_dice(target_h)
+				])
 			_log("[MONSTER] %s engages and attacks %s!" % [m.get("name"), target_h.get("name")])
 			dm_attack_hero(str(target_h.get("id", "")), m)
 			acts += 1
+		else:
+			_log("[TACTICS] %s could not reach the heroes in order to attack this turn." % m.get("name"))
+	else:
+		if is_adjacent:
+			if difficulty_mode == "hard":
+				_log("[HARD MODE TACTICS] %s focuses on %s (weakest target: %d BP, %d Defend Dice) to maximize damage!" % [
+					m.get("name"), target_h.get("name"), int(target_h.get("current_bp", 0)), get_hero_defend_dice(target_h)
+				])
+			_log("[MONSTER] %s engages and attacks %s!" % [m.get("name"), target_h.get("name")])
+			dm_attack_hero(str(target_h.get("id", "")), m)
+			acts += 1
+		else:
+			_log("[TACTICS] %s could not reach the heroes in order to attack this turn." % m.get("name"))
 
 	return acts
 
@@ -9826,7 +10137,7 @@ func _process_enemy_turn(delta: float) -> void:
 				enemy_turn_stage = "acting"
 
 		"acting":
-			# Execute enemy action (melee attack if adjacent to hero)
+			# Execute enemy action (melee attack if adjacent to hero, or boss spell)
 			var m_pos = _to_grid_pos(acting_m.get("grid_pos", Vector2i(-1, -1)))
 			var attack_target = enemy_target_hero
 			var target_valid = false
@@ -9836,23 +10147,65 @@ func _process_enemy_turn(delta: float) -> void:
 					target_valid = true
 
 			if not target_valid:
+				var potential_targets: Array[Dictionary] = []
 				for h in heroes:
 					if h.get("is_on_board", false) and int(h.get("current_bp", 0)) > 0:
 						var hp = _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
 						if absi(hp.x - m_pos.x) + absi(hp.y - m_pos.y) == 1 and not has_wall_between(m_pos, hp):
-							attack_target = h
-							target_valid = true
-							enemy_target_hero = h
-							break
+							potential_targets.append(h)
+				if not potential_targets.is_empty():
+					if difficulty_mode == "hard":
+						potential_targets.sort_custom(func(a, b): return _is_hero_more_vulnerable(a, b))
+					else:
+						potential_targets.sort_custom(func(a, b): return int(a.get("current_bp", 0)) < int(b.get("current_bp", 0)))
+					attack_target = potential_targets[0]
+					target_valid = true
+					enemy_target_hero = attack_target
 
-			if target_valid:
-				_log("[MONSTER] %s engages and attacks %s!" % [acting_m.get("name"), attack_target.get("name")])
-				dm_attack_hero(str(attack_target.get("id", "")), acting_m)
-				enemy_turn_stage = "waiting_for_action"
-				enemy_turn_timer = 2.4 # allow combat dice tray and damage plaque to display
+			var is_boss = is_boss_monster(acting_m)
+			if is_boss:
+				var decision = boss_decide_spell_or_attack(acting_m, attack_target, target_valid)
+				if decision.action == "spell":
+					var sp_target = attack_target if not attack_target.is_empty() else _find_best_spell_target_hero(acting_m)
+					if not sp_target.is_empty():
+						var sp_name = HeroQuestSpells.get_spell(decision.spell).get("name", decision.spell.capitalize())
+						_log("[BOSS TACTICS] %s decides to use a spell: casting %s on %s!" % [acting_m.get("name"), sp_name, sp_target.get("name")])
+						if difficulty_mode == "hard":
+							_log("[HARD MODE TACTICS] %s focuses on %s (weakest target: %d BP, %d Defend Dice) to maximize damage!" % [
+								acting_m.get("name"), sp_target.get("name"), int(sp_target.get("current_bp", 0)), get_hero_defend_dice(sp_target)
+							])
+						dm_cast_spell_on_hero(acting_m, decision.spell, sp_target)
+						enemy_turn_stage = "waiting_for_action"
+						enemy_turn_timer = 2.4
+					else:
+						_log("[TACTICS] %s could not reach the heroes in order to attack this turn." % acting_m.get("name"))
+						_finish_current_enemy_turn()
+				elif decision.action == "attack" and target_valid:
+					_log("[BOSS TACTICS] %s decides to use an attack against %s!" % [acting_m.get("name"), attack_target.get("name")])
+					if difficulty_mode == "hard":
+						_log("[HARD MODE TACTICS] %s focuses on %s (weakest target: %d BP, %d Defend Dice) to maximize damage!" % [
+							acting_m.get("name"), attack_target.get("name"), int(attack_target.get("current_bp", 0)), get_hero_defend_dice(attack_target)
+						])
+					_log("[MONSTER] %s engages and attacks %s!" % [acting_m.get("name"), attack_target.get("name")])
+					dm_attack_hero(str(attack_target.get("id", "")), acting_m)
+					enemy_turn_stage = "waiting_for_action"
+					enemy_turn_timer = 2.4
+				else:
+					_log("[TACTICS] %s could not reach the heroes in order to attack this turn." % acting_m.get("name"))
+					_finish_current_enemy_turn()
 			else:
-				# No melee attack possible
-				_finish_current_enemy_turn()
+				if target_valid:
+					if difficulty_mode == "hard":
+						_log("[HARD MODE TACTICS] %s focuses on %s (weakest target: %d BP, %d Defend Dice) to maximize damage!" % [
+							acting_m.get("name"), attack_target.get("name"), int(attack_target.get("current_bp", 0)), get_hero_defend_dice(attack_target)
+						])
+					_log("[MONSTER] %s engages and attacks %s!" % [acting_m.get("name"), attack_target.get("name")])
+					dm_attack_hero(str(attack_target.get("id", "")), acting_m)
+					enemy_turn_stage = "waiting_for_action"
+					enemy_turn_timer = 2.4
+				else:
+					_log("[TACTICS] %s could not reach the heroes in order to attack this turn." % acting_m.get("name"))
+					_finish_current_enemy_turn()
 
 		"waiting_for_action":
 			enemy_turn_timer -= delta
@@ -10027,17 +10380,32 @@ func skip_enemy_turn_timeout() -> Dictionary:
 				target_valid = true
 
 		if not target_valid:
+			var potential_targets: Array[Dictionary] = []
 			for h in heroes:
 				if h.get("is_on_board", false) and int(h.get("current_bp", 0)) > 0:
 					var hp = _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
 					if absi(hp.x - m_pos.x) + absi(hp.y - m_pos.y) == 1 and not has_wall_between(m_pos, hp):
-						attack_target = h
-						target_valid = true
-						break
+						potential_targets.append(h)
+			if not potential_targets.is_empty():
+				if difficulty_mode == "hard":
+					potential_targets.sort_custom(func(a, b): return _is_hero_more_vulnerable(a, b))
+				else:
+					potential_targets.sort_custom(func(a, b): return int(a.get("current_bp", 0)) < int(b.get("current_bp", 0)))
+				attack_target = potential_targets[0]
+				target_valid = true
 
+		var is_boss = is_boss_monster(acting_m)
 		if target_valid:
+			if is_boss:
+				_log("[BOSS TACTICS] %s decides to use an attack against %s!" % [acting_m.get("name"), attack_target.get("name")])
+			if difficulty_mode == "hard":
+				_log("[HARD MODE TACTICS] %s focuses on %s (weakest target: %d BP, %d Defend Dice) to maximize damage!" % [
+					acting_m.get("name"), attack_target.get("name"), int(attack_target.get("current_bp", 0)), get_hero_defend_dice(attack_target)
+				])
 			_log("[MONSTER] %s engages and attacks %s!" % [acting_m.get("name"), attack_target.get("name")])
 			dm_attack_hero(str(attack_target.get("id", "")), acting_m)
+		else:
+			_log("[TACTICS] %s could not reach the heroes in order to attack this turn." % acting_m.get("name"))
 
 	_finish_current_enemy_turn()
 	return { "success": true, "skipped_monster_id": m_id }
@@ -10076,7 +10444,8 @@ func _update_ui() -> void:
 		title_label.text = "HEROQUEST"
 		apply_rpg_font_to_label(title_label, true, 16, Color(1.0, 0.85, 0.25, 1.0))
 	if role_badge:
-		role_badge.text = "Role: " + ("Player" if current_role == "player" else "GM")
+		var mode_suffix = " [HARD]" if difficulty_mode == "hard" else ""
+		role_badge.text = "Role: " + ("Player" if current_role == "player" else "GM") + mode_suffix
 		apply_rpg_font_to_button(role_badge, 11, Color(1.0, 0.94, 0.76, 1.0))
 
 	var hero = get_active_hero()
@@ -13478,6 +13847,10 @@ func get_telemetry_state() -> Dictionary:
 		"isDemoActive": CartridgeManager.auto_play_enabled,
 		"autoPlayEnabled": CartridgeManager.auto_play_enabled,
 		"autoPlayStep": auto_play_step,
+		"difficultyMode": difficulty_mode,
+		"difficulty_mode": difficulty_mode,
+		"isHardMode": difficulty_mode == "hard",
+		"is_hard_mode": difficulty_mode == "hard",
 		"aiEngine": "Mentor Autonomous Party Harness vs Zargon DM",
 		"aiRole": "autonomous_player",
 		"hasStartingStairTexture": (get_tile_texture("stairs") != null),
@@ -13551,7 +13924,9 @@ func get_telemetry_state() -> Dictionary:
 			"attackerName": active_dice_animation.get("attacker_name", ""),
 			"defenderName": active_dice_animation.get("defender_name", "")
 		} if not active_dice_animation.is_empty() else {},
-		"combatLog": combat_log.slice(-10),
+		"combatLog": combat_log.slice(-15),
+		"recentCombatLog": combat_log.slice(-50),
+		"fullCombatLog": combat_log,
 		"aiStepPending": is_ai_step_pending,
 		"pendingAiCommand": pending_ai_command,
 		"nextAiStep": get_next_ai_step_command(),
@@ -14137,6 +14512,11 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 								else:
 									h[k] = h_patch[k]
 							break
+			if action_data.has("difficulty_mode") or action_data.has("difficulty"):
+				var d_val = str(action_data.get("difficulty_mode", action_data.get("difficulty", "normal"))).to_lower()
+				difficulty_mode = "hard" if (d_val == "hard" or d_val == "hard_mode") else "normal"
+			if action_data.has("is_hard_mode") or action_data.has("isHardMode"):
+				difficulty_mode = "hard" if bool(action_data.get("is_hard_mode", action_data.get("isHardMode", false))) else "normal"
 			if action_data.has("clearMonsters") and bool(action_data.get("clearMonsters")):
 				monsters.clear()
 			if action_data.has("monsters") and action_data.monsters is Array:
@@ -14507,6 +14887,34 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			var mid = str(action_data.get("monsterId", action_data.get("attacker", action_data.get("monster", ""))))
 			var res = dm_attack_hero(hid, mid)
 			return { "success": true, "result": res }
+		"dm_cast_spell", "monster_cast_spell":
+			var hid = str(action_data.get("heroId", action_data.get("target", "")))
+			var mid = str(action_data.get("monsterId", action_data.get("attacker", action_data.get("monster", ""))))
+			var sp = str(action_data.get("spell", action_data.get("spellId", "")))
+			var res = dm_cast_spell_on_hero_by_ids(mid, sp, hid)
+			return res
+		"set_difficulty", "set_difficulty_mode":
+			var d_mode = str(action_data.get("difficulty", action_data.get("mode", "normal"))).to_lower().strip_edges()
+			if d_mode == "hard" or d_mode == "hard_mode" or d_mode == "nightmare":
+				difficulty_mode = "hard"
+			else:
+				difficulty_mode = "normal"
+			_log("[DIFFICULTY] Game difficulty set to: %s" % difficulty_mode.to_upper())
+			_update_ui()
+			return { "success": true, "difficulty_mode": difficulty_mode, "is_hard_mode": difficulty_mode == "hard" }
+		"set_hard_mode":
+			var enable_hard = bool(action_data.get("enabled", true))
+			difficulty_mode = "hard" if enable_hard else "normal"
+			_log("[DIFFICULTY] Hard Mode %s" % ("ENABLED: Bad guys prioritize weakest targets!" if difficulty_mode == "hard" else "DISABLED"))
+			_update_ui()
+			return { "success": true, "difficulty_mode": difficulty_mode, "is_hard_mode": difficulty_mode == "hard" }
+		"execute_monster_action", "single_monster_turn":
+			var m_id = str(action_data.get("monsterId", action_data.get("id", "")))
+			for m in monsters:
+				if str(m.get("id")) == m_id or str(m.get("slug")) == m_id:
+					var acts = _execute_single_monster_action(m)
+					return { "success": true, "acted": acts, "monsterId": m_id }
+			return { "success": false, "error": "Monster not found" }
 		"summon_monster":
 			var sx = int(action_data.get("x", 3))
 			var sy = int(action_data.get("y", 0))
