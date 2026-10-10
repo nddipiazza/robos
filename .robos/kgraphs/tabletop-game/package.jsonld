@@ -2976,6 +2976,67 @@
       ],
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:item:hearthskin-horn",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopArtifact",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "The Hearthskin Horn",
+      "dcterms:description": "Legendary artifact horn carved from dragonbone and hearthstone. When blown, each character gets to place a friendly skeleton in their room or corridor in line of sight. Skeletons have movement 8, attack 2, defend 2, body 1, mind 0. They become new characters that take their turns immediately following their hero counterpart.",
+      "robos:itemType": "artifact",
+      "robos:cost": 600,
+      "robos:isConsumable": false,
+      "robos:action": "blow_hearthskin_horn",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:summon:friendly-skeleton",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSummon",
+        "robos:GameCharacter",
+        "schema:Person"
+      ],
+      "dcterms:title": "Friendly Skeleton",
+      "dcterms:description": "Reanimated skeletal ally summoned by The Hearthskin Horn. Possesses reduced functionality (cannot search for treasure or traps). Always takes its turn immediately after its hero counterpart.",
+      "robos:summoner": "urn:robos:tabletop:hero:barbarian",
+      "robos:bodyPoints": 1,
+      "robos:mindPoints": 0,
+      "robos:attackDice": 2,
+      "robos:defendDice": 2,
+      "robos:movementSquares": 8,
+      "robos:tokenColor": "#38bdf8",
+      "robos:tokenKey": "skeleton",
+      "robos:reducedFunctionality": true,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:summon:wizard-wolf",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSummon",
+        "robos:GameCharacter",
+        "schema:Person"
+      ],
+      "dcterms:title": "Summoned Wolf",
+      "dcterms:description": "Spectral beast companion conjured by the Wizard to fight in battle. Has reduced functionality and acts immediately following the Wizard.",
+      "robos:summoner": "urn:robos:tabletop:hero:wizard",
+      "robos:bodyPoints": 2,
+      "robos:mindPoints": 1,
+      "robos:attackDice": 2,
+      "robos:defendDice": 2,
+      "robos:movementSquares": 8,
+      "robos:tokenColor": "#38bdf8",
+      "robos:tokenKey": "wolf",
+      "robos:reducedFunctionality": true,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
     }
   ]
 }

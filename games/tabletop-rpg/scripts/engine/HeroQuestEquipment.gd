@@ -231,6 +231,27 @@ const BLESSINGS: Dictionary = {
 	}
 }
 
+const ARTIFACTS: Dictionary = {
+	"hearthskin_horn": {
+		"id": "hearthskin_horn",
+		"name": "The Hearthskin Horn",
+		"type": "artifact",
+		"icon": "🪯",
+		"description": "When blown, each character gets to place a friendly skeleton in their room or corridor in line of sight. Skeletons have movement 8, attack 2, defend 2, body 1, mind 0. They take their turns immediately following their hero counterpart.",
+		"cost": 600,
+		"allowed_heroes": ["barbarian", "dwarf", "elf", "wizard"]
+	},
+	"the_hearthskin_horn": {
+		"id": "hearthskin_horn",
+		"name": "The Hearthskin Horn",
+		"type": "artifact",
+		"icon": "🪯",
+		"description": "When blown, each character gets to place a friendly skeleton in their room or corridor in line of sight. Skeletons have movement 8, attack 2, defend 2, body 1, mind 0. They take their turns immediately following their hero counterpart.",
+		"cost": 600,
+		"allowed_heroes": ["barbarian", "dwarf", "elf", "wizard"]
+	}
+}
+
 func _normalize_eq_key(raw_id: String, prefix_strip: String = "") -> String:
 	var key = raw_id.to_lower().strip_edges()
 	if key.contains(":"):
@@ -297,8 +318,22 @@ func get_blessing(blessing_id: String) -> Dictionary:
 func is_blessing(item_id: String) -> bool:
 	return get_blessing(item_id).size() > 0
 
+func get_artifact(artifact_id: String) -> Dictionary:
+	var key = _normalize_eq_key(artifact_id, "artifact_")
+	if ARTIFACTS.has(key):
+		return ARTIFACTS[key]
+	for k in ARTIFACTS:
+		if k in key or key in k:
+			return ARTIFACTS[k]
+	return {}
+
+func is_artifact(item_id: String) -> bool:
+	return get_artifact(item_id).size() > 0
+
 func get_item(item_id: String) -> Dictionary:
 	var key = _normalize_eq_key(item_id)
+	if ARTIFACTS.has(key):
+		return ARTIFACTS[key]
 	if BLESSINGS.has(key):
 		return BLESSINGS[key]
 	if CONSUMABLES.has(key):
@@ -309,6 +344,9 @@ func get_item(item_id: String) -> Dictionary:
 		return WEAPONS[key]
 	if ARMOR.has(key):
 		return ARMOR[key]
+	var art = get_artifact(item_id)
+	if art.size() > 0:
+		return art
 	var b = get_blessing(item_id)
 	if b.size() > 0:
 		return b
@@ -332,7 +370,8 @@ func get_all_equipment() -> Dictionary:
 		"armor": ARMOR,
 		"consumables": CONSUMABLES,
 		"tools": TOOLS,
-		"blessings": BLESSINGS
+		"blessings": BLESSINGS,
+		"artifacts": ARTIFACTS
 	}
 
 func can_hero_equip(hero_id: String, item_id: String) -> Dictionary:

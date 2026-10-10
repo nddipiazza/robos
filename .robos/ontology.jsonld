@@ -7616,6 +7616,34 @@
       ]
     },
     {
+      "@id": "robos:TabletopSummon",
+      "@type": "rdfs:Class",
+      "rdfs:label": "TabletopSummon",
+      "robos:shaclShape": "urn:robos:shape:TabletopSummonShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Person"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:TabletopArtifact",
+      "@type": "rdfs:Class",
+      "rdfs:label": "TabletopArtifact",
+      "robos:shaclShape": "urn:robos:shape:GameItemShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Product"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
       "@id": "robos:seed",
       "@type": "rdf:Property",
       "rdfs:label": "seed",
@@ -8113,6 +8141,26 @@
       "@id": "robos:cover",
       "@type": "rdf:Property",
       "rdfs:label": "cover",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:summoner",
+      "@type": "rdf:Property",
+      "rdfs:label": "summoner",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:reducedFunctionality",
+      "@type": "rdf:Property",
+      "rdfs:label": "reducedFunctionality",
       "robos:classification": [
         {
           "@id": "https://robos.dev/ns/sdlc#classification/testing"

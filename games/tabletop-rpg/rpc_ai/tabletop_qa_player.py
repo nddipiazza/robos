@@ -750,6 +750,34 @@ class TabletopQAPlayer:
         self.log(f"Monster {monster_id} casting spell '{spell_id}' on {hero_id}...")
         return self.execute_action("dm_cast_spell", monsterId=monster_id, spell=spell_id, heroId=hero_id)
 
+    # --- Summons & Hearthskin Horn Helpers ---
+    def blow_hearthskin_horn(self, hero_id: str = "", placements: dict = None) -> dict:
+        self.log(f"Blowing The Hearthskin Horn (blower={hero_id or 'active hero'})...")
+        payload = {}
+        if hero_id:
+            payload["heroId"] = hero_id
+        if placements:
+            payload["placements"] = placements
+        return self.execute_action("blow_hearthskin_horn", **payload)
+
+    def summon_character(self, summoner_id: str, name: str = "", token_key: str = "wolf", **kwargs) -> dict:
+        self.log(f"Summoning minion '{name or token_key}' for summoner {summoner_id}...")
+        payload = {"summonerId": summoner_id, "token_key": token_key, **kwargs}
+        if name:
+            payload["name"] = name
+        return self.execute_action("summon_character", **payload)
+
+    def get_valid_summon_tiles(self, hero_id: str = "") -> list:
+        payload = {"heroId": hero_id} if hero_id else {}
+        res = self.execute_action("get_valid_summon_tiles", **payload)
+        return res.get("tiles", [])
+
+    def get_summons(self) -> list[dict]:
+        st = self.get_state()
+        heroes = st.get("heroes", [])
+        return [h for h in heroes if h.get("is_summon", False) or h.get("isSummon", False)]
+
+
 
 
 
