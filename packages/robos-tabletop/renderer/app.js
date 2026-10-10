@@ -1982,6 +1982,7 @@ async function initKGraphData() {
       setupHeroEditorControls();
       setupMonsterEditorControls();
       setupSpellDraftControls();
+      setupHeroTradeControls();
       applySpellAllocationToHeroes();
       renderHeroesList();
       renderMonstersList();
@@ -2768,12 +2769,20 @@ function renderHeroInventory(hero) {
           <div class="inventory-item-type">${item.type || 'item'} • ${item.effect || ''}</div>
         </div>
       </div>
-      <div style="display:flex; align-items:center;">
+      <div style="display:flex; align-items:center; gap:6px;">
         <span class="inventory-item-val">${item.value ? item.value + ' GP' : ''}</span>
+        <button class="btn btn-xs btn-secondary btn-trade-item" data-idx="${idx}" title="Trade item to another hero between quests">🤝 Trade</button>
         <button class="btn btn-xs btn-danger btn-del-item" data-idx="${idx}" title="Remove Item">✕</button>
       </div>
     `;
     container.appendChild(row);
+  });
+
+  container.querySelectorAll(".btn-trade-item").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const idx = parseInt(btn.dataset.idx, 10);
+      openBetweenQuestsTradeModal(hero["@id"]);
+    });
   });
 
   container.querySelectorAll(".btn-del-item").forEach(btn => {
@@ -2816,6 +2825,362 @@ function removeHeroInventoryItem(index) {
   renderHeroInventory(hero);
   logCombatAction(`🎒 Removed ${removed?.name || 'item'} from inventory.`, "system");
   triggerHeroAutosave();
+}
+
+// ==========================================
+// 2B. HERO ITEM & EQUIPMENT TRADE ENGINE (Between Quests)
+// ==========================================
+
+let tradeSessionLogs = [];
+let tradeHeroAId = null;
+let tradeHeroBId = null;
+
+function getHeroById(heroId) {
+  if (!Array.isArray(currentData.heroes)) return null;
+  return currentData.heroes.find(h => h["@id"] === heroId || (h["@id"] && h["@id"].toLowerCase().includes(String(heroId).toLowerCase())));
+}
+
+function tradeHeroItem(fromHeroId, toHeroId, itemIndexOrId) {
+  const fromHero = getHeroById(fromHeroId);
+  const toHero = getHeroById(toHeroId);
+  if (!fromHero) return { success: false, error: `Giving hero not found: ${fromHeroId}` };
+  if (!toHero) return { success: false, error: `Recipient hero not found: ${toHeroId}` };
+  if (fromHero["@id"] === toHero["@id"]) return { success: false, error: "Cannot trade item to the same hero" };
+
+  if (!Array.isArray(fromHero["robos:inventory"])) fromHero["robos:inventory"] = getHeroInventory(fromHero);
+  if (!Array.isArray(toHero["robos:inventory"])) toHero["robos:inventory"] = getHeroInventory(toHero);
+
+  let itemIdx = -1;
+  let tradedItem = null;
+
+  if (typeof itemIndexOrId === "number") {
+    itemIdx = itemIndexOrId;
+    if (itemIdx < 0 || itemIdx >= fromHero["robos:inventory"].length) {
+      return { success: false, error: `Invalid item index ${itemIndexOrId}` };
+    }
+    tradedItem = fromHero["robos:inventory"].splice(itemIdx, 1)[0];
+  } else {
+    const key = String(itemIndexOrId).toLowerCase().trim().replace(/-/g, "_");
+    itemIdx = fromHero["robos:inventory"].findIndex(it => {
+      const itId = String(it.id || it.name || it).toLowerCase().trim().replace(/-/g, "_");
+      return itId === key || itId.includes(key);
+    });
+    if (itemIdx !== -1) {
+      tradedItem = fromHero["robos:inventory"].splice(itemIdx, 1)[0];
+    } else {
+      // Check if equipped weapon or armor
+      const eqWep = String(fromHero["robos:equippedWeapon"] || "").toLowerCase().replace(/-/g, "_");
+      const eqArm = String(fromHero["robos:equippedArmor"] || "").toLowerCase().replace(/-/g, "_");
+      if (eqWep.includes(key) || key.includes("weapon") || key.includes("broadsword") || key.includes("shortsword")) {
+        tradedItem = { id: `wep-${Date.now()}`, name: fromHero["robos:equippedWeapon"] || "Weapon", type: "weapon", effect: "Equipped weapon", value: 150 };
+        fromHero["robos:equippedWeapon"] = getHeroClass(fromHero) === "Wizard" ? "Dagger (1 Combat Die)" : "Shortsword (2 Combat Dice)";
+      } else if (eqArm.includes(key) || key.includes("armor") || key.includes("shield")) {
+        tradedItem = { id: `arm-${Date.now()}`, name: fromHero["robos:equippedArmor"] || "Armor", type: "armor", effect: "Equipped armor", value: 100 };
+        fromHero["robos:equippedArmor"] = "Natural Toughness (2 Defend Dice)";
+      } else {
+        return { success: false, error: `Item '${itemIndexOrId}' not found in ${getHeroName(fromHero)}'s inventory` };
+      }
+    }
+  }
+
+  toHero["robos:inventory"].push(tradedItem);
+
+  const itemName = tradedItem.name || tradedItem.id || "Item";
+  const fromName = getHeroName(fromHero);
+  const toName = getHeroName(toHero);
+  const logMsg = `🤝 ${fromName} passed ${itemName} to ${toName}.`;
+
+  tradeSessionLogs.unshift(logMsg);
+  setStatus(logMsg);
+  logCombatAction(`[EXCHANGE] ${logMsg}`, "system");
+
+  // Re-render UI
+  renderHeroesList();
+  const activeH = getActiveHero();
+  if (activeH && (activeH["@id"] === fromHero["@id"] || activeH["@id"] === toHero["@id"])) {
+    renderHeroInventory(activeH);
+  }
+  renderPartyTradeModal();
+  triggerHeroAutosave();
+
+  return {
+    success: true,
+    action: "trade_item",
+    item: tradedItem,
+    fromHero: fromHero["@id"],
+    fromHeroName: fromName,
+    toHero: toHero["@id"],
+    toHeroName: toName
+  };
+}
+
+function tradeHeroGold(fromHeroId, toHeroId, amount) {
+  const fromHero = getHeroById(fromHeroId);
+  const toHero = getHeroById(toHeroId);
+  if (!fromHero) return { success: false, error: `Giving hero not found: ${fromHeroId}` };
+  if (!toHero) return { success: false, error: `Recipient hero not found: ${toHeroId}` };
+  if (fromHero["@id"] === toHero["@id"]) return { success: false, error: "Cannot transfer gold to self" };
+
+  const amt = parseInt(amount, 10);
+  if (isNaN(amt) || amt <= 0) return { success: false, error: "Amount must be a positive integer" };
+
+  const curGold = parseInt(fromHero["robos:gold"], 10) || 0;
+  if (curGold < amt) {
+    return { success: false, error: `${getHeroName(fromHero)} only has ${curGold} GP (cannot transfer ${amt} GP)` };
+  }
+
+  fromHero["robos:gold"] = curGold - amt;
+  toHero["robos:gold"] = (parseInt(toHero["robos:gold"], 10) || 0) + amt;
+
+  const fromName = getHeroName(fromHero);
+  const toName = getHeroName(toHero);
+  const logMsg = `🪙 ${fromName} transferred ${amt} Gold Coins to ${toName}.`;
+
+  tradeSessionLogs.unshift(logMsg);
+  setStatus(logMsg);
+  logCombatAction(`[EXCHANGE] ${logMsg}`, "system");
+
+  // Re-render UI
+  renderHeroesList();
+  const activeH = getActiveHero();
+  if (activeH && (activeH["@id"] === fromHero["@id"] || activeH["@id"] === toHero["@id"])) {
+    const goldInput = document.getElementById("hero-gold");
+    if (goldInput) goldInput.value = activeH["robos:gold"];
+    const actGold = document.getElementById("act-hero-gold");
+    if (actGold) actGold.textContent = `${activeH["robos:gold"]} GP`;
+  }
+  renderPartyTradeModal();
+  triggerHeroAutosave();
+
+  return {
+    success: true,
+    action: "trade_gold",
+    amount: amt,
+    fromHero: fromHero["@id"],
+    fromHeroName: fromName,
+    fromGold: fromHero["robos:gold"],
+    toHero: toHero["@id"],
+    toHeroName: toName,
+    toGold: toHero["robos:gold"]
+  };
+}
+
+function openBetweenQuestsTradeModal(preselectHeroAId = null, preselectHeroBId = null) {
+  if (!Array.isArray(currentData.heroes) || currentData.heroes.length < 2) {
+    setStatus("Need at least 2 heroes in the party to trade items.");
+    return;
+  }
+
+  const modal = document.getElementById("modal-between-quests-trade");
+  if (!modal) return;
+
+  tradeHeroAId = preselectHeroAId || currentData.activeHeroId || currentData.heroes[0]["@id"];
+  if (preselectHeroBId) {
+    tradeHeroBId = preselectHeroBId;
+  } else {
+    const other = currentData.heroes.find(h => h["@id"] !== tradeHeroAId);
+    tradeHeroBId = other ? other["@id"] : currentData.heroes[1]["@id"];
+  }
+
+  setupHeroTradeControls();
+  populateTradeHeroSelects();
+  renderPartyTradeModal();
+  modal.style.display = "flex";
+}
+
+function closeBetweenQuestsTradeModal() {
+  const modal = document.getElementById("modal-between-quests-trade");
+  if (modal) modal.style.display = "none";
+  const activeH = getActiveHero();
+  if (activeH) {
+    selectHero(activeH["@id"]);
+  }
+}
+
+function populateTradeHeroSelects() {
+  const selectA = document.getElementById("trade-hero-a-select");
+  const selectB = document.getElementById("trade-hero-b-select");
+  if (!selectA || !selectB) return;
+
+  selectA.innerHTML = "";
+  selectB.innerHTML = "";
+
+  currentData.heroes.forEach(h => {
+    const optA = document.createElement("option");
+    optA.value = h["@id"];
+    optA.textContent = `${getHeroName(h)} (${getHeroClass(h)})`;
+    if (h["@id"] === tradeHeroAId) optA.selected = true;
+    selectA.appendChild(optA);
+
+    const optB = document.createElement("option");
+    optB.value = h["@id"];
+    optB.textContent = `${getHeroName(h)} (${getHeroClass(h)})`;
+    if (h["@id"] === tradeHeroBId) optB.selected = true;
+    selectB.appendChild(optB);
+  });
+}
+
+function renderPartyTradeModal() {
+  const heroA = getHeroById(tradeHeroAId) || currentData.heroes[0];
+  const heroB = getHeroById(tradeHeroBId) || currentData.heroes[1];
+  if (!heroA || !heroB) return;
+
+  const iconA = document.getElementById("trade-hero-a-icon");
+  const goldA = document.getElementById("trade-hero-a-gold");
+  const iconB = document.getElementById("trade-hero-b-icon");
+  const goldB = document.getElementById("trade-hero-b-gold");
+
+  if (iconA) iconA.textContent = heroA["robos:icon"] || "🛡️";
+  if (goldA) goldA.textContent = `${heroA["robos:gold"] !== undefined ? heroA["robos:gold"] : 100} GP`;
+  if (iconB) iconB.textContent = heroB["robos:icon"] || "⚔️";
+  if (goldB) goldB.textContent = `${heroB["robos:gold"] !== undefined ? heroB["robos:gold"] : 100} GP`;
+
+  const eqAEl = document.getElementById("trade-hero-a-equipped");
+  if (eqAEl) {
+    eqAEl.innerHTML = `
+      <div style="font-size:12px; color:#cbd5e1; display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.04); padding:4px 8px; border-radius:4px;">
+        <span>⚔️ ${heroA["robos:equippedWeapon"] || getHeroWeapon(heroA)}</span>
+        <button class="btn btn-xs btn-secondary btn-trade-wep-a" title="Pass equipped weapon to ${getHeroName(heroB)}">Pass ➔</button>
+      </div>
+      <div style="font-size:12px; color:#cbd5e1; display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.04); padding:4px 8px; border-radius:4px;">
+        <span>🛡️ ${heroA["robos:equippedArmor"] || getHeroArmor(heroA)}</span>
+        <button class="btn btn-xs btn-secondary btn-trade-arm-a" title="Pass equipped armor to ${getHeroName(heroB)}">Pass ➔</button>
+      </div>
+    `;
+    eqAEl.querySelector(".btn-trade-wep-a")?.addEventListener("click", () => {
+      tradeHeroItem(heroA["@id"], heroB["@id"], "weapon");
+    });
+    eqAEl.querySelector(".btn-trade-arm-a")?.addEventListener("click", () => {
+      tradeHeroItem(heroA["@id"], heroB["@id"], "armor");
+    });
+  }
+
+  const eqBEl = document.getElementById("trade-hero-b-equipped");
+  if (eqBEl) {
+    eqBEl.innerHTML = `
+      <div style="font-size:12px; color:#cbd5e1; display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.04); padding:4px 8px; border-radius:4px;">
+        <span>⚔️ ${heroB["robos:equippedWeapon"] || getHeroWeapon(heroB)}</span>
+        <button class="btn btn-xs btn-secondary btn-trade-wep-b" title="Pass equipped weapon to ${getHeroName(heroA)}">⬅ Pass</button>
+      </div>
+      <div style="font-size:12px; color:#cbd5e1; display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.04); padding:4px 8px; border-radius:4px;">
+        <span>🛡️ ${heroB["robos:equippedArmor"] || getHeroArmor(heroB)}</span>
+        <button class="btn btn-xs btn-secondary btn-trade-arm-b" title="Pass equipped armor to ${getHeroName(heroA)}">⬅ Pass</button>
+      </div>
+    `;
+    eqBEl.querySelector(".btn-trade-wep-b")?.addEventListener("click", () => {
+      tradeHeroItem(heroB["@id"], heroA["@id"], "weapon");
+    });
+    eqBEl.querySelector(".btn-trade-arm-b")?.addEventListener("click", () => {
+      tradeHeroItem(heroB["@id"], heroA["@id"], "armor");
+    });
+  }
+
+  const invAEl = document.getElementById("trade-hero-a-inventory");
+  if (invAEl) {
+    const itemsA = Array.isArray(heroA["robos:inventory"]) ? heroA["robos:inventory"] : getHeroInventory(heroA);
+    if (itemsA.length === 0) {
+      invAEl.innerHTML = `<span style="color:#64748b; font-size:11px; font-style:italic; padding:6px 0;">Backpack is empty.</span>`;
+    } else {
+      invAEl.innerHTML = "";
+      itemsA.forEach((it, idx) => {
+        const itemRow = document.createElement("div");
+        itemRow.className = "trade-item-chip";
+        itemRow.style = "display:flex; justify-content:space-between; align-items:center; background:rgba(15,23,42,0.8); border:1px solid var(--border-color); padding:6px 8px; border-radius:4px;";
+        itemRow.innerHTML = `
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span style="font-size:13px;">🎒</span>
+            <div>
+              <strong style="font-size:12px; color:#f1f5f9;">${it.name || it.id}</strong>
+              <div style="font-size:10px; color:#94a3b8;">${it.type || 'item'} • ${it.effect || ''}</div>
+            </div>
+          </div>
+          <button class="btn btn-xs btn-primary btn-pass-item-a2b" data-idx="${idx}" title="Pass ${it.name || 'item'} to ${getHeroName(heroB)}">Pass ➔</button>
+        `;
+        invAEl.appendChild(itemRow);
+      });
+      invAEl.querySelectorAll(".btn-pass-item-a2b").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const idx = parseInt(btn.dataset.idx, 10);
+          tradeHeroItem(heroA["@id"], heroB["@id"], idx);
+        });
+      });
+    }
+  }
+
+  const invBEl = document.getElementById("trade-hero-b-inventory");
+  if (invBEl) {
+    const itemsB = Array.isArray(heroB["robos:inventory"]) ? heroB["robos:inventory"] : getHeroInventory(heroB);
+    if (itemsB.length === 0) {
+      invBEl.innerHTML = `<span style="color:#64748b; font-size:11px; font-style:italic; padding:6px 0;">Backpack is empty.</span>`;
+    } else {
+      invBEl.innerHTML = "";
+      itemsB.forEach((it, idx) => {
+        const itemRow = document.createElement("div");
+        itemRow.className = "trade-item-chip";
+        itemRow.style = "display:flex; justify-content:space-between; align-items:center; background:rgba(15,23,42,0.8); border:1px solid var(--border-color); padding:6px 8px; border-radius:4px;";
+        itemRow.innerHTML = `
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span style="font-size:13px;">🎒</span>
+            <div>
+              <strong style="font-size:12px; color:#f1f5f9;">${it.name || it.id}</strong>
+              <div style="font-size:10px; color:#94a3b8;">${it.type || 'item'} • ${it.effect || ''}</div>
+            </div>
+          </div>
+          <button class="btn btn-xs btn-primary btn-pass-item-b2a" data-idx="${idx}" title="Pass ${it.name || 'item'} to ${getHeroName(heroA)}">⬅ Pass</button>
+        `;
+        invBEl.appendChild(itemRow);
+      });
+      invBEl.querySelectorAll(".btn-pass-item-b2a").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const idx = parseInt(btn.dataset.idx, 10);
+          tradeHeroItem(heroB["@id"], heroA["@id"], idx);
+        });
+      });
+    }
+  }
+
+  const logEl = document.getElementById("trade-log-entries");
+  if (logEl) {
+    if (tradeSessionLogs.length === 0) {
+      logEl.innerHTML = `<span style="color:#64748b; font-style:italic;">No trades made yet between quests. Click 'Pass' on any item or gold amount to exchange.</span>`;
+    } else {
+      logEl.innerHTML = tradeSessionLogs.map(l => `<div>${escapeHtml(l)}</div>`).join("");
+    }
+  }
+}
+
+let heroTradeControlsInitialized = false;
+function setupHeroTradeControls() {
+  if (heroTradeControlsInitialized) return;
+  heroTradeControlsInitialized = true;
+
+  document.getElementById("btn-open-party-trade")?.addEventListener("click", () => openBetweenQuestsTradeModal());
+  document.getElementById("btn-trade-between-quests-banner")?.addEventListener("click", () => openBetweenQuestsTradeModal());
+  document.getElementById("btn-close-trade-modal")?.addEventListener("click", closeBetweenQuestsTradeModal);
+  document.getElementById("btn-done-trade-modal")?.addEventListener("click", closeBetweenQuestsTradeModal);
+
+  document.getElementById("trade-hero-a-select")?.addEventListener("change", (e) => {
+    tradeHeroAId = e.target.value;
+    renderPartyTradeModal();
+  });
+  document.getElementById("trade-hero-b-select")?.addEventListener("change", (e) => {
+    tradeHeroBId = e.target.value;
+    renderPartyTradeModal();
+  });
+
+  document.querySelectorAll(".btn-trade-gold-a").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const amt = parseInt(btn.dataset.amt, 10);
+      tradeHeroGold(tradeHeroAId, tradeHeroBId, amt);
+    });
+  });
+
+  document.querySelectorAll(".btn-trade-gold-b").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const amt = parseInt(btn.dataset.amt, 10);
+      tradeHeroGold(tradeHeroBId, tradeHeroAId, amt);
+    });
+  });
 }
 
 // Render Action Screen & Combat HUD
@@ -4522,6 +4887,16 @@ if (typeof window !== "undefined") {
     castMonsterSpell,
     saveActiveMonsterToKGraph
   };
+
+  window._tabletopHeroTrade = {
+    tradeHeroItem,
+    tradeHeroGold,
+    openBetweenQuestsTradeModal,
+    closeBetweenQuestsTradeModal,
+    renderPartyTradeModal,
+    getHeroById,
+    getTradeSessionLogs: () => tradeSessionLogs
+  };
 }
 
 // Initialize on DOM ready
@@ -4534,7 +4909,12 @@ if (typeof module !== "undefined" && module.exports) {
     FURNITURE_ASSET_MAP,
     TILE_ASSET_MAP,
     getFurnitureImage,
-    getTileImage
+    getTileImage,
+    tradeHeroItem,
+    tradeHeroGold,
+    openBetweenQuestsTradeModal,
+    closeBetweenQuestsTradeModal,
+    getHeroById
   };
 }
 

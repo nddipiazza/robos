@@ -170,6 +170,18 @@ class TabletopQAPlayer:
         self.log(f"Unequipping item '{item_id}'{' from ' + hero_id if hero_id else ''}...")
         return self.execute_action("unequip", itemId=item_id, heroId=hero_id)
 
+    def pass_item(self, to_hero_id: str, item_id: str, from_hero_id: str = "") -> dict:
+        self.log(f"Passing item '{item_id}' from {from_hero_id or 'active hero'} to {to_hero_id}...")
+        return self.execute_action("pass_item", itemId=item_id, fromHeroId=from_hero_id, toHeroId=to_hero_id)
+
+    def pass_gold(self, to_hero_id: str, amount: int, from_hero_id: str = "") -> dict:
+        self.log(f"Passing {amount} gold from {from_hero_id or 'active hero'} to {to_hero_id}...")
+        return self.execute_action("pass_gold", amount=amount, fromHeroId=from_hero_id, toHeroId=to_hero_id)
+
+    def get_adjacent_heroes(self, hero_id: str = "") -> dict:
+        self.log(f"Checking adjacent heroes for {hero_id or 'active hero'}...")
+        return self.execute_action("get_adjacent_heroes", heroId=hero_id)
+
     def dm_attack(self, hero_id: str = "", monster_id: str = "") -> dict:
         self.log(f"Zargon monster{' ' + monster_id if monster_id else ''} strikes at hero{' ' + hero_id if hero_id else ''}...")
         kwargs = {"heroId": hero_id}

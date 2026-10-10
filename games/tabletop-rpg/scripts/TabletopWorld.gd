@@ -5967,7 +5967,7 @@ func _update_item_use_modal_ui() -> void:
 		var is_cons = HeroQuestEquipment.is_consumable(item_str) or item_str.contains("potion")
 
 		var card = PanelContainer.new()
-		card.custom_minimum_size = Vector2(400, 100)
+		card.custom_minimum_size = Vector2(400, 130)
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 		var csb = StyleBoxFlat.new()
@@ -6071,6 +6071,33 @@ func _update_item_use_modal_ui() -> void:
 			btn_row.add_child(eq_btn)
 
 		vbox.add_child(btn_row)
+
+		# Row 4: Pass / Item Exchange to adjacent heroes (HeroQuest rule)
+		var pass_row = HBoxContainer.new()
+		pass_row.add_theme_constant_override("separation", 6)
+		var adj_heroes = get_adjacent_heroes(hero)
+		if not adj_heroes.is_empty():
+			for adj_h in adj_heroes:
+				var pbtn = Button.new()
+				var target_hid = str(adj_h.get("id"))
+				var target_hname = str(adj_h.get("name", "Hero"))
+				pbtn.text = "🤝 Give to %s" % target_hname
+				pbtn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				pbtn.tooltip_text = "Pass %s to adjacent %s" % [i_name, target_hname]
+				var cur_pass_item = item_str
+				pbtn.pressed.connect(func():
+					pass_item(hid, target_hid, cur_pass_item)
+				)
+				pass_row.add_child(pbtn)
+		else:
+			var no_pass_btn = Button.new()
+			no_pass_btn.text = "🤝 Pass Item"
+			no_pass_btn.disabled = true
+			no_pass_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			no_pass_btn.tooltip_text = "Heroes may pass items or equipment only when standing in an adjacent square."
+			pass_row.add_child(no_pass_btn)
+
+		vbox.add_child(pass_row)
 		item_use_grid.add_child(card)
 
 # --- Trap Disarming & Detection Helpers ---
@@ -8051,6 +8078,246 @@ func use_item(hero_id: String = "", item_id: String = "", target_id: String = ""
 		return eq_res
 
 	return { "success": false, "error": "Unknown item effect: " + item_id }
+
+# --- Hero Item & Equipment Exchange (HeroQuest Adjacency Rule) ---
+func are_heroes_adjacent(h1: Dictionary, h2: Dictionary) -> bool:
+	if h1.is_empty() or h2.is_empty() or str(h1.get("id")) == str(h2.get("id")):
+		return false
+	if not bool(h1.get("is_on_board", false)) or not bool(h2.get("is_on_board", false)):
+		return false
+	if int(h1.get("current_bp", 0)) <= 0 or int(h2.get("current_bp", 0)) <= 0:
+		return false
+	var p1 = _to_grid_pos(h1.get("grid_pos", Vector2i(-1, -1)))
+	var p2 = _to_grid_pos(h2.get("grid_pos", Vector2i(-1, -1)))
+	if p1.x < 0 or p2.x < 0:
+		return false
+	var dx = absi(p1.x - p2.x)
+	var dy = absi(p1.y - p2.y)
+	if dx > 1 or dy > 1 or (dx == 0 and dy == 0):
+		return false
+	if dx + dy == 1:
+		return not has_wall_between(p1, p2)
+	# Diagonal: ensure line of sight and no wall blockage
+	return has_line_of_sight(p1, p2)
+
+func get_adjacent_heroes(hero: Dictionary) -> Array[Dictionary]:
+	var res: Array[Dictionary] = []
+	if hero.is_empty():
+		return res
+	for other in heroes:
+		if are_heroes_adjacent(hero, other):
+			res.append(other)
+	return res
+
+func pass_item(from_hero_id: String = "", to_hero_id: String = "", item_id: String = "") -> Dictionary:
+	var from_hero: Dictionary = {}
+	if from_hero_id != "":
+		for h in heroes:
+			if str(h.get("id")) == from_hero_id:
+				from_hero = h
+				break
+	if from_hero.is_empty():
+		from_hero = get_active_hero()
+	if from_hero.is_empty():
+		return { "success": false, "error": "No active giving hero" }
+
+	var to_hero: Dictionary = {}
+	if to_hero_id != "":
+		for h in heroes:
+			if str(h.get("id")) == to_hero_id:
+				to_hero = h
+				break
+	if to_hero.is_empty():
+		return { "success": false, "error": "Recipient hero not found: " + to_hero_id }
+
+	if str(from_hero.get("id")) == str(to_hero.get("id")):
+		return { "success": false, "error": "Cannot pass item to self" }
+
+	# Adjacency validation strictly enforced per HeroQuest rules
+	if not are_heroes_adjacent(from_hero, to_hero):
+		var err_msg = "Cannot pass item: %s and %s are not in adjacent squares" % [from_hero.get("name"), to_hero.get("name")]
+		_log("[EXCHANGE] " + err_msg)
+		show_unavailable_notice("Heroes must be adjacent to pass items", _to_grid_pos(from_hero.get("grid_pos", Vector2i(-1, -1))))
+		return { "success": false, "error": err_msg }
+
+	var from_name = str(from_hero.get("name", "Hero"))
+	var to_name = str(to_hero.get("name", "Hero"))
+	var clean_item = item_id.to_lower().strip_edges()
+	var norm_item = clean_item.replace("-", "_")
+
+	# Find item in from_hero inventory or equipped gear
+	var inv: Array = from_hero.get("inventory", []).duplicate()
+	var found_idx = -1
+	var found_item_val = null
+
+	for i in range(inv.size()):
+		var cur_str = str(inv[i]).to_lower().strip_edges()
+		var cur_norm = cur_str.replace("-", "_")
+		if cur_str == clean_item or cur_norm == norm_item:
+			found_idx = i
+			found_item_val = inv[i]
+			break
+		if (norm_item in ["potion_defense", "potion_of_defense", "defense_potion"]) and (cur_norm in ["potion_defense", "potion_of_defense", "defense_potion"]):
+			found_idx = i
+			found_item_val = inv[i]
+			break
+		if (norm_item in ["potion_strength", "potion_of_strength", "strength_potion"]) and (cur_norm in ["potion_strength", "potion_of_strength", "strength_potion"]):
+			found_idx = i
+			found_item_val = inv[i]
+			break
+		if (norm_item in ["potion_speed", "potion_of_speed", "speed_potion"]) and (cur_norm in ["potion_speed", "potion_of_speed", "speed_potion"]):
+			found_idx = i
+			found_item_val = inv[i]
+			break
+		if (norm_item in ["healing_potion", "potion_of_healing", "cure_potion"]) and (cur_norm in ["healing_potion", "potion_of_healing", "cure_potion"]):
+			found_idx = i
+			found_item_val = inv[i]
+			break
+		if (norm_item in ["holy_water", "holy-water"]) and (cur_norm in ["holy_water", "holy-water"]):
+			found_idx = i
+			found_item_val = inv[i]
+			break
+
+	var was_equipped_weapon = false
+	var was_equipped_armor = false
+
+	if found_idx == -1:
+		# Check if equipped weapon
+		if str(from_hero.get("equipped_weapon", "")).to_lower().replace("-", "_") == norm_item:
+			was_equipped_weapon = true
+			found_item_val = from_hero.get("equipped_weapon")
+		elif from_hero.get("equipped_armor", []) is Array:
+			for arm in from_hero.get("equipped_armor", []):
+				if str(arm).to_lower().replace("-", "_") == norm_item:
+					was_equipped_armor = true
+					found_item_val = arm
+					break
+
+	if found_idx == -1 and not was_equipped_weapon and not was_equipped_armor:
+		return { "success": false, "error": "Item '%s' not found in %s's inventory or equipment" % [item_id, from_name] }
+
+	# Remove from giving hero
+	if found_idx != -1:
+		inv.remove_at(found_idx)
+		from_hero["inventory"] = inv
+
+	if was_equipped_weapon or str(from_hero.get("equipped_weapon", "")).to_lower().replace("-", "_") == norm_item:
+		var alt_weapon = ""
+		for it in from_hero.get("inventory", []):
+			var it_s = str(it).to_lower().replace("-", "_")
+			if not HeroQuestEquipment.get_weapon(it_s).is_empty():
+				alt_weapon = it_s
+				break
+		if alt_weapon == "":
+			alt_weapon = "dagger" if str(from_hero.get("id")) == "wizard" else "shortsword"
+		from_hero["equipped_weapon"] = alt_weapon
+
+	if was_equipped_armor or (from_hero.get("equipped_armor", []) is Array and from_hero.get("equipped_armor", []).has(norm_item)):
+		var arms = from_hero.get("equipped_armor", []).duplicate()
+		arms.erase(norm_item)
+		arms.erase(clean_item)
+		from_hero["equipped_armor"] = arms
+
+	# Add to recipient hero
+	if not (to_hero.get("inventory", []) is Array):
+		to_hero["inventory"] = []
+	var final_transfer_item = found_item_val if found_item_val != null else item_id
+	to_hero["inventory"].append(final_transfer_item)
+
+	# Determine human-friendly display name of item
+	var item_info = HeroQuestEquipment.get_item(str(final_transfer_item))
+	var disp_item_name = str(item_info.get("name", str(final_transfer_item).replace("_", " ").capitalize()))
+
+	# VFX & Floating text
+	var p_from = _to_grid_pos(from_hero.get("grid_pos", Vector2i(-1, -1)))
+	var p_to = _to_grid_pos(to_hero.get("grid_pos", Vector2i(-1, -1)))
+	spawn_floating_text(p_from, "-1 %s" % disp_item_name, Color(1.0, 0.65, 0.2))
+	spawn_floating_text(p_to, "+1 %s" % disp_item_name, Color(0.2, 0.9, 0.4))
+	spawn_projectile_vfx(p_from, p_to, Color(0.3, 0.8, 1.0), 0.25)
+
+	_log("[EXCHANGE] 🤝 %s passed %s to %s!" % [from_name, disp_item_name, to_name])
+
+	_update_ui()
+	if item_use_modal and item_use_modal.visible:
+		_update_item_use_modal_ui()
+	queue_redraw_all()
+	auto_save_game()
+
+	return {
+		"success": true,
+		"action": "pass_item",
+		"item": str(final_transfer_item),
+		"itemName": disp_item_name,
+		"fromHero": str(from_hero.get("id")),
+		"fromHeroName": from_name,
+		"toHero": str(to_hero.get("id")),
+		"toHeroName": to_name,
+		"fromInventory": from_hero.get("inventory", []),
+		"toInventory": to_hero.get("inventory", [])
+	}
+
+func pass_gold(from_hero_id: String = "", to_hero_id: String = "", amount: int = 0) -> Dictionary:
+	var from_hero: Dictionary = {}
+	if from_hero_id != "":
+		for h in heroes:
+			if str(h.get("id")) == from_hero_id:
+				from_hero = h
+				break
+	if from_hero.is_empty():
+		from_hero = get_active_hero()
+	if from_hero.is_empty():
+		return { "success": false, "error": "No active giving hero" }
+
+	var to_hero: Dictionary = {}
+	if to_hero_id != "":
+		for h in heroes:
+			if str(h.get("id")) == to_hero_id:
+				to_hero = h
+				break
+	if to_hero.is_empty():
+		return { "success": false, "error": "Recipient hero not found: " + to_hero_id }
+
+	if str(from_hero.get("id")) == str(to_hero.get("id")):
+		return { "success": false, "error": "Cannot pass gold to self" }
+
+	if amount <= 0:
+		return { "success": false, "error": "Amount must be greater than 0" }
+
+	var from_gold = int(from_hero.get("gold", 0))
+	if from_gold < amount:
+		return { "success": false, "error": "%s does not have %d Gold Coins" % [from_hero.get("name"), amount] }
+
+	# Adjacency check
+	if not are_heroes_adjacent(from_hero, to_hero):
+		var err_msg = "Cannot pass gold: %s and %s are not in adjacent squares" % [from_hero.get("name"), to_hero.get("name")]
+		_log("[EXCHANGE] " + err_msg)
+		show_unavailable_notice("Heroes must be adjacent to pass gold", _to_grid_pos(from_hero.get("grid_pos", Vector2i(-1, -1))))
+		return { "success": false, "error": err_msg }
+
+	from_hero["gold"] = from_gold - amount
+	to_hero["gold"] = int(to_hero.get("gold", 0)) + amount
+
+	var p_from = _to_grid_pos(from_hero.get("grid_pos", Vector2i(-1, -1)))
+	var p_to = _to_grid_pos(to_hero.get("grid_pos", Vector2i(-1, -1)))
+	spawn_floating_text(p_from, "-%d GP" % amount, Color(1.0, 0.85, 0.2))
+	spawn_floating_text(p_to, "+%d GP" % amount, Color(1.0, 0.85, 0.2))
+	spawn_projectile_vfx(p_from, p_to, Color(1.0, 0.85, 0.2), 0.25)
+
+	_log("[EXCHANGE] 🤝 %s passed %d Gold Coins to %s!" % [from_hero.get("name"), amount, to_hero.get("name")])
+
+	_update_ui()
+	queue_redraw_all()
+	auto_save_game()
+
+	return {
+		"success": true,
+		"action": "pass_gold",
+		"amount": amount,
+		"fromHero": str(from_hero.get("id")),
+		"fromGold": from_hero["gold"],
+		"toHero": str(to_hero.get("id")),
+		"toGold": to_hero["gold"]
+	}
 
 func _conclude_action_turn_state() -> void:
 	has_acted_this_turn = true
@@ -14566,6 +14833,7 @@ func get_telemetry_state() -> Dictionary:
 
 		hc["statusEffects"] = effs
 		hc["activeEffects"] = effs
+		hc["adjacentHeroes"] = get_adjacent_heroes(h).map(func(adj_h): return str(adj_h.get("id")))
 		heroes_copy.append(hc)
 
 		var cur_bp = int(h.get("current_bp", 8))
@@ -14629,7 +14897,8 @@ func get_telemetry_state() -> Dictionary:
 			"spells": h.get("spells", []),
 			"usedSpells": h.get("used_spells", []).duplicate(),
 			"availableSpells": _get_available_spells(h),
-			"inventory": h.get("inventory", [])
+			"inventory": h.get("inventory", []),
+			"adjacentHeroes": get_adjacent_heroes(h).map(func(adj_h): return str(adj_h.get("id")))
 		})
 
 	var monsters_copy: Array = []
@@ -16054,6 +16323,35 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			var target_id = str(action_data.get("targetId", action_data.get("target", "")))
 			var res = use_item(h_id, item_id, target_id)
 			return res
+		"pass_item", "exchange_item", "give_item", "trade_item":
+			var from_id = str(action_data.get("fromHeroId", action_data.get("from_hero", action_data.get("from", action_data.get("heroId", get_active_hero().get("id", ""))))))
+			var to_id = str(action_data.get("toHeroId", action_data.get("to_hero", action_data.get("to", action_data.get("targetId", action_data.get("target", ""))))))
+			var item_id = str(action_data.get("itemId", action_data.get("item", "")))
+			return pass_item(from_id, to_id, item_id)
+		"pass_gold", "give_gold", "trade_gold":
+			var from_id = str(action_data.get("fromHeroId", action_data.get("from_hero", action_data.get("from", action_data.get("heroId", get_active_hero().get("id", ""))))))
+			var to_id = str(action_data.get("toHeroId", action_data.get("to_hero", action_data.get("to", action_data.get("targetId", action_data.get("target", ""))))))
+			var amount = int(action_data.get("amount", action_data.get("gold", 0)))
+			return pass_gold(from_id, to_id, amount)
+		"get_adjacent_heroes":
+			var h_id = str(action_data.get("heroId", action_data.get("hero", get_active_hero().get("id", ""))))
+			var target_hero: Dictionary = {}
+			for h in heroes:
+				if str(h.get("id")) == h_id:
+					target_hero = h
+					break
+			if target_hero.is_empty():
+				target_hero = get_active_hero()
+			var adj = get_adjacent_heroes(target_hero)
+			return {
+				"success": true,
+				"hero": str(target_hero.get("id")),
+				"adjacentHeroes": adj.map(func(h): return {
+					"id": str(h.get("id")),
+					"name": str(h.get("name")),
+					"grid_pos": [h.get("grid_pos", Vector2i(-1, -1)).x, h.get("grid_pos", Vector2i(-1, -1)).y]
+				})
+			}
 		"open_item_panel", "open_item_modal":
 			show_item_use_modal()
 			return { "success": true, "item_panel_open": true }
