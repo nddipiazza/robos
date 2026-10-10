@@ -205,6 +205,9 @@ class TabletopQAPlayer:
         self.log("Dismissing / collecting active treasure card overlay...")
         return self.execute_action("click_treasure_overlay")
 
+    def dismiss_treasure_overlay(self) -> dict:
+        return self.resolve_treasure_overlay()
+
     def get_treasure_overlay(self) -> dict:
         return self.get_state().get("treasureOverlay", {})
 
