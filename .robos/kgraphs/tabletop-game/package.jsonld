@@ -300,7 +300,10 @@
       "robos:isSpellcaster": true,
       "robos:spells": [
         "urn:robos:tabletop:spell:lightning-bolt",
-        "urn:robos:tabletop:spell:fear"
+        "urn:robos:tabletop:spell:firestorm",
+        "urn:robos:tabletop:spell:fear",
+        "urn:robos:tabletop:spell:sleep-dread",
+        "urn:robos:tabletop:spell:cloud-of-chaos"
       ],
       "robos:tokenColor": "#15803d",
       "robos:package": "tabletop-game",
@@ -1755,7 +1758,10 @@
       "robos:isSpellcaster": true,
       "robos:spells": [
         "urn:robos:tabletop:spell:lightning-bolt",
-        "urn:robos:tabletop:spell:fear"
+        "urn:robos:tabletop:spell:firestorm",
+        "urn:robos:tabletop:spell:fear",
+        "urn:robos:tabletop:spell:sleep-dread",
+        "urn:robos:tabletop:spell:cloud-of-chaos"
       ],
       "robos:tokenColor": "#15803d",
       "robos:package": "tabletop-game",

@@ -202,6 +202,63 @@ const SPELLS: Dictionary = {
 		"description": "Fills target hero's mind with dread terror, inflicting dark psychological trauma.",
 		"vfx": "fear_aura",
 		"color": "#a855f7"
+	},
+	"firestorm": {
+		"id": "firestorm",
+		"name": "Firestorm",
+		"deck": "dread",
+		"target_type": "hero",
+		"range_type": "los",
+		"damage": 3,
+		"defend_dice": 3,
+		"icon": "🔥",
+		"description": "Engulfs target hero in searing hellfire causing 3 BP damage; target rolls 3 combat dice to defend.",
+		"vfx": "fire_burst",
+		"color": "#dc2626"
+	},
+	"sleep_dread": {
+		"id": "sleep_dread",
+		"name": "Sleep of Dread",
+		"deck": "dread",
+		"target_type": "hero",
+		"range_type": "los",
+		"icon": "💤",
+		"description": "Puts target hero into deep magical slumber. They cannot move, attack, or defend until awakened.",
+		"vfx": "sleep_runes",
+		"color": "#6366f1"
+	},
+	"cloud_of_chaos": {
+		"id": "cloud_of_chaos",
+		"name": "Cloud of Chaos",
+		"deck": "dread",
+		"target_type": "hero",
+		"range_type": "los",
+		"icon": "🕸️",
+		"description": "Releases toxic chaos vapors. Target hero is stunned and loses their next turn.",
+		"vfx": "chaos_cloud",
+		"color": "#9333ea"
+	},
+	"rust": {
+		"id": "rust",
+		"name": "Rust",
+		"deck": "dread",
+		"target_type": "hero",
+		"range_type": "los",
+		"icon": "🛡️",
+		"description": "Corrodes and destroys metal equipment or weapon wielded by target hero.",
+		"vfx": "corrosion_mist",
+		"color": "#b45309"
+	},
+	"escape": {
+		"id": "escape",
+		"name": "Escape",
+		"deck": "dread",
+		"target_type": "self",
+		"range_type": "self",
+		"icon": "💨",
+		"description": "Dissolves the dread spellcaster into dark mist, teleporting them away from danger.",
+		"vfx": "teleport_flash",
+		"color": "#64748b"
 	}
 }
 
@@ -209,6 +266,10 @@ func get_spell(spell_id: String) -> Dictionary:
 	var clean_id = spell_id.to_lower().strip_edges().replace("-", "_")
 	if SPELLS.has(clean_id):
 		return SPELLS[clean_id]
+	if clean_id == "sleep" or clean_id == "dread_sleep":
+		return SPELLS.get("sleep_dread", {})
+	if clean_id == "cloud_chaos" or clean_id == "chaos_cloud":
+		return SPELLS.get("cloud_of_chaos", {})
 	return SPELLS.get(spell_id.to_lower().strip_edges(), {})
 
 func get_spells_by_deck(deck: String) -> Array[Dictionary]:
