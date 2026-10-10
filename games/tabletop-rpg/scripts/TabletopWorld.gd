@@ -973,6 +973,15 @@ func _get_search_status() -> Dictionary:
 			"desc": "Unavailable: No active hero selected to search for treasure."
 		}
 
+	if hero.get("is_summon", false):
+		return {
+			"can_search": false,
+			"reason_key": "is_summon",
+			"notice": "Summons cannot search",
+			"title": "🔍 Search Room (Summon)",
+			"desc": "Unavailable: Friendly summons cannot search chambers for treasure due to reduced functionality."
+		}
+
 	var h_name = str(hero.get("name", "Hero"))
 	var h_pos = hero.get("grid_pos", Vector2i(-1, -1))
 	var h_room = _get_room_at(h_pos)
@@ -1282,6 +1291,19 @@ func get_hero_token_texture(h: Dictionary) -> Texture2D:
 	var h_cls = str(h.get("heroClass", h.get("hero_class", ""))).to_lower()
 	var h_name = str(h.get("name", "")).to_lower()
 	var char_name = str(h.get("characterName", h.get("character_name", ""))).to_lower()
+
+	if h.get("is_summon", false) or h.has("token_key"):
+		var tok_k = str(h.get("token_key", "skeleton")).to_lower()
+		if monster_token_textures.has(tok_k) and monster_token_textures[tok_k] != null:
+			return monster_token_textures[tok_k]
+		if hero_token_textures.has(tok_k) and hero_token_textures[tok_k] != null:
+			return hero_token_textures[tok_k]
+		var sk_tex = _load_texture_safe("res://assets/tokens/token_%s.png" % tok_k)
+		if not sk_tex:
+			sk_tex = _load_texture_safe("res://../crpg-realm/assets/sprites/enemies/%s.png" % tok_k)
+		if sk_tex:
+			hero_token_textures[tok_k] = sk_tex
+			return sk_tex
 
 	var key = "barbarian"
 	if "barbarian" in h_id or "barbarian" in h_cls or "barbarian" in h_name or "berserker" in h_cls:
@@ -3004,6 +3026,18 @@ func get_hero_at(tile: Vector2i) -> Dictionary:
 			return h
 	return {}
 
+func get_hero_by_id(hero_id: String) -> Dictionary:
+	if hero_id == "":
+		return {}
+	var hid = hero_id.to_lower().strip_edges()
+	for h in heroes:
+		var cur_id = str(h.get("id", "")).to_lower().strip_edges()
+		var cur_name = str(h.get("name", "")).to_lower().strip_edges()
+		var cur_char = str(h.get("characterName", h.get("character_name", ""))).to_lower().strip_edges()
+		if cur_id == hid or cur_name == hid or cur_char == hid or cur_id.ends_with(hid) or hid.ends_with(cur_id):
+			return h
+	return {}
+
 func get_monster_by_id(monster_id: String) -> Dictionary:
 	if monster_id == "":
 		return {}
@@ -4495,6 +4529,8 @@ func buy_armory_item(hero_id: String, item_id: String) -> Dictionary:
 			break
 	if hero.is_empty():
 		return { "success": false, "error": "Hero not found: " + hero_id }
+	if hero.get("is_summon", false):
+		return { "success": false, "error": "Summons cannot purchase armory items" }
 
 	var item_data: Dictionary = {}
 	for it in ARMORY_CATALOG:
@@ -6330,7 +6366,7 @@ func _update_item_use_modal_ui() -> void:
 # --- Trap Disarming & Detection Helpers ---
 func can_search_for_traps() -> bool:
 	var hero = get_active_hero()
-	if hero.is_empty() or has_acted_this_turn:
+	if hero.is_empty() or has_acted_this_turn or hero.get("is_summon", false):
 		return false
 	var h_pos: Vector2i = hero.get("grid_pos", Vector2i(-1, -1))
 	var rm = _get_room_at(h_pos)
@@ -6353,6 +6389,8 @@ func can_search_for_traps() -> bool:
 func can_hero_disarm(hero: Dictionary) -> Dictionary:
 	if hero.is_empty():
 		return { "can_disarm": false, "reason": "No active hero" }
+	if hero.get("is_summon", false):
+		return { "can_disarm": false, "reason": "Summons cannot disarm traps" }
 	var h_id = str(hero.get("id", "")).to_lower()
 	if h_id == "dwarf":
 		return { "can_disarm": true, "is_dwarf": true }
@@ -7502,7 +7540,14 @@ func roll_movement_dice() -> Dictionary:
 	var roll = {}
 	var dice_vals: Array = []
 
-	if has_plate:
+	if hero.get("is_summon", false):
+		var fixed_spd = int(hero.get("movement", hero.get("movement_speed", 8)))
+		roll = { "total": fixed_spd, "d1": fixed_spd, "d2": 0, "summon_movement": true }
+		dice_vals = [fixed_spd]
+		_log("[MOVE] %s strides forward with summon movement: %d squares!" % [
+			hero.get("name", "Summon"), fixed_spd
+		])
+	elif has_plate:
 		var d1 = randi_range(1, 6)
 		roll = { "total": d1, "d1": d1, "d2": 0, "plate_mail": true }
 		dice_vals = [d1]
@@ -7976,9 +8021,13 @@ func get_hero_display_title(h: Dictionary) -> String:
 
 # --- HeroQuest Combat & Equipment Calculations ---
 func get_hero_attack_dice(h: Dictionary) -> int:
-	var w_id = str(h.get("equipped_weapon", ""))
-	var w = HeroQuestEquipment.get_weapon(w_id)
-	var base_atk = int(w.get("attack_dice", h.get("attackDice", 1)))
+	var base_atk = 1
+	if h.get("is_summon", false):
+		base_atk = int(h.get("attackDice", 2))
+	else:
+		var w_id = str(h.get("equipped_weapon", ""))
+		var w = HeroQuestEquipment.get_weapon(w_id)
+		base_atk = int(w.get("attack_dice", h.get("attackDice", 1)))
 	if h.get("courage_active", false):
 		base_atk += 2
 	if h.get("fear_active", false):
@@ -7986,19 +8035,22 @@ func get_hero_attack_dice(h: Dictionary) -> int:
 	return base_atk
 
 func get_hero_defend_dice(h: Dictionary) -> int:
-	var armors: Array = h.get("equipped_armor", [])
 	var base_def = 2
-	if armors.has("plate_mail"):
-		base_def = 4
-	elif armors.has("chain_mail"):
-		base_def = 3
-	else:
+	if h.get("is_summon", false):
 		base_def = int(h.get("defendDice", 2))
+	else:
+		var armors: Array = h.get("equipped_armor", [])
+		if armors.has("plate_mail"):
+			base_def = 4
+		elif armors.has("chain_mail"):
+			base_def = 3
+		else:
+			base_def = int(h.get("defendDice", 2))
 
-	if armors.has("helmet"):
-		base_def += 1
-	if armors.has("shield"):
-		base_def += 1
+		if armors.has("helmet"):
+			base_def += 1
+		if armors.has("shield"):
+			base_def += 1
 	if h.get("rock_skin_active", false):
 		base_def += 1
 	if h.get("potion_defense_active", false):
@@ -8353,6 +8405,11 @@ func use_item(hero_id: String = "", item_id: String = "", target_id: String = ""
 			else:
 				return oracle_lay_out_room(hid)
 
+	elif norm_item_key in ["hearthskin_horn", "the_hearthskin_horn", "hearthskin"] or HeroQuestEquipment.is_artifact(item_id) or HeroQuestEquipment.is_artifact(norm_item_key):
+		inv.remove_at(found_idx)
+		hero["inventory"] = inv
+		return blow_hearthskin_horn(hid)
+
 	# 2. Weapons
 	var w = HeroQuestEquipment.get_weapon(item_id)
 	if not w.is_empty():
@@ -8683,6 +8740,255 @@ func oracle_reroll_dice(hero_id: String = "", roll_type: String = "") -> Diction
 	return { "success": false, "error": "Unknown roll type: " + eff_roll_type }
 
 # ==============================================================================
+# HEROQUEST SUMMONING SUBSYSTEM & THE HEARTHSKIN HORN
+# ==============================================================================
+
+func get_valid_summon_tiles_for_hero(hero: Dictionary) -> Array[Vector2i]:
+	var valid_tiles: Array[Vector2i] = []
+	var h_pos = _to_grid_pos(hero.get("grid_pos", Vector2i(-1, -1)))
+	if h_pos.x < 0 or h_pos.y < 0:
+		return valid_tiles
+	var hero_room_id = _tile_to_room_id.get(h_pos, "")
+
+	for y in range(grid_rows):
+		for x in range(grid_cols):
+			var tile = Vector2i(x, y)
+			if tile == h_pos:
+				continue
+			if not is_tile_walkable(tile) or is_tile_occupied(tile):
+				continue
+			var t_room_id = _tile_to_room_id.get(tile, "")
+			if hero_room_id != "":
+				if t_room_id != hero_room_id:
+					continue
+			else:
+				if t_room_id != "":
+					continue
+			if has_line_of_sight(h_pos, tile):
+				valid_tiles.append(tile)
+
+	# Sort by Manhattan distance from hero (closest first)
+	valid_tiles.sort_custom(func(a, b):
+		var da = absi(a.x - h_pos.x) + absi(a.y - h_pos.y)
+		var db = absi(b.x - h_pos.x) + absi(b.y - h_pos.y)
+		return da < db
+	)
+	return valid_tiles
+
+func summon_character(summoner_id: String, config: Dictionary = {}) -> Dictionary:
+	var summoner: Dictionary = {}
+	if summoner_id != "":
+		summoner = get_hero_by_id(summoner_id)
+	if summoner.is_empty():
+		summoner = get_active_hero()
+	if summoner.is_empty() or not is_hero_alive(summoner):
+		return { "success": false, "error": "No living summoner found for id: " + summoner_id }
+
+	var s_hero_id = str(summoner.get("id"))
+	var s_hero_name = str(summoner.get("name", "Hero"))
+	var h_pos = _to_grid_pos(summoner.get("grid_pos", Vector2i(-1, -1)))
+
+	# Determine placement tile
+	var tile = Vector2i(-1, -1)
+	var pos_raw = config.get("grid_pos", config.get("position", null))
+	if pos_raw != null:
+		tile = _to_grid_pos(pos_raw)
+		if not is_tile_walkable(tile) or is_tile_occupied(tile):
+			return { "success": false, "error": "Target tile (%d, %d) is occupied or unwalkable" % [tile.x, tile.y] }
+		var hero_room_id = _tile_to_room_id.get(h_pos, "")
+		var t_room_id = _tile_to_room_id.get(tile, "")
+		if hero_room_id != "":
+			if t_room_id != hero_room_id:
+				return { "success": false, "error": "Summon must be placed in the same room as summoner" }
+		else:
+			if t_room_id != "":
+				return { "success": false, "error": "Summon must be placed in corridor in line of sight" }
+		if not has_line_of_sight(h_pos, tile):
+			return { "success": false, "error": "Target tile (%d, %d) is not in line of sight of %s" % [tile.x, tile.y, s_hero_name] }
+	else:
+		var valids = get_valid_summon_tiles_for_hero(summoner)
+		if valids.is_empty():
+			return { "success": false, "error": "No valid unoccupied tile in line of sight for %s" % s_hero_name }
+		tile = valids[0]
+
+	# Build summon data
+	var tok_key = str(config.get("token_key", config.get("tokenKey", "wolf"))).to_lower()
+	var def_name = ("Summoned %s" % tok_key.capitalize()) if tok_key != "" else "Summoned Minion"
+	var s_name = str(config.get("name", def_name))
+	var s_id = str(config.get("id", "summon_%s_%s_%d" % [tok_key, s_hero_id, randi() % 10000]))
+	var atk_d = int(config.get("attackDice", config.get("attack_dice", config.get("attack", 2))))
+	var def_d = int(config.get("defendDice", config.get("defend_dice", config.get("defend", 2))))
+	var bp = int(config.get("bodyPoints", config.get("body_points", config.get("body", 1))))
+	var mp = int(config.get("mindPoints", config.get("mind_points", config.get("mind", 0))))
+	var spd = int(config.get("movement", config.get("movement_speed", config.get("speed", 8))))
+	var tok_col = str(config.get("tokenColor", "#38bdf8"))
+
+	var summon_dict: Dictionary = {
+		"id": s_id,
+		"name": s_name,
+		"characterName": s_name,
+		"character_name": s_name,
+		"heroClass": "Summon",
+		"hero_class": "Summon",
+		"bodyPoints": bp,
+		"current_bp": bp,
+		"mindPoints": mp,
+		"current_mp": mp,
+		"attackDice": atk_d,
+		"defendDice": def_d,
+		"movement": spd,
+		"movement_speed": spd,
+		"is_summon": true,
+		"summoner_id": s_hero_id,
+		"reduced_functionality": true,
+		"is_on_board": true,
+		"grid_pos": tile,
+		"has_departed_start": true,
+		"token_key": tok_key,
+		"tokenColor": tok_col,
+		"equipped_weapon": "claws",
+		"equipped_armor": [],
+		"inventory": [],
+		"spells": [],
+		"used_spells": []
+	}
+
+	# Insert directly following summoner or summoner's existing summons
+	var s_idx = heroes.find(summoner)
+	var insert_idx = s_idx + 1
+	if s_idx >= 0:
+		while insert_idx < heroes.size() and heroes[insert_idx].get("summoner_id", "") == s_hero_id:
+			insert_idx += 1
+		heroes.insert(insert_idx, summon_dict)
+		if active_hero_idx >= insert_idx:
+			active_hero_idx += 1
+	else:
+		heroes.append(summon_dict)
+
+	var screen_pos = board_offset + Vector2((tile.x + 0.5) * tile_size, (tile.y + 0.5) * tile_size)
+	spawn_burst_vfx(screen_pos, Color(0.2, 0.85, 1.0), 36.0, 0.45)
+	spawn_floating_text(tile, "SUMMONED!", Color(0.2, 0.85, 1.0), 1.8)
+	_log("[SUMMON] %s conjures %s to fight! Placed at (%d, %d). [Move: %d, Atk: %d, Def: %d, BP: %d, MP: %d]" % [
+		s_hero_name, s_name, tile.x, tile.y, spd, atk_d, def_d, bp, mp
+	])
+
+	update_party_vision()
+	_update_ui()
+	queue_redraw_all()
+	auto_save_game()
+
+	return {
+		"success": true,
+		"summon": summon_dict,
+		"tile": [tile.x, tile.y],
+		"summoner": s_hero_id
+	}
+
+func blow_hearthskin_horn(blower_hero_id: String = "", options: Dictionary = {}) -> Dictionary:
+	var blower: Dictionary = {}
+	if blower_hero_id != "":
+		blower = get_hero_by_id(blower_hero_id)
+	if blower.is_empty():
+		blower = get_active_hero()
+	if blower.is_empty() or not is_hero_alive(blower):
+		return { "success": false, "error": "No living hero to blow The Hearthskin Horn" }
+
+	var blower_name = str(blower.get("name", "Hero"))
+	_log("[HEARTHSKIN HORN] 🪯 %s blows The Hearthskin Horn! A piercing resonant note echoes through corridors and stone chambers!" % blower_name)
+
+	var blower_pos = _to_grid_pos(blower.get("grid_pos", Vector2i(-1, -1)))
+	var b_screen = board_offset + Vector2((blower_pos.x + 0.5) * tile_size, (blower_pos.y + 0.5) * tile_size)
+	spawn_burst_vfx(b_screen, Color(0.2, 0.85, 1.0), 65.0, 0.6)
+	spawn_floating_text(blower_pos, "🪯 HEARTHSKIN HORN!", Color(0.2, 0.85, 1.0), 2.2)
+
+	var living_heroes: Array[Dictionary] = []
+	for h in heroes:
+		if is_hero_alive(h) and not h.get("is_summon", false):
+			living_heroes.append(h)
+
+	var placements = options.get("placements", options.get("target_tiles", {}))
+	var created_summons: Array[Dictionary] = []
+
+	for h in living_heroes:
+		var hid = str(h.get("id"))
+		var hname = str(h.get("name", "Hero"))
+		var target_tile = Vector2i(-1, -1)
+
+		if placements.has(hid):
+			target_tile = _to_grid_pos(placements[hid])
+		else:
+			var valids = get_valid_summon_tiles_for_hero(h)
+			if valids.size() > 0:
+				target_tile = valids[0]
+
+		if target_tile.x >= 0 and target_tile.y >= 0 and is_tile_walkable(target_tile) and not is_tile_occupied(target_tile):
+			var sk_id = "summon_skeleton_" + hid + "_" + str(randi() % 10000)
+			var sk_name = "%s's Skeleton" % hname
+			var sk_dict: Dictionary = {
+				"id": sk_id,
+				"name": sk_name,
+				"characterName": sk_name,
+				"character_name": sk_name,
+				"heroClass": "Friendly Skeleton",
+				"hero_class": "Friendly Skeleton",
+				"bodyPoints": 1,
+				"current_bp": 1,
+				"mindPoints": 0,
+				"current_mp": 0,
+				"attackDice": 2,
+				"defendDice": 2,
+				"movement": 8,
+				"movement_speed": 8,
+				"is_summon": true,
+				"summoner_id": hid,
+				"reduced_functionality": true,
+				"is_on_board": true,
+				"grid_pos": target_tile,
+				"has_departed_start": true,
+				"token_key": "skeleton",
+				"tokenColor": "#38bdf8",
+				"equipped_weapon": "claws",
+				"equipped_armor": [],
+				"inventory": [],
+				"spells": [],
+				"used_spells": []
+			}
+
+			# Insert summon right after hero counterpart
+			var h_idx = heroes.find(h)
+			var insert_idx = h_idx + 1
+			if h_idx >= 0:
+				while insert_idx < heroes.size() and heroes[insert_idx].get("summoner_id", "") == hid:
+					insert_idx += 1
+				heroes.insert(insert_idx, sk_dict)
+				if active_hero_idx >= insert_idx:
+					active_hero_idx += 1
+			else:
+				heroes.append(sk_dict)
+
+			created_summons.append(sk_dict)
+
+			var sk_screen = board_offset + Vector2((target_tile.x + 0.5) * tile_size, (target_tile.y + 0.5) * tile_size)
+			spawn_burst_vfx(sk_screen, Color(0.2, 0.85, 1.0), 30.0, 0.4)
+			spawn_floating_text(target_tile, "SKELETON RISES!", Color(0.3, 0.85, 1.0), 1.8)
+			_log("[SUMMON] A friendly Skeleton arises to fight alongside %s at (%d, %d)! [Move: 8, Atk: 2, Def: 2, BP: 1, MP: 0]" % [
+				hname, target_tile.x, target_tile.y
+			])
+
+	update_party_vision()
+	_update_ui()
+	queue_redraw_all()
+	auto_save_game()
+
+	return {
+		"success": true,
+		"action": "blow_hearthskin_horn",
+		"blower": str(blower.get("id")),
+		"summons": created_summons,
+		"count": created_summons.size()
+	}
+
+# ==============================================================================
 # HEROQUEST STATUS EFFECTS SUBSYSTEM (Heroes & Monsters)
 # ==============================================================================
 
@@ -8938,6 +9244,8 @@ func pass_item(from_hero_id: String = "", to_hero_id: String = "", item_id: Stri
 		from_hero = get_active_hero()
 	if from_hero.is_empty():
 		return { "success": false, "error": "No active giving hero" }
+	if from_hero.get("is_summon", false):
+		return { "success": false, "error": "Summons cannot exchange items" }
 
 	var to_hero: Dictionary = {}
 	if to_hero_id != "":
@@ -8947,6 +9255,8 @@ func pass_item(from_hero_id: String = "", to_hero_id: String = "", item_id: Stri
 				break
 	if to_hero.is_empty():
 		return { "success": false, "error": "Recipient hero not found: " + to_hero_id }
+	if to_hero.get("is_summon", false):
+		return { "success": false, "error": "Summons cannot receive items" }
 
 	if str(from_hero.get("id")) == str(to_hero.get("id")):
 		return { "success": false, "error": "Cannot pass item to self" }
@@ -9184,6 +9494,14 @@ func attack_adjacent_monster(monster_id: String = "", weapon_id: String = "") ->
 
 	var cur_w_id = str(hero.get("equipped_weapon", "broadsword"))
 	var w_def = HeroQuestEquipment.get_weapon(cur_w_id)
+	if w_def.is_empty() and hero.get("is_summon", false):
+		w_def = {
+			"id": "natural_attack",
+			"name": str(hero.get("weapon_name", "Natural Attack")),
+			"attack_dice": int(hero.get("attackDice", 2)),
+			"ranged": false,
+			"diagonal": false
+		}
 	var hero_pos = hero.get("grid_pos", Vector2i(-1, -1))
 
 	var target_m: Dictionary = {}
@@ -11054,6 +11372,11 @@ func search_room(is_interactive: bool = false) -> Dictionary:
 		show_unavailable_notice("Not enough actions", h_pos)
 		return { "success": false, "error": "Already acted this turn" }
 
+	if hero.get("is_summon", false):
+		_log("[SUMMON] %s cannot search for treasure! Friendly summons lack treasure hunting instincts." % hero.get("name", "Summon"))
+		show_unavailable_notice("Summons cannot search", h_pos)
+		return { "success": false, "error": "Summons cannot search for treasure" }
+
 	var h_room = _get_room_at(h_pos)
 	var r_id = str(h_room.get("id", "")) if not h_room.is_empty() else ""
 
@@ -11377,6 +11700,11 @@ func search_traps() -> Dictionary:
 		_log("[ACTION] %s has already taken an action this turn!" % hero.get("name", "Hero"))
 		show_unavailable_notice("Not enough actions", h_pos)
 		return { "success": false, "error": "Already acted this turn" }
+
+	if hero.get("is_summon", false):
+		_log("[SUMMON] %s cannot search for traps or secret doors!" % hero.get("name", "Summon"))
+		show_unavailable_notice("Summons cannot search", h_pos)
+		return { "success": false, "error": "Summons cannot search for traps" }
 
 	var h_room = _get_room_at(h_pos)
 	var found_traps: Array[String] = []
@@ -16109,6 +16437,13 @@ func get_telemetry_state() -> Dictionary:
 		hc["is_alive"] = not is_dead
 		hc["is_dead"] = is_dead
 
+		hc["isSummon"] = bool(h.get("is_summon", false))
+		hc["is_summon"] = bool(h.get("is_summon", false))
+		hc["summoner_id"] = str(h.get("summoner_id", ""))
+		hc["movement"] = int(h.get("movement", h.get("movement_speed", 8)))
+		hc["movementSpeed"] = int(h.get("movement_speed", h.get("movement", 8)))
+		hc["reduced_functionality"] = bool(h.get("reduced_functionality", false))
+
 		var effs = get_hero_status_effects(h)
 
 		hc["statusEffects"] = effs
@@ -16161,6 +16496,12 @@ func get_telemetry_state() -> Dictionary:
 			"isOnBoard": bool(h.get("is_on_board", false)) and not is_dead,
 			"isAlive": not is_dead,
 			"isDead": is_dead,
+			"isSummon": bool(h.get("is_summon", false)),
+			"is_summon": bool(h.get("is_summon", false)),
+			"summoner_id": str(h.get("summoner_id", "")),
+			"movement": int(h.get("movement", h.get("movement_speed", 8))),
+			"movementSpeed": int(h.get("movement_speed", h.get("movement", 8))),
+			"reduced_functionality": bool(h.get("reduced_functionality", false)),
 			"weapon": str(h.get("equipped_weapon", h.get("weapon", "unarmed"))),
 			"weaponIcon": HeroQuestEquipment.get_weapon(str(h.get("equipped_weapon", h.get("weapon", "")))).get("icon", "⚔️"),
 			"weaponTexture": _get_hero_weapon_texture_path(h),
@@ -16487,12 +16828,14 @@ func get_telemetry_state() -> Dictionary:
 		"currentRole": current_role,
 		"round": current_round,
 		"phase": current_phase,
+		"currentPhase": current_phase,
 		"gameState": get_game_state(),
 		"isQuestBegin": is_quest_begin(),
 		"questBegun": quest_begun,
 		"activeHero": h_act.get("id", ""),
 		"activeHeroId": h_act.get("id", ""),
 		"activeHeroIndex": active_hero_idx,
+		"activeHeroIdx": active_hero_idx,
 		"activeHeroPos": [h_pos.x, h_pos.y],
 		"activeHeroTokenPos": [active_center.x, active_center.y],
 		"boardOffset": [board_offset.x, board_offset.y],
@@ -17074,7 +17417,7 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 					"overflow": (btn_scroll_right.visible or btn_scroll_left.visible) if (btn_scroll_right and btn_scroll_left) else false
 				}
 			return { "success": false }
-		"take_screenshot":
+		"take_screenshot", "capture_screenshot", "screenshot":
 			var out_p = str(action_data.get("path", "/tmp/tabletop_hotbar.png"))
 			var v_img = get_viewport().get_texture().get_image() if get_viewport() and get_viewport().get_texture() else null
 			if not v_img:
@@ -17179,14 +17522,6 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				current_phase = str(action_data.get("current_phase"))
 			elif action_data.has("currentPhase"):
 				current_phase = str(action_data.get("currentPhase"))
-			if action_data.has("activeHeroIndex") or action_data.has("active_hero_index"):
-				active_hero_idx = int(action_data.get("activeHeroIndex", action_data.get("active_hero_index", 0)))
-			if action_data.has("activeHero") or action_data.has("active_hero"):
-				var req_h = str(action_data.get("activeHero", action_data.get("active_hero", "")))
-				for i in range(heroes.size()):
-					if str(heroes[i].get("id")) == req_h:
-						active_hero_idx = i
-						break
 			if action_data.has("movementRemaining"):
 				movement_remaining = int(action_data.get("movementRemaining"))
 				if movement_remaining > 0 and not action_data.has("movementClosed"):
@@ -17278,11 +17613,15 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				last_player_attack_hit = action_data.get("lastPlayerAttackHit").duplicate(true)
 				turn_losses_active = true
 				_update_log_display()
+			if action_data.has("clearHeroes") and bool(action_data.get("clearHeroes")):
+				heroes.clear()
 			if action_data.has("heroes") and action_data.heroes is Array:
 				for h_patch in action_data.heroes:
 					var h_id = str(h_patch.get("id", ""))
+					var found_h = false
 					for h in heroes:
 						if str(h.get("id")) == h_id:
+							found_h = true
 							for k in h_patch:
 								if k == "grid_pos" and h_patch[k] is Array:
 									h["grid_pos"] = Vector2i(int(h_patch[k][0]), int(h_patch[k][1]))
@@ -17322,6 +17661,19 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 								else:
 									h[k] = h_patch[k]
 							break
+					if not found_h:
+						var new_h = h_patch.duplicate(true)
+						if new_h.has("grid_pos") and new_h["grid_pos"] is Array:
+							new_h["grid_pos"] = Vector2i(int(new_h["grid_pos"][0]), int(new_h["grid_pos"][1]))
+						heroes.append(new_h)
+			if action_data.has("activeHeroIndex") or action_data.has("active_hero_index") or action_data.has("activeHeroIdx"):
+				active_hero_idx = int(action_data.get("activeHeroIndex", action_data.get("active_hero_index", action_data.get("activeHeroIdx", 0))))
+			if action_data.has("activeHero") or action_data.has("active_hero"):
+				var req_h = str(action_data.get("activeHero", action_data.get("active_hero", "")))
+				for i in range(heroes.size()):
+					if str(heroes[i].get("id")) == req_h:
+						active_hero_idx = i
+						break
 			if action_data.has("difficulty_mode") or action_data.has("difficulty"):
 				var d_val = str(action_data.get("difficulty_mode", action_data.get("difficulty", "normal"))).to_lower().strip_edges()
 				if d_val == "hard" or d_val == "hard_mode" or d_val == "nightmare":
@@ -17608,7 +17960,7 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			var r = roll_movement_dice()
 			if r.is_empty():
 				return { "success": false, "error": "Movement phase closed or already concluded" }
-			return { "success": true, "roll": r }
+			return { "success": true, "roll": r, "movementRemaining": movement_remaining, "movement_remaining": movement_remaining }
 		"move":
 			var tx = int(action_data.get("x", 0))
 			var ty = int(action_data.get("y", 0))
@@ -17909,7 +18261,7 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			if not is_interactive and bool(action_data.get("claim_hearth_heal", false)):
 				claim_hearth_heal()
 			return res
-		"end_turn":
+		"end_turn", "click_end_turn":
 			end_turn()
 			return { "success": true }
 		"click_turn_overlay":
@@ -18026,6 +18378,20 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 					is_def = (c_res.wounds >= int(action_data.get("current_bp", 999)))
 				trigger_combat_dice_roll(c_res, str(action_data.get("attacker", "Barbarian")), str(action_data.get("defender", "Crypt Skeleton")), is_hero_def, is_def)
 				return { "success": true, "type": "combat", "result": c_res, "isDefeated": is_def }
+		"blow_hearthskin_horn", "hearthskin_horn", "use_hearthskin_horn":
+			var h_id = str(action_data.get("heroId", action_data.get("hero_id", "")))
+			return blow_hearthskin_horn(h_id, action_data)
+		"summon_character", "summon_minion", "summon":
+			var s_id = str(action_data.get("summonerId", action_data.get("summoner_id", action_data.get("heroId", ""))))
+			return summon_character(s_id, action_data)
+		"get_valid_summon_tiles":
+			var h_id = str(action_data.get("heroId", action_data.get("hero_id", "")))
+			var h = get_hero_by_id(h_id) if h_id != "" else get_active_hero()
+			var valids = get_valid_summon_tiles_for_hero(h)
+			var tiles_arr = []
+			for vt in valids:
+				tiles_arr.append([vt.x, vt.y])
+			return { "success": true, "tiles": tiles_arr }
 	return { "success": false, "error": "Unknown action: " + action_type }
 
 func _draw() -> void:
@@ -18733,11 +19099,17 @@ func _draw_board(canvas: CanvasItem) -> void:
 				h_initial = "E"
 			elif "wizard" in h_name:
 				h_initial = "W"
+			elif h.get("is_summon", false):
+				h_initial = "S" if "skeleton" in h_name else ("W" if "wolf" in h_name else "M")
 			else:
 				h_initial = h_name.substr(0, 1).to_upper()
 
 			var init_w = ThemeDB.fallback_font.get_string_size(h_initial, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size).x
 			canvas.draw_string(ThemeDB.fallback_font, Vector2(screen_pos.x - init_w * 0.5, screen_pos.y + font_size * 0.38), h_initial, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, Color.WHITE)
+
+		# Draw Friendly Summon Aura
+		if h.get("is_summon", false):
+			canvas.draw_arc(screen_pos, token_radius + 2.5, 0, TAU, 32, Color(0.22, 0.85, 1.0, 0.95), 2.2)
 
 		# Draw Hero Active Status Auras
 		if h.get("potion_defense_active", false):

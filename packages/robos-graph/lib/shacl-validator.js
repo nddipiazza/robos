@@ -2888,6 +2888,51 @@ const BUILTIN_SHACL_SHAPES = [
     "domainStandard": "https://robos.dev/ns/tabletop#Monster"
   },
   {
+    "shapeId": "urn:robos:shape:TabletopSummonShape",
+    "targetClass": "robos:TabletopSummon",
+    "targetClasses": ["robos:TabletopSummon"],
+    "properties": [
+      {
+        "path": "dcterms:title",
+        "minCount": 1,
+        "message": "Tabletop summon must have a name."
+      },
+      {
+        "path": "robos:summoner",
+        "minCount": 1,
+        "message": "Tabletop summon must declare its hero summoner."
+      },
+      {
+        "path": "robos:bodyPoints",
+        "minCount": 1,
+        "message": "Tabletop summon must declare Body Points."
+      },
+      {
+        "path": "robos:mindPoints",
+        "minCount": 1,
+        "message": "Tabletop summon must declare Mind Points."
+      },
+      {
+        "path": "robos:attackDice",
+        "minCount": 1,
+        "message": "Tabletop summon must declare attack dice."
+      },
+      {
+        "path": "robos:defendDice",
+        "minCount": 1,
+        "message": "Tabletop summon must declare defend dice."
+      },
+      {
+        "path": "robos:movementSquares",
+        "minCount": 1,
+        "message": "Tabletop summon must declare movement speed in squares."
+      }
+    ],
+    "refersFrom": "https://schema.org/Person",
+    "schemaOrgType": "https://schema.org/Person",
+    "domainStandard": "https://robos.dev/ns/tabletop#Summon"
+  },
+  {
     "shapeId": "urn:robos:shape:TabletopQuestMapShape",
     "targetClass": "robos:TabletopQuestMap",
     "targetClasses": ["robos:TabletopQuestMap"],
