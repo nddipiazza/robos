@@ -711,6 +711,12 @@ func _setup_action_button_style(btn: Button) -> void:
 		shield.gui_input.connect(func(ev: InputEvent):
 			_on_disabled_action_button_clicked(ev, btn)
 		)
+		shield.mouse_entered.connect(func():
+			_on_action_button_hovered(btn)
+		)
+		shield.mouse_exited.connect(func():
+			_on_action_button_unhovered(btn)
+		)
 		btn.add_child(shield)
 
 func _update_action_tile(btn: Button, icon_key: String, count: int, title: String, desc: String, badge_color: Color = Color(0.88, 0.15, 0.28, 0.92)) -> void:
@@ -756,6 +762,10 @@ func _update_action_tile(btn: Button, icon_key: String, count: int, title: Strin
 	btn.tooltip_text = "%s\n%s" % [title, desc]
 	btn.set_meta("action_title", title)
 	btn.set_meta("action_desc", desc)
+
+	var shield_ctrl = btn.get_node_or_null("DisabledClickShield") as Control
+	if shield_ctrl:
+		shield_ctrl.tooltip_text = btn.tooltip_text
 
 	if not btn.mouse_entered.is_connected(_on_action_button_hovered.bind(btn)):
 		btn.mouse_entered.connect(_on_action_button_hovered.bind(btn))
@@ -903,8 +913,6 @@ func _get_button_unavailable_reason(btn: Button) -> String:
 			return "No items in inventory"
 		return "No items available"
 	elif btn == btn_search:
-		if has_acted_this_turn:
-			return "Not enough actions"
 		return _get_search_unavailable_reason()
 	elif btn == btn_search_traps:
 		if has_acted_this_turn:
@@ -930,36 +938,146 @@ func _get_button_unavailable_reason(btn: Button) -> String:
 		return "Cannot end turn"
 	return "Action unavailable"
 
-func _get_search_unavailable_reason() -> String:
+func _get_search_status() -> Dictionary:
+	# 1. Turn phase / role
+	if is_gm_role():
+		return {
+			"can_search": false,
+			"reason_key": "gm_role",
+			"notice": "GM cannot search",
+			"title": "🔍 Search Room (Zargon)",
+			"desc": "Unavailable: Zargon does not search rooms for treasure."
+		}
+
+	if current_phase != "hero_phase" or current_role != "player":
+		return {
+			"can_search": false,
+			"reason_key": "not_hero_phase",
+			"notice": "Not hero's turn",
+			"title": "🔍 Search Room (Zargon Turn)",
+			"desc": "Unavailable: Cannot search for treasure during Zargon's turn."
+		}
+
 	var hero = get_active_hero()
 	if hero.is_empty():
-		return "No active hero"
+		return {
+			"can_search": false,
+			"reason_key": "no_hero",
+			"notice": "No active hero",
+			"title": "🔍 Search Room (No Hero)",
+			"desc": "Unavailable: No active hero selected to search for treasure."
+		}
+
+	var h_name = str(hero.get("name", "Hero"))
 	var h_pos = hero.get("grid_pos", Vector2i(-1, -1))
 	var h_room = _get_room_at(h_pos)
 	var r_id = str(h_room.get("id", "")) if not h_room.is_empty() else ""
+
+	# 2. Standing in a corridor
 	if r_id == "":
-		return "Cannot search in corridor"
+		return {
+			"can_search": false,
+			"reason_key": "in_corridor",
+			"notice": "Cannot search in corridor",
+			"title": "🔍 Search Room (In Corridor)",
+			"desc": "Unavailable: Cannot search for treasure in corridors. Under HeroQuest rules, treasures can only be searched for inside rooms."
+		}
+
+	# 3. Room is unrevealed / unexplored
+	if not revealed_rooms.has(r_id):
+		return {
+			"can_search": false,
+			"reason_key": "room_unrevealed",
+			"notice": "Room not revealed",
+			"title": "🔍 Search Room (Unexplored)",
+			"desc": "Unavailable: This room has not been revealed or entered yet."
+		}
+
+	# 4. Room contains living monsters
+	var monsters_in_room: Array[String] = []
 	for m in monsters:
 		if bool(m.get("is_alive", true)) and int(m.get("current_bp", 1)) > 0:
 			var m_pos = _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
 			var m_room = str(_get_room_at(m_pos).get("id", ""))
 			var m_room_id = str(m.get("roomId", ""))
 			if (m_room != "" and m_room == r_id) or (m_room_id != "" and m_room_id == r_id):
-				return "Monsters present in room"
+				monsters_in_room.append(str(m.get("name", "Monster")))
+
+	if monsters_in_room.size() > 0:
+		var m_names = ", ".join(monsters_in_room)
+		return {
+			"can_search": false,
+			"reason_key": "monsters_in_room",
+			"notice": "Monsters present in room",
+			"title": "🔍 Search Room (Monsters in Room)",
+			"desc": "Unavailable: Cannot search for treasure while monsters are present in this room (%s)! Defeat all monsters first." % m_names
+		}
+
+	# 5. Hero already searched this room or room exhausted
 	var hero_id = str(hero.get("id", ""))
 	var room_searches: Array = searched_rooms.get(r_id, [])
-	if hero_id in room_searches or room_searches.size() >= 4:
-		return "Room already searched"
-	return "Cannot search room"
+	if hero_id in room_searches:
+		return {
+			"can_search": false,
+			"reason_key": "already_searched",
+			"notice": "Room already searched",
+			"title": "🔍 Search Room (Already Searched)",
+			"desc": "Unavailable: %s has already searched this room for treasure! Under HeroQuest rules, each hero may only search a room once." % h_name
+		}
+
+	if room_searches.size() >= 4:
+		return {
+			"can_search": false,
+			"reason_key": "room_exhausted",
+			"notice": "Room already searched",
+			"title": "🔍 Search Room (Already Searched)",
+			"desc": "Unavailable: This room has been thoroughly searched by the party and holds no more treasure."
+		}
+
+	# 6. Hero already used action this turn
+	if has_acted_this_turn:
+		return {
+			"can_search": false,
+			"reason_key": "action_used",
+			"notice": "Not enough actions",
+			"title": "🔍 Search Room (Action Used)",
+			"desc": "Unavailable: %s has already taken an action this turn. Each hero may only perform one action per turn." % h_name
+		}
+
+	# 7. Turn concluded / movement closed
+	if movement_closed or (moved_before_action and has_acted_this_turn):
+		return {
+			"can_search": false,
+			"reason_key": "turn_concluded",
+			"notice": "Not enough actions",
+			"title": "🔍 Search Room (Turn Ended)",
+			"desc": "Unavailable: Turn has concluded for %s. Click End Turn to proceed." % h_name
+		}
+
+	# All conditions satisfied!
+	return {
+		"can_search": true,
+		"reason_key": "available",
+		"notice": "",
+		"title": "🔍 Search Room for Treasure",
+		"desc": "Search this chamber for hidden chests, gems, or gold."
+	}
+
+func _get_search_unavailable_reason() -> String:
+	var st = _get_search_status()
+	if not st.get("can_search", false):
+		return str(st.get("notice", "Cannot search room"))
+	return ""
 
 func _sync_disabled_click_shields() -> void:
-	var btns = [btn_roll, btn_attack, btn_cast_spell, btn_use_item, btn_search, btn_end_turn, btn_summon, btn_ai_step, btn_search_traps, btn_disarm_trap, btn_armory, btn_map_end_turn]
+	var btns = [btn_roll, btn_attack, btn_cast_spell, btn_use_item, btn_search, btn_end_turn, btn_summon, btn_ai_step, btn_search_traps, btn_disarm_trap, btn_armory, btn_map_end_turn, btn_wandering_monster]
 	for btn in btns:
 		if not btn:
 			continue
 		var shield = btn.get_node_or_null("DisabledClickShield") as Control
 		if shield:
 			shield.mouse_filter = Control.MOUSE_FILTER_STOP if btn.disabled else Control.MOUSE_FILTER_IGNORE
+			shield.tooltip_text = btn.tooltip_text
 
 func _on_disabled_action_button_clicked(event: InputEvent, btn: Button) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
@@ -6717,28 +6835,7 @@ func get_adjacent_closed_doors() -> Array[Dictionary]:
 	return res
 
 func can_search_room() -> bool:
-	var hero = get_active_hero()
-	if hero.is_empty() or has_acted_this_turn:
-		return false
-	var h_pos: Vector2i = hero.get("grid_pos", Vector2i(-1, -1))
-	var rm = _get_room_at(h_pos)
-	var r_id = str(rm.get("id", ""))
-	if r_id == "" or not revealed_rooms.has(r_id):
-		return false
-	for m in monsters:
-		if bool(m.get("is_alive", true)) and int(m.get("current_bp", 1)) > 0:
-			var m_pos = _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
-			var m_room = str(_get_room_at(m_pos).get("id", ""))
-			var m_room_id = str(m.get("roomId", ""))
-			if (m_room != "" and m_room == r_id) or (m_room_id != "" and m_room_id == r_id):
-				return false
-	var hero_id = str(hero.get("id", ""))
-	var room_searches: Array = searched_rooms.get(r_id, [])
-	if hero_id in room_searches:
-		return false
-	if room_searches.size() >= 4:
-		return false
-	return true
+	return bool(_get_search_status().get("can_search", false))
 
 func _input(event: InputEvent) -> void:
 	if is_targeting_active():
@@ -10844,6 +10941,18 @@ func _update_demo_button_ui() -> void:
 	if demo_btn:
 		demo_btn.visible = false
 
+func _update_search_action_button() -> void:
+	if not btn_search:
+		return
+	btn_search.visible = true
+	var status = _get_search_status()
+	var can_s = bool(status.get("can_search", false))
+	btn_search.disabled = not can_s
+	btn_search.text = "Search Room"
+	var title = str(status.get("title", "🔍 Search Room for Treasure"))
+	var desc = str(status.get("desc", "Search this chamber for hidden chests, gems, or gold."))
+	_update_action_tile(btn_search, "search", 0, title, desc, Color(0.92, 0.75, 0.22, 0.95))
+
 func _update_ui() -> void:
 	_update_demo_button_ui()
 	_update_quest_objectives_hud()
@@ -10881,7 +10990,7 @@ func _update_ui() -> void:
 		if btn_use_item:
 			btn_use_item.visible = false
 		if btn_search:
-			btn_search.visible = false
+			_update_search_action_button()
 		if btn_search_traps:
 			btn_search_traps.visible = false
 		if btn_disarm_trap:
@@ -10913,7 +11022,7 @@ func _update_ui() -> void:
 		if btn_use_item:
 			btn_use_item.visible = false
 		if btn_search:
-			btn_search.visible = false
+			_update_search_action_button()
 		if btn_search_traps:
 			btn_search_traps.visible = false
 		if btn_disarm_trap:
@@ -10993,6 +11102,9 @@ func _update_ui() -> void:
 			btn_disarm_trap.text = "🔧 Disarm (%d)" % adj_traps.size() if adj_traps.size() > 0 else "🔧 Disarm"
 			_update_action_tile(btn_disarm_trap, "disarm", adj_traps.size(), "🔧 Disarm Trap (%d Adjacent)" % adj_traps.size(), "Attempt to safely disarm adjacent trap with Tool Kit.", Color(0.15, 0.75, 0.70, 0.92))
 
+		# Search Room for Treasure Action Button (Always visible in hotbar, disabled with explanation if unavailable)
+		_update_search_action_button()
+
 		var adj_monsters = get_adjacent_monsters()
 		var adj_doors = get_adjacent_closed_doors()
 		var in_room_clean = can_search_room()
@@ -11007,8 +11119,6 @@ func _update_ui() -> void:
 				_update_action_tile(btn_roll, "move", 0, "🎲 Movement Complete (0)", "Movement has concluded for this turn.")
 			if btn_attack:
 				btn_attack.visible = false
-			if btn_search:
-				btn_search.visible = false
 			if btn_search_traps:
 				btn_search_traps.disabled = true
 			if btn_disarm_trap:
@@ -11052,8 +11162,6 @@ func _update_ui() -> void:
 						_update_action_tile(btn_attack, "door", 0, "🚪 Open Door", "Kick open adjacent dungeon door to reveal room and foes.")
 				else:
 					btn_attack.visible = false
-			if btn_search:
-				btn_search.visible = false
 			if btn_end_turn:
 				btn_end_turn.visible = true
 				btn_end_turn.disabled = false
@@ -11110,16 +11218,6 @@ func _update_ui() -> void:
 						_update_action_tile(btn_attack, "door", 0, "🚪 Open Door", "Kick open adjacent dungeon door to reveal room and foes.")
 				else:
 					btn_attack.visible = false
-
-			# Contextual search button
-			if btn_search:
-				if in_room_clean and not has_acted_this_turn:
-					btn_search.visible = true
-					btn_search.disabled = false
-					btn_search.text = "Search Room"
-					_update_action_tile(btn_search, "search", 0, "🔍 Search Room for Treasure", "Search this chamber for hidden chests, gems, or gold.")
-				else:
-					btn_search.visible = false
 
 			if btn_end_turn:
 				btn_end_turn.visible = true
@@ -14097,7 +14195,7 @@ func get_telemetry_state() -> Dictionary:
 			"attack": { "visible": btn_attack.visible, "disabled": btn_attack.disabled, "text": btn_attack.text, "tooltip": btn_attack.tooltip_text, "icon": ("action_door" if ("Door" in btn_attack.text) else "action_attack") } if btn_attack else {},
 			"cast_spell": { "visible": btn_cast_spell.visible, "disabled": btn_cast_spell.disabled, "tooltip": btn_cast_spell.tooltip_text, "icon": "action_spell" } if btn_cast_spell else {},
 			"use_item": { "visible": btn_use_item.visible, "disabled": btn_use_item.disabled, "tooltip": btn_use_item.tooltip_text, "icon": "action_item" } if btn_use_item else {},
-			"search": { "visible": btn_search.visible, "disabled": btn_search.disabled, "tooltip": btn_search.tooltip_text, "icon": "action_search" } if btn_search else {},
+			"search": { "visible": btn_search.visible, "disabled": btn_search.disabled, "text": btn_search.text, "tooltip": btn_search.tooltip_text, "icon": "action_search", "reason": _get_search_unavailable_reason() if btn_search.disabled else "" } if btn_search else {},
 			"search_traps": { "visible": btn_search_traps.visible, "disabled": btn_search_traps.disabled, "tooltip": btn_search_traps.tooltip_text, "icon": "action_traps" } if btn_search_traps else {},
 			"disarm_trap": { "visible": btn_disarm_trap.visible, "disabled": btn_disarm_trap.disabled, "tooltip": btn_disarm_trap.tooltip_text, "icon": "action_disarm" } if btn_disarm_trap else {},
 			"end_turn": { "visible": btn_end_turn.visible, "disabled": btn_end_turn.disabled, "tooltip": btn_end_turn.tooltip_text, "icon": "action_end_turn" } if btn_end_turn else {},
