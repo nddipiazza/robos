@@ -1246,16 +1246,15 @@ horizontal_alignment = 1
 
 [node name="IllustrationFrame" type="PanelContainer" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardColumn/CardStageControl/DrawnCard/CardMargin/CardVBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 160)
+custom_minimum_size = Vector2(0, 180)
 
 [node name="CardIllustration" type="TextureRect" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardColumn/CardStageControl/DrawnCard/CardMargin/CardVBox/IllustrationFrame"]
 layout_mode = 2
 expand_mode = 1
-stretch_mode = 6
+stretch_mode = 5
 
 [node name="CardDescription" type="Label" parent="UI/TreasureModal/Card/Margin/VBox/StageHBox/CardColumn/CardStageControl/DrawnCard/CardMargin/CardVBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(336, 0)
 theme_override_font_sizes/font_size = 11
 text = "Card description..."
 autowrap_mode = 2

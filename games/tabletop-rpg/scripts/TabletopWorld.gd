@@ -1954,7 +1954,7 @@ func get_ai_icon_texture(category: String, id_name: String) -> Texture2D:
 			cat = "armor"
 		elif "flame" in clean_id or "fire" in clean_id or "courage" in clean_id or "rock_skin" in clean_id or "heal_body" in clean_id or "pass_through_rock" in clean_id or "water_of_healing" in clean_id or "sleep" in clean_id or "veil_of_mist" in clean_id or "genie" in clean_id or "swift_wind" in clean_id or "tempest" in clean_id:
 			cat = "spell"
-		elif "potion" in clean_id or "elixir" in clean_id or "draught" in clean_id or "flask" in clean_id or "water" in clean_id or "tool" in clean_id or "kit" in clean_id:
+		elif "potion" in clean_id or "defense" in clean_id or "ward" in clean_id or "elixir" in clean_id or "draught" in clean_id or "flask" in clean_id or "water" in clean_id or "tool" in clean_id or "kit" in clean_id:
 			cat = "item"
 
 	var file_name = ""
@@ -2012,7 +2012,7 @@ func get_ai_icon_texture(category: String, id_name: String) -> Texture2D:
 				file_name = "spell_tempest.png"
 			else:
 				file_name = "spell_ball_of_flame.png"
-		"item", "consumable", "tool", "ability", "gear", "potion", "potions":
+		"item", "items", "consumable", "tool", "ability", "gear", "potion", "potions":
 			if "strength" in clean_id:
 				file_name = "item_potion_of_strength.png"
 			elif "speed" in clean_id:
@@ -12718,6 +12718,11 @@ func _setup_treasure_modal() -> void:
 	if treasure_deck_texture and _treasure_deck_texture_res:
 		treasure_deck_texture.texture = _treasure_deck_texture_res
 
+	var deck_title = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/StageHBox/DeckColumn/DeckTitle")
+	if deck_title is Label:
+		deck_title.add_theme_stylebox_override("normal", get_rpg_section_header_stylebox(12, 4))
+		apply_rpg_font_to_label(deck_title, true, 13, Color(1.0, 0.88, 0.40, 1.0))
+
 	if not treasure_drawn_card:
 		treasure_drawn_card = get_node_or_null("UI/TreasureModal/Card/Margin/VBox/StageHBox/CardColumn/CardStageControl/DrawnCard")
 		if not treasure_drawn_card and treasure_modal:
@@ -12836,18 +12841,28 @@ func _populate_treasure_modal(card: Dictionary, hero: Dictionary, is_quest_note:
 	if treasure_card_type_badge:
 		treasure_card_type_badge.visible = false
 
-	# 3. Card Title with Cinzel font placed directly on top banner ribbon
+	# 3. Card Title with Cinzel font placed directly on top banner ribbon with protective dark plaque
 	if treasure_card_title:
 		treasure_card_title.text = raw_title
-		var title_col = Color(1.0, 0.90, 0.75, 1.0) if is_hazard else Color(0.14, 0.08, 0.03, 1.0)
+		var title_sb = StyleBoxFlat.new()
+		if is_hazard:
+			title_sb.bg_color = Color(0.14, 0.04, 0.04, 0.92)
+			title_sb.border_color = Color(0.85, 0.30, 0.22, 0.95)
+		else:
+			title_sb.bg_color = Color(0.12, 0.09, 0.05, 0.92)
+			title_sb.border_color = Color(0.85, 0.72, 0.32, 0.95)
+		title_sb.set_corner_radius_all(6)
+		title_sb.set_border_width_all(1)
+		title_sb.content_margin_left = 14
+		title_sb.content_margin_right = 14
+		title_sb.content_margin_top = 5
+		title_sb.content_margin_bottom = 5
+		treasure_card_title.add_theme_stylebox_override("normal", title_sb)
+		var title_col = Color(1.0, 0.85, 0.75, 1.0) if is_hazard else Color(1.0, 0.88, 0.35, 1.0)
 		treasure_card_title.add_theme_color_override("font_color", title_col)
 		apply_rpg_font_to_label(treasure_card_title, true, 16, title_col)
-		if not is_hazard:
-			treasure_card_title.add_theme_constant_override("outline_size", 1)
-			treasure_card_title.add_theme_color_override("font_outline_color", Color(0.96, 0.90, 0.80, 0.95))
-		else:
-			treasure_card_title.add_theme_constant_override("outline_size", 2)
-			treasure_card_title.add_theme_color_override("font_outline_color", Color(0.05, 0.02, 0.02, 0.95))
+		treasure_card_title.add_theme_constant_override("outline_size", 1)
+		treasure_card_title.add_theme_color_override("font_outline_color", Color(0.04, 0.02, 0.02, 0.95))
 
 	# 4. Card Illustration Frame & Dedicated Texture
 	var if_node = treasure_drawn_card.find_child("IllustrationFrame", true, false)
@@ -12858,29 +12873,42 @@ func _populate_treasure_modal(card: Dictionary, hero: Dictionary, is_quest_note:
 		if_sb.set_border_width_all(2)
 		if_sb.border_color = Color(0.85, 0.32, 0.25, 0.85) if is_hazard else Color(0.72, 0.52, 0.25, 0.85)
 		if_node.add_theme_stylebox_override("panel", if_sb)
+		if_node.custom_minimum_size = Vector2(0, 180)
 
 	if treasure_card_illustration:
 		var tex: Texture2D = _get_treasure_card_art_texture(card, is_quest_note)
 		treasure_card_illustration.texture = tex
 		treasure_card_illustration.visible = (tex != null)
+		treasure_card_illustration.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		treasure_card_illustration.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 
-	# 5. Card Description & Flavor (combined in single flow to prevent any overlap)
+	# 5. Card Description & Flavor with high-contrast RPG parchment/slate background panel
 	if treasure_card_desc:
+		treasure_card_desc.custom_minimum_size = Vector2(0, 0)
 		var desc_text = str(card.get("description", ""))
 		var flv = str(card.get("flavor", ""))
 		var full_text = desc_text
 		if flv != "":
 			full_text += "\n\n— %s —" % flv
-		var col = Color(0.95, 0.90, 0.82, 1.0) if is_hazard else Color(0.12, 0.07, 0.03, 1.0)
-		treasure_card_desc.text = full_text
-		treasure_card_desc.add_theme_color_override("font_color", col)
-		apply_rpg_font_to_label(treasure_card_desc, false, 11, col)
-		if not is_hazard:
-			treasure_card_desc.add_theme_constant_override("outline_size", 1)
-			treasure_card_desc.add_theme_color_override("font_outline_color", Color(0.97, 0.92, 0.82, 0.90))
+		var desc_sb = StyleBoxFlat.new()
+		if is_hazard:
+			desc_sb.bg_color = Color(0.12, 0.04, 0.04, 0.92)
+			desc_sb.border_color = Color(0.75, 0.28, 0.20, 0.80)
 		else:
-			treasure_card_desc.add_theme_constant_override("outline_size", 1)
-			treasure_card_desc.add_theme_color_override("font_outline_color", Color(0.04, 0.02, 0.02, 0.95))
+			desc_sb.bg_color = Color(0.12, 0.09, 0.05, 0.92)
+			desc_sb.border_color = Color(0.70, 0.55, 0.25, 0.80)
+		desc_sb.set_corner_radius_all(6)
+		desc_sb.set_border_width_all(1)
+		desc_sb.content_margin_left = 14
+		desc_sb.content_margin_right = 14
+		desc_sb.content_margin_top = 8
+		desc_sb.content_margin_bottom = 8
+		treasure_card_desc.add_theme_stylebox_override("normal", desc_sb)
+		var desc_col = Color(1.0, 0.92, 0.88, 1.0) if is_hazard else Color(1.0, 0.96, 0.88, 1.0)
+		treasure_card_desc.text = full_text
+		apply_rpg_font_to_label(treasure_card_desc, false, 12, desc_col)
+		treasure_card_desc.add_theme_color_override("font_color", desc_col)
+		treasure_card_desc.add_theme_constant_override("outline_size", 0)
 
 	if treasure_card_flavor:
 		treasure_card_flavor.visible = false
@@ -12890,30 +12918,34 @@ func _populate_treasure_modal(card: Dictionary, hero: Dictionary, is_quest_note:
 	if ob_node:
 		var ob_sb = StyleBoxFlat.new()
 		if is_hazard:
-			ob_sb.bg_color = Color(0.16, 0.05, 0.05, 0.88)
-			ob_sb.border_color = Color(0.85, 0.32, 0.22, 0.85)
+			ob_sb.bg_color = Color(0.16, 0.05, 0.05, 0.92)
+			ob_sb.border_color = Color(0.85, 0.32, 0.22, 0.90)
 		else:
-			ob_sb.bg_color = Color(0.14, 0.10, 0.06, 0.88)
+			ob_sb.bg_color = Color(0.14, 0.10, 0.06, 0.92)
 			ob_sb.border_color = Color(0.72, 0.54, 0.22, 0.90)
-		ob_sb.set_corner_radius_all(4)
+		ob_sb.set_corner_radius_all(6)
 		ob_sb.set_border_width_all(1)
 		ob_node.add_theme_stylebox_override("panel", ob_sb)
 
 	if treasure_outcome_text:
 		var h_name = str(hero.get("name", "Hero"))
+		var out_col = Color(0.45, 0.95, 0.65, 1.0)
 		if is_quest_note:
 			treasure_outcome_text.text = "Rule: Room-specific Special Treasure claimed by %s! (Marked as claimed for this Quest)." % h_name
-			treasure_outcome_text.add_theme_color_override("font_color", Color(1.0, 0.85, 0.35, 1.0))
+			out_col = Color(1.0, 0.88, 0.40, 1.0)
 		elif c_type == "hazard":
 			var dmg = int(card.get("damage", 1))
 			treasure_outcome_text.text = "Rule: %s suffers %d BP damage! Card resolved, returned to deck, and shuffled." % [h_name, dmg]
-			treasure_outcome_text.add_theme_color_override("font_color", Color(1.0, 0.55, 0.50, 1.0))
+			out_col = Color(1.0, 0.60, 0.55, 1.0)
 		elif c_type == "wandering_monster":
 			treasure_outcome_text.text = "Rule: Wandering monster ambushes adjacent to %s! Card resolved, returned to deck, and shuffled." % h_name
-			treasure_outcome_text.add_theme_color_override("font_color", Color(1.0, 0.70, 0.35, 1.0))
+			out_col = Color(1.0, 0.75, 0.40, 1.0)
 		else:
 			treasure_outcome_text.text = "Rule: Awarded to %s. Card is permanently discarded from the deck for the quest." % h_name
-			treasure_outcome_text.add_theme_color_override("font_color", Color(0.45, 0.95, 0.65, 1.0))
+			out_col = Color(0.50, 0.98, 0.70, 1.0)
+		apply_rpg_font_to_label(treasure_outcome_text, false, 11, out_col)
+		treasure_outcome_text.add_theme_color_override("font_color", out_col)
+		treasure_outcome_text.add_theme_constant_override("outline_size", 0)
 
 	# 7. Action Button
 	if treasure_btn_resolve:
