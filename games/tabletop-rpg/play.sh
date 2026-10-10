@@ -43,4 +43,28 @@ for arg in "$@"; do
   fi
 done
 
-exec "$GODOT" --path "$PROJECT_DIR" "$@"
+# Separate Godot engine flags from project/game args so engine flags (like --quit-after) are parsed reliably
+engine_args=()
+game_args=()
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --headless|--quit)
+      engine_args+=("$1")
+      shift
+      ;;
+    --quit-after)
+      engine_args+=("$1" "$2")
+      shift 2
+      ;;
+    --quit-after=*)
+      engine_args+=("$1")
+      shift
+      ;;
+    *)
+      game_args+=("$1")
+      shift
+      ;;
+  esac
+done
+
+exec "$GODOT" "${engine_args[@]}" --path "$PROJECT_DIR" "${game_args[@]}"

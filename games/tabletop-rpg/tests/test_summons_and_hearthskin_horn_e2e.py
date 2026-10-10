@@ -107,12 +107,12 @@ class TestSummonsAndHearthskinHornE2E(unittest.TestCase):
         hero_ids = [h.get("id") for h in st_initial.get("heroes", [])]
         self.assertEqual(hero_ids, ["barbarian", "dwarf", "elf", "wizard"])
 
-        bdd_step("WHEN", "Wizard summons Wolf 1 into a corridor square in line of sight [2, 1]")
+        bdd_step("WHEN", "Wizard summons Wolf 1 into a corridor square in line of sight [0, 2]")
         res_w1 = self.player.summon_character(
             summoner_id="wizard",
             name="Shadow Wolf",
             token_key="wolf",
-            grid_pos=[2, 1],
+            grid_pos=[0, 2],
             attackDice=2,
             defendDice=2,
             bodyPoints=2,
@@ -128,12 +128,12 @@ class TestSummonsAndHearthskinHornE2E(unittest.TestCase):
         self.assertTrue(res_w1.get("success"))
         self.assertEqual(res_w1.get("summoner"), "wizard")
 
-        bdd_step("WHEN", "Wizard summons Wolf 2 into an adjacent line of sight square [3, 1]")
+        bdd_step("WHEN", "Wizard summons Wolf 2 into an adjacent line of sight square [0, 3]")
         res_w2 = self.player.summon_character(
             summoner_id="wizard",
             name="Timber Wolf",
             token_key="wolf",
-            grid_pos=[3, 1],
+            grid_pos=[0, 3],
             attackDice=2,
             defendDice=2,
             bodyPoints=2,
@@ -167,10 +167,10 @@ class TestSummonsAndHearthskinHornE2E(unittest.TestCase):
 
         # Position heroes in open starting corridor so valid summon tiles in line of sight exist
         self.player.set_state(heroes=[
-            {"id": "barbarian", "grid_pos": [1, 1], "is_on_board": True, "has_departed_start": True, "current_bp": 8},
-            {"id": "dwarf", "grid_pos": [2, 1], "is_on_board": True, "has_departed_start": True, "current_bp": 7},
-            {"id": "elf", "grid_pos": [3, 1], "is_on_board": True, "has_departed_start": True, "current_bp": 6},
-            {"id": "wizard", "grid_pos": [4, 1], "is_on_board": True, "has_departed_start": True, "current_bp": 4}
+            {"id": "barbarian", "grid_pos": [1, 0], "is_on_board": True, "has_departed_start": True, "current_bp": 8},
+            {"id": "dwarf", "grid_pos": [2, 0], "is_on_board": True, "has_departed_start": True, "current_bp": 7},
+            {"id": "elf", "grid_pos": [3, 0], "is_on_board": True, "has_departed_start": True, "current_bp": 6},
+            {"id": "wizard", "grid_pos": [4, 0], "is_on_board": True, "has_departed_start": True, "current_bp": 4}
         ])
 
         bdd_step("WHEN", "Barbarian uses/blows The Hearthskin Horn")
@@ -206,8 +206,8 @@ class TestSummonsAndHearthskinHornE2E(unittest.TestCase):
         self.player.set_state(
             clearHeroes=True,
             heroes=[
-                {"id": "barbarian", "name": "Barbarian", "grid_pos": [1, 1], "is_on_board": True, "has_departed_start": True, "current_bp": 8},
-                {"id": "elf", "name": "Elf", "grid_pos": [3, 1], "is_on_board": True, "has_departed_start": True, "current_bp": 6}
+                {"id": "barbarian", "name": "Barbarian", "grid_pos": [1, 0], "is_on_board": True, "has_departed_start": True, "current_bp": 8},
+                {"id": "elf", "name": "Elf", "grid_pos": [3, 0], "is_on_board": True, "has_departed_start": True, "current_bp": 6}
             ],
             clearMonsters=True
         )

@@ -2,7 +2,7 @@
   "cartridgeVersion": "2.0.0",
   "cartridgeId": "heroquest-the-trial",
   "header": {
-    "title": "HeroQuest: The Gathering Storm",
+    "title": "HeroQuest: The Trial",
     "slug": "heroquest-the-trial",
     "author": "RobOS Tabletop Studio",
     "gameType": "tabletop",
@@ -11,12 +11,12 @@
     "description": "The Emperor calls upon the kingdom's greatest champions to defeat the armies of Morcar and the Witch Lord.",
     "coverColor": "#78350f",
     "icon": "\ud83d\udee1\ufe0f",
-    "mapCount": 3,
+    "mapCount": 4,
     "heroCount": 4,
     "monsterCount": 6,
     "spellCount": 0,
     "itemCount": 0,
-    "questCount": 3,
+    "questCount": 4,
     "startingMap": "heroquest-the-trial",
     "startingPosition": [
       0,
@@ -308,10 +308,10 @@
         "cloud-of-chaos"
       ],
       "position": [
-        4,
-        10
+        11,
+        8
       ],
-      "roomId": "room-grand-fossil"
+      "roomId": "room-center"
     },
     "mon-skel-1": {
       "id": "mon-skel-1",
@@ -326,10 +326,10 @@
       "isSpellcaster": false,
       "spells": [],
       "position": [
-        3,
-        4
+        6,
+        6
       ],
-      "roomId": "room-nw-crypt"
+      "roomId": "room-nw-5"
     },
     "mon-skel-2": {
       "id": "mon-skel-2",
@@ -344,10 +344,10 @@
       "isSpellcaster": false,
       "spells": [],
       "position": [
-        5,
-        4
+        7,
+        6
       ],
-      "roomId": "room-nw-crypt"
+      "roomId": "room-nw-5"
     },
     "mon-zombie-1": {
       "id": "mon-zombie-1",
@@ -362,10 +362,10 @@
       "isSpellcaster": false,
       "spells": [],
       "position": [
-        4,
-        16
+        6,
+        15
       ],
-      "roomId": "room-sw-cellar"
+      "roomId": "room-sw-4"
     },
     "mon-orc-1": {
       "id": "mon-orc-1",
@@ -380,10 +380,10 @@
       "isSpellcaster": false,
       "spells": [],
       "position": [
-        14,
-        11
+        2,
+        6
       ],
-      "roomId": "room-center-mid"
+      "roomId": "room-nw-4"
     },
     "mon-goblin-1": {
       "id": "mon-goblin-1",
@@ -398,10 +398,10 @@
       "isSpellcaster": false,
       "spells": [],
       "position": [
-        15,
-        11
+        3,
+        6
       ],
-      "roomId": "room-center-mid"
+      "roomId": "room-nw-4"
     }
   },
   "spells": {},
@@ -409,50 +409,53 @@
   "maps": {
     "heroquest-the-trial": {
       "id": "heroquest-the-trial",
-      "title": "Quest 1: The Trial",
-      "mapConfigurationId": "fan-dungeon-28x21",
-      "width": 28,
-      "height": 21,
-      "backgroundImage": "res://assets/boards/fan_dungeon_28x21.png",
+      "title": "Quest 1: The Trial (First Light Side A)",
+      "mapConfigurationId": "first-light-dungeon",
+      "width": 26,
+      "height": 19,
+      "backgroundImage": "res://assets/boards/heroquest_board.png",
       "wanderingMonster": "orc",
       "startingStair": [
         0,
         1
       ],
       "activeRooms": [
-        "room-grand-fossil",
-        "room-nw-crypt",
-        "room-sw-cellar",
-        "room-n-armory",
-        "room-upper-cell",
-        "room-lower-cell",
-        "room-s-barracks",
-        "room-center-n",
-        "room-center-mid",
-        "room-center-s",
-        "room-ne-inner",
-        "room-e-upper-cell",
-        "room-e-lower-cell",
-        "room-se-inner",
-        "room-ne-vault",
-        "room-e-parlor",
-        "room-e-forge",
-        "room-se-sanctum",
-        "room-se-tomb"
+        "room-nw-1",
+        "room-nw-2",
+        "room-nw-3",
+        "room-nw-4",
+        "room-nw-5",
+        "room-center",
+        "room-ne-1",
+        "room-ne-2",
+        "room-ne-3",
+        "room-ne-4",
+        "room-ne-sub-left",
+        "room-ne-sub-right",
+        "room-sw-1",
+        "room-sw-2",
+        "room-sw-3",
+        "room-sw-4",
+        "room-sw-5",
+        "room-se-1",
+        "room-se-2",
+        "room-se-3",
+        "room-se-4",
+        "room-se-5"
       ],
       "storyTriggers": [
         {
           "id": "trigger-a-emperor-letter",
           "marker": "A",
-          "room": "room-grand-fossil",
+          "room": "room-nw-3",
           "tile": [
-            3,
-            9
+            9,
+            2
           ],
           "condition": "search_treasure",
           "title": "The Emperor's Hidden Epistle",
           "banner": "QUEST NOTE [A]",
-          "narrative": "Stop. Do not draw a card. As your hand searches along the cold damp wall behind the dragon skull altar, a loose mortar stone gives way! Inside a hollow recess lies a velvet-wrapped pouch containing 50 gold pieces and an urgent letter bearing the Emperor's royal seal: 'Champions of the Realm: Beware the foul Orc Warlord Verag in his catacombs. Take this gold to steel your courage and vanquish the gathering storm.'",
+          "narrative": "Stop. Do not draw a card. As your hand searches along the cold damp wall behind the weapons rack, a loose mortar stone gives way! Inside a hollow recess lies a velvet-wrapped pouch containing 50 gold pieces and an urgent letter bearing the Emperor's royal seal: 'Champions of the Realm: Beware the foul Orc Warlord Verag in his catacombs. Take this gold to steel your courage and vanquish the gathering storm.'",
           "consequence": "The hero does not draw a treasure card. Instead, they receive 50 Gold Coins and the Emperor's Epistle.",
           "gold": 50,
           "item": {
@@ -468,10 +471,10 @@
         {
           "id": "trigger-b-crypt-ambush",
           "marker": "B",
-          "room": "room-nw-crypt",
+          "room": "room-nw-5",
           "tile": [
-            4,
-            3
+            6,
+            6
           ],
           "condition": "enter_room",
           "title": "Restless Dead of the Catacomb",
@@ -485,10 +488,10 @@
               "monsterType": "skeleton",
               "tokenColor": "#b91c1c",
               "grid_pos": [
-                6,
-                4
+                7,
+                7
               ],
-              "roomId": "room-nw-crypt",
+              "roomId": "room-nw-5",
               "current_bp": 1,
               "bodyPoints": 1,
               "attackDice": 2,
@@ -502,53 +505,35 @@
       ],
       "rooms": [
         {
-          "id": "room-grand-fossil",
-          "name": "Grand Fossil Hall",
+          "id": "room-nw-1",
+          "name": "Northwest Green Moss Chamber",
           "x": 1,
-          "y": 6,
-          "w": 7,
-          "h": 9,
-          "quadrant": "w",
-          "specialTreasure": {
-            "id": "quest-treasure-fossil",
-            "type": "quest_note",
-            "title": "Dragon Skull Altar Hoard",
-            "gold": 100,
-            "icon": "\ud83d\udc8e",
-            "description": "Beneath the dragon skull altar lies a velvet pouch containing 100 Gold Coins!",
-            "flavor": "Unclaimed loot from fallen adventurers of ages past."
-          }
-        },
-        {
-          "id": "room-nw-crypt",
-          "name": "Northwest Crypt",
-          "x": 2,
-          "y": 2,
-          "w": 5,
+          "y": 1,
+          "w": 4,
           "h": 4,
           "quadrant": "nw",
           "specialTreasure": {
-            "id": "quest-treasure-crypt",
+            "id": "quest-treasure-moss-chest",
             "type": "quest_note",
-            "title": "Ancient Crypt Stone Chest",
+            "title": "Moss-Covered Stone Chest",
             "gold": 50,
             "icon": "\ud83d\udcb0",
-            "description": "An ancient stone chest contains 50 Gold Coins.",
-            "flavor": "Carved with the runes of the ancient kings, the heavy stone lid gives way to reveal a cache of gold."
+            "description": "Behind overgrown moss, a hidden stone chest yields 50 Gold Coins.",
+            "flavor": "Ancient dwarven coins untouched by time."
           }
         },
         {
-          "id": "room-sw-cellar",
-          "name": "Southwest Cellar",
-          "x": 2,
-          "y": 15,
-          "w": 5,
+          "id": "room-nw-2",
+          "name": "North Flagstone Hall",
+          "x": 5,
+          "y": 1,
+          "w": 3,
           "h": 4,
-          "quadrant": "sw"
+          "quadrant": "nw"
         },
         {
-          "id": "room-n-armory",
-          "name": "North Armory",
+          "id": "room-nw-3",
+          "name": "North Crimson Armory",
           "x": 8,
           "y": 1,
           "w": 4,
@@ -557,309 +542,554 @@
           "specialTreasure": {
             "id": "quest-treasure-armory",
             "type": "quest_note",
-            "title": "Armory Weapons Chest",
+            "title": "Armory Weapons Cache",
             "gold": 30,
             "item": "healing_potion",
             "icon": "\ud83e\uddea",
-            "description": "Inside a reinforced weapons chest, you find a Potion of Healing and 30 Gold Coins.",
-            "flavor": "Left behind by the garrison, this sealed elixir restores up to 4 Body Points."
+            "description": "Inside an iron weapon rack, you discover a Potion of Healing and 30 Gold Coins.",
+            "flavor": "A sealed glass elixir tucked behind heavy warhammers."
           }
         },
         {
-          "id": "room-upper-cell",
-          "name": "Upper Guard Room",
-          "x": 9,
-          "y": 6,
-          "w": 3,
-          "h": 3,
+          "id": "room-nw-4",
+          "name": "West Golden Barracks",
+          "x": 1,
+          "y": 5,
+          "w": 4,
+          "h": 4,
           "quadrant": "nw"
         },
         {
-          "id": "room-lower-cell",
-          "name": "Lower Guard Room",
-          "x": 9,
-          "y": 12,
-          "w": 3,
-          "h": 3,
-          "quadrant": "sw"
-        },
-        {
-          "id": "room-s-barracks",
-          "name": "South Barracks",
-          "x": 8,
-          "y": 16,
+          "id": "room-nw-5",
+          "name": "Northwest Crypt of Bones",
+          "x": 5,
+          "y": 5,
           "w": 4,
           "h": 4,
-          "quadrant": "sw"
-        },
-        {
-          "id": "room-center-n",
-          "name": "North Central Chamber",
-          "x": 13,
-          "y": 2,
-          "w": 4,
-          "h": 5,
-          "quadrant": "center"
-        },
-        {
-          "id": "room-center-mid",
-          "name": "Great Center Chamber",
-          "x": 13,
-          "y": 8,
-          "w": 4,
-          "h": 5,
-          "quadrant": "center"
-        },
-        {
-          "id": "room-center-s",
-          "name": "South Central Chamber",
-          "x": 13,
-          "y": 14,
-          "w": 4,
-          "h": 5,
-          "quadrant": "center"
-        },
-        {
-          "id": "room-ne-inner",
-          "name": "Northeast Antechamber",
-          "x": 18,
-          "y": 2,
-          "w": 3,
-          "h": 4,
-          "quadrant": "ne"
-        },
-        {
-          "id": "room-e-upper-cell",
-          "name": "East Upper Alcove",
-          "x": 18,
-          "y": 7,
-          "w": 3,
-          "h": 3,
-          "quadrant": "ne"
-        },
-        {
-          "id": "room-e-lower-cell",
-          "name": "East Lower Alcove",
-          "x": 18,
-          "y": 11,
-          "w": 3,
-          "h": 3,
-          "quadrant": "se"
-        },
-        {
-          "id": "room-se-inner",
-          "name": "Southeast Antechamber",
-          "x": 18,
-          "y": 15,
-          "w": 3,
-          "h": 4,
-          "quadrant": "se"
-        },
-        {
-          "id": "room-ne-vault",
-          "name": "Northeast Vault",
-          "x": 22,
-          "y": 1,
-          "w": 4,
-          "h": 3,
-          "quadrant": "ne",
+          "quadrant": "nw",
           "specialTreasure": {
-            "id": "quest-treasure-vault",
+            "id": "quest-treasure-crypt",
             "type": "quest_note",
-            "title": "Hidden Vault Strongbox",
-            "gold": 150,
+            "title": "Ancient Crypt Reliquary",
+            "gold": 75,
             "icon": "\ud83d\udc51",
-            "description": "A magnificent gilded chest contains 150 Gold Coins!",
-            "flavor": "The secret vault guarded by the hidden doorway yields its grand prize."
+            "description": "Within the stone sarcophagus lies 75 Gold Coins and forgotten jewels.",
+            "flavor": "Resting peacefully with the fallen lord."
           }
         },
         {
-          "id": "room-e-parlor",
-          "name": "East Grand Parlor",
-          "x": 22,
+          "id": "room-center",
+          "name": "Central Stone Great Hall",
+          "x": 9,
+          "y": 6,
+          "w": 6,
+          "h": 6,
+          "quadrant": "center",
+          "specialTreasure": {
+            "id": "quest-treasure-throne",
+            "type": "quest_note",
+            "title": "Warlord Throne Hoard",
+            "gold": 120,
+            "icon": "\ud83d\udc8e",
+            "description": "Beneath the throne flagstones lies Verag's personal hoard of 120 Gold Coins!",
+            "flavor": "Plundered treasures gathered by the Orc Warlord."
+          }
+        },
+        {
+          "id": "room-ne-1",
+          "name": "Upper East Gilded Hall",
+          "x": 13,
+          "y": 1,
+          "w": 3,
+          "h": 5,
+          "quadrant": "ne"
+        },
+        {
+          "id": "room-ne-2",
+          "name": "Upper East Checkerboard Vault",
+          "x": 16,
+          "y": 1,
+          "w": 4,
+          "h": 5,
+          "quadrant": "ne",
+          "specialTreasure": {
+            "id": "quest-treasure-checker-vault",
+            "type": "quest_note",
+            "title": "Checkerboard Strongbox",
+            "gold": 60,
+            "icon": "\ud83d\udcb0",
+            "description": "A locked strongbox concealed in the checkered tiles contains 60 Gold Coins.",
+            "flavor": "The pattern in the tile floor reveals the secret cache."
+          }
+        },
+        {
+          "id": "room-ne-3",
+          "name": "Northeast Grey Tomb",
+          "x": 20,
+          "y": 1,
+          "w": 5,
+          "h": 4,
+          "quadrant": "ne"
+        },
+        {
+          "id": "room-ne-4",
+          "name": "East Golden Gallery",
+          "x": 20,
           "y": 5,
           "w": 5,
+          "h": 4,
+          "quadrant": "ne"
+        },
+        {
+          "id": "room-ne-sub-left",
+          "name": "East Jade Cell",
+          "x": 16,
+          "y": 6,
+          "w": 2,
           "h": 3,
           "quadrant": "ne"
         },
         {
-          "id": "room-e-forge",
-          "name": "East Forge",
-          "x": 22,
-          "y": 9,
-          "w": 4,
+          "id": "room-ne-sub-right",
+          "name": "East Cyan Cell",
+          "x": 18,
+          "y": 6,
+          "w": 2,
           "h": 3,
-          "quadrant": "se"
+          "quadrant": "ne"
         },
         {
-          "id": "room-se-sanctum",
-          "name": "Southeast Sanctum",
-          "x": 22,
+          "id": "room-sw-1",
+          "name": "Southwest Green Moss Vault",
+          "x": 1,
+          "y": 10,
+          "w": 4,
+          "h": 4,
+          "quadrant": "sw"
+        },
+        {
+          "id": "room-sw-2",
+          "name": "Southwest Red Guardpost",
+          "x": 5,
+          "y": 10,
+          "w": 4,
+          "h": 4,
+          "quadrant": "sw"
+        },
+        {
+          "id": "room-sw-3",
+          "name": "Southwest Cellar of Bones",
+          "x": 1,
+          "y": 14,
+          "w": 4,
+          "h": 4,
+          "quadrant": "sw"
+        },
+        {
+          "id": "room-sw-4",
+          "name": "South Blue Slate Crypt",
+          "x": 5,
+          "y": 14,
+          "w": 4,
+          "h": 4,
+          "quadrant": "sw"
+        },
+        {
+          "id": "room-sw-5",
+          "name": "South Crimson Forge",
+          "x": 9,
           "y": 13,
-          "w": 5,
-          "h": 3,
+          "w": 3,
+          "h": 5,
+          "quadrant": "sw"
+        },
+        {
+          "id": "room-se-1",
+          "name": "Southeast Cyan Sanctuary",
+          "x": 13,
+          "y": 13,
+          "w": 3,
+          "h": 5,
           "quadrant": "se"
         },
         {
-          "id": "room-se-tomb",
-          "name": "Southeast Tomb",
-          "x": 22,
-          "y": 17,
+          "id": "room-se-2",
+          "name": "Southeast Gilded Antechamber",
+          "x": 16,
+          "y": 10,
           "w": 4,
-          "h": 3,
+          "h": 4,
           "quadrant": "se"
+        },
+        {
+          "id": "room-se-3",
+          "name": "Southeast Cobalt Catacomb",
+          "x": 20,
+          "y": 10,
+          "w": 5,
+          "h": 4,
+          "quadrant": "se"
+        },
+        {
+          "id": "room-se-4",
+          "name": "Southeast Checkered Chamber",
+          "x": 16,
+          "y": 14,
+          "w": 4,
+          "h": 4,
+          "quadrant": "se"
+        },
+        {
+          "id": "room-se-5",
+          "name": "Southeast Rust Tomb",
+          "x": 20,
+          "y": 14,
+          "w": 5,
+          "h": 4,
+          "quadrant": "se",
+          "specialTreasure": {
+            "id": "quest-treasure-rust-chest",
+            "type": "quest_note",
+            "title": "Rust-Bound Iron Chest",
+            "gold": 80,
+            "icon": "\ud83d\udcb0",
+            "description": "A heavy rusted chest gives way to reveal 80 Gold Coins.",
+            "flavor": "Guarded jealously by the dungeon tomb-keepers."
+          }
         }
       ],
       "doors": [
         {
-          "id": "fdoor-fossil-n",
+          "id": "door-nw-1-w",
           "from": [
-            4,
-            5
+            0,
+            2
           ],
           "to": [
-            4,
+            1,
+            2
+          ],
+          "state": "closed",
+          "room": "room-nw-1"
+        },
+        {
+          "id": "door-nw-2-n",
+          "from": [
+            6,
+            0
+          ],
+          "to": [
+            6,
+            1
+          ],
+          "state": "closed",
+          "room": "room-nw-2"
+        },
+        {
+          "id": "door-nw-3-n",
+          "from": [
+            10,
+            0
+          ],
+          "to": [
+            10,
+            1
+          ],
+          "state": "closed",
+          "room": "room-nw-3"
+        },
+        {
+          "id": "door-nw-4-w",
+          "from": [
+            0,
+            6
+          ],
+          "to": [
+            1,
             6
           ],
           "state": "closed",
-          "room": "room-grand-fossil"
+          "room": "room-nw-4"
         },
         {
-          "id": "fdoor-fossil-s",
+          "id": "door-nw-5-s",
           "from": [
-            4,
-            15
+            7,
+            9
           ],
           "to": [
-            4,
-            14
+            7,
+            8
           ],
           "state": "closed",
-          "room": "room-grand-fossil"
+          "room": "room-nw-5"
         },
         {
-          "id": "fdoor-fossil-e",
+          "id": "door-center-w",
           "from": [
             8,
-            10
+            9
+          ],
+          "to": [
+            9,
+            9
+          ],
+          "state": "closed",
+          "room": "room-center"
+        },
+        {
+          "id": "door-center-e",
+          "from": [
+            15,
+            9
+          ],
+          "to": [
+            14,
+            9
+          ],
+          "state": "closed",
+          "room": "room-center"
+        },
+        {
+          "id": "door-center-n",
+          "from": [
+            11,
+            5
+          ],
+          "to": [
+            11,
+            6
+          ],
+          "state": "closed",
+          "room": "room-center"
+        },
+        {
+          "id": "door-center-s",
+          "from": [
+            12,
+            12
+          ],
+          "to": [
+            12,
+            11
+          ],
+          "state": "closed",
+          "room": "room-center"
+        },
+        {
+          "id": "door-ne-1-n",
+          "from": [
+            14,
+            0
+          ],
+          "to": [
+            14,
+            1
+          ],
+          "state": "closed",
+          "room": "room-ne-1"
+        },
+        {
+          "id": "door-ne-2-n",
+          "from": [
+            18,
+            0
+          ],
+          "to": [
+            18,
+            1
+          ],
+          "state": "closed",
+          "room": "room-ne-2"
+        },
+        {
+          "id": "door-ne-3-n",
+          "from": [
+            22,
+            0
+          ],
+          "to": [
+            22,
+            1
+          ],
+          "state": "closed",
+          "room": "room-ne-3"
+        },
+        {
+          "id": "door-ne-4-e",
+          "from": [
+            25,
+            7
+          ],
+          "to": [
+            24,
+            7
+          ],
+          "state": "closed",
+          "room": "room-ne-4"
+        },
+        {
+          "id": "door-ne-sub-l",
+          "from": [
+            16,
+            9
+          ],
+          "to": [
+            16,
+            8
+          ],
+          "state": "closed",
+          "room": "room-ne-sub-left"
+        },
+        {
+          "id": "door-ne-sub-r",
+          "from": [
+            19,
+            9
+          ],
+          "to": [
+            19,
+            8
+          ],
+          "state": "closed",
+          "room": "room-ne-sub-right"
+        },
+        {
+          "id": "door-sw-1-w",
+          "from": [
+            0,
+            11
+          ],
+          "to": [
+            1,
+            11
+          ],
+          "state": "closed",
+          "room": "room-sw-1"
+        },
+        {
+          "id": "door-sw-2-n",
+          "from": [
+            7,
+            9
           ],
           "to": [
             7,
             10
           ],
           "state": "closed",
-          "room": "room-grand-fossil"
+          "room": "room-sw-2"
         },
         {
-          "id": "fdoor-nw-crypt",
+          "id": "door-sw-3-w",
           "from": [
-            4,
-            1
+            0,
+            16
           ],
           "to": [
-            4,
-            2
+            1,
+            16
           ],
           "state": "closed",
-          "room": "room-nw-crypt"
+          "room": "room-sw-3"
         },
         {
-          "id": "fdoor-sw-cellar",
+          "id": "door-sw-4-s",
           "from": [
-            4,
-            19
-          ],
-          "to": [
-            4,
+            7,
             18
           ],
-          "state": "closed",
-          "room": "room-sw-cellar"
-        },
-        {
-          "id": "fdoor-center-n",
-          "from": [
-            12,
-            4
-          ],
           "to": [
-            13,
-            4
+            7,
+            17
           ],
           "state": "closed",
-          "room": "room-center-n"
+          "room": "room-sw-4"
         },
         {
-          "id": "fdoor-center-mid-w",
+          "id": "door-sw-5-w",
           "from": [
-            12,
-            10
+            8,
+            15
           ],
           "to": [
-            13,
-            10
+            9,
+            15
           ],
           "state": "closed",
-          "room": "room-center-mid"
+          "room": "room-sw-5"
         },
         {
-          "id": "fdoor-center-mid-e",
+          "id": "door-se-1-e",
           "from": [
-            17,
-            10
-          ],
-          "to": [
             16,
+            15
+          ],
+          "to": [
+            15,
+            15
+          ],
+          "state": "closed",
+          "room": "room-se-1"
+        },
+        {
+          "id": "door-se-2-n",
+          "from": [
+            18,
+            9
+          ],
+          "to": [
+            18,
             10
           ],
           "state": "closed",
-          "room": "room-center-mid"
+          "room": "room-se-2"
         },
         {
-          "id": "fdoor-center-s",
+          "id": "door-se-3-e",
           "from": [
-            12,
+            25,
+            12
+          ],
+          "to": [
+            24,
+            12
+          ],
+          "state": "closed",
+          "room": "room-se-3"
+        },
+        {
+          "id": "door-se-4-s",
+          "from": [
+            18,
+            18
+          ],
+          "to": [
+            18,
+            17
+          ],
+          "state": "closed",
+          "room": "room-se-4"
+        },
+        {
+          "id": "door-se-5-e",
+          "from": [
+            25,
             16
           ],
           "to": [
-            13,
+            24,
             16
           ],
           "state": "closed",
-          "room": "room-center-s"
-        },
-        {
-          "id": "fdoor-e-parlor",
-          "from": [
-            21,
-            6
-          ],
-          "to": [
-            22,
-            6
-          ],
-          "state": "closed",
-          "room": "room-e-parlor"
-        },
-        {
-          "id": "fdoor-se-sanctum",
-          "from": [
-            21,
-            14
-          ],
-          "to": [
-            22,
-            14
-          ],
-          "state": "closed",
-          "room": "room-se-sanctum"
+          "room": "room-se-5"
         }
       ],
       "wallBlocks": [
         {
           "id": "block-1",
           "x": 12,
-          "y": 0,
+          "y": 5,
           "type": "single",
           "width": 1,
           "height": 1
@@ -867,108 +1097,82 @@
         {
           "id": "block-2",
           "x": 12,
-          "y": 20,
+          "y": 12,
           "type": "single",
           "width": 1,
-          "height": 1
-        },
-        {
-          "id": "block-double-v",
-          "x": 0,
-          "y": 10,
-          "type": "double-v",
-          "width": 1,
-          "height": 2
-        },
-        {
-          "id": "block-double-h",
-          "x": 26,
-          "y": 10,
-          "type": "double-h",
-          "width": 2,
           "height": 1
         }
       ],
       "furniture": [
         {
           "id": "furn-altar-1",
-          "name": "Sorcerer's Altar / Desk",
+          "name": "Sorcerer's Altar",
           "type": "altar",
-          "x": 14,
-          "y": 8,
+          "x": 11,
+          "y": 7,
+          "width": 2,
+          "height": 1,
+          "roomId": "room-center"
+        },
+        {
+          "id": "furn-table-1",
+          "name": "Council Table",
+          "type": "table",
+          "x": 11,
+          "y": 9,
           "width": 2,
           "height": 2,
-          "roomId": "room-center-mid"
+          "roomId": "room-center"
+        },
+        {
+          "id": "furn-rack-1",
+          "name": "Weapons Rack",
+          "type": "weapons-rack",
+          "x": 9,
+          "y": 2,
+          "width": 2,
+          "height": 1,
+          "roomId": "room-nw-3"
+        },
+        {
+          "id": "furn-tomb-1",
+          "name": "Ancient Stone Tomb",
+          "type": "tomb",
+          "x": 6,
+          "y": 6,
+          "width": 2,
+          "height": 2,
+          "roomId": "room-nw-5"
         },
         {
           "id": "furn-bookcase-1",
           "name": "Grand Bookcase",
           "type": "bookcase",
           "x": 13,
-          "y": 3,
+          "y": 2,
           "width": 3,
           "height": 1,
-          "roomId": "room-center-n"
+          "roomId": "room-ne-1"
         },
         {
           "id": "furn-bookshelf-1",
           "name": "Study Bookshelf",
           "type": "bookshelf",
-          "x": 23,
-          "y": 5,
+          "x": 21,
+          "y": 6,
           "width": 2,
           "height": 1,
-          "roomId": "room-e-parlor"
-        },
-        {
-          "id": "furn-boulder-1",
-          "name": "Fossil Boulder Tile",
-          "type": "boulder",
-          "x": 2,
-          "y": 7,
-          "width": 1,
-          "height": 1,
-          "roomId": "room-grand-fossil"
-        },
-        {
-          "id": "furn-tomb-1",
-          "name": "Ancient Stone Tomb",
-          "type": "tomb",
-          "x": 5,
-          "y": 2,
-          "width": 2,
-          "height": 2,
-          "roomId": "room-nw-crypt"
+          "roomId": "room-ne-4"
         },
         {
           "id": "furn-chest-1",
-          "name": "Vault Chest of Gold",
+          "name": "Tomb Iron Chest",
           "type": "chest",
           "x": 23,
-          "y": 2,
+          "y": 15,
           "width": 1,
           "height": 1,
-          "roomId": "room-ne-vault"
-        },
-        {
-          "id": "furn-table-1",
-          "name": "Council Table",
-          "type": "table",
-          "x": 14,
-          "y": 14,
-          "width": 2,
-          "height": 2,
-          "roomId": "room-center-s"
-        },
-        {
-          "id": "furn-rack-1",
-          "name": "Weapons Rack",
-          "type": "weapons-rack",
-          "x": 8,
-          "y": 2,
-          "width": 3,
-          "height": 1,
-          "roomId": "room-n-armory"
+          "roomId": "room-se-5"
         }
       ],
       "traps": [
@@ -976,25 +1180,25 @@
           "id": "trap-pit-1",
           "trapType": "pit",
           "x": 0,
-          "y": 5,
+          "y": 4,
           "damageDice": 1,
-          "detected": false,
-          "disarmed": false
-        },
-        {
-          "id": "trap-boulder-1",
-          "trapType": "boulder",
-          "x": 7,
-          "y": 5,
-          "damageDice": 3,
           "detected": false,
           "disarmed": false
         },
         {
           "id": "trap-falling-1",
           "trapType": "falling-block",
-          "x": 21,
-          "y": 10,
+          "x": 12,
+          "y": 0,
+          "damageDice": 3,
+          "detected": false,
+          "disarmed": false
+        },
+        {
+          "id": "trap-boulder-1",
+          "trapType": "boulder",
+          "x": 25,
+          "y": 8,
           "damageDice": 3,
           "detected": false,
           "disarmed": false
@@ -1432,6 +1636,809 @@
           "disarmed": false
         }
       ]
+    },
+    "heroquest-fortress-fire-king": {
+      "id": "heroquest-fortress-fire-king",
+      "title": "Quest 4: The Fortress of the Fire King (First Light Side A)",
+      "mapConfigurationId": "first-light-dungeon",
+      "width": 26,
+      "height": 19,
+      "backgroundImage": "res://assets/boards/heroquest_board.png",
+      "wanderingMonster": "orc",
+      "startingStair": [
+        0,
+        1
+      ],
+      "activeRooms": [
+        "room-nw-1",
+        "room-nw-2",
+        "room-nw-3",
+        "room-nw-4",
+        "room-nw-5",
+        "room-center",
+        "room-ne-1",
+        "room-ne-2",
+        "room-ne-3",
+        "room-ne-4",
+        "room-ne-sub-left",
+        "room-ne-sub-right",
+        "room-sw-1",
+        "room-sw-2",
+        "room-sw-3",
+        "room-sw-4",
+        "room-sw-5",
+        "room-se-1",
+        "room-se-2",
+        "room-se-3",
+        "room-se-4",
+        "room-se-5"
+      ],
+      "storyTriggers": [
+        {
+          "id": "trigger-note-a",
+          "marker": "Note A",
+          "title": "Encounter on the Perimeter",
+          "x": 4,
+          "y": 0,
+          "narrative": "An orc and a goblin, wearing Cassandria's pale-skull-and-ruby-eyes emblem, haul a heavy ironbound treasure chest along the corridor. On seeing you, the orc panics and heaves the chest straight through a crumbling false wall into the darkness!",
+          "gold": 0,
+          "reward": "Cassandria's Secret Markings"
+        },
+        {
+          "id": "trigger-note-f-mist",
+          "marker": "Note F",
+          "title": "Chamber of Mist & Undeath",
+          "x": 9,
+          "y": 9,
+          "narrative": "Freezing gray mist curls across the flagstones. High above the hearth, a Witch Hand of Cassandria chants in a forgotten tongue. Skeletons and mummies step silently from the vapor\u2014and through the very stone walls themselves!",
+          "gold": 0,
+          "reward": "Spectral Chill"
+        }
+      ],
+      "rooms": [
+        {
+          "id": "room-nw-1",
+          "name": "Northwest Entry Armory",
+          "x": 1,
+          "y": 1,
+          "w": 4,
+          "h": 4,
+          "quadrant": "nw"
+        },
+        {
+          "id": "room-nw-2",
+          "name": "Northwest Antechamber",
+          "x": 5,
+          "y": 1,
+          "w": 3,
+          "h": 4,
+          "quadrant": "nw"
+        },
+        {
+          "id": "room-nw-3",
+          "name": "North Hall (Note B: Equipment Stash)",
+          "x": 8,
+          "y": 1,
+          "w": 4,
+          "h": 4,
+          "quadrant": "nw",
+          "note": "B",
+          "specialTreasure": {
+            "id": "quest-treasure-note-b",
+            "type": "equipment_cards_deal_four",
+            "title": "Weapons Cache",
+            "description": "Hero searches the weapons rack and keeps the least expensive of 4 dealt equipment cards.",
+            "flavor": "Cassandria's scouts abandoned their gathered supplies in haste."
+          }
+        },
+        {
+          "id": "room-nw-4",
+          "name": "West Cellar",
+          "x": 1,
+          "y": 5,
+          "w": 4,
+          "h": 4,
+          "quadrant": "nw"
+        },
+        {
+          "id": "room-nw-5",
+          "name": "Guard Post (Note C: Cassandria's Doomguard)",
+          "x": 5,
+          "y": 5,
+          "w": 4,
+          "h": 4,
+          "quadrant": "nw",
+          "note": "C",
+          "description": "Station of the Dread Warrior elite Doomguard guarding the approaches."
+        },
+        {
+          "id": "room-center",
+          "name": "The Grand Hearth Hall (Note F: Witch Hand Summoning)",
+          "x": 9,
+          "y": 6,
+          "w": 6,
+          "h": 6,
+          "quadrant": "center",
+          "note": "F",
+          "event": "A Witch Hand begins casting; undead emerge from swirling mist with the stench of undeath.",
+          "special": "Undead in this room may move through walls into areas already discovered by the heroes."
+        },
+        {
+          "id": "room-ne-1",
+          "name": "Northeast Archives",
+          "x": 13,
+          "y": 1,
+          "w": 3,
+          "h": 5,
+          "quadrant": "ne"
+        },
+        {
+          "id": "room-ne-2",
+          "name": "King's Antechamber (Note E: Orc's Bane)",
+          "x": 16,
+          "y": 1,
+          "w": 4,
+          "h": 5,
+          "quadrant": "ne",
+          "note": "E",
+          "specialTreasure": {
+            "id": "quest-treasure-orcs-bane",
+            "type": "artifact",
+            "title": "Orc's Bane & Stashed Gold",
+            "gold": 200,
+            "item": "Orc's Bane",
+            "itemData": {
+              "id": "item-orcs-bane",
+              "name": "Orc's Bane",
+              "type": "weapon",
+              "attackDice": 2,
+              "effect": "Shortsword that grants 2 attacks per turn against any Orc.",
+              "value": 450
+            },
+            "description": "Concealed within a hollowed wall panel lies 200 Gold Coins and the fabled blade Orc's Bane!"
+          }
+        },
+        {
+          "id": "room-ne-3",
+          "name": "Northeast Barracks",
+          "x": 20,
+          "y": 1,
+          "w": 5,
+          "h": 4,
+          "quadrant": "ne"
+        },
+        {
+          "id": "room-ne-4",
+          "name": "Northeast Scriptorium",
+          "x": 20,
+          "y": 5,
+          "w": 5,
+          "h": 4,
+          "quadrant": "ne"
+        },
+        {
+          "id": "room-ne-sub-left",
+          "name": "Twin Vault West (Note D)",
+          "x": 16,
+          "y": 6,
+          "w": 2,
+          "h": 3,
+          "quadrant": "ne",
+          "note": "D",
+          "special": "Door to adjoining room is already open; reveal both rooms."
+        },
+        {
+          "id": "room-ne-sub-right",
+          "name": "Twin Vault East (Note D)",
+          "x": 18,
+          "y": 6,
+          "w": 2,
+          "h": 3,
+          "quadrant": "ne",
+          "note": "D",
+          "special": "Adjoining room revealed simultaneously when Twin Vault West is opened."
+        },
+        {
+          "id": "room-sw-1",
+          "name": "Southwest Outer Gallery",
+          "x": 1,
+          "y": 10,
+          "w": 4,
+          "h": 4,
+          "quadrant": "sw"
+        },
+        {
+          "id": "room-sw-2",
+          "name": "Southwest Crypt (Unlettered Encounter)",
+          "x": 5,
+          "y": 10,
+          "w": 4,
+          "h": 4,
+          "quadrant": "sw",
+          "description": "Ancient dwarven ossuary containing 3 restless skeletons."
+        },
+        {
+          "id": "room-sw-3",
+          "name": "Southwest Forge Antechamber",
+          "x": 1,
+          "y": 14,
+          "w": 4,
+          "h": 4,
+          "quadrant": "sw"
+        },
+        {
+          "id": "room-sw-4",
+          "name": "Southwest Guard Room (Unlettered Encounter)",
+          "x": 5,
+          "y": 14,
+          "w": 4,
+          "h": 4,
+          "quadrant": "sw",
+          "description": "Garrison quarters harboring greenskin raiders (2 Goblins, 1 Orc)."
+        },
+        {
+          "id": "room-sw-5",
+          "name": "Great Forge of Forgrin",
+          "x": 9,
+          "y": 13,
+          "w": 3,
+          "h": 5,
+          "quadrant": "sw"
+        },
+        {
+          "id": "room-se-1",
+          "name": "Smelting Vaults",
+          "x": 13,
+          "y": 13,
+          "w": 3,
+          "h": 5,
+          "quadrant": "se"
+        },
+        {
+          "id": "room-se-2",
+          "name": "Southeast Treasury Antechamber",
+          "x": 16,
+          "y": 10,
+          "w": 4,
+          "h": 4,
+          "quadrant": "se"
+        },
+        {
+          "id": "room-se-3",
+          "name": "Southeast Pillar Chamber",
+          "x": 20,
+          "y": 10,
+          "w": 5,
+          "h": 4,
+          "quadrant": "se"
+        },
+        {
+          "id": "room-se-4",
+          "name": "Southeast Catacombs",
+          "x": 16,
+          "y": 14,
+          "w": 4,
+          "h": 4,
+          "quadrant": "se"
+        },
+        {
+          "id": "room-se-5",
+          "name": "Throne Room of the Fire King (Note G)",
+          "x": 20,
+          "y": 14,
+          "w": 5,
+          "h": 4,
+          "quadrant": "se",
+          "note": "G",
+          "special": "Secret door to the mountain passage cannot be discovered by a normal search.",
+          "specialTreasure": {
+            "id": "quest-treasure-note-g-desk",
+            "type": "quest_item",
+            "title": "Glordrin's Map of the Passage",
+            "description": "A secret compartment inside the dwarven desk contains Glordrin's map of the passage; places the secret door.",
+            "revealsSecretDoor": "door-secret-mountain-passage",
+            "secondSearch": {
+              "id": "quest-treasure-note-g-chest",
+              "gold": 400,
+              "item": "Ring of Fortitude",
+              "itemData": {
+                "id": "item-ring-fortitude-found",
+                "name": "Ring of Fortitude",
+                "type": "artifact",
+                "effect": "+1 Body Point capacity",
+                "value": 500
+              },
+              "location": "False bottom of treasure chest",
+              "description": "Beneath a false bottom in the iron chest lies 400 Gold Coins and the Ring of Fortitude!"
+            }
+          }
+        }
+      ],
+      "doors": [
+        {
+          "id": "door-nw-1-w",
+          "from": [
+            0,
+            2
+          ],
+          "to": [
+            1,
+            2
+          ],
+          "state": "closed",
+          "room": "room-nw-1"
+        },
+        {
+          "id": "door-nw-2-n",
+          "from": [
+            6,
+            0
+          ],
+          "to": [
+            6,
+            1
+          ],
+          "state": "closed",
+          "room": "room-nw-2"
+        },
+        {
+          "id": "door-nw-3-n",
+          "from": [
+            10,
+            0
+          ],
+          "to": [
+            10,
+            1
+          ],
+          "state": "closed",
+          "room": "room-nw-3"
+        },
+        {
+          "id": "door-nw-4-w",
+          "from": [
+            0,
+            6
+          ],
+          "to": [
+            1,
+            6
+          ],
+          "state": "closed",
+          "room": "room-nw-4"
+        },
+        {
+          "id": "door-nw-5-s",
+          "from": [
+            7,
+            9
+          ],
+          "to": [
+            7,
+            8
+          ],
+          "state": "closed",
+          "room": "room-nw-5"
+        },
+        {
+          "id": "door-center-w",
+          "from": [
+            8,
+            9
+          ],
+          "to": [
+            9,
+            9
+          ],
+          "state": "closed",
+          "room": "room-center"
+        },
+        {
+          "id": "door-center-e",
+          "from": [
+            15,
+            9
+          ],
+          "to": [
+            14,
+            9
+          ],
+          "state": "closed",
+          "room": "room-center"
+        },
+        {
+          "id": "door-center-n",
+          "from": [
+            11,
+            5
+          ],
+          "to": [
+            11,
+            6
+          ],
+          "state": "closed",
+          "room": "room-center"
+        },
+        {
+          "id": "door-center-s",
+          "from": [
+            12,
+            12
+          ],
+          "to": [
+            12,
+            11
+          ],
+          "state": "closed",
+          "room": "room-center"
+        },
+        {
+          "id": "door-ne-1-n",
+          "from": [
+            14,
+            0
+          ],
+          "to": [
+            14,
+            1
+          ],
+          "state": "closed",
+          "room": "room-ne-1"
+        },
+        {
+          "id": "door-ne-2-n",
+          "from": [
+            18,
+            0
+          ],
+          "to": [
+            18,
+            1
+          ],
+          "state": "closed",
+          "room": "room-ne-2"
+        },
+        {
+          "id": "door-ne-3-n",
+          "from": [
+            22,
+            0
+          ],
+          "to": [
+            22,
+            1
+          ],
+          "state": "closed",
+          "room": "room-ne-3"
+        },
+        {
+          "id": "door-ne-4-e",
+          "from": [
+            25,
+            7
+          ],
+          "to": [
+            24,
+            7
+          ],
+          "state": "closed",
+          "room": "room-ne-4"
+        },
+        {
+          "id": "door-ne-sub-adjoining",
+          "from": [
+            17,
+            7
+          ],
+          "to": [
+            18,
+            7
+          ],
+          "state": "open",
+          "is_open": true,
+          "room": "room-ne-sub-right"
+        },
+        {
+          "id": "door-ne-sub-l",
+          "from": [
+            16,
+            9
+          ],
+          "to": [
+            16,
+            8
+          ],
+          "state": "closed",
+          "room": "room-ne-sub-left"
+        },
+        {
+          "id": "door-ne-sub-r",
+          "from": [
+            19,
+            9
+          ],
+          "to": [
+            19,
+            8
+          ],
+          "state": "closed",
+          "room": "room-ne-sub-right"
+        },
+        {
+          "id": "door-sw-1-w",
+          "from": [
+            0,
+            11
+          ],
+          "to": [
+            1,
+            11
+          ],
+          "state": "closed",
+          "room": "room-sw-1"
+        },
+        {
+          "id": "door-sw-2-n",
+          "from": [
+            7,
+            9
+          ],
+          "to": [
+            7,
+            10
+          ],
+          "state": "closed",
+          "room": "room-sw-2"
+        },
+        {
+          "id": "door-sw-3-w",
+          "from": [
+            0,
+            16
+          ],
+          "to": [
+            1,
+            16
+          ],
+          "state": "closed",
+          "room": "room-sw-3"
+        },
+        {
+          "id": "door-sw-4-s",
+          "from": [
+            7,
+            18
+          ],
+          "to": [
+            7,
+            17
+          ],
+          "state": "closed",
+          "room": "room-sw-4"
+        },
+        {
+          "id": "door-sw-5-w",
+          "from": [
+            8,
+            15
+          ],
+          "to": [
+            9,
+            15
+          ],
+          "state": "closed",
+          "room": "room-sw-5"
+        },
+        {
+          "id": "door-se-1-e",
+          "from": [
+            16,
+            15
+          ],
+          "to": [
+            15,
+            15
+          ],
+          "state": "closed",
+          "room": "room-se-1"
+        },
+        {
+          "id": "door-se-2-n",
+          "from": [
+            18,
+            9
+          ],
+          "to": [
+            18,
+            10
+          ],
+          "state": "closed",
+          "room": "room-se-2"
+        },
+        {
+          "id": "door-se-3-e",
+          "from": [
+            25,
+            12
+          ],
+          "to": [
+            24,
+            12
+          ],
+          "state": "closed",
+          "room": "room-se-3"
+        },
+        {
+          "id": "door-se-4-s",
+          "from": [
+            18,
+            18
+          ],
+          "to": [
+            18,
+            17
+          ],
+          "state": "closed",
+          "room": "room-se-4"
+        },
+        {
+          "id": "door-se-5-e",
+          "from": [
+            25,
+            16
+          ],
+          "to": [
+            24,
+            16
+          ],
+          "state": "closed",
+          "room": "room-se-5"
+        },
+        {
+          "id": "door-secret-mountain-passage",
+          "from": [
+            24,
+            15
+          ],
+          "to": [
+            25,
+            15
+          ],
+          "state": "closed",
+          "is_secret": true,
+          "is_revealed": false,
+          "room": "room-se-5"
+        }
+      ],
+      "wallBlocks": [
+        {
+          "id": "block-1",
+          "x": 12,
+          "y": 5,
+          "type": "single",
+          "width": 1,
+          "height": 1
+        },
+        {
+          "id": "block-2",
+          "x": 12,
+          "y": 12,
+          "type": "single",
+          "width": 1,
+          "height": 1
+        }
+      ],
+      "furniture": [
+        {
+          "id": "furn-fire-hearth",
+          "name": "Hearth of Forgrin the Fire King",
+          "type": "altar",
+          "x": 11,
+          "y": 7,
+          "width": 2,
+          "height": 1,
+          "roomId": "room-center"
+        },
+        {
+          "id": "furn-grand-table",
+          "name": "Council Table",
+          "type": "table",
+          "x": 11,
+          "y": 9,
+          "width": 2,
+          "height": 2,
+          "roomId": "room-center"
+        },
+        {
+          "id": "furn-weapons-rack-b",
+          "name": "Abandoned Weapons Rack",
+          "type": "weapons-rack",
+          "x": 9,
+          "y": 2,
+          "width": 2,
+          "height": 1,
+          "roomId": "room-nw-3"
+        },
+        {
+          "id": "furn-throne-fire-king",
+          "name": "Throne of the Fire King",
+          "type": "tomb",
+          "x": 21,
+          "y": 14,
+          "width": 2,
+          "height": 2,
+          "roomId": "room-se-5"
+        },
+        {
+          "id": "furn-glordrin-desk",
+          "name": "Glordrin's Secret Desk",
+          "type": "table",
+          "x": 23,
+          "y": 16,
+          "width": 1,
+          "height": 1,
+          "roomId": "room-se-5"
+        },
+        {
+          "id": "furn-chest-ring-fortitude",
+          "name": "Ornate Iron Chest (False Bottom)",
+          "type": "chest",
+          "x": 20,
+          "y": 17,
+          "width": 1,
+          "height": 1,
+          "roomId": "room-se-5"
+        },
+        {
+          "id": "furn-archives-bookcase",
+          "name": "Ancient Dwarven Bookcase",
+          "type": "bookcase",
+          "x": 13,
+          "y": 2,
+          "width": 3,
+          "height": 1,
+          "roomId": "room-ne-1"
+        },
+        {
+          "id": "furn-scriptorium-shelf",
+          "name": "Scholar's Bookshelf",
+          "type": "bookshelf",
+          "x": 21,
+          "y": 6,
+          "width": 2,
+          "height": 1,
+          "roomId": "room-ne-4"
+        }
+      ],
+      "traps": [
+        {
+          "id": "trap-pit-1",
+          "x": 0,
+          "y": 4,
+          "type": "pit",
+          "damage": 1,
+          "is_revealed": false,
+          "is_disarmed": false
+        },
+        {
+          "id": "trap-spear-1",
+          "x": 12,
+          "y": 0,
+          "type": "spear",
+          "damage": 1,
+          "is_revealed": false,
+          "is_disarmed": false
+        },
+        {
+          "id": "trap-falling-rock-1",
+          "x": 20,
+          "y": 9,
+          "type": "falling_rock",
+          "damage": 2,
+          "is_revealed": false,
+          "is_disarmed": false
+        }
+      ]
     }
   },
   "quests": [
@@ -1471,6 +2478,19 @@
       "mapConfigId": "first-light-caverns",
       "startingPosition": [
         1,
+        1
+      ]
+    },
+    {
+      "id": "quest-4",
+      "slug": "heroquest-fortress-fire-king",
+      "title": "Quest 4: The Fortress of the Fire King",
+      "briefing": "Mentor examines Visions of King Agrain, a book recovered from the temple. Sir Ragnar takes the book to deliver to Prince Magnus. Mentor sends the heroes beyond the Tul Vor to find the secret passage into the mountain in the ruins of the dwarven fortress built by Forgrin the Fire King, warning that Witch Queen Cassandria seeks it too.",
+      "goldReward": 400,
+      "completed": false,
+      "mapConfigId": "first-light-dungeon",
+      "startingPosition": [
+        0,
         1
       ]
     }
