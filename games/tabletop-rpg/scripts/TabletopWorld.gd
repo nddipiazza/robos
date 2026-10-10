@@ -5254,8 +5254,16 @@ func _update_wandering_monster_content() -> void:
 		frame_sb.texture = _card_frame_hazard
 		wandering_monster_card.add_theme_stylebox_override("panel", frame_sb)
 
-	if wandering_monster_art_rect and _card_art_wandering_orc:
-		wandering_monster_art_rect.texture = _card_art_wandering_orc
+	if wandering_monster_art_rect:
+		var wm_type_str = str(data.get("monster_type", "orc")).to_lower()
+		if wm_type_str == "orc" and _card_art_wandering_orc:
+			wandering_monster_art_rect.texture = _card_art_wandering_orc
+		else:
+			var specific_tex = _load_texture_safe("res://assets/monster_cards/card_bg_%s.png" % wm_type_str)
+			if specific_tex:
+				wandering_monster_art_rect.texture = specific_tex
+			elif _card_art_wandering_orc:
+				wandering_monster_art_rect.texture = _card_art_wandering_orc
 
 
 func _setup_quest_objectives_hud() -> void:
@@ -9206,8 +9214,20 @@ func _initialize_treasure_deck() -> void:
 		{ "id": "wandering-monster-a", "type": "wandering_monster", "title": "Wandering Monster!", "icon": "👹", "gold": 0, "description": "A wandering monster ambushes you while your guard is down!", "flavor": "A guttural roar echoes as an enemy emerges from the gloom!" },
 		{ "id": "wandering-monster-b", "type": "wandering_monster", "title": "Wandering Monster!", "icon": "👹", "gold": 0, "description": "A wandering monster stalks into the chamber and strikes!", "flavor": "Cold steel glints in the darkness!" }
 	]
+	var wm_card_info = get_wandering_monster_card_data()
 	for c in raw_cards:
-		treasure_deck.append(c.duplicate(true))
+		var dup = c.duplicate(true)
+		if str(dup.get("type", "")).to_lower() == "wandering_monster":
+			dup["monster_type"] = wm_card_info.get("monster_type", "orc")
+			dup["monster_name"] = wm_card_info.get("monster_name", "Wandering Orc")
+			dup["attack_dice"] = wm_card_info.get("attack_dice", 3)
+			dup["defend_dice"] = wm_card_info.get("defend_dice", 2)
+			dup["body_points"] = wm_card_info.get("body_points", 1)
+			dup["movement"] = wm_card_info.get("movement", 8)
+			dup["description"] = wm_card_info.get("description", dup.get("description"))
+			dup["flavor"] = wm_card_info.get("flavor", dup.get("flavor"))
+			dup["card_rule"] = wm_card_info.get("card_rule", "")
+		treasure_deck.append(dup)
 	treasure_deck.shuffle()
 
 func _draw_treasure_card() -> Dictionary:
@@ -9398,6 +9418,21 @@ func _check_and_trigger_out_of_movement_item_flash() -> void:
 func _setup_treasure_card_overlay(card: Dictionary, hero: Dictionary, is_quest_note: bool) -> void:
 	var item_str = str(card.get("item", ""))
 	var gold_val = int(card.get("gold", card.get("amount", 0)))
+	var c_type = str(card.get("type", "gold")).to_lower()
+	var is_wm = (c_type == "wandering_monster")
+	var wm_data = get_wandering_monster_card_data() if is_wm else {}
+	if is_wm:
+		if not card.has("monster_type"):
+			card["monster_type"] = wm_data.get("monster_type", "orc")
+			card["monster_name"] = wm_data.get("monster_name", "Wandering Orc")
+			card["attack_dice"] = wm_data.get("attack_dice", 3)
+			card["defend_dice"] = wm_data.get("defend_dice", 2)
+			card["body_points"] = wm_data.get("body_points", 1)
+			card["movement"] = wm_data.get("movement", 8)
+			card["description"] = wm_data.get("description", card.get("description", ""))
+			card["flavor"] = wm_data.get("flavor", card.get("flavor", ""))
+			card["card_rule"] = wm_data.get("card_rule", "")
+
 	active_treasure_overlay = {
 		"card": card,
 		"hero": hero,
@@ -9407,11 +9442,13 @@ func _setup_treasure_card_overlay(card: Dictionary, hero: Dictionary, is_quest_n
 		"icon": str(card.get("icon", "💎")),
 		"description": str(card.get("description", "")),
 		"flavor": str(card.get("flavor", "")),
-		"card_type": str(card.get("type", "gold")),
+		"card_type": c_type,
 		"is_quest_note": is_quest_note,
 		"gold_found": gold_val,
 		"item_found": item_str,
-		"waitingForClick": true
+		"waitingForClick": true,
+		"isWanderingMonster": is_wm,
+		"wanderingMonsterCard": wm_data
 	}
 	open_treasure_modal(card, hero, is_quest_note)
 
@@ -9819,6 +9856,17 @@ func search_room(is_interactive: bool = false) -> Dictionary:
 			spawn_floating_text(h_pos, "-%d HP HAZARD" % dmg, Color(0.9, 0.25, 0.25), 1.8)
 		"wandering_monster":
 			spawned_wm = _spawn_wandering_monster(hero, r_id)
+			var wm_info = get_wandering_monster_card_data()
+			card["monster_type"] = wm_info.get("monster_type", "orc")
+			card["monster_name"] = wm_info.get("monster_name", "Wandering Orc")
+			card["attack_dice"] = wm_info.get("attack_dice", 3)
+			card["defend_dice"] = wm_info.get("defend_dice", 2)
+			card["body_points"] = wm_info.get("body_points", 1)
+			card["movement"] = wm_info.get("movement", 8)
+			card["description"] = wm_info.get("description", card.get("description", ""))
+			card["flavor"] = wm_info.get("flavor", card.get("flavor", ""))
+			card["card_rule"] = wm_info.get("card_rule", "")
+			card["spawned_monster"] = spawned_wm
 			var wm_pos = _to_grid_pos(spawned_wm.get("grid_pos", Vector2i(-1, -1)))
 			_log("[WANDERING MONSTER] ⚠️ AMBUSH! %s draws a Wandering Monster card! A %s appears at (%d, %d)!" % [
 				hero.get("name"), spawned_wm.get("name"), wm_pos.x, wm_pos.y
@@ -12826,6 +12874,15 @@ func _get_treasure_card_art_texture(card: Dictionary, is_quest_note: bool = fals
 
 	# Hazards & Wandering Monsters
 	if c_type == "wandering_monster" or "wandering" in c_id or "wandering" in c_title or "ambush" in c_title:
+		var wm_type = str(card.get("monster_type", "")).to_lower()
+		if wm_type == "":
+			var wm_info = get_wandering_monster_card_data()
+			wm_type = str(wm_info.get("monster_type", "orc")).to_lower()
+		if wm_type == "orc" and _card_art_wandering_orc:
+			return _card_art_wandering_orc
+		var specific_tex = _load_texture_safe("res://assets/monster_cards/card_bg_%s.png" % wm_type)
+		if specific_tex:
+			return specific_tex
 		if _card_art_wandering_orc:
 			return _card_art_wandering_orc
 	elif c_type == "hazard" or "hazard" in c_id or "trap" in c_id or "trap" in c_title:
@@ -13004,6 +13061,9 @@ func _populate_treasure_modal(card: Dictionary, hero: Dictionary, is_quest_note:
 	var raw_title = str(card.get("title", "Treasure"))
 	var c_type = str(card.get("type", "gold")).to_lower()
 	var is_hazard = (c_type == "hazard" or c_type == "wandering_monster")
+	var wm_data: Dictionary = get_wandering_monster_card_data() if c_type == "wandering_monster" else {}
+	var wm_type: String = str(card.get("monster_type", wm_data.get("monster_type", "orc"))).to_lower()
+	var wm_name: String = str(card.get("monster_name", wm_data.get("monster_name", "Wandering Orc")))
 
 	# 1. Textured card frame (ornate gold filigree parchment or sinister spiked blood-iron)
 	var frame_tex: Texture2D = _card_frame_hazard if is_hazard else _card_frame_treasure
@@ -13019,15 +13079,32 @@ func _populate_treasure_modal(card: Dictionary, hero: Dictionary, is_quest_note:
 		drawn_sb.border_color = Color(0.85, 0.25, 0.20, 1.0) if is_hazard else Color(0.32, 0.20, 0.12, 1.0)
 		treasure_drawn_card.add_theme_stylebox_override("panel", drawn_sb)
 
-	# 2. Card Source & Type Badge (hidden inside card frame to give full prominence to ornate ribbon)
-	if treasure_card_source:
-		treasure_card_source.visible = false
-	if treasure_card_type_badge:
-		treasure_card_type_badge.visible = false
+	# 2. Card Source & Type Badge (displayed for wandering monster ambush)
+	var card_header = treasure_drawn_card.find_child("CardHeader", true, false)
+	if c_type == "wandering_monster":
+		if card_header:
+			card_header.visible = true
+		if treasure_card_type_badge:
+			treasure_card_type_badge.visible = true
+			treasure_card_type_badge.text = "👹 WANDERING MONSTER AMBUSH 👹"
+			treasure_card_type_badge.add_theme_stylebox_override("normal", get_rpg_badge_stylebox(Color(0.85, 0.32, 0.20, 0.90), Color(0.18, 0.06, 0.06, 0.92)))
+			apply_rpg_font_to_label(treasure_card_type_badge, false, 10, Color(1.0, 0.75, 0.40, 1.0))
+		if treasure_card_source:
+			treasure_card_source.visible = true
+			treasure_card_source.text = "HeroQuest Treasure Deck"
+			apply_rpg_font_to_label(treasure_card_source, false, 10, Color(0.85, 0.70, 0.65, 0.8))
+	else:
+		if card_header:
+			card_header.visible = false
+		if treasure_card_source:
+			treasure_card_source.visible = false
+		if treasure_card_type_badge:
+			treasure_card_type_badge.visible = false
 
 	# 3. Card Title with Cinzel font placed directly on top banner ribbon with protective dark plaque
 	if treasure_card_title:
-		treasure_card_title.text = raw_title
+		var display_title = ("Wandering Monster! (%s)" % wm_type.capitalize()) if c_type == "wandering_monster" else raw_title
+		treasure_card_title.text = display_title
 		var title_sb = StyleBoxFlat.new()
 		if is_hazard:
 			title_sb.bg_color = Color(0.14, 0.04, 0.04, 0.92)
@@ -13039,12 +13116,12 @@ func _populate_treasure_modal(card: Dictionary, hero: Dictionary, is_quest_note:
 		title_sb.set_border_width_all(1)
 		title_sb.content_margin_left = 14
 		title_sb.content_margin_right = 14
-		title_sb.content_margin_top = 5
-		title_sb.content_margin_bottom = 5
+		title_sb.content_margin_top = 4
+		title_sb.content_margin_bottom = 4
 		treasure_card_title.add_theme_stylebox_override("normal", title_sb)
 		var title_col = Color(1.0, 0.85, 0.75, 1.0) if is_hazard else Color(1.0, 0.88, 0.35, 1.0)
 		treasure_card_title.add_theme_color_override("font_color", title_col)
-		apply_rpg_font_to_label(treasure_card_title, true, 16, title_col)
+		apply_rpg_font_to_label(treasure_card_title, true, 15, title_col)
 		treasure_card_title.add_theme_constant_override("outline_size", 1)
 		treasure_card_title.add_theme_color_override("font_outline_color", Color(0.04, 0.02, 0.02, 0.95))
 
@@ -13057,7 +13134,7 @@ func _populate_treasure_modal(card: Dictionary, hero: Dictionary, is_quest_note:
 		if_sb.set_border_width_all(2)
 		if_sb.border_color = Color(0.85, 0.32, 0.25, 0.85) if is_hazard else Color(0.72, 0.52, 0.25, 0.85)
 		if_node.add_theme_stylebox_override("panel", if_sb)
-		if_node.custom_minimum_size = Vector2(0, 180)
+		if_node.custom_minimum_size = Vector2(0, 160)
 
 	if treasure_card_illustration:
 		var tex: Texture2D = _get_treasure_card_art_texture(card, is_quest_note)
@@ -13066,11 +13143,70 @@ func _populate_treasure_modal(card: Dictionary, hero: Dictionary, is_quest_note:
 		treasure_card_illustration.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		treasure_card_illustration.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 
+	# 4b. Stats Row for Wandering Monster (Attack, Defend, BP, Move)
+	var stats_hbox = treasure_drawn_card.find_child("StatsHBox", true, false)
+	if not stats_hbox:
+		var card_vbox = treasure_drawn_card.find_child("CardVBox", true, false)
+		if card_vbox:
+			stats_hbox = HBoxContainer.new()
+			stats_hbox.name = "StatsHBox"
+			stats_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+			stats_hbox.add_theme_constant_override("separation", 6)
+			var if_idx = -1
+			for i in range(card_vbox.get_child_count()):
+				if card_vbox.get_child(i).name == "IllustrationFrame":
+					if_idx = i
+					break
+			if if_idx >= 0:
+				card_vbox.add_child(stats_hbox)
+				card_vbox.move_child(stats_hbox, if_idx + 1)
+			else:
+				card_vbox.add_child(stats_hbox)
+
+			var stat_keys = [
+				{"name": "Atk", "prefix": "⚔️ "},
+				{"name": "Def", "prefix": "🛡️ "},
+				{"name": "BP", "prefix": "❤️ "},
+				{"name": "Move", "prefix": "👟 "}
+			]
+			for sk in stat_keys:
+				var p_badge = Label.new()
+				p_badge.name = "Badge_" + sk["name"]
+				p_badge.add_theme_stylebox_override("normal", get_rpg_badge_stylebox())
+				apply_rpg_font_to_label(p_badge, true, 10, Color(1.0, 0.85, 0.35, 1.0))
+				stats_hbox.add_child(p_badge)
+
+	if stats_hbox:
+		if c_type == "wandering_monster":
+			stats_hbox.visible = true
+			var atk_l = stats_hbox.get_node_or_null("Badge_Atk") as Label
+			if atk_l:
+				atk_l.text = "⚔️ %d Attack" % int(card.get("attack_dice", wm_data.get("attack_dice", 3)))
+			var def_l = stats_hbox.get_node_or_null("Badge_Def") as Label
+			if def_l:
+				def_l.text = "🛡️ %d Defend" % int(card.get("defend_dice", wm_data.get("defend_dice", 2)))
+			var bp_l = stats_hbox.get_node_or_null("Badge_BP") as Label
+			if bp_l:
+				bp_l.text = "❤️ %d BP" % int(card.get("body_points", wm_data.get("body_points", 1)))
+			var mv_l = stats_hbox.get_node_or_null("Badge_Move") as Label
+			if mv_l:
+				mv_l.text = "👟 %d Move" % int(card.get("movement", wm_data.get("movement", 8)))
+		else:
+			stats_hbox.visible = false
+
 	# 5. Card Description & Flavor with high-contrast RPG parchment/slate background panel
 	if treasure_card_desc:
 		treasure_card_desc.custom_minimum_size = Vector2(0, 0)
 		var desc_text = str(card.get("description", ""))
 		var flv = str(card.get("flavor", ""))
+		if c_type == "wandering_monster":
+			var raw_desc = str(wm_data.get("description", desc_text))
+			raw_desc = raw_desc.replace("[b]", "").replace("[/b]", "")
+			raw_desc = raw_desc.replace("[color=#ffb74d]", "").replace("[/color]", "")
+			raw_desc = raw_desc.replace("[color=#f2e8dc]", "").replace("[/color]", "")
+			desc_text = raw_desc
+			flv = str(card.get("flavor", wm_data.get("flavor", "A guttural roar echoes as an enemy emerges from the gloom!")))
+
 		var full_text = desc_text
 		if flv != "":
 			full_text += "\n\n— %s —" % flv
@@ -13083,14 +13219,15 @@ func _populate_treasure_modal(card: Dictionary, hero: Dictionary, is_quest_note:
 			desc_sb.border_color = Color(0.70, 0.55, 0.25, 0.80)
 		desc_sb.set_corner_radius_all(6)
 		desc_sb.set_border_width_all(1)
-		desc_sb.content_margin_left = 14
-		desc_sb.content_margin_right = 14
-		desc_sb.content_margin_top = 8
-		desc_sb.content_margin_bottom = 8
+		desc_sb.content_margin_left = 12
+		desc_sb.content_margin_right = 12
+		desc_sb.content_margin_top = 6
+		desc_sb.content_margin_bottom = 6
 		treasure_card_desc.add_theme_stylebox_override("normal", desc_sb)
 		var desc_col = Color(1.0, 0.92, 0.88, 1.0) if is_hazard else Color(1.0, 0.96, 0.88, 1.0)
 		treasure_card_desc.text = full_text
-		apply_rpg_font_to_label(treasure_card_desc, false, 12, desc_col)
+		var font_sz = 10 if c_type == "wandering_monster" else 12
+		apply_rpg_font_to_label(treasure_card_desc, false, font_sz, desc_col)
 		treasure_card_desc.add_theme_color_override("font_color", desc_col)
 		treasure_card_desc.add_theme_constant_override("outline_size", 0)
 
@@ -13122,21 +13259,38 @@ func _populate_treasure_modal(card: Dictionary, hero: Dictionary, is_quest_note:
 			treasure_outcome_text.text = "Rule: %s suffers %d BP damage! Card resolved, returned to deck, and shuffled." % [h_name, dmg]
 			out_col = Color(1.0, 0.60, 0.55, 1.0)
 		elif c_type == "wandering_monster":
-			treasure_outcome_text.text = "Rule: Wandering monster ambushes adjacent to %s! Card resolved, returned to deck, and shuffled." % h_name
+			treasure_outcome_text.text = "HeroQuest Rule: Wandering %s ambushes adjacent to %s! The Wandering Monster card is returned to the Treasure Deck and shuffled after an ambush." % [wm_type.capitalize(), h_name]
 			out_col = Color(1.0, 0.75, 0.40, 1.0)
 		else:
 			treasure_outcome_text.text = "Rule: Awarded to %s. Card is permanently discarded from the deck for the quest." % h_name
 			out_col = Color(0.50, 0.98, 0.70, 1.0)
-		apply_rpg_font_to_label(treasure_outcome_text, false, 11, out_col)
+		apply_rpg_font_to_label(treasure_outcome_text, false, 10 if c_type == "wandering_monster" else 11, out_col)
 		treasure_outcome_text.add_theme_color_override("font_color", out_col)
 		treasure_outcome_text.add_theme_constant_override("outline_size", 0)
 
-	# 7. Action Button
+	# 7. Action Button Box (Resolve & Inspect Monster Profile)
+	var btn_box = treasure_modal.find_child("ButtonBox", true, false) if treasure_modal else null
+	var btn_inspect = treasure_modal.find_child("BtnInspectWanderingMonster", true, false) if treasure_modal else null
+	if btn_box and not btn_inspect:
+		btn_inspect = Button.new()
+		btn_inspect.name = "BtnInspectWanderingMonster"
+		btn_inspect.text = "👹 View Full Profile [W]"
+		btn_inspect.custom_minimum_size = Vector2(210, 42)
+		btn_inspect.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		apply_rpg_font_to_button(btn_inspect, 11, Color(1.0, 0.85, 0.40, 1.0))
+		btn_inspect.pressed.connect(func():
+			open_wandering_monster_modal()
+		)
+		btn_box.add_child(btn_inspect)
+
+	if btn_inspect:
+		btn_inspect.visible = (c_type == "wandering_monster")
+
 	if treasure_btn_resolve:
 		if c_type == "hazard":
 			treasure_btn_resolve.text = "Endure Hazard (Space / Enter)"
 		elif c_type == "wandering_monster":
-			treasure_btn_resolve.text = "Engage Ambush (Space / Enter)"
+			treasure_btn_resolve.text = "Engage %s Ambush (Space / Enter)" % wm_type.capitalize()
 		else:
 			treasure_btn_resolve.text = "Claim Treasure (Space / Enter)"
 
@@ -14743,6 +14897,8 @@ func get_telemetry_state() -> Dictionary:
 			"goldFound": active_treasure_overlay.get("gold_found", 0),
 			"waitingForClick": not active_treasure_overlay.is_empty(),
 			"card": active_treasure_overlay.get("card", {}),
+			"isWanderingMonster": active_treasure_overlay.get("isWanderingMonster", false),
+			"wanderingMonsterCard": active_treasure_overlay.get("wanderingMonsterCard", {}),
 			"deckCount": get_treasure_deck_stats().total,
 			"goodsCount": get_treasure_deck_stats().goods,
 			"hazardsCount": get_treasure_deck_stats().hazards,
