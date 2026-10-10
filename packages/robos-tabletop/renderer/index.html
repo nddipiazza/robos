@@ -46,6 +46,9 @@
         <button id="btn-open-spell-pick" class="btn btn-secondary" title="Pick spells for Elf vs Wizard (HeroQuest elemental spell draft)">
           🔮 Pick Spells
         </button>
+        <button id="btn-open-party-trade" class="btn btn-secondary" title="Exchange items, weapons, potions, and gold between party heroes between quests">
+          🤝 Hero Trade
+        </button>
         <button id="btn-save-kgraph" class="btn btn-secondary" title="Save current form changes directly into .robos/kgraphs/tabletop-game/package.jsonld">
           💾 Save to KGraph
         </button>
@@ -113,7 +116,10 @@
                   <p id="victory-quest-desc" style="margin:0; font-size:12px; color:#cbd5e1;">All party heroes have been awarded the quest bounty.</p>
                 </div>
               </div>
-              <button id="btn-next-quest-banner" class="btn btn-sm btn-primary">Proceed to Next Quest ➔</button>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <button id="btn-trade-between-quests-banner" class="btn btn-sm btn-secondary" title="Exchange items, weapons, potions, and gold between heroes between quests">🤝 Trade Between Quests</button>
+                <button id="btn-next-quest-banner" class="btn btn-sm btn-primary">Proceed to Next Quest ➔</button>
+              </div>
             </div>
 
             <div class="card form-card" style="margin-bottom:16px;">
@@ -948,6 +954,106 @@
       </div>
     </div>
   </div>
+
+  <!-- Between-Quests Hero Item & Equipment Trade Modal -->
+  <div id="modal-between-quests-trade" class="modal-backdrop" style="display:none;">
+    <div class="modal-window" style="max-width: 960px;">
+      <div class="modal-header">
+        <div>
+          <h2 style="margin:0; font-size:18px; display:flex; align-items:center; gap:8px;">
+            <span>🤝</span> Hero Item & Equipment Trade Between Quests
+          </h2>
+          <div class="text-muted" style="font-size:12px; margin-top:2px;">
+            HeroQuest Rule: Between quests, heroes rest at the tavern and may freely trade weapons, armor, potions, artifacts, and gold.
+          </div>
+        </div>
+        <button id="btn-close-trade-modal" class="modal-close-btn" title="Close modal">&times;</button>
+      </div>
+
+      <div class="modal-body" style="gap:16px;">
+        <!-- Two-column Trade Grid -->
+        <div class="trade-split-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+          <!-- Column A: Hero A -->
+          <div class="trade-hero-panel card" style="background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px; padding:14px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid var(--border-color); padding-bottom:8px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span id="trade-hero-a-icon" style="font-size:1.4rem;">🛡️</span>
+                <select id="trade-hero-a-select" class="form-select" style="font-weight:700; font-size:14px; padding:4px 8px;">
+                  <!-- Populated from currentData.heroes -->
+                </select>
+              </div>
+              <span id="trade-hero-a-gold" class="gold-badge" style="font-size:13px; font-weight:700;">100 GP</span>
+            </div>
+
+            <!-- Gold Quick Pass -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; background:rgba(234,179,8,0.08); padding:8px 10px; border-radius:6px; border:1px solid rgba(234,179,8,0.2);">
+              <span style="font-size:12px; color:#fde047; font-weight:600;">🪙 Pass Gold ➔</span>
+              <div style="display:flex; gap:4px;">
+                <button type="button" class="btn btn-xs btn-secondary btn-trade-gold-a" data-amt="10">+10g</button>
+                <button type="button" class="btn btn-xs btn-secondary btn-trade-gold-a" data-amt="50">+50g</button>
+                <button type="button" class="btn btn-xs btn-secondary btn-trade-gold-a" data-amt="100">+100g</button>
+              </div>
+            </div>
+
+            <!-- Hero A Equipment Summary -->
+            <div style="font-size:11px; color:#94a3b8; margin-bottom:6px; text-transform:uppercase; font-weight:700;">Equipped Gear:</div>
+            <div id="trade-hero-a-equipped" style="display:flex; flex-direction:column; gap:4px; margin-bottom:12px;"></div>
+
+            <!-- Hero A Backpack Inventory Items -->
+            <div style="font-size:11px; color:#94a3b8; margin-bottom:6px; text-transform:uppercase; font-weight:700;">🎒 Backpack Items:</div>
+            <div id="trade-hero-a-inventory" class="trade-inventory-list" style="max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;"></div>
+          </div>
+
+          <!-- Column B: Hero B -->
+          <div class="trade-hero-panel card" style="background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px; padding:14px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid var(--border-color); padding-bottom:8px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span id="trade-hero-b-icon" style="font-size:1.4rem;">⚔️</span>
+                <select id="trade-hero-b-select" class="form-select" style="font-weight:700; font-size:14px; padding:4px 8px;">
+                  <!-- Populated from currentData.heroes -->
+                </select>
+              </div>
+              <span id="trade-hero-b-gold" class="gold-badge" style="font-size:13px; font-weight:700;">100 GP</span>
+            </div>
+
+            <!-- Gold Quick Pass -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; background:rgba(234,179,8,0.08); padding:8px 10px; border-radius:6px; border:1px solid rgba(234,179,8,0.2);">
+              <span style="font-size:12px; color:#fde047; font-weight:600;">⬅ Pass Gold</span>
+              <div style="display:flex; gap:4px;">
+                <button type="button" class="btn btn-xs btn-secondary btn-trade-gold-b" data-amt="10">+10g</button>
+                <button type="button" class="btn btn-xs btn-secondary btn-trade-gold-b" data-amt="50">+50g</button>
+                <button type="button" class="btn btn-xs btn-secondary btn-trade-gold-b" data-amt="100">+100g</button>
+              </div>
+            </div>
+
+            <!-- Hero B Equipment Summary -->
+            <div style="font-size:11px; color:#94a3b8; margin-bottom:6px; text-transform:uppercase; font-weight:700;">Equipped Gear:</div>
+            <div id="trade-hero-b-equipped" style="display:flex; flex-direction:column; gap:4px; margin-bottom:12px;"></div>
+
+            <!-- Hero B Backpack Inventory Items -->
+            <div style="font-size:11px; color:#94a3b8; margin-bottom:6px; text-transform:uppercase; font-weight:700;">🎒 Backpack Items:</div>
+            <div id="trade-hero-b-inventory" class="trade-inventory-list" style="max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;"></div>
+          </div>
+        </div>
+
+        <!-- Recent Trade Log -->
+        <div class="trade-log-container" style="background:#090d16; border:1px solid var(--border-color); border-radius:6px; padding:10px 12px;">
+          <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; font-weight:700; margin-bottom:4px;">📜 Trade Ledger & Exchanges:</div>
+          <div id="trade-log-entries" style="font-size:12px; color:#cbd5e1; max-height:80px; overflow-y:auto; display:flex; flex-direction:column; gap:3px;">
+            <span style="color:#64748b; font-style:italic;">No trades made yet between quests. Click 'Pass' on any item or gold amount to exchange.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <div class="modal-footer-note text-muted">
+          💡 Any weapons, armor, potions, or artifacts acquired during dungeon exploration can be traded freely between quests.
+        </div>
+        <button id="btn-done-trade-modal" class="btn btn-primary">✓ Done Trading</button>
+      </div>
+    </div>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>

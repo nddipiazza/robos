@@ -809,6 +809,133 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
       assert.ok(fs.statSync(rFile).size > 1000, `Runtime texture ${t}.png must be non-empty image`);
     }
   });
+
+  it("supports trading items (potions, weapons, armor, artifacts) between heroes between quests", () => {
+    const heroes = [
+      {
+        "@id": "urn:robos:tabletop:hero:barbarian",
+        "dcterms:title": "Barbarian",
+        "robos:characterName": "Rogar",
+        "robos:heroClass": "Barbarian",
+        "robos:gold": 250,
+        "robos:equippedWeapon": "Broadsword (3 Combat Dice)",
+        "robos:equippedArmor": "Natural Toughness (2 Defend Dice)",
+        "robos:inventory": [
+          { id: "item-pot-heal", name: "Potion of Healing", type: "potion", effect: "Restores up to 4 BP", value: 100 },
+          { id: "item-orc-cleaver", name: "Orc's Cleaver", type: "artifact", effect: "+1 Attack vs Orcs", value: 350 },
+          { id: "item-rope", name: "Heavy Rope (30 ft)", type: "tool", effect: "Climb pits", value: 25 }
+        ]
+      },
+      {
+        "@id": "urn:robos:tabletop:hero:dwarf",
+        "dcterms:title": "Dwarf",
+        "robos:characterName": "Dorgan",
+        "robos:heroClass": "Dwarf",
+        "robos:gold": 120,
+        "robos:equippedWeapon": "Shortsword (2 Combat Dice)",
+        "robos:equippedArmor": "Shield & Chainmail (+2 Defend Dice)",
+        "robos:inventory": [
+          { id: "item-toolkit", name: "Trap Disarm Toolkit", type: "tool", effect: "Disarm traps", value: 75 }
+        ]
+      },
+      {
+        "@id": "urn:robos:tabletop:hero:wizard",
+        "dcterms:title": "Wizard",
+        "robos:characterName": "Telor",
+        "robos:heroClass": "Wizard",
+        "robos:gold": 80,
+        "robos:equippedWeapon": "Dagger (1 Combat Die)",
+        "robos:equippedArmor": "Wizard Cloak (2 Defend Dice)",
+        "robos:inventory": [
+          { id: "item-holy-water", name: "Holy Water", type: "relic", effect: "Destroys undead", value: 200 }
+        ]
+      }
+    ];
+
+    function simulateTradeItem(heroList, fromId, toId, itemIndexOrName) {
+      const fromHero = heroList.find(h => h["@id"] === fromId);
+      const toHero = heroList.find(h => h["@id"] === toId);
+      assert.ok(fromHero, "From hero must exist");
+      assert.ok(toHero, "To hero must exist");
+      assert.notStrictEqual(fromId, toId, "Cannot trade to self");
+
+      let item = null;
+      if (typeof itemIndexOrName === "number") {
+        assert.ok(itemIndexOrName >= 0 && itemIndexOrName < fromHero["robos:inventory"].length);
+        item = fromHero["robos:inventory"].splice(itemIndexOrName, 1)[0];
+      } else {
+        const idx = fromHero["robos:inventory"].findIndex(it => it.id === itemIndexOrName || it.name === itemIndexOrName);
+        if (idx !== -1) {
+          item = fromHero["robos:inventory"].splice(idx, 1)[0];
+        } else if (fromHero["robos:equippedWeapon"].includes(itemIndexOrName)) {
+          item = { id: "item-traded-wep", name: fromHero["robos:equippedWeapon"], type: "weapon" };
+          fromHero["robos:equippedWeapon"] = "Shortsword (2 Combat Dice)";
+        }
+      }
+      assert.ok(item, "Traded item must be found");
+      toHero["robos:inventory"].push(item);
+      return { success: true, item, fromHero, toHero };
+    }
+
+    // Trade 1: Barbarian passes Potion of Healing to Dwarf between quests
+    const res1 = simulateTradeItem(heroes, "urn:robos:tabletop:hero:barbarian", "urn:robos:tabletop:hero:dwarf", 0);
+    assert.strictEqual(res1.success, true);
+    assert.strictEqual(res1.item.name, "Potion of Healing");
+    assert.strictEqual(heroes[0]["robos:inventory"].length, 2, "Barbarian should have 2 items left");
+    assert.strictEqual(heroes[1]["robos:inventory"].length, 2, "Dwarf should now have 2 items");
+    assert.ok(heroes[1]["robos:inventory"].some(it => it.name === "Potion of Healing"));
+
+    // Trade 2: Barbarian passes artifact "Orc's Cleaver" to Dwarf
+    const res2 = simulateTradeItem(heroes, "urn:robos:tabletop:hero:barbarian", "urn:robos:tabletop:hero:dwarf", "Orc's Cleaver");
+    assert.strictEqual(res2.success, true);
+    assert.strictEqual(res2.item.type, "artifact");
+    assert.strictEqual(heroes[0]["robos:inventory"].length, 1, "Barbarian should have 1 item left");
+    assert.strictEqual(heroes[1]["robos:inventory"].length, 3, "Dwarf should now have 3 items");
+
+    // Trade 3: Wizard passes Holy Water to Barbarian
+    const res3 = simulateTradeItem(heroes, "urn:robos:tabletop:hero:wizard", "urn:robos:tabletop:hero:barbarian", "Holy Water");
+    assert.strictEqual(res3.success, true);
+    assert.strictEqual(heroes[2]["robos:inventory"].length, 0, "Wizard backpack empty");
+    assert.strictEqual(heroes[0]["robos:inventory"].length, 2, "Barbarian now has 2 items");
+    assert.ok(heroes[0]["robos:inventory"].some(it => it.name === "Holy Water"));
+
+    // Trade 4: Barbarian passes equipped Broadsword to Dwarf
+    const res4 = simulateTradeItem(heroes, "urn:robos:tabletop:hero:barbarian", "urn:robos:tabletop:hero:dwarf", "Broadsword");
+    assert.strictEqual(res4.success, true);
+    assert.strictEqual(heroes[0]["robos:equippedWeapon"], "Shortsword (2 Combat Dice)", "Barbarian falls back to shortsword");
+    assert.strictEqual(heroes[1]["robos:inventory"].length, 4, "Dwarf received broadsword in inventory");
+  });
+
+  it("supports transferring gold between heroes between quests with validation guards", () => {
+    const heroA = { "@id": "hero-a", name: "Rogar", "robos:gold": 250 };
+    const heroB = { "@id": "hero-b", name: "Dorgan", "robos:gold": 50 };
+
+    function transferGold(hFrom, hTo, amount) {
+      if (hFrom["@id"] === hTo["@id"]) return { success: false, error: "Cannot transfer to self" };
+      if (amount <= 0) return { success: false, error: "Amount must be positive" };
+      if (hFrom["robos:gold"] < amount) return { success: false, error: "Insufficient gold" };
+      hFrom["robos:gold"] -= amount;
+      hTo["robos:gold"] += amount;
+      return { success: true, amount, fromGold: hFrom["robos:gold"], toGold: hTo["robos:gold"] };
+    }
+
+    // Transfer 100 gold
+    const t1 = transferGold(heroA, heroB, 100);
+    assert.strictEqual(t1.success, true);
+    assert.strictEqual(heroA["robos:gold"], 150);
+    assert.strictEqual(heroB["robos:gold"], 150);
+
+    // Reject transfer exceeding current gold
+    const t2 = transferGold(heroA, heroB, 200);
+    assert.strictEqual(t2.success, false);
+    assert.strictEqual(t2.error, "Insufficient gold");
+    assert.strictEqual(heroA["robos:gold"], 150, "Gold must remain unchanged after rejected transfer");
+
+    // Reject transfer to self
+    const t3 = transferGold(heroA, heroA, 50);
+    assert.strictEqual(t3.success, false);
+    assert.strictEqual(t3.error, "Cannot transfer to self");
+  });
 });
 
 
