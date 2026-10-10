@@ -302,7 +302,10 @@
       "isSpellcaster": true,
       "spells": [
         "lightning-bolt",
-        "fear"
+        "firestorm",
+        "fear",
+        "sleep-dread",
+        "cloud-of-chaos"
       ],
       "position": [
         4,

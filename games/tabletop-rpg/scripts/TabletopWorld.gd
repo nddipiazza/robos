@@ -10775,39 +10775,160 @@ func get_monster_available_spells(m: Dictionary) -> Array:
 			available.append(s_str)
 	return available
 
+func _choose_best_spell_for_target(m: Dictionary, target_h: Dictionary, avail_spells: Array, is_adjacent: bool) -> String:
+	if avail_spells.is_empty():
+		return ""
+
+	var h_bp = int(target_h.get("current_bp", 0)) if not target_h.is_empty() else 99
+	var h_def = get_hero_defend_dice(target_h) if not target_h.is_empty() else 2
+	var h_atk = int(target_h.get("attackDice", 2)) if not target_h.is_empty() else 2
+	var is_wiz = _is_wizard(target_h) if not target_h.is_empty() else false
+
+	if difficulty_mode == "hard":
+		# Heuristic A: Lethal finisher or glass-cannon caster kill -> high damage spell
+		if h_bp <= 3 or is_wiz:
+			for s in avail_spells:
+				var sn = str(s).to_lower().replace("-", "_")
+				if "lightning" in sn or "fire" in sn or "flame" in sn:
+					return s
+
+		# Heuristic B: Heavy melee offensive threat (Barbarian / high attack) -> control/debuff spell
+		if h_atk >= 3:
+			for s in avail_spells:
+				var sn = str(s).to_lower().replace("-", "_")
+				if "fear" in sn or "sleep" in sn or "cloud" in sn:
+					return s
+
+		# Heuristic C: Heavily armored hero (Dwarf / 3+ Defend Dice) -> control or damage
+		if h_def >= 3:
+			for s in avail_spells:
+				var sn = str(s).to_lower().replace("-", "_")
+				if "sleep" in sn or "cloud" in sn or "fire" in sn or "rust" in sn:
+					return s
+
+	# Standard priority for normal/fallback
+	for s in avail_spells:
+		var sn = str(s).to_lower().replace("-", "_")
+		if "lightning" in sn or "fire" in sn or "fear" in sn or "sleep" in sn or "cloud" in sn:
+			return s
+
+	return avail_spells[0]
+
 func boss_decide_spell_or_attack(m: Dictionary, target_h: Dictionary, is_adjacent: bool) -> Dictionary:
+	var m_name = str(m.get("name", "Monster"))
+	var m_atk = int(m.get("attackDice", 3))
+	var m_pos = _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
+	var h_name = str(target_h.get("name", "Hero")) if not target_h.is_empty() else "heroes"
+	var h_bp = int(target_h.get("current_bp", 0)) if not target_h.is_empty() else 0
+	var h_def = get_hero_defend_dice(target_h) if not target_h.is_empty() else 2
+	var h_atk = int(target_h.get("attackDice", 2)) if not target_h.is_empty() else 2
+	var h_pos = _to_grid_pos(target_h.get("grid_pos", Vector2i(-1, -1))) if not target_h.is_empty() else Vector2i(-1, -1)
+	var dist = absi(h_pos.x - m_pos.x) + absi(h_pos.y - m_pos.y) if (h_pos.x >= 0 and m_pos.x >= 0) else 999
+	var has_los = (h_pos.x >= 0 and m_pos.x >= 0 and has_line_of_sight(m_pos, h_pos))
+
 	var forced = str(m.get("forced_next_action", "")).to_lower()
 	var avail_spells = get_monster_available_spells(m)
-	if avail_spells.is_empty():
-		if is_adjacent:
-			return { "action": "attack", "spell": "" }
-		else:
-			return { "action": "none", "spell": "" }
 
-	var chosen_spell = avail_spells[0]
-	for s in avail_spells:
-		if "lightning" in s or "flame" in s or "fear" in s:
-			chosen_spell = s
-			break
+	if avail_spells.is_empty():
+		var total_spells = m.get("spells", [])
+		if total_spells is Array and not total_spells.is_empty():
+			_log("[AI SPELL DECISION] %s has exhausted all dread spells from its grimoire (used: %s); defaulting to physical attack." % [
+				m_name, ", ".join(m.get("used_spells", []))
+			])
+		else:
+			_log("[AI SPELL DECISION] %s has no dread spells in bestiary entry; executing physical attack." % m_name)
+		if is_adjacent:
+			return { "action": "attack", "spell": "", "reason": "no_spells_melee" }
+		else:
+			return { "action": "none", "spell": "", "reason": "no_spells_out_of_range" }
+
+	var chosen_spell = _choose_best_spell_for_target(m, target_h, avail_spells, is_adjacent)
+	var sp_dict = HeroQuestSpells.get_spell(chosen_spell)
+	var sp_name = str(sp_dict.get("name", chosen_spell.capitalize().replace("_", " ")))
 
 	if forced == "spell":
-		return { "action": "spell", "spell": chosen_spell }
+		_log("[AI SPELL DECISION - FORCED] %s follows tactical command override: casting %s on %s!" % [m_name, sp_name, h_name])
+		return { "action": "spell", "spell": chosen_spell, "reason": "forced_spell" }
 	elif forced == "attack":
+		_log("[AI SPELL DECISION - FORCED] %s follows tactical command override: physical attack chosen against %s." % [m_name, h_name])
 		if is_adjacent:
-			return { "action": "attack", "spell": "" }
+			return { "action": "attack", "spell": "", "reason": "forced_attack" }
 		else:
-			return { "action": "none", "spell": "" }
+			return { "action": "none", "spell": "", "reason": "forced_attack_out_of_range" }
 
+	# If monster cannot reach with melee this turn
 	if not is_adjacent:
-		return { "action": "spell", "spell": chosen_spell }
+		if has_los:
+			_log("[AI SPELL DECISION] %s is at range (%d tiles away from %s) with clear line of sight. Grimoire has %d available spells: [%s]. Decides to CAST %s to strike from distance!" % [
+				m_name, dist, h_name, avail_spells.size(), ", ".join(avail_spells), sp_name
+			])
+			return { "action": "spell", "spell": chosen_spell, "reason": "ranged_los" }
+		else:
+			_log("[AI SPELL DECISION] %s is at range (%d tiles away from %s) but line of sight is obstructed by dungeon walls; cannot cast targeted dread spells." % [
+				m_name, dist, h_name
+			])
+			return { "action": "none", "spell": "", "reason": "los_blocked" }
 
-	var spell_chance = 0.6 if difficulty_mode == "hard" else 0.5
-	if randf() < spell_chance:
-		return { "action": "spell", "spell": chosen_spell }
-	else:
-		return { "action": "attack", "spell": "" }
+	# Monster is adjacent to target_h: choose between melee and spells
+	if difficulty_mode == "hard":
+		# Hard Mode Tactical Evaluation
+		if h_bp <= 3 and ("lightning" in chosen_spell.to_lower() or "fire" in chosen_spell.to_lower()):
+			_log("[AI SPELL DECISION - HARD] %s detects critical lethal finisher against adjacent %s (%d BP remaining). Decides to CAST %s to secure elimination!" % [
+				m_name, h_name, h_bp, sp_name
+			])
+			return { "action": "spell", "spell": chosen_spell, "reason": "lethal_burst" }
 
-func _find_best_spell_target_hero(m: Dictionary) -> Dictionary:
+		if h_def >= 3 and ("fear" in chosen_spell.to_lower() or "sleep" in chosen_spell.to_lower() or "cloud" in chosen_spell.to_lower()):
+			_log("[AI SPELL DECISION - HARD] %s identifies adjacent %s as heavily armored (%d Defend Dice). Decides to CAST control spell %s to neutralize combat threat!" % [
+				m_name, h_name, h_def, sp_name
+			])
+			return { "action": "spell", "spell": chosen_spell, "reason": "bypass_armor" }
+
+		if h_atk >= 3 and ("fear" in chosen_spell.to_lower() or "sleep" in chosen_spell.to_lower() or "cloud" in chosen_spell.to_lower()):
+			_log("[AI SPELL DECISION - HARD] %s faces formidable offense from adjacent %s (%d Attack Dice). Decides to CAST control spell %s to cripple hero attacks!" % [
+				m_name, h_name, h_atk, sp_name
+			])
+			return { "action": "spell", "spell": chosen_spell, "reason": "threat_control" }
+
+		# Melee crush if monster has high physical attack (4 dice) vs unarmored target (2 defend dice)
+		if m_atk >= 4 and h_def <= 2 and randf() < 0.35:
+			_log("[AI SPELL DECISION - HARD] %s evaluates crushing melee weapon (%d Attack Dice) against %s (%d Defend Dice). Decides to STRIKE with physical weapon and conserve dread magic!" % [
+				m_name, m_atk, h_name, h_def
+			])
+			return { "action": "attack", "spell": "", "reason": "melee_advantage" }
+
+		_log("[AI SPELL DECISION - HARD] %s maintains tactical spell pressure against adjacent %s: decides to CAST %s (grimoire: %d spells remaining)." % [
+			m_name, h_name, sp_name, avail_spells.size()
+		])
+		return { "action": "spell", "spell": chosen_spell, "reason": "hard_spell_pressure" }
+
+	elif difficulty_mode == "easy":
+		# Easy mode prefers physical attacks (75% melee, 25% spell)
+		if randf() < 0.75:
+			_log("[AI SPELL DECISION - EASY] %s opts for straightforward physical melee (%d Attack Dice) against %s, reserving dread spells." % [
+				m_name, m_atk, h_name
+			])
+			return { "action": "attack", "spell": "", "reason": "easy_melee" }
+		else:
+			_log("[AI SPELL DECISION - EASY] %s channels dread spell %s against adjacent %s." % [
+				m_name, sp_name, h_name
+			])
+			return { "action": "spell", "spell": chosen_spell, "reason": "easy_spell" }
+
+	else: # Normal mode: balanced 50/50
+		if randf() < 0.5:
+			_log("[AI SPELL DECISION - NORMAL] %s balances tactical options against adjacent %s: decides to CAST %s (grimoire has %d spells remaining)." % [
+				m_name, h_name, sp_name, avail_spells.size()
+			])
+			return { "action": "spell", "spell": chosen_spell, "reason": "normal_spell" }
+		else:
+			_log("[AI SPELL DECISION - NORMAL] %s balances tactical options against adjacent %s: decides to STRIKE with melee attack (%d Attack Dice)." % [
+				m_name, h_name, m_atk
+			])
+			return { "action": "attack", "spell": "", "reason": "normal_melee" }
+
+func _find_best_spell_target_hero(m: Dictionary, chosen_spell: String = "") -> Dictionary:
+	var m_name = str(m.get("name", "Monster"))
 	var m_pos = _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
 	var candidates: Array[Dictionary] = []
 	for h in heroes:
@@ -10823,12 +10944,69 @@ func _find_best_spell_target_hero(m: Dictionary) -> Dictionary:
 	if candidates.is_empty():
 		return {}
 
-	if difficulty_mode == "hard":
-		candidates.sort_custom(func(a, b): return _is_hero_more_vulnerable(a, b))
-	else:
-		candidates.sort_custom(func(a, b): return int(a.get("current_bp", 0)) < int(b.get("current_bp", 0)))
+	if candidates.size() == 1:
+		var sole_h = candidates[0]
+		_log("[AI TARGETING - %s] %s targets sole active hero: %s (%s, %d BP, %d Defend Dice)." % [
+			difficulty_mode.to_upper(), m_name, str(sole_h.get("name", "Hero")), str(sole_h.get("class", "hero")).capitalize(),
+			int(sole_h.get("current_bp", 0)), get_hero_defend_dice(sole_h)
+		])
+		return sole_h
 
-	return candidates[0]
+	if difficulty_mode == "hard":
+		# Hard Mode: strategic priority evaluation
+		# 1. Lethal Finisher (BP <= 2)
+		for h in candidates:
+			var bp = int(h.get("current_bp", 0))
+			if bp <= 2:
+				_log("[AI TARGETING - HARD] %s evaluates heroes: selects %s as primary target: CRITICAL LETHAL FINISHER (%d BP remaining, lowest in party to eliminate action economy)!" % [
+					m_name, str(h.get("name")), bp
+				])
+				return h
+
+		# 2. If casting control spell (fear, sleep, cloud of chaos), target highest attack threat
+		var sp_clean = chosen_spell.to_lower().replace("-", "_")
+		if "fear" in sp_clean or "sleep" in sp_clean or "cloud" in sp_clean:
+			var sorted_threat = candidates.duplicate()
+			sorted_threat.sort_custom(func(a, b): return int(a.get("attackDice", 2)) > int(b.get("attackDice", 2)))
+			var highest_atk_h = sorted_threat[0]
+			_log("[AI TARGETING - HARD] %s evaluates heroes: selects %s as control target: HIGHEST ATTACK THREAT (%d Attack Dice) to cripple party damage output!" % [
+				m_name, str(highest_atk_h.get("name")), int(highest_atk_h.get("attackDice", 2))
+			])
+			return highest_atk_h
+
+		# 3. Fragile spellcaster suppression (Wizard)
+		for h in candidates:
+			if _is_wizard(h):
+				_log("[AI TARGETING - HARD] %s evaluates heroes: selects %s as primary target: CASTER SUPPRESSION (Wizard, %d BP, %d Defend Dice) to silence healing and elemental spells!" % [
+					m_name, str(h.get("name")), int(h.get("current_bp", 0)), get_hero_defend_dice(h)
+				])
+				return h
+
+		# 4. Lowest Defense penetration
+		candidates.sort_custom(func(a, b): return _is_hero_more_vulnerable(a, b))
+		var target = candidates[0]
+		_log("[AI TARGETING - HARD] %s evaluates heroes: selects %s as primary target: WEAKEST DEFENSE (%d Defend Dice vs %d BP) to maximize wound probability!" % [
+			m_name, str(target.get("name")), get_hero_defend_dice(target), int(target.get("current_bp", 0))
+		])
+		return target
+
+	elif difficulty_mode == "easy":
+		# Easy Mode: target healthiest / tank (Barbarian with 8 BP) based on frontline presence
+		candidates.sort_custom(func(a, b): return int(a.get("current_bp", 0)) > int(b.get("current_bp", 0)))
+		var target = candidates[0]
+		_log("[AI TARGETING - EASY] %s engages frontline hero %s (%s, %d BP) based on proximity, sparing vulnerable companions." % [
+			m_name, str(target.get("name")), str(target.get("class", "hero")).capitalize(), int(target.get("current_bp", 0))
+		])
+		return target
+
+	else: # Normal Mode
+		candidates.sort_custom(func(a, b): return int(a.get("current_bp", 0)) < int(b.get("current_bp", 0)))
+		var target = candidates[0]
+		_log("[AI TARGETING - NORMAL] %s evaluates hero threats: selects %s (%s, %d BP, %d Defend Dice) based on balanced proximity and combat threat." % [
+			m_name, str(target.get("name")), str(target.get("class", "hero")).capitalize(),
+			int(target.get("current_bp", 0)), get_hero_defend_dice(target)
+		])
+		return target
 
 func dm_cast_spell_on_hero(m: Dictionary, spell_id: String, target_hero: Dictionary) -> Dictionary:
 	if m.is_empty() or target_hero.is_empty():
@@ -10857,17 +11035,40 @@ func dm_cast_spell_on_hero(m: Dictionary, spell_id: String, target_hero: Diction
 	elif "fire" in s_clean or "flame" in s_clean:
 		spawn_projectile_vfx(m_pos, h_pos, Color(1.0, 0.4, 0.1), 0.35, "fire_burst")
 		spawn_burst_vfx(h_screen, Color(1.0, 0.45, 0.1), 40.0, 0.4)
+	elif "sleep" in s_clean:
+		spawn_burst_vfx(h_screen, Color(0.4, 0.3, 0.9), 40.0, 0.5)
+		spawn_floating_text(h_pos, "SLEEP!", Color(0.4, 0.4, 1.0))
+	elif "cloud" in s_clean or "chaos" in s_clean:
+		spawn_burst_vfx(h_screen, Color(0.6, 0.1, 0.7), 45.0, 0.5)
+		spawn_floating_text(h_pos, "STUNNED!", Color(0.7, 0.2, 0.8))
+	elif "rust" in s_clean:
+		spawn_burst_vfx(h_screen, Color(0.7, 0.4, 0.1), 35.0, 0.4)
+		spawn_floating_text(h_pos, "RUST!", Color(0.8, 0.5, 0.1))
 	else:
 		spawn_beam_vfx(m_screen, h_screen, Color(0.8, 0.2, 0.8), 0.35)
 		spawn_burst_vfx(h_screen, Color(0.8, 0.2, 0.9), 35.0, 0.4)
 
 	var res: Dictionary = { "success": true, "spell": s_clean, "spell_name": spell_name, "caster": m.get("id"), "target": target_hero.get("id") }
 
+	# Status effect spells
+	if "sleep" in s_clean:
+		target_hero["is_sleeping"] = true
+		_log("[DREAD SPELL EFFECT] %s falls into deep enchanted slumber! Cannot move, attack, or defend until awakened." % h_name)
+	elif "cloud" in s_clean or "chaos" in s_clean:
+		target_hero["tempest_stunned"] = true
+		_log("[DREAD SPELL EFFECT] %s is choked by Cloud of Chaos! Hero is stunned and misses next turn." % h_name)
+	elif "fear" in s_clean:
+		target_hero["fear_active"] = true
+		_log("[DREAD SPELL EFFECT] %s's courage shatters in terror! Hero attacks with only 1 combat die on next turn." % h_name)
+	elif "rust" in s_clean:
+		target_hero["rust_active"] = true
+		_log("[DREAD SPELL EFFECT] %s's steel equipment is corroded by dark acid!" % h_name)
+
 	var atk_dice = int(spell.get("damage", 2))
 	if "lightning" in s_clean:
 		atk_dice = 3
 	elif "fire" in s_clean:
-		atk_dice = 2
+		atk_dice = 3
 	elif "fear" in s_clean:
 		atk_dice = 1
 
@@ -10983,6 +11184,8 @@ func find_best_monster_attack_plan(m: Dictionary, max_moves: int, forced_target_
 	if not adjacent_heroes.is_empty():
 		if difficulty_mode == "hard":
 			adjacent_heroes.sort_custom(func(a, b): return _is_hero_more_vulnerable(a, b))
+		elif difficulty_mode == "easy":
+			adjacent_heroes.sort_custom(func(a, b): return int(a.get("current_bp", 0)) > int(b.get("current_bp", 0)))
 		else:
 			adjacent_heroes.sort_custom(func(a, b): return int(a.get("current_bp", 0)) < int(b.get("current_bp", 0)))
 		var primary_target = adjacent_heroes[0]
@@ -11051,6 +11254,14 @@ func find_best_monster_attack_plan(m: Dictionary, max_moves: int, forced_target_
 					return a_vuln
 				return a["path_len"] < b["path_len"]
 			)
+		elif difficulty_mode == "easy":
+			candidate_routes.sort_custom(func(a, b):
+				if a["can_reach_now"] != b["can_reach_now"]:
+					return a["can_reach_now"]
+				if a["hero_bp"] != b["hero_bp"]:
+					return a["hero_bp"] > b["hero_bp"]
+				return a["path_len"] < b["path_len"]
+			)
 		else:
 			candidate_routes.sort_custom(func(a, b):
 				if a["can_reach_now"] != b["can_reach_now"]:
@@ -11088,6 +11299,8 @@ func find_best_monster_attack_plan(m: Dictionary, max_moves: int, forced_target_
 				can_attack = true
 				if difficulty_mode == "hard":
 					adj_h.sort_custom(func(a, b): return _is_hero_more_vulnerable(a, b))
+				elif difficulty_mode == "easy":
+					adj_h.sort_custom(func(a, b): return int(a.get("current_bp", 0)) > int(b.get("current_bp", 0)))
 				else:
 					adj_h.sort_custom(func(a, b): return int(a.get("current_bp", 0)) < int(b.get("current_bp", 0)))
 				final_target = adj_h[0]
@@ -11199,8 +11412,9 @@ func _execute_single_monster_action(m: Dictionary) -> int:
 	var dist = absi(h_pos.x - curr_pos.x) + absi(h_pos.y - curr_pos.y)
 	var is_adjacent = (dist == 1 and not has_wall_between(curr_pos, h_pos) and int(target_h.get("current_bp", 0)) > 0)
 	var is_boss = is_boss_monster(m)
+	var is_caster = is_boss or bool(m.get("isSpellcaster", false)) or get_monster_available_spells(m).size() > 0
 
-	if is_boss:
+	if is_caster:
 		var decision = boss_decide_spell_or_attack(m, target_h, is_adjacent)
 		if decision.action == "spell":
 			var sp_name = HeroQuestSpells.get_spell(decision.spell).get("name", decision.spell.capitalize())
@@ -11217,6 +11431,10 @@ func _execute_single_monster_action(m: Dictionary) -> int:
 				_log("[HARD MODE TACTICS] %s focuses on %s (weakest target: %d BP, %d Defend Dice) to maximize damage!" % [
 					m.get("name"), target_h.get("name"), int(target_h.get("current_bp", 0)), get_hero_defend_dice(target_h)
 				])
+			elif difficulty_mode == "easy":
+				_log("[AI TARGETING - EASY] %s engages %s (frontline tank: %d BP) to spare wounded heroes." % [
+					m.get("name"), target_h.get("name"), int(target_h.get("current_bp", 0))
+				])
 			_log("[MONSTER] %s engages and attacks %s!" % [m.get("name"), target_h.get("name")])
 			dm_attack_hero(str(target_h.get("id", "")), m)
 			acts += 1
@@ -11227,6 +11445,10 @@ func _execute_single_monster_action(m: Dictionary) -> int:
 			if difficulty_mode == "hard":
 				_log("[HARD MODE TACTICS] %s focuses on %s (weakest target: %d BP, %d Defend Dice) to maximize damage!" % [
 					m.get("name"), target_h.get("name"), int(target_h.get("current_bp", 0)), get_hero_defend_dice(target_h)
+				])
+			elif difficulty_mode == "easy":
+				_log("[AI TARGETING - EASY] %s engages %s (frontline tank: %d BP) to spare wounded heroes." % [
+					m.get("name"), target_h.get("name"), int(target_h.get("current_bp", 0))
 				])
 			_log("[MONSTER] %s engages and attacks %s!" % [m.get("name"), target_h.get("name")])
 			dm_attack_hero(str(target_h.get("id", "")), m)
@@ -11324,7 +11546,8 @@ func _process_enemy_turn(delta: float) -> void:
 					enemy_target_hero = attack_target
 
 			var is_boss = is_boss_monster(acting_m)
-			if is_boss:
+			var is_caster = is_boss or bool(acting_m.get("isSpellcaster", false)) or get_monster_available_spells(acting_m).size() > 0
+			if is_caster:
 				var decision = boss_decide_spell_or_attack(acting_m, attack_target, target_valid)
 				if decision.action == "spell":
 					var sp_target = attack_target if not attack_target.is_empty() else _find_best_spell_target_hero(acting_m)
@@ -11347,6 +11570,10 @@ func _process_enemy_turn(delta: float) -> void:
 						_log("[HARD MODE TACTICS] %s focuses on %s (weakest target: %d BP, %d Defend Dice) to maximize damage!" % [
 							acting_m.get("name"), attack_target.get("name"), int(attack_target.get("current_bp", 0)), get_hero_defend_dice(attack_target)
 						])
+					elif difficulty_mode == "easy":
+						_log("[AI TARGETING - EASY] %s engages %s (frontline tank: %d BP) to spare wounded heroes." % [
+							acting_m.get("name"), attack_target.get("name"), int(attack_target.get("current_bp", 0))
+						])
 					_log("[MONSTER] %s engages and attacks %s!" % [acting_m.get("name"), attack_target.get("name")])
 					dm_attack_hero(str(attack_target.get("id", "")), acting_m)
 					enemy_turn_stage = "waiting_for_action"
@@ -11359,6 +11586,10 @@ func _process_enemy_turn(delta: float) -> void:
 					if difficulty_mode == "hard":
 						_log("[HARD MODE TACTICS] %s focuses on %s (weakest target: %d BP, %d Defend Dice) to maximize damage!" % [
 							acting_m.get("name"), attack_target.get("name"), int(attack_target.get("current_bp", 0)), get_hero_defend_dice(attack_target)
+						])
+					elif difficulty_mode == "easy":
+						_log("[AI TARGETING - EASY] %s engages %s (frontline tank: %d BP) to spare wounded heroes." % [
+							acting_m.get("name"), attack_target.get("name"), int(attack_target.get("current_bp", 0))
 						])
 					_log("[MONSTER] %s engages and attacks %s!" % [acting_m.get("name"), attack_target.get("name")])
 					dm_attack_hero(str(attack_target.get("id", "")), acting_m)
@@ -11550,6 +11781,8 @@ func skip_enemy_turn_timeout() -> Dictionary:
 			if not potential_targets.is_empty():
 				if difficulty_mode == "hard":
 					potential_targets.sort_custom(func(a, b): return _is_hero_more_vulnerable(a, b))
+				elif difficulty_mode == "easy":
+					potential_targets.sort_custom(func(a, b): return int(a.get("current_bp", 0)) > int(b.get("current_bp", 0)))
 				else:
 					potential_targets.sort_custom(func(a, b): return int(a.get("current_bp", 0)) < int(b.get("current_bp", 0)))
 				attack_target = potential_targets[0]
@@ -11562,6 +11795,10 @@ func skip_enemy_turn_timeout() -> Dictionary:
 			if difficulty_mode == "hard":
 				_log("[HARD MODE TACTICS] %s focuses on %s (weakest target: %d BP, %d Defend Dice) to maximize damage!" % [
 					acting_m.get("name"), attack_target.get("name"), int(attack_target.get("current_bp", 0)), get_hero_defend_dice(attack_target)
+				])
+			elif difficulty_mode == "easy":
+				_log("[AI TARGETING - EASY] %s engages %s (frontline tank: %d BP) to spare wounded heroes." % [
+					acting_m.get("name"), attack_target.get("name"), int(attack_target.get("current_bp", 0))
 				])
 			_log("[MONSTER] %s engages and attacks %s!" % [acting_m.get("name"), attack_target.get("name")])
 			dm_attack_hero(str(attack_target.get("id", "")), acting_m)
@@ -15307,6 +15544,8 @@ func get_telemetry_state() -> Dictionary:
 		"difficulty_mode": difficulty_mode,
 		"isHardMode": difficulty_mode == "hard",
 		"is_hard_mode": difficulty_mode == "hard",
+		"activeQuestSlug": str(get_active_quest_objective().get("slug", CartridgeManager.current_cartridge_slug)),
+		"active_quest_slug": str(get_active_quest_objective().get("slug", CartridgeManager.current_cartridge_slug)),
 		"aiEngine": "Mentor Autonomous Party Harness vs Zargon DM",
 		"aiRole": "autonomous_player",
 		"hasStartingStairTexture": (get_tile_texture("stairs") != null),
@@ -16014,8 +16253,13 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 									h[k] = h_patch[k]
 							break
 			if action_data.has("difficulty_mode") or action_data.has("difficulty"):
-				var d_val = str(action_data.get("difficulty_mode", action_data.get("difficulty", "normal"))).to_lower()
-				difficulty_mode = "hard" if (d_val == "hard" or d_val == "hard_mode") else "normal"
+				var d_val = str(action_data.get("difficulty_mode", action_data.get("difficulty", "normal"))).to_lower().strip_edges()
+				if d_val == "hard" or d_val == "hard_mode" or d_val == "nightmare":
+					difficulty_mode = "hard"
+				elif d_val == "easy" or d_val == "casual":
+					difficulty_mode = "easy"
+				else:
+					difficulty_mode = "normal"
 			if action_data.has("is_hard_mode") or action_data.has("isHardMode"):
 				difficulty_mode = "hard" if bool(action_data.get("is_hard_mode", action_data.get("isHardMode", false))) else "normal"
 			if action_data.has("clearMonsters") and bool(action_data.get("clearMonsters")):
@@ -16447,6 +16691,8 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			var d_mode = str(action_data.get("difficulty", action_data.get("mode", "normal"))).to_lower().strip_edges()
 			if d_mode == "hard" or d_mode == "hard_mode" or d_mode == "nightmare":
 				difficulty_mode = "hard"
+			elif d_mode == "easy" or d_mode == "casual":
+				difficulty_mode = "easy"
 			else:
 				difficulty_mode = "normal"
 			_log("[DIFFICULTY] Game difficulty set to: %s" % difficulty_mode.to_upper())
