@@ -79,7 +79,7 @@ class TestQuestObjectiveModalE2E(unittest.TestCase):
 
     def test_01_review_quest_objective_button_in_header(self):
         print("\n==========================================================================================")
-        print("📜 SCENARIO 01: 'Review Quest Objective' button is present on the main header bar")
+        print("📜 SCENARIO 01: 'Review Objective' button is present on the main header bar")
         print("==========================================================================================")
 
         self._start_game()
@@ -99,8 +99,14 @@ class TestQuestObjectiveModalE2E(unittest.TestCase):
                       f"BtnReviewQuestObjective was not found in header buttons! Found: {header_btns}")
         self.assertIn("BtnGameMenu", header_btns,
                       f"BtnGameMenu was not found in header buttons! Found: {header_btns}")
+
+        btn_info = scene_ui.get("buttons", {}).get("review_objective", {})
+        self.assertEqual(btn_info.get("text"), "Review Objective",
+                         f"Expected button text 'Review Objective', got: '{btn_info.get('text')}'")
+
         print(f"    ✔  [ASSERTION]  Header buttons: {header_btns}")
-        print("    ✔  [ASSERTION]  'BtnReviewQuestObjective' is present on the main screen header")
+        print(f"    ✔  [ASSERTION]  Button text: '{btn_info.get('text')}'")
+        print("    ✔  [ASSERTION]  'BtnReviewQuestObjective' is present on the main screen header with label 'Review Objective'")
 
     def test_02_open_inspect_and_close_quest_objective_modal(self):
         print("\n==========================================================================================")

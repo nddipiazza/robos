@@ -580,6 +580,12 @@ class TabletopQAPlayer:
         self.log("Opening Quest Objective Modal...")
         return self.execute_action("open_quest_objective")
 
+    def review_objective(self) -> dict:
+        return self.open_quest_objective()
+
+    def review_quest_objective(self) -> dict:
+        return self.open_quest_objective()
+
     def close_quest_objective(self) -> dict:
         self.log("Closing Quest Objective Modal...")
         return self.execute_action("close_quest_objective")
