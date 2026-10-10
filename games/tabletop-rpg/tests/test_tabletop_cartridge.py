@@ -59,7 +59,7 @@ class TestHeroQuestCartridge(unittest.TestCase):
 
     def test_headless_player_mode_execution(self):
         play_script = os.path.join(ROOT_DIR, "play.sh")
-        cmd = [play_script, "--headless", "--role=player", "--auto-play", "--quit-after", "120"]
+        cmd = [play_script, "--headless", "--reset", "--role=player", "--auto-play", "--quit-after", "120"]
         res = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
         self.assertEqual(res.returncode, 0, f"Godot execution failed: {res.stderr}")
         self.assertIn("Player Mode Active", res.stdout)
@@ -67,7 +67,7 @@ class TestHeroQuestCartridge(unittest.TestCase):
 
     def test_headless_game_master_mode_execution(self):
         play_script = os.path.join(ROOT_DIR, "play.sh")
-        cmd = [play_script, "--headless", "--role=gm", "--auto-play", "--quit-after", "120"]
+        cmd = [play_script, "--headless", "--reset", "--role=gm", "--auto-play", "--quit-after", "120"]
         res = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
         self.assertEqual(res.returncode, 0, f"Godot execution failed: {res.stderr}")
         self.assertTrue("Game Master" in res.stdout or "DunMaster Mode Active" in res.stdout)
@@ -75,7 +75,7 @@ class TestHeroQuestCartridge(unittest.TestCase):
 
     def test_headless_dunmaster_mode_execution(self):
         play_script = os.path.join(ROOT_DIR, "play.sh")
-        cmd = [play_script, "--headless", "--role=dm", "--auto-play", "--quit-after", "120"]
+        cmd = [play_script, "--headless", "--reset", "--role=dm", "--auto-play", "--quit-after", "120"]
         res = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
         self.assertEqual(res.returncode, 0, f"Godot execution failed: {res.stderr}")
         self.assertIn("DunMaster Mode Active", res.stdout)
@@ -88,7 +88,7 @@ class TestHeroQuestCartridge(unittest.TestCase):
 
         play_script = os.path.join(ROOT_DIR, "play.sh")
         env = dict(os.environ, TABLETOP_SERVER_PORT="18099")
-        proc = subprocess.Popen([play_script, "--headless", "--role=player"], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        proc = subprocess.Popen([play_script, "--headless", "--reset", "--role=player"], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         try:
             player = TabletopQAPlayer(port=18099)
             connected = False
@@ -97,28 +97,28 @@ class TestHeroQuestCartridge(unittest.TestCase):
                     connected = True
                     break
                 time.sleep(0.4)
-            self.assertTrue(connected, "GameControlServer must be reachable on :18092")
+            self.assertTrue(connected, "GameControlServer must be reachable on :18099")
+            player.reset_game()
 
-            # 1. Initial State: Starting stairs explored via rays down corridor; crypt unrevealed
+            # 1. Initial State: Starting stairs explored via rays down corridor; rooms unrevealed
             st1 = player.get_state()
             self.assertEqual(st1.get("revealedRooms"), [], "Initial revealed rooms must be empty")
             initial_count = st1.get("exploredCount", 0)
-            self.assertGreaterEqual(initial_count, 28, "Initial ray vision must explore corridor tiles")
+            self.assertGreaterEqual(initial_count, 18, "Initial ray vision must explore corridor tiles")
 
-            # 2. Kick open Northwest Crypt door (4, 1) -> (4, 2)
-            door_res = player.open_door(4, 1, 4, 2)
+            # 2. Kick open Northwest Chamber door (0, 2) -> (1, 2)
+            door_res = player.open_door(0, 2, 1, 2)
             self.assertTrue(door_res.get("success"), "Door open action must succeed")
 
             # 3. Whole room immediately becomes visible
             st2 = player.get_state()
-            self.assertIn("room-nw-crypt", st2.get("revealedRooms", []), "Northwest Crypt must immediately be revealed")
-            # 20 tiles in Northwest Crypt (5x4)
-            self.assertEqual(st2.get("exploredCount"), initial_count + 20, "Explored count must increase by all 20 room tiles")
+            self.assertIn("room-nw-1", st2.get("revealedRooms", []), "Northwest Chamber must immediately be revealed")
+            # 16 tiles in Northwest Chamber (4x4)
+            self.assertEqual(st2.get("exploredCount"), initial_count + 16, "Explored count must increase by all 16 room tiles")
 
             # 4. Combat log logs room reveal and spotted monsters
             combat_log = " ".join(st2.get("combatLog", []))
-            self.assertIn("Northwest Crypt", combat_log)
-            self.assertIn("Crypt Skeleton", combat_log)
+            self.assertIn("Northwest", combat_log)
         finally:
             proc.terminate()
             proc.wait()

@@ -1,0 +1,1593 @@
+{
+  "cartridgeVersion": "2.0.0",
+  "cartridgeId": "heroquest-fortress-fire-king",
+  "header": {
+    "title": "HeroQuest: The Fortress of the Fire King",
+    "slug": "heroquest-fortress-fire-king",
+    "author": "RobOS Tabletop Studio",
+    "gameType": "tabletop",
+    "genre": "Tabletop Dungeon Crawler",
+    "ruleset": "heroquest",
+    "description": "Mentor sends the heroes beyond the Tul Vor to find the secret mountain passage in the ruins of Forgrin the Fire King's dwarven fortress before Witch Queen Cassandria's forces.",
+    "coverColor": "#b91c1c",
+    "icon": "\ud83d\udd25",
+    "mapCount": 1,
+    "heroCount": 4,
+    "monsterCount": 28,
+    "spellCount": 12,
+    "itemCount": 8,
+    "questCount": 1,
+    "startingMap": "fortress-fire-king",
+    "startingPosition": [
+      0,
+      1
+    ],
+    "createdDate": "2026-10-10T20:55:00.000Z"
+  },
+  "heroes": {
+    "wizard": {
+      "id": "wizard",
+      "name": "Curious",
+      "slug": "wizard",
+      "heroClass": "Wizard",
+      "bodyPoints": 4,
+      "mindPoints": 6,
+      "attackDice": 1,
+      "defendDice": 2,
+      "movement": 8,
+      "gold": 100,
+      "weapon": "Wizard Staff (1 Combat Die)",
+      "armor": "Wizard Cloak (2 Defend Dice)",
+      "tokenColor": "#1d4ed8",
+      "position": [
+        0,
+        1
+      ],
+      "inventory": [
+        {
+          "id": "item-pot-def-1",
+          "name": "Potion of Defense",
+          "type": "potion",
+          "effect": "Grants +2 extra Defend Dice during the next combat encounter.",
+          "value": 200
+        },
+        {
+          "id": "item-bless-oracle-1",
+          "name": "Blessing of Oracle",
+          "type": "relic",
+          "effect": "Allows the hero to reroll any single failed combat or movement die once per quest.",
+          "value": 300
+        }
+      ],
+      "spells": [
+        {
+          "id": "urn:robos:tabletop:spell:ball-of-flame",
+          "slug": "ball-of-flame",
+          "name": "Ball of Flame",
+          "element": "fire",
+          "icon": "\u2604\ufe0f",
+          "val": 2,
+          "effect": "damage-bp",
+          "description": "Hurls a blazing sphere dealing 2 BP damage."
+        },
+        {
+          "id": "urn:robos:tabletop:spell:courage",
+          "slug": "courage",
+          "name": "Courage",
+          "element": "fire",
+          "icon": "\ud83e\udd81",
+          "val": 2,
+          "effect": "buff-atk",
+          "description": "Grants +2 extra Combat Attack Dice until no monsters remain."
+        },
+        {
+          "id": "urn:robos:tabletop:spell:fire-of-wrath",
+          "slug": "fire-of-wrath",
+          "name": "Fire of Wrath",
+          "element": "fire",
+          "icon": "\ud83d\udd25",
+          "val": 1,
+          "effect": "damage-bp",
+          "description": "Strikes any visible monster with darts of flame."
+        },
+        {
+          "id": "urn:robos:tabletop:spell:water-of-healing",
+          "slug": "water-of-healing",
+          "name": "Water of Healing",
+          "element": "water",
+          "icon": "\ud83d\udca7",
+          "val": 4,
+          "effect": "heal-bp",
+          "description": "Restores up to 4 lost Body Points to any Hero."
+        },
+        {
+          "id": "urn:robos:tabletop:spell:sleep",
+          "slug": "sleep",
+          "name": "Sleep",
+          "element": "water",
+          "icon": "\ud83d\udca4",
+          "val": 1,
+          "effect": "status-sleep",
+          "description": "Puts a monster into magical slumber."
+        },
+        {
+          "id": "urn:robos:tabletop:spell:veil-of-mist",
+          "slug": "veil-of-mist",
+          "name": "Veil of Mist",
+          "element": "water",
+          "icon": "\ud83c\udf2b\ufe0f",
+          "val": 1,
+          "effect": "status-stealth",
+          "description": "Envelops caster in thick fog, allowing movement past monsters."
+        },
+        {
+          "id": "urn:robos:tabletop:spell:genie",
+          "slug": "genie",
+          "name": "Genie",
+          "element": "air",
+          "icon": "\ud83e\uddde",
+          "val": 5,
+          "effect": "summon-attack",
+          "description": "Summons djinn to attack visible monster with 5 combat dice or open locked door."
+        },
+        {
+          "id": "urn:robos:tabletop:spell:swift-wind",
+          "slug": "swift-wind",
+          "name": "Swift Wind",
+          "element": "air",
+          "icon": "\ud83d\udca8",
+          "val": 2,
+          "effect": "buff-move",
+          "description": "Bestows double movement dice (4d6)."
+        },
+        {
+          "id": "urn:robos:tabletop:spell:tempest",
+          "slug": "tempest",
+          "name": "Tempest",
+          "element": "air",
+          "icon": "\ud83c\udf2a\ufe0f",
+          "val": 1,
+          "effect": "status-freeze",
+          "description": "Traps a monster for 1 turn; misses next turn."
+        }
+      ]
+    },
+    "elf": {
+      "id": "elf",
+      "name": "Shawnti",
+      "slug": "elf",
+      "heroClass": "Elf",
+      "bodyPoints": 6,
+      "mindPoints": 5,
+      "attackDice": 4,
+      "defendDice": 3,
+      "movement": 8,
+      "gold": 150,
+      "weapon": "Battle Axe (4 Combat Dice)",
+      "armor": "Helmet (+1 Defend Die)",
+      "tokenColor": "#15803d",
+      "position": [
+        0,
+        1
+      ],
+      "inventory": [
+        {
+          "id": "item-talisman-lore",
+          "name": "Talisman of Lore",
+          "type": "artifact",
+          "effect": "Grants +1 Mind Point and allows the hero to sense magical traps automatically.",
+          "value": 400
+        },
+        {
+          "id": "item-bless-oracle-2",
+          "name": "Blessing of Oracle",
+          "type": "relic",
+          "effect": "Allows the hero to reroll any single failed combat or movement die once per quest.",
+          "value": 300
+        },
+        {
+          "id": "item-ring-fortitude-equipped",
+          "name": "Ring of Fortitude",
+          "type": "artifact",
+          "effect": "Infuses the wearer with ancient vigor, granting +1 extra Body Point capacity.",
+          "value": 500
+        }
+      ],
+      "spells": [
+        {
+          "id": "urn:robos:tabletop:spell:heal-body",
+          "slug": "heal-body",
+          "name": "Heal Body",
+          "element": "earth",
+          "icon": "\ud83d\udc96",
+          "val": 4,
+          "effect": "heal-bp",
+          "description": "Restores up to 4 lost Body Points to any Hero."
+        },
+        {
+          "id": "urn:robos:tabletop:spell:pass-through-rock",
+          "slug": "pass-through-rock",
+          "name": "Pass Through Rock",
+          "element": "earth",
+          "icon": "\ud83e\uddf1",
+          "val": 1,
+          "effect": "phase-walls",
+          "description": "Allows moving through solid stone walls on next turn."
+        },
+        {
+          "id": "urn:robos:tabletop:spell:rock-skin",
+          "slug": "rock-skin",
+          "name": "Rock Skin",
+          "element": "earth",
+          "icon": "\ud83d\udee1\ufe0f",
+          "val": 1,
+          "effect": "buff-def",
+          "description": "Grants +1 extra Combat Defend Die until damaged."
+        }
+      ]
+    },
+    "dwarf": {
+      "id": "dwarf",
+      "name": "Rufus",
+      "slug": "dwarf",
+      "heroClass": "Dwarf",
+      "bodyPoints": 7,
+      "mindPoints": 3,
+      "attackDice": 3,
+      "defendDice": 3,
+      "movement": 8,
+      "gold": 200,
+      "weapon": "Broadsword (3 Combat Dice)",
+      "armor": "Helmet (+1 Defend Die)",
+      "tokenColor": "#b45309",
+      "position": [
+        0,
+        1
+      ],
+      "inventory": [
+        {
+          "id": "item-toolkit-1",
+          "name": "Tool Kit",
+          "type": "tool",
+          "effect": "Allows disarming any discovered trap on a roll of anything except a skull.",
+          "value": 250
+        }
+      ],
+      "spells": []
+    },
+    "barbarian": {
+      "id": "barbarian",
+      "name": "Axel",
+      "slug": "barbarian",
+      "heroClass": "Barbarian",
+      "bodyPoints": 8,
+      "mindPoints": 2,
+      "attackDice": 4,
+      "defendDice": 3,
+      "movement": 8,
+      "gold": 925,
+      "weapon": "Battle Axe (4 Combat Dice)",
+      "armor": "Helmet (+1 Defend Die)",
+      "tokenColor": "#b91c1c",
+      "position": [
+        0,
+        1
+      ],
+      "inventory": [
+        {
+          "id": "item-hearthskin-horn",
+          "name": "The Hearthskin Horn",
+          "type": "artifact",
+          "effect": "When blown, summons friendly skeletons for all heroes in line of sight (Move: 8, Atk: 2, Def: 2, BP: 1, MP: 0).",
+          "value": 600
+        }
+      ],
+      "spells": []
+    }
+  },
+  "monsters": {
+    "mon-note-a-orc": {
+      "id": "mon-note-a-orc",
+      "slug": "orc-courier",
+      "name": "Cassandria's Orc Courier",
+      "position": [
+        4,
+        0
+      ],
+      "roomId": "corridor",
+      "movementSquares": 6,
+      "attackDice": 3,
+      "defendDice": 2,
+      "bodyPoints": 1,
+      "isBoss": false,
+      "isUndead": false,
+      "isSpellcaster": false,
+      "spells": [],
+      "note": "A",
+      "flavor": "Bears Cassandria's pale-skull-and-ruby-eyes emblem."
+    },
+    "mon-note-a-goblin": {
+      "id": "mon-note-a-goblin",
+      "slug": "goblin-carrier",
+      "name": "Cassandria's Goblin Carrier",
+      "position": [
+        5,
+        0
+      ],
+      "roomId": "corridor",
+      "movementSquares": 10,
+      "attackDice": 2,
+      "defendDice": 1,
+      "bodyPoints": 1,
+      "isBoss": false,
+      "isUndead": false,
+      "isSpellcaster": false,
+      "spells": [],
+      "note": "A"
+    },
+    "mon-note-b-orc": {
+      "id": "mon-note-b-orc",
+      "slug": "orc-pillager",
+      "name": "Orc Pillager",
+      "position": [
+        9,
+        3
+      ],
+      "roomId": "room-nw-3",
+      "movementSquares": 6,
+      "attackDice": 3,
+      "defendDice": 2,
+      "bodyPoints": 1,
+      "isBoss": false,
+      "isUndead": false,
+      "isSpellcaster": false,
+      "spells": [],
+      "note": "B"
+    },
+    "mon-note-b-gob-1": {
+      "id": "mon-note-b-gob-1",
+      "slug": "goblin-scavenger-1",
+      "name": "Goblin Scavenger",
+      "position": [
+        10,
+        2
+      ],
+      "roomId": "room-nw-3",
+      "movementSquares": 10,
+      "attackDice": 2,
+      "defendDice": 1,
+      "bodyPoints": 1,
+      "isBoss": false,
+      "isUndead": false,
+      "isSpellcaster": false,
+      "spells": [],
+      "note": "B"
+    },
+    "mon-note-b-gob-2": {
+      "id": "mon-note-b-gob-2",
+      "slug": "goblin-scavenger-2",
+      "name": "Goblin Scavenger",
+      "position": [
+        11,
+        3
+      ],
+      "roomId": "room-nw-3",
+      "movementSquares": 10,
+      "attackDice": 2,
+      "defendDice": 1,
+      "bodyPoints": 1,
+      "isBoss": false,
+      "isUndead": false,
+      "isSpellcaster": false,
+      "spells": [],
+      "note": "B"
+    },
+    "mon-note-c-doomguard": {
+      "id": "mon-note-c-doomguard",
+      "slug": "cassandria-doomguard",
+      "name": "Cassandria's Doomguard",
+      "position": [
+        6,
+        7
+      ],
+      "roomId": "room-nw-5",
+      "movementSquares": 8,
+      "attackDice": 4,
+      "defendDice": 6,
+      "bodyPoints": 3,
+      "mindPoints": 3,
+      "isBoss": true,
+      "isUndead": false,
+      "isSpellcaster": false,
+      "spells": [],
+      "note": "C",
+      "flavor": "An elite Dread Warrior encased in jagged obsidian armor, bearing Cassandria's dread sigils."
+    },
+    "mon-note-c-orc": {
+      "id": "mon-note-c-orc",
+      "slug": "doomguard-attendant-orc",
+      "name": "Orc Attendant",
+      "position": [
+        7,
+        7
+      ],
+      "roomId": "room-nw-5",
+      "movementSquares": 6,
+      "attackDice": 3,
+      "defendDice": 2,
+      "bodyPoints": 1,
+      "isBoss": false,
+      "isUndead": false,
+      "isSpellcaster": false,
+      "spells": [],
+      "note": "C"
+    },
+    "mon-note-d-goblin": {
+      "id": "mon-note-d-goblin",
+      "slug": "vault-goblin",
+      "name": "Vault Goblin Scout",
+      "position": [
+        16,
+        7
+      ],
+      "roomId": "room-ne-sub-left",
+      "movementSquares": 10,
+      "attackDice": 2,
+      "defendDice": 1,
+      "bodyPoints": 1,
+      "isBoss": false,
+      "isUndead": false,
+      "isSpellcaster": false,
+      "spells": [],
+      "note": "D"
+    },
+    "mon-note-d-orc": {
+      "id": "mon-note-d-orc",
+      "slug": "vault-orc",
+      "name": "Vault Orc Sentry",
+      "position": [
+        19,
+        7
+      ],
+      "roomId": "room-ne-sub-right",
+      "movementSquares": 6,
+      "attackDice": 3,
+      "defendDice": 2,
+      "bodyPoints": 1,
+      "isBoss": false,
+      "isUndead": false,
+      "isSpellcaster": false,
+      "spells": [],
+      "note": "D"
+    },
+    "mon-note-e-orc": {
+      "id": "mon-note-e-orc",
+      "slug": "antechamber-orc",
+      "name": "Antechamber Orc Guard",
+      "position": [
+        17,
+        3
+      ],
+      "roomId": "room-ne-2",
+      "movementSquares": 6,
+      "attackDice": 3,
+      "defendDice": 2,
+      "bodyPoints": 1,
+      "isBoss": false,
+      "isUndead": false,
+      "isSpellcaster": false,
+      "spells": [],
+      "note": "E"
+    },
+    "mon-note-e-goblin": {
+      "id": "mon-note-e-goblin",
+      "slug": "antechamber-goblin",
+      "name": "Antechamber Goblin Sneak",
+      "position": [
+        18,
+        3
+      ],
+      "roomId": "room-ne-2",
+      "movementSquares": 10,
+      "attackDice": 2,
+      "defendDice": 1,
+      "bodyPoints": 1,
+      "isBoss": false,
+      "isUndead": false,
+      "isSpellcaster": false,
+      "spells": [],
+      "note": "E"
+    },
+    "mon-note-f-witch-hand": {
+      "id": "mon-note-f-witch-hand",
+      "slug": "cassandria-witch-hand",
+      "name": "Witch Hand of Cassandria",
+      "position": [
+        11,
+        8
+      ],
+      "roomId": "room-center",
+      "movementSquares": 8,
+      "attackDice": 4,
+      "defendDice": 4,
+      "bodyPoints": 4,
+      "mindPoints": 3,
+      "isBoss": true,
+      "isUndead": true,
+      "isSpellcaster": true,
+      "spells": [
+        "cloud-of-chaos",
+        "fear",
+        "sleep-dread"
+      ],
+      "note": "F",
+      "phaseWalls": true,
+      "flavor": "A pale sorceress of Cassandria chanting foul incantations amidst freezing mists."
+    },
+    "mon-note-f-skel-1": {
+      "id": "mon-note-f-skel-1",
+      "slug": "mist-skeleton-1",
+      "name": "Mist-Spawned Skeleton",
+      "position": [
+        10,
+        7
+      ],
+      "roomId": "room-center",
+      "movementSquares": 6,
+      "attackDice": 2,
+      "defendDice": 2,
+      "bodyPoints": 1,
+      "isBoss": false,
+      "isUndead": true,
+      "phaseWalls": true,
+      "note": "F"
+    },
+    "mon-note-f-skel-2": {
+      "id": "mon-note-f-skel-2",
+      "slug": "mist-skeleton-2",
+      "name": "Mist-Spawned Skeleton",
+      "position": [
+        13,
+        7
+      ],
+      "roomId": "room-center",
+      "movementSquares": 6,
+      "attackDice": 2,
+      "defendDice": 2,
+      "bodyPoints": 1,
+      "isBoss": false,
+      "isUndead": true,
+      "phaseWalls": true,
+      "note": "F"
+    },
+    "mon-note-f-skel-3": {
+      "id": "mon-note-f-skel-3",
+      "slug": "mist-skeleton-3",
+      "name": "Mist-Spawned Skeleton",
+      "position": [
+        12,
+        10
+      ],
+      "roomId": "room-center",
+      "movementSquares": 6,
+      "attackDice": 2,
+      "defendDice": 2,
+      "bodyPoints": 1,
+      "isBoss": false,
+      "isUndead": true,
+      "phaseWalls": true,
+      "note": "F"
+    },
+    "mon-note-f-mummy-1": {
+      "id": "mon-note-f-mummy-1",
+      "slug": "mist-mummy-1",
+      "name": "Dwarven Tomb Mummy",
+      "position": [
+        10,
+        10
+      ],
+      "roomId": "room-center",
+      "movementSquares": 4,
+      "attackDice": 3,
+      "defendDice": 4,
+      "bodyPoints": 2,
+      "isBoss": false,
+      "isUndead": true,
+      "phaseWalls": true,
+      "note": "F"
+    },
+    "mon-note-f-mummy-2": {
+      "id": "mon-note-f-mummy-2",
+      "slug": "mist-mummy-2",
+      "name": "Dwarven Tomb Mummy",
+      "position": [
+        13,
+        10
+      ],
+      "roomId": "room-center",
+      "movementSquares": 4,
+      "attackDice": 3,
+      "defendDice": 4,
+      "bodyPoints": 2,
+      "isBoss": false,
+      "isUndead": true,
+      "phaseWalls": true,
+      "note": "F"
+    },
+    "mon-note-g-dread-1": {
+      "id": "mon-note-g-dread-1",
+      "slug": "dread-warrior-throne-1",
+      "name": "Dread Warrior Guardian",
+      "position": [
+        21,
+        15
+      ],
+      "roomId": "room-se-5",
+      "movementSquares": 7,
+      "attackDice": 3,
+      "defendDice": 4,
+      "bodyPoints": 2,
+      "mindPoints": 2,
+      "isBoss": false,
+      "isUndead": false,
+      "note": "G"
+    },
+    "mon-note-g-dread-2": {
+      "id": "mon-note-g-dread-2",
+      "slug": "dread-warrior-throne-2",
+      "name": "Dread Warrior Guardian",
+      "position": [
+        22,
+        15
+      ],
+      "roomId": "room-se-5",
+      "movementSquares": 7,
+      "attackDice": 3,
+      "defendDice": 4,
+      "bodyPoints": 2,
+      "mindPoints": 2,
+      "isBoss": false,
+      "isUndead": false,
+      "note": "G"
+    },
+    "mon-crypt-skel-1": {
+      "id": "mon-crypt-skel-1",
+      "name": "Crypt Skeleton",
+      "position": [
+        6,
+        11
+      ],
+      "roomId": "room-sw-2",
+      "movementSquares": 6,
+      "attackDice": 2,
+      "defendDice": 2,
+      "bodyPoints": 1
+    },
+    "mon-crypt-skel-2": {
+      "id": "mon-crypt-skel-2",
+      "name": "Crypt Skeleton",
+      "position": [
+        7,
+        11
+      ],
+      "roomId": "room-sw-2",
+      "movementSquares": 6,
+      "attackDice": 2,
+      "defendDice": 2,
+      "bodyPoints": 1
+    },
+    "mon-crypt-skel-3": {
+      "id": "mon-crypt-skel-3",
+      "name": "Crypt Skeleton",
+      "position": [
+        7,
+        12
+      ],
+      "roomId": "room-sw-2",
+      "movementSquares": 6,
+      "attackDice": 2,
+      "defendDice": 2,
+      "bodyPoints": 1
+    },
+    "mon-garrison-gob-1": {
+      "id": "mon-garrison-gob-1",
+      "name": "Garrison Goblin",
+      "position": [
+        6,
+        15
+      ],
+      "roomId": "room-sw-4",
+      "movementSquares": 10,
+      "attackDice": 2,
+      "defendDice": 1,
+      "bodyPoints": 1
+    },
+    "mon-garrison-gob-2": {
+      "id": "mon-garrison-gob-2",
+      "name": "Garrison Goblin",
+      "position": [
+        7,
+        15
+      ],
+      "roomId": "room-sw-4",
+      "movementSquares": 10,
+      "attackDice": 2,
+      "defendDice": 1,
+      "bodyPoints": 1
+    },
+    "mon-garrison-orc": {
+      "id": "mon-garrison-orc",
+      "name": "Garrison Orc",
+      "position": [
+        6,
+        16
+      ],
+      "roomId": "room-sw-4",
+      "movementSquares": 6,
+      "attackDice": 3,
+      "defendDice": 2,
+      "bodyPoints": 1
+    },
+    "mon-patrol-gob-1": {
+      "id": "mon-patrol-gob-1",
+      "name": "Corridor Goblin Patrol",
+      "position": [
+        0,
+        8
+      ],
+      "roomId": "corridor",
+      "movementSquares": 10,
+      "attackDice": 2,
+      "defendDice": 1,
+      "bodyPoints": 1
+    },
+    "mon-patrol-gob-2": {
+      "id": "mon-patrol-gob-2",
+      "name": "Corridor Goblin Patrol",
+      "position": [
+        12,
+        18
+      ],
+      "roomId": "corridor",
+      "movementSquares": 10,
+      "attackDice": 2,
+      "defendDice": 1,
+      "bodyPoints": 1
+    },
+    "mon-patrol-gob-3": {
+      "id": "mon-patrol-gob-3",
+      "name": "Corridor Goblin Patrol",
+      "position": [
+        25,
+        9
+      ],
+      "roomId": "corridor",
+      "movementSquares": 10,
+      "attackDice": 2,
+      "defendDice": 1,
+      "bodyPoints": 1
+    }
+  },
+  "spells": {},
+  "items": {},
+  "quests": [
+    {
+      "id": "quest-4",
+      "slug": "fortress-fire-king",
+      "title": "Quest 4: The Fortress of the Fire King",
+      "briefing": "Mentor examines Visions of King Agrain, a book recovered from the temple. Sir Ragnar takes the book to deliver to Prince Magnus. Mentor sends the heroes beyond the Tul Vor to find the secret passage into the mountain in the ruins of the dwarven fortress built by Forgrin the Fire King, warning that Witch Queen Cassandria seeks it too.",
+      "goldReward": 400,
+      "completed": false,
+      "mapConfigId": "first-light-dungeon",
+      "startingPosition": [
+        0,
+        1
+      ]
+    }
+  ],
+  "maps": {
+    "fortress-fire-king": {
+      "id": "fortress-fire-king",
+      "title": "Quest 4: The Fortress of the Fire King (First Light Side A)",
+      "mapConfigurationId": "first-light-dungeon",
+      "width": 26,
+      "height": 19,
+      "backgroundImage": "res://assets/boards/heroquest_board.png",
+      "wanderingMonster": "orc",
+      "startingStair": [
+        0,
+        1
+      ],
+      "activeRooms": [
+        "room-nw-1",
+        "room-nw-2",
+        "room-nw-3",
+        "room-nw-4",
+        "room-nw-5",
+        "room-center",
+        "room-ne-1",
+        "room-ne-2",
+        "room-ne-3",
+        "room-ne-4",
+        "room-ne-sub-left",
+        "room-ne-sub-right",
+        "room-sw-1",
+        "room-sw-2",
+        "room-sw-3",
+        "room-sw-4",
+        "room-sw-5",
+        "room-se-1",
+        "room-se-2",
+        "room-se-3",
+        "room-se-4",
+        "room-se-5"
+      ],
+      "storyTriggers": [
+        {
+          "id": "trigger-note-a",
+          "marker": "Note A",
+          "title": "Encounter on the Perimeter",
+          "x": 4,
+          "y": 0,
+          "narrative": "An orc and a goblin, wearing Cassandria's pale-skull-and-ruby-eyes emblem, haul a heavy ironbound treasure chest along the corridor. On seeing you, the orc panics and heaves the chest straight through a crumbling false wall into the darkness!",
+          "gold": 0,
+          "reward": "Cassandria's Secret Markings"
+        },
+        {
+          "id": "trigger-note-f-mist",
+          "marker": "Note F",
+          "title": "Chamber of Mist & Undeath",
+          "x": 9,
+          "y": 9,
+          "narrative": "Freezing gray mist curls across the flagstones. High above the hearth, a Witch Hand of Cassandria chants in a forgotten tongue. Skeletons and mummies step silently from the vapor\u2014and through the very stone walls themselves!",
+          "gold": 0,
+          "reward": "Spectral Chill"
+        }
+      ],
+      "rooms": [
+        {
+          "id": "room-nw-1",
+          "name": "Northwest Entry Armory",
+          "x": 1,
+          "y": 1,
+          "w": 4,
+          "h": 4,
+          "quadrant": "nw"
+        },
+        {
+          "id": "room-nw-2",
+          "name": "Northwest Antechamber",
+          "x": 5,
+          "y": 1,
+          "w": 3,
+          "h": 4,
+          "quadrant": "nw"
+        },
+        {
+          "id": "room-nw-3",
+          "name": "North Hall (Note B: Equipment Stash)",
+          "x": 8,
+          "y": 1,
+          "w": 4,
+          "h": 4,
+          "quadrant": "nw",
+          "note": "B",
+          "specialTreasure": {
+            "id": "quest-treasure-note-b",
+            "type": "equipment_cards_deal_four",
+            "title": "Weapons Cache",
+            "description": "Hero searches the weapons rack and keeps the least expensive of 4 dealt equipment cards.",
+            "flavor": "Cassandria's scouts abandoned their gathered supplies in haste."
+          }
+        },
+        {
+          "id": "room-nw-4",
+          "name": "West Cellar",
+          "x": 1,
+          "y": 5,
+          "w": 4,
+          "h": 4,
+          "quadrant": "nw"
+        },
+        {
+          "id": "room-nw-5",
+          "name": "Guard Post (Note C: Cassandria's Doomguard)",
+          "x": 5,
+          "y": 5,
+          "w": 4,
+          "h": 4,
+          "quadrant": "nw",
+          "note": "C",
+          "description": "Station of the Dread Warrior elite Doomguard guarding the approaches."
+        },
+        {
+          "id": "room-center",
+          "name": "The Grand Hearth Hall (Note F: Witch Hand Summoning)",
+          "x": 9,
+          "y": 6,
+          "w": 6,
+          "h": 6,
+          "quadrant": "center",
+          "note": "F",
+          "event": "A Witch Hand begins casting; undead emerge from swirling mist with the stench of undeath.",
+          "special": "Undead in this room may move through walls into areas already discovered by the heroes."
+        },
+        {
+          "id": "room-ne-1",
+          "name": "Northeast Archives",
+          "x": 13,
+          "y": 1,
+          "w": 3,
+          "h": 5,
+          "quadrant": "ne"
+        },
+        {
+          "id": "room-ne-2",
+          "name": "King's Antechamber (Note E: Orc's Bane)",
+          "x": 16,
+          "y": 1,
+          "w": 4,
+          "h": 5,
+          "quadrant": "ne",
+          "note": "E",
+          "specialTreasure": {
+            "id": "quest-treasure-orcs-bane",
+            "type": "artifact",
+            "title": "Orc's Bane & Stashed Gold",
+            "gold": 200,
+            "item": "Orc's Bane",
+            "itemData": {
+              "id": "item-orcs-bane",
+              "name": "Orc's Bane",
+              "type": "weapon",
+              "attackDice": 2,
+              "effect": "Shortsword that grants 2 attacks per turn against any Orc.",
+              "value": 450
+            },
+            "description": "Concealed within a hollowed wall panel lies 200 Gold Coins and the fabled blade Orc's Bane!"
+          }
+        },
+        {
+          "id": "room-ne-3",
+          "name": "Northeast Barracks",
+          "x": 20,
+          "y": 1,
+          "w": 5,
+          "h": 4,
+          "quadrant": "ne"
+        },
+        {
+          "id": "room-ne-4",
+          "name": "Northeast Scriptorium",
+          "x": 20,
+          "y": 5,
+          "w": 5,
+          "h": 4,
+          "quadrant": "ne"
+        },
+        {
+          "id": "room-ne-sub-left",
+          "name": "Twin Vault West (Note D)",
+          "x": 16,
+          "y": 6,
+          "w": 2,
+          "h": 3,
+          "quadrant": "ne",
+          "note": "D",
+          "special": "Door to adjoining room is already open; reveal both rooms."
+        },
+        {
+          "id": "room-ne-sub-right",
+          "name": "Twin Vault East (Note D)",
+          "x": 18,
+          "y": 6,
+          "w": 2,
+          "h": 3,
+          "quadrant": "ne",
+          "note": "D",
+          "special": "Adjoining room revealed simultaneously when Twin Vault West is opened."
+        },
+        {
+          "id": "room-sw-1",
+          "name": "Southwest Outer Gallery",
+          "x": 1,
+          "y": 10,
+          "w": 4,
+          "h": 4,
+          "quadrant": "sw"
+        },
+        {
+          "id": "room-sw-2",
+          "name": "Southwest Crypt (Unlettered Encounter)",
+          "x": 5,
+          "y": 10,
+          "w": 4,
+          "h": 4,
+          "quadrant": "sw",
+          "description": "Ancient dwarven ossuary containing 3 restless skeletons."
+        },
+        {
+          "id": "room-sw-3",
+          "name": "Southwest Forge Antechamber",
+          "x": 1,
+          "y": 14,
+          "w": 4,
+          "h": 4,
+          "quadrant": "sw"
+        },
+        {
+          "id": "room-sw-4",
+          "name": "Southwest Guard Room (Unlettered Encounter)",
+          "x": 5,
+          "y": 14,
+          "w": 4,
+          "h": 4,
+          "quadrant": "sw",
+          "description": "Garrison quarters harboring greenskin raiders (2 Goblins, 1 Orc)."
+        },
+        {
+          "id": "room-sw-5",
+          "name": "Great Forge of Forgrin",
+          "x": 9,
+          "y": 13,
+          "w": 3,
+          "h": 5,
+          "quadrant": "sw"
+        },
+        {
+          "id": "room-se-1",
+          "name": "Smelting Vaults",
+          "x": 13,
+          "y": 13,
+          "w": 3,
+          "h": 5,
+          "quadrant": "se"
+        },
+        {
+          "id": "room-se-2",
+          "name": "Southeast Treasury Antechamber",
+          "x": 16,
+          "y": 10,
+          "w": 4,
+          "h": 4,
+          "quadrant": "se"
+        },
+        {
+          "id": "room-se-3",
+          "name": "Southeast Pillar Chamber",
+          "x": 20,
+          "y": 10,
+          "w": 5,
+          "h": 4,
+          "quadrant": "se"
+        },
+        {
+          "id": "room-se-4",
+          "name": "Southeast Catacombs",
+          "x": 16,
+          "y": 14,
+          "w": 4,
+          "h": 4,
+          "quadrant": "se"
+        },
+        {
+          "id": "room-se-5",
+          "name": "Throne Room of the Fire King (Note G)",
+          "x": 20,
+          "y": 14,
+          "w": 5,
+          "h": 4,
+          "quadrant": "se",
+          "note": "G",
+          "special": "Secret door to the mountain passage cannot be discovered by a normal search.",
+          "specialTreasure": {
+            "id": "quest-treasure-note-g-desk",
+            "type": "quest_item",
+            "title": "Glordrin's Map of the Passage",
+            "description": "A secret compartment inside the dwarven desk contains Glordrin's map of the passage; places the secret door.",
+            "revealsSecretDoor": "door-secret-mountain-passage",
+            "secondSearch": {
+              "id": "quest-treasure-note-g-chest",
+              "gold": 400,
+              "item": "Ring of Fortitude",
+              "itemData": {
+                "id": "item-ring-fortitude-found",
+                "name": "Ring of Fortitude",
+                "type": "artifact",
+                "effect": "+1 Body Point capacity",
+                "value": 500
+              },
+              "location": "False bottom of treasure chest",
+              "description": "Beneath a false bottom in the iron chest lies 400 Gold Coins and the Ring of Fortitude!"
+            }
+          }
+        }
+      ],
+      "doors": [
+        {
+          "id": "door-nw-1-w",
+          "from": [
+            0,
+            2
+          ],
+          "to": [
+            1,
+            2
+          ],
+          "state": "closed",
+          "room": "room-nw-1"
+        },
+        {
+          "id": "door-nw-2-n",
+          "from": [
+            6,
+            0
+          ],
+          "to": [
+            6,
+            1
+          ],
+          "state": "closed",
+          "room": "room-nw-2"
+        },
+        {
+          "id": "door-nw-3-n",
+          "from": [
+            10,
+            0
+          ],
+          "to": [
+            10,
+            1
+          ],
+          "state": "closed",
+          "room": "room-nw-3"
+        },
+        {
+          "id": "door-nw-4-w",
+          "from": [
+            0,
+            6
+          ],
+          "to": [
+            1,
+            6
+          ],
+          "state": "closed",
+          "room": "room-nw-4"
+        },
+        {
+          "id": "door-nw-5-s",
+          "from": [
+            7,
+            9
+          ],
+          "to": [
+            7,
+            8
+          ],
+          "state": "closed",
+          "room": "room-nw-5"
+        },
+        {
+          "id": "door-center-w",
+          "from": [
+            8,
+            9
+          ],
+          "to": [
+            9,
+            9
+          ],
+          "state": "closed",
+          "room": "room-center"
+        },
+        {
+          "id": "door-center-e",
+          "from": [
+            15,
+            9
+          ],
+          "to": [
+            14,
+            9
+          ],
+          "state": "closed",
+          "room": "room-center"
+        },
+        {
+          "id": "door-center-n",
+          "from": [
+            11,
+            5
+          ],
+          "to": [
+            11,
+            6
+          ],
+          "state": "closed",
+          "room": "room-center"
+        },
+        {
+          "id": "door-center-s",
+          "from": [
+            12,
+            12
+          ],
+          "to": [
+            12,
+            11
+          ],
+          "state": "closed",
+          "room": "room-center"
+        },
+        {
+          "id": "door-ne-1-n",
+          "from": [
+            14,
+            0
+          ],
+          "to": [
+            14,
+            1
+          ],
+          "state": "closed",
+          "room": "room-ne-1"
+        },
+        {
+          "id": "door-ne-2-n",
+          "from": [
+            18,
+            0
+          ],
+          "to": [
+            18,
+            1
+          ],
+          "state": "closed",
+          "room": "room-ne-2"
+        },
+        {
+          "id": "door-ne-3-n",
+          "from": [
+            22,
+            0
+          ],
+          "to": [
+            22,
+            1
+          ],
+          "state": "closed",
+          "room": "room-ne-3"
+        },
+        {
+          "id": "door-ne-4-e",
+          "from": [
+            25,
+            7
+          ],
+          "to": [
+            24,
+            7
+          ],
+          "state": "closed",
+          "room": "room-ne-4"
+        },
+        {
+          "id": "door-ne-sub-adjoining",
+          "from": [
+            17,
+            7
+          ],
+          "to": [
+            18,
+            7
+          ],
+          "state": "open",
+          "is_open": true,
+          "room": "room-ne-sub-right"
+        },
+        {
+          "id": "door-ne-sub-l",
+          "from": [
+            16,
+            9
+          ],
+          "to": [
+            16,
+            8
+          ],
+          "state": "closed",
+          "room": "room-ne-sub-left"
+        },
+        {
+          "id": "door-ne-sub-r",
+          "from": [
+            19,
+            9
+          ],
+          "to": [
+            19,
+            8
+          ],
+          "state": "closed",
+          "room": "room-ne-sub-right"
+        },
+        {
+          "id": "door-sw-1-w",
+          "from": [
+            0,
+            11
+          ],
+          "to": [
+            1,
+            11
+          ],
+          "state": "closed",
+          "room": "room-sw-1"
+        },
+        {
+          "id": "door-sw-2-n",
+          "from": [
+            7,
+            9
+          ],
+          "to": [
+            7,
+            10
+          ],
+          "state": "closed",
+          "room": "room-sw-2"
+        },
+        {
+          "id": "door-sw-3-w",
+          "from": [
+            0,
+            16
+          ],
+          "to": [
+            1,
+            16
+          ],
+          "state": "closed",
+          "room": "room-sw-3"
+        },
+        {
+          "id": "door-sw-4-s",
+          "from": [
+            7,
+            18
+          ],
+          "to": [
+            7,
+            17
+          ],
+          "state": "closed",
+          "room": "room-sw-4"
+        },
+        {
+          "id": "door-sw-5-w",
+          "from": [
+            8,
+            15
+          ],
+          "to": [
+            9,
+            15
+          ],
+          "state": "closed",
+          "room": "room-sw-5"
+        },
+        {
+          "id": "door-se-1-e",
+          "from": [
+            16,
+            15
+          ],
+          "to": [
+            15,
+            15
+          ],
+          "state": "closed",
+          "room": "room-se-1"
+        },
+        {
+          "id": "door-se-2-n",
+          "from": [
+            18,
+            9
+          ],
+          "to": [
+            18,
+            10
+          ],
+          "state": "closed",
+          "room": "room-se-2"
+        },
+        {
+          "id": "door-se-3-e",
+          "from": [
+            25,
+            12
+          ],
+          "to": [
+            24,
+            12
+          ],
+          "state": "closed",
+          "room": "room-se-3"
+        },
+        {
+          "id": "door-se-4-s",
+          "from": [
+            18,
+            18
+          ],
+          "to": [
+            18,
+            17
+          ],
+          "state": "closed",
+          "room": "room-se-4"
+        },
+        {
+          "id": "door-se-5-e",
+          "from": [
+            25,
+            16
+          ],
+          "to": [
+            24,
+            16
+          ],
+          "state": "closed",
+          "room": "room-se-5"
+        },
+        {
+          "id": "door-secret-mountain-passage",
+          "from": [
+            24,
+            15
+          ],
+          "to": [
+            25,
+            15
+          ],
+          "state": "closed",
+          "is_secret": true,
+          "is_revealed": false,
+          "room": "room-se-5"
+        }
+      ],
+      "wallBlocks": [
+        {
+          "id": "block-1",
+          "x": 12,
+          "y": 5,
+          "type": "single",
+          "width": 1,
+          "height": 1
+        },
+        {
+          "id": "block-2",
+          "x": 12,
+          "y": 12,
+          "type": "single",
+          "width": 1,
+          "height": 1
+        }
+      ],
+      "furniture": [
+        {
+          "id": "furn-fire-hearth",
+          "name": "Hearth of Forgrin the Fire King",
+          "type": "altar",
+          "x": 11,
+          "y": 7,
+          "width": 2,
+          "height": 1,
+          "roomId": "room-center"
+        },
+        {
+          "id": "furn-grand-table",
+          "name": "Council Table",
+          "type": "table",
+          "x": 11,
+          "y": 9,
+          "width": 2,
+          "height": 2,
+          "roomId": "room-center"
+        },
+        {
+          "id": "furn-weapons-rack-b",
+          "name": "Abandoned Weapons Rack",
+          "type": "weapons-rack",
+          "x": 9,
+          "y": 2,
+          "width": 2,
+          "height": 1,
+          "roomId": "room-nw-3"
+        },
+        {
+          "id": "furn-throne-fire-king",
+          "name": "Throne of the Fire King",
+          "type": "tomb",
+          "x": 21,
+          "y": 14,
+          "width": 2,
+          "height": 2,
+          "roomId": "room-se-5"
+        },
+        {
+          "id": "furn-glordrin-desk",
+          "name": "Glordrin's Secret Desk",
+          "type": "table",
+          "x": 23,
+          "y": 16,
+          "width": 1,
+          "height": 1,
+          "roomId": "room-se-5"
+        },
+        {
+          "id": "furn-chest-ring-fortitude",
+          "name": "Ornate Iron Chest (False Bottom)",
+          "type": "chest",
+          "x": 20,
+          "y": 17,
+          "width": 1,
+          "height": 1,
+          "roomId": "room-se-5"
+        },
+        {
+          "id": "furn-archives-bookcase",
+          "name": "Ancient Dwarven Bookcase",
+          "type": "bookcase",
+          "x": 13,
+          "y": 2,
+          "width": 3,
+          "height": 1,
+          "roomId": "room-ne-1"
+        },
+        {
+          "id": "furn-scriptorium-shelf",
+          "name": "Scholar's Bookshelf",
+          "type": "bookshelf",
+          "x": 21,
+          "y": 6,
+          "width": 2,
+          "height": 1,
+          "roomId": "room-ne-4"
+        }
+      ],
+      "traps": [
+        {
+          "id": "trap-pit-1",
+          "x": 0,
+          "y": 4,
+          "type": "pit",
+          "damage": 1,
+          "is_revealed": false,
+          "is_disarmed": false
+        },
+        {
+          "id": "trap-spear-1",
+          "x": 12,
+          "y": 0,
+          "type": "spear",
+          "damage": 1,
+          "is_revealed": false,
+          "is_disarmed": false
+        },
+        {
+          "id": "trap-falling-rock-1",
+          "x": 20,
+          "y": 9,
+          "type": "falling_rock",
+          "damage": 2,
+          "is_revealed": false,
+          "is_disarmed": false
+        }
+      ]
+    }
+  }
+}

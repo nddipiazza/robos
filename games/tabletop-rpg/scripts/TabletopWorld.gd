@@ -2985,6 +2985,8 @@ func is_tile_wall_blocked(tile: Vector2i) -> bool:
 	return _blocked_wall_tiles.has(tile)
 
 func is_border_tile(tile: Vector2i) -> bool:
+	if grid_cols == 26 and grid_rows == 19:
+		return false
 	return tile.x <= 0 or tile.x >= grid_cols - 1 or tile.y <= 0 or tile.y >= grid_rows - 1
 
 func is_edge_tile(tile: Vector2i) -> bool:
@@ -7024,11 +7026,17 @@ func _execute_mentor_ai_party_step() -> void:
 			var path: Array[Vector2i] = target_info.get("path")
 			if path.size() > 1:
 				var max_steps = mini(movement_remaining, path.size() - 1)
-				var dest = path[max_steps]
-				var reason = str(target_info.get("reason", "advance"))
-				_log("[MENTOR AI] 🏃 %s moves toward %s (stepping to (%d, %d))." % [hero_name, reason, dest.x, dest.y])
-				move_hero(dest)
-				return
+				while max_steps > 0 and is_tile_occupied(path[max_steps], active_hero_idx):
+					max_steps -= 1
+				if max_steps > 0:
+					var dest = path[max_steps]
+					var reason = str(target_info.get("reason", "advance"))
+					_log("[MENTOR AI] 🏃 %s moves toward %s (stepping to (%d, %d))." % [hero_name, reason, dest.x, dest.y])
+					if not move_hero(dest):
+						movement_remaining = 0
+					return
+				else:
+					movement_remaining = 0
 
 	# 11. Actions After Movement (if hero moved without acting yet)
 	if not has_acted_this_turn:

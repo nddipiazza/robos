@@ -855,20 +855,20 @@
       "robos:namespace": "robos.tabletop"
     },
     {
-      "@id": "urn:robos:tabletop:mapconfig:fan-dungeon-28x21",
+      "@id": "urn:robos:tabletop:mapconfig:first-light-dungeon",
       "@type": [
         "oslc_am:Resource",
         "robos:TabletopMapConfiguration",
         "schema:Place"
       ],
-      "dcterms:title": "HeroQuest Fan Dungeon & Cavern Citadel (28×21)",
-      "robos:boardSide": "Custom",
+      "dcterms:title": "HeroQuest: First Light Stone Dungeon (Side A)",
+      "robos:boardSide": "A",
       "robos:gridDimensions": [
-        28,
-        21
+        26,
+        19
       ],
-      "robos:backgroundImage": "res://assets/boards/fan_dungeon_28x21.png",
-      "robos:roomsCount": 19,
+      "robos:backgroundImage": "res://assets/boards/heroquest_board.png",
+      "robos:roomsCount": 22,
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
     },
@@ -1496,6 +1496,148 @@
         "clairvoyance_lay_out_room",
         "fated_reroll_dice"
       ],
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:item:hearthskin-horn",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopArtifact",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "The Hearthskin Horn",
+      "dcterms:description": "Legendary artifact horn carved from dragonbone and hearthstone. When blown, each character gets to place a friendly skeleton in their room or corridor in line of sight. Skeletons have movement 8, attack 2, defend 2, body 1, mind 0. They become new characters that take their turns immediately following their hero counterpart.",
+      "robos:itemType": "artifact",
+      "robos:cost": 600,
+      "robos:isConsumable": false,
+      "robos:action": "blow_hearthskin_horn",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:summon:friendly-skeleton",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSummon",
+        "robos:GameCharacter",
+        "schema:Person"
+      ],
+      "dcterms:title": "Friendly Skeleton",
+      "dcterms:description": "Reanimated skeletal ally summoned by The Hearthskin Horn. Possesses reduced functionality (cannot search for treasure or traps). Always takes its turn immediately after its hero counterpart.",
+      "robos:summoner": "urn:robos:tabletop:hero:barbarian",
+      "robos:bodyPoints": 1,
+      "robos:mindPoints": 0,
+      "robos:attackDice": 2,
+      "robos:defendDice": 2,
+      "robos:movementSquares": 8,
+      "robos:tokenColor": "#38bdf8",
+      "robos:tokenKey": "skeleton",
+      "robos:reducedFunctionality": true,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:summon:wizard-wolf",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSummon",
+        "robos:GameCharacter",
+        "schema:Person"
+      ],
+      "dcterms:title": "Summoned Wolf",
+      "dcterms:description": "Spectral beast companion conjured by the Wizard to fight in battle. Has reduced functionality and acts immediately following the Wizard.",
+      "robos:summoner": "urn:robos:tabletop:hero:wizard",
+      "robos:bodyPoints": 2,
+      "robos:mindPoints": 1,
+      "robos:attackDice": 2,
+      "robos:defendDice": 2,
+      "robos:movementSquares": 8,
+      "robos:tokenColor": "#38bdf8",
+      "robos:tokenKey": "wolf",
+      "robos:reducedFunctionality": true,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:campaign:fortress-fire-king",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopCampaign",
+        "robos:Campaign",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Quest 4: The Fortress of the Fire King",
+      "robos:ruleset": "heroquest",
+      "robos:adventure": "First Light",
+      "robos:questNumber": 4,
+      "robos:map": "urn:robos:tabletop:map:fortress-fire-king",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:map:fortress-fire-king",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopQuestMap",
+        "robos:GameMap",
+        "schema:Place"
+      ],
+      "dcterms:title": "The Fortress of the Fire King — Quest 4",
+      "robos:width": 26,
+      "robos:height": 19,
+      "robos:startingSpawn": [
+        0,
+        1
+      ],
+      "robos:backgroundImage": "res://assets/boards/heroquest_board.png",
+      "robos:boss": "urn:robos:tabletop:monster:cassandria-doomguard",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:cassandria-doomguard",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Cassandria's Doomguard",
+      "robos:bodyPoints": 3,
+      "robos:mindPoints": 3,
+      "robos:attackDice": 4,
+      "robos:defendDice": 6,
+      "robos:movementSquares": 8,
+      "robos:isBoss": true,
+      "robos:isSpellcaster": false,
+      "robos:tokenColor": "#475569",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:cassandria-witch-hand",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Witch Hand of Cassandria",
+      "robos:bodyPoints": 4,
+      "robos:mindPoints": 3,
+      "robos:attackDice": 4,
+      "robos:defendDice": 4,
+      "robos:movementSquares": 8,
+      "robos:isBoss": true,
+      "robos:isSpellcaster": true,
+      "robos:spells": [
+        "urn:robos:tabletop:spell:cloud-of-chaos",
+        "urn:robos:tabletop:spell:fear",
+        "urn:robos:tabletop:spell:sleep-dread"
+      ],
+      "robos:tokenColor": "#9333ea",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
     }
@@ -2333,20 +2475,20 @@
       "robos:namespace": "robos.tabletop"
     },
     {
-      "@id": "urn:robos:tabletop:mapconfig:fan-dungeon-28x21",
+      "@id": "urn:robos:tabletop:mapconfig:first-light-dungeon",
       "@type": [
         "oslc_am:Resource",
         "robos:TabletopMapConfiguration",
         "schema:Place"
       ],
-      "dcterms:title": "HeroQuest Fan Dungeon & Cavern Citadel (28×21)",
-      "robos:boardSide": "Custom",
+      "dcterms:title": "HeroQuest: First Light Stone Dungeon (Side A)",
+      "robos:boardSide": "A",
       "robos:gridDimensions": [
-        28,
-        21
+        26,
+        19
       ],
-      "robos:backgroundImage": "res://assets/boards/fan_dungeon_28x21.png",
-      "robos:roomsCount": 19,
+      "robos:backgroundImage": "res://assets/boards/heroquest_board.png",
+      "robos:roomsCount": 22,
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
     },
@@ -3035,6 +3177,87 @@
       "robos:tokenColor": "#38bdf8",
       "robos:tokenKey": "wolf",
       "robos:reducedFunctionality": true,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:campaign:fortress-fire-king",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopCampaign",
+        "robos:Campaign",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Quest 4: The Fortress of the Fire King",
+      "robos:ruleset": "heroquest",
+      "robos:adventure": "First Light",
+      "robos:questNumber": 4,
+      "robos:map": "urn:robos:tabletop:map:fortress-fire-king",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:map:fortress-fire-king",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopQuestMap",
+        "robos:GameMap",
+        "schema:Place"
+      ],
+      "dcterms:title": "The Fortress of the Fire King — Quest 4",
+      "robos:width": 26,
+      "robos:height": 19,
+      "robos:startingSpawn": [
+        0,
+        1
+      ],
+      "robos:backgroundImage": "res://assets/boards/heroquest_board.png",
+      "robos:boss": "urn:robos:tabletop:monster:cassandria-doomguard",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:cassandria-doomguard",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Cassandria's Doomguard",
+      "robos:bodyPoints": 3,
+      "robos:mindPoints": 3,
+      "robos:attackDice": 4,
+      "robos:defendDice": 6,
+      "robos:movementSquares": 8,
+      "robos:isBoss": true,
+      "robos:isSpellcaster": false,
+      "robos:tokenColor": "#475569",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:cassandria-witch-hand",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Witch Hand of Cassandria",
+      "robos:bodyPoints": 4,
+      "robos:mindPoints": 3,
+      "robos:attackDice": 4,
+      "robos:defendDice": 4,
+      "robos:movementSquares": 8,
+      "robos:isBoss": true,
+      "robos:isSpellcaster": true,
+      "robos:spells": [
+        "urn:robos:tabletop:spell:cloud-of-chaos",
+        "urn:robos:tabletop:spell:fear",
+        "urn:robos:tabletop:spell:sleep-dread"
+      ],
+      "robos:tokenColor": "#9333ea",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
     }
