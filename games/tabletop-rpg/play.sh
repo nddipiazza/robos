@@ -37,6 +37,10 @@ for arg in "$@"; do
   if [[ "$arg" == "--dm" || "$arg" == "--gm" ]]; then
     export TABLETOP_ROLE=gm
   fi
+  if [[ "$arg" == "--hard" || "$arg" == "--hard-mode" ]]; then
+    export TABLETOP_HARD_MODE=1
+    export TABLETOP_DIFFICULTY=hard
+  fi
 done
 
 exec "$GODOT" --path "$PROJECT_DIR" "$@"
