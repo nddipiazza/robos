@@ -175,6 +175,11 @@ custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
 text = "Armory"
 
+[node name="BtnWanderingMonster" type="Button" parent="UI/ActionsBar/HotbarHBox/ActionsScroll/Actions"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+text = "Show Wondering Monster"
+
 [node name="BtnSummon" type="Button" parent="UI/ActionsBar/HotbarHBox/ActionsScroll/Actions"]
 custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
