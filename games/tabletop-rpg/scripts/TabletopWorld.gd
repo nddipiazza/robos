@@ -2653,6 +2653,8 @@ func _load_active_cartridge(force_fresh: bool = false) -> void:
 		h["used_spells"] = []
 		h["courage_active"] = false
 		h["rock_skin_active"] = false
+		h["potion_defense_active"] = false
+		h["potion_defense_bonus"] = 0
 		h["pass_through_rock_active"] = false
 		h["veil_of_mist_active"] = false
 		h["swift_wind_active"] = false
@@ -7632,6 +7634,8 @@ func get_hero_defend_dice(h: Dictionary) -> int:
 		base_def += 1
 	if h.get("rock_skin_active", false):
 		base_def += 1
+	if h.get("potion_defense_active", false):
+		base_def += int(h.get("potion_defense_bonus", 2))
 
 	return base_def
 
@@ -7735,10 +7739,27 @@ func use_item(hero_id: String = "", item_id: String = "", target_id: String = ""
 	var inv: Array = hero.get("inventory", []).duplicate()
 	var item_key = item_id.to_lower().strip_edges()
 
-	# Check if item exists in hero's inventory
+	# Check if item exists in hero's inventory (supporting alias matching)
 	var found_idx = -1
+	var norm_item_key = item_key.replace("-", "_")
 	for i in range(inv.size()):
-		if str(inv[i]).to_lower().strip_edges() == item_key:
+		var cur_inv_key = str(inv[i]).to_lower().strip_edges().replace("-", "_")
+		if cur_inv_key == norm_item_key or str(inv[i]).to_lower().strip_edges() == item_key:
+			found_idx = i
+			break
+		if (norm_item_key in ["potion_defense", "potion_of_defense", "defense_potion"]) and (cur_inv_key in ["potion_defense", "potion_of_defense", "defense_potion"]):
+			found_idx = i
+			break
+		if (norm_item_key in ["potion_strength", "potion_of_strength", "strength_potion"]) and (cur_inv_key in ["potion_strength", "potion_of_strength", "strength_potion"]):
+			found_idx = i
+			break
+		if (norm_item_key in ["potion_speed", "potion_of_speed", "speed_potion"]) and (cur_inv_key in ["potion_speed", "potion_of_speed", "speed_potion"]):
+			found_idx = i
+			break
+		if (norm_item_key in ["healing_potion", "potion_of_healing", "cure_potion"]) and (cur_inv_key in ["healing_potion", "potion_of_healing", "cure_potion"]):
+			found_idx = i
+			break
+		if (norm_item_key in ["holy_water", "holy-water"]) and (cur_inv_key in ["holy_water", "holy-water"]):
 			found_idx = i
 			break
 
@@ -7752,7 +7773,7 @@ func use_item(hero_id: String = "", item_id: String = "", target_id: String = ""
 	var hero_screen = board_offset + Vector2((hero_pos.x + 0.5) * tile_size, (hero_pos.y + 0.5) * tile_size)
 
 	# 1. Consumable items
-	if item_key == "healing_potion" or item_key == "potion_of_healing":
+	if item_key == "healing_potion" or item_key == "potion_of_healing" or norm_item_key == "healing_potion" or norm_item_key == "potion_of_healing":
 		var target_h = hero
 		if target_id != "":
 			for h in heroes:
@@ -7769,7 +7790,7 @@ func use_item(hero_id: String = "", item_id: String = "", target_id: String = ""
 		inv.remove_at(found_idx)
 		hero["inventory"] = inv
 
-		var th_pos = target_h.get("grid_pos", hero_pos)
+		var th_pos = _to_grid_pos(target_h.get("grid_pos", hero_pos))
 		var th_screen = board_offset + Vector2((th_pos.x + 0.5) * tile_size, (th_pos.y + 0.5) * tile_size)
 		spawn_burst_vfx(th_screen, Color(0.2, 0.9, 0.4), 45.0, 0.45)
 		spawn_floating_text(th_pos, "+%d BP" % healed, Color(0.2, 0.9, 0.3))
@@ -7781,6 +7802,7 @@ func use_item(hero_id: String = "", item_id: String = "", target_id: String = ""
 		if item_use_modal and item_use_modal.visible:
 			_update_item_use_modal_ui()
 		queue_redraw_all()
+		auto_save_game()
 		return {
 			"success": true,
 			"item": item_id,
@@ -7791,31 +7813,137 @@ func use_item(hero_id: String = "", item_id: String = "", target_id: String = ""
 			"target": str(target_h.get("id"))
 		}
 
-	elif item_key == "potion_of_strength":
-		hero["courage_active"] = true
+	elif norm_item_key in ["potion_defense", "potion_of_defense", "defense_potion"]:
+		var target_h = hero
+		if target_id != "":
+			for h in heroes:
+				if str(h.get("id")) == target_id:
+					target_h = h
+					break
+		target_h["potion_defense_active"] = true
+		target_h["potion_defense_bonus"] = 2
 		inv.remove_at(found_idx)
 		hero["inventory"] = inv
-		spawn_burst_vfx(hero_screen, Color(0.9, 0.3, 0.2), 40.0, 0.4)
-		spawn_floating_text(hero_pos, "+2 ATK DICE", Color(1.0, 0.4, 0.3))
-		_log("[ITEM] %s quaffs Potion of Strength! Attack dice increased by +2." % h_name)
-		_update_ui()
-		if item_use_modal and item_use_modal.visible:
-			_update_item_use_modal_ui()
-		queue_redraw_all()
-		return { "success": true, "item": item_id, "action": "strength_bonus" }
 
-	elif item_key == "potion_of_speed":
-		hero["swift_wind_active"] = true
-		inv.remove_at(found_idx)
-		hero["inventory"] = inv
-		spawn_cyclone_vfx(hero_screen, Color(0.3, 0.8, 1.0), 0.5)
-		spawn_floating_text(hero_pos, "2X SPEED", Color(0.3, 0.9, 1.0))
-		_log("[ITEM] %s quaffs Potion of Speed! Movement dice doubled to 4d6 on next turn." % h_name)
+		var th_pos = _to_grid_pos(target_h.get("grid_pos", hero_pos))
+		var th_screen = board_offset + Vector2((th_pos.x + 0.5) * tile_size, (th_pos.y + 0.5) * tile_size)
+		spawn_burst_vfx(th_screen, Color(0.25, 0.65, 1.0), 45.0, 0.45)
+		spawn_floating_text(th_pos, "+2 DEF DICE", Color(0.3, 0.7, 1.0))
+		_log("[ITEM] %s drinks %s! Defense increased by +2 Defend Dice on their next defense." % [
+			target_h.get("name"), "Potion of Defense"
+		])
+
 		_update_ui()
 		if item_use_modal and item_use_modal.visible:
 			_update_item_use_modal_ui()
 		queue_redraw_all()
-		return { "success": true, "item": item_id, "action": "speed_bonus" }
+		auto_save_game()
+		return {
+			"success": true,
+			"item": item_id,
+			"action": "defense_bonus",
+			"defense_bonus": 2,
+			"target": str(target_h.get("id")),
+			"target_name": str(target_h.get("name"))
+		}
+
+	elif norm_item_key in ["potion_of_strength", "potion_strength", "strength_potion"]:
+		var target_h = hero
+		if target_id != "":
+			for h in heroes:
+				if str(h.get("id")) == target_id:
+					target_h = h
+					break
+		target_h["courage_active"] = true
+		inv.remove_at(found_idx)
+		hero["inventory"] = inv
+		var th_pos = _to_grid_pos(target_h.get("grid_pos", hero_pos))
+		var th_screen = board_offset + Vector2((th_pos.x + 0.5) * tile_size, (th_pos.y + 0.5) * tile_size)
+		spawn_burst_vfx(th_screen, Color(0.9, 0.3, 0.2), 40.0, 0.4)
+		spawn_floating_text(th_pos, "+2 ATK DICE", Color(1.0, 0.4, 0.3))
+		_log("[ITEM] %s quaffs Potion of Strength! Attack dice increased by +2." % target_h.get("name"))
+		_update_ui()
+		if item_use_modal and item_use_modal.visible:
+			_update_item_use_modal_ui()
+		queue_redraw_all()
+		auto_save_game()
+		return { "success": true, "item": item_id, "action": "strength_bonus", "target": str(target_h.get("id")) }
+
+	elif norm_item_key in ["potion_of_speed", "potion_speed", "speed_potion"]:
+		var target_h = hero
+		if target_id != "":
+			for h in heroes:
+				if str(h.get("id")) == target_id:
+					target_h = h
+					break
+		target_h["swift_wind_active"] = true
+		inv.remove_at(found_idx)
+		hero["inventory"] = inv
+		var th_pos = _to_grid_pos(target_h.get("grid_pos", hero_pos))
+		var th_screen = board_offset + Vector2((th_pos.x + 0.5) * tile_size, (th_pos.y + 0.5) * tile_size)
+		spawn_cyclone_vfx(th_screen, Color(0.3, 0.8, 1.0), 0.5)
+		spawn_floating_text(th_pos, "2X SPEED", Color(0.3, 0.9, 1.0))
+		_log("[ITEM] %s quaffs Potion of Speed! Movement dice doubled to 4d6 on next turn." % target_h.get("name"))
+		_update_ui()
+		if item_use_modal and item_use_modal.visible:
+			_update_item_use_modal_ui()
+		queue_redraw_all()
+		auto_save_game()
+		return { "success": true, "item": item_id, "action": "speed_bonus", "target": str(target_h.get("id")) }
+
+	elif norm_item_key in ["holy_water", "holy-water"]:
+		var target_m: Dictionary = {}
+		var target_h: Dictionary = {}
+		if target_id != "":
+			for m in monsters:
+				if str(m.get("id")) == target_id:
+					target_m = m
+					break
+			if target_m.is_empty():
+				for h in heroes:
+					if str(h.get("id")) == target_id:
+						target_h = h
+						break
+		if target_m.is_empty() and target_h.is_empty():
+			target_h = hero
+
+		inv.remove_at(found_idx)
+		hero["inventory"] = inv
+
+		if not target_m.is_empty():
+			var m_pos = _to_grid_pos(target_m.get("grid_pos", Vector2i(-1, -1)))
+			var m_screen = board_offset + Vector2((m_pos.x + 0.5) * tile_size, (m_pos.y + 0.5) * tile_size)
+			spawn_burst_vfx(m_screen, Color(0.8, 0.95, 1.0), 45.0, 0.5)
+			spawn_floating_text(m_pos, "-3 BP HOLY", Color(0.6, 0.9, 1.0))
+			var prev_bp = int(target_m.get("current_bp", 1))
+			target_m["current_bp"] = maxi(0, prev_bp - 3)
+			if int(target_m.get("current_bp", 0)) <= 0:
+				target_m["is_alive"] = false
+				_log("[HOLY WATER] %s splashes Holy Water on %s! Inflicts 3 holy damage, destroying the creature!" % [h_name, target_m.get("name")])
+			else:
+				_log("[HOLY WATER] %s splashes Holy Water on %s! Inflicts 3 holy damage (%d/%d BP remaining)." % [h_name, target_m.get("name"), target_m.get("current_bp"), target_m.get("bodyPoints")])
+			_update_ui()
+			if item_use_modal and item_use_modal.visible:
+				_update_item_use_modal_ui()
+			queue_redraw_all()
+			auto_save_game()
+			return { "success": true, "item": item_id, "action": "holy_damage", "damage": 3, "target": str(target_m.get("id")) }
+		else:
+			var cur_bp = int(target_h.get("current_bp", 1))
+			var max_bp = int(target_h.get("bodyPoints", 8))
+			var healed = mini(max_bp, cur_bp + 2) - cur_bp
+			target_h["current_bp"] = cur_bp + healed
+			var th_pos = _to_grid_pos(target_h.get("grid_pos", hero_pos))
+			var th_screen = board_offset + Vector2((th_pos.x + 0.5) * tile_size, (th_pos.y + 0.5) * tile_size)
+			spawn_burst_vfx(th_screen, Color(0.7, 0.9, 1.0), 40.0, 0.4)
+			spawn_floating_text(th_pos, "+%d BP" % healed, Color(0.5, 0.85, 1.0))
+			_log("[HOLY WATER] %s drinks Holy Water, restoring %d BP." % [target_h.get("name"), healed])
+			_update_ui()
+			if item_use_modal and item_use_modal.visible:
+				_update_item_use_modal_ui()
+			queue_redraw_all()
+			auto_save_game()
+			return { "success": true, "item": item_id, "action": "heal", "healed": healed, "target": str(target_h.get("id")) }
 
 	# 2. Weapons
 	var w = HeroQuestEquipment.get_weapon(item_id)
@@ -8076,6 +8204,11 @@ func dm_attack_hero(hero_id: String = "", attacker_monster: Variant = null) -> D
 	elif h_hp_subtracted == 0 and res.wounds == 0:
 		_log("[BLOCKED] %s successfully blocked the monster attack!" % target_h.get("name"))
 		spawn_floating_text(h_pos, "BLOCKED!", Color(0.3, 0.8, 1.0))
+
+	if target_h.get("potion_defense_active", false):
+		target_h["potion_defense_active"] = false
+		target_h["potion_defense_bonus"] = 0
+		_log("[POTION] %s's Potion of Defense warding dissipates after deflecting the attack." % target_h.get("name"))
 
 	res["attacker"] = monster.get("id")
 	res["attacker_name"] = monster.get("name")
@@ -10264,6 +10397,11 @@ func dm_cast_spell_on_hero(m: Dictionary, spell_id: String, target_hero: Diction
 		_log("[BLOCKED] %s successfully warded off %s's %s!" % [h_name, m_name, spell_name])
 		spawn_floating_text(h_pos, "WARDED!", Color(0.3, 0.8, 1.0))
 
+	if target_hero.get("potion_defense_active", false):
+		target_hero["potion_defense_active"] = false
+		target_hero["potion_defense_bonus"] = 0
+		_log("[POTION] %s's Potion of Defense warding dissipates after the defense." % h_name)
+
 	# Mark spell as used by monster
 	if not m.has("used_spells") or not (m["used_spells"] is Array):
 		m["used_spells"] = []
@@ -11556,8 +11694,11 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 			bg_rect.modulate = Color(0.85, 0.90, 1.0, 0.30)
 		card.add_child(bg_rect)
 
-	# Click card to open full character sheet dialog
-	card.tooltip_text = "Click to inspect %s's full character sheet" % get_hero_display_title(h)
+	# Click card to open full character sheet dialog or target hero
+	if is_targeting_active() and str(active_targeting.get("target_type")) == "hero":
+		card.tooltip_text = "Click to use %s on %s" % [str(active_targeting.get("name", "Action")), get_hero_display_title(h)]
+	else:
+		card.tooltip_text = "Click to inspect %s's full character sheet" % get_hero_display_title(h)
 	card.gui_input.connect(func(event: InputEvent):
 		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 			if is_targeting_active():
@@ -11567,6 +11708,7 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 	)
 
 	var margin = MarginContainer.new()
+	margin.mouse_filter = Control.MOUSE_FILTER_PASS
 	margin.add_theme_constant_override("margin_left", 6)
 	margin.add_theme_constant_override("margin_right", 6)
 	margin.add_theme_constant_override("margin_top", 4)
@@ -11574,16 +11716,20 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 	card.add_child(margin)
 
 	var main_hbox = HBoxContainer.new()
+	main_hbox.mouse_filter = Control.MOUSE_FILTER_PASS
 	main_hbox.add_theme_constant_override("separation", 6)
 	margin.add_child(main_hbox)
 
-	# Hero Portrait Button (Clicking inspects character sheet, replacing legacy INFO button)
+	# Hero Portrait Button (Clicking inspects character sheet or targets hero)
 	var portrait_btn = Button.new()
 	portrait_btn.name = "HeroPortraitButton"
 	portrait_btn.custom_minimum_size = Vector2(38, 38)
 	portrait_btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	portrait_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	portrait_btn.tooltip_text = "Click portrait to inspect %s's full Character Sheet" % get_hero_display_title(h)
+	if is_targeting_active() and str(active_targeting.get("target_type")) == "hero":
+		portrait_btn.tooltip_text = "Click to use %s on %s" % [str(active_targeting.get("name", "Action")), get_hero_display_title(h)]
+	else:
+		portrait_btn.tooltip_text = "Click portrait to inspect %s's full Character Sheet" % get_hero_display_title(h)
 
 	var token_tex = get_hero_token_texture(h)
 	if token_tex:
@@ -11620,15 +11766,21 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 	main_hbox.add_child(portrait_btn)
 
 	var vbox = VBoxContainer.new()
+	vbox.mouse_filter = Control.MOUSE_FILTER_PASS
 	vbox.add_theme_constant_override("separation", 2)
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	main_hbox.add_child(vbox)
 
 	# Row 1: Header (Name + Class & Status Badge)
 	var hdr_row = HBoxContainer.new()
+	hdr_row.mouse_filter = Control.MOUSE_FILTER_PASS
 	var name_lbl = Label.new()
+	name_lbl.mouse_filter = Control.MOUSE_FILTER_PASS
 	name_lbl.text = get_hero_display_title(h)
-	name_lbl.tooltip_text = "Name: %s | Class: %s\nClick anywhere to view full character sheet." % [get_hero_character_name(h), get_hero_class_name(h)]
+	if is_targeting_active() and str(active_targeting.get("target_type")) == "hero":
+		name_lbl.tooltip_text = "Click to use %s on %s" % [str(active_targeting.get("name", "Action")), get_hero_display_title(h)]
+	else:
+		name_lbl.tooltip_text = "Name: %s | Class: %s\nClick anywhere to view full character sheet." % [get_hero_character_name(h), get_hero_class_name(h)]
 	name_lbl.add_theme_font_size_override("font_size", 11)
 	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_lbl.clip_text = true
@@ -11638,9 +11790,17 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 		name_lbl.add_theme_color_override("font_color", Color(1.0, 0.9, 0.3, 1.0))
 	else:
 		name_lbl.add_theme_color_override("font_color", Color(0.9, 0.95, 1.0, 1.0))
+	name_lbl.gui_input.connect(func(event: InputEvent):
+		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			if is_targeting_active():
+				resolve_targeting_entity("hero", h_id)
+			else:
+				open_hero_detail_modal(h)
+	)
 	hdr_row.add_child(name_lbl)
 
 	var status_tag = Label.new()
+	status_tag.mouse_filter = Control.MOUSE_FILTER_PASS
 	status_tag.add_theme_font_size_override("font_size", 9)
 	if is_dead:
 		status_tag.text = "[DEAD]"
@@ -11659,17 +11819,21 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 
 	# Row 2: Vitals (BP + MP)
 	var vitals_row = HBoxContainer.new()
+	vitals_row.mouse_filter = Control.MOUSE_FILTER_PASS
 	vitals_row.add_theme_constant_override("separation", 6)
 
 	var bp_box = HBoxContainer.new()
+	bp_box.mouse_filter = Control.MOUSE_FILTER_PASS
 	bp_box.add_theme_constant_override("separation", 3)
 	bp_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var bp_lbl = Label.new()
+	bp_lbl.mouse_filter = Control.MOUSE_FILTER_PASS
 	bp_lbl.text = "BP %d/%d" % [cur_bp, max_bp]
 	bp_lbl.add_theme_font_size_override("font_size", 9)
 	bp_box.add_child(bp_lbl)
 
 	var bp_bar = ProgressBar.new()
+	bp_bar.mouse_filter = Control.MOUSE_FILTER_PASS
 	bp_bar.custom_minimum_size = Vector2(0, 6)
 	bp_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bp_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -11692,14 +11856,17 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 	vitals_row.add_child(bp_box)
 
 	var mp_box = HBoxContainer.new()
+	mp_box.mouse_filter = Control.MOUSE_FILTER_PASS
 	mp_box.add_theme_constant_override("separation", 3)
 	mp_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var mp_lbl = Label.new()
+	mp_lbl.mouse_filter = Control.MOUSE_FILTER_PASS
 	mp_lbl.text = "MP %d/%d" % [cur_mp, max_mp]
 	mp_lbl.add_theme_font_size_override("font_size", 9)
 	mp_box.add_child(mp_lbl)
 
 	var mp_bar = ProgressBar.new()
+	mp_bar.mouse_filter = Control.MOUSE_FILTER_PASS
 	mp_bar.custom_minimum_size = Vector2(0, 6)
 	mp_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	mp_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -11712,7 +11879,7 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 	mp_bar.add_theme_stylebox_override("fill", mp_fill)
 	var mp_bg = StyleBoxFlat.new()
 	mp_bg.bg_color = Color(0.08, 0.10, 0.14, 0.9)
-	mp_bar.add_theme_stylebox_override("background", mp_bg)
+	mp_bar.add_theme_stylebox_override("background", bp_bg)
 	mp_box.add_child(mp_bar)
 	vitals_row.add_child(mp_box)
 	vbox.add_child(vitals_row)
@@ -11721,9 +11888,11 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 	var atk_d = get_hero_attack_dice(h)
 	var def_d = get_hero_defend_dice(h)
 	var stat_row = HBoxContainer.new()
+	stat_row.mouse_filter = Control.MOUSE_FILTER_PASS
 	stat_row.add_theme_constant_override("separation", 5)
 
 	var dice_stat = Label.new()
+	dice_stat.mouse_filter = Control.MOUSE_FILTER_PASS
 	dice_stat.text = "ATK %dd  DEF %dd" % [atk_d, def_d]
 	dice_stat.add_theme_font_size_override("font_size", 9)
 	dice_stat.add_theme_color_override("font_color", Color(0.85, 0.88, 0.95, 0.95))
@@ -11731,6 +11900,8 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 
 	# Active Buff Badges (Pills)
 	var buff_badges: Array[Dictionary] = []
+	if h.get("potion_defense_active", false):
+		buff_badges.append({ "code": "PD", "desc": "Potion of Defense (Active Buff)\nEffect: Grants +2 Defend Dice on your next defense.", "color": Color(0.25, 0.65, 1.0) })
 	if h.get("rock_skin_active", false):
 		buff_badges.append({ "code": "RS", "desc": "Rock Skin (Active Earth Spell Buff)\nEffect: Grants +1 Defend Die. Lasts until hero suffers damage.", "color": Color(0.65, 0.60, 0.55) })
 	if h.get("courage_active", false):
@@ -11983,6 +12154,7 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 			b_sb.bg_color = Color(0.28, 0.22, 0.08, 0.95)
 			b_sb.border_color = Color(1.0, 0.85, 0.25, 1.0)
 			b_sb.set_border_width_all(2)
+			ibtn.tooltip_text = "[ACTIVE TARGETING: %s]\nClick a hero's card, portrait, or token on board to use on them!\n(Or click here again to cancel)" % str(itm.get("name", "Item"))
 
 		ibtn.add_theme_stylebox_override("normal", b_sb)
 
@@ -12021,14 +12193,24 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 						)
 						ibtn.add_child(s_shield)
 			else:
-				ibtn.pressed.connect(func(): open_hero_detail_modal(h))
+				ibtn.pressed.connect(func():
+					if is_targeting_active() and str(active_targeting.get("target_type")) == "hero":
+						resolve_targeting_entity("hero", str(h.get("id")))
+					else:
+						open_hero_detail_modal(h)
+				)
 		elif itype == "item":
 			if is_active:
 				var item_id_str = str(itm.get("id"))
 				var hid = str(h.get("id"))
 				ibtn.pressed.connect(func(): toggle_targeting("item", item_id_str, hid))
 			else:
-				ibtn.pressed.connect(func(): open_hero_detail_modal(h))
+				ibtn.pressed.connect(func():
+					if is_targeting_active() and str(active_targeting.get("target_type")) == "hero":
+						resolve_targeting_entity("hero", str(h.get("id")))
+					else:
+						open_hero_detail_modal(h)
+				)
 		elif itype == "weapon":
 			if is_active:
 				ibtn.disabled = has_acted_this_turn
@@ -12561,6 +12743,8 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 
 		# Active Buffs
 		var buffs: Array[Dictionary] = []
+		if h.get("potion_defense_active", false):
+			buffs.append({ "name": "[Potion of Defense]", "desc": "Alchemical buff: Liquid iron elixir. +2 extra Defend Dice on next defense." })
 		if h.get("rock_skin_active", false):
 			buffs.append({ "name": "[Rock Skin]", "desc": "Earth spell buff: Skin hardened like granite. +1 extra Defend Die until hero suffers damage." })
 		if h.get("courage_active", false):
@@ -13960,6 +14144,18 @@ func get_telemetry_state() -> Dictionary:
 		hc["isDead"] = is_dead
 		hc["is_alive"] = not is_dead
 		hc["is_dead"] = is_dead
+
+		var effs: Array[String] = []
+		if h.get("potion_defense_active", false): effs.append("potion_defense")
+		if h.get("rock_skin_active", false): effs.append("rock_skin")
+		if h.get("courage_active", false): effs.append("courage")
+		if h.get("swift_wind_active", false): effs.append("swift_wind")
+		if h.get("pass_through_rock_active", false): effs.append("pass_through_rock")
+		if h.get("veil_of_mist_active", false): effs.append("veil_of_mist")
+		if h.get("is_sleeping", false): effs.append("sleep")
+
+		hc["statusEffects"] = effs
+		hc["activeEffects"] = effs
 		heroes_copy.append(hc)
 
 		var cur_bp = int(h.get("current_bp", 8))
@@ -13967,13 +14163,6 @@ func get_telemetry_state() -> Dictionary:
 		var cur_mp = int(h.get("current_mp", 2))
 		var max_mp = int(h.get("mindPoints", 2))
 		var is_act = (i == active_hero_idx and current_phase == "hero_phase" and current_role == "player" and not is_dead)
-		var effs: Array[String] = []
-		if h.get("rock_skin_active", false): effs.append("rock_skin")
-		if h.get("courage_active", false): effs.append("courage")
-		if h.get("swift_wind_active", false): effs.append("swift_wind")
-		if h.get("pass_through_rock_active", false): effs.append("pass_through_rock")
-		if h.get("veil_of_mist_active", false): effs.append("veil_of_mist")
-		if h.get("is_sleeping", false): effs.append("sleep")
 
 		var eq_w = str(h.get("equipped_weapon", h.get("weapon", ""))).strip_edges().to_lower()
 		var eq_a = h.get("equipped_armor", [])
@@ -14020,6 +14209,7 @@ func get_telemetry_state() -> Dictionary:
 			"cardIcons": _get_hero_card_icons_telemetry(h),
 			"armor": h.get("equipped_armor", []),
 			"statusEffects": effs,
+			"activeEffects": effs,
 			"tokenAsset": get_hero_token_path(h),
 			"hasTokenTexture": (get_hero_token_texture(h) != null),
 			"hasAiBackground": (get_hero_card_bg_texture(str(h.get("id"))) != null),
@@ -15517,9 +15707,9 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			var item_id = str(action_data.get("itemId", action_data.get("item_id", action_data.get("item", ""))))
 			var res = buy_armory_item(h_id, item_id)
 			return res
-		"dm_attack":
-			var hid = str(action_data.get("heroId", action_data.get("target", "")))
-			var mid = str(action_data.get("monsterId", action_data.get("attacker", action_data.get("monster", ""))))
+		"dm_attack", "dm_attack_hero":
+			var hid = str(action_data.get("heroId", action_data.get("target_hero_id", action_data.get("target", ""))))
+			var mid = str(action_data.get("monsterId", action_data.get("monster_id", action_data.get("attacker", action_data.get("monster", "")))))
 			var res = dm_attack_hero(hid, mid)
 			return { "success": true, "result": res }
 		"dm_cast_spell", "monster_cast_spell":
@@ -16392,6 +16582,8 @@ func _draw_board(canvas: CanvasItem) -> void:
 			canvas.draw_string(ThemeDB.fallback_font, Vector2(screen_pos.x - init_w * 0.5, screen_pos.y + font_size * 0.38), h_initial, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size, Color.WHITE)
 
 		# Draw Hero Active Status Auras
+		if h.get("potion_defense_active", false):
+			canvas.draw_arc(screen_pos, token_radius + 4.5, 0, TAU, 28, Color(0.25, 0.65, 1.0, 0.85), 2.2)
 		if h.get("rock_skin_active", false):
 			for s in range(6):
 				var a1 = (float(s) / 6.0) * TAU
