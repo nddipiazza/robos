@@ -7303,6 +7303,17 @@ func roll_movement_dice() -> Dictionary:
 		_log("[RULE] Hero is fallen and cannot roll movement!")
 		show_unavailable_notice("Hero is dead")
 		return {}
+
+	if hero.get("is_sleeping", false):
+		_log("[SLEEP] %s is sound asleep and cannot move!" % hero.get("name", "Hero"))
+		show_unavailable_notice("Hero is asleep")
+		return {}
+
+	if hero.get("tempest_stunned", false) or hero.get("tempest_active", false):
+		_log("[TEMPEST] %s is caught in a tempest and misses this turn!" % hero.get("name", "Hero"))
+		show_unavailable_notice("Hero is caught in tempest")
+		return {}
+
 	var armors: Array = hero.get("equipped_armor", [])
 	var has_plate = armors.has("plate_mail")
 	var is_swift = hero.get("swift_wind_active", false)
@@ -7531,6 +7542,10 @@ func move_hero(target_pos: Vector2i, is_interactive: bool = false) -> bool:
 	hero["grid_pos"] = final_pos
 	hero["has_departed_start"] = true
 	quest_begun = true
+	if hero.get("in_pit", false) or hero.get("in_pit_active", false):
+		hero["in_pit"] = false
+		hero["in_pit_active"] = false
+		_log("[PIT] %s spends movement climbing out of the pit to (%d, %d)!" % [hero.get("name"), final_pos.x, final_pos.y])
 
 	for step_idx in range(1, actual_cost + 1):
 		var step_pos = path[step_idx]
@@ -7576,6 +7591,8 @@ func move_hero(target_pos: Vector2i, is_interactive: bool = false) -> bool:
 			var dmg = base_dmg if roll_skull else 0
 			if dmg > 0:
 				hero["current_bp"] = maxi(0, hero.get("current_bp", 1) - dmg)
+				hero["hit_by_trap"] = true
+				hero["trap_wounded"] = true
 				_log("[TRAP] 🔺 Spear trap springs at (%d, %d)! %s suffers %d damage (Remaining BP: %d). The spears are now spent and the tile is safe." % [
 					final_pos.x, final_pos.y, hero.get("name"), dmg, hero.get("current_bp")
 				])
@@ -7595,6 +7612,8 @@ func move_hero(target_pos: Vector2i, is_interactive: bool = false) -> bool:
 					skulls += 1
 			var dmg = maxi(1, skulls)
 			hero["current_bp"] = maxi(0, hero.get("current_bp", 1) - dmg)
+			hero["hit_by_trap"] = true
+			hero["trap_wounded"] = true
 
 			# Hero pushed back to safe entry tile along path before falling block!
 			var trap_tile = final_pos
@@ -7623,6 +7642,10 @@ func move_hero(target_pos: Vector2i, is_interactive: bool = false) -> bool:
 			# Pit Trap: 1 BP damage with NO defense roll, movement ends, cannot be disarmed once sprung
 			var dmg = int(sprung_trap.get("damageDice", 1))
 			hero["current_bp"] = maxi(0, hero.get("current_bp", 1) - dmg)
+			hero["in_pit"] = true
+			hero["in_pit_active"] = true
+			hero["hit_by_trap"] = true
+			hero["trap_wounded"] = true
 			_log("[TRAP] 🕳️ Pit trap sprung at (%d, %d)! %s plunges into the pit and suffers %d damage (Remaining BP: %d). Movement halts!" % [
 				final_pos.x, final_pos.y, hero.get("name"), dmg, hero.get("current_bp")
 			])
@@ -7776,6 +7799,8 @@ func get_hero_attack_dice(h: Dictionary) -> int:
 	var base_atk = int(w.get("attack_dice", h.get("attackDice", 1)))
 	if h.get("courage_active", false):
 		base_atk += 2
+	if h.get("fear_active", false):
+		base_atk = max(1, base_atk - 1)
 	return base_atk
 
 func get_hero_defend_dice(h: Dictionary) -> int:
@@ -7796,8 +7821,24 @@ func get_hero_defend_dice(h: Dictionary) -> int:
 		base_def += 1
 	if h.get("potion_defense_active", false):
 		base_def += int(h.get("potion_defense_bonus", 2))
+	if h.get("veil_of_mist_active", false):
+		base_def += 1
+	if h.get("rust_active", false):
+		base_def = max(1, base_def - 1)
 
 	return base_def
+
+func get_monster_attack_dice(m: Dictionary) -> int:
+	var atk = int(m.get("attackDice", 2))
+	if m.get("fear_active", false) or m.get("weakened", false):
+		atk = max(1, atk - 1)
+	return atk
+
+func get_monster_defend_dice(m: Dictionary) -> int:
+	if m.get("is_sleeping", false):
+		return 0
+	var def_d = int(m.get("defendDice", 2))
+	return def_d
 
 func equip_item(hero_id: String, item_id: String) -> Dictionary:
 	var hero: Dictionary = {}
@@ -8459,6 +8500,221 @@ func oracle_reroll_dice(hero_id: String = "", roll_type: String = "") -> Diction
 
 	return { "success": false, "error": "Unknown roll type: " + eff_roll_type }
 
+# ==============================================================================
+# HEROQUEST STATUS EFFECTS SUBSYSTEM (Heroes & Monsters)
+# ==============================================================================
+
+func get_hero_status_effects(h: Dictionary) -> Array[String]:
+	var effs: Array[String] = []
+	# Beneficial (spells & potions)
+	if h.get("courage_active", false): effs.append("courage")
+	if h.get("rock_skin_active", false): effs.append("rock_skin")
+	if h.get("veil_of_mist_active", false): effs.append("veil_of_mist")
+	if h.get("swift_wind_active", false): effs.append("swift_wind")
+	if h.get("pass_through_rock_active", false): effs.append("pass_through_rock")
+	if h.get("potion_defense_active", false): effs.append("potion_defense")
+	# Harmful (chaos spells, hazards & traps)
+	if h.get("fear_active", false): effs.append("fear")
+	if h.get("rust_active", false): effs.append("rust")
+	if h.get("command_active", false): effs.append("command")
+	if h.get("tempest_stunned", false) or h.get("tempest_active", false):
+		effs.append("tempest")
+		effs.append("tempest_stunned")
+	if h.get("is_sleeping", false): effs.append("sleep")
+	if h.get("in_pit", false) or h.get("in_pit_active", false):
+		effs.append("in_pit")
+		effs.append("pit")
+	if h.get("hit_by_trap", false) or h.get("trap_wounded", false):
+		effs.append("hit_by_trap")
+		effs.append("trap_wounded")
+	return effs
+
+func get_monster_status_effects(m: Dictionary) -> Array[String]:
+	var effs: Array[String] = []
+	var cur_bp = int(m.get("current_bp", 1))
+	var is_alive = bool(m.get("is_alive", true)) and cur_bp > 0
+	if not is_alive:
+		effs.append("dead")
+	if m.get("is_sleeping", false):
+		effs.append("sleep")
+		effs.append("asleep")
+	if m.get("tempest_stunned", false) or m.get("tempest_active", false):
+		effs.append("tempest")
+		effs.append("tempest_stunned")
+	if m.get("fear_active", false) or m.get("weakened", false):
+		effs.append("fear")
+	if m.get("frozen_active", false) or m.get("held_active", false):
+		effs.append("frozen")
+		effs.append("held")
+	if m.get("hit_by_fire", false) or m.get("fire_damage_taken", false):
+		effs.append("hit_by_fire")
+	return effs
+
+func apply_status_effect(target_id: String, effect_name: String, _value: Variant = true) -> Dictionary:
+	var clean_eff = effect_name.to_lower().strip_edges().replace("-", "_")
+	var t_hero: Dictionary = {}
+	var t_monster: Dictionary = {}
+
+	for h in heroes:
+		if str(h.get("id")) == target_id:
+			t_hero = h
+			break
+	if t_hero.is_empty():
+		for m in monsters:
+			if str(m.get("id")) == target_id or str(m.get("slug")) == target_id:
+				t_monster = m
+				break
+
+	if not t_hero.is_empty():
+		var h_name = str(t_hero.get("name", target_id))
+		match clean_eff:
+			"fear":
+				t_hero["fear_active"] = true
+				_log("[STATUS] 😱 %s is gripped by Fear! Attacks with fewer combat dice." % h_name)
+			"rust":
+				t_hero["rust_active"] = true
+				_log("[STATUS] 🛡️ %s's armor is corroded by Rust! Defends with fewer combat dice." % h_name)
+			"command":
+				t_hero["command_active"] = true
+				_log("[STATUS] 👁️ %s is under Command! Zargon forces their actions." % h_name)
+			"tempest", "tempest_stunned":
+				t_hero["tempest_stunned"] = true
+				t_hero["tempest_active"] = true
+				_log("[STATUS] 🌪️ %s is caught in a Tempest! Will miss their next turn." % h_name)
+			"in_pit", "pit":
+				t_hero["in_pit"] = true
+				t_hero["in_pit_active"] = true
+				_log("[STATUS] 🕳️ %s is In a Pit! Suffers damage and must spend movement climbing out." % h_name)
+			"hit_by_trap", "trap_hit", "trap_wounded":
+				t_hero["hit_by_trap"] = true
+				t_hero["trap_wounded"] = true
+				_log("[STATUS] ⚠️ %s was hit by a dungeon trap, losing Body Points." % h_name)
+			"courage":
+				t_hero["courage_active"] = true
+				_log("[STATUS] 🦁 %s is filled with Courage! Rolls +2 extra attack dice." % h_name)
+			"rock_skin":
+				t_hero["rock_skin_active"] = true
+				_log("[STATUS] 🪨 %s is shielded by Rock Skin! Rolls +1 extra defend die." % h_name)
+			"veil_of_mist":
+				t_hero["veil_of_mist_active"] = true
+				_log("[STATUS] 🌫️ %s is shrouded by Veil of Mist! Can move through monsters and is harder to hit." % h_name)
+			"swift_wind":
+				t_hero["swift_wind_active"] = true
+				_log("[STATUS] ⚡ %s is caught in Swift Wind! Movement dice doubled to 4d6." % h_name)
+			"sleep", "asleep":
+				t_hero["is_sleeping"] = true
+				_log("[STATUS] 💤 %s falls into deep enchanted Sleep!" % h_name)
+			_:
+				t_hero[clean_eff + "_active"] = true
+				_log("[STATUS] Applied effect '%s' to %s." % [clean_eff, h_name])
+
+		_update_ui()
+		queue_redraw_all()
+		auto_save_game()
+		return { "success": true, "target": target_id, "is_hero": true, "effect": clean_eff, "statusEffects": get_hero_status_effects(t_hero) }
+
+	elif not t_monster.is_empty():
+		var m_name = str(t_monster.get("name", target_id))
+		match clean_eff:
+			"sleep", "asleep":
+				t_monster["is_sleeping"] = true
+				_log("[STATUS] 💤 %s falls Asleep! Cannot move, attack, or defend." % m_name)
+			"tempest", "tempest_stunned":
+				t_monster["tempest_stunned"] = true
+				t_monster["tempest_active"] = true
+				_log("[STATUS] 🌪️ %s is caught in a Tempest! Misses its next turn." % m_name)
+			"fear", "weakened":
+				t_monster["fear_active"] = true
+				_log("[STATUS] 😱 %s is struck by Fear! Attacks with fewer dice." % m_name)
+			"frozen", "held", "held_in_place":
+				t_monster["frozen_active"] = true
+				_log("[STATUS] ❄️ %s is Frozen / held in place! Movement reduced to 0." % m_name)
+			"hit_by_fire", "fire_damage":
+				t_monster["hit_by_fire"] = true
+				_log("[STATUS] 🔥 %s suffered direct fire damage!" % m_name)
+			"dead", "defeated":
+				t_monster["is_alive"] = false
+				t_monster["current_bp"] = 0
+				_log("[STATUS] 💀 %s is dead and removed from the board." % m_name)
+			_:
+				t_monster[clean_eff + "_active"] = true
+				_log("[STATUS] Applied effect '%s' to monster %s." % [clean_eff, m_name])
+
+		_update_ui()
+		queue_redraw_all()
+		auto_save_game()
+		return { "success": true, "target": target_id, "is_monster": true, "effect": clean_eff, "statusEffects": get_monster_status_effects(t_monster) }
+
+	return { "success": false, "error": "Target not found: " + target_id }
+
+func remove_status_effect(target_id: String, effect_name: String) -> Dictionary:
+	var clean_eff = effect_name.to_lower().strip_edges().replace("-", "_")
+	var t_hero: Dictionary = {}
+	var t_monster: Dictionary = {}
+
+	for h in heroes:
+		if str(h.get("id")) == target_id:
+			t_hero = h
+			break
+	if t_hero.is_empty():
+		for m in monsters:
+			if str(m.get("id")) == target_id or str(m.get("slug")) == target_id:
+				t_monster = m
+				break
+
+	if not t_hero.is_empty():
+		match clean_eff:
+			"fear": t_hero["fear_active"] = false
+			"rust": t_hero["rust_active"] = false
+			"command": t_hero["command_active"] = false
+			"tempest", "tempest_stunned":
+				t_hero["tempest_stunned"] = false
+				t_hero["tempest_active"] = false
+			"in_pit", "pit":
+				t_hero["in_pit"] = false
+				t_hero["in_pit_active"] = false
+			"hit_by_trap", "trap_hit", "trap_wounded":
+				t_hero["hit_by_trap"] = false
+				t_hero["trap_wounded"] = false
+			"courage": t_hero["courage_active"] = false
+			"rock_skin": t_hero["rock_skin_active"] = false
+			"veil_of_mist": t_hero["veil_of_mist_active"] = false
+			"swift_wind": t_hero["swift_wind_active"] = false
+			"sleep", "asleep": t_hero["is_sleeping"] = false
+			_: t_hero[clean_eff + "_active"] = false
+
+		_update_ui()
+		queue_redraw_all()
+		auto_save_game()
+		return { "success": true, "target": target_id, "removed": clean_eff, "statusEffects": get_hero_status_effects(t_hero) }
+
+	elif not t_monster.is_empty():
+		match clean_eff:
+			"sleep", "asleep": t_monster["is_sleeping"] = false
+			"tempest", "tempest_stunned":
+				t_monster["tempest_stunned"] = false
+				t_monster["tempest_active"] = false
+			"fear", "weakened": t_monster["fear_active"] = false
+			"frozen", "held", "held_in_place": t_monster["frozen_active"] = false
+			"hit_by_fire", "fire_damage": t_monster["hit_by_fire"] = false
+			_: t_monster[clean_eff + "_active"] = false
+
+		_update_ui()
+		queue_redraw_all()
+		auto_save_game()
+		return { "success": true, "target": target_id, "removed": clean_eff, "statusEffects": get_monster_status_effects(t_monster) }
+
+	return { "success": false, "error": "Target not found: " + target_id }
+
+func get_target_status_effects(target_id: String) -> Dictionary:
+	for h in heroes:
+		if str(h.get("id")) == target_id:
+			return { "success": true, "target": target_id, "is_hero": true, "statusEffects": get_hero_status_effects(h) }
+	for m in monsters:
+		if str(m.get("id")) == target_id or str(m.get("slug")) == target_id:
+			return { "success": true, "target": target_id, "is_monster": true, "statusEffects": get_monster_status_effects(m) }
+	return { "success": false, "error": "Target not found: " + target_id }
+
 # --- Hero Item & Equipment Exchange (HeroQuest Adjacency Rule) ---
 func are_heroes_adjacent(h1: Dictionary, h2: Dictionary) -> bool:
 	if h1.is_empty() or h2.is_empty() or str(h1.get("id")) == str(h2.get("id")):
@@ -8731,6 +8987,16 @@ func attack_adjacent_monster(monster_id: String = "", weapon_id: String = "") ->
 		show_unavailable_notice("Not enough actions", hero.get("grid_pos", Vector2i(-1, -1)))
 		return { "success": false, "error": "Already acted this turn" }
 
+	if hero.get("is_sleeping", false):
+		_log("[SLEEP] %s is sound asleep and cannot attack!" % hero.get("name", "Hero"))
+		show_unavailable_notice("Hero is asleep", hero.get("grid_pos", Vector2i(-1, -1)))
+		return { "success": false, "error": "Hero is asleep and cannot attack" }
+
+	if hero.get("tempest_stunned", false) or hero.get("tempest_active", false):
+		_log("[TEMPEST] %s is caught in a tempest and misses this turn!" % hero.get("name", "Hero"))
+		show_unavailable_notice("Hero is caught in tempest", hero.get("grid_pos", Vector2i(-1, -1)))
+		return { "success": false, "error": "Hero is caught in a tempest and misses this turn" }
+
 	if weapon_id != "":
 		hero["equipped_weapon"] = weapon_id
 
@@ -8803,9 +9069,7 @@ func attack_adjacent_monster(monster_id: String = "", weapon_id: String = "") ->
 		spawn_slash_vfx(center_screen, 0.0)
 
 	var atk_dice = get_hero_attack_dice(hero)
-	var def_dice = int(target_m.get("defendDice", 2))
-	if target_m.get("is_sleeping", false):
-		def_dice = 0
+	var def_dice = get_monster_defend_dice(target_m)
 
 	var res = TabletopDice.resolve_combat(atk_dice, def_dice, false)
 	var will_defeat = (res.wounds >= int(target_m.get("current_bp", 1)))
@@ -8905,7 +9169,7 @@ func dm_attack_hero(hero_id: String = "", attacker_monster: Variant = null) -> D
 		_log("No living hero to attack!")
 		return {}
 
-	var atk_dice = int(monster.get("attackDice", 2))
+	var atk_dice = get_monster_attack_dice(monster)
 	var def_dice = get_hero_defend_dice(target_h)
 	var h_pos = _to_grid_pos(target_h.get("grid_pos", Vector2i(-1, -1)))
 
@@ -9079,6 +9343,7 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 				target_m.get("name"), shields, wounds, target_m.get("current_bp")
 			])
 			if wounds > 0:
+				target_m["hit_by_fire"] = true
 				var is_m_def = int(target_m.get("current_bp", 0)) <= 0
 				record_damage_event(
 					str(target_m.get("name", "Monster")),
@@ -9126,6 +9391,7 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 				target_m.get("name"), shields, wounds, target_m.get("current_bp")
 			])
 			if wounds > 0:
+				target_m["hit_by_fire"] = true
 				var is_m_def = int(target_m.get("current_bp", 0)) <= 0
 				record_damage_event(
 					str(target_m.get("name", "Monster")),
@@ -9256,7 +9522,7 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 					return { "success": false, "error": "No target monster in line of sight for Genie" }
 				var m_pos = target_m.get("grid_pos", Vector2i(-1, -1))
 				spawn_projectile_vfx(hero_pos, m_pos, Color(0.1, 0.8, 1.0), 0.35, "genie_burst")
-				var combat_res = TabletopDice.resolve_combat(5, target_m.get("defendDice", 2), false)
+				var combat_res = TabletopDice.resolve_combat(5, get_monster_defend_dice(target_m), false)
 				var will_defeat = (combat_res.wounds >= int(target_m.get("current_bp", 1)))
 				trigger_combat_dice_roll(combat_res, "Genie", str(target_m.get("name", "Monster")), false, will_defeat)
 				target_m["current_bp"] = maxi(0, target_m.get("current_bp", 1) - combat_res.wounds)
@@ -9298,16 +9564,29 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 
 		"tempest":
 			var target_m = _find_spell_target_monster(target_id, hero_pos)
-			if target_m.is_empty():
-				return { "success": false, "error": "No target monster in line of sight for Tempest" }
-			target_m["tempest_stunned"] = true
-			var m_pos = target_m.get("grid_pos", Vector2i(-1, -1))
-			var m_screen = board_offset + Vector2((m_pos.x + 0.5) * tile_size, (m_pos.y + 0.5) * tile_size)
-			spawn_cyclone_vfx(m_screen, Color(0.1, 0.7, 0.9), 0.6)
-			spawn_floating_text(m_pos, "STUNNED", Color(0.2, 0.8, 1.0))
-			_log("[SPELL] Tempest whirlwind traps %s! It will miss its next turn." % target_m.get("name"))
-			res["target"] = target_m.get("id")
-			res["tempest_stunned"] = true
+			if not target_m.is_empty():
+				target_m["tempest_stunned"] = true
+				target_m["tempest_active"] = true
+				var m_pos = target_m.get("grid_pos", Vector2i(-1, -1))
+				var m_screen = board_offset + Vector2((m_pos.x + 0.5) * tile_size, (m_pos.y + 0.5) * tile_size)
+				spawn_cyclone_vfx(m_screen, Color(0.1, 0.7, 0.9), 0.6)
+				spawn_floating_text(m_pos, "STUNNED", Color(0.2, 0.8, 1.0))
+				_log("[SPELL] Tempest whirlwind traps %s! It will miss its next turn." % target_m.get("name"))
+				res["target"] = target_m.get("id")
+				res["tempest_stunned"] = true
+			else:
+				var target_h = _find_spell_target_hero(target_id)
+				if target_h.is_empty():
+					return { "success": false, "error": "No target monster or hero in line of sight for Tempest" }
+				target_h["tempest_stunned"] = true
+				target_h["tempest_active"] = true
+				var th_pos = target_h.get("grid_pos", hero_pos)
+				var th_screen = board_offset + Vector2((th_pos.x + 0.5) * tile_size, (th_pos.y + 0.5) * tile_size)
+				spawn_cyclone_vfx(th_screen, Color(0.1, 0.7, 0.9), 0.6)
+				spawn_floating_text(th_pos, "STUNNED", Color(0.2, 0.8, 1.0))
+				_log("[SPELL] Tempest whirlwind traps %s! Hero will miss their next turn." % target_h.get("name"))
+				res["target"] = target_h.get("id")
+				res["tempest_stunned"] = true
 
 		"command":
 			var target_h = _find_spell_target_hero(target_id)
@@ -10981,6 +11260,10 @@ func end_turn() -> void:
 		if cur_hero.size() > 0:
 			if has_moved_this_turn or has_acted_this_turn:
 				cur_hero["has_departed_start"] = true
+			if cur_hero.get("tempest_stunned", false) or cur_hero.get("tempest_active", false):
+				cur_hero["tempest_stunned"] = false
+				cur_hero["tempest_active"] = false
+				_log("[TEMPEST] %s recovers from the tempest whirlwind at the end of their missed turn." % cur_hero.get("name", "Hero"))
 		
 		var next_hero_found = false
 		for next_i in range(active_hero_idx + 1, heroes.size()):
@@ -11821,6 +12104,9 @@ func _execute_single_monster_action(m: Dictionary) -> int:
 
 	var roll = TabletopDice.roll_movement()
 	var max_moves = maxi(int(m.get("movementSquares", 4)), roll.total)
+	if m.get("frozen_active", false) or m.get("held_active", false):
+		max_moves = 0
+		_log("[FROZEN] %s is frozen / held in place and cannot move!" % m.get("name"))
 	var plan = find_best_monster_attack_plan(m, max_moves)
 	var target_h: Dictionary = plan.get("target_hero", {})
 	if target_h.is_empty():
@@ -12130,6 +12416,9 @@ func _begin_next_enemy_turn_in_sequence() -> void:
 	var dice_vals = [roll.d1, roll.d2]
 	enemy_movement_rolled_total = roll.total
 	var max_moves = maxi(int(current_m.get("movementSquares", 4)), roll.total)
+	if current_m.get("frozen_active", false) or current_m.get("held_active", false):
+		max_moves = 0
+		_log("[FROZEN] %s is frozen / held in place and cannot move!" % current_m.get("name"))
 	enemy_movement_remaining = max_moves
 
 	_log("[ENEMY TURN] %s prepares to act! (Rolling 2d6 movement: [%d, %d] = %d squares)" % [
@@ -13098,6 +13387,18 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 		buff_badges.append({ "code": "VM", "desc": "Veil of Mist (Active Water Spell Buff)\nEffect: Allows hero to move unseen through enemy squares.", "color": Color(0.40, 0.70, 0.85) })
 	if h.get("is_sleeping", false):
 		buff_badges.append({ "code": "ZZ", "desc": "Sleep (Status Condition)\nEffect: Hero is asleep and cannot move or take actions.", "color": Color(0.60, 0.50, 0.80) })
+	if h.get("fear_active", false):
+		buff_badges.append({ "code": "FR", "desc": "Fear (Chaos Spell Debuff)\nEffect: The hero attacks with fewer combat dice.", "color": Color(0.75, 0.30, 0.85) })
+	if h.get("rust_active", false):
+		buff_badges.append({ "code": "RU", "desc": "Rust (Chaos Spell Debuff)\nEffect: Damages hero's armor, so they defend with fewer combat dice.", "color": Color(0.80, 0.45, 0.20) })
+	if h.get("command_active", false):
+		buff_badges.append({ "code": "CM", "desc": "Command (Chaos Spell Debuff)\nEffect: Zargon forces the hero's actions.", "color": Color(0.60, 0.20, 0.80) })
+	if h.get("tempest_stunned", false) or h.get("tempest_active", false):
+		buff_badges.append({ "code": "TP", "desc": "Tempest (Spell Debuff)\nEffect: The hero is trapped in a whirlwind and misses their next turn.", "color": Color(0.20, 0.75, 0.95) })
+	if h.get("in_pit", false) or h.get("in_pit_active", false):
+		buff_badges.append({ "code": "PT", "desc": "In a Pit (Hazard)\nEffect: The hero fell into a pit, took damage, and must spend movement climbing out.", "color": Color(0.55, 0.35, 0.20) })
+	if h.get("hit_by_trap", false) or h.get("trap_wounded", false):
+		buff_badges.append({ "code": "TW", "desc": "Hit by a Trap (Hazard Wounded)\nEffect: Suffered Body Point loss from a dungeon trap.", "color": Color(0.85, 0.25, 0.25) })
 
 	for bb in buff_badges:
 		var pill = PanelContainer.new()
@@ -14607,8 +14908,8 @@ func _populate_monster_detail_modal(m: Dictionary) -> void:
 		for child in monster_detail_stats_box.get_children():
 			child.queue_free()
 
-		var atk_dice = int(m.get("attackDice", 2))
-		var def_dice = int(m.get("defendDice", 2))
+		var atk_dice = get_monster_attack_dice(m)
+		var def_dice = get_monster_defend_dice(m)
 		var move_sq = int(m.get("moveSquares", m.get("movementSquares", 6)))
 		var mind_pts = int(m.get("mindPoints", 0))
 
@@ -15015,8 +15316,8 @@ func _create_enemy_card(m: Dictionary, is_visible: bool) -> PanelContainer:
 	vbox.add_child(bp_row)
 
 	# Row 4: Stats row (ATK, DEF, MOV, MP)
-	var atk_d = int(m.get("attackDice", 2))
-	var def_d = int(m.get("defendDice", 2))
+	var atk_d = get_monster_attack_dice(m)
+	var def_d = get_monster_defend_dice(m)
 	var mv_sq = int(m.get("moveSquares", m.get("movementSquares", 6)))
 	var mind_p = int(m.get("mindPoints", 0))
 	var stat_row = HBoxContainer.new()
@@ -15027,27 +15328,35 @@ func _create_enemy_card(m: Dictionary, is_visible: bool) -> PanelContainer:
 	stat_row.add_child(stat_lbl)
 	vbox.add_child(stat_row)
 
-	# Row 5: Conditions (Sleep, Stun, etc.)
-	var eff_list: Array[String] = []
+	# Row 5: Conditions (Sleep, Tempest, Fear, Frozen, Burned, Dead)
+	var eff_list: Array[Dictionary] = []
+	if not is_alive:
+		eff_list.append({ "label": "💀 Dead", "bg": Color(0.30, 0.08, 0.08, 0.9), "border": Color(0.8, 0.2, 0.2, 0.9) })
 	if is_sleeping:
-		eff_list.append("Sleeping")
-	if is_stunned:
-		eff_list.append("Stunned")
+		eff_list.append({ "label": "💤 Sleeping", "bg": Color(0.35, 0.20, 0.10, 0.9), "border": Color(0.9, 0.65, 0.2, 0.9) })
+	if is_stunned or m.get("tempest_stunned", false):
+		eff_list.append({ "label": "🌪️ Tempest", "bg": Color(0.10, 0.25, 0.35, 0.9), "border": Color(0.2, 0.8, 1.0, 0.9) })
+	if m.get("fear_active", false) or m.get("weakened", false):
+		eff_list.append({ "label": "😱 Feared", "bg": Color(0.25, 0.10, 0.35, 0.9), "border": Color(0.7, 0.3, 0.9, 0.9) })
+	if m.get("frozen_active", false) or m.get("held_active", false):
+		eff_list.append({ "label": "❄️ Frozen", "bg": Color(0.10, 0.20, 0.40, 0.9), "border": Color(0.3, 0.7, 1.0, 0.9) })
+	if m.get("hit_by_fire", false) or m.get("fire_damage_taken", false):
+		eff_list.append({ "label": "🔥 Burned", "bg": Color(0.35, 0.15, 0.05, 0.9), "border": Color(1.0, 0.45, 0.1, 0.9) })
 
 	if eff_list.size() > 0:
 		var eff_row = HBoxContainer.new()
 		eff_row.add_theme_constant_override("separation", 4)
-		for eff in eff_list:
+		for c_item in eff_list:
 			var pill = PanelContainer.new()
 			var psb = StyleBoxFlat.new()
-			psb.bg_color = Color(0.35, 0.20, 0.10, 0.9) if "Sleep" in eff else Color(0.15, 0.25, 0.4, 0.9)
-			psb.border_color = Color(0.9, 0.65, 0.2, 0.9) if "Sleep" in eff else Color(0.3, 0.7, 1.0, 0.9)
+			psb.bg_color = c_item.bg
+			psb.border_color = c_item.border
 			psb.border_width_left = 1; psb.border_width_top = 1; psb.border_width_right = 1; psb.border_width_bottom = 1
 			psb.corner_radius_top_left = 3; psb.corner_radius_top_right = 3
 			psb.corner_radius_bottom_left = 3; psb.corner_radius_bottom_right = 3
 			pill.add_theme_stylebox_override("panel", psb)
 			var plbl = Label.new()
-			plbl.text = eff
+			plbl.text = c_item.label
 			plbl.add_theme_font_size_override("font_size", 9)
 			plbl.add_theme_color_override("font_color", Color(1.0, 0.95, 0.8, 1.0))
 			var pmarg = MarginContainer.new()
@@ -15494,14 +15803,7 @@ func get_telemetry_state() -> Dictionary:
 		hc["is_alive"] = not is_dead
 		hc["is_dead"] = is_dead
 
-		var effs: Array[String] = []
-		if h.get("potion_defense_active", false): effs.append("potion_defense")
-		if h.get("rock_skin_active", false): effs.append("rock_skin")
-		if h.get("courage_active", false): effs.append("courage")
-		if h.get("swift_wind_active", false): effs.append("swift_wind")
-		if h.get("pass_through_rock_active", false): effs.append("pass_through_rock")
-		if h.get("veil_of_mist_active", false): effs.append("veil_of_mist")
-		if h.get("is_sleeping", false): effs.append("sleep")
+		var effs = get_hero_status_effects(h)
 
 		hc["statusEffects"] = effs
 		hc["activeEffects"] = effs
@@ -15581,6 +15883,9 @@ func get_telemetry_state() -> Dictionary:
 		var mc = m.duplicate(true)
 		var mp = m.get("grid_pos", Vector2i(-1, -1))
 		mc["grid_pos"] = [mp.x, mp.y]
+		mc["statusEffects"] = get_monster_status_effects(m)
+		mc["attackDice"] = get_monster_attack_dice(m)
+		mc["defendDice"] = get_monster_defend_dice(m)
 		monsters_copy.append(mc)
 
 		var mid = str(m.get("id"))
@@ -15589,9 +15894,7 @@ func get_telemetry_state() -> Dictionary:
 			var cur_bp = int(m.get("current_bp", 1))
 			var max_bp = int(m.get("bodyPoints", 1))
 			var alive = bool(m.get("is_alive", true)) and cur_bp > 0
-			var effs: Array[String] = []
-			if m.get("is_sleeping", false): effs.append("sleep")
-			if m.get("tempest_stunned", false): effs.append("tempest_stunned")
+			var effs = get_monster_status_effects(m)
 
 			var badge = "visible"
 			if not alive:
@@ -15609,8 +15912,8 @@ func get_telemetry_state() -> Dictionary:
 				"type": str(m.get("type", "monster")),
 				"current_bp": cur_bp,
 				"max_bp": max_bp,
-				"attackDice": int(m.get("attackDice", 2)),
-				"defendDice": int(m.get("defendDice", 2)),
+				"attackDice": get_monster_attack_dice(m),
+				"defendDice": get_monster_defend_dice(m),
 				"moveSquares": int(m.get("moveSquares", 6)),
 				"isVisible": vis,
 				"isAlive": alive,
@@ -16684,6 +16987,23 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 									h["has_departed_start"] = bool(h_patch[k])
 								elif k == "used_spells" or k == "usedSpells":
 									h["used_spells"] = h_patch[k].duplicate(true) if (h_patch[k] is Array) else []
+								elif k == "statusEffects" or k == "status_effects":
+									if h_patch[k] is Array:
+										var eff_arr = h_patch[k]
+										h["fear_active"] = ("fear" in eff_arr)
+										h["rust_active"] = ("rust" in eff_arr)
+										h["command_active"] = ("command" in eff_arr)
+										h["tempest_stunned"] = ("tempest" in eff_arr or "tempest_stunned" in eff_arr)
+										h["tempest_active"] = h["tempest_stunned"]
+										h["in_pit"] = ("in_pit" in eff_arr or "pit" in eff_arr)
+										h["in_pit_active"] = h["in_pit"]
+										h["hit_by_trap"] = ("hit_by_trap" in eff_arr or "trap_wounded" in eff_arr)
+										h["trap_wounded"] = h["hit_by_trap"]
+										h["courage_active"] = ("courage" in eff_arr)
+										h["rock_skin_active"] = ("rock_skin" in eff_arr)
+										h["veil_of_mist_active"] = ("veil_of_mist" in eff_arr)
+										h["swift_wind_active"] = ("swift_wind" in eff_arr)
+										h["is_sleeping"] = ("sleep" in eff_arr or "asleep" in eff_arr)
 								else:
 									h[k] = h_patch[k]
 							break
@@ -16719,8 +17039,23 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 								found_m["current_bp"] = int(m_patch[k])
 								if int(m_patch[k]) <= 0:
 									found_m["is_alive"] = false
+							elif k == "statusEffects" or k == "status_effects":
+								if m_patch[k] is Array:
+									var eff_arr = m_patch[k]
+									found_m["is_sleeping"] = ("sleep" in eff_arr or "asleep" in eff_arr)
+									found_m["tempest_stunned"] = ("tempest" in eff_arr or "tempest_stunned" in eff_arr)
+									found_m["tempest_active"] = found_m["tempest_stunned"]
+									found_m["fear_active"] = ("fear" in eff_arr or "weakened" in eff_arr)
+									found_m["frozen_active"] = ("frozen" in eff_arr or "held" in eff_arr or "held_in_place" in eff_arr)
+									found_m["hit_by_fire"] = ("hit_by_fire" in eff_arr or "fire_damage" in eff_arr)
+									if "dead" in eff_arr or "defeated" in eff_arr:
+										found_m["is_alive"] = false
+										found_m["current_bp"] = 0
 							else:
 								found_m[k] = m_patch[k]
+						var fmid = str(found_m.get("id", ""))
+						if fmid != "":
+							discovered_monster_ids[fmid] = true
 					else:
 						var new_m = m_patch.duplicate(true)
 						if new_m.has("grid_pos") and new_m["grid_pos"] is Array:
@@ -16731,7 +17066,22 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 							new_m["attackDice"] = 2
 						if not new_m.has("defendDice"):
 							new_m["defendDice"] = 2
+						if new_m.has("statusEffects") or new_m.has("status_effects"):
+							var eff_arr = new_m.get("statusEffects", new_m.get("status_effects", []))
+							if eff_arr is Array:
+								new_m["is_sleeping"] = ("sleep" in eff_arr or "asleep" in eff_arr)
+								new_m["tempest_stunned"] = ("tempest" in eff_arr or "tempest_stunned" in eff_arr)
+								new_m["tempest_active"] = new_m["tempest_stunned"]
+								new_m["fear_active"] = ("fear" in eff_arr or "weakened" in eff_arr)
+								new_m["frozen_active"] = ("frozen" in eff_arr or "held" in eff_arr or "held_in_place" in eff_arr)
+								new_m["hit_by_fire"] = ("hit_by_fire" in eff_arr or "fire_damage" in eff_arr)
+								if "dead" in eff_arr or "defeated" in eff_arr:
+									new_m["is_alive"] = false
+									new_m["current_bp"] = 0
 						monsters.append(new_m)
+						var nmid = str(new_m.get("id", ""))
+						if nmid != "":
+							discovered_monster_ids[nmid] = true
 
 			if action_data.has("doors") and action_data.doors is Array:
 				for d_patch in action_data.doors:
@@ -16950,6 +17300,9 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			if action_data.has("target") and action_data.target is Array and action_data.target.size() >= 2:
 				tx = int(action_data.target[0])
 				ty = int(action_data.target[1])
+			elif action_data.has("to") and action_data.to is Array and action_data.to.size() >= 2:
+				tx = int(action_data.to[0])
+				ty = int(action_data.to[1])
 			var is_interactive = bool(action_data.get("interactive", false))
 			var ok = move_hero(Vector2i(tx, ty), is_interactive)
 			return { "success": ok }
@@ -17010,6 +17363,23 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			var h_id = str(action_data.get("heroId", action_data.get("hero", get_active_hero().get("id", ""))))
 			var r_type = str(action_data.get("rollType", action_data.get("roll_type", action_data.get("type", ""))))
 			return oracle_reroll_dice(h_id, r_type)
+		"apply_status_effect", "add_status_effect", "set_status_effect":
+			var t_id = str(action_data.get("targetId", action_data.get("target", action_data.get("heroId", action_data.get("monsterId", "")))))
+			if t_id == "":
+				t_id = str(get_active_hero().get("id", "barbarian"))
+			var eff_name = str(action_data.get("effect", action_data.get("statusEffect", action_data.get("name", ""))))
+			return apply_status_effect(t_id, eff_name)
+		"remove_status_effect", "clear_status_effect":
+			var t_id = str(action_data.get("targetId", action_data.get("target", action_data.get("heroId", action_data.get("monsterId", "")))))
+			if t_id == "":
+				t_id = str(get_active_hero().get("id", "barbarian"))
+			var eff_name = str(action_data.get("effect", action_data.get("statusEffect", action_data.get("name", ""))))
+			return remove_status_effect(t_id, eff_name)
+		"get_status_effects":
+			var t_id = str(action_data.get("targetId", action_data.get("target", action_data.get("heroId", action_data.get("monsterId", "")))))
+			if t_id == "":
+				t_id = str(get_active_hero().get("id", "barbarian"))
+			return get_target_status_effects(t_id)
 		"pass_item", "exchange_item", "give_item", "trade_item":
 			var from_id = str(action_data.get("fromHeroId", action_data.get("from_hero", action_data.get("from", action_data.get("heroId", get_active_hero().get("id", ""))))))
 			var to_id = str(action_data.get("toHeroId", action_data.get("to_hero", action_data.get("to", action_data.get("targetId", action_data.get("target", ""))))))

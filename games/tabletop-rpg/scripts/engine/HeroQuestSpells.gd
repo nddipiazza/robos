@@ -146,15 +146,26 @@ const SPELLS: Dictionary = {
 		"id": "tempest",
 		"name": "Tempest",
 		"deck": "air",
-		"target_type": "monster",
+		"target_type": "any",
 		"range_type": "los",
 		"icon": "🌪️",
-		"description": "Envelops target monster in a violent whirlwind, causing it to lose its next turn.",
+		"description": "Envelops target in a violent whirlwind, causing them to lose their next turn. Can be cast on monsters or heroes.",
 		"vfx": "cyclone_vortex",
 		"color": "#0ea5e9"
 	},
 
 	# --- DREAD / CHAOS SPELLS ---
+	"dread_tempest": {
+		"id": "dread_tempest",
+		"name": "Tempest of Chaos",
+		"deck": "dread",
+		"target_type": "hero",
+		"range_type": "los",
+		"icon": "🌪️",
+		"description": "Whirlwind of dark chaos magic forcing target hero to miss their next turn.",
+		"vfx": "cyclone_vortex",
+		"color": "#0ea5e9"
+	},
 	"command": {
 		"id": "command",
 		"name": "Command",
@@ -270,6 +281,8 @@ func get_spell(spell_id: String) -> Dictionary:
 		return SPELLS.get("sleep_dread", {})
 	if clean_id == "cloud_chaos" or clean_id == "chaos_cloud":
 		return SPELLS.get("cloud_of_chaos", {})
+	if clean_id == "dread_tempest" or clean_id == "tempest_chaos" or clean_id == "chaos_tempest":
+		return SPELLS.get("dread_tempest", {})
 	return SPELLS.get(spell_id.to_lower().strip_edges(), {})
 
 func get_spells_by_deck(deck: String) -> Array[Dictionary]:
