@@ -115,12 +115,14 @@ def run_audit():
         im = Image.open(shot_file)
         w, h = im.size
         print(f"📸 Full screenshot: {w}x{h}")
+        scale_x = w / 1920.0
+        scale_y = h / 1080.0
 
         # Crop dialog area (dialog is 1100x750 centered in 1920x1080)
         # Center of 1920 is 960, center of 1080 is 540
         # Dialog is from x=410 to x=1510, y=165 to y=915
         # Card column is roughly x=750 to 1480, y=200 to 880
-        crop_box = (700, 180, 1450, 900)
+        crop_box = (int(700 * scale_x), int(180 * scale_y), int(1450 * scale_x), int(900 * scale_y))
         card_crop = im.crop(crop_box)
         crop_path = os.path.join(OUT_DIR, f"{card_id}_crop.png")
         card_crop.save(crop_path)
@@ -129,7 +131,7 @@ def run_audit():
         # Let's inspect brightness of illustration area to ensure it's not all solid black
         # In card_crop (width 750, height 720), card is centered
         # Illustration is around crop coords (180, 70, 570, 260)
-        illus_crop = card_crop.crop((180, 70, 570, 260))
+        illus_crop = card_crop.crop((int(180 * scale_x), int(70 * scale_y), int(570 * scale_x), int(260 * scale_y)))
         illus_path = os.path.join(OUT_DIR, f"{card_id}_illus.png")
         illus_crop.save(illus_path)
 
