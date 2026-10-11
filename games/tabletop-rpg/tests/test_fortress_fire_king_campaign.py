@@ -182,5 +182,91 @@ class TestFortressFireKingCampaign(unittest.TestCase):
             proc.wait()
 
 
+    def test_06_cinematic_movie_triggers_and_playback(self):
+        """Scenario 6: In-game cinematic movie playback triggers for Quest Start, Note A corridor, and Boss Room."""
+        from rpc_ai.tabletop_qa_player import TabletopQAPlayer
+        import time
+
+        # 1. Cartridge Metadata Verification
+        quests = self.cart.get("quests", [])
+        q4 = quests[0]
+        self.assertIn("introMovie", q4, "Quest 4 must define introMovie")
+        self.assertIn("quest_introduction_movie", q4["introMovie"])
+
+        maps = self.cart.get("maps", {})
+        f_map = maps["fortress-fire-king"]
+        self.assertIn("introMovie", f_map)
+
+        triggers_by_id = {st.get("id"): st for st in f_map.get("storyTriggers", [])}
+        self.assertIn("trigger-note-a", triggers_by_id)
+        tr_a = triggers_by_id["trigger-note-a"]
+        self.assertIn("movie", tr_a, "Note A trigger must link to corridor heist movie")
+        self.assertIn("quest_scene_a_corridor_heist", tr_a["movie"])
+        self.assertEqual(tr_a.get("tile"), [4, 0])
+
+        rooms_by_id = {r.get("id"): r for r in f_map.get("rooms", [])}
+        self.assertIn("room-center", rooms_by_id)
+        r_boss = rooms_by_id["room-center"]
+        self.assertIn("movie", r_boss, "Boss room must link to Witch Hand undead movie")
+        self.assertIn("quest_scene_f_witch_hand_undead", r_boss["movie"])
+
+        # 2. Headless Godot Execution & Runtime Trigger Tests
+        play_script = os.path.join(ROOT_DIR, "play.sh")
+        port = 18106
+        env = dict(os.environ, TABLETOP_SERVER_PORT=str(port), TABLETOP_CARTRIDGE="heroquest-fortress-fire-king")
+        proc = subprocess.Popen([play_script, "--headless", "--reset", "--cartridge=heroquest-fortress-fire-king"], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        try:
+            player = TabletopQAPlayer(port=port)
+            connected = False
+            for _ in range(30):
+                if player.check_health():
+                    connected = True
+                    break
+                time.sleep(0.3)
+            self.assertTrue(connected, "GameControlServer must connect")
+
+            # Check that intro movie was triggered on quest open
+            mv_state = player.get_movie_state()
+            self.assertIsInstance(mv_state, dict)
+            played = mv_state.get("playedMovies", [])
+            # Intro movie must be in played list
+            has_intro = any("quest_introduction_movie" in p for p in played)
+            self.assertTrue(has_intro, f"Intro movie must have been triggered on quest open. Played: {played}")
+
+            # Trigger Note A (Encounter on the Perimeter at corridor tile (4, 0))
+            res_tr = player.execute_action("trigger_story_event", id="trigger-note-a")
+            self.assertTrue(res_tr.get("success"), f"Trigger Note A must succeed: {res_tr}")
+            mv_state2 = player.get_movie_state()
+            played2 = mv_state2.get("playedMovies", [])
+            has_heist = any("quest_scene_a_corridor_heist" in p for p in played2)
+            self.assertTrue(has_heist, f"Corridor heist movie must have been triggered by Note A. Played: {played2}")
+
+            # Reveal Boss Room (room-center: Grand Hearth Hall / Witch Hand ritual)
+            res_room = player.execute_action("reveal_room", roomId="room-center")
+            self.assertTrue(res_room.get("success"), f"Reveal room-center must succeed: {res_room}")
+            mv_state3 = player.get_movie_state()
+            played3 = mv_state3.get("playedMovies", [])
+            has_boss_movie = any("quest_scene_f_witch_hand_undead" in p for p in played3)
+            self.assertTrue(has_boss_movie, f"Boss room reveal must trigger witch hand movie. Played: {played3}")
+
+            # Test explicit play_movie with MP4 path (verifying transparent MP4->OGV resolution)
+            res_mp4 = player.play_movie(
+                "/home/ndipiazza/Documents/quest_scene_a_corridor_heist.mp4",
+                title="Corridor Ambush Reprise",
+                can_skip=True,
+                once_only=False
+            )
+            self.assertTrue(res_mp4.get("success"), f"Playing movie with MP4 path must succeed: {res_mp4}")
+            self.assertIn("quest_scene_a_corridor_heist.ogv", res_mp4.get("movie", ""))
+
+            # Test skip_movie action
+            res_skip = player.skip_movie()
+            self.assertIn("success", res_skip)
+        finally:
+            proc.terminate()
+            proc.wait()
+
+
 if __name__ == "__main__":
     unittest.main()
+

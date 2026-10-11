@@ -777,10 +777,15 @@ class TabletopQAPlayer:
         heroes = st.get("heroes", [])
         return [h for h in heroes if h.get("is_summon", False) or h.get("isSummon", False)]
 
+    # --- Movie & Cinematic Helpers ---
+    def play_movie(self, movie_path: str, title: str = "", can_skip: bool = True, once_only: bool = False) -> dict:
+        self.log(f"Playing cinematic movie: {title or movie_path}...")
+        return self.execute_action("play_movie", movie=movie_path, title=title, can_skip=can_skip, once_only=once_only)
 
+    def skip_movie(self) -> dict:
+        self.log("Skipping cinematic movie...")
+        return self.execute_action("skip_movie")
 
-
-
-
-
-
+    def get_movie_state(self) -> dict:
+        st = self.get_state()
+        return st.get("movie", {})

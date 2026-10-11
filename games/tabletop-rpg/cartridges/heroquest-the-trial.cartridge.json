@@ -1641,6 +1641,7 @@
       "id": "heroquest-fortress-fire-king",
       "title": "Quest 4: The Fortress of the Fire King (First Light Side A)",
       "mapConfigurationId": "first-light-dungeon",
+      "introMovie": "res://assets/movies/quest_introduction_movie.ogv",
       "width": 26,
       "height": 19,
       "backgroundImage": "res://assets/boards/heroquest_board.png",
@@ -1680,6 +1681,8 @@
           "title": "Encounter on the Perimeter",
           "x": 4,
           "y": 0,
+          "tile": [4, 0],
+          "movie": "res://assets/movies/quest_scene_a_corridor_heist.ogv",
           "narrative": "An orc and a goblin, wearing Cassandria's pale-skull-and-ruby-eyes emblem, haul a heavy ironbound treasure chest along the corridor. On seeing you, the orc panics and heaves the chest straight through a crumbling false wall into the darkness!",
           "gold": 0,
           "reward": "Cassandria's Secret Markings"
@@ -1690,7 +1693,10 @@
           "title": "Chamber of Mist & Undeath",
           "x": 9,
           "y": 9,
-          "narrative": "Freezing gray mist curls across the flagstones. High above the hearth, a Witch Hand of Cassandria chants in a forgotten tongue. Skeletons and mummies step silently from the vapor\u2014and through the very stone walls themselves!",
+          "tile": [9, 9],
+          "room": "room-center",
+          "movie": "res://assets/movies/quest_scene_f_witch_hand_undead.ogv",
+          "narrative": "Freezing gray mist curls across the flagstones. High above the hearth, a Witch Hand of Cassandria chants in a forgotten tongue. Skeletons and mummies step silently from the vapor—and through the very stone walls themselves!",
           "gold": 0,
           "reward": "Spectral Chill"
         }
@@ -1760,6 +1766,7 @@
           "h": 6,
           "quadrant": "center",
           "note": "F",
+          "movie": "res://assets/movies/quest_scene_f_witch_hand_undead.ogv",
           "event": "A Witch Hand begins casting; undead emerge from swirling mist with the stench of undeath.",
           "special": "Undead in this room may move through walls into areas already discovered by the heroes."
         },
@@ -2485,6 +2492,7 @@
       "id": "quest-4",
       "slug": "heroquest-fortress-fire-king",
       "title": "Quest 4: The Fortress of the Fire King",
+      "introMovie": "res://assets/movies/quest_introduction_movie.ogv",
       "briefing": "Mentor examines Visions of King Agrain, a book recovered from the temple. Sir Ragnar takes the book to deliver to Prince Magnus. Mentor sends the heroes beyond the Tul Vor to find the secret passage into the mountain in the ruins of the dwarven fortress built by Forgrin the Fire King, warning that Witch Queen Cassandria seeks it too.",
       "goldReward": 400,
       "completed": false,

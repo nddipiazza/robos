@@ -93,6 +93,19 @@ var enemy_target_hero: Dictionary = {}
 var damage_events: Array[Dictionary] = []
 var last_damage_event: Dictionary = {}
 
+# In-Game Movie & Cinematic Player
+var movie_player_layer: CanvasLayer = null
+var movie_player_backdrop: ColorRect = null
+var movie_player_node: VideoStreamPlayer = null
+var movie_player_title_label: Label = null
+var movie_player_skip_btn: Button = null
+var movie_player_hint_label: Label = null
+var is_movie_playing: bool = false
+var current_movie_path: String = ""
+var current_movie_title: String = ""
+var played_movies: Dictionary = {}
+var pending_movie_callback: Callable
+
 func _update_board_metrics() -> void:
 	if board_sprite and board_sprite.texture:
 		var tex_size = board_sprite.texture.get_size()
@@ -454,6 +467,7 @@ func _ready() -> void:
 	_setup_treasure_modal()
 	_setup_unavailable_notice_style()
 	_setup_targeting_system()
+	_setup_movie_player()
 	_apply_rpg_theme_to_all_modals()
 	_load_door_textures()
 	_load_hero_token_textures()
@@ -467,6 +481,7 @@ func _ready() -> void:
 	else:
 		_log("[PLAYER] [Player Mode Active] You lead the four heroes into the catacombs of Verag!")
 		if is_quest_begin():
+			_check_play_intro_movie()
 			_check_start_elf_spell_selection()
 		else:
 			if elf_spell_modal:
@@ -2851,6 +2866,7 @@ func _load_active_cartridge(force_fresh: bool = false) -> void:
 	_update_ui()
 	queue_redraw_all()
 	if is_quest_begin():
+		_check_play_intro_movie()
 		_check_start_elf_spell_selection()
 	else:
 		if elf_spell_modal:
@@ -3466,6 +3482,17 @@ func reveal_room_by_id(r_id: String) -> void:
 	else:
 		_log("[CALM] The chamber appears calm... for now.")
 
+	# Check if room has an associated cinematic movie
+	var room_movie = str(room_obj.get("movie", room_obj.get("cinematic", "")))
+	if room_movie != "":
+		play_movie(room_movie, "🎬 Chamber Reveal: %s" % room_name, true, true)
+	else:
+		# Check if any story trigger in this room has a movie
+		for st in story_triggers:
+			if str(st.get("room", "")) == r_id and st.has("movie") and not st.get("triggered", false):
+				play_movie(str(st.get("movie")), "🎬 %s: %s" % [st.get("marker", "Note"), st.get("title", room_name)], true, true)
+				break
+
 func _is_inside_any_room(tile: Vector2i) -> bool:
 	return _tile_to_room.has(tile)
 
@@ -3516,6 +3543,9 @@ func get_game_state() -> String:
 		var any_door_open = false
 		for d in doors:
 			if bool(d.get("is_open", false)):
+				var d_room = str(d.get("room", ""))
+				if d_room != "" and not revealed_rooms.has(d_room):
+					continue
 				any_door_open = true
 				break
 		if not any_hero_departed and not any_door_open and not has_moved_this_turn and not has_acted_this_turn and not movement_rolled and revealed_rooms.is_empty():
@@ -7221,6 +7251,13 @@ func can_search_room() -> bool:
 	return bool(_get_search_status().get("can_search", false))
 
 func _input(event: InputEvent) -> void:
+	if is_movie_playing:
+		if (event is InputEventKey and event.pressed and (event.keycode == KEY_ESCAPE or event.keycode == KEY_SPACE or event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER)) or \
+		   (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT):
+			skip_movie()
+			get_viewport().set_input_as_handled()
+			return
+
 	if is_targeting_active():
 		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 			cancel_targeting()
@@ -11259,9 +11296,14 @@ func _find_ground_story_trigger(step_tile: Vector2i, prev_tile: Vector2i = Vecto
 		var st_room = str(st.get("room", ""))
 		var st_tile = st.get("tile", [])
 		var has_tile = (st_tile is Array and st_tile.size() >= 2)
+		var target_tile = Vector2i(-1, -1)
+		if has_tile:
+			target_tile = Vector2i(int(st_tile[0]), int(st_tile[1]))
+		elif st.has("x") and st.has("y"):
+			target_tile = Vector2i(int(st.get("x")), int(st.get("y")))
+			has_tile = true
 
 		if has_tile:
-			var target_tile = Vector2i(int(st_tile[0]), int(st_tile[1]))
 			if target_tile == step_tile:
 				if st_room == "" or cur_room_id == st_room:
 					return st
@@ -11293,6 +11335,9 @@ func _setup_story_trigger_overlay(trigger: Dictionary, hero: Dictionary) -> void
 		active_story_trigger_overlay.marker,
 		active_story_trigger_overlay.title
 	])
+	var movie_url = str(trigger.get("movie", trigger.get("cinematic", "")))
+	if movie_url != "":
+		play_movie(movie_url, "🎬 %s: %s" % [trigger.get("marker", "Note"), trigger.get("title", "Cinematic Scene")], true, true)
 	queue_redraw_all()
 
 func resolve_story_trigger_overlay_click() -> Dictionary:
@@ -16990,6 +17035,7 @@ func get_telemetry_state() -> Dictionary:
 		"reachableWalkTiles": (get_reachable_walk_tiles().map(func(v): return [v.x, v.y])),
 		"storyTriggers": story_triggers,
 		"activeStoryTrigger": active_story_trigger_overlay,
+		"movie": get_movie_state(),
 		"activeEnemyTurnMonsterId": active_enemy_turn_monster_id,
 		"isEnemyTurnWaiting": is_enemy_turn_waiting,
 		"enemyTurnWaitRemaining": enemy_turn_wait_timer,
@@ -17343,6 +17389,21 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				_setup_story_trigger_overlay(found_tr, get_active_hero())
 				return { "success": true, "trigger": found_tr }
 			return { "success": false, "error": "Story trigger not found: " + target_id }
+		"play_movie":
+			var m_path = str(action_data.get("movie", action_data.get("path", "")))
+			var m_title = str(action_data.get("title", ""))
+			var m_skip = bool(action_data.get("can_skip", action_data.get("canSkip", true)))
+			var m_once = bool(action_data.get("once_only", action_data.get("onceOnly", false)))
+			return play_movie(m_path, m_title, m_skip, m_once)
+		"skip_movie":
+			return skip_movie()
+		"get_movie_state":
+			return { "success": true, "movie": get_movie_state() }
+		"reveal_room", "reveal_room_by_id":
+			var r_id = str(action_data.get("roomId", action_data.get("room_id", action_data.get("room", ""))))
+			reveal_room_by_id(r_id)
+			queue_redraw_all()
+			return { "success": true, "revealedRooms": revealed_rooms, "roomId": r_id }
 		"hover_action_button":
 			var btn_key = str(action_data.get("button", "roll"))
 			var target_btn: Button = null
@@ -21105,3 +21166,231 @@ func _draw_white_combat_die(canvas: CanvasItem, center: Vector2, size: float, fa
 	# Reset Canvas Transform
 	canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
+# ==============================================================================
+# IN-GAME MOVIE & CINEMATIC ENGINE
+# ==============================================================================
+
+func _setup_movie_player() -> void:
+	if movie_player_layer and is_instance_valid(movie_player_layer):
+		return
+	movie_player_layer = CanvasLayer.new()
+	movie_player_layer.name = "MoviePlayerLayer"
+	movie_player_layer.layer = 120
+	movie_player_layer.visible = false
+	add_child(movie_player_layer)
+
+	movie_player_backdrop = ColorRect.new()
+	movie_player_backdrop.name = "MovieBackdrop"
+	movie_player_backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
+	movie_player_backdrop.color = Color(0.01, 0.02, 0.03, 0.98)
+	movie_player_backdrop.mouse_filter = Control.MOUSE_FILTER_STOP
+	movie_player_layer.add_child(movie_player_backdrop)
+
+	movie_player_node = VideoStreamPlayer.new()
+	movie_player_node.name = "VideoStreamPlayer"
+	movie_player_node.set_anchors_preset(Control.PRESET_FULL_RECT)
+	movie_player_node.expand = true
+	movie_player_node.loop = false
+	movie_player_node.bus = "Master"
+	movie_player_node.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	movie_player_backdrop.add_child(movie_player_node)
+	movie_player_node.finished.connect(_on_movie_player_finished)
+
+	# Top Title Banner
+	var top_panel = PanelContainer.new()
+	top_panel.name = "MovieTopBar"
+	top_panel.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	top_panel.offset_top = 20.0
+	top_panel.offset_left = 60.0
+	top_panel.offset_right = -60.0
+	top_panel.offset_bottom = 76.0
+	var top_style = StyleBoxFlat.new()
+	top_style.bg_color = Color(0.04, 0.06, 0.1, 0.85)
+	top_style.border_color = Color(0.85, 0.65, 0.15, 0.8)
+	top_style.set_border_width_all(2)
+	top_style.set_corner_radius_all(6)
+	top_panel.add_theme_stylebox_override("panel", top_style)
+	movie_player_backdrop.add_child(top_panel)
+
+	var top_hbox = HBoxContainer.new()
+	top_panel.add_child(top_hbox)
+
+	movie_player_title_label = Label.new()
+	movie_player_title_label.name = "MovieTitleLabel"
+	movie_player_title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	movie_player_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	movie_player_title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	movie_player_title_label.add_theme_font_size_override("font_size", 18)
+	movie_player_title_label.add_theme_color_override("font_color", Color(1.0, 0.88, 0.4, 1.0))
+	movie_player_title_label.text = "🎬 CINEMATIC"
+	top_hbox.add_child(movie_player_title_label)
+
+	# Bottom Controls (Skip button & instruction hint)
+	var bot_hbox = HBoxContainer.new()
+	bot_hbox.name = "MovieControls"
+	bot_hbox.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	bot_hbox.offset_left = 60.0
+	bot_hbox.offset_right = -60.0
+	bot_hbox.offset_top = -70.0
+	bot_hbox.offset_bottom = -20.0
+	movie_player_backdrop.add_child(bot_hbox)
+
+	movie_player_hint_label = Label.new()
+	movie_player_hint_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	movie_player_hint_label.add_theme_font_size_override("font_size", 13)
+	movie_player_hint_label.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85, 0.8))
+	movie_player_hint_label.text = "Press ESC or Space to skip cinematic"
+	bot_hbox.add_child(movie_player_hint_label)
+
+	movie_player_skip_btn = Button.new()
+	movie_player_skip_btn.name = "BtnSkipMovie"
+	movie_player_skip_btn.custom_minimum_size = Vector2(200, 38)
+	movie_player_skip_btn.text = "⏭️ Skip Cinematic"
+	movie_player_skip_btn.add_theme_font_size_override("font_size", 14)
+	var btn_style = StyleBoxFlat.new()
+	btn_style.bg_color = Color(0.12, 0.15, 0.22, 0.9)
+	btn_style.border_color = Color(0.3, 0.7, 0.9, 0.9)
+	btn_style.set_border_width_all(2)
+	btn_style.set_corner_radius_all(4)
+	movie_player_skip_btn.add_theme_stylebox_override("normal", btn_style)
+	movie_player_skip_btn.pressed.connect(skip_movie)
+	bot_hbox.add_child(movie_player_skip_btn)
+
+func _resolve_movie_file_path(path: String) -> String:
+	if path == "":
+		return ""
+	var clean_path = path.strip_edges()
+	var candidates: Array[String] = []
+
+	# Check project asset directory matches by file basename
+	var base_filename = clean_path.get_file()
+	var base_name_only = base_filename.get_basename()
+	candidates.append("res://assets/movies/" + base_name_only + ".ogv")
+	candidates.append("res://assets/movies/" + base_filename)
+
+	# If directly an OGV path
+	candidates.append(clean_path)
+
+	# If provided as MP4, replace extension with .ogv
+	if clean_path.ends_with(".mp4"):
+		candidates.append(clean_path.left(clean_path.length() - 4) + ".ogv")
+
+	# Check each candidate
+	for c in candidates:
+		if c.begins_with("res://"):
+			if ResourceLoader.exists(c) or FileAccess.file_exists(c):
+				return c
+			var global_c = ProjectSettings.globalize_path(c)
+			if FileAccess.file_exists(global_c):
+				return c
+		else:
+			if FileAccess.file_exists(c):
+				return c
+
+	return clean_path
+
+func play_movie(movie_path: String, title: String = "", can_skip: bool = true, once_only: bool = true) -> Dictionary:
+	_setup_movie_player()
+	if movie_path == "":
+		return { "success": false, "error": "Empty movie path" }
+
+	var resolved = _resolve_movie_file_path(movie_path)
+	if once_only and (played_movies.has(resolved) or played_movies.has(movie_path)):
+		return { "success": false, "reason": "already_played", "path": resolved }
+
+	played_movies[movie_path] = true
+	played_movies[resolved] = true
+	current_movie_path = resolved
+	current_movie_title = title
+
+	_log("🎬 [CINEMATIC] %s" % (title if title != "" else resolved.get_file()))
+
+	if movie_player_title_label:
+		movie_player_title_label.text = title if title != "" else "🎬 %s" % resolved.get_file().get_basename().capitalize()
+
+	if movie_player_skip_btn:
+		movie_player_skip_btn.visible = can_skip
+	if movie_player_hint_label:
+		movie_player_hint_label.visible = can_skip
+
+	# Check if running in headless mode
+	var is_headless = DisplayServer.get_name() == "headless" or OS.has_feature("template")
+
+	var stream = VideoStreamTheora.new()
+	stream.set_file(resolved)
+
+	if movie_player_node:
+		movie_player_node.stream = stream
+
+	if movie_player_layer:
+		movie_player_layer.visible = true
+
+	is_movie_playing = true
+
+	if not is_headless and movie_player_node:
+		movie_player_node.play()
+	else:
+		# In headless mode, stop immediately or schedule immediate finish so tests don't stall
+		call_deferred("_on_movie_player_finished")
+
+	return {
+		"success": true,
+		"movie": resolved,
+		"title": title,
+		"isPlaying": is_movie_playing,
+		"isHeadless": is_headless
+	}
+
+func skip_movie() -> Dictionary:
+	if not is_movie_playing:
+		return { "success": false, "error": "No movie currently playing" }
+	_log("⏭️ [CINEMATIC] Skipped: %s" % current_movie_title)
+	_on_movie_player_finished()
+	return { "success": true, "skipped": true, "movie": current_movie_path }
+
+func _on_movie_player_finished() -> void:
+	is_movie_playing = false
+	if movie_player_node:
+		movie_player_node.stop()
+		movie_player_node.stream = null
+	if movie_player_layer:
+		movie_player_layer.visible = false
+	if pending_movie_callback.is_valid():
+		var cb = pending_movie_callback
+		pending_movie_callback = Callable()
+		cb.call()
+
+func get_movie_state() -> Dictionary:
+	return {
+		"isPlaying": is_movie_playing,
+		"currentPath": current_movie_path,
+		"currentTitle": current_movie_title,
+		"playedMovies": played_movies.keys()
+	}
+
+func _get_active_map_data() -> Dictionary:
+	var cart = CartridgeManager.active_cartridge
+	var starting_map_id = cart.get("header", {}).get("startingMap", "heroquest-the-trial")
+	var map_data = cart.get("maps", {}).get(starting_map_id, {})
+	if map_data.is_empty() and cart.get("maps", {}).size() > 0:
+		map_data = cart.get("maps", {}).values()[0]
+	return map_data
+
+func _check_play_intro_movie() -> void:
+	if quest_begun:
+		return
+	var movie_url = ""
+	var map_data = _get_active_map_data()
+	if map_data.has("introMovie"):
+		movie_url = str(map_data.get("introMovie", ""))
+	elif map_data.has("introCinematic"):
+		movie_url = str(map_data.get("introCinematic", ""))
+	if movie_url == "":
+		var act_q = get_active_quest_objective()
+		if act_q.has("introMovie"):
+			movie_url = str(act_q.get("introMovie", ""))
+		elif act_q.has("introCinematic"):
+			movie_url = str(act_q.get("introCinematic", ""))
+	if movie_url != "":
+		var movie_title = "🎬 Prologue: %s" % str(map_data.get("title", "HeroQuest"))
+		play_movie(movie_url, movie_title, true, true)
