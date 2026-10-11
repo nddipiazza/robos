@@ -41,6 +41,9 @@ for arg in "$@"; do
     export TABLETOP_HARD_MODE=1
     export TABLETOP_DIFFICULTY=hard
   fi
+  if [[ "$arg" == --cartridge=* ]]; then
+    export TABLETOP_CARTRIDGE="${arg#*=}"
+  fi
 done
 
 # Separate Godot engine flags from project/game args so engine flags (like --quit-after) are parsed reliably
