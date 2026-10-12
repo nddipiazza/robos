@@ -20,13 +20,27 @@ func _check_cli_cartridge() -> void:
 	var cart_arg: String = OS.get_environment("CRPG_CARTRIDGE")
 	if cart_arg == "":
 		cart_arg = OS.get_environment("TABLETOP_CARTRIDGE")
+	if cart_arg == "":
+		cart_arg = OS.get_environment("TABLETOP_MISSION")
 
 	for i in range(cmd_args.size()):
 		var a = cmd_args[i]
-		if (a == "--cartridge" or a == "--campaign") and i + 1 < cmd_args.size():
+		if (a == "--cartridge" or a == "--campaign" or a == "--mission" or a == "-m") and i + 1 < cmd_args.size():
 			cart_arg = cmd_args[i + 1]
-		elif a.begins_with("--cartridge="):
+		elif a.begins_with("--cartridge=") or a.begins_with("--mission="):
 			cart_arg = a.split("=")[1]
+		elif (a == "--quest" or a == "-q") and i + 1 < cmd_args.size():
+			var q_val = cmd_args[i + 1]
+			if q_val == "4" or q_val == "quest-4" or "fortress" in q_val:
+				cart_arg = "heroquest-fortress-fire-king"
+			else:
+				cart_arg = "heroquest-the-trial"
+		elif a.begins_with("--quest="):
+			var q_val = a.split("=")[1]
+			if q_val == "4" or q_val == "quest-4" or "fortress" in q_val:
+				cart_arg = "heroquest-fortress-fire-king"
+			else:
+				cart_arg = "heroquest-the-trial"
 
 	var wants_auto = (
 		"--auto-play" in cmd_args or
@@ -37,6 +51,12 @@ func _check_cli_cartridge() -> void:
 		OS.get_environment("TABLETOP_DEMO") == "1"
 	)
 	auto_play_enabled = wants_auto
+
+	# Normalize aliases
+	if cart_arg == "4" or cart_arg == "quest-4" or cart_arg == "fortress" or cart_arg == "fortress-fire-king":
+		cart_arg = "heroquest-fortress-fire-king"
+	elif cart_arg == "1" or cart_arg == "quest-1" or cart_arg == "the-trial":
+		cart_arg = "heroquest-the-trial"
 
 	if cart_arg == "":
 		cart_arg = "heroquest-the-trial"

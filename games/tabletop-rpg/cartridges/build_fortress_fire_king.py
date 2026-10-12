@@ -716,7 +716,7 @@ CART = {
             "introMovie": "res://assets/movies/quest_introduction_movie.ogv",
             "width": 26,
             "height": 19,
-            "backgroundImage": "res://assets/boards/heroquest_board.png",
+            "backgroundImage": "res://assets/boards/first_light_dungeon.png",
             "wanderingMonster": "orc",
             "startingStair": [0, 1],
             "activeRooms": [r["id"] for r in ROOMS],

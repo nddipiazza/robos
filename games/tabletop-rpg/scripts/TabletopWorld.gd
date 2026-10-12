@@ -2328,6 +2328,51 @@ func is_reset_requested() -> bool:
 			return true
 	return false
 
+var active_quest_id: String = ""
+
+func _get_effective_starting_map_id(cart: Dictionary = {}) -> String:
+	if cart.is_empty():
+		cart = CartridgeManager.active_cartridge if CartridgeManager else {}
+	var target = active_quest_id
+	if target == "":
+		target = OS.get_environment("TABLETOP_QUEST")
+	if target == "":
+		target = cart.get("header", {}).get("startingMap", "heroquest-the-trial")
+
+	var maps = cart.get("maps", {})
+	if maps.has(target):
+		return target
+
+	# Resolve aliases
+	if target == "4" or target == "quest-4" or target == "fortress" or target == "fortress-fire-king":
+		if maps.has("heroquest-fortress-fire-king"):
+			return "heroquest-fortress-fire-king"
+		if maps.has("fortress-fire-king"):
+			return "fortress-fire-king"
+	elif target == "1" or target == "quest-1" or target == "the-trial":
+		if maps.has("heroquest-the-trial"):
+			return "heroquest-the-trial"
+		if maps.has("the-trial"):
+			return "the-trial"
+	elif target == "2" or target == "quest-2" or target == "sir-ragnar":
+		if maps.has("heroquest-rescue-sir-ragnar"):
+			return "heroquest-rescue-sir-ragnar"
+	elif target == "3" or target == "quest-3" or target == "ulag":
+		if maps.has("heroquest-lair-orc-warlord"):
+			return "heroquest-lair-orc-warlord"
+
+	for q in cart.get("quests", []):
+		if str(q.get("id")) == target or str(q.get("id")) == ("quest-" + target) or str(q.get("slug")) == target:
+			var s = str(q.get("slug", ""))
+			if maps.has(s):
+				return s
+			var mid = str(q.get("id", ""))
+			if maps.has(mid):
+				return mid
+	if maps.size() > 0:
+		return maps.keys()[0]
+	return target
+
 func get_save_file_path() -> String:
 	var env_path = OS.get_environment("TABLETOP_SAVE_PATH")
 	if env_path != "":
@@ -2335,10 +2380,11 @@ func get_save_file_path() -> String:
 	var slug = CartridgeManager.current_cartridge_slug
 	if slug == "":
 		var cart = CartridgeManager.active_cartridge
-		slug = str(cart.get("cartridgeId", cart.get("header", {}).get("startingMap", "heroquest-the-trial")))
+		slug = str(cart.get("cartridgeId", _get_effective_starting_map_id(cart)))
 	if slug == "":
 		slug = "heroquest-the-trial"
-	return "user://tabletop_autosave_%s.json" % slug.replace("/", "_").replace("\\", "_")
+	var effective_map = _get_effective_starting_map_id()
+	return "user://tabletop_autosave_%s_%s.json" % [slug.replace("/", "_").replace("\\", "_"), effective_map.replace("/", "_").replace("\\", "_")]
 
 func has_saved_game() -> bool:
 	var path = get_save_file_path()
@@ -2416,7 +2462,7 @@ func serialize_game_state() -> Dictionary:
 
 	var cart = CartridgeManager.active_cartridge
 	var cart_slug = CartridgeManager.current_cartridge_slug
-	var starting_map_id = cart.get("header", {}).get("startingMap", "heroquest-the-trial")
+	var starting_map_id = _get_effective_starting_map_id(cart)
 
 	var msp = movement_start_pos
 	var msp_arr = [msp.x, msp.y] if msp is Vector2i else [-1, -1]
@@ -2432,6 +2478,8 @@ func serialize_game_state() -> Dictionary:
 		"timestamp": Time.get_unix_time_from_system(),
 		"cartridge_slug": cart_slug,
 		"map_id": starting_map_id,
+		"grid_cols": grid_cols,
+		"grid_rows": grid_rows,
 		"current_role": current_role,
 		"active_hero_idx": active_hero_idx,
 		"current_round": current_round,
@@ -2500,6 +2548,13 @@ func restore_saved_game(save_dict: Dictionary = {}) -> bool:
 	if str(data.get("game_state", "")) == "closed" or bool(data.get("is_game_closed", false)) or bool(data.get("quest_completed", false)):
 		print("[TabletopAutosave] Saved game is from a completed/closed quest. Starting fresh quest.")
 		return false
+
+	var saved_cols = int(data.get("grid_cols", -1))
+	var saved_rows = int(data.get("grid_rows", -1))
+	if saved_cols > 0 and saved_rows > 0:
+		if saved_cols != grid_cols or saved_rows != grid_rows:
+			print("[TabletopAutosave] Save dimensions (%dx%d) mismatch current map (%dx%d). Starting fresh quest." % [saved_cols, saved_rows, grid_cols, grid_rows])
+			return false
 
 	_is_restoring_state = true
 	print("[TabletopAutosave] Restoring game state from save (Round: ", data.get("current_round", 1), ")...")
@@ -2672,7 +2727,7 @@ func _load_active_cartridge(force_fresh: bool = false) -> void:
 		quest_begun = false
 		_log("[RESET] Force reloading current quest from cartridge...")
 
-	var starting_map_id = cart.get("header", {}).get("startingMap", "heroquest-the-trial")
+	var starting_map_id = _get_effective_starting_map_id(cart)
 	var map_data = cart.get("maps", {}).get(starting_map_id, {})
 	if map_data.is_empty() and cart.get("maps", {}).size() > 0:
 		map_data = cart.get("maps", {}).values()[0]
@@ -4744,6 +4799,17 @@ func _setup_game_menu_modal() -> void:
 	btns_vbox.name = "ButtonsVBox"
 	btns_vbox.add_theme_constant_override("separation", 8)
 
+	# Select Quest / Mission Button
+	var btn_menu_select_quest = Button.new()
+	btn_menu_select_quest.name = "BtnSelectQuest"
+	btn_menu_select_quest.text = "SELECT QUEST / MISSION"
+	btn_menu_select_quest.tooltip_text = "Choose a different Quest (The Trial, Rescue Sir Ragnar, Orc Warlord, Fortress of the Fire King)"
+	btn_menu_select_quest.custom_minimum_size = Vector2(0, 46)
+	btn_menu_select_quest.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	apply_rpg_font_to_button(btn_menu_select_quest, 15, Color(1.0, 0.88, 0.4, 1.0))
+	btn_menu_select_quest.pressed.connect(toggle_quest_selector_modal)
+	btns_vbox.add_child(btn_menu_select_quest)
+
 	# Restart Quest Button
 	btn_menu_restart_quest = Button.new()
 	btn_menu_restart_quest.name = "BtnRestartQuest"
@@ -4828,7 +4894,8 @@ func _update_game_menu_info() -> void:
 	if not game_menu_info_label:
 		return
 	var cart = CartridgeManager.active_cartridge
-	var q_title = cart.get("header", {}).get("title", "HeroQuest")
+	var act_q = get_active_quest_objective()
+	var q_title = act_q.get("title", cart.get("header", {}).get("title", "HeroQuest"))
 	var h_id = heroes[active_hero_idx].get("id", "hero") if active_hero_idx >= 0 and active_hero_idx < heroes.size() else "None"
 	var save_exists = has_saved_game()
 	var save_text = "Save Present (%s)" % get_save_file_path().get_file() if save_exists else "No Save On Disk"
@@ -4874,16 +4941,141 @@ func load_game_from_menu() -> void:
 			game_menu_status_label.text = "[!] Failed to restore saved game!"
 			game_menu_status_label.add_theme_color_override("font_color", Color(0.95, 0.4, 0.4, 1.0))
 
+var quest_selector_modal: ColorRect = null
+
+func toggle_quest_selector_modal() -> void:
+	if quest_selector_modal and quest_selector_modal.visible:
+		quest_selector_modal.visible = false
+	else:
+		open_quest_selector_modal()
+
+func open_quest_selector_modal() -> void:
+	if not quest_selector_modal:
+		_setup_quest_selector_modal()
+	_update_quest_selector_content()
+	quest_selector_modal.visible = true
+
+func _setup_quest_selector_modal() -> void:
+	var ui_node = get_node_or_null("UI")
+	if not ui_node:
+		return
+	quest_selector_modal = ColorRect.new()
+	quest_selector_modal.name = "QuestSelectorModal"
+	quest_selector_modal.visible = false
+	quest_selector_modal.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	quest_selector_modal.color = Color(0.02, 0.03, 0.05, 0.88)
+	quest_selector_modal.z_index = 250
+
+	var card = PanelContainer.new()
+	card.name = "QuestSelectorCard"
+	card.custom_minimum_size = Vector2(640, 480)
+	card.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	card.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	card.grow_vertical = Control.GROW_DIRECTION_BOTH
+	card.add_theme_stylebox_override("panel", get_rpg_dialog_panel_stylebox(18, 18, 18, 18))
+
+	var margin = MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 20)
+	margin.add_theme_constant_override("margin_top", 18)
+	margin.add_theme_constant_override("margin_right", 20)
+	margin.add_theme_constant_override("margin_bottom", 18)
+	card.add_child(margin)
+
+	var vbox = VBoxContainer.new()
+	vbox.name = "VBox"
+	vbox.add_theme_constant_override("separation", 12)
+	margin.add_child(vbox)
+
+	var title = Label.new()
+	title.text = "SELECT QUEST / CAMPAIGN MISSION"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_stylebox_override("normal", get_rpg_title_plaque_stylebox(14, 6))
+	apply_rpg_font_to_label(title, true, 18, Color(1.0, 0.88, 0.35, 1.0))
+	vbox.add_child(title)
+
+	var list_vbox = VBoxContainer.new()
+	list_vbox.name = "QuestListVBox"
+	list_vbox.add_theme_constant_override("separation", 8)
+	vbox.add_child(list_vbox)
+
+	var btn_close = Button.new()
+	btn_close.name = "BtnCloseQuestSelector"
+	btn_close.text = "BACK TO GAME MENU"
+	btn_close.custom_minimum_size = Vector2(0, 42)
+	btn_close.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	apply_rpg_font_to_button(btn_close, 14, Color(1.0, 0.94, 0.76, 1.0))
+	btn_close.pressed.connect(func(): quest_selector_modal.visible = false)
+	vbox.add_child(btn_close)
+
+	quest_selector_modal.add_child(card)
+	ui_node.add_child(quest_selector_modal)
+
+func _update_quest_selector_content() -> void:
+	if not quest_selector_modal:
+		return
+	var list_vbox = quest_selector_modal.get_node_or_null("QuestSelectorCard/MarginContainer/VBox/QuestListVBox")
+	if not list_vbox:
+		return
+	for ch in list_vbox.get_children():
+		list_vbox.remove_child(ch)
+		ch.queue_free()
+
+	var available_options = [
+		{"num": 1, "title": "Quest 1: The Trial", "slug": "heroquest-the-trial", "board": "Classic 28x21 Board", "cart": "heroquest-the-trial"},
+		{"num": 2, "title": "Quest 2: The Rescue of Sir Ragnar", "slug": "heroquest-rescue-sir-ragnar", "board": "Classic 28x21 Board", "cart": "heroquest-the-trial"},
+		{"num": 3, "title": "Quest 3: Lair of the Orc Warlord", "slug": "heroquest-lair-orc-warlord", "board": "First Light Caverns Board", "cart": "heroquest-the-trial"},
+		{"num": 4, "title": "Quest 4: The Fortress of the Fire King", "slug": "heroquest-fortress-fire-king", "board": "First Light Side A (26x19 Board)", "cart": "heroquest-fortress-fire-king"}
+	]
+
+	var effective = _get_effective_starting_map_id()
+	for opt in available_options:
+		var q_btn = Button.new()
+		var is_active = (opt["slug"] == effective or opt["slug"] == active_quest_id or (opt["num"] == 4 and "fortress" in effective))
+		var prefix = "[ACTIVE] " if is_active else "  "
+		q_btn.text = "%s%s\n   Board: %s" % [prefix, opt["title"], opt["board"]]
+		q_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		q_btn.custom_minimum_size = Vector2(0, 52)
+		q_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		var btn_color = Color(1.0, 0.85, 0.25, 1.0) if is_active else Color(0.85, 0.92, 1.0, 1.0)
+		apply_rpg_font_to_button(q_btn, 13, btn_color)
+		var target_slug = str(opt["slug"])
+		var target_cart = str(opt["cart"])
+		q_btn.pressed.connect(func(): switch_to_quest(target_slug, target_cart))
+		list_vbox.add_child(q_btn)
+
+func switch_to_quest(quest_slug: String, target_cartridge: String = "") -> void:
+	_log("[QUEST] Switching to %s..." % quest_slug)
+	active_quest_id = quest_slug
+	delete_save_game()
+	quest_begun = false
+	if quest_selector_modal:
+		quest_selector_modal.visible = false
+	close_game_menu()
+	if target_cartridge != "" and CartridgeManager.current_cartridge_slug != target_cartridge:
+		CartridgeManager.insert_cartridge(target_cartridge)
+	else:
+		_load_active_cartridge(true)
+	_update_ui()
+	queue_redraw_all()
+	_check_play_intro_movie()
+
 func get_active_quest_objective() -> Dictionary:
 	var cart = CartridgeManager.active_cartridge
 	var quests = cart.get("quests", [])
 	var active_q: Dictionary = {}
 	var current_slug = CartridgeManager.current_cartridge_slug
+	var effective_map = _get_effective_starting_map_id(cart)
 	for q in quests:
 		if q is Dictionary:
-			if str(q.get("slug")) == current_slug or str(q.get("id")) == current_slug:
+			if str(q.get("slug")) == effective_map or str(q.get("id")) == effective_map or str(q.get("mapConfigId")) == effective_map:
 				active_q = q
 				break
+	if active_q.is_empty():
+		for q in quests:
+			if q is Dictionary:
+				if str(q.get("slug")) == current_slug or str(q.get("id")) == current_slug:
+					active_q = q
+					break
 	if active_q.is_empty() and not quests.is_empty() and quests[0] is Dictionary:
 		active_q = quests[0]
 
@@ -5222,7 +5414,7 @@ func _update_quest_objective_content() -> void:
 # -----------------------------------------------------------------------------
 func get_wandering_monster_card_data() -> Dictionary:
 	var cart = CartridgeManager.active_cartridge if CartridgeManager else {}
-	var starting_map_id = cart.get("header", {}).get("startingMap", "heroquest-the-trial")
+	var starting_map_id = _get_effective_starting_map_id(cart)
 	var map_data = cart.get("maps", {}).get(starting_map_id, {})
 	var wm_type = str(map_data.get("wanderingMonster", cart.get("wanderingMonster", "orc"))).to_lower()
 	var wm_name = "Wandering " + wm_type.capitalize()
@@ -10946,7 +11138,7 @@ func get_treasure_deck_stats() -> Dictionary:
 func _spawn_wandering_monster(hero: Dictionary, room_id: String) -> Dictionary:
 	var h_pos: Vector2i = hero.get("grid_pos", Vector2i(-1, -1))
 	var cart = CartridgeManager.active_cartridge
-	var starting_map_id = cart.get("header", {}).get("startingMap", "heroquest-the-trial")
+	var starting_map_id = _get_effective_starting_map_id(cart)
 	var map_data = cart.get("maps", {}).get(starting_map_id, {})
 	var wm_type = str(map_data.get("wanderingMonster", cart.get("wanderingMonster", "orc"))).to_lower()
 
@@ -21370,7 +21562,7 @@ func get_movie_state() -> Dictionary:
 
 func _get_active_map_data() -> Dictionary:
 	var cart = CartridgeManager.active_cartridge
-	var starting_map_id = cart.get("header", {}).get("startingMap", "heroquest-the-trial")
+	var starting_map_id = _get_effective_starting_map_id(cart)
 	var map_data = cart.get("maps", {}).get(starting_map_id, {})
 	if map_data.is_empty() and cart.get("maps", {}).size() > 0:
 		map_data = cart.get("maps", {}).values()[0]

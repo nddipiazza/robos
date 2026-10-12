@@ -104,21 +104,22 @@ class TestHeroQuestCartridge(unittest.TestCase):
             st1 = player.get_state()
             self.assertEqual(st1.get("revealedRooms"), [], "Initial revealed rooms must be empty")
             initial_count = st1.get("exploredCount", 0)
-            self.assertGreaterEqual(initial_count, 18, "Initial ray vision must explore corridor tiles")
+            self.assertGreaterEqual(initial_count, 28, "Initial ray vision must explore corridor tiles")
 
-            # 2. Kick open Northwest Chamber door (0, 2) -> (1, 2)
-            door_res = player.open_door(0, 2, 1, 2)
+            # 2. Kick open Northwest Crypt door (4, 1) -> (4, 2)
+            door_res = player.open_door(4, 1, 4, 2)
             self.assertTrue(door_res.get("success"), "Door open action must succeed")
 
             # 3. Whole room immediately becomes visible
             st2 = player.get_state()
-            self.assertIn("room-nw-1", st2.get("revealedRooms", []), "Northwest Chamber must immediately be revealed")
-            # 16 tiles in Northwest Chamber (4x4)
-            self.assertEqual(st2.get("exploredCount"), initial_count + 16, "Explored count must increase by all 16 room tiles")
+            self.assertIn("room-nw-crypt", st2.get("revealedRooms", []), "Northwest Crypt must immediately be revealed")
+            # 20 tiles in Northwest Crypt (5x4)
+            self.assertEqual(st2.get("exploredCount"), initial_count + 20, "Explored count must increase by all 20 room tiles")
 
             # 4. Combat log logs room reveal and spotted monsters
             combat_log = " ".join(st2.get("combatLog", []))
-            self.assertIn("Northwest", combat_log)
+            self.assertIn("Northwest Crypt", combat_log)
+            self.assertIn("Crypt Skeleton", combat_log)
         finally:
             proc.terminate()
             proc.wait()
