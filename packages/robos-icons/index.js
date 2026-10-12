@@ -85,6 +85,12 @@ const BUILTIN_APPS = [
     iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#00bcd4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M24 4 L40 10 V24 C40 33 33 41 24 44 C15 41 8 33 8 24 V10 Z" /><rect x="18" y="16" width="12" height="12" rx="2" /><circle cx="21" cy="19" r="1" fill="#00bcd4" /><circle cx="27" cy="19" r="1" fill="#00bcd4" /><circle cx="24" cy="22" r="1" fill="#00bcd4" /><circle cx="21" cy="25" r="1" fill="#00bcd4" /><circle cx="27" cy="25" r="1" fill="#00bcd4" /><line x1="24" y1="28" x2="24" y2="38" /><line x1="16" y1="38" x2="32" y2="38" /></svg>'
   },
   {
+    appId: 'tabletop-blockmap-creator',
+    label: 'Tabletop Blockmap Creator',
+    category: 'Game Development',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="38" height="38" rx="3" stroke="#00bcd4" stroke-width="1.8" /><path d="M5 17 H43 M5 29 H43 M17 5 V43 M29 5 V43" stroke="#00bcd4" stroke-dasharray="2 2" stroke-opacity="0.45" /><rect x="17" y="17" width="12" height="12" rx="1" fill="#00bcd4" fill-opacity="0.2" stroke="#00bcd4" stroke-width="2" /><path d="M33 7 L41 15 M36 10 L38 8 M38 12 L40 10" stroke="#f59e0b" stroke-width="1.8" /></svg>'
+  },
+  {
     appId: 'context-manager',
     label: 'Context Manager',
     category: 'RobOS AI',
