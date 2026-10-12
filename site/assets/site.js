@@ -165,7 +165,7 @@
     video.hidden = !inVideo;
     controls.hidden = inVideo;
     watch.setAttribute('aria-pressed', inVideo);
-    watch.textContent = inVideo ? '↺ Back to step highlights' : '▶ Watch the full recording';
+    watch.textContent = inVideo ? 'Back to step highlights' : 'Watch the full recording';
     if (inVideo) { video.currentTime = starts[Math.max(0, chips.findIndex(function (b) { return b.classList.contains('on'); }))] || 0; video.play().catch(function () { video.controls = true; }); }
     else { video.pause(); show(index); }
   });

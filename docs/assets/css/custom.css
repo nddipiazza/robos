@@ -1738,7 +1738,6 @@ svg[id^="mermaid-"] text.noteText,
   height: 7rem;
   width: auto;
   border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(0, 229, 255, 0.25);
 }
 /* The product name: large, solid white (no gradient fade) so it is the first thing read. */
 .rb-hero h1.rb-brand-name {
@@ -1749,7 +1748,6 @@ svg[id^="mermaid-"] text.noteText,
   background: none !important;
   -webkit-text-fill-color: #ffffff !important;
   color: #ffffff !important;
-  text-shadow: 0 0 32px rgba(0, 229, 255, 0.35);
 }
 .rb-hero .rb-pron {
   font-size: 0.95rem;
@@ -1781,9 +1779,8 @@ svg[id^="mermaid-"] text.noteText,
 .rb-demo {
   margin: 2rem 0 3rem;
   border: 1px solid #1e293b;
-  border-radius: 12px;
+  border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
 }
 .rb-demo img,
 .rb-demo video {
@@ -1807,22 +1804,14 @@ a.rb-door {
   flex-direction: column;
   background: #111827;
   border: 1px solid #1e293b;
-  border-top: 3px solid var(--rb-accent, #00e5ff);
-  border-radius: 12px;
+  border-radius: 8px;
   padding: 1.5rem;
   text-decoration: none !important;
   color: #e2e8f0 !important;
-  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.15s ease;
 }
 a.rb-door:hover {
-  transform: translateY(-3px);
   border-color: var(--rb-accent, #00e5ff);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
-}
-.rb-door .rb-door-icon {
-  font-size: 2rem;
-  line-height: 1;
-  margin-bottom: 0.75rem;
 }
 .rb-door .rb-door-title {
   font-family: 'Space Grotesk', sans-serif;
@@ -1847,6 +1836,8 @@ a.rb-door:hover {
 .rb-door .rb-door-go {
   font-weight: 700;
   color: var(--rb-accent, #00e5ff);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 .rb-strip {
   display: flex;
