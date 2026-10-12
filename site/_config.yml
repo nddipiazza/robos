@@ -16,3 +16,7 @@ collections:
 
 exclude:
   - README.md
+
+# Long-form pages (the whitepaper) list only their section headings in the contents.
+kramdown:
+  toc_levels: [2]

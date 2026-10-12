@@ -250,16 +250,13 @@ electron packages/skills-manager
 
 ---
 
-## The Future: Standardized Turing Skills & Compiled Machine Code
+## The Future: A Shared Catalog of Compiled Skills
 
-While RobOS skills today exist as vendor-agnostic markdown specifications (`SKILL.md`) and shell commands, RobOS is engineered towards an ultimate destination: **Turing machine-inspired skill structures** whose leaf capabilities are compiled down to native machine code (`.so`, `.dylib`, ELF, or WebAssembly AOT).
+RobOS skills today are vendor-agnostic markdown instructions (`SKILL.md`) that tell an AI agent how to do a task, plus the shell commands in the Skills Manager. They are not compiled code.
 
-In this future architecture:
-- Every atomic capability is formally modeled with strict input and output tapes.
-- Leaf skills are compiled to raw binaries and invoked like C-ABI method calls with zero LLM overhead.
-- Consumer hardware running local models (Ollama, llama.cpp) can assemble and link these compiled skills into complete, working applications—entirely offline, without data center reliance.
+The [Skill Commons whitepaper](https://rowbose.com/future/whitepaper/) proposes a next step: break every job down to base tasks, build and verify each one once, compile it, and keep it in a shared, searchable catalog. Before anything is generated, the catalog is searched, and a small local model assembles existing pieces instead of rewriting solved ones. This is a proposal. The catalog, the compiler pipeline and the assembler are not built; the whitepaper lists what exists today and describes how to test whether the idea works.
 
-Read the complete vision in **[The Future of Software Development: Turing Skills, Compiled Machine Code & Local Edge Assembly]({{ site.baseurl }}{% link future.md %})**.
+Read the plain-English summary at **[rowbose.com/future](https://rowbose.com/future/)**.
 
 ---
 
@@ -282,7 +279,7 @@ node packages/robos-test/demos/skills-manager-demo.js
 
 ## Next Steps
 
-- **[The Future of Software Development]({{ site.baseurl }}{% link future.md %})**: Read our vision for standardized Turing skills, machine-code leaf skills, and local edge assembly without data centers.
+- **[The Future of Software Development]({{ site.baseurl }}{% link future.md %})**: A proposal for a shared catalog of verified, compiled skills that small local models can assemble into applications.
 - **[Agent-Agnostic Framework]({{ site.baseurl }}{% link big-wins/agent-agnostic-framework.md %})**: Learn how universal skills eliminate vendor lock-in.
 - **[RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover core architectural innovations and strategic advantages.
 - **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.

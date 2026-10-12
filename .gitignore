@@ -38,6 +38,7 @@ run/
 
 # Personal / sensitive files
 *.pdf
+!site/future/skill-commons-whitepaper.pdf
 site/_apps/
 site/_data/app_categories.yml
 _site/

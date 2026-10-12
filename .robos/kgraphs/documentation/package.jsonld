@@ -321,120 +321,6 @@
       "robos:domainStandard": "https://schema.org/ImageObject"
     },
     {
-      "@id": "urn:robos:diagram:stochastic-guessing-game",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:FlowDiagram",
-        "schema:ImageObject"
-      ],
-      "dcterms:title": "Software Engineering: Stochastic Guessing Game vs. Deterministic Execution",
-      "dcterms:description": "Cloud data center prompt loops burning energy in token gambling vs. deterministic compiled execution.",
-      "robos:imagePath": "assets/images/stochastic-guessing-game.jpg",
-      "robos:diagramType": "architecture",
-      "robos:aspectRatio": "16:9",
-      "robos:schemaOrgType": "https://schema.org/ImageObject",
-      "robos:domainStandard": "https://schema.org/ImageObject",
-      "robos:package": "documentation",
-      "robos:namespace": "robos.docs",
-      "robos:mermaidText": "graph TD\n    subgraph Cloud[\"Current Paradigm: Hyperscaler Cloud Treadmill\"]\n        REQ[\"Developer / Feature Prompt\"] --> LLM[\"Centralized 70B+ / 400B+ Model<br/><i>(Megawatts, Network Latency, Token Fees)</i>\"]\n        LLM --> CODE[\"Stochastically Generated Code<br/><i>(Hallucinations, Flaky Diffs)</i>\"]\n        CODE --> FAIL[\"Validation / Test Failure\"]\n        FAIL -->|Loop Back & Burn Tokens| LLM\n        CODE --> PROD[\"Fragile Production Runtime\"]\n    end",
-      "robos:tooltip": "Software Engineering: Stochastic Guessing Game vs. Deterministic Execution"
-    },
-    {
-      "@id": "urn:robos:diagram:turing-skill-architecture",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:FlowDiagram",
-        "schema:ImageObject"
-      ],
-      "dcterms:title": "Standardized Turing Machine-Inspired Skill Architecture",
-      "dcterms:description": "Formal Turing skill with typed Input Tapes, state machine invariants, leaf transition execution, and Output Tapes.",
-      "robos:imagePath": "assets/images/turing-skill-architecture.jpg",
-      "robos:diagramType": "flowchart",
-      "robos:aspectRatio": "16:9",
-      "robos:schemaOrgType": "https://schema.org/ImageObject",
-      "robos:domainStandard": "https://schema.org/ImageObject",
-      "robos:package": "documentation",
-      "robos:namespace": "robos.docs",
-      "robos:mermaidText": "flowchart LR\n    subgraph InputTape[\"Input Tape (Σ, Γ)\"]\n        IN[\"Typed Input Contract<br/><code>JSON-LD / SHACL / TypeSpec</code>\"]\n    end\n    subgraph TuringSkill[\"Standardized Turing Skill (M = ⟨Q, Σ, Γ, δ, q₀, B, F⟩)\"]\n        STATE[\"Finite State Register (Q)<br/><i>Hermetic Pre-Conditions</i>\"]\n        DELTA[\"Deterministic Transition Function (δ)<br/><i>Leaf Execution Logic</i>\"]\n        INV[\"State Invariants<br/><i>Cryptographic Sandboxing</i>\"]\n        STATE --> DELTA\n        INV -.-> DELTA\n    end\n    subgraph OutputTape[\"Output Tape & Halting (F)\"]\n        OUT[\"Typed Output Contract<br/><code>q_accept / q_reject</code>\"]\n        HALT[\"Bounded Halting Proof<br/><i>Guaranteed Termination</i>\"]\n        OUT --- HALT\n    end\n    IN --> TuringSkill\n    TuringSkill --> OUT",
-      "robos:tooltip": "Standardized Turing Machine-Inspired Skill Architecture"
-    },
-    {
-      "@id": "urn:robos:diagram:leaf-skill-compilation",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:FlowDiagram",
-        "schema:ImageObject"
-      ],
-      "dcterms:title": "The Compilation Pipeline: Verified Leaf Skills into Native Machine Code",
-      "dcterms:description": "Pipeline from exploratory generative LLMs through formal BDD verification and Turing specification into signed native binaries.",
-      "robos:imagePath": "assets/images/leaf-skill-compilation.jpg",
-      "robos:diagramType": "pipeline",
-      "robos:aspectRatio": "16:9",
-      "robos:schemaOrgType": "https://schema.org/ImageObject",
-      "robos:domainStandard": "https://schema.org/ImageObject",
-      "robos:package": "documentation",
-      "robos:namespace": "robos.docs",
-      "robos:mermaidText": "flowchart TD\n    A[\"Exploratory Prompting<br/><i>(Agent Chat / Claude / Codex)</i>\"] --> B[\"BDD Gherkin Verification<br/><i>(Input/Output Invariants)</i>\"]\n    B --> C{\"Behavioral Verification<br/>& Halting Proof\"}\n    C -->|Fails Tests| B\n    C -->|100% Proven| D[\"Turing Machine Formalization<br/><i>(Typed Input/Output Schemas)</i>\"]\n    D --> E[\"Compiler Pipeline<br/><i>(Rust / C / LLVM / Wasm AOT)</i>\"]\n    E --> F[\"Native Machine Code Leaf Skill<br/><code>.so / .dylib / ELF / Wasm</code>\"]\n    F --> G[\"Global Consortium Registry<br/><i>(Cryptographically Signed Binary)</i>\"]",
-      "robos:tooltip": "The Compilation Pipeline: Verified Leaf Skills into Native Machine Code"
-    },
-    {
-      "@id": "urn:robos:diagram:local-edge-assembly",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:FlowDiagram",
-        "schema:ImageObject"
-      ],
-      "dcterms:title": "Local Edge Assembly on Consumer Hardware Independent of Data Centers",
-      "dcterms:description": "Local open-weight model acting as Semantic Graph Linker wiring pre-compiled leaf skills into complete native applications offline.",
-      "robos:imagePath": "assets/images/local-edge-assembly.jpg",
-      "robos:diagramType": "architecture",
-      "robos:aspectRatio": "16:9",
-      "robos:schemaOrgType": "https://schema.org/ImageObject",
-      "robos:domainStandard": "https://schema.org/ImageObject",
-      "robos:package": "documentation",
-      "robos:namespace": "robos.docs",
-      "robos:mermaidText": "flowchart TB\n    USER[\"User Request\"] --> LOCAL_LLM[\"Local Open-Weight Model\"]\n    subgraph EdgeDevice[\"Local Consumer Workstation\"]\n        LOCAL_LLM --> ARCH[\"1. Synthesizes Application Topology\"]\n        ARCH --> RESOLVER[\"2. Skill Registry Lookup & Contract Matcher\"]\n        subgraph SkillRepo[\"Local Pre-Compiled Skill Cache\"]\n            S1[\"Compiled Leaf Skill: SQLite WAL Ingest\"]\n            S2[\"Compiled Leaf Skill: ChaCha20-Poly1305 Encrypt\"]\n            S3[\"Compiled Leaf Skill: Noise Protocol Handshake\"]\n            S4[\"Compiled Leaf Skill: P2P mDNS Discovery\"]\n        end\n        RESOLVER --> S1\n        RESOLVER --> S2\n        RESOLVER --> S3\n        RESOLVER --> S4\n        LINKER[\"3. RobOS Local Native Linker\"]\n        S1 --> LINKER\n        S2 --> LINKER\n        S3 --> LINKER\n        S4 --> LINKER\n        LINKER --> RUNTIME[\"4. Running Native Application\"]\n    end",
-      "robos:tooltip": "Local Edge Assembly on Consumer Hardware Independent of Data Centers"
-    },
-    {
-      "@id": "urn:robos:diagram:asymptotic-convergence",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:FlowDiagram",
-        "schema:ImageObject"
-      ],
-      "dcterms:title": "Asymptotic Endpoint: Transition from Generative Exploration to Planetary Catalog Assembly",
-      "dcterms:description": "Declining generative prompt loops as primitives are solved, transitioning to deterministic assembly and re-use.",
-      "robos:imagePath": "assets/images/asymptotic-convergence.jpg",
-      "robos:diagramType": "chart",
-      "robos:aspectRatio": "16:9",
-      "robos:schemaOrgType": "https://schema.org/ImageObject",
-      "robos:domainStandard": "https://schema.org/ImageObject",
-      "robos:package": "documentation",
-      "robos:namespace": "robos.docs",
-      "robos:mermaidText": "xychart-beta\n    title \"The Shift from Continuous Generation to Catalog Re-use\"\n    x-axis [\"Year 1\", \"Year 3\", \"Year 5\", \"Year 7\", \"Year 10\", \"Year 15\"]\n    y-axis \"Percentage of Effort (%)\" 0 --> 100\n    line \"LLM Generative Exploration\" [95, 75, 50, 25, 10, 2]\n    line \"Compiled Skill Assembly & Re-use\" [5, 25, 50, 75, 90, 98]",
-      "robos:tooltip": "Asymptotic Endpoint: Transition from Generative Exploration to Planetary Catalog Assembly"
-    },
-    {
-      "@id": "urn:robos:diagram:global-consortium-registry",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:FlowDiagram",
-        "schema:ImageObject"
-      ],
-      "dcterms:title": "The Global Consortium: A Planetary Commons of Compiled Skills",
-      "dcterms:description": "Decentralized planetary network with Turing specifications, verification oracles, cryptographic binary stores, and local assembly.",
-      "robos:imagePath": "assets/images/global-consortium-registry.jpg",
-      "robos:diagramType": "network",
-      "robos:aspectRatio": "16:9",
-      "robos:schemaOrgType": "https://schema.org/ImageObject",
-      "robos:domainStandard": "https://schema.org/ImageObject",
-      "robos:package": "documentation",
-      "robos:namespace": "robos.docs",
-      "robos:mermaidText": "graph TD\n    subgraph Consortium[\"Global Consortium & Decentralized Registry\"]\n        SPEC[\"Turing Skill Standard Specification\"]\n        ORACLE[\"Distributed Verification Oracles\"]\n        REGISTRY[\"Content-Addressed Binary Artifact Store\"]\n        CRYPTO[\"Ed25519 Cryptographic Signatures & SBOMs\"]\n    end\n    DEV[\"Developer / Squad / Edge AI\"] --> SPEC\n    SPEC --> ORACLE\n    ORACLE --> CRYPTO\n    CRYPTO --> REGISTRY\n    LOCAL_PC[\"Local Workstations (RobOS)\"] --> REGISTRY\n    LOCAL_PC --> RUN[\"Native Applications\"]",
-      "robos:tooltip": "The Global Consortium: A Planetary Commons of Compiled Skills"
-    },
-    {
       "@id": "urn:robos:doc:future-vision",
       "@type": [
         "oslc_am:Resource",
@@ -442,12 +328,12 @@
         "robos:DocArticle",
         "schema:TechArticle"
       ],
-      "dcterms:title": "The Future of Software Development: Turing Skills, Compiled Machine Code & Local Edge Assembly",
+      "dcterms:title": "The Future of Software Development: The Skill Commons",
       "robos:slug": "future-vision",
-      "dcterms:description": "Vision for standardized Turing machine-inspired skills, leaf skill compilation to machine code, and local edge assembly on consumer hardware without data centers.",
-      "robos:docPath": "docs/future.md",
+      "dcterms:description": "Plain-English proposal for a shared catalog of verified, compiled skills that small local models assemble into applications. Not yet built.",
+      "robos:docPath": "site/future/index.md",
       "robos:category": "Vision",
-      "robos:hasFlowDiagram": "urn:robos:diagram:stochastic-guessing-game",
+      "robos:hasFlowDiagram": "urn:robos:diagram:skill-commons-commons-map",
       "robos:schemaOrgType": "https://schema.org/TechArticle",
       "robos:domainStandard": "https://schema.org/TechArticle",
       "robos:package": "documentation",
@@ -461,12 +347,12 @@
         "robos:DocArticle",
         "schema:TechArticle"
       ],
-      "dcterms:title": "Standardized Turing Skills: Grounding AI Agent Capabilities in Automata Theory",
+      "dcterms:title": "The Skill Commons (whitepaper)",
       "robos:slug": "whitepaper-turing-skills",
-      "dcterms:description": "Foundational whitepaper on automata theory, halting proofs, C-ABI leaf compilation, and local edge assembly.",
-      "robos:docPath": "docs/turing-skills-whitepaper.md",
+      "dcterms:description": "Whitepaper: indexing every solved task, compiling it once, and assembling applications from the catalog with small local models; evidence, limits, and a plan to test it.",
+      "robos:docPath": "site/future/whitepaper.md",
       "robos:category": "Whitepaper",
-      "robos:hasFlowDiagram": "urn:robos:diagram:turing-skill-architecture",
+      "robos:hasFlowDiagram": "urn:robos:diagram:skill-commons-worked-example",
       "robos:schemaOrgType": "https://schema.org/TechArticle",
       "robos:domainStandard": "https://schema.org/TechArticle",
       "robos:package": "documentation",
@@ -493,6 +379,82 @@
         }
       ],
       "robos:namespace": "robos.docs"
+    },
+    {
+      "@type": [
+        "oslc_am:Resource",
+        "robos:FlowDiagram",
+        "schema:ImageObject"
+      ],
+      "robos:diagramType": "architecture",
+      "robos:schemaOrgType": "https://schema.org/ImageObject",
+      "robos:domainStandard": "https://schema.org/ImageObject",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs",
+      "@id": "urn:robos:diagram:skill-commons-commons-map",
+      "dcterms:title": "The Skill Commons",
+      "dcterms:description": "People, AI agents and companies add skills through one gate; a job is broken down to base tasks that other apps reuse; a small local model assembles them with private company knowledge.",
+      "robos:imagePath": "assets/future/commons-map.svg",
+      "robos:aspectRatio": "1600:1030",
+      "robos:mermaidText": "flowchart LR\n    P[\"People\"] --> G\n    A[\"AI agents\"] --> G\n    C[\"Companies\"] --> G\n    G{\"The one rule: not already there, passes its tests, built and signed\"} --> APP\n    subgraph COMMONS[\"The Commons: a shared, searchable catalog\"]\n        APP[\"Clinic reminder app\"] --> J1[\"Find who to remind\"]\n        APP --> J2[\"Write the message\"]\n        APP --> J3[\"Send a text\"]\n        APP --> J4[\"Log what was sent\"]\n        J1 --> B1[\"Convert time zone\"]\n        J2 --> B2[\"Fill a template\"]\n        J3 --> B3[\"Format phone number\"]\n        J3 --> B4[\"Call the text service\"]\n        J4 --> B5[\"Save a record\"]\n    end\n    B1 -->|\"local copy of the catalog\"| LAPTOP[\"Your computer with a small AI model\"]\n    PRIV[\"Your company private knowledge\"] --> LAPTOP\n    LAPTOP --> OUT[\"Your finished app\"]",
+      "robos:tooltip": "The Skill Commons"
+    },
+    {
+      "@type": [
+        "oslc_am:Resource",
+        "robos:FlowDiagram",
+        "schema:ImageObject"
+      ],
+      "robos:diagramType": "architecture",
+      "robos:schemaOrgType": "https://schema.org/ImageObject",
+      "robos:domainStandard": "https://schema.org/ImageObject",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs",
+      "@id": "urn:robos:diagram:skill-commons-assembler-loop",
+      "dcterms:title": "How a small local model assembles an app",
+      "dcterms:description": "Five steps: describe, break down, look up, check the fit, run the pieces' own tests. A missing piece is built once through the gate and the lookup runs again.",
+      "robos:imagePath": "assets/future/assembler-loop.svg",
+      "robos:aspectRatio": "1600:660",
+      "robos:mermaidText": "flowchart LR\n    U[\"1. You describe the job\"] --> M[\"2. The model breaks it into smaller jobs\"]\n    M --> S[\"3. Look up each job: company first, then the catalog\"]\n    S -->|\"nothing matches\"| GAP[\"A person or an AI builds that piece once; it passes the gate and joins the catalog\"]\n    GAP --> S\n    S --> CHK[\"4. Machines check the fit\"]\n    CHK --> T[\"5. Pieces run their own tests\"]\n    T --> APP[\"Working app\"]",
+      "robos:tooltip": "How a small local model assembles an app"
+    },
+    {
+      "@type": [
+        "oslc_am:Resource",
+        "robos:FlowDiagram",
+        "schema:ImageObject"
+      ],
+      "robos:diagramType": "architecture",
+      "robos:schemaOrgType": "https://schema.org/ImageObject",
+      "robos:domainStandard": "https://schema.org/ImageObject",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs",
+      "@id": "urn:robos:diagram:skill-commons-worked-example",
+      "dcterms:title": "A worked example: appointment reminders",
+      "dcterms:description": "The request becomes four smaller jobs and seven base tasks: five reused from the commons, one from the clinic's private graph, one missing and built once.",
+      "robos:imagePath": "assets/future/worked-example.svg",
+      "robos:aspectRatio": "16:9",
+      "robos:mermaidText": "flowchart TB\n    ROOT[\"Send appointment reminders (wiring only)\"] --> F[\"Find tomorrow's appointments\"]\n    ROOT --> W[\"Write the message\"]\n    ROOT --> SND[\"Send the text\"]\n    ROOT --> R[\"Record that it was sent\"]\n    F --> F1[\"Read clinic schedule (company, private)\"]\n    F --> F2[\"Convert time zone (found)\"]\n    W --> W1[\"Fill a template (found)\"]\n    SND --> S1[\"Format phone number (found)\"]\n    SND --> S2[\"Call the text service (found)\"]\n    SND --> S3[\"Respect quiet hours (NEW: built once)\"]\n    R --> R1[\"Save a record (found)\"]",
+      "robos:tooltip": "A worked example: appointment reminders"
+    },
+    {
+      "@type": [
+        "oslc_am:Resource",
+        "robos:FlowDiagram",
+        "schema:ImageObject"
+      ],
+      "robos:diagramType": "architecture",
+      "robos:schemaOrgType": "https://schema.org/ImageObject",
+      "robos:domainStandard": "https://schema.org/ImageObject",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs",
+      "@id": "urn:robos:diagram:skill-commons-skill-lifecycle",
+      "dcterms:title": "How a skill enters the commons",
+      "dcterms:description": "Propose, look for a twin, check, build reproducibly, sign and log, then share to mirrors; duplicates link to the existing skill and failing tests send the submission back.",
+      "robos:imagePath": "assets/future/skill-lifecycle.svg",
+      "robos:aspectRatio": "1600:660",
+      "robos:mermaidText": "flowchart LR\n    P[\"1. Propose\"] --> T[\"2. Find a twin\"]\n    T -->|\"already exists\"| L[\"Link to the existing skill\"]\n    T --> C[\"3. Check: tests, sandbox, time and step limits\"]\n    C -->|\"a test fails\"| X[\"Sent back with the failing test\"]\n    C --> B[\"4. Reproducible build for each target\"]\n    B --> S[\"5. Sign and log\"]\n    S --> M[\"6. Share to mirrors\"]",
+      "robos:tooltip": "How a skill enters the commons"
     }
   ],
   "@graph": [
@@ -731,120 +693,6 @@
       "robos:domainStandard": "https://schema.org/ImageObject"
     },
     {
-      "@id": "urn:robos:diagram:stochastic-guessing-game",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:FlowDiagram",
-        "schema:ImageObject"
-      ],
-      "dcterms:title": "Software Engineering: Stochastic Guessing Game vs. Deterministic Execution",
-      "dcterms:description": "Cloud data center prompt loops burning energy in token gambling vs. deterministic compiled execution.",
-      "robos:imagePath": "assets/images/stochastic-guessing-game.jpg",
-      "robos:diagramType": "architecture",
-      "robos:aspectRatio": "16:9",
-      "robos:schemaOrgType": "https://schema.org/ImageObject",
-      "robos:domainStandard": "https://schema.org/ImageObject",
-      "robos:package": "documentation",
-      "robos:namespace": "robos.docs",
-      "robos:mermaidText": "graph TD\n    subgraph Cloud[\"Current Paradigm: Hyperscaler Cloud Treadmill\"]\n        REQ[\"Developer / Feature Prompt\"] --> LLM[\"Centralized 70B+ / 400B+ Model<br/><i>(Megawatts, Network Latency, Token Fees)</i>\"]\n        LLM --> CODE[\"Stochastically Generated Code<br/><i>(Hallucinations, Flaky Diffs)</i>\"]\n        CODE --> FAIL[\"Validation / Test Failure\"]\n        FAIL -->|Loop Back & Burn Tokens| LLM\n        CODE --> PROD[\"Fragile Production Runtime\"]\n    end",
-      "robos:tooltip": "Software Engineering: Stochastic Guessing Game vs. Deterministic Execution"
-    },
-    {
-      "@id": "urn:robos:diagram:turing-skill-architecture",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:FlowDiagram",
-        "schema:ImageObject"
-      ],
-      "dcterms:title": "Standardized Turing Machine-Inspired Skill Architecture",
-      "dcterms:description": "Formal Turing skill with typed Input Tapes, state machine invariants, leaf transition execution, and Output Tapes.",
-      "robos:imagePath": "assets/images/turing-skill-architecture.jpg",
-      "robos:diagramType": "flowchart",
-      "robos:aspectRatio": "16:9",
-      "robos:schemaOrgType": "https://schema.org/ImageObject",
-      "robos:domainStandard": "https://schema.org/ImageObject",
-      "robos:package": "documentation",
-      "robos:namespace": "robos.docs",
-      "robos:mermaidText": "flowchart LR\n    subgraph InputTape[\"Input Tape (Σ, Γ)\"]\n        IN[\"Typed Input Contract<br/><code>JSON-LD / SHACL / TypeSpec</code>\"]\n    end\n    subgraph TuringSkill[\"Standardized Turing Skill (M = ⟨Q, Σ, Γ, δ, q₀, B, F⟩)\"]\n        STATE[\"Finite State Register (Q)<br/><i>Hermetic Pre-Conditions</i>\"]\n        DELTA[\"Deterministic Transition Function (δ)<br/><i>Leaf Execution Logic</i>\"]\n        INV[\"State Invariants<br/><i>Cryptographic Sandboxing</i>\"]\n        STATE --> DELTA\n        INV -.-> DELTA\n    end\n    subgraph OutputTape[\"Output Tape & Halting (F)\"]\n        OUT[\"Typed Output Contract<br/><code>q_accept / q_reject</code>\"]\n        HALT[\"Bounded Halting Proof<br/><i>Guaranteed Termination</i>\"]\n        OUT --- HALT\n    end\n    IN --> TuringSkill\n    TuringSkill --> OUT",
-      "robos:tooltip": "Standardized Turing Machine-Inspired Skill Architecture"
-    },
-    {
-      "@id": "urn:robos:diagram:leaf-skill-compilation",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:FlowDiagram",
-        "schema:ImageObject"
-      ],
-      "dcterms:title": "The Compilation Pipeline: Verified Leaf Skills into Native Machine Code",
-      "dcterms:description": "Pipeline from exploratory generative LLMs through formal BDD verification and Turing specification into signed native binaries.",
-      "robos:imagePath": "assets/images/leaf-skill-compilation.jpg",
-      "robos:diagramType": "pipeline",
-      "robos:aspectRatio": "16:9",
-      "robos:schemaOrgType": "https://schema.org/ImageObject",
-      "robos:domainStandard": "https://schema.org/ImageObject",
-      "robos:package": "documentation",
-      "robos:namespace": "robos.docs",
-      "robos:mermaidText": "flowchart TD\n    A[\"Exploratory Prompting<br/><i>(Agent Chat / Claude / Codex)</i>\"] --> B[\"BDD Gherkin Verification<br/><i>(Input/Output Invariants)</i>\"]\n    B --> C{\"Behavioral Verification<br/>& Halting Proof\"}\n    C -->|Fails Tests| B\n    C -->|100% Proven| D[\"Turing Machine Formalization<br/><i>(Typed Input/Output Schemas)</i>\"]\n    D --> E[\"Compiler Pipeline<br/><i>(Rust / C / LLVM / Wasm AOT)</i>\"]\n    E --> F[\"Native Machine Code Leaf Skill<br/><code>.so / .dylib / ELF / Wasm</code>\"]\n    F --> G[\"Global Consortium Registry<br/><i>(Cryptographically Signed Binary)</i>\"]",
-      "robos:tooltip": "The Compilation Pipeline: Verified Leaf Skills into Native Machine Code"
-    },
-    {
-      "@id": "urn:robos:diagram:local-edge-assembly",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:FlowDiagram",
-        "schema:ImageObject"
-      ],
-      "dcterms:title": "Local Edge Assembly on Consumer Hardware Independent of Data Centers",
-      "dcterms:description": "Local open-weight model acting as Semantic Graph Linker wiring pre-compiled leaf skills into complete native applications offline.",
-      "robos:imagePath": "assets/images/local-edge-assembly.jpg",
-      "robos:diagramType": "architecture",
-      "robos:aspectRatio": "16:9",
-      "robos:schemaOrgType": "https://schema.org/ImageObject",
-      "robos:domainStandard": "https://schema.org/ImageObject",
-      "robos:package": "documentation",
-      "robos:namespace": "robos.docs",
-      "robos:mermaidText": "flowchart TB\n    USER[\"User Request\"] --> LOCAL_LLM[\"Local Open-Weight Model\"]\n    subgraph EdgeDevice[\"Local Consumer Workstation\"]\n        LOCAL_LLM --> ARCH[\"1. Synthesizes Application Topology\"]\n        ARCH --> RESOLVER[\"2. Skill Registry Lookup & Contract Matcher\"]\n        subgraph SkillRepo[\"Local Pre-Compiled Skill Cache\"]\n            S1[\"Compiled Leaf Skill: SQLite WAL Ingest\"]\n            S2[\"Compiled Leaf Skill: ChaCha20-Poly1305 Encrypt\"]\n            S3[\"Compiled Leaf Skill: Noise Protocol Handshake\"]\n            S4[\"Compiled Leaf Skill: P2P mDNS Discovery\"]\n        end\n        RESOLVER --> S1\n        RESOLVER --> S2\n        RESOLVER --> S3\n        RESOLVER --> S4\n        LINKER[\"3. RobOS Local Native Linker\"]\n        S1 --> LINKER\n        S2 --> LINKER\n        S3 --> LINKER\n        S4 --> LINKER\n        LINKER --> RUNTIME[\"4. Running Native Application\"]\n    end",
-      "robos:tooltip": "Local Edge Assembly on Consumer Hardware Independent of Data Centers"
-    },
-    {
-      "@id": "urn:robos:diagram:asymptotic-convergence",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:FlowDiagram",
-        "schema:ImageObject"
-      ],
-      "dcterms:title": "Asymptotic Endpoint: Transition from Generative Exploration to Planetary Catalog Assembly",
-      "dcterms:description": "Declining generative prompt loops as primitives are solved, transitioning to deterministic assembly and re-use.",
-      "robos:imagePath": "assets/images/asymptotic-convergence.jpg",
-      "robos:diagramType": "chart",
-      "robos:aspectRatio": "16:9",
-      "robos:schemaOrgType": "https://schema.org/ImageObject",
-      "robos:domainStandard": "https://schema.org/ImageObject",
-      "robos:package": "documentation",
-      "robos:namespace": "robos.docs",
-      "robos:mermaidText": "xychart-beta\n    title \"The Shift from Continuous Generation to Catalog Re-use\"\n    x-axis [\"Year 1\", \"Year 3\", \"Year 5\", \"Year 7\", \"Year 10\", \"Year 15\"]\n    y-axis \"Percentage of Effort (%)\" 0 --> 100\n    line \"LLM Generative Exploration\" [95, 75, 50, 25, 10, 2]\n    line \"Compiled Skill Assembly & Re-use\" [5, 25, 50, 75, 90, 98]",
-      "robos:tooltip": "Asymptotic Endpoint: Transition from Generative Exploration to Planetary Catalog Assembly"
-    },
-    {
-      "@id": "urn:robos:diagram:global-consortium-registry",
-      "@type": [
-        "oslc_am:Resource",
-        "robos:FlowDiagram",
-        "schema:ImageObject"
-      ],
-      "dcterms:title": "The Global Consortium: A Planetary Commons of Compiled Skills",
-      "dcterms:description": "Decentralized planetary network with Turing specifications, verification oracles, cryptographic binary stores, and local assembly.",
-      "robos:imagePath": "assets/images/global-consortium-registry.jpg",
-      "robos:diagramType": "network",
-      "robos:aspectRatio": "16:9",
-      "robos:schemaOrgType": "https://schema.org/ImageObject",
-      "robos:domainStandard": "https://schema.org/ImageObject",
-      "robos:package": "documentation",
-      "robos:namespace": "robos.docs",
-      "robos:mermaidText": "graph TD\n    subgraph Consortium[\"Global Consortium & Decentralized Registry\"]\n        SPEC[\"Turing Skill Standard Specification\"]\n        ORACLE[\"Distributed Verification Oracles\"]\n        REGISTRY[\"Content-Addressed Binary Artifact Store\"]\n        CRYPTO[\"Ed25519 Cryptographic Signatures & SBOMs\"]\n    end\n    DEV[\"Developer / Squad / Edge AI\"] --> SPEC\n    SPEC --> ORACLE\n    ORACLE --> CRYPTO\n    CRYPTO --> REGISTRY\n    LOCAL_PC[\"Local Workstations (RobOS)\"] --> REGISTRY\n    LOCAL_PC --> RUN[\"Native Applications\"]",
-      "robos:tooltip": "The Global Consortium: A Planetary Commons of Compiled Skills"
-    },
-    {
       "@id": "urn:robos:doc:future-vision",
       "@type": [
         "oslc_am:Resource",
@@ -852,12 +700,12 @@
         "robos:DocArticle",
         "schema:TechArticle"
       ],
-      "dcterms:title": "The Future of Software Development: Turing Skills, Compiled Machine Code & Local Edge Assembly",
+      "dcterms:title": "The Future of Software Development: The Skill Commons",
       "robos:slug": "future-vision",
-      "dcterms:description": "Vision for standardized Turing machine-inspired skills, leaf skill compilation to machine code, and local edge assembly on consumer hardware without data centers.",
-      "robos:docPath": "docs/future.md",
+      "dcterms:description": "Plain-English proposal for a shared catalog of verified, compiled skills that small local models assemble into applications. Not yet built.",
+      "robos:docPath": "site/future/index.md",
       "robos:category": "Vision",
-      "robos:hasFlowDiagram": "urn:robos:diagram:stochastic-guessing-game",
+      "robos:hasFlowDiagram": "urn:robos:diagram:skill-commons-commons-map",
       "robos:schemaOrgType": "https://schema.org/TechArticle",
       "robos:domainStandard": "https://schema.org/TechArticle",
       "robos:package": "documentation",
@@ -871,12 +719,12 @@
         "robos:DocArticle",
         "schema:TechArticle"
       ],
-      "dcterms:title": "Standardized Turing Skills: Grounding AI Agent Capabilities in Automata Theory",
+      "dcterms:title": "The Skill Commons (whitepaper)",
       "robos:slug": "whitepaper-turing-skills",
-      "dcterms:description": "Foundational whitepaper on automata theory, halting proofs, C-ABI leaf compilation, and local edge assembly.",
-      "robos:docPath": "docs/turing-skills-whitepaper.md",
+      "dcterms:description": "Whitepaper: indexing every solved task, compiling it once, and assembling applications from the catalog with small local models; evidence, limits, and a plan to test it.",
+      "robos:docPath": "site/future/whitepaper.md",
       "robos:category": "Whitepaper",
-      "robos:hasFlowDiagram": "urn:robos:diagram:turing-skill-architecture",
+      "robos:hasFlowDiagram": "urn:robos:diagram:skill-commons-worked-example",
       "robos:schemaOrgType": "https://schema.org/TechArticle",
       "robos:domainStandard": "https://schema.org/TechArticle",
       "robos:package": "documentation",
@@ -903,6 +751,82 @@
         }
       ],
       "robos:namespace": "robos.docs"
+    },
+    {
+      "@type": [
+        "oslc_am:Resource",
+        "robos:FlowDiagram",
+        "schema:ImageObject"
+      ],
+      "robos:diagramType": "architecture",
+      "robos:schemaOrgType": "https://schema.org/ImageObject",
+      "robos:domainStandard": "https://schema.org/ImageObject",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs",
+      "@id": "urn:robos:diagram:skill-commons-commons-map",
+      "dcterms:title": "The Skill Commons",
+      "dcterms:description": "People, AI agents and companies add skills through one gate; a job is broken down to base tasks that other apps reuse; a small local model assembles them with private company knowledge.",
+      "robos:imagePath": "assets/future/commons-map.svg",
+      "robos:aspectRatio": "1600:1030",
+      "robos:mermaidText": "flowchart LR\n    P[\"People\"] --> G\n    A[\"AI agents\"] --> G\n    C[\"Companies\"] --> G\n    G{\"The one rule: not already there, passes its tests, built and signed\"} --> APP\n    subgraph COMMONS[\"The Commons: a shared, searchable catalog\"]\n        APP[\"Clinic reminder app\"] --> J1[\"Find who to remind\"]\n        APP --> J2[\"Write the message\"]\n        APP --> J3[\"Send a text\"]\n        APP --> J4[\"Log what was sent\"]\n        J1 --> B1[\"Convert time zone\"]\n        J2 --> B2[\"Fill a template\"]\n        J3 --> B3[\"Format phone number\"]\n        J3 --> B4[\"Call the text service\"]\n        J4 --> B5[\"Save a record\"]\n    end\n    B1 -->|\"local copy of the catalog\"| LAPTOP[\"Your computer with a small AI model\"]\n    PRIV[\"Your company private knowledge\"] --> LAPTOP\n    LAPTOP --> OUT[\"Your finished app\"]",
+      "robos:tooltip": "The Skill Commons"
+    },
+    {
+      "@type": [
+        "oslc_am:Resource",
+        "robos:FlowDiagram",
+        "schema:ImageObject"
+      ],
+      "robos:diagramType": "architecture",
+      "robos:schemaOrgType": "https://schema.org/ImageObject",
+      "robos:domainStandard": "https://schema.org/ImageObject",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs",
+      "@id": "urn:robos:diagram:skill-commons-assembler-loop",
+      "dcterms:title": "How a small local model assembles an app",
+      "dcterms:description": "Five steps: describe, break down, look up, check the fit, run the pieces' own tests. A missing piece is built once through the gate and the lookup runs again.",
+      "robos:imagePath": "assets/future/assembler-loop.svg",
+      "robos:aspectRatio": "1600:660",
+      "robos:mermaidText": "flowchart LR\n    U[\"1. You describe the job\"] --> M[\"2. The model breaks it into smaller jobs\"]\n    M --> S[\"3. Look up each job: company first, then the catalog\"]\n    S -->|\"nothing matches\"| GAP[\"A person or an AI builds that piece once; it passes the gate and joins the catalog\"]\n    GAP --> S\n    S --> CHK[\"4. Machines check the fit\"]\n    CHK --> T[\"5. Pieces run their own tests\"]\n    T --> APP[\"Working app\"]",
+      "robos:tooltip": "How a small local model assembles an app"
+    },
+    {
+      "@type": [
+        "oslc_am:Resource",
+        "robos:FlowDiagram",
+        "schema:ImageObject"
+      ],
+      "robos:diagramType": "architecture",
+      "robos:schemaOrgType": "https://schema.org/ImageObject",
+      "robos:domainStandard": "https://schema.org/ImageObject",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs",
+      "@id": "urn:robos:diagram:skill-commons-worked-example",
+      "dcterms:title": "A worked example: appointment reminders",
+      "dcterms:description": "The request becomes four smaller jobs and seven base tasks: five reused from the commons, one from the clinic's private graph, one missing and built once.",
+      "robos:imagePath": "assets/future/worked-example.svg",
+      "robos:aspectRatio": "16:9",
+      "robos:mermaidText": "flowchart TB\n    ROOT[\"Send appointment reminders (wiring only)\"] --> F[\"Find tomorrow's appointments\"]\n    ROOT --> W[\"Write the message\"]\n    ROOT --> SND[\"Send the text\"]\n    ROOT --> R[\"Record that it was sent\"]\n    F --> F1[\"Read clinic schedule (company, private)\"]\n    F --> F2[\"Convert time zone (found)\"]\n    W --> W1[\"Fill a template (found)\"]\n    SND --> S1[\"Format phone number (found)\"]\n    SND --> S2[\"Call the text service (found)\"]\n    SND --> S3[\"Respect quiet hours (NEW: built once)\"]\n    R --> R1[\"Save a record (found)\"]",
+      "robos:tooltip": "A worked example: appointment reminders"
+    },
+    {
+      "@type": [
+        "oslc_am:Resource",
+        "robos:FlowDiagram",
+        "schema:ImageObject"
+      ],
+      "robos:diagramType": "architecture",
+      "robos:schemaOrgType": "https://schema.org/ImageObject",
+      "robos:domainStandard": "https://schema.org/ImageObject",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs",
+      "@id": "urn:robos:diagram:skill-commons-skill-lifecycle",
+      "dcterms:title": "How a skill enters the commons",
+      "dcterms:description": "Propose, look for a twin, check, build reproducibly, sign and log, then share to mirrors; duplicates link to the existing skill and failing tests send the submission back.",
+      "robos:imagePath": "assets/future/skill-lifecycle.svg",
+      "robos:aspectRatio": "1600:660",
+      "robos:mermaidText": "flowchart LR\n    P[\"1. Propose\"] --> T[\"2. Find a twin\"]\n    T -->|\"already exists\"| L[\"Link to the existing skill\"]\n    T --> C[\"3. Check: tests, sandbox, time and step limits\"]\n    C -->|\"a test fails\"| X[\"Sent back with the failing test\"]\n    C --> B[\"4. Reproducible build for each target\"]\n    B --> S[\"5. Sign and log\"]\n    S --> M[\"6. Share to mirrors\"]",
+      "robos:tooltip": "How a skill enters the commons"
     }
   ]
 }

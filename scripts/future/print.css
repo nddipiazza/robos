@@ -1,0 +1,56 @@
+/* Print stylesheet for the whitepaper PDF (rendered by Chromium via render-pdf.mjs). */
+@page { size: Letter; margin: 0.8in 0.8in 0.9in; }
+@page wide { size: Letter landscape; margin: 0.55in 0.5in 0.75in; }
+
+:root { --text:#14181f; --muted:#4b5563; --line:#cfd6e2; --accent:#0a7c8c; --panel:#f4f7fb; }
+* { box-sizing: border-box; }
+html { font-size: 10.5pt; }
+body { margin: 0; color: var(--text); background: #fff; font-family: 'Bitstream Charter', Charter, 'Liberation Serif', Georgia, serif; line-height: 1.5; hyphens: auto; }
+h1, h2, h3, .cover-top, .status, .toc-h, th, figcaption, nav#TOC { font-family: Inter, 'Liberation Sans', Arial, sans-serif; }
+
+/* cover */
+.cover { break-after: page; min-height: 9in; display: flex; flex-direction: column; }
+.cover-top { display: flex; align-items: center; gap: 10px; font-size: 10pt; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+.cover-top .logo { height: 26px; width: auto; }
+.cover h1.title { font-size: 44pt; line-height: 1.02; letter-spacing: -.03em; margin: 1.1in 0 .2in; font-weight: 800; }
+.cover .subtitle { font-family: Inter, 'Liberation Sans', sans-serif; font-size: 16pt; line-height: 1.3; margin: 0 0 .25in; max-width: 5.6in; color: #1f2937; }
+.cover .status { font-size: 9.5pt; color: var(--muted); margin: 0 0 .4in; }
+.cover .about { border-left: 4px solid var(--accent); background: var(--panel); padding: 12px 16px; font-size: 10pt; line-height: 1.5; margin-bottom: .4in; }
+.cover .about p { margin: 0 0 .5em; }
+.cover .about p:last-child { margin: 0; font-size: 9pt; color: var(--muted); }
+.toc { margin-top: auto; }
+.toc-h { font-size: 9pt; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+nav.toc ul { list-style: none; padding: 0; margin: 0; columns: 2; column-gap: .4in; font-family: Inter, 'Liberation Sans', Arial, sans-serif; font-size: 9.5pt; line-height: 1.6; }
+nav.toc li { break-inside: avoid; }
+nav.toc a { color: var(--text); text-decoration: none; }
+
+/* body */
+main h2 { font-size: 17pt; line-height: 1.15; letter-spacing: -.02em; margin: 1.5em 0 .45em; font-weight: 800; break-after: avoid; }
+main h2:first-child { margin-top: 0; }
+main h3 { font-size: 12pt; margin: 1.25em 0 .3em; font-weight: 700; break-after: avoid; }
+main p { margin: 0 0 .75em; orphans: 3; widows: 3; }
+main ul, main ol { margin: 0 0 .85em; padding-left: 1.3em; }
+main li { margin: .2em 0; }
+main a { color: var(--accent); text-decoration: none; }
+code { font-family: 'Liberation Mono', 'DejaVu Sans Mono', monospace; font-size: .85em; background: #eef2f7; border-radius: 3px; padding: 0 .25em; hyphens: none; }
+pre { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 9px 12px; font-size: 8pt; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; break-inside: avoid; }
+pre code { background: none; padding: 0; font-size: inherit; }
+
+table { width: 100%; border-collapse: collapse; margin: .8em 0 1.1em; font-size: 9pt; line-height: 1.4; break-inside: avoid; table-layout: auto; hyphens: manual; }
+table col { width: auto !important; }
+th, td { text-align: left; vertical-align: top; padding: 6px 8px; border-bottom: .6pt solid var(--line); }
+th { font-size: 7.5pt; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 700; border-bottom: 1pt solid #9aa7bb; }
+td:first-child { min-width: 1.1in; }
+
+figure.fig { margin: 1em 0 1.2em; break-inside: avoid; }
+figure.fig img { display: block; width: 100%; height: auto; border: .6pt solid var(--line); border-radius: 6px; }
+figure.fig figcaption { font-size: 8.5pt; line-height: 1.4; color: var(--muted); margin-top: 6px; }
+figure.fig.wide { page: wide; break-before: page; break-after: page; margin: 0; }
+figure.fig.wide img { max-height: 6.2in; width: auto; max-width: 100%; margin: 0 auto; }
+
+/* references: hanging indent, small */
+main h2#references ~ p { font-size: 8.5pt; line-height: 1.4; margin: 0 0 .5em; padding-left: 2em; text-indent: -2em; overflow-wrap: anywhere; hyphens: none; }
+a[id] { display: inline; }
+
+/* keep a lead-in sentence with the table that follows it */
+main p:has(+ table) { break-after: avoid; }
