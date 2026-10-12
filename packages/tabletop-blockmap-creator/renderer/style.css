@@ -381,6 +381,58 @@ body {
   image-rendering: crisp-edges;
 }
 
+/* ---------------- Floating Freeform Action Bar ---------------- */
+.freeform-action-bar {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.95);
+  border: 1.5px solid var(--accent);
+  box-shadow: 0 4px 24px rgba(0, 188, 212, 0.35);
+  border-radius: 8px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  z-index: 50;
+  backdrop-filter: blur(8px);
+}
+
+.freeform-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.freeform-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--accent-dark);
+  padding: 3px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+.freeform-text {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.freeform-text strong {
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.freeform-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .canvas-overlay-help {
   position: absolute;
   bottom: 12px;
