@@ -1,0 +1,93 @@
+{
+  "duration": 86.68,
+  "chapters": [
+    {
+      "step": 0,
+      "id": "task-created",
+      "title": "Task created",
+      "who": "Task Explorer",
+      "text": "The plan becomes tracked issues, with acceptance criteria and test cases",
+      "start": 0
+    },
+    {
+      "step": 1,
+      "id": "task-implemented",
+      "title": "Task implemented",
+      "who": "Task Implementer",
+      "text": "An agent branches, commits and pushes. It does not open a PR",
+      "start": 10.04
+    },
+    {
+      "step": 2,
+      "id": "review-changes",
+      "title": "Owner reviews the changes",
+      "who": "Code Review Theater",
+      "text": "A diff of the pushed branch, file by file",
+      "start": 18.04
+    },
+    {
+      "step": 3,
+      "id": "review-evidence",
+      "title": "Owner checks the evidence",
+      "who": "Code Review Theater",
+      "text": "Before and after, captured from real runs of the code",
+      "start": 23.08
+    },
+    {
+      "step": 4,
+      "id": "review-walkthrough",
+      "title": "Owner takes the walkthrough",
+      "who": "Code Review Theater",
+      "text": "An agent demonstrates each checkpoint while the owner stays in control",
+      "start": 27.48
+    },
+    {
+      "step": 5,
+      "id": "draft-pr",
+      "title": "Draft PR created",
+      "who": "Code Review Theater",
+      "text": "The description is reviewed first, then published as a draft",
+      "start": 36.68
+    },
+    {
+      "step": 6,
+      "id": "ci",
+      "title": "Owner watches CI",
+      "who": "Draft PR",
+      "text": "Checks go from pending to passing",
+      "start": 42.48
+    },
+    {
+      "step": 7,
+      "id": "ready",
+      "title": "Moved to ready for review",
+      "who": "Draft PR",
+      "text": "Only once CI is green, with reviewers requested",
+      "start": 51.64
+    },
+    {
+      "step": 8,
+      "id": "reviewer-approves",
+      "title": "Reviewer approves",
+      "who": "PR reviewer",
+      "text": "Reads the diff and signs off",
+      "start": 56.88
+    },
+    {
+      "step": 9,
+      "id": "owner-merges",
+      "title": "Owner merges",
+      "who": "PR author",
+      "text": "The approved PR is merged and shows as Merged",
+      "start": 67.52
+    },
+    {
+      "step": 10,
+      "id": "post-merge-ci",
+      "title": "Owner watches CI and acts",
+      "who": "Task Explorer",
+      "text": "contract-check fails on main, so a follow-up task is filed. Back to step 1",
+      "start": 73.68
+    }
+  ]
+}

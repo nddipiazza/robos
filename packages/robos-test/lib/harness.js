@@ -195,6 +195,15 @@ function setupHome(homeDir, scenario) {
       JSON.stringify(scenario.settings, null, 2));
   }
 
+  // Arbitrary seed files: { 'relative/to/HOME': string | object }
+  if (scenario.files) {
+    for (const [rel, content] of Object.entries(scenario.files)) {
+      const target = path.join(homeDir, rel);
+      fs.mkdirSync(path.dirname(target), { recursive: true });
+      fs.writeFileSync(target, typeof content === 'string' ? content : JSON.stringify(content, null, 2));
+    }
+  }
+
   return homeDir;
 }
 

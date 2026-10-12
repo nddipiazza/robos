@@ -1,0 +1,40 @@
+#!/usr/bin/env node
+'use strict';
+// Scripted stand-in for the `claude` CLI used by Task Implementer.
+// It performs REAL git work (branch, commit, push to the local remote) and runs
+// the project's REAL tests; only the "thinking" is scripted.
+const { execFileSync } = require('child_process');
+const path = require('path');
+const world = require('../world');
+
+const args = process.argv.slice(2);
+if (args.includes('--version')) { console.log('Claude Code 2.0.0 (scripted demo agent)'); process.exit(0); }
+
+const emit = (text) => console.log(JSON.stringify({ type: 'assistant', message: { content: [{ type: 'text', text: text + '\n' }] } }));
+const sleep = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+
+const prompt = args[args.indexOf('-p') + 1] || '';
+const key = (prompt.match(/TASK KEY:\s*(#?\d+)/) || [])[1] || '#42';
+const title = (prompt.match(/TASK:\s*(.+)/) || [])[1] || world.TASK.title;
+const workspace = process.env.FAKE_WORKSPACE;
+if (!workspace) { console.error('FAKE_WORKSPACE is not set'); process.exit(2); }
+const branch = 'codex/' + key.replace(/[^0-9]/g, '');
+
+emit(`Reading task ${key}: ${title}`);
+sleep(500);
+emit('Inspecting src/pets.js and test/pets.test.js to see how search works today…');
+sleep(600);
+emit('Plan: add an optional species filter, rank exact/prefix matches first, reject unknown species with the valid choices.');
+sleep(600);
+emit(`Creating feature branch ${branch} and writing the change…`);
+const sha = world.implementFeature(workspace, branch);
+sleep(500);
+emit('Running the project tests…');
+let out = '';
+try { out = execFileSync('node', ['--test'], { cwd: workspace, encoding: 'utf8' }); } catch (e) { out = (e.stdout || '') + (e.stderr || ''); }
+const pass = (out.match(/^# pass (\d+)/m) || [])[1];
+const fail = (out.match(/^# fail (\d+)/m) || [])[1];
+emit(`Tests: ${pass} passed, ${fail} failed.`);
+sleep(400);
+emit(`Committed ${sha.slice(0, 7)} and pushed ${branch} to origin. No pull request created.`);
+console.log(JSON.stringify({ type: 'result', result: `Done. Implemented ${key} on ${branch} (${sha.slice(0, 7)}), ${pass} tests passing.\n` }));

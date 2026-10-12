@@ -57,3 +57,25 @@
     });
   });
 })();
+
+// Hero player: highlight the current step and let people jump between steps.
+(function () {
+  var v = document.getElementById('hero-video');
+  var buttons = document.querySelectorAll('#hero-player .steps button');
+  if (!v || !buttons.length) return;
+  var starts = Array.prototype.map.call(buttons, function (b) { return parseFloat(b.dataset.start); });
+  var current = -1;
+  function mark(t) {
+    var i = 0;
+    for (var k = 0; k < starts.length; k++) if (t + 0.05 >= starts[k]) i = k;
+    if (i === current) return;
+    current = i;
+    buttons.forEach(function (b, k) { b.classList.toggle('on', k === i); b.classList.toggle('done', k < i); });
+  }
+  v.addEventListener('timeupdate', function () { mark(v.currentTime); });
+  buttons.forEach(function (b, k) {
+    b.addEventListener('click', function () { v.currentTime = starts[k]; mark(starts[k]); v.play().catch(function () {}); });
+  });
+  mark(0);
+  if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) { v.removeAttribute('autoplay'); v.pause(); v.controls = true; }
+})();

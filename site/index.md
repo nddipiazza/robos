@@ -14,24 +14,21 @@ permalink: /
     </div>
     <p class="sub">Free &amp; open source · macOS, Linux, Windows · <a href="{{ '/download/' | relative_url }}">Other install options</a></p>
 
-    <div class="win" aria-label="Illustration of the RobOS pull request review app">
-      <div class="win-bar"><i></i><i></i><i></i><span>Agent Code Review · fix/checkout-timeout</span></div>
-      <div class="win-body">
-        <div class="win-side"><b>Review</b><div class="on">Changed files (4)</div><div>Blast radius</div><div>Proof of work</div><b>Agents</b><div>claude-code</div><div>gemini-cli</div></div>
-        <div class="win-main">
-          <span class="ctx">  async function charge(order) {</span>
-          <span class="del">-   return gateway.charge(order, { timeout: 0 });</span>
-          <span class="add">+   return gateway.charge(order, { timeout: 8000, retries: 2 });</span>
-          <span class="ctx">  }</span>
-          <span class="ctx">&nbsp;</span>
-          <span class="add">+ it('retries on gateway timeout', async () =&gt; { … });</span>
-        </div>
-        <div class="win-chat">
-          <div class="bubble"><span class="tag">Blast radius</span><br>2 services, 1 contract affected</div>
-          <div class="bubble ok"><span class="tag">Proof of work</span><br>▶ 1080p walkthrough · 14/14 tests pass</div>
-          <div class="bubble">Ready to approve?</div>
-        </div>
+    <div class="player" id="hero-player">
+      <div class="player-frame">
+        <div class="player-bar"><i></i><i></i><i></i><span>One task, from idea to merged PR, in the real RobOS apps</span></div>
+        <video id="hero-video" class="player-video" autoplay muted loop playsinline preload="auto" poster="{{ '/assets/hero/poster.jpg' | relative_url }}" aria-label="Recording of RobOS taking one task from creation, through implementation, review and CI, to a merged pull request">
+          <source src="{{ '/assets/hero/hero.webm' | relative_url }}" type="video/webm">
+          <source src="{{ '/assets/hero/hero.mp4' | relative_url }}" type="video/mp4">
+          <img src="{{ '/assets/hero/hero-storyboard.gif' | relative_url }}" alt="Storyboard of the eleven steps from task created to merged pull request">
+        </video>
       </div>
+      <ol class="steps" aria-label="Steps in the recording">
+        {%- for c in site.data.hero.chapters %}
+        <li><button type="button" data-start="{{ c.start }}"><b>{{ forloop.index }}</b><span>{{ c.title }}</span></button></li>
+        {%- endfor %}
+      </ol>
+      <p class="player-note">Recorded from the real apps. GitHub, the coding agent and CI results are scripted stand-ins; the repository, tests, diff and evidence are real.</p>
     </div>
   </div>
 </section>

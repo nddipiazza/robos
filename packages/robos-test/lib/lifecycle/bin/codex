@@ -1,0 +1,72 @@
+#!/usr/bin/env node
+'use strict';
+// Scripted stand-in for the `codex` CLI that powers the review walkthrough.
+// It runs REAL commands in the workspace (git diff, node, the project's tests)
+// and reports what they printed; only the narration is scripted.
+const fs = require('fs');
+const { execFileSync, spawnSync } = require('child_process');
+const crypto = require('crypto');
+
+const argv = process.argv.slice(2);
+
+if (argv[0] === 'app-server') {           // model catalog handshake (CI recovery picker)
+  let buf = '';
+  process.stdin.on('data', d => {
+    buf += d;
+    let i;
+    while ((i = buf.indexOf('\n')) >= 0) {
+      const line = buf.slice(0, i); buf = buf.slice(i + 1);
+      let msg; try { msg = JSON.parse(line); } catch { continue; }
+      if (msg.method === 'initialize') console.log(JSON.stringify({ id: msg.id, result: {} }));
+      if (msg.method === 'model/list') console.log(JSON.stringify({ id: msg.id, result: { data: [{ model: 'demo-agent', displayName: 'Demo agent', supportedReasoningEfforts: [{ reasoningEffort: 'high', description: '' }] }] } }));
+    }
+  });
+  return;
+}
+
+const flagValue = (n) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
+const outFile = flagValue('--output-last-message');
+let prompt = '';
+process.stdin.on('data', d => prompt += d);
+process.stdin.on('end', run);
+
+const sleep = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+const ev = (o) => console.log(JSON.stringify(o));
+const say = (text) => { ev({ type: 'item.completed', item: { type: 'agent_message', text } }); };
+const sh = (cmd) => {
+  ev({ type: 'item.started', item: { type: 'command_execution', command: cmd } });
+  const r = spawnSync('sh', ['-c', cmd], { cwd: process.cwd(), encoding: 'utf8' });
+  ev({ type: 'item.completed', item: { type: 'command_execution', command: cmd, exit_code: r.status } });
+  return (r.stdout || '') + (r.stderr || '');
+};
+
+function run() {
+  ev({ type: 'thread.started', thread_id: crypto.randomUUID() });
+  const m = prompt.match(/Checkpoint (\d+)\/(\d+): (\{.*\})/);
+  const idx = m ? Number(m[1]) : 1;
+  let reply, guidance;
+
+  if (idx === 1) {
+    say('Reading the diff against main to see what this branch changes…');
+    sleep(700);
+    const stat = sh('git diff --stat origin/main HEAD').trim();
+    sleep(500);
+    say('searchPets now takes an options object with a species filter, scores matches so exact and prefix hits come first, and throws a RangeError for unknown species.');
+    sleep(500);
+    reply = `Here is what changed on this branch:\n\n${stat}\n\nsearchPets(query, { species }) now filters by species, ranks exact and prefix matches above substring matches, and rejects unknown species with the list of valid choices.`;
+    guidance = 'The change is confined to src/pets.js and its tests. Next, try the new behavior against the sample pets.';
+  } else {
+    say('Calling the real searchPets function with the new options…');
+    sleep(600);
+    const cats = sh(`node -e "const {searchPets}=require('./src/pets');console.log(searchPets('',{species:'cat'}).map(p=>p.name).join(', '))"`).trim();
+    sleep(500);
+    const bad = sh(`node -e "const {searchPets}=require('./src/pets');try{searchPets('',{species:'dragon'})}catch(e){console.log(e.message)}"`).trim();
+    sleep(500);
+    say('Running the test suite…');
+    const tests = sh('node --test 2>&1 | grep -E "^# (tests|pass|fail)"').trim().split('\n').join(' · ');
+    sleep(400);
+    reply = `Tried it against the sample pets:\n\n• species "cat" → ${cats}\n• species "dragon" → ${bad}\n• test run → ${tests.replace(/# /g, '')}\n\nThe acceptance criteria in the task all hold.`;
+    guidance = 'All acceptance criteria verified. You can move on to creating the pull request.';
+  }
+  fs.writeFileSync(outFile, JSON.stringify({ reply, checkpointReached: true, guidance, questions: [] }));
+}

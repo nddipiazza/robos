@@ -1,0 +1,27 @@
+#!/usr/bin/env node
+'use strict';
+// Stateful stand-in for the GitHub CLI used by the end-to-end lifecycle demo.
+// All state lives in the JSON file named by FAKE_FORGE_STATE, so the planner,
+// implementer and review apps (separate processes) see one consistent forge.
+// Every call is appended to FAKE_FORGE_LOG so the demo can assert on it.
+const fs = require('fs');
+const path = require('path');
+const forge = require('../forge');
+
+const args = process.argv.slice(2);
+const stateFile = process.env.FAKE_FORGE_STATE;
+const logFile = process.env.FAKE_FORGE_LOG;
+if (logFile) fs.appendFileSync(logFile, JSON.stringify({ at: new Date().toISOString(), args }) + '\n');
+
+const out = (v) => process.stdout.write(typeof v === 'string' ? v : JSON.stringify(v) + '\n');
+const fail = (msg, code = 1) => { process.stderr.write(msg + '\n'); process.exit(code); };
+
+const flag = (name, list = args) => { const i = list.indexOf(name); return i >= 0 ? list[i + 1] : undefined; };
+const flags = (name) => args.reduce((acc, a, i) => (a === name ? acc.concat(args[i + 1]) : acc), []);
+
+try {
+  const code = forge.handle({ args, flag, flags, out, fail, stateFile, env: process.env });
+  if (typeof code === 'number') process.exit(code);
+} catch (e) {
+  fail('gh (demo forge): ' + e.message);
+}
