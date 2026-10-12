@@ -6,7 +6,11 @@ permalink: /
 ---
 
 <div class="rb-hero">
-  <h1>RobOS</h1>
+  <div class="rb-brand">
+    <img class="rb-brand-mark" src="{{ '/assets/images/logo-mark.png' | relative_url }}" alt="" width="320" height="248">
+    <h1 class="rb-brand-name">RobOS</h1>
+  </div>
+  <p class="rb-pron">pronounced &ldquo;row-bose&rdquo;</p>
   <p class="rb-tagline">AI agents write the code. RobOS makes sure you can trust it.</p>
   <p class="rb-sub">A desktop suite of developer apps, a knowledge graph of your whole system, and review tools that show you exactly what an agent changed and prove it works.</p>
   <div class="rb-hero-actions">
