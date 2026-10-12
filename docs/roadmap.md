@@ -405,7 +405,7 @@ Every feature in RobOS progresses through an open, transparent 4-stage lifecycle
 
 ## Next Steps
 
-- **[The Future of Software Development]({{ site.baseurl }}{% link future.md %})**: Explore our long-term vision for standardized Turing skills, machine-code leaf skills, and local edge assembly without data centers.
+- **[The Future of Software Development]({{ site.baseurl }}{% link future.md %})**: A long-term proposal for a shared catalog of verified, compiled skills that small local models can assemble into applications.
 - **[RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover core architectural innovations and strategic advantages.
 - **[Real-World E2E Walkthroughs]({{ site.baseurl }}{% link walkthroughs.md %})**: Watch all 20 reference lifecycle steps executed live.
 - **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
