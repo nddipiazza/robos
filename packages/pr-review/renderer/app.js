@@ -1022,8 +1022,11 @@ window.openPRReviewTheater = async function(pr) {
 
   if (res.local) {
     renderTheaterDiffViewer(); renderTheaterShowTheFix(); renderTheaterVideo();
-    document.querySelector('[data-theater-action="openTheaterConfigModal"]').style.display = 'none';
-    document.querySelector('.fix-type-selector-bar').style.display = 'none';
+    // These controls are already gone when the theater is reopened (after Create PR or Ready).
+    const configButton = document.querySelector('[data-theater-action="openTheaterConfigModal"]');
+    if (configButton) configButton.style.display = 'none';
+    const fixTypeBar = document.querySelector('.fix-type-selector-bar');
+    if (fixTypeBar) fixTypeBar.style.display = 'none';
     document.querySelectorAll('[id^="btn-fix-type-"]').forEach(el => el.hidden = true);
     document.querySelectorAll('.stage-nav-footer').forEach(el => el.style.display = 'none');
     updateTheaterStepper(); window.setTheaterStage(res.initialStage === 5 ? 5 : 9);

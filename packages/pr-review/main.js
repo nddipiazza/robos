@@ -60,9 +60,19 @@ ipcMain.handle('demo-clear-chat', () => { if (!demoSession) return { ok: false, 
 ipcMain.handle('demo-save-process', (_, value) => { try { if (ciRecovery?.busy || descriptionGenerator?.pending) throw new Error('Wait for the current agent to finish.'); if (!demoSession) throw new Error('No project demo process configured.'); return { ok: true, state: demoSession.saveProcess(value) }; } catch (e) { return { ok: false, error: e.message }; } });
 app.on('before-quit', () => { demoSession?.stop(); ciRecovery?.session.stop(); });
 app.on('before-quit', () => showMeSession.stop());
+// Issues a PR closes ("Closes #42") become its work items; never invent a task.
+function linkedIssues(body, repo) {
+  const seen = new Set(), items = [];
+  for (const m of String(body || '').matchAll(/\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#(\d+)/gi)) {
+    if (seen.has(m[1]) || !/^[\w.-]+\/[\w.-]+$/.test(repo || '')) continue;
+    seen.add(m[1]);
+    items.push({ key: '#' + m[1], title: 'Issue #' + m[1], url: `https://github.com/${repo}/issues/${m[1]}`, status: 'Linked' });
+  }
+  return items;
+}
 ipcMain.handle('get-local-review', async () => {if(!localReview){
  if(!process.env.ROBOS_REVIEW_URL)return null;
- try{const {run,fields,parseURL}=require('../dev-central/lib/pull-requests');const url=process.env.ROBOS_REVIEW_URL,identity=parseURL(url);const pr=JSON.parse(await run(['pr','view',url,'--json',fields]));return {ok:true,pr:{...pr,...identity,published:true,author:pr.author.login,headBranch:pr.headRefName,baseBranch:pr.baseRefName}};}catch(e){return {ok:false,error:e.message};}
+ try{const {run,fields,parseURL}=require('../dev-central/lib/pull-requests');const url=process.env.ROBOS_REVIEW_URL,identity=parseURL(url);const pr=JSON.parse(await run(['pr','view',url,'--json',fields]));return {ok:true,pr:{...pr,...identity,published:true,author:pr.author.login,headBranch:pr.headRefName,baseBranch:pr.baseRefName,workItems:linkedIssues(pr.body,identity.repo)}};}catch(e){return {ok:false,error:e.message};}
  }try{return {ok:true,pr:await prState.refresh()};}catch(e){return {ok:true,pr:{...localReview.pr,stateError:e.message,isAuthor:false}};}});
 
 const SETTINGS_FILE = path.join(os.homedir(), '.config', 'robos', 'settings.json');
@@ -862,15 +872,15 @@ ipcMain.handle('submit-pr-theater-review', async (_, { repo, number, action, bod
     await githubCommand(['pr','review','--repo',repo,String(number),flag,...(body?['--body',body]:[])]);
 
     const kgBranch = kgraphBranch || 'kgraph/PET-105-rabies-verification';
-    const isMerged = action === 'approve';
 
+    // Approving a review does not merge anything: the author merges on GitHub.
     return {
       ok: true,
-      merged: isMerged,
+      merged: false,
       gitBranch: 'feature/PET-105-rabies-verification',
       kgraphBranch: kgBranch,
-      message: isMerged
-        ? `✓ PR #${number} approved! Merged code branch into main and synchronized Knowledge Graph branch ${kgBranch} with verified completion certificate.`
+      message: action === 'approve'
+        ? `✓ PR #${number} approved. The author can now merge it.`
         : `Review submitted: ${action}`,
     };
   } catch (e) {
