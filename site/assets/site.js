@@ -52,7 +52,7 @@
     document.querySelectorAll('.app-card').forEach(function (c) {
       c.hidden = v && c.dataset.s.indexOf(v) === -1;
     });
-    document.querySelectorAll('.app-group').forEach(function (g) {
+    document.querySelectorAll(".app-group:not(.games-link)").forEach(function (g) {
       g.hidden = !g.querySelector('.app-card:not([hidden])');
     });
   });

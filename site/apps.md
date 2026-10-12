@@ -29,7 +29,7 @@ description: Every RobOS desktop app, grouped by what it does.
 {%- endfor -%}
 {%- assign shown = 0 -%}
 {%- assign others = "" | split: "" -%}
-{%- for app in site.apps -%}{%- unless known_ids contains app.category -%}{%- assign others = others | push: app -%}{%- endunless -%}{%- endfor -%}
+{%- for app in site.apps -%}{%- unless known_ids contains app.category or app.category == "games" -%}{%- assign others = others | push: app -%}{%- endunless -%}{%- endfor -%}
 {%- if others.size > 0 %}
   <div class="app-group" id="more">
     <h2>More apps</h2>
@@ -43,4 +43,10 @@ description: Every RobOS desktop app, grouped by what it does.
     </div>
   </div>
 {%- endif %}
+  <div class="app-group games-link">
+    <a class="card" href="{{ '/games/' | relative_url }}" style="display:flex;gap:18px;align-items:center;justify-content:space-between;padding:28px">
+      <div><h2 style="margin:0 0 6px">🎮 RobOS Games</h2><p style="margin:0">Realm of Heroes CRPG and the Tabletop RPG, plus their editors and docs.</p></div>
+      <span class="go">Explore games →</span>
+    </a>
+  </div>
 </div>
