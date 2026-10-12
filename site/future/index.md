@@ -21,8 +21,8 @@ og_image: /assets/future/og.png
 
 <div class="fig-wide">
   <figure class="fig-card">
-    <a href="{{ '/assets/future/commons-map.svg' | relative_url }}" target="_blank" rel="noopener"><img src="{{ '/assets/future/commons-map.svg' | relative_url }}" alt="The Skill Commons. People, AI agents and companies add skills through one gate: not already there, passes its tests, built and signed. A clinic reminder app is broken into smaller jobs and then into base tasks, which other apps reuse. A small AI model on your own computer searches a local copy of the catalog and your company's private knowledge and snaps the pieces together." width="1600" height="1030"></a>
-    <figcaption>The Skill Commons at a glance. Every job is broken down to base tasks, each built once and reused by every other app. <a href="{{ '/assets/future/commons-map.svg' | relative_url }}" target="_blank" rel="noopener">Open full size</a>.</figcaption>
+    <a href="{{ '/assets/future/commons-map.svg' | relative_url }}" target="_blank" rel="noopener"><img src="{{ '/assets/future/ai/commons-map.jpg' | relative_url }}" alt="The Skill Commons. People, AI agents and companies add skills through one gate: not already there, passes its tests, built and signed. A clinic reminder app is broken into smaller jobs and then into base tasks, which other apps reuse. A small AI model on your own computer searches a local copy of the catalog and your company's private knowledge and snaps the pieces together." width="1600" height="893"></a>
+    <figcaption>The Skill Commons at a glance. Every job is broken down to base tasks, each built once and reused by every other app. <a href="{{ '/assets/future/commons-map.svg' | relative_url }}" target="_blank" rel="noopener">View exact schematic (SVG)</a>.</figcaption>
   </figure>
 </div>
 
@@ -40,6 +40,13 @@ og_image: /assets/future/og.png
   </div>
 </section>
 
+<div class="fig-wide">
+  <figure class="fig-card">
+    <a href="{{ '/assets/future/worked-example.svg' | relative_url }}" target="_blank" rel="noopener"><img src="{{ '/assets/future/ai/worked-example.jpg' | relative_url }}" alt="A worked example: text my patients the day before their appointment becomes four smaller jobs and seven base tasks. Five are reused from the commons, one from the clinic's private shelf, and one is built once and added." width="1600" height="893"></a>
+    <figcaption>A worked example: assembling an appointment reminder app from four smaller jobs and seven base tasks. <a href="{{ '/assets/future/worked-example.svg' | relative_url }}" target="_blank" rel="noopener">View exact schematic (SVG)</a>.</figcaption>
+  </figure>
+</div>
+
 <section class="alt">
   <div class="wrap">
     <div class="split">
@@ -55,8 +62,8 @@ og_image: /assets/future/og.png
         </ul>
       </div>
       <figure class="fig-card" style="margin:0">
-        <img src="{{ '/assets/future/assembler-loop.svg' | relative_url }}" alt="Five steps. You describe the job in plain language. The small model breaks it into smaller jobs and looks each one up, company knowledge first and then the catalog. Machines then check that the pieces fit and run each piece's own tests. If nothing matches, a person or an AI builds that one piece once, it passes the gate and joins the catalog, and the lookup runs again." width="1600" height="660">
-        <figcaption>The model proposes. Machines check.</figcaption>
+        <a href="{{ '/assets/future/assembler-loop.svg' | relative_url }}" target="_blank" rel="noopener"><img src="{{ '/assets/future/ai/assembler-loop.jpg' | relative_url }}" alt="Five steps. You describe the job in plain language. The small model breaks it into smaller jobs and looks each one up, company knowledge first and then the catalog. Machines then check that the pieces fit and run each piece's own tests. If nothing matches, a person or an AI builds that one piece once, it passes the gate and joins the catalog, and the lookup runs again." width="1600" height="893"></a>
+        <figcaption>The model proposes. Machines check. <a href="{{ '/assets/future/assembler-loop.svg' | relative_url }}" target="_blank" rel="noopener">View exact schematic (SVG)</a>.</figcaption>
       </figure>
     </div>
   </div>
@@ -88,6 +95,13 @@ og_image: /assets/future/og.png
     <p class="sec-p" style="max-width:70ch">The whitepaper includes a plan for finding out whether the idea works, and says what would prove it wrong. We would rather find that out early.</p>
   </div>
 </section>
+
+<div class="fig-wide">
+  <figure class="fig-card">
+    <a href="{{ '/assets/future/skill-lifecycle.svg' | relative_url }}" target="_blank" rel="noopener"><img src="{{ '/assets/future/ai/skill-lifecycle.jpg' | relative_url }}" alt="How a skill enters the commons: propose, find a twin, check, build reproducibly, sign and log, share to mirrors. Duplicates link to the existing skill; failing tests go back." width="1600" height="893"></a>
+    <figcaption>How a skill enters the commons: one gate, the same for people and AI. <a href="{{ '/assets/future/skill-lifecycle.svg' | relative_url }}" target="_blank" rel="noopener">View exact schematic (SVG)</a>.</figcaption>
+  </figure>
+</div>
 
 <section class="alt">
   <div class="wrap">
