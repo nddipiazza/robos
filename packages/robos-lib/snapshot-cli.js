@@ -115,6 +115,7 @@ const PORT_REGISTRY = {
   'robos-documentation': 19197,
   'robos-tabletop':    19198,
   'tabletop-editor':   19198,
+  'tabletop-blockmap-creator': 19199,
 };
 
 

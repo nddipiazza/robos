@@ -1,0 +1,25 @@
+{
+  "name": "robos-tabletop-blockmap-creator",
+  "version": "1.0.0",
+  "description": "RobOS Tabletop Blockmap Creator — Calibrate grid tile size, offsets, borders, and draw corridors and rooms from any dungeon image",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron . --no-sandbox --disable-gpu --disable-dev-shm-usage",
+    "test": "node --test tests/*.test.js"
+  },
+  "keywords": [
+    "robos",
+    "tabletop",
+    "heroquest",
+    "blockmap",
+    "map-editor",
+    "grid-calibration",
+    "corridor-tool",
+    "room-tool"
+  ],
+  "author": "RobOS AI Team",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "electron": "^28.0.0"
+  }
+}
