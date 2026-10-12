@@ -347,6 +347,13 @@ class BlockmapCreator {
       this.showToast('Rectangle Selector: Drag on map to define room bounds');
     });
 
+    const btnClearRooms = document.getElementById('btn-clear-all-rooms');
+    if (btnClearRooms) {
+      btnClearRooms.addEventListener('click', () => {
+        this.clearAllRooms();
+      });
+    }
+
     const btnFreeformRoom = document.getElementById('btn-add-freeform-room');
     if (btnFreeformRoom) {
       btnFreeformRoom.addEventListener('click', () => {
@@ -769,6 +776,21 @@ class BlockmapCreator {
       this.render();
       this.showToast(`Deleted ${name}`);
     }
+  }
+
+  clearAllRooms() {
+    if (this.rooms.length === 0) {
+      this.showToast('No rooms to clear');
+      return;
+    }
+    this.pushHistory();
+    const count = this.rooms.length;
+    this.rooms = [];
+    this.selectedRoomId = null;
+    this.updateRoomListUI();
+    this.updateRoomInspector();
+    this.render();
+    this.showToast(`Cleared all ${count} rooms`);
   }
 
   getSelectedRoom() {

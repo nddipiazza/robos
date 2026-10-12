@@ -116,3 +116,44 @@ test('Cartridge Schema Validation: export payload conforms to Tabletop Cartridge
   assert.equal(payload.calibration.tileSize, 39.0);
   assert.equal(payload.rooms[0].w, 4);
 });
+
+test('Clear All Rooms: empties room array, updates selection, and supports undo restoration', () => {
+  let rooms = [
+    { id: 'room-1', name: 'Chamber 1' },
+    { id: 'room-2', name: 'Chamber 2' },
+    { id: 'room-3', name: 'Chamber 3' }
+  ];
+  let selectedRoomId = 'room-2';
+  const history = [];
+
+  function clearAllRooms() {
+    if (rooms.length === 0) return 0;
+    history.push({ rooms: [...rooms], selectedRoomId });
+    const count = rooms.length;
+    rooms = [];
+    selectedRoomId = null;
+    return count;
+  }
+
+  function undo() {
+    if (history.length === 0) return false;
+    const prev = history.pop();
+    rooms = prev.rooms;
+    selectedRoomId = prev.selectedRoomId;
+    return true;
+  }
+
+  assert.equal(rooms.length, 3);
+  assert.equal(selectedRoomId, 'room-2');
+
+  const cleared = clearAllRooms();
+  assert.equal(cleared, 3);
+  assert.equal(rooms.length, 0);
+  assert.equal(selectedRoomId, null);
+
+  const restored = undo();
+  assert.equal(restored, true);
+  assert.equal(rooms.length, 3);
+  assert.equal(selectedRoomId, 'room-2');
+});
+
