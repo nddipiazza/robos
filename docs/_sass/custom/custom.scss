@@ -157,7 +157,7 @@ pre {
     }
 
     @media (max-width: 50rem) {
-      min-height: 7rem !important;
+      min-height: 8rem !important;
       padding: 0.75rem 1rem !important;
     }
   }
@@ -171,10 +171,13 @@ pre {
     height: auto !important;
   }
 
+  // Image is cropped tight to the robot + wordmark (logo-sidebar.png), so it can fill
+  // the header width and the "RobOS" name stays readable.
   .site-logo {
-    height: 9.5rem !important;
-    min-height: 9.5rem !important;
-    width: 12.66rem !important;
+    width: 14.5rem !important;
+    height: auto !important;
+    min-height: 0 !important;
+    aspect-ratio: 720 / 580 !important;
     max-width: 100% !important;
     background-size: cover !important;
     background-position: center center !important;
@@ -188,9 +191,7 @@ pre {
     }
 
     @media (max-width: 50rem) {
-      height: 5.5rem !important;
-      min-height: 5.5rem !important;
-      width: 7.33rem !important;
+      width: 9rem !important;
       border-radius: 10px !important;
     }
   }
