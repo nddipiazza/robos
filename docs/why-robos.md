@@ -626,7 +626,7 @@ infra/desktop/run.sh
 - **[System Architecture]({{ site.baseurl }}{% link architecture.md %})**: Dive deep into the architectural pillars and the Dual-State Comparison Engine.
 - **[Browse All Apps]({{ site.baseurl }}{% link apps.md %})**: Explore the full catalog of RobOS developer tools.
 - **[Real-World Walkthroughs]({{ site.baseurl }}{% link walkthroughs.md %})**: Watch high-definition video walkthroughs of real-world engineering scenarios.
-- **[The Future of Software Development]({{ site.baseurl }}{% link future.md %})**: Read our vision for standardized Turing skills, machine-code leaf skills, and local edge assembly without data centers.
+- **[The Future of Software Development]({{ site.baseurl }}{% link future.md %})**: A proposal for a shared catalog of verified, compiled skills that small local models can assemble into applications.
 - **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: Browse raw idea notes, community feature proposals, and structured architecture specs.
 
 ---
