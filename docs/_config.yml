@@ -2,7 +2,7 @@ title: RobOS
 tagline: AI-First SDLC Platform & Autonomous Agent Governance Harness
 description: "The AI-first SDLC platform and autonomous agent governance harness with automated 1080p video proof-of-work, semantic blast-radius checking, and Knowledge Graph-First application generation. Model your architecture once and govern coding agents with zero workstation pollution."
 url: "https://rowbose.com"
-baseurl: ""
+baseurl: "/v1"
 
 # Open Graph / LinkedIn / Twitter preview
 image:

@@ -254,7 +254,7 @@ jobs:
             echo "- USB flash drive (4 GB+) for bare-metal install"
             echo "- Or: QEMU/KVM for VM usage"
             echo ""
-            echo "**[Documentation](https://rowbose.com)** | **[Installation / Getting Started](https://rowbose.com/getting-started.html)**"
+            echo "**[Documentation](https://rowbose.com)** | **[Installation / Getting Started](https://rowbose.com/v1/getting-started.html)**"
           } > release/RELEASE-NOTES.md
 
           {

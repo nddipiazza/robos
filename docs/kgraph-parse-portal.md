@@ -26,7 +26,7 @@ Heavy-scale connectors web application and headless parsing portal fronting a hi
 The **RobOS Kgraph Parse Portal** (`packages/kgraph-parse-portal`) is the industrial-strength resource ingestion gateway and connectors engine for the RobOS Dual-State SDLC Knowledge Graph. It allows developers, platform architects, and autonomous AI agents to point at **any web resource or Linux filesystem location** and extract a validated, SHACL-compliant Knowledge Graph package in W3C RDF JSON-LD 1.1 format.
 
 {: .note }
-> **Interactive Masterclass Available**: Take the hands-on 5-module [RobOS Kgraph Parse Portal Masterclass](/projects/kgraph-parse-portal/elearning/) with interactive architecture diagrams, live labs, quizzes, and earn your verifiable RobOS Knowledge Graph Ingestion Specialist Certificate!
+> **Interactive Masterclass Available**: Take the hands-on 5-module [RobOS Kgraph Parse Portal Masterclass](/v1/projects/kgraph-parse-portal/elearning/) with interactive architecture diagrams, live labs, quizzes, and earn your verifiable RobOS Knowledge Graph Ingestion Specialist Certificate!
 
 It supersedes preliminary crawler drafts by fusing three cutting-edge infrastructure layers:
 
@@ -166,19 +166,19 @@ The portal's capabilities have been verified through automated headless E2E BDD 
 
 ### 1. Direct CLI Search Query
 Terminal execution querying the Luxir search index directly, returning indexed OpenAPI 3.1 contracts and gRPC Protobuf specifications with AST symbols, roles, and cryptographic SHA-256 evidence.
-![Direct Luxir CLI Search Query](/assets/images/screenshots/09_luxir_cli_search_direct.png)
+![Direct Luxir CLI Search Query](/v1/assets/images/screenshots/09_luxir_cli_search_direct.png)
 
 ### 2. Direct Document Inspection
 Inspecting the complete raw Luxir JSON index document for `openapi.yaml`, demonstrating indexed SHACL types, AST symbol hierarchies, MIME classifications, and content preview.
-![Direct Luxir CLI Document Inspection](/assets/images/screenshots/10_luxir_cli_inspect_doc.png)
+![Direct Luxir CLI Document Inspection](/v1/assets/images/screenshots/10_luxir_cli_inspect_doc.png)
 
 ### 3. Direct REST API Execution via cURL
 Querying the running KGraph Parse Portal REST gateway directly with cURL, demonstrating HTTP JSON payload responses with search scores, hit counts, and structured AST symbols.
-![Direct cURL REST API Query](/assets/images/screenshots/11_luxir_curl_rest_direct.png)
+![Direct cURL REST API Query](/v1/assets/images/screenshots/11_luxir_curl_rest_direct.png)
 
 ### 4. Luxir Engine Status & Document Distribution
 Status report displaying Luxir engine state (`READY`), endpoint (`:8983`), index name (`robos_kgraph`), and distribution across indexed SHACL types.
-![Luxir Engine Status Report](/assets/images/screenshots/12_luxir_cli_status_engine.png)
+![Luxir Engine Status Report](/v1/assets/images/screenshots/12_luxir_cli_status_engine.png)
 
 ---
 

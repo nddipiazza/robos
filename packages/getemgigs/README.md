@@ -1,7 +1,7 @@
 # Get ’Em Gigs — The Gig Bandit (`getemgigs.com`)
 
 [![CI](https://github.com/nddipiazza/thegigbandit/actions/workflows/ci.yml/badge.svg)](https://github.com/nddipiazza/thegigbandit/actions/workflows/ci.yml)
-[![RobOS Project](https://img.shields.io/badge/RobOS-Project-00bcd4)](https://rowbose.com/projects/getemgigs/)
+[![RobOS Project](https://img.shields.io/badge/RobOS-Project-00bcd4)](https://rowbose.com/v1/projects/getemgigs/)
 
 Local bands trade attendance: **“I’ll come to your gig if you come to mine.”** Both bands lock a small deposit.
 Show up and the band playing **scans your check-in QR at the door** (Venmo-style) — you get it back. Bail, and the

@@ -1,10 +1,8 @@
 ---
-layout: v2
+layout: default
 title: Download
-permalink: /v2/download/
+permalink: /download/
 description: Download RobOS for macOS, Linux and Windows, or run it from source or in a VM.
-nav_exclude: true
-search_exclude: true
 ---
 <div class="page-h wrap">
   <h1>Download RobOS</h1>
@@ -54,7 +52,7 @@ sudo bash packages/desktop-shell/install.sh</code></pre>
   -net nic -net user,hostfwd=tcp::2224-:22,hostfwd=tcp::5910-:5900</code></pre>
       </div>
     </div>
-    <p class="muted" style="margin-top:20px">Full walkthrough in the <a style="color:var(--accent)" href="{{ '/getting-started.html' | relative_url }}">installation guide</a>.</p>
+    <p class="muted" style="margin-top:20px">Full walkthrough in the <a style="color:var(--accent)" href="{{ '/v1/getting-started.html' | relative_url }}">installation guide</a>.</p>
   </div>
 </section>
 

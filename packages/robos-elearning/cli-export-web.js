@@ -61,7 +61,7 @@ async function main() {
     console.log(`- Directory Index: ${result.indexFilePath}`);
   }
   console.log(`- GitHub Pages Permalink: ${result.permalink}`);
-  console.log(`- URL: https://www.rowbose.com${result.permalink}`);
+  console.log(`- URL: https://www.rowbose.com/v1${result.permalink}`);
 }
 
 main().catch((err) => {

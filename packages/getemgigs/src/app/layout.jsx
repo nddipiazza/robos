@@ -136,7 +136,7 @@ export default async function RootLayout({ children }) {
               <Link href="/stay-to-play">Stay-To-Play</Link>
               <Link href="/terms">Terms</Link>
               <Link href="/privacy">Privacy</Link>
-              <a href="https://rowbose.com/projects/getemgigs/" rel="noopener">Built with RobOS</a>
+              <a href="https://rowbose.com/v1/projects/getemgigs/" rel="noopener">Built with RobOS</a>
             </nav>
           </div>
         </footer>

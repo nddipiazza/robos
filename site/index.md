@@ -1,20 +1,18 @@
 ---
-layout: v2
+layout: default
 title: RobOS
-permalink: /v2/
-nav_exclude: true
-search_exclude: true
+permalink: /
 ---
 <section class="hero" style="padding-bottom:0">
   <div class="wrap">
-    <a class="pill" href="{{ '/v2/download/' | relative_url }}"><b>New</b> · RobOS v0.0.7 is out — download the installer →</a>
+    <a class="pill" href="{{ '/download/' | relative_url }}"><b>New</b> · RobOS v0.0.7 is out — download the installer →</a>
     <h1>Trust every line your <em>agents</em> write</h1>
     <p class="lead">RobOS is the AI-first SDLC platform: a desktop suite of developer apps, a knowledge graph of your whole system, and video proof-of-work for every agent change.</p>
     <div class="cta">
-      <a class="btn" data-dl-href data-win="https://github.com/nddipiazza/robos/releases/download/v0.0.7/RobOS-Installer-v0.0.7-win.exe" data-mac="https://github.com/nddipiazza/robos/releases/download/v0.0.7/RobOS-Installer-v0.0.7-mac.dmg" data-linux="https://github.com/nddipiazza/robos/releases/download/v0.0.7/RobOS-Installer-v0.0.7-linux.AppImage" href="{{ '/v2/download/' | relative_url }}">⬇ <span data-dl-label>Download RobOS</span></a>
-      <a class="btn btn-ghost" href="{{ '/v2/docs/' | relative_url }}">Read the docs</a>
+      <a class="btn" data-dl-href data-win="https://github.com/nddipiazza/robos/releases/download/v0.0.7/RobOS-Installer-v0.0.7-win.exe" data-mac="https://github.com/nddipiazza/robos/releases/download/v0.0.7/RobOS-Installer-v0.0.7-mac.dmg" data-linux="https://github.com/nddipiazza/robos/releases/download/v0.0.7/RobOS-Installer-v0.0.7-linux.AppImage" href="{{ '/download/' | relative_url }}">⬇ <span data-dl-label>Download RobOS</span></a>
+      <a class="btn btn-ghost" href="{{ '/docs/' | relative_url }}">Read the docs</a>
     </div>
-    <p class="sub">Free &amp; open source · macOS, Linux, Windows · <a href="{{ '/v2/download/' | relative_url }}">Other install options</a></p>
+    <p class="sub">Free &amp; open source · macOS, Linux, Windows · <a href="{{ '/download/' | relative_url }}">Other install options</a></p>
 
     <div class="win" aria-label="Illustration of the RobOS pull request review app">
       <div class="win-bar"><i></i><i></i><i></i><span>Agent Code Review · fix/checkout-timeout</span></div>
@@ -64,9 +62,9 @@ search_exclude: true
         <h3>Review AI pull requests you can actually understand</h3>
         <p>Open the Agent Code Review app, or jump straight into IntelliJ or VS Code with full symbol navigation and local tests.</p>
         <ul class="ticks"><li>Semantic diffs, not just line diffs</li><li>Inline comments and approvals</li><li>Breakpoint debugging of agent runs</li></ul>
-        <p><a class="go" style="color:var(--accent);font-weight:600" href="{{ '/pr-review-theater.html' | relative_url }}">Explore PR Review Theater →</a></p>
+        <p><a class="go" style="color:var(--accent);font-weight:600" href="{{ '/v1/pr-review-theater.html' | relative_url }}">Explore PR Review Theater →</a></p>
       </div>
-      <div class="art"><img src="{{ '/assets/images/dual-state-blast-radius.jpg' | relative_url }}" alt="Dual-state blast radius diagram" loading="lazy"></div>
+      <div class="art"><img src="{{ '/v1/assets/images/dual-state-blast-radius.jpg' | relative_url }}" alt="Dual-state blast radius diagram" loading="lazy"></div>
     </div>
     <div class="split rev">
       <div class="split-t">
@@ -74,9 +72,9 @@ search_exclude: true
         <h3>85 apps, one knowledge graph</h3>
         <p>Dev Central, Issue Manager, Git Projects, database and API clients, topology studio and more. All native, all sharing context.</p>
         <ul class="ticks"><li>Electron + plain JavaScript</li><li>Searchable app launcher</li><li>Install one app or the whole shell</li></ul>
-        <p><a style="color:var(--accent);font-weight:600" href="{{ '/v2/apps/' | relative_url }}">Browse the app directory →</a></p>
+        <p><a style="color:var(--accent);font-weight:600" href="{{ '/apps/' | relative_url }}">Browse the app directory →</a></p>
       </div>
-      <div class="art"><img src="{{ '/assets/images/kgraph-living-architecture.jpg' | relative_url }}" alt="Living knowledge graph architecture" loading="lazy"></div>
+      <div class="art"><img src="{{ '/v1/assets/images/kgraph-living-architecture.jpg' | relative_url }}" alt="Living knowledge graph architecture" loading="lazy"></div>
     </div>
   </div>
 </section>
@@ -92,9 +90,9 @@ search_exclude: true
     <p class="eyebrow">Start here</p>
     <h2 class="h2">Pick your path</h2>
     <div class="grid3">
-      <a class="card" href="{{ '/use-robos.html' | relative_url }}"><div class="ic">🖥️</div><h3>Use RobOS</h3><p>Install it, tour the suite, and see a day with RobOS.</p><span class="go">Start using →</span></a>
-      <a class="card" href="{{ '/build-on-robos.html' | relative_url }}"><div class="ic">🧬</div><h3>Build on RobOS</h3><p>Model your system, generate apps, and write skills agents can run.</p><span class="go">Start building →</span></a>
-      <a class="card" href="{{ '/robos-for-teams.html' | relative_url }}"><div class="ic">🏢</div><h3>RobOS for Teams</h3><p>Govern coding agents and roll RobOS out across your org.</p><span class="go">See why →</span></a>
+      <a class="card" href="{{ '/v1/use-robos.html' | relative_url }}"><div class="ic">🖥️</div><h3>Use RobOS</h3><p>Install it, tour the suite, and see a day with RobOS.</p><span class="go">Start using →</span></a>
+      <a class="card" href="{{ '/v1/build-on-robos.html' | relative_url }}"><div class="ic">🧬</div><h3>Build on RobOS</h3><p>Model your system, generate apps, and write skills agents can run.</p><span class="go">Start building →</span></a>
+      <a class="card" href="{{ '/v1/robos-for-teams.html' | relative_url }}"><div class="ic">🏢</div><h3>RobOS for Teams</h3><p>Govern coding agents and roll RobOS out across your org.</p><span class="go">See why →</span></a>
     </div>
   </div>
 </section>
@@ -102,6 +100,6 @@ search_exclude: true
 <section class="final">
   <div class="wrap">
     <h2 class="h2">Ship with agents. Keep the receipts.</h2>
-    <div class="cta" style="margin-top:30px"><a class="btn btn-accent" href="{{ '/v2/download/' | relative_url }}">⬇ Download RobOS</a><a class="btn btn-ghost" href="https://github.com/nddipiazza/robos" target="_blank" rel="noopener">★ Star on GitHub</a></div>
+    <div class="cta" style="margin-top:30px"><a class="btn btn-accent" href="{{ '/download/' | relative_url }}">⬇ Download RobOS</a><a class="btn btn-ghost" href="https://github.com/nddipiazza/robos" target="_blank" rel="noopener">★ Star on GitHub</a></div>
   </div>
 </section>

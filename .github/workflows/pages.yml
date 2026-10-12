@@ -5,6 +5,7 @@ on:
     branches: ["main"]
     paths:
       - "docs/**"
+      - "site/**"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -27,11 +28,22 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      - name: Build with Jekyll
+      # Front site -> https://rowbose.com/ (reads app data from the v1 docs)
+      - name: Stage app data for the front site
+        run: scripts/stage-site-data.sh
+
+      - name: Build front site
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./site
+          destination: ./_site
+
+      # Classic docs -> https://rowbose.com/v1/ (baseurl is set in docs/_config.yml)
+      - name: Build classic docs (v1)
         uses: actions/jekyll-build-pages@v1
         with:
           source: ./docs
-          destination: ./_site
+          destination: ./_site/v1
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

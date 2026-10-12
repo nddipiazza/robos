@@ -1,10 +1,8 @@
 ---
-layout: v2
+layout: default
 title: Apps
-permalink: /v2/apps/
+permalink: /apps/
 description: Every RobOS desktop app, grouped by what it does.
-nav_exclude: true
-search_exclude: true
 ---
 <div class="page-h wrap">
   <h1>The app suite</h1>
@@ -20,8 +18,8 @@ search_exclude: true
     <h2>{{ cat.icon }} {{ cat.name }}</h2>
     <div class="app-grid">
     {%- for app in apps %}
-      <a class="card app-card" href="{{ app.url | relative_url }}" data-s="{{ app.title | append: ' ' | append: app.summary | downcase | escape }}">
-        {%- if app.icon -%}<img src="{{ '/assets/images/icons/' | append: app.icon | relative_url }}" alt="" loading="lazy">{%- else -%}<span class="ph">{{ app.title | slice: 0 }}</span>{%- endif -%}
+      <a class="card app-card" href="{{ "/v1/apps/" | append: app.slug | append: "/" | relative_url }}" data-s="{{ app.title | append: ' ' | append: app.summary | downcase | escape }}">
+        {%- if app.icon -%}<img src="{{ '/v1/assets/images/icons/' | append: app.icon | relative_url }}" alt="" loading="lazy">{%- else -%}<span class="ph">{{ app.title | slice: 0 }}</span>{%- endif -%}
         <div><h3>{{ app.title }}</h3><p>{{ app.summary }}</p></div>
       </a>
     {%- endfor %}
@@ -37,8 +35,8 @@ search_exclude: true
     <h2>More apps</h2>
     <div class="app-grid">
     {%- for app in others %}
-      <a class="card app-card" href="{{ app.url | relative_url }}" data-s="{{ app.title | append: ' ' | append: app.summary | downcase | escape }}">
-        {%- if app.icon -%}<img src="{{ '/assets/images/icons/' | append: app.icon | relative_url }}" alt="" loading="lazy">{%- else -%}<span class="ph">{{ app.title | slice: 0 }}</span>{%- endif -%}
+      <a class="card app-card" href="{{ "/v1/apps/" | append: app.slug | append: "/" | relative_url }}" data-s="{{ app.title | append: ' ' | append: app.summary | downcase | escape }}">
+        {%- if app.icon -%}<img src="{{ '/v1/assets/images/icons/' | append: app.icon | relative_url }}" alt="" loading="lazy">{%- else -%}<span class="ph">{{ app.title | slice: 0 }}</span>{%- endif -%}
         <div><h3>{{ app.title }}</h3><p>{{ app.summary }}</p></div>
       </a>
     {%- endfor %}

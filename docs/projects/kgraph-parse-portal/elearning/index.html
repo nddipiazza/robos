@@ -15,14 +15,14 @@ redirect_from:
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RobOS Kgraph Parse Portal Masterclass: Heavy-Scale Ingestion, Tika gRPC, Luxir Search & Buildbarn RBE — RobOS Interactive eLearning</title>
-  <link rel="icon" type="image/x-icon" href="/assets/images/favicon.ico">
+  <link rel="icon" type="image/x-icon" href="/v1/assets/images/favicon.ico">
 
   <!-- Open Graph / Meta -->
   <meta name="description" content="Master heavy-scale Knowledge Graph ingestion across web resources and Linux filesystems. Learn how every Linux file maps into the KGraph with cryptographic SHA-256 evidence, disambiguate ambiguous MIME types into precise architectural contracts, stream document parsing over Apache Tika 4.0 gRPC, orchestrate Hermetiq Buildbarn Helm charts (REAPI v2) for distributed build/parse clusters, and bridge nodes into the ultra-fast Luxir C++ search index with W3C SHACL validation gates.">
   <meta property="og:title" content="RobOS Kgraph Parse Portal Masterclass: Heavy-Scale Ingestion, Tika gRPC, Luxir Search & Buildbarn RBE">
   <meta property="og:description" content="Master heavy-scale Knowledge Graph ingestion across web resources and Linux filesystems. Learn how every Linux file maps into the KGraph with cryptographic SHA-256 evidence, disambiguate ambiguous MIME types into precise architectural contracts, stream document parsing over Apache Tika 4.0 gRPC, orchestrate Hermetiq Buildbarn Helm charts (REAPI v2) for distributed build/parse clusters, and bridge nodes into the ultra-fast Luxir C++ search index with W3C SHACL validation gates.">
   <meta property="og:type" content="article">
-  <meta property="og:image" content="/assets/images/crpg-realm/village_square_overview.png">
+  <meta property="og:image" content="/v1/assets/images/crpg-realm/village_square_overview.png">
 
   <!-- Mermaid.js for Interactive Diagrams -->
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
@@ -1325,7 +1325,7 @@ redirect_from:
 
 <p>The <strong>RobOS Kgraph Parse Portal</strong> (<code>packages/kgraph-parse-portal</code>) is the industrial-strength resource ingestion gateway and connectors engine for the RobOS Dual-State SDLC Knowledge Graph. It allows developers, platform architects, and autonomous AI agents to point at <strong>any web resource or Linux filesystem location</strong> and extract a validated, SHACL-compliant Knowledge Graph package in W3C RDF JSON-LD 1.1 format.</p>
 
-<blockquote><strong>Interactive Masterclass Available</strong>: Take the hands-on 5-module <a href="/projects/kgraph-parse-portal/elearning/" target="_blank" rel="noopener" style="color:var(--accent-cyan);">RobOS Kgraph Parse Portal Masterclass</a> with interactive architecture diagrams, live labs, quizzes, and earn your verifiable RobOS Knowledge Graph Ingestion Specialist Certificate!</blockquote>
+<blockquote><strong>Interactive Masterclass Available</strong>: Take the hands-on 5-module <a href="/v1/projects/kgraph-parse-portal/elearning/" target="_blank" rel="noopener" style="color:var(--accent-cyan);">RobOS Kgraph Parse Portal Masterclass</a> with interactive architecture diagrams, live labs, quizzes, and earn your verifiable RobOS Knowledge Graph Ingestion Specialist Certificate!</blockquote>
 
 <p>It supersedes preliminary crawler drafts by fusing three cutting-edge infrastructure layers:</p>
 
@@ -1444,19 +1444,19 @@ curl -s "http://localhost:19192/api/v1/search?q=Contract" | jq .</code></pre>
 
 <h3>1. Direct CLI Search Query</h3>
 Terminal execution querying the Luxir search index directly, returning indexed OpenAPI 3.1 contracts and gRPC Protobuf specifications with AST symbols, roles, and cryptographic SHA-256 evidence.
-!<a href="/assets/images/screenshots/09_luxir_cli_search_direct.png" target="_blank" rel="noopener" style="color:var(--accent-cyan);">Direct Luxir CLI Search Query</a>
+!<a href="/v1/assets/images/screenshots/09_luxir_cli_search_direct.png" target="_blank" rel="noopener" style="color:var(--accent-cyan);">Direct Luxir CLI Search Query</a>
 
 <h3>2. Direct Document Inspection</h3>
 Inspecting the complete raw Luxir JSON index document for <code>openapi.yaml</code>, demonstrating indexed SHACL types, AST symbol hierarchies, MIME classifications, and content preview.
-!<a href="/assets/images/screenshots/10_luxir_cli_inspect_doc.png" target="_blank" rel="noopener" style="color:var(--accent-cyan);">Direct Luxir CLI Document Inspection</a>
+!<a href="/v1/assets/images/screenshots/10_luxir_cli_inspect_doc.png" target="_blank" rel="noopener" style="color:var(--accent-cyan);">Direct Luxir CLI Document Inspection</a>
 
 <h3>3. Direct REST API Execution via cURL</h3>
 Querying the running KGraph Parse Portal REST gateway directly with cURL, demonstrating HTTP JSON payload responses with search scores, hit counts, and structured AST symbols.
-!<a href="/assets/images/screenshots/11_luxir_curl_rest_direct.png" target="_blank" rel="noopener" style="color:var(--accent-cyan);">Direct cURL REST API Query</a>
+!<a href="/v1/assets/images/screenshots/11_luxir_curl_rest_direct.png" target="_blank" rel="noopener" style="color:var(--accent-cyan);">Direct cURL REST API Query</a>
 
 <h3>4. Luxir Engine Status & Document Distribution</h3>
 Status report displaying Luxir engine state (<code>READY</code>), endpoint (<code>:8983</code>), index name (<code>robos_kgraph</code>), and distribution across indexed SHACL types.
-!<a href="/assets/images/screenshots/12_luxir_cli_status_engine.png" target="_blank" rel="noopener" style="color:var(--accent-cyan);">Luxir Engine Status Report</a>
+!<a href="/v1/assets/images/screenshots/12_luxir_cli_status_engine.png" target="_blank" rel="noopener" style="color:var(--accent-cyan);">Luxir Engine Status Report</a>
 
 <hr style="border:none; border-top:1px solid var(--border); margin:24px 0;">
 
@@ -1945,11 +1945,11 @@ flowchart TD
               </ul>
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 14px;">
                 <div class="doc-figure" style="margin: 0;">
-                  <img src="/assets/images/crpg-realm/character_status_sheet.png" alt="Character Sheet" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                  <img src="/v1/assets/images/crpg-realm/character_status_sheet.png" alt="Character Sheet" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                   <div class="doc-caption">Figure 1.1: Complete D&D 5e Character Sheet tracking ability scores, modifiers, AC, saving throws, and status conditions.</div>
                 </div>
                 <div class="doc-figure" style="margin: 0;">
-                  <img src="/assets/images/crpg-realm/combat_battlefield.png" alt="Real-Time with Pause Combat" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                  <img src="/v1/assets/images/crpg-realm/combat_battlefield.png" alt="Real-Time with Pause Combat" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                   <div class="doc-caption">Figure 1.2: RTwP battlefield with 6.0s round timer, threat indicators, and spell targeting.</div>
                 </div>
               </div>
@@ -2015,11 +2015,11 @@ func _process(delta: float) -> void:
               </p>
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 14px;">
                 <div class="doc-figure" style="margin: 0;">
-                  <img src="/assets/images/crpg-realm/house_wall_navigation.png" alt="Building Collision Geometry" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                  <img src="/v1/assets/images/crpg-realm/house_wall_navigation.png" alt="Building Collision Geometry" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                   <div class="doc-caption">Figure 2.1: Physical house footprints blocking movement; party routes through safe street corridors.</div>
                 </div>
                 <div class="doc-figure" style="margin: 0;">
-                  <img src="/assets/images/crpg-realm/fog_of_war_reveal.png" alt="Fog of War Reveal" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                  <img src="/v1/assets/images/crpg-realm/fog_of_war_reveal.png" alt="Fog of War Reveal" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                   <div class="doc-caption">Figure 2.2: Dynamic Fog of War shader revealing shrouded terrain as heroes advance.</div>
                 </div>
               </div>
@@ -2063,7 +2063,7 @@ graph LR
                 Dialogue choices are displayed directly inside the 240px Activity Log console rather than intrusive full-screen popups. Players can select choices via numeric keys <code>1</code>–<code>9</code> or mouse click, maintaining visual connection to the surrounding world. HUD controls include Spacebar tactical RTwP pause, Shift-click waypoint queuing, and circle selection rings.
               </p>
               <div class="doc-figure" style="margin: 14px 0 0;">
-                <img src="/assets/images/crpg-realm/dozens_npc_dialogue.png" alt="In-Log Dialogue" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                <img src="/v1/assets/images/crpg-realm/dozens_npc_dialogue.png" alt="In-Log Dialogue" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                 <div class="doc-caption">Figure 3.1: Multi-branch dialogue with Blacksmith Brand inside the 240px Activity Log.</div>
               </div>
             </div>
@@ -2116,11 +2116,11 @@ flowchart TD
               </p>
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 14px;">
                 <div class="doc-figure" style="margin: 0;">
-                  <img src="/assets/images/crpg-realm/threat_aggro_splash.png" alt="Threat Aggro" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                  <img src="/v1/assets/images/crpg-realm/threat_aggro_splash.png" alt="Threat Aggro" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                   <div class="doc-caption">Figure 4.1: BDD scenario verifying enemy pack aggro alerting and fighter peeling.</div>
                 </div>
                 <div class="doc-figure" style="margin: 0;">
-                  <img src="/assets/images/crpg-realm/victory_screen.png" alt="Victory Screen" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                  <img src="/v1/assets/images/crpg-realm/victory_screen.png" alt="Victory Screen" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                   <div class="doc-caption">Figure 4.2: Campaign victory achieved with 100% test pass rate across 482 steps.</div>
                 </div>
               </div>
@@ -2175,7 +2175,7 @@ static func get_class_data(class_id: String) -> Dictionary:
                 Before any pull request or deployment is approved, <code>kgraph validate</code> validates all shapes, and <code>kgraph diff main</code> checks for broken dialogue references, orphaned asset bindings, or stat imbalances across game revisions.
               </p>
               <div class="doc-figure" style="margin: 14px 0 0;">
-                <img src="/assets/images/crpg-realm/game_generation_paradigm.png" alt="Game Generation Paradigm" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                <img src="/v1/assets/images/crpg-realm/game_generation_paradigm.png" alt="Game Generation Paradigm" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                 <div class="doc-caption">Figure 5.1: The 4-Phase RobOS Knowledge Graph-First Game Generation Paradigm.</div>
               </div>
             </div>
@@ -2284,7 +2284,7 @@ flowchart TD
               </table>
 
               <div class="doc-figure">
-                <img src="/assets/images/kgraph-parse-portal-pipeline.jpg" alt="RobOS Ingestion Pipeline Stage 1" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                <img src="/v1/assets/images/kgraph-parse-portal-pipeline.jpg" alt="RobOS Ingestion Pipeline Stage 1" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                 <div class="doc-caption">Figure 1.1: Stage 1 of the Ingestion Pipeline extracting Linux filesystem entities into the RobOS Knowledge Graph.</div>
               </div>
             </div>
@@ -2578,11 +2578,11 @@ node packages/kgraph-parse-portal/bin/luxir-portal-cli.js inspect openapi.yaml</
 
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 14px;">
                 <div class="doc-figure" style="margin: 0;">
-                  <img src="/assets/images/screenshots/09_luxir_cli_search_direct.png" alt="Direct Luxir CLI Search Query" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                  <img src="/v1/assets/images/screenshots/09_luxir_cli_search_direct.png" alt="Direct Luxir CLI Search Query" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                   <div class="doc-caption">Figure 5.1: Direct Luxir CLI search returning indexed OpenAPI and Protobuf contracts.</div>
                 </div>
                 <div class="doc-figure" style="margin: 0;">
-                  <img src="/assets/images/screenshots/12_luxir_cli_status_engine.png" alt="Luxir Engine Status Report" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                  <img src="/v1/assets/images/screenshots/12_luxir_cli_status_engine.png" alt="Luxir Engine Status Report" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                   <div class="doc-caption">Figure 5.2: Luxir engine status report showing READY state, :8983 endpoint, and type counts.</div>
                 </div>
               </div>

@@ -36,3 +36,6 @@ run/
 
 # Personal / sensitive files
 *.pdf
+site/_apps/
+site/_data/app_categories.yml
+_site/

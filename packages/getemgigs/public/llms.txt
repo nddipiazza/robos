@@ -22,4 +22,4 @@ Key facts:
 - [Privacy](https://www.getemgigs.com/privacy)
 
 ## Optional
-- [How it's built](https://rowbose.com/projects/getemgigs/): architecture, check-in design and end-to-end test videos
+- [How it's built](https://rowbose.com/v1/projects/getemgigs/): architecture, check-in design and end-to-end test videos

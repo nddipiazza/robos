@@ -10,10 +10,10 @@
 
 <p align="center">
   <a href="https://rowbose.com/"><strong>Documentation</strong></a> ·
-  <a href="https://rowbose.com/getting-started.html"><strong>Quickstart</strong></a> ·
-  <a href="https://rowbose.com/big-wins.html"><strong>Core Innovations</strong></a> ·
-  <a href="https://rowbose.com/apps.html"><strong>App Suite</strong></a> ·
-  <a href="https://rowbose.com/architecture.html"><strong>Architecture</strong></a> ·
+  <a href="https://rowbose.com/v1/getting-started.html"><strong>Quickstart</strong></a> ·
+  <a href="https://rowbose.com/v1/big-wins.html"><strong>Core Innovations</strong></a> ·
+  <a href="https://rowbose.com/v1/apps.html"><strong>App Suite</strong></a> ·
+  <a href="https://rowbose.com/v1/architecture.html"><strong>Architecture</strong></a> ·
   <a href="CONTRIBUTING.md"><strong>Contributing</strong></a> ·
   <a href="https://discord.gg/6PjxzkHujE"><strong>Discord Community</strong></a>
 </p>
@@ -300,7 +300,7 @@ RobOS is built entirely on battle-tested open specifications. Everything persist
 - **The Lore**: Named after **Robo** (R-66Y / Prometheus) from the 1995 RPG classic *Chrono Trigger*. In the story, Robo spends **400 years** tilling and irrigating Fiona's scorched desert so it blossoms into a flourishing forest. RobOS does the same for developers: our autonomous agents tirelessly perform the grueling background labor of the SDLC (scaffolding, contracts, migrations, headless testing) so human architects can focus on creative engineering.
 - **Built by Agents**: **GitHub Copilot**, **Anthropic Claude**, **OpenAI Codex**, and **Google Gemini** contributed equally to building RobOS through agentic workflows, proving that diverse AI models excel when collaborating under open standards.
 
-👉 **[Read the complete backstory and multi-agent lore →](https://rowbose.com/about.html)**
+👉 **[Read the complete backstory and multi-agent lore →](https://rowbose.com/v1/about.html)**
 
 ---
 

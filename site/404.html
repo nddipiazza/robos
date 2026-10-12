@@ -1,0 +1,19 @@
+---
+permalink: /404.html
+sitemap: false
+---
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Page not found · RobOS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#07090f;color:#f1f5f9;font:16px/1.6 system-ui,sans-serif;text-align:center}a{color:#00e5ff}</style>
+<script>
+  // Before the v1 move, every doc lived at the site root. Send old deep links
+  // (e.g. /getting-started.html) to their new /v1/ home.
+  (function () {
+    var p = location.pathname;
+    if (!/^\/(v1|games)(\/|$)/.test(p) && p !== '/404.html') {
+      location.replace('/v1' + p + location.search + location.hash);
+    }
+  })();
+</script></head>
+<body><main><h1>Page not found</h1><p><a href="/">RobOS home</a> · <a href="/docs/">Docs</a> · <a href="/v1/">Classic docs (v1)</a></p></main></body></html>

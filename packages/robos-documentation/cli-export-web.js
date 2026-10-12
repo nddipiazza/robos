@@ -62,7 +62,7 @@ async function main() {
   console.log(`- Documented Entities: ${result.entriesCount}`);
   console.log(`- Output File: ${result.filePath}`);
   console.log(`- GitHub Pages Permalink: ${result.permalink}`);
-  console.log(`- Public URL: https://www.rowbose.com${result.permalink}`);
+  console.log(`- Public URL: https://www.rowbose.com/v1${result.permalink}`);
 }
 
 main().catch((err) => {

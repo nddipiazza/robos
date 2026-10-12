@@ -213,14 +213,14 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${courseTitle} — RobOS Interactive eLearning</title>
-  <link rel="icon" type="image/x-icon" href="/assets/images/favicon.ico">
+  <link rel="icon" type="image/x-icon" href="/v1/assets/images/favicon.ico">
 
   <!-- Open Graph / Meta -->
   <meta name="description" content="${(courseDesc || '').replace(/"/g, '&quot;')}">
   <meta property="og:title" content="${courseTitle.replace(/"/g, '&quot;')}">
   <meta property="og:description" content="${(courseDesc || '').replace(/"/g, '&quot;')}">
   <meta property="og:type" content="article">
-  <meta property="og:image" content="/assets/images/crpg-realm/village_square_overview.png">
+  <meta property="og:image" content="/v1/assets/images/crpg-realm/village_square_overview.png">
 
   <!-- Mermaid.js for Interactive Diagrams -->
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
@@ -1308,7 +1308,7 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
       </a>
       <span style="color: var(--border);">/</span>
       ${isCrpg ? `
-      <a href="/projects/crpg-realm/" class="top-link">⚔️ Tactical cRPG Realm</a>
+      <a href="/v1/projects/crpg-realm/" class="top-link">⚔️ Tactical cRPG Realm</a>
       <span style="color: var(--border);">/</span>
       <span style="color: #38bdf8; font-size: 13px; font-weight: 600;">Interactive Masterclass</span>
       ` : `
@@ -1316,7 +1316,7 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
       `}
     </div>
     <div class="top-nav-right">
-      ${isCrpg ? `<a href="/projects/crpg-realm/elearning-masterclass.html" class="top-link">📖 Living Architecture Guide</a>` : ''}
+      ${isCrpg ? `<a href="/v1/projects/crpg-realm/elearning-masterclass.html" class="top-link">📖 Living Architecture Guide</a>` : ''}
       <a href="https://github.com/nddipiazza/robos" target="_blank" rel="noopener" class="top-link">⭐ GitHub</a>
       <a href="https://discord.gg/6PjxzkHujE" target="_blank" rel="noopener" class="top-link">💬 Discord</a>
     </div>
@@ -1899,11 +1899,11 @@ flowchart TD
               </ul>
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 14px;">
                 <div class="doc-figure" style="margin: 0;">
-                  <img src="/assets/images/crpg-realm/character_status_sheet.png" alt="Character Sheet" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                  <img src="/v1/assets/images/crpg-realm/character_status_sheet.png" alt="Character Sheet" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                   <div class="doc-caption">Figure 1.1: Complete D&D 5e Character Sheet tracking ability scores, modifiers, AC, saving throws, and status conditions.</div>
                 </div>
                 <div class="doc-figure" style="margin: 0;">
-                  <img src="/assets/images/crpg-realm/combat_battlefield.png" alt="Real-Time with Pause Combat" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                  <img src="/v1/assets/images/crpg-realm/combat_battlefield.png" alt="Real-Time with Pause Combat" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                   <div class="doc-caption">Figure 1.2: RTwP battlefield with 6.0s round timer, threat indicators, and spell targeting.</div>
                 </div>
               </div>
@@ -1969,11 +1969,11 @@ func _process(delta: float) -> void:
               </p>
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 14px;">
                 <div class="doc-figure" style="margin: 0;">
-                  <img src="/assets/images/crpg-realm/house_wall_navigation.png" alt="Building Collision Geometry" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                  <img src="/v1/assets/images/crpg-realm/house_wall_navigation.png" alt="Building Collision Geometry" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                   <div class="doc-caption">Figure 2.1: Physical house footprints blocking movement; party routes through safe street corridors.</div>
                 </div>
                 <div class="doc-figure" style="margin: 0;">
-                  <img src="/assets/images/crpg-realm/fog_of_war_reveal.png" alt="Fog of War Reveal" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                  <img src="/v1/assets/images/crpg-realm/fog_of_war_reveal.png" alt="Fog of War Reveal" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                   <div class="doc-caption">Figure 2.2: Dynamic Fog of War shader revealing shrouded terrain as heroes advance.</div>
                 </div>
               </div>
@@ -2017,7 +2017,7 @@ graph LR
                 Dialogue choices are displayed directly inside the 240px Activity Log console rather than intrusive full-screen popups. Players can select choices via numeric keys <code>1</code>–<code>9</code> or mouse click, maintaining visual connection to the surrounding world. HUD controls include Spacebar tactical RTwP pause, Shift-click waypoint queuing, and circle selection rings.
               </p>
               <div class="doc-figure" style="margin: 14px 0 0;">
-                <img src="/assets/images/crpg-realm/dozens_npc_dialogue.png" alt="In-Log Dialogue" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                <img src="/v1/assets/images/crpg-realm/dozens_npc_dialogue.png" alt="In-Log Dialogue" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                 <div class="doc-caption">Figure 3.1: Multi-branch dialogue with Blacksmith Brand inside the 240px Activity Log.</div>
               </div>
             </div>
@@ -2070,11 +2070,11 @@ flowchart TD
               </p>
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 14px;">
                 <div class="doc-figure" style="margin: 0;">
-                  <img src="/assets/images/crpg-realm/threat_aggro_splash.png" alt="Threat Aggro" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                  <img src="/v1/assets/images/crpg-realm/threat_aggro_splash.png" alt="Threat Aggro" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                   <div class="doc-caption">Figure 4.1: BDD scenario verifying enemy pack aggro alerting and fighter peeling.</div>
                 </div>
                 <div class="doc-figure" style="margin: 0;">
-                  <img src="/assets/images/crpg-realm/victory_screen.png" alt="Victory Screen" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                  <img src="/v1/assets/images/crpg-realm/victory_screen.png" alt="Victory Screen" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                   <div class="doc-caption">Figure 4.2: Campaign victory achieved with 100% test pass rate across 482 steps.</div>
                 </div>
               </div>
@@ -2129,7 +2129,7 @@ static func get_class_data(class_id: String) -> Dictionary:
                 Before any pull request or deployment is approved, <code>kgraph validate</code> validates all shapes, and <code>kgraph diff main</code> checks for broken dialogue references, orphaned asset bindings, or stat imbalances across game revisions.
               </p>
               <div class="doc-figure" style="margin: 14px 0 0;">
-                <img src="/assets/images/crpg-realm/game_generation_paradigm.png" alt="Game Generation Paradigm" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                <img src="/v1/assets/images/crpg-realm/game_generation_paradigm.png" alt="Game Generation Paradigm" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                 <div class="doc-caption">Figure 5.1: The 4-Phase RobOS Knowledge Graph-First Game Generation Paradigm.</div>
               </div>
             </div>
@@ -2238,7 +2238,7 @@ flowchart TD
               </table>
 
               <div class="doc-figure">
-                <img src="/assets/images/kgraph-parse-portal-pipeline.jpg" alt="RobOS Ingestion Pipeline Stage 1" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                <img src="/v1/assets/images/kgraph-parse-portal-pipeline.jpg" alt="RobOS Ingestion Pipeline Stage 1" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                 <div class="doc-caption">Figure 1.1: Stage 1 of the Ingestion Pipeline extracting Linux filesystem entities into the RobOS Knowledge Graph.</div>
               </div>
             </div>
@@ -2532,11 +2532,11 @@ node packages/kgraph-parse-portal/bin/luxir-portal-cli.js inspect openapi.yaml</
 
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 14px;">
                 <div class="doc-figure" style="margin: 0;">
-                  <img src="/assets/images/screenshots/09_luxir_cli_search_direct.png" alt="Direct Luxir CLI Search Query" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                  <img src="/v1/assets/images/screenshots/09_luxir_cli_search_direct.png" alt="Direct Luxir CLI Search Query" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                   <div class="doc-caption">Figure 5.1: Direct Luxir CLI search returning indexed OpenAPI and Protobuf contracts.</div>
                 </div>
                 <div class="doc-figure" style="margin: 0;">
-                  <img src="/assets/images/screenshots/12_luxir_cli_status_engine.png" alt="Luxir Engine Status Report" class="doc-img" onclick="openLightbox(this.src, this.alt)">
+                  <img src="/v1/assets/images/screenshots/12_luxir_cli_status_engine.png" alt="Luxir Engine Status Report" class="doc-img" onclick="openLightbox(this.src, this.alt)">
                   <div class="doc-caption">Figure 5.2: Luxir engine status report showing READY state, :8983 endpoint, and type counts.</div>
                 </div>
               </div>

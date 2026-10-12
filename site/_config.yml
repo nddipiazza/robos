@@ -1,0 +1,18 @@
+title: RobOS
+description: "The AI-first SDLC platform and autonomous agent governance harness with automated 1080p video proof-of-work, semantic blast-radius checking, and Knowledge Graph-First application generation."
+url: "https://rowbose.com"
+baseurl: ""
+
+# This is the front site at https://rowbose.com/. The classic (v1) docs are
+# a separate Jekyll site in ../docs, built with baseurl /v1 and published
+# under /v1/. See .github/workflows/pages.yml.
+#
+# The App Directory reads app front matter from ../docs/_apps. The workflow (and
+# scripts/build-docs.sh) stage it into site/_apps via scripts/stage-site-data.sh; the
+# collection is data only (output: false), the pages themselves live at /v1/apps/.
+collections:
+  apps:
+    output: false
+
+exclude:
+  - README.md
