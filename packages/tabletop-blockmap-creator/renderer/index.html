@@ -131,24 +131,31 @@
 
         <!-- Room Subtool Options -->
         <div id="room-subtool-panel" class="subtool-panel hidden">
-          <div class="subtool-title">Room Tool</div>
+          <div class="subtool-title">Room Mode</div>
           <label class="radio-label">
-            <input type="radio" name="room-mode" value="box" checked> Drag Box
+            <input type="radio" name="room-mode" value="rect" checked> ⬛ Rectangle
           </label>
           <label class="radio-label">
-            <input type="radio" name="room-mode" value="toggle"> Toggle Edge
-          </label>
-          <label class="radio-label">
-            <input type="radio" name="room-mode" value="paint"> Paint Tile
-          </label>
-          <label class="radio-label">
-            <input type="radio" name="room-mode" value="erase"> Erase Tile
+            <input type="radio" name="room-mode" value="freeform"> ✏️ Free Form
           </label>
         </div>
       </nav>
 
       <!-- Center Interactive Canvas Viewport -->
       <div class="canvas-viewport" id="canvas-viewport">
+        <!-- Floating Freeform Action Bar -->
+        <div id="freeform-action-bar" class="freeform-action-bar hidden">
+          <div class="freeform-bar-left">
+            <span class="freeform-badge">✏️ FREE FORM ROOM</span>
+            <span class="freeform-text" id="freeform-status-text">Click / drag tiles to define room boundaries: <strong id="freeform-tile-count">0</strong> tiles</span>
+          </div>
+          <div class="freeform-bar-right">
+            <button id="btn-freeform-ok" class="btn btn-sm btn-accent" title="Validate and create room (Enter)">✓ OK</button>
+            <button id="btn-freeform-clear" class="btn btn-sm btn-secondary" title="Clear draft tiles">Clear</button>
+            <button id="btn-freeform-cancel" class="btn btn-sm btn-danger" title="Cancel freeform draft (Esc)">Cancel</button>
+          </div>
+        </div>
+
         <canvas id="map-canvas"></canvas>
         <div id="canvas-overlay-help" class="canvas-overlay-help">
           <span>Pan: Middle-click or Space+drag | Zoom: Scroll wheel | Drag on grid to paint/toggle</span>
@@ -286,8 +293,15 @@
               </select>
             </div>
             <div class="room-bounds-info">
+              <span>Shape: <strong id="prop-room-shape">Rectangle</strong></span>
+              <span>Tiles: <strong id="prop-room-tiles-count">0</strong></span>
+            </div>
+            <div class="room-bounds-info" style="margin-top:4px;">
               <span>Position: X=<strong id="prop-room-x">0</strong>, Y=<strong id="prop-room-y">0</strong></span>
-              <span>Size: <strong id="prop-room-w">0</strong> × <strong id="prop-room-h">0</strong> tiles</span>
+              <span>Bounds: <strong id="prop-room-w">0</strong> × <strong id="prop-room-h">0</strong></span>
+            </div>
+            <div class="btn-row" style="margin-top:8px;">
+              <button id="btn-edit-room-shape" class="btn btn-sm btn-secondary" title="Edit this room's shape in Free Form mode">✏️ Edit Shape (Free Form)</button>
             </div>
           </div>
 
@@ -295,7 +309,10 @@
           <div class="section-card">
             <div class="room-list-header">
               <h3>Static Rooms (<span id="room-list-count">0</span>)</h3>
-              <button id="btn-add-new-room" class="btn btn-sm btn-primary">+ New Room</button>
+              <div class="btn-group">
+                <button id="btn-add-new-room" class="btn btn-sm btn-primary" title="Add rectangular room">+ Rect</button>
+                <button id="btn-add-freeform-room" class="btn btn-sm btn-accent" title="Add free-form room (click boundaries until done)">+ Free Form</button>
+              </div>
             </div>
             <div id="room-items-container" class="room-items-container">
               <!-- Populated dynamically -->
@@ -320,6 +337,7 @@
     <div id="toast" class="toast hidden"></div>
   </div>
 
+  <script src="../lib/room-shape.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

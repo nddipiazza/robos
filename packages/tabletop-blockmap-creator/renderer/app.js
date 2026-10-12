@@ -19,6 +19,40 @@ const ROOM_COLORS = [
   '#2dd4bf', '#fb923c'
 ];
 
+function getShapeHelper(name) {
+  if (typeof window !== 'undefined' && window.RobOSRoomShape && typeof window.RobOSRoomShape[name] === 'function') {
+    return window.RobOSRoomShape[name];
+  }
+  if (typeof window !== 'undefined' && typeof window[name] === 'function') {
+    return window[name];
+  }
+  if (typeof globalThis !== 'undefined' && typeof globalThis[name] === 'function') {
+    return globalThis[name];
+  }
+  return null;
+}
+
+function callValidateRoomContiguity(tiles) {
+  const fn = getShapeHelper('validateRoomContiguity');
+  return fn ? fn(tiles) : { valid: true };
+}
+
+function callComputeRoomBounds(tiles) {
+  const fn = getShapeHelper('computeRoomBoundsFromTiles');
+  return fn ? fn(tiles) : { x: 0, y: 0, w: 1, h: 1 };
+}
+
+function callGenerateRectTiles(x, y, w, h) {
+  const fn = getShapeHelper('generateRectTiles');
+  return fn ? fn(x, y, w, h) : [];
+}
+
+function callGetRoomPerimeterEdges(tiles) {
+  const fn = getShapeHelper('getRoomPerimeterEdges');
+  return fn ? fn(tiles) : [];
+}
+
+
 class BlockmapCreator {
   constructor() {
     this.canvas = document.getElementById('map-canvas');
@@ -41,7 +75,11 @@ class BlockmapCreator {
     // 2. Active Tools
     this.activeTool = 'inspect';  // 'inspect', 'corridor', 'room', 'erase'
     this.corridorMode = 'toggle'; // 'toggle', 'paint', 'erase'
-    this.roomMode = 'box';        // 'box', 'toggle', 'paint', 'erase'
+    this.roomMode = 'rect';       // 'rect' (Rectangle Selector), 'freeform' (Free Form Selector)
+    this.draftFreeformTiles = new Set(); // Set of "col,row" strings
+    this.freeformEditingRoomId = null;   // null if new room, roomId if editing existing
+    this.invalidFreeformTiles = null;    // Set of "col,row" when rejected
+    this.freeformStrokeAction = 'add';   // 'add' or 'remove' during drag stroke
 
     // 3. Layer 1 Data
     this.image = null;
@@ -52,7 +90,7 @@ class BlockmapCreator {
     this.cartridgeSlug = 'heroquest-fortress-fire-king';
 
     this.corridorTiles = new Set(); // "col,row" strings
-    this.rooms = [];                // Array of { id, name, x, y, w, h, quadrant, color }
+    this.rooms = [];                // Array of { id, name, x, y, w, h, shape, tiles, tileSet, quadrant, color }
     this.selectedRoomId = null;
 
     // View Display Flags
@@ -94,7 +132,18 @@ class BlockmapCreator {
         if (startup.type === 'cartridge' || startup.value.includes('cartridge')) {
           await this.loadCartridge(startup.value);
         } else if (startup.type === 'image') {
-          await this.loadImageFile(startup.value);
+          // If image matches a board preset, load the preset and all its rooms
+          const presetsRes = await window.robosBlockmap.listBoardPresets();
+          const matched = (presetsRes && presetsRes.presets) ? presetsRes.presets.find(p =>
+            p.file.endsWith(startup.value) ||
+            startup.value.endsWith(p.file) ||
+            p.id === startup.value.replace(/\.[^/.]+$/, '')
+          ) : null;
+          if (matched) {
+            await this.loadPreset(matched.id);
+          } else {
+            await this.loadImageFile(startup.value);
+          }
         } else {
           await this.loadPreset(startup.value || 'first-light-dungeon');
         }
@@ -257,7 +306,7 @@ class BlockmapCreator {
       r.addEventListener('change', (e) => { this.corridorMode = e.target.value; });
     });
     document.querySelectorAll('input[name="room-mode"]').forEach(r => {
-      r.addEventListener('change', (e) => { this.roomMode = e.target.value; });
+      r.addEventListener('change', (e) => { this.setRoomMode(e.target.value); });
     });
 
     // Room Inspector Inputs
@@ -293,8 +342,39 @@ class BlockmapCreator {
     });
 
     document.getElementById('btn-add-new-room').addEventListener('click', () => {
-      this.addNewRoom();
+      this.setActiveTool('room');
+      this.setRoomMode('rect');
+      this.showToast('Rectangle Selector: Drag on map to define room bounds');
     });
+
+    const btnFreeformRoom = document.getElementById('btn-add-freeform-room');
+    if (btnFreeformRoom) {
+      btnFreeformRoom.addEventListener('click', () => {
+        this.startFreeformRoom();
+      });
+    }
+
+    const btnEditShape = document.getElementById('btn-edit-room-shape');
+    if (btnEditShape) {
+      btnEditShape.addEventListener('click', () => {
+        const room = this.getSelectedRoom();
+        if (room) this.startFreeformRoom(room);
+      });
+    }
+
+    // Freeform Floating Action Bar
+    const btnFreeformOk = document.getElementById('btn-freeform-ok');
+    if (btnFreeformOk) {
+      btnFreeformOk.addEventListener('click', () => this.finishFreeformRoom());
+    }
+    const btnFreeformClear = document.getElementById('btn-freeform-clear');
+    if (btnFreeformClear) {
+      btnFreeformClear.addEventListener('click', () => this.clearFreeformDraft());
+    }
+    const btnFreeformCancel = document.getElementById('btn-freeform-cancel');
+    if (btnFreeformCancel) {
+      btnFreeformCancel.addEventListener('click', () => this.cancelFreeformRoom());
+    }
 
     // Corridor action buttons
     document.getElementById('btn-fill-outer-corridor').addEventListener('click', () => {
@@ -340,6 +420,16 @@ class BlockmapCreator {
         this.setActiveTool('room');
       } else if (e.key === 'e' || e.key === 'E') {
         this.setActiveTool('erase');
+      } else if (e.key === 'Enter') {
+        if (this.roomMode === 'freeform' && this.draftFreeformTiles.size > 0) {
+          e.preventDefault();
+          this.finishFreeformRoom();
+        }
+      } else if (e.key === 'Escape') {
+        if (this.roomMode === 'freeform') {
+          e.preventDefault();
+          this.cancelFreeformRoom();
+        }
       } else if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
         e.preventDefault();
         this.undo();
@@ -428,10 +518,18 @@ class BlockmapCreator {
           this.modifiedThisStroke.add(key);
         }
       } else if (this.activeTool === 'room') {
-        if (this.roomMode === 'paint' || this.roomMode === 'erase') {
-          const room = this.getSelectedRoom();
-          if (room && this.isTileInBounds(tile.col, tile.row)) {
-            this.toggleRoomTile(room, tile.col, tile.row, this.roomMode === 'paint');
+        if (this.roomMode === 'freeform') {
+          if (this.isTileInBounds(tile.col, tile.row)) {
+            const key = `${tile.col},${tile.row}`;
+            this.freeformStrokeAction = this.draftFreeformTiles.has(key) ? 'remove' : 'add';
+            if (this.freeformStrokeAction === 'add') {
+              this.draftFreeformTiles.add(key);
+            } else {
+              this.draftFreeformTiles.delete(key);
+            }
+            this.invalidFreeformTiles = null;
+            this.modifiedThisStroke.add(key);
+            this.updateFreeformHUD();
           }
         }
       } else if (this.activeTool === 'erase') {
@@ -473,6 +571,18 @@ class BlockmapCreator {
           this.modifiedThisStroke.add(key);
           this.applyCorridorTile(tile.col, tile.row, this.dragStrokeAction);
         }
+      } else if (this.activeTool === 'room' && this.roomMode === 'freeform' && this.isTileInBounds(tile.col, tile.row)) {
+        const key = `${tile.col},${tile.row}`;
+        if (!this.modifiedThisStroke.has(key)) {
+          this.modifiedThisStroke.add(key);
+          if (this.freeformStrokeAction === 'add') {
+            this.draftFreeformTiles.add(key);
+          } else {
+            this.draftFreeformTiles.delete(key);
+          }
+          this.invalidFreeformTiles = null;
+          this.updateFreeformHUD();
+        }
       } else if (this.activeTool === 'erase' && this.isTileInBounds(tile.col, tile.row)) {
         this.eraseAtTile(tile.col, tile.row);
       }
@@ -493,8 +603,8 @@ class BlockmapCreator {
       const world = this.screenToWorld(e.clientX, e.clientY);
       const tile = this.worldToTile(world.x, world.y);
 
-      // Finalize room rectangle if dragging box
-      if (this.activeTool === 'room' && (this.roomMode === 'box' || this.roomMode === 'toggle') && this.dragStartTile) {
+      // Finalize room rectangle if dragging box in rect mode
+      if (this.activeTool === 'room' && this.roomMode === 'rect' && this.dragStartTile) {
         const c1 = this.dragStartTile.col;
         const r1 = this.dragStartTile.row;
         const c2 = tile.col;
@@ -514,6 +624,10 @@ class BlockmapCreator {
             activeRoom.y = ry;
             activeRoom.w = rw;
             activeRoom.h = rh;
+            activeRoom.shape = 'rect';
+            const tiles = callGenerateRectTiles(rx, ry, rw, rh);
+            activeRoom.tiles = tiles;
+            activeRoom.tileSet = new Set(tiles.map(t => `${t[0]},${t[1]}`));
             this.updateRoomInspector();
             this.updateRoomListUI();
             this.showToast(`Updated ${activeRoom.name} bounds: [${rx}, ${ry}] ${rw}×${rh}`);
@@ -575,10 +689,22 @@ class BlockmapCreator {
   }
 
   // ---------------- Rooms Management ----------------
+  roomContainsTile(room, col, row) {
+    if (!room) return false;
+    if (room.tileSet) {
+      return room.tileSet.has(`${col},${row}`);
+    }
+    if (room.tiles && Array.isArray(room.tiles)) {
+      return room.tiles.some(t => t[0] === col && t[1] === row);
+    }
+    return col >= room.x && col < room.x + room.w && row >= room.y && row < room.y + room.h;
+  }
+
   addNewRoom(x = 1, y = 1, w = 4, h = 4) {
     const count = this.rooms.length + 1;
     const quadrant = this.determineQuadrant(x, y);
     const color = ROOM_COLORS[(count - 1) % ROOM_COLORS.length];
+    const tiles = callGenerateRectTiles(x, y, w, h);
     const newRoom = {
       id: `room-${quadrant}-${count}`,
       name: `Room ${count} (${quadrant.toUpperCase()})`,
@@ -586,6 +712,9 @@ class BlockmapCreator {
       y: y,
       w: w,
       h: h,
+      shape: 'rect',
+      tiles: tiles,
+      tileSet: new Set(tiles.map(t => `${t[0]},${t[1]}`)),
       quadrant: quadrant,
       color: color
     };
@@ -595,6 +724,35 @@ class BlockmapCreator {
     this.updateRoomListUI();
     this.updateRoomInspector();
     this.showToast(`Defined new room: ${newRoom.name}`);
+    return newRoom;
+  }
+
+  addNewFreeformRoom(tileArray) {
+    const bounds = callComputeRoomBounds(tileArray);
+    const count = this.rooms.length + 1;
+    const quadrant = this.determineQuadrant(bounds.x, bounds.y);
+    const color = ROOM_COLORS[(count - 1) % ROOM_COLORS.length];
+    const isRect = tileArray.length === bounds.w * bounds.h;
+
+    const newRoom = {
+      id: `room-${quadrant}-${count}`,
+      name: `Room ${count} (${quadrant.toUpperCase()})`,
+      x: bounds.x,
+      y: bounds.y,
+      w: bounds.w,
+      h: bounds.h,
+      shape: isRect ? 'rect' : 'freeform',
+      tiles: tileArray,
+      tileSet: new Set(tileArray.map(t => `${t[0]},${t[1]}`)),
+      quadrant: quadrant,
+      color: color
+    };
+
+    this.rooms.push(newRoom);
+    this.selectedRoomId = newRoom.id;
+    this.updateRoomListUI();
+    this.updateRoomInspector();
+    this.showToast(`Defined ${newRoom.shape} room: ${newRoom.name} (${tileArray.length} tiles)`);
     return newRoom;
   }
 
@@ -619,11 +777,134 @@ class BlockmapCreator {
 
   getRoomAtTile(col, row) {
     for (const r of this.rooms) {
-      if (col >= r.x && col < r.x + r.w && row >= r.y && row < r.y + r.h) {
+      if (this.roomContainsTile(r, col, row)) {
         return r;
       }
     }
     return null;
+  }
+
+  setRoomMode(mode) {
+    this.roomMode = mode;
+    const radio = document.querySelector(`input[name="room-mode"][value="${mode}"]`);
+    if (radio) radio.checked = true;
+
+    const bar = document.getElementById('freeform-action-bar');
+    if (bar) {
+      if (mode === 'freeform') {
+        bar.classList.remove('hidden');
+      } else if (!this.freeformEditingRoomId && this.draftFreeformTiles.size === 0) {
+        bar.classList.add('hidden');
+      }
+    }
+    this.render();
+  }
+
+  startFreeformRoom(existingRoom = null) {
+    this.setActiveTool('room');
+    this.setRoomMode('freeform');
+    this.invalidFreeformTiles = null;
+
+    if (existingRoom) {
+      this.freeformEditingRoomId = existingRoom.id;
+      const tiles = existingRoom.tiles && existingRoom.tiles.length > 0
+        ? existingRoom.tiles
+        : callGenerateRectTiles(existingRoom.x, existingRoom.y, existingRoom.w, existingRoom.h);
+      this.draftFreeformTiles = new Set(tiles.map(t => `${t[0]},${t[1]}`));
+      const statusEl = document.getElementById('freeform-status-text');
+      if (statusEl) {
+        statusEl.innerHTML = `Editing <strong>${existingRoom.name}</strong>: Click/drag tiles. Must connect: <strong id="freeform-tile-count">${this.draftFreeformTiles.size}</strong> tiles`;
+      }
+      this.showToast(`Editing shape for ${existingRoom.name} in Free Form mode`);
+    } else {
+      this.freeformEditingRoomId = null;
+      this.draftFreeformTiles.clear();
+      const statusEl = document.getElementById('freeform-status-text');
+      if (statusEl) {
+        statusEl.innerHTML = `Click / drag tiles to define room boundaries: <strong id="freeform-tile-count">0</strong> tiles`;
+      }
+      this.showToast('Free Form mode: Click or drag tiles, then click OK');
+    }
+
+    const bar = document.getElementById('freeform-action-bar');
+    if (bar) bar.classList.remove('hidden');
+    this.updateFreeformHUD();
+    this.render();
+  }
+
+  finishFreeformRoom() {
+    if (this.draftFreeformTiles.size === 0) {
+      this.showToast('⚠️ Room cannot be empty! Click or drag to add tiles.');
+      return;
+    }
+
+    // Contiguity validation: reject any non-connecting shapes
+    const validation = callValidateRoomContiguity(this.draftFreeformTiles);
+
+    if (!validation.valid) {
+      this.invalidFreeformTiles = new Set(this.draftFreeformTiles);
+      const reasonMsg = validation.reason || 'All tiles in a room must be orthogonally connected.';
+      this.showToast(`❌ Rejected: Non-connecting room shape! ${reasonMsg}`);
+      const statusEl = document.getElementById('freeform-status-text');
+      if (statusEl) {
+        statusEl.innerHTML = `<span style="color:#ef4444;font-weight:bold;">❌ Rejected: Non-connecting shape (${validation.componentCount || 0} separate islands). Must connect!</span>`;
+      }
+      this.render();
+      return;
+    }
+
+    this.invalidFreeformTiles = null;
+    const tileArray = Array.from(this.draftFreeformTiles).map(k => k.split(',').map(Number));
+    const bounds = callComputeRoomBounds(tileArray);
+    const isRect = tileArray.length === bounds.w * bounds.h;
+
+    this.pushHistory();
+
+    if (this.freeformEditingRoomId) {
+      const room = this.rooms.find(r => r.id === this.freeformEditingRoomId);
+      if (room) {
+        room.x = bounds.x;
+        room.y = bounds.y;
+        room.w = bounds.w;
+        room.h = bounds.h;
+        room.shape = isRect ? 'rect' : 'freeform';
+        room.tiles = tileArray;
+        room.tileSet = new Set(this.draftFreeformTiles);
+        this.selectedRoomId = room.id;
+        this.showToast(`Updated shape for ${room.name} (${tileArray.length} tiles)`);
+      }
+    } else {
+      this.addNewFreeformRoom(tileArray);
+    }
+
+    this.cancelFreeformRoom(false);
+    this.updateRoomListUI();
+    this.updateRoomInspector();
+    this.render();
+  }
+
+  cancelFreeformRoom(notify = true) {
+    this.draftFreeformTiles.clear();
+    this.freeformEditingRoomId = null;
+    this.invalidFreeformTiles = null;
+    const bar = document.getElementById('freeform-action-bar');
+    if (bar) bar.classList.add('hidden');
+    this.setRoomMode('rect');
+    this.render();
+    if (notify) this.showToast('Cancelled Free Form mode');
+  }
+
+  clearFreeformDraft() {
+    this.draftFreeformTiles.clear();
+    this.invalidFreeformTiles = null;
+    this.updateFreeformHUD();
+    this.render();
+    this.showToast('Cleared draft tiles');
+  }
+
+  updateFreeformHUD() {
+    const el = document.getElementById('freeform-tile-count');
+    if (el) el.textContent = this.draftFreeformTiles.size;
   }
 
   determineQuadrant(x, y) {
@@ -645,11 +926,13 @@ class BlockmapCreator {
     this.rooms.forEach(r => {
       const card = document.createElement('div');
       card.className = `room-card-item ${r.id === this.selectedRoomId ? 'selected' : ''}`;
+      const shapeLabel = r.shape === 'freeform' ? 'Free Form' : 'Rect';
+      const tileCount = r.tiles ? r.tiles.length : (r.w * r.h);
       card.innerHTML = `
         <div class="room-item-badge" style="background:${r.color || '#00bcd4'};"></div>
         <div class="room-item-info">
           <span class="room-item-title">${r.name}</span>
-          <span class="room-item-coords">[${r.x}, ${r.y}] ${r.w}×${r.h} • ${r.quadrant.toUpperCase()}</span>
+          <span class="room-item-coords">[${r.x}, ${r.y}] ${r.w}×${r.h} • ${shapeLabel} (${tileCount}t) • ${r.quadrant.toUpperCase()}</span>
         </div>
       `;
       card.addEventListener('click', () => {
@@ -675,6 +958,10 @@ class BlockmapCreator {
       document.getElementById('prop-room-y').textContent = '0';
       document.getElementById('prop-room-w').textContent = '0';
       document.getElementById('prop-room-h').textContent = '0';
+      const shapeEl = document.getElementById('prop-room-shape');
+      if (shapeEl) shapeEl.textContent = '-';
+      const tilesEl = document.getElementById('prop-room-tiles-count');
+      if (tilesEl) tilesEl.textContent = '0';
       return;
     }
 
@@ -688,6 +975,10 @@ class BlockmapCreator {
     document.getElementById('prop-room-y').textContent = room.y;
     document.getElementById('prop-room-w').textContent = room.w;
     document.getElementById('prop-room-h').textContent = room.h;
+    const shapeEl = document.getElementById('prop-room-shape');
+    if (shapeEl) shapeEl.textContent = room.shape === 'freeform' ? 'Free Form' : 'Rectangle';
+    const tilesEl = document.getElementById('prop-room-tiles-count');
+    if (tilesEl) tilesEl.textContent = room.tiles ? room.tiles.length : (room.w * room.h);
   }
 
   setActiveTool(tool) {
@@ -914,10 +1205,19 @@ class BlockmapCreator {
     const map = res.mapData || {};
     this.cols = map.width || 26;
     this.rows = map.height || 19;
-    this.rooms = (map.rooms || []).map((r, i) => ({
-      ...r,
-      color: r.color || ROOM_COLORS[i % ROOM_COLORS.length]
-    }));
+    this.rooms = (map.rooms || []).map((r, i) => {
+      const shape = r.shape || 'rect';
+      const tiles = r.tiles && r.tiles.length > 0
+        ? r.tiles
+        : callGenerateRectTiles(r.x, r.y, r.w, r.h);
+      return {
+        ...r,
+        shape: shape,
+        tiles: tiles,
+        tileSet: new Set(tiles.map(t => `${t[0]},${t[1]}`)),
+        color: r.color || ROOM_COLORS[i % ROOM_COLORS.length]
+      };
+    });
 
     if (map.calibration) {
       if (map.calibration.tileSize) this.tileSize = map.calibration.tileSize;
@@ -980,6 +1280,8 @@ class BlockmapCreator {
         y: r.y,
         w: r.w,
         h: r.h,
+        shape: r.shape || 'rect',
+        tiles: r.tiles || callGenerateRectTiles(r.x, r.y, r.w, r.h),
         quadrant: r.quadrant || 'center'
       })),
       corridors: Array.from(this.corridorTiles).map(k => k.split(',').map(Number))
@@ -1007,6 +1309,8 @@ class BlockmapCreator {
           y: r.y,
           w: r.w,
           h: r.h,
+          shape: r.shape || 'rect',
+          tiles: r.tiles || callGenerateRectTiles(r.x, r.y, r.w, r.h),
           quadrant: r.quadrant || 'center'
         }))
       }
@@ -1106,27 +1410,103 @@ class BlockmapCreator {
     if (this.showRooms) {
       this.rooms.forEach(r => {
         const isSelected = r.id === this.selectedRoomId;
-        const rx = this.offsetX + r.x * this.tileSize;
-        const ry = this.offsetY + r.y * this.tileSize;
-        const rw = r.w * this.tileSize;
-        const rh = r.h * this.tileSize;
+        const color = r.color || '#10b981';
+        const tileList = r.tiles && r.tiles.length > 0
+          ? r.tiles
+          : callGenerateRectTiles(r.x, r.y, r.w, r.h);
 
         ctx.save();
         // Room floor tint
-        ctx.fillStyle = isSelected ? 'rgba(0, 188, 212, 0.32)' : 'rgba(16, 185, 129, 0.16)';
-        ctx.fillRect(rx, ry, rw, rh);
+        ctx.fillStyle = isSelected ? 'rgba(0, 188, 212, 0.32)' : `${color}28`;
+        for (const [c, row] of tileList) {
+          const tx = this.offsetX + c * this.tileSize;
+          const ty = this.offsetY + row * this.tileSize;
+          ctx.fillRect(tx, ty, this.tileSize, this.tileSize);
+        }
 
         // Room solid wall boundary
-        ctx.strokeStyle = isSelected ? '#00bcd4' : (r.color || '#10b981');
+        ctx.strokeStyle = isSelected ? '#00bcd4' : color;
         ctx.lineWidth = isSelected ? 2.5 : 1.8;
-        ctx.strokeRect(rx, ry, rw, rh);
+
+        if (r.shape === 'freeform') {
+          const edges = callGetRoomPerimeterEdges(tileList);
+          ctx.beginPath();
+          for (const edge of edges) {
+            const x1 = this.offsetX + edge.from[0] * this.tileSize;
+            const y1 = this.offsetY + edge.from[1] * this.tileSize;
+            const x2 = this.offsetX + edge.to[0] * this.tileSize;
+            const y2 = this.offsetY + edge.to[1] * this.tileSize;
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+          }
+          ctx.stroke();
+        } else {
+          const rx = this.offsetX + r.x * this.tileSize;
+          const ry = this.offsetY + r.y * this.tileSize;
+          const rw = r.w * this.tileSize;
+          const rh = r.h * this.tileSize;
+          ctx.strokeRect(rx, ry, rw, rh);
+        }
 
         // Room title banner
         ctx.fillStyle = isSelected ? '#00bcd4' : '#fff';
         ctx.font = `bold ${Math.max(10, Math.min(14, this.tileSize * 0.35))}px sans-serif`;
+        const rx = this.offsetX + r.x * this.tileSize;
+        const ry = this.offsetY + r.y * this.tileSize;
         ctx.fillText(r.name || r.id, rx + 6, ry + 16);
         ctx.restore();
       });
+    }
+
+    // 4.5 Draw Draft Freeform Room
+    if (this.draftFreeformTiles && this.draftFreeformTiles.size > 0) {
+      const isInvalid = !!this.invalidFreeformTiles;
+      const tileArray = Array.from(this.draftFreeformTiles).map(k => k.split(',').map(Number));
+
+      ctx.save();
+      // Fill
+      ctx.fillStyle = isInvalid ? 'rgba(239, 68, 68, 0.40)' : 'rgba(168, 85, 247, 0.38)';
+      for (const [c, r] of tileArray) {
+        const tx = this.offsetX + c * this.tileSize;
+        const ty = this.offsetY + r * this.tileSize;
+        ctx.fillRect(tx, ty, this.tileSize, this.tileSize);
+      }
+
+      // Perimeter line
+      ctx.strokeStyle = isInvalid ? '#ef4444' : '#c084fc';
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([6, 3]);
+
+      const edges = callGetRoomPerimeterEdges(this.draftFreeformTiles);
+      if (edges && edges.length > 0) {
+        ctx.beginPath();
+        for (const edge of edges) {
+          const x1 = this.offsetX + edge.from[0] * this.tileSize;
+          const y1 = this.offsetY + edge.from[1] * this.tileSize;
+          const x2 = this.offsetX + edge.to[0] * this.tileSize;
+          const y2 = this.offsetY + edge.to[1] * this.tileSize;
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+        }
+        ctx.stroke();
+      }
+
+      // Status text on first tile
+      if (tileArray.length > 0) {
+        const [c0, r0] = tileArray[0];
+        const tx = this.offsetX + c0 * this.tileSize;
+        const ty = this.offsetY + r0 * this.tileSize;
+        ctx.fillStyle = isInvalid ? '#fca5a5' : '#f3e8ff';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.setLineDash([]);
+        if (isInvalid) {
+          ctx.fillText(`⚠️ Non-connecting shape!`, tx + 4, ty + 16);
+        } else {
+          ctx.fillText(`Draft Room (${this.draftFreeformTiles.size} tiles)`, tx + 4, ty + 16);
+        }
+      }
+
+      ctx.restore();
     }
 
     // 5. Draw Grid Lines
@@ -1169,7 +1549,7 @@ class BlockmapCreator {
     }
 
     // 7. Draw Room Box Drag Preview
-    if (this.isDrawing && this.activeTool === 'room' && (this.roomMode === 'box' || this.roomMode === 'toggle') && this.dragStartTile && this.dragCurrentTile) {
+    if (this.isDrawing && this.activeTool === 'room' && this.roomMode === 'rect' && this.dragStartTile && this.dragCurrentTile) {
       const c1 = this.dragStartTile.col;
       const r1 = this.dragStartTile.row;
       const c2 = this.dragCurrentTile.col;
