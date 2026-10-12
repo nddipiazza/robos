@@ -27,7 +27,7 @@ plugins:
 
 color_scheme: dark
 
-logo: "/assets/images/logo.png"
+logo: "/assets/images/logo-sidebar.png"
 favicon_ico: "/assets/images/favicon.ico"
 
 aux_links:

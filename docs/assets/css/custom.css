@@ -132,10 +132,13 @@ pre {
   height: auto !important;
 }
 
+/* The logo image is cropped tight to the robot + wordmark (logo-sidebar.png), so it
+   can fill the whole header width and the "RobOS" name stays readable. */
 .side-bar .site-logo {
-  height: 9.5rem !important;
-  min-height: 9.5rem !important;
-  width: 12.66rem !important;
+  width: 14.5rem !important;
+  height: auto !important;
+  min-height: 0 !important;
+  aspect-ratio: 720 / 580 !important;
   max-width: 100% !important;
   background-size: cover !important;
   background-position: center center !important;
@@ -151,7 +154,7 @@ pre {
 
 @media (max-width: 50rem) {
   .side-bar .site-header {
-    min-height: 7rem !important;
+    min-height: 8rem !important;
     padding: 0.75rem 1rem !important;
   }
 
@@ -163,9 +166,7 @@ pre {
   }
 
   .side-bar .site-logo {
-    height: 5.5rem !important;
-    min-height: 5.5rem !important;
-    width: 7.33rem !important;
+    width: 9rem !important;
     border-radius: 10px !important;
   }
 }
@@ -1726,9 +1727,34 @@ svg[id^="mermaid-"] text.noteText,
   text-align: center;
   padding: 2.5rem 0 1rem;
 }
-.rb-hero h1 {
-  font-size: 3.25rem !important;
-  margin-bottom: 0.75rem !important;
+.rb-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+}
+.rb-brand-mark {
+  display: block;
+  height: 7rem;
+  width: auto;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(0, 229, 255, 0.25);
+}
+/* The product name: large, solid white (no gradient fade) so it is the first thing read. */
+.rb-hero h1.rb-brand-name {
+  font-size: 5rem !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+  margin: 0 !important;
+  background: none !important;
+  -webkit-text-fill-color: #ffffff !important;
+  color: #ffffff !important;
+  text-shadow: 0 0 32px rgba(0, 229, 255, 0.35);
+}
+.rb-hero .rb-pron {
+  font-size: 0.95rem;
+  color: #94a3b8 !important;
+  margin: 0.6rem 0 1.25rem;
 }
 .rb-hero .rb-tagline {
   font-family: 'Space Grotesk', sans-serif;
@@ -1866,7 +1892,9 @@ a.rb-link span {
 }
 
 @media (max-width: 600px) {
-  .rb-hero h1 { font-size: 2.4rem !important; }
+  .rb-brand { gap: 1rem; }
+  .rb-brand-mark { height: 4.75rem; border-radius: 12px; }
+  .rb-hero h1.rb-brand-name { font-size: 3.4rem !important; }
   .rb-hero .rb-tagline { font-size: 1.3rem; }
 }
 
