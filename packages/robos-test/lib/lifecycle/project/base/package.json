@@ -1,0 +1,6 @@
+{
+  "name": "pawfinder-api",
+  "version": "1.4.0",
+  "private": true,
+  "scripts": { "start": "node src/server.js", "test": "node --test" }
+}

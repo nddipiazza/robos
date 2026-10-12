@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pawfinder</title>
+<style>
+:root{--bg:#fff8f1;--ink:#2b2118;--muted:#7b6a5a;--brand:#e8590c;--line:#f0e1d2}
+*{box-sizing:border-box}body{margin:0;font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink)}
+header{padding:26px 32px 4px}h1{margin:0;font-size:30px;letter-spacing:-.02em}h1 span{color:var(--brand)}
+.sub{color:var(--muted);margin:2px 0 0}
+form{display:flex;gap:10px;padding:16px 32px 8px;flex-wrap:wrap;align-items:center}
+input[type=search],select{padding:12px 14px;border:1px solid var(--line);border-radius:12px;font:inherit;background:#fff;color:var(--ink)}
+input[type=search]{flex:1;min-width:220px}
+#chips{display:flex;gap:8px;flex-wrap:wrap}
+#chips button{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;padding:9px 16px;font:inherit;font-size:15px;cursor:pointer}
+#chips button[aria-pressed=true]{background:var(--brand);border-color:var(--brand);color:#fff}
+#results{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;padding:12px 32px 32px}
+.pet{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px}
+.pet .e{font-size:30px;line-height:1}.pet b{display:block;font-size:18px;margin-top:6px}
+.tag{display:inline-block;font-size:12px;padding:2px 9px;border-radius:999px;background:#ffe8d6;color:#9c3d07;margin-top:6px}
+.pet p{margin:6px 0 0;color:var(--muted);font-size:14px}
+.note{padding:4px 32px;color:var(--muted)}.err{color:#b42318}
+</style>
+</head>
+<body>
+<header><h1>Paw<span>finder</span></h1><p class="sub">Find your next best friend.</p></header>
+<form id="f" onsubmit="return false">
+  <input id="q" type="search" placeholder="Search by name or breed" autocomplete="off">
+
+</form>
+<p id="msg" class="note" hidden></p>
+<main id="results"></main>
+<script>
+const EMOJI = { dog: '🐶', cat: '🐱', rabbit: '🐰' };
+const q = document.getElementById('q');
+const box = document.getElementById('results');
+const msg = document.getElementById('msg');
+async function run() {
+  const params = new URLSearchParams({ q: q.value });
+  const res = await fetch('/api/pets?' + params);
+  const data = await res.json();
+  msg.hidden = res.ok && data.length > 0;
+  msg.className = res.ok ? 'note' : 'note err';
+  msg.textContent = !res.ok ? data.error : 'No pets match that search.';
+  box.replaceChildren(...(res.ok ? data : []).map(p => {
+    const el = document.createElement('article');
+    el.className = 'pet';
+    el.innerHTML = `<div class="e">${EMOJI[p.species] || '🐾'}</div><b>${p.name}</b><span class="tag">${p.species}</span><p>${p.breed} · ${p.ageYears} yr · ${p.shelter}</p>`;
+    return el;
+  }));
+}
+q.addEventListener('input', run);
+run();
+</script>
+</body>
+</html>
