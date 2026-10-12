@@ -20,7 +20,7 @@ permalink: /
           <i></i><i></i><i></i><span>One task, from idea to merged PR, in the real RobOS apps</span>
           <button type="button" class="watch" id="hero-watch" aria-pressed="false">▶ Watch the full recording</button>
         </div>
-        <div class="stage" id="hero-stage">
+        <div class="stage" id="hero-stage" tabindex="0" role="group" aria-roledescription="slideshow" aria-label="Walkthrough slides. Click or press space to pause or resume, arrow keys to step.">
           {%- for s in site.data.hero.slides %}
           <img class="slide{% if forloop.first %} is-active{% endif %}" src="{{ '/assets/hero/slides/' | append: s.file | relative_url }}" data-step="{{ s.step }}" data-dwell="{{ s.dwell }}" alt="{{ s.alt | escape }}" width="1280" height="720"{% unless forloop.first %} loading="lazy"{% endunless %}>
           {%- endfor %}
@@ -28,7 +28,30 @@ permalink: /
             <source src="{{ '/assets/hero/hero.webm' | relative_url }}" type="video/webm">
             <source src="{{ '/assets/hero/hero.mp4' | relative_url }}" type="video/mp4">
           </video>
+          <div class="stage-state" aria-hidden="true">Paused</div>
           <div class="stage-progress" aria-hidden="true"><i></i></div>
+        </div>
+        <div class="player-controls" id="hero-controls" role="group" aria-label="Slideshow controls">
+          <button type="button" class="ctl ctl-play" id="hero-play" aria-pressed="false" aria-label="Pause slideshow" title="Pause (space)">
+            <svg class="ic-pause" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M3.5 2h3v12h-3zM9.5 2h3v12h-3z"/></svg>
+            <svg class="ic-play" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M4 2l10 6-10 6z"/></svg>
+            <span class="ctl-label">Pause</span>
+          </button>
+          <button type="button" class="ctl" id="hero-prev" aria-label="Previous slide" title="Previous (←)">
+            <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M10 3L5 8l5 5"/></svg>
+          </button>
+          <button type="button" class="ctl" id="hero-next" aria-label="Next slide" title="Next (→)">
+            <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M6 3l5 5-5 5"/></svg>
+          </button>
+          <span class="count" id="hero-count" aria-live="off">1 / {{ site.data.hero.slides | size }}</span>
+          <label class="ctl-speed" for="hero-speed">Time per slide
+            <select id="hero-speed">
+              <option value="1">Normal</option>
+              <option value="1.5" selected>Longer</option>
+              <option value="2">Much longer</option>
+              <option value="3">Longest</option>
+            </select>
+          </label>
         </div>
       </div>
       <ol class="steps" aria-label="Steps">
