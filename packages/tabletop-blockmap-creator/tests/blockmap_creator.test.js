@@ -157,3 +157,95 @@ test('Clear All Rooms: empties room array, updates selection, and supports undo 
   assert.equal(selectedRoomId, 'room-2');
 });
 
+test('Freeform Draft Stroke Undo: undoes draft strokes in sequence without altering rooms or offset', () => {
+  const draftFreeformTiles = new Set();
+  const draftStrokeHistory = [];
+  let rooms = [{ id: 'room-1', name: 'Existing Room' }];
+  let offsetY = 12;
+
+  // Simulate stroke 1: add two tiles
+  const stroke1 = { added: ['5,5', '5,6'], removed: [] };
+  for (const k of stroke1.added) draftFreeformTiles.add(k);
+  draftStrokeHistory.push(stroke1);
+
+  // Simulate stroke 2: add one tile
+  const stroke2 = { added: ['5,7'], removed: [] };
+  for (const k of stroke2.added) draftFreeformTiles.add(k);
+  draftStrokeHistory.push(stroke2);
+
+  assert.equal(draftFreeformTiles.size, 3);
+  assert.equal(draftStrokeHistory.length, 2);
+
+  // Undo stroke 2
+  const undoneStroke2 = draftStrokeHistory.pop();
+  for (const k of undoneStroke2.added) draftFreeformTiles.delete(k);
+  assert.equal(draftFreeformTiles.size, 2);
+  assert.ok(draftFreeformTiles.has('5,5'));
+  assert.ok(draftFreeformTiles.has('5,6'));
+  assert.ok(!draftFreeformTiles.has('5,7'));
+  assert.equal(offsetY, 12);
+  assert.equal(rooms.length, 1);
+
+  // Undo stroke 1
+  const undoneStroke1 = draftStrokeHistory.pop();
+  for (const k of undoneStroke1.added) draftFreeformTiles.delete(k);
+  assert.equal(draftFreeformTiles.size, 0);
+  assert.equal(offsetY, 12);
+  assert.equal(rooms.length, 1);
+});
+
+test('Room tileSet preservation: tileSet remains a functioning Set after pushHistory and undo', () => {
+  let rooms = [
+    {
+      id: 'room-1',
+      name: 'Hall',
+      tiles: [[1, 1], [1, 2]],
+      tileSet: new Set(['1,1', '1,2'])
+    }
+  ];
+  const history = [];
+
+  function pushHistory() {
+    history.push({
+      rooms: rooms.map(r => ({
+        ...r,
+        tiles: r.tiles ? r.tiles.map(t => [...t]) : [],
+        tileSet: new Set(r.tileSet ? r.tileSet : (r.tiles || []).map(t => `${t[0]},${t[1]}`))
+      }))
+    });
+  }
+
+  function undo() {
+    if (history.length === 0) return false;
+    const prev = history.pop();
+    rooms = prev.rooms.map(r => ({
+      ...r,
+      tiles: r.tiles ? r.tiles.map(t => [...t]) : [],
+      tileSet: new Set(r.tileSet ? r.tileSet : (r.tiles || []).map(t => `${t[0]},${t[1]}`))
+    }));
+    return true;
+  }
+
+  pushHistory();
+  // Modify room
+  rooms.push({
+    id: 'room-2',
+    name: 'Vault',
+    tiles: [[3, 3]],
+    tileSet: new Set(['3,3'])
+  });
+
+  assert.equal(rooms.length, 2);
+  assert.ok(rooms[0].tileSet instanceof Set);
+  assert.ok(rooms[0].tileSet.has('1,1'));
+
+  const undone = undo();
+  assert.equal(undone, true);
+  assert.equal(rooms.length, 1);
+  assert.ok(rooms[0].tileSet instanceof Set);
+  assert.ok(rooms[0].tileSet.has('1,1'));
+  assert.ok(rooms[0].tileSet.has('1,2'));
+  assert.ok(!rooms[0].tileSet.has('3,3'));
+});
+
+
