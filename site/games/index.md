@@ -19,7 +19,7 @@ accent: "#e0b252"
   <div class="wrap">
     <div class="hub">
       <a href="{{ '/games/crpg/' | relative_url }}" style="background-image:url('{{ '/assets/games/crpg-bg-poster.jpg' | relative_url }}');--accent:#5ec8e5">
-        <div class="in"><h2>Realm of Heroes</h2><p>A party-based, real-time-with-pause cRPG in the Infinity Engine tradition. Godot 4.3.</p><span class="go">Enter the realm →</span></div>
+        <div class="in"><h2>Realm of Heroes CRPG</h2><p>A party-based, real-time-with-pause cRPG in the Infinity Engine tradition. Godot 4.3.</p><span class="go">Enter the realm →</span></div>
       </a>
       <a href="{{ '/games/tabletop-rpg/' | relative_url }}" style="background-image:url('{{ '/assets/games/tabletop-still-intro.jpg' | relative_url }}')">
         <div class="in"><h2>Tabletop RPG</h2><p>A HeroQuest-inspired dungeon crawler with cartridges, fog of war and a Game Master mode.</p><span class="go">Open the box →</span></div>

@@ -1,14 +1,14 @@
 ---
 layout: game
-title: "Realm of Heroes Docs"
+title: "Realm of Heroes CRPG Docs"
 permalink: /games/crpg/docs/
-description: Guides, tutorials and reference for the RobOS Realm of Heroes cRPG.
+description: Guides, tutorials and reference for the RobOS Realm of Heroes CRPG.
 bg_video: /assets/games/crpg-bg.mp4
 bg_poster: /assets/games/crpg-bg-poster.jpg
 accent: "#5ec8e5"
 ---
 <section class="game-doc wrap">
-  <p class="eyebrow" style="color:var(--accent)">Realm of Heroes</p>
+  <p class="eyebrow" style="color:var(--accent)">Realm of Heroes CRPG</p>
   <h1 class="g-title" style="font-size:clamp(2rem,5vw,3.4rem)">Documentation</h1>
   <p class="lead" style="margin-top:14px;color:#c9c2b2;max-width:60ch">Everything for playing, modding and understanding the cRPG.</p>
   <div class="grid3">

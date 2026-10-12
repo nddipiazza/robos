@@ -23,6 +23,6 @@ accent: "#e0b252"
       <a href="https://github.com/nddipiazza/robos/tree/main/games/tabletop-rpg/cartridges" target="_blank" rel="noopener"><b>Cartridges</b><span>↗</span></a></div>
     <div><h3>Also</h3>
       <a href="{{ '/games/' | relative_url }}"><b>All RobOS games</b><span>→</span></a>
-      <a href="{{ '/games/crpg/docs/' | relative_url }}"><b>Realm of Heroes docs</b><span>→</span></a></div>
+      <a href="{{ '/games/crpg/docs/' | relative_url }}"><b>Realm of Heroes CRPG docs</b><span>→</span></a></div>
   </div>
 </section>
