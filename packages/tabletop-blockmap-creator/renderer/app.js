@@ -422,6 +422,8 @@ class BlockmapCreator {
 
       if (isUndoKey) {
         e.preventDefault();
+        e.stopPropagation();
+        if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
         if (document.activeElement && typeof document.activeElement.blur === 'function') {
           document.activeElement.blur();
         }
@@ -431,6 +433,8 @@ class BlockmapCreator {
 
       if (isRedoKey) {
         e.preventDefault();
+        e.stopPropagation();
+        if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
         if (document.activeElement && typeof document.activeElement.blur === 'function') {
           document.activeElement.blur();
         }
@@ -467,7 +471,7 @@ class BlockmapCreator {
           this.cancelFreeformRoom();
         }
       }
-    });
+    }, true);
 
     window.addEventListener('keyup', (e) => {
       if (e.code === 'Space') {
@@ -1464,11 +1468,14 @@ class BlockmapCreator {
   // ---------------- Canvas Rendering ----------------
   render() {
     const ctx = this.ctx;
+    // Always reset transform matrix to identity before clearing and rendering
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
     ctx.save();
-    ctx.translate(this.panX, this.panY);
-    ctx.scale(this.zoom, this.zoom);
+    try {
+      ctx.translate(this.panX, this.panY);
+      ctx.scale(this.zoom, this.zoom);
 
     const totalGridW = this.cols * this.tileSize;
     const totalGridH = this.rows * this.tileSize;
@@ -1526,10 +1533,14 @@ class BlockmapCreator {
           const edges = callGetRoomPerimeterEdges(tileList);
           ctx.beginPath();
           for (const edge of edges) {
-            const x1 = this.offsetX + edge.from[0] * this.tileSize;
-            const y1 = this.offsetY + edge.from[1] * this.tileSize;
-            const x2 = this.offsetX + edge.to[0] * this.tileSize;
-            const y2 = this.offsetY + edge.to[1] * this.tileSize;
+            const ex1 = edge.from ? edge.from[0] : edge.x1;
+            const ey1 = edge.from ? edge.from[1] : edge.y1;
+            const ex2 = edge.to ? edge.to[0] : edge.x2;
+            const ey2 = edge.to ? edge.to[1] : edge.y2;
+            const x1 = this.offsetX + ex1 * this.tileSize;
+            const y1 = this.offsetY + ey1 * this.tileSize;
+            const x2 = this.offsetX + ex2 * this.tileSize;
+            const y2 = this.offsetY + ey2 * this.tileSize;
             ctx.moveTo(x1, y1);
             ctx.lineTo(x2, y2);
           }
@@ -1575,10 +1586,14 @@ class BlockmapCreator {
       if (edges && edges.length > 0) {
         ctx.beginPath();
         for (const edge of edges) {
-          const x1 = this.offsetX + edge.from[0] * this.tileSize;
-          const y1 = this.offsetY + edge.from[1] * this.tileSize;
-          const x2 = this.offsetX + edge.to[0] * this.tileSize;
-          const y2 = this.offsetY + edge.to[1] * this.tileSize;
+          const ex1 = edge.from ? edge.from[0] : edge.x1;
+          const ey1 = edge.from ? edge.from[1] : edge.y1;
+          const ex2 = edge.to ? edge.to[0] : edge.x2;
+          const ey2 = edge.to ? edge.to[1] : edge.y2;
+          const x1 = this.offsetX + ex1 * this.tileSize;
+          const y1 = this.offsetY + ey1 * this.tileSize;
+          const x2 = this.offsetX + ex2 * this.tileSize;
+          const y2 = this.offsetY + ey2 * this.tileSize;
           ctx.moveTo(x1, y1);
           ctx.lineTo(x2, y2);
         }
@@ -1672,9 +1687,13 @@ class BlockmapCreator {
       ctx.fillText(`Room: [${rx}, ${ry}] ${rw}×${rh}`, px + 6, py + 18);
       ctx.restore();
     }
-
+  } catch (err) {
+    console.error('Canvas render error:', err);
+  } finally {
     ctx.restore();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
+}
 }
 
 window.addEventListener('DOMContentLoaded', () => {

@@ -204,19 +204,19 @@
 
       // North edge
       if (!set.has(`${c},${r - 1}`)) {
-        edges.push({ orientation: 'h', x1: c, y1: r, x2: c + 1, y2: r, side: 'north' });
+        edges.push({ orientation: 'h', x1: c, y1: r, x2: c + 1, y2: r, from: [c, r], to: [c + 1, r], side: 'north' });
       }
       // South edge
       if (!set.has(`${c},${r + 1}`)) {
-        edges.push({ orientation: 'h', x1: c, y1: r + 1, x2: c + 1, y2: r + 1, side: 'south' });
+        edges.push({ orientation: 'h', x1: c, y1: r + 1, x2: c + 1, y2: r + 1, from: [c, r + 1], to: [c + 1, r + 1], side: 'south' });
       }
       // West edge
       if (!set.has(`${c - 1},${r}`)) {
-        edges.push({ orientation: 'v', x1: c, y1: r, x2: c, y2: r + 1, side: 'west' });
+        edges.push({ orientation: 'v', x1: c, y1: r, x2: c, y2: r + 1, from: [c, r], to: [c, r + 1], side: 'west' });
       }
       // East edge
       if (!set.has(`${c + 1},${r}`)) {
-        edges.push({ orientation: 'v', x1: c + 1, y1: r, x2: c + 1, y2: r + 1, side: 'east' });
+        edges.push({ orientation: 'v', x1: c + 1, y1: r, x2: c + 1, y2: r + 1, from: [c + 1, r], to: [c + 1, r + 1], side: 'east' });
       }
     }
 
