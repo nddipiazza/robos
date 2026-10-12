@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -11,12 +11,12 @@
   <link rel="icon" href="{{ '/v1/assets/images/favicon.svg' | relative_url }}" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ '/assets/site.css' | relative_url }}">
   {%- if page.extra_css %}
   <link rel="stylesheet" href="{{ page.extra_css | relative_url }}">
   {%- endif %}
-  <script>try{var t=localStorage.getItem('rb2-theme');if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
+  <script>try{var t=localStorage.getItem('rb2-theme');if(!t&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)t='dark';if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
 </head>
 <body class="{{ page.body_class }}">
 <header class="nav">
@@ -30,7 +30,7 @@
       <a href="https://discord.gg/6PjxzkHujE" target="_blank" rel="noopener">Community</a>
     </nav>
     <div class="nav-r">
-      <button class="icon-btn" id="theme" aria-label="Toggle theme">◐</button>
+      <button class="icon-btn" id="theme" type="button" aria-label="Toggle light and dark theme"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 2a6 6 0 0 0 0 12z" fill="currentColor"/></svg></button>
       <a class="btn btn-sm" href="{{ '/download/' | relative_url }}">Download</a>
     </div>
   </div>
