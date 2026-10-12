@@ -1,5 +1,5 @@
 {
-  "duration": 86.68,
+  "duration": 142.72,
   "chapters": [
     {
       "step": 0,
@@ -15,7 +15,7 @@
       "title": "Task implemented",
       "who": "Task Implementer",
       "text": "An agent branches, commits and pushes. It does not open a PR",
-      "start": 10.04
+      "start": 15.64
     },
     {
       "step": 2,
@@ -23,7 +23,7 @@
       "title": "Owner reviews the changes",
       "who": "Code Review Theater",
       "text": "A diff of the pushed branch, file by file",
-      "start": 18.04
+      "start": 27.32
     },
     {
       "step": 3,
@@ -31,7 +31,7 @@
       "title": "Owner checks the evidence",
       "who": "Code Review Theater",
       "text": "Before and after, captured from real runs of the code",
-      "start": 23.08
+      "start": 43.8
     },
     {
       "step": 4,
@@ -39,7 +39,7 @@
       "title": "Owner takes the walkthrough",
       "who": "Code Review Theater",
       "text": "An agent demonstrates each checkpoint while the owner stays in control",
-      "start": 27.48
+      "start": 61.08
     },
     {
       "step": 5,
@@ -47,7 +47,7 @@
       "title": "Draft PR created",
       "who": "Code Review Theater",
       "text": "The description is reviewed first, then published as a draft",
-      "start": 36.68
+      "start": 83.4
     },
     {
       "step": 6,
@@ -55,7 +55,7 @@
       "title": "Owner watches CI",
       "who": "Draft PR",
       "text": "Checks go from pending to passing",
-      "start": 42.48
+      "start": 91.96
     },
     {
       "step": 7,
@@ -63,7 +63,7 @@
       "title": "Moved to ready for review",
       "who": "Draft PR",
       "text": "Only once CI is green, with reviewers requested",
-      "start": 51.64
+      "start": 101.84
     },
     {
       "step": 8,
@@ -71,7 +71,7 @@
       "title": "Reviewer approves",
       "who": "PR reviewer",
       "text": "Reads the diff and signs off",
-      "start": 56.88
+      "start": 109.48
     },
     {
       "step": 9,
@@ -79,7 +79,7 @@
       "title": "Owner merges",
       "who": "PR author",
       "text": "The approved PR is merged and shows as Merged",
-      "start": 67.52
+      "start": 120.16
     },
     {
       "step": 10,
@@ -87,79 +87,195 @@
       "title": "Owner watches CI and acts",
       "who": "Task Explorer",
       "text": "contract-check fails on main, so a follow-up task is filed. Back to step 1",
-      "start": 73.68
+      "start": 126.56
     }
   ],
   "slides": [
     {
-      "file": "01-planner-created.jpg",
+      "file": "01-app-before.jpg",
       "step": 0,
-      "alt": "Task created. The plan becomes tracked issues, with acceptance criteria and test cases"
+      "dwell": 6400,
+      "alt": "Task created. Start from the app as it is today"
     },
     {
-      "file": "02-implementer-done.jpg",
+      "file": "02-planner-prompt.jpg",
+      "step": 0,
+      "dwell": 6200,
+      "alt": "Task created. Describe the goal and let an AI agent plan it"
+    },
+    {
+      "file": "03-planner-generated.jpg",
+      "step": 0,
+      "dwell": 6200,
+      "alt": "Task created. The plan comes with acceptance criteria and test cases"
+    },
+    {
+      "file": "04-planner-created.jpg",
+      "step": 0,
+      "dwell": 6200,
+      "alt": "Task created. Synced to the tracker as real issues"
+    },
+    {
+      "file": "05-implementer-ready.jpg",
       "step": 1,
-      "alt": "Task implemented. An agent branches, commits and pushes. It does not open a PR"
+      "dwell": 6200,
+      "alt": "Task implemented. Pick a task and let an agent implement it"
     },
     {
-      "file": "03-changes.jpg",
+      "file": "06-implementer-running.jpg",
+      "step": 1,
+      "dwell": 5200,
+      "alt": "Task implemented. The agent branches, edits, tests and pushes"
+    },
+    {
+      "file": "07-implementer-done.jpg",
+      "step": 1,
+      "dwell": 6200,
+      "alt": "Task implemented. Branch pushed. No pull request yet"
+    },
+    {
+      "file": "08-changes-diff.jpg",
       "step": 2,
-      "alt": "Owner reviews the changes. A diff of the pushed branch, file by file"
+      "dwell": 6200,
+      "alt": "Owner reviews the changes. Review every changed file"
     },
     {
-      "file": "04-evidence.jpg",
+      "file": "09-changes-ask.jpg",
+      "step": 2,
+      "dwell": 5200,
+      "alt": "Owner reviews the changes. Ask the agent for a change, in plain English"
+    },
+    {
+      "file": "10-changes-working.jpg",
+      "step": 2,
+      "dwell": 5200,
+      "alt": "Owner reviews the changes. The agent edits the file, runs the tests and commits"
+    },
+    {
+      "file": "11-changes-updated.jpg",
+      "step": 2,
+      "dwell": 5200,
+      "alt": "Owner reviews the changes. The diff updates on its own"
+    },
+    {
+      "file": "12-evidence-stale.jpg",
       "step": 3,
-      "alt": "Owner checks the evidence. Before and after, captured from real runs of the code"
+      "dwell": 5200,
+      "alt": "Owner checks the evidence. Evidence is tied to a commit"
     },
     {
-      "file": "05-walkthrough-2.jpg",
+      "file": "13-evidence-ask.jpg",
+      "step": 3,
+      "dwell": 6200,
+      "alt": "Owner checks the evidence. Ask for fresh evidence, plus a new case"
+    },
+    {
+      "file": "14-evidence-making.jpg",
+      "step": 3,
+      "dwell": 5200,
+      "alt": "Owner checks the evidence. Evidence appears as the agent makes it"
+    },
+    {
+      "file": "15-evidence-updated.jpg",
+      "step": 3,
+      "dwell": 5200,
+      "alt": "Owner checks the evidence. Fresh evidence for this commit, with the new case"
+    },
+    {
+      "file": "16-walk-start.jpg",
       "step": 4,
-      "alt": "Owner takes the walkthrough. An agent demonstrates each checkpoint while the owner stays in control"
+      "dwell": 5200,
+      "alt": "Owner takes the walkthrough. A guided walkthrough, one checkpoint at a time"
     },
     {
-      "file": "06-draft-pr.jpg",
+      "file": "17-walk-app.jpg",
+      "step": 4,
+      "dwell": 6400,
+      "alt": "Owner takes the walkthrough. The agent pops up the running app"
+    },
+    {
+      "file": "18-walk-ask.jpg",
+      "step": 4,
+      "dwell": 5200,
+      "alt": "Owner takes the walkthrough. Ask for a change while the app is open"
+    },
+    {
+      "file": "19-walk-updated.jpg",
+      "step": 4,
+      "dwell": 6400,
+      "alt": "Owner takes the walkthrough. The page updates live, and the change is committed"
+    },
+    {
+      "file": "20-pr-form.jpg",
       "step": 5,
-      "alt": "Draft PR created. The description is reviewed first, then published as a draft"
+      "dwell": 6200,
+      "alt": "Draft PR created. Create the pull request as a draft"
     },
     {
-      "file": "07-ci-pending.jpg",
+      "file": "21-draft-pr.jpg",
+      "step": 5,
+      "dwell": 5200,
+      "alt": "Draft PR created. The PR exists, as a draft"
+    },
+    {
+      "file": "22-ci-pending.jpg",
       "step": 6,
-      "alt": "Owner watches CI. Checks go from pending to passing"
+      "dwell": 6200,
+      "alt": "Owner watches CI. CI runs on the pushed commit"
     },
     {
-      "file": "08-ci-passed.jpg",
+      "file": "23-ci-passed.jpg",
       "step": 6,
-      "alt": "Owner watches CI. Checks go from pending to passing"
+      "dwell": 5200,
+      "alt": "Owner watches CI. All checks pass, so the PR can leave draft"
     },
     {
-      "file": "09-ready-dialog.jpg",
+      "file": "24-ready-dialog.jpg",
       "step": 7,
-      "alt": "Moved to ready for review. Only once CI is green, with reviewers requested"
+      "dwell": 5200,
+      "alt": "Moved to ready for review. Ask for review"
     },
     {
-      "file": "10-in-review.jpg",
+      "file": "25-in-review.jpg",
       "step": 7,
-      "alt": "Moved to ready for review. Only once CI is green, with reviewers requested"
+      "dwell": 5200,
+      "alt": "Moved to ready for review. Now in review"
     },
     {
-      "file": "11-reviewer-approved.jpg",
+      "file": "26-reviewer-changes.jpg",
       "step": 8,
-      "alt": "Reviewer approves. Reads the diff and signs off"
+      "dwell": 6200,
+      "alt": "Reviewer approves. The reviewer opens the same pull request"
     },
     {
-      "file": "12-merged.jpg",
+      "file": "27-reviewer-approved.jpg",
+      "step": 8,
+      "dwell": 5200,
+      "alt": "Reviewer approves. The reviewer approves"
+    },
+    {
+      "file": "28-merged.jpg",
       "step": 9,
-      "alt": "Owner merges. The approved PR is merged and shows as Merged"
+      "dwell": 5200,
+      "alt": "Owner merges. The author merges the approved PR"
     },
     {
-      "file": "13-post-merge-ci-failed.jpg",
+      "file": "29-post-merge-ci-failed.jpg",
       "step": 10,
-      "alt": "Owner watches CI and acts. contract-check fails on main, so a follow-up task is filed. Back to step 1"
+      "dwell": 5200,
+      "alt": "Owner watches CI and acts. CI keeps watching after the merge"
     },
     {
-      "file": "14-followup-created.jpg",
+      "file": "30-followup-created.jpg",
       "step": 10,
-      "alt": "Owner watches CI and acts. contract-check fails on main, so a follow-up task is filed. Back to step 1"
+      "dwell": 5200,
+      "alt": "Owner watches CI and acts. Back to step 1: the loop starts again"
+    },
+    {
+      "file": "31-deployed.jpg",
+      "step": 10,
+      "dwell": 6800,
+      "alt": "Owner watches CI and acts. The feature is live"
     }
   ]
 }

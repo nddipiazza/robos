@@ -19,6 +19,8 @@ __pycache__/
 *.avi
 *.webm
 !docs/assets/videos/*.vtt
+!site/assets/hero/*.mp4
+!site/assets/hero/*.webm
 
 # Editor files
 *.swp

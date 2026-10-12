@@ -73,6 +73,7 @@
   var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   var index = 0, visible = true, started = 0, elapsed = 0, raf = 0, inVideo = false;
 
+  function dwellOf(i) { var d = parseInt(slides[i].dataset.dwell, 10); return d > 1500 ? d : DWELL; }
   function stepOf(i) { return parseInt(slides[i].dataset.step, 10); }
   function mark(step) {
     chips.forEach(function (b) {
@@ -91,8 +92,9 @@
     raf = requestAnimationFrame(tick);
     if (inVideo || reduce || !visible || document.hidden) { started = now - elapsed; return; }
     elapsed = now - started;
-    bar.style.width = Math.min(100, (elapsed / DWELL) * 100) + '%';
-    if (elapsed >= DWELL) show(index + 1);
+    var dwell = dwellOf(index);
+    bar.style.width = Math.min(100, (elapsed / dwell) * 100) + '%';
+    if (elapsed >= dwell) show(index + 1);
   }
   // Fetch the later slides once the first has painted, so cross-fades never flash empty.
   function preload() { slides.forEach(function (el) { var im = new Image(); im.src = el.currentSrc || el.src; }); }

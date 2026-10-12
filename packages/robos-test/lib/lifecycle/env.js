@@ -26,6 +26,8 @@ function createContext(root) {
     FAKE_FORGE_STATE: stateFile,
     FAKE_FORGE_LOG: logFile,
     FAKE_WORKSPACE: w.workspace,
+    FAKE_RUN_DIR: path.join(root, 'run'),
+    FAKE_EVIDENCE_DIR: path.join(root, 'review', 'evidence'),
   };
 
   const settings = {

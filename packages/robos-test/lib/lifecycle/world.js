@@ -21,121 +21,30 @@ const TASK = {
 
 const git = (cwd, ...args) => execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 
-const BASE_FILES = {
-  'package.json': JSON.stringify({ name: 'pawfinder-api', version: '1.4.0', private: true, scripts: { test: 'node --test' } }, null, 2) + '\n',
-  'README.md': '# pawfinder-api\n\nSearch service behind the Pawfinder adoption site.\n',
-  'src/pets.js': `'use strict';
+const PROJECT = path.join(__dirname, 'project');
 
-const PETS = require('./data');
-
-// Returns pets whose name or breed contains the query (case-insensitive).
-function searchPets(query = '') {
-  const q = String(query).trim().toLowerCase();
-  if (!q) return PETS.slice();
-  return PETS.filter(p => p.name.toLowerCase().includes(q) || p.breed.toLowerCase().includes(q));
-}
-
-module.exports = { searchPets };
-`,
-  'src/data.js': `'use strict';
-
-module.exports = [
-  { id: 1, name: 'Biscuit', species: 'dog', breed: 'Beagle', ageYears: 3, shelter: 'Eastside' },
-  { id: 2, name: 'Mochi', species: 'cat', breed: 'Siamese', ageYears: 2, shelter: 'Eastside' },
-  { id: 3, name: 'Juniper', species: 'dog', breed: 'Border Collie', ageYears: 5, shelter: 'Harbor' },
-  { id: 4, name: 'Pepper', species: 'cat', breed: 'Tabby', ageYears: 1, shelter: 'Harbor' },
-  { id: 5, name: 'Waffles', species: 'rabbit', breed: 'Holland Lop', ageYears: 2, shelter: 'Eastside' },
-  { id: 6, name: 'Scout', species: 'dog', breed: 'Beagle Mix', ageYears: 7, shelter: 'Harbor' },
+/** Comments the reviewer asks the agent to drop: they only restate the next line of code. */
+const USELESS_COMMENTS = [
+  'load the pets data',
+  'build the set of known species',
+  'lowercase the name and the breed',
+  'lowercase the query',
+  'only filter when a species was given',
+  'filter, score and sort the pets',
 ];
-`,
-  'test/pets.test.js': `'use strict';
-const test = require('node:test');
-const assert = require('node:assert/strict');
-const { searchPets } = require('../src/pets');
 
-test('empty query returns every pet', () => {
-  assert.equal(searchPets('').length, 6);
-});
-
-test('matches on name or breed', () => {
-  assert.deepEqual(searchPets('beagle').map(p => p.name), ['Biscuit', 'Scout']);
-});
-`,
-};
-
-const FEATURE_FILES = {
-  'src/pets.js': `'use strict';
-
-const PETS = require('./data');
-const SPECIES = new Set(PETS.map(p => p.species));
-
-function score(pet, q) {
-  if (!q) return 0;
-  const name = pet.name.toLowerCase();
-  const breed = pet.breed.toLowerCase();
-  if (name === q) return 3;
-  if (name.startsWith(q) || breed.startsWith(q)) return 2;
-  return name.includes(q) || breed.includes(q) ? 1 : -1;
-}
-
-// Search by text and optionally narrow to one species. Best matches come first.
-function searchPets(query = '', { species } = {}) {
-  const q = String(query).trim().toLowerCase();
-  let wanted = null;
-  if (species !== undefined && species !== null && species !== '') {
-    wanted = String(species).trim().toLowerCase();
-    if (!SPECIES.has(wanted)) {
-      throw new RangeError(\`Unknown species "\${species}". Expected one of: \${[...SPECIES].sort().join(', ')}\`);
-    }
+/** Copy a project layer (base | feature | chips) over the workspace. */
+function applyLayer(workspace, layer) {
+  const root = path.join(PROJECT, layer);
+  const walk = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap(e => e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)]);
+  const files = walk(root).map(f => path.relative(root, f));
+  for (const rel of files) {
+    const target = path.join(workspace, rel);
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.copyFileSync(path.join(root, rel), target);
   }
-  return PETS
-    .filter(p => (!wanted || p.species === wanted) && score(p, q) >= 0)
-    .map(p => ({ p, s: score(p, q) }))
-    .sort((a, b) => b.s - a.s || a.p.name.localeCompare(b.p.name))
-    .map(({ p }) => p);
+  return files;
 }
-
-module.exports = { searchPets, SPECIES: [...SPECIES].sort() };
-`,
-  'test/pets.test.js': `'use strict';
-const test = require('node:test');
-const assert = require('node:assert/strict');
-const { searchPets, SPECIES } = require('../src/pets');
-
-test('empty query returns every pet', () => {
-  assert.equal(searchPets('').length, 6);
-});
-
-test('matches on name or breed', () => {
-  assert.deepEqual(searchPets('beagle').map(p => p.name), ['Biscuit', 'Scout']);
-});
-
-test('species filter narrows results (happy path)', () => {
-  assert.deepEqual(searchPets('', { species: 'cat' }).map(p => p.name), ['Mochi', 'Pepper']);
-});
-
-test('species filter is case-insensitive and combines with text', () => {
-  assert.deepEqual(searchPets('beagle', { species: 'DOG' }).map(p => p.name), ['Biscuit', 'Scout']);
-});
-
-test('exact and prefix matches rank above substring matches', () => {
-  assert.equal(searchPets('scout')[0].name, 'Scout');
-  assert.equal(searchPets('bea')[0].breed.startsWith('Beagle'), true);
-});
-
-test('unknown species is rejected with the valid choices (negative case)', () => {
-  assert.throws(() => searchPets('', { species: 'dragon' }), /Unknown species "dragon".*cat, dog, rabbit/);
-});
-
-test('no match returns an empty list (edge case)', () => {
-  assert.deepEqual(searchPets('zzz', { species: 'dog' }), []);
-});
-
-test('exposes the supported species', () => {
-  assert.deepEqual(SPECIES, ['cat', 'dog', 'rabbit']);
-});
-`,
-};
 
 function write(root, files) {
   for (const [rel, content] of Object.entries(files)) {
@@ -156,8 +65,8 @@ function createWorld(root) {
   git(workspace, 'init', '-q', '-b', 'main');
   git(workspace, 'config', 'user.name', 'Dana Whitfield');
   git(workspace, 'config', 'user.email', 'dana@acme-corp.example');
-  write(workspace, BASE_FILES);
-  git(workspace, 'add', 'package.json', 'README.md', 'src', 'test');
+  applyLayer(workspace, 'base');
+  git(workspace, 'add', 'package.json', 'README.md', 'src', 'test', 'public');
   git(workspace, 'commit', '-q', '-m', 'Initial pet search');
   // origin is the local bare repo; bin/git reports it as the GitHub URL when
   // RobOS asks `git remote get-url origin` (it requires a github.com origin).
@@ -171,12 +80,33 @@ function createWorld(root) {
 /** What the scripted agent commits: a real, tested feature change on its own branch. */
 function implementFeature(workspace, branch = TASK.branch) {
   git(workspace, 'checkout', '-q', '-b', branch);
-  write(workspace, FEATURE_FILES);
-  git(workspace, 'add', 'src/pets.js', 'test/pets.test.js');
+  const files = applyLayer(workspace, 'feature');
+  git(workspace, 'add', ...files);
   git(workspace, 'commit', '-q', '-m', 'feat(search): add species filter and relevance ranking (#42)',
-    '-m', 'Adds an optional species filter to searchPets, ranks exact and prefix matches above substring matches, and rejects unknown species with the list of valid choices.');
+    '-m', 'Adds an optional species filter to searchPets and the search page, ranks exact and prefix matches above substring matches, and rejects unknown species with the list of valid choices.');
   git(workspace, 'push', '-q', '-u', 'origin', branch);
   return git(workspace, 'rev-parse', 'HEAD');
 }
 
-module.exports = { REPO, TASK, createWorld, implementFeature, git };
+/** Real edit + commit: remove the comments that only restate the code. */
+function removeUselessComments(workspace) {
+  const file = path.join(workspace, 'src', 'pets.js');
+  const before = fs.readFileSync(file, 'utf8');
+  const drop = new Set(USELESS_COMMENTS.map(c => '// ' + c));
+  const kept = before.split('\n').filter(line => !drop.has(line.trim()));
+  fs.writeFileSync(file, kept.join('\n'));
+  const removed = before.split('\n').length - kept.length;
+  git(workspace, 'add', 'src/pets.js');
+  git(workspace, 'commit', '-q', '-m', 'chore(search): drop comments that restate the code');
+  return { removed, sha: git(workspace, 'rev-parse', 'HEAD') };
+}
+
+/** Real edit + commit: species dropdown becomes clickable chips on the search page. */
+function useSpeciesChips(workspace) {
+  applyLayer(workspace, 'chips');
+  git(workspace, 'add', 'public/index.html');
+  git(workspace, 'commit', '-q', '-m', 'feat(ui): show species as clickable chips');
+  return git(workspace, 'rev-parse', 'HEAD');
+}
+
+module.exports = { REPO, TASK, USELESS_COMMENTS, createWorld, implementFeature, removeUselessComments, useSpeciesChips, applyLayer, git };

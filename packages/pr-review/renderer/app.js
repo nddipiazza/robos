@@ -1122,6 +1122,23 @@ function updateTheaterStepper() {
   }
 }
 
+// Keep Changes and Evidence in step with the agent working in this review: evidence follows it
+// while it runs, and Changes reloads once it has committed.
+(function liveReviewRefresh() {
+  if (!window.api?.onDemoState) return;
+  let previous = null, lastEvidence = 0;
+  window.api.onDemoState(state => {
+    if (!theaterContext?.local) return;
+    const running = state.status === 'running';
+    if (running && currentTheaterStage === 5 && Date.now() - lastEvidence > 900) { lastEvidence = Date.now(); window.renderTaskEvidence?.(); }
+    if (previous === 'running' && !running) {   // the agent may have committed or regenerated evidence
+      window.renderTaskEvidence?.();
+      renderTheaterDiffViewer();
+    }
+    previous = state.status;
+  });
+})();
+
 window.setTheaterStage = function(stageNum) {
   if (theaterContext?.local && ![3, 5, 6, 8, 9].includes(stageNum)) return;
   // If target stage is disabled in config, skip to next or previous available stage
@@ -1149,6 +1166,7 @@ window.setTheaterStage = function(stageNum) {
   }
 
   currentTheaterStage = stageNum;
+  if (stageNum === 5 && theaterContext?.local) window.renderTaskEvidence?.();   // never show evidence captured before the latest commit
   if(stageNum===8)window.preparePRDescription?.();
 
   // Update Stepper buttons
