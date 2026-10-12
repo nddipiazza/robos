@@ -121,7 +121,7 @@ All apps are Electron + vanilla JavaScript (no React/Vue/Angular framework overh
 | **Search Index** | File system indexer for @-search in AI textareas |
 | **RobOS Preferences** | System-wide settings (credentials, AI model prefs) |
 | **RobOS cRPG Editor** | Unified cRPG game editor for campaign management, character sheets, party inventory, and 5-ft blockmap level design |
-| **Tabletop Blockmap Creator** | Visual calibration tool for dungeon board images: tile size, offset X/Y, 1-tile border, static corridor draw tool, and room boundary authoring |
+| **Tabletop Blockmap Creator** | Visual calibration tool for dungeon board images: tile size, offset X/Y, static corridor draw tool, and room boundary authoring |
 
 ## Shared Libraries
 

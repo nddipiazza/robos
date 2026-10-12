@@ -5,7 +5,6 @@
  * Focuses exclusively on the permanent cardboard board specification:
  * - Tile Size (px)
  * - Map Image Offset (X, Y)
- * - Add 1-Tile Border Option Checkbox
  * - Corridor Draw Tool (Click & drag mouse to toggle/disable corridor tiles)
  * - Room Draw Tool (Click & drag mouse to toggle edges of tiles as room or drag box)
  * - Takes ANY image and turns it into a reusable board map specification
@@ -65,7 +64,6 @@ class BlockmapCreator {
     this.offsetY = 0;
     this.cols = 26;
     this.rows = 19;
-    this.addBorder = true;
 
     // Viewport transform
     this.panX = 40;
@@ -264,17 +262,7 @@ class BlockmapCreator {
     document.getElementById('btn-offy-plus-1').addEventListener('click', () => { if (document.activeElement) document.activeElement.blur(); this.stepOffsetY(1); });
     document.getElementById('btn-offy-plus-5').addEventListener('click', () => { if (document.activeElement) document.activeElement.blur(); this.stepOffsetY(5); });
 
-    // 3. Add 1-Tile Border Checkbox
-    const chkBorder = document.getElementById('chk-add-border');
-    chkBorder.addEventListener('change', (e) => {
-      this.addBorder = e.target.checked;
-      if (this.addBorder) {
-        this.fillOuterPerimeterCorridor();
-      }
-      this.render();
-    });
-
-    // Grid Dimensions
+    // 3. Grid Dimensions
     document.getElementById('input-grid-cols').addEventListener('change', (e) => {
       const val = parseInt(e.target.value, 10);
       if (val >= 2) {
@@ -395,13 +383,6 @@ class BlockmapCreator {
     }
 
     // Corridor action buttons
-    document.getElementById('btn-fill-outer-corridor').addEventListener('click', () => {
-      this.pushHistory();
-      this.fillOuterPerimeterCorridor();
-      this.render();
-      this.showToast('Filled 1-tile outer perimeter corridor');
-    });
-
     document.getElementById('btn-clear-corridors').addEventListener('click', () => {
       this.pushHistory();
       this.corridorTiles.clear();
@@ -733,18 +714,6 @@ class BlockmapCreator {
       this.corridorTiles.add(key);
     } else {
       this.corridorTiles.delete(key);
-    }
-    document.getElementById('corridor-count').textContent = this.corridorTiles.size;
-  }
-
-  fillOuterPerimeterCorridor() {
-    for (let c = 0; c < this.cols; c++) {
-      this.corridorTiles.add(`${c},0`);
-      this.corridorTiles.add(`${c},${this.rows - 1}`);
-    }
-    for (let r = 0; r < this.rows; r++) {
-      this.corridorTiles.add(`0,${r}`);
-      this.corridorTiles.add(`${this.cols - 1},${r}`);
     }
     document.getElementById('corridor-count').textContent = this.corridorTiles.size;
   }
@@ -1284,7 +1253,6 @@ class BlockmapCreator {
     this.offsetY = p.offsetY || 0;
     this.cols = p.defaultCols || 26;
     this.rows = p.defaultRows || 19;
-    this.addBorder = !!p.hasBorder;
 
     document.getElementById('input-tile-size').value = this.tileSize.toFixed(1);
     document.getElementById('slider-tile-size').value = this.tileSize;
@@ -1292,7 +1260,6 @@ class BlockmapCreator {
     document.getElementById('input-offset-y').value = this.offsetY;
     document.getElementById('input-grid-cols').value = this.cols;
     document.getElementById('input-grid-rows').value = this.rows;
-    document.getElementById('chk-add-border').checked = this.addBorder;
 
     if (p.cartridgeSlug) {
       await this.loadCartridge(p.cartridgeSlug);
@@ -1318,9 +1285,6 @@ class BlockmapCreator {
       document.getElementById('info-image-size').textContent = `📐 ${img.naturalWidth} × ${img.naturalHeight} px`;
       document.getElementById('info-grid-size').textContent = `🧱 ${this.cols} × ${this.rows} grid`;
 
-      if (this.addBorder && this.corridorTiles.size === 0) {
-        this.fillOuterPerimeterCorridor();
-      }
       this.fitToScreen();
       this.render();
       this.showToast(`Loaded map image: ${this.fileName}`);
@@ -1342,7 +1306,6 @@ class BlockmapCreator {
       document.getElementById('info-image-size').textContent = `📐 ${img.naturalWidth} × ${img.naturalHeight} px`;
 
       this.autoCalculateGrid();
-      if (this.addBorder) this.fillOuterPerimeterCorridor();
       this.fitToScreen();
       this.render();
       this.showToast(`Loaded image: ${this.fileName}`);
@@ -1379,7 +1342,6 @@ class BlockmapCreator {
       if (map.calibration.tileSize) this.tileSize = map.calibration.tileSize;
       if (map.calibration.offsetX !== undefined) this.offsetX = map.calibration.offsetX;
       if (map.calibration.offsetY !== undefined) this.offsetY = map.calibration.offsetY;
-      if (map.calibration.border !== undefined) this.addBorder = map.calibration.border;
     }
 
     document.getElementById('input-tile-size').value = this.tileSize.toFixed(1);
@@ -1388,15 +1350,10 @@ class BlockmapCreator {
     document.getElementById('input-offset-y').value = this.offsetY;
     document.getElementById('input-grid-cols').value = this.cols;
     document.getElementById('input-grid-rows').value = this.rows;
-    document.getElementById('chk-add-border').checked = this.addBorder;
 
     this.selectedRoomId = this.rooms.length > 0 ? this.rooms[0].id : null;
     this.updateRoomListUI();
     this.updateRoomInspector();
-
-    if (this.addBorder) {
-      this.fillOuterPerimeterCorridor();
-    }
 
     if (res.imageData && res.imageData.dataUrl) {
       const img = new Image();
@@ -1426,8 +1383,7 @@ class BlockmapCreator {
       calibration: {
         tileSize: this.tileSize,
         offsetX: this.offsetX,
-        offsetY: this.offsetY,
-        hasBorder: this.addBorder
+        offsetY: this.offsetY
       },
       rooms: this.rooms.map(r => ({
         id: r.id,
@@ -1455,8 +1411,7 @@ class BlockmapCreator {
         calibration: {
           tileSize: this.tileSize,
           offsetX: this.offsetX,
-          offsetY: this.offsetY,
-          border: this.addBorder
+          offsetY: this.offsetY
         },
         rooms: this.rooms.map(r => ({
           id: r.id,
@@ -1529,24 +1484,7 @@ class BlockmapCreator {
       ctx.fillRect(this.offsetX, this.offsetY, totalGridW, totalGridH);
     }
 
-    // 2. Draw 1-Tile Outer Border Corridor Highlight
-    if (this.addBorder) {
-      ctx.save();
-      ctx.fillStyle = 'rgba(245, 158, 11, 0.09)';
-      ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
-      ctx.lineWidth = 1.2;
-
-      // Top & Bottom border rows
-      ctx.fillRect(this.offsetX, this.offsetY, totalGridW, this.tileSize);
-      ctx.fillRect(this.offsetX, this.offsetY + totalGridH - this.tileSize, totalGridW, this.tileSize);
-      // Left & Right border cols
-      ctx.fillRect(this.offsetX, this.offsetY, this.tileSize, totalGridH);
-      ctx.fillRect(this.offsetX + totalGridW - this.tileSize, this.offsetY, this.tileSize, totalGridH);
-
-      ctx.restore();
-    }
-
-    // 3. Draw Corridor Floor Tiles
+    // 2. Draw Corridor Floor Tiles
     if (this.showCorridors && this.corridorTiles.size > 0) {
       ctx.save();
       ctx.fillStyle = 'rgba(56, 189, 248, 0.22)';

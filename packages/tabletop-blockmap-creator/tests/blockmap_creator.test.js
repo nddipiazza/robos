@@ -19,19 +19,6 @@ function tileToWorld(col, row, offsetX, offsetY, tileSize) {
   };
 }
 
-function computePerimeterTiles(cols, rows) {
-  const set = new Set();
-  for (let c = 0; c < cols; c++) {
-    set.add(`${c},0`);
-    set.add(`${c},${rows - 1}`);
-  }
-  for (let r = 0; r < rows; r++) {
-    set.add(`0,${r}`);
-    set.add(`${cols - 1},${r}`);
-  }
-  return set;
-}
-
 function computeRoomBounds(c1, r1, c2, r2, maxCols, maxRows) {
   const rx = Math.max(0, Math.min(c1, c2));
   const ry = Math.max(0, Math.min(r1, r2));
@@ -52,25 +39,6 @@ test('Tile Coordinate Math: precise conversion between world and grid tiles', ()
   const world = tileToWorld(4, 6, offX, offY, tileSize);
   assert.equal(world.x, 15 + 39 * 4);
   assert.equal(world.y, 25 + 39 * 6);
-});
-
-test('1-Tile Border: correctly generates complete outer perimeter corridor', () => {
-  const cols = 26;
-  const rows = 19;
-  const border = computePerimeterTiles(cols, rows);
-
-  // Total unique tiles on perimeter = 2 * 26 + 2 * (19 - 2) = 52 + 34 = 86
-  assert.equal(border.size, 86);
-
-  // Four corners
-  assert.ok(border.has('0,0'));
-  assert.ok(border.has('25,0'));
-  assert.ok(border.has('0,18'));
-  assert.ok(border.has('25,18'));
-
-  // Interior tile is not in border
-  assert.ok(!border.has('1,1'));
-  assert.ok(!border.has('10,10'));
 });
 
 test('Room Bounding Box: correctly handles reverse drags and clamps to grid', () => {
