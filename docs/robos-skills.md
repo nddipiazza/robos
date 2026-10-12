@@ -279,7 +279,7 @@ node packages/robos-test/demos/skills-manager-demo.js
 
 ## Next Steps
 
-- **[The Future of Software Development]({{ site.baseurl }}{% link future.md %})**: A proposal for a shared catalog of verified, compiled skills that small local models can assemble into applications.
+- **[The Future of Software Development](https://rowbose.com/future/)**: A proposal for a shared catalog of verified, compiled skills that small local models can assemble into applications.
 - **[Agent-Agnostic Framework]({{ site.baseurl }}{% link big-wins/agent-agnostic-framework.md %})**: Learn how universal skills eliminate vendor lock-in.
 - **[RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover core architectural innovations and strategic advantages.
 - **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
