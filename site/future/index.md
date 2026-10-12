@@ -1,16 +1,16 @@
 ---
 layout: default
-title: The future of software
+title: "Less AI strain on data centers, if done right"
 permalink: /future/
-description: "A proposal: solve each software task once, keep it in a shared catalog, and let a small AI on your own computer snap finished pieces together."
+description: "Done right, AI puts less strain on data centers. A proposal: solve each software task once, keep it in a shared catalog, and let a small AI on your own computer snap finished pieces together."
 extra_css: /assets/future.css
 og_image: /assets/future/og.png
 ---
 <section class="hero future-hero">
   <div class="wrap">
     <a class="pill" href="{{ '/future/whitepaper/' | relative_url }}"><b>Whitepaper</b> · The Skill Commons, draft 2 →</a>
-    <h1>Solve it once.<br><em>Reuse it everywhere.</em></h1>
-    <p class="lead">Today, every new app asks a giant computer to rewrite things that were solved long ago. There is a better way: a shared catalog of finished building blocks, and a small AI on your own laptop that snaps them together.</p>
+    <h1>Done right, AI puts <em>less strain on data centers.</em></h1>
+    <p class="lead">Today, every new app asks a giant computer to rewrite things that were solved long ago. Solve each task once and reuse it everywhere: a shared catalog of finished building blocks, and a small AI on your own laptop that snaps them together. Fewer trips to the data center, if we get it right.</p>
     <div class="cta">
       <a class="btn btn-accent" href="{{ '/future/whitepaper/' | relative_url }}">Read the whitepaper</a>
       <a class="btn btn-ghost" href="{{ '/future/skill-commons-whitepaper.pdf' | relative_url }}">⬇ Download the PDF</a>
@@ -52,11 +52,12 @@ og_image: /assets/future/og.png
     <div class="split">
       <div class="split-t">
         <p class="eyebrow">Why it matters</p>
-        <h3>Less waste, better software, and it stays yours</h3>
+        <h3>Less strain, less waste, and it stays yours</h3>
         <ul class="ticks">
+          <li><b>Less strain on data centers.</b> Routine work moves from giant shared machines to small models on your own computer. That is the goal; the paper says how we would measure whether it happens.</li>
           <li><b>Less rework.</b> Solved problems stay solved. New effort goes to problems nobody has solved yet.</li>
           <li><b>Tested once, trusted everywhere.</b> A piece is checked carefully one time, then used by everyone.</li>
-          <li><b>Runs on your own machine.</b> A small local model can assemble from the catalog, so ordinary work doesn't need a data center.</li>
+          <li><b>Runs on your own machine.</b> A small local model can assemble from the catalog, so ordinary work needn't go to a data center.</li>
           <li><b>Your knowledge stays private.</b> Your company's own pieces sit on a private shelf beside the shared one.</li>
           <li><b>Open to everyone.</b> People and AI add to the catalog through the same gate.</li>
         </ul>
