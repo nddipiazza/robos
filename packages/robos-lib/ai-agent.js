@@ -94,6 +94,7 @@ function listProviders() {
  * @returns {Promise<{ ok: boolean, text: string, error: string|null }>}
  */
 function ask(prompt, opts = {}) {
+  prompt = require('./engineering-writing').instructions + '\n\n' + prompt;
   const resolvedId = opts.providerId || getActiveProviderId();
   const provider   = PROVIDER_MAP[resolvedId] || PROVIDER_MAP['github-copilot'];
 

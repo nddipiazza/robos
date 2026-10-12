@@ -115,7 +115,7 @@ ipcMain.handle('list-tasks', async (_, { filter } = {}) => {
 
   if (server.type === 'github') {
     try {
-      const repo = `${server.gh_org}/${server.gh_repo}`;
+      const repo = `${server.gh_org || server.repos?.[0]?.org || ''}/${server.gh_repo || server.repos?.[0]?.repo || ''}`;
       let args = ['issue', 'list', '--repo', repo,
         '--limit', '50', '--state', filter?.state || 'open',
         '--json', 'number,title,state,labels,assignees,createdAt,updatedAt,body'];
@@ -274,6 +274,7 @@ ipcMain.handle('start-agent', (event, { taskKey, task, extraContext, persona, cu
     prompt = buildAgentPrompt(task, extraContext, effectivePersona);
   }
 
+  prompt += '\n\n'+require('../robos-lib/engineering-writing').instructions;
   prompt += '\n\n'+require('../robos-lib/commit-completion').instructions;
   prompt += '\n\nDEFAULT ROBOS DELIVERY WORKFLOW:\nCreate a feature branch (use the requested branch, otherwise codex/<task-key>). Implement and test the task, commit the task changes, and push that branch to origin. Do not create a pull request, including a draft PR. Report the workspace path, repository, branch, base branch, validation and evidence locations. The developer may optionally review Changes, Evidence and Walkthrough locally and then explicitly click Create PR when ready. Never make PR creation an automatic completion step.';
 
@@ -293,6 +294,7 @@ ipcMain.handle('start-agent', (event, { taskKey, task, extraContext, persona, cu
   const child = cp.spawn('claude', [
     '-p', prompt,
     '--output-format', 'stream-json',
+    '--verbose',
     '--dangerously-skip-permissions',
   ], { encoding: 'utf8', env: childEnv });
 

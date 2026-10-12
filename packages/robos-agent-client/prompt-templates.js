@@ -95,19 +95,8 @@ const PR_DESCRIPTION_PROMPT = `You are an AI assistant writing a pull request de
 {{changes}}
 
 ## Instructions
-Write a concise pull request description in this format:
-
-## Summary
-(1-3 bullet points describing the changes)
-
-## Changes
-(Detailed list of files changed and why)
-
-## Testing
-(How to test these changes)
-
-## Notes
-(Any caveats, follow-ups, or discussion points)`;
+${require('../robos-lib/engineering-writing').instructions}
+Explain the problem and changed behavior in one or two short paragraphs. Add relevant verification or real product screenshots only when useful. Do not force Summary, Changes, Testing or Notes sections.`;
 
 // ── Interpolation ────────────────────────────────────────────────────────────
 
