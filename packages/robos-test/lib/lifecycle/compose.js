@@ -76,6 +76,14 @@ function main(recDir, outDir) {
   const barPng = [];
   STEPS.forEach((_, i) => { const p = path.join(work, `bar-${i}.png`); shoot(barHtml(i), p, W, H); barPng[i] = p; });
   const notePng = {};
+  if (process.argv.includes('--slides-only')) {   // refresh slides.json + slides/ without re-encoding the video
+    const noteMark = marks.find(m => m.type === 'note');
+    const meta = JSON.parse(fs.readFileSync(path.join(outDir, 'chapters.json'), 'utf8'));
+    meta.slides = slides(recDir, outDir, work, barPng, noteMark && noteMark.text);
+    fs.writeFileSync(path.join(outDir, 'chapters.json'), JSON.stringify(meta, null, 2));
+    console.log(`${meta.slides.length} slides`);
+    return;
+  }
   const parts = [];
   segs.forEach((s, n) => {
     const out = path.join(work, `seg-${String(n).padStart(2, '0')}.mp4`);
@@ -110,8 +118,56 @@ function main(recDir, outDir) {
   fs.writeFileSync(path.join(outDir, 'chapters.json'), JSON.stringify({ duration: Number(dur.toFixed(2)), chapters }, null, 2));
   execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-ss', String((chapters.find(c => c.id === 'review-changes')?.start || 18) + 3.2), '-i', mp4, '-frames:v', '1', '-q:v', '3', path.join(outDir, 'poster.jpg')]);
   storyboard(mp4, chapters, outDir, work);
+  const noteMark = marks.find(m => m.type === 'note');
+  const slideRows = slides(recDir, outDir, work, barPng, noteMark && noteMark.text);
+  const meta = JSON.parse(fs.readFileSync(path.join(outDir, 'chapters.json'), 'utf8'));
+  meta.slides = slideRows;
+  fs.writeFileSync(path.join(outDir, 'chapters.json'), JSON.stringify(meta, null, 2));
   console.log(`hero.mp4 ${dur.toFixed(1)}s, ${chapters.length} chapters`);
 }
+// Slides for the self-cycling hero: real frames from the recording, captioned like the video.
+const SLIDES = [
+  { step: 'task-created', frame: 'planner-created' },
+  { step: 'task-implemented', frame: 'implementer-done' },
+  { step: 'review-changes', frame: 'changes' },
+  { step: 'review-evidence', frame: 'evidence' },
+  { step: 'review-walkthrough', frame: 'walkthrough-2' },
+  { step: 'draft-pr', frame: 'draft-pr' },
+  { step: 'ci', frame: 'ci-pending' },
+  { step: 'ci', frame: 'ci-passed' },
+  { step: 'ready', frame: 'ready-dialog' },
+  { step: 'ready', frame: 'in-review' },
+  { step: 'reviewer-approves', frame: 'reviewer-approved' },
+  { step: 'owner-merges', frame: 'merged', note: true },
+  { step: 'post-merge-ci', frame: 'post-merge-ci-failed' },
+  { step: 'post-merge-ci', frame: 'followup-created' },
+];
+
+function slides(recDir, outDir, work, barPng, noteText) {
+  const framesDir = path.join(recDir, 'frames');
+  const dest = path.join(outDir, 'slides');
+  fs.rmSync(dest, { recursive: true, force: true });
+  fs.mkdirSync(dest, { recursive: true });
+  const rows = [];
+  SLIDES.forEach((sl, n) => {
+    const idx = STEPS.findIndex(x => x.id === sl.step);
+    const src = fs.readdirSync(framesDir).find(f => f.replace(/^\d+-/, '') === sl.frame + '.png');
+    if (!src) throw new Error('Missing frame ' + sl.frame);
+    const inputs = ['-i', path.join(framesDir, src), '-i', barPng[idx]];
+    let chain = `[0:v]scale=${W}:${H}:flags=lanczos[v];[v][1:v]overlay=0:0[o]`;
+    if (sl.note && noteText) {
+      const np = path.join(work, 'note-slide.png');
+      shoot(noteHtml(noteText), np, W, H);
+      inputs.push('-i', np);
+      chain += ';[o][2:v]overlay=0:0[o2]';
+    }
+    const file = String(n + 1).padStart(2, '0') + '-' + sl.frame + '.jpg';
+    execFileSync('ffmpeg', ['-y', '-loglevel', 'error', ...inputs, '-filter_complex', chain, '-map', sl.note && noteText ? '[o2]' : '[o]', '-frames:v', '1', '-q:v', '3', path.join(dest, file)]);
+    rows.push({ file, step: idx, alt: `${STEPS[idx].title}. ${STEPS[idx].text}` });
+  });
+  return rows;
+}
+
 /** One captioned frame per step, as a small looping GIF (fallback / social preview). */
 function storyboard(mp4, chapters, outDir, work) {
   const dir = path.join(work, 'story');

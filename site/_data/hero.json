@@ -89,5 +89,77 @@
       "text": "contract-check fails on main, so a follow-up task is filed. Back to step 1",
       "start": 73.68
     }
+  ],
+  "slides": [
+    {
+      "file": "01-planner-created.jpg",
+      "step": 0,
+      "alt": "Task created. The plan becomes tracked issues, with acceptance criteria and test cases"
+    },
+    {
+      "file": "02-implementer-done.jpg",
+      "step": 1,
+      "alt": "Task implemented. An agent branches, commits and pushes. It does not open a PR"
+    },
+    {
+      "file": "03-changes.jpg",
+      "step": 2,
+      "alt": "Owner reviews the changes. A diff of the pushed branch, file by file"
+    },
+    {
+      "file": "04-evidence.jpg",
+      "step": 3,
+      "alt": "Owner checks the evidence. Before and after, captured from real runs of the code"
+    },
+    {
+      "file": "05-walkthrough-2.jpg",
+      "step": 4,
+      "alt": "Owner takes the walkthrough. An agent demonstrates each checkpoint while the owner stays in control"
+    },
+    {
+      "file": "06-draft-pr.jpg",
+      "step": 5,
+      "alt": "Draft PR created. The description is reviewed first, then published as a draft"
+    },
+    {
+      "file": "07-ci-pending.jpg",
+      "step": 6,
+      "alt": "Owner watches CI. Checks go from pending to passing"
+    },
+    {
+      "file": "08-ci-passed.jpg",
+      "step": 6,
+      "alt": "Owner watches CI. Checks go from pending to passing"
+    },
+    {
+      "file": "09-ready-dialog.jpg",
+      "step": 7,
+      "alt": "Moved to ready for review. Only once CI is green, with reviewers requested"
+    },
+    {
+      "file": "10-in-review.jpg",
+      "step": 7,
+      "alt": "Moved to ready for review. Only once CI is green, with reviewers requested"
+    },
+    {
+      "file": "11-reviewer-approved.jpg",
+      "step": 8,
+      "alt": "Reviewer approves. Reads the diff and signs off"
+    },
+    {
+      "file": "12-merged.jpg",
+      "step": 9,
+      "alt": "Owner merges. The approved PR is merged and shows as Merged"
+    },
+    {
+      "file": "13-post-merge-ci-failed.jpg",
+      "step": 10,
+      "alt": "Owner watches CI and acts. contract-check fails on main, so a follow-up task is filed. Back to step 1"
+    },
+    {
+      "file": "14-followup-created.jpg",
+      "step": 10,
+      "alt": "Owner watches CI and acts. contract-check fails on main, so a follow-up task is filed. Back to step 1"
+    }
   ]
 }

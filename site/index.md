@@ -14,18 +14,26 @@ permalink: /
     </div>
     <p class="sub">Free &amp; open source · macOS, Linux, Windows · <a href="{{ '/download/' | relative_url }}">Other install options</a></p>
 
-    <div class="player" id="hero-player">
+    <div class="player" id="hero-player" data-slides="{{ site.data.hero.slides | size }}">
       <div class="player-frame">
-        <div class="player-bar"><i></i><i></i><i></i><span>One task, from idea to merged PR, in the real RobOS apps</span></div>
-        <video id="hero-video" class="player-video" autoplay muted loop playsinline preload="auto" poster="{{ '/assets/hero/poster.jpg' | relative_url }}" aria-label="Recording of RobOS taking one task from creation, through implementation, review and CI, to a merged pull request">
-          <source src="{{ '/assets/hero/hero.webm' | relative_url }}" type="video/webm">
-          <source src="{{ '/assets/hero/hero.mp4' | relative_url }}" type="video/mp4">
-          <img src="{{ '/assets/hero/hero-storyboard.gif' | relative_url }}" alt="Storyboard of the eleven steps from task created to merged pull request">
-        </video>
+        <div class="player-bar">
+          <i></i><i></i><i></i><span>One task, from idea to merged PR, in the real RobOS apps</span>
+          <button type="button" class="watch" id="hero-watch" aria-pressed="false">▶ Watch the full recording</button>
+        </div>
+        <div class="stage" id="hero-stage">
+          {%- for s in site.data.hero.slides %}
+          <img class="slide{% if forloop.first %} is-active{% endif %}" src="{{ '/assets/hero/slides/' | append: s.file | relative_url }}" data-step="{{ s.step }}" alt="{{ s.alt | escape }}" width="1280" height="720"{% unless forloop.first %} loading="lazy"{% endunless %}>
+          {%- endfor %}
+          <video id="hero-video" class="player-video" hidden controls muted loop playsinline preload="none" poster="{{ '/assets/hero/poster.jpg' | relative_url }}" aria-label="Recording of RobOS taking one task from creation, through implementation, review and CI, to a merged pull request">
+            <source src="{{ '/assets/hero/hero.webm' | relative_url }}" type="video/webm">
+            <source src="{{ '/assets/hero/hero.mp4' | relative_url }}" type="video/mp4">
+          </video>
+          <div class="stage-progress" aria-hidden="true"><i></i></div>
+        </div>
       </div>
-      <ol class="steps" aria-label="Steps in the recording">
+      <ol class="steps" aria-label="Steps">
         {%- for c in site.data.hero.chapters %}
-        <li><button type="button" data-start="{{ c.start }}"><b>{{ forloop.index }}</b><span>{{ c.title }}</span></button></li>
+        <li><button type="button" data-step="{{ c.step }}" data-start="{{ c.start }}"><b>{{ forloop.index }}</b><span>{{ c.title }}</span></button></li>
         {%- endfor %}
       </ol>
       <p class="player-note">Recorded from the real apps. GitHub, the coding agent and CI results are scripted stand-ins; the repository, tests, diff and evidence are real.</p>

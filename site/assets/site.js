@@ -58,24 +58,74 @@
   });
 })();
 
-// Hero player: highlight the current step and let people jump between steps.
+// Hero player. The default is a self-cycling slideshow of real frames (it needs no autoplay
+// permission, so it moves everywhere); "Watch the full recording" swaps in the video.
 (function () {
-  var v = document.getElementById('hero-video');
-  var buttons = document.querySelectorAll('#hero-player .steps button');
-  if (!v || !buttons.length) return;
-  var starts = Array.prototype.map.call(buttons, function (b) { return parseFloat(b.dataset.start); });
-  var current = -1;
-  function mark(t) {
-    var i = 0;
-    for (var k = 0; k < starts.length; k++) if (t + 0.05 >= starts[k]) i = k;
-    if (i === current) return;
-    current = i;
-    buttons.forEach(function (b, k) { b.classList.toggle('on', k === i); b.classList.toggle('done', k < i); });
+  var player = document.getElementById('hero-player');
+  if (!player) return;
+  var stage = document.getElementById('hero-stage');
+  var slides = Array.prototype.slice.call(stage.querySelectorAll('.slide'));
+  var chips = Array.prototype.slice.call(player.querySelectorAll('.steps button'));
+  var bar = stage.querySelector('.stage-progress i');
+  var video = document.getElementById('hero-video');
+  var watch = document.getElementById('hero-watch');
+  var DWELL = 4600;
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var index = 0, visible = true, started = 0, elapsed = 0, raf = 0, inVideo = false;
+
+  function stepOf(i) { return parseInt(slides[i].dataset.step, 10); }
+  function mark(step) {
+    chips.forEach(function (b) {
+      var s = parseInt(b.dataset.step, 10);
+      b.classList.toggle('on', s === step); b.classList.toggle('done', s < step);
+    });
   }
-  v.addEventListener('timeupdate', function () { mark(v.currentTime); });
-  buttons.forEach(function (b, k) {
-    b.addEventListener('click', function () { v.currentTime = starts[k]; mark(starts[k]); v.play().catch(function () {}); });
+  function show(i) {
+    index = (i + slides.length) % slides.length;
+    slides.forEach(function (el, k) { el.classList.toggle('is-active', k === index); });
+    mark(stepOf(index));
+    elapsed = 0; started = performance.now();
+    bar.style.width = '0%';
+  }
+  function tick(now) {
+    raf = requestAnimationFrame(tick);
+    if (inVideo || reduce || !visible || document.hidden) { started = now - elapsed; return; }
+    elapsed = now - started;
+    bar.style.width = Math.min(100, (elapsed / DWELL) * 100) + '%';
+    if (elapsed >= DWELL) show(index + 1);
+  }
+  // Fetch the later slides once the first has painted, so cross-fades never flash empty.
+  function preload() { slides.forEach(function (el) { var im = new Image(); im.src = el.currentSrc || el.src; }); }
+  if (document.readyState === 'complete') setTimeout(preload, 300); else window.addEventListener('load', function () { setTimeout(preload, 300); });
+
+  if ('IntersectionObserver' in window) new IntersectionObserver(function (e) { visible = e[0].isIntersecting; }, { threshold: 0.25 }).observe(stage);
+
+  // Step buttons: jump to that step's slide, or seek the recording while it is playing.
+  chips.forEach(function (b) {
+    b.addEventListener('click', function () {
+      var step = parseInt(b.dataset.step, 10);
+      if (inVideo) { video.currentTime = parseFloat(b.dataset.start); video.play().catch(function () {}); return; }
+      for (var i = 0; i < slides.length; i++) if (stepOf(i) === step) { show(i); break; }
+    });
   });
-  mark(0);
-  if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) { v.removeAttribute('autoplay'); v.pause(); v.controls = true; }
+
+  // Recording mode.
+  var starts = chips.map(function (b) { return parseFloat(b.dataset.start); });
+  video.addEventListener('timeupdate', function () {
+    if (!inVideo) return;
+    var k = 0; for (var i = 0; i < starts.length; i++) if (video.currentTime + 0.05 >= starts[i]) k = i;
+    mark(parseInt(chips[k].dataset.step, 10));
+  });
+  watch.addEventListener('click', function () {
+    inVideo = !inVideo;
+    stage.classList.toggle('is-video', inVideo);
+    video.hidden = !inVideo;
+    watch.setAttribute('aria-pressed', inVideo);
+    watch.textContent = inVideo ? '↺ Back to step highlights' : '▶ Watch the full recording';
+    if (inVideo) { video.currentTime = starts[Math.max(0, chips.findIndex(function (b) { return b.classList.contains('on'); }))] || 0; video.play().catch(function () { video.controls = true; }); }
+    else { video.pause(); show(index); }
+  });
+
+  show(0);
+  raf = requestAnimationFrame(tick);
 })();
