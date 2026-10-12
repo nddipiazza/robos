@@ -394,7 +394,7 @@
       "@id": "urn:robos:diagram:skill-commons-commons-map",
       "dcterms:title": "The Skill Commons",
       "dcterms:description": "People, AI agents and companies add skills through one gate; a job is broken down to base tasks that other apps reuse; a small local model assembles them with private company knowledge.",
-      "robos:imagePath": "assets/future/commons-map.svg",
+      "robos:imagePath": "assets/future/ai/commons-map.jpg",
       "robos:aspectRatio": "1600:1030",
       "robos:mermaidText": "flowchart LR\n    P[\"People\"] --> G\n    A[\"AI agents\"] --> G\n    C[\"Companies\"] --> G\n    G{\"The one rule: not already there, passes its tests, built and signed\"} --> APP\n    subgraph COMMONS[\"The Commons: a shared, searchable catalog\"]\n        APP[\"Clinic reminder app\"] --> J1[\"Find who to remind\"]\n        APP --> J2[\"Write the message\"]\n        APP --> J3[\"Send a text\"]\n        APP --> J4[\"Log what was sent\"]\n        J1 --> B1[\"Convert time zone\"]\n        J2 --> B2[\"Fill a template\"]\n        J3 --> B3[\"Format phone number\"]\n        J3 --> B4[\"Call the text service\"]\n        J4 --> B5[\"Save a record\"]\n    end\n    B1 -->|\"local copy of the catalog\"| LAPTOP[\"Your computer with a small AI model\"]\n    PRIV[\"Your company private knowledge\"] --> LAPTOP\n    LAPTOP --> OUT[\"Your finished app\"]",
       "robos:tooltip": "The Skill Commons"
@@ -413,7 +413,7 @@
       "@id": "urn:robos:diagram:skill-commons-assembler-loop",
       "dcterms:title": "How a small local model assembles an app",
       "dcterms:description": "Five steps: describe, break down, look up, check the fit, run the pieces' own tests. A missing piece is built once through the gate and the lookup runs again.",
-      "robos:imagePath": "assets/future/assembler-loop.svg",
+      "robos:imagePath": "assets/future/ai/assembler-loop.jpg",
       "robos:aspectRatio": "1600:660",
       "robos:mermaidText": "flowchart LR\n    U[\"1. You describe the job\"] --> M[\"2. The model breaks it into smaller jobs\"]\n    M --> S[\"3. Look up each job: company first, then the catalog\"]\n    S -->|\"nothing matches\"| GAP[\"A person or an AI builds that piece once; it passes the gate and joins the catalog\"]\n    GAP --> S\n    S --> CHK[\"4. Machines check the fit\"]\n    CHK --> T[\"5. Pieces run their own tests\"]\n    T --> APP[\"Working app\"]",
       "robos:tooltip": "How a small local model assembles an app"
@@ -432,7 +432,7 @@
       "@id": "urn:robos:diagram:skill-commons-worked-example",
       "dcterms:title": "A worked example: appointment reminders",
       "dcterms:description": "The request becomes four smaller jobs and seven base tasks: five reused from the commons, one from the clinic's private graph, one missing and built once.",
-      "robos:imagePath": "assets/future/worked-example.svg",
+      "robos:imagePath": "assets/future/ai/worked-example.jpg",
       "robos:aspectRatio": "16:9",
       "robos:mermaidText": "flowchart TB\n    ROOT[\"Send appointment reminders (wiring only)\"] --> F[\"Find tomorrow's appointments\"]\n    ROOT --> W[\"Write the message\"]\n    ROOT --> SND[\"Send the text\"]\n    ROOT --> R[\"Record that it was sent\"]\n    F --> F1[\"Read clinic schedule (company, private)\"]\n    F --> F2[\"Convert time zone (found)\"]\n    W --> W1[\"Fill a template (found)\"]\n    SND --> S1[\"Format phone number (found)\"]\n    SND --> S2[\"Call the text service (found)\"]\n    SND --> S3[\"Respect quiet hours (NEW: built once)\"]\n    R --> R1[\"Save a record (found)\"]",
       "robos:tooltip": "A worked example: appointment reminders"
@@ -451,7 +451,7 @@
       "@id": "urn:robos:diagram:skill-commons-skill-lifecycle",
       "dcterms:title": "How a skill enters the commons",
       "dcterms:description": "Propose, look for a twin, check, build reproducibly, sign and log, then share to mirrors; duplicates link to the existing skill and failing tests send the submission back.",
-      "robos:imagePath": "assets/future/skill-lifecycle.svg",
+      "robos:imagePath": "assets/future/ai/skill-lifecycle.jpg",
       "robos:aspectRatio": "1600:660",
       "robos:mermaidText": "flowchart LR\n    P[\"1. Propose\"] --> T[\"2. Find a twin\"]\n    T -->|\"already exists\"| L[\"Link to the existing skill\"]\n    T --> C[\"3. Check: tests, sandbox, time and step limits\"]\n    C -->|\"a test fails\"| X[\"Sent back with the failing test\"]\n    C --> B[\"4. Reproducible build for each target\"]\n    B --> S[\"5. Sign and log\"]\n    S --> M[\"6. Share to mirrors\"]",
       "robos:tooltip": "How a skill enters the commons"
@@ -766,7 +766,7 @@
       "@id": "urn:robos:diagram:skill-commons-commons-map",
       "dcterms:title": "The Skill Commons",
       "dcterms:description": "People, AI agents and companies add skills through one gate; a job is broken down to base tasks that other apps reuse; a small local model assembles them with private company knowledge.",
-      "robos:imagePath": "assets/future/commons-map.svg",
+      "robos:imagePath": "assets/future/ai/commons-map.jpg",
       "robos:aspectRatio": "1600:1030",
       "robos:mermaidText": "flowchart LR\n    P[\"People\"] --> G\n    A[\"AI agents\"] --> G\n    C[\"Companies\"] --> G\n    G{\"The one rule: not already there, passes its tests, built and signed\"} --> APP\n    subgraph COMMONS[\"The Commons: a shared, searchable catalog\"]\n        APP[\"Clinic reminder app\"] --> J1[\"Find who to remind\"]\n        APP --> J2[\"Write the message\"]\n        APP --> J3[\"Send a text\"]\n        APP --> J4[\"Log what was sent\"]\n        J1 --> B1[\"Convert time zone\"]\n        J2 --> B2[\"Fill a template\"]\n        J3 --> B3[\"Format phone number\"]\n        J3 --> B4[\"Call the text service\"]\n        J4 --> B5[\"Save a record\"]\n    end\n    B1 -->|\"local copy of the catalog\"| LAPTOP[\"Your computer with a small AI model\"]\n    PRIV[\"Your company private knowledge\"] --> LAPTOP\n    LAPTOP --> OUT[\"Your finished app\"]",
       "robos:tooltip": "The Skill Commons"
@@ -785,7 +785,7 @@
       "@id": "urn:robos:diagram:skill-commons-assembler-loop",
       "dcterms:title": "How a small local model assembles an app",
       "dcterms:description": "Five steps: describe, break down, look up, check the fit, run the pieces' own tests. A missing piece is built once through the gate and the lookup runs again.",
-      "robos:imagePath": "assets/future/assembler-loop.svg",
+      "robos:imagePath": "assets/future/ai/assembler-loop.jpg",
       "robos:aspectRatio": "1600:660",
       "robos:mermaidText": "flowchart LR\n    U[\"1. You describe the job\"] --> M[\"2. The model breaks it into smaller jobs\"]\n    M --> S[\"3. Look up each job: company first, then the catalog\"]\n    S -->|\"nothing matches\"| GAP[\"A person or an AI builds that piece once; it passes the gate and joins the catalog\"]\n    GAP --> S\n    S --> CHK[\"4. Machines check the fit\"]\n    CHK --> T[\"5. Pieces run their own tests\"]\n    T --> APP[\"Working app\"]",
       "robos:tooltip": "How a small local model assembles an app"
@@ -804,7 +804,7 @@
       "@id": "urn:robos:diagram:skill-commons-worked-example",
       "dcterms:title": "A worked example: appointment reminders",
       "dcterms:description": "The request becomes four smaller jobs and seven base tasks: five reused from the commons, one from the clinic's private graph, one missing and built once.",
-      "robos:imagePath": "assets/future/worked-example.svg",
+      "robos:imagePath": "assets/future/ai/worked-example.jpg",
       "robos:aspectRatio": "16:9",
       "robos:mermaidText": "flowchart TB\n    ROOT[\"Send appointment reminders (wiring only)\"] --> F[\"Find tomorrow's appointments\"]\n    ROOT --> W[\"Write the message\"]\n    ROOT --> SND[\"Send the text\"]\n    ROOT --> R[\"Record that it was sent\"]\n    F --> F1[\"Read clinic schedule (company, private)\"]\n    F --> F2[\"Convert time zone (found)\"]\n    W --> W1[\"Fill a template (found)\"]\n    SND --> S1[\"Format phone number (found)\"]\n    SND --> S2[\"Call the text service (found)\"]\n    SND --> S3[\"Respect quiet hours (NEW: built once)\"]\n    R --> R1[\"Save a record (found)\"]",
       "robos:tooltip": "A worked example: appointment reminders"
@@ -823,7 +823,7 @@
       "@id": "urn:robos:diagram:skill-commons-skill-lifecycle",
       "dcterms:title": "How a skill enters the commons",
       "dcterms:description": "Propose, look for a twin, check, build reproducibly, sign and log, then share to mirrors; duplicates link to the existing skill and failing tests send the submission back.",
-      "robos:imagePath": "assets/future/skill-lifecycle.svg",
+      "robos:imagePath": "assets/future/ai/skill-lifecycle.jpg",
       "robos:aspectRatio": "1600:660",
       "robos:mermaidText": "flowchart LR\n    P[\"1. Propose\"] --> T[\"2. Find a twin\"]\n    T -->|\"already exists\"| L[\"Link to the existing skill\"]\n    T --> C[\"3. Check: tests, sandbox, time and step limits\"]\n    C -->|\"a test fails\"| X[\"Sent back with the failing test\"]\n    C --> B[\"4. Reproducible build for each target\"]\n    B --> S[\"5. Sign and log\"]\n    S --> M[\"6. Share to mirrors\"]",
       "robos:tooltip": "How a skill enters the commons"
