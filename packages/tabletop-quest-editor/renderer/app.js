@@ -77,7 +77,10 @@ const state = {
   redoStack: [],
 
   // Asset Sprite Cache
-  assetCache: {}
+  assetCache: {},
+
+  // Additional Border Tile option
+  hasAdditionalBorder: false
 };
 
 // -------------------------------------------------------------
@@ -108,7 +111,8 @@ const FURNITURE_DEFS = {
   throne: { name: 'Throne', w: 2, h: 2, icon: '👑' },
   cupboard: { name: 'Cupboard', w: 2, h: 1, icon: '🚪' },
   torture_rack: { name: 'Torture Rack', w: 2, h: 1, icon: '⛓️' },
-  fireplace: { name: 'Fireplace', w: 2, h: 1, icon: '🔥' }
+  fireplace: { name: 'Fireplace', w: 2, h: 1, icon: '🔥' },
+  stairs: { name: 'Spiral Staircase / Stairs', w: 1, h: 1, icon: '🪜' }
 };
 
 // -------------------------------------------------------------
@@ -212,6 +216,11 @@ const dom = {
   inspectFurnDims: document.getElementById('inspect-furn-dims'),
   btnInspectRotateFurn: document.getElementById('btn-inspect-rotate-furn'),
   inspectFurnTreasure: document.getElementById('inspect-furn-treasure'),
+  inspectFurnStairRole: document.getElementById('inspect-furn-stair-role'),
+  inspectFurnStairStatus: document.getElementById('inspect-furn-stair-status'),
+  btnFurnMakeStart: document.getElementById('btn-furn-make-start'),
+  btnFurnMakeExit: document.getElementById('btn-furn-make-exit'),
+  btnFurnClearRole: document.getElementById('btn-furn-clear-role'),
 
   inspectGroupTrap: document.getElementById('inspect-group-trap'),
   inspectTrapDmg: document.getElementById('inspect-trap-dmg'),
@@ -235,6 +244,7 @@ const dom = {
   chkShowTraps: document.getElementById('chk-show-traps'),
   chkShowWallBlocks: document.getElementById('chk-show-wall-blocks'),
   chkShowNotes: document.getElementById('chk-show-notes'),
+  chkAdditionalBorder: document.getElementById('chk-additional-border'),
   sliderArtOpacity: document.getElementById('slider-art-opacity'),
   sliderGridOpacity: document.getElementById('slider-grid-opacity'),
 
@@ -371,6 +381,15 @@ async function loadBlockmap(slugOrPath) {
 
     state.blockmap = res.blockmap;
     state.blockmapPath = res.blockmapPath;
+    state.hasAdditionalBorder = Boolean(
+      state.blockmap.additionalBorderTile ||
+      state.blockmap.calibration?.additionalBorderTile ||
+      state.blockmap.hasBorder ||
+      state.blockmap.calibration?.hasBorder
+    );
+    if (dom.chkAdditionalBorder) {
+      dom.chkAdditionalBorder.checked = state.hasAdditionalBorder;
+    }
 
     // Load board background image
     if (res.imageData && res.imageData.dataUrl) {
@@ -426,6 +445,10 @@ async function loadCartridge(slugOrPath) {
     }
 
     if (mapData) {
+      if (mapData.additionalBorderTile !== undefined) {
+        state.hasAdditionalBorder = Boolean(mapData.additionalBorderTile);
+        if (dom.chkAdditionalBorder) dom.chkAdditionalBorder.checked = state.hasAdditionalBorder;
+      }
       state.quest.wanderingMonster = mapData.wanderingMonster || 'orc';
       state.quest.startingStair = mapData.startingStair || c.header?.startingPosition || [0, 1];
       state.quest.exitTile = mapData.exitTile || mapData.exitStair || null;
@@ -618,6 +641,7 @@ function buildCartridgePayload() {
         mapConfigurationId: bm.id || 'custom-blockmap',
         width: dims[0],
         height: dims[1],
+        additionalBorderTile: Boolean(state.hasAdditionalBorder),
         backgroundImage: bm.backgroundImage || '',
         tileSize: bm.tileSize || 39.0,
         pixelOffset: bm.pixelOffset || [0, 0],
@@ -810,12 +834,18 @@ function getGridGeometry() {
   const offsetX = cal.offsetX !== undefined ? cal.offsetX : (bm.pixelOffset ? bm.pixelOffset[0] : 0);
   const offsetY = cal.offsetY !== undefined ? cal.offsetY : (bm.pixelOffset ? bm.pixelOffset[1] : 0);
   const dims = bm.gridDimensions || [26, 19];
+  const hasAdditionalBorder = Boolean(
+    state.hasAdditionalBorder !== undefined
+      ? state.hasAdditionalBorder
+      : (bm.additionalBorderTile || cal.additionalBorderTile || bm.hasBorder || cal.hasBorder)
+  );
   return {
     cols: dims[0],
     rows: dims[1],
     tileSize: tileSize,
     offsetX: offsetX,
-    offsetY: offsetY
+    offsetY: offsetY,
+    hasAdditionalBorder: hasAdditionalBorder
   };
 }
 
@@ -832,13 +862,18 @@ function worldToTile(wx, wy, clampToBorder = false) {
   let col = Math.floor(relX / geom.tileSize);
   let row = Math.floor(relY / geom.tileSize);
 
+  const minCol = geom.hasAdditionalBorder ? -1 : 0;
+  const maxCol = geom.hasAdditionalBorder ? geom.cols : geom.cols - 1;
+  const minRow = geom.hasAdditionalBorder ? -1 : 0;
+  const maxRow = geom.hasAdditionalBorder ? geom.rows : geom.rows - 1;
+
   if (clampToBorder) {
-    col = Math.max(0, Math.min(geom.cols - 1, col));
-    row = Math.max(0, Math.min(geom.rows - 1, row));
+    col = Math.max(minCol, Math.min(maxCol, col));
+    row = Math.max(minRow, Math.min(maxRow, row));
     return [col, row];
   }
 
-  if (col < 0 || col >= geom.cols || row < 0 || row >= geom.rows) {
+  if (col < minCol || col > maxCol || row < minRow || row > maxRow) {
     return null;
   }
   return [col, row];
@@ -854,6 +889,9 @@ function tileToWorld(col, row) {
 
 function isBorderTile(col, row) {
   const geom = getGridGeometry();
+  if (geom.hasAdditionalBorder) {
+    return col === -1 || col === geom.cols || row === -1 || row === geom.rows;
+  }
   return col === 0 || col === geom.cols - 1 || row === 0 || row === geom.rows - 1;
 }
 
@@ -940,6 +978,34 @@ function render() {
   ctx.translate(state.panX, state.panY);
   ctx.scale(state.zoom, state.zoom);
 
+  // 0. Additional Black Border Tiles (Border Option)
+  if (geom.hasAdditionalBorder) {
+    ctx.save();
+    for (let c = -1; c <= geom.cols; c++) {
+      for (let r = -1; r <= geom.rows; r++) {
+        if (c === -1 || c === geom.cols || r === -1 || r === geom.rows) {
+          const pos = tileToWorld(c, r);
+          // Dark solid black tile
+          ctx.fillStyle = '#070b12';
+          ctx.fillRect(pos.x, pos.y, geom.tileSize, geom.tileSize);
+
+          // Subtle slate border
+          ctx.strokeStyle = '#1e293b';
+          ctx.lineWidth = 1.0;
+          ctx.strokeRect(pos.x, pos.y, geom.tileSize, geom.tileSize);
+
+          // Subtle stone wall texture line
+          ctx.strokeStyle = 'rgba(51, 65, 85, 0.3)';
+          ctx.beginPath();
+          ctx.moveTo(pos.x + 3, pos.y + 3);
+          ctx.lineTo(pos.x + geom.tileSize - 3, pos.y + geom.tileSize - 3);
+          ctx.stroke();
+        }
+      }
+    }
+    ctx.restore();
+  }
+
   // 1. Board Background Artwork (Layer 1)
   if (state.layers.showImage && state.bgImage) {
     ctx.save();
@@ -985,20 +1051,25 @@ function render() {
     ctx.lineWidth = 1.0;
     ctx.beginPath();
 
-    const startX = geom.offsetX;
-    const startY = geom.offsetY;
-    const endX = startX + geom.cols * geom.tileSize;
-    const endY = startY + geom.rows * geom.tileSize;
+    const minC = geom.hasAdditionalBorder ? -1 : 0;
+    const maxC = geom.hasAdditionalBorder ? geom.cols + 1 : geom.cols;
+    const minR = geom.hasAdditionalBorder ? -1 : 0;
+    const maxR = geom.hasAdditionalBorder ? geom.rows + 1 : geom.rows;
+
+    const startX = geom.offsetX + minC * geom.tileSize;
+    const startY = geom.offsetY + minR * geom.tileSize;
+    const endX = geom.offsetX + maxC * geom.tileSize;
+    const endY = geom.offsetY + maxR * geom.tileSize;
 
     // Vertical lines
-    for (let c = 0; c <= geom.cols; c++) {
-      const x = startX + c * geom.tileSize;
+    for (let c = minC; c <= maxC; c++) {
+      const x = geom.offsetX + c * geom.tileSize;
       ctx.moveTo(x, startY);
       ctx.lineTo(x, endY);
     }
     // Horizontal lines
-    for (let r = 0; r <= geom.rows; r++) {
-      const y = startY + r * geom.tileSize;
+    for (let r = minR; r <= maxR; r++) {
+      const y = geom.offsetY + r * geom.tileSize;
       ctx.moveTo(startX, y);
       ctx.lineTo(endX, y);
     }
@@ -1006,7 +1077,98 @@ function render() {
     ctx.restore();
   }
 
-  // 5. Starting Spiral Stairs & Quest Exit (Layer 2)
+  // 5. Wall Blocks (Layer 2)
+  if (state.layers.showWallBlocks && state.quest.wallBlocks) {
+    state.quest.wallBlocks.forEach((wb, i) => {
+      const pos = tileToWorld(wb.x, wb.y);
+      const bw = (wb.width || 1) * geom.tileSize;
+      const bh = (wb.height || 1) * geom.tileSize;
+      const blockImg = state.assetCache['wall_block'];
+
+      if (blockImg) {
+        ctx.drawImage(blockImg, pos.x, pos.y, bw, bh);
+      } else {
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(pos.x + 1, pos.y + 1, bw - 2, bh - 2);
+        ctx.strokeStyle = '#64748b';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(pos.x + 1, pos.y + 1, bw - 2, bh - 2);
+
+        // Brick lines
+        ctx.strokeStyle = '#475569';
+        ctx.beginPath();
+        ctx.moveTo(pos.x + 1, pos.y + bh / 2);
+        ctx.lineTo(pos.x + bw - 1, pos.y + bh / 2);
+        ctx.stroke();
+      }
+
+      if (state.selectedEntity && state.selectedEntity.type === 'wall-block' && state.selectedEntity.index === i) {
+        drawSelectionGlow(pos.x, pos.y, bw, bh);
+      }
+    });
+  }
+
+  // 6. Traps (Layer 2)
+  if (state.layers.showTraps && state.quest.traps) {
+    state.quest.traps.forEach((tr, i) => {
+      const pos = tileToWorld(tr.x, tr.y);
+      const trapKey = tr.type === 'spear' ? 'trap_spear' : (tr.type === 'falling_rock' ? 'trap_falling_block' : 'trap_pit');
+      const trapImg = state.assetCache[trapKey];
+
+      if (trapImg) {
+        ctx.drawImage(trapImg, pos.x, pos.y, geom.tileSize, geom.tileSize);
+      } else {
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.25)';
+        ctx.fillRect(pos.x + 2, pos.y + 2, geom.tileSize - 4, geom.tileSize - 4);
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(pos.x + 2, pos.y + 2, geom.tileSize - 4, geom.tileSize - 4);
+
+        ctx.fillStyle = '#fca5a5';
+        ctx.font = '13px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('⚠️', pos.x + geom.tileSize / 2, pos.y + geom.tileSize / 2);
+      }
+
+      if (state.selectedEntity && state.selectedEntity.type === 'trap' && state.selectedEntity.index === i) {
+        drawSelectionGlow(pos.x, pos.y, geom.tileSize, geom.tileSize);
+      }
+    });
+  }
+
+  // 7. Furniture & Map Items (Layer 2)
+  if (state.layers.showFurniture && state.quest.furniture) {
+    state.quest.furniture.forEach((f, i) => {
+      const pos = tileToWorld(f.x, f.y);
+      const fw = (f.width || 1) * geom.tileSize;
+      const fh = (f.height || 1) * geom.tileSize;
+      const furnImg = state.assetCache[f.type];
+
+      if (furnImg) {
+        ctx.drawImage(furnImg, pos.x, pos.y, fw, fh);
+      } else {
+        ctx.fillStyle = '#78350f';
+        ctx.fillRect(pos.x + 2, pos.y + 2, fw - 4, fh - 4);
+        ctx.strokeStyle = '#b45309';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(pos.x + 2, pos.y + 2, fw - 4, fh - 4);
+
+        ctx.fillStyle = '#fef3c7';
+        ctx.font = '12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const def = FURNITURE_DEFS[f.type] || { icon: '🪑' };
+        ctx.fillText(def.icon, pos.x + fw / 2, pos.y + fh / 2);
+      }
+
+      if (state.selectedEntity && state.selectedEntity.type === 'furniture' && state.selectedEntity.index === i) {
+        drawSelectionGlow(pos.x, pos.y, fw, fh);
+      }
+    });
+  }
+
+  // 8. Starting Spiral Stairs & Quest Exit (Layer 2 - drawn over map pieces / stairs)
   if (state.quest.startingStair) {
     const [sc, sr] = state.quest.startingStair;
     const spos = tileToWorld(sc, sr);
@@ -1069,7 +1231,7 @@ function render() {
     }
   }
 
-  // 5b. Quest Exit Staircase / Escape Hatch
+  // 8b. Quest Exit Staircase / Escape Hatch (Layer 2)
   if (state.quest.exitTile) {
     const [ec, er] = state.quest.exitTile;
     const epos = tileToWorld(ec, er);
@@ -1130,97 +1292,6 @@ function render() {
     if (state.selectedEntity && state.selectedEntity.type === 'exit') {
       drawSelectionGlow(epos.x, epos.y, geom.tileSize, geom.tileSize);
     }
-  }
-
-  // 6. Wall Blocks (Layer 2)
-  if (state.layers.showWallBlocks && state.quest.wallBlocks) {
-    state.quest.wallBlocks.forEach((wb, i) => {
-      const pos = tileToWorld(wb.x, wb.y);
-      const bw = (wb.width || 1) * geom.tileSize;
-      const bh = (wb.height || 1) * geom.tileSize;
-      const blockImg = state.assetCache['wall_block'];
-
-      if (blockImg) {
-        ctx.drawImage(blockImg, pos.x, pos.y, bw, bh);
-      } else {
-        ctx.fillStyle = '#334155';
-        ctx.fillRect(pos.x + 1, pos.y + 1, bw - 2, bh - 2);
-        ctx.strokeStyle = '#64748b';
-        ctx.lineWidth = 1.5;
-        ctx.strokeRect(pos.x + 1, pos.y + 1, bw - 2, bh - 2);
-
-        // Brick lines
-        ctx.strokeStyle = '#475569';
-        ctx.beginPath();
-        ctx.moveTo(pos.x + 1, pos.y + bh / 2);
-        ctx.lineTo(pos.x + bw - 1, pos.y + bh / 2);
-        ctx.stroke();
-      }
-
-      if (state.selectedEntity && state.selectedEntity.type === 'wall-block' && state.selectedEntity.index === i) {
-        drawSelectionGlow(pos.x, pos.y, bw, bh);
-      }
-    });
-  }
-
-  // 7. Traps (Layer 2)
-  if (state.layers.showTraps && state.quest.traps) {
-    state.quest.traps.forEach((tr, i) => {
-      const pos = tileToWorld(tr.x, tr.y);
-      const trapKey = tr.type === 'spear' ? 'trap_spear' : (tr.type === 'falling_rock' ? 'trap_falling_block' : 'trap_pit');
-      const trapImg = state.assetCache[trapKey];
-
-      if (trapImg) {
-        ctx.drawImage(trapImg, pos.x, pos.y, geom.tileSize, geom.tileSize);
-      } else {
-        ctx.fillStyle = 'rgba(239, 68, 68, 0.25)';
-        ctx.fillRect(pos.x + 2, pos.y + 2, geom.tileSize - 4, geom.tileSize - 4);
-        ctx.strokeStyle = '#ef4444';
-        ctx.lineWidth = 1.5;
-        ctx.strokeRect(pos.x + 2, pos.y + 2, geom.tileSize - 4, geom.tileSize - 4);
-
-        ctx.fillStyle = '#fca5a5';
-        ctx.font = '13px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('⚠️', pos.x + geom.tileSize / 2, pos.y + geom.tileSize / 2);
-      }
-
-      if (state.selectedEntity && state.selectedEntity.type === 'trap' && state.selectedEntity.index === i) {
-        drawSelectionGlow(pos.x, pos.y, geom.tileSize, geom.tileSize);
-      }
-    });
-  }
-
-  // 8. Furniture (Layer 2)
-  if (state.layers.showFurniture && state.quest.furniture) {
-    state.quest.furniture.forEach((f, i) => {
-      const pos = tileToWorld(f.x, f.y);
-      const fw = (f.width || 1) * geom.tileSize;
-      const fh = (f.height || 1) * geom.tileSize;
-      const furnImg = state.assetCache[f.type];
-
-      if (furnImg) {
-        ctx.drawImage(furnImg, pos.x, pos.y, fw, fh);
-      } else {
-        ctx.fillStyle = '#78350f';
-        ctx.fillRect(pos.x + 2, pos.y + 2, fw - 4, fh - 4);
-        ctx.strokeStyle = '#b45309';
-        ctx.lineWidth = 1.5;
-        ctx.strokeRect(pos.x + 2, pos.y + 2, fw - 4, fh - 4);
-
-        ctx.fillStyle = '#fef3c7';
-        ctx.font = '12px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        const def = FURNITURE_DEFS[f.type] || { icon: '🪑' };
-        ctx.fillText(def.icon, pos.x + fw / 2, pos.y + fh / 2);
-      }
-
-      if (state.selectedEntity && state.selectedEntity.type === 'furniture' && state.selectedEntity.index === i) {
-        drawSelectionGlow(pos.x, pos.y, fw, fh);
-      }
-    });
   }
 
   // 9. Doors (Layer 2)
@@ -1482,8 +1553,12 @@ function renderToolPreview(ctx, geom) {
 // -------------------------------------------------------------
 function fitView() {
   const geom = getGridGeometry();
-  const boardW = geom.cols * geom.tileSize;
-  const boardH = geom.rows * geom.tileSize;
+  const minC = geom.hasAdditionalBorder ? -1 : 0;
+  const maxC = geom.hasAdditionalBorder ? geom.cols + 1 : geom.cols;
+  const minR = geom.hasAdditionalBorder ? -1 : 0;
+  const maxR = geom.hasAdditionalBorder ? geom.rows + 1 : geom.rows;
+  const boardW = (maxC - minC) * geom.tileSize;
+  const boardH = (maxR - minR) * geom.tileSize;
   const vpW = dom.canvas.width;
   const vpH = dom.canvas.height;
 
@@ -1491,8 +1566,8 @@ function fitView() {
   const scaleY = (vpH - 80) / boardH;
   state.zoom = Math.max(0.4, Math.min(2.5, Math.min(scaleX, scaleY)));
 
-  state.panX = Math.round((vpW - boardW * state.zoom) / 2 - geom.offsetX * state.zoom);
-  state.panY = Math.round((vpH - boardH * state.zoom) / 2 - geom.offsetY * state.zoom);
+  state.panX = Math.round((vpW - boardW * state.zoom) / 2 - (geom.offsetX + minC * geom.tileSize) * state.zoom);
+  state.panY = Math.round((vpH - boardH * state.zoom) / 2 - (geom.offsetY + minR * geom.tileSize) * state.zoom);
 
   updateZoomUI();
 }
@@ -1924,6 +1999,28 @@ function updateInspectorUI() {
     dom.inspectFurnDims.textContent = `${f.width} × ${f.height}`;
     dom.inspectFurnTreasure.value = f.treasure || '';
     dom.inspectGroupFurniture.style.display = 'block';
+
+    if (dom.inspectFurnStairRole) {
+      dom.inspectFurnStairRole.style.display = 'block';
+      const isStart = state.quest.startingStair && state.quest.startingStair[0] === f.x && state.quest.startingStair[1] === f.y;
+      const isExit = state.quest.exitTile && state.quest.exitTile[0] === f.x && state.quest.exitTile[1] === f.y;
+      if (isStart) {
+        dom.inspectFurnStairStatus.innerHTML = '<span style="color:#38bdf8; font-weight:600;">🪜 Active Starting Entrance</span>';
+        if (dom.btnFurnClearRole) dom.btnFurnClearRole.style.display = 'inline-block';
+        if (dom.btnFurnMakeStart) dom.btnFurnMakeStart.style.display = 'none';
+        if (dom.btnFurnMakeExit) dom.btnFurnMakeExit.style.display = 'inline-block';
+      } else if (isExit) {
+        dom.inspectFurnStairStatus.innerHTML = '<span style="color:#34d399; font-weight:600;">🏁 Active Quest Exit</span>';
+        if (dom.btnFurnClearRole) dom.btnFurnClearRole.style.display = 'inline-block';
+        if (dom.btnFurnMakeStart) dom.btnFurnMakeStart.style.display = 'inline-block';
+        if (dom.btnFurnMakeExit) dom.btnFurnMakeExit.style.display = 'none';
+      } else {
+        dom.inspectFurnStairStatus.innerHTML = '<span style="color:#94a3b8;">Standard map piece</span>';
+        if (dom.btnFurnClearRole) dom.btnFurnClearRole.style.display = 'none';
+        if (dom.btnFurnMakeStart) dom.btnFurnMakeStart.style.display = 'inline-block';
+        if (dom.btnFurnMakeExit) dom.btnFurnMakeExit.style.display = 'inline-block';
+      }
+    }
   } else if (type === 'trap') {
     const tr = state.quest.traps[index];
     if (!tr) return;
@@ -2508,6 +2605,68 @@ function setupEventListeners() {
       updateEntitySummaryList();
       render();
       showToast('Exit tile cleared', 'info');
+    });
+  }
+
+  // Furniture Stairs Role button handlers
+  if (dom.btnFurnMakeStart) {
+    dom.btnFurnMakeStart.addEventListener('click', () => {
+      if (!state.selectedEntity || state.selectedEntity.type !== 'furniture') return;
+      const f = state.quest.furniture[state.selectedEntity.index];
+      if (!f) return;
+      recordHistory();
+      state.quest.startingStair = [f.x, f.y];
+      updateStartSuboptsUI();
+      updateInspectorUI();
+      updateEntitySummaryList();
+      render();
+      showToast(`🪜 Starting entrance set to stairs at [${f.x}, ${f.y}]`, 'success');
+    });
+  }
+
+  if (dom.btnFurnMakeExit) {
+    dom.btnFurnMakeExit.addEventListener('click', () => {
+      if (!state.selectedEntity || state.selectedEntity.type !== 'furniture') return;
+      const f = state.quest.furniture[state.selectedEntity.index];
+      if (!f) return;
+      recordHistory();
+      state.quest.exitTile = [f.x, f.y];
+      updateExitSuboptsUI();
+      updateInspectorUI();
+      updateEntitySummaryList();
+      render();
+      showToast(`🏁 Quest exit set to stairs at [${f.x}, ${f.y}]`, 'success');
+    });
+  }
+
+  if (dom.btnFurnClearRole) {
+    dom.btnFurnClearRole.addEventListener('click', () => {
+      if (!state.selectedEntity || state.selectedEntity.type !== 'furniture') return;
+      const f = state.quest.furniture[state.selectedEntity.index];
+      if (!f) return;
+      recordHistory();
+      if (state.quest.startingStair && state.quest.startingStair[0] === f.x && state.quest.startingStair[1] === f.y) {
+        state.quest.startingStair = [0, 1];
+        updateStartSuboptsUI();
+      }
+      if (state.quest.exitTile && state.quest.exitTile[0] === f.x && state.quest.exitTile[1] === f.y) {
+        state.quest.exitTile = null;
+        updateExitSuboptsUI();
+      }
+      updateInspectorUI();
+      updateEntitySummaryList();
+      render();
+      showToast('Stairs role cleared', 'info');
+    });
+  }
+
+  // Additional Border Tile toggle handler
+  if (dom.chkAdditionalBorder) {
+    dom.chkAdditionalBorder.addEventListener('change', (e) => {
+      state.hasAdditionalBorder = e.target.checked;
+      fitView();
+      render();
+      showToast(state.hasAdditionalBorder ? 'Additional border tiles enabled' : 'Additional border tiles disabled', 'info');
     });
   }
 

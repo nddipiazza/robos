@@ -1455,7 +1455,11 @@ func _load_furniture_textures() -> void:
 		"sly": "res://assets/furniture/chest.png",
 		"throne": "res://assets/furniture/throne.png",
 		"torture-rack": "res://assets/furniture/torture_rack.png",
-		"alchemists-bench": "res://assets/furniture/alchemists_bench.png"
+		"alchemists-bench": "res://assets/furniture/alchemists_bench.png",
+		"stairs": "res://assets/tiles/stairs.png",
+		"spiral_stairs": "res://assets/tiles/stairs.png",
+		"spiral-stairs": "res://assets/tiles/stairs.png",
+		"stair": "res://assets/tiles/stairs.png"
 	}
 	for k in furn_map:
 		if not furniture_textures.has(k) or furniture_textures[k] == null:
@@ -3010,7 +3014,15 @@ func get_furniture_at(tile: Vector2i) -> Dictionary:
 	return _furniture_by_tile.get(tile, {})
 
 func is_tile_occupied_by_furniture(tile: Vector2i) -> bool:
-	return _furniture_by_tile.has(tile)
+	if not _furniture_by_tile.has(tile):
+		return false
+	var furn = _furniture_by_tile[tile]
+	var f_type = str(furn.get("type", "")).to_lower()
+	if f_type in ["stairs", "spiral_stairs", "spiral-stairs", "stair"]:
+		return false
+	if tile == exit_stair:
+		return false
+	return true
 
 func get_room_furniture(r_id: String) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
@@ -3063,6 +3075,9 @@ func is_tile_wall_blocked(tile: Vector2i) -> bool:
 	return _blocked_wall_tiles.has(tile)
 
 func is_border_tile(tile: Vector2i) -> bool:
+	if tile == exit_stair or tile == starting_stair:
+		if tile.x < 0 or tile.x >= grid_cols or tile.y < 0 or tile.y >= grid_rows:
+			return true
 	if grid_cols == 26 and grid_rows == 19:
 		return false
 	return tile.x <= 0 or tile.x >= grid_cols - 1 or tile.y <= 0 or tile.y >= grid_rows - 1
@@ -3071,13 +3086,15 @@ func is_edge_tile(tile: Vector2i) -> bool:
 	return is_border_tile(tile)
 
 func is_tile_walkable(tile: Vector2i) -> bool:
+	if tile == exit_stair:
+		return true
+	if tile == starting_stair:
+		return false
 	if tile.x < 0 or tile.x >= grid_cols or tile.y < 0 or tile.y >= grid_rows:
 		return false
 	if is_border_tile(tile):
 		if tile != starting_stair and tile != exit_stair:
 			return false
-	if tile == starting_stair:
-		return false
 	if is_tile_wall_blocked(tile):
 		return false
 	if is_tile_occupied_by_furniture(tile):
@@ -3653,7 +3670,8 @@ func get_reachable_walk_tiles() -> Array[Vector2i]:
 		for d in dirs:
 			var nxt = cur + d
 			if nxt.x < 0 or nxt.x >= grid_cols or nxt.y < 0 or nxt.y >= grid_rows:
-				continue
+				if nxt != exit_stair:
+					continue
 			# Rule: Edge / border tiles are strictly non-walkable UNLESS it is the exit_stair
 			if is_border_tile(nxt) and nxt != exit_stair:
 				continue
@@ -7887,7 +7905,8 @@ func find_path(start: Vector2i, goal: Vector2i, moving_hero_idx: int = -1) -> Ar
 		for d in dirs:
 			var nxt = cur + d
 			if nxt.x < 0 or nxt.x >= grid_cols or nxt.y < 0 or nxt.y >= grid_rows:
-				continue
+				if nxt != exit_stair:
+					continue
 			# Rule: Edge / border tiles of the map are strictly non-walkable UNLESS nxt == exit_stair
 			if is_border_tile(nxt) and nxt != exit_stair:
 				continue

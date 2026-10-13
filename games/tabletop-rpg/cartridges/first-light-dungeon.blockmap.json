@@ -6,10 +6,13 @@
     26,
     19
   ],
+  "additionalBorderTile": true,
   "calibration": {
     "tileSize": 39,
     "offsetX": 0,
-    "offsetY": 0
+    "offsetY": 0,
+    "additionalBorderTile": true,
+    "hasBorder": true
   },
   "rooms": [
     {
