@@ -3702,17 +3702,31 @@ function findTargetRoom(roomSpec, blockmap, currentContext = {}) {
   }
 
   const spec = roomSpec.toLowerCase().trim();
-  const cleanSpec = spec.replace(/^(?:in|to|into|at|inside|the)\s+/g, '').replace(/[.,!?;:]+$/g, '').trim();
+  const cleanSpec = spec
+    .replace(/\b(?:to|in|into|at|inside)\s+(?:b|g)rooms?\b/gi, (match) => {
+      const prep = match.split(/\s+/)[0];
+      return `${prep} room`;
+    })
+    .replace(/\b(?:b|g)rooms?\s+(#?\d+|[a-z0-9\-_]+)\b/gi, 'room $1')
+    .replace(/^(?:in|to|into|at|inside|the)\s+/g, '')
+    .replace(/[.,!?;:]+$/g, '')
+    .trim();
 
   const wordMap = {
     one: 1, two: 2, three: 3, four: 4, five: 5,
     six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+    eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15,
+    sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19, twenty: 20,
+    'twenty-one': 21, 'twenty-two': 22, 'twenty-three': 23, 'twenty-four': 24, 'twenty-five': 25,
+    'twenty one': 21, 'twenty two': 22, 'twenty three': 23, 'twenty four': 24, 'twenty five': 25,
     first: 1, second: 2, third: 3, fourth: 4, fifth: 5,
-    sixth: 6, seventh: 7, eighth: 8, ninth: 9, tenth: 10
+    sixth: 6, seventh: 7, eighth: 8, ninth: 9, tenth: 10,
+    eleventh: 11, twelfth: 12, thirteenth: 13, fourteenth: 14, fifteenth: 15,
+    sixteenth: 16, seventeenth: 17, eighteenth: 18, nineteenth: 19, twentieth: 20
   };
 
-  // Match room number or word, e.g. "room 1", "room #2", "room one", "room two", "second room", "first room", "two", "2", "one", "1"
-  const numMatch = cleanSpec.match(/(?:(?:the\s+)?room\s*#?|(?:the\s+))?(\d+|one|two|three|four|five|six|seven|eight|nine|ten|first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth)(?:\s+room)?\b/i);
+  // Match room number or word, e.g. "room 1", "room 19", "broom 19", "room nineteen", "second room", "first room", "two", "2", "one", "1"
+  const numMatch = cleanSpec.match(/(?:(?:the\s+)?(?:room|broom|groom)\s*#?|(?:the\s+))?(\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|eleventh|twelfth|thirteenth|fourteenth|fifteenth|sixteenth|seventeenth|eighteenth|nineteenth|twentieth)(?:\s+(?:room|broom|groom))?\b/i);
   if (numMatch) {
     let n = parseInt(numMatch[1], 10);
     if (isNaN(n)) {
@@ -3783,6 +3797,11 @@ function interpretVoiceQuestCommands(spokenText, blockmap, quest, currentContext
   const cleanInput = spokenText
     .replace(/[(\[*]\s*(?:wind\s+blowing|wind|music|applause|laughter|cough|sigh|noise|groan|chatter)\s*[)\]*]/gi, ' ')
     .replace(/[(\[*][^()\[\]]{2,30}[)\]*]/g, ' ')
+    .replace(/\b(?:to|in|into|at|inside)\s+(?:b|g)rooms?\b/gi, (match) => {
+      const prep = match.split(/\s+/)[0];
+      return `${prep} room`;
+    })
+    .replace(/\b(?:b|g)rooms?\s+(#?\d+|[a-z0-9\-_]+)\b/gi, 'room $1')
     .trim();
 
   if (!cleanInput) return [];
@@ -3790,6 +3809,10 @@ function interpretVoiceQuestCommands(spokenText, blockmap, quest, currentContext
   const WORD_TO_NUM = {
     a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5,
     six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+    eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15,
+    sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19, twenty: 20,
+    'twenty-one': 21, 'twenty-two': 22, 'twenty-three': 23, 'twenty-four': 24, 'twenty-five': 25,
+    'twenty one': 21, 'twenty two': 22, 'twenty three': 23, 'twenty four': 24, 'twenty five': 25,
     'a couple': 2, 'a couple of': 2, 'a pair': 2, 'a pair of': 2
   };
 
@@ -3797,7 +3820,7 @@ function interpretVoiceQuestCommands(spokenText, blockmap, quest, currentContext
     { type: 'skeleton', keys: ['skeletons', 'skeleton', 'skellies', 'skelly'] },
     { type: 'orc', keys: ['orcs', 'orc'] },
     { type: 'goblin', keys: ['goblins', 'goblin'] },
-    { type: 'zombie', keys: ['zombies', 'zombie'] },
+    { type: 'zombie', keys: ['zombies', 'zombie', 'zombys', 'zomby'] },
     { type: 'mummy', keys: ['mummies', 'mummy'] },
     { type: 'chaos_warrior', keys: ['chaos warriors', 'chaos warrior', 'chaos'] },
     { type: 'fimir', keys: ['fimirs', 'fimir'] },

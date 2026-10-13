@@ -7,9 +7,79 @@ function normalizeText(str) {
   return (str || '')
     .toLowerCase()
     .replace(/\be[\s\u2010-\u2015-]+learning\b/g, 'elearning')
+    .replace(/\b(?:to|in|into|at|inside)\s+(?:b|g)rooms?\b/gi, (match) => {
+      const prep = match.split(/\s+/)[0];
+      return `${prep} room`;
+    })
+    .replace(/\b(?:b|g)rooms?\s+(#?\d+|[a-z0-9\-_]+)\b/gi, 'room $1')
     .replace(/[^\w\s()\[\]*]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+/**
+ * Maps plural and colloquial monster strings to official HeroQuest / tabletop cartridge singular types.
+ * Prevents "zombies" from turning into invalid "zomby", "mummies" -> "mummy", etc.
+ */
+function normalizeMonsterType(rawType) {
+  const t = (rawType || '').toLowerCase().trim().replace(/\s+/g, '_');
+  const singularMap = {
+    zombies: 'zombie',
+    zombie: 'zombie',
+    zombys: 'zombie',
+    zomby: 'zombie',
+    mummies: 'mummy',
+    mummy: 'mummy',
+    skeletons: 'skeleton',
+    skeleton: 'skeleton',
+    skellies: 'skeleton',
+    skelly: 'skeleton',
+    goblins: 'goblin',
+    goblin: 'goblin',
+    orcs: 'orc',
+    orc: 'orc',
+    fimirs: 'fimir',
+    fimir: 'fimir',
+    chaos_warriors: 'chaos_warrior',
+    chaos_warrior: 'chaos_warrior',
+    dread_warriors: 'chaos_warrior',
+    dread_warrior: 'chaos_warrior',
+    gargoyles: 'gargoyle',
+    gargoyle: 'gargoyle',
+    werewolves: 'werewolf',
+    werewolf: 'werewolf',
+    abominations: 'abomination',
+    abomination: 'abomination',
+    bosses: 'boss',
+    boss: 'boss'
+  };
+  if (singularMap[t]) return singularMap[t];
+  if (t.endsWith('ies')) return t.slice(0, -3) + 'y';
+  if (t.endsWith('s') && !t.endsWith('ss')) return t.slice(0, -1);
+  return t;
+}
+
+function formatMonsterLabel(singularType, count = 1) {
+  const pluralMap = {
+    zombie: 'Zombies',
+    mummy: 'Mummies',
+    werewolf: 'Werewolves',
+    boss: 'Bosses',
+    chaos_warrior: 'Chaos Warriors',
+    skeleton: 'Skeletons',
+    goblin: 'Goblins',
+    orc: 'Orcs',
+    fimir: 'Fimirs',
+    gargoyle: 'Gargoyles',
+    abomination: 'Abominations'
+  };
+  const singularTitle = singularType
+    .split('_')
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+
+  if (count <= 1) return singularTitle;
+  return pluralMap[singularType] || `${singularTitle}s`;
 }
 
 /**
@@ -49,18 +119,32 @@ function detectAmbientNoise(text) {
  * Resolves commands like:
  * - "add 2 skeletons to room 1"
  * - "Add one skeleton to room 2."
+ * - "add two zombies to room 19" (or Whisper mishearing "add two zombies to broom 19")
  * - "place a chest in room 3"
  * - "put a spear trap at room 1"
  */
 function matchTabletopSkills(text) {
   const norm = normalizeText(text);
-  const raw = text.trim();
+  // Phonetic correction for Whisper mishearing "to room" as "to broom" or "broom 19"
+  const raw = (text || '')
+    .trim()
+    .replace(/\b(?:to|in|into|at|inside)\s+(?:b|g)rooms?\b/gi, (match) => {
+      const prep = match.split(/\s+/)[0];
+      return `${prep} room`;
+    })
+    .replace(/\b(?:b|g)rooms?\s+(#?\d+|[a-z0-9\-_]+)\b/gi, 'room $1');
+
   const skills = [];
 
-  // Match numbers in words or digits: 1, 2, one, two, three, a, an
+  // Match numbers in words or digits: 1..30, one..thirty, a, an
   const wordToNum = {
-    'a': 1, 'an': 1, 'one': 1, 'two': 2, 'three': 3, 'four': 4,
-    'five': 5, 'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10
+    a: 1, an: 1, one: 1, two: 2, three: 3, four: 4,
+    five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+    eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15,
+    sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19, twenty: 20,
+    'twenty-one': 21, 'twenty-two': 22, 'twenty-three': 23, 'twenty-four': 24, 'twenty-five': 25,
+    'twenty one': 21, 'twenty two': 22, 'twenty three': 23, 'twenty four': 24, 'twenty five': 25,
+    'a couple': 2, 'a couple of': 2, 'a pair': 2, 'a pair of': 2
   };
 
   // Monster keywords
@@ -86,13 +170,9 @@ function matchTabletopSkills(text) {
   // Door keywords
   const doorKeywords = ['door', 'doors', 'secret door', 'iron door', 'wooden door'];
 
-  // Pattern: (add|put|place|spawn|insert) [count] [item] (in|to|at|inside) (room|tile) [target]
-  // e.g., "add 2 skeletons to room 1"
-  // e.g., "Add one skeleton to room 2."
-  // e.g., "put a chest in room 1"
-
+  // Pattern: (add|put|place|spawn|insert) [count] [item] (in|to|at|inside) (room|broom|tile) [target]
   const monsterPattern = new RegExp(
-    `(?:add|put|place|spawn|insert|set)\\s+(\\d+|one|two|three|four|five|six|seven|eight|nine|ten|a|an)?\\s*(${monsterKeywords.join('|')})\\s+(?:in(?:to)?|to|at|inside)\\s+(?:the\\s+)?(?:room\\s+)?([a-z0-9\\-_]+)`,
+    `(?:add|put|place|spawn|insert|set)\\s+(\\d+|[a-z\\s'-]+?)?\\s*(${monsterKeywords.join('|')})\\s+(?:in(?:to)?|to|at|inside)\\s+(?:the\\s+)?(?:(?:room|broom|groom)\\s+)?([a-z0-9\\-_]+)`,
     'i'
   );
 
@@ -100,21 +180,18 @@ function matchTabletopSkills(text) {
   if (monsterMatch) {
     const rawCount = (monsterMatch[1] || '1').toLowerCase().trim();
     const count = parseInt(rawCount, 10) || wordToNum[rawCount] || 1;
-    let mType = monsterMatch[2].toLowerCase().trim();
-    if (mType.endsWith('ies')) mType = mType.slice(0, -3) + 'y';
-    else if (mType.endsWith('s') && !mType.endsWith('ss')) mType = mType.slice(0, -1);
-    mType = mType.replace(/\s+/g, '_');
+    const mType = normalizeMonsterType(monsterMatch[2]);
 
     const roomRaw = monsterMatch[3].replace(/[.,!?;:]+$/g, '').trim();
     const roomNum = parseInt(roomRaw, 10) || wordToNum[roomRaw.toLowerCase()] || roomRaw;
     const roomLabel = typeof roomNum === 'number' ? `Room ${roomNum}` : `Room ${roomRaw}`;
     const roomParam = typeof roomNum === 'number' ? String(roomNum) : roomRaw;
-    const monsterLabel = mType.charAt(0).toUpperCase() + mType.slice(1).replace(/_/g, ' ');
+    const monsterLabel = formatMonsterLabel(mType, count);
 
     skills.push({
       id: 'tabletop:place-monster',
       name: 'Place Monster',
-      title: `Place ${count} ${monsterLabel}${count > 1 ? 's' : ''} in ${roomLabel}`,
+      title: `Place ${count} ${monsterLabel} in ${roomLabel}`,
       category: 'Tabletop Quest',
       confidence: 0.96,
       action: 'place-monster',
