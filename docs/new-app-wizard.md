@@ -74,7 +74,7 @@ The Where will it run? menu starts on Cloud Hosting (Vercel / Web), and the Adva
 
 ## What is registered
 
-After writing files the generator also updates these. Items marked "if present" are skipped silently when the target does not exist.
+After writing files the generator also updates these. A target that does not exist is skipped silently.
 
 | Target | Change |
 |:---|:---|
@@ -83,7 +83,7 @@ After writing files the generator also updates these. Items marked "if present" 
 | `docs/projects/<slug>.md` | Creates a project page if `docs/projects/` exists and the page does not. |
 | `~/.config/robos/git-projects.json` | Appends an entry. See the note below. |
 
-The `repository` value in `catalog-info.yaml`, `.robos/packages.yaml` and the graph node is always `nddipiazza/<slug>`, because the wizard has no repository field. Edit it after generation.
+The repository is always `nddipiazza/<slug>`, because the wizard has no repository field. It appears as the `github.com/project-slug` annotation in `catalog-info.yaml` and as `repository` in `.robos/packages.yaml` and the graph node. Edit it after generation.
 
 {: .note }
 Git Projects stores its list as `{ "projects": [...] }` in `git-projects.json`, while the wizard reads and writes the file as a bare array. If Git Projects has already created the file, the wizard's entry is skipped. If the wizard creates the file first, Git Projects will not list the project. Add the repository in [Git Projects]({{ '/apps/git-projects/' | relative_url }}) yourself.
@@ -92,27 +92,29 @@ Git Projects stores its list as `{ "projects": [...] }` in `git-projects.json`, 
 
 ## Generate without the GUI
 
-The generator is plain Node.js and does not need Electron. From a RobOS checkout:
+The generator is plain Node.js and does not need Electron. This example writes to a scratch folder; run it from a RobOS checkout:
 
 ```bash
+mkdir -p /tmp/robos-demo/.robos
 node -e "
 const { generateNewApp } = require('./packages/app-wizard/lib/generate-app');
 const r = generateNewApp(
   { name: 'Pulse Metrics', slug: 'pulse-metrics', archetype: 'robos:ConsoleApp',
     technology: 'Node.js 20 / CLI', deploy: 'self-hosted' },
-  { robosRoot: '.' }
+  { robosRoot: '/tmp/robos-demo' }
 );
 console.log(r.targetDir, r.generated);
 "
 ```
 
-Always pass `archetype`. Without `homeDir` in the second argument, the call does not touch `~/.config/robos/git-projects.json`. The unit tests for the generator are in `packages/robos-test/tests/app-wizard/generate-app.test.js`.
+The project lands in `/tmp/robos-demo/packages/pulse-metrics`. Set `robosRoot` to a repository root to register the project in that repository's `.robos` instead. Always pass `archetype`. Without `homeDir` in the second argument, the call does not touch `~/.config/robos/git-projects.json`. The unit tests for the generator are in `packages/robos-test/tests/app-wizard/generate-app.test.js`.
 
 ## Limits
 
 - Only the web, desktop and CLI archetypes have their own template. PC Video Game, Mobile Phone App, Data Worker / Sync and Reusable Code Library are cards in the UI, but they produce the generic Node.js service or the web template.
 - The Mobile Game archetype appears only in the import wizard, not on the creation cards.
 - The step 3 contract editor and the data-storage menu do not affect the output.
+- The Electron template's `.desktop` file points at an `icon.svg` that the wizard does not create. Add one (see the `update-app-icon` skill).
 - The generated `dev-setup.sh` checks only for Node.js and git. It does not install Java, Go or other runtimes.
 
 For a project that already exists, use [Import an existing app]({{ site.baseurl }}{% link app-import-wizard.md %}).

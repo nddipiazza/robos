@@ -6,7 +6,7 @@ icon: security-setup.svg
 summary: "Five-step wizard that configures GPG pinentry, a GPG key, the pass store and an SSH key."
 description: "Runs gpg, pass and ssh-keygen to set up the credentials RobOS needs. It does not configure git commit signing."
 related:
-  - /big-wins/devops-security-pass.html
+  - /big-wins.html
 ---
 
 Security Setup is a small wizard for a machine that has no GPG key, password store or SSH key yet. It runs the usual `gpg`, `pass` and `ssh-keygen` commands, so the results are ordinary files you can manage by hand. It checks what already exists and lets you skip steps that are done. The larger [RobOS Setup Wizard]({{ '/apps/robos-onboarding/' | relative_url }}) covers the same ground plus git identity, Chrome, GitHub login and AI keys.

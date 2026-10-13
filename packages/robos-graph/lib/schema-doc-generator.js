@@ -2,7 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { BUILTIN_SHACL_SHAPES } = require('./shacl-validator');
+const { BUILTIN_SHACL_SHAPES, SHACLValidator } = require('./shacl-validator');
 const { DEFAULT_PACKAGES, KGraphPackageManager } = require('./package-manager');
 const { OSLC_CONTEXT } = require('./oslc-parser');
 const { resolveSchemaElement, CATALOG } = require('./classification');
@@ -818,9 +818,10 @@ PROPERTY_METADATA['robos:classificationOrigin'] = {
 for (const [id, metadata] of Object.entries(PROPERTY_METADATA)) metadata['robos:classification'] = resolveSchemaElement(id);
 const classificationLabels = id => resolveSchemaElement(id).map(ref => CATALOG.find(code => code.id === ref['@id']).label).join(', ');
 
-// Package display titles for Just the Docs navigation
+// Package display titles for Just the Docs navigation. A page's `parent:` must equal
+// its parent's `title:`, and titles must be unique across the whole docs site.
 const PACKAGE_DISPLAY_TITLES = {
-  'core-platform': 'Core Platform (robos.core)',
+  'core-platform': 'Core Platform (robos.platform)',
   'organization': 'Organization & Teams (robos.org)',
   'services': 'Services & Contracts (robos.services)',
   'applications': 'Applications (robos.apps)',
@@ -828,7 +829,49 @@ const PACKAGE_DISPLAY_TITLES = {
   'learning': 'eLearning Curriculums (robos.learning)',
   'documentation': 'Documentation & Diagrams (robos.docs)',
   'testing': 'Testing, Quality & BDD (robos.testing)',
+  'game': 'Game Rules (robos.game)',
+  'crpg': 'cRPG (robos.crpg)',
+  'tabletop-game': 'Tabletop Game (robos.tabletop)',
 };
+
+// Packages that exist in .robos/kgraph.yaml but are not in DEFAULT_PACKAGES. Only the
+// game-domain shapes listed in SHAPE_PACKAGE_OVERRIDES are documented under them.
+const EXTRA_DOC_PACKAGES = [
+  { id: 'game', namespace: 'robos.game' },
+  { id: 'crpg', namespace: 'robos.crpg' },
+  { id: 'tabletop-game', namespace: 'robos.tabletop' },
+];
+
+const DOC_PACKAGE_DESCRIPTIONS = {
+  'core-platform': 'Databases, message brokers, search indexes, MCP servers, build systems, context sources, prompt strategies and source declarations.',
+  'organization': 'Teams, projects and work items, Git organizations, repositories, branches, pull requests and commits, agent personas, task servers and review comments.',
+  'services': 'Microservices, API contracts (OpenAPI, Protobuf, GraphQL), endpoints, data models, requirements and features.',
+  'applications': 'Front-end, desktop, console and mobile applications, games, libraries, web routes, CLI commands and voice commands.',
+  'devops': 'Kubernetes clusters, environments, GitOps deployments, CI/CD pipelines, remote-execution clusters and data pipelines.',
+  'learning': 'eLearning courses, modules, lessons, labs, quizzes, completion certificates and agent skills.',
+  'documentation': 'Documentation pages, architecture decision records, flow diagrams, walkthroughs and code snippets.',
+  'testing': 'Gherkin features, scenarios, step definitions, test plans, suites, execution records, testing libraries and game test scenarios.',
+  'game': 'Rules-engine building blocks shared by games: games, classes, items, spells and monsters.',
+  'crpg': 'Party-based tactical cRPG content: abilities, campaigns, map transitions, game events and story flows.',
+  'tabletop-game': 'Tabletop dungeon-crawler content: heroes, monsters, summons, quest maps, turn steps and AI directives.',
+};
+
+// Classes that the type-name heuristics in package-manager.js would place in the wrong
+// group. Existing classes keep their original group so their page URLs do not change.
+const SHAPE_PACKAGE_OVERRIDES = {};
+for (const name of ['CRPGAbility', 'CRPGGameEvent', 'CRPGCampaign', 'CRPGMapTransition', 'CRPGStoryFlow', 'CRPGStoryNode']) {
+  SHAPE_PACKAGE_OVERRIDES[`robos:${name}`] = 'crpg';
+}
+for (const name of ['Game', 'GameClass', 'GameMonster', 'GameItem', 'GameSpell']) {
+  SHAPE_PACKAGE_OVERRIDES[`robos:${name}`] = 'game';
+}
+for (const name of [
+  'TabletopGame', 'TabletopHero', 'TabletopMonster', 'TabletopSummon', 'TabletopQuestMap', 'TabletopMapConfiguration',
+  'TabletopTurnDAG', 'TabletopTurnStep', 'TabletopAIEngine', 'TabletopAIDirective', 'TabletopCombatant', 'TabletopAICommand',
+]) {
+  SHAPE_PACKAGE_OVERRIDES[`robos:${name}`] = 'tabletop-game';
+}
+SHAPE_PACKAGE_OVERRIDES['robos:VoiceCommand'] = 'applications';
 
 // Explicit slug and display title overrides for acronyms, multi-capital terms, and compound tech names
 const ENTITY_OVERRIDES = {
@@ -861,16 +904,45 @@ const ENTITY_OVERRIDES = {
   'TestExecutionRecord': { slug: 'test-execution-record', title: 'Test Execution Record' },
 };
 
+// Front matter values: quote anything that is not plain words and digits (for example a
+// title with "&", ":" or parentheses) so the YAML always parses.
+const yamlValue = text => (/^[A-Za-z0-9 ]+$/.test(text) ? text : JSON.stringify(text));
+// Markdown table cells cannot contain a raw pipe or a line break.
+const tableCell = text => String(text == null ? '' : text).replace(/\|/g, '\\|').replace(/\r?\n/g, ' ');
+const siteLink = (label, sitePath) => `[${label}]({{ '${sitePath}' | relative_url }})`;
+const schemaOrgCurie = url => String(url).replace('https://schema.org/', 'schema:');
+// One shape declares an OSLC URL where a Schema.org type is expected; only real
+// Schema.org URLs are shown in Schema.org columns.
+const isSchemaOrg = url => typeof url === 'string' && url.startsWith('https://schema.org/');
+
+// Short label for a standards URL: OSLC, Cucumber, C4 and similar get a name, anything
+// else shows the host so a reader can see where the link goes.
+function standardLabel(url) {
+  if (url.includes('open-services.net/ns/')) return `OSLC ${url.split('#')[0].split('/').pop().toUpperCase()}`;
+  if (url.includes('cucumber.io')) return 'Cucumber';
+  if (url.includes('w3id.org/c4') || url.includes('c4model.com')) return 'C4 model';
+  if (url.includes('openapis.org')) return 'OpenAPI 3.1';
+  if (url.includes('kubernetes.io')) return 'Kubernetes';
+  if (url.includes('modelcontextprotocol.io')) return 'MCP specification';
+  if (url.includes('kafka.apache.org')) return 'Apache Kafka';
+  if (url.includes('schema.org')) return schemaOrgCurie(url);
+  try { return new URL(url).hostname; } catch { return url; }
+}
+const standardLink = url => `[${standardLabel(url)}](${url})`;
+
 class SchemaDocGenerator {
   constructor(options = {}) {
     this.rootDir = options.rootDir || process.cwd();
     this.kgraphDir = options.kgraphDir || path.join(this.rootDir, '.robos');
     this.docsDir = options.docsDir || path.join(this.rootDir, 'docs');
     this.outputDir = options.outputDir || path.join(this.docsDir, 'schemas');
-    this.packageManager = new KGraphPackageManager({ baseDir: this.kgraphDir });
+    // Read-only: generating docs must never write into .robos.
+    this.packageManager = new KGraphPackageManager({ baseDir: this.kgraphDir, readOnly: true });
+    this.validator = new SHACLValidator();
   }
 
   getSchemaPackage(targetClass) {
+    if (SHAPE_PACKAGE_OVERRIDES[targetClass]) return SHAPE_PACKAGE_OVERRIDES[targetClass];
     const fakeNode = { '@type': targetClass };
     return this.packageManager.inferPackageForNode(fakeNode);
   }
@@ -896,6 +968,7 @@ class SchemaDocGenerator {
       .replace(/([a-z0-9])([A-Z])/g, '$1 $2');
   }
 
+  // First node of the class in the given package (kept for callers that want one node).
   getCanonicalNode(targetClass, pkgId) {
     const pkg = this.packageManager.getPackage(pkgId);
     if (pkg && pkg.nodes) {
@@ -908,15 +981,55 @@ class SchemaDocGenerator {
     return null;
   }
 
+  // Picks a real node of this class from the checked-in graph (.robos/kgraphs) that passes
+  // the validator. Prefers the shape's own package, then the node that fills the most of the
+  // shape's properties, then the shortest. Returns null when no stored node qualifies.
+  findExampleNode(shape, pkgId) {
+    const paths = new Set(shape.properties.map(p => p.path));
+    const candidates = [];
+    for (const { id } of this.packageManager.listPackages()) {
+      const pkg = this.packageManager.getPackage(id);
+      for (const node of (pkg && pkg.nodes) || []) {
+        const types = Array.isArray(node['@type']) ? node['@type'] : [node['@type'] || ''];
+        if (!types.includes(shape.targetClass)) continue;
+        if (!this.validator.validate([node]).conforms) continue;
+        candidates.push({
+          node,
+          packageId: id,
+          filled: Object.keys(node).filter(key => paths.has(key)).length,
+          size: JSON.stringify(node).length,
+        });
+      }
+    }
+    candidates.sort((a, b) =>
+      (b.packageId === pkgId) - (a.packageId === pkgId) || b.filled - a.filled || a.size - b.size);
+    return candidates.length ? candidates[0] : null;
+  }
+
+  // The example shown on a schema page, with where it came from.
+  getExample(shape, pkg) {
+    const found = this.findExampleNode(shape, pkg.id);
+    if (found) return { node: found.node, origin: 'graph', packageId: found.packageId };
+    return { node: this.generateSampleNode(shape, pkg), origin: 'placeholder', packageId: pkg.id };
+  }
+
+  getDocPackages() {
+    return [
+      ...DEFAULT_PACKAGES.map(pkg => ({ ...pkg })),
+      ...EXTRA_DOC_PACKAGES.map(pkg => ({ ...pkg })),
+    ];
+  }
+
   generateAll() {
     fs.mkdirSync(this.outputDir, { recursive: true });
 
     // Group SHACL shapes by package
     const packageMap = new Map();
-    for (const pkg of DEFAULT_PACKAGES) {
+    for (const pkg of this.getDocPackages()) {
       packageMap.set(pkg.id, {
         ...pkg,
         displayTitle: PACKAGE_DISPLAY_TITLES[pkg.id] || pkg.title,
+        description: DOC_PACKAGE_DESCRIPTIONS[pkg.id] || pkg.description || '',
         shapes: [],
       });
     }
@@ -986,7 +1099,7 @@ class SchemaDocGenerator {
   generateHubMarkdown(packageMap) {
     const lines = [
       '---',
-      'title: KGraph Schemas',
+      'title: Schemas',
       'layout: default',
       'parent: Build on RobOS',
       'nav_order: 2',
@@ -994,124 +1107,82 @@ class SchemaDocGenerator {
       'permalink: /schemas.html',
       '---',
       '',
-      '# RobOS Knowledge Graph Schemas & Ontologies',
+      '# Schemas',
       '{: .no_toc }',
       '',
-      'Comprehensive, machine-readable ontologies and W3C SHACL constraint specifications governing the RobOS Dual-State SDLC Knowledge Graph across all of the standard package stores.',
-      '{: .fs-6 .fw-300 }',
+      'Reference for the node types (classes) in the RobOS knowledge graph. Use it to see which properties a node needs before you add it, and what the validator rejects.',
+      '{: .fs-6 }',
       '',
-      '## Table of contents',
-      '{: .no_toc .text-delta }',
-      '',
+      '<details open markdown="block">',
+      '  <summary>On this page</summary>',
+      '  {: .text-delta }',
       '1. TOC',
       '{:toc}',
+      '</details>',
       '',
-      '---',
+      '## What these pages describe',
       '',
-      '## Architectural Overview',
+      'Each class page documents one shape. A shape is a rule set in `packages/robos-graph/lib/shacl-validator.js` that applies to nodes of one class, such as `robos:Microservice`. For every property it lists the minimum and maximum number of values and the message shown when the rule fails.',
       '',
-      'RobOS structures the entire software development lifecycle as an open, interconnected **Dual-State Knowledge Graph**. Rather than proprietary siloes or monolithic configuration files, RobOS combines three international standards:',
+      'The built-in validator checks counts only. It confirms that required properties are present and that single-valued properties have at most one value. It does not check datatypes or value formats, and it is not a complete W3C SHACL implementation.',
       '',
-      '1. **OASIS OSLC Core 3.0 & W3C JSON-LD**: Global semantic web standard for linking requirements, changes, architectures, and tests.',
-      '2. **W3C SHACL (Shapes Constraint Language)**: Strictly validates graph nodes against structural schemas before saving or synthesizing code.',
-      `3. **Modular Namespaced Packages (\`.robos/kgraphs/\`)**: Eliminates Git merge conflicts and blurs across teams by dividing the universe into domain-isolated package stores.`,
+      'Classes are grouped by package, the same way the graph is stored on disk (see [Knowledge graph]({{ site.baseurl }}{% link knowledge-graph.md %})). The grouping here is a documentation aid. The `robos:package` property on each node decides where the node is stored, and one class can have nodes in more than one package.',
       '',
-      '<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">',
-      `  <img src="{{ '/assets/images/kgraph-schemas-architecture.jpg' | relative_url }}" alt="RobOS SDLC Knowledge Graph Ontology and Modular Package Stores" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />`,
-      '  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">',
-      `    <strong>RobOS SDLC Knowledge Graph Ontology</strong>: The modular package stores, linked-data relationships, and OSLC Core 3.0 / W3C SHACL validation layer. <em>(Click image to zoom full screen)</em>`,
-      '  </div>',
-      '</div>',
+      'Every shape also records the upstream definition it follows: a Schema.org type and, where one applies, a domain standard such as OSLC, the C4 model or Cucumber.',
       '',
-      '---',
+      '## Packages',
       '',
-      '## The Standard RobOS Package Stores',
-      '',
-      '| Package ID | Namespace | Target Domain | Schemas & Shapes |',
+      '| Package | Namespace | Classes | Covers |',
       '|---|---|---|---|',
     ];
 
     for (const [pkgId, pkg] of packageMap.entries()) {
-      const link = `[${pkg.displayTitle}]({{ '/schemas/${pkgId}.html' | relative_url }})`;
-      const shapeLinks = pkg.shapes.map(s => `<code>${s.targetClass}</code>`).join(', ') || '<em>Base platform nodes</em>';
-      lines.push(`| **\`${pkgId}\`** | \`${pkg.namespace}\` | ${pkg.description} | ${shapeLinks} |`);
+      lines.push(`| ${siteLink(tableCell(pkg.displayTitle), `/schemas/${pkgId}.html`)} | \`${pkg.namespace}\` | ${pkg.shapes.length} | ${tableCell(pkg.description)} |`);
     }
 
     lines.push(
       '',
-      '---',
+      '## All classes',
       '',
-      '## Universal Schema.org & De Facto Standards Matrix',
+      'The Schema.org column is the parent type from the shape. Open a class for its property rules, the standard it follows and an example node.',
       '',
-      'Every single entity in the RobOS Knowledge Graph is formally mapped to a canonical **[Schema.org](https://schema.org/)** parent class (ensuring 100% interoperability with search engines, web indexers, and general AI reasoning models) alongside an international **De Facto Domain Standard** (OASIS OSLC 3.0, W3C C4 Model, Cucumber BDD, OpenAPI 3.1, CNCF).',
-      '',
-      'The formal, machine-readable W3C RDF Schema / OWL ontology bridge is published at [**`ontology.jsonld`**]({{ \x27/schemas/ontology.jsonld\x27 | relative_url }}).',
-      '',
-      '| RobOS Class | Package | Schema.org Parent Type | De Facto Domain Standard | Specification |',
-      '|---|---|---|---|---|'
+      '| Class | Package | Schema.org type |',
+      '|---|---|---|'
     );
 
     for (const [pkgId, pkg] of packageMap.entries()) {
       for (const shape of pkg.shapes) {
         const slug = this.getEntitySlug(shape.targetClass);
-        const specLink = `[Docs & SHACL]({{ \x27/schemas/${pkgId}/${slug}.html\x27 | relative_url }})`;
-        const sLink = shape.schemaOrgType ? `[\`${shape.schemaOrgType.replace('https://schema.org/', 'schema:')}\`](${shape.schemaOrgType})` : '-';
-        let dDisplay = shape.domainStandard || shape.refersFrom || '-';
-        if (dDisplay.includes('open-services.net/ns/')) {
-          dDisplay = `[OSLC ${dDisplay.split('#')[0].split('/').pop().toUpperCase()}](${dDisplay})`;
-        } else if (dDisplay.includes('cucumber.io')) {
-          dDisplay = `[Cucumber BDD](${dDisplay})`;
-        } else if (dDisplay.includes('w3id.org/c4')) {
-          dDisplay = `[W3C C4 Model](${dDisplay})`;
-        } else if (dDisplay.includes('openapis.org')) {
-          dDisplay = `[OpenAPI 3.1](${dDisplay})`;
-        } else if (dDisplay.includes('kubernetes.io')) {
-          dDisplay = `[Kubernetes / CNCF](${dDisplay})`;
-        } else if (dDisplay.includes('modelcontextprotocol.io')) {
-          dDisplay = `[MCP Spec](${dDisplay})`;
-        } else if (dDisplay.includes('kafka.apache.org')) {
-          dDisplay = `[Apache Kafka](${dDisplay})`;
-        } else if (dDisplay.includes('schema.org')) {
-          dDisplay = `[\`${dDisplay.replace('https://schema.org/', 'schema:')}\`](${dDisplay})`;
-        } else {
-          dDisplay = `[Standard](${dDisplay})`;
-        }
-        lines.push(`| <code>${shape.targetClass}</code> | [${pkg.displayTitle}]({{ \x27/schemas/${pkgId}.html\x27 | relative_url }}) | ${sLink} | ${dDisplay} | ${specLink} |`);
+        const classLink = siteLink(`\`${shape.targetClass}\``, `/schemas/${pkgId}/${slug}.html`);
+        const schemaOrg = isSchemaOrg(shape.schemaOrgType) ? `[\`${schemaOrgCurie(shape.schemaOrgType)}\`](${shape.schemaOrgType})` : '-';
+        lines.push(`| ${classLink} | \`${pkgId}\` | ${schemaOrg} |`);
       }
     }
 
     lines.push(
       '',
-      '---',
+      '## Check a node against a shape',
       '',
-      '## Automated Validation via SHACL',
-      '',
-      'Every node in the Knowledge Graph is verified using programmatic SHACL validators before it can be merged into `.robos/knowledge-graph.jsonld` or deployed to production:',
-      '',
-      '```javascript',
-      "const { SHACLValidator } = require('/usr/local/share/robos/robos-graph/lib/shacl-validator');",
-      "const { SDLCKnowledgeGraphStore } = require('/usr/local/share/robos/robos-graph');",
-      '',
-      'const store = new SDLCKnowledgeGraphStore();',
-      'const validationResult = store.validate();',
-      '',
-      'if (!validationResult.conforms) {',
-      '  console.error("SHACL Violations:", validationResult.violations);',
-      '} else {',
-      '  console.log("All graph nodes strictly conform to SHACL specifications.");',
-      '}',
-      '```',
-      '',
-      '---',
-      '',
-      '## Regenerating Schema Documentation',
-      '',
-      'RobOS includes a built-in companion generator that keeps documentation in continuous lockstep with schema code:',
+      'Save one node as `node.json` in the repository root, for example the example from a class page. Then run:',
       '',
       '```bash',
-      '# Run automated schema doc generator',
+      `node -e "const { SHACLValidator } = require('./packages/robos-graph/lib/shacl-validator'); const r = new SHACLValidator().validate([require('./node.json')]); console.log(r.conforms, r.results)"`,
+      '```',
+      '',
+      'The command prints `true` and an empty list when the node meets every rule for its types. Otherwise it prints `false` and one entry per failed rule. The `kgraph validate` and `kgraph insert` commands run the same checks.',
+      '',
+      '## Ontology file',
+      '',
+      `${siteLink('`ontology.jsonld`', '/schemas/ontology.jsonld')} lists classes with their Schema.org parent class and shape id. The same file is kept at \`.robos/ontology.jsonld\`. \`node scripts/sync-classification-ontology.js\` updates both; it stops with an error for any class that has no classification code. This generator does not touch the ontology, so the file can lag behind the shapes listed here.`,
+      '',
+      '## Regenerate these pages',
+      '',
+      'This section and every page under it are generated. Do not edit them by hand. Change the generator, `packages/robos-graph/lib/schema-doc-generator.js`, or the shapes, then run:',
+      '',
+      '```bash',
       'node scripts/generate-kgraph-schema-docs.js',
-      '```'
+      '```',
+      ''
     );
 
     return lines.join('\n');
@@ -1120,9 +1191,9 @@ class SchemaDocGenerator {
   generatePackageMarkdown(pkg, navOrder) {
     const lines = [
       '---',
-      `title: ${pkg.displayTitle}`,
+      `title: ${yamlValue(pkg.displayTitle)}`,
       'layout: default',
-      'parent: KGraph Schemas',
+      'parent: Schemas',
       `nav_order: ${navOrder}`,
       'has_children: true',
       `permalink: /schemas/${pkg.id}.html`,
@@ -1132,53 +1203,32 @@ class SchemaDocGenerator {
       '{: .no_toc }',
       '',
       `${pkg.description}`,
-      '{: .fs-6 .fw-300 }',
+      '{: .fs-6 }',
       '',
-      '## Table of contents',
-      '{: .no_toc .text-delta }',
+      '| | |',
+      '|---|---|',
+      `| Package id | \`${pkg.id}\` |`,
+      `| Namespace | \`${pkg.namespace}\` |`,
+      `| Package file | \`.robos/kgraphs/${pkg.id}/package.jsonld\` |`,
+      `| Classes documented | ${pkg.shapes.length} |`,
       '',
-      '1. TOC',
-      '{:toc}',
+      '## Classes',
       '',
-      '---',
+      'Required properties are the ones with a minimum count of 1 or more. A node that lacks one fails validation.',
       '',
-      '## Package Metadata',
-      '',
-      `- **Package Store ID**: \`${pkg.id}\``,
-      `- **Ontology Namespace**: \`${pkg.namespace}\``,
-      `- **GitOps Package File**: \`.robos/kgraphs/${pkg.id}/package.jsonld\``,
-      `- **Schemas Defined**: ${pkg.shapes.length}`,
-      '',
-      '---',
-      '',
-      '## Package Schemas & Constraint Shapes',
-      '',
-      '| Schema Class | Target Shape URI | Required Properties (minCount ≥ 1) | Specification |',
-      '|---|---|---|---|',
+      '| Class | Shape | Required properties |',
+      '|---|---|---|',
     ];
 
     for (const shape of pkg.shapes) {
       const slug = this.getEntitySlug(shape.targetClass);
       const title = this.getEntityTitle(shape.targetClass);
-      const link = `[**${title}** (\`${shape.targetClass}\`)]({{ '/schemas/${pkg.id}/${slug}.html' | relative_url }})`;
-      const reqProps = shape.properties.map(p => `\`${p.path}\``).join(', ');
-      lines.push(`| ${link} | \`${shape.shapeId}\` | ${reqProps} | [View Schema &rarr;]({{ '/schemas/${pkg.id}/${slug}.html' | relative_url }}) |`);
+      const link = siteLink(`${tableCell(title)} (\`${shape.targetClass}\`)`, `/schemas/${pkg.id}/${slug}.html`);
+      const required = shape.properties.filter(p => p.minCount >= 1).map(p => `\`${p.path}\``).join(', ') || 'none';
+      lines.push(`| ${link} | \`${shape.shapeId}\` | ${required} |`);
     }
 
-    lines.push(
-      '',
-      '---',
-      '',
-      '## Package Architecture & Linked Data Model',
-      '',
-      '<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">',
-      `  <img src="{{ '/assets/images/kgraph-schemas-architecture.jpg' | relative_url }}" alt="${pkg.displayTitle} Ontology Map" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />`,
-      '  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">',
-      `    <strong>${pkg.displayTitle} (${pkg.namespace})</strong>: High-level package ontology within the RobOS Knowledge Graph. <em>(Click image to zoom full screen)</em>`,
-      '  </div>',
-      '</div>'
-    );
-
+    lines.push('');
     return lines.join('\n');
   }
 
@@ -1186,171 +1236,87 @@ class SchemaDocGenerator {
     const slug = this.getEntitySlug(shape.targetClass);
     const title = this.getEntityTitle(shape.targetClass);
     const targetClasses = Array.isArray(shape.targetClasses) ? shape.targetClasses : [shape.targetClass];
-    const canonicalNode = this.getCanonicalNode(shape.targetClass, pkg.id);
+    const aliases = targetClasses.filter(tc => tc !== shape.targetClass);
+    const example = this.getExample(shape, pkg);
+
+    const detailRows = [
+      ['Class', `\`${shape.targetClass}\``],
+      aliases.length ? ['Also matches', aliases.map(tc => `\`${tc}\``).join(', ')] : null,
+      ['Shape id', `\`${shape.shapeId}\``],
+      ['Package', `${siteLink(tableCell(pkg.displayTitle), `/schemas/${pkg.id}.html`)} (\`${pkg.id}\`)`],
+      classificationLabels(shape.targetClass) ? ['Classification', classificationLabels(shape.targetClass)] : null,
+      isSchemaOrg(shape.schemaOrgType) ? ['Schema.org type', `[\`${schemaOrgCurie(shape.schemaOrgType)}\`](${shape.schemaOrgType})`] : null,
+      shape.domainStandard && (shape.domainStandard !== shape.schemaOrgType || !isSchemaOrg(shape.schemaOrgType)) ? ['Domain standard', standardLink(shape.domainStandard)] : null,
+      shape.refersFrom && shape.refersFrom !== shape.schemaOrgType && shape.refersFrom !== shape.domainStandard ? ['Upstream reference', standardLink(shape.refersFrom)] : null,
+    ].filter(Boolean);
 
     const lines = [
       '---',
-      `title: ${title}`,
+      `title: ${yamlValue(title)}`,
       'layout: default',
-      `parent: ${pkg.displayTitle}`,
-      'grand_parent: KGraph Schemas',
+      `parent: ${yamlValue(pkg.displayTitle)}`,
+      'grand_parent: Schemas',
       `nav_order: ${navOrder}`,
       `permalink: /schemas/${pkg.id}/${slug}.html`,
       '---',
       '',
-      `# Schema: \`${shape.targetClass}\``,
+      `# ${shape.targetClass}`,
       '{: .no_toc }',
       '',
-      `Formal W3C SHACL constraint shape and OSLC JSON-LD specification for \`${shape.targetClass}\` in the \`${pkg.id}\` package store.`,
-      '{: .fs-6 .fw-300 }',
+      `Validation shape for \`${shape.targetClass}\` nodes in the \`${pkg.id}\` package group.`,
+      '{: .fs-6 }',
       '',
-      '## Table of contents',
-      '{: .no_toc .text-delta }',
+      '## Details',
       '',
-      '1. TOC',
-      '{:toc}',
+      '| | |',
+      '|---|---|',
+      ...detailRows.map(([label, value]) => `| ${label} | ${value} |`),
       '',
-      '---',
+      '## Properties',
       '',
-      '## Specification Metadata',
+      'Count is the minimum and maximum number of values (`*` means no maximum). The validator enforces both. The type column is documentation only; the validator does not check types.',
       '',
-      `- **RDF / OWL Class**: \`${shape.targetClass}\``,
-      `- **Aliases / Target Classes**: ${targetClasses.map(tc => `\`${tc}\``).join(', ')}`,
-      `- **SHACL Shape ID**: \`${shape.shapeId}\``,
-      `- **Governing Package**: [${pkg.displayTitle}]({{ '/schemas/${pkg.id}.html' | relative_url }}) (\`${pkg.id}\`)`,
-      `- **Namespace**: \`${pkg.namespace}\``,
-      shape.schemaOrgType ? `- **Schema.org Classification**: [${shape.schemaOrgType}](${shape.schemaOrgType})` : '',
-      shape.domainStandard ? `- **Domain De Facto Standard**: [${shape.domainStandard}](${shape.domainStandard})` : '',
-      shape.refersFrom ? `- **Upstream Schema Basis (Refers From)**: [${shape.refersFrom}](${shape.refersFrom})` : '',
-      '',
-      '---',
-      '',
-      ...(shape.refersFrom || shape.schemaOrgType ? [
-        '## Upstream Schema Basis (Refers From) & Global Standards Provenance',
-        '',
-        `This RobOS schema is modeled after and directly aligns with two levels of global standards:`,
-        ...(shape.schemaOrgType ? [`- **Universal Schema.org Class**: [${shape.schemaOrgType}](${shape.schemaOrgType}) (100% interoperability with search engines, web indexers, and general AI reasoning)`] : []),
-        ...(shape.domainStandard ? [`- **Specialized Domain Standard**: [${shape.domainStandard}](${shape.domainStandard}) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)`] : []),
-        ...(shape.refersFrom ? [`- **Canonical Reference**: [${shape.refersFrom}](${shape.refersFrom})`] : []),
-        `- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of \`${shape.targetClass}\`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.`,
-        '',
-        '---',
-        '',
-      ] : []),
-      '## Entity Relationship & Schema Context',
-      '',
-      '<div style="margin: 1.5rem 0; padding: 1.25rem; background: #161b22; border: 1px solid #30363d; border-radius: 8px;">',
-      `  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">`,
-      `    <span style="font-size: 1.15rem; font-weight: 700; color: #38bdf8;">${title}</span>`,
-      `    <span style="font-family: monospace; background: #121927; color: #00e5ff; border: 1px solid rgba(0, 229, 255, 0.4); padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.85rem;">${shape.targetClass}</span>`,
-      '  </div>',
-      `  <p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Governed by W3C SHACL shape <code>${shape.shapeId}</code> within the <strong>${pkg.displayTitle}</strong> (<code>${pkg.namespace}</code>) package store.</p>`,
-      `  <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">`,
-      ...shape.properties.map(p => `    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>${p.path}</code></span>`),
-      '  </div>',
-      '</div>',
-      '',
-      '---',
-      '',
-      `**RobOS classification:** ${classificationLabels(shape.targetClass)}. These RobOS-owned codes use Schema.org CategoryCode vocabulary.`,
-      '',
-      '## Property Constraints & SHACL Rules',
-      '',
-      '| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |',
-      '|---|---|---|---|---|---|',
+      '| Property | Count | Type | Rule or description |',
+      '|---|---|---|---|',
     ];
 
     for (const prop of shape.properties) {
-      const meta = PROPERTY_METADATA[prop.path] || {
-        name: prop.path.replace(/^.*:/, ''),
-        type: 'xsd:string',
-        description: '',
-      };
+      const meta = PROPERTY_METADATA[prop.path];
       const minCount = prop.minCount !== undefined ? prop.minCount : 0;
       const maxCount = prop.maxCount !== undefined ? prop.maxCount : '*';
-      const multiplicity = `${minCount}..${maxCount}`;
-      const msg = prop.message || `Property ${prop.path} is required`;
-      lines.push(`| **\`${prop.path}\`** | ${meta.name} | \`${multiplicity}\` | \`${meta.type}\` | ${classificationLabels(prop.path)} | ${msg} |`);
+      const type = meta ? `\`${tableCell(meta.type)}\`` : '-';
+      const note = prop.message || (meta && meta.description) || '';
+      lines.push(`| \`${prop.path}\` | \`${minCount}..${maxCount}\` | ${type} | ${tableCell(note)} |`);
     }
 
-    // Canonical JSON-LD Example
+    const fileName = `.robos/kgraphs/${example.packageId}/package.jsonld`;
+    const exampleIntro = example.origin === 'graph'
+      ? `This node comes from \`${fileName}\` in the RobOS repository. That graph holds sample data for a fictional company, so treat the values as illustrations.`
+      : 'The checked-in graph has no node of this class that passes the validator, so this is a placeholder built from the shape. It has every required property, with example values. It is not a node from the graph.';
+
     lines.push(
       '',
-      '---',
+      '## Example node',
       '',
-      '## Canonical OSLC JSON-LD Example',
+      exampleIntro,
       '',
+      '{% raw %}',
       '```json',
-      JSON.stringify(canonicalNode || this.generateSampleNode(shape, pkg), null, 2),
+      JSON.stringify(example.node, null, 2),
+      '```',
+      '{% endraw %}',
+      '',
+      '## Validate the example',
+      '',
+      'Save the example as `node.json` in the repository root, then run:',
+      '',
+      '```bash',
+      `node -e "const { SHACLValidator } = require('./packages/robos-graph/lib/shacl-validator'); console.log(new SHACLValidator().validate([require('./node.json')]).conforms)"`,
       '```',
       '',
-      '---',
-      '',
-      '## Programmatic SHACL Validation',
-      '',
-      '```javascript',
-      "const { SHACLValidator } = require('/usr/local/share/robos/robos-graph/lib/shacl-validator');",
-      "const { OSLCGraphParser, OSLC_CONTEXT } = require('/usr/local/share/robos/robos-graph/lib/oslc-parser');",
-      '',
-      'const validator = new SHACLValidator();',
-      'const result = validator.validateGraph(new OSLCGraphParser({',
-      '  "@context": OSLC_CONTEXT,',
-      '  "robos:nodes": [',
-      JSON.stringify(canonicalNode || this.generateSampleNode(shape, pkg), null, 4).split('\n').map(l => '    ' + l).join('\n'),
-      '  ],',
-      '}));',
-      '',
-      'console.log("Conforms:", result.conforms); // Expected: true',
-      '```'
+      'The command prints `true` when the node meets every rule for its types.',
+      ''
     );
-
-    return lines.join('\n');
-  }
-
-  generateMermaidForPackage(pkg) {
-    const lines = ['graph LR'];
-    lines.push(`    subgraph Pkg ["${pkg.displayTitle}"]`);
-    for (const shape of pkg.shapes) {
-      const name = shape.targetClass.replace(/^.*:/, '');
-      lines.push(`        ${name}["${name}<br/><code>${shape.targetClass}</code>"]`);
-    }
-    lines.push('    end');
-
-    // Add inter-shape edges
-    if (pkg.id === 'services') {
-      lines.push('    Microservice -->|robos:implementsContract| Contract');
-      lines.push('    Requirement -->|robos:validatedBy| Microservice');
-    } else if (pkg.id === 'core-platform') {
-      lines.push('    BuildSystem -->|robos:hasRemoteExecution| RemoteExecutionCluster["RemoteExecutionCluster<br/>(devops)"]');
-      lines.push('    Epic -->|robos:hasTask| Project');
-    } else if (pkg.id === 'organization') {
-      lines.push('    GitProjectOrganization -->|robos:hasRepository| Repos["Git Repositories"]');
-      lines.push('    GitProjectOrganization -->|robos:ownerTeam| Team');
-    } else if (pkg.id === 'applications') {
-      lines.push('    DesktopApp -->|robos:implementsContract| Contract["Contract (services)"]');
-      lines.push('    FrontEndApp -->|robos:implementsContract| Contract');
-      lines.push('    ConsoleApp -->|robos:implementsContract| Contract');
-    } else if (pkg.id === 'documentation') {
-      lines.push('    DocumentationPage -->|robos:hasFlowDiagram| FlowDiagram');
-      lines.push('    ArchitectureDecisionRecord -->|robos:hasFlowDiagram| FlowDiagram');
-      lines.push('    InteractiveWalkthrough -->|robos:hasFlowDiagram| FlowDiagram');
-    }
-
-    return lines.join('\n');
-  }
-
-  generateMermaidForSchema(shape, pkg) {
-    const name = shape.targetClass.replace(/^.*:/, '');
-    const lines = ['graph LR'];
-    lines.push(`    ThisNode["${name}<br/><code>${shape.targetClass}</code>"]:::primary`);
-    lines.push('    classDef primary fill:#16243b,stroke:#00e5ff,stroke-width:2.5px,color:#ffffff;');
-
-    for (const prop of shape.properties) {
-      if (prop.path.startsWith('robos:') && prop.path.match(/(Contract|Team|Project|RemoteExecution|Entity|Repository)/i)) {
-        const targetName = prop.path.replace('robos:', '').replace(/^has|^uses|^implements/, '');
-        lines.push(`    ThisNode -->|${prop.path}| ${targetName}["${targetName}"]`);
-      }
-    }
 
     return lines.join('\n');
   }
@@ -1369,7 +1335,7 @@ class SchemaDocGenerator {
       '@id': `urn:robos:${pkg.id}:${slug}-sample`,
       '@type': types,
       'dcterms:title': `Sample ${this.getEntityTitle(shape.targetClass)}`,
-      'dcterms:description': `Canonical reference instance for ${shape.targetClass}.`,
+      'dcterms:description': `Placeholder node for ${shape.targetClass}.`,
       'robos:package': pkg.id,
       'robos:namespace': pkg.namespace,
     };
@@ -1497,6 +1463,13 @@ class SchemaDocGenerator {
       else if (prop.path === 'robos:testsService') sample[prop.path] = 'urn:robos:service:billing-api';
     }
 
+    // Every required property gets a value, so the placeholder passes the validator.
+    for (const prop of shape.properties) {
+      if (prop.minCount >= 1 && sample[prop.path] === undefined) {
+        sample[prop.path] = `<${prop.path.replace(/^.*:/, '')}>`;
+      }
+    }
+
     if (shape.schemaOrgType) {
       sample['robos:schemaOrgType'] = shape.schemaOrgType;
     }
@@ -1511,4 +1484,12 @@ class SchemaDocGenerator {
   }
 }
 
-module.exports = { SchemaDocGenerator, PROPERTY_METADATA, PACKAGE_DISPLAY_TITLES, ENTITY_OVERRIDES };
+module.exports = {
+  SchemaDocGenerator,
+  PROPERTY_METADATA,
+  PACKAGE_DISPLAY_TITLES,
+  ENTITY_OVERRIDES,
+  EXTRA_DOC_PACKAGES,
+  SHAPE_PACKAGE_OVERRIDES,
+  yamlValue,
+};

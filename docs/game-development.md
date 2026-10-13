@@ -12,6 +12,13 @@ nav_order: 4
 What RobOS contains for games today: two Godot projects you can run and read, editor apps for their content, graph packages and shapes for game projects, and six Task Planner templates. The App Wizard does not scaffold a game project yet.
 {: .fs-6 }
 
+<details open markdown="block">
+  <summary>On this page</summary>
+  {: .text-delta }
+1. TOC
+{:toc}
+</details>
+
 ## Games in this repository
 
 Both are Godot 4.3 projects (`config/features` in each `project.godot` lists 4.3 and the GL Compatibility renderer).

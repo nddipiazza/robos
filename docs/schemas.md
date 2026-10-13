@@ -201,7 +201,7 @@ The command prints `true` and an empty list when the node meets every rule for i
 
 ## Ontology file
 
-[`ontology.jsonld`]({{ '/schemas/ontology.jsonld' | relative_url }}) lists classes with their Schema.org parent class and shape id. The same file is kept at `.robos/ontology.jsonld`. `node scripts/sync-classification-ontology.js` updates both. This generator does not, so the ontology can lag behind the shapes listed here.
+[`ontology.jsonld`]({{ '/schemas/ontology.jsonld' | relative_url }}) lists classes with their Schema.org parent class and shape id. The same file is kept at `.robos/ontology.jsonld`. `node scripts/sync-classification-ontology.js` updates both; it stops with an error for any class that has no classification code. This generator does not touch the ontology, so the file can lag behind the shapes listed here.
 
 ## Regenerate these pages
 

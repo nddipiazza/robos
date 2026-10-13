@@ -10,7 +10,7 @@ body_class: home
   <div class="wrap h-hero-grid">
     <div class="h-hero-copy">
       <h1>Trust every line your <em>agents</em> write</h1>
-      <p class="h-lead">RobOS is a platform for working with coding agents. It combines a desktop suite of developer apps, a knowledge graph of your system, and a recorded run of every agent change, so you review evidence instead of a bare diff.</p>
+      <p class="h-lead">RobOS is a platform for working with coding agents. It combines a desktop suite of developer apps, a knowledge graph of your system, and a recorded run of every agent change, so the person approving a change sees the diff, captured evidence and a walkthrough, not a bare diff.</p>
       <div class="h-cta">
         <a class="h-btn h-btn-primary" data-dl-href data-win="https://github.com/nddipiazza/robos/releases/download/v0.0.7/RobOS-Installer-v0.0.7-win.exe" data-mac="https://github.com/nddipiazza/robos/releases/download/v0.0.7/RobOS-Installer-v0.0.7-mac.dmg" data-linux="https://github.com/nddipiazza/robos/releases/download/v0.0.7/RobOS-Installer-v0.0.7-linux.AppImage" href="{{ '/download/' | relative_url }}"><span data-dl-label>Download RobOS</span></a>
         <a class="h-btn" href="{{ '/docs/' | relative_url }}">Read the docs</a>
@@ -24,7 +24,7 @@ body_class: home
       <div><dt>Platforms</dt><dd>macOS, Linux, Windows</dd></div>
       <div><dt>Desktop apps</dt><dd><a href="{{ '/apps/' | relative_url }}">{{ real_apps.size }}</a> in {{ site.data.app_categories.size }} categories</dd></div>
       <div><dt>Built with</dt><dd>Electron and plain JavaScript</dd></div>
-      <div><dt>Agents routed</dt><dd>Claude Code, Codex, Gemini CLI, Antigravity, Copilot, Hermes, Oh My Pi</dd></div>
+      <div><dt>Agents run</dt><dd>Claude Code, Codex, GitHub Copilot CLI</dd></div>
     </dl>
   </div>
 </section>
@@ -86,38 +86,38 @@ body_class: home
     <div class="h-head">
       <p class="h-label">What it does</p>
       <h2>Review agent work with the evidence in front of you</h2>
-      <p class="h-sub">Agents do the background work: branching, editing, running tests. RobOS records what they did and checks it against a model of your system, so the person approving the change can see what happened.</p>
+      <p class="h-sub">Agents do the background work: branching, editing, running tests. RobOS puts the diff, the captured evidence and a walkthrough in front of the person approving the change.</p>
     </div>
     <ul class="h-rows">
       <li>
-        <h3>Video proof-of-work</h3>
-        <p>The agent runs your app in a virtual framebuffer and hands back a narrated 1080p recording of the change working.</p>
-        <code class="h-src">packages/robos-test/lib/lifecycle</code>
+        <h3>Recorded proof of work</h3>
+        <p>A demo script drives a RobOS app step by step while <code>ffmpeg</code> records the window as a 1080p WebM, with captions taken from the script. It runs headless in a Docker container.</p>
+        <code class="h-src">packages/robos-test</code>
       </li>
       <li>
         <h3>Knowledge graph</h3>
-        <p>Services, contracts, schemas and ownership are modeled as JSON-LD using OSLC, C4, Pact and schema.org vocabularies. Every agent reads the same source of truth.</p>
+        <p>Services, contracts, schemas and ownership are described as JSON-LD packages under <code>.robos/</code>, using OSLC, C4, Pact and schema.org vocabularies, and checked against SHACL shapes.</p>
         <code class="h-src">.robos/knowledge-graph.jsonld</code>
       </li>
       <li>
         <h3>Blast radius</h3>
-        <p>Diff the graph between <code>main</code> and a feature branch to see which services and contracts a change touches, before the code is written.</p>
-        <code class="h-src">packages/pr-review</code>
+        <p>From any node, list what depends on it. The CLI can also diff two graph documents and report the services and contracts affected. Branch diffs use in-memory sample branches today, not your Git branches.</p>
+        <code class="h-src">packages/robos-graph</code>
       </li>
       <li>
-        <h3>Disposable sandboxes</h3>
-        <p>Throwaway Linux accounts on <code>tmpfs</code> with virtual X11 displays keep agent work off your machine and away from your credentials.</p>
-        <code class="h-src">packages/robos-profiled/tmpfs-manager.js</code>
+        <h3>Agent profiles</h3>
+        <p><code>robos-run-as</code> runs a command with <code>HOME</code> pointing at a private folder, a 2 GB <code>tmpfs</code> when the daemon runs as root. It keeps stray files out of your home folder. It is not a security boundary; use the Docker container for stronger isolation.</p>
+        <code class="h-src">packages/robos-profiled</code>
       </li>
       <li>
         <h3>Prompt security guard</h3>
-        <p>Prompts are scanned for secrets, PII and injection attempts before they leave the machine. Modes: redact, block, warn, audit-only, off. Every decision is logged.</p>
+        <p>Prompts are scanned for secrets, personal data and injection phrases before they reach an agent. Modes: redact (the default), block, warn, audit-only, off. The audit log records finding types and counts, not the secret.</p>
         <code class="h-src">packages/robos-lib/prompt-security.js</code>
       </li>
       <li>
-        <h3>One router, many agents</h3>
-        <p>A single harness protocol routes tasks to Claude Code, Codex, Gemini CLI, Copilot and others, so switching agents does not change your workflow.</p>
-        <code class="h-src">packages/robos-agent-client/harness-router.js</code>
+        <h3>One interface, several agent CLIs</h3>
+        <p>One session API runs prompts through Claude Code, Codex or the GitHub Copilot CLI. Other harnesses are listed, but the embedded router does not run them yet.</p>
+        <code class="h-src">packages/robos-agent-client</code>
       </li>
     </ul>
   </div>
@@ -133,7 +133,7 @@ body_class: home
     <div class="h-ex-grid">
       <article class="h-ex">
         <h3>It keeps one written description of your system</h3>
-        <p class="h-ex-says">Every app, service and team is written down once, as data: <b>what it is</b>, <b>what it is built with</b>, <b>who owns it</b> and <b>which project it belongs to</b>. Agents read this instead of guessing, so they all start from the same facts. Below is one app, the Voice Prompt Agent.</p>
+        <p class="h-ex-says">Every app, service and team is written down once, as data: <b>what it is</b>, <b>what it is built with</b>, <b>who owns it</b> and <b>which project it belongs to</b>. Apps and agents read this instead of each keeping their own notes. Below is one app, the Voice Prompt Agent.</p>
         <figure class="h-code">
           <figcaption><b>The real file</b><span>.robos/kgraphs/applications/package.jsonld, trimmed</span></figcaption>
 <pre><code>{
@@ -183,7 +183,7 @@ body_class: home
     <div class="h-head">
       <p class="h-label">Review</p>
       <h2>Read the diff, check the evidence, then approve</h2>
-      <p class="h-sub">Code Review Theater is where the owner of a change reviews it. You can also open the same branch in IntelliJ IDEA or VS Code with full symbol navigation and local tests.</p>
+      <p class="h-sub">Code Review Theater is where the owner of a change reviews it: the diff, captured evidence and a walkthrough. From a review you can open files in VS Code or IntelliJ IDEA.</p>
     </div>
     <div class="h-shots">
       <figure>
