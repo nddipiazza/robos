@@ -122,9 +122,14 @@
           <span class="label">Block</span>
         </button>
 
-        <button class="tool-btn" data-tool="stairs" title="Place heroes' starting spiral staircase">
+        <button class="tool-btn" data-tool="start" title="Place heroes' starting entrance / staircase (can be on border or corridor)">
           <span class="icon">🪜</span>
-          <span class="label">Stairs</span>
+          <span class="label">Start</span>
+        </button>
+
+        <button class="tool-btn" data-tool="exit" title="Place quest exit staircase / escape tile (can be on border or corridor)">
+          <span class="icon">🏁</span>
+          <span class="label">Exit</span>
         </button>
 
         <button class="tool-btn" data-tool="note" title="Place story trigger / room encounter notes">
@@ -231,6 +236,41 @@
               <label for="input-note-marker">Marker:</label>
               <input type="text" id="input-note-marker" class="text-input" value="Note A" style="width:70px;">
             </div>
+          </div>
+
+          <!-- Start tile suboptions -->
+          <div id="subopts-start" class="subopts-group" style="display:none;">
+            <p style="font-size:11px; color:#94a3b8; line-height:1.4;">
+              Click any tile to place the heroes' starting entrance / staircase.
+            </p>
+            <div class="info-tag" style="margin-top:4px;">
+              📍 Position: <strong id="subopts-start-pos">[0, 1]</strong>
+            </div>
+            <div id="subopts-start-border-badge" class="badge" style="margin-top:4px; display:inline-block; font-size:10px;">
+              Border Tile (Outside Entrance)
+            </div>
+            <p style="font-size:10px; color:#64748b; margin-top:6px; font-style:italic;">
+              Note: Border tiles are normally non-walkable, but the start position can exist there.
+            </p>
+          </div>
+
+          <!-- Exit tile suboptions -->
+          <div id="subopts-exit" class="subopts-group" style="display:none;">
+            <p style="font-size:11px; color:#94a3b8; line-height:1.4;">
+              Click any tile to place the quest exit / escape staircase.
+            </p>
+            <div class="info-tag" style="margin-top:4px;">
+              📍 Position: <strong id="subopts-exit-pos">None</strong>
+            </div>
+            <div id="subopts-exit-border-badge" class="badge" style="margin-top:4px; display:none; font-size:10px; color:#34d399; border-color:#059669;">
+              Border Tile (Outside Exit)
+            </div>
+            <p style="font-size:10px; color:#64748b; margin-top:6px; font-style:italic;">
+              Note: Border tiles are normally non-walkable, but the exit position can exist there.
+            </p>
+            <button id="btn-clear-exit" class="btn btn-sm btn-secondary" style="margin-top:8px;">
+              Clear Exit Tile
+            </button>
           </div>
         </div>
       </nav>

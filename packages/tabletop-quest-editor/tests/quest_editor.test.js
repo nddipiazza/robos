@@ -22,6 +22,10 @@ function tileToWorld(col, row, offsetX, offsetY, tileSize) {
   };
 }
 
+function isBorderTile(col, row, cols, rows) {
+  return col === 0 || col === cols - 1 || row === 0 || row === rows - 1;
+}
+
 function detectDoorEdge(wx, wy, offsetX, offsetY, tileSize, cols, rows, rooms) {
   const tile = worldToTile(wx, wy, offsetX, offsetY, tileSize, cols, rows);
   if (!tile) return null;
@@ -375,3 +379,73 @@ test('Undo/Redo State Machine: pushes snapshots and accurately restores previous
   quest = JSON.parse(redoStack.pop());
   assert.equal(quest.monsters.length, 1);
 });
+
+// -------------------------------------------------------------
+// Test 7: Start and Exit Tile Placement on Border Tiles
+// -------------------------------------------------------------
+test('Start & Exit Tiles: can be placed on border tiles and serialized to cartridge', () => {
+  const cols = 26;
+  const rows = 19;
+
+  // Check border classification
+  assert.equal(isBorderTile(0, 1, cols, rows), true, '[0, 1] is a West border tile');
+  assert.equal(isBorderTile(25, 10, cols, rows), true, '[25, 10] is an East border tile');
+  assert.equal(isBorderTile(12, 0, cols, rows), true, '[12, 0] is a North border tile');
+  assert.equal(isBorderTile(12, 18, cols, rows), true, '[12, 18] is a South border tile');
+  assert.equal(isBorderTile(5, 5, cols, rows), false, '[5, 5] is an interior tile');
+
+  // Simulate placing start on border tile and exit on opposite border tile
+  const quest = {
+    title: 'Trial of the Border Escape',
+    slug: 'trial-border-escape',
+    startingStair: [0, 1], // Border start
+    exitTile: [25, 10],    // Border exit
+    wanderingMonster: 'orc',
+    doors: [],
+    monsters: [],
+    furniture: [],
+    traps: [],
+    wallBlocks: [],
+    storyTriggers: []
+  };
+
+  assert.ok(isBorderTile(quest.startingStair[0], quest.startingStair[1], cols, rows));
+  assert.ok(isBorderTile(quest.exitTile[0], quest.exitTile[1], cols, rows));
+
+  // Build cartridge payload
+  const cartridge = {
+    cartridgeVersion: '2.0.0',
+    header: {
+      title: quest.title,
+      startingMap: quest.slug,
+      startingPosition: quest.startingStair,
+      exitPosition: quest.exitTile
+    },
+    maps: {
+      [quest.slug]: {
+        id: quest.slug,
+        title: quest.title,
+        startingStair: quest.startingStair,
+        startingPosition: quest.startingStair,
+        exitTile: quest.exitTile,
+        exitStair: quest.exitTile
+      }
+    }
+  };
+
+  // Assert cartridge serialization preserves border start and exit tiles
+  assert.deepEqual(cartridge.header.startingPosition, [0, 1]);
+  assert.deepEqual(cartridge.maps['trial-border-escape'].startingStair, [0, 1]);
+  assert.deepEqual(cartridge.maps['trial-border-escape'].exitTile, [25, 10]);
+  assert.deepEqual(cartridge.maps['trial-border-escape'].exitStair, [25, 10]);
+
+  // Verify deserialization into new editor state
+  const mapData = cartridge.maps['trial-border-escape'];
+  const restoredQuest = {
+    startingStair: mapData.startingStair || [0, 1],
+    exitTile: mapData.exitTile || null
+  };
+  assert.deepEqual(restoredQuest.startingStair, [0, 1]);
+  assert.deepEqual(restoredQuest.exitTile, [25, 10]);
+});
+

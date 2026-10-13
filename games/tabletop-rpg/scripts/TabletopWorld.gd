@@ -55,6 +55,7 @@ var _furniture_by_tile: Dictionary = {}
 var grid_cols: int = GRID_COLS
 var grid_rows: int = GRID_ROWS
 var starting_stair: Vector2i = Vector2i(1, 1)
+var exit_stair: Vector2i = Vector2i(-1, -1)
 var tile_size: float = TILE_SIZE
 var board_offset: Vector2 = BOARD_OFFSET
 var hovered_tile: Vector2i = Vector2i(-1, -1)
@@ -2740,8 +2741,14 @@ func _load_active_cartridge(force_fresh: bool = false) -> void:
 	if bg_img != "" and ResourceLoader.exists(bg_img):
 		board_sprite.texture = load(bg_img)
 
-	var stair = map_data.get("startingStair", [0, 1])
+	var stair = map_data.get("startingStair", map_data.get("startingPosition", [0, 1]))
 	starting_stair = Vector2i(stair[0], stair[1])
+
+	var e_stair = map_data.get("exitTile", map_data.get("exitStair", null))
+	if e_stair != null and e_stair is Array and e_stair.size() >= 2:
+		exit_stair = Vector2i(e_stair[0], e_stair[1])
+	else:
+		exit_stair = Vector2i(-1, -1)
 
 	var cart_heroes = cart.get("heroes", {})
 	heroes.clear()
@@ -3067,7 +3074,8 @@ func is_tile_walkable(tile: Vector2i) -> bool:
 	if tile.x < 0 or tile.x >= grid_cols or tile.y < 0 or tile.y >= grid_rows:
 		return false
 	if is_border_tile(tile):
-		return false
+		if tile != starting_stair and tile != exit_stair:
+			return false
 	if tile == starting_stair:
 		return false
 	if is_tile_wall_blocked(tile):
@@ -3217,7 +3225,7 @@ func can_monster_fit_at(m: Dictionary, origin: Vector2i, exclude_monster_id: Str
 	for t in m_tiles:
 		if t.x < 0 or t.x >= grid_cols or t.y < 0 or t.y >= grid_rows:
 			return false
-		if is_border_tile(t) or t == starting_stair:
+		if is_border_tile(t) or t == starting_stair or t == exit_stair:
 			return false
 		if is_tile_wall_blocked(t) or is_tile_occupied_by_furniture(t):
 			return false
@@ -3449,6 +3457,8 @@ func update_party_vision() -> void:
 		vision_sources.append(starting_stair)
 
 	explored_tiles[starting_stair] = true
+	if exit_stair != Vector2i(-1, -1):
+		explored_tiles[exit_stair] = true
 
 	# Ensure all tiles in revealed rooms are permanently explored
 	for r_id in revealed_rooms:
@@ -3644,8 +3654,8 @@ func get_reachable_walk_tiles() -> Array[Vector2i]:
 			var nxt = cur + d
 			if nxt.x < 0 or nxt.x >= grid_cols or nxt.y < 0 or nxt.y >= grid_rows:
 				continue
-			# Rule: Edge / border tiles are strictly non-walkable
-			if is_border_tile(nxt):
+			# Rule: Edge / border tiles are strictly non-walkable UNLESS it is the exit_stair
+			if is_border_tile(nxt) and nxt != exit_stair:
 				continue
 			# Rule: Starting stair tile cannot be stepped back onto
 			if nxt == starting_stair:
@@ -3679,13 +3689,15 @@ func get_reachable_walk_tiles() -> Array[Vector2i]:
 	# Filter destination tiles that the hero can end their movement on:
 	# Cannot end on the start pos
 	# Cannot end on starting stair
-	# Cannot end on edge / border tiles
+	# Cannot end on edge / border tiles (unless it is exit_stair)
 	# Cannot end on another hero (Rule: HeroQuest strictly forbids sharing squares)
 	# Cannot end on monster
 	# Cannot end on furniture
 	# Cannot end on wall block
 	for tile in min_cost.keys():
-		if tile == start_pos or tile == starting_stair or is_border_tile(tile):
+		if tile == start_pos or tile == starting_stair:
+			continue
+		if is_border_tile(tile) and tile != exit_stair:
 			continue
 		if is_tile_occupied_by_hero(tile, active_hero_idx):
 			continue
@@ -6025,7 +6037,10 @@ func get_quest_objectives() -> Array[Dictionary]:
 		party_surviving = has_living_heroes
 	elif is_boss_dead and has_living_heroes:
 		var hero_at_stairs = living_heroes.any(func(h):
-			return bool(h.get("has_departed_start", false)) and _to_grid_pos(h.get("grid_pos")) == starting_stair
+			var pos = _to_grid_pos(h.get("grid_pos"))
+			if exit_stair != Vector2i(-1, -1):
+				return pos == exit_stair or (bool(h.get("has_departed_start", false)) and pos == starting_stair)
+			return bool(h.get("has_departed_start", false)) and pos == starting_stair
 		)
 		if hero_at_stairs or not any_monster_alive:
 			party_surviving = true
@@ -7840,8 +7855,8 @@ func find_path(start: Vector2i, goal: Vector2i, moving_hero_idx: int = -1) -> Ar
 	# Rule: Cannot target starting_stair (starting tile cannot be stepped back onto)
 	if goal == starting_stair:
 		return []
-	# Rule: Edge / border tiles of the map are strictly non-walkable
-	if is_border_tile(goal):
+	# Rule: Edge / border tiles of the map are strictly non-walkable UNLESS goal == exit_stair
+	if is_border_tile(goal) and goal != exit_stair:
 		return []
 	# Rule 1: No sharing squares! Characters cannot finish their turn on a square occupied by another model.
 	if is_tile_occupied(goal, moving_hero_idx):
@@ -7873,8 +7888,8 @@ func find_path(start: Vector2i, goal: Vector2i, moving_hero_idx: int = -1) -> Ar
 			var nxt = cur + d
 			if nxt.x < 0 or nxt.x >= grid_cols or nxt.y < 0 or nxt.y >= grid_rows:
 				continue
-			# Rule: Edge / border tiles of the map are strictly non-walkable
-			if is_border_tile(nxt):
+			# Rule: Edge / border tiles of the map are strictly non-walkable UNLESS nxt == exit_stair
+			if is_border_tile(nxt) and nxt != exit_stair:
 				continue
 			# Rule: Starting stair tile cannot be stepped back onto
 			if nxt == starting_stair:
@@ -17156,6 +17171,8 @@ func get_telemetry_state() -> Dictionary:
 			"tooltip": btn_map_end_turn.tooltip_text if btn_map_end_turn else ""
 		},
 		"startingStair": [starting_stair.x, starting_stair.y],
+		"exitStair": [exit_stair.x, exit_stair.y] if exit_stair != Vector2i(-1, -1) else null,
+		"exitTile": [exit_stair.x, exit_stair.y] if exit_stair != Vector2i(-1, -1) else null,
 		"gameMenuVisible": is_game_menu_open(),
 		"isGameMenuOpen": is_game_menu_open(),
 		"questObjectiveModalOpen": is_quest_objective_open(),
@@ -19215,6 +19232,27 @@ func _draw_board(canvas: CanvasItem) -> void:
 		canvas.draw_arc(stair_rect.get_center(), tile_size * 0.20, 0, TAU, 16, Color(0.55, 0.68, 0.82, 0.9), 1.5)
 		var st_w = ThemeDB.fallback_font.get_string_size("STAIR", HORIZONTAL_ALIGNMENT_CENTER, -1, 8).x
 		canvas.draw_string(ThemeDB.fallback_font, Vector2(stair_rect.get_center().x - st_w * 0.5, stair_rect.get_center().y + 3), "STAIR", HORIZONTAL_ALIGNMENT_CENTER, -1, 8, Color(0.85, 0.9, 1.0, 0.85))
+
+	# Draw Exit Staircase Tile (if present)
+	if exit_stair != Vector2i(-1, -1):
+		var exit_rect = Rect2(board_offset + Vector2(exit_stair.x * tile_size + 2, exit_stair.y * tile_size + 2), Vector2(tile_size - 4, tile_size - 4))
+		var exit_tex = get_tile_texture("stairs")
+		if exit_tex:
+			canvas.draw_rect(Rect2(exit_rect.position + Vector2(2, 2), exit_rect.size), Color(0.0, 0.0, 0.0, 0.5))
+			canvas.draw_texture_rect(exit_tex, exit_rect, false)
+			canvas.draw_rect(exit_rect, Color(0.20, 0.85, 0.55, 0.9), false, 1.5)
+			var ex_w = ThemeDB.fallback_font.get_string_size("EXIT", HORIZONTAL_ALIGNMENT_CENTER, -1, 8).x
+			var ex_b = Rect2(exit_rect.get_center().x - ex_w * 0.5 - 3, exit_rect.get_center().y - 4, ex_w + 6, 12)
+			canvas.draw_rect(ex_b, Color(0.06, 0.20, 0.14, 0.85))
+			canvas.draw_rect(ex_b, Color(0.20, 0.85, 0.55, 0.8), false, 1.0)
+			canvas.draw_string(ThemeDB.fallback_font, Vector2(exit_rect.get_center().x - ex_w * 0.5, exit_rect.get_center().y + 5), "EXIT", HORIZONTAL_ALIGNMENT_CENTER, -1, 8, Color(0.65, 1.0, 0.80, 0.95))
+		else:
+			canvas.draw_rect(exit_rect, Color(0.08, 0.24, 0.16, 0.95))
+			canvas.draw_rect(exit_rect, Color(0.20, 0.85, 0.55, 1.0), false, 1.5)
+			canvas.draw_arc(exit_rect.get_center(), tile_size * 0.36, 0, TAU, 24, Color(0.18, 0.65, 0.42, 0.8), 1.5)
+			canvas.draw_arc(exit_rect.get_center(), tile_size * 0.20, 0, TAU, 16, Color(0.35, 0.88, 0.60, 0.9), 1.5)
+			var ex_w = ThemeDB.fallback_font.get_string_size("EXIT", HORIZONTAL_ALIGNMENT_CENTER, -1, 8).x
+			canvas.draw_string(ThemeDB.fallback_font, Vector2(exit_rect.get_center().x - ex_w * 0.5, exit_rect.get_center().y + 3), "EXIT", HORIZONTAL_ALIGNMENT_CENTER, -1, 8, Color(0.65, 1.0, 0.80, 0.85))
 
 	# Draw Movement Trail (Green line from where hero or monster came from with moves remaining in middle)
 	var is_enemy_moving = (is_enemy_turn_waiting or active_enemy_turn_monster_id != "") and (enemy_turn_stage in ["moving", "pause_after_move", "acting", "waiting_for_action"])
