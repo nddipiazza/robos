@@ -55,7 +55,9 @@ var _furniture_by_tile: Dictionary = {}
 var grid_cols: int = GRID_COLS
 var grid_rows: int = GRID_ROWS
 var starting_stair: Vector2i = Vector2i(1, 1)
+var starting_stair_type: String = "stairs_up_1x1"
 var exit_stair: Vector2i = Vector2i(-1, -1)
+var exit_stair_type: String = "stairs_down_1x1"
 var tile_size: float = TILE_SIZE
 var board_offset: Vector2 = BOARD_OFFSET
 var hovered_tile: Vector2i = Vector2i(-1, -1)
@@ -1459,7 +1461,17 @@ func _load_furniture_textures() -> void:
 		"stairs": "res://assets/tiles/stairs.png",
 		"spiral_stairs": "res://assets/tiles/stairs.png",
 		"spiral-stairs": "res://assets/tiles/stairs.png",
-		"stair": "res://assets/tiles/stairs.png"
+		"stair": "res://assets/tiles/stairs.png",
+		"stairs_up": "res://assets/tiles/stairs_up_1x1.png",
+		"stairs_down": "res://assets/tiles/stairs_down_1x1.png",
+		"stairs_up_1x1": "res://assets/tiles/stairs_up_1x1.png",
+		"stairs_down_1x1": "res://assets/tiles/stairs_down_1x1.png",
+		"stairs_up_2x2": "res://assets/tiles/stairs_up_2x2.png",
+		"stairs_down_2x2": "res://assets/tiles/stairs_down_2x2.png",
+		"stairs-up-1x1": "res://assets/tiles/stairs_up_1x1.png",
+		"stairs-down-1x1": "res://assets/tiles/stairs_down_1x1.png",
+		"stairs-up-2x2": "res://assets/tiles/stairs_up_2x2.png",
+		"stairs-down-2x2": "res://assets/tiles/stairs_down_2x2.png"
 	}
 	for k in furn_map:
 		if not furniture_textures.has(k) or furniture_textures[k] == null:
@@ -1473,6 +1485,16 @@ func _load_tile_textures() -> void:
 		"stairs": "res://assets/tiles/stairs.png",
 		"stair": "res://assets/tiles/stairs.png",
 		"starting_stairs": "res://assets/tiles/stairs.png",
+		"stairs_up": "res://assets/tiles/stairs_up_1x1.png",
+		"stairs_down": "res://assets/tiles/stairs_down_1x1.png",
+		"stairs_up_1x1": "res://assets/tiles/stairs_up_1x1.png",
+		"stairs_down_1x1": "res://assets/tiles/stairs_down_1x1.png",
+		"stairs_up_2x2": "res://assets/tiles/stairs_up_2x2.png",
+		"stairs_down_2x2": "res://assets/tiles/stairs_down_2x2.png",
+		"stairs-up-1x1": "res://assets/tiles/stairs_up_1x1.png",
+		"stairs-down-1x1": "res://assets/tiles/stairs_down_1x1.png",
+		"stairs-up-2x2": "res://assets/tiles/stairs_up_2x2.png",
+		"stairs-down-2x2": "res://assets/tiles/stairs_down_2x2.png",
 		"pit": "res://assets/tiles/trap_pit.png",
 		"trap_pit": "res://assets/tiles/trap_pit.png",
 		"spear": "res://assets/tiles/trap_spear.png",
@@ -2747,10 +2769,12 @@ func _load_active_cartridge(force_fresh: bool = false) -> void:
 
 	var stair = map_data.get("startingStair", map_data.get("startingPosition", [0, 1]))
 	starting_stair = Vector2i(stair[0], stair[1])
+	starting_stair_type = str(map_data.get("startingStairType", cart.get("startingStairType", "stairs_up_1x1")))
 
 	var e_stair = map_data.get("exitTile", map_data.get("exitStair", null))
 	if e_stair != null and e_stair is Array and e_stair.size() >= 2:
 		exit_stair = Vector2i(e_stair[0], e_stair[1])
+		exit_stair_type = str(map_data.get("exitStairType", cart.get("exitStairType", "stairs_down_1x1")))
 	else:
 		exit_stair = Vector2i(-1, -1)
 
@@ -3002,6 +3026,8 @@ func _rebuild_spatial_caches() -> void:
 			fw = 2; fh = 3
 		elif (f_type in ["healing_hearth", "healing-hearth", "healing hearth", "hearth"]) and fw == 1 and fh == 1:
 			fw = 1; fh = 3
+		elif (f_type in ["stairs_up_2x2", "stairs_down_2x2", "stairs-up-2x2", "stairs-down-2x2"]) and fw == 1 and fh == 1:
+			fw = 2; fh = 2
 		for bx in range(fx, fx + fw):
 			for by in range(fy, fy + fh):
 				_furniture_by_tile[Vector2i(bx, by)] = furn
@@ -3009,6 +3035,46 @@ func _rebuild_spatial_caches() -> void:
 	show_defeated_monsters = false
 	if enemies_scroll:
 		enemies_scroll.scroll_vertical = 0
+
+func get_starting_stair_rect_tiles() -> Rect2i:
+	var w = 2 if "2x2" in starting_stair_type else 1
+	var h = 2 if "2x2" in starting_stair_type else 1
+	for f in furniture:
+		var f_type = str(f.get("type", "")).to_lower()
+		if "stair" in f_type:
+			var fx = int(f.get("x", f.get("position", [0, 0])[0]))
+			var fy = int(f.get("y", f.get("position", [0, 0])[1]))
+			var fw = int(f.get("width", 2 if "2x2" in f_type else 1))
+			var fh = int(f.get("height", 2 if "2x2" in f_type else 1))
+			if starting_stair.x >= fx and starting_stair.x < fx + fw and starting_stair.y >= fy and starting_stair.y < fy + fh:
+				return Rect2i(fx, fy, fw, fh)
+	return Rect2i(starting_stair.x, starting_stair.y, w, h)
+
+func get_exit_stair_rect_tiles() -> Rect2i:
+	if exit_stair == Vector2i(-1, -1):
+		return Rect2i(-1, -1, 0, 0)
+	var w = 2 if "2x2" in exit_stair_type else 1
+	var h = 2 if "2x2" in exit_stair_type else 1
+	for f in furniture:
+		var f_type = str(f.get("type", "")).to_lower()
+		if "stair" in f_type:
+			var fx = int(f.get("x", f.get("position", [0, 0])[0]))
+			var fy = int(f.get("y", f.get("position", [0, 0])[1]))
+			var fw = int(f.get("width", 2 if "2x2" in f_type else 1))
+			var fh = int(f.get("height", 2 if "2x2" in f_type else 1))
+			if exit_stair.x >= fx and exit_stair.x < fx + fw and exit_stair.y >= fy and exit_stair.y < fy + fh:
+				return Rect2i(fx, fy, fw, fh)
+	return Rect2i(exit_stair.x, exit_stair.y, w, h)
+
+func is_starting_stair_tile(tile: Vector2i) -> bool:
+	var r = get_starting_stair_rect_tiles()
+	return tile.x >= r.position.x and tile.x < r.position.x + r.size.x and tile.y >= r.position.y and tile.y < r.position.y + r.size.y
+
+func is_exit_stair_tile(tile: Vector2i) -> bool:
+	if exit_stair == Vector2i(-1, -1):
+		return false
+	var r = get_exit_stair_rect_tiles()
+	return tile.x >= r.position.x and tile.x < r.position.x + r.size.x and tile.y >= r.position.y and tile.y < r.position.y + r.size.y
 
 func get_furniture_at(tile: Vector2i) -> Dictionary:
 	return _furniture_by_tile.get(tile, {})
@@ -3018,9 +3084,9 @@ func is_tile_occupied_by_furniture(tile: Vector2i) -> bool:
 		return false
 	var furn = _furniture_by_tile[tile]
 	var f_type = str(furn.get("type", "")).to_lower()
-	if f_type in ["stairs", "spiral_stairs", "spiral-stairs", "stair"]:
+	if "stair" in f_type:
 		return false
-	if tile == exit_stair:
+	if is_exit_stair_tile(tile) or is_starting_stair_tile(tile):
 		return false
 	return true
 
@@ -3075,7 +3141,7 @@ func is_tile_wall_blocked(tile: Vector2i) -> bool:
 	return _blocked_wall_tiles.has(tile)
 
 func is_border_tile(tile: Vector2i) -> bool:
-	if tile == exit_stair or tile == starting_stair:
+	if is_exit_stair_tile(tile) or is_starting_stair_tile(tile):
 		if tile.x < 0 or tile.x >= grid_cols or tile.y < 0 or tile.y >= grid_rows:
 			return true
 	if grid_cols == 26 and grid_rows == 19:
@@ -3086,14 +3152,14 @@ func is_edge_tile(tile: Vector2i) -> bool:
 	return is_border_tile(tile)
 
 func is_tile_walkable(tile: Vector2i) -> bool:
-	if tile == exit_stair:
+	if is_exit_stair_tile(tile):
 		return true
-	if tile == starting_stair:
+	if is_starting_stair_tile(tile):
 		return false
 	if tile.x < 0 or tile.x >= grid_cols or tile.y < 0 or tile.y >= grid_rows:
 		return false
 	if is_border_tile(tile):
-		if tile != starting_stair and tile != exit_stair:
+		if not is_starting_stair_tile(tile) and not is_exit_stair_tile(tile):
 			return false
 	if is_tile_wall_blocked(tile):
 		return false
@@ -3670,13 +3736,13 @@ func get_reachable_walk_tiles() -> Array[Vector2i]:
 		for d in dirs:
 			var nxt = cur + d
 			if nxt.x < 0 or nxt.x >= grid_cols or nxt.y < 0 or nxt.y >= grid_rows:
-				if nxt != exit_stair:
+				if not is_exit_stair_tile(nxt):
 					continue
 			# Rule: Edge / border tiles are strictly non-walkable UNLESS it is the exit_stair
-			if is_border_tile(nxt) and nxt != exit_stair:
+			if is_border_tile(nxt) and not is_exit_stair_tile(nxt):
 				continue
 			# Rule: Starting stair tile cannot be stepped back onto
-			if nxt == starting_stair:
+			if is_starting_stair_tile(nxt):
 				continue
 
 			# Must be within the revealed map
@@ -3713,9 +3779,9 @@ func get_reachable_walk_tiles() -> Array[Vector2i]:
 	# Cannot end on furniture
 	# Cannot end on wall block
 	for tile in min_cost.keys():
-		if tile == start_pos or tile == starting_stair:
+		if tile == start_pos or is_starting_stair_tile(tile):
 			continue
-		if is_border_tile(tile) and tile != exit_stair:
+		if is_border_tile(tile) and not is_exit_stair_tile(tile):
 			continue
 		if is_tile_occupied_by_hero(tile, active_hero_idx):
 			continue
@@ -6057,8 +6123,8 @@ func get_quest_objectives() -> Array[Dictionary]:
 		var hero_at_stairs = living_heroes.any(func(h):
 			var pos = _to_grid_pos(h.get("grid_pos"))
 			if exit_stair != Vector2i(-1, -1):
-				return pos == exit_stair or (bool(h.get("has_departed_start", false)) and pos == starting_stair)
-			return bool(h.get("has_departed_start", false)) and pos == starting_stair
+				return is_exit_stair_tile(pos) or (bool(h.get("has_departed_start", false)) and is_starting_stair_tile(pos))
+			return bool(h.get("has_departed_start", false)) and is_starting_stair_tile(pos)
 		)
 		if hero_at_stairs or not any_monster_alive:
 			party_surviving = true
@@ -7871,10 +7937,10 @@ func find_path(start: Vector2i, goal: Vector2i, moving_hero_idx: int = -1) -> Ar
 	if start == goal:
 		return [start]
 	# Rule: Cannot target starting_stair (starting tile cannot be stepped back onto)
-	if goal == starting_stair:
+	if is_starting_stair_tile(goal):
 		return []
 	# Rule: Edge / border tiles of the map are strictly non-walkable UNLESS goal == exit_stair
-	if is_border_tile(goal) and goal != exit_stair:
+	if is_border_tile(goal) and not is_exit_stair_tile(goal):
 		return []
 	# Rule 1: No sharing squares! Characters cannot finish their turn on a square occupied by another model.
 	if is_tile_occupied(goal, moving_hero_idx):
@@ -7905,13 +7971,13 @@ func find_path(start: Vector2i, goal: Vector2i, moving_hero_idx: int = -1) -> Ar
 		for d in dirs:
 			var nxt = cur + d
 			if nxt.x < 0 or nxt.x >= grid_cols or nxt.y < 0 or nxt.y >= grid_rows:
-				if nxt != exit_stair:
+				if not is_exit_stair_tile(nxt):
 					continue
 			# Rule: Edge / border tiles of the map are strictly non-walkable UNLESS nxt == exit_stair
-			if is_border_tile(nxt) and nxt != exit_stair:
+			if is_border_tile(nxt) and not is_exit_stair_tile(nxt):
 				continue
 			# Rule: Starting stair tile cannot be stepped back onto
-			if nxt == starting_stair:
+			if is_starting_stair_tile(nxt):
 				continue
 			if came_from.has(nxt):
 				continue
@@ -17190,8 +17256,10 @@ func get_telemetry_state() -> Dictionary:
 			"tooltip": btn_map_end_turn.tooltip_text if btn_map_end_turn else ""
 		},
 		"startingStair": [starting_stair.x, starting_stair.y],
+		"startingStairType": starting_stair_type,
 		"exitStair": [exit_stair.x, exit_stair.y] if exit_stair != Vector2i(-1, -1) else null,
 		"exitTile": [exit_stair.x, exit_stair.y] if exit_stair != Vector2i(-1, -1) else null,
+		"exitStairType": exit_stair_type,
 		"gameMenuVisible": is_game_menu_open(),
 		"isGameMenuOpen": is_game_menu_open(),
 		"questObjectiveModalOpen": is_quest_objective_open(),
@@ -18978,6 +19046,8 @@ func _draw_board(canvas: CanvasItem) -> void:
 				w = 2; h = 3
 			elif (f_type in ["healing_hearth", "healing-hearth", "healing hearth", "hearth"]) and w == 1 and h == 1:
 				w = 1; h = 3
+			elif (f_type in ["stairs_up_2x2", "stairs_down_2x2", "stairs-up-2x2", "stairs-down-2x2"]) and w == 1 and h == 1:
+				w = 2; h = 2
 
 			var f_rect = Rect2(board_offset + Vector2(px * tile_size + 2, py * tile_size + 2), Vector2(w * tile_size - 4, h * tile_size - 4))
 			var label_text = ""
@@ -19232,8 +19302,22 @@ func _draw_board(canvas: CanvasItem) -> void:
 						canvas.draw_arc(screen_pos, tile_size * 0.46, 0, TAU, 16, Color(0.2, 0.8, 1.0, 0.85), 2.0)
 
 	# Draw Starting Staircase Tile (Entrance / Exit)
-	var stair_rect = Rect2(board_offset + Vector2(starting_stair.x * tile_size + 2, starting_stair.y * tile_size + 2), Vector2(tile_size - 4, tile_size - 4))
-	var st_tex = get_tile_texture("stairs")
+	var st_bounds = get_starting_stair_rect_tiles()
+	var stair_rect = Rect2(board_offset + Vector2(st_bounds.position.x * tile_size + 2, st_bounds.position.y * tile_size + 2), Vector2(st_bounds.size.x * tile_size - 4, st_bounds.size.y * tile_size - 4))
+	var st_tex_key = starting_stair_type
+	for f in furniture:
+		var f_type = str(f.get("type", "")).to_lower()
+		if "stair" in f_type:
+			var fx = int(f.get("x", f.get("position", [0, 0])[0]))
+			var fy = int(f.get("y", f.get("position", [0, 0])[1]))
+			var fw = int(f.get("width", 2 if "2x2" in f_type else 1))
+			var fh = int(f.get("height", 2 if "2x2" in f_type else 1))
+			if starting_stair.x >= fx and starting_stair.x < fx + fw and starting_stair.y >= fy and starting_stair.y < fy + fh:
+				st_tex_key = f_type
+				break
+	var st_tex = get_tile_texture(st_tex_key)
+	if st_tex == null:
+		st_tex = get_tile_texture("stairs")
 	if st_tex:
 		# Drop shadow and texture
 		canvas.draw_rect(Rect2(stair_rect.position + Vector2(2, 2), stair_rect.size), Color(0.0, 0.0, 0.0, 0.5))
@@ -19247,15 +19331,29 @@ func _draw_board(canvas: CanvasItem) -> void:
 	else:
 		canvas.draw_rect(stair_rect, Color(0.18, 0.22, 0.28, 0.95))
 		canvas.draw_rect(stair_rect, Color(0.45, 0.60, 0.75, 1.0), false, 1.5)
-		canvas.draw_arc(stair_rect.get_center(), tile_size * 0.36, 0, TAU, 24, Color(0.35, 0.45, 0.58, 0.8), 1.5)
-		canvas.draw_arc(stair_rect.get_center(), tile_size * 0.20, 0, TAU, 16, Color(0.55, 0.68, 0.82, 0.9), 1.5)
+		canvas.draw_arc(stair_rect.get_center(), min(st_bounds.size.x, st_bounds.size.y) * tile_size * 0.36, 0, TAU, 24, Color(0.35, 0.45, 0.58, 0.8), 1.5)
+		canvas.draw_arc(stair_rect.get_center(), min(st_bounds.size.x, st_bounds.size.y) * tile_size * 0.20, 0, TAU, 16, Color(0.55, 0.68, 0.82, 0.9), 1.5)
 		var st_w = ThemeDB.fallback_font.get_string_size("STAIR", HORIZONTAL_ALIGNMENT_CENTER, -1, 8).x
 		canvas.draw_string(ThemeDB.fallback_font, Vector2(stair_rect.get_center().x - st_w * 0.5, stair_rect.get_center().y + 3), "STAIR", HORIZONTAL_ALIGNMENT_CENTER, -1, 8, Color(0.85, 0.9, 1.0, 0.85))
 
 	# Draw Exit Staircase Tile (if present)
 	if exit_stair != Vector2i(-1, -1):
-		var exit_rect = Rect2(board_offset + Vector2(exit_stair.x * tile_size + 2, exit_stair.y * tile_size + 2), Vector2(tile_size - 4, tile_size - 4))
-		var exit_tex = get_tile_texture("stairs")
+		var ex_bounds = get_exit_stair_rect_tiles()
+		var exit_rect = Rect2(board_offset + Vector2(ex_bounds.position.x * tile_size + 2, ex_bounds.position.y * tile_size + 2), Vector2(ex_bounds.size.x * tile_size - 4, ex_bounds.size.y * tile_size - 4))
+		var ex_tex_key = exit_stair_type
+		for f in furniture:
+			var f_type = str(f.get("type", "")).to_lower()
+			if "stair" in f_type:
+				var fx = int(f.get("x", f.get("position", [0, 0])[0]))
+				var fy = int(f.get("y", f.get("position", [0, 0])[1]))
+				var fw = int(f.get("width", 2 if "2x2" in f_type else 1))
+				var fh = int(f.get("height", 2 if "2x2" in f_type else 1))
+				if exit_stair.x >= fx and exit_stair.x < fx + fw and exit_stair.y >= fy and exit_stair.y < fy + fh:
+					ex_tex_key = f_type
+					break
+		var exit_tex = get_tile_texture(ex_tex_key)
+		if exit_tex == null:
+			exit_tex = get_tile_texture("stairs")
 		if exit_tex:
 			canvas.draw_rect(Rect2(exit_rect.position + Vector2(2, 2), exit_rect.size), Color(0.0, 0.0, 0.0, 0.5))
 			canvas.draw_texture_rect(exit_tex, exit_rect, false)
@@ -19268,8 +19366,8 @@ func _draw_board(canvas: CanvasItem) -> void:
 		else:
 			canvas.draw_rect(exit_rect, Color(0.08, 0.24, 0.16, 0.95))
 			canvas.draw_rect(exit_rect, Color(0.20, 0.85, 0.55, 1.0), false, 1.5)
-			canvas.draw_arc(exit_rect.get_center(), tile_size * 0.36, 0, TAU, 24, Color(0.18, 0.65, 0.42, 0.8), 1.5)
-			canvas.draw_arc(exit_rect.get_center(), tile_size * 0.20, 0, TAU, 16, Color(0.35, 0.88, 0.60, 0.9), 1.5)
+			canvas.draw_arc(exit_rect.get_center(), min(ex_bounds.size.x, ex_bounds.size.y) * tile_size * 0.36, 0, TAU, 24, Color(0.18, 0.65, 0.42, 0.8), 1.5)
+			canvas.draw_arc(exit_rect.get_center(), min(ex_bounds.size.x, ex_bounds.size.y) * tile_size * 0.20, 0, TAU, 16, Color(0.35, 0.88, 0.60, 0.9), 1.5)
 			var ex_w = ThemeDB.fallback_font.get_string_size("EXIT", HORIZONTAL_ALIGNMENT_CENTER, -1, 8).x
 			canvas.draw_string(ThemeDB.fallback_font, Vector2(exit_rect.get_center().x - ex_w * 0.5, exit_rect.get_center().y + 3), "EXIT", HORIZONTAL_ALIGNMENT_CENTER, -1, 8, Color(0.65, 1.0, 0.80, 0.85))
 

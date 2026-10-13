@@ -20,7 +20,9 @@ const state = {
     goldBounty: 100,
     briefing: 'Mentor speaks: "The Emperor calls upon the kingdom\'s greatest champions..."',
     startingStair: [0, 1],
+    startingStairType: 'stairs_up_1x1',
     exitTile: null,
+    exitStairType: 'stairs_down_1x1',
     doors: [],
     monsters: [],
     furniture: [],
@@ -53,7 +55,9 @@ const state = {
     furnitureRotated: false, // false: normal, true: 90 deg rotated
     trapType: 'pit',
     wallBlockType: 'single',
-    noteMarker: 'Note A'
+    noteMarker: 'Note A',
+    startStairType: 'stairs_up_1x1',
+    exitStairType: 'stairs_down_1x1'
   },
 
   // Layer toggles
@@ -112,7 +116,11 @@ const FURNITURE_DEFS = {
   cupboard: { name: 'Cupboard', w: 2, h: 1, icon: '🚪' },
   torture_rack: { name: 'Torture Rack', w: 2, h: 1, icon: '⛓️' },
   fireplace: { name: 'Fireplace', w: 2, h: 1, icon: '🔥' },
-  stairs: { name: 'Spiral Staircase / Stairs', w: 1, h: 1, icon: '🪜' }
+  stairs_up_1x1: { name: 'Up Staircase (1×1)', w: 1, h: 1, icon: '🪜' },
+  stairs_down_1x1: { name: 'Down Staircase (1×1)', w: 1, h: 1, icon: '🪜' },
+  stairs_up_2x2: { name: 'Up Staircase (2×2)', w: 2, h: 2, icon: '🪜' },
+  stairs_down_2x2: { name: 'Down Staircase (2×2)', w: 2, h: 2, icon: '🪜' },
+  stairs: { name: 'Up Staircase (1×1)', w: 1, h: 1, icon: '🪜' }
 };
 
 // -------------------------------------------------------------
@@ -166,6 +174,8 @@ const dom = {
   suboptsExitPos: document.getElementById('subopts-exit-pos'),
   suboptsExitBorderBadge: document.getElementById('subopts-exit-border-badge'),
   btnClearExit: document.getElementById('btn-clear-exit'),
+  selectStartStairType: document.getElementById('select-start-stair-type'),
+  selectExitStairType: document.getElementById('select-exit-stair-type'),
 
   // Subtool inputs
   radioDoorTypes: document.querySelectorAll('input[name="door-type"]'),
@@ -451,7 +461,13 @@ async function loadCartridge(slugOrPath) {
       }
       state.quest.wanderingMonster = mapData.wanderingMonster || 'orc';
       state.quest.startingStair = mapData.startingStair || c.header?.startingPosition || [0, 1];
+      state.quest.startingStairType = mapData.startingStairType || 'stairs_up_1x1';
       state.quest.exitTile = mapData.exitTile || mapData.exitStair || null;
+      state.quest.exitStairType = mapData.exitStairType || 'stairs_down_1x1';
+      state.subtool.startStairType = state.quest.startingStairType;
+      state.subtool.exitStairType = state.quest.exitStairType;
+      if (dom.selectStartStairType) dom.selectStartStairType.value = state.quest.startingStairType;
+      if (dom.selectExitStairType) dom.selectExitStairType.value = state.quest.exitStairType;
       state.quest.doors = (mapData.doors || []).map((d, i) => ({
         id: d.id || `door-${i+1}`,
         from: d.from || [0, 0],
@@ -460,17 +476,22 @@ async function loadCartridge(slugOrPath) {
         is_secret: Boolean(d.is_secret),
         room: d.room || ''
       }));
-      state.quest.furniture = (mapData.furniture || []).map((f, i) => ({
-        id: f.id || `furn-${i+1}`,
-        name: f.name || f.type,
-        type: f.type || 'chest',
-        x: f.x || 0,
-        y: f.y || 0,
-        width: f.width || 1,
-        height: f.height || 1,
-        roomId: f.roomId || '',
-        treasure: f.treasure || ''
-      }));
+      state.quest.furniture = (mapData.furniture || []).map((f, i) => {
+        const rawType = f.type || 'chest';
+        const type = rawType === 'stairs' ? 'stairs_up_1x1' : rawType;
+        const def = FURNITURE_DEFS[type] || { w: 1, h: 1, name: type };
+        return {
+          id: f.id || `furn-${i+1}`,
+          name: f.name || def.name,
+          type: type,
+          x: f.x || 0,
+          y: f.y || 0,
+          width: f.width || def.w || 1,
+          height: f.height || def.h || 1,
+          roomId: f.roomId || '',
+          treasure: f.treasure || ''
+        };
+      });
       state.quest.wallBlocks = (mapData.wallBlocks || []).map((wb, i) => ({
         id: wb.id || `block-${i+1}`,
         type: wb.type || 'single',
@@ -648,8 +669,10 @@ function buildCartridgePayload() {
         wanderingMonster: q.wanderingMonster || 'orc',
         startingStair: q.startingStair || [0, 1],
         startingPosition: q.startingStair || [0, 1],
+        startingStairType: q.startingStairType || 'stairs_up_1x1',
         exitTile: q.exitTile || null,
         exitStair: q.exitTile || null,
+        exitStairType: q.exitStairType || 'stairs_down_1x1',
         activeRooms: (bm.rooms || []).map(r => r.id),
         rooms: bm.rooms || [],
         corridors: bm.corridors || [],
@@ -796,6 +819,12 @@ function preloadAssets() {
     { key: 'cupboard', path: 'assets/furniture/cupboard.png' },
     { key: 'torture_rack', path: 'assets/furniture/torture_rack.png' },
     { key: 'fireplace', path: 'assets/furniture/fireplace.png' },
+    { key: 'stairs_up_1x1', path: 'assets/tiles/stairs_up_1x1.png' },
+    { key: 'stairs_down_1x1', path: 'assets/tiles/stairs_down_1x1.png' },
+    { key: 'stairs_up_2x2', path: 'assets/tiles/stairs_up_2x2.png' },
+    { key: 'stairs_down_2x2', path: 'assets/tiles/stairs_down_2x2.png' },
+    { key: 'stairs_up', path: 'assets/tiles/stairs_up_1x1.png' },
+    { key: 'stairs_down', path: 'assets/tiles/stairs_down_1x1.png' },
     { key: 'stairs', path: 'assets/tiles/stairs.png' },
     { key: 'wall_block', path: 'assets/tiles/wall_block.png' },
     { key: 'trap_pit', path: 'assets/tiles/trap_pit.png' },
@@ -1143,7 +1172,10 @@ function render() {
       const pos = tileToWorld(f.x, f.y);
       const fw = (f.width || 1) * geom.tileSize;
       const fh = (f.height || 1) * geom.tileSize;
-      const furnImg = state.assetCache[f.type];
+      let furnImg = state.assetCache[f.type];
+      if (!furnImg && f.type.includes('stair')) {
+        furnImg = state.assetCache['stairs_up_1x1'] || state.assetCache['stairs'];
+      }
 
       if (furnImg) {
         ctx.drawImage(furnImg, pos.x, pos.y, fw, fh);
@@ -1171,34 +1203,56 @@ function render() {
   // 8. Starting Spiral Stairs & Quest Exit (Layer 2 - drawn over map pieces / stairs)
   if (state.quest.startingStair) {
     const [sc, sr] = state.quest.startingStair;
-    const spos = tileToWorld(sc, sr);
-    const stairsImg = state.assetCache['stairs'];
     const isBorder = isBorderTile(sc, sr);
+
+    // Check if starting stair is on a placed stairs furniture piece
+    const stairFurn = state.quest.furniture.find(f =>
+      f.type.includes('stair') &&
+      sc >= f.x && sc < f.x + (f.width || 1) &&
+      sr >= f.y && sr < f.y + (f.height || 1)
+    );
+
+    const spos = stairFurn ? tileToWorld(stairFurn.x, stairFurn.y) : tileToWorld(sc, sr);
+    const sw = (stairFurn ? (stairFurn.width || 1) : (state.quest.startingStairType?.includes('2x2') ? 2 : 1)) * geom.tileSize;
+    const sh = (stairFurn ? (stairFurn.height || 1) : (state.quest.startingStairType?.includes('2x2') ? 2 : 1)) * geom.tileSize;
 
     // Border tile indicator aura (highlights entrance from outside dungeon)
     if (isBorder) {
       ctx.save();
       ctx.fillStyle = 'rgba(14, 165, 233, 0.35)';
-      ctx.fillRect(spos.x - 3, spos.y - 3, geom.tileSize + 6, geom.tileSize + 6);
+      ctx.fillRect(spos.x - 3, spos.y - 3, sw + 6, sh + 6);
       ctx.strokeStyle = '#0284c7';
       ctx.lineWidth = 2.5;
       ctx.setLineDash([4, 2]);
-      ctx.strokeRect(spos.x - 3, spos.y - 3, geom.tileSize + 6, geom.tileSize + 6);
+      ctx.strokeRect(spos.x - 3, spos.y - 3, sw + 6, sh + 6);
       ctx.restore();
     }
 
-    if (stairsImg) {
-      ctx.drawImage(stairsImg, spos.x, spos.y, geom.tileSize, geom.tileSize);
-      ctx.save();
-      ctx.fillStyle = 'rgba(2, 132, 199, 0.35)';
-      ctx.fillRect(spos.x + 1, spos.y + 1, geom.tileSize - 2, geom.tileSize - 2);
-      ctx.restore();
+    if (!stairFurn) {
+      const stairKey = state.quest.startingStairType || 'stairs_up_1x1';
+      const stairsImg = state.assetCache[stairKey] || state.assetCache['stairs_up_1x1'] || state.assetCache['stairs'];
+      if (stairsImg) {
+        ctx.drawImage(stairsImg, spos.x, spos.y, sw, sh);
+        ctx.save();
+        ctx.fillStyle = 'rgba(2, 132, 199, 0.35)';
+        ctx.fillRect(spos.x + 1, spos.y + 1, sw - 2, sh - 2);
+        ctx.restore();
+      } else {
+        ctx.fillStyle = '#0284c7';
+        ctx.fillRect(spos.x + 2, spos.y + 2, sw - 4, sh - 4);
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(spos.x + 2, spos.y + 2, sw - 4, sh - 4);
+      }
     } else {
-      ctx.fillStyle = '#0284c7';
-      ctx.fillRect(spos.x + 2, spos.y + 2, geom.tileSize - 4, geom.tileSize - 4);
+      // Highlight existing stairs furniture that is the active start
+      ctx.save();
+      ctx.fillStyle = 'rgba(2, 132, 199, 0.28)';
+      ctx.fillRect(spos.x + 1, spos.y + 1, sw - 2, sh - 2);
       ctx.strokeStyle = '#38bdf8';
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(spos.x + 2, spos.y + 2, geom.tileSize - 4, geom.tileSize - 4);
+      ctx.lineWidth = 2.0;
+      ctx.strokeRect(spos.x + 1, spos.y + 1, sw - 2, sh - 2);
+      ctx.restore();
     }
 
     // Always draw clear 🪜 ladder / entrance icon in center with contrast backdrop
@@ -1206,62 +1260,85 @@ function render() {
     ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
     ctx.shadowBlur = 4;
     ctx.fillStyle = '#fff';
-    ctx.font = '16px sans-serif';
+    ctx.font = `${Math.round(16 * Math.min(sw, sh) / geom.tileSize)}px sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('🪜', spos.x + geom.tileSize / 2, spos.y + geom.tileSize / 2 - 4);
+    ctx.fillText('🪜', spos.x + sw / 2, spos.y + sh / 2 - 4);
     ctx.restore();
 
     // High-visibility START label pill
+    const pillW = Math.min(sw - 4, 46);
     ctx.save();
     ctx.fillStyle = 'rgba(12, 74, 110, 0.9)';
-    ctx.fillRect(spos.x + 2, spos.y + geom.tileSize - 13, geom.tileSize - 4, 11);
+    ctx.fillRect(spos.x + (sw - pillW) / 2, spos.y + sh - 13, pillW, 11);
     ctx.strokeStyle = '#38bdf8';
     ctx.lineWidth = 1.0;
-    ctx.strokeRect(spos.x + 2, spos.y + geom.tileSize - 13, geom.tileSize - 4, 11);
+    ctx.strokeRect(spos.x + (sw - pillW) / 2, spos.y + sh - 13, pillW, 11);
     ctx.fillStyle = '#7dd3fc';
     ctx.font = 'bold 8.5px monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('START', spos.x + geom.tileSize / 2, spos.y + geom.tileSize - 7.5);
+    ctx.fillText('START', spos.x + sw / 2, spos.y + sh - 7.5);
     ctx.restore();
 
     if (state.selectedEntity && (state.selectedEntity.type === 'start' || state.selectedEntity.type === 'stairs')) {
-      drawSelectionGlow(spos.x, spos.y, geom.tileSize, geom.tileSize);
+      drawSelectionGlow(spos.x, spos.y, sw, sh);
     }
   }
 
   // 8b. Quest Exit Staircase / Escape Hatch (Layer 2)
   if (state.quest.exitTile) {
     const [ec, er] = state.quest.exitTile;
-    const epos = tileToWorld(ec, er);
-    const stairsImg = state.assetCache['stairs'];
     const isBorder = isBorderTile(ec, er);
+
+    // Check if exit is on a placed stairs furniture piece
+    const stairFurn = state.quest.furniture.find(f =>
+      f.type.includes('stair') &&
+      ec >= f.x && ec < f.x + (f.width || 1) &&
+      er >= f.y && er < f.y + (f.height || 1)
+    );
+
+    const epos = stairFurn ? tileToWorld(stairFurn.x, stairFurn.y) : tileToWorld(ec, er);
+    const ew = (stairFurn ? (stairFurn.width || 1) : (state.quest.exitStairType?.includes('2x2') ? 2 : 1)) * geom.tileSize;
+    const eh = (stairFurn ? (stairFurn.height || 1) : (state.quest.exitStairType?.includes('2x2') ? 2 : 1)) * geom.tileSize;
 
     // Border tile indicator aura (highlights exit to safety outside dungeon)
     if (isBorder) {
       ctx.save();
       ctx.fillStyle = 'rgba(16, 185, 129, 0.35)';
-      ctx.fillRect(epos.x - 3, epos.y - 3, geom.tileSize + 6, geom.tileSize + 6);
+      ctx.fillRect(epos.x - 3, epos.y - 3, ew + 6, eh + 6);
       ctx.strokeStyle = '#10b981';
       ctx.lineWidth = 2.5;
       ctx.setLineDash([4, 2]);
-      ctx.strokeRect(epos.x - 3, epos.y - 3, geom.tileSize + 6, geom.tileSize + 6);
+      ctx.strokeRect(epos.x - 3, epos.y - 3, ew + 6, eh + 6);
       ctx.restore();
     }
 
-    if (stairsImg) {
-      ctx.drawImage(stairsImg, epos.x, epos.y, geom.tileSize, geom.tileSize);
-      ctx.save();
-      ctx.fillStyle = 'rgba(5, 150, 105, 0.55)';
-      ctx.fillRect(epos.x + 1, epos.y + 1, geom.tileSize - 2, geom.tileSize - 2);
-      ctx.restore();
+    if (!stairFurn) {
+      const stairKey = state.quest.exitStairType || 'stairs_down_1x1';
+      const stairsImg = state.assetCache[stairKey] || state.assetCache['stairs_down_1x1'] || state.assetCache['stairs'];
+      if (stairsImg) {
+        ctx.drawImage(stairsImg, epos.x, epos.y, ew, eh);
+        ctx.save();
+        ctx.fillStyle = 'rgba(5, 150, 105, 0.55)';
+        ctx.fillRect(epos.x + 1, epos.y + 1, ew - 2, eh - 2);
+        ctx.restore();
+      } else {
+        ctx.fillStyle = '#065f46';
+        ctx.fillRect(epos.x + 2, epos.y + 2, ew - 4, eh - 4);
+        ctx.strokeStyle = '#34d399';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(epos.x + 2, epos.y + 2, ew - 4, eh - 4);
+      }
     } else {
-      ctx.fillStyle = '#065f46';
-      ctx.fillRect(epos.x + 2, epos.y + 2, geom.tileSize - 4, geom.tileSize - 4);
-      ctx.strokeStyle = '#34d399';
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(epos.x + 2, epos.y + 2, geom.tileSize - 4, geom.tileSize - 4);
+      // Highlight existing stairs furniture that is the active exit
+      ctx.save();
+      ctx.fillStyle = 'rgba(16, 185, 129, 0.28)';
+      ctx.fillRect(epos.x + 1, epos.y + 1, ew - 2, eh - 2);
+      ctx.strokeStyle = '#10b981';
+      ctx.lineWidth = 2.0;
+      ctx.strokeRect(epos.x + 1, epos.y + 1, ew - 2, eh - 2);
+      ctx.restore();
     }
 
     // Always draw clear 🏁 checkered flag in center with contrast backdrop
@@ -1269,28 +1346,29 @@ function render() {
     ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
     ctx.shadowBlur = 4;
     ctx.fillStyle = '#fff';
-    ctx.font = '16px sans-serif';
+    ctx.font = `${Math.round(16 * Math.min(ew, eh) / geom.tileSize)}px sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('🏁', epos.x + geom.tileSize / 2, epos.y + geom.tileSize / 2 - 4);
+    ctx.fillText('🏁', epos.x + ew / 2, epos.y + eh / 2 - 4);
     ctx.restore();
 
     // High-visibility EXIT label pill
+    const pillW = Math.min(ew - 4, 46);
     ctx.save();
     ctx.fillStyle = 'rgba(6, 78, 59, 0.9)';
-    ctx.fillRect(epos.x + 2, epos.y + geom.tileSize - 13, geom.tileSize - 4, 11);
+    ctx.fillRect(epos.x + (ew - pillW) / 2, epos.y + eh - 13, pillW, 11);
     ctx.strokeStyle = '#34d399';
     ctx.lineWidth = 1.0;
-    ctx.strokeRect(epos.x + 2, epos.y + geom.tileSize - 13, geom.tileSize - 4, 11);
+    ctx.strokeRect(epos.x + (ew - pillW) / 2, epos.y + eh - 13, pillW, 11);
     ctx.fillStyle = '#6ee7b7';
     ctx.font = 'bold 8.5px monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('EXIT', epos.x + geom.tileSize / 2, epos.y + geom.tileSize - 7.5);
+    ctx.fillText('EXIT', epos.x + ew / 2, epos.y + eh - 7.5);
     ctx.restore();
 
     if (state.selectedEntity && state.selectedEntity.type === 'exit') {
-      drawSelectionGlow(epos.x, epos.y, geom.tileSize, geom.tileSize);
+      drawSelectionGlow(epos.x, epos.y, ew, eh);
     }
   }
 
@@ -1491,11 +1569,22 @@ function renderToolPreview(ctx, geom) {
     const def = FURNITURE_DEFS[state.subtool.furnitureType] || { w: 1, h: 1 };
     const w = (state.subtool.furnitureRotated ? def.h : def.w) * geom.tileSize;
     const h = (state.subtool.furnitureRotated ? def.w : def.h) * geom.tileSize;
-    ctx.fillStyle = '#b45309';
-    ctx.fillRect(pos.x, pos.y, w, h);
-    ctx.strokeStyle = '#fbbf24';
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(pos.x, pos.y, w, h);
+    let furnImg = state.assetCache[state.subtool.furnitureType];
+    if (!furnImg && state.subtool.furnitureType.includes('stair')) {
+      furnImg = state.assetCache['stairs_up_1x1'] || state.assetCache['stairs'];
+    }
+    if (furnImg) {
+      ctx.drawImage(furnImg, pos.x, pos.y, w, h);
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(pos.x, pos.y, w, h);
+    } else {
+      ctx.fillStyle = '#b45309';
+      ctx.fillRect(pos.x, pos.y, w, h);
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(pos.x, pos.y, w, h);
+    }
   } else if (state.activeTool === 'trap') {
     ctx.fillStyle = '#ef4444';
     ctx.fillRect(pos.x, pos.y, geom.tileSize, geom.tileSize);
@@ -1507,37 +1596,43 @@ function renderToolPreview(ctx, geom) {
     ctx.fillStyle = '#475569';
     ctx.fillRect(pos.x, pos.y, bw, bh);
   } else if (state.activeTool === 'start' || state.activeTool === 'stairs') {
+    const is2x2 = state.subtool.startStairType?.includes('2x2');
+    const sw = (is2x2 ? 2 : 1) * geom.tileSize;
+    const sh = (is2x2 ? 2 : 1) * geom.tileSize;
     ctx.fillStyle = 'rgba(2, 132, 199, 0.75)';
-    ctx.fillRect(pos.x + 1, pos.y + 1, geom.tileSize - 2, geom.tileSize - 2);
+    ctx.fillRect(pos.x + 1, pos.y + 1, sw - 2, sh - 2);
     ctx.strokeStyle = '#38bdf8';
     ctx.lineWidth = isBorderTile(col, row) ? 3.0 : 1.5;
-    ctx.strokeRect(pos.x + 1, pos.y + 1, geom.tileSize - 2, geom.tileSize - 2);
+    ctx.strokeRect(pos.x + 1, pos.y + 1, sw - 2, sh - 2);
 
     ctx.fillStyle = '#fff';
-    ctx.font = '14px sans-serif';
+    ctx.font = `${Math.round(14 * (is2x2 ? 1.5 : 1))}px sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('🪜', pos.x + geom.tileSize / 2, pos.y + geom.tileSize / 2 - 4);
+    ctx.fillText('🪜', pos.x + sw / 2, pos.y + sh / 2 - 4);
 
     ctx.fillStyle = '#7dd3fc';
     ctx.font = 'bold 8.5px monospace';
-    ctx.fillText('START', pos.x + geom.tileSize / 2, pos.y + geom.tileSize - 6);
+    ctx.fillText('START', pos.x + sw / 2, pos.y + sh - 6);
   } else if (state.activeTool === 'exit') {
+    const is2x2 = state.subtool.exitStairType?.includes('2x2');
+    const ew = (is2x2 ? 2 : 1) * geom.tileSize;
+    const eh = (is2x2 ? 2 : 1) * geom.tileSize;
     ctx.fillStyle = 'rgba(5, 150, 105, 0.75)';
-    ctx.fillRect(pos.x + 1, pos.y + 1, geom.tileSize - 2, geom.tileSize - 2);
+    ctx.fillRect(pos.x + 1, pos.y + 1, ew - 2, eh - 2);
     ctx.strokeStyle = '#34d399';
     ctx.lineWidth = isBorderTile(col, row) ? 3.0 : 1.5;
-    ctx.strokeRect(pos.x + 1, pos.y + 1, geom.tileSize - 2, geom.tileSize - 2);
+    ctx.strokeRect(pos.x + 1, pos.y + 1, ew - 2, eh - 2);
 
     ctx.fillStyle = '#fff';
-    ctx.font = '14px sans-serif';
+    ctx.font = `${Math.round(14 * (is2x2 ? 1.5 : 1))}px sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('🏁', pos.x + geom.tileSize / 2, pos.y + geom.tileSize / 2 - 4);
+    ctx.fillText('🏁', pos.x + ew / 2, pos.y + eh / 2 - 4);
 
     ctx.fillStyle = '#6ee7b7';
     ctx.font = 'bold 8.5px monospace';
-    ctx.fillText('EXIT', pos.x + geom.tileSize / 2, pos.y + geom.tileSize - 6);
+    ctx.fillText('EXIT', pos.x + ew / 2, pos.y + eh - 6);
   } else if (state.activeTool === 'note') {
     ctx.fillStyle = '#d97706';
     ctx.beginPath();
@@ -1580,6 +1675,9 @@ function updateZoomUI() {
 // Tool Handling & Interaction
 // -------------------------------------------------------------
 function updateStartSuboptsUI() {
+  if (dom.selectStartStairType) {
+    dom.selectStartStairType.value = state.quest.startingStairType || state.subtool.startStairType || 'stairs_up_1x1';
+  }
   if (!dom.suboptsStartPos) return;
   if (state.quest.startingStair) {
     const [sc, sr] = state.quest.startingStair;
@@ -1595,6 +1693,9 @@ function updateStartSuboptsUI() {
 }
 
 function updateExitSuboptsUI() {
+  if (dom.selectExitStairType) {
+    dom.selectExitStairType.value = state.quest.exitStairType || state.subtool.exitStairType || 'stairs_down_1x1';
+  }
   if (!dom.suboptsExitPos) return;
   if (state.quest.exitTile) {
     const [ec, er] = state.quest.exitTile;
@@ -1872,19 +1973,43 @@ function handleCanvasClick(wx, wy) {
     updateInspectorUI();
     updateEntitySummaryList();
   } else if (state.activeTool === 'start' || state.activeTool === 'stairs') {
-    state.quest.startingStair = [col, row];
-    state.selectedEntity = { type: 'start', index: 0, data: state.quest.startingStair };
+    const stairFurn = state.quest.furniture.find(f =>
+      f.type.includes('stair') &&
+      col >= f.x && col < f.x + (f.width || 1) &&
+      row >= f.y && row < f.y + (f.height || 1)
+    );
+    if (stairFurn) {
+      state.quest.startingStair = [stairFurn.x, stairFurn.y];
+      state.quest.startingStairType = stairFurn.type;
+      state.selectedEntity = { type: 'furniture', index: state.quest.furniture.indexOf(stairFurn), data: stairFurn };
+      showToast(`🪜 Starting entrance set to ${stairFurn.name || 'stairs'} at [${stairFurn.x}, ${stairFurn.y}]`, 'success');
+    } else {
+      state.quest.startingStair = [col, row];
+      state.selectedEntity = { type: 'start', index: 0, data: state.quest.startingStair };
+      showToast(`🪜 Starting entrance placed at [${col}, ${row}]${isBorderTile(col, row) ? ' (Border Tile)' : ''}`, 'success');
+    }
     updateStartSuboptsUI();
     updateInspectorUI();
     updateEntitySummaryList();
-    showToast(`🪜 Starting entrance placed at [${col}, ${row}]${isBorderTile(col, row) ? ' (Border Tile)' : ''}`, 'success');
   } else if (state.activeTool === 'exit') {
-    state.quest.exitTile = [col, row];
-    state.selectedEntity = { type: 'exit', index: 0, data: state.quest.exitTile };
+    const stairFurn = state.quest.furniture.find(f =>
+      f.type.includes('stair') &&
+      col >= f.x && col < f.x + (f.width || 1) &&
+      row >= f.y && row < f.y + (f.height || 1)
+    );
+    if (stairFurn) {
+      state.quest.exitTile = [stairFurn.x, stairFurn.y];
+      state.quest.exitStairType = stairFurn.type;
+      state.selectedEntity = { type: 'furniture', index: state.quest.furniture.indexOf(stairFurn), data: stairFurn };
+      showToast(`🏁 Quest exit set to ${stairFurn.name || 'stairs'} at [${stairFurn.x}, ${stairFurn.y}]`, 'success');
+    } else {
+      state.quest.exitTile = [col, row];
+      state.selectedEntity = { type: 'exit', index: 0, data: state.quest.exitTile };
+      showToast(`🏁 Exit tile placed at [${col}, ${row}]${isBorderTile(col, row) ? ' (Border Tile)' : ''}`, 'success');
+    }
     updateExitSuboptsUI();
     updateInspectorUI();
     updateEntitySummaryList();
-    showToast(`🏁 Exit tile placed at [${col}, ${row}]${isBorderTile(col, row) ? ' (Border Tile)' : ''}`, 'success');
   } else if (state.activeTool === 'note') {
     const mark = state.subtool.noteMarker || `Note ${String.fromCharCode(65 + state.quest.storyTriggers.length)}`;
     const newTrigger = {
@@ -1910,6 +2035,27 @@ function deleteEntity(type, index) {
   } else if (type === 'door') {
     state.quest.doors.splice(index, 1);
   } else if (type === 'furniture') {
+    const f = state.quest.furniture[index];
+    if (f) {
+      if (state.quest.startingStair && (
+        (state.quest.startingStair[0] === f.x && state.quest.startingStair[1] === f.y) ||
+        (state.quest.startingStair[0] >= f.x && state.quest.startingStair[0] < f.x + (f.width || 1) &&
+         state.quest.startingStair[1] >= f.y && state.quest.startingStair[1] < f.y + (f.height || 1))
+      )) {
+        state.quest.startingStair = [0, 1];
+        state.quest.startingStairType = 'stairs_up_1x1';
+        updateStartSuboptsUI();
+      }
+      if (state.quest.exitTile && (
+        (state.quest.exitTile[0] === f.x && state.quest.exitTile[1] === f.y) ||
+        (state.quest.exitTile[0] >= f.x && state.quest.exitTile[0] < f.x + (f.width || 1) &&
+         state.quest.exitTile[1] >= f.y && state.quest.exitTile[1] < f.y + (f.height || 1))
+      )) {
+        state.quest.exitTile = null;
+        state.quest.exitStairType = 'stairs_down_1x1';
+        updateExitSuboptsUI();
+      }
+    }
     state.quest.furniture.splice(index, 1);
   } else if (type === 'trap') {
     state.quest.traps.splice(index, 1);
@@ -2001,24 +2147,37 @@ function updateInspectorUI() {
     dom.inspectGroupFurniture.style.display = 'block';
 
     if (dom.inspectFurnStairRole) {
-      dom.inspectFurnStairRole.style.display = 'block';
-      const isStart = state.quest.startingStair && state.quest.startingStair[0] === f.x && state.quest.startingStair[1] === f.y;
-      const isExit = state.quest.exitTile && state.quest.exitTile[0] === f.x && state.quest.exitTile[1] === f.y;
-      if (isStart) {
-        dom.inspectFurnStairStatus.innerHTML = '<span style="color:#38bdf8; font-weight:600;">🪜 Active Starting Entrance</span>';
-        if (dom.btnFurnClearRole) dom.btnFurnClearRole.style.display = 'inline-block';
-        if (dom.btnFurnMakeStart) dom.btnFurnMakeStart.style.display = 'none';
-        if (dom.btnFurnMakeExit) dom.btnFurnMakeExit.style.display = 'inline-block';
-      } else if (isExit) {
-        dom.inspectFurnStairStatus.innerHTML = '<span style="color:#34d399; font-weight:600;">🏁 Active Quest Exit</span>';
-        if (dom.btnFurnClearRole) dom.btnFurnClearRole.style.display = 'inline-block';
-        if (dom.btnFurnMakeStart) dom.btnFurnMakeStart.style.display = 'inline-block';
-        if (dom.btnFurnMakeExit) dom.btnFurnMakeExit.style.display = 'none';
+      const isStair = f.type && (f.type.includes('stair') || f.type.includes('stairs'));
+      if (isStair) {
+        dom.inspectFurnStairRole.style.display = 'block';
+        const isStart = state.quest.startingStair && (
+          (state.quest.startingStair[0] === f.x && state.quest.startingStair[1] === f.y) ||
+          (state.quest.startingStair[0] >= f.x && state.quest.startingStair[0] < f.x + (f.width || 1) &&
+           state.quest.startingStair[1] >= f.y && state.quest.startingStair[1] < f.y + (f.height || 1))
+        );
+        const isExit = state.quest.exitTile && (
+          (state.quest.exitTile[0] === f.x && state.quest.exitTile[1] === f.y) ||
+          (state.quest.exitTile[0] >= f.x && state.quest.exitTile[0] < f.x + (f.width || 1) &&
+           state.quest.exitTile[1] >= f.y && state.quest.exitTile[1] < f.y + (f.height || 1))
+        );
+        if (isStart) {
+          dom.inspectFurnStairStatus.innerHTML = '<span style="color:#38bdf8; font-weight:600;">🪜 Active Starting Entrance</span>';
+          if (dom.btnFurnClearRole) dom.btnFurnClearRole.style.display = 'inline-block';
+          if (dom.btnFurnMakeStart) dom.btnFurnMakeStart.style.display = 'none';
+          if (dom.btnFurnMakeExit) dom.btnFurnMakeExit.style.display = 'inline-block';
+        } else if (isExit) {
+          dom.inspectFurnStairStatus.innerHTML = '<span style="color:#34d399; font-weight:600;">🏁 Active Quest Exit</span>';
+          if (dom.btnFurnClearRole) dom.btnFurnClearRole.style.display = 'inline-block';
+          if (dom.btnFurnMakeStart) dom.btnFurnMakeStart.style.display = 'inline-block';
+          if (dom.btnFurnMakeExit) dom.btnFurnMakeExit.style.display = 'none';
+        } else {
+          dom.inspectFurnStairStatus.innerHTML = '<span style="color:#94a3b8;">Standard map piece</span>';
+          if (dom.btnFurnClearRole) dom.btnFurnClearRole.style.display = 'none';
+          if (dom.btnFurnMakeStart) dom.btnFurnMakeStart.style.display = 'inline-block';
+          if (dom.btnFurnMakeExit) dom.btnFurnMakeExit.style.display = 'inline-block';
+        }
       } else {
-        dom.inspectFurnStairStatus.innerHTML = '<span style="color:#94a3b8;">Standard map piece</span>';
-        if (dom.btnFurnClearRole) dom.btnFurnClearRole.style.display = 'none';
-        if (dom.btnFurnMakeStart) dom.btnFurnMakeStart.style.display = 'inline-block';
-        if (dom.btnFurnMakeExit) dom.btnFurnMakeExit.style.display = 'inline-block';
+        dom.inspectFurnStairRole.style.display = 'none';
       }
     }
   } else if (type === 'trap') {
@@ -2329,6 +2488,22 @@ function setupEventListeners() {
     state.subtool.noteMarker = dom.inputNoteMarker.value;
   });
 
+  if (dom.selectStartStairType) {
+    dom.selectStartStairType.addEventListener('change', () => {
+      state.subtool.startStairType = dom.selectStartStairType.value;
+      state.quest.startingStairType = dom.selectStartStairType.value;
+      render();
+    });
+  }
+
+  if (dom.selectExitStairType) {
+    dom.selectExitStairType.addEventListener('change', () => {
+      state.subtool.exitStairType = dom.selectExitStairType.value;
+      state.quest.exitStairType = dom.selectExitStairType.value;
+      render();
+    });
+  }
+
   // Tabs
   dom.sideTabs.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -2616,11 +2791,15 @@ function setupEventListeners() {
       if (!f) return;
       recordHistory();
       state.quest.startingStair = [f.x, f.y];
+      if (f.type.includes('stair')) {
+        state.quest.startingStairType = f.type;
+        state.subtool.startStairType = f.type;
+      }
       updateStartSuboptsUI();
       updateInspectorUI();
       updateEntitySummaryList();
       render();
-      showToast(`🪜 Starting entrance set to stairs at [${f.x}, ${f.y}]`, 'success');
+      showToast(`🪜 Starting entrance set to ${f.name || 'stairs'} at [${f.x}, ${f.y}]`, 'success');
     });
   }
 
@@ -2631,11 +2810,15 @@ function setupEventListeners() {
       if (!f) return;
       recordHistory();
       state.quest.exitTile = [f.x, f.y];
+      if (f.type.includes('stair')) {
+        state.quest.exitStairType = f.type;
+        state.subtool.exitStairType = f.type;
+      }
       updateExitSuboptsUI();
       updateInspectorUI();
       updateEntitySummaryList();
       render();
-      showToast(`🏁 Quest exit set to stairs at [${f.x}, ${f.y}]`, 'success');
+      showToast(`🏁 Quest exit set to ${f.name || 'stairs'} at [${f.x}, ${f.y}]`, 'success');
     });
   }
 
@@ -2645,12 +2828,22 @@ function setupEventListeners() {
       const f = state.quest.furniture[state.selectedEntity.index];
       if (!f) return;
       recordHistory();
-      if (state.quest.startingStair && state.quest.startingStair[0] === f.x && state.quest.startingStair[1] === f.y) {
+      if (state.quest.startingStair && (
+        (state.quest.startingStair[0] === f.x && state.quest.startingStair[1] === f.y) ||
+        (state.quest.startingStair[0] >= f.x && state.quest.startingStair[0] < f.x + (f.width || 1) &&
+         state.quest.startingStair[1] >= f.y && state.quest.startingStair[1] < f.y + (f.height || 1))
+      )) {
         state.quest.startingStair = [0, 1];
+        state.quest.startingStairType = 'stairs_up_1x1';
         updateStartSuboptsUI();
       }
-      if (state.quest.exitTile && state.quest.exitTile[0] === f.x && state.quest.exitTile[1] === f.y) {
+      if (state.quest.exitTile && (
+        (state.quest.exitTile[0] === f.x && state.quest.exitTile[1] === f.y) ||
+        (state.quest.exitTile[0] >= f.x && state.quest.exitTile[0] < f.x + (f.width || 1) &&
+         state.quest.exitTile[1] >= f.y && state.quest.exitTile[1] < f.y + (f.height || 1))
+      )) {
         state.quest.exitTile = null;
+        state.quest.exitStairType = 'stairs_down_1x1';
         updateExitSuboptsUI();
       }
       updateInspectorUI();
