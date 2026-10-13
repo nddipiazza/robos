@@ -124,8 +124,7 @@ ipcMain.handle('blockmap:list-presets', async () => {
         defaultTileSize: 39.0,
         offsetX: 0,
         offsetY: 0,
-        cartridgeSlug: 'heroquest-fortress-fire-king',
-        hasBorder: true
+        cartridgeSlug: 'heroquest-fortress-fire-king'
       },
       {
         id: 'heroquest-classic',
@@ -136,8 +135,7 @@ ipcMain.handle('blockmap:list-presets', async () => {
         defaultTileSize: 36.57,
         offsetX: 0,
         offsetY: 0,
-        cartridgeSlug: 'heroquest-the-trial',
-        hasBorder: true
+        cartridgeSlug: 'heroquest-the-trial'
       },
       {
         id: 'first-light-caverns',
@@ -148,8 +146,7 @@ ipcMain.handle('blockmap:list-presets', async () => {
         defaultTileSize: 42.0,
         offsetX: 0,
         offsetY: 0,
-        cartridgeSlug: null,
-        hasBorder: true
+        cartridgeSlug: null
       },
       {
         id: 'fan-dungeon-28x21',
@@ -160,8 +157,7 @@ ipcMain.handle('blockmap:list-presets', async () => {
         defaultTileSize: 36.57,
         offsetX: 0,
         offsetY: 0,
-        cartridgeSlug: 'heroquest-the-trial',
-        hasBorder: true
+        cartridgeSlug: 'heroquest-the-trial'
       }
     ];
 

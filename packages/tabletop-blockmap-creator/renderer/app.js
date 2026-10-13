@@ -5,7 +5,6 @@
  * Focuses exclusively on the permanent cardboard board specification:
  * - Tile Size (px)
  * - Map Image Offset (X, Y)
- * - Add 1-Tile Border Option Checkbox
  * - Corridor Draw Tool (Click & drag mouse to toggle/disable corridor tiles)
  * - Room Draw Tool (Click & drag mouse to toggle edges of tiles as room or drag box)
  * - Takes ANY image and turns it into a reusable board map specification
@@ -65,7 +64,6 @@ class BlockmapCreator {
     this.offsetY = 0;
     this.cols = 26;
     this.rows = 19;
-    this.addBorder = true;
 
     // Viewport transform
     this.panX = 40;
@@ -77,6 +75,8 @@ class BlockmapCreator {
     this.corridorMode = 'toggle'; // 'toggle', 'paint', 'erase'
     this.roomMode = 'rect';       // 'rect' (Rectangle Selector), 'freeform' (Free Form Selector)
     this.draftFreeformTiles = new Set(); // Set of "col,row" strings
+    this.draftStrokeHistory = [];        // Array of { added: string[], removed: string[] } for freeform undo
+    this.currentFreeformStroke = null;   // Active stroke delta during drawing
     this.freeformEditingRoomId = null;   // null if new room, roomId if editing existing
     this.invalidFreeformTiles = null;    // Set of "col,row" when rejected
     this.freeformStrokeAction = 'add';   // 'add' or 'remove' during drag stroke
@@ -218,6 +218,9 @@ class BlockmapCreator {
         this.render();
       }
     });
+    inputTile.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === 'Escape') inputTile.blur();
+    });
 
     sliderTile.addEventListener('input', (e) => {
       const val = parseFloat(e.target.value);
@@ -226,10 +229,10 @@ class BlockmapCreator {
       this.render();
     });
 
-    document.getElementById('btn-tile-minus-1').addEventListener('click', () => this.stepTileSize(-1.0));
-    document.getElementById('btn-tile-minus-01').addEventListener('click', () => this.stepTileSize(-0.1));
-    document.getElementById('btn-tile-plus-01').addEventListener('click', () => this.stepTileSize(0.1));
-    document.getElementById('btn-tile-plus-1').addEventListener('click', () => this.stepTileSize(1.0));
+    document.getElementById('btn-tile-minus-1').addEventListener('click', () => { if (document.activeElement) document.activeElement.blur(); this.stepTileSize(-1.0); });
+    document.getElementById('btn-tile-minus-01').addEventListener('click', () => { if (document.activeElement) document.activeElement.blur(); this.stepTileSize(-0.1); });
+    document.getElementById('btn-tile-plus-01').addEventListener('click', () => { if (document.activeElement) document.activeElement.blur(); this.stepTileSize(0.1); });
+    document.getElementById('btn-tile-plus-1').addEventListener('click', () => { if (document.activeElement) document.activeElement.blur(); this.stepTileSize(1.0); });
 
     // 2. Offset X Controls
     const inputOffX = document.getElementById('input-offset-x');
@@ -237,10 +240,13 @@ class BlockmapCreator {
       this.offsetX = parseFloat(e.target.value) || 0;
       this.render();
     });
-    document.getElementById('btn-offx-minus-5').addEventListener('click', () => this.stepOffsetX(-5));
-    document.getElementById('btn-offx-minus-1').addEventListener('click', () => this.stepOffsetX(-1));
-    document.getElementById('btn-offx-plus-1').addEventListener('click', () => this.stepOffsetX(1));
-    document.getElementById('btn-offx-plus-5').addEventListener('click', () => this.stepOffsetX(5));
+    inputOffX.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === 'Escape') inputOffX.blur();
+    });
+    document.getElementById('btn-offx-minus-5').addEventListener('click', () => { if (document.activeElement) document.activeElement.blur(); this.stepOffsetX(-5); });
+    document.getElementById('btn-offx-minus-1').addEventListener('click', () => { if (document.activeElement) document.activeElement.blur(); this.stepOffsetX(-1); });
+    document.getElementById('btn-offx-plus-1').addEventListener('click', () => { if (document.activeElement) document.activeElement.blur(); this.stepOffsetX(1); });
+    document.getElementById('btn-offx-plus-5').addEventListener('click', () => { if (document.activeElement) document.activeElement.blur(); this.stepOffsetX(5); });
 
     // Offset Y Controls
     const inputOffY = document.getElementById('input-offset-y');
@@ -248,22 +254,15 @@ class BlockmapCreator {
       this.offsetY = parseFloat(e.target.value) || 0;
       this.render();
     });
-    document.getElementById('btn-offy-minus-5').addEventListener('click', () => this.stepOffsetY(-5));
-    document.getElementById('btn-offy-minus-1').addEventListener('click', () => this.stepOffsetY(-1));
-    document.getElementById('btn-offy-plus-1').addEventListener('click', () => this.stepOffsetY(1));
-    document.getElementById('btn-offy-plus-5').addEventListener('click', () => this.stepOffsetY(5));
-
-    // 3. Add 1-Tile Border Checkbox
-    const chkBorder = document.getElementById('chk-add-border');
-    chkBorder.addEventListener('change', (e) => {
-      this.addBorder = e.target.checked;
-      if (this.addBorder) {
-        this.fillOuterPerimeterCorridor();
-      }
-      this.render();
+    inputOffY.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === 'Escape') inputOffY.blur();
     });
+    document.getElementById('btn-offy-minus-5').addEventListener('click', () => { if (document.activeElement) document.activeElement.blur(); this.stepOffsetY(-5); });
+    document.getElementById('btn-offy-minus-1').addEventListener('click', () => { if (document.activeElement) document.activeElement.blur(); this.stepOffsetY(-1); });
+    document.getElementById('btn-offy-plus-1').addEventListener('click', () => { if (document.activeElement) document.activeElement.blur(); this.stepOffsetY(1); });
+    document.getElementById('btn-offy-plus-5').addEventListener('click', () => { if (document.activeElement) document.activeElement.blur(); this.stepOffsetY(5); });
 
-    // Grid Dimensions
+    // 3. Grid Dimensions
     document.getElementById('input-grid-cols').addEventListener('change', (e) => {
       const val = parseInt(e.target.value, 10);
       if (val >= 2) {
@@ -384,13 +383,6 @@ class BlockmapCreator {
     }
 
     // Corridor action buttons
-    document.getElementById('btn-fill-outer-corridor').addEventListener('click', () => {
-      this.pushHistory();
-      this.fillOuterPerimeterCorridor();
-      this.render();
-      this.showToast('Filled 1-tile outer perimeter corridor');
-    });
-
     document.getElementById('btn-clear-corridors').addEventListener('click', () => {
       this.pushHistory();
       this.corridorTiles.clear();
@@ -412,11 +404,52 @@ class BlockmapCreator {
 
   bindKeyboardEvents() {
     window.addEventListener('keydown', (e) => {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
+      const isRoomTextProperty = (
+        e.target && (e.target.id === 'prop-room-name' || e.target.id === 'prop-room-id')
+      );
+      if (isRoomTextProperty) {
+        if (e.key === 'Escape' || e.key === 'Enter') {
+          e.target.blur();
+        }
+        return; // Allow native typing and text editing in room name/id fields
+      }
+
+      // Intercept Ctrl+Z / Ctrl+Y globally.
+      // If calibration inputs (offset-x, offset-y, tile-size) or buttons had focus,
+      // blur them so native browser undo does NOT roll back offset values!
+      const isUndoKey = (e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z' || e.code === 'KeyZ') && !e.shiftKey;
+      const isRedoKey = (e.ctrlKey || e.metaKey) && (e.key === 'y' || e.key === 'Y' || e.code === 'KeyY' || (e.shiftKey && (e.key === 'z' || e.key === 'Z' || e.code === 'KeyZ')));
+
+      if (isUndoKey) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+        if (document.activeElement && typeof document.activeElement.blur === 'function') {
+          document.activeElement.blur();
+        }
+        this.undo();
+        return;
+      }
+
+      if (isRedoKey) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+        if (document.activeElement && typeof document.activeElement.blur === 'function') {
+          document.activeElement.blur();
+        }
+        this.redo();
+        return;
+      }
+
+      // Ignore single-character tool shortcuts if the user is typing in any other text input
+      if (e.target && (e.target.tagName === 'TEXTAREA' || (e.target.tagName === 'INPUT' && !['radio', 'checkbox', 'range', 'button', 'submit'].includes(e.target.type)))) {
+        if (e.key === 'Escape' || e.key === 'Enter') e.target.blur();
         return;
       }
 
       if (e.code === 'Space') {
+        e.preventDefault(); // Prevent space from scrolling container/page down
         this.spacePressed = true;
         this.viewport.classList.add('panning');
       } else if (e.key === 'v' || e.key === 'V') {
@@ -437,14 +470,8 @@ class BlockmapCreator {
           e.preventDefault();
           this.cancelFreeformRoom();
         }
-      } else if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
-        e.preventDefault();
-        this.undo();
-      } else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'Z'))) {
-        e.preventDefault();
-        this.redo();
       }
-    });
+    }, true);
 
     window.addEventListener('keyup', (e) => {
       if (e.code === 'Space') {
@@ -487,6 +514,10 @@ class BlockmapCreator {
 
   // ---------------- Mouse Event Handlers ----------------
   onMouseDown(e) {
+    if (document.activeElement && typeof document.activeElement.blur === 'function') {
+      document.activeElement.blur();
+    }
+
     // Middle click, right click, or space+drag initiates pan
     if (e.button === 1 || e.button === 2 || this.spacePressed) {
       this.isPanning = true;
@@ -505,7 +536,10 @@ class BlockmapCreator {
       this.dragCurrentTile = tile;
       this.modifiedThisStroke.clear();
 
-      this.pushHistory();
+      // Only push to undoStack for tools that immediately mutate persistent state
+      if (this.activeTool === 'corridor' || this.activeTool === 'erase' || (this.activeTool === 'room' && this.roomMode === 'rect')) {
+        this.pushHistory();
+      }
 
       const key = `${tile.col},${tile.row}`;
 
@@ -526,13 +560,16 @@ class BlockmapCreator {
         }
       } else if (this.activeTool === 'room') {
         if (this.roomMode === 'freeform') {
+          this.currentFreeformStroke = { added: [], removed: [] };
           if (this.isTileInBounds(tile.col, tile.row)) {
             const key = `${tile.col},${tile.row}`;
             this.freeformStrokeAction = this.draftFreeformTiles.has(key) ? 'remove' : 'add';
             if (this.freeformStrokeAction === 'add') {
               this.draftFreeformTiles.add(key);
+              this.currentFreeformStroke.added.push(key);
             } else {
               this.draftFreeformTiles.delete(key);
+              this.currentFreeformStroke.removed.push(key);
             }
             this.invalidFreeformTiles = null;
             this.modifiedThisStroke.add(key);
@@ -584,8 +621,10 @@ class BlockmapCreator {
           this.modifiedThisStroke.add(key);
           if (this.freeformStrokeAction === 'add') {
             this.draftFreeformTiles.add(key);
+            if (this.currentFreeformStroke) this.currentFreeformStroke.added.push(key);
           } else {
             this.draftFreeformTiles.delete(key);
+            if (this.currentFreeformStroke) this.currentFreeformStroke.removed.push(key);
           }
           this.invalidFreeformTiles = null;
           this.updateFreeformHUD();
@@ -640,6 +679,11 @@ class BlockmapCreator {
             this.showToast(`Updated ${activeRoom.name} bounds: [${rx}, ${ry}] ${rw}×${rh}`);
           }
         }
+      } else if (this.activeTool === 'room' && this.roomMode === 'freeform') {
+        if (this.currentFreeformStroke && (this.currentFreeformStroke.added.length > 0 || this.currentFreeformStroke.removed.length > 0)) {
+          this.draftStrokeHistory.push(this.currentFreeformStroke);
+        }
+        this.currentFreeformStroke = null;
       }
 
       this.isDrawing = false;
@@ -674,18 +718,6 @@ class BlockmapCreator {
       this.corridorTiles.add(key);
     } else {
       this.corridorTiles.delete(key);
-    }
-    document.getElementById('corridor-count').textContent = this.corridorTiles.size;
-  }
-
-  fillOuterPerimeterCorridor() {
-    for (let c = 0; c < this.cols; c++) {
-      this.corridorTiles.add(`${c},0`);
-      this.corridorTiles.add(`${c},${this.rows - 1}`);
-    }
-    for (let r = 0; r < this.rows; r++) {
-      this.corridorTiles.add(`0,${r}`);
-      this.corridorTiles.add(`${this.cols - 1},${r}`);
     }
     document.getElementById('corridor-count').textContent = this.corridorTiles.size;
   }
@@ -823,9 +855,14 @@ class BlockmapCreator {
   }
 
   startFreeformRoom(existingRoom = null) {
+    if (document.activeElement && typeof document.activeElement.blur === 'function') {
+      document.activeElement.blur();
+    }
     this.setActiveTool('room');
     this.setRoomMode('freeform');
     this.invalidFreeformTiles = null;
+    this.draftStrokeHistory = [];
+    this.currentFreeformStroke = null;
 
     if (existingRoom) {
       this.freeformEditingRoomId = existingRoom.id;
@@ -876,6 +913,8 @@ class BlockmapCreator {
     }
 
     this.invalidFreeformTiles = null;
+    this.draftStrokeHistory = [];
+    this.currentFreeformStroke = null;
     const tileArray = Array.from(this.draftFreeformTiles).map(k => k.split(',').map(Number));
     const bounds = callComputeRoomBounds(tileArray);
     const isRect = tileArray.length === bounds.w * bounds.h;
@@ -907,6 +946,8 @@ class BlockmapCreator {
 
   cancelFreeformRoom(notify = true) {
     this.draftFreeformTiles.clear();
+    this.draftStrokeHistory = [];
+    this.currentFreeformStroke = null;
     this.freeformEditingRoomId = null;
     this.invalidFreeformTiles = null;
     const bar = document.getElementById('freeform-action-bar');
@@ -918,6 +959,8 @@ class BlockmapCreator {
 
   clearFreeformDraft() {
     this.draftFreeformTiles.clear();
+    this.draftStrokeHistory = [];
+    this.currentFreeformStroke = null;
     this.invalidFreeformTiles = null;
     this.updateFreeformHUD();
     this.render();
@@ -1004,6 +1047,9 @@ class BlockmapCreator {
   }
 
   setActiveTool(tool) {
+    if (document.activeElement && typeof document.activeElement.blur === 'function') {
+      document.activeElement.blur();
+    }
     this.activeTool = tool;
     document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
       btn.classList.toggle('active', btn.getAttribute('data-tool') === tool);
@@ -1089,29 +1135,78 @@ class BlockmapCreator {
   pushHistory() {
     const snapshot = {
       corridorTiles: new Set(this.corridorTiles),
-      rooms: JSON.parse(JSON.stringify(this.rooms))
+      rooms: this.rooms.map(r => ({
+        ...r,
+        tiles: r.tiles ? r.tiles.map(t => [...t]) : [],
+        tileSet: new Set(r.tileSet ? r.tileSet : (r.tiles || []).map(t => `${t[0]},${t[1]}`))
+      })),
+      selectedRoomId: this.selectedRoomId
     };
     this.undoStack.push(snapshot);
     if (this.undoStack.length > 50) this.undoStack.shift();
     this.redoStack = [];
-    document.getElementById('btn-undo').disabled = false;
-    document.getElementById('btn-redo').disabled = true;
+    const btnUndo = document.getElementById('btn-undo');
+    if (btnUndo) btnUndo.disabled = false;
+    const btnRedo = document.getElementById('btn-redo');
+    if (btnRedo) btnRedo.disabled = true;
   }
 
   undo() {
+    // 1. If in freeform mode with active draft strokes, undo the last stroke first
+    if (this.roomMode === 'freeform') {
+      if (this.draftStrokeHistory && this.draftStrokeHistory.length > 0) {
+        const stroke = this.draftStrokeHistory.pop();
+        if (stroke.added) {
+          for (const k of stroke.added) {
+            this.draftFreeformTiles.delete(k);
+          }
+        }
+        if (stroke.removed) {
+          for (const k of stroke.removed) {
+            this.draftFreeformTiles.add(k);
+          }
+        }
+        this.invalidFreeformTiles = null;
+        this.updateFreeformHUD();
+        this.render();
+        this.showToast(`Undid draft tile stroke (${this.draftFreeformTiles.size} tiles remaining)`);
+        return;
+      } else if (this.draftFreeformTiles && this.draftFreeformTiles.size > 0) {
+        this.draftFreeformTiles.clear();
+        this.invalidFreeformTiles = null;
+        this.updateFreeformHUD();
+        this.render();
+        this.showToast('Cleared draft room tiles');
+        return;
+      }
+    }
+
+    // 2. Global room & corridor undo
     if (this.undoStack.length === 0) return;
     const current = {
       corridorTiles: new Set(this.corridorTiles),
-      rooms: JSON.parse(JSON.stringify(this.rooms))
+      rooms: this.rooms.map(r => ({
+        ...r,
+        tiles: r.tiles ? r.tiles.map(t => [...t]) : [],
+        tileSet: new Set(r.tileSet ? r.tileSet : (r.tiles || []).map(t => `${t[0]},${t[1]}`))
+      })),
+      selectedRoomId: this.selectedRoomId
     };
     this.redoStack.push(current);
 
     const prev = this.undoStack.pop();
-    this.corridorTiles = prev.corridorTiles;
-    this.rooms = prev.rooms;
+    this.corridorTiles = new Set(prev.corridorTiles);
+    this.rooms = (prev.rooms || []).map(r => ({
+      ...r,
+      tiles: r.tiles ? r.tiles.map(t => [...t]) : [],
+      tileSet: new Set(r.tileSet ? r.tileSet : (r.tiles || []).map(t => `${t[0]},${t[1]}`))
+    }));
+    this.selectedRoomId = prev.selectedRoomId || (this.rooms.length > 0 ? this.rooms[0].id : null);
 
-    document.getElementById('btn-undo').disabled = this.undoStack.length === 0;
-    document.getElementById('btn-redo').disabled = false;
+    const btnUndo = document.getElementById('btn-undo');
+    if (btnUndo) btnUndo.disabled = this.undoStack.length === 0;
+    const btnRedo = document.getElementById('btn-redo');
+    if (btnRedo) btnRedo.disabled = false;
     this.updateRoomListUI();
     this.updateRoomInspector();
     this.render();
@@ -1121,16 +1216,28 @@ class BlockmapCreator {
     if (this.redoStack.length === 0) return;
     const current = {
       corridorTiles: new Set(this.corridorTiles),
-      rooms: JSON.parse(JSON.stringify(this.rooms))
+      rooms: this.rooms.map(r => ({
+        ...r,
+        tiles: r.tiles ? r.tiles.map(t => [...t]) : [],
+        tileSet: new Set(r.tileSet ? r.tileSet : (r.tiles || []).map(t => `${t[0]},${t[1]}`))
+      })),
+      selectedRoomId: this.selectedRoomId
     };
     this.undoStack.push(current);
 
     const next = this.redoStack.pop();
-    this.corridorTiles = next.corridorTiles;
-    this.rooms = next.rooms;
+    this.corridorTiles = new Set(next.corridorTiles);
+    this.rooms = (next.rooms || []).map(r => ({
+      ...r,
+      tiles: r.tiles ? r.tiles.map(t => [...t]) : [],
+      tileSet: new Set(r.tileSet ? r.tileSet : (r.tiles || []).map(t => `${t[0]},${t[1]}`))
+    }));
+    this.selectedRoomId = next.selectedRoomId || (this.rooms.length > 0 ? this.rooms[0].id : null);
 
-    document.getElementById('btn-undo').disabled = false;
-    document.getElementById('btn-redo').disabled = this.redoStack.length === 0;
+    const btnUndo = document.getElementById('btn-undo');
+    if (btnUndo) btnUndo.disabled = false;
+    const btnRedo = document.getElementById('btn-redo');
+    if (btnRedo) btnRedo.disabled = this.redoStack.length === 0;
     this.updateRoomListUI();
     this.updateRoomInspector();
     this.render();
@@ -1150,7 +1257,6 @@ class BlockmapCreator {
     this.offsetY = p.offsetY || 0;
     this.cols = p.defaultCols || 26;
     this.rows = p.defaultRows || 19;
-    this.addBorder = !!p.hasBorder;
 
     document.getElementById('input-tile-size').value = this.tileSize.toFixed(1);
     document.getElementById('slider-tile-size').value = this.tileSize;
@@ -1158,7 +1264,6 @@ class BlockmapCreator {
     document.getElementById('input-offset-y').value = this.offsetY;
     document.getElementById('input-grid-cols').value = this.cols;
     document.getElementById('input-grid-rows').value = this.rows;
-    document.getElementById('chk-add-border').checked = this.addBorder;
 
     if (p.cartridgeSlug) {
       await this.loadCartridge(p.cartridgeSlug);
@@ -1184,9 +1289,6 @@ class BlockmapCreator {
       document.getElementById('info-image-size').textContent = `📐 ${img.naturalWidth} × ${img.naturalHeight} px`;
       document.getElementById('info-grid-size').textContent = `🧱 ${this.cols} × ${this.rows} grid`;
 
-      if (this.addBorder && this.corridorTiles.size === 0) {
-        this.fillOuterPerimeterCorridor();
-      }
       this.fitToScreen();
       this.render();
       this.showToast(`Loaded map image: ${this.fileName}`);
@@ -1208,7 +1310,6 @@ class BlockmapCreator {
       document.getElementById('info-image-size').textContent = `📐 ${img.naturalWidth} × ${img.naturalHeight} px`;
 
       this.autoCalculateGrid();
-      if (this.addBorder) this.fillOuterPerimeterCorridor();
       this.fitToScreen();
       this.render();
       this.showToast(`Loaded image: ${this.fileName}`);
@@ -1245,7 +1346,6 @@ class BlockmapCreator {
       if (map.calibration.tileSize) this.tileSize = map.calibration.tileSize;
       if (map.calibration.offsetX !== undefined) this.offsetX = map.calibration.offsetX;
       if (map.calibration.offsetY !== undefined) this.offsetY = map.calibration.offsetY;
-      if (map.calibration.border !== undefined) this.addBorder = map.calibration.border;
     }
 
     document.getElementById('input-tile-size').value = this.tileSize.toFixed(1);
@@ -1254,15 +1354,10 @@ class BlockmapCreator {
     document.getElementById('input-offset-y').value = this.offsetY;
     document.getElementById('input-grid-cols').value = this.cols;
     document.getElementById('input-grid-rows').value = this.rows;
-    document.getElementById('chk-add-border').checked = this.addBorder;
 
     this.selectedRoomId = this.rooms.length > 0 ? this.rooms[0].id : null;
     this.updateRoomListUI();
     this.updateRoomInspector();
-
-    if (this.addBorder) {
-      this.fillOuterPerimeterCorridor();
-    }
 
     if (res.imageData && res.imageData.dataUrl) {
       const img = new Image();
@@ -1292,8 +1387,7 @@ class BlockmapCreator {
       calibration: {
         tileSize: this.tileSize,
         offsetX: this.offsetX,
-        offsetY: this.offsetY,
-        hasBorder: this.addBorder
+        offsetY: this.offsetY
       },
       rooms: this.rooms.map(r => ({
         id: r.id,
@@ -1321,8 +1415,7 @@ class BlockmapCreator {
         calibration: {
           tileSize: this.tileSize,
           offsetX: this.offsetX,
-          offsetY: this.offsetY,
-          border: this.addBorder
+          offsetY: this.offsetY
         },
         rooms: this.rooms.map(r => ({
           id: r.id,
@@ -1375,11 +1468,14 @@ class BlockmapCreator {
   // ---------------- Canvas Rendering ----------------
   render() {
     const ctx = this.ctx;
+    // Always reset transform matrix to identity before clearing and rendering
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
     ctx.save();
-    ctx.translate(this.panX, this.panY);
-    ctx.scale(this.zoom, this.zoom);
+    try {
+      ctx.translate(this.panX, this.panY);
+      ctx.scale(this.zoom, this.zoom);
 
     const totalGridW = this.cols * this.tileSize;
     const totalGridH = this.rows * this.tileSize;
@@ -1395,24 +1491,7 @@ class BlockmapCreator {
       ctx.fillRect(this.offsetX, this.offsetY, totalGridW, totalGridH);
     }
 
-    // 2. Draw 1-Tile Outer Border Corridor Highlight
-    if (this.addBorder) {
-      ctx.save();
-      ctx.fillStyle = 'rgba(245, 158, 11, 0.09)';
-      ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
-      ctx.lineWidth = 1.2;
-
-      // Top & Bottom border rows
-      ctx.fillRect(this.offsetX, this.offsetY, totalGridW, this.tileSize);
-      ctx.fillRect(this.offsetX, this.offsetY + totalGridH - this.tileSize, totalGridW, this.tileSize);
-      // Left & Right border cols
-      ctx.fillRect(this.offsetX, this.offsetY, this.tileSize, totalGridH);
-      ctx.fillRect(this.offsetX + totalGridW - this.tileSize, this.offsetY, this.tileSize, totalGridH);
-
-      ctx.restore();
-    }
-
-    // 3. Draw Corridor Floor Tiles
+    // 2. Draw Corridor Floor Tiles
     if (this.showCorridors && this.corridorTiles.size > 0) {
       ctx.save();
       ctx.fillStyle = 'rgba(56, 189, 248, 0.22)';
@@ -1454,10 +1533,14 @@ class BlockmapCreator {
           const edges = callGetRoomPerimeterEdges(tileList);
           ctx.beginPath();
           for (const edge of edges) {
-            const x1 = this.offsetX + edge.from[0] * this.tileSize;
-            const y1 = this.offsetY + edge.from[1] * this.tileSize;
-            const x2 = this.offsetX + edge.to[0] * this.tileSize;
-            const y2 = this.offsetY + edge.to[1] * this.tileSize;
+            const ex1 = edge.from ? edge.from[0] : edge.x1;
+            const ey1 = edge.from ? edge.from[1] : edge.y1;
+            const ex2 = edge.to ? edge.to[0] : edge.x2;
+            const ey2 = edge.to ? edge.to[1] : edge.y2;
+            const x1 = this.offsetX + ex1 * this.tileSize;
+            const y1 = this.offsetY + ey1 * this.tileSize;
+            const x2 = this.offsetX + ex2 * this.tileSize;
+            const y2 = this.offsetY + ey2 * this.tileSize;
             ctx.moveTo(x1, y1);
             ctx.lineTo(x2, y2);
           }
@@ -1503,10 +1586,14 @@ class BlockmapCreator {
       if (edges && edges.length > 0) {
         ctx.beginPath();
         for (const edge of edges) {
-          const x1 = this.offsetX + edge.from[0] * this.tileSize;
-          const y1 = this.offsetY + edge.from[1] * this.tileSize;
-          const x2 = this.offsetX + edge.to[0] * this.tileSize;
-          const y2 = this.offsetY + edge.to[1] * this.tileSize;
+          const ex1 = edge.from ? edge.from[0] : edge.x1;
+          const ey1 = edge.from ? edge.from[1] : edge.y1;
+          const ex2 = edge.to ? edge.to[0] : edge.x2;
+          const ey2 = edge.to ? edge.to[1] : edge.y2;
+          const x1 = this.offsetX + ex1 * this.tileSize;
+          const y1 = this.offsetY + ey1 * this.tileSize;
+          const x2 = this.offsetX + ex2 * this.tileSize;
+          const y2 = this.offsetY + ey2 * this.tileSize;
           ctx.moveTo(x1, y1);
           ctx.lineTo(x2, y2);
         }
@@ -1600,9 +1687,13 @@ class BlockmapCreator {
       ctx.fillText(`Room: [${rx}, ${ry}] ${rw}×${rh}`, px + 6, py + 18);
       ctx.restore();
     }
-
+  } catch (err) {
+    console.error('Canvas render error:', err);
+  } finally {
     ctx.restore();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
+}
 }
 
 window.addEventListener('DOMContentLoaded', () => {
