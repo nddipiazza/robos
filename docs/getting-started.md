@@ -1,296 +1,185 @@
 ---
-title: Installation / Getting Started
+title: Get started
 layout: default
-parent: Use RobOS
-nav_order: 1
+nav_order: 2
 ---
 
-# Installation / Getting Started
+# Get started
 {: .no_toc }
 
-<div style="display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; margin: 0.5rem 0 1.25rem;">
-  <span style="background: rgba(0, 229, 255, 0.12); color: #00e5ff; border: 1px solid rgba(0, 229, 255, 0.3); border-radius: 9999px; padding: 4px 12px; font-weight: 600; font-size: 0.85rem; font-family: 'Space Grotesk', sans-serif;">
-    Latest Version: v0.0.7
-  </span>
-  <a href="https://github.com/nddipiazza/robos/releases/tag/v0.0.7" target="_blank" rel="noopener" style="font-size: 0.85rem; color: #38bdf8; text-decoration: none; font-weight: 500;">
-    📦 View v0.0.7 Release Assets &amp; Changelog &rarr;
-  </a>
-</div>
+How to run RobOS apps from a clone of the repository, install them into the GNOME launcher, or boot the RobOS appliance from a USB drive or a QEMU virtual machine. Read this before your first run.
+{: .fs-6 }
 
-Run RobOS instantly on your existing macOS, Linux, or Windows WSL machine via Docker or standalone CLI/apps, or deploy the native developer desktop suite and optional appliance OS.
-{: .fs-6 .fw-300 }
-
-## Table of contents
-{: .no_toc .text-delta }
-
+<details open markdown="block">
+  <summary>On this page</summary>
+  {: .text-delta }
 1. TOC
 {:toc}
+</details>
 
----
+## Pick a method
 
-## Option 1: Instant Universal Quickstart & Agent Sandbox (macOS, Linux, Windows WSL)
+| Method | Where it runs | You need | What you get |
+|---|---|---|---|
+| [Run from source](#run-from-source) | Linux. The README also lists macOS and Windows with WSL2, but nothing in the repository tests them. | Node.js 20 or newer, Git, a desktop session | One app window per command |
+| [GNOME launcher](#add-the-apps-to-the-gnome-launcher) | Ubuntu with GNOME | The same as above | A launcher entry for each app in your clone |
+| [USB installer](#install-the-appliance-from-a-usb-drive) | The installer app runs on Linux, macOS or Windows (it cannot flash on Windows, see below); the target is an x86_64 PC | A USB drive of 4 GB or more | The RobOS appliance on the target PC |
+| [Virtual machine](#boot-the-appliance-in-qemu) | A Linux host with QEMU | QEMU, 16 GB of RAM for the guest | The appliance in a QEMU window |
 
-The fastest way to experience RobOS without modifying your operating system. RobOS is engineered to run seamlessly alongside your existing IDE (VS Code, IntelliJ IDEA) and terminal workflows on **macOS**, **Linux**, or **Windows (WSL2)**.
+{: .note }
+The `.dmg`, `.exe`, `.AppImage` and `.deb` files on the [download page](https://rowbose.com/download/) are the USB installer. They do not install the app suite on macOS or Windows. To run apps on your current machine, use "Run from source".
 
-### 1. Prerequisites
-- **Node.js 20+** and **npm**
-- **Git**
-- **Docker** (optional, recommended for headless virtual framebuffer & video proof-of-work)
+## Run from source
 
-### 2. Quick Setup & Headless Agent Verification
+Each app is an Electron app in its own folder under `packages/`, next to the shared libraries. There is no `package.json` at the repository root, so you install dependencies inside a package, not at the top level.
+
+Prerequisites:
+
+- Node.js 20 or newer and npm. The README and `AGENTS.md` state Node 20+, and the release workflow and the Docker image both use Node 20.
+- Git.
+- A desktop session. The launch script sets `DISPLAY=:0` when `DISPLAY` is not set.
+
+1. Clone the repository.
+
+   ```bash
+   git clone https://github.com/nddipiazza/robos.git
+   cd robos
+   ```
+
+2. Launch an app by its folder name.
+
+   ```bash
+   scripts/dev-launch.sh pr-review
+   ```
+
+   If the package has no `node_modules/.bin/electron` yet, the script runs `npm install` in that package first. It then starts Electron with `--no-sandbox --disable-gpu --disable-dev-shm-usage`. Run `scripts/dev-launch.sh` with no argument to list every package that has a `main.js` and a `package.json`.
+
+You can also work in the package directly. Most packages that have a `main.js` define an `npm start` script.
+
 ```bash
-# 1. Clone the RobOS repository
-git clone https://github.com/nddipiazza/robos.git
-cd robos
-
-# 2. Run containerized headless verification & video proof-of-work
-./scripts/e2e-container.sh
-```
-
-### 3. Launch Standalone Tools
-You can launch any RobOS application individually without installing the desktop shell:
-
-```bash
-# Install package dependencies
+cd packages/dev-central
 npm install
-
-# Launch Agent Code Review Platform
-electron packages/pr-review
-
-# Launch System Topology & C4 Architecture Studio
-electron packages/topology-manager
-
-# Launch Dev Central daily dashboard
-electron packages/dev-central
-
-# Launch Bruno REST API Client
-electron packages/rest-client
-
-# Launch Relational DB Manager (PostgreSQL, MySQL)
-electron packages/db-manager
+npm start
 ```
 
-### 4. Use Knowledge Graph in Existing Repositories
-Simply drop the `.robos/` directory into your project root to immediately enable declarative architecture modeling, TypeSpec schemas, W3C SHACL shape validation, and pre-code blast-radius diffing with any AI agent (Claude Code, Gemini, Copilot, Antigravity).
+Some app folder names that you can pass to `scripts/dev-launch.sh`:
 
----
+| Folder | App name in the desktop entry |
+|---|---|
+| `pr-review` | Agent Code Review Platform (see [PR Review Theater]({{ site.baseurl }}{% link pr-review-theater.md %})) |
+| `dev-central` | Dev Central |
+| `task-planner` | RobOS Task Explorer |
+| `voice-prompt` | RobOS Voice (see [RobOS Voice]({{ site.baseurl }}{% link voice-prompt.md %})) |
 
-## Option 2: Full Native Developer Suite (Ubuntu / GNOME Desktop)
+The [Apps]({{ site.baseurl }}{% link apps.md %}) page lists the rest.
 
-If you run an **Ubuntu Linux (22.04 LTS, 24.04 LTS, or 26.04)** workstation with the GNOME desktop environment, you can install the complete RobOS desktop suite, app launchers, system tray daemons, and shared libraries directly alongside your existing desktop:
+Several apps, for example `pr-review` and `voice-prompt`, look for shared libraries such as `robos-lib` in the neighboring `packages/` folder first and then in `/usr/local/share/robos/`, which is where the appliance installs them.
 
-### 1. One-Line Desktop Installation
+## Add the apps to the GNOME launcher
+
+`scripts/install-local.sh` runs `npm install` in each package that has a `main.js` and a `.desktop` file. It then writes `~/.local/share/applications/robos-<app-id>.desktop` entries that point at your clone.
+
 ```bash
-# Clone the RobOS repository
-git clone https://github.com/nddipiazza/robos.git
-cd robos
-
-# Audit & install dev machine dependencies
-node scripts/install-dev-deps.js
-
-# Install all apps, .desktop entries, and shared libraries to /usr/local/share/robos/
-sudo bash packages/desktop-shell/install.sh
+scripts/install-local.sh              # every app
+scripts/install-local.sh dev-central  # one app
+scripts/install-local.sh --uninstall  # remove the entries again
 ```
 
-### 2. Launching Applications from Desktop Panel
-All RobOS applications become accessible directly from the **RobOS App Launcher** in your desktop dock and top panel, or executable from the Tilix/bash terminal.
+## Install development dependencies
 
----
+`scripts/install-dev-deps.sh` is for Debian and Ubuntu machines. It installs the apt packages the apps and tests use, adds your user to the `kvm` group, installs Node.js 20 from NodeSource when no `node` is on the path, and runs `npm install` in `installer/` and in every package that declares dependencies. It uses `sudo` and takes a while, so check first.
 
-## Option 3 (Optional Power-User Appliance): Dedicated RobOS OS Distro & QEMU VM
-
-For regulated environments, hardware air-gapping, or developers who want a dedicated appliance workstation, RobOS provides a fully provisioned, bootable Ubuntu 26.04 LTS developer OS image, GUI installer apps, and a local QEMU/KVM virtual machine.
-
-### RobOS v0.0.7 Release Downloads
-
-| Platform / Artifact | File Name | Purpose |
-|:---------------------|:----------|:--------|
-| **Linux Installer** | `RobOS-Installer-v0.0.7-linux.AppImage` / `.deb` | 3-click USB flash GUI app for Linux |
-| **macOS Installer** | `RobOS-Installer-v0.0.7-mac.dmg` | 3-click USB flash GUI app for macOS |
-| **Windows Installer** | `RobOS-Installer-v0.0.7-win.exe` | 3-click USB flash GUI app for Windows |
-| **Bootable Installer ISO** | `robos-v0.0.7.iso` | Unattended bootable OS installer for bare metal |
-| **VM Disk Image** | `robos-v0.0.7.qcow2` | Ready-to-boot QEMU/KVM virtual machine disk image |
-| **Seed ISO** | `robos-v0.0.7-seed.iso` | Cloud-init seed ISO for VM auto-provisioning |
-| **Packages Bundle** | `robos-v0.0.7-packages.tar.gz` | Complete native Electron application packages |
-
-👉 **[Download all v0.0.7 binaries & checksums on GitHub Releases](https://github.com/nddipiazza/robos/releases/tag/v0.0.7)**
-
-### A. Bare Metal Deployment (Flash via RobOS Installer, Rufus, Etcher, or dd)
-1. **Easiest**: Use the **RobOS Installer GUI** (`RobOS-Installer-v0.0.7-*` for Linux, macOS, or Windows), select your USB drive, and click **Flash**.
-2. **Alternative**: Download `robos-v0.0.7.iso` from [GitHub Releases](https://github.com/nddipiazza/robos/releases/tag/v0.0.7) and write to a USB flash drive:
-   - **Windows**: Use [Rufus](https://rufus.ie/) (Select GPT partition scheme and UEFI target).
-   - **macOS / Linux**: Use [balenaEtcher](https://etcher.balena.io/) or standard `dd`:
-     ```bash
-     sudo dd if=robos-v0.0.7.iso of=/dev/sdX bs=4M status=progress conv=fsync
-     ```
-3. Insert the USB drive into your PC, boot into UEFI, and let cloud-init automatically provision the environment in ~15 minutes.
-4. Default credentials: `robos` / `robos`.
-
-### B. Virtual Machine Deployment (QEMU / KVM)
 ```bash
-# Option 1: Boot pre-built v0.0.7 release image
+bash scripts/install-dev-deps.sh --check   # report what is missing, change nothing
+bash scripts/install-dev-deps.sh           # install everything
+bash scripts/install-dev-deps.sh --sys     # apt packages only
+bash scripts/install-dev-deps.sh --npm     # npm packages only
+```
+
+On a machine without `apt-get` the script prints a warning and skips the system packages.
+
+## Install the appliance from a USB drive
+
+The appliance is a RobOS desktop image that installs unattended on an x86_64 PC. The release notes list 16 GB of RAM, 100 GB of disk and a USB drive of 4 GB or more as requirements. The installer app and the ISO are release assets on [GitHub Releases](https://github.com/nddipiazza/robos/releases/latest). File names include the version, for example `RobOS-Installer-v0.0.7-mac.dmg`.
+
+| Platform | Installer file |
+|---|---|
+| Linux | `RobOS-Installer-<version>-linux.AppImage` or `.deb` |
+| macOS | `RobOS-Installer-<version>-mac.dmg` |
+| Windows | `RobOS-Installer-<version>-win.exe` |
+
+The installer is an Electron app (source in [`installer/`](https://github.com/nddipiazza/robos/tree/main/installer)). Its screens are:
+
+1. **Select USB Drive**. It lists removable and USB drives. Choose one and click **Next: Download RobOS**.
+2. **Download RobOS**. It downloads the `.iso` asset of the latest GitHub release into your temporary directory and reuses the file if it is already there.
+3. **Flash to Drive**. Click **Flash RobOS to Drive**.
+4. A final screen with the next steps.
+
+{: .warning }
+Flashing erases the selected drive. On Linux and macOS the installer unmounts the drive and runs `sudo dd` with a 4M block size. On Windows the installer cannot flash: it reports that flashing requires administrator rights and tells you to use Rufus or balenaEtcher with the downloaded ISO.
+
+To skip the installer app, download `robos-<version>.iso` from the release and write it yourself. Replace `/dev/sdX` with your USB device and check it twice.
+
+```bash
+sudo dd if=robos-v0.0.7.iso of=/dev/sdX bs=4M status=progress
+```
+
+Then:
+
+1. Plug the drive into the target PC and boot from it. The installer app suggests F12 or F2 at the BIOS splash screen; the key depends on the machine.
+2. Wait for the unattended install. The installer app estimates 15 to 20 minutes.
+3. Log in with the default account `robos`, password `robos`.
+
+## Boot the appliance in QEMU
+
+The release includes a prebuilt disk image and a cloud-init seed ISO. You need QEMU and, for acceptable speed, KVM. `infra/desktop/run.sh` falls back to software emulation when `/dev/kvm` is missing and warns that the VM will be slow.
+
+```bash
 qemu-system-x86_64 -m 16G -smp $(nproc) -enable-kvm -cpu host \
   -drive file=robos-v0.0.7.qcow2,format=qcow2 \
   -cdrom robos-v0.0.7-seed.iso \
-  -net nic -net user,hostfwd=tcp::2224-:22,hostfwd=tcp::5910-:5900
+  -net nic -net user,hostfwd=tcp::2224-:22
+```
 
-# Option 2: Build locally from source
-infra/desktop/build.sh
-infra/desktop/run.sh
+Connect over SSH with the same default account:
 
-# Connect via SSH
+```bash
 ssh -p 2224 robos@localhost
 ```
 
----
+To build the image yourself from a clone:
 
-## Cross-Platform Desktop Setup: macOS & Windows
-
-RobOS applications are built using pure Electron and vanilla JavaScript with zero framework overhead, making them inherently cross-platform and runnable across macOS, Windows, and Linux.
-
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/cross-platform-desktop-architecture.jpg' | relative_url }}" alt="RobOS Cross-Platform Desktop Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>RobOS Cross-Platform Architecture</strong>: Native execution on macOS (Apple Silicon & Intel), Windows 11/10 (WSL2 & PowerShell), and Ubuntu Linux. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
-
-### 🍎 macOS Setup (Apple Silicon M1–M4 & Intel)
-
-RobOS runs natively on macOS with full support for Apple Silicon and Intel architectures.
-
-#### 1. Prerequisites (via Homebrew)
 ```bash
-brew install node git
-# Optional: Docker Desktop or OrbStack for containerized headless video proof-of-work
-brew install --cask docker
+infra/desktop/build.sh   # downloads an Ubuntu cloud image, creates robos.qcow2 and seed.iso
+infra/desktop/run.sh     # boots it; attaches the seed ISO on the first boot only
 ```
 
-#### 2. Clone & Install
+`build.sh` needs `qemu-img`, `wget`, `python3` and either `xorriso` or `genisoimage`. `run.sh` accepts `--vnc` (VNC on port 5912), `--spice` (SPICE on port 5932) and `--headless`. Output goes to `infra/desktop/output/`.
+
+## Run the tests
+
+The unit tests need only Node.js. This is the command the release workflow runs.
+
 ```bash
-git clone https://github.com/nddipiazza/robos.git
-cd robos
+cd packages/robos-test
 npm install
+npm run test:unit
 ```
 
-#### 3. Launch Standalone Applications
-Launch any RobOS application directly from your terminal:
-```bash
-# Launch Agent Code Review Platform & IDE Bridge
-npx electron packages/pr-review
-
-# Launch System Topology & C4 Architecture Studio
-npx electron packages/topology-manager
-
-# Launch Dev Central daily dashboard
-npx electron packages/dev-central
-
-# Launch Relational DB Manager (PostgreSQL, MySQL)
-npx electron packages/db-manager
-
-# Launch Bruno REST API Client
-npx electron packages/rest-client
-```
-
-#### 4. Run Headless Proof-of-Work in Docker
-```bash
-# Run containerized headless E2E verification & Piper TTS video proof-of-work
-./scripts/e2e-container.sh
-```
-
----
-
-### 🪟 Windows 11 & 10 Setup (WSL2 & Native PowerShell)
-
-RobOS supports Windows both inside WSL2 (with WSLg hardware-accelerated GUI streaming) and natively via PowerShell.
-
-#### Method A: WSL2 with WSLg (Recommended)
-WSL2 provides the ideal environment for RobOS on Windows because it supports in-memory `tmpfs` agent sandboxes, virtual X11 framebuffers, and native Windows 11 window integration:
+`scripts/e2e-container.sh` runs the end-to-end tests inside Docker. Docker is needed only for this script, which exits with an error if the `docker` command is missing. It builds the `robos-e2e-test:latest` image from `infra/docker/Dockerfile` (Ubuntu 24.04, Xvfb, Node 20) on the first run, mounts the repository at `/workspace`, and runs `npm test` in `packages/robos-test`.
 
 ```bash
-# 1. Inside your WSL2 Ubuntu terminal, install Node.js and Git:
-sudo apt update && sudo apt install -y nodejs npm git
-
-# 2. Clone the repository and install dependencies:
-git clone https://github.com/nddipiazza/robos.git
-cd robos
-npm install
-
-# 3. Launch applications (opens directly as native Windows 11 windows via WSLg):
-npx electron packages/pr-review
-npx electron packages/topology-manager
-npx electron packages/dev-central
-
-# 4. Run containerized headless verification & video proof-of-work:
-./scripts/e2e-container.sh
+./scripts/e2e-container.sh                 # default suite
+./scripts/e2e-container.sh --build         # rebuild the image first
+./scripts/e2e-container.sh -i              # shell inside the container
+./scripts/e2e-container.sh node packages/robos-test/tests/agents-manager/e2e.test.js
 ```
 
-#### Method B: Native Windows (PowerShell)
-You can also run RobOS developer tools directly in Windows PowerShell:
+## Next steps
 
-```powershell
-# 1. Install Node.js LTS and Git (if not already installed)
-winget install OpenJS.NodeJS.LTS
-winget install Git.Git
-
-# 2. Clone the repository and install dependencies:
-git clone https://github.com/nddipiazza/robos.git
-cd robos
-npm install
-
-# 3. Launch applications directly:
-npx electron packages\pr-review
-npx electron packages\topology-manager
-npx electron packages\dev-central
-npx electron packages\db-manager
-```
-
----
-
-## First-Run Onboarding & Organization Setup
-
-When you first launch RobOS or log into the desktop, you can onboard your organization or bootstrap a brand-new tenant:
-
-### 🏢 Organization Setup Paths
-- [**Existing Company Setup**]({{ site.baseurl }}{% link existing-company-setup.md %}) — For established organizations with existing IdPs: configure automated SCIM/LDAP directory sync (Okta, Azure AD / Microsoft Entra, Google Workspace), GitHub team mapping, and Team Topologies (`.robos/teams.yaml`).
-- [**New Company Setup**]({{ site.baseurl }}{% link new-company-setup.md %}) — For greenfield startups and new ventures: provision root administrator credentials, initialize VCS organizations, scaffold foundational squads, and configure AI provider keys.
-
-### 🛠️ Developer Application Wizards
-- [**Develop a New App**]({{ site.baseurl }}{% link new-app-wizard.md %}) — Launch the **RobOS App Wizard** to scaffold a brand-new application across multi-app archetypes (`DesktopApp`, `FrontEndApp`, `PCGame`, `MobileGame`, `Microservice`, `ConsoleApp`, `MobileApp`, `DataPipeline`, `Library`) with API contract specifications and runnable `dev-setup.sh`.
-- [**Import Existing Apps**]({{ site.baseurl }}{% link app-import-wizard.md %}) — Use the App Wizard's import engine to deeply inspect existing brownfield repositories, auto-detect runtime frameworks, synthesize Backstage `catalog-info.yaml`, and link into the Knowledge Graph.
-
----
-
-## Testing & Verifying Applications
-
-Run the containerized headless test suite or local scenario walkers:
-
-```bash
-# Run full automated test suite inside Docker container with Xvfb
-./scripts/e2e-container.sh
-
-# Run unit & scenario tests
-npm --prefix packages/robos-test test
-
-# Run developer tools test suite
-xvfb-run -a node --test packages/robos-test/tests/developer-tools/developer-tools-suite.test.js
-
-# Run full end-to-end topology & kubernetes lifecycle test
-xvfb-run -a node --test packages/robos-test/tests/e2e/topology-db-kube-lifecycle.test.js
-```
-
----
-
-## Next Steps
-
-- [**Existing Company Setup**]({{ site.baseurl }}{% link existing-company-setup.md %}) — Connect enterprise directory sync (Okta, Azure AD, OpenLDAP) and map Team Topologies.
-- [**New Company Setup**]({{ site.baseurl }}{% link new-company-setup.md %}) — Bootstrap a new startup, root administrator, and foundational squads.
-- [**Develop a New App**]({{ site.baseurl }}{% link new-app-wizard.md %}) — Scaffold a new application across archetypes with API contracts and Backstage catalog.
-- [**Import Existing Apps**]({{ site.baseurl }}{% link app-import-wizard.md %}) — Ingest existing brownfield repositories with automated tech stack detection.
-- [**RobOS Skills**]({{ site.baseurl }}{% link robos-skills.md %}) — Master cross-agent AI skills (Claude, Codex, Antigravity, Copilot, Gemini) and shell macros.
-- [**App Development Flow**]({{ site.baseurl }}{% link app-development-flow.md %}) — Learn the progressive flow of RobOS apps used to build an application.
-- [**AI Agent Review-Based Development**]({{ site.baseurl }}{% link agent-review-development.md %}) — Learn the plan-code-review-verify workflow.
-- [**Master Walkthroughs**]({{ site.baseurl }}{% link walkthroughs.md %}) — View recorded video walkthroughs and test proof-of-work.
-- [**System Architecture**]({{ site.baseurl }}{% link architecture.md %}) — Explore the 8-pillar SDLC architecture and Knowledge Graph.
-- [**App Suite Catalog**]({{ site.baseurl }}{% link apps.md %}) — Explore all applications.
-- [**💡 Feature Ideas Store on GitHub**](https://github.com/nddipiazza/robos/tree/main/docs/ideas) — Explore raw ideas, structured specs, and community feature requests.
+- [A day with RobOS]({{ site.baseurl }}{% link day-in-the-life.md %}): one task from plan to merged pull request, as recorded on the home page.
+- [Apps]({{ site.baseurl }}{% link apps.md %}): the app catalog.
+- [RobOS Voice]({{ site.baseurl }}{% link voice-prompt.md %}): dictation and voice commands.
+- [Company setup]({{ site.baseurl }}{% link existing-company-setup.md %}): connect RobOS to an existing organization.
+- [New app wizard]({{ site.baseurl }}{% link new-app-wizard.md %}): scaffold a new application.
+- [Architecture]({{ site.baseurl }}{% link architecture.md %}): how the pieces fit together.

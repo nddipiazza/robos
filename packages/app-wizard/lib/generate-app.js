@@ -205,7 +205,7 @@ function projectDocPage(spec, domain) {
     return `---
 title: ${JSON.stringify(spec.name)}
 layout: default
-parent: RobOS Projects
+parent: Projects
 permalink: /projects/${spec.slug}/
 ---
 
@@ -234,7 +234,7 @@ _Run \`npm run e2e:live && npm run evidence\` and embed \`evidence/*.mp4\` here.
   return `---
 title: ${JSON.stringify(spec.name)}
 layout: default
-parent: RobOS Projects
+parent: Projects
 permalink: /projects/${spec.slug}/
 ---
 

@@ -1,133 +1,106 @@
 ---
-title: RobOS Tabletop RPG & HeroQuest Engine
+title: "Tabletop RPG"
 layout: default
-parent: RobOS Projects
+parent: Projects
 permalink: /projects/tabletop-rpg/
-nav_order: 2
-description: "RobOS Tabletop RPG: A modular HeroQuest-inspired dungeon crawler engine powered by the RobOS Gaming library, multi-package Knowledge Graph, and Cartridge Player."
+nav_order: 3
+description: "A HeroQuest-style dungeon crawler in Godot 4 with data-driven cartridges, an HTTP control API and automated end-to-end tests."
 ---
 
-# RobOS Tabletop RPG & HeroQuest Engine
+# Tabletop RPG (HeroQuest engine)
 {: .no_toc }
 
-*RobOS Tabletop RPG* is a turn-based tactical dungeon crawler engine and cartridge player modeled after the classic *HeroQuest* board game system. Built on Godot 4.3 and backed by the **`robos-gaming`** shared library and tri-package Knowledge Graph, it executes self-contained tabletop cartridges with automated 2d6 movement, authentic combat dice mechanics (Skulls & Shields), fog-of-war room reveals, and headless agent telemetry.
-{: .fs-6 .fw-300 }
+A turn-based dungeon crawler in Godot 4.3, modelled on the HeroQuest board game, in `games/tabletop-rpg`. This page covers how to run it, what it contains, and how its parts fit together.
+{: .fs-6 }
 
-![HeroQuest Board Map]({{ "/assets/images/tabletop-rpg/heroquest_board.jpg" | relative_url }}){: .robos-zoomable-img }
-*Authentic 26×19 HeroQuest tactical dungeon board with outer perimeter corridors, central 4×5 chamber, and interconnected quadrant chambers.*
-
-## Table of contents
-{: .no_toc .text-delta }
-
+<details open markdown="block">
+  <summary>On this page</summary>
+  {: .text-delta }
 1. TOC
 {:toc}
+</details>
 
----
+![A dungeon board with rooms, doors and torches]({{ '/assets/images/tabletop-rpg/fan_dungeon_28x21.jpg' | relative_url }}){: .robos-zoomable-img }
 
-## Technical Architecture
+*The Fan Dungeon board image, the 28x21 map used by Quest 1. Rooms are the walled areas; the open space between them is corridor.*
 
-The RobOS Gaming ecosystem is engineered around a three-tier modular architecture spanning declarative semantic linked data, engine-agnostic shared libraries, and dedicated runtime players.
+## Run it
 
-![RobOS Gaming Architecture]({{ "/assets/images/architecture/robos-gaming-architecture.jpg" | relative_url }}){: .robos-zoomable-img }
-*Three-tier architecture diagram showing KGraph packages (game, crpg, tabletop), the shared robos-gaming library, and runtime engines.*
+You need Godot 4.3, the version `project.godot` targets (GL Compatibility renderer). The game does not bundle it. `play.sh` looks for the binary in `$GODOT_BIN`, then `~/.local/bin/godot`, `~/apps/godot4`, and `godot4` or `godot` on your `PATH`. It exits with an error if none exists.
 
-### Architecture Flow
-
-```mermaid
-flowchart TD
-    subgraph KGraph["Knowledge Graph Layer (.robos/kgraphs/)"]
-        KG_Base["robos.game (Base Ontology)<br/>Universal Rulesets & Shapes"]
-        KG_CRPG["robos.crpg (cRPG Package)<br/>RTwP, 3D Pawns, BioWare BCS"]
-        KG_Tabletop["robos.tabletop (Tabletop Package)<br/>HeroQuest Board, Combat Dice, Heroes"]
-        KG_Base --> KG_CRPG
-        KG_Base --> KG_Tabletop
-    end
-
-    subgraph Lib["Shared Gaming Library (packages/robos-gaming)"]
-        Dice["Universal Dice Engine<br/>d20 & Combat Dice (Skulls/Shields)"]
-        Grid["26x19 Board Grid & LOS<br/>Manhattan & Room Reveal"]
-        Bundler["GameCartridgeBundler<br/>Unified .cartridge.json Packager"]
-        Shapes["SHACL Shape Registry<br/>W3C Constraint Validators"]
-    end
-
-    subgraph Engines["Game Execution Layer"]
-        CRPG["crpg-realm<br/>Godot 4.3 Isometric RTwP Engine"]
-        Tabletop["tabletop-rpg<br/>Godot 4.3 HeroQuest Cartridge Player"]
-    end
-
-    KGraph --> Lib
-    Lib --> CRPG
-    Lib --> Tabletop
-```
-
----
-
-## Core Tabletop Mechanics
-
-### 1. Board Layout & Dimensions
-* **Grid**: Exactly **26 columns × 19 rows** of square stone tiles.
-* **Corridors**: Continuous 1-tile outer perimeter corridors plus inner corridors dividing the 4 quadrants.
-* **Central Chamber**: A prominent 4×5 square chamber (columns 11–14, rows 7–11) where boss encounters and tombs reside.
-* **Rooms**: 22 distinct rooms with ancient flagstone textures, closed wooden doors, and furniture props.
-
-### 2. Turn Sequence
-Each turn in the tabletop system progresses through disciplined phases:
-1. **Hero Phase**:
-   - **Roll Movement**: 2 standard six-sided dice (2d6) determine available movement squares.
-   - **Move**: Navigate along corridors and open rooms within the rolled budget.
-   - **Action**: One action per turn:
-     - **Attack**: Strike an adjacent monster using Hero combat dice.
-     - **Cast Spell**: Unleash one of the 12 elemental spells (Fire, Earth, Water, Air).
-     - **Search for Treasure**: Loot the current room for gold chests or artifacts.
-     - **Disarm Trap**: Clear pit or falling block traps (Dwarf special ability).
-   - **Open Doors**: Stepping next to a closed door allows opening it, immediately lifting the fog of war and revealing all monsters and furniture inside.
-2. **Morcar / Zargon Phase**:
-   - All revealed monsters navigate toward the nearest heroes and strike with monster combat dice.
-
-### 3. Combat Dice Mechanics
-HeroQuest uses specialized 6-sided combat dice:
-* **3 Skulls (50%)**: Attack Hits
-* **2 White Shields (33.3%)**: Hero Defense Success
-* **1 Black Shield (16.7%)**: Monster Defense Success
-
-```
-Wounds Inflicted = Max(0, Attack Skulls - Defense Shields)
-```
-
----
-
-## The Four Classic Heroes
-
-| Hero | Body Points | Mind Points | Attack Dice | Defend Dice | Starting Gear & Traits |
-|:---|:---:|:---:|:---:|:---:|:---|
-| **Barbarian** | 8 | 2 | 3 | 2 | Broadsword (3 dice attack), Frontline powerhouse |
-| **Dwarf** | 7 | 3 | 2 | 2 | Shortsword (2 dice attack), Innate ability to disarm traps |
-| **Elf** | 6 | 4 | 2 | 2 | Shortsword (2 dice attack), 1 Elemental Spell College |
-| **Wizard** | 4 | 6 | 1 | 2 | Dagger (1 die attack), 3 Elemental Spell Colleges (9 spells) |
-
----
-
-## Standalone Cartridge Player
-
-The tabletop player (`games/tabletop-rpg`) loads self-contained **`.cartridge.json`** game cartridges. 
-
-### Launching the Game
 ```bash
-# Interactive mode on your desktop
-./games/tabletop-rpg/play.sh
-
-# Autonomous Demonstration Mode (moves hero, opens doors, fights goblin, loots chest)
-./games/tabletop-rpg/play.sh --auto-play
-
-# Headless agent verification
+./games/tabletop-rpg/play.sh                   # prompts for a quest; defaults to quest 4 after 4 seconds
+./games/tabletop-rpg/play.sh --quest 1         # quest 1, from the heroquest-the-trial cartridge
+./games/tabletop-rpg/play.sh --cartridge heroquest-fortress-fire-king
+./games/tabletop-rpg/play.sh --dm              # play the Game Master (Zargon) instead of the heroes
+./games/tabletop-rpg/play.sh --auto-play       # scripted demo turn sequence
 ./games/tabletop-rpg/play.sh --headless --auto-play --quit-after 160
 ```
 
-### Automated Verification
-```bash
-# Run the Python cartridge verification suite
-python3 games/tabletop-rpg/tests/test_tabletop_cartridge.py
+Other flags in `play.sh`: `--reset` starts a new game instead of resuming, `--player` selects the hero side, and `--hard` sets hard mode. Without a terminal and without a cartridge argument, it loads `heroquest-the-trial`.
 
-# Run the shared gaming library tests
+## What is in the game
+
+The game loads a cartridge, a single `.cartridge.json` file that holds heroes, monsters, quests and maps. Two ship in `games/tabletop-rpg/cartridges`.
+
+| Cartridge | Quests | Maps |
+|:---|:---|:---|
+| `heroquest-the-trial` | Quest 1: The Trial. Quest 2: The Rescue of Sir Ragnar. Quest 3: Lair of the Orc Warlord. | Quest 1 uses the 28x21 Fan Dungeon, quest 2 the 26x19 classic board, quest 3 the 26x19 First Light caverns. |
+| `heroquest-fortress-fire-king` | Quest 4: The Fortress of the Fire King. | One 26x19 map. Its heroes carry their own gear and spells, and the file defines 28 monsters. |
+
+The rules in code:
+
+- **Movement.** A hero rolls 2d6 for movement (`TabletopDice.gd`).
+- **Combat.** Each combat die has three skulls, two white shields and one black shield. Wounds are the attacker's skulls minus the defender's shields, to a minimum of zero. A defending hero counts white shields and a defending monster counts black shields.
+- **Fog of war.** Rooms stay hidden until a hero opens a door into them.
+- **Spells.** `HeroQuestSpells.gd` defines 12 spells in four decks (fire, earth, water, air), plus 10 dread spells for the Game Master.
+
+The four heroes in the Quest 1 cartridge:
+
+| Hero | Body | Mind | Attack dice | Defend dice |
+|:---|:---:|:---:|:---:|:---:|
+| Barbarian | 8 | 2 | 3 | 2 |
+| Dwarf | 7 | 3 | 2 | 2 |
+| Elf | 6 | 4 | 2 | 2 |
+| Wizard | 4 | 6 | 1 | 2 |
+
+## How the parts fit
+
+| Part | Location | Role |
+|:---|:---|:---|
+| Game | `games/tabletop-rpg` | Godot project. Main scene `TabletopWorld.tscn`; autoloads for dice, cartridges, spells, equipment and the control server. |
+| Shared library | `packages/robos-gaming` | Node.js code for dice, a board grid with walls and doors, three map configurations, a cartridge bundler that validates a cartridge, and the gaming ontology with its SHACL shapes. |
+| Knowledge graph | `.robos/kgraphs/tabletop-game` | The `robos.tabletop` package: heroes, monsters, spell cards, furniture, map configurations and test scenarios. Hero nodes refer to starting weapons defined in the `robos.game` package in `.robos/kgraphs/game`. |
+| Cartridge editor | [RobOS Tabletop Studio]({{ '/apps/robos-tabletop/' | relative_url }}) | Electron app for editing cartridge data. |
+| Map tool | [Tabletop Blockmap Creator]({{ '/apps/tabletop-blockmap-creator/' | relative_url }}) | Electron app for calibrating a grid over a dungeon image and drawing corridors and rooms. |
+
+## Control API
+
+While the game runs, `GameControlServer.gd` listens on `127.0.0.1:18092`. Set `TABLETOP_SERVER_PORT` to use another port.
+
+| Request | Purpose |
+|:---|:---|
+| `GET /api/v1/health` | Liveness check. |
+| `GET /api/v1/state` | Current game state as JSON. |
+| `GET /api/v1/cartridges` | Discovered cartridges and the active one. |
+| `POST /api/v1/action` | Run a game action, such as rolling movement, moving, opening a door or attacking. |
+| `POST /api/v1/cartridge/insert` | Load a different cartridge. |
+| `POST /api/v1/screenshot` | Save a PNG to the path in the request body. |
+
+`rpc_ai/tabletop_qa_player.py` is a Python client for this API. `rpc_ai/tabletop_rpc_ai.py` builds on it to play whole turns.
+
+## Tests
+
+The library tests need only Node.js:
+
+```bash
 npm --prefix packages/robos-gaming test
 ```
+
+The game has 60 `test_*.py` files in `games/tabletop-rpg/tests`. 58 of them launch the game through `play.sh`, typically with `--headless` and a dedicated port. They then drive the game through the control API with `TabletopQAPlayer` and assert on the returned state. They need a Godot binary. Run one directly:
+
+```bash
+python3 games/tabletop-rpg/tests/test_tabletop_cartridge.py
+```
+
+`tests/record_tabletop_gameplay.py` plays a scripted session in a virtual display (Xvfb at 1920x1080), records it with FFmpeg and writes an MP4 and a WebVTT caption file to `~/.robos/development/walkthroughs/tabletop-gameplay/`.

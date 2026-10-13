@@ -1,160 +1,186 @@
 ---
-title: Quick Start
+title: CRPG quick start
 layout: default
-parent: Tactical cRPG & Infinity AI Engine
-grand_parent: RobOS Projects
+parent: Realm of Heroes CRPG
+grand_parent: Projects
 nav_order: 1
-description: "Install Godot, run Realm of Heroes, and run the BDD test suites with video recording in about ten minutes."
+description: Install Godot 4.3, run Realm of Heroes from source, start a cartridge or a single scene, and run the BDD test suites.
 ---
 
-# Quick Start
+# CRPG quick start
 {: .no_toc }
 
-Get the game running, play the first scene, then run the automated test suites. Everything lives in `games/crpg-realm/` in the [RobOS repository](https://github.com/nddipiazza/robos/tree/main/games/crpg-realm).
-{: .fs-6 .fw-300 }
+How to run Realm of Heroes from the RobOS repository, start a specific campaign or scene, and run its automated tests. The game lives in `games/crpg-realm/`.
+{: .fs-6 }
 
-## Table of contents
-{: .no_toc .text-delta }
-
+<details open markdown="block">
+  <summary>On this page</summary>
+  {: .text-delta }
 1. TOC
 {:toc}
+</details>
 
----
-
-## 1. Prerequisites
+## Prerequisites
 
 | Need | For | Notes |
 |:---|:---|:---|
-| **Godot 4.3** (standard build, not .NET) | Playing and testing | The project declares the `4.3` feature and the GL Compatibility renderer, so it runs on modest GPUs. |
-| **Python 3** + `behave`, `behave-html-formatter` | Tests only | No `requirements.txt` exists; install them yourself (below). |
-| **Xvfb** | Tests only | Godot runs *windowed* inside a virtual X display. Linux only. |
-| **ffmpeg** | Tests only | Records every scenario to MP4. |
+| Git, Godot 4.3 (standard build, not .NET) | Playing, tests | `project.godot` declares the `4.3` feature and the GL Compatibility renderer. |
+| Python 3, `behave`, `behave-html-formatter` | Tests | The repo has no `requirements.txt`. The test code itself uses only the standard library plus `behave`. |
+| `Xvfb`, `ffmpeg` | Tests that record video | Linux only. Not needed in backend mode (see [Run the tests](#run-the-tests)). |
+| Node.js and npm | [Campaign editor]({{ '/projects/crpg-realm/campaign-editor-tutorial.html' | relative_url }}) | The editor is an Electron app. |
 
 ```bash
 git clone https://github.com/nddipiazza/robos.git
 cd robos/games/crpg-realm
-
-# test-only dependencies (Debian/Ubuntu)
-sudo apt install xvfb ffmpeg
-python3 -m pip install behave behave-html-formatter
+python3 -m pip install behave behave-html-formatter   # tests only
 ```
 
-## 2. Play the game
+## Play the game
 
 ```bash
 ./play.sh
 ```
 
-`play.sh` finds Godot in this order and then runs `godot --path .`:
+`play.sh` looks for Godot in this order, then runs `godot --path . <your arguments>`:
 
-1. `$GODOT_BIN` (if it is executable)
+1. the file named by `$GODOT_BIN`
 2. `~/apps/godot4`
 3. `godot4` on your `PATH`
 4. `godot` on your `PATH`
 
-If none is found it exits with *"Godot 4 binary not found"*. Fix it with `export GODOT_BIN=/path/to/Godot_v4.3-stable_linux.x86_64`.
-
-The game opens on **Character Select** (`scenes/CharacterSelect.tscn`). Pick one of 9 races and 12 classes, then start. You wake up in the **Homestead** (Act 1). See [Controls]({{ '/projects/crpg-realm/controls.html' | relative_url }}) for keys; the essentials are:
-
-- **Left-click** the ground to move, **Shift-click** to queue waypoints.
-- **Left-click** NPCs, doors, chests, items and enemies to interact.
-- **Space** pauses and resumes (real-time with pause).
-- **1–9** picks a dialogue reply in the log.
-
-You can also open the project in the Godot editor (`godot --editor --path .`) and press F5.
-
-### Jump straight to a scene
-
-`debug.sh` takes the same Godot lookup and starts a chosen scene instead of Character Select:
+If none is found it prints `Error: Godot 4 binary not found` and exits. Set `GODOT_BIN` to fix that:
 
 ```bash
-./debug.sh --scene VillageSquare        # short names: Homestead, VillageSquare, GarrisonKeep, VictoryScreen, TestRunner
-./debug.sh --scene res://scenes/AncientCatacombs.tscn   # any other scene: pass the res:// path
+GODOT_BIN=/path/to/Godot_v4.3-stable_linux.x86_64 ./play.sh
 ```
 
-{: .note }
-Starting mid-campaign skips the setup that Character Select and earlier scenes perform, so party members, items and quest flags will be at their defaults.
+You can also open the folder in the Godot editor (`godot --editor --path .`) and press F5.
 
-## 3. The campaign at a glance
+The game opens on Character Select. There you set the hero name (blank becomes "Lieutenant Vance"), pick one of 9 races and 12 classes, optionally toggle the spells Magic Missile, Cure Wounds and Fireball, and press **RE-ROLL STATS** until the ability scores (4d6, drop the lowest die) suit you. The **EMBARK INTO OAKHAVEN** button starts the game.
 
-| Act | Scene | What happens |
-|:---|:---|:---|
-| 1 | `Homestead.tscn` | Wake up, loot the footlocker, meet Elora. Leaving is scripted and takes you to the village. |
-| 2 | `VillageSquare.tscn` | 12 townsfolk, shops, ground items. The Royal Garrison Gate is locked. |
-| 3 | `WhisperingForest.tscn` | River and bridge, dire wolves, the goblin peddler and the hermit. |
-| 4 | `AncientCatacombs.tscn` | Traps, skeleton archers, the Spirit of Sir Justin, and the sarcophagus. |
-| 5 | `GarrisonKeep.tscn` | Confront Captain Malakor. Winning loads `VictoryScreen.tscn`. |
+### Cartridges
 
-The exact door-to-door graph is in [Scenes & Door Portals]({{ '/projects/crpg-realm/create-your-own-game/02-scenes-and-portals.html' | relative_url }}).
+If `res://cartridges/` (or `user://cartridges/`) contains cartridge files, Character Select also shows a cartridge bar at the top left: a drop-down plus **Play** and **Auto-Play** buttons. The repository ships six, and `rescue-the-princess` is selected by default. While a cartridge is selected, Embark loads that cartridge's starting map instead of the Homestead scene. **Auto-Play** lets the game play the cartridge's story by itself.
 
-## 4. Run the tests
+| Cartridge id | Title |
+|:---|:---|
+| `candlekeep-prologue` | Candlekeep: The Prophecy Begins |
+| `crypt-of-the-archmage` | Crypt of the Archmage |
+| `dragonwarrior-1-usa` | Dragon Warrior (USA) |
+| `rescue-the-princess` | Rescue of Princess Jennifer |
+| `sword-sanctuary` | Sanctuary of the Blade |
+| `underdark-incursion` | Descent into the Cavern Depths |
+
+To skip Character Select and start a cartridge directly, pass it on the command line. Arguments after the script name go to Godot, and the game reads them itself:
 
 ```bash
-python3 run_cucumber_tests.py              # normal suite (default): 17 features
-python3 run_cucumber_tests.py --spells     # 24 spell features
-python3 run_cucumber_tests.py --playthrough  # 6 start-to-finish playthroughs
-python3 run_cucumber_tests.py --all        # everything (47 features)
+./play.sh --cartridge rescue-the-princess
+./play.sh --cartridge rescue-the-princess --auto-play
+./play.sh --cartridge rescue-the-princess --map main-castle
+```
 
-# one feature file
+`--campaign` is an alias for `--cartridge`, and `--starting-map` for `--map`. The environment variables `CRPG_CARTRIDGE`, `CRPG_CAMPAIGN`, `CRPG_MAP` and `CRPG_AUTO_PLAY=1` do the same. You can also pass a path that starts with `res://` or `user://`, or that ends in `.json`.
+
+If you pass the slug of a campaign that has no cartridge, the game builds one on the fly from `campaigns/<slug>.jsonld`, but with empty map, character and item tables. Create real cartridges with the [editor or the bundler]({{ '/projects/crpg-realm/campaign-editor-tutorial.html#build-a-cartridge' | relative_url }}).
+
+### The original five-scene campaign
+
+The hand-built scenes (`Homestead`, `VillageSquare`, `WhisperingForest`, `AncientCatacombs`, `GarrisonKeep`) are still in the repository. Start one directly with `debug.sh`:
+
+```bash
+./debug.sh --scene Homestead
+./debug.sh --scene res://scenes/AncientCatacombs.tscn
+```
+
+The short names `Homestead`, `VillageSquare`, `GarrisonKeep`, `VictoryScreen` and `TestRunner` are built in. For any other scene, pass the `res://` path. `debug.sh` skips Character Select, so party members, items and quest flags are at their defaults. The [hub page]({{ '/projects/crpg-realm/' | relative_url }}#the-original-campaign) shows how the scenes connect.
+
+### Demo mode
+
+The demo mode plays the test suite inside the game, with the scenario splash cards, step bar and proof panel on screen. Use the **Demo Arena** and **Real cRPG Demo** buttons on Character Select, or:
+
+```bash
+./play.sh --demo        # engine scenarios in the Scenario Arena
+./play.sh --real-demo   # campaign playthroughs in the real scenes
+```
+
+Demo keys are on the [controls page]({{ '/projects/crpg-realm/controls.html#demo-mode' | relative_url }}).
+
+### Browser build
+
+```bash
+./export_web.sh
+```
+
+This exports `build/web/` and `build/realm-of-heroes-web.zip`. It needs the Godot 4.3 web export templates in `~/.local/share/godot/export_templates/4.3.stable/`. In a browser build the control server does not start and the test panels are hidden.
+
+## Run the tests
+
+Run all commands from `games/crpg-realm/`. There are two test layers that matter day to day. The details are on the [testing page]({{ '/projects/crpg-realm/infinity-ai-agent-harness.html' | relative_url }}).
+
+```bash
+# Engine suite: rules, spells, AI, maps. Headless Godot, no video.
+python3 run_cucumber_tests.py --engine --backend
+
+# Same suite with video, splash cards and pauses ("prove it to a human")
+python3 run_cucumber_tests.py --engine --human
+
+# Scene and UI features under Xvfb, one MP4 per scenario
+python3 run_cucumber_tests.py            # tests/e2e/features/normal
+python3 run_cucumber_tests.py --spells
+python3 run_cucumber_tests.py --playthrough
+python3 run_cucumber_tests.py --scenarios
+
+# Everything under tests/e2e/features/
+python3 run_cucumber_tests.py --all
+
+# One feature file
 python3 run_cucumber_tests.py tests/e2e/features/normal/12_infinity_engine_traps_detection_and_disarm.feature
 ```
 
-Any other argument is passed through to `behave` (for example `-n "scenario name"` or `--tags`).
+Arguments the runner does not recognize go to `behave`, for example `-n "scenario name"` or `--tags=@find_traps`.
 
-What happens:
+In human mode the harness starts Xvfb on display `:99` at 1920x1080 once per run, and starts one Godot process on it with the control server on port 18090. Before each scenario the harness resets the game and starts `ffmpeg` recording at 30 fps. In backend mode it starts Godot with `--headless` and records nothing.
 
-1. Once per run, Xvfb starts on `:99` at 1920×1080×24 and Godot starts windowed on that display, with the in-game HTTP control server on port **18090**.
-2. Before each scenario the game is reset (and, for most scenarios, moved to a starting scene), and ffmpeg starts recording the display at 30 fps.
-3. Steps drive the game through HTTP (`/api/v1/action`, `/api/v1/setup_state`, …) and assert on `/api/v1/state`.
-4. After each scenario the video and a GameState JSON snapshot are saved.
+Where results go:
 
-Results:
-
-- Behave's console summary and exit code are the source of truth.
-- HTML report: `tests/e2e/reports/index.html`
-- Videos: `tests/e2e/reports/videos/<scenario_name>.mp4`
+- The console summary and the exit code from `behave` are the real result.
+- Videos: `tests/e2e/reports/videos/<scenario_name>.mp4` (human mode only).
+- Game state snapshots, `godot_output.log` and `ffmpeg.log` are in `tests/e2e/reports/`.
+- `tests/e2e/reports/index.html` is a report page.
 
 {: .warning }
-The generated HTML report marks a scenario as passed whenever its video exists. Every scenario is recorded, so that badge does not reflect failures. Check the console output or the exit code.
+The HTML report marks a scenario PASSED when its video file exists, not when it passed. A failed scenario that was recorded still shows PASSED, and in backend mode, which records no video, every scenario shows FAILED. Read the console output or the exit code.
 
-### Useful environment variables
+Environment variables the test harness reads:
 
 | Variable | Default | Effect |
 |:---|:---|:---|
-| `GODOT_BIN` | auto-detected | Godot binary used by the tests. |
-| `XVFB_BIN`, `FFMPEG_BIN` | auto-detected | Override tool paths. |
-| `USE_XVFB` | `1` | Set to `0` to run on your real display and watch. |
-| `CRPG_DISPLAY` / `XVFB_DISPLAY` | `:99` | Virtual display number. |
-| `CRPG_WEB_SERVICE_PORT` | `18090` | HTTP control server port. |
+| `CRPG_MODE` | `human` | `backend` runs headless with no video, overlays or pauses. |
+| `CRPG_WEB_SERVICE_PORT` | `18090` | Port for the game's control server. |
+| `CRPG_DISPLAY` or `XVFB_DISPLAY` | `:99` | X display Godot renders on. |
+| `USE_XVFB` | `1` | `0`, `false` or `no` does not start Xvfb. Also set `CRPG_DISPLAY` to your own display. |
+| `GODOT_BIN`, `XVFB_BIN`, `FFMPEG_BIN` | auto-detected | Tool paths. |
+| `CRPG_TURN_PACE`, `CRPG_SHOW_PAUSE` | `0.7`, `0.9` | Seconds between AI turns and after each action in human mode (engine features). |
 
-Full details: [Cucumber BDD & Video Proof]({{ '/projects/crpg-realm/create-your-own-game/08-cucumber-bdd-testing.html' | relative_url }}).
+## Talk to the running game
 
-## 5. Poke the running game over HTTP
-
-Every run of the game, including `./play.sh`, starts `GameControlServer` on `127.0.0.1`. Outside the tests it defaults to port **8080** and tries up to 8089 if that is taken. The console prints the chosen port.
+Every desktop run starts `GameControlServer` on `127.0.0.1`. Outside the tests it listens on port 8080 and tries up to 8089 if that is busy. The port is printed in the Godot output.
 
 ```bash
 curl -s http://127.0.0.1:8080/api/v1/health
 curl -s http://127.0.0.1:8080/api/v1/state | python3 -m json.tool | head -40
 ```
 
-Choose the port with `CRPG_WEB_SERVICE_PORT=18090 ./play.sh` or `./play.sh -- --port 18090`. The endpoint list is in the [Reference]({{ '/projects/crpg-realm/reference.html' | relative_url }}).
+Choose the port with `CRPG_WEB_SERVICE_PORT=18090 ./play.sh` or `./play.sh --port 18090`. The endpoint list is on the [reference page]({{ '/projects/crpg-realm/reference.html#http-control-api' | relative_url }}).
 
 {: .important }
-The control server has no authentication. It only binds to localhost, but anything on your machine can drive the game while it runs.
+The control server has no authentication. It binds to localhost only, but any local process can drive the game while it runs.
 
 ## Troubleshooting
 
-| Symptom | Fix |
+| Symptom | Cause and fix |
 |:---|:---|
-| `Godot 4 binary not found` | Set `GODOT_BIN` to the full path of a Godot 4.3 binary. |
-| Godot opens a *Project Manager* or complains about the version | Use Godot 4.3. Newer 4.x releases usually work but may offer to upgrade `project.godot`; don't commit that change. |
-| `Web service did not respond on port 18090 in time!` | Godot failed to start or another process holds the port. Check the `[GameControlServer]` lines in the output, or try `CRPG_WEB_SERVICE_PORT=18190`. |
-| `No module named behave` | `python3 -m pip install behave behave-html-formatter` with the same `python3` you run the tests with. |
-| Blank or black videos | Xvfb or ffmpeg is missing, or `USE_XVFB=0` is recording a different display. |
-
-## Where next
-
-- **Playing:** [Controls]({{ '/projects/crpg-realm/controls.html' | relative_url }})
-- **Building your own content:** [Creating Your Own Game]({{ '/projects/crpg-realm/create-your-own-game.html' | relative_url }})
-- **Looking something up:** [Reference]({{ '/projects/crpg-realm/reference.html' | relative_url }})
+| `Godot 4 binary not found` | Set `GODOT_BIN` to a Godot 4.3 binary. |
+| `Web service did not respond on port 18090 in time!` during tests | Godot did not start, or another process holds the port. Read `tests/e2e/reports/godot_output.log`, or set `CRPG_WEB_SERVICE_PORT` to another port. If 18090 is taken but a nearby port is free, the game binds the nearby port and the tests still call 18090. |
+| `No module named behave` | Install `behave` with the same `python3` that runs the tests. |
+| Videos are black or missing | Xvfb or ffmpeg is missing, or `USE_XVFB=0` points at a different display than `CRPG_DISPLAY`. |

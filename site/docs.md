@@ -3,49 +3,58 @@ layout: default
 title: Documentation
 permalink: /docs/
 description: Guides, architecture and reference for RobOS.
+extra_css: /assets/home.css
+body_class: home
 ---
-<div class="page-h wrap">
-  <h1>Documentation</h1>
-  <p>Learn RobOS, build on it, and roll it out to your team.</p>
-</div>
-<section style="padding-top:24px">
+<section class="h-sec" style="padding-bottom:40px">
   <div class="wrap">
-    <div class="grid3">
-      <a class="card" href="{{ '/v1/getting-started.html' | relative_url }}"><div class="ic">🚀</div><h3>Get started</h3><p>Install RobOS on macOS, Linux or Windows and launch your first app.</p><span class="go">Installation guide →</span></a>
-      <a class="card" href="{{ '/v1/knowledge-graph.html' | relative_url }}"><div class="ic">🧬</div><h3>Knowledge graph</h3><p>Model your architecture once and let every agent use it.</p><span class="go">Learn the model →</span></a>
-      <a class="card" href="{{ '/v1/pr-review-theater.html' | relative_url }}"><div class="ic">🎬</div><h3>Review &amp; proof of work</h3><p>Verify what agents changed, with video evidence.</p><span class="go">See how →</span></a>
+    <div class="h-head" style="margin-bottom:44px">
+      <p class="h-label">Documentation</p>
+      <h2 style="font-size:clamp(2.2rem,4.4vw,3.4rem);line-height:1.06">Learn RobOS, build on it, and run it for a team</h2>
+      <p class="h-sub">Guides for the apps, the knowledge graph and the review tools. Every page is checked against the code in the repository.</p>
     </div>
+    <div class="h-paths">
+      <a href="{{ '/v1/getting-started.html' | relative_url }}">
+        <h3>Get started</h3>
+        <p class="h-who">Install and first run</p>
+        <p>Install RobOS on macOS, Linux or Windows and open your first app.</p>
+      </a>
+      <a href="{{ '/v1/knowledge-graph.html' | relative_url }}">
+        <h3>Knowledge graph</h3>
+        <p class="h-who">The core idea</p>
+        <p>How your system is described once, as data, and how agents read it.</p>
+      </a>
+      <a href="{{ '/v1/pr-review-theater.html' | relative_url }}">
+        <h3>Review and proof of work</h3>
+        <p class="h-who">Checking agent changes</p>
+        <p>Read the diff, check the evidence, and approve a pull request.</p>
+      </a>
+    </div>
+  </div>
+</section>
 
-    <div class="doc-list" style="margin-top:56px">
-      <div>
-        <h3 style="margin-top:8px">Use RobOS</h3>
-        <a href="{{ '/v1/use-robos.html' | relative_url }}"><b>Overview</b><span>→</span></a>
-        <a href="{{ '/apps/' | relative_url }}"><b>App directory</b><span>→</span></a>
-        <a href="{{ '/v1/voice-prompt.html' | relative_url }}"><b>RobOS Voice</b><span>→</span></a>
-        <a href="{{ '/v1/day-in-the-life.html' | relative_url }}"><b>A day in the life</b><span>→</span></a>
-        <a href="{{ '/v1/walkthroughs.html' | relative_url }}"><b>E2E walkthroughs</b><span>→</span></a>
+<section class="h-sec h-tint">
+  <div class="wrap">
+    <div class="h-index">
+      <div class="h-index-row">
+        <h3>Use RobOS</h3>
+        <p><a href="{{ '/v1/use-robos.html' | relative_url }}">Overview</a>, <a href="{{ '/apps/' | relative_url }}">App directory</a>, <a href="{{ '/v1/voice-prompt.html' | relative_url }}">RobOS Voice</a>, <a href="{{ '/v1/day-in-the-life.html' | relative_url }}">A day with RobOS</a>, <a href="{{ '/v1/projects/' | relative_url }}">Projects</a></p>
       </div>
-      <div>
-        <h3 style="margin-top:8px">Build on RobOS</h3>
-        <a href="{{ '/v1/build-on-robos.html' | relative_url }}"><b>Overview</b><span>→</span></a>
-        <a href="{{ '/v1/new-app-wizard.html' | relative_url }}"><b>New app wizard</b><span>→</span></a>
-        <a href="{{ '/v1/robos-skills.html' | relative_url }}"><b>Skills</b><span>→</span></a>
-        <a href="{{ '/v1/architecture.html' | relative_url }}"><b>System architecture</b><span>→</span></a>
-        <a href="{{ '/v1/schemas.html' | relative_url }}"><b>Schemas</b><span>→</span></a>
+      <div class="h-index-row">
+        <h3>Review and governance</h3>
+        <p><a href="{{ '/v1/agent-review-development.html' | relative_url }}">Overview</a>, <a href="{{ '/v1/pr-review-theater.html' | relative_url }}">PR Review Theater</a>, <a href="{{ '/v1/walkthroughs.html' | relative_url }}">Walkthroughs and proof of work</a>, <a href="{{ '/v1/agent-tiers.html' | relative_url }}">Agent tiers</a></p>
       </div>
-      <div>
-        <h3 style="margin-top:32px">RobOS for Teams</h3>
-        <a href="{{ '/v1/robos-for-teams.html' | relative_url }}"><b>Overview</b><span>→</span></a>
-        <a href="{{ '/v1/why-robos.html' | relative_url }}"><b>Why RobOS</b><span>→</span></a>
-        <a href="{{ '/v1/agent-tiers.html' | relative_url }}"><b>Agent tiers &amp; dispatch</b><span>→</span></a>
-        <a href="{{ '/v1/personas.html' | relative_url }}"><b>User personas</b><span>→</span></a>
+      <div class="h-index-row">
+        <h3>Build on RobOS</h3>
+        <p><a href="{{ '/v1/build-on-robos.html' | relative_url }}">Overview</a>, <a href="{{ '/v1/new-app-wizard.html' | relative_url }}">New app wizard</a>, <a href="{{ '/v1/schemas.html' | relative_url }}">Schemas</a>, <a href="{{ '/v1/robos-skills.html' | relative_url }}">Skills</a>, <a href="{{ '/v1/architecture.html' | relative_url }}">Architecture</a></p>
       </div>
-      <div>
-        <h3 style="margin-top:32px">More</h3>
-        <a href="{{ '/v1/big-wins.html' | relative_url }}"><b>Main wins</b><span>→</span></a>
-        <a href="{{ '/v1/roadmap.html' | relative_url }}"><b>Roadmap</b><span>→</span></a>
-        <a href="{{ '/v1/training/' | relative_url }}"><b>Training</b><span>→</span></a>
-        <a href="{{ '/v1/' | relative_url }}"><b>Classic docs (v1)</b><span>→</span></a>
+      <div class="h-index-row">
+        <h3>RobOS for Teams</h3>
+        <p><a href="{{ '/v1/robos-for-teams.html' | relative_url }}">Overview</a>, <a href="{{ '/v1/why-robos.html' | relative_url }}">Why RobOS</a>, <a href="{{ '/v1/big-wins.html' | relative_url }}">What sets RobOS apart</a>, <a href="{{ '/v1/existing-company-setup.html' | relative_url }}">Company setup</a></p>
+      </div>
+      <div class="h-index-row">
+        <h3>More</h3>
+        <p><a href="{{ '/v1/roadmap.html' | relative_url }}">Roadmap</a>, <a href="{{ '/v1/training/' | relative_url }}">Training</a>, <a href="{{ '/v1/about.html' | relative_url }}">About</a>, <a href="{{ '/v1/' | relative_url }}">All documentation (v1 index)</a></p>
       </div>
     </div>
   </div>

@@ -1,126 +1,33 @@
 ---
+title: "Proposal: cloud file storage and sharing"
 layout: default
 nav_exclude: true
 ---
 
-# Feature Spec: RobOS File Storage & MCP Agent-Driven File Sharing
+# Proposal: cloud file storage and sharing
+{: .no_toc }
 
-- **Status**: Draft
-- **Created Date**: 2026-09-03
-- **Target Component**: Desktop Apps (`packages/file-storage`), MCP Server Tools, `packages/people-directory`, `packages/group-manager`
-- **Author/Idea Source**: User Idea
+A desktop app for browsing cloud object storage, plus MCP tools that let an agent upload a file and share it with people from the People Directory.
+{: .fs-6 }
 
-## 1. Overview & Vision
-Modern software teams handle diverse assets alongside source code: design specs, architecture diagrams, build artifacts, test datasets, logs, client documents, and media. These assets typically reside in heterogeneous cloud storage systems (AWS S3, Google Cloud Storage, Azure Blob Storage, Google Drive, Microsoft OneDrive, Nextcloud/WebDAV) accessed via complex SDK credentials, web consoles, or disjointed CLI tools.
+{: .important }
+Proposal, not built. There is no `packages/file-storage` and no file storage MCP server in the repository.
 
-This feature introduces the **RobOS File Storage App (`packages/file-storage`)** and an accompanying **MCP Storage & Sharing Engine**. RobOS File Storage acts as a unified, high-performance desktop wrapper over major cloud storage providers via SDK keys and OAuth tokens. 
+## Proposal
 
-Furthermore, by integrating with the **RobOS People & Groups directory**, **RobOS AI Agents (via MCP)** gain the ability to inspect files/folders, generate pre-signed share links, manage cloud access control lists (ACLs), and securely share assets directly with designated RobOS users and teams.
+- A new app, `packages/file-storage`, with a file browser for several providers. The spec lists S3-compatible stores (including R2 and MinIO), Google Cloud Storage, Azure Blob, Google Drive, OneDrive and WebDAV or SFTP.
+- Provider credentials stored in the GPG-backed `pass` store, not in plain files.
+- An MCP server, `robos-file-storage-mcp`, with tools to list, upload and download files, create a signed share link, and share with a user or group. For example, an agent could be asked to upload benchmark results to a team bucket and share them with a named person.
+- Recipient lookup through [People Directory]({{ '/apps/people-directory/' | relative_url }}) and [Group Manager]({{ '/apps/group-manager/' | relative_url }}), and a desktop notification to the recipient.
 
-## 2. User Stories & Use Cases
-- **As a** developer or DevOps engineer,
-- **I want a** unified RobOS File Storage desktop app configured with my cloud storage credentials (AWS S3, GCS, Azure Blob, Google Drive, OneDrive),
-- **So that** I can browse, upload, preview, and organize cloud buckets and folders without leaving the RobOS desktop environment.
+The Drive and OneDrive providers depend on the OAuth work in [linked accounts and guided OAuth]({{ '/ideas/specs/robos-people-groups-cloud-identity.html' | relative_url }}).
 
-- **As a** developer collaborating with an AI agent in RobOS,
-- **I want to** instruct the agent: *"Upload the benchmark results to our team S3 bucket and share the folder with @sarah and the @qa-team"*,
-- **So that** the AI agent leverages MCP tools and the People/Groups directory to upload the files and configure appropriate sharing permissions automatically.
+## What exists today
 
-- **As a** team member,
-- **I want to** receive a notification and direct link in RobOS when a file or directory is shared with me by an AI agent or teammate,
-- **So that** I can immediately access and download the asset.
+- [Data Sources]({{ '/apps/data-sources/' | relative_url }}) has an "Amazon S3 / MinIO" connection type (`packages/data-sources/main.js`). Nothing in it lists, uploads or shares objects.
+- No package lists a cloud storage SDK (`@aws-sdk`, `@google-cloud/storage`, `@azure/storage`) in its `package.json`.
+- People Directory and Group Manager exist, but neither can resolve a person to a cloud account.
 
-## 3. Key Capabilities & Scope
+## Source
 
-### 3.1 RobOS File Storage Desktop App (`packages/file-storage`)
-- **Multi-Provider Cloud Adapters**:
-  - AWS S3 / S3-compatible (Cloudflare R2, MinIO, Wasabi)
-  - Google Cloud Storage (GCS)
-  - Azure Blob Storage
-  - Google Drive & Microsoft OneDrive (via OAuth tokens from People/Groups identity integration)
-  - WebDAV / Nextcloud / SFTP
-- **Storage Explorer UI**:
-  - Modern dark-themed file browser with breadcrumb navigation, search, and sorting.
-  - In-app file previewing (Markdown, JSON, Images, PDF, Code, Log files).
-  - Drag-and-drop file/folder upload and download progress tracking.
-  - Multi-bucket / multi-account switcher in sidebar.
-
-### 3.2 Secure Credential & Provider Configuration
-- Guided connection wizard supporting:
-  - AWS Access Key ID + Secret Key / AWS Profile / IAM Roles
-  - Google Cloud Service Account JSON / Application Default Credentials
-  - Azure Storage Connection String / SAS Tokens
-  - Linked Cloud Accounts via RobOS Multi-Cloud Identity OAuth (Google Drive / OneDrive)
-- All secrets encrypted via RobOS GPG pass store (`~/.password-store/robos/storage/`).
-
-### 3.3 Agent-Driven File Sharing via MCP (`robos-file-storage-mcp`)
-- Expose rich storage and sharing tools to AI agents:
-  - `storage_list_files({ providerId, bucket, prefix })`
-  - `storage_upload_file({ providerId, bucket, localPath, remotePath })`
-  - `storage_download_file({ providerId, bucket, remotePath, localDestPath })`
-  - `storage_generate_share_link({ providerId, bucket, remotePath, expiresInHours })`
-  - `storage_share_with_user({ providerId, bucket, remotePath, userIdOrEmail, permissionLevel })`
-  - `storage_share_with_group({ providerId, bucket, remotePath, groupId, permissionLevel })`
-
-### 3.4 Integration with RobOS People & Groups
-- People Directory and Group Manager provide user identity resolution (resolving `@username`, GitHub handle, Slack ID, or email to the appropriate cloud account/IAM identifier).
-- When an asset is shared, RobOS generates a notification toast and updates the recipient's "Shared with Me" view in File Storage.
-
-### Out of Scope
-- Building a custom cloud storage backend (RobOS wraps existing enterprise cloud providers).
-- Heavy real-time document co-editing (focus is on storage management, artifact delivery, and sharing).
-
-## 4. Architectural & System Integration
-
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/file-storage-sharing-architecture.jpg' | relative_url }}" alt="RobOS File Storage & Cloud Sharing Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>RobOS File Storage & Cloud Sharing Architecture</strong>: MCP tools, desktop GUI app, People Directory identity resolution, and multi-cloud adapters (S3, GCS, Azure, OneDrive). <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
-
-- **Impacted Packages/Apps**:
-  - `packages/file-storage` (new Electron desktop app)
-  - `packages/people-directory` & `packages/group-manager` (sharing targets and identity lookup)
-  - `packages/mcp-manager` (register and configure `robos-file-storage-mcp`)
-  - `packages/robos-icons` (add `file-storage` icon)
-  - `packages/robos-lib` (storage adapter abstractions and IPC registration)
-- **IPC / Endpoints Required**:
-  - `ipcMain.handle('storage:list-providers')`
-  - `ipcMain.handle('storage:save-provider', { providerConfig })`
-  - `ipcMain.handle('storage:list-objects', { providerId, bucket, prefix })`
-  - `ipcMain.handle('storage:upload-object', { providerId, bucket, key, localPath })`
-  - `ipcMain.handle('storage:download-object', { providerId, bucket, key, destinationPath })`
-  - `ipcMain.handle('storage:create-share', { providerId, bucket, key, recipients, expiry })`
-- **UI/UX Considerations**:
-  - Dual-pane or tree-and-grid view of cloud buckets and files.
-  - "Share" modal with user/group autocomplete powered by People Directory.
-  - Transfer progress bar in bottom status bar.
-- **Data & Configuration Storage**:
-  - Provider profiles: `~/.config/robos/storage/providers.json`
-  - Secrets: Encrypted in `~/.password-store/robos/storage/`
-
-## 5. Proposed Implementation Plan
-
-1. **Phase 1: Cloud Storage Adapter Engine & Secure Storage in `robos-lib`**
-   - Implement provider abstraction layer for S3, GCS, Azure Blob, Google Drive, and OneDrive.
-   - Wire credentials to GPG pass store.
-
-2. **Phase 2: RobOS File Storage App (`packages/file-storage`)**
-   - Build Electron application with bucket explorer, upload/download queue, and file previewers.
-   - Register app in `robos-icons`, `APP_REGISTRY`, and `.desktop` files.
-
-3. **Phase 3: MCP Storage Server (`robos-file-storage-mcp`)**
-   - Expose file inspection, upload, download, and share link generation as MCP tools.
-   - Test MCP tool invocations with Claude Code, Copilot, and Gemini agents.
-
-4. **Phase 4: People & Groups Sharing Integration**
-   - Integrate recipient resolution with People Directory and Group Manager.
-   - Implement notification triggers when assets are shared with RobOS users.
-
-## 6. Acceptance Criteria
-- [ ] Users can configure AWS S3, Google Cloud Storage, Azure Blob, and Drive/OneDrive accounts via secure credential entry or OAuth.
-- [ ] Users can browse buckets, upload/download files, preview supported media/text files, and generate signed URLs in `packages/file-storage`.
-- [ ] RobOS AI agents can list files, upload build artifacts, and generate pre-signed share links via MCP tools.
-- [ ] AI agents and users can target files and folders to share with specific RobOS users or groups from the People Directory.
-- [ ] All credentials and access tokens are stored encrypted at rest.
+Raw note: [`ideas/inbox/robos-file-storage-and-agent-sharing.txt`](https://github.com/nddipiazza/robos/blob/main/docs/ideas/inbox/robos-file-storage-and-agent-sharing.txt). The earlier long spec is in the git history of this file.
