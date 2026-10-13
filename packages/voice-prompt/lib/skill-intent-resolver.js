@@ -48,8 +48,8 @@ function normalizeMonsterType(rawType) {
     gargoyle: 'gargoyle',
     werewolves: 'werewolf',
     werewolf: 'werewolf',
-    abominations: 'abomination',
-    abomination: 'abomination',
+    abominations: 'fimir',
+    abomination: 'fimir',
     bosses: 'boss',
     boss: 'boss'
   };

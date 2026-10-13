@@ -94,6 +94,16 @@ test('SkillIntentResolver: Tabletop Quest Editor Skills', async (t) => {
     assert.strictEqual(s.params.room, '19');
   });
 
+  await t.test('resolves "add an abomination to room 6" as Fimir archetype', () => {
+    const skills = matchTabletopSkills('add an abomination to room 6');
+    assert.strictEqual(skills.length, 1);
+    const s = skills[0];
+    assert.strictEqual(s.id, 'tabletop:place-monster');
+    assert.strictEqual(s.params.monster, 'fimir');
+    assert.strictEqual(s.params.count, 1);
+    assert.strictEqual(s.params.room, '6');
+  });
+
   await t.test('resolves furniture and trap commands', () => {
     const furn = matchTabletopSkills('place a treasure chest in room 3');
     assert.strictEqual(furn.length, 1);

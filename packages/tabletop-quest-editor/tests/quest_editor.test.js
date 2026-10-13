@@ -1433,6 +1433,13 @@ test('Voice Map Setup: interprets spoken quest instructions and places items cle
   assert.equal(cmdZombies[0].count, 2);
   assert.equal(cmdZombies[0].targetRoom, 'room 19');
 
+  const cmdAbomination = interpretVoiceQuestCommands('add an abomination to room 1', blockmap, null);
+  assert.equal(cmdAbomination.length, 1);
+  assert.equal(cmdAbomination[0].category, 'monster');
+  assert.equal(cmdAbomination[0].type, 'fimir');
+  assert.equal(cmdAbomination[0].count, 1);
+  assert.equal(cmdAbomination[0].targetRoom, 'room 1');
+
   const cmdAmbient = interpretVoiceQuestCommands('(wind blowing)', blockmap, null);
   assert.equal(cmdAmbient.length, 0);
 
@@ -1491,6 +1498,16 @@ test('Voice Map Setup: interprets spoken quest instructions and places items cle
   assert.equal(placedZombies[0].name, 'Zombie');
   assert.equal(placedZombies[0].atk, 3);
   assert.equal(placedZombies[0].def, 3);
+
+  // Execute: "add an abomination to room 2" (verifying Fimir / Abomination alias)
+  const execAbom = executeVoiceMapCommands('add an abomination to room 2', 'guidance', quest, blockmap);
+  assert.equal(execAbom.success, true);
+  const placedFimir = quest.monsters.filter(m => m.type === 'fimir');
+  assert.equal(placedFimir.length, 1);
+  assert.equal(placedFimir[0].roomId, 'room-2');
+  assert.equal(placedFimir[0].atk, 3);
+  assert.equal(placedFimir[0].def, 3);
+  assert.equal(placedFimir[0].bp, 2);
 
   // Validate the resulting quest - must be 100% valid under HeroQuest rules
   const val = validateQuest(quest, blockmap);
