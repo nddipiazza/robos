@@ -1,591 +1,174 @@
 ---
-title: PR Review Theater & Verification
+title: PR Review Theater
 layout: default
-parent: Agent Governance & Review
-nav_order: 3
+parent: "Review & governance"
+nav_order: 1
 permalink: /pr-review-theater.html
 ---
 
-# PR Review Theater & Verification
+# PR Review Theater
 {: .no_toc }
 
-How RobOS turns pull request reviews into an interactive, multi-modal governance theater: AI agents teach developers how changes work with interactive masterclasses, prove real execution with 1080p narrated video proof-of-work, link living architecture deltas, and bridge directly into developer IDEs.
-{: .fs-6 .fw-300 }
+PR Review Theater is the review window of the Agent Code Review Platform app. It shows a branch's diff, the evidence that the change works and an agent-led walkthrough, then helps the author open a pull request or a reviewer approve one. Read this page to see what each tab does, which parts use real data, and how to open a review.
+{: .fs-6 }
 
-## Table of contents
-{: .no_toc .text-delta }
-
+<details open markdown="block">
+  <summary>On this page</summary>
+  {: .text-delta }
 1. TOC
 {:toc}
+</details>
 
----
+## What it is
 
-## Default delivery workflow
+The app is [`packages/pr-review`](https://github.com/nddipiazza/robos/tree/main/packages/pr-review). It appears in the launcher as Agent Code Review Platform, and its window title is "RobOS Agent-Generated Code Review Platform". The app page is [Agent Code Review]({{ '/apps/pr-review/' | relative_url }}).
 
-1. **Task Planner** iteratively refines an epic and its tasks, including scope, dependencies, acceptance criteria, and happy, negative, and edge cases.
-2. **Task Implementer** creates a feature branch, implements and validates the task, then commits and pushes the branch. It does **not** create a PR or draft PR.
-3. **Local review is optional.** Choose **Review branch…** in Task Implementer and select the implementation checkout. The review header displays the repository and actual branch. Use Changes, Evidence, and Walkthrough to inspect or refine the work before publication.
-4. When ready, open the **Create PR** stage alongside Changes, Evidence, and Walkthrough. Its title and description are saved locally as you edit, including across navigation and restarts. Review the title and description, optionally choose a draft, and explicitly create the PR. Completing every walkthrough checkpoint is not required.
+A review opens in one of two modes, and the mode decides which tabs you get.
 
-Commit and push any edits made during local review before creating the PR. Publication checks the checkout's origin and current branch, rejects uncommitted or unpushed work, and reuses an existing open PR for that branch rather than creating a duplicate. The header then links to the PR number and title. Saved chat and walkthrough state remain attached to the local review.
+| | Local review | Published PR, reviewer mode |
+|:---|:---|:---|
+| Used by | The author, before and after creating the PR | Someone reviewing a PR that has no saved local review on this machine |
+| Opened from | Task Implementer (**Review branch…**) or Dev Central (**Open Code Review**) | Dev Central, **Open code review** on a pull request |
+| Tabs | Description, Changes, Evidence, Walkthrough, Pull Request | Description, Overview, Documentation, Changes, Open in IDE, Evidence, Walkthrough, Approve |
+| Uses real data | All tabs | Description, Changes and Approve |
 
-Local review launch manifests live under `~/.robos/local-reviews/`. When `baseRef` pins a diff commit, set `baseBranch` to the PR target branch. An optional `githubAccount` selects an existing `gh` account for publication without switching the global account. Existing configured demo processes remain customizable; newly prepared reviews start with two checkpoints for understanding and trying the changed behavior.
+{: .important }
+In reviewer mode, the Overview, Documentation, Open in IDE, Evidence and Walkthrough tabs show built-in sample content about a PetStore mTLS change. It is not generated from the pull request: the quiz has three fixed questions, the REST runner falls back to a canned response, and the breakpoint and live-proof logs are fixed text. Use Description, Changes and Approve there. The Approve button stays blocked until the Overview quiz is passed (pass mark 80% by default), unless **Review settings** turns that gate off.
 
-## The Paradigm Shift: Why Traditional Code Review Fails for AI Code
+## Open a review
 
-In traditional software development, developers spend hours scrolling through lines of green and red text in a browser diff tool. When code is written by humans, diff reading is already tiring and error-prone. When code is drafted at high velocity by autonomous AI agents (Claude Code, Google Antigravity, GitHub Copilot, OpenAI Codex), **traditional line-by-line diff review completely collapses**:
+From Task Implementer, finish a task, click **Review branch…** and choose the implementation checkout. RobOS writes a review manifest and opens the review in a new window. From Dev Central, open a saved review under "In code review" with **Open Code Review**, or open a pull request with **Open code review**. If you created the PR from a local review, Dev Central reopens that review in author mode.
 
-- **Reviewer Cognitive Overload**: AI agents can scaffold entire microservices, refactor 40 files, or regenerate complex database migrations in seconds. Staring at hundreds of lines of code without architectural context causes review fatigue, leading to rubber-stamping or missed edge cases.
-- **The "Hallucination Trap"**: Code may look syntactically correct and pass static linters while subtly violating distributed state invariants, breaking event-driven contracts, or failing in real runtime environments.
-- **Passive vs. Active Comprehension**: Merely skimming a diff doesn't guarantee the reviewer understands the design decisions, blast radius, or operational failure modes.
-
-### The Lead System Architect Model
-
-RobOS eliminates blind trust in AI diffs by promoting human developers to **Lead System Architects**. Autonomous agents perform the implementation, but they must present their work in the **RobOS PR Review Theater**—an orchestrated 6-stage review environment that actively educates the reviewer, validates comprehension through verifiable knowledge checks, and proves runtime correctness before a single line is merged into `main`.
-
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/elearning-reviewer-architecture.jpg' | relative_url }}" alt="RobOS Dual-Context eLearning and Interactive Reviewer Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>RobOS Dual-Context Review Architecture</strong>: Autonomous task completion triggers the PR Review Theater, synthesizing interactive training, living documentation deltas, and multi-modal verification. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
-
----
-
-## Dual-State Knowledge Graph Governance
-
-Every pull request reviewed in RobOS is anchored to the **Dual-State SDLC Knowledge Graph**. Rather than treating a pull request as an isolated Git patch, RobOS evaluates the difference between two linked worlds:
-
-1. **Production Reality (`World 1: main`)**: The verified, live state of all microservices, databases, API schemas, and Kubernetes deployments.
-2. **Proposed Reality (`World 2: feature-branch`)**: The candidate architecture mutated by the AI agent's pull request.
-
-The PR Review Theater leverages W3C SHACL constraint shapes (`robos:PullRequestReviewTheater`, `robos:ReviewTheaterStage`, `robos:LearningCourse`, `robos:CompletionCertificate`, `robos:LivingDocPage`) defined in `.robos/kgraphs/learning/package.jsonld` and `.robos/kgraphs/documentation/package.jsonld`. Every stage of the review is tracked as a first-class semantic entity, ensuring immutable auditability across the enterprise.
-
----
-
-## PR Review Theater & Team Policy Architecture
-
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/pr-review-theater-architecture.jpg' | relative_url }}" alt="RobOS PR Review Theater and Team Policy Governance Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>RobOS PR Review Theater Architecture</strong>: Team Policy Governance (<code>robos:Team</code>) controls dynamic stage activation, anti-rubber-stamp quiz thresholds, evidence video proof teaching feature mechanics first, and the multi-target Walk Me Through It agent verification walkthrough. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Architect as Lead System Architect
-    participant Theater as PR Review Theater (:19115)
-    participant KGraph as Team KGraph Policy (robos:Team)
-    participant Agent as Autonomous Agent Harness
-    participant IDE as IDE / Browser / Desktop IPC
-
-    Architect->>Theater: Click "⚙️ Stage Policy" / Open Theater
-    Theater->>KGraph: Fetch team policy (robos:prReviewTheaterConfig)
-    KGraph-->>Theater: Active stages, quiz pass threshold, required gates
-
-    rect rgb(15, 23, 42)
-        Note over Architect,Theater: Stages: Anti-Rubber-Stamp, Living Docs & Code Inspection
-        Architect->>Theater: Stage 1: Pass Knowledge Check (Score >= threshold)
-        Theater->>KGraph: Issue robos:CompletionCertificate
-        Architect->>Theater: Stage 2: Living Docs & REST Verification Runner
-        Architect->>Theater: Stage 3: In-App Unified / Split Diff Viewer
-        Architect->>Theater: Stage 4: Launch IDE Branch Diff Bridge (IntelliJ / VS Code)
-    end
-
-    rect rgb(16, 37, 66)
-        Note over Architect,Agent: Stage 5: Evidence Video & Proof-of-Work (Teaches Feature Mechanics First)
-        Architect->>Theater: Stage 5: Inspect 1080p Video Walkthrough / Desktop Session
-        Theater->>Agent: Stream narrated video playback & WebVTT captions
-        Architect->>Theater: Understand feature mechanics & runtime behavior
-    end
-
-    rect rgb(15, 30, 55)
-        Note over Architect,IDE: Stage 6: "Walk Me Through It" Interactive Agent Walkthrough
-        Architect->>Theater: Click "Start Walkthrough"
-        Theater->>Agent: Spawn fix walkthrough (Target: Backend / Frontend / Desktop)
-        alt Backend Target
-            Agent->>IDE: Connect port 63343, set breakpoint, run test, pause thread
-            Architect->>IDE: Step over & inspect live variables
-        else Frontend Target
-            Agent->>IDE: Launch visible browser (headless: false), navigate to fix
-            Agent-->>Architect: Interactive Checkpoint: "Take Control in Browser"
-            Architect->>Theater: Confirm "Handoff Complete / Fix Verified"
-        else Desktop App Target
-            Agent->>IDE: Launch desktop app via supervisor, attach DOM snapshot IPC
-            Agent-->>Architect: Highlight component with glow & route focus
-        end
-        Agent-->>Theater: Mark Fix Demonstrated (Gate 6 Passed)
-    end
-
-    rect rgb(15, 23, 42)
-        Note over Architect,KGraph: Stage 7: Validation Gates & Dual-Branch Merge
-        Architect->>Theater: Stage 7: Enter Reviewer Notes & Click Approve
-        Theater->>KGraph: Dual-Branch Atomic Merge (Git main + KGraph main)
-        KGraph-->>Architect: ✓ Merged & Synchronized
-    end
-```
-
-### Team KGraph Policy & Theater Customization
-
-Every engineering team has different risk profiles and delivery tempos. RobOS stores PR Review Theater policies directly on `robos:Team` nodes (`robos:prReviewTheaterConfig`) in `.robos/kgraphs/organization/package.jsonld`.
-
-Clicking **`⚙️ Stage Policy`** in the review topbar opens the policy editor:
-- **Global Prerequisites**: Toggle strict prerequisites enforcement, mandatory stage confirmation checkboxes, and required written feedback notes on approvals.
-- **Stage 1 (eLearning)**: Adjust minimum passing score thresholds (50%–100%), lock Stage 3 code diffs until passed, and toggle auto-generation.
-- **Stage 2 (Living Docs & REST)**: Toggle Mermaid sequence synthesis, Dual-Reality deltas, and mandatory REST contract executions.
-- **Stage 3 (Diffs)**: Choose default mode (unified vs split) and require file-by-file review checklists.
-- **Stage 4 (IDE Bridge)**: Select default IDE (IntelliJ IDEA on port 63343 vs VS Code protocol).
-- **Stage 5 (Evidence Video)**: Set default view (1080p recorded video vs live desktop session). Teaches the reviewer how the feature works first before interactive walkthroughs.
-- **Stage 6 (Walk Me Through It)**: Select demonstration target (`Auto-Detect`, `Backend`, `Frontend`, or `Desktop`), headed browser flags, and interactive handoff checkpoints.
-- **Quick Presets**: Apply 1-click presets: *Strict Anti-Rubber-Stamp*, *Fast Developer Flow*, *Frontend Focus*, or *Full Comprehensive*.
-
----
-
-## PR Review Theater Walkthrough
-
-Let's walk through the end-to-end PR Review Theater workflow as experienced by a Lead Architect reviewing a multi-component feature (`PR #12: feat(auth): add OAuth2 PKCE social login and session token refresh`).
-
----
-
-### PR Queue & Triage Dashboard
-
-The review journey begins in the **Agent Code Review Platform** (`packages/pr-review`), which aggregates all active pull requests across the enterprise catalog.
-
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/screenshots/pr-review-theater-01-queue.png' | relative_url }}" alt="RobOS PR Review Queue & Triage Dashboard" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>PR Queue & Triage</strong>: Review dashboard tracking pull requests with status badges, CI health dots, author attribution (Claude, Antigravity, Copilot, Human), and one-click Theater launch chips. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
-
-#### Key Capabilities:
-- **Multi-Repo Aggregation**: Collects pull requests across all registered Git repositories and monorepos.
-- **AI Attribution & Risk Tiers**: Clearly identifies AI-generated pull requests and their semantic blast radius tier (`Tier 1 Low`, `Tier 2 Medium`, `Tier 3 High Risk`).
-- **One-Click Theater Chip**: Each card includes a direct `🎭 Review Theater` launch button to immediately enter the immersive review mode.
-
----
-
-### PR Overview & Detail Launch
-
-Selecting a pull request opens the comprehensive detail view, summarizing the business objective, automated CI test outcomes, security audits, and impacted architecture components.
-
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/screenshots/pr-review-theater-02-pr-detail.png' | relative_url }}" alt="RobOS PR Detail Overview & Theater Launch View" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>PR Detail Overview</strong>: High-level architectural briefing displaying branch tracking, commit history, SHACL schema conformance, and the prominent "Launch PR Review Theater" primary action. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
-
-#### Key Capabilities:
-- **Blast Radius Summary**: Summarizes affected REST endpoints, database schemas, and consumer microservices before diving into code.
-- **Automated Security & Audit Scans**: Live indicators verifying zero plaintext secrets, dependency vulnerability scans, and W3C SHACL shape validation gates.
-- **Launch Theater CTA**: Clicking the vibrant cyan `🎭 Launch PR Review Theater` button transitions into the dedicated 6-stage guided review environment.
-
----
-
-### Stage 1: PR Masterclass & Reviewer Knowledge Check
-
-Before examining raw code diffs, the reviewer is enrolled in an **on-demand interactive training masterclass** synthesized specifically for this pull request.
-
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/screenshots/pr-review-theater-03-stage1-elearning.png' | relative_url }}" alt="Stage 1: PR Masterclass & Reviewer Knowledge Check" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Stage 1 — PR Masterclass</strong>: Multi-module interactive curriculum explaining architectural context, design choices, state mutation, and an active Reviewer Knowledge Check quiz. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
-
-#### Key Capabilities:
-- **Targeted Learning Modules**:
-  - *Module 1: Architecture & Rationale*: Why this change was made and how it fits into the broader enterprise topology.
-  - *Module 2: Token Lifecycle & Cryptography*: Deep-dive into RFC 7636 PKCE code challenges and SHA-256 state hashing.
-  - *Module 3: Blast Radius & Failure Modes*: Downstream consumer impacts, cache invalidation, and timeout recovery.
-- **Dual App & PR eLearning**: Access both the PR-specific micro-masterclass and the broader application architecture curriculum in the standalone RobOS eLearning Hub with one click.
-- **Strict Anti-Rubber-Stamp Knowledge Gate**:
-  - Reviewers cannot bypass or rubber-stamp reviews: code diffs in Stage 3 and approval merge actions in Stage 6 remain **strictly locked** behind a cryptographic comprehension gate.
-  - The reviewer must answer scenario-based quiz questions verifying understanding of the system's operational invariants and achieve ≥ 80% to unlock the diff viewer and sign-off console.
-
----
-
-### Stage 1 (Verified): Knowledge Graph Verified Credential
-
-Upon successfully passing the knowledge check, RobOS mints an **immutable Certificate of Completion** registered directly to the reviewer's node in the SDLC Knowledge Graph.
-
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/screenshots/pr-review-theater-04-stage1-certificate.png' | relative_url }}" alt="Stage 1: Verified Certificate of Completion Credential" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Verified Certificate Credential</strong>: Cryptographically hashed certificate (`robos:CompletionCertificate`) with score, issuance timestamp, and dual-state Knowledge Graph registry link. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
-
-#### Key Capabilities:
-- **Cryptographic Hash Verification**: Issued with a unique hash (e.g. `ROBOS-CERT-F04FAD16F235707C`) validating non-repudiation.
-- **Knowledge Graph Association**: Stored as a `robos:CompletionCertificate` linked via `robos:hasCertificate` to the human reviewer's `robos:Developer` entity.
-- **Audit Compliance**: Provides regulated enterprise teams (financial services, healthcare, aerospace) with incontrovertible proof that code was actively understood prior to production deployment.
-
----
-
-### Stage 2: Living Architecture Guide & Dual-Reality Delta
-
-Stage 2 presents the **Living Architecture Guide**, automatically synthesized from the Dual-State Knowledge Graph by comparing Production Reality against Proposed Reality.
-
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/screenshots/pr-review-theater-05-stage2-living-docs.png' | relative_url }}" alt="Stage 2: Living Architecture Guide & Dual-Reality Delta" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Stage 2 — Living Architecture Guide</strong>: Visual sequence flows, dual-reality delta tables comparing Production vs. Proposed behavior, and synchronized API contracts. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
-
-#### Key Capabilities:
-- **Visual Mermaid Sequence Flows**: Auto-generated sequence diagrams depicting client authentication, OAuth code exchange, and token refresh loops.
-- **Dual-Reality Behavioral Delta**: Side-by-side comparison tables showing:
-  - *Production Reality*: Legacy session cookie auth without PKCE or mobile OAuth2 support.
-  - *Proposed Reality*: RFC 7636 PKCE social login, JWT access tokens, and rolling refresh tokens.
-- **Contract Impact**: Live diff of modified OpenAPI 3.1 endpoints (`POST /api/v1/auth/token/refresh`) and database schema additions (`auth_sessions`, `refresh_tokens`).
-- **Interactive REST API Verification Panel**:
-  - Live execution harness testing the exact REST endpoints touched by the PR.
-  - Inspect simulated or real HTTP requests, headers (`Authorization: Bearer ...`, mTLS, content-type), query parameters, and JSON request bodies.
-  - Click **"Execute REST API Call"** to send the live request and view real-time response telemetry side-by-side against expected OpenAPI contract schema.
-
----
-
-### Stage 3: In-App Semantic File Diff Viewer
-
-Reviewers can inspect the actual source code modifications directly inside the theater using the **In-App File Diff Viewer**.
-
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/screenshots/pr-review-theater-06-stage3-diff-viewer.png' | relative_url }}" alt="Stage 3: In-App File Diff Viewer with Syntax Highlighting" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Stage 3 — File Diff Viewer</strong>: High-performance syntax-highlighted diff viewer with file tree navigation, addition/deletion metrics, and inline agent commentary. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
-
-#### Key Capabilities:
-- **Split & Unified View**: Toggle between side-by-side and unified diff views.
-- **Syntax Highlighting & Line Numbers**: Polyglot code coloring supporting TypeScript, JavaScript, Python, Java, Go, Rust, and SQL.
-- **File Filter & Jump**: File tree sidebar displaying added (`+`), modified (`~`), and deleted (`-`) files with line change tallies.
-- **Agent Intent Annotations**: Code hunks feature embedded annotations explaining the exact intent behind non-obvious algorithmic changes.
-
----
-
-### Stage 4: IDE Branch Diff Viewer Bridge
-
-When a Lead Architect requires full IDE power—AST symbol navigation, type hierarchies, local breakpoint debugging, or custom test execution—RobOS provides an **instant one-click bridge into IntelliJ IDEA and VS Code**.
-
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/screenshots/pr-review-theater-07-stage4-ide-bridge.png' | relative_url }}" alt="Stage 4: IDE Branch Diff Bridge (IntelliJ IDEA & VS Code)" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Stage 4 — IDE Review Bridge</strong>: Deep integration launching the pull request branch directly inside IntelliJ IDEA (via port 63343 IPC) or VS Code (via `vscode://` URL handler). <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
-
-#### Key Capabilities:
-- **IntelliJ IDEA IPC Server (Port `63343`)**:
-  - Communicates directly with the running IntelliJ IDEA instance.
-  - Automatically fetches and checks out the PR branch.
-  - Launches JetBrains' native **Pull Request Review Tool Window** with local AST symbol resolution and refactoring analyzers.
-  - Sets breakpoint listeners at modified code sites for interactive step-through debugging.
-- **Interactive Breakpoint Debugger**:
-  - Automatically fires up the target app in the IDE and triggers a breakpoint relevant to the PR (e.g. at line 42 of `TokenController.java`).
-  - Halts execution and exposes real-time stack frames, thread status, and live variable inspection (`tokenRequest`, `clientSecret`, `grantType`, `expiresIn`).
-  - Reviewers can inspect variables directly in the Theater and click **"Resume Execution"** or step through in their IDE.
-- **VS Code Protocol Integration (`vscode://`)**:
-  - Triggers the official `GitHub.vscode-pull-request-github` extension (`vscode://github.vscode-pull-request-github/open-pr?repo=...&number=12`).
-  - Opens diff editors directly in VS Code with inline comment threads, Copilot completions, and terminal test runners.
-- **Zero Configuration**: No manual Git commands, branch checking, or stash management required.
-
----
-
-### Stage 5: Evidence Video & Proof-of-Work Canvas (1080p Xvfb Video or Live Desktop)
-
-RobOS completely eliminates the question *"Did anyone actually run this to see if it works?"* Stage 5 acts as an autonomous proof-of-work canvas where the robot proves execution through either **autonomous 1080p recorded video walkthrough** or **live execution right in your current desktop session**.
-
-Crucially, **the evidence video teaches the reviewer how the feature works first**—narrating the architectural design decisions with Piper neural TTS, walking through the end-to-end user journey, and validating test assertions before transitioning into interactive hands-on inspection.
-
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/screenshots/pr-review-theater-08-stage5-video.png' | relative_url }}" alt="Stage 5: Autonomous Evidence Video & Proof-of-Work Walkthrough" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Stage 5 — Evidence Video &amp; Proof-of-Work Canvas</strong>: Switchable proof canvas supporting 1080p Xvfb recorded video with Piper neural narration or real-time interactive desktop execution on DISPLAY=:0. Teaches feature mechanics first. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
-
-#### Key Capabilities:
-- **Dual-Mode Canvas Switcher**:
-  - **1080p Recorded Xvfb Video**: The agent runs headless inside a virtual framebuffer, interacting with UI buttons, submitting forms, and asserting responses with Piper neural speech and synchronized WebVTT captions.
-  - **Live Desktop Session (`DISPLAY=:0`)**: For reviewers who prefer to watch the app run live or interact with it directly in their active GNOME/X11 session. Launches the test reproduction harness right on the reviewer's screen with live terminal logs, process PID tracking, and exit telemetry.
-- **Piper Neural TTS Audio**: Explains each action in natural human speech, highlighting edge cases tested and test assertions validated.
-- **Synchronized WebVTT Subtitles**: Captions update in real time with interactive timeline jump markers (`00:04 Click Social Login`, `00:12 Submit PKCE Token`, `00:22 Validate Session Refresh`).
-- **Zero Fluff**: 30-to-60-second concise proof validating end-to-end functionality before merge.
-
----
-
-### Stage 6: "Walk Me Through It" Interactive Walkthrough
-
-Now that the reviewer has watched the evidence video and understands the feature mechanics, Stage 6 bridges the gap between passive code reading and active execution. Instead of asking the reviewer to build and run the PR branch manually, the autonomous AI agent is tasked with **actively showing you the fix in real time** across three target architectures:
-
-#### 1. Backend Service Targets (IDE + App Launcher)
-- **Automatic IDE Popup**: Connects to IntelliJ IDEA over port 63343 IPC (or VS Code).
-- **Automated Breakpoint Injection**: Sets breakpoints at the modified method or AST entrypoint (e.g. `VaccineGatewayClient.java:34`).
-- **Live Test Suite Execution**: Fires up the target test scenario (e.g. `mvn test -Dtest=PetServiceTest#testAdoptPetWithRabiesVerification`).
-- **Thread Suspension & Inspection**: Suspends thread execution on the breakpoint, streaming stack frames and evaluated local variables (`this.sslContext = TLSv1.3 [ACME-ROOT-CA]`, `petId = "PET-105-VAX"`).
-- **Reviewer Stepping**: Reviewers can click **Step Over** or **Resume** directly in the Theater or continue stepping in their IDE.
-
-#### 2. Frontend Web Targets (Headed Browser + Interactive Reviewer Handoff)
-- **Headed Browser Launch**: Pops up a visible Chromium browser window on the active display (`headless: false`).
-- **Automated E2E Journey**: Drives the browser through setup steps (e.g., navigating to adoption form, uploading certificate details).
-- **Interactive Checkpoint Handoff**: Once the modified UI state is reached, the agent yields control with an interactive banner: *"🎮 Take Control in Browser"*.
-- **Reviewer Hands-on Verification**: The reviewer interacts directly with the live web application to test responsiveness, accessibility, and edge-case inputs before clicking **"Handoff Complete / Fix Verified"**.
-
-#### 3. Desktop Application Targets (IPC + DOM Snapshot Navigation)
-- **Process Supervisor Launch**: Spawns the desktop application in the local workstation session via RobOS supervisor.
-- **IPC Navigation**: Connects to the DOM Snapshot debug server (ports 19100–19121) and routes view state directly to the modified component.
-- **Component Glow & Inspection**: Highlights the altered UI widget with an animated cyan pulse glow and displays live DOM hierarchy attributes.
-
----
-
-### Stage 7: Review Validation Gates & Dual-Branch Merge Sign-Off
-
-The review culminates in Stage 7: the **Merge Sign-Off & Verification Gates Console**.
-
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/screenshots/pr-review-theater-09-stage6-signoff.png' | relative_url }}" alt="Stage 7: Review Validation Gates & Dual-Branch Merge Sign-Off" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Stage 7 — Merge Sign-Off Console</strong>: Comprehensive validation gates, reviewer decision selectors, sign-off notes textarea, and one-click atomic merge button. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
-
-#### The 6 Validation Gates:
-1. **Gate 1: Reviewer Knowledge Check**: Verifies that the Lead Architect passed the PR masterclass quiz meeting team threshold policy (e.g. ≥ 80%) and holds an active `robos:CompletionCertificate`.
-2. **Gate 2: Living Architecture Guide**: Confirms the architectural delta, sequence diagrams, and REST contract scenarios have been inspected and executed.
-3. **Gate 3: In-App Code Diff Review**: Confirms the syntax-highlighted code hunks have been audited.
-4. **Gate 4: IDE Verification Bridge**: Confirms the PR branch was compared in IntelliJ IDEA or VS Code.
-5. **Gate 5: Proof-of-Work Telemetry**: Confirms the 1080p narrated proof video or live robot session was observed.
-6. **Gate 6: "Walk Me Through It" Demonstration**: Confirms the agent successfully demonstrated the fix in the IDE, browser, or desktop session.
-
-#### Atomic Sign-Off & Merge:
-- **Decision Controls**: Choose between `Approved` (with green badge), `Request Changes`, or `Comment`.
-- **Reviewer Notes**: Enter sign-off remarks recorded permanently to the Git commit and Knowledge Graph audit ledger (mandated if required by team policy).
-- **Dual-Branch Merge Execution**: The `Execute Review & Dual Merge` button executes an atomic Git merge to `main` while simultaneously synchronizing and merging the Knowledge Graph branch into Production Reality (`World 1`).
-
----
-
-## Standalone RobOS eLearning Player Hub
-
-In addition to PR-specific review masterclasses, RobOS provides a dedicated standalone desktop application: **RobOS eLearning Hub** (`packages/robos-elearning`).
-
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/screenshots/robos-elearning-hub-player.png' | relative_url }}" alt="Standalone RobOS eLearning Player Hub" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>RobOS eLearning Hub</strong>: Enterprise developer learning player featuring multi-course catalog, interactive coding labs, module progress tracking, and verified certificate credentials. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
-
-### Features of the Standalone Player:
-- **Enterprise Curriculum Catalog**: Browse interactive courses across all cataloged applications, frameworks, and microservices in the organization's Knowledge Graph.
-- **Hands-On Interactive Labs**: Execute code exercises directly against local ephemeral sandboxes with real-time automated scoring.
-- **Certificate Registry**: Centralized repository of all earned developer certifications, filterable by application, team member, and issuance date.
-- **Autonomous Curriculum Generation**: AI agents can scaffold complete eLearning courses on demand for any codebase using the `generate-app-elearning` skill.
-
----
-
-## Cross-Agent AI Skills & Automation
-
-The PR Review Theater and eLearning capabilities are fully exposed to autonomous agents across all leading LLM platforms via standardized skills:
-
-| Skill Name | Purpose | Target Agents |
-|---|---|---|
-| **`pr-review-theater`** | Inspects, initializes, and orchestrates the 6-stage PR Review Theater for any pull request. | Claude Code, Antigravity, Copilot, Gemini |
-| **`generate-app-elearning`** | Analyzes an application in the Knowledge Graph and scaffolds an interactive eLearning curriculum and lab exercises. | Claude Code, Antigravity, Copilot, Gemini |
-| **`generate-app-docs`** | Synthesizes living Markdown architecture documentation and Mermaid sequence diagrams for any service. | Claude Code, Antigravity, Copilot, Gemini |
-| **`sync-kgraph-docs`** | Discovers architectural delta between `main` and branch and updates living documentation accordingly. | Claude Code, Antigravity, Copilot, Gemini |
-| **`ide-java`** | Automates IntelliJ IDEA over port 63343 IPC for secret run configs, breakpoints, and thread inspection. | Claude Code, Antigravity, Copilot, Gemini |
-
-### Using the `pr-review-theater` Skill
-
-Agents can inspect or advance a PR Review Theater programmatically:
-```bash
-# Inspect review theater state for PR #12
-node .agents/skills/pr-review-theater/scripts/review-theater-cli.js --pr 12 --status
-
-# Generate masterclass curriculum and living doc delta
-node .agents/skills/pr-review-theater/scripts/review-theater-cli.js --pr 12 --synthesize
-
-# Verify completion certificate credential
-node .agents/skills/pr-review-theater/scripts/review-theater-cli.js --verify-cert ROBOS-CERT-F04FAD16F235707C
-```
-
----
-
-## Semantic Vocabularies & SHACL Shapes
-
-All entities in the PR Review Theater and eLearning Hub conform strictly to W3C SHACL constraint shapes:
-
-- **`robos:PullRequestReviewTheater`**: Governs theater lifecycle, current stage, reviewer assignment, and gate states.
-- **`robos:ReviewTheaterStage`**: Individual stage definition with status (`pending`, `in_progress`, `completed`), label, and artifact links.
-- **`robos:LearningCourse`**: Educational course structure with lessons, code labs, and quiz questions.
-- **`robos:CompletionCertificate`**: Immutable credential tracking reviewer ID, score, issuance timestamp, and cryptographic hash.
-- **`robos:LivingDocPage`**: Markdown living documentation with embedded Mermaid diagrams and dual-reality behavioral deltas.
-
-Explore the complete schema definitions in the [Living Learning & Documentation SHACL Schemas]({{ site.baseurl }}{% link schemas/learning.md %}).
-
----
-
-## Next Steps
-
-- **[E2E Walkthroughs & Video Proof of Work]({{ site.baseurl }}{% link walkthroughs.md %})**: Watch real-world video walkthroughs generated by autonomous agents.
-- **[Agent Tiers & Model Dispatch]({{ site.baseurl }}{% link agent-tiers.md %})**: Learn how RobOS optimizes model intelligence and cost across 3 agent tiers.
-- **[RobOS Desktop Applications Suite]({{ site.baseurl }}{% link apps.md %})**: Explore all native developer tools in the RobOS platform.
-- **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps and structured architecture specs.
-
-## Review a local draft before publishing a PR
-
-Launch the theater with a workstation-owned JSON manifest:
+To launch it yourself, install the app once and pass the manifest or a PR URL in an environment variable:
 
 ```bash
-ROBOS_LOCAL_REVIEW=/absolute/path/review.json electron packages/pr-review
+cd packages/pr-review
+npm install
+ROBOS_LOCAL_REVIEW=/absolute/path/review.json npm start
+ROBOS_REVIEW_URL=https://github.com/OWNER/REPO/pull/NUMBER npm start
 ```
 
-The manifest supplies `title`, `repo`, an absolute `workspace`, `baseRef`,
-`videoPath`, `summary`, and an optional `showMeDescription`. The theater reads the
-actual committed Git diff from `baseRef` to `HEAD`, plays the supplied recording,
-and labels the review as a local draft. It does not publish a PR or enable merge.
-Uncommitted changes are not included in this review.
+With neither variable set, the app opens an "Open a task" picker that lists the manifests saved under `~/.robos/local-reviews/`. `npm install` also builds the Markdown editor and the Changes view. Both modes call `gh`, so the GitHub CLI must be installed and signed in.
 
-For an interactive frontend demonstration, add `runner` with an absolute
-`command`, an `args` array, optional `cwd`, and optional `timeoutMs` (default
-120000). Use only a locally reviewed runner: this is permission to execute it.
-Commands are never taken from a PR body or renderer input, and no shell is used.
-The runner should launch a headed browser, perform and assert its setup, then
-write one JSON line with `status: "HANDOFF_READY"` and an accurate `message`.
-It must keep running to leave the browser available to the reviewer. Other JSON
-lines containing `message` appear as execution steps. Failed launches, early
-exits, and checkpoint timeouts are errors, not successful demonstrations.
+## Review a branch before it becomes a PR
 
-The runner receives JSON lines on stdin: `{"action":"focus"}` to bring the
-browser forward, and `{"action":"complete"}` after the reviewer confirms the
-handoff. It should close its browser and exit on completion or SIGTERM. Merely
-opening or focusing a browser does not mark the review verified. The normal
-GitHub frontend Show me path now reports missing configuration instead of
-opening a hard-coded example app and claiming simulated test results.
+Prerequisites: a feature-branch checkout (not `main` or `master`) whose `origin` is on GitHub. Task Implementer's agent creates the branch (`codex/<task-key>` by default), implements and tests the task, commits, pushes, and does not create a PR. **Review branch…** is disabled while that agent is running.
 
-## Walk me through it: an editable, checkpoint-based demo
+The diff is `HEAD` against the remote's default branch, falling back to `origin/main`. Uncommitted changes are not part of it.
 
-A feature does not have to be a bug fix. **Walk me through it** is the live,
-agent-driven review mode. Its compact toolbar has **Explain** and **Next
-checkpoint**, and the rest of the interaction is a conversation with the agent.
-The agent reaches one checkpoint and pauses. Explain stays at that checkpoint;
-chat can request a local code change and its hot-reloaded verification. Only
-Next requests the following checkpoint. Failures leave progress unchanged and
-expose Retry. Reaching the last checkpoint does not approve or merge anything.
+| Tab | What it does |
+|:---|:---|
+| Changes | The diff, file by file. Use the filter box, **Collapse all**, **Expand all**, **Hide viewed**, the **Viewed** checkbox on each file, **Unified** or **Split**, **Wrap lines**, **Refresh** and **Copy path**. Viewed marks apply to one revision. **Suggest changes** (top right) opens the agent discussion pane, where you ask for a change in plain language. The agent edits the checkout and the diff reloads when it finishes. |
+| Evidence | The task's evidence bundle for the current commit: before and after calls, screenshots or check results, depending on its template. Evidence captured at an earlier commit is marked stale. Without a bundle the tab says "No evidence bundle is linked to this task." |
+| Walkthrough | An agent demonstrates the change one checkpoint at a time. See [Walkthrough](#walkthrough). |
+| Description | Editor for the PR title and description in WYSIWYG, Markdown or Markdown + Preview mode. **Edit with agent** drafts text from the diff and the available evidence, and **Restore previous description** undoes it. The text is saved locally as you type. |
+| Pull Request | The label shows the state: Not Created, In Draft, In Review, Merged, Closed or Status Unavailable. See below. |
 
-Add two properties to the local review launch manifest:
+### Create the PR
 
-- `demoProcess`: absolute path to the project's JSON demo process. It contains
-  `instructions` and a `checkpoints` array, each with `title`, `given`, `when`,
-  and `then`. **Process…** edits this configuration; saving resets progress.
-- `demoAgent`: a locally authorized Codex CLI `command` (absolute path), `args`
-  (start with `exec`, `--json` and the desired sandbox/MCP configuration), and
-  optional `timeoutMs`. The CLI must support the configured model. RobOS sends
-  the contextual request on stdin and requires a structured checkpoint result.
-  It never takes executable commands from a chat message or PR body.
+Open the **Pull Request** tab, check the title, and optionally tick **Create as draft**. **Create PR** pushes the branch head, then runs `gh pr create`. It refuses when the checkout has uncommitted changes (a **Resolve uncommitted changes** button asks the agent to deal with them), when the branch is `main`, or when `origin` does not match the review's `repo`. If an open PR already exists for the branch, RobOS reuses it. If a messaging provider is configured, an unchecked **Send PR review notification to …** option appears; set it up in Git Projects under **Team messaging**, and edit the description template under **PR template**.
 
-The bundled example at
-`packages/pr-review/demo-processes/hermetiq-cloud-native.json` demonstrates the
-compact filters through the existing Customize page flow. Adapt its sandbox URL,
-fixture setup, and expected counts to the project's local lab. Connect the agent
-to the official Chrome DevTools MCP server and a dedicated, visible Chrome
-profile. The project process owns setup, conversational guidance, checkpoints, and mutation
-constraints. Code edits happen in the selected workspace: review the resulting
-diff before publishing. Explain-only requests explicitly prohibit changes.
+After creation the tab offers **Reload PR**, **Open pull request**, and, for the author of an open PR, **Update PR**. RobOS has no merge button. The author merges on GitHub.
 
-Demo progress and chat remain in the running theater session. Restarting the
-app starts a fresh demo; the saved project process persists. Legacy one-shot
-runner manifests continue to work. The shell executable and permissions remain
-workstation configuration and cannot be changed by the in-app process editor.
+### CI and moving out of draft
 
-**Start over** reruns the initial setup and checkpoint one using the current project process. It preserves chat context and source edits, resets prior checkpoint completion, and pauses again after the first checkpoint is verified. It is disabled while an agent action is running. A failed restart stays incomplete; Retry targets checkpoint one.
+A banner in the review reads the PR's checks, with **Refresh CI** and **View checks**. For Buildkite checks, **Jobs & live logs** shows job states and the last 64 KiB of a job's log. When CI has failed, **Get CI back to green** starts an agent repair in a clean checkout; you review and push its fix yourself.
 
+**Move PR to Ready** appears for the author of an open draft. The dialog's **Request GitHub reviews** option takes usernames or teams, with defaults from Git Projects. RobOS re-checks the head commit, the author, the draft state and CI before it changes anything on GitHub, and refuses when CI has not passed.
 
-### Guidance and before-change comparisons
+## Walkthrough
 
-The agent translates checkpoint intent into a short explanation of what is being demonstrated, what to try, and what visible result to expect. Given/When/Then remain internal test intent. Browser callouts use `lib/demo-callout.js`: translucent, click-through except for ×, and limited to one overlay. Showing new guidance removes older overlays. Closing a callout suppresses updates with the same id until a new action starts.
+The Walkthrough tab runs a project-defined demo process with a Codex CLI agent. The agent reaches one checkpoint and pauses.
 
-An optional `before` object in the process contains `ref` (default `origin/main`), `instructions`, and its own `checkpoints`. **How it used to work** creates a separate detached worktree at the locally fetched ref; fetch main before launching to compare with its latest revision. The theater displays the pinned revision. Configure a separate dev port and browser tab in its instructions. An optional trusted manifest `beforeWorkspace` object (`workspace`, `ref`, `revision`) can reuse a prepared checkout. **Show the change** returns to checkpoint one of the feature process. Start over resets the current mode. Neither operation resets or switches the feature checkout or discards live edits.
+- **Explain this step** keeps you on the checkpoint. **Next checkpoint** advances.
+- A checkpoint the agent cannot verify does not advance. You get **Retry**, or **Recheck** and **Continue**; continuing records the step as unverified.
+- A message sent while the agent is working stops its current attempt and restarts at the same checkpoint with your instructions and existing edits.
+- **More** holds **Start over**, **How it used to work** and **Show the change**, and **Process…**. The first two compare against a detached checkout of `origin/main` (or the `before.ref` you set) without touching your branch. **Process…** edits the process JSON, and saving resets progress.
+- After the last checkpoint the tab shows "Walkthrough complete". That does not approve or merge anything.
 
-During an action, the theater streams public agent updates and safe descriptions of tool activity. It shows one live status line with elapsed time and the age of a status after 20 seconds. Specific public narration remains visible across generic command events; the agent is instructed to name the actual control, file, or check it is working on. It does not display raw commands, tool payloads, or reasoning, and progress messages never advance a checkpoint.
+The conversation is saved as `conversation.jsonl` and `session.json` under `~/.robos/pr-reviews/<repo>-<hash>/pr-<number>/`, or `branch-<branch>-<hash>/` before a PR exists. **Saved history** pages through it, **Clear chat** hides the visible window only, and **Resume agent** continues an interrupted run. Opening a review does not start an agent by itself.
 
-The walkthrough toolbar shows only actions relevant to its current state. While paused, Explain and Next checkpoint are visible; Start over, the before/after comparison, and Process settings are in More. During agent work, action buttons disappear and live progress remains visible.
+## Review someone else's PR
 
-While an action runs, Send becomes **Steer**. A steering message stops the current CLI attempt, waits for its process to exit, and starts a continuation at the same checkpoint with the new instructions and existing source edits. It does not mark interrupted work verified or run concurrent browser-editing agents.
+Reviewer mode shows the PR description (read-only), the real diff from `gh pr diff`, and the **Approve** tab. Choose Approve, Request Changes or Submit Comment Only, add notes and click **Submit review**. RobOS runs `gh pr review` with `--approve`, `--request-changes` or `--comment`. Approving does not merge. The message reads "The author can now merge it."
 
-Live progress is retained in the conversation under the configured agent/model label. History is FIFO-bounded to 120 entries and 128 KiB of message text, with each entry limited to 16,000 characters; the renderer explains when older entries were removed. Progress entries are excluded from the follow-up prompt's conversation history. New activity does not pull a reviewer away from older messages they are reading.
+**Review settings** opens the team policy editor: enable or disable each stage, mark a stage as a Required Gate, set the quiz pass mark (50% to 100%), the default diff mode and the preferred IDE. The policy is stored as `robos:prReviewTheaterConfig` on the team's `robos:Team` node in the Knowledge Graph. It is not available in a local review.
 
-Step actions sit below the checkpoint description. An incomplete check displays its reason and offers Recheck or an explicit Continue to the next step; continuing records the skipped check as unverified. Chat remains usable after startup verification fails. The last verified checkpoint displays Walkthrough complete, without implying approval or merge. A trusted local launch manifest may supply `resumeStatePath` to restore a non-running snapshot with matching process configuration during a restart.
+## IDE integration
 
-### Persistent review sessions
+| Control | What it does | Needs |
+|:---|:---|:---|
+| **Open in IDE** (top right) | Opens a chooser of installed IDEs and opens the review's checkout in the one you pick. It looks for IntelliJ IDEA, Visual Studio Code, Cursor, WebStorm, PyCharm, GoLand, CLion, Rider, RustRover, VSCodium, Zed, Windsurf and Sublime Text. | A command-line launcher on `PATH`; local reviews only |
+| **IntelliJ** (header) | Posts to `http://127.0.0.1:63343/api/robos/pull-request/open` with a 1.5 second timeout, then falls back to `idea --line <n> <file>` or `idea .`. | `idea` on `PATH` |
+| **VS Code** (header) | Opens `vscode://github.vscode-pull-request-github/open-pr?number=<n>&repo=<owner/repo>` and runs `code --goto <file>:<line>` or `code .`. | The GitHub Pull Requests and Issues extension, and `code` on `PATH` |
 
-The local review runner stores sessions under `~/.robos/pr-reviews/<repository>-<hash>/pr-<number>/`, or `branch-<branch>-<workspace-hash>/` for unpublished work. `conversation.jsonl` archives every public chat entry before the in-memory FIFO cap; `session.json` atomically saves the checkpoint, mode, baseline checkout and native Codex thread IDs. Files are private to the user. Raw commands, tool output and model reasoning are not archived as chat.
+{: .note }
+Nothing in this repository serves the `/api/robos/pull-request/open` path, so the **IntelliJ** button always uses the `idea` fallback. There is no VS Code plugin in the repository, only that URI link to Microsoft's extension. The IntelliJ platform plugin in [`plugins/intellij-idea`](https://github.com/nddipiazza/robos/tree/main/plugins/intellij-idea) serves a different set of paths on port 63343 (`/robos/open-file`, `/robos/set-breakpoint`, run-configuration and thread-state endpoints), which the `ide-java` skill and `ide-bridge-mcp` use. The review window does not call them.
 
-Reopening restores recent messages automatically. **Saved history** pages through the complete archive, including messages cleared from the window, without loading the entire file. **Clear chat** resets only the visible conversation. **Resume agent** continues the saved Codex thread in the same mode and workspace; opening a review never automatically starts an agent. If the app closed mid-action, the checkpoint stays unverified until resumed. Changing the demo process resets checkpoint progress but retains saved history; changing runner configuration starts a fresh native thread using the saved conversation rather than resuming a potentially incompatible runner.
+## Reference
 
-### Project review templates and notifications
+### Launch manifest
 
-Git Projects has separate **PR template** and **Slack** (or **Team messaging**) tabs
-for the PR description and notification settings. Both use the expanding RobOS AI
-text editor. The messaging tab also holds the workspace and channel. Templates support `{{title}}`,
-`{{url}}`, `{{repo}}`, `{{branch}}`, and `{{description}}`. Notifications must include
-`{{url}}`. Settings are stored per repository under `~/.robos/project-review-settings/`.
+The manifest is a JSON file on your workstation. It is the only place an agent command can come from; RobOS never reads one from a PR body, a repository file or chat.
 
-The Create PR stage offers an unchecked **Send PR review notification to Slack**
-option when Slack is the configured provider (or “messaging app” for multiple
-providers). Select the channel and inspect the preview before creating the PR.
-Only successful PR creation triggers the selected notification; a send failure
-keeps the created PR visible. Completed sends are deduplicated across restarts,
-and uncertain sends require checking the channel rather than automatic retry.
+| Key | Meaning |
+|:---|:---|
+| `workspace` | Required. Absolute path of the checkout. |
+| `title` | Required. Header text and default PR title. |
+| `baseRef` | Required. Ref or commit the diff starts from. |
+| `baseBranch` | The PR target branch. Required when `baseRef` is a commit hash. |
+| `repo` | `owner/name` on GitHub. Must match `origin`. Needed to create a PR. |
+| `summary` | Initial PR body. |
+| `taskUrl`, `taskTitle` | Work item shown in the header. |
+| `demoProcess` | Absolute path to the walkthrough process JSON. |
+| `demoAgent` | `command` (absolute path), `args` (start with `exec`) and `timeoutMs` (default 600000). |
+| `beforeWorkspace` | Optional prepared checkout for the before comparison: `workspace`, `ref`, `revision`. |
+| `evidenceBundlePath` | Path to a `robos:EvidenceBundle` file for the Evidence tab. |
+| `evidenceRoots`, `evidenceIndexes`, `evidence` | Extra screenshots, videos and reports offered to the description agent. |
+| `pullRequest` | Written by RobOS when it creates the PR. |
+| `runner` | Older mechanism: an absolute `command`, an `args` array, optional `cwd` and `timeoutMs` (default 120000). It prints a JSON line with `status` set to `HANDOFF_READY` once its browser is open. |
 
-The integration uses RobOS Team Chat Servers, including its password-store
-credentials and delivery receipts. It prefers the bundled service, with installed
-runtime discovery through `ROBOS_HOME` and `~/.hermetiq/robos` for older checkouts.
-No Slack token is exposed to the renderer or saved in review settings.
+```json
+{
+  "workspace": "/home/me/src/pawfinder-api",
+  "repo": "acme-corp/pawfinder-api",
+  "title": "feat(search): species filter and relevance ranking",
+  "baseRef": "origin/main",
+  "baseBranch": "main",
+  "taskUrl": "https://github.com/acme-corp/pawfinder-api/issues/42",
+  "demoProcess": "/home/me/.robos/local-reviews/abc123/demo.json",
+  "demoAgent": { "command": "/usr/local/bin/codex", "args": ["exec", "--json"], "timeoutMs": 600000 }
+}
+```
 
-### Editing the PR description
+**Review branch…** writes this file to `~/.robos/local-reviews/<id>/review.json` together with a starter `demo.json` that has two checkpoints, "Understand the change" and "Try the changed behavior". It fills `demoAgent` only when it finds a `codex` binary (`ROBOS_CODEX_BIN`, `/usr/lib/chatgpt/resources/codex` or `PATH`).
 
-Create PR uses a dark WYSIWYG Markdown editor with headings, emphasis, lists,
-tables, links, shared images, and code. Switch to Markdown to edit source directly.
-The editor stores Markdown in the saved draft and sends that Markdown to GitHub.
-Run `npm install` in `packages/pr-review` to install and bundle the editor; the
-bundle can also be rebuilt with `npm run build:editor`.
+### Demo process
 
-**Replace default PR text with an AI-generated description** is checked by default.
-Opening Create PR drafts a description from the current diff, saved review notes,
-and the supplied proof directory. Generation uses the configured Codex model in
-a separate read-only run; it does not publish anything. Review or edit the result,
-regenerate it, or restore the previous text. Edits made during generation are kept.
+| Key | Meaning |
+|:---|:---|
+| `instructions` | Required string given to the agent for the whole walkthrough. |
+| `checkpoints` | Required list of 1 to 40 items, each with `title`, `given`, `when` and `then`. |
+| `before` | Optional `ref` (default `origin/main`), `instructions` and `checkpoints` for the before comparison. |
 
-The local review manifest can provide an `evidence` array with `label`, `kind`
-(`screenshot` or `video`), `side` (`before` or `after`), and a shared HTTPS `url`.
-Only supplied shared screenshot URLs may be embedded. Local-only artifacts are
-reported as needing upload, and before/after claims must be supported by observed
-evidence. Image insertion accepts shared URLs; this editor does not upload local
-files to GitHub automatically.
+A worked example is [`demo-processes/hermetiq-cloud-native.json`](https://github.com/nddipiazza/robos/blob/main/packages/pr-review/demo-processes/hermetiq-cloud-native.json). Adapt its URLs and expected counts to your own project.
 
-### Evidence-led descriptions
+### Evidence bundles
 
-The description agent receives a complete evidence catalog rather than only files
-beside the video and the latest chat messages. The catalog includes configured
-`evidenceRoots` and `evidenceIndexes`, saved walkthrough screenshots, full chat,
-the before/after checkpoint process, manifests, test reports, and logs. Overlapping
-roots are deduplicated; any inventory limit is reported explicitly.
+`packages/robos-lib/evidence-template-cli.js` has the subcommands `list`, `register`, `select`, `collect` and `refresh`. `collect` binds an agent's result to a template and writes a bundle, recording the `git` revision it was captured at. `refresh` revalidates existing captures against the current revision without rerunning any test.
 
-Up to eight priority screenshots are attached directly to the generation request.
-The agent must inspect representative images and relevant reports, use the visible
-product differences in the description, and distinguish baseline screenshots from
-earlier feature iterations. Local images remain useful evidence even before upload.
-The Create PR stage shows the selected real screenshots in an expandable gallery;
-only shared URLs are embedded in the GitHub Markdown.
+## Tests
 
-New walkthrough actions capture clean product screenshots into the review's
-`evidence/` directory and retain checkpoint, mode, capture time, baseline revision,
-and verification status in its index. This keeps comparison evidence available
-across chat clearing, restarts, and description regeneration.
+The review logic has unit tests that run without Electron:
+
+```bash
+node --test packages/robos-test/tests/pr-review/local-review.test.js \
+  packages/robos-test/tests/pr-review/demo-session.test.js \
+  packages/robos-test/tests/pr-review/create-review-pr.test.js \
+  packages/robos-test/tests/pr-review/review-pr-state.test.js \
+  packages/robos-test/tests/pr-review/review-session-store.test.js
+```
+
+They cover checkpoint pausing and retry, steering, Start over, saved sessions, PR creation guards, and the ready-for-review checks. The `*.e2e.js` files in the same folder drive a running Electron window. Some, such as `local-review.e2e.js`, are skipped unless `ROBOS_THEATER_CDP` points at it.
+
+For recorded demos and the lifecycle test that backs the home-page recording, see [Walkthroughs and proof of work]({{ site.baseurl }}{% link walkthroughs.md %}). For where the review fits in the delivery loop, see [Review & governance]({{ site.baseurl }}{% link agent-review-development.md %}).
