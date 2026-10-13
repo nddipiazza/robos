@@ -94,6 +94,13 @@ body.home{
 .h-who{font:.74rem/1.5 var(--mono);text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:14px}
 .h-paths p:last-child{color:color-mix(in srgb,var(--fg) 78%,var(--bg));font-size:.97rem}
 
+/* license */
+.h-license{padding:72px 0}
+.h-license-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:56px;align-items:start}
+.h-license h2{font-size:clamp(1.6rem,2.6vw,2.1rem)}
+.h-license-text p:first-child{font-size:1.05rem;max-width:62ch;color:color-mix(in srgb,var(--fg) 82%,var(--bg))}
+.h-license .h-label{margin-bottom:14px}
+
 /* install */
 .h-install-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:56px;align-items:center}
 .h-install .h-cta{margin-top:26px}
@@ -137,7 +144,7 @@ body.home{
 
 @media(max-width:900px){
   .h-hero{padding:48px 0 56px}
-  .h-hero-grid,.h-code-grid,.h-install-grid{grid-template-columns:1fr;gap:40px}
+  .h-hero-grid,.h-code-grid,.h-install-grid,.h-license-grid{grid-template-columns:1fr;gap:28px}
   .h-sec{padding:60px 0}
   .h-rows li{grid-template-columns:1fr;gap:6px}
   .h-index-row{grid-template-columns:1fr;gap:4px}

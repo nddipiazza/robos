@@ -20,7 +20,7 @@ body_class: home
     </div>
     <dl class="h-facts" aria-label="Facts about RobOS">
       <div><dt>Release</dt><dd><a href="https://github.com/nddipiazza/robos/releases/tag/v0.0.7" target="_blank" rel="noopener">v0.0.7</a></dd></div>
-      <div><dt>License</dt><dd>Apache-2.0</dd></div>
+      <div><dt>License</dt><dd><a href="https://github.com/nddipiazza/robos/blob/main/LICENSE" target="_blank" rel="noopener">Apache License 2.0</a></dd></div>
       <div><dt>Platforms</dt><dd>macOS, Linux, Windows</dd></div>
       <div><dt>Desktop apps</dt><dd><a href="{{ '/apps/' | relative_url }}">{{ real_apps.size }}</a> in {{ site.data.app_categories.size }} categories</dd></div>
       <div><dt>Built with</dt><dd>Electron and plain JavaScript</dd></div>
@@ -261,5 +261,18 @@ cd robos
 npm install
 electron packages/pr-review</code></pre>
     </figure>
+  </div>
+</section>
+
+<section class="h-sec h-license" id="license">
+  <div class="wrap h-license-grid">
+    <div>
+      <p class="h-label">License</p>
+      <h2>Apache License 2.0</h2>
+    </div>
+    <div class="h-license-text">
+      <p>RobOS is free and open source. You can use it, modify it and ship it commercially. There is no SaaS subscription and no proprietary cloud dependency. The license also includes an express patent grant from every contributor.</p>
+      <p class="h-more"><a href="https://github.com/nddipiazza/robos/blob/main/LICENSE" target="_blank" rel="noopener">Read the full license</a></p>
+    </div>
   </div>
 </section>
