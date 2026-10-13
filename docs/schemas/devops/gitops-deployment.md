@@ -1,84 +1,47 @@
 ---
 title: GitOps Deployment
 layout: default
-parent: DevOps & Cloud (robos.devops)
-grand_parent: KGraph Schemas
+parent: "DevOps & Cloud (robos.devops)"
+grand_parent: Schemas
 nav_order: 5
 permalink: /schemas/devops/gitops-deployment.html
 ---
 
-# Schema: `robos:GitOpsDeployment`
+# robos:GitOpsDeployment
 {: .no_toc }
 
-Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:GitOpsDeployment` in the `devops` package store.
-{: .fs-6 .fw-300 }
+Validation shape for `robos:GitOpsDeployment` nodes in the `devops` package group.
+{: .fs-6 }
 
-## Table of contents
-{: .no_toc .text-delta }
+## Details
 
-1. TOC
-{:toc}
+| | |
+|---|---|
+| Class | `robos:GitOpsDeployment` |
+| Also matches | `robos:ArgoCDApplication` |
+| Shape id | `urn:robos:shape:GitOpsDeploymentShape` |
+| Package | [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) (`devops`) |
+| Classification | Infrastructure & delivery |
+| Schema.org type | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) |
+| Domain standard | [opengitops.dev](https://opengitops.dev/) |
 
----
+## Properties
 
-## Specification Metadata
+Count is the minimum and maximum number of values (`*` means no maximum). The validator enforces both. The type column is documentation only; the validator does not check types.
 
-- **RDF / OWL Class**: `robos:GitOpsDeployment`
-- **Aliases / Target Classes**: `robos:GitOpsDeployment`, `robos:ArgoCDApplication`
-- **SHACL Shape ID**: `urn:robos:shape:GitOpsDeploymentShape`
-- **Governing Package**: [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) (`devops`)
-- **Namespace**: `robos.devops`
-- **Schema.org Classification**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
-- **Domain De Facto Standard**: [https://opengitops.dev/](https://opengitops.dev/)
-- **Upstream Schema Basis (Refers From)**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
+| Property | Count | Type | Rule or description |
+|---|---|---|---|
+| `dcterms:title` | `1..*` | `xsd:string` | GitOps Deployment must have a title. |
+| `robos:gitopsEngine` | `1..*` | - | GitOps Deployment must declare engine (argocd, flux). |
+| `robos:sourceRepo` | `1..*` | - | GitOps Deployment must specify source Git repository. |
+| `robos:targetCluster` | `1..*` | - | GitOps Deployment must link to target Kubernetes Cluster. |
+| `robos:targetNamespace` | `1..*` | - | GitOps Deployment must specify target namespace. |
 
----
+## Example node
 
-## Upstream Schema Basis (Refers From) & Global Standards Provenance
+This node comes from `.robos/kgraphs/devops/package.jsonld` in the RobOS repository. That graph holds sample data for a fictional company, so treat the values as illustrations.
 
-This RobOS schema is modeled after and directly aligns with two levels of global standards:
-- **Universal Schema.org Class**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication) (100% interoperability with search engines, web indexers, and general AI reasoning)
-- **Specialized Domain Standard**: [https://opengitops.dev/](https://opengitops.dev/) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
-- **Canonical Reference**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
-- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:GitOpsDeployment`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
-
----
-
-## Entity Relationship & Schema Context
-
-<div style="margin: 1.5rem 0; padding: 1.25rem; background: #161b22; border: 1px solid #30363d; border-radius: 8px;">
-  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
-    <span style="font-size: 1.15rem; font-weight: 700; color: #38bdf8;">GitOps Deployment</span>
-    <span style="font-family: monospace; background: #121927; color: #00e5ff; border: 1px solid rgba(0, 229, 255, 0.4); padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.85rem;">robos:GitOpsDeployment</span>
-  </div>
-  <p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Governed by W3C SHACL shape <code>urn:robos:shape:GitOpsDeploymentShape</code> within the <strong>DevOps & Cloud (robos.devops)</strong> (<code>robos.devops</code>) package store.</p>
-  <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>dcterms:title</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:gitopsEngine</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:sourceRepo</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:targetCluster</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:targetNamespace</code></span>
-  </div>
-</div>
-
----
-
-**RobOS classification:** Infrastructure & delivery. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
-
-## Property Constraints & SHACL Rules
-
-| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
-|---|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | GitOps Deployment must have a title. |
-| **`robos:gitopsEngine`** | gitopsEngine | `1..*` | `xsd:string` | Infrastructure & delivery | GitOps Deployment must declare engine (argocd, flux). |
-| **`robos:sourceRepo`** | sourceRepo | `1..*` | `xsd:string` | Infrastructure & delivery | GitOps Deployment must specify source Git repository. |
-| **`robos:targetCluster`** | targetCluster | `1..*` | `xsd:string` | Infrastructure & delivery | GitOps Deployment must link to target Kubernetes Cluster. |
-| **`robos:targetNamespace`** | targetNamespace | `1..*` | `xsd:string` | Infrastructure & delivery | GitOps Deployment must specify target namespace. |
-
----
-
-## Canonical OSLC JSON-LD Example
-
+{% raw %}
 ```json
 {
   "@id": "urn:robos:gitops:checkout-service-argocd",
@@ -102,42 +65,14 @@ This RobOS schema is modeled after and directly aligns with two levels of global
   "robos:domainStandard": "https://opengitops.dev/"
 }
 ```
+{% endraw %}
 
----
+## Validate the example
 
-## Programmatic SHACL Validation
+Save the example as `node.json` in the repository root, then run:
 
-```javascript
-const { SHACLValidator } = require('/usr/local/share/robos/robos-graph/lib/shacl-validator');
-const { OSLCGraphParser, OSLC_CONTEXT } = require('/usr/local/share/robos/robos-graph/lib/oslc-parser');
-
-const validator = new SHACLValidator();
-const result = validator.validateGraph(new OSLCGraphParser({
-  "@context": OSLC_CONTEXT,
-  "robos:nodes": [
-    {
-        "@id": "urn:robos:gitops:checkout-service-argocd",
-        "@type": [
-            "oslc_config:ConfigurationItem",
-            "robos:GitOpsDeployment",
-            "robos:ArgoCDApplication",
-            "schema:SoftwareApplication"
-        ],
-        "dcterms:title": "Billing & Checkout ArgoCD GitOps Application",
-        "dcterms:description": "Declarative GitOps deployment application managing Kubernetes manifests via ArgoCD.",
-        "robos:gitopsEngine": "argocd",
-        "robos:sourceRepo": "https://github.com/acme/gitops-manifests",
-        "robos:sourcePath": "charts/billing-api",
-        "robos:targetCluster": "urn:robos:cluster:prod-us-east-eks",
-        "robos:targetNamespace": "production",
-        "robos:syncPolicy": "automated",
-        "robos:package": "devops",
-        "robos:namespace": "robos.devops",
-        "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-        "robos:domainStandard": "https://opengitops.dev/"
-    }
-  ],
-}));
-
-console.log("Conforms:", result.conforms); // Expected: true
+```bash
+node -e "const { SHACLValidator } = require('./packages/robos-graph/lib/shacl-validator'); console.log(new SHACLValidator().validate([require('./node.json')]).conforms)"
 ```
+
+The command prints `true` when the node meets every rule for its types.

@@ -1,179 +1,138 @@
 ---
-title: Existing App Import Wizard
+title: Import an existing app
 layout: default
-parent: Application Development
-nav_order: 3
+parent: Building apps
+grand_parent: Build on RobOS
+nav_order: 2
 ---
 
-# Existing App Import Wizard
+# Import an existing app
 {: .no_toc }
 
-How application developers import existing codebases and Git repositories into RobOS using the App Import Wizard: deep automated code inspection, heuristic archetype detection, Backstage `catalog-info.yaml` generation, `dev-setup.sh` synthesis, and Knowledge Graph mapping.
-{: .fs-6 .fw-300 }
+How to bring an existing codebase, or a list of repositories and services, into RobOS with the App Wizard's import mode. The import mostly builds graph nodes from names and top-level files; it does not connect to GitHub, Confluence, databases or clusters. This page lists what it actually reads and writes so you can decide what to check by hand.
+{: .fs-6 }
 
-## Table of contents
-{: .no_toc .text-delta }
-
+<details open markdown="block">
+  <summary>On this page</summary>
+  {: .text-delta }
 1. TOC
 {:toc}
+</details>
 
----
+## Run it
 
-## Overview: Bring Any Existing App Into RobOS
+Start the wizard from inside the repository whose knowledge graph you want to update, then click **Import Existing Code** in the header:
 
-Most engineering teams have existing repositories that were built before adopting RobOS. Bringing these projects into RobOS should not require rewriting code, converting folder structures, or manually authoring dozens of metadata files.
+```bash
+electron packages/app-wizard
+```
 
-The **RobOS App Import Wizard** (`packages/app-wizard` in import mode) automatically inspects existing codebases, extracts their capabilities and contracts, and integrates them into the RobOS ecosystem in seconds:
+The wizard looks for `.robos` in the working directory and up to four parent directories. The sidebar steps are What to Import, Deep Inspection and Catalog & Ingest. The app page is [App Wizard]({{ '/apps/app-wizard/' | relative_url }}).
 
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/enterprise-migration-architecture.jpg' | relative_url }}" alt="Existing App Import & Ingestion Pipeline" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Existing App Import & Ingestion Pipeline</strong>: How the App Import Wizard scans manifests, infers archetypes, synthesizes Backstage metadata and dev-setup scripts, and ingests repositories into the Knowledge Graph. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
+{: .warning }
+Do not queue a database connection string that contains a password. The importer copies the full URI into the node's `dcterms:description`, which is saved in `.robos/kgraphs/core-platform/package.jsonld`. The built-in sample stack contains one such string (`admin:secret`), so do not load it into a graph you commit.
 
----
+## Step 1: What to Import
 
-## Deep Inspection & Archetype Detection Engine
+Add targets one at a time with **Add Resource Target (URL, Local Path, or Connection URI)** and **+ Add Resource**, or paste text into the prompt box and click **Deep Thinking AI Extract & Queue Targets**. The queue is shown under **Queued Resources for Ingestion**.
 
-When an existing project directory is provided, the inspection engine analyzes build files and dependency trees using heuristic detection rules:
+The type menu defaults to **Auto-Detect Type**. Auto-detection looks at the text:
 
-### Manifest Scanning Rules:
-- **`pom.xml` / `build.gradle`**:
-  - Detects Java version (e.g., Java 17, Java 21).
-  - Identifies Spring Boot, Quarkus, or Micronaut dependencies.
-  - Classifies as `robos:Microservice`.
-- **`package.json`**:
-  - Scans dependencies:
-    - If `electron` is present: classifies as `robos:DesktopApp`.
-    - If `react-native` is present: classifies as `robos:MobileApp`.
-    - If `express`, `fastify`, `koa`, or `nest`: classifies as `robos:Microservice`.
-    - Otherwise: classifies as `robos:Library` or frontend client.
-- **`go.mod`**:
-  - Detects Go version.
-  - Scans for Gin, Echo, or Chi (Microservice) or Cobra (ConsoleApp).
-- **`Cargo.toml`**:
-  - Scans for Tokio, Actix, or Axum (Microservice) or Clap (ConsoleApp).
-- **`requirements.txt` / `pyproject.toml`**:
-  - Scans for FastAPI, Flask, Django (Microservice) or Celery (DataPipeline).
+| Text | Type |
+|:---|:---|
+| `http(s)` URL containing `confluence`, `wiki`, `/spaces/` or `/display/` | Confluence |
+| `github.com/<org>` or `github.com/<org>/<repo>` | GitHub organization or repository |
+| `gitlab.com` URL | GitLab |
+| Any other `http(s)` URL | HTTP / Backstage catalog |
+| `s3://...` | S3 bucket |
+| `postgres://`, `postgresql://`, `mysql://`, `redis://`, `mongodb://` | Database |
+| Contains `kafka`, or ends in a 4- or 5-digit port | Kafka |
+| Contains `k8s`, `eks`, `gke` or `aks` | Kubernetes cluster |
+| Contains `mcp` or ends in `-server` | MCP server |
+| Anything else | Local directory |
 
-### API Contract & Migration Extraction:
-The engine also scans for:
-- Existing OpenAPI / Swagger specifications (`openapi.yaml`, `swagger.json`).
-- GraphQL schemas (`schema.graphql`).
-- Protobuf RPC definitions (`*.proto`).
-- Database migration directories (`db/migration`, Flyway, Liquibase, Prisma, Alembic).
+Pick a type from the menu to override the guess.
 
----
+The prompt box is not a language model. **Deep Thinking AI Extract & Queue Targets** runs a set of regular expressions (`KGraphResourceImporter.parsePrompt` in `packages/robos-graph`) that pull out URLs, absolute paths, database URIs, a Kafka endpoint after the word "kafka", Kubernetes clusters written as "EKS cluster name", and MCP servers written as "MCP server name". It also guesses a company name from phrases such as "for Acme" or "company Acme".
 
-## Interactive AI Prompt Refinement (`<robos-ai-textarea>`)
+**Load Enterprise Sample Stack** queues five fixed example targets for a fictional company, Acme. Use it to see the screens, not for real work.
 
-Automated heuristic detection is fast, but real-world enterprise codebases frequently have special architectural requirements or polyglot structures.
+Set **Company / Organization**, **Company Slug** and **Default Assigned Team** before you continue. The defaults are Acme Global and `acme-global`, and they name the nodes the importer creates.
 
-In **Panel 2: Deep Inspection Results**, RobOS equips developers with an interactive `<robos-ai-textarea>` prompt bar alongside direct editable controls:
+![The What to Import step with queued Confluence, GitHub, repository, database and Kafka targets]({{ '/assets/images/screenshots/import-app-source-select_frame.png' | relative_url }}){: .robos-zoomable-img }
+*Look at the colored badges: each queued target shows the type the wizard chose. Some button labels have changed since this capture.*
 
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/screenshots/import-app-ai-refinement_frame.png' | relative_url }}" alt="Deep Inspection and Interactive AI Prompt Refinement" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Interactive AI Prompt Refinement</strong>: Using <code>&lt;robos-ai-textarea&gt;</code> to tune detected archetypes, technology stacks, and team assignments in real time. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
+## Step 2: Deep Inspection
 
-Developers can type natural language instructions to immediately alter the detected parameters:
-- *"Treat this as a Microservice using Spring Boot instead of a library"*
-- *"Change the runtime stack to Node 20 with Fastify and TypeScript"*
-- *"Assign this component to team core-platform with package slug auth-gateway"*
+Click **Deep Inspect & Analyze Targets**. This click does the ingestion, not the last step: the wizard calls the importer, validates the generated nodes against the built-in SHACL shapes, and saves them into the `.robos/kgraphs/` package files. It also appends entries to `.robos/packages.yaml`.
 
-Clicking **Apply AI Refinement** (or directly modifying the form fields) updates the archetype, technology stack, package name, and team assignment in real time before generating any configuration files.
+Step 2 then shows:
 
----
+- Counts by node type and a per-package breakdown. The green banner above them is fixed text; check the violation count in the line beside it.
+- A summary of the first local directory in the queue: **Target Directory**, **Detected Archetype**, **Language & Framework**, **Contracts Discovered**, **Docker Support** and **Dev Setup**.
+- Editable fields: **Package Identifier / Name**, **Application Archetype**, **Technology Stack** and **Assign Team Ownership (.robos/teams.yaml)**.
+- A **Deep Thinking AI Refine** box.
 
-## Step-by-Step Heterogeneous Resource & Codebase Ingestion Workflow
+If the queue held no local directory and the importer created no Microservice, Desktop Application or Front End Application node, the summary shows a placeholder record named Payment Gateway API. Correct it or go back.
 
-The import workflow follows three streamlined panels powered by the **RobOS Knowledge Graph Resource Importer** (`KGraphResourceImporter`):
+![The inspection step showing graph entity counts, package pills and the detected archetype of a local folder]({{ '/assets/images/screenshots/import-app-deep-inspection_frame.png' | relative_url }}){: .robos-zoomable-img }
+*Look at the lower box: the archetype and language come from the folder scan described below.*
 
-### 1. Step 1: What stuff are you importing?
-Specify any combination of heterogeneous infrastructure resources to ingest into the dual-state SDLC Knowledge Graph:
-- **Git Repositories & URLs**: Individual GitHub, GitLab, or Bitbucket repositories (`https://github.com/org/repo`).
-- **Git Organizations & Forges**: Full GitHub organizations (`https://github.com/acme-payments`), importing member repositories, forge metadata, and organization-level agent rules.
-- **Local Directories & Monorepos**: Local filesystem paths (`/home/user/app`), scanning codebase manifests, packages, and markdown ADRs (`docs/adr/*.md`).
-- **Confluence Spaces & Wikis**: Confluence URLs (`https://confluence.acme.corp/display/ARCH`), extracting living documentation pages, Architecture Decision Records (ADRs), and interactive Mermaid flowcharts.
-- **Databases & Event Streams**: Connection URIs for PostgreSQL, MySQL, Redis, MongoDB (`postgres://...`), and Apache Kafka clusters (`kafka.internal:9092`).
-- **Cloud Infrastructure & MCP Servers**: Kubernetes clusters (EKS, GKE, AKS, K3s) and Model Context Protocol (MCP) server endpoints.
-- **AI Prompt & Bulk Extractor**: Paste unstructured notes or natural language requests into `<robos-ai-textarea>` to extract and queue targets automatically.
-- **Enterprise Sample Stack**: One-click preset loading a realistic enterprise stack for rapid exploration.
+### How the local folder is scanned
 
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/screenshots/import-app-source-select_frame.png' | relative_url }}" alt="Step 1: What stuff are you importing?" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Step 1: What stuff are you importing?</strong>: Queue URL resources, local repositories, Confluence spaces, databases, Kafka streams, and use AI prompt extraction. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
+The wizard lists only the top level of the folder and applies the first matching rule:
 
-### 2. Step 2: Inspection & Knowledge Graph Topology
-The inspection engine scans local manifests and simultaneously executes the `KGraphResourceImporter` pipeline:
-- **Topology Statistics**: Discovers all entities across standard packages (Microservices, Git Organizations, Confluence Docs, ADRs, Flow Diagrams, OpenAPI/Protobuf contracts, Databases, and Kafka brokers).
-- **100% W3C SHACL Shape Conformance**: Every discovered node is validated in real time against SHACL constraint shapes.
-- **Interactive AI Prompt Refinement**: Use the `<robos-ai-textarea>` prompt bar to tune detected archetypes, technology stacks, naming, or team mapping in seconds.
+| Top-level file | Archetype | Language and framework shown |
+|:---|:---|:---|
+| `pom.xml` | Microservice | Java 21 / Spring Boot 3 |
+| `package.json` with `electron` | Desktop Application | Node.js 20 / Electron |
+| `package.json` with `react-native`, or an `app.json` file | Mobile Application, or Mobile Game if the folder name contains "game" | TypeScript / React Native |
+| `package.json` with `vite`, `next`, `nuxt`, `vue`, `svelte`, `@angular/core` or `react-scripts`, or `react` without `express` | Front End Application | TypeScript / Vue, Next.js, Svelte, Angular or React |
+| `package.json` with `express`, `fastify` or `koa` | Microservice | Node.js 20 / Express |
+| Any other `package.json` | Library | TypeScript / Node.js |
+| `*.uproject` or `project.godot` | PC Game, or Mobile Game if the folder name contains "mobile" | Unreal Engine or Godot |
+| `go.mod` | Microservice | Go 1.22 / Gin |
+| `Cargo.toml` | Console & CLI Tool | Rust / Tokio |
+| `requirements.txt` or `pyproject.toml` | Microservice | Python 3.11 / FastAPI |
+| None of these | Library | Unknown |
 
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/screenshots/import-app-deep-inspection_frame.png' | relative_url }}" alt="Step 2: Inspection and Knowledge Graph Topology" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Step 2: Inspection & Knowledge Graph Topology</strong>: Discovered entities, modular package breakdown, W3C SHACL conformance, and interactive AI refinement. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
+Rules are checked in the order shown. The language and framework are fixed labels for the matching rule. The wizard reads dependencies only from `package.json`, and it does not read version numbers anywhere, so correct **Technology Stack** by hand. A `build.gradle` project is not recognised.
 
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/screenshots/import-app-ai-refinement_frame.png' | relative_url }}" alt="Step 2: AI Prompt Refinement Applied" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Step 2 (Continued): AI Prompt Refinement</strong>: Instructing AI in natural language to refine archetype, stack, and team ownership. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
+It also flags `openapi.yaml`, `openapi.json` or `swagger.json` (shown as "OpenAPI 3.1"), `schema.graphql`, and any `.proto` file. When none is found, **Contracts Discovered** still shows "OpenAPI 3.1 & JSON-LD". **Docker Support** says "will synthesize" for a missing Dockerfile, but the import never writes one.
 
-### 3. Step 3: Synthesize Backstage Catalog & Ingest
-Executing ingestion automatically creates Backstage `catalog-info.yaml`, synthesizes executable `dev-setup.sh` environment runners, commits all validated nodes into `.robos/kgraphs/`, registers components in `.robos/packages.yaml`, and updates local workspace discovery in `~/.config/robos/git-projects.json`:
+### Refinement
 
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/screenshots/import-app-ingest-complete_frame.png' | relative_url }}" alt="Step 3: Ingestion Complete & Knowledge Graph Mapped" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Step 3: Ingestion Complete</strong>: Real-time synthesis of Backstage catalog metadata, dev-setup scripts, and Knowledge Graph mapping. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
+**Deep Thinking AI Refine** applies keyword rules in `packages/app-wizard/main.js`; it does not call a model. It changes the archetype when the text contains phrases such as "mobile game", "front end", "cli", "desktop", "microservice", "pipeline" or "library". It reads a name after "rename to", "name", "named", "named as" or "slug", a stack when the text says "runtime", "technology", "language", "stack" or "framework" followed by a value (or mentions Go, Python, Rust or Java), and a team if its id or name appears in the text. Matching is by substring, so a word like "google" also counts as Go. The message under the box lists what changed. You can also edit the fields directly.
 
----
+## Step 3: Catalog & Ingest
 
-## What RobOS Generates on Import
+**Complete Ingestion & Map** runs only for a local directory. It writes two files into that folder if they are missing:
 
-1. **Backstage Catalog Component (`catalog-info.yaml`)**:
-   If the repository doesn't already contain a Backstage manifest, RobOS generates one with the detected archetype, technology, and team ownership.
-2. **Zero-Friction Dev Setup Script (`dev-setup.sh`)**:
-   Synthesizes an executable environment verification script checking required runtimes (e.g. Node, Java JDK, Docker) and pulling credentials from the GPG vault.
-3. **Registration in Git Projects (`~/.config/robos/git-projects.json`)**:
-   Links the local directory into the multi-repo Git Projects manager for one-click branch switching and Monaco editor inspection.
-4. **Knowledge Graph Ingestion**:
-   Registers the package into `.robos/packages.yaml` and links the service into the live visual architecture map.
-5. **Bruno REST API Test Collections (`.bru`)**:
-   For microservices with OpenAPI contracts, RobOS automatically generates plain-text `.bru` request collections ready for batch execution in the REST API Client.
+| File | Content |
+|:---|:---|
+| `catalog-info.yaml` | A Backstage `Component` with the name, title, `spec.type` set to the lower-cased archetype, `lifecycle: production` and the chosen owner. The description is the fixed text "Imported into RobOS via App Import Wizard". |
+| `dev-setup.sh` | An executable script that prints a heading and "All dependencies verified!". It checks nothing. Replace it with a real setup script. |
 
----
+It then appends an entry to `.robos/packages.yaml` if the URN is not already there, and tries to append one to `~/.config/robos/git-projects.json`. The `repository` in that entry is always `github.com/acme/<slug>`; edit it.
 
-## E2E Walkthrough Video & Proof of Work
+The console box prints "Registered in .robos/packages.yaml" and "Added to ~/.config/robos/git-projects.json" whether or not those writes succeeded. Git Projects stores `{ "projects": [...] }` in that file and the wizard treats it as a bare array, so the entry is skipped when Git Projects has created the file and is not listed by Git Projects otherwise. Add the repository in [Git Projects]({{ '/apps/git-projects/' | relative_url }}) yourself.
 
-Watch the live end-to-end verification video showing deep inspection, AI prompt refinement, and Backstage synthesis with zero mocking:
+If the inspected source is not a local path (for example a URL), step 3 writes nothing, although the console still prints "Synthesized Backstage catalog metadata". Only the graph nodes from step 2 exist.
 
-<video controls width="100%" style="border-radius: 8px; border: 1px solid #30363d; margin-top: 1rem; margin-bottom: 1.5rem;" poster="{{ '/assets/images/screenshots/import-app-deep-inspection_frame.png' | relative_url }}">
-  <source src="{{ '/assets/videos/app-import-wizard-final.webm' | relative_url }}" type="video/webm">
-  Your browser does not support the video tag.
-</video>
+## What the importer does not do
 
-* [👉 **Full Walkthrough Archive & Audio Script**]({{ site.baseurl }}{% link walkthroughs.md %}#step-20-import-existing-apps--codebase-ingestion--archetype-detection)
+The importer does not clone repositories, call the Confluence or GitHub APIs, connect to databases or brokers, or query clusters. The nodes it creates come from these rules:
 
----
+| Target | What you get |
+|:---|:---|
+| Repository URL | One node. The archetype is guessed from the repository name (for example `cli`, `sdk`, `worker`, `mobile`, `game`) and defaults to Microservice. Two example URLs (`acme-retail/checkout-api` and a GitLab `acme-devops/gitops-deployments`) have canned titles. For Microservice and Library nodes it also creates a placeholder OpenAPI contract with made-up endpoints (`/api/v1/<name>`, `/healthz`). |
+| GitHub organization | Built-in sample data for `acme-payments` and `acme-identity`. Any other organization gets one placeholder repository named `<org>-service`. |
+| Confluence space | The same sample pages and ADRs for any Confluence URL. |
+| Database | A node with the engine, host, port and database name parsed from the URI. |
+| Kafka | A node with the endpoint you gave and two fixed topics, `events.incoming` and `events.processed`. |
+| Kubernetes cluster | A node with the fixed namespaces `default` and `production`. |
+| Local directory | A scan of its subfolders for projects (those with `.git`, `package.json` or `pom.xml`), plus one ADR node per Markdown file in `docs/adr/`. |
 
-## Next Steps
+Treat the graph after an import as a draft. Review and edit the nodes in [Knowledge Graph Explorer]({{ '/apps/robos-graph/' | relative_url }}). When you need source evidence on every node, use the reviewed two-step import (propose, then apply) described in [`WORKSPACES.md`](https://github.com/nddipiazza/robos/blob/main/packages/robos-graph/WORKSPACES.md); see also [Knowledge graph]({{ site.baseurl }}{% link knowledge-graph.md %}).
 
-- **[App Development Flow]({{ site.baseurl }}{% link app-development-flow.md %})**: Follow the step-by-step developer tutorial.
-- **[RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover core architectural innovations and strategic advantages.
-- **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
-
-
+The wizard's tests are `packages/robos-test/tests/app-wizard/import-mode-e2e.test.js` and `multi-resource-import.test.js`.

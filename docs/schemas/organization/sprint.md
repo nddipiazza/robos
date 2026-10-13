@@ -1,82 +1,44 @@
 ---
 title: Sprint
 layout: default
-parent: Organization & Teams (robos.org)
-grand_parent: KGraph Schemas
+parent: "Organization & Teams (robos.org)"
+grand_parent: Schemas
 nav_order: 11
 permalink: /schemas/organization/sprint.html
 ---
 
-# Schema: `robos:Sprint`
+# robos:Sprint
 {: .no_toc }
 
-Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Sprint` in the `organization` package store.
-{: .fs-6 .fw-300 }
+Validation shape for `robos:Sprint` nodes in the `organization` package group.
+{: .fs-6 }
 
-## Table of contents
-{: .no_toc .text-delta }
+## Details
 
-1. TOC
-{:toc}
+| | |
+|---|---|
+| Class | `robos:Sprint` |
+| Shape id | `urn:robos:shape:SprintShape` |
+| Package | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) (`organization`) |
+| Classification | Projects & work items |
+| Schema.org type | [`schema:Action`](https://schema.org/Action) |
 
----
+## Properties
 
-## Specification Metadata
+Count is the minimum and maximum number of values (`*` means no maximum). The validator enforces both. The type column is documentation only; the validator does not check types.
 
-- **RDF / OWL Class**: `robos:Sprint`
-- **Aliases / Target Classes**: `robos:Sprint`
-- **SHACL Shape ID**: `urn:robos:shape:SprintShape`
-- **Governing Package**: [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) (`organization`)
-- **Namespace**: `robos.org`
-- **Schema.org Classification**: [https://schema.org/Action](https://schema.org/Action)
-- **Domain De Facto Standard**: [https://schema.org/Action](https://schema.org/Action)
-- **Upstream Schema Basis (Refers From)**: [https://schema.org/Action](https://schema.org/Action)
+| Property | Count | Type | Rule or description |
+|---|---|---|---|
+| `dcterms:title` | `1..*` | `xsd:string` | Sprint must have a title or name. |
+| `robos:status` | `1..*` | `xsd:string` | Sprint must declare status (planning, active, completed). |
+| `robos:startDate` | `1..*` | `xsd:date` | Sprint must specify a start date. |
+| `robos:endDate` | `1..*` | `xsd:date` | Sprint must specify an end date. |
 
----
+## Example node
 
-## Upstream Schema Basis (Refers From) & Global Standards Provenance
+The checked-in graph has no node of this class that passes the validator, so this is a placeholder built from the shape. It has every required property, with example values. It is not a node from the graph.
 
-This RobOS schema is modeled after and directly aligns with two levels of global standards:
-- **Universal Schema.org Class**: [https://schema.org/Action](https://schema.org/Action) (100% interoperability with search engines, web indexers, and general AI reasoning)
-- **Specialized Domain Standard**: [https://schema.org/Action](https://schema.org/Action) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
-- **Canonical Reference**: [https://schema.org/Action](https://schema.org/Action)
-- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:Sprint`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
-
----
-
-## Entity Relationship & Schema Context
-
-<div style="margin: 1.5rem 0; padding: 1.25rem; background: #161b22; border: 1px solid #30363d; border-radius: 8px;">
-  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
-    <span style="font-size: 1.15rem; font-weight: 700; color: #38bdf8;">Sprint</span>
-    <span style="font-family: monospace; background: #121927; color: #00e5ff; border: 1px solid rgba(0, 229, 255, 0.4); padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.85rem;">robos:Sprint</span>
-  </div>
-  <p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Governed by W3C SHACL shape <code>urn:robos:shape:SprintShape</code> within the <strong>Organization & Teams (robos.org)</strong> (<code>robos.org</code>) package store.</p>
-  <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>dcterms:title</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:status</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:startDate</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:endDate</code></span>
-  </div>
-</div>
-
----
-
-**RobOS classification:** Projects & work items. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
-
-## Property Constraints & SHACL Rules
-
-| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
-|---|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | Sprint must have a title or name. |
-| **`robos:status`** | Lifecycle Status | `1..*` | `xsd:string` | Projects & work items, Source control & artifacts, Documentation & decisions | Sprint must declare status (planning, active, completed). |
-| **`robos:startDate`** | Start Date | `1..*` | `xsd:date` | Projects & work items | Sprint must specify a start date. |
-| **`robos:endDate`** | End Date | `1..*` | `xsd:date` | Projects & work items | Sprint must specify an end date. |
-
----
-
-## Canonical OSLC JSON-LD Example
-
+{% raw %}
 ```json
 {
   "@id": "urn:robos:organization:sprint-sample",
@@ -86,7 +48,7 @@ This RobOS schema is modeled after and directly aligns with two levels of global
     "oslc:Resource"
   ],
   "dcterms:title": "Sample Sprint",
-  "dcterms:description": "Canonical reference instance for robos:Sprint.",
+  "dcterms:description": "Placeholder node for robos:Sprint.",
   "robos:package": "organization",
   "robos:namespace": "robos.org",
   "robos:status": "active",
@@ -97,39 +59,14 @@ This RobOS schema is modeled after and directly aligns with two levels of global
   "robos:refersFrom": "https://schema.org/Action"
 }
 ```
+{% endraw %}
 
----
+## Validate the example
 
-## Programmatic SHACL Validation
+Save the example as `node.json` in the repository root, then run:
 
-```javascript
-const { SHACLValidator } = require('/usr/local/share/robos/robos-graph/lib/shacl-validator');
-const { OSLCGraphParser, OSLC_CONTEXT } = require('/usr/local/share/robos/robos-graph/lib/oslc-parser');
-
-const validator = new SHACLValidator();
-const result = validator.validateGraph(new OSLCGraphParser({
-  "@context": OSLC_CONTEXT,
-  "robos:nodes": [
-    {
-        "@id": "urn:robos:organization:sprint-sample",
-        "@type": [
-            "robos:Sprint",
-            "schema:Action",
-            "oslc:Resource"
-        ],
-        "dcterms:title": "Sample Sprint",
-        "dcterms:description": "Canonical reference instance for robos:Sprint.",
-        "robos:package": "organization",
-        "robos:namespace": "robos.org",
-        "robos:status": "active",
-        "robos:startDate": "2026-10-01",
-        "robos:endDate": "2026-10-15",
-        "robos:schemaOrgType": "https://schema.org/Action",
-        "robos:domainStandard": "https://schema.org/Action",
-        "robos:refersFrom": "https://schema.org/Action"
-    }
-  ],
-}));
-
-console.log("Conforms:", result.conforms); // Expected: true
+```bash
+node -e "const { SHACLValidator } = require('./packages/robos-graph/lib/shacl-validator'); console.log(new SHACLValidator().validate([require('./node.json')]).conforms)"
 ```
+
+The command prints `true` when the node meets every rule for its types.

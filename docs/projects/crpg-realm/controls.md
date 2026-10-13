@@ -71,9 +71,9 @@ The action toolbar (`ActionToolbar.gd`) has:
 
 | Button | What it does |
 |:---|:---|
-| Attack, Move, Guard | Order the selected member |
-| Spell | Shows the first prepared spell by name. Only some spells work from here. See [Combat, party and spells]({{ '/projects/crpg-realm/create-your-own-game/combat-party-and-spells.html#spells' | relative_url }}). |
-| Special | Depends on the hero's class. Fighter: 2nd Wind. Rogue: Find Traps (reads Traps (ON) while active). Cleric: Turn. Wizard: Recovery. Other classes: Special. |
+| Attack, Move, Guard | Log an order in the activity log. Attack tells you to click a target. Guard shows a "+2 AC" label, but no code applies an AC bonus. Clicking an enemy or the ground is what acts. |
+| Spell | Shows the first prepared spell by name. Cure Wounds heals the hero. Other spells mostly do nothing from this button. See [Combat, party and spells]({{ '/projects/crpg-realm/create-your-own-game/combat-party-and-spells.html#spells' | relative_url }}). |
+| Special | Fighter: Second Wind, which heals 6 to 10 HP. Rogue: toggles Find Traps mode (reads Traps (ON) while active). Cleric (Turn) and wizard (Recovery): log a message and show a floating label, with no other effect. Other classes: log a message. |
 | Heal (n), Anti (n) | Use a healing potion or an antidote. The number is how many you carry. |
 | PAUSE | Pause or resume, same as Space |
 | Six formation buttons | Rank and file, wedge, shield wall, marching column, defensive square, skirmish. See [Combat, party and spells]({{ '/projects/crpg-realm/create-your-own-game/combat-party-and-spells.html#party-and-formations' | relative_url }}). |

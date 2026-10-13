@@ -26,7 +26,8 @@ Not built yet: automatic tier dispatch. RobOS has three settings called Tier 1, 
 
 Open **RobOS Preferences** from the app launcher and choose **Agent Tiers & Prompt Optimization** in the left sidebar. The source is [`packages/robos-preferences`](https://github.com/nddipiazza/robos/tree/main/packages/robos-preferences).
 
-![RobOS Preferences showing the Agent Tiers and Prompt Optimization section with default values]({{ '/assets/images/screenshots/agent-tiers-preferences-overview.png' | relative_url }}){: .robos-zoomable-img }
+![RobOS Preferences showing the Agent Tiers and Prompt Optimization section with default values]({{ '/assets/images/screenshots/agent-tiers-preferences-overview.png' | relative_url }})
+{: .robos-zoomable-img }
 
 *Look at the three model fields and the Caveman and DSPy controls with their defaults.*
 
@@ -45,13 +46,15 @@ Open **RobOS Preferences** from the app launcher and choose **Agent Tiers & Prom
 
 The model fields are free text. The defaults are whatever the code ships with, so change them to a model your agent CLI accepts.
 
-![The same section with Caveman mode set to extreme and DSPy set to BootstrapFewShot with unit_tests_pass]({{ '/assets/images/screenshots/agent-tiers-preferences-extreme-config.png' | relative_url }}){: .robos-zoomable-img }
+![The same section with Caveman mode set to extreme and DSPy set to BootstrapFewShot with unit_tests_pass]({{ '/assets/images/screenshots/agent-tiers-preferences-extreme-config.png' | relative_url }})
+{: .robos-zoomable-img }
 
 *Look at Caveman Compression Mode set to extreme and the DSPy optimizer and metric changed from their defaults.*
 
 Click **Save All**. RobOS merges the values into `~/.config/robos/settings.json` and shows "Settings saved successfully."
 
-![RobOS Preferences after clicking Save All, with the green saved banner above the Agent Tiers section]({{ '/assets/images/screenshots/agent-tiers-preferences-saved.png' | relative_url }}){: .robos-zoomable-img }
+![RobOS Preferences after clicking Save All, with the green saved banner above the Agent Tiers section]({{ '/assets/images/screenshots/agent-tiers-preferences-saved.png' | relative_url }})
+{: .robos-zoomable-img }
 
 *Look at the green banner at the top of the section.*
 

@@ -1,103 +1,65 @@
 ---
 title: MCP Server
 layout: default
-parent: Core Platform (robos.core)
-grand_parent: KGraph Schemas
+parent: "Core Platform (robos.platform)"
+grand_parent: Schemas
 nav_order: 7
 permalink: /schemas/core-platform/mcp-server.html
 ---
 
-# Schema: `robos:MCPServer`
+# robos:MCPServer
 {: .no_toc }
 
-Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:MCPServer` in the `core-platform` package store.
-{: .fs-6 .fw-300 }
+Validation shape for `robos:MCPServer` nodes in the `core-platform` package group.
+{: .fs-6 }
 
-## Table of contents
-{: .no_toc .text-delta }
+## Details
 
-1. TOC
-{:toc}
+| | |
+|---|---|
+| Class | `robos:MCPServer` |
+| Also matches | `robos:ToolProvider` |
+| Shape id | `urn:robos:shape:MCPServerShape` |
+| Package | [Core Platform (robos.platform)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
+| Classification | Agents & MCP |
+| Schema.org type | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) |
+| Domain standard | [MCP specification](https://modelcontextprotocol.io/specification/2025-11-25/schema) |
 
----
+## Properties
 
-## Specification Metadata
+Count is the minimum and maximum number of values (`*` means no maximum). The validator enforces both. The type column is documentation only; the validator does not check types.
 
-- **RDF / OWL Class**: `robos:MCPServer`
-- **Aliases / Target Classes**: `robos:MCPServer`, `robos:ToolProvider`
-- **SHACL Shape ID**: `urn:robos:shape:MCPServerShape`
-- **Governing Package**: [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`)
-- **Namespace**: `robos.platform`
-- **Schema.org Classification**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
-- **Domain De Facto Standard**: [https://modelcontextprotocol.io/specification/2025-11-25/schema](https://modelcontextprotocol.io/specification/2025-11-25/schema)
-- **Upstream Schema Basis (Refers From)**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
+| Property | Count | Type | Rule or description |
+|---|---|---|---|
+| `dcterms:title` | `1..*` | `xsd:string` | MCP Server must have a title or display name. |
+| `robos:transport` | `1..*` | - | MCP Server must declare transport (stdio, Streamable HTTP, or legacy SSE). |
+| `robos:toolsProvided` | `0..*` | - | Recorded tools are optional; resources-only and prompts-only MCP servers are valid. |
+| `robos:endpoint` | `0..*` | - | Recorded server endpoint; optional for stdio and source declarations. |
+| `robos:resourcesProvided` | `0..*` | - | Recorded resource node references; not live discovery. |
+| `robos:promptsProvided` | `0..*` | - | Recorded prompt node references; not live discovery. |
 
----
+## Example node
 
-## Upstream Schema Basis (Refers From) & Global Standards Provenance
+This node comes from `.robos/kgraphs/core-platform/package.jsonld` in the RobOS repository. That graph holds sample data for a fictional company, so treat the values as illustrations.
 
-This RobOS schema is modeled after and directly aligns with two levels of global standards:
-- **Universal Schema.org Class**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication) (100% interoperability with search engines, web indexers, and general AI reasoning)
-- **Specialized Domain Standard**: [https://modelcontextprotocol.io/specification/2025-11-25/schema](https://modelcontextprotocol.io/specification/2025-11-25/schema) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
-- **Canonical Reference**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
-- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:MCPServer`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
-
----
-
-## Entity Relationship & Schema Context
-
-<div style="margin: 1.5rem 0; padding: 1.25rem; background: #161b22; border: 1px solid #30363d; border-radius: 8px;">
-  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
-    <span style="font-size: 1.15rem; font-weight: 700; color: #38bdf8;">MCP Server</span>
-    <span style="font-family: monospace; background: #121927; color: #00e5ff; border: 1px solid rgba(0, 229, 255, 0.4); padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.85rem;">robos:MCPServer</span>
-  </div>
-  <p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Governed by W3C SHACL shape <code>urn:robos:shape:MCPServerShape</code> within the <strong>Core Platform (robos.core)</strong> (<code>robos.platform</code>) package store.</p>
-  <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>dcterms:title</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:transport</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:toolsProvided</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:endpoint</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:resourcesProvided</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:promptsProvided</code></span>
-  </div>
-</div>
-
----
-
-**RobOS classification:** Agents & MCP. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
-
-## Property Constraints & SHACL Rules
-
-| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
-|---|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | MCP Server must have a title or display name. |
-| **`robos:transport`** | transport | `1..*` | `xsd:string` | Agents & MCP | MCP Server must declare transport (stdio, Streamable HTTP, or legacy SSE). |
-| **`robos:toolsProvided`** | toolsProvided | `0..*` | `xsd:string` | Agents & MCP | Recorded tools are optional; resources-only and prompts-only MCP servers are valid. |
-| **`robos:endpoint`** | endpoint | `0..*` | `xsd:string` | Data stores & messaging, Agents & MCP | Recorded server endpoint; optional for stdio and source declarations. |
-| **`robos:resourcesProvided`** | resourcesProvided | `0..*` | `xsd:string` | Agents & MCP | Recorded resource node references; not live discovery. |
-| **`robos:promptsProvided`** | promptsProvided | `0..*` | `xsd:string` | Agents & MCP | Recorded prompt node references; not live discovery. |
-
----
-
-## Canonical OSLC JSON-LD Example
-
+{% raw %}
 ```json
 {
-  "@id": "urn:robos:mcp:context-engine",
+  "@id": "urn:robos:mcp:kgraph-navigator",
   "@type": [
     "oslc_am:Resource",
     "robos:MCPServer",
     "robos:ToolProvider",
     "schema:SoftwareApplication"
   ],
-  "dcterms:title": "RobOS Code Context MCP Server",
-  "dcterms:description": "Stdio MCP server exposing AST symbols, codebase indexing, and symbol resolution.",
+  "dcterms:title": "RobOS Knowledge Graph MCP Server",
+  "dcterms:description": "Model Context Protocol server allowing autonomous agents to query and validate SDLC graph nodes.",
   "robos:transport": "stdio",
-  "robos:command": "/usr/local/bin/robos-context-mcp",
+  "robos:command": "/usr/local/bin/robos-kgraph-mcp",
   "robos:toolsProvided": [
-    "ast_search",
-    "symbol_lookup",
-    "dependency_graph"
+    "query_nodes",
+    "get_blast_radius",
+    "validate_shacl"
   ],
   "robos:package": "core-platform",
   "robos:namespace": "robos.platform",
@@ -105,175 +67,61 @@ This RobOS schema is modeled after and directly aligns with two levels of global
   "robos:domainStandard": "https://modelcontextprotocol.io/specification",
   "robos:tools": [
     {
-      "name": "ast_search",
-      "description": "Perform structural AST pattern matching across source files",
+      "name": "query_nodes",
+      "description": "Search and filter knowledge graph nodes by type or keyword",
       "inputSchema": {
         "type": "object",
         "properties": {
-          "query": {
+          "type": {
             "type": "string",
-            "description": "AST pattern or symbol name"
+            "description": "RDF type filter"
           },
-          "filePattern": {
+          "text": {
             "type": "string",
-            "description": "Glob filter (e.g. **/*.js)"
+            "description": "Full-text search query"
           },
-          "maxResults": {
+          "limit": {
             "type": "integer",
-            "default": 10
+            "default": 20
           }
-        },
-        "required": [
-          "query"
-        ]
+        }
       }
     },
     {
-      "name": "symbol_lookup",
-      "description": "Resolve declaration location, signature, and usages of a code symbol",
+      "name": "blast_radius",
+      "description": "Perform recursive dependency and impact traversal for a graph node",
       "inputSchema": {
         "type": "object",
         "properties": {
-          "symbol": {
+          "nodeId": {
             "type": "string",
-            "description": "Identifier name"
+            "description": "Target URN"
           },
-          "includeReferences": {
-            "type": "boolean",
-            "default": true
+          "direction": {
+            "type": "string",
+            "enum": [
+              "upstream",
+              "downstream"
+            ],
+            "default": "downstream"
           }
         },
         "required": [
-          "symbol"
-        ]
-      }
-    },
-    {
-      "name": "dependency_graph",
-      "description": "Calculate import and call graph for target module or package",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "entrypoint": {
-            "type": "string",
-            "description": "Path to entrypoint file"
-          },
-          "depth": {
-            "type": "integer",
-            "default": 2
-          }
-        },
-        "required": [
-          "entrypoint"
+          "nodeId"
         ]
       }
     }
   ]
 }
 ```
+{% endraw %}
 
----
+## Validate the example
 
-## Programmatic SHACL Validation
+Save the example as `node.json` in the repository root, then run:
 
-```javascript
-const { SHACLValidator } = require('/usr/local/share/robos/robos-graph/lib/shacl-validator');
-const { OSLCGraphParser, OSLC_CONTEXT } = require('/usr/local/share/robos/robos-graph/lib/oslc-parser');
-
-const validator = new SHACLValidator();
-const result = validator.validateGraph(new OSLCGraphParser({
-  "@context": OSLC_CONTEXT,
-  "robos:nodes": [
-    {
-        "@id": "urn:robos:mcp:context-engine",
-        "@type": [
-            "oslc_am:Resource",
-            "robos:MCPServer",
-            "robos:ToolProvider",
-            "schema:SoftwareApplication"
-        ],
-        "dcterms:title": "RobOS Code Context MCP Server",
-        "dcterms:description": "Stdio MCP server exposing AST symbols, codebase indexing, and symbol resolution.",
-        "robos:transport": "stdio",
-        "robos:command": "/usr/local/bin/robos-context-mcp",
-        "robos:toolsProvided": [
-            "ast_search",
-            "symbol_lookup",
-            "dependency_graph"
-        ],
-        "robos:package": "core-platform",
-        "robos:namespace": "robos.platform",
-        "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-        "robos:domainStandard": "https://modelcontextprotocol.io/specification",
-        "robos:tools": [
-            {
-                "name": "ast_search",
-                "description": "Perform structural AST pattern matching across source files",
-                "inputSchema": {
-                    "type": "object",
-                    "properties": {
-                        "query": {
-                            "type": "string",
-                            "description": "AST pattern or symbol name"
-                        },
-                        "filePattern": {
-                            "type": "string",
-                            "description": "Glob filter (e.g. **/*.js)"
-                        },
-                        "maxResults": {
-                            "type": "integer",
-                            "default": 10
-                        }
-                    },
-                    "required": [
-                        "query"
-                    ]
-                }
-            },
-            {
-                "name": "symbol_lookup",
-                "description": "Resolve declaration location, signature, and usages of a code symbol",
-                "inputSchema": {
-                    "type": "object",
-                    "properties": {
-                        "symbol": {
-                            "type": "string",
-                            "description": "Identifier name"
-                        },
-                        "includeReferences": {
-                            "type": "boolean",
-                            "default": true
-                        }
-                    },
-                    "required": [
-                        "symbol"
-                    ]
-                }
-            },
-            {
-                "name": "dependency_graph",
-                "description": "Calculate import and call graph for target module or package",
-                "inputSchema": {
-                    "type": "object",
-                    "properties": {
-                        "entrypoint": {
-                            "type": "string",
-                            "description": "Path to entrypoint file"
-                        },
-                        "depth": {
-                            "type": "integer",
-                            "default": 2
-                        }
-                    },
-                    "required": [
-                        "entrypoint"
-                    ]
-                }
-            }
-        ]
-    }
-  ],
-}));
-
-console.log("Conforms:", result.conforms); // Expected: true
+```bash
+node -e "const { SHACLValidator } = require('./packages/robos-graph/lib/shacl-validator'); console.log(new SHACLValidator().validate([require('./node.json')]).conforms)"
 ```
+
+The command prints `true` when the node meets every rule for its types.

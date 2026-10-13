@@ -1,157 +1,109 @@
 ---
 title: Front End App
 layout: default
-parent: Applications (robos.apps)
-grand_parent: KGraph Schemas
+parent: "Applications (robos.apps)"
+grand_parent: Schemas
 nav_order: 5
 permalink: /schemas/applications/front-end-app.html
 ---
 
-# Schema: `robos:FrontEndApp`
+# robos:FrontEndApp
 {: .no_toc }
 
-Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:FrontEndApp` in the `applications` package store.
-{: .fs-6 .fw-300 }
+Validation shape for `robos:FrontEndApp` nodes in the `applications` package group.
+{: .fs-6 }
 
-## Table of contents
-{: .no_toc .text-delta }
+## Details
 
-1. TOC
-{:toc}
+| | |
+|---|---|
+| Class | `robos:FrontEndApp` |
+| Shape id | `urn:robos:shape:FrontEndAppShape` |
+| Package | [Applications (robos.apps)]({{ '/schemas/applications.html' | relative_url }}) (`applications`) |
+| Classification | Applications & entry points |
+| Schema.org type | [`schema:WebApplication`](https://schema.org/WebApplication) |
 
----
+## Properties
 
-## Specification Metadata
+Count is the minimum and maximum number of values (`*` means no maximum). The validator enforces both. The type column is documentation only; the validator does not check types.
 
-- **RDF / OWL Class**: `robos:FrontEndApp`
-- **Aliases / Target Classes**: `robos:FrontEndApp`
-- **SHACL Shape ID**: `urn:robos:shape:FrontEndAppShape`
-- **Governing Package**: [Applications (robos.apps)]({{ '/schemas/applications.html' | relative_url }}) (`applications`)
-- **Namespace**: `robos.apps`
-- **Schema.org Classification**: [https://schema.org/WebApplication](https://schema.org/WebApplication)
-- **Domain De Facto Standard**: [https://schema.org/WebApplication](https://schema.org/WebApplication)
-- **Upstream Schema Basis (Refers From)**: [https://schema.org/WebApplication](https://schema.org/WebApplication)
+| Property | Count | Type | Rule or description |
+|---|---|---|---|
+| `dcterms:title` | `1..*` | `xsd:string` | Front End App must have a title. |
+| `robos:repository` | `1..*` | `xsd:string` | Front End App must define a repository. |
+| `robos:technology` | `1..*` | `xsd:string` | Front End App must specify technology stack. |
+| `robos:frontendFramework` | `1..*` | `xsd:string` | Front End App must declare frontend framework (React, Vue, Next.js, Angular, Svelte). |
+| `robos:appTemplate` | `0..*` | `xsd:string` | Template the app was generated from; optional for hand-built apps. |
+| `robos:hostingPlatform` | `0..*` | `xsd:string` | Production hosting platform. |
+| `robos:productionUrl` | `0..*` | `xsd:string` | Canonical production URL. |
+| `robos:databaseEngine` | `0..*` | `xsd:string` | Primary datastore. |
+| `robos:authStrategy` | `0..*` | `xsd:string` | Authentication approach. |
+| `robos:abuseControls` | `0..*` | `xsd:string` | Abuse and bot protections. |
+| `robos:captchaProvider` | `0..*` | `xsd:string` | CAPTCHA integration and whether it is enabled. |
+| `robos:crawlerPolicy` | `0..*` | `xsd:string` | robots.txt policy for search engines and AI agents. |
+| `robos:sitemapUrl` | `0..*` | `xsd:string` | XML sitemap URL. |
+| `robos:llmsTxtUrl` | `0..*` | `xsd:string` | llms.txt summary for AI agents. |
+| `robos:structuredData` | `0..*` | `xsd:string` | schema.org JSON-LD types emitted. |
+| `robos:e2eEvidence` | `0..*` | `xsd:string` | E2E evidence video location. |
 
----
+## Example node
 
-## Upstream Schema Basis (Refers From) & Global Standards Provenance
+This node comes from `.robos/kgraphs/applications/package.jsonld` in the RobOS repository. That graph holds sample data for a fictional company, so treat the values as illustrations.
 
-This RobOS schema is modeled after and directly aligns with two levels of global standards:
-- **Universal Schema.org Class**: [https://schema.org/WebApplication](https://schema.org/WebApplication) (100% interoperability with search engines, web indexers, and general AI reasoning)
-- **Specialized Domain Standard**: [https://schema.org/WebApplication](https://schema.org/WebApplication) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
-- **Canonical Reference**: [https://schema.org/WebApplication](https://schema.org/WebApplication)
-- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:FrontEndApp`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
-
----
-
-## Entity Relationship & Schema Context
-
-<div style="margin: 1.5rem 0; padding: 1.25rem; background: #161b22; border: 1px solid #30363d; border-radius: 8px;">
-  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
-    <span style="font-size: 1.15rem; font-weight: 700; color: #38bdf8;">Front End App</span>
-    <span style="font-family: monospace; background: #121927; color: #00e5ff; border: 1px solid rgba(0, 229, 255, 0.4); padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.85rem;">robos:FrontEndApp</span>
-  </div>
-  <p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Governed by W3C SHACL shape <code>urn:robos:shape:FrontEndAppShape</code> within the <strong>Applications (robos.apps)</strong> (<code>robos.apps</code>) package store.</p>
-  <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>dcterms:title</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:repository</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:technology</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:frontendFramework</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:appTemplate</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:hostingPlatform</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:productionUrl</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:databaseEngine</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:authStrategy</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:abuseControls</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:captchaProvider</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:crawlerPolicy</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:sitemapUrl</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:llmsTxtUrl</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:structuredData</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:e2eEvidence</code></span>
-  </div>
-</div>
-
----
-
-**RobOS classification:** Applications & entry points. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
-
-## Property Constraints & SHACL Rules
-
-| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
-|---|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | Front End App must have a title. |
-| **`robos:repository`** | Git Repository | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Libraries & build systems, Source control & artifacts | Front End App must define a repository. |
-| **`robos:technology`** | Technology Stack | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Libraries & build systems | Front End App must specify technology stack. |
-| **`robos:frontendFramework`** | Frontend Framework | `1..*` | `xsd:string` | Applications & entry points | Front End App must declare frontend framework (React, Vue, Next.js, Angular, Svelte). |
-| **`robos:appTemplate`** | App Template | `0..*` | `xsd:string` | Applications & entry points | Template the app was generated from; optional for hand-built apps. |
-| **`robos:hostingPlatform`** | Hosting Platform | `0..*` | `xsd:string` | Infrastructure & delivery | Production hosting platform. |
-| **`robos:productionUrl`** | Production URL | `0..*` | `xsd:string` | Applications & entry points | Canonical production URL. |
-| **`robos:databaseEngine`** | Database Engine | `0..*` | `xsd:string` | Data stores & messaging | Primary datastore. |
-| **`robos:authStrategy`** | Auth Strategy | `0..*` | `xsd:string` | Applications & entry points | Authentication approach. |
-| **`robos:abuseControls`** | Abuse Controls | `0..*` | `xsd:string` | Applications & entry points | Abuse and bot protections. |
-| **`robos:captchaProvider`** | CAPTCHA Provider | `0..*` | `xsd:string` | Applications & entry points | CAPTCHA integration and whether it is enabled. |
-| **`robos:crawlerPolicy`** | Crawler Policy | `0..*` | `xsd:string` | Applications & entry points | robots.txt policy for search engines and AI agents. |
-| **`robos:sitemapUrl`** | Sitemap URL | `0..*` | `xsd:string` | Applications & entry points | XML sitemap URL. |
-| **`robos:llmsTxtUrl`** | llms.txt URL | `0..*` | `xsd:string` | Applications & entry points | llms.txt summary for AI agents. |
-| **`robos:structuredData`** | Structured Data | `0..*` | `xsd:string` | Applications & entry points | schema.org JSON-LD types emitted. |
-| **`robos:e2eEvidence`** | E2E Evidence | `0..*` | `xsd:string` | Testing & behavior | E2E evidence video location. |
-
----
-
-## Canonical OSLC JSON-LD Example
-
+{% raw %}
 ```json
 {
-  "@id": "urn:robos:app:billing-portal",
+  "@id": "urn:robos:frontend-app:urban-plant-tracker",
   "@type": [
     "oslc_am:Resource",
     "robos:FrontEndApp",
     "schema:WebApplication"
   ],
-  "dcterms:title": "Billing Web Portal",
-  "robos:framework": "React 19 / Vite",
+  "dcterms:title": "Urban Plant Tracker",
+  "dcterms:description": "Smart indoor plant care companion with automated watering reminders, botanical light logs, and care guides.",
   "robos:package": "applications",
   "robos:namespace": "robos.applications",
-  "robos:repository": "github.com/acme/billing-portal",
-  "robos:technology": "React 19 / TypeScript / Vite",
-  "robos:frontendFramework": "React",
+  "robos:repository": "github.com/nddipiazza/urban-plant-tracker",
+  "robos:technology": "Next.js 15 / React 19 / Node.js 22",
+  "robos:frontendFramework": "Next.js",
+  "robos:appTemplate": "robos:template:nextjs-vercel-web@1",
+  "robos:hostingPlatform": "Vercel",
+  "robos:productionUrl": "https://www.urbanplanttracker.com",
+  "robos:databaseEngine": "Neon serverless Postgres (PGlite locally)",
+  "robos:authStrategy": "Email + password, server-side sessions (bcrypt, SHA-256 hashed tokens)",
+  "robos:abuseControls": [
+    "rate-limits",
+    "honeypot",
+    "form-timing",
+    "disposable-email-block",
+    "password-policy",
+    "same-origin-csrf",
+    "csp",
+    "audit-log"
+  ],
+  "robos:captchaProvider": "reCAPTCHA v3 (wired, disabled)",
+  "robos:crawlerPolicy": "Search engines, AI search/agents and link-preview bots allowed on public pages; /api, /dashboard, /account disallowed",
+  "robos:sitemapUrl": "https://www.urbanplanttracker.com/sitemap.xml",
+  "robos:llmsTxtUrl": "https://www.urbanplanttracker.com/llms.txt",
+  "robos:structuredData": [
+    "schema:Organization",
+    "schema:WebSite",
+    "schema:WebApplication",
+    "schema:FAQPage"
+  ],
+  "robos:e2eEvidence": "tests/e2e (Cucumber + Playwright) → npm run evidence",
   "robos:schemaOrgType": "https://schema.org/WebApplication",
   "robos:domainStandard": "https://schema.org/WebApplication"
 }
 ```
+{% endraw %}
 
----
+## Validate the example
 
-## Programmatic SHACL Validation
+Save the example as `node.json` in the repository root, then run:
 
-```javascript
-const { SHACLValidator } = require('/usr/local/share/robos/robos-graph/lib/shacl-validator');
-const { OSLCGraphParser, OSLC_CONTEXT } = require('/usr/local/share/robos/robos-graph/lib/oslc-parser');
-
-const validator = new SHACLValidator();
-const result = validator.validateGraph(new OSLCGraphParser({
-  "@context": OSLC_CONTEXT,
-  "robos:nodes": [
-    {
-        "@id": "urn:robos:app:billing-portal",
-        "@type": [
-            "oslc_am:Resource",
-            "robos:FrontEndApp",
-            "schema:WebApplication"
-        ],
-        "dcterms:title": "Billing Web Portal",
-        "robos:framework": "React 19 / Vite",
-        "robos:package": "applications",
-        "robos:namespace": "robos.applications",
-        "robos:repository": "github.com/acme/billing-portal",
-        "robos:technology": "React 19 / TypeScript / Vite",
-        "robos:frontendFramework": "React",
-        "robos:schemaOrgType": "https://schema.org/WebApplication",
-        "robos:domainStandard": "https://schema.org/WebApplication"
-    }
-  ],
-}));
-
-console.log("Conforms:", result.conforms); // Expected: true
+```bash
+node -e "const { SHACLValidator } = require('./packages/robos-graph/lib/shacl-validator'); console.log(new SHACLValidator().validate([require('./node.json')]).conforms)"
 ```
+
+The command prints `true` when the node meets every rule for its types.

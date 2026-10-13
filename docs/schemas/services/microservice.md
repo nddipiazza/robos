@@ -1,303 +1,77 @@
 ---
 title: Microservice
 layout: default
-parent: Services & Contracts (robos.services)
-grand_parent: KGraph Schemas
+parent: "Services & Contracts (robos.services)"
+grand_parent: Schemas
 nav_order: 1
 permalink: /schemas/services/microservice.html
 ---
 
-# Schema: `robos:Microservice`
+# robos:Microservice
 {: .no_toc }
 
-Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:Microservice` in the `services` package store.
-{: .fs-6 .fw-300 }
+Validation shape for `robos:Microservice` nodes in the `services` package group.
+{: .fs-6 }
 
-## Table of contents
-{: .no_toc .text-delta }
+## Details
 
-1. TOC
-{:toc}
+| | |
+|---|---|
+| Class | `robos:Microservice` |
+| Shape id | `urn:robos:shape:MicroserviceShape` |
+| Package | [Services & Contracts (robos.services)]({{ '/schemas/services.html' | relative_url }}) (`services`) |
+| Classification | Services & processing |
+| Schema.org type | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) |
+| Domain standard | [C4 model](https://w3id.org/c4/Container) |
 
----
+## Properties
 
-## Specification Metadata
+Count is the minimum and maximum number of values (`*` means no maximum). The validator enforces both. The type column is documentation only; the validator does not check types.
 
-- **RDF / OWL Class**: `robos:Microservice`
-- **Aliases / Target Classes**: `robos:Microservice`
-- **SHACL Shape ID**: `urn:robos:shape:MicroserviceShape`
-- **Governing Package**: [Services & Contracts (robos.services)]({{ '/schemas/services.html' | relative_url }}) (`services`)
-- **Namespace**: `robos.services`
-- **Schema.org Classification**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
-- **Domain De Facto Standard**: [https://w3id.org/c4/Container](https://w3id.org/c4/Container)
-- **Upstream Schema Basis (Refers From)**: [https://w3id.org/c4/Container](https://w3id.org/c4/Container)
+| Property | Count | Type | Rule or description |
+|---|---|---|---|
+| `robos:repository` | `1..1` | `xsd:string` | Microservice must define exactly one repository. |
+| `robos:ownerTeam` | `0..*` | `URI (robos:Team)` | Record an owner team when known; unknown ownership must not be fabricated. |
+| `dcterms:title` | `1..*` | `xsd:string` | Microservice must have a title. |
 
----
+## Example node
 
-## Upstream Schema Basis (Refers From) & Global Standards Provenance
+This node comes from `.robos/kgraphs/services/package.jsonld` in the RobOS repository. That graph holds sample data for a fictional company, so treat the values as illustrations.
 
-This RobOS schema is modeled after and directly aligns with two levels of global standards:
-- **Universal Schema.org Class**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication) (100% interoperability with search engines, web indexers, and general AI reasoning)
-- **Specialized Domain Standard**: [https://w3id.org/c4/Container](https://w3id.org/c4/Container) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
-- **Canonical Reference**: [https://w3id.org/c4/Container](https://w3id.org/c4/Container)
-- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:Microservice`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
-
----
-
-## Entity Relationship & Schema Context
-
-<div style="margin: 1.5rem 0; padding: 1.25rem; background: #161b22; border: 1px solid #30363d; border-radius: 8px;">
-  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
-    <span style="font-size: 1.15rem; font-weight: 700; color: #38bdf8;">Microservice</span>
-    <span style="font-family: monospace; background: #121927; color: #00e5ff; border: 1px solid rgba(0, 229, 255, 0.4); padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.85rem;">robos:Microservice</span>
-  </div>
-  <p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Governed by W3C SHACL shape <code>urn:robos:shape:MicroserviceShape</code> within the <strong>Services & Contracts (robos.services)</strong> (<code>robos.services</code>) package store.</p>
-  <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:repository</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:ownerTeam</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>dcterms:title</code></span>
-  </div>
-</div>
-
----
-
-**RobOS classification:** Services & processing. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
-
-## Property Constraints & SHACL Rules
-
-| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
-|---|---|---|---|---|---|
-| **`robos:repository`** | Git Repository | `1..1` | `xsd:string` | Services & processing, Applications & entry points, Libraries & build systems, Source control & artifacts | Microservice must define exactly one repository. |
-| **`robos:ownerTeam`** | Owner Team | `0..*` | `URI (robos:Team)` | Services & processing | Record an owner team when known; unknown ownership must not be fabricated. |
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | Microservice must have a title. |
-
----
-
-## Canonical OSLC JSON-LD Example
-
+{% raw %}
 ```json
 {
-  "@id": "urn:robos:service:billing-api",
+  "@id": "urn:robos:service:order-service",
   "@type": [
     "oslc_am:Resource",
-    "robos:Microservice",
-    "schema:SoftwareApplication"
+    "c4:Container",
+    "robos:Microservice"
   ],
-  "dcterms:title": "Billing API Service",
-  "robos:technology": "Go 1.22 / Gin",
-  "robos:repository": "github.com/acme/billing-api",
-  "robos:package": "services",
-  "robos:namespace": "robos.services",
-  "robos:ownerTeam": "urn:robos:team:order-processing",
-  "robos:usesDatabase": "urn:robos:db:acme-orders-postgres",
-  "robos:publishesTo": "urn:robos:broker:acme-event-kafka",
-  "robos:hasPipeline": "urn:robos:pipeline:checkout-service-ci",
-  "robos:deployedTo": "urn:robos:gitops:checkout-service-argocd",
-  "robos:hasDocumentation": "urn:robos:documentation:billing-api",
-  "robos:implementsContract": [
-    "urn:robos:contract:orders-grpc"
-  ],
-  "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-  "robos:domainStandard": "https://w3id.org/c4/Container",
+  "dcterms:title": "Order Service (Local) Service",
+  "dcterms:description": "Backend microservice powering Order Service (Local) capabilities with containerized deployment.",
+  "robos:repository": "github.com/acme/order-service",
+  "robos:technology": "Node.js 20 / TypeScript",
+  "robos:implementsContract": "urn:robos:contract:order-service-v1",
+  "robos:ownerTeam": "urn:robos:team:core-platform",
+  "robos:hasProject": "urn:robos:project:enterprise-core",
   "robos:ports": [
     8080
   ],
   "robos:healthCheckUrl": "/healthz",
-  "robos:endpoints": [
-    {
-      "path": "/api/v1/billing/invoices",
-      "method": "GET",
-      "description": "List customer billing invoices with payment status filtering",
-      "parameters": [
-        {
-          "name": "status",
-          "in": "query",
-          "type": "string",
-          "description": "Filter by invoice status (PAID, PENDING, OVERDUE)"
-        },
-        {
-          "name": "limit",
-          "in": "query",
-          "type": "integer",
-          "default": 20,
-          "description": "Maximum number of records to return"
-        }
-      ],
-      "responses": {
-        "200": {
-          "description": "Successful invoice query result"
-        }
-      }
-    },
-    {
-      "path": "/api/v1/billing/invoices",
-      "method": "POST",
-      "description": "Create new billing invoice",
-      "requestBody": {
-        "customerId": "cust_98234",
-        "amount": 149.5,
-        "currency": "USD",
-        "description": "Enterprise Subscription - Sep 2026"
-      },
-      "responses": {
-        "201": {
-          "description": "Invoice issued successfully"
-        }
-      }
-    },
-    {
-      "path": "/api/v1/billing/invoices/{id}",
-      "method": "GET",
-      "description": "Get invoice details by identifier",
-      "parameters": [
-        {
-          "name": "id",
-          "in": "path",
-          "required": true,
-          "type": "string",
-          "description": "Unique invoice identifier"
-        }
-      ],
-      "responses": {
-        "200": {
-          "description": "Invoice found"
-        },
-        "404": {
-          "description": "Invoice not found"
-        }
-      }
-    },
-    {
-      "path": "/healthz",
-      "method": "GET",
-      "description": "Liveness and readiness probe",
-      "responses": {
-        "200": {
-          "description": "Service healthy"
-        }
-      }
-    }
-  ]
+  "robos:inOrganization": "urn:robos:git-org:acme",
+  "robos:localPath": "/home/developer/source/repos/order-service",
+  "robos:package": "services",
+  "robos:namespace": "robos.services"
 }
 ```
+{% endraw %}
 
----
+## Validate the example
 
-## Programmatic SHACL Validation
+Save the example as `node.json` in the repository root, then run:
 
-```javascript
-const { SHACLValidator } = require('/usr/local/share/robos/robos-graph/lib/shacl-validator');
-const { OSLCGraphParser, OSLC_CONTEXT } = require('/usr/local/share/robos/robos-graph/lib/oslc-parser');
-
-const validator = new SHACLValidator();
-const result = validator.validateGraph(new OSLCGraphParser({
-  "@context": OSLC_CONTEXT,
-  "robos:nodes": [
-    {
-        "@id": "urn:robos:service:billing-api",
-        "@type": [
-            "oslc_am:Resource",
-            "robos:Microservice",
-            "schema:SoftwareApplication"
-        ],
-        "dcterms:title": "Billing API Service",
-        "robos:technology": "Go 1.22 / Gin",
-        "robos:repository": "github.com/acme/billing-api",
-        "robos:package": "services",
-        "robos:namespace": "robos.services",
-        "robos:ownerTeam": "urn:robos:team:order-processing",
-        "robos:usesDatabase": "urn:robos:db:acme-orders-postgres",
-        "robos:publishesTo": "urn:robos:broker:acme-event-kafka",
-        "robos:hasPipeline": "urn:robos:pipeline:checkout-service-ci",
-        "robos:deployedTo": "urn:robos:gitops:checkout-service-argocd",
-        "robos:hasDocumentation": "urn:robos:documentation:billing-api",
-        "robos:implementsContract": [
-            "urn:robos:contract:orders-grpc"
-        ],
-        "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-        "robos:domainStandard": "https://w3id.org/c4/Container",
-        "robos:ports": [
-            8080
-        ],
-        "robos:healthCheckUrl": "/healthz",
-        "robos:endpoints": [
-            {
-                "path": "/api/v1/billing/invoices",
-                "method": "GET",
-                "description": "List customer billing invoices with payment status filtering",
-                "parameters": [
-                    {
-                        "name": "status",
-                        "in": "query",
-                        "type": "string",
-                        "description": "Filter by invoice status (PAID, PENDING, OVERDUE)"
-                    },
-                    {
-                        "name": "limit",
-                        "in": "query",
-                        "type": "integer",
-                        "default": 20,
-                        "description": "Maximum number of records to return"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successful invoice query result"
-                    }
-                }
-            },
-            {
-                "path": "/api/v1/billing/invoices",
-                "method": "POST",
-                "description": "Create new billing invoice",
-                "requestBody": {
-                    "customerId": "cust_98234",
-                    "amount": 149.5,
-                    "currency": "USD",
-                    "description": "Enterprise Subscription - Sep 2026"
-                },
-                "responses": {
-                    "201": {
-                        "description": "Invoice issued successfully"
-                    }
-                }
-            },
-            {
-                "path": "/api/v1/billing/invoices/{id}",
-                "method": "GET",
-                "description": "Get invoice details by identifier",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "type": "string",
-                        "description": "Unique invoice identifier"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Invoice found"
-                    },
-                    "404": {
-                        "description": "Invoice not found"
-                    }
-                }
-            },
-            {
-                "path": "/healthz",
-                "method": "GET",
-                "description": "Liveness and readiness probe",
-                "responses": {
-                    "200": {
-                        "description": "Service healthy"
-                    }
-                }
-            }
-        ]
-    }
-  ],
-}));
-
-console.log("Conforms:", result.conforms); // Expected: true
+```bash
+node -e "const { SHACLValidator } = require('./packages/robos-graph/lib/shacl-validator'); console.log(new SHACLValidator().validate([require('./node.json')]).conforms)"
 ```
+
+The command prints `true` when the node meets every rule for its types.

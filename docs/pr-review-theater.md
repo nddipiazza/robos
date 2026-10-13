@@ -37,7 +37,7 @@ In reviewer mode, the Overview, Documentation, Open in IDE, Evidence and Walkthr
 
 ## Open a review
 
-From Task Implementer, finish a task, click **Review branch…** and choose the implementation checkout. RobOS writes a review manifest and opens the review in a new window. From Dev Central, open a saved review under "In code review" with **Open Code Review**, or open a pull request with **Open code review**. If you created the PR from a local review, Dev Central reopens that review in author mode.
+From Task Implementer, finish a task, click **Review branch…** and choose the implementation checkout. RobOS writes a review manifest and opens the review in a new window. From Dev Central, open a saved review under "In code review" with **Open Code Review**, or open a pull request with **Open code review**. If you created the PR from a local review, Dev Central reopens that saved review instead of reviewer mode.
 
 To launch it yourself, install the app once and pass the manifest or a PR URL in an environment variable:
 
@@ -52,29 +52,29 @@ With neither variable set, the app opens an "Open a task" picker that lists the 
 
 ## Review a branch before it becomes a PR
 
-Prerequisites: a feature-branch checkout (not `main` or `master`) whose `origin` is on GitHub. Task Implementer's agent creates the branch (`codex/<task-key>` by default), implements and tests the task, commits, pushes, and does not create a PR. **Review branch…** is disabled while that agent is running.
+Prerequisites: a feature-branch checkout (not `main` or `master`) whose `origin` is on GitHub. Task Implementer's agent creates the branch (`codex/<task-key>` by default), implements and tests the task, commits, pushes, and does not create a PR. **Review branch…** refuses to start while that agent is still running.
 
-The diff is `HEAD` against the remote's default branch, falling back to `origin/main`. Uncommitted changes are not part of it.
+The diff is `HEAD` against `baseRef`. **Review branch…** sets `baseRef` to the remote's default branch, falling back to `origin/main`. Uncommitted changes are not part of the diff.
 
 | Tab | What it does |
 |:---|:---|
 | Changes | The diff, file by file. Use the filter box, **Collapse all**, **Expand all**, **Hide viewed**, the **Viewed** checkbox on each file, **Unified** or **Split**, **Wrap lines**, **Refresh** and **Copy path**. Viewed marks apply to one revision. **Suggest changes** (top right) opens the agent discussion pane, where you ask for a change in plain language. The agent edits the checkout and the diff reloads when it finishes. |
 | Evidence | The task's evidence bundle for the current commit: before and after calls, screenshots or check results, depending on its template. Evidence captured at an earlier commit is marked stale. Without a bundle the tab says "No evidence bundle is linked to this task." |
 | Walkthrough | An agent demonstrates the change one checkpoint at a time. See [Walkthrough](#walkthrough). |
-| Description | Editor for the PR title and description in WYSIWYG, Markdown or Markdown + Preview mode. **Edit with agent** drafts text from the diff and the available evidence, and **Restore previous description** undoes it. The text is saved locally as you type. |
+| Description | Editor for the PR title and description in WYSIWYG, Markdown or Markdown + Preview mode. **Edit with agent** drafts text from the diff and the available evidence, and **Restore previous description** undoes it. The text is saved locally as you type. For an existing PR, **Save description** writes it to GitHub if you are the author of an open PR. |
 | Pull Request | The label shows the state: Not Created, In Draft, In Review, Merged, Closed or Status Unavailable. See below. |
 
 ### Create the PR
 
-Open the **Pull Request** tab, check the title, and optionally tick **Create as draft**. **Create PR** pushes the branch head, then runs `gh pr create`. It refuses when the checkout has uncommitted changes (a **Resolve uncommitted changes** button asks the agent to deal with them), when the branch is `main`, or when `origin` does not match the review's `repo`. If an open PR already exists for the branch, RobOS reuses it. If a messaging provider is configured, an unchecked **Send PR review notification to …** option appears; set it up in Git Projects under **Team messaging**, and edit the description template under **PR template**.
+Open the **Pull Request** tab, check the title, and optionally tick **Create as draft**. **Create PR** pushes the branch head, then runs `gh pr create`. It refuses when the checkout has uncommitted changes (a **Resolve uncommitted changes** button asks the agent to deal with them), when the branch is `main`, or when `origin` does not match the review's `repo`. If an open PR already exists for the branch, RobOS reuses it. If a messaging provider is configured, an unchecked **Send PR review notification to …** option appears; set it up in Git Projects under **Team messaging** (the tab takes the provider's name when one is configured), and edit the description template under **PR template**.
 
 After creation the tab offers **Reload PR**, **Open pull request**, and, for the author of an open PR, **Update PR**. RobOS has no merge button. The author merges on GitHub.
 
 ### CI and moving out of draft
 
-A banner in the review reads the PR's checks, with **Refresh CI** and **View checks**. For Buildkite checks, **Jobs & live logs** shows job states and the last 64 KiB of a job's log. When CI has failed, **Get CI back to green** starts an agent repair in a clean checkout; you review and push its fix yourself.
+A banner in the review reads the PR's checks, with **Refresh CI** and **View checks**. For Buildkite checks, **Jobs & live logs** shows job states and the last 64 KiB of a job's log. When CI has failed, **Get CI back to green** starts an agent repair in an isolated checkout; you review and push its fix yourself.
 
-**Move PR to Ready** appears for the author of an open draft. The dialog's **Request GitHub reviews** option takes usernames or teams, with defaults from Git Projects. RobOS re-checks the head commit, the author, the draft state and CI before it changes anything on GitHub, and refuses when CI has not passed.
+**Move PR to Ready** appears on an open draft PR, and only the PR's author can use it. The dialog's **Request GitHub reviews** option takes usernames or teams, with defaults from Git Projects. RobOS re-checks the head commit, the author, the draft state and CI before it changes anything on GitHub, and refuses when CI has not passed.
 
 ## Walkthrough
 
@@ -83,7 +83,7 @@ The Walkthrough tab runs a project-defined demo process with a Codex CLI agent. 
 - **Explain this step** keeps you on the checkpoint. **Next checkpoint** advances.
 - A checkpoint the agent cannot verify does not advance. You get **Retry**, or **Recheck** and **Continue**; continuing records the step as unverified.
 - A message sent while the agent is working stops its current attempt and restarts at the same checkpoint with your instructions and existing edits.
-- **More** holds **Start over**, **How it used to work** and **Show the change**, and **Process…**. The first two compare against a detached checkout of `origin/main` (or the `before.ref` you set) without touching your branch. **Process…** edits the process JSON, and saving resets progress.
+- The **More** menu holds **Start over**, **How it used to work**, **Show the change** and **Process…**. **How it used to work** runs the optional `before` checkpoints in a detached checkout of `origin/main` (or the `before.ref` you set) without touching your branch, and **Show the change** returns to the feature checkpoints. **Process…** edits the process JSON, and saving resets progress.
 - After the last checkpoint the tab shows "Walkthrough complete". That does not approve or merge anything.
 
 The conversation is saved as `conversation.jsonl` and `session.json` under `~/.robos/pr-reviews/<repo>-<hash>/pr-<number>/`, or `branch-<branch>-<hash>/` before a PR exists. **Saved history** pages through it, **Clear chat** hides the visible window only, and **Resume agent** continues an interrupted run. Opening a review does not start an agent by itself.
@@ -98,7 +98,7 @@ Reviewer mode shows the PR description (read-only), the real diff from `gh pr di
 
 | Control | What it does | Needs |
 |:---|:---|:---|
-| **Open in IDE** (top right) | Opens a chooser of installed IDEs and opens the review's checkout in the one you pick. It looks for IntelliJ IDEA, Visual Studio Code, Cursor, WebStorm, PyCharm, GoLand, CLion, Rider, RustRover, VSCodium, Zed, Windsurf and Sublime Text. | A command-line launcher on `PATH`; local reviews only |
+| **Open in IDE** (top right) | Opens a chooser of installed IDEs and opens the review's checkout in the one you pick. It looks for IntelliJ IDEA, Visual Studio Code, Cursor, WebStorm, PyCharm, GoLand, CLion, Rider, RustRover, VSCodium, Zed, Windsurf and Sublime Text. | A command-line launcher on `PATH` or in a standard install location; local reviews only |
 | **IntelliJ** (header) | Posts to `http://127.0.0.1:63343/api/robos/pull-request/open` with a 1.5 second timeout, then falls back to `idea --line <n> <file>` or `idea .`. | `idea` on `PATH` |
 | **VS Code** (header) | Opens `vscode://github.vscode-pull-request-github/open-pr?number=<n>&repo=<owner/repo>` and runs `code --goto <file>:<line>` or `code .`. | The GitHub Pull Requests and Issues extension, and `code` on `PATH` |
 
@@ -169,6 +169,6 @@ node --test packages/robos-test/tests/pr-review/local-review.test.js \
   packages/robos-test/tests/pr-review/review-session-store.test.js
 ```
 
-They cover checkpoint pausing and retry, steering, Start over, saved sessions, PR creation guards, and the ready-for-review checks. The `*.e2e.js` files in the same folder drive a running Electron window. Some, such as `local-review.e2e.js`, are skipped unless `ROBOS_THEATER_CDP` points at it.
+They cover checkpoint pausing and retry, steering, Start over, saved sessions, PR creation guards, and the ready-for-review checks. The `*.e2e.js` files in the same folder use Playwright. For example, `local-review.e2e.js` attaches to a running review window over CDP and is skipped unless `ROBOS_THEATER_CDP` is set.
 
 For recorded demos and the lifecycle test that backs the home-page recording, see [Walkthroughs and proof of work]({{ site.baseurl }}{% link walkthroughs.md %}). For where the review fits in the delivery loop, see [Review & governance]({{ site.baseurl }}{% link agent-review-development.md %}).

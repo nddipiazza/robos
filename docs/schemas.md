@@ -1,5 +1,5 @@
 ---
-title: KGraph Schemas
+title: Schemas
 layout: default
 parent: Build on RobOS
 nav_order: 2
@@ -7,199 +7,206 @@ has_children: true
 permalink: /schemas.html
 ---
 
-# RobOS Knowledge Graph Schemas & Ontologies
+# Schemas
 {: .no_toc }
 
-Comprehensive, machine-readable ontologies and W3C SHACL constraint specifications governing the RobOS Dual-State SDLC Knowledge Graph across all of the standard package stores.
-{: .fs-6 .fw-300 }
+Reference for the node types (classes) in the RobOS knowledge graph. Use it to see which properties a node needs before you add it, and what the validator rejects.
+{: .fs-6 }
 
-## Table of contents
-{: .no_toc .text-delta }
-
+<details open markdown="block">
+  <summary>On this page</summary>
+  {: .text-delta }
 1. TOC
 {:toc}
+</details>
 
----
+## What these pages describe
 
-## Architectural Overview
+Each class page documents one shape. A shape is a rule set in `packages/robos-graph/lib/shacl-validator.js` that applies to nodes of one class, such as `robos:Microservice`. For every property it lists the minimum and maximum number of values and the message shown when the rule fails.
 
-RobOS structures the entire software development lifecycle as an open, interconnected **Dual-State Knowledge Graph**. Rather than proprietary siloes or monolithic configuration files, RobOS combines three international standards:
+The built-in validator checks counts only. It confirms that required properties are present and that single-valued properties have at most one value. It does not check datatypes or value formats, and it is not a complete W3C SHACL implementation.
 
-1. **OASIS OSLC Core 3.0 & W3C JSON-LD**: Global semantic web standard for linking requirements, changes, architectures, and tests.
-2. **W3C SHACL (Shapes Constraint Language)**: Strictly validates graph nodes against structural schemas before saving or synthesizing code.
-3. **Modular Namespaced Packages (`.robos/kgraphs/`)**: Eliminates Git merge conflicts and blurs across teams by dividing the universe into domain-isolated package stores.
+Classes are grouped by package, the same way the graph is stored on disk (see [Knowledge graph]({{ site.baseurl }}{% link knowledge-graph.md %})). The grouping here is a documentation aid. The `robos:package` property on each node decides where the node is stored, and one class can have nodes in more than one package.
 
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/kgraph-schemas-architecture.jpg' | relative_url }}" alt="RobOS SDLC Knowledge Graph Ontology and Modular Package Stores" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>RobOS SDLC Knowledge Graph Ontology</strong>: The modular package stores, linked-data relationships, and OSLC Core 3.0 / W3C SHACL validation layer. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
+Every shape also records the upstream definition it follows: a Schema.org type and, where one applies, a domain standard such as OSLC, the C4 model or Cucumber.
 
----
+## Packages
 
-## The Standard RobOS Package Stores
-
-| Package ID | Namespace | Target Domain | Schemas & Shapes |
+| Package | Namespace | Classes | Covers |
 |---|---|---|---|
-| **`core-platform`** | `robos.platform` | Foundational architectural graph, system roots, and platform configuration. | <code>robos:BuildSystem</code>, <code>robos:Database</code>, <code>robos:NoSQLDatabase</code>, <code>robos:SearchIndex</code>, <code>robos:SearchCluster</code>, <code>robos:MessageBroker</code>, <code>robos:MCPServer</code>, <code>robos:ContextSource</code>, <code>robos:PromptStrategy</code>, <code>robos:DatabaseSchema</code>, <code>robos:DatabaseTable</code>, <code>robos:DatabaseColumn</code>, <code>robos:DatabaseIndex</code>, <code>robos:NoSQLCollection</code>, <code>robos:MessageTopic</code>, <code>robos:ConsumerGroup</code>, <code>robos:MCPTool</code>, <code>robos:MCPResource</code>, <code>robos:MCPPrompt</code>, <code>robos:CurriculumDefinition</code>, <code>robos:DataStore</code>, <code>robos:BrokerDefinition</code>, <code>robos:SourceArtifact</code> |
-| **`organization`** | `robos.org` | People, developer profiles, team topologies, and cross-team communication channels. | <code>robos:Team</code>, <code>robos:Project</code>, <code>robos:Epic</code>, <code>robos:GitProjectOrganization</code>, <code>robos:AgentPersona</code>, <code>robos:TaskServer</code>, <code>robos:UserStory</code>, <code>robos:Task</code>, <code>robos:Subtask</code>, <code>robos:Bug</code>, <code>robos:Sprint</code>, <code>robos:Milestone</code>, <code>robos:GitRepository</code>, <code>robos:GitBranch</code>, <code>robos:PullRequest</code>, <code>robos:GitCommit</code>, <code>robos:GitTag</code>, <code>robos:Comment</code>, <code>robos:DiscussionThread</code>, <code>robos:ReviewComment</code>, <code>robos:CommentAttachment</code> |
-| **`services`** | `robos.services` | Backend microservices, OpenAPI 3.1 specifications, gRPC reflection stubs, and BDD verification features. | <code>robos:Microservice</code>, <code>robos:Contract</code>, <code>oslc_rm:Requirement</code>, <code>robos:ProtobufContract</code>, <code>robos:GraphQLContract</code>, <code>robos:Feature</code>, <code>robos:APIEndpoint</code>, <code>robos:DataModel</code> |
-| **`applications`** | `robos.apps` | Front-end SPAs, desktop workstations, PC & mobile games, mobile apps, and CLI tools. | <code>robos:DesktopApp</code>, <code>robos:ConsoleApp</code>, <code>robos:MobileApp</code>, <code>robos:Library</code>, <code>robos:FrontEndApp</code>, <code>robos:PCGame</code>, <code>robos:MobileGame</code>, <code>robos:WebRoute</code>, <code>robos:CLICommand</code>, <code>robos:CLIFlag</code> |
-| **`devops`** | `robos.devops` | Cloud providers, CI/CD pipelines, container registries, OAuth apps, DNS domains, and secure GPG pass credentials. | <code>robos:DataPipeline</code>, <code>robos:RemoteExecutionCluster</code>, <code>robos:KubernetesCluster</code>, <code>robos:Environment</code>, <code>robos:GitOpsDeployment</code>, <code>robos:CICDPipeline</code>, <code>robos:KubernetesNamespace</code>, <code>robos:KubernetesDeployment</code>, <code>robos:KubernetesService</code>, <code>robos:KubernetesIngress</code>, <code>robos:PipelineStage</code>, <code>robos:PipelineJob</code>, <code>robos:PipelineStep</code>, <code>robos:EnvironmentProfile</code> |
-| **`learning`** | `robos.learning` | Interactive developer courses, tutorials, and architectural training modules. | <code>robos:ELearning</code>, <code>robos:CertificateOfCompletion</code>, <code>robos:LearningModule</code>, <code>robos:LearningLesson</code>, <code>robos:HandsOnLab</code>, <code>robos:QuizAssessment</code>, <code>robos:AgentSkill</code> |
-| **`documentation`** | `robos.docs` | Living documentation pages, architecture decision records (ADRs), interactive walkthroughs, and visual flow diagrams with AI illustrations. | <code>robos:FlowDiagram</code>, <code>robos:Documentation</code>, <code>robos:DocumentationPage</code>, <code>robos:ArchitectureDecisionRecord</code>, <code>robos:InteractiveWalkthrough</code>, <code>robos:CodeSnippet</code>, <code>robos:DocSection</code>, <code>robos:ADROption</code> |
-| **`testing`** | `robos.testing` | First-class Gherkin features, scenarios, step definitions, test execution records, and major testing frameworks. | <code>robos:Scenario</code>, <code>robos:ScenarioStep</code>, <code>robos:CRPGTestScenario</code>, <code>robos:CRPGBattleMap</code>, <code>robos:CRPGMapObject</code>, <code>robos:CRPGCombatant</code>, <code>robos:InfinityAIDirective</code>, <code>robos:CRPGPlayerInput</code>, <code>robos:GherkinFeature</code>, <code>robos:GherkinBackground</code>, <code>robos:GherkinRule</code>, <code>robos:ScenarioOutline</code>, <code>robos:ExamplesTable</code>, <code>robos:StepDefinition</code>, <code>robos:DataTable</code>, <code>robos:DocString</code>, <code>robos:TestingLibrary</code>, <code>robos:TestPlan</code>, <code>robos:TestSuite</code>, <code>robos:TestExecutionRecord</code> |
+| [Core Platform (robos.platform)]({{ '/schemas/core-platform.html' | relative_url }}) | `robos.platform` | 23 | Databases, message brokers, search indexes, MCP servers, build systems, context sources, prompt strategies and source declarations. |
+| [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) | `robos.org` | 21 | Teams, projects and work items, Git organizations, repositories, branches, pull requests and commits, agent personas, task servers and review comments. |
+| [Services & Contracts (robos.services)]({{ '/schemas/services.html' | relative_url }}) | `robos.services` | 8 | Microservices, API contracts (OpenAPI, Protobuf, GraphQL), endpoints, data models, requirements and features. |
+| [Applications (robos.apps)]({{ '/schemas/applications.html' | relative_url }}) | `robos.apps` | 11 | Front-end, desktop, console and mobile applications, games, libraries, web routes, CLI commands and voice commands. |
+| [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) | `robos.devops` | 14 | Kubernetes clusters, environments, GitOps deployments, CI/CD pipelines, remote-execution clusters and data pipelines. |
+| [eLearning Curriculums (robos.learning)]({{ '/schemas/learning.html' | relative_url }}) | `robos.learning` | 7 | eLearning courses, modules, lessons, labs, quizzes, completion certificates and agent skills. |
+| [Documentation & Diagrams (robos.docs)]({{ '/schemas/documentation.html' | relative_url }}) | `robos.docs` | 8 | Documentation pages, architecture decision records, flow diagrams, walkthroughs and code snippets. |
+| [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) | `robos.testing` | 21 | Gherkin features, scenarios, step definitions, test plans, suites, execution records, testing libraries and game test scenarios. |
+| [Game Rules (robos.game)]({{ '/schemas/game.html' | relative_url }}) | `robos.game` | 5 | Rules-engine building blocks shared by games: games, classes, items, spells and monsters. |
+| [cRPG (robos.crpg)]({{ '/schemas/crpg.html' | relative_url }}) | `robos.crpg` | 6 | Party-based tactical cRPG content: abilities, campaigns, map transitions, game events and story flows. |
+| [Tabletop Game (robos.tabletop)]({{ '/schemas/tabletop-game.html' | relative_url }}) | `robos.tabletop` | 12 | Tabletop dungeon-crawler content: heroes, monsters, summons, quest maps, turn steps and AI directives. |
 
----
+## All classes
 
-## Universal Schema.org & De Facto Standards Matrix
+The Schema.org column is the parent type from the shape. Open a class for its property rules, the standard it follows and an example node.
 
-Every single entity in the RobOS Knowledge Graph is formally mapped to a canonical **[Schema.org](https://schema.org/)** parent class (ensuring 100% interoperability with search engines, web indexers, and general AI reasoning models) alongside an international **De Facto Domain Standard** (OASIS OSLC 3.0, W3C C4 Model, Cucumber BDD, OpenAPI 3.1, CNCF).
+| Class | Package | Schema.org type |
+|---|---|---|
+| [`robos:BuildSystem`]({{ '/schemas/core-platform/build-system.html' | relative_url }}) | `core-platform` | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) |
+| [`robos:Database`]({{ '/schemas/core-platform/database.html' | relative_url }}) | `core-platform` | [`schema:DataStore`](https://schema.org/DataStore) |
+| [`robos:NoSQLDatabase`]({{ '/schemas/core-platform/nosql-database.html' | relative_url }}) | `core-platform` | [`schema:DataStore`](https://schema.org/DataStore) |
+| [`robos:SearchIndex`]({{ '/schemas/core-platform/search-index.html' | relative_url }}) | `core-platform` | [`schema:DataStore`](https://schema.org/DataStore) |
+| [`robos:SearchCluster`]({{ '/schemas/core-platform/search-cluster.html' | relative_url }}) | `core-platform` | [`schema:DataStore`](https://schema.org/DataStore) |
+| [`robos:MessageBroker`]({{ '/schemas/core-platform/message-broker.html' | relative_url }}) | `core-platform` | [`schema:BroadcastService`](https://schema.org/BroadcastService) |
+| [`robos:MCPServer`]({{ '/schemas/core-platform/mcp-server.html' | relative_url }}) | `core-platform` | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) |
+| [`robos:ContextSource`]({{ '/schemas/core-platform/context-source.html' | relative_url }}) | `core-platform` | [`schema:DataFeed`](https://schema.org/DataFeed) |
+| [`robos:PromptStrategy`]({{ '/schemas/core-platform/prompt-strategy.html' | relative_url }}) | `core-platform` | [`schema:Intangible`](https://schema.org/Intangible) |
+| [`robos:DatabaseSchema`]({{ '/schemas/core-platform/database-schema.html' | relative_url }}) | `core-platform` | [`schema:DataStore`](https://schema.org/DataStore) |
+| [`robos:DatabaseTable`]({{ '/schemas/core-platform/database-table.html' | relative_url }}) | `core-platform` | [`schema:Table`](https://schema.org/Table) |
+| [`robos:DatabaseColumn`]({{ '/schemas/core-platform/database-column.html' | relative_url }}) | `core-platform` | [`schema:Property`](https://schema.org/Property) |
+| [`robos:DatabaseIndex`]({{ '/schemas/core-platform/database-index.html' | relative_url }}) | `core-platform` | [`schema:Index`](https://schema.org/Index) |
+| [`robos:NoSQLCollection`]({{ '/schemas/core-platform/nosql-collection.html' | relative_url }}) | `core-platform` | [`schema:Collection`](https://schema.org/Collection) |
+| [`robos:MessageTopic`]({{ '/schemas/core-platform/message-topic.html' | relative_url }}) | `core-platform` | [`schema:BroadcastChannel`](https://schema.org/BroadcastChannel) |
+| [`robos:ConsumerGroup`]({{ '/schemas/core-platform/consumer-group.html' | relative_url }}) | `core-platform` | [`schema:Audience`](https://schema.org/Audience) |
+| [`robos:MCPTool`]({{ '/schemas/core-platform/mcp-tool.html' | relative_url }}) | `core-platform` | [`schema:Action`](https://schema.org/Action) |
+| [`robos:MCPResource`]({{ '/schemas/core-platform/mcp-resource.html' | relative_url }}) | `core-platform` | [`schema:MediaObject`](https://schema.org/MediaObject) |
+| [`robos:MCPPrompt`]({{ '/schemas/core-platform/mcp-prompt.html' | relative_url }}) | `core-platform` | [`schema:Text`](https://schema.org/Text) |
+| [`robos:CurriculumDefinition`]({{ '/schemas/core-platform/curriculum-definition.html' | relative_url }}) | `core-platform` | [`schema:Course`](https://schema.org/Course) |
+| [`robos:DataStore`]({{ '/schemas/core-platform/data-store.html' | relative_url }}) | `core-platform` | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) |
+| [`robos:BrokerDefinition`]({{ '/schemas/core-platform/broker-definition.html' | relative_url }}) | `core-platform` | [`schema:Service`](https://schema.org/Service) |
+| [`robos:SourceArtifact`]({{ '/schemas/core-platform/source-artifact.html' | relative_url }}) | `core-platform` | [`schema:CreativeWork`](https://schema.org/CreativeWork) |
+| [`robos:Team`]({{ '/schemas/organization/team.html' | relative_url }}) | `organization` | [`schema:ProjectTeam`](https://schema.org/ProjectTeam) |
+| [`robos:Project`]({{ '/schemas/organization/project.html' | relative_url }}) | `organization` | [`schema:Project`](https://schema.org/Project) |
+| [`robos:Epic`]({{ '/schemas/organization/epic.html' | relative_url }}) | `organization` | [`schema:Plan`](https://schema.org/Plan) |
+| [`robos:GitProjectOrganization`]({{ '/schemas/organization/git-project-organization.html' | relative_url }}) | `organization` | [`schema:Organization`](https://schema.org/Organization) |
+| [`robos:AgentPersona`]({{ '/schemas/organization/agent-persona.html' | relative_url }}) | `organization` | [`schema:Person`](https://schema.org/Person) |
+| [`robos:TaskServer`]({{ '/schemas/organization/task-server.html' | relative_url }}) | `organization` | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) |
+| [`robos:UserStory`]({{ '/schemas/organization/user-story.html' | relative_url }}) | `organization` | [`schema:Action`](https://schema.org/Action) |
+| [`robos:Task`]({{ '/schemas/organization/task.html' | relative_url }}) | `organization` | [`schema:Action`](https://schema.org/Action) |
+| [`robos:Subtask`]({{ '/schemas/organization/subtask.html' | relative_url }}) | `organization` | [`schema:Action`](https://schema.org/Action) |
+| [`robos:Bug`]({{ '/schemas/organization/bug.html' | relative_url }}) | `organization` | [`schema:Action`](https://schema.org/Action) |
+| [`robos:Sprint`]({{ '/schemas/organization/sprint.html' | relative_url }}) | `organization` | [`schema:Action`](https://schema.org/Action) |
+| [`robos:Milestone`]({{ '/schemas/organization/milestone.html' | relative_url }}) | `organization` | [`schema:Action`](https://schema.org/Action) |
+| [`robos:GitRepository`]({{ '/schemas/organization/git-repository.html' | relative_url }}) | `organization` | [`schema:SoftwareSourceCode`](https://schema.org/SoftwareSourceCode) |
+| [`robos:GitBranch`]({{ '/schemas/organization/git-branch.html' | relative_url }}) | `organization` | [`schema:SoftwareSourceCode`](https://schema.org/SoftwareSourceCode) |
+| [`robos:PullRequest`]({{ '/schemas/organization/pull-request.html' | relative_url }}) | `organization` | [`schema:UpdateAction`](https://schema.org/UpdateAction) |
+| [`robos:GitCommit`]({{ '/schemas/organization/git-commit.html' | relative_url }}) | `organization` | [`schema:SoftwareSourceCode`](https://schema.org/SoftwareSourceCode) |
+| [`robos:GitTag`]({{ '/schemas/organization/git-tag.html' | relative_url }}) | `organization` | [`schema:SoftwareSourceCode`](https://schema.org/SoftwareSourceCode) |
+| [`robos:Comment`]({{ '/schemas/organization/comment.html' | relative_url }}) | `organization` | [`schema:Comment`](https://schema.org/Comment) |
+| [`robos:DiscussionThread`]({{ '/schemas/organization/discussion-thread.html' | relative_url }}) | `organization` | [`schema:Conversation`](https://schema.org/Conversation) |
+| [`robos:ReviewComment`]({{ '/schemas/organization/review-comment.html' | relative_url }}) | `organization` | [`schema:Comment`](https://schema.org/Comment) |
+| [`robos:CommentAttachment`]({{ '/schemas/organization/comment-attachment.html' | relative_url }}) | `organization` | [`schema:MediaObject`](https://schema.org/MediaObject) |
+| [`robos:Microservice`]({{ '/schemas/services/microservice.html' | relative_url }}) | `services` | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) |
+| [`robos:Contract`]({{ '/schemas/services/contract.html' | relative_url }}) | `services` | [`schema:DigitalDocument`](https://schema.org/DigitalDocument) |
+| [`oslc_rm:Requirement`]({{ '/schemas/services/requirement.html' | relative_url }}) | `services` | [`schema:DigitalDocument`](https://schema.org/DigitalDocument) |
+| [`robos:ProtobufContract`]({{ '/schemas/services/protobuf-contract.html' | relative_url }}) | `services` | [`schema:DigitalDocument`](https://schema.org/DigitalDocument) |
+| [`robos:GraphQLContract`]({{ '/schemas/services/graphql-contract.html' | relative_url }}) | `services` | [`schema:DigitalDocument`](https://schema.org/DigitalDocument) |
+| [`robos:Feature`]({{ '/schemas/services/feature.html' | relative_url }}) | `services` | [`schema:DigitalDocument`](https://schema.org/DigitalDocument) |
+| [`robos:APIEndpoint`]({{ '/schemas/services/api-endpoint.html' | relative_url }}) | `services` | [`schema:EntryPoint`](https://schema.org/EntryPoint) |
+| [`robos:DataModel`]({{ '/schemas/services/data-model.html' | relative_url }}) | `services` | [`schema:Class`](https://schema.org/Class) |
+| [`robos:DesktopApp`]({{ '/schemas/applications/desktop-app.html' | relative_url }}) | `applications` | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) |
+| [`robos:ConsoleApp`]({{ '/schemas/applications/console-app.html' | relative_url }}) | `applications` | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) |
+| [`robos:MobileApp`]({{ '/schemas/applications/mobile-app.html' | relative_url }}) | `applications` | [`schema:MobileApplication`](https://schema.org/MobileApplication) |
+| [`robos:Library`]({{ '/schemas/applications/library.html' | relative_url }}) | `applications` | [`schema:SoftwareSourceCode`](https://schema.org/SoftwareSourceCode) |
+| [`robos:FrontEndApp`]({{ '/schemas/applications/front-end-app.html' | relative_url }}) | `applications` | [`schema:WebApplication`](https://schema.org/WebApplication) |
+| [`robos:PCGame`]({{ '/schemas/applications/pc-game.html' | relative_url }}) | `applications` | [`schema:VideoGame`](https://schema.org/VideoGame) |
+| [`robos:MobileGame`]({{ '/schemas/applications/mobile-game.html' | relative_url }}) | `applications` | [`schema:VideoGame`](https://schema.org/VideoGame) |
+| [`robos:WebRoute`]({{ '/schemas/applications/web-route.html' | relative_url }}) | `applications` | [`schema:WebPage`](https://schema.org/WebPage) |
+| [`robos:CLICommand`]({{ '/schemas/applications/cli-command.html' | relative_url }}) | `applications` | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) |
+| [`robos:CLIFlag`]({{ '/schemas/applications/cli-flag.html' | relative_url }}) | `applications` | [`schema:PropertyValue`](https://schema.org/PropertyValue) |
+| [`robos:VoiceCommand`]({{ '/schemas/applications/voice-command.html' | relative_url }}) | `applications` | [`schema:ControlAction`](https://schema.org/ControlAction) |
+| [`robos:DataPipeline`]({{ '/schemas/devops/data-pipeline.html' | relative_url }}) | `devops` | [`schema:DataFeed`](https://schema.org/DataFeed) |
+| [`robos:RemoteExecutionCluster`]({{ '/schemas/devops/remote-execution-cluster.html' | relative_url }}) | `devops` | [`schema:ComputerPlatform`](https://schema.org/ComputerPlatform) |
+| [`robos:KubernetesCluster`]({{ '/schemas/devops/kubernetes-cluster.html' | relative_url }}) | `devops` | [`schema:ComputerPlatform`](https://schema.org/ComputerPlatform) |
+| [`robos:Environment`]({{ '/schemas/devops/environment.html' | relative_url }}) | `devops` | [`schema:DeploymentEnvironment`](https://schema.org/DeploymentEnvironment) |
+| [`robos:GitOpsDeployment`]({{ '/schemas/devops/gitops-deployment.html' | relative_url }}) | `devops` | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) |
+| [`robos:CICDPipeline`]({{ '/schemas/devops/cicd-pipeline.html' | relative_url }}) | `devops` | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) |
+| [`robos:KubernetesNamespace`]({{ '/schemas/devops/kubernetes-namespace.html' | relative_url }}) | `devops` | [`schema:AdministrativeArea`](https://schema.org/AdministrativeArea) |
+| [`robos:KubernetesDeployment`]({{ '/schemas/devops/kubernetes-deployment.html' | relative_url }}) | `devops` | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) |
+| [`robos:KubernetesService`]({{ '/schemas/devops/kubernetes-service.html' | relative_url }}) | `devops` | [`schema:Service`](https://schema.org/Service) |
+| [`robos:KubernetesIngress`]({{ '/schemas/devops/kubernetes-ingress.html' | relative_url }}) | `devops` | [`schema:EntryPoint`](https://schema.org/EntryPoint) |
+| [`robos:PipelineStage`]({{ '/schemas/devops/pipeline-stage.html' | relative_url }}) | `devops` | [`schema:Action`](https://schema.org/Action) |
+| [`robos:PipelineJob`]({{ '/schemas/devops/pipeline-job.html' | relative_url }}) | `devops` | [`schema:Action`](https://schema.org/Action) |
+| [`robos:PipelineStep`]({{ '/schemas/devops/pipeline-step.html' | relative_url }}) | `devops` | [`schema:Action`](https://schema.org/Action) |
+| [`robos:EnvironmentProfile`]({{ '/schemas/devops/environment-profile.html' | relative_url }}) | `devops` | [`schema:DefinedTerm`](https://schema.org/DefinedTerm) |
+| [`robos:ELearning`]({{ '/schemas/learning/elearning.html' | relative_url }}) | `learning` | [`schema:Course`](https://schema.org/Course) |
+| [`robos:CertificateOfCompletion`]({{ '/schemas/learning/certificate-of-completion.html' | relative_url }}) | `learning` | [`schema:EducationalOccupationalCredential`](https://schema.org/EducationalOccupationalCredential) |
+| [`robos:LearningModule`]({{ '/schemas/learning/learning-module.html' | relative_url }}) | `learning` | [`schema:CourseInstance`](https://schema.org/CourseInstance) |
+| [`robos:LearningLesson`]({{ '/schemas/learning/learning-lesson.html' | relative_url }}) | `learning` | [`schema:LearningResource`](https://schema.org/LearningResource) |
+| [`robos:HandsOnLab`]({{ '/schemas/learning/hands-on-lab.html' | relative_url }}) | `learning` | [`schema:ExercisePlan`](https://schema.org/ExercisePlan) |
+| [`robos:QuizAssessment`]({{ '/schemas/learning/quiz-assessment.html' | relative_url }}) | `learning` | [`schema:Quiz`](https://schema.org/Quiz) |
+| [`robos:AgentSkill`]({{ '/schemas/learning/agent-skill.html' | relative_url }}) | `learning` | [`schema:HowTo`](https://schema.org/HowTo) |
+| [`robos:FlowDiagram`]({{ '/schemas/documentation/flow-diagram.html' | relative_url }}) | `documentation` | [`schema:ImageObject`](https://schema.org/ImageObject) |
+| [`robos:Documentation`]({{ '/schemas/documentation/documentation.html' | relative_url }}) | `documentation` | [`schema:TechArticle`](https://schema.org/TechArticle) |
+| [`robos:DocumentationPage`]({{ '/schemas/documentation/documentation-page.html' | relative_url }}) | `documentation` | [`schema:TechArticle`](https://schema.org/TechArticle) |
+| [`robos:ArchitectureDecisionRecord`]({{ '/schemas/documentation/architecture-decision-record.html' | relative_url }}) | `documentation` | [`schema:TechArticle`](https://schema.org/TechArticle) |
+| [`robos:InteractiveWalkthrough`]({{ '/schemas/documentation/interactive-walkthrough.html' | relative_url }}) | `documentation` | [`schema:Guide`](https://schema.org/Guide) |
+| [`robos:CodeSnippet`]({{ '/schemas/documentation/code-snippet.html' | relative_url }}) | `documentation` | [`schema:SoftwareSourceCode`](https://schema.org/SoftwareSourceCode) |
+| [`robos:DocSection`]({{ '/schemas/documentation/doc-section.html' | relative_url }}) | `documentation` | [`schema:Article`](https://schema.org/Article) |
+| [`robos:ADROption`]({{ '/schemas/documentation/adr-option.html' | relative_url }}) | `documentation` | [`schema:ChooseAction`](https://schema.org/ChooseAction) |
+| [`robos:Scenario`]({{ '/schemas/testing/scenario.html' | relative_url }}) | `testing` | [`schema:CheckAction`](https://schema.org/CheckAction) |
+| [`robos:ScenarioStep`]({{ '/schemas/testing/scenario-step.html' | relative_url }}) | `testing` | [`schema:HowToStep`](https://schema.org/HowToStep) |
+| [`robos:CRPGTestScenario`]({{ '/schemas/testing/crpg-test-scenario.html' | relative_url }}) | `testing` | [`schema:CheckAction`](https://schema.org/CheckAction) |
+| [`robos:CRPGBattleMap`]({{ '/schemas/testing/crpg-battle-map.html' | relative_url }}) | `testing` | [`schema:Place`](https://schema.org/Place) |
+| [`robos:CRPGMapObject`]({{ '/schemas/testing/crpg-map-object.html' | relative_url }}) | `testing` | [`schema:Place`](https://schema.org/Place) |
+| [`robos:CRPGCombatant`]({{ '/schemas/testing/crpg-combatant.html' | relative_url }}) | `testing` | [`schema:Person`](https://schema.org/Person) |
+| [`robos:InfinityAIDirective`]({{ '/schemas/testing/infinity-ai-directive.html' | relative_url }}) | `testing` | [`schema:ControlAction`](https://schema.org/ControlAction) |
+| [`robos:CRPGPlayerInput`]({{ '/schemas/testing/crpg-player-input.html' | relative_url }}) | `testing` | [`schema:InteractAction`](https://schema.org/InteractAction) |
+| [`robos:TabletopTestScenario`]({{ '/schemas/testing/tabletop-test-scenario.html' | relative_url }}) | `testing` | [`schema:CheckAction`](https://schema.org/CheckAction) |
+| [`robos:GherkinFeature`]({{ '/schemas/testing/gherkin-feature.html' | relative_url }}) | `testing` | [`schema:DigitalDocument`](https://schema.org/DigitalDocument) |
+| [`robos:GherkinBackground`]({{ '/schemas/testing/gherkin-background.html' | relative_url }}) | `testing` | [`schema:ItemList`](https://schema.org/ItemList) |
+| [`robos:GherkinRule`]({{ '/schemas/testing/gherkin-rule.html' | relative_url }}) | `testing` | [`schema:DigitalDocument`](https://schema.org/DigitalDocument) |
+| [`robos:ScenarioOutline`]({{ '/schemas/testing/scenario-outline.html' | relative_url }}) | `testing` | [`schema:CheckAction`](https://schema.org/CheckAction) |
+| [`robos:ExamplesTable`]({{ '/schemas/testing/examples-table.html' | relative_url }}) | `testing` | [`schema:Table`](https://schema.org/Table) |
+| [`robos:StepDefinition`]({{ '/schemas/testing/step-definition.html' | relative_url }}) | `testing` | [`schema:SoftwareSourceCode`](https://schema.org/SoftwareSourceCode) |
+| [`robos:DataTable`]({{ '/schemas/testing/data-table.html' | relative_url }}) | `testing` | [`schema:Table`](https://schema.org/Table) |
+| [`robos:DocString`]({{ '/schemas/testing/doc-string.html' | relative_url }}) | `testing` | [`schema:Text`](https://schema.org/Text) |
+| [`robos:TestingLibrary`]({{ '/schemas/testing/testing-library.html' | relative_url }}) | `testing` | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) |
+| [`robos:TestPlan`]({{ '/schemas/testing/test-plan.html' | relative_url }}) | `testing` | [`schema:Plan`](https://schema.org/Plan) |
+| [`robos:TestSuite`]({{ '/schemas/testing/test-suite.html' | relative_url }}) | `testing` | [`schema:ItemList`](https://schema.org/ItemList) |
+| [`robos:TestExecutionRecord`]({{ '/schemas/testing/test-execution-record.html' | relative_url }}) | `testing` | [`schema:AssessAction`](https://schema.org/AssessAction) |
+| [`robos:Game`]({{ '/schemas/game/game.html' | relative_url }}) | `game` | [`schema:Game`](https://schema.org/Game) |
+| [`robos:GameClass`]({{ '/schemas/game/game-class.html' | relative_url }}) | `game` | [`schema:Role`](https://schema.org/Role) |
+| [`robos:GameMonster`]({{ '/schemas/game/game-monster.html' | relative_url }}) | `game` | [`schema:Person`](https://schema.org/Person) |
+| [`robos:GameItem`]({{ '/schemas/game/game-item.html' | relative_url }}) | `game` | [`schema:Product`](https://schema.org/Product) |
+| [`robos:GameSpell`]({{ '/schemas/game/game-spell.html' | relative_url }}) | `game` | [`schema:Action`](https://schema.org/Action) |
+| [`robos:CRPGAbility`]({{ '/schemas/crpg/crpg-ability.html' | relative_url }}) | `crpg` | [`schema:Action`](https://schema.org/Action) |
+| [`robos:CRPGStoryFlow`]({{ '/schemas/crpg/crpg-story-flow.html' | relative_url }}) | `crpg` | [`schema:CreativeWork`](https://schema.org/CreativeWork) |
+| [`robos:CRPGStoryNode`]({{ '/schemas/crpg/crpg-story-node.html' | relative_url }}) | `crpg` | - |
+| [`robos:CRPGGameEvent`]({{ '/schemas/crpg/crpg-game-event.html' | relative_url }}) | `crpg` | [`schema:Event`](https://schema.org/Event) |
+| [`robos:CRPGCampaign`]({{ '/schemas/crpg/crpg-campaign.html' | relative_url }}) | `crpg` | [`schema:CreativeWork`](https://schema.org/CreativeWork) |
+| [`robos:CRPGMapTransition`]({{ '/schemas/crpg/crpg-map-transition.html' | relative_url }}) | `crpg` | [`schema:Place`](https://schema.org/Place) |
+| [`robos:TabletopGame`]({{ '/schemas/tabletop-game/tabletop-game.html' | relative_url }}) | `tabletop-game` | [`schema:Game`](https://schema.org/Game) |
+| [`robos:TabletopHero`]({{ '/schemas/tabletop-game/tabletop-hero.html' | relative_url }}) | `tabletop-game` | [`schema:Person`](https://schema.org/Person) |
+| [`robos:TabletopMonster`]({{ '/schemas/tabletop-game/tabletop-monster.html' | relative_url }}) | `tabletop-game` | [`schema:Person`](https://schema.org/Person) |
+| [`robos:TabletopSummon`]({{ '/schemas/tabletop-game/tabletop-summon.html' | relative_url }}) | `tabletop-game` | [`schema:Person`](https://schema.org/Person) |
+| [`robos:TabletopQuestMap`]({{ '/schemas/tabletop-game/tabletop-quest-map.html' | relative_url }}) | `tabletop-game` | [`schema:Place`](https://schema.org/Place) |
+| [`robos:TabletopMapConfiguration`]({{ '/schemas/tabletop-game/tabletop-map-configuration.html' | relative_url }}) | `tabletop-game` | [`schema:Place`](https://schema.org/Place) |
+| [`robos:TabletopTurnDAG`]({{ '/schemas/tabletop-game/tabletop-turn-dag.html' | relative_url }}) | `tabletop-game` | [`schema:Action`](https://schema.org/Action) |
+| [`robos:TabletopTurnStep`]({{ '/schemas/tabletop-game/tabletop-turn-step.html' | relative_url }}) | `tabletop-game` | [`schema:Action`](https://schema.org/Action) |
+| [`robos:TabletopAIEngine`]({{ '/schemas/tabletop-game/tabletop-ai-engine.html' | relative_url }}) | `tabletop-game` | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) |
+| [`robos:TabletopAIDirective`]({{ '/schemas/tabletop-game/tabletop-ai-directive.html' | relative_url }}) | `tabletop-game` | [`schema:ControlAction`](https://schema.org/ControlAction) |
+| [`robos:TabletopCombatant`]({{ '/schemas/tabletop-game/tabletop-combatant.html' | relative_url }}) | `tabletop-game` | [`schema:Person`](https://schema.org/Person) |
+| [`robos:TabletopAICommand`]({{ '/schemas/tabletop-game/tabletop-ai-command.html' | relative_url }}) | `tabletop-game` | [`schema:InteractAction`](https://schema.org/InteractAction) |
 
-The formal, machine-readable W3C RDF Schema / OWL ontology bridge is published at [**`ontology.jsonld`**]({{ '/schemas/ontology.jsonld' | relative_url }}).
+## Check a node against a shape
 
-| RobOS Class | Package | Schema.org Parent Type | De Facto Domain Standard | Specification |
-|---|---|---|---|---|
-| <code>robos:BuildSystem</code> | [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) | [Standard](https://bazel.build/) | [Docs & SHACL]({{ '/schemas/core-platform/build-system.html' | relative_url }}) |
-| <code>robos:Database</code> | [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) | [`schema:DataStore`](https://schema.org/DataStore) | [Standard](https://www.iso.org/standard/63555.html) | [Docs & SHACL]({{ '/schemas/core-platform/database.html' | relative_url }}) |
-| <code>robos:NoSQLDatabase</code> | [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) | [`schema:DataStore`](https://schema.org/DataStore) | [`schema:DataStore`](https://schema.org/DataStore) | [Docs & SHACL]({{ '/schemas/core-platform/nosql-database.html' | relative_url }}) |
-| <code>robos:SearchIndex</code> | [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) | [`schema:DataStore`](https://schema.org/DataStore) | [`schema:DataStore`](https://schema.org/DataStore) | [Docs & SHACL]({{ '/schemas/core-platform/search-index.html' | relative_url }}) |
-| <code>robos:SearchCluster</code> | [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) | [`schema:DataStore`](https://schema.org/DataStore) | [`schema:DataStore`](https://schema.org/DataStore) | [Docs & SHACL]({{ '/schemas/core-platform/search-cluster.html' | relative_url }}) |
-| <code>robos:MessageBroker</code> | [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) | [`schema:BroadcastService`](https://schema.org/BroadcastService) | [Apache Kafka](https://kafka.apache.org/) | [Docs & SHACL]({{ '/schemas/core-platform/message-broker.html' | relative_url }}) |
-| <code>robos:MCPServer</code> | [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) | [MCP Spec](https://modelcontextprotocol.io/specification/2025-11-25/schema) | [Docs & SHACL]({{ '/schemas/core-platform/mcp-server.html' | relative_url }}) |
-| <code>robos:ContextSource</code> | [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) | [`schema:DataFeed`](https://schema.org/DataFeed) | [`schema:DataFeed`](https://schema.org/DataFeed) | [Docs & SHACL]({{ '/schemas/core-platform/context-source.html' | relative_url }}) |
-| <code>robos:PromptStrategy</code> | [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) | [`schema:Intangible`](https://schema.org/Intangible) | [`schema:Intangible`](https://schema.org/Intangible) | [Docs & SHACL]({{ '/schemas/core-platform/prompt-strategy.html' | relative_url }}) |
-| <code>robos:DatabaseSchema</code> | [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) | [`schema:DataStore`](https://schema.org/DataStore) | [Standard](https://www.iso.org/standard/63555.html) | [Docs & SHACL]({{ '/schemas/core-platform/database-schema.html' | relative_url }}) |
-| <code>robos:DatabaseTable</code> | [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) | [`schema:Table`](https://schema.org/Table) | [Standard](https://www.iso.org/standard/63555.html) | [Docs & SHACL]({{ '/schemas/core-platform/database-table.html' | relative_url }}) |
-| <code>robos:DatabaseColumn</code> | [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) | [`schema:Property`](https://schema.org/Property) | [Standard](https://www.iso.org/standard/63555.html) | [Docs & SHACL]({{ '/schemas/core-platform/database-column.html' | relative_url }}) |
-| <code>robos:DatabaseIndex</code> | [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) | [`schema:Index`](https://schema.org/Index) | [Standard](https://www.iso.org/standard/63555.html) | [Docs & SHACL]({{ '/schemas/core-platform/database-index.html' | relative_url }}) |
-| <code>robos:NoSQLCollection</code> | [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) | [`schema:Collection`](https://schema.org/Collection) | [`schema:Collection`](https://schema.org/Collection) | [Docs & SHACL]({{ '/schemas/core-platform/nosql-collection.html' | relative_url }}) |
-| <code>robos:MessageTopic</code> | [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) | [`schema:BroadcastChannel`](https://schema.org/BroadcastChannel) | [Apache Kafka](https://kafka.apache.org/documentation/#intro_concepts_and_terms) | [Docs & SHACL]({{ '/schemas/core-platform/message-topic.html' | relative_url }}) |
-| <code>robos:ConsumerGroup</code> | [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) | [`schema:Audience`](https://schema.org/Audience) | [Apache Kafka](https://kafka.apache.org/documentation/#intro_concepts_and_terms) | [Docs & SHACL]({{ '/schemas/core-platform/consumer-group.html' | relative_url }}) |
-| <code>robos:MCPTool</code> | [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) | [`schema:Action`](https://schema.org/Action) | [MCP Spec](https://modelcontextprotocol.io/specification/2025-11-25/schema) | [Docs & SHACL]({{ '/schemas/core-platform/mcp-tool.html' | relative_url }}) |
-| <code>robos:MCPResource</code> | [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) | [`schema:MediaObject`](https://schema.org/MediaObject) | [MCP Spec](https://modelcontextprotocol.io/specification/2025-11-25/schema) | [Docs & SHACL]({{ '/schemas/core-platform/mcp-resource.html' | relative_url }}) |
-| <code>robos:MCPPrompt</code> | [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) | [`schema:Text`](https://schema.org/Text) | [MCP Spec](https://modelcontextprotocol.io/specification/2025-11-25/schema) | [Docs & SHACL]({{ '/schemas/core-platform/mcp-prompt.html' | relative_url }}) |
-| <code>robos:CurriculumDefinition</code> | [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) | [`schema:Course`](https://schema.org/Course) | [`schema:Course`](https://schema.org/Course) | [Docs & SHACL]({{ '/schemas/core-platform/curriculum-definition.html' | relative_url }}) |
-| <code>robos:DataStore</code> | [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) | [Docs & SHACL]({{ '/schemas/core-platform/data-store.html' | relative_url }}) |
-| <code>robos:BrokerDefinition</code> | [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) | [`schema:Service`](https://schema.org/Service) | [`schema:Service`](https://schema.org/Service) | [Docs & SHACL]({{ '/schemas/core-platform/broker-definition.html' | relative_url }}) |
-| <code>robos:SourceArtifact</code> | [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) | [`schema:CreativeWork`](https://schema.org/CreativeWork) | [`schema:CreativeWork`](https://schema.org/CreativeWork) | [Docs & SHACL]({{ '/schemas/core-platform/source-artifact.html' | relative_url }}) |
-| <code>robos:Team</code> | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) | [`schema:ProjectTeam`](https://schema.org/ProjectTeam) | [`schema:ProjectTeam`](https://schema.org/ProjectTeam) | [Docs & SHACL]({{ '/schemas/organization/team.html' | relative_url }}) |
-| <code>robos:Project</code> | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) | [`schema:Project`](https://schema.org/Project) | [`schema:Project`](https://schema.org/Project) | [Docs & SHACL]({{ '/schemas/organization/project.html' | relative_url }}) |
-| <code>robos:Epic</code> | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) | [`schema:Plan`](https://schema.org/Plan) | [OSLC CM](http://open-services.net/ns/cm#ChangeRequest) | [Docs & SHACL]({{ '/schemas/organization/epic.html' | relative_url }}) |
-| <code>robos:GitProjectOrganization</code> | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) | [`schema:Organization`](https://schema.org/Organization) | [`schema:Organization`](https://schema.org/Organization) | [Docs & SHACL]({{ '/schemas/organization/git-project-organization.html' | relative_url }}) |
-| <code>robos:AgentPersona</code> | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) | [`schema:Person`](https://schema.org/Person) | [`schema:Person`](https://schema.org/Person) | [Docs & SHACL]({{ '/schemas/organization/agent-persona.html' | relative_url }}) |
-| <code>robos:TaskServer</code> | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) | [Docs & SHACL]({{ '/schemas/organization/task-server.html' | relative_url }}) |
-| <code>robos:UserStory</code> | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) | [`schema:Action`](https://schema.org/Action) | [OSLC CM](http://open-services.net/ns/cm#ChangeRequest) | [Docs & SHACL]({{ '/schemas/organization/user-story.html' | relative_url }}) |
-| <code>robos:Task</code> | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) | [`schema:Action`](https://schema.org/Action) | [OSLC CM](http://open-services.net/ns/cm#ChangeRequest) | [Docs & SHACL]({{ '/schemas/organization/task.html' | relative_url }}) |
-| <code>robos:Subtask</code> | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) | [`schema:Action`](https://schema.org/Action) | [OSLC CM](http://open-services.net/ns/cm#ChangeRequest) | [Docs & SHACL]({{ '/schemas/organization/subtask.html' | relative_url }}) |
-| <code>robos:Bug</code> | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) | [`schema:Action`](https://schema.org/Action) | [OSLC CM](http://open-services.net/ns/cm#ChangeRequest) | [Docs & SHACL]({{ '/schemas/organization/bug.html' | relative_url }}) |
-| <code>robos:Sprint</code> | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) | [`schema:Action`](https://schema.org/Action) | [`schema:Action`](https://schema.org/Action) | [Docs & SHACL]({{ '/schemas/organization/sprint.html' | relative_url }}) |
-| <code>robos:Milestone</code> | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) | [`schema:Action`](https://schema.org/Action) | [`schema:Action`](https://schema.org/Action) | [Docs & SHACL]({{ '/schemas/organization/milestone.html' | relative_url }}) |
-| <code>robos:GitRepository</code> | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) | [`schema:SoftwareSourceCode`](https://schema.org/SoftwareSourceCode) | [`schema:SoftwareSourceCode`](https://schema.org/SoftwareSourceCode) | [Docs & SHACL]({{ '/schemas/organization/git-repository.html' | relative_url }}) |
-| <code>robos:GitBranch</code> | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) | [`schema:SoftwareSourceCode`](https://schema.org/SoftwareSourceCode) | [`schema:SoftwareSourceCode`](https://schema.org/SoftwareSourceCode) | [Docs & SHACL]({{ '/schemas/organization/git-branch.html' | relative_url }}) |
-| <code>robos:PullRequest</code> | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) | [`schema:UpdateAction`](https://schema.org/UpdateAction) | [OSLC CM](http://open-services.net/ns/cm#ChangeRequest) | [Docs & SHACL]({{ '/schemas/organization/pull-request.html' | relative_url }}) |
-| <code>robos:GitCommit</code> | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) | [`schema:SoftwareSourceCode`](https://schema.org/SoftwareSourceCode) | [`schema:SoftwareSourceCode`](https://schema.org/SoftwareSourceCode) | [Docs & SHACL]({{ '/schemas/organization/git-commit.html' | relative_url }}) |
-| <code>robos:GitTag</code> | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) | [`schema:SoftwareSourceCode`](https://schema.org/SoftwareSourceCode) | [`schema:SoftwareSourceCode`](https://schema.org/SoftwareSourceCode) | [Docs & SHACL]({{ '/schemas/organization/git-tag.html' | relative_url }}) |
-| <code>robos:Comment</code> | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) | [`schema:Comment`](https://schema.org/Comment) | [OSLC CORE](http://open-services.net/ns/core#Comment) | [Docs & SHACL]({{ '/schemas/organization/comment.html' | relative_url }}) |
-| <code>robos:DiscussionThread</code> | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) | [`schema:Conversation`](https://schema.org/Conversation) | [OSLC CORE](http://open-services.net/ns/core#Discussion) | [Docs & SHACL]({{ '/schemas/organization/discussion-thread.html' | relative_url }}) |
-| <code>robos:ReviewComment</code> | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) | [`schema:Comment`](https://schema.org/Comment) | [OSLC CORE](http://open-services.net/ns/core#Comment) | [Docs & SHACL]({{ '/schemas/organization/review-comment.html' | relative_url }}) |
-| <code>robos:CommentAttachment</code> | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) | [`schema:MediaObject`](https://schema.org/MediaObject) | [OSLC CORE](http://open-services.net/ns/core#Attachment) | [Docs & SHACL]({{ '/schemas/organization/comment-attachment.html' | relative_url }}) |
-| <code>robos:Microservice</code> | [Services & Contracts (robos.services)]({{ '/schemas/services.html' | relative_url }}) | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) | [W3C C4 Model](https://w3id.org/c4/Container) | [Docs & SHACL]({{ '/schemas/services/microservice.html' | relative_url }}) |
-| <code>robos:Contract</code> | [Services & Contracts (robos.services)]({{ '/schemas/services.html' | relative_url }}) | [`schema:DigitalDocument`](https://schema.org/DigitalDocument) | [OSLC AM](http://open-services.net/ns/am#Resource) | [Docs & SHACL]({{ '/schemas/services/contract.html' | relative_url }}) |
-| <code>oslc_rm:Requirement</code> | [Services & Contracts (robos.services)]({{ '/schemas/services.html' | relative_url }}) | [`schema:DigitalDocument`](https://schema.org/DigitalDocument) | [OSLC RM](http://open-services.net/ns/rm#Requirement) | [Docs & SHACL]({{ '/schemas/services/requirement.html' | relative_url }}) |
-| <code>robos:ProtobufContract</code> | [Services & Contracts (robos.services)]({{ '/schemas/services.html' | relative_url }}) | [`schema:DigitalDocument`](https://schema.org/DigitalDocument) | [Standard](https://protobuf.dev/) | [Docs & SHACL]({{ '/schemas/services/protobuf-contract.html' | relative_url }}) |
-| <code>robos:GraphQLContract</code> | [Services & Contracts (robos.services)]({{ '/schemas/services.html' | relative_url }}) | [`schema:DigitalDocument`](https://schema.org/DigitalDocument) | [Standard](https://graphql.org/learn/schema/) | [Docs & SHACL]({{ '/schemas/services/graphql-contract.html' | relative_url }}) |
-| <code>robos:Feature</code> | [Services & Contracts (robos.services)]({{ '/schemas/services.html' | relative_url }}) | [`schema:DigitalDocument`](https://schema.org/DigitalDocument) | [OSLC RM](http://open-services.net/ns/rm#Requirement) | [Docs & SHACL]({{ '/schemas/services/feature.html' | relative_url }}) |
-| <code>robos:APIEndpoint</code> | [Services & Contracts (robos.services)]({{ '/schemas/services.html' | relative_url }}) | [`schema:EntryPoint`](https://schema.org/EntryPoint) | [OpenAPI 3.1](https://spec.openapis.org/oas/v3.1.0) | [Docs & SHACL]({{ '/schemas/services/api-endpoint.html' | relative_url }}) |
-| <code>robos:DataModel</code> | [Services & Contracts (robos.services)]({{ '/schemas/services.html' | relative_url }}) | [`schema:Class`](https://schema.org/Class) | [OpenAPI 3.1](https://spec.openapis.org/oas/v3.1.0) | [Docs & SHACL]({{ '/schemas/services/data-model.html' | relative_url }}) |
-| <code>robos:DesktopApp</code> | [Applications (robos.apps)]({{ '/schemas/applications.html' | relative_url }}) | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) | [Docs & SHACL]({{ '/schemas/applications/desktop-app.html' | relative_url }}) |
-| <code>robos:ConsoleApp</code> | [Applications (robos.apps)]({{ '/schemas/applications.html' | relative_url }}) | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) | [Docs & SHACL]({{ '/schemas/applications/console-app.html' | relative_url }}) |
-| <code>robos:MobileApp</code> | [Applications (robos.apps)]({{ '/schemas/applications.html' | relative_url }}) | [`schema:MobileApplication`](https://schema.org/MobileApplication) | [`schema:MobileApplication`](https://schema.org/MobileApplication) | [Docs & SHACL]({{ '/schemas/applications/mobile-app.html' | relative_url }}) |
-| <code>robos:Library</code> | [Applications (robos.apps)]({{ '/schemas/applications.html' | relative_url }}) | [`schema:SoftwareSourceCode`](https://schema.org/SoftwareSourceCode) | [`schema:SoftwareSourceCode`](https://schema.org/SoftwareSourceCode) | [Docs & SHACL]({{ '/schemas/applications/library.html' | relative_url }}) |
-| <code>robos:FrontEndApp</code> | [Applications (robos.apps)]({{ '/schemas/applications.html' | relative_url }}) | [`schema:WebApplication`](https://schema.org/WebApplication) | [`schema:WebApplication`](https://schema.org/WebApplication) | [Docs & SHACL]({{ '/schemas/applications/front-end-app.html' | relative_url }}) |
-| <code>robos:PCGame</code> | [Applications (robos.apps)]({{ '/schemas/applications.html' | relative_url }}) | [`schema:VideoGame`](https://schema.org/VideoGame) | [`schema:VideoGame`](https://schema.org/VideoGame) | [Docs & SHACL]({{ '/schemas/applications/pc-game.html' | relative_url }}) |
-| <code>robos:MobileGame</code> | [Applications (robos.apps)]({{ '/schemas/applications.html' | relative_url }}) | [`schema:VideoGame`](https://schema.org/VideoGame) | [`schema:VideoGame`](https://schema.org/VideoGame) | [Docs & SHACL]({{ '/schemas/applications/mobile-game.html' | relative_url }}) |
-| <code>robos:WebRoute</code> | [Applications (robos.apps)]({{ '/schemas/applications.html' | relative_url }}) | [`schema:WebPage`](https://schema.org/WebPage) | [`schema:WebPage`](https://schema.org/WebPage) | [Docs & SHACL]({{ '/schemas/applications/web-route.html' | relative_url }}) |
-| <code>robos:CLICommand</code> | [Applications (robos.apps)]({{ '/schemas/applications.html' | relative_url }}) | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) | [Docs & SHACL]({{ '/schemas/applications/cli-command.html' | relative_url }}) |
-| <code>robos:CLIFlag</code> | [Applications (robos.apps)]({{ '/schemas/applications.html' | relative_url }}) | [`schema:PropertyValue`](https://schema.org/PropertyValue) | [`schema:PropertyValue`](https://schema.org/PropertyValue) | [Docs & SHACL]({{ '/schemas/applications/cli-flag.html' | relative_url }}) |
-| <code>robos:DataPipeline</code> | [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) | [`schema:DataFeed`](https://schema.org/DataFeed) | [`schema:DataFeed`](https://schema.org/DataFeed) | [Docs & SHACL]({{ '/schemas/devops/data-pipeline.html' | relative_url }}) |
-| <code>robos:RemoteExecutionCluster</code> | [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) | [`schema:ComputerPlatform`](https://schema.org/ComputerPlatform) | [Standard](https://github.com/bazelbuild/remote-apis) | [Docs & SHACL]({{ '/schemas/devops/remote-execution-cluster.html' | relative_url }}) |
-| <code>robos:KubernetesCluster</code> | [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) | [`schema:ComputerPlatform`](https://schema.org/ComputerPlatform) | [Kubernetes / CNCF](https://kubernetes.io/docs/concepts/overview/) | [Docs & SHACL]({{ '/schemas/devops/kubernetes-cluster.html' | relative_url }}) |
-| <code>robos:Environment</code> | [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) | [`schema:DeploymentEnvironment`](https://schema.org/DeploymentEnvironment) | [`schema:DeploymentEnvironment`](https://schema.org/DeploymentEnvironment) | [Docs & SHACL]({{ '/schemas/devops/environment.html' | relative_url }}) |
-| <code>robos:GitOpsDeployment</code> | [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) | [Standard](https://opengitops.dev/) | [Docs & SHACL]({{ '/schemas/devops/gitops-deployment.html' | relative_url }}) |
-| <code>robos:CICDPipeline</code> | [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) | [Docs & SHACL]({{ '/schemas/devops/cicd-pipeline.html' | relative_url }}) |
-| <code>robos:KubernetesNamespace</code> | [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) | [`schema:AdministrativeArea`](https://schema.org/AdministrativeArea) | [Kubernetes / CNCF](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/) | [Docs & SHACL]({{ '/schemas/devops/kubernetes-namespace.html' | relative_url }}) |
-| <code>robos:KubernetesDeployment</code> | [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) | [Kubernetes / CNCF](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) | [Docs & SHACL]({{ '/schemas/devops/kubernetes-deployment.html' | relative_url }}) |
-| <code>robos:KubernetesService</code> | [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) | [`schema:Service`](https://schema.org/Service) | [Kubernetes / CNCF](https://kubernetes.io/docs/concepts/services-networking/service/) | [Docs & SHACL]({{ '/schemas/devops/kubernetes-service.html' | relative_url }}) |
-| <code>robos:KubernetesIngress</code> | [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) | [`schema:EntryPoint`](https://schema.org/EntryPoint) | [Kubernetes / CNCF](https://kubernetes.io/docs/concepts/services-networking/ingress/) | [Docs & SHACL]({{ '/schemas/devops/kubernetes-ingress.html' | relative_url }}) |
-| <code>robos:PipelineStage</code> | [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) | [`schema:Action`](https://schema.org/Action) | [`schema:Action`](https://schema.org/Action) | [Docs & SHACL]({{ '/schemas/devops/pipeline-stage.html' | relative_url }}) |
-| <code>robos:PipelineJob</code> | [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) | [`schema:Action`](https://schema.org/Action) | [`schema:Action`](https://schema.org/Action) | [Docs & SHACL]({{ '/schemas/devops/pipeline-job.html' | relative_url }}) |
-| <code>robos:PipelineStep</code> | [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) | [`schema:Action`](https://schema.org/Action) | [`schema:Action`](https://schema.org/Action) | [Docs & SHACL]({{ '/schemas/devops/pipeline-step.html' | relative_url }}) |
-| <code>robos:EnvironmentProfile</code> | [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) | [`schema:DefinedTerm`](https://schema.org/DefinedTerm) | [`schema:DefinedTerm`](https://schema.org/DefinedTerm) | [Docs & SHACL]({{ '/schemas/devops/environment-profile.html' | relative_url }}) |
-| <code>robos:ELearning</code> | [eLearning Curriculums (robos.learning)]({{ '/schemas/learning.html' | relative_url }}) | [`schema:Course`](https://schema.org/Course) | [`schema:Course`](https://schema.org/Course) | [Docs & SHACL]({{ '/schemas/learning/elearning.html' | relative_url }}) |
-| <code>robos:CertificateOfCompletion</code> | [eLearning Curriculums (robos.learning)]({{ '/schemas/learning.html' | relative_url }}) | [`schema:EducationalOccupationalCredential`](https://schema.org/EducationalOccupationalCredential) | [`schema:EducationalOccupationalCredential`](https://schema.org/EducationalOccupationalCredential) | [Docs & SHACL]({{ '/schemas/learning/certificate-of-completion.html' | relative_url }}) |
-| <code>robos:LearningModule</code> | [eLearning Curriculums (robos.learning)]({{ '/schemas/learning.html' | relative_url }}) | [`schema:CourseInstance`](https://schema.org/CourseInstance) | [`schema:CourseInstance`](https://schema.org/CourseInstance) | [Docs & SHACL]({{ '/schemas/learning/learning-module.html' | relative_url }}) |
-| <code>robos:LearningLesson</code> | [eLearning Curriculums (robos.learning)]({{ '/schemas/learning.html' | relative_url }}) | [`schema:LearningResource`](https://schema.org/LearningResource) | [`schema:LearningResource`](https://schema.org/LearningResource) | [Docs & SHACL]({{ '/schemas/learning/learning-lesson.html' | relative_url }}) |
-| <code>robos:HandsOnLab</code> | [eLearning Curriculums (robos.learning)]({{ '/schemas/learning.html' | relative_url }}) | [`schema:ExercisePlan`](https://schema.org/ExercisePlan) | [`schema:ExercisePlan`](https://schema.org/ExercisePlan) | [Docs & SHACL]({{ '/schemas/learning/hands-on-lab.html' | relative_url }}) |
-| <code>robos:QuizAssessment</code> | [eLearning Curriculums (robos.learning)]({{ '/schemas/learning.html' | relative_url }}) | [`schema:Quiz`](https://schema.org/Quiz) | [`schema:Quiz`](https://schema.org/Quiz) | [Docs & SHACL]({{ '/schemas/learning/quiz-assessment.html' | relative_url }}) |
-| <code>robos:AgentSkill</code> | [eLearning Curriculums (robos.learning)]({{ '/schemas/learning.html' | relative_url }}) | [`schema:HowTo`](https://schema.org/HowTo) | [`schema:HowTo`](https://schema.org/HowTo) | [Docs & SHACL]({{ '/schemas/learning/agent-skill.html' | relative_url }}) |
-| <code>robos:FlowDiagram</code> | [Documentation & Diagrams (robos.docs)]({{ '/schemas/documentation.html' | relative_url }}) | [`schema:ImageObject`](https://schema.org/ImageObject) | [`schema:ImageObject`](https://schema.org/ImageObject) | [Docs & SHACL]({{ '/schemas/documentation/flow-diagram.html' | relative_url }}) |
-| <code>robos:Documentation</code> | [Documentation & Diagrams (robos.docs)]({{ '/schemas/documentation.html' | relative_url }}) | [`schema:TechArticle`](https://schema.org/TechArticle) | [`schema:TechArticle`](https://schema.org/TechArticle) | [Docs & SHACL]({{ '/schemas/documentation/documentation.html' | relative_url }}) |
-| <code>robos:DocumentationPage</code> | [Documentation & Diagrams (robos.docs)]({{ '/schemas/documentation.html' | relative_url }}) | [`schema:TechArticle`](https://schema.org/TechArticle) | [`schema:TechArticle`](https://schema.org/TechArticle) | [Docs & SHACL]({{ '/schemas/documentation/documentation-page.html' | relative_url }}) |
-| <code>robos:ArchitectureDecisionRecord</code> | [Documentation & Diagrams (robos.docs)]({{ '/schemas/documentation.html' | relative_url }}) | [`schema:TechArticle`](https://schema.org/TechArticle) | [Standard](https://adr.github.io/) | [Docs & SHACL]({{ '/schemas/documentation/architecture-decision-record.html' | relative_url }}) |
-| <code>robos:InteractiveWalkthrough</code> | [Documentation & Diagrams (robos.docs)]({{ '/schemas/documentation.html' | relative_url }}) | [`schema:Guide`](https://schema.org/Guide) | [`schema:Guide`](https://schema.org/Guide) | [Docs & SHACL]({{ '/schemas/documentation/interactive-walkthrough.html' | relative_url }}) |
-| <code>robos:CodeSnippet</code> | [Documentation & Diagrams (robos.docs)]({{ '/schemas/documentation.html' | relative_url }}) | [`schema:SoftwareSourceCode`](https://schema.org/SoftwareSourceCode) | [`schema:SoftwareSourceCode`](https://schema.org/SoftwareSourceCode) | [Docs & SHACL]({{ '/schemas/documentation/code-snippet.html' | relative_url }}) |
-| <code>robos:DocSection</code> | [Documentation & Diagrams (robos.docs)]({{ '/schemas/documentation.html' | relative_url }}) | [`schema:Article`](https://schema.org/Article) | [`schema:Article`](https://schema.org/Article) | [Docs & SHACL]({{ '/schemas/documentation/doc-section.html' | relative_url }}) |
-| <code>robos:ADROption</code> | [Documentation & Diagrams (robos.docs)]({{ '/schemas/documentation.html' | relative_url }}) | [`schema:ChooseAction`](https://schema.org/ChooseAction) | [`schema:ChooseAction`](https://schema.org/ChooseAction) | [Docs & SHACL]({{ '/schemas/documentation/adr-option.html' | relative_url }}) |
-| <code>robos:Scenario</code> | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) | [`schema:CheckAction`](https://schema.org/CheckAction) | [OSLC QM](http://open-services.net/ns/qm#TestCase) | [Docs & SHACL]({{ '/schemas/testing/scenario.html' | relative_url }}) |
-| <code>robos:ScenarioStep</code> | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) | [`schema:HowToStep`](https://schema.org/HowToStep) | [Cucumber BDD](https://cucumber.io/docs/gherkin/reference/#steps) | [Docs & SHACL]({{ '/schemas/testing/scenario-step.html' | relative_url }}) |
-| <code>robos:CRPGTestScenario</code> | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) | [`schema:CheckAction`](https://schema.org/CheckAction) | [OSLC QM](http://open-services.net/ns/qm#TestCase) | [Docs & SHACL]({{ '/schemas/testing/crpg-test-scenario.html' | relative_url }}) |
-| <code>robos:CRPGBattleMap</code> | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) | [`schema:Place`](https://schema.org/Place) | [`schema:Place`](https://schema.org/Place) | [Docs & SHACL]({{ '/schemas/testing/crpg-battle-map.html' | relative_url }}) |
-| <code>robos:CRPGMapObject</code> | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) | [`schema:Place`](https://schema.org/Place) | [Standard](https://robos.dev/ns/crpg#MapObject) | [Docs & SHACL]({{ '/schemas/testing/crpg-map-object.html' | relative_url }}) |
-| <code>robos:CRPGCombatant</code> | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) | [`schema:Person`](https://schema.org/Person) | [Standard](https://robos.dev/ns/crpg#Combatant) | [Docs & SHACL]({{ '/schemas/testing/crpg-combatant.html' | relative_url }}) |
-| <code>robos:InfinityAIDirective</code> | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) | [`schema:ControlAction`](https://schema.org/ControlAction) | [Standard](https://robos.dev/ns/crpg#InfinityAIDirective) | [Docs & SHACL]({{ '/schemas/testing/infinity-ai-directive.html' | relative_url }}) |
-| <code>robos:CRPGPlayerInput</code> | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) | [`schema:InteractAction`](https://schema.org/InteractAction) | [Standard](https://robos.dev/ns/crpg#PlayerInput) | [Docs & SHACL]({{ '/schemas/testing/crpg-player-input.html' | relative_url }}) |
-| <code>robos:GherkinFeature</code> | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) | [`schema:DigitalDocument`](https://schema.org/DigitalDocument) | [OSLC RM](http://open-services.net/ns/rm#Requirement) | [Docs & SHACL]({{ '/schemas/testing/gherkin-feature.html' | relative_url }}) |
-| <code>robos:GherkinBackground</code> | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) | [`schema:ItemList`](https://schema.org/ItemList) | [Cucumber BDD](https://cucumber.io/docs/gherkin/reference/#background) | [Docs & SHACL]({{ '/schemas/testing/gherkin-background.html' | relative_url }}) |
-| <code>robos:GherkinRule</code> | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) | [`schema:DigitalDocument`](https://schema.org/DigitalDocument) | [Cucumber BDD](https://cucumber.io/docs/gherkin/reference/#rule) | [Docs & SHACL]({{ '/schemas/testing/gherkin-rule.html' | relative_url }}) |
-| <code>robos:ScenarioOutline</code> | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) | [`schema:CheckAction`](https://schema.org/CheckAction) | [Cucumber BDD](https://cucumber.io/docs/gherkin/reference/#scenario-outline) | [Docs & SHACL]({{ '/schemas/testing/scenario-outline.html' | relative_url }}) |
-| <code>robos:ExamplesTable</code> | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) | [`schema:Table`](https://schema.org/Table) | [Cucumber BDD](https://cucumber.io/docs/gherkin/reference/#examples) | [Docs & SHACL]({{ '/schemas/testing/examples-table.html' | relative_url }}) |
-| <code>robos:StepDefinition</code> | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) | [`schema:SoftwareSourceCode`](https://schema.org/SoftwareSourceCode) | [Cucumber BDD](https://cucumber.io/docs/cucumber/step-definitions/) | [Docs & SHACL]({{ '/schemas/testing/step-definition.html' | relative_url }}) |
-| <code>robos:DataTable</code> | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) | [`schema:Table`](https://schema.org/Table) | [Cucumber BDD](https://cucumber.io/docs/gherkin/reference/#data-tables) | [Docs & SHACL]({{ '/schemas/testing/data-table.html' | relative_url }}) |
-| <code>robos:DocString</code> | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) | [`schema:Text`](https://schema.org/Text) | [Cucumber BDD](https://cucumber.io/docs/gherkin/reference/#doc-strings) | [Docs & SHACL]({{ '/schemas/testing/doc-string.html' | relative_url }}) |
-| <code>robos:TestingLibrary</code> | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) | [Docs & SHACL]({{ '/schemas/testing/testing-library.html' | relative_url }}) |
-| <code>robos:TestPlan</code> | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) | [`schema:Plan`](https://schema.org/Plan) | [OSLC QM](http://open-services.net/ns/qm#TestPlan) | [Docs & SHACL]({{ '/schemas/testing/test-plan.html' | relative_url }}) |
-| <code>robos:TestSuite</code> | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) | [`schema:ItemList`](https://schema.org/ItemList) | [OSLC QM](http://open-services.net/ns/qm#TestSuite) | [Docs & SHACL]({{ '/schemas/testing/test-suite.html' | relative_url }}) |
-| <code>robos:TestExecutionRecord</code> | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) | [`schema:AssessAction`](https://schema.org/AssessAction) | [OSLC QM](http://open-services.net/ns/qm#TestExecutionRecord) | [Docs & SHACL]({{ '/schemas/testing/test-execution-record.html' | relative_url }}) |
-
----
-
-## Automated Validation via SHACL
-
-Every node in the Knowledge Graph is verified using programmatic SHACL validators before it can be merged into `.robos/knowledge-graph.jsonld` or deployed to production:
-
-```javascript
-const { SHACLValidator } = require('/usr/local/share/robos/robos-graph/lib/shacl-validator');
-const { SDLCKnowledgeGraphStore } = require('/usr/local/share/robos/robos-graph');
-
-const store = new SDLCKnowledgeGraphStore();
-const validationResult = store.validate();
-
-if (!validationResult.conforms) {
-  console.error("SHACL Violations:", validationResult.violations);
-} else {
-  console.log("All graph nodes strictly conform to SHACL specifications.");
-}
-```
-
----
-
-## Regenerating Schema Documentation
-
-RobOS includes a built-in companion generator that keeps documentation in continuous lockstep with schema code:
+Save one node as `node.json` in the repository root, for example the example from a class page. Then run:
 
 ```bash
-# Run automated schema doc generator
+node -e "const { SHACLValidator } = require('./packages/robos-graph/lib/shacl-validator'); const r = new SHACLValidator().validate([require('./node.json')]); console.log(r.conforms, r.results)"
+```
+
+The command prints `true` and an empty list when the node meets every rule for its types. Otherwise it prints `false` and one entry per failed rule. The `kgraph validate` and `kgraph insert` commands run the same checks.
+
+## Ontology file
+
+[`ontology.jsonld`]({{ '/schemas/ontology.jsonld' | relative_url }}) lists classes with their Schema.org parent class and shape id. The same file is kept at `.robos/ontology.jsonld`. `node scripts/sync-classification-ontology.js` updates both. This generator does not, so the ontology can lag behind the shapes listed here.
+
+## Regenerate these pages
+
+This section and every page under it are generated. Do not edit them by hand. Change the generator, `packages/robos-graph/lib/schema-doc-generator.js`, or the shapes, then run:
+
+```bash
 node scripts/generate-kgraph-schema-docs.js
 ```

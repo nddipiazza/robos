@@ -1,107 +1,55 @@
 ---
-title: Agent Governance & Review
+title: "Review & governance"
 layout: default
-parent: RobOS for Teams
-nav_order: 3
+nav_order: 4
 has_children: true
 permalink: /agent-review-development.html
 ---
 
-# AI Agent Review-Based Development
+# Review & governance
 {: .no_toc }
 
-How RobOS flips the software development lifecycle: AI agents investigate bugs, draft plans, write code, and prove their work with automated tests — while human developers steer the vision as Lead Architects and Reviewers.
-{: .fs-6 .fw-300 }
+How RobOS reviews code that an agent wrote: where the work is checked, what counts as evidence, and which parts of governance are not built yet. This section has four pages, listed at the end of this one.
+{: .fs-6 }
 
-## Table of contents
-{: .no_toc .text-delta }
+## The delivery loop
 
-1. TOC
-{:toc}
+An agent does the implementation. A person decides whether the result is good enough to publish and merge. The recording on the [RobOS home page](https://rowbose.com/) shows the whole loop; each step below names the app that owns it.
 
----
+| Step | App | What happens |
+|:---|:---|:---|
+| 1. Plan | Task Explorer (`task-planner`) | An agent turns a goal into tracked issues with acceptance criteria. |
+| 2. Implement | Task Implementer | An agent creates a feature branch (`codex/<task-key>` by default), implements and tests the task, commits and pushes. It does not open a pull request. |
+| 3. Review locally | Review window, local review | The owner reads the diff on the Changes tab, checks the Evidence tab and takes the agent-led Walkthrough. |
+| 4. Publish | Review window, Pull Request tab | The owner reviews the description and creates the PR, as a draft if they choose. |
+| 5. CI | Review window | The CI banner shows check results. A draft can move to ready only when CI has passed. |
+| 6. Approve | Review window, reviewer mode | A reviewer reads the diff and submits Approve, Request Changes or a comment through `gh pr review`. |
+| 7. Merge | GitHub | The author merges. The review window has no merge button. |
 
-## Why Agent Review-Based Development?
+The apps are described on their own pages: [Task Planner]({{ '/apps/task-planner/' | relative_url }}), [Task Implementer]({{ '/apps/task-implementer/' | relative_url }}) and [Agent Code Review & PR Review Theater]({{ '/apps/pr-review/' | relative_url }}).
 
-Traditional AI coding assistants (autocomplete plugins and sidebar chat boxes) only help you write code line-by-line. You still spend most of your day reading stack traces, setting up test databases, and compiling code manually.
+## How review and proof of work fit together
 
-**RobOS changes your role from code typist to Lead Architect:**
+The review window does not ask you to trust the agent's summary. It shows three kinds of evidence next to the diff:
 
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/agent-review-workflow-comparison.jpg' | relative_url }}" alt="Traditional Workflow vs. RobOS Agent Review Workflow" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Workflow Comparison</strong>: How RobOS shifts engineering from manual code typing bottlenecks to high-leverage architectural review and automated video proof. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
+- An evidence bundle recorded at one commit. When a new commit lands, the bundle is marked stale.
+- Walkthrough checkpoints where an agent runs the changed behavior and pauses so you can try it.
+- CI results read from GitHub and, for job logs, Buildkite.
 
----
+Each is a signal for a person to weigh. The tool does not decide that a change is correct. Reaching the last walkthrough checkpoint does not approve or merge anything, and a PR can be created without completing the walkthrough.
 
-## The 5-Stage Development Workflow (In Plain English)
+## Known limits
 
-### 1. Task Intake & Bug Investigation
-When a ticket is assigned (from GitHub Issues, Jira, or Dev Central), the AI agent:
-- Spins up an isolated, temporary workspace for the specific branch.
-- Launches the required databases and services automatically.
-- Analyzes the codebase, reproduces test failures, and can optionally use the breakpoint debugging feature to pause execution at an exact line in the IDE for variable inspection if needed.
+- In reviewer mode, several tabs show built-in sample content rather than content from the PR, and the Approve button is gated by a fixed sample quiz. [PR Review Theater]({{ site.baseurl }}{% link pr-review-theater.md %}) lists which tabs use real data.
+- The walkthrough and evidence agents are Codex CLI sessions, configured as `demoAgent` in the review's launch manifest. **Review branch…** sets it only when it finds a `codex` binary. Without one, those tabs have no agent to run.
+- Recorded demos in the repository use sandbox data. The [Walkthroughs and proof of work]({{ site.baseurl }}{% link walkthroughs.md %}) page separates what the tests assert from what a recording only shows.
+- Automatic selection of a model by task difficulty is not built. See [Agent tiers]({{ site.baseurl }}{% link agent-tiers.md %}).
 
-### 2. Proactive Human Alignment & Plan Review
-Before touching any source code, the agent drafts a clear, structured technical plan grounded in the Knowledge Graph:
-- Lists all API endpoints, database tables, and configuration files that need updates.
-- Identifies any downstream services that could be impacted (blast radius).
-- The workflow actively picks and probes at the human architect—clarifying design trade-offs, testing edge cases, and ensuring you are intimately involved in what is being built before execution begins.
+## In this section
 
-### 3. Autonomous Code Implementation & Infrastructure Generation
-Once you approve the plan:
-- The AI implements the code across frontend, backend, and database repositories.
-- If a new database or message queue is needed, the AI adds it to the visual architecture map and auto-generates the Kubernetes deployment manifests and Helm charts.
-- Compiles data models and packages automatically across TypeScript, Java, and Go.
-
-### 4. Automated Visual Testing & Video Proof-of-Work
-Instead of simply claiming that the code works, the AI runs a complete automated test verification:
-- Launches a private virtual screen so your active monitor is never interrupted.
-- Clicks real buttons, tests forms, runs SQL queries, and validates API responses.
-- Records a 1080p video with spoken voiceover explanations detailing what was built and tested.
-- Packages the video, subtitles, and test results for your review.
-
-### 5. Human PR Review & PR Review Theater
-The human developer opens the review dashboard:
-- Reviews the visual code diffs, automated security audits, and architectural changes.
-- **Launches the PR Review Theater**: Steps through on-demand interactive masterclasses, passes the Reviewer Knowledge Check for verified Knowledge Graph certification, inspects living architecture deltas, audits in-app code diffs, bridges to the IDE, and watches the 1080p narrated video proof-of-work. Read the complete guide in [PR Review Theater & Verification]({{ site.baseurl }}{% link pr-review-theater.md %}).
-- **Optionally opens the project in their IDE (IntelliJ IDEA or VS Code) using RobOS** to review the PR directly inside the IDE with all IDE context (syntax tree, symbol lookup, type checking, local tests, and debugger) in tow.
-- Watches the 30-second narrated verification video.
-- Approves and merges the pull request with a single click.
-
----
-
-## Clean, Isolated AI Workspaces (Zero Desktop Clutter)
-
-AI agents in RobOS do not pollute your personal desktop user account. Every agent runs in a sandboxed, temporary environment:
-
-| Feature | Your Personal Account (`robos`) | AI Agent Workspace (`agent-task-108`) |
-|---|---|---|
-| **Filesystem** | Physical Hard Drive (`/home/robos`) | High-Speed RAM Memory (`/home/agent-...`) |
-| **Running Apps** | Your Permanent Desktop Apps | Automatically closed upon task completion |
-| **Display** | Your Main Monitor | Private Virtual Screen or Bridged Window |
-| **Passwords & Keys** | Encrypted Master Password Vault | Short-lived, temporary session tokens |
-| **Cleanup** | Permanent | **Zero Residue**: Memory is wiped completely clean on exit |
-
----
-
-## Universal AI Tool Connections (Model Context Protocol)
-
-RobOS equips all AI coding assistants (Claude Code, Google Antigravity, GitHub Copilot, Google Gemini) with a standardized set of development tools:
-- **Architecture Tool**: Read and modify system topology maps and services.
-- **API Contract Tool**: Validate OpenAPI and TypeSpec data models.
-- **Workspace Tool**: Automatically create, switch, and manage Git branches.
-- **Cloud & Kubernetes Tool**: Trigger container deployments and stream live server logs.
-- **Database & REST Tool**: Run live SQL queries and execute REST API test suites.
-
----
-
-## Next Steps
-
-- **[PR Review Theater & Verification]({{ site.baseurl }}{% link pr-review-theater.md %})**: Experience the 6-stage multi-modal review theater with verified Knowledge Graph certifications.
-- **[RobOS Skills & CLI Macros]({{ site.baseurl }}{% link robos-skills.md %})**: Master cross-agent AI skills and parameter validation.
-- **[RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover core architectural innovations and strategic advantages.
-- **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
-
+| Page | What it covers |
+|:---|:---|
+| [PR Review Theater]({{ site.baseurl }}{% link pr-review-theater.md %}) | The review window: tabs, how to open a review, creating and readying a PR, the walkthrough, and the launch manifest. |
+| [Walkthroughs and proof of work]({{ site.baseurl }}{% link walkthroughs.md %}) | The review lifecycle recording and its test, how the demo recorder works, and a catalog of the recorded demo scripts. |
+| [Agent tiers]({{ site.baseurl }}{% link agent-tiers.md %}) | What the Agent Tiers settings do today and what is not built yet. |
+| [Workspace preflight]({{ '/workspace-preflight.html' | relative_url }}) | How an agent gets a clean checkout before a task that needs one. |

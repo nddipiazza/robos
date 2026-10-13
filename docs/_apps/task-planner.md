@@ -3,50 +3,33 @@ title: "Task Planner"
 package: task-planner
 category: ai-agents
 icon: task-planner.svg
-summary: "AI-assisted project breakdown with interactive domain-specific web templates for epics and stories."
-description: "AI-assisted project breakdown with interactive domain-specific web templates for epics and stories."
+summary: "Describe a feature or pick a template, have GitHub Copilot draft epics and tasks, edit them, and create them as issues on your task server."
+description: "Also called Task Explorer in its window and launcher. It generates a task list with gh copilot, creates GitHub or Jira issues, and manages linked project plans in the knowledge graph."
 ---
 
-Tell the AI what you want to build in plain English, or choose from a library of **interactive task templates** spanning Services & APIs, Front-End Applications, Game Development (Godot, Unity, Unreal), Mobile Apps (React Native, Flutter), Libraries, Knowledge Graph & Schemas, Cloud Infrastructure, and DevOps. Each template provides an interactive web form tailored to the target domain, and developers can author and persist custom task templates in `~/.config/robos/task-planner/custom-templates/`. RobOS breaks goals down into structured Epics and child stories, synchronizing tickets to GitHub Issues, Gitea, or Jira.
+Task Planner (the window and `.desktop` entry are named **RobOS Task Explorer**) turns a plain-language description into a list of epics and tasks, lets you edit it, and creates the tickets on your task server.
 
-![Task Planner]({{ '/assets/images/screenshots/acme-petshop-step1-dag_frame.png' | relative_url }})
+## Requirements
 
-## First-Class Developer Agent Personas
+- A task server in `~/.config/robos/settings.json`. GitHub needs the `gh` CLI signed in. Jira needs its URL, a username and an API token in `pass` (`token_pass_path`). If none is set the window shows **Open Task Servers**; see [Task Servers]({{ '/apps/task-servers/' | relative_url }}).
+- The `gh copilot` extension. Generation runs `gh copilot -p <prompt> --allow-all-tools --silent` and gives up after 3 minutes.
 
-In RobOS, development work is not treated as generic code generation. Every task is governed by a **specialized Developer Agent Persona** (`robos:AgentPersona`), an entity in the Knowledge Graph conforming to W3C SHACL shape validation:
+## Plan new work
 
-- **🏛️ Software Architect** (`urn:robos:agent:software-architect`): Governs C4 domain models, system boundaries, ADRs, KGraph blast-radius diffs, and modular service decomposition. Automatically assigned to high-level Epics.
-- **🎨 Frontend Web Developer** (`urn:robos:agent:frontend-web-dev`): User interface and client specialist for Electron desktop DOM, React 18, accessible web components, RobOS dark navy/cyan design tokens, and contextBridge IPC security.
-- **⚔️ Game Developer** (`urn:robos:agent:game-dev`): Game systems developer specializing in Godot 4 LTS, GDScript, isometric turn-based combat, D&D 5e SRD rules, Flare RPG sprite integration, and headless scenario tests.
-- **⚙️ Backend Systems Developer** (`urn:robos:agent:backend-dev`): Distributed microservices engineer specializing in Java 21 / Spring Boot 3, Node.js / Fastify, OpenAPI 3.1 contracts, gRPC Protobuf stubs, and zero-leak secrets.
-- **💾 Data & Storage Engineer** (`urn:robos:agent:data-engineer-dev`): Relational schema designer for PostgreSQL, versioned Flyway migrations, Kafka event streaming pipelines, NoSQL collections, and ACID indexing.
-- **☁️ DevOps & Cloud Engineer** (`urn:robos:agent:devops-engineer`): Infrastructure engineer managing multi-cluster Kubernetes manifests, Helm charts, Dockerfiles, ArgoCD GitOps pipelines, and Prometheus monitoring.
+1. Pick a project in the **Projects** list, or create one, and click **+ Plan New Feature**. Fill in the tech stack and architecture context, the microservices or repositories involved, and optionally a **Parent Epic** (for Jira, an existing epic).
+2. Either describe the work in the prompt box and click **Generate with AI**, or choose a template. **Browse All Templates** opens the library; there are 67 built-in templates in ten categories (Services & APIs, Front-End Applications, Game Development, Mobile Applications, Libraries & SDKs, Knowledge Graph & Schemas, Data & Storage, Cloud & Infrastructure, DevOps & Observability, RobOS Platform & Agent Extensions). A template opens a form, and **Generate Task Plan** turns your answers into tasks. **Create Custom Template** saves your own under `~/.config/robos/task-planner/custom-templates/`.
+3. The AI may ask follow-up questions as an "Interactive Architecture Form" (Previous / Next Question) before **Generate Epics & Tasks**.
+4. The result appears under **Project Tasks & Epics**. Use **+ Add Epic** and **+ Add Task** to edit it, and **Save to Project** to keep it locally in `~/.config/robos/task-planner/projects/`.
+5. **Sync All to Server** creates the issues: `gh issue create` for GitHub (with a `role:<persona>` label added), or the Jira REST API. A link between a blocker and a blocked task is created too.
 
-### Role-Aware Epic Breakdown Workflow
+## Personas
 
-```mermaid
-graph LR
-    Epic["High-Level Epic<br/>(Software Architect)"] --> T1["UI Components & Views<br/>(Frontend Web Dev)"]
-    Epic --> T2["Core Microservices & APIs<br/>(Backend Dev)"]
-    Epic --> T3["Database & Migrations<br/>(Data & Storage Engineer)"]
-    Epic --> T4["Tactical Encounter / Loop<br/>(Game Dev)"]
-    Epic --> T5["K8s Manifests & GitOps<br/>(DevOps Engineer)"]
+Each generated task is assigned a developer persona (for example Software Architect, Frontend Web Developer, Backend Systems Developer), and the prompt includes the persona list. **Agent Personas & Prompts** lets you edit them, add custom ones, or **Restore Defaults**. They are the same personas that [Task Implementer]({{ '/apps/task-implementer/' | relative_url }}) uses.
 
-    T1 --> KGraph["Dual-State Knowledge Graph<br/>(robos:assignedAgent & role)"]
-    T2 --> KGraph
-    T3 --> KGraph
-    T4 --> KGraph
-    T5 --> KGraph
+## KGraph Project Plans
 
-    KGraph --> Impl["Task Implementer<br/>(Role-Specific Directives & Guidance)"]
-```
+**KGraph Project Plans** is a separate workflow for plans over issues that already exist. Start the app with `ROBOS_GRAPH_ROOT` set to the directory that contains `.robos`. You paste a version-1 plan that lists existing GitHub issue URLs. **Preview plan** reads those issues with your `gh` login and validates the graph, and **Save reviewed plan** writes the plan to the project node. It does not create, close or approve GitHub issues. A command-line equivalent is `packages/task-planner/bin/project-plan.js` with `list`, `view`, `export`, `propose --file` and `apply --file`. The format, status values and limits are in `packages/task-planner/PROJECT-PLANS.md`.
 
-![RobOS Developer Agent Personas Architecture]({{ '/assets/images/architecture/developer-agent-personas.jpg' | relative_url }})
+## Run it
 
-### Interactive Persona Management & Directives
-
-Developers can inspect and customize agent personas directly within the Task Planner UI:
-1. **Personas Modal (`🤖 Agent Personas`)**: Review and edit core system prompts, RobOS development guidance, epic breakdown directives, and implementation instructions for any role, or create custom personas.
-2. **Card-Level Role Selector**: Each generated task card displays its assigned agent role and allows instant re-assignment across specialized personas.
-3. **Editable Implementation Directives**: Expanding a task card's directives box lets developers override prompts and attach custom constraints (e.g., WCAG compliance, memory optimization, or specific rule variants) before syncing to GitHub or Jira.
-
+Launch from the app launcher, or run `npm start` in `packages/task-planner`.

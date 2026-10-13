@@ -16,7 +16,7 @@ body_class: home
         <a class="h-btn" href="{{ '/docs/' | relative_url }}">Read the docs</a>
         <a class="h-text-link" href="https://github.com/nddipiazza/robos" target="_blank" rel="noopener">Source on GitHub</a>
       </div>
-      <p class="h-small"><a href="{{ '/download/' | relative_url }}">Other install options</a>: from source, Ubuntu desktop, or a QEMU/KVM image.</p>
+      <p class="h-small"><a href="{{ '/download/' | relative_url }}">Other install options</a>: from source, a GNOME launcher, the appliance on a USB drive, or a QEMU image.</p>
     </div>
     <dl class="h-facts" aria-label="Facts about RobOS">
       <div><dt>Release</dt><dd><a href="https://github.com/nddipiazza/robos/releases/tag/v0.0.7" target="_blank" rel="noopener">v0.0.7</a></dd></div>
@@ -255,19 +255,18 @@ body_class: home
   <div class="wrap h-install-grid">
     <div>
       <p class="h-label">Install</p>
-      <h2>Run it in a few minutes</h2>
-      <p class="h-sub">Installers for macOS, Linux and Windows are on the download page. To run from source you need Node.js 20+ and Git; Docker is optional and used for headless proof-of-work.</p>
+      <h2>Run an app from source</h2>
+      <p class="h-sub">The macOS, Linux and Windows downloads install the RobOS appliance on a USB drive. To run the apps on the machine you have now, run them from source. You need Node.js 20+, Git and a desktop session.</p>
       <div class="h-cta">
-        <a class="h-btn h-btn-primary" href="{{ '/download/' | relative_url }}">Go to downloads</a>
-        <a class="h-text-link" href="{{ '/v1/getting-started.html' | relative_url }}">Installation guide</a>
+        <a class="h-btn h-btn-primary" href="{{ '/download/' | relative_url }}">All install options</a>
+        <a class="h-text-link" href="{{ '/v1/getting-started.html' | relative_url }}">Get started guide</a>
       </div>
     </div>
     <figure class="h-code h-code-flat">
-      <figcaption><b>From source</b><span>any OS</span></figcaption>
+      <figcaption><b>From source</b><span>pr-review is one app; run the script with no argument to list them</span></figcaption>
 <pre><code>git clone https://github.com/nddipiazza/robos.git
 cd robos
-npm install
-electron packages/pr-review</code></pre>
+scripts/dev-launch.sh pr-review</code></pre>
     </figure>
   </div>
 </section>
