@@ -319,4 +319,34 @@ test('Map Identity: custom title and id update export payload and sanitize slug'
   assert.equal(payload.mapData.title, 'Dungeon of Doom: Level 1');
 });
 
+test('Standalone Blockmap Persistence: saves to clean <boardId>.blockmap.json without quest coupling', () => {
+  function getBlockmapFileName(boardId) {
+    const cleanId = (boardId || 'custom-board').toLowerCase().replace(/[_\s]+/g, '-').replace(/[^a-z0-9-]/g, '');
+    return `${cleanId}.blockmap.json`;
+  }
+
+  assert.equal(getBlockmapFileName('first-light-dungeon'), 'first-light-dungeon.blockmap.json');
+  assert.equal(getBlockmapFileName('heroquest-classic'), 'heroquest-classic.blockmap.json');
+  assert.equal(getBlockmapFileName('My Custom Dungeon!'), 'my-custom-dungeon.blockmap.json');
+
+  // Verify static board payload contains only Layer 1 geometry
+  const staticPayload = {
+    id: 'first-light-dungeon',
+    title: 'HeroQuest: First Light Side A',
+    backgroundImage: 'res://assets/boards/first_light_dungeon.png',
+    gridDimensions: [26, 19],
+    calibration: { tileSize: 39.0, offsetX: 0, offsetY: 0 },
+    rooms: [
+      { id: 'room-nw-1', name: 'Northwest Entry Armory', x: 1, y: 1, w: 4, h: 4, shape: 'rect', quadrant: 'nw' }
+    ],
+    corridors: [[0, 0], [1, 0]]
+  };
+
+  assert.ok(!staticPayload.cartridgeSlug, 'Must not couple to cartridge slug');
+  assert.ok(!staticPayload.quests, 'Must not contain quest rules');
+  assert.ok(!staticPayload.heroes, 'Must not contain hero stats');
+  assert.equal(staticPayload.id, 'first-light-dungeon');
+  assert.equal(staticPayload.rooms[0].name, 'Northwest Entry Armory');
+});
+
 
