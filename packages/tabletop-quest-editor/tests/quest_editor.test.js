@@ -8,7 +8,9 @@ const fs = require('fs');
 const {
   validateQuest,
   interpretVoiceQuestCommands,
-  executeVoiceMapCommands
+  executeVoiceMapCommands,
+  setupSplitDividers,
+  dom
 } = require('../renderer/app.js');
 
 // Helpers mirroring app.js math & logic
@@ -1440,5 +1442,217 @@ test('Voice Map Setup: interprets spoken quest instructions and places items cle
   assert.equal(val.totalErrors, 0);
   assert.equal(val.errors.length, 0);
 });
+
+test('Resizable Split Dividers: enables resizing of tool palette and sidebar with clamping and reset defaults', (t) => {
+  // 1. Verify HTML Structure
+  const htmlPath = path.join(__dirname, '..', 'renderer', 'index.html');
+  const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+
+  assert.ok(htmlContent.includes('id="resizer-left"'), 'index.html must contain #resizer-left');
+  assert.ok(htmlContent.includes('id="resizer-right"'), 'index.html must contain #resizer-right');
+
+  // Verify left divider attributes and positioning
+  const leftResizerMatch = htmlContent.match(/<div[^>]*id="resizer-left"[^>]*>/s);
+  assert.ok(leftResizerMatch, '#resizer-left markup must be present');
+  assert.ok(leftResizerMatch[0].includes('class="split-divider col-resize"'), '#resizer-left has split-divider class');
+  assert.ok(leftResizerMatch[0].includes('data-target="prev"'), '#resizer-left targets previous element (palette)');
+  assert.ok(leftResizerMatch[0].includes('data-min="110"'), '#resizer-left min-width is 110');
+  assert.ok(leftResizerMatch[0].includes('data-max="380"'), '#resizer-left max-width is 380');
+  assert.ok(leftResizerMatch[0].includes('role="separator"'), '#resizer-left has separator role');
+  assert.ok(leftResizerMatch[0].includes('aria-orientation="vertical"'), '#resizer-left vertical orientation');
+
+  // Verify right divider attributes and positioning
+  const rightResizerMatch = htmlContent.match(/<div[^>]*id="resizer-right"[^>]*>/s);
+  assert.ok(rightResizerMatch, '#resizer-right markup must be present');
+  assert.ok(rightResizerMatch[0].includes('class="split-divider col-resize"'), '#resizer-right has split-divider class');
+  assert.ok(rightResizerMatch[0].includes('data-target="next"'), '#resizer-right targets next element (sidebar)');
+  assert.ok(rightResizerMatch[0].includes('data-min="240"'), '#resizer-right min-width is 240');
+  assert.ok(rightResizerMatch[0].includes('data-max="680"'), '#resizer-right max-width is 680');
+  assert.ok(rightResizerMatch[0].includes('role="separator"'), '#resizer-right has separator role');
+  assert.ok(rightResizerMatch[0].includes('aria-orientation="vertical"'), '#resizer-right vertical orientation');
+
+  // 2. Verify CSS rules
+  const cssPath = path.join(__dirname, '..', 'renderer', 'style.css');
+  const cssContent = fs.readFileSync(cssPath, 'utf8');
+
+  assert.ok(cssContent.includes('.split-divider'), 'CSS defines .split-divider');
+  assert.ok(cssContent.includes('cursor: col-resize'), 'CSS defines col-resize cursor');
+  assert.ok(cssContent.includes('.split-divider::after'), 'CSS defines divider border line pseudo-element');
+  assert.ok(cssContent.includes('.split-divider:hover::after'), 'CSS defines hover accent glow state');
+  assert.ok(cssContent.includes('body.resizing'), 'CSS defines active drag resizing body state');
+  assert.ok(cssContent.includes('min-width: 110px'), 'tool-palette min-width set to 110px in CSS');
+  assert.ok(cssContent.includes('min-width: 240px'), 'sidebar-right min-width set to 240px in CSS');
+
+  // 3. Verify Divider Sizing Math & Clamping Logic
+  function calculateNewWidth(targetDirection, startSize, deltaX, minSize, maxSize) {
+    if (targetDirection === 'prev') {
+      return Math.max(minSize, Math.min(maxSize, startSize + deltaX));
+    } else {
+      return Math.max(minSize, Math.min(maxSize, startSize - deltaX));
+    }
+  }
+
+  // Left Tool Palette Clamping (min: 110, max: 380, default: 140)
+  assert.equal(calculateNewWidth('prev', 140, 50, 110, 380), 190);
+  assert.equal(calculateNewWidth('prev', 140, -10, 110, 380), 130);
+  assert.equal(calculateNewWidth('prev', 140, -60, 110, 380), 110); // clamped to min 110
+  assert.equal(calculateNewWidth('prev', 140, -100, 110, 380), 110); // clamped to min 110
+  assert.equal(calculateNewWidth('prev', 140, 200, 110, 380), 340);
+  assert.equal(calculateNewWidth('prev', 140, 300, 110, 380), 380); // clamped to max 380
+
+  // Right Inspector Sidebar Clamping (min: 240, max: 680, default: 360)
+  // Dragging left (negative deltaX) increases right sidebar width: startSize - (-deltaX)
+  assert.equal(calculateNewWidth('next', 360, -100, 240, 680), 460);
+  assert.equal(calculateNewWidth('next', 360, 50, 240, 680), 310);
+  assert.equal(calculateNewWidth('next', 360, 150, 240, 680), 240); // clamped to min 240
+  assert.equal(calculateNewWidth('next', 360, 250, 240, 680), 240); // clamped to min 240
+  assert.equal(calculateNewWidth('next', 360, -300, 240, 680), 660);
+  assert.equal(calculateNewWidth('next', 360, -400, 240, 680), 680); // clamped to max 680
+
+  // 4. Functional DOM Event Simulation for setupSplitDividers
+  const savedDocument = global.document;
+  const savedLocalStorage = global.localStorage;
+  const savedViewport = dom.viewport;
+  const savedCanvas = dom.canvas;
+  const savedCtx = dom.ctx;
+
+  const storageMock = {};
+  global.localStorage = {
+    getItem: (key) => storageMock[key] || null,
+    setItem: (key, val) => { storageMock[key] = String(val); },
+    removeItem: (key) => { delete storageMock[key]; }
+  };
+
+  const createMockElement = (id, className, attrs = {}, width = 140) => {
+    const listeners = {};
+    const classes = new Set(className ? className.split(' ') : []);
+    const element = {
+      id,
+      className,
+      style: { width: `${width}px`, flex: `0 0 ${width}px` },
+      classList: {
+        add: (c) => classes.add(c),
+        remove: (c) => classes.delete(c),
+        contains: (c) => classes.has(c)
+      },
+      getAttribute: (k) => attrs[k] !== undefined ? attrs[k] : null,
+      setAttribute: (k, v) => { attrs[k] = v; },
+      addEventListener: (evt, handler) => {
+        if (!listeners[evt]) listeners[evt] = [];
+        listeners[evt].push(handler);
+      },
+      dispatchEvent: (evt, data) => {
+        if (listeners[evt]) {
+          listeners[evt].forEach(fn => fn(data || {}));
+        }
+      },
+      setPointerCapture: () => {},
+      releasePointerCapture: () => {},
+      getBoundingClientRect: () => ({ width: parseInt(element.style.width, 10) || width, height: 600 }),
+      previousElementSibling: null,
+      nextElementSibling: null
+    };
+    return element;
+  };
+
+  const mockPalette = createMockElement('tool-palette', 'tool-palette', {}, 140);
+  const mockResizerLeft = createMockElement('resizer-left', 'split-divider col-resize', {
+    'data-target': 'prev',
+    'data-min': '110',
+    'data-max': '380'
+  });
+  const mockViewport = createMockElement('canvas-viewport', 'canvas-viewport', {}, 800);
+  const mockResizerRight = createMockElement('resizer-right', 'split-divider col-resize', {
+    'data-target': 'next',
+    'data-min': '240',
+    'data-max': '680'
+  });
+  const mockSidebar = createMockElement('sidebar-right', 'sidebar-right', {}, 360);
+
+  // Wire sibling relationships
+  mockPalette.nextElementSibling = mockResizerLeft;
+  mockResizerLeft.previousElementSibling = mockPalette;
+  mockResizerLeft.nextElementSibling = mockViewport;
+
+  mockViewport.previousElementSibling = mockResizerLeft;
+  mockViewport.nextElementSibling = mockResizerRight;
+
+  mockResizerRight.previousElementSibling = mockViewport;
+  mockResizerRight.nextElementSibling = mockSidebar;
+  mockSidebar.previousElementSibling = mockResizerRight;
+
+  const mockBody = createMockElement('body', '');
+  global.document = {
+    body: mockBody,
+    querySelectorAll: (selector) => {
+      if (selector === '.split-divider') return [mockResizerLeft, mockResizerRight];
+      return [];
+    }
+  };
+
+  let renderCount = 0;
+  dom.viewport = mockViewport;
+  dom.canvas = { width: 0, height: 0 };
+  dom.ctx = new Proxy({}, {
+    get: (target, prop) => {
+      if (prop === 'clearRect') {
+        renderCount++;
+      }
+      return () => {};
+    }
+  });
+
+  try {
+    setupSplitDividers();
+
+    // Test Left Resizer Drag (+60px)
+    mockResizerLeft.dispatchEvent('pointerdown', { clientX: 100, pointerId: 1, preventDefault: () => {} });
+    assert.ok(mockResizerLeft.classList.contains('active'), 'Resizer has active class during drag');
+    assert.ok(mockBody.classList.contains('resizing'), 'Body has resizing class during drag');
+
+    mockResizerLeft.dispatchEvent('pointermove', { clientX: 160, pointerId: 1 });
+    assert.equal(mockPalette.style.width, '200px', 'Tool palette width increases by 60px');
+    assert.equal(mockPalette.style.flex, '0 0 200px');
+    assert.equal(storageMock['robos_quest_editor_tool_palette_w'], '200');
+
+    mockResizerLeft.dispatchEvent('pointerup', { pointerId: 1 });
+    assert.ok(!mockResizerLeft.classList.contains('active'), 'Resizer loses active class on pointerup');
+    assert.ok(!mockBody.classList.contains('resizing'), 'Body loses resizing class on pointerup');
+
+    // Test Left Resizer Double Click (Reset to 140px default)
+    mockResizerLeft.dispatchEvent('dblclick', {});
+    assert.equal(mockPalette.style.width, '140px', 'Tool palette resets to 140px on dblclick');
+    assert.equal(storageMock['robos_quest_editor_tool_palette_w'], undefined, 'Storage entry cleared on reset');
+
+    // Test Right Resizer Drag (-100px dragging left widens sidebar by 100px)
+    mockResizerRight.dispatchEvent('pointerdown', { clientX: 700, pointerId: 2, preventDefault: () => {} });
+    assert.ok(mockResizerRight.classList.contains('active'));
+
+    mockResizerRight.dispatchEvent('pointermove', { clientX: 600, pointerId: 2 });
+    assert.equal(mockSidebar.style.width, '460px', 'Sidebar width increases by 100px when dragged left');
+    assert.equal(mockSidebar.style.flex, '0 0 460px');
+    assert.equal(storageMock['robos_quest_editor_sidebar_right_w'], '460');
+
+    mockResizerRight.dispatchEvent('pointerup', { pointerId: 2 });
+    assert.ok(!mockResizerRight.classList.contains('active'));
+
+    // Test Right Resizer Double Click (Reset to 360px default)
+    mockResizerRight.dispatchEvent('dblclick', {});
+    assert.equal(mockSidebar.style.width, '360px', 'Sidebar resets to 360px on dblclick');
+    assert.equal(storageMock['robos_quest_editor_sidebar_right_w'], undefined, 'Storage entry cleared on reset');
+
+    // Verify canvas redraw and dimensions were updated during resizing
+    assert.equal(dom.canvas.width, 800, 'Canvas width resized to viewport width');
+    assert.equal(dom.canvas.height, 600, 'Canvas height resized to viewport height');
+    assert.ok(renderCount > 0, 'Canvas render was invoked');
+  } finally {
+    global.document = savedDocument;
+    global.localStorage = savedLocalStorage;
+    dom.viewport = savedViewport;
+    dom.canvas = savedCanvas;
+    dom.ctx = savedCtx;
+  }
+});
+
 
 
