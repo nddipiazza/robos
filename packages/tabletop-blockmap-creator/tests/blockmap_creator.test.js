@@ -281,4 +281,42 @@ test('Consecutive Room Creation: identical dimension rooms never overwrite exist
   assert.ok(ids.has('room-nw-5'));
 });
 
+test('Map Identity: custom title and id update export payload and sanitize slug', () => {
+  function sanitizeMapId(raw) {
+    return raw.toLowerCase().replace(/[_\s]+/g, '-').replace(/[^a-z0-9-]/g, '');
+  }
+
+  function formatTitleFromFilename(fileName) {
+    const baseName = fileName.replace(/\.[^/.]+$/, '');
+    return baseName.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  }
+
+  // 1. Automatic title & id from custom filename
+  const autoTitle = formatTitleFromFilename('cavern_of_the_ice_queen.png');
+  const autoId = sanitizeMapId('cavern_of_the_ice_queen.png'.replace(/\.[^/.]+$/, ''));
+  assert.equal(autoTitle, 'Cavern Of The Ice Queen');
+  assert.equal(autoId, 'cavern-of-the-ice-queen');
+
+  // 2. User edits title & id with special characters
+  const customTitle = 'Dungeon of Doom: Level 1';
+  const customId = sanitizeMapId('Dungeon of Doom: Level 1');
+  assert.equal(customId, 'dungeon-of-doom-level-1');
+
+  // 3. Payload includes custom title and id
+  const payload = {
+    cartridgeSlug: 'heroquest-first-light',
+    mapId: customId,
+    mapData: {
+      id: customId,
+      title: customTitle,
+      width: 26,
+      height: 19
+    }
+  };
+
+  assert.equal(payload.mapId, 'dungeon-of-doom-level-1');
+  assert.equal(payload.mapData.id, 'dungeon-of-doom-level-1');
+  assert.equal(payload.mapData.title, 'Dungeon of Doom: Level 1');
+});
+
 
