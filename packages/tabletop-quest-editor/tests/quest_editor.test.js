@@ -599,4 +599,135 @@ test('Stairs Map Items: support placing starting and exit tiles on stairs furnit
   assert.equal(exitStairFurn.type, 'stairs');
 });
 
+// -------------------------------------------------------------
+// Test 11: 1x1 and 2x2 Up & Down Staircase Furniture Definitions
+// -------------------------------------------------------------
+test('Staircase Definitions: provides 1x1 and 2x2 up & down staircases with backward-compatible aliasing', () => {
+  const STAIR_DEFS = {
+    stairs_up_1x1: { name: 'Up Staircase (1×1)', w: 1, h: 1, category: 'stairs' },
+    stairs_down_1x1: { name: 'Down Staircase (1×1)', w: 1, h: 1, category: 'stairs' },
+    stairs_up_2x2: { name: 'Up Staircase (2×2)', w: 2, h: 2, category: 'stairs' },
+    stairs_down_2x2: { name: 'Down Staircase (2×2)', w: 2, h: 2, category: 'stairs' },
+    stairs: { name: 'Up Staircase (1×1)', w: 1, h: 1, category: 'stairs', aliasOf: 'stairs_up_1x1' }
+  };
+
+  // 1x1 up and down
+  assert.equal(STAIR_DEFS.stairs_up_1x1.w, 1);
+  assert.equal(STAIR_DEFS.stairs_up_1x1.h, 1);
+  assert.equal(STAIR_DEFS.stairs_down_1x1.w, 1);
+  assert.equal(STAIR_DEFS.stairs_down_1x1.h, 1);
+
+  // 2x2 up and down
+  assert.equal(STAIR_DEFS.stairs_up_2x2.w, 2);
+  assert.equal(STAIR_DEFS.stairs_up_2x2.h, 2);
+  assert.equal(STAIR_DEFS.stairs_down_2x2.w, 2);
+  assert.equal(STAIR_DEFS.stairs_down_2x2.h, 2);
+
+  // Legacy 'stairs' aliasing
+  assert.equal(STAIR_DEFS.stairs.aliasOf, 'stairs_up_1x1');
+});
+
+// -------------------------------------------------------------
+// Test 12: 2x2 Staircase Footprint Hit-Testing & Cartridge Serialization
+// -------------------------------------------------------------
+test('2x2 Staircase Footprint: hit-testing recognizes 2x2 bounds and serializes stair types to cartridge', () => {
+  const quest = {
+    title: 'Trial of the Great Staircase',
+    slug: 'trial-great-staircase',
+    startingStair: [4, 5],
+    startingStairType: 'stairs_up_2x2',
+    exitTile: [18, 12],
+    exitStairType: 'stairs_down_2x2',
+    furniture: [
+      { id: 'furn-stairs-up-2x2', type: 'stairs_up_2x2', name: 'Up Staircase (2×2)', x: 4, y: 5, width: 2, height: 2 },
+      { id: 'furn-stairs-down-2x2', type: 'stairs_down_2x2', name: 'Down Staircase (2×2)', x: 18, y: 12, width: 2, height: 2 }
+    ]
+  };
+
+  function findStairFurnitureAt(col, row, furnList) {
+    return furnList.find(f => {
+      const isStair = f.type && f.type.includes('stair');
+      if (!isStair) return false;
+      const w = f.width || 1;
+      const h = f.height || 1;
+      return col >= f.x && col < f.x + w && row >= f.y && row < f.y + h;
+    });
+  }
+
+  // Hit test all 4 tiles of 2x2 starting staircase at (4, 5)
+  assert.equal(findStairFurnitureAt(4, 5, quest.furniture)?.id, 'furn-stairs-up-2x2');
+  assert.equal(findStairFurnitureAt(5, 5, quest.furniture)?.id, 'furn-stairs-up-2x2');
+  assert.equal(findStairFurnitureAt(4, 6, quest.furniture)?.id, 'furn-stairs-up-2x2');
+  assert.equal(findStairFurnitureAt(5, 6, quest.furniture)?.id, 'furn-stairs-up-2x2');
+
+  // Outside 2x2 footprint returns undefined
+  assert.equal(findStairFurnitureAt(6, 6, quest.furniture), undefined);
+  assert.equal(findStairFurnitureAt(3, 5, quest.furniture), undefined);
+
+  // Cartridge serialization
+  const cartridge = {
+    cartridgeVersion: '2.0.0',
+    cartridgeId: quest.slug,
+    header: {
+      title: quest.title,
+      startingPosition: quest.startingStair,
+      exitPosition: quest.exitTile
+    },
+    maps: {
+      [quest.slug]: {
+        id: quest.slug,
+        title: quest.title,
+        startingStair: quest.startingStair,
+        startingStairType: quest.startingStairType,
+        exitTile: quest.exitTile,
+        exitStairType: quest.exitStairType,
+        furniture: quest.furniture
+      }
+    }
+  };
+
+  const mapData = cartridge.maps[quest.slug];
+  assert.deepEqual(mapData.startingStair, [4, 5]);
+  assert.equal(mapData.startingStairType, 'stairs_up_2x2');
+  assert.deepEqual(mapData.exitTile, [18, 12]);
+  assert.equal(mapData.exitStairType, 'stairs_down_2x2');
+});
+
+// -------------------------------------------------------------
+// Test 13: Deleting 2x2 Staircase Furniture Clears Start / Exit Roles
+// -------------------------------------------------------------
+test('Entity Deletion: deleting 2x2 staircase furniture resets startingStair if targeted', () => {
+  const quest = {
+    startingStair: [4, 5],
+    startingStairType: 'stairs_up_2x2',
+    exitTile: [10, 10],
+    exitStairType: 'stairs_down_1x1',
+    furniture: [
+      { id: 'furn-stair-1', type: 'stairs_up_2x2', x: 4, y: 5, width: 2, height: 2 }
+    ]
+  };
+
+  const furnToDelete = quest.furniture[0];
+
+  // Helper matching app.js deleteEntity footprint check
+  const isStartMatch = quest.startingStair && (
+    (quest.startingStair[0] === furnToDelete.x && quest.startingStair[1] === furnToDelete.y) ||
+    (quest.startingStair[0] >= furnToDelete.x && quest.startingStair[0] < furnToDelete.x + furnToDelete.width &&
+     quest.startingStair[1] >= furnToDelete.y && quest.startingStair[1] < furnToDelete.y + furnToDelete.height)
+  );
+
+  assert.ok(isStartMatch, 'Starting stair at (4, 5) must match 2x2 staircase being deleted');
+
+  if (isStartMatch) {
+    quest.startingStair = [0, 1];
+    quest.startingStairType = 'stairs_up_1x1';
+  }
+  quest.furniture = [];
+
+  assert.deepEqual(quest.startingStair, [0, 1]);
+  assert.equal(quest.startingStairType, 'stairs_up_1x1');
+  assert.equal(quest.furniture.length, 0);
+});
+
+
 

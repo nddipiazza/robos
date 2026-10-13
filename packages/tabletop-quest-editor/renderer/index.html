@@ -193,7 +193,10 @@
           <!-- Furniture suboptions -->
           <div id="subopts-furniture" class="subopts-group" style="display:none;">
             <select id="select-furniture-type" class="dropdown dropdown-sm">
-              <option value="stairs">🪜 Spiral Staircase / Stairs (1×1)</option>
+              <option value="stairs_up_1x1">🪜 Up Staircase (1×1)</option>
+              <option value="stairs_down_1x1">🪜 Down Staircase (1×1)</option>
+              <option value="stairs_up_2x2">🪜 Up Staircase (2×2)</option>
+              <option value="stairs_down_2x2">🪜 Down Staircase (2×2)</option>
               <option value="chest" selected>📦 Treasure Chest (1×1)</option>
               <option value="table">🪵 Table (2×2)</option>
               <option value="bookcase">📚 Bookcase (3×1)</option>
@@ -253,6 +256,15 @@
             <p style="font-size:10px; color:#64748b; margin-top:6px; font-style:italic;">
               Note: Border tiles are normally non-walkable, but the start position can exist there.
             </p>
+            <div class="form-row" style="margin-top:8px;">
+              <label for="select-start-stair-type"><strong style="font-size:11px;">Staircase Style:</strong></label>
+              <select id="select-start-stair-type" class="dropdown dropdown-sm">
+                <option value="stairs_up_1x1" selected>🪜 Up Staircase (1×1)</option>
+                <option value="stairs_down_1x1">🪜 Down Staircase (1×1)</option>
+                <option value="stairs_up_2x2">🪜 Up Staircase (2×2)</option>
+                <option value="stairs_down_2x2">🪜 Down Staircase (2×2)</option>
+              </select>
+            </div>
           </div>
 
           <!-- Exit tile suboptions -->
@@ -265,6 +277,15 @@
             </div>
             <div id="subopts-exit-border-badge" class="badge" style="margin-top:4px; display:none; font-size:10px; color:#34d399; border-color:#059669;">
               Border Tile (Outside Exit)
+            </div>
+            <div class="form-row" style="margin-top:8px;">
+              <label for="select-exit-stair-type"><strong style="font-size:11px;">Staircase Style:</strong></label>
+              <select id="select-exit-stair-type" class="dropdown dropdown-sm">
+                <option value="stairs_down_1x1" selected>🪜 Down Staircase (1×1)</option>
+                <option value="stairs_up_1x1">🪜 Up Staircase (1×1)</option>
+                <option value="stairs_down_2x2">🪜 Down Staircase (2×2)</option>
+                <option value="stairs_up_2x2">🪜 Up Staircase (2×2)</option>
+              </select>
             </div>
             <p style="font-size:10px; color:#64748b; margin-top:6px; font-style:italic;">
               Note: Border tiles are normally non-walkable, but the exit position can exist there.
