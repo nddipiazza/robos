@@ -36,6 +36,9 @@ RobOS has no shared company service and does not read your identity provider. Se
 
 Groups and people are plain JSON files. The apps do not sync them between machines. To give a colleague a group, copy its file into their `~/.config/robos/groups/` folder.
 
+![Identity providers and a directory sync adapter feeding people, groups and a team roster, which in turn feed task trackers, secrets and Kubernetes]({{ '/assets/images/enterprise-migration-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The people files, group files and team roster in the middle exist; the directory sync adapter and the automation on the right do not. The text on this page says what is built today.*
+
 ## Step 1: Set up each developer's machine
 
 Install RobOS first (see [Get started]({{ site.baseurl }}{% link getting-started.md %})). Then each developer launches **RobOS Setup Wizard** from the app launcher. It has 11 steps:
@@ -166,6 +169,9 @@ To keep a directory of people on each machine, use **RobOS People Directory**. I
 ## What the Sync Directory button does
 
 Group Manager has two buttons under the identity badge: **Sync Directory** and **Bootstrap**. Sync Directory opens a form with a name, email, GitHub username, organization, a provider drop-down (Okta, Microsoft Entra, LDAP / Active Directory, GitHub Enterprise Teams) and a team.
+
+![Developer onboarding flow from an enterprise identity provider through a single directory sync click to signing keys, team ownership, knowledge graph context and enterprise tool access]({{ '/assets/images/directory-sync-workflow.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The button does not query a directory or create signing keys today; the text on this page says what it writes.*
 
 ![Group Manager showing the Enterprise Directory Sync and Identity Setup form with five status lines below the fields]({{ '/assets/images/screenshots/existing-company-teams-mapped_frame.png' | relative_url }})
 {: .robos-zoomable-img }

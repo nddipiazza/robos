@@ -46,6 +46,9 @@ Some nodes you see in play are created in code, not saved in the scene. `PartyHU
 
 The root has `y_sort_enabled = true`, so children are drawn in order of their `y` position and a node lower on screen is in front. Each actor's origin should be at its feet. `Ground` sits at (0, 0) and so draws first.
 
+![Scene tree of a location, with autoload singletons, the main scene and a canvas layer]({{ '/assets/images/crpg-realm/crpg_scene_tree_architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The text on this page says what is built today: it shows a "YSort Entities" container under the scene root, but the real scenes have no such node and keep every gameplay node as a direct child of the root.*
+
 ### Why the scene must stay flat
 
 Several systems find gameplay nodes with `get_tree().current_scene.get_children()`, which returns direct children only: `GameState.get_scene_traps()`, the `battle.enemies` list that `GameControlServer` builds for `/api/v1/state`, party lookup, fireball targeting and enemy pack alerts. Put a trap or an enemy under a grouping node and these systems silently stop seeing it.
@@ -101,7 +104,13 @@ To link two scenes, instance `DoorPortal.tscn` as a direct child of the root of 
 
 `opens_quest_stage` is applied when the key opens the door, before `door_entered` is emitted.
 
+![Scene transitions through door portals, with the five acts in a row and notes on door portals, spawn coordinates, companions and camera clamping]({{ '/assets/images/crpg-realm/crpg_scene_portal_flow.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs, simplified: the door graph above is the accurate one, and some text in the lower panels is garbled. The text on this page says what is built today.*
+
 ## Map plate, colliders and camera
+
+![VillageSquare during a test run, with a cyan route through numbered waypoints]({{ '/assets/images/crpg-realm/village_square_overview.png' | relative_url }}){: .robos-zoomable-img }
+*VillageSquare during a test run. The cyan line and the "WP" badges are drawn by `HeroPlayer`'s `PathVisualizer` child. The 2560x1440 plate scrolls under the 1920x1080 viewport, and the buildings are part of the painted plate.*
 
 A location map has four parts, all direct children of the y-sorted root:
 
@@ -109,6 +118,9 @@ A location map has four parts, all direct children of the y-sorted root:
 2. Colliders: `StaticBody2D` nodes on collision layer 1. Map edges use `CollisionShape2D` rectangles. Buildings use `CollisionPolygon2D` outlines traced over the painted footprint.
 3. Actors and objects: hero, NPCs, enemies, doors, traps and items.
 4. `FogOfWar`, whose `map_width` and `map_height` default to 2560 and 1440. Set them to your plate size.
+
+![Layers of a 2.5D isometric map: plate texture, foundation colliders, y-sorted entities, fog of war and the HUD, with the camera limits]({{ '/assets/images/crpg-realm/crpg_isometric_world_layers.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The text on this page says what is built today: it shows the HUD as a fifth layer, but in the scenes it is a `CanvasLayer` child of the root, and `FogOfWar` is a node drawn over the world.*
 
 Because buildings are painted into the plate, the collider decides where the building "is". Trace only the base of the walls, not the roof, so the hero can walk "behind" the building. `VillageSquare.tscn` does this for each house:
 

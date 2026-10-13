@@ -161,3 +161,41 @@ The output points the client at `/usr/local/share/robos/robos-mcp-router/cli.js`
 | `~/.config/robos/` | App settings and data: `git-projects.json`, `mcp/servers.json`, `harnessrouter/`, `profiled/`, `agentd/`, `prompt-security-audit.json`, and an Electron `userData` folder per app. |
 | `/usr/local/share/robos/` | Installed apps and libraries on a RobOS machine. |
 | `~/.password-store/` | Secrets, in the Unix `pass` store. The graph stores references to them, not the values. |
+
+## Diagrams
+
+Three apps documented in the older architecture pages, with the data flow each page drew. They are simplified, and the app pages in the [app catalog]({{ site.baseurl }}{% link apps.md %}) describe what each app does today.
+
+Dev Central. The standup summary and blocker radar are part of its legacy dashboard.
+
+```mermaid
+graph TD
+    Dev["Software Engineer"] --> DevCentral["Dev Central"]
+    DevCentral -->|"sync PRs and issues"| GitHub["GitHub (gh CLI) and task servers"]
+    DevCentral -->|"legacy dashboard"| Radar["Blocker Radar"]
+    DevCentral -->|"legacy dashboard"| Standup["Standup summary"]
+```
+
+RobOS Documentation.
+
+```mermaid
+graph TD
+    User["Developer or architect"] -->|"inspect and edit"| App["RobOS Documentation app"]
+    App -->|"IPC bridge"| Main["Electron main process"]
+    Main -->|"query and mutate"| Store["SDLC Knowledge Graph Store"]
+    Store -->|"sync catalog"| Catalog[".robos/documentation.yaml"]
+    Store -->|"maintain pages"| Docs["docs/architecture/*.md"]
+    Store -->|"export static site"| WebGen["Web export"]
+    WebGen -->|"write"| Site["docs/system-documentation/index.html"]
+```
+
+RobOS eLearning.
+
+```mermaid
+graph TD
+    Learner["Developer or engineer"] -->|"labs and quizzes"| Player["RobOS eLearning player"]
+    Player -->|"IPC bridge"| Main["Electron main process"]
+    Main -->|"query courses"| Graph["SDLC Knowledge Graph Store"]
+    Player -->|"100% progress"| Cert["Completion certificate"]
+    Cert -->|"recorded in"| Graph
+```

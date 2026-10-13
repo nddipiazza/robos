@@ -26,7 +26,7 @@ Walks through the RobOS cRPG Editor using the campaign that ships with the game,
 The editor is an Electron app in [`packages/crpg-editor`](https://github.com/nddipiazza/robos/tree/main/packages/crpg-editor). It reads and writes JSON-LD files directly in `games/crpg-realm/`. There is no database and no export step: Save writes the file, and the game reads the same file.
 
 ![End-to-end cRPG campaign editor pipeline]({{ '/assets/images/crpg-realm/crpg_rescue_princess_tutorial_architecture.jpg' | relative_url }}){: .robos-zoomable-img }
-*Concept diagram from the original design docs. The text on this page says what is built today, for example that the cartridge runner does not play the story tree.*
+*Concept diagram from the original design docs. The text on this page says what is built today: the cartridge runner does not use the 5-ft collision grid and does not play the story tree.*
 
 ```mermaid
 graph TD
@@ -91,7 +91,7 @@ The story the shipped campaign tells, act by act:
 
 ```mermaid
 journey
-    title The Hero journey - Rescue of Princess Jennifer
+    title The Hero's Journey - Rescue of Princess Jennifer
     section Act I - The Royal Decree
       Hear King Alden's decree in the Throne Room: 5: Sir Caleb, King Alden
       Visit Master Torvald at the Dragonclaw Forge: 4: Sir Caleb, Torvald

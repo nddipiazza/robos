@@ -39,6 +39,9 @@ RobOS Preferences has an "AI Provider & Models" section with fields for Claude, 
 
 Group Manager shows **Sync Directory** and **Bootstrap** under the identity badge. Bootstrap opens a form titled "New Company Setup & Greenfield Bootstrap" with these fields: Company / Legal Entity Name, Domain Name / Tenant Slug, Root Administrator Full Name, Root Administrator Corporate Email and Root Admin Role. The button is **Bootstrap Organization & Activate Admin**.
 
+![Greenfield bootstrap flow from a founder form through a provisioning engine to root admin identity, team topologies, an AI hub and a starter architecture]({{ '/assets/images/new-company-bootstrap.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The button does not generate keys, set up an AI hub or create a starter architecture; the text on this page says what it writes.*
+
 ![Group Manager after Bootstrap, showing the Founding Core Engineering group with its seven sections and a second group, Cloud Platform and Infrastructure, in the sidebar]({{ '/assets/images/screenshots/new-company-security-baseline_frame.png' | relative_url }})
 {: .robos-zoomable-img }
 

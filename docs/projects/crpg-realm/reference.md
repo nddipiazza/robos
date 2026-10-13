@@ -100,6 +100,9 @@ The game has two ways to describe content, and they do not share a loader.
 {: .warning }
 Do not run `packages/crpg-builder` with `generate` or `create-game` against `games/crpg-realm`. Its default target is this folder, and it overwrites `data/v1/*.json`, `schemas/v1/`, `src/generated/v1/*.gd` (including `DataStoreV1.gd`, whose generated version has no trap or mod loading) and `project.godot`. The game was bootstrapped from the builder and then edited by hand. To try the builder, use `--target-dir` with a scratch folder. The builder reads the package at `.robos/kgraphs/crpg/package.jsonld`, which models only the original three-map slice.
 
+![The four stages of the original game generation]({{ '/assets/images/crpg-realm/game_generation_paradigm.png' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The text on this page says what is built today: the game was bootstrapped from the builder and then edited by hand, so the data files and `DataStoreV1.gd` no longer match what it would generate.*
+
 `python3 tests/validate_schemas.py` checks that ten data files parse and spot-checks a few records. It does not validate against the JSON Schemas, and `traps.json` is not in its list.
 
 ### KGraph JSON-LD folders
