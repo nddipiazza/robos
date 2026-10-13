@@ -6,7 +6,7 @@ icon: pass-unlock.svg
 summary: "Small dialog that asks for your GPG passphrase once a day and caches it in gpg-agent."
 description: "Presets your GPG passphrase into gpg-agent so pass and agents can read secrets for the day, and shows how many secret accesses were logged."
 related:
-  - /big-wins/devops-security-pass.html
+  - /big-wins.html
 ---
 
 Pass Unlock is a small always-on-top window, not a background daemon. It asks for your GPG passphrase and hands it to `gpg-agent`, so tools that call `pass` do not each prompt for it.

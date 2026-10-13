@@ -64,7 +64,7 @@ Issues from GitHub and Jira carry no persona field, so Task Implementer decides 
 {: .tip }
 The keyword rules are broad. A backend issue that mentions a "view" or "web" will be treated as frontend work. When the guess matters, add a `role:<slug>` label to the issue, or change the persona in the dropdown above the output before you click **Start Agent**.
 
-Task Planner assigns a persona to each planned task from the model's answer or, for templates, from the same keyword rules. On GitHub it does not write the persona to the issue, so the label is the only way to carry the choice into Task Implementer. See [Plan a feature in Task Planner]({{ '/training/agent-tasks/plan-a-feature.html' | relative_url }}).
+Task Planner assigns a persona to each planned task from the model's answer or, for templates, from the keyword rules in `agent-personas.js`. On GitHub it does not write the persona to the issue, so the label is the only way to carry the choice into Task Implementer. See [Plan a feature in Task Planner]({{ '/training/agent-tasks/plan-a-feature.html' | relative_url }}).
 
 ## Edit a persona in the app
 
@@ -100,9 +100,10 @@ Reopen the app to load it. The app form has no field for `executionMode`, so set
 
 The knowledge graph also holds `robos:AgentPersona` nodes in the organization package. Task Implementer and Task Planner do not read them, and editing a persona in the app does not change them.
 
-## Verify the persona tests
+## Check which personas are loaded
+
+From a checkout, this prints the slug of every persona, built-in and custom. Custom ones are marked with an asterisk:
 
 ```bash
-node --test packages/robos-test/tests/task-implementer/agent-personas.test.js
-node --test packages/robos-test/tests/task-planner/agent-personas.test.js
+node -e "const p = require('./packages/robos-lib/agent-personas'); console.log(p.loadAgentPersonas().map(x => x.slug + (x.isDefault ? '' : '*')).join(' '))"
 ```

@@ -6,7 +6,7 @@ icon: pass-manager.svg
 summary: "Desktop front end for the standard Unix password store (pass), with entries encrypted by GPG."
 description: "Browse, add, edit, delete and copy entries in your ~/.password-store, and create a GPG key and store if you do not have one. It shells out to the pass and gpg commands."
 related:
-  - /big-wins/devops-security-pass.html
+  - /big-wins.html
 ---
 
 Pass Manager is a graphical client for [pass](https://www.passwordstore.org/). It does not have its own storage format. Every action runs a `pass` or `gpg` command against `~/.password-store`, so the same entries work in a terminal.

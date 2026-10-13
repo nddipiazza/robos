@@ -76,6 +76,7 @@ The game has two ways to describe content, and they do not share a loader.
 2. **KGraph JSON-LD files** in `campaigns/`, `characters/`, `items/`, `enemies/`, `spells/`, `abilities/`, `events/` and `maps/` are what the [campaign editor]({{ '/projects/crpg-realm/campaign-editor-tutorial.html' | relative_url }}) reads and writes. The cartridge bundler compiles them into `cartridges/*.cartridge.json`, which `CartridgeWorld` plays.
 
 ### data/v1 files
+{: #data-v1-files }
 
 | File | Records | Read by |
 |:---|---:|:---|

@@ -102,7 +102,7 @@ A node the wizard writes looks like this, trimmed:
 }
 ```
 
-The `robos:repository` value is always `nddipiazza/<slug>` because the wizard does not ask for one. Change it to your repository.
+The `robos:repository` value is always `github.com/nddipiazza/<slug>` because the wizard does not ask for one. Change it to your repository.
 
 ## Other frameworks
 
