@@ -267,6 +267,31 @@ body {
   text-align: center;
 }
 
+#btn-toggle-room-names {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+#btn-toggle-room-names.active-toggle {
+  background: rgba(245, 158, 11, 0.22);
+  border-color: #f59e0b;
+  color: #fef08a;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.35);
+}
+
+#btn-toggle-room-names:not(.active-toggle) {
+  opacity: 0.65;
+  color: var(--text-muted);
+}
+
+#info-room-name:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
 /* ---------------- Workspace Layout ---------------- */
 .workspace {
   display: flex;
