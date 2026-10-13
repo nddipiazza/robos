@@ -86,8 +86,8 @@ class BlockmapCreator {
     this.imagePath = '';
     this.fileName = 'first_light_dungeon.png';
     this.boardId = 'first-light-dungeon';
-    this.boardTitle = 'HeroQuest: First Light Side A (Fortress of the Fire King)';
-    this.cartridgeSlug = 'heroquest-fortress-fire-king';
+    this.boardTitle = 'HeroQuest: First Light Side A';
+    this.cartridgeSlug = null;
 
     this.corridorTiles = new Set(); // "col,row" strings
     this.rooms = [];                // Array of { id, name, x, y, w, h, shape, tiles, tileSet, quadrant, color }
@@ -205,6 +205,29 @@ class BlockmapCreator {
         if (content) content.classList.add('active');
       });
     });
+
+    // Map Identity Controls
+    const inputMapTitle = document.getElementById('input-map-title');
+    if (inputMapTitle) {
+      inputMapTitle.addEventListener('input', (e) => {
+        this.boardTitle = e.target.value;
+        const infoTitle = document.getElementById('info-map-title-text');
+        if (infoTitle) infoTitle.textContent = this.boardTitle || 'Untitled Blockmap';
+      });
+      inputMapTitle.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === 'Escape') inputMapTitle.blur();
+      });
+    }
+
+    const inputMapId = document.getElementById('input-map-id');
+    if (inputMapId) {
+      inputMapId.addEventListener('input', (e) => {
+        this.boardId = e.target.value.toLowerCase().replace(/[_\s]+/g, '-').replace(/[^a-z0-9-]/g, '');
+      });
+      inputMapId.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === 'Escape') inputMapId.blur();
+      });
+    }
 
     // 1. Tile Size Controls
     const inputTile = document.getElementById('input-tile-size');
@@ -662,22 +685,7 @@ class BlockmapCreator {
         const rh = Math.min(this.rows - ry, Math.abs(r2 - r1) + 1);
 
         if (rw >= 1 && rh >= 1) {
-          let activeRoom = this.getSelectedRoom();
-          if (!activeRoom || (rw > 1 && rh > 1 && (activeRoom.w !== rw || activeRoom.h !== rh))) {
-            activeRoom = this.addNewRoom(rx, ry, rw, rh);
-          } else {
-            activeRoom.x = rx;
-            activeRoom.y = ry;
-            activeRoom.w = rw;
-            activeRoom.h = rh;
-            activeRoom.shape = 'rect';
-            const tiles = callGenerateRectTiles(rx, ry, rw, rh);
-            activeRoom.tiles = tiles;
-            activeRoom.tileSet = new Set(tiles.map(t => `${t[0]},${t[1]}`));
-            this.updateRoomInspector();
-            this.updateRoomListUI();
-            this.showToast(`Updated ${activeRoom.name} bounds: [${rx}, ${ry}] ${rw}×${rh}`);
-          }
+          this.addNewRoom(rx, ry, rw, rh);
         }
       } else if (this.activeTool === 'room' && this.roomMode === 'freeform') {
         if (this.currentFreeformStroke && (this.currentFreeformStroke.added.length > 0 || this.currentFreeformStroke.removed.length > 0)) {
@@ -739,13 +747,37 @@ class BlockmapCreator {
     return col >= room.x && col < room.x + room.w && row >= room.y && row < room.y + room.h;
   }
 
+  getNextRoomNumber() {
+    let maxNum = 0;
+    for (const r of this.rooms) {
+      const match = (r.name || '').match(/Room\s+(\d+)/i);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > maxNum) maxNum = num;
+      }
+    }
+    return maxNum > 0 ? maxNum + 1 : this.rooms.length + 1;
+  }
+
+  generateUniqueRoomId(quadrant) {
+    const existingIds = new Set(this.rooms.map(r => r.id));
+    let num = this.getNextRoomNumber();
+    let id = `room-${quadrant}-${num}`;
+    while (existingIds.has(id)) {
+      num++;
+      id = `room-${quadrant}-${num}`;
+    }
+    return id;
+  }
+
   addNewRoom(x = 1, y = 1, w = 4, h = 4) {
-    const count = this.rooms.length + 1;
+    const count = this.getNextRoomNumber();
     const quadrant = this.determineQuadrant(x, y);
-    const color = ROOM_COLORS[(count - 1) % ROOM_COLORS.length];
+    const color = ROOM_COLORS[(this.rooms.length) % ROOM_COLORS.length];
     const tiles = callGenerateRectTiles(x, y, w, h);
+    const id = this.generateUniqueRoomId(quadrant);
     const newRoom = {
-      id: `room-${quadrant}-${count}`,
+      id: id,
       name: `Room ${count} (${quadrant.toUpperCase()})`,
       x: x,
       y: y,
@@ -768,13 +800,14 @@ class BlockmapCreator {
 
   addNewFreeformRoom(tileArray) {
     const bounds = callComputeRoomBounds(tileArray);
-    const count = this.rooms.length + 1;
+    const count = this.getNextRoomNumber();
     const quadrant = this.determineQuadrant(bounds.x, bounds.y);
-    const color = ROOM_COLORS[(count - 1) % ROOM_COLORS.length];
+    const color = ROOM_COLORS[(this.rooms.length) % ROOM_COLORS.length];
     const isRect = tileArray.length === bounds.w * bounds.h;
+    const id = this.generateUniqueRoomId(quadrant);
 
     const newRoom = {
-      id: `room-${quadrant}-${count}`,
+      id: id,
       name: `Room ${count} (${quadrant.toUpperCase()})`,
       x: bounds.x,
       y: bounds.y,
@@ -1046,6 +1079,21 @@ class BlockmapCreator {
     if (tilesEl) tilesEl.textContent = room.tiles ? room.tiles.length : (room.w * room.h);
   }
 
+  updateMapIdentityUI() {
+    const titleEl = document.getElementById('input-map-title');
+    if (titleEl && document.activeElement !== titleEl) {
+      titleEl.value = this.boardTitle || '';
+    }
+    const idEl = document.getElementById('input-map-id');
+    if (idEl && document.activeElement !== idEl) {
+      idEl.value = this.boardId || '';
+    }
+    const infoTitle = document.getElementById('info-map-title-text');
+    if (infoTitle) {
+      infoTitle.textContent = this.boardTitle || 'Untitled Blockmap';
+    }
+  }
+
   setActiveTool(tool) {
     if (document.activeElement && typeof document.activeElement.blur === 'function') {
       document.activeElement.blur();
@@ -1252,6 +1300,8 @@ class BlockmapCreator {
     document.getElementById('board-preset-select').value = p.id;
     this.boardId = p.id;
     this.boardTitle = p.title;
+    this.cartridgeSlug = null;
+    this.updateMapIdentityUI();
     this.tileSize = p.defaultTileSize || 39.0;
     this.offsetX = p.offsetX || 0;
     this.offsetY = p.offsetY || 0;
@@ -1265,10 +1315,82 @@ class BlockmapCreator {
     document.getElementById('input-grid-cols').value = this.cols;
     document.getElementById('input-grid-rows').value = this.rows;
 
-    if (p.cartridgeSlug) {
-      await this.loadCartridge(p.cartridgeSlug);
+    const boardRes = await window.robosBlockmap.loadBoardMap(p.id);
+    if (boardRes && boardRes.success && boardRes.boardData) {
+      await this.applyBoardData(boardRes.boardData, boardRes.imageData);
     } else {
       await this.loadImageFile(p.file);
+    }
+  }
+
+  async applyBoardData(boardData, imageData) {
+    this.boardId = boardData.id || this.boardId;
+    this.boardTitle = boardData.title || this.boardTitle;
+    this.updateMapIdentityUI();
+
+    if (boardData.gridDimensions) {
+      this.cols = boardData.gridDimensions[0] || this.cols;
+      this.rows = boardData.gridDimensions[1] || this.rows;
+    } else {
+      if (boardData.width) this.cols = boardData.width;
+      if (boardData.height) this.rows = boardData.height;
+    }
+
+    if (boardData.calibration) {
+      if (boardData.calibration.tileSize) this.tileSize = boardData.calibration.tileSize;
+      if (boardData.calibration.offsetX !== undefined) this.offsetX = boardData.calibration.offsetX;
+      if (boardData.calibration.offsetY !== undefined) this.offsetY = boardData.calibration.offsetY;
+    }
+
+    document.getElementById('input-tile-size').value = this.tileSize.toFixed(1);
+    document.getElementById('slider-tile-size').value = this.tileSize;
+    document.getElementById('input-offset-x').value = this.offsetX;
+    document.getElementById('input-offset-y').value = this.offsetY;
+    document.getElementById('input-grid-cols').value = this.cols;
+    document.getElementById('input-grid-rows').value = this.rows;
+
+    this.rooms = (boardData.rooms || []).map((r, i) => {
+      const shape = r.shape || 'rect';
+      const tiles = r.tiles && r.tiles.length > 0
+        ? r.tiles
+        : callGenerateRectTiles(r.x, r.y, r.w, r.h);
+      return {
+        ...r,
+        shape: shape,
+        tiles: tiles,
+        tileSet: new Set(tiles.map(t => `${t[0]},${t[1]}`)),
+        color: r.color || ROOM_COLORS[i % ROOM_COLORS.length]
+      };
+    });
+
+    this.corridorTiles = new Set();
+    if (Array.isArray(boardData.corridors)) {
+      for (const c of boardData.corridors) {
+        if (Array.isArray(c) && c.length >= 2) {
+          this.corridorTiles.add(`${c[0]},${c[1]}`);
+        }
+      }
+    }
+
+    this.selectedRoomId = this.rooms.length > 0 ? this.rooms[0].id : null;
+    this.updateRoomListUI();
+    this.updateRoomInspector();
+
+    if (imageData && imageData.dataUrl) {
+      const img = new Image();
+      img.onload = () => {
+        this.image = img;
+        this.imagePath = imageData.filePath;
+        this.fileName = imageData.fileName;
+        document.getElementById('info-image-name').textContent = `🖼️ ${this.fileName}`;
+        document.getElementById('info-image-size').textContent = `📐 ${img.naturalWidth} × ${img.naturalHeight} px`;
+        document.getElementById('info-grid-size').textContent = `🧱 ${this.cols} × ${this.rows} grid`;
+        this.fitToScreen();
+        this.render();
+      };
+      img.src = imageData.dataUrl;
+    } else {
+      this.render();
     }
   }
 
@@ -1284,6 +1406,13 @@ class BlockmapCreator {
       this.image = img;
       this.imagePath = res.filePath;
       this.fileName = res.fileName;
+
+      const baseName = this.fileName.replace(/\.[^/.]+$/, '');
+      if (!this.boardTitle || this.boardId === 'first-light-dungeon') {
+        this.boardTitle = baseName.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        this.boardId = baseName.toLowerCase().replace(/[_\s]+/g, '-').replace(/[^a-z0-9-]/g, '');
+      }
+      this.updateMapIdentityUI();
 
       document.getElementById('info-image-name').textContent = `🖼️ ${this.fileName}`;
       document.getElementById('info-image-size').textContent = `📐 ${img.naturalWidth} × ${img.naturalHeight} px`;
@@ -1306,6 +1435,11 @@ class BlockmapCreator {
       this.imagePath = res.filePath;
       this.fileName = res.fileName;
 
+      const baseName = this.fileName.replace(/\.[^/.]+$/, '');
+      this.boardTitle = baseName.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      this.boardId = baseName.toLowerCase().replace(/[_\s]+/g, '-').replace(/[^a-z0-9-]/g, '');
+      this.updateMapIdentityUI();
+
       document.getElementById('info-image-name').textContent = `🖼️ ${this.fileName}`;
       document.getElementById('info-image-size').textContent = `📐 ${img.naturalWidth} × ${img.naturalHeight} px`;
 
@@ -1319,6 +1453,7 @@ class BlockmapCreator {
 
   async loadCartridge(slug) {
     this.cartridgeSlug = slug;
+    this.boardId = slug;
     const res = await window.robosBlockmap.loadCartridgeMap(slug);
     if (!res.success) {
       console.warn('Could not load cartridge map:', res.error);
@@ -1326,6 +1461,8 @@ class BlockmapCreator {
     }
 
     const map = res.mapData || {};
+    this.boardTitle = (map && (map.title || map.name)) || (slug.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()));
+    this.updateMapIdentityUI();
     this.cols = map.width || 26;
     this.rows = map.height || 19;
     this.rooms = (map.rooms || []).map((r, i) => {
@@ -1405,37 +1542,41 @@ class BlockmapCreator {
   }
 
   async saveBoard() {
-    const payload = {
-      cartridgeSlug: this.cartridgeSlug,
-      mapId: 'fortress-fire-king',
-      mapData: {
-        width: this.cols,
-        height: this.rows,
-        backgroundImage: `res://assets/boards/${this.fileName}`,
-        calibration: {
-          tileSize: this.tileSize,
-          offsetX: this.offsetX,
-          offsetY: this.offsetY
-        },
-        rooms: this.rooms.map(r => ({
-          id: r.id,
-          name: r.name,
-          x: r.x,
-          y: r.y,
-          w: r.w,
-          h: r.h,
-          shape: r.shape || 'rect',
-          tiles: r.tiles || callGenerateRectTiles(r.x, r.y, r.w, r.h),
-          quadrant: r.quadrant || 'center'
-        }))
-      }
-    };
+    const payload = this.getStaticBoardPayload();
+    const res = await window.robosBlockmap.saveBoardMap({
+      boardId: this.boardId || 'custom-board',
+      boardData: payload
+    });
 
-    const res = await window.robosBlockmap.saveCartridgeMap(payload);
     if (res.success) {
-      this.showToast(`Saved static board blockmap to ${this.cartridgeSlug}!`);
+      this.showToast(`Saved static board blockmap to ${res.fileName}!`);
     } else {
       this.showToast(`Save failed: ${res.error}`);
+    }
+
+    // Only if an explicit cartridge was opened via CLI/loader, also sync its map
+    if (this.cartridgeSlug) {
+      try {
+        await window.robosBlockmap.saveCartridgeMap({
+          cartridgeSlug: this.cartridgeSlug,
+          mapId: this.boardId || 'custom-board',
+          mapData: {
+            id: this.boardId || 'custom-board',
+            title: this.boardTitle || `${this.fileName} Static Board`,
+            width: this.cols,
+            height: this.rows,
+            backgroundImage: `res://assets/boards/${this.fileName}`,
+            calibration: {
+              tileSize: this.tileSize,
+              offsetX: this.offsetX,
+              offsetY: this.offsetY
+            },
+            rooms: payload.rooms
+          }
+        });
+      } catch (err) {
+        console.warn('Optional cartridge sync error:', err);
+      }
     }
   }
 

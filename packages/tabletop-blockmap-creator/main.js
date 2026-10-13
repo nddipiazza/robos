@@ -87,8 +87,7 @@ ipcMain.handle('blockmap:get-startup-args', async () => {
   return startupTarget || {
     type: 'preset',
     value: 'first-light-dungeon',
-    defaultBoard: 'first_light_dungeon.png',
-    defaultCartridge: 'heroquest-fortress-fire-king'
+    defaultBoard: 'first_light_dungeon.png'
   };
 });
 
@@ -117,47 +116,45 @@ ipcMain.handle('blockmap:list-presets', async () => {
     const presets = [
       {
         id: 'first-light-dungeon',
-        title: 'HeroQuest: First Light Side A (Fortress of the Fire King)',
+        title: 'HeroQuest: First Light Side A (1014×738)',
         file: 'first_light_dungeon.png',
         defaultCols: 26,
         defaultRows: 19,
         defaultTileSize: 39.0,
         offsetX: 0,
         offsetY: 0,
-        cartridgeSlug: 'heroquest-fortress-fire-king'
+        blockmapFile: 'first-light-dungeon.blockmap.json'
       },
       {
         id: 'heroquest-classic',
-        title: 'HeroQuest Classic Stone Dungeon (The Trial)',
+        title: 'HeroQuest Classic Stone Dungeon (1024×768)',
         file: 'heroquest_board.png',
         defaultCols: 28,
         defaultRows: 21,
         defaultTileSize: 36.57,
         offsetX: 0,
         offsetY: 0,
-        cartridgeSlug: 'heroquest-the-trial'
+        blockmapFile: 'heroquest-classic.blockmap.json'
       },
       {
         id: 'first-light-caverns',
-        title: 'HeroQuest: First Light Side B (Subterranean Caverns)',
+        title: 'HeroQuest First Light Side B Caverns (1200×896)',
         file: 'first_light_caverns.png',
         defaultCols: 26,
         defaultRows: 19,
         defaultTileSize: 42.0,
         offsetX: 0,
-        offsetY: 0,
-        cartridgeSlug: null
+        offsetY: 0
       },
       {
         id: 'fan-dungeon-28x21',
-        title: 'HeroQuest Fan Cavern Citadel (28×21)',
+        title: 'Fan Cavern Citadel (1024×768)',
         file: 'fan_dungeon_28x21.png',
         defaultCols: 28,
         defaultRows: 21,
         defaultTileSize: 36.57,
         offsetX: 0,
-        offsetY: 0,
-        cartridgeSlug: 'heroquest-the-trial'
+        offsetY: 0
       }
     ];
 
@@ -214,6 +211,63 @@ ipcMain.handle('blockmap:open-file-dialog', async () => {
       filePath: fullPath,
       fileName: path.basename(fullPath),
       dataUrl: `data:${mime};base64,${data}`
+    };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+// IPC: Load Board Blockmap JSON
+ipcMain.handle('blockmap:load-board-map', async (_event, boardId) => {
+  try {
+    const clean = (boardId || '').toLowerCase().replace(/[_\s]+/g, '-').replace(/[^a-z0-9-]/g, '');
+    let blockmapPath = path.join(CARTRIDGES_DIR, `${clean}.blockmap.json`);
+    if (!fs.existsSync(blockmapPath)) {
+      blockmapPath = path.join(CARTRIDGES_DIR, `${boardId}.blockmap.json`);
+    }
+    if (!fs.existsSync(blockmapPath)) {
+      return { success: false, error: `Blockmap not found: ${clean}.blockmap.json` };
+    }
+
+    const raw = fs.readFileSync(blockmapPath, 'utf8');
+    const boardData = JSON.parse(raw);
+
+    let imgData = null;
+    const bgImage = boardData.backgroundImage || 'res://assets/boards/first_light_dungeon.png';
+    const resolvedPath = resolveImagePath(bgImage);
+    if (resolvedPath) {
+      const ext = path.extname(resolvedPath).toLowerCase();
+      const mime = (ext === '.jpg' || ext === '.jpeg') ? 'image/jpeg' : (ext === '.webp' ? 'image/webp' : 'image/png');
+      imgData = {
+        dataUrl: `data:${mime};base64,${fs.readFileSync(resolvedPath).toString('base64')}`,
+        filePath: resolvedPath,
+        fileName: path.basename(resolvedPath)
+      };
+    }
+
+    return {
+      success: true,
+      boardId: clean,
+      boardData,
+      imageData: imgData
+    };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+// IPC: Save Board Blockmap JSON
+ipcMain.handle('blockmap:save-board-map', async (_event, payload) => {
+  try {
+    const { boardId, boardData } = payload;
+    const cleanId = (boardId || 'custom-board').toLowerCase().replace(/[_\s]+/g, '-').replace(/[^a-z0-9-]/g, '');
+    const blockmapPath = path.join(CARTRIDGES_DIR, `${cleanId}.blockmap.json`);
+    fs.writeFileSync(blockmapPath, JSON.stringify(boardData, null, 2) + '\n', 'utf8');
+    return {
+      success: true,
+      filePath: blockmapPath,
+      fileName: `${cleanId}.blockmap.json`,
+      boardId: cleanId
     };
   } catch (err) {
     return { success: false, error: err.message };
