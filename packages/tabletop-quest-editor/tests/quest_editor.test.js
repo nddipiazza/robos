@@ -774,6 +774,39 @@ test('Blockmap Underlay Styles: uses distinct, subtle colors and perimeter borde
   assert.equal(edges2x2.filter(e => e.side === 'E').length, 2);
 });
 
+// -------------------------------------------------------------
+// Test 15: HeroQuest Rule: Characters and enemies cannot stand on furniture
+// -------------------------------------------------------------
+test('HeroQuest Rule: Characters and enemies cannot stand on furniture', () => {
+  const furniture = [
+    { id: 'furn-table', type: 'table', x: 5, y: 5, width: 2, height: 2 },
+    { id: 'furn-rack', type: 'weapons-rack', x: 9, y: 2, width: 2, height: 1 }
+  ];
 
+  function isTileOccupiedByFurniture(col, row) {
+    return furniture.some(f =>
+      col >= f.x && col < f.x + (f.width || 1) &&
+      row >= f.y && row < f.y + (f.height || 1)
+    );
+  }
 
+  // Table footprint occupies (5,5), (6,5), (5,6), (6,6)
+  assert.equal(isTileOccupiedByFurniture(5, 5), true);
+  assert.equal(isTileOccupiedByFurniture(6, 6), true);
+  assert.equal(isTileOccupiedByFurniture(7, 5), false);
 
+  // Weapons rack footprint occupies (9,2), (10,2)
+  assert.equal(isTileOccupiedByFurniture(9, 2), true);
+  assert.equal(isTileOccupiedByFurniture(10, 2), true);
+  assert.equal(isTileOccupiedByFurniture(10, 3), false);
+
+  // Validation function checks monster placement
+  function canPlaceMonster(col, row) {
+    return !isTileOccupiedByFurniture(col, row);
+  }
+
+  assert.equal(canPlaceMonster(10, 2), false, 'Cannot place monster on weapons rack');
+  assert.equal(canPlaceMonster(10, 3), true, 'Can place monster on adjacent floor');
+  assert.equal(canPlaceMonster(5, 5), false, 'Cannot place monster on table');
+  assert.equal(canPlaceMonster(4, 5), true, 'Can place monster on adjacent floor');
+});

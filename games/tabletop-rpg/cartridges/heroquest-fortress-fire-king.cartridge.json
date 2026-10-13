@@ -19,8 +19,8 @@
     "questCount": 1,
     "startingMap": "fortress-fire-king",
     "startingPosition": [
-      0,
-      1
+      6,
+      15
     ],
     "createdDate": "2026-10-10T20:55:00.000Z"
   },
@@ -40,8 +40,8 @@
       "armor": "Wizard Cloak (2 Defend Dice)",
       "tokenColor": "#1d4ed8",
       "position": [
-        0,
-        1
+        6,
+        16
       ],
       "inventory": [
         {
@@ -167,8 +167,8 @@
       "armor": "Helmet (+1 Defend Die)",
       "tokenColor": "#15803d",
       "position": [
-        0,
-        1
+        7,
+        15
       ],
       "inventory": [
         {
@@ -241,8 +241,8 @@
       "armor": "Helmet (+1 Defend Die)",
       "tokenColor": "#b45309",
       "position": [
-        0,
-        1
+        5,
+        15
       ],
       "inventory": [
         {
@@ -270,8 +270,8 @@
       "armor": "Helmet (+1 Defend Die)",
       "tokenColor": "#b91c1c",
       "position": [
-        0,
-        1
+        6,
+        15
       ],
       "inventory": [
         {
@@ -350,7 +350,7 @@
       "name": "Goblin Scavenger",
       "position": [
         10,
-        2
+        3
       ],
       "roomId": "room-nw-3",
       "movementSquares": 10,
@@ -566,7 +566,7 @@
       "name": "Mist-Spawned Skeleton",
       "position": [
         12,
-        10
+        11
       ],
       "roomId": "room-center",
       "movementSquares": 6,
@@ -620,7 +620,7 @@
       "name": "Dread Warrior Guardian",
       "position": [
         21,
-        15
+        16
       ],
       "roomId": "room-se-5",
       "movementSquares": 7,
@@ -638,7 +638,7 @@
       "name": "Dread Warrior Guardian",
       "position": [
         22,
-        15
+        16
       ],
       "roomId": "room-se-5",
       "movementSquares": 7,
@@ -693,10 +693,10 @@
       "id": "mon-garrison-gob-1",
       "name": "Garrison Goblin",
       "position": [
-        6,
+        2,
         15
       ],
-      "roomId": "room-sw-4",
+      "roomId": "room-sw-3",
       "movementSquares": 10,
       "attackDice": 2,
       "defendDice": 1,
@@ -706,10 +706,10 @@
       "id": "mon-garrison-gob-2",
       "name": "Garrison Goblin",
       "position": [
-        7,
+        3,
         15
       ],
-      "roomId": "room-sw-4",
+      "roomId": "room-sw-3",
       "movementSquares": 10,
       "attackDice": 2,
       "defendDice": 1,
@@ -719,10 +719,10 @@
       "id": "mon-garrison-orc",
       "name": "Garrison Orc",
       "position": [
-        6,
+        2,
         16
       ],
-      "roomId": "room-sw-4",
+      "roomId": "room-sw-3",
       "movementSquares": 6,
       "attackDice": 3,
       "defendDice": 2,
@@ -781,8 +781,8 @@
       "completed": false,
       "mapConfigId": "first-light-dungeon",
       "startingPosition": [
-        0,
-        1
+        6,
+        15
       ]
     }
   ],
@@ -796,10 +796,17 @@
       "height": 19,
       "backgroundImage": "res://assets/boards/first_light_dungeon.png",
       "wanderingMonster": "orc",
+      "startingRoom": "room-sw-4",
+      "startingRoomId": 8,
       "startingStair": [
-        0,
-        1
+        5,
+        14
       ],
+      "startingPosition": [
+        6,
+        15
+      ],
+      "startingStairType": "stairs_up_1x1",
       "activeRooms": [
         "room-nw-1",
         "room-nw-2",
@@ -1022,22 +1029,25 @@
         },
         {
           "id": "room-sw-3",
-          "name": "Southwest Forge Antechamber",
+          "name": "Southwest Garrison (Unlettered Encounter)",
           "x": 1,
-          "y": 14,
-          "w": 4,
-          "h": 4,
-          "quadrant": "sw"
-        },
-        {
-          "id": "room-sw-4",
-          "name": "Southwest Guard Room (Unlettered Encounter)",
-          "x": 5,
           "y": 14,
           "w": 4,
           "h": 4,
           "quadrant": "sw",
           "description": "Garrison quarters harboring greenskin raiders (2 Goblins, 1 Orc)."
+        },
+        {
+          "id": "room-sw-4",
+          "name": "Room 8: Southwest Starting Chamber",
+          "x": 5,
+          "y": 14,
+          "w": 4,
+          "h": 4,
+          "quadrant": "sw",
+          "roomNumber": 8,
+          "isStartingRoom": true,
+          "description": "Starting chamber with spiral staircase leading up from the surface and south door opening to the corridor."
         },
         {
           "id": "room-sw-5",
@@ -1377,7 +1387,10 @@
             17
           ],
           "state": "closed",
-          "room": "room-sw-4"
+          "room": "room-sw-4",
+          "side": "south",
+          "roomNumber": 8,
+          "description": "South door of Room 8 leading out to the corridor"
         },
         {
           "id": "door-sw-5-w",
@@ -1492,6 +1505,16 @@
         }
       ],
       "furniture": [
+        {
+          "id": "furn-starting-stair",
+          "name": "Starting Spiral Staircase",
+          "type": "stairs_up_1x1",
+          "x": 5,
+          "y": 14,
+          "width": 1,
+          "height": 1,
+          "roomId": "room-sw-4"
+        },
         {
           "id": "furn-fire-hearth",
           "name": "Hearth of Forgrin the Fire King",
