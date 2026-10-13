@@ -91,6 +91,12 @@ const BUILTIN_APPS = [
     iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="38" height="38" rx="3" stroke="#00bcd4" stroke-width="1.8" /><path d="M5 17 H43 M5 29 H43 M17 5 V43 M29 5 V43" stroke="#00bcd4" stroke-dasharray="2 2" stroke-opacity="0.45" /><rect x="17" y="17" width="12" height="12" rx="1" fill="#00bcd4" fill-opacity="0.2" stroke="#00bcd4" stroke-width="2" /><path d="M33 7 L41 15 M36 10 L38 8 M38 12 L40 10" stroke="#f59e0b" stroke-width="1.8" /></svg>'
   },
   {
+    appId: 'tabletop-quest-editor',
+    label: 'Tabletop Quest Map Editor',
+    category: 'Game Development',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="36" height="36" rx="4" /><path d="M18 6v36" stroke-dasharray="2 3" opacity="0.4" /><path d="M30 6v36" stroke-dasharray="2 3" opacity="0.4" /><path d="M6 18h36" stroke-dasharray="2 3" opacity="0.4" /><path d="M6 30h36" stroke-dasharray="2 3" opacity="0.4" /><rect x="15" y="16" width="6" height="4" fill="#00bcd4" fill-opacity="0.3" stroke="#00bcd4" stroke-width="1.5" /><circle cx="24" cy="24" r="3" fill="#00bcd4" /><path d="M24 19v2" /><path d="M24 27v2" /><path d="M19 24h2" /><path d="M27 24h2" /><path d="M32 36v-3h3v-3h3" /></svg>'
+  },
+  {
     appId: 'context-manager',
     label: 'Context Manager',
     category: 'RobOS AI',
