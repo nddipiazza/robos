@@ -115,6 +115,7 @@ const MONSTER_DEFS = {
   mummy: { name: 'Mummy', bp: 2, mp: 0, atk: 3, def: 4, move: 4, isBoss: false, isUndead: true, isCaster: false, color: '#d97706', icon: '🩹' },
   chaos_warrior: { name: 'Chaos Warrior', bp: 2, mp: 3, atk: 3, def: 4, move: 7, isBoss: false, isUndead: false, isCaster: false, color: '#7c3aed', icon: '⚔️' },
   fimir: { name: 'Fimir', bp: 2, mp: 3, atk: 3, def: 3, move: 6, isBoss: false, isUndead: false, isCaster: false, color: '#2563eb', icon: '🦎' },
+  abomination: { name: 'Abomination', bp: 2, mp: 3, atk: 3, def: 3, move: 6, isBoss: false, isUndead: false, isCaster: false, color: '#2563eb', icon: '🦎' },
   gargoyle: { name: 'Gargoyle', bp: 3, mp: 4, atk: 4, def: 5, move: 6, isBoss: false, isUndead: false, isCaster: false, color: '#dc2626', icon: '🗿' },
   boss: { name: 'Dungeon Boss', bp: 5, mp: 5, atk: 4, def: 4, move: 8, isBoss: true, isUndead: false, isCaster: true, color: '#e11d48', icon: '👑' }
 };
@@ -920,6 +921,7 @@ function preloadAssets() {
     { key: 'token_mummy', path: 'assets/tokens/token_mummy.png' },
     { key: 'token_chaos_warrior', path: 'assets/tokens/token_chaos_warrior.png' },
     { key: 'token_fimir', path: 'assets/tokens/token_fimir.png' },
+    { key: 'token_abomination', path: 'assets/tokens/token_fimir.png' },
     { key: 'token_gargoyle', path: 'assets/tokens/token_gargoyle.png' },
     { key: 'chest', path: 'assets/furniture/chest.png' },
     { key: 'table', path: 'assets/furniture/table.png' },
@@ -3832,7 +3834,7 @@ function interpretVoiceQuestCommands(spokenText, blockmap, quest, currentContext
     { type: 'zombie', keys: ['zombies', 'zombie', 'zombys', 'zomby'] },
     { type: 'mummy', keys: ['mummies', 'mummy'] },
     { type: 'chaos_warrior', keys: ['chaos warriors', 'chaos warrior', 'chaos'] },
-    { type: 'fimir', keys: ['fimirs', 'fimir'] },
+    { type: 'fimir', keys: ['fimirs', 'fimir', 'abominations', 'abomination'] },
     { type: 'gargoyle', keys: ['gargoyles', 'gargoyle'] },
     { type: 'boss', keys: ['bosses', 'boss', 'dungeon boss', 'warlord'] }
   ];
