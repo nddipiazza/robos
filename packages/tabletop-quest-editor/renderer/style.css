@@ -279,8 +279,9 @@ body {
 /* ---------------- Left Tool Palette ---------------- */
 .tool-palette {
   width: 140px;
+  min-width: 110px;
+  max-width: 450px;
   background: var(--bg-secondary);
-  border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   padding: 8px 6px;
@@ -440,11 +441,52 @@ body {
   z-index: 4;
 }
 
+/* ---------------- Resizable Split Dividers ---------------- */
+.split-divider {
+  position: relative;
+  width: 6px;
+  min-width: 6px;
+  background: transparent;
+  cursor: col-resize;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  touch-action: none;
+  transition: background 0.15s ease;
+  flex-shrink: 0;
+}
+
+.split-divider::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--border-color);
+  transition: all 0.15s ease;
+}
+
+.split-divider:hover::after,
+.split-divider.active::after {
+  background: var(--accent);
+  width: 3px;
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+
+body.resizing,
+body.resizing * {
+  user-select: none !important;
+  cursor: col-resize !important;
+}
+
 /* ---------------- Right Sidebar ---------------- */
 .sidebar-right {
   width: 360px;
+  min-width: 240px;
+  max-width: 800px;
   background: var(--bg-secondary);
-  border-left: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;

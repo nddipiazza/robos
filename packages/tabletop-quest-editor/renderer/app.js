@@ -369,6 +369,32 @@ function updateHistoryButtons() {
 // Blockmap & Cartridge Loading
 // -------------------------------------------------------------
 async function initApp() {
+  // Restore saved column widths if available
+  try {
+    const leftW = localStorage.getItem('robos_quest_editor_tool_palette_w');
+    if (leftW) {
+      const toolPalette = document.querySelector('.tool-palette');
+      if (toolPalette) {
+        const w = parseInt(leftW, 10);
+        if (w >= 110 && w <= 450) {
+          toolPalette.style.width = `${w}px`;
+          toolPalette.style.flex = `0 0 ${w}px`;
+        }
+      }
+    }
+    const rightW = localStorage.getItem('robos_quest_editor_sidebar_right_w');
+    if (rightW) {
+      const sidebarRight = document.querySelector('.sidebar-right');
+      if (sidebarRight) {
+        const w = parseInt(rightW, 10);
+        if (w >= 240 && w <= 800) {
+          sidebarRight.style.width = `${w}px`;
+          sidebarRight.style.flex = `0 0 ${w}px`;
+        }
+      }
+    }
+  } catch (_) {}
+
   resizeCanvas();
   window.addEventListener('resize', () => {
     resizeCanvas();
@@ -894,6 +920,7 @@ function preloadAssets() {
 // Coordinate Math & Geometry
 // -------------------------------------------------------------
 function resizeCanvas() {
+  if (!dom || !dom.viewport || !dom.canvas) return;
   const rect = dom.viewport.getBoundingClientRect();
   dom.canvas.width = rect.width;
   dom.canvas.height = rect.height;
@@ -1035,6 +1062,7 @@ function detectDoorEdge(wx, wy) {
 // Canvas Rendering Engine
 // -------------------------------------------------------------
 function render() {
+  if (!dom || !dom.ctx || !dom.canvas) return;
   const ctx = dom.ctx;
   const w = dom.canvas.width;
   const h = dom.canvas.height;
@@ -3972,9 +4000,102 @@ function executeVoiceMapCommands(spokenText, guidancePrompt, targetQuest = null,
 }
 
 // -------------------------------------------------------------
+// Resizable Split Dividers
+// -------------------------------------------------------------
+function setupSplitDividers() {
+  if (typeof document === 'undefined') return;
+
+  const dividers = document.querySelectorAll('.split-divider');
+  dividers.forEach(divider => {
+    let isDragging = false;
+    let startX = 0;
+    let startSize = 0;
+    const targetDirection = divider.getAttribute('data-target') || 'prev';
+    const minSize = parseInt(divider.getAttribute('data-min') || '110', 10);
+    const maxSize = parseInt(divider.getAttribute('data-max') || '680', 10);
+
+    const onPointerDown = (e) => {
+      isDragging = true;
+      startX = e.clientX;
+      try {
+        divider.setPointerCapture(e.pointerId);
+      } catch (_) {}
+      divider.classList.add('active');
+      document.body.classList.add('resizing');
+
+      const targetEl = targetDirection === 'prev' ? divider.previousElementSibling : divider.nextElementSibling;
+      if (targetEl) {
+        startSize = targetEl.getBoundingClientRect().width;
+      }
+      e.preventDefault();
+    };
+
+    const onPointerMove = (e) => {
+      if (!isDragging) return;
+      const deltaX = e.clientX - startX;
+      const targetEl = targetDirection === 'prev' ? divider.previousElementSibling : divider.nextElementSibling;
+      if (!targetEl) return;
+
+      let newSize;
+      if (targetDirection === 'prev') {
+        newSize = Math.max(minSize, Math.min(maxSize, startSize + deltaX));
+      } else {
+        newSize = Math.max(minSize, Math.min(maxSize, startSize - deltaX));
+      }
+
+      targetEl.style.width = `${newSize}px`;
+      targetEl.style.flex = `0 0 ${newSize}px`;
+
+      resizeCanvas();
+      render();
+
+      try {
+        const storageKey = targetDirection === 'prev' ? 'robos_quest_editor_tool_palette_w' : 'robos_quest_editor_sidebar_right_w';
+        localStorage.setItem(storageKey, String(newSize));
+      } catch (_) {}
+    };
+
+    const onPointerUp = (e) => {
+      if (!isDragging) return;
+      isDragging = false;
+      try {
+        divider.releasePointerCapture(e.pointerId);
+      } catch (_) {}
+      divider.classList.remove('active');
+      document.body.classList.remove('resizing');
+
+      resizeCanvas();
+      render();
+    };
+
+    divider.addEventListener('pointerdown', onPointerDown);
+    divider.addEventListener('pointermove', onPointerMove);
+    divider.addEventListener('pointerup', onPointerUp);
+    divider.addEventListener('pointercancel', onPointerUp);
+
+    // Double-click to reset to default
+    divider.addEventListener('dblclick', () => {
+      const defaultSize = targetDirection === 'prev' ? 140 : 360;
+      const targetEl = targetDirection === 'prev' ? divider.previousElementSibling : divider.nextElementSibling;
+      if (targetEl) {
+        targetEl.style.width = `${defaultSize}px`;
+        targetEl.style.flex = `0 0 ${defaultSize}px`;
+        try {
+          const storageKey = targetDirection === 'prev' ? 'robos_quest_editor_tool_palette_w' : 'robos_quest_editor_sidebar_right_w';
+          localStorage.removeItem(storageKey);
+        } catch (_) {}
+        resizeCanvas();
+        render();
+      }
+    });
+  });
+}
+
+// -------------------------------------------------------------
 // Event Listeners Setup
 // -------------------------------------------------------------
 function setupEventListeners() {
+  setupSplitDividers();
   // Tool palette clicks
   dom.toolBtns.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -4547,7 +4668,8 @@ if (typeof window !== 'undefined') {
     executeVoiceMapCommands,
     findTargetRoom,
     findFreeTilesInRoom,
-    findFreeRectInRoom
+    findFreeRectInRoom,
+    setupSplitDividers
   };
 
   // Bootstrap application on window load
@@ -4562,6 +4684,8 @@ if (typeof module !== 'undefined' && module.exports) {
     findTargetRoom,
     findFreeTilesInRoom,
     findFreeRectInRoom,
+    setupSplitDividers,
+    dom,
     MONSTER_DEFS,
     FURNITURE_DEFS
   };

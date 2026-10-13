@@ -308,12 +308,38 @@
         </div>
       </nav>
 
+      <!-- Left Vertical Resizer -->
+      <div
+        class="split-divider col-resize"
+        id="resizer-left"
+        data-target="prev"
+        data-min="110"
+        data-max="380"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize Left Tool Palette"
+        title="Drag to resize Tool Palette · Double-click to reset">
+      </div>
+
       <!-- Center Canvas Viewport -->
       <div id="canvas-viewport" class="canvas-viewport">
         <canvas id="quest-canvas"></canvas>
         <div id="canvas-overlay-help" class="canvas-overlay-help">
           <span>Pan: Space+drag or Middle-click | Zoom: Scroll wheel | Click to place entity</span>
         </div>
+      </div>
+
+      <!-- Right Vertical Resizer -->
+      <div
+        class="split-divider col-resize"
+        id="resizer-right"
+        data-target="next"
+        data-min="240"
+        data-max="680"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize Right Inspector Sidebar"
+        title="Drag to resize Inspector Sidebar · Double-click to reset">
       </div>
 
       <!-- Right Sidebar (Inspector & Quest Settings) -->
