@@ -62,6 +62,21 @@ robos-voice-button {
   cursor: not-allowed;
 }
 
+/* Icon-Only Mode (all text removed) */
+.robos-voice-btn.icon-only {
+  padding: 6px 8px;
+  min-width: 32px;
+  height: 28px;
+  justify-content: center;
+  gap: 0;
+}
+
+.robos-voice-btn.icon-only .robos-voice-label-text,
+.robos-voice-btn.icon-only .robos-voice-timer,
+.robos-voice-btn.icon-only .robos-voice-rec-dot {
+  display: none !important;
+}
+
 /* Active Recording State */
 .robos-voice-btn.recording {
   background: #2b0b11;
@@ -349,7 +364,7 @@ robos-voice-button {
 
   class RobosVoiceButton extends HTMLElement {
     static get observedAttributes() {
-      return ['guidance-prompt', 'label', 'recording-label', 'api-url', 'show-drawer', 'agent-id', 'disabled'];
+      return ['guidance-prompt', 'label', 'recording-label', 'api-url', 'show-drawer', 'agent-id', 'disabled', 'icon-only'];
     }
 
     constructor() {
@@ -367,6 +382,15 @@ robos-voice-button {
       this._recognition = null;
       this._drawerEl = null;
       this._simulatedMode = false;
+    }
+
+    _isIconOnly() {
+      if (this.hasAttribute('icon-only')) return true;
+      if (this.hasAttribute('label')) {
+        const lbl = this.getAttribute('label');
+        if (lbl === null || String(lbl).trim() === '') return true;
+      }
+      return false;
     }
 
     connectedCallback() {
@@ -398,8 +422,8 @@ robos-voice-button {
         this._apiUrl = newValue || 'http://127.0.0.1:19188';
       } else if (name === 'show-drawer') {
         this._showDrawer = newValue !== 'false';
-      } else if (name === 'label' || name === 'recording-label') {
-        this._updateButtonContent();
+      } else if (name === 'label' || name === 'recording-label' || name === 'icon-only') {
+        this.render();
       } else if (name === 'disabled') {
         const btn = this.querySelector('.robos-voice-btn');
         if (btn) btn.disabled = this.hasAttribute('disabled');
@@ -420,9 +444,14 @@ robos-voice-button {
     }
 
     render() {
-      const label = this.getAttribute('label') || 'Voice Input';
+      const isIconOnly = this._isIconOnly();
+      const rawLabel = this.getAttribute('label');
+      const label = isIconOnly ? '' : (rawLabel !== null ? rawLabel : 'Voice Input');
+      const buttonTitle = this.getAttribute('title') || (isIconOnly ? 'Dictate voice commands' : (label || 'Dictate voice commands'));
+      const ariaLabel = this.getAttribute('aria-label') || this.getAttribute('title') || label || 'Dictate voice commands';
+
       this.innerHTML = `
-        <button type="button" class="robos-voice-btn" title="Click to start dictating voice commands" aria-pressed="false">
+        <button type="button" class="robos-voice-btn${isIconOnly ? ' icon-only' : ''}" title="${this._escapeHtml(buttonTitle)}" aria-label="${this._escapeHtml(ariaLabel)}" aria-pressed="false">
           <span class="robos-voice-icon-wrap">
             <svg class="robos-voice-icon-mic" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
@@ -431,9 +460,11 @@ robos-voice-button {
             </svg>
             <span class="robos-voice-icon-stop" aria-hidden="true"></span>
           </span>
-          <span class="robos-voice-rec-dot" aria-hidden="true"></span>
-          <span class="robos-voice-label-text">${this._escapeHtml(label)}</span>
-          <span class="robos-voice-timer" aria-live="polite">00:00</span>
+          ${isIconOnly ? '' : `
+            <span class="robos-voice-rec-dot" aria-hidden="true"></span>
+            <span class="robos-voice-label-text">${this._escapeHtml(label)}</span>
+            <span class="robos-voice-timer" aria-live="polite">00:00</span>
+          `}
         </button>
       `;
 
@@ -457,18 +488,24 @@ robos-voice-button {
     _updateButtonContent() {
       const btn = this.querySelector('.robos-voice-btn');
       if (!btn) return;
+      const isIconOnly = this._isIconOnly();
       const labelText = this.querySelector('.robos-voice-label-text');
 
       if (this._isRecording) {
         btn.classList.add('recording');
         btn.setAttribute('aria-pressed', 'true');
-        const recLabel = this.getAttribute('recording-label') || 'Stop Recording';
-        if (labelText) labelText.textContent = recLabel;
+        if (!isIconOnly && labelText) {
+          const recLabel = this.getAttribute('recording-label') || 'Stop Recording';
+          labelText.textContent = recLabel;
+        }
       } else {
         btn.classList.remove('recording');
         btn.setAttribute('aria-pressed', 'false');
-        const normLabel = this.getAttribute('label') || 'Voice Input';
-        if (labelText) labelText.textContent = normLabel;
+        if (!isIconOnly && labelText) {
+          const rawLabel = this.getAttribute('label');
+          const normLabel = rawLabel !== null ? rawLabel : 'Voice Input';
+          labelText.textContent = normLabel;
+        }
       }
     }
 

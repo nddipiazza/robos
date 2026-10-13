@@ -1153,9 +1153,19 @@ body.resizing * {
   border: 1px solid #0284c7;
   color: #38bdf8;
   font-weight: 600;
-  padding: 5px 12px;
-  font-size: 12px;
+  padding: 5px 8px;
+  min-width: 32px;
+  height: 28px;
+  justify-content: center;
+  gap: 0;
+  border-radius: 4px;
   transition: all 0.18s ease-in-out;
+}
+
+#btn-voice-add-items .robos-voice-label-text,
+#btn-voice-add-items .robos-voice-timer,
+#btn-voice-add-items .robos-voice-rec-dot {
+  display: none !important;
 }
 
 #btn-voice-add-items .robos-voice-btn:hover {
