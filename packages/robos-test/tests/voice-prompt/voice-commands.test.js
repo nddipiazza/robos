@@ -166,8 +166,8 @@ test('RobOS Voice Activated Commands & Configuration', async (t) => {
   });
 
   await t.test('6. REST API Endpoints for Voice Commands', async () => {
-    // Start temporary test server with voice commands routes
-    const testPort = 19195;
+    // Start temporary test server with voice commands routes using dynamic ephemeral port
+    let testPort = 0;
     const server = http.createServer(async (req, res) => {
       const urlObj = new URL(req.url, `http://localhost:${testPort}`);
       res.setHeader('Content-Type', 'application/json');
@@ -196,7 +196,8 @@ test('RobOS Voice Activated Commands & Configuration', async (t) => {
       res.end(JSON.stringify({ error: 'Not found' }));
     });
 
-    await new Promise(r => server.listen(testPort, r));
+    await new Promise(r => server.listen(0, r));
+    testPort = server.address().port;
 
     try {
       // 1. GET /api/voice-commands

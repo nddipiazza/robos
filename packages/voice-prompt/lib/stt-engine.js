@@ -22,6 +22,15 @@ function cleanTranscript(text) {
   cleaned = cleaned.replace(/(\b[\w'-]+\b)(?:\s+\1\b){2,}/gi, '$1');
   cleaned = cleaned.replace(/(\b[\w'-]+\s+[\w'-]+\b)(?:\s+\1\b){2,}/gi, '$1');
 
+  // Phonetic correction for common Whisper acoustic confusions in commands:
+  // e.g. "to broom 19" -> "to room 19", "in broom 1" -> "in room 1", "broom 19" -> "room 19"
+  cleaned = cleaned
+    .replace(/\b(?:to|in|into|at|inside)\s+(?:b|g)rooms?\b/gi, (match) => {
+      const prep = match.split(/\s+/)[0];
+      return `${prep} room`;
+    })
+    .replace(/\b(?:b|g)rooms?\s+(#?\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|[a-z0-9\-_]+)\b/gi, 'room $1');
+
   return cleaned.trim();
 }
 

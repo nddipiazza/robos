@@ -1377,6 +1377,17 @@ test('Voice Map Setup: interprets spoken quest instructions and places items cle
           [8,1],[8,2],[8,3],[8,4],
           [9,1],[9,2],[9,3],[9,4]
         ]
+      },
+      {
+        id: 'room-19',
+        name: 'Room 19 (SE)',
+        x: 12, y: 12, w: 4, h: 4,
+        tiles: [
+          [12,12],[12,13],[12,14],[12,15],
+          [13,12],[13,13],[13,14],[13,15],
+          [14,12],[14,13],[14,14],[14,15],
+          [15,12],[15,13],[15,14],[15,15]
+        ]
       }
     ]
   };
@@ -1414,6 +1425,13 @@ test('Voice Map Setup: interprets spoken quest instructions and places items cle
   assert.equal(cmd4[0].category, 'monster');
   assert.equal(cmd4[0].type, 'skeleton');
   assert.equal(cmd4[0].count, 2);
+
+  const cmdZombies = interpretVoiceQuestCommands('add two zombies to broom 19', blockmap, null);
+  assert.equal(cmdZombies.length, 1);
+  assert.equal(cmdZombies[0].category, 'monster');
+  assert.equal(cmdZombies[0].type, 'zombie');
+  assert.equal(cmdZombies[0].count, 2);
+  assert.equal(cmdZombies[0].targetRoom, 'room 19');
 
   const cmdAmbient = interpretVoiceQuestCommands('(wind blowing)', blockmap, null);
   assert.equal(cmdAmbient.length, 0);
@@ -1462,6 +1480,17 @@ test('Voice Map Setup: interprets spoken quest instructions and places items cle
   assert.equal(exec3.success, true);
   assert.equal(quest.monsters.length, 4); // 3 skeletons + 1 orc
   assert.equal(quest.traps.length, 1);
+
+  // Execute: "add two zombies to broom 19" (verifying phonetic broom->room and zombie pluralization)
+  const execZombies = executeVoiceMapCommands('add two zombies to broom 19', 'guidance', quest, blockmap);
+  assert.equal(execZombies.success, true);
+  const placedZombies = quest.monsters.filter(m => m.type === 'zombie');
+  assert.equal(placedZombies.length, 2);
+  assert.equal(placedZombies[0].roomId, 'room-19');
+  assert.equal(placedZombies[1].roomId, 'room-19');
+  assert.equal(placedZombies[0].name, 'Zombie');
+  assert.equal(placedZombies[0].atk, 3);
+  assert.equal(placedZombies[0].def, 3);
 
   // Validate the resulting quest - must be 100% valid under HeroQuest rules
   const val = validateQuest(quest, blockmap);
