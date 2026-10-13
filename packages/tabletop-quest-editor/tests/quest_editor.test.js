@@ -1443,6 +1443,31 @@ test('Voice Map Setup: interprets spoken quest instructions and places items cle
   const cmdAmbient = interpretVoiceQuestCommands('(wind blowing)', blockmap, null);
   assert.equal(cmdAmbient.length, 0);
 
+  const cmdNorthDoor = interpretVoiceQuestCommands('add a door on the north wall of room 1', blockmap, null);
+  assert.equal(cmdNorthDoor.length, 1);
+  assert.equal(cmdNorthDoor[0].category, 'door');
+  assert.equal(cmdNorthDoor[0].type, 'wood-closed');
+  assert.equal(cmdNorthDoor[0].wall, 'north');
+  assert.equal(cmdNorthDoor[0].targetRoom, 'room 1');
+
+  const cmdSecretDoor = interpretVoiceQuestCommands('place a secret door on south wall of room 2', blockmap, null);
+  assert.equal(cmdSecretDoor.length, 1);
+  assert.equal(cmdSecretDoor[0].category, 'door');
+  assert.equal(cmdSecretDoor[0].type, 'secret');
+  assert.equal(cmdSecretDoor[0].wall, 'south');
+  assert.equal(cmdSecretDoor[0].targetRoom, 'room 2');
+
+  const cmdInterRoom = interpretVoiceQuestCommands('place a door between room 1 and room 2', blockmap, null);
+  assert.equal(cmdInterRoom.length, 1);
+  assert.equal(cmdInterRoom[0].category, 'door');
+  assert.equal(cmdInterRoom[0].targetRoom, 'room 1');
+  assert.equal(cmdInterRoom[0].secondRoom, 'room 2');
+
+  const cmdMultiDoors = interpretVoiceQuestCommands('add 2 doors to room 1', blockmap, null);
+  assert.equal(cmdMultiDoors.length, 1);
+  assert.equal(cmdMultiDoors[0].category, 'door');
+  assert.equal(cmdMultiDoors[0].count, 2);
+
   // 2. Execution and Board Placement
   const quest = {
     monsters: [],
@@ -1508,6 +1533,31 @@ test('Voice Map Setup: interprets spoken quest instructions and places items cle
   assert.equal(placedFimir[0].atk, 3);
   assert.equal(placedFimir[0].def, 3);
   assert.equal(placedFimir[0].bp, 2);
+
+  // Execute door placement: "add a door on the north wall of room 1"
+  const execNorthDoor = executeVoiceMapCommands('add a door on the north wall of room 1', 'guidance', quest, blockmap);
+  assert.equal(execNorthDoor.success, true);
+  assert.equal(quest.doors.length, 1);
+  assert.equal(quest.doors[0].room, 'room-1');
+  assert.equal(quest.doors[0].state, 'closed');
+  assert.equal(quest.doors[0].is_secret, false);
+  // North wall neighbor: from.y - 1 === to.y
+  assert.equal(quest.doors[0].to[1], quest.doors[0].from[1] - 1);
+
+  // Execute secret door: "place a secret door on south wall of room 2"
+  const execSecretDoor = executeVoiceMapCommands('place a secret door on south wall of room 2', 'guidance', quest, blockmap);
+  assert.equal(execSecretDoor.success, true);
+  assert.equal(quest.doors.length, 2);
+  assert.equal(quest.doors[1].room, 'room-2');
+  assert.equal(quest.doors[1].state, 'secret');
+  assert.equal(quest.doors[1].is_secret, true);
+  // South wall neighbor: from.y + 1 === to.y
+  assert.equal(quest.doors[1].to[1], quest.doors[1].from[1] + 1);
+
+  // Execute multi-doors: "add 2 doors to room 1"
+  const exec2Doors = executeVoiceMapCommands('add 2 doors to room 1', 'guidance', quest, blockmap);
+  assert.equal(exec2Doors.success, true);
+  assert.equal(quest.doors.length, 4);
 
   // Validate the resulting quest - must be 100% valid under HeroQuest rules
   const val = validateQuest(quest, blockmap);

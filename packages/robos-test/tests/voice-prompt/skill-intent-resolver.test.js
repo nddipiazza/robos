@@ -115,6 +115,28 @@ test('SkillIntentResolver: Tabletop Quest Editor Skills', async (t) => {
     assert.strictEqual(trap[0].id, 'tabletop:place-trap');
     assert.strictEqual(trap[0].params.room, '4');
   });
+
+  await t.test('resolves door commands with counts, types, and walls', () => {
+    const d1 = matchTabletopSkills('add 2 doors to room 1');
+    assert.strictEqual(d1.length, 1);
+    assert.strictEqual(d1[0].id, 'tabletop:place-door');
+    assert.strictEqual(d1[0].title, 'Place 2 Doors at room 1');
+    assert.strictEqual(d1[0].params.count, 2);
+    assert.strictEqual(d1[0].params.doorType, 'wood-closed');
+
+    const d2 = matchTabletopSkills('place a secret door on the north wall of room 2');
+    assert.strictEqual(d2.length, 1);
+    assert.strictEqual(d2[0].id, 'tabletop:place-door');
+    assert.strictEqual(d2[0].title, 'Place Secret Door at the north wall of room 2');
+    assert.strictEqual(d2[0].params.count, 1);
+    assert.strictEqual(d2[0].params.doorType, 'secret');
+
+    const d3 = matchTabletopSkills('put an open door between room 1 and room 2');
+    assert.strictEqual(d3.length, 1);
+    assert.strictEqual(d3[0].id, 'tabletop:place-door');
+    assert.strictEqual(d3[0].title, 'Place Open Door at room 1 and room 2');
+    assert.strictEqual(d3[0].params.doorType, 'wood-open');
+  });
 });
 
 test('SkillIntentResolver: Full resolveLikelySkills Workflow', async (t) => {

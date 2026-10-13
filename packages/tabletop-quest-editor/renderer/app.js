@@ -3863,9 +3863,14 @@ function interpretVoiceQuestCommands(spokenText, blockmap, quest, currentContext
   ];
 
   const DOORS = [
-    { type: 'secret', keys: ['secret doors', 'secret door', 'hidden doors', 'hidden door'] },
-    { type: 'wood-open', keys: ['open doors', 'open door'] },
-    { type: 'wood-closed', keys: ['closed doors', 'closed door', 'doors', 'door'] }
+    { type: 'secret', keys: ['secret doors', 'secret door', 'hidden doors', 'hidden door', 'concealed doors', 'concealed door'] },
+    { type: 'wood-open', keys: ['open doors', 'open door', 'open wooden doors', 'open wooden door', 'open wood doors', 'open wood door'] },
+    { type: 'wood-closed', keys: [
+      'closed doors', 'closed door', 'closed wooden doors', 'closed wooden door', 'closed wood doors', 'closed wood door',
+      'wooden doors', 'wooden door', 'wood doors', 'wood door',
+      'iron doors', 'iron door', 'metal doors', 'metal door', 'stone doors', 'stone door',
+      'doors', 'door'
+    ] }
   ];
 
   const WALL_BLOCKS = [
@@ -3886,29 +3891,68 @@ function interpretVoiceQuestCommands(spokenText, blockmap, quest, currentContext
   for (const sentence of sentences) {
     if (!sentence.trim()) continue;
 
-    const ROOM_REGEX = /(?:in|to|into|inside|at)\s+(?:the\s+)?(this\s+room|current\s+room|room\s*#?\s*\d+|room\s+[a-z]+|[a-z0-9\s'-]+?(?:room|crypt|hall|chamber|tomb))\b/gi;
-    const matches = [...sentence.matchAll(ROOM_REGEX)];
-    let clauses = [];
+    const ROOM_TERM = `(?:this\\s+room|current\\s+room|room\\s*#?\\s*\\d+|room\\s+[a-z]+|[a-z0-9\\s'-]+?(?:room|crypt|hall|chamber|tomb))\\b`;
+    const BETWEEN_REGEX = new RegExp(`\\b(?:between\\s+)(${ROOM_TERM})\\s+and\\s+(?:room\\s*#?\\s*)?(${ROOM_TERM}|\\d+)`, 'gi');
+    const DIRECTION_ROOM_REGEX = new RegExp(`\\b(?:in|to|into|inside|at|on|along)\\s+(?:the\\s+)?(?:(north|south|east|west|top|bottom|left|right)\\s+wall\\s+(?:of|in)\\s+)?(${ROOM_TERM})`, 'gi');
 
+    let betweenMatches = [...sentence.matchAll(BETWEEN_REGEX)];
+    let matches = [];
+    if (betweenMatches.length > 0) {
+      matches = betweenMatches.map(m => {
+        let sec = m[2];
+        if (/^\d+$/.test(sec.trim())) sec = 'room ' + sec.trim();
+        return {
+          index: m.index,
+          length: m[0].length,
+          matchStr: m[0],
+          room: m[1],
+          secondRoom: sec,
+          wall: null
+        };
+      });
+    } else {
+      let dirMatches = [...sentence.matchAll(DIRECTION_ROOM_REGEX)];
+      matches = dirMatches.map(m => ({
+        index: m.index,
+        length: m[0].length,
+        matchStr: m[0],
+        room: m[2],
+        secondRoom: null,
+        wall: m[1] || null
+      }));
+    }
+
+    let clauses = [];
     if (matches.length === 0) {
-      clauses = [{ text: sentence, room: 'this room' }];
+      clauses = [{ text: sentence, room: 'this room', wall: null, secondRoom: null }];
     } else if (matches.length === 1) {
-      const cleanedText = sentence.slice(0, matches[0].index) + ' ' + sentence.slice(matches[0].index + matches[0][0].length);
-      clauses = [{ text: cleanedText, room: matches[0][1] }];
+      const cleanedText = sentence.slice(0, matches[0].index) + ' ' + sentence.slice(matches[0].index + matches[0].length);
+      clauses = [{ text: cleanedText, room: matches[0].room, wall: matches[0].wall, secondRoom: matches[0].secondRoom }];
     } else {
       let prevEnd = 0;
       for (let i = 0; i < matches.length; i++) {
         const curMatch = matches[i];
-        const end = (i < matches.length - 1) ? curMatch.index + curMatch[0].length : sentence.length;
+        const end = (i < matches.length - 1) ? curMatch.index + curMatch.length : sentence.length;
         const rawClause = sentence.substring(prevEnd, end);
-        const cleanedText = rawClause.replace(curMatch[0], ' ');
-        clauses.push({ text: cleanedText, room: curMatch[1] });
+        const cleanedText = rawClause.replace(curMatch.matchStr, ' ');
+        clauses.push({ text: cleanedText, room: curMatch.room, wall: curMatch.wall, secondRoom: curMatch.secondRoom });
         prevEnd = end;
       }
     }
 
     for (const clause of clauses) {
       let remaining = clause.text;
+
+      // Extract trailing wall direction if not captured by room preposition (e.g. "to room 1 on the north wall")
+      let clauseWall = clause.wall;
+      if (!clauseWall) {
+        const wallMatch = remaining.match(/\b(?:(?:on|along|at)\s+(?:the\s+)?)?(north|south|east|west|top|bottom|left|right)\s+wall\b/i);
+        if (wallMatch) {
+          clauseWall = wallMatch[1].toLowerCase();
+          remaining = remaining.replace(wallMatch[0], ' ');
+        }
+      }
+
       for (const ent of ALL_ENTITIES) {
         const regex = new RegExp(`\\b(?:(\\d+|one|two|three|four|five|six|seven|eight|nine|ten|a\\s+couple(?:\\s+of)?|a\\s+pair(?:\\s+of)?|a|an)\\s+)?${ent.key}\\b`, 'i');
         let m = remaining.match(regex);
@@ -3927,7 +3971,9 @@ function interpretVoiceQuestCommands(spokenText, blockmap, quest, currentContext
             category: ent.category,
             type: ent.type,
             count,
-            targetRoom: clause.room
+            targetRoom: clause.room,
+            wall: clauseWall || null,
+            secondRoom: clause.secondRoom || null
           });
           remaining = remaining.replace(m[0], ' ');
           m = remaining.match(regex);
@@ -4097,7 +4143,6 @@ function executeVoiceMapCommands(spokenText, guidancePrompt, targetQuest = null,
     } else if (cmd.category === 'door') {
       const roomTiles = getTilesForRoom(targetRoom);
       const roomTileSet = new Set(roomTiles.map(t => `${t[0]},${t[1]}`));
-      let doorPlaced = false;
       const existingDoors = currentQuest.doors || [];
       const hasDoorAtEdge = (c1, r1, c2, r2) => {
         return existingDoors.some(d =>
@@ -4106,38 +4151,136 @@ function executeVoiceMapCommands(spokenText, guidancePrompt, targetQuest = null,
         );
       };
 
-      for (const [col, row] of roomTiles) {
-        const neighbors = [
-          [col, row - 1],
-          [col, row + 1],
-          [col - 1, row],
-          [col + 1, row]
-        ];
-        for (const [nc, nr] of neighbors) {
-          if (!roomTileSet.has(`${nc},${nr}`) && !hasDoorAtEdge(col, row, nc, nr)) {
-            const geom = (typeof getGridGeometry === 'function') ? getGridGeometry() : {
-              cols: currentBlockmap.gridDimensions ? currentBlockmap.gridDimensions[0] : 28,
-              rows: currentBlockmap.gridDimensions ? currentBlockmap.gridDimensions[1] : 21
-            };
-            if (nc >= 0 && nc < geom.cols && nr >= 0 && nr < geom.rows) {
-              const newDoor = {
-                id: `door-${(currentQuest.doors || []).length + 1}`,
-                from: [col, row],
-                to: [nc, nr],
-                state: cmd.type === 'secret' ? 'secret' : (cmd.type === 'wood-open' ? 'open' : 'closed')
-              };
-              if (!currentQuest.doors) currentQuest.doors = [];
-              currentQuest.doors.push(newDoor);
-              doorPlaced = true;
-              placedCount++;
-              break;
-            }
+      const geom = (typeof getGridGeometry === 'function') ? getGridGeometry() : {
+        cols: currentBlockmap.gridDimensions ? currentBlockmap.gridDimensions[0] : 28,
+        rows: currentBlockmap.gridDimensions ? currentBlockmap.gridDimensions[1] : 21
+      };
+
+      const getRoomAt = (c, r) => {
+        if (!currentBlockmap || !currentBlockmap.rooms) return null;
+        for (const rm of currentBlockmap.rooms) {
+          if (rm.tiles) {
+            if (rm.tiles.some(t => t[0] === c && t[1] === r)) return rm;
+          } else if (rm.x !== undefined) {
+            if (c >= rm.x && c < rm.x + rm.w && r >= rm.y && r < rm.y + rm.h) return rm;
           }
         }
-        if (doorPlaced) break;
+        return null;
+      };
+
+      // Second room target if inter-room door requested (e.g. "between room 1 and room 2")
+      let targetRoom2 = null;
+      if (cmd.secondRoom) {
+        targetRoom2 = findTargetRoom(cmd.secondRoom, currentBlockmap, currentContext);
       }
+
+      // Desired wall direction (north, south, east, west)
+      let desiredWall = null;
+      if (cmd.wall) {
+        const w = cmd.wall.toLowerCase().trim();
+        if (w === 'top' || w === 'north') desiredWall = 'north';
+        else if (w === 'bottom' || w === 'south') desiredWall = 'south';
+        else if (w === 'left' || w === 'west') desiredWall = 'west';
+        else if (w === 'right' || w === 'east') desiredWall = 'east';
+      }
+
+      const corridorSet = new Set((currentBlockmap.corridors || []).map(t => `${t[0]},${t[1]}`));
+      const hasCorridorsList = Boolean(currentBlockmap.corridors && currentBlockmap.corridors.length > 0);
+
+      // Collect all candidate perimeter edges of targetRoom
+      const candidateEdges = [];
+      for (const [col, row] of roomTiles) {
+        const neighbors = [
+          { nc: col, nr: row - 1, wall: 'north' },
+          { nc: col, nr: row + 1, wall: 'south' },
+          { nc: col - 1, nr: row, wall: 'west' },
+          { nc: col + 1, nr: row, wall: 'east' }
+        ];
+
+        for (const { nc, nr, wall } of neighbors) {
+          // Inside board boundary
+          if (nc < 0 || nc >= geom.cols || nr < 0 || nr >= geom.rows) continue;
+          // Not within the same room
+          if (roomTileSet.has(`${nc},${nr}`)) continue;
+          // No door already placed on this edge
+          if (hasDoorAtEdge(col, row, nc, nr)) continue;
+
+          const otherRoom = getRoomAt(nc, nr);
+          const isCorridor = hasCorridorsList ? corridorSet.has(`${nc},${nr}`) : !otherRoom;
+
+          // Per HeroQuest rules, a door must connect a room to a corridor or to an adjacent room
+          if (!isCorridor && !otherRoom) continue;
+
+          candidateEdges.push({
+            col, row, nc, nr, wall,
+            otherRoom,
+            isCorridor
+          });
+        }
+      }
+
+      // Filter by secondRoom if requested
+      let pool = candidateEdges;
+      if (targetRoom2) {
+        pool = pool.filter(c => c.otherRoom && (c.otherRoom.id === targetRoom2.id || c.otherRoom.name === targetRoom2.name));
+      }
+
+      // Filter by desired wall direction if specified
+      if (desiredWall) {
+        const wallMatches = pool.filter(c => c.wall === desiredWall);
+        if (wallMatches.length > 0) {
+          pool = wallMatches;
+        }
+      }
+
+      const neededCount = Math.max(1, cmd.count || 1);
+      const selected = [];
+      const usedIndices = new Set();
+      if (pool.length <= neededCount) {
+        selected.push(...pool);
+      } else {
+        const step = pool.length / neededCount;
+        for (let i = 0; i < neededCount; i++) {
+          let idx = Math.floor(i * step + step / 2);
+          if (idx >= pool.length) idx = pool.length - 1;
+          while (usedIndices.has(idx) && idx < pool.length - 1) idx++;
+          while (usedIndices.has(idx) && idx > 0) idx--;
+          if (!usedIndices.has(idx)) {
+            usedIndices.add(idx);
+            selected.push(pool[idx]);
+          }
+        }
+      }
+
+      if (!currentQuest.doors) currentQuest.doors = [];
+
+      for (const edge of selected) {
+        const isSecret = cmd.type === 'secret';
+        const isOpen = cmd.type === 'wood-open';
+        const newDoor = {
+          id: `door-${currentQuest.doors.length + 1}`,
+          from: [edge.col, edge.row],
+          to: [edge.nc, edge.nr],
+          state: isSecret ? 'secret' : (isOpen ? 'open' : 'closed'),
+          is_secret: isSecret,
+          room: targetRoom.id || ''
+        };
+        currentQuest.doors.push(newDoor);
+        placedCount++;
+      }
+
       if (placedCount > 0) {
-        placedSummary.push(`door in ${roomName}`);
+        const doorLabel = (cmd.type === 'secret') ? 'secret door' : ((cmd.type === 'wood-open') ? 'open door' : 'door');
+        let summary = `${placedCount} ${doorLabel}${placedCount > 1 ? 's' : ''}`;
+        if (targetRoom2) {
+          summary += ` between ${roomName} and ${targetRoom2.name || targetRoom2.id}`;
+        } else {
+          summary += ` in ${roomName}`;
+          if (desiredWall) {
+            summary += ` on ${desiredWall} wall`;
+          }
+        }
+        placedSummary.push(summary);
       }
     }
   }
