@@ -4,7 +4,7 @@ package: group-manager
 category: arch-planning
 icon: group-manager.svg
 summary: "Create and edit developer groups (members, repositories, software, onboarding steps, secrets, CI) and set up a sample company identity."
-description: "Group Manager stores groups as JSON files under ~/.config/robos/groups. Its Sync Directory and Bootstrap buttons write built-in sample people and teams; they do not connect to Okta, LDAP or GitHub."
+description: "Group Manager stores groups as JSON files under ~/.config/robos/groups. Its Sync Directory and Bootstrap buttons write built-in sample people and teams; they do not connect to Okta or LDAP."
 ---
 
 Group Manager defines groups of developers and what each group needs: repositories, software, onboarding steps, secrets and CI environments. Other apps read the groups, for example [Git Projects]({{ '/apps/git-projects/' | relative_url }}) uses them for **Add Dev Group Repos**.
@@ -23,7 +23,7 @@ Click **+** to add a group (a Group ID and Name are required). Select a group to
 | CI Environments | CI settings |
 | Workspaces | IDE project workspaces associated with the group |
 
-Each group is one file, `~/.config/robos/groups/<id>.json`; the folder button under the list opens it. **Create with AI** drafts a group from a description using the agent chosen in the **Agent** menu. **Dev Console** opens `https://localhost:9090` (the Cockpit web console) in a window, which only works if Cockpit is installed and running.
+Each group is one file, `~/.config/robos/groups/<id>.json`; the folder button under the list opens it. **Create with AI** drafts a group from a description using the agent chosen in the **Agent** menu. **Dev Console** opens `https://localhost:9090` in a window. That is the default address of Cockpit, the Linux server admin console, so it only works if Cockpit is installed and running.
 
 ## Identity and company setup
 

@@ -28,7 +28,7 @@ Agent runs are plain JSON files in `~/.robos/agent-runs/<runId>.json` with a `.l
 
 ## The legacy dashboard
 
-Start it with `--v1` or `ROBOS_DEVCENTRAL_UI=v1`. Its tabs are Mission Control (overview), Active Feature, My Tasks & Sprint, Pull Requests & CI, Notifications, Blocker Radar, AI Standup and Desktop Activity.
+Start it with `--v1` or `ROBOS_DEVCENTRAL_UI=v1`. Its tabs are an overview, Active Feature, My Tasks & Sprint, Pull Requests & CI, Notifications, Blocker Radar, AI Standup and Desktop Activity.
 
 ![The legacy Dev Central dashboard with overview cards, task, pull request and blocker lists and a standup summary]({{ '/assets/images/screenshots/dev-central-overview.png' | relative_url }})
 {: .robos-zoomable-img }
