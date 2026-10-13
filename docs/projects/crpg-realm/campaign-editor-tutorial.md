@@ -192,15 +192,15 @@ In the cartridge map, left-click to move and click NPCs, chests, items and passa
 
 The cartridge runner is `scripts/CartridgeWorld.gd`. It reads these things generically from any cartridge:
 
-- **Maps.** Width, height, terrain, `robos:backgroundImage` and `robos:mapObjects`. Objects of type `wall`, `pillar` and `dais` become obstacles. Type `chest` (or an id containing `chest`) becomes a chest. Types `item`, `weapon`, `pickup`, `loot` and `equipment` become pickups. Types `passage`, `door` and `portal` become map transitions through the campaign's `robos:mapConnections`.
-- **The campaign state.** `robos:heroes`, the shared inventory, world flags and the quest log go into `GameState`.
-- **Items, NPCs and monsters** are added to `DataStore`.
+- Maps. Width, height, terrain, `robos:backgroundImage` and `robos:mapObjects`. Objects of type `wall`, `pillar` and `dais` become obstacles. Type `chest` (or an id containing `chest`) becomes a chest. Types `item`, `weapon`, `pickup`, `loot` and `equipment` become pickups. Types `passage`, `door` and `portal` become map transitions through the campaign's `robos:mapConnections`.
+- The campaign state. `robos:heroes`, the shared inventory, world flags and the quest log go into `GameState`.
+- Items, NPCs and monsters are added to `DataStore`.
 
 It does not read these generically:
 
-- **NPC placement and dialogue.** NPCs are placed by `_spawn_map_npcs`, which tests the map slug and the character slug against fixed strings (`throne-room` with `king`, `main-castle` with `torvald`, `dark-lord-lair` with `malakor`, and the Dragon Warrior equivalents). The `location`, `col`, `row` and `dialogue` fields in a character file are not used. The lines NPCs speak are strings in `_interact_with_npc`.
-- **Story logic.** The quest steps (accept the quest, win the goblin trial, claim the sword, defeat the boss, escort the princess, victory) are functions in `CartridgeWorld.gd` for two stories, Rescue the Princess and Dragon Warrior. The story tree in `robos:storyFlow` is bundled into the cartridge as `storyDAG` but not played.
-- **Chest contents** are chosen from the chest's object id (`120g`, `key`, `torch`, `sword`, `herb`).
+- NPC placement and dialogue. NPCs are placed by `_spawn_map_npcs`, which tests the map slug and the character slug against fixed strings (`throne-room` with `king`, `main-castle` with `torvald`, `dark-lord-lair` with `malakor`, and the Dragon Warrior equivalents). The `location`, `col`, `row` and `dialogue` fields in a character file are not used. The lines NPCs speak are strings in `_interact_with_npc`.
+- Story logic. The quest steps (accept the quest, win the goblin trial, claim the sword, defeat the boss, escort the princess, victory) are functions in `CartridgeWorld.gd` for two stories, Rescue the Princess and Dragon Warrior. The story tree in `robos:storyFlow` is bundled into the cartridge as `storyDAG` but not played.
+- Chest contents are chosen from the chest's object id (`120g`, `key`, `torch`, `sword`, `herb`).
 
 So a new campaign gets its maps, walls, chests, pickups and passages in the game. Its NPCs, dialogue and quest steps need code in `CartridgeWorld.gd` until a generic runner exists. Treat the editor as an authoring tool for the data, and the Rescue the Princess campaign as the one end-to-end example.
 

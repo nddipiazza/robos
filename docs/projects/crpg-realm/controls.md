@@ -48,7 +48,7 @@ The game is real-time with pause. Press Space to freeze the action, give orders,
 |:---|:---|:---|
 | Space | Pause or resume | `HeroPlayer._unhandled_key_input` calls `GameState.toggle_pause()` |
 | 1, 2, 3 | Select party member 1, 2 or 3. This does not change the leader. | `HeroPlayer._unhandled_key_input` |
-| `\` or `=` | Select the whole party | `HeroPlayer._unhandled_key_input` |
+| Backslash or `=` | Select the whole party | `HeroPlayer._unhandled_key_input` |
 | W A S D | Move the hero directly. This cancels a click-to-move. | `HeroPlayer._physics_process` |
 | Arrow keys | Pan the camera | `HeroPlayer._handle_camera_pan` |
 | Home | Clear the camera pan so the view is centred on the leader again | `HeroPlayer.center_camera_on_hero` |

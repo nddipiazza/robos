@@ -3,6 +3,7 @@ title: KGraph parse portal
 layout: default
 parent: Build on RobOS
 nav_order: 5
+has_children: true
 permalink: /kgraph-parse-portal.html
 redirect_from:
   - /kgraph-crawler/tika-grpc-service.html

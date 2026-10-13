@@ -35,7 +35,7 @@ flowchart LR
   apps["Electron apps (packages/*)"]
   lib["robos-lib"]
   ui["robos-ui"]
-  graph["robos-graph"]
+  rgraph["robos-graph"]
   kg[".robos/kgraphs/*/package.jsonld"]
   client["robos-agent-client"]
   clis["claude, codex, copilot CLIs"]
@@ -47,8 +47,8 @@ flowchart LR
 
   apps --> lib
   apps --> ui
-  apps --> graph
-  graph --> kg
+  apps --> rgraph
+  rgraph --> kg
   apps --> client
   client --> clis
   servers --> mcplib

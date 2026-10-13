@@ -33,7 +33,7 @@ A review opens in one of two modes, and the mode decides which tabs you get.
 | Uses real data | All tabs | Description, Changes and Approve |
 
 {: .important }
-In reviewer mode, the Overview, Documentation, Open in IDE, Evidence and Walkthrough tabs show built-in sample content about a PetStore mTLS change. It is not generated from the pull request: the quiz has three fixed questions, the REST runner falls back to a canned response, and the breakpoint and live-proof logs are fixed text. Use Description, Changes and Approve there. The Approve button stays blocked until the Overview quiz is passed (pass mark 80% by default), unless **Review settings** turns that gate off.
+In reviewer mode, the Overview, Documentation, Open in IDE, Evidence and Walkthrough tabs show built-in sample content about a PetStore mTLS change. It is not generated from the pull request: the quiz has three fixed questions, the REST runner falls back to a canned response, and the breakpoint and live-proof logs are fixed text. Use Description, Changes and Approve there. With the default team policy, the Changes tab shows a "Code diffs locked" overlay and the Approve step shows a lock banner until the Overview quiz is passed (pass mark 80% by default). **Review settings** can turn each lock off: clear **Lock code diffs in Stage 3 until passed** for Changes, or make the quiz optional for Approve. Local reviews do not have this lock.
 
 ## Open a review
 

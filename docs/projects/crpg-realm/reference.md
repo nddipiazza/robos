@@ -72,8 +72,8 @@ Declared in `project.godot`. They exist for the whole run and survive scene chan
 
 The game has two ways to describe content, and they do not share a loader.
 
-1. **`data/v1/*.json`** are JSON arrays of objects with an `id`. `DataStore` loads them for the hand-built scenes. `ScenarioEngine` reads a subset for the rules engine.
-2. **KGraph JSON-LD files** in `campaigns/`, `characters/`, `items/`, `enemies/`, `spells/`, `abilities/`, `events/` and `maps/` are what the [campaign editor]({{ '/projects/crpg-realm/campaign-editor-tutorial.html' | relative_url }}) reads and writes. The cartridge bundler compiles them into `cartridges/*.cartridge.json`, which `CartridgeWorld` plays.
+1. `data/v1/*.json` files are JSON arrays of objects with an `id`. `DataStore` loads them for the hand-built scenes. `ScenarioEngine` reads a subset for the rules engine.
+2. KGraph JSON-LD files in `campaigns/`, `characters/`, `items/`, `enemies/`, `spells/`, `abilities/`, `events/` and `maps/` are what the [campaign editor]({{ '/projects/crpg-realm/campaign-editor-tutorial.html' | relative_url }}) reads and writes. The cartridge bundler compiles them into `cartridges/*.cartridge.json`, which `CartridgeWorld` plays.
 
 ### data/v1 files
 {: #data-v1-files }
@@ -90,7 +90,8 @@ The game has two ways to describe content, and they do not share a loader.
 | `dialogue.json` | 18 | `NPCCharacter` and the scene scripts, through `DataStore.dialogue_trees` |
 | `traps.json` | 4 | `Trap.gd` (overrides the node's exports by `trap_id`) and `ScenarioEngine` |
 | `status_effects.json` | 17 | `ScenarioEngine` (conditions) |
-| `quests.json`, `zones.json` | 4, 3 | Loaded by `DataStore`; no script reads them |
+| `quests.json` | 4 | `GameState.load_campaign_state()` reads it directly when a campaign has no quest log. `DataStore` also loads it. |
+| `zones.json` | 3 | Loaded by `DataStore`; no script reads it |
 | `encounters.json`, `events.json` | 2, 19 | No script reads them |
 | `active_campaign.json` | object | Written by the editor's **Render as Game**. `CharacterSelect.gd` and `GameControlServer.gd` read it as a fallback campaign. |
 
@@ -171,7 +172,7 @@ The API is not pure input simulation. `mouse_click` pushes a real input event, b
 | `python3 run_cucumber_tests.py [suite] [feature] [behave args]` | Suites: `--normal` (default; alias `--isolated`), `--spells` (`--spell`, `--magic`), `--playthrough` (`--playthroughs`, `--full`), `--scenarios` (`--scenario`, `--adventures`), `--engine`, `--all` (`--both`). Modifiers: `--backend` or `--fast`, `--human` or `--prove`. |
 | `node packages/crpg-builder/bin/crpg-cartridge.js list` | List cartridges and campaigns. Other commands: `bundle <slug> [out]`, `bundle-all`, `inspect <slug>`. |
 | `node --test tests/*.test.js` in `packages/crpg-builder` | Builder and cartridge tests |
-| `python3 -m robos_crpg_blockout validate\|build\|check\|render <map.jsonld>` in `packages/robos-crpg-blockout` | Blockout map tool. See its [README](https://github.com/nddipiazza/robos/blob/main/packages/robos-crpg-blockout/README.md). |
+| `python3 -m robos_crpg_blockout <command> <map.jsonld>` in `packages/robos-crpg-blockout` | Blockout map tool. The commands are `validate`, `build`, `check` and `render`. See its [README](https://github.com/nddipiazza/robos/blob/main/packages/robos-crpg-blockout/README.md). |
 | `node games/crpg-realm/tests/e2e/validate_scenarios_kgraph.js <file.jsonld>...` | Check scenario files against the SHACL shapes |
 | `npm start` in `packages/crpg-editor` | Start the campaign editor |
 

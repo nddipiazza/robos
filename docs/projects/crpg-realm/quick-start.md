@@ -24,7 +24,7 @@ How to run Realm of Heroes from the RobOS repository, start a specific campaign 
 
 | Need | For | Notes |
 |:---|:---|:---|
-| Git, Godot 4.3 (standard build, not .NET) | Playing, tests | `project.godot` declares the `4.3` feature and the GL Compatibility renderer. |
+| Git, Godot 4.3 | Playing, tests | `project.godot` declares the `4.3` feature and the GL Compatibility renderer. |
 | Python 3, `behave`, `behave-html-formatter` | Tests | The repo has no `requirements.txt`. The test code itself uses only the standard library plus `behave`. |
 | `Xvfb`, `ffmpeg` | Tests that record video | Linux only. Not needed in backend mode (see [Run the tests](#run-the-tests)). |
 | Node.js and npm | [Campaign editor]({{ '/projects/crpg-realm/campaign-editor-tutorial.html' | relative_url }}) | The editor is an Electron app. |
