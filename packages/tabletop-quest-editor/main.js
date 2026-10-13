@@ -391,3 +391,38 @@ ipcMain.handle('quest:launch-game', async (_event, slug) => {
     return { success: false, error: err.message };
   }
 });
+
+// IPC: Ensure RobOS Voice overlay app is running
+ipcMain.handle('voice:ensure-running', async () => {
+  try {
+    let voiceClient = null;
+    try {
+      const { RobOSVoiceClient } = require('../robos-lib/voice');
+      voiceClient = new RobOSVoiceClient();
+    } catch {
+      try {
+        const { RobOSVoiceClient } = require('/usr/local/share/robos/robos-lib/voice');
+        voiceClient = new RobOSVoiceClient();
+      } catch {}
+    }
+
+    if (voiceClient && typeof voiceClient.ensureRunning === 'function') {
+      return await voiceClient.ensureRunning();
+    }
+
+    const hudScript = path.resolve(__dirname, '../voice-prompt/bin/robos-voice-hud');
+    if (fs.existsSync(hudScript)) {
+      const child = spawn(hudScript, [], {
+        detached: true,
+        stdio: 'ignore',
+        env: { ...process.env, DISPLAY: process.env.DISPLAY || ':0' }
+      });
+      child.unref();
+      return { ok: true, launched: true, pid: child.pid };
+    }
+
+    return { ok: false, error: 'Voice HUD script not found' };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});

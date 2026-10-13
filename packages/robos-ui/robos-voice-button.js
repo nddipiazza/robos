@@ -382,6 +382,11 @@ robos-voice-button {
       this._recognition = null;
       this._drawerEl = null;
       this._simulatedMode = false;
+      this._usingOverlayApp = false;
+    }
+
+    get usingOverlayApp() {
+      return this._usingOverlayApp;
     }
 
     _isIconOnly() {
@@ -525,14 +530,11 @@ robos-voice-button {
       this._isRecording = true;
       this._capturedText = '';
       this._interimText = '';
+      this._usingOverlayApp = false;
       this._startTime = Date.now();
 
       this._updateButtonContent();
       this._startTimer();
-
-      if (this._showDrawer) {
-        this._renderDrawer();
-      }
 
       this.dispatchEvent(new CustomEvent('robos-voice-start', {
         detail: {
@@ -544,32 +546,98 @@ robos-voice-button {
 
       // Start underlying speech capture mechanism
       await this._connectAudioStream();
+
+      // Only show internal drawer if overlay app is not handling the visual HUD bubbles
+      if (this._showDrawer && !this._usingOverlayApp) {
+        this._renderDrawer();
+      }
+
       return true;
+    }
+
+    /**
+     * Ensure RobOS Voice overlay daemon is running; invoke host app IPC if offline
+     */
+    async _ensureVoiceAppRunning(maxWaitMs = 5000) {
+      // 1. Probe if daemon is already alive
+      try {
+        const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        const timer = controller ? setTimeout(() => controller.abort(), 600) : null;
+        const res = await fetch(`${this._apiUrl}/api/status`, {
+          signal: controller ? controller.signal : undefined,
+        });
+        if (timer) clearTimeout(timer);
+        if (res.ok) return true;
+      } catch {}
+
+      // 2. Request host Electron application to start the overlay app
+      let launchTriggered = false;
+      try {
+        if (typeof window !== 'undefined') {
+          if (window.robosQuestEditor && typeof window.robosQuestEditor.ensureVoiceApp === 'function') {
+            await window.robosQuestEditor.ensureVoiceApp();
+            launchTriggered = true;
+          } else if (window.robosVoiceHud && typeof window.robosVoiceHud.ensureRunning === 'function') {
+            await window.robosVoiceHud.ensureRunning();
+            launchTriggered = true;
+          } else if (window.robosDesktop && typeof window.robosDesktop.launchApp === 'function') {
+            window.robosDesktop.launchApp('voice-prompt');
+            launchTriggered = true;
+          }
+        }
+      } catch (err) {
+        console.warn('[RobosVoiceButton] Unable to trigger host voice app launch:', err);
+      }
+
+      // If initial probe was offline and no launcher could be triggered, return immediately
+      if (!launchTriggered) {
+        return false;
+      }
+
+      // 3. Poll /api/status until daemon responds or maxWaitMs expires
+      const start = Date.now();
+      while (Date.now() - start < maxWaitMs) {
+        try {
+          const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+          const timer = controller ? setTimeout(() => controller.abort(), 500) : null;
+          const res = await fetch(`${this._apiUrl}/api/status`, {
+            signal: controller ? controller.signal : undefined,
+          });
+          if (timer) clearTimeout(timer);
+          if (res.ok) return true;
+        } catch {}
+        await new Promise(r => setTimeout(r, 250));
+      }
+      return false;
     }
 
     /**
      * Connect to voice streaming: local Voice Daemon -> Web Speech API -> Simulation
      */
     async _connectAudioStream() {
-      // 1. Try local RobOS Voice API daemon
+      // 1. Try local RobOS Voice API daemon (start overlay app if offline)
       let connectedToDaemon = false;
       try {
-        const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-        const timer = controller ? setTimeout(() => controller.abort(), 200) : null;
-        const res = await fetch(`${this._apiUrl}/api/activate`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            backgroundMode: true,
-            guidancePrompt: this._guidancePrompt,
-            agentId: this._agentId,
-          }),
-          signal: controller ? controller.signal : undefined,
-        });
-        if (timer) clearTimeout(timer);
-        if (res.ok) {
-          connectedToDaemon = true;
-          this._initDaemonSseStream();
+        const isRunning = await this._ensureVoiceAppRunning(5000);
+        if (isRunning) {
+          const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+          const timer = controller ? setTimeout(() => controller.abort(), 3000) : null;
+          const res = await fetch(`${this._apiUrl}/api/activate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              backgroundMode: false,
+              guidancePrompt: this._guidancePrompt,
+              agentId: this._agentId,
+            }),
+            signal: controller ? controller.signal : undefined,
+          });
+          if (timer) clearTimeout(timer);
+          if (res.ok) {
+            connectedToDaemon = true;
+            this._usingOverlayApp = true;
+            this._initDaemonSseStream();
+          }
         }
       } catch {
         connectedToDaemon = false;
@@ -828,7 +896,8 @@ robos-voice-button {
       // Try deactivating on daemon if connected
       try {
         const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-        const timer = controller ? setTimeout(() => controller.abort(), 200) : null;
+        // Whisper speech transcription finalization may take a couple seconds
+        const timer = controller ? setTimeout(() => controller.abort(), 6000) : null;
         const res = await fetch(`${this._apiUrl}/api/deactivate`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -854,6 +923,7 @@ robos-voice-button {
         timestamp: new Date().toISOString(),
       };
 
+      this._usingOverlayApp = false;
       this._updateButtonContent();
       this._closeDrawer();
 
@@ -892,9 +962,16 @@ robos-voice-button {
       }
 
       try {
-        fetch(`${this._apiUrl}/api/deactivate`, { method: 'POST' }).catch(() => {});
+        const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        const timer = controller ? setTimeout(() => controller.abort(), 2000) : null;
+        fetch(`${this._apiUrl}/api/deactivate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: controller ? controller.signal : undefined,
+        }).then(() => { if (timer) clearTimeout(timer); }).catch(() => {});
       } catch {}
 
+      this._usingOverlayApp = false;
       this._updateButtonContent();
       this._closeDrawer();
 

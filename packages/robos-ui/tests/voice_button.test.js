@@ -224,3 +224,59 @@ test('RobosVoiceButton empty label attribute acts as icon-only without text', ()
   assert.ok(!vb.innerHTML.includes('robos-voice-timer'), 'Button must not contain timer element');
 });
 
+test('RobosVoiceButton triggers host ensureVoiceApp and connects to overlay app daemon', async () => {
+  let ensureVoiceAppCalled = false;
+  global.window = global.window || {};
+  global.window.robosQuestEditor = {
+    ensureVoiceApp: async () => {
+      ensureVoiceAppCalled = true;
+      return { ok: true, launched: true };
+    },
+  };
+
+  const originalFetch = global.fetch;
+  const requests = [];
+  global.fetch = async (url, options = {}) => {
+    requests.push({ url, method: options.method || 'GET', body: options.body ? JSON.parse(options.body) : null });
+    if (url.endsWith('/api/status')) {
+      return { ok: true, json: async () => ({ ok: true, listening: false }) };
+    }
+    if (url.endsWith('/api/activate')) {
+      return { ok: true, json: async () => ({ ok: true, active: true }) };
+    }
+    if (url.endsWith('/api/deactivate')) {
+      return { ok: true, json: async () => ({ ok: true, text: 'add 2 goblins to room 3' }) };
+    }
+    return { ok: false, status: 404, json: async () => ({}) };
+  };
+
+  try {
+    const vb = new RobosVoiceButton();
+    vb.setAttribute('guidance-prompt', 'Place monsters and furniture');
+    vb.connectedCallback();
+
+    let completeEvent = null;
+    vb.addEventListener('robos-voice-complete', (e) => { completeEvent = e; });
+
+    await vb.start();
+    assert.equal(vb.isRecording, true);
+    assert.equal(vb.usingOverlayApp, true, 'usingOverlayApp should be true when daemon activated');
+    assert.equal(vb._drawerEl, null, 'Drawer should not be displayed when overlay HUD is active');
+
+    const activateReq = requests.find(r => r.url.endsWith('/api/activate'));
+    assert.ok(activateReq, 'POST /api/activate should have been sent');
+    assert.equal(activateReq.body.backgroundMode, false, 'backgroundMode must be false to display overlay HUD');
+    assert.equal(activateReq.body.guidancePrompt, 'Place monsters and furniture');
+
+    const result = await vb.stop();
+    assert.equal(vb.isRecording, false);
+    assert.equal(vb.usingOverlayApp, false);
+    assert.ok(requests.some(r => r.url.endsWith('/api/deactivate')), 'POST /api/deactivate was sent');
+    assert.equal(result.text, 'add 2 goblins to room 3');
+    assert.equal(completeEvent.detail.text, 'add 2 goblins to room 3');
+  } finally {
+    global.fetch = originalFetch;
+    delete global.window.robosQuestEditor;
+  }
+});
+
