@@ -1,103 +1,148 @@
 ---
-title: System Architecture
+title: Architecture
 layout: default
 parent: Build on RobOS
-nav_order: 6
-has_children: true
+nav_order: 7
+redirect_from:
+  - /architecture/billing-api.html
+  - /architecture/dev-central.html
+  - /architecture/forms-api.html
+  - /architecture/inventory-api.html
+  - /architecture/robos-documentation.html
+  - /architecture/robos-elearning.html
+  - /applications/forms-api.html
 ---
 
-# System Architecture (How RobOS Works Under the Hood)
+# Architecture
 {: .no_toc }
 
-The architectural pillars, the Dual-State Comparison Engine, multi-app archetypes, and the secure desktop bridge powering RobOS.
-{: .fs-6 .fw-300 }
+How the RobOS repository is put together: Electron apps, the shared libraries they load, the `.robos` knowledge graph, the agent router and the MCP servers. Read it before you change something that crosses package boundaries.
+{: .fs-6 }
 
-## Table of contents
-{: .no_toc .text-delta }
-
+<details open markdown="block">
+  <summary>On this page</summary>
+  {: .text-delta }
 1. TOC
 {:toc}
+</details>
 
----
+## Overview
 
-## The Pillars of RobOS
+RobOS is a set of Electron desktop apps that share libraries and one knowledge graph. The suite apps are plain JavaScript with no front-end framework. (`getemgigs` and `urban-plant-tracker` in `packages/` are Next.js web apps, not suite apps.) Agent features call out to command-line agents you install yourself.
 
-RobOS structures all development lifecycle information into 8 connected, plain-text categories stored directly in your Git repositories:
+```mermaid
+flowchart LR
+  apps["Electron apps (packages/*)"]
+  lib["robos-lib"]
+  ui["robos-ui"]
+  graph["robos-graph"]
+  kg[".robos/kgraphs/*/package.jsonld"]
+  client["robos-agent-client"]
+  clis["claude, codex, copilot CLIs"]
+  servers["MCP servers (*-mcp)"]
+  mcplib["robos-mcp-lib"]
+  registry["~/.config/robos/mcp/servers.json"]
+  router["robos-mcp-router"]
+  mcpclient["MCP client, for example Claude Code"]
 
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/robos-8-pillars-architecture.jpg' | relative_url }}" alt="The Architectural Pillars of RobOS" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>The Architectural Pillars of RobOS</strong>: How connected Git-backed standards (C4 maps, Team Topologies, TypeSpec models, API contracts, multi-app archetypes, multi-repo workspaces, and DAG task roadmaps) converge into a unified SDLC Knowledge Graph. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
+  apps --> lib
+  apps --> ui
+  apps --> graph
+  graph --> kg
+  apps --> client
+  client --> clis
+  servers --> mcplib
+  mcplib --> registry
+  router --> registry
+  mcpclient --> router
+```
 
-1. **Visual Architecture & Service Map**: Visualizes all microservices, frontends, databases, and message queues with live dependency maps and blast radius impact tracking.
-2. **Team Roster & Team Topologies**: Clear directory of engineering squads (stream-aligned, platform, enablement, complicated-subsystem), service ownership, and enterprise directory sync (Okta, Azure AD, LDAP) stored in `.robos/teams.yaml`.
-3. **Data Model Studio (TypeSpec)**: Define domain data models once and generate TypeScript, Java, and Go types automatically.
-4. **API Contracts & Mock Servers**: Define REST APIs (OpenAPI 3.1), gRPC Protobuf, and event streams with live mock servers for instant testing.
-5. **Multi-App Archetypes & Packages**: Standardized scaffolding and runtime definitions across archetypes (`robos:Microservice`, `robos:FrontEndApp`, `robos:DesktopApp`, `robos:PCGame`, `robos:MobileGame`, `robos:ConsoleApp`, `robos:MobileApp`, `robos:DataPipeline`, `robos:Library`) stored in `.robos/packages.yaml`.
-6. **Multi-Repo Workspace Hub**: Switch between Git branches across multiple repositories simultaneously without duplicate disk storage.
-7. **Step-by-Step Task Roadmap**: Breaks high-level feature goals down into a clean checklist of prerequisite and dependent tasks (OASIS OSLC Change Management).
-8. **Clean Git-Backed Files**: Everything is saved in human-readable plain text files across **Modular KGraph Packages** under `.robos/` (`teams.yaml`, `packages.yaml`, `topology.yaml`) with zero proprietary cloud databases.
+Each arrow is a `require`, a file read or a spawned process in the source. The exception is the MCP client, which you point at the router with a generated configuration (see MCP servers below). For example `packages/app-wizard/main.js` requires `robos-lib` and `robos-graph`, its HTML loads `robos-ui`, and `packages/robos-mcp-lib/server.js` registers each server in `servers.json`. Of the MCP servers, `ekgraph-mcp` uses `robos-graph`, through its `robos_sdlc_*` tools.
 
-{: .note }
-> **Deep Dive:** For the complete breakdown of packages, namespaces, Git-tag version pinning, and the zero-plaintext GPG password store vault, see the dedicated [SDLC Knowledge Graph Guide]({{ site.baseurl }}{% link knowledge-graph.md %}).
+## Repository layout
 
----
+| Path | Contents |
+|:---|:---|
+| `packages/<name>/` | One folder per app, library or daemon. There is no root `package.json`; each package has its own `node_modules`. |
+| `.robos/` | The knowledge graph and its catalogs. See below. |
+| `games/` | Two Godot projects, `crpg-realm` and `tabletop-rpg`. See [Game development]({{ site.baseurl }}{% link game-development.md %}). |
+| `plugins/`, `.agents/skills/` | The agent skills and the plugin marketplace. See [Skills]({{ site.baseurl }}{% link robos-skills.md %}). |
+| `infra/desktop/` | Scripts that build and run the RobOS virtual machine (`build.sh`, `run.sh`, `clean.sh`). |
+| `infra/docker/` | The Docker image for headless end-to-end tests (Ubuntu with Xvfb and Picom). `scripts/e2e-container.sh` runs it. |
+| `installer/` | An Electron app for flashing RobOS to a USB drive. |
+| `docs/`, `site/` | This documentation site and the front site. |
 
-## Today vs. Tomorrow (The Dual-State Engine)
+## Apps
 
-Traditional developer tools only understand the files currently on your laptop. RobOS tracks two versions of your system at the same time:
+Every app in `packages/` follows one layout: `main.js` (Electron main process), `preload.js`, `renderer/` (HTML, CSS, JavaScript), an icon and a `.desktop` file. Windows are created with `nodeIntegration: false`, and `preload.js` exposes the app's functions to the page with `contextBridge`. The page calls them, and `main.js` handles the calls with `ipcMain.handle`. No package under `packages/` sets `nodeIntegration: true`.
 
-- **World 1 (Live Production `main`)**: What is running in production right now — deployed services, active API contracts, and live databases.
-- **World 2 (Your Feature Branch)**: What the system will look like once your feature branch merges.
+App state lives in `~/.config/robos/`. Many apps also set Electron's `userData` path to a folder there, for example `~/.config/robos/electron/app-wizard`.
 
-RobOS automatically computes the difference between the two states:
-- **Breaking API Changes**: Flagged before any code is written via Spectral and SHACL validators.
-- **Missing Database Migrations**: Caught and planned upfront.
-- **Affected Downstream Apps**: Automatically identified so you can update client apps before releasing.
-- **Living Documentation Sync**: System documentation (`docs/`) and interactive training courses (`.robos/elearning.yaml`) are updated in lockstep with architectural changes.
+Apps start a small HTTP debug server through `robos-lib/dom-snapshot`. `packages/robos-lib/snapshot-cli.js` has a `PORT_REGISTRY` that maps each app id to its port (the App Wizard uses 19183). The command `node packages/robos-lib/snapshot-cli.js <app-id> --text` returns the page's DOM as text. Tests and agents use this to see an app without a screenshot.
 
----
+The desktop shell is three apps: `robos-desktop` (a full-screen taskbar that replaces the GNOME panel), `desktop-manager` (tray icon, app lifecycle and an IPC hub) and `app-launcher` (a searchable grid). Launcher entries are `.desktop` files. `robos-lib` lists the entries whose file has `X-RobOS-App=true`, and groups them by `X-RobOS-Category`.
 
-## Fast, Secure Desktop Bridge
+## Shared libraries
 
-RobOS applications are built using lightweight vanilla JavaScript and Electron, communicating through secure desktop channels:
+Libraries are not npm dependencies. On a RobOS machine they are copied to `/usr/local/share/robos/<lib>`, and apps load them by path inside `try`/`catch`, trying the sibling folder in the repository first and then the installed path (`robos-lib` also honors `ROBOS_LIB_PATH`). That is why an app still starts when a library is missing.
 
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/secure-desktop-bridge-architecture.jpg' | relative_url }}" alt="Secure Desktop Bridge & Execution Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Secure Desktop Bridge & Execution Architecture</strong>: The 4-tier communication pipeline from isolated Vanilla JS desktop apps through hardened Electron contextBridge IPC to the background daemon and local/cloud runtime infrastructure. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
+| Package | What it is |
+|:---|:---|
+| `robos-lib` | `.desktop` parsing and app categories, the DOM snapshot server and CLI, logging, the prompt security guard, and other helpers. |
+| `robos-ui` | Web components for renderer pages, such as `<robos-ai-textarea>`. |
+| `robos-icons` | The SVG icon registry for built-in apps. |
+| `robos-graph` | The knowledge graph engine, and also the Knowledge Graph Explorer app. |
+| `robos-agent-client` | Agent session management and the HarnessRouter client. |
+| `robos-mcp-lib`, `robos-mcp-router` | The MCP server framework and the router. |
+| `robos-event-bus`, `robos-scheduler`, `robos-rule-engine`, `robos-action-registry` | A Unix-socket pub/sub bus, a cron and event-triggered scheduler, an event-driven rule engine and a pluggable action registry. |
+| `robos-task-client` | One adapter over Jira and GitHub Issues. |
+| `robos-test` | The test framework, scenarios and demo recorders. |
 
-### Shared System Libraries (`/usr/local/share/robos/`)
-- **`robos-lib`**: Desktop application management, `.desktop` file parsers, live visual testing tools (`snapshot-cli.js`), and zero-dependency OSS **Prompt Security Guard** (`prompt-security.js`: Gitleaks, TruffleHog, Presidio, OWASP LLM01, Shannon entropy).
-- **`robos-icons`**: Central SVG icon registry for all RobOS applications.
-- **`robos-graph`**: Open-standard OASIS OSLC 3.0 / W3C JSON-LD architecture parser, SHACL validator, and dual-state difference engine.
-- **`robos-test`**: Containerized headless test fabric (`Xvfb + Picom`), automated DOM assertions, and neural text-to-speech voiceover generator (Piper TTS).
-- **`robos-mcp-router`**: Fast tool router connecting AI models (Claude, Antigravity, Copilot, Gemini) to local developer tools.
+## Knowledge graph
 
-### Core Architectural Applications
-- **RobOS App Wizard (`packages/app-wizard`)**: Scaffolds greenfield apps and ingests brownfield codebases across multi-app archetypes with Spotify Backstage `catalog-info.yaml` synthesis and runnable `dev-setup.sh`.
-- **RobOS Group Manager (`packages/group-manager`)**: Enterprise directory sync (SCIM 2.0, Okta, Azure AD, LDAP) and Team Topologies management with active identity cards and role-based access control.
-- **RobOS Voice Prompt Agent (`packages/voice-prompt`)**: Offline neural Whisper speech-to-text dictation with real-time streaming, active window context detection (`xdotool`, `wmctrl`), global push-to-talk (`Super+V`), and headless REST API (`:19188`).
+The graph is JSON-LD. `.robos/kgraph.yaml` lists the packages, and each lives in `.robos/kgraphs/<package>/package.jsonld`. The packages are `core-platform`, `organization`, `services`, `applications`, `devops`, `learning`, `documentation`, `testing`, `game`, `crpg`, `tabletop-game` and `infinity-engine`. `.robos/knowledge-graph.jsonld` is an aggregate of them. Other catalogs sit beside it: `packages.yaml`, `teams.yaml`, `documentation.yaml`, `elearning.yaml` and `ontology.jsonld`.
 
-### Universal Knowledge Graph Data Backing (Zero Unbacked Data)
-Every application in the RobOS suite is backed by the SDLC Knowledge Graph (`SDLCKnowledgeGraphStore`):
-- **Databases & Caches**: `db-manager`, `nosql-manager`, and `data-sources` persist relational and NoSQL datastores as `robos:Database` and `robos:NoSQLDatabase` nodes in the `core-platform` package with W3C SHACL shape enforcement.
-- **Microservices & APIs**: OpenAPI 3.1 contracts, Protobuf gRPC definitions, and GraphQL schemas are linked directly to `robos:Microservice` nodes.
-- **Cloud & Kubernetes**: `kube-studio` reconciles clusters (`robos:KubernetesCluster`) and GitOps applications (`robos:GitOpsDeployment`) in the `devops` package.
-- **AI Tooling & Context**: `mcp-manager` (`robos:MCPServer`), `agents-manager` (`robos:AgentPersona`), `task-servers` (`robos:TaskServer`), and `context-manager` (`robos:ContextSource`) are first-class ontology nodes.
-- **Prompt Security Governance**: `urn:robos:security:prompt-security-guard` is registered in `core-platform` as a validated architectural component enforcing prompt safety across all agent interactions.
-- **Zero Plaintext Credentials**: All credentials across all apps link to UNIX `pass` password-store paths via `robos:hasCredential` (`urn:robos:credential:...`).
+`packages/robos-graph` provides:
 
----
+- An OSLC-style JSON-LD parser and the `SDLCKnowledgeGraphStore` that loads and saves the package files.
+- A SHACL validator with the built-in shapes (`lib/shacl-validator.js`), including one per app archetype such as `FrontEndAppShape`. See [Schemas]({{ site.baseurl }}{% link schemas.md %}).
+- `GraphDiffEngine`, which compares two graph documents, and `BlastRadiusAnalyzer`, which lists the services, contracts, requirements and teams affected by a diff.
+- A workspace mode for an external project: set `ROBOS_GRAPH_ROOT` or pass `--graph-root`, then use the `kgraph` CLI (`init`, `inspect`, `context`, `propose`, `apply`, `recover`). Edits go through a proposal that is validated before it is applied. See `packages/robos-graph/WORKSPACES.md`.
 
-## Next Steps
+Two limits to know about:
 
-- **[RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover core architectural innovations and strategic advantages.
-- **[Browse All Apps]({{ site.baseurl }}{% link apps.md %})**: Explore detailed specifications for every application in the suite.
-- **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
+- The graph checked in at `.robos/` is a sample company, "Acme Enterprise Global", plus the game content packages. It exists so the apps and tests have data. It is not a model of RobOS itself. Services such as `billing-api` and `forms-api` are sample entries tied to fictional `acme` repositories; no code for them exists in this repository.
+- The Explorer's branch list is in memory. Outside workspace mode it shows `main` plus three sample branches (`feature/TASK-101-auth`, `poc/v2-graphql`, `pilot/beta-billing`), and a new branch is a copy of the loaded graph. In workspace mode there is only `main`. Branches are not read from Git, so the diff and blast-radius views compare in-memory graphs, not your real branches.
 
+## Agents
 
+`robos-agent-client` has three backends: Claude Code (`claude`), GitHub Copilot CLI (through `gh`) and `harnessrouter`. The HarnessRouter backend speaks the Unified Harness Protocol (version `2026-08-11`) to a server at `http://127.0.0.1:3000` by default. If no server answers, `getHarnessRouter()` falls back to an embedded router that runs inside the process and stores sessions in `~/.config/robos/harnessrouter/sessions.json`.
+
+The embedded router lists six harnesses: Claude Code, OpenAI Codex, GitHub Copilot CLI, Gemini CLI, Hermes and Oh My Pi. It runs a task only through `claude -p`, `codex exec` or Copilot. For the others, or when the CLI is not installed, it returns a placeholder response without running anything. Check the response text before you trust a result.
+
+The embedded router scans each prompt with the prompt security guard in `robos-lib` before running it. The mode is `redact` by default, or `block`, `warn`, `audit-only` or `off` from the preferences setting. Events are logged to `~/.config/robos/prompt-security-audit.json`.
+
+Two daemons manage per-agent working state. `robos-profiled` (CLI `robos-profile`, plus `robos-run-as` to run a command) and `robos-agentd` (CLI `robos-agent`) keep their state under `~/.config/robos/` and take commands over Unix sockets. `robos-profiled` gives each agent its own home directory, mounted as a 2 GB tmpfs when the daemon runs as root and a plain directory otherwise, and forwards the host's SSH agent and Git identity into it. `robos-run-as` runs the command as the same operating-system user with `HOME` pointed at that directory. Neither daemon creates a separate Linux account or enforces isolation, so treat them as environment setup, not a security boundary.
+
+## MCP servers
+
+Servers are built with `robos-mcp-lib` and register themselves in `~/.config/robos/mcp/servers.json`. They are `task-manager-mcp`, `ekgraph-mcp`, `ide-bridge-mcp`, `system-mcp`, `workspace-manager-mcp`, `ci-monitor-mcp` and `dev-tools-mcp`.
+
+`robos-mcp-router` merges the tools of every registered server behind one MCP endpoint. It speaks JSON-RPC on stdio, and `startHttp` can serve it over HTTP with `/mcp` and `/health`. To print an MCP client configuration for it:
+
+```bash
+node packages/robos-mcp-router/cli.js --claude-config
+```
+
+The output points the client at `/usr/local/share/robos/robos-mcp-router/cli.js`, so the router must be installed there. When `servers.json` does not exist, the router serves a built-in set of sample tool definitions (task manager, knowledge graph, Kubernetes, REST client and workspace manager) instead of reporting an empty list.
+
+`ekgraph-mcp` exposes `robos_sdlc_inspect`, `robos_sdlc_query`, `robos_sdlc_propose` and `robos_sdlc_apply` against a workspace set with `ROBOS_GRAPH_ROOT`. Inspect and query are read-only; apply commits a saved proposal by its id.
+
+## Where state lives
+
+| Location | Contents |
+|:---|:---|
+| `.robos/` in a repository | The knowledge graph and catalogs for that repository. |
+| `~/.config/robos/` | App settings and data: `git-projects.json`, `mcp/servers.json`, `harnessrouter/`, `profiled/`, `agentd/`, `prompt-security-audit.json`, and an Electron `userData` folder per app. |
+| `/usr/local/share/robos/` | Installed apps and libraries on a RobOS machine. |
+| `~/.password-store/` | Secrets, in the Unix `pass` store. The graph stores references to them, not the values. |
