@@ -1834,6 +1834,13 @@ test('Room Names Display & Toggles: renders centered labels, toggles layer visib
     const rectCenterY = rectRoom.y + rectRoom.h / 2;
     assert.equal(rectCenterX, 13.0, 'Center tile X for room at x:10, w:6 is 13.0');
     assert.equal(rectCenterY, 9.5, 'Center tile Y for room at y:7, h:5 is 9.5');
+
+    // 6. Test Scrunched Label Height Geometry
+    const geomTileSize = 39;
+    const fontSize = Math.max(9, Math.min(11, Math.round(geomTileSize * 0.23)));
+    const padY = 0.5;
+    const boxH = Math.round(fontSize + padY * 2 + 1);
+    assert.ok(boxH <= 12, `Scrunched badge height must be tight (<=12px), got ${boxH}px`);
   } finally {
     global.localStorage = savedLocalStorage;
     dom.chkShowRoomNames = savedChk;

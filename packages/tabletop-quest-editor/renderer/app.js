@@ -1251,70 +1251,6 @@ function render() {
     ctx.restore();
   }
 
-  // 4b. Room Names (Layer 1.5)
-  if (state.layers.showRoomNames && state.blockmap?.rooms) {
-    ctx.save();
-    for (const room of state.blockmap.rooms) {
-      const text = room.name || room.id;
-      if (!text) continue;
-
-      let centerTileX = 0;
-      let centerTileY = 0;
-
-      if (room.tiles && room.tiles.length > 0) {
-        let minC = Infinity, maxC = -Infinity, minR = Infinity, maxR = -Infinity;
-        for (const [c, r] of room.tiles) {
-          if (c < minC) minC = c;
-          if (c > maxC) maxC = c;
-          if (r < minR) minR = r;
-          if (r > maxR) maxR = r;
-        }
-        centerTileX = (minC + maxC + 1) / 2;
-        centerTileY = (minR + maxR + 1) / 2;
-      } else if (room.x !== undefined && room.y !== undefined && room.w && room.h) {
-        centerTileX = room.x + room.w / 2;
-        centerTileY = room.y + room.h / 2;
-      } else {
-        continue;
-      }
-
-      const cx = geom.offsetX + centerTileX * geom.tileSize;
-      const cy = geom.offsetY + centerTileY * geom.tileSize;
-
-      const fontSize = Math.max(10, Math.min(14, Math.round(geom.tileSize * 0.3)));
-      ctx.font = `600 ${fontSize}px system-ui, -apple-system, sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-
-      const metrics = ctx.measureText(text);
-      const textWidth = metrics.width;
-      const padX = 7;
-      const padY = 3.5;
-      const boxW = textWidth + padX * 2;
-      const boxH = fontSize + padY * 2;
-      const rx = cx - boxW / 2;
-      const ry = cy - boxH / 2;
-      const radius = 4;
-
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
-      ctx.strokeStyle = room.color || 'rgba(245, 158, 11, 0.75)';
-      ctx.lineWidth = 1.2;
-
-      ctx.beginPath();
-      if (typeof ctx.roundRect === 'function') {
-        ctx.roundRect(rx, ry, boxW, boxH, radius);
-      } else {
-        ctx.rect(rx, ry, boxW, boxH);
-      }
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.fillStyle = '#fde047';
-      ctx.fillText(text, cx, cy + 0.5);
-    }
-    ctx.restore();
-  }
-
   // 5. Wall Blocks (Layer 2)
   if (state.layers.showWallBlocks && state.quest.wallBlocks) {
     state.quest.wallBlocks.forEach((wb, i) => {
@@ -1969,7 +1905,80 @@ function render() {
     });
   }
 
-  // 11.5. Validation Warnings Overlay
+  // 11.5. Room Names (Layer 2.5 - scrunched height, sits on top of tokens)
+  if (state.layers.showRoomNames && state.blockmap?.rooms) {
+    ctx.save();
+    for (const room of state.blockmap.rooms) {
+      const text = room.name || room.id;
+      if (!text) continue;
+
+      let centerTileX = 0;
+      let centerTileY = 0;
+
+      if (room.tiles && room.tiles.length > 0) {
+        let minC = Infinity, maxC = -Infinity, minR = Infinity, maxR = -Infinity;
+        for (const [c, r] of room.tiles) {
+          if (c < minC) minC = c;
+          if (c > maxC) maxC = c;
+          if (r < minR) minR = r;
+          if (r > maxR) maxR = r;
+        }
+        centerTileX = (minC + maxC + 1) / 2;
+        centerTileY = (minR + maxR + 1) / 2;
+      } else if (room.x !== undefined && room.y !== undefined && room.w && room.h) {
+        centerTileX = room.x + room.w / 2;
+        centerTileY = room.y + room.h / 2;
+      } else {
+        continue;
+      }
+
+      const cx = geom.offsetX + centerTileX * geom.tileSize;
+      const cy = geom.offsetY + centerTileY * geom.tileSize;
+
+      // Scrunched, compact badge font & tight height
+      const fontSize = Math.max(9, Math.min(11, Math.round(geom.tileSize * 0.23)));
+      ctx.font = `600 ${fontSize}px system-ui, -apple-system, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      const metrics = ctx.measureText(text);
+      const textWidth = metrics.width;
+      const padX = 4;
+      const padY = 0.5;
+      const boxW = Math.round(textWidth + padX * 2);
+      const boxH = Math.round(fontSize + padY * 2 + 1); // tight scrunched height (e.g. 11-12px)
+      const rx = Math.round(cx - boxW / 2);
+      const ry = Math.round(cy - boxH / 2);
+      const radius = 2.5;
+
+      // Render crisp badge sitting on top of tokens with soft shadow
+      ctx.save();
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.75)';
+      ctx.shadowBlur = 3;
+      ctx.shadowOffsetY = 1;
+
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.94)';
+      ctx.strokeStyle = room.color || 'rgba(245, 158, 11, 0.85)';
+      ctx.lineWidth = 1.0;
+
+      ctx.beginPath();
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(rx, ry, boxW, boxH, radius);
+      } else {
+        ctx.rect(rx, ry, boxW, boxH);
+      }
+      ctx.fill();
+      ctx.shadowColor = 'transparent';
+      ctx.stroke();
+
+      ctx.fillStyle = '#fef08a';
+      ctx.fillText(text, cx, cy);
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  // 11.6. Validation Warnings Overlay
   if (state.layers.showValidationWarnings && state.validation && state.validation.errors && state.validation.errors.length > 0) {
     renderValidationCanvasOverlays(ctx, geom);
   }
