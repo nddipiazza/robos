@@ -497,4 +497,106 @@ test('Border Snapping: clicks in margins clamp to nearest perimeter border tile'
   assert.ok(rightBorderTile[0] === geom.cols - 1, 'Should snap to right perimeter border');
 });
 
+test('Additional Border Tile: allows start and exit tiles on outer black border around 26x19 board', () => {
+  const geom = { cols: 26, rows: 19, tileSize: 39.0, offsetX: 0, offsetY: 0, hasAdditionalBorder: true };
+
+  function testWorldToTileWithBorder(wx, wy, clampToBorder = false) {
+    const relX = wx - geom.offsetX;
+    const relY = wy - geom.offsetY;
+    let col = Math.floor(relX / geom.tileSize);
+    let row = Math.floor(relY / geom.tileSize);
+
+    const minCol = geom.hasAdditionalBorder ? -1 : 0;
+    const maxCol = geom.hasAdditionalBorder ? geom.cols : geom.cols - 1;
+    const minRow = geom.hasAdditionalBorder ? -1 : 0;
+    const maxRow = geom.hasAdditionalBorder ? geom.rows : geom.rows - 1;
+
+    if (clampToBorder) {
+      col = Math.max(minCol, Math.min(maxCol, col));
+      row = Math.max(minRow, Math.min(maxRow, row));
+      return [col, row];
+    }
+
+    if (col < minCol || col > maxCol || row < minRow || row > maxRow) {
+      return null;
+    }
+    return [col, row];
+  }
+
+  function testIsBorderTile(col, row) {
+    if (geom.hasAdditionalBorder) {
+      return col === -1 || col === geom.cols || row === -1 || row === geom.rows;
+    }
+    return col === 0 || col === geom.cols - 1 || row === 0 || row === geom.rows - 1;
+  }
+
+  // Left additional border tile (-1, 5)
+  const leftClick = testWorldToTileWithBorder(-20, 5 * 39 + 10, false);
+  assert.deepEqual(leftClick, [-1, 5]);
+  assert.ok(testIsBorderTile(leftClick[0], leftClick[1]), '[-1, 5] should be recognized as border tile');
+
+  // Top additional border tile (10, -1)
+  const topClick = testWorldToTileWithBorder(10 * 39 + 10, -15, false);
+  assert.deepEqual(topClick, [10, -1]);
+  assert.ok(testIsBorderTile(topClick[0], topClick[1]), '[10, -1] should be recognized as border tile');
+
+  // Right additional border tile (26, 12)
+  const rightClick = testWorldToTileWithBorder(26 * 39 + 15, 12 * 39 + 10, false);
+  assert.deepEqual(rightClick, [26, 12]);
+  assert.ok(testIsBorderTile(rightClick[0], rightClick[1]), '[26, 12] should be recognized as border tile');
+
+  // Bottom additional border tile (8, 19)
+  const bottomClick = testWorldToTileWithBorder(8 * 39 + 10, 19 * 39 + 15, false);
+  assert.deepEqual(bottomClick, [8, 19]);
+  assert.ok(testIsBorderTile(bottomClick[0], bottomClick[1]), '[8, 19] should be recognized as border tile');
+
+  // Deep outside clamp snaps to outer border
+  const farLeftClamp = testWorldToTileWithBorder(-200, 300, true);
+  assert.equal(farLeftClamp[0], -1);
+  const farRightClamp = testWorldToTileWithBorder(1500, 300, true);
+  assert.equal(farRightClamp[0], 26);
+  const farTopClamp = testWorldToTileWithBorder(300, -200, true);
+  assert.equal(farTopClamp[1], -1);
+  const farBottomClamp = testWorldToTileWithBorder(300, 1000, true);
+  assert.equal(farBottomClamp[1], 19);
+
+  // Cartridge serialization
+  const cartridge = {
+    cartridgeId: 'first-light-dungeon-quest',
+    maps: {
+      'first-light-dungeon-quest': {
+        width: 26,
+        height: 19,
+        additionalBorderTile: true,
+        startingStair: [-1, 2],
+        exitTile: [26, 10]
+      }
+    }
+  };
+  assert.ok(cartridge.maps['first-light-dungeon-quest'].additionalBorderTile === true);
+  assert.deepEqual(cartridge.maps['first-light-dungeon-quest'].startingStair, [-1, 2]);
+  assert.deepEqual(cartridge.maps['first-light-dungeon-quest'].exitTile, [26, 10]);
+});
+
+test('Stairs Map Items: support placing starting and exit tiles on stairs furniture', () => {
+  const quest = {
+    furniture: [
+      { id: 'furn-stairs-1', type: 'stairs', name: 'Spiral Staircase / Stairs', x: 5, y: 7, width: 1, height: 1 },
+      { id: 'furn-stairs-2', type: 'stairs', name: 'Spiral Staircase / Stairs', x: 20, y: 14, width: 1, height: 1 }
+    ],
+    startingStair: [5, 7],
+    exitTile: [20, 14]
+  };
+
+  // Verify starting stair matches stairs furniture 1
+  const startStairFurn = quest.furniture.find(f => f.x === quest.startingStair[0] && f.y === quest.startingStair[1]);
+  assert.ok(startStairFurn !== undefined, 'Starting stair should match placed stairs furniture');
+  assert.equal(startStairFurn.type, 'stairs');
+
+  // Verify exit tile matches stairs furniture 2
+  const exitStairFurn = quest.furniture.find(f => f.x === quest.exitTile[0] && f.y === quest.exitTile[1]);
+  assert.ok(exitStairFurn !== undefined, 'Exit tile should match placed stairs furniture');
+  assert.equal(exitStairFurn.type, 'stairs');
+});
+
 
