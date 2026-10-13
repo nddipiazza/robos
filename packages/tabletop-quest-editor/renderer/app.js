@@ -65,6 +65,7 @@ const state = {
     showImage: true,
     showGrid: true,
     showRooms: true,
+    showRoomNames: true,
     showCorridors: true,
     showDoors: true,
     showMonsters: true,
@@ -263,6 +264,8 @@ const dom = (typeof document !== 'undefined') ? {
   chkShowImage: document.getElementById('chk-show-image'),
   chkShowGrid: document.getElementById('chk-show-grid'),
   chkShowRooms: document.getElementById('chk-show-rooms'),
+  chkShowRoomNames: document.getElementById('chk-show-room-names'),
+  btnToggleRoomNames: document.getElementById('btn-toggle-room-names'),
   chkShowCorridors: document.getElementById('chk-show-corridors'),
   chkShowDoors: document.getElementById('chk-show-doors'),
   chkShowMonsters: document.getElementById('chk-show-monsters'),
@@ -366,6 +369,43 @@ function updateHistoryButtons() {
 }
 
 // -------------------------------------------------------------
+// Room Names Visibility Toggle
+// -------------------------------------------------------------
+function toggleRoomNames(forceVal) {
+  if (typeof forceVal === 'boolean') {
+    state.layers.showRoomNames = forceVal;
+  } else {
+    state.layers.showRoomNames = !state.layers.showRoomNames;
+  }
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('robos_quest_editor_show_room_names', String(state.layers.showRoomNames));
+    }
+  } catch (_) {}
+  updateRoomNamesToggleUI();
+  if (typeof render === 'function') {
+    render();
+  }
+  return state.layers.showRoomNames;
+}
+
+function updateRoomNamesToggleUI() {
+  const isShown = !!state.layers.showRoomNames;
+  if (dom && dom.chkShowRoomNames) {
+    dom.chkShowRoomNames.checked = isShown;
+  }
+  if (dom && dom.btnToggleRoomNames) {
+    if (isShown) {
+      dom.btnToggleRoomNames.classList.add('active-toggle');
+      dom.btnToggleRoomNames.title = 'Hide Room Names on Board (Shortcut: Shift+N)';
+    } else {
+      dom.btnToggleRoomNames.classList.remove('active-toggle');
+      dom.btnToggleRoomNames.title = 'Show Room Names on Board (Shortcut: Shift+N)';
+    }
+  }
+}
+
+// -------------------------------------------------------------
 // Blockmap & Cartridge Loading
 // -------------------------------------------------------------
 async function initApp() {
@@ -392,6 +432,10 @@ async function initApp() {
           sidebarRight.style.flex = `0 0 ${w}px`;
         }
       }
+    }
+    const savedRoomNames = localStorage.getItem('robos_quest_editor_show_room_names');
+    if (savedRoomNames !== null) {
+      state.layers.showRoomNames = savedRoomNames === 'true';
     }
   } catch (_) {}
 
@@ -424,6 +468,7 @@ async function initApp() {
   preloadAssets();
 
   setupEventListeners();
+  updateRoomNamesToggleUI();
   runValidation();
   render();
 }
@@ -1203,6 +1248,70 @@ function render() {
       ctx.lineTo(endX, y);
     }
     ctx.stroke();
+    ctx.restore();
+  }
+
+  // 4b. Room Names (Layer 1.5)
+  if (state.layers.showRoomNames && state.blockmap?.rooms) {
+    ctx.save();
+    for (const room of state.blockmap.rooms) {
+      const text = room.name || room.id;
+      if (!text) continue;
+
+      let centerTileX = 0;
+      let centerTileY = 0;
+
+      if (room.tiles && room.tiles.length > 0) {
+        let minC = Infinity, maxC = -Infinity, minR = Infinity, maxR = -Infinity;
+        for (const [c, r] of room.tiles) {
+          if (c < minC) minC = c;
+          if (c > maxC) maxC = c;
+          if (r < minR) minR = r;
+          if (r > maxR) maxR = r;
+        }
+        centerTileX = (minC + maxC + 1) / 2;
+        centerTileY = (minR + maxR + 1) / 2;
+      } else if (room.x !== undefined && room.y !== undefined && room.w && room.h) {
+        centerTileX = room.x + room.w / 2;
+        centerTileY = room.y + room.h / 2;
+      } else {
+        continue;
+      }
+
+      const cx = geom.offsetX + centerTileX * geom.tileSize;
+      const cy = geom.offsetY + centerTileY * geom.tileSize;
+
+      const fontSize = Math.max(10, Math.min(14, Math.round(geom.tileSize * 0.3)));
+      ctx.font = `600 ${fontSize}px system-ui, -apple-system, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      const metrics = ctx.measureText(text);
+      const textWidth = metrics.width;
+      const padX = 7;
+      const padY = 3.5;
+      const boxW = textWidth + padX * 2;
+      const boxH = fontSize + padY * 2;
+      const rx = cx - boxW / 2;
+      const ry = cy - boxH / 2;
+      const radius = 4;
+
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+      ctx.strokeStyle = room.color || 'rgba(245, 158, 11, 0.75)';
+      ctx.lineWidth = 1.2;
+
+      ctx.beginPath();
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(rx, ry, boxW, boxH, radius);
+      } else {
+        ctx.rect(rx, ry, boxW, boxH);
+      }
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#fde047';
+      ctx.fillText(text, cx, cy + 0.5);
+    }
     ctx.restore();
   }
 
@@ -4305,6 +4414,21 @@ function setupEventListeners() {
   dom.chkShowImage.addEventListener('change', () => { state.layers.showImage = dom.chkShowImage.checked; render(); });
   dom.chkShowGrid.addEventListener('change', () => { state.layers.showGrid = dom.chkShowGrid.checked; render(); });
   dom.chkShowRooms.addEventListener('change', () => { state.layers.showRooms = dom.chkShowRooms.checked; render(); });
+  if (dom.chkShowRoomNames) {
+    dom.chkShowRoomNames.addEventListener('change', () => {
+      toggleRoomNames(dom.chkShowRoomNames.checked);
+    });
+  }
+  if (dom.btnToggleRoomNames) {
+    dom.btnToggleRoomNames.addEventListener('click', () => {
+      toggleRoomNames();
+    });
+  }
+  if (dom.infoRoomName) {
+    dom.infoRoomName.addEventListener('click', () => {
+      toggleRoomNames();
+    });
+  }
   dom.chkShowCorridors.addEventListener('change', () => { state.layers.showCorridors = dom.chkShowCorridors.checked; render(); });
   dom.chkShowDoors.addEventListener('change', () => { state.layers.showDoors = dom.chkShowDoors.checked; render(); });
   dom.chkShowMonsters.addEventListener('change', () => { state.layers.showMonsters = dom.chkShowMonsters.checked; render(); });
@@ -4614,6 +4738,9 @@ function setupEventListeners() {
       setActiveTool('start');
     } else if (e.key === 'x' || e.key === '0') {
       setActiveTool('exit');
+    } else if (e.key === 'N' || (e.key === 'n' && e.shiftKey)) {
+      e.preventDefault();
+      toggleRoomNames();
     } else if (e.key === 'n' || e.key === '8') {
       setActiveTool('note');
     } else if (e.key === 'e' || e.key === '9') {
@@ -4669,7 +4796,9 @@ if (typeof window !== 'undefined') {
     findTargetRoom,
     findFreeTilesInRoom,
     findFreeRectInRoom,
-    setupSplitDividers
+    setupSplitDividers,
+    toggleRoomNames,
+    updateRoomNamesToggleUI
   };
 
   // Bootstrap application on window load
@@ -4685,6 +4814,9 @@ if (typeof module !== 'undefined' && module.exports) {
     findFreeTilesInRoom,
     findFreeRectInRoom,
     setupSplitDividers,
+    toggleRoomNames,
+    updateRoomNamesToggleUI,
+    state,
     dom,
     MONSTER_DEFS,
     FURNITURE_DEFS

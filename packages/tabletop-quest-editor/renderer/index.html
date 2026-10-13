@@ -88,9 +88,10 @@
         <span id="info-active-tool" class="info-tag tool-highlight">🛠️ Tool: Door</span>
         <span id="info-cursor-coords" class="info-tag">📍 Cursor: --, --</span>
         <span id="info-tile-coords" class="info-tag">🎯 Tile: [-, -]</span>
-        <span id="info-room-name" class="info-tag">🏠 Room: None</span>
+        <span id="info-room-name" class="info-tag" title="Click to toggle Room Names on board" style="cursor:pointer;">🏠 Room: None</span>
       </div>
       <div class="info-right">
+        <button id="btn-toggle-room-names" class="btn-sm btn-secondary active-toggle" title="Toggle Room Names on Board (Shortcut: Shift+N)">🏷️ Names</button>
         <button id="btn-zoom-out" class="btn-icon" title="Zoom Out">-</button>
         <span id="info-zoom-level" class="zoom-text">100%</span>
         <button id="btn-zoom-in" class="btn-icon" title="Zoom In">+</button>
@@ -546,6 +547,10 @@
               </label>
               <label class="custom-checkbox">Show Blockmap Rooms <span class="layer-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f59e0b;box-shadow:0 0 4px rgba(245,158,11,0.6);margin-left:4px;vertical-align:middle;" title="Amber underlay tint"></span>
                 <input type="checkbox" id="chk-show-rooms" checked>
+                <span class="checkmark"></span>
+              </label>
+              <label class="custom-checkbox" style="padding-left: 32px;">Show Room Names <span class="layer-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#fde047;box-shadow:0 0 4px rgba(253,224,71,0.6);margin-left:4px;vertical-align:middle;" title="Room label text on board"></span>
+                <input type="checkbox" id="chk-show-room-names" checked>
                 <span class="checkmark"></span>
               </label>
               <label class="custom-checkbox">Show Blockmap Corridors <span class="layer-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#38bdf8;box-shadow:0 0 4px rgba(56,189,248,0.6);margin-left:4px;vertical-align:middle;" title="Sky Blue underlay tint"></span>

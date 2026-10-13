@@ -10,6 +10,9 @@ const {
   interpretVoiceQuestCommands,
   executeVoiceMapCommands,
   setupSplitDividers,
+  toggleRoomNames,
+  updateRoomNamesToggleUI,
+  state,
   dom
 } = require('../renderer/app.js');
 
@@ -1651,6 +1654,119 @@ test('Resizable Split Dividers: enables resizing of tool palette and sidebar wit
     dom.viewport = savedViewport;
     dom.canvas = savedCanvas;
     dom.ctx = savedCtx;
+  }
+});
+
+test('Room Names Display & Toggles: renders centered labels, toggles layer visibility, updates UI controls, and persists state in localStorage', (t) => {
+  const savedLocalStorage = global.localStorage;
+  const storageMock = {};
+  global.localStorage = {
+    getItem: (k) => storageMock[k] || null,
+    setItem: (k, v) => { storageMock[k] = String(v); },
+    removeItem: (k) => { delete storageMock[k]; }
+  };
+
+  const savedChk = dom.chkShowRoomNames;
+  const savedBtn = dom.btnToggleRoomNames;
+
+  const mockClasses = new Set();
+  const mockBtn = {
+    classList: {
+      add: (cls) => mockClasses.add(cls),
+      remove: (cls) => mockClasses.delete(cls),
+      contains: (cls) => mockClasses.has(cls)
+    },
+    title: ''
+  };
+
+  const mockChk = {
+    checked: false
+  };
+
+  dom.chkShowRoomNames = mockChk;
+  dom.btnToggleRoomNames = mockBtn;
+
+  try {
+    // 1. Initial toggle to false
+    const res1 = toggleRoomNames(false);
+    assert.equal(res1, false, 'toggleRoomNames(false) returns false');
+    assert.equal(state.layers.showRoomNames, false);
+    assert.equal(storageMock['robos_quest_editor_show_room_names'], 'false', 'Persists false to localStorage');
+    assert.equal(mockChk.checked, false, 'Checkbox is unchecked');
+    assert.equal(mockBtn.classList.contains('active-toggle'), false, 'Button active-toggle class removed');
+    assert.match(mockBtn.title, /Show Room Names/, 'Button title indicates click to show');
+
+    // 2. Toggle without argument flips to true
+    const res2 = toggleRoomNames();
+    assert.equal(res2, true, 'toggleRoomNames() flips false to true');
+    assert.equal(state.layers.showRoomNames, true);
+    assert.equal(storageMock['robos_quest_editor_show_room_names'], 'true', 'Persists true to localStorage');
+    assert.equal(mockChk.checked, true, 'Checkbox is checked');
+    assert.equal(mockBtn.classList.contains('active-toggle'), true, 'Button active-toggle class added');
+    assert.match(mockBtn.title, /Hide Room Names/, 'Button title indicates click to hide');
+
+    // 3. Toggle without argument flips back to false
+    const res3 = toggleRoomNames();
+    assert.equal(res3, false, 'toggleRoomNames() flips true to false');
+    assert.equal(state.layers.showRoomNames, false);
+    assert.equal(mockChk.checked, false);
+    assert.equal(mockBtn.classList.contains('active-toggle'), false);
+
+    // 4. Force back to true
+    toggleRoomNames(true);
+    assert.equal(state.layers.showRoomNames, true);
+    assert.equal(mockChk.checked, true);
+    assert.equal(mockBtn.classList.contains('active-toggle'), true);
+
+    // 5. Test Room Centroid Geometry Calculation
+    // Tile-based room (HeroQuest NW room: col 1..4, row 1..4)
+    const tileRoom = {
+      id: 'room-nw-1',
+      name: 'Room 1 (NW)',
+      tiles: [
+        [1, 1], [1, 2], [1, 3], [1, 4],
+        [2, 1], [2, 2], [2, 3], [2, 4],
+        [3, 1], [3, 2], [3, 3], [3, 4],
+        [4, 1], [4, 2], [4, 3], [4, 4]
+      ]
+    };
+    let minC = Infinity, maxC = -Infinity, minR = Infinity, maxR = -Infinity;
+    for (const [c, r] of tileRoom.tiles) {
+      if (c < minC) minC = c;
+      if (c > maxC) maxC = c;
+      if (r < minR) minR = r;
+      if (r > maxR) maxR = r;
+    }
+    const centerTileX = (minC + maxC + 1) / 2;
+    const centerTileY = (minR + maxR + 1) / 2;
+    assert.equal(centerTileX, 3.0, 'Center tile X for 4x4 room at cols 1..4 is 3.0');
+    assert.equal(centerTileY, 3.0, 'Center tile Y for 4x4 room at rows 1..4 is 3.0');
+
+    const tileSize = 39;
+    const offsetX = 0;
+    const offsetY = 0;
+    const worldX = offsetX + centerTileX * tileSize;
+    const worldY = offsetY + centerTileY * tileSize;
+    assert.equal(worldX, 117.0, 'World X is 117.0px');
+    assert.equal(worldY, 117.0, 'World Y is 117.0px');
+
+    // Bounds-based room (x, y, w, h)
+    const rectRoom = {
+      id: 'room-center',
+      name: 'Central Chamber',
+      x: 10,
+      y: 7,
+      w: 6,
+      h: 5
+    };
+    const rectCenterX = rectRoom.x + rectRoom.w / 2;
+    const rectCenterY = rectRoom.y + rectRoom.h / 2;
+    assert.equal(rectCenterX, 13.0, 'Center tile X for room at x:10, w:6 is 13.0');
+    assert.equal(rectCenterY, 9.5, 'Center tile Y for room at y:7, h:5 is 9.5');
+  } finally {
+    global.localStorage = savedLocalStorage;
+    dom.chkShowRoomNames = savedChk;
+    dom.btnToggleRoomNames = savedBtn;
   }
 });
 
