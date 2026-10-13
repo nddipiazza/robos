@@ -217,19 +217,10 @@
             </div>
           </div>
 
-          <!-- 1-Tile Border Checkbox -->
+          <!-- Grid Dimensions -->
           <div class="section-card">
-            <h3>🛡️ 3. Border & Dimensions</h3>
-            <div class="checkbox-row">
-              <label class="custom-checkbox">
-                <input type="checkbox" id="chk-add-border" checked>
-                <span class="checkmark"></span>
-                <span class="label-text"><strong>Add 1-Tile Border Option</strong></span>
-              </label>
-              <small class="help-text">Includes the permanent 1-tile outer perimeter corridor around the 4 edges of the board.</small>
-            </div>
-
-            <div class="grid-dim-row" style="margin-top:12px;">
+            <h3>🧱 3. Grid Dimensions</h3>
+            <div class="grid-dim-row">
               <div class="dim-box">
                 <label for="input-grid-cols">Grid Columns (X):</label>
                 <input type="number" id="input-grid-cols" value="26" min="2" max="100" class="num-input">
@@ -328,8 +319,7 @@
             <p class="section-desc">Marked corridor tiles: <strong id="corridor-count">0</strong> tiles.</p>
             <p class="section-desc" style="margin-top:2px;">Use the <strong>Corridor Draw Tool</strong> to click and drag across the map to toggle or paint corridor floor tiles.</p>
             <div class="btn-row" style="margin-top:6px;">
-              <button id="btn-fill-outer-corridor" class="btn btn-sm btn-secondary" title="Fill all 4 border edges as corridor">Fill 1-Tile Perimeter</button>
-              <button id="btn-clear-corridors" class="btn btn-sm btn-danger" title="Clear all corridor tiles">Clear All</button>
+              <button id="btn-clear-corridors" class="btn btn-sm btn-danger" style="width:100%;" title="Clear all corridor tiles">🗑️ Clear All Corridors</button>
             </div>
           </div>
         </div>
