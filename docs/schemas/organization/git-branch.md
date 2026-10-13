@@ -1,7 +1,7 @@
 ---
 title: Git Branch
 layout: default
-parent: "Organization & Teams (robos.org)"
+parent: "Organization & Teams"
 grand_parent: Schemas
 nav_order: 14
 permalink: /schemas/organization/git-branch.html
@@ -15,11 +15,11 @@ Validation shape for `robos:GitBranch` nodes in the `organization` package group
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:GitBranch` |
 | Shape id | `urn:robos:shape:GitBranchShape` |
-| Package | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) (`organization`) |
+| Package | [Organization & Teams]({{ '/schemas/organization.html' | relative_url }}) (`organization`) |
 | Classification | Source control & artifacts |
 | Schema.org type | [`schema:SoftwareSourceCode`](https://schema.org/SoftwareSourceCode) |
 

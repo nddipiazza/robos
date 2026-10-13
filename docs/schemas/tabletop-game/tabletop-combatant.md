@@ -1,7 +1,7 @@
 ---
 title: Tabletop Combatant
 layout: default
-parent: "Tabletop Game (robos.tabletop)"
+parent: "Games: Tabletop"
 grand_parent: Schemas
 nav_order: 11
 permalink: /schemas/tabletop-game/tabletop-combatant.html
@@ -15,11 +15,11 @@ Validation shape for `robos:TabletopCombatant` nodes in the `tabletop-game` pack
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:TabletopCombatant` |
 | Shape id | `urn:robos:shape:TabletopCombatantShape` |
-| Package | [Tabletop Game (robos.tabletop)]({{ '/schemas/tabletop-game.html' | relative_url }}) (`tabletop-game`) |
+| Package | [Games: Tabletop]({{ '/schemas/tabletop-game.html' | relative_url }}) (`tabletop-game`) |
 | Classification | Testing & behavior |
 | Schema.org type | [`schema:Person`](https://schema.org/Person) |
 | Domain standard | [robos.dev](https://robos.dev/ns/tabletop#Combatant) |

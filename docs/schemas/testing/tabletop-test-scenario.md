@@ -1,7 +1,7 @@
 ---
 title: Tabletop Test Scenario
 layout: default
-parent: "Testing, Quality & BDD (robos.testing)"
+parent: "Testing & BDD"
 grand_parent: Schemas
 nav_order: 9
 permalink: /schemas/testing/tabletop-test-scenario.html
@@ -15,11 +15,11 @@ Validation shape for `robos:TabletopTestScenario` nodes in the `testing` package
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:TabletopTestScenario` |
 | Shape id | `urn:robos:shape:TabletopTestScenarioShape` |
-| Package | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
+| Package | [Testing & BDD]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
 | Classification | Testing & behavior |
 | Schema.org type | [`schema:CheckAction`](https://schema.org/CheckAction) |
 | Domain standard | [robos.dev](https://robos.dev/ns/tabletop#TestScenario) |

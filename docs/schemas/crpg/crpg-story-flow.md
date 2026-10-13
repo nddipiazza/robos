@@ -1,7 +1,7 @@
 ---
 title: CRPG Story Flow
 layout: default
-parent: "cRPG (robos.crpg)"
+parent: "Games: cRPG"
 grand_parent: Schemas
 nav_order: 2
 permalink: /schemas/crpg/crpg-story-flow.html
@@ -15,11 +15,11 @@ Validation shape for `robos:CRPGStoryFlow` nodes in the `crpg` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:CRPGStoryFlow` |
 | Shape id | `urn:robos:shape:CRPGStoryFlowShape` |
-| Package | [cRPG (robos.crpg)]({{ '/schemas/crpg.html' | relative_url }}) (`crpg`) |
+| Package | [Games: cRPG]({{ '/schemas/crpg.html' | relative_url }}) (`crpg`) |
 | Schema.org type | [`schema:CreativeWork`](https://schema.org/CreativeWork) |
 
 ## Properties

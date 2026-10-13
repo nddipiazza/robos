@@ -1,7 +1,7 @@
 ---
 title: Tabletop Turn DAG
 layout: default
-parent: "Tabletop Game (robos.tabletop)"
+parent: "Games: Tabletop"
 grand_parent: Schemas
 nav_order: 7
 permalink: /schemas/tabletop-game/tabletop-turn-dag.html
@@ -15,11 +15,11 @@ Validation shape for `robos:TabletopTurnDAG` nodes in the `tabletop-game` packag
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:TabletopTurnDAG` |
 | Shape id | `urn:robos:shape:TabletopTurnDAGShape` |
-| Package | [Tabletop Game (robos.tabletop)]({{ '/schemas/tabletop-game.html' | relative_url }}) (`tabletop-game`) |
+| Package | [Games: Tabletop]({{ '/schemas/tabletop-game.html' | relative_url }}) (`tabletop-game`) |
 | Classification | Testing & behavior |
 | Schema.org type | [`schema:Action`](https://schema.org/Action) |
 | Domain standard | [robos.dev](https://robos.dev/ns/tabletop#TurnDAG) |

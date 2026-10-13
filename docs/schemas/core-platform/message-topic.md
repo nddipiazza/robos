@@ -1,7 +1,7 @@
 ---
 title: Message Topic
 layout: default
-parent: "Core Platform (robos.platform)"
+parent: Core Platform
 grand_parent: Schemas
 nav_order: 15
 permalink: /schemas/core-platform/message-topic.html
@@ -15,12 +15,12 @@ Validation shape for `robos:MessageTopic` nodes in the `core-platform` package g
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:MessageTopic` |
 | Also matches | `robos:MessageQueue`, `robos:EventTopic` |
 | Shape id | `urn:robos:shape:MessageTopicShape` |
-| Package | [Core Platform (robos.platform)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
+| Package | [Core Platform]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
 | Classification | Data stores & messaging |
 | Schema.org type | [`schema:BroadcastChannel`](https://schema.org/BroadcastChannel) |
 | Domain standard | [Apache Kafka](https://kafka.apache.org/documentation/#intro_concepts_and_terms) |

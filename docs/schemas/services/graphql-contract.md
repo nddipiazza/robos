@@ -1,7 +1,7 @@
 ---
 title: GraphQL Contract
 layout: default
-parent: "Services & Contracts (robos.services)"
+parent: "Services & Contracts"
 grand_parent: Schemas
 nav_order: 5
 permalink: /schemas/services/graphql-contract.html
@@ -15,12 +15,12 @@ Validation shape for `robos:GraphQLContract` nodes in the `services` package gro
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:GraphQLContract` |
 | Also matches | `robos:GraphQLSchema` |
 | Shape id | `urn:robos:shape:GraphQLContractShape` |
-| Package | [Services & Contracts (robos.services)]({{ '/schemas/services.html' | relative_url }}) (`services`) |
+| Package | [Services & Contracts]({{ '/schemas/services.html' | relative_url }}) (`services`) |
 | Classification | Contracts & data models |
 | Schema.org type | [`schema:DigitalDocument`](https://schema.org/DigitalDocument) |
 | Domain standard | [graphql.org](https://graphql.org/learn/schema/) |

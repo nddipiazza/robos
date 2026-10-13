@@ -81,6 +81,9 @@ h4, h5, h6 { color: $body-heading-color; }
 .nav-list .nav-list-item .nav-list-link.active { font-weight: 600; color: var(--rb-head); box-shadow: inset 3px 0 0 var(--rb-hot); background-image: none; background-color: transparent; }
 .nav-list .nav-list-item .nav-list-link:hover:not(.active) { color: var(--rb-hot); background-image: none; }
 .nav-list .nav-list-item.active > .nav-list-link { font-weight: 600; }
+// deeper levels step down in size so long groups (Schemas, Projects) stay readable
+.nav-list .nav-list .nav-list-link { font-size: 0.84rem; }
+.nav-list .nav-list .nav-list .nav-list-link { font-size: 0.8rem; }
 
 .main-header { border-bottom: 1px solid var(--rb-line); }
 .search-input { font-family: inherit; }
@@ -107,7 +110,7 @@ details[open] > summary { border-bottom: 1px solid var(--rb-line); margin-bottom
 
 // tables
 .table-wrapper { border: 1px solid var(--rb-line); border-radius: 6px; box-shadow: none; }
-table th { font: 500 0.7rem "Fira Code", monospace; text-transform: uppercase; letter-spacing: 0.07em; color: var(--rb-muted); background: var(--rb-tint); border-bottom: 1px solid var(--rb-line); }
+table th { text-align: left; font: 500 0.7rem "Fira Code", monospace; text-transform: uppercase; letter-spacing: 0.07em; color: var(--rb-muted); background: var(--rb-tint); border-bottom: 1px solid var(--rb-line); }
 table td { font-size: 0.92rem; }
 table th, table td { border-bottom: 1px solid var(--rb-line); border-left: 0; }
 
@@ -153,6 +156,24 @@ a.rb-link:hover { border-color: var(--rb-hot); border-top-color: var(--rb-hot); 
 a.rb-link strong { display: block; font-family: var(--rb-serif); font-size: 1.05rem; color: var(--rb-head); margin-bottom: 0.15rem; }
 a.rb-link span { font-size: 0.9rem; color: var(--rb-muted); line-height: 1.5; }
 a.rb-link:hover strong { color: var(--rb-hot); }
+
+// compact reference list (generated Schemas hub): one row per package, class names as small links
+.rb-classlist { border: 1px solid var(--rb-line); border-radius: 6px; background: var(--rb-card); margin: 1.2rem 0 2rem; overflow: hidden; }
+.rb-classlist-label { padding: 0.35rem 0.9rem; font: 500 0.66rem "Fira Code", monospace; text-transform: uppercase; letter-spacing: 0.09em; color: var(--rb-muted); background: var(--rb-tint); border-top: 1px solid var(--rb-line); border-bottom: 1px solid var(--rb-line); }
+.rb-classlist-label:first-child { border-top: 0; }
+.rb-classlist-row { display: grid; grid-template-columns: 12rem minmax(0, 1fr); gap: 0.3rem 1.1rem; padding: 0.65rem 0.9rem; border-top: 1px solid var(--rb-line); }
+.rb-classlist-label + .rb-classlist-row { border-top: 0; }
+.rb-classlist-pkg { display: flex; flex-direction: column; align-items: flex-start; gap: 0.1rem; line-height: 1.3; }
+.main-content .rb-classlist-pkg > a { font-weight: 600; font-size: 0.86rem; color: var(--rb-head); text-decoration: none !important; }
+.main-content .rb-classlist-pkg > a:hover { color: var(--rb-hot); }
+.rb-classlist-pkg code { font-size: 0.72rem; border: 0; padding: 0; background: transparent; color: var(--rb-muted); }
+.rb-classlist-pkg span { font-size: 0.72rem; color: var(--rb-muted); }
+.rb-classlist-body p { margin: 0; }
+.rb-classlist-desc { font-size: 0.78rem; line-height: 1.45; color: var(--rb-muted); margin-bottom: 0.4rem !important; }
+.rb-classlist-chips { display: flex; flex-wrap: wrap; gap: 0.22rem 0.3rem; }
+.main-content .rb-classlist-chips a { font: 0.72rem/1.25 "Fira Code", monospace; padding: 0.14rem 0.42rem; border-radius: 4px; background: var(--rb-tint); color: var(--rb-link); text-decoration: none !important; }
+.main-content .rb-classlist-chips a:hover { background: transparent; box-shadow: inset 0 0 0 1px var(--rb-hot); color: var(--rb-hot); }
+@media (max-width: 600px) { .rb-classlist-row { grid-template-columns: minmax(0, 1fr); } }
 
 // ------------------------------------------------------------- docs home
 .rb-home-lead { font-size: 1.15rem; max-width: 38rem; color: var(--rb-muted); }

@@ -1,7 +1,7 @@
 ---
 title: Agent Persona
 layout: default
-parent: "Organization & Teams (robos.org)"
+parent: "Organization & Teams"
 grand_parent: Schemas
 nav_order: 5
 permalink: /schemas/organization/agent-persona.html
@@ -15,12 +15,12 @@ Validation shape for `robos:AgentPersona` nodes in the `organization` package gr
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:AgentPersona` |
 | Also matches | `robos:AIAgent` |
 | Shape id | `urn:robos:shape:AgentPersonaShape` |
-| Package | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) (`organization`) |
+| Package | [Organization & Teams]({{ '/schemas/organization.html' | relative_url }}) (`organization`) |
 | Classification | Agents & MCP |
 | Schema.org type | [`schema:Person`](https://schema.org/Person) |
 

@@ -1,7 +1,7 @@
 ---
 title: Step Definition
 layout: default
-parent: "Testing, Quality & BDD (robos.testing)"
+parent: "Testing & BDD"
 grand_parent: Schemas
 nav_order: 15
 permalink: /schemas/testing/step-definition.html
@@ -15,11 +15,11 @@ Validation shape for `robos:StepDefinition` nodes in the `testing` package group
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:StepDefinition` |
 | Shape id | `urn:robos:shape:StepDefinitionShape` |
-| Package | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
+| Package | [Testing & BDD]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
 | Classification | Testing & behavior |
 | Schema.org type | [`schema:SoftwareSourceCode`](https://schema.org/SoftwareSourceCode) |
 | Domain standard | [Cucumber](https://cucumber.io/docs/cucumber/step-definitions/) |

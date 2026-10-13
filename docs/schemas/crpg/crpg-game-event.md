@@ -1,7 +1,7 @@
 ---
 title: CRPG Game Event
 layout: default
-parent: "cRPG (robos.crpg)"
+parent: "Games: cRPG"
 grand_parent: Schemas
 nav_order: 4
 permalink: /schemas/crpg/crpg-game-event.html
@@ -15,11 +15,11 @@ Validation shape for `robos:CRPGGameEvent` nodes in the `crpg` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:CRPGGameEvent` |
 | Shape id | `urn:robos:shape:CRPGGameEventShape` |
-| Package | [cRPG (robos.crpg)]({{ '/schemas/crpg.html' | relative_url }}) (`crpg`) |
+| Package | [Games: cRPG]({{ '/schemas/crpg.html' | relative_url }}) (`crpg`) |
 | Schema.org type | [`schema:Event`](https://schema.org/Event) |
 | Domain standard | [robos.dev](https://robos.dev/ns/crpg#GameEvent) |
 

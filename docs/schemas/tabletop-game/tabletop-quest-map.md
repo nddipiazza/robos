@@ -1,7 +1,7 @@
 ---
 title: Tabletop Quest Map
 layout: default
-parent: "Tabletop Game (robos.tabletop)"
+parent: "Games: Tabletop"
 grand_parent: Schemas
 nav_order: 5
 permalink: /schemas/tabletop-game/tabletop-quest-map.html
@@ -15,11 +15,11 @@ Validation shape for `robos:TabletopQuestMap` nodes in the `tabletop-game` packa
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:TabletopQuestMap` |
 | Shape id | `urn:robos:shape:TabletopQuestMapShape` |
-| Package | [Tabletop Game (robos.tabletop)]({{ '/schemas/tabletop-game.html' | relative_url }}) (`tabletop-game`) |
+| Package | [Games: Tabletop]({{ '/schemas/tabletop-game.html' | relative_url }}) (`tabletop-game`) |
 | Classification | Testing & behavior |
 | Schema.org type | [`schema:Place`](https://schema.org/Place) |
 | Domain standard | [robos.dev](https://robos.dev/ns/tabletop#QuestMap) |

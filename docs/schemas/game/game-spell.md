@@ -1,7 +1,7 @@
 ---
 title: Game Spell
 layout: default
-parent: "Game Rules (robos.game)"
+parent: "Games: Rules"
 grand_parent: Schemas
 nav_order: 5
 permalink: /schemas/game/game-spell.html
@@ -15,11 +15,11 @@ Validation shape for `robos:GameSpell` nodes in the `game` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:GameSpell` |
 | Shape id | `urn:robos:shape:GameSpellShape` |
-| Package | [Game Rules (robos.game)]({{ '/schemas/game.html' | relative_url }}) (`game`) |
+| Package | [Games: Rules]({{ '/schemas/game.html' | relative_url }}) (`game`) |
 | Schema.org type | [`schema:Action`](https://schema.org/Action) |
 | Domain standard | [robos.dev](https://robos.dev/ns/game#Spell) |
 

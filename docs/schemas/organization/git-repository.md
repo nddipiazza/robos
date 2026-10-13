@@ -1,7 +1,7 @@
 ---
 title: Git Repository
 layout: default
-parent: "Organization & Teams (robos.org)"
+parent: "Organization & Teams"
 grand_parent: Schemas
 nav_order: 13
 permalink: /schemas/organization/git-repository.html
@@ -15,12 +15,12 @@ Validation shape for `robos:GitRepository` nodes in the `organization` package g
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:GitRepository` |
 | Also matches | `robos:Repository` |
 | Shape id | `urn:robos:shape:GitRepositoryShape` |
-| Package | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) (`organization`) |
+| Package | [Organization & Teams]({{ '/schemas/organization.html' | relative_url }}) (`organization`) |
 | Classification | Source control & artifacts |
 | Schema.org type | [`schema:SoftwareSourceCode`](https://schema.org/SoftwareSourceCode) |
 

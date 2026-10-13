@@ -1,7 +1,7 @@
 ---
 title: Curriculum Definition
 layout: default
-parent: "Core Platform (robos.platform)"
+parent: Core Platform
 grand_parent: Schemas
 nav_order: 20
 permalink: /schemas/core-platform/curriculum-definition.html
@@ -15,11 +15,11 @@ Validation shape for `robos:CurriculumDefinition` nodes in the `core-platform` p
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:CurriculumDefinition` |
 | Shape id | `robos:CurriculumDefinitionShape` |
-| Package | [Core Platform (robos.platform)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
+| Package | [Core Platform]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
 | Classification | Learning & assessment |
 | Schema.org type | [`schema:Course`](https://schema.org/Course) |
 

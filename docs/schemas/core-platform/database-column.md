@@ -1,7 +1,7 @@
 ---
 title: Database Column
 layout: default
-parent: "Core Platform (robos.platform)"
+parent: Core Platform
 grand_parent: Schemas
 nav_order: 12
 permalink: /schemas/core-platform/database-column.html
@@ -15,11 +15,11 @@ Validation shape for `robos:DatabaseColumn` nodes in the `core-platform` package
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:DatabaseColumn` |
 | Shape id | `urn:robos:shape:DatabaseColumnShape` |
-| Package | [Core Platform (robos.platform)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
+| Package | [Core Platform]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
 | Classification | Data stores & messaging |
 | Schema.org type | [`schema:Property`](https://schema.org/Property) |
 | Domain standard | [www.iso.org](https://www.iso.org/standard/63555.html) |

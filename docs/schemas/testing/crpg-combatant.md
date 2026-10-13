@@ -1,7 +1,7 @@
 ---
 title: CRPG Combatant
 layout: default
-parent: "Testing, Quality & BDD (robos.testing)"
+parent: "Testing & BDD"
 grand_parent: Schemas
 nav_order: 6
 permalink: /schemas/testing/crpg-combatant.html
@@ -15,11 +15,11 @@ Validation shape for `robos:CRPGCombatant` nodes in the `testing` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:CRPGCombatant` |
 | Shape id | `urn:robos:shape:CRPGCombatantShape` |
-| Package | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
+| Package | [Testing & BDD]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
 | Classification | Testing & behavior |
 | Schema.org type | [`schema:Person`](https://schema.org/Person) |
 | Domain standard | [robos.dev](https://robos.dev/ns/crpg#Combatant) |

@@ -1,7 +1,7 @@
 ---
 title: Agent Skill
 layout: default
-parent: "eLearning Curriculums (robos.learning)"
+parent: eLearning
 grand_parent: Schemas
 nav_order: 7
 permalink: /schemas/learning/agent-skill.html
@@ -15,11 +15,11 @@ Validation shape for `robos:AgentSkill` nodes in the `learning` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:AgentSkill` |
 | Shape id | `robos:AgentSkillShape` |
-| Package | [eLearning Curriculums (robos.learning)]({{ '/schemas/learning.html' | relative_url }}) (`learning`) |
+| Package | [eLearning]({{ '/schemas/learning.html' | relative_url }}) (`learning`) |
 | Classification | Agents & MCP |
 | Schema.org type | [`schema:HowTo`](https://schema.org/HowTo) |
 

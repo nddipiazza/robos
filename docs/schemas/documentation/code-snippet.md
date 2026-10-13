@@ -1,7 +1,7 @@
 ---
 title: Code Snippet
 layout: default
-parent: "Documentation & Diagrams (robos.docs)"
+parent: "Documentation & Diagrams"
 grand_parent: Schemas
 nav_order: 6
 permalink: /schemas/documentation/code-snippet.html
@@ -15,12 +15,12 @@ Validation shape for `robos:CodeSnippet` nodes in the `documentation` package gr
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:CodeSnippet` |
 | Also matches | `robos:CodeSample` |
 | Shape id | `urn:robos:shape:CodeSnippetShape` |
-| Package | [Documentation & Diagrams (robos.docs)]({{ '/schemas/documentation.html' | relative_url }}) (`documentation`) |
+| Package | [Documentation & Diagrams]({{ '/schemas/documentation.html' | relative_url }}) (`documentation`) |
 | Classification | Documentation & decisions |
 | Schema.org type | [`schema:SoftwareSourceCode`](https://schema.org/SoftwareSourceCode) |
 

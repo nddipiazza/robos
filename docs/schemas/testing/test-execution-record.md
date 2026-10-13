@@ -1,7 +1,7 @@
 ---
 title: Test Execution Record
 layout: default
-parent: "Testing, Quality & BDD (robos.testing)"
+parent: "Testing & BDD"
 grand_parent: Schemas
 nav_order: 21
 permalink: /schemas/testing/test-execution-record.html
@@ -15,12 +15,12 @@ Validation shape for `robos:TestExecutionRecord` nodes in the `testing` package 
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:TestExecutionRecord` |
 | Also matches | `oslc_qm:TestExecutionRecord` |
 | Shape id | `urn:robos:shape:TestExecutionRecordShape` |
-| Package | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
+| Package | [Testing & BDD]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
 | Classification | Testing & behavior |
 | Schema.org type | [`schema:AssessAction`](https://schema.org/AssessAction) |
 | Domain standard | [OSLC QM](http://open-services.net/ns/qm#TestExecutionRecord) |

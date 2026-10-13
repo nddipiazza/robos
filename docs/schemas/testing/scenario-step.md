@@ -1,7 +1,7 @@
 ---
 title: Scenario Step
 layout: default
-parent: "Testing, Quality & BDD (robos.testing)"
+parent: "Testing & BDD"
 grand_parent: Schemas
 nav_order: 2
 permalink: /schemas/testing/scenario-step.html
@@ -15,11 +15,11 @@ Validation shape for `robos:ScenarioStep` nodes in the `testing` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:ScenarioStep` |
 | Shape id | `urn:robos:shape:ScenarioStepShape` |
-| Package | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
+| Package | [Testing & BDD]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
 | Classification | Testing & behavior |
 | Schema.org type | [`schema:HowToStep`](https://schema.org/HowToStep) |
 | Domain standard | [Cucumber](https://cucumber.io/docs/gherkin/reference/#steps) |

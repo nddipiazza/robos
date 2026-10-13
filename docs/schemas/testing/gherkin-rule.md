@@ -1,7 +1,7 @@
 ---
 title: Gherkin Rule
 layout: default
-parent: "Testing, Quality & BDD (robos.testing)"
+parent: "Testing & BDD"
 grand_parent: Schemas
 nav_order: 12
 permalink: /schemas/testing/gherkin-rule.html
@@ -15,12 +15,12 @@ Validation shape for `robos:GherkinRule` nodes in the `testing` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:GherkinRule` |
 | Also matches | `robos:Rule` |
 | Shape id | `urn:robos:shape:GherkinRuleShape` |
-| Package | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
+| Package | [Testing & BDD]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
 | Classification | Testing & behavior |
 | Schema.org type | [`schema:DigitalDocument`](https://schema.org/DigitalDocument) |
 | Domain standard | [Cucumber](https://cucumber.io/docs/gherkin/reference/#rule) |

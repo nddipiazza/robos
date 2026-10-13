@@ -819,20 +819,35 @@ for (const [id, metadata] of Object.entries(PROPERTY_METADATA)) metadata['robos:
 const classificationLabels = id => resolveSchemaElement(id).map(ref => CATALOG.find(code => code.id === ref['@id']).label).join(', ');
 
 // Package display titles for Just the Docs navigation. A page's `parent:` must equal
-// its parent's `title:`, and titles must be unique across the whole docs site.
+// its parent's `title:`, and titles must be unique across the whole docs site. They are kept
+// short so the sidebar does not wrap; each page's heading adds the namespace.
 const PACKAGE_DISPLAY_TITLES = {
-  'core-platform': 'Core Platform (robos.platform)',
-  'organization': 'Organization & Teams (robos.org)',
-  'services': 'Services & Contracts (robos.services)',
-  'applications': 'Applications (robos.apps)',
-  'devops': 'DevOps & Cloud (robos.devops)',
-  'learning': 'eLearning Curriculums (robos.learning)',
-  'documentation': 'Documentation & Diagrams (robos.docs)',
-  'testing': 'Testing, Quality & BDD (robos.testing)',
-  'game': 'Game Rules (robos.game)',
-  'crpg': 'cRPG (robos.crpg)',
-  'tabletop-game': 'Tabletop Game (robos.tabletop)',
+  'core-platform': 'Core Platform',
+  'organization': 'Organization & Teams',
+  'services': 'Services & Contracts',
+  'applications': 'Applications',
+  'devops': 'DevOps & Cloud',
+  'learning': 'eLearning',
+  'documentation': 'Documentation & Diagrams',
+  'testing': 'Testing & BDD',
+  'game': 'Games: Rules',
+  'crpg': 'Games: cRPG',
+  'tabletop-game': 'Games: Tabletop',
 };
+
+// The game packages are listed together as one family on the hub and cross-linked from
+// each other's pages. `infinity-engine` has no shapes of its own, so it has no page group
+// here; the hub row for it points at the game documentation instead.
+const GAME_PACKAGE_IDS = ['game', 'crpg', 'tabletop-game'];
+const NOTES_ONLY_PACKAGES = [
+  {
+    id: 'infinity-engine',
+    namespace: 'robos.infinity',
+    displayTitle: 'Games: Infinity Engine',
+    description: 'No classes of its own. Architecture notes on GemRB, the open-source Infinity Engine that the cRPG follows: engine subsystems, file-format contracts and decision records, typed with classes documented in other packages.',
+    sitePath: '/knowledge-graph.html#game-packages',
+  },
+];
 
 // Packages that exist in .robos/kgraph.yaml but are not in DEFAULT_PACKAGES. Only the
 // game-domain shapes listed in SHAPE_PACKAGE_OVERRIDES are documented under them.
@@ -910,6 +925,7 @@ const yamlValue = text => (/^[A-Za-z0-9 ]+$/.test(text) ? text : JSON.stringify(
 // Markdown table cells cannot contain a raw pipe or a line break.
 const tableCell = text => String(text == null ? '' : text).replace(/\|/g, '\\|').replace(/\r?\n/g, ' ');
 const siteLink = (label, sitePath) => `[${label}]({{ '${sitePath}' | relative_url }})`;
+const htmlEscape = text => String(text == null ? '' : text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const schemaOrgCurie = url => String(url).replace('https://schema.org/', 'schema:');
 // One shape declares an OSLC URL where a Schema.org type is expected; only real
 // Schema.org URLs are shown in Schema.org columns.
@@ -1130,37 +1146,45 @@ class SchemaDocGenerator {
       '',
       'Every shape also records the upstream definition it follows: a Schema.org type and, where one applies, a domain standard such as OSLC, the C4 model or Cucumber.',
       '',
-      '## Packages',
+      '## Packages and classes',
       '',
-      '| Package | Namespace | Classes | Covers |',
-      '|---|---|---|---|',
+      'One row per package, with the classes it documents. Class names drop the `robos:` prefix. Open a class for its property rules, the Schema.org type and standard it follows, and an example node.',
+      '',
     ];
 
+    const standardIds = [...packageMap.keys()].filter(id => !GAME_PACKAGE_IDS.includes(id));
+    lines.push('<div class="rb-classlist">');
+    lines.push('  <div class="rb-classlist-label">Standard packages</div>');
+    for (const pkgId of standardIds) lines.push(...this.renderPackageRow(pkgId, packageMap.get(pkgId)));
+    lines.push('  <div class="rb-classlist-label">Games</div>');
+    for (const pkgId of GAME_PACKAGE_IDS) {
+      if (packageMap.has(pkgId)) lines.push(...this.renderPackageRow(pkgId, packageMap.get(pkgId)));
+    }
+    for (const notes of NOTES_ONLY_PACKAGES) lines.push(...this.renderNotesRow(notes));
+    lines.push('</div>', '');
+
+    // Game-flavoured classes that are documented with the package they serve (PCGame under
+    // Applications, the cRPG and tabletop test scenarios under Testing) rather than under Games.
+    const strayGameClasses = [];
     for (const [pkgId, pkg] of packageMap.entries()) {
-      lines.push(`| ${siteLink(tableCell(pkg.displayTitle), `/schemas/${pkgId}.html`)} | \`${pkg.namespace}\` | ${pkg.shapes.length} | ${tableCell(pkg.description)} |`);
+      if (GAME_PACKAGE_IDS.includes(pkgId)) continue;
+      const hits = pkg.shapes.filter(shape => /^robos:(CRPG|Tabletop|InfinityAI|PCGame|MobileGame)/.test(shape.targetClass));
+      if (!hits.length) continue;
+      const links = hits.map(shape => siteLink(`\`${shape.targetClass.replace(/^robos:/, '')}\``, `/schemas/${pkgId}/${this.getEntitySlug(shape.targetClass)}.html`));
+      strayGameClasses.push(`${links.join(', ')} under ${siteLink(pkg.displayTitle, `/schemas/${pkgId}.html`)}`);
     }
 
     lines.push(
+      '## Game packages',
       '',
-      '## All classes',
+      'Games are modeled in four packages. `game` holds what every game shares: rulesets (D&D 5e SRD, HeroQuest, D20), dice systems, classes, items and spells. `crpg` holds the content of the Realm of Heroes cRPG and `tabletop-game` the HeroQuest-style tabletop game. Their nodes carry the generic `robos:Game*` type next to their own, so a `robos:CRPGItem` is also a `robos:GameItem` and a query for the generic type finds items from both games.',
       '',
-      'The Schema.org column is the parent type from the shape. Open a class for its property rules, the standard it follows and an example node.',
-      '',
-      '| Class | Package | Schema.org type |',
-      '|---|---|---|'
+      ...(strayGameClasses.length ? [`Some game classes are documented with the package they serve instead of under Games: ${strayGameClasses.join('; ')}.`, ''] : []),
+      `\`infinity-engine\` describes the engine the cRPG follows. It defines no classes, so it has no page group here. The Realm of Heroes node links to it with \`robos:engineArchitecture\`, and its own nodes use C4 components plus classes documented under [Services & Contracts]({{ '/schemas/services.html' | relative_url }}) and [Documentation & Diagrams]({{ '/schemas/documentation.html' | relative_url }}). [Knowledge graph]({{ site.baseurl }}{% link knowledge-graph.md %}#game-packages) shows how the four packages connect, and [Game development]({{ site.baseurl }}{% link game-development.md %}) covers the games themselves.`,
+      ''
     );
 
-    for (const [pkgId, pkg] of packageMap.entries()) {
-      for (const shape of pkg.shapes) {
-        const slug = this.getEntitySlug(shape.targetClass);
-        const classLink = siteLink(`\`${shape.targetClass}\``, `/schemas/${pkgId}/${slug}.html`);
-        const schemaOrg = isSchemaOrg(shape.schemaOrgType) ? `[\`${schemaOrgCurie(shape.schemaOrgType)}\`](${shape.schemaOrgType})` : '-';
-        lines.push(`| ${classLink} | \`${pkgId}\` | ${schemaOrg} |`);
-      }
-    }
-
     lines.push(
-      '',
       '## Check a node against a shape',
       '',
       'Save one node as `node.json` in the repository root, for example the example from a class page. Then run:',
@@ -1188,6 +1212,52 @@ class SchemaDocGenerator {
     return lines.join('\n');
   }
 
+  // One row of the hub list: package link, namespace and class count on the left, a one-line
+  // description and alphabetical class chips on the right. Plain HTML keeps the list compact.
+  renderPackageRow(pkgId, pkg) {
+    const href = `{{ '/schemas/${pkgId}.html' | relative_url }}`;
+    const chips = [...pkg.shapes]
+      .sort((a, b) => a.targetClass.localeCompare(b.targetClass, 'en', { sensitivity: 'base' }))
+      .map(shape => {
+        const label = shape.targetClass.replace(/^robos:/, '');
+        const classHref = `{{ '/schemas/${pkgId}/${this.getEntitySlug(shape.targetClass)}.html' | relative_url }}`;
+        return `<a href="${classHref}" title="${htmlEscape(shape.targetClass)}">${htmlEscape(label)}</a>`;
+      });
+    return [
+      '  <div class="rb-classlist-row">',
+      `    <div class="rb-classlist-pkg"><a href="${href}">${htmlEscape(pkg.displayTitle)}</a><code>${htmlEscape(pkg.namespace)}</code><span>${pkg.shapes.length} classes</span></div>`,
+      '    <div class="rb-classlist-body">',
+      `      <p class="rb-classlist-desc">${htmlEscape(pkg.description)}</p>`,
+      `      <p class="rb-classlist-chips">${chips.join(' ')}</p>`,
+      '    </div>',
+      '  </div>',
+    ];
+  }
+
+  // A package with no shapes of its own: same row layout, linking to the page that covers it.
+  renderNotesRow(notes) {
+    const href = `{{ '${notes.sitePath}' | relative_url }}`;
+    return [
+      '  <div class="rb-classlist-row">',
+      `    <div class="rb-classlist-pkg"><a href="${href}">${htmlEscape(notes.displayTitle)}</a><code>${htmlEscape(notes.namespace)}</code><span>no classes</span></div>`,
+      '    <div class="rb-classlist-body">',
+      `      <p class="rb-classlist-desc">${htmlEscape(notes.description)}</p>`,
+      '    </div>',
+      '  </div>',
+    ];
+  }
+
+  // Cross-links between the game packages so none of them stands alone.
+  renderGameFamilyNote(pkg) {
+    if (!GAME_PACKAGE_IDS.includes(pkg.id)) return [];
+    const siblings = GAME_PACKAGE_IDS.filter(id => id !== pkg.id)
+      .map(id => siteLink(PACKAGE_DISPLAY_TITLES[id], `/schemas/${id}.html`));
+    return [
+      `This package is one of the game packages. See also ${siblings.join(' and ')}, the Infinity Engine notes under ${siteLink('Game packages', '/knowledge-graph.html#game-packages')} and the games themselves in ${siteLink('Game development', '/game-development.html')}.`,
+      '',
+    ];
+  }
+
   generatePackageMarkdown(pkg, navOrder) {
     const lines = [
       '---',
@@ -1199,33 +1269,34 @@ class SchemaDocGenerator {
       `permalink: /schemas/${pkg.id}.html`,
       '---',
       '',
-      `# ${pkg.displayTitle}`,
+      `# ${pkg.displayTitle} (${pkg.namespace})`,
       '{: .no_toc }',
       '',
       `${pkg.description}`,
       '{: .fs-6 }',
       '',
-      '| | |',
+      '| Detail | Value |',
       '|---|---|',
       `| Package id | \`${pkg.id}\` |`,
       `| Namespace | \`${pkg.namespace}\` |`,
       `| Package file | \`.robos/kgraphs/${pkg.id}/package.jsonld\` |`,
       `| Classes documented | ${pkg.shapes.length} |`,
       '',
+      ...this.renderGameFamilyNote(pkg),
       '## Classes',
       '',
       'Required properties are the ones with a minimum count of 1 or more. A node that lacks one fails validation.',
       '',
-      '| Class | Shape | Required properties |',
+      '| Class | Node type | Required properties |',
       '|---|---|---|',
     ];
 
     for (const shape of pkg.shapes) {
       const slug = this.getEntitySlug(shape.targetClass);
       const title = this.getEntityTitle(shape.targetClass);
-      const link = siteLink(`${tableCell(title)} (\`${shape.targetClass}\`)`, `/schemas/${pkg.id}/${slug}.html`);
+      const link = siteLink(tableCell(title), `/schemas/${pkg.id}/${slug}.html`);
       const required = shape.properties.filter(p => p.minCount >= 1).map(p => `\`${p.path}\``).join(', ') || 'none';
-      lines.push(`| ${link} | \`${shape.shapeId}\` | ${required} |`);
+      lines.push(`| ${link} | \`${shape.targetClass}\` | ${required} |`);
     }
 
     lines.push('');
@@ -1268,7 +1339,7 @@ class SchemaDocGenerator {
       '',
       '## Details',
       '',
-      '| | |',
+      '| Detail | Value |',
       '|---|---|',
       ...detailRows.map(([label, value]) => `| ${label} | ${value} |`),
       '',

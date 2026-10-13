@@ -1,7 +1,7 @@
 ---
 title: Infinity AI Directive
 layout: default
-parent: "Testing, Quality & BDD (robos.testing)"
+parent: "Testing & BDD"
 grand_parent: Schemas
 nav_order: 7
 permalink: /schemas/testing/infinity-ai-directive.html
@@ -15,11 +15,11 @@ Validation shape for `robos:InfinityAIDirective` nodes in the `testing` package 
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:InfinityAIDirective` |
 | Shape id | `urn:robos:shape:InfinityAIDirectiveShape` |
-| Package | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
+| Package | [Testing & BDD]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
 | Classification | Testing & behavior |
 | Schema.org type | [`schema:ControlAction`](https://schema.org/ControlAction) |
 | Domain standard | [robos.dev](https://robos.dev/ns/crpg#InfinityAIDirective) |

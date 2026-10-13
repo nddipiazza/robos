@@ -1,7 +1,7 @@
 ---
 title: "CI/CD Pipeline"
 layout: default
-parent: "DevOps & Cloud (robos.devops)"
+parent: "DevOps & Cloud"
 grand_parent: Schemas
 nav_order: 6
 permalink: /schemas/devops/cicd-pipeline.html
@@ -15,12 +15,12 @@ Validation shape for `robos:CICDPipeline` nodes in the `devops` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:CICDPipeline` |
 | Also matches | `robos:Pipeline` |
 | Shape id | `urn:robos:shape:CICDPipelineShape` |
-| Package | [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) (`devops`) |
+| Package | [DevOps & Cloud]({{ '/schemas/devops.html' | relative_url }}) (`devops`) |
 | Classification | Infrastructure & delivery |
 | Schema.org type | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) |
 

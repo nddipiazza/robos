@@ -1,7 +1,7 @@
 ---
 title: Test Suite
 layout: default
-parent: "Testing, Quality & BDD (robos.testing)"
+parent: "Testing & BDD"
 grand_parent: Schemas
 nav_order: 20
 permalink: /schemas/testing/test-suite.html
@@ -15,12 +15,12 @@ Validation shape for `robos:TestSuite` nodes in the `testing` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:TestSuite` |
 | Also matches | `oslc_qm:TestSuite` |
 | Shape id | `urn:robos:shape:TestSuiteShape` |
-| Package | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
+| Package | [Testing & BDD]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
 | Classification | Testing & behavior |
 | Schema.org type | [`schema:ItemList`](https://schema.org/ItemList) |
 | Domain standard | [OSLC QM](http://open-services.net/ns/qm#TestSuite) |

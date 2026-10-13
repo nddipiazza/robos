@@ -1,7 +1,7 @@
 ---
 title: Mobile App
 layout: default
-parent: "Applications (robos.apps)"
+parent: Applications
 grand_parent: Schemas
 nav_order: 3
 permalink: /schemas/applications/mobile-app.html
@@ -15,11 +15,11 @@ Validation shape for `robos:MobileApp` nodes in the `applications` package group
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:MobileApp` |
 | Shape id | `urn:robos:shape:MobileAppShape` |
-| Package | [Applications (robos.apps)]({{ '/schemas/applications.html' | relative_url }}) (`applications`) |
+| Package | [Applications]({{ '/schemas/applications.html' | relative_url }}) (`applications`) |
 | Classification | Applications & entry points |
 | Schema.org type | [`schema:MobileApplication`](https://schema.org/MobileApplication) |
 

@@ -1,7 +1,7 @@
 ---
 title: Microservice
 layout: default
-parent: "Services & Contracts (robos.services)"
+parent: "Services & Contracts"
 grand_parent: Schemas
 nav_order: 1
 permalink: /schemas/services/microservice.html
@@ -15,11 +15,11 @@ Validation shape for `robos:Microservice` nodes in the `services` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:Microservice` |
 | Shape id | `urn:robos:shape:MicroserviceShape` |
-| Package | [Services & Contracts (robos.services)]({{ '/schemas/services.html' | relative_url }}) (`services`) |
+| Package | [Services & Contracts]({{ '/schemas/services.html' | relative_url }}) (`services`) |
 | Classification | Services & processing |
 | Schema.org type | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) |
 | Domain standard | [C4 model](https://w3id.org/c4/Container) |

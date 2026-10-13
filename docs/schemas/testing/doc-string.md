@@ -1,7 +1,7 @@
 ---
 title: Doc String
 layout: default
-parent: "Testing, Quality & BDD (robos.testing)"
+parent: "Testing & BDD"
 grand_parent: Schemas
 nav_order: 17
 permalink: /schemas/testing/doc-string.html
@@ -15,11 +15,11 @@ Validation shape for `robos:DocString` nodes in the `testing` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:DocString` |
 | Shape id | `urn:robos:shape:DocStringShape` |
-| Package | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
+| Package | [Testing & BDD]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
 | Classification | Testing & behavior |
 | Schema.org type | [`schema:Text`](https://schema.org/Text) |
 | Domain standard | [Cucumber](https://cucumber.io/docs/gherkin/reference/#doc-strings) |

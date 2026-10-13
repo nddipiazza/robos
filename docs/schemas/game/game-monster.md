@@ -1,7 +1,7 @@
 ---
 title: Game Monster
 layout: default
-parent: "Game Rules (robos.game)"
+parent: "Games: Rules"
 grand_parent: Schemas
 nav_order: 3
 permalink: /schemas/game/game-monster.html
@@ -15,11 +15,11 @@ Validation shape for `robos:GameMonster` nodes in the `game` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:GameMonster` |
 | Shape id | `urn:robos:shape:GameMonsterShape` |
-| Package | [Game Rules (robos.game)]({{ '/schemas/game.html' | relative_url }}) (`game`) |
+| Package | [Games: Rules]({{ '/schemas/game.html' | relative_url }}) (`game`) |
 | Schema.org type | [`schema:Person`](https://schema.org/Person) |
 | Domain standard | [robos.dev](https://robos.dev/ns/game#Monster) |
 

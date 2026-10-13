@@ -1,7 +1,7 @@
 ---
 title: CRPG Test Scenario
 layout: default
-parent: "Testing, Quality & BDD (robos.testing)"
+parent: "Testing & BDD"
 grand_parent: Schemas
 nav_order: 3
 permalink: /schemas/testing/crpg-test-scenario.html
@@ -15,11 +15,11 @@ Validation shape for `robos:CRPGTestScenario` nodes in the `testing` package gro
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:CRPGTestScenario` |
 | Shape id | `urn:robos:shape:CRPGTestScenarioShape` |
-| Package | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
+| Package | [Testing & BDD]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
 | Classification | Testing & behavior |
 | Schema.org type | [`schema:CheckAction`](https://schema.org/CheckAction) |
 | Domain standard | [OSLC QM](http://open-services.net/ns/qm#TestCase) |

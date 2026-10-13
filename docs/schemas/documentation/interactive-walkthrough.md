@@ -1,7 +1,7 @@
 ---
 title: Interactive Walkthrough
 layout: default
-parent: "Documentation & Diagrams (robos.docs)"
+parent: "Documentation & Diagrams"
 grand_parent: Schemas
 nav_order: 5
 permalink: /schemas/documentation/interactive-walkthrough.html
@@ -15,11 +15,11 @@ Validation shape for `robos:InteractiveWalkthrough` nodes in the `documentation`
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:InteractiveWalkthrough` |
 | Shape id | `urn:robos:shape:InteractiveWalkthroughShape` |
-| Package | [Documentation & Diagrams (robos.docs)]({{ '/schemas/documentation.html' | relative_url }}) (`documentation`) |
+| Package | [Documentation & Diagrams]({{ '/schemas/documentation.html' | relative_url }}) (`documentation`) |
 | Classification | Documentation & decisions |
 | Schema.org type | [`schema:Guide`](https://schema.org/Guide) |
 

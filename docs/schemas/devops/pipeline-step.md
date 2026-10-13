@@ -1,7 +1,7 @@
 ---
 title: Pipeline Step
 layout: default
-parent: "DevOps & Cloud (robos.devops)"
+parent: "DevOps & Cloud"
 grand_parent: Schemas
 nav_order: 13
 permalink: /schemas/devops/pipeline-step.html
@@ -15,11 +15,11 @@ Validation shape for `robos:PipelineStep` nodes in the `devops` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:PipelineStep` |
 | Shape id | `urn:robos:shape:PipelineStepShape` |
-| Package | [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) (`devops`) |
+| Package | [DevOps & Cloud]({{ '/schemas/devops.html' | relative_url }}) (`devops`) |
 | Classification | Infrastructure & delivery |
 | Schema.org type | [`schema:Action`](https://schema.org/Action) |
 

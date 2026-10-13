@@ -1,7 +1,7 @@
 ---
 title: Task Server
 layout: default
-parent: "Organization & Teams (robos.org)"
+parent: "Organization & Teams"
 grand_parent: Schemas
 nav_order: 6
 permalink: /schemas/organization/task-server.html
@@ -15,11 +15,11 @@ Validation shape for `robos:TaskServer` nodes in the `organization` package grou
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:TaskServer` |
 | Shape id | `urn:robos:shape:TaskServerShape` |
-| Package | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) (`organization`) |
+| Package | [Organization & Teams]({{ '/schemas/organization.html' | relative_url }}) (`organization`) |
 | Classification | Projects & work items |
 | Schema.org type | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) |
 

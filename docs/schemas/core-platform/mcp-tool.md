@@ -1,7 +1,7 @@
 ---
 title: MCP Tool
 layout: default
-parent: "Core Platform (robos.platform)"
+parent: Core Platform
 grand_parent: Schemas
 nav_order: 17
 permalink: /schemas/core-platform/mcp-tool.html
@@ -15,11 +15,11 @@ Validation shape for `robos:MCPTool` nodes in the `core-platform` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:MCPTool` |
 | Shape id | `urn:robos:shape:MCPToolShape` |
-| Package | [Core Platform (robos.platform)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
+| Package | [Core Platform]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
 | Classification | Agents & MCP |
 | Schema.org type | [`schema:Action`](https://schema.org/Action) |
 | Domain standard | [MCP specification](https://modelcontextprotocol.io/specification/2025-11-25/schema) |

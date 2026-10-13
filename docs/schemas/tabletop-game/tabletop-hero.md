@@ -1,7 +1,7 @@
 ---
 title: Tabletop Hero
 layout: default
-parent: "Tabletop Game (robos.tabletop)"
+parent: "Games: Tabletop"
 grand_parent: Schemas
 nav_order: 2
 permalink: /schemas/tabletop-game/tabletop-hero.html
@@ -15,11 +15,11 @@ Validation shape for `robos:TabletopHero` nodes in the `tabletop-game` package g
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:TabletopHero` |
 | Shape id | `urn:robos:shape:TabletopHeroShape` |
-| Package | [Tabletop Game (robos.tabletop)]({{ '/schemas/tabletop-game.html' | relative_url }}) (`tabletop-game`) |
+| Package | [Games: Tabletop]({{ '/schemas/tabletop-game.html' | relative_url }}) (`tabletop-game`) |
 | Classification | Testing & behavior |
 | Schema.org type | [`schema:Person`](https://schema.org/Person) |
 | Domain standard | [robos.dev](https://robos.dev/ns/tabletop#Hero) |

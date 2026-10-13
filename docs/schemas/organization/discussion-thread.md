@@ -1,7 +1,7 @@
 ---
 title: Discussion Thread
 layout: default
-parent: "Organization & Teams (robos.org)"
+parent: "Organization & Teams"
 grand_parent: Schemas
 nav_order: 19
 permalink: /schemas/organization/discussion-thread.html
@@ -15,12 +15,12 @@ Validation shape for `robos:DiscussionThread` nodes in the `organization` packag
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:DiscussionThread` |
 | Also matches | `robos:Conversation` |
 | Shape id | `urn:robos:shape:DiscussionThreadShape` |
-| Package | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) (`organization`) |
+| Package | [Organization & Teams]({{ '/schemas/organization.html' | relative_url }}) (`organization`) |
 | Classification | Projects & work items |
 | Schema.org type | [`schema:Conversation`](https://schema.org/Conversation) |
 | Domain standard | [OSLC CORE](http://open-services.net/ns/core#Discussion) |

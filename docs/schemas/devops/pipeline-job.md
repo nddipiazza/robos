@@ -1,7 +1,7 @@
 ---
 title: Pipeline Job
 layout: default
-parent: "DevOps & Cloud (robos.devops)"
+parent: "DevOps & Cloud"
 grand_parent: Schemas
 nav_order: 12
 permalink: /schemas/devops/pipeline-job.html
@@ -15,11 +15,11 @@ Validation shape for `robos:PipelineJob` nodes in the `devops` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:PipelineJob` |
 | Shape id | `urn:robos:shape:PipelineJobShape` |
-| Package | [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) (`devops`) |
+| Package | [DevOps & Cloud]({{ '/schemas/devops.html' | relative_url }}) (`devops`) |
 | Classification | Infrastructure & delivery |
 | Schema.org type | [`schema:Action`](https://schema.org/Action) |
 

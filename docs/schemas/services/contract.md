@@ -1,7 +1,7 @@
 ---
 title: Contract
 layout: default
-parent: "Services & Contracts (robos.services)"
+parent: "Services & Contracts"
 grand_parent: Schemas
 nav_order: 2
 permalink: /schemas/services/contract.html
@@ -15,11 +15,11 @@ Validation shape for `robos:Contract` nodes in the `services` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:Contract` |
 | Shape id | `urn:robos:shape:ContractShape` |
-| Package | [Services & Contracts (robos.services)]({{ '/schemas/services.html' | relative_url }}) (`services`) |
+| Package | [Services & Contracts]({{ '/schemas/services.html' | relative_url }}) (`services`) |
 | Classification | Contracts & data models |
 | Schema.org type | [`schema:DigitalDocument`](https://schema.org/DigitalDocument) |
 | Domain standard | [OSLC AM](http://open-services.net/ns/am#Resource) |

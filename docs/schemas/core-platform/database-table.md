@@ -1,7 +1,7 @@
 ---
 title: Database Table
 layout: default
-parent: "Core Platform (robos.platform)"
+parent: Core Platform
 grand_parent: Schemas
 nav_order: 11
 permalink: /schemas/core-platform/database-table.html
@@ -15,11 +15,11 @@ Validation shape for `robos:DatabaseTable` nodes in the `core-platform` package 
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:DatabaseTable` |
 | Shape id | `urn:robos:shape:DatabaseTableShape` |
-| Package | [Core Platform (robos.platform)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
+| Package | [Core Platform]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
 | Classification | Data stores & messaging |
 | Schema.org type | [`schema:Table`](https://schema.org/Table) |
 | Domain standard | [www.iso.org](https://www.iso.org/standard/63555.html) |

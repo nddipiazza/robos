@@ -1,7 +1,7 @@
 ---
 title: Git Tag
 layout: default
-parent: "Organization & Teams (robos.org)"
+parent: "Organization & Teams"
 grand_parent: Schemas
 nav_order: 17
 permalink: /schemas/organization/git-tag.html
@@ -15,11 +15,11 @@ Validation shape for `robos:GitTag` nodes in the `organization` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:GitTag` |
 | Shape id | `urn:robos:shape:GitTagShape` |
-| Package | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) (`organization`) |
+| Package | [Organization & Teams]({{ '/schemas/organization.html' | relative_url }}) (`organization`) |
 | Classification | Source control & artifacts |
 | Schema.org type | [`schema:SoftwareSourceCode`](https://schema.org/SoftwareSourceCode) |
 

@@ -1,7 +1,7 @@
 ---
 title: Tabletop AI Command
 layout: default
-parent: "Tabletop Game (robos.tabletop)"
+parent: "Games: Tabletop"
 grand_parent: Schemas
 nav_order: 12
 permalink: /schemas/tabletop-game/tabletop-ai-command.html
@@ -15,11 +15,11 @@ Validation shape for `robos:TabletopAICommand` nodes in the `tabletop-game` pack
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:TabletopAICommand` |
 | Shape id | `urn:robos:shape:TabletopAICommandShape` |
-| Package | [Tabletop Game (robos.tabletop)]({{ '/schemas/tabletop-game.html' | relative_url }}) (`tabletop-game`) |
+| Package | [Games: Tabletop]({{ '/schemas/tabletop-game.html' | relative_url }}) (`tabletop-game`) |
 | Classification | Testing & behavior |
 | Schema.org type | [`schema:InteractAction`](https://schema.org/InteractAction) |
 | Domain standard | [robos.dev](https://robos.dev/ns/tabletop#AICommand) |

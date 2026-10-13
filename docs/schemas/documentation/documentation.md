@@ -1,7 +1,7 @@
 ---
 title: Documentation
 layout: default
-parent: "Documentation & Diagrams (robos.docs)"
+parent: "Documentation & Diagrams"
 grand_parent: Schemas
 nav_order: 2
 permalink: /schemas/documentation/documentation.html
@@ -15,12 +15,12 @@ Validation shape for `robos:Documentation` nodes in the `documentation` package 
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:Documentation` |
 | Also matches | `robos:SystemDocumentation` |
 | Shape id | `urn:robos:shape:DocumentationShape` |
-| Package | [Documentation & Diagrams (robos.docs)]({{ '/schemas/documentation.html' | relative_url }}) (`documentation`) |
+| Package | [Documentation & Diagrams]({{ '/schemas/documentation.html' | relative_url }}) (`documentation`) |
 | Classification | Documentation & decisions |
 | Schema.org type | [`schema:TechArticle`](https://schema.org/TechArticle) |
 

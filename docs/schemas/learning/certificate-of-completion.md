@@ -1,7 +1,7 @@
 ---
 title: Certificate Of Completion
 layout: default
-parent: "eLearning Curriculums (robos.learning)"
+parent: eLearning
 grand_parent: Schemas
 nav_order: 2
 permalink: /schemas/learning/certificate-of-completion.html
@@ -15,11 +15,11 @@ Validation shape for `robos:CertificateOfCompletion` nodes in the `learning` pac
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:CertificateOfCompletion` |
 | Shape id | `urn:robos:shape:CertificateOfCompletionShape` |
-| Package | [eLearning Curriculums (robos.learning)]({{ '/schemas/learning.html' | relative_url }}) (`learning`) |
+| Package | [eLearning]({{ '/schemas/learning.html' | relative_url }}) (`learning`) |
 | Classification | Learning & assessment |
 | Schema.org type | [`schema:EducationalOccupationalCredential`](https://schema.org/EducationalOccupationalCredential) |
 

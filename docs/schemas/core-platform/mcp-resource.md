@@ -1,7 +1,7 @@
 ---
 title: MCP Resource
 layout: default
-parent: "Core Platform (robos.platform)"
+parent: Core Platform
 grand_parent: Schemas
 nav_order: 18
 permalink: /schemas/core-platform/mcp-resource.html
@@ -15,11 +15,11 @@ Validation shape for `robos:MCPResource` nodes in the `core-platform` package gr
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:MCPResource` |
 | Shape id | `urn:robos:shape:MCPResourceShape` |
-| Package | [Core Platform (robos.platform)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
+| Package | [Core Platform]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
 | Classification | Agents & MCP |
 | Schema.org type | [`schema:MediaObject`](https://schema.org/MediaObject) |
 | Domain standard | [MCP specification](https://modelcontextprotocol.io/specification/2025-11-25/schema) |

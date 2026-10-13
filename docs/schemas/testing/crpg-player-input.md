@@ -1,7 +1,7 @@
 ---
 title: CRPG Player Input
 layout: default
-parent: "Testing, Quality & BDD (robos.testing)"
+parent: "Testing & BDD"
 grand_parent: Schemas
 nav_order: 8
 permalink: /schemas/testing/crpg-player-input.html
@@ -15,11 +15,11 @@ Validation shape for `robos:CRPGPlayerInput` nodes in the `testing` package grou
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:CRPGPlayerInput` |
 | Shape id | `urn:robos:shape:CRPGPlayerInputShape` |
-| Package | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
+| Package | [Testing & BDD]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
 | Classification | Testing & behavior |
 | Schema.org type | [`schema:InteractAction`](https://schema.org/InteractAction) |
 | Domain standard | [robos.dev](https://robos.dev/ns/crpg#PlayerInput) |

@@ -1,7 +1,7 @@
 ---
 title: Voice Command
 layout: default
-parent: "Applications (robos.apps)"
+parent: Applications
 grand_parent: Schemas
 nav_order: 11
 permalink: /schemas/applications/voice-command.html
@@ -15,11 +15,11 @@ Validation shape for `robos:VoiceCommand` nodes in the `applications` package gr
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:VoiceCommand` |
 | Shape id | `urn:robos:shape:VoiceCommandShape` |
-| Package | [Applications (robos.apps)]({{ '/schemas/applications.html' | relative_url }}) (`applications`) |
+| Package | [Applications]({{ '/schemas/applications.html' | relative_url }}) (`applications`) |
 | Schema.org type | [`schema:ControlAction`](https://schema.org/ControlAction) |
 
 ## Properties

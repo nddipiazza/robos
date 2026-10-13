@@ -1,7 +1,7 @@
 ---
 title: Data Store
 layout: default
-parent: "Core Platform (robos.platform)"
+parent: Core Platform
 grand_parent: Schemas
 nav_order: 21
 permalink: /schemas/core-platform/data-store.html
@@ -15,11 +15,11 @@ Validation shape for `robos:DataStore` nodes in the `core-platform` package grou
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:DataStore` |
 | Shape id | `robos:DataStoreShape` |
-| Package | [Core Platform (robos.platform)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
+| Package | [Core Platform]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
 | Classification | Data stores & messaging |
 | Schema.org type | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) |
 

@@ -1,7 +1,7 @@
 ---
 title: Database Schema
 layout: default
-parent: "Core Platform (robos.platform)"
+parent: Core Platform
 grand_parent: Schemas
 nav_order: 10
 permalink: /schemas/core-platform/database-schema.html
@@ -15,11 +15,11 @@ Validation shape for `robos:DatabaseSchema` nodes in the `core-platform` package
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:DatabaseSchema` |
 | Shape id | `urn:robos:shape:DatabaseSchemaShape` |
-| Package | [Core Platform (robos.platform)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
+| Package | [Core Platform]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
 | Classification | Data stores & messaging |
 | Schema.org type | [`schema:DataStore`](https://schema.org/DataStore) |
 | Domain standard | [www.iso.org](https://www.iso.org/standard/63555.html) |

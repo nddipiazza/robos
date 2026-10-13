@@ -1,7 +1,7 @@
 ---
 title: Kubernetes Deployment
 layout: default
-parent: "DevOps & Cloud (robos.devops)"
+parent: "DevOps & Cloud"
 grand_parent: Schemas
 nav_order: 8
 permalink: /schemas/devops/kubernetes-deployment.html
@@ -15,11 +15,11 @@ Validation shape for `robos:KubernetesDeployment` nodes in the `devops` package 
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:KubernetesDeployment` |
 | Shape id | `urn:robos:shape:KubernetesDeploymentShape` |
-| Package | [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) (`devops`) |
+| Package | [DevOps & Cloud]({{ '/schemas/devops.html' | relative_url }}) (`devops`) |
 | Classification | Infrastructure & delivery |
 | Schema.org type | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) |
 | Domain standard | [Kubernetes](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) |

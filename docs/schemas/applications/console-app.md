@@ -1,7 +1,7 @@
 ---
 title: Console App
 layout: default
-parent: "Applications (robos.apps)"
+parent: Applications
 grand_parent: Schemas
 nav_order: 2
 permalink: /schemas/applications/console-app.html
@@ -15,11 +15,11 @@ Validation shape for `robos:ConsoleApp` nodes in the `applications` package grou
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:ConsoleApp` |
 | Shape id | `urn:robos:shape:ConsoleAppShape` |
-| Package | [Applications (robos.apps)]({{ '/schemas/applications.html' | relative_url }}) (`applications`) |
+| Package | [Applications]({{ '/schemas/applications.html' | relative_url }}) (`applications`) |
 | Classification | Applications & entry points |
 | Schema.org type | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) |
 

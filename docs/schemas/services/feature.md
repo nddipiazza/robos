@@ -1,7 +1,7 @@
 ---
 title: Feature
 layout: default
-parent: "Services & Contracts (robos.services)"
+parent: "Services & Contracts"
 grand_parent: Schemas
 nav_order: 6
 permalink: /schemas/services/feature.html
@@ -15,12 +15,12 @@ Validation shape for `robos:Feature` nodes in the `services` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:Feature` |
 | Also matches | `robos:ProductFeature` |
 | Shape id | `urn:robos:shape:FeatureShape` |
-| Package | [Services & Contracts (robos.services)]({{ '/schemas/services.html' | relative_url }}) (`services`) |
+| Package | [Services & Contracts]({{ '/schemas/services.html' | relative_url }}) (`services`) |
 | Classification | Projects & work items |
 | Schema.org type | [`schema:DigitalDocument`](https://schema.org/DigitalDocument) |
 | Domain standard | [OSLC RM](http://open-services.net/ns/rm#Requirement) |

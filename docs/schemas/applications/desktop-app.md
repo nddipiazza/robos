@@ -1,7 +1,7 @@
 ---
 title: Desktop App
 layout: default
-parent: "Applications (robos.apps)"
+parent: Applications
 grand_parent: Schemas
 nav_order: 1
 permalink: /schemas/applications/desktop-app.html
@@ -15,11 +15,11 @@ Validation shape for `robos:DesktopApp` nodes in the `applications` package grou
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:DesktopApp` |
 | Shape id | `urn:robos:shape:DesktopAppShape` |
-| Package | [Applications (robos.apps)]({{ '/schemas/applications.html' | relative_url }}) (`applications`) |
+| Package | [Applications]({{ '/schemas/applications.html' | relative_url }}) (`applications`) |
 | Classification | Applications & entry points |
 | Schema.org type | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) |
 

@@ -1,7 +1,7 @@
 ---
 title: CLI Command
 layout: default
-parent: "Applications (robos.apps)"
+parent: Applications
 grand_parent: Schemas
 nav_order: 9
 permalink: /schemas/applications/cli-command.html
@@ -15,11 +15,11 @@ Validation shape for `robos:CLICommand` nodes in the `applications` package grou
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:CLICommand` |
 | Shape id | `urn:robos:shape:CLICommandShape` |
-| Package | [Applications (robos.apps)]({{ '/schemas/applications.html' | relative_url }}) (`applications`) |
+| Package | [Applications]({{ '/schemas/applications.html' | relative_url }}) (`applications`) |
 | Classification | Applications & entry points |
 | Schema.org type | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) |
 

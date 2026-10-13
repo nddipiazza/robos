@@ -1,7 +1,7 @@
 ---
 title: Team
 layout: default
-parent: "Organization & Teams (robos.org)"
+parent: "Organization & Teams"
 grand_parent: Schemas
 nav_order: 1
 permalink: /schemas/organization/team.html
@@ -15,11 +15,11 @@ Validation shape for `robos:Team` nodes in the `organization` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:Team` |
 | Shape id | `urn:robos:shape:TeamShape` |
-| Package | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) (`organization`) |
+| Package | [Organization & Teams]({{ '/schemas/organization.html' | relative_url }}) (`organization`) |
 | Classification | Organization & people |
 | Schema.org type | [`schema:ProjectTeam`](https://schema.org/ProjectTeam) |
 

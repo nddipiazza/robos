@@ -1,7 +1,7 @@
 ---
 title: Build System
 layout: default
-parent: "Core Platform (robos.platform)"
+parent: Core Platform
 grand_parent: Schemas
 nav_order: 1
 permalink: /schemas/core-platform/build-system.html
@@ -15,12 +15,12 @@ Validation shape for `robos:BuildSystem` nodes in the `core-platform` package gr
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:BuildSystem` |
 | Also matches | `robos:MonorepoBuild` |
 | Shape id | `urn:robos:shape:BuildSystemShape` |
-| Package | [Core Platform (robos.platform)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
+| Package | [Core Platform]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
 | Classification | Libraries & build systems |
 | Schema.org type | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) |
 | Domain standard | [bazel.build](https://bazel.build/) |

@@ -1,7 +1,7 @@
 ---
 title: Environment
 layout: default
-parent: "DevOps & Cloud (robos.devops)"
+parent: "DevOps & Cloud"
 grand_parent: Schemas
 nav_order: 4
 permalink: /schemas/devops/environment.html
@@ -15,12 +15,12 @@ Validation shape for `robos:Environment` nodes in the `devops` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:Environment` |
 | Also matches | `robos:DeploymentEnvironment` |
 | Shape id | `urn:robos:shape:EnvironmentShape` |
-| Package | [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) (`devops`) |
+| Package | [DevOps & Cloud]({{ '/schemas/devops.html' | relative_url }}) (`devops`) |
 | Classification | Infrastructure & delivery |
 | Schema.org type | [`schema:DeploymentEnvironment`](https://schema.org/DeploymentEnvironment) |
 

@@ -1,7 +1,7 @@
 ---
 title: Mobile Game
 layout: default
-parent: "Applications (robos.apps)"
+parent: Applications
 grand_parent: Schemas
 nav_order: 7
 permalink: /schemas/applications/mobile-game.html
@@ -15,11 +15,11 @@ Validation shape for `robos:MobileGame` nodes in the `applications` package grou
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:MobileGame` |
 | Shape id | `urn:robos:shape:MobileGameShape` |
-| Package | [Applications (robos.apps)]({{ '/schemas/applications.html' | relative_url }}) (`applications`) |
+| Package | [Applications]({{ '/schemas/applications.html' | relative_url }}) (`applications`) |
 | Classification | Applications & entry points |
 | Schema.org type | [`schema:VideoGame`](https://schema.org/VideoGame) |
 

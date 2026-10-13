@@ -1,7 +1,7 @@
 ---
 title: NoSQL Collection
 layout: default
-parent: "Core Platform (robos.platform)"
+parent: Core Platform
 grand_parent: Schemas
 nav_order: 14
 permalink: /schemas/core-platform/nosql-collection.html
@@ -15,11 +15,11 @@ Validation shape for `robos:NoSQLCollection` nodes in the `core-platform` packag
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:NoSQLCollection` |
 | Shape id | `urn:robos:shape:NoSQLCollectionShape` |
-| Package | [Core Platform (robos.platform)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
+| Package | [Core Platform]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
 | Classification | Data stores & messaging |
 | Schema.org type | [`schema:Collection`](https://schema.org/Collection) |
 

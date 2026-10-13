@@ -1,7 +1,7 @@
 ---
 title: Prompt Strategy
 layout: default
-parent: "Core Platform (robos.platform)"
+parent: Core Platform
 grand_parent: Schemas
 nav_order: 9
 permalink: /schemas/core-platform/prompt-strategy.html
@@ -15,12 +15,12 @@ Validation shape for `robos:PromptStrategy` nodes in the `core-platform` package
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:PromptStrategy` |
 | Also matches | `robos:PromptOptimizer`, `robos:PromptCompiler`, `robos:AIPromptTechnique` |
 | Shape id | `urn:robos:shape:PromptStrategyShape` |
-| Package | [Core Platform (robos.platform)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
+| Package | [Core Platform]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
 | Classification | Agents & MCP |
 | Schema.org type | [`schema:Intangible`](https://schema.org/Intangible) |
 

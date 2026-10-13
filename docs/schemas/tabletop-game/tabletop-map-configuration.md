@@ -1,7 +1,7 @@
 ---
 title: Tabletop Map Configuration
 layout: default
-parent: "Tabletop Game (robos.tabletop)"
+parent: "Games: Tabletop"
 grand_parent: Schemas
 nav_order: 6
 permalink: /schemas/tabletop-game/tabletop-map-configuration.html
@@ -15,11 +15,11 @@ Validation shape for `robos:TabletopMapConfiguration` nodes in the `tabletop-gam
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:TabletopMapConfiguration` |
 | Shape id | `urn:robos:shape:TabletopMapConfigurationShape` |
-| Package | [Tabletop Game (robos.tabletop)]({{ '/schemas/tabletop-game.html' | relative_url }}) (`tabletop-game`) |
+| Package | [Games: Tabletop]({{ '/schemas/tabletop-game.html' | relative_url }}) (`tabletop-game`) |
 | Classification | Testing & behavior |
 | Schema.org type | [`schema:Place`](https://schema.org/Place) |
 | Domain standard | [robos.dev](https://robos.dev/ns/tabletop#MapConfiguration) |

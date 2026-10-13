@@ -1,7 +1,7 @@
 ---
 title: Epic
 layout: default
-parent: "Organization & Teams (robos.org)"
+parent: "Organization & Teams"
 grand_parent: Schemas
 nav_order: 3
 permalink: /schemas/organization/epic.html
@@ -15,11 +15,11 @@ Validation shape for `robos:Epic` nodes in the `organization` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:Epic` |
 | Shape id | `urn:robos:shape:EpicShape` |
-| Package | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) (`organization`) |
+| Package | [Organization & Teams]({{ '/schemas/organization.html' | relative_url }}) (`organization`) |
 | Classification | Projects & work items |
 | Schema.org type | [`schema:Plan`](https://schema.org/Plan) |
 | Domain standard | [OSLC CM](http://open-services.net/ns/cm#ChangeRequest) |

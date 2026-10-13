@@ -1,7 +1,7 @@
 ---
 title: Kubernetes Namespace
 layout: default
-parent: "DevOps & Cloud (robos.devops)"
+parent: "DevOps & Cloud"
 grand_parent: Schemas
 nav_order: 7
 permalink: /schemas/devops/kubernetes-namespace.html
@@ -15,11 +15,11 @@ Validation shape for `robos:KubernetesNamespace` nodes in the `devops` package g
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:KubernetesNamespace` |
 | Shape id | `urn:robos:shape:KubernetesNamespaceShape` |
-| Package | [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) (`devops`) |
+| Package | [DevOps & Cloud]({{ '/schemas/devops.html' | relative_url }}) (`devops`) |
 | Classification | Infrastructure & delivery |
 | Schema.org type | [`schema:AdministrativeArea`](https://schema.org/AdministrativeArea) |
 | Domain standard | [Kubernetes](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/) |

@@ -1,7 +1,7 @@
 ---
 title: Context Source
 layout: default
-parent: "Core Platform (robos.platform)"
+parent: Core Platform
 grand_parent: Schemas
 nav_order: 8
 permalink: /schemas/core-platform/context-source.html
@@ -15,11 +15,11 @@ Validation shape for `robos:ContextSource` nodes in the `core-platform` package 
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:ContextSource` |
 | Shape id | `urn:robos:shape:ContextSourceShape` |
-| Package | [Core Platform (robos.platform)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
+| Package | [Core Platform]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
 | Classification | Agents & MCP |
 | Schema.org type | [`schema:DataFeed`](https://schema.org/DataFeed) |
 

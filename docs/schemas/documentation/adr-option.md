@@ -1,7 +1,7 @@
 ---
 title: ADR Option
 layout: default
-parent: "Documentation & Diagrams (robos.docs)"
+parent: "Documentation & Diagrams"
 grand_parent: Schemas
 nav_order: 8
 permalink: /schemas/documentation/adr-option.html
@@ -15,11 +15,11 @@ Validation shape for `robos:ADROption` nodes in the `documentation` package grou
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:ADROption` |
 | Shape id | `urn:robos:shape:ADROptionShape` |
-| Package | [Documentation & Diagrams (robos.docs)]({{ '/schemas/documentation.html' | relative_url }}) (`documentation`) |
+| Package | [Documentation & Diagrams]({{ '/schemas/documentation.html' | relative_url }}) (`documentation`) |
 | Classification | Documentation & decisions |
 | Schema.org type | [`schema:ChooseAction`](https://schema.org/ChooseAction) |
 

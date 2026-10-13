@@ -1,7 +1,7 @@
 ---
 title: CRPG Story Node
 layout: default
-parent: "cRPG (robos.crpg)"
+parent: "Games: cRPG"
 grand_parent: Schemas
 nav_order: 3
 permalink: /schemas/crpg/crpg-story-node.html
@@ -15,11 +15,11 @@ Validation shape for `robos:CRPGStoryNode` nodes in the `crpg` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:CRPGStoryNode` |
 | Shape id | `urn:robos:shape:CRPGStoryNodeShape` |
-| Package | [cRPG (robos.crpg)]({{ '/schemas/crpg.html' | relative_url }}) (`crpg`) |
+| Package | [Games: cRPG]({{ '/schemas/crpg.html' | relative_url }}) (`crpg`) |
 | Domain standard | [OSLC CM](http://open-services.net/ns/cm#ChangeRequest) |
 
 ## Properties

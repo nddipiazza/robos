@@ -1,5 +1,5 @@
 ---
-title: "Services & Contracts (robos.services)"
+title: "Services & Contracts"
 layout: default
 parent: Schemas
 nav_order: 3
@@ -13,7 +13,7 @@ permalink: /schemas/services.html
 Microservices, API contracts (OpenAPI, Protobuf, GraphQL), endpoints, data models, requirements and features.
 {: .fs-6 }
 
-| | |
+| Detail | Value |
 |---|---|
 | Package id | `services` |
 | Namespace | `robos.services` |
@@ -24,13 +24,13 @@ Microservices, API contracts (OpenAPI, Protobuf, GraphQL), endpoints, data model
 
 Required properties are the ones with a minimum count of 1 or more. A node that lacks one fails validation.
 
-| Class | Shape | Required properties |
+| Class | Node type | Required properties |
 |---|---|---|
-| [Microservice (`robos:Microservice`)]({{ '/schemas/services/microservice.html' | relative_url }}) | `urn:robos:shape:MicroserviceShape` | `robos:repository`, `dcterms:title` |
-| [Contract (`robos:Contract`)]({{ '/schemas/services/contract.html' | relative_url }}) | `urn:robos:shape:ContractShape` | `robos:specFile`, `robos:protocol` |
-| [Requirement (`oslc_rm:Requirement`)]({{ '/schemas/services/requirement.html' | relative_url }}) | `urn:robos:shape:RequirementShape` | `dcterms:title`, `robos:featureFile` |
-| [Protobuf Contract (`robos:ProtobufContract`)]({{ '/schemas/services/protobuf-contract.html' | relative_url }}) | `urn:robos:shape:ProtobufContractShape` | `dcterms:title`, `robos:specFile`, `robos:packageName`, `robos:rpcMethods` |
-| [GraphQL Contract (`robos:GraphQLContract`)]({{ '/schemas/services/graphql-contract.html' | relative_url }}) | `urn:robos:shape:GraphQLContractShape` | `dcterms:title`, `robos:specFile`, `robos:schemaType` |
-| [Feature (`robos:Feature`)]({{ '/schemas/services/feature.html' | relative_url }}) | `urn:robos:shape:FeatureShape` | `dcterms:title` |
-| [API Endpoint (`robos:APIEndpoint`)]({{ '/schemas/services/api-endpoint.html' | relative_url }}) | `urn:robos:shape:APIEndpointShape` | `dcterms:title`, `robos:pathPattern`, `robos:httpMethod` |
-| [Data Model (`robos:DataModel`)]({{ '/schemas/services/data-model.html' | relative_url }}) | `urn:robos:shape:DataModelShape` | `dcterms:title`, `robos:modelName` |
+| [Microservice]({{ '/schemas/services/microservice.html' | relative_url }}) | `robos:Microservice` | `robos:repository`, `dcterms:title` |
+| [Contract]({{ '/schemas/services/contract.html' | relative_url }}) | `robos:Contract` | `robos:specFile`, `robos:protocol` |
+| [Requirement]({{ '/schemas/services/requirement.html' | relative_url }}) | `oslc_rm:Requirement` | `dcterms:title`, `robos:featureFile` |
+| [Protobuf Contract]({{ '/schemas/services/protobuf-contract.html' | relative_url }}) | `robos:ProtobufContract` | `dcterms:title`, `robos:specFile`, `robos:packageName`, `robos:rpcMethods` |
+| [GraphQL Contract]({{ '/schemas/services/graphql-contract.html' | relative_url }}) | `robos:GraphQLContract` | `dcterms:title`, `robos:specFile`, `robos:schemaType` |
+| [Feature]({{ '/schemas/services/feature.html' | relative_url }}) | `robos:Feature` | `dcterms:title` |
+| [API Endpoint]({{ '/schemas/services/api-endpoint.html' | relative_url }}) | `robos:APIEndpoint` | `dcterms:title`, `robos:pathPattern`, `robos:httpMethod` |
+| [Data Model]({{ '/schemas/services/data-model.html' | relative_url }}) | `robos:DataModel` | `dcterms:title`, `robos:modelName` |

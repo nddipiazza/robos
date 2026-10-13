@@ -1,7 +1,7 @@
 ---
 title: Test Plan
 layout: default
-parent: "Testing, Quality & BDD (robos.testing)"
+parent: "Testing & BDD"
 grand_parent: Schemas
 nav_order: 19
 permalink: /schemas/testing/test-plan.html
@@ -15,12 +15,12 @@ Validation shape for `robos:TestPlan` nodes in the `testing` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:TestPlan` |
 | Also matches | `oslc_qm:TestPlan` |
 | Shape id | `urn:robos:shape:TestPlanShape` |
-| Package | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
+| Package | [Testing & BDD]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
 | Classification | Testing & behavior |
 | Schema.org type | [`schema:Plan`](https://schema.org/Plan) |
 | Domain standard | [OSLC QM](http://open-services.net/ns/qm#TestPlan) |

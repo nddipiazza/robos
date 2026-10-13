@@ -1,7 +1,7 @@
 ---
 title: Hands On Lab
 layout: default
-parent: "eLearning Curriculums (robos.learning)"
+parent: eLearning
 grand_parent: Schemas
 nav_order: 5
 permalink: /schemas/learning/hands-on-lab.html
@@ -15,11 +15,11 @@ Validation shape for `robos:HandsOnLab` nodes in the `learning` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:HandsOnLab` |
 | Shape id | `urn:robos:shape:HandsOnLabShape` |
-| Package | [eLearning Curriculums (robos.learning)]({{ '/schemas/learning.html' | relative_url }}) (`learning`) |
+| Package | [eLearning]({{ '/schemas/learning.html' | relative_url }}) (`learning`) |
 | Classification | Learning & assessment |
 | Schema.org type | [`schema:ExercisePlan`](https://schema.org/ExercisePlan) |
 

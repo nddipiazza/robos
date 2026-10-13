@@ -1,7 +1,7 @@
 ---
 title: Subtask
 layout: default
-parent: "Organization & Teams (robos.org)"
+parent: "Organization & Teams"
 grand_parent: Schemas
 nav_order: 9
 permalink: /schemas/organization/subtask.html
@@ -15,11 +15,11 @@ Validation shape for `robos:Subtask` nodes in the `organization` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:Subtask` |
 | Shape id | `urn:robos:shape:SubtaskShape` |
-| Package | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) (`organization`) |
+| Package | [Organization & Teams]({{ '/schemas/organization.html' | relative_url }}) (`organization`) |
 | Classification | Projects & work items |
 | Schema.org type | [`schema:Action`](https://schema.org/Action) |
 | Domain standard | [OSLC CM](http://open-services.net/ns/cm#ChangeRequest) |

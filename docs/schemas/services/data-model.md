@@ -1,7 +1,7 @@
 ---
 title: Data Model
 layout: default
-parent: "Services & Contracts (robos.services)"
+parent: "Services & Contracts"
 grand_parent: Schemas
 nav_order: 8
 permalink: /schemas/services/data-model.html
@@ -15,12 +15,12 @@ Validation shape for `robos:DataModel` nodes in the `services` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:DataModel` |
 | Also matches | `robos:SchemaModel`, `robos:DomainEntity` |
 | Shape id | `urn:robos:shape:DataModelShape` |
-| Package | [Services & Contracts (robos.services)]({{ '/schemas/services.html' | relative_url }}) (`services`) |
+| Package | [Services & Contracts]({{ '/schemas/services.html' | relative_url }}) (`services`) |
 | Classification | Contracts & data models |
 | Schema.org type | [`schema:Class`](https://schema.org/Class) |
 | Domain standard | [OpenAPI 3.1](https://spec.openapis.org/oas/v3.1.0) |

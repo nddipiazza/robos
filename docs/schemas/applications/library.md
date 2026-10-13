@@ -1,7 +1,7 @@
 ---
 title: Library
 layout: default
-parent: "Applications (robos.apps)"
+parent: Applications
 grand_parent: Schemas
 nav_order: 4
 permalink: /schemas/applications/library.html
@@ -15,11 +15,11 @@ Validation shape for `robos:Library` nodes in the `applications` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:Library` |
 | Shape id | `urn:robos:shape:LibraryShape` |
-| Package | [Applications (robos.apps)]({{ '/schemas/applications.html' | relative_url }}) (`applications`) |
+| Package | [Applications]({{ '/schemas/applications.html' | relative_url }}) (`applications`) |
 | Classification | Libraries & build systems |
 | Schema.org type | [`schema:SoftwareSourceCode`](https://schema.org/SoftwareSourceCode) |
 

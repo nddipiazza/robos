@@ -1,7 +1,7 @@
 ---
 title: Tabletop AI Engine
 layout: default
-parent: "Tabletop Game (robos.tabletop)"
+parent: "Games: Tabletop"
 grand_parent: Schemas
 nav_order: 9
 permalink: /schemas/tabletop-game/tabletop-ai-engine.html
@@ -15,11 +15,11 @@ Validation shape for `robos:TabletopAIEngine` nodes in the `tabletop-game` packa
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:TabletopAIEngine` |
 | Shape id | `urn:robos:shape:TabletopAIEngineShape` |
-| Package | [Tabletop Game (robos.tabletop)]({{ '/schemas/tabletop-game.html' | relative_url }}) (`tabletop-game`) |
+| Package | [Games: Tabletop]({{ '/schemas/tabletop-game.html' | relative_url }}) (`tabletop-game`) |
 | Classification | Testing & behavior |
 | Schema.org type | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) |
 | Domain standard | [robos.dev](https://robos.dev/ns/tabletop#AIEngine) |

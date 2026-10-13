@@ -1,7 +1,7 @@
 ---
 title: CRPG Map Object
 layout: default
-parent: "Testing, Quality & BDD (robos.testing)"
+parent: "Testing & BDD"
 grand_parent: Schemas
 nav_order: 5
 permalink: /schemas/testing/crpg-map-object.html
@@ -15,11 +15,11 @@ Validation shape for `robos:CRPGMapObject` nodes in the `testing` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:CRPGMapObject` |
 | Shape id | `urn:robos:shape:CRPGMapObjectShape` |
-| Package | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
+| Package | [Testing & BDD]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
 | Classification | Testing & behavior |
 | Schema.org type | [`schema:Place`](https://schema.org/Place) |
 | Domain standard | [robos.dev](https://robos.dev/ns/crpg#MapObject) |

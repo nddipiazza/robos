@@ -1,7 +1,7 @@
 ---
 title: CRPG Battle Map
 layout: default
-parent: "Testing, Quality & BDD (robos.testing)"
+parent: "Testing & BDD"
 grand_parent: Schemas
 nav_order: 4
 permalink: /schemas/testing/crpg-battle-map.html
@@ -15,11 +15,11 @@ Validation shape for `robos:CRPGBattleMap` nodes in the `testing` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:CRPGBattleMap` |
 | Shape id | `urn:robos:shape:CRPGBattleMapShape` |
-| Package | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
+| Package | [Testing & BDD]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
 | Classification | Testing & behavior |
 | Schema.org type | [`schema:Place`](https://schema.org/Place) |
 

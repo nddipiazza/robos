@@ -1,7 +1,7 @@
 ---
 title: Search Cluster
 layout: default
-parent: "Core Platform (robos.platform)"
+parent: Core Platform
 grand_parent: Schemas
 nav_order: 5
 permalink: /schemas/core-platform/search-cluster.html
@@ -15,11 +15,11 @@ Validation shape for `robos:SearchCluster` nodes in the `core-platform` package 
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:SearchCluster` |
 | Shape id | `urn:robos:shape:SearchClusterShape` |
-| Package | [Core Platform (robos.platform)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
+| Package | [Core Platform]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
 | Classification | Data stores & messaging |
 | Schema.org type | [`schema:DataStore`](https://schema.org/DataStore) |
 

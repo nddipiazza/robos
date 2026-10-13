@@ -1,7 +1,7 @@
 ---
 title: Web Route
 layout: default
-parent: "Applications (robos.apps)"
+parent: Applications
 grand_parent: Schemas
 nav_order: 8
 permalink: /schemas/applications/web-route.html
@@ -15,11 +15,11 @@ Validation shape for `robos:WebRoute` nodes in the `applications` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:WebRoute` |
 | Shape id | `urn:robos:shape:WebRouteShape` |
-| Package | [Applications (robos.apps)]({{ '/schemas/applications.html' | relative_url }}) (`applications`) |
+| Package | [Applications]({{ '/schemas/applications.html' | relative_url }}) (`applications`) |
 | Classification | Applications & entry points |
 | Schema.org type | [`schema:WebPage`](https://schema.org/WebPage) |
 

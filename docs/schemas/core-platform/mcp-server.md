@@ -1,7 +1,7 @@
 ---
 title: MCP Server
 layout: default
-parent: "Core Platform (robos.platform)"
+parent: Core Platform
 grand_parent: Schemas
 nav_order: 7
 permalink: /schemas/core-platform/mcp-server.html
@@ -15,12 +15,12 @@ Validation shape for `robos:MCPServer` nodes in the `core-platform` package grou
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:MCPServer` |
 | Also matches | `robos:ToolProvider` |
 | Shape id | `urn:robos:shape:MCPServerShape` |
-| Package | [Core Platform (robos.platform)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
+| Package | [Core Platform]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
 | Classification | Agents & MCP |
 | Schema.org type | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) |
 | Domain standard | [MCP specification](https://modelcontextprotocol.io/specification/2025-11-25/schema) |

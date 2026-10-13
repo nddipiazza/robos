@@ -1,7 +1,7 @@
 ---
 title: GitOps Deployment
 layout: default
-parent: "DevOps & Cloud (robos.devops)"
+parent: "DevOps & Cloud"
 grand_parent: Schemas
 nav_order: 5
 permalink: /schemas/devops/gitops-deployment.html
@@ -15,12 +15,12 @@ Validation shape for `robos:GitOpsDeployment` nodes in the `devops` package grou
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:GitOpsDeployment` |
 | Also matches | `robos:ArgoCDApplication` |
 | Shape id | `urn:robos:shape:GitOpsDeploymentShape` |
-| Package | [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) (`devops`) |
+| Package | [DevOps & Cloud]({{ '/schemas/devops.html' | relative_url }}) (`devops`) |
 | Classification | Infrastructure & delivery |
 | Schema.org type | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) |
 | Domain standard | [opengitops.dev](https://opengitops.dev/) |

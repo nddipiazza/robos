@@ -1,7 +1,7 @@
 ---
 title: Tabletop Monster
 layout: default
-parent: "Tabletop Game (robos.tabletop)"
+parent: "Games: Tabletop"
 grand_parent: Schemas
 nav_order: 3
 permalink: /schemas/tabletop-game/tabletop-monster.html
@@ -15,11 +15,11 @@ Validation shape for `robos:TabletopMonster` nodes in the `tabletop-game` packag
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:TabletopMonster` |
 | Shape id | `urn:robos:shape:TabletopMonsterShape` |
-| Package | [Tabletop Game (robos.tabletop)]({{ '/schemas/tabletop-game.html' | relative_url }}) (`tabletop-game`) |
+| Package | [Games: Tabletop]({{ '/schemas/tabletop-game.html' | relative_url }}) (`tabletop-game`) |
 | Classification | Testing & behavior |
 | Schema.org type | [`schema:Person`](https://schema.org/Person) |
 | Domain standard | [robos.dev](https://robos.dev/ns/tabletop#Monster) |

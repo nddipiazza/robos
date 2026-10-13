@@ -55,7 +55,14 @@ Without `CRPG_MODE=backend` the same features run with video and on-screen overl
 
 ## Game packages in the knowledge graph
 
-`.robos/kgraph.yaml` registers four game-related packages under `.robos/kgraphs/`: `game` (a shared gaming and RPG-rules ontology), `crpg` (the cRPG's content nodes), `tabletop-game` (the HeroQuest content) and `infinity-engine` (notes on the Infinity Engine architecture the cRPG follows).
+`.robos/kgraph.yaml` registers four game-related packages under `.robos/kgraphs/`. They are described together in [Knowledge graph]({{ site.baseurl }}{% link knowledge-graph.md %}#game-packages), and the classes of the first three are listed under Games in [Schemas]({{ site.baseurl }}{% link schemas.md %}).
+
+| Package | Holds | Read by |
+|:---|:---|:---|
+| `game` | Rules shared by every game: rulesets, dice, classes, items, spells. | [Tabletop Studio]({{ '/apps/robos-tabletop/' | relative_url }}). The `crpg` and `tabletop-game` nodes also reuse its `robos:Game*` types. |
+| `crpg` | The cRPG's content nodes. | `packages/crpg-builder`, which compiles it into game data, schemas and GDScript. |
+| `tabletop-game` | The HeroQuest content. | [Tabletop Studio]({{ '/apps/robos-tabletop/' | relative_url }}) and the tabletop game's scenario test. |
+| `infinity-engine` | Notes on the Infinity Engine (GemRB) architecture the cRPG follows. | Reference only. The Realm of Heroes node and its game events point into it by id. |
 
 The `crpg` package holds the node `urn:robos:crpg:game:realm-of-heroes`, typed `robos:PCGame` and `schema:VideoGame`. It is the only `robos:PCGame` node in the graph packages; the Space Raiders and Puzzle Quest entries in `.robos/packages.yaml` are sample data.
 

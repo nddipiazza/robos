@@ -1,7 +1,7 @@
 ---
 title: API Endpoint
 layout: default
-parent: "Services & Contracts (robos.services)"
+parent: "Services & Contracts"
 grand_parent: Schemas
 nav_order: 7
 permalink: /schemas/services/api-endpoint.html
@@ -15,12 +15,12 @@ Validation shape for `robos:APIEndpoint` nodes in the `services` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:APIEndpoint` |
 | Also matches | `robos:APIOperation` |
 | Shape id | `urn:robos:shape:APIEndpointShape` |
-| Package | [Services & Contracts (robos.services)]({{ '/schemas/services.html' | relative_url }}) (`services`) |
+| Package | [Services & Contracts]({{ '/schemas/services.html' | relative_url }}) (`services`) |
 | Classification | Contracts & data models |
 | Schema.org type | [`schema:EntryPoint`](https://schema.org/EntryPoint) |
 | Domain standard | [OpenAPI 3.1](https://spec.openapis.org/oas/v3.1.0) |

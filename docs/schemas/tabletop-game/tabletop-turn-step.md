@@ -1,7 +1,7 @@
 ---
 title: Tabletop Turn Step
 layout: default
-parent: "Tabletop Game (robos.tabletop)"
+parent: "Games: Tabletop"
 grand_parent: Schemas
 nav_order: 8
 permalink: /schemas/tabletop-game/tabletop-turn-step.html
@@ -15,11 +15,11 @@ Validation shape for `robos:TabletopTurnStep` nodes in the `tabletop-game` packa
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:TabletopTurnStep` |
 | Shape id | `urn:robos:shape:TabletopTurnStepShape` |
-| Package | [Tabletop Game (robos.tabletop)]({{ '/schemas/tabletop-game.html' | relative_url }}) (`tabletop-game`) |
+| Package | [Games: Tabletop]({{ '/schemas/tabletop-game.html' | relative_url }}) (`tabletop-game`) |
 | Classification | Testing & behavior |
 | Schema.org type | [`schema:Action`](https://schema.org/Action) |
 | Domain standard | [robos.dev](https://robos.dev/ns/tabletop#TurnStep) |

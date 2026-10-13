@@ -1,7 +1,7 @@
 ---
 title: Git Project Organization
 layout: default
-parent: "Organization & Teams (robos.org)"
+parent: "Organization & Teams"
 grand_parent: Schemas
 nav_order: 4
 permalink: /schemas/organization/git-project-organization.html
@@ -15,12 +15,12 @@ Validation shape for `robos:GitProjectOrganization` nodes in the `organization` 
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:GitProjectOrganization` |
 | Also matches | `robos:GitOrganization` |
 | Shape id | `urn:robos:shape:GitProjectOrganizationShape` |
-| Package | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) (`organization`) |
+| Package | [Organization & Teams]({{ '/schemas/organization.html' | relative_url }}) (`organization`) |
 | Classification | Organization & people |
 | Schema.org type | [`schema:Organization`](https://schema.org/Organization) |
 

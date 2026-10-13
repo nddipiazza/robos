@@ -76,10 +76,28 @@ The graph is split into packages. A package is one directory under `.robos/kgrap
 | `learning` | `robos.learning` | eLearning courses, completion certificates, agent skills |
 | `documentation` | `robos.docs` | Documentation pages, decision records, flow diagrams, walkthroughs, code snippets |
 | `testing` | `robos.testing` | Gherkin features, scenarios, test plans and suites, testing libraries |
-| `game`, `crpg`, `tabletop-game` | `robos.game`, `robos.crpg`, `robos.tabletop` | Game rules and content for the cRPG and tabletop games |
-| `infinity-engine` | `robos.infinity` | Architecture notes on the Infinity Engine (GemRB) |
 
-The first eight are the standard packages that every graph workspace gets. The other four are specific to this repository.
+The first eight are the standard packages that every graph workspace gets.
+
+### Game packages
+
+The other four are specific to this repository. They hold the content and rules of the two games in `games/` and the notes behind the cRPG's engine design, and they are grouped as Games in the [Schemas]({{ site.baseurl }}{% link schemas.md %}) reference.
+
+| Package id | Namespace | Nodes | Holds |
+|---|---|---|---|
+| `game` | `robos.game` | 21 | Rules shared by every game: rulesets (D&D 5e SRD, HeroQuest, D20), dice systems, classes, items and spells. |
+| `crpg` | `robos.crpg` | 106 | Content for the Realm of Heroes cRPG: the game node, classes, NPCs, monsters, spells, items, map zones, encounter tables, quests, dialogue trees, factions and game events, plus its test plan. |
+| `tabletop-game` | `robos.tabletop` | 71 | Content for the HeroQuest-style tabletop game: heroes, monsters, spell cards, furniture, quest maps, the turn graph and AI directives. |
+| `infinity-engine` | `robos.infinity` | 31 | Architecture notes on GemRB, the open-source Infinity Engine the cRPG follows: 13 engine subsystems, 12 file-format contracts, 4 decision records and a C++ interface sketch. It defines no classes of its own. |
+
+The packages connect in a few places:
+
+- Nodes in `crpg` and `tabletop-game` carry the generic `robos:Game*` types next to their own. A `robos:CRPGItem` is also a `robos:GameItem`, so a query for the generic type returns items from both games.
+- The Realm of Heroes node names the `dnd5e` ruleset that `game` defines in `robos:ruleset`, and links to the engine notes with `robos:engineArchitecture`, an edge to `urn:robos:infinity:engine:gemrb-infinity` in `infinity-engine`.
+- Every cRPG game event has a `robos:infinityInteraction` block that names the engine subsystems it exercises, such as the script VM and the dialogue state machine, by their `infinity-engine` ids.
+- `packages/crpg-builder` reads the `crpg` package and compiles it into game data, JSON schemas and GDScript.
+
+[Game development]({{ site.baseurl }}{% link game-development.md %}) covers the games, their editor apps and the shapes for game projects.
 
 ![The Explorer with the statistics bar under the header and the Forms API Service node selected]({{ '/assets/images/screenshots/multi-pkg-statbar_frame.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Look at the header buttons and the statistics bar. The tab strip on the right is from an older Explorer.*

@@ -1,7 +1,7 @@
 ---
 title: Quiz Assessment
 layout: default
-parent: "eLearning Curriculums (robos.learning)"
+parent: eLearning
 grand_parent: Schemas
 nav_order: 6
 permalink: /schemas/learning/quiz-assessment.html
@@ -15,11 +15,11 @@ Validation shape for `robos:QuizAssessment` nodes in the `learning` package grou
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:QuizAssessment` |
 | Shape id | `urn:robos:shape:QuizAssessmentShape` |
-| Package | [eLearning Curriculums (robos.learning)]({{ '/schemas/learning.html' | relative_url }}) (`learning`) |
+| Package | [eLearning]({{ '/schemas/learning.html' | relative_url }}) (`learning`) |
 | Classification | Learning & assessment |
 | Schema.org type | [`schema:Quiz`](https://schema.org/Quiz) |
 

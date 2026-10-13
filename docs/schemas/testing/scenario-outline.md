@@ -1,7 +1,7 @@
 ---
 title: Scenario Outline
 layout: default
-parent: "Testing, Quality & BDD (robos.testing)"
+parent: "Testing & BDD"
 grand_parent: Schemas
 nav_order: 13
 permalink: /schemas/testing/scenario-outline.html
@@ -15,11 +15,11 @@ Validation shape for `robos:ScenarioOutline` nodes in the `testing` package grou
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:ScenarioOutline` |
 | Shape id | `urn:robos:shape:ScenarioOutlineShape` |
-| Package | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
+| Package | [Testing & BDD]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
 | Classification | Testing & behavior |
 | Schema.org type | [`schema:CheckAction`](https://schema.org/CheckAction) |
 | Domain standard | [Cucumber](https://cucumber.io/docs/gherkin/reference/#scenario-outline) |

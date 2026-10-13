@@ -1,7 +1,7 @@
 ---
 title: Source Artifact
 layout: default
-parent: "Core Platform (robos.platform)"
+parent: Core Platform
 grand_parent: Schemas
 nav_order: 23
 permalink: /schemas/core-platform/source-artifact.html
@@ -15,11 +15,11 @@ Validation shape for `robos:SourceArtifact` nodes in the `core-platform` package
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:SourceArtifact` |
 | Shape id | `robos:SourceArtifactShape` |
-| Package | [Core Platform (robos.platform)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
+| Package | [Core Platform]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
 | Classification | Source control & artifacts |
 | Schema.org type | [`schema:CreativeWork`](https://schema.org/CreativeWork) |
 

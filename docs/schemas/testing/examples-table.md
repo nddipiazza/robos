@@ -1,7 +1,7 @@
 ---
 title: Examples Table
 layout: default
-parent: "Testing, Quality & BDD (robos.testing)"
+parent: "Testing & BDD"
 grand_parent: Schemas
 nav_order: 14
 permalink: /schemas/testing/examples-table.html
@@ -15,11 +15,11 @@ Validation shape for `robos:ExamplesTable` nodes in the `testing` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:ExamplesTable` |
 | Shape id | `urn:robos:shape:ExamplesTableShape` |
-| Package | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
+| Package | [Testing & BDD]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
 | Classification | Testing & behavior |
 | Schema.org type | [`schema:Table`](https://schema.org/Table) |
 | Domain standard | [Cucumber](https://cucumber.io/docs/gherkin/reference/#examples) |

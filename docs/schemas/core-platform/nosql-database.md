@@ -1,7 +1,7 @@
 ---
 title: NoSQL Database
 layout: default
-parent: "Core Platform (robos.platform)"
+parent: Core Platform
 grand_parent: Schemas
 nav_order: 3
 permalink: /schemas/core-platform/nosql-database.html
@@ -15,12 +15,12 @@ Validation shape for `robos:NoSQLDatabase` nodes in the `core-platform` package 
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:NoSQLDatabase` |
 | Also matches | `robos:CacheStore`, `robos:DocumentStore`, `robos:KeyValueStore` |
 | Shape id | `urn:robos:shape:NoSQLDatabaseShape` |
-| Package | [Core Platform (robos.platform)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
+| Package | [Core Platform]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
 | Classification | Data stores & messaging |
 | Schema.org type | [`schema:DataStore`](https://schema.org/DataStore) |
 

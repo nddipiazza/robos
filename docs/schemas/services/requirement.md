@@ -1,7 +1,7 @@
 ---
 title: Requirement
 layout: default
-parent: "Services & Contracts (robos.services)"
+parent: "Services & Contracts"
 grand_parent: Schemas
 nav_order: 3
 permalink: /schemas/services/requirement.html
@@ -15,11 +15,11 @@ Validation shape for `oslc_rm:Requirement` nodes in the `services` package group
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `oslc_rm:Requirement` |
 | Shape id | `urn:robos:shape:RequirementShape` |
-| Package | [Services & Contracts (robos.services)]({{ '/schemas/services.html' | relative_url }}) (`services`) |
+| Package | [Services & Contracts]({{ '/schemas/services.html' | relative_url }}) (`services`) |
 | Classification | Projects & work items |
 | Schema.org type | [`schema:DigitalDocument`](https://schema.org/DigitalDocument) |
 | Domain standard | [OSLC RM](http://open-services.net/ns/rm#Requirement) |

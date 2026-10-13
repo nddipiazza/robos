@@ -1,7 +1,7 @@
 ---
 title: Flow Diagram
 layout: default
-parent: "Documentation & Diagrams (robos.docs)"
+parent: "Documentation & Diagrams"
 grand_parent: Schemas
 nav_order: 1
 permalink: /schemas/documentation/flow-diagram.html
@@ -15,11 +15,11 @@ Validation shape for `robos:FlowDiagram` nodes in the `documentation` package gr
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:FlowDiagram` |
 | Shape id | `urn:robos:shape:FlowDiagramShape` |
-| Package | [Documentation & Diagrams (robos.docs)]({{ '/schemas/documentation.html' | relative_url }}) (`documentation`) |
+| Package | [Documentation & Diagrams]({{ '/schemas/documentation.html' | relative_url }}) (`documentation`) |
 | Classification | Documentation & decisions |
 | Schema.org type | [`schema:ImageObject`](https://schema.org/ImageObject) |
 

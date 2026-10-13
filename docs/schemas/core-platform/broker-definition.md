@@ -1,7 +1,7 @@
 ---
 title: Broker Definition
 layout: default
-parent: "Core Platform (robos.platform)"
+parent: Core Platform
 grand_parent: Schemas
 nav_order: 22
 permalink: /schemas/core-platform/broker-definition.html
@@ -15,11 +15,11 @@ Validation shape for `robos:BrokerDefinition` nodes in the `core-platform` packa
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:BrokerDefinition` |
 | Shape id | `robos:BrokerDefinitionShape` |
-| Package | [Core Platform (robos.platform)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
+| Package | [Core Platform]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
 | Classification | Data stores & messaging |
 | Schema.org type | [`schema:Service`](https://schema.org/Service) |
 

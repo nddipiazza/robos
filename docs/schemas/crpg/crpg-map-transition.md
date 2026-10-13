@@ -1,7 +1,7 @@
 ---
 title: CRPG Map Transition
 layout: default
-parent: "cRPG (robos.crpg)"
+parent: "Games: cRPG"
 grand_parent: Schemas
 nav_order: 6
 permalink: /schemas/crpg/crpg-map-transition.html
@@ -15,11 +15,11 @@ Validation shape for `robos:CRPGMapTransition` nodes in the `crpg` package group
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:CRPGMapTransition` |
 | Shape id | `urn:robos:shape:CRPGMapTransitionShape` |
-| Package | [cRPG (robos.crpg)]({{ '/schemas/crpg.html' | relative_url }}) (`crpg`) |
+| Package | [Games: cRPG]({{ '/schemas/crpg.html' | relative_url }}) (`crpg`) |
 | Schema.org type | [`schema:Place`](https://schema.org/Place) |
 | Domain standard | [robos.dev](https://robos.dev/ns/crpg#MapTransition) |
 

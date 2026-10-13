@@ -1,7 +1,7 @@
 ---
 title: Learning Lesson
 layout: default
-parent: "eLearning Curriculums (robos.learning)"
+parent: eLearning
 grand_parent: Schemas
 nav_order: 4
 permalink: /schemas/learning/learning-lesson.html
@@ -15,11 +15,11 @@ Validation shape for `robos:LearningLesson` nodes in the `learning` package grou
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:LearningLesson` |
 | Shape id | `urn:robos:shape:LearningLessonShape` |
-| Package | [eLearning Curriculums (robos.learning)]({{ '/schemas/learning.html' | relative_url }}) (`learning`) |
+| Package | [eLearning]({{ '/schemas/learning.html' | relative_url }}) (`learning`) |
 | Classification | Learning & assessment |
 | Schema.org type | [`schema:LearningResource`](https://schema.org/LearningResource) |
 

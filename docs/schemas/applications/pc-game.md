@@ -1,7 +1,7 @@
 ---
 title: PC Game
 layout: default
-parent: "Applications (robos.apps)"
+parent: Applications
 grand_parent: Schemas
 nav_order: 6
 permalink: /schemas/applications/pc-game.html
@@ -15,11 +15,11 @@ Validation shape for `robos:PCGame` nodes in the `applications` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:PCGame` |
 | Shape id | `urn:robos:shape:PCGameShape` |
-| Package | [Applications (robos.apps)]({{ '/schemas/applications.html' | relative_url }}) (`applications`) |
+| Package | [Applications]({{ '/schemas/applications.html' | relative_url }}) (`applications`) |
 | Classification | Applications & entry points |
 | Schema.org type | [`schema:VideoGame`](https://schema.org/VideoGame) |
 

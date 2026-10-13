@@ -1,7 +1,7 @@
 ---
 title: Gherkin Feature
 layout: default
-parent: "Testing, Quality & BDD (robos.testing)"
+parent: "Testing & BDD"
 grand_parent: Schemas
 nav_order: 10
 permalink: /schemas/testing/gherkin-feature.html
@@ -15,12 +15,12 @@ Validation shape for `robos:GherkinFeature` nodes in the `testing` package group
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:GherkinFeature` |
 | Also matches | `robos:BDDFeature` |
 | Shape id | `urn:robos:shape:GherkinFeatureShape` |
-| Package | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
+| Package | [Testing & BDD]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
 | Classification | Testing & behavior |
 | Schema.org type | [`schema:DigitalDocument`](https://schema.org/DigitalDocument) |
 | Domain standard | [OSLC RM](http://open-services.net/ns/rm#Requirement) |

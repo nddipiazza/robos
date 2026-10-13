@@ -1,7 +1,7 @@
 ---
 title: Bug
 layout: default
-parent: "Organization & Teams (robos.org)"
+parent: "Organization & Teams"
 grand_parent: Schemas
 nav_order: 10
 permalink: /schemas/organization/bug.html
@@ -15,12 +15,12 @@ Validation shape for `robos:Bug` nodes in the `organization` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:Bug` |
 | Also matches | `robos:Defect`, `oslc_cm:Defect` |
 | Shape id | `urn:robos:shape:BugShape` |
-| Package | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) (`organization`) |
+| Package | [Organization & Teams]({{ '/schemas/organization.html' | relative_url }}) (`organization`) |
 | Classification | Projects & work items |
 | Schema.org type | [`schema:Action`](https://schema.org/Action) |
 | Domain standard | [OSLC CM](http://open-services.net/ns/cm#ChangeRequest) |

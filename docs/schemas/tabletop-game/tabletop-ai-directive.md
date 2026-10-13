@@ -1,7 +1,7 @@
 ---
 title: Tabletop AI Directive
 layout: default
-parent: "Tabletop Game (robos.tabletop)"
+parent: "Games: Tabletop"
 grand_parent: Schemas
 nav_order: 10
 permalink: /schemas/tabletop-game/tabletop-ai-directive.html
@@ -15,11 +15,11 @@ Validation shape for `robos:TabletopAIDirective` nodes in the `tabletop-game` pa
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:TabletopAIDirective` |
 | Shape id | `urn:robos:shape:TabletopAIDirectiveShape` |
-| Package | [Tabletop Game (robos.tabletop)]({{ '/schemas/tabletop-game.html' | relative_url }}) (`tabletop-game`) |
+| Package | [Games: Tabletop]({{ '/schemas/tabletop-game.html' | relative_url }}) (`tabletop-game`) |
 | Classification | Testing & behavior |
 | Schema.org type | [`schema:ControlAction`](https://schema.org/ControlAction) |
 | Domain standard | [robos.dev](https://robos.dev/ns/tabletop#AIDirective) |

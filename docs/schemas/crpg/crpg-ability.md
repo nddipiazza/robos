@@ -1,7 +1,7 @@
 ---
 title: CRPG Ability
 layout: default
-parent: "cRPG (robos.crpg)"
+parent: "Games: cRPG"
 grand_parent: Schemas
 nav_order: 1
 permalink: /schemas/crpg/crpg-ability.html
@@ -15,11 +15,11 @@ Validation shape for `robos:CRPGAbility` nodes in the `crpg` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:CRPGAbility` |
 | Shape id | `urn:robos:shape:CRPGAbilityShape` |
-| Package | [cRPG (robos.crpg)]({{ '/schemas/crpg.html' | relative_url }}) (`crpg`) |
+| Package | [Games: cRPG]({{ '/schemas/crpg.html' | relative_url }}) (`crpg`) |
 | Schema.org type | [`schema:Action`](https://schema.org/Action) |
 | Domain standard | [robos.dev](https://robos.dev/ns/crpg#Ability) |
 

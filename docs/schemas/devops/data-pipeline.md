@@ -1,7 +1,7 @@
 ---
 title: Data Pipeline
 layout: default
-parent: "DevOps & Cloud (robos.devops)"
+parent: "DevOps & Cloud"
 grand_parent: Schemas
 nav_order: 1
 permalink: /schemas/devops/data-pipeline.html
@@ -15,11 +15,11 @@ Validation shape for `robos:DataPipeline` nodes in the `devops` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:DataPipeline` |
 | Shape id | `urn:robos:shape:DataPipelineShape` |
-| Package | [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) (`devops`) |
+| Package | [DevOps & Cloud]({{ '/schemas/devops.html' | relative_url }}) (`devops`) |
 | Classification | Services & processing |
 | Schema.org type | [`schema:DataFeed`](https://schema.org/DataFeed) |
 

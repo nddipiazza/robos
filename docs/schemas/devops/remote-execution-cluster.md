@@ -1,7 +1,7 @@
 ---
 title: Remote Execution Cluster
 layout: default
-parent: "DevOps & Cloud (robos.devops)"
+parent: "DevOps & Cloud"
 grand_parent: Schemas
 nav_order: 2
 permalink: /schemas/devops/remote-execution-cluster.html
@@ -15,12 +15,12 @@ Validation shape for `robos:RemoteExecutionCluster` nodes in the `devops` packag
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:RemoteExecutionCluster` |
 | Also matches | `robos:RemoteBuildCluster` |
 | Shape id | `urn:robos:shape:RemoteExecutionClusterShape` |
-| Package | [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) (`devops`) |
+| Package | [DevOps & Cloud]({{ '/schemas/devops.html' | relative_url }}) (`devops`) |
 | Classification | Infrastructure & delivery |
 | Schema.org type | [`schema:ComputerPlatform`](https://schema.org/ComputerPlatform) |
 | Domain standard | [github.com](https://github.com/bazelbuild/remote-apis) |

@@ -1,7 +1,7 @@
 ---
 title: Kubernetes Service
 layout: default
-parent: "DevOps & Cloud (robos.devops)"
+parent: "DevOps & Cloud"
 grand_parent: Schemas
 nav_order: 9
 permalink: /schemas/devops/kubernetes-service.html
@@ -15,11 +15,11 @@ Validation shape for `robos:KubernetesService` nodes in the `devops` package gro
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:KubernetesService` |
 | Shape id | `urn:robos:shape:KubernetesServiceShape` |
-| Package | [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) (`devops`) |
+| Package | [DevOps & Cloud]({{ '/schemas/devops.html' | relative_url }}) (`devops`) |
 | Classification | Infrastructure & delivery |
 | Schema.org type | [`schema:Service`](https://schema.org/Service) |
 | Domain standard | [Kubernetes](https://kubernetes.io/docs/concepts/services-networking/service/) |

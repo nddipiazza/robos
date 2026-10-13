@@ -1,7 +1,7 @@
 ---
 title: Pull Request
 layout: default
-parent: "Organization & Teams (robos.org)"
+parent: "Organization & Teams"
 grand_parent: Schemas
 nav_order: 15
 permalink: /schemas/organization/pull-request.html
@@ -15,12 +15,12 @@ Validation shape for `robos:PullRequest` nodes in the `organization` package gro
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:PullRequest` |
 | Also matches | `robos:MergeRequest` |
 | Shape id | `urn:robos:shape:PullRequestShape` |
-| Package | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) (`organization`) |
+| Package | [Organization & Teams]({{ '/schemas/organization.html' | relative_url }}) (`organization`) |
 | Classification | Source control & artifacts |
 | Schema.org type | [`schema:UpdateAction`](https://schema.org/UpdateAction) |
 | Domain standard | [OSLC CM](http://open-services.net/ns/cm#ChangeRequest) |

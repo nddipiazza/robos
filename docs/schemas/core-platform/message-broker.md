@@ -1,7 +1,7 @@
 ---
 title: Message Broker
 layout: default
-parent: "Core Platform (robos.platform)"
+parent: Core Platform
 grand_parent: Schemas
 nav_order: 6
 permalink: /schemas/core-platform/message-broker.html
@@ -15,12 +15,12 @@ Validation shape for `robos:MessageBroker` nodes in the `core-platform` package 
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:MessageBroker` |
 | Also matches | `robos:EventBus` |
 | Shape id | `urn:robos:shape:MessageBrokerShape` |
-| Package | [Core Platform (robos.platform)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
+| Package | [Core Platform]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
 | Classification | Data stores & messaging |
 | Schema.org type | [`schema:BroadcastService`](https://schema.org/BroadcastService) |
 | Domain standard | [Apache Kafka](https://kafka.apache.org/) |

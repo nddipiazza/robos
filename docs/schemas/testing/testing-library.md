@@ -1,7 +1,7 @@
 ---
 title: Testing Library
 layout: default
-parent: "Testing, Quality & BDD (robos.testing)"
+parent: "Testing & BDD"
 grand_parent: Schemas
 nav_order: 18
 permalink: /schemas/testing/testing-library.html
@@ -15,12 +15,12 @@ Validation shape for `robos:TestingLibrary` nodes in the `testing` package group
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:TestingLibrary` |
 | Also matches | `robos:TestFramework` |
 | Shape id | `urn:robos:shape:TestingLibraryShape` |
-| Package | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
+| Package | [Testing & BDD]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
 | Classification | Testing & behavior |
 | Schema.org type | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) |
 

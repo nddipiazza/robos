@@ -1,7 +1,7 @@
 ---
 title: Doc Section
 layout: default
-parent: "Documentation & Diagrams (robos.docs)"
+parent: "Documentation & Diagrams"
 grand_parent: Schemas
 nav_order: 7
 permalink: /schemas/documentation/doc-section.html
@@ -15,11 +15,11 @@ Validation shape for `robos:DocSection` nodes in the `documentation` package gro
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:DocSection` |
 | Shape id | `urn:robos:shape:DocSectionShape` |
-| Package | [Documentation & Diagrams (robos.docs)]({{ '/schemas/documentation.html' | relative_url }}) (`documentation`) |
+| Package | [Documentation & Diagrams]({{ '/schemas/documentation.html' | relative_url }}) (`documentation`) |
 | Classification | Documentation & decisions |
 | Schema.org type | [`schema:Article`](https://schema.org/Article) |
 

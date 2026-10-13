@@ -1,7 +1,7 @@
 ---
 title: Milestone
 layout: default
-parent: "Organization & Teams (robos.org)"
+parent: "Organization & Teams"
 grand_parent: Schemas
 nav_order: 12
 permalink: /schemas/organization/milestone.html
@@ -15,11 +15,11 @@ Validation shape for `robos:Milestone` nodes in the `organization` package group
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:Milestone` |
 | Shape id | `urn:robos:shape:MilestoneShape` |
-| Package | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) (`organization`) |
+| Package | [Organization & Teams]({{ '/schemas/organization.html' | relative_url }}) (`organization`) |
 | Classification | Projects & work items |
 | Schema.org type | [`schema:Action`](https://schema.org/Action) |
 

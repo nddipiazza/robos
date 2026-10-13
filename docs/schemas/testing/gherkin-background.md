@@ -1,7 +1,7 @@
 ---
 title: Gherkin Background
 layout: default
-parent: "Testing, Quality & BDD (robos.testing)"
+parent: "Testing & BDD"
 grand_parent: Schemas
 nav_order: 11
 permalink: /schemas/testing/gherkin-background.html
@@ -15,12 +15,12 @@ Validation shape for `robos:GherkinBackground` nodes in the `testing` package gr
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:GherkinBackground` |
 | Also matches | `robos:Background` |
 | Shape id | `urn:robos:shape:GherkinBackgroundShape` |
-| Package | [Testing, Quality & BDD (robos.testing)]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
+| Package | [Testing & BDD]({{ '/schemas/testing.html' | relative_url }}) (`testing`) |
 | Classification | Testing & behavior |
 | Schema.org type | [`schema:ItemList`](https://schema.org/ItemList) |
 | Domain standard | [Cucumber](https://cucumber.io/docs/gherkin/reference/#background) |

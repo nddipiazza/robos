@@ -1,7 +1,7 @@
 ---
 title: Kubernetes Cluster
 layout: default
-parent: "DevOps & Cloud (robos.devops)"
+parent: "DevOps & Cloud"
 grand_parent: Schemas
 nav_order: 3
 permalink: /schemas/devops/kubernetes-cluster.html
@@ -15,12 +15,12 @@ Validation shape for `robos:KubernetesCluster` nodes in the `devops` package gro
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:KubernetesCluster` |
 | Also matches | `robos:K8sCluster` |
 | Shape id | `urn:robos:shape:KubernetesClusterShape` |
-| Package | [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) (`devops`) |
+| Package | [DevOps & Cloud]({{ '/schemas/devops.html' | relative_url }}) (`devops`) |
 | Classification | Infrastructure & delivery |
 | Schema.org type | [`schema:ComputerPlatform`](https://schema.org/ComputerPlatform) |
 | Domain standard | [Kubernetes](https://kubernetes.io/docs/concepts/overview/) |

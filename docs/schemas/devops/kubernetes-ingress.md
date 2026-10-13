@@ -1,7 +1,7 @@
 ---
 title: Kubernetes Ingress
 layout: default
-parent: "DevOps & Cloud (robos.devops)"
+parent: "DevOps & Cloud"
 grand_parent: Schemas
 nav_order: 10
 permalink: /schemas/devops/kubernetes-ingress.html
@@ -15,11 +15,11 @@ Validation shape for `robos:KubernetesIngress` nodes in the `devops` package gro
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:KubernetesIngress` |
 | Shape id | `urn:robos:shape:KubernetesIngressShape` |
-| Package | [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) (`devops`) |
+| Package | [DevOps & Cloud]({{ '/schemas/devops.html' | relative_url }}) (`devops`) |
 | Classification | Infrastructure & delivery |
 | Schema.org type | [`schema:EntryPoint`](https://schema.org/EntryPoint) |
 | Domain standard | [Kubernetes](https://kubernetes.io/docs/concepts/services-networking/ingress/) |

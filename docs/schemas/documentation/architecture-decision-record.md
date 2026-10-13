@@ -1,7 +1,7 @@
 ---
 title: Architecture Decision Record
 layout: default
-parent: "Documentation & Diagrams (robos.docs)"
+parent: "Documentation & Diagrams"
 grand_parent: Schemas
 nav_order: 4
 permalink: /schemas/documentation/architecture-decision-record.html
@@ -15,12 +15,12 @@ Validation shape for `robos:ArchitectureDecisionRecord` nodes in the `documentat
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:ArchitectureDecisionRecord` |
 | Also matches | `robos:ADR` |
 | Shape id | `urn:robos:shape:ArchitectureDecisionRecordShape` |
-| Package | [Documentation & Diagrams (robos.docs)]({{ '/schemas/documentation.html' | relative_url }}) (`documentation`) |
+| Package | [Documentation & Diagrams]({{ '/schemas/documentation.html' | relative_url }}) (`documentation`) |
 | Classification | Documentation & decisions |
 | Schema.org type | [`schema:TechArticle`](https://schema.org/TechArticle) |
 | Domain standard | [adr.github.io](https://adr.github.io/) |

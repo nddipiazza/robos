@@ -1,7 +1,7 @@
 ---
 title: Game
 layout: default
-parent: "Game Rules (robos.game)"
+parent: "Games: Rules"
 grand_parent: Schemas
 nav_order: 1
 permalink: /schemas/game/game.html
@@ -15,11 +15,11 @@ Validation shape for `robos:Game` nodes in the `game` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:Game` |
 | Shape id | `urn:robos:shape:GameShape` |
-| Package | [Game Rules (robos.game)]({{ '/schemas/game.html' | relative_url }}) (`game`) |
+| Package | [Games: Rules]({{ '/schemas/game.html' | relative_url }}) (`game`) |
 | Schema.org type | [`schema:Game`](https://schema.org/Game) |
 
 ## Properties

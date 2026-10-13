@@ -1,7 +1,7 @@
 ---
 title: Protobuf Contract
 layout: default
-parent: "Services & Contracts (robos.services)"
+parent: "Services & Contracts"
 grand_parent: Schemas
 nav_order: 4
 permalink: /schemas/services/protobuf-contract.html
@@ -15,12 +15,12 @@ Validation shape for `robos:ProtobufContract` nodes in the `services` package gr
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:ProtobufContract` |
 | Also matches | `robos:GRPCContract` |
 | Shape id | `urn:robos:shape:ProtobufContractShape` |
-| Package | [Services & Contracts (robos.services)]({{ '/schemas/services.html' | relative_url }}) (`services`) |
+| Package | [Services & Contracts]({{ '/schemas/services.html' | relative_url }}) (`services`) |
 | Classification | Contracts & data models |
 | Schema.org type | [`schema:DigitalDocument`](https://schema.org/DigitalDocument) |
 | Domain standard | [protobuf.dev](https://protobuf.dev/) |

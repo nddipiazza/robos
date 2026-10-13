@@ -1,7 +1,7 @@
 ---
 title: Consumer Group
 layout: default
-parent: "Core Platform (robos.platform)"
+parent: Core Platform
 grand_parent: Schemas
 nav_order: 16
 permalink: /schemas/core-platform/consumer-group.html
@@ -15,11 +15,11 @@ Validation shape for `robos:ConsumerGroup` nodes in the `core-platform` package 
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:ConsumerGroup` |
 | Shape id | `urn:robos:shape:ConsumerGroupShape` |
-| Package | [Core Platform (robos.platform)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
+| Package | [Core Platform]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
 | Classification | Data stores & messaging |
 | Schema.org type | [`schema:Audience`](https://schema.org/Audience) |
 | Domain standard | [Apache Kafka](https://kafka.apache.org/documentation/#intro_concepts_and_terms) |

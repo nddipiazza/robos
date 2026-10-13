@@ -1,7 +1,7 @@
 ---
 title: CLI Flag
 layout: default
-parent: "Applications (robos.apps)"
+parent: Applications
 grand_parent: Schemas
 nav_order: 10
 permalink: /schemas/applications/cli-flag.html
@@ -15,11 +15,11 @@ Validation shape for `robos:CLIFlag` nodes in the `applications` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:CLIFlag` |
 | Shape id | `urn:robos:shape:CLIFlagShape` |
-| Package | [Applications (robos.apps)]({{ '/schemas/applications.html' | relative_url }}) (`applications`) |
+| Package | [Applications]({{ '/schemas/applications.html' | relative_url }}) (`applications`) |
 | Classification | Applications & entry points |
 | Schema.org type | [`schema:PropertyValue`](https://schema.org/PropertyValue) |
 

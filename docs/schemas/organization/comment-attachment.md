@@ -1,7 +1,7 @@
 ---
 title: Comment Attachment
 layout: default
-parent: "Organization & Teams (robos.org)"
+parent: "Organization & Teams"
 grand_parent: Schemas
 nav_order: 21
 permalink: /schemas/organization/comment-attachment.html
@@ -15,12 +15,12 @@ Validation shape for `robos:CommentAttachment` nodes in the `organization` packa
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:CommentAttachment` |
 | Also matches | `robos:Attachment` |
 | Shape id | `urn:robos:shape:CommentAttachmentShape` |
-| Package | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) (`organization`) |
+| Package | [Organization & Teams]({{ '/schemas/organization.html' | relative_url }}) (`organization`) |
 | Classification | Projects & work items |
 | Schema.org type | [`schema:MediaObject`](https://schema.org/MediaObject) |
 | Domain standard | [OSLC CORE](http://open-services.net/ns/core#Attachment) |

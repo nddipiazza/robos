@@ -1,7 +1,7 @@
 ---
 title: eLearning Course
 layout: default
-parent: "eLearning Curriculums (robos.learning)"
+parent: eLearning
 grand_parent: Schemas
 nav_order: 1
 permalink: /schemas/learning/elearning.html
@@ -15,11 +15,11 @@ Validation shape for `robos:ELearning` nodes in the `learning` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:ELearning` |
 | Shape id | `urn:robos:shape:ELearningShape` |
-| Package | [eLearning Curriculums (robos.learning)]({{ '/schemas/learning.html' | relative_url }}) (`learning`) |
+| Package | [eLearning]({{ '/schemas/learning.html' | relative_url }}) (`learning`) |
 | Classification | Learning & assessment |
 | Schema.org type | [`schema:Course`](https://schema.org/Course) |
 

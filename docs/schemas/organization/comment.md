@@ -1,7 +1,7 @@
 ---
 title: Comment
 layout: default
-parent: "Organization & Teams (robos.org)"
+parent: "Organization & Teams"
 grand_parent: Schemas
 nav_order: 18
 permalink: /schemas/organization/comment.html
@@ -15,12 +15,12 @@ Validation shape for `robos:Comment` nodes in the `organization` package group.
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:Comment` |
 | Also matches | `robos:WorkItemComment`, `robos:DiscussionComment` |
 | Shape id | `urn:robos:shape:CommentShape` |
-| Package | [Organization & Teams (robos.org)]({{ '/schemas/organization.html' | relative_url }}) (`organization`) |
+| Package | [Organization & Teams]({{ '/schemas/organization.html' | relative_url }}) (`organization`) |
 | Classification | Projects & work items |
 | Schema.org type | [`schema:Comment`](https://schema.org/Comment) |
 | Domain standard | [OSLC CORE](http://open-services.net/ns/core#Comment) |

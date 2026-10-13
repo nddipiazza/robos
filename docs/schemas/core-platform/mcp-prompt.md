@@ -1,7 +1,7 @@
 ---
 title: MCP Prompt
 layout: default
-parent: "Core Platform (robos.platform)"
+parent: Core Platform
 grand_parent: Schemas
 nav_order: 19
 permalink: /schemas/core-platform/mcp-prompt.html
@@ -15,11 +15,11 @@ Validation shape for `robos:MCPPrompt` nodes in the `core-platform` package grou
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:MCPPrompt` |
 | Shape id | `urn:robos:shape:MCPPromptShape` |
-| Package | [Core Platform (robos.platform)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
+| Package | [Core Platform]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
 | Classification | Agents & MCP |
 | Schema.org type | [`schema:Text`](https://schema.org/Text) |
 | Domain standard | [MCP specification](https://modelcontextprotocol.io/specification/2025-11-25/schema) |

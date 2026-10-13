@@ -1,7 +1,7 @@
 ---
 title: Front End App
 layout: default
-parent: "Applications (robos.apps)"
+parent: Applications
 grand_parent: Schemas
 nav_order: 5
 permalink: /schemas/applications/front-end-app.html
@@ -15,11 +15,11 @@ Validation shape for `robos:FrontEndApp` nodes in the `applications` package gro
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:FrontEndApp` |
 | Shape id | `urn:robos:shape:FrontEndAppShape` |
-| Package | [Applications (robos.apps)]({{ '/schemas/applications.html' | relative_url }}) (`applications`) |
+| Package | [Applications]({{ '/schemas/applications.html' | relative_url }}) (`applications`) |
 | Classification | Applications & entry points |
 | Schema.org type | [`schema:WebApplication`](https://schema.org/WebApplication) |
 

@@ -1,7 +1,7 @@
 ---
 title: Environment Profile
 layout: default
-parent: "DevOps & Cloud (robos.devops)"
+parent: "DevOps & Cloud"
 grand_parent: Schemas
 nav_order: 14
 permalink: /schemas/devops/environment-profile.html
@@ -15,11 +15,11 @@ Validation shape for `robos:EnvironmentProfile` nodes in the `devops` package gr
 
 ## Details
 
-| | |
+| Detail | Value |
 |---|---|
 | Class | `robos:EnvironmentProfile` |
 | Shape id | `robos:EnvironmentProfileShape` |
-| Package | [DevOps & Cloud (robos.devops)]({{ '/schemas/devops.html' | relative_url }}) (`devops`) |
+| Package | [DevOps & Cloud]({{ '/schemas/devops.html' | relative_url }}) (`devops`) |
 | Classification | Infrastructure & delivery |
 | Schema.org type | [`schema:DefinedTerm`](https://schema.org/DefinedTerm) |
 
