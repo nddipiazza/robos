@@ -17,13 +17,6 @@ redirect_from:
 How items, loot, traps and mods work in the hand-built scenes of `games/crpg-realm`, with the steps to add each. The scenario engine reads some of the same data differently; see the [reference]({{ '/projects/crpg-realm/reference.html#data-v1-files' | relative_url }}).
 {: .fs-6 }
 
-<details open markdown="block">
-  <summary>On this page</summary>
-  {: .text-delta }
-1. TOC
-{:toc}
-</details>
-
 ## Items
 
 ### items.json
@@ -80,10 +73,10 @@ The inventory window shows a 16-slot backpack grid with a weapon and an armor sl
 
 ### Ground items, chests and corpses
 
-- **`GroundItem`** (`scenes/components/GroundItem.tscn`) exports `item_id`, `item_name`, `quantity`, `is_picked_up` and `icon_texture`. A left-click calls `pickup()`, which adds one copy of `item_id`, emits `item_picked_up` and frees the node. The label comes from `item_name` and the sprite from `icon_texture`, not from `items.json`. `quantity` is ignored, and there is no range check.
-- **`TreasureChest`** (`scripts/TreasureChest.gd`) is an `Area2D` that, on the first left-click, sets `is_opened`, changes its `Label` to "[Chest Opened]" and emits `chest_opened`. The scene script decides what is inside: `AncientCatacombs.gd` connects the signal and calls `GameState.add_item("garrison-key")`. The node needs a child `Label`.
-- **Enemy corpses.** `TacticalEnemy` exports `loot_gold` (25) and `loot_items` (`["potion-healing"]`), handed out by `loot_corpse()`.
-- **The shop.** Blacksmith Brand's stock is the `shop_items` array in `scripts/ShopWindow.gd`, not data.
+- `GroundItem` (`scenes/components/GroundItem.tscn`) exports `item_id`, `item_name`, `quantity`, `is_picked_up` and `icon_texture`. A left-click calls `pickup()`, which adds one copy of `item_id`, emits `item_picked_up` and frees the node. The label comes from `item_name` and the sprite from `icon_texture`, not from `items.json`. `quantity` is ignored, and there is no range check.
+- `TreasureChest` (`scripts/TreasureChest.gd`) is an `Area2D` that, on the first left-click, sets `is_opened`, changes its `Label` to "[Chest Opened]" and emits `chest_opened`. The scene script decides what is inside: `AncientCatacombs.gd` connects the signal and calls `GameState.add_item("garrison-key")`. The node needs a child `Label`.
+- Enemy corpses: `TacticalEnemy` exports `loot_gold` (25) and `loot_items` (`["potion-healing"]`), handed out by `loot_corpse()`.
+- The shop: Blacksmith Brand's stock is the `shop_items` array in `scripts/ShopWindow.gd`, not data.
 
 ### Add an item
 
@@ -142,8 +135,8 @@ A trap is concealed (invisible), detected (red tint, pulsing, with a "[TRAP]" la
 
 A trap is found in one of two ways.
 
-1. **Find Traps mode.** The rogue's toolbar button (`Find Traps`, then `Traps (ON)`) calls `GameState.set_detect_traps_mode()`. While it is on, `GameState` calls `pulse_trap_detection()` every 1.5 seconds. That calls `attempt_detection(name)` on every direct child of the scene that has it. The searcher is the first party member whose class is `rogue`, or the hero. `attempt_detection` fails if the searcher is more than `detection_radius` away, or if fog of war is on and the trap's position has not been explored or seen. Otherwise it calls `CombatManager.resolve_trap_detection()`, which rolls `max(10, d20)` plus the perception bonus against `detect_dc`. The bonus is `max(4, WIS modifier + proficiency)` for the hero (proficiency 4 for a rogue, else 2), 5 for "Bramble", and 4 for anyone else. The floor of 10 means the lowest total is 14, so a trap with `detectDC` 14 or less is always found on the first pulse in range.
-2. **The Find Traps spell.** `find-traps` calls `reveal_trap()` on every direct child that has it, with no roll. When fog of war is on, it skips traps in unexplored, unseen areas. The route differs by scene: the HTTP `cast_spell` action runs its own loop when the scene's `CombatManager` has no `cast_spell` method, and `TacticalBattle` goes through the `"find-traps"` branch of `CombatManager.execute_cast_spell`. The toolbar Spell button calls `cm.cast_spell("find-traps", ...)`, and `CombatManager` defines no method of that name, so from the toolbar it raises a runtime error in any scene that has a `CombatManager`.
+1. Find Traps mode. The rogue's toolbar button (`Find Traps`, then `Traps (ON)`) calls `GameState.set_detect_traps_mode()`. While it is on, `GameState` calls `pulse_trap_detection()` every 1.5 seconds. That calls `attempt_detection(name)` on every direct child of the scene that has it. The searcher is the first party member whose class is `rogue`, or the hero. `attempt_detection` fails if the searcher is more than `detection_radius` away, or if fog of war is on and the trap's position has not been explored or seen. Otherwise it calls `CombatManager.resolve_trap_detection()`, which rolls `max(10, d20)` plus the perception bonus against `detect_dc`. The bonus is `max(4, WIS modifier + proficiency)` for the hero (proficiency 4 for a rogue, else 2), 5 for "Bramble", and 4 for anyone else. The floor of 10 means the lowest total is 14, so a trap with `detectDC` 14 or less is always found on the first pulse in range.
+2. The Find Traps spell. `find-traps` calls `reveal_trap()` on every direct child that has it, with no roll. When fog of war is on, it skips traps in unexplored, unseen areas. The route differs by scene: the HTTP `cast_spell` action runs its own loop when the scene's `CombatManager` has no `cast_spell` method, and `TacticalBattle` goes through the `"find-traps"` branch of `CombatManager.execute_cast_spell`. The toolbar Spell button calls `cm.cast_spell("find-traps", ...)`, and `CombatManager` defines no method of that name, so from the toolbar it raises a runtime error in any scene that has a `CombatManager`.
 
 ### Disarming
 
@@ -195,8 +188,8 @@ Its `traps.json` adds one trap, `thunder-tripwire`, which no scene places. The m
 
 What a mod can do:
 
-- **Replace a placed trap's numbers.** An entry with an existing id replaces the whole base entry, so include every key. A `user://mods/<id>/traps.json` entry for `spike-pit-trap` with a higher `disarmDC` changes the spike pit in `AncientCatacombs` without touching the scene. `user://mods/` is read after `res://mods/`, so it wins. The order between two mods in one folder is whatever `DirAccess` returns.
-- **Register a new trap id.** It does nothing until a `Trap.tscn` instance with that `trap_id` sits in a scene.
+- Replace a placed trap's numbers. An entry with an existing id replaces the whole base entry, so include every key. A `user://mods/<id>/traps.json` entry for `spike-pit-trap` with a higher `disarmDC` changes the spike pit in `AncientCatacombs` without touching the scene. `user://mods/` is read after `res://mods/`, so it wins. The order between two mods in one folder is whatever `DirAccess` returns.
+- Register a new trap id. It does nothing until a `Trap.tscn` instance with that `trap_id` sits in a scene.
 
 What it cannot do: add items, spells, monsters, NPCs, dialogue, quests, scenes or scripts, place anything on a map, or be disabled. A malformed `mod.json`, a wrong `traps_file` path or a non-array file fails silently. Success prints `DataStoreV1: Successfully loaded mod -> ...` and `Mod [id]: Registered custom trap -> ...` to Godot's output (`tests/e2e/reports/godot_output.log` under the tests).
 

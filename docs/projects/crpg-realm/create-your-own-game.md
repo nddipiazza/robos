@@ -59,20 +59,20 @@ The three pages:
 
 Breaking these does not raise an error. The affected feature just stops seeing your nodes.
 
-- **Keep gameplay nodes flat.** Enemies, traps, NPCs, ground items, doors and companions must be direct children of the scene root. `GameState.get_scene_traps()`, the `battle.enemies` list in `/api/v1/state`, fireball targeting, enemy pack alerts and party lookup all scan `get_tree().current_scene.get_children()`. A trap under a `Traps` group node is never detected, and an enemy under an `Enemies` node never hears an alert.
-- **Add a `CombatManager` child node** to any scene with combat. It is a `class_name`, not an autoload, and scene scripts reach it as `$CombatManager`.
-- **Name the player node `HeroPlayer`.** `GameState.get_scene_party_nodes()`, `TacticalEnemy` and the HTTP API look it up by that name. Its `Camera2D` is the scene camera.
-- **The root node name is the scene name.** `/api/v1/state` reports it, and the test step `the current scene is "X"` compares against it.
-- **Set `mouse_filter = 2` (Ignore) on the map's `Ground` node.** Otherwise it swallows clicks before `HeroPlayer._unhandled_input` sees them and click-to-move stops working.
-- **Put content in `data/v1/*.json`, but expect some behaviour to be keyed by id in code.** Potion effects are in `GameState.use_item()`, spells in `CombatManager.gd`. Adding JSON alone is not always enough; each page says when.
+- Keep gameplay nodes flat. Enemies, traps, NPCs, ground items, doors and companions must be direct children of the scene root. `GameState.get_scene_traps()`, the `battle.enemies` list in `/api/v1/state`, fireball targeting, enemy pack alerts and party lookup all scan `get_tree().current_scene.get_children()`. A trap under a `Traps` group node is never detected, and an enemy under an `Enemies` node never hears an alert.
+- Add a `CombatManager` child node to any scene with combat. It is a `class_name`, not an autoload, and scene scripts reach it as `$CombatManager`.
+- Name the player node `HeroPlayer`. `GameState.get_scene_party_nodes()`, `TacticalEnemy` and the HTTP API look it up by that name. Its `Camera2D` is the scene camera.
+- The root node name is the scene name. `/api/v1/state` reports it, and the test step `the current scene is "X"` compares against it.
+- Set `mouse_filter = 2` (Ignore) on the map's `Ground` node. Otherwise it swallows clicks before `HeroPlayer._unhandled_input` sees them and click-to-move stops working.
+- Put content in `data/v1/*.json`, but expect some behaviour to be keyed by id in code. Potion effects are in `GameState.use_item()`, spells in `CombatManager.gd`. Adding JSON alone is not always enough; each page says when.
 
 ## Checklist: a new location
 
 This is the shortest path to a new playable scene. The details of each step are on the three pages above. Duplicating an existing scene in the Godot editor is safer than writing a `.tscn` by hand.
 
-1. **Duplicate a scene.** In the FileSystem dock, right-click `scenes/AncientCatacombs.tscn` and choose Duplicate. Rename the file and its root node (the root name must match the file name for tests). Delete the catacomb children you do not want (the traps, the sarcophagus, the skeleton and guardian, the two ground items, `KeepSecretPassage`).
-2. **Keep what scripts look up by path:** `CombatManager`, `Ground`, the boundary `StaticBody2D`, `HeroPlayer`, and under `CanvasLayer` the `NoticeLabel`, `PartyHUD` (with `QuestLabel`, `BtnOptions`, `BtnInventory`, `BtnPause`), `ActionLog`, `InventoryWindow`, `SettingsModal` and `CharacterStatusWindow`. Keep `FogOfWar` if you want fog.
-3. **Write the scene script.** Attach a new script that follows the start of `AncientCatacombs.gd`:
+1. Duplicate a scene. In the FileSystem dock, right-click `scenes/AncientCatacombs.tscn` and choose Duplicate. Rename the file and its root node (the root name must match the file name for tests). Delete the catacomb children you do not want (the traps, the sarcophagus, the skeleton and guardian, the two ground items, `KeepSecretPassage`).
+2. Keep what scripts look up by path: `CombatManager`, `Ground`, the boundary `StaticBody2D`, `HeroPlayer`, and under `CanvasLayer` the `NoticeLabel`, `PartyHUD` (with `QuestLabel`, `BtnOptions`, `BtnInventory`, `BtnPause`), `ActionLog`, `InventoryWindow`, `SettingsModal` and `CharacterStatusWindow`. Keep `FogOfWar` if you want fog.
+3. Write the scene script. Attach a new script that follows the start of `AncientCatacombs.gd`:
 
    ```gdscript
    extends Node2D
@@ -96,10 +96,10 @@ This is the shortest path to a new playable scene. The details of each step are 
    ```
 
    This is a sketch derived from `AncientCatacombs.gd`. Run the scene in the editor to check it. Use the size of your own map plate for the camera limits, and set the same size on `FogOfWar.map_width` and `map_height`.
-4. **Connect it with doors.** Instance `scenes/components/DoorPortal.tscn` directly under the root of both scenes. Set `door_id`, `door_name`, `target_scene` (`res://scenes/YourScene.tscn`) and `target_spawn` (the position where the hero should appear). Details and pitfalls are on [Scenes, doors and maps]({{ '/projects/crpg-realm/create-your-own-game/scenes-and-maps.html#doors' | relative_url }}).
-5. **Add content.** Ground items, chests, traps, enemies and NPCs are on the other two pages.
-6. **Run it:** `./debug.sh --scene res://scenes/YourScene.tscn`. The short names in `debug.sh` cover only five scenes.
-7. **Test it.** Add a feature under `tests/e2e/features/normal/`. These steps exist in `crpg_steps.py` and `infinity_ai_steps.py`:
+4. Connect it with doors. Instance `scenes/components/DoorPortal.tscn` directly under the root of both scenes. Set `door_id`, `door_name`, `target_scene` (`res://scenes/YourScene.tscn`) and `target_spawn` (the position where the hero should appear). Details and pitfalls are on [Scenes, doors and maps]({{ '/projects/crpg-realm/create-your-own-game/scenes-and-maps.html#doors' | relative_url }}).
+5. Add content. Ground items, chests, traps, enemies and NPCs are on the other two pages.
+6. Run it: `./debug.sh --scene res://scenes/YourScene.tscn`. The short names in `debug.sh` cover only five scenes.
+7. Test it. Add a feature under `tests/e2e/features/normal/`. These steps exist in `crpg_steps.py` and `infinity_ai_steps.py`:
 
    ```gherkin
    Feature: Your location portals

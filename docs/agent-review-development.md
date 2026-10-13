@@ -40,7 +40,7 @@ Each is a signal for a person to weigh. The tool does not decide that a change i
 
 ## Known limits
 
-- In reviewer mode, several tabs show built-in sample content rather than content from the PR, and the Approve button is gated by a fixed sample quiz. [PR Review Theater]({{ site.baseurl }}{% link pr-review-theater.md %}) lists which tabs use real data.
+- In reviewer mode, several tabs show built-in sample content rather than content from the PR, and by default the Changes tab and the Approve step stay locked until a fixed three-question sample quiz is passed. [PR Review Theater]({{ site.baseurl }}{% link pr-review-theater.md %}) lists which tabs use real data.
 - The walkthrough and evidence agents are Codex CLI sessions, configured as `demoAgent` in the review's launch manifest. **Review branch…** sets it only when it finds a `codex` binary. Without one, those tabs have no agent to run.
 - Recorded demos in the repository use sandbox data. The [Walkthroughs and proof of work]({{ site.baseurl }}{% link walkthroughs.md %}) page separates what the tests assert from what a recording only shows.
 - Automatic selection of a model by task difficulty is not built. See [Agent tiers]({{ site.baseurl }}{% link agent-tiers.md %}).

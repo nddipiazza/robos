@@ -17,13 +17,6 @@ redirect_from:
 How a hand-built location scene is put together: the node tree, the global singletons, door portals, and the collision and camera setup that click-to-move depends on. Read it before adding a location to `games/crpg-realm`.
 {: .fs-6 }
 
-<details open markdown="block">
-  <summary>On this page</summary>
-  {: .text-delta }
-1. TOC
-{:toc}
-</details>
-
 ## The scene tree
 
 A `.tscn` file is a saved tree of nodes, and a script on a node adds behaviour. One scene is the current scene at a time (`get_tree().current_scene`). A location change replaces it with `change_scene_to_file("res://scenes/X.tscn")`. Each location, such as `AncientCatacombs`, is one scene in `scenes/` with a matching script in `scripts/`.
@@ -100,22 +93,22 @@ Details that the graph hides:
 | `target_scene` | `res://scenes/X.tscn` to load. Empty means "do not change scene". |
 | `target_spawn` | Where the hero appears in the next scene. `Vector2(0, 0)` means "do not set one". |
 | `is_locked`, `required_key` | A locked door opens when `GameState.has_item(required_key)` is true. The key is not consumed. |
-| `opens_quest_stage` | If above 0, `GameState.advance_quest()` runs when the door unlocks |
+| `opens_quest_stage` | If above 0, `GameState.advance_quest()` runs when the key opens the door |
 
 `try_enter()` runs when you left-click the door: it checks the lock, emits `door_entered`, stores `target_spawn` in `GameState.spawn_position`, and calls `change_scene_to_file(target_scene)`. Walking over a door does nothing. In the next scene, `HeroPlayer._ready()` moves the hero to `spawn_position` and resets it to zero. With no spawn set, the hero starts where the `HeroPlayer` node sits in that `.tscn`.
 
 To link two scenes, instance `DoorPortal.tscn` as a direct child of the root of each, and set `target_scene` and `target_spawn` on both. A location script can also react to `door_entered` itself, as `Homestead` does. Do not both set `target_scene` and change scene in a handler: `VillageSquare`'s `ForestGate` does that and the scene change runs twice.
 
-`opens_quest_stage` is applied when the door unlocks, before `door_entered` is emitted.
+`opens_quest_stage` is applied when the key opens the door, before `door_entered` is emitted.
 
 ## Map plate, colliders and camera
 
 A location map has four parts, all direct children of the y-sorted root:
 
-1. **The plate.** A `TextureRect` named `Ground` at (0, 0), 2560x1440, with `expand_mode = 1` and `mouse_filter = 2`. Buildings, trees and walls are painted into this one image.
-2. **Colliders.** `StaticBody2D` nodes on collision layer 1. Map edges use `CollisionShape2D` rectangles. Buildings use `CollisionPolygon2D` outlines traced over the painted footprint.
-3. **Actors and objects.** Hero, NPCs, enemies, doors, traps and items.
-4. **`FogOfWar`.** `map_width` and `map_height` default to 2560 and 1440. Set them to your plate size.
+1. The plate: a `TextureRect` named `Ground` at (0, 0), 2560x1440, with `expand_mode = 1` and `mouse_filter = 2`. Buildings, trees and walls are painted into this one image.
+2. Colliders: `StaticBody2D` nodes on collision layer 1. Map edges use `CollisionShape2D` rectangles. Buildings use `CollisionPolygon2D` outlines traced over the painted footprint.
+3. Actors and objects: hero, NPCs, enemies, doors, traps and items.
+4. `FogOfWar`, whose `map_width` and `map_height` default to 2560 and 1440. Set them to your plate size.
 
 Because buildings are painted into the plate, the collider decides where the building "is". Trace only the base of the walls, not the roof, so the hero can walk "behind" the building. `VillageSquare.tscn` does this for each house:
 

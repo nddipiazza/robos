@@ -29,10 +29,10 @@ The systems behind click-to-move, the 3D miniature pawns, NPC dialogue and fog o
 
 `get_nav_path(world_2d, start, target, scene, exclude)` works in four steps:
 
-1. **Direct line.** `is_line_clear()` casts three rays against collision layer 1: one down the middle and two offset sideways by the check radius (10 px here). If none hits, the path is `[target]`.
-2. **Grid.** `get_or_build_grid()` builds an `AStarGrid2D` over the scene bounds, with 20x20 px cells, diagonal moves allowed only when no obstacle is adjacent, and a Euclidean heuristic. It marks a cell solid when a 14 px circle at the cell centre overlaps a layer-1 body. The bounds come from the hero's camera limits, or a `RoomBG` or `Background` control, or default to 2560x1440. The grid is cached against the scene's instance id. Call `Pathfinder.invalidate_grid()` after changing collision at run time; `CartridgeWorld` does this on every map load.
-3. **Nearest walkable cell.** If the start or target cell is solid (a click on a wall, say), `find_nearest_walkable_cell()` searches square rings out to 8 cells for the closest free cell.
-4. **Smoothing.** `smooth_path()` walks the raw grid path and, from each point, jumps to the furthest later point with a clear three-ray line, so a staircase of cells becomes a few corner points.
+1. `is_line_clear()` casts three rays against collision layer 1: one down the middle and two offset sideways by the check radius (10 px here). If none hits, the path is `[target]`.
+2. `get_or_build_grid()` builds an `AStarGrid2D` over the scene bounds, with 20x20 px cells, diagonal moves allowed only when no obstacle is adjacent, and a Euclidean heuristic. It marks a cell solid when a 14 px circle at the cell centre overlaps a layer-1 body. The bounds come from the hero's camera limits, or a `RoomBG` or `Background` control, or default to 2560x1440. The grid is cached against the scene's instance id. Call `Pathfinder.invalidate_grid()` after changing collision at run time; `CartridgeWorld` does this on every map load.
+3. If the start or target cell is solid (a click on a wall, say), `find_nearest_walkable_cell()` searches square rings out to 8 cells for the closest free cell.
+4. `smooth_path()` walks the raw grid path and, from each point, jumps to the furthest later point with a clear three-ray line, so a staircase of cells becomes a few corner points.
 
 If the grid cannot be built, `_legacy_nav_points_path()` falls back to an `AStar2D` over the points returned by the scene's `get_nav_points()`, or to a straight line if the scene has none.
 

@@ -19,15 +19,14 @@ accent: "#5ec8e5"
   <div class="doc-list" style="margin-top:44px">
     <div>
       <h3>Build</h3>
-      <a href="{{ '/v1/projects/crpg-realm/create-your-own-game.html' | relative_url }}"><b>Creating your own game (12 chapters)</b><span>→</span></a>
-      <a href="{{ '/v1/projects/crpg-realm/game-creation-process.html' | relative_url }}"><b>Game creation process</b><span>→</span></a>
+      <a href="{{ '/v1/projects/crpg-realm/create-your-own-game.html' | relative_url }}"><b>Creating your own game</b><span>→</span></a>
       <a href="{{ '/v1/projects/crpg-realm/reference.html' | relative_url }}"><b>Reference: autoloads, data, endpoints</b><span>→</span></a>
     </div>
     <div>
       <h3>Understand</h3>
       <a href="{{ '/v1/projects/crpg-realm/world-systems-and-pathfinding.html' | relative_url }}"><b>World systems &amp; pathfinding</b><span>→</span></a>
       <a href="{{ '/v1/projects/crpg-realm/infinity-ai-agent-harness.html' | relative_url }}"><b>Infinity AI agent &amp; BDD harness</b><span>→</span></a>
-      <a href="{{ '/v1/projects/crpg-realm/elearning-masterclass.html' | relative_url }}"><b>Engine specification</b><span>→</span></a>
+      <a href="{{ '/v1/projects/crpg-realm/create-your-own-game/combat-party-and-spells.html' | relative_url }}"><b>Combat, party and spells</b><span>→</span></a>
     </div>
     <div>
       <h3>Learn interactively</h3>

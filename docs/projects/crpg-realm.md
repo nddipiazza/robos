@@ -11,7 +11,7 @@ description: "Realm of Heroes: a party-based, real-time-with-pause RPG on Godot 
 # Realm of Heroes CRPG
 {: .no_toc }
 
-*Realm of Heroes: A Night Without Memory* is a party-based, real-time-with-pause RPG in the style of the Infinity Engine games, written in GDScript for Godot 4.3 with D&D 5e SRD rules. It lives in `games/crpg-realm/` and is an early-access vertical slice. It is also the test bed for the Infinity AI scenario engine, which plays any fighter, monster or NPC and records the result to video.
+*Realm of Heroes: A Night Without Memory* is a party-based, real-time-with-pause RPG in the style of the Infinity Engine games, written in GDScript for Godot 4.3 with D&D 5e SRD rules. It lives in `games/crpg-realm/` and is an early-access vertical slice. It is also the test bed for the Infinity AI scenario engine, which plays any fighter, monster or NPC, and its tests can record each run to video.
 {: .fs-6 }
 
 [Quick start]({{ '/projects/crpg-realm/quick-start.html' | relative_url }}){: .btn .btn-primary .mr-2 }
@@ -97,7 +97,7 @@ The tests treat the game as a black box. `behave` features drive the running gam
 | Engine | `features/engine/` | 13 | Rules, spells, AI directives, items, traps, movement, blockout maps, fuzzed battles. Can run headless with no video. |
 | Normal | `features/normal/` | 18 | One mechanic per feature in the real scenes: fog of war, shop, looting, traps, aggro, formations, pathfinding |
 | Spells | `features/spells/` | 24 | One feature per spell or fighter ability |
-| Scenario adventures | `features/scenarios/` | 4 | Multi-act stories played by cartridge |
+| Scenario adventures | `features/scenarios/` | 4 | Stories loaded from a campaign file and played through the real scenes |
 | Full playthroughs | `features/full_playthroughs/` | 6 | Start-to-finish runs |
 
 ```bash
