@@ -1,322 +1,168 @@
-# RobOS — AI-First SDLC Platform & Autonomous Agent Governance Harness
+# RobOS
+
+RobOS is a platform for working with coding agents. It combines a suite of desktop developer apps, a knowledge graph of your system, and a recorded run of every agent change, so you review evidence instead of a bare diff.
+
+It is free and open source under the [Apache License 2.0](LICENSE). The current release is [v0.0.7](https://github.com/nddipiazza/robos/releases/tag/v0.0.7).
+
+[Website](https://rowbose.com/) | [Documentation](https://rowbose.com/docs/) | [Download](https://rowbose.com/download/) | [Releases](https://github.com/nddipiazza/robos/releases) | [Discord](https://discord.gg/6PjxzkHujE)
 
 <p align="center">
-  <img src="docs/assets/images/kgraph-autogen-architecture.jpg" alt="RobOS: Knowledge Graph-First Application Generation & Agent Governance Harness" width="100%" />
+  <img src="site/assets/hero/slides/15-evidence-updated.jpg" alt="Code Review Theater showing before and after evidence for a branch an agent pushed" width="900">
 </p>
 
-<p align="center">
-  <strong>Autonomous AI agents that prove their work. Model your architecture once, auto-generate polyglot applications, and govern coding agents with 1080p video proof-of-work, semantic blast-radius diffs, and zero workstation pollution.</strong>
-</p>
+*Code Review Theater showing before-and-after evidence for a branch an agent pushed. Recorded against a demo repository: GitHub, the agent and CI results are scripted stand-ins, while the repository, tests, diff and evidence are real.*
 
-<p align="center">
-  <a href="https://rowbose.com/"><strong>Documentation</strong></a> ·
-  <a href="https://rowbose.com/v1/getting-started.html"><strong>Quickstart</strong></a> ·
-  <a href="https://rowbose.com/v1/big-wins.html"><strong>Core Innovations</strong></a> ·
-  <a href="https://rowbose.com/v1/apps.html"><strong>App Suite</strong></a> ·
-  <a href="https://rowbose.com/v1/architecture.html"><strong>Architecture</strong></a> ·
-  <a href="CONTRIBUTING.md"><strong>Contributing</strong></a> ·
-  <a href="https://discord.gg/6PjxzkHujE"><strong>Discord Community</strong></a>
-</p>
+## What is in this repository
 
-<p align="center">
-  <a href="https://rowbose.com/"><img src="https://img.shields.io/badge/docs-rowbose.com-blue?style=flat&logo=read-the-docs&logoColor=white" alt="Documentation" /></a>
-  <a href="https://discord.gg/6PjxzkHujE"><img src="https://img.shields.io/badge/Discord-Join%20Community-5865F2?style=flat&logo=discord&logoColor=white" alt="Discord" /></a>
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/nddipiazza/robos" alt="License" /></a>
-  <a href="https://github.com/nddipiazza/robos/stargazers"><img src="https://img.shields.io/github/stars/nddipiazza/robos?style=social" alt="Stars" /></a>
-  <a href="packages/robos-test"><img src="https://img.shields.io/badge/tests-100%25%20passing-brightgreen" alt="Tests" /></a>
-  <a href="https://rowbose.com/"><img src="https://img.shields.io/badge/standards-OSLC%20%7C%20TypeSpec%20%7C%20Backstage%20%7C%20Pact%20%7C%20MCP-blue" alt="Standards" /></a>
-</p>
+- **Desktop apps.** Electron apps covering the development lifecycle: planning, code review, git and issues, databases and API clients, Kubernetes, builds, documentation and eLearning. See the [app directory](https://rowbose.com/apps/).
+- **Knowledge graph.** Services, contracts, databases, teams and work items stored as JSON-LD under `.robos/` and validated with SHACL. Two states of the graph (`main` and a feature branch) can be diffed to see what a change touches before it merges.
+- **Agent harness.** Routes tasks to the agent CLIs you have installed (Claude Code, Codex, Copilot, Gemini CLI / Antigravity, Hermes), scans prompts for secrets and personal data, runs agents in disposable profiles, and captures test and UI evidence for review.
+- **Skills and plugins.** Skills and slash commands that let coding agents operate RobOS and work on this repository.
+- **Appliance OS (optional).** An Ubuntu desktop image for QEMU/KVM with the whole suite preinstalled.
 
-<p align="center">
-  <img src="docs/assets/images/robos-proof-of-work-demo.gif" alt="RobOS Day in the Life: Idea to Production Walkthrough" width="100%" />
-</p>
-<p align="center">
-  <em>Complete Day-in-the-Life: from Onboarding Wizard & Dual-State Knowledge Graph to IntelliJ IDEA breakpoint debugging and Kube GitOps.</em><br />
-  🎥 <strong><a href="https://raw.githubusercontent.com/nddipiazza/robos/main/docs/assets/videos/robos-proof-of-work-demo.mp4">Watch the full 1080p video walkthrough (2:39)</a></strong>
-</p>
+## Getting started
 
----
+The installers on the [download page](https://rowbose.com/download/) set up the appliance OS. To use the apps on the machine you already have, run them from source. You need Node.js 20+ and Git, on macOS, Linux or Windows (WSL2).
 
-## ⚡ The Problem: AI Agents Are Coding Blind
-
-Today's AI coding assistants (Claude Code, GitHub Copilot, Cursor, OpenAI Codex, Google Antigravity) generate code at blistering speed, but they introduce severe risks that bottleneck engineering teams:
-
-1. **"Trust Me, It Works" (Review Fatigue)**: Agents claim `"Task complete!"` without verifying their work. Developers spend more time reviewing hallucinated diffs, broken imports, and failed edge cases than they would have spent writing the code from scratch.
-2. **Invisible Blast Radiuses**: An agent working in a single file or repository has no visibility into the broader system. Renaming an entity breaks a downstream analytics pipeline; tweaking an API response violates a frontend consumer contract.
-3. **Machine Pollution & Host Mutation**: Autonomous agents executing unchecked shell commands in your home directory leave behind orphaned node modules, zombie Docker containers, conflicting processes, and credential leak risks.
-4. **Unintentional Credential & Data Leakage**: Developers pasting terminal logs, stack traces, or configs into AI prompts accidentally transmit AWS keys, GitHub PATs, database credentials, or customer PII into third-party LLM contexts. Agents are also exposed to prompt injection and credential exfiltration payloads.
-
-**RobOS fixes this by placing autonomous agents inside a verifiable governance harness.**
-
----
-
-## 🎯 The Killer Wedges
-
-RobOS turns developers into **Lead System Architects** by wrapping autonomous agents in non-negotiable verification gates:
-
-```
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                                ROBOS GOVERNANCE HARNESS                                │
-├──────────────────────┬──────────────────────────┬──────────────────────────┬───────────┤
-│ 1. VIDEO PROOF-OF-   │ 2. DUAL-STATE SEMANTIC   │ 3. EPHEMERAL IN-MEMORY   │ 4. PROMPT │
-│    WORK ENGINE       │    BLAST-RADIUS DIFFS    │    SANDBOXES (tmpfs)     │    SEC    │
-├──────────────────────┼──────────────────────────┼──────────────────────────┼───────────┤
-│ Headless Xvfb virtual│ Live graph diffing of    │ Zero host pollution.     │ Zero leak │
-│ displays execute user│ World 1 (main) vs World 2│ Agents run in isolated   │ OSS rules │
-│ flows and record 1080p (feature branch). Flags  │ in-memory Linux profiles │ (Gitleaks,│
-│ narrated walkthroughs│ broken API contracts and │ with auto-teardown and   │ Presidio, │
-│ with Piper TTS audio.│ Pact tests before code.  │ zero residual files.     │ OWASP).   │
-└──────────────────────┴──────────────────────────┴──────────────────────────┴───────────┘
-```
-
-### 1. Automated 1080p Video Proof-of-Work
-Stop reviewing walls of blind diffs. RobOS launches agents inside a headless Xvfb virtual framebuffer with Picom compositing. Agents execute the feature, interact with live UI elements, verify API responses, and record a **1080p text-narrated video walkthrough with synchronized neural voiceovers (Piper TTS)**. You approve PRs by watching a 15-second verifiable proof video.
-
-### 2. Dual-State Semantic Blast-Radius Checking
-Before generating code, RobOS compares your production architecture (**World 1**) against your proposed feature changes (**World 2**) in the SDLC Knowledge Graph. It traces transitive dependencies across services, databases, message brokers, and consumers—alerting you to breaking contract changes, schema regressions, and test failures *before* any code is merged.
-
-### 3. Ephemeral In-Memory Sandboxes (`tmpfs`)
-AI agents never execute raw commands directly in your daily workstation environment. RobOS isolates agent swarms inside ephemeral Linux user profiles mounted directly on in-memory `tmpfs` storage. When the task is complete, the sandbox evaporates—leaving zero machine residue, zero orphaned daemons, and zero credential leaks.
-
-### 4. Zero-Data-Leak Prompt Security Guard (Gitleaks, Presidio, OWASP LLM01)
-Never accidentally leak secrets or customer PII to external AI providers. RobOS intercepts every prompt in `<robos-ai-textarea>`, `AgentSession`, and `EmbeddedHarnessRouter`. It enforces open-source security standards: Gitleaks & TruffleHog secrets (AWS, GitHub, tokens, private keys, database URIs), Microsoft Presidio PII (Luhn-checked credit cards, SSNs, personal emails), Shannon entropy calculations, OWASP LLM01 prompt injection defenses, and 1-click in-place Auto-Redaction.
-
----
-
-## Knowledge graph classification
-
-The Knowledge Graph Explorer defaults to a classification tree backed by one
-shared catalog for the engine and browser. Built-in classes, SHACL shapes and
-predicates have deterministic metadata. Nodes show declared or inferred
-classification; custom types with no known category remain visible as
-**Unclassified** with warnings. Package, RDF type and flat views, combined
-filters, search, and collapse counts remain available.
-
-The object inspector also offers schema-specific tabs for recorded property groups:
-MCP servers and actions, services and contracts, application routes and commands,
-data models and databases, messaging, infrastructure, pipelines, source control,
-work items, testing, learning and agent configuration. Tabs require both an
-applicable type and actual data. Child objects are discovered through forward
-and inverse references; their declarations and source evidence are available
-without leaving the graph. Back/Forward navigation restores object visits, tabs
-and filters, including mouse side-button navigation. A bottom status bar identifies
-the graph and its location and counts. See the [inspector guide](packages/robos-graph/INSPECTOR.md).
-
-RobOS owns the SDLC codes and expresses them using Schema.org
-[CategoryCode](https://schema.org/CategoryCode) and
-[CategoryCodeSet](https://schema.org/CategoryCodeSet). They are not a Schema.org
-SDLC taxonomy. See the [classification and workspace guide](packages/robos-graph/WORKSPACES.md#classification-catalog-and-viewer-tree)
-for reference syntax, provenance, registry coverage, and the real Electron test.
-
-Dependency impact uses directed, evidenced relationships and separates them from
-repository membership and source provenance. The importer records dependency
-scopes and protobuf references; unresolved external dependencies remain explicit.
-The topology view draws the same resolved JSON-LD relationships, with cyan
-dependency arrows, dashed reference arrows, and explicit limits on large views.
-Kube Studio can browse infrastructure declarations and their source evidence from
-the same graph workspace. See [dependency workflows](packages/robos-graph/WORKSPACES.md#dependency-evidence-and-impact)
-for commands, supported extraction and interpretation limits.
-
-The object inspector shows recorded fields and JSON-LD. Documentation, source
-evidence, topology and dependency tabs appear only when the selected object has
-the corresponding data. Unrelated demo workflows and fabricated verification
-claims have been removed; see the [tab audit](packages/robos-graph/INSPECTOR.md).
-
-## 🧬 The Paradigm: Knowledge Graph-First (KGraph-First) Application Generation
-
-In modern software engineering:
-- An **OpenAPI 3.1 contract** automatically generates typed REST clients and server stubs.
-- A **Protobuf definition** automatically generates gRPC serializers and microservice stubs.
-- An **SQL DDL schema** automatically generates typed ORMs and database migrations.
-
-**RobOS elevates this principle to the entire software application:**
-
-> **If an API contract can auto-generate a client, a schema-validated Knowledge Graph can auto-generate an entire application.**
-
-```
-   ┌─────────────────────────────────────────────────────────────┐
-   │             1. ARCHITECT IN KNOWLEDGE GRAPH                 │
-   │   Define topology, services, schemas & contracts in .robos/  │
-   └──────────────────────────────┬──────────────────────────────┘
-                                  ▼
-   ┌─────────────────────────────────────────────────────────────┐
-   │           2. SYNTHESIS ENGINE & AGENT SWARMS                │
-   │   Compiles graph into polyglot code, DB migrations & tests   │
-   └──────────────────────────────┬──────────────────────────────┘
-                                  ▼
-   ┌─────────────────────────────────────────────────────────────┐
-   │         3. EPHEMERAL SANDBOX EXECUTION & PROOF              │
-   │   Builds, runs headless tests, and records 1080p video demo │
-   └──────────────────────────────┬──────────────────────────────┘
-                                  ▼
-   ┌─────────────────────────────────────────────────────────────┐
-   │         4. LEAD ARCHITECT REVIEW & 1-CLICK MERGE            │
-   │   Inspect blast radius, watch video proof, approve in IDE   │
-   └─────────────────────────────────────────────────────────────┘
-```
-
-RobOS supports auto-generation and governance across **application archetypes**:
-- **Microservices & Web APIs** (`robos:Microservice`): OpenAPI 3.1 YAML, Protobuf gRPC, GraphQL.
-- **Frontend Web Applications** (`robos:FrontEndApp`): React, Vite, Next.js, Vue, Svelte SPAs/SSRs.
-- **Desktop Applications** (`robos:DesktopApp`): Electron, Qt, GTK, Tauri local applications.
-- **PC Games** (`robos:PCGame`): Godot, Unreal Engine, Unity, Bevy desktop games.
-- **Mobile Games** (`robos:MobileGame`): Cross-platform mobile games with touch controls.
-- **Console & CLI Tools** (`robos:ConsoleApp`): Go Cobra, Rust Clap, Python Click, Node Commander utilities.
-- **Mobile Applications** (`robos:MobileApp`): React Native, Flutter, iOS, and Android clients.
-- **Data Pipelines & Workers** (`robos:DataPipeline`): Kafka Streams, Celery, Spark distributed workers.
-- **Shared Libraries & SDKs** (`robos:Library`): Reusable client SDKs and common packages.
-
----
-
-## ⚡ Quickstart (Universal: macOS, Linux, Windows, Docker)
-
-Get up and running with RobOS in under 60 seconds on your existing machine:
-
-### 1. Clone the Repository
-```bash
+```sh
 git clone https://github.com/nddipiazza/robos.git
 cd robos
+scripts/dev-launch.sh pr-review
 ```
 
-### 2. Run Autonomous E2E Tests with Video Proof-of-Work (Docker)
-Run the full headless verification harness inside an isolated container:
-```bash
-./scripts/e2e-container.sh
-```
-*Captures DOM snapshots, executes integration tests, and generates proof-of-work video walkthroughs with zero host dependencies.*
+`dev-launch.sh` installs the app's dependencies on first run, then starts it. Run it with no argument to list the apps. On GNOME, `scripts/install-local.sh` adds the apps to the application launcher instead.
 
-### 3. Launch Standalone Native Apps (macOS, Linux, Windows WSL2)
-Run any RobOS desktop application using Node.js 20+:
-```bash
-# Install core dependencies
+For the Ubuntu desktop setup, the VM image and per-platform notes, see the [installation guide](https://rowbose.com/v1/getting-started.html). To model another repository in a knowledge graph, see the [graph workspace guide](packages/robos-graph/WORKSPACES.md).
+
+## How a change moves through RobOS
+
+1. **Plan.** `task-planner` turns a request into tracked issues with acceptance criteria and test cases.
+2. **Implement.** An agent (`task-implementer`) works on a branch, commits and pushes. It does not open the pull request.
+3. **Review.** `pr-review`, also called Code Review Theater, shows the diff file by file, before-and-after evidence captured from real runs of the code, and a walkthrough where an agent demonstrates each checkpoint. IntelliJ IDEA and VS Code open from the same screen.
+4. **Ship.** The reviewed description is published as a draft pull request, moved to ready once CI is green, then reviewed and merged. A CI failure on `main` files a follow-up task.
+
+More on this in [Agent Governance & Review](https://rowbose.com/v1/agent-review-development.html) and [PR Review Theater](https://rowbose.com/v1/pr-review-theater.html).
+
+### The apps
+
+Each app is a directory under `packages/`, launched with `scripts/dev-launch.sh <package>`. A sample, not the full list:
+
+| Area | Packages |
+|---|---|
+| Planning and tasks | `task-planner`, `task-implementer`, `task-board`, `issue-manager`, `dev-central` |
+| Review and delivery | `pr-review`, `ci-monitor`, `deploy-tracker` |
+| Architecture and graph | `robos-graph` (Knowledge Graph Explorer), `topology-manager`, `schema-studio`, `contract-studio` |
+| Data and APIs | `db-manager`, `nosql-manager`, `rest-client`, `grpc-client`, `graphql-client`, `data-sources` |
+| Infrastructure and secrets | `kube-studio`, `remote-execution-studio`, `pass-manager` |
+| Agents | `agents-manager`, `agent-chat`, `mcp-manager` |
+
+Every app has a page in [`docs/_apps/`](docs/_apps/) and an entry in the [app directory](https://rowbose.com/apps/).
+
+## How it is built
+
+The apps are Electron with plain JavaScript and no UI framework. Each package is independent: there is no root `package.json`, and each has its own `node_modules`.
+
+An app looks like this:
+
+```
+packages/<app-id>/
+  main.js          Electron main process; registers ipcMain handlers
+  preload.js       contextBridge API exposed to the renderer
+  renderer/        HTML, CSS and JavaScript for the UI
+  package.json     the app's own dependencies
+  icon.svg         app icon
+  <app-id>.desktop launcher entry
+```
+
+- **IPC.** Renderers have no Node access. They call `window.<api>` from `preload.js`, which forwards to `ipcMain.handle` in `main.js`.
+- **State.** Persistent data lives in `~/.config/robos/`.
+- **Shared code.** `robos-lib` (prompt security, evidence capture, DOM snapshots, `.desktop` parsing), `robos-icons`, `robos-ui` and `robos-mcp-lib`. On the VM these are installed under `/usr/local/share/robos/` and required by absolute path, so apps wrap those requires in `try/catch`. See [AGENTS.md](AGENTS.md) for the details.
+- **MCP servers.** Packages ending in `-mcp` expose the graph, IDE bridge, tasks and workspaces to agents over the Model Context Protocol.
+- **Knowledge graph.** JSON-LD packages in `.robos/kgraphs/<package>/package.jsonld`, indexed by `.robos/kgraph.yaml`. The engine, SHACL validation, diffing and the `kgraph` CLI are in `packages/robos-graph/`. Inserts must pass SHACL validation; graph changes go through a propose-then-apply review. See [WORKSPACES.md](packages/robos-graph/WORKSPACES.md) and [INSPECTOR.md](packages/robos-graph/INSPECTOR.md).
+- **Agent routing.** `robos-agent-client/harness-router.js` dispatches tasks to the agent CLIs found on your machine.
+- **Sandboxing.** `robos-profiled` gives each agent its own profile with a tmpfs-backed home directory and a display bridge for GUI runs.
+
+It is built on existing standards instead of new formats: OSLC and JSON-LD for the graph, SHACL for validation, Backstage catalog files and the C4 model for topology, TypeSpec, OpenAPI and AsyncAPI for schemas and contracts, Pact for consumer contracts, Bruno files for API collections, and MCP for agent tooling.
+
+### Repository layout
+
+| Path | Contents |
+|---|---|
+| `packages/` | Apps, shared libraries and MCP servers, one directory each |
+| `packages/robos-graph/` | Knowledge graph engine, SHACL validation, `kgraph` CLI and explorer app |
+| `packages/robos-test/` | Unit and end-to-end tests |
+| `.robos/` | This repository's own knowledge graph |
+| `plugins/` | Skill marketplace for coding agents, and the IntelliJ IDEA plugin |
+| `.agents/`, `.claude/`, `.antigravity/`, `.gemini/`, `.github/skills/` | Skills and commands in the form each agent reads |
+| `docs/` | Documentation site (Jekyll), published at rowbose.com/v1/ |
+| `site/` | Front site (Jekyll), published at rowbose.com |
+| `infra/` | `docker/` for the containerized E2E runner, `desktop/` for the VM image build |
+| `installer/` | Installer app for the appliance OS |
+| `games/` | Godot games (a cRPG and a tabletop RPG) and their tooling |
+| `scripts/` | Launch, install, build, release and docs tooling |
+
+## Development
+
+Requirements: Node.js 20+ and Git. Docker is needed for the containerized E2E runner, QEMU/KVM for the VM image, and JDK 17+ with Gradle for the IntelliJ plugin.
+
+```sh
+# Run an app
+scripts/dev-launch.sh <package>
+
+# Unit tests (no display needed)
+cd packages/robos-test
 npm install
+npm run test:unit
 
-# Launch the Agent Code Review Platform
-npx electron packages/pr-review
+# End-to-end tests in a container with a virtual display
+./scripts/e2e-container.sh
 
-# Launch the System Topology Studio
-npx electron packages/topology-manager
-
-# Launch the Knowledge Graph Explorer
-npx electron packages/kgraph-explorer
+# Inspect a running app's DOM
+node packages/robos-lib/snapshot-cli.js <package> --text
 ```
 
-> 💡 **Drop `.robos/` into any repository**: Add a `.robos/` directory to your existing Git projects to immediately enable semantic Knowledge Graph architecture modeling, TypeSpec schemas, and pre-code blast-radius diffs with Claude Code, Google Antigravity, GitHub Copilot, or OpenAI Codex.
+Adding, renaming or removing an app touches several registries (desktop manager, icons, install scripts, the knowledge graph, docs). Use the `create-robos-app`, `rename-robos-app` and `remove-robos-app` skills, or follow the checklist in [AGENTS.md](AGENTS.md).
 
----
+The documentation lives in `docs/` and `site/`. `scripts/build-docs.sh` builds both the way CI does (needs Jekyll and the gems in `docs/Gemfile`), and `node scripts/sync-app-docs.js` refreshes the per-app pages.
 
-## 🧰 Native Developer Tool Suite (Apps)
+To build and run the VM image, see `infra/desktop/` (`build.sh`, `run.sh`, `clean.sh`).
 
-RobOS includes a complete suite of lightweight, high-performance developer tools built with Electron and vanilla JavaScript (zero framework overhead). All tools are natively wired to your SDLC Knowledge Graph:
+## Skills
 
-| Category | Application | Purpose |
-|:---|:---|:---|
-| **Core Dev** | **Dev Discussions** | Discord/Slack-like work-item & PR review discussion threads (Projects -> Features -> Tasks/PRs) with smart caching. |
-| | **Dev Central** | Daily engineering dashboard: sprint board, PR health, blocker radar, AI standup. |
-| | **Issue Manager** | GitHub Issues client with Kanban views and AI issue breakdown. |
-| | **Git Projects** | Repository manager with Monaco editor, terminal runners, and AI dev-setup generation. |
-| | **Agents Manager** | Multi-agent orchestrator for Claude Code, Antigravity, Copilot, and Gemini CLI sessions. |
-| | **Voice Prompt Agent** | Offline neural Whisper speech-to-text dictation with real-time streaming, active window context, and REST API. |
-| | **App Launcher** | Searchable system grid for all RobOS developer tools and workflows. |
-| **Architecture** | **Topology Manager** | C4 Level 1–3 interactive architecture canvas; auto-syncs Spotify Backstage catalogs. |
-| | **Knowledge Graph Explorer** | Dual-state OSLC JSON-LD knowledge graph browser with SHACL shape validation. |
-| | **Schema Studio & Registry** | Microsoft TypeSpec domain modeling, W3C SHACL generation, and schema linters. |
-| | **Contract Studio** | OpenAPI 3.1 & AsyncAPI specification authoring with live Prism mock servers. |
-| **Data & APIs** | **Relational DB Manager** | DBeaver/DataGrip-style multi-tab SQL console and data grid for Postgres, MySQL, Oracle. |
-| | **NoSQL DB Manager** | Document and key-value store manager for MongoDB, Redis, and DynamoDB. |
-| | **Data Sources Explorer** | Unified inspector for relational databases, document vaults, and Kafka event streams. |
-| | **REST API Client** | Git-backed UseBruno (`.bru`) REST collection runner and microservice verifier. |
-| | **gRPC Client** | BloomRPC/Kreya-style Protobuf dynamic reflection microservice testing client. |
-| | **GraphQL Client** | GraphiQL-style schema explorer, query editor, and variable runner. |
-| | **KGraph Parse Portal** | Heavy-scale resource ingestion gateway fronting Luxir C++ search index, contextual MIME disambiguation, and Tika 4.0 gRPC. |
-| **Governance** | **Agent Code Review Platform** | Autonomous AI PR auditor, semantic diffs, security audits, and IDE review bridge. |
-| | **Workflow Studio** | Visual SDLC lifecycle, issue state machines, and approval pipelines. |
-| | **Task Planner** | Multi-domain AI task planning with interactive web forms and Jira/GitHub sync. |
-| | **Agent Scheduler** | Background cron runner for automated agent maintenance and repo housekeeping. |
-| **DevOps & Cloud** | **Kube Studio** | Multi-cluster Kubernetes navigator, Helm release matrix, and ArgoCD GitOps sync. |
-| | **DevOps Wizard** | 25+ provider onboarding wizard (AWS, GCP, Azure, GitHub, GitLab, Docker, Okta). |
-| | **Pass Manager** | Local UNIX GPG password store (`pass`) GUI with zero plaintext KGraph secrets. |
-| | **Remote Execution Studio** | REAPI v2 distributed build cluster manager for Bazel, Buck2, and Buildbarn. |
+Skills are how coding agents operate RobOS: scaffolding apps, running the E2E harness, recording demos, querying and diffing the knowledge graph, and managing the VM. They are written once in [`plugins/robos/skills/`](plugins/robos/skills/) and installed in the form each agent reads (Claude Code, Codex, Antigravity, Copilot, Gemini CLI).
 
----
+```sh
+# Claude Code
+claude plugin marketplace add ./plugins
+claude plugin install robos
 
-## 🔄 The Governance Workflow: Agent Review-Based Development
-
-RobOS turns the traditional coding bottleneck on its head:
-
-<p align="center">
-  <img src="docs/assets/images/agent-review-workflow-comparison.jpg" alt="Agent Review-Based Development Workflow" width="100%" />
-</p>
-
-1. **Grounded Investigation**: The AI agent provisions an isolated workspace, investigates the requirement against the Knowledge Graph blueprint, reproduces edge cases at live breakpoints, and drafts an architectural proposal.
-2. **Proactive Human Alignment**: RobOS actively probes the Lead Architect on design trade-offs, constraints, and edge cases *before* any code is generated—keeping humans in command.
-3. **Autonomous Implementation & Verification**: The agent synthesizes the code, runs unit tests, provisions temporary test databases, and executes headless end-to-end tests on an isolated virtual screen.
-4. **1-Click Human Approval in Your IDE**: Review the blast radius diff and watch the 1080p narrated video proof. If you want deep code inspection, RobOS bridges the review directly into your existing **IntelliJ IDEA** or **VS Code** environment with full AST navigation, symbol lookup, and local debugging tools.
-
----
-
-## 💻 Optional Power-User Appliance: Dedicated RobOS VM
-
-For enterprise teams requiring total physical isolation, air-gapped workstations, or a dedicated developer appliance, RobOS provides a bootable **Ubuntu 26.04 LTS OS image** and **QEMU/KVM virtual machine**:
-
-- **Hardware Specs**: 16 GB RAM, host CPU passthrough, 100 GB sparse disk.
-- **Desktop Environment**: Custom GNOME desktop, dark navy/cyan theme, LightDM auto-login, Tilix terminal, zsh + oh-my-zsh.
-- **Total Isolation**: Air-gapped sandbox with SSH (port 2224), VNC (port 5910), and SPICE (port 5932).
-- **Stateless Reproducibility**: 100% automated first-boot provisioning via cloud-init.
-
-```bash
-# Build the disk image + cloud-init ISO
-infra/desktop/build.sh
-
-# Launch the QEMU/KVM Virtual Machine
-infra/desktop/run.sh
+# Any agent: sync skills into this repository, or add --global for your user profile
+./plugins/install.sh
+./plugins/install.sh --target codex
 ```
 
-*(Note: The VM is entirely optional. RobOS runs natively on macOS, Linux, Windows WSL2, and Docker.)*
+- [plugins/README.md](plugins/README.md): install steps for each agent
+- [Skills catalog](docs/skills/skills-catalog.md): every skill, its parameters and how it is verified
+- [RobOS Skills](https://rowbose.com/v1/robos-skills.html) on the docs site
 
----
+[AGENTS.md](AGENTS.md) is the reference for agents and contributors: architecture, conventions, the app registration checklist and known gotchas. `CLAUDE.md`, `GEMINI.md` and `ANTIGRAVITY.md` point to it.
 
-## 🌐 Open-Source Standards ("Reinvent Nothing!")
+## Documentation
 
-RobOS is built entirely on battle-tested open specifications. Everything persists as declarative plain-text files in your Git repository under `.robos/`:
+- [Installation guide](https://rowbose.com/v1/getting-started.html)
+- [System architecture](https://rowbose.com/v1/architecture.html)
+- [SDLC knowledge graph](https://rowbose.com/v1/knowledge-graph.html) and [schemas](https://rowbose.com/v1/schemas.html)
+- [Agent governance and review](https://rowbose.com/v1/agent-review-development.html)
+- [App directory](https://rowbose.com/apps/)
+- [Game development](https://rowbose.com/v1/game-development.html) and the [cRPG test guide](games/crpg-realm/AGENTS.md)
+- [Roadmap](https://rowbose.com/v1/roadmap.html), [Why RobOS](https://rowbose.com/v1/why-robos.html) and [About](https://rowbose.com/v1/about.html)
 
-| Standard / Technology | Industry Purpose | RobOS Implementation |
-|:---|:---|:---|
-| **[OASIS OSLC Core 3.0](https://open-services.net/) & [W3C JSON-LD](https://www.w3.org/TR/json-ld11/)** | Global ISO/OASIS linked-data standard for lifecycle integration. | Powers the SDLC Knowledge Graph, modular package stores, and semantic blast-radius diffs. |
-| **[Spotify Backstage](https://backstage.io/) (`catalog-info.yaml`)** | Industry-standard developer portal service catalog format. | Zero-config topology discovery: parses Backstage YAML to auto-populate system architecture. |
-| **[C4 Architecture Model](https://c4model.com/) & Structurizr** | Hierarchical architecture visualization framework (Levels 1–3). | Visual System Topology Studio: renders microservices, databases, and message brokers. |
-| **[Microsoft TypeSpec](https://typespec.io/)** | Single-source-of-truth schema definition language. | Schema Studio: authors entity schemas once and compiles to TypeScript, Java, and Go. |
-| **[OpenAPI 3.1](https://www.openapis.org/) & [AsyncAPI](https://www.asyncapi.com/)** | API specifications for RESTful endpoints and event streams. | Contract Studio: authors API contracts, powers Spectral linting, and runs Prism mock servers. |
-| **[Pact](https://pact.io/) Consumer Contracts** | Consumer-driven contract testing for microservices. | Automated PR gates: prevents agents from merging code that breaks downstream consumers. |
-| **[UseBruno](https://www.usebruno.com/) (`.bru`)** | Git-backed, plain-text REST client collections. | REST API Client: executes automated test suites with zero proprietary cloud locks. |
-| **[Model Context Protocol (MCP)](https://modelcontextprotocol.io/)** | Anthropic's universal protocol connecting AI to tools. | Exposes RobOS Knowledge Graph, IDE breakpoints, and Kubernetes deployments to any agent. |
-| **[Piper Neural TTS](https://github.com/rhasspy/piper)** | Ultra-fast offline neural text-to-speech synthesis. | Generates synchronized narration audio and WebVTT subtitles for 1080p video proofs. |
+## Contributing
 
----
+Read [CONTRIBUTING.md](CONTRIBUTING.md) first. Commits follow [Conventional Commits](https://www.conventionalcommits.org/). Feature ideas are in [`docs/ideas/`](docs/ideas/) and reported problems in [`docs/issues/`](docs/issues/). Questions and proposals go to [GitHub Discussions](https://github.com/nddipiazza/robos/discussions), bugs to [Issues](https://github.com/nddipiazza/robos/issues), and conversation to [Discord](https://discord.gg/6PjxzkHujE).
 
-## 🤖 About RobOS (*row-bose*)
+## License
 
-- **Pronunciation**: **RobOS** is pronounced **"row-bose"** (`/ˈroʊboʊs/`), rhyming with *rose*.
-- **The Lore**: Named after **Robo** (R-66Y / Prometheus) from the 1995 RPG classic *Chrono Trigger*. In the story, Robo spends **400 years** tilling and irrigating Fiona's scorched desert so it blossoms into a flourishing forest. RobOS does the same for developers: our autonomous agents tirelessly perform the grueling background labor of the SDLC (scaffolding, contracts, migrations, headless testing) so human architects can focus on creative engineering.
-- **Built by Agents**: **GitHub Copilot**, **Anthropic Claude**, **OpenAI Codex**, and **Google Gemini** contributed equally to building RobOS through agentic workflows, proving that diverse AI models excel when collaborating under open standards.
+Apache License 2.0. See [LICENSE](LICENSE).
 
-👉 **[Read the complete backstory and multi-agent lore →](https://rowbose.com/v1/about.html)**
-
----
-
-## 💬 Community & Discussion
-
-Join developers, architects, and AI researchers building the future of agent-governed software development:
-
-- 🛠️ **[Contributing Guide (Use RobOS to Build RobOS!)](CONTRIBUTING.md)** — Create prompt contracts, run workflows in community sandboxes, and submit video-proven PRs.
-- 💡 **[Feature Ideas Store](docs/ideas/)** — Browse raw ideas, structured specs, and community prompt workflows.
-- 🎮 **[Join the RobOS Discord Server](https://discord.gg/6PjxzkHujE)** — Live support, demo streams, and agent architecture discussions.
-- 💬 **[#general Channel Discussion](https://discord.com/channels/1546926331193725029/)** — General questions and community announcements.
-- 🐙 **[GitHub Discussions](https://github.com/nddipiazza/robos/discussions)** & **[Issues](https://github.com/nddipiazza/robos/issues)** — Feature proposals, bug reports, and roadmap discussions.
-- 📖 **[Documentation Portal](https://rowbose.com/)** — Complete guides, architecture specs, and walkthrough archives.
-
----
-
-<p align="center">
-  <sub>Licensed under the Apache License 2.0. Copyright &copy; 2026 RobOS Contributors.</sub>
-</p>
+RobOS is pronounced "row-bose". The name comes from Robo in *Chrono Trigger*; the [About page](https://rowbose.com/v1/about.html) has the story.
