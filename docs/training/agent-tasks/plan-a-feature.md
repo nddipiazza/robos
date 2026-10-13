@@ -24,10 +24,10 @@ Task Planner (`packages/task-planner`) turns a template form or a written descri
 
 ## Prerequisites
 
-- **A task server.** Open the Task Servers app and add GitHub Issues or Jira. Task Planner reads the active server from `task_servers` and `active_task_server` in `~/.config/robos/settings.json`, and falls back to the first server in the list.
-- **For GitHub:** the `gh` CLI, signed in. Task Planner creates issues with `gh issue create`.
-- **For Jira:** a base URL, a user name and an API token stored in `pass`. The Task Servers form saves the `pass` path.
-- **For AI generation only:** the GitHub Copilot CLI (`gh copilot`). Templates do not call a model.
+- A task server. Open the Task Servers app and add GitHub Issues or Jira. Task Planner reads the active server from `task_servers` and `active_task_server` in `~/.config/robos/settings.json`, and falls back to the first server in the list.
+- For GitHub, the `gh` CLI signed in. Task Planner creates issues with `gh issue create`.
+- For Jira, a base URL, a user name and an API token stored in `pass`. The Task Servers form saves the `pass` path.
+- For AI generation only, the GitHub Copilot CLI (`gh copilot`). Templates do not call a model.
 
 {: .note }
 For a GitHub server, Task Planner builds the repository name from `gh_org` and `gh_repo` on the server entry. The Task Servers form stores repositories as a `repos` list and does not write those two keys. If your entry has only `repos`, add `gh_org` and `gh_repo` with the same owner and repository name.
