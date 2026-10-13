@@ -42,7 +42,7 @@ graph LR
     style Home fill:#164e63,stroke:#00e5ff,color:#fff
 ```
 
-![Three stages left to right: multi-model agents, a protocol gateway with a prompt security guard that scans for secrets, personal data, injection and entropy, and a disposable execution boundary with a RAM sandbox and virtual display]({{ '/assets/images/training/uhp-security-harness-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+![Three stages left to right: multi-model agents, a protocol gateway with a prompt security guard that scans for secrets, personal data, injection and entropy, and a disposable execution boundary with a RAM sandbox and virtual display]({{ '/assets/images/training/uhp-security-harness-architecture.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. The text on this page says what is built today: the guard runs inside the router, and the profile daemon is a separate piece that does not sandbox the agent.*
 
 | Lesson | Code | What it is |

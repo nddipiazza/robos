@@ -29,7 +29,7 @@ Short lessons for the RobOS tools that plan work, run coding agents, and control
 | | [Run tasks through the harness router]({{ '/training/harness-and-security/harness-router.html' | relative_url }}) | Send a task to Claude Code, Codex or Copilot through one interface, and tell a real run from a simulated one. | The agent CLIs you want to use |
 | | [Run commands in an ephemeral agent profile]({{ '/training/harness-and-security/agent-profiles.html' | relative_url }}) | Give an agent a throwaway home directory, and know what that does and does not isolate. | Linux, `python3`, Electron |
 
-![Four phases from left to right: context and architecture with a knowledge graph, a visual task plan with a dependency graph and milestones, a sandboxed agent run, and a verifiable signoff with video playback and approval]({{ '/assets/images/training/course-cadence-flow.jpg' | relative_url }}){: .robos-zoomable-img }
+![Four phases from left to right: context and architecture with a knowledge graph, a visual task plan with a dependency graph and milestones, a sandboxed agent run, and a verifiable signoff with video playback and approval]({{ '/assets/images/training/course-cadence-flow.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs, drawn for the earlier four-phase course. The text on this page says what is built today.*
 
 ## Where the rest is documented
@@ -56,7 +56,7 @@ Replace `task-planner` with the package folder of the app. Every lesson names th
 
 ## Diagrams
 
-![Five review stages left to right: knowledge check, living docs delta, semantic AST diff, IDE review bridge, and video proof with signoff]({{ '/assets/images/training/review-theater-flight-simulator.jpg' | relative_url }}){: .robos-zoomable-img }
+![Five review stages left to right: knowledge check, living docs delta, semantic AST diff, IDE review bridge, and video proof with signoff]({{ '/assets/images/training/review-theater-flight-simulator.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs, drawn for the earlier five-stage review. The PR Review Theater page says what is built today.*
 
 Why a long diff gets a reflexive approval, and the review path RobOS offers instead:

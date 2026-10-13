@@ -24,7 +24,7 @@ Proposal, not built. Only a minimal local task list exists today; see "What exis
 
 The spec asked for permissively licensed dependencies (MIT or Apache-2.0) only.
 
-![A local task server beside GitHub, Jira and Linear adapters, all reached through one task client by Task Servers, Task Board, Dev Central and agent tools]({{ '/assets/images/task-servers-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+![A local task server beside GitHub, Jira and Linear adapters, all reached through one task client by Task Servers, Task Board, Dev Central and agent tools]({{ '/assets/images/task-servers-architecture.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. The text on this page says what is built today.*
 
 ## What exists today

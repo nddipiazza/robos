@@ -74,10 +74,10 @@ flowchart TD
     K --> L["load VictoryScreen.tscn"]
 ```
 
-![The end of the Malakor fight in the Garrison Keep, recorded during a test run]({{ '/assets/images/crpg-realm/victory_screen.png' | relative_url }}){: .robos-zoomable-img }
+![The end of the Malakor fight in the Garrison Keep, recorded during a test run]({{ '/assets/images/crpg-realm/victory_screen.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *The end of the fight in a recorded Infinity AI playthrough. Read the log: the hero's +8 attack hits AC 14, the journal moves to Stage 5, and the vanquish message appears twice.*
 
-![Boss encounter state machine with a cutscene, two combat phases, minions and a victory transition]({{ '/assets/images/crpg-realm/crpg_boss_fight_state_machine.jpg' | relative_url }}){: .robos-zoomable-img }
+![Boss encounter state machine with a cutscene, two combat phases, minions and a victory transition]({{ '/assets/images/crpg-realm/crpg_boss_fight_state_machine.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. The text on this page says what is built today: the Malakor fight has no cutscene trigger, phases, shield or minions. It is a simple alternating attack loop, and this diagram shows the shape a second phase could take.*
 
 - A click from anywhere starts it. There is no range check.
@@ -91,10 +91,10 @@ The HTTP actions for the fight are `confront_malakor`, `attack_malakor` (calls `
 
 ## Party and formations
 
-![The tactical battle scenario card, with three heroes in the portrait toolbar on the right]({{ '/assets/images/crpg-realm/tactical_battle_splash.png' | relative_url }}){: .robos-zoomable-img }
+![The tactical battle scenario card, with three heroes in the portrait toolbar on the right]({{ '/assets/images/crpg-realm/tactical_battle_splash.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *The scenario card for a party fight in `TacticalBattle`. Look at the right edge: the portrait toolbar lists the three party members, and the leader's card is outlined in gold.*
 
-![Party composition, leader selection and the six formation shapes]({{ '/assets/images/crpg-realm/crpg_party_dynamics_formations.jpg' | relative_url }}){: .robos-zoomable-img }
+![Party composition, leader selection and the six formation shapes]({{ '/assets/images/crpg-realm/crpg_party_dynamics_formations.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. The text on this page says what is built today: the six formation tables below, and companions that do not use the pathfinder.*
 
 ### Data and nodes
@@ -141,15 +141,15 @@ Two enemy scripts exist.
 | `TacticalEnemy.gd` (scene `components/TacticalEnemy.tscn`) | `TacticalBattle.tscn`: `EnemyWolfAlpha`, `EnemySkeletonArcher`, `EnemyShadowStalker` | Threat table, proximity aggro, pack alerts. Every stat is an `@export`; it does not read `monsters.json`. |
 | `ShadowHound.gd` (scene `ShadowHound.tscn`) | `VillageSquare`, `WhisperingForest`, `AncientCatacombs` | Patrols and chases the hero within 190 px. No threat table or pack logic. The location script handles the fight. |
 
-![Tactical battle where two enemies rally to defend a wolf, with threat values in the log]({{ '/assets/images/crpg-realm/combat_battlefield.png' | relative_url }}){: .robos-zoomable-img }
+![Tactical battle where two enemies rally to defend a wolf, with threat values in the log]({{ '/assets/images/crpg-realm/combat_battlefield.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *From the pack-alert scenario in `TacticalBattle`. Read the log at the bottom: the wolf targets Vance with a threat value, and the archer and stalker are alerted to defend their ally.*
 
 The rest of this section is about `TacticalEnemy`.
 
-![Enemy social aggro with an assist radius and linked friends, a threat table, and a combat loop with a real-time and a round-based mode]({{ '/assets/images/crpg-realm/crpg_infinity_engine_aggro.jpg' | relative_url }}){: .robos-zoomable-img }
+![Enemy social aggro with an assist radius and linked friends, a threat table, and a combat loop with a real-time and a round-based mode]({{ '/assets/images/crpg-realm/crpg_infinity_engine_aggro.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. The text on this page says what is built today: the radii in pixels are in the table below, threat is `damage * 2 + 10` per hit, and these scenes have no round-based turn controller.*
 
-![Scenario card for a pack-aggro fight: enemies rally when an ally is struck]({{ '/assets/images/crpg-realm/threat_aggro_splash.png' | relative_url }}){: .robos-zoomable-img }
+![Scenario card for a pack-aggro fight: enemies rally when an ally is struck]({{ '/assets/images/crpg-realm/threat_aggro_splash.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *The splash card of the pack aggro scenario in `TacticalBattle`, with the step banner and the input stream behind it.*
 
 | Export | Default | Meaning |
@@ -190,7 +190,7 @@ Before the `match`, `execute_cast_spell` refuses a target that is invisible (unl
 
 ### Fireball
 
-![Fireball area-of-effect flow from the caster through targeting to a damage pipeline with saving throws]({{ '/assets/images/crpg-realm/crpg_fireball_aoe_architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+![Fireball area-of-effect flow from the caster through targeting to a damage pipeline with saving throws]({{ '/assets/images/crpg-realm/crpg_fireball_aoe_architecture.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. The text on this page says what is built today: the blast radius is 180 px, the DC is 14, and one 8d6 roll is shared across all targets.*
 
 `fireball` rolls eight d6 once (8d6) and shares the total across all targets. Candidates are the scene's `enemies` dictionary (`TacticalBattle` has one) plus every `TacticalEnemy` that is a direct child of the scene. Each living candidate within `radius` pixels of the point rolls d20 plus its `dex_save_mod` export (default 2) against the DC, and takes half damage, rounded up, on a pass. `take_damage(dmg, caster_node)` builds threat and alerts the pack only when `caster_node` is not null. The return value has the dice, the total, the DC and a `targets_hit` list with each target's save and HP before and after. The HTTP API returns it as `telemetry`.

@@ -19,7 +19,7 @@ Proposal, not built. This page replaces two older specs, an LMS proposal and a U
 
 The older LMS spec described a new app, `packages/robos-lms`. The eLearning Hub now provides the player, so the items below would extend [RobOS eLearning Hub]({{ '/apps/robos-elearning/' | relative_url }}) instead.
 
-![An agent generates courses into a course folder, an LMS engine and player run them, and labs, progress sync and team assignments hang off the player]({{ '/assets/images/lms-education-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+![An agent generates courses into a course folder, an LMS engine and player run them, and labs, progress sync and team assignments hang off the player]({{ '/assets/images/lms-education-architecture.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs, for the earlier standalone LMS app. The text on this page says what is built today.*
 
 **Authoring**
@@ -56,7 +56,7 @@ flowchart TD
 
 *Concept diagram from the original UX audit, for the proposed course creation screen. None of it is built.*
 
-![Course creation by AI synthesis from a graph entity or by a manual builder, both passing a validation gate before being saved to elearning.yaml]({{ '/assets/images/elearning-creation-ux-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+![Course creation by AI synthesis from a graph entity or by a manual builder, both passing a validation gate before being saved to elearning.yaml]({{ '/assets/images/elearning-creation-ux-architecture.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. The text on this page says what is built today.*
 
 **Organization**
@@ -64,7 +64,7 @@ flowchart TD
 - Folders or learning tracks, tags, and search in place of the single course dropdown.
 - Drag and drop to reorder courses, modules and lab steps.
 
-![Folder tree with drag and drop of course cards and lab steps, synced to elearning.yaml and the knowledge graph]({{ '/assets/images/elearning-organization-dnd-ux.jpg' | relative_url }}){: .robos-zoomable-img }
+![Folder tree with drag and drop of course cards and lab steps, synced to elearning.yaml and the knowledge graph]({{ '/assets/images/elearning-organization-dnd-ux.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. The text on this page says what is built today; the hub has no folders or drag and drop.*
 
 ```mermaid

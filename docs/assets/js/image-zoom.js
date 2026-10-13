@@ -21,6 +21,20 @@
   // Mermaid is configured once, with the site palette, in _includes/mermaid_config.js.
   function configureMermaid() {}
 
+  // Size a diagram to its card, but never below 72% of its natural size: a wide diagram then scrolls
+  // inside the card instead of shrinking to unreadable text. Click-to-enlarge still shows it whole.
+  function fitDiagram(card, svg) {
+    try {
+      const vb = svg.viewBox && svg.viewBox.baseVal;
+      const natural = vb && vb.width ? vb.width : svg.getBoundingClientRect().width;
+      if (!natural) return;
+      const avail = Math.max(240, card.clientWidth - 32);
+      svg.style.width = Math.min(natural, Math.max(avail, natural * 0.72)) + 'px';
+      svg.style.maxWidth = 'none';
+      svg.style.height = 'auto';
+    } catch (e) { /* leave the diagram at its default size */ }
+  }
+
   function createLightboxDOM() {
     if (document.getElementById('robos-lightbox-overlay')) return;
 
@@ -508,6 +522,7 @@
       }
 
       cardWrapper.classList.add('robos-zoomable-diagram');
+      fitDiagram(cardWrapper, svgEl);
       cardWrapper.setAttribute('title', 'Click to open interactive flowchart zoom & fullscreen view');
 
       const diagramTitle = findNearestHeading(cardWrapper);

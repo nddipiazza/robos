@@ -24,7 +24,7 @@ The systems behind click-to-move, the 3D miniature pawns, NPC dialogue and fog o
 
 `scripts/Pathfinder.gd` is a `RefCounted` class with static functions. Only `HeroPlayer` calls `Pathfinder.get_nav_path()`, from `move_to_point()` and `queue_move_point()`. Companions and enemies walk in straight lines and slide along walls.
 
-![Party routing between houses with the path line drawn by PathVisualizer]({{ '/assets/images/crpg-realm/house_wall_navigation.png' | relative_url }}){: .robos-zoomable-img }
+![Party routing between houses with the path line drawn by PathVisualizer]({{ '/assets/images/crpg-realm/house_wall_navigation.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Look for the cyan line from the hero and the ring at the click point: the line is the route that `PathVisualizer` draws for a click.*
 
 `get_nav_path(world_2d, start, target, scene, exclude)` works in four steps:
@@ -77,15 +77,15 @@ flowchart TD
     Queue --> Ribbon
 ```
 
-![Four ways to route around obstacles: sparse waypoints, a uniform grid, Theta* and a navmesh with string pulling]({{ '/assets/images/crpg-realm/crpg_pathfinding_algorithms_architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+![Four ways to route around obstacles: sparse waypoints, a uniform grid, Theta* and a navmesh with string pulling]({{ '/assets/images/crpg-realm/crpg_pathfinding_algorithms_architecture.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. The text on this page says what is built today: a grid with a straight-line check and string-pulling smoothing. Theta* and a navmesh are not used.*
 
-![A pathfinding engine overlay on the village, with collision boxes around buildings and a route around them]({{ '/assets/images/crpg-realm/pathfinder_obstacle_avoidance.jpg' | relative_url }}){: .robos-zoomable-img }
+![A pathfinding engine overlay on the village, with collision boxes around buildings and a route around them]({{ '/assets/images/crpg-realm/pathfinder_obstacle_avoidance.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. The text on this page says what is built today: the numbers shown (grid resolution, node counts, timings) are illustrative, and only the hero is routed.*
 
 ## 3D miniature pawns
 
-![Isometric miniature pawn: a SubViewport renders the model, with weapon, shield and helmet sockets, into a 2D sprite]({{ '/assets/images/crpg-realm/crpg_3d_pawn_sockets_architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+![Isometric miniature pawn: a SubViewport renders the model, with weapon, shield and helmet sockets, into a 2D sprite]({{ '/assets/images/crpg-realm/crpg_3d_pawn_sockets_architecture.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. The text on this page says what is built today: the viewport is 160x160 here, and the sockets are the three listed in the table below.*
 
 Characters and monsters are 3D miniatures drawn into the 2D world by `scripts/CharacterModel3D.gd`. Each pawn owns a 160x160 `SubViewport` with a transparent background, its own 3D world and 4x MSAA, a camera with a 36 degree field of view, a sun and a fill light, and a `ModelPivot` node holding the mesh. A `Sprite2D` named `DisplaySprite` shows the viewport texture with an offset of (0, -18), which lines the pedestal up with the actor's 2D feet collider.
@@ -154,14 +154,14 @@ It then calls `ActionLog.start_dialogue(tree, tree.rootNode)` and restores the i
 
 Not built: wandering NPCs. No scene sets `waypoints` on an `NPCCharacter`, so the townsfolk stand still.
 
-![Numbered dialogue replies in the activity log]({{ '/assets/images/crpg-realm/dozens_npc_dialogue.png' | relative_url }}){: .robos-zoomable-img }
+![Numbered dialogue replies in the activity log]({{ '/assets/images/crpg-realm/dozens_npc_dialogue.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *The activity log during a conversation: each reply is a numbered line you pick with a number key or a click.*
 
 ## Fog of war
 
 `scripts/FogOfWar.gd` (instanced from `scenes/components/FogOfWar.tscn`) keeps a low-resolution grid of the map and draws it as a shader overlay (`shaders/fog_of_war.gdshader`).
 
-![Fog of war: a lit vision circle on an isometric map, memory fog, unexplored shroud, and the settings and runtime flow]({{ '/assets/images/crpg-realm/crpg_fog_of_war_architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+![Fog of war: a lit vision circle on an isometric map, memory fog, unexplored shroud, and the settings and runtime flow]({{ '/assets/images/crpg-realm/crpg_fog_of_war_architecture.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. The text on this page says what is built today: the vision radius is 425 px with a slider from 200 to 800 px, and fog is classified per map.*
 
 ```mermaid
@@ -199,7 +199,7 @@ flowchart TD
     GridBuffer --> Actors
 ```
 
-![A lit circle around two heroes and darkness beyond it]({{ '/assets/images/crpg-realm/fog_of_war_reveal.png' | relative_url }}){: .robos-zoomable-img }
+![A lit circle around two heroes and darkness beyond it]({{ '/assets/images/crpg-realm/fog_of_war_reveal.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *A frame from the recorded fog of war test. Look at the lit circle around the two heroes: everything outside the vision radius is shrouded.*
 
 | Export | Default | Meaning |

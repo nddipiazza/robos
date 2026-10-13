@@ -19,7 +19,7 @@ Data Sources Explorer is a registry of the data stores your services use. The us
 - Select an entry to see its bound services and use its tabs: **Schema Inspector**, **Interactive Query Console** (run with `Ctrl+Enter`, **Export CSV** for results) and **All Data Sources Catalog**.
 
 ![Data Sources showing a sample PostgreSQL entry bound to two services, with the Schema Inspector tab open]({{ '/assets/images/screenshots/data-sources-postgres_overview_frame.png' | relative_url }})
-{: .robos-zoomable-img }
+{: .robos-zoomable-img loading="lazy" }
 
 *A sample entry with its bound microservices and the Schema Inspector tab. The tables and row counts are fixed sample data.*
 

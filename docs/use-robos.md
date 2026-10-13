@@ -25,10 +25,24 @@ Pages for running RobOS and working with its apps. If you have not installed any
 
 ## Related pages
 
-- [PR Review Theater]({{ site.baseurl }}{% link pr-review-theater.md %}): the review workflow shown in "A day with RobOS".
-- [Walkthroughs and proof of work]({{ site.baseurl }}{% link walkthroughs.md %}): recorded walkthroughs of RobOS features.
-- [Training]({{ site.baseurl }}{% link training.md %}): courses.
-- [Build on RobOS]({{ site.baseurl }}{% link build-on-robos.md %}): create your own apps, schemas and skills.
+<div class="rb-links">
+  <a class="rb-link" href="{{ site.baseurl }}{% link pr-review-theater.md %}">
+    <strong>PR Review Theater</strong>
+    <span>The review workflow shown in "A day with RobOS".</span>
+  </a>
+  <a class="rb-link" href="{{ site.baseurl }}{% link walkthroughs.md %}">
+    <strong>Walkthroughs and proof of work</strong>
+    <span>Recorded walkthroughs of RobOS features.</span>
+  </a>
+  <a class="rb-link" href="{{ site.baseurl }}{% link training.md %}">
+    <strong>Training</strong>
+    <span>Courses.</span>
+  </a>
+  <a class="rb-link" href="{{ site.baseurl }}{% link build-on-robos.md %}">
+    <strong>Build on RobOS</strong>
+    <span>Create your own apps, schemas and skills.</span>
+  </a>
+</div>
 
 ## Get help
 

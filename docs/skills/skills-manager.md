@@ -25,7 +25,7 @@ The app shows a grid of cards. Each card has a name, a description, a shell comm
 
 These are not the agent skills in `plugins/robos/skills/`. Those are described in [Skills]({{ site.baseurl }}{% link robos-skills.md %}) and the [Skills catalog]({{ site.baseurl }}{% link skills/skills-catalog.md %}).
 
-![The Skills Manager desktop and prompt surfaces on the left, a registry of built-in, custom and community pack skills in the middle, and shell execution on the right]({{ '/assets/images/skills-manager-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+![The Skills Manager desktop and prompt surfaces on the left, a registry of built-in, custom and community pack skills in the middle, and shell execution on the right]({{ '/assets/images/skills-manager-architecture.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. The text on this page says what is built today: the app copies commands and does not run them.*
 
 ## Start it
@@ -47,16 +47,16 @@ The package is also listed on its [app page]({{ '/apps/skills-manager/' | relati
 The **My Skills** tab lists built-in and custom skills together. Type in the search box to match a skill's name, description, tags or category. Click a category tab to narrow the grid. The counter at the top right shows `shown / total` while a filter is active.
 
 ![The My Skills tab with category tabs across the top and a grid of cards, each with a command and a Copy button]({{ '/assets/images/screenshots/skills-manager-overview.png' | relative_url }})
-{: .robos-zoomable-img }
+{: .robos-zoomable-img loading="lazy" }
 
 *Look at the category tabs under the search box and the Copy button at the bottom of each card.*
 
 ![The search box filtered to the word port, showing five matching cards including List Open Ports and What is Using a Port?]({{ '/assets/images/screenshots/skills-manager-search-parameter.png' | relative_url }})
-{: .robos-zoomable-img }
+{: .robos-zoomable-img loading="lazy" }
 
 *Look at the `$PORT` placeholder in the last card's command. Copy puts it on the clipboard unchanged.*
 
-![The My Skills tab filtered to the Git category, showing Recent Commits, Changed Files Status, Stash List, Branch Overview, Top Contributors, Find Large Git Objects and Cleanup Merged Branches cards]({{ '/assets/images/screenshots/skills-manager-git-category.png' | relative_url }}){: .robos-zoomable-img }
+![The My Skills tab filtered to the Git category, showing Recent Commits, Changed Files Status, Stash List, Branch Overview, Top Contributors, Find Large Git Objects and Cleanup Merged Branches cards]({{ '/assets/images/screenshots/skills-manager-git-category.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Look at the highlighted Git tab in the category row and the built-in badge on each card.*
 
 ### Built-in skills
@@ -86,7 +86,7 @@ The commands assume a Linux host with the usual tools (`ss`, `systemctl`, `journ
 3. Click **Save Skill**. **Cancel** closes the dialog without saving.
 
 ![The New Skill dialog with Name, Category, Description, Command / Script and Tags fields]({{ '/assets/images/screenshots/skills-manager-create-modal.png' | relative_url }})
-{: .robos-zoomable-img }
+{: .robos-zoomable-img loading="lazy" }
 
 *Look at the five fields and the Save Skill button.*
 
@@ -123,7 +123,7 @@ The **Skill Packs** tab (the page is headed Skill Pack Marketplace) offers three
 | SDLC Essentials | Built into the app | Prompts for code review, PR writing, testing, documentation and similar tasks |
 
 ![The Skill Packs tab with the Fabric Patterns, Awesome Cursor Rules and SDLC Essentials cards]({{ '/assets/images/screenshots/skills-manager-packs-marketplace.png' | relative_url }})
-{: .robos-zoomable-img }
+{: .robos-zoomable-img loading="lazy" }
 
 *Look at the Clone Repo button on the two GitHub packs. SDLC Essentials shows Always Available instead.*
 
@@ -135,7 +135,7 @@ To use a pack:
 4. **Back to Packs** returns to the pack list.
 
 ![The pattern browser for SDLC Essentials with a list of patterns on the left and the selected prompt text on the right]({{ '/assets/images/screenshots/skills-manager-pattern-browser.png' | relative_url }})
-{: .robos-zoomable-img }
+{: .robos-zoomable-img loading="lazy" }
 
 *Look at the Install and Preview buttons on each row and the prompt text in the right pane.*
 

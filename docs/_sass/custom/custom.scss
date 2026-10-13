@@ -215,10 +215,11 @@ body.robos-lightbox-open { overflow: hidden; }
 .robos-lightbox-hints { font-size: 0.75rem; opacity: 0.75; }
 
 // mermaid diagram card
-.robos-diagram-card { border: 1px solid var(--rb-line); border-radius: 6px; background: var(--rb-card); margin: 1.5rem 0; overflow: hidden; }
+.robos-diagram-card { border: 1px solid var(--rb-line); border-radius: 6px; background: var(--rb-card); margin: 1.5rem 0; overflow-x: auto; overflow-y: hidden; }
 .robos-zoomable-diagram { cursor: zoom-in; }
 .robos-zoomable-diagram:hover { border-color: var(--rb-hot); }
 .robos-diagram-header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 0.5rem 0.9rem; border-bottom: 1px solid var(--rb-line); background: var(--rb-tint); font: 500 0.68rem "Fira Code", monospace; text-transform: uppercase; letter-spacing: 0.08em; color: var(--rb-muted); }
 .robos-diagram-badge, .robos-diagram-hint { display: inline-flex; align-items: center; gap: 0.4rem; }
-.robos-diagram-card .mermaid, .robos-diagram-card svg { display: block; margin: 0 auto; padding: 1rem; max-width: 100%; height: auto; }
+.robos-diagram-card .mermaid, .robos-diagram-card > svg, .robos-diagram-card .mermaid > svg { display: block; margin: 0 auto; padding: 1rem; max-width: none; height: auto; }
+.robos-diagram-header svg { width: 14px; height: 14px; padding: 0; margin: 0; display: inline-block; }
 pre:has(.language-mermaid) { background: transparent; border: 0; padding: 0; }

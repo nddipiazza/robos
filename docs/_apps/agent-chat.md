@@ -22,7 +22,7 @@ Agent Chat is the chat front end for the RobOS app suite. Today it is a working 
 - The wrench button opens a list of twelve sample MCP tool names for apps such as DB Manager, Kube Studio and PR Review Theater.
 
 ![Agent Chat showing the sample Vaccination Tracking Feature session with tool cards and a formatted reply]({{ '/assets/images/screenshots/agent-chat.png' | relative_url }})
-{: .robos-zoomable-img }
+{: .robos-zoomable-img loading="lazy" }
 
 *The bundled sample session: tool cards above the reply, model and mode selectors on top, session list on the left.*
 

@@ -10,7 +10,7 @@ description: "Git Projects tracks repositories in ~/.config/robos/git-projects.j
 Git Projects is the repository list the rest of RobOS reads (Context Manager, App Wizard and others add to or read the same file).
 
 ![Git Projects with a tree of repositories under github.com and acme-org, and the header buttons Add Dev Group Repos, Add GitHub Org, AI Prompt and Add Project]({{ '/assets/images/screenshots/acme-petshop-step4-projects_open_frame.png' | relative_url }})
-{: .robos-zoomable-img }
+{: .robos-zoomable-img loading="lazy" }
 
 *The project tree grouped by host and organization, with the add buttons in the header. A green dot marks a repository that is cloned.*
 

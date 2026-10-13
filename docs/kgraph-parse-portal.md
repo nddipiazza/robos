@@ -35,7 +35,7 @@ The package is [`packages/kgraph-parse-portal`](https://github.com/nddipiazza/ro
 | Luxir | Pings an HTTP endpoint to choose a status label. | Scan and parse results are not sent to Luxir. See [Search and the CLI](#search-and-the-cli). |
 | Buildbarn | Fills in a Helm values template, probes a TCP port, and registers a cluster node. | The values are not checked against the chart. |
 
-![Infographic of the parse portal data pipeline in five stages: filesystem and web sources, MIME and archetype classifier, Tika gRPC streaming, Buildbarn RBE, and the Luxir search index with a SHACL gate]({{ '/assets/images/kgraph-parse-portal-pipeline.jpg' | relative_url }}){: .robos-zoomable-img }
+![Infographic of the parse portal data pipeline in five stages: filesystem and web sources, MIME and archetype classifier, Tika gRPC streaming, Buildbarn RBE, and the Luxir search index with a SHACL gate]({{ '/assets/images/kgraph-parse-portal-pipeline.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. The text on this page says what is built today: Tika and Luxir are only probed for a status label.*
 
 ## Run it
@@ -66,7 +66,7 @@ The header shows status badges: **Tika: Offline Engine** or **Tika gRPC: Live**,
 | **Hermetiq Buildbarn RBE** | **Generate Helm Values**, **Probe Cluster Health**, **Register in KGraph**. |
 | **Documentation & Living Specs** | Static text. |
 
-![The Luxir Search Explorer tab with the query Contract and the Contracts (OpenAPI/gRPC) facet selected, showing openapi.yaml and tika-service.proto]({{ '/assets/images/screenshots/07_step6_luxir_faceted_filter.png' | relative_url }}){: .robos-zoomable-img }
+![The Luxir Search Explorer tab with the query Contract and the Contracts (OpenAPI/gRPC) facet selected, showing openapi.yaml and tika-service.proto]({{ '/assets/images/screenshots/07_step6_luxir_faceted_filter.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Look at the badges at top right: Tika is in offline mode and Luxir is serving from its cache.*
 
 Two things in the window are not what they look like.
@@ -133,16 +133,16 @@ node packages/kgraph-parse-portal/bin/luxir-portal-cli.js curl "<query>"
 
 `search` and `status` try the portal on ports `19192` then `19193`. If neither answers, the CLI scans the portal's own package folder (depth 5) into a private index and answers from that, so the results are the portal's own files. `inspect` always uses that private index and matches a full id or a substring of an id or title. `curl` prints the equivalent `curl` line, then prints the query result without calling `curl`. For example, `search "tika" --type robos:Contract` returns `tika-service.proto`.
 
-![The Direct Luxir CLI tab after running search for Contract, listing openapi.yaml and tika-service.proto]({{ '/assets/images/screenshots/09_luxir_cli_search_direct.png' | relative_url }}){: .robos-zoomable-img }
+![The Direct Luxir CLI tab after running search for Contract, listing openapi.yaml and tika-service.proto]({{ '/assets/images/screenshots/09_luxir_cli_search_direct.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Look at the terminal output: the search returns two nodes with their ids, types, MIME types and roles.*
 
-![The Direct Luxir CLI tab after running inspect on openapi.yaml, showing the node as JSON with its evidence record]({{ '/assets/images/screenshots/10_luxir_cli_inspect_doc.png' | relative_url }}){: .robos-zoomable-img }
+![The Direct Luxir CLI tab after running inspect on openapi.yaml, showing the node as JSON with its evidence record]({{ '/assets/images/screenshots/10_luxir_cli_inspect_doc.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Look at the robos:evidence block in the JSON: repository, path, line, revision and sha256.*
 
-![The Direct Luxir CLI tab after running a curl search against the portal API, listing the same two nodes]({{ '/assets/images/screenshots/11_luxir_curl_rest_direct.png' | relative_url }}){: .robos-zoomable-img }
+![The Direct Luxir CLI tab after running a curl search against the portal API, listing the same two nodes]({{ '/assets/images/screenshots/11_luxir_curl_rest_direct.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Look at the curl line echoed in the terminal. As described above, the window does not run curl; it prints the line and then the same results as the search.*
 
-![The Direct Luxir CLI tab after running status, with Engine State hybrid-local-cache (Standby Fallback)]({{ '/assets/images/screenshots/12_luxir_cli_status_engine.png' | relative_url }}){: .robos-zoomable-img }
+![The Direct Luxir CLI tab after running status, with Engine State hybrid-local-cache (Standby Fallback)]({{ '/assets/images/screenshots/12_luxir_cli_status_engine.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Look at Engine State in the terminal: Standby Fallback means no Luxir server answered.*
 
 To reindex the whole graph into a Luxir server, or to search it, use `index` and `search --engine luxir` in `packages/robos-graph/bin/kgraph-cli.js`. Those commands are separate from the portal.

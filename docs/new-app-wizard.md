@@ -31,14 +31,14 @@ Click **Create New Project** in the header. The wizard writes to `packages/<slug
 
 The header also has a **Simple Mode** and **Advanced Mode** toggle. Advanced Mode adds three fields and a contract editor, described below.
 
-![Decision flowchart: a new app is scaffolded across archetypes, an existing codebase is imported with AI refinement, and both generate catalog-info.yaml and dev-setup.sh and register in packages.yaml]({{ '/assets/images/app-flow-scaffolding-ingestion.jpg' | relative_url }}){: .robos-zoomable-img }
+![Decision flowchart: a new app is scaffolded across archetypes, an existing codebase is imported with AI refinement, and both generate catalog-info.yaml and dev-setup.sh and register in packages.yaml]({{ '/assets/images/app-flow-scaffolding-ingestion.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. The text on this page says what is built today.*
 
 ## The four steps
 
 The sidebar shows the steps: What to Build, Project Basics, Features & Data, Review & Create.
 
-![Four-column flow from project archetype presets through plain-English configuration and a scaffolding engine to registration in the knowledge graph, Backstage catalog, packages.yaml and living documentation]({{ '/assets/images/app-wizard/create_project_architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+![Four-column flow from project archetype presets through plain-English configuration and a scaffolding engine to registration in the knowledge graph, Backstage catalog, packages.yaml and living documentation]({{ '/assets/images/app-wizard/create_project_architecture.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. The text on this page says what is built today.*
 
 | Step | What you do |

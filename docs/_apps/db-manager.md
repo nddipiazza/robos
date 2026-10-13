@@ -20,7 +20,7 @@ No driver is loaded and no connection is opened. The tables `pets`, `vaccination
 The **Apply Filter**, **Refresh**, **Export CSV**, **Explain Plan** and **+ Connect DB** buttons are in the layout but have no handler yet, so connections cannot be added from the window.
 
 ![Relational DB Manager with the connection tree on the left and the pets table data on the right]({{ '/assets/images/screenshots/dev-tools-table_data_grid_frame.png' | relative_url }})
-{: .robos-zoomable-img }
+{: .robos-zoomable-img loading="lazy" }
 
 *The Data tab for the sample `pets` table. The same three sample tables appear under every connection.*
 

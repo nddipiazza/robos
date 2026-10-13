@@ -20,7 +20,7 @@ A turn-based dungeon crawler in Godot 4.3, modelled on the HeroQuest board game,
 {:toc}
 </details>
 
-![A dungeon board with rooms, doors and torches]({{ '/assets/images/tabletop-rpg/fan_dungeon_28x21.jpg' | relative_url }}){: .robos-zoomable-img }
+![A dungeon board with rooms, doors and torches]({{ '/assets/images/tabletop-rpg/fan_dungeon_28x21.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 
 *The Fan Dungeon board image, the 28x21 map used by Quest 1. Rooms are the walled areas; the open space between them is corridor.*
 
@@ -48,10 +48,10 @@ The game loads a cartridge, a single `.cartridge.json` file that holds heroes, m
 | `heroquest-the-trial` | Quest 1: The Trial. Quest 2: The Rescue of Sir Ragnar. Quest 3: Lair of the Orc Warlord. | Quest 1 uses the 28x21 Fan Dungeon, quest 2 the 26x19 classic board, quest 3 the 26x19 First Light caverns. |
 | `heroquest-fortress-fire-king` | Quest 4: The Fortress of the Fire King. | One 26x19 map. Its heroes carry their own gear and spells, and the file defines 28 monsters. |
 
-![The classic 26x19 HeroQuest board with rooms, corridors and torches]({{ "/assets/images/tabletop-rpg/heroquest_board.jpg" | relative_url }}){: .robos-zoomable-img }
+![The classic 26x19 HeroQuest board with rooms, corridors and torches]({{ "/assets/images/tabletop-rpg/heroquest_board.jpg" | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *The classic board image, the 26x19 map used by Quest 2. The cartridge draws its grid and walls over this picture.*
 
-![The First Light cavern board, a 26x19 grid over cave chambers with a rope bridge]({{ "/assets/images/tabletop-rpg/first_light_caverns.jpg" | relative_url }}){: .robos-zoomable-img }
+![The First Light cavern board, a 26x19 grid over cave chambers with a rope bridge]({{ "/assets/images/tabletop-rpg/first_light_caverns.jpg" | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *The First Light caverns board image, the 26x19 map used by Quest 3. Look at the lettered rows and numbered columns that the grid follows.*
 
 The rules in code:
@@ -80,7 +80,7 @@ The four heroes in the Quest 1 cartridge:
 | Cartridge editor | [RobOS Tabletop Studio]({{ '/apps/robos-tabletop/' | relative_url }}) | Electron app for editing cartridge data. |
 | Map tool | [Tabletop Blockmap Creator]({{ '/apps/tabletop-blockmap-creator/' | relative_url }}) | Electron app for calibrating a grid over a dungeon image and drawing corridors and rooms. |
 
-![RobOS gaming subsystem: knowledge graph packages, the shared gaming library and the game engines]({{ "/assets/images/architecture/robos-gaming-architecture.jpg" | relative_url }}){: .robos-zoomable-img }
+![RobOS gaming subsystem: knowledge graph packages, the shared gaming library and the game engines]({{ "/assets/images/architecture/robos-gaming-architecture.jpg" | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. The text on this page says what is built today: the shared library `packages/robos-gaming` is used by the tabletop tooling, and `games/crpg-realm` does not import it.*
 
 ```mermaid

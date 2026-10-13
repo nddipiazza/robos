@@ -24,7 +24,7 @@ description: "Realm of Heroes: a party-based, real-time-with-pause RPG on Godot 
 {:toc}
 </details>
 
-![Village square with the party HUD, action toolbar and activity log]({{ '/assets/images/crpg-realm/village_square_overview.png' | relative_url }}){: .robos-zoomable-img }
+![Village square with the party HUD, action toolbar and activity log]({{ '/assets/images/crpg-realm/village_square_overview.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *A frame from a recorded test run in the village square. The activity log (bottom left) holds a numbered dialogue. The banner and the input stream at the top are test overlays.*
 
 ## Pages
@@ -84,17 +84,17 @@ The door-by-door detail is on the [scenes, doors and maps]({{ '/projects/crpg-re
 
 Real time with pause. Space freezes the action; you can then queue moves with Shift-click, change the leader or formation, or pick a spell, and unpause. Keys and buttons are on the [controls page]({{ '/projects/crpg-realm/controls.html' | relative_url }}).
 
-![The party HUD during a conversation with Elora]({{ '/assets/images/crpg-realm/character_status_sheet.png' | relative_url }}){: .robos-zoomable-img }
+![The party HUD during a conversation with Elora]({{ '/assets/images/crpg-realm/character_status_sheet.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Look at the edges: the portrait cards at top right, the action toolbar and the Sheet (C) button along the bottom, and the quest line above the toolbar.*
 
 The activity log at the bottom of the screen carries combat rolls, dialogue and journal updates. It has three heights (124, 240 and 420 px; Tab or L cycles them). Dialogue replies appear as numbered lines in the log, and you pick one with the number key or a click.
 
-![Dialogue in the activity log]({{ '/assets/images/crpg-realm/dozens_npc_dialogue.png' | relative_url }}){: .robos-zoomable-img }
+![Dialogue in the activity log]({{ '/assets/images/crpg-realm/dozens_npc_dialogue.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *A conversation with Guildmaster Aldous in the village square: the numbered replies are lines in the log, with no popup.*
 
 Combat, in the hand-built scenes, uses d20 attack rolls against AC with advantage and disadvantage, saving throws, and a threat table for enemy targeting. [Combat, party and spells]({{ '/projects/crpg-realm/create-your-own-game/combat-party-and-spells.html' | relative_url }}) covers the formulas, the six formations and the spell code.
 
-![Tactical combat]({{ '/assets/images/crpg-realm/combat_battlefield.png' | relative_url }}){: .robos-zoomable-img }
+![Tactical combat]({{ '/assets/images/crpg-realm/combat_battlefield.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Real-time-with-pause combat in the tactical arena. The log at the bottom shows the attack rolls and the pack alert.*
 
 ## How it is tested
@@ -116,7 +116,7 @@ python3 run_cucumber_tests.py --engine --backend
 
 In human mode each scenario opens with a splash card showing its name, so the video explains itself.
 
-![Scenario splash banner]({{ '/assets/images/crpg-realm/splash_screen.png' | relative_url }}){: .robos-zoomable-img }
+![Scenario splash banner]({{ '/assets/images/crpg-realm/splash_screen.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *The splash card at the start of a recorded scenario, drawn over Character Select. The step banner at top left and the input stream at top right are test overlays.*
 
 [CRPG testing and Infinity AI]({{ '/projects/crpg-realm/infinity-ai-agent-harness.html' | relative_url }}) explains the layers and how to write a scenario.

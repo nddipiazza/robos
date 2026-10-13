@@ -59,13 +59,13 @@ The prompt box is not a language model. **Deep Thinking AI Extract & Queue Targe
 
 Set **Company / Organization**, **Company Slug** and **Default Assigned Team** before you continue. The defaults are Acme Global and `acme-global`, and they name the nodes the importer creates.
 
-![The What to Import step with queued Confluence, GitHub, repository, database and Kafka targets]({{ '/assets/images/screenshots/import-app-source-select_frame.png' | relative_url }}){: .robos-zoomable-img }
+![The What to Import step with queued Confluence, GitHub, repository, database and Kafka targets]({{ '/assets/images/screenshots/import-app-source-select_frame.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Look at the colored badges: each queued target shows the type the wizard chose. Some button labels have changed since this capture.*
 
-![The What to Import step with the Deep Thinking AI Agent box filled with GitHub repositories, a local path, a PostgreSQL URI, a Confluence space and a Kafka broker]({{ '/assets/images/screenshots/app-flow-kgraph-ai-agent-prompt.png' | relative_url }}){: .robos-zoomable-img }
+![The What to Import step with the Deep Thinking AI Agent box filled with GitHub repositories, a local path, a PostgreSQL URI, a Confluence space and a Kafka broker]({{ '/assets/images/screenshots/app-flow-kgraph-ai-agent-prompt.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Look at the pasted text in the prompt box: the regular expressions described above pull the targets out of it. The header buttons are now labeled Create New Project and Import Existing Code.*
 
-![The same step after extraction, with eight queued targets shown as Git Repo, Confluence and Local Path badges]({{ '/assets/images/screenshots/app-flow-kgraph-queued-targets.png' | relative_url }}){: .robos-zoomable-img }
+![The same step after extraction, with eight queued targets shown as Git Repo, Confluence and Local Path badges]({{ '/assets/images/screenshots/app-flow-kgraph-queued-targets.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Look at the queue and its count of eight items, and the confirmation line under the prompt box.*
 
 ## Step 2: Deep Inspection
@@ -81,10 +81,10 @@ Step 2 then shows:
 
 If the queue held no local directory and the importer created no Microservice, Desktop Application or Front End Application node, the summary shows a placeholder record named Payment Gateway API. Correct it or go back.
 
-![The inspection step showing graph entity counts, package pills and the detected archetype of a local folder]({{ '/assets/images/screenshots/import-app-deep-inspection_frame.png' | relative_url }}){: .robos-zoomable-img }
+![The inspection step showing graph entity counts, package pills and the detected archetype of a local folder]({{ '/assets/images/screenshots/import-app-deep-inspection_frame.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Look at the lower box: the archetype and language come from the folder scan described below.*
 
-![The inspection step for a queue of repositories, with entity counts, a package distribution row and a Deep Thinking AI Refine box]({{ '/assets/images/screenshots/app-flow-kgraph-topology-inspection.png' | relative_url }}){: .robos-zoomable-img }
+![The inspection step for a queue of repositories, with entity counts, a package distribution row and a Deep Thinking AI Refine box]({{ '/assets/images/screenshots/app-flow-kgraph-topology-inspection.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Look at the entity counts and the package pills. The green conformance banner at the top is fixed text.*
 
 ### How the local folder is scanned
@@ -113,7 +113,7 @@ It also flags `openapi.yaml`, `openapi.json` or `swagger.json` (shown as "OpenAP
 
 **Deep Thinking AI Refine** applies keyword rules in `packages/app-wizard/main.js`; it does not call a model. It changes the archetype when the text contains phrases such as "mobile game", "front end", "cli", "desktop", "microservice", "pipeline" or "library". It reads a name after "rename to", "name", "named", "named as" or "slug", a stack when the text says "runtime", "technology", "language", "stack" or "framework" followed by a value (or mentions Go, Python, Rust or Java), and a team if its id or name appears in the text. Matching is by substring, so a word like "google" also counts as Go. The message under the box lists what changed. You can also edit the fields directly.
 
-![The inspection step scrolled to the AI prompt refinement box below the detected archetype and package details]({{ '/assets/images/screenshots/import-app-ai-refinement_frame.png' | relative_url }}){: .robos-zoomable-img }
+![The inspection step scrolled to the AI prompt refinement box below the detected archetype and package details]({{ '/assets/images/screenshots/import-app-ai-refinement_frame.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Look at the refinement box under the detected details. In current builds its button reads Deep Thinking AI Refine.*
 
 ## Step 3: Catalog & Ingest
@@ -129,10 +129,10 @@ It then appends an entry to `.robos/packages.yaml` if the URN is not already the
 
 The console box prints "Registered in .robos/packages.yaml" and "Added to ~/.config/robos/git-projects.json" whether or not those writes succeeded. Git Projects stores `{ "projects": [...] }` in that file and the wizard treats it as a bare array, so the entry is skipped when Git Projects has created the file and is not listed by Git Projects otherwise. Add the repository in [Git Projects]({{ '/apps/git-projects/' | relative_url }}) yourself.
 
-![The Catalog and Ingest step after Complete Ingestion and Map, with a summary card and a console box listing the generated files and registrations]({{ '/assets/images/screenshots/import-app-ingest-complete_frame.png' | relative_url }}){: .robos-zoomable-img }
+![The Catalog and Ingest step after Complete Ingestion and Map, with a summary card and a console box listing the generated files and registrations]({{ '/assets/images/screenshots/import-app-ingest-complete_frame.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Look at the console box for a local folder: it lists the catalog and dev-setup paths. Its success lines print whether or not each write succeeded.*
 
-![The same step when no local folder was inspected, with a console box that has no catalog or dev-setup file lines]({{ '/assets/images/screenshots/app-flow-kgraph-ingest-complete.png' | relative_url }}){: .robos-zoomable-img }
+![The same step when no local folder was inspected, with a console box that has no catalog or dev-setup file lines]({{ '/assets/images/screenshots/app-flow-kgraph-ingest-complete.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Look at the console box: there are no file lines because no local folder was inspected.*
 
 If the inspected source is not a local path (for example a URL), step 3 writes nothing, although the console still prints "Synthesized Backstage catalog metadata". Only the graph nodes from step 2 exist.
@@ -157,5 +157,5 @@ The wizard's tests are `packages/robos-test/tests/app-wizard/import-mode-e2e.tes
 
 ## Diagrams
 
-![Three-column diagram of enterprise identity and directory providers feeding a RobOS directory sync adapter, user profiles, group manager and a team roster in teams.yaml, with downstream task routing, secrets and cluster mapping]({{ '/assets/images/enterprise-migration-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+![Three-column diagram of enterprise identity and directory providers feeding a RobOS directory sync adapter, user profiles, group manager and a team roster in teams.yaml, with downstream task routing, secrets and cluster mapping]({{ '/assets/images/enterprise-migration-architecture.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. It shows where team ownership (`.robos/teams.yaml`) could come from. The text on this page says what is built today.*

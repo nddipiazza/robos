@@ -22,7 +22,7 @@ Every key and mouse input the game handles, taken from the input handlers in `ga
 
 The game is real-time with pause. Press Space to freeze the action, give orders, then press Space again. These controls apply to the hand-built scenes (`Homestead`, `VillageSquare`, `WhisperingForest`, `AncientCatacombs`, `GarrisonKeep`, `TacticalBattle`). Cartridge maps use a smaller set, listed [below](#cartridge-maps).
 
-![Village square with the party HUD, action toolbar and activity log]({{ '/assets/images/crpg-realm/village_square_overview.png' | relative_url }}){: .robos-zoomable-img }
+![Village square with the party HUD, action toolbar and activity log]({{ '/assets/images/crpg-realm/village_square_overview.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Look at the bottom edge: the toolbar (Attack, Move, Guard, Spell, 2nd Wind, Heal, Anti) and the Sheet (C), OPTIONS, ITEMS and PAUSE buttons. The banner and the input stream at the top are test overlays that you will not see in normal play.*
 
 ## Mouse

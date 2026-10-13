@@ -11,7 +11,7 @@ related:
 
 The eLearning Hub plays courses defined as `robos:ELearning` nodes in the knowledge graph, read from `.robos/kgraphs/learning/package.jsonld`. It uses the graph store from [Knowledge Graph Explorer]({{ '/apps/robos-graph/' | relative_url }}), so it needs that package next to it. The [PR Review Theater]({{ site.baseurl }}{% link pr-review-theater.md %}) uses the same courses for its knowledge-check stage.
 
-![RobOS eLearning Hub player showing a course with its module list]({{ '/assets/images/screenshots/robos-elearning-hub-player.png' | relative_url }}){: .robos-zoomable-img }
+![RobOS eLearning Hub player showing a course with its module list]({{ '/assets/images/screenshots/robos-elearning-hub-player.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 
 *The player: curriculum modules on the left, the selected module with its lab steps and quizzes on the right.*
 

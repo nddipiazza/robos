@@ -134,7 +134,7 @@ graph TD
 
 A workspace is a separate graph that you change through reviewed proposals. Nothing is written until `apply`, and `apply` re-validates.
 
-![Two graphs side by side: the production graph, and a feature-branch proposal where a modified billing service flags a breaking change for the order service and a schema deprecation for the notification worker]({{ '/assets/images/training/architects-blast-radius-diff.jpg' | relative_url }}){: .robos-zoomable-img }
+![Two graphs side by side: the production graph, and a feature-branch proposal where a modified billing service flags a breaking change for the order service and a schema deprecation for the notification worker]({{ '/assets/images/training/architects-blast-radius-diff.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs, showing a graph before and after a proposed change. The text on this page says what is built today: `propose` reports the `delta` and any validation errors.*
 
 1. Create the workspace:

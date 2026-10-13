@@ -19,7 +19,7 @@ The contract list, operations, "0 errors" Spectral result, "14/14" Pact result a
 - An **AI Contract Authoring & Governance Assistant** prompt box.
 
 ![Contract Studio with the contract registry on the left and the governance gates for petstore-api.openapi.yaml on the right]({{ '/assets/images/screenshots/acme-petshop-step3-studio_open_frame.png' | relative_url }})
-{: .robos-zoomable-img }
+{: .robos-zoomable-img loading="lazy" }
 
 *The registry (left) and the Spectral, Pact and Prism gates for the first sample contract (right).*
 

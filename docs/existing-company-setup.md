@@ -36,7 +36,7 @@ RobOS has no shared company service and does not read your identity provider. Se
 
 Groups and people are plain JSON files. The apps do not sync them between machines. To give a colleague a group, copy its file into their `~/.config/robos/groups/` folder.
 
-![Identity providers and a directory sync adapter feeding people, groups and a team roster, which in turn feed task trackers, secrets and Kubernetes]({{ '/assets/images/enterprise-migration-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+![Identity providers and a directory sync adapter feeding people, groups and a team roster, which in turn feed task trackers, secrets and Kubernetes]({{ '/assets/images/enterprise-migration-architecture.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. The people files, group files and team roster in the middle exist; the directory sync adapter and the automation on the right do not. The text on this page says what is built today.*
 
 ## Step 1: Set up each developer's machine
@@ -67,7 +67,7 @@ In Security Setup, **Reset** deletes the GPG key your password store uses and re
 **Git Login Manager** checks four things: `gh` is logged in, an SSH key exists in `~/.ssh` (`id_ed25519`, `id_ecdsa` or `id_rsa`), `ssh -T git@github.com` succeeds, and the global git identity is set. Each failing check has a button next to it. The background check runs every five minutes, and **Check now** runs it at once. The window text says 60 seconds, but that countdown is only cosmetic.
 
 ![Git Login Manager showing four failing checks: gh CLI authenticated, SSH key exists, SSH to github.com, and git identity configured, each with an action button]({{ '/assets/images/screenshots/git-login-manager.png' | relative_url }})
-{: .robos-zoomable-img }
+{: .robos-zoomable-img loading="lazy" }
 
 *Look at the four checks and the button on each row.*
 
@@ -130,7 +130,7 @@ Add `--dry-run` to the first command to print coverage and validation without wr
 Open **RobOS Task Servers**, click the plus button and pick a type: Gitea, Jira / Atlassian, GitHub Issues, GitLab Issues, Linear or Azure DevOps.
 
 ![Task Servers with an empty server list and a plus button]({{ '/assets/images/screenshots/task-servers.png' | relative_url }})
-{: .robos-zoomable-img }
+{: .robos-zoomable-img loading="lazy" }
 
 *Look at the plus button at the top of the list, which opens the type menu.*
 
@@ -170,11 +170,11 @@ To keep a directory of people on each machine, use **RobOS People Directory**. I
 
 Group Manager has two buttons under the identity badge: **Sync Directory** and **Bootstrap**. Sync Directory opens a form with a name, email, GitHub username, organization, a provider drop-down (Okta, Microsoft Entra, LDAP / Active Directory, GitHub Enterprise Teams) and a team.
 
-![Developer onboarding flow from an enterprise identity provider through a single directory sync click to signing keys, team ownership, knowledge graph context and enterprise tool access]({{ '/assets/images/directory-sync-workflow.jpg' | relative_url }}){: .robos-zoomable-img }
+![Developer onboarding flow from an enterprise identity provider through a single directory sync click to signing keys, team ownership, knowledge graph context and enterprise tool access]({{ '/assets/images/directory-sync-workflow.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. The button does not query a directory or create signing keys today; the text on this page says what it writes.*
 
 ![Group Manager showing the Enterprise Directory Sync and Identity Setup form with five status lines below the fields]({{ '/assets/images/screenshots/existing-company-teams-mapped_frame.png' | relative_url }})
-{: .robos-zoomable-img }
+{: .robos-zoomable-img loading="lazy" }
 
 *Look at the status lines under the form. The app prints them itself; no directory was queried.*
 

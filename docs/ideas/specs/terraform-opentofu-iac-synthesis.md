@@ -22,7 +22,7 @@ Proposal, not built. No cloud resource types, HCL generator or IaC app exists in
 - Cloud credentials and remote state settings read from the `pass` store, not from files.
 - The spec leaves open whether this lives in [Kube Studio]({{ '/apps/kube-studio/' | relative_url }}) or in a new `packages/iac-studio`.
 
-![Declarative GitOps pipeline from a topology canvas through a Git store and a synthesis engine to cluster deployment]({{ '/assets/images/gitops-synthesis-pipeline.jpg' | relative_url }}){: .robos-zoomable-img }
+![Declarative GitOps pipeline from a topology canvas through a Git store and a synthesis engine to cluster deployment]({{ '/assets/images/gitops-synthesis-pipeline.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. The earlier spec reused this Kubernetes synthesis pipeline to illustrate the proposed OpenTofu generator; it does not show Terraform. The text on this page says what is built today.*
 
 ## What exists today

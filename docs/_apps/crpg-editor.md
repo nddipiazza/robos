@@ -10,7 +10,7 @@ description: "The cRPG Editor reads and writes the JSON-LD content files of game
 The cRPG Editor is the authoring tool for the `robos-crpg` game ("Realm of Heroes", in `games/crpg-realm`). Each campaign, character, map and so on is one JSON-LD file in that folder, so the files can be committed and reviewed like code. The game itself and its test suite are described in [Tactical cRPG & Infinity AI Engine]({{ '/projects/crpg-realm/' | relative_url }}); a worked example is the [Campaign Editor Tutorial]({{ '/projects/crpg-realm/campaign-editor-tutorial.html' | relative_url }}).
 
 ![The cRPG Editor Campaign tab showing campaign metadata, the list of included maps and the list of included characters]({{ '/assets/images/screenshots/crpg-editor-overview.png' | relative_url }})
-{: .robos-zoomable-img }
+{: .robos-zoomable-img loading="lazy" }
 
 *The Campaign tab: metadata and starting scene at the top, then the maps and characters the campaign includes. This capture is older and shows fewer tabs than the current app.*
 

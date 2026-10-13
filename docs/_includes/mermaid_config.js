@@ -17,5 +17,8 @@
   var vars = dark ? night : light;
   vars.background = 'transparent';
   vars.fontFamily = 'Plus Jakarta Sans, system-ui, sans-serif';
-  return { startOnLoad: false, theme: 'base', securityLevel: 'loose', themeVariables: vars };
+  var natural = { useMaxWidth: false };
+  return { startOnLoad: false, theme: 'base', securityLevel: 'loose', themeVariables: vars,
+    flowchart: natural, sequence: natural, journey: natural, gantt: natural, state: natural,
+    class: natural, er: natural, timeline: natural, mindmap: natural, requirement: natural };
 })()

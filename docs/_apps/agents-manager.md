@@ -32,7 +32,7 @@ Provider settings are the only view for the last two entries, so the points belo
 - Under **Configured MCP Servers**, **+ Add MCP Server** opens the **Configure MCP Server** form (server id, display name, transport, command or URL, arguments, environment variables, authentication type). **Authenticate & Verify** marks a server authenticated and saves the token you enter. The lists are kept per provider in `~/.config/robos/agent-mcp-servers.json`, and the token is written there as plain JSON.
 
 ![Agents Manager showing the Claude Code provider page with its list of configured MCP servers]({{ '/assets/images/screenshots/agent-mcp-antigravity_servers_frame.png' | relative_url }})
-{: .robos-zoomable-img }
+{: .robos-zoomable-img loading="lazy" }
 
 *An older capture of a provider page: CLI status at the top, then each MCP server with its Edit, Remove and Authenticate buttons. The current app opens this view from the gear button.*
 

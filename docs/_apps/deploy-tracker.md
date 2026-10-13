@@ -28,7 +28,7 @@ Pick **Last 7 days**, **Last 30 days** or **Last 90 days**, and optionally one e
 | **Recent Releases**, **Recently Merged (Changesets)** | Releases and merged PRs | |
 
 ![Deploy Tracker showing the five summary cards, a deployment timeline with production and staging rows, and recent releases]({{ '/assets/images/screenshots/acme-petshop-step7-kpis_frame.png' | relative_url }})
-{: .robos-zoomable-img }
+{: .robos-zoomable-img loading="lazy" }
 
 *The summary cards across the top, then the timeline and the release and merged-PR lists. This capture uses sample repository data.*
 

@@ -38,12 +38,12 @@ The three pages:
 2. [Items, traps and mods]({{ '/projects/crpg-realm/create-your-own-game/items-traps-and-mods.html' | relative_url }}): `items.json`, ground items and chests, `Trap`, and the mod loader.
 3. [Combat, party and spells]({{ '/projects/crpg-realm/create-your-own-game/combat-party-and-spells.html' | relative_url }}): attack math, the Malakor fight, formations, enemy threat and the spell code.
 
-![The five steps of building a game scene by scene, from data modeling to automated verification]({{ '/assets/images/crpg-realm/crpg_complete_game_creation_pipeline.jpg' | relative_url }}){: .robos-zoomable-img }
+![The five steps of building a game scene by scene, from data modeling to automated verification]({{ '/assets/images/crpg-realm/crpg_complete_game_creation_pipeline.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. The text on this page says what is built today. The hand-built scenes read their data from `data/v1` through `DataStore`, and there is no turn-order engine in them.*
 
 ## Where things live
 
-![Layers of the Godot project: the scene tree, the systems layer and the verification layer]({{ '/assets/images/crpg-realm/crpg_game_builder_architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+![Layers of the Godot project: the scene tree, the systems layer and the verification layer]({{ '/assets/images/crpg-realm/crpg_game_builder_architecture.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. The text on this page says what is built today: the tests are Python `behave` features that drive the game over HTTP, not a GDScript test framework.*
 
 | Path in `games/crpg-realm/` | What it holds |

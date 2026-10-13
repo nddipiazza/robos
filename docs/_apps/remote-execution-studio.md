@@ -16,7 +16,7 @@ Remote Execution Studio helps you write configuration for a remote build cluster
 - **Provider Configurations.** Generates JSON for the Buildbarn services (`bb-storage`, `bb-scheduler`, `bb-worker`, `bb-runner`, `bb-browser`) or for NativeLink, with a **Copy JSON** button. Check the output against your Buildbarn or NativeLink version before deploying.
 - **Knowledge Graph & SHACL.** Shows the cluster as a JSON-LD node (`robos:RemoteExecutionCluster`).
 
-![Remote Execution Studio on the Build Clients tab, showing a generated .bazelrc for the sample Buildbarn cluster]({{ '/assets/images/screenshots/re-studio-bazel_frame.png' | relative_url }}){: .robos-zoomable-img }
+![Remote Execution Studio on the Build Clients tab, showing a generated .bazelrc for the sample Buildbarn cluster]({{ '/assets/images/screenshots/re-studio-bazel_frame.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 
 *The Build Clients tab: clusters and build systems on the left, the generated `.bazelrc` and usage notes on the right.*
 

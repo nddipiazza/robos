@@ -14,19 +14,53 @@ Start here if you are a tech lead or evaluator deciding whether RobOS fits your 
 
 ## Evaluate
 
-- [Why RobOS]({{ site.baseurl }}{% link why-robos.md %}) states the problem, the approach, what exists in the repository, and the limits.
-- [What sets RobOS apart]({{ site.baseurl }}{% link big-wins.md %}) covers the main RobOS features in more depth.
-- [PR Review Theater]({{ site.baseurl }}{% link pr-review-theater.md %}) describes the staged pull request review.
-- [Review & governance]({{ site.baseurl }}{% link agent-review-development.md %}) is the section on reviewing agent work.
-- [Walkthroughs and proof of work]({{ site.baseurl }}{% link walkthroughs.md %}) collects recorded walkthroughs of RobOS apps.
-- [Architecture]({{ site.baseurl }}{% link architecture.md %}) shows how the apps and libraries fit together.
+<div class="rb-links">
+  <a class="rb-link" href="{{ site.baseurl }}{% link why-robos.md %}">
+    <strong>Why RobOS</strong>
+    <span>The problem, the approach, what exists in the repository, and the limits.</span>
+  </a>
+  <a class="rb-link" href="{{ site.baseurl }}{% link big-wins.md %}">
+    <strong>What sets RobOS apart</strong>
+    <span>The main RobOS features in more depth.</span>
+  </a>
+  <a class="rb-link" href="{{ site.baseurl }}{% link pr-review-theater.md %}">
+    <strong>PR Review Theater</strong>
+    <span>The staged pull request review.</span>
+  </a>
+  <a class="rb-link" href="{{ site.baseurl }}{% link agent-review-development.md %}">
+    <strong>Review & governance</strong>
+    <span>The section on reviewing agent work.</span>
+  </a>
+  <a class="rb-link" href="{{ site.baseurl }}{% link walkthroughs.md %}">
+    <strong>Walkthroughs and proof of work</strong>
+    <span>Recorded walkthroughs of RobOS apps.</span>
+  </a>
+  <a class="rb-link" href="{{ site.baseurl }}{% link architecture.md %}">
+    <strong>Architecture</strong>
+    <span>How the apps and libraries fit together.</span>
+  </a>
+</div>
 
 ## Set up a team
 
-- [Company setup]({{ site.baseurl }}{% link existing-company-setup.md %}) is for a team with existing repositories and a task tracker.
-- [New company]({{ '/new-company-setup.html' | relative_url }}) is for a team starting from nothing.
-- [Personas]({{ site.baseurl }}{% link personas.md %}) lists which apps to open first for four common jobs.
-- [Agent tiers]({{ site.baseurl }}{% link agent-tiers.md %}) explains which agent CLIs RobOS can run and which model settings do something today.
+<div class="rb-links">
+  <a class="rb-link" href="{{ site.baseurl }}{% link existing-company-setup.md %}">
+    <strong>Company setup</strong>
+    <span>For a team with existing repositories and a task tracker.</span>
+  </a>
+  <a class="rb-link" href="{{ '/new-company-setup.html' | relative_url }}">
+    <strong>New company</strong>
+    <span>For a team starting from nothing.</span>
+  </a>
+  <a class="rb-link" href="{{ site.baseurl }}{% link personas.md %}">
+    <strong>Personas</strong>
+    <span>Which apps to open first for four common jobs.</span>
+  </a>
+  <a class="rb-link" href="{{ site.baseurl }}{% link agent-tiers.md %}">
+    <strong>Agent tiers</strong>
+    <span>Which agent CLIs RobOS can run and which model settings do something today.</span>
+  </a>
+</div>
 
 ## Check before you adopt
 

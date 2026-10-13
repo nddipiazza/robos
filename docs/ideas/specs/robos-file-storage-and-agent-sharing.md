@@ -22,7 +22,7 @@ Proposal, not built. There is no `packages/file-storage` and no file storage MCP
 
 The Drive and OneDrive providers depend on the OAuth work in [linked accounts and guided OAuth]({{ '/ideas/specs/robos-people-groups-cloud-identity.html' | relative_url }}).
 
-![A file storage app and MCP server over a storage core with S3, Google Cloud Storage, Azure Blob and Drive adapters, a people directory and the password store]({{ '/assets/images/file-storage-sharing-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+![A file storage app and MCP server over a storage core with S3, Google Cloud Storage, Azure Blob and Drive adapters, a people directory and the password store]({{ '/assets/images/file-storage-sharing-architecture.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. The text on this page says what is built today.*
 
 ## What exists today

@@ -23,7 +23,7 @@ PR Review Theater is the review window of the Agent Code Review Platform app. It
 
 The app is [`packages/pr-review`](https://github.com/nddipiazza/robos/tree/main/packages/pr-review). It appears in the launcher as Agent Code Review Platform, and its window title is "RobOS Agent-Generated Code Review Platform". The app page is [Agent Code Review]({{ '/apps/pr-review/' | relative_url }}).
 
-![A finished agent task triggers a toast and opens the reviewer app, which offers a teaching path and a live demonstration path]({{ '/assets/images/elearning-reviewer-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+![A finished agent task triggers a toast and opens the reviewer app, which offers a teaching path and a live demonstration path]({{ '/assets/images/elearning-reviewer-architecture.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. The text on this page says what is built today.*
 
 A review opens in one of two modes, and the mode decides which tabs you get.
@@ -97,7 +97,7 @@ Reviewer mode shows the PR description (read-only), the real diff from `gh pr di
 
 **Review settings** opens the team policy editor: enable or disable each stage, mark a stage as a Required Gate, set the quiz pass mark (50% to 100%), the default diff mode and the preferred IDE. The policy is stored as `robos:prReviewTheaterConfig` on the team's `robos:Team` node in the Knowledge Graph. It is not available in a local review.
 
-![A team policy node in the knowledge graph controlling a chain of review stages that ends in a sign-off]({{ '/assets/images/pr-review-theater-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+![A team policy node in the knowledge graph controlling a chain of review stages that ends in a sign-off]({{ '/assets/images/pr-review-theater-architecture.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs, drawn for the earlier seven-stage design. The text on this page says what is built today: the stages are now tabs, and approving does not merge.*
 
 The sequence below shows how a reviewer-mode review runs today.

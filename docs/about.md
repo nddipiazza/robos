@@ -21,14 +21,14 @@ The repository also contains:
 - An installer app and scripts that build a RobOS appliance image, which you can install from a USB drive or run in QEMU. See [Get started]({{ site.baseurl }}{% link getting-started.md %}).
 - Instruction files for coding agents: `AGENTS.md`, `CLAUDE.md`, `GEMINI.md` and `ANTIGRAVITY.md`, and RobOS skills under `plugins/robos/skills/`.
 
-![Four AI coding assistants contributing to RobOS through shared protocols, skills and validation gates]({{ '/assets/images/multi-agent-co-creation.jpg' | relative_url }}){: .robos-zoomable-img }
+![Four AI coding assistants contributing to RobOS through shared protocols, skills and validation gates]({{ '/assets/images/multi-agent-co-creation.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. The text on this page says what is built today.*
 
 ## The name
 
 RobOS is pronounced "row-bose", rhyming with "rose". [RobOS Voice]({{ site.baseurl }}{% link voice-prompt.md %}) rewrites "RobOS" to "Row Bose" before it speaks. The project README says the name comes from the robot Robo in the game Chrono Trigger. Chrono Trigger and Robo belong to Square Enix. RobOS is an independent project and is not affiliated with or endorsed by Square Enix.
 
-![Tribute artwork of the robot Robo standing in a lush forest]({{ '/assets/images/robo-chrono-trigger.jpg' | relative_url }}){: .robos-zoomable-img }
+![Tribute artwork of the robot Robo standing in a lush forest]({{ '/assets/images/robo-chrono-trigger.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Original tribute artwork of Robo, the character the name comes from. Robo and Chrono Trigger belong to Square Enix.*
 
 ## License

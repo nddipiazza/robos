@@ -42,7 +42,7 @@ Types come from several vocabularies. The JSON-LD context maps the prefixes `osl
 
 Impact analysis follows only some edges. The predicates that count as dependencies are a fixed list in `packages/robos-graph/lib/relationships.js`, for example `robos:dependsOn`, `robos:uses`, `robos:usesDatabase`, `robos:publishesTo` and `robos:implementsContract`. Ownership, containment and provenance predicates such as `robos:ownerTeam` and `robos:inRepository` stay queryable but do not count.
 
-![Infographic of the SDLC knowledge graph: modular package stores and shared remote repositories feed a dual-state engine that drives blast radius, grounded AI coding, living docs and code ownership]({{ '/assets/images/kgraph-living-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+![Infographic of the SDLC knowledge graph: modular package stores and shared remote repositories feed a dual-state engine that drives blast radius, grounded AI coding, living docs and code ownership]({{ '/assets/images/kgraph-living-architecture.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. The text on this page says what is built today.*
 
 Work items are an example of edges between node types. A task server holds projects, which hold the planning and work-item nodes below.
@@ -81,16 +81,16 @@ The graph is split into packages. A package is one directory under `.robos/kgrap
 
 The first eight are the standard packages that every graph workspace gets. The other four are specific to this repository.
 
-![The Explorer with the statistics bar under the header and the Forms API Service node selected]({{ '/assets/images/screenshots/multi-pkg-statbar_frame.png' | relative_url }}){: .robos-zoomable-img }
+![The Explorer with the statistics bar under the header and the Forms API Service node selected]({{ '/assets/images/screenshots/multi-pkg-statbar_frame.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Look at the header buttons and the statistics bar. The tab strip on the right is from an older Explorer.*
 
-![The Packages and Repositories window listing the standard packages with their namespaces, node counts and versions]({{ '/assets/images/screenshots/multi-pkg-modal_frame.png' | relative_url }}){: .robos-zoomable-img }
+![The Packages and Repositories window listing the standard packages with their namespaces, node counts and versions]({{ '/assets/images/screenshots/multi-pkg-modal_frame.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Look at the package cards: each shows a namespace such as robos.services and its node count.*
 
-![The Packages and Repositories window with the Registered KGraph Repositories list highlighted]({{ '/assets/images/screenshots/multi-pkg-repos_frame.png' | relative_url }}){: .robos-zoomable-img }
+![The Packages and Repositories window with the Registered KGraph Repositories list highlighted]({{ '/assets/images/screenshots/multi-pkg-repos_frame.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Look at the Registered KGraph Repositories list under the package cards.*
 
-![The Packages and Repositories window with a remote repository, enterprise-contracts, pinned to version v2.4.0]({{ '/assets/images/screenshots/multi-pkg-filter_frame.png' | relative_url }}){: .robos-zoomable-img }
+![The Packages and Repositories window with a remote repository, enterprise-contracts, pinned to version v2.4.0]({{ '/assets/images/screenshots/multi-pkg-filter_frame.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Look at the remote repository row with its Sync Tag and Remove buttons. As the known limits below explain, a registered remote repository is not yet merged into the graph.*
 
 Next to the packages, `.robos/` holds these files:
@@ -150,19 +150,19 @@ Leave out `ROBOS_GRAPH_ROOT` to open the default graph in `~/.robos`.
 
 The left panel lists nodes. Group them by **Classification**, **Package**, **Type** or **Flat**, search them, and filter by package, type or classification. Selecting a node opens tabs on the right: **Overview**, **Topology**, **Impact**, **Query & Paths**, **JSON-LD**, and, when the node has the data, **Documentation**, **Source Evidence** and type-specific property tabs. The header has **Import & Refine**, **DevOps Integrations**, **Packages & Repos**, **Generate eLearning**, **Semantic Diff** and **Validate SHACL**. See [Inspector schema coverage]({{ '/inspector-schema-coverage.html' | relative_url }}) for which types get property tabs.
 
-![The Knowledge Graph Explorer with the SDLC Resource Nodes list on the left and the Forms API Service node open on the right]({{ '/assets/images/screenshots/robos-graph-frame_01.png' | relative_url }}){: .robos-zoomable-img }
+![The Knowledge Graph Explorer with the SDLC Resource Nodes list on the left and the Forms API Service node open on the right]({{ '/assets/images/screenshots/robos-graph-frame_01.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Look at the header buttons and the node list on the left. The tab strip on the right is from an older Explorer; today's tabs are listed above.*
 
-![The node list grouped by package, with collapsible groups and node counts]({{ '/assets/images/screenshots/nodes-panel-package-group.png' | relative_url }}){: .robos-zoomable-img }
+![The node list grouped by package, with collapsible groups and node counts]({{ '/assets/images/screenshots/nodes-panel-package-group.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Look at the collapsible package groups and their counts. The Explorer you run today also offers a Classification grouping.*
 
-![The node list grouped by type: Microservices and Containers, then API Contracts and Specs]({{ '/assets/images/screenshots/nodes-panel-category-group.png' | relative_url }}){: .robos-zoomable-img }
+![The node list grouped by type: Microservices and Containers, then API Contracts and Specs]({{ '/assets/images/screenshots/nodes-panel-category-group.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Look at the same nodes regrouped under the Type button.*
 
-![The node list filtered by the search text petstore, showing matching nodes in two groups]({{ '/assets/images/screenshots/nodes-panel-search-filtered.png' | relative_url }}){: .robos-zoomable-img }
+![The node list filtered by the search text petstore, showing matching nodes in two groups]({{ '/assets/images/screenshots/nodes-panel-search-filtered.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Look at how the search box filters nodes and keeps only the groups that match.*
 
-![The node list with a single scrollable row of filter chips and the collapse control highlighted]({{ '/assets/images/screenshots/nodes-panel-horizontal-chips.png' | relative_url }}){: .robos-zoomable-img }
+![The node list with a single scrollable row of filter chips and the collapse control highlighted]({{ '/assets/images/screenshots/nodes-panel-horizontal-chips.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Look at the single row of filter chips and the control that collapses or expands every group.*
 
 ### From a script
@@ -252,7 +252,7 @@ To compare a candidate document with the current graph, run `diff --file candida
 
 The `import-company-kgraph` skill builds a proposal from local Git checkouts. You give it a `sources.json` that names the repositories and a `local.json` that maps each name to a checkout path. The importer reads tracked files only. It does not run repository code or Git hooks, and it does not clone anything. Every extracted node carries evidence: repository, path, line, revision and a SHA-256 of the file. The importer writes a proposal that you review and apply as above. Its `SKILL.md` has the commands and the manifest format.
 
-![Infographic of the company knowledge graph ingestion pipeline: portals, object storage, local workspaces and Git forges feed the import-company-kgraph engine, which produces KGraph packages and contracts]({{ '/assets/images/import-company-kgraph-pipeline.jpg' | relative_url }}){: .robos-zoomable-img }
+![Infographic of the company knowledge graph ingestion pipeline: portals, object storage, local workspaces and Git forges feed the import-company-kgraph engine, which produces KGraph packages and contracts]({{ '/assets/images/import-company-kgraph-pipeline.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. The text on this page says what is built today: the source-backed import reads local Git checkouts.*
 
 Older flags for importing from an S3 bucket, an HTTP catalog or a directory scan exist only in a demo mode that needs `--demo`. They are not the source-backed workflow and their output is not evidence of anything.
@@ -267,7 +267,7 @@ Two things exist in the code. Neither reads Git branches.
 
 `BranchManager` holds named graph versions in memory. In the default graph there are four: `main` and three sample branches written into `branch-manager.js` (`feature/TASK-101-auth`, `poc/v2-graphql` and `pilot/beta-billing`). In a workspace there is only `main`, which is the current revision. The Explorer's branch selector lists these. Its **Semantic Diff** button always compares `main` with `feature/TASK-101-auth`. `kgraph diff <branch>` without `--file` works on the same in-memory branches, and its plain-text output currently prints zero counts, so pass `--json` to see the result.
 
-![The Semantic Graph Diff panel showing a comparison of main against feature/TASK-101-auth with a LOW risk level and counts of added, removed and modified nodes]({{ '/assets/images/screenshots/robos-graph-frame_02.png' | relative_url }}){: .robos-zoomable-img }
+![The Semantic Graph Diff panel showing a comparison of main against feature/TASK-101-auth with a LOW risk level and counts of added, removed and modified nodes]({{ '/assets/images/screenshots/robos-graph-frame_02.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Look at the diff summary: the Semantic Diff button compares main with the sample branch feature/TASK-101-auth and reports counts and a risk level.*
 
 Nothing in the code builds a graph version from a Git branch or pull request. The PR review app's knowledge graph panel shows fixed sample data and does not call the diff engine.
@@ -276,10 +276,10 @@ Nothing in the code builds a graph version from a Git branch or pull request. Th
 
 **DevOps Integrations** in the Explorer records an account for a provider (GitHub, AWS, Kubernetes and others, grouped into seven categories) as a `robos:DevOpsIntegration` node. Secret fields are not stored in the graph. For each secret, RobOS runs `pass insert` to write it to `~/.password-store/devops/<category>/<provider>/<account>/<field>` and adds a `robos:PassCredential` node that holds only the `robos:passPath`. The integration node links to it with `robos:hasCredential`.
 
-![The DevOps Account Integrations window before any integration is configured]({{ '/assets/images/screenshots/devops-modal-open_frame.png' | relative_url }}){: .robos-zoomable-img }
+![The DevOps Account Integrations window before any integration is configured]({{ '/assets/images/screenshots/devops-modal-open_frame.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Look at the Active Accounts and Add Integration buttons at the top of the window.*
 
-![Step 1 of the integration wizard: category tabs and a grid of provider cards such as GitHub, GitLab, Bitbucket and AWS]({{ '/assets/images/screenshots/devops-wizard-categories_frame.png' | relative_url }}){: .robos-zoomable-img }
+![Step 1 of the integration wizard: category tabs and a grid of provider cards such as GitHub, GitLab, Bitbucket and AWS]({{ '/assets/images/screenshots/devops-wizard-categories_frame.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Look at the seven category tabs above the provider grid.*
 
 {: .warning }
@@ -287,10 +287,10 @@ If `pass` is missing or cannot run, the code does not stop. It writes a file at 
 
 **Test Connection** checks that the required fields are filled in. Except for Buildkite, it does not contact the provider and always reports success when the fields are present.
 
-![Step 2 of the wizard: the GitLab form with a masked access token field and Test Connection and Save buttons]({{ '/assets/images/screenshots/devops-config-form_frame.png' | relative_url }}){: .robos-zoomable-img }
+![Step 2 of the wizard: the GitLab form with a masked access token field and Test Connection and Save buttons]({{ '/assets/images/screenshots/devops-config-form_frame.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Look at the secret field and the Test Connection button. The password-store path in the form is only real when pass and GPG are set up, as the warning above says.*
 
-![The DevOps Account Integrations window listing one connected GitLab account with its pass credential]({{ '/assets/images/screenshots/devops-active-integrations_frame.png' | relative_url }}){: .robos-zoomable-img }
+![The DevOps Account Integrations window listing one connected GitLab account with its pass credential]({{ '/assets/images/screenshots/devops-active-integrations_frame.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Look at the pass credential listed under the account: the graph holds the path to the secret, not the secret itself.*
 
 ## Known limits
@@ -302,5 +302,5 @@ If `pass` is missing or cannot run, the code does not stop. It writes a file at 
 
 ## Diagrams
 
-![Infographic of five-tier agent rules and context inheritance from the workstation down to the repository, feeding an AI agent session]({{ '/assets/images/agent-context-hierarchy.jpg' | relative_url }}){: .robos-zoomable-img }
+![Infographic of five-tier agent rules and context inheritance from the workstation down to the repository, feeding an AI agent session]({{ '/assets/images/agent-context-hierarchy.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs, showing how Git organization rules would cascade to repositories. The text on this page says what is built today.*

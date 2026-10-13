@@ -25,7 +25,7 @@ Walks through the RobOS cRPG Editor using the campaign that ships with the game,
 
 The editor is an Electron app in [`packages/crpg-editor`](https://github.com/nddipiazza/robos/tree/main/packages/crpg-editor). It reads and writes JSON-LD files directly in `games/crpg-realm/`. There is no database and no export step: Save writes the file, and the game reads the same file.
 
-![End-to-end cRPG campaign editor pipeline]({{ '/assets/images/crpg-realm/crpg_rescue_princess_tutorial_architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+![End-to-end cRPG campaign editor pipeline]({{ '/assets/images/crpg-realm/crpg_rescue_princess_tutorial_architecture.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. The text on this page says what is built today: the cartridge runner does not use the 5-ft collision grid and does not play the story tree.*
 
 ```mermaid
@@ -109,7 +109,7 @@ journey
 
 ### Overview & Settings
 
-![Campaign Overview tab with title, slug, setting, rule system, starting scene and synopsis]({{ '/assets/images/crpg-realm/tutorial_step1_campaign_overview.png' | relative_url }}){: .robos-zoomable-img }
+![Campaign Overview tab with title, slug, setting, rule system, starting scene and synopsis]({{ '/assets/images/crpg-realm/tutorial_step1_campaign_overview.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *The fields on the left are the campaign's title, slug, world setting, rule system, difficulty, starting scene and synopsis. The counters on the right come from the file.*
 
 These fields map to keys in the campaign file:
@@ -126,7 +126,7 @@ The file's type is `["robos:CRPGCampaign", "schema:CreativeWork"]` and its id is
 
 ### Maps & Scenes
 
-![Maps and Scenes tab with the starting map, the list of campaign maps and the topology table]({{ '/assets/images/crpg-realm/tutorial_step2_maps_connectivity.png' | relative_url }}){: .robos-zoomable-img }
+![Maps and Scenes tab with the starting map, the list of campaign maps and the topology table]({{ '/assets/images/crpg-realm/tutorial_step2_maps_connectivity.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *The table in the middle lists the three connections between the four maps. The last row of the screenshot is the editor's simulator for walking a party through them.*
 
 This tab sets the starting map, spawn point and facing (`robos:startingSpawn`), which maps belong to the campaign (`robos:maps`, one URN per map), and the connections between them. Use **Add Connection** to add a row and **Validate Topology** to check the graph.
@@ -163,7 +163,7 @@ A connection is an entry in `robos:mapConnections`. This is the one that gates t
 
 ### Characters & NPCs, Items, Party & Inventory
 
-![Characters and NPCs tab with the roster on the left and Sir Caleb's class, ability scores and combat vitals on the right]({{ '/assets/images/crpg-realm/tutorial_step3_characters_roster.png' | relative_url }}){: .robos-zoomable-img }
+![Characters and NPCs tab with the roster on the left and Sir Caleb's class, ability scores and combat vitals on the right]({{ '/assets/images/crpg-realm/tutorial_step3_characters_roster.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *The roster at the left lists every character file, with filters for player characters and NPCs. The form on the right edits the selected file: here Sir Caleb, a level 1 Human Fighter.*
 
 Characters are separate files that the campaign lists in `robos:characters`. The shipped campaign lists six: `hero-sir-caleb`, `npc-king-alden`, `npc-blacksmith-torvald`, `creature-projection-goblin`, `boss-dark-lord-malakor` and `npc-princess-jennifer`. The top-level **Characters & NPCs** tab edits them: its **File** menu has New Player Character, New NPC and Save Character. A hero file carries class, level, ability scores and equipment:
@@ -185,14 +185,14 @@ Characters are separate files that the campaign lists in `robos:characters`. The
 
 The **Items** tab edits one item per file. Its form has Item Name, Unique Slug, Category, Equip Slot, Gold Cost (GP), Weight (lbs), Rarity, Damage Dice, Damage Type, Base AC or Bonus, Consumable Effect and a 3D model section. The Hero's Sword is `items/heros-sword.jsonld`: category `weapon`, slot `main_hand`, rarity `rare`, cost 500, damage `1d8` slashing, and the effect text `+3 ATK, Dragonclaw Rune`.
 
-![Items tab with the item library on the left and the Hero's Sword blueprint form on the right]({{ '/assets/images/crpg-realm/tutorial_step4_inventory_heros_sword.png' | relative_url }}){: .robos-zoomable-img }
+![Items tab with the item library on the left and the Hero's Sword blueprint form on the right]({{ '/assets/images/crpg-realm/tutorial_step4_inventory_heros_sword.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *The Item Library lists one file per item. The blueprint form shows the Hero's Sword fields: slug, category, equip slot, cost, weight, rarity, damage dice, damage type and lore.*
 
 The Party & Inventory sub-tab edits `robos:gameState`: the active party, party formation, shared purse and starting inventory (`gold: 100` and one `potion-healing` in this campaign).
 
 ### Quest & Scenario Tree and Skyrim Quest Journal
 
-![Story tree with three acts, six nodes and an inspector for the selected node]({{ '/assets/images/crpg-realm/tutorial_step5_quest_tree_dag.png' | relative_url }}){: .robos-zoomable-img }
+![Story tree with three acts, six nodes and an inspector for the selected node]({{ '/assets/images/crpg-realm/tutorial_step5_quest_tree_dag.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Each card is a story node. The pills at the bottom of a card are its choices, labelled with what triggers them (talk to an NPC, combat trial, area transition). The panel on the right edits the selected node.*
 
 The six story nodes in the shipped campaign, as stored in `robos:storyFlow`:
@@ -223,12 +223,12 @@ graph TD
 
 The story tree edits `robos:storyFlow`: a `robos:rootNodeId`, three `robos:flowPages` (the acts) and six `robos:storyNodes`. A node has a `robos:nodeType` (for example `game_start`, `quest_stage`), a `robos:location` map, a `robos:giver` and `robos:choices`. Each choice has a `targetNodeId` and a `robos:triggerType` such as `talk_npc` or `combat`.
 
-![Quest and Scenario Tree tab with the Walkthrough Simulator button in the toolbar and a status bar message that an interactive story walkthrough started]({{ '/assets/images/crpg-realm/tutorial_step7_game_execution.png' | relative_url }}){: .robos-zoomable-img }
+![Quest and Scenario Tree tab with the Walkthrough Simulator button in the toolbar and a status bar message that an interactive story walkthrough started]({{ '/assets/images/crpg-realm/tutorial_step7_game_execution.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Look at the toolbar above the tree: the Walkthrough Simulator button starts an interactive walkthrough of the story, and the status bar at the bottom reports "Started Interactive Story Walkthrough".*
 
 The journal edits `robos:questLog`. The campaign has a main quest (`quest-rescue-princess`) and a side quest, each with `robos:questObjectives`, numbered `robos:questStages` (0, 10, 20 and so on) and `robos:questRewards`.
 
-![Skyrim Quest Journal tab with the main quest and the side quest at the left and the objectives and journal stages of the main quest at the right]({{ '/assets/images/crpg-realm/tutorial_step6_skyrim_quest_journal.png' | relative_url }}){: .robos-zoomable-img }
+![Skyrim Quest Journal tab with the main quest and the side quest at the left and the objectives and journal stages of the main quest at the right]({{ '/assets/images/crpg-realm/tutorial_step6_skyrim_quest_journal.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *The quest list at the left shows the main quest, Rescue of Princess Jennifer, and the side quest, The Dragonclaw Blade Trial. The main quest's checkbox objectives and numbered journal stages are on the right.*
 
 The Story Flags sub-tab edits `robos:worldFlags`. This campaign starts with `princess_kidnapped` and `talked_to_king` set to true and five more set to false, including `obtained_heros_sword`.

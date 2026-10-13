@@ -33,7 +33,7 @@ Proposals for RobOS features that are not built, or only partly built. The publi
 
 ## Add an idea
 
-![A four-stage pipeline from raw notes in the inbox to structured specs, approved plans and verified implementations]({{ '/assets/images/ideas-issues-pipeline.jpg' | relative_url }}){: .robos-zoomable-img }
+![A four-stage pipeline from raw notes in the inbox to structured specs, approved plans and verified implementations]({{ '/assets/images/ideas-issues-pipeline.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. The steps below are what exists today.*
 
 1. Write a rough note in `inbox/<name>.txt`.

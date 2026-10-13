@@ -46,27 +46,27 @@ Earlier specs for features that have since been built, such as the dual-state kn
 
 These diagrams come from the earlier specs that were folded into this page or removed. Each is a concept diagram, not a description of what is built.
 
-![Dual-state knowledge graph comparing production main with a proposed feature branch and flagging the downstream impact]({{ '/assets/images/dual-state-blast-radius.jpg' | relative_url }}){: .robos-zoomable-img }
+![Dual-state knowledge graph comparing production main with a proposed feature branch and flagging the downstream impact]({{ '/assets/images/dual-state-blast-radius.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs, for the dual-state knowledge graph. The Roadmap and What sets RobOS apart say which parts exist.*
 
-![Agent-first lifecycle architecture connecting the .robos GitOps stores, the desktop app suite and agent execution engines]({{ '/assets/images/robos-8-pillars-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+![Agent-first lifecycle architecture connecting the .robos GitOps stores, the desktop app suite and agent execution engines]({{ '/assets/images/robos-8-pillars-architecture.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs, for the agent-first lifecycle idea. The Roadmap says what is built today.*
 
-![Task planning flow turning a goal into a reviewed plan stored in the knowledge graph]({{ '/assets/images/interactive-task-planning-flow.jpg' | relative_url }}){: .robos-zoomable-img }
+![Task planning flow turning a goal into a reviewed plan stored in the knowledge graph]({{ '/assets/images/interactive-task-planning-flow.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs, for plans as knowledge graph objects. A plan is saved on a project node today; the Roadmap describes it under Built.*
 
-![Contract-driven project graph linking repository specs, a graph engine, an interactive canvas and verification gates]({{ '/assets/images/contract-project-graph-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+![Contract-driven project graph linking repository specs, a graph engine, an interactive canvas and verification gates]({{ '/assets/images/contract-project-graph-architecture.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs, for the contract-driven project graph. The project graph app it describes is not in the repository.*
 
-![Five-phase implementation roadmap for the contract-driven project graph]({{ '/assets/images/contract-graph-roadmap.jpg' | relative_url }}){: .robos-zoomable-img }
+![Five-phase implementation roadmap for the contract-driven project graph]({{ '/assets/images/contract-graph-roadmap.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs, showing the five delivery phases proposed for the contract-driven project graph. No dates were set.*
 
-![An agent task finishes, a toast opens a Reviewer app, and the reviewer chooses Teach Me or Show Me]({{ '/assets/images/elearning-reviewer-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+![An agent task finishes, a toast opens a Reviewer app, and the reviewer chooses Teach Me or Show Me]({{ '/assets/images/elearning-reviewer-architecture.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs, for the Interactive Reviewer idea. That app was proposed and is not built.*
 
 ## Add an idea
 
-![A four-stage pipeline from raw notes in the inbox to structured specs, approved plans and verified implementations]({{ '/assets/images/ideas-issues-pipeline.jpg' | relative_url }}){: .robos-zoomable-img }
+![A four-stage pipeline from raw notes in the inbox to structured specs, approved plans and verified implementations]({{ '/assets/images/ideas-issues-pipeline.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. The first two steps below are what exists today; the text on this page says what is built.*
 
 1. Write a rough note in `docs/ideas/inbox/<name>.txt`.

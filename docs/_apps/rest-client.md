@@ -9,7 +9,7 @@ description: "Sends HTTP requests from a built-in sample collection to a service
 
 REST API Client has the layout of a Bruno-style client: a collections tree, a request editor, a response pane and a collection runner. Today it works only for a demo scenario, the Acme Petshop services running on a local kind cluster. You cannot yet add your own collections or point it at an arbitrary base URL.
 
-![REST Client showing the Acme Petshop collection and a POST request to the vaccine verification endpoint]({{ '/assets/images/screenshots/acme-petshop-step11-collections_tree_frame.png' | relative_url }}){: .robos-zoomable-img }
+![REST Client showing the Acme Petshop collection and a POST request to the vaccine verification endpoint]({{ '/assets/images/screenshots/acme-petshop-step11-collections_tree_frame.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 
 *The request editor with the sample collection on the left. The labelled overlays in this frame come from a recorded demo, not from the app.*
 
@@ -18,7 +18,7 @@ REST API Client has the layout of a Bruno-style client: a collections tree, a re
 - **Request Editor.** Select a request from the **Acme Petshop API Collection** (create pet, verify rabies vaccine certificate, list available pets, submit adoption request, health check). Edit the method, URL, **Body (JSON)**, **Headers**, **Params** and the test text, and click **Send**. The response pane shows the status, time, size, body, headers and test results.
 - **Collection Runner.** Switch with the **Collection Runner** button at the top, set Iterations and Delay, and click **Run Collection (5 Requests)**. It runs five fixed requests against `petstore-api`, `vaccine-gateway` and `petstore-infra` and fills a results matrix with status, latency and assertions.
 
-![Collection Runner view with the Run Collection button and an empty results matrix]({{ '/assets/images/screenshots/acme-petshop-step12-runner_view_frame.png' | relative_url }}){: .robos-zoomable-img }
+![Collection Runner view with the Run Collection button and an empty results matrix]({{ '/assets/images/screenshots/acme-petshop-step12-runner_view_frame.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 
 *The runner before a run: the five-request suite, the iteration and delay fields, and the empty test execution matrix.*
 

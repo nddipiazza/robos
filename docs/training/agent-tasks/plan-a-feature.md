@@ -22,7 +22,7 @@ Task Planner (`packages/task-planner`) turns a template form or a written descri
 {:toc}
 </details>
 
-![A single giant prompt leading to a crash and a polluted machine, beside a schema, a visual task plan, an agent in a sandbox, passing tests and a one-click merge]({{ '/assets/images/training/alice-bob-workflow.jpg' | relative_url }}){: .robos-zoomable-img }
+![A single giant prompt leading to a crash and a polluted machine, beside a schema, a visual task plan, an agent in a sandbox, passing tests and a one-click merge]({{ '/assets/images/training/alice-bob-workflow.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs, contrasting one giant prompt with a planned, task-by-task workflow. The text on this page says what is built today.*
 
 ## Prerequisites
@@ -64,7 +64,7 @@ To make your own template, click **Create Custom Template**. It is saved as JSON
 1. Type what you want in the box titled "Describe the tasks and architecture you want to plan".
 2. Click **Generate with AI**.
 
-![Task Explorer with a plain-English game feature description typed into the Describe the tasks and architecture box above the Generate with AI button]({{ '/assets/images/screenshots/game-planner-step1-prompt_frame.png' | relative_url }}){: .robos-zoomable-img }
+![Task Explorer with a plain-English game feature description typed into the Describe the tasks and architecture box above the Generate with AI button]({{ '/assets/images/screenshots/game-planner-step1-prompt_frame.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Look at the description box and the Generate with AI button below it. This capture is from a demo recording with sample text.*
 
 Task Planner runs `gh copilot -- -p <prompt> --allow-all-tools --silent` and gives it three minutes. It expects back a JSON array of tasks with a title, body, labels, a persona and optional `dependsOn` indices. If the agent fails or the reply is not valid JSON, the status line under the button shows the error.
@@ -96,13 +96,13 @@ flowchart TD
 
 If your description contains "ask me question" or "clarif" (as in "ask me questions", or "clarify"), Task Planner shows a two-question multiple-choice form before generating. The questions are fixed sets built into the app: one for game ideas, one for Kafka or Spring services, and a default set about a pet-adoption site. They are chosen by keywords in your text and are not generated from your idea. Your selections are appended to the prompt as JSON. The default set rarely fits, so skip the form unless your description matches a game or a Kafka service.
 
-![The two-question multiple-choice form showing question 1 of 2 about shopkeeper interaction style, with three options and a Next Question button]({{ '/assets/images/screenshots/game-planner-step1-question_frame.png' | relative_url }}){: .robos-zoomable-img }
+![The two-question multiple-choice form showing question 1 of 2 about shopkeeper interaction style, with three options and a Next Question button]({{ '/assets/images/screenshots/game-planner-step1-question_frame.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Look at the three options and the Next Question button. This is the built-in set for game ideas, captured in a demo recording.*
 
 ## Edit the plan and create the issues
 
 ![Task Planner showing six generated task cards, each with a persona dropdown, a Directives button and a Sync button, above a Sync All to Server button]({{ '/assets/images/screenshots/game-planner-step1-plan_frame.png' | relative_url }})
-{: .robos-zoomable-img }
+{: .robos-zoomable-img loading="lazy" }
 
 *Look at the row of controls on the right of each card and the Sync All to Server button at the bottom. This capture is from a demo recording with sample tasks.*
 
@@ -111,7 +111,7 @@ Each card has a title field, a body you click to edit, removable labels with **+
 - **Save to Project** writes the tasks to `~/.config/robos/task-planner/projects/<id>.json`. If `~/.robos/knowledge-graph.jsonld` exists, it also adds or updates a `robos:Project` node there. Create a project first with the **+** button in the **Projects** sidebar, which asks for a name. With no project selected, the plan is saved under the built-in name "Acme Petshop Platform".
 - **Sync All to Server** creates the epics first, then the other tasks. On GitHub each task becomes an issue with `gh issue create`, and missing labels are created with `gh label create --force`. A card that was already synced is updated with `gh issue edit` (title and body only). The results list shows each issue URL. **Plan More Tasks** clears the view.
 
-![Six task cards, one epic and five quest tasks, each with a persona dropdown, a Directives button and a ticket badge, above the Sync All to Server button]({{ '/assets/images/screenshots/game-planner-step1-synced_badge_frame.png' | relative_url }}){: .robos-zoomable-img }
+![Six task cards, one epic and five quest tasks, each with a persona dropdown, a Directives button and a ticket badge, above the Sync All to Server button]({{ '/assets/images/screenshots/game-planner-step1-synced_badge_frame.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Look at the ticket badge on each card after a sync. This capture is from a demo recording, and the green message under the button was added by the recording script.*
 
 ## Limits
@@ -123,7 +123,7 @@ Each card has a title field, a body you click to edit, removable labels with **+
 | `dependsOn` ("Depends on" badges on cards) | Not written anywhere | Created as "Blocks" issue links after the sync |
 | Persona and **Directives** | Kept in the saved project only | Kept in the saved project only |
 
-![A task dependency flowchart: healing potion item and apothecary NPC feed a trading counter and a shop window, then sound effects, then an in-game playtest]({{ '/assets/images/training/game-potion-shop-dag.jpg' | relative_url }}){: .robos-zoomable-img }
+![A task dependency flowchart: healing potion item and apothecary NPC feed a trading counter and a shop window, then sound effects, then an in-game playtest]({{ '/assets/images/training/game-potion-shop-dag.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs, showing task dependencies as a flowchart. The text on this page says what is built today: the app shows "Depends on" badges, and only Jira turns them into links.*
 
 - Gitea servers are listed in Task Servers, but the sync code for them returns placeholder keys and URLs and creates nothing. Do not use Gitea as a target.

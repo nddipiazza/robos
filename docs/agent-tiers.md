@@ -27,7 +27,7 @@ Not built yet: automatic tier dispatch. RobOS has three settings called Tier 1, 
 Open **RobOS Preferences** from the app launcher and choose **Agent Tiers & Prompt Optimization** in the left sidebar. The source is [`packages/robos-preferences`](https://github.com/nddipiazza/robos/tree/main/packages/robos-preferences).
 
 ![RobOS Preferences showing the Agent Tiers and Prompt Optimization section with default values]({{ '/assets/images/screenshots/agent-tiers-preferences-overview.png' | relative_url }})
-{: .robos-zoomable-img }
+{: .robos-zoomable-img loading="lazy" }
 
 *Look at the three model fields and the Caveman and DSPy controls with their defaults.*
 
@@ -46,18 +46,18 @@ Open **RobOS Preferences** from the app launcher and choose **Agent Tiers & Prom
 
 The model fields are free text. The defaults are whatever the code ships with, so change them to a model your agent CLI accepts.
 
-![A matrix matching task reasoning complexity against model cost across three tiers]({{ '/assets/images/model-cost-matrix.jpg' | relative_url }}){: .robos-zoomable-img }
+![A matrix matching task reasoning complexity against model cost across three tiers]({{ '/assets/images/model-cost-matrix.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs, showing the three-tier idea. The text on this page says what is built today: the tier fields are stored and nothing reads them.*
 
 ![The same section with Caveman mode set to extreme and DSPy set to BootstrapFewShot with unit_tests_pass]({{ '/assets/images/screenshots/agent-tiers-preferences-extreme-config.png' | relative_url }})
-{: .robos-zoomable-img }
+{: .robos-zoomable-img loading="lazy" }
 
 *Look at Caveman Compression Mode set to extreme and the DSPy optimizer and metric changed from their defaults.*
 
 Click **Save All**. RobOS merges the values into `~/.config/robos/settings.json` and shows "Settings saved successfully."
 
 ![RobOS Preferences after clicking Save All, with the green saved banner above the Agent Tiers section]({{ '/assets/images/screenshots/agent-tiers-preferences-saved.png' | relative_url }})
-{: .robos-zoomable-img }
+{: .robos-zoomable-img loading="lazy" }
 
 *Look at the green banner at the top of the section.*
 
@@ -67,7 +67,7 @@ On save, the code also tries to mirror the Caveman and DSPy toggles into the kno
 
 Two methods on `SDLCKnowledgeGraphStore` in [`packages/robos-graph/lib/graph-store.js`](https://github.com/nddipiazza/robos/tree/main/packages/robos-graph) implement the "prompt optimization" half of the pane. No RobOS app calls either one outside the test suite, so the toggles above do not change what agents receive.
 
-![A pipeline from a task through model tier routing, Caveman token compression and DSPy optimization to the agent]({{ '/assets/images/agent-dispatch-pipeline.jpg' | relative_url }}){: .robos-zoomable-img }
+![A pipeline from a task through model tier routing, Caveman token compression and DSPy optimization to the agent]({{ '/assets/images/agent-dispatch-pipeline.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. The two helpers below exist, but no app wires them into a pipeline like this; the text on this page says what is built today.*
 
 ### Caveman compression
@@ -117,7 +117,7 @@ flowchart TD
 | `HarnessRouterClient` | A HarnessRouter container listening on `127.0.0.1:3000` | HTTP and server-sent events. Requires Docker. Optional bearer token. |
 | `EmbeddedHarnessRouter` | Inside the calling Node process | No Docker. Stores sessions in `~/.config/robos/harnessrouter/sessions.json`. |
 
-![RobOS apps connecting through the Unified Harness Protocol to a Docker router or an embedded router and a catalog of agent harnesses]({{ '/assets/images/unified-harness-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+![RobOS apps connecting through the Unified Harness Protocol to a Docker router or an embedded router and a catalog of agent harnesses]({{ '/assets/images/unified-harness-architecture.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. The text on this page says what is built today, including which harnesses the embedded router really starts.*
 
 Start the container with the command the install scripts use:
@@ -214,7 +214,7 @@ The same limits apply here: in embedded mode the model you pick is not passed to
 
 The two diagrams below show the tier dispatch design that the box at the top of this page says is not built.
 
-![A seven-phase dispatch flowchart covering task intake, complexity scoring, prompt optimization, sandboxed execution, verification gates and escalation to a higher tier]({{ '/assets/images/agent-tier-dispatch-algorithm.jpg' | relative_url }}){: .robos-zoomable-img }
+![A seven-phase dispatch flowchart covering task intake, complexity scoring, prompt optimization, sandboxed execution, verification gates and escalation to a higher tier]({{ '/assets/images/agent-tier-dispatch-algorithm.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. Nothing scores tasks, picks a tier or escalates today; the text on this page says what is built.*
 
 ```mermaid

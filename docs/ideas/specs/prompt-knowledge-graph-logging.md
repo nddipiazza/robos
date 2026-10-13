@@ -24,7 +24,7 @@ Proposal, not built. No prompt record exists in the knowledge graph or in `.robo
 
 All logging would stay local.
 
-![Prompt logging pipeline from text areas, cron jobs, terminals and sub-agents through ingestion and validation into a Git store linked to plans, change requests and commits]({{ '/assets/images/prompt-logging-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+![Prompt logging pipeline from text areas, cron jobs, terminals and sub-agents through ingestion and validation into a Git store linked to plans, change requests and commits]({{ '/assets/images/prompt-logging-architecture.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. The text on this page says what is built today.*
 
 ## What exists today

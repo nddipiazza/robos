@@ -158,5 +158,5 @@ The previous roadmap also listed a time-travel debugger built on `rr`, a chaos e
 
 Check this page first, then follow "Add an idea" on the [Ideas]({{ site.baseurl }}{% link ideas.md %}) page.
 
-![A four-stage pipeline from raw notes in the inbox to structured specs, approved plans and verified implementations]({{ '/assets/images/ideas-issues-pipeline.jpg' | relative_url }}){: .robos-zoomable-img }
+![A four-stage pipeline from raw notes in the inbox to structured specs, approved plans and verified implementations]({{ '/assets/images/ideas-issues-pipeline.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. The first steps, a note and a spec, are what exists today; no dates are promised for the rest.*

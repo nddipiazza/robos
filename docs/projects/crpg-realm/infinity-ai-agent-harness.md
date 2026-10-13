@@ -63,10 +63,10 @@ The scenario names must be unique across all features, because the video file na
 
 ## How the harness works
 
-![A recorded test frame with the BDD step banner at the top]({{ '/assets/images/crpg-realm/keep_victory.png' | relative_url }}){: .robos-zoomable-img }
+![A recorded test frame with the BDD step banner at the top]({{ '/assets/images/crpg-realm/keep_victory.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *A frame from a recorded scenario. The green "BDD STEP" banner at top left and the "INPUT EVENT STREAM" panel at top right are drawn by the `QAOverlay` autoload during test runs.*
 
-![Gherkin features run by behave against Godot on a virtual display, with video, game state and an HTML report as outputs]({{ '/assets/images/crpg-realm/crpg_cucumber_bdd_test_harness.jpg' | relative_url }}){: .robos-zoomable-img }
+![Gherkin features run by behave against Godot on a virtual display, with video, game state and an HTML report as outputs]({{ '/assets/images/crpg-realm/crpg_cucumber_bdd_test_harness.jpg' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *Concept diagram from the original design docs. The text on this page says what is built today: the engine layer runs headless with no video, and the HTML report cannot tell a pass from a fail.*
 
 ```mermaid
@@ -216,7 +216,7 @@ Features in `normal/`, `spells/` and `full_playthroughs/` drive the hand-built s
 
 The visible cursor in the videos is the `QAOverlay` autoload's, not the X pointer (ffmpeg runs with `-draw_mouse 0`). `QAOverlay.human_move_and_click()` moves it along a curved path before each simulated click and plays a click ping.
 
-![Scenario splash card with the scenario title, map and party]({{ '/assets/images/crpg-realm/threat_aggro_splash.png' | relative_url }}){: .robos-zoomable-img }
+![Scenario splash card with the scenario title, map and party]({{ '/assets/images/crpg-realm/threat_aggro_splash.png' | relative_url }}){: .robos-zoomable-img loading="lazy" }
 *A scenario splash card: the title, a description, the map and the party. The step banner and the input stream are visible behind it.*
 
 ## Write a scene-layer scenario
