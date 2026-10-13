@@ -1811,6 +1811,16 @@ function setActiveTool(tool) {
   render();
 }
 
+function findFurnitureAtTile(col, row) {
+  for (let i = 0; i < state.quest.furniture.length; i++) {
+    const f = state.quest.furniture[i];
+    if (col >= f.x && col < f.x + (f.width || 1) && row >= f.y && row < f.y + (f.height || 1)) {
+      return f;
+    }
+  }
+  return null;
+}
+
 function findEntityAt(col, row) {
   // Check monsters
   for (let i = 0; i < state.quest.monsters.length; i++) {
@@ -1932,6 +1942,13 @@ function handleCanvasClick(wx, wy) {
       updateEntitySummaryList();
     }
   } else if (state.activeTool === 'monster') {
+    // Validation Rule: Characters and enemies cannot stand on furniture in HeroQuest
+    const furnAtTile = findFurnitureAtTile(col, row);
+    if (furnAtTile) {
+      showToast(`⚠️ Characters and enemies cannot stand on furniture in HeroQuest! Tile [${col}, ${row}] is occupied by ${furnAtTile.name || furnAtTile.type}.`, 'error');
+      return;
+    }
+
     const type = state.subtool.monsterType;
     const def = MONSTER_DEFS[type] || MONSTER_DEFS.goblin;
     const newMon = {
@@ -1957,6 +1974,17 @@ function handleCanvasClick(wx, wy) {
     const def = FURNITURE_DEFS[state.subtool.furnitureType] || { w: 1, h: 1, name: 'Furniture' };
     const w = state.subtool.furnitureRotated ? def.h : def.w;
     const h = state.subtool.furnitureRotated ? def.w : def.h;
+
+    // Validation Rule: Characters and enemies cannot stand on furniture in HeroQuest
+    const overlappingMon = state.quest.monsters.find(m =>
+      m.pos[0] >= col && m.pos[0] < col + w &&
+      m.pos[1] >= row && m.pos[1] < row + h
+    );
+    if (overlappingMon) {
+      showToast(`⚠️ Characters and enemies cannot stand on furniture in HeroQuest! Cannot place ${def.name} on ${overlappingMon.name} at [${overlappingMon.pos[0]}, ${overlappingMon.pos[1]}].`, 'error');
+      return;
+    }
+
     const newFurn = {
       id: `furn-${state.subtool.furnitureType}-${state.quest.furniture.length + 1}`,
       name: def.name,
