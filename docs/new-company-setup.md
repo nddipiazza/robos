@@ -1,187 +1,71 @@
 ---
-title: New Company Greenfield Setup
+title: New company
 layout: default
-parent: Enterprise & Organization Setup
+parent: Company setup
+grand_parent: RobOS for Teams
 nav_order: 1
+permalink: /new-company-setup.html
 ---
 
-# New Company Greenfield Setup in RobOS
+# New company
 {: .no_toc }
 
-How greenfield startups and new software engineering organizations initialize RobOS from day one: 5-minute company bootstrap, initial root administrator provisioning, foundational team topologies, greenfield VCS organization setup, central AI provider model tiering, and starter C4 architecture.
-{: .fs-6 .fw-300 }
+How a new team with no repositories or task tracker yet gets RobOS working, and what the Group Manager "Bootstrap" button does and does not create.
+{: .fs-6 }
 
-## Table of contents
-{: .no_toc .text-delta }
-
+<details open markdown="block">
+  <summary>On this page</summary>
+  {: .text-delta }
 1. TOC
 {:toc}
+</details>
 
----
+RobOS does not create your accounts. You create the GitHub organization, repositories and branch rules yourself, and RobOS then works with them. There is no code in RobOS that creates a GitHub organization, sets branch protection, or deploys a Gitea server.
 
-## Overview: The 5-Minute Startup Bootstrap
+## Before you start
 
-Starting a new software company traditionally involves weeks of friction: creating accounts on disparate platforms, copying `.env` secrets insecurely over chat, arguing about directory layouts, and manually writing boilerplate CI configurations.
+- RobOS installed on each developer's machine. See [Get started]({{ site.baseurl }}{% link getting-started.md %}).
+- `gpg` and `pass` installed, because the setup wizard uses them to store tokens.
+- A GitHub account and organization, or another forge, created outside RobOS.
+- At least one agent CLI you can sign in to: Claude Code, GitHub Copilot CLI or Codex.
 
-RobOS changes this with a unified **Greenfield Company Bootstrap Wizard**. In under 5 minutes, a technical founder or founding engineer establishes:
-1. **Company Identity & Root Admin**: Setting the organization domain, tenant metadata, and master administrator credentials.
-2. **Foundational Team Topologies**: Structuring startup teams (Founding Core Engineering, Cloud Platform) directly into `.robos/teams.yaml`.
-3. **Greenfield VCS Organization**: Connecting or creating a GitHub Organization or internal Gitea instance with standardized branch protection.
-4. **Central AI Hub & Shared MCP Tools**: Centralizing LLM API keys (Anthropic Claude, Google Gemini/Antigravity, OpenAI) and configuring shared Model Context Protocol servers.
-5. **Baseline Security & Starter Architecture**: Generating corporate cryptographic signing keys and an initial C4 Level 1 (System Context) Knowledge Graph.
+## Steps
 
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/new-company-bootstrap.jpg' | relative_url }}" alt="Greenfield Startup Bootstrap Workflow" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Greenfield Startup Bootstrap Workflow</strong>: How the 5-minute interactive bootstrap activates root cryptographic signing, foundational team topologies, central AI provider hubs, and living C4 starter architecture. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
+1. **Set up every machine.** Each developer runs **RobOS Setup Wizard**. It creates the GPG key, initializes `pass`, sets the git identity, creates an SSH key and offers a GitHub login. The steps are listed in [Company setup]({{ '/existing-company-setup.html' | relative_url }}#step-1-set-up-each-developers-machine).
+2. **Create the repositories on GitHub.** Add the SSH key from step 1 to your GitHub account (Git Login Manager has an **Add to GitHub** button), then create the organization and its repositories on github.com.
+3. **Create the first project.** Open **RobOS Create Project & App Wizard** and follow [New app wizard]({{ site.baseurl }}{% link new-app-wizard.md %}) to scaffold code from an archetype, or the import mode for a folder that already has code.
+4. **Record your teams.** Create `.robos/teams.yaml` in the repository, using the format in [Company setup]({{ '/existing-company-setup.html' | relative_url }}#step-5-record-teams-and-people). Then create one group per team in **RobOS Group Manager** and list the repository URLs in each group's Git Projects section.
+5. **Add the repositories to Git Projects.** In **RobOS Git Projects**, click **Add Dev Group Repos** and choose the group, or **Add GitHub Org**.
+6. **Choose the agent.** Open **RobOS Agents**, select Claude Code, GitHub Copilot or Codex, sign in, and click **Set as Active**. The choice is saved in `~/.config/robos/ai-provider.json`. The shared AI library behind buttons such as Group Manager's **Create with AI** reads that file, supports only those three providers, and uses GitHub Copilot when nothing is set.
+7. **Connect the tracker.** Add a Jira, GitHub Issues or other server in **RobOS Task Servers**. See [Company setup]({{ '/existing-company-setup.html' | relative_url }}#step-4-connect-your-task-tracker).
 
----
+{: .note }
+RobOS Preferences has an "AI Provider & Models" section with fields for Claude, OpenAI and Gemini API keys. No RobOS app reads those fields today. The "Agent Tiers & Prompt Optimization" section is similar; see [Agent tiers]({{ site.baseurl }}{% link agent-tiers.md %}).
 
-## Step 1: Company Profile & Root Administrator Initialization
+## What the Bootstrap button does
 
-Starting a greenfield company begins with declaring who you are and defining your company tenant. In **Group Manager** (`packages/group-manager`), founders do this directly through the interactive **Greenfield Company Bootstrap Wizard**:
+Group Manager shows **Sync Directory** and **Bootstrap** under the identity badge. Bootstrap opens a form titled "New Company Setup & Greenfield Bootstrap" with these fields: Company / Legal Entity Name, Domain Name / Tenant Slug, Root Administrator Full Name, Root Administrator Corporate Email and Root Admin Role. The button is **Bootstrap Organization & Activate Admin**.
 
-### 1. Interactive Bootstrap Wizard
-1. **Inspect Identity State**: Group Manager displays an unlinked badge (`No Tenant / Unlinked`).
-2. **Open Bootstrap Wizard**: Click **🚀 Bootstrap** in the sidebar.
-3. **Configure Company & Root Administrator**:
-   - **Company Legal Name**: `Acme Cloud Innovations`
-   - **Domain Name / Slug**: `acmecloud.io`
-   - **Root Administrator Full Name**: `Alex Rivera`
-   - **Root Admin Corporate Email**: `alex@acmecloud.io`
-   - **Root Admin Role**: `Chief Architect & VP Engineering`
-4. **Execute Bootstrap**: Click **Bootstrap Organization & Activate Admin**.
+![Group Manager after Bootstrap, showing the Founding Core Engineering group with its seven sections and a second group, Cloud Platform and Infrastructure, in the sidebar]({{ '/assets/images/screenshots/new-company-security-baseline_frame.png' | relative_url }})
+{: .robos-zoomable-img }
 
-### 2. Administrator Identity & Keyring Provisioning
-RobOS immediately:
-- Stores tenant configuration in `~/.config/robos/company.json`:
-  ```json
-  {
-    "name": "Acme Cloud Innovations",
-    "domain": "acmecloud.io",
-    "slug": "acme-cloud",
-    "founded": "2026",
-    "createdAt": "2026-09-05T17:45:35Z"
-  }
-  ```
-- Activates your root administrator identity in `~/.config/robos/identity.json` and `~/.config/robos/people/admin.json`:
-  ```json
-  {
-    "uid": "admin",
-    "displayName": "Alex Rivera",
-    "name": "Alex Rivera",
-    "email": "alex@acmecloud.io",
-    "role": "Chief Architect & VP Engineering",
-    "isRootAdmin": true,
-    "company": "Acme Cloud Innovations",
-    "team": "founding-core",
-    "createdAt": "2026-09-05T17:45:35Z"
-  }
-  ```
-- Sets global git author credentials (`git config --global user.name "Alex Rivera"` and `user.email "alex@acmecloud.io"`).
-- Updates the active identity badge in the UI to **Alex Rivera · Chief Architect & VP Engineering · founding-core**.
+*Look at the two groups in the sidebar and the section list inside Founding Core Engineering. The caption inside the screenshot overstates what the button does.*
 
----
+It writes local files and nothing else:
 
-## Step 2: Scaffolding Foundational Team Topologies & Knowledge Graph
+| Written | Content |
+|:---|:---|
+| `~/.config/robos/company.json` | Company name, domain, a slug made from the name, the year 2026 as `founded`, and a timestamp |
+| `~/.config/robos/identity.json` and `people/admin.json` | The administrator you typed, with uid `admin` and `isRootAdmin: true` |
+| Global git config | `user.name` and `user.email` set to the administrator |
+| Two groups in `~/.config/robos/groups/` | Founding Core Engineering (`founding-core`) and Cloud Platform & Infrastructure (`cloud-platform`), each with the administrator as the only member |
+| `.robos/teams.yaml` and `knowledge-graph.jsonld` | The same two teams and the person, written to the `.robos/` folder two levels above the app folder |
 
-Early-stage startups often make the mistake of assigning everything to everyone, leading to unclear code ownership and messy permissions. RobOS establishes clear **Team Topologies** from the start:
+The groups come with sample content: repository entries such as `github.com/<slug>/core-app` and `github.com/<slug>/infra`, which do not exist unless you create them, and software lists such as `node-20`, `docker`, `kubectl`, `helm` and `terraform`. Edit or delete them.
 
-```yaml
-version: "1.0"
-kind: TeamRoster
-organization: "Acme Cloud Innovations"
-domain: "acmecloud.io"
-initializedAt: "2026-09-05T17:45:35Z"
-teams:
-  - id: founding-core
-    name: Founding Core Engineering
-    topology: stream-aligned
-    lead: admin
-    members:
-      - id: admin
-        name: Alex Rivera
-        type: human
-        role: Approver
-  - id: cloud-platform
-    name: Cloud Platform & Infrastructure
-    topology: platform
-    lead: admin
-    members:
-      - id: admin
-        name: Alex Rivera
-        type: human
-        role: Approver
-```
+Nothing reads `isRootAdmin`, so the "root administrator" has no extra permissions. The window's status lines say that it "Generated GPG & SSH keyring" and "Provisioned company tenant". It does neither: no key is created, and there is no tenant beyond the files above. The `.robos/` location is the checkout root in a development setup and `/usr/local/share/.robos/` for an installed copy, so in a RobOS checkout this overwrites tracked files. If you want these teams, write the files yourself as in step 4 instead.
 
-### Modular KGraph Packages Registration
-The bootstrap engine simultaneously registers the organization root admin and founding squads into the **Modular KGraph Packages** (`organization` package):
-```json
-{
-  "@id": "urn:robos:person:admin",
-  "@type": ["oslc:Person", "robos:Developer"],
-  "dcterms:title": "Alex Rivera",
-  "robos:email": "alex@acmecloud.io",
-  "robos:handle": "admin",
-  "robos:role": "Chief Architect & VP Engineering",
-  "robos:memberOf": "urn:robos:team:founding-core"
-}
-```
-As the company scales and hires new engineers, additional stream-aligned teams (e.g., Mobile, Billing, Analytics) or platform teams are added to `.robos/teams.yaml` and the Knowledge Graph without altering security boundaries.
+## Related
 
----
-
-## Step 3: Greenfield VCS Organization Setup
-
-RobOS connects to your Git hosting provider:
-1. **GitHub Organization**: Connects via GitHub OAuth to create repositories and manage team permissions.
-2. **Internal Gitea Instance**: For privacy-focused or air-gapped startups, RobOS can deploy an internal Gitea server with zero external dependencies.
-3. **Automated Branch Protection**: Configures baseline branch protection rules on `main`:
-   - Require pull request reviews before merging.
-   - Require status checks to pass before merging.
-   - Require cryptographically signed commits.
-
----
-
-## Step 4: Central AI Provider & Shared MCP Registry
-
-Individual API keys scattered across developer machines lead to billing headaches and security risks. RobOS centralizes AI model management:
-- **Central Model Providers**: Configures shared corporate keys for:
-  - **Anthropic Claude** (Claude Sonnet 5 / Claude Opus 5)
-  - **Google Gemini & Antigravity** (Gemini 2.5 Flash / Gemini 2.5 Pro)
-  - **OpenAI** (GPT-5 / o3 / Codex)
-  - **Local Ollama** (offline DeepSeek, Llama)
-- **Shared MCP Tool Registry**: Configures local Model Context Protocol servers:
-  - `system-mcp`: OS and system resource management.
-  - `task-manager-mcp`: Issue backlog and sprint DAG dispatching.
-  - `workspace-manager-mcp`: Git worktree creation and repo orchestration.
-  - `ide-bridge-mcp`: Breakpoint debugging and IDE communication.
-
----
-
-## Step 5: Starter C4 Architecture & Knowledge Graph
-
-RobOS automatically generates an initial **C4 Level 1 (System Context)** diagram in the **Modular KGraph Packages** (`core-platform`):
-- **Users**: Target customers, administrators, and external API consumers.
-- **Software System**: Acme Cloud Innovations platform boundary.
-- **External Dependencies**: Payment providers, third-party auth, and cloud hosting.
-
-This starter graph serves as the foundation for the visual architecture canvas in **Topology Studio** and ensures that as new microservices or frontend apps are created, they are automatically placed within the system context.
-
----
-
-## E2E Walkthrough & Proof of Work
-
-See the complete, live end-to-end walkthrough video, audio narration, and verification logs:
-* [👉 **New Company Greenfield Setup Walkthrough Video & Proof-of-Work**]({{ site.baseurl }}{% link walkthroughs.md %}#step-18-new-company-setup--greenfield-startup-bootstrap)
-
----
-
-## Next Steps
-
-- **[Develop a New App Guide]({{ site.baseurl }}{% link new-app-wizard.md %})**: Scaffold a new application across archetypes.
-- **[RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover core architectural innovations and strategic advantages.
-- **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
-
+- [Company setup]({{ '/existing-company-setup.html' | relative_url }}) covers the same tools for a team with existing repositories.
+- [Personas]({{ '/personas.html' | relative_url }}) lists which apps suit which jobs.

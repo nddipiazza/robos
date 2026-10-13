@@ -3,61 +3,40 @@ title: "RobOS Voice"
 package: voice-prompt
 category: ai-agents
 icon: voice-prompt.svg
-summary: "Bi-directional voice assistant with lifelike neural TTS (Kokoro-82M & Edge-TTS), continuous stream listening ('hello robos' / 'rob OS' / 'row bose'), Whisper STT, and desktop assistant."
-description: "Bi-directional voice assistant with lifelike neural TTS (Kokoro-82M & Edge-TTS), continuous stream listening ('hello robos' / 'rob OS' / 'row bose'), Whisper STT, and desktop assistant."
+summary: "Speech-to-text dictation, spoken replies and a wake-word assistant for the desktop, with a local HTTP API on port 19188."
+description: "Transcribes speech on the machine with a Whisper model, speaks answers with Kokoro, Edge-TTS, Piper or Speech Dispatcher, and answers wake-word questions through the shared RobOS AI agent library."
 related:
   - /voice-prompt.html
 ---
 
-A bi-directional, privacy-first voice assistant engineered for hands-free AI interaction, ambient stream listening, and lifelike neural speech generation:
-- **Natural Outgoing Neural Voice (TTS)**: Features high-fidelity neural speech engines including **Kokoro-82M** (24kHz warm open-source offline TTS) and **Edge-TTS** (studio-grade neural voices with zero API keys), with phonetic calibration ensuring RobOS is pronounced as *"Row Bose"*.
-- **Continuous Topic Stream Listening**: Operates in an ephemeral background stream mode where ambient speech is emitted to subscriber topics without filling local prompt disk storage unless explicitly consumed.
-- **Wake-Word Detection**: Listens directly on the live audio stream for `"hello robos"`, `"rob OS"`, and `"row bose"` triggers to wake the assistant hands-free.
-- **RobOS Desktop Assistant**: Streams recognized speech in real time, enriches developer queries with active window and Git repository context, and responds out loud using the natural voice engine.
-- **100% On-Device Neural Whisper STT**: Transcribes developer speech offline with `@xenova/transformers` ONNX runtime models (`whisper-tiny.en`), keeping proprietary enterprise codebase discussions safe from cloud data leaks.
-- **Universal REST API (`:19188`), Node.js Library (`robos-lib/voice`), & CLI (`robos-voice`)**: Full programmatic control over speech generation, microphone capture, wake-word activation, and assistant dialogues.
-- **Voice Activated Commands**: Dynamic catalog connecting spoken phrases directly to RobOS skills and desktop applications. Automatically matches commands when speech settles, executing actions hands-free.
-- **Dual-State Knowledge Graph Integration**: Voice commands are semantic `robos:VoiceCommand` entities conforming to W3C SHACL shape `urn:robos:shape:VoiceCommandShape` (derived from Schema.org `schema:ControlAction`).
-- **Floating HUD & Standalone Voice Commands Dialog**: Desktop overlay featuring real-time speech bubbles, settle debounce with bounce animations, formatted execution result cards, and a dedicated standalone dialog popup window for browsing and testing voice commands across all apps and skills.
+RobOS Voice has three jobs: turn speech into text, speak text aloud, and answer short questions by voice. This page is the app summary. Setup, the API and the command-line client are covered in [RobOS Voice]({{ site.baseurl }}{% link voice-prompt.md %}).
 
-### Voice Activated Commands & Floating HUD
+## The window
 
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin: 1.5rem 0;">
-  <div style="border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b;">
-    <img src="{{ '/assets/images/screenshots/robos-voice-hud-bubble-command.png' | relative_url }}" alt="RobOS Voice HUD with Matched Voice Command" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-    <div style="padding: 0.5rem 0.75rem; font-size: 0.8rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-      <strong>Floating HUD</strong>: Speech bubbles with command bounce formatting and execution cards.
-    </div>
-  </div>
-  <div style="border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b;">
-    <img src="{{ '/assets/images/screenshots/robos-voice-commands-modal.png' | relative_url }}" alt="RobOS Voice Activated Commands Standalone Dialog Window" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-    <div style="padding: 0.5rem 0.75rem; font-size: 0.8rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-      <strong>Commands Dialog Popup</strong>: Dedicated window with searchable voice command catalog, category tabs, and test phrase triggers.
-    </div>
-  </div>
-</div>
+The tabs are **Dictation & Context**, **Outgoing Voice (Natural TTS)** and **RobOS Desktop Assistant**.
 
-### Architecture Overview
+- **Dictation & Context.** **Activate Microphone** starts recording. Recognized text streams into the panel, and **Save Voice Prompt** stores it. A context panel shows the focused app, window title, running apps and the active workspace and branch. The default push-to-talk hotkey is `Super+V`, set by `pushToTalkKey` in the voice preferences.
+- **Outgoing Voice.** Choose the engine (Kokoro-82M, Edge-TTS, Piper or Speech Dispatcher), a voice, speed, pitch and volume, and preview with **Speak Out Loud**. "RobOS" is spoken as "Row Bose".
+- **RobOS Desktop Assistant.** With wake-word listening on, saying "hello robos", "hey rob OS" or "row bose" followed by a question sends the question, with the active window and workspace as context, to the AI agent library, and speaks the reply. If no AI provider answers, the assistant returns a generic acknowledgement and does not answer the question.
 
-```mermaid
-flowchart LR
-    Mic[Microphone Input] --> STT[Whisper Neural STT]
-    STT --> Settle[Settle Debounce 650ms]
-    Settle --> Matcher{Voice Commands Matcher}
-    Matcher -->|Command Match| Dispatch[Action Dispatch: Skills & Apps]
-    Dispatch --> KGraph[(Dual-State Knowledge Graph)]
-    Dispatch --> HUD[HUD Bubble Bounce & Result Card]
-    Settle --> Wake{"Wake Word Detector\nhello robos / rob OS / row bose"}
-    Wake -->|Triggered| Assistant[RobOS Desktop Assistant]
-    Assistant --> TTS["Outgoing Voice TTS\nKokoro-82M / Edge-TTS\n'Row Bose' Phonetic Engine"]
-    TTS --> Speaker[Audio Output]
-```
+A floating HUD window shows speech bubbles and command results, and a commands dialog lists the spoken commands that map to RobOS apps and skills.
 
-<div style="margin: 1.5rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b;">
-  <img src="{{ '/assets/images/voice-commands-architecture.jpg' | relative_url }}" alt="RobOS Voice Activated Commands Architecture Diagram" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.5rem 1rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>RobOS Voice Commands & Knowledge Graph Pipeline</strong>: End-to-end schematic connecting audio stream transcription, settle debounce gating, multi-token matching engine, W3C SHACL shape validation, and action dispatch to skills and apps.
-  </div>
-</div>
+## What it needs
 
-Read the complete [RobOS Voice Guide]({{ site.baseurl }}{% link voice-prompt.md %}).
+| Part | Requirement |
+|---|---|
+| Speech-to-text | `@xenova/transformers` with the `Xenova/whisper-tiny.en` model, run on the machine. A microphone, captured with `pw-record` (PipeWire) or `arecord` (ALSA). |
+| Kokoro voices | The model file `~/.local/share/kokoro/kokoro-v1.0.onnx` and `python3`. |
+| Edge-TTS voices | The `edge-tts` command, which calls an online Microsoft service. |
+| Piper voices | A `piper` binary and voices in `~/.local/share/piper/voices`. |
+| Assistant answers | An AI provider configured for `robos-lib/ai-agent`. |
+
+## Files and ports
+
+- Saved prompts: `~/.config/robos/voice-prompts.json`.
+- HTTP API: `http://localhost:19188` (change it with `ROBOS_VOICE_PORT`). Routes include `/api/status`, `/api/stream` (server-sent events), `/api/activate`, `/api/deactivate`, `/api/dictate`, `/api/context`, `/api/prompts`, `/api/speak` and `/api/assistant/chat`.
+- Command line: `packages/voice-prompt/bin/robos-voice-prompt`, and the `robos-voice` script in `packages/robos-cli`.
+
+## Run it
+
+Launch **RobOS Voice** from the app launcher, or run `npm start` in `packages/voice-prompt`. Set `ROBOS_TEST=1` to start it without microphone hardware.

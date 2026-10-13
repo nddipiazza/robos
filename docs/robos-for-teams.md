@@ -1,7 +1,7 @@
 ---
 title: RobOS for Teams
 layout: default
-nav_order: 5
+nav_order: 6
 has_children: true
 has_toc: false
 ---
@@ -9,45 +9,31 @@ has_toc: false
 # RobOS for Teams
 {: .no_toc }
 
-For tech leads and anyone deciding whether RobOS fits their team: how it keeps AI-written code reviewable, and how to roll it out.
-{: .fs-6 .fw-300 }
-
-## Start here
-
-1. **[Why RobOS]({{ site.baseurl }}{% link why-robos.md %})**: the AI pull request review problem, and how RobOS solves it.
-2. **[Agent governance & review]({{ site.baseurl }}{% link agent-review-development.md %})**: agents investigate, plan, code and prove their work, while people steer and approve.
-3. **[PR Review Theater]({{ site.baseurl }}{% link pr-review-theater.md %})**: reviews that teach the reviewer, gate the diff behind a knowledge check, and come with video proof.
+Start here if you are a tech lead or evaluator deciding whether RobOS fits your team. These pages cover what problem RobOS targets, what is built today, and how a team sets it up.
+{: .fs-6 }
 
 ## Evaluate
 
-<div class="rb-links">
-  <a class="rb-link" href="{{ site.baseurl }}{% link big-wins.md %}">
-    <strong>🏆 The big wins</strong>
-    <span>The main advantages over traditional IDEs and coding assistants, in depth.</span>
-  </a>
-  <a class="rb-link" href="{{ site.baseurl }}{% link walkthroughs.md %}">
-    <strong>🎥 Proof of work</strong>
-    <span>Real scenarios with narrated video, test assertions and logs.</span>
-  </a>
-  <a class="rb-link" href="{{ site.baseurl }}{% link personas.md %}">
-    <strong>👥 Who uses it, and how</strong>
-    <span>Day-to-day workflows for architects, developers, DevOps and product managers.</span>
-  </a>
-</div>
+- [Why RobOS]({{ site.baseurl }}{% link why-robos.md %}) states the problem, the approach, what exists in the repository, and the limits.
+- [What sets RobOS apart]({{ site.baseurl }}{% link big-wins.md %}) covers the main RobOS features in more depth.
+- [PR Review Theater]({{ site.baseurl }}{% link pr-review-theater.md %}) describes the staged pull request review.
+- [Review & governance]({{ site.baseurl }}{% link agent-review-development.md %}) is the section on reviewing agent work.
+- [Walkthroughs and proof of work]({{ site.baseurl }}{% link walkthroughs.md %}) collects recorded walkthroughs of RobOS apps.
+- [Architecture]({{ site.baseurl }}{% link architecture.md %}) shows how the apps and libraries fit together.
 
-## Roll it out
+## Set up a team
 
-<div class="rb-links">
-  <a class="rb-link" href="{{ site.baseurl }}{% link new-company-setup.md %}">
-    <strong>🌱 New company setup</strong>
-    <span>Start a greenfield org on RobOS from day one.</span>
-  </a>
-  <a class="rb-link" href="{{ site.baseurl }}{% link existing-company-setup.md %}">
-    <strong>🏢 Existing company setup</strong>
-    <span>Sync your directory, map teams, and connect Jira or GitHub Projects.</span>
-  </a>
-  <a class="rb-link" href="{{ site.baseurl }}{% link roadmap.md %}">
-    <strong>🗺️ Roadmap</strong>
-    <span>What's planned next.</span>
-  </a>
-</div>
+- [Company setup]({{ site.baseurl }}{% link existing-company-setup.md %}) is for a team with existing repositories and a task tracker.
+- [New company]({{ '/new-company-setup.html' | relative_url }}) is for a team starting from nothing.
+- [Personas]({{ site.baseurl }}{% link personas.md %}) lists which apps to open first for four common jobs.
+- [Agent tiers]({{ site.baseurl }}{% link agent-tiers.md %}) explains which agent CLIs RobOS can run and which model settings do something today.
+
+## Check before you adopt
+
+| Question | Short answer | Details |
+|:---|:---|:---|
+| What platform does it need? | The install scripts use `apt` and register the Electron apps in the GNOME app launcher. | [Get started]({{ site.baseurl }}{% link getting-started.md %}) |
+| Is there a shared server for company settings? | No. Setup is stored in files on each machine and in `.robos/` folders in your repositories. | [Company setup]({{ site.baseurl }}{% link existing-company-setup.md %}) |
+| Does it include a model or an agent? | No. RobOS runs agent CLIs you install and sign in to yourself. | [Agent tiers]({{ site.baseurl }}{% link agent-tiers.md %}) |
+| Does it read our identity provider? | No. The "Sync Directory" button in Group Manager writes sample data. | [Company setup]({{ site.baseurl }}{% link existing-company-setup.md %}) |
+| What is planned but not built? | Listed on the roadmap. | [Roadmap]({{ site.baseurl }}{% link roadmap.md %}) |

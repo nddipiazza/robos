@@ -105,5 +105,7 @@ defaults:
 
 exclude:
   - project-plan/
+  - issues/
+  - ideas/inbox/
   - Gemfile
   - Gemfile.lock

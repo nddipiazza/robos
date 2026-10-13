@@ -1,148 +1,79 @@
 ---
-title: Game Development
+title: Game development
 layout: default
-parent: Application Development
-nav_order: 5
+parent: Building apps
+grand_parent: Build on RobOS
+nav_order: 4
 ---
 
-# Game Development: PC Games & Mobile Games
+# Game development
 {: .no_toc }
 
-Architect, scaffold, and manage PC and Mobile video game projects in RobOS aligned with Schema.org `schema:VideoGame` and `schema:MobileApplication`.
-{: .fs-6 .fw-300 }
+What RobOS contains for games today: two Godot projects you can run and read, editor apps for their content, graph packages and shapes for game projects, and six Task Planner templates. The App Wizard does not scaffold a game project yet.
+{: .fs-6 }
 
-## Table of contents
-{: .no_toc .text-delta }
+## Games in this repository
 
-1. TOC
-{:toc}
+Both are Godot 4.3 projects (`config/features` in each `project.godot` lists 4.3 and the GL Compatibility renderer).
 
----
+| Path | Game | Notes |
+|:---|:---|:---|
+| `games/crpg-realm` | Realm of Heroes: A Night Without Memory | A party-based cRPG with D&D 5e SRD rules. It has its own `AGENTS.md` describing the test layers. |
+| `games/tabletop-rpg` | RobOS Tabletop RPG: HeroQuest | A HeroQuest-style turn-based dungeon crawler. Its content is modeled in the `tabletop-game` graph package. `play.sh` accepts options such as `--cartridge`, `--quest`, `--demo` and `--hard`. |
 
-## Overview
+Both have a launcher script. It finds Godot from `GODOT_BIN`, then `godot4` or `godot` on your `PATH` (they also check `~/apps/godot4`, and the tabletop script checks `~/.local/bin/godot`):
 
-RobOS provides first-class support for game development across two dedicated software archetypes in the Knowledge Graph:
-1. **PC Games (`robos:PCGame`)**: Desktop video games targeting Windows, Linux, and macOS platforms.
-2. **Mobile Games (`robos:MobileGame`)**: Handheld video games targeting iOS and Android mobile devices.
-
-Both archetypes integrate with [Schema.org VideoGame](https://schema.org/VideoGame) and Wikidata standards (`wd:Q10590` for PC games, `wd:Q1149622` for mobile games).
-
----
-
-## Supported Game Engines
-
-- **Unreal Engine 5** (C++ / Blueprints) with DirectX 12, Vulkan, and Nanite/Lumen asset pipelines.
-- **Unity 6** (C#) for cross-platform desktop and mobile games.
-- **Godot 4.2+** (GDScript / C#) for lightweight 2D and 3D games.
-- **Bevy Engine** (Rust) for data-driven ECS rendering.
-
----
-
-## PC Game Schema & Properties (`robos:PCGame`)
-
-Conforms to `urn:robos:shape:PCGameShape`:
-
-```json
-{
-  "@id": "urn:robos:pc-game:space-raiders-pc",
-  "@type": [
-    "robos:PCGame",
-    "schema:VideoGame",
-    "oslc_am:Resource",
-    "c4:Container"
-  ],
-  "dcterms:title": "Space Raiders PC Game",
-  "dcterms:description": "Interactive PC video game built with Unreal Engine 5.",
-  "robos:repository": "github.com/acme-org/space-raiders-pc",
-  "robos:technology": "C++ / Unreal Engine 5",
-  "robos:gameEngine": "Unreal Engine",
-  "robos:targetPlatform": ["Windows", "Linux", "macOS"],
-  "robos:graphicsApi": "DirectX 12 / Vulkan",
-  "schema:gamePlatform": "PC",
-  "schema:playMode": "SinglePlayer",
-  "robos:ownerTeam": "urn:robos:team:core-platform"
-}
+```bash
+GODOT_BIN=/path/to/godot games/crpg-realm/play.sh
+games/tabletop-rpg/play.sh
 ```
 
-### SHACL Constraints (`PCGameShape`)
-- **`dcterms:title`**: Game title (minCount: 1)
-- **`robos:repository`**: Canonical Git repository URL (minCount: 1)
-- **`robos:technology`**: Runtime technology stack (minCount: 1)
-- **`robos:gameEngine`**: Engine (Unreal Engine, Unity, Godot, Bevy) (minCount: 1)
-- **`robos:targetPlatform`**: Target PC platforms (Windows, Linux, macOS) (minCount: 1)
+The scripts exit with "Godot 4 binary not found" if none of these exists.
 
----
+The cRPG's tests run from `games/crpg-realm` and need Python with `behave` installed. The fast layer runs headless:
 
-## Mobile Game Schema & Properties (`robos:MobileGame`)
-
-Conforms to `urn:robos:shape:MobileGameShape`:
-
-```json
-{
-  "@id": "urn:robos:mobile-game:puzzle-quest-mobile",
-  "@type": [
-    "robos:MobileGame",
-    "schema:VideoGame",
-    "schema:MobileApplication",
-    "oslc_am:Resource",
-    "c4:Container"
-  ],
-  "dcterms:title": "Puzzle Quest Mobile Game",
-  "dcterms:description": "Interactive mobile video game for iOS and Android built with Unity 6.",
-  "robos:repository": "github.com/acme-org/puzzle-quest-mobile",
-  "robos:technology": "C# / Unity 6",
-  "robos:gameEngine": "Unity",
-  "robos:platform": ["iOS", "Android"],
-  "robos:bundleId": "com.robos.game.puzzlequest",
-  "schema:gamePlatform": ["iOS", "Android"],
-  "schema:playMode": "SinglePlayer",
-  "robos:ownerTeam": "urn:robos:team:core-platform"
-}
+```bash
+CRPG_MODE=backend python3 -m behave tests/e2e/features/engine
 ```
 
-### SHACL Constraints (`MobileGameShape`)
-- **`dcterms:title`**: Game title (minCount: 1)
-- **`robos:repository`**: Canonical Git repository URL (minCount: 1)
-- **`robos:technology`**: Runtime technology stack (minCount: 1)
-- **`robos:gameEngine`**: Engine (Unity, Unreal Engine, Godot) (minCount: 1)
-- **`robos:platform`**: Mobile platforms (iOS, Android) (minCount: 1)
+Without `CRPG_MODE=backend` the same features run with video and on-screen overlays. The test layers, the Infinity AI scenario engine and the environment variables are described in [`games/crpg-realm/AGENTS.md`](https://github.com/nddipiazza/robos/blob/main/games/crpg-realm/AGENTS.md). For the project write-ups, see [Tactical cRPG]({{ '/projects/crpg-realm/' | relative_url }}) and [Tabletop RPG]({{ '/projects/tabletop-rpg/' | relative_url }}), or the list on [Projects]({{ site.baseurl }}{% link projects.md %}).
 
----
+## Editor apps
 
-## Scaffolding Games via RobOS App Wizard
+| App | What it edits |
+|:---|:---|
+| [cRPG Editor]({{ '/apps/crpg-editor/' | relative_url }}) | Campaigns, characters, inventory and blockmaps for the cRPG. |
+| [Tabletop Studio]({{ '/apps/robos-tabletop/' | relative_url }}) | HeroQuest and tabletop RPG cartridges, through a form editor. |
+| [Tabletop Blockmap Creator]({{ '/apps/tabletop-blockmap-creator/' | relative_url }}) | Grid tile size and offsets for a dungeon image, plus corridors and rooms drawn over it. |
 
-1. Open **RobOS App Wizard** (`packages/app-wizard`).
-2. Select **PC Game** (🎮) or **Mobile Game** (🕹️).
-3. Specify engine, repository slug, and platform targets.
-4. Click **Generate Scaffolding** to produce build configuration templates, `dev-setup.sh`, and `.robos/packages.yaml` registration.
+## Game packages in the knowledge graph
 
----
+`.robos/kgraph.yaml` registers four game-related packages under `.robos/kgraphs/`: `game` (a shared gaming and RPG-rules ontology), `crpg` (the cRPG's content nodes), `tabletop-game` (the HeroQuest content) and `infinity-engine` (notes on the Infinity Engine architecture the cRPG follows).
 
-## Planning Game Projects with Task Planner
+The `crpg` package holds the node `urn:robos:crpg:game:realm-of-heroes`, typed `robos:PCGame` and `schema:VideoGame`. It is the only `robos:PCGame` node in the graph packages; the Space Raiders and Puzzle Quest entries in `.robos/packages.yaml` are sample data.
 
-RobOS Task Planner includes dedicated game development project templates:
-- **Plan to Create a Tactical cRPG Game (Godot 4 Infinity Engine)** (`robos-crpg-game`): Generates a 7-story phased DAG plan spanning KGraph-first ontological modeling, Godot 4.3 GL Compatibility viewport and Layer 1 physical colliders, D&D 5e SRD real-time with pause combat, Flare RPG paperdoll asset pipeline, 3-mode expandable Activity Log, autonomous Infinity AI Agent verification, and interactive eLearning course generation.
-- **Plan to Create a Godot Game** (`godot-game`): Scaffolds 2D/3D Godot game loops, scene tree topologies, and physics controller tasks.
+Two SHACL shapes cover game projects. Each property below has `minCount: 1`:
 
----
+| Shape | Required properties |
+|:---|:---|
+| `PCGameShape` (`robos:PCGame`) | `dcterms:title`, `robos:repository`, `robos:technology`, `robos:gameEngine`, `robos:targetPlatform` |
+| `MobileGameShape` (`robos:MobileGame`) | `dcterms:title`, `robos:repository`, `robos:technology`, `robos:gameEngine`, `robos:platform` |
 
-## Flagship Game Showcase
+## Planning a game
 
-Explore our fully realized, production-grade video game project built, verified, and governed end-to-end within RobOS:
+Task Planner has six templates in its Game Development category, defined in `packages/task-planner/lib/default-templates.js`. They produce a plan of tasks; they do not create a project.
 
-- **[⚔️ Tactical cRPG & Infinity AI Engine]({{ '/projects/crpg-realm/' | relative_url }})**: A party-based tactical isometric cRPG built in Godot 4.3 inspired by classic Infinity Engine titles (Baldur's Gate, Icewind Dale). Features D&D 5e SRD rules, a 5-Act Epic Campaign, building collision with raycast + A* waypoint pathfinding, 17 named NPCs with branching dialogue, and a BDD harness whose scripted player completes the campaign on camera.
-  - [Interactive eLearning Masterclass]({{ '/projects/crpg-realm/elearning/' | relative_url }})
-  - [Game Creation & Architecture Deep-Dive]({{ '/projects/crpg-realm/game-creation-process.html' | relative_url }})
-  - [Infinity AI Agent & E2E Verification Harness]({{ '/projects/crpg-realm/infinity-ai-agent-harness.html' | relative_url }})
-  - [World Systems, Physical Buildings & Pathfinding]({{ '/projects/crpg-realm/world-systems-and-pathfinding.html' | relative_url }})
+- **Plan to Create a Tactical cRPG Game (Godot 4 Infinity Engine)**
+- **Plan to Create a Godot Game**
+- **Plan to Create a Unity 6 PC/Console Game**
+- **Plan to Create a Unity 6 Mobile Game**
+- **Plan to Create an Unreal Engine 5 PC Action Game**
+- **Plan to Create a Rust Bevy ECS Game**
 
----
+See [Task Planner]({{ '/apps/task-planner/' | relative_url }}).
 
-## Next Steps
+## Not built yet
 
-- **[RobOS Projects Showcase]({{ '/projects/' | relative_url }})**: Browse all real-world applications and games built with RobOS.
-- **[Develop a New App Guide]({{ site.baseurl }}{% link new-app-wizard.md %})**: Learn about all multi-app archetypes.
-- **[RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover core architectural innovations and strategic advantages.
-- **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
-
-
+- The wizard has a **PC Video Game** card but no game template. It produces the generic web or Node.js scaffold described in [New app wizard]({{ site.baseurl }}{% link new-app-wizard.md %}).
+- There is no Mobile Game card in the creation wizard. The import wizard classifies a folder containing `project.godot` or an Unreal `*.uproject` as a PC Game (a Mobile Game if the folder name contains "mobile"), and a React Native project whose folder name contains "game" as a Mobile Game. It goes by file and folder names only.
+- Apart from the planning templates above, RobOS has no Unreal Engine, Unity or Bevy support: no scaffold, build or export tooling.

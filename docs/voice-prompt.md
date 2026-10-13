@@ -29,7 +29,7 @@ The package is [`packages/voice-prompt`](https://github.com/nddipiazza/robos/tre
 
 ## Requirements and limits
 
-- **Linux only.** The microphone is read with `pw-record` (PipeWire) or `arecord` (ALSA). Window context uses `xdotool` and `xprop`, so it needs an X11 session.
+- **Linux only.** The microphone is read with `pw-record` (PipeWire) or `arecord` (ALSA). Window context comes from `xdotool` and `xprop` on an X11 session; without them the focused-window fields are empty.
 - **Speech recognition** uses the `Xenova/whisper-tiny.en` model through `@xenova/transformers`, so it is English only. `packages/voice-prompt/package.json` lists only `electron`, and nothing else in the repository installs `@xenova/transformers`. If the import fails, the engine logs a warning and every transcript is empty. Installing it with `npm install @xenova/transformers` inside the package should satisfy the import; this page does not verify that.
 - **Speech output** needs at least one engine installed. See "Speech output" below.
 - Not built yet: hands-free wake-word activation. See "Not built yet".
@@ -46,7 +46,7 @@ You can also start it from the desktop launcher entry "RobOS Voice" on an instal
 
 1. Click **Start Recording** or press `Super+V`. Both toggle the microphone. The key comes from `pushToTalkKey` in `~/.config/robos/voice-prompt-prefs.json` and defaults to `Super+V`.
 2. Speak. Text appears in bubbles marked "Listening" while it is interim and settles when you pause.
-3. Click **Copy All** to copy every bubble to the clipboard, or use the "Save chat history as..." button to write them to a text file.
+3. Click **Copy All** to copy every bubble to the clipboard, or use the "Save chat history as…" button (the floppy-disk icon) to write them to a text file.
 
 The window does not type into other applications. It also does not write the live feed to disk. Prompts that are saved with the active-app context go to `~/.config/robos/voice-prompts.json` (the last 500 are kept) when you use `POST /api/activate` followed by `POST /api/deactivate`, `POST /api/dictate`, or `robos-voice dictate`.
 
@@ -64,7 +64,7 @@ Matching ignores a leading "hey", "hello", "hi", "ok" or "okay", an optional "ro
 |---|---|
 | "validate knowledge graph" | Runs the knowledge graph validation skill |
 | "search knowledge graph for payments" | Runs the search skill with `payments` as the argument |
-| "list tasks" | Lists tasks from the saved plan |
+| "list tasks" | Runs the skill that shows the project task plan |
 | "open dev central" | Launches the app |
 
 Every app in the icon registry (`packages/robos-icons`) gets "open <name>" phrases. The skill commands are defined in [`lib/voice-commands-registry.js`](https://github.com/nddipiazza/robos/blob/main/packages/voice-prompt/lib/voice-commands-registry.js).
@@ -118,7 +118,7 @@ packages/robos-cli/robos-voice background stop
 packages/robos-cli/robos-voice dictate "Refactor the authentication middleware"
 packages/robos-cli/robos-voice activate
 packages/robos-cli/robos-voice deactivate
-packages/robos-cli/robos-voice list --limit 5
+packages/robos-cli/robos-voice list --app dev-central
 packages/robos-cli/robos-voice clear
 ```
 
@@ -143,7 +143,7 @@ The API has no authentication and answers cross-origin requests from any origin 
 | `POST /api/speak`, `POST /api/stop-speaking`, `GET /api/voices`, `GET` or `POST /api/tts/config` | Speech output |
 | `POST /api/background/start`, `POST /api/background/stop` | Ephemeral streaming mode |
 | `POST /api/assistant/chat`, `GET` or `DELETE /api/assistant/history` | Assistant |
-| `GET /api/voice-commands` (`?q=`, `?category=all\|apps\|skills`) | List commands |
+| `GET /api/voice-commands` (`?q=` and `?category=` with `all`, `apps` or `skills`) | List commands |
 | `POST /api/voice-commands/match`, `POST /api/voice-commands/execute` | Match `{ "text" }`; run `{ "commandId", "args", "text" }` |
 | `GET /api/skills`, `POST /api/skills/execute` | List skills; run `{ "command" }` through the assistant |
 | `POST /api/stream/simulate` | Push `{ "text", "isFinal" }` into the speech stream, for tests |

@@ -21,11 +21,11 @@ What RobOS gives you for a web application: the Next.js project the App Wizard g
 
 ## Generate a web app
 
-In the [New app wizard]({{ site.baseurl }}{% link new-app-wizard.md %}), choose the **Modern Website / Web App** card. Fill in **Project Name**, **What does this project do?**, **Catchy Tagline** and, in Advanced Mode, **Custom Domain Name (Optional)** and **Search Keywords**. These values go into the hero text, page metadata, the Open Graph image, `public/llms.txt` and the schema.org markup. If you leave the domain empty it defaults to `<slug>.com`.
+In the [New app wizard]({{ site.baseurl }}{% link new-app-wizard.md %}), choose the **Modern Website / Web App** card. Fill in **Project Name**, **What does this project do?**, **Catchy Tagline** and, in Advanced Mode, **Custom Domain Name (Optional)** and **Search Keywords**. These values are substituted into `src/lib/site.js`, `public/llms.txt`, the README and the generated SVGs; the pages read their title, description and keywords from `site.js`. If you leave the domain empty it defaults to `<slug>.com`.
 
 The template is `packages/app-wizard/templates/nextjs-vercel-web`. The wizard writes it to `packages/<slug>/`, along with `catalog-info.yaml` and `dev-setup.sh`. It does not overwrite template files that already exist.
 
-The template was distilled from the getemgigs.com app, which is in this repository as `packages/getemgigs`. `packages/urban-plant-tracker` is the output of the wizard's Urban Plant Tracker starter. See [Get 'Em Gigs]({{ '/projects/getemgigs/' | relative_url }}) for the production app.
+The template was distilled from the getemgigs.com app, which is in this repository as `packages/getemgigs`. `packages/urban-plant-tracker` has the layout the wizard's Urban Plant Tracker starter produces. See [Get 'Em Gigs]({{ '/projects/getemgigs/' | relative_url }}) for the production app.
 
 ## What the template contains
 

@@ -1,99 +1,58 @@
 ---
 title: Build System
 layout: default
-parent: Core Platform (robos.core)
-grand_parent: KGraph Schemas
+parent: "Core Platform (robos.platform)"
+grand_parent: Schemas
 nav_order: 1
 permalink: /schemas/core-platform/build-system.html
 ---
 
-# Schema: `robos:BuildSystem`
+# robos:BuildSystem
 {: .no_toc }
 
-Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:BuildSystem` in the `core-platform` package store.
-{: .fs-6 .fw-300 }
+Validation shape for `robos:BuildSystem` nodes in the `core-platform` package group.
+{: .fs-6 }
 
-## Table of contents
-{: .no_toc .text-delta }
+## Details
 
-1. TOC
-{:toc}
+| | |
+|---|---|
+| Class | `robos:BuildSystem` |
+| Also matches | `robos:MonorepoBuild` |
+| Shape id | `urn:robos:shape:BuildSystemShape` |
+| Package | [Core Platform (robos.platform)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
+| Classification | Libraries & build systems |
+| Schema.org type | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) |
+| Domain standard | [bazel.build](https://bazel.build/) |
 
----
+## Properties
 
-## Specification Metadata
+Count is the minimum and maximum number of values (`*` means no maximum). The validator enforces both. The type column is documentation only; the validator does not check types.
 
-- **RDF / OWL Class**: `robos:BuildSystem`
-- **Aliases / Target Classes**: `robos:BuildSystem`, `robos:MonorepoBuild`
-- **SHACL Shape ID**: `urn:robos:shape:BuildSystemShape`
-- **Governing Package**: [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`)
-- **Namespace**: `robos.platform`
-- **Schema.org Classification**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
-- **Domain De Facto Standard**: [https://bazel.build/](https://bazel.build/)
-- **Upstream Schema Basis (Refers From)**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
+| Property | Count | Type | Rule or description |
+|---|---|---|---|
+| `dcterms:title` | `1..*` | `xsd:string` | Build System must have a title. |
+| `robos:buildTool` | `1..*` | `xsd:string` | Build System must declare build tool (maven, gradle, cargo, go, pnpm, npm, cmake, bazel, buck2, pants). |
+| `robos:configFile` | `1..*` | `xsd:string` | Build System must specify configuration file (pom.xml, build.gradle, Cargo.toml, go.mod, package.json, CMakeLists.txt, .bazelrc, .buckconfig). |
 
----
+## Example node
 
-## Upstream Schema Basis (Refers From) & Global Standards Provenance
+This node comes from `.robos/kgraphs/core-platform/package.jsonld` in the RobOS repository. That graph holds sample data for a fictional company, so treat the values as illustrations.
 
-This RobOS schema is modeled after and directly aligns with two levels of global standards:
-- **Universal Schema.org Class**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication) (100% interoperability with search engines, web indexers, and general AI reasoning)
-- **Specialized Domain Standard**: [https://bazel.build/](https://bazel.build/) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
-- **Canonical Reference**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
-- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:BuildSystem`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
-
----
-
-## Entity Relationship & Schema Context
-
-<div style="margin: 1.5rem 0; padding: 1.25rem; background: #161b22; border: 1px solid #30363d; border-radius: 8px;">
-  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
-    <span style="font-size: 1.15rem; font-weight: 700; color: #38bdf8;">Build System</span>
-    <span style="font-family: monospace; background: #121927; color: #00e5ff; border: 1px solid rgba(0, 229, 255, 0.4); padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.85rem;">robos:BuildSystem</span>
-  </div>
-  <p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Governed by W3C SHACL shape <code>urn:robos:shape:BuildSystemShape</code> within the <strong>Core Platform (robos.core)</strong> (<code>robos.platform</code>) package store.</p>
-  <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>dcterms:title</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:buildTool</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:configFile</code></span>
-  </div>
-</div>
-
----
-
-**RobOS classification:** Libraries & build systems. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
-
-## Property Constraints & SHACL Rules
-
-| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
-|---|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | Build System must have a title. |
-| **`robos:buildTool`** | Build Tool | `1..*` | `xsd:string` | Libraries & build systems | Build System must declare build tool (maven, gradle, cargo, go, pnpm, npm, cmake, bazel, buck2, pants). |
-| **`robos:configFile`** | Config File | `1..*` | `xsd:string` | Libraries & build systems | Build System must specify configuration file (pom.xml, build.gradle, Cargo.toml, go.mod, package.json, CMakeLists.txt, .bazelrc, .buckconfig). |
-
----
-
-## Canonical OSLC JSON-LD Example
-
+{% raw %}
 ```json
 {
-  "@id": "urn:robos:build-system:acme-monorepo-bazel",
+  "@id": "urn:robos:build-system:acme-cloud-go",
   "@type": [
     "robos:BuildSystem",
-    "robos:MonorepoBuild",
     "oslc:Resource",
     "schema:SoftwareApplication"
   ],
-  "dcterms:title": "Acme Core Services Monorepo (Bazel)",
-  "dcterms:description": "Polyglot backend microservices and shared libraries built with Bazel.",
-  "robos:buildTool": "bazel",
-  "robos:configFile": ".bazelrc",
-  "robos:repository": "github.com/acme/buildbarn-forms",
-  "robos:hasRemoteExecution": "urn:robos:remote-execution:acme-buildbarn-cluster",
-  "robos:defaultExecProperties": {
-    "OSFamily": "linux",
-    "ISA": "x86-64"
-  },
+  "dcterms:title": "Acme Cloud Infrastructure Controllers (Go Modules)",
+  "dcterms:description": "Kubernetes operators and sidecar proxies built with Go Modules.",
+  "robos:buildTool": "go",
+  "robos:configFile": "go.mod",
+  "robos:repository": "github.com/acme/k8s-operator",
   "robos:package": "core-platform",
   "robos:namespace": "robos.platform",
   "robos:refersFrom": "https://schema.org/SoftwareApplication",
@@ -101,45 +60,14 @@ This RobOS schema is modeled after and directly aligns with two levels of global
   "robos:domainStandard": "https://bazel.build/"
 }
 ```
+{% endraw %}
 
----
+## Validate the example
 
-## Programmatic SHACL Validation
+Save the example as `node.json` in the repository root, then run:
 
-```javascript
-const { SHACLValidator } = require('/usr/local/share/robos/robos-graph/lib/shacl-validator');
-const { OSLCGraphParser, OSLC_CONTEXT } = require('/usr/local/share/robos/robos-graph/lib/oslc-parser');
-
-const validator = new SHACLValidator();
-const result = validator.validateGraph(new OSLCGraphParser({
-  "@context": OSLC_CONTEXT,
-  "robos:nodes": [
-    {
-        "@id": "urn:robos:build-system:acme-monorepo-bazel",
-        "@type": [
-            "robos:BuildSystem",
-            "robos:MonorepoBuild",
-            "oslc:Resource",
-            "schema:SoftwareApplication"
-        ],
-        "dcterms:title": "Acme Core Services Monorepo (Bazel)",
-        "dcterms:description": "Polyglot backend microservices and shared libraries built with Bazel.",
-        "robos:buildTool": "bazel",
-        "robos:configFile": ".bazelrc",
-        "robos:repository": "github.com/acme/buildbarn-forms",
-        "robos:hasRemoteExecution": "urn:robos:remote-execution:acme-buildbarn-cluster",
-        "robos:defaultExecProperties": {
-            "OSFamily": "linux",
-            "ISA": "x86-64"
-        },
-        "robos:package": "core-platform",
-        "robos:namespace": "robos.platform",
-        "robos:refersFrom": "https://schema.org/SoftwareApplication",
-        "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-        "robos:domainStandard": "https://bazel.build/"
-    }
-  ],
-}));
-
-console.log("Conforms:", result.conforms); // Expected: true
+```bash
+node -e "const { SHACLValidator } = require('./packages/robos-graph/lib/shacl-validator'); console.log(new SHACLValidator().validate([require('./node.json')]).conforms)"
 ```
+
+The command prints `true` when the node meets every rule for its types.

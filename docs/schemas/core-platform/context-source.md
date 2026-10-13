@@ -1,80 +1,43 @@
 ---
 title: Context Source
 layout: default
-parent: Core Platform (robos.core)
-grand_parent: KGraph Schemas
+parent: "Core Platform (robos.platform)"
+grand_parent: Schemas
 nav_order: 8
 permalink: /schemas/core-platform/context-source.html
 ---
 
-# Schema: `robos:ContextSource`
+# robos:ContextSource
 {: .no_toc }
 
-Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:ContextSource` in the `core-platform` package store.
-{: .fs-6 .fw-300 }
+Validation shape for `robos:ContextSource` nodes in the `core-platform` package group.
+{: .fs-6 }
 
-## Table of contents
-{: .no_toc .text-delta }
+## Details
 
-1. TOC
-{:toc}
+| | |
+|---|---|
+| Class | `robos:ContextSource` |
+| Shape id | `urn:robos:shape:ContextSourceShape` |
+| Package | [Core Platform (robos.platform)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`) |
+| Classification | Agents & MCP |
+| Schema.org type | [`schema:DataFeed`](https://schema.org/DataFeed) |
 
----
+## Properties
 
-## Specification Metadata
+Count is the minimum and maximum number of values (`*` means no maximum). The validator enforces both. The type column is documentation only; the validator does not check types.
 
-- **RDF / OWL Class**: `robos:ContextSource`
-- **Aliases / Target Classes**: `robos:ContextSource`
-- **SHACL Shape ID**: `urn:robos:shape:ContextSourceShape`
-- **Governing Package**: [Core Platform (robos.core)]({{ '/schemas/core-platform.html' | relative_url }}) (`core-platform`)
-- **Namespace**: `robos.platform`
-- **Schema.org Classification**: [https://schema.org/DataFeed](https://schema.org/DataFeed)
-- **Domain De Facto Standard**: [https://schema.org/DataFeed](https://schema.org/DataFeed)
-- **Upstream Schema Basis (Refers From)**: [https://schema.org/DataFeed](https://schema.org/DataFeed)
+| Property | Count | Type | Rule or description |
+|---|---|---|---|
+| `dcterms:title` | `1..*` | `xsd:string` | Context Source must have a title. |
+| `robos:sourceType` | `1..*` | `xsd:string` | Context Source must declare source type (file, folder, url, github, repo, ticket). |
+| `robos:location` | `1..*` | - | Context Source must specify location path, URL, or repository identifier. |
 
----
+## Example node
 
-## Upstream Schema Basis (Refers From) & Global Standards Provenance
+The checked-in graph has no node of this class that passes the validator, so this is a placeholder built from the shape. It has every required property, with example values. It is not a node from the graph.
 
-This RobOS schema is modeled after and directly aligns with two levels of global standards:
-- **Universal Schema.org Class**: [https://schema.org/DataFeed](https://schema.org/DataFeed) (100% interoperability with search engines, web indexers, and general AI reasoning)
-- **Specialized Domain Standard**: [https://schema.org/DataFeed](https://schema.org/DataFeed) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
-- **Canonical Reference**: [https://schema.org/DataFeed](https://schema.org/DataFeed)
-- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:ContextSource`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
-
----
-
-## Entity Relationship & Schema Context
-
-<div style="margin: 1.5rem 0; padding: 1.25rem; background: #161b22; border: 1px solid #30363d; border-radius: 8px;">
-  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
-    <span style="font-size: 1.15rem; font-weight: 700; color: #38bdf8;">Context Source</span>
-    <span style="font-family: monospace; background: #121927; color: #00e5ff; border: 1px solid rgba(0, 229, 255, 0.4); padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.85rem;">robos:ContextSource</span>
-  </div>
-  <p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Governed by W3C SHACL shape <code>urn:robos:shape:ContextSourceShape</code> within the <strong>Core Platform (robos.core)</strong> (<code>robos.platform</code>) package store.</p>
-  <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>dcterms:title</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:sourceType</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:location</code></span>
-  </div>
-</div>
-
----
-
-**RobOS classification:** Agents & MCP. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
-
-## Property Constraints & SHACL Rules
-
-| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
-|---|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | Context Source must have a title. |
-| **`robos:sourceType`** | Source Type | `1..*` | `xsd:string` | Agents & MCP | Context Source must declare source type (file, folder, url, github, repo, ticket). |
-| **`robos:location`** | location | `1..*` | `xsd:string` | Agents & MCP | Context Source must specify location path, URL, or repository identifier. |
-
----
-
-## Canonical OSLC JSON-LD Example
-
+{% raw %}
 ```json
 {
   "@id": "urn:robos:core-platform:context-source-sample",
@@ -84,44 +47,24 @@ This RobOS schema is modeled after and directly aligns with two levels of global
     "oslc:Resource"
   ],
   "dcterms:title": "Sample Context Source",
-  "dcterms:description": "Canonical reference instance for robos:ContextSource.",
+  "dcterms:description": "Placeholder node for robos:ContextSource.",
   "robos:package": "core-platform",
   "robos:namespace": "robos.platform",
+  "robos:sourceType": "<sourceType>",
+  "robos:location": "<location>",
   "robos:schemaOrgType": "https://schema.org/DataFeed",
   "robos:domainStandard": "https://schema.org/DataFeed",
   "robos:refersFrom": "https://schema.org/DataFeed"
 }
 ```
+{% endraw %}
 
----
+## Validate the example
 
-## Programmatic SHACL Validation
+Save the example as `node.json` in the repository root, then run:
 
-```javascript
-const { SHACLValidator } = require('/usr/local/share/robos/robos-graph/lib/shacl-validator');
-const { OSLCGraphParser, OSLC_CONTEXT } = require('/usr/local/share/robos/robos-graph/lib/oslc-parser');
-
-const validator = new SHACLValidator();
-const result = validator.validateGraph(new OSLCGraphParser({
-  "@context": OSLC_CONTEXT,
-  "robos:nodes": [
-    {
-        "@id": "urn:robos:core-platform:context-source-sample",
-        "@type": [
-            "robos:ContextSource",
-            "schema:DataFeed",
-            "oslc:Resource"
-        ],
-        "dcterms:title": "Sample Context Source",
-        "dcterms:description": "Canonical reference instance for robos:ContextSource.",
-        "robos:package": "core-platform",
-        "robos:namespace": "robos.platform",
-        "robos:schemaOrgType": "https://schema.org/DataFeed",
-        "robos:domainStandard": "https://schema.org/DataFeed",
-        "robos:refersFrom": "https://schema.org/DataFeed"
-    }
-  ],
-}));
-
-console.log("Conforms:", result.conforms); // Expected: true
+```bash
+node -e "const { SHACLValidator } = require('./packages/robos-graph/lib/shacl-validator'); console.log(new SHACLValidator().validate([require('./node.json')]).conforms)"
 ```
+
+The command prints `true` when the node meets every rule for its types.

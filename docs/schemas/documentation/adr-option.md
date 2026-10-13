@@ -1,78 +1,42 @@
 ---
 title: ADR Option
 layout: default
-parent: Documentation & Diagrams (robos.docs)
-grand_parent: KGraph Schemas
+parent: "Documentation & Diagrams (robos.docs)"
+grand_parent: Schemas
 nav_order: 8
 permalink: /schemas/documentation/adr-option.html
 ---
 
-# Schema: `robos:ADROption`
+# robos:ADROption
 {: .no_toc }
 
-Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:ADROption` in the `documentation` package store.
-{: .fs-6 .fw-300 }
+Validation shape for `robos:ADROption` nodes in the `documentation` package group.
+{: .fs-6 }
 
-## Table of contents
-{: .no_toc .text-delta }
+## Details
 
-1. TOC
-{:toc}
+| | |
+|---|---|
+| Class | `robos:ADROption` |
+| Shape id | `urn:robos:shape:ADROptionShape` |
+| Package | [Documentation & Diagrams (robos.docs)]({{ '/schemas/documentation.html' | relative_url }}) (`documentation`) |
+| Classification | Documentation & decisions |
+| Schema.org type | [`schema:ChooseAction`](https://schema.org/ChooseAction) |
 
----
+## Properties
 
-## Specification Metadata
+Count is the minimum and maximum number of values (`*` means no maximum). The validator enforces both. The type column is documentation only; the validator does not check types.
 
-- **RDF / OWL Class**: `robos:ADROption`
-- **Aliases / Target Classes**: `robos:ADROption`
-- **SHACL Shape ID**: `urn:robos:shape:ADROptionShape`
-- **Governing Package**: [Documentation & Diagrams (robos.docs)]({{ '/schemas/documentation.html' | relative_url }}) (`documentation`)
-- **Namespace**: `robos.docs`
-- **Schema.org Classification**: [https://schema.org/ChooseAction](https://schema.org/ChooseAction)
-- **Domain De Facto Standard**: [https://schema.org/ChooseAction](https://schema.org/ChooseAction)
-- **Upstream Schema Basis (Refers From)**: [https://schema.org/ChooseAction](https://schema.org/ChooseAction)
+| Property | Count | Type | Rule or description |
+|---|---|---|---|
+| `dcterms:title` | `1..*` | `xsd:string` | ADR Option must have a title. |
+| `robos:adr` | `1..*` | `URI (robos:ArchitectureDecisionRecord)` | ADR Option must link to parent Architecture Decision Record. |
 
----
+## Example node
 
-## Upstream Schema Basis (Refers From) & Global Standards Provenance
+The checked-in graph has no node of this class that passes the validator, so this is a placeholder built from the shape. It has every required property, with example values. It is not a node from the graph.
 
-This RobOS schema is modeled after and directly aligns with two levels of global standards:
-- **Universal Schema.org Class**: [https://schema.org/ChooseAction](https://schema.org/ChooseAction) (100% interoperability with search engines, web indexers, and general AI reasoning)
-- **Specialized Domain Standard**: [https://schema.org/ChooseAction](https://schema.org/ChooseAction) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
-- **Canonical Reference**: [https://schema.org/ChooseAction](https://schema.org/ChooseAction)
-- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:ADROption`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
-
----
-
-## Entity Relationship & Schema Context
-
-<div style="margin: 1.5rem 0; padding: 1.25rem; background: #161b22; border: 1px solid #30363d; border-radius: 8px;">
-  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
-    <span style="font-size: 1.15rem; font-weight: 700; color: #38bdf8;">ADR Option</span>
-    <span style="font-family: monospace; background: #121927; color: #00e5ff; border: 1px solid rgba(0, 229, 255, 0.4); padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.85rem;">robos:ADROption</span>
-  </div>
-  <p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Governed by W3C SHACL shape <code>urn:robos:shape:ADROptionShape</code> within the <strong>Documentation & Diagrams (robos.docs)</strong> (<code>robos.docs</code>) package store.</p>
-  <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>dcterms:title</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:adr</code></span>
-  </div>
-</div>
-
----
-
-**RobOS classification:** Documentation & decisions. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
-
-## Property Constraints & SHACL Rules
-
-| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
-|---|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | ADR Option must have a title. |
-| **`robos:adr`** | Parent ADR | `1..*` | `URI (robos:ArchitectureDecisionRecord)` | Documentation & decisions | ADR Option must link to parent Architecture Decision Record. |
-
----
-
-## Canonical OSLC JSON-LD Example
-
+{% raw %}
 ```json
 {
   "@id": "urn:robos:documentation:adr-option-sample",
@@ -82,7 +46,7 @@ This RobOS schema is modeled after and directly aligns with two levels of global
     "oslc:Resource"
   ],
   "dcterms:title": "Sample ADR Option",
-  "dcterms:description": "Canonical reference instance for robos:ADROption.",
+  "dcterms:description": "Placeholder node for robos:ADROption.",
   "robos:package": "documentation",
   "robos:namespace": "robos.docs",
   "robos:adr": "urn:robos:adr:001-modular-kgraph",
@@ -91,37 +55,14 @@ This RobOS schema is modeled after and directly aligns with two levels of global
   "robos:refersFrom": "https://schema.org/ChooseAction"
 }
 ```
+{% endraw %}
 
----
+## Validate the example
 
-## Programmatic SHACL Validation
+Save the example as `node.json` in the repository root, then run:
 
-```javascript
-const { SHACLValidator } = require('/usr/local/share/robos/robos-graph/lib/shacl-validator');
-const { OSLCGraphParser, OSLC_CONTEXT } = require('/usr/local/share/robos/robos-graph/lib/oslc-parser');
-
-const validator = new SHACLValidator();
-const result = validator.validateGraph(new OSLCGraphParser({
-  "@context": OSLC_CONTEXT,
-  "robos:nodes": [
-    {
-        "@id": "urn:robos:documentation:adr-option-sample",
-        "@type": [
-            "robos:ADROption",
-            "schema:ChooseAction",
-            "oslc:Resource"
-        ],
-        "dcterms:title": "Sample ADR Option",
-        "dcterms:description": "Canonical reference instance for robos:ADROption.",
-        "robos:package": "documentation",
-        "robos:namespace": "robos.docs",
-        "robos:adr": "urn:robos:adr:001-modular-kgraph",
-        "robos:schemaOrgType": "https://schema.org/ChooseAction",
-        "robos:domainStandard": "https://schema.org/ChooseAction",
-        "robos:refersFrom": "https://schema.org/ChooseAction"
-    }
-  ],
-}));
-
-console.log("Conforms:", result.conforms); // Expected: true
+```bash
+node -e "const { SHACLValidator } = require('./packages/robos-graph/lib/shacl-validator'); console.log(new SHACLValidator().validate([require('./node.json')]).conforms)"
 ```
+
+The command prints `true` when the node meets every rule for its types.
