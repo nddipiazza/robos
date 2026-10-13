@@ -199,3 +199,28 @@ test('RobosVoiceButton cancel aborts session without complete event', async () =
   assert.equal(completed, false, 'Should not emit complete on cancel');
   assert.equal(cancelled, true, 'Should emit robos-voice-cancel');
 });
+
+test('RobosVoiceButton icon-only removes all text elements from button', () => {
+  const vb = new RobosVoiceButton();
+  vb.setAttribute('icon-only', '');
+  vb.setAttribute('title', 'Add items via voice');
+  vb.connectedCallback();
+
+  assert.ok(vb.innerHTML.includes('icon-only'), 'Button has icon-only class');
+  assert.ok(!vb.innerHTML.includes('robos-voice-label-text'), 'Button must not contain label-text element');
+  assert.ok(!vb.innerHTML.includes('robos-voice-timer'), 'Button must not contain timer element');
+  assert.ok(!vb.innerHTML.includes('robos-voice-rec-dot'), 'Button must not contain rec-dot element');
+  assert.ok(vb.innerHTML.includes('aria-label="Add items via voice"'), 'Accessible aria-label is present');
+});
+
+test('RobosVoiceButton empty label attribute acts as icon-only without text', () => {
+  const vb = new RobosVoiceButton();
+  vb.setAttribute('label', '');
+  vb.setAttribute('title', 'Dictate commands');
+  vb.connectedCallback();
+
+  assert.ok(vb.innerHTML.includes('icon-only'), 'Button with label="" has icon-only class');
+  assert.ok(!vb.innerHTML.includes('robos-voice-label-text'), 'Button must not contain label-text element');
+  assert.ok(!vb.innerHTML.includes('robos-voice-timer'), 'Button must not contain timer element');
+});
+
