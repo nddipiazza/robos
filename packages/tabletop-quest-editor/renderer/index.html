@@ -164,13 +164,13 @@
           <div id="subopts-door" class="subopts-group active">
             <div class="subopt-row">
               <label class="radio-label">
-                <input type="radio" name="door-type" value="wood-closed" checked> Wood Door (Closed)
+                <input type="radio" name="door-type" value="wood-closed" checked> Wood Door <span class="door-status-pill door-badge-closed">CLOSED</span>
               </label>
               <label class="radio-label">
-                <input type="radio" name="door-type" value="wood-open"> Wood Door (Open)
+                <input type="radio" name="door-type" value="wood-open"> Wood Door <span class="door-status-pill door-badge-open">OPEN</span>
               </label>
               <label class="radio-label">
-                <input type="radio" name="door-type" value="secret"> Secret Door (Hidden)
+                <input type="radio" name="door-type" value="secret"> Secret Door <span class="door-status-pill door-badge-secret">SECRET</span>
               </label>
             </div>
           </div>
@@ -416,12 +416,12 @@
                 <div class="form-row">
                   <label><strong>Initial State:</strong></label>
                   <select id="inspect-door-state" class="dropdown">
-                    <option value="closed">Closed</option>
-                    <option value="open">Open</option>
+                    <option value="closed">🔒 Closed (Solid Timber Slab)</option>
+                    <option value="open">🔓 Open (Passage &amp; Swung Leaf)</option>
                   </select>
                 </div>
                 <div class="form-row" style="margin-top:8px;">
-                  <label class="custom-checkbox">Secret Door (Hidden until searched)
+                  <label class="custom-checkbox">🔮 Secret Door (Hidden masonry until searched)
                     <input type="checkbox" id="inspect-door-secret">
                     <span class="checkmark"></span>
                   </label>
