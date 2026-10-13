@@ -11,9 +11,9 @@ description: Download RobOS for macOS, Linux and Windows, or run it from source 
 <section style="padding-top:20px">
   <div class="wrap">
     <div class="os-grid">
-      <div class="card os" data-os="mac"><div class="ic">💻</div><h3>macOS</h3><p class="muted">Installer (.dmg)</p><a class="btn" href="https://github.com/nddipiazza/robos/releases/download/v0.0.7/RobOS-Installer-v0.0.7-mac.dmg">Download for macOS</a></div>
-      <div class="card os" data-os="win"><div class="ic">🪟</div><h3>Windows</h3><p class="muted">Installer (.exe)</p><a class="btn" href="https://github.com/nddipiazza/robos/releases/download/v0.0.7/RobOS-Installer-v0.0.7-win.exe">Download for Windows</a></div>
-      <div class="card os" data-os="linux"><div class="ic">🐧</div><h3>Linux</h3><p class="muted">AppImage or .deb</p><a class="btn" href="https://github.com/nddipiazza/robos/releases/download/v0.0.7/RobOS-Installer-v0.0.7-linux.AppImage">Download AppImage</a><a class="alt-l" href="https://github.com/nddipiazza/robos/releases/download/v0.0.7/RobOS-Installer-v0.0.7-linux.deb">or the .deb package</a></div>
+      <div class="card os" data-os="mac"><h3>macOS</h3><p class="muted">Installer (.dmg)</p><a class="btn" href="https://github.com/nddipiazza/robos/releases/download/v0.0.7/RobOS-Installer-v0.0.7-mac.dmg">Download for macOS</a></div>
+      <div class="card os" data-os="win"><h3>Windows</h3><p class="muted">Installer (.exe)</p><a class="btn" href="https://github.com/nddipiazza/robos/releases/download/v0.0.7/RobOS-Installer-v0.0.7-win.exe">Download for Windows</a></div>
+      <div class="card os" data-os="linux"><h3>Linux</h3><p class="muted">AppImage or .deb</p><a class="btn" href="https://github.com/nddipiazza/robos/releases/download/v0.0.7/RobOS-Installer-v0.0.7-linux.AppImage">Download AppImage</a><a class="alt-l" href="https://github.com/nddipiazza/robos/releases/download/v0.0.7/RobOS-Installer-v0.0.7-linux.deb">or the .deb package</a></div>
     </div>
     <p class="muted small" style="text-align:center;margin-top:18px">All files and checksums are on <a style="text-decoration:underline" href="https://github.com/nddipiazza/robos/releases/tag/v0.0.7" target="_blank" rel="noopener">GitHub Releases</a>. The installer is the 3-click USB flasher for the RobOS appliance OS; to run the app suite on your current machine use one of the methods below.</p>
   </div>

@@ -1,7 +1,7 @@
 ---
 title: Use RobOS
 layout: default
-nav_order: 2
+nav_order: 3
 has_children: true
 has_toc: false
 ---
@@ -9,42 +9,28 @@ has_toc: false
 # Use RobOS
 {: .no_toc }
 
-New here? Start with these pages to get RobOS running and find your way around it.
-{: .fs-6 .fw-300 }
+Pages for running RobOS and working with its apps. If you have not installed anything yet, start with Get started.
+{: .fs-6 }
 
 ## Start here
 
-1. **[Install RobOS]({{ site.baseurl }}{% link getting-started.md %})**: run it on macOS, Linux or Windows (WSL), with or without Docker.
-2. **[Tour the app suite]({{ site.baseurl }}{% link apps.md %})**: all the desktop apps, grouped by what they're for.
-3. **[Watch a day in the life]({{ site.baseurl }}{% link day-in-the-life.md %})**: follow one idea from a sketch all the way to production.
+1. [Get started]({{ site.baseurl }}{% link getting-started.md %}): run the apps from a clone, add them to the GNOME launcher, or boot the appliance.
+2. [Apps]({{ site.baseurl }}{% link apps.md %}): the app catalog, with one page per app.
+3. [A day with RobOS]({{ site.baseurl }}{% link day-in-the-life.md %}): one task taken from a plan to a merged pull request.
 
-## Explore
+## In this section
 
-<div class="rb-links">
-  <a class="rb-link" href="{{ '/demo.html' | relative_url }}">
-    <strong>⚡ Big Wins in plain English</strong>
-    <span>What RobOS does differently, explained with everyday comparisons instead of jargon.</span>
-  </a>
-  <a class="rb-link" href="{{ site.baseurl }}{% link voice-prompt.md %}">
-    <strong>🎙️ Voice prompts</strong>
-    <span>Talk to your agents. Offline speech-to-text that attaches what's on your screen.</span>
-  </a>
-  <a class="rb-link" href="{{ site.baseurl }}{% link walkthroughs.md %}">
-    <strong>🎥 Video walkthroughs</strong>
-    <span>Narrated recordings of RobOS features being tested end to end.</span>
-  </a>
-  <a class="rb-link" href="{{ '/training/' | relative_url }}">
-    <strong>🎓 Training Academy</strong>
-    <span>Learn to build full-scale web apps and video games without writing code. Step-by-step tutorials and hands-on courses for non-developers and architects.</span>
-  </a>
-  <a class="rb-link" href="{{ site.baseurl }}{% link projects.md %}">
-    <strong>🎮 Projects built with RobOS</strong>
-    <span>Apps, games and systems that RobOS agents designed and built.</span>
-  </a>
-</div>
+- [RobOS Voice]({{ site.baseurl }}{% link voice-prompt.md %}): dictation, spoken commands and the local HTTP API.
+- [Projects]({{ site.baseurl }}{% link projects.md %}): projects built with RobOS.
+
+## Related pages
+
+- [PR Review Theater]({{ site.baseurl }}{% link pr-review-theater.md %}): the review workflow shown in "A day with RobOS".
+- [Walkthroughs and proof of work]({{ site.baseurl }}{% link walkthroughs.md %}): recorded walkthroughs of RobOS features.
+- [Training]({{ site.baseurl }}{% link training.md %}): courses.
+- [Build on RobOS]({{ site.baseurl }}{% link build-on-robos.md %}): create your own apps, schemas and skills.
 
 ## Get help
 
-- **[Discord](https://discord.gg/6PjxzkHujE){: target="_blank" rel="noopener" }**: ask questions and share what you're building.
-- **[GitHub issues](https://github.com/nddipiazza/robos/issues){: target="_blank" rel="noopener" }**: report bugs.
-- Want to build your own apps? Head to **[Build on RobOS]({{ site.baseurl }}{% link build-on-robos.md %})**.
+- [Discord](https://discord.gg/6PjxzkHujE){: target="_blank" rel="noopener" } for questions.
+- [GitHub issues](https://github.com/nddipiazza/robos/issues){: target="_blank" rel="noopener" } for bug reports.

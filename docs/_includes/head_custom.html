@@ -1,50 +1,24 @@
-<!-- Typography & Fonts -->
+<!-- Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{{ '/assets/css/custom.css' | relative_url }}?v={{ site.time | date: '%s' }}">
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500&display=swap" rel="stylesheet">
+
+<!-- Theme: same choice as rowbose.com (shared localStorage key), else the OS preference. -->
 <script>
-  window.mermaidConfig = {
-    startOnLoad: false,
-    theme: 'base',
-    securityLevel: 'loose',
-    themeVariables: {
-      darkMode: true,
-      background: 'transparent',
-      primaryColor: '#162032',
-      primaryTextColor: '#ffffff',
-      primaryBorderColor: '#00e5ff',
-      lineColor: '#38bdf8',
-      secondaryColor: '#1e293b',
-      tertiaryColor: '#0d131f',
-      mainBkg: '#162032',
-      nodeBorder: '#00e5ff',
-      nodeTextColor: '#ffffff',
-      clusterBkg: '#0d1527',
-      clusterBorder: '#6366f1',
-      defaultLinkColor: '#38bdf8',
-      titleColor: '#00e5ff',
-      edgeLabelBackground: '#1a2333',
-      actorBorder: '#00e5ff',
-      actorBkg: '#162032',
-      actorTextColor: '#ffffff',
-      actorLineColor: '#475569',
-      signalColor: '#38bdf8',
-      signalTextColor: '#f8fafc',
-      labelBoxBkgColor: '#1a2333',
-      labelBoxBorderColor: '#00e5ff',
-      labelTextColor: '#ffffff',
-      loopTextColor: '#00e5ff',
-      noteBorderColor: '#f59e0b',
-      noteBkgColor: '#1e293b',
-      noteTextColor: '#fef08a',
-      fontFamily: 'Space Grotesk, Plus Jakarta Sans, sans-serif'
+  (function () {
+    var t = null;
+    try { t = localStorage.getItem('rb2-theme'); } catch (e) {}
+    if (!t && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) t = 'dark';
+    document.documentElement.dataset.theme = t === 'dark' ? 'dark' : 'light';
+    if (t === 'dark') {
+      var css = document.querySelector('[rel="stylesheet"]');
+      if (css) css.setAttribute('href', '{{ "/assets/css/just-the-docs-robos-dark.css" | relative_url }}');
     }
-  };
+  })();
 </script>
 <script defer src="{{ '/assets/js/image-zoom.js' | relative_url }}"></script>
 
-<!-- KaTeX & MathJax Mathematical Notation Support -->
+<!-- KaTeX math -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
@@ -52,7 +26,7 @@
   document.addEventListener("DOMContentLoaded", function() {
     function initMath() {
       if (typeof renderMathInElement === 'function') {
-        // No single-$ delimiter: it turned prices like "$100 → $75" into math.
+        // No single-$ delimiter: it turned prices like "$100 -> $75" into math.
         renderMathInElement(document.body, {
           delimiters: [
             {left: '$$', right: '$$', display: true},
@@ -70,21 +44,11 @@
   });
 </script>
 
-
-{%- comment -%}
-  Homepage-specific Open Graph / Twitter Card title override.
-  Subpages inherit their individual page title, description, and canonical URL dynamically via jekyll-seo-tag.
-{%- endcomment -%}
-{%- if page.url == "/" or page.url == "/index.html" -%}
-<meta property="og:title" content="RobOS — AI-First SDLC Platform &amp; Autonomous Agent Governance Harness" />
-<meta name="twitter:title" content="RobOS — AI-First SDLC Platform &amp; Autonomous Agent Governance Harness" />
-{%- endif -%}
-
-<!-- Favicon & App Icons -->
+<!-- Favicon & app icons -->
 <link rel="icon" type="image/svg+xml" href="{{ '/assets/images/favicon.svg' | relative_url }}">
 <link rel="icon" type="image/png" sizes="32x32" href="{{ '/assets/images/favicon-32x32.png' | relative_url }}">
 <link rel="icon" type="image/png" sizes="16x16" href="{{ '/assets/images/favicon-16x16.png' | relative_url }}">
 <link rel="apple-touch-icon" sizes="180x180" href="{{ '/assets/images/apple-touch-icon.png' | relative_url }}">
 <link rel="shortcut icon" href="{{ '/assets/images/favicon.ico' | relative_url }}">
 <link rel="manifest" href="{{ '/site.webmanifest' | relative_url }}">
-<meta name="theme-color" content="#080b11">
+<meta name="theme-color" content="#f7f5ef">

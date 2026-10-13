@@ -3,71 +3,48 @@ title: "RobOS Create Project & App Wizard"
 package: app-wizard
 category: arch-planning
 icon: app-wizard.svg
-summary: "Greenfield application scaffolding and brownfield codebase ingestion across multi-app archetypes."
-description: "Greenfield application scaffolding and brownfield codebase ingestion across multi-app archetypes."
+summary: "Scaffold a new project from an archetype, or import an existing folder, and register it in the RobOS project files."
+description: "App Wizard writes starter code for a web app, desktop app, CLI or service, or inspects an existing codebase and adds a Backstage catalog file and dev-setup.sh. Both paths register the project in RobOS."
 ---
 
-# RobOS Create Project & App Wizard
+App Wizard has two modes, switched at the top of the window: **Create New Project** and **Import Existing Code**. A **Simple Mode** / **Advanced Mode** toggle hides or shows the engineering fields (technology stack, custom domain, team ownership). Step-by-step walkthroughs are on [New app wizard]({{ '/new-app-wizard.html' | relative_url }}) and [Import an existing app]({{ '/app-import-wizard.html' | relative_url }}).
 
-The **RobOS Create Project & App Wizard** (`packages/app-wizard`) is the visual entry point for greenfield application scaffolding and brownfield codebase ingestion. Engineered for both non-technical creators and seasoned software architects, it translates product concepts into fully configured, production-grade applications registered in the RobOS Knowledge Graph.
+## Create a new project
 
-## Key Usability & Non-Technical Features
+The steps are **What to Build**, **Project Basics**, **Features & Data** and **Review & Create**.
 
-- **Simple Mode vs. Advanced Mode**: Default plain-English mode strips away confusing developer jargon (raw YAML editors, TypeSpec, and URNs), replacing them with intuitive checklists. Advanced developers can toggle to granular engineering mode anytime.
-- **One-Click Realistic Starter Templates**: Instant one-click templates to test and prototype real-world systems:
-  - 🌿 **Urban Plant Tracker** (`robos:FrontEndApp`): Modern Next.js 15 web application with automated plant care schedules and botanical logs.
-  - ☕ **Barista Order API** (`robos:Microservice`): Cloud REST microservice for specialty coffee roastery orders with OpenAPI 3.1 contracts.
-  - 📑 **DocuVault Desktop** (`robos:DesktopApp`): Electron desktop application for offline-first markdown notes and encrypted personal storage.
-  - ⚡ **Pulse Metrics CLI** (`robos:ConsoleApp`): Executable command-line diagnostic tool for uptime monitoring and latency checks.
-- **Real-Time Auto-Slug Generation**: As creators type human-friendly names (e.g., "Urban Plant Tracker"), RobOS automatically computes clean, standardized directory paths (`packages/urban-plant-tracker`).
-- **Human-Readable Project Launch Card**: Review stage presents a clean visual summary card detailing the archetype, runtime, storage, and automated setup deliverables before scaffolding.
+1. Choose an archetype: Modern Website / Web App, Desktop Application, Backend Cloud API, Command-Line Utility, PC Video Game, Mobile Phone App, Data Worker / Sync, or Reusable Code Library. Four one-click presets (Urban Plant Tracker, Barista Order API, DocuVault Desktop, Pulse Metrics CLI) pre-fill the form.
+2. Enter a project name. The folder name under `packages/` is derived from it and must be lowercase letters, digits and hyphens.
+3. Pick how it stores data and where it runs, then review and create.
 
-## Architecture & Scaffolding Workflow
+What gets written depends on the archetype:
 
-![RobOS Create Project Architecture]({{ '/assets/images/app-wizard/create_project_architecture.jpg' | relative_url }})
+| Archetype | Generated code |
+|---|---|
+| Web app (also any project whose deploy target is Vercel or whose stack mentions Next.js) | Copy of the `nextjs-vercel-web` template in `packages/app-wizard/templates` |
+| Desktop app | Electron `package.json` and `main.js` with the RobOS window flags |
+| Command-line utility | `package.json`, `bin/cli.js`, `README.md`, `Dockerfile` |
+| Everything else, including API, game, mobile, pipeline and library | A small Node HTTP service: `server.js` with a `/health` route, `openapi.yaml`, `Dockerfile`, `README.md` |
 
-```mermaid
-flowchart LR
-    subgraph S1["1. Archetype & Quick Presets"]
-        T1["🌐 Web Application\n(Urban Plant Tracker)"]
-        T2["⚡ Cloud API\n(Barista Order API)"]
-        T3["🖥️ Desktop Tool\n(DocuVault Desktop)"]
-        T4["⌨️ CLI Utility\n(Pulse Metrics CLI)"]
-    end
+For every archetype the wizard also writes `catalog-info.yaml` (a Backstage descriptor) and an executable `dev-setup.sh`, then registers the project:
 
-    subgraph S2["2. Plain-English Configuration"]
-        C1["Simple Mode\n(Non-technical friendly)"]
-        C2["Auto-Slug Synchronization\n(packages/slug)"]
-        C3["Advanced Mode Toggle\n(OpenAPI 3.1 & TypeSpec)"]
-    end
+- appends an entry to `.robos/packages.yaml` if that file exists;
+- adds a node to `.robos/kgraphs/services/package.jsonld` (APIs) or `.robos/kgraphs/applications/package.jsonld` (everything else);
+- creates `docs/projects/<slug>.md` if the `docs/projects` folder exists;
+- adds the project to `~/.config/robos/git-projects.json`, so it shows up in [Git Projects]({{ '/apps/git-projects/' | relative_url }}).
 
-    subgraph S3["3. Greenfield Scaffolding Engine"]
-        E1["Next.js Launch Kit\n(Auth, PGlite, SEO, E2E)"]
-        E2["Electron Desktop\n(Window Bridge & Theme)"]
-        E3["REST Microservice\n(Express/Node Server & Docker)"]
-        E4["Executable CLI\n(CLI Runner & Diagnostics)"]
-    end
+The target is `packages/<slug>` under the RobOS checkout, found by walking up from the working directory until a `.robos` folder appears.
 
-    subgraph S4["4. RobOS SDLC Registration"]
-        R1["Dual-State Knowledge Graph\n(.robos/kgraphs/)"]
-        R2["Packages Registry\n(.robos/packages.yaml)"]
-        R3["Spotify Backstage\n(catalog-info.yaml)"]
-        R4["Living Documentation\n(docs/projects/<slug>.md)"]
-    end
+## Import existing code
 
-    S1 --> S2 --> S3 --> S4
+The steps are **What to Import**, **Deep Inspection** and **Catalog & Ingest**. You give a folder path (the box offers path completion). **Deep Inspect & Analyze Targets** looks at files in the top level of that folder and guesses the archetype: `pom.xml` (Java, Spring Boot), `package.json` with Electron, React Native, a front-end framework or Express, `project.godot` or `*.uproject`, `go.mod`, `Cargo.toml`, `requirements.txt` or `pyproject.toml`. It also notes an existing `Dockerfile`, `dev-setup.sh`, `catalog-info.yaml`, and OpenAPI, GraphQL or `.proto` files. Frameworks for Go and Python are assumed (Gin, FastAPI), not detected, so check the result and edit it.
 
-    classDef stage fill:#161b22,stroke:#00bcd4,stroke-width:1.5px,color:#f0f6fc;
-    classDef item fill:#0d1117,stroke:#30363d,stroke-width:1px,color:#c9d1d9;
-    class S1,S2,S3,S4 stage;
-    class T1,T2,T3,T4,C1,C2,C3,E1,E2,E3,E4,R1,R2,R3,R4 item;
-```
+**Synthesize Backstage Catalog & Ingest** and **Complete Ingestion & Map** then write `catalog-info.yaml` and `dev-setup.sh` into the folder when they are missing (the generated `dev-setup.sh` only prints a message), append to `.robos/packages.yaml`, and add the folder to `git-projects.json`. A text box lets you correct the guess in words ("mobile game", "front end"); that is keyword matching in `main.js`, not a model. Through **+ Add Resource** the wizard can also take other resource types (Git repository or organization, local directory, Confluence space, Backstage catalog, S3 bucket, database, Kafka, Kubernetes cluster, MCP server) and import them into `.robos/knowledge-graph.jsonld` with SHACL validation.
 
-## Supported Archetypes
-- **Modern Web Application** (`robos:FrontEndApp` / `schema:WebApplication`): Phone-first Next.js 15 apps with built-in auth, serverless Neon Postgres, SEO metadata, and Cucumber E2E tests.
-- **Desktop Application** (`robos:DesktopApp` / `schema:SoftwareApplication`): Installable Electron desktop apps integrated into the RobOS desktop shell and taskbar.
-- **Backend Microservice / Web API** (`robos:Microservice` / `schema:WebApplication`): Express/FastAPI/Spring Boot services with OpenAPI 3.1 specifications and Dockerfiles.
-- **Command-Line Tool** (`robos:ConsoleApp` / `schema:SoftwareApplication`): Lightweight terminal utilities with argument parsing and subcommands.
-- **PC & Mobile Games** (`robos:PCGame`, `robos:MobileGame`): Godot / Unreal Engine game scaffolds.
-- **Data Pipeline & Workers** (`robos:DataPipeline`): Kafka and batch streaming event handlers.
-- **Software Libraries** (`robos:Library`): Reusable client SDKs and cross-platform modules.
+## Notes
+
+- No network access or tokens are needed. Generated web apps expect Node and, for deploys, a Vercel account.
+- The wizard edits files in your checkout. Commit or stash first so you can see what it changed.
+- The wizard has no field for the repository URL. New projects are registered with `github.com/nddipiazza/<slug>` and imported ones with `github.com/acme/<slug>`, so correct the entry in `.robos/packages.yaml`.
+
+Source: [`packages/app-wizard`](https://github.com/nddipiazza/robos/tree/main/packages/app-wizard).

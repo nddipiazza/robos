@@ -3,123 +3,42 @@ title: "RobOS cRPG Editor"
 package: crpg-editor
 category: "games"
 icon: crpg-editor.svg
-summary: "Unified cRPG game editor for campaign management, character & NPC authoring, party inventory, and tactical maps"
-description: "Unified cRPG game editor for campaign management, character & NPC authoring, party inventory, and tactical maps"
+summary: "Desktop editor for the cRPG in games/crpg-realm: campaigns, characters, items, enemies, spells, abilities and battle maps."
+description: "The cRPG Editor reads and writes the JSON-LD content files of games/crpg-realm, can build map collision grids with a Python tool, and can launch a campaign in the Godot 4 game."
 ---
 
-# RobOS cRPG Editor
+The cRPG Editor is the authoring tool for the `robos-crpg` game ("Realm of Heroes", in `games/crpg-realm`). Each campaign, character, map and so on is one JSON-LD file in that folder, so the files can be committed and reviewed like code. The game itself and its test suite are described in [Tactical cRPG & Infinity AI Engine]({{ '/projects/crpg-realm/' | relative_url }}); a worked example is the [Campaign Editor Tutorial]({{ '/projects/crpg-realm/campaign-editor-tutorial.html' | relative_url }}).
 
-RobOS cRPG Editor is the unified game development and authoring environment for `robos-crpg` (Realm of Heroes). It consolidates campaign orchestration, independent D&D 5e character and NPC authoring, party inventory management, and tactical 2.5D battle map level design into a cohesive, production-grade desktop application.
+![The cRPG Editor Campaign tab showing campaign metadata, the list of included maps and the list of included characters]({{ '/assets/images/screenshots/crpg-editor-overview.png' | relative_url }})
+{: .robos-zoomable-img }
 
-[Step-by-Step Tutorial: Rescue the Princess]({{ '/projects/crpg-realm/campaign-editor-tutorial.html' | relative_url }}){: .btn .btn-primary .mr-2 }
-[Tactical cRPG Architecture]({{ '/projects/crpg-realm/' | relative_url }}){: .btn .mr-2 }
+*The Campaign tab: metadata and starting scene at the top, then the maps and characters the campaign includes. This capture is older and shows fewer tabs than the current app.*
 
-![RobOS cRPG Editor Architecture]({{ '/assets/images/architecture/crpg-editor-architecture.jpg' | relative_url }})
+## Tabs
 
-## Unified Architectural Model
+| Tab | What you edit | Folder under `games/crpg-realm` |
+|---|---|---|
+| **Campaign** | Title, slug, world setting, rule system, difficulty, starting scene and map, story synopsis, which maps and characters are included, quest journal and world flags | `campaigns/` |
+| **Characters & NPCs** | Heroes and non-player characters | `characters/` |
+| **Items** | Items | `items/` |
+| **Enemies** | Enemies | `enemies/` |
+| **Spells** | Spells | `spells/` |
+| **Abilities** | Abilities | `abilities/` |
+| **Maps** | Battle maps: terrain, size in feet, optional artwork underlay and a list of placed objects (select, place and pan tools; `Ctrl+Z` undoes and `Ctrl+Y` redoes while the Maps tab is open) | `maps/` |
 
-In RobOS cRPG development, entities are decoupled as first-class, independent Knowledge Graph objects:
+Events, scenes and imported art (portraits, icons, tokens, sprites, backgrounds, models) are also read from their folders under `events/`, `scenes/` and `assets/`. The editor creates any missing folder on start.
 
-- **Battle Maps** are independent entities (`games/crpg-realm/maps/<slug>.jsonld`, `@type: ["robos:CRPGBattleMap", "schema:Place"]`).
-- **Characters & NPCs** are independent entities (`games/crpg-realm/characters/<slug>.jsonld`, `@type: ["robos:CRPGCharacter", "schema:Person"]`).
-- **Campaigns** compose independent maps (`robos:maps`) and characters (`robos:characters`), with an active starting map (`robos:startingMap`), quest log (`robos:questLog`), and world flags (`robos:worldFlags`).
+## Things the buttons do
 
-```mermaid
-graph TD
-    classDef camp fill:#1e293b,stroke:#00bcd4,stroke-width:2px,color:#fff
-    classDef char fill:#1e293b,stroke:#a855f7,stroke-width:2px,color:#fff
-    classDef map fill:#1e293b,stroke:#10b981,stroke-width:2px,color:#fff
-    classDef inv fill:#1e293b,stroke:#f59e0b,stroke-width:2px,color:#fff
+- **Save** writes the open campaign as a `.jsonld` file in `campaigns/`.
+- **Build PNG & Grid** (Maps) runs `python3 -m robos_crpg_blockout build <map>.jsonld --game-dir <folder>` from `packages/robos-crpg-blockout`. It writes a PNG to `assets/blockouts/` and stores blocked, opaque, difficult and cover cells in the map file. It needs `python3`. **Export PNG** copies the built image elsewhere.
+- **Generate Cartridge** bundles the campaign into `<slug>.cartridge.json` with `CartridgeBundler` from `packages/crpg-builder`.
+- **Render as Game** saves the campaign, bundles a cartridge into `cartridges/`, then starts Godot with `--path games/crpg-realm --cartridge <slug>` and `CRPG_MODE=real`. It looks for Godot 4 in `$GODOT_BIN`, `~/.local/bin/godot`, `~/.local/bin/godot4`, `~/apps/godot4`, `/usr/bin/godot4`, `/usr/local/bin/godot4` and `/usr/bin/godot`, and falls back to `games/crpg-realm/play.sh`. If none exists it reports "Godot 4 binary not found."
 
-    subgraph CampaignStudio["📜 Campaign Studio"]
-        Camp["CRPGCampaign<br/><b>dragonwarrior-1-usa</b>"]:::camp
-        QuestLog["Quest Journal<br/>- Defeat Dragonlord<br/>- Rescue Gwaelin"]:::camp
-        WorldFlags["World State Flags<br/>- ball_of_light_stolen<br/>- princess_rescued"]:::camp
-    end
+## Setup
 
-    subgraph CharactersStudio["👤 Characters & NPCs Studio"]
-        Hero1["CRPGHero<br/><b>hero-of-alefgard</b><br/>Lvl 1 Fighter (15 HP)"]:::char
-        NPC1["CRPGNPC<br/><b>npc-king-loric</b><br/>Role: king (save)"]:::char
-        NPC2["CRPGNPC<br/><b>npc-princess-gwaelin</b><br/>Role: princess (talk)"]:::char
-    end
-
-    subgraph MapsStudio["🗺️ Tactical Maps Studio"]
-        Map1["CRPGBattleMap<br/><b>tantegel-throne-room</b><br/>60x40 ft (Stone)"]:::map
-        Blockout["Python Engine<br/><b>assets/blockouts/tantegel-throne-room.png</b><br/>5-ft Collision Matrix"]:::map
-    end
-
-    subgraph InventoryStudio["🎒 Inventory & Equipment"]
-        Party["Active Party<br/><b>Hero of Alefgard</b>"]:::inv
-        Purse["Shared Purse<br/><b>120 GP</b> (King's Chests)"]:::inv
-        Gear["Equipped Slots<br/>Bamboo Pole, Small Shield, Clothes"]:::inv
-    end
-
-    Camp -->|robos:maps| Map1
-    Camp -->|robos:startingMap| Map1
-    Camp -->|robos:characters| Hero1
-    Camp -->|robos:characters| NPC1
-    Camp -->|robos:characters| NPC2
-    Camp -->|robos:gameState| QuestLog
-    Camp -->|robos:gameState| WorldFlags
-
-    Map1 -->|robos_crpg_blockout| Blockout
-    NPC1 -.->|placed in| Map1
-    NPC2 -.->|placed in| Map1
-
-    Camp -->|robos:heroes| Party
-    Party --> Gear
-    Camp --> Purse
+```bash
+electron packages/crpg-editor
 ```
 
-## Core Modules
-
-### 1. 📜 Campaign Management
-- **Campaign Metadata**: Title, slug, setting, ruleset (D&D 5e SRD, Advanced 5e, RobOS Tactical), and difficulty mode.
-- **Compositional Maps & Characters**: Checklists for selecting independent maps and characters that belong to this campaign, with automatic count badges.
-- **Starting Map Selection**: Designates the primary spawn location (e.g. `tantegel-throne-room`).
-- **Quest Journal & World Story Flags**: Narrative tracking with live status updates (active, completed, failed) and dynamic state flags.
-
-### 2. 👤 Characters & NPCs Studio
-- **Dual Entity Classification**: Supports full player heroes and non-player characters (NPCs) with seamless one-click switching.
-- **Roster Filtering**: Instant pill filters (`All`, `Heroes`, `NPCs`) with role badges (`Hero`, `King`, `Princess`, `Guard`, `Merchant`, `Sage`).
-- **NPC Scripting & Placement**: Configure NPC role, interaction type (`talk`, `save`, `shop`, `inn`, `rest`), assigned map placement, grid coordinate position (`col`, `row`), facing orientation, and multi-page dialogue scripts.
-- **D&D 5e Hero Attributes**: Full ability scores (STR, DEX, CON, INT, WIS, CHA) with auto-computed modifiers, AC, HP Max, current HP, speed, initiative, prepared spells, and backstory.
-
-### 3. 🗺️ Tactical Maps Studio
-- **Independent Battle Arenas**: Author maps with customizable dimensions (width/height in feet), base terrain (stone, dirt, grass, dungeon floor), and background underlay art.
-- **Object Hierarchies**: Place and manipulate obstacles, throne daises, stone archway columns, treasure chests, and doors with configurable collision (`blocked`, `difficult`, `open`) and opacity (`opaque`, `transparent`, `halfCover`).
-- **Automated Blockout Compilation**: One-click `⚡ Build PNG & Grid` invokes the headless `robos_crpg_blockout` Python compiler to generate 5-ft cell collision matrices and static background PNGs in `games/crpg-realm/assets/blockouts/`.
-
-### 4. 🎒 Party Inventory & Equipment
-- **Active Party Assembly**: Check heroes into the active adventuring party and set party leader and tactical marching formations (Rank, Wedge, Line, Column, Square, Scatter).
-- **Party Currency Purse**: Shared gold (GP), silver (SP), and copper (CP) purse.
-- **Individual Equipment Slots**: Main hand, off hand, armor, helmet, cloak, boots, ring, and quick-access belt items with live AC impact calculations.
-
-## Example: Dragon Warrior 1 (USA) Scaffolding
-
-Using only user inputs in the editor, the full Dragon Warrior 1 (USA) starting campaign is authored:
-1. **Map**: `tantegel-throne-room` (60×40 ft stone arena with King's throne dais, pillars, and 120 G chest).
-2. **Hero**: `Hero of Alefgard` (Level 1 Fighter, descendant of Erdrick, 15 HP, 12 AC, HEAL/SIZZ spells).
-3. **NPCs**:
-   - `King Loric` (role: `king`, interaction: `save`, Tantegel Castle 2F placement, Ball of Light dialogue).
-   - `Princess Gwaelin` (role: `princess`, interaction: `talk`, swamp cave rescue dialogue).
-4. **Campaign**: `dragonwarrior-1-usa` (Alefgard world setting, Tantegel starting map, Dragonlord and Gwaelin quests).
-5. **Inventory**: 120 GP starting purse, Bamboo Pole, Small Shield, Clothes, and Herb/Torch/Key stash.
-
-### Visual Walkthrough
-
-| 🗺️ Tantegel Throne Room Map | 👤 Hero of Alefgard |
-|---|---|
-| ![Tantegel Throne Room Map]({{ '/assets/images/screenshots/crpg-editor-tantegel-map.png' | relative_url }}) | ![Hero of Alefgard Sheet]({{ '/assets/images/screenshots/crpg-editor-hero-alefgard.png' | relative_url }}) |
-| **👑 King Loric NPC** | **📜 Dragon Warrior 1 Campaign** |
-| ![King Loric NPC Profile]({{ '/assets/images/screenshots/crpg-editor-king-loric.png' | relative_url }}) | ![Dragon Warrior 1 Campaign]({{ '/assets/images/screenshots/crpg-editor-campaign-dragonwarrior.png' | relative_url }}) |
-| **🎒 Equipped Gear & Purse** | **⚡ Editor Overview** |
-| ![Inventory and Equipment]({{ '/assets/images/screenshots/crpg-editor-inventory-equipped.png' | relative_url }}) | ![RobOS cRPG Editor Overview]({{ '/assets/images/screenshots/crpg-editor-overview.png' | relative_url }}) |
-
----
-
-## Step-by-Step Campaign Creation Tutorial
-
-Looking for a complete end-to-end tutorial showing how to use the editor to create maps, D&D 5e characters, blacksmith trials, and Skyrim-style quests?
-
-Check out our comprehensive guide: **[Campaign Editor Tutorial: Rescue the Princess]({{ '/projects/crpg-realm/campaign-editor-tutorial.html' | relative_url }})**. It walks through every step from the King's royal decree in the Throne Room to the Dragonclaw Forge trial, Overworld wilderness, Dark Lord Malakor's dungeon lair, and triumphant victory.
+Set `ROBOS_CRPG_DIR` to edit a game folder other than `games/crpg-realm`. Tests run with `npm test` in the package (`node --test tests/*.test.js`). Source: [`packages/crpg-editor`](https://github.com/nddipiazza/robos/tree/main/packages/crpg-editor).

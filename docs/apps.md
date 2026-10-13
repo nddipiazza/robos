@@ -13,14 +13,14 @@ Every RobOS desktop app, each with its own page. They're built with Electron and
 {: .fs-6 .fw-300 }
 
 <div class="rb-app-filter">
-  <input type="search" id="rb-app-search" placeholder="Filter apps by name or what they do…" aria-label="Filter apps" autocomplete="off">
+  <input type="search" id="rb-app-search" placeholder="Filter apps by name or what they do" aria-label="Filter apps" autocomplete="off">
 </div>
 
 <nav class="rb-cat-pills" aria-label="App categories">
 {%- for cat in site.data.app_categories -%}
   {%- assign n = site.apps | where: "category", cat.id | size -%}
   {%- if n > 0 %}
-  <a href="#{{ cat.id }}">{{ cat.icon }} {{ cat.name }}</a>
+  <a href="#{{ cat.id }}">{{ cat.name }}</a>
   {%- endif -%}
 {%- endfor %}
 </nav>
@@ -35,7 +35,7 @@ Every RobOS desktop app, each with its own page. They're built with Electron and
 {%- assign apps = site.apps | where: "category", cat.id | sort_natural: "title" -%}
 {%- if apps.size > 0 %}
 <section class="rb-cat" id="{{ cat.id }}">
-  <h2 class="rb-cat-title">{{ cat.icon }} {{ cat.name }}</h2>
+  <h2 class="rb-cat-title">{{ cat.name }}</h2>
   <div class="robos-apps-grid">
     {%- for app in apps %}
     {% include app-card.html app=app %}
@@ -47,7 +47,7 @@ Every RobOS desktop app, each with its own page. They're built with Electron and
 
 {%- if other_apps.size > 0 %}
 <section class="rb-cat" id="more-apps">
-  <h2 class="rb-cat-title">✨ More apps</h2>
+  <h2 class="rb-cat-title">More apps</h2>
   <div class="robos-apps-grid">
     {%- assign other_apps = other_apps | sort_natural: "title" -%}
     {%- for app in other_apps %}

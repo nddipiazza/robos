@@ -8,14 +8,14 @@ og_image: /assets/future/og.png
 ---
 <section class="hero future-hero">
   <div class="wrap">
-    <a class="pill" href="{{ '/future/whitepaper/' | relative_url }}"><b>Whitepaper</b> · The Skill Commons, draft 2 →</a>
+    <a class="pill" href="{{ '/future/whitepaper/' | relative_url }}"><b>Whitepaper</b> · The Skill Commons, draft 2</a>
     <h1>Done right, AI puts <em>less strain on data centers.</em></h1>
     <p class="lead">Today, every new app asks a giant computer to rewrite things that were solved long ago. Solve each task once and reuse it everywhere: a shared catalog of finished building blocks, and a small AI on your own laptop that snaps them together. Fewer trips to the data center, if we get it right.</p>
     <div class="cta">
       <a class="btn btn-accent" href="{{ '/future/whitepaper/' | relative_url }}">Read the whitepaper</a>
-      <a class="btn btn-ghost" href="{{ '/future/skill-commons-whitepaper.pdf' | relative_url }}">⬇ Download the PDF</a>
+      <a class="btn btn-ghost" href="{{ '/future/skill-commons-whitepaper.pdf' | relative_url }}">Download the PDF</a>
     </div>
-    <p class="sub">A proposal, not a product. <a href="#is-this-real">What exists today, and what doesn't →</a></p>
+    <p class="sub">A proposal, not a product. <a href="#is-this-real">What exists today, and what doesn't</a></p>
   </div>
 </section>
 
@@ -125,7 +125,7 @@ og_image: /assets/future/og.png
     <p class="sec-p" style="margin-inline:auto">The evidence, the design, the limits, and a plan to test it.</p>
     <div class="cta" style="margin-top:26px">
       <a class="btn btn-accent" href="{{ '/future/whitepaper/' | relative_url }}">Read it online</a>
-      <a class="btn btn-ghost" href="{{ '/future/skill-commons-whitepaper.pdf' | relative_url }}">⬇ Download the PDF</a>
+      <a class="btn btn-ghost" href="{{ '/future/skill-commons-whitepaper.pdf' | relative_url }}">Download the PDF</a>
     </div>
   </div>
 </section>
