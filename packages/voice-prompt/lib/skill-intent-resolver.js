@@ -168,7 +168,14 @@ function matchTabletopSkills(text) {
   const trapKeywords = ['pit trap', 'pit', 'spear trap', 'spear', 'falling rock', 'rock trap', 'gas trap', 'chest trap'];
 
   // Door keywords
-  const doorKeywords = ['door', 'doors', 'secret door', 'iron door', 'wooden door'];
+  const doorKeywords = [
+    'secret doors', 'secret door', 'hidden doors', 'hidden door', 'concealed doors', 'concealed door',
+    'open doors', 'open door', 'open wooden doors', 'open wooden door', 'open wood doors', 'open wood door',
+    'closed doors', 'closed door', 'closed wooden doors', 'closed wooden door', 'closed wood doors', 'closed wood door',
+    'wooden doors', 'wooden door', 'wood doors', 'wood door',
+    'iron doors', 'iron door', 'metal doors', 'metal door', 'stone doors', 'stone door',
+    'doors', 'door'
+  ];
 
   // Pattern: (add|put|place|spawn|insert) [count] [item] (in|to|at|inside) (room|broom|tile) [target]
   const monsterPattern = new RegExp(
@@ -283,24 +290,40 @@ function matchTabletopSkills(text) {
 
   // Door pattern
   const doorPattern = new RegExp(
-    `(?:add|put|place)\\s+(?:a\\s+)?(${doorKeywords.join('|')})\\s+(?:at|between|to|in)\\s+([a-z0-9\\-_\\s,]+)`,
+    `(?:add|put|place|set|install)\\s+(\\d+|one|two|three|four|five|six|seven|eight|nine|ten|a\\s+couple(?:\\s+of)?|a\\s+pair(?:\\s+of)?|a|an)?\\s*(${doorKeywords.join('|')})\\s+(?:at|between|to|in|on|along)\\s+([a-z0-9\\-_\\s,]+)`,
     'i'
   );
   const doorMatch = raw.match(doorPattern);
   if (doorMatch) {
-    const dType = doorMatch[1].toLowerCase().includes('secret') ? 'secret' : 'standard';
-    const location = doorMatch[2].trim();
+    const rawCount = (doorMatch[1] || '1').toLowerCase().trim();
+    const count = parseInt(rawCount, 10) || wordToNum[rawCount] || 1;
+    const rawDoor = doorMatch[2].toLowerCase().trim();
+    let dType = 'standard';
+    if (rawDoor.includes('secret') || rawDoor.includes('hidden') || rawDoor.includes('concealed')) {
+      dType = 'secret';
+    } else if (rawDoor.includes('open')) {
+      dType = 'wood-open';
+    } else {
+      dType = 'wood-closed';
+    }
+    const location = doorMatch[3].replace(/[.,!?;:]+$/g, '').trim();
+    const doorName = dType === 'secret' ? 'Secret Door' : (dType === 'wood-open' ? 'Open Door' : 'Door');
+    const title = count > 1 ? `Place ${count} ${doorName}s at ${location}` : `Place ${doorName} at ${location}`;
+
     skills.push({
       id: 'tabletop:place-door',
       name: 'Place Door',
-      title: `Place ${dType === 'secret' ? 'Secret Door' : 'Door'} at ${location}`,
+      title,
       category: 'Tabletop Quest',
       confidence: 0.90,
       action: 'place-door',
       params: {
         category: 'door',
         doorType: dType,
-        location
+        type: dType,
+        count,
+        location,
+        targetRoom: location
       }
     });
     return skills;
