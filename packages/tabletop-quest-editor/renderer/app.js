@@ -72,9 +72,25 @@ const state = {
     showTraps: true,
     showWallBlocks: true,
     showNotes: true,
+    showValidationWarnings: true,
     artOpacity: 1.0,
     gridOpacity: 0.75
   },
+
+  // Error validation state
+  validation: {
+    valid: true,
+    totalErrors: 0,
+    errors: [],
+    counts: {
+      all: 0,
+      furniture_bounds: 0,
+      door_wall: 0,
+      overlap: 0
+    },
+    activeFilter: 'all'
+  },
+  focusedErrorId: null,
 
   // Undo / Redo history
   undoStack: [],
@@ -254,9 +270,25 @@ const dom = {
   chkShowTraps: document.getElementById('chk-show-traps'),
   chkShowWallBlocks: document.getElementById('chk-show-wall-blocks'),
   chkShowNotes: document.getElementById('chk-show-notes'),
+  chkShowValidation: document.getElementById('chk-show-validation'),
   chkAdditionalBorder: document.getElementById('chk-additional-border'),
   sliderArtOpacity: document.getElementById('slider-art-opacity'),
   sliderGridOpacity: document.getElementById('slider-grid-opacity'),
+
+  // Validation Tab & Status Badge
+  infoValidationBadge: document.getElementById('info-validation-badge'),
+  badgeValCount: document.getElementById('badge-val-count'),
+  tabBtnValidation: document.getElementById('tab-btn-validation'),
+  valSummaryBanner: document.getElementById('val-summary-banner'),
+  valSummaryIcon: document.getElementById('val-summary-icon'),
+  valSummaryTitle: document.getElementById('val-summary-title'),
+  valSummaryDesc: document.getElementById('val-summary-desc'),
+  valFilterAllCount: document.getElementById('val-filter-all-count'),
+  valFilterBoundsCount: document.getElementById('val-filter-bounds-count'),
+  valFilterDoorCount: document.getElementById('val-filter-door-count'),
+  valFilterOverlapCount: document.getElementById('val-filter-overlap-count'),
+  validationErrorsList: document.getElementById('validation-errors-list'),
+  filterPills: document.querySelectorAll('.val-filters .filter-pill'),
 
   // Toast Container
   toastContainer: document.getElementById('toast-container')
@@ -301,6 +333,7 @@ function undo() {
   updateEntitySummaryList();
   syncQuestMetaInputs();
   updateHistoryButtons();
+  runValidation();
   render();
   showToast('Undone', 'info');
 }
@@ -316,6 +349,7 @@ function redo() {
   updateEntitySummaryList();
   syncQuestMetaInputs();
   updateHistoryButtons();
+  runValidation();
   render();
   showToast('Redone', 'info');
 }
@@ -358,6 +392,7 @@ async function initApp() {
   preloadAssets();
 
   setupEventListeners();
+  runValidation();
   render();
 }
 
@@ -423,6 +458,7 @@ async function loadBlockmap(slugOrPath) {
 
     // Fit view to screen
     fitView();
+    runValidation();
     render();
     showToast(`Loaded Blockmap: ${state.blockmap.title || state.blockmap.id}`, 'success');
   } catch (err) {
@@ -572,6 +608,7 @@ async function loadCartridge(slugOrPath) {
 
     syncQuestMetaInputs();
     updateEntitySummaryList();
+    runValidation();
     render();
     showToast(`Loaded Cartridge: ${state.quest.title}`, 'success');
   } catch (err) {
@@ -1718,7 +1755,9 @@ function render() {
   // 10. Monsters (Layer 2)
   if (state.layers.showMonsters && state.quest.monsters) {
     state.quest.monsters.forEach((m, i) => {
-      const pos = tileToWorld(m.pos[0], m.pos[1]);
+      const mc = m.pos ? m.pos[0] : (m.x !== undefined ? m.x : 0);
+      const mr = m.pos ? m.pos[1] : (m.y !== undefined ? m.y : 0);
+      const pos = tileToWorld(mc, mr);
       const tokenKey = `token_${m.type}`;
       const tokenImg = state.assetCache[tokenKey];
       const radius = (geom.tileSize / 2) - 3;
@@ -1785,6 +1824,11 @@ function render() {
         drawSelectionGlow(pos.x, pos.y, geom.tileSize, geom.tileSize);
       }
     });
+  }
+
+  // 11.5. Validation Warnings Overlay
+  if (state.layers.showValidationWarnings && state.validation && state.validation.errors && state.validation.errors.length > 0) {
+    renderValidationCanvasOverlays(ctx, geom);
   }
 
   // 12. Hover & Placement Ghost Preview
@@ -2379,6 +2423,7 @@ function handleCanvasClick(wx, wy) {
     updateEntitySummaryList();
   }
 
+  runValidation();
   render();
 }
 
@@ -2426,6 +2471,7 @@ function deleteEntity(type, index) {
   state.selectedEntity = null;
   updateInspectorUI();
   updateEntitySummaryList();
+  runValidation();
   render();
 }
 
@@ -2792,6 +2838,644 @@ function updateEntitySummaryList() {
 }
 
 // -------------------------------------------------------------
+// Error Validation Engine (HeroQuest Placement Rules)
+// -------------------------------------------------------------
+function validateQuest(quest, blockmap) {
+  const errors = [];
+  if (!quest) {
+    return {
+      valid: true,
+      totalErrors: 0,
+      errors: [],
+      counts: { all: 0, furniture_bounds: 0, door_wall: 0, overlap: 0 }
+    };
+  }
+
+  // Room lookup helper
+  function getRoomAt(col, row) {
+    if (!blockmap || !blockmap.rooms) return null;
+    for (const r of blockmap.rooms) {
+      if (r.tiles) {
+        if (r.tiles.some(t => t[0] === col && t[1] === row)) return r;
+      } else if (r.x !== undefined) {
+        if (col >= r.x && col < r.x + r.w && row >= r.y && row < r.y + r.h) return r;
+      }
+    }
+    return null;
+  }
+
+  // -------------------------------------------------------------
+  // Rule 1: Furniture outside of bounds of single room
+  // -------------------------------------------------------------
+  if (Array.isArray(quest.furniture)) {
+    quest.furniture.forEach((f, idx) => {
+      const w = f.width || 1;
+      const h = f.height || 1;
+      const furnName = f.name || f.type || 'Furniture';
+      const tiles = [];
+      const roomsEncountered = new Map();
+      const corridorTiles = [];
+
+      for (let dx = 0; dx < w; dx++) {
+        for (let dy = 0; dy < h; dy++) {
+          const col = f.x + dx;
+          const row = f.y + dy;
+          tiles.push([col, row]);
+          const room = getRoomAt(col, row);
+          if (!room) {
+            corridorTiles.push([col, row]);
+          } else {
+            if (!roomsEncountered.has(room.id)) {
+              roomsEncountered.set(room.id, { room, tiles: [] });
+            }
+            roomsEncountered.get(room.id).tiles.push([col, row]);
+          }
+        }
+      }
+
+      // 1a: Extends into corridor / void outside room
+      if (corridorTiles.length > 0) {
+        const corrStr = corridorTiles.map(t => `[${t[0]}, ${t[1]}]`).join(', ');
+        errors.push({
+          id: `furn-bounds-corr-${f.id || idx}`,
+          category: 'furniture_bounds',
+          categoryLabel: 'Furniture Bounds',
+          icon: '🪑',
+          title: `${furnName} Outside Room Bounds`,
+          description: `${furnName} at [${f.x}, ${f.y}] (${w}×${h}) extends outside room boundaries into corridor or void at tile${corridorTiles.length > 1 ? 's' : ''} ${corrStr}.`,
+          tiles: corridorTiles,
+          allTiles: tiles,
+          entityType: 'furniture',
+          entityIndex: idx,
+          entityId: f.id || null,
+          anchor: [f.x, f.y]
+        });
+      }
+
+      // 1b: Straddles multiple rooms
+      if (roomsEncountered.size > 1) {
+        const roomNames = Array.from(roomsEncountered.values()).map(r => r.room.name || r.room.id).join(' and ');
+        errors.push({
+          id: `furn-bounds-multi-${f.id || idx}`,
+          category: 'furniture_bounds',
+          categoryLabel: 'Furniture Bounds',
+          icon: '🪑',
+          title: `${furnName} Straddles Multiple Rooms`,
+          description: `${furnName} at [${f.x}, ${f.y}] (${w}×${h}) straddles multiple rooms (${roomNames}). Furniture must reside strictly within a single room.`,
+          tiles: tiles,
+          allTiles: tiles,
+          entityType: 'furniture',
+          entityIndex: idx,
+          entityId: f.id || null,
+          anchor: [f.x, f.y]
+        });
+      }
+    });
+  }
+
+  // -------------------------------------------------------------
+  // Rule 2: Door not on wall of room
+  // -------------------------------------------------------------
+  if (Array.isArray(quest.doors)) {
+    quest.doors.forEach((d, idx) => {
+      const from = d.from;
+      const to = d.to;
+      if (!from || !to) return;
+
+      const r1 = getRoomAt(from[0], from[1]);
+      const r2 = getRoomAt(to[0], to[1]);
+      const doorName = d.is_secret ? 'Secret Door' : (d.state === 'open' ? 'Open Door' : 'Door');
+      const doorId = d.id || idx;
+
+      // In HeroQuest, a door connects a room to a corridor or connects two rooms.
+      // Invalid: Both sides are corridors (!r1 && !r2) or both sides are in the same room (r1 && r2 && r1.id === r2.id)
+      if (!r1 && !r2) {
+        errors.push({
+          id: `door-wall-corridor-${doorId}`,
+          category: 'door_wall',
+          categoryLabel: 'Door Wall',
+          icon: '🚪',
+          title: `${doorName} Floating in Corridor`,
+          description: `${doorName} between [${from[0]}, ${from[1]}] and [${to[0]}, ${to[1]}] is not attached to any room perimeter wall (both sides are corridors).`,
+          tiles: [from, to],
+          allTiles: [from, to],
+          entityType: 'door',
+          entityIndex: idx,
+          entityId: d.id || null,
+          doorEdge: { from, to },
+          anchor: from
+        });
+      } else if (r1 && r2 && r1.id === r2.id) {
+        const roomName = r1.name || r1.id;
+        errors.push({
+          id: `door-wall-interior-${doorId}`,
+          category: 'door_wall',
+          categoryLabel: 'Door Wall',
+          icon: '🚪',
+          title: `${doorName} Inside Room Floor`,
+          description: `${doorName} between [${from[0]}, ${from[1]}] and [${to[0]}, ${to[1]}] is placed inside open floor space within ${roomName} instead of on its perimeter wall.`,
+          tiles: [from, to],
+          allTiles: [from, to],
+          entityType: 'door',
+          entityIndex: idx,
+          entityId: d.id || null,
+          doorEdge: { from, to },
+          anchor: from
+        });
+      }
+    });
+  }
+
+  // -------------------------------------------------------------
+  // Rule 3: Objects on top of each other
+  // -------------------------------------------------------------
+  const tileOccupants = new Map();
+  function addOccupant(col, row, item) {
+    const key = `${col},${row}`;
+    if (!tileOccupants.has(key)) {
+      tileOccupants.set(key, []);
+    }
+    tileOccupants.get(key).push(item);
+  }
+
+  // Furniture footprints
+  if (Array.isArray(quest.furniture)) {
+    quest.furniture.forEach((f, idx) => {
+      const w = f.width || 1;
+      const h = f.height || 1;
+      const name = f.name || f.type || 'Furniture';
+      for (let dx = 0; dx < w; dx++) {
+        for (let dy = 0; dy < h; dy++) {
+          addOccupant(f.x + dx, f.y + dy, {
+            type: 'furniture',
+            index: idx,
+            id: f.id || null,
+            name,
+            x: f.x + dx,
+            y: f.y + dy,
+            rootX: f.x,
+            rootY: f.y,
+            width: w,
+            height: h
+          });
+        }
+      }
+    });
+  }
+
+  // Monsters
+  if (Array.isArray(quest.monsters)) {
+    quest.monsters.forEach((m, idx) => {
+      const name = m.name || m.type || 'Monster';
+      const mx = m.x !== undefined ? m.x : (m.pos ? m.pos[0] : 0);
+      const my = m.y !== undefined ? m.y : (m.pos ? m.pos[1] : 0);
+      addOccupant(mx, my, {
+        type: 'monster',
+        index: idx,
+        id: m.id || null,
+        name,
+        x: mx,
+        y: my
+      });
+    });
+  }
+
+  // Wall Blocks
+  if (Array.isArray(quest.wallBlocks)) {
+    quest.wallBlocks.forEach((b, idx) => {
+      addOccupant(b.x, b.y, {
+        type: 'wall-block',
+        index: idx,
+        id: b.id || null,
+        name: 'Wall Block',
+        x: b.x,
+        y: b.y
+      });
+    });
+  }
+
+  // Traps
+  if (Array.isArray(quest.traps)) {
+    quest.traps.forEach((t, idx) => {
+      addOccupant(t.x, t.y, {
+        type: 'trap',
+        index: idx,
+        id: t.id || null,
+        name: `Trap (${t.type || 'pit'})`,
+        x: t.x,
+        y: t.y
+      });
+    });
+  }
+
+  // Check tile collisions
+  for (const [key, occupants] of tileOccupants.entries()) {
+    if (occupants.length <= 1) continue;
+    const [col, row] = key.split(',').map(Number);
+
+    for (let i = 0; i < occupants.length; i++) {
+      for (let j = i + 1; j < occupants.length; j++) {
+        const o1 = occupants[i];
+        const o2 = occupants[j];
+
+        let title = `Object Collision at [${col}, ${row}]`;
+        let desc = '';
+        let primaryEntity = o2;
+
+        if (o1.type === 'furniture' && o2.type === 'monster') {
+          title = `Monster on Furniture at [${col}, ${row}]`;
+          desc = `HeroQuest rule violation: ${o2.name} is standing on top of ${o1.name}. Characters and enemies cannot stand on furniture.`;
+          primaryEntity = o2;
+        } else if (o1.type === 'monster' && o2.type === 'furniture') {
+          title = `Monster on Furniture at [${col}, ${row}]`;
+          desc = `HeroQuest rule violation: ${o1.name} is standing on top of ${o2.name}. Characters and enemies cannot stand on furniture.`;
+          primaryEntity = o1;
+        } else if (o1.type === 'monster' && o2.type === 'monster') {
+          title = `Monsters Colliding at [${col}, ${row}]`;
+          desc = `Multiple monsters (${o1.name} and ${o2.name}) are placed on the exact same tile [${col}, ${row}].`;
+          primaryEntity = o2;
+        } else if (o1.type === 'furniture' && o2.type === 'furniture') {
+          title = `Furniture Overlap at [${col}, ${row}]`;
+          desc = `Furniture pieces '${o1.name}' and '${o2.name}' overlap each other at tile [${col}, ${row}].`;
+          primaryEntity = o2;
+        } else if (o1.type === 'wall-block' || o2.type === 'wall-block') {
+          const other = o1.type === 'wall-block' ? o2 : o1;
+          title = `Wall Block Overlap at [${col}, ${row}]`;
+          desc = `Wall Block is placed on top of ${other.type} '${other.name}' at tile [${col}, ${row}].`;
+          primaryEntity = o2;
+        } else if (o1.type === 'trap' || o2.type === 'trap') {
+          const other = o1.type === 'trap' ? o2 : o1;
+          title = `Trap Collision at [${col}, ${row}]`;
+          desc = `Trap at [${col}, ${row}] is placed on top of ${other.type} '${other.name}'.`;
+          primaryEntity = o2;
+        } else {
+          title = `Object Collision at [${col}, ${row}]`;
+          desc = `${o1.name} and ${o2.name} overlap at tile [${col}, ${row}].`;
+        }
+
+        errors.push({
+          id: `overlap-${col}-${row}-${o1.type}-${o1.index}-${o2.type}-${o2.index}`,
+          category: 'overlap',
+          categoryLabel: 'Object Overlap',
+          icon: '💥',
+          title,
+          description: desc,
+          tiles: [[col, row]],
+          allTiles: [[col, row]],
+          entityType: primaryEntity.type,
+          entityIndex: primaryEntity.index,
+          entityId: primaryEntity.id,
+          anchor: [col, row],
+          occupants: [o1, o2]
+        });
+      }
+    }
+  }
+
+  const counts = {
+    all: errors.length,
+    furniture_bounds: errors.filter(e => e.category === 'furniture_bounds').length,
+    door_wall: errors.filter(e => e.category === 'door_wall').length,
+    overlap: errors.filter(e => e.category === 'overlap').length
+  };
+
+  return {
+    valid: errors.length === 0,
+    totalErrors: errors.length,
+    errors,
+    counts
+  };
+}
+
+function runValidation() {
+  const result = validateQuest(state.quest, state.blockmap);
+  const currentFilter = state.validation ? state.validation.activeFilter : 'all';
+  state.validation = {
+    ...result,
+    activeFilter: currentFilter
+  };
+  renderValidationUI();
+  return result;
+}
+
+function renderValidationUI() {
+  const v = state.validation;
+  if (!v) return;
+
+  // 1. Info bar badge
+  if (dom.infoValidationBadge) {
+    if (v.valid) {
+      dom.infoValidationBadge.className = 'info-tag badge-valid';
+      dom.infoValidationBadge.innerHTML = '✅ <strong>0 Errors</strong>';
+      dom.infoValidationBadge.title = 'Quest layout is valid! Click to view validation panel.';
+    } else {
+      dom.infoValidationBadge.className = 'info-tag badge-invalid';
+      dom.infoValidationBadge.innerHTML = `⚠️ <strong>${v.totalErrors} Error${v.totalErrors > 1 ? 's' : ''}</strong>`;
+      dom.infoValidationBadge.title = `${v.totalErrors} validation error${v.totalErrors > 1 ? 's' : ''} detected! Click to view and fix.`;
+    }
+  }
+
+  // 2. Sidebar Tab Badge
+  if (dom.badgeValCount) {
+    dom.badgeValCount.textContent = v.totalErrors;
+  }
+
+  // 3. Summary Banner
+  if (dom.valSummaryBanner) {
+    if (v.valid) {
+      dom.valSummaryBanner.className = 'val-summary-banner banner-valid';
+      if (dom.valSummaryIcon) dom.valSummaryIcon.textContent = '✅';
+      if (dom.valSummaryTitle) dom.valSummaryTitle.textContent = 'No Validation Errors';
+      if (dom.valSummaryDesc) dom.valSummaryDesc.textContent = 'All furniture, doors, and objects pass HeroQuest board placement rules.';
+    } else {
+      dom.valSummaryBanner.className = 'val-summary-banner banner-invalid';
+      if (dom.valSummaryIcon) dom.valSummaryIcon.textContent = '⚠️';
+      if (dom.valSummaryTitle) dom.valSummaryTitle.textContent = `${v.totalErrors} Validation Error${v.totalErrors > 1 ? 's' : ''} Found`;
+      if (dom.valSummaryDesc) dom.valSummaryDesc.textContent = 'Offending layout items must be relocated or deleted to conform to HeroQuest rules.';
+    }
+  }
+
+  // 4. Filter counts
+  if (dom.valFilterAllCount) dom.valFilterAllCount.textContent = v.counts.all;
+  if (dom.valFilterBoundsCount) dom.valFilterBoundsCount.textContent = v.counts.furniture_bounds;
+  if (dom.valFilterDoorCount) dom.valFilterDoorCount.textContent = v.counts.door_wall;
+  if (dom.valFilterOverlapCount) dom.valFilterOverlapCount.textContent = v.counts.overlap;
+
+  // 5. Update filter pills active state
+  if (dom.filterPills) {
+    dom.filterPills.forEach(pill => {
+      pill.classList.toggle('active', pill.dataset.filter === v.activeFilter);
+    });
+  }
+
+  // 6. Errors list
+  if (dom.validationErrorsList) {
+    dom.validationErrorsList.innerHTML = '';
+
+    const filtered = v.activeFilter === 'all'
+      ? v.errors
+      : v.errors.filter(e => e.category === v.activeFilter);
+
+    if (v.errors.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'val-empty-state';
+      empty.innerHTML = `
+        <span class="val-empty-icon">🛡️</span>
+        <div class="val-empty-title">Clean Dungeon Layout</div>
+        <div class="val-empty-desc">No furniture out of bounds, no floating doors, and no object overlaps detected.</div>
+      `;
+      dom.validationErrorsList.appendChild(empty);
+    } else if (filtered.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'val-empty-state';
+      empty.innerHTML = `
+        <span class="val-empty-icon">👌</span>
+        <div class="val-empty-title">No Errors in This Category</div>
+        <div class="val-empty-desc">All checks for '${v.activeFilter}' passed successfully.</div>
+      `;
+      dom.validationErrorsList.appendChild(empty);
+    } else {
+      filtered.forEach(err => {
+        const card = document.createElement('div');
+        const isFocused = state.focusedErrorId === err.id;
+        card.className = `val-error-card ${isFocused ? 'focused' : ''}`;
+
+        const coordStr = err.doorEdge
+          ? `[${err.doorEdge.from[0]},${err.doorEdge.from[1]}] ↔ [${err.doorEdge.to[0]},${err.doorEdge.to[1]}]`
+          : (err.tiles && err.tiles.length > 1
+              ? `Tiles: ${err.tiles.map(t => `[${t[0]},${t[1]}]`).join(' ')}`
+              : `Tile: [${err.anchor[0]}, ${err.anchor[1]}]`);
+
+        card.innerHTML = `
+          <div class="val-card-header">
+            <span class="val-card-title">${err.icon} ${err.title}</span>
+            <span class="val-category-pill cat-${err.category}">${err.categoryLabel}</span>
+          </div>
+          <div class="val-card-desc">${err.description}</div>
+          <div class="val-card-footer">
+            <span class="val-tile-tag">${coordStr}</span>
+            <div class="val-card-actions">
+              <button class="btn-val-action btn-val-locate" title="Pan and zoom to view this error">🎯 Locate</button>
+              <button class="btn-val-action btn-val-delete" title="Delete offending entity">🗑️ Delete</button>
+            </div>
+          </div>
+        `;
+
+        card.querySelector('.btn-val-locate').addEventListener('click', (e) => {
+          e.stopPropagation();
+          focusValidationError(err);
+        });
+
+        card.querySelector('.btn-val-delete').addEventListener('click', (e) => {
+          e.stopPropagation();
+          deleteValidationErrorEntity(err);
+        });
+
+        card.addEventListener('click', () => {
+          focusValidationError(err);
+        });
+
+        dom.validationErrorsList.appendChild(card);
+      });
+    }
+  }
+}
+
+function focusValidationError(err) {
+  state.focusedErrorId = err.id;
+  const geom = getGridGeometry();
+
+  // Highlight and select entity if possible
+  if (err.entityType === 'furniture' && state.quest.furniture) {
+    const idx = err.entityId ? state.quest.furniture.findIndex(f => f.id === err.entityId) : err.entityIndex;
+    if (idx >= 0 && idx < state.quest.furniture.length) {
+      state.selectedEntity = { type: 'furniture', index: idx, data: state.quest.furniture[idx] };
+      updateInspectorUI();
+    }
+  } else if (err.entityType === 'door' && state.quest.doors) {
+    const idx = err.entityId ? state.quest.doors.findIndex(d => d.id === err.entityId) : err.entityIndex;
+    if (idx >= 0 && idx < state.quest.doors.length) {
+      state.selectedEntity = { type: 'door', index: idx, data: state.quest.doors[idx] };
+      updateInspectorUI();
+    }
+  } else if (err.entityType === 'monster' && state.quest.monsters) {
+    const idx = err.entityId ? state.quest.monsters.findIndex(m => m.id === err.entityId) : err.entityIndex;
+    if (idx >= 0 && idx < state.quest.monsters.length) {
+      state.selectedEntity = { type: 'monster', index: idx, data: state.quest.monsters[idx] };
+      updateInspectorUI();
+    }
+  } else if (err.entityType === 'trap' && state.quest.traps) {
+    const idx = err.entityId ? state.quest.traps.findIndex(t => t.id === err.entityId) : err.entityIndex;
+    if (idx >= 0 && idx < state.quest.traps.length) {
+      state.selectedEntity = { type: 'trap', index: idx, data: state.quest.traps[idx] };
+      updateInspectorUI();
+    }
+  } else if (err.entityType === 'wall-block' && state.quest.wallBlocks) {
+    const idx = err.entityId ? state.quest.wallBlocks.findIndex(b => b.id === err.entityId) : err.entityIndex;
+    if (idx >= 0 && idx < state.quest.wallBlocks.length) {
+      state.selectedEntity = { type: 'wall-block', index: idx, data: state.quest.wallBlocks[idx] };
+      updateInspectorUI();
+    }
+  }
+
+  // Pan & Zoom to center on error anchor tile
+  const anchor = err.anchor || (err.tiles && err.tiles[0]) || [0, 0];
+  const targetWorld = tileToWorld(anchor[0], anchor[1]);
+  const centerX = targetWorld.x + geom.tileSize / 2;
+  const centerY = targetWorld.y + geom.tileSize / 2;
+
+  state.zoom = Math.max(state.zoom, 1.25);
+  updateZoomUI();
+
+  const vpW = dom.canvas.width;
+  const vpH = dom.canvas.height;
+  state.panX = vpW / 2 - centerX * state.zoom;
+  state.panY = vpH / 2 - centerY * state.zoom;
+
+  renderValidationUI();
+  render();
+  showToast(`Located: ${err.title}`, 'info');
+}
+
+function deleteValidationErrorEntity(err) {
+  recordHistory();
+  let targetType = err.entityType;
+  let targetIndex = err.entityIndex;
+
+  if (targetType === 'furniture' && state.quest.furniture) {
+    const idx = err.entityId ? state.quest.furniture.findIndex(f => f.id === err.entityId) : -1;
+    if (idx !== -1) targetIndex = idx;
+    else if (err.anchor) {
+      const idx2 = state.quest.furniture.findIndex(f => f.x === err.anchor[0] && f.y === err.anchor[1]);
+      if (idx2 !== -1) targetIndex = idx2;
+    }
+  } else if (targetType === 'door' && state.quest.doors) {
+    const idx = err.entityId ? state.quest.doors.findIndex(d => d.id === err.entityId) : -1;
+    if (idx !== -1) targetIndex = idx;
+    else if (err.doorEdge) {
+      const idx2 = state.quest.doors.findIndex(d =>
+        (d.from[0] === err.doorEdge.from[0] && d.from[1] === err.doorEdge.from[1] &&
+         d.to[0] === err.doorEdge.to[0] && d.to[1] === err.doorEdge.to[1]) ||
+        (d.from[0] === err.doorEdge.to[0] && d.from[1] === err.doorEdge.to[1] &&
+         d.to[0] === err.doorEdge.from[0] && d.to[1] === err.doorEdge.from[1])
+      );
+      if (idx2 !== -1) targetIndex = idx2;
+    }
+  } else if (targetType === 'monster' && state.quest.monsters) {
+    const idx = err.entityId ? state.quest.monsters.findIndex(m => m.id === err.entityId) : -1;
+    if (idx !== -1) targetIndex = idx;
+    else if (err.anchor) {
+      const idx2 = state.quest.monsters.findIndex(m => {
+        const mx = m.x !== undefined ? m.x : m.pos?.[0];
+        const my = m.y !== undefined ? m.y : m.pos?.[1];
+        return mx === err.anchor[0] && my === err.anchor[1];
+      });
+      if (idx2 !== -1) targetIndex = idx2;
+    }
+  } else if (targetType === 'trap' && state.quest.traps) {
+    const idx = err.entityId ? state.quest.traps.findIndex(t => t.id === err.entityId) : -1;
+    if (idx !== -1) targetIndex = idx;
+    else if (err.anchor) {
+      const idx2 = state.quest.traps.findIndex(t => t.x === err.anchor[0] && t.y === err.anchor[1]);
+      if (idx2 !== -1) targetIndex = idx2;
+    }
+  } else if (targetType === 'wall-block' && state.quest.wallBlocks) {
+    const idx = err.entityId ? state.quest.wallBlocks.findIndex(b => b.id === err.entityId) : -1;
+    if (idx !== -1) targetIndex = idx;
+    else if (err.anchor) {
+      const idx2 = state.quest.wallBlocks.findIndex(b => b.x === err.anchor[0] && b.y === err.anchor[1]);
+      if (idx2 !== -1) targetIndex = idx2;
+    }
+  }
+
+  deleteEntity(targetType, targetIndex);
+  runValidation();
+  showToast(`Deleted invalid ${targetType}`, 'info');
+}
+
+function renderValidationCanvasOverlays(ctx, geom) {
+  if (!state.validation || !state.validation.errors || state.validation.errors.length === 0) return;
+
+  const ts = geom.tileSize;
+
+  state.validation.errors.forEach(err => {
+    const isFocused = state.focusedErrorId === err.id;
+
+    if (err.category === 'door_wall' && err.doorEdge) {
+      const edge = err.doorEdge;
+      const isVertical = edge.from[0] !== edge.to[0];
+      const c = isVertical ? Math.max(edge.from[0], edge.to[0]) : edge.from[0];
+      const r = isVertical ? edge.from[1] : Math.max(edge.from[1], edge.to[1]);
+      const basePos = tileToWorld(c, r);
+
+      let cx, cy;
+      if (isVertical) {
+        cx = basePos.x;
+        cy = basePos.y + ts / 2;
+      } else {
+        cx = basePos.x + ts / 2;
+        cy = basePos.y;
+      }
+
+      ctx.save();
+      ctx.shadowColor = '#ef4444';
+      ctx.shadowBlur = isFocused ? 14 : 8;
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = isFocused ? 3.0 : 2.0;
+      ctx.setLineDash([4, 3]);
+
+      if (isVertical) {
+        ctx.strokeRect(cx - 7, cy - ts * 0.42, 14, ts * 0.84);
+      } else {
+        ctx.strokeRect(cx - ts * 0.42, cy - 7, ts * 0.84, 14);
+      }
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = '#ef4444';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 9, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#fca5a5';
+      ctx.lineWidth = 1.0;
+      ctx.stroke();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 9px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('⚠️', cx, cy);
+      ctx.restore();
+
+    } else {
+      const tilesToDraw = (err.tiles && err.tiles.length > 0) ? err.tiles : [[err.anchor[0], err.anchor[1]]];
+      tilesToDraw.forEach(tile => {
+        const [col, row] = tile;
+        const pos = tileToWorld(col, row);
+
+        ctx.save();
+        ctx.fillStyle = isFocused ? 'rgba(239, 68, 68, 0.32)' : 'rgba(239, 68, 68, 0.18)';
+        ctx.fillRect(pos.x + 1, pos.y + 1, ts - 2, ts - 2);
+
+        ctx.strokeStyle = isFocused ? '#f87171' : '#ef4444';
+        ctx.lineWidth = isFocused ? 2.5 : 1.8;
+        ctx.shadowColor = '#ef4444';
+        ctx.shadowBlur = isFocused ? 12 : 6;
+        ctx.setLineDash([4, 3]);
+        ctx.strokeRect(pos.x + 1.5, pos.y + 1.5, ts - 3, ts - 3);
+        ctx.setLineDash([]);
+
+        ctx.shadowBlur = 0;
+        ctx.font = '10px sans-serif';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'top';
+        ctx.fillText('⚠️', pos.x + ts - 2, pos.y + 2);
+        ctx.restore();
+      });
+    }
+  });
+}
+
+// -------------------------------------------------------------
 // Event Listeners Setup
 // -------------------------------------------------------------
 function setupEventListeners() {
@@ -3011,8 +3695,30 @@ function setupEventListeners() {
   dom.chkShowTraps.addEventListener('change', () => { state.layers.showTraps = dom.chkShowTraps.checked; render(); });
   dom.chkShowWallBlocks.addEventListener('change', () => { state.layers.showWallBlocks = dom.chkShowWallBlocks.checked; render(); });
   dom.chkShowNotes.addEventListener('change', () => { state.layers.showNotes = dom.chkShowNotes.checked; render(); });
+  if (dom.chkShowValidation) {
+    dom.chkShowValidation.addEventListener('change', () => {
+      state.layers.showValidationWarnings = dom.chkShowValidation.checked;
+      render();
+    });
+  }
   dom.sliderArtOpacity.addEventListener('input', () => { state.layers.artOpacity = parseFloat(dom.sliderArtOpacity.value); render(); });
   dom.sliderGridOpacity.addEventListener('input', () => { state.layers.gridOpacity = parseFloat(dom.sliderGridOpacity.value); render(); });
+
+  // Validation status badge & category filters
+  if (dom.infoValidationBadge) {
+    dom.infoValidationBadge.addEventListener('click', () => {
+      switchSidebarTab('tab-validation');
+    });
+  }
+
+  if (dom.filterPills) {
+    dom.filterPills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        state.validation.activeFilter = pill.dataset.filter;
+        renderValidationUI();
+      });
+    });
+  }
 
   // Top header button actions
   dom.selectBlockmap.addEventListener('change', async () => {
@@ -3310,24 +4016,36 @@ function setupEventListeners() {
 // -------------------------------------------------------------
 // Expose test inspection hooks on window for automated testing
 // -------------------------------------------------------------
-window.__test_quest_editor = {
-  state,
-  buildCartridgePayload,
-  detectDoorEdge,
-  worldToTile,
-  tileToWorld,
-  isBorderTile,
-  findRoomAtTile,
-  handleCanvasClick,
-  deleteEntity,
-  setActiveTool,
-  undo,
-  redo,
-  render,
-  updateInspectorUI,
-  updateEntitySummaryList,
-  syncQuestMetaInputs
-};
+if (typeof window !== 'undefined') {
+  window.__test_quest_editor = {
+    state,
+    buildCartridgePayload,
+    detectDoorEdge,
+    worldToTile,
+    tileToWorld,
+    isBorderTile,
+    findRoomAtTile,
+    handleCanvasClick,
+    deleteEntity,
+    setActiveTool,
+    undo,
+    redo,
+    render,
+    updateInspectorUI,
+    updateEntitySummaryList,
+    syncQuestMetaInputs,
+    validateQuest,
+    runValidation,
+    focusValidationError,
+    deleteValidationErrorEntity
+  };
 
-// Bootstrap application on window load
-window.addEventListener('DOMContentLoaded', initApp);
+  // Bootstrap application on window load
+  window.addEventListener('DOMContentLoaded', initApp);
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    validateQuest
+  };
+}

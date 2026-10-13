@@ -70,6 +70,7 @@
         <span class="info-tag" title="Active Blockmap">🗺️ <strong id="info-blockmap-name">HeroQuest: First Light Side A</strong></span>
         <span class="info-tag" title="Grid Dimensions">📐 <strong id="info-grid-size">26 × 19</strong></span>
         <span class="info-tag" title="Active Quest Title">📜 <strong id="info-quest-title">Quest 1: Custom Dungeon</strong></span>
+        <span id="info-validation-badge" class="info-tag badge-valid" title="Click to view error validation details" style="cursor:pointer;">✅ <strong>0 Errors</strong></span>
       </div>
       <div class="info-center">
         <span id="info-active-tool" class="info-tag tool-highlight">🛠️ Tool: Door</span>
@@ -312,6 +313,7 @@
           <button class="side-tab" data-tab="tab-entity-inspector">🔍 Inspector</button>
           <button class="side-tab" data-tab="tab-entity-summary">📋 Entities (<span id="badge-entity-count">0</span>)</button>
           <button class="side-tab" data-tab="tab-layers">👁️ Layers</button>
+          <button id="tab-btn-validation" class="side-tab" data-tab="tab-validation">⚠️ Validation (<span id="badge-val-count">0</span>)</button>
         </div>
 
         <!-- Tab 1: Quest Metadata -->
@@ -536,6 +538,10 @@
                 <input type="checkbox" id="chk-show-notes" checked>
                 <span class="checkmark"></span>
               </label>
+              <label class="custom-checkbox">Show Validation Warnings <span class="layer-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ef4444;box-shadow:0 0 4px rgba(239,68,68,0.6);margin-left:4px;vertical-align:middle;" title="Red error highlights on board"></span>
+                <input type="checkbox" id="chk-show-validation" checked>
+                <span class="checkmark"></span>
+              </label>
               <label class="custom-checkbox">Additional Border Tile
                 <input type="checkbox" id="chk-additional-border">
                 <span class="checkmark"></span>
@@ -550,6 +556,33 @@
             <div class="form-row" style="margin-top:8px;">
               <label>Grid Opacity:</label>
               <input type="range" id="slider-grid-opacity" class="range-slider" min="0" max="1" step="0.05" value="0.75">
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 5: Error Validation -->
+        <div id="tab-validation" class="sidebar-content">
+          <div class="section-card">
+            <h3>⚠️ Quest Error Validation</h3>
+            <p class="section-desc">Real-time HeroQuest layout validation rules: furniture bounds, door perimeters, and object collisions.</p>
+
+            <div id="val-summary-banner" class="val-summary-banner banner-valid">
+              <span id="val-summary-icon" class="val-summary-icon">✅</span>
+              <div class="val-summary-text">
+                <strong id="val-summary-title">No Validation Errors</strong>
+                <span id="val-summary-desc">All furniture, doors, and objects pass HeroQuest board placement rules.</span>
+              </div>
+            </div>
+
+            <div class="val-filters">
+              <button class="filter-pill active" data-filter="all">All (<span id="val-filter-all-count">0</span>)</button>
+              <button class="filter-pill" data-filter="furniture_bounds">🪑 Bounds (<span id="val-filter-bounds-count">0</span>)</button>
+              <button class="filter-pill" data-filter="door_wall">🚪 Walls (<span id="val-filter-door-count">0</span>)</button>
+              <button class="filter-pill" data-filter="overlap">💥 Overlaps (<span id="val-filter-overlap-count">0</span>)</button>
+            </div>
+
+            <div id="validation-errors-list" class="validation-errors-list">
+              <!-- Rendered error cards -->
             </div>
           </div>
         </div>
