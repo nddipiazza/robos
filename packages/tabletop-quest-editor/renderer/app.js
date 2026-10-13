@@ -20,6 +20,7 @@ const state = {
     goldBounty: 100,
     briefing: 'Mentor speaks: "The Emperor calls upon the kingdom\'s greatest champions..."',
     startingStair: [0, 1],
+    exitTile: null,
     doors: [],
     monsters: [],
     furniture: [],
@@ -154,6 +155,13 @@ const dom = {
   suboptsTrap: document.getElementById('subopts-trap'),
   suboptsWallBlock: document.getElementById('subopts-wall-block'),
   suboptsNote: document.getElementById('subopts-note'),
+  suboptsStart: document.getElementById('subopts-start'),
+  suboptsStartPos: document.getElementById('subopts-start-pos'),
+  suboptsStartBorderBadge: document.getElementById('subopts-start-border-badge'),
+  suboptsExit: document.getElementById('subopts-exit'),
+  suboptsExitPos: document.getElementById('subopts-exit-pos'),
+  suboptsExitBorderBadge: document.getElementById('subopts-exit-border-badge'),
+  btnClearExit: document.getElementById('btn-clear-exit'),
 
   // Subtool inputs
   radioDoorTypes: document.querySelectorAll('input[name="door-type"]'),
@@ -419,7 +427,8 @@ async function loadCartridge(slugOrPath) {
 
     if (mapData) {
       state.quest.wanderingMonster = mapData.wanderingMonster || 'orc';
-      state.quest.startingStair = mapData.startingStair || [0, 1];
+      state.quest.startingStair = mapData.startingStair || c.header?.startingPosition || [0, 1];
+      state.quest.exitTile = mapData.exitTile || mapData.exitStair || null;
       state.quest.doors = (mapData.doors || []).map((d, i) => ({
         id: d.id || `door-${i+1}`,
         from: d.from || [0, 0],
@@ -614,6 +623,9 @@ function buildCartridgePayload() {
         pixelOffset: bm.pixelOffset || [0, 0],
         wanderingMonster: q.wanderingMonster || 'orc',
         startingStair: q.startingStair || [0, 1],
+        startingPosition: q.startingStair || [0, 1],
+        exitTile: q.exitTile || null,
+        exitStair: q.exitTile || null,
         activeRooms: (bm.rooms || []).map(r => r.id),
         rooms: bm.rooms || [],
         corridors: bm.corridors || [],
@@ -833,6 +845,11 @@ function tileToWorld(col, row) {
   };
 }
 
+function isBorderTile(col, row) {
+  const geom = getGridGeometry();
+  return col === 0 || col === geom.cols - 1 || row === 0 || row === geom.rows - 1;
+}
+
 function findRoomAtTile(col, row) {
   if (!state.blockmap || !state.blockmap.rooms) return null;
   for (const r of state.blockmap.rooms) {
@@ -982,11 +999,24 @@ function render() {
     ctx.restore();
   }
 
-  // 5. Starting Spiral Stairs (Layer 2)
+  // 5. Starting Spiral Stairs & Quest Exit (Layer 2)
   if (state.quest.startingStair) {
     const [sc, sr] = state.quest.startingStair;
     const spos = tileToWorld(sc, sr);
     const stairsImg = state.assetCache['stairs'];
+    const isBorder = isBorderTile(sc, sr);
+
+    // Border tile indicator aura (highlights entrance from outside dungeon)
+    if (isBorder) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(14, 165, 233, 0.28)';
+      ctx.fillRect(spos.x - 2, spos.y - 2, geom.tileSize + 4, geom.tileSize + 4);
+      ctx.strokeStyle = '#0284c7';
+      ctx.lineWidth = 2.0;
+      ctx.setLineDash([4, 2]);
+      ctx.strokeRect(spos.x - 2, spos.y - 2, geom.tileSize + 4, geom.tileSize + 4);
+      ctx.restore();
+    }
 
     if (stairsImg) {
       ctx.drawImage(stairsImg, spos.x, spos.y, geom.tileSize, geom.tileSize);
@@ -1010,8 +1040,58 @@ function render() {
     ctx.textAlign = 'center';
     ctx.fillText('START', spos.x + geom.tileSize / 2, spos.y + geom.tileSize - 4);
 
-    if (state.selectedEntity && state.selectedEntity.type === 'stairs') {
+    if (state.selectedEntity && (state.selectedEntity.type === 'start' || state.selectedEntity.type === 'stairs')) {
       drawSelectionGlow(spos.x, spos.y, geom.tileSize, geom.tileSize);
+    }
+  }
+
+  // 5b. Quest Exit Staircase / Escape Hatch
+  if (state.quest.exitTile) {
+    const [ec, er] = state.quest.exitTile;
+    const epos = tileToWorld(ec, er);
+    const stairsImg = state.assetCache['stairs'];
+    const isBorder = isBorderTile(ec, er);
+
+    // Border tile indicator aura (highlights exit to safety outside dungeon)
+    if (isBorder) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(16, 185, 129, 0.28)';
+      ctx.fillRect(epos.x - 2, epos.y - 2, geom.tileSize + 4, geom.tileSize + 4);
+      ctx.strokeStyle = '#059669';
+      ctx.lineWidth = 2.0;
+      ctx.setLineDash([4, 2]);
+      ctx.strokeRect(epos.x - 2, epos.y - 2, geom.tileSize + 4, geom.tileSize + 4);
+      ctx.restore();
+    }
+
+    if (stairsImg) {
+      ctx.drawImage(stairsImg, epos.x, epos.y, geom.tileSize, geom.tileSize);
+      ctx.save();
+      ctx.fillStyle = 'rgba(5, 150, 105, 0.45)';
+      ctx.fillRect(epos.x + 2, epos.y + 2, geom.tileSize - 4, geom.tileSize - 4);
+      ctx.restore();
+    } else {
+      ctx.fillStyle = '#065f46';
+      ctx.fillRect(epos.x + 2, epos.y + 2, geom.tileSize - 4, geom.tileSize - 4);
+      ctx.strokeStyle = '#34d399';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(epos.x + 2, epos.y + 2, geom.tileSize - 4, geom.tileSize - 4);
+
+      ctx.fillStyle = '#fff';
+      ctx.font = '14px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🏁', epos.x + geom.tileSize / 2, epos.y + geom.tileSize / 2);
+    }
+
+    // Label
+    ctx.fillStyle = '#34d399';
+    ctx.font = 'bold 9px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('EXIT', epos.x + geom.tileSize / 2, epos.y + geom.tileSize - 4);
+
+    if (state.selectedEntity && state.selectedEntity.type === 'exit') {
+      drawSelectionGlow(epos.x, epos.y, geom.tileSize, geom.tileSize);
     }
   }
 
@@ -1318,9 +1398,22 @@ function renderToolPreview(ctx, geom) {
     const bh = (isDoubleV ? 2 : 1) * geom.tileSize;
     ctx.fillStyle = '#475569';
     ctx.fillRect(pos.x, pos.y, bw, bh);
-  } else if (state.activeTool === 'stairs') {
+  } else if (state.activeTool === 'start' || state.activeTool === 'stairs') {
     ctx.fillStyle = '#0284c7';
     ctx.fillRect(pos.x, pos.y, geom.tileSize, geom.tileSize);
+    if (isBorderTile(col, row)) {
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2.5;
+      ctx.strokeRect(pos.x, pos.y, geom.tileSize, geom.tileSize);
+    }
+  } else if (state.activeTool === 'exit') {
+    ctx.fillStyle = '#059669';
+    ctx.fillRect(pos.x, pos.y, geom.tileSize, geom.tileSize);
+    if (isBorderTile(col, row)) {
+      ctx.strokeStyle = '#34d399';
+      ctx.lineWidth = 2.5;
+      ctx.strokeRect(pos.x, pos.y, geom.tileSize, geom.tileSize);
+    }
   } else if (state.activeTool === 'note') {
     ctx.fillStyle = '#d97706';
     ctx.beginPath();
@@ -1358,6 +1451,36 @@ function updateZoomUI() {
 // -------------------------------------------------------------
 // Tool Handling & Interaction
 // -------------------------------------------------------------
+function updateStartSuboptsUI() {
+  if (!dom.suboptsStartPos) return;
+  if (state.quest.startingStair) {
+    const [sc, sr] = state.quest.startingStair;
+    const isBorder = isBorderTile(sc, sr);
+    dom.suboptsStartPos.textContent = `[${sc}, ${sr}]`;
+    if (dom.suboptsStartBorderBadge) {
+      dom.suboptsStartBorderBadge.style.display = isBorder ? 'inline-block' : 'none';
+    }
+  } else {
+    dom.suboptsStartPos.textContent = 'None';
+    if (dom.suboptsStartBorderBadge) dom.suboptsStartBorderBadge.style.display = 'none';
+  }
+}
+
+function updateExitSuboptsUI() {
+  if (!dom.suboptsExitPos) return;
+  if (state.quest.exitTile) {
+    const [ec, er] = state.quest.exitTile;
+    const isBorder = isBorderTile(ec, er);
+    dom.suboptsExitPos.textContent = `[${ec}, ${er}]`;
+    if (dom.suboptsExitBorderBadge) {
+      dom.suboptsExitBorderBadge.style.display = isBorder ? 'inline-block' : 'none';
+    }
+  } else {
+    dom.suboptsExitPos.textContent = 'None';
+    if (dom.suboptsExitBorderBadge) dom.suboptsExitBorderBadge.style.display = 'none';
+  }
+}
+
 function setActiveTool(tool) {
   state.activeTool = tool;
   dom.toolBtns.forEach(btn => {
@@ -1372,7 +1495,9 @@ function setActiveTool(tool) {
     furniture: 'Furniture',
     trap: 'Trap',
     'wall-block': 'Wall Block',
-    stairs: 'Starting Stairs',
+    start: 'Starting Entrance (🪜)',
+    stairs: 'Starting Entrance (🪜)',
+    exit: 'Quest Exit (🏁)',
     note: 'Quest Note',
     erase: 'Erase'
   };
@@ -1385,7 +1510,9 @@ function setActiveTool(tool) {
     dom.suboptsFurniture,
     dom.suboptsTrap,
     dom.suboptsWallBlock,
-    dom.suboptsNote
+    dom.suboptsNote,
+    dom.suboptsStart,
+    dom.suboptsExit
   ].forEach(el => { if (el) el.style.display = 'none'; });
 
   // Show matching subtool group
@@ -1404,6 +1531,18 @@ function setActiveTool(tool) {
   } else if (tool === 'wall-block') {
     dom.subtoolHeader.textContent = '🧱 Wall Block Options';
     dom.suboptsWallBlock.style.display = 'flex';
+  } else if (tool === 'start' || tool === 'stairs') {
+    dom.subtoolHeader.textContent = '🪜 Start Position Options';
+    if (dom.suboptsStart) {
+      dom.suboptsStart.style.display = 'block';
+      updateStartSuboptsUI();
+    }
+  } else if (tool === 'exit') {
+    dom.subtoolHeader.textContent = '🏁 Exit Position Options';
+    if (dom.suboptsExit) {
+      dom.suboptsExit.style.display = 'block';
+      updateExitSuboptsUI();
+    }
   } else if (tool === 'note') {
     dom.subtoolHeader.textContent = '📜 Note Options';
     dom.suboptsNote.style.display = 'flex';
@@ -1447,9 +1586,14 @@ function findEntityAt(col, row) {
     }
   }
 
-  // Check stairs
+  // Check start / stairs
   if (state.quest.startingStair && state.quest.startingStair[0] === col && state.quest.startingStair[1] === row) {
-    return { type: 'stairs', index: 0, data: state.quest.startingStair };
+    return { type: 'start', index: 0, data: state.quest.startingStair };
+  }
+
+  // Check exit
+  if (state.quest.exitTile && state.quest.exitTile[0] === col && state.quest.exitTile[1] === row) {
+    return { type: 'exit', index: 0, data: state.quest.exitTile };
   }
 
   // Check notes
@@ -1598,9 +1742,16 @@ function handleCanvasClick(wx, wy) {
     state.selectedEntity = { type: 'wall-block', index: state.quest.wallBlocks.length - 1, data: newBlock };
     updateInspectorUI();
     updateEntitySummaryList();
-  } else if (state.activeTool === 'stairs') {
+  } else if (state.activeTool === 'start' || state.activeTool === 'stairs') {
     state.quest.startingStair = [col, row];
-    state.selectedEntity = { type: 'stairs', index: 0, data: state.quest.startingStair };
+    state.selectedEntity = { type: 'start', index: 0, data: state.quest.startingStair };
+    updateStartSuboptsUI();
+    updateInspectorUI();
+    updateEntitySummaryList();
+  } else if (state.activeTool === 'exit') {
+    state.quest.exitTile = [col, row];
+    state.selectedEntity = { type: 'exit', index: 0, data: state.quest.exitTile };
+    updateExitSuboptsUI();
     updateInspectorUI();
     updateEntitySummaryList();
   } else if (state.activeTool === 'note') {
@@ -1635,8 +1786,12 @@ function deleteEntity(type, index) {
     state.quest.wallBlocks.splice(index, 1);
   } else if (type === 'note') {
     state.quest.storyTriggers.splice(index, 1);
-  } else if (type === 'stairs') {
+  } else if (type === 'stairs' || type === 'start') {
     state.quest.startingStair = null;
+    updateStartSuboptsUI();
+  } else if (type === 'exit') {
+    state.quest.exitTile = null;
+    updateExitSuboptsUI();
   }
   state.selectedEntity = null;
   updateInspectorUI();
@@ -1729,10 +1884,16 @@ function updateInspectorUI() {
     dom.inspectNoteTitle.value = st.title;
     dom.inspectNoteNarrative.value = st.narrative;
     dom.inspectGroupNote.style.display = 'block';
-  } else if (type === 'stairs') {
+  } else if (type === 'start' || type === 'stairs') {
     const pos = state.quest.startingStair || [0, 1];
-    dom.inspectPosText.textContent = `[${pos[0]}, ${pos[1]}]`;
-    dom.inspectName.value = 'Starting Spiral Staircase';
+    const isBorder = isBorderTile(pos[0], pos[1]);
+    dom.inspectPosText.textContent = `[${pos[0]}, ${pos[1]}]${isBorder ? ' (Border Tile - Entrance)' : ''}`;
+    dom.inspectName.value = 'Starting Entrance / Staircase';
+  } else if (type === 'exit') {
+    const pos = state.quest.exitTile || [0, 0];
+    const isBorder = isBorderTile(pos[0], pos[1]);
+    dom.inspectPosText.textContent = `[${pos[0]}, ${pos[1]}]${isBorder ? ' (Border Tile - Escape Hatch)' : ''}`;
+    dom.inspectName.value = 'Quest Exit / Escape Staircase';
   } else if (type === 'wall-block') {
     const wb = state.quest.wallBlocks[index];
     if (!wb) return;
@@ -1746,6 +1907,68 @@ function updateEntitySummaryList() {
   list.innerHTML = '';
 
   let totalCount = 0;
+
+  // Starting Entrance
+  if (state.quest.startingStair) {
+    totalCount++;
+    const [sc, sr] = state.quest.startingStair;
+    const isBorder = isBorderTile(sc, sr);
+    const item = document.createElement('div');
+    item.className = 'entity-summary-item';
+    item.innerHTML = `
+      <div class="entity-item-main">
+        <span class="entity-item-icon">🪜</span>
+        <div>
+          <div class="entity-item-name">Starting Entrance / Stairs</div>
+          <div class="entity-item-pos">[${sc}, ${sr}] ${isBorder ? '• Border Entrance' : ''}</div>
+        </div>
+      </div>
+      <button class="btn btn-sm btn-danger btn-del-entity">🗑️</button>
+    `;
+    item.addEventListener('click', (e) => {
+      if (e.target.closest('.btn-del-entity')) {
+        recordHistory();
+        deleteEntity('start', 0);
+      } else {
+        state.selectedEntity = { type: 'start', index: 0, data: state.quest.startingStair };
+        switchSidebarTab('tab-entity-inspector');
+        updateInspectorUI();
+        render();
+      }
+    });
+    list.appendChild(item);
+  }
+
+  // Quest Exit
+  if (state.quest.exitTile) {
+    totalCount++;
+    const [ec, er] = state.quest.exitTile;
+    const isBorder = isBorderTile(ec, er);
+    const item = document.createElement('div');
+    item.className = 'entity-summary-item';
+    item.innerHTML = `
+      <div class="entity-item-main">
+        <span class="entity-item-icon">🏁</span>
+        <div>
+          <div class="entity-item-name">Quest Exit Staircase</div>
+          <div class="entity-item-pos">[${ec}, ${er}] ${isBorder ? '• Border Exit' : ''}</div>
+        </div>
+      </div>
+      <button class="btn btn-sm btn-danger btn-del-entity">🗑️</button>
+    `;
+    item.addEventListener('click', (e) => {
+      if (e.target.closest('.btn-del-entity')) {
+        recordHistory();
+        deleteEntity('exit', 0);
+      } else {
+        state.selectedEntity = { type: 'exit', index: 0, data: state.quest.exitTile };
+        switchSidebarTab('tab-entity-inspector');
+        updateInspectorUI();
+        render();
+      }
+    });
+    list.appendChild(item);
+  }
 
   // Monsters
   state.quest.monsters.forEach((m, idx) => {
@@ -2195,9 +2418,10 @@ function setupEventListeners() {
 
     if (tile) {
       state.hoverTile = tile;
-      dom.infoTileCoords.textContent = `🎯 Tile: [${tile[0]}, ${tile[1]}]`;
+      const isBorder = isBorderTile(tile[0], tile[1]);
+      dom.infoTileCoords.textContent = `🎯 Tile: [${tile[0]}, ${tile[1]}]${isBorder ? ' (Border Tile)' : ''}`;
       const room = findRoomAtTile(tile[0], tile[1]);
-      dom.infoRoomName.textContent = `🏠 Room: ${room ? (room.name || room.id) : 'Corridor / None'}`;
+      dom.infoRoomName.textContent = `🏠 Room: ${room ? (room.name || room.id) : (isBorder ? 'Border (Solid Wall / Portal)' : 'Corridor / None')}`;
 
       if (state.activeTool === 'door') {
         state.hoverDoorEdge = detectDoorEdge(world.x, world.y);
@@ -2213,6 +2437,22 @@ function setupEventListeners() {
 
     render();
   });
+
+  // Clear Exit Tile button handler
+  if (dom.btnClearExit) {
+    dom.btnClearExit.addEventListener('click', () => {
+      recordHistory();
+      state.quest.exitTile = null;
+      updateExitSuboptsUI();
+      if (state.selectedEntity && state.selectedEntity.type === 'exit') {
+        state.selectedEntity = null;
+        updateInspectorUI();
+      }
+      updateEntitySummaryList();
+      render();
+      showToast('Exit tile cleared', 'info');
+    });
+  }
 
   window.addEventListener('mouseup', () => {
     if (state.isPanning) {
@@ -2269,7 +2509,9 @@ function setupEventListeners() {
     } else if (e.key === 'b' || e.key === '6') {
       setActiveTool('wall-block');
     } else if (e.key === 'l' || e.key === '7') {
-      setActiveTool('stairs');
+      setActiveTool('start');
+    } else if (e.key === 'x' || e.key === '0') {
+      setActiveTool('exit');
     } else if (e.key === 'n' || e.key === '8') {
       setActiveTool('note');
     } else if (e.key === 'e' || e.key === '9') {
@@ -2304,6 +2546,7 @@ window.__test_quest_editor = {
   detectDoorEdge,
   worldToTile,
   tileToWorld,
+  isBorderTile,
   findRoomAtTile,
   handleCanvasClick,
   deleteEntity,
