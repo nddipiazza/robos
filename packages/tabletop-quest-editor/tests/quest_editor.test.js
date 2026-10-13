@@ -5,6 +5,12 @@ const assert = require('node:assert/strict');
 const path = require('path');
 const fs = require('fs');
 
+const {
+  validateQuest,
+  interpretVoiceQuestCommands,
+  executeVoiceMapCommands
+} = require('../renderer/app.js');
+
 // Helpers mirroring app.js math & logic
 function worldToTile(wx, wy, offsetX, offsetY, tileSize, cols, rows) {
   const relX = wx - offsetX;
@@ -1340,4 +1346,99 @@ test('Error Validation Area: validates HeroQuest rules for furniture bounds, doo
   assert.equal(cleanRes.errors.length, 0);
   assert.deepEqual(cleanRes.counts, { all: 0, furniture_bounds: 0, door_wall: 0, overlap: 0 });
 });
+
+test('Voice Map Setup: interprets spoken quest instructions and places items cleanly', (t) => {
+  const blockmap = {
+    gridDimensions: [28, 21],
+    rooms: [
+      {
+        id: 'room-1',
+        name: 'Room 1 (NW)',
+        x: 1, y: 1, w: 4, h: 4,
+        tiles: [
+          [1,1],[1,2],[1,3],[1,4],
+          [2,1],[2,2],[2,3],[2,4],
+          [3,1],[3,2],[3,3],[3,4],
+          [4,1],[4,2],[4,3],[4,4]
+        ]
+      },
+      {
+        id: 'room-2',
+        name: 'Room 2 (NE)',
+        x: 6, y: 1, w: 4, h: 4,
+        tiles: [
+          [6,1],[6,2],[6,3],[6,4],
+          [7,1],[7,2],[7,3],[7,4],
+          [8,1],[8,2],[8,3],[8,4],
+          [9,1],[9,2],[9,3],[9,4]
+        ]
+      }
+    ]
+  };
+
+  // 1. Natural speech interpretation tests
+  const cmd1 = interpretVoiceQuestCommands('add 3 skeletons to this room', blockmap, null, { hoverTile: [2, 2] });
+  assert.equal(cmd1.length, 1);
+  assert.equal(cmd1[0].category, 'monster');
+  assert.equal(cmd1[0].type, 'skeleton');
+  assert.equal(cmd1[0].count, 3);
+  assert.equal(cmd1[0].targetRoom, 'this room');
+
+  const cmd2 = interpretVoiceQuestCommands('add 3 skeletons to room 1 and 2 orcs to room 2', blockmap, null);
+  assert.equal(cmd2.length, 2);
+  assert.equal(cmd2[0].type, 'skeleton');
+  assert.equal(cmd2[0].count, 3);
+  assert.equal(cmd2[0].targetRoom, 'room 1');
+  assert.equal(cmd2[1].type, 'orc');
+  assert.equal(cmd2[1].count, 2);
+  assert.equal(cmd2[1].targetRoom, 'room 2');
+
+  const cmd3 = interpretVoiceQuestCommands('place a treasure chest and 2 orcs in room 2', blockmap, null);
+  assert.equal(cmd3.length, 2);
+  assert.equal(cmd3[0].category, 'furniture');
+  assert.equal(cmd3[0].type, 'chest');
+  assert.equal(cmd3[0].count, 1);
+  assert.equal(cmd3[0].targetRoom, 'room 2');
+  assert.equal(cmd3[1].category, 'monster');
+  assert.equal(cmd3[1].type, 'orc');
+  assert.equal(cmd3[1].count, 2);
+  assert.equal(cmd3[1].targetRoom, 'room 2');
+
+  // 2. Execution and Board Placement
+  const quest = {
+    monsters: [],
+    furniture: [],
+    doors: [],
+    traps: [],
+    wallBlocks: []
+  };
+
+  // Execute: "add 3 skeletons to room 1"
+  const exec1 = executeVoiceMapCommands('add 3 skeletons to room 1', 'guidance', quest, blockmap);
+  assert.equal(exec1.success, true);
+  assert.equal(quest.monsters.length, 3);
+  assert.equal(quest.monsters[0].type, 'skeleton');
+  assert.equal(quest.monsters[0].roomId, 'room-1');
+  assert.equal(quest.monsters[0].bp, 1);
+
+  // Execute: "place a treasure chest in room 2"
+  const exec2 = executeVoiceMapCommands('place a treasure chest in room 2', 'guidance', quest, blockmap);
+  assert.equal(exec2.success, true);
+  assert.equal(quest.furniture.length, 1);
+  assert.equal(quest.furniture[0].type, 'chest');
+  assert.equal(quest.furniture[0].roomId, 'room-2');
+
+  // Execute: "place an orc and a pit trap in room 2"
+  const exec3 = executeVoiceMapCommands('place an orc and a pit trap in room 2', 'guidance', quest, blockmap);
+  assert.equal(exec3.success, true);
+  assert.equal(quest.monsters.length, 4); // 3 skeletons + 1 orc
+  assert.equal(quest.traps.length, 1);
+
+  // Validate the resulting quest - must be 100% valid under HeroQuest rules
+  const val = validateQuest(quest, blockmap);
+  assert.equal(val.valid, true);
+  assert.equal(val.totalErrors, 0);
+  assert.equal(val.errors.length, 0);
+});
+
 
