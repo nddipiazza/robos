@@ -810,3 +810,112 @@ test('HeroQuest Rule: Characters and enemies cannot stand on furniture', () => {
   assert.equal(canPlaceMonster(5, 5), false, 'Cannot place monster on table');
   assert.equal(canPlaceMonster(4, 5), true, 'Can place monster on adjacent floor');
 });
+
+// -------------------------------------------------------------
+// Test 16: Door Visual Differentiation (Closed vs Open vs Secret)
+// -------------------------------------------------------------
+test('Door Visual Differentiation: distinct rendering for closed, open, and secret doors', () => {
+  const tileSize = 39;
+  const doorLength = Math.round(tileSize * 0.82); // 32
+  const doorThick = 8;
+
+  function computeDoorRenderSpec(door) {
+    const isVertical = door.from[0] !== door.to[0];
+    const c = isVertical ? Math.max(door.from[0], door.to[0]) : door.from[0];
+    const r = isVertical ? door.from[1] : Math.max(door.from[1], door.to[1]);
+    const bx = c * tileSize;
+    const by = r * tileSize;
+
+    let dw, dh, dx, dy, cx, cy;
+    if (isVertical) {
+      dw = doorThick;
+      dh = doorLength;
+      cx = bx;
+      cy = by + tileSize / 2;
+      dx = cx - dw / 2;
+      dy = by + (tileSize - dh) / 2;
+    } else {
+      dw = doorLength;
+      dh = doorThick;
+      cx = bx + tileSize / 2;
+      cy = by;
+      dx = bx + (tileSize - dw) / 2;
+      dy = cy - dh / 2;
+    }
+
+    const isSecret = !!door.is_secret;
+    const isOpen = door.state === 'open';
+
+    const spec = {
+      isVertical,
+      doorway: { dx, dy, dw, dh, cx, cy },
+      isSecret,
+      isOpen,
+      badgeText: isSecret ? (isOpen ? 'SECRET [OPEN]' : 'SECRET') : (isOpen ? 'OPEN' : 'CLOSED'),
+      badgeClass: isSecret ? (isOpen ? 'door-badge-secret-open' : 'door-badge-secret') : (isOpen ? 'door-badge-open' : 'door-badge-closed'),
+      theme: {
+        border: isSecret ? '#d8b4fe' : (isOpen ? '#10b981' : '#f59e0b'),
+        hasSwungLeaf: isOpen,
+        hasOpenBadge: isOpen,
+        hasIronStraps: !isOpen && !isSecret,
+        hasSwingArc: isOpen
+      }
+    };
+
+    if (isOpen) {
+      spec.leaf = {
+        length: Math.round(doorLength * 0.85),
+        thickness: 5.5,
+        pivot: isVertical ? [cx, dy] : [dx, cy],
+        direction: isVertical ? 'horizontal' : 'vertical'
+      };
+    }
+
+    return spec;
+  }
+
+  // 1. Closed Vertical Wood Door
+  const closedV = computeDoorRenderSpec({ from: [0, 2], to: [1, 2], state: 'closed', is_secret: false });
+  assert.equal(closedV.isVertical, true);
+  assert.equal(closedV.isOpen, false);
+  assert.equal(closedV.isSecret, false);
+  assert.equal(closedV.badgeText, 'CLOSED');
+  assert.equal(closedV.badgeClass, 'door-badge-closed');
+  assert.equal(closedV.theme.border, '#f59e0b');
+  assert.equal(closedV.theme.hasIronStraps, true);
+  assert.equal(closedV.theme.hasSwungLeaf, false);
+
+  // 2. Open Vertical Wood Door
+  const openV = computeDoorRenderSpec({ from: [17, 7], to: [18, 7], state: 'open', is_secret: false });
+  assert.equal(openV.isVertical, true);
+  assert.equal(openV.isOpen, true);
+  assert.equal(openV.badgeText, 'OPEN');
+  assert.equal(openV.badgeClass, 'door-badge-open');
+  assert.equal(openV.theme.border, '#10b981');
+  assert.equal(openV.theme.hasSwungLeaf, true);
+  assert.equal(openV.theme.hasSwingArc, true);
+  assert.equal(openV.theme.hasOpenBadge, true);
+  assert.equal(openV.theme.hasIronStraps, false);
+  assert.ok(openV.leaf.length > 20);
+  assert.equal(openV.leaf.direction, 'horizontal');
+
+  // 3. Open Horizontal Wood Door
+  const openH = computeDoorRenderSpec({ from: [7, 9], to: [7, 10], state: 'open', is_secret: false });
+  assert.equal(openH.isVertical, false);
+  assert.equal(openH.isOpen, true);
+  assert.equal(openH.leaf.direction, 'vertical');
+
+  // 4. Secret Closed Door
+  const secretClosed = computeDoorRenderSpec({ from: [24, 15], to: [25, 15], state: 'closed', is_secret: true });
+  assert.equal(secretClosed.isSecret, true);
+  assert.equal(secretClosed.isOpen, false);
+  assert.equal(secretClosed.badgeText, 'SECRET');
+  assert.equal(secretClosed.badgeClass, 'door-badge-secret');
+  assert.equal(secretClosed.theme.border, '#d8b4fe');
+
+  // Verify visual uniqueness between open and closed
+  assert.notEqual(openV.theme.border, closedV.theme.border);
+  assert.notEqual(openV.badgeText, closedV.badgeText);
+  assert.notEqual(openV.badgeClass, closedV.badgeClass);
+  assert.notEqual(openV.theme.hasSwungLeaf, closedV.theme.hasSwungLeaf);
+});

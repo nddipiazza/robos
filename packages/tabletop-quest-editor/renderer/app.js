@@ -1408,43 +1408,306 @@ function render() {
       const c = isVertical ? Math.max(d.from[0], d.to[0]) : d.from[0];
       const r = isVertical ? d.from[1] : Math.max(d.from[1], d.to[1]);
       const basePos = tileToWorld(c, r);
+      const ts = geom.tileSize;
+      const doorLength = Math.round(ts * 0.82);
+      const doorThick = 8;
 
-      let dw, dh, dx, dy;
+      let dw, dh, dx, dy, cx, cy;
       if (isVertical) {
-        dw = 8;
-        dh = geom.tileSize * 0.75;
-        dx = basePos.x - dw / 2;
-        dy = basePos.y + (geom.tileSize - dh) / 2;
+        dw = doorThick;
+        dh = doorLength;
+        cx = basePos.x;
+        cy = basePos.y + ts / 2;
+        dx = cx - dw / 2;
+        dy = basePos.y + (ts - dh) / 2;
       } else {
-        dw = geom.tileSize * 0.75;
-        dh = 8;
-        dx = basePos.x + (geom.tileSize - dw) / 2;
-        dy = basePos.y - dh / 2;
+        dw = doorLength;
+        dh = doorThick;
+        cx = basePos.x + ts / 2;
+        cy = basePos.y;
+        dx = basePos.x + (ts - dw) / 2;
+        dy = cy - dh / 2;
       }
 
-      const doorKey = d.state === 'open' ? 'door_open' : 'door_closed';
-      const doorImg = state.assetCache[doorKey];
+      ctx.save();
 
-      if (doorImg && !d.is_secret) {
-        // Draw texture
-        ctx.drawImage(doorImg, dx, dy, dw, dh);
-      } else {
-        // Crisp vector representation
-        ctx.fillStyle = d.is_secret ? '#a855f7' : (d.state === 'open' ? '#10b981' : '#b45309');
-        ctx.fillRect(dx, dy, dw, dh);
-        ctx.strokeStyle = d.is_secret ? '#d8b4fe' : (d.state === 'open' ? '#6ee7b7' : '#f59e0b');
-        ctx.lineWidth = 1.5;
-        ctx.strokeRect(dx, dy, dw, dh);
+      if (d.is_secret) {
+        if (d.state === 'open') {
+          // Open Secret Door (revealed passageway)
+          ctx.fillStyle = 'rgba(147, 51, 234, 0.25)';
+          ctx.fillRect(dx, dy, dw, dh);
 
-        // Secret 'S' badge
-        if (d.is_secret) {
-          ctx.fillStyle = '#fff';
+          ctx.strokeStyle = '#c084fc';
+          ctx.setLineDash([3, 2]);
+          ctx.lineWidth = 2.0;
+          ctx.beginPath();
+          if (isVertical) {
+            ctx.moveTo(cx, dy);
+            ctx.lineTo(cx, dy + dh);
+          } else {
+            ctx.moveTo(dx, cy);
+            ctx.lineTo(dx + dw, cy);
+          }
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          // Swung stone slab
+          const leafLen = Math.round(doorLength * 0.82);
+          const leafThick = 5.5;
+          ctx.fillStyle = '#6b21a8';
+          ctx.strokeStyle = '#d8b4fe';
+          ctx.lineWidth = 1.5;
+          if (isVertical) {
+            ctx.fillRect(cx, dy - leafThick / 2, leafLen, leafThick);
+            ctx.strokeRect(cx, dy - leafThick / 2, leafLen, leafThick);
+            ctx.strokeStyle = 'rgba(216, 180, 254, 0.7)';
+            ctx.setLineDash([2, 2]);
+            ctx.beginPath();
+            ctx.arc(cx, dy, leafLen, 0, Math.PI / 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+          } else {
+            ctx.fillRect(dx - leafThick / 2, cy, leafThick, leafLen);
+            ctx.strokeRect(dx - leafThick / 2, cy, leafThick, leafLen);
+            ctx.strokeStyle = 'rgba(216, 180, 254, 0.7)';
+            ctx.setLineDash([2, 2]);
+            ctx.beginPath();
+            ctx.arc(dx, cy, leafLen, 0, Math.PI / 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+          }
+
+          // Secret Open Badge
+          const bw = 24, bh = 11;
+          ctx.fillStyle = '#581c87';
+          ctx.strokeStyle = '#c084fc';
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.roundRect(cx - bw / 2, cy - bh / 2, bw, bh, 3);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 7px system-ui, -apple-system, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('S:OPEN', cx, cy + 0.5);
+        } else {
+          // Closed Secret Door: solid purple masonry slab with 'S' badge
+          ctx.fillStyle = '#6b21a8';
+          ctx.fillRect(dx, dy, dw, dh);
+          ctx.strokeStyle = '#d8b4fe';
+          ctx.lineWidth = 2.0;
+          ctx.strokeRect(dx, dy, dw, dh);
+
+          // Center 'S' badge
+          ctx.fillStyle = '#581c87';
+          ctx.strokeStyle = '#c084fc';
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.arc(cx, cy, 7, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.fillStyle = '#ffffff';
           ctx.font = 'bold 9px monospace';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.fillText('S', dx + dw / 2, dy + dh / 2);
+          ctx.fillText('S', cx, cy);
         }
+      } else if (d.state === 'open') {
+        // ── OPEN WOOD DOOR ──
+        // 1. Open threshold glow (illuminated passageway)
+        ctx.fillStyle = 'rgba(16, 185, 129, 0.32)';
+        ctx.fillRect(dx, dy, dw, dh);
+
+        // 2. Dashed threshold line (marking open wall boundary)
+        ctx.strokeStyle = '#10b981';
+        ctx.setLineDash([3, 2]);
+        ctx.lineWidth = 2.0;
+        ctx.beginPath();
+        if (isVertical) {
+          ctx.moveTo(cx, dy);
+          ctx.lineTo(cx, dy + dh);
+        } else {
+          ctx.moveTo(dx, cy);
+          ctx.lineTo(dx + dw, cy);
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // 3. Door jamb posts at ends
+        ctx.fillStyle = '#064e3b';
+        ctx.strokeStyle = '#10b981';
+        ctx.lineWidth = 1.0;
+        if (isVertical) {
+          ctx.fillRect(cx - 3, dy - 1, 6, 3);
+          ctx.strokeRect(cx - 3, dy - 1, 6, 3);
+          ctx.fillRect(cx - 3, dy + dh - 2, 6, 3);
+          ctx.strokeRect(cx - 3, dy + dh - 2, 6, 3);
+        } else {
+          ctx.fillRect(dx - 1, cy - 3, 3, 6);
+          ctx.strokeRect(dx - 1, cy - 3, 3, 6);
+          ctx.fillRect(dx + dw - 2, cy - 3, 3, 6);
+          ctx.strokeRect(dx + dw - 2, cy - 3, 3, 6);
+        }
+
+        // 4. 90-degree swung wooden door leaf
+        const leafLen = Math.round(doorLength * 0.85);
+        const leafThick = 5.5;
+        ctx.fillStyle = '#78350f';
+        ctx.strokeStyle = '#34d399'; // vivid emerald outline
+        ctx.lineWidth = 1.5;
+
+        if (isVertical) {
+          // Swung into right tile (+X)
+          ctx.fillRect(cx, dy - leafThick / 2, leafLen, leafThick);
+          ctx.strokeRect(cx, dy - leafThick / 2, leafLen, leafThick);
+
+          // Brass hinge pin at corner
+          ctx.fillStyle = '#fbbf24';
+          ctx.strokeStyle = '#d97706';
+          ctx.lineWidth = 1.0;
+          ctx.beginPath();
+          ctx.arc(cx, dy, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          // Quarter-circle swing arc
+          ctx.strokeStyle = 'rgba(52, 211, 153, 0.75)';
+          ctx.setLineDash([2, 2]);
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.arc(cx, dy, leafLen, 0, Math.PI / 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        } else {
+          // Swung into lower tile (+Y)
+          ctx.fillRect(dx - leafThick / 2, cy, leafThick, leafLen);
+          ctx.strokeRect(dx - leafThick / 2, cy, leafThick, leafLen);
+
+          // Brass hinge pin at corner
+          ctx.fillStyle = '#fbbf24';
+          ctx.strokeStyle = '#d97706';
+          ctx.lineWidth = 1.0;
+          ctx.beginPath();
+          ctx.arc(dx, cy, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          // Quarter-circle swing arc
+          ctx.strokeStyle = 'rgba(52, 211, 153, 0.75)';
+          ctx.setLineDash([2, 2]);
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.arc(dx, cy, leafLen, 0, Math.PI / 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+
+        // 5. Central "OPEN" badge
+        const bw = 24, bh = 11;
+        ctx.fillStyle = '#064e3b';
+        ctx.strokeStyle = '#10b981';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.roundRect(cx - bw / 2, cy - bh / 2, bw, bh, 3);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 7.5px system-ui, -apple-system, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('OPEN', cx, cy + 0.5);
+
+      } else {
+        // ── CLOSED WOOD DOOR ──
+        // 1. Dark iron/slate jamb posts at ends
+        ctx.fillStyle = '#1e293b';
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 1.0;
+        if (isVertical) {
+          ctx.fillRect(cx - 4, dy - 2, 8, 3);
+          ctx.strokeRect(cx - 4, dy - 2, 8, 3);
+          ctx.fillRect(cx - 4, dy + dh - 1, 8, 3);
+          ctx.strokeRect(cx - 4, dy + dh - 1, 8, 3);
+        } else {
+          ctx.fillRect(dx - 2, cy - 4, 3, 8);
+          ctx.strokeRect(dx - 2, cy - 4, 3, 8);
+          ctx.fillRect(dx + dw - 1, cy - 4, 3, 8);
+          ctx.strokeRect(dx + dw - 1, cy - 4, 3, 8);
+        }
+
+        // 2. Heavy solid wood slab with gradient
+        const grad = isVertical
+          ? ctx.createLinearGradient(dx, cy, dx + dw, cy)
+          : ctx.createLinearGradient(cx, dy, cx, dy + dh);
+        grad.addColorStop(0, '#92400e');
+        grad.addColorStop(0.5, '#78350f');
+        grad.addColorStop(1, '#451a03');
+
+        ctx.fillStyle = grad;
+        ctx.fillRect(dx, dy, dw, dh);
+
+        // 3. Solid Amber Border
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 1.8;
+        ctx.strokeRect(dx, dy, dw, dh);
+
+        // 4. Two Dark Iron Reinforcement Straps with Rivets
+        ctx.fillStyle = '#0f172a';
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 0.8;
+        if (isVertical) {
+          const y1 = dy + Math.round(dh * 0.25) - 1.5;
+          const y2 = dy + Math.round(dh * 0.75) - 1.5;
+          ctx.fillRect(dx, y1, dw, 3);
+          ctx.strokeRect(dx, y1, dw, 3);
+          ctx.fillRect(dx, y2, dw, 3);
+          ctx.strokeRect(dx, y2, dw, 3);
+
+          // Rivet dots
+          ctx.fillStyle = '#cbd5e1';
+          ctx.beginPath();
+          ctx.arc(dx + 2, y1 + 1.5, 0.8, 0, Math.PI * 2);
+          ctx.arc(dx + dw - 2, y1 + 1.5, 0.8, 0, Math.PI * 2);
+          ctx.arc(dx + 2, y2 + 1.5, 0.8, 0, Math.PI * 2);
+          ctx.arc(dx + dw - 2, y2 + 1.5, 0.8, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          const x1 = dx + Math.round(dw * 0.25) - 1.5;
+          const x2 = dx + Math.round(dw * 0.75) - 1.5;
+          ctx.fillRect(x1, dy, 3, dh);
+          ctx.strokeRect(x1, dy, 3, dh);
+          ctx.fillRect(x2, dy, 3, dh);
+          ctx.strokeRect(x2, dy, 3, dh);
+
+          // Rivet dots
+          ctx.fillStyle = '#cbd5e1';
+          ctx.beginPath();
+          ctx.arc(x1 + 1.5, dy + 2, 0.8, 0, Math.PI * 2);
+          ctx.arc(x1 + 1.5, dy + dh - 2, 0.8, 0, Math.PI * 2);
+          ctx.arc(x2 + 1.5, dy + 2, 0.8, 0, Math.PI * 2);
+          ctx.arc(x2 + 1.5, dy + dh - 2, 0.8, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // 5. Brass Handle Stud / Ring Plate in Center
+        ctx.fillStyle = '#b45309';
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 3.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#1c1917';
+        ctx.beginPath();
+        ctx.arc(cx, cy, 1.2, 0, Math.PI * 2);
+        ctx.fill();
       }
+
+      ctx.restore();
 
       if (state.selectedEntity && state.selectedEntity.type === 'door' && state.selectedEntity.index === i) {
         drawSelectionGlow(dx - 3, dy - 3, dw + 6, dh + 6);
@@ -1556,24 +1819,57 @@ function renderToolPreview(ctx, geom) {
   if (state.activeTool === 'door' && state.hoverDoorEdge) {
     const e = state.hoverDoorEdge;
     ctx.save();
-    ctx.strokeStyle = state.subtool.doorType === 'secret' ? '#c084fc' : '#38bdf8';
-    ctx.fillStyle = state.subtool.doorType === 'secret' ? 'rgba(192, 132, 252, 0.4)' : 'rgba(56, 189, 248, 0.4)';
-    ctx.lineWidth = 2.0;
+    const isSecret = state.subtool.doorType === 'secret';
+    const isOpen = state.subtool.doorType === 'wood-open';
+    const ts = geom.tileSize;
+    const doorLength = Math.round(ts * 0.82);
+    const doorThick = 8;
 
     let dw, dh, dx, dy;
     if (e.orientation === 'v') {
-      dw = 8;
-      dh = geom.tileSize * 0.75;
+      dw = doorThick;
+      dh = doorLength;
       dx = e.cx - dw / 2;
       dy = e.cy - dh / 2;
     } else {
-      dw = geom.tileSize * 0.75;
-      dh = 8;
+      dw = doorLength;
+      dh = doorThick;
       dx = e.cx - dw / 2;
       dy = e.cy - dh / 2;
     }
-    ctx.fillRect(dx, dy, dw, dh);
-    ctx.strokeRect(dx, dy, dw, dh);
+
+    if (isSecret) {
+      ctx.fillStyle = 'rgba(147, 51, 234, 0.45)';
+      ctx.strokeStyle = '#d8b4fe';
+      ctx.lineWidth = 2.0;
+      ctx.fillRect(dx, dy, dw, dh);
+      ctx.strokeRect(dx, dy, dw, dh);
+    } else if (isOpen) {
+      ctx.fillStyle = 'rgba(16, 185, 129, 0.45)';
+      ctx.strokeStyle = '#10b981';
+      ctx.lineWidth = 2.0;
+      ctx.fillRect(dx, dy, dw, dh);
+      ctx.strokeRect(dx, dy, dw, dh);
+
+      ctx.setLineDash([3, 2]);
+      ctx.strokeStyle = '#34d399';
+      ctx.beginPath();
+      if (e.orientation === 'v') {
+        ctx.moveTo(e.cx, dy);
+        ctx.lineTo(e.cx, dy + dh);
+      } else {
+        ctx.moveTo(dx, e.cy);
+        ctx.lineTo(dx + dw, e.cy);
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+    } else {
+      ctx.fillStyle = 'rgba(180, 83, 9, 0.55)';
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 2.0;
+      ctx.fillRect(dx, dy, dw, dh);
+      ctx.strokeRect(dx, dy, dw, dh);
+    }
     ctx.restore();
     return;
   }
@@ -2373,15 +2669,23 @@ function updateEntitySummaryList() {
     totalCount++;
     const item = document.createElement('div');
     item.className = 'entity-summary-item';
+    const isSecret = !!d.is_secret;
+    const isOpen = d.state === 'open';
+    const badgeCls = isSecret ? (isOpen ? 'door-badge-secret-open' : 'door-badge-secret') : (isOpen ? 'door-badge-open' : 'door-badge-closed');
+    const badgeText = isSecret ? (isOpen ? 'SECRET [OPEN]' : 'SECRET') : (isOpen ? 'OPEN' : 'CLOSED');
+    const doorIcon = isSecret ? '🔮' : (isOpen ? '🚪🔓' : '🚪🔒');
     item.innerHTML = `
       <div class="entity-item-main">
-        <span class="entity-item-icon">🚪</span>
+        <span class="entity-item-icon">${doorIcon}</span>
         <div>
-          <div class="entity-item-name">${d.is_secret ? 'Secret Door' : 'Wood Door'} (${d.state})</div>
+          <div class="entity-item-name">
+            ${isSecret ? 'Secret Door' : 'Wood Door'}
+            <span class="door-status-pill ${badgeCls}">${badgeText}</span>
+          </div>
           <div class="entity-item-pos">[${d.from[0]},${d.from[1]}] ↔ [${d.to[0]},${d.to[1]}]</div>
         </div>
       </div>
-      <button class="btn btn-sm btn-danger btn-del-entity">🗑️</button>
+      <button class="btn btn-sm btn-danger btn-del-entity" title="Delete Door">🗑️</button>
     `;
     item.addEventListener('click', (e) => {
       if (e.target.closest('.btn-del-entity')) {
