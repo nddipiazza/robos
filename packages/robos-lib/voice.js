@@ -275,6 +275,76 @@ class RobOSVoiceClient {
   async addTask(title, options = {}) {
     return this.executeSkill(`add a task: ${title}`, options);
   }
+
+  /**
+   * Start a voice session with a guidance prompt and live streaming
+   */
+  async startVoiceSession(options = {}) {
+    const { guidancePrompt = '', agentId = 'fast-reactive', onInterim, onError } = options;
+    const session = {
+      startTime: Date.now(),
+      guidancePrompt,
+      capturedText: '',
+      interimText: '',
+      unsubscribe: null,
+    };
+
+    const activateRes = await this.activate({
+      backgroundMode: true,
+      guidancePrompt,
+      agentId,
+    });
+
+    session.unsubscribe = this.listenStream((chunk) => {
+      if (chunk.text) {
+        if (chunk.isFinal) {
+          session.capturedText = (session.capturedText + ' ' + chunk.text).trim();
+          session.interimText = '';
+        } else {
+          session.interimText = chunk.text;
+        }
+        const total = (session.capturedText + ' ' + session.interimText).trim();
+        if (typeof onInterim === 'function') {
+          onInterim({ text: total, chunk, session });
+        }
+      }
+    }, onError);
+
+    this._currentSession = session;
+    return { ok: true, session, activateRes };
+  }
+
+  /**
+   * Stop active voice session and return captured text with guidance prompt
+   */
+  async stopVoiceSession() {
+    const session = this._currentSession || { guidancePrompt: '', capturedText: '', startTime: Date.now() };
+    if (session.unsubscribe) {
+      try { session.unsubscribe(); } catch {}
+      session.unsubscribe = null;
+    }
+
+    const deactivateRes = await this.deactivate();
+    let text = (session.capturedText || '').trim();
+    if (deactivateRes?.text && deactivateRes.text.trim()) {
+      text = deactivateRes.text.trim();
+    } else if (session.interimText) {
+      text = (text + ' ' + session.interimText).trim();
+    }
+
+    const durationMs = Math.max(0, Date.now() - (session.startTime || Date.now()));
+    const result = {
+      ok: true,
+      text,
+      guidancePrompt: session.guidancePrompt || '',
+      fullPrompt: `[Guidance Context]\n${session.guidancePrompt || ''}\n\n[Captured Voice Audio Transcript]\n"${text}"`,
+      durationMs,
+      timestamp: new Date().toISOString(),
+    };
+
+    this._currentSession = null;
+    return result;
+  }
 }
 
 const voice = new RobOSVoiceClient();

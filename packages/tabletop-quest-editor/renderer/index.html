@@ -58,6 +58,16 @@
           📋 Copy JSON
         </button>
 
+        <div class="header-divider"></div>
+
+        <robos-voice-button
+          id="btn-voice-add-items"
+          label="Add items via voice"
+          recording-label="Stop Dictating"
+          guidance-prompt="Tabletop Quest Map Editor Voice Assistant: The user is dictating quest map setup commands to place monsters, furniture, doors, traps, or wall blocks on the board (e.g. 'add 3 skeletons to room 1', 'place a treasure chest in room 2', 'put an orc in the north room')."
+          title="Dictate map setup instructions via voice">
+        </robos-voice-button>
+
         <button id="btn-test-play" class="btn btn-primary" title="Launch Godot Tabletop RPG to test play this quest">
           ⚔️ Test Play
         </button>
@@ -593,6 +603,18 @@
     <div id="toast-container" class="toast-container"></div>
   </div>
 
+  <script>
+    (function() {
+      const s = document.createElement('script');
+      s.src = '../../robos-ui/robos-ui.js';
+      s.onerror = () => {
+        const s2 = document.createElement('script');
+        s2.src = '/usr/local/share/robos/robos-ui/robos-ui.js';
+        document.head.appendChild(s2);
+      };
+      document.head.appendChild(s);
+    })();
+  </script>
   <script src="app.js"></script>
 </body>
 </html>

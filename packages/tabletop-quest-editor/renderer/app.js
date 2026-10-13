@@ -142,7 +142,7 @@ const FURNITURE_DEFS = {
 // -------------------------------------------------------------
 // DOM Elements Cache
 // -------------------------------------------------------------
-const dom = {
+const dom = (typeof document !== 'undefined') ? {
   canvas: document.getElementById('quest-canvas'),
   viewport: document.getElementById('canvas-viewport'),
   ctx: null,
@@ -290,16 +290,22 @@ const dom = {
   validationErrorsList: document.getElementById('validation-errors-list'),
   filterPills: document.querySelectorAll('.val-filters .filter-pill'),
 
+  // Voice Dictation Controls
+  btnVoiceAddItems: document.getElementById('btn-voice-add-items'),
+
   // Toast Container
   toastContainer: document.getElementById('toast-container')
-};
+} : {};
 
-dom.ctx = dom.canvas.getContext('2d');
+if (typeof document !== 'undefined' && dom.canvas) {
+  dom.ctx = dom.canvas.getContext('2d');
+}
 
 // -------------------------------------------------------------
 // Toast Messages
 // -------------------------------------------------------------
 function showToast(message, type = 'info') {
+  if (typeof document === 'undefined' || !dom.toastContainer) return;
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
   toast.innerHTML = `<span>${message}</span>`;
@@ -355,8 +361,8 @@ function redo() {
 }
 
 function updateHistoryButtons() {
-  dom.btnUndo.disabled = state.undoStack.length === 0;
-  dom.btnRedo.disabled = state.redoStack.length === 0;
+  if (dom.btnUndo) dom.btnUndo.disabled = state.undoStack.length === 0;
+  if (dom.btnRedo) dom.btnRedo.disabled = state.redoStack.length === 0;
 }
 
 // -------------------------------------------------------------
@@ -3476,6 +3482,496 @@ function renderValidationCanvasOverlays(ctx, geom) {
 }
 
 // -------------------------------------------------------------
+// Voice Assistant Map Setup & Placement Engine
+// -------------------------------------------------------------
+
+function getTilesForRoom(room) {
+  if (!room) return [];
+  if (Array.isArray(room.tiles) && room.tiles.length > 0) {
+    return room.tiles.map(t => [t[0], t[1]]);
+  }
+  const tiles = [];
+  const x = room.x !== undefined ? room.x : 0;
+  const y = room.y !== undefined ? room.y : 0;
+  const w = room.w !== undefined ? room.w : 1;
+  const h = room.h !== undefined ? room.h : 1;
+  for (let r = y; r < y + h; r++) {
+    for (let c = x; c < x + w; c++) {
+      tiles.push([c, r]);
+    }
+  }
+  return tiles;
+}
+
+function getOccupiedTileSet(quest) {
+  const set = new Set();
+  if (!quest) return set;
+
+  (quest.monsters || []).forEach(m => {
+    const x = m.x !== undefined ? m.x : (m.pos ? m.pos[0] : null);
+    const y = m.y !== undefined ? m.y : (m.pos ? m.pos[1] : null);
+    if (x !== null && y !== null) set.add(`${x},${y}`);
+  });
+
+  (quest.furniture || []).forEach(f => {
+    const w = f.width || 1;
+    const h = f.height || 1;
+    for (let dy = 0; dy < h; dy++) {
+      for (let dx = 0; dx < w; dx++) {
+        set.add(`${f.x + dx},${f.y + dy}`);
+      }
+    }
+  });
+
+  (quest.wallBlocks || []).forEach(wb => {
+    set.add(`${wb.x},${wb.y}`);
+  });
+
+  (quest.traps || []).forEach(t => {
+    set.add(`${t.x},${t.y}`);
+  });
+
+  if (quest.startingStair) {
+    const [sx, sy] = quest.startingStair;
+    const is2x2 = quest.startingStairType && quest.startingStairType.includes('2x2');
+    set.add(`${sx},${sy}`);
+    if (is2x2) {
+      set.add(`${sx + 1},${sy}`);
+      set.add(`${sx},${sy + 1}`);
+      set.add(`${sx + 1},${sy + 1}`);
+    }
+  }
+
+  return set;
+}
+
+function findTargetRoom(roomSpec, blockmap, currentContext = {}) {
+  if (!blockmap || !Array.isArray(blockmap.rooms) || blockmap.rooms.length === 0) {
+    return null;
+  }
+  const rooms = blockmap.rooms;
+
+  // If no room specified, or "this room" / "current room"
+  if (!roomSpec || /^(this\s+room|current\s+room|here)$/i.test(roomSpec.trim())) {
+    if (currentContext.hoverTile) {
+      const rm = rooms.find(r => {
+        const tiles = getTilesForRoom(r);
+        return tiles.some(t => t[0] === currentContext.hoverTile[0] && t[1] === currentContext.hoverTile[1]);
+      });
+      if (rm) return rm;
+    }
+    if (currentContext.selectedEntityRoom) return currentContext.selectedEntityRoom;
+    return rooms[0];
+  }
+
+  const spec = roomSpec.toLowerCase().trim();
+
+  // Match room number or word, e.g. "room 1", "room #2", "room one"
+  const wordMap = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10 };
+  const numMatch = spec.match(/room\s*#?(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\b/i);
+  if (numMatch) {
+    let n = parseInt(numMatch[1], 10);
+    if (isNaN(n)) {
+      n = wordMap[numMatch[1].toLowerCase()];
+    }
+    if (n !== undefined) {
+      // 1. Try matching room with name containing Room N
+      const matchByName = rooms.find(r => (r.name && new RegExp(`\\broom\\s*#?${n}\\b`, 'i').test(r.name)) || (r.id && new RegExp(`\\b${n}\\b`).test(r.id)));
+      if (matchByName) return matchByName;
+      // 2. Try 1-based index in rooms array
+      if (n >= 1 && n <= rooms.length) {
+        return rooms[n - 1];
+      }
+    }
+  }
+
+  // Substring match on name or id
+  const cleanSpec = spec.replace(/^(in|to|at|the)\s+/g, '').trim();
+  const directMatch = rooms.find(r => {
+    const name = (r.name || '').toLowerCase();
+    const id = (r.id || '').toLowerCase();
+    return name.includes(cleanSpec) || cleanSpec.includes(name) || id.includes(cleanSpec);
+  });
+  if (directMatch) return directMatch;
+
+  return rooms[0];
+}
+
+function findFreeTilesInRoom(room, occupiedSet, count = 1) {
+  const roomTiles = getTilesForRoom(room);
+  const freeTiles = [];
+  for (const [col, row] of roomTiles) {
+    if (!occupiedSet.has(`${col},${row}`)) {
+      freeTiles.push([col, row]);
+      if (freeTiles.length >= count) break;
+    }
+  }
+  return freeTiles;
+}
+
+function findFreeRectInRoom(room, w, h, occupiedSet) {
+  const roomTiles = getTilesForRoom(room);
+  const roomTileSet = new Set(roomTiles.map(t => `${t[0]},${t[1]}`));
+  for (const [col, row] of roomTiles) {
+    let fits = true;
+    for (let dy = 0; dy < h; dy++) {
+      for (let dx = 0; dx < w; dx++) {
+        const key = `${col + dx},${row + dy}`;
+        if (!roomTileSet.has(key) || occupiedSet.has(key)) {
+          fits = false;
+          break;
+        }
+      }
+      if (!fits) break;
+    }
+    if (fits) {
+      return { x: col, y: row };
+    }
+  }
+  return null;
+}
+
+function interpretVoiceQuestCommands(spokenText, blockmap, quest, currentContext = {}) {
+  if (!spokenText || typeof spokenText !== 'string') return [];
+
+  const WORD_TO_NUM = {
+    a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5,
+    six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+    'a couple': 2, 'a couple of': 2, 'a pair': 2, 'a pair of': 2
+  };
+
+  const MONSTERS = [
+    { type: 'skeleton', keys: ['skeletons', 'skeleton', 'skellies', 'skelly'] },
+    { type: 'orc', keys: ['orcs', 'orc'] },
+    { type: 'goblin', keys: ['goblins', 'goblin'] },
+    { type: 'zombie', keys: ['zombies', 'zombie'] },
+    { type: 'mummy', keys: ['mummies', 'mummy'] },
+    { type: 'chaos_warrior', keys: ['chaos warriors', 'chaos warrior', 'chaos'] },
+    { type: 'fimir', keys: ['fimirs', 'fimir'] },
+    { type: 'gargoyle', keys: ['gargoyles', 'gargoyle'] },
+    { type: 'boss', keys: ['bosses', 'boss', 'dungeon boss', 'warlord'] }
+  ];
+
+  const FURNITURE = [
+    { type: 'chest', keys: ['treasure chests', 'treasure chest', 'chests', 'chest'] },
+    { type: 'table', keys: ['tables', 'table'] },
+    { type: 'bookcase', keys: ['bookcases', 'bookcase'] },
+    { type: 'bookshelf', keys: ['bookshelves', 'bookshelf'] },
+    { type: 'weapons_rack', keys: ['weapons racks', 'weapons rack', 'weapon racks', 'weapon rack'] },
+    { type: 'altar', keys: ['altars', 'altar'] },
+    { type: 'alchemists_bench', keys: ['alchemists benches', 'alchemist bench', 'alchemists bench', "alchemist's bench", 'alchemy bench'] },
+    { type: 'tomb', keys: ['tombs', 'tomb', 'stone tombs', 'stone tomb', 'sarcophagus'] },
+    { type: 'throne', keys: ['thrones', 'throne'] },
+    { type: 'cupboard', keys: ['cupboards', 'cupboard'] },
+    { type: 'torture_rack', keys: ['torture racks', 'torture rack'] },
+    { type: 'fireplace', keys: ['fireplaces', 'fireplace'] },
+    { type: 'stairs_up_1x1', keys: ['stairs up', 'staircase up', 'stairs', 'staircase'] },
+    { type: 'stairs_down_1x1', keys: ['stairs down', 'staircase down'] }
+  ];
+
+  const TRAPS = [
+    { type: 'pit', keys: ['pit traps', 'pit trap', 'pits', 'pit'] },
+    { type: 'falling_block', keys: ['falling block traps', 'falling block', 'falling rock'] },
+    { type: 'spear', keys: ['spear traps', 'spear trap', 'spears', 'spear'] }
+  ];
+
+  const DOORS = [
+    { type: 'secret', keys: ['secret doors', 'secret door', 'hidden doors', 'hidden door'] },
+    { type: 'wood-open', keys: ['open doors', 'open door'] },
+    { type: 'wood-closed', keys: ['closed doors', 'closed door', 'doors', 'door'] }
+  ];
+
+  const WALL_BLOCKS = [
+    { type: 'single', keys: ['wall blocks', 'wall block', 'blocked tiles', 'blocked tile', 'rock blocks', 'rock block'] }
+  ];
+
+  const ALL_ENTITIES = [];
+  MONSTERS.forEach(m => m.keys.forEach(k => ALL_ENTITIES.push({ category: 'monster', type: m.type, key: k })));
+  FURNITURE.forEach(f => f.keys.forEach(k => ALL_ENTITIES.push({ category: 'furniture', type: f.type, key: k })));
+  TRAPS.forEach(t => t.keys.forEach(k => ALL_ENTITIES.push({ category: 'trap', type: t.type, key: k })));
+  DOORS.forEach(d => d.keys.forEach(k => ALL_ENTITIES.push({ category: 'door', type: d.type, key: k })));
+  WALL_BLOCKS.forEach(w => w.keys.forEach(k => ALL_ENTITIES.push({ category: 'wall-block', type: w.type, key: k })));
+  ALL_ENTITIES.sort((a, b) => b.key.length - a.key.length);
+
+  const sentences = spokenText.split(/[.!?;\n]+/);
+  const commands = [];
+
+  for (const sentence of sentences) {
+    if (!sentence.trim()) continue;
+
+    const ROOM_REGEX = /(?:in|to|into|inside|at)\s+(?:the\s+)?(this\s+room|current\s+room|room\s*#?\s*\d+|room\s+[a-z]+|[a-z0-9\s'-]+?(?:room|crypt|hall|chamber|tomb))\b/gi;
+    const matches = [...sentence.matchAll(ROOM_REGEX)];
+    let clauses = [];
+
+    if (matches.length === 0) {
+      clauses = [{ text: sentence, room: 'this room' }];
+    } else if (matches.length === 1) {
+      const cleanedText = sentence.slice(0, matches[0].index) + ' ' + sentence.slice(matches[0].index + matches[0][0].length);
+      clauses = [{ text: cleanedText, room: matches[0][1] }];
+    } else {
+      let prevEnd = 0;
+      for (let i = 0; i < matches.length; i++) {
+        const curMatch = matches[i];
+        const end = (i < matches.length - 1) ? curMatch.index + curMatch[0].length : sentence.length;
+        const rawClause = sentence.substring(prevEnd, end);
+        const cleanedText = rawClause.replace(curMatch[0], ' ');
+        clauses.push({ text: cleanedText, room: curMatch[1] });
+        prevEnd = end;
+      }
+    }
+
+    for (const clause of clauses) {
+      let remaining = clause.text;
+      for (const ent of ALL_ENTITIES) {
+        const regex = new RegExp(`\\b(?:(\\d+|one|two|three|four|five|six|seven|eight|nine|ten|a\\s+couple(?:\\s+of)?|a\\s+pair(?:\\s+of)?|a|an)\\s+)?${ent.key}\\b`, 'i');
+        let m = remaining.match(regex);
+        while (m) {
+          let count = 1;
+          if (m[1]) {
+            const numStr = m[1].toLowerCase().trim();
+            if (WORD_TO_NUM[numStr] !== undefined) {
+              count = WORD_TO_NUM[numStr];
+            } else {
+              const parsed = parseInt(numStr, 10);
+              if (!isNaN(parsed)) count = parsed;
+            }
+          }
+          commands.push({
+            category: ent.category,
+            type: ent.type,
+            count,
+            targetRoom: clause.room
+          });
+          remaining = remaining.replace(m[0], ' ');
+          m = remaining.match(regex);
+        }
+      }
+    }
+  }
+
+  return commands;
+}
+
+function executeVoiceMapCommands(spokenText, guidancePrompt, targetQuest = null, targetBlockmap = null) {
+  const currentQuest = targetQuest || state.quest;
+  const currentBlockmap = targetBlockmap || state.blockmap;
+
+  if (!currentBlockmap || !Array.isArray(currentBlockmap.rooms) || currentBlockmap.rooms.length === 0) {
+    if (typeof showToast === 'function') {
+      showToast('⚠️ No active blockmap or rooms available to place items.', 'error');
+    }
+    return { success: false, placed: [], errors: ['No active blockmap or rooms'] };
+  }
+
+  const currentContext = {
+    hoverTile: (typeof state !== 'undefined' ? state.hoverTile : null),
+    selectedEntity: (typeof state !== 'undefined' ? state.selectedEntity : null)
+  };
+
+  const parsed = interpretVoiceQuestCommands(spokenText, currentBlockmap, currentQuest, currentContext);
+  if (!parsed || parsed.length === 0) {
+    if (typeof showToast === 'function') {
+      showToast(`🎙️ No valid map items recognized in: "${spokenText}"`, 'info');
+    }
+    return { success: false, placed: [], errors: ['No items recognized'] };
+  }
+
+  if (typeof recordHistory === 'function') {
+    recordHistory();
+  }
+
+  const occupiedSet = getOccupiedTileSet(currentQuest);
+  const placedSummary = [];
+
+  for (const cmd of parsed) {
+    const targetRoom = findTargetRoom(cmd.targetRoom, currentBlockmap, currentContext);
+    if (!targetRoom) continue;
+
+    const roomName = targetRoom.name || targetRoom.id || 'Room';
+    let placedCount = 0;
+
+    if (cmd.category === 'monster') {
+      const def = MONSTER_DEFS[cmd.type] || MONSTER_DEFS.goblin;
+      for (let i = 0; i < cmd.count; i++) {
+        const freeTiles = findFreeTilesInRoom(targetRoom, occupiedSet, 1);
+        if (freeTiles.length === 0) break;
+        const [col, row] = freeTiles[0];
+        const newMon = {
+          id: `mon-${cmd.type}-${(currentQuest.monsters || []).length + 1}`,
+          name: def.name,
+          type: cmd.type,
+          bp: def.bp,
+          mp: def.mp,
+          atk: def.atk,
+          def: def.def,
+          move: def.move,
+          pos: [col, row],
+          x: col,
+          y: row,
+          roomId: targetRoom.id,
+          isBoss: def.isBoss,
+          isUndead: def.isUndead,
+          isSpellcaster: def.isCaster
+        };
+        if (!currentQuest.monsters) currentQuest.monsters = [];
+        currentQuest.monsters.push(newMon);
+        occupiedSet.add(`${col},${row}`);
+        placedCount++;
+      }
+      if (placedCount > 0) {
+        placedSummary.push(`${placedCount} ${cmd.type}${placedCount > 1 ? 's' : ''} in ${roomName}`);
+      }
+    } else if (cmd.category === 'furniture') {
+      const def = FURNITURE_DEFS[cmd.type] || { w: 1, h: 1, name: 'Furniture' };
+      for (let i = 0; i < cmd.count; i++) {
+        let rect = findFreeRectInRoom(targetRoom, def.w, def.h, occupiedSet);
+        let w = def.w;
+        let h = def.h;
+        if (!rect && def.w !== def.h) {
+          rect = findFreeRectInRoom(targetRoom, def.h, def.w, occupiedSet);
+          if (rect) {
+            w = def.h;
+            h = def.w;
+          }
+        }
+        if (!rect) break;
+
+        const newFurn = {
+          id: `furn-${cmd.type}-${(currentQuest.furniture || []).length + 1}`,
+          name: def.name,
+          type: cmd.type,
+          x: rect.x,
+          y: rect.y,
+          width: w,
+          height: h,
+          roomId: targetRoom.id,
+          treasure: ''
+        };
+        if (!currentQuest.furniture) currentQuest.furniture = [];
+        currentQuest.furniture.push(newFurn);
+        for (let dy = 0; dy < h; dy++) {
+          for (let dx = 0; dx < w; dx++) {
+            occupiedSet.add(`${rect.x + dx},${rect.y + dy}`);
+          }
+        }
+        placedCount++;
+      }
+      if (placedCount > 0) {
+        placedSummary.push(`${placedCount} ${def.name}${placedCount > 1 ? 's' : ''} in ${roomName}`);
+      }
+    } else if (cmd.category === 'trap') {
+      for (let i = 0; i < cmd.count; i++) {
+        const freeTiles = findFreeTilesInRoom(targetRoom, occupiedSet, 1);
+        if (freeTiles.length === 0) break;
+        const [col, row] = freeTiles[0];
+        const newTrap = {
+          id: `trap-${cmd.type}-${(currentQuest.traps || []).length + 1}`,
+          type: cmd.type,
+          x: col,
+          y: row,
+          damage: cmd.type === 'falling_block' ? 2 : 1,
+          detected: false,
+          disarmed: false
+        };
+        if (!currentQuest.traps) currentQuest.traps = [];
+        currentQuest.traps.push(newTrap);
+        occupiedSet.add(`${col},${row}`);
+        placedCount++;
+      }
+      if (placedCount > 0) {
+        placedSummary.push(`${placedCount} ${cmd.type} trap${placedCount > 1 ? 's' : ''} in ${roomName}`);
+      }
+    } else if (cmd.category === 'wall-block') {
+      for (let i = 0; i < cmd.count; i++) {
+        const freeTiles = findFreeTilesInRoom(targetRoom, occupiedSet, 1);
+        if (freeTiles.length === 0) break;
+        const [col, row] = freeTiles[0];
+        const newBlock = {
+          id: `block-${(currentQuest.wallBlocks || []).length + 1}`,
+          type: 'single',
+          x: col,
+          y: row,
+          width: 1,
+          height: 1
+        };
+        if (!currentQuest.wallBlocks) currentQuest.wallBlocks = [];
+        currentQuest.wallBlocks.push(newBlock);
+        occupiedSet.add(`${col},${row}`);
+        placedCount++;
+      }
+      if (placedCount > 0) {
+        placedSummary.push(`${placedCount} wall block${placedCount > 1 ? 's' : ''} in ${roomName}`);
+      }
+    } else if (cmd.category === 'door') {
+      const roomTiles = getTilesForRoom(targetRoom);
+      const roomTileSet = new Set(roomTiles.map(t => `${t[0]},${t[1]}`));
+      let doorPlaced = false;
+      const existingDoors = currentQuest.doors || [];
+      const hasDoorAtEdge = (c1, r1, c2, r2) => {
+        return existingDoors.some(d =>
+          (d.from[0] === c1 && d.from[1] === r1 && d.to[0] === c2 && d.to[1] === r2) ||
+          (d.from[0] === c2 && d.from[1] === r2 && d.to[0] === c1 && d.to[1] === r1)
+        );
+      };
+
+      for (const [col, row] of roomTiles) {
+        const neighbors = [
+          [col, row - 1],
+          [col, row + 1],
+          [col - 1, row],
+          [col + 1, row]
+        ];
+        for (const [nc, nr] of neighbors) {
+          if (!roomTileSet.has(`${nc},${nr}`) && !hasDoorAtEdge(col, row, nc, nr)) {
+            const geom = (typeof getGridGeometry === 'function') ? getGridGeometry() : {
+              cols: currentBlockmap.gridDimensions ? currentBlockmap.gridDimensions[0] : 28,
+              rows: currentBlockmap.gridDimensions ? currentBlockmap.gridDimensions[1] : 21
+            };
+            if (nc >= 0 && nc < geom.cols && nr >= 0 && nr < geom.rows) {
+              const newDoor = {
+                id: `door-${(currentQuest.doors || []).length + 1}`,
+                from: [col, row],
+                to: [nc, nr],
+                state: cmd.type === 'secret' ? 'secret' : (cmd.type === 'wood-open' ? 'open' : 'closed')
+              };
+              if (!currentQuest.doors) currentQuest.doors = [];
+              currentQuest.doors.push(newDoor);
+              doorPlaced = true;
+              placedCount++;
+              break;
+            }
+          }
+        }
+        if (doorPlaced) break;
+      }
+      if (placedCount > 0) {
+        placedSummary.push(`door in ${roomName}`);
+      }
+    }
+  }
+
+  if (typeof runValidation === 'function' && typeof document !== 'undefined') runValidation();
+  if (typeof updateEntitySummaryList === 'function' && typeof document !== 'undefined') updateEntitySummaryList();
+  if (typeof render === 'function' && typeof document !== 'undefined') render();
+
+  if (placedSummary.length > 0) {
+    if (typeof showToast === 'function') {
+      showToast(`🎙️ Placed: ${placedSummary.join(', ')}`, 'success');
+    }
+  } else {
+    if (typeof showToast === 'function') {
+      showToast('⚠️ No space in room(s) to place requested items.', 'error');
+    }
+  }
+
+  return {
+    success: placedSummary.length > 0,
+    placed: placedSummary,
+    parsedCommands: parsed
+  };
+}
+
+// -------------------------------------------------------------
 // Event Listeners Setup
 // -------------------------------------------------------------
 function setupEventListeners() {
@@ -3746,6 +4242,15 @@ function setupEventListeners() {
   dom.btnExportJson.addEventListener('click', exportJson);
   dom.btnCopyJson.addEventListener('click', copyJson);
   dom.btnTestPlay.addEventListener('click', testPlay);
+
+  if (dom.btnVoiceAddItems) {
+    dom.btnVoiceAddItems.addEventListener('robos-voice-complete', (e) => {
+      const { text, guidancePrompt } = e.detail || {};
+      if (text && text.trim()) {
+        executeVoiceMapCommands(text, guidancePrompt);
+      }
+    });
+  }
 
   // Zoom controls
   dom.btnZoomIn.addEventListener('click', () => {
@@ -4037,7 +4542,12 @@ if (typeof window !== 'undefined') {
     validateQuest,
     runValidation,
     focusValidationError,
-    deleteValidationErrorEntity
+    deleteValidationErrorEntity,
+    interpretVoiceQuestCommands,
+    executeVoiceMapCommands,
+    findTargetRoom,
+    findFreeTilesInRoom,
+    findFreeRectInRoom
   };
 
   // Bootstrap application on window load
@@ -4046,6 +4556,13 @@ if (typeof window !== 'undefined') {
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    validateQuest
+    validateQuest,
+    interpretVoiceQuestCommands,
+    executeVoiceMapCommands,
+    findTargetRoom,
+    findFreeTilesInRoom,
+    findFreeRectInRoom,
+    MONSTER_DEFS,
+    FURNITURE_DEFS
   };
 }
