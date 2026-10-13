@@ -92,7 +92,7 @@ function matchTabletopSkills(text) {
   // e.g., "put a chest in room 1"
 
   const monsterPattern = new RegExp(
-    `(?:add|put|place|spawn|insert|set)\\s+(\\d+|one|two|three|four|five|six|seven|eight|nine|ten|a|an)?\\s*(${monsterKeywords.join('|')})\\s+(?:in(?:to)?|to|at|inside)\\s+(?:room\\s+)?([a-z0-9\\-_]+)`,
+    `(?:add|put|place|spawn|insert|set)\\s+(\\d+|one|two|three|four|five|six|seven|eight|nine|ten|a|an)?\\s*(${monsterKeywords.join('|')})\\s+(?:in(?:to)?|to|at|inside)\\s+(?:the\\s+)?(?:room\\s+)?([a-z0-9\\-_]+)`,
     'i'
   );
 
@@ -105,13 +105,16 @@ function matchTabletopSkills(text) {
     else if (mType.endsWith('s') && !mType.endsWith('ss')) mType = mType.slice(0, -1);
     mType = mType.replace(/\s+/g, '_');
 
-    const room = monsterMatch[3].trim();
+    const roomRaw = monsterMatch[3].replace(/[.,!?;:]+$/g, '').trim();
+    const roomNum = parseInt(roomRaw, 10) || wordToNum[roomRaw.toLowerCase()] || roomRaw;
+    const roomLabel = typeof roomNum === 'number' ? `Room ${roomNum}` : `Room ${roomRaw}`;
+    const roomParam = typeof roomNum === 'number' ? String(roomNum) : roomRaw;
     const monsterLabel = mType.charAt(0).toUpperCase() + mType.slice(1).replace(/_/g, ' ');
 
     skills.push({
       id: 'tabletop:place-monster',
       name: 'Place Monster',
-      title: `Place ${count} ${monsterLabel}${count > 1 ? 's' : ''} in Room ${room}`,
+      title: `Place ${count} ${monsterLabel}${count > 1 ? 's' : ''} in ${roomLabel}`,
       category: 'Tabletop Quest',
       confidence: 0.96,
       action: 'place-monster',
@@ -120,8 +123,10 @@ function matchTabletopSkills(text) {
         monster: mType,
         type: mType,
         count,
-        targetRoom: room,
-        room
+        targetRoom: roomParam,
+        room: roomParam,
+        roomLabel,
+        roomNumber: typeof roomNum === 'number' ? roomNum : null
       }
     });
     return skills;
@@ -129,7 +134,7 @@ function matchTabletopSkills(text) {
 
   // Furniture pattern
   const furnPattern = new RegExp(
-    `(?:add|put|place|set)\\s+(\\d+|one|two|three|four|five|six|seven|eight|nine|ten|a|an)?\\s*(${furnitureKeywords.join('|')})\\s+(?:in(?:to)?|to|at|inside)\\s+(?:room\\s+)?([a-z0-9\\-_]+)`,
+    `(?:add|put|place|set)\\s+(\\d+|one|two|three|four|five|six|seven|eight|nine|ten|a|an)?\\s*(${furnitureKeywords.join('|')})\\s+(?:in(?:to)?|to|at|inside)\\s+(?:the\\s+)?(?:room\\s+)?([a-z0-9\\-_]+)`,
     'i'
   );
   const furnMatch = raw.match(furnPattern);
@@ -139,13 +144,16 @@ function matchTabletopSkills(text) {
     let fType = furnMatch[2].toLowerCase().trim();
     if (fType.endsWith('s') && !fType.endsWith('ss')) fType = fType.slice(0, -1);
     fType = fType.replace(/\s+/g, '_');
-    const room = furnMatch[3].trim();
+    const roomRaw = furnMatch[3].replace(/[.,!?;:]+$/g, '').trim();
+    const roomNum = parseInt(roomRaw, 10) || wordToNum[roomRaw.toLowerCase()] || roomRaw;
+    const roomLabel = typeof roomNum === 'number' ? `Room ${roomNum}` : `Room ${roomRaw}`;
+    const roomParam = typeof roomNum === 'number' ? String(roomNum) : roomRaw;
     const furnLabel = fType.charAt(0).toUpperCase() + fType.slice(1).replace(/_/g, ' ');
 
     skills.push({
       id: 'tabletop:place-furniture',
       name: 'Place Furniture',
-      title: `Place ${count} ${furnLabel} in Room ${room}`,
+      title: `Place ${count} ${furnLabel} in ${roomLabel}`,
       category: 'Tabletop Quest',
       confidence: 0.94,
       action: 'place-furniture',
@@ -154,8 +162,10 @@ function matchTabletopSkills(text) {
         furniture: fType,
         type: fType,
         count,
-        targetRoom: room,
-        room
+        targetRoom: roomParam,
+        room: roomParam,
+        roomLabel,
+        roomNumber: typeof roomNum === 'number' ? roomNum : null
       }
     });
     return skills;
@@ -163,17 +173,20 @@ function matchTabletopSkills(text) {
 
   // Trap pattern
   const trapPattern = new RegExp(
-    `(?:add|put|place|set)\\s+(?:a\\s+)?(${trapKeywords.join('|')})\\s+(?:in(?:to)?|to|at)\\s+(?:room\\s+)?([a-z0-9\\-_]+)`,
+    `(?:add|put|place|set)\\s+(?:a\\s+)?(${trapKeywords.join('|')})\\s+(?:in(?:to)?|to|at)\\s+(?:the\\s+)?(?:room\\s+)?([a-z0-9\\-_]+)`,
     'i'
   );
   const trapMatch = raw.match(trapPattern);
   if (trapMatch) {
     let tType = trapMatch[1].toLowerCase().replace(/\s*trap$/i, '').trim();
-    const room = trapMatch[2].trim();
+    const roomRaw = trapMatch[2].replace(/[.,!?;:]+$/g, '').trim();
+    const roomNum = parseInt(roomRaw, 10) || wordToNum[roomRaw.toLowerCase()] || roomRaw;
+    const roomLabel = typeof roomNum === 'number' ? `Room ${roomNum}` : `Room ${roomRaw}`;
+    const roomParam = typeof roomNum === 'number' ? String(roomNum) : roomRaw;
     skills.push({
       id: 'tabletop:place-trap',
       name: 'Place Trap',
-      title: `Place ${tType} Trap in Room ${room}`,
+      title: `Place ${tType} Trap in ${roomLabel}`,
       category: 'Tabletop Quest',
       confidence: 0.92,
       action: 'place-trap',
@@ -182,8 +195,10 @@ function matchTabletopSkills(text) {
         trap: tType,
         type: tType,
         count: 1,
-        targetRoom: room,
-        room
+        targetRoom: roomParam,
+        room: roomParam,
+        roomLabel,
+        roomNumber: typeof roomNum === 'number' ? roomNum : null
       }
     });
     return skills;
