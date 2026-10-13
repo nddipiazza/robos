@@ -56,7 +56,7 @@ These diagrams come from the earlier specs that were folded into this page or re
 *Concept diagram from the original design docs, for plans as knowledge graph objects. A plan is saved on a project node today; the Roadmap describes it under Built.*
 
 ![Contract-driven project graph linking repository specs, a graph engine, an interactive canvas and verification gates]({{ '/assets/images/contract-project-graph-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
-*Concept diagram from the original design docs, for the contract-driven project graph. The text on this page says it is not built.*
+*Concept diagram from the original design docs, for the contract-driven project graph. The project graph app it describes is not in the repository.*
 
 ![Five-phase implementation roadmap for the contract-driven project graph]({{ '/assets/images/contract-graph-roadmap.jpg' | relative_url }}){: .robos-zoomable-img }
 *Concept diagram from the original design docs, showing the five delivery phases proposed for the contract-driven project graph. No dates were set.*

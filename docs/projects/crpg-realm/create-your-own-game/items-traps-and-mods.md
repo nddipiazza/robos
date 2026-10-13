@@ -61,6 +61,9 @@ The mesh shown on a pawn comes from `CharacterModel3D`, which matches the item i
 
 ### Inventory, slots and AC
 
+![Item data flow from items.json through DataStoreV1 to ground items, the inventory and the character sheet]({{ '/assets/images/crpg-realm/crpg_items_inventory_pipeline.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The text on this page says what is built today: `GameState.inventory` is a flat array of item ids, not a dictionary of slots, and a ground item takes its label and icon from its own exports rather than from `items.json`.*
+
 All inventory state is in `GameState`: `inventory` is a flat array of item ids (three potions are three `"potion-healing"` entries), plus `equipped_weapon`, `equipped_armor`, `equipped_shield`, `equipped_helmet` and `equipped_accessory`. `add_item(id)` appends one id and logs "Acquired item". `has_item(id)` checks the inventory and the weapon, armor and accessory slots.
 
 `equip_item()` chooses the slot in this order: weapon category, then shield, then helmet, then armor, then accessory. It swaps the old item back into the inventory.
@@ -72,6 +75,9 @@ All inventory state is in `GameState`: `inventory` is a flat array of item ids (
 The inventory window shows a 16-slot backpack grid with a weapon and an armor slot.
 
 ### Ground items, chests and corpses
+
+![Ground item labels in VillageSquare during a test run]({{ '/assets/images/crpg-realm/house_wall_navigation.png' | relative_url }}){: .robos-zoomable-img }
+*`GroundItem` nodes in VillageSquare: "Militia Shortsword" and "Lesser Healing Draught" are labels set from each node's `item_name`.*
 
 - `GroundItem` (`scenes/components/GroundItem.tscn`) exports `item_id`, `item_name`, `quantity`, `is_picked_up` and `icon_texture`. A left-click calls `pickup()`, which adds one copy of `item_id`, emits `item_picked_up` and frees the node. The label comes from `item_name` and the sprite from `icon_texture`, not from `items.json`. `quantity` is ignored, and there is no range check.
 - `TreasureChest` (`scripts/TreasureChest.gd`) is an `Area2D` that, on the first left-click, sets `is_opened`, changes its `Label` to "[Chest Opened]" and emits `chest_opened`. The scene script decides what is inside: `AncientCatacombs.gd` connects the signal and calls `GameState.add_item("garrison-key")`. The node needs a child `Label`.
@@ -129,6 +135,9 @@ The code reads `title`, `detectDC`, `disarmDC`, `saveStat`, `saveDC`, `damageMin
 
 ### States
 
+![Trap lifecycle from concealed, to sprung, to the state the HTTP API reports]({{ '/assets/images/crpg-realm/crpg_trap_disappear_lifecycle.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The text on this page says what is built today: the JSON field names in the right-hand panel are illustrative, and a trap that has been disarmed or sprung is remembered in `GameState.neutralized_traps`.*
+
 A trap is concealed (invisible), detected (red tint, pulsing, with a "[TRAP]" label), disarmed or triggered. A disarmed or sprung trap flashes (green or orange), fades out and is removed from play. `GameState.neutralized_traps` remembers it per scene, so it stays gone when you re-enter.
 
 ### Detection
@@ -168,6 +177,9 @@ Scenario: The new trap is revealed and disarmed
 Do not assert `the trap "..." is disarmed` for a trap whose disarm DC is above 15, because that roll can fail.
 
 ## Mods
+
+![Mod and trap data flow from mod.json and traps.json through DataStoreV1 to the Trap node and its detect, disarm and trigger steps]({{ '/assets/images/crpg-realm/crpg_modding_and_traps_architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The text on this page says what is built today: the mod loader reads only `traps_file` from a `mod.json`.*
 
 `DataStoreV1.load_mods()` scans `res://mods/` (inside the project) and then `user://mods/`. Every subfolder that has a `mod.json` is a mod. A missing folder is skipped without error. `_load_single_mod()` stores the manifest in `DataStore.loaded_mods` and prints the mod's `name` and `version`. The only key that loads data is `traps_file`, a path relative to the mod folder to a JSON array of trap objects, in the same shape as `traps.json`.
 

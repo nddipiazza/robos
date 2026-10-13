@@ -38,7 +38,55 @@ If the grid cannot be built, `_legacy_nav_points_path()` falls back to an `AStar
 
 `PartyCompanion` preloads `Pathfinder` but does not call it, and `TacticalEnemy` chases straight at its target.
 
+```mermaid
+flowchart TD
+    subgraph Input["1. Move command"]
+        Click["Player click (target_pos)"]
+        HeroPos["Hero feet position (start_pos)"]
+    end
+
+    subgraph FastPath["2. Straight line"]
+        Ray3["is_line_clear(): three rays on layer 1"]
+        Direct["Return [target_pos]"]
+    end
+
+    subgraph AStarGrid["3. 20x20 px AStarGrid2D"]
+        CacheCheck{"Grid cached for this scene?"}
+        BuildGrid["get_or_build_grid()<br/>14 px circle overlap test on layer 1"]
+        Remap["Start or target cell solid?<br/>find_nearest_walkable_cell(), rings out to 8 cells"]
+        Compute["AStarGrid2D get_point_path()"]
+    end
+
+    subgraph Smooth["4. Smoothing"]
+        StringPull["smooth_path(): jump to the furthest<br/>point with a clear line"]
+    end
+
+    subgraph Move["5. Movement"]
+        Queue["HeroPlayer waypoint_queue"]
+        Slide["move_and_slide()"]
+        Ribbon["PathVisualizer draws the route"]
+    end
+
+    Click & HeroPos --> Ray3
+    Ray3 -->|"Clear"| Direct --> Queue
+    Ray3 -->|"Blocked"| CacheCheck
+    CacheCheck -->|"No"| BuildGrid --> Remap
+    CacheCheck -->|"Yes"| Remap
+    Remap --> Compute --> StringPull --> Queue
+    Queue --> Slide
+    Queue --> Ribbon
+```
+
+![Four ways to route around obstacles: sparse waypoints, a uniform grid, Theta* and a navmesh with string pulling]({{ '/assets/images/crpg-realm/crpg_pathfinding_algorithms_architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The text on this page says what is built today: a grid with a straight-line check and string-pulling smoothing. Theta* and a navmesh are not used.*
+
+![A pathfinding engine overlay on the village, with collision boxes around buildings and a route around them]({{ '/assets/images/crpg-realm/pathfinder_obstacle_avoidance.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The text on this page says what is built today: the numbers shown (grid resolution, node counts, timings) are illustrative, and only the hero is routed.*
+
 ## 3D miniature pawns
+
+![Isometric miniature pawn: a SubViewport renders the model, with weapon, shield and helmet sockets, into a 2D sprite]({{ '/assets/images/crpg-realm/crpg_3d_pawn_sockets_architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The text on this page says what is built today: the viewport is 160x160 here, and the sockets are the three listed in the table below.*
 
 Characters and monsters are 3D miniatures drawn into the 2D world by `scripts/CharacterModel3D.gd`. Each pawn owns a 160x160 `SubViewport` with a transparent background, its own 3D world and 4x MSAA, a camera with a 36 degree field of view, a sun and a fill light, and a `ModelPivot` node holding the mesh. A `Sprite2D` named `DisplaySprite` shows the viewport texture with an offset of (0, -18), which lines the pedestal up with the actor's 2D feet collider.
 
@@ -55,6 +103,39 @@ Characters and monsters are 3D miniatures drawn into the 2D world by `scripts/Ch
 Motion is procedural. `update_facing(velocity)` and `face_point(pos)` turn the pivot toward the movement or a target. While moving, `set_moving(true)` makes the model hop (`abs(sin(t)) * 0.14`) and roll slightly, like a miniature being pushed along a table. At rest it sways gently. The attack swing animation is on `HeroPlayer`, not on the model.
 
 The meshes are in `assets/models/`: pawns for a knight, wizard, rogue, king and princess, monsters (goblin, hound, skeleton, minotaur, skirmisher, dragon), shields, helmets and armor suits, and spell effects. `SpellModel3D.gd` renders spell projectiles and bursts the same way, through isolated viewports.
+
+```mermaid
+graph TD
+    subgraph Viewport["SubViewport (160x160, transparent, own 3D world, 4x MSAA)"]
+        Cam["Camera, 36 degree field of view"]
+        Sun["Sun light"]
+        Fill["Fill light"]
+        Pivot["ModelPivot (Node3D)<br/>yaw facing and tabletop hop"]
+    end
+
+    subgraph Sockets["On ModelPivot"]
+        BodyMesh["Pawn mesh (.glb)"]
+        WSocket["WeaponSocket<br/>(0.24, 0.45, 0.12)"]
+        SSocket["ShieldSocket<br/>(-0.25, 0.46, 0.12)"]
+        HSocket["HelmSocket<br/>(0.0, 0.78, 0.0)"]
+    end
+
+    subgraph Equipment["Loaded by equip_weapon, equip_shield, equip_helmet"]
+        Weapon["Weapon .glb"]
+        Shield["Shield .glb"]
+        Helm["Helmet .glb"]
+    end
+
+    Disp["DisplaySprite (Sprite2D)<br/>viewport texture, offset (0, -18)"]
+    Feet["2D feet collider"]
+
+    Pivot --> BodyMesh
+    Pivot --> WSocket --> Weapon
+    Pivot --> SSocket --> Shield
+    Pivot --> HSocket --> Helm
+    Viewport --> Disp
+    Disp -.->|"pedestal lines up with"| Feet
+```
 
 ## NPCs and dialogue
 
@@ -79,6 +160,47 @@ Not built: wandering NPCs. No scene sets `waypoints` on an `NPCCharacter`, so th
 ## Fog of war
 
 `scripts/FogOfWar.gd` (instanced from `scenes/components/FogOfWar.tscn`) keeps a low-resolution grid of the map and draws it as a shader overlay (`shaders/fog_of_war.gdshader`).
+
+![Fog of war: a lit vision circle on an isometric map, memory fog, unexplored shroud, and the settings and runtime flow]({{ '/assets/images/crpg-realm/crpg_fog_of_war_architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The text on this page says what is built today: the vision radius is 425 px with a slider from 200 to 800 px, and fog is classified per map.*
+
+```mermaid
+flowchart TD
+    subgraph UI["Player controls"]
+        Settings["Options window (O key)<br/>global fog switch<br/>vision radius slider, 200 to 800 px"]
+        PartyHUD["Party HUD<br/>BtnFogIndicator toggles fog for this map"]
+    end
+
+    subgraph State["GameState"]
+        GS["settings: fog_of_war, fog_of_war_radius (425)<br/>fog_cache metadata"]
+    end
+
+    subgraph FogNode["FogOfWar.gd"]
+        SceneCheck{"Map classification<br/>is_town_or_interior, default_fog_of_war, scene name"}
+        TownHouse["Towns and interiors<br/>fog off"]
+        WildDungeon["Wilderness, catacombs, keep<br/>fog on"]
+        Brush["Circular brush<br/>vision 425 px, clear core 300 px"]
+        GridBuffer["Grid 320x180<br/>red = explored, green = in sight"]
+    end
+
+    subgraph Render["Shader and actors"]
+        Shader["fog_of_war.gdshader<br/>memory darkness 0.65"]
+        Actors["register_actor(): actors fade out of sight"]
+    end
+
+    Settings -->|"update_setting()"| GS
+    GS -->|"settings_changed"| FogNode
+    PartyHUD -->|"toggle_map_fog()"| FogNode
+    SceneCheck -->|"town or interior"| TownHouse
+    SceneCheck -->|"wilderness or crypt"| WildDungeon
+    WildDungeon -->|"stamp when the hero moves over 5 px"| Brush
+    Brush --> GridBuffer
+    GridBuffer --> Shader
+    GridBuffer --> Actors
+```
+
+![A lit circle around two heroes and darkness beyond it]({{ '/assets/images/crpg-realm/fog_of_war_reveal.png' | relative_url }}){: .robos-zoomable-img }
+*A frame from the recorded fog of war test. Look at the lit circle around the two heroes: everything outside the vision radius is shrouded.*
 
 | Export | Default | Meaning |
 |:---|---:|:---|

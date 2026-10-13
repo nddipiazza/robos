@@ -49,11 +49,11 @@ RobOS is a set of desktop apps and libraries aimed at those four points. It does
 ![The AI Prompt pop-up floating over Agent Chat, with a multi-step objective typed in]({{ '/assets/images/screenshots/robos-agent-prompt-control-overlay.png' | relative_url }}){: .robos-zoomable-img }
 *Look at the AI Prompt pop-up on top of Agent Chat, with skills listed on the left.*
 
-![REST API Client showing a live request with a 201 Created response]({{ '/assets/images/screenshots/acme-petshop-step11-live_response_frame.png' | relative_url }}){: .robos-zoomable-img }
-*Frame from a recorded demo run. Look at the 201 Created response in the REST API Client.*
+![REST API Client showing a generated Bruno request in the Bruno Source tab with an empty response panel]({{ '/assets/images/screenshots/acme-petshop-step11-live_response_frame.png' | relative_url }}){: .robos-zoomable-img }
+*Frame from a recorded demo run. Look at the request list on the left and the Bruno Source tab holding the request as plain text.*
 
-![Kube Studio showing newly deployed pods running]({{ '/assets/images/screenshots/acme-petshop-step10-autodeployed_pods_frame.png' | relative_url }}){: .robos-zoomable-img }
-*Frame from the same recorded demo run. Look at the pod list in Kube Studio.*
+![Kube Studio showing one running pod in a namespace]({{ '/assets/images/screenshots/acme-petshop-step10-autodeployed_pods_frame.png' | relative_url }}){: .robos-zoomable-img }
+*Frame from the same recorded demo run. Look at the single running pod in the Kube Studio pod table. The overlay notes in the frame come from the demo script.*
 
 Most RobOS apps are Electron apps written in plain JavaScript, and most of their state is plain files: settings under `~/.config/robos/` and project data under `.robos/` in your repository. The license is Apache-2.0. The [Apps]({{ site.baseurl }}{% link apps.md %}) page lists every app with its package.
 

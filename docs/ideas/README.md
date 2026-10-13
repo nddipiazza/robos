@@ -33,6 +33,9 @@ Proposals for RobOS features that are not built, or only partly built. The publi
 
 ## Add an idea
 
+![A four-stage pipeline from raw notes in the inbox to structured specs, approved plans and verified implementations]({{ '/assets/images/ideas-issues-pipeline.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The steps below are what exists today.*
+
 1. Write a rough note in `inbox/<name>.txt`.
 2. Run the `create-feature-spec` skill on it: `/create-feature-spec docs/ideas/inbox/<name>.txt`. The skill is defined in `plugins/robos/skills/create-feature-spec/SKILL.md` and writes `specs/<name>.md`.
 3. Add a row to the table above and to `docs/ideas.md`, then open a pull request.

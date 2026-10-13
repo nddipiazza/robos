@@ -84,7 +84,7 @@ The door-by-door detail is on the [scenes, doors and maps]({{ '/projects/crpg-re
 
 Real time with pause. Space freezes the action; you can then queue moves with Shift-click, change the leader or formation, or pick a spell, and unpause. Keys and buttons are on the [controls page]({{ '/projects/crpg-realm/controls.html' | relative_url }}).
 
-![The party HUD during a conversation with Elora in the Homestead]({{ '/assets/images/crpg-realm/character_status_sheet.png' | relative_url }}){: .robos-zoomable-img }
+![The party HUD during a conversation with Elora]({{ '/assets/images/crpg-realm/character_status_sheet.png' | relative_url }}){: .robos-zoomable-img }
 *Look at the edges: the portrait cards at top right, the action toolbar and the Sheet (C) button along the bottom, and the quest line above the toolbar.*
 
 The activity log at the bottom of the screen carries combat rolls, dialogue and journal updates. It has three heights (124, 240 and 420 px; Tab or L cycles them). Dialogue replies appear as numbered lines in the log, and you pick one with the number key or a click.

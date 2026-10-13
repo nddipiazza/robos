@@ -24,6 +24,9 @@ Proposal, not built. No prompt record exists in the knowledge graph or in `.robo
 
 All logging would stay local.
 
+![Prompt logging pipeline from app text areas, background jobs and terminals into knowledge graph prompt nodes]({{ '/assets/images/prompt-logging-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The text on this page says what is built today.*
+
 ## What exists today
 
 - `<robos-ai-textarea>` is a shared element in `packages/robos-ui` and is used in many app windows.

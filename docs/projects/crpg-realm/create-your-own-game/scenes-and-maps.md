@@ -47,7 +47,7 @@ Some nodes you see in play are created in code, not saved in the scene. `PartyHU
 The root has `y_sort_enabled = true`, so children are drawn in order of their `y` position and a node lower on screen is in front. Each actor's origin should be at its feet. `Ground` sits at (0, 0) and so draws first.
 
 ![Scene tree of a location, with autoload singletons, the main scene and a canvas layer]({{ '/assets/images/crpg-realm/crpg_scene_tree_architecture.jpg' | relative_url }}){: .robos-zoomable-img }
-*Concept diagram from the original design docs. The text on this page says what is built today: it shows a "YSort Entities" container under the scene root, but the real scenes have no such node and keep every gameplay node as a direct child of the root.*
+*Concept diagram from the original design docs. The text on this page says what is built today: it shows a "YSort Entities" container and lists CombatManager as an autoload, but the real scenes have no container node, and CombatManager is a child of each combat scene.*
 
 ### Why the scene must stay flat
 
@@ -120,7 +120,7 @@ A location map has four parts, all direct children of the y-sorted root:
 4. `FogOfWar`, whose `map_width` and `map_height` default to 2560 and 1440. Set them to your plate size.
 
 ![Layers of a 2.5D isometric map: plate texture, foundation colliders, y-sorted entities, fog of war and the HUD, with the camera limits]({{ '/assets/images/crpg-realm/crpg_isometric_world_layers.jpg' | relative_url }}){: .robos-zoomable-img }
-*Concept diagram from the original design docs. The text on this page says what is built today: it shows the HUD as a fifth layer, but in the scenes it is a `CanvasLayer` child of the root, and `FogOfWar` is a node drawn over the world.*
+*Concept diagram from the original design docs. The text on this page says what is built today.*
 
 Because buildings are painted into the plate, the collider decides where the building "is". Trace only the base of the walls, not the roof, so the hero can walk "behind" the building. `VillageSquare.tscn` does this for each house:
 

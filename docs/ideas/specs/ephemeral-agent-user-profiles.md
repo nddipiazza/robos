@@ -23,12 +23,21 @@ Proposal, not built. The directory-and-environment version of agent profiles exi
 - On exit, kill the agent's processes through a transient systemd scope or cgroup, unmount the home and delete the user.
 - Pass the host's SSH agent, GPG agent, git identity and API tokens into the agent session without exposing them in the agent's files.
 
+![Agent sandbox with a RAM-backed home, a virtual display, credential tunnel and teardown that wipes the profile]({{ '/assets/images/ephemeral-sandboxes-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The text on this page says what is built today.*
+
 **Seeing the agent work.** The two older specs proposed different models, and the choice is open:
 
 - Agent apps open windows on your own display next to host windows, with X authority and audio sockets shared.
 - Each agent gets a virtual display (Xvfb or a headless Wayland compositor), streamed into the Desktop Agents viewer in a grid or picture-in-picture, with an input pass-through toggle.
 
+![Desktop agent sessions architecture with a host daemon, virtual displays streamed to a viewer and a session library]({{ '/assets/images/secure-desktop-bridge-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The text on this page says what is built today.*
+
 **Proof of work.** An agent that finishes a task puts its result on screen (the app running, the passing test run) and waits for you to confirm, with a toast notification.
+
+![Five-phase implementation plan for desktop agents, from sub-user spawning to the proof of work protocol]({{ '/assets/images/desktop-agents-roadmap.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs, showing the five phases the earlier spec proposed. No dates were set; the text on this page says what is built today.*
 
 ## What exists today
 

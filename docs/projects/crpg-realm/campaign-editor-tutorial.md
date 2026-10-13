@@ -223,13 +223,13 @@ graph TD
 
 The story tree edits `robos:storyFlow`: a `robos:rootNodeId`, three `robos:flowPages` (the acts) and six `robos:storyNodes`. A node has a `robos:nodeType` (for example `game_start`, `quest_stage`), a `robos:location` map, a `robos:giver` and `robos:choices`. Each choice has a `targetNodeId` and a `robos:triggerType` such as `talk_npc` or `combat`.
 
+![Quest and Scenario Tree tab with the Walkthrough Simulator button in the toolbar and a status bar message that an interactive story walkthrough started]({{ '/assets/images/crpg-realm/tutorial_step7_game_execution.png' | relative_url }}){: .robos-zoomable-img }
+*Look at the toolbar above the tree: the Walkthrough Simulator button starts an interactive walkthrough of the story, and the status bar at the bottom reports "Started Interactive Story Walkthrough".*
+
 The journal edits `robos:questLog`. The campaign has a main quest (`quest-rescue-princess`) and a side quest, each with `robos:questObjectives`, numbered `robos:questStages` (0, 10, 20 and so on) and `robos:questRewards`.
 
 ![Skyrim Quest Journal tab with the main quest and the side quest at the left and the objectives and journal stages of the main quest at the right]({{ '/assets/images/crpg-realm/tutorial_step6_skyrim_quest_journal.png' | relative_url }}){: .robos-zoomable-img }
 *The quest list at the left shows the main quest, Rescue of Princess Jennifer, and the side quest, The Dragonclaw Blade Trial. The main quest's checkbox objectives and numbered journal stages are on the right.*
-
-![Quest and Scenario Tree tab with the Walkthrough Simulator button in the toolbar and a status bar message that an interactive story walkthrough started]({{ '/assets/images/crpg-realm/tutorial_step7_game_execution.png' | relative_url }}){: .robos-zoomable-img }
-*Look at the toolbar above the tree: the Walkthrough Simulator button starts a walkthrough of the story from the selected node, and the status bar at the bottom reports "Started Interactive Story Walkthrough".*
 
 The Story Flags sub-tab edits `robos:worldFlags`. This campaign starts with `princess_kidnapped` and `talked_to_king` set to true and five more set to false, including `obtained_heros_sword`.
 

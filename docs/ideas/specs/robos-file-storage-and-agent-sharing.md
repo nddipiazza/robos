@@ -22,6 +22,9 @@ Proposal, not built. There is no `packages/file-storage` and no file storage MCP
 
 The Drive and OneDrive providers depend on the OAuth work in [linked accounts and guided OAuth]({{ '/ideas/specs/robos-people-groups-cloud-identity.html' | relative_url }}).
 
+![File storage app and MCP server connecting cloud storage providers to agents and to people in the directory]({{ '/assets/images/file-storage-sharing-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The text on this page says what is built today.*
+
 ## What exists today
 
 - [Data Sources]({{ '/apps/data-sources/' | relative_url }}) has an "Amazon S3 / MinIO" connection type (`packages/data-sources/main.js`). Nothing in it lists, uploads or shares objects.

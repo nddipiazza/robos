@@ -41,6 +41,21 @@ These appeared on earlier roadmaps or idea lists and now exist, sometimes in a d
 | Agent accounts and live agent desktops. [Proposal]({{ '/ideas/specs/ephemeral-agent-user-profiles.html' | relative_url }}) | `packages/robos-profiled` creates a profile: a home directory (a `tmpfs` mount when run as root), copied X authority, linked audio sockets and forwarded SSH, GPG and git identity. `robos-run-as --agent NAME COMMAND` runs a command in it, and `spawnSwarm` creates several profiles at once. The taskbar lists active profiles with a "Kill & Wipe" button. `packages/robos-agentd` keeps a registry of agent sessions. | A profile does not create a Linux user or set cgroup limits, so commands run as the host user with a different `HOME`. No agent gets a real virtual display. The Desktop Agents viewer draws simulated screens from sample data. |
 | Dev Central as an agent review hub. [Proposal]({{ '/ideas/specs/dev-central-ai-agent-review-development.html' | relative_url }}) | `packages/dev-central` shows your issues, pull requests, review requests, notifications and saved code reviews with CI state, and has an Open Code Review button. | No goal dispatcher, plan review screen or agent monitor. The walkthrough viewer returns one hardcoded sample task. |
 
+```mermaid
+flowchart TD
+    User["Prompt from a lead architect"] --> Swarm["spawnSwarm<br/>(robos-profiled)"]
+    Swarm --> Arch["Architect profile"]
+    Swarm --> Back["Backend profile"]
+    Swarm --> Front["Frontend profile"]
+    Swarm --> QA["QA profile"]
+    Arch --> Review["Pull request review"]
+    Back --> Review
+    Front --> Review
+    QA --> Review
+```
+
+*Concept diagram from the original design docs, trimmed to what exists. `spawnSwarm` creates several profiles at once. Role assignment, a message bus between agents and semantic merge are not built.*
+
 ## Planned
 
 None of these is in the repository. Each links to a proposal that says what exists today.
@@ -57,6 +72,84 @@ None of these is in the repository. Each links to a proposal that says what exis
 | [Search Studio]({{ '/ideas/specs/search-engine-and-log-analytics-studio.html' | relative_url }}) | The graph already has `robos:SearchCluster` and `robos:SearchIndex`. There is no app. |
 | [OpenTofu and Terraform synthesis]({{ '/ideas/specs/terraform-opentofu-iac-synthesis.html' | relative_url }}) | No cloud resource types or HCL generator exist. |
 
+```mermaid
+flowchart LR
+    subgraph Apps["Application layer"]
+        MS["Microservice"]
+        DP["Data pipeline"]
+    end
+    subgraph Studio["Search Studio (proposed)"]
+        SS["Search Studio app"]
+        LOGS["Live log tail"]
+        DSL["Query editor"]
+        KNN["Vector playground"]
+    end
+    subgraph KG["Knowledge graph"]
+        SC["robos:SearchCluster"]
+        SI["robos:SearchIndex"]
+        LS["robos:LogAnalyticsSink (proposed)"]
+    end
+    MS -->|streamsLogsTo| LS
+    MS -->|queriesIndex| SI
+    DP -->|indexesDocument| SI
+    SS --> LOGS
+    SS --> DSL
+    SS --> KNN
+    SS -->|discovers and registers| SC
+```
+
+*Concept diagram from the original design docs, for Search Studio. The app, the log sink type and the three edges are not built; `robos:SearchCluster` and `robos:SearchIndex` already exist in the graph.*
+
+```mermaid
+flowchart TD
+    subgraph WS["Offline workstation"]
+        LTS["Local task server<br/>(SQLite, proposed)"]
+        TB["Task Board and Dev Central"]
+        Agents["Claude, Gemini and Copilot agents"]
+        GitStore[".robos/tasks YAML files"]
+    end
+    TB <-->|"REST and server-sent events"| LTS
+    Agents <-->|"MCP task tools"| LTS
+    LTS <-->|"two-way sync"| GitStore
+```
+
+*Concept diagram from the original design docs, for the local task server. The server and the YAML sync are not built; Task Manager MCP keeps a minimal local task list today.*
+
+```mermaid
+flowchart LR
+    subgraph Sources["SDLC sources"]
+        ADR["Architecture decision records"]
+        PRV["PR video walkthroughs"]
+        KGS["Knowledge graph schemas"]
+    end
+    GEN["Course synthesizer (proposed)"]
+    subgraph Pkg["Course package"]
+        CY["course.yaml"]
+        MODS["Markdown modules"]
+        MEDIA["Narrated audio and video"]
+        LABS["Practice labs"]
+    end
+    subgraph Hub["eLearning Hub"]
+        PLAYER["Course player"]
+        QUIZ["Graded quizzes"]
+        IDE["Launch in IDE"]
+    end
+    ADR --> GEN
+    PRV --> GEN
+    KGS --> GEN
+    GEN --> CY
+    GEN --> MODS
+    GEN --> MEDIA
+    GEN --> LABS
+    CY --> PLAYER
+    MODS --> PLAYER
+    MEDIA --> PLAYER
+    LABS --> IDE
+    PLAYER --> QUIZ
+```
+
+*Concept diagram from the original design docs, for course authoring. The hub plays courses and quizzes today; the synthesizer, authoring screens and IDE launch are not built.*
+
 ## Removed from the earlier roadmap
 
 The previous roadmap also listed a time-travel debugger built on `rr`, a chaos engineering studio (`packages/chaos-studio`) and an agent swarm orchestrator with AST-aware merge. There is no spec, plan or code for the first two, and the third amounts to `spawnSwarm` (see In progress). They were removed instead of carried forward.
@@ -64,3 +157,6 @@ The previous roadmap also listed a time-travel debugger built on `rr`, a chaos e
 ## Suggest a feature
 
 Check this page first, then follow "Add an idea" on the [Ideas]({{ site.baseurl }}{% link ideas.md %}) page.
+
+![A four-stage pipeline from raw notes in the inbox to structured specs, approved plans and verified implementations]({{ '/assets/images/ideas-issues-pipeline.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The first steps, a note and a spec, are what exists today; no dates are promised for the rest.*

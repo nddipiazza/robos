@@ -24,6 +24,9 @@ Proposal, not built. Only a minimal local task list exists today; see "What exis
 
 The spec asked for permissively licensed dependencies (MIT or Apache-2.0) only.
 
+![A local task server with issue tracker adapters feeding Task Board, Dev Central and agent tools]({{ '/assets/images/task-servers-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The text on this page says what is built today.*
+
 ## What exists today
 
 - `createAdapter` in `packages/robos-task-client/index.js` supports two server types, `jira` and `github`. Any other type throws "Unsupported task server type".

@@ -22,6 +22,9 @@ Proposal, not built. No cloud resource types, HCL generator or IaC app exists in
 - Cloud credentials and remote state settings read from the `pass` store, not from files.
 - The spec leaves open whether this lives in [Kube Studio]({{ '/apps/kube-studio/' | relative_url }}) or in a new `packages/iac-studio`.
 
+![Pipeline from knowledge graph cloud resources through OpenTofu synthesis and a plan review to deployment]({{ '/assets/images/gitops-synthesis-pipeline.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The text on this page says what is built today.*
+
 ## What exists today
 
 - [Dev Tools MCP]({{ '/apps/dev-tools-mcp/' | relative_url }}) lists `terraform` among the tools it can check for (`packages/dev-tools-mcp/server.js`).

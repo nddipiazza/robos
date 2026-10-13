@@ -23,6 +23,9 @@ How the app in `packages/getemgigs` is structured, where it stores data, how it 
 
 The app is Next.js 15 with the App Router and React 19. Pages are server components that read the session cookie and query Postgres directly. Forms are small client components that call JSON route handlers under `src/app/api`.
 
+![Get 'Em Gigs on Vercel: a mobile client, the Vercel edge network, Next.js pages and API routes, and a storage tier]({{ '/assets/images/getemgigs/vercel-edge-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The text on this page says what is built today: the storage tier shown is outdated. The app keeps all its data, including rate limits, in Postgres (Neon in production, PGlite locally) and uses no MongoDB, Redis or embedded file store.*
+
 Every route handler is wrapped by `route()` in `src/lib/session.js`. The wrapper rejects cross-origin mutations (any method except GET and HEAD) and returns errors as JSON. It adds a `Retry-After` header to 429 responses.
 
 `next.config.mjs` sets these response headers on every path:
