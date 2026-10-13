@@ -225,6 +225,9 @@ The tests and demos above use the same mechanism. The debug server binds to `0.0
 ![REST API Client showing a generated Bruno request in the Bruno Source tab]({{ '/assets/images/screenshots/acme-petshop-step11-live_response_frame.png' | relative_url }}){: .robos-zoomable-img }
 *Frame from the same recorded demo run. Look at the request list on the left and the Bruno Source tab.*
 
+![REST API Client with a JSON request body and a collection of requests on the left]({{ '/assets/images/screenshots/acme-petshop-step11-bruno-rest-client-frame_01.png' | relative_url }}){: .robos-zoomable-img }
+*Frame from the same recorded demo run. Look at the JSON request body and the collection list in the REST API Client.*
+
 ![Kube Studio showing one running pod in a namespace]({{ '/assets/images/screenshots/acme-petshop-step10-autodeployed_pods_frame.png' | relative_url }}){: .robos-zoomable-img }
 *Frame from the same recorded demo run. Look at the running pod in the Kube Studio table.*
 

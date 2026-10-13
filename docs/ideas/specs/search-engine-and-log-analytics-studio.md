@@ -23,7 +23,7 @@ Proposal, not built. There is no `packages/search-studio` in the repository.
 - Two new knowledge graph types, `robos:LogAnalyticsSink` and `robos:VectorStore`, and edges such as `robos:streamsLogsTo`, `robos:queriesIndex` and `robos:indexesDocument` from a service to its index or sink, validated by SHACL shapes.
 - A "Discover from Cluster" action that reads a live cluster and writes the matching graph nodes.
 
-![Search Studio connecting OpenSearch, Elasticsearch, Solr and vector stores to a query console and the knowledge graph]({{ '/assets/images/search-studio-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+![Search Studio app with a cluster navigator, index matrix, query console and log streamer, backed by graph packages and the password store, over OpenSearch, Elastic, Solr and vector databases]({{ '/assets/images/search-studio-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
 *Concept diagram from the original design docs. The text on this page says what is built today.*
 
 ## What exists today

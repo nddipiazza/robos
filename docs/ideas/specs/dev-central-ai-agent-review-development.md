@@ -22,7 +22,7 @@ Proposal, not built. The dashboard exists; the agent-facing parts below do not.
 - **Organization settings.** Shared agent rules (`AGENTS.md`, coding conventions) and the app and service boundaries agents must respect.
 - **Proof and sign-off.** A walkthrough with test logs and snapshots, reviewed before the change is merged.
 
-![Comparison of a normal agent workflow with a review-driven lifecycle where goals, plans, live monitoring and proof are reviewed in Dev Central]({{ '/assets/images/agent-review-workflow-comparison.jpg' | relative_url }}){: .robos-zoomable-img }
+![A manual developer workflow compared with a six-step agent workflow where a human architect approves a plan and reviews a proof video before merge]({{ '/assets/images/agent-review-workflow-comparison.jpg' | relative_url }}){: .robos-zoomable-img }
 *Concept diagram from the original design docs. The text on this page says what is built today.*
 
 ## What exists today
