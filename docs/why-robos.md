@@ -34,7 +34,7 @@ RobOS is a set of desktop apps and libraries aimed at those four points. It does
 | Secrets and personal data in prompts | A prompt scanner in `robos-lib/prompt-security.js`, used by the AI text area, Agent Chat, `AgentSession` and the embedded agent router. Modes are `redact` (default), `block`, `warn`, `audit-only` and `off`. | [Agent tiers]({{ site.baseurl }}{% link agent-tiers.md %}) |
 | Many agent CLIs | Agents Manager lists Claude Code, GitHub Copilot CLI, Codex and Antigravity sessions in one window. RobOS skills are `SKILL.md` files under `plugins/robos/skills/`. | [Skills]({{ site.baseurl }}{% link robos-skills.md %}) |
 
-The apps are Electron with plain JavaScript, and most of their state is plain files: settings under `~/.config/robos/` and project data under `.robos/` in your repository. The license is Apache-2.0. The [Apps]({{ site.baseurl }}{% link apps.md %}) page lists every app with its package.
+Most RobOS apps are Electron apps written in plain JavaScript, and most of their state is plain files: settings under `~/.config/robos/` and project data under `.robos/` in your repository. The license is Apache-2.0. The [Apps]({{ site.baseurl }}{% link apps.md %}) page lists every app with its package.
 
 ## What is built and what is not
 

@@ -13,13 +13,6 @@ permalink: /new-company-setup.html
 How a new team with no repositories or task tracker yet gets RobOS working, and what the Group Manager "Bootstrap" button does and does not create.
 {: .fs-6 }
 
-<details open markdown="block">
-  <summary>On this page</summary>
-  {: .text-delta }
-1. TOC
-{:toc}
-</details>
-
 RobOS does not create your accounts. You create the GitHub organization, repositories and branch rules yourself, and RobOS then works with them. There is no code in RobOS that creates a GitHub organization, sets branch protection, or deploys a Gitea server.
 
 ## Before you start
