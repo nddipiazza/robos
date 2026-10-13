@@ -203,8 +203,62 @@ if (typeof document !== 'undefined') {
   }
 
 
+  // AI Stream Likely Skills & Ambient Badge Renderer
+  function renderBubbleSkills(bubbleEl, analysis) {
+    if (!bubbleEl || !analysis) return;
+    let container = bubbleEl.querySelector('.ai-skills-stream');
+    if (!container) {
+      container = document.createElement('div');
+      container.className = 'ai-skills-stream';
+      bubbleEl.appendChild(container);
+    }
+    container.innerHTML = '';
+
+    if (analysis.isAmbient) {
+      bubbleEl.classList.add('ambient-bubble');
+      const badge = document.createElement('div');
+      badge.className = 'ai-ambient-badge';
+      badge.innerHTML = `
+        <span class="ai-ambient-icon">🍃</span>
+        <span class="ai-ambient-label">Ambient audio: ${escapeHtml(analysis.ambientReason || 'Background sound')}</span>
+      `;
+      container.appendChild(badge);
+      return;
+    }
+
+    bubbleEl.classList.remove('ambient-bubble');
+
+    const likely = analysis.likelySkills || [];
+    if (likely.length > 0) {
+      for (const skill of likely) {
+        const badge = document.createElement('div');
+        badge.className = 'ai-skill-badge';
+        const confPct = skill.confidence ? `${Math.round(skill.confidence * 100)}% match` : '';
+        badge.innerHTML = `
+          <span class="ai-skill-sparkle">⚡</span>
+          <span class="ai-skill-category">${escapeHtml(skill.category || 'Skill')}</span>
+          <span class="ai-skill-title">${escapeHtml(skill.title || skill.name)}</span>
+          ${confPct ? `<span class="ai-skill-confidence">${confPct}</span>` : ''}
+        `;
+        container.appendChild(badge);
+      }
+    }
+  }
+
+  async function resolveAndRenderBubbleSkills(bubbleEl, text) {
+    if (!bubbleEl || !text || !text.trim()) return;
+    if (window.robosVoiceHud && typeof window.robosVoiceHud.resolveBubbleSkills === 'function') {
+      try {
+        const analysis = await window.robosVoiceHud.resolveBubbleSkills(text);
+        if (analysis) {
+          renderBubbleSkills(bubbleEl, analysis);
+        }
+      } catch {}
+    }
+  }
+
   // Update or create live interim text bubble
-  function updateInterimBubble(text) {
+  function updateInterimBubble(text, bubbleMeta = null) {
     const cleanText = (text || '').trim();
     if (!cleanText || !chatFeed) return;
 
@@ -251,6 +305,12 @@ if (typeof document !== 'undefined') {
     } else {
       const textEl = currentInterimBubble.querySelector('.bubble-text');
       if (textEl) textEl.textContent = cleanText;
+    }
+
+    if (bubbleMeta && (bubbleMeta.likelySkills !== undefined || bubbleMeta.isAmbient !== undefined)) {
+      renderBubbleSkills(currentInterimBubble, bubbleMeta);
+    } else {
+      resolveAndRenderBubbleSkills(currentInterimBubble, cleanText);
     }
 
     scrollToBottom();
@@ -341,7 +401,7 @@ if (typeof document !== 'undefined') {
   }
 
   // Finalize an interim bubble into a permanent bubble with timestamp & copy button
-  function finalizeBubble(text, time = new Date()) {
+  function finalizeBubble(text, time = new Date(), bubbleMeta = null) {
     const cleanText = (text || '').trim();
     if (!cleanText) {
       if (currentInterimBubble) {
@@ -371,6 +431,11 @@ if (typeof document !== 'undefined') {
         const lastBubble = chatFeed.querySelector(`[data-id="${lastFinal.id}"]`);
         if (lastBubble) {
           scheduleBubbleSettle(lastBubble, merge.text);
+          if (bubbleMeta && (bubbleMeta.likelySkills !== undefined || bubbleMeta.isAmbient !== undefined)) {
+            renderBubbleSkills(lastBubble, bubbleMeta);
+          } else {
+            resolveAndRenderBubbleSkills(lastBubble, merge.text);
+          }
         }
         if (currentInterimBubble) {
           currentInterimBubble.remove();
@@ -383,7 +448,7 @@ if (typeof document !== 'undefined') {
     hideWelcome();
 
     const formattedTime = formatTime(time);
-    const msgId = `msg-${now}-${Math.random().toString(36).slice(2, 6)}`;
+    const msgId = (bubbleMeta && bubbleMeta.bubbleId) || `msg-${now}-${Math.random().toString(36).slice(2, 6)}`;
     finalizedMessages.push({ id: msgId, text: cleanText, time: formattedTime, ts: now });
 
     let bubbleEl = currentInterimBubble;
@@ -425,6 +490,12 @@ if (typeof document !== 'undefined') {
         }, 1500);
       }
     });
+
+    if (bubbleMeta && (bubbleMeta.likelySkills !== undefined || bubbleMeta.isAmbient !== undefined)) {
+      renderBubbleSkills(bubbleEl, bubbleMeta);
+    } else {
+      resolveAndRenderBubbleSkills(bubbleEl, cleanText);
+    }
 
     scheduleBubbleSettle(bubbleEl, cleanText);
     scrollToBottom();
@@ -591,6 +662,21 @@ if (typeof document !== 'undefined') {
         updateInterimBubble(text);
       }
     });
+
+    // 2.5 Structured AI Bubble Stream (tracking bubble timestamp, msg, and likely skills)
+    if (typeof window.robosVoiceHud.onBubble === 'function') {
+      window.robosVoiceHud.onBubble((bubble = {}) => {
+        const msg = (bubble.msg || bubble.text || '').trim();
+        if (!msg) return;
+
+        if (bubble.isFinal) {
+          if (silenceTimer) clearTimeout(silenceTimer);
+          finalizeBubble(msg, bubble.isoTime || new Date(), bubble);
+        } else {
+          updateInterimBubble(msg, bubble);
+        }
+      });
+    }
 
     // 3. Recording state changes (e.g. from hotkey Super+V)
     if (typeof window.robosVoiceHud.onRecordingState === 'function') {

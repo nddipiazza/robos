@@ -24,8 +24,12 @@ const hudApi = {
   openVoiceCommandsWindow: () => ipcRenderer.invoke('vp-voice-commands-window-open'),
   closeVoiceCommandsWindow: () => ipcRenderer.invoke('vp-voice-commands-window-close'),
   toggleVoiceCommandsWindow: () => ipcRenderer.invoke('vp-voice-commands-window-toggle'),
+  resolveBubbleSkills: (msg, context) => ipcRenderer.invoke('vp-resolve-bubble-skills', { msg, context }),
 
   // Events from main process
+  onBubble: (callback) => {
+    ipcRenderer.on('vp-hud-bubble', (_e, data) => callback(data));
+  },
   onRecordingState: (callback) => {
     ipcRenderer.on('vp-hud-recording-state', (_e, data) => callback(data));
   },

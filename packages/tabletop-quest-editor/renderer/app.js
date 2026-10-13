@@ -3771,6 +3771,13 @@ function findFreeRectInRoom(room, w, h, occupiedSet) {
 function interpretVoiceQuestCommands(spokenText, blockmap, quest, currentContext = {}) {
   if (!spokenText || typeof spokenText !== 'string') return [];
 
+  const cleanInput = spokenText
+    .replace(/[(\[*]\s*(?:wind\s+blowing|wind|music|applause|laughter|cough|sigh|noise|groan|chatter)\s*[)\]*]/gi, ' ')
+    .replace(/[(\[*][^()\[\]]{2,30}[)\]*]/g, ' ')
+    .trim();
+
+  if (!cleanInput) return [];
+
   const WORD_TO_NUM = {
     a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5,
     six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
@@ -3830,7 +3837,7 @@ function interpretVoiceQuestCommands(spokenText, blockmap, quest, currentContext
   WALL_BLOCKS.forEach(w => w.keys.forEach(k => ALL_ENTITIES.push({ category: 'wall-block', type: w.type, key: k })));
   ALL_ENTITIES.sort((a, b) => b.key.length - a.key.length);
 
-  const sentences = spokenText.split(/[.!?;\n]+/);
+  const sentences = cleanInput.split(/[.!?;\n]+/);
   const commands = [];
 
   for (const sentence of sentences) {
@@ -3890,6 +3897,11 @@ function interpretVoiceQuestCommands(spokenText, blockmap, quest, currentContext
 }
 
 function executeVoiceMapCommands(spokenText, guidancePrompt, targetQuest = null, targetBlockmap = null) {
+  const trimmed = (spokenText || '').trim();
+  if (/^[(\[*]\s*(?:wind\s+blowing|wind|music|applause|laughter|cough|noise|sigh|groan|chatter)[)\]*][.!]*$/i.test(trimmed)) {
+    return { success: true, placed: [], isAmbient: true };
+  }
+
   const currentQuest = targetQuest || state.quest;
   const currentBlockmap = targetBlockmap || state.blockmap;
 
@@ -4536,6 +4548,7 @@ function setupEventListeners() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           backgroundMode: false,
+          activeApp: 'tabletop-quest-editor',
           guidancePrompt: VOICE_GUIDANCE_PROMPT,
         }),
       });
@@ -4553,8 +4566,25 @@ function setupEventListeners() {
         voiceState.eventSource.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
-            if (data && data.text) {
+            if (!data) return;
+
+            // Handle structured bubble from AI stream
+            const bubble = data.bubble || (data.type === 'bubble' ? data : null);
+            if (bubble) {
+              if (!voiceState.bubbles) voiceState.bubbles = {};
+              voiceState.bubbles[bubble.bubbleId] = bubble;
+
+              // If ambient noise (e.g. "(wind blowing)"), ignore without error
+              if (bubble.isAmbient) {
+                return;
+              }
+            }
+
+            if (data.text) {
               const clean = data.text.trim();
+              if (/^[(\[*]\s*(?:wind\s+blowing|wind|music|applause|laughter|cough|noise|sigh|groan)[)\]*][.!]*$/i.test(clean)) {
+                return;
+              }
               if (data.isFinal) {
                 if (!voiceState.capturedText.endsWith(clean)) {
                   voiceState.capturedText = (voiceState.capturedText + ' ' + clean).trim();
