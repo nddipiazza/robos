@@ -168,8 +168,10 @@ infra/desktop/run.sh           # Starts VM (automatically detects first boot & a
 
 ### Deploying to VM
 ```bash
-# Full install
-ssh -p 2224 robos@localhost 'bash -s' < packages/desktop-shell/install.sh
+# Full install: rebuild the image. build.sh bundles every package under packages/ into the
+# cloud-init seed ISO, and first boot unpacks them into /usr/local/share/robos/ and installs
+# each package's .desktop file (infra/desktop/cloud-init/user-data, infra/desktop/robos-provision.sh)
+infra/desktop/clean.sh && infra/desktop/build.sh && infra/desktop/run.sh
 
 # Single app update
 scp -P 2224 -r packages/<app-id>/* robos@localhost:/tmp/<app-id>/
@@ -372,12 +374,11 @@ When adding, renaming, or removing an app, update ALL of these locations. Use th
 4. `packages/robos-icons/builtin-apps-browser.js` — `ROBOS_BUILTIN_APPS` array
 5. `packages/icon-lib/builtin-apps.js` — must match #3 exactly
 6. `packages/task-manager/main.js` — `KNOWN_APPS` map
-7. `packages/desktop-shell/install.sh` — install block
-8. `<app-id>.desktop` file
-9. `AGENTS.md` App Suite table
-10. **Modular KGraph Packages** (`.robos/kgraphs/` & `.robos/kgraph.yaml`) and `.robos/packages.yaml` — Register or update the application node in the dual-state SDLC knowledge graph and GitOps tree, and prompt documentation synchronization.
+7. The app's `.desktop` file in `packages/<app-id>/` — the VM provisioner (`infra/desktop/robos-provision.sh`) and `scripts/install-local.sh` pick it up from the package; there is no separate install block to edit
+8. `AGENTS.md` App Suite table
+9. **Modular KGraph Packages** (`.robos/kgraphs/` & `.robos/kgraph.yaml`) and `.robos/packages.yaml` — Register or update the application node in the dual-state SDLC knowledge graph and GitOps tree, and prompt documentation synchronization.
 
-**Note:** Some checklist targets (desktop-manager, icon-lib, task-manager, desktop-shell) may not exist yet. Only update files that exist.
+**Note:** Some checklist targets (desktop-manager, icon-lib, task-manager) may not exist yet. Only update files that exist.
 
 ## Technical Gotchas
 
