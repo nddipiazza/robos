@@ -206,6 +206,29 @@ class BlockmapCreator {
       });
     });
 
+    // Map Identity Controls
+    const inputMapTitle = document.getElementById('input-map-title');
+    if (inputMapTitle) {
+      inputMapTitle.addEventListener('input', (e) => {
+        this.boardTitle = e.target.value;
+        const infoTitle = document.getElementById('info-map-title-text');
+        if (infoTitle) infoTitle.textContent = this.boardTitle || 'Untitled Blockmap';
+      });
+      inputMapTitle.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === 'Escape') inputMapTitle.blur();
+      });
+    }
+
+    const inputMapId = document.getElementById('input-map-id');
+    if (inputMapId) {
+      inputMapId.addEventListener('input', (e) => {
+        this.boardId = e.target.value.toLowerCase().replace(/[_\s]+/g, '-').replace(/[^a-z0-9-]/g, '');
+      });
+      inputMapId.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === 'Escape') inputMapId.blur();
+      });
+    }
+
     // 1. Tile Size Controls
     const inputTile = document.getElementById('input-tile-size');
     const sliderTile = document.getElementById('slider-tile-size');
@@ -1056,6 +1079,21 @@ class BlockmapCreator {
     if (tilesEl) tilesEl.textContent = room.tiles ? room.tiles.length : (room.w * room.h);
   }
 
+  updateMapIdentityUI() {
+    const titleEl = document.getElementById('input-map-title');
+    if (titleEl && document.activeElement !== titleEl) {
+      titleEl.value = this.boardTitle || '';
+    }
+    const idEl = document.getElementById('input-map-id');
+    if (idEl && document.activeElement !== idEl) {
+      idEl.value = this.boardId || '';
+    }
+    const infoTitle = document.getElementById('info-map-title-text');
+    if (infoTitle) {
+      infoTitle.textContent = this.boardTitle || 'Untitled Blockmap';
+    }
+  }
+
   setActiveTool(tool) {
     if (document.activeElement && typeof document.activeElement.blur === 'function') {
       document.activeElement.blur();
@@ -1262,6 +1300,7 @@ class BlockmapCreator {
     document.getElementById('board-preset-select').value = p.id;
     this.boardId = p.id;
     this.boardTitle = p.title;
+    this.updateMapIdentityUI();
     this.tileSize = p.defaultTileSize || 39.0;
     this.offsetX = p.offsetX || 0;
     this.offsetY = p.offsetY || 0;
@@ -1295,6 +1334,13 @@ class BlockmapCreator {
       this.imagePath = res.filePath;
       this.fileName = res.fileName;
 
+      const baseName = this.fileName.replace(/\.[^/.]+$/, '');
+      if (!this.boardTitle || this.boardId === 'first-light-dungeon') {
+        this.boardTitle = baseName.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        this.boardId = baseName.toLowerCase().replace(/[_\s]+/g, '-').replace(/[^a-z0-9-]/g, '');
+      }
+      this.updateMapIdentityUI();
+
       document.getElementById('info-image-name').textContent = `🖼️ ${this.fileName}`;
       document.getElementById('info-image-size').textContent = `📐 ${img.naturalWidth} × ${img.naturalHeight} px`;
       document.getElementById('info-grid-size').textContent = `🧱 ${this.cols} × ${this.rows} grid`;
@@ -1316,6 +1362,11 @@ class BlockmapCreator {
       this.imagePath = res.filePath;
       this.fileName = res.fileName;
 
+      const baseName = this.fileName.replace(/\.[^/.]+$/, '');
+      this.boardTitle = baseName.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      this.boardId = baseName.toLowerCase().replace(/[_\s]+/g, '-').replace(/[^a-z0-9-]/g, '');
+      this.updateMapIdentityUI();
+
       document.getElementById('info-image-name').textContent = `🖼️ ${this.fileName}`;
       document.getElementById('info-image-size').textContent = `📐 ${img.naturalWidth} × ${img.naturalHeight} px`;
 
@@ -1329,6 +1380,7 @@ class BlockmapCreator {
 
   async loadCartridge(slug) {
     this.cartridgeSlug = slug;
+    this.boardId = slug;
     const res = await window.robosBlockmap.loadCartridgeMap(slug);
     if (!res.success) {
       console.warn('Could not load cartridge map:', res.error);
@@ -1336,6 +1388,8 @@ class BlockmapCreator {
     }
 
     const map = res.mapData || {};
+    this.boardTitle = (map && (map.title || map.name)) || (slug.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()));
+    this.updateMapIdentityUI();
     this.cols = map.width || 26;
     this.rows = map.height || 19;
     this.rooms = (map.rooms || []).map((r, i) => {
@@ -1416,9 +1470,11 @@ class BlockmapCreator {
 
   async saveBoard() {
     const payload = {
-      cartridgeSlug: this.cartridgeSlug,
-      mapId: 'fortress-fire-king',
+      cartridgeSlug: this.cartridgeSlug || 'heroquest-first-light',
+      mapId: this.boardId || 'custom-board',
       mapData: {
+        id: this.boardId || 'custom-board',
+        title: this.boardTitle || `${this.fileName} Static Board`,
         width: this.cols,
         height: this.rows,
         backgroundImage: `res://assets/boards/${this.fileName}`,

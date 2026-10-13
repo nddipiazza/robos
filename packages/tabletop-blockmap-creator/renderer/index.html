@@ -57,6 +57,7 @@
     <!-- Info Coordinates & Status Bar -->
     <div class="info-bar">
       <div class="info-left">
+        <span id="info-map-title" class="info-tag" title="Map Title">🗺️ <strong id="info-map-title-text">HeroQuest: First Light Side A</strong></span>
         <span id="info-image-name" class="info-tag">🖼️ first_light_dungeon.png</span>
         <span id="info-image-size" class="info-tag">📐 1014 × 738 px</span>
         <span id="info-grid-size" class="info-tag">🧱 26 × 19 grid</span>
@@ -171,6 +172,22 @@
 
         <!-- Tab 1: Calibration -->
         <div id="tab-calibration" class="sidebar-content active">
+          <!-- Map Identity -->
+          <div class="section-card">
+            <h3>🗺️ Map Identity</h3>
+            <p class="section-desc">Display name and cartridge identifier for this blockmap.</p>
+
+            <div class="form-row">
+              <label for="input-map-title"><strong>Map Name:</strong></label>
+              <input type="text" id="input-map-title" class="text-input" placeholder="e.g. HeroQuest: First Light Side A" style="flex:1;">
+            </div>
+
+            <div class="form-row" style="margin-top:8px;">
+              <label for="input-map-id"><strong>Map ID:</strong></label>
+              <input type="text" id="input-map-id" class="text-input" placeholder="e.g. first-light-dungeon" style="flex:1;">
+            </div>
+          </div>
+
           <!-- Tile Size Calibration -->
           <div class="section-card">
             <h3>📏 1. Tile Size (px)</h3>
