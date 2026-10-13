@@ -33,6 +33,26 @@ redirect_from:
 
 Agents Manager lists **HarnessRouter (UHP)** as a provider. Its detail page shows the **Runtime Mode** (`service` or `embedded`), the **Configured Agent Harnesses** and the stored sessions, each with a **Delete** button.
 
+```mermaid
+graph TD
+    Caller["Your code calls getHarnessRouter()"] --> Probe{"Does GET /v1/uhp answer?"}
+    Probe -->|"yes"| Client["HarnessRouterClient<br/>HTTP and server-sent events"]
+    Probe -->|"no, or forceEmbedded"| Embedded["EmbeddedHarnessRouter<br/>in-process"]
+    Client --> Server["UHP server<br/>(optional Docker container)"]
+
+    Embedded --> Guard["Prompt security guard"]
+    Guard --> Spawn["child_process.spawn"]
+    Spawn --> A1["claude -p"]
+    Spawn --> A2["codex exec"]
+    Spawn --> A3["copilot through run-copilot.js"]
+    Embedded -.->|"any other harness id, or CLI not installed"| Canned["Canned success reply<br/>nothing runs"]
+    Embedded --> Events["onEvent: task.queued, task.progress,<br/>task.delta, task.completed, task.failed"]
+
+    style Embedded fill:#164e63,stroke:#00e5ff,color:#fff
+    style Events fill:#064e3b,stroke:#10b981,color:#fff
+    style Canned fill:#7f1d1d,stroke:#ef4444,color:#fff
+```
+
 ## List the harnesses
 
 From a checkout:

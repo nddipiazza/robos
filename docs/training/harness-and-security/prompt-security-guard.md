@@ -26,6 +26,33 @@ The prompt security guard (`packages/robos-lib/prompt-security.js`) scans prompt
 
 The guard is a self-contained JavaScript module. Its rule catalog is modeled on Gitleaks, TruffleHog, Microsoft Presidio and OWASP LLM01, but it does not run those tools or call any service.
 
+```mermaid
+graph TD
+    Raw["Prompt text"] --> Guard{"Prompt security guard"}
+
+    Guard --> Secrets["Secrets<br/>AWS and GitHub keys, PEM private keys, database URLs"]
+    Guard --> PII["Personal data<br/>SSN, Luhn-checked card numbers, email, phone, private IPs"]
+    Guard --> Entropy["High entropy<br/>24 or more characters, 4.5 bits per character"]
+    Guard --> Injection["Injection and exfiltration phrases"]
+    Guard --> Blocklist["Your blocklist terms"]
+
+    Secrets --> Policy{"Mode"}
+    PII --> Policy
+    Entropy --> Policy
+    Injection --> Policy
+    Blocklist --> Policy
+
+    Policy -->|"redact"| Redacted["Matches replaced by a placeholder<br/>prompt is sent"]
+    Policy -->|"block"| Blocked["Prompt is not sent"]
+    Policy -->|"warn or audit-only"| Warned["Prompt sent unchanged<br/>findings in the result"]
+    Policy -->|"off"| Off["No scan, no audit entry"]
+    Policy -->|"every mode except off"| Audit["Audit entry in<br/>~/.config/robos/prompt-security-audit.json"]
+
+    style Guard fill:#164e63,stroke:#00e5ff,color:#fff
+    style Redacted fill:#064e3b,stroke:#10b981,color:#fff
+    style Blocked fill:#7f1d1d,stroke:#ef4444,color:#fff
+```
+
 | Category | Examples |
 |:---|:---|
 | Secrets | AWS access keys and secret keys, GitHub, GitLab, Slack, Stripe, Anthropic, OpenAI and Google API keys, PEM private key blocks, database URLs with a password, `user:password@` URLs, JWTs, `password = "..."` style assignments |

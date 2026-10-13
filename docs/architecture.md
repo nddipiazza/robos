@@ -59,6 +59,9 @@ flowchart LR
 
 Each arrow is a `require`, a file read or a spawned process in the source. The exception is the MCP client, which you point at the router with a generated configuration (see MCP servers below). For example `packages/app-wizard/main.js` requires `robos-lib` and `robos-graph`, its HTML loads `robos-ui`, and `packages/robos-mcp-lib/server.js` registers each server in `servers.json`. Of the MCP servers, `ekgraph-mcp` uses `robos-graph`, through its `robos_sdlc_*` tools.
 
+![Infographic of the eight architectural pillars of RobOS arranged around a central SDLC knowledge graph]({{ '/assets/images/robos-8-pillars-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The text on this page says what is built today.*
+
 ## Repository layout
 
 | Path | Contents |
@@ -76,11 +79,17 @@ Each arrow is a `require`, a file read or a spawned process in the source. The e
 
 Every app in `packages/` follows one layout: `main.js` (Electron main process), `preload.js`, `renderer/` (HTML, CSS, JavaScript), an icon and a `.desktop` file. Windows are created with `nodeIntegration: false`, and `preload.js` exposes the app's functions to the page with `contextBridge`. The page calls them, and `main.js` handles the calls with `ipcMain.handle`. No package under `packages/` sets `nodeIntegration: true`.
 
+![Infographic of the secure desktop bridge in four tiers: isolated app UI, contextBridge and preload layer, background engine, and local or cloud runtime]({{ '/assets/images/secure-desktop-bridge-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The first two tiers match the app layout described above; the text on this page says what is built today.*
+
 App state lives in `~/.config/robos/`. Many apps also set Electron's `userData` path to a folder there, for example `~/.config/robos/electron/app-wizard`.
 
 Apps start a small HTTP debug server through `robos-lib/dom-snapshot`. `packages/robos-lib/snapshot-cli.js` has a `PORT_REGISTRY` that maps each app id to its port (the App Wizard uses 19183). The command `node packages/robos-lib/snapshot-cli.js <app-id> --text` returns the page's DOM as text. Tests and agents use this to see an app without a screenshot.
 
 The desktop shell is three apps: `robos-desktop` (a full-screen taskbar that replaces the GNOME panel), `desktop-manager` (tray icon, app lifecycle and an IPC hub) and `app-launcher` (a searchable grid). Launcher entries are `.desktop` files. `robos-lib` lists the entries whose file has `X-RobOS-App=true`, and groups them by `X-RobOS-Category`.
+
+![Infographic of the cross-platform desktop architecture showing Linux, macOS and Windows tiles for a pure Electron and vanilla JavaScript app suite]({{ '/assets/images/cross-platform-desktop-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. Only Linux is tested in this repository today, so treat the macOS and Windows tiles as plans; the text on this page says what is built today.*
 
 ## Shared libraries
 
@@ -102,6 +111,9 @@ Libraries are not npm dependencies. On a RobOS machine they are copied to `/usr/
 
 The graph is JSON-LD. `.robos/kgraph.yaml` lists the packages, and each lives in `.robos/kgraphs/<package>/package.jsonld`. The packages are `core-platform`, `organization`, `services`, `applications`, `devops`, `learning`, `documentation`, `testing`, `game`, `crpg`, `tabletop-game` and `infinity-engine`. `.robos/knowledge-graph.jsonld` is an aggregate of them. Other catalogs sit beside it: `packages.yaml`, `teams.yaml`, `documentation.yaml`, `elearning.yaml` and `ontology.jsonld`.
 
+![Infographic of the four levels of the C4 software architecture model: system context, containers, components and code]({{ '/assets/images/c4-model-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The text on this page says what is built today.*
+
 `packages/robos-graph` provides:
 
 - An OSLC-style JSON-LD parser and the `SDLCKnowledgeGraphStore` that loads and saves the package files.
@@ -117,6 +129,9 @@ Two limits to know about:
 ## Agents
 
 `robos-agent-client` has three backends: Claude Code (`claude`), GitHub Copilot CLI (through `gh`) and `harnessrouter`. The HarnessRouter backend speaks the Unified Harness Protocol (version `2026-08-11`) to a server at `http://127.0.0.1:3000` by default. If no server answers, `getHarnessRouter()` falls back to an embedded router that runs inside the process and stores sessions in `~/.config/robos/harnessrouter/sessions.json`.
+
+![Infographic of the unified harness architecture: RobOS apps talk through the Unified Harness Protocol to a Docker service engine and an embedded engine, which drive several agent CLIs]({{ '/assets/images/unified-harness-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The embedded router lists six harnesses and runs only Claude Code, Codex and Copilot; the text on this page says what is built today.*
 
 The embedded router lists six harnesses: Claude Code, OpenAI Codex, GitHub Copilot CLI, Gemini CLI, Hermes and Oh My Pi. It runs a task only through `claude -p`, `codex exec` or Copilot. For the others, or when the CLI is not installed, it returns a placeholder response without running anything. Check the response text before you trust a result.
 

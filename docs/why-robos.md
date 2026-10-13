@@ -37,6 +37,24 @@ RobOS is a set of desktop apps and libraries aimed at those four points. It does
 | Secrets and personal data in prompts | A prompt scanner in `robos-lib/prompt-security.js`, used by the AI text area, Agent Chat, `AgentSession` and the embedded agent router. Modes are `redact` (default), `block`, `warn`, `audit-only` and `off`. | [Agent tiers]({{ site.baseurl }}{% link agent-tiers.md %}) |
 | Many agent CLIs | Agents Manager lists Claude Code, GitHub Copilot CLI, Codex and Antigravity sessions in one window. RobOS skills are `SKILL.md` files under `plugins/robos/skills/`. | [Skills]({{ site.baseurl }}{% link robos-skills.md %}) |
 
+![Four stages: a human architect and knowledge graph blueprint, synthesis and agent swarms, sandbox verification, then agent review and human approval]({{ '/assets/images/kgraph-autogen-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs, showing the intended four-stage lifecycle. The text on this page says what is built today.*
+
+![Skills defined once as SKILL.md files and shared across Claude Code, Codex, Antigravity, Copilot and Gemini CLI]({{ '/assets/images/robos-skills-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs, showing skills shared across agent CLIs. The text on this page says what is built today.*
+
+![Animated walkthrough of the RobOS apps from onboarding through knowledge graph, IDE debugging, PR review and Kubernetes deployment]({{ '/assets/images/robos-proof-of-work-demo.gif' | relative_url }}){: .robos-zoomable-img }
+*Recorded walkthrough of the RobOS apps. Watch the apps hand work from one to the next, from setup to pull request review.*
+
+![The AI Prompt pop-up floating over Agent Chat, with a multi-step objective typed in]({{ '/assets/images/screenshots/robos-agent-prompt-control-overlay.png' | relative_url }}){: .robos-zoomable-img }
+*Look at the AI Prompt pop-up on top of Agent Chat, with skills listed on the left.*
+
+![REST API Client showing a live request with a 201 Created response]({{ '/assets/images/screenshots/acme-petshop-step11-live_response_frame.png' | relative_url }}){: .robos-zoomable-img }
+*Frame from a recorded demo run. Look at the 201 Created response in the REST API Client.*
+
+![Kube Studio showing newly deployed pods running]({{ '/assets/images/screenshots/acme-petshop-step10-autodeployed_pods_frame.png' | relative_url }}){: .robos-zoomable-img }
+*Frame from the same recorded demo run. Look at the pod list in Kube Studio.*
+
 Most RobOS apps are Electron apps written in plain JavaScript, and most of their state is plain files: settings under `~/.config/robos/` and project data under `.robos/` in your repository. The license is Apache-2.0. The [Apps]({{ site.baseurl }}{% link apps.md %}) page lists every app with its package.
 
 ## What is built and what is not
@@ -56,6 +74,9 @@ Not built, or not what the older documentation said:
 - Live agent desktop streaming. The Desktop Agents Viewer draws simulated screens from sample data.
 - A server-side review gate. The knowledge check is enforced in the PR Review window. It is a prompt to the reviewer, not an access control on the repository.
 
+![An agent task finishes, a toast opens a Reviewer app, and the reviewer chooses Teach Me or Show Me]({{ '/assets/images/elearning-reviewer-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The separate Interactive Reviewer app with Teach Me and Show Me actions was proposed and is not built; PR Review's staged review is what exists.*
+
 ## Limits to plan for
 
 - **Platform.** The install scripts use `apt`, and the VM image is Ubuntu. Treat Debian-based Linux with a desktop as the supported setup unless the [Get started]({{ site.baseurl }}{% link getting-started.md %}) page says otherwise.
@@ -65,3 +86,8 @@ Not built, or not what the older documentation said:
 - **Some features need extra software.** Examples are Docker for the HarnessRouter container, Xvfb and ffmpeg for recorded test runs, and `pass` with GPG for the password apps.
 
 If a feature you need is not listed above, check the app's own page under [Apps]({{ site.baseurl }}{% link apps.md %}) and the [Roadmap]({{ site.baseurl }}{% link roadmap.md %}) before assuming it exists.
+
+## Diagrams
+
+![Flowchart of the lifecycle from business idea through planning, architecture, implementation, verification and review to production]({{ '/assets/images/day-in-the-life-flowchart.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs, showing how the RobOS apps are meant to connect from idea to production. The text on this page says what is built today.*

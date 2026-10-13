@@ -37,6 +37,23 @@ A profile is named `my-agent-<name>`. Creating one does this:
 
 So a profile gives a command a clean `HOME`: nothing from your real `~` (npm cache, `~/.claude`, `~/.config/gh`) is picked up through that variable. It is not a security boundary. The command runs with your user's permissions and can still open absolute paths such as `/home/you/.ssh`.
 
+```mermaid
+graph TD
+    Host["Your user account<br/>real home, permanent files"] -->|"robos-profile create or robos-run-as"| Home["Throwaway home directory<br/>~/.config/robos/profiled/homes/my-agent-NAME<br/>a 2G tmpfs only when the daemon runs as root"]
+
+    Home --> Env["HOME, ROBOS_AGENT=1, ROBOS_AGENT_NAME"]
+    Home --> Rc[".bashrc and .profile<br/>with API key variables"]
+    Home --> Fwd["Copied .gitconfig and .Xauthority,<br/>SSH and GPG agent sockets"]
+
+    Env --> Cmd["Your command runs as your user"]
+    Cmd -->|"robos-profile terminate my-agent-NAME"| Gone["Home directory deleted"]
+    Cmd -.->|"still reachable"| Reach["Absolute paths such as /home/you/.ssh"]
+
+    style Host fill:#064e3b,stroke:#10b981,color:#fff
+    style Home fill:#164e63,stroke:#00e5ff,color:#fff
+    style Reach fill:#7f1d1d,stroke:#ef4444,color:#fff
+```
+
 {: .warning }
 If any of the four API key variables is set in the daemon's environment, its value is written in plain text into the profile's `.bashrc`. If it is not set, a placeholder `sk-robos-mock-<name>` is written, and the profile's `apiTokensInjected` list still names the variable.
 

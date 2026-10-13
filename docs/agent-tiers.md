@@ -46,6 +46,9 @@ Open **RobOS Preferences** from the app launcher and choose **Agent Tiers & Prom
 
 The model fields are free text. The defaults are whatever the code ships with, so change them to a model your agent CLI accepts.
 
+![A matrix matching task reasoning complexity against model cost across three tiers]({{ '/assets/images/model-cost-matrix.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs, showing the three-tier idea. The text on this page says what is built today: the tier fields are stored and nothing reads them.*
+
 ![The same section with Caveman mode set to extreme and DSPy set to BootstrapFewShot with unit_tests_pass]({{ '/assets/images/screenshots/agent-tiers-preferences-extreme-config.png' | relative_url }})
 {: .robos-zoomable-img }
 
@@ -63,6 +66,9 @@ On save, the code also tries to mirror the Caveman and DSPy toggles into the kno
 ## Prompt helpers
 
 Two methods on `SDLCKnowledgeGraphStore` in [`packages/robos-graph/lib/graph-store.js`](https://github.com/nddipiazza/robos/tree/main/packages/robos-graph) implement the "prompt optimization" half of the pane. No RobOS app calls either one outside the test suite, so the toggles above do not change what agents receive.
+
+![A pipeline from a task through model tier routing, Caveman token compression and DSPy optimization to the agent]({{ '/assets/images/agent-dispatch-pipeline.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The two helpers below exist, but no app wires them into a pipeline like this; the text on this page says what is built today.*
 
 ### Caveman compression
 
@@ -110,6 +116,9 @@ flowchart TD
 |:---|:---|:---|
 | `HarnessRouterClient` | A HarnessRouter container listening on `127.0.0.1:3000` | HTTP and server-sent events. Requires Docker. Optional bearer token. |
 | `EmbeddedHarnessRouter` | Inside the calling Node process | No Docker. Stores sessions in `~/.config/robos/harnessrouter/sessions.json`. |
+
+![RobOS apps connecting through the Unified Harness Protocol to a Docker router or an embedded router and a catalog of agent harnesses]({{ '/assets/images/unified-harness-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The text on this page says what is built today, including which harnesses the embedded router really starts.*
 
 Start the container with the command the install scripts use:
 
@@ -200,6 +209,33 @@ Open **RobOS Agents** from the app launcher ([Agents Manager]({{ '/apps/agents-m
 - **Active & Archived Sessions**: each session has **Turns** and **Delete** buttons, and **Refresh Sessions** reloads the list.
 
 The same limits apply here: in embedded mode the model you pick is not passed to the CLI, and the gemini, hermes and omp harnesses return the placeholder.
+
+## Diagrams
+
+The two diagrams below show the tier dispatch design that the box at the top of this page says is not built.
+
+![A seven-phase dispatch flowchart covering task intake, complexity scoring, prompt optimization, sandboxed execution, verification gates and escalation to a higher tier]({{ '/assets/images/agent-tier-dispatch-algorithm.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. Nothing scores tasks, picks a tier or escalates today; the text on this page says what is built.*
+
+```mermaid
+flowchart TD
+    A["Task trigger"] --> B["Score task complexity"]
+    B --> C{"Score range"}
+    C -->|low| T1["Tier 1: fast utility and local"]
+    C -->|medium| T2["Tier 2: workhorse implementation"]
+    C -->|high| T3["Tier 3: frontier deep reasoning"]
+    T1 --> P["Optimize prompt<br/>(DSPy template, Caveman compression)"]
+    T2 --> P
+    T3 --> P
+    P --> R["UHP router"]
+    R --> X["Agent runs the task"]
+    X --> V{"Verification gates pass?"}
+    V -->|yes| S["Commit and log the result"]
+    V -->|no| E["Retry, then promote to the next tier"]
+    E --> R
+```
+
+*Condensed from the original design docs. Only the router step and the two prompt helpers exist; scoring, tier selection, verification gates and escalation are not built.*
 
 ## Related
 

@@ -96,3 +96,6 @@ Xvfb :99 -screen 0 1920x1080x24 &
 ```
 
 Every other persona starts the agent on your current `DISPLAY`. Nothing in Task Implementer limits which files or commands an agent can touch. For a separate home directory, see [Run commands in an ephemeral agent profile]({{ '/training/harness-and-security/agent-profiles.html' | relative_url }}), and read its limits first.
+
+![A personal computer mounting a disposable in-memory workspace that holds an agent, a code branch, builds and a virtual display, then unmounting to leave a clean machine]({{ '/assets/images/training/ram-sandbox-cleanroom.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs, drawn for in-memory sandboxes. The text on this page says what is built today: Task Implementer does not create a sandbox or mount a RAM disk.*

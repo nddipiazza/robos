@@ -25,6 +25,40 @@ Walks through the RobOS cRPG Editor using the campaign that ships with the game,
 
 The editor is an Electron app in [`packages/crpg-editor`](https://github.com/nddipiazza/robos/tree/main/packages/crpg-editor). It reads and writes JSON-LD files directly in `games/crpg-realm/`. There is no database and no export step: Save writes the file, and the game reads the same file.
 
+![End-to-end cRPG campaign editor pipeline]({{ '/assets/images/crpg-realm/crpg_rescue_princess_tutorial_architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The text on this page says what is built today, for example that the cartridge runner does not play the story tree.*
+
+```mermaid
+graph TD
+    subgraph Files["JSON-LD files in games/crpg-realm"]
+        C_JSON["campaigns/rescue-the-princess.jsonld"]
+        M_JSON["maps/ (throne-room, main-castle, world-overworld, dark-lord-lair)"]
+        CH_JSON["characters/ (hero, king, blacksmith, goblin, malakor, princess)"]
+        I_JSON["items/heros-sword.jsonld"]
+    end
+
+    subgraph Editor["RobOS cRPG Editor"]
+        Overview["Overview and Settings"]
+        MapConn["Maps and Scenes"]
+        CharRoster["Characters and NPCs"]
+        ItemForge["Items"]
+        QuestDAG["Quest and Scenario Tree"]
+        QuestJournal["Skyrim Quest Journal"]
+        Simulator["Walkthrough Simulator"]
+    end
+
+    subgraph Runtime["Build and play"]
+        Bundler["crpg-cartridge bundle"]
+        Godot["Godot 4.3<br/>CartridgeWorld"]
+        Tests["node --test in<br/>packages/crpg-builder"]
+    end
+
+    Files <-->|"Open and Save"| Editor
+    Editor -->|"Generate Cartridge or Render as Game"| Bundler
+    Bundler --> Godot
+    Files --> Tests
+```
+
 | Editor tab | Folder it edits (`games/crpg-realm/`) |
 |:---|:---|
 | Campaign | `campaigns/<slug>.jsonld` |
@@ -53,6 +87,26 @@ Pick **Rescue of Princess Jennifer** in the **Campaign:** drop-down at the top r
 
 The Campaign tab has eight sub-tabs: Overview & Settings, Quest & Scenario Tree, Skyrim Quest Journal, Maps & Scenes, Characters & NPCs, Party & Inventory, Infinity AI Tactics & Arena, and Story Flags.
 
+The story the shipped campaign tells, act by act:
+
+```mermaid
+journey
+    title The Hero journey - Rescue of Princess Jennifer
+    section Act I - The Royal Decree
+      Hear King Alden's decree in the Throne Room: 5: Sir Caleb, King Alden
+      Visit Master Torvald at the Dragonclaw Forge: 4: Sir Caleb, Torvald
+      Defeat the Projection Goblin combat trial: 4: Sir Caleb
+      Claim the Hero's Sword: 5: Sir Caleb, Torvald
+    section Act II - Journey and Showdown
+      Unlock the gate to the Overworld: 4: Sir Caleb
+      Cross the wilderness to the Dark Lord's Lair: 3: Sir Caleb
+      Defeat Dark Lord Malakor: 5: Sir Caleb, Malakor
+      Free Princess Jennifer: 5: Sir Caleb, Princess Jennifer
+    section Act III - The Triumphant Return
+      Return the Princess to the Throne Room: 5: Sir Caleb, Princess Jennifer
+      King Alden proclaims victory: 5: Sir Caleb, King Alden, Princess Jennifer
+```
+
 ### Overview & Settings
 
 ![Campaign Overview tab with title, slug, setting, rule system, starting scene and synopsis]({{ '/assets/images/crpg-realm/tutorial_step1_campaign_overview.png' | relative_url }}){: .robos-zoomable-img }
@@ -77,6 +131,15 @@ The file's type is `["robos:CRPGCampaign", "schema:CreativeWork"]` and its id is
 
 This tab sets the starting map, spawn point and facing (`robos:startingSpawn`), which maps belong to the campaign (`robos:maps`, one URN per map), and the connections between them. Use **Add Connection** to add a row and **Validate Topology** to check the graph.
 
+The shipped campaign's three connections, all two-way, with the one gate:
+
+```mermaid
+graph LR
+    TR["Throne Room<br/>(throne-room)"] <-->|"Double doors"| MC["Main Castle and Forge<br/>(main-castle)"]
+    MC <-->|"Requires flag: obtained_heros_sword"| WO["Overworld Wilderness<br/>(world-overworld)"]
+    WO <-->|"Dark cavern maw"| DL["Dark Lord's Lair<br/>(dark-lord-lair)"]
+```
+
 A connection is an entry in `robos:mapConnections`. This is the one that gates the overworld behind the Hero's Sword:
 
 ```json
@@ -100,6 +163,9 @@ A connection is an entry in `robos:mapConnections`. This is the one that gates t
 
 ### Characters & NPCs, Items, Party & Inventory
 
+![Characters and NPCs tab with the roster on the left and Sir Caleb's class, ability scores and combat vitals on the right]({{ '/assets/images/crpg-realm/tutorial_step3_characters_roster.png' | relative_url }}){: .robos-zoomable-img }
+*The roster at the left lists every character file, with filters for player characters and NPCs. The form on the right edits the selected file: here Sir Caleb, a level 1 Human Fighter.*
+
 Characters are separate files that the campaign lists in `robos:characters`. The shipped campaign lists six: `hero-sir-caleb`, `npc-king-alden`, `npc-blacksmith-torvald`, `creature-projection-goblin`, `boss-dark-lord-malakor` and `npc-princess-jennifer`. The top-level **Characters & NPCs** tab edits them: its **File** menu has New Player Character, New NPC and Save Character. A hero file carries class, level, ability scores and equipment:
 
 ```json
@@ -119,6 +185,9 @@ Characters are separate files that the campaign lists in `robos:characters`. The
 
 The **Items** tab edits one item per file. Its form has Item Name, Unique Slug, Category, Equip Slot, Gold Cost (GP), Weight (lbs), Rarity, Damage Dice, Damage Type, Base AC or Bonus, Consumable Effect and a 3D model section. The Hero's Sword is `items/heros-sword.jsonld`: category `weapon`, slot `main_hand`, rarity `rare`, cost 500, damage `1d8` slashing, and the effect text `+3 ATK, Dragonclaw Rune`.
 
+![Items tab with the item library on the left and the Hero's Sword blueprint form on the right]({{ '/assets/images/crpg-realm/tutorial_step4_inventory_heros_sword.png' | relative_url }}){: .robos-zoomable-img }
+*The Item Library lists one file per item. The blueprint form shows the Hero's Sword fields: slug, category, equip slot, cost, weight, rarity, damage dice, damage type and lore.*
+
 The Party & Inventory sub-tab edits `robos:gameState`: the active party, party formation, shared purse and starting inventory (`gold: 100` and one `potion-healing` in this campaign).
 
 ### Quest & Scenario Tree and Skyrim Quest Journal
@@ -126,9 +195,41 @@ The Party & Inventory sub-tab edits `robos:gameState`: the active party, party f
 ![Story tree with three acts, six nodes and an inspector for the selected node]({{ '/assets/images/crpg-realm/tutorial_step5_quest_tree_dag.png' | relative_url }}){: .robos-zoomable-img }
 *Each card is a story node. The pills at the bottom of a card are its choices, labelled with what triggers them (talk to an NPC, combat trial, area transition). The panel on the right edits the selected node.*
 
+The six story nodes in the shipped campaign, as stored in `robos:storyFlow`:
+
+```mermaid
+graph TD
+    subgraph Act1["Act I: Royal Decree and Dragonclaw Forge"]
+        N1["node-kings-plea<br/>Game start, throne-room<br/>Giver: King Alden"]
+        N2["node-dragonclaw-forge-trial<br/>Quest stage, main-castle<br/>Giver: Master Torvald"]
+        N3["node-slay-projection-goblin<br/>Combat trial, main-castle"]
+    end
+
+    subgraph Act2["Act II: The Journey and Slaying Malakor"]
+        N4["node-journey-through-world<br/>Quest stage, world-overworld"]
+        N5["node-confront-dark-lord<br/>Combat trial, dark-lord-lair"]
+    end
+
+    subgraph Act3["Act III: The Triumphant Return"]
+        N6["node-triumphant-return<br/>End game state, throne-room"]
+    end
+
+    N1 -->|"talk_npc"| N2
+    N2 -->|"combat"| N3
+    N3 -->|"item (needs defeated_projection_goblin)"| N4
+    N4 -->|"transition (needs obtained_heros_sword)"| N5
+    N5 -->|"victory (needs defeated_dark_lord)"| N6
+```
+
 The story tree edits `robos:storyFlow`: a `robos:rootNodeId`, three `robos:flowPages` (the acts) and six `robos:storyNodes`. A node has a `robos:nodeType` (for example `game_start`, `quest_stage`), a `robos:location` map, a `robos:giver` and `robos:choices`. Each choice has a `targetNodeId` and a `robos:triggerType` such as `talk_npc` or `combat`.
 
 The journal edits `robos:questLog`. The campaign has a main quest (`quest-rescue-princess`) and a side quest, each with `robos:questObjectives`, numbered `robos:questStages` (0, 10, 20 and so on) and `robos:questRewards`.
+
+![Skyrim Quest Journal tab with the main quest and the side quest at the left and the objectives and journal stages of the main quest at the right]({{ '/assets/images/crpg-realm/tutorial_step6_skyrim_quest_journal.png' | relative_url }}){: .robos-zoomable-img }
+*The quest list at the left shows the main quest, Rescue of Princess Jennifer, and the side quest, The Dragonclaw Blade Trial. The main quest's checkbox objectives and numbered journal stages are on the right.*
+
+![Quest and Scenario Tree tab with the Walkthrough Simulator button in the toolbar and a status bar message that an interactive story walkthrough started]({{ '/assets/images/crpg-realm/tutorial_step7_game_execution.png' | relative_url }}){: .robos-zoomable-img }
+*Look at the toolbar above the tree: the Walkthrough Simulator button starts a walkthrough of the story from the selected node, and the status bar at the bottom reports "Started Interactive Story Walkthrough".*
 
 The Story Flags sub-tab edits `robos:worldFlags`. This campaign starts with `princess_kidnapped` and `talked_to_king` set to true and five more set to false, including `obtained_heros_sword`.
 
@@ -161,6 +262,31 @@ The Rescue maps were not built with that tool. `throne-room`, `main-castle` and 
 ## Build a cartridge
 
 A cartridge bundles a campaign with the maps, characters, items, enemies, spells and quests it references into one file.
+
+```mermaid
+flowchart LR
+    subgraph Source["Files written by the editor"]
+        Campaign["campaigns/rescue-the-princess.jsonld"]
+        Maps["maps/*.jsonld"]
+        Chars["characters/*.jsonld"]
+        Items["items/*.jsonld"]
+    end
+
+    Bundler["crpg-cartridge bundle<br/>(or Generate Cartridge)"]
+    Cart["cartridges/rescue-the-princess.cartridge.json"]
+
+    subgraph Godot["Godot 4.3"]
+        CS["Character Select<br/>(cartridge drop-down)"]
+        CM["CartridgeManager autoload"]
+        CW["CartridgeWorld.tscn<br/>(cartridge runner)"]
+    end
+
+    Campaign & Maps & Chars & Items --> Bundler
+    Bundler --> Cart
+    Cart -->|"--cartridge slug"| CM
+    CS --> CM
+    CM --> CW
+```
 
 In the editor, press **Generate Cartridge**. From a shell, use the bundler:
 
