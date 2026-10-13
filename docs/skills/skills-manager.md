@@ -25,6 +25,9 @@ The app shows a grid of cards. Each card has a name, a description, a shell comm
 
 These are not the agent skills in `plugins/robos/skills/`. Those are described in [Skills]({{ site.baseurl }}{% link robos-skills.md %}) and the [Skills catalog]({{ site.baseurl }}{% link skills/skills-catalog.md %}).
 
+![The Skills Manager desktop and prompt surfaces on the left, a registry of built-in, custom and community pack skills in the middle, and shell execution on the right]({{ '/assets/images/skills-manager-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The text on this page says what is built today: the app copies commands and does not run them.*
+
 ## Start it
 
 From a checkout of the repository:
@@ -52,6 +55,9 @@ The **My Skills** tab lists built-in and custom skills together. Type in the sea
 {: .robos-zoomable-img }
 
 *Look at the `$PORT` placeholder in the last card's command. Copy puts it on the clipboard unchanged.*
+
+![The My Skills tab filtered to the Git category, showing Recent Commits, Changed Files Status, Stash List, Branch Overview, Top Contributors, Find Large Git Objects and Cleanup Merged Branches cards]({{ '/assets/images/screenshots/skills-manager-git-category.png' | relative_url }}){: .robos-zoomable-img }
+*Look at the highlighted Git tab in the category row and the built-in badge on each card.*
 
 ### Built-in skills
 

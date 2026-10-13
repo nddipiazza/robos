@@ -27,6 +27,44 @@ The package is [`packages/voice-prompt`](https://github.com/nddipiazza/robos/tre
 - It registers the push-to-talk hotkey `Super+V`.
 - It starts an HTTP server on port `19188`. Set `ROBOS_VOICE_PORT` to use another port.
 
+The flowchart shows how speech moves through the app. Dotted lines are parts that exist in the code but are not connected (see [Not built yet](#not-built-yet)).
+
+```mermaid
+flowchart TD
+    subgraph SpeechIn["Speech in"]
+        Mic["Microphone"] --> Capture["Capture with pw-record or arecord"]
+        Capture --> Whisper["Local speech recognition: whisper-tiny.en"]
+        Whisper --> Bubbles["Text bubbles in the floating window"]
+        Whisper -->|background mode| Stream["Stream: GET /api/stream"]
+    end
+
+    subgraph Act["Commands and assistant"]
+        Bubbles --> Matcher{"Voice command matcher"}
+        Matcher -->|match| Run["Run a skill or launch an app"]
+        Context["Focused window, running apps, workspace"] --> Saved["Saved prompt with context"]
+        Whisper -->|activate then deactivate| Saved
+        Chat["robos-voice assistant or POST /api/assistant/chat"] --> Rules["Rule-based assistant"]
+    end
+
+    subgraph SpeechOut["Speech out"]
+        Rules --> Phonetic["Rewrite RobOS to Row Bose"]
+        Speak["robos-voice speak or POST /api/speak"] --> Phonetic
+        Phonetic --> Engine{"TTS engine"}
+        Engine --> Kokoro["Kokoro"]
+        Engine --> Edge["Edge-TTS"]
+        Engine --> Piper["Piper"]
+        Kokoro --> Play["Playback"]
+        Edge --> Play
+        Piper --> Play
+    end
+
+    Stream -.->|not connected| Wake["Wake-word detector"]
+    Wake -.-> Rules
+```
+
+![Voice pipeline from microphone through speech recognition, a stream, a wake-word detector and a desktop assistant to neural speech output]({{ '/assets/images/robos-voice-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The text on this page says what is built today: the wake-word detector in it is not connected.*
+
 ## Requirements and limits
 
 - **Linux only.** The microphone is read with `pw-record` (PipeWire) or `arecord` (ALSA). Window context comes from `xdotool` and `xprop` on an X11 session; without them the focused-window fields are empty.
@@ -58,7 +96,23 @@ Other buttons in the window: the gear opens settings, the trash icon clears the 
 
 When you stop speaking for 650 ms, the bubble text is matched against the registered voice commands. On a match, the bubble bounces and shows a card with an "App" or "Skill" badge, the command title, and a status that changes from "Executing" to "Done" or "Error".
 
+![The floating window with an Open Git Projects app card, a Validate Knowledge Graph skill card marked Done, and a bubble still listening]({{ '/assets/images/screenshots/robos-voice-hud-bubble-command.png' | relative_url }}){: .robos-zoomable-img }
+*Look at the cards under each bubble: the App or Skill badge, the title and the Done status. This capture is from an earlier layout, before the gear and floppy-disk buttons.*
+
 Matching ignores a leading "hey", "hello", "hi", "ok" or "okay", an optional "robos", "rob os" or "row bose", and "please", "can you", "could you" or "would you". It then tries, in order: an exact match on a skill phrase, a wildcard match for skills that take an argument, an exact match or "open"/"launch" plus the name for apps, and finally a multi-word phrase contained in what you said. Skills are checked before apps.
+
+```mermaid
+flowchart TD
+    Speech["Recognized speech"] --> Settle["Settle window: 650 ms of quiet"]
+    Settle --> Matcher{"Voice command matcher: skill phrase, wildcard, open or launch plus name, contained phrase"}
+    Matcher -->|no match| Plain["Plain speech bubble"]
+    Matcher -->|match| Bounce["Bubble bounces and shows a command card"]
+    Bounce --> Dispatch{"Target type"}
+    Dispatch -->|skill| Skill["Run the skill"]
+    Dispatch -->|app| App["Launch or focus the app"]
+    Skill --> Result["Status badge: Executing, then Done or Error"]
+    App --> Result
+```
 
 | Say | What happens |
 |---|---|
@@ -69,6 +123,9 @@ Matching ignores a leading "hey", "hello", "hi", "ok" or "okay", an optional "ro
 
 Every app in the icon registry (`packages/robos-icons`) gets "open <name>" phrases. The skill commands are defined in [`lib/voice-commands-registry.js`](https://github.com/nddipiazza/robos/blob/main/packages/voice-prompt/lib/voice-commands-registry.js).
 
+![Voice pipeline from audio input through a settle debounce and a command matcher to the floating window, with a wake-word detector and desktop assistant on a second path]({{ '/assets/images/voice-commands-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The text on this page says what is built today: the wake-word detector in it is not connected.*
+
 ## Settings window
 
 The gear in the floating window opens "RobOS Voice Settings" (720 by 640 pixels). It has two tabs.
@@ -77,6 +134,12 @@ The gear in the floating window opens "RobOS Voice Settings" (720 by 640 pixels)
 |---|---|
 | **Device** | Choose the dictation microphone from **Input device**, **Refresh** the list, and click **Save device**. The choice applies to the next recording, so stop dictation before you switch. **Test microphone** shows a live waveform without saving or transcribing audio. It stops when you click it again, change device, leave the tab, close the window, or after 30 seconds. |
 | **RobOS Commands** | Lists every registered command with its trigger phrases and a count badge. A search box filters by title, description, target or phrase. The buttons **All Commands**, **Applications** and **Skills & Actions** filter by type. **Test** on a card, or clicking a phrase, sends that phrase to the floating window as if you had said it. `Esc` closes the window. |
+
+![The Voice Activated Commands list with a count badge, a search box, All, Apps and Skills filters, and command cards with trigger phrases and Test buttons]({{ '/assets/images/screenshots/robos-voice-commands-modal.png' | relative_url }}){: .robos-zoomable-img }
+*The command list in an earlier layout, shown as an overlay in the floating window. The same list, search box and filters are now on the RobOS Commands tab.*
+
+![The command list filtered by the word knowledge, showing the Validate Knowledge Graph, Search Knowledge Graph and Export Graph skills]({{ '/assets/images/screenshots/robos-voice-commands-search.png' | relative_url }}){: .robos-zoomable-img }
+*Typing in the search box narrows the list to matching commands, here three knowledge graph skills.*
 
 ## Speech output
 

@@ -96,6 +96,9 @@ Run the installer from the repository root. With no options it writes project-le
 ./plugins/install.sh
 ```
 
+![A skills repository on the left feeds a sync engine running install.sh, which copies skills to Claude Code, OpenAI Codex, Google Antigravity, GitHub Copilot and Gemini CLI]({{ '/assets/images/robos-skills-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The text on this page says what is built today.*
+
 | Option | Effect |
 | --- | --- |
 | `--target <agent>` | Limit to `claude`, `codex`, `antigravity`, `copilot` or `gemini` (default `all`) |

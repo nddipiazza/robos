@@ -23,6 +23,9 @@ PR Review Theater is the review window of the Agent Code Review Platform app. It
 
 The app is [`packages/pr-review`](https://github.com/nddipiazza/robos/tree/main/packages/pr-review). It appears in the launcher as Agent Code Review Platform, and its window title is "RobOS Agent-Generated Code Review Platform". The app page is [Agent Code Review]({{ '/apps/pr-review/' | relative_url }}).
 
+![A finished agent task triggers a toast and opens the reviewer app, which offers a teaching path and a live demonstration path]({{ '/assets/images/elearning-reviewer-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The text on this page says what is built today.*
+
 A review opens in one of two modes, and the mode decides which tabs you get.
 
 | | Local review | Published PR, reviewer mode |
@@ -93,6 +96,33 @@ The conversation is saved as `conversation.jsonl` and `session.json` under `~/.r
 Reviewer mode shows the PR description (read-only), the real diff from `gh pr diff`, and the **Approve** tab. Choose Approve, Request Changes or Submit Comment Only, add notes and click **Submit review**. RobOS runs `gh pr review` with `--approve`, `--request-changes` or `--comment`. Approving does not merge. The message reads "The author can now merge it."
 
 **Review settings** opens the team policy editor: enable or disable each stage, mark a stage as a Required Gate, set the quiz pass mark (50% to 100%), the default diff mode and the preferred IDE. The policy is stored as `robos:prReviewTheaterConfig` on the team's `robos:Team` node in the Knowledge Graph. It is not available in a local review.
+
+![A team policy node in the knowledge graph controlling a chain of review stages that ends in a sign-off]({{ '/assets/images/pr-review-theater-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs, drawn for the earlier seven-stage design. The text on this page says what is built today: the stages are now tabs, and approving does not merge.*
+
+The sequence below shows how a reviewer-mode review runs today.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Reviewer
+    participant Window as Review window, reviewer mode
+    participant Policy as Team policy in the knowledge graph
+    participant GH as GitHub via gh
+
+    Reviewer->>Window: Open a pull request from Dev Central
+    Window->>Policy: Read the review policy
+    Policy-->>Window: Enabled stages, quiz pass mark, required gates
+    Window->>GH: gh pr diff
+    GH-->>Window: The real diff
+    Reviewer->>Window: Overview quiz with fixed sample questions
+    Note over Reviewer,Window: By default Changes and Approve stay locked until the quiz is passed
+    Reviewer->>Window: Read the diff on the Changes tab
+    Reviewer->>Window: Optional tabs: Open in IDE, Evidence, Walkthrough (sample content)
+    Reviewer->>Window: Approve tab, choose a decision and add notes
+    Window->>GH: gh pr review with approve, request changes or comment
+    Note over Reviewer,GH: Approving does not merge. The author merges on GitHub.
+```
 
 ## IDE integration
 

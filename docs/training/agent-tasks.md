@@ -34,6 +34,9 @@ flowchart LR
 
 Task Planner and Task Implementer both read the active task server from `~/.config/robos/settings.json`, which you edit in the Task Servers app. The agent in the middle is the Claude Code CLI. Task Implementer starts it and streams its output. It does not create a sandbox, clone the repository or open the pull request. [Run an agent on a task]({{ '/training/agent-tasks/run-an-agent.html' | relative_url }}) lists exactly what it does.
 
+![Four phases left to right: app onboarding in App Wizard, visual task planning in Task Planner, implementation in Task Implementer, and review and launch of the finished app]({{ '/assets/images/training/non-developer-game-building-lifecycle.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs, drawn for the earlier non-developer course. The text on this page says what is built today.*
+
 ## Lessons
 
 | Lesson | Apps used |
@@ -44,3 +47,8 @@ Task Planner and Task Implementer both read the active task server from `~/.conf
 | [Choose and customize agent personas]({{ '/training/agent-tasks/agent-personas.html' | relative_url }}) | Task Implementer, Task Planner |
 
 Reviewing the branch an agent pushes is covered on the [PR Review Theater]({{ site.baseurl }}{% link pr-review-theater.md %}) page.
+
+## Diagrams
+
+![Four steps left to right: a visual campaign editor, a declarative knowledge graph of items, spells and monsters, the Godot engine with a playthrough bot, and a playable game]({{ '/assets/images/training/crpg-architecture-flow.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs, showing how the cRPG game example fits together. The text on this page says what is built today.*

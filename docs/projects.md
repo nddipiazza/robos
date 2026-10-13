@@ -26,6 +26,30 @@ The sample projects in the RobOS repository: one web app and two games, each wit
 | [Tabletop RPG]({{ '/projects/tabletop-rpg/' | relative_url }}) | Game, Godot 4.3 | `games/tabletop-rpg` | A turn-based dungeon crawler modelled on HeroQuest, with data-driven cartridges and an HTTP API that the tests use to play the game. |
 | [Tactical cRPG Realm]({{ '/projects/crpg-realm/' | relative_url }}) | Game, Godot 4.3 | `games/crpg-realm` | A party-based, Infinity Engine-style RPG using D&D 5e SRD rules, tested end to end with Cucumber. |
 
+The Tactical cRPG Realm game ties three things together: its content, the Godot runtime, and the HTTP control API that the tests use to play it.
+
+```mermaid
+flowchart LR
+    subgraph Content["Content"]
+        DATA["data/v1 JSON files"] --> DS["DataStore autoload<br/>(DataStoreV1.gd)"]
+        KG["KGraph JSON-LD files<br/>(campaign editor)"] --> CART["Cartridges<br/>(crpg-builder bundle)"]
+    end
+
+    subgraph Runtime["Godot 4.3 runtime"]
+        DS --> Scenes["Hand-built scenes<br/>(Homestead to GarrisonKeep)"]
+        CART --> CW["CartridgeWorld"]
+        Scenes --> RTwP["Real-time-with-pause combat"]
+        DS --> SE["ScenarioEngine<br/>(Infinity AI)"]
+    end
+
+    subgraph QA["Testing"]
+        HTTP["GameControlServer<br/>(HTTP API)"] <--> Steps["behave steps<br/>and Infinity AI"]
+        Steps --> Video["Video per scenario<br/>(ffmpeg on Xvfb)"]
+    end
+
+    Scenes <--> HTTP
+```
+
 For how to build your own, see [Building apps]({{ site.baseurl }}{% link app-development-flow.md %}) and [Game development]({{ '/game-development.html' | relative_url }}).
 
 ## Starter projects from the App Wizard

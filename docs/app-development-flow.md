@@ -24,6 +24,9 @@ The App Wizard (`packages/app-wizard`) is the entry point. It has two modes, sel
 | A web app | [Front-end apps]({{ site.baseurl }}{% link frontend-applications.md %}) | The Next.js template the wizard generates, and the graph shape for front-end apps. |
 | A game | [Game development]({{ site.baseurl }}{% link game-development.md %}) | What the repository contains for games, and what the wizard does not do for them. |
 
+![Flowchart with two paths, a new app scaffolded across archetypes and an existing codebase imported with AI refinement, both ending in a catalog-info.yaml and dev-setup.sh and registration in packages.yaml]({{ '/assets/images/app-flow-scaffolding-ingestion.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The text on this page says what is built today.*
+
 Open the wizard from the App Launcher, or run it from a RobOS checkout:
 
 ```bash
@@ -36,6 +39,9 @@ Both modes look for a `.robos` directory in the process's working directory and 
 
 These apps read the same files and graph the wizard writes. Each has its own page; the one-line descriptions come from the apps' `package.json` files.
 
+![Ten-phase lifecycle diagram from organization setup and App Wizard through task planning, contracts, git projects, AI implementation, PR review, database consoles, REST client and Kube Studio to runtime operations, with a defect feedback loop]({{ '/assets/images/app-flow-lifecycle-overview.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The text on this page says what is built today.*
+
 | App | Use it for |
 |:---|:---|
 | [Task Planner]({{ '/apps/task-planner/' | relative_url }}) | Creating tasks on your task server from an AI prompt. |
@@ -47,6 +53,18 @@ These apps read the same files and graph the wizard writes. Each has its own pag
 | [Deploy Tracker]({{ '/apps/deploy-tracker/' | relative_url }}) | Tracking deployment history and frequency. |
 
 The full list is on [Apps]({{ site.baseurl }}{% link apps.md %}).
+
+![System Topology and Catalog Manager on the L2 Containers view, with a Backstage catalog list, a canvas of service cards and a node inspector]({{ '/assets/images/screenshots/topology-db-c4_polyglot_frame.png' | relative_url }}){: .robos-zoomable-img }
+*Topology Studio: look at the L1, L2 and L3 view switch and the node inspector on the right. The example system is built-in sample data.*
+
+![Git Projects with a tree of six repositories under github.com and acme-org and the header buttons Add Dev Group Repos, Add GitHub Org, AI Prompt and Add Project]({{ '/assets/images/screenshots/acme-petshop-step4-git-projects-frame_01.png' | relative_url }}){: .robos-zoomable-img }
+*Git Projects: look at the repository tree on the left and the buttons in the header.*
+
+![AI Bruno Generator dialog with a TypeSpec source, a target collection, a request file name and three generation options]({{ '/assets/images/screenshots/acme-petshop-step11-bruno-rest-client-frame_02.png' | relative_url }}){: .robos-zoomable-img }
+*REST API Client: look at the AI Bruno Generator dialog, which writes a `.bru` request into a collection.*
+
+![PR Review window on the Overview tab with a pull request title, description and status cards, and tabs for Overview, PR Review, Files Changed, Knowledge Graph and CI Checks]({{ '/assets/images/screenshots/acme-petshop-step6-overview_frame.png' | relative_url }}){: .robos-zoomable-img }
+*PR Review: look at the tab row and the Review Decision button. The header and step list have changed since this capture.*
 
 ## Add an app to the RobOS suite
 
@@ -67,5 +85,10 @@ Then:
 3. Run the suite's tests in Docker with `./scripts/e2e-container.sh`. This needs Docker; `--build` rebuilds the image and `-i` opens a shell in the container.
 4. Create the app's docs page with `node scripts/sync-app-docs.js`. It adds a file to `docs/_apps/` for every app that has none.
 5. To try the app on the RobOS VM, use the `deploy-to-vm` skill. The VM accepts SSH on port 2224.
+
+## Diagrams
+
+![Decision flowchart for organization setup: existing enterprise directory sync or a new greenfield company, both leading to team topologies in teams.yaml, security setup and a ready developer foundation]({{ '/assets/images/app-flow-org-foundation.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The text on this page says what is built today.*
 
 See [Skills]({{ site.baseurl }}{% link robos-skills.md %}) for how skills are installed and run, and [Architecture]({{ site.baseurl }}{% link architecture.md %}) for how the pieces fit together.

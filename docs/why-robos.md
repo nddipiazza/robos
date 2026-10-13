@@ -23,6 +23,9 @@ Coding agents such as Claude Code, Codex, GitHub Copilot CLI and Antigravity can
 
 RobOS is a set of desktop apps and libraries aimed at those four points. It does not remove the need for a human reviewer. It tries to give the reviewer better inputs.
 
+![Many user stories and feature requests funneling down to one developer typing code by hand]({{ '/assets/images/typing-bottleneck.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs, showing the typing bottleneck that agents are meant to remove. The text on this page says what is built today.*
+
 ## The approach
 
 | Problem | What RobOS provides | Where to read more |
