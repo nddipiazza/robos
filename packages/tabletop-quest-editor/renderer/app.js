@@ -4488,14 +4488,147 @@ function setupEventListeners() {
   dom.btnCopyJson.addEventListener('click', copyJson);
   dom.btnTestPlay.addEventListener('click', testPlay);
 
-  if (dom.btnVoiceAddItems) {
-    dom.btnVoiceAddItems.addEventListener('robos-voice-complete', (e) => {
-      const { text, guidancePrompt } = e.detail || {};
-      if (text && text.trim()) {
-        executeVoiceMapCommands(text, guidancePrompt);
+  // ── Voice Dictation Integration with RobOS Voice Overlay App ─────────────
+  const VOICE_GUIDANCE_PROMPT = "Tabletop Quest Map Editor Voice Assistant: The user is dictating quest map setup commands to place monsters, furniture, doors, traps, or wall blocks on the board (e.g. 'add 3 skeletons to room 1', 'place a treasure chest in room 2', 'put an orc in the north room').";
+  const VOICE_API_URL = 'http://127.0.0.1:19188';
+
+  const voiceState = {
+    isListening: false,
+    eventSource: null,
+    capturedText: '',
+    interimText: ''
+  };
+
+  async function toggleVoiceRecording() {
+    if (voiceState.isListening) {
+      await stopVoiceRecording();
+    } else {
+      await startVoiceRecording();
+    }
+  }
+
+  async function startVoiceRecording() {
+    if (voiceState.isListening) return;
+    voiceState.isListening = true;
+    voiceState.capturedText = '';
+    voiceState.interimText = '';
+
+    // Indicator in the "record" icon to show we are listening
+    if (dom.btnVoiceAddItems) {
+      dom.btnVoiceAddItems.classList.add('listening', 'recording');
+      dom.btnVoiceAddItems.setAttribute('aria-pressed', 'true');
+      dom.btnVoiceAddItems.title = 'Listening... Click to stop recording';
+    }
+
+    // 1. Pop-up RobOS Voice app if not already running
+    try {
+      if (window.robosQuestEditor && typeof window.robosQuestEditor.ensureVoiceApp === 'function') {
+        await window.robosQuestEditor.ensureVoiceApp();
       }
+    } catch (err) {
+      console.warn('[Voice] Error ensuring voice app:', err);
+    }
+
+    // 2. Pop-up RobOS Voice HUD and start dictating there (streams text to its text bubbles)
+    try {
+      await fetch(`${VOICE_API_URL}/api/activate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          backgroundMode: false,
+          guidancePrompt: VOICE_GUIDANCE_PROMPT,
+        }),
+      });
+    } catch (err) {
+      console.warn('[Voice] Failed to activate dictation on RobOS Voice overlay:', err);
+    }
+
+    // 3. Listen to that stream from the app via API
+    if (typeof EventSource !== 'undefined') {
+      try {
+        if (voiceState.eventSource) {
+          voiceState.eventSource.close();
+        }
+        voiceState.eventSource = new EventSource(`${VOICE_API_URL}/api/stream`);
+        voiceState.eventSource.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data && data.text) {
+              const clean = data.text.trim();
+              if (data.isFinal) {
+                if (!voiceState.capturedText.endsWith(clean)) {
+                  voiceState.capturedText = (voiceState.capturedText + ' ' + clean).trim();
+                }
+                voiceState.interimText = '';
+              } else {
+                voiceState.interimText = clean;
+              }
+            }
+          } catch {}
+        };
+      } catch (err) {
+        console.warn('[Voice] SSE connection error:', err);
+      }
+    }
+  }
+
+  async function stopVoiceRecording() {
+    if (!voiceState.isListening) return;
+    voiceState.isListening = false;
+
+    // Reset indicator in the "record" icon
+    if (dom.btnVoiceAddItems) {
+      dom.btnVoiceAddItems.classList.remove('listening', 'recording');
+      dom.btnVoiceAddItems.setAttribute('aria-pressed', 'false');
+      dom.btnVoiceAddItems.title = 'Voice Dictation: Click to record map setup instructions';
+    }
+
+    if (voiceState.eventSource) {
+      try { voiceState.eventSource.close(); } catch {}
+      voiceState.eventSource = null;
+    }
+
+    // Deactivate on RobOS Voice overlay and retrieve final transcribed text
+    let finalText = (voiceState.capturedText || voiceState.interimText || '').trim();
+    try {
+      const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      const timer = controller ? setTimeout(() => controller.abort(), 6000) : null;
+      const res = await fetch(`${VOICE_API_URL}/api/deactivate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: controller ? controller.signal : undefined,
+      });
+      if (timer) clearTimeout(timer);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.text && data.text.trim()) {
+          finalText = data.text.trim();
+        }
+      }
+    } catch (err) {
+      console.warn('[Voice] Error deactivating voice dictation:', err);
+    }
+
+    if (finalText) {
+      executeVoiceMapCommands(finalText, VOICE_GUIDANCE_PROMPT);
+    }
+  }
+
+  if (dom.btnVoiceAddItems) {
+    dom.btnVoiceAddItems.addEventListener('click', (e) => {
+      e.preventDefault();
+      toggleVoiceRecording();
     });
   }
+
+  // Expose for debugging and tests
+  window.toggleVoiceRecording = toggleVoiceRecording;
+  window.startVoiceRecording = startVoiceRecording;
+  window.stopVoiceRecording = stopVoiceRecording;
+  window.voiceState = voiceState;
+  window.state = state;
+  window.dom = dom;
+
 
   // Zoom controls
   dom.btnZoomIn.addEventListener('click', () => {

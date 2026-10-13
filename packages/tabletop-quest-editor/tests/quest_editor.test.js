@@ -1446,6 +1446,24 @@ test('Voice Map Setup: interprets spoken quest instructions and places items cle
   assert.equal(val.errors.length, 0);
 });
 
+test('Voice Record Button: provides indicator in record icon and connects to RobOS Voice overlay app', () => {
+  const htmlPath = path.join(__dirname, '..', 'renderer', 'index.html');
+  const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+
+  // Verify voice stream component is removed and replaced by native record button
+  assert.ok(!htmlContent.includes('<robos-voice-button'), 'Old robos-voice-button component must be removed');
+  assert.ok(htmlContent.includes('id="btn-voice-add-items"'), 'Must have #btn-voice-add-items button');
+  assert.ok(htmlContent.includes('class="btn btn-voice-record"'), 'Must have btn-voice-record class');
+  assert.ok(htmlContent.includes('class="voice-mic-icon"'), 'Must have record mic icon');
+  assert.ok(htmlContent.includes('class="voice-listening-indicator"'), 'Must have listening indicator in record icon');
+
+  const cssPath = path.join(__dirname, '..', 'renderer', 'style.css');
+  const cssContent = fs.readFileSync(cssPath, 'utf8');
+  assert.ok(cssContent.includes('.voice-listening-indicator'), 'CSS must define .voice-listening-indicator');
+  assert.ok(cssContent.includes('.btn-voice-record.listening'), 'CSS must define active listening indicator state');
+  assert.ok(cssContent.includes('animation: voice-rec-pulse'), 'CSS must pulse when listening');
+});
+
 test('Resizable Split Dividers: enables resizing of tool palette and sidebar with clamping and reset defaults', (t) => {
   // 1. Verify HTML Structure
   const htmlPath = path.join(__dirname, '..', 'renderer', 'index.html');

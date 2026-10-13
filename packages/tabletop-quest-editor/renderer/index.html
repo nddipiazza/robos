@@ -60,15 +60,22 @@
 
         <div class="header-divider"></div>
 
-        <robos-voice-button
+        <button
           id="btn-voice-add-items"
-          icon-only
-          label=""
-          recording-label=""
-          guidance-prompt="Tabletop Quest Map Editor Voice Assistant: The user is dictating quest map setup commands to place monsters, furniture, doors, traps, or wall blocks on the board (e.g. 'add 3 skeletons to room 1', 'place a treasure chest in room 2', 'put an orc in the north room')."
-          title="Add items via voice · Dictate map setup instructions"
-          aria-label="Add items via voice">
-        </robos-voice-button>
+          class="btn btn-voice-record"
+          title="Voice Dictation: Click to record map setup instructions"
+          aria-label="Voice Dictation"
+          aria-pressed="false">
+          <span class="voice-record-icon-wrap">
+            <svg class="voice-mic-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+              <line x1="12" x2="12" y1="19" y2="22"/>
+              <line x1="8" y1="16" x2="16" y2="22"/>
+            </svg>
+            <span class="voice-listening-indicator" aria-hidden="true"></span>
+          </span>
+        </button>
 
         <button id="btn-test-play" class="btn btn-primary" title="Launch Godot Tabletop RPG to test play this quest">
           ⚔️ Test Play
@@ -636,18 +643,6 @@
     <div id="toast-container" class="toast-container"></div>
   </div>
 
-  <script>
-    (function() {
-      const s = document.createElement('script');
-      s.src = '../../robos-ui/robos-ui.js';
-      s.onerror = () => {
-        const s2 = document.createElement('script');
-        s2.src = '/usr/local/share/robos/robos-ui/robos-ui.js';
-        document.head.appendChild(s2);
-      };
-      document.head.appendChild(s);
-    })();
-  </script>
   <script src="app.js"></script>
 </body>
 </html>

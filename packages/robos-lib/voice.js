@@ -79,6 +79,61 @@ class RobOSVoiceClient {
   }
 
   /**
+   * Ensure RobOS Voice overlay app is running; launches it if not already on
+   */
+  async ensureRunning(timeoutMs = 8000) {
+    const status = await this.getStatus();
+    if (status && status.ok) {
+      return { ok: true, alreadyRunning: true, status };
+    }
+
+    const { spawn } = require('child_process');
+    const candidates = [
+      path.resolve(__dirname, '..', 'voice-prompt', 'bin', 'robos-voice-hud'),
+      '/usr/local/bin/robos-voice-hud',
+      path.resolve(__dirname, '..', 'voice-prompt', 'bin', 'robos-voice-prompt'),
+      '/usr/local/bin/robos-voice-prompt',
+    ];
+
+    let launchBin = candidates.find(c => fs.existsSync(c));
+    let launchArgs = [];
+
+    if (!launchBin) {
+      const voiceDir = path.resolve(__dirname, '..', 'voice-prompt');
+      const electronCandidates = [
+        path.join(voiceDir, 'node_modules', '.bin', 'electron'),
+        path.resolve(__dirname, '..', 'robos-test', 'node_modules', '.bin', 'electron'),
+        'electron',
+      ];
+      const electronBin = electronCandidates.find(c => fs.existsSync(c)) || 'electron';
+      launchBin = electronBin;
+      launchArgs = [voiceDir, '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--hud'];
+    }
+
+    try {
+      const childEnv = { ...process.env, DISPLAY: process.env.DISPLAY || ':0' };
+      const child = spawn(launchBin, launchArgs, {
+        detached: true,
+        stdio: 'ignore',
+        env: childEnv,
+      });
+      child.unref();
+
+      const deadline = Date.now() + timeoutMs;
+      while (Date.now() < deadline) {
+        await new Promise(r => setTimeout(r, 250));
+        const check = await this.getStatus();
+        if (check && check.ok) {
+          return { ok: true, launched: true, pid: child.pid, status: check };
+        }
+      }
+      return { ok: false, error: `RobOS Voice app launched (PID ${child.pid}) but did not respond within ${timeoutMs}ms` };
+    } catch (err) {
+      return { ok: false, error: `Failed to launch RobOS Voice app: ${err.message}` };
+    }
+  }
+
+  /**
    * Speak text out loud using RobOS Outgoing Voice (Kokoro / Edge-TTS / Piper)
    * @param {string} text
    * @param {object} options
@@ -136,7 +191,9 @@ class RobOSVoiceClient {
    * Activate listening for dictation
    */
   async activate(options = {}) {
-    const res = await this._request('POST', '/api/activate', options);
+    await this.ensureRunning();
+    const opts = { backgroundMode: false, ...options };
+    const res = await this._request('POST', '/api/activate', opts);
     return res.data;
   }
 
