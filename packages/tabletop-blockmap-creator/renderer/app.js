@@ -662,22 +662,7 @@ class BlockmapCreator {
         const rh = Math.min(this.rows - ry, Math.abs(r2 - r1) + 1);
 
         if (rw >= 1 && rh >= 1) {
-          let activeRoom = this.getSelectedRoom();
-          if (!activeRoom || (rw > 1 && rh > 1 && (activeRoom.w !== rw || activeRoom.h !== rh))) {
-            activeRoom = this.addNewRoom(rx, ry, rw, rh);
-          } else {
-            activeRoom.x = rx;
-            activeRoom.y = ry;
-            activeRoom.w = rw;
-            activeRoom.h = rh;
-            activeRoom.shape = 'rect';
-            const tiles = callGenerateRectTiles(rx, ry, rw, rh);
-            activeRoom.tiles = tiles;
-            activeRoom.tileSet = new Set(tiles.map(t => `${t[0]},${t[1]}`));
-            this.updateRoomInspector();
-            this.updateRoomListUI();
-            this.showToast(`Updated ${activeRoom.name} bounds: [${rx}, ${ry}] ${rw}×${rh}`);
-          }
+          this.addNewRoom(rx, ry, rw, rh);
         }
       } else if (this.activeTool === 'room' && this.roomMode === 'freeform') {
         if (this.currentFreeformStroke && (this.currentFreeformStroke.added.length > 0 || this.currentFreeformStroke.removed.length > 0)) {
@@ -739,13 +724,37 @@ class BlockmapCreator {
     return col >= room.x && col < room.x + room.w && row >= room.y && row < room.y + room.h;
   }
 
+  getNextRoomNumber() {
+    let maxNum = 0;
+    for (const r of this.rooms) {
+      const match = (r.name || '').match(/Room\s+(\d+)/i);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > maxNum) maxNum = num;
+      }
+    }
+    return maxNum > 0 ? maxNum + 1 : this.rooms.length + 1;
+  }
+
+  generateUniqueRoomId(quadrant) {
+    const existingIds = new Set(this.rooms.map(r => r.id));
+    let num = this.getNextRoomNumber();
+    let id = `room-${quadrant}-${num}`;
+    while (existingIds.has(id)) {
+      num++;
+      id = `room-${quadrant}-${num}`;
+    }
+    return id;
+  }
+
   addNewRoom(x = 1, y = 1, w = 4, h = 4) {
-    const count = this.rooms.length + 1;
+    const count = this.getNextRoomNumber();
     const quadrant = this.determineQuadrant(x, y);
-    const color = ROOM_COLORS[(count - 1) % ROOM_COLORS.length];
+    const color = ROOM_COLORS[(this.rooms.length) % ROOM_COLORS.length];
     const tiles = callGenerateRectTiles(x, y, w, h);
+    const id = this.generateUniqueRoomId(quadrant);
     const newRoom = {
-      id: `room-${quadrant}-${count}`,
+      id: id,
       name: `Room ${count} (${quadrant.toUpperCase()})`,
       x: x,
       y: y,
@@ -768,13 +777,14 @@ class BlockmapCreator {
 
   addNewFreeformRoom(tileArray) {
     const bounds = callComputeRoomBounds(tileArray);
-    const count = this.rooms.length + 1;
+    const count = this.getNextRoomNumber();
     const quadrant = this.determineQuadrant(bounds.x, bounds.y);
-    const color = ROOM_COLORS[(count - 1) % ROOM_COLORS.length];
+    const color = ROOM_COLORS[(this.rooms.length) % ROOM_COLORS.length];
     const isRect = tileArray.length === bounds.w * bounds.h;
+    const id = this.generateUniqueRoomId(quadrant);
 
     const newRoom = {
-      id: `room-${quadrant}-${count}`,
+      id: id,
       name: `Room ${count} (${quadrant.toUpperCase()})`,
       x: bounds.x,
       y: bounds.y,

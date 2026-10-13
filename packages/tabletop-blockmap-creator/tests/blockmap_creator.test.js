@@ -216,4 +216,69 @@ test('Room tileSet preservation: tileSet remains a functioning Set after pushHis
   assert.ok(!rooms[0].tileSet.has('3,3'));
 });
 
+test('Consecutive Room Creation: identical dimension rooms never overwrite existing rooms and maintain unique IDs', () => {
+  const rooms = [];
+
+  function getNextRoomNumber() {
+    let maxNum = 0;
+    for (const r of rooms) {
+      const match = (r.name || '').match(/Room\s+(\d+)/i);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > maxNum) maxNum = num;
+      }
+    }
+    return maxNum > 0 ? maxNum + 1 : rooms.length + 1;
+  }
+
+  function generateUniqueRoomId(quadrant) {
+    const existingIds = new Set(rooms.map(r => r.id));
+    let num = getNextRoomNumber();
+    let id = `room-${quadrant}-${num}`;
+    while (existingIds.has(id)) {
+      num++;
+      id = `room-${quadrant}-${num}`;
+    }
+    return id;
+  }
+
+  function addRoom(x, y, w, h, quadrant = 'nw', shape = 'rect', tileCount = w * h) {
+    const count = getNextRoomNumber();
+    const id = generateUniqueRoomId(quadrant);
+    const room = {
+      id,
+      name: `Room ${count} (${quadrant.toUpperCase()})`,
+      x, y, w, h, shape, tileCount, quadrant
+    };
+    rooms.push(room);
+    return room;
+  }
+
+  // Exact scenario from user bug report:
+  // 1. Room 1 (NW) [5, 5] 4x4 Free Form (15t)
+  addRoom(5, 5, 4, 4, 'nw', 'freeform', 15);
+  // 2. Room 2 (NW) [5, 1] 3x4 Rect (12t)
+  addRoom(5, 1, 3, 4, 'nw', 'rect', 12);
+  // 3. Room 3 (NW) [8, 1] 4x5 Rect (20t)
+  addRoom(8, 1, 4, 5, 'nw', 'rect', 20);
+  // 4. Room 4 (NW) [1, 5] 4x4 Rect (16t)
+  addRoom(1, 5, 4, 4, 'nw', 'rect', 16);
+  // 5. Room 5 (NW) [1, 1] 4x4 Rect (16t) -- identical 4x4 dimensions to Room 4!
+  addRoom(1, 1, 4, 4, 'nw', 'rect', 16);
+
+  assert.equal(rooms.length, 5, 'All 5 rooms must exist and not be overwritten');
+  assert.equal(rooms[3].name, 'Room 4 (NW)');
+  assert.equal(rooms[3].x, 1);
+  assert.equal(rooms[3].y, 5);
+  assert.equal(rooms[4].name, 'Room 5 (NW)');
+  assert.equal(rooms[4].x, 1);
+  assert.equal(rooms[4].y, 1);
+
+  // Check unique IDs
+  const ids = new Set(rooms.map(r => r.id));
+  assert.equal(ids.size, 5, 'All room IDs must be unique');
+  assert.ok(ids.has('room-nw-4'));
+  assert.ok(ids.has('room-nw-5'));
+});
+
 
