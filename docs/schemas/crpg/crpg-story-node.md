@@ -20,6 +20,7 @@ Validation shape for `robos:CRPGStoryNode` nodes in the `crpg` package group.
 | Class | `robos:CRPGStoryNode` |
 | Shape id | `urn:robos:shape:CRPGStoryNodeShape` |
 | Package | [cRPG (robos.crpg)]({{ '/schemas/crpg.html' | relative_url }}) (`crpg`) |
+| Classification | Testing & behavior |
 | Domain standard | [OSLC CM](http://open-services.net/ns/cm#ChangeRequest) |
 
 ## Properties

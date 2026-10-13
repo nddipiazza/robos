@@ -20,6 +20,7 @@ Validation shape for `robos:GameMonster` nodes in the `game` package group.
 | Class | `robos:GameMonster` |
 | Shape id | `urn:robos:shape:GameMonsterShape` |
 | Package | [Game Rules (robos.game)]({{ '/schemas/game.html' | relative_url }}) (`game`) |
+| Classification | Testing & behavior |
 | Schema.org type | [`schema:Person`](https://schema.org/Person) |
 | Domain standard | [robos.dev](https://robos.dev/ns/game#Monster) |
 

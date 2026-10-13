@@ -26,7 +26,7 @@ to built-in types and their aliases. Each group requires an applicable type and
 at least one populated domain property or recorded child relation. A type, title,
 or provenance path alone never creates an empty specialist tab. The catalog test
 checks every executable SHACL target and every domain constraint property, so new
-schema types cannot silently miss viewer coverage. The [type-by-type coverage audit](../../docs/inspector-schema-coverage.md) lists all 98 shapes, 141 targets/aliases, and 25 groups.
+schema types cannot silently miss viewer coverage. The [type-by-type coverage audit](../../docs/inspector-schema-coverage.md) lists every shape target and alias with the group that covers it.
 
 Select an MCP server and open **MCP Server** to browse its recorded actions/tools,
 resources and prompts. Child cards show descriptions, declarations, parameter

@@ -20,6 +20,7 @@ Validation shape for `robos:CRPGMapTransition` nodes in the `crpg` package group
 | Class | `robos:CRPGMapTransition` |
 | Shape id | `urn:robos:shape:CRPGMapTransitionShape` |
 | Package | [cRPG (robos.crpg)]({{ '/schemas/crpg.html' | relative_url }}) (`crpg`) |
+| Classification | Testing & behavior |
 | Schema.org type | [`schema:Place`](https://schema.org/Place) |
 | Domain standard | [robos.dev](https://robos.dev/ns/crpg#MapTransition) |
 

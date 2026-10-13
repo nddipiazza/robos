@@ -20,6 +20,7 @@ Validation shape for `robos:TabletopSummon` nodes in the `tabletop-game` package
 | Class | `robos:TabletopSummon` |
 | Shape id | `urn:robos:shape:TabletopSummonShape` |
 | Package | [Tabletop Game (robos.tabletop)]({{ '/schemas/tabletop-game.html' | relative_url }}) (`tabletop-game`) |
+| Classification | Testing & behavior |
 | Schema.org type | [`schema:Person`](https://schema.org/Person) |
 | Domain standard | [robos.dev](https://robos.dev/ns/tabletop#Summon) |
 

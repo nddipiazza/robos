@@ -902,7 +902,10 @@
         "urn:robos:crpg:feature:garrison-boss-victory"
       ],
       "robos:package": "crpg",
-      "robos:namespace": "robos.crpg"
+      "robos:namespace": "robos.crpg",
+      "robos:targets": {
+        "@id": "urn:robos:crpg:game:realm-of-heroes"
+      }
     },
     {
       "@id": "urn:robos:crpg:testplan:early-access-slice",
@@ -3326,7 +3329,10 @@
         "urn:robos:crpg:feature:garrison-boss-victory"
       ],
       "robos:package": "crpg",
-      "robos:namespace": "robos.crpg"
+      "robos:namespace": "robos.crpg",
+      "robos:targets": {
+        "@id": "urn:robos:crpg:game:realm-of-heroes"
+      }
     },
     {
       "@id": "urn:robos:crpg:testplan:early-access-slice",

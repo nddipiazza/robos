@@ -20,6 +20,7 @@ Validation shape for `robos:CRPGGameEvent` nodes in the `crpg` package group.
 | Class | `robos:CRPGGameEvent` |
 | Shape id | `urn:robos:shape:CRPGGameEventShape` |
 | Package | [cRPG (robos.crpg)]({{ '/schemas/crpg.html' | relative_url }}) (`crpg`) |
+| Classification | Testing & behavior |
 | Schema.org type | [`schema:Event`](https://schema.org/Event) |
 | Domain standard | [robos.dev](https://robos.dev/ns/crpg#GameEvent) |
 

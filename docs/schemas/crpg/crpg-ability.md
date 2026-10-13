@@ -20,6 +20,7 @@ Validation shape for `robos:CRPGAbility` nodes in the `crpg` package group.
 | Class | `robos:CRPGAbility` |
 | Shape id | `urn:robos:shape:CRPGAbilityShape` |
 | Package | [cRPG (robos.crpg)]({{ '/schemas/crpg.html' | relative_url }}) (`crpg`) |
+| Classification | Testing & behavior |
 | Schema.org type | [`schema:Action`](https://schema.org/Action) |
 | Domain standard | [robos.dev](https://robos.dev/ns/crpg#Ability) |
 

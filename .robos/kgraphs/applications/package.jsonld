@@ -440,7 +440,9 @@
       "robos:namespace": "robos.applications",
       "robos:repository": "github.com/nddipiazza/docu-vault-desktop",
       "robos:technology": "Electron 29 / Vanilla JS",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:appName": "docu-vault-desktop",
+      "robos:appVersion": "1.0.0"
     },
     {
       "@id": "urn:robos:console-app:pulse-metrics-cli",
@@ -455,7 +457,9 @@
       "robos:namespace": "robos.applications",
       "robos:repository": "github.com/nddipiazza/pulse-metrics-cli",
       "robos:technology": "Node.js 20 / CLI",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:appName": "pulse-metrics-cli",
+      "robos:appVersion": "1.0.0"
     }
   ],
   "@graph": [
@@ -813,7 +817,9 @@
       "robos:namespace": "robos.applications",
       "robos:repository": "github.com/nddipiazza/docu-vault-desktop",
       "robos:technology": "Electron 29 / Vanilla JS",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:appName": "docu-vault-desktop",
+      "robos:appVersion": "1.0.0"
     },
     {
       "@id": "urn:robos:console-app:pulse-metrics-cli",
@@ -828,7 +834,9 @@
       "robos:namespace": "robos.applications",
       "robos:repository": "github.com/nddipiazza/pulse-metrics-cli",
       "robos:technology": "Node.js 20 / CLI",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:appName": "pulse-metrics-cli",
+      "robos:appVersion": "1.0.0"
     }
   ]
 }

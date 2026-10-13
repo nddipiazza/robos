@@ -20,6 +20,7 @@ Validation shape for `robos:CRPGCampaign` nodes in the `crpg` package group.
 | Class | `robos:CRPGCampaign` |
 | Shape id | `urn:robos:shape:CRPGCampaignShape` |
 | Package | [cRPG (robos.crpg)]({{ '/schemas/crpg.html' | relative_url }}) (`crpg`) |
+| Classification | Testing & behavior |
 | Schema.org type | [`schema:CreativeWork`](https://schema.org/CreativeWork) |
 
 ## Properties

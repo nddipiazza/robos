@@ -479,7 +479,9 @@
       "robos:namespace": "robos.applications",
       "robos:repository": "github.com/nddipiazza/docu-vault-desktop",
       "robos:technology": "Electron 29 / Vanilla JS",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:appName": "docu-vault-desktop",
+      "robos:appVersion": "1.0.0"
     },
     {
       "@id": "urn:robos:console-app:pulse-metrics-cli",
@@ -494,7 +496,9 @@
       "robos:namespace": "robos.applications",
       "robos:repository": "github.com/nddipiazza/pulse-metrics-cli",
       "robos:technology": "Node.js 20 / CLI",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:appName": "pulse-metrics-cli",
+      "robos:appVersion": "1.0.0"
     },
     {
       "@id": "urn:robos:graph:root",
@@ -2448,7 +2452,10 @@
         "urn:robos:crpg:feature:garrison-boss-victory"
       ],
       "robos:package": "crpg",
-      "robos:namespace": "robos.crpg"
+      "robos:namespace": "robos.crpg",
+      "robos:targets": {
+        "@id": "urn:robos:crpg:game:realm-of-heroes"
+      }
     },
     {
       "@id": "urn:robos:crpg:testplan:early-access-slice",
@@ -4477,25 +4484,6 @@
       "robos:domainStandard": "https://schema.org/ImageObject",
       "robos:package": "documentation",
       "robos:namespace": "robos.docs",
-      "@id": "urn:robos:diagram:skill-commons-assembler-loop",
-      "dcterms:title": "How a small local model assembles an app",
-      "dcterms:description": "Five steps: describe, break down, look up, check the fit, run the pieces' own tests. A missing piece is built once through the gate and the lookup runs again.",
-      "robos:imagePath": "assets/future/ai/assembler-loop.jpg",
-      "robos:aspectRatio": "1600:660",
-      "robos:mermaidText": "flowchart LR\n    U[\"1. You describe the job\"] --> M[\"2. The model breaks it into smaller jobs\"]\n    M --> S[\"3. Look up each job: company first, then the catalog\"]\n    S -->|\"nothing matches\"| GAP[\"A person or an AI builds that piece once; it passes the gate and joins the catalog\"]\n    GAP --> S\n    S --> CHK[\"4. Machines check the fit\"]\n    CHK --> T[\"5. Pieces run their own tests\"]\n    T --> APP[\"Working app\"]",
-      "robos:tooltip": "How a small local model assembles an app"
-    },
-    {
-      "@type": [
-        "oslc_am:Resource",
-        "robos:FlowDiagram",
-        "schema:ImageObject"
-      ],
-      "robos:diagramType": "architecture",
-      "robos:schemaOrgType": "https://schema.org/ImageObject",
-      "robos:domainStandard": "https://schema.org/ImageObject",
-      "robos:package": "documentation",
-      "robos:namespace": "robos.docs",
       "@id": "urn:robos:diagram:skill-commons-commons-map",
       "dcterms:title": "The Skill Commons",
       "dcterms:description": "People, AI agents and companies add skills through one gate; a job is broken down to base tasks that other apps reuse; a small local model assembles them with private company knowledge.",
@@ -4515,13 +4503,13 @@
       "robos:domainStandard": "https://schema.org/ImageObject",
       "robos:package": "documentation",
       "robos:namespace": "robos.docs",
-      "@id": "urn:robos:diagram:skill-commons-skill-lifecycle",
-      "dcterms:title": "How a skill enters the commons",
-      "dcterms:description": "Propose, look for a twin, check, build reproducibly, sign and log, then share to mirrors; duplicates link to the existing skill and failing tests send the submission back.",
-      "robos:imagePath": "assets/future/ai/skill-lifecycle.jpg",
+      "@id": "urn:robos:diagram:skill-commons-assembler-loop",
+      "dcterms:title": "How a small local model assembles an app",
+      "dcterms:description": "Five steps: describe, break down, look up, check the fit, run the pieces' own tests. A missing piece is built once through the gate and the lookup runs again.",
+      "robos:imagePath": "assets/future/ai/assembler-loop.jpg",
       "robos:aspectRatio": "1600:660",
-      "robos:mermaidText": "flowchart LR\n    P[\"1. Propose\"] --> T[\"2. Find a twin\"]\n    T -->|\"already exists\"| L[\"Link to the existing skill\"]\n    T --> C[\"3. Check: tests, sandbox, time and step limits\"]\n    C -->|\"a test fails\"| X[\"Sent back with the failing test\"]\n    C --> B[\"4. Reproducible build for each target\"]\n    B --> S[\"5. Sign and log\"]\n    S --> M[\"6. Share to mirrors\"]",
-      "robos:tooltip": "How a skill enters the commons"
+      "robos:mermaidText": "flowchart LR\n    U[\"1. You describe the job\"] --> M[\"2. The model breaks it into smaller jobs\"]\n    M --> S[\"3. Look up each job: company first, then the catalog\"]\n    S -->|\"nothing matches\"| GAP[\"A person or an AI builds that piece once; it passes the gate and joins the catalog\"]\n    GAP --> S\n    S --> CHK[\"4. Machines check the fit\"]\n    CHK --> T[\"5. Pieces run their own tests\"]\n    T --> APP[\"Working app\"]",
+      "robos:tooltip": "How a small local model assembles an app"
     },
     {
       "@type": [
@@ -4541,6 +4529,25 @@
       "robos:aspectRatio": "16:9",
       "robos:mermaidText": "flowchart TB\n    ROOT[\"Send appointment reminders (wiring only)\"] --> F[\"Find tomorrow's appointments\"]\n    ROOT --> W[\"Write the message\"]\n    ROOT --> SND[\"Send the text\"]\n    ROOT --> R[\"Record that it was sent\"]\n    F --> F1[\"Read clinic schedule (company, private)\"]\n    F --> F2[\"Convert time zone (found)\"]\n    W --> W1[\"Fill a template (found)\"]\n    SND --> S1[\"Format phone number (found)\"]\n    SND --> S2[\"Call the text service (found)\"]\n    SND --> S3[\"Respect quiet hours (NEW: built once)\"]\n    R --> R1[\"Save a record (found)\"]",
       "robos:tooltip": "A worked example: appointment reminders"
+    },
+    {
+      "@type": [
+        "oslc_am:Resource",
+        "robos:FlowDiagram",
+        "schema:ImageObject"
+      ],
+      "robos:diagramType": "architecture",
+      "robos:schemaOrgType": "https://schema.org/ImageObject",
+      "robos:domainStandard": "https://schema.org/ImageObject",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs",
+      "@id": "urn:robos:diagram:skill-commons-skill-lifecycle",
+      "dcterms:title": "How a skill enters the commons",
+      "dcterms:description": "Propose, look for a twin, check, build reproducibly, sign and log, then share to mirrors; duplicates link to the existing skill and failing tests send the submission back.",
+      "robos:imagePath": "assets/future/ai/skill-lifecycle.jpg",
+      "robos:aspectRatio": "1600:660",
+      "robos:mermaidText": "flowchart LR\n    P[\"1. Propose\"] --> T[\"2. Find a twin\"]\n    T -->|\"already exists\"| L[\"Link to the existing skill\"]\n    T --> C[\"3. Check: tests, sandbox, time and step limits\"]\n    C -->|\"a test fails\"| X[\"Sent back with the failing test\"]\n    C --> B[\"4. Reproducible build for each target\"]\n    B --> S[\"5. Sign and log\"]\n    S --> M[\"6. Share to mirrors\"]",
+      "robos:tooltip": "How a skill enters the commons"
     },
     {
       "@id": "urn:robos:game:ruleset:dnd5e",
@@ -5973,7 +5980,7 @@
       ],
       "dcterms:title": "Core Subsystem C++ Interfaces for Autonomous AI Engine Generation",
       "robos:language": "cpp",
-      "robos:codeContent": "// GemRB Core Architectural Interfaces for Autonomous Implementation\n\n#include <string>\n#include <vector>\n#include <memory>\n#include <cstdint>\n\nnamespace GemRB {\n\nstruct ResRef {\n    char name[8];\n    uint16_t type;\n};\n\nstruct ResourceBuffer {\n    const uint8_t* data;\n    size_t size;\n};\n\nclass IResourceManager {\npublic:\n    virtual ~IResourceManager() = default;\n    virtual bool Initialize(const std::string& chitinKeyPath, const std::string& overrideDir) = 0;\n    virtual std::shared_ptr<ResourceBuffer> LoadResource(const ResRef& resRef) = 0;\n    virtual bool Exists(const ResRef& resRef) = 0;\n};\n\nclass IGameControl {\npublic:\n    virtual ~IGameControl() = default;\n    virtual void StepTick(uint32_t deltaMs) = 0;\n    virtual void TogglePause(bool userTriggered) = 0;\n    virtual bool IsPaused() const = 0;\n    virtual uint32_t GetCurrentTick() const = 0;\n    virtual uint32_t GetCurrentRound() const = 0;\n};\n\nclass IScriptEngine {\npublic:\n    virtual ~IScriptEngine() = default;\n    virtual bool EvaluateTrigger(uint32_t triggerId, const std::vector<int32_t>& intArgs, const std::string& strArg) = 0;\n    virtual void ExecuteAction(uint32_t actionId, const std::vector<int32_t>& intArgs, const std::string& strArg) = 0;\n};\n\nclass IRulesEngine {\npublic:\n    virtual ~IRulesEngine() = default;\n    virtual bool ResolveAttack(int32_t attackerThac0, int32_t targetAc, int32_t attackBonus, int32_t& outDamage) = 0;\n    virtual bool ResolveSavingThrow(int32_t saveCategory, int32_t targetValue, int32_t modifier) = 0;\n};\n\nclass IPathfinder {\npublic:\n    virtual ~IPathfinder() = default;\n    virtual std::vector<std::pair<int, int>> FindPath(int startX, int startY, int endX, int endY, int actorRadius) = 0;\n    virtual bool IsPassable(int x, int y, uint32_t passabilityMask) = 0;\n};\n\n} // namespace GemRB",
+      "robos:code": "// GemRB Core Architectural Interfaces for Autonomous Implementation\n\n#include <string>\n#include <vector>\n#include <memory>\n#include <cstdint>\n\nnamespace GemRB {\n\nstruct ResRef {\n    char name[8];\n    uint16_t type;\n};\n\nstruct ResourceBuffer {\n    const uint8_t* data;\n    size_t size;\n};\n\nclass IResourceManager {\npublic:\n    virtual ~IResourceManager() = default;\n    virtual bool Initialize(const std::string& chitinKeyPath, const std::string& overrideDir) = 0;\n    virtual std::shared_ptr<ResourceBuffer> LoadResource(const ResRef& resRef) = 0;\n    virtual bool Exists(const ResRef& resRef) = 0;\n};\n\nclass IGameControl {\npublic:\n    virtual ~IGameControl() = default;\n    virtual void StepTick(uint32_t deltaMs) = 0;\n    virtual void TogglePause(bool userTriggered) = 0;\n    virtual bool IsPaused() const = 0;\n    virtual uint32_t GetCurrentTick() const = 0;\n    virtual uint32_t GetCurrentRound() const = 0;\n};\n\nclass IScriptEngine {\npublic:\n    virtual ~IScriptEngine() = default;\n    virtual bool EvaluateTrigger(uint32_t triggerId, const std::vector<int32_t>& intArgs, const std::string& strArg) = 0;\n    virtual void ExecuteAction(uint32_t actionId, const std::vector<int32_t>& intArgs, const std::string& strArg) = 0;\n};\n\nclass IRulesEngine {\npublic:\n    virtual ~IRulesEngine() = default;\n    virtual bool ResolveAttack(int32_t attackerThac0, int32_t targetAc, int32_t attackBonus, int32_t& outDamage) = 0;\n    virtual bool ResolveSavingThrow(int32_t saveCategory, int32_t targetValue, int32_t modifier) = 0;\n};\n\nclass IPathfinder {\npublic:\n    virtual ~IPathfinder() = default;\n    virtual std::vector<std::pair<int, int>> FindPath(int startX, int startY, int endX, int endY, int actorRadius) = 0;\n    virtual bool IsPassable(int x, int y, uint32_t passabilityMask) = 0;\n};\n\n} // namespace GemRB",
       "robos:package": "infinity-engine",
       "robos:namespace": "robos.infinity"
     },
@@ -8492,7 +8499,9 @@
       "robos:namespace": "robos.services",
       "robos:repository": "github.com/nddipiazza/barista-order-api",
       "robos:technology": "Node.js 20 / Express",
-      "robos:schemaOrgType": "https://schema.org/WebApplication"
+      "robos:schemaOrgType": "https://schema.org/WebApplication",
+      "robos:appName": "barista-order-api",
+      "robos:appVersion": "1.0.0"
     },
     {
       "@id": "urn:robos:tabletop:game:heroquest",
@@ -8771,7 +8780,10 @@
       "robos:isSpellcaster": true,
       "robos:spells": [
         "urn:robos:tabletop:spell:lightning-bolt",
-        "urn:robos:tabletop:spell:fear"
+        "urn:robos:tabletop:spell:firestorm",
+        "urn:robos:tabletop:spell:fear",
+        "urn:robos:tabletop:spell:sleep-dread",
+        "urn:robos:tabletop:spell:cloud-of-chaos"
       ],
       "robos:tokenColor": "#15803d",
       "robos:package": "tabletop-game",
@@ -9323,20 +9335,20 @@
       "robos:namespace": "robos.tabletop"
     },
     {
-      "@id": "urn:robos:tabletop:mapconfig:fan-dungeon-28x21",
+      "@id": "urn:robos:tabletop:mapconfig:first-light-dungeon",
       "@type": [
         "oslc_am:Resource",
         "robos:TabletopMapConfiguration",
         "schema:Place"
       ],
-      "dcterms:title": "HeroQuest Fan Dungeon & Cavern Citadel (28×21)",
-      "robos:boardSide": "Custom",
+      "dcterms:title": "HeroQuest: First Light Stone Dungeon (Side A)",
+      "robos:boardSide": "A",
       "robos:gridDimensions": [
-        28,
-        21
+        26,
+        19
       ],
-      "robos:backgroundImage": "res://assets/boards/fan_dungeon_28x21.png",
-      "robos:roomsCount": 19,
+      "robos:backgroundImage": "res://assets/boards/heroquest_board.png",
+      "robos:roomsCount": 22,
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
     },
@@ -9948,6 +9960,168 @@
       "robos:namespace": "robos.tabletop"
     },
     {
+      "@id": "urn:robos:tabletop:blessing:oracles-blessing",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopBlessing",
+        "robos:ConsumableItem",
+        "schema:SpecialAnnouncement"
+      ],
+      "dcterms:title": "Oracle's Blessing",
+      "dcterms:description": "Consumable divine blessing. Invoked to ask Zargon to lay out the room beyond an adjacent closed door without opening it, or after rolling attack, defend, or move dice to re-roll all dice and take the second result.",
+      "robos:itemType": "blessing",
+      "robos:cost": 250,
+      "robos:isConsumable": true,
+      "robos:modes": [
+        "clairvoyance_lay_out_room",
+        "fated_reroll_dice"
+      ],
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:item:hearthskin-horn",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopArtifact",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "The Hearthskin Horn",
+      "dcterms:description": "Legendary artifact horn carved from dragonbone and hearthstone. When blown, each character gets to place a friendly skeleton in their room or corridor in line of sight. Skeletons have movement 8, attack 2, defend 2, body 1, mind 0. They become new characters that take their turns immediately following their hero counterpart.",
+      "robos:itemType": "artifact",
+      "robos:cost": 600,
+      "robos:isConsumable": false,
+      "robos:action": "blow_hearthskin_horn",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:summon:friendly-skeleton",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSummon",
+        "robos:GameCharacter",
+        "schema:Person"
+      ],
+      "dcterms:title": "Friendly Skeleton",
+      "dcterms:description": "Reanimated skeletal ally summoned by The Hearthskin Horn. Possesses reduced functionality (cannot search for treasure or traps). Always takes its turn immediately after its hero counterpart.",
+      "robos:summoner": "urn:robos:tabletop:hero:barbarian",
+      "robos:bodyPoints": 1,
+      "robos:mindPoints": 0,
+      "robos:attackDice": 2,
+      "robos:defendDice": 2,
+      "robos:movementSquares": 8,
+      "robos:tokenColor": "#38bdf8",
+      "robos:tokenKey": "skeleton",
+      "robos:reducedFunctionality": true,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:summon:wizard-wolf",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSummon",
+        "robos:GameCharacter",
+        "schema:Person"
+      ],
+      "dcterms:title": "Summoned Wolf",
+      "dcterms:description": "Spectral beast companion conjured by the Wizard to fight in battle. Has reduced functionality and acts immediately following the Wizard.",
+      "robos:summoner": "urn:robos:tabletop:hero:wizard",
+      "robos:bodyPoints": 2,
+      "robos:mindPoints": 1,
+      "robos:attackDice": 2,
+      "robos:defendDice": 2,
+      "robos:movementSquares": 8,
+      "robos:tokenColor": "#38bdf8",
+      "robos:tokenKey": "wolf",
+      "robos:reducedFunctionality": true,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:campaign:fortress-fire-king",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopCampaign",
+        "robos:Campaign",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Quest 4: The Fortress of the Fire King",
+      "robos:ruleset": "heroquest",
+      "robos:adventure": "First Light",
+      "robos:questNumber": 4,
+      "robos:map": "urn:robos:tabletop:map:fortress-fire-king",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:map:fortress-fire-king",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopQuestMap",
+        "robos:GameMap",
+        "schema:Place"
+      ],
+      "dcterms:title": "The Fortress of the Fire King — Quest 4",
+      "robos:width": 26,
+      "robos:height": 19,
+      "robos:startingSpawn": [
+        0,
+        1
+      ],
+      "robos:backgroundImage": "res://assets/boards/heroquest_board.png",
+      "robos:boss": "urn:robos:tabletop:monster:cassandria-doomguard",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:cassandria-doomguard",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Cassandria's Doomguard",
+      "robos:bodyPoints": 3,
+      "robos:mindPoints": 3,
+      "robos:attackDice": 4,
+      "robos:defendDice": 6,
+      "robos:movementSquares": 8,
+      "robos:isBoss": true,
+      "robos:isSpellcaster": false,
+      "robos:tokenColor": "#475569",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:cassandria-witch-hand",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Witch Hand of Cassandria",
+      "robos:bodyPoints": 4,
+      "robos:mindPoints": 3,
+      "robos:attackDice": 4,
+      "robos:defendDice": 4,
+      "robos:movementSquares": 8,
+      "robos:isBoss": true,
+      "robos:isSpellcaster": true,
+      "robos:spells": [
+        "urn:robos:tabletop:spell:cloud-of-chaos",
+        "urn:robos:tabletop:spell:fear",
+        "urn:robos:tabletop:spell:sleep-dread"
+      ],
+      "robos:tokenColor": "#9333ea",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
       "@id": "urn:robos:gherkin:checkout-cart-validation",
       "@type": [
         "robos:GherkinFeature",
@@ -10035,7 +10209,10 @@
       "robos:namespace": "robos.testing",
       "robos:refersFrom": "http://open-services.net/ns/qm#TestCase",
       "robos:schemaOrgType": "https://schema.org/CheckAction",
-      "robos:domainStandard": "http://open-services.net/ns/qm#TestCase"
+      "robos:domainStandard": "http://open-services.net/ns/qm#TestCase",
+      "robos:testsService": {
+        "@id": "urn:robos:service:billing-api"
+      }
     },
     {
       "@id": "urn:robos:step:checkout-add-item-with-table",
@@ -10974,7 +11151,9 @@
       "robos:namespace": "robos.applications",
       "robos:repository": "github.com/nddipiazza/docu-vault-desktop",
       "robos:technology": "Electron 29 / Vanilla JS",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:appName": "docu-vault-desktop",
+      "robos:appVersion": "1.0.0"
     },
     {
       "@id": "urn:robos:console-app:pulse-metrics-cli",
@@ -10989,7 +11168,9 @@
       "robos:namespace": "robos.applications",
       "robos:repository": "github.com/nddipiazza/pulse-metrics-cli",
       "robos:technology": "Node.js 20 / CLI",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:appName": "pulse-metrics-cli",
+      "robos:appVersion": "1.0.0"
     },
     {
       "@id": "urn:robos:graph:root",
@@ -12943,7 +13124,10 @@
         "urn:robos:crpg:feature:garrison-boss-victory"
       ],
       "robos:package": "crpg",
-      "robos:namespace": "robos.crpg"
+      "robos:namespace": "robos.crpg",
+      "robos:targets": {
+        "@id": "urn:robos:crpg:game:realm-of-heroes"
+      }
     },
     {
       "@id": "urn:robos:crpg:testplan:early-access-slice",
@@ -14972,25 +15156,6 @@
       "robos:domainStandard": "https://schema.org/ImageObject",
       "robos:package": "documentation",
       "robos:namespace": "robos.docs",
-      "@id": "urn:robos:diagram:skill-commons-assembler-loop",
-      "dcterms:title": "How a small local model assembles an app",
-      "dcterms:description": "Five steps: describe, break down, look up, check the fit, run the pieces' own tests. A missing piece is built once through the gate and the lookup runs again.",
-      "robos:imagePath": "assets/future/ai/assembler-loop.jpg",
-      "robos:aspectRatio": "1600:660",
-      "robos:mermaidText": "flowchart LR\n    U[\"1. You describe the job\"] --> M[\"2. The model breaks it into smaller jobs\"]\n    M --> S[\"3. Look up each job: company first, then the catalog\"]\n    S -->|\"nothing matches\"| GAP[\"A person or an AI builds that piece once; it passes the gate and joins the catalog\"]\n    GAP --> S\n    S --> CHK[\"4. Machines check the fit\"]\n    CHK --> T[\"5. Pieces run their own tests\"]\n    T --> APP[\"Working app\"]",
-      "robos:tooltip": "How a small local model assembles an app"
-    },
-    {
-      "@type": [
-        "oslc_am:Resource",
-        "robos:FlowDiagram",
-        "schema:ImageObject"
-      ],
-      "robos:diagramType": "architecture",
-      "robos:schemaOrgType": "https://schema.org/ImageObject",
-      "robos:domainStandard": "https://schema.org/ImageObject",
-      "robos:package": "documentation",
-      "robos:namespace": "robos.docs",
       "@id": "urn:robos:diagram:skill-commons-commons-map",
       "dcterms:title": "The Skill Commons",
       "dcterms:description": "People, AI agents and companies add skills through one gate; a job is broken down to base tasks that other apps reuse; a small local model assembles them with private company knowledge.",
@@ -15010,13 +15175,13 @@
       "robos:domainStandard": "https://schema.org/ImageObject",
       "robos:package": "documentation",
       "robos:namespace": "robos.docs",
-      "@id": "urn:robos:diagram:skill-commons-skill-lifecycle",
-      "dcterms:title": "How a skill enters the commons",
-      "dcterms:description": "Propose, look for a twin, check, build reproducibly, sign and log, then share to mirrors; duplicates link to the existing skill and failing tests send the submission back.",
-      "robos:imagePath": "assets/future/ai/skill-lifecycle.jpg",
+      "@id": "urn:robos:diagram:skill-commons-assembler-loop",
+      "dcterms:title": "How a small local model assembles an app",
+      "dcterms:description": "Five steps: describe, break down, look up, check the fit, run the pieces' own tests. A missing piece is built once through the gate and the lookup runs again.",
+      "robos:imagePath": "assets/future/ai/assembler-loop.jpg",
       "robos:aspectRatio": "1600:660",
-      "robos:mermaidText": "flowchart LR\n    P[\"1. Propose\"] --> T[\"2. Find a twin\"]\n    T -->|\"already exists\"| L[\"Link to the existing skill\"]\n    T --> C[\"3. Check: tests, sandbox, time and step limits\"]\n    C -->|\"a test fails\"| X[\"Sent back with the failing test\"]\n    C --> B[\"4. Reproducible build for each target\"]\n    B --> S[\"5. Sign and log\"]\n    S --> M[\"6. Share to mirrors\"]",
-      "robos:tooltip": "How a skill enters the commons"
+      "robos:mermaidText": "flowchart LR\n    U[\"1. You describe the job\"] --> M[\"2. The model breaks it into smaller jobs\"]\n    M --> S[\"3. Look up each job: company first, then the catalog\"]\n    S -->|\"nothing matches\"| GAP[\"A person or an AI builds that piece once; it passes the gate and joins the catalog\"]\n    GAP --> S\n    S --> CHK[\"4. Machines check the fit\"]\n    CHK --> T[\"5. Pieces run their own tests\"]\n    T --> APP[\"Working app\"]",
+      "robos:tooltip": "How a small local model assembles an app"
     },
     {
       "@type": [
@@ -15036,6 +15201,25 @@
       "robos:aspectRatio": "16:9",
       "robos:mermaidText": "flowchart TB\n    ROOT[\"Send appointment reminders (wiring only)\"] --> F[\"Find tomorrow's appointments\"]\n    ROOT --> W[\"Write the message\"]\n    ROOT --> SND[\"Send the text\"]\n    ROOT --> R[\"Record that it was sent\"]\n    F --> F1[\"Read clinic schedule (company, private)\"]\n    F --> F2[\"Convert time zone (found)\"]\n    W --> W1[\"Fill a template (found)\"]\n    SND --> S1[\"Format phone number (found)\"]\n    SND --> S2[\"Call the text service (found)\"]\n    SND --> S3[\"Respect quiet hours (NEW: built once)\"]\n    R --> R1[\"Save a record (found)\"]",
       "robos:tooltip": "A worked example: appointment reminders"
+    },
+    {
+      "@type": [
+        "oslc_am:Resource",
+        "robos:FlowDiagram",
+        "schema:ImageObject"
+      ],
+      "robos:diagramType": "architecture",
+      "robos:schemaOrgType": "https://schema.org/ImageObject",
+      "robos:domainStandard": "https://schema.org/ImageObject",
+      "robos:package": "documentation",
+      "robos:namespace": "robos.docs",
+      "@id": "urn:robos:diagram:skill-commons-skill-lifecycle",
+      "dcterms:title": "How a skill enters the commons",
+      "dcterms:description": "Propose, look for a twin, check, build reproducibly, sign and log, then share to mirrors; duplicates link to the existing skill and failing tests send the submission back.",
+      "robos:imagePath": "assets/future/ai/skill-lifecycle.jpg",
+      "robos:aspectRatio": "1600:660",
+      "robos:mermaidText": "flowchart LR\n    P[\"1. Propose\"] --> T[\"2. Find a twin\"]\n    T -->|\"already exists\"| L[\"Link to the existing skill\"]\n    T --> C[\"3. Check: tests, sandbox, time and step limits\"]\n    C -->|\"a test fails\"| X[\"Sent back with the failing test\"]\n    C --> B[\"4. Reproducible build for each target\"]\n    B --> S[\"5. Sign and log\"]\n    S --> M[\"6. Share to mirrors\"]",
+      "robos:tooltip": "How a skill enters the commons"
     },
     {
       "@id": "urn:robos:game:ruleset:dnd5e",
@@ -16468,7 +16652,7 @@
       ],
       "dcterms:title": "Core Subsystem C++ Interfaces for Autonomous AI Engine Generation",
       "robos:language": "cpp",
-      "robos:codeContent": "// GemRB Core Architectural Interfaces for Autonomous Implementation\n\n#include <string>\n#include <vector>\n#include <memory>\n#include <cstdint>\n\nnamespace GemRB {\n\nstruct ResRef {\n    char name[8];\n    uint16_t type;\n};\n\nstruct ResourceBuffer {\n    const uint8_t* data;\n    size_t size;\n};\n\nclass IResourceManager {\npublic:\n    virtual ~IResourceManager() = default;\n    virtual bool Initialize(const std::string& chitinKeyPath, const std::string& overrideDir) = 0;\n    virtual std::shared_ptr<ResourceBuffer> LoadResource(const ResRef& resRef) = 0;\n    virtual bool Exists(const ResRef& resRef) = 0;\n};\n\nclass IGameControl {\npublic:\n    virtual ~IGameControl() = default;\n    virtual void StepTick(uint32_t deltaMs) = 0;\n    virtual void TogglePause(bool userTriggered) = 0;\n    virtual bool IsPaused() const = 0;\n    virtual uint32_t GetCurrentTick() const = 0;\n    virtual uint32_t GetCurrentRound() const = 0;\n};\n\nclass IScriptEngine {\npublic:\n    virtual ~IScriptEngine() = default;\n    virtual bool EvaluateTrigger(uint32_t triggerId, const std::vector<int32_t>& intArgs, const std::string& strArg) = 0;\n    virtual void ExecuteAction(uint32_t actionId, const std::vector<int32_t>& intArgs, const std::string& strArg) = 0;\n};\n\nclass IRulesEngine {\npublic:\n    virtual ~IRulesEngine() = default;\n    virtual bool ResolveAttack(int32_t attackerThac0, int32_t targetAc, int32_t attackBonus, int32_t& outDamage) = 0;\n    virtual bool ResolveSavingThrow(int32_t saveCategory, int32_t targetValue, int32_t modifier) = 0;\n};\n\nclass IPathfinder {\npublic:\n    virtual ~IPathfinder() = default;\n    virtual std::vector<std::pair<int, int>> FindPath(int startX, int startY, int endX, int endY, int actorRadius) = 0;\n    virtual bool IsPassable(int x, int y, uint32_t passabilityMask) = 0;\n};\n\n} // namespace GemRB",
+      "robos:code": "// GemRB Core Architectural Interfaces for Autonomous Implementation\n\n#include <string>\n#include <vector>\n#include <memory>\n#include <cstdint>\n\nnamespace GemRB {\n\nstruct ResRef {\n    char name[8];\n    uint16_t type;\n};\n\nstruct ResourceBuffer {\n    const uint8_t* data;\n    size_t size;\n};\n\nclass IResourceManager {\npublic:\n    virtual ~IResourceManager() = default;\n    virtual bool Initialize(const std::string& chitinKeyPath, const std::string& overrideDir) = 0;\n    virtual std::shared_ptr<ResourceBuffer> LoadResource(const ResRef& resRef) = 0;\n    virtual bool Exists(const ResRef& resRef) = 0;\n};\n\nclass IGameControl {\npublic:\n    virtual ~IGameControl() = default;\n    virtual void StepTick(uint32_t deltaMs) = 0;\n    virtual void TogglePause(bool userTriggered) = 0;\n    virtual bool IsPaused() const = 0;\n    virtual uint32_t GetCurrentTick() const = 0;\n    virtual uint32_t GetCurrentRound() const = 0;\n};\n\nclass IScriptEngine {\npublic:\n    virtual ~IScriptEngine() = default;\n    virtual bool EvaluateTrigger(uint32_t triggerId, const std::vector<int32_t>& intArgs, const std::string& strArg) = 0;\n    virtual void ExecuteAction(uint32_t actionId, const std::vector<int32_t>& intArgs, const std::string& strArg) = 0;\n};\n\nclass IRulesEngine {\npublic:\n    virtual ~IRulesEngine() = default;\n    virtual bool ResolveAttack(int32_t attackerThac0, int32_t targetAc, int32_t attackBonus, int32_t& outDamage) = 0;\n    virtual bool ResolveSavingThrow(int32_t saveCategory, int32_t targetValue, int32_t modifier) = 0;\n};\n\nclass IPathfinder {\npublic:\n    virtual ~IPathfinder() = default;\n    virtual std::vector<std::pair<int, int>> FindPath(int startX, int startY, int endX, int endY, int actorRadius) = 0;\n    virtual bool IsPassable(int x, int y, uint32_t passabilityMask) = 0;\n};\n\n} // namespace GemRB",
       "robos:package": "infinity-engine",
       "robos:namespace": "robos.infinity"
     },
@@ -18987,7 +19171,9 @@
       "robos:namespace": "robos.services",
       "robos:repository": "github.com/nddipiazza/barista-order-api",
       "robos:technology": "Node.js 20 / Express",
-      "robos:schemaOrgType": "https://schema.org/WebApplication"
+      "robos:schemaOrgType": "https://schema.org/WebApplication",
+      "robos:appName": "barista-order-api",
+      "robos:appVersion": "1.0.0"
     },
     {
       "@id": "urn:robos:tabletop:game:heroquest",
@@ -19266,7 +19452,10 @@
       "robos:isSpellcaster": true,
       "robos:spells": [
         "urn:robos:tabletop:spell:lightning-bolt",
-        "urn:robos:tabletop:spell:fear"
+        "urn:robos:tabletop:spell:firestorm",
+        "urn:robos:tabletop:spell:fear",
+        "urn:robos:tabletop:spell:sleep-dread",
+        "urn:robos:tabletop:spell:cloud-of-chaos"
       ],
       "robos:tokenColor": "#15803d",
       "robos:package": "tabletop-game",
@@ -19818,20 +20007,20 @@
       "robos:namespace": "robos.tabletop"
     },
     {
-      "@id": "urn:robos:tabletop:mapconfig:fan-dungeon-28x21",
+      "@id": "urn:robos:tabletop:mapconfig:first-light-dungeon",
       "@type": [
         "oslc_am:Resource",
         "robos:TabletopMapConfiguration",
         "schema:Place"
       ],
-      "dcterms:title": "HeroQuest Fan Dungeon & Cavern Citadel (28×21)",
-      "robos:boardSide": "Custom",
+      "dcterms:title": "HeroQuest: First Light Stone Dungeon (Side A)",
+      "robos:boardSide": "A",
       "robos:gridDimensions": [
-        28,
-        21
+        26,
+        19
       ],
-      "robos:backgroundImage": "res://assets/boards/fan_dungeon_28x21.png",
-      "robos:roomsCount": 19,
+      "robos:backgroundImage": "res://assets/boards/heroquest_board.png",
+      "robos:roomsCount": 22,
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
     },
@@ -20443,6 +20632,168 @@
       "robos:namespace": "robos.tabletop"
     },
     {
+      "@id": "urn:robos:tabletop:blessing:oracles-blessing",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopBlessing",
+        "robos:ConsumableItem",
+        "schema:SpecialAnnouncement"
+      ],
+      "dcterms:title": "Oracle's Blessing",
+      "dcterms:description": "Consumable divine blessing. Invoked to ask Zargon to lay out the room beyond an adjacent closed door without opening it, or after rolling attack, defend, or move dice to re-roll all dice and take the second result.",
+      "robos:itemType": "blessing",
+      "robos:cost": 250,
+      "robos:isConsumable": true,
+      "robos:modes": [
+        "clairvoyance_lay_out_room",
+        "fated_reroll_dice"
+      ],
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:item:hearthskin-horn",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopArtifact",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "The Hearthskin Horn",
+      "dcterms:description": "Legendary artifact horn carved from dragonbone and hearthstone. When blown, each character gets to place a friendly skeleton in their room or corridor in line of sight. Skeletons have movement 8, attack 2, defend 2, body 1, mind 0. They become new characters that take their turns immediately following their hero counterpart.",
+      "robos:itemType": "artifact",
+      "robos:cost": 600,
+      "robos:isConsumable": false,
+      "robos:action": "blow_hearthskin_horn",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:summon:friendly-skeleton",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSummon",
+        "robos:GameCharacter",
+        "schema:Person"
+      ],
+      "dcterms:title": "Friendly Skeleton",
+      "dcterms:description": "Reanimated skeletal ally summoned by The Hearthskin Horn. Possesses reduced functionality (cannot search for treasure or traps). Always takes its turn immediately after its hero counterpart.",
+      "robos:summoner": "urn:robos:tabletop:hero:barbarian",
+      "robos:bodyPoints": 1,
+      "robos:mindPoints": 0,
+      "robos:attackDice": 2,
+      "robos:defendDice": 2,
+      "robos:movementSquares": 8,
+      "robos:tokenColor": "#38bdf8",
+      "robos:tokenKey": "skeleton",
+      "robos:reducedFunctionality": true,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:summon:wizard-wolf",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSummon",
+        "robos:GameCharacter",
+        "schema:Person"
+      ],
+      "dcterms:title": "Summoned Wolf",
+      "dcterms:description": "Spectral beast companion conjured by the Wizard to fight in battle. Has reduced functionality and acts immediately following the Wizard.",
+      "robos:summoner": "urn:robos:tabletop:hero:wizard",
+      "robos:bodyPoints": 2,
+      "robos:mindPoints": 1,
+      "robos:attackDice": 2,
+      "robos:defendDice": 2,
+      "robos:movementSquares": 8,
+      "robos:tokenColor": "#38bdf8",
+      "robos:tokenKey": "wolf",
+      "robos:reducedFunctionality": true,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:campaign:fortress-fire-king",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopCampaign",
+        "robos:Campaign",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "Quest 4: The Fortress of the Fire King",
+      "robos:ruleset": "heroquest",
+      "robos:adventure": "First Light",
+      "robos:questNumber": 4,
+      "robos:map": "urn:robos:tabletop:map:fortress-fire-king",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:map:fortress-fire-king",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopQuestMap",
+        "robos:GameMap",
+        "schema:Place"
+      ],
+      "dcterms:title": "The Fortress of the Fire King — Quest 4",
+      "robos:width": 26,
+      "robos:height": 19,
+      "robos:startingSpawn": [
+        0,
+        1
+      ],
+      "robos:backgroundImage": "res://assets/boards/heroquest_board.png",
+      "robos:boss": "urn:robos:tabletop:monster:cassandria-doomguard",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:cassandria-doomguard",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Cassandria's Doomguard",
+      "robos:bodyPoints": 3,
+      "robos:mindPoints": 3,
+      "robos:attackDice": 4,
+      "robos:defendDice": 6,
+      "robos:movementSquares": 8,
+      "robos:isBoss": true,
+      "robos:isSpellcaster": false,
+      "robos:tokenColor": "#475569",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:cassandria-witch-hand",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Witch Hand of Cassandria",
+      "robos:bodyPoints": 4,
+      "robos:mindPoints": 3,
+      "robos:attackDice": 4,
+      "robos:defendDice": 4,
+      "robos:movementSquares": 8,
+      "robos:isBoss": true,
+      "robos:isSpellcaster": true,
+      "robos:spells": [
+        "urn:robos:tabletop:spell:cloud-of-chaos",
+        "urn:robos:tabletop:spell:fear",
+        "urn:robos:tabletop:spell:sleep-dread"
+      ],
+      "robos:tokenColor": "#9333ea",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
       "@id": "urn:robos:gherkin:checkout-cart-validation",
       "@type": [
         "robos:GherkinFeature",
@@ -20530,7 +20881,10 @@
       "robos:namespace": "robos.testing",
       "robos:refersFrom": "http://open-services.net/ns/qm#TestCase",
       "robos:schemaOrgType": "https://schema.org/CheckAction",
-      "robos:domainStandard": "http://open-services.net/ns/qm#TestCase"
+      "robos:domainStandard": "http://open-services.net/ns/qm#TestCase",
+      "robos:testsService": {
+        "@id": "urn:robos:service:billing-api"
+      }
     },
     {
       "@id": "urn:robos:step:checkout-add-item-with-table",

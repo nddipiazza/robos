@@ -185,6 +185,8 @@ test('metadata-only fields stay displayable without triggering unrelated domain 
     application: ['ownerTeam'], messaging: ['technology', 'pipelineEngine'],
     deployment: ['namespace'], organization: ['status', 'ownerTeam', 'assignedTeam'],
     'source-control': ['inRepository', 'repository'],
+    'work-items': ['status'], source: ['sourceKind'],
+    testing: ['attackDice', 'defendDice', 'ruleset', 'action'],
   };
   for (const [id, fields] of Object.entries(excluded)) {
     const group = GROUPS.find(g => g.id === id);
@@ -207,6 +209,11 @@ test('engine excludes metadata-only groups even when metadata resolves to an out
     ['Project', 'organization', ['status', 'ownerTeam', 'assignedTeam']],
     ['GitRepository', 'source-control', ['inRepository', 'repository']],
     ['KubernetesDeployment', 'deployment', ['namespace']],
+    ['Task', 'work-items', ['status']],
+    ['SourceArtifact', 'source', ['sourceKind']],
+    ['TabletopSummon', 'testing', ['attackDice', 'defendDice']],
+    ['TabletopGame', 'testing', ['ruleset']],
+    ['TabletopAICommand', 'testing', ['action']],
   ]) {
     for (const key of properties) for (const value of ['recorded metadata', { '@id': 'urn:test:related' }]) {
       const node = { '@id': 'urn:test:selected', '@type': `robos:${type}`, [`robos:${key}`]: value };

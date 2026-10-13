@@ -831,7 +831,9 @@
       "robos:namespace": "robos.services",
       "robos:repository": "github.com/nddipiazza/barista-order-api",
       "robos:technology": "Node.js 20 / Express",
-      "robos:schemaOrgType": "https://schema.org/WebApplication"
+      "robos:schemaOrgType": "https://schema.org/WebApplication",
+      "robos:appName": "barista-order-api",
+      "robos:appVersion": "1.0.0"
     }
   ],
   "@graph": [
@@ -1580,7 +1582,9 @@
       "robos:namespace": "robos.services",
       "robos:repository": "github.com/nddipiazza/barista-order-api",
       "robos:technology": "Node.js 20 / Express",
-      "robos:schemaOrgType": "https://schema.org/WebApplication"
+      "robos:schemaOrgType": "https://schema.org/WebApplication",
+      "robos:appName": "barista-order-api",
+      "robos:appVersion": "1.0.0"
     }
   ]
 }

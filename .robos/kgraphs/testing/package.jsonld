@@ -174,7 +174,10 @@
       "robos:namespace": "robos.testing",
       "robos:refersFrom": "http://open-services.net/ns/qm#TestCase",
       "robos:schemaOrgType": "https://schema.org/CheckAction",
-      "robos:domainStandard": "http://open-services.net/ns/qm#TestCase"
+      "robos:domainStandard": "http://open-services.net/ns/qm#TestCase",
+      "robos:testsService": {
+        "@id": "urn:robos:service:billing-api"
+      }
     },
     {
       "@id": "urn:robos:step:checkout-add-item-with-table",
@@ -847,7 +850,10 @@
       "robos:namespace": "robos.testing",
       "robos:refersFrom": "http://open-services.net/ns/qm#TestCase",
       "robos:schemaOrgType": "https://schema.org/CheckAction",
-      "robos:domainStandard": "http://open-services.net/ns/qm#TestCase"
+      "robos:domainStandard": "http://open-services.net/ns/qm#TestCase",
+      "robos:testsService": {
+        "@id": "urn:robos:service:billing-api"
+      }
     },
     {
       "@id": "urn:robos:step:checkout-add-item-with-table",

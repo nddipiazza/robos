@@ -20,6 +20,7 @@ Validation shape for `robos:GameSpell` nodes in the `game` package group.
 | Class | `robos:GameSpell` |
 | Shape id | `urn:robos:shape:GameSpellShape` |
 | Package | [Game Rules (robos.game)]({{ '/schemas/game.html' | relative_url }}) (`game`) |
+| Classification | Testing & behavior |
 | Schema.org type | [`schema:Action`](https://schema.org/Action) |
 | Domain standard | [robos.dev](https://robos.dev/ns/game#Spell) |
 

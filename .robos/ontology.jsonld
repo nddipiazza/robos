@@ -25,7 +25,7 @@
   "dcterms:title": "RobOS SDLC Knowledge Graph Ontology & Universal Schema.org Bridge",
   "dcterms:description": "RobOS SDLC class and predicate ontology, with complete built-in shape coverage and RobOS-owned classification codes expressed using Schema.org CategoryCode and CategoryCodeSet.",
   "dcterms:license": "https://creativecommons.org/licenses/by/4.0/",
-  "robos:totalClasses": 188,
+  "robos:totalClasses": 216,
   "@graph": [
     {
       "@id": "robos:Microservice",
@@ -8164,6 +8164,662 @@
       "robos:classification": [
         {
           "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:CRPGAbility",
+      "@type": "rdfs:Class",
+      "rdfs:label": "CRPGAbility",
+      "robos:shaclShape": "urn:robos:shape:CRPGAbilityShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Action"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:CRPGStoryFlow",
+      "@type": "rdfs:Class",
+      "rdfs:label": "CRPGStoryFlow",
+      "robos:shaclShape": "urn:robos:shape:CRPGStoryFlowShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/CreativeWork"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:CRPGStoryNode",
+      "@type": "rdfs:Class",
+      "rdfs:label": "CRPGStoryNode",
+      "robos:shaclShape": "urn:robos:shape:CRPGStoryNodeShape",
+      "rdfs:subClassOf": {
+        "@id": "http://open-services.net/ns/cm#ChangeRequest"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:CRPGGameEvent",
+      "@type": "rdfs:Class",
+      "rdfs:label": "CRPGGameEvent",
+      "robos:shaclShape": "urn:robos:shape:CRPGGameEventShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Event"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:CRPGCampaign",
+      "@type": "rdfs:Class",
+      "rdfs:label": "CRPGCampaign",
+      "robos:shaclShape": "urn:robos:shape:CRPGCampaignShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/CreativeWork"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:CRPGMapTransition",
+      "@type": "rdfs:Class",
+      "rdfs:label": "CRPGMapTransition",
+      "robos:shaclShape": "urn:robos:shape:CRPGMapTransitionShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Place"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:Game",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Game",
+      "robos:shaclShape": "urn:robos:shape:GameShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Game"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:GameClass",
+      "@type": "rdfs:Class",
+      "rdfs:label": "GameClass",
+      "robos:shaclShape": "urn:robos:shape:GameClassShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Role"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:GameMonster",
+      "@type": "rdfs:Class",
+      "rdfs:label": "GameMonster",
+      "robos:shaclShape": "urn:robos:shape:GameMonsterShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Person"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:GameItem",
+      "@type": "rdfs:Class",
+      "rdfs:label": "GameItem",
+      "robos:shaclShape": "urn:robos:shape:GameItemShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Product"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:GameSpell",
+      "@type": "rdfs:Class",
+      "rdfs:label": "GameSpell",
+      "robos:shaclShape": "urn:robos:shape:GameSpellShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Action"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:TabletopGame",
+      "@type": "rdfs:Class",
+      "rdfs:label": "TabletopGame",
+      "robos:shaclShape": "urn:robos:shape:TabletopGameShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Game"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:TabletopHero",
+      "@type": "rdfs:Class",
+      "rdfs:label": "TabletopHero",
+      "robos:shaclShape": "urn:robos:shape:TabletopHeroShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Person"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:TabletopMonster",
+      "@type": "rdfs:Class",
+      "rdfs:label": "TabletopMonster",
+      "robos:shaclShape": "urn:robos:shape:TabletopMonsterShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Person"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:TabletopQuestMap",
+      "@type": "rdfs:Class",
+      "rdfs:label": "TabletopQuestMap",
+      "robos:shaclShape": "urn:robos:shape:TabletopQuestMapShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Place"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:TabletopMapConfiguration",
+      "@type": "rdfs:Class",
+      "rdfs:label": "TabletopMapConfiguration",
+      "robos:shaclShape": "urn:robos:shape:TabletopMapConfigurationShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Place"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:TabletopTurnDAG",
+      "@type": "rdfs:Class",
+      "rdfs:label": "TabletopTurnDAG",
+      "robos:shaclShape": "urn:robos:shape:TabletopTurnDAGShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Action"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:TabletopTurnStep",
+      "@type": "rdfs:Class",
+      "rdfs:label": "TabletopTurnStep",
+      "robos:shaclShape": "urn:robos:shape:TabletopTurnStepShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Action"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:VoiceCommand",
+      "@type": "rdfs:Class",
+      "rdfs:label": "VoiceCommand",
+      "robos:shaclShape": "urn:robos:shape:VoiceCommandShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/ControlAction"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/applications"
+        }
+      ]
+    },
+    {
+      "@id": "robos:SystemDocumentation",
+      "@type": "rdfs:Class",
+      "rdfs:label": "SystemDocumentation",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/documentation"
+        }
+      ]
+    },
+    {
+      "@id": "robos:gridPos",
+      "@type": "rdf:Property",
+      "rdfs:label": "gridPos",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:actionPriority",
+      "@type": "rdf:Property",
+      "rdfs:label": "actionPriority",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:movementTactic",
+      "@type": "rdf:Property",
+      "rdfs:label": "movementTactic",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:decisionPipeline",
+      "@type": "rdf:Property",
+      "rdfs:label": "decisionPipeline",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:proposalConfirmationRequired",
+      "@type": "rdf:Property",
+      "rdfs:label": "proposalConfirmationRequired",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:scriptedCommands",
+      "@type": "rdf:Property",
+      "rdfs:label": "scriptedCommands",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:engineId",
+      "@type": "rdf:Property",
+      "rdfs:label": "engineId",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:controllerModes",
+      "@type": "rdf:Property",
+      "rdfs:label": "controllerModes",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:humanGovernance",
+      "@type": "rdf:Property",
+      "rdfs:label": "humanGovernance",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:restApiPort",
+      "@type": "rdf:Property",
+      "rdfs:label": "restApiPort",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:targetEntity",
+      "@type": "rdf:Property",
+      "rdfs:label": "targetEntity",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/documentation"
+        }
+      ]
+    },
+    {
+      "@id": "robos:actionType",
+      "@type": "rdf:Property",
+      "rdfs:label": "actionType",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:recharge",
+      "@type": "rdf:Property",
+      "rdfs:label": "recharge",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:rootNodeId",
+      "@type": "rdf:Property",
+      "rdfs:label": "rootNodeId",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:storyNodes",
+      "@type": "rdf:Property",
+      "rdfs:label": "storyNodes",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:nodeType",
+      "@type": "rdf:Property",
+      "rdfs:label": "nodeType",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:act",
+      "@type": "rdf:Property",
+      "rdfs:label": "act",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:eventType",
+      "@type": "rdf:Property",
+      "rdfs:label": "eventType",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:infinityInteraction",
+      "@type": "rdf:Property",
+      "rdfs:label": "infinityInteraction",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:startingMap",
+      "@type": "rdf:Property",
+      "rdfs:label": "startingMap",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:maps",
+      "@type": "rdf:Property",
+      "rdfs:label": "maps",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:targetMap",
+      "@type": "rdf:Property",
+      "rdfs:label": "targetMap",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:targetSpawn",
+      "@type": "rdf:Property",
+      "rdfs:label": "targetSpawn",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:ruleset",
+      "@type": "rdf:Property",
+      "rdfs:label": "ruleset",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:gridDimensions",
+      "@type": "rdf:Property",
+      "rdfs:label": "gridDimensions",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:bodyPoints",
+      "@type": "rdf:Property",
+      "rdfs:label": "bodyPoints",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:mindPoints",
+      "@type": "rdf:Property",
+      "rdfs:label": "mindPoints",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:attackDice",
+      "@type": "rdf:Property",
+      "rdfs:label": "attackDice",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:defendDice",
+      "@type": "rdf:Property",
+      "rdfs:label": "defendDice",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:movementSquares",
+      "@type": "rdf:Property",
+      "rdfs:label": "movementSquares",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:startingSpawn",
+      "@type": "rdf:Property",
+      "rdfs:label": "startingSpawn",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:rootStepId",
+      "@type": "rdf:Property",
+      "rdfs:label": "rootStepId",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:turnSteps",
+      "@type": "rdf:Property",
+      "rdfs:label": "turnSteps",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:stepType",
+      "@type": "rdf:Property",
+      "rdfs:label": "stepType",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:action",
+      "@type": "rdf:Property",
+      "rdfs:label": "action",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:commandMatcher",
+      "@type": "rdf:Property",
+      "rdfs:label": "commandMatcher",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/applications"
+        }
+      ]
+    },
+    {
+      "@id": "robos:targetType",
+      "@type": "rdf:Property",
+      "rdfs:label": "targetType",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/applications"
+        }
+      ]
+    },
+    {
+      "@id": "robos:targetId",
+      "@type": "rdf:Property",
+      "rdfs:label": "targetId",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/applications"
         }
       ]
     }

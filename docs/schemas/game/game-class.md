@@ -20,6 +20,7 @@ Validation shape for `robos:GameClass` nodes in the `game` package group.
 | Class | `robos:GameClass` |
 | Shape id | `urn:robos:shape:GameClassShape` |
 | Package | [Game Rules (robos.game)]({{ '/schemas/game.html' | relative_url }}) (`game`) |
+| Classification | Testing & behavior |
 | Schema.org type | [`schema:Role`](https://schema.org/Role) |
 
 ## Properties

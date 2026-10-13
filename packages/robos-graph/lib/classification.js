@@ -19,7 +19,7 @@
   // Explicit class membership, never local-name or substring guessing.
   const DEFINITIONS = [
     ['services', 'Services & processing', 'Microservice DataPipeline'],
-    ['applications', 'Applications & entry points', 'DesktopApp ConsoleApp MobileApp FrontEndApp PCGame MobileGame WebRoute CLICommand CLIFlag'],
+    ['applications', 'Applications & entry points', 'DesktopApp ConsoleApp MobileApp FrontEndApp PCGame MobileGame WebRoute CLICommand CLIFlag VoiceCommand'],
     ['contracts', 'Contracts & data models', 'Contract ProtobufContract GraphQLContract APIEndpoint DataModel Entity'],
     ['data', 'Data stores & messaging', 'Database NoSQLDatabase MessageBroker SearchIndex SearchCluster DatabaseSchema DatabaseTable DatabaseColumn DatabaseIndex NoSQLCollection MessageTopic ConsumerGroup DataStore BrokerDefinition'],
     ['libraries', 'Libraries & build systems', 'Library BuildSystem'],
@@ -30,7 +30,7 @@
     ['agents', 'Agents & MCP', 'MCPServer AgentPersona ContextSource PromptStrategy PromptOptimizer MCPTool MCPResource MCPPrompt AgentSkill'],
     ['documentation', 'Documentation & decisions', 'Documentation SystemDocumentation FlowDiagram DocumentationPage ArchitectureDecisionRecord ADR InteractiveWalkthrough CodeSnippet DocSection ADROption'],
     ['learning', 'Learning & assessment', 'ELearning CertificateOfCompletion LearningModule LearningLesson HandsOnLab QuizAssessment CurriculumDefinition'],
-    ['testing', 'Testing & behavior', 'Scenario ScenarioStep CRPGTestScenario CRPGBattleMap CRPGMapObject CRPGCombatant InfinityAIDirective CRPGPlayerInput TabletopAIEngine TabletopAIDirective TabletopTestScenario TabletopCombatant TabletopAICommand TabletopGame TabletopHero TabletopMonster TabletopQuestMap TabletopMapConfiguration TabletopTurnDAG TabletopTurnStep GherkinFeature GherkinBackground GherkinRule ScenarioOutline ExamplesTable StepDefinition DataTable DocString TestingLibrary TestPlan TestSuite TestExecutionRecord'],
+    ['testing', 'Testing & behavior', 'Scenario ScenarioStep CRPGTestScenario CRPGBattleMap CRPGMapObject CRPGCombatant InfinityAIDirective CRPGPlayerInput CRPGAbility CRPGStoryFlow CRPGStoryNode CRPGGameEvent CRPGCampaign CRPGMapTransition Game GameClass GameMonster GameItem GameSpell TabletopAIEngine TabletopAIDirective TabletopTestScenario TabletopCombatant TabletopAICommand TabletopGame TabletopHero TabletopMonster TabletopSummon TabletopArtifact TabletopQuestMap TabletopMapConfiguration TabletopTurnDAG TabletopTurnStep GherkinFeature GherkinBackground GherkinRule ScenarioOutline ExamplesTable StepDefinition DataTable DocString TestingLibrary TestPlan TestSuite TestExecutionRecord'],
     ['schema', 'Schema & graph metadata', 'SystemGraph KGraphPackage schema:CategoryCode schema:CategoryCodeSet rdfs:Class rdf:Property owl:Class owl:ObjectProperty owl:DatatypeProperty owl:Ontology sh:NodeShape sh:PropertyShape oslc:ServiceProvider'],
   ];
   const CATALOG = DEFINITIONS.map(([code, label], order) => ({ id: NS + 'classification/' + code, code, label, order, '@id': NS + 'classification/' + code, '@type': 'schema:CategoryCode', 'schema:codeValue': code, 'schema:name': label, 'schema:inCodeSet': { '@id': CODE_SET_ID } }));
@@ -1738,6 +1738,42 @@
     "robos:workerPools": [
       "infrastructure"
     ]
+  });
+  // Shapes added after the catalog was last synchronized: Documentation targets,
+  // cRPG campaign/story/ability content, tabletop game content and voice commands.
+  // Game content follows the existing cRPG/Tabletop predicates (testing); voice
+  // commands are application entry points like WebRoute and CLICommand.
+  Object.assign(PREDICATE_CODES, {
+    "robos:targetEntity": ["documentation"],
+    "robos:actionType": ["testing"],
+    "robos:recharge": ["testing"],
+    "robos:rootNodeId": ["testing"],
+    "robos:storyNodes": ["testing"],
+    "robos:nodeType": ["testing"],
+    "robos:act": ["testing"],
+    "robos:eventType": ["testing"],
+    "robos:infinityInteraction": ["testing"],
+    "robos:startingMap": ["testing"],
+    "robos:maps": ["testing"],
+    "robos:targetMap": ["testing"],
+    "robos:targetSpawn": ["testing"],
+    "robos:ruleset": ["testing"],
+    "robos:gridDimensions": ["testing"],
+    "robos:bodyPoints": ["testing"],
+    "robos:mindPoints": ["testing"],
+    "robos:attackDice": ["testing"],
+    "robos:defendDice": ["testing"],
+    "robos:movementSquares": ["testing"],
+    "robos:summoner": ["testing"],
+    "robos:startingSpawn": ["testing"],
+    "robos:reducedFunctionality": ["testing"],
+    "robos:rootStepId": ["testing"],
+    "robos:turnSteps": ["testing"],
+    "robos:stepType": ["testing"],
+    "robos:action": ["testing"],
+    "robos:commandMatcher": ["applications"],
+    "robos:targetType": ["applications"],
+    "robos:targetId": ["applications"]
   });
   const ordered = codes => [...new Set(codes)].sort((a, b) => CATALOG.findIndex(c => c.code === a) - CATALOG.findIndex(c => c.code === b));
   const reference = code => ({ '@id': NS + 'classification/' + code });

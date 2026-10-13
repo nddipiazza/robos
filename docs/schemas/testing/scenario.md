@@ -59,7 +59,10 @@ This node comes from `.robos/kgraphs/testing/package.jsonld` in the RobOS reposi
   "robos:namespace": "robos.testing",
   "robos:refersFrom": "http://open-services.net/ns/qm#TestCase",
   "robos:schemaOrgType": "https://schema.org/CheckAction",
-  "robos:domainStandard": "http://open-services.net/ns/qm#TestCase"
+  "robos:domainStandard": "http://open-services.net/ns/qm#TestCase",
+  "robos:testsService": {
+    "@id": "urn:robos:service:billing-api"
+  }
 }
 ```
 {% endraw %}

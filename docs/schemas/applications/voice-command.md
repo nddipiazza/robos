@@ -20,6 +20,7 @@ Validation shape for `robos:VoiceCommand` nodes in the `applications` package gr
 | Class | `robos:VoiceCommand` |
 | Shape id | `urn:robos:shape:VoiceCommandShape` |
 | Package | [Applications (robos.apps)]({{ '/schemas/applications.html' | relative_url }}) (`applications`) |
+| Classification | Applications & entry points |
 | Schema.org type | [`schema:ControlAction`](https://schema.org/ControlAction) |
 
 ## Properties

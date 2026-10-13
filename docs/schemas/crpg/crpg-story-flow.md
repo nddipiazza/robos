@@ -20,6 +20,7 @@ Validation shape for `robos:CRPGStoryFlow` nodes in the `crpg` package group.
 | Class | `robos:CRPGStoryFlow` |
 | Shape id | `urn:robos:shape:CRPGStoryFlowShape` |
 | Package | [cRPG (robos.crpg)]({{ '/schemas/crpg.html' | relative_url }}) (`crpg`) |
+| Classification | Testing & behavior |
 | Schema.org type | [`schema:CreativeWork`](https://schema.org/CreativeWork) |
 
 ## Properties

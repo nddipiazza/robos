@@ -31,6 +31,9 @@ jobs:
       - name: Run unit tests
         run: cd packages/robos-test && npm run test:unit
 
+      - name: Run knowledge graph workspace tests
+        run: cd packages/robos-test && npm run test:kgraph-workspace
+
   # Build the RobOS Installer GUI for Linux
   build-installer-linux:
     needs: test
