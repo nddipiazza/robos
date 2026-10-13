@@ -129,6 +129,9 @@ Two enemy scripts exist.
 | `TacticalEnemy.gd` (scene `components/TacticalEnemy.tscn`) | `TacticalBattle.tscn`: `EnemyWolfAlpha`, `EnemySkeletonArcher`, `EnemyShadowStalker` | Threat table, proximity aggro, pack alerts. Every stat is an `@export`; it does not read `monsters.json`. |
 | `ShadowHound.gd` (scene `ShadowHound.tscn`) | `VillageSquare`, `WhisperingForest`, `AncientCatacombs` | Patrols and chases the hero within 190 px. No threat table or pack logic. The location script handles the fight. |
 
+![Tactical battle where two enemies rally to defend a wolf, with threat values in the log]({{ '/assets/images/crpg-realm/combat_battlefield.png' | relative_url }}){: .robos-zoomable-img }
+*From the pack-alert scenario in `TacticalBattle`. Read the log at the bottom: the wolf targets Vance with a threat value, and the archer and stalker are alerted to defend their ally.*
+
 The rest of this section is about `TacticalEnemy`.
 
 | Export | Default | Meaning |

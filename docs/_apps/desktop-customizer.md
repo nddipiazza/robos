@@ -17,13 +17,13 @@ Input that does not start with `/` only returns a message that natural-language 
 | Command | What it does |
 |---|---|
 | `/move-clock left`, `center`, `right`, `hide`, `show`, `format 24h`, `show-seconds`, `show-date` | Clock position and format. Position uses the dash-to-panel extension's `clock-position` key. |
-| `/taskbar height <px>`, `autohide on|off`, `add-favorite <app-id>`, `remove-favorite <app-id>` | Panel height (dash-to-panel), auto-hide (dash-to-dock) and pinned apps. |
+| `/taskbar height <px>`, `autohide on`, `autohide off`, `add-favorite <app-id>`, `remove-favorite <app-id>` | Panel height (dash-to-panel), auto-hide (dash-to-dock) and pinned apps. |
 | `/theme dark`, `light`, `accent <color>`, `font-size <px>`, `window-buttons left`, `right`, `css "<rules>"` | Color scheme, accent color (written to `gtk.css`), text scaling, window button side and custom GTK CSS. Re-open apps to see CSS changes. |
 | `/shortcut <keys> open <app>`, `list`, `remove <keys>` | Custom GNOME keyboard shortcuts that launch a RobOS app. |
 | `/startup list`, `add <app>`, `remove <app>` | Autostart entries in `~/.config/autostart`. |
 | `/snapshot save <name>`, `list`, `diff` | Manual snapshots and a diff against the previous one. |
 | `/restore last` or `/restore <hash>` | Roll back to a snapshot. |
-| `/gsettings get|set <schema> <key> [value]`, `/exec <command>` | Direct access. `/exec` runs any shell command as you. |
+| `/gsettings get <schema> <key>`, `/gsettings set <schema> <key> <value>`, `/exec <command>` | Direct access. `/exec` runs any shell command as you. |
 
 ## Snapshots
 

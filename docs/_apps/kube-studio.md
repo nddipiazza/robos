@@ -4,7 +4,7 @@ package: kube-studio
 category: devops-cloud
 icon: kube-studio.svg
 summary: "A Kubernetes browser that runs real kubectl against a local Kind or Minikube cluster; remote clusters, Helm, ArgoCD and Vercel panels show sample data."
-description: "Kube Studio lists namespaces and resources, deploys the bundled Acme Petshop manifests and streams pod logs on a local cluster through kubectl. EKS, GKE and AKS entries and the Helm, ArgoCD and Vercel tabs are fixed samples."
+description: "Kube Studio lists namespaces and resources, deploys the bundled Acme Petshop manifests and shows pod logs on a local cluster through kubectl. EKS, GKE and AKS entries and the Helm, ArgoCD and Vercel tabs are fixed samples."
 ---
 
 Kube Studio is split into parts that act on a real cluster and parts that only display examples. Which is which depends on the cluster you pick.
