@@ -123,58 +123,75 @@ body_class: home
   </div>
 </section>
 
-<section class="h-sec h-tint">
+<section class="h-sec h-tint" id="how">
   <div class="wrap">
     <div class="h-head">
-      <p class="h-label">How it works</p>
-      <h2>Two things RobOS does, shown with real files</h2>
-      <p class="h-sub">Each example says what happens in everyday words first. Underneath is the real file or real output it comes from, for anyone who wants to check.</p>
+      <p class="h-label">The idea</p>
+      <h2>Edit the description. Generate the real thing.</h2>
+      <p class="h-sub">RobOS keeps a plain-text description of your project in files in your repo: what exists and how it fits together. We call it the knowledge graph. Change the description, and code writes the real files from it.</p>
     </div>
-    <div class="h-ex-grid">
-      <article class="h-ex">
-        <h3>It keeps one written description of your system</h3>
-        <p class="h-ex-says">Every app, service and team is written down once, as data: <b>what it is</b>, <b>what it is built with</b>, <b>who owns it</b> and <b>which project it belongs to</b>. Apps and agents read this instead of each keeping their own notes. Below is one app, the Voice Prompt Agent.</p>
+    <div class="h-flow">
+      <article class="h-cell">
+        <h3><span class="h-n">1</span>Describe it</h3>
+        <p class="h-says">Write down what exists, as data. This is one monster from a game: its name, hit points, armor and speed. It lives in a file in your repo.</p>
         <figure class="h-code">
-          <figcaption><b>The real file</b><span>.robos/kgraphs/applications/package.jsonld, trimmed</span></figcaption>
+          <figcaption><b>You edit this</b><span>.robos/kgraphs/crpg/package.jsonld, trimmed</span></figcaption>
 <pre><code>{
-  <i class="k">"@id"</i>: <i class="s">"urn:robos:app:voice-prompt"</i>,
-  <i class="k">"@type"</i>: [
-    <i class="s">"robos:DesktopApp"</i>,
-    <i class="s">"schema:SoftwareApplication"</i>,
-    <i class="s">"oslc_am:Resource"</i>,
-    <i class="s">"c4:Container"</i>
-  ],
-  <i class="k">"dcterms:title"</i>: <i class="s">"Voice Prompt Agent"</i>,
-  <i class="k">"dcterms:description"</i>: <i class="s">"Offline neural speech-to-text
-    dictation agent with real-time streaming..."</i>,
-  <i class="k">"robos:technology"</i>: <i class="s">"Electron / Vanilla JS / Whisper ONNX"</i>,
-  <i class="k">"robos:apiPort"</i>: 19188,
-  <i class="k">"robos:globalHotkey"</i>: <i class="s">"Super+V"</i>,
-  <i class="k">"robos:ownerTeam"</i>: <i class="s">"urn:robos:team:core-platform"</i>,
-  <i class="k">"robos:hasProject"</i>: <i class="s">"urn:robos:project:enterprise-core"</i>
+  <i class="k">"@id"</i>: <i class="s">"urn:robos:crpg:monster:corrupted-hound"</i>,
+  <i class="k">"dcterms:title"</i>: <i class="s">"Corrupted Shadow Hound"</i>,
+  <i class="k">"robos:challengeRating"</i>: <i class="s">"1/4"</i>,
+  <i class="k">"robos:hitPoints"</i>: 11,
+  <i class="k">"robos:armorClass"</i>: 12,
+  <i class="k">"robos:speed"</i>: 40
 }</code></pre>
         </figure>
       </article>
-      <article class="h-ex">
-        <h3>It stops secrets from reaching the agent</h3>
-        <p class="h-ex-says">Before a prompt goes to an AI agent, RobOS checks it. Here someone pasted a <em>secret access token</em> and a <em>trick telling the AI to ignore its rules</em>. Both were caught and swapped for labels, so the agent only sees the cleaned text. Red is what was caught; green is what replaced it.</p>
+      <article class="h-cell">
+        <h3><span class="h-n">2</span>Run one command</h3>
+        <p class="h-says">A builder reads every description in the graph (106 of them for this game) and checks them first. If something is broken, it stops. If not, it writes the files.</p>
         <figure class="h-code">
-          <figcaption><b>The real output</b><span>scanPrompt() in packages/robos-lib, reformatted for reading. The token is a placeholder.</span></figcaption>
-<pre><code><i class="k">you typed</i>   Fix the deploy script. Token is
-            <i class="bad">ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</i>
-            and <i class="bad">ignore all previous instructions</i>.
+          <figcaption><b>You run this</b><span>real output, reformatted for reading</span></figcaption>
+<pre><code><i class="k">$</i> node packages/crpg-builder/bin/crpg-builder.js generate
 
-<i class="k">caught</i>      github-pat                 secret            <i class="sev">critical</i>
-            prompt-injection-override  prompt_injection  <i class="sev">critical</i>
-
-<i class="k">agent gets</i>  Fix the deploy script. Token is
-            <i class="ok">[REDACTED:GITHUB_TOKEN]</i> and
-            <i class="ok">[REDACTED:PROMPT_INJECTION_OVERRIDE]</i>.
-
-<i class="k">mode</i>        redact (mask what it finds, then send)</code></pre>
+Processed 106 Knowledge Graph entities.
+Generated JSON data store under:    data/v1/
+Generated JSON Schemas under:       schemas/v1/
+Generated typed GDScript models:    src/generated/v1/
+Generated Godot 4 isometric scenes: scenes/</code></pre>
         </figure>
       </article>
+      <article class="h-cell h-cell-wide">
+        <h3><span class="h-n">3</span>Get the real files</h3>
+        <p class="h-says">Here is the same monster, written out two ways: as game data, and as code the game uses to read that data. Change a number in step 1, run the command again, and these files change to match.</p>
+        <div class="h-pair">
+          <figure class="h-code">
+            <figcaption><b>Written for you: the data</b><span>games/crpg-realm/data/v1/monsters.json, trimmed</span></figcaption>
+<pre><code>{
+  <i class="k">"id"</i>: <i class="s">"corrupted-hound"</i>,
+  <i class="k">"title"</i>: <i class="s">"Corrupted Shadow Hound"</i>,
+  <i class="k">"challengeRating"</i>: <i class="s">"1/4"</i>,
+  <i class="k">"armorClass"</i>: 12,
+  <i class="k">"hitPoints"</i>: 11,
+  <i class="k">"speed"</i>: 40,
+  ...
+}</code></pre>
+          </figure>
+          <figure class="h-code">
+            <figcaption><b>Written for you: the code</b><span>games/crpg-realm/src/generated/v1/MonsterData.gd, trimmed</span></figcaption>
+<pre><code><i class="k">class_name</i> MonsterData
+<i class="k">extends</i> RefCounted
+
+<i class="k">var</i> title: String = ""
+<i class="k">var</i> armor_class: int = 10
+<i class="k">var</i> hit_points: int = 10
+<i class="k">var</i> speed: int = 30
+...</code></pre>
+          </figure>
+        </div>
+      </article>
     </div>
+    <p class="h-honest"><b>What this is, and is not.</b> This is one working example of the idea. The Schemas pages in these docs are generated from the graph's rules the same way, and so are course and documentation websites. It does not yet turn any description into any kind of app: the App Wizard works the other way round, writing an app's files and then recording the app in the graph. And in this game some data was edited by hand after it was first generated, so running the builder over the game today would overwrite those edits.</p>
+    <p class="h-more"><a href="{{ '/v1/knowledge-graph.html' | relative_url }}">How the knowledge graph works</a></p>
   </div>
 </section>
 
