@@ -38,6 +38,39 @@ RobOS is a desktop suite of developer apps, a knowledge graph of your system, an
   </a>
 </div>
 
+## How the pieces fit
+
+RobOS is a set of Electron desktop apps that share libraries and one knowledge graph. Agents run through a router, and MCP servers expose the graph and the apps to other tools.
+
+```mermaid
+flowchart LR
+  apps["Electron apps (packages/*)"]
+  lib["robos-lib"]
+  ui["robos-ui"]
+  rgraph["robos-graph"]
+  kg[".robos/kgraphs/*/package.jsonld"]
+  client["robos-agent-client"]
+  clis["claude, codex, copilot CLIs"]
+  servers["MCP servers (*-mcp)"]
+  mcplib["robos-mcp-lib"]
+  registry["~/.config/robos/mcp/servers.json"]
+  router["robos-mcp-router"]
+  mcpclient["MCP client, for example Claude Code"]
+
+  apps --> lib
+  apps --> ui
+  apps --> rgraph
+  rgraph --> kg
+  apps --> client
+  client --> clis
+  servers --> mcplib
+  mcplib --> registry
+  router --> registry
+  mcpclient --> router
+```
+
+Each arrow is a `require`, a file read or a spawned process in the source. The [architecture overview]({{ site.baseurl }}{% link architecture.md %}) walks through each box.
+
 ## Also here
 
 - [Roadmap]({{ site.baseurl }}{% link roadmap.md %}): what is built, in progress and planned.

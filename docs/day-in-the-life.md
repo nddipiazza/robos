@@ -30,6 +30,9 @@ Nothing is deployed in the recording. The last slide shows the sample app starte
 
 ## Walkthrough
 
+![Six phases from planning and architecture to cloud operations, each listing the RobOS apps used]({{ '/assets/images/day-in-the-life-flowchart.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs, covering a wider lifecycle than the recording. The text on this page says what is built today and what the recording shows.*
+
 ### 1. Plan the task in Task Explorer
 
 Chapter: Task created. App: RobOS Task Explorer, package [`task-planner`]({{ '/apps/task-planner/' | relative_url }}).

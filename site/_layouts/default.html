@@ -22,7 +22,7 @@
 <header class="nav">
   <div class="wrap nav-in">
     <a class="brand" href="{{ '/' | relative_url }}"><img src="{{ '/assets/logo-mark.png' | relative_url }}" alt="" height="30"><span>RobOS</span></a>
-    <nav class="links" aria-label="Primary">
+    <nav class="links" id="primary-nav" aria-label="Primary">
       <a href="{{ '/#product' | relative_url }}">Product</a>
       <a href="{{ '/apps/' | relative_url }}">Apps</a>
       <a href="{{ '/docs/' | relative_url }}">Docs</a>
@@ -30,6 +30,7 @@
       <a href="https://discord.gg/6PjxzkHujE" target="_blank" rel="noopener">Community</a>
     </nav>
     <div class="nav-r">
+      <button class="icon-btn menu-btn" id="menu" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="primary-nav"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M2 4h12M2 8h12M2 12h12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
       <button class="icon-btn" id="theme" type="button" aria-label="Toggle light and dark theme"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 2a6 6 0 0 0 0 12z" fill="currentColor"/></svg></button>
       <a class="btn btn-sm" href="{{ '/download/' | relative_url }}">Download</a>
     </div>

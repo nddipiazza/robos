@@ -7,6 +7,15 @@
     try { localStorage.setItem('rb2-theme', next); } catch (e) {}
   });
 
+  // Mobile menu
+  var nav = document.querySelector('.nav'), menu = document.getElementById('menu');
+  if (nav && menu) {
+    var setMenu = function (open) { nav.classList.toggle('open', open); menu.setAttribute('aria-expanded', open); menu.setAttribute('aria-label', open ? 'Close menu' : 'Open menu'); };
+    menu.addEventListener('click', function () { setMenu(!nav.classList.contains('open')); });
+    nav.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('.links a')) setMenu(false); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false); });
+  }
+
   // OS detection for download buttons
   var ua = navigator.userAgent || '';
   var os = /Windows/i.test(ua) ? 'win' : /Mac/i.test(ua) ? 'mac' : 'linux';

@@ -16,6 +16,9 @@ How RobOS reviews code that an agent wrote: where the work is checked, what coun
 
 An agent does the implementation. A person decides whether the result is good enough to publish and merge. The recording on the [RobOS home page](https://rowbose.com/) shows the whole loop; each step below names the app that owns it.
 
+![A traditional workflow of four manual developer steps above a six-step agent review workflow where the human acts as lead architect]({{ '/assets/images/agent-review-workflow-comparison.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The text on this page says what is built today: for example, the review window has no merge button, and the author merges on GitHub.*
+
 | Step | App | What happens |
 |:---|:---|:---|
 | 1. Plan | Task Explorer (`task-planner`) | An agent turns a goal into tracked issues with acceptance criteria. |

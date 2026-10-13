@@ -29,6 +29,9 @@ How to run RobOS apps from a clone of the repository, install them into the GNOM
 {: .note }
 The `.dmg`, `.exe`, `.AppImage` and `.deb` files on the [download page](https://rowbose.com/download/) are the USB installer. They do not install the app suite on macOS or Windows. To run apps on your current machine, use "Run from source".
 
+![Three panels for Linux, macOS and Windows, each listing how RobOS would be installed and run there]({{ '/assets/images/cross-platform-desktop-architecture.jpg' | relative_url }}){: .robos-zoomable-img }
+*Concept diagram from the original design docs. The text on this page says what is built today: only Linux is tested, and the macOS and Windows downloads are the USB installer, not the app suite.*
+
 ## Run from source
 
 Each app is an Electron app in its own folder under `packages/`, next to the shared libraries. There is no `package.json` at the repository root, so you install dependencies inside a package, not at the top level.
