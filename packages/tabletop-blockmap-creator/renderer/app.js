@@ -86,8 +86,8 @@ class BlockmapCreator {
     this.imagePath = '';
     this.fileName = 'first_light_dungeon.png';
     this.boardId = 'first-light-dungeon';
-    this.boardTitle = 'HeroQuest: First Light Side A (Fortress of the Fire King)';
-    this.cartridgeSlug = 'heroquest-fortress-fire-king';
+    this.boardTitle = 'HeroQuest: First Light Side A';
+    this.cartridgeSlug = null;
 
     this.corridorTiles = new Set(); // "col,row" strings
     this.rooms = [];                // Array of { id, name, x, y, w, h, shape, tiles, tileSet, quadrant, color }
@@ -1300,6 +1300,7 @@ class BlockmapCreator {
     document.getElementById('board-preset-select').value = p.id;
     this.boardId = p.id;
     this.boardTitle = p.title;
+    this.cartridgeSlug = null;
     this.updateMapIdentityUI();
     this.tileSize = p.defaultTileSize || 39.0;
     this.offsetX = p.offsetX || 0;
@@ -1314,10 +1315,82 @@ class BlockmapCreator {
     document.getElementById('input-grid-cols').value = this.cols;
     document.getElementById('input-grid-rows').value = this.rows;
 
-    if (p.cartridgeSlug) {
-      await this.loadCartridge(p.cartridgeSlug);
+    const boardRes = await window.robosBlockmap.loadBoardMap(p.id);
+    if (boardRes && boardRes.success && boardRes.boardData) {
+      await this.applyBoardData(boardRes.boardData, boardRes.imageData);
     } else {
       await this.loadImageFile(p.file);
+    }
+  }
+
+  async applyBoardData(boardData, imageData) {
+    this.boardId = boardData.id || this.boardId;
+    this.boardTitle = boardData.title || this.boardTitle;
+    this.updateMapIdentityUI();
+
+    if (boardData.gridDimensions) {
+      this.cols = boardData.gridDimensions[0] || this.cols;
+      this.rows = boardData.gridDimensions[1] || this.rows;
+    } else {
+      if (boardData.width) this.cols = boardData.width;
+      if (boardData.height) this.rows = boardData.height;
+    }
+
+    if (boardData.calibration) {
+      if (boardData.calibration.tileSize) this.tileSize = boardData.calibration.tileSize;
+      if (boardData.calibration.offsetX !== undefined) this.offsetX = boardData.calibration.offsetX;
+      if (boardData.calibration.offsetY !== undefined) this.offsetY = boardData.calibration.offsetY;
+    }
+
+    document.getElementById('input-tile-size').value = this.tileSize.toFixed(1);
+    document.getElementById('slider-tile-size').value = this.tileSize;
+    document.getElementById('input-offset-x').value = this.offsetX;
+    document.getElementById('input-offset-y').value = this.offsetY;
+    document.getElementById('input-grid-cols').value = this.cols;
+    document.getElementById('input-grid-rows').value = this.rows;
+
+    this.rooms = (boardData.rooms || []).map((r, i) => {
+      const shape = r.shape || 'rect';
+      const tiles = r.tiles && r.tiles.length > 0
+        ? r.tiles
+        : callGenerateRectTiles(r.x, r.y, r.w, r.h);
+      return {
+        ...r,
+        shape: shape,
+        tiles: tiles,
+        tileSet: new Set(tiles.map(t => `${t[0]},${t[1]}`)),
+        color: r.color || ROOM_COLORS[i % ROOM_COLORS.length]
+      };
+    });
+
+    this.corridorTiles = new Set();
+    if (Array.isArray(boardData.corridors)) {
+      for (const c of boardData.corridors) {
+        if (Array.isArray(c) && c.length >= 2) {
+          this.corridorTiles.add(`${c[0]},${c[1]}`);
+        }
+      }
+    }
+
+    this.selectedRoomId = this.rooms.length > 0 ? this.rooms[0].id : null;
+    this.updateRoomListUI();
+    this.updateRoomInspector();
+
+    if (imageData && imageData.dataUrl) {
+      const img = new Image();
+      img.onload = () => {
+        this.image = img;
+        this.imagePath = imageData.filePath;
+        this.fileName = imageData.fileName;
+        document.getElementById('info-image-name').textContent = `🖼️ ${this.fileName}`;
+        document.getElementById('info-image-size').textContent = `📐 ${img.naturalWidth} × ${img.naturalHeight} px`;
+        document.getElementById('info-grid-size').textContent = `🧱 ${this.cols} × ${this.rows} grid`;
+        this.fitToScreen();
+        this.render();
+      };
+      img.src = imageData.dataUrl;
+    } else {
+      this.render();
     }
   }
 
@@ -1469,39 +1542,41 @@ class BlockmapCreator {
   }
 
   async saveBoard() {
-    const payload = {
-      cartridgeSlug: this.cartridgeSlug || 'heroquest-first-light',
-      mapId: this.boardId || 'custom-board',
-      mapData: {
-        id: this.boardId || 'custom-board',
-        title: this.boardTitle || `${this.fileName} Static Board`,
-        width: this.cols,
-        height: this.rows,
-        backgroundImage: `res://assets/boards/${this.fileName}`,
-        calibration: {
-          tileSize: this.tileSize,
-          offsetX: this.offsetX,
-          offsetY: this.offsetY
-        },
-        rooms: this.rooms.map(r => ({
-          id: r.id,
-          name: r.name,
-          x: r.x,
-          y: r.y,
-          w: r.w,
-          h: r.h,
-          shape: r.shape || 'rect',
-          tiles: r.tiles || callGenerateRectTiles(r.x, r.y, r.w, r.h),
-          quadrant: r.quadrant || 'center'
-        }))
-      }
-    };
+    const payload = this.getStaticBoardPayload();
+    const res = await window.robosBlockmap.saveBoardMap({
+      boardId: this.boardId || 'custom-board',
+      boardData: payload
+    });
 
-    const res = await window.robosBlockmap.saveCartridgeMap(payload);
     if (res.success) {
-      this.showToast(`Saved static board blockmap to ${this.cartridgeSlug}!`);
+      this.showToast(`Saved static board blockmap to ${res.fileName}!`);
     } else {
       this.showToast(`Save failed: ${res.error}`);
+    }
+
+    // Only if an explicit cartridge was opened via CLI/loader, also sync its map
+    if (this.cartridgeSlug) {
+      try {
+        await window.robosBlockmap.saveCartridgeMap({
+          cartridgeSlug: this.cartridgeSlug,
+          mapId: this.boardId || 'custom-board',
+          mapData: {
+            id: this.boardId || 'custom-board',
+            title: this.boardTitle || `${this.fileName} Static Board`,
+            width: this.cols,
+            height: this.rows,
+            backgroundImage: `res://assets/boards/${this.fileName}`,
+            calibration: {
+              tileSize: this.tileSize,
+              offsetX: this.offsetX,
+              offsetY: this.offsetY
+            },
+            rooms: payload.rooms
+          }
+        });
+      } catch (err) {
+        console.warn('Optional cartridge sync error:', err);
+      }
     }
   }
 
