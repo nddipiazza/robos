@@ -449,3 +449,52 @@ test('Start & Exit Tiles: can be placed on border tiles and serialized to cartri
   assert.deepEqual(restoredQuest.exitTile, [25, 10]);
 });
 
+test('Border Snapping: clicks in margins clamp to nearest perimeter border tile', () => {
+  const geom = { cols: 28, rows: 21, tileSize: 36.57, offsetX: 0, offsetY: 0 };
+
+  function testWorldToTile(wx, wy, clampToBorder = false) {
+    const relX = wx - geom.offsetX;
+    const relY = wy - geom.offsetY;
+    let col = Math.floor(relX / geom.tileSize);
+    let row = Math.floor(relY / geom.tileSize);
+
+    if (clampToBorder) {
+      col = Math.max(0, Math.min(geom.cols - 1, col));
+      row = Math.max(0, Math.min(geom.rows - 1, row));
+      return [col, row];
+    }
+
+    if (col < 0 || col >= geom.cols || row < 0 || row >= geom.rows) {
+      return null;
+    }
+    return [col, row];
+  }
+
+  // Regular click inside map
+  assert.deepEqual(testWorldToTile(100, 100, false), [2, 2]);
+
+  // Click outside bottom boundary without clamp returns null
+  assert.equal(testWorldToTile(700, 805, false), null);
+
+  // Click outside bottom boundary WITH clamp snaps to bottom border row 20
+  const bottomBorderTile = testWorldToTile(700, 805, true);
+  assert.deepEqual(bottomBorderTile, [19, 20]);
+  assert.ok(bottomBorderTile[1] === geom.rows - 1, 'Should snap to bottom perimeter border');
+
+  // Click above top boundary WITH clamp snaps to top border row 0
+  const topBorderTile = testWorldToTile(350, -30, true);
+  assert.deepEqual(topBorderTile, [9, 0]);
+  assert.ok(topBorderTile[1] === 0, 'Should snap to top perimeter border');
+
+  // Click left of board WITH clamp snaps to left border col 0
+  const leftBorderTile = testWorldToTile(-25, 400, true);
+  assert.deepEqual(leftBorderTile, [0, 10]);
+  assert.ok(leftBorderTile[0] === 0, 'Should snap to left perimeter border');
+
+  // Click right of board WITH clamp snaps to right border col 27
+  const rightBorderTile = testWorldToTile(1100, 500, true);
+  assert.deepEqual(rightBorderTile, [27, 13]);
+  assert.ok(rightBorderTile[0] === geom.cols - 1, 'Should snap to right perimeter border');
+});
+
+

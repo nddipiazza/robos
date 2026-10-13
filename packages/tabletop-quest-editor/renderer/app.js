@@ -825,12 +825,19 @@ function screenToWorld(sx, sy) {
   return { x: wx, y: wy };
 }
 
-function worldToTile(wx, wy) {
+function worldToTile(wx, wy, clampToBorder = false) {
   const geom = getGridGeometry();
   const relX = wx - geom.offsetX;
   const relY = wy - geom.offsetY;
-  const col = Math.floor(relX / geom.tileSize);
-  const row = Math.floor(relY / geom.tileSize);
+  let col = Math.floor(relX / geom.tileSize);
+  let row = Math.floor(relY / geom.tileSize);
+
+  if (clampToBorder) {
+    col = Math.max(0, Math.min(geom.cols - 1, col));
+    row = Math.max(0, Math.min(geom.rows - 1, row));
+    return [col, row];
+  }
+
   if (col < 0 || col >= geom.cols || row < 0 || row >= geom.rows) {
     return null;
   }
@@ -1009,36 +1016,53 @@ function render() {
     // Border tile indicator aura (highlights entrance from outside dungeon)
     if (isBorder) {
       ctx.save();
-      ctx.fillStyle = 'rgba(14, 165, 233, 0.28)';
-      ctx.fillRect(spos.x - 2, spos.y - 2, geom.tileSize + 4, geom.tileSize + 4);
+      ctx.fillStyle = 'rgba(14, 165, 233, 0.35)';
+      ctx.fillRect(spos.x - 3, spos.y - 3, geom.tileSize + 6, geom.tileSize + 6);
       ctx.strokeStyle = '#0284c7';
-      ctx.lineWidth = 2.0;
+      ctx.lineWidth = 2.5;
       ctx.setLineDash([4, 2]);
-      ctx.strokeRect(spos.x - 2, spos.y - 2, geom.tileSize + 4, geom.tileSize + 4);
+      ctx.strokeRect(spos.x - 3, spos.y - 3, geom.tileSize + 6, geom.tileSize + 6);
       ctx.restore();
     }
 
     if (stairsImg) {
       ctx.drawImage(stairsImg, spos.x, spos.y, geom.tileSize, geom.tileSize);
+      ctx.save();
+      ctx.fillStyle = 'rgba(2, 132, 199, 0.35)';
+      ctx.fillRect(spos.x + 1, spos.y + 1, geom.tileSize - 2, geom.tileSize - 2);
+      ctx.restore();
     } else {
       ctx.fillStyle = '#0284c7';
       ctx.fillRect(spos.x + 2, spos.y + 2, geom.tileSize - 4, geom.tileSize - 4);
       ctx.strokeStyle = '#38bdf8';
       ctx.lineWidth = 1.5;
       ctx.strokeRect(spos.x + 2, spos.y + 2, geom.tileSize - 4, geom.tileSize - 4);
-
-      ctx.fillStyle = '#fff';
-      ctx.font = '14px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('🪜', spos.x + geom.tileSize / 2, spos.y + geom.tileSize / 2);
     }
 
-    // Label
-    ctx.fillStyle = '#38bdf8';
-    ctx.font = 'bold 9px monospace';
+    // Always draw clear 🪜 ladder / entrance icon in center with contrast backdrop
+    ctx.save();
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+    ctx.shadowBlur = 4;
+    ctx.fillStyle = '#fff';
+    ctx.font = '16px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('START', spos.x + geom.tileSize / 2, spos.y + geom.tileSize - 4);
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🪜', spos.x + geom.tileSize / 2, spos.y + geom.tileSize / 2 - 4);
+    ctx.restore();
+
+    // High-visibility START label pill
+    ctx.save();
+    ctx.fillStyle = 'rgba(12, 74, 110, 0.9)';
+    ctx.fillRect(spos.x + 2, spos.y + geom.tileSize - 13, geom.tileSize - 4, 11);
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 1.0;
+    ctx.strokeRect(spos.x + 2, spos.y + geom.tileSize - 13, geom.tileSize - 4, 11);
+    ctx.fillStyle = '#7dd3fc';
+    ctx.font = 'bold 8.5px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('START', spos.x + geom.tileSize / 2, spos.y + geom.tileSize - 7.5);
+    ctx.restore();
 
     if (state.selectedEntity && (state.selectedEntity.type === 'start' || state.selectedEntity.type === 'stairs')) {
       drawSelectionGlow(spos.x, spos.y, geom.tileSize, geom.tileSize);
@@ -1055,20 +1079,20 @@ function render() {
     // Border tile indicator aura (highlights exit to safety outside dungeon)
     if (isBorder) {
       ctx.save();
-      ctx.fillStyle = 'rgba(16, 185, 129, 0.28)';
-      ctx.fillRect(epos.x - 2, epos.y - 2, geom.tileSize + 4, geom.tileSize + 4);
-      ctx.strokeStyle = '#059669';
-      ctx.lineWidth = 2.0;
+      ctx.fillStyle = 'rgba(16, 185, 129, 0.35)';
+      ctx.fillRect(epos.x - 3, epos.y - 3, geom.tileSize + 6, geom.tileSize + 6);
+      ctx.strokeStyle = '#10b981';
+      ctx.lineWidth = 2.5;
       ctx.setLineDash([4, 2]);
-      ctx.strokeRect(epos.x - 2, epos.y - 2, geom.tileSize + 4, geom.tileSize + 4);
+      ctx.strokeRect(epos.x - 3, epos.y - 3, geom.tileSize + 6, geom.tileSize + 6);
       ctx.restore();
     }
 
     if (stairsImg) {
       ctx.drawImage(stairsImg, epos.x, epos.y, geom.tileSize, geom.tileSize);
       ctx.save();
-      ctx.fillStyle = 'rgba(5, 150, 105, 0.45)';
-      ctx.fillRect(epos.x + 2, epos.y + 2, geom.tileSize - 4, geom.tileSize - 4);
+      ctx.fillStyle = 'rgba(5, 150, 105, 0.55)';
+      ctx.fillRect(epos.x + 1, epos.y + 1, geom.tileSize - 2, geom.tileSize - 2);
       ctx.restore();
     } else {
       ctx.fillStyle = '#065f46';
@@ -1076,19 +1100,32 @@ function render() {
       ctx.strokeStyle = '#34d399';
       ctx.lineWidth = 1.5;
       ctx.strokeRect(epos.x + 2, epos.y + 2, geom.tileSize - 4, geom.tileSize - 4);
-
-      ctx.fillStyle = '#fff';
-      ctx.font = '14px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('🏁', epos.x + geom.tileSize / 2, epos.y + geom.tileSize / 2);
     }
 
-    // Label
-    ctx.fillStyle = '#34d399';
-    ctx.font = 'bold 9px monospace';
+    // Always draw clear 🏁 checkered flag in center with contrast backdrop
+    ctx.save();
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+    ctx.shadowBlur = 4;
+    ctx.fillStyle = '#fff';
+    ctx.font = '16px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('EXIT', epos.x + geom.tileSize / 2, epos.y + geom.tileSize - 4);
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🏁', epos.x + geom.tileSize / 2, epos.y + geom.tileSize / 2 - 4);
+    ctx.restore();
+
+    // High-visibility EXIT label pill
+    ctx.save();
+    ctx.fillStyle = 'rgba(6, 78, 59, 0.9)';
+    ctx.fillRect(epos.x + 2, epos.y + geom.tileSize - 13, geom.tileSize - 4, 11);
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 1.0;
+    ctx.strokeRect(epos.x + 2, epos.y + geom.tileSize - 13, geom.tileSize - 4, 11);
+    ctx.fillStyle = '#6ee7b7';
+    ctx.font = 'bold 8.5px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('EXIT', epos.x + geom.tileSize / 2, epos.y + geom.tileSize - 7.5);
+    ctx.restore();
 
     if (state.selectedEntity && state.selectedEntity.type === 'exit') {
       drawSelectionGlow(epos.x, epos.y, geom.tileSize, geom.tileSize);
@@ -1399,21 +1436,37 @@ function renderToolPreview(ctx, geom) {
     ctx.fillStyle = '#475569';
     ctx.fillRect(pos.x, pos.y, bw, bh);
   } else if (state.activeTool === 'start' || state.activeTool === 'stairs') {
-    ctx.fillStyle = '#0284c7';
-    ctx.fillRect(pos.x, pos.y, geom.tileSize, geom.tileSize);
-    if (isBorderTile(col, row)) {
-      ctx.strokeStyle = '#38bdf8';
-      ctx.lineWidth = 2.5;
-      ctx.strokeRect(pos.x, pos.y, geom.tileSize, geom.tileSize);
-    }
+    ctx.fillStyle = 'rgba(2, 132, 199, 0.75)';
+    ctx.fillRect(pos.x + 1, pos.y + 1, geom.tileSize - 2, geom.tileSize - 2);
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = isBorderTile(col, row) ? 3.0 : 1.5;
+    ctx.strokeRect(pos.x + 1, pos.y + 1, geom.tileSize - 2, geom.tileSize - 2);
+
+    ctx.fillStyle = '#fff';
+    ctx.font = '14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🪜', pos.x + geom.tileSize / 2, pos.y + geom.tileSize / 2 - 4);
+
+    ctx.fillStyle = '#7dd3fc';
+    ctx.font = 'bold 8.5px monospace';
+    ctx.fillText('START', pos.x + geom.tileSize / 2, pos.y + geom.tileSize - 6);
   } else if (state.activeTool === 'exit') {
-    ctx.fillStyle = '#059669';
-    ctx.fillRect(pos.x, pos.y, geom.tileSize, geom.tileSize);
-    if (isBorderTile(col, row)) {
-      ctx.strokeStyle = '#34d399';
-      ctx.lineWidth = 2.5;
-      ctx.strokeRect(pos.x, pos.y, geom.tileSize, geom.tileSize);
-    }
+    ctx.fillStyle = 'rgba(5, 150, 105, 0.75)';
+    ctx.fillRect(pos.x + 1, pos.y + 1, geom.tileSize - 2, geom.tileSize - 2);
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = isBorderTile(col, row) ? 3.0 : 1.5;
+    ctx.strokeRect(pos.x + 1, pos.y + 1, geom.tileSize - 2, geom.tileSize - 2);
+
+    ctx.fillStyle = '#fff';
+    ctx.font = '14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🏁', pos.x + geom.tileSize / 2, pos.y + geom.tileSize / 2 - 4);
+
+    ctx.fillStyle = '#6ee7b7';
+    ctx.font = 'bold 8.5px monospace';
+    ctx.fillText('EXIT', pos.x + geom.tileSize / 2, pos.y + geom.tileSize - 6);
   } else if (state.activeTool === 'note') {
     ctx.fillStyle = '#d97706';
     ctx.beginPath();
@@ -1616,7 +1669,8 @@ function findEntityAt(col, row) {
 }
 
 function handleCanvasClick(wx, wy) {
-  const tile = worldToTile(wx, wy);
+  const isStartOrExit = state.activeTool === 'start' || state.activeTool === 'stairs' || state.activeTool === 'exit';
+  const tile = worldToTile(wx, wy, isStartOrExit);
   if (!tile) return;
   const [col, row] = tile;
   const room = findRoomAtTile(col, row);
@@ -1748,12 +1802,14 @@ function handleCanvasClick(wx, wy) {
     updateStartSuboptsUI();
     updateInspectorUI();
     updateEntitySummaryList();
+    showToast(`🪜 Starting entrance placed at [${col}, ${row}]${isBorderTile(col, row) ? ' (Border Tile)' : ''}`, 'success');
   } else if (state.activeTool === 'exit') {
     state.quest.exitTile = [col, row];
     state.selectedEntity = { type: 'exit', index: 0, data: state.quest.exitTile };
     updateExitSuboptsUI();
     updateInspectorUI();
     updateEntitySummaryList();
+    showToast(`🏁 Exit tile placed at [${col}, ${row}]${isBorderTile(col, row) ? ' (Border Tile)' : ''}`, 'success');
   } else if (state.activeTool === 'note') {
     const mark = state.subtool.noteMarker || `Note ${String.fromCharCode(65 + state.quest.storyTriggers.length)}`;
     const newTrigger = {
@@ -2412,7 +2468,8 @@ function setupEventListeners() {
     const sx = e.clientX - rect.left;
     const sy = e.clientY - rect.top;
     const world = screenToWorld(sx, sy);
-    const tile = worldToTile(world.x, world.y);
+    const isStartOrExit = state.activeTool === 'start' || state.activeTool === 'stairs' || state.activeTool === 'exit';
+    const tile = worldToTile(world.x, world.y, isStartOrExit);
 
     dom.infoCursorCoords.textContent = `📍 Cursor: ${Math.round(world.x)}, ${Math.round(world.y)}`;
 
