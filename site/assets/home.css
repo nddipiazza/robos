@@ -70,13 +70,16 @@ body.home{
 .h-rows p code{font:.82rem var(--mono);background:var(--tint);border:1px solid color-mix(in srgb,var(--navy) 16%,transparent);border-radius:3px;padding:1px 5px}
 .h-src{font:.76rem/1.5 var(--mono);color:var(--muted);overflow-wrap:anywhere}
 
-/* worked examples: say it in words first, then show the real file or output */
-.h-ex-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:start}
-.h-ex{margin:0;display:flex;flex-direction:column;gap:14px}
-.h-ex h3{font:600 1.35rem/1.25 var(--serif);margin:0}
-.h-ex-says{font-size:1rem;line-height:1.65;color:color-mix(in srgb,var(--fg) 86%,var(--bg))}
-.h-ex-says b{color:var(--head);font-weight:600}
-.h-ex-says em{font-style:normal;color:var(--hot);font-weight:600}
+/* the idea: three plain steps, each with a real file under it */
+.h-flow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:48px 32px;align-items:start}
+.h-cell{display:flex;flex-direction:column;gap:14px;min-width:0}
+.h-cell-wide{grid-column:1/-1}
+.h-cell h3{display:flex;align-items:center;gap:12px;font:600 1.5rem/1.2 var(--serif);margin:0}
+.h-n{flex:none;display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--hot);color:var(--btn-fg);font:600 .85rem/1 var(--mono)}
+.h-says{font-size:1.02rem;line-height:1.65;max-width:62ch;color:color-mix(in srgb,var(--fg) 86%,var(--bg))}
+.h-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:start}
+.h-honest{margin-top:44px;max-width:78ch;padding:16px 20px;border-left:3px solid var(--hot);background:color-mix(in srgb,var(--hot) 7%,transparent);font-size:.94rem;line-height:1.65;color:color-mix(in srgb,var(--fg) 86%,var(--bg))}
+.h-honest b{color:var(--head)}
 .h-code{margin:0;border:1px solid color-mix(in srgb,var(--navy) 22%,var(--line));border-radius:6px;background:var(--card);overflow:hidden}
 .h-code figcaption{display:flex;flex-direction:column;gap:2px;padding:10px 16px;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--navy) 7%,transparent)}
 .h-code figcaption b{font:500 .68rem/1.4 var(--mono);text-transform:uppercase;letter-spacing:.09em;color:var(--hot)}
@@ -169,7 +172,7 @@ body.home{
 
 @media(max-width:900px){
   .h-hero{padding:48px 0 52px}
-  .h-hero-grid,.h-ex-grid,.h-install-grid,.h-license-grid{grid-template-columns:1fr;gap:28px}
+  .h-hero-grid,.h-flow,.h-pair,.h-install-grid,.h-license-grid{grid-template-columns:1fr;gap:28px}
   .h-hero-grid{gap:40px}
   .h-sec{padding:60px 0}
   .h-stage{padding:36px 0 44px}
