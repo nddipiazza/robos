@@ -100,6 +100,23 @@ class SkillsExecutor {
       }
     }
 
+    // 2.1 Tabletop Quest Editor Skills:
+    // e.g., "Place two skeletons in room one", "add 2 skeletons to room 1", "put a chest in room 2"
+    try {
+      const { defaultIntentResolver } = require('./skill-intent-resolver');
+      const tabletopAnalysis = defaultIntentResolver ? defaultIntentResolver.resolveLikelySkills(query, context) : null;
+      const tabletopSkill = tabletopAnalysis?.likelySkills?.find(s => s.id?.startsWith('tabletop:'));
+      if (tabletopSkill) {
+        return {
+          ok: true,
+          skill: tabletopSkill.id,
+          actionDone: tabletopSkill.title,
+          response: `Placed: ${tabletopSkill.title.replace(/^Place\s+/i, '')}.`,
+          data: tabletopSkill.params
+        };
+      }
+    } catch {}
+
     // 3. Task Management: Add Task
     // Matches: "add a task to...", "create a task: ...", "new task ...", "add task ..."
     const addTaskMatch = query.match(/^(?:add|create|new|insert)\s+(?:a\s+)?task(?:\s*[:|-]\s*|\s+for\s+|\s+to\s+|\s+)(.+)$/i)

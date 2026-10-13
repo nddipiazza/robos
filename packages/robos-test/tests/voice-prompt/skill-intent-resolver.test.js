@@ -61,6 +61,17 @@ test('SkillIntentResolver: Tabletop Quest Editor Skills', async (t) => {
     assert.strictEqual(s.params.room, '2');
   });
 
+  await t.test('resolves "Place two skeletons in room one."', () => {
+    const skills = matchTabletopSkills('Place two skeletons in room one.');
+    assert.strictEqual(skills.length, 1);
+    const s = skills[0];
+    assert.strictEqual(s.id, 'tabletop:place-monster');
+    assert.strictEqual(s.title, 'Place 2 Skeletons in Room 1');
+    assert.strictEqual(s.params.monster, 'skeleton');
+    assert.strictEqual(s.params.count, 2);
+    assert.strictEqual(s.params.room, '1');
+  });
+
   await t.test('resolves furniture and trap commands', () => {
     const furn = matchTabletopSkills('place a treasure chest in room 3');
     assert.strictEqual(furn.length, 1);

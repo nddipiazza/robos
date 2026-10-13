@@ -1409,6 +1409,15 @@ test('Voice Map Setup: interprets spoken quest instructions and places items cle
   assert.equal(cmd3[1].count, 2);
   assert.equal(cmd3[1].targetRoom, 'room 2');
 
+  const cmd4 = interpretVoiceQuestCommands('Place two skeletons in room one.', blockmap, null);
+  assert.equal(cmd4.length, 1);
+  assert.equal(cmd4[0].category, 'monster');
+  assert.equal(cmd4[0].type, 'skeleton');
+  assert.equal(cmd4[0].count, 2);
+
+  const cmdAmbient = interpretVoiceQuestCommands('(wind blowing)', blockmap, null);
+  assert.equal(cmdAmbient.length, 0);
+
   // 2. Execution and Board Placement
   const quest = {
     monsters: [],
@@ -1417,6 +1426,21 @@ test('Voice Map Setup: interprets spoken quest instructions and places items cle
     traps: [],
     wallBlocks: []
   };
+
+  // Execute: "Place two skeletons in room one."
+  const exec0 = executeVoiceMapCommands('Place two skeletons in room one.', 'guidance', quest, blockmap);
+  assert.equal(exec0.success, true);
+  assert.equal(quest.monsters.length, 2);
+  assert.equal(quest.monsters[0].roomId, 'room-1');
+  assert.equal(quest.monsters[1].roomId, 'room-1');
+
+  // Execute ambient noise: should not place anything or error
+  const execAmb = executeVoiceMapCommands('(wind blowing)', 'guidance', quest, blockmap);
+  assert.equal(execAmb.success, true);
+  assert.equal(execAmb.isAmbient, true);
+  assert.equal(quest.monsters.length, 2);
+
+  quest.monsters = [];
 
   // Execute: "add 3 skeletons to room 1"
   const exec1 = executeVoiceMapCommands('add 3 skeletons to room 1', 'guidance', quest, blockmap);

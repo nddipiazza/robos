@@ -3702,18 +3702,28 @@ function findTargetRoom(roomSpec, blockmap, currentContext = {}) {
   }
 
   const spec = roomSpec.toLowerCase().trim();
+  const cleanSpec = spec.replace(/^(?:in|to|into|at|inside|the)\s+/g, '').replace(/[.,!?;:]+$/g, '').trim();
 
-  // Match room number or word, e.g. "room 1", "room #2", "room one"
-  const wordMap = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10 };
-  const numMatch = spec.match(/room\s*#?(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\b/i);
+  const wordMap = {
+    one: 1, two: 2, three: 3, four: 4, five: 5,
+    six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+    first: 1, second: 2, third: 3, fourth: 4, fifth: 5,
+    sixth: 6, seventh: 7, eighth: 8, ninth: 9, tenth: 10
+  };
+
+  // Match room number or word, e.g. "room 1", "room #2", "room one", "room two", "second room", "first room", "two", "2", "one", "1"
+  const numMatch = cleanSpec.match(/(?:(?:the\s+)?room\s*#?|(?:the\s+))?(\d+|one|two|three|four|five|six|seven|eight|nine|ten|first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth)(?:\s+room)?\b/i);
   if (numMatch) {
     let n = parseInt(numMatch[1], 10);
     if (isNaN(n)) {
       n = wordMap[numMatch[1].toLowerCase()];
     }
     if (n !== undefined) {
-      // 1. Try matching room with name containing Room N
-      const matchByName = rooms.find(r => (r.name && new RegExp(`\\broom\\s*#?${n}\\b`, 'i').test(r.name)) || (r.id && new RegExp(`\\b${n}\\b`).test(r.id)));
+      // 1. Try matching room with name containing Room N, Room #N, or id containing N / room-N
+      const matchByName = rooms.find(r =>
+        (r.name && (new RegExp(`\\broom\\s*#?${n}\\b`, 'i').test(r.name) || new RegExp(`\\b${n}\\b`).test(r.name))) ||
+        (r.id && (new RegExp(`\\b${n}\\b`).test(r.id) || r.id === `room-${n}` || r.id === `r${n}`))
+      );
       if (matchByName) return matchByName;
       // 2. Try 1-based index in rooms array
       if (n >= 1 && n <= rooms.length) {
@@ -3723,7 +3733,6 @@ function findTargetRoom(roomSpec, blockmap, currentContext = {}) {
   }
 
   // Substring match on name or id
-  const cleanSpec = spec.replace(/^(in|to|at|the)\s+/g, '').trim();
   const directMatch = rooms.find(r => {
     const name = (r.name || '').toLowerCase();
     const id = (r.id || '').toLowerCase();
@@ -4524,6 +4533,9 @@ function setupEventListeners() {
     voiceState.isListening = true;
     voiceState.capturedText = '';
     voiceState.interimText = '';
+    voiceState.bubbles = {};
+    voiceState.executedBubbles = new Set();
+    voiceState.executedTexts = new Set();
 
     // Indicator in the "record" icon to show we are listening
     if (dom.btnVoiceAddItems) {
@@ -4578,6 +4590,17 @@ function setupEventListeners() {
               if (bubble.isAmbient) {
                 return;
               }
+
+              // Real-time execution: when a bubble is final and has speech, execute it immediately!
+              if (bubble.isFinal && bubble.msg) {
+                if (!voiceState.executedBubbles) voiceState.executedBubbles = new Set();
+                if (!voiceState.executedBubbles.has(bubble.bubbleId)) {
+                  voiceState.executedBubbles.add(bubble.bubbleId);
+                  if (!voiceState.executedTexts) voiceState.executedTexts = new Set();
+                  voiceState.executedTexts.add(bubble.msg.trim());
+                  executeVoiceMapCommands(bubble.msg, VOICE_GUIDANCE_PROMPT);
+                }
+              }
             }
 
             if (data.text) {
@@ -4590,6 +4613,11 @@ function setupEventListeners() {
                   voiceState.capturedText = (voiceState.capturedText + ' ' + clean).trim();
                 }
                 voiceState.interimText = '';
+                if (!voiceState.executedTexts) voiceState.executedTexts = new Set();
+                if (!voiceState.executedTexts.has(clean)) {
+                  voiceState.executedTexts.add(clean);
+                  executeVoiceMapCommands(clean, VOICE_GUIDANCE_PROMPT);
+                }
               } else {
                 voiceState.interimText = clean;
               }
@@ -4640,7 +4668,11 @@ function setupEventListeners() {
     }
 
     if (finalText) {
-      executeVoiceMapCommands(finalText, VOICE_GUIDANCE_PROMPT);
+      if (!voiceState.executedTexts || !voiceState.executedTexts.has(finalText)) {
+        if (!voiceState.executedTexts) voiceState.executedTexts = new Set();
+        voiceState.executedTexts.add(finalText);
+        executeVoiceMapCommands(finalText, VOICE_GUIDANCE_PROMPT);
+      }
     }
   }
 
