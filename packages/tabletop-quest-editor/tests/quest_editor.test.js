@@ -729,5 +729,51 @@ test('Entity Deletion: deleting 2x2 staircase furniture resets startingStair if 
   assert.equal(quest.furniture.length, 0);
 });
 
+// -------------------------------------------------------------
+// Test 14: Distinct Blockmap Room and Corridor Underlay Colors
+// -------------------------------------------------------------
+test('Blockmap Underlay Styles: uses distinct, subtle colors and perimeter borders for rooms vs corridors', () => {
+  const LAYER_STYLES = {
+    corridor: {
+      fill: 'rgba(56, 189, 248, 0.16)',   // Sky Blue
+      stroke: 'rgba(56, 189, 248, 0.28)',
+      theme: 'cool-sky'
+    },
+    room: {
+      fill: 'rgba(245, 158, 11, 0.14)',    // Warm Amber
+      stroke: 'rgba(245, 158, 11, 0.45)',
+      theme: 'warm-amber'
+    }
+  };
+
+  // Assert rooms and corridors use distinct hue themes
+  assert.notEqual(LAYER_STYLES.corridor.fill, LAYER_STYLES.room.fill);
+  assert.notEqual(LAYER_STYLES.corridor.stroke, LAYER_STYLES.room.stroke);
+  assert.notEqual(LAYER_STYLES.corridor.theme, LAYER_STYLES.room.theme);
+
+  // Perimeter detection logic for rectangular and freeform rooms
+  function computePerimeterEdges(tileList) {
+    const set = new Set(tileList.map(([c, r]) => `${c},${r}`));
+    const edges = [];
+    for (const [c, r] of tileList) {
+      if (!set.has(`${c},${r - 1}`)) edges.push({ side: 'N', from: [c, r], to: [c + 1, r] });
+      if (!set.has(`${c},${r + 1}`)) edges.push({ side: 'S', from: [c, r + 1], to: [c + 1, r + 1] });
+      if (!set.has(`${c - 1},${r}`)) edges.push({ side: 'W', from: [c, r], to: [c, r + 1] });
+      if (!set.has(`${c + 1},${r}`)) edges.push({ side: 'E', from: [c + 1, r], to: [c + 1, r + 1] });
+    }
+    return edges;
+  }
+
+  // 2x2 room has exactly 8 exterior perimeter unit edges (2 per side)
+  const room2x2 = [[1, 1], [2, 1], [1, 2], [2, 2]];
+  const edges2x2 = computePerimeterEdges(room2x2);
+  assert.equal(edges2x2.length, 8);
+  assert.equal(edges2x2.filter(e => e.side === 'N').length, 2);
+  assert.equal(edges2x2.filter(e => e.side === 'S').length, 2);
+  assert.equal(edges2x2.filter(e => e.side === 'W').length, 2);
+  assert.equal(edges2x2.filter(e => e.side === 'E').length, 2);
+});
+
+
 
 

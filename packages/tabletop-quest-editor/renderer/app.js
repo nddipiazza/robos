@@ -1045,31 +1045,60 @@ function render() {
 
   // 2. Corridors Underlay (Layer 1)
   if (state.layers.showCorridors && state.blockmap?.corridors) {
-    ctx.fillStyle = 'rgba(71, 85, 105, 0.22)';
+    ctx.save();
+    ctx.fillStyle = 'rgba(56, 189, 248, 0.16)'; // Soft Sky Blue tint
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.28)'; // Subtle corridor tile edge
+    ctx.lineWidth = 1.0;
     for (const [c, r] of state.blockmap.corridors) {
       const pos = tileToWorld(c, r);
       ctx.fillRect(pos.x, pos.y, geom.tileSize, geom.tileSize);
+      ctx.strokeRect(pos.x, pos.y, geom.tileSize, geom.tileSize);
     }
+    ctx.restore();
   }
 
   // 3. Rooms Underlay (Layer 1)
   if (state.layers.showRooms && state.blockmap?.rooms) {
+    ctx.save();
     for (const room of state.blockmap.rooms) {
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.18)';
-      ctx.strokeStyle = 'rgba(148, 163, 184, 0.35)';
-      ctx.lineWidth = 2.0;
+      const roomColor = room.color;
+      ctx.fillStyle = roomColor ? `${roomColor}24` : 'rgba(245, 158, 11, 0.14)'; // Soft Warm Amber tint default
+      ctx.strokeStyle = roomColor ? `${roomColor}80` : 'rgba(245, 158, 11, 0.45)'; // Amber room perimeter border
+      ctx.lineWidth = 1.8;
 
-      if (room.tiles) {
+      if (room.tiles && room.tiles.length > 0) {
+        const tileSet = new Set(room.tiles.map(([c, r]) => `${c},${r}`));
+        ctx.beginPath();
         for (const [c, r] of room.tiles) {
           const pos = tileToWorld(c, r);
           ctx.fillRect(pos.x, pos.y, geom.tileSize, geom.tileSize);
+
+          // Outer room perimeter borders
+          if (!tileSet.has(`${c},${r - 1}`)) {
+            ctx.moveTo(pos.x, pos.y);
+            ctx.lineTo(pos.x + geom.tileSize, pos.y);
+          }
+          if (!tileSet.has(`${c},${r + 1}`)) {
+            ctx.moveTo(pos.x, pos.y + geom.tileSize);
+            ctx.lineTo(pos.x + geom.tileSize, pos.y + geom.tileSize);
+          }
+          if (!tileSet.has(`${c - 1},${r}`)) {
+            ctx.moveTo(pos.x, pos.y);
+            ctx.lineTo(pos.x, pos.y + geom.tileSize);
+          }
+          if (!tileSet.has(`${c + 1},${r}`)) {
+            ctx.moveTo(pos.x + geom.tileSize, pos.y);
+            ctx.lineTo(pos.x + geom.tileSize, pos.y + geom.tileSize);
+          }
         }
-      } else {
+        ctx.stroke();
+      } else if (room.x !== undefined && room.y !== undefined && room.w && room.h) {
         const pos = tileToWorld(room.x, room.y);
         ctx.fillRect(pos.x, pos.y, room.w * geom.tileSize, room.h * geom.tileSize);
         ctx.strokeRect(pos.x, pos.y, room.w * geom.tileSize, room.h * geom.tileSize);
       }
     }
+    ctx.restore();
   }
 
   // 4. Grid Lines (Layer 1)
