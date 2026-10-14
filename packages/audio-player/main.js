@@ -157,7 +157,19 @@ ipcMain.handle('audio:cast-resume', async (_evt, ip) => {
 });
 
 ipcMain.handle('audio:cast-stop', async (_evt, ip) => {
-  return castService.stopPlayback(ip);
+  const res = await castService.stopPlayback(ip);
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('audio:speaker-playback-stopped', { ip });
+  }
+  return res;
+});
+
+ipcMain.handle('audio:cast-stop-all', async () => {
+  const res = await castService.stopAllPlayback();
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('audio:speaker-playback-stopped', { all: true });
+  }
+  return res;
 });
 
 ipcMain.handle('audio:open-file-dialog', async () => {

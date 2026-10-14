@@ -17411,12 +17411,20 @@
     const [isScanning, setIsScanning] = (0, import_react8.useState)(false);
     const [isScanningLibrary, setIsScanningLibrary] = (0, import_react8.useState)(false);
     const [libraryScanStatus, setLibraryScanStatus] = (0, import_react8.useState)(null);
+    const [activeCastSession, setActiveCastSession] = (0, import_react8.useState)(null);
     const [ttsMessage, setTtsMessage] = (0, import_react8.useState)("Hello from RobOS! Smart home audio is online.");
     const [statusMsg, setStatusMsg] = (0, import_react8.useState)("");
     const [activeAmbient, setActiveAmbient] = (0, import_react8.useState)(null);
     const playerRef = (0, import_react8.useRef)(null);
     const audioCtxRef = (0, import_react8.useRef)(null);
     const ambientNodeRef = (0, import_react8.useRef)(null);
+    const getSpeakerName = (ip) => {
+      if (!ip) return "Speaker";
+      if (ip === "local") return "Desktop (Local Audio)";
+      if (ip === "all") return "All Connected Speakers";
+      const found = speakers.find((s) => s.ip === ip);
+      return found ? found.name : `Speaker (${ip})`;
+    };
     (0, import_react8.useEffect)(() => {
       refreshSpeakers();
       loadLibrary();
@@ -17474,6 +17482,22 @@
           showStatus(`Library scan error: ${err.error}`);
         }));
       }
+      if (window.robosAudio?.onSpeakerPlaybackStopped) {
+        cleanups.push(window.robosAudio.onSpeakerPlaybackStopped((data) => {
+          setActiveCastSession(null);
+        }));
+      }
+      if (window.robosAudio?.onSpeakerStatusChange) {
+        cleanups.push(window.robosAudio.onSpeakerStatusChange(({ ip, status }) => {
+          if (status?.playerState === "IDLE" && status?.idleReason === "FINISHED") {
+            setActiveCastSession(null);
+          } else if (status?.playerState === "PAUSED") {
+            setActiveCastSession((prev) => prev ? { ...prev, isPaused: true } : prev);
+          } else if (status?.playerState === "PLAYING") {
+            setActiveCastSession((prev) => prev ? { ...prev, isPaused: false } : prev);
+          }
+        }));
+      }
       return () => {
         cleanups.forEach((fn) => {
           try {
@@ -17482,7 +17506,7 @@
           }
         });
       };
-    }, []);
+    }, [speakers]);
     const showStatus = (msg) => {
       setStatusMsg(msg);
       setTimeout(() => setStatusMsg(""), 4e3);
@@ -17579,20 +17603,50 @@
       }
     };
     const currentTrack = playlist[currentTrackIndex] || playlist[0] || null;
-    const playTrack = (track) => {
-      const existingIdx = playlist.findIndex((t) => t.filePath === track.filePath || t.src === track.src);
-      if (existingIdx >= 0) {
-        setCurrentTrackIndex(existingIdx);
-      } else {
-        setPlaylist((prev) => [...prev, track]);
-        setCurrentTrackIndex(playlist.length);
+    const handleStopCast = async (targetIp = null) => {
+      const ipToStop = targetIp || activeCastSession?.ip || (outputTarget !== "local" ? outputTarget : null);
+      showStatus(`Stopping playback on ${ipToStop ? getSpeakerName(ipToStop) : "speakers"}...`);
+      try {
+        if (ipToStop && ipToStop !== "all") {
+          await window.robosAudio.castStop(ipToStop);
+        } else {
+          await window.robosAudio.castStopAll();
+        }
+        setActiveCastSession(null);
+        if (playerRef.current?.audio?.current) {
+          playerRef.current.audio.current.pause();
+        }
+        showStatus("Cast playback stopped.");
+      } catch (err) {
+        showStatus("Error stopping cast: " + err.message);
       }
-      if (outputTarget !== "local") {
-        castTrack(outputTarget, track);
+    };
+    const handleToggleCastPause = async () => {
+      if (!activeCastSession?.ip) return;
+      try {
+        if (activeCastSession.isPaused) {
+          await window.robosAudio.castResume(activeCastSession.ip);
+          setActiveCastSession((prev) => ({ ...prev, isPaused: false }));
+          if (playerRef.current?.audio?.current) {
+            playerRef.current.audio.current.play().catch(() => {
+            });
+          }
+          showStatus(`Resumed cast on ${getSpeakerName(activeCastSession.ip)}`);
+        } else {
+          await window.robosAudio.castPause(activeCastSession.ip);
+          setActiveCastSession((prev) => ({ ...prev, isPaused: true }));
+          if (playerRef.current?.audio?.current) {
+            playerRef.current.audio.current.pause();
+          }
+          showStatus(`Paused cast on ${getSpeakerName(activeCastSession.ip)}`);
+        }
+      } catch (err) {
+        showStatus("Error toggling pause: " + err.message);
       }
     };
     const castTrack = async (speakerIp, track) => {
-      showStatus(`Casting "${track.title}" to ${speakerIp}...`);
+      if (!speakerIp || speakerIp === "local" || !track) return;
+      showStatus(`Casting "${track.title}" to ${getSpeakerName(speakerIp)}...`);
       const metadata = {
         title: track.title,
         artist: track.artist,
@@ -17601,17 +17655,72 @@
       if (track.artId) {
         metadata.images = [{ url: `http://192.168.1.34:0/art/${track.artId}.jpg` }];
       }
-      if (speakerIp === "all") {
-        speakers.forEach((s) => {
-          if (track.filePath) window.robosAudio.castFile(s.ip, track.filePath, metadata);
-          else if (track.src) window.robosAudio.castUrl(s.ip, track.src, metadata);
-        });
-      } else {
-        if (track.filePath) {
-          await window.robosAudio.castFile(speakerIp, track.filePath, metadata);
-        } else if (track.src) {
-          await window.robosAudio.castUrl(speakerIp, track.src, metadata);
+      try {
+        if (speakerIp === "all") {
+          for (const s of speakers) {
+            if (track.filePath) window.robosAudio.castFile(s.ip, track.filePath, metadata);
+            else if (track.src) window.robosAudio.castUrl(s.ip, track.src, metadata);
+          }
+          setActiveCastSession({ ip: "all", trackId: track.id, filePath: track.filePath, isPaused: false });
+        } else {
+          if (track.filePath) {
+            await window.robosAudio.castFile(speakerIp, track.filePath, metadata);
+          } else if (track.src) {
+            await window.robosAudio.castUrl(speakerIp, track.src, metadata);
+          }
+          setActiveCastSession({ ip: speakerIp, trackId: track.id, filePath: track.filePath, isPaused: false });
         }
+        showStatus(`Streaming "${track.title}" to ${getSpeakerName(speakerIp)}!`);
+      } catch (err) {
+        showStatus("Error casting track: " + err.message);
+        setActiveCastSession(null);
+      }
+    };
+    const playTrack = (track) => {
+      const existingIdx = playlist.findIndex((t) => t.id && t.id === track.id || t.filePath && t.filePath === track.filePath || t.src === track.src);
+      if (existingIdx >= 0) {
+        setCurrentTrackIndex(existingIdx);
+      } else {
+        setPlaylist((prev) => [...prev, track]);
+        setCurrentTrackIndex(playlist.length);
+      }
+      if (outputTarget !== "local") {
+        castTrack(outputTarget, track);
+        if (playerRef.current?.audio?.current) {
+          playerRef.current.audio.current.muted = true;
+          playerRef.current.audio.current.play().catch(() => {
+          });
+        }
+      } else {
+        if (activeCastSession) {
+          handleStopCast();
+        }
+        if (playerRef.current?.audio?.current) {
+          playerRef.current.audio.current.muted = false;
+          playerRef.current.audio.current.play().catch(() => {
+          });
+        }
+      }
+    };
+    const handlePlayerPlay = () => {
+      if (outputTarget !== "local") {
+        if (playerRef.current?.audio?.current) {
+          playerRef.current.audio.current.muted = true;
+        }
+        if (activeCastSession && activeCastSession.isPaused) {
+          window.robosAudio.castResume(activeCastSession.ip);
+          setActiveCastSession((prev) => ({ ...prev, isPaused: false }));
+          showStatus(`Resumed casting on ${getSpeakerName(activeCastSession.ip)}`);
+        } else if (currentTrack) {
+          castTrack(outputTarget, currentTrack);
+        }
+      }
+    };
+    const handlePlayerPause = () => {
+      if (outputTarget !== "local" && activeCastSession) {
+        window.robosAudio.castPause(activeCastSession.ip);
+        setActiveCastSession((prev) => ({ ...prev, isPaused: true }));
+        showStatus(`Paused casting on ${getSpeakerName(activeCastSession.ip)}`);
       }
     };
     const handlePlayNext = () => {
@@ -17758,7 +17867,21 @@
           id: "output-select",
           value: outputTarget,
           onChange: (e) => {
-            setOutputTarget(e.target.value);
+            const target = e.target.value;
+            setOutputTarget(target);
+            if (target === "local") {
+              if (activeCastSession) handleStopCast();
+              if (playerRef.current?.audio?.current) {
+                playerRef.current.audio.current.muted = false;
+              }
+            } else {
+              if (playerRef.current?.audio?.current) {
+                playerRef.current.audio.current.muted = true;
+              }
+              if (currentTrack) {
+                castTrack(target, currentTrack);
+              }
+            }
             showStatus(`Switched output to: ${e.target.options[e.target.selectedIndex].text}`);
           }
         },
@@ -17817,7 +17940,16 @@
             width: `${libraryScanStatus?.total > 0 ? Math.min(100, Math.round((libraryScanStatus.current || 0) / libraryScanStatus.total * 100)) : 100}%`
           }
         }
-      )), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-cancel-scan", onClick: handleCancelScan }, "\u2715 Cancel Scan")), activeTab === "player" && /* @__PURE__ */ import_react8.default.createElement("div", { className: "player-deck-container" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "deck-card" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "track-hero" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "album-art-box" }, currentTrack?.artId ? /* @__PURE__ */ import_react8.default.createElement("img", { src: `http://192.168.1.34:0/art/${currentTrack.artId}.jpg`, alt: "Album Art" }) : /* @__PURE__ */ import_react8.default.createElement("div", { className: "art-fallback" }, /* @__PURE__ */ import_react8.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "48", height: "48", viewBox: "0 0 24 24", fill: "none", stroke: "#00bcd4", "stroke-width": "1.5" }, /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "12", cy: "12", r: "10" }), /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "12", cy: "12", r: "3" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "12", y1: "2", x2: "12", y2: "4" })))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "track-details" }, /* @__PURE__ */ import_react8.default.createElement("h2", { id: "track-title" }, currentTrack?.title || "No Track Selected"), /* @__PURE__ */ import_react8.default.createElement("p", { id: "track-artist" }, currentTrack?.artist || "Unknown Artist", " \u2022 ", currentTrack?.album || "RobOS Library"), /* @__PURE__ */ import_react8.default.createElement("div", { className: "track-meta-pills" }, /* @__PURE__ */ import_react8.default.createElement("span", { className: "badge" }, "Output: ", outputTarget === "local" ? "Desktop" : outputTarget), currentTrack?.genre && /* @__PURE__ */ import_react8.default.createElement("span", { className: "badge" }, currentTrack.genre), currentTrack?.year && /* @__PURE__ */ import_react8.default.createElement("span", { className: "badge" }, currentTrack.year))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "hero-quick-actions" }, /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-secondary", onClick: handleSelectFolder, title: "Add folder via file manager" }, "\u{1F4C1} Add Folder"), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-secondary", onClick: handleAddFiles, title: "Add files" }, "\u2795 Add Files"))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "react-h5-wrapper" }, /* @__PURE__ */ import_react8.default.createElement(
+      )), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-cancel-scan", onClick: handleCancelScan }, "\u2715 Cancel Scan")), activeTab === "player" && /* @__PURE__ */ import_react8.default.createElement("div", { className: "player-deck-container" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "deck-card" }, (outputTarget !== "local" || activeCastSession) && /* @__PURE__ */ import_react8.default.createElement("div", { className: "active-cast-bar" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "cast-bar-indicator" }, /* @__PURE__ */ import_react8.default.createElement(
+        "span",
+        {
+          className: "cast-pulse-dot",
+          style: { background: activeCastSession?.isPaused ? "#eab308" : "#22c55e" }
+        }
+      ), /* @__PURE__ */ import_react8.default.createElement("span", null, activeCastSession ? `\u{1F50A} Casting "${currentTrack?.title || "Track"}" to ${getSpeakerName(activeCastSession.ip)}${activeCastSession.isPaused ? " (Paused)" : " (Live)"}` : `\u{1F3AF} Output routed to ${getSpeakerName(outputTarget)} (Local desktop muted)`)), /* @__PURE__ */ import_react8.default.createElement("div", { className: "cast-bar-controls" }, activeCastSession && /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-chip", onClick: handleToggleCastPause }, activeCastSession.isPaused ? "\u25B6 Resume Cast" : "\u23F8 Pause Cast"), activeCastSession && /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast(activeCastSession.ip) }, "\u23F9 Stop Cast"), outputTarget !== "local" && /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-chip", onClick: () => {
+        setOutputTarget("local");
+        handleStopCast();
+      } }, "\u{1F4BB} Switch to Local Desktop"))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "track-hero" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "album-art-box" }, currentTrack?.artId ? /* @__PURE__ */ import_react8.default.createElement("img", { src: `http://192.168.1.34:0/art/${currentTrack.artId}.jpg`, alt: "Album Art" }) : /* @__PURE__ */ import_react8.default.createElement("div", { className: "art-fallback" }, /* @__PURE__ */ import_react8.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "48", height: "48", viewBox: "0 0 24 24", fill: "none", stroke: "#00bcd4", "stroke-width": "1.5" }, /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "12", cy: "12", r: "10" }), /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "12", cy: "12", r: "3" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "12", y1: "2", x2: "12", y2: "4" })))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "track-details" }, /* @__PURE__ */ import_react8.default.createElement("h2", { id: "track-title" }, currentTrack?.title || "No Track Selected"), /* @__PURE__ */ import_react8.default.createElement("p", { id: "track-artist" }, currentTrack?.artist || "Unknown Artist", " \u2022 ", currentTrack?.album || "RobOS Library"), /* @__PURE__ */ import_react8.default.createElement("div", { className: "track-meta-pills" }, /* @__PURE__ */ import_react8.default.createElement("span", { className: "badge" }, "Output: ", getSpeakerName(outputTarget)), activeCastSession && /* @__PURE__ */ import_react8.default.createElement("span", { className: "badge", style: { color: "#22c55e", borderColor: "#22c55e" } }, activeCastSession.isPaused ? "\u23F8 Cast Paused" : "\u{1F50A} Casting Active"), currentTrack?.genre && /* @__PURE__ */ import_react8.default.createElement("span", { className: "badge" }, currentTrack.genre), currentTrack?.year && /* @__PURE__ */ import_react8.default.createElement("span", { className: "badge" }, currentTrack.year))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "hero-quick-actions" }, /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-secondary", onClick: handleSelectFolder, title: "Add folder via file manager" }, "\u{1F4C1} Add Folder"), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-secondary", onClick: handleAddFiles, title: "Add files" }, "\u2795 Add Files"))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "react-h5-wrapper" }, /* @__PURE__ */ import_react8.default.createElement(
         es_default,
         {
           ref: playerRef,
@@ -17827,9 +17959,12 @@
           onClickNext: handlePlayNext,
           onClickPrevious: handlePlayPrev,
           onEnded: handlePlayNext,
+          onPlay: handlePlayerPlay,
+          onPause: handlePlayerPause,
           className: "robos-rhap-theme",
           layout: "stacked",
-          customAdditionalControls: []
+          customAdditionalControls: [],
+          muted: outputTarget !== "local"
         }
       )), /* @__PURE__ */ import_react8.default.createElement("div", { className: "queue-quick-peek" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "queue-header" }, /* @__PURE__ */ import_react8.default.createElement("h4", null, "Playlist Queue (", playlist.length, ")"), /* @__PURE__ */ import_react8.default.createElement("span", { className: "queue-subtitle" }, "Drag and drop folders or files anywhere onto this window to add them")), /* @__PURE__ */ import_react8.default.createElement("div", { className: "queue-items-scroll" }, playlist.map((t, idx) => /* @__PURE__ */ import_react8.default.createElement(
         "div",
@@ -17860,20 +17995,47 @@
           value: searchQuery,
           onChange: (e) => setSearchQuery(e.target.value)
         }
-      )), /* @__PURE__ */ import_react8.default.createElement("div", { className: "browser-actions" }, /* @__PURE__ */ import_react8.default.createElement("button", { id: "btn-browse-add-folder", className: "btn-accent", onClick: handleSelectFolder }, /* @__PURE__ */ import_react8.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "12", y1: "10", x2: "12", y2: "16" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "9", y1: "13", x2: "15", y2: "13" })), /* @__PURE__ */ import_react8.default.createElement("span", null, "Add Folder via File Manager")), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-secondary", onClick: handleAddFiles }, /* @__PURE__ */ import_react8.default.createElement("span", null, "\u2795 Add Files")))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "dropzone-banner", onClick: handleSelectFolder }, /* @__PURE__ */ import_react8.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "#00bcd4", "stroke-width": "2" }, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" })), /* @__PURE__ */ import_react8.default.createElement("p", null, "Click here or drag & drop any music folder from your file manager to scan and index")), /* @__PURE__ */ import_react8.default.createElement("div", { className: "library-grid" }, filteredLibrary.length === 0 ? /* @__PURE__ */ import_react8.default.createElement("div", { className: "empty-state" }, /* @__PURE__ */ import_react8.default.createElement("p", null, "No tracks indexed in media library yet."), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-accent", onClick: handleSelectFolder, style: { marginTop: "12px" } }, "\u{1F4C1} Add Folder via File Manager Popup")) : filteredLibrary.map((t, idx) => /* @__PURE__ */ import_react8.default.createElement("div", { key: t.id || idx, className: "track-card", onClick: () => playTrack(t) }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "card-thumb" }, /* @__PURE__ */ import_react8.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "32", height: "32", viewBox: "0 0 24 24", fill: "none", stroke: "#00bcd4", "stroke-width": "1.5" }, /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "12", cy: "12", r: "10" }), /* @__PURE__ */ import_react8.default.createElement("polygon", { points: "10 8 16 12 10 16 10 8", fill: "#00bcd4" }))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "card-info" }, /* @__PURE__ */ import_react8.default.createElement("h4", null, t.title), /* @__PURE__ */ import_react8.default.createElement("p", null, t.artist, " \u2022 ", t.album)), /* @__PURE__ */ import_react8.default.createElement("div", { className: "card-actions" }, /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-chip", onClick: (e) => {
+      )), /* @__PURE__ */ import_react8.default.createElement("div", { className: "browser-actions" }, /* @__PURE__ */ import_react8.default.createElement("button", { id: "btn-browse-add-folder", className: "btn-accent", onClick: handleSelectFolder }, /* @__PURE__ */ import_react8.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "12", y1: "10", x2: "12", y2: "16" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "9", y1: "13", x2: "15", y2: "13" })), /* @__PURE__ */ import_react8.default.createElement("span", null, "Add Folder via File Manager")), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-secondary", onClick: handleAddFiles }, /* @__PURE__ */ import_react8.default.createElement("span", null, "\u2795 Add Files")))), activeCastSession && /* @__PURE__ */ import_react8.default.createElement("div", { className: "active-cast-bar", style: { marginBottom: "16px" } }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "cast-bar-indicator" }, /* @__PURE__ */ import_react8.default.createElement(
+        "span",
+        {
+          className: "cast-pulse-dot",
+          style: { background: activeCastSession.isPaused ? "#eab308" : "#22c55e" }
+        }
+      ), /* @__PURE__ */ import_react8.default.createElement("span", null, "\u{1F50A} Currently casting to ", /* @__PURE__ */ import_react8.default.createElement("strong", null, getSpeakerName(activeCastSession.ip)))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "cast-bar-controls" }, /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-chip", onClick: handleToggleCastPause }, activeCastSession.isPaused ? "\u25B6 Resume" : "\u23F8 Pause"), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast(activeCastSession.ip) }, "\u23F9 Stop Cast"))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "dropzone-banner", onClick: handleSelectFolder }, /* @__PURE__ */ import_react8.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "#00bcd4", "stroke-width": "2" }, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" })), /* @__PURE__ */ import_react8.default.createElement("p", null, "Click here or drag & drop any music folder from your file manager to scan and index")), /* @__PURE__ */ import_react8.default.createElement("div", { className: "library-grid" }, filteredLibrary.length === 0 ? /* @__PURE__ */ import_react8.default.createElement("div", { className: "empty-state" }, /* @__PURE__ */ import_react8.default.createElement("p", null, "No tracks indexed in media library yet."), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-accent", onClick: handleSelectFolder, style: { marginTop: "12px" } }, "\u{1F4C1} Add Folder via File Manager Popup")) : filteredLibrary.map((t, idx) => /* @__PURE__ */ import_react8.default.createElement("div", { key: t.id || idx, className: "track-card", onClick: () => playTrack(t) }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "card-thumb" }, /* @__PURE__ */ import_react8.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "32", height: "32", viewBox: "0 0 24 24", fill: "none", stroke: "#00bcd4", "stroke-width": "1.5" }, /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "12", cy: "12", r: "10" }), /* @__PURE__ */ import_react8.default.createElement("polygon", { points: "10 8 16 12 10 16 10 8", fill: "#00bcd4" }))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "card-info" }, /* @__PURE__ */ import_react8.default.createElement("h4", null, t.title), /* @__PURE__ */ import_react8.default.createElement("p", null, t.artist, " \u2022 ", t.album)), /* @__PURE__ */ import_react8.default.createElement("div", { className: "card-actions" }, /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-chip", onClick: (e) => {
         e.stopPropagation();
         playTrack(t);
-      } }, "\u25B6 Play"), speakers.length > 0 && /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-chip", onClick: (e) => {
-        e.stopPropagation();
-        castTrack(speakers[0].ip, t);
-      } }, "\u{1F50A} Cast")))))), activeTab === "ambient" && /* @__PURE__ */ import_react8.default.createElement("div", { className: "ambient-container" }, /* @__PURE__ */ import_react8.default.createElement("h3", null, "\u26A1 Procedural Focus Soundscapes"), /* @__PURE__ */ import_react8.default.createElement("p", { className: "subtitle" }, "Synthesized in real-time with Web Audio API nodes (zero external files)"), /* @__PURE__ */ import_react8.default.createElement("div", { className: "ambient-grid" }, [
+      } }, "\u25B6 Play"), speakers.length > 0 && (activeCastSession && (activeCastSession.trackId === t.id || activeCastSession.filePath === t.filePath) ? /* @__PURE__ */ import_react8.default.createElement(
+        "button",
+        {
+          className: "btn-chip btn-stop-cast active",
+          onClick: (e) => {
+            e.stopPropagation();
+            handleStopCast(activeCastSession.ip);
+          },
+          title: "Stop playback on Google Cast speaker"
+        },
+        "\u23F9 Stop Cast"
+      ) : /* @__PURE__ */ import_react8.default.createElement(
+        "button",
+        {
+          className: "btn-chip",
+          onClick: (e) => {
+            e.stopPropagation();
+            const target = outputTarget !== "local" ? outputTarget : speakers[0].ip;
+            if (outputTarget === "local") setOutputTarget(target);
+            playTrack(t);
+          },
+          title: `Cast to ${getSpeakerName(outputTarget !== "local" ? outputTarget : speakers[0].ip)}`
+        },
+        "\u{1F50A} Cast"
+      ))))))), activeTab === "ambient" && /* @__PURE__ */ import_react8.default.createElement("div", { className: "ambient-container" }, /* @__PURE__ */ import_react8.default.createElement("h3", null, "\u26A1 Procedural Focus Soundscapes"), /* @__PURE__ */ import_react8.default.createElement("p", { className: "subtitle" }, "Synthesized in real-time with Web Audio API nodes (zero external files)"), /* @__PURE__ */ import_react8.default.createElement("div", { className: "ambient-grid" }, [
         { id: "rain", emoji: "\u{1F327}\uFE0F", name: "Coding Rain", desc: "Resonant filtered pink noise mimicking rainfall" },
         { id: "synth", emoji: "\u{1F30C}", name: "Cyber Synth", desc: "Dual detuned sawtooth oscillators with analog low-pass filter" },
         { id: "pink", emoji: "\u{1F4FB}", name: "Pink Noise", desc: "Voss-McCartney noise buffer for deep technical focus" }
-      ].map((s) => /* @__PURE__ */ import_react8.default.createElement("div", { key: s.id, className: `ambient-card-item ${activeAmbient === s.id ? "active" : ""}`, onClick: () => playAmbient(s.id) }, /* @__PURE__ */ import_react8.default.createElement("span", { className: "card-emoji" }, s.emoji), /* @__PURE__ */ import_react8.default.createElement("h4", null, s.name), /* @__PURE__ */ import_react8.default.createElement("p", null, s.desc), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-accent" }, activeAmbient === s.id ? "Stop" : "Start"))))), activeTab === "speakers" && /* @__PURE__ */ import_react8.default.createElement("div", { className: "speakers-container" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "speakers-header" }, /* @__PURE__ */ import_react8.default.createElement("h3", null, "\u{1F50A} Connected Google Cast Smart Speakers"), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-secondary", onClick: refreshSpeakers }, "\u{1F504} Refresh Subnet Scan")), /* @__PURE__ */ import_react8.default.createElement("div", { className: "speakers-grid" }, speakers.map((s) => /* @__PURE__ */ import_react8.default.createElement("div", { key: s.ip, className: "speaker-card" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "speaker-badge" }, "ONLINE"), /* @__PURE__ */ import_react8.default.createElement("h4", null, s.name), /* @__PURE__ */ import_react8.default.createElement("p", { className: "speaker-ip" }, "IP Address: ", /* @__PURE__ */ import_react8.default.createElement("code", null, s.ip)), /* @__PURE__ */ import_react8.default.createElement("p", { className: "speaker-model" }, "Model: ", s.model), /* @__PURE__ */ import_react8.default.createElement("div", { className: "speaker-actions" }, /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-accent", onClick: () => {
+      ].map((s) => /* @__PURE__ */ import_react8.default.createElement("div", { key: s.id, className: `ambient-card-item ${activeAmbient === s.id ? "active" : ""}`, onClick: () => playAmbient(s.id) }, /* @__PURE__ */ import_react8.default.createElement("span", { className: "card-emoji" }, s.emoji), /* @__PURE__ */ import_react8.default.createElement("h4", null, s.name), /* @__PURE__ */ import_react8.default.createElement("p", null, s.desc), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-accent" }, activeAmbient === s.id ? "Stop" : "Start"))))), activeTab === "speakers" && /* @__PURE__ */ import_react8.default.createElement("div", { className: "speakers-container" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "speakers-header" }, /* @__PURE__ */ import_react8.default.createElement("h3", null, "\u{1F50A} Connected Google Cast Smart Speakers"), /* @__PURE__ */ import_react8.default.createElement("div", { style: { display: "flex", gap: "8px" } }, /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast() }, "\u23F9 Stop All Speakers"), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-secondary", onClick: refreshSpeakers }, "\u{1F504} Refresh Subnet Scan"))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "speakers-grid" }, speakers.map((s) => /* @__PURE__ */ import_react8.default.createElement("div", { key: s.ip, className: "speaker-card" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "speaker-badge" }, "ONLINE"), /* @__PURE__ */ import_react8.default.createElement("h4", null, s.name), /* @__PURE__ */ import_react8.default.createElement("p", { className: "speaker-ip" }, "IP Address: ", /* @__PURE__ */ import_react8.default.createElement("code", null, s.ip)), /* @__PURE__ */ import_react8.default.createElement("p", { className: "speaker-model" }, "Model: ", s.model), /* @__PURE__ */ import_react8.default.createElement("div", { className: "speaker-actions" }, /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-accent", onClick: () => {
         setOutputTarget(s.ip);
         setActiveTab("player");
-      } }, "Set as Output"), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-secondary", onClick: () => window.robosAudio.castTTS(s.ip, `Test tone from RobOS Audio Player on ${s.name}`) }, "Test Speaker"))))))),
+      } }, "Set as Output"), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast(s.ip) }, "\u23F9 Stop Playback"), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-secondary", onClick: () => window.robosAudio.castTTS(s.ip, `Test tone from RobOS Audio Player on ${s.name}`) }, "Test Speaker"))))))),
       statusMsg && /* @__PURE__ */ import_react8.default.createElement("div", { className: "toast" }, statusMsg)
     );
   }
