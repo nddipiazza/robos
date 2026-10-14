@@ -20,6 +20,16 @@ contextBridge.exposeInMainWorld('robosAudio', {
   cancelLibraryScan: () => ipcRenderer.invoke('audio:cancel-scan'),
   importPaths: (paths) => ipcRenderer.invoke('audio:import-paths', paths),
   scanDefaultLibrary: () => ipcRenderer.invoke('audio:scan-default-library'),
+  getPlaylists: () => ipcRenderer.invoke('audio:get-playlists'),
+  getPlaylist: (id) => ipcRenderer.invoke('audio:get-playlist', id),
+  createPlaylist: (data) => ipcRenderer.invoke('audio:create-playlist', data),
+  updatePlaylist: (id, updates) => ipcRenderer.invoke('audio:update-playlist', { id, updates }),
+  deletePlaylist: (id) => ipcRenderer.invoke('audio:delete-playlist', id),
+  addTracksToPlaylist: (id, tracks) => ipcRenderer.invoke('audio:add-tracks-to-playlist', { id, tracks }),
+  removeTrackFromPlaylist: (id, trackIndex) => ipcRenderer.invoke('audio:remove-track-from-playlist', { id, trackIndex }),
+  reorderPlaylistTracks: (id, fromIndex, toIndex) => ipcRenderer.invoke('audio:reorder-playlist-tracks', { id, fromIndex, toIndex }),
+  exportPlaylistM3u: (id) => ipcRenderer.invoke('audio:export-playlist-m3u', id),
+  importPlaylistM3u: () => ipcRenderer.invoke('audio:import-playlist-m3u'),
   onLibraryScanDiscovered: (callback) => {
     const handler = (_event, data) => callback(data);
     ipcRenderer.on('audio:library-scan-discovered', handler);

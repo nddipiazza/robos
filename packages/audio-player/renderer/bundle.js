@@ -17414,10 +17414,37 @@
     const [activeCastSession, setActiveCastSession] = (0, import_react8.useState)(null);
     const [statusMsg, setStatusMsg] = (0, import_react8.useState)("");
     const [activeAmbient, setActiveAmbient] = (0, import_react8.useState)(null);
+    const [playlists, setPlaylists] = (0, import_react8.useState)([]);
+    const [selectedPlaylistId, setSelectedPlaylistId] = (0, import_react8.useState)(null);
+    const [showCreatePlaylistModal, setShowCreatePlaylistModal] = (0, import_react8.useState)(false);
+    const [newPlaylistName, setNewPlaylistName] = (0, import_react8.useState)("");
+    const [newPlaylistDesc, setNewPlaylistDesc] = (0, import_react8.useState)("");
+    const [showSaveQueueModal, setShowSaveQueueModal] = (0, import_react8.useState)(false);
+    const [saveQueueName, setSaveQueueName] = (0, import_react8.useState)("");
+    const [saveQueueDesc, setSaveQueueDesc] = (0, import_react8.useState)("");
+    const [showAddToPlaylistModal, setShowAddToPlaylistModal] = (0, import_react8.useState)(false);
+    const [selectedTrackForPlaylist, setSelectedTrackForPlaylist] = (0, import_react8.useState)(null);
     const playerRef = (0, import_react8.useRef)(null);
     const audioCtxRef = (0, import_react8.useRef)(null);
     const ambientNodeRef = (0, import_react8.useRef)(null);
     const toastTimerRef = (0, import_react8.useRef)(null);
+    const formatDuration = (sec) => {
+      if (!sec || isNaN(sec)) return "--:--";
+      const totalSec = Math.round(sec);
+      const m = Math.floor(totalSec / 60);
+      const s = totalSec % 60;
+      return `${m}:${s < 10 ? "0" : ""}${s}`;
+    };
+    const formatTotalDuration = (tracks) => {
+      if (!tracks || !tracks.length) return "0 min";
+      const totalSec = tracks.reduce((acc, t) => acc + (t.duration || 0), 0);
+      const mins = Math.floor(totalSec / 60);
+      const hours = Math.floor(mins / 60);
+      if (hours > 0) {
+        return `${hours}h ${mins % 60}m`;
+      }
+      return `${mins} min`;
+    };
     const getSpeakerName = (ip) => {
       if (!ip) return "Speaker";
       if (ip === "local") return "Desktop (Local Audio)";
@@ -17428,6 +17455,7 @@
     (0, import_react8.useEffect)(() => {
       refreshSpeakers();
       loadLibrary();
+      refreshPlaylists();
       const cleanups = [];
       if (window.robosAudio?.onLibraryScanDiscovered) {
         cleanups.push(window.robosAudio.onLibraryScanDiscovered((info) => {
@@ -17543,6 +17571,19 @@
       } catch {
       }
     };
+    const refreshPlaylists = async () => {
+      try {
+        if (window.robosAudio?.getPlaylists) {
+          const list = await window.robosAudio.getPlaylists();
+          setPlaylists(list || []);
+          if (list && list.length > 0) {
+            setSelectedPlaylistId((prev) => prev && list.some((p) => p.id === prev) ? prev : list[0].id);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching playlists:", err);
+      }
+    };
     const handleSelectFolder = async () => {
       showStatus("Opening file manager to select music folder(s)...");
       try {
@@ -17607,6 +17648,219 @@
       } catch (err) {
         showStatus("Error importing dropped items: " + err.message);
       }
+    };
+    const selectedPlaylist = playlists.find((p) => p.id === selectedPlaylistId) || playlists[0] || null;
+    const handlePlayPlaylist = (pl, replaceQueue = true) => {
+      if (!pl || !pl.tracks || pl.tracks.length === 0) {
+        showStatus(`Playlist "${pl?.name || "Playlist"}" has no tracks to play.`);
+        return;
+      }
+      if (replaceQueue) {
+        setPlaylist([...pl.tracks]);
+        setCurrentTrackIndex(0);
+        const first = pl.tracks[0];
+        if (outputTarget !== "local") {
+          castTrack(outputTarget, first);
+          if (playerRef.current?.audio?.current) {
+            playerRef.current.audio.current.muted = true;
+            playerRef.current.audio.current.play().catch(() => {
+            });
+          }
+        } else {
+          if (activeCastSession) handleStopCast();
+          if (playerRef.current?.audio?.current) {
+            playerRef.current.audio.current.muted = false;
+            playerRef.current.audio.current.play().catch(() => {
+            });
+          }
+        }
+        showStatus(`Playing playlist "${pl.name}" (${pl.tracks.length} tracks)`);
+      } else {
+        setPlaylist((prev) => [...prev, ...pl.tracks]);
+        showStatus(`Appended ${pl.tracks.length} track(s) from "${pl.name}" to queue`);
+      }
+    };
+    const handleAppendPlaylistToQueue = (pl) => {
+      if (!pl || !pl.tracks || pl.tracks.length === 0) {
+        showStatus(`Playlist "${pl?.name || "Playlist"}" has no tracks.`);
+        return;
+      }
+      setPlaylist((prev) => [...prev, ...pl.tracks]);
+      showStatus(`Appended ${pl.tracks.length} track(s) from "${pl.name}" to queue`);
+    };
+    const handleCastPlaylist = (pl) => {
+      if (!pl || !pl.tracks || pl.tracks.length === 0) {
+        showStatus(`Playlist "${pl?.name || "Playlist"}" has no tracks.`);
+        return;
+      }
+      const target = outputTarget !== "local" ? outputTarget : speakers[0]?.ip || "all";
+      setOutputTarget(target);
+      setPlaylist([...pl.tracks]);
+      setCurrentTrackIndex(0);
+      castTrack(target, pl.tracks[0]);
+      if (playerRef.current?.audio?.current) {
+        playerRef.current.audio.current.muted = true;
+        playerRef.current.audio.current.play().catch(() => {
+        });
+      }
+      showStatus(`Casting playlist "${pl.name}" to ${getSpeakerName(target)}!`);
+    };
+    const handleCreatePlaylist = async () => {
+      if (!newPlaylistName.trim()) {
+        showStatus("Please enter a playlist name");
+        return;
+      }
+      try {
+        const created = await window.robosAudio.createPlaylist({
+          name: newPlaylistName.trim(),
+          description: newPlaylistDesc.trim(),
+          tracks: []
+        });
+        await refreshPlaylists();
+        if (created) setSelectedPlaylistId(created.id);
+        setNewPlaylistName("");
+        setNewPlaylistDesc("");
+        setShowCreatePlaylistModal(false);
+        showStatus(`Created playlist "${created?.name || newPlaylistName}"!`);
+      } catch (err) {
+        showStatus("Error creating playlist: " + err.message);
+      }
+    };
+    const handleDeletePlaylist = async (id) => {
+      const pl = playlists.find((p) => p.id === id);
+      const confirmDelete = window.confirm(`Are you sure you want to delete playlist "${pl?.name || "this playlist"}"?`);
+      if (!confirmDelete) return;
+      try {
+        await window.robosAudio.deletePlaylist(id);
+        const updated = playlists.filter((p) => p.id !== id);
+        setPlaylists(updated);
+        if (selectedPlaylistId === id) {
+          setSelectedPlaylistId(updated[0]?.id || null);
+        }
+        showStatus(`Deleted playlist "${pl?.name || ""}"`);
+      } catch (err) {
+        showStatus("Error deleting playlist: " + err.message);
+      }
+    };
+    const handleAddTrackToPlaylist = async (playlistId, track) => {
+      try {
+        await window.robosAudio.addTracksToPlaylist(playlistId, [track]);
+        await refreshPlaylists();
+        const targetPl = playlists.find((p) => p.id === playlistId);
+        setShowAddToPlaylistModal(false);
+        setSelectedTrackForPlaylist(null);
+        showStatus(`Added "${track.title}" to "${targetPl?.name || "playlist"}"!`);
+      } catch (err) {
+        showStatus("Error adding to playlist: " + err.message);
+      }
+    };
+    const handleRemoveTrackFromPlaylist = async (playlistId, trackIndex) => {
+      try {
+        await window.robosAudio.removeTrackFromPlaylist(playlistId, trackIndex);
+        await refreshPlaylists();
+        showStatus("Removed track from playlist");
+      } catch (err) {
+        showStatus("Error removing track: " + err.message);
+      }
+    };
+    const handleMoveTrackInPlaylist = async (playlistId, fromIdx, toIdx) => {
+      try {
+        await window.robosAudio.reorderPlaylistTracks(playlistId, fromIdx, toIdx);
+        await refreshPlaylists();
+      } catch (err) {
+        showStatus("Error reordering playlist: " + err.message);
+      }
+    };
+    const handleExportM3u = async (plId) => {
+      try {
+        const res = await window.robosAudio.exportPlaylistM3u(plId);
+        if (!res.canceled && res.ok) {
+          showStatus(`Playlist exported to ${res.path}`);
+        }
+      } catch (err) {
+        showStatus("Error exporting playlist: " + err.message);
+      }
+    };
+    const handleImportM3u = async () => {
+      try {
+        const res = await window.robosAudio.importPlaylistM3u();
+        if (!res.canceled && res.playlist) {
+          await refreshPlaylists();
+          setSelectedPlaylistId(res.playlist.id);
+          showStatus(`Imported playlist "${res.playlist.name}" (${res.playlist.tracks.length} tracks)!`);
+        }
+      } catch (err) {
+        showStatus("Error importing M3U: " + err.message);
+      }
+    };
+    const handleAddFilesToSelectedPlaylist = async () => {
+      if (!selectedPlaylistId) return;
+      try {
+        const res = await window.robosAudio.openFileDialog();
+        if (!res.canceled && res.tracks && res.tracks.length > 0) {
+          await window.robosAudio.addTracksToPlaylist(selectedPlaylistId, res.tracks);
+          await refreshPlaylists();
+          showStatus(`Added ${res.tracks.length} track(s) to playlist`);
+        }
+      } catch (err) {
+        showStatus("Error adding files to playlist: " + err.message);
+      }
+    };
+    const handleSaveQueueAsPlaylist = async () => {
+      if (!saveQueueName.trim()) {
+        showStatus("Please enter a playlist name");
+        return;
+      }
+      try {
+        const created = await window.robosAudio.createPlaylist({
+          name: saveQueueName.trim(),
+          description: saveQueueDesc.trim() || `Saved queue of ${playlist.length} track(s)`,
+          tracks: playlist
+        });
+        await refreshPlaylists();
+        if (created) setSelectedPlaylistId(created.id);
+        setSaveQueueName("");
+        setSaveQueueDesc("");
+        setShowSaveQueueModal(false);
+        showStatus(`Saved queue as playlist "${created?.name || saveQueueName}" (${playlist.length} tracks)!`);
+      } catch (err) {
+        showStatus("Error saving queue as playlist: " + err.message);
+      }
+    };
+    const handleShuffleQueue = () => {
+      if (playlist.length <= 1) return;
+      const current = playlist[currentTrackIndex];
+      const rest = playlist.filter((_, idx) => idx !== currentTrackIndex);
+      for (let i = rest.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [rest[i], rest[j]] = [rest[j], rest[i]];
+      }
+      setPlaylist([current, ...rest]);
+      setCurrentTrackIndex(0);
+      showStatus("Queue shuffled!");
+    };
+    const handleClearQueue = () => {
+      if (playlist.length <= 1) return;
+      const current = playlist[currentTrackIndex];
+      setPlaylist([current]);
+      setCurrentTrackIndex(0);
+      showStatus("Cleared other tracks from queue");
+    };
+    const handleRemoveQueueTrack = (idxToRemove) => {
+      if (playlist.length <= 1) {
+        showStatus("Cannot remove the only track in queue");
+        return;
+      }
+      const newQueue = playlist.filter((_, idx) => idx !== idxToRemove);
+      let nextCurrent = currentTrackIndex;
+      if (idxToRemove === currentTrackIndex) {
+        nextCurrent = Math.min(currentTrackIndex, newQueue.length - 1);
+      } else if (idxToRemove < currentTrackIndex) {
+        nextCurrent = currentTrackIndex - 1;
+      }
+      setPlaylist(newQueue);
+      setCurrentTrackIndex(nextCurrent);
+      showStatus("Removed track from queue");
     };
     const currentTrack = playlist[currentTrackIndex] || playlist[0] || null;
     const handleStopCast = async (targetIp = null) => {
@@ -17893,6 +18147,7 @@
       /* @__PURE__ */ import_react8.default.createElement("nav", { className: "nav-tabs" }, /* @__PURE__ */ import_react8.default.createElement(
         "button",
         {
+          id: "tab-btn-player",
           className: `tab-btn ${activeTab === "player" ? "active" : ""}`,
           onClick: () => setActiveTab("player")
         },
@@ -17900,6 +18155,17 @@
       ), /* @__PURE__ */ import_react8.default.createElement(
         "button",
         {
+          id: "tab-btn-playlists",
+          className: `tab-btn ${activeTab === "playlists" ? "active" : ""}`,
+          onClick: () => setActiveTab("playlists")
+        },
+        "\u{1F4D1} Playlists (",
+        playlists.length,
+        ")"
+      ), /* @__PURE__ */ import_react8.default.createElement(
+        "button",
+        {
+          id: "tab-btn-library",
           className: `tab-btn ${activeTab === "library" ? "active" : ""}`,
           onClick: () => setActiveTab("library")
         },
@@ -17909,6 +18175,7 @@
       ), /* @__PURE__ */ import_react8.default.createElement(
         "button",
         {
+          id: "tab-btn-ambient",
           className: `tab-btn ${activeTab === "ambient" ? "active" : ""}`,
           onClick: () => setActiveTab("ambient")
         },
@@ -17916,6 +18183,7 @@
       ), /* @__PURE__ */ import_react8.default.createElement(
         "button",
         {
+          id: "tab-btn-speakers",
           className: `tab-btn ${activeTab === "speakers" ? "active" : ""}`,
           onClick: () => setActiveTab("speakers")
         },
@@ -17957,7 +18225,34 @@
           customAdditionalControls: [],
           muted: outputTarget !== "local"
         }
-      )), /* @__PURE__ */ import_react8.default.createElement("div", { className: "queue-quick-peek" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "queue-header" }, /* @__PURE__ */ import_react8.default.createElement("h4", null, "Playlist Queue (", playlist.length, ")"), /* @__PURE__ */ import_react8.default.createElement("span", { className: "queue-subtitle" }, "Drag and drop folders or files anywhere onto this window to add them")), /* @__PURE__ */ import_react8.default.createElement("div", { className: "queue-items-scroll" }, playlist.map((t, idx) => /* @__PURE__ */ import_react8.default.createElement(
+      )), /* @__PURE__ */ import_react8.default.createElement("div", { className: "queue-quick-peek" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "queue-header" }, /* @__PURE__ */ import_react8.default.createElement("div", null, /* @__PURE__ */ import_react8.default.createElement("h4", null, "Playback Queue (", playlist.length, ")"), /* @__PURE__ */ import_react8.default.createElement("span", { className: "queue-subtitle" }, "Drag & drop files or save queue as a custom playlist")), /* @__PURE__ */ import_react8.default.createElement("div", { className: "queue-header-actions" }, /* @__PURE__ */ import_react8.default.createElement(
+        "button",
+        {
+          id: "btn-save-queue-as-playlist",
+          className: "btn-chip",
+          onClick: () => setShowSaveQueueModal(true),
+          title: "Save current playback queue as a permanent playlist"
+        },
+        "\u{1F4BE} Save as Playlist"
+      ), /* @__PURE__ */ import_react8.default.createElement(
+        "button",
+        {
+          id: "btn-shuffle-queue",
+          className: "btn-chip",
+          onClick: handleShuffleQueue,
+          title: "Shuffle queue"
+        },
+        "\u{1F500} Shuffle"
+      ), /* @__PURE__ */ import_react8.default.createElement(
+        "button",
+        {
+          id: "btn-clear-queue",
+          className: "btn-chip btn-stop-cast",
+          onClick: handleClearQueue,
+          title: "Clear other tracks from queue"
+        },
+        "\u{1F5D1} Clear"
+      ))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "queue-items-scroll" }, playlist.map((t, idx) => /* @__PURE__ */ import_react8.default.createElement(
         "div",
         {
           key: t.id || idx,
@@ -17967,9 +18262,165 @@
             if (outputTarget !== "local") castTrack(outputTarget, t);
           }
         },
-        /* @__PURE__ */ import_react8.default.createElement("span", { className: "queue-chip-title" }, idx + 1, ". ", t.title),
-        /* @__PURE__ */ import_react8.default.createElement("span", { className: "queue-chip-artist" }, t.artist)
-      )))))), activeTab === "library" && /* @__PURE__ */ import_react8.default.createElement("div", { className: "media-browser-container" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "browser-toolbar" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "search-box" }, /* @__PURE__ */ import_react8.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2" }, /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "11", cy: "11", r: "8" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "21", y1: "21", x2: "16.65", y2: "16.65" })), /* @__PURE__ */ import_react8.default.createElement(
+        /* @__PURE__ */ import_react8.default.createElement("div", { className: "queue-chip-content" }, /* @__PURE__ */ import_react8.default.createElement("span", { className: "queue-chip-title" }, idx + 1, ". ", t.title), /* @__PURE__ */ import_react8.default.createElement("span", { className: "queue-chip-artist" }, t.artist)),
+        playlist.length > 1 && /* @__PURE__ */ import_react8.default.createElement(
+          "button",
+          {
+            className: "btn-remove-queue-item",
+            title: "Remove from queue",
+            onClick: (e) => {
+              e.stopPropagation();
+              handleRemoveQueueTrack(idx);
+            }
+          },
+          "\u2715"
+        )
+      )))))), activeTab === "playlists" && /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlists-view-container" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlists-header" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlists-title-group" }, /* @__PURE__ */ import_react8.default.createElement("h3", null, "\u{1F4D1} Custom Playlists (", playlists.length, ")"), /* @__PURE__ */ import_react8.default.createElement("p", { className: "subtitle" }, "Curate custom music collections, import/export M3U playlists, and cast directly to speakers")), /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlists-header-actions" }, /* @__PURE__ */ import_react8.default.createElement(
+        "button",
+        {
+          id: "btn-create-playlist",
+          className: "btn-accent",
+          onClick: () => setShowCreatePlaylistModal(true)
+        },
+        "\u2795 New Playlist"
+      ), /* @__PURE__ */ import_react8.default.createElement(
+        "button",
+        {
+          id: "btn-import-m3u",
+          className: "btn-secondary",
+          onClick: handleImportM3u,
+          title: "Import external .m3u or .m3u8 playlist file"
+        },
+        "\u{1F4E5} Import M3U"
+      ))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlists-layout" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlists-sidebar" }, playlists.length === 0 ? /* @__PURE__ */ import_react8.default.createElement("div", { className: "empty-playlists-sidebar" }, /* @__PURE__ */ import_react8.default.createElement("p", null, "No playlists created yet."), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-accent", onClick: () => setShowCreatePlaylistModal(true), style: { marginTop: "8px" } }, "Create Playlist")) : playlists.map((pl) => /* @__PURE__ */ import_react8.default.createElement(
+        "div",
+        {
+          key: pl.id,
+          className: `playlist-sidebar-card ${selectedPlaylistId === pl.id ? "active" : ""}`,
+          onClick: () => setSelectedPlaylistId(pl.id)
+        },
+        /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlist-sidebar-icon" }, /* @__PURE__ */ import_react8.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "22", height: "22", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "1.5" }, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M9 18V5l12-2v13" }), /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "6", cy: "18", r: "3" }), /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "18", cy: "16", r: "3" }))),
+        /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlist-sidebar-info" }, /* @__PURE__ */ import_react8.default.createElement("span", { className: "playlist-sidebar-name" }, pl.name), /* @__PURE__ */ import_react8.default.createElement("span", { className: "playlist-sidebar-meta" }, pl.tracks?.length || 0, " track", (pl.tracks?.length || 0) === 1 ? "" : "s")),
+        /* @__PURE__ */ import_react8.default.createElement(
+          "button",
+          {
+            className: "btn-playlist-quick-play",
+            title: `Play "${pl.name}"`,
+            onClick: (e) => {
+              e.stopPropagation();
+              handlePlayPlaylist(pl, true);
+            }
+          },
+          "\u25B6"
+        )
+      ))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlist-detail-pane" }, selectedPlaylist ? /* @__PURE__ */ import_react8.default.createElement(import_react8.default.Fragment, null, /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlist-detail-header" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlist-detail-meta" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlist-cover-icon" }, /* @__PURE__ */ import_react8.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "36", height: "36", viewBox: "0 0 24 24", fill: "none", stroke: "#00bcd4", "stroke-width": "1.5" }, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M9 18V5l12-2v13" }), /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "6", cy: "18", r: "3" }), /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "18", cy: "16", r: "3" }))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlist-text-meta" }, /* @__PURE__ */ import_react8.default.createElement("h2", null, selectedPlaylist.name), /* @__PURE__ */ import_react8.default.createElement("p", { className: "playlist-description" }, selectedPlaylist.description || "No description provided."), /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlist-stats" }, /* @__PURE__ */ import_react8.default.createElement("span", { className: "badge" }, selectedPlaylist.tracks?.length || 0, " Tracks"), /* @__PURE__ */ import_react8.default.createElement("span", { className: "badge" }, "Duration: ", formatTotalDuration(selectedPlaylist.tracks)), /* @__PURE__ */ import_react8.default.createElement("span", { className: "badge" }, "Updated: ", new Date(selectedPlaylist.updatedAt || selectedPlaylist.createdAt || Date.now()).toLocaleDateString())))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlist-actions-bar" }, /* @__PURE__ */ import_react8.default.createElement(
+        "button",
+        {
+          id: "btn-play-all-playlist",
+          className: "btn-accent",
+          onClick: () => handlePlayPlaylist(selectedPlaylist, true),
+          disabled: !selectedPlaylist.tracks?.length,
+          title: "Play all tracks in order (replaces queue)"
+        },
+        "\u25B6 Play All"
+      ), /* @__PURE__ */ import_react8.default.createElement(
+        "button",
+        {
+          id: "btn-append-playlist",
+          className: "btn-secondary",
+          onClick: () => handleAppendPlaylistToQueue(selectedPlaylist),
+          disabled: !selectedPlaylist.tracks?.length,
+          title: "Append all tracks to current queue"
+        },
+        "\u2795 Append to Queue"
+      ), speakers.length > 0 && /* @__PURE__ */ import_react8.default.createElement(
+        "button",
+        {
+          id: "btn-cast-playlist",
+          className: "btn-secondary",
+          onClick: () => handleCastPlaylist(selectedPlaylist),
+          disabled: !selectedPlaylist.tracks?.length,
+          title: `Cast playlist to ${getSpeakerName(outputTarget !== "local" ? outputTarget : speakers[0].ip)}`
+        },
+        "\u{1F50A} Cast Playlist"
+      ), /* @__PURE__ */ import_react8.default.createElement(
+        "button",
+        {
+          id: "btn-export-m3u",
+          className: "btn-secondary",
+          onClick: () => handleExportM3u(selectedPlaylist.id),
+          title: "Export playlist to .m3u file"
+        },
+        "\u{1F4E4} Export M3U"
+      ), /* @__PURE__ */ import_react8.default.createElement(
+        "button",
+        {
+          id: "btn-delete-playlist",
+          className: "btn-chip btn-stop-cast",
+          onClick: () => handleDeletePlaylist(selectedPlaylist.id),
+          title: "Delete playlist"
+        },
+        "\u{1F5D1} Delete"
+      ))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlist-tracks-container" }, !selectedPlaylist.tracks || selectedPlaylist.tracks.length === 0 ? /* @__PURE__ */ import_react8.default.createElement("div", { className: "empty-playlist-tracks" }, /* @__PURE__ */ import_react8.default.createElement("p", null, "This playlist has no tracks yet."), /* @__PURE__ */ import_react8.default.createElement("span", { className: "hint" }, "Choose tracks from your Media Library below or import local files."), /* @__PURE__ */ import_react8.default.createElement(
+        "button",
+        {
+          className: "btn-accent",
+          onClick: handleAddFilesToSelectedPlaylist,
+          style: { marginTop: "12px" }
+        },
+        "\u2795 Add Audio Files from Disk"
+      )) : /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlist-tracks-table" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlist-table-header" }, /* @__PURE__ */ import_react8.default.createElement("span", { className: "col-num" }, "#"), /* @__PURE__ */ import_react8.default.createElement("span", { className: "col-title" }, "Title"), /* @__PURE__ */ import_react8.default.createElement("span", { className: "col-artist" }, "Artist"), /* @__PURE__ */ import_react8.default.createElement("span", { className: "col-album" }, "Album"), /* @__PURE__ */ import_react8.default.createElement("span", { className: "col-duration" }, "Duration"), /* @__PURE__ */ import_react8.default.createElement("span", { className: "col-actions" }, "Actions")), /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlist-table-body" }, selectedPlaylist.tracks.map((track, tIdx) => /* @__PURE__ */ import_react8.default.createElement("div", { key: track.id || tIdx, className: "playlist-table-row" }, /* @__PURE__ */ import_react8.default.createElement("span", { className: "col-num" }, tIdx + 1), /* @__PURE__ */ import_react8.default.createElement("span", { className: "col-title", title: track.title }, track.title), /* @__PURE__ */ import_react8.default.createElement("span", { className: "col-artist", title: track.artist }, track.artist), /* @__PURE__ */ import_react8.default.createElement("span", { className: "col-album", title: track.album }, track.album), /* @__PURE__ */ import_react8.default.createElement("span", { className: "col-duration" }, formatDuration(track.duration)), /* @__PURE__ */ import_react8.default.createElement("span", { className: "col-actions" }, /* @__PURE__ */ import_react8.default.createElement(
+        "button",
+        {
+          className: "btn-row-action",
+          title: "Play track",
+          onClick: () => playTrack(track)
+        },
+        "\u25B6"
+      ), /* @__PURE__ */ import_react8.default.createElement(
+        "button",
+        {
+          className: "btn-row-action",
+          title: "Move up",
+          disabled: tIdx === 0,
+          onClick: () => handleMoveTrackInPlaylist(selectedPlaylist.id, tIdx, tIdx - 1)
+        },
+        "\u25B2"
+      ), /* @__PURE__ */ import_react8.default.createElement(
+        "button",
+        {
+          className: "btn-row-action",
+          title: "Move down",
+          disabled: tIdx === selectedPlaylist.tracks.length - 1,
+          onClick: () => handleMoveTrackInPlaylist(selectedPlaylist.id, tIdx, tIdx + 1)
+        },
+        "\u25BC"
+      ), /* @__PURE__ */ import_react8.default.createElement(
+        "button",
+        {
+          className: "btn-row-action btn-danger",
+          title: "Remove from playlist",
+          onClick: () => handleRemoveTrackFromPlaylist(selectedPlaylist.id, tIdx)
+        },
+        "\u2715"
+      )))))), library.tracks.length > 0 && /* @__PURE__ */ import_react8.default.createElement("div", { className: "quick-add-from-library" }, /* @__PURE__ */ import_react8.default.createElement("h4", null, "\u2795 Add Tracks from Media Library"), /* @__PURE__ */ import_react8.default.createElement("div", { className: "quick-add-controls" }, /* @__PURE__ */ import_react8.default.createElement(
+        "select",
+        {
+          id: "select-track-to-add",
+          className: "library-track-picker",
+          defaultValue: "",
+          onChange: (e) => {
+            if (!e.target.value) return;
+            const track = library.tracks.find((t) => t.id === e.target.value || t.filePath === e.target.value);
+            if (track) {
+              handleAddTrackToPlaylist(selectedPlaylist.id, track);
+              e.target.value = "";
+            }
+          }
+        },
+        /* @__PURE__ */ import_react8.default.createElement("option", { value: "", disabled: true }, 'Select track to add to "', selectedPlaylist.name, '"...'),
+        library.tracks.map((t, idx) => /* @__PURE__ */ import_react8.default.createElement("option", { key: t.id || idx, value: t.id || t.filePath }, t.title, " \u2014 ", t.artist, " (", formatDuration(t.duration), ")"))
+      ), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-secondary", onClick: handleAddFilesToSelectedPlaylist }, "\u{1F4C1} Add Audio Files"))))) : /* @__PURE__ */ import_react8.default.createElement("div", { className: "empty-state" }, /* @__PURE__ */ import_react8.default.createElement("p", null, "Select a playlist from the left or create a new one."), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-accent", onClick: () => setShowCreatePlaylistModal(true), style: { marginTop: "12px" } }, "\u2795 Create Playlist"))))), activeTab === "library" && /* @__PURE__ */ import_react8.default.createElement("div", { className: "media-browser-container" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "browser-toolbar" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "search-box" }, /* @__PURE__ */ import_react8.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2" }, /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "11", cy: "11", r: "8" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "21", y1: "21", x2: "16.65", y2: "16.65" })), /* @__PURE__ */ import_react8.default.createElement(
         "input",
         {
           type: "text",
@@ -17986,7 +18437,31 @@
       ), /* @__PURE__ */ import_react8.default.createElement("span", null, "\u{1F50A} Currently casting to ", /* @__PURE__ */ import_react8.default.createElement("strong", null, getSpeakerName(activeCastSession.ip)))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "cast-bar-controls" }, /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-chip", onClick: handleToggleCastPause }, activeCastSession.isPaused ? "\u25B6 Resume" : "\u23F8 Pause"), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast(activeCastSession.ip) }, "\u23F9 Stop Cast"))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "dropzone-banner", onClick: handleSelectFolder }, /* @__PURE__ */ import_react8.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "#00bcd4", "stroke-width": "2" }, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" })), /* @__PURE__ */ import_react8.default.createElement("p", null, "Click here or drag & drop any music folder from your file manager to scan and index")), /* @__PURE__ */ import_react8.default.createElement("div", { className: "library-grid" }, filteredLibrary.length === 0 ? /* @__PURE__ */ import_react8.default.createElement("div", { className: "empty-state" }, /* @__PURE__ */ import_react8.default.createElement("p", null, "No tracks indexed in media library yet."), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-accent", onClick: handleSelectFolder, style: { marginTop: "12px" } }, "\u{1F4C1} Add Folder via File Manager Popup")) : filteredLibrary.map((t, idx) => /* @__PURE__ */ import_react8.default.createElement("div", { key: t.id || idx, className: "track-card", onClick: () => playTrack(t) }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "card-thumb" }, /* @__PURE__ */ import_react8.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "32", height: "32", viewBox: "0 0 24 24", fill: "none", stroke: "#00bcd4", "stroke-width": "1.5" }, /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "12", cy: "12", r: "10" }), /* @__PURE__ */ import_react8.default.createElement("polygon", { points: "10 8 16 12 10 16 10 8", fill: "#00bcd4" }))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "card-info" }, /* @__PURE__ */ import_react8.default.createElement("h4", null, t.title), /* @__PURE__ */ import_react8.default.createElement("p", null, t.artist, " \u2022 ", t.album)), /* @__PURE__ */ import_react8.default.createElement("div", { className: "card-actions" }, /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-chip", onClick: (e) => {
         e.stopPropagation();
         playTrack(t);
-      } }, "\u25B6 Play"), speakers.length > 0 && (activeCastSession && (activeCastSession.trackId === t.id || activeCastSession.filePath === t.filePath) ? /* @__PURE__ */ import_react8.default.createElement(
+      } }, "\u25B6 Play"), /* @__PURE__ */ import_react8.default.createElement(
+        "button",
+        {
+          className: "btn-chip",
+          title: "Add to current playback queue",
+          onClick: (e) => {
+            e.stopPropagation();
+            setPlaylist((prev) => [...prev, t]);
+            showStatus(`Added "${t.title}" to queue`);
+          }
+        },
+        "\u2795 Queue"
+      ), /* @__PURE__ */ import_react8.default.createElement(
+        "button",
+        {
+          className: "btn-chip",
+          title: "Add track to a custom playlist",
+          onClick: (e) => {
+            e.stopPropagation();
+            setSelectedTrackForPlaylist(t);
+            setShowAddToPlaylistModal(true);
+          }
+        },
+        "\u{1F4D1} Playlist"
+      ), speakers.length > 0 && (activeCastSession && (activeCastSession.trackId === t.id || activeCastSession.filePath === t.filePath) ? /* @__PURE__ */ import_react8.default.createElement(
         "button",
         {
           className: "btn-chip btn-stop-cast active",
@@ -18026,6 +18501,85 @@
           showStatus("Test chime error: " + err.message);
         }
       } }, "\u{1F514} Play Test Chime"))))))),
+      showCreatePlaylistModal && /* @__PURE__ */ import_react8.default.createElement("div", { className: "modal-overlay", onClick: () => setShowCreatePlaylistModal(false) }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "modal-card", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react8.default.createElement("h3", null, "\u2795 Create New Playlist"), /* @__PURE__ */ import_react8.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react8.default.createElement("label", null, "Playlist Name"), /* @__PURE__ */ import_react8.default.createElement(
+        "input",
+        {
+          id: "input-playlist-name",
+          type: "text",
+          placeholder: "e.g. Focus Flow, Night Drive...",
+          value: newPlaylistName,
+          autoFocus: true,
+          onChange: (e) => setNewPlaylistName(e.target.value),
+          onKeyDown: (e) => {
+            if (e.key === "Enter") handleCreatePlaylist();
+          }
+        }
+      )), /* @__PURE__ */ import_react8.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react8.default.createElement("label", null, "Description (Optional)"), /* @__PURE__ */ import_react8.default.createElement(
+        "textarea",
+        {
+          id: "input-playlist-desc",
+          rows: "3",
+          placeholder: "A collection of favorite tracks...",
+          value: newPlaylistDesc,
+          onChange: (e) => setNewPlaylistDesc(e.target.value)
+        }
+      )), /* @__PURE__ */ import_react8.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-secondary", onClick: () => setShowCreatePlaylistModal(false) }, "Cancel"), /* @__PURE__ */ import_react8.default.createElement("button", { id: "btn-modal-create-playlist", className: "btn-accent", onClick: handleCreatePlaylist }, "Create Playlist")))),
+      showSaveQueueModal && /* @__PURE__ */ import_react8.default.createElement("div", { className: "modal-overlay", onClick: () => setShowSaveQueueModal(false) }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "modal-card", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react8.default.createElement("h3", null, "\u{1F4BE} Save Queue as Playlist"), /* @__PURE__ */ import_react8.default.createElement("p", { className: "subtitle", style: { fontSize: "0.8rem", color: "var(--text-muted)" } }, "Save all ", playlist.length, " track(s) from your current playback queue into a permanent playlist."), /* @__PURE__ */ import_react8.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react8.default.createElement("label", null, "Playlist Name"), /* @__PURE__ */ import_react8.default.createElement(
+        "input",
+        {
+          id: "input-save-queue-name",
+          type: "text",
+          placeholder: "e.g. My Queue Session...",
+          value: saveQueueName,
+          autoFocus: true,
+          onChange: (e) => setSaveQueueName(e.target.value),
+          onKeyDown: (e) => {
+            if (e.key === "Enter") handleSaveQueueAsPlaylist();
+          }
+        }
+      )), /* @__PURE__ */ import_react8.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react8.default.createElement("label", null, "Description (Optional)"), /* @__PURE__ */ import_react8.default.createElement(
+        "textarea",
+        {
+          id: "input-save-queue-desc",
+          rows: "2",
+          placeholder: "Saved queue session...",
+          value: saveQueueDesc,
+          onChange: (e) => setSaveQueueDesc(e.target.value)
+        }
+      )), /* @__PURE__ */ import_react8.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-secondary", onClick: () => setShowSaveQueueModal(false) }, "Cancel"), /* @__PURE__ */ import_react8.default.createElement("button", { id: "btn-modal-save-queue", className: "btn-accent", onClick: handleSaveQueueAsPlaylist }, "Save Playlist")))),
+      showAddToPlaylistModal && selectedTrackForPlaylist && /* @__PURE__ */ import_react8.default.createElement("div", { className: "modal-overlay", onClick: () => {
+        setShowAddToPlaylistModal(false);
+        setSelectedTrackForPlaylist(null);
+      } }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "modal-card", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react8.default.createElement("h3", null, "\u{1F4D1} Add Track to Playlist"), /* @__PURE__ */ import_react8.default.createElement("div", { className: "modal-selected-track-info" }, /* @__PURE__ */ import_react8.default.createElement("strong", null, selectedTrackForPlaylist.title), /* @__PURE__ */ import_react8.default.createElement("span", { style: { fontSize: "0.75rem", color: "var(--text-muted)" } }, selectedTrackForPlaylist.artist, " \u2022 ", selectedTrackForPlaylist.album)), /* @__PURE__ */ import_react8.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react8.default.createElement("label", null, "Choose Destination Playlist"), playlists.length === 0 ? /* @__PURE__ */ import_react8.default.createElement("p", { style: { fontSize: "0.8rem", color: "var(--text-muted)" } }, "No playlists exist yet.") : /* @__PURE__ */ import_react8.default.createElement("div", { className: "modal-playlist-select-list" }, playlists.map((pl) => /* @__PURE__ */ import_react8.default.createElement(
+        "div",
+        {
+          key: pl.id,
+          className: "modal-playlist-select-item",
+          onClick: () => handleAddTrackToPlaylist(pl.id, selectedTrackForPlaylist)
+        },
+        /* @__PURE__ */ import_react8.default.createElement("div", null, /* @__PURE__ */ import_react8.default.createElement("strong", null, pl.name), /* @__PURE__ */ import_react8.default.createElement("span", { style: { display: "block", fontSize: "0.72rem", color: "var(--text-muted)" } }, pl.tracks?.length || 0, " track(s)")),
+        /* @__PURE__ */ import_react8.default.createElement("span", { className: "btn-chip" }, "\u2795 Add")
+      )))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "modal-actions", style: { justifyContent: "space-between" } }, /* @__PURE__ */ import_react8.default.createElement(
+        "button",
+        {
+          className: "btn-chip",
+          onClick: () => {
+            setShowAddToPlaylistModal(false);
+            setShowCreatePlaylistModal(true);
+          }
+        },
+        "\u2795 New Playlist"
+      ), /* @__PURE__ */ import_react8.default.createElement(
+        "button",
+        {
+          className: "btn-secondary",
+          onClick: () => {
+            setShowAddToPlaylistModal(false);
+            setSelectedTrackForPlaylist(null);
+          }
+        },
+        "Cancel"
+      )))),
       statusMsg && /* @__PURE__ */ import_react8.default.createElement("div", { className: "toast" }, statusMsg)
     );
   }
