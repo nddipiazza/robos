@@ -52,9 +52,9 @@ class TestDialogueAndQuestFlowE2E(unittest.TestCase):
         print("💬 TABLETOP RPG DIALOGUE SEQUENCES, MODAL MESSAGES & QUEST FLOW E2E TEST SUITE")
         print("=" * 90)
         cls.play_script = os.path.join(ROOT_DIR, "play.sh")
-        cls.env = dict(os.environ, TABLETOP_SERVER_PORT=str(cls.port), TABLETOP_CARTRIDGE="simple-dialogue-quest")
+        cls.env = dict(os.environ, TABLETOP_SERVER_PORT=str(cls.port), TABLETOP_CARTRIDGE="simple-dialogue-quest", TABLETOP_RESET="1")
         cls.proc = subprocess.Popen(
-            [cls.play_script, "--headless", "--role=player", "--cartridge=simple-dialogue-quest"],
+            [cls.play_script, "--headless", "--reset", "--role=player", "--cartridge=simple-dialogue-quest"],
             env=cls.env,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
@@ -71,6 +71,7 @@ class TestDialogueAndQuestFlowE2E(unittest.TestCase):
                 cls.proc.terminate()
             raise RuntimeError(f"Could not connect to Godot tabletop server on port {cls.port}")
         print(f"Connected to Tabletop Godot server on port {cls.port}.")
+        cls.ai.reset_game()
 
     @classmethod
     def tearDownClass(cls):
@@ -94,7 +95,7 @@ class TestDialogueAndQuestFlowE2E(unittest.TestCase):
         monsters = st.get("monsters", [])
         doors = st.get("doors", [])
 
-        bdd_step("THEN", "Barbarian starts at stair [4, 1], door [4, 1]->[4, 2] is closed, and guardian is in crypt",
+        bdd_step("THEN", "Barbarian starts at stair [4, 1], door [0, 2]->[1, 2] is closed, and guardian is in crypt",
                  assertions=[
                      f"Hero position is {hero_pos}",
                      f"Found {len(monsters)} monster(s) in scenario",
@@ -109,9 +110,9 @@ class TestDialogueAndQuestFlowE2E(unittest.TestCase):
 
     def test_02_entering_room_triggers_dialogue_bubble_sequence(self):
         """Scenario 2: Moving into the crypt triggers on_room_entered and starts bubble 1 (Barbarian)."""
-        bdd_step("WHEN", "Barbarian opens door at [4, 1]->[4, 2] and steps into Northwest Crypt at [4, 2]",
-                 action_info="Open door and move hero to [4, 2]")
-        self.ai.open_door(4, 1, 4, 2)
+        bdd_step("WHEN", "Barbarian rolls movement and steps forward into Northwest Crypt at [4, 2]",
+                 action_info="Roll movement and move hero to [4, 2]")
+        self.ai.roll_movement()
         self.ai.move(4, 2)
 
         st = self.ai.get_state()

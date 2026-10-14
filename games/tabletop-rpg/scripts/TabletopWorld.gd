@@ -456,8 +456,6 @@ func _ready() -> void:
 	_check_cli_difficulty()
 	_update_board_metrics()
 	_load_rpg_ui_theme_assets()
-	_load_active_cartridge()
-	CartridgeManager.cartridge_inserted.connect(_on_cartridge_inserted)
 	_setup_action_hotbar()
 	_setup_enemies_panel()
 	_setup_ui_signals()
@@ -481,16 +479,22 @@ func _ready() -> void:
 	_load_monster_token_textures()
 	_load_furniture_textures()
 	_load_tile_textures()
+	_load_active_cartridge()
+	CartridgeManager.cartridge_inserted.connect(_on_cartridge_inserted)
 	_update_ui()
-	_log("=== Welcome to HeroQuest: The Trial ===")
+	var q_obj = get_active_quest_objective()
+	var q_title = str(q_obj.get("title", "HeroQuest"))
+	_log("=== Welcome to %s ===" % q_title)
 	if is_gm_role():
 		_log("[GM] [Game Master / DunMaster Mode Active] You are Zargon, Master of Darkness. Full dungeon visibility granted.")
 	else:
-		_log("[PLAYER] [Player Mode Active] You lead the four heroes into the catacombs of Verag!")
+		_log("[PLAYER] [Player Mode Active] You lead the four heroes into %s!" % q_title)
 		if is_quest_begin():
 			_check_play_intro_movie()
-			_check_start_elf_spell_selection()
+			_check_show_quest_objective_at_start()
 		else:
+			if quest_objective_modal:
+				quest_objective_modal.visible = false
 			if elf_spell_modal:
 				elf_spell_modal.visible = false
 			if armory_modal:
@@ -5242,14 +5246,17 @@ func get_active_quest_objective() -> Dictionary:
 	if active_q.is_empty() and not quests.is_empty() and quests[0] is Dictionary:
 		active_q = quests[0]
 
-	var quest_title = str(active_q.get("title", cart.get("header", {}).get("title", "Quest 1: The Trial")))
-	var campaign_title = str(cart.get("header", {}).get("title", "HeroQuest: The Gathering Storm"))
-	var briefing = str(active_q.get("briefing", cart.get("header", {}).get("description", "You have learned well, my apprentices. Now comes your final test. Seek out the foul Orc Warlord Verag in his hidden catacombs, slay him, and return to the stairwell alive.")))
+	var default_title = "Quest: %s" % current_slug.replace("-", " ").capitalize() if current_slug != "" else "HeroQuest"
+	var quest_title = str(active_q.get("title", cart.get("header", {}).get("title", default_title)))
+	var campaign_title = str(active_q.get("campaign", cart.get("header", {}).get("title", "HeroQuest: The Gathering Storm")))
+	var briefing = str(active_q.get("briefing", cart.get("header", {}).get("description", "You enter the perilous dungeon depths. Stay vigilant and vanquish your foes.")))
 	var gold_reward = int(active_q.get("goldReward", 100))
 	var map_id = str(active_q.get("mapConfigId", "fan-dungeon-28x21"))
 
 	var primary_goals: Array = []
-	if active_q.get("slug") == "heroquest-the-trial" or active_q.get("id") == "quest-1" or active_q.is_empty():
+	if active_q.has("primaryGoals") and active_q["primaryGoals"] is Array and not active_q["primaryGoals"].is_empty():
+		primary_goals = active_q["primaryGoals"].duplicate()
+	elif active_q.get("slug") == "heroquest-the-trial" or active_q.get("id") == "quest-1" or (active_q.is_empty() and (current_slug == "heroquest-the-trial" or current_slug == "trial-of-verag" or current_slug == "")):
 		primary_goals = [
 			"Locate and defeat the Orc Warlord Verag in his inner catacombs.",
 			"Explore the ancient chambers and search for hidden treasures.",
@@ -5268,11 +5275,19 @@ func get_active_quest_objective() -> Dictionary:
 			"Survive the onslaught and escape back to the surface."
 		]
 	else:
-		primary_goals = [
-			"Fulfill Mentor's decree and vanquish Morcar's minions.",
-			"Recover all ancient artifacts and treasures.",
-			"Ensure the survival of the imperial adventurers."
-		]
+		var boss_name = str(active_q.get("bossTarget", "")).strip_edges()
+		if boss_name != "":
+			primary_goals = [
+				"Locate and defeat the %s." % boss_name.capitalize(),
+				"Explore the ancient chambers and search for hidden treasures.",
+				"Ensure all living heroes return safely to the spiral stairway."
+			]
+		else:
+			primary_goals = [
+				"Fulfill Mentor's decree and vanquish Morcar's minions.",
+				"Recover all ancient artifacts and treasures.",
+				"Ensure the survival of the imperial adventurers."
+			]
 
 	return {
 		"campaign": campaign_title,
@@ -6162,8 +6177,10 @@ func get_quest_objectives() -> Array[Dictionary]:
 	if not any_monster_alive and not monsters.is_empty():
 		is_boss_dead = true
 
-	var obj1_text = "Defeat Orc Warlord Verag in his catacombs"
-	if slug == "heroquest-the-trial" or q_id == "quest-1" or "trial" in slug or slug == "":
+	var obj1_text = "Defeat the dungeon commander"
+	if active_q.has("primaryGoals") and active_q["primaryGoals"] is Array and not active_q["primaryGoals"].is_empty():
+		obj1_text = str(active_q["primaryGoals"][0])
+	elif slug == "heroquest-the-trial" or q_id == "quest-1" or "trial" in slug or slug == "":
 		obj1_text = "Defeat Orc Warlord Verag in his catacombs"
 	elif slug == "heroquest-rescue-sir-ragnar":
 		obj1_text = "Vanquish the dungeon guards and locate Sir Ragnar"
@@ -6181,13 +6198,21 @@ func get_quest_objectives() -> Array[Dictionary]:
 		"required": true
 	})
 
+	var obj2_text = "Explore the ancient chambers and search for hidden treasures"
+	if active_q.has("primaryGoals") and active_q["primaryGoals"] is Array and active_q["primaryGoals"].size() >= 2:
+		obj2_text = str(active_q["primaryGoals"][1])
+
 	var rooms_explored = revealed_rooms.size() >= 1 or searched_rooms.size() >= 1 or room_special_treasure_collected.size() >= 1 or _quest_completed or get_game_state() == "quest_victory"
 	objs.append({
 		"id": "explore_dungeon",
-		"title": "Explore the ancient chambers and search for hidden treasures",
+		"title": obj2_text,
 		"completed": rooms_explored,
 		"required": true
 	})
+
+	var obj3_text = "Ensure all living heroes return safely to the spiral stairway"
+	if active_q.has("primaryGoals") and active_q["primaryGoals"] is Array and active_q["primaryGoals"].size() >= 3:
+		obj3_text = str(active_q["primaryGoals"][2])
 
 	var living_heroes = heroes.filter(func(h): return int(h.get("current_bp", 0)) > 0)
 	var has_living_heroes = living_heroes.size() > 0
@@ -6206,7 +6231,7 @@ func get_quest_objectives() -> Array[Dictionary]:
 
 	objs.append({
 		"id": "party_survival",
-		"title": "Ensure all living heroes return safely to the spiral stairway",
+		"title": obj3_text,
 		"completed": party_surviving,
 		"required": true
 	})
@@ -7340,7 +7365,8 @@ func _execute_mentor_ai_party_step() -> void:
 
 	var live_monsters = monsters.filter(func(m): return bool(m.get("is_alive", false)) and int(m.get("current_bp", 1)) > 0)
 	if live_monsters.is_empty():
-		_log("🏆 [QUEST VICTORY] All minions of Zargon have been defeated! The heroes triumph and cleanse the catacombs of Verag!")
+		var q_title = str(get_active_quest_objective().get("title", "the dungeon"))
+		_log("🏆 [QUEST VICTORY] All minions of Zargon have been defeated! The heroes triumph and complete %s!" % q_title)
 		CartridgeManager.auto_play_enabled = false
 		_update_ui()
 		return
