@@ -253,6 +253,7 @@ class MediaLibrary {
         this._saveCache();
 
         if (this.currentWorker === worker) {
+          try { worker.terminate(); } catch {}
           this.currentWorker = null;
         }
 
@@ -265,6 +266,7 @@ class MediaLibrary {
         }
       } else if (msg.type === 'error') {
         if (this.currentWorker === worker) {
+          try { worker.terminate(); } catch {}
           this.currentWorker = null;
         }
         if (typeof onError === 'function') {
@@ -275,6 +277,7 @@ class MediaLibrary {
 
     worker.on('error', (err) => {
       if (this.currentWorker === worker) {
+        try { worker.terminate(); } catch {}
         this.currentWorker = null;
       }
       if (typeof onError === 'function') {

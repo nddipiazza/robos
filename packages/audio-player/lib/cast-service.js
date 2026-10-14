@@ -127,6 +127,7 @@ class CastService {
 
     this.streamServer.listen(0, '0.0.0.0', () => {
       this.streamPort = this.streamServer.address().port;
+      this.streamServer.unref();
       console.log(`[CastService] Audio stream server ready at http://${this.hostIp}:${this.streamPort}`);
     });
   }
@@ -424,32 +425,47 @@ class CastService {
     return { ok: false };
   }
 
-  async broadcastTTS(ip, text, metadata = {}) {
-    const cleanText = (text || '').trim();
-    if (!cleanText) throw new Error('Text is required for TTS announcement');
+  generateChimeBuffer() {
+    const sampleRate = 44100;
+    const duration = 0.8;
+    const numSamples = Math.floor(sampleRate * duration);
+    const buffer = Buffer.alloc(44 + numSamples * 2);
 
-    const audioBuffer = await this._fetchTTSAudio(cleanText);
-    const mediaUrl = this.registerBuffer(audioBuffer, 'audio/mp3');
+    // Write standard 16-bit PCM mono WAV header
+    buffer.write('RIFF', 0);
+    buffer.writeUInt32LE(36 + numSamples * 2, 4);
+    buffer.write('WAVE', 8);
+    buffer.write('fmt ', 12);
+    buffer.writeUInt32LE(16, 16);
+    buffer.writeUInt16LE(1, 20); // PCM
+    buffer.writeUInt16LE(1, 22); // Mono
+    buffer.writeUInt32LE(sampleRate, 24);
+    buffer.writeUInt32LE(sampleRate * 2, 28);
+    buffer.writeUInt16LE(2, 32);
+    buffer.writeUInt16LE(16, 34);
+    buffer.write('data', 36);
+    buffer.writeUInt32LE(numSamples * 2, 40);
 
-    return this.castMediaUrl(ip, mediaUrl, {
-      title: 'RobOS Voice Announcement',
-      artist: 'RobOS Smart Home',
-      contentType: 'audio/mp3',
-      ...metadata
-    });
+    // Two-tone harmonic chime (C5 523Hz -> E5 659Hz)
+    for (let i = 0; i < numSamples; i++) {
+      const t = i / sampleRate;
+      const freq = t < 0.35 ? 523.25 : 659.25;
+      const decay = Math.exp(-t * 3.0);
+      const val = Math.floor(Math.sin(2 * Math.PI * freq * t) * decay * 18000);
+      buffer.writeInt16LE(Math.max(-32767, Math.min(32767, val)), 44 + i * 2);
+    }
+
+    return buffer;
   }
 
-  _fetchTTSAudio(text) {
-    return new Promise((resolve, reject) => {
-      const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=en&client=tw-ob`;
-      https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' } }, (res) => {
-        if (res.statusCode !== 200) {
-          return reject(new Error(`TTS service returned HTTP ${res.statusCode}`));
-        }
-        const chunks = [];
-        res.on('data', chunk => chunks.push(chunk));
-        res.on('end', () => resolve(Buffer.concat(chunks)));
-      }).on('error', reject);
+  async playTestChime(ip) {
+    const buffer = this.generateChimeBuffer();
+    const streamUrl = this.registerBuffer(buffer, 'audio/wav');
+    return this.castMediaUrl(ip, streamUrl, {
+      title: 'Speaker Test Chime',
+      artist: 'RobOS Audio Player',
+      album: 'Diagnostics',
+      contentType: 'audio/wav'
     });
   }
 }

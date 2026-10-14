@@ -21,7 +21,6 @@ export default function App() {
   const [isScanningLibrary, setIsScanningLibrary] = useState(false);
   const [libraryScanStatus, setLibraryScanStatus] = useState(null);
   const [activeCastSession, setActiveCastSession] = useState(null); // { ip, trackId, filePath, isPaused }
-  const [ttsMessage, setTtsMessage] = useState('Hello from RobOS! Smart home audio is online.');
   const [statusMsg, setStatusMsg] = useState('');
   const [activeAmbient, setActiveAmbient] = useState(null);
 
@@ -379,24 +378,6 @@ export default function App() {
     }
   };
 
-  // ── Voice Announcer ───────────────────────────────────────────────────────
-
-  const handleBroadcastTTS = async () => {
-    if (!ttsMessage.trim()) return;
-    const target = outputTarget === 'local' ? (speakers[0]?.ip || '192.168.1.10') : outputTarget;
-    showStatus(`Broadcasting speech announcement to ${target}...`);
-    try {
-      if (target === 'all') {
-        speakers.forEach(s => window.robosAudio.castTTS(s.ip, ttsMessage));
-      } else {
-        await window.robosAudio.castTTS(target, ttsMessage);
-      }
-      showStatus('Announcement broadcast complete!');
-    } catch (err) {
-      showStatus('TTS error: ' + err.message);
-    }
-  };
-
   // ── Ambient Synthesizers (Web Audio) ──────────────────────────────────────
 
   const playAmbient = (type) => {
@@ -744,33 +725,6 @@ export default function App() {
                   ))}
                 </div>
               </div>
-
-              {/* Quick Speaker Announcer Bar */}
-              <div className="announcer-panel">
-                <div className="announcer-header">
-                  <h3>🎙️ Smart Speaker Voice Announcer</h3>
-                  <span className="announcer-target">Target: {outputTarget === 'local' ? 'Kitchen speaker' : outputTarget}</span>
-                </div>
-                <div className="announcer-presets">
-                  {['Build succeeded! All tests passing.', 'Pull request approved and ready for merge.', 'Time for sprint standup in Dev Central.', 'Stretch break! Take 5 minutes.'].map((msg, i) => (
-                    <button key={i} className="btn-preset" onClick={() => setTtsMessage(msg)}>
-                      {msg.split('!')[0]}
-                    </button>
-                  ))}
-                </div>
-                <div className="announcer-input-row">
-                  <input
-                    type="text"
-                    id="tts-input"
-                    value={ttsMessage}
-                    onChange={(e) => setTtsMessage(e.target.value)}
-                    placeholder="Type speech announcement to broadcast..."
-                  />
-                  <button id="btn-broadcast-tts" className="btn-accent" onClick={handleBroadcastTTS}>
-                    <span>Broadcast</span>
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
         )}
@@ -936,8 +890,16 @@ export default function App() {
                     <button className="btn-chip btn-stop-cast" onClick={() => handleStopCast(s.ip)}>
                       ⏹ Stop Playback
                     </button>
-                    <button className="btn-secondary" onClick={() => window.robosAudio.castTTS(s.ip, `Test tone from RobOS Audio Player on ${s.name}`)}>
-                      Test Speaker
+                    <button className="btn-secondary" onClick={async () => {
+                      showStatus(`Playing harmonic test chime on ${s.name}...`);
+                      try {
+                        await window.robosAudio.playTestChime(s.ip);
+                        showStatus(`Test chime played on ${s.name}`);
+                      } catch (err) {
+                        showStatus('Test chime error: ' + err.message);
+                      }
+                    }}>
+                      🔔 Play Test Chime
                     </button>
                   </div>
                 </div>

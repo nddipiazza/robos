@@ -17412,7 +17412,6 @@
     const [isScanningLibrary, setIsScanningLibrary] = (0, import_react8.useState)(false);
     const [libraryScanStatus, setLibraryScanStatus] = (0, import_react8.useState)(null);
     const [activeCastSession, setActiveCastSession] = (0, import_react8.useState)(null);
-    const [ttsMessage, setTtsMessage] = (0, import_react8.useState)("Hello from RobOS! Smart home audio is online.");
     const [statusMsg, setStatusMsg] = (0, import_react8.useState)("");
     const [activeAmbient, setActiveAmbient] = (0, import_react8.useState)(null);
     const playerRef = (0, import_react8.useRef)(null);
@@ -17739,21 +17738,6 @@
         castTrack(outputTarget, playlist[prevIdx]);
       }
     };
-    const handleBroadcastTTS = async () => {
-      if (!ttsMessage.trim()) return;
-      const target = outputTarget === "local" ? speakers[0]?.ip || "192.168.1.10" : outputTarget;
-      showStatus(`Broadcasting speech announcement to ${target}...`);
-      try {
-        if (target === "all") {
-          speakers.forEach((s) => window.robosAudio.castTTS(s.ip, ttsMessage));
-        } else {
-          await window.robosAudio.castTTS(target, ttsMessage);
-        }
-        showStatus("Announcement broadcast complete!");
-      } catch (err) {
-        showStatus("TTS error: " + err.message);
-      }
-    };
     const playAmbient = (type) => {
       if (activeAmbient === type) {
         if (ambientNodeRef.current) {
@@ -17978,16 +17962,7 @@
         },
         /* @__PURE__ */ import_react8.default.createElement("span", { className: "queue-chip-title" }, idx + 1, ". ", t.title),
         /* @__PURE__ */ import_react8.default.createElement("span", { className: "queue-chip-artist" }, t.artist)
-      )))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "announcer-panel" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "announcer-header" }, /* @__PURE__ */ import_react8.default.createElement("h3", null, "\u{1F399}\uFE0F Smart Speaker Voice Announcer"), /* @__PURE__ */ import_react8.default.createElement("span", { className: "announcer-target" }, "Target: ", outputTarget === "local" ? "Kitchen speaker" : outputTarget)), /* @__PURE__ */ import_react8.default.createElement("div", { className: "announcer-presets" }, ["Build succeeded! All tests passing.", "Pull request approved and ready for merge.", "Time for sprint standup in Dev Central.", "Stretch break! Take 5 minutes."].map((msg, i) => /* @__PURE__ */ import_react8.default.createElement("button", { key: i, className: "btn-preset", onClick: () => setTtsMessage(msg) }, msg.split("!")[0]))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "announcer-input-row" }, /* @__PURE__ */ import_react8.default.createElement(
-        "input",
-        {
-          type: "text",
-          id: "tts-input",
-          value: ttsMessage,
-          onChange: (e) => setTtsMessage(e.target.value),
-          placeholder: "Type speech announcement to broadcast..."
-        }
-      ), /* @__PURE__ */ import_react8.default.createElement("button", { id: "btn-broadcast-tts", className: "btn-accent", onClick: handleBroadcastTTS }, /* @__PURE__ */ import_react8.default.createElement("span", null, "Broadcast")))))), activeTab === "library" && /* @__PURE__ */ import_react8.default.createElement("div", { className: "media-browser-container" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "browser-toolbar" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "search-box" }, /* @__PURE__ */ import_react8.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2" }, /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "11", cy: "11", r: "8" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "21", y1: "21", x2: "16.65", y2: "16.65" })), /* @__PURE__ */ import_react8.default.createElement(
+      )))))), activeTab === "library" && /* @__PURE__ */ import_react8.default.createElement("div", { className: "media-browser-container" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "browser-toolbar" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "search-box" }, /* @__PURE__ */ import_react8.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2" }, /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "11", cy: "11", r: "8" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "21", y1: "21", x2: "16.65", y2: "16.65" })), /* @__PURE__ */ import_react8.default.createElement(
         "input",
         {
           type: "text",
@@ -18035,7 +18010,15 @@
       ].map((s) => /* @__PURE__ */ import_react8.default.createElement("div", { key: s.id, className: `ambient-card-item ${activeAmbient === s.id ? "active" : ""}`, onClick: () => playAmbient(s.id) }, /* @__PURE__ */ import_react8.default.createElement("span", { className: "card-emoji" }, s.emoji), /* @__PURE__ */ import_react8.default.createElement("h4", null, s.name), /* @__PURE__ */ import_react8.default.createElement("p", null, s.desc), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-accent" }, activeAmbient === s.id ? "Stop" : "Start"))))), activeTab === "speakers" && /* @__PURE__ */ import_react8.default.createElement("div", { className: "speakers-container" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "speakers-header" }, /* @__PURE__ */ import_react8.default.createElement("h3", null, "\u{1F50A} Connected Google Cast Smart Speakers"), /* @__PURE__ */ import_react8.default.createElement("div", { style: { display: "flex", gap: "8px" } }, /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast() }, "\u23F9 Stop All Speakers"), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-secondary", onClick: refreshSpeakers }, "\u{1F504} Refresh Subnet Scan"))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "speakers-grid" }, speakers.map((s) => /* @__PURE__ */ import_react8.default.createElement("div", { key: s.ip, className: "speaker-card" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "speaker-badge" }, "ONLINE"), /* @__PURE__ */ import_react8.default.createElement("h4", null, s.name), /* @__PURE__ */ import_react8.default.createElement("p", { className: "speaker-ip" }, "IP Address: ", /* @__PURE__ */ import_react8.default.createElement("code", null, s.ip)), /* @__PURE__ */ import_react8.default.createElement("p", { className: "speaker-model" }, "Model: ", s.model), /* @__PURE__ */ import_react8.default.createElement("div", { className: "speaker-actions" }, /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-accent", onClick: () => {
         setOutputTarget(s.ip);
         setActiveTab("player");
-      } }, "Set as Output"), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast(s.ip) }, "\u23F9 Stop Playback"), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-secondary", onClick: () => window.robosAudio.castTTS(s.ip, `Test tone from RobOS Audio Player on ${s.name}`) }, "Test Speaker"))))))),
+      } }, "Set as Output"), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast(s.ip) }, "\u23F9 Stop Playback"), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-secondary", onClick: async () => {
+        showStatus(`Playing harmonic test chime on ${s.name}...`);
+        try {
+          await window.robosAudio.playTestChime(s.ip);
+          showStatus(`Test chime played on ${s.name}`);
+        } catch (err) {
+          showStatus("Test chime error: " + err.message);
+        }
+      } }, "\u{1F514} Play Test Chime"))))))),
       statusMsg && /* @__PURE__ */ import_react8.default.createElement("div", { className: "toast" }, statusMsg)
     );
   }
