@@ -17409,7 +17409,8 @@
     const [library, setLibrary] = (0, import_react8.useState)({ tracks: [], artists: [], albums: [] });
     const [searchQuery, setSearchQuery] = (0, import_react8.useState)("");
     const [isScanning, setIsScanning] = (0, import_react8.useState)(false);
-    const [scanProgress, setScanProgress] = (0, import_react8.useState)(null);
+    const [isScanningLibrary, setIsScanningLibrary] = (0, import_react8.useState)(false);
+    const [libraryScanStatus, setLibraryScanStatus] = (0, import_react8.useState)(null);
     const [ttsMessage, setTtsMessage] = (0, import_react8.useState)("Hello from RobOS! Smart home audio is online.");
     const [statusMsg, setStatusMsg] = (0, import_react8.useState)("");
     const [activeAmbient, setActiveAmbient] = (0, import_react8.useState)(null);
@@ -17419,12 +17420,68 @@
     (0, import_react8.useEffect)(() => {
       refreshSpeakers();
       loadLibrary();
-      if (window.robosAudio?.onLibraryScanProgress) {
-        const unsub = window.robosAudio.onLibraryScanProgress((p) => {
-          setScanProgress(p);
-        });
-        return () => unsub();
+      const cleanups = [];
+      if (window.robosAudio?.onLibraryScanDiscovered) {
+        cleanups.push(window.robosAudio.onLibraryScanDiscovered((info) => {
+          setIsScanningLibrary(true);
+          setLibraryScanStatus({
+            current: 0,
+            total: info.total,
+            file: "Starting background metadata extraction..."
+          });
+          showStatus(`Discovered ${info.total} audio files. Scanning in background...`);
+        }));
       }
+      if (window.robosAudio?.onLibraryScanProgress) {
+        cleanups.push(window.robosAudio.onLibraryScanProgress((p) => {
+          setIsScanningLibrary(true);
+          setLibraryScanStatus(p);
+        }));
+      }
+      if (window.robosAudio?.onLibraryScanBatch) {
+        cleanups.push(window.robosAudio.onLibraryScanBatch((batch) => {
+          if (batch.library) {
+            setLibrary(batch.library);
+          }
+          if (batch.tracks && batch.tracks.length > 0) {
+            setPlaylist((prev) => {
+              const existingPaths = new Set(prev.map((t) => t.filePath));
+              const newItems = batch.tracks.filter((t) => !existingPaths.has(t.filePath));
+              return [...prev, ...newItems];
+            });
+          }
+        }));
+      }
+      if (window.robosAudio?.onLibraryScanComplete) {
+        cleanups.push(window.robosAudio.onLibraryScanComplete((done) => {
+          setIsScanningLibrary(false);
+          setLibraryScanStatus(null);
+          if (done.library) setLibrary(done.library);
+          showStatus(`Library background scan complete! Found ${done.totalFound} track(s).`);
+        }));
+      }
+      if (window.robosAudio?.onLibraryScanCanceled) {
+        cleanups.push(window.robosAudio.onLibraryScanCanceled(() => {
+          setIsScanningLibrary(false);
+          setLibraryScanStatus(null);
+          showStatus("Library background scan canceled.");
+        }));
+      }
+      if (window.robosAudio?.onLibraryScanError) {
+        cleanups.push(window.robosAudio.onLibraryScanError((err) => {
+          setIsScanningLibrary(false);
+          setLibraryScanStatus(null);
+          showStatus(`Library scan error: ${err.error}`);
+        }));
+      }
+      return () => {
+        cleanups.forEach((fn) => {
+          try {
+            fn();
+          } catch {
+          }
+        });
+      };
     }, []);
     const showStatus = (msg) => {
       setStatusMsg(msg);
@@ -17460,25 +17517,27 @@
       showStatus("Opening file manager to select music folder(s)...");
       try {
         const res = await window.robosAudio.selectLibraryFolder();
-        if (!res.canceled && res.tracks) {
-          if (res.library) {
-            setLibrary(res.library);
-          } else {
-            loadLibrary();
-          }
-          if (res.tracks.length > 0) {
-            setPlaylist((prev) => {
-              const existingPaths = new Set(prev.map((t) => t.filePath));
-              const newItems = res.tracks.filter((t) => !existingPaths.has(t.filePath));
-              return [...prev, ...newItems];
-            });
-            showStatus(`Imported ${res.totalFound} audio track(s) from ${res.folders?.length || 1} folder(s)!`);
-          } else {
-            showStatus("Selected folder contains no supported audio files.");
-          }
+        if (!res.canceled && res.started) {
+          setIsScanningLibrary(true);
+          setLibraryScanStatus({
+            current: 0,
+            total: 0,
+            file: "Discovering audio files in folder(s)..."
+          });
+          showStatus(`Started background scanning of ${res.folders?.length || 1} folder(s)...`);
         }
       } catch (err) {
         showStatus("Error scanning folder: " + err.message);
+      }
+    };
+    const handleCancelScan = async () => {
+      try {
+        await window.robosAudio.cancelLibraryScan();
+        setIsScanningLibrary(false);
+        setLibraryScanStatus(null);
+        showStatus("Canceled background library scan.");
+      } catch (err) {
+        showStatus("Error canceling scan: " + err.message);
       }
     };
     const handleAddFiles = async () => {
@@ -17508,6 +17567,11 @@
             return [...prev, ...newItems];
           });
           if (res.library) setLibrary(res.library);
+        }
+        if (res && res.scanningDirs) {
+          setIsScanningLibrary(true);
+          showStatus(`Scanning ${res.dirs.length} directory/directories in background...`);
+        } else if (res && res.tracks && res.tracks.length > 0) {
           showStatus(`Imported ${res.tracks.length} track(s) into library & queue!`);
         }
       } catch (err) {
@@ -17745,7 +17809,15 @@
         speakers.length,
         ")"
       )),
-      /* @__PURE__ */ import_react8.default.createElement("main", { className: "tab-content" }, activeTab === "player" && /* @__PURE__ */ import_react8.default.createElement("div", { className: "player-deck-container" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "deck-card" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "track-hero" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "album-art-box" }, currentTrack?.artId ? /* @__PURE__ */ import_react8.default.createElement("img", { src: `http://192.168.1.34:0/art/${currentTrack.artId}.jpg`, alt: "Album Art" }) : /* @__PURE__ */ import_react8.default.createElement("div", { className: "art-fallback" }, /* @__PURE__ */ import_react8.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "48", height: "48", viewBox: "0 0 24 24", fill: "none", stroke: "#00bcd4", "stroke-width": "1.5" }, /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "12", cy: "12", r: "10" }), /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "12", cy: "12", r: "3" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "12", y1: "2", x2: "12", y2: "4" })))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "track-details" }, /* @__PURE__ */ import_react8.default.createElement("h2", { id: "track-title" }, currentTrack?.title || "No Track Selected"), /* @__PURE__ */ import_react8.default.createElement("p", { id: "track-artist" }, currentTrack?.artist || "Unknown Artist", " \u2022 ", currentTrack?.album || "RobOS Library"), /* @__PURE__ */ import_react8.default.createElement("div", { className: "track-meta-pills" }, /* @__PURE__ */ import_react8.default.createElement("span", { className: "badge" }, "Output: ", outputTarget === "local" ? "Desktop" : outputTarget), currentTrack?.genre && /* @__PURE__ */ import_react8.default.createElement("span", { className: "badge" }, currentTrack.genre), currentTrack?.year && /* @__PURE__ */ import_react8.default.createElement("span", { className: "badge" }, currentTrack.year))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "hero-quick-actions" }, /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-secondary", onClick: handleSelectFolder, title: "Add folder via file manager" }, "\u{1F4C1} Add Folder"), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-secondary", onClick: handleAddFiles, title: "Add files" }, "\u2795 Add Files"))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "react-h5-wrapper" }, /* @__PURE__ */ import_react8.default.createElement(
+      /* @__PURE__ */ import_react8.default.createElement("main", { className: "tab-content" }, isScanningLibrary && /* @__PURE__ */ import_react8.default.createElement("div", { className: "scan-progress-banner" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "scan-progress-info" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "scan-spinner" }), /* @__PURE__ */ import_react8.default.createElement("div", { className: "scan-text" }, /* @__PURE__ */ import_react8.default.createElement("strong", null, "Background Library Scanning Active"), /* @__PURE__ */ import_react8.default.createElement("span", { className: "scan-details" }, libraryScanStatus?.total > 0 ? `${libraryScanStatus.current || 0} / ${libraryScanStatus.total} files (${Math.round((libraryScanStatus.current || 0) / libraryScanStatus.total * 100)}%)` : "Discovering audio files in folder(s)...", libraryScanStatus?.file ? ` \u2014 ${libraryScanStatus.file.split("/").slice(-2).join("/")}` : ""))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "scan-bar-container" }, /* @__PURE__ */ import_react8.default.createElement(
+        "div",
+        {
+          className: "scan-bar-fill",
+          style: {
+            width: `${libraryScanStatus?.total > 0 ? Math.min(100, Math.round((libraryScanStatus.current || 0) / libraryScanStatus.total * 100)) : 100}%`
+          }
+        }
+      )), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-cancel-scan", onClick: handleCancelScan }, "\u2715 Cancel Scan")), activeTab === "player" && /* @__PURE__ */ import_react8.default.createElement("div", { className: "player-deck-container" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "deck-card" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "track-hero" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "album-art-box" }, currentTrack?.artId ? /* @__PURE__ */ import_react8.default.createElement("img", { src: `http://192.168.1.34:0/art/${currentTrack.artId}.jpg`, alt: "Album Art" }) : /* @__PURE__ */ import_react8.default.createElement("div", { className: "art-fallback" }, /* @__PURE__ */ import_react8.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "48", height: "48", viewBox: "0 0 24 24", fill: "none", stroke: "#00bcd4", "stroke-width": "1.5" }, /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "12", cy: "12", r: "10" }), /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "12", cy: "12", r: "3" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "12", y1: "2", x2: "12", y2: "4" })))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "track-details" }, /* @__PURE__ */ import_react8.default.createElement("h2", { id: "track-title" }, currentTrack?.title || "No Track Selected"), /* @__PURE__ */ import_react8.default.createElement("p", { id: "track-artist" }, currentTrack?.artist || "Unknown Artist", " \u2022 ", currentTrack?.album || "RobOS Library"), /* @__PURE__ */ import_react8.default.createElement("div", { className: "track-meta-pills" }, /* @__PURE__ */ import_react8.default.createElement("span", { className: "badge" }, "Output: ", outputTarget === "local" ? "Desktop" : outputTarget), currentTrack?.genre && /* @__PURE__ */ import_react8.default.createElement("span", { className: "badge" }, currentTrack.genre), currentTrack?.year && /* @__PURE__ */ import_react8.default.createElement("span", { className: "badge" }, currentTrack.year))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "hero-quick-actions" }, /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-secondary", onClick: handleSelectFolder, title: "Add folder via file manager" }, "\u{1F4C1} Add Folder"), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-secondary", onClick: handleAddFiles, title: "Add files" }, "\u2795 Add Files"))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "react-h5-wrapper" }, /* @__PURE__ */ import_react8.default.createElement(
         es_default,
         {
           ref: playerRef,

@@ -18,7 +18,8 @@ export default function App() {
   const [library, setLibrary] = useState({ tracks: [], artists: [], albums: [] });
   const [searchQuery, setSearchQuery] = useState('');
   const [isScanning, setIsScanning] = useState(false);
-  const [scanProgress, setScanProgress] = useState(null);
+  const [isScanningLibrary, setIsScanningLibrary] = useState(false);
+  const [libraryScanStatus, setLibraryScanStatus] = useState(null);
   const [ttsMessage, setTtsMessage] = useState('Hello from RobOS! Smart home audio is online.');
   const [statusMsg, setStatusMsg] = useState('');
   const [activeAmbient, setActiveAmbient] = useState(null);
@@ -33,12 +34,70 @@ export default function App() {
     refreshSpeakers();
     loadLibrary();
 
-    if (window.robosAudio?.onLibraryScanProgress) {
-      const unsub = window.robosAudio.onLibraryScanProgress((p) => {
-        setScanProgress(p);
-      });
-      return () => unsub();
+    const cleanups = [];
+
+    if (window.robosAudio?.onLibraryScanDiscovered) {
+      cleanups.push(window.robosAudio.onLibraryScanDiscovered((info) => {
+        setIsScanningLibrary(true);
+        setLibraryScanStatus({
+          current: 0,
+          total: info.total,
+          file: 'Starting background metadata extraction...'
+        });
+        showStatus(`Discovered ${info.total} audio files. Scanning in background...`);
+      }));
     }
+
+    if (window.robosAudio?.onLibraryScanProgress) {
+      cleanups.push(window.robosAudio.onLibraryScanProgress((p) => {
+        setIsScanningLibrary(true);
+        setLibraryScanStatus(p);
+      }));
+    }
+
+    if (window.robosAudio?.onLibraryScanBatch) {
+      cleanups.push(window.robosAudio.onLibraryScanBatch((batch) => {
+        if (batch.library) {
+          setLibrary(batch.library);
+        }
+        if (batch.tracks && batch.tracks.length > 0) {
+          setPlaylist(prev => {
+            const existingPaths = new Set(prev.map(t => t.filePath));
+            const newItems = batch.tracks.filter(t => !existingPaths.has(t.filePath));
+            return [...prev, ...newItems];
+          });
+        }
+      }));
+    }
+
+    if (window.robosAudio?.onLibraryScanComplete) {
+      cleanups.push(window.robosAudio.onLibraryScanComplete((done) => {
+        setIsScanningLibrary(false);
+        setLibraryScanStatus(null);
+        if (done.library) setLibrary(done.library);
+        showStatus(`Library background scan complete! Found ${done.totalFound} track(s).`);
+      }));
+    }
+
+    if (window.robosAudio?.onLibraryScanCanceled) {
+      cleanups.push(window.robosAudio.onLibraryScanCanceled(() => {
+        setIsScanningLibrary(false);
+        setLibraryScanStatus(null);
+        showStatus('Library background scan canceled.');
+      }));
+    }
+
+    if (window.robosAudio?.onLibraryScanError) {
+      cleanups.push(window.robosAudio.onLibraryScanError((err) => {
+        setIsScanningLibrary(false);
+        setLibraryScanStatus(null);
+        showStatus(`Library scan error: ${err.error}`);
+      }));
+    }
+
+    return () => {
+      cleanups.forEach(fn => { try { fn(); } catch {} });
+    };
   }, []);
 
   const showStatus = (msg) => {
@@ -77,25 +136,28 @@ export default function App() {
     showStatus('Opening file manager to select music folder(s)...');
     try {
       const res = await window.robosAudio.selectLibraryFolder();
-      if (!res.canceled && res.tracks) {
-        if (res.library) {
-          setLibrary(res.library);
-        } else {
-          loadLibrary();
-        }
-        if (res.tracks.length > 0) {
-          setPlaylist(prev => {
-            const existingPaths = new Set(prev.map(t => t.filePath));
-            const newItems = res.tracks.filter(t => !existingPaths.has(t.filePath));
-            return [...prev, ...newItems];
-          });
-          showStatus(`Imported ${res.totalFound} audio track(s) from ${res.folders?.length || 1} folder(s)!`);
-        } else {
-          showStatus('Selected folder contains no supported audio files.');
-        }
+      if (!res.canceled && res.started) {
+        setIsScanningLibrary(true);
+        setLibraryScanStatus({
+          current: 0,
+          total: 0,
+          file: 'Discovering audio files in folder(s)...'
+        });
+        showStatus(`Started background scanning of ${res.folders?.length || 1} folder(s)...`);
       }
     } catch (err) {
       showStatus('Error scanning folder: ' + err.message);
+    }
+  };
+
+  const handleCancelScan = async () => {
+    try {
+      await window.robosAudio.cancelLibraryScan();
+      setIsScanningLibrary(false);
+      setLibraryScanStatus(null);
+      showStatus('Canceled background library scan.');
+    } catch (err) {
+      showStatus('Error canceling scan: ' + err.message);
     }
   };
 
@@ -128,6 +190,11 @@ export default function App() {
           return [...prev, ...newItems];
         });
         if (res.library) setLibrary(res.library);
+      }
+      if (res && res.scanningDirs) {
+        setIsScanningLibrary(true);
+        showStatus(`Scanning ${res.dirs.length} directory/directories in background...`);
+      } else if (res && res.tracks && res.tracks.length > 0) {
         showStatus(`Imported ${res.tracks.length} track(s) into library & queue!`);
       }
     } catch (err) {
@@ -404,6 +471,35 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="tab-content">
+        {/* Background Scan Banner */}
+        {isScanningLibrary && (
+          <div className="scan-progress-banner">
+            <div className="scan-progress-info">
+              <div className="scan-spinner"></div>
+              <div className="scan-text">
+                <strong>Background Library Scanning Active</strong>
+                <span className="scan-details">
+                  {libraryScanStatus?.total > 0
+                    ? `${libraryScanStatus.current || 0} / ${libraryScanStatus.total} files (${Math.round(((libraryScanStatus.current || 0) / libraryScanStatus.total) * 100)}%)`
+                    : 'Discovering audio files in folder(s)...'}
+                  {libraryScanStatus?.file ? ` — ${libraryScanStatus.file.split('/').slice(-2).join('/')}` : ''}
+                </span>
+              </div>
+            </div>
+            <div className="scan-bar-container">
+              <div
+                className="scan-bar-fill"
+                style={{
+                  width: `${libraryScanStatus?.total > 0 ? Math.min(100, Math.round(((libraryScanStatus.current || 0) / libraryScanStatus.total) * 100)) : 100}%`
+                }}
+              />
+            </div>
+            <button className="btn-cancel-scan" onClick={handleCancelScan}>
+              ✕ Cancel Scan
+            </button>
+          </div>
+        )}
+
         {/* TAB 1: NOW PLAYING */}
         {activeTab === 'player' && (
           <div className="player-deck-container">
