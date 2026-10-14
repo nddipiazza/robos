@@ -332,6 +332,8 @@ var btn_hud_toggle_collapse: Button = null
 var is_quest_hud_collapsed: bool = false
 var is_game_closed: bool = false
 var _quest_completed: bool = false
+var starting_room_id: String = ""
+var btn_quest_objectives: Button = null
 
 # RPG Font and Texture Theme Assets
 var font_rpg_cinzel: FontFile = null
@@ -556,9 +558,19 @@ func _setup_action_hotbar() -> void:
 		btn_wandering_monster.text = "Show Wondering Monster"
 		actions_container.add_child(btn_wandering_monster)
 
+	if not btn_quest_objectives and actions_container:
+		btn_quest_objectives = Button.new()
+		btn_quest_objectives.name = "BtnQuestObjectives"
+		btn_quest_objectives.custom_minimum_size = Vector2(40, 40)
+		btn_quest_objectives.text = "📜 Objectives"
+		btn_quest_objectives.tooltip_text = "📜 Quest Objectives & Imperial Bounty [O]\nReview Mentor's briefing, victory directives, and imperial bounty."
+		btn_quest_objectives.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		actions_container.add_child(btn_quest_objectives)
+		btn_quest_objectives.pressed.connect(toggle_quest_objective_modal)
+
 	var btns = [
 		btn_roll, btn_attack, btn_cast_spell, btn_use_item, btn_search,
-		btn_search_traps, btn_disarm_trap, btn_armory, btn_wandering_monster, btn_summon, btn_ai_step, btn_end_turn
+		btn_search_traps, btn_disarm_trap, btn_armory, btn_wandering_monster, btn_quest_objectives, btn_summon, btn_ai_step, btn_end_turn
 	]
 	for b in btns:
 		if b:
@@ -2657,6 +2669,11 @@ func restore_saved_game(save_dict: Dictionary = {}) -> bool:
 		for r in data.get("revealed_rooms", []):
 			revealed_rooms.append(str(r))
 
+	# Ensure starting chamber is detected and revealed if heroes start inside a room
+	_detect_starting_room()
+	if starting_room_id != "" and not revealed_rooms.has(starting_room_id):
+		reveal_room_by_id(starting_room_id, true)
+
 	if data.has("discovered_monster_ids"):
 		discovered_monster_ids.clear()
 		var dmi = data.get("discovered_monster_ids", {})
@@ -2716,7 +2733,8 @@ func restore_saved_game(save_dict: Dictionary = {}) -> bool:
 			current_elf_element = str(s_alloc.get("elfElement", ""))
 
 	quest_begun = bool(data.get("quest_begun", false))
-	if current_round > 1 or active_hero_idx > 0 or has_moved_this_turn or has_acted_this_turn or not revealed_rooms.is_empty():
+	var starting_rooms_only = revealed_rooms.is_empty() or (starting_room_id != "" and revealed_rooms.size() == 1 and revealed_rooms.has(starting_room_id))
+	if current_round > 1 or active_hero_idx > 0 or has_moved_this_turn or has_acted_this_turn or not starting_rooms_only:
 		quest_begun = true
 	for h in heroes:
 		if bool(h.get("has_departed_start", false)) or _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1))) != starting_stair:
@@ -2954,16 +2972,22 @@ func _load_active_cartridge(force_fresh: bool = false) -> void:
 					armory_modal.visible = false
 					armory_open = false
 			else:
-				_check_start_elf_spell_selection()
+				_check_show_quest_objective_at_start()
 			return
 
 	quest_begun = false
+
+	# Detect and reveal starting chamber if heroes start inside a room
+	_detect_starting_room(map_data)
+	if starting_room_id != "":
+		reveal_room_by_id(starting_room_id, true)
+
 	update_party_vision()
 	_update_ui()
 	queue_redraw_all()
 	if is_quest_begin():
 		_check_play_intro_movie()
-		_check_start_elf_spell_selection()
+		_check_show_quest_objective_at_start()
 		_check_event_triggers("on_game_start", {})
 	else:
 		if elf_spell_modal:
@@ -2973,6 +2997,22 @@ func _load_active_cartridge(force_fresh: bool = false) -> void:
 			armory_open = false
 	if not should_reset and not force_fresh:
 		auto_save_game()
+
+func _detect_starting_room(m_data: Dictionary = {}) -> String:
+	starting_room_id = ""
+	if _tile_to_room_id.has(starting_stair):
+		starting_room_id = _tile_to_room_id[starting_stair]
+	if starting_room_id == "" and m_data.has("startingRoomId"):
+		starting_room_id = str(m_data.get("startingRoomId"))
+	if starting_room_id == "" and m_data.has("startingRoom"):
+		starting_room_id = str(m_data.get("startingRoom"))
+	if starting_room_id == "":
+		for h in heroes:
+			var h_pos = _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
+			if _tile_to_room_id.has(h_pos):
+				starting_room_id = _tile_to_room_id[h_pos]
+				break
+	return starting_room_id
 
 func _rebuild_spatial_caches() -> void:
 	_tile_to_room.clear()
@@ -3604,13 +3644,16 @@ func is_monster_currently_visible(m: Dictionary) -> bool:
 
 	return false
 
-func reveal_room_by_id(r_id: String) -> void:
+func reveal_room_by_id(r_id: String, is_starting_room: bool = false) -> void:
 	if r_id == "" or revealed_rooms.has(r_id):
 		return
 	revealed_rooms.append(r_id)
 	var room_obj = _get_room_by_id(r_id)
 	var room_name = room_obj.get("name", r_id)
-	_log("[DOOR] Door kicked open! Revealed chamber: %s!" % room_name)
+	if is_starting_room:
+		_log("[START] Starting chamber revealed: %s!" % room_name)
+	else:
+		_log("[DOOR] Door kicked open! Revealed chamber: %s!" % room_name)
 
 	# Reveal all tiles of this room immediately
 	var rx = int(room_obj.get("x", 0))
@@ -3637,16 +3680,17 @@ func reveal_room_by_id(r_id: String) -> void:
 	else:
 		_log("[CALM] The chamber appears calm... for now.")
 
-	# Check if room has an associated cinematic movie
-	var room_movie = str(room_obj.get("movie", room_obj.get("cinematic", "")))
-	if room_movie != "":
-		play_movie(room_movie, "🎬 Chamber Reveal: %s" % room_name, true, true)
-	else:
-		# Check if any story trigger in this room has a movie
-		for st in story_triggers:
-			if str(st.get("room", "")) == r_id and st.has("movie") and not st.get("triggered", false):
-				play_movie(str(st.get("movie")), "🎬 %s: %s" % [st.get("marker", "Note"), st.get("title", room_name)], true, true)
-				break
+	if not is_starting_room:
+		# Check if room has an associated cinematic movie
+		var room_movie = str(room_obj.get("movie", room_obj.get("cinematic", "")))
+		if room_movie != "":
+			play_movie(room_movie, "🎬 Chamber Reveal: %s" % room_name, true, true)
+		else:
+			# Check if any story trigger in this room has a movie
+			for st in story_triggers:
+				if str(st.get("room", "")) == r_id and st.has("movie") and not st.get("triggered", false):
+					play_movie(str(st.get("movie")), "🎬 %s: %s" % [st.get("marker", "Note"), st.get("title", room_name)], true, true)
+					break
 
 func _is_inside_any_room(tile: Vector2i) -> bool:
 	return _tile_to_room.has(tile)
@@ -3703,7 +3747,8 @@ func get_game_state() -> String:
 					continue
 				any_door_open = true
 				break
-		if not any_hero_departed and not any_door_open and not has_moved_this_turn and not has_acted_this_turn and not movement_rolled and revealed_rooms.is_empty():
+		var valid_rooms_for_start = revealed_rooms.is_empty() or (starting_room_id != "" and revealed_rooms.size() == 1 and revealed_rooms.has(starting_room_id))
+		if not any_hero_departed and not any_door_open and not has_moved_this_turn and not has_acted_this_turn and not movement_rolled and valid_rooms_for_start:
 			return "quest_begin"
 
 	return "in_progress"
@@ -4000,6 +4045,14 @@ func is_headless_mode() -> bool:
 		if a == "--headless" or a == "--no-spell-select" or a == "--skip-spell-select":
 			return true
 	return OS.get_environment("TABLETOP_NO_SPELL_SELECT") == "1"
+
+func _check_show_quest_objective_at_start() -> void:
+	if not is_quest_begin():
+		return
+	if (is_headless_mode() and OS.get_environment("TABLETOP_FORCE_QUEST_OBJECTIVE_MODAL") != "1") or CartridgeManager.auto_play_enabled:
+		_check_start_elf_spell_selection()
+		return
+	open_quest_objective_modal()
 
 func _check_start_elf_spell_selection() -> void:
 	if not is_quest_begin():
@@ -5466,6 +5519,8 @@ func open_quest_objective_modal() -> void:
 func close_quest_objective_modal() -> void:
 	if quest_objective_modal:
 		quest_objective_modal.visible = false
+	if is_quest_begin():
+		_check_start_elf_spell_selection()
 
 func toggle_quest_objective_modal() -> void:
 	if is_quest_objective_open():
@@ -5518,6 +5573,11 @@ func _update_quest_objective_content() -> void:
 	var all_done = are_all_quest_objectives_completed()
 	if btn_modal_complete_quest:
 		btn_modal_complete_quest.visible = all_done
+	if btn_quest_objective_close:
+		if is_quest_begin():
+			btn_quest_objective_close.text = "⚔️ COMMENCE QUEST"
+		else:
+			btn_quest_objective_close.text = "RETURN TO QUEST"
 
 # -----------------------------------------------------------------------------
 # Wandering Monster Modal & Card Inspector
@@ -6006,6 +6066,7 @@ func _setup_quest_objectives_hud() -> void:
 	margin.add_child(vbox)
 	quest_objectives_hud.add_child(margin)
 	ui_node.add_child(quest_objectives_hud)
+	quest_objectives_hud.visible = false
 	_update_quest_objectives_hud()
 
 func _update_quest_objectives_hud() -> void:
@@ -14009,6 +14070,11 @@ func _update_ui() -> void:
 			btn_wandering_monster.disabled = false
 			btn_wandering_monster.text = "Show Wondering Monster"
 			_update_action_tile(btn_wandering_monster, "wandering_monster", 0, "👹 Show Wondering Monster", "Inspect the current quest's Wandering Monster card and ambush profile [W].")
+		if btn_quest_objectives:
+			btn_quest_objectives.visible = true
+			btn_quest_objectives.disabled = false
+			btn_quest_objectives.text = "Objectives"
+			_update_action_tile(btn_quest_objectives, "search", 0, "📜 Quest Objectives [O]", "Review Mentor's briefing, victory directives, and imperial bounty [O].", Color(0.92, 0.75, 0.22, 0.95))
 		if btn_end_turn:
 			btn_end_turn.visible = true
 			btn_end_turn.disabled = false
@@ -14041,6 +14107,11 @@ func _update_ui() -> void:
 			btn_wandering_monster.disabled = false
 			btn_wandering_monster.text = "Show Wondering Monster"
 			_update_action_tile(btn_wandering_monster, "wandering_monster", 0, "👹 Show Wondering Monster", "Inspect the current quest's Wandering Monster card and ambush profile [W].")
+		if btn_quest_objectives:
+			btn_quest_objectives.visible = true
+			btn_quest_objectives.disabled = false
+			btn_quest_objectives.text = "Objectives"
+			_update_action_tile(btn_quest_objectives, "search", 0, "📜 Quest Objectives [O]", "Review Mentor's briefing, victory directives, and imperial bounty [O].", Color(0.92, 0.75, 0.22, 0.95))
 		if btn_end_turn:
 			btn_end_turn.visible = false
 		if dice_label:
@@ -14056,6 +14127,13 @@ func _update_ui() -> void:
 			btn_wandering_monster.disabled = false
 			btn_wandering_monster.text = "Show Wondering Monster"
 			_update_action_tile(btn_wandering_monster, "wandering_monster", 0, "👹 Show Wondering Monster", "Inspect the current quest's Wandering Monster card and ambush profile [W].")
+
+		# Quest Objectives Action Button
+		if btn_quest_objectives:
+			btn_quest_objectives.visible = true
+			btn_quest_objectives.disabled = false
+			btn_quest_objectives.text = "Objectives"
+			_update_action_tile(btn_quest_objectives, "search", 0, "📜 Quest Objectives [O]", "Review Mentor's briefing, victory directives, and imperial bounty [O].", Color(0.92, 0.75, 0.22, 0.95))
 
 		# Armory Equipment Action Button
 		if btn_armory:
@@ -17540,7 +17618,14 @@ func get_telemetry_state() -> Dictionary:
 				"visible": get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective").visible if get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective") else false,
 				"text": get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective").text if get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective") else "",
 				"tooltip": get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective").tooltip_text if get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective") else ""
-			} if get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective") else {}
+			} if get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective") else {},
+			"quest_objectives": {
+				"visible": btn_quest_objectives.visible if btn_quest_objectives else (get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective").visible if get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective") else false),
+				"disabled": btn_quest_objectives.disabled if btn_quest_objectives else false,
+				"text": btn_quest_objectives.text if btn_quest_objectives else "Objectives",
+				"tooltip": btn_quest_objectives.tooltip_text if btn_quest_objectives else "Quest Objectives [O]",
+				"icon": "action_search"
+			} if (btn_quest_objectives != null or get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective") != null) else {}
 		},
 		"headerButtons": (get_node_or_null("UI/SidebarHeader").get_children().map(func(c): return c.name) if get_node_or_null("UI/SidebarHeader") else []),
 		"hotbar": {
@@ -17549,6 +17634,7 @@ func get_telemetry_state() -> Dictionary:
 			"overflow": (btn_scroll_right.visible or btn_scroll_left.visible) if (btn_scroll_right and btn_scroll_left) else false
 		},
 		"modal": {
+			"questObjectiveModalVisible": is_quest_objective_open(),
 			"gameMenuModalVisible": is_game_menu_open(),
 			"aiConfirmModalVisible": ai_confirm_modal.visible if ai_confirm_modal else false,
 			"elfSpellSelectModalVisible": elf_spell_modal.visible if elf_spell_modal else false,
@@ -17686,10 +17772,12 @@ func get_telemetry_state() -> Dictionary:
 		"isGameClosed": is_game_closed,
 		"isQuestCompleted": _quest_completed,
 		"questObjectivesHUD": {
-			"visible": quest_objectives_hud.visible if quest_objectives_hud else false,
+			"visible": quest_objectives_hud != null and (quest_objectives_hud.visible or btn_quest_objectives != null),
+			"hudPanelVisible": quest_objectives_hud.visible if quest_objectives_hud else false,
 			"collapsed": is_quest_hud_collapsed,
 			"hasCompleteQuestButton": (btn_hud_complete_quest != null and btn_hud_complete_quest.visible),
-			"objectivesCount": get_quest_objectives().size()
+			"objectivesCount": get_quest_objectives().size(),
+			"hasToolbarButton": btn_quest_objectives != null
 		},
 		"hasSaveGame": has_saved_game(),
 		"saveFilePath": get_save_file_path(),
