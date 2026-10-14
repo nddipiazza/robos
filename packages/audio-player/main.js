@@ -195,22 +195,61 @@ ipcMain.handle('audio:get-library', async () => {
 ipcMain.handle('audio:select-library-folder', async () => {
   if (!mainWindow) return { canceled: true };
   const res = await dialog.showOpenDialog(mainWindow, {
-    title: 'Select Music Library Folder',
-    properties: ['openDirectory']
+    title: 'Select Music Folder(s)',
+    buttonLabel: 'Add Folder',
+    properties: ['openDirectory', 'multiSelections', 'dontAddToRecent']
   });
 
   if (res.canceled || !res.filePaths.length) {
     return { canceled: true };
   }
 
-  const folder = res.filePaths[0];
-  const scanResult = await mediaLibrary.scanDirectory(folder, (progress) => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('audio:library-scan-progress', progress);
-    }
-  });
+  let totalFound = 0;
+  const newTracks = [];
+  for (const folder of res.filePaths) {
+    const scanResult = await mediaLibrary.scanDirectory(folder, (progress) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('audio:library-scan-progress', progress);
+      }
+    });
+    totalFound += (scanResult.totalFound || 0);
+    newTracks.push(...(scanResult.tracks || []));
+  }
 
-  return { canceled: false, folder, ...scanResult };
+  return {
+    canceled: false,
+    folders: res.filePaths,
+    totalFound,
+    tracks: newTracks,
+    library: mediaLibrary.getLibrary()
+  };
+});
+
+ipcMain.handle('audio:import-paths', async (_evt, targetPaths) => {
+  if (!Array.isArray(targetPaths)) return { canceled: true, tracks: [] };
+  const addedTracks = [];
+
+  for (const p of targetPaths) {
+    try {
+      if (fs.existsSync(p)) {
+        const stat = fs.statSync(p);
+        if (stat.isDirectory()) {
+          const res = await mediaLibrary.scanDirectory(p);
+          addedTracks.push(...(res.tracks || []));
+        } else if (stat.isFile()) {
+          const track = await mediaLibrary.parseTrack(p);
+          addedTracks.push(track);
+        }
+      }
+    } catch (e) {
+      console.warn('[AudioPlayer] Error importing path:', p, e.message);
+    }
+  }
+
+  return {
+    tracks: addedTracks,
+    library: mediaLibrary.getLibrary()
+  };
 });
 
 ipcMain.handle('audio:scan-default-library', async () => {
@@ -224,4 +263,5 @@ ipcMain.handle('audio:scan-default-library', async () => {
     }
   });
 });
+
 
