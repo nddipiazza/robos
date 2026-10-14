@@ -43,6 +43,22 @@ describe('RobOS Audio Player Tests', () => {
       assert.ok(content.includes('#00bcd4'), 'Accent color should match RobOS cyan');
     });
 
+    it('icon.png exists and is a valid raster PNG for BrowserWindow _NET_WM_ICON', () => {
+      const pngPath = path.join(APP_DIR, 'icon.png');
+      assert.ok(fs.existsSync(pngPath), 'icon.png should exist');
+      const stat = fs.statSync(pngPath);
+      assert.ok(stat.size > 100, `icon.png should be non-empty, got ${stat.size} bytes`);
+    });
+
+    it('desktop shortcut exists in ~/Desktop/audio-player.desktop', () => {
+      const desktopShortcut = path.join(process.env.HOME || '/home/ndipiazza', 'Desktop', 'audio-player.desktop');
+      assert.ok(fs.existsSync(desktopShortcut), 'Desktop shortcut should exist on ~/Desktop');
+      const content = fs.readFileSync(desktopShortcut, 'utf8');
+      assert.ok(content.includes('Name=RobOS Audio Player'), 'Shortcut should have correct Name');
+      assert.ok(content.includes('Exec='), 'Shortcut should have Exec command');
+      assert.ok(content.includes('StartupWMClass=robos-audio-player'), 'Shortcut should have StartupWMClass');
+    });
+
     it('compiled React bundle exists and is valid', () => {
       const bundlePath = path.join(APP_DIR, 'renderer', 'bundle.js');
       assert.ok(fs.existsSync(bundlePath), 'bundle.js should exist');
