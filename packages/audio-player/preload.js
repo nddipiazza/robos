@@ -13,6 +13,14 @@ contextBridge.exposeInMainWorld('robosAudio', {
   castResume: (ip) => ipcRenderer.invoke('audio:cast-resume', ip),
   castStop: (ip) => ipcRenderer.invoke('audio:cast-stop', ip),
   openFileDialog: () => ipcRenderer.invoke('audio:open-file-dialog'),
+  getLibrary: () => ipcRenderer.invoke('audio:get-library'),
+  selectLibraryFolder: () => ipcRenderer.invoke('audio:select-library-folder'),
+  scanDefaultLibrary: () => ipcRenderer.invoke('audio:scan-default-library'),
+  onLibraryScanProgress: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on('audio:library-scan-progress', handler);
+    return () => ipcRenderer.removeListener('audio:library-scan-progress', handler);
+  },
   onSpeakerStatusChange: (callback) => {
     const handler = (_event, data) => callback(data);
     ipcRenderer.on('audio:speaker-status-change', handler);

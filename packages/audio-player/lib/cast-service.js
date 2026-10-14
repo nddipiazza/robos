@@ -48,6 +48,28 @@ class CastService {
   _initStreamServer() {
     this.streamServer = http.createServer((req, res) => {
       const parsedUrl = new URL(req.url, `http://${this.hostIp}:${this.streamPort}`);
+
+      // Handle Album Art requests
+      if (parsedUrl.pathname.startsWith('/art/')) {
+        const artId = parsedUrl.pathname.replace(/^\/art\//, '').replace(/\.[^.]+$/, '');
+        let art = this.mediaLibrary ? this.mediaLibrary.getArt(artId) : null;
+        if (!art && this.mediaRegistry.has(artId)) {
+          art = this.mediaRegistry.get(artId);
+        }
+        if (art && art.buffer) {
+          res.writeHead(200, {
+            'Content-Type': art.format || 'image/jpeg',
+            'Content-Length': art.buffer.length,
+            'Cache-Control': 'public, max-age=86400'
+          });
+          res.end(art.buffer);
+          return;
+        }
+        res.writeHead(404, { 'Content-Type': 'text/plain' });
+        res.end('Art not found');
+        return;
+      }
+
       const mediaId = parsedUrl.pathname.replace(/^\/media\//, '').replace(/\.[^.]+$/, '');
       const item = this.mediaRegistry.get(mediaId);
 

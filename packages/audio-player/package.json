@@ -4,9 +4,17 @@
   "description": "RobOS Audio Player with open-source Howler.js engine and zero-cloud Google Home / Cast speaker streaming",
   "main": "main.js",
   "scripts": {
-    "start": "electron . --no-sandbox --disable-gpu --disable-dev-shm-usage"
+    "build": "esbuild src/index.jsx --bundle --outfile=renderer/bundle.js --loader:.js=jsx --loader:.jsx=jsx --platform=browser --define:process.env.NODE_ENV='\"production\"'",
+    "start": "npm run build && electron . --no-sandbox --disable-gpu --disable-dev-shm-usage"
   },
   "dependencies": {
-    "castv2-client": "^1.2.0"
+    "castv2-client": "^1.2.0",
+    "music-metadata": "^12.2.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-h5-audio-player": "^3.10.2"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
   }
 }
