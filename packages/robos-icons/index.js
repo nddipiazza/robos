@@ -61,6 +61,12 @@ const BUILTIN_APPS = [
     iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m19 11-8-8-8.5 8.5a2.12 2.12 0 0 0 3 3L12 8l6.5 6.5a2.12 2.12 0 0 0 3-3L19 11Z"/><path d="m5 2 5 5"/><path d="M2 5l5 5"/><path d="M22 19l-3-3"/><path d="m19 22 3-3"/><circle cx="19" cy="5" r="2"/></svg>'
   },
   {
+    appId: 'audio-player',
+    label: 'Audio Player',
+    category: 'Tools',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/><polygon points="10 10 15 12 10 14 10 10" fill="#00bcd4"/></svg>'
+  },
+  {
     appId: 'automation-studio',
     label: 'Automation Studio',
     category: 'Development',

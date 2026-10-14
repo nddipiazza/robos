@@ -113,6 +113,7 @@ const PORT_REGISTRY = {
   'crpg-campaign':     19194,
   'crpg-scene-studio': 19194,
   'tabletop-quest-editor': 19195,
+  'audio-player':      19196,
   'robos-documentation': 19197,
   'robos-tabletop':    19198,
   'tabletop-editor':   19198,
