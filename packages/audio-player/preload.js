@@ -15,6 +15,7 @@ contextBridge.exposeInMainWorld('robosAudio', {
   openFileDialog: () => ipcRenderer.invoke('audio:open-file-dialog'),
   getLibrary: () => ipcRenderer.invoke('audio:get-library'),
   selectLibraryFolder: () => ipcRenderer.invoke('audio:select-library-folder'),
+  importPaths: (paths) => ipcRenderer.invoke('audio:import-paths', paths),
   scanDefaultLibrary: () => ipcRenderer.invoke('audio:scan-default-library'),
   onLibraryScanProgress: (callback) => {
     const handler = (_event, data) => callback(data);

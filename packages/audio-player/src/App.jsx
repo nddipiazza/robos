@@ -24,9 +24,7 @@ export default function App() {
   const [activeAmbient, setActiveAmbient] = useState(null);
 
   const playerRef = useRef(null);
-  const canvasRef = useRef(null);
   const audioCtxRef = useRef(null);
-  const analyserRef = useRef(null);
   const ambientNodeRef = useRef(null);
 
   // ── Initial Load & Speaker Discovery ──────────────────────────────────────
@@ -35,7 +33,6 @@ export default function App() {
     refreshSpeakers();
     loadLibrary();
 
-    // Listen to background progress
     if (window.robosAudio?.onLibraryScanProgress) {
       const unsub = window.robosAudio.onLibraryScanProgress((p) => {
         setScanProgress(p);
@@ -77,16 +74,64 @@ export default function App() {
   };
 
   const handleSelectFolder = async () => {
-    showStatus('Select music folder to scan with music-metadata...');
-    const res = await window.robosAudio.selectLibraryFolder();
-    if (!res.canceled && res.tracks) {
-      setLibrary({
-        tracks: res.tracks,
-        artists: [],
-        albums: []
-      });
-      loadLibrary();
-      showStatus(`Imported ${res.totalFound} audio tracks into media library!`);
+    showStatus('Opening file manager to select music folder(s)...');
+    try {
+      const res = await window.robosAudio.selectLibraryFolder();
+      if (!res.canceled && res.tracks) {
+        if (res.library) {
+          setLibrary(res.library);
+        } else {
+          loadLibrary();
+        }
+        if (res.tracks.length > 0) {
+          setPlaylist(prev => {
+            const existingPaths = new Set(prev.map(t => t.filePath));
+            const newItems = res.tracks.filter(t => !existingPaths.has(t.filePath));
+            return [...prev, ...newItems];
+          });
+          showStatus(`Imported ${res.totalFound} audio track(s) from ${res.folders?.length || 1} folder(s)!`);
+        } else {
+          showStatus('Selected folder contains no supported audio files.');
+        }
+      }
+    } catch (err) {
+      showStatus('Error scanning folder: ' + err.message);
+    }
+  };
+
+  const handleAddFiles = async () => {
+    try {
+      const res = await window.robosAudio.openFileDialog();
+      if (!res.canceled && res.tracks && res.tracks.length > 0) {
+        setPlaylist(prev => [...prev, ...res.tracks]);
+        showStatus(`Added ${res.tracks.length} track(s) to playlist`);
+      }
+    } catch (err) {
+      showStatus('Error opening files: ' + err.message);
+    }
+  };
+
+  const handleDrop = async (e) => {
+    e.preventDefault();
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    if (!droppedFiles.length) return;
+    const paths = droppedFiles.map(f => f.path).filter(Boolean);
+    if (!paths.length) return;
+
+    showStatus(`Importing ${paths.length} dropped item(s)...`);
+    try {
+      const res = await window.robosAudio.importPaths(paths);
+      if (res && res.tracks && res.tracks.length > 0) {
+        setPlaylist(prev => {
+          const existingPaths = new Set(prev.map(t => t.filePath));
+          const newItems = res.tracks.filter(t => !existingPaths.has(t.filePath));
+          return [...prev, ...newItems];
+        });
+        if (res.library) setLibrary(res.library);
+        showStatus(`Imported ${res.tracks.length} track(s) into library & queue!`);
+      }
+    } catch (err) {
+      showStatus('Error importing dropped items: ' + err.message);
     }
   };
 
@@ -95,7 +140,6 @@ export default function App() {
   const currentTrack = playlist[currentTrackIndex] || playlist[0] || null;
 
   const playTrack = (track) => {
-    // If not in playlist, append
     const existingIdx = playlist.findIndex(t => t.filePath === track.filePath || t.src === track.src);
     if (existingIdx >= 0) {
       setCurrentTrackIndex(existingIdx);
@@ -256,7 +300,11 @@ export default function App() {
   });
 
   return (
-    <div className="react-audio-app">
+    <div
+      className="react-audio-app"
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={handleDrop}
+    >
       {/* Header */}
       <header className="app-header">
         <div className="header-brand">
@@ -269,6 +317,28 @@ export default function App() {
             <h1>RobOS Audio Player</h1>
             <span className="subtitle">React H5AudioPlayer & Zero-Cloud Google Cast Streaming</span>
           </div>
+        </div>
+
+        {/* Global Action Buttons in Header */}
+        <div className="header-actions">
+          <button
+            id="btn-header-add-folder"
+            className="btn-accent"
+            onClick={handleSelectFolder}
+            title="Open built-in system file manager to add music folder"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/><line x1="12" y1="10" x2="12" y2="16"/><line x1="9" y1="13" x2="15" y2="13"/></svg>
+            <span>Add Folder</span>
+          </button>
+          <button
+            id="btn-header-add-files"
+            className="btn-secondary"
+            onClick={handleAddFiles}
+            title="Open file picker to select individual audio files"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+            <span>Add Files</span>
+          </button>
         </div>
 
         {/* Output Selector */}
@@ -357,9 +427,18 @@ export default function App() {
                     {currentTrack?.year && <span className="badge">{currentTrack.year}</span>}
                   </div>
                 </div>
+
+                <div className="hero-quick-actions">
+                  <button className="btn-secondary" onClick={handleSelectFolder} title="Add folder via file manager">
+                    📁 Add Folder
+                  </button>
+                  <button className="btn-secondary" onClick={handleAddFiles} title="Add files">
+                    ➕ Add Files
+                  </button>
+                </div>
               </div>
 
-              {/* Existing React Component: React H5 Audio Player */}
+              {/* React H5 Audio Player Component */}
               <div className="react-h5-wrapper">
                 <AudioPlayer
                   ref={playerRef}
@@ -373,6 +452,29 @@ export default function App() {
                   layout="stacked"
                   customAdditionalControls={[]}
                 />
+              </div>
+
+              {/* Queue bar */}
+              <div className="queue-quick-peek">
+                <div className="queue-header">
+                  <h4>Playlist Queue ({playlist.length})</h4>
+                  <span className="queue-subtitle">Drag and drop folders or files anywhere onto this window to add them</span>
+                </div>
+                <div className="queue-items-scroll">
+                  {playlist.map((t, idx) => (
+                    <div
+                      key={t.id || idx}
+                      className={`queue-chip ${idx === currentTrackIndex ? 'active' : ''}`}
+                      onClick={() => {
+                        setCurrentTrackIndex(idx);
+                        if (outputTarget !== 'local') castTrack(outputTarget, t);
+                      }}
+                    >
+                      <span className="queue-chip-title">{idx + 1}. {t.title}</span>
+                      <span className="queue-chip-artist">{t.artist}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {/* Quick Speaker Announcer Bar */}
@@ -419,25 +521,30 @@ export default function App() {
                 />
               </div>
               <div className="browser-actions">
-                <button className="btn-secondary" onClick={handleSelectFolder}>
-                  📂 Scan Music Folder (music-metadata)
+                <button id="btn-browse-add-folder" className="btn-accent" onClick={handleSelectFolder}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/><line x1="12" y1="10" x2="12" y2="16"/><line x1="9" y1="13" x2="15" y2="13"/></svg>
+                  <span>Add Folder via File Manager</span>
                 </button>
-                <button className="btn-secondary" onClick={() => window.robosAudio.openFileDialog().then(r => {
-                  if (!r.canceled && r.tracks) {
-                    setPlaylist(prev => [...prev, ...r.tracks]);
-                    showStatus(`Added ${r.tracks.length} tracks to queue`);
-                  }
-                })}>
-                  ➕ Add Audio Files
+                <button className="btn-secondary" onClick={handleAddFiles}>
+                  <span>➕ Add Files</span>
                 </button>
               </div>
+            </div>
+
+            {/* Dropzone Hint */}
+            <div className="dropzone-banner" onClick={handleSelectFolder}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="2"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+              <p>Click here or drag & drop any music folder from your file manager to scan and index</p>
             </div>
 
             {/* Library Grid */}
             <div className="library-grid">
               {filteredLibrary.length === 0 ? (
                 <div className="empty-state">
-                  <p>No tracks found in media library. Click <strong>Scan Music Folder</strong> to index local music with <code>music-metadata</code>!</p>
+                  <p>No tracks indexed in media library yet.</p>
+                  <button className="btn-accent" onClick={handleSelectFolder} style={{ marginTop: '12px' }}>
+                    📁 Add Folder via File Manager Popup
+                  </button>
                 </div>
               ) : (
                 filteredLibrary.map((t, idx) => (
