@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RobOS Audio Player</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="howler.min.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-brand">
+        <svg class="brand-icon" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
+          <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
+          <polygon points="10 10 15 12 10 14 10 10" fill="#00bcd4"/>
+        </svg>
+        <div>
+          <h1>RobOS Audio Player</h1>
+          <span class="subtitle">Open-source Howler.js & Google Cast Local Streaming</span>
+        </div>
+      </div>
+
+      <!-- Output Device Selector -->
+      <div class="output-selector-wrapper">
+        <label for="output-select">Playback Output:</label>
+        <div class="select-group">
+          <select id="output-select">
+            <option value="local">💻 Desktop (Local Audio)</option>
+          </select>
+          <button id="btn-scan-speakers" title="Scan LAN for Google Home / Nest speakers" class="btn-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+            <span>Scan Speakers</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Workspace Grid -->
+    <main class="player-grid">
+      <!-- Left Column: Visualizer & Player Deck -->
+      <section class="deck-section">
+        <!-- Visualizer Area -->
+        <div class="visualizer-container">
+          <canvas id="visualizer-canvas"></canvas>
+          <div class="visualizer-overlay">
+            <span id="output-badge" class="badge">💻 Desktop Audio</span>
+            <span id="status-badge" class="badge badge-idle">Ready</span>
+          </div>
+        </div>
+
+        <!-- Track Info -->
+        <div class="track-info">
+          <h2 id="track-title">No Track Selected</h2>
+          <p id="track-artist">Select a track, load an ambient sound, or drag audio files</p>
+        </div>
+
+        <!-- Timeline / Progress Bar -->
+        <div class="progress-container">
+          <span id="time-current">0:00</span>
+          <input type="range" id="progress-bar" min="0" max="100" value="0" step="0.1">
+          <span id="time-duration">0:00</span>
+        </div>
+
+        <!-- Playback Controls -->
+        <div class="controls-toolbar">
+          <div class="control-group-left">
+            <button id="btn-shuffle" class="btn-control" title="Shuffle">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg>
+            </button>
+            <button id="btn-prev" class="btn-control" title="Previous Track">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
+            </button>
+          </div>
+
+          <div class="control-group-center">
+            <button id="btn-play-pause" class="btn-primary-play" title="Play / Pause">
+              <svg id="icon-play" xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <svg id="icon-pause" class="hidden" xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            </button>
+            <button id="btn-stop" class="btn-control" title="Stop">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>
+            </button>
+          </div>
+
+          <div class="control-group-right">
+            <button id="btn-next" class="btn-control" title="Next Track">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+            </button>
+            <button id="btn-repeat" class="btn-control" title="Repeat">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+            </button>
+          </div>
+
+          <!-- Volume Controls -->
+          <div class="volume-container">
+            <button id="btn-mute" class="btn-control" title="Mute / Unmute">
+              <svg id="icon-vol" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+              <svg id="icon-mute" class="hidden" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+            </button>
+            <input type="range" id="volume-slider" min="0" max="100" value="70">
+            <span id="volume-pct">70%</span>
+          </div>
+        </div>
+
+        <!-- Speaker TTS Announcement Bar -->
+        <div class="announcer-panel">
+          <div class="announcer-header">
+            <h3>🎙️ Smart Speaker Voice Announcer</h3>
+            <span class="announcer-target" id="announcer-target-label">Target: Kitchen speaker</span>
+          </div>
+          <div class="announcer-presets">
+            <button class="btn-preset" data-msg="Build succeeded! All tests passing.">🚀 Build Succeeded</button>
+            <button class="btn-preset" data-msg="Pull request approved and ready for merge.">🔍 PR Approved</button>
+            <button class="btn-preset" data-msg="Time for sprint standup in Dev Central.">⏰ Standup Reminder</button>
+            <button class="btn-preset" data-msg="Take a five minute break and stretch.">☕ Stretch Break</button>
+          </div>
+          <div class="announcer-input-row">
+            <input type="text" id="tts-input" placeholder="Type custom voice announcement..." value="Hello from RobOS! Audio streaming to your speaker is online.">
+            <button id="btn-broadcast-tts" class="btn-accent">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+              <span>Broadcast</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: Playlist, Ambient Synthesizers & Discovered Speakers -->
+      <aside class="sidebar-section">
+        <!-- Ambient Sound Synthesizer Station -->
+        <div class="card ambient-card">
+          <div class="card-header">
+            <h3>⚡ Ambient Coding Synthesizers</h3>
+          </div>
+          <p class="card-desc">Procedural, non-repeating Web Audio soundscapes for deep focus</p>
+          <div class="ambient-buttons-grid">
+            <button class="btn-ambient" data-sound="rain">
+              <span class="ambient-emoji">🌧️</span>
+              <span class="ambient-name">Coding Rain</span>
+            </button>
+            <button class="btn-ambient" data-sound="synth">
+              <span class="ambient-emoji">🌌</span>
+              <span class="ambient-name">Cyber Synth</span>
+            </button>
+            <button class="btn-ambient" data-sound="pink">
+              <span class="ambient-emoji">📻</span>
+              <span class="ambient-name">Pink Noise</span>
+            </button>
+            <button class="btn-ambient" data-sound="chimes">
+              <span class="ambient-emoji">🔔</span>
+              <span class="ambient-name">Zen Chimes</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Playlist Card -->
+        <div class="card playlist-card">
+          <div class="card-header">
+            <h3>🎵 Playlist Queue (<span id="playlist-count">0</span>)</h3>
+            <button id="btn-add-files" class="btn-secondary">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>Add Audio</span>
+            </button>
+          </div>
+
+          <!-- Drag and Drop Dropzone -->
+          <div id="dropzone" class="dropzone">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <p>Drag & drop audio files here (MP3, WAV, FLAC, OGG)</p>
+          </div>
+
+          <ul id="playlist-list" class="playlist-items">
+            <!-- Populated via JS -->
+          </ul>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast hidden"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
