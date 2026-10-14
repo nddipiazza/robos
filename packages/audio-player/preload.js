@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld('robosAudio', {
   castPause: (ip) => ipcRenderer.invoke('audio:cast-pause', ip),
   castResume: (ip) => ipcRenderer.invoke('audio:cast-resume', ip),
   castStop: (ip) => ipcRenderer.invoke('audio:cast-stop', ip),
+  castStopAll: () => ipcRenderer.invoke('audio:cast-stop-all'),
   openFileDialog: () => ipcRenderer.invoke('audio:open-file-dialog'),
   getLibrary: () => ipcRenderer.invoke('audio:get-library'),
   selectLibraryFolder: () => ipcRenderer.invoke('audio:select-library-folder'),
@@ -53,5 +54,10 @@ contextBridge.exposeInMainWorld('robosAudio', {
     const handler = (_event, data) => callback(data);
     ipcRenderer.on('audio:speaker-status-change', handler);
     return () => ipcRenderer.removeListener('audio:speaker-status-change', handler);
+  },
+  onSpeakerPlaybackStopped: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on('audio:speaker-playback-stopped', handler);
+    return () => ipcRenderer.removeListener('audio:speaker-playback-stopped', handler);
   }
 });

@@ -20,6 +20,7 @@ export default function App() {
   const [isScanning, setIsScanning] = useState(false);
   const [isScanningLibrary, setIsScanningLibrary] = useState(false);
   const [libraryScanStatus, setLibraryScanStatus] = useState(null);
+  const [activeCastSession, setActiveCastSession] = useState(null); // { ip, trackId, filePath, isPaused }
   const [ttsMessage, setTtsMessage] = useState('Hello from RobOS! Smart home audio is online.');
   const [statusMsg, setStatusMsg] = useState('');
   const [activeAmbient, setActiveAmbient] = useState(null);
@@ -27,6 +28,14 @@ export default function App() {
   const playerRef = useRef(null);
   const audioCtxRef = useRef(null);
   const ambientNodeRef = useRef(null);
+
+  const getSpeakerName = (ip) => {
+    if (!ip) return 'Speaker';
+    if (ip === 'local') return 'Desktop (Local Audio)';
+    if (ip === 'all') return 'All Connected Speakers';
+    const found = speakers.find(s => s.ip === ip);
+    return found ? found.name : `Speaker (${ip})`;
+  };
 
   // ── Initial Load & Speaker Discovery ──────────────────────────────────────
 
@@ -95,10 +104,28 @@ export default function App() {
       }));
     }
 
+    if (window.robosAudio?.onSpeakerPlaybackStopped) {
+      cleanups.push(window.robosAudio.onSpeakerPlaybackStopped((data) => {
+        setActiveCastSession(null);
+      }));
+    }
+
+    if (window.robosAudio?.onSpeakerStatusChange) {
+      cleanups.push(window.robosAudio.onSpeakerStatusChange(({ ip, status }) => {
+        if (status?.playerState === 'IDLE' && status?.idleReason === 'FINISHED') {
+          setActiveCastSession(null);
+        } else if (status?.playerState === 'PAUSED') {
+          setActiveCastSession(prev => prev ? { ...prev, isPaused: true } : prev);
+        } else if (status?.playerState === 'PLAYING') {
+          setActiveCastSession(prev => prev ? { ...prev, isPaused: false } : prev);
+        }
+      }));
+    }
+
     return () => {
       cleanups.forEach(fn => { try { fn(); } catch {} });
     };
-  }, []);
+  }, [speakers]);
 
   const showStatus = (msg) => {
     setStatusMsg(msg);
@@ -206,22 +233,51 @@ export default function App() {
 
   const currentTrack = playlist[currentTrackIndex] || playlist[0] || null;
 
-  const playTrack = (track) => {
-    const existingIdx = playlist.findIndex(t => t.filePath === track.filePath || t.src === track.src);
-    if (existingIdx >= 0) {
-      setCurrentTrackIndex(existingIdx);
-    } else {
-      setPlaylist(prev => [...prev, track]);
-      setCurrentTrackIndex(playlist.length);
+  const handleStopCast = async (targetIp = null) => {
+    const ipToStop = targetIp || activeCastSession?.ip || (outputTarget !== 'local' ? outputTarget : null);
+    showStatus(`Stopping playback on ${ipToStop ? getSpeakerName(ipToStop) : 'speakers'}...`);
+    try {
+      if (ipToStop && ipToStop !== 'all') {
+        await window.robosAudio.castStop(ipToStop);
+      } else {
+        await window.robosAudio.castStopAll();
+      }
+      setActiveCastSession(null);
+      if (playerRef.current?.audio?.current) {
+        playerRef.current.audio.current.pause();
+      }
+      showStatus('Cast playback stopped.');
+    } catch (err) {
+      showStatus('Error stopping cast: ' + err.message);
     }
+  };
 
-    if (outputTarget !== 'local') {
-      castTrack(outputTarget, track);
+  const handleToggleCastPause = async () => {
+    if (!activeCastSession?.ip) return;
+    try {
+      if (activeCastSession.isPaused) {
+        await window.robosAudio.castResume(activeCastSession.ip);
+        setActiveCastSession(prev => ({ ...prev, isPaused: false }));
+        if (playerRef.current?.audio?.current) {
+          playerRef.current.audio.current.play().catch(() => {});
+        }
+        showStatus(`Resumed cast on ${getSpeakerName(activeCastSession.ip)}`);
+      } else {
+        await window.robosAudio.castPause(activeCastSession.ip);
+        setActiveCastSession(prev => ({ ...prev, isPaused: true }));
+        if (playerRef.current?.audio?.current) {
+          playerRef.current.audio.current.pause();
+        }
+        showStatus(`Paused cast on ${getSpeakerName(activeCastSession.ip)}`);
+      }
+    } catch (err) {
+      showStatus('Error toggling pause: ' + err.message);
     }
   };
 
   const castTrack = async (speakerIp, track) => {
-    showStatus(`Casting "${track.title}" to ${speakerIp}...`);
+    if (!speakerIp || speakerIp === 'local' || !track) return;
+    showStatus(`Casting "${track.title}" to ${getSpeakerName(speakerIp)}...`);
     const metadata = {
       title: track.title,
       artist: track.artist,
@@ -231,17 +287,77 @@ export default function App() {
       metadata.images = [{ url: `http://192.168.1.34:0/art/${track.artId}.jpg` }];
     }
 
-    if (speakerIp === 'all') {
-      speakers.forEach(s => {
-        if (track.filePath) window.robosAudio.castFile(s.ip, track.filePath, metadata);
-        else if (track.src) window.robosAudio.castUrl(s.ip, track.src, metadata);
-      });
-    } else {
-      if (track.filePath) {
-        await window.robosAudio.castFile(speakerIp, track.filePath, metadata);
-      } else if (track.src) {
-        await window.robosAudio.castUrl(speakerIp, track.src, metadata);
+    try {
+      if (speakerIp === 'all') {
+        for (const s of speakers) {
+          if (track.filePath) window.robosAudio.castFile(s.ip, track.filePath, metadata);
+          else if (track.src) window.robosAudio.castUrl(s.ip, track.src, metadata);
+        }
+        setActiveCastSession({ ip: 'all', trackId: track.id, filePath: track.filePath, isPaused: false });
+      } else {
+        if (track.filePath) {
+          await window.robosAudio.castFile(speakerIp, track.filePath, metadata);
+        } else if (track.src) {
+          await window.robosAudio.castUrl(speakerIp, track.src, metadata);
+        }
+        setActiveCastSession({ ip: speakerIp, trackId: track.id, filePath: track.filePath, isPaused: false });
       }
+      showStatus(`Streaming "${track.title}" to ${getSpeakerName(speakerIp)}!`);
+    } catch (err) {
+      showStatus('Error casting track: ' + err.message);
+      setActiveCastSession(null);
+    }
+  };
+
+  const playTrack = (track) => {
+    const existingIdx = playlist.findIndex(t => (t.id && t.id === track.id) || (t.filePath && t.filePath === track.filePath) || t.src === track.src);
+    if (existingIdx >= 0) {
+      setCurrentTrackIndex(existingIdx);
+    } else {
+      setPlaylist(prev => [...prev, track]);
+      setCurrentTrackIndex(playlist.length);
+    }
+
+    if (outputTarget !== 'local') {
+      // Cast the track to the selected speaker
+      castTrack(outputTarget, track);
+      // Mute local audio element so it acts as synchronized visual seeker without audio leak
+      if (playerRef.current?.audio?.current) {
+        playerRef.current.audio.current.muted = true;
+        playerRef.current.audio.current.play().catch(() => {});
+      }
+    } else {
+      // Local desktop playback: stop any remote casting sessions
+      if (activeCastSession) {
+        handleStopCast();
+      }
+      if (playerRef.current?.audio?.current) {
+        playerRef.current.audio.current.muted = false;
+        playerRef.current.audio.current.play().catch(() => {});
+      }
+    }
+  };
+
+  const handlePlayerPlay = () => {
+    if (outputTarget !== 'local') {
+      if (playerRef.current?.audio?.current) {
+        playerRef.current.audio.current.muted = true;
+      }
+      if (activeCastSession && activeCastSession.isPaused) {
+        window.robosAudio.castResume(activeCastSession.ip);
+        setActiveCastSession(prev => ({ ...prev, isPaused: false }));
+        showStatus(`Resumed casting on ${getSpeakerName(activeCastSession.ip)}`);
+      } else if (currentTrack) {
+        castTrack(outputTarget, currentTrack);
+      }
+    }
+  };
+
+  const handlePlayerPause = () => {
+    if (outputTarget !== 'local' && activeCastSession) {
+      window.robosAudio.castPause(activeCastSession.ip);
+      setActiveCastSession(prev => ({ ...prev, isPaused: true }));
+      showStatus(`Paused casting on ${getSpeakerName(activeCastSession.ip)}`);
     }
   };
 
@@ -416,7 +532,21 @@ export default function App() {
               id="output-select"
               value={outputTarget}
               onChange={(e) => {
-                setOutputTarget(e.target.value);
+                const target = e.target.value;
+                setOutputTarget(target);
+                if (target === 'local') {
+                  if (activeCastSession) handleStopCast();
+                  if (playerRef.current?.audio?.current) {
+                    playerRef.current.audio.current.muted = false;
+                  }
+                } else {
+                  if (playerRef.current?.audio?.current) {
+                    playerRef.current.audio.current.muted = true;
+                  }
+                  if (currentTrack) {
+                    castTrack(target, currentTrack);
+                  }
+                }
                 showStatus(`Switched output to: ${e.target.options[e.target.selectedIndex].text}`);
               }}
             >
@@ -504,6 +634,40 @@ export default function App() {
         {activeTab === 'player' && (
           <div className="player-deck-container">
             <div className="deck-card">
+              {/* Active Cast Routing Bar */}
+              {(outputTarget !== 'local' || activeCastSession) && (
+                <div className="active-cast-bar">
+                  <div className="cast-bar-indicator">
+                    <span
+                      className="cast-pulse-dot"
+                      style={{ background: activeCastSession?.isPaused ? '#eab308' : '#22c55e' }}
+                    ></span>
+                    <span>
+                      {activeCastSession
+                        ? `🔊 Casting "${currentTrack?.title || 'Track'}" to ${getSpeakerName(activeCastSession.ip)}${activeCastSession.isPaused ? ' (Paused)' : ' (Live)'}`
+                        : `🎯 Output routed to ${getSpeakerName(outputTarget)} (Local desktop muted)`}
+                    </span>
+                  </div>
+                  <div className="cast-bar-controls">
+                    {activeCastSession && (
+                      <button className="btn-chip" onClick={handleToggleCastPause}>
+                        {activeCastSession.isPaused ? '▶ Resume Cast' : '⏸ Pause Cast'}
+                      </button>
+                    )}
+                    {activeCastSession && (
+                      <button className="btn-chip btn-stop-cast" onClick={() => handleStopCast(activeCastSession.ip)}>
+                        ⏹ Stop Cast
+                      </button>
+                    )}
+                    {outputTarget !== 'local' && (
+                      <button className="btn-chip" onClick={() => { setOutputTarget('local'); handleStopCast(); }}>
+                        💻 Switch to Local Desktop
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div className="track-hero">
                 <div className="album-art-box">
                   {currentTrack?.artId ? (
@@ -518,7 +682,12 @@ export default function App() {
                   <h2 id="track-title">{currentTrack?.title || 'No Track Selected'}</h2>
                   <p id="track-artist">{currentTrack?.artist || 'Unknown Artist'} &bull; {currentTrack?.album || 'RobOS Library'}</p>
                   <div className="track-meta-pills">
-                    <span className="badge">Output: {outputTarget === 'local' ? 'Desktop' : outputTarget}</span>
+                    <span className="badge">Output: {getSpeakerName(outputTarget)}</span>
+                    {activeCastSession && (
+                      <span className="badge" style={{ color: '#22c55e', borderColor: '#22c55e' }}>
+                        {activeCastSession.isPaused ? '⏸ Cast Paused' : '🔊 Casting Active'}
+                      </span>
+                    )}
                     {currentTrack?.genre && <span className="badge">{currentTrack.genre}</span>}
                     {currentTrack?.year && <span className="badge">{currentTrack.year}</span>}
                   </div>
@@ -544,9 +713,12 @@ export default function App() {
                   onClickNext={handlePlayNext}
                   onClickPrevious={handlePlayPrev}
                   onEnded={handlePlayNext}
+                  onPlay={handlePlayerPlay}
+                  onPause={handlePlayerPause}
                   className="robos-rhap-theme"
                   layout="stacked"
                   customAdditionalControls={[]}
+                  muted={outputTarget !== 'local'}
                 />
               </div>
 
@@ -627,6 +799,27 @@ export default function App() {
               </div>
             </div>
 
+            {/* Active Cast Bar in Library */}
+            {activeCastSession && (
+              <div className="active-cast-bar" style={{ marginBottom: '16px' }}>
+                <div className="cast-bar-indicator">
+                  <span
+                    className="cast-pulse-dot"
+                    style={{ background: activeCastSession.isPaused ? '#eab308' : '#22c55e' }}
+                  ></span>
+                  <span>🔊 Currently casting to <strong>{getSpeakerName(activeCastSession.ip)}</strong></span>
+                </div>
+                <div className="cast-bar-controls">
+                  <button className="btn-chip" onClick={handleToggleCastPause}>
+                    {activeCastSession.isPaused ? '▶ Resume' : '⏸ Pause'}
+                  </button>
+                  <button className="btn-chip btn-stop-cast" onClick={() => handleStopCast(activeCastSession.ip)}>
+                    ⏹ Stop Cast
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Dropzone Hint */}
             <div className="dropzone-banner" onClick={handleSelectFolder}>
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="2"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
@@ -657,9 +850,31 @@ export default function App() {
                         ▶ Play
                       </button>
                       {speakers.length > 0 && (
-                        <button className="btn-chip" onClick={(e) => { e.stopPropagation(); castTrack(speakers[0].ip, t); }}>
-                          🔊 Cast
-                        </button>
+                        (activeCastSession && (activeCastSession.trackId === t.id || activeCastSession.filePath === t.filePath)) ? (
+                          <button
+                            className="btn-chip btn-stop-cast active"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleStopCast(activeCastSession.ip);
+                            }}
+                            title="Stop playback on Google Cast speaker"
+                          >
+                            ⏹ Stop Cast
+                          </button>
+                        ) : (
+                          <button
+                            className="btn-chip"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const target = outputTarget !== 'local' ? outputTarget : speakers[0].ip;
+                              if (outputTarget === 'local') setOutputTarget(target);
+                              playTrack(t);
+                            }}
+                            title={`Cast to ${getSpeakerName(outputTarget !== 'local' ? outputTarget : speakers[0].ip)}`}
+                          >
+                            🔊 Cast
+                          </button>
+                        )
                       )}
                     </div>
                   </div>
@@ -698,9 +913,14 @@ export default function App() {
           <div className="speakers-container">
             <div className="speakers-header">
               <h3>🔊 Connected Google Cast Smart Speakers</h3>
-              <button className="btn-secondary" onClick={refreshSpeakers}>
-                🔄 Refresh Subnet Scan
-              </button>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button className="btn-chip btn-stop-cast" onClick={() => handleStopCast()}>
+                  ⏹ Stop All Speakers
+                </button>
+                <button className="btn-secondary" onClick={refreshSpeakers}>
+                  🔄 Refresh Subnet Scan
+                </button>
+              </div>
             </div>
             <div className="speakers-grid">
               {speakers.map(s => (
@@ -712,6 +932,9 @@ export default function App() {
                   <div className="speaker-actions">
                     <button className="btn-accent" onClick={() => { setOutputTarget(s.ip); setActiveTab('player'); }}>
                       Set as Output
+                    </button>
+                    <button className="btn-chip btn-stop-cast" onClick={() => handleStopCast(s.ip)}>
+                      ⏹ Stop Playback
                     </button>
                     <button className="btn-secondary" onClick={() => window.robosAudio.castTTS(s.ip, `Test tone from RobOS Audio Player on ${s.name}`)}>
                       Test Speaker

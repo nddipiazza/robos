@@ -276,7 +276,7 @@ class CastService {
   }
 
   async castMediaUrl(ip, mediaUrl, metadata = {}, onStatusUpdate = null) {
-    this.stopPlayback(ip);
+    await this.stopPlayback(ip);
 
     return new Promise((resolve, reject) => {
       const client = new Client();
@@ -306,7 +306,8 @@ class CastService {
               return reject(err);
             }
 
-            this.activeConnections.set(ip, { client, player, mediaUrl });
+            const sessionId = player.session?.sessionId;
+            this.activeConnections.set(ip, { client, player, mediaUrl, sessionId });
 
             player.on('status', (s) => {
               if (typeof onStatusUpdate === 'function') {
@@ -317,7 +318,7 @@ class CastService {
               }
             });
 
-            resolve({ ok: true, playerState: status?.playerState, ip });
+            resolve({ ok: true, playerState: status?.playerState, ip, sessionId });
           });
         });
       });
@@ -329,19 +330,80 @@ class CastService {
     });
   }
 
-  stopPlayback(ip) {
+  async stopPlayback(ip) {
+    if (!ip) return { ok: false, error: 'No IP specified' };
+
     const conn = this.activeConnections.get(ip);
     if (conn) {
-      try {
-        if (conn.player) conn.player.stop();
-      } catch {}
-      try {
-        if (conn.client) conn.client.close();
-      } catch {}
       this.activeConnections.delete(ip);
-      return { ok: true, stopped: true };
+      try {
+        const sessionId = conn.player?.session?.sessionId || conn.sessionId;
+        if (conn.client && conn.client.receiver && sessionId) {
+          await new Promise((resolve) => {
+            conn.client.receiver.stop(sessionId, () => resolve());
+            setTimeout(resolve, 800);
+          });
+        }
+      } catch (err) {
+        console.warn(`[CastService] Receiver stop error on ${ip}:`, err.message);
+      }
+
+      try {
+        if (conn.client) {
+          conn.client.close();
+        }
+      } catch {}
+      return { ok: true, stopped: true, ip };
     }
-    return { ok: false, stopped: false };
+
+    // Fallback: connect directly and terminate any running session
+    return new Promise((resolve) => {
+      const client = new Client();
+      const timer = setTimeout(() => {
+        try { client.close(); } catch {}
+        resolve({ ok: false, stopped: false, ip });
+      }, 2500);
+
+      client.connect(ip, () => {
+        client.getSessions((err, sessions) => {
+          if (!err && sessions && sessions.length > 0) {
+            let pending = sessions.length;
+            for (const s of sessions) {
+              client.receiver.stop(s.sessionId, () => {
+                pending--;
+                if (pending <= 0) {
+                  clearTimeout(timer);
+                  try { client.close(); } catch {}
+                  resolve({ ok: true, stopped: true, ip });
+                }
+              });
+            }
+          } else {
+            clearTimeout(timer);
+            try { client.close(); } catch {}
+            resolve({ ok: true, stopped: false, ip });
+          }
+        });
+      });
+
+      client.on('error', () => {
+        clearTimeout(timer);
+        try { client.close(); } catch {}
+        resolve({ ok: false, error: 'Connection failed', ip });
+      });
+    });
+  }
+
+  async stopAllPlayback() {
+    const ips = new Set([
+      ...this.activeConnections.keys(),
+      ...this.speakers.keys()
+    ]);
+    const results = [];
+    for (const ip of ips) {
+      results.push(await this.stopPlayback(ip));
+    }
+    return results;
   }
 
   pausePlayback(ip) {

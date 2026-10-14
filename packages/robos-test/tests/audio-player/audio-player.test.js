@@ -210,5 +210,16 @@ describe('RobOS Audio Player Tests', () => {
       });
       assert.strictEqual(res, 404);
     });
+
+    it('stopPlayback handles inactive or non-existent client gracefully', async () => {
+      const res = await service.stopPlayback('127.0.0.1');
+      assert.ok(typeof res === 'object', 'Should return object');
+      assert.strictEqual(res.ip, '127.0.0.1');
+    });
+
+    it('stopAllPlayback executes without error', async () => {
+      const results = await service.stopAllPlayback();
+      assert.ok(Array.isArray(results), 'Should return array of stop results');
+    });
   });
 });
