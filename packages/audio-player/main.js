@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const { CastService } = require('./lib/cast-service');
+const { MediaLibrary } = require('./lib/media-library');
 
 // Optional snapshot debug server
 let _debugServer = null;
@@ -30,7 +31,9 @@ app.commandLine.appendSwitch('disable-gpu');
 app.commandLine.appendSwitch('disable-dev-shm-usage');
 
 let mainWindow = null;
+const mediaLibrary = new MediaLibrary();
 const castService = new CastService();
+castService.mediaLibrary = mediaLibrary;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -184,3 +187,41 @@ ipcMain.handle('audio:open-file-dialog', async () => {
 
   return { canceled: false, tracks };
 });
+
+ipcMain.handle('audio:get-library', async () => {
+  return mediaLibrary.getLibrary();
+});
+
+ipcMain.handle('audio:select-library-folder', async () => {
+  if (!mainWindow) return { canceled: true };
+  const res = await dialog.showOpenDialog(mainWindow, {
+    title: 'Select Music Library Folder',
+    properties: ['openDirectory']
+  });
+
+  if (res.canceled || !res.filePaths.length) {
+    return { canceled: true };
+  }
+
+  const folder = res.filePaths[0];
+  const scanResult = await mediaLibrary.scanDirectory(folder, (progress) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('audio:library-scan-progress', progress);
+    }
+  });
+
+  return { canceled: false, folder, ...scanResult };
+});
+
+ipcMain.handle('audio:scan-default-library', async () => {
+  const musicDir = path.join(os.homedir(), 'Music');
+  if (!fs.existsSync(musicDir)) {
+    fs.mkdirSync(musicDir, { recursive: true });
+  }
+  return await mediaLibrary.scanDirectory(musicDir, (progress) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('audio:library-scan-progress', progress);
+    }
+  });
+});
+

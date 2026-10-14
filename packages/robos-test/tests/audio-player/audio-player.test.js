@@ -8,16 +8,21 @@ const http = require('http');
 
 const APP_DIR = path.resolve(__dirname, '../../../audio-player');
 const { CastService } = require(path.join(APP_DIR, 'lib', 'cast-service'));
+const { MediaLibrary } = require(path.join(APP_DIR, 'lib', 'media-library'));
 
 describe('RobOS Audio Player Tests', () => {
 
   describe('Package Structure & Registrations', () => {
-    it('package.json exists and is valid', () => {
+    it('package.json exists and contains React, H5AudioPlayer, and music-metadata', () => {
       const pkgPath = path.join(APP_DIR, 'package.json');
       assert.ok(fs.existsSync(pkgPath), 'package.json should exist');
       const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
       assert.strictEqual(pkg.name, 'robos-audio-player');
-      assert.ok(pkg.dependencies['castv2-client'], 'castv2-client dependency should be present');
+      assert.ok(pkg.dependencies['castv2-client'], 'castv2-client should be present');
+      assert.ok(pkg.dependencies['react'], 'react should be present');
+      assert.ok(pkg.dependencies['react-dom'], 'react-dom should be present');
+      assert.ok(pkg.dependencies['react-h5-audio-player'], 'react-h5-audio-player should be present');
+      assert.ok(pkg.dependencies['music-metadata'], 'music-metadata should be present');
     });
 
     it('.desktop file exists and conforms to RobOS standards', () => {
@@ -38,22 +43,19 @@ describe('RobOS Audio Player Tests', () => {
       assert.ok(content.includes('#00bcd4'), 'Accent color should match RobOS cyan');
     });
 
-    it('open-source Howler.js engine is bundled', () => {
-      const howlerPath = path.join(APP_DIR, 'renderer', 'howler.min.js');
-      assert.ok(fs.existsSync(howlerPath), 'howler.min.js should be bundled');
-      const stat = fs.statSync(howlerPath);
-      assert.ok(stat.size > 20000, 'howler.min.js should be non-empty (>20KB)');
+    it('compiled React bundle exists and is valid', () => {
+      const bundlePath = path.join(APP_DIR, 'renderer', 'bundle.js');
+      assert.ok(fs.existsSync(bundlePath), 'bundle.js should exist');
+      const stat = fs.statSync(bundlePath);
+      assert.ok(stat.size > 100000, `bundle.js should be non-empty (>100KB), got ${stat.size}`);
     });
 
-    it('renderer HTML contains all essential player hooks', () => {
+    it('renderer HTML mounts React app into root', () => {
       const htmlPath = path.join(APP_DIR, 'renderer', 'index.html');
       assert.ok(fs.existsSync(htmlPath), 'index.html should exist');
       const html = fs.readFileSync(htmlPath, 'utf8');
-      assert.ok(html.includes('id="visualizer-canvas"'), 'Should have visualizer canvas');
-      assert.ok(html.includes('id="output-select"'), 'Should have output selector');
-      assert.ok(html.includes('id="btn-play-pause"'), 'Should have play/pause button');
-      assert.ok(html.includes('id="btn-broadcast-tts"'), 'Should have TTS broadcast button');
-      assert.ok(html.includes('id="dropzone"'), 'Should have drag-and-drop dropzone');
+      assert.ok(html.includes('id="root"'), 'Should have root element');
+      assert.ok(html.includes('src="bundle.js"'), 'Should load bundle.js');
     });
 
     it('snapshot-cli port registry includes audio-player on port 19196', () => {
@@ -86,6 +88,23 @@ describe('RobOS Audio Player Tests', () => {
     });
   });
 
+  describe('MediaLibrary with music-metadata', () => {
+    it('initializes MediaLibrary and loads parser', async () => {
+      const lib = new MediaLibrary({ configDir: '/tmp' });
+      assert.ok(lib, 'MediaLibrary instance created');
+      const parser = await lib._getParser();
+      assert.ok(parser.parseFile, 'music-metadata parseFile function available');
+    });
+
+    it('handles non-existent or dummy file gracefully', async () => {
+      const lib = new MediaLibrary({ configDir: '/tmp' });
+      const dummyPath = '/tmp/nonexistent-song.mp3';
+      const track = await lib.parseTrack(dummyPath);
+      assert.strictEqual(track.title, 'nonexistent-song');
+      assert.strictEqual(track.filePath, dummyPath);
+    });
+  });
+
   describe('CastService & Ephemeral Stream Server', () => {
     let service;
 
@@ -105,7 +124,6 @@ describe('RobOS Audio Player Tests', () => {
     });
 
     it('starts ephemeral HTTP audio streamer on an open port', async () => {
-      // Allow slight async spinup
       await new Promise(r => setTimeout(r, 100));
       assert.ok(service.streamPort > 0, `Stream port should be allocated, got ${service.streamPort}`);
     });
@@ -115,7 +133,6 @@ describe('RobOS Audio Player Tests', () => {
       const streamUrl = service.registerBuffer(testBuffer, 'audio/mp3');
       assert.ok(streamUrl.includes(`:${service.streamPort}/media/`), `Stream URL formatted properly: ${streamUrl}`);
 
-      // Fetch the registered buffer
       const res = await new Promise((resolve, reject) => {
         http.get(streamUrl, (response) => {
           const chunks = [];
