@@ -118,6 +118,7 @@ const PORT_REGISTRY = {
   'robos-tabletop':    19198,
   'tabletop-editor':   19198,
   'tabletop-blockmap-creator': 19199,
+  'home-speaker':      19200,
 };
 
 

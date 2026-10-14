@@ -1,0 +1,170 @@
+#!/usr/bin/env node
+'use strict';
+
+/**
+ * robos-speaker — CLI tool to control Google Home, Nest, and Cast smart speakers in RobOS
+ *
+ * Usage:
+ *   robos-speaker list
+ *   robos-speaker speak "Dinner is ready!" [--speaker <name|ip>] [--voice <voice>] [--chime]
+ *   robos-speaker play <audio-file-path> [--speaker <name|ip>]
+ *   robos-speaker sound <chime|ping|fanfare|siren|witch_laugh> [--speaker <name|ip>]
+ *   robos-speaker ambient <rain|brown_noise|pink_noise|cyber_drone> [--minutes <min>] [--speaker <name|ip>]
+ *   robos-speaker volume <0-100> [--speaker <name|ip>]
+ *   robos-speaker stop [--speaker <name|ip>]
+ */
+
+const path = require('path');
+const fs = require('fs');
+
+const { HomeSpeakerService } = require('../home-speaker/lib/speaker-service');
+const { listSounds } = require('../home-speaker/lib/soundboard');
+
+function parseArgs(args) {
+  const result = { _: [] };
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg.startsWith('--')) {
+      const key = arg.slice(2);
+      if (i + 1 < args.length && !args[i + 1].startsWith('--')) {
+        result[key] = args[++i];
+      } else {
+        result[key] = true;
+      }
+    } else {
+      result._.push(arg);
+    }
+  }
+  return result;
+}
+
+async function main() {
+  const args = parseArgs(process.argv.slice(2));
+  const command = args._[0];
+
+  const service = new HomeSpeakerService();
+  const targetSpeaker = args.speaker || 'Kitchen speaker';
+
+  if (!command || command === 'help') {
+    console.log(`
+RobOS Smart Speaker CLI (robos-speaker)
+
+Commands:
+  list                                    List discovered Google Home / Nest speakers
+  speak "<text>" [--speaker S] [--chime]  Synthesize and cast speech to speaker
+  play <file> [--speaker S]               Stream a custom audio file (MP3/WAV/etc.)
+  sound <id> [--speaker S]                Play soundboard SFX (chime, ping, fanfare, siren, witch_laugh)
+  ambient <type> [--minutes M]            Play focus soundscape (rain, brown_noise, pink_noise, cyber_drone)
+  volume <0-100> [--speaker S]            Set speaker volume percentage
+  stop [--speaker S]                      Stop active speaker playback
+
+Options:
+  --speaker <name|ip>   Target speaker (default: "Kitchen speaker" or "all")
+  --voice <voice_id>    Kokoro/Piper voice id (default: af_heart)
+  --chime               Prepend attention chime before speech
+  --minutes <n>         Ambient loop duration in minutes (default: 30)
+`);
+    process.exit(0);
+  }
+
+  switch (command) {
+    case 'list': {
+      console.log('Discovering Google Cast speakers on local network...');
+      const speakers = await service.scan(2500);
+      if (speakers.length === 0) {
+        console.log('No speakers discovered on subnet.');
+      } else {
+        console.log(`Found ${speakers.length} speaker(s):`);
+        speakers.forEach(s => {
+          console.log(`  • ${s.name.padEnd(25)} IP: ${s.ip.padEnd(16)} Status: ${s.online ? 'Online' : 'Offline'}`);
+        });
+      }
+      process.exit(0);
+      break;
+    }
+
+    case 'speak': {
+      const text = args._[1];
+      if (!text) {
+        console.error('Error: Please provide text to speak.');
+        process.exit(1);
+      }
+      console.log(`Synthesizing announcement for "${targetSpeaker}": "${text}"`);
+      await service.castTTS(targetSpeaker, text, {
+        voice: args.voice || 'af_heart',
+        prependChime: !!args.chime
+      });
+      console.log('Cast stream established.');
+      // Give speaker a moment to buffer stream before exiting CLI
+      setTimeout(() => process.exit(0), 4000);
+      break;
+    }
+
+    case 'play': {
+      const filePath = path.resolve(process.cwd(), args._[1] || '');
+      if (!fs.existsSync(filePath)) {
+        console.error(`Error: File not found: ${filePath}`);
+        process.exit(1);
+      }
+      console.log(`Streaming "${path.basename(filePath)}" to "${targetSpeaker}"...`);
+      await service.castFile(targetSpeaker, filePath);
+      console.log('Playback started on speaker.');
+      setTimeout(() => process.exit(0), 4000);
+      break;
+    }
+
+    case 'sound': {
+      const soundId = args._[1];
+      if (!soundId) {
+        console.log('Available sounds:');
+        listSounds().forEach(s => console.log(`  - ${s.id.padEnd(14)} (${s.name}: ${s.description})`));
+        process.exit(1);
+      }
+      console.log(`Playing sound "${soundId}" on "${targetSpeaker}"...`);
+      await service.playSound(targetSpeaker, soundId);
+      console.log('Sound sent to speaker.');
+      setTimeout(() => process.exit(0), 3000);
+      break;
+    }
+
+    case 'ambient': {
+      const type = args._[1] || 'rain';
+      const mins = parseInt(args.minutes || '30', 10);
+      console.log(`Starting ambient "${type}" (${mins}m) on "${targetSpeaker}"...`);
+      await service.playAmbient(targetSpeaker, type, mins);
+      console.log('Ambient soundscape streaming to speaker.');
+      setTimeout(() => process.exit(0), 3000);
+      break;
+    }
+
+    case 'volume': {
+      const level = parseInt(args._[1], 10);
+      if (isNaN(level) || level < 0 || level > 100) {
+        console.error('Error: Volume must be between 0 and 100');
+        process.exit(1);
+      }
+      console.log(`Setting volume to ${level}% on "${targetSpeaker}"...`);
+      await service.setVolume(targetSpeaker, level / 100);
+      console.log('Volume updated.');
+      process.exit(0);
+      break;
+    }
+
+    case 'stop': {
+      console.log(`Stopping playback on "${targetSpeaker}"...`);
+      await service.stop(targetSpeaker);
+      console.log('Playback stopped.');
+      process.exit(0);
+      break;
+    }
+
+    default:
+      console.error(`Unknown command: ${command}. Run "robos-speaker help" for usage.`);
+      process.exit(1);
+  }
+}
+
+main().catch(err => {
+  console.error('Error:', err.message);
+  process.exit(1);
+});

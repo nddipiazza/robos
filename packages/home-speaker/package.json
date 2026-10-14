@@ -1,0 +1,12 @@
+{
+  "name": "robos-home-speaker",
+  "version": "0.1.0",
+  "description": "RobOS Home Speaker intercom, neural TTS broadcaster, walkie-talkie voice recorder, soundboard, and Google Cast smart speaker controller",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron . --no-sandbox --disable-gpu --disable-dev-shm-usage"
+  },
+  "dependencies": {
+    "castv2-client": "^1.2.0"
+  }
+}
