@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const { Worker } = require('worker_threads');
 
 class MediaLibrary {
   constructor(options = {}) {
@@ -14,6 +15,7 @@ class MediaLibrary {
     this.albumArtRegistry = new Map(); // artId -> { buffer, format }
     this.nextArtId = 1;
     this._mm = null;
+    this.currentWorker = null;
 
     this._loadCache();
   }
@@ -175,6 +177,145 @@ class MediaLibrary {
       albumsCount: this.albums.size,
       tracks: this.tracks
     };
+  }
+
+  /**
+   * Scan folders in the background using a Node.js worker_thread
+   * @param {string|string[]} folders
+   * @param {Object} callbacks
+   */
+  scanFoldersInBackground(folders, callbacks = {}) {
+    const { onDiscovered, onProgress, onBatch, onDone, onError } = callbacks;
+
+    if (this.currentWorker) {
+      try {
+        this.currentWorker.terminate();
+      } catch {}
+      this.currentWorker = null;
+    }
+
+    const workerPath = path.resolve(__dirname, 'scan-worker.js');
+    const normalizedFolders = Array.isArray(folders) ? folders : [folders];
+    const worker = new Worker(workerPath, {
+      workerData: { folders: normalizedFolders }
+    });
+    this.currentWorker = worker;
+
+    worker.on('message', (msg) => {
+      if (!msg) return;
+
+      if (msg.type === 'discovered') {
+        if (typeof onDiscovered === 'function') {
+          onDiscovered(msg);
+        }
+      } else if (msg.type === 'progress') {
+        if (typeof onProgress === 'function') {
+          onProgress(msg);
+        }
+      } else if (msg.type === 'batch') {
+        // Register artworks
+        for (const art of (msg.artworks || [])) {
+          if (art && art.artId && art.buffer) {
+            this.albumArtRegistry.set(art.artId, {
+              buffer: Buffer.from(art.buffer),
+              format: art.format || 'image/jpeg'
+            });
+          }
+        }
+        // Merge tracks
+        const incomingFileSet = new Set(msg.tracks.map(t => t.filePath));
+        this.tracks = this.tracks.filter(t => !incomingFileSet.has(t.filePath)).concat(msg.tracks);
+        this._rebuildIndexes();
+        this._saveCache();
+
+        if (typeof onBatch === 'function') {
+          onBatch({
+            tracks: msg.tracks,
+            current: msg.current,
+            total: msg.total,
+            library: this.getLibrary()
+          });
+        }
+      } else if (msg.type === 'done') {
+        // Register artworks
+        for (const art of (msg.artworks || [])) {
+          if (art && art.artId && art.buffer) {
+            this.albumArtRegistry.set(art.artId, {
+              buffer: Buffer.from(art.buffer),
+              format: art.format || 'image/jpeg'
+            });
+          }
+        }
+        // Final merge
+        const incomingFileSet = new Set(msg.tracks.map(t => t.filePath));
+        this.tracks = this.tracks.filter(t => !incomingFileSet.has(t.filePath)).concat(msg.tracks);
+        this._rebuildIndexes();
+        this._saveCache();
+
+        if (this.currentWorker === worker) {
+          this.currentWorker = null;
+        }
+
+        if (typeof onDone === 'function') {
+          onDone({
+            totalFound: msg.totalFound,
+            tracks: msg.tracks,
+            library: this.getLibrary()
+          });
+        }
+      } else if (msg.type === 'error') {
+        if (this.currentWorker === worker) {
+          this.currentWorker = null;
+        }
+        if (typeof onError === 'function') {
+          onError(new Error(msg.error || 'Unknown scan worker error'));
+        }
+      }
+    });
+
+    worker.on('error', (err) => {
+      if (this.currentWorker === worker) {
+        this.currentWorker = null;
+      }
+      if (typeof onError === 'function') {
+        onError(err);
+      }
+    });
+
+    worker.on('exit', () => {
+      if (this.currentWorker === worker) {
+        this.currentWorker = null;
+      }
+    });
+
+    return {
+      worker,
+      cancel: () => {
+        try {
+          worker.postMessage({ type: 'stop' });
+          worker.terminate();
+        } catch {}
+        if (this.currentWorker === worker) {
+          this.currentWorker = null;
+        }
+      }
+    };
+  }
+
+  cancelScan() {
+    if (this.currentWorker) {
+      try {
+        this.currentWorker.postMessage({ type: 'stop' });
+        this.currentWorker.terminate();
+      } catch {}
+      this.currentWorker = null;
+      return true;
+    }
+    return false;
+  }
+
+  isScanning() {
+    return this.currentWorker !== null;
   }
 
   getLibrary() {

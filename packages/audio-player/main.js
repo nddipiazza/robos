@@ -204,50 +204,145 @@ ipcMain.handle('audio:select-library-folder', async () => {
     return { canceled: true };
   }
 
-  let totalFound = 0;
-  const newTracks = [];
-  for (const folder of res.filePaths) {
-    const scanResult = await mediaLibrary.scanDirectory(folder, (progress) => {
+  // Launch background scan worker off the main thread
+  mediaLibrary.scanFoldersInBackground(res.filePaths, {
+    onDiscovered: (data) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('audio:library-scan-discovered', data);
+      }
+    },
+    onProgress: (progress) => {
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send('audio:library-scan-progress', progress);
       }
-    });
-    totalFound += (scanResult.totalFound || 0);
-    newTracks.push(...(scanResult.tracks || []));
-  }
+    },
+    onBatch: (batch) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('audio:library-scan-batch', batch);
+      }
+    },
+    onDone: (doneData) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('audio:library-scan-complete', doneData);
+      }
+    },
+    onError: (err) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('audio:library-scan-error', { error: err.message });
+      }
+    }
+  });
 
   return {
     canceled: false,
-    folders: res.filePaths,
-    totalFound,
-    tracks: newTracks,
-    library: mediaLibrary.getLibrary()
+    started: true,
+    folders: res.filePaths
   };
 });
 
-ipcMain.handle('audio:import-paths', async (_evt, targetPaths) => {
-  if (!Array.isArray(targetPaths)) return { canceled: true, tracks: [] };
-  const addedTracks = [];
+ipcMain.handle('audio:scan-folders', async (_evt, folders) => {
+  if (!Array.isArray(folders) || !folders.length) return { canceled: true };
+  mediaLibrary.scanFoldersInBackground(folders, {
+    onDiscovered: (data) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('audio:library-scan-discovered', data);
+      }
+    },
+    onProgress: (progress) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('audio:library-scan-progress', progress);
+      }
+    },
+    onBatch: (batch) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('audio:library-scan-batch', batch);
+      }
+    },
+    onDone: (doneData) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('audio:library-scan-complete', doneData);
+      }
+    },
+    onError: (err) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('audio:library-scan-error', { error: err.message });
+      }
+    }
+  });
+  return { started: true, folders };
+});
 
+ipcMain.handle('audio:cancel-scan', async () => {
+  const canceled = mediaLibrary.cancelScan();
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('audio:library-scan-canceled');
+  }
+  return { canceled };
+});
+
+ipcMain.handle('audio:import-paths', async (_evt, targetPaths) => {
+  if (!Array.isArray(targetPaths) || !targetPaths.length) return { canceled: true, tracks: [] };
+  
+  const files = [];
+  const dirs = [];
   for (const p of targetPaths) {
     try {
       if (fs.existsSync(p)) {
         const stat = fs.statSync(p);
-        if (stat.isDirectory()) {
-          const res = await mediaLibrary.scanDirectory(p);
-          addedTracks.push(...(res.tracks || []));
-        } else if (stat.isFile()) {
-          const track = await mediaLibrary.parseTrack(p);
-          addedTracks.push(track);
+        if (stat.isDirectory()) dirs.push(p);
+        else if (stat.isFile()) files.push(p);
+      }
+    } catch {}
+  }
+
+  const quickTracks = [];
+  for (const f of files) {
+    try {
+      const track = await mediaLibrary.parseTrack(f);
+      quickTracks.push(track);
+    } catch {}
+  }
+  if (quickTracks.length > 0) {
+    const incomingFileSet = new Set(quickTracks.map(t => t.filePath));
+    mediaLibrary.tracks = mediaLibrary.tracks.filter(t => !incomingFileSet.has(t.filePath)).concat(quickTracks);
+    mediaLibrary._rebuildIndexes();
+    mediaLibrary._saveCache();
+  }
+
+  if (dirs.length > 0) {
+    mediaLibrary.scanFoldersInBackground(dirs, {
+      onDiscovered: (data) => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('audio:library-scan-discovered', data);
+        }
+      },
+      onProgress: (progress) => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('audio:library-scan-progress', progress);
+        }
+      },
+      onBatch: (batch) => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('audio:library-scan-batch', batch);
+        }
+      },
+      onDone: (doneData) => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('audio:library-scan-complete', doneData);
+        }
+      },
+      onError: (err) => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('audio:library-scan-error', { error: err.message });
         }
       }
-    } catch (e) {
-      console.warn('[AudioPlayer] Error importing path:', p, e.message);
-    }
+    });
   }
 
   return {
-    tracks: addedTracks,
+    tracks: quickTracks,
+    scanningDirs: dirs.length > 0,
+    dirs,
     library: mediaLibrary.getLibrary()
   };
 });
@@ -257,11 +352,34 @@ ipcMain.handle('audio:scan-default-library', async () => {
   if (!fs.existsSync(musicDir)) {
     fs.mkdirSync(musicDir, { recursive: true });
   }
-  return await mediaLibrary.scanDirectory(musicDir, (progress) => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('audio:library-scan-progress', progress);
+  mediaLibrary.scanFoldersInBackground([musicDir], {
+    onDiscovered: (data) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('audio:library-scan-discovered', data);
+      }
+    },
+    onProgress: (progress) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('audio:library-scan-progress', progress);
+      }
+    },
+    onBatch: (batch) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('audio:library-scan-batch', batch);
+      }
+    },
+    onDone: (doneData) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('audio:library-scan-complete', doneData);
+      }
+    },
+    onError: (err) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('audio:library-scan-error', { error: err.message });
+      }
     }
   });
+  return { started: true, folder: musicDir };
 });
 
 

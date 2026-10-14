@@ -103,6 +103,54 @@ describe('RobOS Audio Player Tests', () => {
       assert.strictEqual(track.title, 'nonexistent-song');
       assert.strictEqual(track.filePath, dummyPath);
     });
+
+    it('scans folders in background worker thread without blocking', async () => {
+      const testDir = '/tmp/robos-audio-test-bg';
+      fs.mkdirSync(testDir, { recursive: true });
+      const testFile = path.join(testDir, 'sample-song.mp3');
+      fs.writeFileSync(testFile, 'ID3\x03\x00\x00\x00\x00\x00\x00dummy sample audio content');
+
+      const lib = new MediaLibrary({ configDir: '/tmp' });
+      let progressCalled = false;
+      let batchCalled = false;
+
+      const result = await new Promise((resolve, reject) => {
+        lib.scanFoldersInBackground(testDir, {
+          onProgress: (p) => {
+            progressCalled = true;
+          },
+          onBatch: (b) => {
+            batchCalled = true;
+          },
+          onDone: (data) => {
+            resolve(data);
+          },
+          onError: (err) => {
+            reject(err);
+          }
+        });
+      });
+
+      assert.strictEqual(result.totalFound, 1);
+      assert.strictEqual(result.tracks.length >= 1, true);
+      assert.strictEqual(progressCalled, true);
+      assert.strictEqual(batchCalled, true);
+
+      // Clean up
+      try {
+        fs.unlinkSync(testFile);
+        fs.rmdirSync(testDir);
+      } catch {}
+    });
+
+    it('cancels active background scan cleanly', async () => {
+      const lib = new MediaLibrary({ configDir: '/tmp' });
+      lib.scanFoldersInBackground('/tmp', {});
+      assert.strictEqual(lib.isScanning(), true);
+      const canceled = lib.cancelScan();
+      assert.strictEqual(canceled, true);
+      assert.strictEqual(lib.isScanning(), false);
+    });
   });
 
   describe('CastService & Ephemeral Stream Server', () => {
