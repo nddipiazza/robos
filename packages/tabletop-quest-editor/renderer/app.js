@@ -624,9 +624,8 @@ async function loadBlockmap(slugOrPath) {
     if (dom.selectBlockmap) {
       dom.selectBlockmap.value = state.blockmap.id || slugOrPath;
     }
-    const dims = state.blockmap.gridDimensions || [26, 19];
-    dom.infoBlockmapName.textContent = state.blockmap.title || state.blockmap.id || 'Custom Dungeon';
-    dom.infoGridSize.textContent = `${dims[0]} × ${dims[1]}`;
+    if (dom.infoBlockmapName) dom.infoBlockmapName.textContent = state.blockmap.title || state.blockmap.id || 'Custom Dungeon';
+    if (dom.infoGridSize) dom.infoGridSize.textContent = `${dims[0]} × ${dims[1]}`;
 
     // Fit view to screen
     fitView();
@@ -5538,6 +5537,16 @@ function setupEventListeners() {
     }
   });
 
+  if (dom.btnOpenCartridge) {
+    dom.btnOpenCartridge.addEventListener('click', async () => {
+      if (!window.robosQuestEditor) return;
+      const res = await window.robosQuestEditor.openCartridgeDialog();
+      if (res && res.success && res.filePath) {
+        await loadCartridge(res.filePath);
+      }
+    });
+  }
+
   dom.btnSaveCartridge.addEventListener('click', saveCartridge);
   dom.btnExportJson.addEventListener('click', exportJson);
   dom.btnCopyJson.addEventListener('click', copyJson);
@@ -6037,6 +6046,7 @@ if (typeof window !== 'undefined') {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     validateQuest,
+    loadCartridge,
     interpretVoiceQuestCommands,
     executeVoiceMapCommands,
     findTargetRoom,
