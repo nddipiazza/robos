@@ -555,9 +555,324 @@ ambientPlayButtons.forEach(btn => {
   });
 });
 
+// 8. Tab 6: RobOS Media Player Music Library
+const musicSearchInput = document.getElementById('music-search-input');
+const btnRefreshLibrary = document.getElementById('btn-refresh-library');
+const musicTracksContainer = document.getElementById('music-tracks-container');
+
+function formatDuration(sec) {
+  if (!sec || isNaN(sec)) return '--:--';
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+async function loadMusicLibrary(query = '') {
+  try {
+    const tracks = await window.robosSpeaker.searchLibrary(query);
+    musicTracksContainer.innerHTML = '';
+
+    // Update schedule form music dropdown as well
+    const schedMusicSelect = document.getElementById('sched-music-select');
+    if (schedMusicSelect) {
+      schedMusicSelect.innerHTML = '';
+      tracks.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.id;
+        opt.textContent = `${t.title || 'Untitled'} - ${t.artist || 'Unknown'}`;
+        schedMusicSelect.appendChild(opt);
+      });
+    }
+
+    if (!tracks || tracks.length === 0) {
+      musicTracksContainer.innerHTML = `
+        <div style="padding: 20px; text-align: center; color: var(--text-secondary);">
+          No music tracks found in RobOS Media Player library (~/.config/robos/audio-library.json).
+        </div>
+      `;
+      return;
+    }
+
+    tracks.forEach(track => {
+      const row = document.createElement('div');
+      row.className = 'track-row';
+      row.innerHTML = `
+        <div class="track-info">
+          <span class="track-icon">🎵</span>
+          <div class="track-texts">
+            <span class="track-title">${track.title || 'Untitled Track'}</span>
+            <span class="track-artist">${track.artist || 'Unknown Artist'} • ${track.album || 'Unknown Album'}</span>
+          </div>
+        </div>
+        <div class="track-meta">
+          <span class="track-duration">${formatDuration(track.duration)}</span>
+          <div class="track-actions">
+            <button class="btn btn-secondary btn-sm btn-cast-track" data-id="${track.id}" data-title="${track.title}">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Cast
+            </button>
+            <button class="btn btn-secondary btn-sm btn-schedule-track" data-id="${track.id}" data-title="${track.title}">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Schedule
+            </button>
+          </div>
+        </div>
+      `;
+
+      row.querySelector('.btn-cast-track').addEventListener('click', async (e) => {
+        const btn = e.currentTarget;
+        const target = speakerSelect.value;
+        btn.disabled = true;
+        btn.textContent = 'Streaming...';
+
+        try {
+          setPlaybackState(true, track.title);
+          await window.robosSpeaker.castLibraryTrack(target, track.id);
+        } catch (err) {
+          alert(`Error casting track: ${err.message}`);
+          setPlaybackState(false, 'Error');
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Cast
+          `;
+        }
+      });
+
+      row.querySelector('.btn-schedule-track').addEventListener('click', () => {
+        // Switch to schedules tab and pre-fill form
+        const schedTabBtn = document.querySelector('[data-tab="tab-schedules"]');
+        if (schedTabBtn) schedTabBtn.click();
+        openScheduleForm({
+          name: `Play: ${track.title}`,
+          actionType: 'music',
+          trackId: track.id
+        });
+      });
+
+      musicTracksContainer.appendChild(row);
+    });
+  } catch (err) {
+    console.warn('Error loading music library:', err);
+  }
+}
+
+if (musicSearchInput) {
+  let searchTimer = null;
+  musicSearchInput.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+      loadMusicLibrary(musicSearchInput.value);
+    }, 250);
+  });
+}
+
+if (btnRefreshLibrary) {
+  btnRefreshLibrary.addEventListener('click', () => {
+    loadMusicLibrary(musicSearchInput?.value || '');
+  });
+}
+
+// 9. Tab 7: Schedules & Alarms
+const btnToggleAddSchedule = document.getElementById('btn-toggle-add-schedule');
+const scheduleFormContainer = document.getElementById('schedule-form-container');
+const btnSaveSchedule = document.getElementById('btn-save-schedule');
+const btnCancelSchedule = document.getElementById('btn-cancel-schedule');
+const scheduleListContainer = document.getElementById('schedule-list-container');
+
+const schedName = document.getElementById('sched-name');
+const schedTime = document.getElementById('sched-time');
+const schedTarget = document.getElementById('sched-target');
+const schedDays = document.getElementById('sched-days');
+const schedActionType = document.getElementById('sched-action-type');
+const schedSoundSelect = document.getElementById('sched-sound-select');
+const schedTtsText = document.getElementById('sched-tts-text');
+const schedMusicSelect = document.getElementById('sched-music-select');
+const schedAmbientSelect = document.getElementById('sched-ambient-select');
+const schedVolume = document.getElementById('sched-volume');
+
+const schedPayloadSoundGroup = document.getElementById('sched-payload-sound-group');
+const schedPayloadTtsGroup = document.getElementById('sched-payload-tts-group');
+const schedPayloadMusicGroup = document.getElementById('sched-payload-music-group');
+const schedPayloadAmbientGroup = document.getElementById('sched-payload-ambient-group');
+
+function updateSchedulePayloadVisibility() {
+  const type = schedActionType.value;
+  schedPayloadSoundGroup.classList.toggle('hidden', type !== 'sound');
+  schedPayloadTtsGroup.classList.toggle('hidden', type !== 'tts');
+  schedPayloadMusicGroup.classList.toggle('hidden', type !== 'music');
+  schedPayloadAmbientGroup.classList.toggle('hidden', type !== 'ambient');
+}
+
+if (schedActionType) {
+  schedActionType.addEventListener('change', updateSchedulePayloadVisibility);
+}
+
+function openScheduleForm(prefill = {}) {
+  scheduleFormContainer.classList.remove('hidden');
+  if (prefill.name) schedName.value = prefill.name;
+  if (prefill.actionType) {
+    schedActionType.value = prefill.actionType;
+    updateSchedulePayloadVisibility();
+  }
+  if (prefill.trackId && schedMusicSelect) {
+    schedMusicSelect.value = prefill.trackId;
+  }
+  schedName.focus();
+}
+
+if (btnToggleAddSchedule) {
+  btnToggleAddSchedule.addEventListener('click', () => {
+    scheduleFormContainer.classList.toggle('hidden');
+    updateSchedulePayloadVisibility();
+  });
+}
+
+if (btnCancelSchedule) {
+  btnCancelSchedule.addEventListener('click', () => {
+    scheduleFormContainer.classList.add('hidden');
+  });
+}
+
+if (btnSaveSchedule) {
+  btnSaveSchedule.addEventListener('click', async () => {
+    const name = schedName.value.trim() || 'Scheduled Alert';
+    const time = schedTime.value || '09:00';
+    const target = schedTarget.value;
+    const daysVal = schedDays.value;
+    const actionType = schedActionType.value;
+    const volumeVal = schedVolume.value ? parseInt(schedVolume.value, 10) : null;
+
+    const payload = {};
+    if (actionType === 'sound') {
+      payload.soundId = schedSoundSelect.value;
+    } else if (actionType === 'tts') {
+      payload.text = schedTtsText.value.trim() || 'Scheduled announcement';
+      payload.prependChime = true;
+    } else if (actionType === 'music') {
+      payload.trackId = schedMusicSelect.value;
+    } else if (actionType === 'ambient') {
+      payload.ambientType = schedAmbientSelect.value;
+      payload.durationMinutes = 30;
+    }
+
+    try {
+      await window.robosSpeaker.addSchedule({
+        name,
+        time,
+        target,
+        days: [daysVal],
+        actionType,
+        payload,
+        volume: volumeVal,
+        enabled: true
+      });
+
+      scheduleFormContainer.classList.add('hidden');
+      schedName.value = '';
+      await loadSchedules();
+    } catch (err) {
+      alert(`Error saving schedule: ${err.message}`);
+    }
+  });
+}
+
+async function loadSchedules() {
+  try {
+    const schedules = await window.robosSpeaker.listSchedules();
+    scheduleListContainer.innerHTML = '';
+
+    if (!schedules || schedules.length === 0) {
+      scheduleListContainer.innerHTML = `
+        <div style="padding: 30px; text-align: center; color: var(--text-secondary);">
+          No scheduled broadcasts yet. Click <strong>New Schedule</strong> above to set an alert or chime.
+        </div>
+      `;
+      return;
+    }
+
+    schedules.forEach(job => {
+      const card = document.createElement('div');
+      card.className = `schedule-card ${job.enabled ? '' : 'disabled'}`;
+
+      let typeIcon = '🔔';
+      let typeDesc = job.payload?.soundId || 'Chime';
+      if (job.actionType === 'tts') {
+        typeIcon = '🗣️';
+        typeDesc = `"${job.payload?.text || ''}"`;
+      } else if (job.actionType === 'music') {
+        typeIcon = '🎵';
+        typeDesc = `Track: ${job.payload?.trackId || 'Music'}`;
+      } else if (job.actionType === 'ambient') {
+        typeIcon = '🌧️';
+        typeDesc = `Ambient: ${job.payload?.ambientType || 'Focus'}`;
+      }
+
+      card.innerHTML = `
+        <div class="sched-left">
+          <div class="sched-time-badge">${job.time}</div>
+          <div class="sched-details">
+            <span class="sched-title">${job.name}</span>
+            <div class="sched-badges">
+              <span class="badge">${typeIcon} ${typeDesc}</span>
+              <span class="badge badge-target">📢 ${job.target}</span>
+              <span class="badge">🗓️ ${(job.days || []).join(', ')}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="sched-actions">
+          <button class="btn btn-secondary btn-sm btn-trigger-sched" title="Test broadcast now">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Test
+          </button>
+          <button class="btn btn-secondary btn-sm btn-toggle-sched">
+            ${job.enabled ? 'Disable' : 'Enable'}
+          </button>
+          <button class="btn btn-danger btn-sm btn-delete-sched" title="Delete schedule">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      `;
+
+      card.querySelector('.btn-trigger-sched').addEventListener('click', async () => {
+        try {
+          await window.robosSpeaker.triggerSchedule(job.id);
+        } catch (err) {
+          alert(`Trigger error: ${err.message}`);
+        }
+      });
+
+      card.querySelector('.btn-toggle-sched').addEventListener('click', async () => {
+        try {
+          await window.robosSpeaker.updateSchedule(job.id, { enabled: !job.enabled });
+          await loadSchedules();
+        } catch (err) {
+          alert(`Update error: ${err.message}`);
+        }
+      });
+
+      card.querySelector('.btn-delete-sched').addEventListener('click', async () => {
+        if (confirm(`Delete scheduled broadcast "${job.name}"?`)) {
+          await window.robosSpeaker.removeSchedule(job.id);
+          await loadSchedules();
+        }
+      });
+
+      scheduleListContainer.appendChild(card);
+    });
+  } catch (err) {
+    console.warn('Error loading schedules:', err);
+  }
+}
+
 // Init
 document.addEventListener('DOMContentLoaded', () => {
   initWaveformCanvas();
   loadSpeakers(true);
   loadSoundboard();
+  loadMusicLibrary();
+  loadSchedules();
 });
+

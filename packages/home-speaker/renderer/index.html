@@ -74,6 +74,14 @@
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M16 14v6"/><path d="M8 14v6"/><path d="M12 16v6"/></svg>
         Ambient Focus
       </button>
+      <button class="tab-btn" data-tab="tab-music">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        Media Player Library
+      </button>
+      <button class="tab-btn" data-tab="tab-schedules">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Schedules & Alarms
+      </button>
     </nav>
 
     <!-- Main Content Area -->
@@ -303,6 +311,136 @@
               <p>Harmonic sub-bass electronic synth drone for coding</p>
               <button class="btn btn-secondary btn-sm btn-ambient-play">Play Ambient</button>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 6: RobOS Media Player Music Library -->
+      <section id="tab-music" class="tab-pane">
+        <div class="card pane-card">
+          <div class="card-header">
+            <div>
+              <h2>RobOS Media Player Music Library</h2>
+              <p class="card-desc">Browse and cast audio tracks from your RobOS desktop music collection directly to smart speakers.</p>
+            </div>
+            <div class="search-box">
+              <input type="text" id="music-search-input" placeholder="Search tracks, albums, artists..." class="input-search">
+              <button id="btn-refresh-library" class="btn btn-secondary btn-sm" title="Reload library cache">Reload</button>
+            </div>
+          </div>
+
+          <div class="library-content">
+            <div id="music-tracks-container" class="music-tracks-list">
+              <!-- Dynamically populated from ~/.config/robos/audio-library.json -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 7: Schedules & Alarms -->
+      <section id="tab-schedules" class="tab-pane">
+        <div class="card pane-card">
+          <div class="card-header">
+            <div>
+              <h2>Scheduled Speaker Broadcasts & Alarms</h2>
+              <p class="card-desc">Automatically trigger sounds, TTS announcements, or music at specified times or daily intervals.</p>
+            </div>
+            <button id="btn-toggle-add-schedule" class="btn btn-primary btn-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              New Schedule
+            </button>
+          </div>
+
+          <!-- Schedule Form (Collapsible) -->
+          <div id="schedule-form-container" class="schedule-form-card hidden">
+            <h3 id="schedule-form-title">Create Scheduled Broadcast</h3>
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="sched-name">Schedule Name:</label>
+                <input type="text" id="sched-name" class="input-text" placeholder="e.g. Morning Standup Chime">
+              </div>
+
+              <div class="form-group">
+                <label for="sched-time">Time (24h):</label>
+                <input type="time" id="sched-time" class="input-text" value="09:00">
+              </div>
+
+              <div class="form-group">
+                <label for="sched-target">Target Speaker:</label>
+                <select id="sched-target" class="dropdown">
+                  <option value="Kitchen speaker">Kitchen speaker</option>
+                  <option value="all">📢 All Speakers (Broadcast)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="sched-days">Frequency / Days:</label>
+                <select id="sched-days" class="dropdown">
+                  <option value="Daily" selected>Every Day (Daily)</option>
+                  <option value="Weekdays">Monday – Friday (Weekdays)</option>
+                  <option value="Weekends">Saturday & Sunday (Weekends)</option>
+                  <option value="Once">One-time Only</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="sched-action-type">Action Type:</label>
+                <select id="sched-action-type" class="dropdown">
+                  <option value="sound" selected>🔔 Soundboard SFX</option>
+                  <option value="tts">🗣️ Text-to-Speech Announcement</option>
+                  <option value="music">🎵 Music Library Track</option>
+                  <option value="ambient">🌧️ Ambient Focus</option>
+                </select>
+              </div>
+
+              <div class="form-group" id="sched-payload-sound-group">
+                <label for="sched-sound-select">Sound Effect:</label>
+                <select id="sched-sound-select" class="dropdown">
+                  <option value="chime">🔔 Intercom Chime</option>
+                  <option value="ping">✨ Attention Ping</option>
+                  <option value="fanfare">🎺 Victory Fanfare</option>
+                  <option value="siren">🚨 Alert Siren</option>
+                  <option value="witch_laugh">🧙‍♀️ Witch Laugh</option>
+                </select>
+              </div>
+
+              <div class="form-group hidden" id="sched-payload-tts-group">
+                <label for="sched-tts-text">Announcement Text:</label>
+                <input type="text" id="sched-tts-text" class="input-text" placeholder="e.g. Standup meeting in five minutes!">
+              </div>
+
+              <div class="form-group hidden" id="sched-payload-music-group">
+                <label for="sched-music-select">Music Track:</label>
+                <select id="sched-music-select" class="dropdown">
+                  <!-- Populated from library -->
+                </select>
+              </div>
+
+              <div class="form-group hidden" id="sched-payload-ambient-group">
+                <label for="sched-ambient-select">Ambient Soundscape:</label>
+                <select id="sched-ambient-select" class="dropdown">
+                  <option value="rain">Soft Rain & Thunder</option>
+                  <option value="brown_noise">Deep Brown Noise</option>
+                  <option value="pink_noise">Calm Pink Noise</option>
+                  <option value="cyber_drone">Cyber Synth Focus Drone</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="sched-volume">Volume Override (%):</label>
+                <input type="number" id="sched-volume" class="input-text" min="0" max="100" placeholder="Default (leave blank)">
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button id="btn-save-schedule" class="btn btn-primary">Save Schedule</button>
+              <button id="btn-cancel-schedule" class="btn btn-secondary">Cancel</button>
+            </div>
+          </div>
+
+          <!-- Schedule List -->
+          <div id="schedule-list-container" class="schedules-list">
+            <!-- Dynamically populated schedules -->
           </div>
         </div>
       </section>

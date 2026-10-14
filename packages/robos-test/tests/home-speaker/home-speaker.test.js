@@ -172,11 +172,83 @@ describe('RobOS Home Speaker Tests', () => {
       assert.ok(output.includes('ambient'), 'Should list ambient command');
       assert.ok(output.includes('volume'), 'Should list volume command');
       assert.ok(output.includes('stop'), 'Should list stop command');
+      assert.ok(output.includes('music'), 'Should list music command');
+      assert.ok(output.includes('schedule'), 'Should list schedule command');
+    });
+
+    it('CLI music list command outputs RobOS Media Player tracks', () => {
+      const output = execSync(`${CLI_PATH} music list`, { encoding: 'utf8' });
+      assert.ok(output.includes('RobOS Media Player Library'), 'Should output library header');
+      assert.ok(output.includes('Death') || output.includes('Overactive'), 'Should list tracks from audio-library.json');
+    });
+
+    it('CLI schedule add and list commands work cleanly', () => {
+      const addOut = execSync(`${CLI_PATH} schedule add --name "Test Automated Alert" --time "10:15" --sound ping --speaker "Kitchen speaker"`, { encoding: 'utf8' });
+      assert.ok(addOut.includes('Schedule created successfully'), 'Should confirm creation');
+      const listOut = execSync(`${CLI_PATH} schedule list`, { encoding: 'utf8' });
+      assert.ok(listOut.includes('Test Automated Alert'), 'Should include created schedule');
+      // Extract ID and remove it
+      const match = addOut.match(/ID:\s+(sch_[a-z0-9_]+)/);
+      if (match) {
+        execSync(`${CLI_PATH} schedule remove ${match[1]}`);
+      }
+    });
+  });
+
+  describe('RobOS Media Player Music Library Integration', () => {
+    it('MediaLibraryClient loads tracks from ~/.config/robos/audio-library.json', () => {
+      const { MediaLibraryClient } = require(path.join(APP_DIR, 'lib', 'media-library-client'));
+      const client = new MediaLibraryClient();
+      const tracks = client.getTracks();
+      assert.ok(Array.isArray(tracks), 'Should return tracks array');
+      assert.ok(tracks.length >= 1, 'Should load existing library tracks');
+      assert.ok(tracks[0].title, 'Track should have a title');
+      assert.ok(tracks[0].filePath, 'Track should have a filePath');
+    });
+
+    it('MediaLibraryClient searches tracks by query string', () => {
+      const { MediaLibraryClient } = require(path.join(APP_DIR, 'lib', 'media-library-client'));
+      const client = new MediaLibraryClient();
+      const results = client.search('Overactive');
+      assert.ok(Array.isArray(results), 'Should return array');
+      assert.ok(results.length >= 1, 'Should find Overactive track');
+      assert.ok(results[0].title.includes('Overactive'), 'Title should match query');
+    });
+  });
+
+  describe('Speaker Scheduler Engine', () => {
+    it('SpeakerScheduler adds, lists, and removes scheduled alerts', () => {
+      const { SpeakerScheduler } = require(path.join(APP_DIR, 'lib', 'scheduler'));
+      const sched = new SpeakerScheduler();
+      const job = sched.add({
+        name: 'Unit Test Alert',
+        time: '14:00',
+        target: 'Kitchen speaker',
+        days: ['Daily'],
+        actionType: 'sound',
+        payload: { soundId: 'chime' }
+      });
+      assert.ok(job.id, 'Job should have generated ID');
+      const list = sched.list();
+      assert.ok(list.some(j => j.id === job.id), 'Job should be in schedule list');
+
+      // Test matches logic
+      const nowMatch = new Date();
+      nowMatch.setHours(14, 0, 0, 0);
+      assert.strictEqual(sched.matches(job, nowMatch), true, 'Should match at 14:00');
+
+      const nowNoMatch = new Date();
+      nowNoMatch.setHours(14, 1, 0, 0);
+      assert.strictEqual(sched.matches(job, nowNoMatch), false, 'Should not match at 14:01');
+
+      // Remove job
+      const removed = sched.remove(job.id);
+      assert.strictEqual(removed, true, 'Should remove job successfully');
     });
   });
 
   describe('Renderer UI Assets', () => {
-    it('index.html contains all 5 functional tab panes', () => {
+    it('index.html contains all 7 functional tab panes', () => {
       const htmlPath = path.join(APP_DIR, 'renderer', 'index.html');
       assert.ok(fs.existsSync(htmlPath), 'index.html should exist');
       const html = fs.readFileSync(htmlPath, 'utf8');
@@ -185,6 +257,8 @@ describe('RobOS Home Speaker Tests', () => {
       assert.ok(html.includes('id="tab-file"'), 'Should contain tab-file pane');
       assert.ok(html.includes('id="tab-soundboard"'), 'Should contain tab-soundboard pane');
       assert.ok(html.includes('id="tab-ambient"'), 'Should contain tab-ambient pane');
+      assert.ok(html.includes('id="tab-music"'), 'Should contain tab-music pane');
+      assert.ok(html.includes('id="tab-schedules"'), 'Should contain tab-schedules pane');
       assert.ok(html.includes('id="waveform-canvas"'), 'Should have waveform canvas');
     });
 
@@ -194,18 +268,20 @@ describe('RobOS Home Speaker Tests', () => {
       const css = fs.readFileSync(cssPath, 'utf8');
       assert.ok(css.includes('--bg-primary: #0d1117'), 'Should define bg-primary');
       assert.ok(css.includes('--accent: #00bcd4'), 'Should define accent');
-      assert.ok(css.includes('waveform-canvas'), 'Should style waveform canvas');
+      assert.ok(css.includes('sched-time-badge'), 'Should style schedule badges');
     });
 
-    it('app.js contains event handlers for recording, casting, and soundboard', () => {
+    it('app.js contains event handlers for recording, casting, music, and schedules', () => {
       const jsPath = path.join(APP_DIR, 'renderer', 'app.js');
       assert.ok(fs.existsSync(jsPath), 'app.js should exist');
       const js = fs.readFileSync(jsPath, 'utf8');
       assert.ok(js.includes('startRecording'), 'Should implement startRecording');
       assert.ok(js.includes('castVoiceRecording'), 'Should call castVoiceRecording');
       assert.ok(js.includes('castTTS'), 'Should call castTTS');
-      assert.ok(js.includes('loadSoundboard'), 'Should implement loadSoundboard');
+      assert.ok(js.includes('loadMusicLibrary'), 'Should implement loadMusicLibrary');
+      assert.ok(js.includes('loadSchedules'), 'Should implement loadSchedules');
     });
   });
 
 });
+

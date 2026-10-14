@@ -55,6 +55,12 @@ Commands:
   play <file> [--speaker S]               Stream a custom audio file (MP3/WAV/etc.)
   sound <id> [--speaker S]                Play soundboard SFX (chime, ping, fanfare, siren, witch_laugh)
   ambient <type> [--minutes M]            Play focus soundscape (rain, brown_noise, pink_noise, cyber_drone)
+  music list [query]                      List tracks from RobOS Media Player library
+  music play <query|id> [--speaker S]     Play track from RobOS Media Player library on speaker
+  schedule list                           List scheduled alerts & broadcasts
+  schedule add [options]                  Create new scheduled broadcast
+  schedule remove <id>                    Remove a scheduled broadcast
+  schedule trigger <id>                   Test / trigger scheduled broadcast immediately
   volume <0-100> [--speaker S]            Set speaker volume percentage
   stop [--speaker S]                      Stop active speaker playback
 
@@ -63,6 +69,11 @@ Options:
   --voice <voice_id>    Kokoro/Piper voice id (default: af_heart)
   --chime               Prepend attention chime before speech
   --minutes <n>         Ambient loop duration in minutes (default: 30)
+  --time <HH:MM>        Scheduled time in 24hr format (e.g. 09:00)
+  --days <d1,d2>        Days (Daily, Weekdays, Weekends, Mon,Tue...)
+  --sound <id>          Soundboard sound id
+  --tts "<text>"        TTS announcement text
+  --music "<track>"     Music track name or id
 `);
     process.exit(0);
   }
@@ -134,6 +145,120 @@ Options:
       await service.playAmbient(targetSpeaker, type, mins);
       console.log('Ambient soundscape streaming to speaker.');
       setTimeout(() => process.exit(0), 3000);
+      break;
+    }
+
+    case 'music': {
+      const sub = args._[1];
+      if (sub === 'list' || !sub) {
+        const query = args._[2] || '';
+        const tracks = service.searchLibrary(query);
+        console.log(`RobOS Media Player Library (${tracks.length} tracks):`);
+        tracks.forEach(t => {
+          const dur = t.duration ? `${Math.floor(t.duration / 60)}:${String(Math.floor(t.duration % 60)).padStart(2, '0')}` : '--:--';
+          console.log(`  • [${dur}] ${(t.title || 'Untitled').padEnd(30)} by ${(t.artist || 'Unknown').padEnd(20)} (${t.album || ''})`);
+        });
+        process.exit(0);
+      } else if (sub === 'play') {
+        const query = args._[2];
+        if (!query) {
+          console.error('Error: Please specify track title, ID, or query to play.');
+          process.exit(1);
+        }
+        console.log(`Casting library track "${query}" to "${targetSpeaker}"...`);
+        await service.castLibraryTrack(targetSpeaker, query);
+        console.log('Track streaming to speaker.');
+        setTimeout(() => process.exit(0), 4000);
+      } else {
+        // Direct query shorthand: robos-speaker music "Overactive"
+        console.log(`Casting library track "${sub}" to "${targetSpeaker}"...`);
+        await service.castLibraryTrack(targetSpeaker, sub);
+        console.log('Track streaming to speaker.');
+        setTimeout(() => process.exit(0), 4000);
+      }
+      break;
+    }
+
+    case 'schedule': {
+      const sub = args._[1];
+      if (sub === 'list' || !sub) {
+        const schedules = service.listSchedules();
+        if (schedules.length === 0) {
+          console.log('No scheduled broadcasts found. Add one with "robos-speaker schedule add".');
+        } else {
+          console.log(`Scheduled Broadcasts (${schedules.length}):`);
+          schedules.forEach(s => {
+            const status = s.enabled ? 'ACTIVE' : 'DISABLED';
+            console.log(`  • [${s.time}] [${status}] "${s.name}" -> ${s.target} (${(s.days || []).join(',')})`);
+            console.log(`    Type: ${s.actionType} | ID: ${s.id}`);
+          });
+        }
+        process.exit(0);
+      } else if (sub === 'add') {
+        const name = args.name || 'Scheduled Broadcast';
+        const time = args.time || '09:00';
+        const days = args.days ? args.days.split(',').map(d => d.trim()) : ['Daily'];
+        const target = args.speaker || targetSpeaker;
+        let actionType = 'sound';
+        const payload = {};
+
+        if (args.tts) {
+          actionType = 'tts';
+          payload.text = args.tts;
+          payload.voice = args.voice || 'af_heart';
+          payload.prependChime = true;
+        } else if (args.sound) {
+          actionType = 'sound';
+          payload.soundId = args.sound;
+        } else if (args.music) {
+          actionType = 'music';
+          payload.trackId = args.music;
+        } else if (args.ambient) {
+          actionType = 'ambient';
+          payload.ambientType = args.ambient;
+          payload.durationMinutes = parseInt(args.minutes || '30', 10);
+        }
+
+        const newJob = service.addSchedule({
+          name,
+          time,
+          target,
+          days,
+          actionType,
+          payload,
+          volume: args.volume ? parseInt(args.volume, 10) : null
+        });
+
+        console.log(`Schedule created successfully:`);
+        console.log(`  ID: ${newJob.id}`);
+        console.log(`  Name: ${newJob.name}`);
+        console.log(`  Time: ${newJob.time} (${newJob.days.join(',')})`);
+        console.log(`  Target: ${newJob.target}`);
+        process.exit(0);
+      } else if (sub === 'remove' || sub === 'delete') {
+        const id = args._[2];
+        if (!id) {
+          console.error('Error: Please specify schedule ID to remove.');
+          process.exit(1);
+        }
+        const ok = service.removeSchedule(id);
+        if (ok) console.log(`Schedule ${id} removed.`);
+        else console.error(`Schedule ${id} not found.`);
+        process.exit(0);
+      } else if (sub === 'trigger' || sub === 'test') {
+        const id = args._[2];
+        if (!id) {
+          console.error('Error: Please specify schedule ID to trigger.');
+          process.exit(1);
+        }
+        console.log(`Triggering schedule "${id}" immediately...`);
+        await service.triggerSchedule(id);
+        console.log('Triggered successfully.');
+        setTimeout(() => process.exit(0), 3000);
+      } else {
+        console.error(`Unknown schedule action: ${sub}. Use list, add, remove, or trigger.`);
+        process.exit(1);
+      }
       break;
     }
 
