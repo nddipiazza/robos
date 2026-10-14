@@ -17417,6 +17417,7 @@
     const playerRef = (0, import_react8.useRef)(null);
     const audioCtxRef = (0, import_react8.useRef)(null);
     const ambientNodeRef = (0, import_react8.useRef)(null);
+    const toastTimerRef = (0, import_react8.useRef)(null);
     const getSpeakerName = (ip) => {
       if (!ip) return "Speaker";
       if (ip === "local") return "Desktop (Local Audio)";
@@ -17505,10 +17506,16 @@
           }
         });
       };
-    }, [speakers]);
+    }, []);
     const showStatus = (msg) => {
       setStatusMsg(msg);
-      setTimeout(() => setStatusMsg(""), 4e3);
+      if (toastTimerRef.current) {
+        clearTimeout(toastTimerRef.current);
+      }
+      toastTimerRef.current = setTimeout(() => {
+        setStatusMsg("");
+        toastTimerRef.current = null;
+      }, 4e3);
     };
     const refreshSpeakers = async () => {
       setIsScanning(true);
