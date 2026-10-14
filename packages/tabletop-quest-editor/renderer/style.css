@@ -1262,4 +1262,164 @@ body.resizing * {
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6);
 }
 
+/* ---------------- Triggers & Action Sequences ---------------- */
+.trigger-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 520px;
+  overflow-y: auto;
+}
+
+.trigger-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.trigger-card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--accent);
+}
+
+.trigger-card.selected {
+  border-color: var(--accent);
+  background: rgba(0, 188, 212, 0.08);
+}
+
+.trigger-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.trigger-card-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.trigger-event-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  background: #1e293b;
+  color: #94a3b8;
+  border: 1px solid #334155;
+}
+
+.trigger-event-badge.event-room {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+.trigger-event-badge.event-tile {
+  background: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
+  border-color: rgba(168, 85, 247, 0.4);
+}
+
+.trigger-event-badge.event-door {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.trigger-event-badge.event-monster {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.trigger-event-badge.event-game {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.trigger-card-desc {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.3;
+}
+
+.trigger-actions-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.action-pill-mini {
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: #1e293b;
+  color: #cbd5e1;
+  border: 1px solid #334155;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* ---------------- Action Pipeline Editor ---------------- */
+.action-pipeline-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.action-step-card {
+  background: #0d1424;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.action-step-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.action-step-body {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.action-step-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+}
+
+.action-step-row label {
+  color: var(--text-muted);
+  min-width: 60px;
+  font-size: 10px;
+}
+
+
 
