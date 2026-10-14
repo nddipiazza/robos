@@ -19,4 +19,19 @@ contextBridge.exposeInMainWorld('robosSpeaker', {
   listSounds: () => ipcRenderer.invoke('speakers:listSounds'),
   listVoices: () => ipcRenderer.invoke('speakers:listVoices'),
   openAudioFileDialog: () => ipcRenderer.invoke('dialog:openAudioFile'),
+
+  // RobOS Media Player Music Library
+  getLibraryTracks: (limit) => ipcRenderer.invoke('library:getTracks', limit),
+  searchLibrary: (query, limit) => ipcRenderer.invoke('library:search', query, limit),
+  getLibraryAlbums: () => ipcRenderer.invoke('library:getAlbums'),
+  castLibraryTrack: (target, queryOrId) => ipcRenderer.invoke('library:castTrack', target, queryOrId),
+
+  // Scheduled Broadcasts
+  listSchedules: () => ipcRenderer.invoke('schedule:list'),
+  getSchedule: (id) => ipcRenderer.invoke('schedule:get', id),
+  addSchedule: (jobData) => ipcRenderer.invoke('schedule:add', jobData),
+  updateSchedule: (id, partial) => ipcRenderer.invoke('schedule:update', id, partial),
+  removeSchedule: (id) => ipcRenderer.invoke('schedule:remove', id),
+  triggerSchedule: (id) => ipcRenderer.invoke('schedule:trigger', id),
 });
+

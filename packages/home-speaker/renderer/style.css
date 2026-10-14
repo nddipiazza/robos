@@ -789,3 +789,238 @@ body {
   display: flex;
   gap: 8px;
 }
+
+/* Tab 6: Media Player Music Library */
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.input-search {
+  background-color: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  width: 250px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.input-search:focus {
+  border-color: var(--accent);
+}
+
+.music-tracks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.track-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  gap: 12px;
+  transition: border-color 0.15s;
+}
+
+.track-row:hover {
+  border-color: var(--accent);
+}
+
+.track-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.track-icon {
+  font-size: 1.3rem;
+  color: var(--accent);
+}
+
+.track-texts {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.track-title {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-bright);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.track-artist {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.track-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.track-duration {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.track-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Tab 7: Schedules & Alarms */
+.schedule-form-card {
+  background-color: var(--bg-input);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  padding: 18px;
+  margin-bottom: 20px;
+}
+
+.schedule-form-card h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-bright);
+  margin-bottom: 14px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.input-text {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  padding: 7px 10px;
+  font-size: 0.85rem;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+
+.input-text:focus {
+  border-color: var(--accent);
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.schedules-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.schedule-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  gap: 16px;
+  transition: border-color 0.15s;
+}
+
+.schedule-card:hover {
+  border-color: var(--text-secondary);
+}
+
+.schedule-card.disabled {
+  opacity: 0.55;
+}
+
+.sched-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+
+.sched-time-badge {
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--accent);
+  background-color: var(--accent-glow);
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--accent);
+}
+
+.sched-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sched-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-bright);
+}
+
+.sched-badges {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.badge {
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+
+.badge-target {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.sched-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+

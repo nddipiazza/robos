@@ -139,6 +139,48 @@ ipcMain.handle('speakers:listVoices', async () => {
   ];
 });
 
+// RobOS Media Player Music Library Handlers
+ipcMain.handle('library:getTracks', async (_event, limit) => {
+  return speakerService.getLibraryTracks(limit);
+});
+
+ipcMain.handle('library:search', async (_event, query, limit) => {
+  return speakerService.searchLibrary(query, limit);
+});
+
+ipcMain.handle('library:getAlbums', async () => {
+  return speakerService.getLibraryAlbums();
+});
+
+ipcMain.handle('library:castTrack', async (_event, target, queryOrId) => {
+  return speakerService.castLibraryTrack(target, queryOrId);
+});
+
+// Scheduled Broadcast Handlers
+ipcMain.handle('schedule:list', async () => {
+  return speakerService.listSchedules();
+});
+
+ipcMain.handle('schedule:get', async (_event, id) => {
+  return speakerService.getSchedule(id);
+});
+
+ipcMain.handle('schedule:add', async (_event, jobData) => {
+  return speakerService.addSchedule(jobData);
+});
+
+ipcMain.handle('schedule:update', async (_event, id, partial) => {
+  return speakerService.updateSchedule(id, partial);
+});
+
+ipcMain.handle('schedule:remove', async (_event, id) => {
+  return speakerService.removeSchedule(id);
+});
+
+ipcMain.handle('schedule:trigger', async (_event, id) => {
+  return speakerService.triggerSchedule(id);
+});
+
 ipcMain.handle('dialog:openAudioFile', async () => {
   if (!mainWindow) return null;
   const result = await dialog.showOpenDialog(mainWindow, {

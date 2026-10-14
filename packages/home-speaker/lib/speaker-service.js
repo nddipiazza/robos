@@ -6,6 +6,8 @@ const os = require('os');
 const { exec } = require('child_process');
 const { CastService } = require('../../audio-player/lib/cast-service');
 const { SOUNDS, getSound, generateIntercomChime } = require('./soundboard');
+const { MediaLibraryClient } = require('./media-library-client');
+const { SpeakerScheduler } = require('./scheduler');
 
 let TTSEngine = null;
 try {
@@ -25,10 +27,15 @@ class HomeSpeakerService {
   constructor() {
     this.castService = new CastService();
     this.ttsEngine = TTSEngine ? new TTSEngine() : null;
+    this.mediaClient = new MediaLibraryClient();
+    this.scheduler = new SpeakerScheduler({
+      executor: (job) => this.executeScheduledJob(job)
+    });
     this.knownSpeakers = new Map();
     this.activeBroadcasts = new Map(); // ip -> { title, type, startTime }
 
     this._loadCache();
+    this.scheduler.start();
   }
 
   _loadCache() {
@@ -389,6 +396,108 @@ class HomeSpeakerService {
       contentType: 'audio/mpeg'
     });
   }
+
+  // -------------------------------------------------------------
+  // RobOS Media Player Music Library Integration
+  // -------------------------------------------------------------
+  getLibraryTracks(limit = 100) {
+    return this.mediaClient.getTracks(limit);
+  }
+
+  searchLibrary(query, limit = 50) {
+    return this.mediaClient.search(query, limit);
+  }
+
+  getLibraryAlbums() {
+    return this.mediaClient.listAlbums();
+  }
+
+  async castLibraryTrack(target, queryOrId) {
+    const track = this.mediaClient.findTrack(queryOrId);
+    if (!track) {
+      throw new Error(`Track not found in RobOS Media Library: "${queryOrId}"`);
+    }
+
+    if (!fs.existsSync(track.filePath)) {
+      throw new Error(`Track audio file is missing on disk: ${track.filePath}`);
+    }
+
+    return this.castFile(target, track.filePath, {
+      title: track.title || path.basename(track.filePath),
+      artist: track.artist || 'RobOS Media Player',
+      contentType: 'audio/mpeg'
+    });
+  }
+
+  // -------------------------------------------------------------
+  // Scheduled Broadcasts & Timers
+  // -------------------------------------------------------------
+  listSchedules() {
+    return this.scheduler.list();
+  }
+
+  getSchedule(id) {
+    return this.scheduler.get(id);
+  }
+
+  addSchedule(jobData) {
+    return this.scheduler.add(jobData);
+  }
+
+  updateSchedule(id, partial) {
+    return this.scheduler.update(id, partial);
+  }
+
+  removeSchedule(id) {
+    return this.scheduler.remove(id);
+  }
+
+  async triggerSchedule(id) {
+    return this.scheduler.trigger(id);
+  }
+
+  async executeScheduledJob(job) {
+    console.log(`[HomeSpeaker] Executing scheduled job "${job.name}" on "${job.target}"`);
+
+    if (typeof job.volume === 'number' && job.volume >= 0 && job.volume <= 100) {
+      try {
+        await this.setVolume(job.target, job.volume / 100);
+      } catch (err) {
+        console.warn('[HomeSpeaker] Failed to set scheduled volume:', err.message);
+      }
+    }
+
+    switch (job.actionType) {
+      case 'sound': {
+        const soundId = job.payload?.soundId || 'chime';
+        return this.playSound(job.target, soundId);
+      }
+      case 'tts': {
+        const text = job.payload?.text || 'Scheduled announcement';
+        return this.castTTS(job.target, text, {
+          voice: job.payload?.voice,
+          prependChime: job.payload?.prependChime !== false
+        });
+      }
+      case 'music': {
+        const queryOrId = job.payload?.trackId || job.payload?.query || job.payload?.track;
+        return this.castLibraryTrack(job.target, queryOrId);
+      }
+      case 'file': {
+        return this.castFile(job.target, job.payload?.filePath, {
+          title: job.payload?.title || job.name
+        });
+      }
+      case 'ambient': {
+        const ambientType = job.payload?.ambientType || 'rain';
+        const mins = job.payload?.durationMinutes || 30;
+        return this.playAmbient(job.target, ambientType, mins);
+      }
+      default:
+        throw new Error(`Unknown scheduled action type: ${job.actionType}`);
+    }
+  }
 }
 
 module.exports = { HomeSpeakerService };
+
