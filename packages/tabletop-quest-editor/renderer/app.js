@@ -28,7 +28,8 @@ const state = {
     furniture: [],
     traps: [],
     wallBlocks: [],
-    storyTriggers: []
+    storyTriggers: [],
+    triggers: []
   },
 
   // View & Camera
@@ -56,6 +57,8 @@ const state = {
     trapType: 'pit',
     wallBlockType: 'single',
     noteMarker: 'Note A',
+    triggerEvent: 'on_room_entered',
+    triggerActionType: 'play_movie',
     startStairType: 'stairs_up_1x1',
     exitStairType: 'stairs_down_1x1'
   },
@@ -142,6 +145,63 @@ const FURNITURE_DEFS = {
 };
 
 // -------------------------------------------------------------
+// Trigger Event & Action Definitions
+// -------------------------------------------------------------
+const TRIGGER_EVENT_DEFS = {
+  on_room_entered: { label: 'On Room Entered', icon: '🏰', color: '#3b82f6', targetType: 'room' },
+  on_tile_stepped_on: { label: 'On Tile Stepped On', icon: '👣', color: '#10b981', targetType: 'tile' },
+  on_door_opened: { label: 'On Door Opened', icon: '🚪', color: '#f59e0b', targetType: 'door' },
+  on_monster_killed: { label: 'On Monster Killed', icon: '💀', color: '#ef4444', targetType: 'monster' },
+  on_room_searched_treasure: { label: 'On Searched for Treasure', icon: '💰', color: '#eab308', targetType: 'room' },
+  on_room_searched_traps: { label: 'On Searched for Traps', icon: '🔍', color: '#8b5cf6', targetType: 'room' },
+  on_game_start: { label: 'On Game Start', icon: '🎮', color: '#06b6d4', targetType: 'none' },
+  on_game_end: { label: 'On Game End', icon: '🏆', color: '#ec4899', targetType: 'none' }
+};
+
+const TRIGGER_ACTION_DEFS = {
+  play_movie: {
+    name: 'Play Movie',
+    icon: '🎬',
+    defaultParams: { moviePath: 'res://assets/movies/quest1-intro.mp4', title: 'Cinematic Scene', canSkip: true }
+  },
+  attack_character: {
+    name: 'Attack Character',
+    icon: '⚔️',
+    defaultParams: { attacker: 'Hazard', damageDice: 2, damage: 2, target: 'active_hero' }
+  },
+  cast_spell: {
+    name: 'Cast Spell',
+    icon: '🪄',
+    defaultParams: { spell: 'ball_of_flame', caster: 'Morcar', target: 'active_hero' }
+  },
+  spring_trap: {
+    name: 'Spring Trap',
+    icon: '⚠️',
+    defaultParams: { trapType: 'falling_block', damage: 2 }
+  },
+  show_message: {
+    name: 'Show Message',
+    icon: '📜',
+    defaultParams: { title: 'Dungeon Notice', text: 'Mentor speaks: "Tread carefully, heroes..."' }
+  },
+  spawn_monsters: {
+    name: 'Spawn Monsters',
+    icon: '👾',
+    defaultParams: { monsterType: 'skeleton', count: 1, roomId: '' }
+  },
+  grant_reward: {
+    name: 'Grant Reward',
+    icon: '💰',
+    defaultParams: { gold: 50, item: 'Potion of Healing' }
+  },
+  end_game: {
+    name: 'End Game',
+    icon: '🏁',
+    defaultParams: { outcome: 'victory' }
+  }
+};
+
+// -------------------------------------------------------------
 // DOM Elements Cache
 // -------------------------------------------------------------
 const dom = (typeof document !== 'undefined') ? {
@@ -209,6 +269,7 @@ const dom = (typeof document !== 'undefined') ? {
   sideTabs: document.querySelectorAll('.side-tab'),
   sidebarContents: document.querySelectorAll('.sidebar-content'),
   badgeEntityCount: document.getElementById('badge-entity-count'),
+  badgeTriggerCount: document.getElementById('badge-trigger-count'),
 
   // Quest Meta Tab
   inputQuestTitle: document.getElementById('input-quest-title'),
@@ -253,10 +314,29 @@ const dom = (typeof document !== 'undefined') ? {
   inspectGroupTrap: document.getElementById('inspect-group-trap'),
   inspectTrapDmg: document.getElementById('inspect-trap-dmg'),
 
+  // Inspector: Trigger / Note & Action Pipeline
   inspectGroupNote: document.getElementById('inspect-group-note'),
   inspectNoteMarker: document.getElementById('inspect-note-marker'),
   inspectNoteTitle: document.getElementById('inspect-note-title'),
+  inspectTriggerEvent: document.getElementById('inspect-trigger-event'),
+  inspectTriggerTargetGroup: document.getElementById('inspect-trigger-target-group'),
+  inspectTriggerTargetLbl: document.getElementById('inspect-trigger-target-lbl'),
+  inspectTriggerTargetRoom: document.getElementById('inspect-trigger-target-room'),
+  inspectTriggerTargetDoor: document.getElementById('inspect-trigger-target-door'),
+  inspectTriggerTargetMonster: document.getElementById('inspect-trigger-target-monster'),
+  inspectTriggerTargetTile: document.getElementById('inspect-trigger-target-tile'),
+  inspectTriggerTileX: document.getElementById('inspect-trigger-tile-x'),
+  inspectTriggerTileY: document.getElementById('inspect-trigger-tile-y'),
+  inspectTriggerOnceOnly: document.getElementById('inspect-trigger-once-only'),
   inspectNoteNarrative: document.getElementById('inspect-note-narrative'),
+  selectNewActionType: document.getElementById('select-new-action-type'),
+  btnAddAction: document.getElementById('btn-add-action'),
+  inspectTriggerActionsList: document.getElementById('inspect-trigger-actions-list'),
+
+  // Triggers Tab
+  btnAddTrigger: document.getElementById('btn-add-trigger'),
+  filterTriggerEvent: document.getElementById('filter-trigger-event'),
+  triggerList: document.getElementById('trigger-list'),
 
   // Entities List Tab
   entitySummaryList: document.getElementById('entity-summary-list'),
@@ -623,14 +703,64 @@ async function loadCartridge(slugOrPath) {
         detected: Boolean(t.detected),
         disarmed: Boolean(t.disarmed)
       }));
-      state.quest.storyTriggers = (mapData.storyTriggers || []).map((st, i) => ({
-        id: st.id || `trigger-${i+1}`,
-        marker: st.marker || `Note ${String.fromCharCode(65 + i)}`,
-        title: st.title || 'Special Note',
-        narrative: st.narrative || '',
-        tile: st.tile || [0, 0],
-        room: st.room || ''
-      }));
+
+      const rawTriggers = mapData.triggers || mapData.storyTriggers || [];
+      state.quest.storyTriggers = rawTriggers.map((st, i) => {
+        let inferredEvent = st.event;
+        if (!inferredEvent) {
+          if (st.condition === 'search_treasure') inferredEvent = 'on_room_searched_treasure';
+          else if (st.condition === 'search_traps') inferredEvent = 'on_room_searched_traps';
+          else if (st.condition === 'enter_room' || st.condition === 'line_of_sight') inferredEvent = 'on_room_entered';
+          else if (st.room) inferredEvent = 'on_room_entered';
+          else inferredEvent = 'on_tile_stepped_on';
+        }
+
+        const actions = Array.isArray(st.actions) ? st.actions.map(a => ({ ...a })) : [];
+        if (actions.length === 0) {
+          const movieUrl = st.movie || st.moviePath || st.cinematic;
+          if (movieUrl) {
+            actions.push({
+              type: 'play_movie',
+              moviePath: movieUrl,
+              title: st.title || 'Cinematic Scene',
+              canSkip: true
+            });
+          }
+          if (st.gold && st.gold > 0) {
+            actions.push({
+              type: 'grant_reward',
+              gold: st.gold,
+              item: (st.item && (typeof st.item === 'string' ? st.item : st.item.name)) || ''
+            });
+          }
+          if (Array.isArray(st.spawnMonsters) && st.spawnMonsters.length > 0) {
+            const first = st.spawnMonsters[0];
+            actions.push({
+              type: 'spawn_monsters',
+              monsterType: first.monsterType || first.slug || 'skeleton',
+              count: st.spawnMonsters.length,
+              roomId: st.room || ''
+            });
+          }
+        }
+
+        return {
+          id: st.id || `trigger-${i+1}`,
+          marker: st.marker || `Note ${String.fromCharCode(65 + i)}`,
+          name: st.name || st.title || 'Special Trigger',
+          title: st.title || st.name || 'Special Trigger',
+          event: inferredEvent,
+          target: st.target || st.room || st.doorId || st.monsterId || '',
+          room: st.room || (inferredEvent === 'on_room_entered' || inferredEvent === 'on_room_searched_treasure' || inferredEvent === 'on_room_searched_traps' ? (st.target || '') : ''),
+          doorId: st.doorId || (inferredEvent === 'on_door_opened' ? (st.target || '') : ''),
+          monsterId: st.monsterId || (inferredEvent === 'on_monster_killed' ? (st.target || '') : ''),
+          tile: st.tile || [0, 0],
+          onceOnly: st.onceOnly !== undefined ? Boolean(st.onceOnly) : true,
+          narrative: st.narrative || '',
+          actions: actions
+        };
+      });
+      state.quest.triggers = state.quest.storyTriggers;
     }
 
     // Load monsters from cartridge root
@@ -686,6 +816,7 @@ async function loadCartridge(slugOrPath) {
 
     syncQuestMetaInputs();
     updateEntitySummaryList();
+    updateTriggerTabUI();
     runValidation();
     render();
     showToast(`Loaded Cartridge: ${state.quest.title}`, 'success');
@@ -827,15 +958,37 @@ function buildCartridgePayload() {
           detected: false,
           disarmed: false
         })),
-        storyTriggers: q.storyTriggers.map(st => ({
+        triggers: q.storyTriggers.map(st => ({
           id: st.id,
+          name: st.title || st.name || '',
+          title: st.title || st.name || '',
           marker: st.marker,
-          title: st.title,
-          banner: `QUEST NOTE [${st.marker}]`,
-          narrative: st.narrative,
+          event: st.event || (st.room ? 'on_room_entered' : 'on_tile_stepped_on'),
+          target: st.target || st.room || st.doorId || st.monsterId || '',
+          room: st.room || '',
+          doorId: st.doorId || '',
+          monsterId: st.monsterId || '',
           tile: [st.tile[0], st.tile[1]],
-          room: st.room || ''
-        }))
+          onceOnly: Boolean(st.onceOnly !== false),
+          narrative: st.narrative || '',
+          actions: (st.actions || []).map(a => ({ ...a }))
+        })),
+        storyTriggers: q.storyTriggers.map(st => {
+          const movieAction = (st.actions || []).find(a => a.type === 'play_movie');
+          return {
+            id: st.id,
+            marker: st.marker,
+            title: st.title || st.name || '',
+            banner: `QUEST NOTE [${st.marker}]`,
+            narrative: st.narrative || '',
+            tile: [st.tile[0], st.tile[1]],
+            room: st.room || '',
+            event: st.event || (st.room ? 'on_room_entered' : 'on_tile_stepped_on'),
+            onceOnly: Boolean(st.onceOnly !== false),
+            movie: movieAction?.moviePath || '',
+            actions: (st.actions || []).map(a => ({ ...a }))
+          };
+        })
       }
     }
   };
@@ -1885,23 +2038,49 @@ function render() {
       const cx = pos.x + geom.tileSize / 2;
       const cy = pos.y + geom.tileSize / 2;
 
-      // Parchment seal icon
-      ctx.fillStyle = '#d97706';
+      const eventDef = TRIGGER_EVENT_DEFS[st.event] || TRIGGER_EVENT_DEFS.on_room_entered;
+      const color = eventDef.color || '#d97706';
+
+      // Outer glowing halo
+      ctx.save();
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 6;
+      ctx.fillStyle = color;
       ctx.beginPath();
-      ctx.arc(cx, cy, 10, 0, Math.PI * 2);
+      ctx.arc(cx, cy, 11, 0, Math.PI * 2);
       ctx.fill();
-      ctx.strokeStyle = '#fef3c7';
+      ctx.restore();
+
+      // Inner dark disc
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 9, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = color;
       ctx.lineWidth = 1.5;
       ctx.stroke();
 
-      ctx.fillStyle = '#fff';
+      // Marker
+      ctx.fillStyle = '#ffffff';
       ctx.font = 'bold 9px monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       const mark = (st.marker || 'A').replace('Note ', '');
-      ctx.fillText(mark, cx, cy);
+      ctx.fillText(mark, cx, cy - 1);
 
-      if (state.selectedEntity && state.selectedEntity.type === 'note' && state.selectedEntity.index === i) {
+      // Mini action badge on bottom right
+      const actions = st.actions || [];
+      const hasMovie = actions.some(a => a.type === 'play_movie');
+      const hasAttack = actions.some(a => a.type === 'attack_character' || a.type === 'spring_trap' || a.type === 'cast_spell');
+      if (hasMovie) {
+        ctx.font = '8px sans-serif';
+        ctx.fillText('🎬', cx + 7, cy + 7);
+      } else if (hasAttack) {
+        ctx.font = '8px sans-serif';
+        ctx.fillText('⚔️', cx + 7, cy + 7);
+      }
+
+      if (state.selectedEntity && (state.selectedEntity.type === 'note' || state.selectedEntity.type === 'trigger') && state.selectedEntity.index === i) {
         drawSelectionGlow(pos.x, pos.y, geom.tileSize, geom.tileSize);
       }
     });
@@ -2563,18 +2742,35 @@ function handleCanvasClick(wx, wy) {
     updateEntitySummaryList();
   } else if (state.activeTool === 'note') {
     const mark = state.subtool.noteMarker || `Note ${String.fromCharCode(65 + state.quest.storyTriggers.length)}`;
+    const eventType = state.subtool.triggerEvent || (roomId ? 'on_room_entered' : 'on_tile_stepped_on');
     const newTrigger = {
-      id: `trigger-${mark.toLowerCase().replace(/\s+/g, '-')}`,
+      id: `trigger-${mark.toLowerCase().replace(/\s+/g, '-')}-${Date.now().toString(36).slice(-4)}`,
       marker: mark,
+      name: `${mark} Encounter`,
       title: `${mark} Encounter`,
-      narrative: 'Stop. Do not draw a card. As your hand reaches into the shadows...',
+      event: eventType,
+      target: roomId || '',
+      room: roomId || '',
+      doorId: '',
+      monsterId: '',
       tile: [col, row],
-      room: roomId
+      onceOnly: true,
+      narrative: 'Stop. Do not draw a card. As your hand reaches into the shadows...',
+      actions: [
+        {
+          type: 'play_movie',
+          moviePath: 'res://assets/movies/quest1-intro.mp4',
+          title: `${mark} Cinematic`,
+          canSkip: true
+        }
+      ]
     };
     state.quest.storyTriggers.push(newTrigger);
+    state.quest.triggers = state.quest.storyTriggers;
     state.selectedEntity = { type: 'note', index: state.quest.storyTriggers.length - 1, data: newTrigger };
     updateInspectorUI();
     updateEntitySummaryList();
+    updateTriggerTabUI();
   }
 
   runValidation();
@@ -2613,8 +2809,9 @@ function deleteEntity(type, index) {
     state.quest.traps.splice(index, 1);
   } else if (type === 'wall-block') {
     state.quest.wallBlocks.splice(index, 1);
-  } else if (type === 'note') {
+  } else if (type === 'note' || type === 'trigger') {
     state.quest.storyTriggers.splice(index, 1);
+    state.quest.triggers = state.quest.storyTriggers;
   } else if (type === 'stairs' || type === 'start') {
     state.quest.startingStair = null;
     updateStartSuboptsUI();
@@ -2625,6 +2822,7 @@ function deleteEntity(type, index) {
   state.selectedEntity = null;
   updateInspectorUI();
   updateEntitySummaryList();
+  updateTriggerTabUI();
   runValidation();
   render();
 }
@@ -2740,14 +2938,22 @@ function updateInspectorUI() {
     dom.inspectName.value = tr.id;
     dom.inspectTrapDmg.value = tr.damage;
     dom.inspectGroupTrap.style.display = 'block';
-  } else if (type === 'note') {
+  } else if (type === 'note' || type === 'trigger') {
     const st = state.quest.storyTriggers[index];
     if (!st) return;
     dom.inspectPosText.textContent = `[${st.tile[0]}, ${st.tile[1]}]`;
-    dom.inspectName.value = st.marker;
-    dom.inspectNoteMarker.value = st.marker;
-    dom.inspectNoteTitle.value = st.title;
-    dom.inspectNoteNarrative.value = st.narrative;
+    dom.inspectName.value = st.title || st.name || st.marker;
+    dom.inspectNoteMarker.value = st.marker || 'Note A';
+    dom.inspectNoteTitle.value = st.title || st.name || '';
+    dom.inspectNoteNarrative.value = st.narrative || '';
+    if (dom.inspectTriggerEvent) {
+      dom.inspectTriggerEvent.value = st.event || 'on_room_entered';
+    }
+    if (dom.inspectTriggerOnceOnly) {
+      dom.inspectTriggerOnceOnly.checked = st.onceOnly !== false;
+    }
+    updateTriggerTargetOptions(st);
+    renderActionPipelineUI(st);
     dom.inspectGroupNote.style.display = 'block';
   } else if (type === 'start' || type === 'stairs') {
     const pos = state.quest.startingStair || [0, 1];
@@ -2989,6 +3195,437 @@ function updateEntitySummaryList() {
   });
 
   dom.badgeEntityCount.textContent = totalCount;
+}
+
+// -------------------------------------------------------------
+// Trigger & Action Pipeline Management
+// -------------------------------------------------------------
+function updateTriggerTargetOptions(st) {
+  if (!dom.inspectTriggerTargetGroup) return;
+
+  const eventKey = st.event || 'on_room_entered';
+  const eventDef = TRIGGER_EVENT_DEFS[eventKey] || TRIGGER_EVENT_DEFS.on_room_entered;
+
+  // Reset visibility
+  if (dom.inspectTriggerTargetRoom) dom.inspectTriggerTargetRoom.style.display = 'none';
+  if (dom.inspectTriggerTargetDoor) dom.inspectTriggerTargetDoor.style.display = 'none';
+  if (dom.inspectTriggerTargetMonster) dom.inspectTriggerTargetMonster.style.display = 'none';
+  if (dom.inspectTriggerTargetTile) dom.inspectTriggerTargetTile.style.display = 'none';
+
+  if (eventDef.targetType === 'room') {
+    if (dom.inspectTriggerTargetLbl) dom.inspectTriggerTargetLbl.textContent = 'Room:';
+    if (dom.inspectTriggerTargetRoom) {
+      dom.inspectTriggerTargetRoom.style.display = 'block';
+      dom.inspectTriggerTargetRoom.innerHTML = '<option value="">(Any / Current Room)</option>';
+      const rooms = state.blockmap?.rooms || [];
+      rooms.forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r.id;
+        opt.textContent = `${r.name || r.id} (${r.id})`;
+        if (st.room === r.id || st.target === r.id) opt.selected = true;
+        dom.inspectTriggerTargetRoom.appendChild(opt);
+      });
+    }
+  } else if (eventDef.targetType === 'door') {
+    if (dom.inspectTriggerTargetLbl) dom.inspectTriggerTargetLbl.textContent = 'Door:';
+    if (dom.inspectTriggerTargetDoor) {
+      dom.inspectTriggerTargetDoor.style.display = 'block';
+      dom.inspectTriggerTargetDoor.innerHTML = '<option value="">(Any Door)</option>';
+      const doors = state.quest.doors || [];
+      doors.forEach((d) => {
+        const opt = document.createElement('option');
+        opt.value = d.id;
+        opt.textContent = `${d.id} [${d.from[0]},${d.from[1]}] ${d.is_secret ? '🔮 Secret' : (d.state === 'open' ? '🔓 Open' : '🔒 Closed')}`;
+        if (st.doorId === d.id || st.target === d.id) opt.selected = true;
+        dom.inspectTriggerTargetDoor.appendChild(opt);
+      });
+    }
+  } else if (eventDef.targetType === 'monster') {
+    if (dom.inspectTriggerTargetLbl) dom.inspectTriggerTargetLbl.textContent = 'Monster:';
+    if (dom.inspectTriggerTargetMonster) {
+      dom.inspectTriggerTargetMonster.style.display = 'block';
+      dom.inspectTriggerTargetMonster.innerHTML = '<option value="">(Any Monster Defeated)</option>';
+      const monsters = state.quest.monsters || [];
+      monsters.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.id;
+        opt.textContent = `${m.name} (${m.type}) [${m.pos[0]},${m.pos[1]}]`;
+        if (st.monsterId === m.id || st.target === m.id) opt.selected = true;
+        dom.inspectTriggerTargetMonster.appendChild(opt);
+      });
+    }
+  } else if (eventDef.targetType === 'tile') {
+    if (dom.inspectTriggerTargetLbl) dom.inspectTriggerTargetLbl.textContent = 'Tile [X, Y]:';
+    if (dom.inspectTriggerTargetTile) dom.inspectTriggerTargetTile.style.display = 'flex';
+    if (dom.inspectTriggerTileX) dom.inspectTriggerTileX.value = st.tile ? st.tile[0] : 0;
+    if (dom.inspectTriggerTileY) dom.inspectTriggerTileY.value = st.tile ? st.tile[1] : 0;
+  } else {
+    if (dom.inspectTriggerTargetLbl) dom.inspectTriggerTargetLbl.textContent = 'Target:';
+    if (dom.inspectTriggerTargetGroup) dom.inspectTriggerTargetGroup.style.display = 'none';
+    return;
+  }
+  if (dom.inspectTriggerTargetGroup) dom.inspectTriggerTargetGroup.style.display = 'flex';
+}
+
+function renderActionPipelineUI(st) {
+  if (!dom.inspectTriggerActionsList) return;
+  const list = dom.inspectTriggerActionsList;
+  list.innerHTML = '';
+
+  const actions = st.actions || [];
+  if (actions.length === 0) {
+    list.innerHTML = `
+      <div style="color:#64748b; font-size:11px; font-style:italic; padding:8px 4px; text-align:center;">
+        No actions in this pipeline. Choose an action above and click "+ Add".
+      </div>
+    `;
+    return;
+  }
+
+  actions.forEach((act, idx) => {
+    const def = TRIGGER_ACTION_DEFS[act.type] || { name: act.type, icon: '⚡' };
+    const card = document.createElement('div');
+    card.className = 'action-step-card';
+
+    let fieldsHtml = '';
+    if (act.type === 'play_movie') {
+      fieldsHtml = `
+        <div class="action-step-row" style="margin-top:4px;">
+          <label style="font-size:10px; min-width:65px;">Movie Path:</label>
+          <input type="text" class="text-input text-input-xs act-field-movie" value="${escapeHtml(act.moviePath || '')}" placeholder="res://assets/movies/..." style="flex:1;">
+        </div>
+        <div class="action-step-row" style="margin-top:4px;">
+          <label style="font-size:10px; min-width:65px;">Title:</label>
+          <input type="text" class="text-input text-input-xs act-field-title" value="${escapeHtml(act.title || '')}" placeholder="Cinematic Scene" style="flex:1;">
+        </div>
+        <div class="action-step-row" style="margin-top:4px;">
+          <label class="custom-checkbox" style="font-size:10px;">Can Skip
+            <input type="checkbox" class="act-field-skip" ${act.canSkip !== false ? 'checked' : ''}>
+            <span class="checkmark"></span>
+          </label>
+        </div>
+      `;
+    } else if (act.type === 'attack_character') {
+      fieldsHtml = `
+        <div class="action-step-row" style="margin-top:4px;">
+          <label style="font-size:10px; min-width:65px;">Attacker:</label>
+          <input type="text" class="text-input text-input-xs act-field-attacker" value="${escapeHtml(act.attacker || 'Hazard')}" style="width:80px;">
+          <label style="font-size:10px; margin-left:6px;">Dice:</label>
+          <input type="number" class="num-input-xs act-field-dice" value="${act.damageDice || 2}" min="1" max="10" style="width:40px;">
+        </div>
+        <div class="action-step-row" style="margin-top:4px;">
+          <label style="font-size:10px; min-width:65px;">Target:</label>
+          <select class="dropdown dropdown-xs act-field-target" style="flex:1;">
+            <option value="active_hero" ${act.target !== 'all_heroes' ? 'selected' : ''}>Active Hero</option>
+            <option value="all_heroes" ${act.target === 'all_heroes' ? 'selected' : ''}>All Heroes in Room</option>
+          </select>
+        </div>
+      `;
+    } else if (act.type === 'cast_spell') {
+      const spells = [
+        ['ball_of_flame', '🔥 Ball of Flame (2 BP)'],
+        ['fire_of_wrath', '🔥 Fire of Wrath (2 BP)'],
+        ['sleep', '💤 Sleep (Incapacitate)'],
+        ['courage', '🦁 Courage (+2 Atk)'],
+        ['rock_skin', '🛡️ Rock Skin (+1 Def)'],
+        ['pass_through_rock', '🧱 Pass Through Rock'],
+        ['veil_of_mist', '🌫️ Veil of Mist'],
+        ['heal_body', '❤️ Heal Body (+4 BP)'],
+        ['water_of_healing', '💧 Water of Healing (+4 BP)'],
+        ['tempest', '🌪️ Tempest (Skip Turn)']
+      ];
+      const spellOptions = spells.map(([val, lbl]) => `<option value="${val}" ${act.spell === val ? 'selected' : ''}>${lbl}</option>`).join('');
+      fieldsHtml = `
+        <div class="action-step-row" style="margin-top:4px;">
+          <label style="font-size:10px; min-width:65px;">Spell:</label>
+          <select class="dropdown dropdown-xs act-field-spell" style="flex:1;">
+            ${spellOptions}
+          </select>
+        </div>
+        <div class="action-step-row" style="margin-top:4px;">
+          <label style="font-size:10px; min-width:65px;">Caster:</label>
+          <input type="text" class="text-input text-input-xs act-field-caster" value="${escapeHtml(act.caster || 'Morcar')}" style="width:90px;">
+          <label style="font-size:10px; margin-left:6px;">Target:</label>
+          <select class="dropdown dropdown-xs act-field-target" style="flex:1;">
+            <option value="active_hero" ${act.target !== 'all_heroes' ? 'selected' : ''}>Active Hero</option>
+            <option value="all_heroes" ${act.target === 'all_heroes' ? 'selected' : ''}>All Heroes</option>
+          </select>
+        </div>
+      `;
+    } else if (act.type === 'spring_trap') {
+      fieldsHtml = `
+        <div class="action-step-row" style="margin-top:4px;">
+          <label style="font-size:10px; min-width:65px;">Trap Type:</label>
+          <select class="dropdown dropdown-xs act-field-trap-type" style="flex:1;">
+            <option value="pit" ${act.trapType === 'pit' ? 'selected' : ''}>🕳️ Pit Trap</option>
+            <option value="spear" ${act.trapType === 'spear' ? 'selected' : ''}>🗡️ Spear Trap</option>
+            <option value="falling_block" ${act.trapType === 'falling_block' ? 'selected' : ''}>🧱 Falling Rock / Block</option>
+            <option value="poison" ${act.trapType === 'poison' ? 'selected' : ''}>☠️ Poison Gas</option>
+          </select>
+          <label style="font-size:10px; margin-left:6px;">Dmg:</label>
+          <input type="number" class="num-input-xs act-field-damage" value="${act.damage || 2}" min="1" max="10" style="width:40px;">
+        </div>
+      `;
+    } else if (act.type === 'show_message') {
+      fieldsHtml = `
+        <div class="action-step-row" style="margin-top:4px;">
+          <label style="font-size:10px; min-width:65px;">Title:</label>
+          <input type="text" class="text-input text-input-xs act-field-title" value="${escapeHtml(act.title || '')}" style="flex:1;">
+        </div>
+        <div class="action-step-row" style="margin-top:4px;">
+          <label style="font-size:10px; min-width:65px;">Message:</label>
+          <textarea class="text-input text-input-xs act-field-text" rows="2" style="flex:1;">${escapeHtml(act.text || act.narrative || '')}</textarea>
+        </div>
+      `;
+    } else if (act.type === 'spawn_monsters') {
+      const monOpts = Object.keys(MONSTER_DEFS).map(k =>
+        `<option value="${k}" ${act.monsterType === k ? 'selected' : ''}>${MONSTER_DEFS[k].icon} ${MONSTER_DEFS[k].name}</option>`
+      ).join('');
+      fieldsHtml = `
+        <div class="action-step-row" style="margin-top:4px;">
+          <label style="font-size:10px; min-width:65px;">Type:</label>
+          <select class="dropdown dropdown-xs act-field-monster-type" style="flex:1;">
+            ${monOpts}
+          </select>
+          <label style="font-size:10px; margin-left:6px;">Qty:</label>
+          <input type="number" class="num-input-xs act-field-count" value="${act.count || 1}" min="1" max="10" style="width:40px;">
+        </div>
+      `;
+    } else if (act.type === 'grant_reward') {
+      fieldsHtml = `
+        <div class="action-step-row" style="margin-top:4px;">
+          <label style="font-size:10px; min-width:65px;">Gold:</label>
+          <input type="number" class="num-input-xs act-field-gold" value="${act.gold || 50}" min="0" step="25" style="width:55px;">
+          <label style="font-size:10px; margin-left:6px;">Item:</label>
+          <input type="text" class="text-input text-input-xs act-field-item" value="${escapeHtml(act.item || '')}" placeholder="Potion / Card" style="flex:1;">
+        </div>
+      `;
+    } else if (act.type === 'end_game') {
+      fieldsHtml = `
+        <div class="action-step-row" style="margin-top:4px;">
+          <label style="font-size:10px; min-width:65px;">Outcome:</label>
+          <select class="dropdown dropdown-xs act-field-outcome" style="flex:1;">
+            <option value="victory" ${act.outcome !== 'defeat' ? 'selected' : ''}>🏆 Victory (Bounty &amp; Clear)</option>
+            <option value="defeat" ${act.outcome === 'defeat' ? 'selected' : ''}>💀 Defeat (Party Slain)</option>
+          </select>
+        </div>
+      `;
+    }
+
+    card.innerHTML = `
+      <div class="action-step-header">
+        <span class="action-step-badge">${def.icon} Step ${idx + 1}: ${def.name}</span>
+        <button type="button" class="btn btn-xs btn-danger btn-del-act" data-idx="${idx}" title="Delete Action">🗑️</button>
+      </div>
+      <div class="action-step-body">
+        ${fieldsHtml}
+      </div>
+    `;
+
+    // Wire up inputs inside the action card
+    const movieIn = card.querySelector('.act-field-movie');
+    if (movieIn) movieIn.addEventListener('input', () => { act.moviePath = movieIn.value; });
+    const titleIn = card.querySelector('.act-field-title');
+    if (titleIn) titleIn.addEventListener('input', () => { act.title = titleIn.value; });
+    const skipIn = card.querySelector('.act-field-skip');
+    if (skipIn) skipIn.addEventListener('change', () => { act.canSkip = skipIn.checked; });
+
+    const atkIn = card.querySelector('.act-field-attacker');
+    if (atkIn) atkIn.addEventListener('input', () => { act.attacker = atkIn.value; });
+    const diceIn = card.querySelector('.act-field-dice');
+    if (diceIn) diceIn.addEventListener('change', () => { act.damageDice = parseInt(diceIn.value) || 2; });
+    const tgtIn = card.querySelector('.act-field-target');
+    if (tgtIn) tgtIn.addEventListener('change', () => { act.target = tgtIn.value; });
+
+    const spellIn = card.querySelector('.act-field-spell');
+    if (spellIn) spellIn.addEventListener('change', () => { act.spell = spellIn.value; });
+    const casterIn = card.querySelector('.act-field-caster');
+    if (casterIn) casterIn.addEventListener('input', () => { act.caster = casterIn.value; });
+
+    const trapTypeIn = card.querySelector('.act-field-trap-type');
+    if (trapTypeIn) trapTypeIn.addEventListener('change', () => { act.trapType = trapTypeIn.value; });
+    const dmgIn = card.querySelector('.act-field-damage');
+    if (dmgIn) dmgIn.addEventListener('change', () => { act.damage = parseInt(dmgIn.value) || 2; });
+
+    const textIn = card.querySelector('.act-field-text');
+    if (textIn) textIn.addEventListener('input', () => { act.text = textIn.value; });
+
+    const mTypeIn = card.querySelector('.act-field-monster-type');
+    if (mTypeIn) mTypeIn.addEventListener('change', () => { act.monsterType = mTypeIn.value; });
+    const countIn = card.querySelector('.act-field-count');
+    if (countIn) countIn.addEventListener('change', () => { act.count = parseInt(countIn.value) || 1; });
+
+    const goldIn = card.querySelector('.act-field-gold');
+    if (goldIn) goldIn.addEventListener('change', () => { act.gold = parseInt(goldIn.value) || 0; });
+    const itemIn = card.querySelector('.act-field-item');
+    if (itemIn) itemIn.addEventListener('input', () => { act.item = itemIn.value; });
+
+    const outcomeIn = card.querySelector('.act-field-outcome');
+    if (outcomeIn) outcomeIn.addEventListener('change', () => { act.outcome = outcomeIn.value; });
+
+    const delBtn = card.querySelector('.btn-del-act');
+    if (delBtn) {
+      delBtn.addEventListener('click', () => {
+        recordHistory();
+        st.actions.splice(idx, 1);
+        renderActionPipelineUI(st);
+        updateTriggerTabUI();
+        render();
+      });
+    }
+
+    list.appendChild(card);
+  });
+}
+
+function updateTriggerTabUI() {
+  if (!dom.triggerList) return;
+  const list = dom.triggerList;
+  list.innerHTML = '';
+
+  const triggers = state.quest.storyTriggers || [];
+  if (dom.badgeTriggerCount) {
+    dom.badgeTriggerCount.textContent = triggers.length;
+  }
+
+  const filterVal = dom.filterTriggerEvent ? dom.filterTriggerEvent.value : 'all';
+  const filtered = triggers.filter(t => filterVal === 'all' || (t.event || 'on_room_entered') === filterVal);
+
+  if (filtered.length === 0) {
+    list.innerHTML = `
+      <div style="color:#64748b; font-size:11px; font-style:italic; padding:16px 8px; text-align:center;">
+        No triggers match current filter. Click "+ Add Trigger" above to create one.
+      </div>
+    `;
+    return;
+  }
+
+  filtered.forEach(st => {
+    const realIdx = triggers.indexOf(st);
+    const eventKey = st.event || 'on_room_entered';
+    const eventDef = TRIGGER_EVENT_DEFS[eventKey] || TRIGGER_EVENT_DEFS.on_room_entered;
+
+    let targetDesc = '';
+    if (eventDef.targetType === 'room') {
+      const room = state.blockmap?.rooms?.find(r => r.id === (st.room || st.target));
+      targetDesc = `Room: ${room ? (room.name || room.id) : (st.room || st.target || 'Current')}`;
+    } else if (eventDef.targetType === 'door') {
+      targetDesc = `Door: ${st.doorId || st.target || 'Any'}`;
+    } else if (eventDef.targetType === 'monster') {
+      const mon = state.quest.monsters?.find(m => m.id === (st.monsterId || st.target));
+      targetDesc = `Monster: ${mon ? mon.name : (st.monsterId || st.target || 'Any')}`;
+    } else if (eventDef.targetType === 'tile') {
+      targetDesc = `Tile: [${st.tile[0]}, ${st.tile[1]}]`;
+    } else {
+      targetDesc = `Target: Global Event`;
+    }
+
+    const actionBadgesHtml = (st.actions || []).map(a => {
+      const def = TRIGGER_ACTION_DEFS[a.type] || { name: a.type, icon: '⚡' };
+      return `<span class="badge" style="font-size:9px; padding:1px 5px; background:rgba(30,41,59,0.8);">${def.icon} ${def.name}</span>`;
+    }).join(' ');
+
+    const card = document.createElement('div');
+    card.className = 'trigger-card';
+    card.innerHTML = `
+      <div class="trigger-card-header">
+        <span class="trigger-event-badge badge-${eventKey}">${eventDef.icon} ${eventDef.label}</span>
+        <span style="font-weight:600; font-size:11px; color:#cbd5e1; margin-left:4px;">[${st.marker}]</span>
+        <button class="btn btn-xs btn-danger btn-del-trigger" data-idx="${realIdx}" title="Delete Trigger" style="margin-left:auto;">🗑️</button>
+      </div>
+      <div class="trigger-card-title">${escapeHtml(st.title || st.name || 'Untitled Trigger')}</div>
+      <div class="trigger-card-target">${escapeHtml(targetDesc)}</div>
+      <div class="trigger-card-actions-row" style="margin-top:6px; display:flex; gap:4px; flex-wrap:wrap;">
+        ${actionBadgesHtml || '<span style="color:#64748b; font-size:10px; font-style:italic;">No actions</span>'}
+      </div>
+    `;
+
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('.btn-del-trigger')) {
+        recordHistory();
+        deleteEntity('note', realIdx);
+        updateTriggerTabUI();
+      } else {
+        state.selectedEntity = { type: 'note', index: realIdx, data: st };
+        switchSidebarTab('tab-entity-inspector');
+        updateInspectorUI();
+        render();
+      }
+    });
+
+    list.appendChild(card);
+  });
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function addTrigger(opts = {}) {
+  const triggers = state.quest.storyTriggers;
+  const mark = opts.marker || `Note ${String.fromCharCode(65 + triggers.length)}`;
+  const eventType = opts.event || (state.blockmap?.rooms?.length > 0 ? 'on_room_entered' : 'on_tile_stepped_on');
+  const defaultRoom = state.blockmap?.rooms?.[0]?.id || '';
+  const newTrigger = {
+    id: opts.id || `trigger-${mark.toLowerCase().replace(/\s+/g, '-')}-${Date.now().toString(36).slice(-4)}`,
+    marker: mark,
+    name: opts.name || opts.title || `${mark} Trigger`,
+    title: opts.title || opts.name || `${mark} Trigger`,
+    event: eventType,
+    target: opts.target || (eventType === 'on_room_entered' ? defaultRoom : ''),
+    room: opts.room || (eventType === 'on_room_entered' ? defaultRoom : ''),
+    doorId: opts.doorId || '',
+    monsterId: opts.monsterId || '',
+    tile: opts.tile || [0, 0],
+    onceOnly: opts.onceOnly !== undefined ? Boolean(opts.onceOnly) : true,
+    narrative: opts.narrative || 'Mentor speaks: "As you step forward, ancient magic stirs..."',
+    actions: opts.actions || [
+      {
+        type: 'play_movie',
+        moviePath: 'res://assets/movies/quest1-intro.mp4',
+        title: `${mark} Cinematic`,
+        canSkip: true
+      }
+    ]
+  };
+
+  recordHistory();
+  triggers.push(newTrigger);
+  state.quest.triggers = triggers;
+  state.selectedEntity = { type: 'note', index: triggers.length - 1, data: newTrigger };
+  updateTriggerTabUI();
+  updateEntitySummaryList();
+  switchSidebarTab('tab-entity-inspector');
+  updateInspectorUI();
+  render();
+  return newTrigger;
+}
+
+function addActionToTrigger(trigger, actionType = 'play_movie', customParams = {}) {
+  if (!trigger) return null;
+  if (!Array.isArray(trigger.actions)) trigger.actions = [];
+  const def = TRIGGER_ACTION_DEFS[actionType] || { defaultParams: {} };
+  const newAct = {
+    type: actionType,
+    ...def.defaultParams,
+    ...customParams
+  };
+  trigger.actions.push(newAct);
+  return newAct;
+}
+
+function removeActionFromTrigger(trigger, actionIndex) {
+  if (!trigger || !Array.isArray(trigger.actions)) return false;
+  if (actionIndex >= 0 && actionIndex < trigger.actions.length) {
+    trigger.actions.splice(actionIndex, 1);
+    return true;
+  }
+  return false;
 }
 
 // -------------------------------------------------------------
@@ -4568,21 +5205,122 @@ function setupEventListeners() {
   });
 
   dom.inspectNoteMarker.addEventListener('input', () => {
-    if (state.selectedEntity?.type === 'note') {
-      state.quest.storyTriggers[state.selectedEntity.index].marker = dom.inspectNoteMarker.value;
+    if (state.selectedEntity?.type === 'note' || state.selectedEntity?.type === 'trigger') {
+      const st = state.quest.storyTriggers[state.selectedEntity.index];
+      st.marker = dom.inspectNoteMarker.value;
+      updateTriggerTabUI();
       render();
     }
   });
   dom.inspectNoteTitle.addEventListener('input', () => {
-    if (state.selectedEntity?.type === 'note') {
-      state.quest.storyTriggers[state.selectedEntity.index].title = dom.inspectNoteTitle.value;
+    if (state.selectedEntity?.type === 'note' || state.selectedEntity?.type === 'trigger') {
+      const st = state.quest.storyTriggers[state.selectedEntity.index];
+      st.title = dom.inspectNoteTitle.value;
+      st.name = dom.inspectNoteTitle.value;
+      updateTriggerTabUI();
     }
   });
   dom.inspectNoteNarrative.addEventListener('input', () => {
-    if (state.selectedEntity?.type === 'note') {
+    if (state.selectedEntity?.type === 'note' || state.selectedEntity?.type === 'trigger') {
       state.quest.storyTriggers[state.selectedEntity.index].narrative = dom.inspectNoteNarrative.value;
     }
   });
+  if (dom.inspectTriggerEvent) {
+    dom.inspectTriggerEvent.addEventListener('change', () => {
+      if (state.selectedEntity?.type === 'note' || state.selectedEntity?.type === 'trigger') {
+        const st = state.quest.storyTriggers[state.selectedEntity.index];
+        st.event = dom.inspectTriggerEvent.value;
+        updateTriggerTargetOptions(st);
+        updateTriggerTabUI();
+        render();
+      }
+    });
+  }
+  if (dom.inspectTriggerTargetRoom) {
+    dom.inspectTriggerTargetRoom.addEventListener('change', () => {
+      if (state.selectedEntity?.type === 'note' || state.selectedEntity?.type === 'trigger') {
+        const st = state.quest.storyTriggers[state.selectedEntity.index];
+        st.room = dom.inspectTriggerTargetRoom.value;
+        st.target = st.room;
+        updateTriggerTabUI();
+      }
+    });
+  }
+  if (dom.inspectTriggerTargetDoor) {
+    dom.inspectTriggerTargetDoor.addEventListener('change', () => {
+      if (state.selectedEntity?.type === 'note' || state.selectedEntity?.type === 'trigger') {
+        const st = state.quest.storyTriggers[state.selectedEntity.index];
+        st.doorId = dom.inspectTriggerTargetDoor.value;
+        st.target = st.doorId;
+        updateTriggerTabUI();
+      }
+    });
+  }
+  if (dom.inspectTriggerTargetMonster) {
+    dom.inspectTriggerTargetMonster.addEventListener('change', () => {
+      if (state.selectedEntity?.type === 'note' || state.selectedEntity?.type === 'trigger') {
+        const st = state.quest.storyTriggers[state.selectedEntity.index];
+        st.monsterId = dom.inspectTriggerTargetMonster.value;
+        st.target = st.monsterId;
+        updateTriggerTabUI();
+      }
+    });
+  }
+  if (dom.inspectTriggerTileX) {
+    dom.inspectTriggerTileX.addEventListener('change', () => {
+      if (state.selectedEntity?.type === 'note' || state.selectedEntity?.type === 'trigger') {
+        const st = state.quest.storyTriggers[state.selectedEntity.index];
+        if (!st.tile) st.tile = [0, 0];
+        st.tile[0] = parseInt(dom.inspectTriggerTileX.value) || 0;
+        updateTriggerTabUI();
+        render();
+      }
+    });
+  }
+  if (dom.inspectTriggerTileY) {
+    dom.inspectTriggerTileY.addEventListener('change', () => {
+      if (state.selectedEntity?.type === 'note' || state.selectedEntity?.type === 'trigger') {
+        const st = state.quest.storyTriggers[state.selectedEntity.index];
+        if (!st.tile) st.tile = [0, 0];
+        st.tile[1] = parseInt(dom.inspectTriggerTileY.value) || 0;
+        updateTriggerTabUI();
+        render();
+      }
+    });
+  }
+  if (dom.inspectTriggerOnceOnly) {
+    dom.inspectTriggerOnceOnly.addEventListener('change', () => {
+      if (state.selectedEntity?.type === 'note' || state.selectedEntity?.type === 'trigger') {
+        const st = state.quest.storyTriggers[state.selectedEntity.index];
+        st.onceOnly = dom.inspectTriggerOnceOnly.checked;
+      }
+    });
+  }
+  if (dom.btnAddAction) {
+    dom.btnAddAction.addEventListener('click', () => {
+      if (state.selectedEntity?.type === 'note' || state.selectedEntity?.type === 'trigger') {
+        const st = state.quest.storyTriggers[state.selectedEntity.index];
+        const actionType = dom.selectNewActionType ? dom.selectNewActionType.value : 'play_movie';
+        recordHistory();
+        addActionToTrigger(st, actionType);
+        renderActionPipelineUI(st);
+        updateTriggerTabUI();
+        render();
+      }
+    });
+  }
+  if (dom.btnAddTrigger) {
+    dom.btnAddTrigger.addEventListener('click', () => {
+      const filterVal = dom.filterTriggerEvent ? dom.filterTriggerEvent.value : 'all';
+      const eventType = filterVal !== 'all' ? filterVal : 'on_room_entered';
+      addTrigger({ event: eventType });
+    });
+  }
+  if (dom.filterTriggerEvent) {
+    dom.filterTriggerEvent.addEventListener('change', () => {
+      updateTriggerTabUI();
+    });
+  }
 
   dom.btnDeleteEntity.addEventListener('click', () => {
     if (!state.selectedEntity) return;
@@ -5188,9 +5926,17 @@ if (typeof module !== 'undefined' && module.exports) {
     setupSplitDividers,
     toggleRoomNames,
     updateRoomNamesToggleUI,
+    updateTriggerTabUI,
+    renderActionPipelineUI,
+    addActionToTrigger,
+    removeActionFromTrigger,
+    addTrigger,
+    buildCartridgePayload,
     state,
     dom,
     MONSTER_DEFS,
-    FURNITURE_DEFS
+    FURNITURE_DEFS,
+    TRIGGER_EVENT_DEFS,
+    TRIGGER_ACTION_DEFS
   };
 }

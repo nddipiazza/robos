@@ -12,8 +12,16 @@ const {
   setupSplitDividers,
   toggleRoomNames,
   updateRoomNamesToggleUI,
+  updateTriggerTabUI,
+  renderActionPipelineUI,
+  addActionToTrigger,
+  removeActionFromTrigger,
+  addTrigger,
+  buildCartridgePayload,
   state,
-  dom
+  dom,
+  TRIGGER_EVENT_DEFS,
+  TRIGGER_ACTION_DEFS
 } = require('../renderer/app.js');
 
 // Helpers mirroring app.js math & logic
@@ -1915,5 +1923,356 @@ test('Room Names Display & Toggles: renders centered labels, toggles layer visib
   }
 });
 
+// -------------------------------------------------------------
+// Test 22: Trigger Definitions: all 8 trigger event types
+// -------------------------------------------------------------
+test('Trigger Definitions: validates all 8 trigger events and their target requirements', () => {
+  const expectedEvents = [
+    'on_game_start',
+    'on_game_end',
+    'on_tile_stepped_on',
+    'on_door_opened',
+    'on_room_entered',
+    'on_monster_killed',
+    'on_room_searched_treasure',
+    'on_room_searched_traps'
+  ];
 
+  assert.ok(TRIGGER_EVENT_DEFS, 'TRIGGER_EVENT_DEFS must be defined');
 
+  expectedEvents.forEach(evtKey => {
+    assert.ok(TRIGGER_EVENT_DEFS[evtKey], `TRIGGER_EVENT_DEFS must contain ${evtKey}`);
+    const def = TRIGGER_EVENT_DEFS[evtKey];
+    assert.ok(typeof def.label === 'string' && def.label.length > 0, `${evtKey} must have a label`);
+    assert.ok(typeof def.icon === 'string' && def.icon.length > 0, `${evtKey} must have an icon`);
+    assert.ok(['none', 'tile', 'door', 'room', 'monster'].includes(def.targetType), `${evtKey} has valid targetType: ${def.targetType}`);
+  });
+
+  // Verify specific target requirements
+  assert.equal(TRIGGER_EVENT_DEFS.on_game_start.targetType, 'none');
+  assert.equal(TRIGGER_EVENT_DEFS.on_game_end.targetType, 'none');
+  assert.equal(TRIGGER_EVENT_DEFS.on_tile_stepped_on.targetType, 'tile');
+  assert.equal(TRIGGER_EVENT_DEFS.on_door_opened.targetType, 'door');
+  assert.equal(TRIGGER_EVENT_DEFS.on_room_entered.targetType, 'room');
+  assert.equal(TRIGGER_EVENT_DEFS.on_monster_killed.targetType, 'monster');
+  assert.equal(TRIGGER_EVENT_DEFS.on_room_searched_treasure.targetType, 'room');
+  assert.equal(TRIGGER_EVENT_DEFS.on_room_searched_traps.targetType, 'room');
+});
+
+// -------------------------------------------------------------
+// Test 23: Action Pipeline Definitions
+// -------------------------------------------------------------
+test('Action Pipeline Definitions: validates all action types including play_movie and combat/trap/spell triggers', () => {
+  const expectedActions = [
+    'play_movie',
+    'attack_character',
+    'cast_spell',
+    'spring_trap',
+    'show_message',
+    'spawn_monsters',
+    'grant_reward',
+    'end_game'
+  ];
+
+  assert.ok(TRIGGER_ACTION_DEFS, 'TRIGGER_ACTION_DEFS must be defined');
+
+  expectedActions.forEach(actKey => {
+    assert.ok(TRIGGER_ACTION_DEFS[actKey], `TRIGGER_ACTION_DEFS must contain ${actKey}`);
+    const def = TRIGGER_ACTION_DEFS[actKey];
+    assert.ok(typeof def.name === 'string' && def.name.length > 0, `${actKey} must have a name`);
+    assert.ok(typeof def.icon === 'string' && def.icon.length > 0, `${actKey} must have an icon`);
+    assert.ok(typeof def.defaultParams === 'object', `${actKey} must have defaultParams`);
+  });
+
+  // Check play_movie action
+  assert.equal(TRIGGER_ACTION_DEFS.play_movie.icon, '🎬');
+  assert.ok(TRIGGER_ACTION_DEFS.play_movie.defaultParams.moviePath.includes('.mp4'));
+  assert.equal(TRIGGER_ACTION_DEFS.play_movie.defaultParams.canSkip, true);
+
+  // Check attack_character action
+  assert.equal(TRIGGER_ACTION_DEFS.attack_character.icon, '⚔️');
+  assert.equal(TRIGGER_ACTION_DEFS.attack_character.defaultParams.damageDice, 2);
+  assert.equal(TRIGGER_ACTION_DEFS.attack_character.defaultParams.target, 'active_hero');
+
+  // Check cast_spell action
+  assert.equal(TRIGGER_ACTION_DEFS.cast_spell.icon, '🪄');
+  assert.equal(TRIGGER_ACTION_DEFS.cast_spell.defaultParams.spell, 'ball_of_flame');
+
+  // Check spring_trap action
+  assert.equal(TRIGGER_ACTION_DEFS.spring_trap.icon, '⚠️');
+  assert.equal(TRIGGER_ACTION_DEFS.spring_trap.defaultParams.trapType, 'falling_block');
+
+  // Check end_game action
+  assert.equal(TRIGGER_ACTION_DEFS.end_game.icon, '🏁');
+  assert.equal(TRIGGER_ACTION_DEFS.end_game.defaultParams.outcome, 'victory');
+});
+
+// -------------------------------------------------------------
+// Test 24: Trigger & Action Pipeline Manipulation
+// -------------------------------------------------------------
+test('Trigger & Action Pipeline Manipulation: adds and removes actions dynamically with custom properties', () => {
+  const trigger = {
+    id: 'test-trig-1',
+    marker: 'C',
+    event: 'on_door_opened',
+    doorId: 'door-1',
+    actions: []
+  };
+
+  // Add play_movie action
+  const act1 = addActionToTrigger(trigger, 'play_movie', {
+    moviePath: 'res://assets/movies/crypt_cinematic.mp4',
+    title: 'The Crypt Unsealed'
+  });
+  assert.equal(trigger.actions.length, 1);
+  assert.equal(act1.type, 'play_movie');
+  assert.equal(act1.moviePath, 'res://assets/movies/crypt_cinematic.mp4');
+  assert.equal(act1.title, 'The Crypt Unsealed');
+  assert.equal(act1.canSkip, true); // default merged
+
+  // Add attack_character action
+  const act2 = addActionToTrigger(trigger, 'attack_character', {
+    damageDice: 3,
+    attacker: 'Stone Gargoyle'
+  });
+  assert.equal(trigger.actions.length, 2);
+  assert.equal(act2.type, 'attack_character');
+  assert.equal(act2.damageDice, 3);
+  assert.equal(act2.attacker, 'Stone Gargoyle');
+
+  // Add spring_trap action
+  const act3 = addActionToTrigger(trigger, 'spring_trap', {
+    trapType: 'spear',
+    damage: 3
+  });
+  assert.equal(trigger.actions.length, 3);
+  assert.equal(act3.type, 'spring_trap');
+  assert.equal(act3.trapType, 'spear');
+
+  // Remove middle action (attack_character at index 1)
+  const removed = removeActionFromTrigger(trigger, 1);
+  assert.equal(removed, true);
+  assert.equal(trigger.actions.length, 2);
+  assert.equal(trigger.actions[0].type, 'play_movie');
+  assert.equal(trigger.actions[1].type, 'spring_trap');
+
+  // Attempt removing invalid index returns false
+  assert.equal(removeActionFromTrigger(trigger, 99), false);
+  assert.equal(trigger.actions.length, 2);
+});
+
+// -------------------------------------------------------------
+// Test 25: Cartridge Trigger Serialization & Backward Compatibility
+// -------------------------------------------------------------
+test('Cartridge Trigger Serialization: builds dual triggers and storyTriggers payloads with play_movie backward compatibility', () => {
+  const savedStateQuest = state.quest;
+  const savedBlockmap = state.blockmap;
+
+  try {
+    state.blockmap = {
+      id: 'test-dungeon',
+      gridDimensions: [26, 19],
+      tileSize: 39,
+      rooms: [
+        { id: 'room-1', name: 'Altar Chamber', x: 2, y: 2, w: 5, h: 5 }
+      ],
+      corridors: []
+    };
+
+    state.quest = {
+      title: 'Cinematic Dungeon Quest',
+      slug: 'cinematic-dungeon-quest',
+      startingStair: [2, 2],
+      doors: [
+        { id: 'door-altar', from: [2, 2], to: [2, 3], state: 'closed', is_secret: false, room: 'room-1' }
+      ],
+      monsters: [
+        { id: 'mon-boss', name: 'Gargoyle King', type: 'boss', bp: 5, mp: 4, atk: 4, def: 4, move: 6, pos: [4, 4], isBoss: true }
+      ],
+      furniture: [],
+      traps: [],
+      wallBlocks: [],
+      storyTriggers: [
+        {
+          id: 'trig-start',
+          marker: 'A',
+          title: 'Opening Prologue',
+          event: 'on_game_start',
+          target: '',
+          tile: [2, 2],
+          onceOnly: true,
+          narrative: 'A dark shadow falls upon the realm...',
+          actions: [
+            {
+              type: 'play_movie',
+              moviePath: 'res://assets/movies/quest1-intro.mp4',
+              title: 'The Journey Begins',
+              canSkip: true
+            },
+            {
+              type: 'show_message',
+              title: 'Mentor Whispers',
+              text: 'Find the Altar and break the seal.'
+            }
+          ]
+        },
+        {
+          id: 'trig-door',
+          marker: 'B',
+          title: 'Gargoyle Trap',
+          event: 'on_door_opened',
+          doorId: 'door-altar',
+          target: 'door-altar',
+          tile: [2, 2],
+          onceOnly: true,
+          actions: [
+            {
+              type: 'attack_character',
+              attacker: 'Dart Trap',
+              damageDice: 2,
+              target: 'active_hero'
+            }
+          ]
+        },
+        {
+          id: 'trig-boss-kill',
+          marker: 'C',
+          title: 'Victory Triumph',
+          event: 'on_monster_killed',
+          monsterId: 'mon-boss',
+          target: 'mon-boss',
+          tile: [4, 4],
+          onceOnly: true,
+          actions: [
+            {
+              type: 'play_movie',
+              moviePath: 'res://assets/movies/victory-scene.mp4',
+              title: 'Victory Fanfare'
+            },
+            {
+              type: 'end_game',
+              outcome: 'victory'
+            }
+          ]
+        }
+      ]
+    };
+
+    const payload = buildCartridgePayload();
+    assert.ok(payload);
+    assert.equal(payload.cartridgeId, 'cinematic-dungeon-quest');
+
+    const map = payload.maps['cinematic-dungeon-quest'];
+    assert.ok(map);
+
+    // Verify modern rich triggers array
+    assert.ok(Array.isArray(map.triggers), 'Payload must include map.triggers');
+    assert.equal(map.triggers.length, 3);
+    assert.equal(map.triggers[0].event, 'on_game_start');
+    assert.equal(map.triggers[0].actions.length, 2);
+    assert.equal(map.triggers[0].actions[0].type, 'play_movie');
+    assert.equal(map.triggers[0].actions[0].moviePath, 'res://assets/movies/quest1-intro.mp4');
+    assert.equal(map.triggers[1].event, 'on_door_opened');
+    assert.equal(map.triggers[1].doorId, 'door-altar');
+    assert.equal(map.triggers[2].event, 'on_monster_killed');
+    assert.equal(map.triggers[2].monsterId, 'mon-boss');
+
+    // Verify backward-compatible storyTriggers array
+    assert.ok(Array.isArray(map.storyTriggers), 'Payload must include map.storyTriggers');
+    assert.equal(map.storyTriggers.length, 3);
+    assert.equal(map.storyTriggers[0].movie, 'res://assets/movies/quest1-intro.mp4', 'Movie action mapped to movie field');
+    assert.equal(map.storyTriggers[0].banner, 'QUEST NOTE [A]');
+    assert.equal(map.storyTriggers[1].movie, '', 'No movie action leaves movie field empty string');
+    assert.equal(map.storyTriggers[2].movie, 'res://assets/movies/victory-scene.mp4', 'Boss kill victory movie mapped');
+    assert.equal(map.storyTriggers[2].actions.length, 2);
+  } finally {
+    state.quest = savedStateQuest;
+    state.blockmap = savedBlockmap;
+  }
+});
+
+// -------------------------------------------------------------
+// Test 26: Trigger Tab UI Filtering & Counts
+// -------------------------------------------------------------
+test('Trigger Tab UI: renders trigger cards, updates counts, and filters by event type', () => {
+  const savedDoc = global.document;
+  const savedStateQuest = state.quest;
+  const savedDomList = dom.triggerList;
+  const savedBadge = dom.badgeTriggerCount;
+  const savedFilter = dom.filterTriggerEvent;
+
+  try {
+    const listChildren = [];
+    const mockList = {
+      innerHTML: '',
+      appendChild: (el) => listChildren.push(el)
+    };
+
+    let countText = '';
+    const mockBadge = {
+      set textContent(v) { countText = String(v); },
+      get textContent() { return countText; }
+    };
+
+    let currentFilter = 'all';
+    const mockFilter = {
+      get value() { return currentFilter; },
+      set value(v) { currentFilter = v; }
+    };
+
+    dom.triggerList = mockList;
+    dom.badgeTriggerCount = mockBadge;
+    dom.filterTriggerEvent = mockFilter;
+
+    // Setup global document createElement for card generation
+    global.document = {
+      createElement: (tag) => {
+        const el = {
+          tagName: tag.toUpperCase(),
+          className: '',
+          innerHTML: '',
+          style: {},
+          children: [],
+          addEventListener: () => {},
+          querySelector: () => null,
+          appendChild: (c) => el.children.push(c)
+        };
+        return el;
+      }
+    };
+
+    state.quest = {
+      storyTriggers: [
+        { marker: 'A', title: 'Start Intro', event: 'on_game_start', tile: [0, 0], actions: [{ type: 'play_movie' }] },
+        { marker: 'B', title: 'Ambush Door', event: 'on_door_opened', tile: [2, 3], actions: [{ type: 'spawn_monsters' }] },
+        { marker: 'C', title: 'Treasure Chest Note', event: 'on_room_searched_treasure', tile: [4, 4], actions: [{ type: 'grant_reward' }] }
+      ]
+    };
+
+    // 1. Initial render with 'all' filter
+    updateTriggerTabUI();
+    assert.equal(mockBadge.textContent, '3', 'Total count should be 3');
+    assert.equal(listChildren.length, 3, 'All 3 triggers rendered');
+
+    // 2. Filter by on_door_opened
+    listChildren.length = 0;
+    currentFilter = 'on_door_opened';
+    updateTriggerTabUI();
+    assert.equal(listChildren.length, 1, 'Only 1 trigger matches on_door_opened');
+    assert.ok(listChildren[0].innerHTML.includes('badge-on_door_opened'), 'Has on_door_opened badge');
+    assert.ok(listChildren[0].innerHTML.includes('Ambush Door'));
+
+    // 3. Filter with no matches shows empty placeholder
+    listChildren.length = 0;
+    currentFilter = 'on_monster_killed';
+    updateTriggerTabUI();
+    assert.equal(listChildren.length, 0, 'No children appended when no matches');
+    assert.ok(mockList.innerHTML.includes('No triggers match current filter'), 'Shows empty message');
+  } finally {
+    global.document = savedDoc;
+    state.quest = savedStateQuest;
+    dom.triggerList = savedDomList;
+    dom.badgeTriggerCount = savedBadge;
+    dom.filterTriggerEvent = savedFilter;
+  }
+});

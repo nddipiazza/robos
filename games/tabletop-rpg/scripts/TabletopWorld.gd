@@ -2886,7 +2886,10 @@ func _load_active_cartridge(force_fresh: bool = false) -> void:
 
 	story_triggers.clear()
 	active_story_trigger_overlay.clear()
-	for st in map_data.get("storyTriggers", []):
+	var raw_triggers = map_data.get("triggers", [])
+	if raw_triggers.is_empty():
+		raw_triggers = map_data.get("storyTriggers", [])
+	for st in raw_triggers:
 		story_triggers.append(st.duplicate(true))
 
 	_rebuild_spatial_caches()
@@ -2958,6 +2961,7 @@ func _load_active_cartridge(force_fresh: bool = false) -> void:
 	if is_quest_begin():
 		_check_play_intro_movie()
 		_check_start_elf_spell_selection()
+		_check_event_triggers("on_game_start", {})
 	else:
 		if elf_spell_modal:
 			elf_spell_modal.visible = false
@@ -6181,6 +6185,8 @@ func complete_active_quest(quit_on_complete: bool = false) -> Dictionary:
 	# 5. Persist to cartridge on disk
 	_save_cartridge_quest_completion(q_id)
 
+	_check_event_triggers("on_game_end", { "status": "victory", "bounty": bounty })
+
 	_log("🏆 [QUEST COMPLETE] Quest '%s' successfully completed! Awarded %d gold bounty to party." % [str(active_q.get("title", "The Trial")), bounty])
 	_log("💾 Game state saved and marked as CLOSED.")
 
@@ -8305,6 +8311,8 @@ func open_door(from_pos: Vector2i, to_pos: Vector2i) -> bool:
 	else:
 		_log("[DOOR] %s opens the door." % hero_name)
 
+	_check_event_triggers("on_door_opened", { "door": d, "doorId": str(d.get("id", "")), "from": from_pos, "to": to_pos, "room": explicit_room }, hero)
+
 	update_party_vision()
 	_update_ui()
 	queue_redraw_all()
@@ -9997,6 +10005,7 @@ func attack_adjacent_monster(monster_id: String = "", weapon_id: String = "") ->
 		if is_m_def:
 			target_m["is_alive"] = false
 			_log("[DEFEATED] %s is DEFEATED!" % target_m.get("name"))
+			_check_event_triggers("on_monster_killed", { "monster": target_m, "monsterId": str(target_m.get("id", "")), "monsterType": str(target_m.get("monsterType", target_m.get("type", ""))) }, hero)
 		record_damage_event(
 			str(target_m.get("name", "Monster")),
 			str(target_m.get("id", "monster")),
@@ -11553,9 +11562,20 @@ func _find_untriggered_story_trigger(condition: String, room_id: String, tile: V
 		if st.get("triggered", false) and st.get("onceOnly", true):
 			continue
 		var cond = str(st.get("condition", ""))
-		if cond != condition:
+		var ev = str(st.get("event", ""))
+		var matches_cond = (cond == condition)
+		if not matches_cond and ev != "":
+			if condition == "search_treasure" and ev == "on_room_searched_treasure":
+				matches_cond = true
+			elif condition == "search_traps" and ev == "on_room_searched_traps":
+				matches_cond = true
+			elif condition == "line_of_sight" and (ev == "on_door_opened" or ev == "on_room_entered"):
+				matches_cond = true
+			elif condition == "enter_room" and ev == "on_room_entered":
+				matches_cond = true
+		if not matches_cond:
 			continue
-		var st_room = str(st.get("room", ""))
+		var st_room = str(st.get("room", st.get("target", "")))
 		var st_tile = st.get("tile", [])
 		var has_tile = (st_tile is Array and st_tile.size() >= 2)
 		var matches_room = (st_room != "" and st_room == room_id)
@@ -11581,11 +11601,12 @@ func _find_ground_story_trigger(step_tile: Vector2i, prev_tile: Vector2i = Vecto
 		if st.get("triggered", false) and st.get("onceOnly", true):
 			continue
 		var cond = str(st.get("condition", ""))
+		var ev = str(st.get("event", ""))
 		# Ground triggers exclude purely interactive/action-based triggers:
-		if cond in ["search_treasure", "search_traps", "line_of_sight", "dialogue", "combat", "interact"]:
+		if cond in ["search_treasure", "search_traps", "line_of_sight", "dialogue", "combat", "interact"] or ev in ["on_room_searched_treasure", "on_room_searched_traps", "on_door_opened", "on_monster_killed", "on_game_start", "on_game_end"]:
 			continue
 
-		var st_room = str(st.get("room", ""))
+		var st_room = str(st.get("room", st.get("target", "")))
 		var st_tile = st.get("tile", [])
 		var has_tile = (st_tile is Array and st_tile.size() >= 2)
 		var target_tile = Vector2i(-1, -1)
@@ -11628,6 +11649,12 @@ func _setup_story_trigger_overlay(trigger: Dictionary, hero: Dictionary) -> void
 		active_story_trigger_overlay.title
 	])
 	var movie_url = str(trigger.get("movie", trigger.get("cinematic", "")))
+	if movie_url == "":
+		for act in trigger.get("actions", []):
+			if act is Dictionary and str(act.get("type", "")) == "play_movie":
+				movie_url = str(act.get("moviePath", act.get("movie", "")))
+				if movie_url != "":
+					break
 	if movie_url != "":
 		play_movie(movie_url, "🎬 %s: %s" % [trigger.get("marker", "Note"), trigger.get("title", "Cinematic Scene")], true, true)
 	queue_redraw_all()
@@ -11694,6 +11721,9 @@ func resolve_story_trigger_overlay_click() -> Dictionary:
 			spawn_floating_text(m_pos, "AMBUSH!", Color(1.0, 0.15, 0.15), 2.2)
 			_log("[AMBUSH %s] ⚔️ A %s bursts into battle at (%d, %d)!" % [marker, m_copy.get("name", "Monster"), m_pos.x, m_pos.y])
 
+	# 4. Action Pipeline Dispatch
+	_execute_trigger_actions(trigger, hero)
+
 	_update_ui()
 	queue_redraw_all()
 	return {
@@ -11703,6 +11733,186 @@ func resolve_story_trigger_overlay_click() -> Dictionary:
 		"itemAwarded": item_data != null,
 		"monstersSpawned": spawns.size()
 	}
+
+func _execute_trigger_actions(trigger: Dictionary, hero: Dictionary) -> void:
+	var actions = trigger.get("actions", [])
+	if not (actions is Array):
+		return
+
+	for act in actions:
+		if not (act is Dictionary):
+			continue
+		var act_type = str(act.get("type", ""))
+		match act_type:
+			"play_movie":
+				var movie_path = str(act.get("moviePath", act.get("movie", "")))
+				if movie_path != "":
+					var title = str(act.get("title", trigger.get("title", "Cinematic Scene")))
+					var can_skip = bool(act.get("canSkip", true))
+					play_movie(movie_path, title, can_skip, true)
+			"attack_character":
+				var target_type = str(act.get("target", "active_hero"))
+				var attacker_name = str(act.get("attacker", "Hazard"))
+				var dmg_dice = int(act.get("damageDice", 2))
+				var dmg = int(act.get("damage", dmg_dice))
+				var targets: Array = [hero] if target_type == "active_hero" else heroes
+				for t_hero in targets:
+					if t_hero is Dictionary and int(t_hero.get("current_bp", 0)) > 0:
+						t_hero["current_bp"] = maxi(0, int(t_hero.get("current_bp", 1)) - dmg)
+						var th_pos = _to_grid_pos(t_hero.get("grid_pos", Vector2i(1, 1)))
+						spawn_floating_text(th_pos, "-%d HP %s" % [dmg, attacker_name.to_upper()], Color(1.0, 0.2, 0.2), 2.0)
+						_log("[ACTION] ⚔️ %s attacks %s for %d damage! (Remaining BP: %d)" % [attacker_name, t_hero.get("name", "Hero"), dmg, t_hero.get("current_bp")])
+			"cast_spell":
+				var spell_name = str(act.get("spell", "ball_of_flame"))
+				var caster_name = str(act.get("caster", "Morcar"))
+				var target_type = str(act.get("target", "active_hero"))
+				var targets: Array = [hero] if target_type == "active_hero" else heroes
+				for t_hero in targets:
+					if t_hero is Dictionary:
+						var th_pos = _to_grid_pos(t_hero.get("grid_pos", Vector2i(1, 1)))
+						var screen_pos = board_offset + Vector2((th_pos.x + 0.5) * tile_size, (th_pos.y + 0.5) * tile_size)
+						spawn_burst_vfx(screen_pos, Color(0.9, 0.4, 0.1), 60.0, 0.6)
+						spawn_floating_text(th_pos, "🪄 SPELL: %s" % spell_name.replace("_", " ").to_upper(), Color(0.9, 0.5, 1.0), 2.2)
+						_log("[ACTION] 🪄 %s casts '%s' upon %s!" % [caster_name, spell_name, t_hero.get("name", "Hero")])
+						if spell_name in ["ball_of_flame", "fire_of_wrath"]:
+							t_hero["current_bp"] = maxi(0, int(t_hero.get("current_bp", 1)) - 2)
+						elif spell_name == "sleep":
+							t_hero["is_sleeping"] = true
+						elif spell_name == "courage":
+							t_hero["courage_active"] = true
+						elif spell_name == "rock_skin":
+							t_hero["rock_skin_active"] = true
+			"spring_trap":
+				var trap_type = str(act.get("trapType", "pit")).to_lower()
+				var dmg = int(act.get("damage", 2))
+				var th_pos = _to_grid_pos(hero.get("grid_pos", Vector2i(1, 1)))
+				hero["current_bp"] = maxi(0, int(hero.get("current_bp", 1)) - dmg)
+				hero["hit_by_trap"] = true
+				spawn_floating_text(th_pos, "⚠️ TRAP: -%d BP" % dmg, Color(1.0, 0.3, 0.1), 2.0)
+				_log("[ACTION] ⚠️ A %s trap is sprung beneath %s, inflicting %d damage!" % [trap_type, hero.get("name", "Hero"), dmg])
+			"show_message":
+				var msg_title = str(act.get("title", trigger.get("title", "Notice")))
+				var msg_text = str(act.get("text", act.get("narrative", "")))
+				_log("[NOTICE: %s] 📜 %s" % [msg_title, msg_text])
+				spawn_floating_text(_to_grid_pos(hero.get("grid_pos", Vector2i(1, 1))), msg_title, Color(1.0, 0.9, 0.4), 2.5)
+			"spawn_monsters":
+				var m_type = str(act.get("monsterType", "skeleton"))
+				var count = int(act.get("count", 1))
+				var r_id = str(act.get("roomId", trigger.get("room", "")))
+				var h_pos = _to_grid_pos(hero.get("grid_pos", Vector2i(1, 1)))
+				for i in range(count):
+					var new_m = {
+						"id": "spawn-%s-%d" % [m_type, randi() % 10000],
+						"name": m_type.capitalize(),
+						"monsterType": m_type,
+						"grid_pos": Vector2i(h_pos.x + 1 + i, h_pos.y),
+						"is_alive": true,
+						"current_bp": 2,
+						"bodyPoints": 2,
+						"attackDice": 2,
+						"defendDice": 2
+					}
+					if r_id != "":
+						new_m["roomId"] = r_id
+					monsters.append(new_m)
+					discovered_monster_ids[str(new_m["id"])] = true
+					_log("[ACTION] 👾 A %s appears at (%d, %d)!" % [new_m["name"], new_m["grid_pos"].x, new_m["grid_pos"].y])
+			"grant_reward":
+				var gold_amt = int(act.get("gold", 0))
+				var item_str = str(act.get("item", ""))
+				if gold_amt > 0:
+					hero["gold"] = int(hero.get("gold", 0)) + gold_amt
+					_log("[ACTION] 💰 %s was granted %d gold!" % [hero.get("name", "Hero"), gold_amt])
+				if item_str != "":
+					if not (hero.get("inventory", []) is Array):
+						hero["inventory"] = []
+					hero["inventory"].append(item_str)
+					_log("[ACTION] 🎁 %s received item: %s" % [hero.get("name", "Hero"), item_str])
+			"end_game":
+				var outcome = str(act.get("outcome", "victory"))
+				if outcome == "victory":
+					complete_active_quest()
+				else:
+					_log("💀 [GAME OVER] The quest has ended in defeat.")
+					is_game_closed = true
+
+func _check_event_triggers(event_name: String, context: Dictionary = {}, hero: Dictionary = {}) -> Array:
+	var triggered_list: Array = []
+	if hero.is_empty():
+		hero = get_active_hero()
+
+	var context_room = str(context.get("room", context.get("roomId", "")))
+	var context_tile = context.get("tile", Vector2i(-1, -1))
+	var context_door = str(context.get("doorId", ""))
+	var context_monster = str(context.get("monsterId", ""))
+
+	for st in story_triggers:
+		if st.get("triggered", false) and st.get("onceOnly", true):
+			continue
+
+		var trig_event = str(st.get("event", ""))
+		# Fallbacks for legacy cartridges:
+		if trig_event == "":
+			var cond = str(st.get("condition", ""))
+			if cond == "search_treasure":
+				trig_event = "on_room_searched_treasure"
+			elif cond == "search_traps":
+				trig_event = "on_room_searched_traps"
+			elif cond in ["enter_room", "line_of_sight"]:
+				trig_event = "on_room_entered"
+			elif st.has("room") and str(st.get("room", "")) != "":
+				trig_event = "on_room_entered"
+			else:
+				trig_event = "on_tile_stepped_on"
+
+		if trig_event != event_name:
+			continue
+
+		# Check target match based on event
+		var matches = false
+		match event_name:
+			"on_game_start", "on_game_end":
+				matches = true
+			"on_room_entered", "on_room_searched_treasure", "on_room_searched_traps":
+				var st_room = str(st.get("room", st.get("target", "")))
+				if st_room == "" or context_room == "" or st_room == context_room:
+					matches = true
+			"on_tile_stepped_on":
+				var st_tile = st.get("tile", [])
+				if st_tile is Array and st_tile.size() >= 2:
+					var target_v = Vector2i(int(st_tile[0]), int(st_tile[1]))
+					if target_v == context_tile:
+						matches = true
+				elif st.has("x") and st.has("y"):
+					var target_v = Vector2i(int(st.get("x")), int(st.get("y")))
+					if target_v == context_tile:
+						matches = true
+			"on_door_opened":
+				var st_door = str(st.get("doorId", st.get("target", "")))
+				var st_room = str(st.get("room", ""))
+				if st_door != "" and st_door == context_door:
+					matches = true
+				elif st_door == "" and st_room != "" and context_room == st_room:
+					matches = true
+				elif st_door == "" and st_room == "":
+					matches = true
+			"on_monster_killed":
+				var st_mon = str(st.get("monsterId", st.get("target", "")))
+				var st_type = str(st.get("monsterType", ""))
+				var ctx_type = str(context.get("monsterType", ""))
+				if st_mon != "" and st_mon == context_monster:
+					matches = true
+				elif st_type != "" and st_type == ctx_type:
+					matches = true
+				elif st_mon == "" and st_type == "":
+					matches = true
+
+		if matches:
+			st["triggered"] = true
+			_setup_story_trigger_overlay(st, hero)
+			triggered_list.append(st)
+
+	return triggered_list
 
 func _on_btn_search_pressed() -> void:
 	search_room(true)
@@ -12119,6 +12329,9 @@ func search_traps() -> Dictionary:
 					var s_id = str(d.get("id", "secret_door"))
 					found_secret_doors.append(s_id)
 					spawn_floating_text(corridor_pos, "🚪 SECRET DOOR DISCOVERED", Color(0.9, 0.7, 1.0), 1.8)
+
+	var r_id = str(h_room.get("id", "")) if not h_room.is_empty() else ""
+	_check_event_triggers("on_room_searched_traps", { "room": r_id, "tile": h_pos }, hero)
 
 	_conclude_action_turn_state()
 

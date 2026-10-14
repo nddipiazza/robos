@@ -154,8 +154,8 @@
         </button>
 
         <button class="tool-btn" data-tool="note" title="Place story trigger / room encounter notes">
-          <span class="icon">📜</span>
-          <span class="label">Note</span>
+          <span class="icon">⚡</span>
+          <span class="label">Trigger</span>
         </button>
 
         <button class="tool-btn btn-erase" data-tool="erase" title="Erase placed quest entities">
@@ -357,6 +357,7 @@
         <div class="sidebar-tabs">
           <button class="side-tab active" data-tab="tab-quest-meta">🎯 Quest</button>
           <button class="side-tab" data-tab="tab-entity-inspector">🔍 Inspector</button>
+          <button class="side-tab" data-tab="tab-triggers">⚡ Triggers (<span id="badge-trigger-count">0</span>)</button>
           <button class="side-tab" data-tab="tab-entity-summary">📋 Entities (<span id="badge-entity-count">0</span>)</button>
           <button class="side-tab" data-tab="tab-layers">👁️ Layers</button>
           <button id="tab-btn-validation" class="side-tab" data-tab="tab-validation">⚠️ Validation (<span id="badge-val-count">0</span>)</button>
@@ -506,25 +507,115 @@
                 </div>
               </div>
 
-              <!-- Note specific fields -->
+              <!-- Trigger / Note specific fields & Action Pipeline -->
               <div id="inspect-group-note" class="inspect-group" style="display:none; margin-top:10px;">
                 <div class="form-row">
-                  <label for="inspect-note-marker"><strong>Marker:</strong></label>
-                  <input type="text" id="inspect-note-marker" class="text-input" style="width:90px;">
+                  <label for="inspect-note-marker"><strong>Marker / ID:</strong></label>
+                  <input type="text" id="inspect-note-marker" class="text-input" style="width:90px;" placeholder="e.g. Note A">
                 </div>
                 <div class="form-row" style="margin-top:8px;">
                   <label for="inspect-note-title"><strong>Title:</strong></label>
-                  <input type="text" id="inspect-note-title" class="text-input" style="flex:1;">
+                  <input type="text" id="inspect-note-title" class="text-input" style="flex:1;" placeholder="e.g. Verag Awakens">
                 </div>
+
                 <div class="form-row" style="margin-top:8px;">
-                  <label for="inspect-note-narrative"><strong>Narrative / Special Event:</strong></label>
-                  <textarea id="inspect-note-narrative" class="text-input" rows="4" style="width:100%;"></textarea>
+                  <label for="inspect-trigger-event"><strong>Trigger Event:</strong></label>
+                  <select id="inspect-trigger-event" class="dropdown" style="flex:1;">
+                    <option value="on_room_entered">🏰 On Room Entered</option>
+                    <option value="on_tile_stepped_on">👣 On Tile Stepped On</option>
+                    <option value="on_door_opened">🚪 On Door Opened</option>
+                    <option value="on_monster_killed">💀 On Monster Killed</option>
+                    <option value="on_room_searched_treasure">💰 On Searched for Treasure</option>
+                    <option value="on_room_searched_traps">🔍 On Searched for Traps</option>
+                    <option value="on_game_start">🎮 On Game Start</option>
+                    <option value="on_game_end">🏆 On Game End</option>
+                  </select>
+                </div>
+
+                <div id="inspect-trigger-target-group" class="form-row" style="margin-top:8px;">
+                  <label id="inspect-trigger-target-lbl"><strong>Target:</strong></label>
+                  <div style="flex:1; display:flex; gap:6px; flex-wrap:wrap;">
+                    <select id="inspect-trigger-target-room" class="dropdown" style="flex:1; min-width:120px;">
+                      <!-- Populated dynamically -->
+                    </select>
+                    <select id="inspect-trigger-target-door" class="dropdown" style="flex:1; min-width:120px; display:none;">
+                      <!-- Populated dynamically -->
+                    </select>
+                    <select id="inspect-trigger-target-monster" class="dropdown" style="flex:1; min-width:120px; display:none;">
+                      <!-- Populated dynamically -->
+                    </select>
+                    <div id="inspect-trigger-target-tile" style="display:none; align-items:center; gap:4px;">
+                      <span style="font-size:11px;">X:</span><input type="number" id="inspect-trigger-tile-x" class="num-input-xs" style="width:45px;">
+                      <span style="font-size:11px;">Y:</span><input type="number" id="inspect-trigger-tile-y" class="num-input-xs" style="width:45px;">
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-row" style="margin-top:8px;">
+                  <label class="custom-checkbox">Once Only (Single Trigger)
+                    <input type="checkbox" id="inspect-trigger-once-only" checked>
+                    <span class="checkmark"></span>
+                  </label>
+                </div>
+
+                <div class="form-row" style="margin-top:8px;">
+                  <label for="inspect-note-narrative"><strong>Parchment Narrative:</strong></label>
+                  <textarea id="inspect-note-narrative" class="text-input" rows="3" style="width:100%;" placeholder="Mentor speaks: 'The stones tremble beneath your feet...'"></textarea>
+                </div>
+
+                <!-- Action Pipeline Builder -->
+                <div class="action-pipeline-section" style="margin-top:14px; border-top:1px solid var(--border-color); padding-top:10px;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <strong style="color:var(--accent); font-size:12px;">⚡ Launched Actions</strong>
+                    <div style="display:flex; gap:6px;">
+                      <select id="select-new-action-type" class="dropdown" style="font-size:11px; padding:3px 6px;">
+                        <option value="play_movie">🎬 Play Movie</option>
+                        <option value="attack_character">⚔️ Attack Character</option>
+                        <option value="cast_spell">🪄 Spell is Cast</option>
+                        <option value="spring_trap">⚠️ Trap is Sprung</option>
+                        <option value="show_message">📜 Show Message</option>
+                        <option value="spawn_monsters">👾 Spawn Monsters</option>
+                        <option value="grant_reward">💰 Grant Reward</option>
+                        <option value="end_game">🏁 End Game</option>
+                      </select>
+                      <button id="btn-add-action" type="button" class="btn btn-sm btn-secondary" style="font-size:11px; padding:3px 8px;">+ Add</button>
+                    </div>
+                  </div>
+                  <div id="inspect-trigger-actions-list" class="action-pipeline-list">
+                    <!-- Action cards dynamically inserted here -->
+                  </div>
                 </div>
               </div>
 
               <div class="form-actions" style="margin-top:14px; display:flex; justify-content:space-between;">
                 <button id="btn-delete-entity" class="btn btn-sm btn-danger">🗑️ Delete Entity</button>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: Triggers & Action Sequences -->
+        <div id="tab-triggers" class="sidebar-content">
+          <div class="section-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+              <h3>⚡ Quest Triggers</h3>
+              <button id="btn-add-trigger" class="btn btn-sm btn-primary">+ Add Trigger</button>
+            </div>
+            <div class="form-row" style="margin-bottom:10px;">
+              <select id="filter-trigger-event" class="dropdown" style="width:100%; font-size:11px;">
+                <option value="all">Filter: All Events</option>
+                <option value="on_game_start">🎮 On Game Start</option>
+                <option value="on_game_end">🏆 On Game End</option>
+                <option value="on_tile_stepped_on">👣 On Tile Stepped On</option>
+                <option value="on_door_opened">🚪 On Door Opened</option>
+                <option value="on_room_entered">🏰 On Room Entered</option>
+                <option value="on_monster_killed">💀 On Monster Killed</option>
+                <option value="on_room_searched_treasure">💰 On Searched for Treasure</option>
+                <option value="on_room_searched_traps">🔍 On Searched for Traps</option>
+              </select>
+            </div>
+            <div id="trigger-list" class="trigger-card-list">
+              <!-- Dynamically populated trigger cards -->
             </div>
           </div>
         </div>
