@@ -104,7 +104,7 @@
         4,
         3
       ],
-      "roomId": "room-nw-crypt"
+      "roomId": "room-nw-1"
     }
   },
   "maps": {
@@ -2415,7 +2415,7 @@
           ],
           "state": "closed",
           "is_secret": false,
-          "room": "room-nw-crypt"
+          "room": "room-nw-1"
         }
       ],
       "furniture": [],
@@ -2428,8 +2428,8 @@
           "title": "Chamber Entrance",
           "marker": "A",
           "event": "on_room_entered",
-          "target": "room-nw-crypt",
-          "room": "room-nw-crypt",
+          "target": "room-nw-1",
+          "room": "room-nw-1",
           "doorId": "",
           "monsterId": "",
           "tile": [
@@ -2510,7 +2510,7 @@
             4,
             2
           ],
-          "room": "room-nw-crypt",
+          "room": "room-nw-1",
           "event": "on_room_entered",
           "onceOnly": true,
           "movie": "",
