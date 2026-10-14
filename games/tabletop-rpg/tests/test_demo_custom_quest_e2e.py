@@ -146,8 +146,8 @@ class TestDemoCustomQuestE2E(unittest.TestCase):
     def test_02_autonomous_demo_playthrough_with_screenshots(self):
         bdd_scenario_header(2, "Autonomous Demo Playthrough & Turn-by-Turn Evidence Capture")
 
-        bdd_step("WHEN", "Executing autonomous turns until quest completion (max 50 moves)")
-        max_steps = 50
+        bdd_step("WHEN", "Executing autonomous turns until quest completion (max 120 moves)")
+        max_steps = 120
         turn_shot_count = 0
         quest_won = False
 
@@ -155,10 +155,10 @@ class TestDemoCustomQuestE2E(unittest.TestCase):
             res = self.player.step_demo()
             self.assertTrue(res.get("success"), f"Step {step} failed: {res}")
 
-            time.sleep(0.08)
+            time.sleep(0.04)
 
             # Capture screenshot after each step
-            shot_path = os.path.join(SCREENSHOTS_DIR, f"turn_{step:02d}.png")
+            shot_path = os.path.join(SCREENSHOTS_DIR, f"turn_{step:03d}.png")
             shot_res = self.player.take_screenshot(shot_path)
             if shot_res.get("success") and os.path.exists(shot_path) and os.path.getsize(shot_path) > 1000:
                 self.captured_shots.append(shot_path)
@@ -174,14 +174,14 @@ class TestDemoCustomQuestE2E(unittest.TestCase):
             last_tx = tx_log[-1] if tx_log else {}
             last_desc = last_tx.get("description", "None")
 
-            print(f"    Step {step:02d} [Round {current_round}, {current_phase}]: {last_desc[:70]}")
+            print(f"    Step {step:03d} [Round {current_round}, {current_phase}]: {last_desc[:70]}")
 
             if is_won:
                 if not st.get("isQuestCompleted", False):
                     self.player.step_demo()
                     time.sleep(0.08)
                     st = self.player.get_state()
-                    final_shot = os.path.join(SCREENSHOTS_DIR, f"turn_{step+1:02d}.png")
+                    final_shot = os.path.join(SCREENSHOTS_DIR, f"turn_{step+1:03d}.png")
                     self.player.take_screenshot(final_shot)
                     if os.path.exists(final_shot):
                         self.captured_shots.append(final_shot)
@@ -201,7 +201,7 @@ class TestDemoCustomQuestE2E(unittest.TestCase):
         bdd_step("GIVEN", "The recorded transaction log from the playthrough")
         st = self.player.get_state()
         tx_log = st.get("transactionLog", [])
-        self.assertGreaterEqual(len(tx_log), 5, "Expected at least 5 logged transactions")
+        self.assertGreaterEqual(len(tx_log), 10, "Expected at least 10 logged transactions")
 
         action_types = {tx.get("action_type") for tx in tx_log}
         print(f"\n  Logged action types: {sorted(action_types)}")
@@ -212,7 +212,7 @@ class TestDemoCustomQuestE2E(unittest.TestCase):
             f"Has DOOR_OPEN: {'DOOR_OPEN' in action_types}",
             f"Has ATTACK: {'ATTACK' in action_types}",
             f"Has QUEST_COMPLETE: {'QUEST_COMPLETE' in action_types}",
-            f"Has END_TURN (or won in turn 1): {'END_TURN' in action_types or len(self.captured_shots) <= 6}"
+            f"Has END_TURN: {'END_TURN' in action_types}"
         ])
 
         self.assertIn("ROLL_MOVEMENT", action_types)
@@ -220,8 +220,7 @@ class TestDemoCustomQuestE2E(unittest.TestCase):
         self.assertIn("DOOR_OPEN", action_types)
         self.assertIn("ATTACK", action_types)
         self.assertIn("QUEST_COMPLETE", action_types)
-        if len(self.captured_shots) > 6:
-            self.assertIn("END_TURN", action_types)
+        self.assertIn("END_TURN", action_types)
 
         # Validate transaction structure
         for i, tx in enumerate(tx_log):
@@ -245,30 +244,85 @@ class TestDemoCustomQuestE2E(unittest.TestCase):
         bdd_step("WHEN", "Copying turn-by-turn milestone screenshots to artifacts directory")
         copied = []
         if os.path.exists(BRAIN_DIR):
-            milestones = [
-                ("turn_01.png", "tabletop_demo_turn_01_start.png"),
-                ("turn_02.png", "tabletop_demo_turn_02_advance.png"),
-                ("turn_03.png", "tabletop_demo_turn_03_door_breach.png"),
-                ("turn_05.png", "tabletop_demo_turn_05_combat.png"),
-            ]
             all_shots = sorted(glob.glob(os.path.join(SCREENSHOTS_DIR, "turn_*.png")))
-            if all_shots:
-                milestones.append((os.path.basename(all_shots[-1]), "tabletop_demo_turn_final_victory.png"))
-                if len(all_shots) >= 2:
-                    milestones.append((os.path.basename(all_shots[-2]), "tabletop_demo_turn_return_stair.png"))
+            num_shots = len(all_shots)
+            print(f"    Found {num_shots} total turn screenshots.")
 
-            for src_name, dst_name in milestones:
-                src_path = os.path.join(SCREENSHOTS_DIR, src_name)
-                dst_path = os.path.join(BRAIN_DIR, dst_name)
-                if os.path.exists(src_path):
-                    shutil.copy2(src_path, dst_path)
-                    copied.append(dst_name)
-                    print(f"    ✔ Copied {src_name} -> {dst_name} ({os.path.getsize(dst_path):,} bytes)")
+            # Select 20 evenly distributed milestones across the entire game
+            milestone_indices = [
+                0,                                   # Start
+                min(2, num_shots - 1),               # First room door
+                min(4, num_shots - 1),               # First combat
+                min(5, num_shots - 1),               # Room 9 breach
+                min(12, num_shots - 1),              # Spells cast
+                min(16, num_shots - 1),              # Ball of flame
+                min(20, num_shots - 1),              # Round 2 combat
+                min(25, num_shots - 1),              # Skeletons engage
+                min(33, num_shots - 1),              # Fire of wrath
+                min(39, num_shots - 1),              # Room 21 door breach
+                min(43, num_shots - 1),              # Enter Room 21
+                min(50, num_shots - 1),              # Boss engages
+                min(52, num_shots - 1),              # Boss spells
+                min(59, num_shots - 1),              # Boss battle / defeat
+                min(63, num_shots - 1),              # Elf healing
+                min(75, num_shots - 1),              # Withdrawal begins
+                min(79, num_shots - 1),              # Heroes reach stairs
+                min(86, num_shots - 1),              # Chaos warrior battle
+                min(90, num_shots - 1),              # Party assembled
+                num_shots - 1                        # Victory modal!
+            ]
+
+            milestone_labels = [
+                "tabletop_demo_01_heroes_at_stairs.png",
+                "tabletop_demo_02_corridor_advance.png",
+                "tabletop_demo_03_room8_door_breach.png",
+                "tabletop_demo_04_goblin_vanguard_slain.png",
+                "tabletop_demo_05_room9_door_breach.png",
+                "tabletop_demo_06_elf_casts_sleep.png",
+                "tabletop_demo_07_wizard_ball_of_flame.png",
+                "tabletop_demo_08_gm_orc_counterattack.png",
+                "tabletop_demo_09_room9_melee_skirmish.png",
+                "tabletop_demo_10_room21_door_breached.png",
+                "tabletop_demo_11_enter_boss_lair.png",
+                "tabletop_demo_12_boss_lightning_bolt.png",
+                "tabletop_demo_13_boss_slain.png",
+                "tabletop_demo_14_elf_water_of_healing.png",
+                "tabletop_demo_15_tactical_withdrawal.png",
+                "tabletop_demo_16_dwarf_elf_guard_stairs.png",
+                "tabletop_demo_17_chaos_warrior_slain.png",
+                "tabletop_demo_18_wizard_heals_barbarian.png",
+                "tabletop_demo_19_party_reunited_at_stairs.png",
+                "tabletop_demo_20_quest_victory_complete.png"
+            ]
+
+            # Copy 20 key milestone slides
+            for idx, label in zip(milestone_indices, milestone_labels):
+                if idx < num_shots:
+                    src = all_shots[idx]
+                    dst = os.path.join(BRAIN_DIR, label)
+                    shutil.copy2(src, dst)
+                    copied.append(label)
+
+            # Also maintain legacy names for backwards compatibility
+            legacy_map = {
+                "tabletop_demo_turn_01_start.png": all_shots[0] if num_shots > 0 else None,
+                "tabletop_demo_turn_02_advance.png": all_shots[min(1, num_shots - 1)] if num_shots > 0 else None,
+                "tabletop_demo_turn_03_door_breach.png": all_shots[min(2, num_shots - 1)] if num_shots > 0 else None,
+                "tabletop_demo_turn_05_combat.png": all_shots[min(4, num_shots - 1)] if num_shots > 0 else None,
+                "tabletop_demo_turn_return_stair.png": all_shots[min(85, num_shots - 1)] if num_shots > 0 else None,
+                "tabletop_demo_turn_final_victory.png": all_shots[-1] if num_shots > 0 else None,
+            }
+            for leg_name, leg_src in legacy_map.items():
+                if leg_src and os.path.exists(leg_src):
+                    dst = os.path.join(BRAIN_DIR, leg_name)
+                    shutil.copy2(leg_src, dst)
+                    if leg_name not in copied:
+                        copied.append(leg_name)
 
         bdd_step("THEN", f"Archived {len(copied)} evidence screenshots to artifacts", assertions=[
             f"Evidence files: {copied}"
         ])
-        self.assertGreaterEqual(len(copied), 3)
+        self.assertGreaterEqual(len(copied), 10)
 
 
 if __name__ == "__main__":
