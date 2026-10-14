@@ -2276,3 +2276,153 @@ test('Trigger Tab UI: renders trigger cards, updates counts, and filters by even
     dom.filterTriggerEvent = savedFilter;
   }
 });
+
+// -------------------------------------------------------------
+// Test 27: Dialogue Speech Bubbles & Display Message Actions
+// -------------------------------------------------------------
+test('Dialogue & Message Actions: validates dialogue sequences and modal message dialogs', () => {
+  const savedStateQuest = state.quest;
+  const savedBlockmap = state.blockmap;
+
+  try {
+    // 1. Verify Trigger Action Definitions
+    assert.ok(TRIGGER_ACTION_DEFS.dialogue, 'TRIGGER_ACTION_DEFS must include dialogue');
+    assert.equal(TRIGGER_ACTION_DEFS.dialogue.name, 'Character Dialogue');
+    assert.equal(TRIGGER_ACTION_DEFS.dialogue.icon, '💬');
+    assert.ok(Array.isArray(TRIGGER_ACTION_DEFS.dialogue.defaultParams.lines));
+    assert.equal(TRIGGER_ACTION_DEFS.dialogue.defaultParams.lines[0].speaker, 'barbarian');
+
+    assert.ok(TRIGGER_ACTION_DEFS.display_message, 'TRIGGER_ACTION_DEFS must include display_message');
+    assert.equal(TRIGGER_ACTION_DEFS.display_message.name, 'Display Message');
+    assert.equal(TRIGGER_ACTION_DEFS.display_message.icon, '📜');
+    assert.equal(TRIGGER_ACTION_DEFS.display_message.defaultParams.title, 'Chamber Inscription');
+    assert.equal(TRIGGER_ACTION_DEFS.display_message.defaultParams.buttonText, 'Continue');
+
+    // 2. Setup a quest scenario using dialogue sequence and display message
+    state.blockmap = {
+      id: 'dialogue-crypt',
+      title: 'Crypt of Whispers',
+      gridWidth: 28,
+      gridHeight: 21,
+      image: 'res://assets/boards/fan_dungeon_28x21.png',
+      rooms: [
+        { id: 'room-crypt-1', name: 'Crypt of Whispers', x: 2, y: 2, w: 5, h: 4 }
+      ]
+    };
+
+    state.quest = {
+      title: 'Crypt of Whispers Quest',
+      slug: 'dialogue-crypt-quest',
+      startingStair: [4, 1],
+      heroes: [
+        { id: 'barbarian', name: 'Barbarian', class: 'barbarian', bp: 8, mp: 2, atk: 3, def: 2, pos: [4, 1] }
+      ],
+      monsters: [
+        { id: 'mon-guardian', name: 'Crypt Guardian', type: 'orc', bp: 2, mp: 2, atk: 2, def: 2, pos: [4, 3] }
+      ],
+      furniture: [],
+      doors: [],
+      traps: [],
+      wallBlocks: [],
+      storyTriggers: [
+        {
+          id: 'trig-room-dialogue',
+          marker: 'A',
+          title: 'The Crypt Chamber',
+          event: 'on_room_entered',
+          room: 'room-crypt-1',
+          target: 'room-crypt-1',
+          tile: [4, 2],
+          onceOnly: true,
+          narrative: '',
+          actions: [
+            {
+              type: 'dialogue',
+              lines: [
+                { speaker: 'barbarian', text: 'Steady your blades! Something stirs in this chamber.', audio: 'res://audio/barbarian_warn.wav' },
+                { speaker: 'wizard', text: 'It is the Crypt Guardian! Slay it to break the ancient curse!', audio: '' }
+              ]
+            },
+            {
+              type: 'display_message',
+              title: 'The Guardian Awakes',
+              text: 'The iron doors seal shut with a hollow thud! Slay the guardian to survive.',
+              buttonText: 'Fight!'
+            }
+          ]
+        },
+        {
+          id: 'trig-guardian-defeat',
+          marker: 'B',
+          title: 'Curse Broken',
+          event: 'on_monster_killed',
+          monsterId: 'mon-guardian',
+          target: 'mon-guardian',
+          tile: [4, 3],
+          onceOnly: true,
+          actions: [
+            {
+              type: 'dialogue',
+              lines: [
+                { speaker: 'barbarian', text: 'The beast is slain! The crypt trembles as the seal shatters!' }
+              ]
+            },
+            {
+              type: 'play_movie',
+              moviePath: 'res://assets/movies/quest1-intro.mp4',
+              title: 'Victory Over the Crypt Guardian'
+            },
+            {
+              type: 'end_game',
+              outcome: 'victory'
+            }
+          ]
+        }
+      ]
+    };
+
+    // 3. Serialize and verify payload
+    const payload = buildCartridgePayload();
+    assert.ok(payload);
+    assert.equal(payload.cartridgeId, 'dialogue-crypt-quest');
+
+    const map = payload.maps['dialogue-crypt-quest'];
+    assert.ok(map);
+    assert.equal(map.triggers.length, 2);
+    assert.equal(map.storyTriggers.length, 2);
+
+    // Verify room entrance trigger
+    const enterTrigger = map.triggers[0];
+    assert.equal(enterTrigger.event, 'on_room_entered');
+    assert.equal(enterTrigger.actions.length, 2);
+    assert.equal(enterTrigger.actions[0].type, 'dialogue');
+    assert.equal(enterTrigger.actions[0].lines.length, 2);
+    assert.equal(enterTrigger.actions[0].lines[0].speaker, 'barbarian');
+    assert.equal(enterTrigger.actions[0].lines[0].audio, 'res://audio/barbarian_warn.wav');
+    assert.equal(enterTrigger.actions[0].lines[1].speaker, 'wizard');
+
+    assert.equal(enterTrigger.actions[1].type, 'display_message');
+    assert.equal(enterTrigger.actions[1].title, 'The Guardian Awakes');
+    assert.equal(enterTrigger.actions[1].buttonText, 'Fight!');
+
+    // Verify monster kill trigger
+    const killTrigger = map.triggers[1];
+    assert.equal(killTrigger.event, 'on_monster_killed');
+    assert.equal(killTrigger.monsterId, 'mon-guardian');
+    assert.equal(killTrigger.actions.length, 3);
+    assert.equal(killTrigger.actions[0].type, 'dialogue');
+    assert.equal(killTrigger.actions[0].lines[0].speaker, 'barbarian');
+    assert.equal(killTrigger.actions[1].type, 'play_movie');
+    assert.equal(killTrigger.actions[1].moviePath, 'res://assets/movies/quest1-intro.mp4');
+    assert.equal(killTrigger.actions[2].type, 'end_game');
+    assert.equal(killTrigger.actions[2].outcome, 'victory');
+
+    // Verify storyTriggers backward compatibility has cloned lines and movie
+    assert.equal(map.storyTriggers[0].actions[0].lines.length, 2);
+    assert.equal(map.storyTriggers[1].movie, 'res://assets/movies/quest1-intro.mp4');
+  } finally {
+    state.quest = savedStateQuest;
+    state.blockmap = savedBlockmap;
+  }
+});
+

@@ -1421,5 +1421,43 @@ body.resizing * {
   font-size: 10px;
 }
 
+.dialogue-bubble-card {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 4px;
+  padding: 6px;
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
 
+.dialogue-bubble-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+}
 
+.dialogue-bubble-count {
+  font-weight: 600;
+  color: #38bdf8;
+}
+
+.btn-add-bubble {
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px dashed rgba(56, 189, 248, 0.45);
+  color: #38bdf8;
+  font-size: 10px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 4px;
+  text-align: center;
+  transition: all 0.15s ease;
+}
+
+.btn-add-bubble:hover {
+  background: rgba(56, 189, 248, 0.25);
+  border-color: #38bdf8;
+}

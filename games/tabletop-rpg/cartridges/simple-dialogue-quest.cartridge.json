@@ -1,0 +1,305 @@
+{
+  "cartridgeVersion": "2.0.0",
+  "cartridgeId": "simple-dialogue-quest",
+  "header": {
+    "title": "Quest: The Crypt Guardian",
+    "slug": "simple-dialogue-quest",
+    "author": "RobOS Tabletop Studio",
+    "gameType": "tabletop",
+    "genre": "Tabletop Dungeon Crawler",
+    "ruleset": "heroquest",
+    "description": "Mentor speaks: \"Enter the ancient crypt, champions. Face the ancient guardian, break the dark seal, and claim your victory!\"",
+    "coverColor": "#1e1b4b",
+    "icon": "⚔️",
+    "mapCount": 1,
+    "heroCount": 4,
+    "monsterCount": 1,
+    "itemCount": 0,
+    "questCount": 1,
+    "startingMap": "simple-dialogue-quest",
+    "startingPosition": [
+      4,
+      1
+    ],
+    "createdDate": "2026-10-14T14:00:00.000Z"
+  },
+  "heroes": {
+    "barbarian": {
+      "id": "barbarian",
+      "slug": "barbarian",
+      "name": "Barbarian",
+      "heroClass": "Barbarian",
+      "bodyPoints": 8,
+      "mindPoints": 2,
+      "attackDice": 3,
+      "defendDice": 2,
+      "gold": 100,
+      "position": [
+        4,
+        1
+      ]
+    },
+    "dwarf": {
+      "id": "dwarf",
+      "slug": "dwarf",
+      "name": "Dwarf",
+      "heroClass": "Dwarf",
+      "bodyPoints": 7,
+      "mindPoints": 3,
+      "attackDice": 2,
+      "defendDice": 2,
+      "gold": 100,
+      "position": [
+        4,
+        1
+      ]
+    },
+    "elf": {
+      "id": "elf",
+      "slug": "elf",
+      "name": "Elf",
+      "heroClass": "Elf",
+      "bodyPoints": 6,
+      "mindPoints": 4,
+      "attackDice": 2,
+      "defendDice": 2,
+      "gold": 100,
+      "position": [
+        4,
+        1
+      ]
+    },
+    "wizard": {
+      "id": "wizard",
+      "slug": "wizard",
+      "name": "Wizard",
+      "heroClass": "Wizard",
+      "bodyPoints": 4,
+      "mindPoints": 6,
+      "attackDice": 1,
+      "defendDice": 2,
+      "gold": 100,
+      "position": [
+        4,
+        1
+      ]
+    }
+  },
+  "monsters": {
+    "mon-crypt-guardian": {
+      "id": "mon-crypt-guardian",
+      "slug": "crypt-guardian",
+      "name": "Crypt Guardian",
+      "monsterType": "skeleton",
+      "bodyPoints": 1,
+      "mindPoints": 1,
+      "attackDice": 2,
+      "defendDice": 1,
+      "movementSquares": 6,
+      "isBoss": true,
+      "isUndead": true,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        4,
+        3
+      ],
+      "roomId": "room-nw-crypt"
+    }
+  },
+  "maps": {
+    "simple-dialogue-quest": {
+      "id": "simple-dialogue-quest",
+      "title": "Quest: The Crypt Guardian",
+      "mapConfigurationId": "fan-dungeon-28x21",
+      "width": 28,
+      "height": 21,
+      "backgroundImage": "res://assets/boards/fan_dungeon_28x21.png",
+      "wanderingMonster": "skeleton",
+      "startingStair": [
+        4,
+        1
+      ],
+      "activeRooms": [
+        "room-nw-crypt"
+      ],
+      "rooms": [
+        {
+          "id": "room-nw-crypt",
+          "name": "Northwest Crypt",
+          "x": 2,
+          "y": 2,
+          "w": 5,
+          "h": 4,
+          "quadrant": "nw"
+        }
+      ],
+      "doors": [
+        {
+          "id": "fdoor-nw-crypt",
+          "from": [
+            4,
+            1
+          ],
+          "to": [
+            4,
+            2
+          ],
+          "state": "closed",
+          "is_secret": false,
+          "room": "room-nw-crypt"
+        }
+      ],
+      "furniture": [],
+      "wallBlocks": [],
+      "traps": [],
+      "triggers": [
+        {
+          "id": "trigger-room-enter",
+          "name": "Chamber Entrance",
+          "title": "Chamber Entrance",
+          "marker": "A",
+          "event": "on_room_entered",
+          "target": "room-nw-crypt",
+          "room": "room-nw-crypt",
+          "tile": [
+            4,
+            2
+          ],
+          "onceOnly": true,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "barbarian",
+                  "text": "Steady your blades! Something ancient stirs in this chamber."
+                },
+                {
+                  "speaker": "wizard",
+                  "text": "It is the Crypt Guardian! Slay it to break the ancient curse!"
+                }
+              ]
+            },
+            {
+              "type": "display_message",
+              "title": "The Guardian Awakes",
+              "text": "The iron doors seal shut with a hollow thud! Slay the guardian to survive.",
+              "buttonText": "Fight!"
+            }
+          ]
+        },
+        {
+          "id": "trigger-guardian-killed",
+          "name": "Victory Over the Guardian",
+          "title": "Victory Over the Guardian",
+          "marker": "B",
+          "event": "on_monster_killed",
+          "target": "mon-crypt-guardian",
+          "monsterId": "mon-crypt-guardian",
+          "tile": [
+            4,
+            3
+          ],
+          "onceOnly": true,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "barbarian",
+                  "text": "The beast is slain! The crypt trembles as the seal shatters!"
+                }
+              ]
+            },
+            {
+              "type": "play_movie",
+              "moviePath": "res://assets/movies/quest1-intro.mp4",
+              "title": "Victory Over the Crypt Guardian",
+              "canSkip": true
+            },
+            {
+              "type": "end_game",
+              "outcome": "victory"
+            }
+          ]
+        }
+      ],
+      "storyTriggers": [
+        {
+          "id": "trigger-room-enter",
+          "marker": "A",
+          "title": "Chamber Entrance",
+          "banner": "QUEST NOTE [A]",
+          "narrative": "",
+          "tile": [
+            4,
+            2
+          ],
+          "room": "room-nw-crypt",
+          "event": "on_room_entered",
+          "onceOnly": true,
+          "movie": "",
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "barbarian",
+                  "text": "Steady your blades! Something ancient stirs in this chamber."
+                },
+                {
+                  "speaker": "wizard",
+                  "text": "It is the Crypt Guardian! Slay it to break the ancient curse!"
+                }
+              ]
+            },
+            {
+              "type": "display_message",
+              "title": "The Guardian Awakes",
+              "text": "The iron doors seal shut with a hollow thud! Slay the guardian to survive.",
+              "buttonText": "Fight!"
+            }
+          ]
+        },
+        {
+          "id": "trigger-guardian-killed",
+          "marker": "B",
+          "title": "Victory Over the Guardian",
+          "banner": "QUEST NOTE [B]",
+          "narrative": "",
+          "tile": [
+            4,
+            3
+          ],
+          "room": "room-nw-crypt",
+          "event": "on_monster_killed",
+          "monsterId": "mon-crypt-guardian",
+          "onceOnly": true,
+          "movie": "res://assets/movies/quest1-intro.mp4",
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "barbarian",
+                  "text": "The beast is slain! The crypt trembles as the seal shatters!"
+                }
+              ]
+            },
+            {
+              "type": "play_movie",
+              "moviePath": "res://assets/movies/quest1-intro.mp4",
+              "title": "Victory Over the Crypt Guardian",
+              "canSkip": true
+            },
+            {
+              "type": "end_game",
+              "outcome": "victory"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

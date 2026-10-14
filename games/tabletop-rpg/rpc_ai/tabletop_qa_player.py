@@ -73,6 +73,14 @@ class TabletopQAPlayer:
         self.log("Resetting game to pristine cartridge state...")
         return self.execute_action("reset_game")
 
+    def insert_cartridge(self, cartridge_id: str) -> dict:
+        """Load and insert a different quest cartridge."""
+        self.log(f"Inserting cartridge '{cartridge_id}'...")
+        res = self._post("/cartridge/insert", {"cartridge": cartridge_id})
+        if self.human_delay > 0:
+            time.sleep(self.human_delay)
+        return res
+
     def set_hero_hp(self, hero_id: str, bp: int) -> dict:
         """Update a hero's Body Points."""
         self.log(f"Setting hero {hero_id} BP to {bp}...")
@@ -82,6 +90,11 @@ class TabletopQAPlayer:
         """Mark a hero as dead with 0 Body Points."""
         self.log(f"Defeating hero {hero_id} (BP = 0)...")
         return self.execute_action("defeat_hero", heroId=hero_id, current_bp=0, is_dead=True)
+
+    def defeat_monster(self, monster_id: str = "") -> dict:
+        """Mark a monster as dead with 0 Body Points and trigger defeat hooks."""
+        self.log(f"Defeating monster '{monster_id}' (BP = 0)...")
+        return self.execute_action("defeat_monster", monsterId=monster_id)
 
     def execute_action(self, action, **kwargs) -> dict:
         if isinstance(action, dict):
@@ -434,6 +447,18 @@ class TabletopQAPlayer:
     def dismiss_story_trigger(self) -> dict:
         self.log("Dismissing Quest Note story trigger overlay card...")
         return self.execute_action("dismiss_story_trigger")
+
+    def dismiss_message(self) -> dict:
+        self.log("Dismissing modal message dialog...")
+        return self.execute_action("dismiss_message")
+
+    def get_active_dialogue(self) -> dict:
+        st = self.get_state()
+        return st.get("activeDialogue", {})
+
+    def advance_dialogue(self) -> dict:
+        self.log("Advancing dialogue sequence to next bubble / dismissing...")
+        return self.execute_action("advance_dialogue")
 
     def trigger_story_event(self, marker_or_id: str) -> dict:
         self.log(f"Manually triggering story event '{marker_or_id}'...")
