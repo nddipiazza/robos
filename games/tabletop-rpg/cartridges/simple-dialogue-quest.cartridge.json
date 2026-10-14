@@ -23,6 +23,23 @@
     ],
     "createdDate": "2026-10-14T14:56:28.671Z"
   },
+  "quests": [
+    {
+      "id": "quest-crypt-guardian",
+      "slug": "simple-dialogue-quest",
+      "title": "Quest: The Crypt Guardian",
+      "campaign": "HeroQuest: Crypt of the Guardian",
+      "mapConfigId": "first-light-dungeon",
+      "goldReward": 100,
+      "bossTarget": "crypt guardian",
+      "briefing": "Enter the ancient crypt, champions. Face the ancient guardian, break the dark seal, and claim your victory!",
+      "primaryGoals": [
+        "Defeat the ancient Crypt Guardian in his chamber.",
+        "Explore the crypt and break the dark seal.",
+        "Ensure all living heroes survive the encounter."
+      ]
+    }
+  ],
   "heroes": {
     "barbarian": {
       "id": "barbarian",
@@ -2404,13 +2421,13 @@
       ],
       "doors": [
         {
-          "id": "fdoor-nw-crypt",
+          "id": "door-nw-1-w",
           "from": [
-            4,
-            1
+            0,
+            2
           ],
           "to": [
-            4,
+            1,
             2
           ],
           "state": "closed",

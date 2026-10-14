@@ -13,7 +13,7 @@ var current_cartridge_slug: String = ""
 
 func _ready() -> void:
 	print("[TabletopCartridgeManager] Ready for Tabletop Player Cartridges.")
-	call_deferred("_check_cli_cartridge")
+	_check_cli_cartridge()
 
 func _check_cli_cartridge() -> void:
 	var cmd_args = OS.get_cmdline_user_args() + OS.get_cmdline_args()
@@ -33,12 +33,16 @@ func _check_cli_cartridge() -> void:
 			var q_val = cmd_args[i + 1]
 			if q_val == "4" or q_val == "quest-4" or "fortress" in q_val:
 				cart_arg = "heroquest-fortress-fire-king"
+			elif q_val == "5" or q_val == "quest-5" or "dialogue" in q_val or "crypt" in q_val:
+				cart_arg = "simple-dialogue-quest"
 			else:
 				cart_arg = "heroquest-the-trial"
 		elif a.begins_with("--quest="):
 			var q_val = a.split("=")[1]
 			if q_val == "4" or q_val == "quest-4" or "fortress" in q_val:
 				cart_arg = "heroquest-fortress-fire-king"
+			elif q_val == "5" or q_val == "quest-5" or "dialogue" in q_val or "crypt" in q_val:
+				cart_arg = "simple-dialogue-quest"
 			else:
 				cart_arg = "heroquest-the-trial"
 
@@ -55,6 +59,8 @@ func _check_cli_cartridge() -> void:
 	# Normalize aliases
 	if cart_arg == "4" or cart_arg == "quest-4" or cart_arg == "fortress" or cart_arg == "fortress-fire-king":
 		cart_arg = "heroquest-fortress-fire-king"
+	elif cart_arg == "5" or cart_arg == "quest-5" or cart_arg == "dialogue" or cart_arg == "simple-dialogue":
+		cart_arg = "simple-dialogue-quest"
 	elif cart_arg == "1" or cart_arg == "quest-1" or cart_arg == "the-trial":
 		cart_arg = "heroquest-the-trial"
 
