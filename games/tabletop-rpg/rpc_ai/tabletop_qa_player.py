@@ -814,3 +814,28 @@ class TabletopQAPlayer:
     def get_movie_state(self) -> dict:
         st = self.get_state()
         return st.get("movie", {})
+
+    # --- Autonomous AI & Demo Mode Helpers ---
+    def start_demo(self) -> dict:
+        """Start autonomous demo mode."""
+        self.log("Starting autonomous demo mode...")
+        return self.execute_action("start_demo")
+
+    def stop_demo(self) -> dict:
+        """Stop / pause autonomous demo mode."""
+        self.log("Stopping autonomous demo mode...")
+        return self.execute_action("stop_demo")
+
+    def step_demo(self) -> dict:
+        """Step one turn in autonomous demo mode."""
+        return self.execute_action("step_demo")
+
+    def get_transaction_log(self) -> list:
+        """Get the full transaction log from the game engine."""
+        st = self.get_state()
+        return st.get("transactionLog", [])
+
+    def is_quest_completed(self) -> bool:
+        """Check if quest is marked completed."""
+        st = self.get_state()
+        return bool(st.get("isQuestCompleted", False)) or bool(st.get("questObjectivesCompleted", False))

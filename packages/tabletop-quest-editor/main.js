@@ -298,6 +298,39 @@ ipcMain.handle('quest:load-cartridge', async (_event, slugOrPath) => {
   }
 });
 
+// IPC: Open Native File Dialog for Cartridge
+ipcMain.handle('quest:open-cartridge-dialog', async () => {
+  try {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: 'Select Quest Cartridge (.cartridge.json)',
+      defaultPath: CARTRIDGES_DIR,
+      properties: ['openFile'],
+      filters: [
+        { name: 'Quest Cartridge JSON', extensions: ['json'] },
+        { name: 'All Files', extensions: ['*'] }
+      ]
+    });
+
+    if (result.canceled || !result.filePaths || result.filePaths.length === 0) {
+      return { canceled: true };
+    }
+
+    const fullPath = result.filePaths[0];
+    const raw = fs.readFileSync(fullPath, 'utf8');
+    const cartridge = JSON.parse(raw);
+    const slug = path.basename(fullPath, '.cartridge.json');
+
+    return {
+      success: true,
+      cartridge,
+      slug,
+      filePath: fullPath
+    };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
 // IPC: Save Cartridge
 ipcMain.handle('quest:save-cartridge', async (_event, payload) => {
   try {

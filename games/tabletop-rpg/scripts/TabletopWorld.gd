@@ -23,6 +23,43 @@ var movement_start_pos: Vector2i = Vector2i(-1, -1)
 var movement_trail: Array[Vector2i] = []
 var turn_state: String = "awaiting_roll" # "awaiting_roll", "moving", "action_taken", "turn_complete"
 var combat_log: Array[String] = []
+var transaction_log: Array[Dictionary] = []
+var verbose_combat_log: bool = true
+
+func record_transaction(action_type: String, actor_id: String, actor_name: String, description: String, data: Dictionary = {}) -> Dictionary:
+	var tx_entry = {
+		"id": transaction_log.size() + 1,
+		"round": current_round,
+		"phase": current_phase,
+		"actor_id": actor_id,
+		"actor_name": actor_name,
+		"action_type": action_type,
+		"description": description,
+		"data": data,
+		"timestamp": Time.get_unix_time_from_system()
+	}
+	transaction_log.append(tx_entry)
+	if verbose_combat_log:
+		_log("[TX #%d] %s" % [tx_entry["id"], description])
+	return tx_entry
+
+func _is_returning_to_stairs_allowed() -> bool:
+	if _quest_completed or get_game_state() == "quest_victory":
+		return true
+	var objs = get_quest_objectives()
+	var has_slay_boss = false
+	var slay_boss_completed = false
+	for obj in objs:
+		if str(obj.get("id")) == "slay_boss":
+			has_slay_boss = true
+			if bool(obj.get("completed", false)):
+				slay_boss_completed = true
+	if has_slay_boss:
+		return slay_boss_completed
+	var living_m = monsters.filter(func(m): return bool(m.get("is_alive", false)) and int(m.get("current_bp", 1)) > 0)
+	if living_m.is_empty():
+		return true
+	return false
 
 func is_gm_role() -> bool:
 	return current_role == "gm" or current_role == "gamemaster" or current_role == "dm" or current_role == "dunmaster"
@@ -5290,6 +5327,9 @@ func get_active_quest_objective() -> Dictionary:
 			]
 
 	return {
+		"id": str(active_q.get("id", "quest-1")),
+		"slug": str(active_q.get("slug", current_slug)),
+		"bossTarget": str(active_q.get("bossTarget", "")),
 		"campaign": campaign_title,
 		"title": quest_title,
 		"briefing": briefing,
@@ -6140,6 +6180,10 @@ func get_quest_objectives() -> Array[Dictionary]:
 	
 	# Boss / Primary Target Check
 	var boss_target = str(active_q.get("bossTarget", "")).to_lower()
+	if boss_target == "":
+		var q_list = cart.get("quests", [])
+		if not q_list.is_empty() and q_list[0] is Dictionary:
+			boss_target = str(q_list[0].get("bossTarget", "")).to_lower()
 	var living_monsters = monsters.filter(func(m): return bool(m.get("is_alive", false)) and int(m.get("current_bp", 1)) > 0)
 	var any_monster_alive = not living_monsters.is_empty()
 	
@@ -6222,9 +6266,9 @@ func get_quest_objectives() -> Array[Dictionary]:
 	elif is_boss_dead and has_living_heroes:
 		var hero_at_stairs = living_heroes.any(func(h):
 			var pos = _to_grid_pos(h.get("grid_pos"))
-			if exit_stair != Vector2i(-1, -1):
-				return is_exit_stair_tile(pos) or (bool(h.get("has_departed_start", false)) and is_starting_stair_tile(pos))
-			return bool(h.get("has_departed_start", false)) and is_starting_stair_tile(pos)
+			if exit_stair != Vector2i(-1, -1) and exit_stair.x >= 0 and exit_stair.y >= 0:
+				return is_exit_stair_tile(pos) or is_starting_stair_tile(pos)
+			return is_starting_stair_tile(pos)
 		)
 		if hero_at_stairs or not any_monster_alive:
 			party_surviving = true
@@ -6284,6 +6328,7 @@ func complete_active_quest(quit_on_complete: bool = false) -> Dictionary:
 	_check_event_triggers("on_game_end", { "status": "victory", "bounty": bounty })
 
 	_log("🏆 [QUEST COMPLETE] Quest '%s' successfully completed! Awarded %d gold bounty to party." % [str(active_q.get("title", "The Trial")), bounty])
+	record_transaction("QUEST_COMPLETE", "party", "Adventuring Party", "Quest '%s' successfully completed! Awarded %d gold bounty to party." % [str(active_q.get("title", "The Trial")), bounty], { "questId": q_id, "bounty": bounty, "slug": slug })
 	_log("💾 Game state saved and marked as CLOSED.")
 
 	_update_ui()
@@ -7286,8 +7331,9 @@ func _execute_auto_play_step() -> void:
 	if hero.size() == 0:
 		return
 
-	# If pristine starting sequence (Round 1 at start stairwell), run opening gambit 1-10
-	var is_opening_stair = (current_round == 1 and not bool(heroes[0].get("has_departed_start", false)))
+	# If pristine starting sequence (Round 1 at start stairwell), run opening gambit 1-10 ONLY for The Trial
+	var is_trial = CartridgeManager.current_cartridge_slug == "heroquest-the-trial" or str(CartridgeManager.active_cartridge.get("cartridgeId", "")) == "heroquest-the-trial"
+	var is_opening_stair = (current_round == 1 and not bool(heroes[0].get("has_departed_start", false)) and is_trial and starting_stair == Vector2i(0, 1))
 	if is_opening_stair and auto_play_step <= 10:
 		match auto_play_step:
 			1:
@@ -7348,14 +7394,22 @@ func _execute_mentor_ai_party_step() -> void:
 
 	# 2. Phase Check: Zargon / Game Master Phase
 	if current_phase == "gm_phase":
-		if is_headless_mode():
+		if is_headless_mode() or CartridgeManager.auto_play_enabled:
 			ai_monster_turn()
 		else:
 			if pending_enemy_turn_monsters.is_empty() and enemy_turn_stage == "idle":
 				start_ai_monster_turn_sequence()
 		return
 
-	# 3. Quest Outcome Evaluation: Check living heroes and monsters
+	# 3. Quest Outcome Evaluation: Check victory condition / living heroes and monsters
+	if are_all_quest_objectives_completed():
+		var q_title = str(get_active_quest_objective().get("title", "the dungeon"))
+		_log("🏆 [QUEST VICTORY] All objectives completed! The heroes triumph and complete %s!" % q_title)
+		complete_active_quest(false)
+		CartridgeManager.auto_play_enabled = false
+		_update_ui()
+		return
+
 	var living_heroes = heroes.filter(func(h): return int(h.get("current_bp", 0)) > 0 and bool(h.get("is_on_board", false)))
 	if living_heroes.is_empty():
 		_log("💀 [QUEST DEFEAT] All heroes have fallen in battle. Zargon claims total victory!")
@@ -7364,9 +7418,10 @@ func _execute_mentor_ai_party_step() -> void:
 		return
 
 	var live_monsters = monsters.filter(func(m): return bool(m.get("is_alive", false)) and int(m.get("current_bp", 1)) > 0)
-	if live_monsters.is_empty():
+	if live_monsters.is_empty() and not _quest_completed:
 		var q_title = str(get_active_quest_objective().get("title", "the dungeon"))
 		_log("🏆 [QUEST VICTORY] All minions of Zargon have been defeated! The heroes triumph and complete %s!" % q_title)
+		complete_active_quest(false)
 		CartridgeManager.auto_play_enabled = false
 		_update_ui()
 		return
@@ -7458,6 +7513,9 @@ func _execute_mentor_ai_party_step() -> void:
 					_log("[MENTOR AI] 🏃 %s moves toward %s (stepping to (%d, %d))." % [hero_name, reason, dest.x, dest.y])
 					if not move_hero(dest):
 						movement_remaining = 0
+					elif has_acted_this_turn:
+						movement_remaining = 0
+						turn_state = "turn_complete"
 					return
 				else:
 					movement_remaining = 0
@@ -7525,6 +7583,31 @@ func _find_best_hero_movement_target(hero: Dictionary, h_pos: Vector2i) -> Dicti
 	var hero_id = str(hero.get("id", "barbarian"))
 	var h_idx = active_hero_idx
 
+	# 0. Target: Return to starting stairway if returning to stairs is allowed!
+	if _is_returning_to_stairs_allowed():
+		if not is_starting_stair_tile(h_pos):
+			var r = get_starting_stair_rect_tiles()
+			var best_stair_path: Array[Vector2i] = []
+			for sy in range(r.position.y, r.position.y + r.size.y):
+				for sx in range(r.position.x, r.position.x + r.size.x):
+					var st_tile = Vector2i(sx, sy)
+					if not is_tile_occupied_by_hero(st_tile, h_idx):
+						var p = find_path(h_pos, st_tile, h_idx)
+						if p.size() > 1:
+							if best_stair_path.is_empty() or p.size() < best_stair_path.size():
+								best_stair_path = p
+			if not best_stair_path.is_empty():
+				return { "path": best_stair_path, "reason": "return to spiral stairway" }
+			for adj in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+				var adj_tile = starting_stair + adj
+				if not is_tile_occupied_by_hero(adj_tile, h_idx) and not is_border_tile(adj_tile) and not is_tile_wall_blocked(adj_tile):
+					var p = find_path(h_pos, adj_tile, h_idx)
+					if p.size() > 1:
+						if best_stair_path.is_empty() or p.size() < best_stair_path.size():
+							best_stair_path = p
+			if not best_stair_path.is_empty():
+				return { "path": best_stair_path, "reason": "assemble at spiral stairway" }
+
 	# 1. Target: Visible living monsters
 	var vis_monsters = _get_visible_living_monsters()
 	var best_m_path: Array[Vector2i] = []
@@ -7536,7 +7619,7 @@ func _find_best_hero_movement_target(hero: Dictionary, h_pos: Vector2i) -> Dicti
 		for tile in adj_tiles:
 			if tile.x < 0 or tile.x >= grid_cols or tile.y < 0 or tile.y >= grid_rows:
 				continue
-			if is_border_tile(tile) or tile == starting_stair:
+			if is_border_tile(tile) or (tile == starting_stair and not _is_returning_to_stairs_allowed()):
 				continue
 			if is_tile_occupied_by_hero(tile, h_idx) or is_tile_occupied_by_furniture(tile) or is_tile_wall_blocked(tile):
 				continue
@@ -7561,13 +7644,19 @@ func _find_best_hero_movement_target(hero: Dictionary, h_pos: Vector2i) -> Dicti
 			for pt in [f_pt, t_pt]:
 				if pt == h_pos:
 					continue
-				if is_border_tile(pt) or pt == starting_stair or is_tile_occupied_by_hero(pt, h_idx):
+				if is_border_tile(pt) or (pt == starting_stair and not _is_returning_to_stairs_allowed()):
 					continue
-				var p = find_path(h_pos, pt, h_idx)
-				if p.size() > 1:
-					if best_door_path.is_empty() or p.size() < best_door_path.size():
-						best_door_path = p
-						best_door_desc = "closed door at (%d, %d)" % [pt.x, pt.y]
+				var targets_to_try = [pt]
+				if is_tile_occupied_by_hero(pt, h_idx):
+					targets_to_try = [pt + Vector2i(1, 0), pt + Vector2i(-1, 0), pt + Vector2i(0, 1), pt + Vector2i(0, -1)]
+				for cand in targets_to_try:
+					if cand == h_pos or is_border_tile(cand) or is_tile_occupied_by_hero(cand, h_idx) or is_tile_wall_blocked(cand):
+						continue
+					var p = find_path(h_pos, cand, h_idx)
+					if p.size() > 1:
+						if best_door_path.is_empty() or p.size() < best_door_path.size():
+							best_door_path = p
+							best_door_desc = "closed door near (%d, %d)" % [pt.x, pt.y]
 
 	if not best_door_path.is_empty():
 		return { "path": best_door_path, "reason": best_door_desc }
@@ -7592,10 +7681,10 @@ func _find_best_hero_movement_target(hero: Dictionary, h_pos: Vector2i) -> Dicti
 		var lead_hero = heroes[0] # Barbarian
 		var lead_pos = _to_grid_pos(lead_hero.get("grid_pos", Vector2i(-1, -1)))
 		var lead_dist = absi(lead_pos.x - h_pos.x) + absi(lead_pos.y - h_pos.y)
-		if lead_dist > 2:
+		if lead_dist > 1:
 			var lead_adjs = [lead_pos + Vector2i(1, 0), lead_pos + Vector2i(-1, 0), lead_pos + Vector2i(0, 1), lead_pos + Vector2i(0, -1)]
 			for l_tile in lead_adjs:
-				if is_border_tile(l_tile) or l_tile == starting_stair or is_tile_occupied_by_hero(l_tile, h_idx):
+				if is_border_tile(l_tile) or (l_tile == starting_stair and not _is_returning_to_stairs_allowed()) or is_tile_occupied_by_hero(l_tile, h_idx):
 					continue
 				var p = find_path(h_pos, l_tile, h_idx)
 				if p.size() > 1:
@@ -8044,6 +8133,7 @@ func roll_movement_dice() -> Dictionary:
 
 	show_flashy_roll_number(int(roll.get("total", 0)))
 	trigger_movement_dice_roll(roll, str(hero.get("name", "Hero")), dice_vals)
+	record_transaction("ROLL_MOVEMENT", str(hero.get("id", "")), str(hero.get("name", "Hero")), "%s rolled %d movement (%s)" % [str(hero.get("name", "Hero")), roll.total, str(dice_vals)], { "total": roll.total, "dice": dice_vals })
 	_update_ui()
 	queue_redraw_all()
 	auto_save_game()
@@ -8052,9 +8142,10 @@ func roll_movement_dice() -> Dictionary:
 func find_path(start: Vector2i, goal: Vector2i, moving_hero_idx: int = -1) -> Array[Vector2i]:
 	if start == goal:
 		return [start]
-	# Rule: Cannot target starting_stair (starting tile cannot be stepped back onto)
+	# Rule: Cannot target starting_stair unless returning to stairs is allowed
 	if is_starting_stair_tile(goal):
-		return []
+		if not _is_returning_to_stairs_allowed():
+			return []
 	# Rule: Edge / border tiles of the map are strictly non-walkable UNLESS goal == exit_stair
 	if is_border_tile(goal) and not is_exit_stair_tile(goal):
 		return []
@@ -8092,9 +8183,10 @@ func find_path(start: Vector2i, goal: Vector2i, moving_hero_idx: int = -1) -> Ar
 			# Rule: Edge / border tiles of the map are strictly non-walkable UNLESS nxt == exit_stair
 			if is_border_tile(nxt) and not is_exit_stair_tile(nxt):
 				continue
-			# Rule: Starting stair tile cannot be stepped back onto
+			# Rule: Starting stair tile cannot be stepped back onto unless leaving or returning
 			if is_starting_stair_tile(nxt):
-				continue
+				if not (is_starting_stair_tile(start) or _is_returning_to_stairs_allowed()):
+					continue
 			if came_from.has(nxt):
 				continue
 			if not pass_rock:
@@ -8124,8 +8216,8 @@ func move_hero(target_pos: Vector2i, is_interactive: bool = false) -> bool:
 	if curr == target_pos:
 		return true
 
-	# Rule: Cannot step back onto the starting tile
-	if target_pos == starting_stair:
+	# Rule: Cannot step back onto the starting tile unless returning to stairs is allowed
+	if is_starting_stair_tile(target_pos) and not _is_returning_to_stairs_allowed():
 		_log("[WARNING] Cannot step back upon the starting stairway! The starting tile is not walkable.")
 		show_unavailable_notice("Cannot return to start tile", target_pos)
 		return false
@@ -8372,6 +8464,16 @@ func move_hero(target_pos: Vector2i, is_interactive: bool = false) -> bool:
 	_log("[MOVE] %s moved to (%d, %d). Remaining movement: %d" % [
 		hero.get("name"), final_pos.x, final_pos.y, movement_remaining
 	])
+	record_transaction("MOVE", str(hero.get("id", "")), str(hero.get("name", "Hero")), "%s moved from (%d, %d) to (%d, %d) (cost: %d, remaining: %d)" % [
+		hero.get("name"), curr.x, curr.y, final_pos.x, final_pos.y, actual_cost, movement_remaining
+	], {
+		"from": [curr.x, curr.y],
+		"to": [final_pos.x, final_pos.y],
+		"cost": actual_cost,
+		"remaining": movement_remaining
+	})
+	if are_all_quest_objectives_completed() and not _quest_completed:
+		complete_active_quest(false)
 	_update_ui()
 	queue_redraw_all()
 	auto_save_game()
@@ -8422,6 +8524,14 @@ func open_door(from_pos: Vector2i, to_pos: Vector2i) -> bool:
 		_log("[DOOR] %s opens the door." % hero_name)
 
 	_check_event_triggers("on_door_opened", { "door": d, "doorId": str(d.get("id", "")), "from": from_pos, "to": to_pos, "room": explicit_room }, hero)
+	record_transaction("DOOR_OPEN", str(hero.get("id", "")), hero_name, "%s opened door between (%d, %d) and (%d, %d) (revealed rooms: %s)" % [
+		hero_name, from_pos.x, from_pos.y, to_pos.x, to_pos.y, str(rooms_to_reveal)
+	], {
+		"from": [from_pos.x, from_pos.y],
+		"to": [to_pos.x, to_pos.y],
+		"revealedRooms": rooms_to_reveal,
+		"doorId": str(d.get("id", ""))
+	})
 
 	update_party_vision()
 	_update_ui()
@@ -10133,9 +10243,23 @@ func attack_adjacent_monster(monster_id: String = "", weapon_id: String = "") ->
 	if cur_w_id == "dagger" and (dx > 1 or dy > 1):
 		hero["equipped_weapon"] = "fists"
 
+	record_transaction("ATTACK", str(hero.get("id", "")), str(hero.get("name", "Hero")), "%s attacked %s with %s (skulls: %d, shields: %d, wounds: %d, target HP: %d)" % [
+		hero.get("name"), target_m.get("name"), w_def.get("name", "weapon"), res.total_skulls, res.effective_shields, res.wounds, target_m.get("current_bp")
+	], {
+		"targetId": str(target_m.get("id", "")),
+		"targetName": str(target_m.get("name", "")),
+		"weapon": w_def.get("name", "weapon"),
+		"skulls": res.total_skulls,
+		"shields": res.effective_shields,
+		"wounds": res.wounds,
+		"targetBp": int(target_m.get("current_bp", 0)),
+		"isDefeated": int(target_m.get("current_bp", 0)) <= 0
+	})
 	_conclude_action_turn_state()
 
 	last_combat_result = res
+	if are_all_quest_objectives_completed() and not _quest_completed:
+		complete_active_quest(false)
 	_update_ui()
 	queue_redraw_all()
 	return { "success": true, "result": res, "target": target_m.get("id"), "remaining_bp": target_m.get("current_bp") }
@@ -10262,6 +10386,20 @@ func dm_attack_hero(hero_id: String = "", attacker_monster: Variant = null) -> D
 	res["attacker_name"] = monster.get("name")
 	res["target"] = target_h.get("id")
 	res["target_name"] = target_h.get("name")
+
+	record_transaction("MONSTER_ATTACK", str(monster.get("id", "")), str(monster.get("name", "Monster")), "%s attacked %s (skulls: %d, shields: %d, wounds: %d, target HP: %d)" % [
+		monster.get("name"), target_h.get("name"), res.total_skulls, res.effective_shields, res.wounds, target_h.get("current_bp")
+	], {
+		"monsterId": str(monster.get("id", "")),
+		"monsterName": str(monster.get("name", "")),
+		"targetHeroId": str(target_h.get("id", "")),
+		"targetHeroName": str(target_h.get("name", "")),
+		"skulls": res.total_skulls,
+		"shields": res.effective_shields,
+		"wounds": res.wounds,
+		"targetBp": int(target_h.get("current_bp", 0)),
+		"isDefeated": int(target_h.get("current_bp", 0)) <= 0
+	})
 
 	last_combat_result = res
 	_update_ui()
@@ -10635,6 +10773,14 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 	res["used_spells"] = hero.get("used_spells", []).duplicate()
 	res["available_spells"] = _get_available_spells(hero)
 
+	record_transaction("SPELL_CAST", str(hero.get("id", "")), str(hero.get("name", "Hero")), "%s cast spell '%s' (target: %s)" % [
+		hero.get("name"), spell_name, target_id
+	], {
+		"spellId": s_id,
+		"spellName": spell_name,
+		"targetId": target_id,
+		"result": res
+	})
 	_conclude_action_turn_state()
 
 	last_spell_result = res
@@ -12357,6 +12503,14 @@ func search_room(is_interactive: bool = false) -> Dictionary:
 			hero.get("name"), h_room.get("name", r_id), tr_title, found_gold, hero.get("gold")
 		])
 		spawn_floating_text(h_pos, "+%d GOLD QUEST TREASURE" % found_gold if found_gold > 0 else "QUEST TREASURE!", Color(1.0, 0.85, 0.2), 2.0)
+		record_transaction("SEARCH_ROOM", hero_id, str(hero.get("name", "Hero")), "%s searched room %s: found quest treasure '%s' (%d gold)" % [
+			hero.get("name"), r_id, tr_title, found_gold
+		], {
+			"roomId": r_id,
+			"questTreasure": true,
+			"gold": found_gold,
+			"title": tr_title
+		})
 
 		if is_interactive:
 			_setup_treasure_card_overlay(spec_tr, hero, true)
@@ -12467,6 +12621,15 @@ func search_room(is_interactive: bool = false) -> Dictionary:
 				hero.get("name"), spawned_wm.get("name"), wm_pos.x, wm_pos.y
 			])
 			spawn_floating_text(wm_pos, "⚠️ WANDERING %s!" % str(spawned_wm.get("name")).to_upper(), Color(1.0, 0.25, 0.2), 2.0)
+
+	record_transaction("SEARCH_ROOM", hero_id, str(hero.get("name", "Hero")), "%s searched room %s: drew treasure card '%s' (%s)" % [
+		hero.get("name"), r_id, str(card.get("title", "Treasure")), card_type
+	], {
+		"roomId": r_id,
+		"cardType": card_type,
+		"cardTitle": str(card.get("title", "")),
+		"gold": found_gold
+	})
 
 	if is_interactive:
 		_setup_treasure_card_overlay(card, hero, false)
@@ -12709,12 +12872,15 @@ func _check_hero_enter_board(idx: int) -> void:
 
 func end_turn() -> void:
 	quest_begun = true
+	var cur_hero = get_active_hero()
+	var ending_phase = current_phase
+	var ending_actor = str(cur_hero.get("name", "Hero")) if ending_phase == "hero_phase" else "Zargon GM"
+	var ending_id = str(cur_hero.get("id", "hero")) if ending_phase == "hero_phase" else "zargon"
 	if not pending_flash_item.is_empty():
 		var p = pending_flash_item.duplicate(true)
 		pending_flash_item = {}
 		trigger_flash_new_item(p)
 	if current_phase == "hero_phase":
-		var cur_hero = get_active_hero()
 		if cur_hero.size() > 0:
 			if has_moved_this_turn or has_acted_this_turn:
 				cur_hero["has_departed_start"] = true
@@ -12757,6 +12923,15 @@ func end_turn() -> void:
 			_log("--- Round %d begins (Heroes Turn) ---" % current_round)
 			_log("Active hero: %s" % get_active_hero().get("name", "Hero"))
 			_check_hero_enter_board(active_hero_idx)
+
+	record_transaction("END_TURN", ending_id, ending_actor, "Concluded turn for %s. Active phase: %s, round: %d" % [
+		ending_actor, current_phase, current_round
+	], {
+		"prevPhase": ending_phase,
+		"phase": current_phase,
+		"round": current_round,
+		"activeHeroIdx": active_hero_idx
+	})
 
 	movement_remaining = 0
 	movement_rolled = false
@@ -17894,6 +18069,9 @@ func get_telemetry_state() -> Dictionary:
 		"combatLog": combat_log.slice(-15),
 		"recentCombatLog": combat_log.slice(-50),
 		"fullCombatLog": combat_log,
+		"transactionLog": transaction_log,
+		"transactionCount": transaction_log.size(),
+		"verboseCombatLog": verbose_combat_log,
 		"aiStepPending": is_ai_step_pending,
 		"pendingAiCommand": pending_ai_command,
 		"nextAiStep": get_next_ai_step_command(),
@@ -18849,9 +19027,14 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			CartridgeManager.auto_play_enabled = not CartridgeManager.auto_play_enabled
 			_update_ui()
 			return { "success": true, "demo_active": CartridgeManager.auto_play_enabled }
-		"step_ai", "execute_ai_step":
+		"step_ai", "execute_ai_step", "step_turn", "step_demo":
 			_execute_auto_play_step()
 			return { "success": true, "stepped": true, "step": auto_play_step, "phase": current_phase, "round": current_round }
+		"get_transaction_log":
+			return { "success": true, "transactions": transaction_log, "count": transaction_log.size() }
+		"set_verbose", "set_verbose_log":
+			verbose_combat_log = bool(action_data.get("verbose", true))
+			return { "success": true, "verboseCombatLog": verbose_combat_log }
 		"search_traps":
 			var res = search_traps()
 			return res

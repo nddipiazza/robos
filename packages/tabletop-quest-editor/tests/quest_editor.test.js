@@ -7,6 +7,7 @@ const fs = require('fs');
 
 const {
   validateQuest,
+  loadCartridge,
   interpretVoiceQuestCommands,
   executeVoiceMapCommands,
   setupSplitDividers,
@@ -2425,4 +2426,82 @@ test('Dialogue & Message Actions: validates dialogue sequences and modal message
     state.blockmap = savedBlockmap;
   }
 });
+
+test('Open Cartridge Dialog: opens native file dialog and populates quest state', async () => {
+  const savedStateQuest = JSON.parse(JSON.stringify(state.quest));
+  const savedBlockmap = JSON.parse(JSON.stringify(state.blockmap));
+
+  try {
+    let dialogOpened = false;
+    let cartridgeLoadedPath = '';
+
+    global.window = global.window || {};
+    global.window.robosQuestEditor = {
+      openCartridgeDialog: async () => {
+        dialogOpened = true;
+        return {
+          success: true,
+          filePath: '/fake/path/my-epic-quest.cartridge.json',
+          slug: 'my-epic-quest'
+        };
+      },
+      loadCartridge: async (filePath) => {
+        cartridgeLoadedPath = filePath;
+        return {
+          success: true,
+          slug: 'my-epic-quest',
+          cartridge: {
+            cartridgeId: 'my-epic-quest',
+            header: {
+              title: 'My Epic Test Quest',
+              description: 'Venture forth into the deep catacombs.'
+            },
+            maps: {
+              'my-epic-quest': {
+                wanderingMonster: 'fimir',
+                startingStair: [2, 3],
+                startingStairType: 'stairs_up_1x1',
+                doors: [
+                  { id: 'door-1', from: [2, 3], to: [2, 4], state: 'closed' }
+                ],
+                furniture: [],
+                traps: [],
+                monsters: [
+                  { id: 'm1', slug: 'skeleton', position: [5, 5], current_bp: 1 }
+                ]
+              }
+            }
+          }
+        };
+      },
+      loadBlockmap: async () => ({
+        success: true,
+        blockmap: {
+          id: 'first-light-dungeon',
+          title: 'First Light Dungeon',
+          gridDimensions: [26, 19],
+          rooms: []
+        }
+      })
+    };
+
+    // Test open dialog invocation
+    const openRes = await global.window.robosQuestEditor.openCartridgeDialog();
+    assert.equal(dialogOpened, true);
+    assert.equal(openRes.success, true);
+    assert.equal(openRes.filePath, '/fake/path/my-epic-quest.cartridge.json');
+
+    // Test loadCartridge invocation with result
+    await loadCartridge(openRes.filePath);
+    assert.equal(cartridgeLoadedPath, '/fake/path/my-epic-quest.cartridge.json');
+    assert.equal(state.quest.title, 'My Epic Test Quest');
+    assert.equal(state.quest.slug, 'my-epic-quest');
+    assert.equal(state.quest.wanderingMonster, 'fimir');
+    assert.deepEqual(state.quest.startingStair, [2, 3]);
+  } finally {
+    state.quest = savedStateQuest;
+    state.blockmap = savedBlockmap;
+  }
+});
+
 
