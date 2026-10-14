@@ -374,7 +374,10 @@ ipcMain.handle('quest:load-asset-image', async (_event, relPath) => {
 // IPC: Launch Tabletop Game in Godot with this cartridge
 ipcMain.handle('quest:launch-game', async (_event, slug) => {
   try {
-    const runScript = path.join(TABLETOP_DIR, 'run.sh');
+    let runScript = path.join(TABLETOP_DIR, 'play.sh');
+    if (!fs.existsSync(runScript)) {
+      runScript = path.join(TABLETOP_DIR, 'run.sh');
+    }
     if (!fs.existsSync(runScript)) {
       return { success: false, error: `Run script not found: ${runScript}` };
     }
