@@ -140,9 +140,10 @@ ipcMain.handle('audio:cast-url', async (_evt, { ip, url, metadata }) => {
   }
 });
 
-ipcMain.handle('audio:cast-tts', async (_evt, { ip, text, metadata }) => {
+
+ipcMain.handle('audio:play-test-chime', async (_evt, ip) => {
   try {
-    return await castService.broadcastTTS(ip, text, metadata);
+    return await castService.playTestChime(ip);
   } catch (err) {
     return { ok: false, error: err.message };
   }

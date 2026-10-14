@@ -86,6 +86,21 @@ describe('RobOS Audio Player Tests', () => {
       const content = fs.readFileSync(pkgYaml, 'utf8');
       assert.ok(content.includes('urn:robos:desktop-app:audio-player'), 'packages.yaml should include audio-player');
     });
+
+    it('preload.js exposes playTestChime and omits voice announcer/TTS methods', () => {
+      const preloadPath = path.join(APP_DIR, 'preload.js');
+      const content = fs.readFileSync(preloadPath, 'utf8');
+      assert.ok(content.includes('playTestChime:'), 'preload should expose playTestChime');
+      assert.ok(!content.includes('castTTS:'), 'preload should NOT expose castTTS (voice announcer moved to dedicated app)');
+    });
+
+    it('renderer bundle.js omits voice announcer panel and speech inputs', () => {
+      const bundlePath = path.join(APP_DIR, 'renderer', 'bundle.js');
+      const content = fs.readFileSync(bundlePath, 'utf8');
+      assert.ok(!content.includes('announcer-panel'), 'bundle should not have announcer-panel');
+      assert.ok(!content.includes('tts-input'), 'bundle should not have tts-input');
+      assert.ok(!content.includes('Smart Speaker Voice Announcer'), 'bundle should not have Voice Announcer title');
+    });
   });
 
   describe('MediaLibrary with music-metadata', () => {
@@ -160,9 +175,13 @@ describe('RobOS Audio Player Tests', () => {
       service = new CastService();
     });
 
-    after(() => {
+    after(async () => {
+      http.globalAgent.destroy();
       if (service && service.streamServer) {
-        service.streamServer.close();
+        if (typeof service.streamServer.closeAllConnections === 'function') {
+          service.streamServer.closeAllConnections();
+        }
+        await new Promise(r => service.streamServer.close(r));
       }
     });
 
@@ -182,7 +201,7 @@ describe('RobOS Audio Player Tests', () => {
       assert.ok(streamUrl.includes(`:${service.streamPort}/media/`), `Stream URL formatted properly: ${streamUrl}`);
 
       const res = await new Promise((resolve, reject) => {
-        http.get(streamUrl, (response) => {
+        http.get(streamUrl, { agent: false }, (response) => {
           const chunks = [];
           response.on('data', c => chunks.push(c));
           response.on('end', () => {
@@ -204,7 +223,7 @@ describe('RobOS Audio Player Tests', () => {
     it('returns 404 for unknown media IDs', async () => {
       const invalidUrl = `http://${service.hostIp}:${service.streamPort}/media/nonexistent.mp3`;
       const res = await new Promise((resolve, reject) => {
-        http.get(invalidUrl, (response) => {
+        http.get(invalidUrl, { agent: false }, (response) => {
           resolve(response.statusCode);
         }).on('error', reject);
       });
@@ -220,6 +239,16 @@ describe('RobOS Audio Player Tests', () => {
     it('stopAllPlayback executes without error', async () => {
       const results = await service.stopAllPlayback();
       assert.ok(Array.isArray(results), 'Should return array of stop results');
+    });
+
+    it('generateChimeBuffer generates valid 16-bit PCM WAV audio buffer', () => {
+      const chimeBuffer = service.generateChimeBuffer();
+      assert.ok(Buffer.isBuffer(chimeBuffer), 'Chime must be a Node.js Buffer');
+      assert.ok(chimeBuffer.length > 44, 'Chime buffer must be larger than 44-byte WAV header');
+      assert.strictEqual(chimeBuffer.subarray(0, 4).toString('ascii'), 'RIFF');
+      assert.strictEqual(chimeBuffer.subarray(8, 12).toString('ascii'), 'WAVE');
+      assert.strictEqual(chimeBuffer.subarray(12, 16).toString('ascii'), 'fmt ');
+      assert.strictEqual(chimeBuffer.subarray(36, 40).toString('ascii'), 'data');
     });
   });
 });
