@@ -27,6 +27,7 @@ export default function App() {
   const playerRef = useRef(null);
   const audioCtxRef = useRef(null);
   const ambientNodeRef = useRef(null);
+  const toastTimerRef = useRef(null);
 
   const getSpeakerName = (ip) => {
     if (!ip) return 'Speaker';
@@ -124,11 +125,17 @@ export default function App() {
     return () => {
       cleanups.forEach(fn => { try { fn(); } catch {} });
     };
-  }, [speakers]);
+  }, []);
 
   const showStatus = (msg) => {
     setStatusMsg(msg);
-    setTimeout(() => setStatusMsg(''), 4000);
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
+    toastTimerRef.current = setTimeout(() => {
+      setStatusMsg('');
+      toastTimerRef.current = null;
+    }, 4000);
   };
 
   const refreshSpeakers = async () => {
