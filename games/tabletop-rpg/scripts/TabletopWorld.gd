@@ -69,6 +69,8 @@ var active_trap_overlay: Dictionary = {}
 var active_treasure_overlay: Dictionary = {}
 var story_triggers: Array[Dictionary] = []
 var active_story_trigger_overlay: Dictionary = {}
+var active_dialogue_sequence: Dictionary = {}
+var voice_audio_player: AudioStreamPlayer = null
 var flashing_item: Dictionary = {}
 var pending_flash_item: Dictionary = {}
 var searched_rooms: Dictionary = {}
@@ -2886,6 +2888,7 @@ func _load_active_cartridge(force_fresh: bool = false) -> void:
 
 	story_triggers.clear()
 	active_story_trigger_overlay.clear()
+	active_dialogue_sequence.clear()
 	var raw_triggers = map_data.get("triggers", [])
 	if raw_triggers.is_empty():
 		raw_triggers = map_data.get("storyTriggers", [])
@@ -3849,6 +3852,13 @@ func _process(delta: float) -> void:
 			if evt["time"] < float(evt.get("duration", 3.5)):
 				remaining_evts.append(evt)
 		damage_events = remaining_evts
+		needs_redraw = true
+
+	if not active_dialogue_sequence.is_empty() and active_dialogue_sequence.get("active", false):
+		active_dialogue_sequence["time"] = float(active_dialogue_sequence.get("time", 0.0)) + delta
+		var d_dur = float(active_dialogue_sequence.get("duration", 4.5))
+		if active_dialogue_sequence["time"] >= d_dur:
+			advance_dialogue_bubble()
 		needs_redraw = true
 
 	if is_enemy_turn_waiting:
@@ -7596,6 +7606,12 @@ func _input(event: InputEvent) -> void:
 			close_wandering_monster_modal()
 			get_viewport().set_input_as_handled()
 			return
+	if not active_dialogue_sequence.is_empty() and active_dialogue_sequence.get("active", false):
+		if (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed) or \
+		   (event is InputEventKey and event.pressed and (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER)):
+			advance_dialogue_bubble()
+			get_viewport().set_input_as_handled()
+			return
 	if not active_story_trigger_overlay.is_empty():
 		if (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed) or \
 		   (event is InputEventKey and event.pressed and (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER or event.keycode == KEY_ESCAPE)):
@@ -7646,6 +7662,13 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 		elif event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
 			cancel_targeting()
+			get_viewport().set_input_as_handled()
+			return
+
+	if not active_dialogue_sequence.is_empty() and active_dialogue_sequence.get("active", false):
+		if (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed) or \
+		   (event is InputEventKey and event.pressed and (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER)):
+			advance_dialogue_bubble()
 			get_viewport().set_input_as_handled()
 			return
 
@@ -11607,6 +11630,7 @@ func _find_ground_story_trigger(step_tile: Vector2i, prev_tile: Vector2i = Vecto
 			continue
 
 		var st_room = str(st.get("room", st.get("target", "")))
+
 		var st_tile = st.get("tile", [])
 		var has_tile = (st_tile is Array and st_tile.size() >= 2)
 		var target_tile = Vector2i(-1, -1)
@@ -11627,58 +11651,140 @@ func _find_ground_story_trigger(step_tile: Vector2i, prev_tile: Vector2i = Vecto
 					return st
 	return {}
 
-func _setup_story_trigger_overlay(trigger: Dictionary, hero: Dictionary) -> void:
+func _setup_modal_message_dialog(title: String, text: String, btn_text: String = "Continue") -> void:
 	active_story_trigger_overlay = {
-		"trigger": trigger,
-		"hero": hero,
-		"hero_id": str(hero.get("id", "")),
-		"hero_name": str(hero.get("characterName", hero.get("name", "Hero"))),
-		"marker": str(trigger.get("marker", "A")),
-		"title": str(trigger.get("title", "Story Event")),
-		"banner": str(trigger.get("banner", "QUEST NOTE [%s]" % str(trigger.get("marker", "A")))),
-		"narrative": str(trigger.get("narrative", "")),
-		"consequence": str(trigger.get("consequence", "")),
-		"gold": int(trigger.get("gold", 0)),
-		"item": trigger.get("item", null),
-		"spawnMonsters": trigger.get("spawnMonsters", []),
+		"marker": "📜",
+		"title": title,
+		"banner": "MESSAGE FROM THE REALM",
+		"narrative": text,
 		"waitingForClick": true,
-		"onTopOfDice": true
+		"onTopOfDice": true,
+		"buttonText": btn_text
 	}
-	_log("[STORY TRIGGER %s] 📜 Zargon reads Quest Note: '%s'!" % [
-		active_story_trigger_overlay.marker,
-		active_story_trigger_overlay.title
-	])
-	var movie_url = str(trigger.get("movie", trigger.get("cinematic", "")))
-	if movie_url == "":
-		for act in trigger.get("actions", []):
-			if act is Dictionary and str(act.get("type", "")) == "play_movie":
-				movie_url = str(act.get("moviePath", act.get("movie", "")))
-				if movie_url != "":
-					break
-	if movie_url != "":
-		play_movie(movie_url, "🎬 %s: %s" % [trigger.get("marker", "Note"), trigger.get("title", "Cinematic Scene")], true, true)
 	queue_redraw_all()
 
-func resolve_story_trigger_overlay_click() -> Dictionary:
-	if active_story_trigger_overlay.is_empty():
-		return { "success": false, "error": "No active story trigger overlay" }
+func _resolve_speaker_display_name(speaker_raw: String) -> String:
+	var s_low = speaker_raw.to_lower().strip_edges()
+	match s_low:
+		"barbarian", "rogar":
+			return "Rogar (Barbarian)"
+		"dwarf", "dorgan":
+			return "Dorgan (Dwarf)"
+		"elf":
+			return "Elf"
+		"wizard", "telor":
+			return "Telor (Wizard)"
+		"mentor":
+			return "Mentor"
+		"zargon", "morcar":
+			return "Zargon, Master of Darkness"
+		"monster", "enemy", "foe":
+			return "Chamber Foe"
+		"narrator":
+			return "Narrator"
+		_:
+			for h in heroes:
+				if str(h.get("id")).to_lower() == s_low or str(h.get("name")).to_lower() == s_low:
+					return str(h.get("name", speaker_raw.capitalize()))
+			for m in monsters:
+				if str(m.get("id")).to_lower() == s_low or str(m.get("monsterType")).to_lower() == s_low:
+					return str(m.get("name", speaker_raw.capitalize()))
+			return speaker_raw.capitalize()
 
-	var overlay = active_story_trigger_overlay.duplicate(true)
-	active_story_trigger_overlay = {}
-
-	var trigger = overlay.get("trigger", {})
-	var hero_id = str(overlay.get("hero_id", ""))
-	var hero: Dictionary = {}
+func _find_speaker_grid_pos(speaker_raw: String) -> Vector2i:
+	var s_low = speaker_raw.to_lower().strip_edges()
 	for h in heroes:
-		if str(h.get("id")) == hero_id:
-			hero = h
-			break
-	if hero.is_empty():
-		hero = get_active_hero()
+		if str(h.get("id")).to_lower() == s_low or str(h.get("name")).to_lower() == s_low or str(h.get("characterName", "")).to_lower() == s_low:
+			return _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
+		if s_low == "active_hero" and h == get_active_hero():
+			return _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
+	for m in monsters:
+		if str(m.get("id")).to_lower() == s_low or str(m.get("monsterType")).to_lower() == s_low:
+			return _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
+	if s_low in ["monster", "enemy", "foe"] and monsters.size() > 0:
+		for m in monsters:
+			if m.get("is_alive", true):
+				return _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
+	return Vector2i(-1, -1)
 
+func _play_dialogue_audio(path: String) -> void:
+	if path == "":
+		return
+	if not FileAccess.file_exists(path) and not ResourceLoader.exists(path):
+		return
+	if not voice_audio_player:
+		voice_audio_player = AudioStreamPlayer.new()
+		add_child(voice_audio_player)
+	var stream = load(path)
+	if stream is AudioStream:
+		voice_audio_player.stream = stream
+		voice_audio_player.play()
+
+func _start_dialogue_sequence(lines: Array) -> void:
+	if lines.is_empty():
+		return
+	active_dialogue_sequence = {
+		"bubbles": lines.duplicate(true),
+		"index": 0,
+		"time": 0.0,
+		"duration": 4.5,
+		"active": true
+	}
+	_present_active_dialogue_bubble()
+
+func _present_active_dialogue_bubble() -> void:
+	if active_dialogue_sequence.is_empty() or not active_dialogue_sequence.get("active", false):
+		return
+	var bubbles: Array = active_dialogue_sequence.get("bubbles", [])
+	var idx: int = int(active_dialogue_sequence.get("index", 0))
+	if idx < 0 or idx >= bubbles.size():
+		active_dialogue_sequence.clear()
+		queue_redraw_all()
+		return
+
+	var bubble: Dictionary = bubbles[idx]
+	var speaker_raw: String = str(bubble.get("speaker", "barbarian")).strip_edges()
+	var text: String = str(bubble.get("text", ""))
+	var audio_path: String = str(bubble.get("audio", ""))
+
+	var speaker_disp = _resolve_speaker_display_name(speaker_raw)
+
+	# Show dialog in combat journal
+	_log("💬 [%s] \"%s\"" % [speaker_disp, text])
+
+	# Optional audio files backing
+	if audio_path != "":
+		_play_dialogue_audio(audio_path)
+
+	active_dialogue_sequence["speaker"] = speaker_raw
+	active_dialogue_sequence["speakerName"] = speaker_disp
+	active_dialogue_sequence["text"] = text
+	active_dialogue_sequence["audio"] = audio_path
+	active_dialogue_sequence["time"] = 0.0
+	active_dialogue_sequence["duration"] = float(bubble.get("duration", 4.5))
+	queue_redraw_all()
+
+func advance_dialogue_bubble() -> bool:
+	if active_dialogue_sequence.is_empty() or not active_dialogue_sequence.get("active", false):
+		return false
+	var bubbles: Array = active_dialogue_sequence.get("bubbles", [])
+	var idx: int = int(active_dialogue_sequence.get("index", 0)) + 1
+	if idx < bubbles.size():
+		active_dialogue_sequence["index"] = idx
+		_present_active_dialogue_bubble()
+		return true
+	else:
+		var rem_tr = active_dialogue_sequence.get("remaining_trigger", {})
+		var nxt_idx = int(active_dialogue_sequence.get("next_action_index", -1))
+		var rem_hero = active_dialogue_sequence.get("hero", {})
+		active_dialogue_sequence.clear()
+		queue_redraw_all()
+		if not rem_tr.is_empty() and nxt_idx >= 0:
+			_execute_trigger_actions(rem_tr, rem_hero, nxt_idx)
+		return false
+
+func _apply_trigger_rewards_and_spawns(trigger: Dictionary, hero: Dictionary) -> void:
 	var marker = str(trigger.get("marker", "A"))
-	var title = str(trigger.get("title", "Story Event"))
-	var narrative = str(trigger.get("narrative", ""))
 
 	# 1. Award Gold
 	var gold_val = int(trigger.get("gold", 0))
@@ -11721,25 +11827,90 @@ func resolve_story_trigger_overlay_click() -> Dictionary:
 			spawn_floating_text(m_pos, "AMBUSH!", Color(1.0, 0.15, 0.15), 2.2)
 			_log("[AMBUSH %s] ⚔️ A %s bursts into battle at (%d, %d)!" % [marker, m_copy.get("name", "Monster"), m_pos.x, m_pos.y])
 
-	# 4. Action Pipeline Dispatch
-	_execute_trigger_actions(trigger, hero)
+func _setup_story_trigger_overlay(trigger: Dictionary, hero: Dictionary) -> void:
+	var narrative = str(trigger.get("narrative", "")).strip_edges()
+	var actions = trigger.get("actions", [])
+	if narrative == "" and actions.size() > 0:
+		_apply_trigger_rewards_and_spawns(trigger, hero)
+		_execute_trigger_actions(trigger, hero, 0)
+		return
+
+	active_story_trigger_overlay = {
+		"trigger": trigger,
+		"hero": hero,
+		"hero_id": str(hero.get("id", "")),
+		"hero_name": str(hero.get("characterName", hero.get("name", "Hero"))),
+		"marker": str(trigger.get("marker", "A")),
+		"title": str(trigger.get("title", "Story Event")),
+		"banner": str(trigger.get("banner", "QUEST NOTE [%s]" % str(trigger.get("marker", "A")))),
+		"narrative": str(trigger.get("narrative", "")),
+		"consequence": str(trigger.get("consequence", "")),
+		"gold": int(trigger.get("gold", 0)),
+		"item": trigger.get("item", null),
+		"spawnMonsters": trigger.get("spawnMonsters", []),
+		"waitingForClick": true,
+		"onTopOfDice": true
+	}
+	_log("[STORY TRIGGER %s] 📜 Zargon reads Quest Note: '%s'!" % [
+		active_story_trigger_overlay.marker,
+		active_story_trigger_overlay.title
+	])
+	var movie_url = str(trigger.get("movie", trigger.get("cinematic", "")))
+	if movie_url == "":
+		for act in trigger.get("actions", []):
+			if act is Dictionary and str(act.get("type", "")) == "play_movie":
+				movie_url = str(act.get("moviePath", act.get("movie", "")))
+				if movie_url != "":
+					break
+	if movie_url != "":
+		play_movie(movie_url, "🎬 %s: %s" % [trigger.get("marker", "Note"), trigger.get("title", "Cinematic Scene")], true, true)
+	queue_redraw_all()
+
+func resolve_story_trigger_overlay_click() -> Dictionary:
+	if active_story_trigger_overlay.is_empty():
+		return { "success": false, "error": "No active story trigger overlay" }
+
+	var overlay = active_story_trigger_overlay.duplicate(true)
+	active_story_trigger_overlay = {}
+
+	var hero_id = str(overlay.get("hero_id", ""))
+	var hero: Dictionary = {}
+	for h in heroes:
+		if str(h.get("id")) == hero_id:
+			hero = h
+			break
+	if hero.is_empty():
+		hero = get_active_hero()
+
+	if overlay.has("remaining_trigger"):
+		var rem_tr = overlay["remaining_trigger"]
+		var nxt_idx = int(overlay.get("next_action_index", 0))
+		_execute_trigger_actions(rem_tr, hero, nxt_idx)
+		_update_ui()
+		queue_redraw_all()
+		return { "success": true, "trigger": rem_tr }
+
+	var trigger = overlay.get("trigger", {})
+	_apply_trigger_rewards_and_spawns(trigger, hero)
+	_execute_trigger_actions(trigger, hero, 0)
 
 	_update_ui()
 	queue_redraw_all()
 	return {
 		"success": true,
 		"trigger": trigger,
-		"goldAwarded": gold_val,
-		"itemAwarded": item_data != null,
-		"monstersSpawned": spawns.size()
+		"goldAwarded": int(trigger.get("gold", 0)),
+		"itemAwarded": trigger.get("item", null) != null,
+		"monstersSpawned": (trigger.get("spawnMonsters", []) as Array).size() if trigger.get("spawnMonsters") is Array else 0
 	}
 
-func _execute_trigger_actions(trigger: Dictionary, hero: Dictionary) -> void:
+func _execute_trigger_actions(trigger: Dictionary, hero: Dictionary, start_index: int = 0) -> void:
 	var actions = trigger.get("actions", [])
 	if not (actions is Array):
 		return
 
-	for act in actions:
+	for act_idx in range(start_index, actions.size()):
+		var act = actions[act_idx]
 		if not (act is Dictionary):
 			continue
 		var act_type = str(act.get("type", ""))
@@ -11790,11 +11961,38 @@ func _execute_trigger_actions(trigger: Dictionary, hero: Dictionary) -> void:
 				hero["hit_by_trap"] = true
 				spawn_floating_text(th_pos, "⚠️ TRAP: -%d BP" % dmg, Color(1.0, 0.3, 0.1), 2.0)
 				_log("[ACTION] ⚠️ A %s trap is sprung beneath %s, inflicting %d damage!" % [trap_type, hero.get("name", "Hero"), dmg])
-			"show_message":
+			"show_message", "display_message":
 				var msg_title = str(act.get("title", trigger.get("title", "Notice")))
-				var msg_text = str(act.get("text", act.get("narrative", "")))
-				_log("[NOTICE: %s] 📜 %s" % [msg_title, msg_text])
-				spawn_floating_text(_to_grid_pos(hero.get("grid_pos", Vector2i(1, 1))), msg_title, Color(1.0, 0.9, 0.4), 2.5)
+				var msg_text = str(act.get("text", act.get("narrative", act.get("message", ""))))
+				var btn_text = str(act.get("buttonText", "Continue"))
+				_log("[MESSAGE: %s] 📜 %s" % [msg_title, msg_text])
+				_setup_modal_message_dialog(msg_title, msg_text, btn_text)
+				if act_idx + 1 < actions.size():
+					active_story_trigger_overlay["remaining_trigger"] = trigger
+					active_story_trigger_overlay["next_action_index"] = act_idx + 1
+					active_story_trigger_overlay["hero"] = hero
+					return
+			"dialogue":
+				var lines: Array = []
+				if act.has("lines") and (act["lines"] is Array):
+					lines = act["lines"]
+				elif act.has("bubbles") and (act["bubbles"] is Array):
+					lines = act["bubbles"]
+				elif act.has("dialogue") and (act["dialogue"] is Array):
+					lines = act["dialogue"]
+				else:
+					var spk = str(act.get("speaker", "barbarian"))
+					var txt = str(act.get("text", act.get("line", "")))
+					var aud = str(act.get("audio", ""))
+					if txt != "":
+						lines.append({ "speaker": spk, "text": txt, "audio": aud })
+				if lines.size() > 0:
+					_start_dialogue_sequence(lines)
+					if act_idx + 1 < actions.size():
+						active_dialogue_sequence["remaining_trigger"] = trigger
+						active_dialogue_sequence["next_action_index"] = act_idx + 1
+						active_dialogue_sequence["hero"] = hero
+						return
 			"spawn_monsters":
 				var m_type = str(act.get("monsterType", "skeleton"))
 				var count = int(act.get("count", 1))
@@ -17544,6 +17742,7 @@ func get_telemetry_state() -> Dictionary:
 		"reachableWalkTiles": (get_reachable_walk_tiles().map(func(v): return [v.x, v.y])),
 		"storyTriggers": story_triggers,
 		"activeStoryTrigger": active_story_trigger_overlay,
+		"activeDialogue": active_dialogue_sequence,
 		"movie": get_movie_state(),
 		"activeEnemyTurnMonsterId": active_enemy_turn_monster_id,
 		"isEnemyTurnWaiting": is_enemy_turn_waiting,
@@ -17882,10 +18081,25 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				"isMouseOverBoard": false,
 				"isShowingReachableIndicators": false
 			}
-		"click_story_trigger", "resolve_story_trigger", "dismiss_story_trigger":
+		"click_story_trigger", "resolve_story_trigger", "dismiss_story_trigger", "dismiss_message", "confirm_message", "click_message_dialog":
 			if not active_story_trigger_overlay.is_empty():
 				return resolve_story_trigger_overlay_click()
 			return { "success": false, "error": "No active story trigger overlay" }
+		"advance_dialogue", "dismiss_dialogue", "click_dialogue":
+			if not active_dialogue_sequence.is_empty() and active_dialogue_sequence.get("active", false):
+				var has_more = advance_dialogue_bubble()
+				return {
+					"success": true,
+					"hasMore": has_more,
+					"active": not active_dialogue_sequence.is_empty(),
+					"dialogue": active_dialogue_sequence
+				}
+			return { "success": false, "error": "No active dialogue sequence" }
+		"get_dialogue_state":
+			return {
+				"success": true,
+				"dialogue": active_dialogue_sequence
+			}
 		"trigger_story_event":
 			var target_id = str(action_data.get("id", action_data.get("marker", "")))
 			var found_tr: Dictionary = {}
@@ -18563,6 +18777,28 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			var weapon = str(action_data.get("weapon", action_data.get("weaponId", "")))
 			var res = attack_adjacent_monster(mid, weapon)
 			return res
+		"defeat_monster", "kill_monster":
+			var mid = str(action_data.get("monsterId", action_data.get("id", "")))
+			var target_m: Dictionary = {}
+			for m in monsters:
+				if str(m.get("id", "")) == mid or str(m.get("slug", "")) == mid:
+					target_m = m
+					break
+			if target_m.is_empty() and monsters.size() > 0:
+				target_m = monsters[0]
+			if not target_m.is_empty():
+				target_m["current_bp"] = 0
+				target_m["is_alive"] = false
+				_log("[DEFEATED] %s is DEFEATED!" % target_m.get("name", "Monster"))
+				_check_event_triggers("on_monster_killed", {
+					"monster": target_m,
+					"monsterId": str(target_m.get("id", "")),
+					"monsterType": str(target_m.get("monsterType", target_m.get("type", "")))
+				}, get_active_hero())
+				_update_ui()
+				queue_redraw_all()
+				return { "success": true, "monsterId": str(target_m.get("id", "")), "monsterName": str(target_m.get("name", "")) }
+			return { "success": false, "error": "Monster not found: " + mid }
 		"get_monster_footprint", "get_monster_tiles":
 			var mid = str(action_data.get("monsterId", action_data.get("id", "")))
 			var target_m = get_monster_by_id(mid)
@@ -19789,6 +20025,7 @@ func _draw_board(canvas: CanvasItem) -> void:
 	_draw_active_dice_roll(canvas)
 	_draw_trap_sprung_overlay(canvas)
 	_draw_treasure_card_overlay(canvas)
+	_draw_dialogue_bubbles_overlay(canvas)
 	_draw_story_trigger_overlay(canvas)
 	_draw_item_flash_banner(canvas)
 
@@ -21039,6 +21276,83 @@ func _draw_gm_story_trigger_markers(canvas: CanvasItem) -> void:
 		var txt_w = font.get_string_size(txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 13).x
 		canvas.draw_string(font, Vector2(center.x - txt_w * 0.5, center.y + 5), txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 13, Color.WHITE)
 
+func _draw_dialogue_bubbles_overlay(canvas: CanvasItem) -> void:
+	if active_dialogue_sequence.is_empty() or not active_dialogue_sequence.get("active", false):
+		return
+
+	var bubbles: Array = active_dialogue_sequence.get("bubbles", [])
+	var idx: int = int(active_dialogue_sequence.get("index", 0))
+	if idx < 0 or idx >= bubbles.size():
+		return
+
+	var bubble: Dictionary = bubbles[idx]
+	var speaker_raw: String = str(bubble.get("speaker", "barbarian"))
+	var text: String = str(bubble.get("text", ""))
+	var speaker_disp: String = _resolve_speaker_display_name(speaker_raw)
+
+	var font = ThemeDB.fallback_font
+	_update_board_metrics()
+
+	var g_pos = _find_speaker_grid_pos(speaker_raw)
+	var bubble_anchor: Vector2
+	var has_tail = false
+	var tail_target: Vector2 = Vector2.ZERO
+
+	if g_pos.x >= 0 and g_pos.y >= 0:
+		tail_target = board_offset + Vector2((float(g_pos.x) + 0.5) * tile_size, float(g_pos.y) * tile_size)
+		bubble_anchor = tail_target + Vector2(0, -65)
+		has_tail = true
+	else:
+		# Overhead / center narrator bubble
+		bubble_anchor = board_offset + Vector2(float(grid_cols) * tile_size * 0.5, 75.0)
+
+	var text_w = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x
+	var bubble_w = clampf(text_w + 50.0, 300.0, 520.0)
+	var lines = _wrap_card_text(text, font, 13, bubble_w - 28.0)
+	var line_h = 18.0
+	var bubble_h = 42.0 + float(maxi(1, lines.size())) * line_h + 16.0
+
+	var b_x = clampf(bubble_anchor.x - bubble_w * 0.5, board_offset.x + 10.0, board_offset.x + float(grid_cols) * tile_size - bubble_w - 10.0)
+	var b_y = maxf(board_offset.y + 10.0, bubble_anchor.y - bubble_h)
+	var b_rect = Rect2(b_x, b_y, bubble_w, bubble_h)
+
+	# Tail pointing toward token if anchored
+	if has_tail:
+		var tail_pts = PackedVector2Array([
+			Vector2(clampf(tail_target.x - 10.0, b_rect.position.x + 15.0, b_rect.end.x - 30.0), b_rect.end.y),
+			Vector2(clampf(tail_target.x + 10.0, b_rect.position.x + 30.0, b_rect.end.x - 15.0), b_rect.end.y),
+			tail_target
+		])
+		canvas.draw_colored_polygon(tail_pts, Color(0.05, 0.08, 0.14, 0.96))
+		canvas.draw_line(tail_pts[0], tail_pts[2], Color(0.0, 0.85, 1.0, 0.85), 1.5)
+		canvas.draw_line(tail_pts[1], tail_pts[2], Color(0.0, 0.85, 1.0, 0.85), 1.5)
+
+	# Bubble drop shadow
+	canvas.draw_rect(Rect2(b_rect.position + Vector2(4, 5), b_rect.size), Color(0.0, 0.0, 0.0, 0.65))
+
+	# Bubble background & glowing neon cyan border
+	canvas.draw_rect(b_rect, Color(0.05, 0.08, 0.14, 0.96))
+	canvas.draw_rect(b_rect, Color(0.0, 0.85, 1.0, 0.9), false, 2.0)
+
+	# Speaker Badge
+	var spk_text = "💬 " + speaker_disp
+	var spk_sz = font.get_string_size(spk_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11)
+	var spk_badge_rect = Rect2(b_rect.position.x + 10.0, b_rect.position.y + 6.0, spk_sz.x + 12.0, 18.0)
+	canvas.draw_rect(spk_badge_rect, Color(0.12, 0.22, 0.35, 0.95))
+	canvas.draw_rect(spk_badge_rect, Color(0.0, 0.85, 1.0, 0.6), false, 1.0)
+	canvas.draw_string(font, Vector2(spk_badge_rect.position.x + 6.0, spk_badge_rect.position.y + 13.0), spk_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.3, 0.9, 1.0))
+
+	# Advance prompt hint
+	var hint_text = "[Click or Space (%d/%d)]" % [idx + 1, bubbles.size()]
+	var h_sz = font.get_string_size(hint_text, HORIZONTAL_ALIGNMENT_RIGHT, -1, 9)
+	canvas.draw_string(font, Vector2(b_rect.end.x - h_sz.x - 8.0, b_rect.position.y + 18.0), hint_text, HORIZONTAL_ALIGNMENT_RIGHT, -1, 9, Color(0.6, 0.7, 0.85, 0.8))
+
+	# Text lines
+	var text_y = b_rect.position.y + 40.0
+	for l in lines:
+		canvas.draw_string(font, Vector2(b_rect.position.x + 12.0, text_y), l, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(0.95, 0.96, 0.98))
+		text_y += line_h
+
 func _draw_story_trigger_overlay(canvas: CanvasItem) -> void:
 	if active_story_trigger_overlay.is_empty():
 		return
@@ -21166,6 +21480,8 @@ func _draw_story_trigger_overlay(canvas: CanvasItem) -> void:
 	# 8. Dismiss Action Prompt
 	var pulse = 0.82 + 0.18 * sin(Time.get_ticks_msec() * 0.006)
 	var prompt_text = "[ CLICK ANYWHERE OR PRESS SPACE / ENTER TO PROCEED ]"
+	if overlay.has("buttonText") and str(overlay.get("buttonText")).strip_edges() != "":
+		prompt_text = "[ %s — CLICK ANYWHERE OR PRESS SPACE / ENTER ]" % str(overlay.get("buttonText")).strip_edges().to_upper()
 	var p_sz = font.get_string_size(prompt_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 10)
 	var prompt_y = parchment_rect.end.y - 14.0
 	canvas.draw_string(font, Vector2(center.x - p_sz.x * 0.5, prompt_y), prompt_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(0.36, 0.20, 0.10, pulse))

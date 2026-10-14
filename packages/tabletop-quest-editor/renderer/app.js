@@ -184,6 +184,20 @@ const TRIGGER_ACTION_DEFS = {
     icon: '📜',
     defaultParams: { title: 'Dungeon Notice', text: 'Mentor speaks: "Tread carefully, heroes..."' }
   },
+  display_message: {
+    name: 'Display Message',
+    icon: '📜',
+    defaultParams: { title: 'Chamber Inscription', text: 'The ancient runes glow with an ominous crimson light.', buttonText: 'Continue' }
+  },
+  dialogue: {
+    name: 'Character Dialogue',
+    icon: '💬',
+    defaultParams: {
+      lines: [
+        { speaker: 'barbarian', text: 'I sense danger lurking nearby...', audio: '' }
+      ]
+    }
+  },
   spawn_monsters: {
     name: 'Spawn Monsters',
     icon: '👾',
@@ -971,7 +985,10 @@ function buildCartridgePayload() {
           tile: [st.tile[0], st.tile[1]],
           onceOnly: Boolean(st.onceOnly !== false),
           narrative: st.narrative || '',
-          actions: (st.actions || []).map(a => ({ ...a }))
+          actions: (st.actions || []).map(a => ({
+            ...a,
+            lines: Array.isArray(a.lines) ? a.lines.map(l => ({ ...l })) : undefined
+          }))
         })),
         storyTriggers: q.storyTriggers.map(st => {
           const movieAction = (st.actions || []).find(a => a.type === 'play_movie');
@@ -986,7 +1003,10 @@ function buildCartridgePayload() {
             event: st.event || (st.room ? 'on_room_entered' : 'on_tile_stepped_on'),
             onceOnly: Boolean(st.onceOnly !== false),
             movie: movieAction?.moviePath || '',
-            actions: (st.actions || []).map(a => ({ ...a }))
+            actions: (st.actions || []).map(a => ({
+              ...a,
+              lines: Array.isArray(a.lines) ? a.lines.map(l => ({ ...l })) : undefined
+            }))
           };
         })
       }
@@ -3366,7 +3386,7 @@ function renderActionPipelineUI(st) {
           <input type="number" class="num-input-xs act-field-damage" value="${act.damage || 2}" min="1" max="10" style="width:40px;">
         </div>
       `;
-    } else if (act.type === 'show_message') {
+    } else if (act.type === 'show_message' || act.type === 'display_message') {
       fieldsHtml = `
         <div class="action-step-row" style="margin-top:4px;">
           <label style="font-size:10px; min-width:65px;">Title:</label>
@@ -3374,8 +3394,64 @@ function renderActionPipelineUI(st) {
         </div>
         <div class="action-step-row" style="margin-top:4px;">
           <label style="font-size:10px; min-width:65px;">Message:</label>
-          <textarea class="text-input text-input-xs act-field-text" rows="2" style="flex:1;">${escapeHtml(act.text || act.narrative || '')}</textarea>
+          <textarea class="text-input text-input-xs act-field-text" rows="2" style="flex:1;">${escapeHtml(act.text || act.narrative || act.message || '')}</textarea>
         </div>
+        <div class="action-step-row" style="margin-top:4px;">
+          <label style="font-size:10px; min-width:65px;">Button:</label>
+          <input type="text" class="text-input text-input-xs act-field-button-text" value="${escapeHtml(act.buttonText || 'Continue')}" style="width:110px;">
+          <span style="font-size:10px; color:#94a3b8; font-style:italic;">(Must dismiss to continue)</span>
+        </div>
+      `;
+    } else if (act.type === 'dialogue') {
+      if (!Array.isArray(act.lines) || act.lines.length === 0) {
+        act.lines = [
+          { speaker: 'barbarian', text: 'I sense danger lurking nearby...', audio: '' }
+        ];
+      }
+      const speakerOptions = (selectedVal) => {
+        const presets = [
+          ['barbarian', 'Barbarian (Rogar)'],
+          ['dwarf', 'Dwarf (Dorgan)'],
+          ['elf', 'Elf'],
+          ['wizard', 'Wizard (Telor)'],
+          ['mentor', 'Mentor'],
+          ['zargon', 'Zargon / Morcar'],
+          ['monster', 'Room Monster / Foe'],
+          ['narrator', 'Narrator']
+        ];
+        return presets.map(([val, label]) => `<option value="${val}" ${selectedVal === val ? 'selected' : ''}>${label}</option>`).join('');
+      };
+
+      const bubblesHtml = act.lines.map((line, bIdx) => `
+        <div class="dialogue-bubble-card" data-line-idx="${bIdx}">
+          <div class="dialogue-bubble-header">
+            <span class="dialogue-bubble-count">💬 Bubble #${bIdx + 1}</span>
+            <div style="display:flex; gap:4px; align-items:center;">
+              <select class="dropdown dropdown-xs act-bubble-speaker" data-line-idx="${bIdx}" style="width:130px;">
+                ${speakerOptions(line.speaker || 'barbarian')}
+              </select>
+              ${act.lines.length > 1 ? `<button type="button" class="btn btn-xs btn-danger btn-del-bubble" data-line-idx="${bIdx}" title="Delete Bubble">🗑️</button>` : ''}
+            </div>
+          </div>
+          <div class="action-step-row" style="margin-top:2px;">
+            <label style="font-size:9px; min-width:45px;">Speech:</label>
+            <textarea class="text-input text-input-xs act-bubble-text" data-line-idx="${bIdx}" rows="2" placeholder="Spoken dialogue text..." style="flex:1;">${escapeHtml(line.text || '')}</textarea>
+          </div>
+          <div class="action-step-row" style="margin-top:2px;">
+            <label style="font-size:9px; min-width:45px;">Audio:</label>
+            <input type="text" class="text-input text-input-xs act-bubble-audio" data-line-idx="${bIdx}" value="${escapeHtml(line.audio || '')}" placeholder="res://assets/audio/voice.ogg (optional)" style="flex:1;">
+          </div>
+        </div>
+      `).join('');
+
+      fieldsHtml = `
+        <div style="font-size:10px; color:#38bdf8; margin-bottom:2px;">
+          Dialogue bubbles appear over character tokens in sequence and log to combat journal.
+        </div>
+        <div class="dialogue-bubbles-container">
+          ${bubblesHtml}
+        </div>
+        <button type="button" class="btn-add-bubble" style="width:100%; margin-top:4px;">+ Add Dialogue Bubble</button>
       `;
     } else if (act.type === 'spawn_monsters') {
       const monOpts = Object.keys(MONSTER_DEFS).map(k =>
@@ -3430,6 +3506,9 @@ function renderActionPipelineUI(st) {
     const skipIn = card.querySelector('.act-field-skip');
     if (skipIn) skipIn.addEventListener('change', () => { act.canSkip = skipIn.checked; });
 
+    const btnTextIn = card.querySelector('.act-field-button-text');
+    if (btnTextIn) btnTextIn.addEventListener('input', () => { act.buttonText = btnTextIn.value; });
+
     const atkIn = card.querySelector('.act-field-attacker');
     if (atkIn) atkIn.addEventListener('input', () => { act.attacker = atkIn.value; });
     const diceIn = card.querySelector('.act-field-dice');
@@ -3449,6 +3528,46 @@ function renderActionPipelineUI(st) {
 
     const textIn = card.querySelector('.act-field-text');
     if (textIn) textIn.addEventListener('input', () => { act.text = textIn.value; });
+
+    // Dialogue bubble inputs and controls
+    card.querySelectorAll('.act-bubble-speaker').forEach(sel => {
+      sel.addEventListener('change', () => {
+        const lIdx = parseInt(sel.dataset.lineIdx);
+        if (act.lines && act.lines[lIdx]) act.lines[lIdx].speaker = sel.value;
+      });
+    });
+    card.querySelectorAll('.act-bubble-text').forEach(txt => {
+      txt.addEventListener('input', () => {
+        const lIdx = parseInt(txt.dataset.lineIdx);
+        if (act.lines && act.lines[lIdx]) act.lines[lIdx].text = txt.value;
+      });
+    });
+    card.querySelectorAll('.act-bubble-audio').forEach(aud => {
+      aud.addEventListener('input', () => {
+        const lIdx = parseInt(aud.dataset.lineIdx);
+        if (act.lines && act.lines[lIdx]) act.lines[lIdx].audio = aud.value;
+      });
+    });
+    card.querySelectorAll('.btn-del-bubble').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const lIdx = parseInt(btn.dataset.lineIdx);
+        if (act.lines && act.lines.length > 1) {
+          recordHistory();
+          act.lines.splice(lIdx, 1);
+          renderActionPipelineUI(st);
+        }
+      });
+    });
+    const addBubbleBtn = card.querySelector('.btn-add-bubble');
+    if (addBubbleBtn) {
+      addBubbleBtn.addEventListener('click', () => {
+        recordHistory();
+        if (!Array.isArray(act.lines)) act.lines = [];
+        const nextSpeaker = act.lines.length % 2 === 1 ? 'mentor' : 'barbarian';
+        act.lines.push({ speaker: nextSpeaker, text: '', audio: '' });
+        renderActionPipelineUI(st);
+      });
+    }
 
     const mTypeIn = card.querySelector('.act-field-monster-type');
     if (mTypeIn) mTypeIn.addEventListener('change', () => { act.monsterType = mTypeIn.value; });
