@@ -744,7 +744,7 @@
           "id": "door-4",
           "is_secret": false,
           "room": "room-se-17",
-          "state": "open",
+          "state": "closed",
           "to": [
             21,
             12
@@ -2636,9 +2636,9 @@
   },
   "monsters": {
     "mon-boss-3": {
-      "attackDice": 4,
-      "bodyPoints": 5,
-      "defendDice": 4,
+      "attackDice": 3,
+      "bodyPoints": 2,
+      "defendDice": 2,
       "id": "mon-boss-3",
       "isBoss": true,
       "isSpellcaster": true,
@@ -2648,34 +2648,11 @@
       "movementSquares": 8,
       "name": "Dungeon Boss",
       "position": [
-        18,
-        11
+        15,
+        15
       ],
-      "roomId": "room-se-17",
+      "roomId": "room-se-21",
       "slug": "boss-mon-boss-3",
-      "spells": [
-        "lightning-bolt",
-        "firestorm"
-      ]
-    },
-    "mon-boss-4": {
-      "attackDice": 4,
-      "bodyPoints": 5,
-      "defendDice": 4,
-      "id": "mon-boss-4",
-      "isBoss": true,
-      "isSpellcaster": true,
-      "isUndead": false,
-      "mindPoints": 5,
-      "monsterType": "boss",
-      "movementSquares": 8,
-      "name": "Dungeon Boss",
-      "position": [
-        11,
-        9
-      ],
-      "roomId": "room-nw-10",
-      "slug": "boss-mon-boss-4",
       "spells": [
         "lightning-bolt",
         "firestorm"
@@ -2683,8 +2660,8 @@
     },
     "mon-chaos_warrior-5": {
       "attackDice": 3,
-      "bodyPoints": 2,
-      "defendDice": 4,
+      "bodyPoints": 1,
+      "defendDice": 2,
       "id": "mon-chaos_warrior-5",
       "isBoss": false,
       "isSpellcaster": false,
@@ -2694,10 +2671,10 @@
       "movementSquares": 7,
       "name": "Chaos Warrior",
       "position": [
-        19,
-        13
+        15,
+        14
       ],
-      "roomId": "room-se-17",
+      "roomId": "room-se-21",
       "slug": "chaos_warrior-mon-chaos_warrior-5",
       "spells": []
     },
@@ -2746,13 +2723,13 @@
       "bodyPoints": 1,
       "defendDice": 1,
       "id": "mon-goblin-2",
-      "isBoss": true,
+      "isBoss": false,
       "isSpellcaster": false,
       "isUndead": false,
       "mindPoints": 1,
       "monsterType": "goblin",
       "movementSquares": 10,
-      "name": "Goblin Vanguard",
+      "name": "Goblin Sentry",
       "position": [
         11,
         18
@@ -2860,6 +2837,29 @@
       "roomId": "room-sw-9",
       "slug": "orc-mon-orc-8",
       "spells": []
+    },
+    "mon-orc-champion-4": {
+      "attackDice": 4,
+      "bodyPoints": 5,
+      "defendDice": 4,
+      "id": "mon-orc-champion-4",
+      "isBoss": false,
+      "isSpellcaster": true,
+      "isUndead": false,
+      "mindPoints": 5,
+      "monsterType": "orc",
+      "movementSquares": 8,
+      "name": "Orc Champion",
+      "position": [
+        11,
+        9
+      ],
+      "roomId": "room-nw-10",
+      "slug": "orc-mon-orc-champion-4",
+      "spells": [
+        "lightning-bolt",
+        "firestorm"
+      ]
     },
     "mon-skeleton-10": {
       "attackDice": 2,
@@ -3104,14 +3104,14 @@
   },
   "quests": [
     {
-      "bossTarget": "vanguard",
-      "briefing": "Mentor speaks: Venture forth into the dungeon catacombs, vanquish the Goblin Vanguard guarding the south corridor, explore the chambers, and return safely to the spiral stairway.",
+      "bossTarget": "boss",
+      "briefing": "Mentor speaks: Venture forth into the dungeon catacombs, vanquish the Dungeon Boss guarding the inner stronghold, explore the chambers for ancient relics, and ensure all living heroes return safely to the spiral stairway.",
       "completed": true,
-      "goldReward": 100,
+      "goldReward": 250,
       "id": "quest-custom-1",
-      "mapConfigId": "first-light-dungeon",
+      "mapConfigId": "custom-quest",
       "primaryGoals": [
-        "Vanquish the Goblin Vanguard in the south corridor",
+        "Vanquish the Dungeon Boss guarding the inner stronghold",
         "Explore the ancient chambers and search for hidden treasures",
         "Ensure all living heroes return safely to the spiral stairway"
       ],
