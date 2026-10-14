@@ -395,4 +395,64 @@ ipcMain.handle('audio:scan-default-library', async () => {
   return { started: true, folder: musicDir };
 });
 
+// ── Playlist IPC Handlers ───────────────────────────────────────────────────
+
+ipcMain.handle('audio:get-playlists', async () => {
+  return mediaLibrary.getPlaylists();
+});
+
+ipcMain.handle('audio:get-playlist', async (_evt, id) => {
+  return mediaLibrary.getPlaylist(id);
+});
+
+ipcMain.handle('audio:create-playlist', async (_evt, data) => {
+  return mediaLibrary.createPlaylist(data || {});
+});
+
+ipcMain.handle('audio:update-playlist', async (_evt, { id, updates }) => {
+  return mediaLibrary.updatePlaylist(id, updates || {});
+});
+
+ipcMain.handle('audio:delete-playlist', async (_evt, id) => {
+  return mediaLibrary.deletePlaylist(id);
+});
+
+ipcMain.handle('audio:add-tracks-to-playlist', async (_evt, { id, tracks }) => {
+  return mediaLibrary.addTracksToPlaylist(id, tracks || []);
+});
+
+ipcMain.handle('audio:remove-track-from-playlist', async (_evt, { id, trackIndex }) => {
+  return mediaLibrary.removeTrackFromPlaylist(id, trackIndex);
+});
+
+ipcMain.handle('audio:reorder-playlist-tracks', async (_evt, { id, fromIndex, toIndex }) => {
+  return mediaLibrary.reorderPlaylistTracks(id, fromIndex, toIndex);
+});
+
+ipcMain.handle('audio:export-playlist-m3u', async (_evt, id) => {
+  if (!mainWindow) return { canceled: true };
+  const playlist = mediaLibrary.getPlaylist(id);
+  if (!playlist) return { canceled: true, error: 'Playlist not found' };
+  const res = await dialog.showSaveDialog(mainWindow, {
+    title: 'Export Playlist as M3U',
+    defaultPath: `${playlist.name.replace(/[^a-zA-Z0-9_\-\s]/g, '_')}.m3u`,
+    filters: [{ name: 'M3U Playlist', extensions: ['m3u', 'm3u8'] }]
+  });
+  if (res.canceled || !res.filePath) return { canceled: true };
+  return mediaLibrary.exportM3u(id, res.filePath);
+});
+
+ipcMain.handle('audio:import-playlist-m3u', async () => {
+  if (!mainWindow) return { canceled: true };
+  const res = await dialog.showOpenDialog(mainWindow, {
+    title: 'Import M3U Playlist',
+    properties: ['openFile'],
+    filters: [{ name: 'M3U Playlists', extensions: ['m3u', 'm3u8'] }]
+  });
+  if (res.canceled || !res.filePaths.length) return { canceled: true };
+  const playlist = await mediaLibrary.importM3u(res.filePaths[0]);
+  return { canceled: false, playlist };
+});
+
+
 

@@ -251,4 +251,209 @@ describe('RobOS Audio Player Tests', () => {
       assert.strictEqual(chimeBuffer.subarray(36, 40).toString('ascii'), 'data');
     });
   });
+
+  describe('Playlist Management & M3U Export/Import', () => {
+    const testConfigDir = `/tmp/robos-audio-pl-test-${Date.now()}`;
+
+    before(() => {
+      fs.mkdirSync(testConfigDir, { recursive: true });
+    });
+
+    after(() => {
+      try {
+        fs.rmSync(testConfigDir, { recursive: true, force: true });
+      } catch {}
+    });
+
+    it('initializes with default curated playlists when cache does not exist', () => {
+      const lib = new MediaLibrary({ configDir: testConfigDir });
+      const playlists = lib.getPlaylists();
+      assert.ok(Array.isArray(playlists), 'Playlists must be an array');
+      assert.ok(playlists.length >= 2, 'Should initialize with default playlists');
+      const fav = playlists.find(p => p.id === 'pl_favorites');
+      assert.ok(fav, 'Favorites playlist should exist');
+      const focus = playlists.find(p => p.id === 'pl_focus');
+      assert.ok(focus, 'Focus playlist should exist');
+      assert.ok(focus.tracks.length >= 1, 'Focus playlist should have initial tracks');
+    });
+
+    it('creates a new custom playlist and persists to disk', () => {
+      const lib = new MediaLibrary({ configDir: testConfigDir });
+      const created = lib.createPlaylist({
+        name: 'Coding Synthwave',
+        description: 'Retrowave & electronic beats for high-speed coding',
+        tracks: [
+          {
+            id: 'trk-1',
+            title: 'Neon Horizon',
+            artist: 'Synth Master',
+            album: 'Cyber Grid',
+            duration: 215,
+            filePath: '/home/music/neon-horizon.mp3'
+          }
+        ]
+      });
+
+      assert.ok(created.id.startsWith('pl_'), 'Playlist ID should have prefix pl_');
+      assert.strictEqual(created.name, 'Coding Synthwave');
+      assert.strictEqual(created.tracks.length, 1);
+
+      // Verify reloaded from disk cache
+      const reloadedLib = new MediaLibrary({ configDir: testConfigDir });
+      const found = reloadedLib.getPlaylist(created.id);
+      assert.ok(found, 'Created playlist should be found after re-instantiation');
+      assert.strictEqual(found.name, 'Coding Synthwave');
+      assert.strictEqual(found.tracks[0].title, 'Neon Horizon');
+    });
+
+    it('adds tracks to an existing playlist', () => {
+      const lib = new MediaLibrary({ configDir: testConfigDir });
+      const pl = lib.createPlaylist({ name: 'Workout Beats', tracks: [] });
+      const trackToAdd = {
+        id: 'trk-2',
+        title: 'Adrenaline Rush',
+        artist: 'Pulse',
+        album: 'Cardio Vol 1',
+        duration: 180,
+        filePath: '/home/music/pulse.mp3'
+      };
+
+      const updated = lib.addTracksToPlaylist(pl.id, [trackToAdd]);
+      assert.strictEqual(updated.tracks.length, 1);
+      assert.strictEqual(updated.tracks[0].title, 'Adrenaline Rush');
+    });
+
+    it('reorders tracks within a playlist', () => {
+      const lib = new MediaLibrary({ configDir: testConfigDir });
+      const pl = lib.createPlaylist({
+        name: 'Reorder Test',
+        tracks: [
+          { id: 't1', title: 'Track 1', duration: 100 },
+          { id: 't2', title: 'Track 2', duration: 200 },
+          { id: 't3', title: 'Track 3', duration: 300 }
+        ]
+      });
+
+      lib.reorderPlaylistTracks(pl.id, 0, 2);
+      const reordered = lib.getPlaylist(pl.id);
+      assert.strictEqual(reordered.tracks[0].title, 'Track 2');
+      assert.strictEqual(reordered.tracks[1].title, 'Track 3');
+      assert.strictEqual(reordered.tracks[2].title, 'Track 1');
+    });
+
+    it('removes a track from a playlist by index', () => {
+      const lib = new MediaLibrary({ configDir: testConfigDir });
+      const pl = lib.createPlaylist({
+        name: 'Remove Track Test',
+        tracks: [
+          { id: 't1', title: 'First Song' },
+          { id: 't2', title: 'Second Song' }
+        ]
+      });
+
+      lib.removeTrackFromPlaylist(pl.id, 0);
+      const remaining = lib.getPlaylist(pl.id);
+      assert.strictEqual(remaining.tracks.length, 1);
+      assert.strictEqual(remaining.tracks[0].title, 'Second Song');
+    });
+
+    it('updates playlist name and description', () => {
+      const lib = new MediaLibrary({ configDir: testConfigDir });
+      const pl = lib.createPlaylist({ name: 'Old Title', description: 'Old Desc' });
+      const updated = lib.updatePlaylist(pl.id, {
+        name: 'New Title',
+        description: 'New Description'
+      });
+      assert.strictEqual(updated.name, 'New Title');
+      assert.strictEqual(updated.description, 'New Description');
+    });
+
+    it('deletes a playlist', () => {
+      const lib = new MediaLibrary({ configDir: testConfigDir });
+      const pl = lib.createPlaylist({ name: 'To Be Deleted' });
+      const deleted = lib.deletePlaylist(pl.id);
+      assert.strictEqual(deleted, true);
+      assert.strictEqual(lib.getPlaylist(pl.id), null);
+    });
+
+    it('exports a playlist to standard M3U format', () => {
+      const lib = new MediaLibrary({ configDir: testConfigDir });
+      const pl = lib.createPlaylist({
+        name: 'Rock Classics',
+        tracks: [
+          {
+            title: 'Stairway to Code',
+            artist: 'Led Dev',
+            duration: 480,
+            filePath: '/audio/rock/song1.mp3'
+          },
+          {
+            title: 'Bohemian Codeflow',
+            artist: 'Queen of Bugs',
+            duration: 355,
+            filePath: '/audio/rock/song2.mp3'
+          }
+        ]
+      });
+
+      const exportPath = path.join(testConfigDir, 'rock_classics.m3u');
+      const res = lib.exportM3u(pl.id, exportPath);
+      assert.strictEqual(res.ok, true);
+      assert.ok(fs.existsSync(exportPath), 'M3U file should exist');
+
+      const content = fs.readFileSync(exportPath, 'utf8');
+      assert.ok(content.startsWith('#EXTM3U'), 'Should start with #EXTM3U');
+      assert.ok(content.includes('#PLAYLIST:Rock Classics'), 'Should include playlist name');
+      assert.ok(content.includes('#EXTINF:480,Led Dev - Stairway to Code'), 'Should format track 1');
+      assert.ok(content.includes('/audio/rock/song1.mp3'), 'Should include file path 1');
+      assert.ok(content.includes('#EXTINF:355,Queen of Bugs - Bohemian Codeflow'), 'Should format track 2');
+    });
+
+    it('imports an external M3U playlist file into a new playlist', async () => {
+      const lib = new MediaLibrary({ configDir: testConfigDir });
+      const m3uFile = path.join(testConfigDir, 'imported_session.m3u');
+      const m3uContent = `#EXTM3U
+#PLAYLIST:Imported Dev Session
+#EXTINF:240,Lo-Fi Producer - Deep Focus Beat
+/music/focus/beat1.mp3
+#EXTINF:195,Cyber Artist - Neural Network Chords
+/music/focus/beat2.mp3
+`;
+      fs.writeFileSync(m3uFile, m3uContent, 'utf8');
+
+      const imported = await lib.importM3u(m3uFile);
+      assert.ok(imported, 'Imported playlist should be returned');
+      assert.strictEqual(imported.name, 'Imported Dev Session');
+      assert.strictEqual(imported.tracks.length, 2);
+      assert.strictEqual(imported.tracks[0].title, 'Deep Focus Beat');
+      assert.strictEqual(imported.tracks[0].artist, 'Lo-Fi Producer');
+      assert.strictEqual(imported.tracks[0].duration, 240);
+      assert.strictEqual(imported.tracks[1].title, 'Neural Network Chords');
+    });
+
+    it('preload.js exposes all playlist IPC methods', () => {
+      const preloadPath = path.join(APP_DIR, 'preload.js');
+      const content = fs.readFileSync(preloadPath, 'utf8');
+      assert.ok(content.includes('getPlaylists:'), 'Should expose getPlaylists');
+      assert.ok(content.includes('createPlaylist:'), 'Should expose createPlaylist');
+      assert.ok(content.includes('updatePlaylist:'), 'Should expose updatePlaylist');
+      assert.ok(content.includes('deletePlaylist:'), 'Should expose deletePlaylist');
+      assert.ok(content.includes('addTracksToPlaylist:'), 'Should expose addTracksToPlaylist');
+      assert.ok(content.includes('removeTrackFromPlaylist:'), 'Should expose removeTrackFromPlaylist');
+      assert.ok(content.includes('reorderPlaylistTracks:'), 'Should expose reorderPlaylistTracks');
+      assert.ok(content.includes('exportPlaylistM3u:'), 'Should expose exportPlaylistM3u');
+      assert.ok(content.includes('importPlaylistM3u:'), 'Should expose importPlaylistM3u');
+    });
+
+    it('bundle.js contains playlist navigation and management components', () => {
+      const bundlePath = path.join(APP_DIR, 'renderer', 'bundle.js');
+      const content = fs.readFileSync(bundlePath, 'utf8');
+      assert.ok(content.includes('tab-btn-playlists'), 'Bundle should contain playlists tab button');
+      assert.ok(content.includes('btn-create-playlist'), 'Bundle should contain create playlist button');
+      assert.ok(content.includes('btn-import-m3u'), 'Bundle should contain import M3U button');
+      assert.ok(content.includes('btn-save-queue-as-playlist'), 'Bundle should contain save queue as playlist button');
+      assert.ok(content.includes('playlists-view-container'), 'Bundle should contain playlists view container');
+    });
+  });
 });
+
