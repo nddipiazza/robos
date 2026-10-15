@@ -1,12 +1,12 @@
 ; Engine configuration file.
-; RobOS RTS — SnowPlay & StarCraft II Inspired Deterministic RTS Engine
+; RobOS RTS — Deterministic 64Hz real-time strategy engine
 
 config_version=5
 
 [application]
 
 config/name="RobOS RTS: Starfall Command"
-config/description="SnowPlay & StarCraft II Inspired 64Hz Deterministic RTS Engine powered by RobOS KGraph & s2client-proto Bot API"
+config/description="Deterministic 64Hz RTS with three asymmetric factions, an angled 3D camera and an HTTP/JSON bot API"
 run/main_scene="res://scenes/RTSMain.tscn"
 config/features=PackedStringArray("4.3", "GL Compatibility")
 config/icon="res://icon.svg"

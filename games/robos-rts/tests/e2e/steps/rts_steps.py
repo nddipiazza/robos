@@ -1,5 +1,5 @@
 """
-rts_steps.py — Cucumber step definitions for RobOS RTS (SnowPlay & SC2 Engine)
+rts_steps.py — Cucumber step definitions for RobOS RTS 
 """
 
 from __future__ import annotations
@@ -92,20 +92,20 @@ def step_assert_stutter_step_cancels(context, player: int, min_cancels: int) -> 
     assert cancels >= min_cancels, f"Expected >= {min_cancels} stutter-step cancels for player {player}, got {cancels}"
 
 
-@then("player {player:d} has executed at least {min_blinks:d} Stalker Blinks")
-def step_assert_blinks_executed(context, player: int, min_blinks: int) -> None:
+@then("player {player:d} has executed at least {min_phase_steps:d} Skirmisher Phase Steps")
+def step_assert_phase_steps_executed(context, player: int, min_phase_steps: int) -> None:
     obs = context.client.get_observation()
     p = obs["players"].get(str(player), obs["players"].get(player, {}))
-    blinks = int(p.get("blinks_executed", 0))
-    assert blinks >= min_blinks, f"Expected >= {min_blinks} Blinks for player {player}, got {blinks}"
+    phase_steps = int(p.get("phase_steps_executed", 0))
+    assert phase_steps >= min_phase_steps, f"Expected >= {min_phase_steps} Phase Steps for player {player}, got {phase_steps}"
 
 
-@then("player {player:d} has collected at least {min_minerals:d} minerals")
-def step_assert_minerals_collected(context, player: int, min_minerals: int) -> None:
+@then("player {player:d} has collected at least {min_crystal:d} crystal")
+def step_assert_crystal_collected(context, player: int, min_crystal: int) -> None:
     obs = context.client.get_observation()
     p = obs["players"].get(str(player), obs["players"].get(player, {}))
-    collected = int(p.get("minerals_collected", 0))
-    assert collected >= min_minerals, f"Expected >= {min_minerals} minerals collected, got {collected}"
+    collected = int(p.get("crystal_collected", 0))
+    assert collected >= min_crystal, f"Expected >= {min_crystal} crystal collected, got {collected}"
 
 
 @then("player {player:d} has supply cap of at least {min_cap:d}")

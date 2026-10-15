@@ -1,7 +1,7 @@
 """
-environment.py — Behave lifecycle hooks for RobOS RTS (SnowPlay/SC2 Engine)
+environment.py — Behave lifecycle hooks for RobOS RTS 
 Starts Godot 4.3 headless (in `RTS_MODE=backend`) or inside Xvfb with ffmpeg recording (in `RTS_MODE=human`),
-and connects `context.client` (RobOSSC2Client) to the GameControlServer (:18095).
+and connects `context.client` (RTSClient) to the GameControlServer (:18095).
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ import time
 PROJECT_DIR = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_DIR))
 
-from robos_sc2_bot_sdk import RobOSSC2Client
+from robos_rts_bot_sdk import RTSClient
 
 
 def _find_godot() -> str:
@@ -57,7 +57,7 @@ def before_all(context) -> None:
         text=True,
     )
 
-    context.client = RobOSSC2Client("127.0.0.1", context.port)
+    context.client = RTSClient("127.0.0.1", context.port)
     deadline = time.time() + 15.0
     connected = False
     while time.time() < deadline:

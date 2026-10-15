@@ -1,10 +1,10 @@
 extends Node
 
-# RTSData.gd — StarCraft II / s2client-proto Inspired 3-Faction Registry
+# RTSData.gd — Three-faction unit, structure and ability registry
 # Factions:
-# 1. HUMANS   ("humans" / Terran Vanguard): SCV, Marine (Stimpack), Marauder (Concussive Slow), Siege Tank (Tank/Siege Mode), Command Center, Supply Depot (Lower/Raise), Refinery, Barracks, Factory
-# 2. MONSTERS ("monsters" / Xenomorph Swarm): Drone, Swarmling (fast melee), Roach (armored acid), Ravager (corrosive bile), Hatchery, Overlord Mound, Spawning Pool
-# 3. ALIENS   ("aliens" / Eldar / Protoss-style Celestial Armada): Probe, Zealot (Plasma Shields + Charge), Stalker (Plasma Shields + Blink teleport!),Colossus (Thermal Lance splash + Cliff-Walk), Nexus, Pylon (Power Matrix +8 Supply), Gateway
+# 1. HUMANS   ("humans" / Meridian Guard): Pioneer, Rifleman (Surge Injector), Breacher (Concussive Slow), Howitzer (Mobile/Emplaced Mode), Colony Hub, Provision Silo (Retract/Extend), Aether Tap, Muster Hall, Workshop
+# 2. MONSTERS ("monsters" / Gnarl Brood): Forager, Skitterling (fast melee), Bile Crawler (armored acid), Blight Hurler (corrosive bile), Brood Nest
+# 3. ALIENS   ("aliens" / Aurelian Concord): Mote, Sunblade (Aegis Shields + Charge), Skirmisher (Aegis Shields + Phase Step teleport!),Spire Walker (Prism Beam splash + Cliff-Walk), Heartstone, Resonator (Power Matrix +8 Supply), Waystone
 
 const FACTION_HUMANS = "humans"
 const FACTION_MONSTERS = "monsters"
@@ -12,17 +12,18 @@ const FACTION_ALIENS = "aliens"
 
 var units: Dictionary = {
 	# =========================================================================
-	# 1. HUMANS (Terran Vanguard)
+	# 1. HUMANS (Meridian Guard)
 	# =========================================================================
-	"scv": {
-		"id": "scv",
-		"name": "SCV",
+	"pioneer": {
+		"id": "pioneer",
+		"name": "Pioneer",
+		"blurb": "Builds structures and gathers crystal and aether. Fragile; keep it out of fights.",
 		"faction": FACTION_HUMANS,
 		"is_structure": false,
 		"is_worker": true,
 		"attributes": ["Light", "Biological", "Mechanical"],
-		"mineral_cost": 50,
-		"vespene_cost": 0,
+		"crystal_cost": 50,
+		"aether_cost": 0,
 		"supply_cost": 1,
 		"build_time": 12.0,
 		"max_hp": 45.0,
@@ -33,7 +34,7 @@ var units: Dictionary = {
 		"sight_range": 18.0,
 		"push_priority": 1,
 		"weapon": {
-			"name": "Fusion Cutter",
+			"name": "Arc Welder",
 			"damage": 5.0,
 			"bonus": {},
 			"attacks": 1,
@@ -43,17 +44,18 @@ var units: Dictionary = {
 			"backswing": 0.25,
 			"splash_radius": 0.0
 		},
-		"abilities": ["move", "stop", "hold_position", "attack", "harvest", "build_command_center", "build_supply_depot", "build_refinery", "build_barracks", "build_factory"]
+		"abilities": ["move", "stop", "hold_position", "attack", "harvest", "build_colony_hub", "build_silo", "build_aether_tap", "build_muster_hall", "build_workshop"]
 	},
-	"marine": {
-		"id": "marine",
-		"name": "Marine",
+	"rifleman": {
+		"id": "rifleman",
+		"name": "Rifleman",
+		"blurb": "Cheap ranged infantry. Surge Injector trades 10 HP for faster movement and fire rate. Strong when kiting melee units.",
 		"faction": FACTION_HUMANS,
 		"is_structure": false,
 		"is_worker": false,
 		"attributes": ["Light", "Biological"],
-		"mineral_cost": 50,
-		"vespene_cost": 0,
+		"crystal_cost": 50,
+		"aether_cost": 0,
 		"supply_cost": 1,
 		"build_time": 18.0,
 		"max_hp": 45.0,
@@ -64,7 +66,7 @@ var units: Dictionary = {
 		"sight_range": 22.0,
 		"push_priority": 2,
 		"weapon": {
-			"name": "C-14 Gauss Rifle",
+			"name": "R-9 Carbine",
 			"damage": 6.0,
 			"bonus": {},
 			"attacks": 1,
@@ -74,17 +76,18 @@ var units: Dictionary = {
 			"backswing": 0.30,
 			"splash_radius": 0.0
 		},
-		"abilities": ["move", "stop", "hold_position", "attack", "stimpack"]
+		"abilities": ["move", "stop", "hold_position", "attack", "surge"]
 	},
-	"marauder": {
-		"id": "marauder",
-		"name": "Marauder",
+	"breacher": {
+		"id": "breacher",
+		"name": "Breacher",
+		"blurb": "Armored line infantry. Breach Charges deal bonus damage to armored targets and slow them.",
 		"faction": FACTION_HUMANS,
 		"is_structure": false,
 		"is_worker": false,
 		"attributes": ["Armored", "Biological"],
-		"mineral_cost": 100,
-		"vespene_cost": 25,
+		"crystal_cost": 100,
+		"aether_cost": 25,
 		"supply_cost": 2,
 		"build_time": 21.0,
 		"max_hp": 125.0,
@@ -95,7 +98,7 @@ var units: Dictionary = {
 		"sight_range": 24.0,
 		"push_priority": 3,
 		"weapon": {
-			"name": "Punisher Grenades",
+			"name": "Breach Charges",
 			"damage": 10.0,
 			"bonus": {"Armored": 10.0},
 			"attacks": 1,
@@ -106,17 +109,18 @@ var units: Dictionary = {
 			"splash_radius": 0.0,
 			"concussive_slow": 0.5
 		},
-		"abilities": ["move", "stop", "hold_position", "attack", "stimpack"]
+		"abilities": ["move", "stop", "hold_position", "attack", "surge"]
 	},
-	"siege_tank": {
-		"id": "siege_tank",
-		"name": "Siege Tank (Tank Mode)",
+	"howitzer": {
+		"id": "howitzer",
+		"name": "Howitzer (Mobile Mode)",
+		"blurb": "Mobile artillery. Emplace it to reach range 31 with splash damage.",
 		"faction": FACTION_HUMANS,
 		"is_structure": false,
 		"is_worker": false,
 		"attributes": ["Armored", "Mechanical"],
-		"mineral_cost": 150,
-		"vespene_cost": 125,
+		"crystal_cost": 150,
+		"aether_cost": 125,
 		"supply_cost": 3,
 		"build_time": 32.0,
 		"max_hp": 175.0,
@@ -127,7 +131,7 @@ var units: Dictionary = {
 		"sight_range": 26.0,
 		"push_priority": 4,
 		"weapon": {
-			"name": "90mm Twin Cannon",
+			"name": "Twin Autocannon",
 			"damage": 15.0,
 			"bonus": {"Armored": 10.0},
 			"attacks": 1,
@@ -137,18 +141,19 @@ var units: Dictionary = {
 			"backswing": 0.25,
 			"splash_radius": 0.0
 		},
-		"abilities": ["move", "stop", "hold_position", "attack", "morph_siege_mode"]
+		"abilities": ["move", "stop", "hold_position", "attack", "emplace"]
 	},
-	"siege_tank_sieged": {
-		"id": "siege_tank_sieged",
-		"name": "Siege Tank (Siege Mode)",
+	"howitzer_emplaced": {
+		"id": "howitzer_emplaced",
+		"name": "Howitzer (Emplaced Mode)",
+		"blurb": "Deployed artillery. Range 31 with splash damage, minimum range 5. Cannot move until mobilized.",
 		"faction": FACTION_HUMANS,
 		"is_structure": false,
 		"is_worker": false,
 		"is_immobile": true,
 		"attributes": ["Armored", "Mechanical"],
-		"mineral_cost": 150,
-		"vespene_cost": 125,
+		"crystal_cost": 150,
+		"aether_cost": 125,
 		"supply_cost": 3,
 		"build_time": 32.0,
 		"max_hp": 175.0,
@@ -159,7 +164,7 @@ var units: Dictionary = {
 		"sight_range": 30.0,
 		"push_priority": 10,
 		"weapon": {
-			"name": "180mm Shock Cannon",
+			"name": "Emplaced Mortar",
 			"damage": 40.0,
 			"bonus": {"Armored": 30.0},
 			"attacks": 1,
@@ -170,17 +175,18 @@ var units: Dictionary = {
 			"backswing": 0.30,
 			"splash_radius": 3.5
 		},
-		"abilities": ["stop", "attack", "morph_tank_mode"]
+		"abilities": ["stop", "attack", "mobilize"]
 	},
-	"command_center": {
-		"id": "command_center",
-		"name": "Command Center",
+	"colony_hub": {
+		"id": "colony_hub",
+		"name": "Colony Hub",
+		"blurb": "Main base. Trains Pioneers, receives gathered resources and provides 15 supply.",
 		"faction": FACTION_HUMANS,
 		"is_structure": true,
 		"is_town_hall": true,
 		"attributes": ["Armored", "Mechanical", "Structure"],
-		"mineral_cost": 400,
-		"vespene_cost": 0,
+		"crystal_cost": 400,
+		"aether_cost": 0,
 		"supply_provided": 15,
 		"build_time": 71.0,
 		"max_hp": 1500.0,
@@ -190,17 +196,18 @@ var units: Dictionary = {
 		"footprint": Vector2i(5, 5),
 		"sight_range": 26.0,
 		"push_priority": 100,
-		"trains": ["scv"],
-		"abilities": ["train_scv", "rally"]
+		"trains": ["pioneer"],
+		"abilities": ["train_pioneer", "rally"]
 	},
-	"supply_depot": {
-		"id": "supply_depot",
-		"name": "Supply Depot",
+	"silo": {
+		"id": "silo",
+		"name": "Provision Silo",
+		"blurb": "Provides 8 supply. Extended, it blocks the path; retract it to let units through.",
 		"faction": FACTION_HUMANS,
 		"is_structure": true,
 		"attributes": ["Armored", "Mechanical", "Structure"],
-		"mineral_cost": 100,
-		"vespene_cost": 0,
+		"crystal_cost": 100,
+		"aether_cost": 0,
 		"supply_provided": 8,
 		"build_time": 21.0,
 		"max_hp": 400.0,
@@ -210,17 +217,18 @@ var units: Dictionary = {
 		"footprint": Vector2i(2, 2),
 		"sight_range": 18.0,
 		"push_priority": 100,
-		"abilities": ["lower_depot"]
+		"abilities": ["retract_silo"]
 	},
-	"supply_depot_lowered": {
-		"id": "supply_depot_lowered",
-		"name": "Supply Depot (Lowered)",
+	"silo_retracted": {
+		"id": "silo_retracted",
+		"name": "Provision Silo (Retracted)",
+		"blurb": "Provides 8 supply. Retracted into the ground, so units can walk over it.",
 		"faction": FACTION_HUMANS,
 		"is_structure": true,
 		"is_walkable_structure": true,
 		"attributes": ["Armored", "Mechanical", "Structure"],
-		"mineral_cost": 100,
-		"vespene_cost": 0,
+		"crystal_cost": 100,
+		"aether_cost": 0,
 		"supply_provided": 8,
 		"build_time": 21.0,
 		"max_hp": 400.0,
@@ -230,17 +238,18 @@ var units: Dictionary = {
 		"footprint": Vector2i(2, 2),
 		"sight_range": 18.0,
 		"push_priority": 0,
-		"abilities": ["raise_depot"]
+		"abilities": ["extend_silo"]
 	},
-	"refinery": {
-		"id": "refinery",
-		"name": "Refinery",
+	"aether_tap": {
+		"id": "aether_tap",
+		"name": "Aether Tap",
+		"blurb": "Extracts aether from a vent. Pioneers carry it back to the Colony Hub.",
 		"faction": FACTION_HUMANS,
 		"is_structure": true,
 		"is_gas_extractor": true,
 		"attributes": ["Armored", "Mechanical", "Structure"],
-		"mineral_cost": 75,
-		"vespene_cost": 0,
+		"crystal_cost": 75,
+		"aether_cost": 0,
 		"supply_provided": 0,
 		"build_time": 21.0,
 		"max_hp": 500.0,
@@ -252,15 +261,16 @@ var units: Dictionary = {
 		"push_priority": 100,
 		"abilities": []
 	},
-	"barracks": {
-		"id": "barracks",
-		"name": "Barracks",
+	"muster_hall": {
+		"id": "muster_hall",
+		"name": "Muster Hall",
+		"blurb": "Trains Riflemen and Breachers. Requires a Provision Silo.",
 		"faction": FACTION_HUMANS,
 		"is_structure": true,
-		"requires": ["supply_depot"],
+		"requires": ["silo"],
 		"attributes": ["Armored", "Mechanical", "Structure"],
-		"mineral_cost": 150,
-		"vespene_cost": 0,
+		"crystal_cost": 150,
+		"aether_cost": 0,
 		"supply_provided": 0,
 		"build_time": 46.0,
 		"max_hp": 1000.0,
@@ -270,18 +280,19 @@ var units: Dictionary = {
 		"footprint": Vector2i(3, 3),
 		"sight_range": 20.0,
 		"push_priority": 100,
-		"trains": ["marine", "marauder"],
-		"abilities": ["train_marine", "train_marauder", "rally"]
+		"trains": ["rifleman", "breacher"],
+		"abilities": ["train_rifleman", "train_breacher", "rally"]
 	},
-	"factory": {
-		"id": "factory",
-		"name": "Factory",
+	"workshop": {
+		"id": "workshop",
+		"name": "Workshop",
+		"blurb": "Builds Howitzers. Requires a Muster Hall.",
 		"faction": FACTION_HUMANS,
 		"is_structure": true,
-		"requires": ["barracks"],
+		"requires": ["muster_hall"],
 		"attributes": ["Armored", "Mechanical", "Structure"],
-		"mineral_cost": 150,
-		"vespene_cost": 100,
+		"crystal_cost": 150,
+		"aether_cost": 100,
 		"supply_provided": 0,
 		"build_time": 43.0,
 		"max_hp": 1250.0,
@@ -291,22 +302,23 @@ var units: Dictionary = {
 		"footprint": Vector2i(3, 3),
 		"sight_range": 20.0,
 		"push_priority": 100,
-		"trains": ["siege_tank"],
-		"abilities": ["train_siege_tank", "rally"]
+		"trains": ["howitzer"],
+		"abilities": ["train_howitzer", "rally"]
 	},
 
 	# =========================================================================
-	# 2. MONSTERS (Xenomorph Swarm — Fast Organic Melee & Acid Pack)
+	# 2. MONSTERS (Gnarl Brood — Fast Organic Melee & Acid Pack)
 	# =========================================================================
-	"drone": {
-		"id": "drone",
-		"name": "Drone",
+	"forager": {
+		"id": "forager",
+		"name": "Forager",
+		"blurb": "Worker. Gathers crystal and returns it to the Brood Nest.",
 		"faction": FACTION_MONSTERS,
 		"is_structure": false,
 		"is_worker": true,
 		"attributes": ["Light", "Biological"],
-		"mineral_cost": 50,
-		"vespene_cost": 0,
+		"crystal_cost": 50,
+		"aether_cost": 0,
 		"supply_cost": 1,
 		"build_time": 12.0,
 		"max_hp": 40.0,
@@ -329,15 +341,16 @@ var units: Dictionary = {
 		},
 		"abilities": ["move", "stop", "hold_position", "attack", "harvest"]
 	},
-	"swarmling": {
-		"id": "swarmling",
-		"name": "Swarmling",
+	"skitterling": {
+		"id": "skitterling",
+		"name": "Skitterling",
+		"blurb": "Very fast, cheap melee swarm unit. Dangerous in numbers, weak to splash damage.",
 		"faction": FACTION_MONSTERS,
 		"is_structure": false,
 		"is_worker": false,
 		"attributes": ["Light", "Biological"],
-		"mineral_cost": 25,
-		"vespene_cost": 0,
+		"crystal_cost": 25,
+		"aether_cost": 0,
 		"supply_cost": 1,
 		"build_time": 17.0,
 		"max_hp": 35.0,
@@ -348,7 +361,7 @@ var units: Dictionary = {
 		"sight_range": 20.0,
 		"push_priority": 2,
 		"weapon": {
-			"name": "Adrenal Claws",
+			"name": "Razor Claws",
 			"damage": 5.0,
 			"bonus": {},
 			"attacks": 1,
@@ -360,15 +373,16 @@ var units: Dictionary = {
 		},
 		"abilities": ["move", "stop", "hold_position", "attack"]
 	},
-	"roach": {
-		"id": "roach",
-		"name": "Roach",
+	"bile_crawler": {
+		"id": "bile_crawler",
+		"name": "Bile Crawler",
+		"blurb": "Armored acid spitter with mid range. Good against structures and armored units.",
 		"faction": FACTION_MONSTERS,
 		"is_structure": false,
 		"is_worker": false,
 		"attributes": ["Armored", "Biological"],
-		"mineral_cost": 75,
-		"vespene_cost": 25,
+		"crystal_cost": 75,
+		"aether_cost": 25,
 		"supply_cost": 2,
 		"build_time": 19.0,
 		"max_hp": 145.0,
@@ -379,7 +393,7 @@ var units: Dictionary = {
 		"sight_range": 22.0,
 		"push_priority": 3,
 		"weapon": {
-			"name": "Acid Saliva",
+			"name": "Caustic Spit",
 			"damage": 16.0,
 			"bonus": {},
 			"attacks": 1,
@@ -391,15 +405,16 @@ var units: Dictionary = {
 		},
 		"abilities": ["move", "stop", "hold_position", "attack"]
 	},
-	"ravager": {
-		"id": "ravager",
-		"name": "Ravager",
+	"blight_hurler": {
+		"id": "blight_hurler",
+		"name": "Blight Hurler",
+		"blurb": "Lobs corrosive blight that splashes. Bonus damage to structures.",
 		"faction": FACTION_MONSTERS,
 		"is_structure": false,
 		"is_worker": false,
 		"attributes": ["Biological"],
-		"mineral_cost": 100,
-		"vespene_cost": 100,
+		"crystal_cost": 100,
+		"aether_cost": 100,
 		"supply_cost": 3,
 		"build_time": 24.0,
 		"max_hp": 120.0,
@@ -410,7 +425,7 @@ var units: Dictionary = {
 		"sight_range": 24.0,
 		"push_priority": 4,
 		"weapon": {
-			"name": "Plasma Discharge",
+			"name": "Corrosive Lob",
 			"damage": 18.0,
 			"bonus": {"Structure": 8.0},
 			"attacks": 1,
@@ -422,15 +437,16 @@ var units: Dictionary = {
 		},
 		"abilities": ["move", "stop", "hold_position", "attack"]
 	},
-	"hatchery": {
-		"id": "hatchery",
-		"name": "Hatchery",
+	"brood_nest": {
+		"id": "brood_nest",
+		"name": "Brood Nest",
+		"blurb": "Monster main base. Spawns Foragers, Skitterlings, Bile Crawlers and Blight Hurlers.",
 		"faction": FACTION_MONSTERS,
 		"is_structure": true,
 		"is_town_hall": true,
 		"attributes": ["Armored", "Biological", "Structure"],
-		"mineral_cost": 300,
-		"vespene_cost": 0,
+		"crystal_cost": 300,
+		"aether_cost": 0,
 		"supply_provided": 15,
 		"build_time": 71.0,
 		"max_hp": 1500.0,
@@ -440,22 +456,23 @@ var units: Dictionary = {
 		"footprint": Vector2i(5, 5),
 		"sight_range": 26.0,
 		"push_priority": 100,
-		"trains": ["drone", "swarmling", "roach", "ravager"],
-		"abilities": ["train_drone", "train_swarmling", "train_roach", "train_ravager", "rally"]
+		"trains": ["forager", "skitterling", "bile_crawler", "blight_hurler"],
+		"abilities": ["train_forager", "train_skitterling", "train_bile_crawler", "train_blight_hurler", "rally"]
 	},
 
 	# =========================================================================
-	# 3. ALIENS (Celestial Armada — Regenerating Plasma Shields, Blink & Thermal Colossus)
+	# 3. ALIENS (Aurelian Concord — Regenerating Aegis Shields, Phase Step & Thermal Spire Walker)
 	# =========================================================================
-	"probe": {
-		"id": "probe",
-		"name": "Probe",
+	"mote": {
+		"id": "mote",
+		"name": "Mote",
+		"blurb": "Worker. Gathers crystal and summons structures that complete on their own.",
 		"faction": FACTION_ALIENS,
 		"is_structure": false,
 		"is_worker": true,
 		"attributes": ["Light", "Mechanical"],
-		"mineral_cost": 50,
-		"vespene_cost": 0,
+		"crystal_cost": 50,
+		"aether_cost": 0,
 		"supply_cost": 1,
 		"build_time": 12.0,
 		"max_hp": 20.0,
@@ -466,7 +483,7 @@ var units: Dictionary = {
 		"sight_range": 18.0,
 		"push_priority": 1,
 		"weapon": {
-			"name": "Particle Beam",
+			"name": "Mote Spark",
 			"damage": 5.0,
 			"bonus": {},
 			"attacks": 1,
@@ -476,17 +493,18 @@ var units: Dictionary = {
 			"backswing": 0.22,
 			"splash_radius": 0.0
 		},
-		"abilities": ["move", "stop", "hold_position", "attack", "harvest", "build_nexus", "build_pylon", "build_gateway"]
+		"abilities": ["move", "stop", "hold_position", "attack", "harvest", "build_heartstone", "build_resonator", "build_waystone"]
 	},
-	"zealot": {
-		"id": "zealot",
-		"name": "Zealot",
+	"sunblade": {
+		"id": "sunblade",
+		"name": "Sunblade",
+		"blurb": "Shielded melee warrior with twin light blades. Rush closes the gap quickly.",
 		"faction": FACTION_ALIENS,
 		"is_structure": false,
 		"is_worker": false,
 		"attributes": ["Light", "Biological"],
-		"mineral_cost": 100,
-		"vespene_cost": 0,
+		"crystal_cost": 100,
+		"aether_cost": 0,
 		"supply_cost": 2,
 		"build_time": 27.0,
 		"max_hp": 100.0,
@@ -497,7 +515,7 @@ var units: Dictionary = {
 		"sight_range": 22.0,
 		"push_priority": 3,
 		"weapon": {
-			"name": "Psi Blades",
+			"name": "Light Blades",
 			"damage": 16.0,
 			"bonus": {},
 			"attacks": 2,
@@ -509,15 +527,16 @@ var units: Dictionary = {
 		},
 		"abilities": ["move", "stop", "hold_position", "attack", "charge"]
 	},
-	"stalker": {
-		"id": "stalker",
-		"name": "Stalker",
+	"skirmisher": {
+		"id": "skirmisher",
+		"name": "Skirmisher",
+		"blurb": "Shielded ranged unit. Phase Step teleports it out of danger or onto high ground.",
 		"faction": FACTION_ALIENS,
 		"is_structure": false,
 		"is_worker": false,
 		"attributes": ["Armored", "Mechanical"],
-		"mineral_cost": 125,
-		"vespene_cost": 50,
+		"crystal_cost": 125,
+		"aether_cost": 50,
 		"supply_cost": 2,
 		"build_time": 30.0,
 		"max_hp": 80.0,
@@ -528,7 +547,7 @@ var units: Dictionary = {
 		"sight_range": 26.0,
 		"push_priority": 3,
 		"weapon": {
-			"name": "Particle Disruptors",
+			"name": "Lattice Needlers",
 			"damage": 13.0,
 			"bonus": {"Armored": 5.0},
 			"attacks": 1,
@@ -538,17 +557,18 @@ var units: Dictionary = {
 			"backswing": 0.26,
 			"splash_radius": 0.0
 		},
-		"abilities": ["move", "stop", "hold_position", "attack", "blink"]
+		"abilities": ["move", "stop", "hold_position", "attack", "phase_step"]
 	},
-	"colossus": {
-		"id": "colossus",
-		"name": "Colossus",
+	"spire_walker": {
+		"id": "spire_walker",
+		"name": "Spire Walker",
+		"blurb": "Towering walker with splash prism beams. Strong against light units and can step over cliff walls.",
 		"faction": FACTION_ALIENS,
 		"is_structure": false,
 		"is_worker": false,
 		"attributes": ["Armored", "Mechanical", "Massive"],
-		"mineral_cost": 300,
-		"vespene_cost": 200,
+		"crystal_cost": 300,
+		"aether_cost": 200,
 		"supply_cost": 6,
 		"build_time": 54.0,
 		"max_hp": 200.0,
@@ -559,7 +579,7 @@ var units: Dictionary = {
 		"sight_range": 28.0,
 		"push_priority": 6,
 		"weapon": {
-			"name": "Thermal Lances",
+			"name": "Prism Beams",
 			"damage": 20.0,
 			"bonus": {"Light": 10.0},
 			"attacks": 2,
@@ -571,15 +591,16 @@ var units: Dictionary = {
 		},
 		"abilities": ["move", "stop", "hold_position", "attack"]
 	},
-	"nexus": {
-		"id": "nexus",
-		"name": "Nexus",
+	"heartstone": {
+		"id": "heartstone",
+		"name": "Heartstone",
+		"blurb": "Aurelian main base. Summons Motes and provides 15 supply.",
 		"faction": FACTION_ALIENS,
 		"is_structure": true,
 		"is_town_hall": true,
 		"attributes": ["Armored", "Structure"],
-		"mineral_cost": 400,
-		"vespene_cost": 0,
+		"crystal_cost": 400,
+		"aether_cost": 0,
 		"supply_provided": 15,
 		"build_time": 71.0,
 		"max_hp": 1000.0,
@@ -589,17 +610,18 @@ var units: Dictionary = {
 		"footprint": Vector2i(5, 5),
 		"sight_range": 26.0,
 		"push_priority": 100,
-		"trains": ["probe"],
-		"abilities": ["train_probe", "rally"]
+		"trains": ["mote"],
+		"abilities": ["train_mote", "rally"]
 	},
-	"pylon": {
-		"id": "pylon",
-		"name": "Pylon",
+	"resonator": {
+		"id": "resonator",
+		"name": "Resonator",
+		"blurb": "Provides 8 supply.",
 		"faction": FACTION_ALIENS,
 		"is_structure": true,
 		"attributes": ["Armored", "Structure"],
-		"mineral_cost": 100,
-		"vespene_cost": 0,
+		"crystal_cost": 100,
+		"aether_cost": 0,
 		"supply_provided": 8,
 		"build_time": 18.0,
 		"max_hp": 200.0,
@@ -611,14 +633,15 @@ var units: Dictionary = {
 		"push_priority": 100,
 		"abilities": []
 	},
-	"gateway": {
-		"id": "gateway",
-		"name": "Gateway",
+	"waystone": {
+		"id": "waystone",
+		"name": "Waystone",
+		"blurb": "Summons Sunblades, Skirmishers and Spire Walkers.",
 		"faction": FACTION_ALIENS,
 		"is_structure": true,
 		"attributes": ["Armored", "Structure"],
-		"mineral_cost": 150,
-		"vespene_cost": 0,
+		"crystal_cost": 150,
+		"aether_cost": 0,
 		"supply_provided": 0,
 		"build_time": 46.0,
 		"max_hp": 500.0,
@@ -628,92 +651,64 @@ var units: Dictionary = {
 		"footprint": Vector2i(3, 3),
 		"sight_range": 20.0,
 		"push_priority": 100,
-		"trains": ["zealot", "stalker", "colossus"],
-		"abilities": ["train_zealot", "train_stalker", "train_colossus", "rally"]
+		"trains": ["sunblade", "skirmisher", "spire_walker"],
+		"abilities": ["train_sunblade", "train_skirmisher", "train_spire_walker", "rally"]
 	}
 }
 
 var abilities: Dictionary = {
-	"move": {"id": "move", "name": "Move", "hotkey": "M", "target": "point"},
-	"stop": {"id": "stop", "name": "Stop", "hotkey": "S", "target": "none"},
-	"hold_position": {"id": "hold_position", "name": "Hold Position", "hotkey": "H", "target": "none"},
-	"attack": {"id": "attack", "name": "Attack / A-Move", "hotkey": "A", "target": "point_or_unit"},
-	"harvest": {"id": "harvest", "name": "Gather Resources", "hotkey": "G", "target": "resource"},
-	"stimpack": {
-		"id": "stimpack",
-		"name": "Stimpack (+50% Speed & Fire Rate, -10 HP)",
-		"hotkey": "T",
-		"target": "none",
-		"hp_cost": 10.0,
-		"duration": 11.0,
-		"speed_mult": 1.5,
-		"attack_speed_mult": 1.5
-	},
-	"blink": {
-		"id": "blink",
-		"name": "Blink (Instant Teleport up to 18 Range)",
-		"hotkey": "B",
-		"target": "point",
-		"max_range": 18.0,
-		"cooldown": 7.0
-	},
-	"charge": {
-		"id": "charge",
-		"name": "Zealot Charge (+80% Speed Burst)",
-		"hotkey": "C",
-		"target": "none",
-		"duration": 3.5
-	},
-	"morph_siege_mode": {
-		"id": "morph_siege_mode",
-		"name": "Siege Mode (31 Range Splash)",
-		"hotkey": "E",
-		"target": "none",
-		"morph_to": "siege_tank_sieged"
-	},
-	"morph_tank_mode": {
-		"id": "morph_tank_mode",
-		"name": "Tank Mode (Mobile)",
-		"hotkey": "D",
-		"target": "none",
-		"morph_to": "siege_tank"
-	},
-	"lower_depot": {
-		"id": "lower_depot",
-		"name": "Lower Supply Depot (Walkable)",
-		"hotkey": "R",
-		"target": "none",
-		"morph_to": "supply_depot_lowered"
-	},
-	"raise_depot": {
-		"id": "raise_depot",
-		"name": "Raise Supply Depot (Blocks Choke)",
-		"hotkey": "R",
-		"target": "none",
-		"morph_to": "supply_depot"
-	},
-	"train_scv": {"id": "train_scv", "name": "Train SCV (50M)", "hotkey": "S", "target": "none", "unit": "scv"},
-	"train_marine": {"id": "train_marine", "name": "Train Marine (50M)", "hotkey": "A", "target": "none", "unit": "marine"},
-	"train_marauder": {"id": "train_marauder", "name": "Train Marauder (100M/25G)", "hotkey": "D", "target": "none", "unit": "marauder"},
-	"train_siege_tank": {"id": "train_siege_tank", "name": "Train Siege Tank (150M/125G)", "hotkey": "S", "target": "none", "unit": "siege_tank"},
-	"train_drone": {"id": "train_drone", "name": "Morph Drone (50M)", "hotkey": "D", "target": "none", "unit": "drone"},
-	"train_swarmling": {"id": "train_swarmling", "name": "Morph Swarmling (25M)", "hotkey": "Z", "target": "none", "unit": "swarmling"},
-	"train_roach": {"id": "train_roach", "name": "Morph Roach (75M/25G)", "hotkey": "R", "target": "none", "unit": "roach"},
-	"train_ravager": {"id": "train_ravager", "name": "Morph Ravager (100M/100G)", "hotkey": "V", "target": "none", "unit": "ravager"},
-	"train_probe": {"id": "train_probe", "name": "Warp Probe (50M)", "hotkey": "E", "target": "none", "unit": "probe"},
-	"train_zealot": {"id": "train_zealot", "name": "Warp Zealot (100M)", "hotkey": "Z", "target": "none", "unit": "zealot"},
-	"train_stalker": {"id": "train_stalker", "name": "Warp Stalker (125M/50G)", "hotkey": "S", "target": "none", "unit": "stalker"},
-	"train_colossus": {"id": "train_colossus", "name": "Warp Colossus (300M/200G)", "hotkey": "C", "target": "none", "unit": "colossus"},
-	"build_supply_depot": {"id": "build_supply_depot", "name": "Build Supply Depot (100M)", "hotkey": "B", "target": "point", "structure": "supply_depot"},
-	"build_refinery": {"id": "build_refinery", "name": "Build Refinery (75M)", "hotkey": "R", "target": "point", "structure": "refinery"},
-	"build_barracks": {"id": "build_barracks", "name": "Build Barracks (150M)", "hotkey": "X", "target": "point", "structure": "barracks"},
-	"build_factory": {"id": "build_factory", "name": "Build Factory (150M/100G)", "hotkey": "F", "target": "point", "structure": "factory"},
-	"build_command_center": {"id": "build_command_center", "name": "Build Command Center (400M)", "hotkey": "C", "target": "point", "structure": "command_center"},
-	"build_nexus": {"id": "build_nexus", "name": "Warp Nexus (400M)", "hotkey": "N", "target": "point", "structure": "nexus"},
-	"build_pylon": {"id": "build_pylon", "name": "Warp Pylon (100M)", "hotkey": "E", "target": "point", "structure": "pylon"},
-	"build_gateway": {"id": "build_gateway", "name": "Warp Gateway (150M)", "hotkey": "G", "target": "point", "structure": "gateway"},
-	"rally": {"id": "rally", "name": "Set Rally Point", "hotkey": "Y", "target": "point"}
+	"move": {"id": "move", "name": "Move", "hotkey": "M", "target": "point", "desc": "Move to a location. Units do not stop for enemies on the way."},
+	"stop": {"id": "stop", "name": "Stop", "hotkey": "S", "target": "none", "desc": "Cancel the current order."},
+	"hold_position": {"id": "hold_position", "name": "Hold Position", "hotkey": "H", "target": "none", "desc": "Stay in place and only fire at enemies that come into range."},
+	"attack": {"id": "attack", "name": "Attack", "hotkey": "A", "target": "point_or_unit", "desc": "Attack-move to a point, engaging anything met on the way, or focus a single target."},
+	"harvest": {"id": "harvest", "name": "Gather", "hotkey": "G", "target": "resource", "desc": "Gather crystal or aether and return it to the nearest main base."},
+	"surge": {"id": "surge", "name": "Surge Injector", "hotkey": "T", "target": "none", "desc": "Spend 10 HP for +50% movement and attack speed for 11 seconds.", "hp_cost": 10.0, "duration": 11.0, "speed_mult": 1.5, "attack_speed_mult": 1.5},
+	"phase_step": {"id": "phase_step", "name": "Phase Step", "hotkey": "B", "target": "point", "desc": "Teleport up to 18 range. 7 second cooldown.", "max_range": 18.0, "cooldown": 7.0},
+	"charge": {"id": "charge", "name": "Sunblade Rush", "hotkey": "C", "target": "none", "desc": "Burst of +80% movement speed for 3.5 seconds.", "duration": 3.5},
+	"emplace": {"id": "emplace", "name": "Emplace", "hotkey": "E", "target": "none", "desc": "Deploy. Range 31 with splash, minimum range 5. Cannot move while emplaced.", "morph_to": "howitzer_emplaced"},
+	"mobilize": {"id": "mobilize", "name": "Mobilize", "hotkey": "D", "target": "none", "desc": "Pack up so the howitzer can move again.", "morph_to": "howitzer"},
+	"retract_silo": {"id": "retract_silo", "name": "Retract Silo", "hotkey": "R", "target": "none", "desc": "Lower into the ground so units can walk over it.", "morph_to": "silo_retracted"},
+	"extend_silo": {"id": "extend_silo", "name": "Extend Silo", "hotkey": "R", "target": "none", "desc": "Raise the silo again to block the path.", "morph_to": "silo"},
+	"train_pioneer": {"id": "train_pioneer", "name": "Train Pioneer", "hotkey": "S", "target": "none", "unit": "pioneer"},
+	"train_rifleman": {"id": "train_rifleman", "name": "Train Rifleman", "hotkey": "A", "target": "none", "unit": "rifleman"},
+	"train_breacher": {"id": "train_breacher", "name": "Train Breacher", "hotkey": "D", "target": "none", "unit": "breacher"},
+	"train_howitzer": {"id": "train_howitzer", "name": "Train Howitzer", "hotkey": "S", "target": "none", "unit": "howitzer"},
+	"train_forager": {"id": "train_forager", "name": "Spawn Forager", "hotkey": "D", "target": "none", "unit": "forager"},
+	"train_skitterling": {"id": "train_skitterling", "name": "Spawn Skitterling", "hotkey": "Z", "target": "none", "unit": "skitterling"},
+	"train_bile_crawler": {"id": "train_bile_crawler", "name": "Spawn Bile Crawler", "hotkey": "R", "target": "none", "unit": "bile_crawler"},
+	"train_blight_hurler": {"id": "train_blight_hurler", "name": "Spawn Blight Hurler", "hotkey": "V", "target": "none", "unit": "blight_hurler"},
+	"train_mote": {"id": "train_mote", "name": "Summon Mote", "hotkey": "E", "target": "none", "unit": "mote"},
+	"train_sunblade": {"id": "train_sunblade", "name": "Summon Sunblade", "hotkey": "Z", "target": "none", "unit": "sunblade"},
+	"train_skirmisher": {"id": "train_skirmisher", "name": "Summon Skirmisher", "hotkey": "S", "target": "none", "unit": "skirmisher"},
+	"train_spire_walker": {"id": "train_spire_walker", "name": "Summon Spire Walker", "hotkey": "C", "target": "none", "unit": "spire_walker"},
+	"build_silo": {"id": "build_silo", "name": "Build Provision Silo", "hotkey": "B", "target": "point", "structure": "silo"},
+	"build_aether_tap": {"id": "build_aether_tap", "name": "Build Aether Tap", "hotkey": "R", "target": "point", "structure": "aether_tap"},
+	"build_muster_hall": {"id": "build_muster_hall", "name": "Build Muster Hall", "hotkey": "X", "target": "point", "structure": "muster_hall"},
+	"build_workshop": {"id": "build_workshop", "name": "Build Workshop", "hotkey": "F", "target": "point", "structure": "workshop"},
+	"build_colony_hub": {"id": "build_colony_hub", "name": "Build Colony Hub", "hotkey": "C", "target": "point", "structure": "colony_hub"},
+	"build_heartstone": {"id": "build_heartstone", "name": "Summon Heartstone", "hotkey": "N", "target": "point", "structure": "heartstone"},
+	"build_resonator": {"id": "build_resonator", "name": "Summon Resonator", "hotkey": "E", "target": "point", "structure": "resonator"},
+	"build_waystone": {"id": "build_waystone", "name": "Summon Waystone", "hotkey": "G", "target": "point", "structure": "waystone"},
+	"rally": {"id": "rally", "name": "Set Rally Point", "hotkey": "Y", "target": "point", "desc": "New units gather at this point."}
 }
+
+var faction_info: Dictionary = {
+	"humans": {"name": "Meridian Guard", "color": Color("#4f8cf0"), "town_hall": "colony_hub", "worker": "pioneer"},
+	"monsters": {"name": "Gnarl Brood", "color": Color("#e0453a"), "town_hall": "brood_nest", "worker": "forager"},
+	"aliens": {"name": "Aurelian Concord", "color": Color("#f0c43c"), "town_hall": "heartstone", "worker": "mote"}
+}
+
+var player_colors: Dictionary = {
+	1: Color("#4f8cf0"),
+	2: Color("#e0453a"),
+	3: Color("#f0c43c")
+}
+
+func get_faction_name(faction_id: String) -> String:
+	return str(faction_info.get(faction_id, {}).get("name", faction_id.capitalize()))
+
+func get_player_color(owner_id: int) -> Color:
+	return player_colors.get(owner_id, Color("#9ca3af"))
 
 func get_unit_def(unit_type: String) -> Dictionary:
 	return units.get(unit_type.to_lower(), {})
