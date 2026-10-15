@@ -1,24 +1,28 @@
 extends Node2D
 
-# RTSMain.gd — StarCraft II & Stormgate (SnowPlay) Inspired View Shell & Tactical HUD
-# Renders the 64Hz SimEngine state with smooth frame interpolation, box selection,
-# control groups (1-9), 3x5 SC2 Command Card, Minimap with camera frustum, and BDD E2E overlay.
+# RTSMain.gd — 2.5D Angled 3D Perspective View Shell & StarCraft II Tactical HUD
+# Combines `RTSWorld3D` (3D angled perspective Camera3D + 3D terrain plateaus/ramps/meshes for Humans,
+# Monsters, and Aliens) with crisp 2D screen-space HP/Shield bars, box selection, 3x5 Command Card,
+# Minimap, and BDD E2E overlay.
 
-const WORLD_SCALE: float = 13.5 # World units (128x96) -> Screen space (1728x1296)
+const RTSWorld3DScript = preload("res://scripts/RTSWorld3D.gd")
 
-var camera_offset: Vector2 = Vector2(40.0, 20.0)
-var camera_zoom: float = 1.0
+var world_3d: Node3D
 var selected_tags: Array[int] = []
-var control_groups: Dictionary = {} # 1..9 -> Array[int]
+var control_groups: Dictionary = {}
 
 var is_box_selecting: bool = false
 var box_start_screen: Vector2 = Vector2.ZERO
 var box_end_screen: Vector2 = Vector2.ZERO
 
-var pending_ability: String = "" # e.g., "attack", "move", "build_supply_depot", "build_barracks"
-var active_lasers: Array[Dictionary] = [] # Visual weapon tracers & splash rings
+var pending_ability: String = ""
+var active_lasers: Array[Dictionary] = []
 
 func _ready() -> void:
+	world_3d = RTSWorld3DScript.new()
+	world_3d.name = "RTSWorld3D"
+	add_child(world_3d)
+
 	SimEngine.projectile_fired.connect(_on_projectile_fired)
 	SimEngine.scenario_loaded.connect(_on_scenario_loaded)
 
@@ -43,37 +47,44 @@ func _process(delta: float) -> void:
 		active_lasers[i]["ttl"] -= delta
 		if active_lasers[i]["ttl"] <= 0.0:
 			active_lasers.remove_at(i)
-	# Prune dead tags from selection
 	var alive_sel: Array[int] = []
 	for t in selected_tags:
 		if SimEngine.units.has(t):
 			alive_sel.append(t)
 	selected_tags = alive_sel
+	if world_3d:
+		world_3d.sync_3d_entities(selected_tags, delta)
 	queue_redraw()
 
 func _handle_camera_pan(delta: float) -> void:
-	var pan_spd = 520.0 * delta
+	if not world_3d or not world_3d.camera_3d:
+		return
+	var pan_spd = 38.0 * delta
+	var cam = world_3d.camera_3d
 	if Input.is_key_pressed(KEY_LEFT):
-		camera_offset.x = max(-100.0, camera_offset.x - pan_spd)
+		cam.position.x = clampf(cam.position.x - pan_spd, 16.0, 112.0)
 	if Input.is_key_pressed(KEY_RIGHT):
-		camera_offset.x = min(400.0, camera_offset.x + pan_spd)
+		cam.position.x = clampf(cam.position.x + pan_spd, 16.0, 112.0)
 	if Input.is_key_pressed(KEY_UP):
-		camera_offset.y = max(-80.0, camera_offset.y - pan_spd)
+		cam.position.z = clampf(cam.position.z - pan_spd, 40.0, 130.0)
 	if Input.is_key_pressed(KEY_DOWN):
-		camera_offset.y = min(450.0, camera_offset.y + pan_spd)
+		cam.position.z = clampf(cam.position.z + pan_spd, 40.0, 130.0)
 
-func world_to_screen(wpos: Vector2) -> Vector2:
-	return (wpos * WORLD_SCALE) - camera_offset
+func world_to_screen(wpos: Vector2, y_offset: float = 0.0) -> Vector2:
+	if world_3d and world_3d.camera_3d:
+		return world_3d.world_to_screen(wpos, y_offset)
+	return wpos * 13.5
 
 func screen_to_world(spos: Vector2) -> Vector2:
-	return (spos + camera_offset) / WORLD_SCALE
+	if world_3d and world_3d.camera_3d:
+		return world_3d.screen_to_world(spos)
+	return spos / 13.5
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
 		var mpos: Vector2 = mb.position
 
-		# Check if clicking inside bottom HUD (y >= 850)
 		if mpos.y >= 850.0:
 			if mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT:
 				_handle_hud_click(mpos)
@@ -117,18 +128,16 @@ func _complete_box_selection(p1: Vector2, p2: Vector2, add_shift: bool, is_doubl
 	)
 
 	if rect.size.length() < 10.0:
-		# Single click selection
 		var wclick = screen_to_world(p2)
 		var clicked_unit: Dictionary = {}
 		var best_d: float = 999.0
 		for u in SimEngine.units.values():
 			var d = wclick.distance_to(u["pos"])
-			if d <= u["radius"] + 1.1 and d < best_d:
+			if d <= u["radius"] + 1.5 and d < best_d:
 				best_d = d
 				clicked_unit = u
 		if not clicked_unit.is_empty():
 			if is_double_click:
-				# SC2 Ctrl+Click / Double-Click: select all visible units of same type!
 				for u in SimEngine.units.values():
 					if u["owner"] == clicked_unit["owner"] and u["unit_type"] == clicked_unit["unit_type"]:
 						if not selected_tags.has(u["tag"]):
@@ -137,7 +146,6 @@ func _complete_box_selection(p1: Vector2, p2: Vector2, add_shift: bool, is_doubl
 				if not selected_tags.has(clicked_unit["tag"]):
 					selected_tags.append(clicked_unit["tag"])
 	else:
-		# Box selection: prioritize Player 1 non-structure combat/worker units (just like StarCraft II!)
 		var box_units: Array[Dictionary] = []
 		for u in SimEngine.units.values():
 			var sp = world_to_screen(u["pos"])
@@ -154,15 +162,13 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool) -> void:
 	if selected_tags.is_empty():
 		return
 
-	# Check if right-clicked on a resource node
 	for r in SimEngine.resources.values():
-		if wpos.distance_to(r["pos"]) <= r["radius"] + 1.2:
+		if wpos.distance_to(r["pos"]) <= r["radius"] + 1.4:
 			SimEngine.issue_command(selected_tags, "harvest", r["pos"], r["tag"], "", queue)
 			return
 
-	# Check if right-clicked on an enemy unit or friendly refinery
 	for u in SimEngine.units.values():
-		if wpos.distance_to(u["pos"]) <= u["radius"] + 1.0:
+		if wpos.distance_to(u["pos"]) <= u["radius"] + 1.2:
 			if u["owner"] != 1:
 				SimEngine.issue_command(selected_tags, "attack_target", u["pos"], u["tag"], "", queue)
 				return
@@ -170,7 +176,6 @@ func _issue_smart_right_click(wpos: Vector2, queue: bool) -> void:
 				SimEngine.issue_command(selected_tags, "harvest", u["pos"], u["tag"], "", queue)
 				return
 
-	# If structures are selected, set rally point; otherwise Move
 	var all_struct = selected_tags.all(func(t): return SimEngine.units.get(t, {}).get("is_structure", false))
 	if all_struct:
 		SimEngine.issue_command(selected_tags, "rally", wpos)
@@ -184,19 +189,17 @@ func _execute_pending_ability_at(wpos: Vector2, queue: bool) -> void:
 	var abil = pending_ability
 	pending_ability = ""
 	if abil == "attack":
-		# Check if clicked directly on enemy target
 		for u in SimEngine.units.values():
-			if u["owner"] != 1 and wpos.distance_to(u["pos"]) <= u["radius"] + 1.2:
+			if u["owner"] != 1 and wpos.distance_to(u["pos"]) <= u["radius"] + 1.4:
 				SimEngine.issue_command(selected_tags, "attack_target", u["pos"], u["tag"], "", queue)
 				return
 		SimEngine.issue_command(selected_tags, "attack_move", wpos, 0, "", queue)
-	elif abil == "move":
-		SimEngine.issue_command(selected_tags, "move", wpos, 0, "", queue)
+	elif abil in ["move", "blink"]:
+		SimEngine.issue_command(selected_tags, abil, wpos, 0, "", queue)
 	elif abil.begins_with("build_"):
 		SimEngine.issue_command([selected_tags[0]], abil, wpos, 0, "", queue)
 
 func _handle_hotkey(ke: InputEventKey) -> void:
-	# Control groups 1-9
 	if ke.keycode >= KEY_1 and ke.keycode <= KEY_9:
 		var grp = ke.keycode - KEY_0
 		if ke.ctrl_pressed:
@@ -217,12 +220,17 @@ func _handle_hotkey(ke: InputEventKey) -> void:
 				SimEngine.issue_command(selected_tags, "train_scv")
 			elif _selected_has_ability("train_siege_tank"):
 				SimEngine.issue_command(selected_tags, "train_siege_tank")
+			elif _selected_has_ability("train_stalker"):
+				SimEngine.issue_command(selected_tags, "train_stalker")
 			else:
 				SimEngine.issue_command(selected_tags, "stop")
 		KEY_H:
 			SimEngine.issue_command(selected_tags, "hold_position")
 		KEY_T:
 			SimEngine.issue_command(selected_tags, "stimpack")
+		KEY_C:
+			if _selected_has_ability("charge"):
+				SimEngine.issue_command(selected_tags, "charge")
 		KEY_E:
 			SimEngine.issue_command(selected_tags, "morph_siege_mode")
 		KEY_D:
@@ -236,19 +244,22 @@ func _handle_hotkey(ke: InputEventKey) -> void:
 			elif _selected_has_ability("raise_depot"):
 				SimEngine.issue_command(selected_tags, "raise_depot")
 		KEY_B:
-			if _selected_has_ability("build_supply_depot"):
+			if _selected_has_ability("blink"):
+				pending_ability = "blink"
+			elif _selected_has_ability("build_supply_depot"):
 				pending_ability = "build_supply_depot"
 		KEY_X:
 			if _selected_has_ability("build_barracks"):
 				pending_ability = "build_barracks"
 		KEY_F1:
-			# Toggle Player 1 Stutter-Step AI Co-Pilot
 			var cur = bool(RTSCommanderAI.player_directives[1].get("enabled", false))
 			RTSCommanderAI.set_directive(1, "macro_build", not cur)
 		KEY_F2:
-			# Toggle Player 2 Swarm Rush AI
 			var cur2 = bool(RTSCommanderAI.player_directives[2].get("enabled", false))
 			RTSCommanderAI.set_directive(2, "swarm_rush", not cur2)
+		KEY_F3:
+			var cur3 = bool(RTSCommanderAI.player_directives[3].get("enabled", false))
+			RTSCommanderAI.set_directive(3, "blink_stalker_micro", not cur3)
 
 func _selected_has_ability(abil_id: String) -> bool:
 	for t in selected_tags:
@@ -260,16 +271,14 @@ func _selected_has_ability(abil_id: String) -> bool:
 	return false
 
 func _handle_hud_click(mpos: Vector2) -> void:
-	# Minimap click (bottom-left: Rect2(18, 862, 260, 200))
 	var minimap_rect = Rect2(18.0, 862.0, 260.0, 200.0)
-	if minimap_rect.has_point(mpos):
+	if minimap_rect.has_point(mpos) and world_3d and world_3d.camera_3d:
 		var rel_x = (mpos.x - minimap_rect.position.x) / minimap_rect.size.x
 		var rel_y = (mpos.y - minimap_rect.position.y) / minimap_rect.size.y
-		var wpos = Vector2(rel_x * SimEngine.map_width, rel_y * SimEngine.map_height)
-		camera_offset = (wpos * WORLD_SCALE) - Vector2(960.0, 425.0)
+		world_3d.camera_3d.position.x = clampf(rel_x * SimEngine.map_width, 16.0, 112.0)
+		world_3d.camera_3d.position.z = clampf(rel_y * SimEngine.map_height + 44.0, 40.0, 130.0)
 		return
 
-	# Command Card buttons (bottom-right: 5 cols x 3 rows starting at x=1420, y=865)
 	var card_buttons = _get_active_command_card_buttons()
 	for btn in card_buttons:
 		if btn["rect"].has_point(mpos):
@@ -308,95 +317,14 @@ func _get_active_command_card_buttons() -> Array[Dictionary]:
 		})
 	return buttons
 
-# =============================================================================
-# RENDERING: BATTLEFIELD, UNITS, SELECTION, FOG/TERRAIN, MINIMAP & SC2 HUD
-# =============================================================================
-
 func _draw() -> void:
 	var font = ThemeDB.fallback_font
 
-	# 1. Battlefield Tactical Floor & Grid
-	draw_rect(Rect2(0, 0, 1920, 1080), Color("#090d16"))
-	var map_screen_rect = Rect2(world_to_screen(Vector2.ZERO), Vector2(SimEngine.map_width, SimEngine.map_height) * WORLD_SCALE)
-	draw_rect(map_screen_rect, Color("#0f172a"))
+	# Project 3D unit positions into crisp screen-space HP/Shield bars & order lines
+	for u in SimEngine.units.values():
+		_draw_unit_overlay(u, font)
 
-	# Tactical coordinate grid lines
-	var grid_step = 8.0
-	var gx = 0.0
-	while gx <= SimEngine.map_width:
-		var p1 = world_to_screen(Vector2(gx, 0))
-		var p2 = world_to_screen(Vector2(gx, SimEngine.map_height))
-		draw_line(p1, p2, Color(0.12, 0.20, 0.32, 0.45), 1.0)
-		gx += grid_step
-	var gy = 0.0
-	while gy <= SimEngine.map_height:
-		var p1 = world_to_screen(Vector2(0, gy))
-		var p2 = world_to_screen(Vector2(SimEngine.map_width, gy))
-		draw_line(p1, p2, Color(0.12, 0.20, 0.32, 0.45), 1.0)
-		gy += grid_step
-
-	# High-ground plateau tint & Ramps
-	for hg in SimEngine.high_ground_zones:
-		var sr = Rect2(world_to_screen(hg.position), hg.size * WORLD_SCALE)
-		draw_rect(sr, Color(0.16, 0.24, 0.36, 0.25))
-		draw_rect(sr, Color(0.22, 0.38, 0.56, 0.45), false, 2.0)
-
-	for rmp in SimEngine.ramps:
-		var sr = Rect2(world_to_screen(rmp.position), rmp.size * WORLD_SCALE)
-		draw_rect(sr, Color(0.20, 0.32, 0.44, 0.35))
-
-	# Terrain Cliffs / Obstacles
-	for obs in SimEngine.terrain_obstacles:
-		var sr = Rect2(world_to_screen(obs.position), obs.size * WORLD_SCALE)
-		draw_rect(sr, Color("#1e293b"))
-		draw_rect(sr, Color("#475569"), false, 2.5)
-		draw_string(font, sr.position + Vector2(6, 20), "CLIFF", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#94a3b8"))
-
-	# 2. Resource Nodes (Blue Mineral Fields & Green Vespene Geysers)
-	for r in SimEngine.resources.values():
-		var sp = world_to_screen(r["pos"])
-		var rad = r["radius"] * WORLD_SCALE
-		if r["resource_type"] == "mineral_field":
-			var pts = PackedVector2Array([
-				sp + Vector2(0, -rad),
-				sp + Vector2(rad * 0.9, -rad * 0.2),
-				sp + Vector2(rad * 0.6, rad * 0.8),
-				sp + Vector2(-rad * 0.6, rad * 0.8),
-				sp + Vector2(-rad * 0.9, -rad * 0.2)
-			])
-			draw_colored_polygon(pts, Color("#38bdf8"))
-			draw_polyline(pts, Color("#bae6fd"), 2.0)
-			draw_string(font, sp + Vector2(-18, 4), "%d" % int(r["amount"]), HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#082f49"))
-		else:
-			draw_circle(sp, rad, Color("#10b981"))
-			draw_arc(sp, rad, 0, TAU, 24, Color("#6ee7b7"), 2.5)
-			draw_string(font, sp + Vector2(-24, -rad - 4), "VESPENE", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#6ee7b7"))
-
-	# 3. Units & Structures (Sorted by Y for 2.5D depth)
-	var all_units = SimEngine.units.values()
-	all_units.sort_custom(func(a, b):
-		if a["is_walkable_structure"] != b["is_walkable_structure"]:
-			return a["is_walkable_structure"] # Draw lowered supply depots underneath units walking over them!
-		return a["pos"].y < b["pos"].y
-	)
-
-	for u in all_units:
-		_draw_unit(u, font)
-
-	# 4. Weapon Tracers & Siege Splash Rings
-	for l in active_lasers:
-		var alpha = clampf(l["ttl"] / l["max_ttl"], 0.0, 1.0)
-		var p_from = world_to_screen(l["from"])
-		var p_to = world_to_screen(l["to"])
-		var col = Color(0.22, 0.88, 1.0, alpha) if l["owner"] == 1 else Color(0.75, 0.95, 0.25, alpha)
-		if l["splash"]:
-			draw_line(p_from, p_to, Color(1.0, 0.65, 0.15, alpha), 3.5)
-			draw_arc(p_to, 3.5 * WORLD_SCALE * (1.15 - alpha * 0.4), 0, TAU, 32, Color(1.0, 0.45, 0.1, alpha), 3.0)
-		else:
-			draw_line(p_from, p_to, col, 2.2)
-			draw_circle(p_to, 3.5, Color(1.0, 0.9, 0.4, alpha))
-
-	# 5. Box Selection Rectangle
+	# Box Selection Rectangle
 	if is_box_selecting:
 		var sel_rect = Rect2(
 			Vector2(min(box_start_screen.x, box_end_screen.x), min(box_start_screen.y, box_end_screen.y)),
@@ -405,115 +333,65 @@ func _draw() -> void:
 		draw_rect(sel_rect, Color(0.0, 1.0, 0.45, 0.14))
 		draw_rect(sel_rect, Color(0.1, 1.0, 0.55, 0.92), false, 2.0)
 
-	# 6. Top Resource Bar & Bottom SC2 Command Card HUD
 	_draw_top_bar(font)
 	_draw_bottom_hud(font)
 	_draw_bdd_overlay(font)
 
-func _draw_unit(u: Dictionary, font: Font) -> void:
-	var sp = world_to_screen(u["pos"])
-	var rad = u["radius"] * WORLD_SCALE
+func _draw_unit_overlay(u: Dictionary, font: Font) -> void:
+	var sp_ground = world_to_screen(u["pos"], 0.0)
+	var sp_head = world_to_screen(u["pos"], 2.8 if not u["is_structure"] else 3.8)
+	if sp_ground.y > 848.0 or sp_ground.y < 44.0:
+		return
+
 	var is_sel = selected_tags.has(u["tag"])
-	var is_p1 = (u["owner"] == 1)
-
-	var primary_col = Color("#0ea5e9") if is_p1 else Color("#ef4444")
-	var accent_col = Color("#7dd3fc") if is_p1 else Color("#fca5a5")
-	if u["unit_type"] == "swarmling":
-		primary_col = Color("#a855f7")
-		accent_col = Color("#e9d5ff")
-	elif u["unit_type"] == "roach":
-		primary_col = Color("#84cc16")
-		accent_col = Color("#d9f99d")
-
-	# Draw Order Queue Lines for selected units
 	if is_sel and u["orders"].size() > 0:
 		var ord = u["orders"][0]
 		if ord.has("target_pos"):
-			var tp = world_to_screen(ord["target_pos"])
+			var tp = world_to_screen(ord["target_pos"], 0.2)
 			var line_col = Color("#ef4444") if str(ord["type"]).begins_with("attack") else Color("#22c55e")
-			draw_line(sp, tp, line_col, 1.5)
+			draw_line(sp_ground, tp, line_col, 1.5)
 			draw_circle(tp, 4.0, line_col)
 
-	# Selection Ring (StarCraft II Green/Red ground circle)
-	if is_sel:
-		var ring_col = Color("#22c55e") if is_p1 else Color("#f97316")
-		draw_arc(sp, rad + 4.5, 0, TAU, 32, ring_col, 2.5)
+	var bar_w = max(28.0, float(u["radius"]) * 24.0)
+	var bar_pos = sp_head + Vector2(-bar_w * 0.5, -8.0)
 
-	if u["is_structure"]:
-		var srect = Rect2(sp - Vector2(rad, rad), Vector2(rad * 2.0, rad * 2.0))
-		if u["is_walkable_structure"]:
-			# Lowered Supply Depot (recessed into floor, walkable!)
-			draw_rect(srect, Color(0.12, 0.26, 0.36, 0.45))
-			draw_rect(srect, Color("#38bdf8"), false, 1.5)
-			draw_string(font, sp + Vector2(-28, 4), "DEPOT (LOW)", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#7dd3fc"))
-		else:
-			draw_rect(srect, primary_col.darkened(0.45))
-			draw_rect(srect, accent_col, false, 2.5)
-			draw_string(font, sp + Vector2(-rad + 4, 4), u["name"].to_upper().substr(0, 12), HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color.WHITE)
-			# Rally flag line if selected
-			if is_sel and u["rally_pos"].distance_to(u["pos"]) > 1.0:
-				var rp = world_to_screen(u["rally_pos"])
-				draw_line(sp, rp, Color("#facc15"), 1.5)
-				draw_circle(rp, 4.5, Color("#facc15"))
-	else:
-		# Mobile / Siege Unit Body
-		draw_circle(sp, rad, primary_col)
-		var ring_border = Color("#facc15") if u["stim_timer"] > 0.0 else accent_col
-		draw_arc(sp, rad, 0, TAU, 24, ring_border, 2.0)
+	# Plasma Shield Bar (Aliens) above HP bar!
+	if u["max_shields"] > 0.0:
+		var sh_ratio = clampf(u["shields"] / max(1.0, u["max_shields"]), 0.0, 1.0)
+		var sh_pos = bar_pos + Vector2(0, -6.0)
+		draw_rect(Rect2(sh_pos, Vector2(bar_w, 4.5)), Color(0.05, 0.12, 0.25, 0.88))
+		draw_rect(Rect2(sh_pos, Vector2(bar_w * sh_ratio, 4.5)), Color("#38bdf8"))
 
-		# Turret / Facing barrel
-		var dir = Vector2(cos(u["facing"]), sin(u["facing"]))
-		draw_line(sp, sp + dir * (rad + 5.0), Color.WHITE, 2.5)
-
-		# Siege Mode outriggers & range indicator
-		if u["unit_type"] == "siege_tank_sieged":
-			draw_arc(sp, rad + 3.0, 0, TAU, 8, Color("#f59e0b"), 2.5)
-			if is_sel:
-				var wpn_r = 31.0 * WORLD_SCALE
-				draw_arc(sp, wpn_r, 0, TAU, 64, Color(1.0, 0.65, 0.1, 0.28), 1.5)
-
-		# Worker cargo crystal / gas canister indicator
-		if u["cargo_amount"] > 0:
-			var c_col = Color("#38bdf8") if u["cargo_type"] == "minerals" else Color("#10b981")
-			draw_circle(sp - dir * (rad * 0.6), 4.5, c_col)
-
-	# HP Bar above unit
+	# HP Bar
 	var hp_ratio = clampf(u["hp"] / max(1.0, u["max_hp"]), 0.0, 1.0)
-	var bar_w = max(24.0, rad * 2.1)
-	var bar_pos = sp + Vector2(-bar_w * 0.5, -rad - 10.0)
-	draw_rect(Rect2(bar_pos, Vector2(bar_w, 5.0)), Color(0.08, 0.08, 0.12, 0.85))
+	draw_rect(Rect2(bar_pos, Vector2(bar_w, 5.0)), Color(0.08, 0.08, 0.12, 0.88))
 	var hp_col = Color("#22c55e") if hp_ratio > 0.5 else (Color("#f59e0b") if hp_ratio > 0.25 else Color("#ef4444"))
 	draw_rect(Rect2(bar_pos, Vector2(bar_w * hp_ratio, 5.0)), hp_col)
 
-	# Structure Construction or Production Progress Bar
-	if u["is_structure"]:
-		if u["build_progress"] < 1.0:
-			var bp_pos = sp + Vector2(-bar_w * 0.5, -rad - 17.0)
-			draw_rect(Rect2(bp_pos, Vector2(bar_w, 4.0)), Color("#1e293b"))
-			draw_rect(Rect2(bp_pos, Vector2(bar_w * u["build_progress"], 4.0)), Color("#38bdf8"))
-		elif u["production_queue"].size() > 0:
-			var q0 = u["production_queue"][0]
-			var q_ratio = clampf(float(q0["progress"]) / max(0.1, float(q0["total_time"])), 0.0, 1.0)
-			var qp_pos = sp + Vector2(-bar_w * 0.5, -rad - 17.0)
-			draw_rect(Rect2(qp_pos, Vector2(bar_w, 4.0)), Color("#1e293b"))
-			draw_rect(Rect2(qp_pos, Vector2(bar_w * q_ratio, 4.0)), Color("#facc15"))
+	if u["is_structure"] and is_sel:
+		draw_string(font, bar_pos + Vector2(0, -8), u["name"].to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color.WHITE)
 
 func _draw_top_bar(font: Font) -> void:
 	draw_rect(Rect2(0, 0, 1920, 44), Color(0.04, 0.07, 0.13, 0.94))
 	draw_line(Vector2(0, 44), Vector2(1920, 44), Color("#00bcd4"), 1.5)
 
-	draw_string(font, Vector2(18, 28), "ROBOS-RTS // %s" % SimEngine.scenario_name, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color("#00bcd4"))
-	draw_string(font, Vector2(560, 28), "64Hz SnowPlay Tick: %d (%.1fs)" % [SimEngine.tick, SimEngine.sim_time], HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("#94a3b8"))
+	draw_string(font, Vector2(18, 28), "ROBOS-RTS 2.5D // %s" % SimEngine.scenario_name, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color("#00bcd4"))
+	draw_string(font, Vector2(540, 28), "64Hz Tick: %d (%.1fs)" % [SimEngine.tick, SimEngine.sim_time], HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("#94a3b8"))
 
-	var p1 = SimEngine.players[1]
-	var p2 = SimEngine.players[2]
-	draw_string(font, Vector2(960, 28), "P1 TERRAN  Minerals: %d   Vespene: %d   Supply: %d/%d   Stutter-Cancels: %d" % [
-		p1["minerals"], p1["vespene"], p1["supply_used"], p1["supply_cap"], p1["stutter_step_cancels"]
-	], HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color("#38bdf8"))
+	var p1 = SimEngine.players.get(1, {})
+	var p2 = SimEngine.players.get(2, {})
+	var p3 = SimEngine.players.get(3, {})
+	draw_string(font, Vector2(790, 28), "P1 HUMANS  M:%d G:%d Sup:%d/%d" % [
+		int(p1.get("minerals", 0)), int(p1.get("vespene", 0)), int(p1.get("supply_used", 0)), int(p1.get("supply_cap", 0))
+	], HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("#38bdf8"))
 
-	draw_string(font, Vector2(1540, 28), "P2 SWARM  Supply: %d/%d  Kills: %d" % [
-		p2["supply_used"], p2["supply_cap"], p2["units_killed"]
-	], HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("#f87171"))
+	draw_string(font, Vector2(1180, 28), "P2 MONSTERS  Sup:%d/%d Kills:%d" % [
+		int(p2.get("supply_used", 0)), int(p2.get("supply_cap", 0)), int(p2.get("units_killed", 0))
+	], HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("#c084fc"))
+
+	draw_string(font, Vector2(1540, 28), "P3 ALIENS  Sup:%d/%d Blinks:%d" % [
+		int(p3.get("supply_used", 0)), int(p3.get("supply_cap", 0)), int(p3.get("blinks_executed", 0))
+	], HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("#facc15"))
 
 func _draw_bottom_hud(font: Font) -> void:
 	var hud_rect = Rect2(0, 850, 1920, 230)
@@ -540,38 +418,31 @@ func _draw_bottom_hud(font: Font) -> void:
 	for u in SimEngine.units.values():
 		var ux = mm_rect.position.x + (u["pos"].x / SimEngine.map_width) * mm_rect.size.x
 		var uy = mm_rect.position.y + (u["pos"].y / SimEngine.map_height) * mm_rect.size.y
-		var ucol = Color("#38bdf8") if u["owner"] == 1 else Color("#ef4444")
+		var ucol = Color("#38bdf8") if u["owner"] == 1 else (Color("#c084fc") if u["owner"] == 2 else Color("#facc15"))
 		var sz = 4.0 if u["is_structure"] else 2.5
 		draw_rect(Rect2(ux - sz * 0.5, uy - sz * 0.5, sz, sz), ucol)
 
-	# 2. Center Panel: Unit Wireframe Selection & Telemetry (x: 300 .. 1390)
+	# 2. Center Panel: Unit Selection & 3-Faction Telemetry
 	var center_rect = Rect2(300.0, 862.0, 1095.0, 200.0)
 	draw_rect(center_rect, Color("#0b1324"))
 	draw_rect(center_rect, Color("#1e293b"), false, 1.5)
 
 	if selected_tags.is_empty():
-		draw_string(font, Vector2(325, 900), "NO UNITS SELECTED — Drag-box or click units | Right-Click: Smart Move/Mine/Attack | [F1] Toggle Terran AI | [F2] Toggle Swarm AI", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color("#94a3b8"))
-		draw_string(font, Vector2(325, 932), "SC2 Engine Specs Active: Constrained Funnel A* + RVO2 Crowd Steering + Allied PushPriority + DamagePoint/Backswing Stutter-Step Micro", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("#00bcd4"))
+		draw_string(font, Vector2(325, 900), "2.5D ANGLED 3D PERSPECTIVE — Drag-box or click units | [F1] Humans AI | [F2] Monsters AI | [F3] Aliens Blink AI", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color("#94a3b8"))
+		draw_string(font, Vector2(325, 932), "Factions: HUMANS (Terran Vanguard) vs MONSTERS (Xenomorph Swarm) vs ALIENS (Celestial Armada w/ Plasma Shields & Blink)", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("#00bcd4"))
 	elif selected_tags.size() == 1:
 		var u = SimEngine.units.get(selected_tags[0], {})
 		if not u.is_empty():
 			var def = RTSData.get_unit_def(u["unit_type"])
 			var wpn = def.get("weapon", {})
-			draw_string(font, Vector2(325, 898), "%s  [Tag #%d]" % [u["name"].to_upper(), u["tag"]], HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color("#38bdf8"))
-			draw_string(font, Vector2(325, 928), "HP: %.0f / %.0f   |   Armor: %.0f   |   Speed: %.1f   |   PushPriority: %d   |   Kills: %d" % [
-				u["hp"], u["max_hp"], u["armor"], u["speed"], u["push_priority"], u["kills"]
+			draw_string(font, Vector2(325, 898), "%s  [%s — Tag #%d]" % [u["name"].to_upper(), u["faction"].to_upper(), u["tag"]], HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color("#38bdf8"))
+			draw_string(font, Vector2(325, 928), "HP: %.0f/%.0f   |   Shields: %.0f/%.0f   |   Armor: %.0f   |   Speed: %.1f   |   PushPriority: %d" % [
+				u["hp"], u["max_hp"], u["shields"], u["max_shields"], u["armor"], u["speed"], u["push_priority"]
 			], HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color("#e2e8f0"))
 			if not wpn.is_empty():
 				draw_string(font, Vector2(325, 958), "Weapon: %s   |   Damage: %.0f   |   Range: %.1f   |   Period: %.2fs   |   DamagePoint: %.2fs   |   Backswing: %.2fs" % [
 					wpn.get("name", ""), float(wpn.get("damage", 0)), float(wpn.get("range", 0)), float(wpn.get("period", 0)), float(wpn.get("damage_point", 0)), float(wpn.get("backswing", 0))
 				], HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("#6ee7b7"))
-			if u["stim_timer"] > 0.0:
-				draw_string(font, Vector2(325, 988), "ACTIVE BUFF: STIMPACK (+50%% Move & Attack Speed — %.1fs remaining)" % u["stim_timer"], HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("#facc15"))
-			elif u["production_queue"].size() > 0:
-				var q0 = u["production_queue"][0]
-				draw_string(font, Vector2(325, 988), "PRODUCTION QUEUE (%d): Training %s (%.1fs / %.1fs)" % [
-					u["production_queue"].size(), str(q0["unit_type"]).to_upper(), float(q0["progress"]), float(q0["total_time"])
-				], HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("#facc15"))
 	else:
 		draw_string(font, Vector2(325, 892), "SQUAD SELECTION (%d Units)" % selected_tags.size(), HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color("#38bdf8"))
 		for idx in range(min(24, selected_tags.size())):
@@ -589,7 +460,7 @@ func _draw_bottom_hud(font: Font) -> void:
 			draw_string(font, Vector2(bx + 6, by + 18), u["name"].substr(0, 11), HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color.WHITE)
 			draw_string(font, Vector2(bx + 6, by + 34), "%.0f/%.0f HP" % [u["hp"], u["max_hp"]], HORIZONTAL_ALIGNMENT_LEFT, -1, 11, wcol)
 
-	# 3. Right Panel: SC2 3x5 Command Card (x: 1415 .. 1905)
+	# 3. Right Panel: SC2 3x5 Command Card
 	var card_rect = Rect2(1412.0, 860.0, 492.0, 204.0)
 	draw_rect(card_rect, Color("#0b1324"))
 	draw_rect(card_rect, Color("#00bcd4"), false, 1.5)

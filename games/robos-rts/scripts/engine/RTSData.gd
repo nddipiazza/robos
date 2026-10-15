@@ -1,25 +1,23 @@
 extends Node
 
-# RTSData.gd — StarCraft II / s2client-proto Inspired Unit, Building, Weapon & Ability Registry
-# All stats follow SC2 engine design specifications:
-# - radius: continuous circular collision footprint (in world meters/units)
-# - speed: movement speed in world units per second
-# - push_priority: SC2 unit push priority hierarchy (higher pushes lower/equal idle allies)
-# - damage_point: wind-up time (seconds) before attack damage/projectile fires
-# - backswing: cancelable recovery animation time (seconds) enabling stutter-step kiting
-# - weapon_period: cooldown between attacks (seconds)
+# RTSData.gd — StarCraft II / s2client-proto Inspired 3-Faction Registry
+# Factions:
+# 1. HUMANS   ("humans" / Terran Vanguard): SCV, Marine (Stimpack), Marauder (Concussive Slow), Siege Tank (Tank/Siege Mode), Command Center, Supply Depot (Lower/Raise), Refinery, Barracks, Factory
+# 2. MONSTERS ("monsters" / Xenomorph Swarm): Drone, Swarmling (fast melee), Roach (armored acid), Ravager (corrosive bile), Hatchery, Overlord Mound, Spawning Pool
+# 3. ALIENS   ("aliens" / Eldar / Protoss-style Celestial Armada): Probe, Zealot (Plasma Shields + Charge), Stalker (Plasma Shields + Blink teleport!),Colossus (Thermal Lance splash + Cliff-Walk), Nexus, Pylon (Power Matrix +8 Supply), Gateway
 
-const FACTION_TERRAN = "terran_vanguard"
-const FACTION_SWARM = "xenomorph_swarm"
+const FACTION_HUMANS = "humans"
+const FACTION_MONSTERS = "monsters"
+const FACTION_ALIENS = "aliens"
 
 var units: Dictionary = {
 	# =========================================================================
-	# TERRAN VANGUARD UNITS
+	# 1. HUMANS (Terran Vanguard)
 	# =========================================================================
 	"scv": {
 		"id": "scv",
 		"name": "SCV",
-		"faction": FACTION_TERRAN,
+		"faction": FACTION_HUMANS,
 		"is_structure": false,
 		"is_worker": true,
 		"attributes": ["Light", "Biological", "Mechanical"],
@@ -28,6 +26,7 @@ var units: Dictionary = {
 		"supply_cost": 1,
 		"build_time": 12.0,
 		"max_hp": 45.0,
+		"max_shields": 0.0,
 		"armor": 0.0,
 		"radius": 0.85,
 		"speed": 7.0,
@@ -49,7 +48,7 @@ var units: Dictionary = {
 	"marine": {
 		"id": "marine",
 		"name": "Marine",
-		"faction": FACTION_TERRAN,
+		"faction": FACTION_HUMANS,
 		"is_structure": false,
 		"is_worker": false,
 		"attributes": ["Light", "Biological"],
@@ -58,6 +57,7 @@ var units: Dictionary = {
 		"supply_cost": 1,
 		"build_time": 18.0,
 		"max_hp": 45.0,
+		"max_shields": 0.0,
 		"armor": 0.0,
 		"radius": 0.85,
 		"speed": 7.2,
@@ -79,7 +79,7 @@ var units: Dictionary = {
 	"marauder": {
 		"id": "marauder",
 		"name": "Marauder",
-		"faction": FACTION_TERRAN,
+		"faction": FACTION_HUMANS,
 		"is_structure": false,
 		"is_worker": false,
 		"attributes": ["Armored", "Biological"],
@@ -88,6 +88,7 @@ var units: Dictionary = {
 		"supply_cost": 2,
 		"build_time": 21.0,
 		"max_hp": 125.0,
+		"max_shields": 0.0,
 		"armor": 1.0,
 		"radius": 1.25,
 		"speed": 7.0,
@@ -110,7 +111,7 @@ var units: Dictionary = {
 	"siege_tank": {
 		"id": "siege_tank",
 		"name": "Siege Tank (Tank Mode)",
-		"faction": FACTION_TERRAN,
+		"faction": FACTION_HUMANS,
 		"is_structure": false,
 		"is_worker": false,
 		"attributes": ["Armored", "Mechanical"],
@@ -119,6 +120,7 @@ var units: Dictionary = {
 		"supply_cost": 3,
 		"build_time": 32.0,
 		"max_hp": 175.0,
+		"max_shields": 0.0,
 		"armor": 1.0,
 		"radius": 1.75,
 		"speed": 5.8,
@@ -140,7 +142,7 @@ var units: Dictionary = {
 	"siege_tank_sieged": {
 		"id": "siege_tank_sieged",
 		"name": "Siege Tank (Siege Mode)",
-		"faction": FACTION_TERRAN,
+		"faction": FACTION_HUMANS,
 		"is_structure": false,
 		"is_worker": false,
 		"is_immobile": true,
@@ -150,6 +152,7 @@ var units: Dictionary = {
 		"supply_cost": 3,
 		"build_time": 32.0,
 		"max_hp": 175.0,
+		"max_shields": 0.0,
 		"armor": 1.0,
 		"radius": 1.85,
 		"speed": 0.0,
@@ -169,14 +172,10 @@ var units: Dictionary = {
 		},
 		"abilities": ["stop", "attack", "morph_tank_mode"]
 	},
-
-	# =========================================================================
-	# TERRAN VANGUARD STRUCTURES
-	# =========================================================================
 	"command_center": {
 		"id": "command_center",
 		"name": "Command Center",
-		"faction": FACTION_TERRAN,
+		"faction": FACTION_HUMANS,
 		"is_structure": true,
 		"is_town_hall": true,
 		"attributes": ["Armored", "Mechanical", "Structure"],
@@ -185,6 +184,7 @@ var units: Dictionary = {
 		"supply_provided": 15,
 		"build_time": 71.0,
 		"max_hp": 1500.0,
+		"max_shields": 0.0,
 		"armor": 1.0,
 		"radius": 4.2,
 		"footprint": Vector2i(5, 5),
@@ -196,7 +196,7 @@ var units: Dictionary = {
 	"supply_depot": {
 		"id": "supply_depot",
 		"name": "Supply Depot",
-		"faction": FACTION_TERRAN,
+		"faction": FACTION_HUMANS,
 		"is_structure": true,
 		"attributes": ["Armored", "Mechanical", "Structure"],
 		"mineral_cost": 100,
@@ -204,6 +204,7 @@ var units: Dictionary = {
 		"supply_provided": 8,
 		"build_time": 21.0,
 		"max_hp": 400.0,
+		"max_shields": 0.0,
 		"armor": 1.0,
 		"radius": 1.8,
 		"footprint": Vector2i(2, 2),
@@ -214,7 +215,7 @@ var units: Dictionary = {
 	"supply_depot_lowered": {
 		"id": "supply_depot_lowered",
 		"name": "Supply Depot (Lowered)",
-		"faction": FACTION_TERRAN,
+		"faction": FACTION_HUMANS,
 		"is_structure": true,
 		"is_walkable_structure": true,
 		"attributes": ["Armored", "Mechanical", "Structure"],
@@ -223,6 +224,7 @@ var units: Dictionary = {
 		"supply_provided": 8,
 		"build_time": 21.0,
 		"max_hp": 400.0,
+		"max_shields": 0.0,
 		"armor": 1.0,
 		"radius": 1.8,
 		"footprint": Vector2i(2, 2),
@@ -233,7 +235,7 @@ var units: Dictionary = {
 	"refinery": {
 		"id": "refinery",
 		"name": "Refinery",
-		"faction": FACTION_TERRAN,
+		"faction": FACTION_HUMANS,
 		"is_structure": true,
 		"is_gas_extractor": true,
 		"attributes": ["Armored", "Mechanical", "Structure"],
@@ -242,6 +244,7 @@ var units: Dictionary = {
 		"supply_provided": 0,
 		"build_time": 21.0,
 		"max_hp": 500.0,
+		"max_shields": 0.0,
 		"armor": 1.0,
 		"radius": 2.6,
 		"footprint": Vector2i(3, 3),
@@ -252,7 +255,7 @@ var units: Dictionary = {
 	"barracks": {
 		"id": "barracks",
 		"name": "Barracks",
-		"faction": FACTION_TERRAN,
+		"faction": FACTION_HUMANS,
 		"is_structure": true,
 		"requires": ["supply_depot"],
 		"attributes": ["Armored", "Mechanical", "Structure"],
@@ -261,6 +264,7 @@ var units: Dictionary = {
 		"supply_provided": 0,
 		"build_time": 46.0,
 		"max_hp": 1000.0,
+		"max_shields": 0.0,
 		"armor": 1.0,
 		"radius": 2.8,
 		"footprint": Vector2i(3, 3),
@@ -272,7 +276,7 @@ var units: Dictionary = {
 	"factory": {
 		"id": "factory",
 		"name": "Factory",
-		"faction": FACTION_TERRAN,
+		"faction": FACTION_HUMANS,
 		"is_structure": true,
 		"requires": ["barracks"],
 		"attributes": ["Armored", "Mechanical", "Structure"],
@@ -281,6 +285,7 @@ var units: Dictionary = {
 		"supply_provided": 0,
 		"build_time": 43.0,
 		"max_hp": 1250.0,
+		"max_shields": 0.0,
 		"armor": 1.0,
 		"radius": 3.0,
 		"footprint": Vector2i(3, 3),
@@ -291,12 +296,12 @@ var units: Dictionary = {
 	},
 
 	# =========================================================================
-	# XENOMORPH SWARM (ZERG-INSPIRED) UNITS & STRUCTURES
+	# 2. MONSTERS (Xenomorph Swarm — Fast Organic Melee & Acid Pack)
 	# =========================================================================
 	"drone": {
 		"id": "drone",
 		"name": "Drone",
-		"faction": FACTION_SWARM,
+		"faction": FACTION_MONSTERS,
 		"is_structure": false,
 		"is_worker": true,
 		"attributes": ["Light", "Biological"],
@@ -305,13 +310,14 @@ var units: Dictionary = {
 		"supply_cost": 1,
 		"build_time": 12.0,
 		"max_hp": 40.0,
+		"max_shields": 0.0,
 		"armor": 0.0,
 		"radius": 0.85,
 		"speed": 7.0,
 		"sight_range": 18.0,
 		"push_priority": 1,
 		"weapon": {
-			"name": "Claws",
+			"name": "Mandibles",
 			"damage": 5.0,
 			"bonus": {},
 			"attacks": 1,
@@ -326,7 +332,7 @@ var units: Dictionary = {
 	"swarmling": {
 		"id": "swarmling",
 		"name": "Swarmling",
-		"faction": FACTION_SWARM,
+		"faction": FACTION_MONSTERS,
 		"is_structure": false,
 		"is_worker": false,
 		"attributes": ["Light", "Biological"],
@@ -335,6 +341,7 @@ var units: Dictionary = {
 		"supply_cost": 1,
 		"build_time": 17.0,
 		"max_hp": 35.0,
+		"max_shields": 0.0,
 		"armor": 0.0,
 		"radius": 0.72,
 		"speed": 9.8,
@@ -356,7 +363,7 @@ var units: Dictionary = {
 	"roach": {
 		"id": "roach",
 		"name": "Roach",
-		"faction": FACTION_SWARM,
+		"faction": FACTION_MONSTERS,
 		"is_structure": false,
 		"is_worker": false,
 		"attributes": ["Armored", "Biological"],
@@ -365,6 +372,7 @@ var units: Dictionary = {
 		"supply_cost": 2,
 		"build_time": 19.0,
 		"max_hp": 145.0,
+		"max_shields": 0.0,
 		"armor": 1.0,
 		"radius": 1.15,
 		"speed": 7.0,
@@ -383,10 +391,41 @@ var units: Dictionary = {
 		},
 		"abilities": ["move", "stop", "hold_position", "attack"]
 	},
+	"ravager": {
+		"id": "ravager",
+		"name": "Ravager",
+		"faction": FACTION_MONSTERS,
+		"is_structure": false,
+		"is_worker": false,
+		"attributes": ["Biological"],
+		"mineral_cost": 100,
+		"vespene_cost": 100,
+		"supply_cost": 3,
+		"build_time": 24.0,
+		"max_hp": 120.0,
+		"max_shields": 0.0,
+		"armor": 1.0,
+		"radius": 1.45,
+		"speed": 7.2,
+		"sight_range": 24.0,
+		"push_priority": 4,
+		"weapon": {
+			"name": "Plasma Discharge",
+			"damage": 18.0,
+			"bonus": {"Structure": 8.0},
+			"attacks": 1,
+			"range": 15.0,
+			"period": 1.14,
+			"damage_point": 0.10,
+			"backswing": 0.28,
+			"splash_radius": 2.0
+		},
+		"abilities": ["move", "stop", "hold_position", "attack"]
+	},
 	"hatchery": {
 		"id": "hatchery",
 		"name": "Hatchery",
-		"faction": FACTION_SWARM,
+		"faction": FACTION_MONSTERS,
 		"is_structure": true,
 		"is_town_hall": true,
 		"attributes": ["Armored", "Biological", "Structure"],
@@ -395,13 +434,202 @@ var units: Dictionary = {
 		"supply_provided": 15,
 		"build_time": 71.0,
 		"max_hp": 1500.0,
+		"max_shields": 0.0,
 		"armor": 1.0,
 		"radius": 4.2,
 		"footprint": Vector2i(5, 5),
 		"sight_range": 26.0,
 		"push_priority": 100,
-		"trains": ["drone", "swarmling", "roach"],
-		"abilities": ["train_drone", "train_swarmling", "train_roach", "rally"]
+		"trains": ["drone", "swarmling", "roach", "ravager"],
+		"abilities": ["train_drone", "train_swarmling", "train_roach", "train_ravager", "rally"]
+	},
+
+	# =========================================================================
+	# 3. ALIENS (Celestial Armada — Regenerating Plasma Shields, Blink & Thermal Colossus)
+	# =========================================================================
+	"probe": {
+		"id": "probe",
+		"name": "Probe",
+		"faction": FACTION_ALIENS,
+		"is_structure": false,
+		"is_worker": true,
+		"attributes": ["Light", "Mechanical"],
+		"mineral_cost": 50,
+		"vespene_cost": 0,
+		"supply_cost": 1,
+		"build_time": 12.0,
+		"max_hp": 20.0,
+		"max_shields": 20.0,
+		"armor": 0.0,
+		"radius": 0.85,
+		"speed": 7.2,
+		"sight_range": 18.0,
+		"push_priority": 1,
+		"weapon": {
+			"name": "Particle Beam",
+			"damage": 5.0,
+			"bonus": {},
+			"attacks": 1,
+			"range": 1.8,
+			"period": 1.07,
+			"damage_point": 0.10,
+			"backswing": 0.22,
+			"splash_radius": 0.0
+		},
+		"abilities": ["move", "stop", "hold_position", "attack", "harvest", "build_nexus", "build_pylon", "build_gateway"]
+	},
+	"zealot": {
+		"id": "zealot",
+		"name": "Zealot",
+		"faction": FACTION_ALIENS,
+		"is_structure": false,
+		"is_worker": false,
+		"attributes": ["Light", "Biological"],
+		"mineral_cost": 100,
+		"vespene_cost": 0,
+		"supply_cost": 2,
+		"build_time": 27.0,
+		"max_hp": 100.0,
+		"max_shields": 50.0,
+		"armor": 1.0,
+		"radius": 1.0,
+		"speed": 7.6,
+		"sight_range": 22.0,
+		"push_priority": 3,
+		"weapon": {
+			"name": "Psi Blades",
+			"damage": 16.0,
+			"bonus": {},
+			"attacks": 2,
+			"range": 2.1,
+			"period": 0.86,
+			"damage_point": 0.08,
+			"backswing": 0.25,
+			"splash_radius": 0.0
+		},
+		"abilities": ["move", "stop", "hold_position", "attack", "charge"]
+	},
+	"stalker": {
+		"id": "stalker",
+		"name": "Stalker",
+		"faction": FACTION_ALIENS,
+		"is_structure": false,
+		"is_worker": false,
+		"attributes": ["Armored", "Mechanical"],
+		"mineral_cost": 125,
+		"vespene_cost": 50,
+		"supply_cost": 2,
+		"build_time": 30.0,
+		"max_hp": 80.0,
+		"max_shields": 80.0,
+		"armor": 1.0,
+		"radius": 1.25,
+		"speed": 8.4,
+		"sight_range": 26.0,
+		"push_priority": 3,
+		"weapon": {
+			"name": "Particle Disruptors",
+			"damage": 13.0,
+			"bonus": {"Armored": 5.0},
+			"attacks": 1,
+			"range": 15.5,
+			"period": 1.34,
+			"damage_point": 0.09,
+			"backswing": 0.26,
+			"splash_radius": 0.0
+		},
+		"abilities": ["move", "stop", "hold_position", "attack", "blink"]
+	},
+	"colossus": {
+		"id": "colossus",
+		"name": "Colossus",
+		"faction": FACTION_ALIENS,
+		"is_structure": false,
+		"is_worker": false,
+		"attributes": ["Armored", "Mechanical", "Massive"],
+		"mineral_cost": 300,
+		"vespene_cost": 200,
+		"supply_cost": 6,
+		"build_time": 54.0,
+		"max_hp": 200.0,
+		"max_shields": 150.0,
+		"armor": 1.0,
+		"radius": 2.0,
+		"speed": 6.4,
+		"sight_range": 28.0,
+		"push_priority": 6,
+		"weapon": {
+			"name": "Thermal Lances",
+			"damage": 20.0,
+			"bonus": {"Light": 10.0},
+			"attacks": 2,
+			"range": 21.0,
+			"period": 1.07,
+			"damage_point": 0.10,
+			"backswing": 0.25,
+			"splash_radius": 2.8
+		},
+		"abilities": ["move", "stop", "hold_position", "attack"]
+	},
+	"nexus": {
+		"id": "nexus",
+		"name": "Nexus",
+		"faction": FACTION_ALIENS,
+		"is_structure": true,
+		"is_town_hall": true,
+		"attributes": ["Armored", "Structure"],
+		"mineral_cost": 400,
+		"vespene_cost": 0,
+		"supply_provided": 15,
+		"build_time": 71.0,
+		"max_hp": 1000.0,
+		"max_shields": 1000.0,
+		"armor": 1.0,
+		"radius": 4.2,
+		"footprint": Vector2i(5, 5),
+		"sight_range": 26.0,
+		"push_priority": 100,
+		"trains": ["probe"],
+		"abilities": ["train_probe", "rally"]
+	},
+	"pylon": {
+		"id": "pylon",
+		"name": "Pylon",
+		"faction": FACTION_ALIENS,
+		"is_structure": true,
+		"attributes": ["Armored", "Structure"],
+		"mineral_cost": 100,
+		"vespene_cost": 0,
+		"supply_provided": 8,
+		"build_time": 18.0,
+		"max_hp": 200.0,
+		"max_shields": 200.0,
+		"armor": 0.0,
+		"radius": 1.8,
+		"footprint": Vector2i(2, 2),
+		"sight_range": 18.0,
+		"push_priority": 100,
+		"abilities": []
+	},
+	"gateway": {
+		"id": "gateway",
+		"name": "Gateway",
+		"faction": FACTION_ALIENS,
+		"is_structure": true,
+		"attributes": ["Armored", "Structure"],
+		"mineral_cost": 150,
+		"vespene_cost": 0,
+		"supply_provided": 0,
+		"build_time": 46.0,
+		"max_hp": 500.0,
+		"max_shields": 500.0,
+		"armor": 1.0,
+		"radius": 2.8,
+		"footprint": Vector2i(3, 3),
+		"sight_range": 20.0,
+		"push_priority": 100,
+		"trains": ["zealot", "stalker", "colossus"],
+		"abilities": ["train_zealot", "train_stalker", "train_colossus", "rally"]
 	}
 }
 
@@ -420,6 +648,21 @@ var abilities: Dictionary = {
 		"duration": 11.0,
 		"speed_mult": 1.5,
 		"attack_speed_mult": 1.5
+	},
+	"blink": {
+		"id": "blink",
+		"name": "Blink (Instant Teleport up to 18 Range)",
+		"hotkey": "B",
+		"target": "point",
+		"max_range": 18.0,
+		"cooldown": 7.0
+	},
+	"charge": {
+		"id": "charge",
+		"name": "Zealot Charge (+80% Speed Burst)",
+		"hotkey": "C",
+		"target": "none",
+		"duration": 3.5
 	},
 	"morph_siege_mode": {
 		"id": "morph_siege_mode",
@@ -456,11 +699,19 @@ var abilities: Dictionary = {
 	"train_drone": {"id": "train_drone", "name": "Morph Drone (50M)", "hotkey": "D", "target": "none", "unit": "drone"},
 	"train_swarmling": {"id": "train_swarmling", "name": "Morph Swarmling (25M)", "hotkey": "Z", "target": "none", "unit": "swarmling"},
 	"train_roach": {"id": "train_roach", "name": "Morph Roach (75M/25G)", "hotkey": "R", "target": "none", "unit": "roach"},
+	"train_ravager": {"id": "train_ravager", "name": "Morph Ravager (100M/100G)", "hotkey": "V", "target": "none", "unit": "ravager"},
+	"train_probe": {"id": "train_probe", "name": "Warp Probe (50M)", "hotkey": "E", "target": "none", "unit": "probe"},
+	"train_zealot": {"id": "train_zealot", "name": "Warp Zealot (100M)", "hotkey": "Z", "target": "none", "unit": "zealot"},
+	"train_stalker": {"id": "train_stalker", "name": "Warp Stalker (125M/50G)", "hotkey": "S", "target": "none", "unit": "stalker"},
+	"train_colossus": {"id": "train_colossus", "name": "Warp Colossus (300M/200G)", "hotkey": "C", "target": "none", "unit": "colossus"},
 	"build_supply_depot": {"id": "build_supply_depot", "name": "Build Supply Depot (100M)", "hotkey": "B", "target": "point", "structure": "supply_depot"},
 	"build_refinery": {"id": "build_refinery", "name": "Build Refinery (75M)", "hotkey": "R", "target": "point", "structure": "refinery"},
 	"build_barracks": {"id": "build_barracks", "name": "Build Barracks (150M)", "hotkey": "X", "target": "point", "structure": "barracks"},
 	"build_factory": {"id": "build_factory", "name": "Build Factory (150M/100G)", "hotkey": "F", "target": "point", "structure": "factory"},
 	"build_command_center": {"id": "build_command_center", "name": "Build Command Center (400M)", "hotkey": "C", "target": "point", "structure": "command_center"},
+	"build_nexus": {"id": "build_nexus", "name": "Warp Nexus (400M)", "hotkey": "N", "target": "point", "structure": "nexus"},
+	"build_pylon": {"id": "build_pylon", "name": "Warp Pylon (100M)", "hotkey": "E", "target": "point", "structure": "pylon"},
+	"build_gateway": {"id": "build_gateway", "name": "Warp Gateway (150M)", "hotkey": "G", "target": "point", "structure": "gateway"},
 	"rally": {"id": "rally", "name": "Set Rally Point", "hotkey": "Y", "target": "point"}
 }
 
