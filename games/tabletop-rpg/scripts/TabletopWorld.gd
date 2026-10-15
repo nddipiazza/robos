@@ -360,6 +360,18 @@ var quest_objective_reward_label: Label = null
 var btn_quest_objective_close: Button = null
 var btn_modal_complete_quest: Button = null
 
+# AI Engine Options Modal & Controls
+var ai_options_modal: ColorRect = null
+var ai_options_card: PanelContainer = null
+var btn_ai_options: Button = null
+var check_ai_play: CheckBox = null
+var check_auto_advance: CheckBox = null
+var ai_options_status_label: Label = null
+var ai_play_for_you: bool = false
+var auto_advance_turn: bool = false
+var ai_turn_waiting_for_input: bool = false
+var auto_advance_timer: float = 0.0
+
 # Quest Objectives On-Screen HUD Tracker
 var quest_objectives_hud: PanelContainer = null
 var quest_hud_body: VBoxContainer = null
@@ -502,6 +514,7 @@ func _ready() -> void:
 	_setup_elf_spell_modal()
 	_setup_armory_modal()
 	_setup_game_menu_modal()
+	_setup_ai_options_modal()
 	_setup_quest_objective_modal()
 	_setup_quest_objectives_hud()
 	_setup_turn_overlay_ui()
@@ -521,6 +534,13 @@ func _ready() -> void:
 	_load_active_cartridge()
 	CartridgeManager.cartridge_inserted.connect(_on_cartridge_inserted)
 	_update_ui()
+	if CartridgeManager.auto_play_enabled:
+		ai_play_for_you = true
+		auto_advance_turn = true
+	else:
+		ai_play_for_you = false
+		auto_advance_turn = false
+	_update_ai_options_button_ui()
 	var q_obj = get_active_quest_objective()
 	var q_title = str(q_obj.get("title", "HeroQuest"))
 	_log("=== Welcome to %s ===" % q_title)
@@ -1851,6 +1871,90 @@ func apply_rpg_font_to_button(btn: Button, font_size: int = 14, text_color: Colo
 	btn.add_theme_stylebox_override("disabled", get_rpg_button_stylebox("normal"))
 	btn.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 
+var tex_checkbox_unchecked: ImageTexture = null
+var tex_checkbox_checked: ImageTexture = null
+
+func _get_checkbox_icon(checked: bool) -> ImageTexture:
+	if checked and tex_checkbox_checked:
+		return tex_checkbox_checked
+	if not checked and tex_checkbox_unchecked:
+		return tex_checkbox_unchecked
+
+	var img = Image.create(22, 22, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	var border_col = Color(0.95, 0.82, 0.40, 1.0)
+	var bg_col = Color(0.06, 0.08, 0.14, 0.95)
+	for x in range(2, 20):
+		for y in range(2, 20):
+			if x == 2 or x == 19 or y == 2 or y == 19:
+				img.set_pixel(x, y, border_col)
+			else:
+				img.set_pixel(x, y, bg_col)
+	if checked:
+		var check_col = Color(0.25, 0.98, 0.65, 1.0)
+		var pts = [
+			Vector2i(5, 11), Vector2i(6, 12), Vector2i(7, 13), Vector2i(8, 14),
+			Vector2i(9, 13), Vector2i(10, 11), Vector2i(11, 9), Vector2i(12, 7), Vector2i(13, 5),
+			Vector2i(5, 12), Vector2i(6, 13), Vector2i(7, 14), Vector2i(8, 15),
+			Vector2i(9, 14), Vector2i(10, 12), Vector2i(11, 10), Vector2i(12, 8), Vector2i(13, 6),
+			Vector2i(6, 11), Vector2i(7, 12), Vector2i(8, 13), Vector2i(9, 12), Vector2i(10, 10), Vector2i(11, 8), Vector2i(12, 6)
+		]
+		for p in pts:
+			if p.x >= 0 and p.x < 22 and p.y >= 0 and p.y < 22:
+				img.set_pixel(p.x, p.y, check_col)
+		tex_checkbox_checked = ImageTexture.create_from_image(img)
+		return tex_checkbox_checked
+	else:
+		tex_checkbox_unchecked = ImageTexture.create_from_image(img)
+		return tex_checkbox_unchecked
+
+func apply_rpg_font_to_checkbox(cb: CheckBox, font_size: int = 15, text_color: Color = Color(1.0, 0.94, 0.76, 1.0)) -> void:
+	if not cb:
+		return
+	if font_rpg_cinzel:
+		cb.add_theme_font_override("font", font_rpg_cinzel)
+	if font_size > 0:
+		cb.add_theme_font_size_override("font_size", font_size)
+	cb.add_theme_color_override("font_color", text_color)
+	cb.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 0.90, 1.0))
+	cb.add_theme_color_override("font_pressed_color", Color(1.0, 0.85, 0.35, 1.0))
+	cb.add_theme_color_override("font_focus_color", Color(1.0, 0.94, 0.76, 1.0))
+	cb.add_theme_constant_override("outline_size", 1)
+	cb.add_theme_color_override("font_outline_color", Color(0.01, 0.01, 0.02, 0.95))
+	cb.add_theme_constant_override("h_separation", 14)
+
+	var icon_unchecked = _get_checkbox_icon(false)
+	var icon_checked = _get_checkbox_icon(true)
+	cb.add_theme_icon_override("unchecked", icon_unchecked)
+	cb.add_theme_icon_override("unchecked_disabled", icon_unchecked)
+	cb.add_theme_icon_override("checked", icon_checked)
+	cb.add_theme_icon_override("checked_disabled", icon_checked)
+
+	var normal_sb = StyleBoxFlat.new()
+	normal_sb.bg_color = Color(0.06, 0.08, 0.12, 0.55)
+	normal_sb.border_color = Color(0.4, 0.32, 0.18, 0.7)
+	normal_sb.set_border_width_all(1)
+	normal_sb.set_corner_radius_all(4)
+	normal_sb.content_margin_left = 14
+	normal_sb.content_margin_right = 14
+	normal_sb.content_margin_top = 10
+	normal_sb.content_margin_bottom = 10
+
+	var hover_sb = StyleBoxFlat.new()
+	hover_sb.bg_color = Color(0.12, 0.15, 0.22, 0.75)
+	hover_sb.border_color = Color(0.95, 0.80, 0.35, 0.95)
+	hover_sb.set_border_width_all(1)
+	hover_sb.set_corner_radius_all(4)
+	hover_sb.content_margin_left = 14
+	hover_sb.content_margin_right = 14
+	hover_sb.content_margin_top = 10
+	hover_sb.content_margin_bottom = 10
+
+	cb.add_theme_stylebox_override("normal", normal_sb)
+	cb.add_theme_stylebox_override("hover", hover_sb)
+	cb.add_theme_stylebox_override("pressed", hover_sb)
+	cb.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+
 func _apply_rpg_theme_to_all_modals() -> void:
 	# 1. Spell Cast Modal
 	if spell_cast_modal:
@@ -2304,6 +2408,20 @@ func _setup_ui_signals() -> void:
 		obj_btn.pressed.connect(toggle_quest_objective_modal)
 		header_hbox.add_child(obj_btn)
 
+	btn_ai_options = get_node_or_null("UI/SidebarHeader/BtnAIEngineOptions")
+	if not btn_ai_options and header_hbox:
+		btn_ai_options = Button.new()
+		btn_ai_options.name = "BtnAIEngineOptions"
+		btn_ai_options.text = "🤖 AI"
+		btn_ai_options.tooltip_text = "🤖 AI Engine Options [A]\nConfigure autonomous AI player and turn progression."
+		btn_ai_options.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		btn_ai_options.custom_minimum_size = Vector2(68, 30)
+		header_hbox.add_child(btn_ai_options)
+	if btn_ai_options and not btn_ai_options.pressed.is_connected(toggle_ai_options_modal):
+		btn_ai_options.pressed.connect(toggle_ai_options_modal)
+		apply_rpg_font_to_button(btn_ai_options, 11, Color(1.0, 0.94, 0.76, 1.0))
+	_update_ai_options_button_ui()
+
 	if title_label:
 		apply_rpg_font_to_label(title_label, true, 16, Color(1.0, 0.85, 0.25, 1.0))
 	if role_badge:
@@ -2315,6 +2433,9 @@ func _setup_ui_signals() -> void:
 		var old_demo = header_hbox.get_node("BtnToggleDemo")
 		header_hbox.remove_child(old_demo)
 		old_demo.queue_free()
+
+	if btn_ai_step:
+		btn_ai_step.visible = false
 
 	if role_badge and not role_badge.pressed.is_connected(toggle_role):
 		role_badge.pressed.connect(toggle_role)
@@ -3927,7 +4048,7 @@ func get_reachable_walk_tiles() -> Array[Vector2i]:
 	return result
 
 func _process(delta: float) -> void:
-	if CartridgeManager.auto_play_enabled:
+	if CartridgeManager.auto_play_enabled or (ai_play_for_you and auto_advance_turn):
 		var is_enemy_animating = (current_phase == "gm_phase" and enemy_turn_stage in ["rolling", "moving", "pause_after_move", "acting", "waiting_for_action"])
 		if not is_enemy_animating:
 			auto_play_timer += delta
@@ -3935,6 +4056,16 @@ func _process(delta: float) -> void:
 			if auto_play_timer >= interval:
 				auto_play_timer = 0.0
 				_execute_auto_play_step()
+	elif ai_play_for_you:
+		var is_enemy_animating = (current_phase == "gm_phase" and enemy_turn_stage in ["rolling", "moving", "pause_after_move", "acting", "waiting_for_action"])
+		if not is_enemy_animating and not ai_turn_waiting_for_input:
+			auto_play_timer += delta
+			var interval = 0.05 if is_headless_mode() else 0.75
+			if auto_play_timer >= interval:
+				auto_play_timer = 0.0
+				_execute_step_by_step_ai()
+	elif auto_advance_turn and current_phase == "hero_phase":
+		_check_manual_auto_advance(delta)
 
 	var needs_redraw = false
 	if active_vfx.size() > 0:
@@ -5186,6 +5317,252 @@ func load_game_from_menu() -> void:
 		if game_menu_status_label:
 			game_menu_status_label.text = "[!] Failed to restore saved game!"
 			game_menu_status_label.add_theme_color_override("font_color", Color(0.95, 0.4, 0.4, 1.0))
+
+func is_ai_options_modal_open() -> bool:
+	return ai_options_modal != null and ai_options_modal.visible
+
+func open_ai_options_modal() -> void:
+	if not ai_options_modal:
+		_setup_ai_options_modal()
+	if not ai_options_modal:
+		return
+	if check_ai_play:
+		check_ai_play.button_pressed = ai_play_for_you
+	if check_auto_advance:
+		check_auto_advance.button_pressed = auto_advance_turn
+	_update_ai_options_status_text()
+	ai_options_modal.visible = true
+	_log("[AI ENGINE] Opened AI Engine Options dialog.")
+
+func close_ai_options_modal() -> void:
+	if ai_options_modal:
+		ai_options_modal.visible = false
+
+func toggle_ai_options_modal() -> void:
+	if is_ai_options_modal_open():
+		close_ai_options_modal()
+	else:
+		open_ai_options_modal()
+
+func _on_ai_play_toggled(pressed: bool) -> void:
+	ai_play_for_you = pressed
+	_update_ai_engine_state()
+
+func _on_auto_advance_toggled(pressed: bool) -> void:
+	auto_advance_turn = pressed
+	_update_ai_engine_state()
+
+func _update_ai_engine_state() -> void:
+	CartridgeManager.auto_play_enabled = (ai_play_for_you and auto_advance_turn)
+	ai_turn_waiting_for_input = false
+	auto_advance_timer = 0.0
+	if check_ai_play and check_ai_play.button_pressed != ai_play_for_you:
+		check_ai_play.set_pressed_no_signal(ai_play_for_you)
+	if check_auto_advance and check_auto_advance.button_pressed != auto_advance_turn:
+		check_auto_advance.set_pressed_no_signal(auto_advance_turn)
+	_update_ai_options_button_ui()
+	_update_ai_options_status_text()
+	_log("[AI ENGINE] Options updated: ai_play_for_you=%s, auto_advance_turn=%s, auto_play_enabled=%s" % [
+		str(ai_play_for_you), str(auto_advance_turn), str(CartridgeManager.auto_play_enabled)
+	])
+
+func _update_ai_options_button_ui() -> void:
+	if not btn_ai_options:
+		return
+	if ai_play_for_you and auto_advance_turn:
+		btn_ai_options.text = "🤖 AI [Auto]"
+		btn_ai_options.tooltip_text = "🤖 AI Engine Options [A]\nMode: Full Autonomous Auto-Play\nClick to reconfigure."
+		btn_ai_options.modulate = Color(0.4, 1.0, 0.7, 1.0)
+	elif ai_play_for_you and not auto_advance_turn:
+		btn_ai_options.text = "🤖 AI [Step]"
+		btn_ai_options.tooltip_text = "🤖 AI Engine Options [A]\nMode: Step-by-Step AI (manual turn end)\nClick to reconfigure."
+		btn_ai_options.modulate = Color(0.5, 0.85, 1.0, 1.0)
+	elif not ai_play_for_you and auto_advance_turn:
+		btn_ai_options.text = "🤖 AI [Next]"
+		btn_ai_options.tooltip_text = "🤖 AI Engine Options [A]\nMode: Manual Play with Auto-Advance\nClick to reconfigure."
+		btn_ai_options.modulate = Color(1.0, 0.88, 0.4, 1.0)
+	else:
+		btn_ai_options.text = "🤖 AI"
+		btn_ai_options.tooltip_text = "🤖 AI Engine Options [A]\nMode: Manual Player Control\nClick to reconfigure."
+		btn_ai_options.modulate = Color(1.0, 1.0, 1.0, 1.0)
+
+func _update_ai_options_status_text() -> void:
+	if not ai_options_status_label:
+		return
+	if ai_play_for_you and auto_advance_turn:
+		ai_options_status_label.text = "Mode: Full Autonomous Auto-Play\nAI commands heroes and automatically advances turns."
+		ai_options_status_label.add_theme_color_override("font_color", Color(0.4, 1.0, 0.7, 1.0))
+	elif ai_play_for_you and not auto_advance_turn:
+		ai_options_status_label.text = "Mode: Step-by-Step AI Governance\nAI commands hero actions, then pauses at turn end for review."
+		ai_options_status_label.add_theme_color_override("font_color", Color(0.5, 0.85, 1.0, 1.0))
+	elif not ai_play_for_you and auto_advance_turn:
+		ai_options_status_label.text = "Mode: Manual Play with Auto-Advance\nYou command heroes manually; turns advance automatically when moves/actions finish."
+		ai_options_status_label.add_theme_color_override("font_color", Color(1.0, 0.88, 0.4, 1.0))
+	else:
+		ai_options_status_label.text = "Mode: Standard Manual Control\nYou command heroes and click 'End Turn' to conclude turns."
+		ai_options_status_label.add_theme_color_override("font_color", Color(0.82, 0.78, 0.68, 0.85))
+
+func _execute_step_by_step_ai() -> void:
+	_execute_mentor_ai_party_step()
+
+func _check_manual_auto_advance(delta: float) -> void:
+	if current_phase != "hero_phase":
+		auto_advance_timer = 0.0
+		return
+	var is_turn_done = (turn_state == "turn_complete") or (movement_closed and has_acted_this_turn) or (movement_rolled and movement_remaining <= 0 and has_acted_this_turn)
+	if is_turn_done:
+		auto_advance_timer += delta
+		var delay = 0.1 if is_headless_mode() else 0.75
+		if auto_advance_timer >= delay:
+			auto_advance_timer = 0.0
+			_log("[AI ENGINE] Turn actions complete. Automatically advancing to next turn...")
+			end_turn()
+	else:
+		auto_advance_timer = 0.0
+
+func _setup_ai_options_modal() -> void:
+	if ai_options_modal:
+		return
+	var ui_node = get_node_or_null("UI")
+	if not ui_node:
+		return
+
+	ai_options_modal = ColorRect.new()
+	ai_options_modal.name = "AIEngineOptionsModal"
+	ai_options_modal.visible = false
+	ai_options_modal.color = Color(0.02, 0.03, 0.06, 0.82)
+	ai_options_modal.set_anchors_preset(Control.PRESET_FULL_RECT)
+	ai_options_modal.mouse_filter = Control.MOUSE_FILTER_STOP
+	ai_options_modal.z_index = 240
+
+	if tex_rpg_menu_dungeon_bg:
+		var dungeon_bg = TextureRect.new()
+		dungeon_bg.name = "DungeonBackdrop"
+		dungeon_bg.texture = tex_rpg_menu_dungeon_bg
+		dungeon_bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		dungeon_bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		dungeon_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+		dungeon_bg.modulate = Color(0.5, 0.55, 0.65, 0.85)
+		dungeon_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		ai_options_modal.add_child(dungeon_bg)
+
+	ai_options_modal.gui_input.connect(func(ev: InputEvent):
+		if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
+			close_ai_options_modal()
+	)
+
+	ai_options_card = PanelContainer.new()
+	ai_options_card.name = "Card"
+	ai_options_card.set_anchors_preset(Control.PRESET_CENTER)
+	ai_options_card.custom_minimum_size = Vector2(560, 390)
+	ai_options_card.offset_left = -280
+	ai_options_card.offset_top = -195
+	ai_options_card.offset_right = 280
+	ai_options_card.offset_bottom = 195
+	ai_options_card.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	ai_options_card.grow_vertical = Control.GROW_DIRECTION_BOTH
+	ai_options_card.mouse_filter = Control.MOUSE_FILTER_STOP
+	ai_options_card.add_theme_stylebox_override("panel", get_rpg_dialog_panel_stylebox(36, 30, 36, 30))
+
+	var margin = MarginContainer.new()
+	margin.name = "Margin"
+	margin.add_theme_constant_override("margin_left", 22)
+	margin.add_theme_constant_override("margin_top", 18)
+	margin.add_theme_constant_override("margin_right", 22)
+	margin.add_theme_constant_override("margin_bottom", 18)
+	ai_options_card.add_child(margin)
+
+	var vbox = VBoxContainer.new()
+	vbox.name = "VBox"
+	vbox.add_theme_constant_override("separation", 12)
+	margin.add_child(vbox)
+
+	# 1. Header with title and badge
+	var header = HBoxContainer.new()
+	header.name = "Header"
+	var title = Label.new()
+	title.name = "Title"
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title.text = "AI Engine Options"
+	title.add_theme_stylebox_override("normal", get_rpg_title_plaque_stylebox(14, 6))
+	apply_rpg_font_to_label(title, true, 19, Color(1.0, 0.88, 0.35, 1.0))
+	header.add_child(title)
+
+	var badge = Label.new()
+	badge.name = "Badge"
+	badge.text = "AUTONOMOUS HARNESS"
+	badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	badge.add_theme_stylebox_override("normal", get_rpg_badge_stylebox())
+	apply_rpg_font_to_label(badge, false, 11, Color(0.4, 0.95, 0.85, 1.0))
+	header.add_child(badge)
+	vbox.add_child(header)
+
+	var sep = HSeparator.new()
+	vbox.add_child(sep)
+
+	# 2. Options container (Styled RPG Panel)
+	var options_panel = PanelContainer.new()
+	options_panel.name = "OptionsPanel"
+	options_panel.add_theme_stylebox_override("panel", get_rpg_plaque_stylebox(18, 14, 18, 14))
+
+	var options_vbox = VBoxContainer.new()
+	options_vbox.name = "OptionsVBox"
+	options_vbox.add_theme_constant_override("separation", 14)
+
+	# Checkbox 1: ai play for you
+	check_ai_play = CheckBox.new()
+	check_ai_play.name = "CheckAIPlay"
+	check_ai_play.text = "- ai play for you"
+	check_ai_play.tooltip_text = "When enabled, autonomous AI makes tactical decisions, movement, spellcasting, and combat for the party."
+	check_ai_play.button_pressed = ai_play_for_you
+	check_ai_play.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	apply_rpg_font_to_checkbox(check_ai_play, 16, Color(1.0, 0.96, 0.84, 1.0))
+	check_ai_play.toggled.connect(_on_ai_play_toggled)
+	options_vbox.add_child(check_ai_play)
+
+	# Checkbox 2: automatically go to the next turn without your input
+	check_auto_advance = CheckBox.new()
+	check_auto_advance.name = "CheckAutoAdvance"
+	check_auto_advance.text = "- automatically go to the next turn without your input"
+	check_auto_advance.tooltip_text = "When enabled, turns advance automatically without pausing or waiting for manual 'End Turn' button click."
+	check_auto_advance.button_pressed = auto_advance_turn
+	check_auto_advance.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	apply_rpg_font_to_checkbox(check_auto_advance, 16, Color(1.0, 0.96, 0.84, 1.0))
+	check_auto_advance.toggled.connect(_on_auto_advance_toggled)
+	options_vbox.add_child(check_auto_advance)
+
+	options_panel.add_child(options_vbox)
+	vbox.add_child(options_panel)
+
+	# 3. Status description label
+	ai_options_status_label = Label.new()
+	ai_options_status_label.name = "StatusLabel"
+	ai_options_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	ai_options_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	ai_options_status_label.add_theme_stylebox_override("normal", get_rpg_instruction_stylebox())
+	apply_rpg_font_to_label(ai_options_status_label, false, 12, Color(0.82, 0.78, 0.68, 0.85))
+	vbox.add_child(ai_options_status_label)
+	_update_ai_options_status_text()
+
+	# 4. Action Buttons Container
+	var btns_vbox = VBoxContainer.new()
+	btns_vbox.name = "ButtonsVBox"
+	btns_vbox.add_theme_constant_override("separation", 8)
+
+	var btn_close = Button.new()
+	btn_close.name = "BtnCloseAIOptions"
+	btn_close.text = "RESUME GAME [A]"
+	btn_close.tooltip_text = "Dismiss AI Engine Options dialog [Esc / A]"
+	btn_close.custom_minimum_size = Vector2(0, 44)
+	btn_close.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	apply_rpg_font_to_button(btn_close, 15, Color(1.0, 0.96, 0.82, 1.0))
+	btn_close.pressed.connect(close_ai_options_modal)
+	btns_vbox.add_child(btn_close)
+
+	vbox.add_child(btns_vbox)
+
+	ai_options_modal.add_child(ai_options_card)
+	ui_node.add_child(ai_options_modal)
 
 var quest_selector_modal: ColorRect = null
 
@@ -7746,6 +8123,10 @@ func _execute_mentor_ai_party_step() -> void:
 			return
 
 	# 12. Turn Conclusion
+	if ai_play_for_you and not auto_advance_turn:
+		ai_turn_waiting_for_input = true
+		_log("[AI ENGINE] %s turn actions completed. Press 'End Turn' to advance." % hero_name)
+		return
 	_log("[MENTOR AI] ⏭️ %s concludes turn." % hero_name)
 	end_turn()
 
@@ -8057,6 +8438,12 @@ func _input(event: InputEvent) -> void:
 				targeting_cursor.queue_redraw()
 			queue_redraw_all()
 
+	if ai_options_modal and ai_options_modal.visible:
+		if (event is InputEventKey and event.pressed and (event.keycode == KEY_ESCAPE or event.keycode == KEY_A)):
+			close_ai_options_modal()
+			get_viewport().set_input_as_handled()
+			return
+
 	if game_menu_modal and game_menu_modal.visible:
 		if (event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE):
 			close_game_menu()
@@ -8123,6 +8510,12 @@ func _unhandled_input(event: InputEvent) -> void:
 	if quest_objective_modal and quest_objective_modal.visible:
 		if (event is InputEventKey and event.pressed and (event.keycode == KEY_ESCAPE or event.keycode == KEY_O or event.keycode == KEY_SPACE or event.keycode == KEY_ENTER)):
 			close_quest_objective_modal()
+			get_viewport().set_input_as_handled()
+			return
+
+	if ai_options_modal and ai_options_modal.visible:
+		if (event is InputEventKey and event.pressed and (event.keycode == KEY_ESCAPE or event.keycode == KEY_A)):
+			close_ai_options_modal()
 			get_viewport().set_input_as_handled()
 			return
 
@@ -8223,6 +8616,11 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_W:
 		toggle_wandering_monster_modal()
+		get_viewport().set_input_as_handled()
+		return
+
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_A:
+		toggle_ai_options_modal()
 		get_viewport().set_input_as_handled()
 		return
 
@@ -13218,6 +13616,8 @@ func _check_hero_enter_board(idx: int) -> void:
 
 func end_turn() -> void:
 	quest_begun = true
+	ai_turn_waiting_for_input = false
+	auto_advance_timer = 0.0
 	var cur_hero = get_active_hero()
 	var ending_phase = current_phase
 	var ending_actor = str(cur_hero.get("name", "Hero")) if ending_phase == "hero_phase" else "Zargon GM"
@@ -14857,9 +15257,9 @@ func _update_ui() -> void:
 				btn_end_turn.text = "End Turn"
 				_update_action_tile(btn_end_turn, "end_turn", 0, "⏭️ End Turn", "Conclude current hero's turn and pass initiative.")
 
-		# AI Step button
+		# AI Step button - kept off main toolbar, accessible via AI Engine Options modal
 		if btn_ai_step:
-			_update_action_tile(btn_ai_step, "ai_step", 0, "🤖 AI Step (Autonomous Agent)", "Execute next step planned by autonomous AI agent.")
+			btn_ai_step.visible = false
 
 		default_guidance_text = dice_label.text if dice_label else ""
 		_update_scroll_buttons_visibility()
@@ -18331,6 +18731,15 @@ func get_telemetry_state() -> Dictionary:
 		"isDemoActive": CartridgeManager.auto_play_enabled,
 		"autoPlayEnabled": CartridgeManager.auto_play_enabled,
 		"autoPlayStep": auto_play_step,
+		"aiPlayForYou": ai_play_for_you,
+		"autoAdvanceTurn": auto_advance_turn,
+		"isAIOptionsModalOpen": is_ai_options_modal_open(),
+		"aiEngineOptions": {
+			"aiPlayForYou": ai_play_for_you,
+			"autoAdvanceTurn": auto_advance_turn,
+			"isModalOpen": is_ai_options_modal_open(),
+			"aiTurnWaitingForInput": ai_turn_waiting_for_input
+		},
 		"difficultyMode": difficulty_mode,
 		"difficulty_mode": difficulty_mode,
 		"isHardMode": difficulty_mode == "hard",
@@ -19366,16 +19775,58 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			return { "success": true }
 		"start_demo", "enable_demo", "start_auto_play":
 			CartridgeManager.auto_play_enabled = true
+			ai_play_for_you = true
+			auto_advance_turn = true
+			_update_ai_options_button_ui()
 			_update_ui()
-			return { "success": true, "demo_active": true, "auto_play": true }
+			return { "success": true, "demo_active": true, "auto_play": true, "ai_play_for_you": true, "auto_advance_turn": true }
 		"stop_demo", "pause_demo", "stop_auto_play":
 			CartridgeManager.auto_play_enabled = false
+			ai_play_for_you = false
+			auto_advance_turn = false
+			_update_ai_options_button_ui()
 			_update_ui()
-			return { "success": true, "demo_active": false, "auto_play": false }
+			return { "success": true, "demo_active": false, "auto_play": false, "ai_play_for_you": false, "auto_advance_turn": false }
 		"toggle_demo", "toggle_auto_play":
-			CartridgeManager.auto_play_enabled = not CartridgeManager.auto_play_enabled
+			var new_demo = not (ai_play_for_you and auto_advance_turn)
+			CartridgeManager.auto_play_enabled = new_demo
+			ai_play_for_you = new_demo
+			auto_advance_turn = new_demo
+			_update_ai_options_button_ui()
 			_update_ui()
-			return { "success": true, "demo_active": CartridgeManager.auto_play_enabled }
+			return { "success": true, "demo_active": CartridgeManager.auto_play_enabled, "ai_play_for_you": ai_play_for_you, "auto_advance_turn": auto_advance_turn }
+		"open_ai_options", "show_ai_options", "open_ai_engine_options":
+			open_ai_options_modal()
+			return { "success": true, "modal_open": true, "ai_play_for_you": ai_play_for_you, "auto_advance_turn": auto_advance_turn }
+		"close_ai_options", "hide_ai_options", "close_ai_engine_options":
+			close_ai_options_modal()
+			return { "success": true, "modal_open": false }
+		"toggle_ai_options", "toggle_ai_engine_options":
+			toggle_ai_options_modal()
+			return { "success": true, "modal_open": is_ai_options_modal_open(), "ai_play_for_you": ai_play_for_you, "auto_advance_turn": auto_advance_turn }
+		"get_ai_options", "get_ai_engine_options":
+			return {
+				"success": true,
+				"ai_play_for_you": ai_play_for_you,
+				"auto_advance_turn": auto_advance_turn,
+				"modal_open": is_ai_options_modal_open()
+			}
+		"set_ai_options", "set_ai_engine_options":
+			if action_data.has("ai_play_for_you"):
+				ai_play_for_you = bool(action_data.get("ai_play_for_you"))
+			elif action_data.has("aiPlayForYou"):
+				ai_play_for_you = bool(action_data.get("aiPlayForYou"))
+			if action_data.has("auto_advance_turn"):
+				auto_advance_turn = bool(action_data.get("auto_advance_turn"))
+			elif action_data.has("autoAdvanceTurn"):
+				auto_advance_turn = bool(action_data.get("autoAdvanceTurn"))
+			_update_ai_engine_state()
+			return {
+				"success": true,
+				"ai_play_for_you": ai_play_for_you,
+				"auto_advance_turn": auto_advance_turn,
+				"modal_open": is_ai_options_modal_open()
+			}
 		"step_ai", "execute_ai_step", "step_turn", "step_demo":
 			_execute_auto_play_step()
 			return { "success": true, "stepped": true, "step": auto_play_step, "phase": current_phase, "round": current_round }

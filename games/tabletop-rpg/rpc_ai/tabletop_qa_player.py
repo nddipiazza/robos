@@ -680,6 +680,35 @@ class TabletopQAPlayer:
         st = self.get_state()
         return bool(st.get("gameMenuVisible", False) or st.get("isGameMenuOpen", False))
 
+    # --- AI Engine Options Helpers ---
+    def open_ai_options(self) -> dict:
+        self.log("Opening AI Engine Options Modal...")
+        return self.execute_action("open_ai_options")
+
+    def close_ai_options(self) -> dict:
+        self.log("Closing AI Engine Options Modal...")
+        return self.execute_action("close_ai_options")
+
+    def toggle_ai_options(self) -> dict:
+        self.log("Toggling AI Engine Options Modal...")
+        return self.execute_action("toggle_ai_options")
+
+    def is_ai_options_open(self) -> bool:
+        st = self.get_state()
+        return bool(st.get("isAIOptionsModalOpen", False) or st.get("aiEngineOptions", {}).get("isModalOpen", False))
+
+    def get_ai_options(self) -> dict:
+        return self.execute_action("get_ai_options")
+
+    def set_ai_options(self, ai_play_for_you: bool = None, auto_advance_turn: bool = None) -> dict:
+        kwargs = {}
+        if ai_play_for_you is not None:
+            kwargs["ai_play_for_you"] = ai_play_for_you
+        if auto_advance_turn is not None:
+            kwargs["auto_advance_turn"] = auto_advance_turn
+        self.log(f"Setting AI options: {kwargs}...")
+        return self.execute_action("set_ai_options", **kwargs)
+
     # --- Quest Objective Helpers ---
     def open_quest_objective(self) -> dict:
         self.log("Opening Quest Objective Modal...")
