@@ -37,6 +37,7 @@ var alerts: Array[Dictionary] = []
 var click_markers: Array[Dictionary] = []
 var hover_override: Variant = null
 var show_help: bool = false
+var show_names: bool = false
 var banner_ttl: float = 0.0
 var _attack_msg_cd: float = 0.0
 var _last_group_press: Dictionary = {}
@@ -66,6 +67,7 @@ func _ready() -> void:
 func _on_scenario_loaded(_name: String) -> void:
 	selected_tags.clear()
 	pending_ability = ""
+	control_groups.clear()
 	messages.clear()
 	alerts.clear()
 	click_markers.clear()
@@ -752,6 +754,8 @@ func apply_ui_state(d: Dictionary) -> Dictionary:
 			hover_override = null
 	if d.has("help"):
 		show_help = bool(d["help"])
+	if d.has("show_names"):
+		show_names = bool(d["show_names"])
 	if d.has("pending_ability"):
 		pending_ability = str(d["pending_ability"])
 	if d.has("banner"):
@@ -840,6 +844,8 @@ func _draw() -> void:
 		_draw_unit_bars(u, font)
 	_draw_build_ghost()
 	_draw_click_markers()
+	if show_names:
+		_draw_name_labels(font)
 	if is_box_selecting:
 		var sel_rect := Rect2(
 			Vector2(minf(box_start_screen.x, box_end_screen.x), minf(box_start_screen.y, box_end_screen.y)),
@@ -847,6 +853,18 @@ func _draw() -> void:
 		)
 		draw_rect(sel_rect, Color(0.45, 1.0, 0.55, 0.08))
 		draw_rect(sel_rect, Color(0.55, 1.0, 0.65, 0.9), false, 1.5)
+
+# Optional labels under every unit (scripted roster screenshots); off by default.
+func _draw_name_labels(font: Font) -> void:
+	for u in SimEngine.units.values():
+		var sp := world_to_screen(u["pos"], -0.2)
+		if sp.y > HUD_TOP - 10.0 or sp.y < 50.0:
+			continue
+		var label := str(u["name"])
+		var w := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 18).x
+		var pos := Vector2(sp.x - w * 0.5, sp.y + 30.0)
+		draw_string(font, pos + Vector2(1, 1), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color(0, 0, 0, 0.85))
+		draw_string(font, pos, label, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color("#f3f6fa"))
 
 func _ellipse(center: Vector2, radius: float, col: Color, width: float = 2.0) -> void:
 	draw_set_transform(center, 0.0, Vector2(1.0, 0.58))

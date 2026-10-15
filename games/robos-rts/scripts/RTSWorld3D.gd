@@ -48,7 +48,7 @@ func _ready() -> void:
 	SimEngine.projectile_fired.connect(_on_projectile_fired)
 	SimEngine.unit_phased.connect(_on_unit_phased)
 	SimEngine.unit_destroyed.connect(_on_unit_destroyed)
-	SimEngine.bulk_stepped.connect(_on_bulk_stepped)
+	SimEngine.paused_step.connect(_on_paused_step)
 	_rebuild_static_3d_map()
 
 func _setup_environment_and_camera() -> void:
@@ -510,7 +510,9 @@ func _spawn_burst(pos: Vector3, col: Color, radius: float, ttl: float, grow: flo
 	mi.material_override = m
 	mi.position = pos
 	fx_root.add_child(mi)
-	active_fx.append({"node": mi, "mat": m, "ttl": ttl, "max": ttl, "kind": "burst", "col": col, "grow": grow})
+	# While paused (scripted captures) the effect is held still, so begin it part-way through.
+	var start_ttl := ttl * (0.55 if SimEngine.paused else 1.0)
+	active_fx.append({"node": mi, "mat": m, "ttl": start_ttl, "max": ttl, "kind": "burst", "col": col, "grow": grow})
 
 func _spawn_scorch(pos: Vector3, radius: float) -> void:
 	var mi := MeshInstance3D.new()
@@ -528,11 +530,11 @@ func _spawn_scorch(pos: Vector3, radius: float) -> void:
 	active_fx.append({"node": mi, "mat": m, "ttl": 16.0, "max": 16.0, "kind": "scorch", "col": col, "grow": 0.0})
 
 # While the sim is paused (scripted captures) transient effects hold still, so a frame taken after a
-# small step shows them; a bulk time-skip clears them. Scorch marks always fade in real time.
+# small step shows them; every further paused step clears the previous ones. Scorch marks always fade in real time.
 func _skip_transient_fx() -> bool:
 	return SimEngine.paused and SimEngine.last_step_count > 6
 
-func _on_bulk_stepped() -> void:
+func _on_paused_step() -> void:
 	for i in range(active_fx.size() - 1, -1, -1):
 		if active_fx[i]["kind"] != "scorch":
 			if is_instance_valid(active_fx[i]["node"]):
@@ -579,7 +581,7 @@ func _on_projectile_fired(from_pos: Vector2, to_pos: Vector2, _weapon_name: Stri
 	var col := _weapon_color(owner_id, is_splash)
 	var beam := MeshInstance3D.new()
 	var box := BoxMesh.new()
-	var w := 0.34 if is_splash else 0.14
+	var w := 0.22 if is_splash else 0.12
 	box.size = Vector3(w, w, dist)
 	beam.mesh = box
 	var m := _fx_mat(col)

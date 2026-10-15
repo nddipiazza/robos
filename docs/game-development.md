@@ -9,7 +9,7 @@ nav_order: 4
 # Game development
 {: .no_toc }
 
-What RobOS contains for games today: two Godot projects you can run and read, editor apps for their content, graph packages and shapes for game projects, and six Task Planner templates. The App Wizard does not scaffold a game project yet.
+What RobOS contains for games today: three Godot projects you can run and read, editor apps for their content, graph packages and shapes for game projects, and six Task Planner templates. The App Wizard does not scaffold a game project yet.
 {: .fs-6 }
 
 <details open markdown="block">
@@ -21,18 +21,20 @@ What RobOS contains for games today: two Godot projects you can run and read, ed
 
 ## Games in this repository
 
-Both are Godot 4.3 projects (`config/features` in each `project.godot` lists 4.3 and the GL Compatibility renderer).
+All three are Godot 4.3 projects (`config/features` in each `project.godot` lists 4.3 and the GL Compatibility renderer).
 
 | Path | Game | Notes |
 |:---|:---|:---|
 | `games/crpg-realm` | Realm of Heroes: A Night Without Memory | A party-based cRPG with D&D 5e SRD rules. It has its own `AGENTS.md` describing the test layers. |
 | `games/tabletop-rpg` | RobOS Tabletop RPG: HeroQuest | A HeroQuest-style turn-based dungeon crawler. Its content is modeled in the `tabletop-game` graph package. `play.sh` accepts options such as `--cartridge`, `--quest`, `--demo` and `--hard`. |
+| `games/robos-rts` | Starfall Command | A real-time strategy game with three factions, an angled 3D camera and a deterministic 64 Hz simulation. A Python SDK and HTTP API drive it for bots and Cucumber tests. See [RobOS RTS]({{ '/projects/robos-rts/' | relative_url }}). |
 
-Both have a launcher script. It finds Godot from `GODOT_BIN`, then `godot4` or `godot` on your `PATH` (they also check `~/apps/godot4`, and the tabletop script checks `~/.local/bin/godot`):
+Each has a launcher script. It finds Godot from `GODOT_BIN`, then `godot4` or `godot` on your `PATH` (they also check `~/apps/godot4`, and the tabletop script checks `~/.local/bin/godot`):
 
 ```bash
 GODOT_BIN=/path/to/godot games/crpg-realm/play.sh
 games/tabletop-rpg/play.sh
+games/robos-rts/play.sh
 ```
 
 The scripts exit with "Godot 4 binary not found" if none of these exists.
