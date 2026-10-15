@@ -42,12 +42,15 @@ function parseArgs() {
 parseArgs();
 
 function createWindow() {
+  const iconPng = path.join(__dirname, 'icon.png');
+  const iconSvg = path.join(__dirname, 'icon.svg');
   mainWindow = new BrowserWindow({
     width: 1560,
     height: 980,
     minWidth: 1080,
     minHeight: 720,
     title: 'RobOS Tabletop Quest Map Editor',
+    icon: fs.existsSync(iconPng) ? iconPng : iconSvg,
     backgroundColor: '#0a0e17',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
