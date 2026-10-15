@@ -10622,61 +10622,33 @@
       "@id": "urn:robos:app:auto-center",
       "@type": "robos:DesktopApp",
       "dcterms:title": "RobOS Auto Center",
-      "robos:package": "auto",
-      "robos:repository": "https://github.com/nddipiazza/robos",
-      "robos:technology": "Electron / Node.js / Python 3",
-      "robos:desktopFramework": "Electron",
-      "robos:sourcePath": "packages/auto-center",
       "robos:appFamily": {
         "@id": "urn:robos:auto:family"
       },
-      "robos:description": "Public reference catalog, VIN decoding and local vehicle/service records. Parts, shop and history schemas are foundations for later workflows."
-    },
-    {
-      "@id": "urn:robos:auto:family",
-      "@type": "schema:SoftwareApplication",
-      "dcterms:title": "RobOS Auto",
+      "robos:description": "Owner mode: garage, service history, maintenance plans and reviewed invoice OCR. Maintenance center mode: separate customer vehicles, repair jobs and private Git history. Public bulk recalls link applicability, reported affected components, remedies and exact source rows.",
+      "robos:desktopFramework": "Electron",
       "robos:package": "auto",
-      "schema:name": "RobOS Auto",
-      "robos:hasApp": {
-        "@id": "urn:robos:app:auto-center"
-      }
+      "robos:repository": "https://github.com/nddipiazza/robos",
+      "robos:sourcePath": "packages/auto-center",
+      "robos:technology": "Electron / Node.js / Python 3"
     },
     {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:VehicleMake",
+      "@id": "urn:robos:auto:AutoVocabularyTerm:AccidentRecord",
       "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "VehicleMake",
+      "dcterms:title": "AccidentRecord",
       "robos:package": "auto",
-      "schema:url": "https://schema.org/Brand",
-      "robos:refersFrom": "https://schema.org/Brand",
-      "schema:description": "Required properties: schema:name"
+      "schema:url": "https://schema.org/Event",
+      "robos:refersFrom": "https://schema.org/Event",
+      "schema:description": "Required properties: robos:vehicle"
     },
     {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:VehicleModel",
+      "@id": "urn:robos:auto:AutoVocabularyTerm:AutoDataset",
       "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "VehicleModel",
+      "dcterms:title": "AutoDataset",
       "robos:package": "auto",
-      "schema:url": "https://schema.org/ProductModel",
-      "robos:refersFrom": "https://schema.org/ProductModel",
-      "schema:description": "Required properties: schema:name, robos:make"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:VehicleConfiguration",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "VehicleConfiguration",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/Vehicle",
-      "robos:refersFrom": "https://schema.org/Vehicle",
-      "schema:description": "Required properties: schema:modelDate, robos:model"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:OwnedVehicle",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "OwnedVehicle",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/Vehicle",
-      "robos:refersFrom": "https://schema.org/Vehicle",
-      "schema:description": "Required properties: schema:name"
+      "schema:url": "https://schema.org/Dataset",
+      "robos:refersFrom": "https://schema.org/Dataset",
+      "schema:description": "Required properties: schema:url"
     },
     {
       "@id": "urn:robos:auto:AutoVocabularyTerm:AutoShop",
@@ -10688,31 +10660,31 @@
       "schema:description": "Required properties: schema:name"
     },
     {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:ServiceRecord",
+      "@id": "urn:robos:auto:AutoVocabularyTerm:AutoSoftware",
       "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "ServiceRecord",
+      "dcterms:title": "AutoSoftware",
       "robos:package": "auto",
-      "schema:url": "https://schema.org/Service",
-      "robos:refersFrom": "https://schema.org/Service",
-      "schema:description": "Required properties: robos:vehicle, schema:startDate, schema:description"
+      "schema:url": "https://schema.org/SoftwareApplication",
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "schema:description": "Required properties: schema:url"
     },
     {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:MaintenanceSchedule",
+      "@id": "urn:robos:auto:AutoVocabularyTerm:AutoVocabularyTerm",
       "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "MaintenanceSchedule",
+      "dcterms:title": "AutoVocabularyTerm",
       "robos:package": "auto",
-      "schema:url": "https://schema.org/Schedule",
-      "robos:refersFrom": "https://schema.org/Schedule",
-      "schema:description": "Required properties: robos:vehicle"
+      "schema:url": "https://schema.org/DefinedTerm",
+      "robos:refersFrom": "https://schema.org/DefinedTerm",
+      "schema:description": "Required properties: schema:url"
     },
     {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:RepairOrder",
+      "@id": "urn:robos:auto:AutoVocabularyTerm:DiagnosticCode",
       "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "RepairOrder",
+      "dcterms:title": "DiagnosticCode",
       "robos:package": "auto",
-      "schema:url": "https://schema.org/Order",
-      "robos:refersFrom": "https://schema.org/Order",
-      "schema:description": "Required properties: robos:vehicle"
+      "schema:url": "https://schema.org/DefinedTerm",
+      "robos:refersFrom": "https://schema.org/DefinedTerm",
+      "schema:description": "Required properties: schema:name"
     },
     {
       "@id": "urn:robos:auto:AutoVocabularyTerm:Estimate",
@@ -10724,12 +10696,57 @@
       "schema:description": "Required properties: robos:vehicle"
     },
     {
+      "@id": "urn:robos:auto:AutoVocabularyTerm:Inspection",
+      "@type": "robos:AutoVocabularyTerm",
+      "dcterms:title": "Inspection",
+      "robos:package": "auto",
+      "schema:url": "https://schema.org/CheckAction",
+      "robos:refersFrom": "https://schema.org/CheckAction",
+      "schema:description": "Required properties: robos:vehicle"
+    },
+    {
       "@id": "urn:robos:auto:AutoVocabularyTerm:Invoice",
       "@type": "robos:AutoVocabularyTerm",
       "dcterms:title": "Invoice",
       "robos:package": "auto",
       "schema:url": "https://schema.org/Invoice",
       "robos:refersFrom": "https://schema.org/Invoice",
+      "schema:description": "Required properties: robos:vehicle"
+    },
+    {
+      "@id": "urn:robos:auto:AutoVocabularyTerm:MaintenanceSchedule",
+      "@type": "robos:AutoVocabularyTerm",
+      "dcterms:title": "MaintenanceSchedule",
+      "robos:package": "auto",
+      "schema:url": "https://schema.org/Schedule",
+      "robos:refersFrom": "https://schema.org/Schedule",
+      "schema:description": "Required properties: robos:vehicle"
+    },
+    {
+      "@id": "urn:robos:auto:AutoVocabularyTerm:OdometerReading",
+      "@type": "robos:AutoVocabularyTerm",
+      "dcterms:title": "OdometerReading",
+      "robos:package": "auto",
+      "schema:url": "https://schema.org/QuantitativeValue",
+      "robos:refersFrom": "https://schema.org/QuantitativeValue",
+      "schema:description": "Required properties: robos:vehicle, schema:value, schema:unitCode"
+    },
+    {
+      "@id": "urn:robos:auto:AutoVocabularyTerm:OwnedVehicle",
+      "@type": "robos:AutoVocabularyTerm",
+      "dcterms:title": "OwnedVehicle",
+      "robos:package": "auto",
+      "schema:url": "https://schema.org/Vehicle",
+      "robos:refersFrom": "https://schema.org/Vehicle",
+      "schema:description": "Required properties: schema:name"
+    },
+    {
+      "@id": "urn:robos:auto:AutoVocabularyTerm:OwnershipRecord",
+      "@type": "robos:AutoVocabularyTerm",
+      "dcterms:title": "OwnershipRecord",
+      "robos:package": "auto",
+      "schema:url": "https://schema.org/OwnershipInfo",
+      "robos:refersFrom": "https://schema.org/OwnershipInfo",
       "schema:description": "Required properties: robos:vehicle"
     },
     {
@@ -10751,13 +10768,13 @@
       "schema:description": "Required properties: robos:part, robos:configuration"
     },
     {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:OdometerReading",
+      "@id": "urn:robos:auto:AutoVocabularyTerm:RecallCampaign",
       "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "OdometerReading",
+      "dcterms:title": "RecallCampaign",
       "robos:package": "auto",
-      "schema:url": "https://schema.org/QuantitativeValue",
-      "robos:refersFrom": "https://schema.org/QuantitativeValue",
-      "schema:description": "Required properties: robos:vehicle, schema:value, schema:unitCode"
+      "schema:url": "https://schema.org/CreativeWork",
+      "robos:refersFrom": "https://schema.org/CreativeWork",
+      "schema:description": "Required properties: schema:identifier"
     },
     {
       "@id": "urn:robos:auto:AutoVocabularyTerm:Registration",
@@ -10769,49 +10786,13 @@
       "schema:description": "Required properties: robos:vehicle"
     },
     {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:OwnershipRecord",
+      "@id": "urn:robos:auto:AutoVocabularyTerm:RepairOrder",
       "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "OwnershipRecord",
+      "dcterms:title": "RepairOrder",
       "robos:package": "auto",
-      "schema:url": "https://schema.org/OwnershipInfo",
-      "robos:refersFrom": "https://schema.org/OwnershipInfo",
+      "schema:url": "https://schema.org/Order",
+      "robos:refersFrom": "https://schema.org/Order",
       "schema:description": "Required properties: robos:vehicle"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:AccidentRecord",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "AccidentRecord",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/Event",
-      "robos:refersFrom": "https://schema.org/Event",
-      "schema:description": "Required properties: robos:vehicle"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:Inspection",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "Inspection",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/CheckAction",
-      "robos:refersFrom": "https://schema.org/CheckAction",
-      "schema:description": "Required properties: robos:vehicle"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:DiagnosticCode",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "DiagnosticCode",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/DefinedTerm",
-      "robos:refersFrom": "https://schema.org/DefinedTerm",
-      "schema:description": "Required properties: schema:name"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:RecallCampaign",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "RecallCampaign",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/CreativeWork",
-      "robos:refersFrom": "https://schema.org/CreativeWork",
-      "schema:description": "Required properties: schema:identifier"
     },
     {
       "@id": "urn:robos:auto:AutoVocabularyTerm:SafetyComplaint",
@@ -10823,31 +10804,86 @@
       "schema:description": "Required properties: schema:identifier"
     },
     {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:AutoDataset",
+      "@id": "urn:robos:auto:AutoVocabularyTerm:ServiceRecord",
       "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "AutoDataset",
+      "dcterms:title": "ServiceRecord",
       "robos:package": "auto",
-      "schema:url": "https://schema.org/Dataset",
-      "robos:refersFrom": "https://schema.org/Dataset",
-      "schema:description": "Required properties: schema:url"
+      "schema:url": "https://schema.org/Service",
+      "robos:refersFrom": "https://schema.org/Service",
+      "schema:description": "Required properties: robos:vehicle, schema:startDate, schema:description"
     },
     {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:AutoVocabularyTerm",
+      "@id": "urn:robos:auto:AutoVocabularyTerm:VehicleConfiguration",
       "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "AutoVocabularyTerm",
+      "dcterms:title": "VehicleConfiguration",
       "robos:package": "auto",
-      "schema:url": "https://schema.org/DefinedTerm",
-      "robos:refersFrom": "https://schema.org/DefinedTerm",
-      "schema:description": "Required properties: schema:url"
+      "schema:url": "https://schema.org/Vehicle",
+      "robos:refersFrom": "https://schema.org/Vehicle",
+      "schema:description": "Required properties: schema:modelDate, robos:model"
     },
     {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:AutoSoftware",
+      "@id": "urn:robos:auto:AutoVocabularyTerm:VehicleMake",
       "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "AutoSoftware",
+      "dcterms:title": "VehicleMake",
       "robos:package": "auto",
-      "schema:url": "https://schema.org/SoftwareApplication",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "schema:description": "Required properties: schema:url"
+      "schema:url": "https://schema.org/Brand",
+      "robos:refersFrom": "https://schema.org/Brand",
+      "schema:description": "Required properties: schema:name"
+    },
+    {
+      "@id": "urn:robos:auto:AutoVocabularyTerm:VehicleModel",
+      "@type": "robos:AutoVocabularyTerm",
+      "dcterms:title": "VehicleModel",
+      "robos:package": "auto",
+      "schema:url": "https://schema.org/ProductModel",
+      "robos:refersFrom": "https://schema.org/ProductModel",
+      "schema:description": "Required properties: schema:name, robos:make"
+    },
+    {
+      "@id": "urn:robos:auto:family",
+      "@type": "schema:SoftwareApplication",
+      "dcterms:title": "RobOS Auto",
+      "robos:hasApp": {
+        "@id": "urn:robos:app:auto-center"
+      },
+      "robos:package": "auto",
+      "schema:name": "RobOS Auto"
+    },
+    {
+      "@id": "urn:robos:auto:AutoVocabularyTerm:BulkRecallCampaign",
+      "@type": "robos:AutoVocabularyTerm",
+      "dcterms:title": "BulkRecallCampaign",
+      "robos:package": "auto",
+      "schema:url": "https://schema.org/CreativeWork",
+      "robos:refersFrom": "https://schema.org/CreativeWork",
+      "schema:description": "Required properties: schema:identifier"
+    },
+    {
+      "@id": "urn:robos:auto:AutoVocabularyTerm:RecallRemedy",
+      "@type": "robos:AutoVocabularyTerm",
+      "dcterms:title": "RecallRemedy",
+      "robos:package": "auto",
+      "schema:url": "https://schema.org/CreativeWork",
+      "robos:refersFrom": "https://schema.org/CreativeWork",
+      "schema:description": "Required properties: robos:campaign, schema:description"
+    },
+    {
+      "@id": "urn:robos:auto:AutoVocabularyTerm:RecallAffectedPart",
+      "@type": "robos:AutoVocabularyTerm",
+      "dcterms:title": "RecallAffectedPart",
+      "robos:package": "auto",
+      "schema:url": "https://schema.org/Product",
+      "robos:refersFrom": "https://schema.org/Product",
+      "schema:description": "Required properties: robos:campaign, schema:name"
+    },
+    {
+      "@id": "urn:robos:auto:AutoVocabularyTerm:RecallApplicability",
+      "@type": "robos:AutoVocabularyTerm",
+      "dcterms:title": "RecallApplicability",
+      "robos:package": "auto",
+      "schema:url": "https://schema.org/Vehicle",
+      "robos:refersFrom": "https://schema.org/Vehicle",
+      "schema:description": "Required properties: robos:campaign, robos:affectedPart, robos:sourceRecordId"
     }
   ],
   "@graph": [

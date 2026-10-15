@@ -658,6 +658,158 @@
       ]
     },
     {
+      "@id": "https://robos.dev/ns/sdlc#BulkRecallCampaign",
+      "@type": "rdfs:Class",
+      "rdfs:label": "BulkRecallCampaign",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/CreativeWork"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/CreativeWork"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#BulkRecallCampaignShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#BulkRecallCampaign"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://schema.org/identifier"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#RecallRemedy",
+      "@type": "rdfs:Class",
+      "rdfs:label": "RecallRemedy",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/CreativeWork"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/CreativeWork"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#RecallRemedyShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#RecallRemedy"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#campaign"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://schema.org/description"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#RecallAffectedPart",
+      "@type": "rdfs:Class",
+      "rdfs:label": "RecallAffectedPart",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Product"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/Product"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#RecallAffectedPartShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#RecallAffectedPart"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#campaign"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://schema.org/name"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#RecallApplicability",
+      "@type": "rdfs:Class",
+      "rdfs:label": "RecallApplicability",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Vehicle"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/Vehicle"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#RecallApplicabilityShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#RecallApplicability"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#campaign"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#affectedPart"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#sourceRecordId"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
       "@id": "https://robos.dev/ns/sdlc#SafetyComplaint",
       "@type": "rdfs:Class",
       "rdfs:label": "SafetyComplaint",

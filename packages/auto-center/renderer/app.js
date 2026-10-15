@@ -1,52 +1,58 @@
 'use strict';
 const $=id=>document.getElementById(id);
-let state,proposalId;
+let state,proposalId,invoiceReview,searchRequest=0;
 const text=(tag,value,className)=>{const el=document.createElement(tag);el.textContent=value;if(className)el.className=className;return el;};
 function message(value){$('message').textContent=value;}
 function card(title,body){const c=text('article','','card');c.append(text('h3',title),text('p',body));return c;}
+function button(label,action){const b=text('button',label);b.type='button';b.onclick=()=>safely(action);return b;}
 async function safely(fn){try{await fn();}catch(e){message(e.message);}}
+function lockNavigation(locked){document.querySelectorAll('nav button,#mode').forEach(el=>el.disabled=locked);}
+function navigate(view){message('');if(view==='shop'&&state?.mode!=='shop')view='garage';document.querySelectorAll('nav button').forEach(n=>n.classList.toggle('active',n.dataset.view===view));document.querySelectorAll('.view').forEach(s=>s.hidden=s.id!==view);$('heading').textContent=document.querySelector(`nav [data-view="${view}"]`).textContent;window.scrollTo(0,0);}
+function fillVehicles(vehicles){document.querySelectorAll('.vehicle-picker').forEach(select=>{const previous=select.value;select.replaceChildren(...vehicles.map(n=>{const o=text('option',n['dcterms:title']);o.value=n['@id'];return o;}));if(vehicles.some(v=>v['@id']===previous))select.value=previous;});}
+function gitStatus(s){$('git-status').textContent=s?`${s.local?'Local Git repository ready':'Local Git repository starts on first save'}\n${s.remote||'No remote configured'}\n${s.dirty?'Uncommitted shop changes need a Git snapshot':'All tracked shop changes committed'}\n\n${s.commits.join('\n')}`:'';}
 async function refresh(){
- state=await window.auto.status();$('count').textContent=state.total.toLocaleString()+' graph entries';$('cache').textContent='Raw cache: '+state.cache;
- $('source-list').replaceChildren(...state.sources.map(s=>{
-  const c=card(s.title,s.url);c.append(text('p',`${s.status} · ${s.bytes||0} bytes · ${s.retrievedAt||''}`,s.status==='failed'?'failed':'status'));
-  if(s.error)c.append(text('p',s.error,'failed'));if(s.sha256)c.append(text('p','SHA-256 '+s.sha256,'muted'));return c;
+ state=await window.auto.status();$('count').textContent=state.total.toLocaleString()+' graph entries';$('cache').textContent='Raw cache: '+state.cache;$('mode').value=state.mode;
+ const shop=state.mode==='shop';document.querySelectorAll('.shop-only').forEach(el=>el.hidden=!shop);
+ $('workspace-label').textContent=shop?'AUTO MAINTENANCE CENTER':'AUTO OWNER WORKSPACE';$('mode-description').textContent=shop?'Customer vehicles & private repair operations':'Your cars, history & maintenance';document.querySelector('[data-view="garage"]').textContent=shop?'Customer vehicles & history':'My garage & history';$('vehicle-form-title').textContent=shop?'Add a customer vehicle':'Add your vehicle';$('owner-label').textContent=shop?'Customer / contact notes':'Owner notes';$('garage-intro').textContent=shop?'Customer records are stored in the private shop graph and committed to its Git history.':'Your vehicles, repairs and service history stay in your private local owner graph.';
+ $('recall-import-status').textContent=state.recalls?`${state.recalls.records.toLocaleString()} source rows parsed into ${state.recalls.nodes.toLocaleString()} recall graph entries. Snapshot: ${state.recalls.retrievedAt||'unknown date'}.${state.recalls.outdated?' A different archive has been downloaded; parse it to update this snapshot.':''}`:'The downloaded recall archive has not been imported yet.';
+ $('source-list').replaceChildren(...state.sources.map(s=>{const c=card(s.title,s.url);c.append(text('p',`${s.status} · ${s.bytes||0} bytes · ${s.retrievedAt||''}`,s.status==='failed'?'failed':'status'));if(s.error)c.append(text('p',s.error,'failed'));if(s.sha256)c.append(text('p','SHA-256 '+s.sha256,'muted'));return c;}));
+ const vehicles=state.records.filter(n=>n['@type']==='robos:OwnedVehicle');fillVehicles(vehicles);const vehicleName=n=>vehicles.find(v=>v['@id']===n['robos:vehicle']?.['@id'])?.['dcterms:title']||'';
+ $('records').replaceChildren(...state.records.filter(n=>['robos:OwnedVehicle','robos:ServiceRecord'].includes(n['@type'])).map(n=>card(n['dcterms:title'],n['@type']==='robos:OwnedVehicle'?[n['schema:modelDate'],n['schema:brand'],n['schema:model'],n['robos:ownerNotes']].filter(Boolean).join(' · '):`${vehicleName(n)} · ${n['schema:startDate']} · ${n['robos:serviceNotes']||''}`)));
+ $('schedule-list').replaceChildren(...state.records.filter(n=>n['@type']==='robos:MaintenanceSchedule').sort((a,b)=>(a['schema:startDate']||'9999').localeCompare(b['schema:startDate']||'9999')).map(n=>{
+  const target=n['robos:dueOdometer'];const c=card(n['dcterms:title'],`${vehicleName(n)} · ${n['schema:startDate']||'No date set'}${target===null?'':` · at ${target} ${n['robos:odometerUnit']==='KMT'?'km':'mi'}`} · ${n['schema:description']||''}`);c.append(text('p',n['robos:scheduleStatus'],'status'));if(n['robos:scheduleStatus']!=='completed')c.append(button('Mark completed',async()=>{await window.auto.completeSchedule(n['@id']);await refresh();message('Maintenance plan marked complete. Log the work in service history separately.');}));return c;
  }));
- const vehicles=state.records.filter(n=>n['@type']==='robos:OwnedVehicle');
- $('vehicles').replaceChildren(...vehicles.map(n=>{const o=text('option',n['dcterms:title']);o.value=n['@id'];return o;}));
- $('records').replaceChildren(...state.records.map(n=>{
-  const v=vehicles.find(v=>v['@id']===n['robos:vehicle']?.['@id']);
-  return card(n['dcterms:title'],n['@type']==='robos:OwnedVehicle'?[n['schema:modelDate'],n['schema:brand'],n['schema:model']].filter(Boolean).join(' '):`${v?.['dcterms:title']||''} · ${n['schema:startDate']} · ${n['robos:serviceNotes']||''}`);
- }));
- const schema=await window.auto.search({type:'robos:AutoVocabularyTerm'});
- $('schema-list').replaceChildren(...schema.nodes.filter(n=>!n['dcterms:source']).map(n=>text('span',n['dcterms:title'],'tag')));
- const software=await window.auto.search({type:'robos:AutoSoftware'});
- $('software').replaceChildren(...software.nodes.map(n=>{
-  const c=card(n['dcterms:title'],n['schema:description']);const a=text('a',n['schema:url']);a.href=n['schema:url'];a.onclick=e=>{e.preventDefault();safely(()=>window.auto.openSource(n['schema:url']));};c.append(a,text('p',n['schema:license'],'muted'));return c;
- }));
+ $('invoice-list').replaceChildren(...state.records.filter(n=>n['@type']==='robos:Invoice').map(n=>{const amount=n['schema:totalPaymentDue'];const c=card(n['dcterms:title'],`${vehicleName(n)} · ${n['schema:dateCreated']} · ${amount['schema:currency']} ${amount['schema:value']}`);const d=text('details','');d.append(text('summary','Reviewed invoice text'),text('pre',n['robos:invoiceText']));c.append(d,text('p','Original: '+n['robos:documentPath']+' · SHA-256 '+n['robos:documentSha256'],'muted'),button('Open original invoice',()=>window.auto.openInvoice(n['@id'])));return c;}));
+ $('job-list').replaceChildren(...state.records.filter(n=>n['@type']==='robos:RepairOrder').map(n=>{const c=card(n['dcterms:title'],vehicleName(n)+' · Technician: '+(n['robos:technician']||'Unassigned'));const select=text('select','');select.setAttribute('aria-label','Repair job status');for(const status of ['received','diagnosing','awaiting-approval','in-progress','ready','closed']){const o=text('option',status);o.value=status;select.append(o);}select.value=n['robos:jobStatus'];const notes=text('textarea',n['robos:repairNotes']||'');notes.setAttribute('aria-label','Repair job notes');c.append(select,notes,button('Save job update',async()=>{await window.auto.updateJob({id:n['@id'],status:select.value,notes:notes.value});await refresh();message('Repair job updated and committed to private shop Git history.');}));return c;}));gitStatus(state.gitops);
+ $('schema-list').replaceChildren(...state.schemaTypes.map(name=>text('span',name,'tag')));
+ const software=await window.auto.search({type:'robos:AutoSoftware'});$('software').replaceChildren(...software.nodes.map(n=>{const c=card(n['dcterms:title'],n['schema:description']);c.append(button('Open project',()=>window.auto.openSource(n['schema:url'])),text('p',n['schema:license'],'muted'));return c;}));
 }
-async function search(){
- const result=await window.auto.search({query:$('query').value,type:$('type').value});
- $('results-count').textContent=`${result.total.toLocaleString()} matching entries${result.total>100?' · showing first 100; refine your search':''}`;
- $('results').replaceChildren(...result.nodes.map(n=>{const b=text('button',n['dcterms:title'],'result');b.append(text('small',n['@type']));b.onclick=()=>{$('detail').textContent=JSON.stringify(n,null,2);};return b;}));
+async function sourceRow(id){const source=await window.auto.sourceRow(id);const evidence=$('source-evidence')||text('pre','');evidence.id='source-evidence';evidence.textContent=JSON.stringify(source,null,2);$('recall-detail').append(evidence);evidence.scrollIntoView({block:'nearest'});}
+async function showRecord(id){
+ const d=await window.auto.detail(id),n=d.node;if(!n)throw new Error('Record no longer available');$('detail').textContent=JSON.stringify(n,null,2);$('recall-detail').replaceChildren();
+ if(d.campaign){
+  const c=d.campaign;const summary=card(c['schema:identifier']+' · published recall',([].concat(c['schema:description']||[])).join('\n\n'));summary.append(text('p',([].concat(c['robos:consequences']||[])).join('\n\n')),button('NHTSA campaign data',()=>window.auto.openSource(c['schema:url'])),button('Official archive URL (latest)',()=>window.auto.openSource('https://static.nhtsa.gov/odi/ffdd/rcl/FLAT_RCL_POST_2010.zip')),button('Reveal cached source archive',()=>window.auto.revealRecallSource()),button('Field dictionary',()=>window.auto.openSource('https://static.nhtsa.gov/odi/ffdd/rcl/RCL.txt')),button('View selected source row',()=>sourceRow(n['@id'])));$('recall-detail').append(summary);
+  if(n['@type']==='robos:RecallApplicability')$('recall-detail').append(card('Selected applicability row',`${n['dcterms:title']}\nProduction: ${n['robos:productionStart']||'not reported'} – ${n['robos:productionEnd']||'not reported'}\nDo not drive: ${n['robos:doNotDrive']||'not reported'} · Park outside: ${n['robos:parkOutside']||'not reported'}`));
+  for(const r of [...d.remedies].sort((a,b)=>Number(b['@id']===d.selectedRemedy?.['@id'])-Number(a['@id']===d.selectedRemedy?.['@id']))){const item=card(d.selectedRemedy?(r['@id']===d.selectedRemedy['@id']?'Published repair remedy for selected row':'Other published remedy in this campaign'):'Published repair remedy',r['schema:description']);item.append(button('View remedy source row',()=>sourceRow(r['@id'])));$('recall-detail').append(item);}
+  $('recall-detail').append(text('h3',`Components reported across this campaign (${d.partCount}; showing up to 100)`),text('p','Reported affected components and part numbers are not verified replacement parts or general fitment claims.','note'));
+  const displayed=d.selectedPart?[d.selectedPart,...d.parts.filter(p=>p['@id']!==d.selectedPart['@id'])]:d.parts;for(const p of displayed){const item=card((p['@id']===d.selectedPart?.['@id']?'Selected row: ':'')+p['schema:name'],`${p['schema:description']||''}\nReported part number: ${p['robos:reportedPartNumber']||'Not supplied'}\n${p['schema:manufacturer']||''}`);item.append(button('View component source row',()=>sourceRow(p['@id'])));$('recall-detail').append(item);}
+  $('recall-detail').append(text('p',`${d.applicabilityCount} source applicability rows in this campaign. Search affected vehicle rows to inspect each make, model, year and production range.`,'note'));
+ }else{document.querySelector('#record-panel details').open=true;}
+ navigate('catalog');$('recall-detail').scrollTop=0;
 }
-document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
- document.querySelectorAll('nav button').forEach(n=>n.classList.toggle('active',n===b));
- document.querySelectorAll('.view').forEach(s=>s.hidden=s.id!==b.dataset.view);$('heading').textContent=b.textContent;
-});
+function resultButtons(nodes,fromVehicle=false){return nodes.map(n=>{const b=text('button',n['dcterms:title'],'result');b.append(text('small',n['@type']));b.onclick=()=>safely(async()=>{if(fromVehicle){$('query').value=n['dcterms:title'].split(' · ')[0];$('type').value='robos:RecallApplicability';await search();}await showRecord(n['@id']);});return b;});}
+async function search(){const ticket=++searchRequest;$('results').setAttribute('aria-busy','true');const result=await window.auto.search({query:$('query').value,type:$('type').value});if(ticket!==searchRequest)return;$('results').setAttribute('aria-busy','false');$('results-count').textContent=`${result.total.toLocaleString()} matching entries${result.total>100?' · showing first 100; refine your search':''}`;$('results').replaceChildren(...resultButtons(result.nodes));}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>navigate(b.dataset.view));
+$('mode').onchange=()=>safely(async()=>{lockNavigation(true);try{await window.auto.setMode($('mode').value);invoiceReview=null;$('invoice-form').hidden=true;$('vehicle-recall-results').replaceChildren();await refresh();navigate(state.mode==='shop'?'shop':'garage');message('Switched to '+(state.mode==='shop'?'Auto maintenance center mode. Shop records use private Git history.':'Auto owner mode. Your personal garage is active.'));}finally{lockNavigation(false);}});
 $('search-form').onsubmit=e=>{e.preventDefault();safely(search);};
-for(const [form,kind] of [['vehicle-form','vehicle'],['service-form','service']]) $(form).onsubmit=e=>{e.preventDefault();safely(async()=>{
- await window.auto.save({kind,...Object.fromEntries(new FormData(e.target))});e.target.reset();await refresh();message('Saved to your local Auto graph.');
-});};
-$('decode').onclick=()=>safely(async()=>{
- const f=$('vehicle-form');const response=await window.auto.decode({vin:f.elements.vin.value,year:f.elements.year.value});const r=response.Results?.[0];
- if(!r)throw new Error('NHTSA returned no decode result');
- $('decode-result').textContent=`NHTSA decode status ${r.ErrorCode}: ${r.ErrorText||''}`;
- if(r.Make)f.elements.make.value=r.Make;if(r.Model)f.elements.model.value=r.Model;
- message('VIN decode received. Review the reported errors and fields before saving.');
-});
-$('collect-form').onsubmit=e=>{e.preventDefault();safely(async()=>{
- const v=Object.fromEntries(new FormData(e.target));$('collect').disabled=true;message('Collecting official sources and preparing a graph proposal. This can take several minutes.');
- try{const result=await window.auto.collect(Object.values(v).some(Boolean)?v:undefined);proposalId=result.id;$('review-summary').textContent=JSON.stringify(result,null,2);$('review').hidden=false;$('apply').disabled=!!(result.errors.length||result.conflicts.length);await refresh();message('Import prepared. Review its changes and source failures.');}finally{$('collect').disabled=false;}
-});};
-$('apply').onclick=()=>safely(async()=>{await window.auto.apply(proposalId);$('review').hidden=true;await refresh();await search();message('Public reference graph updated.');});
-safely(async()=>{await refresh();await search();});
+for(const [form,kind] of [['vehicle-form','vehicle'],['service-form','service'],['schedule-form','schedule'],['job-form','job']])$(form).onsubmit=e=>{e.preventDefault();safely(async()=>{await window.auto.save({kind,...Object.fromEntries(new FormData(e.target))});e.target.reset();await refresh();message(state.mode==='shop'?'Saved and committed to the private shop Git repository.':'Saved to your local owner graph.');});};
+$('vehicle-recalls').onclick=()=>safely(async()=>{const result=await window.auto.vehicleRecalls($('recall-vehicle').value);$('vehicle-recall-results').replaceChildren(text('p',`${result.total} exact make/model/year source rows${result.total>100?' · first 100 shown':''}. This is not a VIN recall-status check.`),...resultButtons(result.nodes,true));});
+$('decode').onclick=()=>safely(async()=>{const f=$('vehicle-form');const response=await window.auto.decode({vin:f.elements.vin.value,year:f.elements.year.value});const r=response.Results?.[0];if(!r)throw new Error('NHTSA returned no decode result');$('decode-result').textContent=`NHTSA decode status ${r.ErrorCode}: ${r.ErrorText||''}`;if(r.Make)f.elements.make.value=r.Make;if(r.Model)f.elements.model.value=r.Model;message('Review NHTSA errors and decoded fields before saving.');});
+$('scan-invoice').onclick=()=>safely(async()=>{$('scan-invoice').disabled=true;message('Extracting invoice text locally…');try{const result=await window.auto.scanInvoice();if(!result){message('Invoice selection canceled.');return;}invoiceReview=result;$('invoice-form').hidden=false;$('invoice-method').textContent=result.originalName+' · '+result.method;$('invoice-form').elements.invoiceText.value=result.text;$('invoice-preview').hidden=!result.preview;if(result.preview)$('invoice-preview').src=result.preview;message('Review extracted text, choose the vehicle, and enter the verified invoice date and total.');}finally{$('scan-invoice').disabled=false;}});
+$('invoice-form').onsubmit=e=>{e.preventDefault();safely(async()=>{if(!invoiceReview)throw new Error('Select an invoice first');await window.auto.save({kind:'invoice',token:invoiceReview.token,sha256:invoiceReview.sha256,...Object.fromEntries(new FormData(e.target))});invoiceReview=null;e.target.reset();e.target.hidden=true;await refresh();message('Reviewed invoice and original document saved privately.');});};
+$('configure-git').onclick=()=>safely(async()=>{gitStatus(await window.auto.gitops({action:'configure',repository:$('git-repository').value.trim()}));message('Connected to a verified private repository. Nothing has been pushed yet.');});
+$('sync-git').onclick=()=>safely(async()=>{gitStatus(await window.auto.gitops({action:'sync'}));message('Private shop Git history pushed.');});
+function review(result){proposalId=result.reviewId||result.id;$('review-summary').textContent=JSON.stringify(result,null,2);$('review').hidden=false;$('apply').disabled=!!(result.errors?.length||result.conflicts?.length);}
+$('import-recalls').onclick=()=>safely(async()=>{$('import-recalls').disabled=true;message('Parsing and validating the bulk recall archive. This can take several minutes.');try{review(await window.auto.importRecalls());message('Recall import prepared. Review the campaign, remedy, component and applicability counts.');}finally{$('import-recalls').disabled=false;}});
+$('collect-form').onsubmit=e=>{e.preventDefault();safely(async()=>{const v=Object.fromEntries(new FormData(e.target));$('collect').disabled=true;message('Collecting sources and preparing a graph proposal…');try{review(await window.auto.collect(Object.values(v).some(Boolean)?v:undefined));await refresh();message('Import prepared; review its changes and source failures.');}finally{$('collect').disabled=false;}});};
+$('apply').onclick=()=>safely(async()=>{$('apply').disabled=true;message('Applying the reviewed graph import…');try{await window.auto.apply(proposalId);$('review').hidden=true;await refresh();await search();message('Public reference graph updated.');}finally{$('apply').disabled=false;}});
+lockNavigation(true);safely(async()=>{try{await refresh();navigate(state.mode==='shop'?'shop':'garage');await search();}finally{lockNavigation(false);}});

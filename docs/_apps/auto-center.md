@@ -3,17 +3,20 @@ title: "RobOS Auto Center"
 package: auto-center
 category: auto
 icon: auto-center.svg
-summary: "Vehicle reference catalog, VIN decoding, garage and service history"
-description: "Vehicle reference catalog, VIN decoding, garage and service history"
+summary: "Owner vehicle care and invoice scans, private Git shop repairs, and source-backed recall remedies."
+description: "Separate owner and maintenance center workspaces backed by KGraph."
 ---
 
+Choose **Auto owner mode** to track your vehicles, service history, future maintenance by date or odometer, and repair-shop invoices. Import an image or PDF, review the locally extracted text, and save the original with its hash.
 
-Auto Center starts the **RobOS Auto** family with a searchable KGraph catalog of public vehicle data, VIN decoding through NHTSA, and local vehicle/service records.
+![Owner maintenance planning in Auto Center, using labeled test records](/assets/images/screenshots/auto-owner-maintenance.png)
 
-Use **Vehicle catalog** to filter makes, models, year/configurations, diagnostic codes and model-level safety reports. Select a record to inspect its properties and source row. **My garage & service** stores vehicles and maintenance history in your private local graph.
+Choose **Auto maintenance center mode** for customer vehicles and a repair queue from intake to completion. Changes and accepted invoices have private local Git history. Connecting and pushing to an existing GitHub remote requires the app to verify that repository is private. The two modes keep separate records and remember the selected workspace.
 
-**Sources & imports** collects public sources under `~/.robos/auto-scrape` and prepares a validated graph proposal. Review the changes and failed downloads before applying it. The post-2010 recall archive is staged for later parsing; VIN-specific history, comprehensive repair procedures and parts fitment require additional sources.
+![Maintenance center with a test repair job and actual local Git history](/assets/images/screenshots/auto-maintenance-center.png)
 
-The ontology includes parts, shop operations, registration, ownership and accident records as foundations for future workflows. These schemas do not imply those workflows are implemented. See the [source and coverage guide](https://github.com/nddipiazza/robos/blob/main/packages/auto-center/README.md) for setup and limitations.
+The public catalog includes vehicle configurations, diagnostic codes, and parsed NHTSA post-2010 recalls. Recall views link campaigns, published repair remedies, reported affected components and the original applicability rows. Inspect the exact source line, fields and SHA-256, reveal the cached archive, or follow the official source links. These are source reports, not VIN-specific recall status or verified replacement-part fitment.
 
-![Auto Center showing real EPA configurations for a Toyota Camry](/assets/images/screenshots/auto-center-catalog.png)
+![A published recall remedy and its source-backed components in Auto Center](/assets/images/screenshots/auto-bulk-recall-remedy.png)
+
+Use **Sources & imports** to collect public data and prepare validated imports. Owner and shop documents stay in private local stores. See the [source, setup and coverage guide](https://github.com/nddipiazza/robos/blob/codex/robos-auto-center/packages/auto-center/README.md) for OCR dependencies, private Git setup and remaining scope.

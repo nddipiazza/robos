@@ -8,10 +8,12 @@ test('Auto Center searches collected data and persists owner-entered service rec
  const app=await electron.launch({executablePath:require('../node_modules/electron'),args:[path.resolve(__dirname,'../main.js'),'--no-sandbox','--disable-gpu','--disable-dev-shm-usage'],env:{...process.env,ROBOS_AUTO_PRIVATE:privateRoot}});
  try{
   const page=await app.firstWindow(),errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.waitForFunction(()=>document.querySelector('#count').textContent.includes('graph entries'),{timeout:60000});
+  await page.locator('[data-view="catalog"]').click();
   await page.locator('#results .result').first().waitFor({timeout:60000});
   await page.locator('#query').fill('2015 Toyota Camry');await page.locator('#type').selectOption('robos:VehicleConfiguration');await page.locator('#search-form button').click();
-  await page.locator('#results .result').first().waitFor();assert.ok((await page.locator('#query').boundingBox()).width>=200);assert.match(await page.locator('#results').innerText(),/2015 Toyota Camry/);
-  await page.locator('#results .result').first().click();assert.match(await page.locator('#detail').innerText(),/epaVehicleId/);
+  await page.waitForFunction(()=>document.querySelector('#results .result')?.textContent.includes('2015 Toyota Camry'));assert.ok((await page.locator('#query').boundingBox()).width>=200);assert.match(await page.locator('#results').innerText(),/2015 Toyota Camry/);
+  await page.locator('#results .result').first().click();await page.waitForFunction(()=>document.querySelector('#detail').textContent.includes('epaVehicleId'));assert.match(await page.locator('#detail').innerText(),/epaVehicleId/);
   await page.screenshot({path:path.join(proof,'catalog.png')});
   await page.locator('[data-view="garage"]').click();
   await page.locator('#vehicle-form [name="name"]').fill('Local test vehicle');await page.locator('#vehicle-form [name="year"]').fill('2015');await page.locator('#vehicle-form [name="make"]').fill('Toyota');await page.locator('#vehicle-form [name="model"]').fill('Camry');await page.locator('#vehicle-form button[type="submit"], #vehicle-form button:not([type])').click();

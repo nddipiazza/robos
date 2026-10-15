@@ -5,12 +5,30 @@ const { promisify } = require('node:util');
 const run = promisify(execFile);
 const { GraphWorkspace } = require('../../robos-graph/lib/graph-workspace');
 const { OSLCGraphParser } = require('../../robos-graph/lib/oslc-parser');
-const { propose, node, ref, context } = require('./importer');
+const { propose, node, ref } = require('./importer');
+const {RecallStore}=require('./recalls');
+const {PrivateGit}=require('./private-git');
+const invoices=require('./invoices');
+const JOB_STATES=['received','diagnosing','awaiting-approval','in-progress','ready','closed'];
+function date(value){return /^\d{4}-\d{2}-\d{2}$/.test(value)&&!Number.isNaN(Date.parse(value))&&new Date(value).toISOString().slice(0,10)===value;}
 class AutoCenter {
  constructor({root=process.env.ROBOS_AUTO_CACHE || path.join(os.homedir(),'.robos/auto-scrape'),privateRoot=process.env.ROBOS_AUTO_PRIVATE || path.join(os.homedir(),'.config/robos/auto-center')}={}) {
-  this.root=root; this.privateRoot=privateRoot; this.workspace=new GraphWorkspace(privateRoot); this.publicGraph=null; this.pending=null; this.busy=false;
+  this.root=root; this.privateRoot=privateRoot; this.settingsFile=path.join(privateRoot,'settings.json'); this.mode=fs.existsSync(this.settingsFile)?JSON.parse(fs.readFileSync(this.settingsFile)).mode:'owner'; if(!['owner','shop'].includes(this.mode))this.mode='owner'; this.recalls=new RecallStore(root); this.publicGraph=null; this.pending=null; this.busy=false;
   fs.mkdirSync(privateRoot,{recursive:true,mode:0o700}); fs.chmodSync(privateRoot,0o700);
  }
+ get dataRoot(){return this.mode==='shop'?path.join(this.privateRoot,'shop'):this.privateRoot;}
+ get workspace(){return new GraphWorkspace(this.dataRoot);}
+ setMode(mode){if(!['owner','shop'].includes(mode))throw new Error('Invalid Auto mode');fs.writeFileSync(this.settingsFile+'.tmp',JSON.stringify({mode}),{mode:0o600});fs.renameSync(this.settingsFile+'.tmp',this.settingsFile);this.mode=mode;if(mode==='shop')new PrivateGit(this.dataRoot).ensure();return this.status();}
+ gitops({action,repository}={}){if(this.mode!=='shop')throw new Error('Shop GitOps is only available in maintenance center mode');const git=new PrivateGit(this.dataRoot);if(action==='configure')return git.configure(repository);if(action==='sync')return git.sync();return git.status();}
+ invoicePath(id){const n=this.workspace.read()['robos:nodes'].find(n=>n['@id']===id&&n['@type']==='robos:Invoice');if(!n)throw new Error('Unknown invoice');const file=path.resolve(this.dataRoot,n['robos:documentPath']);if(!file.startsWith(path.resolve(this.dataRoot)+path.sep)||require('./importer').sha(fs.readFileSync(file))!==n['robos:documentSha256'])throw new Error('Invoice original changed');return file;}
+ recallArchivePath(){const s=this.recalls.current();if(!s)throw new Error('Import the recall archive first');const file=path.resolve(this.root,s.source.file);if(!file.startsWith(path.resolve(this.root)+path.sep))throw new Error('Invalid recall source path');return file;}
+ scanInvoice(file){return invoices.scan(file,this.dataRoot);}
+ async importRecalls(){if(this.busy)throw new Error('An import is already running');this.busy=true;try{const {stdout}=await run(process.execPath,[path.join(__dirname,'../recalls-cli.js')],{env:{...process.env,ELECTRON_RUN_AS_NODE:'1',ROBOS_AUTO_CACHE:this.root},timeout:900000,maxBuffer:1024*1024});const summary=JSON.parse(stdout.trim().split('\n').pop());this.pending={kind:'recalls',...summary};return summary;}finally{this.busy=false;}}
+ async detail(id){return await this.recalls.detail(id)||{node:this.publicParser().getNode(id)};}
+ sourceRow(id){return this.recalls.source(id);}
+ async vehicleRecalls(vehicleId){const v=this.workspace.read()['robos:nodes'].find(n=>n['@id']===vehicleId&&n['@type']==='robos:OwnedVehicle');if(!v)throw new Error('Select a saved vehicle');if(!v['schema:modelDate']||!v['schema:brand']||!v['schema:model'])throw new Error('Vehicle needs year, make and model');return this.recalls.search({type:'robos:RecallApplicability',vehicle:{year:v['schema:modelDate'],make:v['schema:brand'],model:v['schema:model']}});}
+ updateJob({id,status,notes}){if(this.mode!=='shop'||!JOB_STATES.includes(status))throw new Error('Invalid shop job status');const n=this.workspace.read()['robos:nodes'].find(n=>n['@id']===id&&n['@type']==='robos:RepairOrder');if(!n)throw new Error('Unknown repair job');if(typeof notes!=='string'||notes.length>10000)throw new Error('Invalid job notes');const proposal=this.workspace.propose({mode:'refine',edits:[{op:'update',id,set:{'robos:jobStatus':status,'robos:repairNotes':notes}}],prompt:'Update private shop repair job'});this.workspace.apply(proposal,{expectedProposalId:proposal.id});new PrivateGit(this.dataRoot).commit('auto: update repair job');return this.status();}
+ completeSchedule(id){const n=this.workspace.read()['robos:nodes'].find(n=>n['@id']===id&&n['@type']==='robos:MaintenanceSchedule');if(!n)throw new Error('Unknown maintenance schedule');const p=this.workspace.propose({mode:'refine',edits:[{op:'update',id,set:{'robos:scheduleStatus':'completed'}}],prompt:'Mark planned maintenance complete'});this.workspace.apply(p,{expectedProposalId:p.id});if(this.mode==='shop')new PrivateGit(this.dataRoot).commit('auto: complete maintenance plan');return this.status();}
  publicParser() {
   if(!this.publicGraph) this.publicGraph=new OSLCGraphParser(new GraphWorkspace(path.join(this.root,'workspace')).read());
   return this.publicGraph;
@@ -18,12 +36,13 @@ class AutoCenter {
  status() {
   const p=this.publicParser(), counts={}; for(const n of p.nodes) counts[n['@type']]=(counts[n['@type']]||0)+1;
   const manifest=fs.existsSync(path.join(this.root,'manifest.json'))?JSON.parse(fs.readFileSync(path.join(this.root,'manifest.json'))):{sources:[]};
-  return {counts,total:p.nodes.length,sources:manifest.sources,cache:this.root,privateRoot:this.privateRoot,records:this.workspace.read()['robos:nodes']};
+  const recalls=this.recalls.current();for(const [type,count] of Object.entries(recalls?.counts||{}))counts[type]=(counts[type]||0)+count;
+  return {schemaTypes:require('../../robos-graph/lib/auto-shapes').AUTO_TYPES.map(([name])=>name),mode:this.mode,counts,total:p.nodes.length+(recalls?.nodes||0),recalls:recalls?{nodes:recalls.nodes,records:recalls.records,retrievedAt:recalls.source.retrievedAt,outdated:manifest.sources.find(s=>s.id==='recalls-bulk')?.sha256!==recalls.archiveSha256}:null,sources:manifest.sources,cache:this.root,privateRoot:this.dataRoot,gitops:this.mode==='shop'?new PrivateGit(this.dataRoot).status():null,records:this.workspace.read()['robos:nodes']};
  }
- search({query='',type=''}={}) {
+ async search({query='',type=''}={}) {
   if(typeof query!=='string'||query.length>200||typeof type!=='string') throw new Error('Invalid search');
-  const results=this.publicParser().queryNodes({search:query,type:type||undefined});
-  return {total:results.length, nodes:results.slice(0,100)};
+  const bulk=await this.recalls.search({query,type});const results=this.publicParser().queryNodes({search:query,type:type||undefined});
+  return {total:results.length+bulk.total, nodes:[...bulk.nodes,...results].slice(0,100)};
  }
  async collect(vehicle) {
   if(this.busy) throw new Error('An import is already running');
@@ -40,7 +59,8 @@ class AutoCenter {
    return {id:proposal.id,added:proposal.delta.added.length,changed:proposal.delta.changed.length,removed:proposal.delta.removed.length,errors:proposal.validation.errors,conflicts:proposal.conflicts,failed:this.status().sources.filter(s=>s.status==='failed')};
   } finally {this.busy=false;}
  }
- apply(id) {
+ async apply(id) {
+  if(this.pending?.kind==='recalls'){if(this.pending.reviewId!==id)throw new Error('Recall import review expired');const {stdout}=await run(process.execPath,[path.join(__dirname,'../recalls-cli.js'),'--apply-reviewed',this.pending.build,id],{env:{...process.env,ELECTRON_RUN_AS_NODE:'1',ROBOS_AUTO_CACHE:this.root},timeout:900000,maxBuffer:1024*1024});this.pending=null;this.recalls.cached=null;return JSON.parse(stdout.trim());}
   if(!this.pending || this.pending.proposal.id!==id) throw new Error('Import review expired; collect again');
   const result=this.pending.workspace.apply(this.pending.proposal,{expectedProposalId:id});this.pending=null;this.publicGraph=null;return result;
  }
@@ -64,10 +84,29 @@ class AutoCenter {
    const mileage=Number(input.mileage);if(input.mileage!==''&&(!Number.isFinite(mileage)||mileage<0)) throw new Error('Mileage must be non-negative');
    if(!['SMI','KMT'].includes(input.unit)) throw new Error('Choose miles or kilometers');
    n=node('ServiceRecord',crypto.randomUUID(),title,{'robos:vehicle':ref(input.vehicle),'schema:startDate':input.date,'schema:description':title,'robos:serviceNotes':String(input.notes||''),'schema:mileageFromOdometer':{'@type':'schema:QuantitativeValue','schema:value':input.mileage===''?null:mileage,'schema:unitCode':input.unit}});
+  } else if(['schedule','job','invoice'].includes(input.kind)) {
+   const vehicle=this.workspace.read()['robos:nodes'].find(n=>n['@id']===input.vehicle&&n['@type']==='robos:OwnedVehicle');if(!vehicle)throw new Error('Select a saved vehicle');
+   const common={'robos:vehicle':ref(input.vehicle)};
+   if(input.kind==='schedule'){
+    if(input.date&&!date(input.date))throw new Error('Valid due date required');
+    if(!input.date&&input.mileage==='')throw new Error('Provide a due date or odometer target');
+    if(input.mileage!==''&&(!Number.isFinite(Number(input.mileage))||Number(input.mileage)<0))throw new Error('Invalid odometer target');
+    if(!['SMI','KMT'].includes(input.unit))throw new Error('Choose miles or kilometers');
+    n=node('MaintenanceSchedule',crypto.randomUUID(),title,{...common,'schema:startDate':input.date||'','robos:dueOdometer':input.mileage===''?null:Number(input.mileage),'robos:odometerUnit':input.unit,'robos:scheduleStatus':'planned','schema:description':String(input.notes||'')});
+   }else if(input.kind==='job'){
+    if(this.mode!=='shop')throw new Error('Repair jobs require maintenance center mode');
+    n=node('RepairOrder',crypto.randomUUID(),title,{...common,'robos:jobStatus':'received','robos:repairNotes':String(input.notes||''),'robos:technician':String(input.technician||''),'schema:orderDate':new Date().toISOString()});
+   }else{
+    if(!date(input.date))throw new Error('Valid invoice date required');
+    if(!/^[A-Z]{3}$/.test(input.currency))throw new Error('Choose a currency');
+    if(!/^\d+(?:\.\d{1,2})?$/.test(input.amount))throw new Error('Enter a non-negative invoice total with up to two decimals');
+    const original=invoices.accept(this.dataRoot,input.token,input.sha256);
+    n=node('Invoice',crypto.randomUUID(),title,{...common,'schema:dateCreated':input.date,'schema:totalPaymentDue':{'@type':'schema:MonetaryAmount','schema:value':input.amount,'schema:currency':input.currency},'robos:invoiceText':String(input.invoiceText||original.text),'robos:documentPath':original.path,'robos:documentSha256':original.sha256,'robos:extractionMethod':original.method,'robos:reviewedByUser':true});
+   }
   } else throw new Error('Unsupported record kind');
-  for(const v of Object.values(input)) if(typeof v==='string'&&v.length>10000) throw new Error('Field too long');
+  for(const v of Object.values(input)) if(typeof v==='string'&&v.length>50000) throw new Error('Field too long');
   const proposal=this.workspace.propose({mode:'refine',edits:[{op:'add',node:n}],prompt:'Save locally entered auto record'});
-  this.workspace.apply(proposal,{expectedProposalId:proposal.id}); return n;
+  this.workspace.apply(proposal,{expectedProposalId:proposal.id}); if(this.mode==='shop'){try{new PrivateGit(this.dataRoot).commit('auto: save '+input.kind);}catch(error){throw new Error('Record saved locally, but Git snapshot failed: '+error.message);}}return n;
  }
 }
 module.exports={AutoCenter};

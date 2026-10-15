@@ -9,7 +9,8 @@
     "collect": "python3 collect.py",
     "import": "node --max-old-space-size=8192 cli.js",
     "test": "node --test tests/*.test.js",
-    "test:e2e": "node --test tests/electron.e2e.js"
+    "test:e2e": "node --test --test-concurrency=1 tests/electron.e2e.js tests/modes.e2e.js",
+    "recalls": "node --max-old-space-size=8192 recalls-cli.js"
   },
   "dependencies": {
     "electron": "^33.2.1"
