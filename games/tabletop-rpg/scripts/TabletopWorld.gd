@@ -3561,6 +3561,10 @@ func has_line_of_sight(from_pos: Vector2i, to_pos: Vector2i) -> bool:
 	if to_rm != "" and not revealed_rooms.has(to_rm):
 		return false
 
+	# Cannot have line of sight from one room into a different room
+	if from_rm != "" and to_rm != "" and from_rm != to_rm:
+		return false
+
 	# Source cannot see out from inside a solid wall block
 	if _blocked_wall_tiles.has(from_pos):
 		return false
@@ -7510,9 +7514,13 @@ func _execute_mentor_ai_party_step() -> void:
 
 	# 8. Action: Ranged Offensive Spells (Priority 3 for Wizard / Elf)
 	if not has_acted_this_turn and (hero_id == "wizard" or hero_id == "elf"):
-		var vis_monsters = _get_visible_living_monsters()
-		if vis_monsters.size() > 0:
-			var target_m = vis_monsters[0]
+		var los_monsters: Array[Dictionary] = []
+		for m in _get_visible_living_monsters():
+			var mp = _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
+			if has_line_of_sight(h_pos, mp):
+				los_monsters.append(m)
+		if los_monsters.size() > 0:
+			var target_m = los_monsters[0]
 			if hero_id == "wizard":
 				if _can_hero_cast_spell(hero, "ball_of_flame"):
 					_log("[MENTOR AI] 🔥 Wizard casts Ball of Flame at %s!" % target_m.get("name", "Monster"))
@@ -7547,8 +7555,31 @@ func _execute_mentor_ai_party_step() -> void:
 				var max_steps = mini(movement_remaining, path.size() - 1)
 				while max_steps > 0 and is_tile_occupied(path[max_steps], active_hero_idx):
 					max_steps -= 1
-				if max_steps > 0:
-					var dest = path[max_steps]
+
+				# If hero is a spellcaster with an offensive spell ready to cast,
+				# check if any tile along the path gives line of sight to a target monster!
+				var chosen_step = max_steps
+				var has_spell_ready = false
+				if not has_acted_this_turn:
+					if hero_id == "elf" and _can_hero_cast_spell(hero, "sleep"):
+						has_spell_ready = true
+					elif hero_id == "wizard" and (_can_hero_cast_spell(hero, "ball_of_flame") or _can_hero_cast_spell(hero, "fire_of_wrath")):
+						has_spell_ready = true
+
+				if has_spell_ready:
+					for s in range(1, max_steps + 1):
+						var step_tile = path[s]
+						if not is_tile_occupied(step_tile, active_hero_idx):
+							for m in _get_visible_living_monsters():
+								var mp = _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
+								if has_line_of_sight(step_tile, mp):
+									chosen_step = s
+									break
+						if chosen_step == s:
+							break
+
+				if chosen_step > 0:
+					var dest = path[chosen_step]
 					var reason = str(target_info.get("reason", "advance"))
 					_log("[MENTOR AI] 🏃 %s moves toward %s (stepping to (%d, %d))." % [hero_name, reason, dest.x, dest.y])
 					if not move_hero(dest):
@@ -7576,6 +7607,31 @@ func _execute_mentor_ai_party_step() -> void:
 			_log("[MENTOR AI] ⚔️ %s attacks adjacent %s!" % [hero_name, target_m.get("name", "Monster")])
 			attack_adjacent_monster(str(target_m.get("id", "")))
 			return
+
+		# 11b. Ranged Offensive Spells After Movement (Wizard / Elf)
+		if (hero_id == "wizard" or hero_id == "elf"):
+			var cur_h_pos = _to_grid_pos(hero.get("grid_pos", Vector2i(-1, -1)))
+			var post_move_los: Array[Dictionary] = []
+			for m in _get_visible_living_monsters():
+				var mp = _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
+				if has_line_of_sight(cur_h_pos, mp):
+					post_move_los.append(m)
+			if post_move_los.size() > 0:
+				var target_m = post_move_los[0]
+				if hero_id == "wizard":
+					if _can_hero_cast_spell(hero, "ball_of_flame"):
+						_log("[MENTOR AI] 🔥 Wizard casts Ball of Flame at %s!" % target_m.get("name", "Monster"))
+						cast_spell("ball_of_flame", str(target_m.get("id", "")))
+						return
+					elif _can_hero_cast_spell(hero, "fire_of_wrath"):
+						_log("[MENTOR AI] 🔥 Wizard casts Fire of Wrath at %s!" % target_m.get("name", "Monster"))
+						cast_spell("fire_of_wrath", str(target_m.get("id", "")))
+						return
+				elif hero_id == "elf":
+					if _can_hero_cast_spell(hero, "sleep") and not target_m.get("is_sleeping", false):
+						_log("[MENTOR AI] 💤 Elf casts Sleep on %s!" % target_m.get("name", "Monster"))
+						cast_spell("sleep", str(target_m.get("id", "")))
+						return
 
 		var doors_now = get_adjacent_closed_doors()
 		if doors_now.size() > 0:
@@ -10855,10 +10911,13 @@ func _find_spell_target_monster(target_id: String, from_pos: Vector2i) -> Dictio
 		if m.get("is_alive", false):
 			var mid = str(m.get("id", ""))
 			var mslug = str(m.get("slug", ""))
+			var mp = _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
 			if target_id != "" and (mid == target_id or mslug == target_id or mid.ends_with(target_id) or target_id.ends_with(mid)):
-				return m
+				if has_line_of_sight(from_pos, mp):
+					return m
+				else:
+					return {}
 			elif target_id == "":
-				var mp = m.get("grid_pos", Vector2i(-1, -1))
 				if has_line_of_sight(from_pos, mp):
 					return m
 	return {}
@@ -18965,6 +19024,7 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				var r_rooms = action_data.get("revealedRooms", action_data.get("revealed_rooms", []))
 				if r_rooms is Array:
 					revealed_rooms.clear()
+					explored_tiles.clear()
 					for r in r_rooms:
 						revealed_rooms.append(str(r))
 			if action_data.has("discoveredMonsterIds") or action_data.has("discovered_monster_ids"):
