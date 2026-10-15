@@ -38,6 +38,7 @@ var click_markers: Array[Dictionary] = []
 var hover_override: Variant = null
 var show_help: bool = false
 var show_names: bool = false
+var hud_hidden: bool = false
 var banner_ttl: float = 0.0
 var _attack_msg_cd: float = 0.0
 var _last_group_press: Dictionary = {}
@@ -754,6 +755,10 @@ func apply_ui_state(d: Dictionary) -> Dictionary:
 			hover_override = null
 	if d.has("help"):
 		show_help = bool(d["help"])
+	if d.has("hide_hud"):
+		hud_hidden = bool(d["hide_hud"])
+		if hud:
+			hud.visible = not hud_hidden
 	if d.has("show_names"):
 		show_names = bool(d["show_names"])
 	if d.has("pending_ability"):
@@ -836,7 +841,7 @@ func inject_input(d: Dictionary) -> void:
 # In-world 2D overlays (unit bars, orders, markers, build ghost, selection box)
 # ---------------------------------------------------------------------------
 func _draw() -> void:
-	if world_3d == null:
+	if world_3d == null or hud_hidden:
 		return
 	var font := ThemeDB.fallback_font
 	_draw_rally_and_orders()
