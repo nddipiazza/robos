@@ -1,17 +1,20 @@
 extends Node
 
-# SimEngine.gd — SnowPlay & StarCraft II Inspired Deterministic 64Hz RTS Simulation Engine
+# SimEngine.gd — Deterministic 64Hz RTS Simulation Engine (fixed-step, seeded, renderer-independent)
 # Supports 3 Factions:
-# - HUMANS ("humans" / Terran Vanguard): Stimpack, Lower/Raise Supply Depots, Siege Tanks, SCV Construction
-# - MONSTERS ("monsters" / Xenomorph Swarm): High-speed Swarmling packs, Roaches, Ravagers
-# - ALIENS ("aliens" / Celestial Armada): Regenerating Plasma Shields, Stalker Blink teleport, Zealot Charge, Thermal Lance Colossus
+# - HUMANS ("humans" / Meridian Guard): Surge Injector, Retract/Extend Provision Silos, Howitzers, Pioneer Construction
+# - MONSTERS ("monsters" / Gnarl Brood): High-speed Skitterling packs, Bile Crawlers, Blight Hurlers
+# - ALIENS ("aliens" / Aurelian Concord): Regenerating Aegis Shields, Skirmisher Phase Step teleport, Sunblade Charge, Prism Beam Spire Walker
 
 signal simulation_ticked(tick: int)
 signal unit_spawned(unit: Dictionary)
 signal unit_destroyed(unit: Dictionary)
 signal projectile_fired(from_pos: Vector2, to_pos: Vector2, weapon_name: String, is_splash: bool, owner_id: int)
-signal unit_blinked(from_pos: Vector2, to_pos: Vector2, unit_tag: int)
+signal unit_phased(from_pos: Vector2, to_pos: Vector2, unit_tag: int)
 signal scenario_loaded(scenario_name: String)
+signal paused_step
+signal notice(owner_id: int, text: String, kind: String)
+signal unit_damaged(owner_id: int, pos: Vector2)
 
 const TICK_RATE: int = 64
 const TICK_DT: float = 1.0 / float(TICK_RATE)
@@ -23,6 +26,8 @@ var sim_time: float = 0.0
 var rng_seed: int = 42
 var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var paused: bool = false
+var decor_enabled: bool = true
+var last_step_count: int = 1
 var rts_mode: String = "human"
 var sim_speed: float = 1.0
 
@@ -82,11 +87,13 @@ func reset_state(new_seed: int = 42, width: float = 128.0, height: float = 96.0)
 	ramps.clear()
 	recent_events.clear()
 	command_history.clear()
+	paused = false
+	decor_enabled = true
 
 	var default_factions = {
-		1: {"name": "Humans (Terran Vanguard)", "faction": "humans"},
-		2: {"name": "Monsters (Xenomorph Swarm)", "faction": "monsters"},
-		3: {"name": "Aliens (Celestial Armada)", "faction": "aliens"}
+		1: {"name": "Humans (Meridian Guard)", "faction": "humans"},
+		2: {"name": "Monsters (Gnarl Brood)", "faction": "monsters"},
+		3: {"name": "Aliens (Aurelian Concord)", "faction": "aliens"}
 	}
 	players.clear()
 	for pid in [1, 2, 3]:
@@ -94,17 +101,17 @@ func reset_state(new_seed: int = 42, width: float = 128.0, height: float = 96.0)
 			"id": pid,
 			"name": default_factions[pid]["name"],
 			"faction": default_factions[pid]["faction"],
-			"minerals": 400,
-			"vespene": 150,
+			"crystal": 400,
+			"aether": 150,
 			"supply_used": 0,
 			"supply_cap": 0,
-			"minerals_collected": 0,
-			"vespene_collected": 0,
+			"crystal_collected": 0,
+			"aether_collected": 0,
 			"units_killed": 0,
 			"units_lost": 0,
 			"structures_built": 0,
 			"stutter_step_cancels": 0,
-			"blinks_executed": 0
+			"phase_steps_executed": 0
 		}
 	_rebuild_astar_grid()
 
@@ -117,57 +124,57 @@ func load_default_scenario() -> void:
 	high_ground_zones.append(Rect2(0.0, 0.0, 60.0, 96.0))
 	ramps.append(Rect2(56.0, 34.0, 14.0, 28.0))
 
-	# Player 1: HUMANS (Terran Vanguard) at West High Ground
-	spawn_unit("command_center", 1, Vector2(20.0, 48.0))
-	spawn_unit("supply_depot", 1, Vector2(34.0, 34.0))
-	spawn_unit("supply_depot", 1, Vector2(34.0, 62.0))
-	spawn_unit("barracks", 1, Vector2(36.0, 48.0))
-	spawn_unit("factory", 1, Vector2(28.0, 66.0))
+	# Player 1: HUMANS (Meridian Guard) at West High Ground
+	spawn_unit("colony_hub", 1, Vector2(20.0, 48.0))
+	spawn_unit("silo", 1, Vector2(34.0, 34.0))
+	spawn_unit("silo", 1, Vector2(34.0, 62.0))
+	spawn_unit("muster_hall", 1, Vector2(36.0, 48.0))
+	spawn_unit("workshop", 1, Vector2(28.0, 66.0))
 
 	for i in range(6):
-		spawn_resource("mineral_field", Vector2(10.0, 33.0 + i * 5.5), 1500)
-	spawn_resource("vespene_geyser", Vector2(14.0, 68.0), 2250)
-	spawn_unit("refinery", 1, Vector2(14.0, 68.0))
+		spawn_resource("crystal_field", Vector2(10.0, 33.0 + i * 5.5), 1500)
+	spawn_resource("aether_vent", Vector2(14.0, 68.0), 2250)
+	spawn_unit("aether_tap", 1, Vector2(14.0, 68.0))
 
 	for i in range(6):
-		var scv = spawn_unit("scv", 1, Vector2(15.0, 35.0 + i * 3.8))
-		issue_SmartHarvest(scv["tag"])
+		var pioneer = spawn_unit("pioneer", 1, Vector2(15.0, 35.0 + i * 3.8))
+		issue_SmartHarvest(pioneer["tag"])
 
 	for i in range(6):
 		var row = i / 3
 		var col = i % 3
-		spawn_unit("marine", 1, Vector2(44.0 + col * 2.2, 43.0 + row * 2.5))
-	spawn_unit("marauder", 1, Vector2(48.0, 50.0))
-	spawn_unit("siege_tank", 1, Vector2(41.0, 48.0))
+		spawn_unit("rifleman", 1, Vector2(44.0 + col * 2.2, 43.0 + row * 2.5))
+	spawn_unit("breacher", 1, Vector2(48.0, 50.0))
+	spawn_unit("howitzer", 1, Vector2(41.0, 48.0))
 
-	# Player 2: MONSTERS (Xenomorph Swarm) at South-East Low Ground
-	spawn_unit("hatchery", 2, Vector2(106.0, 68.0))
+	# Player 2: MONSTERS (Gnarl Brood) at South-East Low Ground
+	spawn_unit("brood_nest", 2, Vector2(106.0, 68.0))
 	for i in range(4):
-		spawn_resource("mineral_field", Vector2(118.0, 58.0 + i * 5.5), 1500)
+		spawn_resource("crystal_field", Vector2(118.0, 58.0 + i * 5.5), 1500)
 	for i in range(4):
-		var drone = spawn_unit("drone", 2, Vector2(112.0, 60.0 + i * 4.0))
-		issue_SmartHarvest(drone["tag"])
+		var forager = spawn_unit("forager", 2, Vector2(112.0, 60.0 + i * 4.0))
+		issue_SmartHarvest(forager["tag"])
 	for i in range(8):
 		var row = i / 4
 		var col = i % 4
-		spawn_unit("swarmling", 2, Vector2(84.0 + col * 2.2, 56.0 + row * 2.5))
-	spawn_unit("roach", 2, Vector2(92.0, 60.0))
-	spawn_unit("ravager", 2, Vector2(94.0, 65.0))
+		spawn_unit("skitterling", 2, Vector2(84.0 + col * 2.2, 56.0 + row * 2.5))
+	spawn_unit("bile_crawler", 2, Vector2(92.0, 60.0))
+	spawn_unit("blight_hurler", 2, Vector2(94.0, 65.0))
 
-	# Player 3: ALIENS (Celestial Armada) at North-East Outpost
-	spawn_unit("nexus", 3, Vector2(104.0, 22.0))
-	spawn_unit("pylon", 3, Vector2(92.0, 20.0))
-	spawn_unit("gateway", 3, Vector2(90.0, 28.0))
+	# Player 3: ALIENS (Aurelian Concord) at North-East Outpost
+	spawn_unit("heartstone", 3, Vector2(104.0, 22.0))
+	spawn_unit("resonator", 3, Vector2(92.0, 20.0))
+	spawn_unit("waystone", 3, Vector2(90.0, 28.0))
 	for i in range(3):
-		spawn_resource("mineral_field", Vector2(116.0, 14.0 + i * 5.5), 1500)
+		spawn_resource("crystal_field", Vector2(116.0, 14.0 + i * 5.5), 1500)
 	for i in range(3):
-		var probe = spawn_unit("probe", 3, Vector2(110.0, 16.0 + i * 4.0))
-		issue_SmartHarvest(probe["tag"])
-	spawn_unit("zealot", 3, Vector2(80.0, 26.0))
-	spawn_unit("zealot", 3, Vector2(80.0, 30.0))
-	spawn_unit("stalker", 3, Vector2(84.0, 24.0))
-	spawn_unit("stalker", 3, Vector2(84.0, 28.0))
-	spawn_unit("colossus", 3, Vector2(88.0, 26.0))
+		var mote = spawn_unit("mote", 3, Vector2(110.0, 16.0 + i * 4.0))
+		issue_SmartHarvest(mote["tag"])
+	spawn_unit("sunblade", 3, Vector2(80.0, 26.0))
+	spawn_unit("sunblade", 3, Vector2(80.0, 30.0))
+	spawn_unit("skirmisher", 3, Vector2(84.0, 24.0))
+	spawn_unit("skirmisher", 3, Vector2(84.0, 28.0))
+	spawn_unit("spire_walker", 3, Vector2(88.0, 26.0))
 
 	_rebuild_astar_grid()
 	_recompute_supplies()
@@ -180,6 +187,8 @@ func load_scenario_dict(data: Dictionary) -> Dictionary:
 	var h = float(map_cfg.get("height", 96.0))
 	reset_state(s_seed, w, h)
 	scenario_name = str(data.get("name", data.get("rdfs:label", "Custom RTS Scenario")))
+	paused = bool(data.get("paused", false))
+	decor_enabled = bool(data.get("decor", true))
 
 	for obs in map_cfg.get("obstacles", []):
 		terrain_obstacles.append(Rect2(
@@ -201,14 +210,14 @@ func load_scenario_dict(data: Dictionary) -> Dictionary:
 		var pid = int(pid_key)
 		if players.has(pid):
 			var pd = p_cfg[pid_key]
-			players[pid]["minerals"] = int(pd.get("minerals", 400))
-			players[pid]["vespene"] = int(pd.get("vespene", 150))
+			players[pid]["crystal"] = int(pd.get("crystal", 400))
+			players[pid]["aether"] = int(pd.get("aether", 150))
 			if pd.has("faction"):
 				players[pid]["faction"] = str(pd["faction"])
 
 	for res in data.get("resources", []):
 		spawn_resource(
-			str(res.get("type", "mineral_field")),
+			str(res.get("type", "crystal_field")),
 			Vector2(float(res.get("x", 20.0)), float(res.get("y", 20.0))),
 			int(res.get("amount", 1500)),
 			str(res.get("id", ""))
@@ -218,7 +227,7 @@ func load_scenario_dict(data: Dictionary) -> Dictionary:
 		var count = int(u.get("count", 1))
 		var base_x = float(u.get("x", 30.0))
 		var base_y = float(u.get("y", 30.0))
-		var utype = str(u.get("type", "marine"))
+		var utype = str(u.get("type", "rifleman"))
 		var owner_id = int(u.get("owner", u.get("player", 1)))
 		var spread = float(u.get("spread", 2.1))
 		var cols = max(1, int(ceil(sqrt(float(count)))))
@@ -249,7 +258,7 @@ func spawn_resource(res_type: String, pos: Vector2, amount: int = 1500, custom_i
 		"resource_type": res_type,
 		"pos": pos,
 		"amount": amount,
-		"radius": 1.8 if res_type == "mineral_field" else 2.6,
+		"radius": 1.8 if res_type == "crystal_field" else 2.6,
 		"harvesters": []
 	}
 	resources[tag] = r
@@ -304,9 +313,9 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 		"attack_state_timer": 0.0,
 		"attack_target_tag": 0,
 		"weapon_cooldown": 0.0,
-		"stim_timer": 0.0,
+		"surge_timer": 0.0,
 		"charge_timer": 0.0,
-		"blink_cooldown": 0.0,
+		"phase_cooldown": 0.0,
 		"slow_timer": 0.0,
 		"cargo_type": "",
 		"cargo_amount": 0,
@@ -337,6 +346,9 @@ func get_elevation_at(pos: Vector2) -> float:
 	return 0.0
 
 func step_ticks(count: int = 1) -> void:
+	last_step_count = count
+	if paused:
+		emit_signal("paused_step")
 	for _i in range(count):
 		_step_single_tick()
 
@@ -431,10 +443,12 @@ func compute_smooth_path(start_pos: Vector2, end_pos: Vector2, unit_radius: floa
 	var anchor: Vector2 = start_pos
 	var idx: int = 0
 	while idx < waypoints.size() - 1:
-		var furthest = idx
-		for probe in range(waypoints.size() - 1, idx, -1):
-			if _has_clear_line_of_walk(anchor, waypoints[probe], unit_radius):
-				furthest = probe
+		# Always advance at least one waypoint; without this a unit hugging a cliff corner (no clear
+		# line to any later waypoint) would loop here forever.
+		var furthest = idx + 1
+		for mote in range(waypoints.size() - 1, idx + 1, -1):
+			if _has_clear_line_of_walk(anchor, waypoints[mote], unit_radius):
+				furthest = mote
 				break
 		smoothed.append(waypoints[furthest])
 		anchor = waypoints[furthest]
@@ -529,21 +543,21 @@ func _update_structures(dt: float) -> void:
 					issue_command([new_unit["tag"]], "move", u["rally_pos"])
 
 func _update_unit_timers(u: Dictionary, dt: float) -> void:
-	if u["stim_timer"] > 0.0:
-		u["stim_timer"] = max(0.0, u["stim_timer"] - dt)
+	if u["surge_timer"] > 0.0:
+		u["surge_timer"] = max(0.0, u["surge_timer"] - dt)
 	if u["charge_timer"] > 0.0:
 		u["charge_timer"] = max(0.0, u["charge_timer"] - dt)
-	if u["blink_cooldown"] > 0.0:
-		u["blink_cooldown"] = max(0.0, u["blink_cooldown"] - dt)
+	if u["phase_cooldown"] > 0.0:
+		u["phase_cooldown"] = max(0.0, u["phase_cooldown"] - dt)
 	if u["slow_timer"] > 0.0:
 		u["slow_timer"] = max(0.0, u["slow_timer"] - dt)
 
-	# SC2 Alien / Protoss Plasma Shield Regeneration (2.0 shields/sec after 3.5s out of combat)
+	# Aegis Shield Regeneration (2.0 shields/sec after 3.5s out of combat)
 	u["out_of_combat_timer"] += dt
 	if u["max_shields"] > 0.0 and u["shields"] < u["max_shields"] and u["out_of_combat_timer"] >= 3.5:
 		u["shields"] = min(u["max_shields"], u["shields"] + 6.0 * dt)
 
-	var atk_speed_mult = 1.5 if u["stim_timer"] > 0.0 else 1.0
+	var atk_speed_mult = 1.5 if u["surge_timer"] > 0.0 else 1.0
 	if u["weapon_cooldown"] > 0.0:
 		u["weapon_cooldown"] = max(0.0, u["weapon_cooldown"] - dt * atk_speed_mult)
 
@@ -662,12 +676,12 @@ func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) 
 		if th.is_empty():
 			return
 		if _edge_distance(u, th) <= 1.6:
-			if u["cargo_type"] == "vespene":
-				players[u["owner"]]["vespene"] += u["cargo_amount"]
-				players[u["owner"]]["vespene_collected"] += u["cargo_amount"]
+			if u["cargo_type"] == "aether":
+				players[u["owner"]]["aether"] += u["cargo_amount"]
+				players[u["owner"]]["aether_collected"] += u["cargo_amount"]
 			else:
-				players[u["owner"]]["minerals"] += u["cargo_amount"]
-				players[u["owner"]]["minerals_collected"] += u["cargo_amount"]
+				players[u["owner"]]["crystal"] += u["cargo_amount"]
+				players[u["owner"]]["crystal_collected"] += u["cargo_amount"]
 			u["cargo_amount"] = 0
 			u["cargo_type"] = ""
 		else:
@@ -678,12 +692,12 @@ func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) 
 	var is_gas: bool = false
 	if resources.has(res_tag):
 		target_entity = resources[res_tag]
-		is_gas = (target_entity["resource_type"] == "vespene_geyser")
-	elif units.has(res_tag) and units[res_tag].get("unit_type") == "refinery":
+		is_gas = (target_entity["resource_type"] == "aether_vent")
+	elif units.has(res_tag) and units[res_tag].get("unit_type") == "aether_tap":
 		target_entity = units[res_tag]
 		is_gas = true
 	else:
-		var nearest_res = _find_nearest_mineral(u["pos"])
+		var nearest_res = _find_nearest_crystal(u["pos"])
 		if nearest_res.is_empty():
 			u["orders"].pop_front()
 			return
@@ -699,10 +713,10 @@ func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) 
 		if u["harvest_timer"] >= 1.75:
 			u["harvest_timer"] = 0.0
 			if is_gas:
-				u["cargo_type"] = "vespene"
+				u["cargo_type"] = "aether"
 				u["cargo_amount"] = 4
 			else:
-				u["cargo_type"] = "minerals"
+				u["cargo_type"] = "crystal"
 				u["cargo_amount"] = 5
 				if resources.has(res_tag):
 					resources[res_tag]["amount"] = max(0, int(resources[res_tag]["amount"]) - 5)
@@ -710,7 +724,7 @@ func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) 
 		_move_toward_point(u, target_entity["pos"], dt)
 
 func _process_worker_build_order(u: Dictionary, order: Dictionary, dt: float) -> void:
-	var struct_type = str(order.get("structure_type", "supply_depot"))
+	var struct_type = str(order.get("structure_type", "silo"))
 	var build_pos: Vector2 = order.get("target_pos", u["pos"])
 	var struct_tag = int(order.get("structure_tag", 0))
 
@@ -718,19 +732,20 @@ func _process_worker_build_order(u: Dictionary, order: Dictionary, dt: float) ->
 		var s_def = RTSData.get_unit_def(struct_type)
 		var build_rad = float(s_def.get("radius", 2.0))
 		if u["pos"].distance_to(build_pos) <= build_rad + u["radius"] + 1.5:
-			var m_cost = int(s_def.get("mineral_cost", 100))
-			var v_cost = int(s_def.get("vespene_cost", 0))
+			var m_cost = int(s_def.get("crystal_cost", 100))
+			var v_cost = int(s_def.get("aether_cost", 0))
 			var p = players[u["owner"]]
-			if p["minerals"] >= m_cost and p["vespene"] >= v_cost:
-				p["minerals"] -= m_cost
-				p["vespene"] -= v_cost
+			if p["crystal"] >= m_cost and p["aether"] >= v_cost:
+				p["crystal"] -= m_cost
+				p["aether"] -= v_cost
 				var s_unit = spawn_unit(struct_type, u["owner"], build_pos, "", 0.1)
 				order["structure_tag"] = s_unit["tag"]
-				# Alien Probes warp in structures automatically and are immediately free!
-				if u["unit_type"] == "probe":
-					s_unit["auto_warp"] = true
+				# Alien Motes summon in structures automatically and are immediately free!
+				if u["unit_type"] == "mote":
+					s_unit["auto_summon"] = true
 					u["orders"].pop_front()
 			else:
+				emit_signal("notice", u["owner"], "Not enough %s to build." % ("crystal" if p["crystal"] < m_cost else "aether"), "error")
 				u["orders"].pop_front()
 		else:
 			_move_toward_point(u, build_pos, dt)
@@ -742,6 +757,7 @@ func _process_worker_build_order(u: Dictionary, order: Dictionary, dt: float) ->
 		if s_unit["build_progress"] >= 1.0:
 			players[u["owner"]]["structures_built"] += 1
 			_recompute_supplies()
+			emit_signal("notice", u["owner"], "%s complete." % s_unit["name"], "info")
 			u["orders"].pop_front()
 			return
 		var dist = _edge_distance(u, s_unit)
@@ -754,13 +770,14 @@ func _process_worker_build_order(u: Dictionary, order: Dictionary, dt: float) ->
 			if s_unit["build_progress"] >= 1.0:
 				players[u["owner"]]["structures_built"] += 1
 				_recompute_supplies()
+				emit_signal("notice", u["owner"], "%s complete." % s_unit["name"], "info")
 				u["orders"].pop_front()
 		else:
 			_move_toward_point(u, s_unit["pos"], dt)
 
 func _follow_order_path(u: Dictionary, target_pos: Vector2, dt: float) -> void:
-	# Colossus has Cliff-Walk ("Massive" attribute walks directly over cliffs!)
-	if u["unit_type"] == "colossus":
+	# Spire Walker has Cliff-Walk ("Massive" attribute walks directly over cliffs!)
+	if u["unit_type"] == "spire_walker":
 		_move_toward_point(u, target_pos, dt)
 		return
 
@@ -788,7 +805,7 @@ func _move_toward_point(u: Dictionary, wp: Vector2, _dt: float) -> void:
 		return
 	dir = dir.normalized()
 	var spd = float(u["speed"])
-	if u["stim_timer"] > 0.0:
+	if u["surge_timer"] > 0.0:
 		spd *= 1.5
 	if u["charge_timer"] > 0.0:
 		spd *= 1.8
@@ -851,16 +868,16 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float) -> void:
 						if perp.dot(n["pos"] - u["pos"]) < 0.0:
 							perp = -perp
 						var push_vec = (perp * 0.75 + (-normal) * 0.25).normalized()
-						n["pos"] = _clamp_to_walkable(n["pos"] + push_vec * u["speed"] * dt * 0.9, n["radius"], n["unit_type"] == "colossus")
+						n["pos"] = _clamp_to_walkable(n["pos"] + push_vec * u["speed"] * dt * 0.9, n["radius"], n["unit_type"] == "spire_walker")
 						n["pushed_timer"] = 0.35
 
 		var final_vel = desired_vel + steer_force
-		var max_spd = u["speed"] * (1.5 if u["stim_timer"] > 0.0 else 1.0) * (1.8 if u["charge_timer"] > 0.0 else 1.0) * (0.5 if u["slow_timer"] > 0.0 else 1.0)
+		var max_spd = u["speed"] * (1.5 if u["surge_timer"] > 0.0 else 1.0) * (1.8 if u["charge_timer"] > 0.0 else 1.0) * (0.5 if u["slow_timer"] > 0.0 else 1.0)
 		if final_vel.length() > max_spd and max_spd > 0.0:
 			final_vel = final_vel.normalized() * max_spd
 
 		if final_vel.length_squared() > 0.001:
-			u["pos"] = _clamp_to_walkable(u["pos"] + final_vel * dt, u["radius"], u["unit_type"] == "colossus")
+			u["pos"] = _clamp_to_walkable(u["pos"] + final_vel * dt, u["radius"], u["unit_type"] == "spire_walker")
 			u["vel"] = final_vel
 
 	for tag in all_tags:
@@ -882,12 +899,12 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float) -> void:
 				var nrm = diff / dist if dist > 0.001 else Vector2.RIGHT
 				var pen = min_dist - dist
 				if n["is_structure"] or n["is_immobile"]:
-					u["pos"] = _clamp_to_walkable(u["pos"] + nrm * pen, u["radius"], u["unit_type"] == "colossus")
+					u["pos"] = _clamp_to_walkable(u["pos"] + nrm * pen, u["radius"], u["unit_type"] == "spire_walker")
 				elif u["is_immobile"]:
-					n["pos"] = _clamp_to_walkable(n["pos"] - nrm * pen, n["radius"], n["unit_type"] == "colossus")
+					n["pos"] = _clamp_to_walkable(n["pos"] - nrm * pen, n["radius"], n["unit_type"] == "spire_walker")
 				else:
-					u["pos"] = _clamp_to_walkable(u["pos"] + nrm * (pen * 0.5), u["radius"], u["unit_type"] == "colossus")
-					n["pos"] = _clamp_to_walkable(n["pos"] - nrm * (pen * 0.5), n["radius"], n["unit_type"] == "colossus")
+					u["pos"] = _clamp_to_walkable(u["pos"] + nrm * (pen * 0.5), u["radius"], u["unit_type"] == "spire_walker")
+					n["pos"] = _clamp_to_walkable(n["pos"] - nrm * (pen * 0.5), n["radius"], n["unit_type"] == "spire_walker")
 
 func _clamp_to_walkable(p: Vector2, radius: float, ignore_cliffs: bool = false) -> Vector2:
 	var res = Vector2(
@@ -966,7 +983,7 @@ func _begin_attack_on(u: Dictionary, target: Dictionary) -> void:
 	var wpn = def.get("weapon", {})
 	if wpn.is_empty():
 		return
-	var atk_speed_mult = 1.5 if u["stim_timer"] > 0.0 else 1.0
+	var atk_speed_mult = 1.5 if u["surge_timer"] > 0.0 else 1.0
 	u["attack_state"] = "windup"
 	u["attack_target_tag"] = target["tag"]
 	u["attack_state_timer"] = float(wpn.get("damage_point", 0.08)) / atk_speed_mult
@@ -1022,8 +1039,9 @@ func _apply_damage_to_target(attacker: Dictionary, target: Dictionary, base_dmg:
 	dmg = max(0.5, dmg * mult)
 
 	target["out_of_combat_timer"] = 0.0
+	emit_signal("unit_damaged", target["owner"], target["pos"])
 
-	# SC2 Plasma Shields absorb damage before HP!
+	# Aegis Shields absorb damage before HP
 	if target["shields"] > 0.0:
 		if target["shields"] >= dmg:
 			target["shields"] -= dmg
@@ -1069,30 +1087,30 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 	for u in valid_units:
 		var ctype = cmd_type.to_lower()
 
-		if u["attack_state"] == "backswing" and ctype in ["move", "attack_move", "blink"]:
+		if u["attack_state"] == "backswing" and ctype in ["move", "attack_move", "phase_step"]:
 			u["attack_state"] = "idle"
 			u["attack_state_timer"] = 0.0
 			if players.has(u["owner"]):
 				players[u["owner"]]["stutter_step_cancels"] += 1
-		elif u["attack_state"] == "windup" and ctype in ["move", "stop", "blink"]:
+		elif u["attack_state"] == "windup" and ctype in ["move", "stop", "phase_step"]:
 			u["attack_state"] = "idle"
 			u["attack_state_timer"] = 0.0
 
-		if ctype == "stimpack":
-			if u["unit_type"] in ["marine", "marauder"] and u["hp"] > 10.0:
+		if ctype == "surge":
+			if u["unit_type"] in ["rifleman", "breacher"] and u["hp"] > 10.0:
 				u["hp"] -= 10.0
-				u["stim_timer"] = 11.0
+				u["surge_timer"] = 11.0
 				accepted += 1
 			continue
 
 		elif ctype == "charge":
-			if u["unit_type"] == "zealot":
+			if u["unit_type"] == "sunblade":
 				u["charge_timer"] = 3.5
 				accepted += 1
 			continue
 
-		elif ctype == "blink":
-			if u["unit_type"] == "stalker" and u["blink_cooldown"] <= 0.0:
+		elif ctype == "phase_step":
+			if u["unit_type"] == "skirmisher" and u["phase_cooldown"] <= 0.0:
 				var old_pos: Vector2 = u["pos"]
 				var delta_b: Vector2 = target_pos - old_pos
 				if delta_b.length() > 18.0:
@@ -1101,36 +1119,36 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 				u["pos"] = dest
 				u["prev_pos"] = dest
 				u["home_pos"] = dest
-				u["blink_cooldown"] = 7.0
+				u["phase_cooldown"] = 7.0
 				u["orders"].clear()
 				u["path"].clear()
 				if players.has(u["owner"]):
-					players[u["owner"]]["blinks_executed"] += 1
-				emit_signal("unit_blinked", old_pos, dest, u["tag"])
+					players[u["owner"]]["phase_steps_executed"] += 1
+				emit_signal("unit_phased", old_pos, dest, u["tag"])
 				accepted += 1
 			continue
 
-		elif ctype in ["morph_siege_mode", "siege_mode"]:
-			if u["unit_type"] == "siege_tank":
-				_morph_unit_in_place(u, "siege_tank_sieged")
+		elif ctype in ["emplace", "emplace"]:
+			if u["unit_type"] == "howitzer":
+				_morph_unit_in_place(u, "howitzer_emplaced")
 				accepted += 1
 			continue
 
-		elif ctype in ["morph_tank_mode", "tank_mode", "unsiege"]:
-			if u["unit_type"] == "siege_tank_sieged":
-				_morph_unit_in_place(u, "siege_tank")
+		elif ctype in ["mobilize", "mobile_mode"]:
+			if u["unit_type"] == "howitzer_emplaced":
+				_morph_unit_in_place(u, "howitzer")
 				accepted += 1
 			continue
 
-		elif ctype == "lower_depot":
-			if u["unit_type"] == "supply_depot":
-				_morph_unit_in_place(u, "supply_depot_lowered")
+		elif ctype == "retract_silo":
+			if u["unit_type"] == "silo":
+				_morph_unit_in_place(u, "silo_retracted")
 				accepted += 1
 			continue
 
-		elif ctype == "raise_depot":
-			if u["unit_type"] == "supply_depot_lowered":
-				_morph_unit_in_place(u, "supply_depot")
+		elif ctype == "extend_silo":
+			if u["unit_type"] == "silo_retracted":
+				_morph_unit_in_place(u, "silo")
 				accepted += 1
 			continue
 
@@ -1216,7 +1234,7 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 		elif ctype == "build":
 			u["orders"].append({
 				"type": "build",
-				"structure_type": extra if extra != "" else "supply_depot",
+				"structure_type": extra if extra != "" else "silo",
 				"target_pos": target_pos,
 				"structure_tag": 0
 			})
@@ -1238,7 +1256,7 @@ func issue_SmartHarvest(worker_tag: int) -> void:
 	if not units.has(worker_tag):
 		return
 	var u = units[worker_tag]
-	var nearest = _find_nearest_mineral(u["pos"])
+	var nearest = _find_nearest_crystal(u["pos"])
 	if not nearest.is_empty():
 		issue_command([worker_tag], "harvest", nearest["pos"], nearest["tag"])
 
@@ -1267,15 +1285,23 @@ func _enqueue_unit_production(structure: Dictionary, unit_type: String) -> bool:
 	var p = players.get(structure["owner"], {})
 	if p.is_empty():
 		return false
-	var m_cost = int(u_def.get("mineral_cost", 50))
-	var v_cost = int(u_def.get("vespene_cost", 0))
+	var m_cost = int(u_def.get("crystal_cost", 50))
+	var v_cost = int(u_def.get("aether_cost", 0))
 	var s_cost = int(u_def.get("supply_cost", 1))
-	if p["minerals"] < m_cost or p["vespene"] < v_cost:
+	if p["crystal"] < m_cost:
+		emit_signal("notice", structure["owner"], "Not enough crystal.", "error")
+		return false
+	if p["aether"] < v_cost:
+		emit_signal("notice", structure["owner"], "Not enough aether.", "error")
 		return false
 	if p["supply_used"] + s_cost > p["supply_cap"]:
+		emit_signal("notice", structure["owner"], "Supply blocked. Build more Provision Silos.", "error")
 		return false
-	p["minerals"] -= m_cost
-	p["vespene"] -= v_cost
+	if structure["production_queue"].size() >= 5:
+		emit_signal("notice", structure["owner"], "Production queue is full.", "error")
+		return false
+	p["crystal"] -= m_cost
+	p["aether"] -= v_cost
 	structure["production_queue"].append({
 		"unit_type": unit_type,
 		"progress": 0.0,
@@ -1316,11 +1342,11 @@ func _find_nearest_town_hall(owner_id: int, pos: Vector2) -> Dictionary:
 					best = u
 	return best
 
-func _find_nearest_mineral(pos: Vector2) -> Dictionary:
+func _find_nearest_crystal(pos: Vector2) -> Dictionary:
 	var best: Dictionary = {}
 	var best_d: float = 999999.0
 	for r in resources.values():
-		if r["resource_type"] == "mineral_field" and r["amount"] > 0:
+		if r["resource_type"] == "crystal_field" and r["amount"] > 0:
 			var d = pos.distance_to(r["pos"])
 			if d < best_d:
 				best_d = d
@@ -1351,9 +1377,9 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 			"is_worker": u["is_worker"],
 			"build_progress": snappedf(u["build_progress"], 0.01),
 			"weapon_cooldown": snappedf(u["weapon_cooldown"], 0.01),
-			"blink_cooldown": snappedf(u["blink_cooldown"], 0.01),
+			"phase_cooldown": snappedf(u["phase_cooldown"], 0.01),
 			"attack_state": u["attack_state"],
-			"stim_timer": snappedf(u["stim_timer"], 0.01),
+			"surge_timer": snappedf(u["surge_timer"], 0.01),
 			"cargo_type": u["cargo_type"],
 			"cargo_amount": u["cargo_amount"],
 			"orders": u["orders"].duplicate(true),
