@@ -1,0 +1,471 @@
+extends Node
+
+# RTSData.gd — StarCraft II / s2client-proto Inspired Unit, Building, Weapon & Ability Registry
+# All stats follow SC2 engine design specifications:
+# - radius: continuous circular collision footprint (in world meters/units)
+# - speed: movement speed in world units per second
+# - push_priority: SC2 unit push priority hierarchy (higher pushes lower/equal idle allies)
+# - damage_point: wind-up time (seconds) before attack damage/projectile fires
+# - backswing: cancelable recovery animation time (seconds) enabling stutter-step kiting
+# - weapon_period: cooldown between attacks (seconds)
+
+const FACTION_TERRAN = "terran_vanguard"
+const FACTION_SWARM = "xenomorph_swarm"
+
+var units: Dictionary = {
+	# =========================================================================
+	# TERRAN VANGUARD UNITS
+	# =========================================================================
+	"scv": {
+		"id": "scv",
+		"name": "SCV",
+		"faction": FACTION_TERRAN,
+		"is_structure": false,
+		"is_worker": true,
+		"attributes": ["Light", "Biological", "Mechanical"],
+		"mineral_cost": 50,
+		"vespene_cost": 0,
+		"supply_cost": 1,
+		"build_time": 12.0,
+		"max_hp": 45.0,
+		"armor": 0.0,
+		"radius": 0.85,
+		"speed": 7.0,
+		"sight_range": 18.0,
+		"push_priority": 1,
+		"weapon": {
+			"name": "Fusion Cutter",
+			"damage": 5.0,
+			"bonus": {},
+			"attacks": 1,
+			"range": 1.6,
+			"period": 1.07,
+			"damage_point": 0.12,
+			"backswing": 0.25,
+			"splash_radius": 0.0
+		},
+		"abilities": ["move", "stop", "hold_position", "attack", "harvest", "build_command_center", "build_supply_depot", "build_refinery", "build_barracks", "build_factory"]
+	},
+	"marine": {
+		"id": "marine",
+		"name": "Marine",
+		"faction": FACTION_TERRAN,
+		"is_structure": false,
+		"is_worker": false,
+		"attributes": ["Light", "Biological"],
+		"mineral_cost": 50,
+		"vespene_cost": 0,
+		"supply_cost": 1,
+		"build_time": 18.0,
+		"max_hp": 45.0,
+		"armor": 0.0,
+		"radius": 0.85,
+		"speed": 7.2,
+		"sight_range": 22.0,
+		"push_priority": 2,
+		"weapon": {
+			"name": "C-14 Gauss Rifle",
+			"damage": 6.0,
+			"bonus": {},
+			"attacks": 1,
+			"range": 12.5,
+			"period": 0.61,
+			"damage_point": 0.05,
+			"backswing": 0.30,
+			"splash_radius": 0.0
+		},
+		"abilities": ["move", "stop", "hold_position", "attack", "stimpack"]
+	},
+	"marauder": {
+		"id": "marauder",
+		"name": "Marauder",
+		"faction": FACTION_TERRAN,
+		"is_structure": false,
+		"is_worker": false,
+		"attributes": ["Armored", "Biological"],
+		"mineral_cost": 100,
+		"vespene_cost": 25,
+		"supply_cost": 2,
+		"build_time": 21.0,
+		"max_hp": 125.0,
+		"armor": 1.0,
+		"radius": 1.25,
+		"speed": 7.0,
+		"sight_range": 24.0,
+		"push_priority": 3,
+		"weapon": {
+			"name": "Punisher Grenades",
+			"damage": 10.0,
+			"bonus": {"Armored": 10.0},
+			"attacks": 1,
+			"range": 14.5,
+			"period": 1.07,
+			"damage_point": 0.12,
+			"backswing": 0.32,
+			"splash_radius": 0.0,
+			"concussive_slow": 0.5
+		},
+		"abilities": ["move", "stop", "hold_position", "attack", "stimpack"]
+	},
+	"siege_tank": {
+		"id": "siege_tank",
+		"name": "Siege Tank (Tank Mode)",
+		"faction": FACTION_TERRAN,
+		"is_structure": false,
+		"is_worker": false,
+		"attributes": ["Armored", "Mechanical"],
+		"mineral_cost": 150,
+		"vespene_cost": 125,
+		"supply_cost": 3,
+		"build_time": 32.0,
+		"max_hp": 175.0,
+		"armor": 1.0,
+		"radius": 1.75,
+		"speed": 5.8,
+		"sight_range": 26.0,
+		"push_priority": 4,
+		"weapon": {
+			"name": "90mm Twin Cannon",
+			"damage": 15.0,
+			"bonus": {"Armored": 10.0},
+			"attacks": 1,
+			"range": 16.5,
+			"period": 0.74,
+			"damage_point": 0.08,
+			"backswing": 0.25,
+			"splash_radius": 0.0
+		},
+		"abilities": ["move", "stop", "hold_position", "attack", "morph_siege_mode"]
+	},
+	"siege_tank_sieged": {
+		"id": "siege_tank_sieged",
+		"name": "Siege Tank (Siege Mode)",
+		"faction": FACTION_TERRAN,
+		"is_structure": false,
+		"is_worker": false,
+		"is_immobile": true,
+		"attributes": ["Armored", "Mechanical"],
+		"mineral_cost": 150,
+		"vespene_cost": 125,
+		"supply_cost": 3,
+		"build_time": 32.0,
+		"max_hp": 175.0,
+		"armor": 1.0,
+		"radius": 1.85,
+		"speed": 0.0,
+		"sight_range": 30.0,
+		"push_priority": 10,
+		"weapon": {
+			"name": "180mm Shock Cannon",
+			"damage": 40.0,
+			"bonus": {"Armored": 30.0},
+			"attacks": 1,
+			"range": 31.0,
+			"min_range": 5.0,
+			"period": 2.14,
+			"damage_point": 0.12,
+			"backswing": 0.30,
+			"splash_radius": 3.5
+		},
+		"abilities": ["stop", "attack", "morph_tank_mode"]
+	},
+
+	# =========================================================================
+	# TERRAN VANGUARD STRUCTURES
+	# =========================================================================
+	"command_center": {
+		"id": "command_center",
+		"name": "Command Center",
+		"faction": FACTION_TERRAN,
+		"is_structure": true,
+		"is_town_hall": true,
+		"attributes": ["Armored", "Mechanical", "Structure"],
+		"mineral_cost": 400,
+		"vespene_cost": 0,
+		"supply_provided": 15,
+		"build_time": 71.0,
+		"max_hp": 1500.0,
+		"armor": 1.0,
+		"radius": 4.2,
+		"footprint": Vector2i(5, 5),
+		"sight_range": 26.0,
+		"push_priority": 100,
+		"trains": ["scv"],
+		"abilities": ["train_scv", "rally"]
+	},
+	"supply_depot": {
+		"id": "supply_depot",
+		"name": "Supply Depot",
+		"faction": FACTION_TERRAN,
+		"is_structure": true,
+		"attributes": ["Armored", "Mechanical", "Structure"],
+		"mineral_cost": 100,
+		"vespene_cost": 0,
+		"supply_provided": 8,
+		"build_time": 21.0,
+		"max_hp": 400.0,
+		"armor": 1.0,
+		"radius": 1.8,
+		"footprint": Vector2i(2, 2),
+		"sight_range": 18.0,
+		"push_priority": 100,
+		"abilities": ["lower_depot"]
+	},
+	"supply_depot_lowered": {
+		"id": "supply_depot_lowered",
+		"name": "Supply Depot (Lowered)",
+		"faction": FACTION_TERRAN,
+		"is_structure": true,
+		"is_walkable_structure": true,
+		"attributes": ["Armored", "Mechanical", "Structure"],
+		"mineral_cost": 100,
+		"vespene_cost": 0,
+		"supply_provided": 8,
+		"build_time": 21.0,
+		"max_hp": 400.0,
+		"armor": 1.0,
+		"radius": 1.8,
+		"footprint": Vector2i(2, 2),
+		"sight_range": 18.0,
+		"push_priority": 0,
+		"abilities": ["raise_depot"]
+	},
+	"refinery": {
+		"id": "refinery",
+		"name": "Refinery",
+		"faction": FACTION_TERRAN,
+		"is_structure": true,
+		"is_gas_extractor": true,
+		"attributes": ["Armored", "Mechanical", "Structure"],
+		"mineral_cost": 75,
+		"vespene_cost": 0,
+		"supply_provided": 0,
+		"build_time": 21.0,
+		"max_hp": 500.0,
+		"armor": 1.0,
+		"radius": 2.6,
+		"footprint": Vector2i(3, 3),
+		"sight_range": 18.0,
+		"push_priority": 100,
+		"abilities": []
+	},
+	"barracks": {
+		"id": "barracks",
+		"name": "Barracks",
+		"faction": FACTION_TERRAN,
+		"is_structure": true,
+		"requires": ["supply_depot"],
+		"attributes": ["Armored", "Mechanical", "Structure"],
+		"mineral_cost": 150,
+		"vespene_cost": 0,
+		"supply_provided": 0,
+		"build_time": 46.0,
+		"max_hp": 1000.0,
+		"armor": 1.0,
+		"radius": 2.8,
+		"footprint": Vector2i(3, 3),
+		"sight_range": 20.0,
+		"push_priority": 100,
+		"trains": ["marine", "marauder"],
+		"abilities": ["train_marine", "train_marauder", "rally"]
+	},
+	"factory": {
+		"id": "factory",
+		"name": "Factory",
+		"faction": FACTION_TERRAN,
+		"is_structure": true,
+		"requires": ["barracks"],
+		"attributes": ["Armored", "Mechanical", "Structure"],
+		"mineral_cost": 150,
+		"vespene_cost": 100,
+		"supply_provided": 0,
+		"build_time": 43.0,
+		"max_hp": 1250.0,
+		"armor": 1.0,
+		"radius": 3.0,
+		"footprint": Vector2i(3, 3),
+		"sight_range": 20.0,
+		"push_priority": 100,
+		"trains": ["siege_tank"],
+		"abilities": ["train_siege_tank", "rally"]
+	},
+
+	# =========================================================================
+	# XENOMORPH SWARM (ZERG-INSPIRED) UNITS & STRUCTURES
+	# =========================================================================
+	"drone": {
+		"id": "drone",
+		"name": "Drone",
+		"faction": FACTION_SWARM,
+		"is_structure": false,
+		"is_worker": true,
+		"attributes": ["Light", "Biological"],
+		"mineral_cost": 50,
+		"vespene_cost": 0,
+		"supply_cost": 1,
+		"build_time": 12.0,
+		"max_hp": 40.0,
+		"armor": 0.0,
+		"radius": 0.85,
+		"speed": 7.0,
+		"sight_range": 18.0,
+		"push_priority": 1,
+		"weapon": {
+			"name": "Claws",
+			"damage": 5.0,
+			"bonus": {},
+			"attacks": 1,
+			"range": 1.6,
+			"period": 1.07,
+			"damage_point": 0.12,
+			"backswing": 0.25,
+			"splash_radius": 0.0
+		},
+		"abilities": ["move", "stop", "hold_position", "attack", "harvest"]
+	},
+	"swarmling": {
+		"id": "swarmling",
+		"name": "Swarmling",
+		"faction": FACTION_SWARM,
+		"is_structure": false,
+		"is_worker": false,
+		"attributes": ["Light", "Biological"],
+		"mineral_cost": 25,
+		"vespene_cost": 0,
+		"supply_cost": 1,
+		"build_time": 17.0,
+		"max_hp": 35.0,
+		"armor": 0.0,
+		"radius": 0.72,
+		"speed": 9.8,
+		"sight_range": 20.0,
+		"push_priority": 2,
+		"weapon": {
+			"name": "Adrenal Claws",
+			"damage": 5.0,
+			"bonus": {},
+			"attacks": 1,
+			"range": 1.9,
+			"period": 0.49,
+			"damage_point": 0.08,
+			"backswing": 0.20,
+			"splash_radius": 0.0
+		},
+		"abilities": ["move", "stop", "hold_position", "attack"]
+	},
+	"roach": {
+		"id": "roach",
+		"name": "Roach",
+		"faction": FACTION_SWARM,
+		"is_structure": false,
+		"is_worker": false,
+		"attributes": ["Armored", "Biological"],
+		"mineral_cost": 75,
+		"vespene_cost": 25,
+		"supply_cost": 2,
+		"build_time": 19.0,
+		"max_hp": 145.0,
+		"armor": 1.0,
+		"radius": 1.15,
+		"speed": 7.0,
+		"sight_range": 22.0,
+		"push_priority": 3,
+		"weapon": {
+			"name": "Acid Saliva",
+			"damage": 16.0,
+			"bonus": {},
+			"attacks": 1,
+			"range": 10.5,
+			"period": 1.43,
+			"damage_point": 0.12,
+			"backswing": 0.30,
+			"splash_radius": 0.0
+		},
+		"abilities": ["move", "stop", "hold_position", "attack"]
+	},
+	"hatchery": {
+		"id": "hatchery",
+		"name": "Hatchery",
+		"faction": FACTION_SWARM,
+		"is_structure": true,
+		"is_town_hall": true,
+		"attributes": ["Armored", "Biological", "Structure"],
+		"mineral_cost": 300,
+		"vespene_cost": 0,
+		"supply_provided": 15,
+		"build_time": 71.0,
+		"max_hp": 1500.0,
+		"armor": 1.0,
+		"radius": 4.2,
+		"footprint": Vector2i(5, 5),
+		"sight_range": 26.0,
+		"push_priority": 100,
+		"trains": ["drone", "swarmling", "roach"],
+		"abilities": ["train_drone", "train_swarmling", "train_roach", "rally"]
+	}
+}
+
+var abilities: Dictionary = {
+	"move": {"id": "move", "name": "Move", "hotkey": "M", "target": "point"},
+	"stop": {"id": "stop", "name": "Stop", "hotkey": "S", "target": "none"},
+	"hold_position": {"id": "hold_position", "name": "Hold Position", "hotkey": "H", "target": "none"},
+	"attack": {"id": "attack", "name": "Attack / A-Move", "hotkey": "A", "target": "point_or_unit"},
+	"harvest": {"id": "harvest", "name": "Gather Resources", "hotkey": "G", "target": "resource"},
+	"stimpack": {
+		"id": "stimpack",
+		"name": "Stimpack (+50% Speed & Fire Rate, -10 HP)",
+		"hotkey": "T",
+		"target": "none",
+		"hp_cost": 10.0,
+		"duration": 11.0,
+		"speed_mult": 1.5,
+		"attack_speed_mult": 1.5
+	},
+	"morph_siege_mode": {
+		"id": "morph_siege_mode",
+		"name": "Siege Mode (31 Range Splash)",
+		"hotkey": "E",
+		"target": "none",
+		"morph_to": "siege_tank_sieged"
+	},
+	"morph_tank_mode": {
+		"id": "morph_tank_mode",
+		"name": "Tank Mode (Mobile)",
+		"hotkey": "D",
+		"target": "none",
+		"morph_to": "siege_tank"
+	},
+	"lower_depot": {
+		"id": "lower_depot",
+		"name": "Lower Supply Depot (Walkable)",
+		"hotkey": "R",
+		"target": "none",
+		"morph_to": "supply_depot_lowered"
+	},
+	"raise_depot": {
+		"id": "raise_depot",
+		"name": "Raise Supply Depot (Blocks Choke)",
+		"hotkey": "R",
+		"target": "none",
+		"morph_to": "supply_depot"
+	},
+	"train_scv": {"id": "train_scv", "name": "Train SCV (50M)", "hotkey": "S", "target": "none", "unit": "scv"},
+	"train_marine": {"id": "train_marine", "name": "Train Marine (50M)", "hotkey": "A", "target": "none", "unit": "marine"},
+	"train_marauder": {"id": "train_marauder", "name": "Train Marauder (100M/25G)", "hotkey": "D", "target": "none", "unit": "marauder"},
+	"train_siege_tank": {"id": "train_siege_tank", "name": "Train Siege Tank (150M/125G)", "hotkey": "S", "target": "none", "unit": "siege_tank"},
+	"train_drone": {"id": "train_drone", "name": "Morph Drone (50M)", "hotkey": "D", "target": "none", "unit": "drone"},
+	"train_swarmling": {"id": "train_swarmling", "name": "Morph Swarmling (25M)", "hotkey": "Z", "target": "none", "unit": "swarmling"},
+	"train_roach": {"id": "train_roach", "name": "Morph Roach (75M/25G)", "hotkey": "R", "target": "none", "unit": "roach"},
+	"build_supply_depot": {"id": "build_supply_depot", "name": "Build Supply Depot (100M)", "hotkey": "B", "target": "point", "structure": "supply_depot"},
+	"build_refinery": {"id": "build_refinery", "name": "Build Refinery (75M)", "hotkey": "R", "target": "point", "structure": "refinery"},
+	"build_barracks": {"id": "build_barracks", "name": "Build Barracks (150M)", "hotkey": "X", "target": "point", "structure": "barracks"},
+	"build_factory": {"id": "build_factory", "name": "Build Factory (150M/100G)", "hotkey": "F", "target": "point", "structure": "factory"},
+	"build_command_center": {"id": "build_command_center", "name": "Build Command Center (400M)", "hotkey": "C", "target": "point", "structure": "command_center"},
+	"rally": {"id": "rally", "name": "Set Rally Point", "hotkey": "Y", "target": "point"}
+}
+
+func get_unit_def(unit_type: String) -> Dictionary:
+	return units.get(unit_type.to_lower(), {})
+
+func get_ability_def(ability_id: String) -> Dictionary:
+	return abilities.get(ability_id.to_lower(), {})

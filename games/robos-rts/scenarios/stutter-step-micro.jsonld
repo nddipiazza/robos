@@ -1,0 +1,23 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/kgraph#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+  },
+  "@id": "urn:robos:rts:scenario:stutter-step-micro",
+  "@type": "robos:RTSTestScenario",
+  "rdfs:label": "Marine Stutter-Step Kiting vs Swarmling Pack",
+  "seed": 101,
+  "map": {
+    "width": 120,
+    "height": 80,
+    "obstacles": []
+  },
+  "units": [
+    {"id": "marine_squad", "type": "marine", "owner": 1, "count": 6, "x": 45.0, "y": 38.0, "spread": 2.0},
+    {"id": "swarmling_pack", "type": "swarmling", "owner": 2, "count": 10, "x": 62.0, "y": 38.0, "spread": 1.8}
+  ],
+  "directives": [
+    {"player": 1, "mode": "stutter_step_kite", "enabled": true, "use_stim": true},
+    {"player": 2, "mode": "swarm_rush", "enabled": true, "target_x": 45.0, "target_y": 38.0}
+  ]
+}

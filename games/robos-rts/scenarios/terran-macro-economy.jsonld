@@ -1,0 +1,32 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/kgraph#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+  },
+  "@id": "urn:robos:rts:scenario:terran-macro-economy",
+  "@type": "robos:RTSTestScenario",
+  "rdfs:label": "Terran Macro Economy: Harvesting, Construction & Production",
+  "seed": 404,
+  "map": {
+    "width": 120,
+    "height": 80,
+    "obstacles": []
+  },
+  "players": {
+    "1": {"minerals": 300, "vespene": 50},
+    "2": {"minerals": 200, "vespene": 0}
+  },
+  "resources": [
+    {"id": "min_1", "type": "mineral_field", "x": 12.0, "y": 32.0, "amount": 1500},
+    {"id": "min_2", "type": "mineral_field", "x": 12.0, "y": 40.0, "amount": 1500},
+    {"id": "min_3", "type": "mineral_field", "x": 12.0, "y": 48.0, "amount": 1500},
+    {"id": "gas_1", "type": "vespene_geyser", "x": 16.0, "y": 60.0, "amount": 2250}
+  ],
+  "units": [
+    {"id": "cc_main", "type": "command_center", "owner": 1, "count": 1, "x": 22.0, "y": 40.0},
+    {"id": "depot_1", "type": "supply_depot", "owner": 1, "count": 1, "x": 34.0, "y": 30.0},
+    {"id": "rax_1", "type": "barracks", "owner": 1, "count": 1, "x": 36.0, "y": 40.0},
+    {"id": "scv_workers", "type": "scv", "owner": 1, "count": 6, "x": 17.0, "y": 35.0, "spread": 2.2, "auto_harvest": true}
+  ],
+  "directives": []
+}

@@ -1,0 +1,24 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/kgraph#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+  },
+  "@id": "urn:robos:rts:scenario:crowd-push-priority",
+  "@type": "robos:RTSTestScenario",
+  "rdfs:label": "SC2 Crowd Steering & Allied PushPriority Return",
+  "seed": 202,
+  "map": {
+    "width": 120,
+    "height": 80,
+    "obstacles": [
+      {"x": 58.0, "y": 0.0, "w": 4.0, "h": 34.0},
+      {"x": 58.0, "y": 46.0, "w": 4.0, "h": 34.0}
+    ]
+  },
+  "units": [
+    {"id": "idle_blocker", "type": "scv", "owner": 1, "count": 1, "x": 50.0, "y": 40.0},
+    {"id": "marching_tank", "type": "siege_tank", "owner": 1, "count": 1, "x": 40.0, "y": 40.0},
+    {"id": "choke_depot", "type": "supply_depot", "owner": 1, "count": 1, "x": 60.0, "y": 40.0}
+  ],
+  "directives": []
+}
