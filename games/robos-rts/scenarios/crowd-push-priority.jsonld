@@ -5,7 +5,7 @@
   },
   "@id": "urn:robos:rts:scenario:crowd-push-priority",
   "@type": "robos:RTSTestScenario",
-  "rdfs:label": "SC2 Crowd Steering & Allied PushPriority Return",
+  "rdfs:label": "Crowd Steering & Allied push priority Return",
   "seed": 202,
   "map": {
     "width": 120,
@@ -16,9 +16,9 @@
     ]
   },
   "units": [
-    {"id": "idle_blocker", "type": "scv", "owner": 1, "count": 1, "x": 50.0, "y": 40.0},
-    {"id": "marching_tank", "type": "siege_tank", "owner": 1, "count": 1, "x": 40.0, "y": 40.0},
-    {"id": "choke_depot", "type": "supply_depot", "owner": 1, "count": 1, "x": 60.0, "y": 40.0}
+    {"id": "idle_blocker", "type": "pioneer", "owner": 1, "count": 1, "x": 50.0, "y": 40.0},
+    {"id": "marching_howitzer", "type": "howitzer", "owner": 1, "count": 1, "x": 40.0, "y": 40.0},
+    {"id": "choke_silo", "type": "silo", "owner": 1, "count": 1, "x": 60.0, "y": 40.0}
   ],
   "directives": []
 }

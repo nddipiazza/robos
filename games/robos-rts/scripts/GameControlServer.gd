@@ -1,16 +1,22 @@
 extends Node
 
-# GameControlServer.gd — SC2API / s2client-proto Inspired HTTP REST & Step Control Server
+# GameControlServer.gd — HTTP/JSON observation, action and step server (bot API & E2E test hook)
 # Default Port: 18095 (override via RTS_WEB_SERVICE_PORT or --port=NNNN)
 #
 # Endpoints:
 # - GET  /health       -> Server status, tick, scenario name
-# - GET  /observation  -> Full SC2-style Observation snapshot (units, resources, players, map, events)
-# - POST /action       -> Issue command(s) to unit tags (move, attack, harvest, build, stimpack, morph_siege_mode, lower_depot, train_marine, etc.)
+# - GET  /observation  -> Full observation snapshot (units, resources, players, map, events)
+# - POST /action       -> Issue command(s) to unit tags (move, attack, harvest, build, surge, emplace, retract_silo, train_rifleman, etc.)
 # - POST /step         -> Advance deterministic 64Hz simulation by `count` ticks (instant in backend mode)
 # - POST /scenario     -> Load a scenario JSON dict or named KGraph scenario from `scenarios/<slug>.jsonld`
 # - POST /directive    -> Configure RTSCommanderAI directive for Player 1 or Player 2
 # - POST /overlay      -> Update on-screen BDD step / proof banner for video walkthroughs
+# - POST /pause        -> Pause or resume real-time simulation ({paused: bool}); /step still advances ticks
+# - POST /select       -> Select units (tags, or unit_type + owner)
+# - POST /camera       -> Move the camera ({x,y,z} raw, or {focus_x,focus_y,height})
+# - POST /input        -> Inject mouse_button / mouse_motion / key events through the real input handlers
+# - POST /ui           -> Drive HUD state: local_player, hover, help, pending_ability, message, control_group, focus
+# - POST /screenshot   -> Save the current frame as PNG
 
 var server: TCPServer = TCPServer.new()
 var active_port: int = 18095
@@ -45,7 +51,7 @@ func _start_server() -> void:
 		var err = server.listen(p, "127.0.0.1")
 		if err == OK:
 			active_port = p
-			print("[GameControlServer] SC2API / RTS Control Service listening on http://127.0.0.1:%d" % active_port)
+			print("[GameControlServer] RTS control service listening on http://127.0.0.1:%d" % active_port)
 			return
 	push_warning("[GameControlServer] Could not bind HTTP server in range %d-%d" % [active_port, active_port + 9])
 
@@ -181,6 +187,11 @@ func _process_http_request(client: StreamPeerTCP, raw_req: String) -> void:
 		"/scenario":
 			if body_dict.has("slug"):
 				var slug = str(body_dict.get("slug"))
+				if slug == "default" or slug == "starfall-canyon":
+					SimEngine.load_default_scenario()
+					RTSCommanderAI.configure_from_scenario([])
+					_send_json(client, 200, {"ok": true, "scenario": SimEngine.scenario_name, "unit_count": SimEngine.units.size()})
+					return
 				var file_path = "res://scenarios/%s.jsonld" % slug
 				if not FileAccess.file_exists(file_path):
 					file_path = "res://scenarios/%s.json" % slug
@@ -195,6 +206,10 @@ func _process_http_request(client: StreamPeerTCP, raw_req: String) -> void:
 			else:
 				var res = SimEngine.load_scenario_dict(body_dict)
 				_send_json(client, 200, res)
+
+		"/pause":
+			SimEngine.paused = bool(body_dict.get("paused", true))
+			_send_json(client, 200, {"ok": true, "paused": SimEngine.paused})
 
 		"/overlay":
 			bdd_step_text = str(body_dict.get("step", bdd_step_text))
@@ -220,13 +235,31 @@ func _process_http_request(client: StreamPeerTCP, raw_req: String) -> void:
 				_send_json(client, 200, {"ok": false, "error": "Main scene not ready"})
 
 		"/camera":
-			var cx = float(body_dict.get("x", 64.0))
-			var cz = float(body_dict.get("z", 92.0))
-			var cy = float(body_dict.get("y", 68.0))
 			var main_node = get_tree().current_scene
 			if main_node and "world_3d" in main_node and main_node.world_3d and main_node.world_3d.camera_3d:
-				main_node.world_3d.camera_3d.position = Vector3(cx, cy, cz)
-			_send_json(client, 200, {"ok": true, "camera": [cx, cy, cz]})
+				if body_dict.has("focus_x"):
+					main_node.world_3d.set_focus(Vector2(float(body_dict.get("focus_x")), float(body_dict.get("focus_y", 48.0))), float(body_dict.get("height", main_node.world_3d.cam_height)))
+				else:
+					main_node.world_3d.camera_3d.position = Vector3(float(body_dict.get("x", 64.0)), float(body_dict.get("y", 68.0)), float(body_dict.get("z", 92.0)))
+				var cp: Vector3 = main_node.world_3d.camera_3d.position
+				_send_json(client, 200, {"ok": true, "camera": [cp.x, cp.y, cp.z]})
+			else:
+				_send_json(client, 200, {"ok": false, "error": "Main scene not ready"})
+
+		"/ui":
+			var main_ui = get_tree().current_scene
+			if main_ui and main_ui.has_method("apply_ui_state"):
+				_send_json(client, 200, {"ok": true, "state": main_ui.apply_ui_state(body_dict)})
+			else:
+				_send_json(client, 200, {"ok": false, "error": "Main scene not ready"})
+
+		"/input":
+			var main_in = get_tree().current_scene
+			if main_in and main_in.has_method("inject_input"):
+				main_in.inject_input(body_dict)
+				_send_json(client, 200, {"ok": true, "state": main_in.ui_state()})
+			else:
+				_send_json(client, 200, {"ok": false, "error": "Main scene not ready"})
 
 		"/screenshot":
 			var out_path = str(body_dict.get("path", "/tmp/robos_rts_shot.png"))

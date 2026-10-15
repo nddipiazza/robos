@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 run_cucumber_tests.py — RobOS RTS Cucumber E2E Test Suite Runner
-Runs headless SnowPlay/SC2 64Hz simulation engine tests (`--backend` default) or `--human`
+Runs headless 64Hz simulation engine tests (`--backend` default) or `--human`
 and generates an HTML report with attached Observation JSON telemetry in `tests/e2e/reports/index.html`.
 """
 

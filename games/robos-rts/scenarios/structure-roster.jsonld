@@ -1,0 +1,115 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/kgraph#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+  },
+  "@id": "urn:robos:rts:scenario:structure-roster",
+  "@type": "robos:RTSTestScenario",
+  "rdfs:label": "Structure Roster: every structure of every faction",
+  "seed": 1,
+  "map": {
+    "width": 110,
+    "height": 68,
+    "obstacles": []
+  },
+  "players": {
+    "1": {
+      "crystal": 1000,
+      "aether": 500
+    },
+    "2": {
+      "crystal": 1000,
+      "aether": 500
+    },
+    "3": {
+      "crystal": 1000,
+      "aether": 500
+    }
+  },
+  "resources": [],
+  "units": [
+    {
+      "id": "roster_colony_hub",
+      "type": "colony_hub",
+      "owner": 1,
+      "count": 1,
+      "x": 14.0,
+      "y": 16.0
+    },
+    {
+      "id": "roster_silo",
+      "type": "silo",
+      "owner": 1,
+      "count": 1,
+      "x": 29.0,
+      "y": 16.0
+    },
+    {
+      "id": "roster_silo_retracted",
+      "type": "silo_retracted",
+      "owner": 1,
+      "count": 1,
+      "x": 44.0,
+      "y": 16.0
+    },
+    {
+      "id": "roster_aether_tap",
+      "type": "aether_tap",
+      "owner": 1,
+      "count": 1,
+      "x": 59.0,
+      "y": 16.0
+    },
+    {
+      "id": "roster_muster_hall",
+      "type": "muster_hall",
+      "owner": 1,
+      "count": 1,
+      "x": 74.0,
+      "y": 16.0
+    },
+    {
+      "id": "roster_workshop",
+      "type": "workshop",
+      "owner": 1,
+      "count": 1,
+      "x": 89.0,
+      "y": 16.0
+    },
+    {
+      "id": "roster_brood_nest",
+      "type": "brood_nest",
+      "owner": 2,
+      "count": 1,
+      "x": 14.0,
+      "y": 36.0
+    },
+    {
+      "id": "roster_heartstone",
+      "type": "heartstone",
+      "owner": 3,
+      "count": 1,
+      "x": 14.0,
+      "y": 56.0
+    },
+    {
+      "id": "roster_resonator",
+      "type": "resonator",
+      "owner": 3,
+      "count": 1,
+      "x": 29.0,
+      "y": 56.0
+    },
+    {
+      "id": "roster_waystone",
+      "type": "waystone",
+      "owner": 3,
+      "count": 1,
+      "x": 44.0,
+      "y": 56.0
+    }
+  ],
+  "directives": [],
+  "paused": true,
+  "decor": false
+}
