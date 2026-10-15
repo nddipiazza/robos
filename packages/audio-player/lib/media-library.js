@@ -3,6 +3,8 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const crypto = require('crypto');
+const { pathToFileURL } = require('url');
 const { Worker } = require('worker_threads');
 
 class MediaLibrary {
@@ -23,6 +25,22 @@ class MediaLibrary {
     this._loadPlaylists();
   }
 
+  _generateTrackId(filePath) {
+    return `trk_${crypto.createHash('sha1').update(filePath).digest('hex').slice(0, 16)}`;
+  }
+
+  _generateArtId(filePath) {
+    return `art_${crypto.createHash('sha1').update(filePath).digest('hex').slice(0, 16)}`;
+  }
+
+  _toSafeFileUrl(filePath) {
+    try {
+      return pathToFileURL(filePath).href;
+    } catch {
+      return encodeURI(`file://${filePath}`);
+    }
+  }
+
   async _getParser() {
     if (!this._mm) {
       this._mm = await import('music-metadata');
@@ -36,6 +54,30 @@ class MediaLibrary {
         const raw = fs.readFileSync(this.cacheFile, 'utf8');
         const data = JSON.parse(raw);
         this.tracks = data.tracks || [];
+
+        // Automatic self-healing: migrate any legacy duplicate IDs and fix unencoded file:// URLs
+        let needsSave = false;
+        const seenIds = new Set();
+        for (const track of this.tracks) {
+          if (track.filePath) {
+            const properId = this._generateTrackId(track.filePath);
+            if (track.id !== properId || seenIds.has(track.id)) {
+              track.id = properId;
+              needsSave = true;
+            }
+            seenIds.add(track.id);
+
+            const properSrc = this._toSafeFileUrl(track.filePath);
+            if (track.src !== properSrc) {
+              track.src = properSrc;
+              needsSave = true;
+            }
+          }
+        }
+        if (needsSave) {
+          this._saveCache();
+        }
+
         this._rebuildIndexes();
       }
     } catch (err) {
@@ -62,6 +104,30 @@ class MediaLibrary {
         const raw = fs.readFileSync(this.playlistsFile, 'utf8');
         const data = JSON.parse(raw);
         this.playlists = Array.isArray(data) ? data : (data.playlists || []);
+
+        // Self-heal tracks inside playlists
+        let plNeedsSave = false;
+        for (const pl of this.playlists) {
+          if (Array.isArray(pl.tracks)) {
+            for (const track of pl.tracks) {
+              if (track.filePath) {
+                const properId = this._generateTrackId(track.filePath);
+                if (track.id !== properId) {
+                  track.id = properId;
+                  plNeedsSave = true;
+                }
+                const properSrc = this._toSafeFileUrl(track.filePath);
+                if (track.src !== properSrc) {
+                  track.src = properSrc;
+                  plNeedsSave = true;
+                }
+              }
+            }
+          }
+        }
+        if (plNeedsSave) {
+          this._savePlaylists();
+        }
       } else {
         // Seed default playlists if file does not exist yet
         this.playlists = [
@@ -137,7 +203,7 @@ class MediaLibrary {
       let artId = null;
       const cover = mm.selectCover(common.picture);
       if (cover) {
-        artId = `art_${this.nextArtId++}_${Date.now()}`;
+        artId = this._generateArtId(filePath);
         this.albumArtRegistry.set(artId, {
           buffer: cover.data,
           format: cover.format || 'image/jpeg'
@@ -145,7 +211,7 @@ class MediaLibrary {
       }
 
       return {
-        id: `trk_${Buffer.from(filePath).toString('base64url').slice(0, 16)}`,
+        id: this._generateTrackId(filePath),
         filePath,
         title: common.title || path.parse(filePath).name,
         artist: common.artist || common.albumartist || 'Unknown Artist',
@@ -157,17 +223,17 @@ class MediaLibrary {
         bitrate: format.bitrate || 0,
         sampleRate: format.sampleRate || 0,
         artId,
-        src: `file://${filePath}`
+        src: this._toSafeFileUrl(filePath)
       };
     } catch (err) {
       return {
-        id: `trk_${Buffer.from(filePath).toString('base64url').slice(0, 16)}`,
+        id: this._generateTrackId(filePath),
         filePath,
         title: path.parse(filePath).name,
         artist: 'Unknown Artist',
         album: 'Unknown Album',
         duration: 0,
-        src: `file://${filePath}`,
+        src: this._toSafeFileUrl(filePath),
         error: err.message
       };
     }
@@ -543,13 +609,13 @@ class MediaLibrary {
         }
         if (!trackObj) {
           trackObj = {
-            id: `trk_${Buffer.from(resolvedPath).toString('base64url').slice(0, 16)}`,
+            id: this._generateTrackId(resolvedPath),
             filePath: resolvedPath,
             title: currentExtInf?.title || path.parse(resolvedPath).name,
             artist: currentExtInf?.artist || 'Unknown Artist',
             album: 'Imported Playlist',
             duration: currentExtInf?.duration || 0,
-            src: resolvedPath.startsWith('http') ? resolvedPath : `file://${resolvedPath}`
+            src: resolvedPath.startsWith('http') ? resolvedPath : this._toSafeFileUrl(resolvedPath)
           };
         }
         tracks.push(trackObj);
