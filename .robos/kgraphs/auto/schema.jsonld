@@ -1,0 +1,789 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "schema": "https://schema.org/",
+    "sh": "http://www.w3.org/ns/shacl#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "dcterms": "http://purl.org/dc/terms/"
+  },
+  "@graph": [
+    {
+      "@id": "https://robos.dev/ns/sdlc#VehicleMake",
+      "@type": "rdfs:Class",
+      "rdfs:label": "VehicleMake",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Brand"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/Brand"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#VehicleMakeShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#VehicleMake"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://schema.org/name"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#VehicleModel",
+      "@type": "rdfs:Class",
+      "rdfs:label": "VehicleModel",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/ProductModel"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/ProductModel"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#VehicleModelShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#VehicleModel"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://schema.org/name"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#make"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#VehicleConfiguration",
+      "@type": "rdfs:Class",
+      "rdfs:label": "VehicleConfiguration",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Vehicle"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/Vehicle"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#VehicleConfigurationShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#VehicleConfiguration"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://schema.org/modelDate"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#model"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#OwnedVehicle",
+      "@type": "rdfs:Class",
+      "rdfs:label": "OwnedVehicle",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Vehicle"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/Vehicle"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#OwnedVehicleShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#OwnedVehicle"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://schema.org/name"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#AutoShop",
+      "@type": "rdfs:Class",
+      "rdfs:label": "AutoShop",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/AutoRepair"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/AutoRepair"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#AutoShopShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#AutoShop"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://schema.org/name"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#ServiceRecord",
+      "@type": "rdfs:Class",
+      "rdfs:label": "ServiceRecord",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Service"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/Service"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#ServiceRecordShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#ServiceRecord"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#vehicle"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://schema.org/startDate"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://schema.org/description"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#MaintenanceSchedule",
+      "@type": "rdfs:Class",
+      "rdfs:label": "MaintenanceSchedule",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Schedule"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/Schedule"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#MaintenanceScheduleShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#MaintenanceSchedule"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#vehicle"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#RepairOrder",
+      "@type": "rdfs:Class",
+      "rdfs:label": "RepairOrder",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Order"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/Order"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#RepairOrderShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#RepairOrder"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#vehicle"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#Estimate",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Estimate",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Offer"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/Offer"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#EstimateShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#Estimate"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#vehicle"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#Invoice",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Invoice",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Invoice"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/Invoice"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#InvoiceShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#Invoice"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#vehicle"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#Part",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Part",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Product"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/Product"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#PartShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#Part"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://schema.org/name"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#PartFitment",
+      "@type": "rdfs:Class",
+      "rdfs:label": "PartFitment",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/ProductModel"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/ProductModel"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#PartFitmentShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#PartFitment"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#part"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#configuration"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#OdometerReading",
+      "@type": "rdfs:Class",
+      "rdfs:label": "OdometerReading",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/QuantitativeValue"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/QuantitativeValue"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#OdometerReadingShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#OdometerReading"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#vehicle"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://schema.org/value"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://schema.org/unitCode"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#Registration",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Registration",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/PropertyValue"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/PropertyValue"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#RegistrationShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#Registration"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#vehicle"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#OwnershipRecord",
+      "@type": "rdfs:Class",
+      "rdfs:label": "OwnershipRecord",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/OwnershipInfo"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/OwnershipInfo"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#OwnershipRecordShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#OwnershipRecord"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#vehicle"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#AccidentRecord",
+      "@type": "rdfs:Class",
+      "rdfs:label": "AccidentRecord",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Event"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/Event"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#AccidentRecordShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#AccidentRecord"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#vehicle"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#Inspection",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Inspection",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/CheckAction"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/CheckAction"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#InspectionShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#Inspection"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#vehicle"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#DiagnosticCode",
+      "@type": "rdfs:Class",
+      "rdfs:label": "DiagnosticCode",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/DefinedTerm"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/DefinedTerm"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#DiagnosticCodeShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#DiagnosticCode"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://schema.org/name"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#RecallCampaign",
+      "@type": "rdfs:Class",
+      "rdfs:label": "RecallCampaign",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/CreativeWork"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/CreativeWork"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#RecallCampaignShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#RecallCampaign"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://schema.org/identifier"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#SafetyComplaint",
+      "@type": "rdfs:Class",
+      "rdfs:label": "SafetyComplaint",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Report"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/Report"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#SafetyComplaintShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#SafetyComplaint"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://schema.org/identifier"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#AutoDataset",
+      "@type": "rdfs:Class",
+      "rdfs:label": "AutoDataset",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Dataset"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/Dataset"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#AutoDatasetShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#AutoDataset"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://schema.org/url"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#AutoVocabularyTerm",
+      "@type": "rdfs:Class",
+      "rdfs:label": "AutoVocabularyTerm",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/DefinedTerm"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/DefinedTerm"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#AutoVocabularyTermShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#AutoVocabularyTerm"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://schema.org/url"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#AutoSoftware",
+      "@type": "rdfs:Class",
+      "rdfs:label": "AutoSoftware",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/SoftwareApplication"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/SoftwareApplication"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#AutoSoftwareShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#AutoSoftware"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://schema.org/url"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    }
+  ]
+}

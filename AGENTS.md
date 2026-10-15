@@ -80,6 +80,12 @@ All apps are Electron + vanilla JavaScript (no React/Vue/Angular framework overh
 | **Agent Chat** | VS Code-like conversational agent chat, code refactoring, and multi-app orchestration |
 | **Dev Discussions** | Discord/Slack-like work-item & PR review discussion threads (Projects -> Features -> Tasks/PRs) with smart caching |
 
+### RobOS Auto
+
+| App | Purpose |
+|-----|---------|
+| **Auto Center** | Public vehicle catalogs, VIN decoding and local vehicle/service records |
+
 ### Supporting Apps
 | App | Purpose |
 |-----|---------|

@@ -93,6 +93,7 @@ const PORT_REGISTRY = {
   'dev-tools-mcp':     19160,
   'robos-graph':       19161,
   'adapter-studio':    19167,
+  'auto-center':       19231,
   'gitea-browser':     19175,
   'kube-studio':       19176,
   'rest-client':       19177,

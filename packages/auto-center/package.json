@@ -1,0 +1,17 @@
+{
+  "name": "robos-auto-center",
+  "version": "0.1.0",
+  "description": "RobOS Auto Center: public vehicle reference data and local maintenance records",
+  "main": "main.js",
+  "license": "Apache-2.0",
+  "scripts": {
+    "start": "electron . --no-sandbox --disable-gpu --disable-dev-shm-usage",
+    "collect": "python3 collect.py",
+    "import": "node --max-old-space-size=8192 cli.js",
+    "test": "node --test tests/*.test.js",
+    "test:e2e": "node --test tests/electron.e2e.js"
+  },
+  "dependencies": {
+    "electron": "^33.2.1"
+  }
+}

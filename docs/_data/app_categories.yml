@@ -31,3 +31,7 @@
 - id: services
   name: Agent Services & MCP Servers
   icon: 🔌
+
+- id: auto
+  name: RobOS Auto
+  icon: 🚘

@@ -18,6 +18,7 @@
  */
 
 const BUILTIN_APPS = [
+  {"appId": "auto-center", "label": "Auto Center", "category": "Auto", "iconSvg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"48\" height=\"48\" viewBox=\"0 0 48 48\" fill=\"none\" stroke=\"#00bcd4\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m10 23 4-11h20l4 11M7 23h34v14H7zM7 30h34M12 37v5m24-5v5\"/><circle cx=\"14\" cy=\"27\" r=\"2\"/><circle cx=\"34\" cy=\"27\" r=\"2\"/><path d=\"M17 35h14\"/></svg>"},
   {
     appId: 'app-launcher',
     label: 'App Launcher',

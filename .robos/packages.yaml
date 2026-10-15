@@ -285,3 +285,9 @@ packages:
     type: "robos:ConsoleApp"
     repository: "github.com/nddipiazza/pulse-metrics-cli"
     technology: "Node.js 20 / CLI"
+
+  - id: "urn:robos:app:auto-center"
+    title: "RobOS Auto Center"
+    type: "robos:DesktopApp"
+    repository: "github.com/nddipiazza/robos"
+    technology: "Electron / Node.js / Python 3"

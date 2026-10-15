@@ -3630,6 +3630,7 @@ const BUILTIN_SHACL_SHAPES = [
 ];
 
 BUILTIN_SHACL_SHAPES.push(...require('./source-shapes').SOURCE_SHAPES);
+BUILTIN_SHACL_SHAPES.push(...require('./auto-shapes').AUTO_SHAPES);
 
 // Classification is metadata about every schema element, not a requirement to
 // persist inferred classification on instance nodes.

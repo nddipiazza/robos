@@ -320,3 +320,7 @@ Join developers, architects, and AI researchers building the future of agent-gov
 <p align="center">
   <sub>Licensed under the Apache License 2.0. Copyright &copy; 2026 RobOS Contributors.</sub>
 </p>
+
+### RobOS Auto
+
+[Auto Center](docs/_apps/auto-center.md) starts the RobOS Auto app family: a public vehicle reference catalog backed by KGraph, VIN decoding, and local garage/service records. Raw source files live under `~/.robos/auto-scrape`. See the [source and coverage guide](packages/auto-center/README.md) for collection, import, and current limitations.
