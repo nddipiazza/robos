@@ -23,6 +23,7 @@ export default function App() {
   const [activeCastSession, setActiveCastSession] = useState(null); // { ip, trackId, filePath, isPaused }
   const [statusMsg, setStatusMsg] = useState('');
   const [activeAmbient, setActiveAmbient] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   // ── Playlist Management State ──────────────────────────────────────────────
   const [playlists, setPlaylists] = useState([]);
@@ -589,22 +590,40 @@ export default function App() {
     }
   };
 
-  const playTrack = (track) => {
-    const existingIdx = playlist.findIndex(t => (t.id && t.id === track.id) || (t.filePath && t.filePath === track.filePath) || t.src === track.src);
+  const playTrack = async (track) => {
+    if (!track) return;
+
+    if (track.filePath && window.robosAudio?.ensureFileAccessible) {
+      await window.robosAudio.ensureFileAccessible(track.filePath).catch(() => {});
+    }
+
+    let trackToPlay = { ...track };
+    if (!trackToPlay.src && trackToPlay.filePath) {
+      trackToPlay.src = encodeURI(`file://${trackToPlay.filePath}`);
+    }
+
+    const existingIdx = playlist.findIndex(t => 
+      (t.id && trackToPlay.id && t.id === trackToPlay.id) || 
+      (t.filePath && trackToPlay.filePath && t.filePath === trackToPlay.filePath) || 
+      (t.src && trackToPlay.src && t.src === trackToPlay.src)
+    );
+
     if (existingIdx >= 0) {
       setCurrentTrackIndex(existingIdx);
     } else {
-      setPlaylist(prev => [...prev, track]);
+      setPlaylist(prev => [...prev, trackToPlay]);
       setCurrentTrackIndex(playlist.length);
     }
 
     if (outputTarget !== 'local') {
       // Cast the track to the selected speaker
-      castTrack(outputTarget, track);
+      castTrack(outputTarget, trackToPlay);
       // Mute local audio element so it acts as synchronized visual seeker without audio leak
       if (playerRef.current?.audio?.current) {
         playerRef.current.audio.current.muted = true;
-        playerRef.current.audio.current.play().catch(() => {});
+        setTimeout(() => {
+          playerRef.current?.audio?.current?.play().catch(() => {});
+        }, 60);
       }
     } else {
       // Local desktop playback: stop any remote casting sessions
@@ -613,12 +632,20 @@ export default function App() {
       }
       if (playerRef.current?.audio?.current) {
         playerRef.current.audio.current.muted = false;
-        playerRef.current.audio.current.play().catch(() => {});
+        setTimeout(() => {
+          playerRef.current?.audio?.current?.play().catch((err) => {
+            console.warn('[AudioPlayer] Playback error:', err);
+            showStatus(`⚠️ Playback error: ${err.message || 'File not accessible'}`);
+          });
+        }, 60);
       }
     }
+    setIsPlaying(true);
+    showStatus(`Playing "${trackToPlay.title}" by ${trackToPlay.artist || 'Unknown'}`);
   };
 
   const handlePlayerPlay = () => {
+    setIsPlaying(true);
     if (outputTarget !== 'local') {
       if (playerRef.current?.audio?.current) {
         playerRef.current.audio.current.muted = true;
@@ -634,10 +661,27 @@ export default function App() {
   };
 
   const handlePlayerPause = () => {
+    setIsPlaying(false);
     if (outputTarget !== 'local' && activeCastSession) {
       window.robosAudio.castPause(activeCastSession.ip);
       setActiveCastSession(prev => ({ ...prev, isPaused: true }));
       showStatus(`Paused casting on ${getSpeakerName(activeCastSession.ip)}`);
+    }
+  };
+
+  const handleTogglePlayPause = () => {
+    if (outputTarget !== 'local') {
+      handleToggleCastPause();
+    } else {
+      if (playerRef.current?.audio?.current) {
+        if (playerRef.current.audio.current.paused) {
+          playerRef.current.audio.current.play().catch(() => {});
+          setIsPlaying(true);
+        } else {
+          playerRef.current.audio.current.pause();
+          setIsPlaying(false);
+        }
+      }
     }
   };
 
@@ -904,9 +948,8 @@ export default function App() {
         )}
 
         {/* TAB 1: NOW PLAYING */}
-        {activeTab === 'player' && (
-          <div className="player-deck-container">
-            <div className="deck-card">
+        <div className="player-deck-container" style={{ display: activeTab === 'player' ? 'block' : 'none' }}>
+          <div className="deck-card">
               {/* Active Cast Routing Bar */}
               {(outputTarget !== 'local' || activeCastSession) && (
                 <div className="active-cast-bar">
@@ -983,11 +1026,17 @@ export default function App() {
                   src={currentTrack?.src || (currentTrack?.filePath ? `file://${currentTrack.filePath}` : '')}
                   showSkipControls={true}
                   showJumpControls={false}
+                  autoPlayAfterSrcChange={true}
                   onClickNext={handlePlayNext}
                   onClickPrevious={handlePlayPrev}
                   onEnded={handlePlayNext}
                   onPlay={handlePlayerPlay}
                   onPause={handlePlayerPause}
+                  onError={(e) => {
+                    console.warn('[AudioPlayer] Audio playback error:', e);
+                    setIsPlaying(false);
+                    showStatus('⚠️ Playback error: Track file may be missing, network drive unmounted, or format unsupported.');
+                  }}
                   className="robos-rhap-theme"
                   layout="stacked"
                   customAdditionalControls={[]}
@@ -1057,11 +1106,10 @@ export default function App() {
                       )}
                     </div>
                   ))}
-                </div>
               </div>
             </div>
           </div>
-        )}
+        </div>
 
         {/* TAB: PLAYLISTS */}
         {activeTab === 'playlists' && (
@@ -1328,6 +1376,17 @@ export default function App() {
                 />
               </div>
               <div className="browser-actions">
+                <button
+                  id="btn-browse-refresh"
+                  className="btn-secondary"
+                  onClick={async () => {
+                    await loadLibrary();
+                    showStatus('Library refreshed from disk cache.');
+                  }}
+                  title="Refresh and sync library index"
+                >
+                  <span>🔄 Refresh</span>
+                </button>
                 <button id="btn-browse-add-folder" className="btn-accent" onClick={handleSelectFolder}>
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/><line x1="12" y1="10" x2="12" y2="16"/><line x1="9" y1="13" x2="15" y2="13"/></svg>
                   <span>Add Folder via File Manager</span>
@@ -1515,6 +1574,38 @@ export default function App() {
           </div>
         )}
       </main>
+
+      {/* Persistent Bottom Mini-Player when browsing library/playlists/etc */}
+      {activeTab !== 'player' && currentTrack && (
+        <footer className="mini-player-bar">
+          <div className="mini-player-info" onClick={() => setActiveTab('player')}>
+            <div className="mini-art">
+              {currentTrack?.artId ? (
+                <img src={`http://192.168.1.34:0/art/${currentTrack.artId}.jpg`} alt="" />
+              ) : (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="#00bcd4"/></svg>
+              )}
+            </div>
+            <div className="mini-text">
+              <span className="mini-title">{currentTrack.title}</span>
+              <span className="mini-artist">{currentTrack.artist || 'Unknown'} &bull; {currentTrack.album || ''}</span>
+            </div>
+          </div>
+          <div className="mini-player-controls">
+            <button className="mini-ctrl-btn" title="Previous" onClick={handlePlayPrev}>⏮</button>
+            <button className="mini-ctrl-btn mini-btn-play" title={isPlaying ? "Pause" : "Play"} onClick={handleTogglePlayPause}>
+              {isPlaying ? '⏸' : '▶'}
+            </button>
+            <button className="mini-ctrl-btn" title="Next" onClick={handlePlayNext}>⏭</button>
+          </div>
+          <div className="mini-player-right">
+            <span className="badge mini-badge">Output: {getSpeakerName(outputTarget)}</span>
+            <button id="btn-mini-now-playing" className="btn-chip" onClick={() => setActiveTab('player')}>
+              🎵 Now Playing
+            </button>
+          </div>
+        </footer>
+      )}
 
       {/* Modal: Create Playlist */}
       {showCreatePlaylistModal && (

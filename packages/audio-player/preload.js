@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld('robosAudio', {
   castStopAll: () => ipcRenderer.invoke('audio:cast-stop-all'),
   playTestChime: (ip) => ipcRenderer.invoke('audio:play-test-chime', ip),
   openFileDialog: () => ipcRenderer.invoke('audio:open-file-dialog'),
+  ensureFileAccessible: (filePath) => ipcRenderer.invoke('audio:ensure-file-accessible', filePath),
   getLibrary: () => ipcRenderer.invoke('audio:get-library'),
   selectLibraryFolder: () => ipcRenderer.invoke('audio:select-library-folder'),
   scanFolders: (folders) => ipcRenderer.invoke('audio:scan-folders', folders),

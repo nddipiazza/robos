@@ -4,8 +4,26 @@ const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
+const crypto = require('crypto');
+const { pathToFileURL } = require('url');
 const { CastService } = require('./lib/cast-service');
 const { MediaLibrary } = require('./lib/media-library');
+
+function ensureFileAccessible(filePath) {
+  if (!filePath || typeof filePath !== 'string') return false;
+  if (fs.existsSync(filePath)) return true;
+  // If it's a GVFS SFTP mount that timed out or disconnected, attempt auto-reconnect via gio mount
+  const match = filePath.match(/\/run\/user\/\d+\/gvfs\/sftp:host=([^/]+)/);
+  if (match) {
+    const host = match[1];
+    try {
+      const { execFileSync } = require('child_process');
+      execFileSync('gio', ['mount', `sftp://${host}`], { stdio: 'ignore', timeout: 5000 });
+      return fs.existsSync(filePath);
+    } catch {}
+  }
+  return false;
+}
 
 // Optional snapshot debug server
 let _debugServer = null;
@@ -191,14 +209,20 @@ ipcMain.handle('audio:open-file-dialog', async () => {
   const tracks = res.filePaths.map(p => {
     const filename = path.basename(p);
     return {
+      id: `trk_${crypto.createHash('sha1').update(p).digest('hex').slice(0, 16)}`,
       title: path.parse(filename).name,
       artist: 'Local File',
+      album: 'Local Files',
       filePath: p,
-      src: `file://${p}`
+      src: pathToFileURL(p).href
     };
   });
 
   return { canceled: false, tracks };
+});
+
+ipcMain.handle('audio:ensure-file-accessible', async (_evt, filePath) => {
+  return ensureFileAccessible(filePath);
 });
 
 ipcMain.handle('audio:get-library', async () => {

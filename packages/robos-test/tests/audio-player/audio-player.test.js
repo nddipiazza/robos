@@ -103,16 +103,19 @@ describe('RobOS Audio Player Tests', () => {
       assert.ok(content.includes('urn:robos:desktop-app:audio-player'), 'packages.yaml should include audio-player');
     });
 
-    it('preload.js exposes playTestChime and omits voice announcer/TTS methods', () => {
+    it('preload.js exposes playTestChime, ensureFileAccessible, and omits voice announcer/TTS methods', () => {
       const preloadPath = path.join(APP_DIR, 'preload.js');
       const content = fs.readFileSync(preloadPath, 'utf8');
       assert.ok(content.includes('playTestChime:'), 'preload should expose playTestChime');
+      assert.ok(content.includes('ensureFileAccessible:'), 'preload should expose ensureFileAccessible');
       assert.ok(!content.includes('castTTS:'), 'preload should NOT expose castTTS (voice announcer moved to dedicated app)');
     });
 
-    it('renderer bundle.js omits voice announcer panel and speech inputs', () => {
+    it('renderer bundle.js includes persistent mini-player and omits voice announcer panel', () => {
       const bundlePath = path.join(APP_DIR, 'renderer', 'bundle.js');
       const content = fs.readFileSync(bundlePath, 'utf8');
+      assert.ok(content.includes('mini-player-bar'), 'bundle should contain persistent mini-player-bar');
+      assert.ok(content.includes('btn-browse-refresh'), 'bundle should contain btn-browse-refresh');
       assert.ok(!content.includes('announcer-panel'), 'bundle should not have announcer-panel');
       assert.ok(!content.includes('tts-input'), 'bundle should not have tts-input');
       assert.ok(!content.includes('Smart Speaker Voice Announcer'), 'bundle should not have Voice Announcer title');
@@ -181,6 +184,69 @@ describe('RobOS Audio Player Tests', () => {
       const canceled = lib.cancelScan();
       assert.strictEqual(canceled, true);
       assert.strictEqual(lib.isScanning(), false);
+    });
+
+    it('generates unique collision-free SHA-1 IDs for files sharing common directory prefixes', async () => {
+      const lib = new MediaLibrary({ configDir: '/tmp' });
+      const path1 = '/run/user/1000/gvfs/sftp:host=192.168.1.25/downloads/music/Album 1/Track 01.mp3';
+      const path2 = '/run/user/1000/gvfs/sftp:host=192.168.1.25/downloads/music/Album 1/Track 02.mp3';
+
+      const track1 = await lib.parseTrack(path1);
+      const track2 = await lib.parseTrack(path2);
+
+      assert.notStrictEqual(track1.id, track2.id, 'Tracks in same directory must have distinct IDs');
+      assert.strictEqual(track1.id.startsWith('trk_'), true);
+      assert.strictEqual(track2.id.startsWith('trk_'), true);
+    });
+
+    it('properly encodes file URLs with spaces and special characters using pathToFileURL', async () => {
+      const lib = new MediaLibrary({ configDir: '/tmp' });
+      const testPath = '/run/user/1000/gvfs/sftp:host=192.168.1.25/downloads/music/1993 - Album/Death - 01 - Song.mp3';
+      const track = await lib.parseTrack(testPath);
+
+      assert.strictEqual(track.src.includes(' '), false, 'URL should not contain raw unencoded spaces');
+      assert.strictEqual(track.src.includes('%20'), true, 'Spaces in URL must be encoded as %20');
+      assert.strictEqual(track.src.startsWith('file:///'), true, 'Must start with file:///');
+    });
+
+    it('self-heals legacy duplicate IDs and unencoded file URLs on cache load', async () => {
+      const tmpConfigDir = path.join('/tmp', `robos-lib-test-${Date.now()}`);
+      fs.mkdirSync(tmpConfigDir, { recursive: true });
+      const cachePath = path.join(tmpConfigDir, 'audio-library.json');
+
+      // Write mock legacy cache with duplicated IDs and unencoded spaces
+      const legacyData = {
+        updatedAt: '2026-10-14T00:00:00.000Z',
+        tracks: [
+          {
+            id: 'trk_L3J1bi91c2VyLzEw',
+            filePath: '/run/user/1000/gvfs/sftp:host=192.168.1.25/music/Album/Song 1.mp3',
+            title: 'Song 1',
+            src: 'file:///run/user/1000/gvfs/sftp:host=192.168.1.25/music/Album/Song 1.mp3'
+          },
+          {
+            id: 'trk_L3J1bi91c2VyLzEw',
+            filePath: '/run/user/1000/gvfs/sftp:host=192.168.1.25/music/Album/Song 2.mp3',
+            title: 'Song 2',
+            src: 'file:///run/user/1000/gvfs/sftp:host=192.168.1.25/music/Album/Song 2.mp3'
+          }
+        ]
+      };
+      fs.writeFileSync(cachePath, JSON.stringify(legacyData, null, 2));
+
+      // Loading MediaLibrary must self-heal the duplicate IDs and URL encode src
+      const lib = new MediaLibrary({ configDir: tmpConfigDir });
+      assert.strictEqual(lib.tracks.length, 2);
+      assert.notStrictEqual(lib.tracks[0].id, lib.tracks[1].id, 'Migrated IDs must be unique');
+      assert.strictEqual(lib.tracks[0].src.includes('%20'), true, 'Migrated src must be encoded');
+      assert.strictEqual(lib.tracks[1].src.includes('%20'), true, 'Migrated src must be encoded');
+
+      // Verify the on-disk file was saved with the healed data
+      const savedData = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+      assert.notStrictEqual(savedData.tracks[0].id, savedData.tracks[1].id);
+
+      // Clean up
+      fs.rmSync(tmpConfigDir, { recursive: true, force: true });
     });
   });
 

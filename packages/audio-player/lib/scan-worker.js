@@ -3,8 +3,26 @@
 const { parentPort, workerData } = require('worker_threads');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
+const { pathToFileURL } = require('url');
 
 const AUDIO_EXTENSIONS = new Set(['.mp3', '.m4a', '.flac', '.ogg', '.wav', '.aac', '.opus', '.wma']);
+
+function generateTrackId(filePath) {
+  return `trk_${crypto.createHash('sha1').update(filePath).digest('hex').slice(0, 16)}`;
+}
+
+function generateArtId(filePath) {
+  return `art_${crypto.createHash('sha1').update(filePath).digest('hex').slice(0, 16)}`;
+}
+
+function toSafeFileUrl(filePath) {
+  try {
+    return pathToFileURL(filePath).href;
+  } catch {
+    return encodeURI(`file://${filePath}`);
+  }
+}
 
 let mm = null;
 async function getParser() {
@@ -47,14 +65,14 @@ async function parseSingleFile(filePath, parser) {
     let artFormat = null;
     const cover = parser.selectCover(common.picture);
     if (cover && cover.data) {
-      artId = `art_${Buffer.from(filePath).toString('base64url').slice(0, 16)}`;
+      artId = generateArtId(filePath);
       artBuffer = cover.data;
       artFormat = cover.format || 'image/jpeg';
     }
 
     return {
       track: {
-        id: `trk_${Buffer.from(filePath).toString('base64url').slice(0, 16)}`,
+        id: generateTrackId(filePath),
         filePath,
         title: common.title || path.parse(filePath).name,
         artist: common.artist || common.albumartist || 'Unknown Artist',
@@ -66,20 +84,20 @@ async function parseSingleFile(filePath, parser) {
         bitrate: format.bitrate || 0,
         sampleRate: format.sampleRate || 0,
         artId,
-        src: `file://${filePath}`
+        src: toSafeFileUrl(filePath)
       },
       art: artBuffer ? { artId, buffer: artBuffer, format: artFormat } : null
     };
   } catch (err) {
     return {
       track: {
-        id: `trk_${Buffer.from(filePath).toString('base64url').slice(0, 16)}`,
+        id: generateTrackId(filePath),
         filePath,
         title: path.parse(filePath).name,
         artist: 'Unknown Artist',
         album: 'Unknown Album',
         duration: 0,
-        src: `file://${filePath}`,
+        src: toSafeFileUrl(filePath),
         error: err.message
       },
       art: null
