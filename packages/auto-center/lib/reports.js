@@ -1,6 +1,7 @@
 'use strict';
 
 const CURRENCIES = ['USD', 'CAD', 'EUR', 'GBP'];
+const COST_CATEGORIES = ['parts', 'labor', 'supplies', 'subcontract', 'rent', 'utilities', 'insurance', 'equipment', 'fees', 'other'];
 const JOB_STATES = ['received', 'diagnosing', 'awaiting-approval', 'in-progress', 'ready', 'closed'];
 const linked = (node, property) => node[property]?.['@id'];
 function validDate(value) {
@@ -106,7 +107,8 @@ function buildReports(nodes, { now = new Date(), timeZone = Intl.DateTimeFormat(
   const technicians = new Map();
   for (const job of openJobs) { const name = job['robos:technician']?.trim() || 'Unassigned'; technicians.set(name, (technicians.get(name) || 0) + 1); }
   const plans = ofType('MaintenanceSchedule').filter(s => s['robos:scheduleStatus'] !== 'completed');
-  return { asOf, today, timeZone, currency, periods, money, revenue: money[currency], balances,
+  const profit = require('./profit').buildProfit(nodes, { jobs, today, asOf, periods, currency, validDate, currencies: CURRENCIES, categories: COST_CATEGORIES });
+  return { profit, asOf, today, timeZone, currency, periods, money, revenue: money[currency], balances,
     balance: balances[currency], held, heldCount: held.length, readyForPickup: held.filter(h => h.readyForPickup).length,
     pastExpected: held.filter(h => h.pastExpectedDate).length, statuses, openJobs: openJobs.length, completions, custody,
     cycleHours: cycleHours.length ? Math.round(cycleHours.reduce((a, b) => a + b, 0) / cycleHours.length * 10) / 10 : null,
@@ -118,4 +120,4 @@ function buildReports(nodes, { now = new Date(), timeZone = Intl.DateTimeFormat(
     daily: Array.from({ length: 7 }, (_, i) => { const date = shiftDay(asOf, i - 6); return { date, ...sums(payments.filter(p => p['robos:currency'] === currency && p['robos:paidOn'] === date)) }; }),
     recentPayments: [...payments].sort((a, b) => b['robos:paidOn'].localeCompare(a['robos:paidOn']) || String(b['robos:recordedAt']).localeCompare(String(a['robos:recordedAt']))).slice(0, 20), invalid };
 }
-module.exports = { CURRENCIES, JOB_STATES, validDate, validInstant, dayAt, shiftDay, amountMinor, buildReports };
+module.exports = { CURRENCIES, COST_CATEGORIES, JOB_STATES, validDate, validInstant, dayAt, shiftDay, amountMinor, buildReports };

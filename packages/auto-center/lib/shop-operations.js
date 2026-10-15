@@ -60,7 +60,7 @@ function recordPayment(service, input) {
     return prior;
   }
   const ledger = records.filter(n => n['@type'] === 'robos:ShopPayment' && linked(n, 'robos:job') === input.job);
-  if (job['robos:billingCurrency'] && job['robos:billingCurrency'] !== currency || ledger.some(p => p['robos:currency'] !== currency)) throw new Error('Use the repair job currency; currencies are not converted');
+  if (job['robos:billingCurrency'] && job['robos:billingCurrency'] !== currency || records.some(p => ['robos:ShopFinanceEntry', 'robos:ShopPayment'].includes(p['@type']) && linked(p, 'robos:job') === input.job && p['robos:currency'] !== currency)) throw new Error('Use the repair job currency; currencies are not converted');
   if (direction === 'refund') {
     const original = ledger.find(p => p['@id'] === input.refundOf && p['robos:paymentDirection'] === 'received');
     if (!original || original['robos:currency'] !== currency) throw new Error('Select the original received payment');

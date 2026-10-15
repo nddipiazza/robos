@@ -32,6 +32,7 @@ class AutoCenter {
  reports(options={}){shopOperations.shop(this);return reports.buildReports(this.workspace.read()['robos:nodes'],{...options,now:this.clock(),timeZone:this.reportTimeZone});}
  checkIn(input){return shopOperations.checkIn(this,input);}
  checkOut(input){return shopOperations.checkOut(this,input);}
+ recordFinance(input){return require('./finance').recordFinance(this,input);}
  recordPayment(input){return shopOperations.recordPayment(this,input);}
  updateJob({id,status,notes,billedTotal,currency}){
   if(this.mode!=='shop'||!JOB_STATES.includes(status))throw new Error('Invalid shop job status');
@@ -42,7 +43,7 @@ class AutoCenter {
   else if(n['robos:jobStatus']==='closed')set['robos:closedAt']=null;
   if(billedTotal!==undefined&&billedTotal!==''){
    const amount=reports.amountMinor(billedTotal);if(!reports.CURRENCIES.includes(currency))throw new Error('Choose a billing currency');
-   if(records.some(p=>p['@type']==='robos:ShopPayment'&&p['robos:job']?.['@id']===id&&p['robos:currency']!==currency))throw new Error('Billing currency must match recorded payments');
+   if(records.some(p=>['robos:ShopPayment','robos:ShopFinanceEntry'].includes(p['@type'])&&p['robos:job']?.['@id']===id&&p['robos:currency']!==currency))throw new Error('Billing currency must match recorded payments and financial entries');
    set['robos:billedMinor']=amount;set['robos:billingCurrency']=currency;
   }
   shopOperations.commit(this,[{op:'update',id,set}],'auto: update repair job');return this.status();

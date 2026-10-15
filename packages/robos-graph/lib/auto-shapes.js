@@ -9,6 +9,7 @@ const AUTO_TYPES = [
  ['ServiceRecord','Service',['robos:vehicle','schema:startDate','schema:description']],
  ['MaintenanceSchedule','Schedule',['robos:vehicle']],
  ['VehicleStay','Event',['robos:vehicle','schema:startDate']],
+ ['ShopFinanceEntry','MonetaryAmount',['robos:entryKind','robos:entryDirection','robos:amountMinor','robos:currency','robos:effectiveOn','robos:costCategory','schema:description']],
  ['ShopPayment','PayAction',['robos:job','robos:amountMinor','robos:currency','robos:paidOn','robos:paymentDirection']],
  ['RepairOrder','Order',['robos:vehicle']],
  ['Estimate','Offer',['robos:vehicle']],

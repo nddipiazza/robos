@@ -45,15 +45,50 @@ test('shop dashboard uses real custody, billing and payment entries and persists
     await receipt('Brake service', '200.10'); await receipt('Oil service', '100.20'); await receipt('Brake service', '20.10', 'refund'); await receipt('Phone estimate', '75.00');
     const r = await page.evaluate(() => window.auto.reports()); assert.equal(r.heldCount, 2); assert.equal(r.openJobs, 3); assert.equal(r.readyForPickup, 1);
     assert.equal(r.revenue.day.netMinor, '28020'); assert.equal(r.balance.outstandingMinor, '7000'); assert.equal(r.balance.creditMinor, '20'); assert.equal(r.money.CAD.day.netMinor, '7500');
+
+    await page.locator('#finance-form').locator('..').locator('summary').click();
+    async function financial(kind, title, category, amount, direction = 'charge') {
+      const form = page.locator('#finance-form');
+      await form.locator('[name="direction"]').selectOption(direction);
+      if (direction === 'credit') {
+        const labels = await form.locator('[name="creditOf"] option').allTextContents();
+        await form.locator('[name="creditOf"]').selectOption({ label: labels.find(t => t.includes('Test parts cost')) });
+      } else {
+        await form.locator('[name="kind"]').selectOption(kind);
+        if (title) { const labels = await form.locator('[name="job"] option').allTextContents(); await form.locator('[name="job"]').selectOption({ label: labels.find(t => t.startsWith(title)) }); }
+        else await form.locator('[name="job"]').selectOption('');
+        await form.locator('[name="category"]').selectOption(category);
+      }
+      await form.locator('[name="amount"]').fill(amount);
+      await form.locator('[name="description"]').fill(`Test ${category} ${direction === 'credit' ? 'supplier credit' : 'cost'}`);
+      await form.locator('[name="reference"]').fill('Synthetic invoice EXP-001');
+      const count = await page.locator('#finance-entries tr').count(); await form.locator('button').click();
+      await page.waitForFunction(n => document.querySelectorAll('#finance-entries tr').length === n, count + 1);
+    }
+    await financial('sale', 'Brake service', 'other', '250.00');
+    await financial('sale', 'Oil service', 'other', '100.00');
+    await financial('expense', 'Brake service', 'parts', '60.00');
+    await financial('expense', 'Brake service', 'labor', '80.00');
+    await financial('expense', 'Oil service', 'supplies', '10.00');
+    await financial('expense', '', 'rent', '20.00');
+    await financial('expense', 'Brake service', 'parts', '10.00', 'credit');
+    const profit = (await page.evaluate(() => window.auto.reports())).profit;
+    assert.equal(profit.periods.day.profitMinor, '19000'); assert.equal(profit.periods.week.profitMinor, '19000'); assert.equal(profit.periods.month.profitMinor, '19000');
+    assert.equal(profit.periods.month.salesMinor, '35000'); assert.equal(profit.periods.month.costsMinor, '16000');
+    assert.equal(profit.jobs.find(j => j.job['dcterms:title'].startsWith('Brake')).profitMinor, '12000');
+    assert.match(await page.locator('#profit-cards').innerText(), /\$190\.00/);
+    assert.match(await page.locator('#job-profit').innerText(), /\$120\.00/);
+    await page.locator('#finance-form').locator('..').locator('summary').click();
     await page.locator('#report-filters button').click(); await page.waitForFunction(() => document.querySelector('#revenue-cards').textContent.includes('$280.20'));
     await page.evaluate(() => window.scrollTo(0, 0)); await page.screenshot({ path: path.join(proof, 'center-reports.png') });
+    await page.locator('#job-profit').scrollIntoViewIfNeeded(); await page.screenshot({ path: path.join(proof, 'job-profit.png') });
     await page.locator('#held-cars').scrollIntoViewIfNeeded(); await page.screenshot({ path: path.join(proof, 'cars-at-center.png') });
     await page.locator('#report-currency').selectOption('CAD'); await page.locator('#report-filters button').click(); await page.waitForFunction(() => document.querySelector('#revenue-cards').textContent.includes('CA$75.00'));
     await page.locator('#report-currency').selectOption('USD'); await page.locator('#report-filters button').click();
     const held = page.locator('#held-cars .held-car').filter({ has: page.getByRole('heading', { name: 'Demo Camry — test vehicle', exact: true }) }); await held.getByRole('button', { name: 'Record vehicle collected' }).click();
     await page.waitForFunction(() => document.querySelectorAll('#held-cars .held-car').length === 1);
     await page.reload(); await page.locator('#reports').waitFor(); await page.waitForFunction(() => document.querySelectorAll('#held-cars .held-car').length === 1);
-    assert.match(await page.locator('#revenue-cards').innerText(), /\$280\.20/); assert.equal((await page.evaluate(() => window.auto.reports())).openJobs, 3);
+    assert.match(await page.locator('#profit-cards').innerText(), /\$190\.00/); assert.match(await page.locator('#revenue-cards').innerText(), /\$280\.20/); assert.equal((await page.evaluate(() => window.auto.reports())).openJobs, 3);
     await page.locator('#mode').selectOption('owner'); await page.locator('#garage').waitFor(); await assert.rejects(() => page.evaluate(() => window.auto.reports()), /maintenance center/); assert.deepEqual(errors, []);
     console.log('Actual reporting screen proof: ' + proof);
   } finally { await app.close(); }

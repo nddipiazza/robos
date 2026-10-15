@@ -294,6 +294,74 @@
       ]
     },
     {
+      "@id": "https://robos.dev/ns/sdlc#ShopFinanceEntry",
+      "@type": "rdfs:Class",
+      "rdfs:label": "ShopFinanceEntry",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/MonetaryAmount"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/MonetaryAmount"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#ShopFinanceEntryShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#ShopFinanceEntry"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#entryKind"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#entryDirection"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#amountMinor"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#currency"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#effectiveOn"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#costCategory"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://schema.org/description"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
       "@id": "https://robos.dev/ns/sdlc#ShopPayment",
       "@type": "rdfs:Class",
       "rdfs:label": "ShopPayment",

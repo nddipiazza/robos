@@ -132,7 +132,7 @@
       "robos:appFamily": {
         "@id": "urn:robos:auto:family"
       },
-      "robos:description": "Separate owner and maintenance-center modes with invoice OCR, maintenance plans and private shop Git history. Center reports use explicit vehicle stays, job closing timestamps, charge totals and an immutable payment/refund ledger. Bulk recalls link remedies, affected components and exact source rows.",
+      "robos:description": "Separate owner and maintenance-center modes with invoice OCR, maintenance plans and private shop Git history. Center reports track custody, payments, actual expenses, earned sales and daily/weekly/monthly operating profit with direct margins per repair job. Immutable credits preserve corrections. Bulk recalls link remedies, affected components and exact source rows.",
       "robos:desktopFramework": "Electron",
       "robos:package": "auto",
       "robos:repository": "https://github.com/nddipiazza/robos",
@@ -354,6 +354,15 @@
       "robos:refersFrom": "https://schema.org/Service",
       "schema:description": "Required properties: robos:vehicle, schema:startDate, schema:description",
       "schema:url": "https://schema.org/Service"
+    },
+    {
+      "@id": "urn:robos:auto:AutoVocabularyTerm:ShopFinanceEntry",
+      "@type": "robos:AutoVocabularyTerm",
+      "dcterms:title": "ShopFinanceEntry",
+      "robos:package": "auto",
+      "robos:refersFrom": "https://schema.org/MonetaryAmount",
+      "schema:description": "Required properties: robos:entryKind, robos:entryDirection, robos:amountMinor, robos:currency, robos:effectiveOn, robos:costCategory, schema:description",
+      "schema:url": "https://schema.org/MonetaryAmount"
     },
     {
       "@id": "urn:robos:auto:AutoVocabularyTerm:ShopPayment",

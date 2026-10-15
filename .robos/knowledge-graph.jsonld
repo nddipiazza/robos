@@ -10625,7 +10625,7 @@
       "robos:appFamily": {
         "@id": "urn:robos:auto:family"
       },
-      "robos:description": "Separate owner and maintenance-center modes with invoice OCR, maintenance plans and private shop Git history. Center reports use explicit vehicle stays, job closing timestamps, charge totals and an immutable payment/refund ledger. Bulk recalls link remedies, affected components and exact source rows.",
+      "robos:description": "Separate owner and maintenance-center modes with invoice OCR, maintenance plans and private shop Git history. Center reports track custody, payments, actual expenses, earned sales and daily/weekly/monthly operating profit with direct margins per repair job. Immutable credits preserve corrections. Bulk recalls link remedies, affected components and exact source rows.",
       "robos:desktopFramework": "Electron",
       "robos:package": "auto",
       "robos:repository": "https://github.com/nddipiazza/robos",
@@ -10849,6 +10849,24 @@
       "schema:description": "Required properties: robos:vehicle, schema:startDate, schema:description"
     },
     {
+      "@id": "urn:robos:auto:AutoVocabularyTerm:ShopFinanceEntry",
+      "@type": "robos:AutoVocabularyTerm",
+      "dcterms:title": "ShopFinanceEntry",
+      "robos:package": "auto",
+      "robos:refersFrom": "https://schema.org/MonetaryAmount",
+      "schema:description": "Required properties: robos:entryKind, robos:entryDirection, robos:amountMinor, robos:currency, robos:effectiveOn, robos:costCategory, schema:description",
+      "schema:url": "https://schema.org/MonetaryAmount"
+    },
+    {
+      "@id": "urn:robos:auto:AutoVocabularyTerm:ShopPayment",
+      "@type": "robos:AutoVocabularyTerm",
+      "dcterms:title": "ShopPayment",
+      "robos:package": "auto",
+      "schema:url": "https://schema.org/PayAction",
+      "robos:refersFrom": "https://schema.org/PayAction",
+      "schema:description": "Required properties: robos:job, robos:amountMinor, robos:currency, robos:paidOn, robos:paymentDirection"
+    },
+    {
       "@id": "urn:robos:auto:AutoVocabularyTerm:VehicleConfiguration",
       "@type": "robos:AutoVocabularyTerm",
       "dcterms:title": "VehicleConfiguration",
@@ -10876,16 +10894,6 @@
       "schema:description": "Required properties: schema:name, robos:make"
     },
     {
-      "@id": "urn:robos:auto:family",
-      "@type": "schema:SoftwareApplication",
-      "dcterms:title": "RobOS Auto",
-      "robos:hasApp": {
-        "@id": "urn:robos:app:auto-center"
-      },
-      "robos:package": "auto",
-      "schema:name": "RobOS Auto"
-    },
-    {
       "@id": "urn:robos:auto:AutoVocabularyTerm:VehicleStay",
       "@type": "robos:AutoVocabularyTerm",
       "dcterms:title": "VehicleStay",
@@ -10895,13 +10903,14 @@
       "schema:description": "Required properties: robos:vehicle, schema:startDate"
     },
     {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:ShopPayment",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "ShopPayment",
+      "@id": "urn:robos:auto:family",
+      "@type": "schema:SoftwareApplication",
+      "dcterms:title": "RobOS Auto",
+      "robos:hasApp": {
+        "@id": "urn:robos:app:auto-center"
+      },
       "robos:package": "auto",
-      "schema:url": "https://schema.org/PayAction",
-      "robos:refersFrom": "https://schema.org/PayAction",
-      "schema:description": "Required properties: robos:job, robos:amountMinor, robos:currency, robos:paidOn, robos:paymentDirection"
+      "schema:name": "RobOS Auto"
     }
   ],
   "@graph": [

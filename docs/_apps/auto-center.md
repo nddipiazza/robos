@@ -15,9 +15,11 @@ Choose **Auto maintenance center mode** for customer vehicles and a repair queue
 
 ![Maintenance center with a test repair job and actual local Git history](/assets/images/screenshots/auto-maintenance-center.png)
 
-**Center reports** opens in maintenance center mode. Vehicle cards track cars physically checked into the shop, with parking location, time held, repair status and collection controls. Revenue cards show recorded payments minus refunds for the selected day, Monday-start week and month. Additional reports cover balances, job statuses, technician workload, vehicle flow, turnaround and maintenance due dates. Payments and stays are backed by the private shop KGraph and Git history.
+**Center reports** opens in maintenance center mode. Vehicle cards track cars physically checked into the shop, with parking location, time held, repair status and collection controls. Profit cards show earned repair sales minus actual expenses for the selected day, Monday-start week and month. Record parts, actual labor cost, supplies and shared overhead with vendor/invoice references. Per-job reports show earned sales, direct costs, direct profit and margin; shared overhead reduces period profit. Costs and sales use earned/incurred dates, including unpaid items. Linked credits preserve corrections; missing-cost/sales warnings expose incomplete records. Separate payment cards show collections minus refunds. Additional reports cover balances, job statuses, technician workload, vehicle flow, turnaround and maintenance due dates. Expenses, earned sales, payments and stays are backed by the private shop KGraph and Git history.
 
-![Center reports showing revenue and workload from labeled test entries](/assets/images/screenshots/auto-center-reports.png)
+![Center reports showing actual profit from labeled test entries](/assets/images/screenshots/auto-center-reports.png)
+
+![Per-job direct profit and margins from labeled test entries](/assets/images/screenshots/auto-job-profit.png)
 
 ![Cars checked into the center, using labeled test vehicles](/assets/images/screenshots/auto-cars-at-center.png)
 

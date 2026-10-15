@@ -1,5 +1,5 @@
 'use strict';
-let reportState, paymentRequestId = window.crypto.randomUUID();
+let reportState, paymentRequestId = window.crypto.randomUUID(), financeRequestId = window.crypto.randomUUID();
 function decimalAmount(minor) { const amount = BigInt(minor); return `${amount / 100n}.${String(amount % 100n).padStart(2, '0')}`; }
 function money(minor, currency) {
   const value = BigInt(minor), amount = value < 0n ? -value : value;
@@ -15,8 +15,9 @@ function refill(select, nodes, label, value = n => n['@id']) {
 async function refreshReports() {
   if (state.mode !== 'shop') { reportState = null; return; }
   const r = await window.auto.reports({ asOf: $('report-date').value || undefined, currency: $('report-currency').value }); reportState = r;
+  renderProfit(r);
   $('report-date').value = r.asOf; $('report-date').max = r.today;
-  $('report-context').textContent = `${r.timeZone} · Monday-start weeks · Week begins ${r.periods.week}; month begins ${r.periods.month}. Live operations are current; payment periods end ${r.asOf}.`;
+  $('report-context').textContent = `${r.timeZone} · Monday-start weeks · Week begins ${r.periods.week}; month begins ${r.periods.month}. Live operations are current; financial periods end ${r.asOf}.`;
   $('revenue-cards').replaceChildren(...[['day', 'Payments received this day'], ['week', 'Payments received this week'], ['month', 'Payments received this month']].map(([period, label]) => {
     const m = r.revenue[period]; return metric(label, money(m.netMinor, r.currency), `${money(m.receivedMinor, r.currency)} received · ${money(m.refundedMinor, r.currency)} refunded`);
   }));
@@ -73,4 +74,30 @@ $('payment-direction').onchange = selectRefund; $('refund-original').onchange = 
 $('payment-form').onsubmit = e => {
   e.preventDefault(); const submit = e.target.querySelector('button'); if (submit.disabled) return; submit.disabled = true;
   safely(async () => { try { await window.auto.recordPayment({ ...Object.fromEntries(new FormData(e.target)), requestId: paymentRequestId }); paymentRequestId = window.crypto.randomUUID(); e.target.reset(); $('refund-picker').hidden = true; await refresh(); message('Transaction recorded and committed to private shop history.'); } finally { submit.disabled = false; } });
+};
+
+function renderProfit(r) {
+  $('profit-cards').replaceChildren(...Object.entries(r.profit.periods).map(([period, p]) => { const card = metric(`Profit this ${period}`, money(p.profitMinor, r.currency), `${money(p.salesMinor, r.currency)} earned − ${money(p.costsMinor, r.currency)} costs (includes ${money(p.overheadMinor, r.currency)} overhead)`); card.dataset.loss = String(BigInt(p.profitMinor) < 0n); return card; }));
+  $('profit-quality').textContent = `Entered costs only: ${r.profit.unrecognizedJobs} closed jobs have no earned sales recorded; ${r.profit.jobsWithoutCosts} jobs have no costs recorded. ${r.profit.invalidEntries} invalid financial entries excluded. Review coverage before treating these totals as complete.`;
+  $('job-profit').replaceChildren(...r.profit.jobs.map(p => tableRow([p.job['dcterms:title'], p.job['robos:jobStatus'], money(p.salesMinor, r.currency), money(p.costsMinor, r.currency), money(p.profitMinor, r.currency), p.marginPercent === null ? '—' : `${p.marginPercent}%`, [!p.salesEntries ? 'No earned sales' : '', !p.expenseEntries ? 'No costs recorded' : ''].filter(Boolean).join(' · ') || 'Review cost completeness'])));
+  $('cost-categories').replaceChildren(...Object.entries(r.profit.categories).map(([category, amount]) => tableRow([category, money(amount, r.currency)])));
+  const jobs = state.records.filter(n => n['@type'] === 'robos:RepairOrder');
+  refill($('finance-job'), [{'@id': '', 'dcterms:title': 'Shared shop overhead (no job)'}, ...jobs], n => n['dcterms:title']);
+  const originals = state.records.filter(n => n['@type'] === 'robos:ShopFinanceEntry' && n['robos:entryDirection'] === 'charge');
+  refill($('finance-original'), originals, n => `${n['robos:effectiveOn']} · ${n['robos:entryKind']} · ${n['robos:currency']} ${money(n['robos:amountMinor'], n['robos:currency'])} · ${n['schema:description']}`);
+  if (!$('finance-date').value) $('finance-date').value = r.today; $('finance-date').max = r.today;
+  $('finance-entries').replaceChildren(...r.profit.recentEntries.map(n => tableRow([n['robos:effectiveOn'], jobs.find(j => j['@id'] === n['robos:job']?.['@id'])?.['dcterms:title'] || 'Shared overhead', n['robos:entryKind'] + ' ' + n['robos:entryDirection'], n['robos:costCategory'], money(n['robos:amountMinor'], r.currency), n['schema:description'], n['robos:documentReference'] || '—'])));
+}
+function selectFinanceCredit() {
+  const credit = $('finance-direction').value === 'credit'; $('finance-credit-picker').hidden = !credit;
+  if (credit) {
+    const original = state.records.find(n => n['@id'] === $('finance-original').value);
+    if (original) { $('finance-kind').value = original['robos:entryKind']; $('finance-job').value = original['robos:job']?.['@id'] || ''; $('finance-currency').value = original['robos:currency']; $('finance-category').value = original['robos:costCategory'] === 'sales' ? 'other' : original['robos:costCategory']; }
+  }
+}
+$('finance-direction').onchange = selectFinanceCredit; $('finance-original').onchange = selectFinanceCredit;
+$('finance-job').onchange = () => { const job = state.records.find(n => n['@id'] === $('finance-job').value); const entry = state.records.find(n => n['@type'] === 'robos:ShopFinanceEntry' && n['robos:job']?.['@id'] === job?.['@id']); $('finance-currency').value = job?.['robos:billingCurrency'] || entry?.['robos:currency'] || $('report-currency').value; };
+$('finance-form').onsubmit = e => {
+  e.preventDefault(); const submit = e.target.querySelector('button'); if (submit.disabled) return; submit.disabled = true;
+  safely(async () => { try { await window.auto.recordFinance({ ...Object.fromEntries(new FormData(e.target)), requestId: financeRequestId }); financeRequestId = window.crypto.randomUUID(); e.target.reset(); $('finance-credit-picker').hidden = true; await refresh(); message('Financial entry recorded and committed to private shop history.'); } finally { submit.disabled = false; } });
 };

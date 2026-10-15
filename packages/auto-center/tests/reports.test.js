@@ -81,3 +81,69 @@ test('invalid refunds are surfaced without changing receipts, and large totals r
   assert.equal(r.revenue.day.netMinor, String(2n * BigInt(Number.MAX_SAFE_INTEGER)));
   assert.equal(r.invalid.payments, 1); assert.equal(r.revenue.day.refundedMinor, '0');
 });
+
+test('actual costs and earned sales give profit independent of collections, with dated credits and overhead', () => {
+  const { s, advance } = service(); s.setMode('shop');
+  const car = s.save({ kind: 'vehicle', name: 'Profit test car' });
+  const job = s.save({ kind: 'job', name: 'Brake job', vehicle: car['@id'] });
+  const input = { job: job['@id'], kind: 'sale', direction: 'charge', amount: '500.00', currency: 'USD', date: '2026-10-14', description: 'Earned sale excluding sales tax', requestId: crypto.randomUUID() };
+  const sale = s.recordFinance(input); assert.equal(s.recordFinance(input)['@id'], sale['@id']);
+  assert.throws(() => s.recordFinance({ ...input, job: '' }), /require a repair job/);
+  assert.throws(() => s.recordFinance({ ...input, amount: '600' }), /different details/);
+  const add = changes => s.recordFinance({ ...input, ...changes, requestId: crypto.randomUUID() });
+  const parts = add({ kind: 'expense', category: 'parts', amount: '100.10', date: '2026-10-14', reference: 'Supplier invoice P123 — unpaid' });
+  add({ kind: 'expense', category: 'labor', amount: '80.20', date: '2026-10-15' });
+  add({ kind: 'expense', category: 'supplies', amount: '5.00', date: '2026-10-15' });
+  const overhead = add({ job: '', kind: 'expense', category: 'rent', amount: '30.00', date: '2026-10-15' });
+  assert.throws(() => s.recordFinance({ ...input, requestId: overhead['robos:transactionKey'], kind: 'expense', category: 'rent', amount: '30.00', date: '2026-10-15' }), /different details/);
+  const credit = add({ kind: 'expense', category: 'parts', direction: 'credit', creditOf: parts['@id'], amount: '10.10', date: '2026-10-15', description: 'Supplier credit' });
+  assert.throws(() => add({ kind: 'expense', category: 'parts', direction: 'credit', creditOf: parts['@id'], amount: '100.00' }), /exceeds/);
+  assert.throws(() => add({ kind: 'expense', category: 'labor', direction: 'credit', creditOf: parts['@id'], amount: '1' }), /match/);
+  assert.throws(() => add({ kind: 'expense', category: 'parts', direction: 'credit', creditOf: parts['@id'], amount: '1', date: '2026-10-13' }), /precede/);
+  assert.throws(() => add({ kind: 'expense', category: 'parts', amount: '-1' }), /amount/);
+  assert.throws(() => add({ kind: 'expense', category: 'parts', date: '2026-10-16' }), /future/);
+  assert.throws(() => add({ kind: 'expense', category: 'parts', currency: 'CAD' }), /currency/);
+  assert.throws(() => s.updateJob({ id: job['@id'], status: 'closed', notes: '', billedTotal: '500', currency: 'CAD' }), /currency/);
+  let r = s.reports(); assert.equal(r.revenue.month.netMinor, '0');
+  assert.equal(r.profit.periods.day.profitMinor, '-10510');
+  assert.equal(r.profit.periods.week.profitMinor, '29480'); assert.equal(r.profit.periods.month.profitMinor, '29480');
+  assert.equal(r.profit.periods.month.overheadMinor, '3000'); assert.equal(r.profit.periods.month.categories.parts, '9000');
+  assert.equal(r.profit.jobs[0].profitMinor, '32480'); assert.equal(r.profit.jobs[0].marginPercent, 64.96);
+  const past = s.reports({ asOf: '2026-10-14' }); assert.equal(past.profit.periods.day.profitMinor, '39990');
+  assert.equal(past.profit.jobs[0].costsMinor, '10010');
+  s.recordPayment({ job: job['@id'], requestId: crypto.randomUUID(), amount: '600', currency: 'USD', paidOn: '2026-10-15', direction: 'received', method: 'card' });
+  assert.equal(s.reports().profit.periods.month.profitMinor, '29480');
+  add({ direction: 'credit', creditOf: sale['@id'], amount: '25.00', description: 'Price concession' });
+  s.updateJob({ id: job['@id'], status: 'closed', notes: '', billedTotal: '900', currency: 'USD' });
+  s.updateJob({ id: job['@id'], status: 'in-progress', notes: '', billedTotal: '950', currency: 'USD' });
+  assert.equal(s.reports().profit.periods.month.salesMinor, '47500');
+  assert.equal(s.reports().profit.periods.month.profitMinor, '26980');
+  advance('2026-11-02T18:00:00Z'); assert.equal(s.reports().profit.periods.month.profitMinor, '0');
+  const reloaded = new AutoCenter({ root: s.root, privateRoot: s.privateRoot });
+  assert.equal(reloaded.reports({ asOf: '2026-10-15' }).profit.jobs[0].profitMinor, '29980');
+  assert.ok(reloaded.status().gitops.commits[0].includes('update repair job'));
+  s.setMode('owner'); assert.throws(() => s.recordFinance(input), /maintenance center/);
+  assert.equal(s.workspace.read()['robos:nodes'].filter(n => n['@type'] === 'robos:ShopFinanceEntry').length, 0);
+});
+
+test('profit excludes invalid credits and future expenses, keeps currencies separate and surfaces missing job coverage', () => {
+  const entry = (id, kind, amount, extra = {}) => n('ShopFinanceEntry', id, {
+    'robos:entryKind': kind, 'robos:entryDirection': 'charge', 'robos:job': ref('j'),
+    'robos:amountMinor': amount, 'robos:currency': 'USD', 'robos:effectiveOn': '2026-10-01',
+    'robos:costCategory': kind === 'sale' ? 'sales' : 'parts', ...extra,
+  });
+  const records = [n('RepairOrder', 'j', { 'robos:billingCurrency': 'USD' }),
+    n('RepairOrder', 'unknown', { 'robos:jobStatus': 'closed' }),
+    n('RepairOrder', 'cad', { 'robos:billingCurrency': 'CAD' }),
+    entry('sale', 'sale', 10000), entry('cost', 'expense', 5000),
+    entry('credit', 'expense', 1000, { 'robos:entryDirection': 'credit', 'robos:creditOf': ref('cost') }),
+    entry('over-credit', 'expense', 4500, { 'robos:entryDirection': 'credit', 'robos:creditOf': ref('cost') }),
+    entry('future', 'expense', 90000, { 'robos:effectiveOn': '2026-10-16' }),
+    entry('missing-job', 'sale', 90000, { 'robos:job': ref('not-found') }),
+    entry('cad-sale', 'sale', 30000, { 'robos:job': ref('cad'), 'robos:currency': 'CAD' })];
+  const options = { now: new Date('2026-10-15T17:00:00Z'), timeZone: 'America/Chicago' };
+  const r = buildReports(records, options); assert.equal(r.profit.periods.month.profitMinor, '6000');
+  assert.equal(r.profit.periods.day.profitMinor, '0'); assert.equal(r.profit.invalidEntries, 3);
+  assert.equal(r.profit.unrecognizedJobs, 1); assert.equal(r.profit.jobsWithoutCosts, 1);
+  assert.equal(buildReports(records, { ...options, currency: 'CAD' }).profit.periods.month.profitMinor, '30000');
+});
