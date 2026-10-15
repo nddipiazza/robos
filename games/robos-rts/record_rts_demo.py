@@ -2,7 +2,7 @@
 """
 record_rts_demo.py — Narrated 1080p Demo Recorder & Proof-of-Work Generator for RobOS RTS
 Launches RobOS RTS inside Xvfb (:98) with a 2.5D Angled 3D Perspective Camera,
-drives a 4-Act showcase across all 3 Factions (Humans, Monsters, Aliens) using `RobOSSC2Client`,
+drives a 4-Act showcase across all 3 Factions (Humans, Monsters, Aliens) using `RTSClient`,
 captures high-res PNG keyframes at 25 FPS, and encodes an H.264 MP4 video walkthrough + key screenshots.
 """
 
@@ -18,7 +18,7 @@ import time
 PROJECT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(PROJECT_DIR))
 
-from robos_sc2_bot_sdk import RobOSSC2Client
+from robos_rts_bot_sdk import RTSClient
 
 BRAIN_DIR = Path("/home/ndipiazza/.gemini/antigravity/brain/30d3b69f-969d-497a-96f9-427b9cb6ced1")
 REPORTS_DIR = PROJECT_DIR / "tests" / "e2e" / "reports"
@@ -57,7 +57,7 @@ def main() -> int:
         text=True,
     )
 
-    client = RobOSSC2Client("127.0.0.1", PORT)
+    client = RTSClient("127.0.0.1", PORT)
     ready = False
     deadline = time.time() + 18.0
     while time.time() < deadline:
@@ -93,60 +93,60 @@ def main() -> int:
         # =====================================================================
         print("📸 Act 1: 3-Faction Starfall Canyon Overview & Humans Base Macro...")
         client.set_camera(x=34.0, y=52.0, z=84.0)
-        client.select(unit_type="marine", owner=1)
+        client.select(unit_type="rifleman", owner=1)
         client.set_overlay(
-            "ACT 1: 2.5D Angled 3D Perspective — Humans (Terran Vanguard) High-Ground Base",
-            "SCVs harvesting 3D Mineral Crystals & Vespene | Barracks queuing Marines | Command Card active"
+            "ACT 1: 2.5D Angled 3D Perspective — Humans (Meridian Guard) High-Ground Base",
+            "Pioneers harvesting 3D Crystal Crystals & Aether | Muster Hall queuing Riflemen | Command Card active"
         )
-        client.command("train_marine", unit_type="barracks", owner=1)
-        client.command("train_marine", unit_type="barracks", owner=1)
+        client.command("train_rifleman", unit_type="muster_hall", owner=1)
+        client.command("train_rifleman", unit_type="muster_hall", owner=1)
         capture_ticks(80, ticks_per_frame=4, hold_frames=8)
         shutil.copy(FRAMES_DIR / f"frame_{frame_idx:04d}.png", BRAIN_DIR / "demo_act1_humans_base_3d.png")
 
         # =====================================================================
-        # ACT 2: SC2 Allied PushPriority & Lowering Supply Depot Choke Gate
+        # ACT 2: Allied push priority & Lowering Provision Silo Choke Gate
         # =====================================================================
-        print("📸 Act 2: SC2 Allied PushPriority & Lowered Supply Depot Choke Traversal...")
+        print("📸 Act 2: Allied push priority & Lowered Provision Silo Choke Traversal...")
         client.load_scenario_slug("crowd-push-priority")
         client.set_camera(x=55.0, y=46.0, z=74.0)
-        client.select(unit_type="siege_tank", owner=1)
+        client.select(unit_type="howitzer", owner=1)
         client.set_overlay(
-            "ACT 2: SC2 Allied PushPriority & Supply Depot Lowering",
-            "Supply Depot lowers into floor (walkable) | Marching Siege Tank pushes idle SCV aside & SCV returns to post"
+            "ACT 2: Allied push priority & Provision Silo Lowering",
+            "Provision Silo lowers into floor (walkable) | Marching Howitzer pushes idle Pioneer aside & Pioneer returns to post"
         )
-        client.command("lower_depot", unit_type="supply_depot", owner=1)
-        client.command("move", unit_type="siege_tank", owner=1, x=72.0, y=40.0)
+        client.command("retract_silo", unit_type="silo", owner=1)
+        client.command("move", unit_type="howitzer", owner=1, x=72.0, y=40.0)
         capture_ticks(160, ticks_per_frame=4, hold_frames=6)
         shutil.copy(FRAMES_DIR / f"frame_{frame_idx:04d}.png", BRAIN_DIR / "demo_act2_push_priority_3d.png")
 
         # =====================================================================
-        # ACT 3: Humans Marines Stutter-Step Kiting & Siege Tank Splash vs Monsters
+        # ACT 3: Humans Riflemen Stutter-Step Kiting & Howitzer Splash vs Monsters
         # =====================================================================
-        print("📸 Act 3: Humans Marines Stutter-Step Micro & Siege Tank Splash vs Monsters...")
+        print("📸 Act 3: Humans Riflemen Stutter-Step Micro & Howitzer Splash vs Monsters...")
         client.load_scenario_slug("stutter-step-micro")
         client.set_camera(x=54.0, y=46.0, z=72.0)
-        client.select(unit_type="marine", owner=1)
+        client.select(unit_type="rifleman", owner=1)
         client.set_overlay(
-            "ACT 3: Humans Marines Stimpack + DamagePoint/Backswing Stutter-Step Kiting vs Monsters",
-            "Marines fire (0.05s DamagePoint) and immediately cancel 0.30s Backswing to kite Swarmling pack"
+            "ACT 3: Humans Riflemen Surge Injector + wind-up/recovery Stutter-Step Kiting vs Monsters",
+            "Riflemen fire (0.05s wind-up) and immediately cancel 0.30s recovery to kite Skitterling pack"
         )
         capture_ticks(200, ticks_per_frame=4, hold_frames=8)
         shutil.copy(FRAMES_DIR / f"frame_{frame_idx:04d}.png", BRAIN_DIR / "demo_act3_stutter_step_3d.png")
 
         # =====================================================================
-        # ACT 4: Aliens Blink Stalkers, Plasma Shields & Cliff-Walking Colossus vs Monsters
+        # ACT 4: Aliens Phase Step Skirmishers, Aegis Shields & Cliff-Walking Spire Walker vs Monsters
         # =====================================================================
-        print("📸 Act 4: Aliens Blink Stalkers, Plasma Shields & Cliff-Walking Colossus vs Monsters...")
-        client.load_scenario_slug("alien-blink-colossus-vs-monsters")
+        print("📸 Act 4: Aliens Phase Step Skirmishers, Aegis Shields & Cliff-Walking Spire Walker vs Monsters...")
+        client.load_scenario_slug("phase-step-spire-walker-vs-monsters")
         client.set_camera(x=58.0, y=48.0, z=74.0)
-        client.select(unit_type="stalker", owner=3)
+        client.select(unit_type="skirmisher", owner=3)
         client.set_overlay(
-            "ACT 4: Aliens Blink Stalker Micro, Regenerating Plasma Shields & Cliff-Walking Colossus",
-            "Depleted-shield Stalkers Blink backward while towering Colossus walks over 3D cliff to splash Monsters"
+            "ACT 4: Aliens Phase Step Skirmisher Micro, Regenerating Aegis Shields & Cliff-Walking Spire Walker",
+            "Depleted-shield Skirmishers Phase Step backward while towering Spire Walker walks over 3D cliff to splash Monsters"
         )
-        client.command("attack_move", unit_type="colossus", owner=3, x=68.0, y=40.0)
+        client.command("attack_move", unit_type="spire_walker", owner=3, x=68.0, y=40.0)
         capture_ticks(200, ticks_per_frame=4, hold_frames=10)
-        shutil.copy(FRAMES_DIR / f"frame_{frame_idx:04d}.png", BRAIN_DIR / "demo_act4_aliens_blink_colossus_3d.png")
+        shutil.copy(FRAMES_DIR / f"frame_{frame_idx:04d}.png", BRAIN_DIR / "demo_act4_aliens_phase_step_spire_walker_3d.png")
 
     finally:
         proc.terminate()

@@ -1,81 +1,119 @@
 extends Node3D
 
-# RTSWorld3D.gd — 2.5D Angled 3D Perspective Renderer for RobOS RTS (StarCraft II / Stormgate Camera)
-# Renders the 64Hz SimEngine world in true 3D perspective (`fov = 42 deg`, pitched `-56 deg`):
-# - Elevated 3D High-Ground Plateaus, Sloped Ramps, and Canyon Cliff Walls
-# - Distinct 3D Meshes for HUMANS (Terran cyan/steel), MONSTERS (Swarm purple/chitin), and ALIENS (Golden/Plasma)
-# - Ground Selection Tori, Mineral Crystals, Vespene Plumes, 3D Laser Beams, and Blink Teleport Rings.
+# RTSWorld3D.gd — angled-perspective renderer for the 64Hz SimEngine world.
+# The sim is the source of truth; this node only mirrors it in 3D:
+# - textured low ground, sandstone plateaus, wedge ramps, rock cliffs and a rock rim around the map
+# - composite models from RTSModels.gd (one silhouette per unit, team color on panels and gems)
+# - animated crystal fields and aether vents, shield flashes, tracers, impact bursts, scorch marks
+
+const Models = preload("res://scripts/RTSModels.gd")
+
+const CAM_PITCH_DEG := 56.0
+const CAM_MIN_H := 28.0
+const CAM_MAX_H := 84.0
+const GROUND_TOP := 2.2
 
 var camera_3d: Camera3D
 var dir_light: DirectionalLight3D
 var world_env: WorldEnvironment
 
 var terrain_root: Node3D
+var decor_root: Node3D
 var resources_root: Node3D
 var units_root: Node3D
 var fx_root: Node3D
 
-var unit_nodes: Dictionary = {}     # tag (int) -> Node3D
-var resource_nodes: Dictionary = {} # tag (int) -> Node3D
+var unit_nodes: Dictionary = {}     # tag -> Node3D
+var resource_nodes: Dictionary = {} # tag -> Node3D
 var active_fx: Array[Dictionary] = []
+var cam_height: float = 50.0
+var anim_time: float = 0.0
 
 var mat_cache: Dictionary = {}
+var _last_pos: Dictionary = {}
 
 func _ready() -> void:
 	_setup_environment_and_camera()
-	terrain_root = Node3D.new()
-	terrain_root.name = "TerrainRoot"
-	add_child(terrain_root)
-
-	resources_root = Node3D.new()
-	resources_root.name = "ResourcesRoot"
-	add_child(resources_root)
-
-	units_root = Node3D.new()
-	units_root.name = "UnitsRoot"
-	add_child(units_root)
-
-	fx_root = Node3D.new()
-	fx_root.name = "FXRoot"
-	add_child(fx_root)
+	for n in ["TerrainRoot", "DecorRoot", "ResourcesRoot", "UnitsRoot", "FXRoot"]:
+		var node := Node3D.new()
+		node.name = n
+		add_child(node)
+	terrain_root = get_node("TerrainRoot")
+	decor_root = get_node("DecorRoot")
+	resources_root = get_node("ResourcesRoot")
+	units_root = get_node("UnitsRoot")
+	fx_root = get_node("FXRoot")
 
 	SimEngine.scenario_loaded.connect(_on_scenario_loaded)
 	SimEngine.projectile_fired.connect(_on_projectile_fired)
-	SimEngine.unit_blinked.connect(_on_unit_blinked)
+	SimEngine.unit_phased.connect(_on_unit_phased)
+	SimEngine.unit_destroyed.connect(_on_unit_destroyed)
+	SimEngine.paused_step.connect(_on_paused_step)
 	_rebuild_static_3d_map()
 
 func _setup_environment_and_camera() -> void:
 	world_env = WorldEnvironment.new()
-	var env = Environment.new()
+	var env := Environment.new()
 	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color("#070b14")
+	env.background_color = Color("#2b241f")
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color("#475569")
-	env.ambient_light_energy = 1.25
+	env.ambient_light_color = Color("#c9d3e3")
+	env.ambient_light_energy = 0.30
+	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	env.tonemap_exposure = 1.0
 	world_env.environment = env
 	add_child(world_env)
 
 	dir_light = DirectionalLight3D.new()
-	dir_light.rotation_degrees = Vector3(-58.0, -32.0, 0.0)
-	dir_light.light_energy = 1.45
-	dir_light.light_color = Color("#f8fafc")
+	dir_light.rotation_degrees = Vector3(-52.0, -38.0, 0.0)
+	dir_light.light_energy = 0.6
+	dir_light.light_color = Color("#fff0d8")
 	dir_light.shadow_enabled = true
+	dir_light.directional_shadow_max_distance = 190.0
+	dir_light.shadow_bias = 0.06
+	dir_light.shadow_blur = 1.4
 	add_child(dir_light)
 
-	# Classic StarCraft II / Stormgate 2.5D Angled 3D Perspective Camera (-56 degree pitch)
 	camera_3d = Camera3D.new()
 	camera_3d.fov = 42.0
 	camera_3d.near = 1.0
-	camera_3d.far = 400.0
-	camera_3d.position = Vector3(64.0, 68.0, 92.0)
-	camera_3d.rotation_degrees = Vector3(-56.0, 0.0, 0.0)
+	camera_3d.far = 420.0
+	camera_3d.rotation_degrees = Vector3(-CAM_PITCH_DEG, 0.0, 0.0)
 	camera_3d.current = true
 	add_child(camera_3d)
+	set_focus(Vector2(SimEngine.map_width * 0.5, SimEngine.map_height * 0.5), cam_height)
 
+# ---------------------------------------------------------------------------
+# Camera
+# ---------------------------------------------------------------------------
+func _z_offset(h: float) -> float:
+	return h / tan(deg_to_rad(CAM_PITCH_DEG))
+
+func get_focus() -> Vector2:
+	return Vector2(camera_3d.position.x, camera_3d.position.z - _z_offset(camera_3d.position.y))
+
+func set_focus(focus: Vector2, height: float = -1.0) -> void:
+	if height > 0.0:
+		cam_height = clampf(height, CAM_MIN_H, CAM_MAX_H)
+	var f := Vector2(
+		clampf(focus.x, 12.0, maxf(12.0, SimEngine.map_width - 12.0)),
+		clampf(focus.y, 8.0, maxf(8.0, SimEngine.map_height - 8.0))
+	)
+	camera_3d.position = Vector3(f.x, cam_height, f.y + _z_offset(cam_height))
+
+func pan(delta_world: Vector2) -> void:
+	set_focus(get_focus() + delta_world)
+
+func zoom_by(step: float) -> void:
+	set_focus(get_focus(), cam_height + step)
+
+# ---------------------------------------------------------------------------
+# Materials
+# ---------------------------------------------------------------------------
 func _get_mat(key: String, albedo: Color, emission: Color = Color.BLACK, metallic: float = 0.2, roughness: float = 0.6) -> StandardMaterial3D:
 	if mat_cache.has(key):
 		return mat_cache[key]
-	var m = StandardMaterial3D.new()
+	var m := StandardMaterial3D.new()
 	m.albedo_color = albedo
 	m.metallic = metallic
 	m.roughness = roughness
@@ -86,80 +124,283 @@ func _get_mat(key: String, albedo: Color, emission: Color = Color.BLACK, metalli
 	mat_cache[key] = m
 	return m
 
+func _noise_mat(key: String, c_dark: Color, c_light: Color, freq: float, tile: float, octaves: int = 5, gain: float = 0.55) -> StandardMaterial3D:
+	if mat_cache.has(key):
+		return mat_cache[key]
+	var n := FastNoiseLite.new()
+	n.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+	n.frequency = freq
+	n.fractal_octaves = octaves
+	n.fractal_gain = gain
+	n.seed = hash(key) & 0xffff
+	var g := Gradient.new()
+	g.set_color(0, c_dark)
+	g.set_color(1, c_light)
+	var t := NoiseTexture2D.new()
+	t.width = 512
+	t.height = 512
+	t.seamless = true
+	t.noise = n
+	t.color_ramp = g
+	var m := StandardMaterial3D.new()
+	m.albedo_texture = t
+	m.uv1_triplanar = true
+	m.uv1_world_triplanar = true
+	m.uv1_scale = Vector3.ONE / tile
+	m.roughness = 0.95
+	m.metallic = 0.0
+	mat_cache[key] = m
+	return m
+
+# ---------------------------------------------------------------------------
+# Static terrain
+# ---------------------------------------------------------------------------
 func _on_scenario_loaded(_name: String) -> void:
 	_rebuild_static_3d_map()
 
+func _clear_children(n: Node) -> void:
+	for c in n.get_children():
+		c.queue_free()
+
+func _terrain_box(size: Vector3, pos: Vector3, m: Material) -> MeshInstance3D:
+	var mi := MeshInstance3D.new()
+	var b := BoxMesh.new()
+	b.size = size
+	mi.mesh = b
+	mi.position = pos
+	mi.material_override = m
+	terrain_root.add_child(mi)
+	return mi
+
+func _subtract_rect(r: Rect2, hole: Rect2) -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	var inter := r.intersection(hole)
+	if inter.size.x <= 0.0 or inter.size.y <= 0.0:
+		out.append(r)
+		return out
+	if inter.position.x > r.position.x:
+		out.append(Rect2(r.position.x, r.position.y, inter.position.x - r.position.x, r.size.y))
+	if inter.end.x < r.end.x:
+		out.append(Rect2(inter.end.x, r.position.y, r.end.x - inter.end.x, r.size.y))
+	if inter.position.y > r.position.y:
+		out.append(Rect2(inter.position.x, r.position.y, inter.size.x, inter.position.y - r.position.y))
+	if inter.end.y < r.end.y:
+		out.append(Rect2(inter.position.x, inter.end.y, inter.size.x, r.end.y - inter.end.y))
+	return out
+
 func _rebuild_static_3d_map() -> void:
-	for c in terrain_root.get_children():
-		c.queue_free()
-	for c in resources_root.get_children():
-		c.queue_free()
-	for c in units_root.get_children():
-		c.queue_free()
+	_clear_children(terrain_root)
+	_clear_children(decor_root)
+	_clear_children(resources_root)
+	_clear_children(units_root)
+	_clear_children(fx_root)
 	unit_nodes.clear()
 	resource_nodes.clear()
 	active_fx.clear()
+	_last_pos.clear()
 
-	# Base Low-Ground Floor Mesh
-	var floor_mi = MeshInstance3D.new()
-	var floor_box = BoxMesh.new()
-	floor_box.size = Vector3(SimEngine.map_width, 1.0, SimEngine.map_height)
-	floor_mi.mesh = floor_box
-	floor_mi.position = Vector3(SimEngine.map_width * 0.5, -0.5, SimEngine.map_height * 0.5)
-	floor_mi.material_override = _get_mat("floor_low", Color("#0f172a"), Color.BLACK, 0.1, 0.85)
-	terrain_root.add_child(floor_mi)
+	var mw := SimEngine.map_width
+	var mh := SimEngine.map_height
+	var low := _noise_mat("low_ground", Color("#33452a"), Color("#617243"), 0.012, 46.0)
+	var high := _noise_mat("high_ground", Color("#625640"), Color("#b0a283"), 0.014, 40.0)
+	var rock := _noise_mat("rock", Color("#3a3029"), Color("#5d4e42"), 0.03, 14.0, 4, 0.6)
+	var path := _noise_mat("ramp", Color("#7d6b4b"), Color("#a08c64"), 0.02, 24.0)
 
-	# High-Ground Plateaus (Elevated 2.2 units up in 3D!)
+	# Low ground
+	_terrain_box(Vector3(mw, 1.0, mh), Vector3(mw * 0.5, -0.5, mh * 0.5), low)
+
+	# Rock rim around the map so the camera never sees the void
+	var rim := 18.0
+	_terrain_box(Vector3(mw + rim * 2.0, 6.0, rim), Vector3(mw * 0.5, 2.0, -rim * 0.5), rock)
+	_terrain_box(Vector3(mw + rim * 2.0, 6.0, rim), Vector3(mw * 0.5, 2.0, mh + rim * 0.5), rock)
+	_terrain_box(Vector3(rim, 6.0, mh), Vector3(-rim * 0.5, 2.0, mh * 0.5), rock)
+	_terrain_box(Vector3(rim, 6.0, mh), Vector3(mw + rim * 0.5, 2.0, mh * 0.5), rock)
+	var rim_rng := RandomNumberGenerator.new()
+	rim_rng.seed = 991
+	for side in range(4):
+		var n_b := int((mw if side < 2 else mh) / 2.6)
+		for i in range(n_b):
+			var along := (float(i) + rim_rng.randf()) / float(n_b) * (mw if side < 2 else mh)
+			var depth := rim_rng.randf_range(0.5, 7.0)
+			var bp := Vector3.ZERO
+			match side:
+				0: bp = Vector3(along, 0, -depth)
+				1: bp = Vector3(along, 0, mh + depth)
+				2: bp = Vector3(-depth, 0, along)
+				3: bp = Vector3(mw + depth, 0, along)
+			var bs := rim_rng.randf_range(1.8, 3.8)
+			var b_mi := MeshInstance3D.new()
+			var b_sph := SphereMesh.new()
+			b_sph.radius = bs
+			b_sph.height = bs * 1.6
+			b_sph.radial_segments = 9
+			b_sph.rings = 5
+			b_mi.mesh = b_sph
+			b_mi.material_override = rock
+			b_mi.position = Vector3(bp.x, 4.4 + rim_rng.randf() * 0.8, bp.z)
+			b_mi.rotation_degrees = Vector3(rim_rng.randf() * 40.0, rim_rng.randf() * 360.0, rim_rng.randf() * 40.0)
+			terrain_root.add_child(b_mi)
+
+	# Plateaus: carve the ramp footprints out so the ramp meets the lip cleanly
 	for hg in SimEngine.high_ground_zones:
-		var hg_mi = MeshInstance3D.new()
-		var hg_box = BoxMesh.new()
-		hg_box.size = Vector3(hg.size.x, 2.2, hg.size.y)
-		hg_mi.mesh = hg_box
-		hg_mi.position = Vector3(hg.position.x + hg.size.x * 0.5, 1.1, hg.position.y + hg.size.y * 0.5)
-		hg_mi.material_override = _get_mat("floor_high", Color("#1e293b"), Color.BLACK, 0.15, 0.75)
-		terrain_root.add_child(hg_mi)
+		var pieces: Array[Rect2] = [hg]
+		for rmp in SimEngine.ramps:
+			var next: Array[Rect2] = []
+			for pc in pieces:
+				next.append_array(_subtract_rect(pc, rmp))
+			pieces = next
+		for pc in pieces:
+			if pc.size.x < 0.1 or pc.size.y < 0.1:
+				continue
+			var cx := pc.position.x + pc.size.x * 0.5
+			var cz := pc.position.y + pc.size.y * 0.5
+			_terrain_box(Vector3(pc.size.x, GROUND_TOP - 0.3, pc.size.y), Vector3(cx, (GROUND_TOP - 0.3) * 0.5, cz), rock)
+			_terrain_box(Vector3(pc.size.x + 0.5, 0.34, pc.size.y + 0.5), Vector3(cx, GROUND_TOP - 0.17, cz), high)
 
-	# Sloped Ramps connecting High Ground and Low Ground
+	# Ramps are right-angle wedges: high edge on the west, sloping down to the east
 	for rmp in SimEngine.ramps:
-		var rmp_mi = MeshInstance3D.new()
-		var rmp_box = BoxMesh.new()
-		rmp_box.size = Vector3(rmp.size.x, 0.6, rmp.size.y)
-		rmp_mi.mesh = rmp_box
-		rmp_mi.position = Vector3(rmp.position.x + rmp.size.x * 0.5, 1.0, rmp.position.y + rmp.size.y * 0.5)
-		rmp_mi.rotation_degrees = Vector3(0.0, 0.0, -10.5)
-		rmp_mi.material_override = _get_mat("ramp_mat", Color("#334155"), Color.BLACK, 0.2, 0.7)
-		terrain_root.add_child(rmp_mi)
+		var prism := PrismMesh.new()
+		prism.size = Vector3(rmp.size.x, GROUND_TOP, rmp.size.y)
+		prism.left_to_right = 0.0
+		var rmi := MeshInstance3D.new()
+		rmi.mesh = prism
+		rmi.material_override = path
+		rmi.position = Vector3(rmp.position.x + rmp.size.x * 0.5, GROUND_TOP * 0.5, rmp.position.y + rmp.size.y * 0.5)
+		terrain_root.add_child(rmi)
 
-	# Canyon Cliff Walls
+	# Cliff walls: dark rock core, ragged boulders on top
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7731
 	for obs in SimEngine.terrain_obstacles:
-		var obs_mi = MeshInstance3D.new()
-		var obs_box = BoxMesh.new()
-		obs_box.size = Vector3(obs.size.x, 5.2, obs.size.y)
-		obs_mi.mesh = obs_box
-		obs_mi.position = Vector3(obs.position.x + obs.size.x * 0.5, 2.6, obs.position.y + obs.size.y * 0.5)
-		obs_mi.material_override = _get_mat("cliff_rock", Color("#334155"), Color.BLACK, 0.1, 0.9)
-		terrain_root.add_child(obs_mi)
+		var h := 5.2
+		var cx2 := obs.position.x + obs.size.x * 0.5
+		var cz2 := obs.position.y + obs.size.y * 0.5
+		_terrain_box(Vector3(obs.size.x, h, obs.size.y), Vector3(cx2, h * 0.5, cz2), rock)
+		var long_axis_z := obs.size.y >= obs.size.x
+		var length := obs.size.y if long_axis_z else obs.size.x
+		var count := int(length / 2.2)
+		for i in range(count):
+			var t := (float(i) + rng.randf()) / float(maxi(1, count))
+			var px := cx2 + (rng.randf_range(-0.35, 0.35) * obs.size.x if long_axis_z else (t - 0.5) * length)
+			var pz := cz2 + ((t - 0.5) * length if long_axis_z else rng.randf_range(-0.35, 0.35) * obs.size.y)
+			var s := rng.randf_range(1.5, 3.0)
+			var boulder := MeshInstance3D.new()
+			var sph := SphereMesh.new()
+			sph.radius = s
+			sph.height = s * 1.7
+			sph.radial_segments = 9
+			sph.rings = 5
+			boulder.mesh = sph
+			boulder.material_override = rock
+			boulder.position = Vector3(px, h - 0.4 + rng.randf() * 0.5, pz)
+			boulder.rotation_degrees = Vector3(rng.randf() * 40.0, rng.randf() * 360.0, rng.randf() * 40.0)
+			terrain_root.add_child(boulder)
 
-func sync_3d_entities(selected_tags: Array[int], delta: float) -> void:
-	# 1. Sync Resource Nodes (Mineral Crystals & Vespene Geysers)
+	_scatter_decor()
+
+func _scatter_decor() -> void:
+	if not SimEngine.decor_enabled:
+		return
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 424242 + int(SimEngine.map_width) * 31 + int(SimEngine.map_height)
+	var keep_out: Array[Vector3] = []
+	for u in SimEngine.units.values():
+		keep_out.append(Vector3(u["pos"].x, u["pos"].y, float(u["radius"]) + 4.5))
+	for r in SimEngine.resources.values():
+		keep_out.append(Vector3(r["pos"].x, r["pos"].y, float(r["radius"]) + 3.5))
+
+	var pine_trunk := _get_mat("pine_trunk", Color("#4b3626"), Color.BLACK, 0.0, 0.9)
+	var pine_a := _get_mat("pine_a", Color("#2f5233"), Color.BLACK, 0.0, 0.85)
+	var pine_b := _get_mat("pine_b", Color("#3b6a3f"), Color.BLACK, 0.0, 0.85)
+	var rock_m := _get_mat("decor_rock", Color("#6e665c"), Color.BLACK, 0.05, 0.95)
+	var rock_d := _get_mat("decor_rock_dark", Color("#4d463f"), Color.BLACK, 0.05, 0.95)
+	var shrub := _get_mat("shrub", Color("#46602f"), Color.BLACK, 0.0, 0.9)
+	var glow := Models.mat("decor_crystal", Color("#4fd1ff"), Color("#38bdf8"), 1.0, 0.0, 0.2, 0.92)
+
+	var attempts := int(SimEngine.map_width * SimEngine.map_height / 10.0)
+	var max_decor := int(SimEngine.map_width * SimEngine.map_height / 75.0)
+	var placed := 0
+	for _i in range(attempts):
+		if placed >= max_decor:
+			break
+		var p := Vector2(rng.randf_range(2.0, SimEngine.map_width - 2.0), rng.randf_range(2.0, SimEngine.map_height - 2.0))
+		var blocked := false
+		for o in keep_out:
+			if p.distance_to(Vector2(o.x, o.y)) < o.z:
+				blocked = true
+				break
+		if blocked:
+			continue
+		for obs in SimEngine.terrain_obstacles:
+			if obs.grow(2.4).has_point(p):
+				blocked = true
+				break
+		if blocked:
+			continue
+		for rmp in SimEngine.ramps:
+			if rmp.grow(3.0).has_point(p):
+				blocked = true
+				break
+		if blocked:
+			continue
+		var elev := SimEngine.get_elevation_at(p)
+		var kind := rng.randf()
+		var node := Node3D.new()
+		node.position = Vector3(p.x, elev, p.y)
+		node.rotation_degrees.y = rng.randf() * 360.0
+		if elev < 1.0 and kind < 0.4:
+			var s := rng.randf_range(0.5, 0.95)
+			Models.cyl(node, 0.2 * s, 0.28 * s, 1.2 * s, pine_trunk, Vector3(0, 0.6 * s, 0), Vector3.ZERO, 6)
+			Models.cone(node, 1.5 * s, 2.4 * s, pine_a, Vector3(0, 2.0 * s, 0), Vector3.ZERO, 7)
+			Models.cone(node, 1.1 * s, 2.0 * s, pine_b, Vector3(0, 3.1 * s, 0), Vector3.ZERO, 7)
+		elif kind < 0.78:
+			var rs := rng.randf_range(0.6, 1.6)
+			Models.sph(node, rs, rock_m if rng.randf() < 0.6 else rock_d, Vector3(0, rs * 0.3, 0), Vector3(1.0, 0.55, 0.8), 8)
+			if rng.randf() < 0.5:
+				Models.sph(node, rs * 0.55, rock_d, Vector3(rs * 0.9, rs * 0.15, rs * 0.3), Vector3(1.0, 0.6, 0.9), 7)
+		elif kind < 0.9:
+			var bs := rng.randf_range(0.4, 0.8)
+			Models.sph(node, bs, shrub, Vector3(0, bs * 0.45, 0), Vector3(1.2, 0.7, 1.0), 8)
+		else:
+			for j in range(3):
+				var h2 := rng.randf_range(0.9, 2.0)
+				Models.cyl(node, 0.0, 0.26, h2, glow, Vector3(rng.randf_range(-0.5, 0.5), h2 * 0.5, rng.randf_range(-0.5, 0.5)), Vector3(rng.randf_range(-12, 12), 0, rng.randf_range(-12, 12)), 5)
+		decor_root.add_child(node)
+		placed += 1
+
+# ---------------------------------------------------------------------------
+# Per-frame sync with the sim
+# ---------------------------------------------------------------------------
+func sync_3d_entities(selected_tags: Array[int], delta: float, local_player: int = 1) -> void:
+	anim_time += delta
+
+	# Resources
 	for r_tag in SimEngine.resources.keys():
-		var r = SimEngine.resources[r_tag]
+		var r: Dictionary = SimEngine.resources[r_tag]
 		if not resource_nodes.has(r_tag):
-			var r_node = _create_resource_node_3d(r)
-			resources_root.add_child(r_node)
-			resource_nodes[r_tag] = r_node
-		var elev = SimEngine.get_elevation_at(r["pos"])
-		resource_nodes[r_tag].position = Vector3(r["pos"].x, elev, r["pos"].y)
-
-	# Remove depleted/deleted resources
+			var node := Models.build_resource(str(r["resource_type"]), int(r_tag))
+			resources_root.add_child(node)
+			resource_nodes[r_tag] = node
+		var rn: Node3D = resource_nodes[r_tag]
+		rn.position = Vector3(r["pos"].x, SimEngine.get_elevation_at(r["pos"]), r["pos"].y)
+		if r["resource_type"] == "crystal_field":
+			var frac := clampf(float(r["amount"]) / 1500.0, 0.25, 1.0)
+			rn.scale = Vector3(1.0, 0.45 + 0.55 * frac, 1.0)
+		else:
+			for i in range(3):
+				var pl := rn.get_node_or_null("Plume%d" % i)
+				if pl:
+					pl.position.y = 1.2 + float(i) * 0.9 + sin(anim_time * 1.6 + float(i)) * 0.25
 	for r_tag in resource_nodes.keys():
 		if not SimEngine.resources.has(r_tag):
 			resource_nodes[r_tag].queue_free()
 			resource_nodes.erase(r_tag)
 
-	# 2. Sync Units & Structures
+	# Units and structures
+	var own_ring := Models.mat("ring_own", Color("#3fd97a"), Color("#22c55e"), 0.45, 0.0, 0.5)
+	var foe_ring := Models.mat("ring_foe", Color("#f0645a"), Color("#ef4444"), 0.45, 0.0, 0.5)
 	for u_tag in SimEngine.units.keys():
-		var u = SimEngine.units[u_tag]
+		var u: Dictionary = SimEngine.units[u_tag]
 		var u_node: Node3D
 		if not unit_nodes.has(u_tag) or unit_nodes[u_tag].get_meta("unit_type", "") != u["unit_type"]:
 			if unit_nodes.has(u_tag):
@@ -170,222 +411,224 @@ func sync_3d_entities(selected_tags: Array[int], delta: float) -> void:
 		else:
 			u_node = unit_nodes[u_tag]
 
-		var elev = SimEngine.get_elevation_at(u["pos"])
-		u_node.position = Vector3(u["pos"].x, elev, u["pos"].y)
-		u_node.rotation.y = -u["facing"]
+		var elev := SimEngine.get_elevation_at(u["pos"])
+		var moving := false
+		if _last_pos.has(u_tag):
+			moving = (u["pos"] - _last_pos[u_tag]).length() > 0.004
+		_last_pos[u_tag] = u["pos"]
+
+		var bob := 0.0
+		var ut := str(u["unit_type"])
+		if moving and not u["is_structure"] and ut != "howitzer" and ut != "spire_walker" and ut != "mote":
+			bob = absf(sin(anim_time * 13.0 + float(u_tag))) * 0.09
+		u_node.position = Vector3(u["pos"].x, elev + bob, u["pos"].y)
+		u_node.rotation.y = -float(u["facing"])
+
+		if u["is_structure"]:
+			var prog := float(u["build_progress"])
+			u_node.scale = Vector3(1.0, clampf(0.2 + 0.8 * prog, 0.2, 1.0), 1.0) if prog < 1.0 else Vector3.ONE
+			for i in range(6):
+				var sh := u_node.get_node_or_null("Shard%d" % i)
+				if sh:
+					sh.position.y = 2.6 + float(i % 3) * 0.9 + sin(anim_time * 1.3 + float(i)) * 0.25
+					sh.rotation.y = anim_time * 0.6 + float(i)
+			var halo := u_node.get_node_or_null("Halo")
+			if halo:
+				halo.rotation.y = anim_time * 0.8
+		var hover := u_node.get_node_or_null("Hover")
+		if hover:
+			hover.position.y = 1.1 + sin(anim_time * 2.4 + float(u_tag)) * 0.12
 
 		var sel_ring: MeshInstance3D = u_node.get_node_or_null("SelectionRing")
 		if sel_ring:
 			sel_ring.visible = selected_tags.has(u_tag)
+			sel_ring.material_override = own_ring if u["owner"] == local_player else foe_ring
 
 		var shield_sphere: MeshInstance3D = u_node.get_node_or_null("ShieldBubble")
 		if shield_sphere:
-			shield_sphere.visible = (u["shields"] > 0.5)
+			shield_sphere.visible = u["shields"] > 0.5 and float(u["out_of_combat_timer"]) < 1.4
 
 	for u_tag in unit_nodes.keys():
 		if not SimEngine.units.has(u_tag):
 			unit_nodes[u_tag].queue_free()
 			unit_nodes.erase(u_tag)
+			_last_pos.erase(u_tag)
 
-	# 3. Update temporary 3D FX (Laser beams & Blink rings)
+	_update_fx(delta)
+
+func _create_unit_node_3d(u: Dictionary) -> Node3D:
+	var rad := float(u["radius"])
+	var root := Models.build(str(u["unit_type"]), int(u["owner"]))
+	root.set_meta("unit_type", u["unit_type"])
+
+	var sel_mi := MeshInstance3D.new()
+	sel_mi.name = "SelectionRing"
+	var torus := TorusMesh.new()
+	torus.inner_radius = rad + 0.18
+	torus.outer_radius = rad + 0.5
+	torus.rings = 32
+	torus.ring_segments = 4
+	sel_mi.mesh = torus
+	sel_mi.scale = Vector3(1.0, 0.25, 1.0)
+	sel_mi.position = Vector3(0.0, 0.08, 0.0)
+	sel_mi.visible = false
+	root.add_child(sel_mi)
+
+	if u["max_shields"] > 0.0:
+		var sh_mi := MeshInstance3D.new()
+		sh_mi.name = "ShieldBubble"
+		var ssph := SphereMesh.new()
+		ssph.radius = rad * 1.2
+		ssph.height = rad * (2.4 if not u["is_structure"] else 2.0)
+		sh_mi.mesh = ssph
+		sh_mi.position = Vector3(0.0, rad * (1.1 if not u["is_structure"] else 0.6), 0.0)
+		sh_mi.material_override = Models.mat("shield_bubble", Color("#7dd3fc"), Color("#38bdf8"), 0.9, 0.0, 0.2, 0.2)
+		sh_mi.visible = false
+		root.add_child(sh_mi)
+	return root
+
+# ---------------------------------------------------------------------------
+# Effects
+# ---------------------------------------------------------------------------
+func _fx_mat(col: Color) -> StandardMaterial3D:
+	var m := StandardMaterial3D.new()
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.albedo_color = col
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	return m
+
+func _spawn_burst(pos: Vector3, col: Color, radius: float, ttl: float, grow: float = 2.6) -> void:
+	var mi := MeshInstance3D.new()
+	var s := SphereMesh.new()
+	s.radius = radius
+	s.height = radius * 2.0
+	s.radial_segments = 10
+	s.rings = 5
+	mi.mesh = s
+	var m := _fx_mat(col)
+	mi.material_override = m
+	mi.position = pos
+	fx_root.add_child(mi)
+	# While paused (scripted captures) the effect is held still, so begin it part-way through.
+	var start_ttl := ttl * (0.55 if SimEngine.paused else 1.0)
+	active_fx.append({"node": mi, "mat": m, "ttl": start_ttl, "max": ttl, "kind": "burst", "col": col, "grow": grow})
+
+func _spawn_scorch(pos: Vector3, radius: float) -> void:
+	var mi := MeshInstance3D.new()
+	var c := CylinderMesh.new()
+	c.top_radius = radius
+	c.bottom_radius = radius
+	c.height = 0.03
+	c.radial_segments = 14
+	mi.mesh = c
+	var col := Color(0.05, 0.04, 0.03, 0.55)
+	var m := _fx_mat(col)
+	mi.material_override = m
+	mi.position = pos + Vector3(0, 0.05, 0)
+	fx_root.add_child(mi)
+	active_fx.append({"node": mi, "mat": m, "ttl": 16.0, "max": 16.0, "kind": "scorch", "col": col, "grow": 0.0})
+
+# While the sim is paused (scripted captures) transient effects hold still, so a frame taken after a
+# small step shows them; every further paused step clears the previous ones. Scorch marks always fade in real time.
+func _skip_transient_fx() -> bool:
+	return SimEngine.paused and SimEngine.last_step_count > 6
+
+func _on_paused_step() -> void:
 	for i in range(active_fx.size() - 1, -1, -1):
-		active_fx[i]["ttl"] -= delta
-		if active_fx[i]["ttl"] <= 0.0:
+		if active_fx[i]["kind"] != "scorch":
 			if is_instance_valid(active_fx[i]["node"]):
 				active_fx[i]["node"].queue_free()
 			active_fx.remove_at(i)
 
-func _create_resource_node_3d(r: Dictionary) -> Node3D:
-	var root = Node3D.new()
-	if r["resource_type"] == "mineral_field":
-		for i in range(3):
-			var shard = MeshInstance3D.new()
-			var prism = PrismMesh.new()
-			prism.size = Vector3(1.2, 2.6 - i * 0.4, 1.2)
-			shard.mesh = prism
-			shard.position = Vector3((i - 1) * 0.75, 1.2, (i % 2) * 0.4)
-			shard.rotation_degrees = Vector3(12.0 * (i - 1), i * 45.0, 15.0 * (1 - i))
-			shard.material_override = _get_mat("mineral_crystal", Color("#38bdf8"), Color("#0284c7"), 0.6, 0.2)
-			root.add_child(shard)
-	else:
-		var crater = MeshInstance3D.new()
-		var cyl = CylinderMesh.new()
-		cyl.top_radius = 1.8
-		cyl.bottom_radius = 2.6
-		cyl.height = 1.4
-		crater.mesh = cyl
-		crater.position = Vector3(0.0, 0.7, 0.0)
-		crater.material_override = _get_mat("vespene_geyser", Color("#10b981"), Color("#059669"), 0.3, 0.5)
-		root.add_child(crater)
-	return root
+func _update_fx(delta: float) -> void:
+	for i in range(active_fx.size() - 1, -1, -1):
+		var fx: Dictionary = active_fx[i]
+		if not (SimEngine.paused and fx["kind"] != "scorch"):
+			fx["ttl"] -= delta
+		if fx["ttl"] <= 0.0 or not is_instance_valid(fx["node"]):
+			if is_instance_valid(fx["node"]):
+				fx["node"].queue_free()
+			active_fx.remove_at(i)
+			continue
+		var t: float = 1.0 - float(fx["ttl"]) / float(fx["max"])
+		var col: Color = fx["col"]
+		match str(fx["kind"]):
+			"burst":
+				fx["mat"].albedo_color = Color(col.r, col.g, col.b, (1.0 - t) * col.a)
+				fx["node"].scale = Vector3.ONE * lerpf(0.5, float(fx["grow"]), t)
+			"scorch":
+				fx["mat"].albedo_color = Color(col.r, col.g, col.b, col.a * clampf((1.0 - t) * 2.0, 0.0, 1.0))
+			"beam":
+				fx["mat"].albedo_color = Color(col.r, col.g, col.b, 1.0 - t)
 
-func _create_unit_node_3d(u: Dictionary) -> Node3D:
-	var root = Node3D.new()
-	root.set_meta("unit_type", u["unit_type"])
-	var rad = float(u["radius"])
-	var faction = str(u.get("faction", "humans"))
-
-	# Selection Ring (3D Ground Torus)
-	var sel_mi = MeshInstance3D.new()
-	sel_mi.name = "SelectionRing"
-	var torus = TorusMesh.new()
-	torus.inner_radius = rad + 0.15
-	torus.outer_radius = rad + 0.42
-	sel_mi.mesh = torus
-	sel_mi.position = Vector3(0.0, 0.12, 0.0)
-	var ring_col = Color("#22c55e") if u["owner"] == 1 else (Color("#ef4444") if u["owner"] == 2 else Color("#facc15"))
-	sel_mi.material_override = _get_mat("sel_" + str(u["owner"]), ring_col, ring_col * 0.6, 0.1, 0.4)
-	sel_mi.visible = false
-	root.add_child(sel_mi)
-
-	# Faction Palette
-	var base_col = Color("#0ea5e9")
-	var accent_col = Color("#bae6fd")
-	if faction == "monsters":
-		base_col = Color("#9333ea") if u["unit_type"] != "roach" else Color("#65a30d")
-		accent_col = Color("#f0abfc")
-	elif faction == "aliens":
-		base_col = Color("#f59e0b")
-		accent_col = Color("#38bdf8")
-
-	if u["is_structure"]:
-		var body_mi = MeshInstance3D.new()
-		if faction == "aliens":
-			var prism = PrismMesh.new()
-			var h = 4.2 if u["unit_type"] == "nexus" else 3.4
-			prism.size = Vector3(rad * 1.9, h, rad * 1.9)
-			body_mi.mesh = prism
-			body_mi.position = Vector3(0.0, h * 0.5, 0.0)
-		elif faction == "monsters":
-			var sph = SphereMesh.new()
-			sph.radius = rad * 0.95
-			sph.height = rad * 1.6
-			body_mi.mesh = sph
-			body_mi.position = Vector3(0.0, rad * 0.7, 0.0)
-		else:
-			var box = BoxMesh.new()
-			var h = 0.35 if u["is_walkable_structure"] else (3.6 if u["unit_type"] == "command_center" else 2.5)
-			box.size = Vector3(rad * 1.85, h, rad * 1.85)
-			body_mi.mesh = box
-			body_mi.position = Vector3(0.0, h * 0.5, 0.0)
-		body_mi.material_override = _get_mat("struct_" + u["unit_type"], base_col, accent_col * 0.15, 0.5, 0.4)
-		root.add_child(body_mi)
-	else:
-		# Mobile Unit 3D Silhouette
-		var body_mi = MeshInstance3D.new()
-		if u["unit_type"] == "colossus":
-			# Tall Alien Colossus Walker towering over cliffs!
-			var cyl = CylinderMesh.new()
-			cyl.top_radius = 1.3
-			cyl.bottom_radius = 0.7
-			cyl.height = 5.5
-			body_mi.mesh = cyl
-			body_mi.position = Vector3(0.0, 2.75, 0.0)
-		elif u["unit_type"] in ["siege_tank", "siege_tank_sieged"]:
-			var hull = BoxMesh.new()
-			hull.size = Vector3(rad * 1.7, 1.3, rad * 1.4)
-			body_mi.mesh = hull
-			body_mi.position = Vector3(0.0, 0.65, 0.0)
-			# Cannon Turret
-			var barrel = MeshInstance3D.new()
-			var bcyl = CylinderMesh.new()
-			bcyl.top_radius = 0.25
-			bcyl.bottom_radius = 0.3
-			bcyl.height = 2.8 if u["unit_type"] == "siege_tank_sieged" else 2.0
-			barrel.mesh = bcyl
-			barrel.rotation_degrees = Vector3(0.0, 0.0, -90.0)
-			barrel.position = Vector3(1.2, 1.4, 0.0)
-			barrel.material_override = _get_mat("tank_barrel", accent_col, Color.BLACK, 0.7, 0.3)
-			root.add_child(barrel)
-		elif faction == "monsters":
-			var cap = SphereMesh.new()
-			cap.radius = rad * 0.9
-			cap.height = rad * 1.3
-			body_mi.mesh = cap
-			body_mi.position = Vector3(0.0, rad * 0.65, 0.0)
-		elif faction == "aliens":
-			var aprism = PrismMesh.new()
-			aprism.size = Vector3(rad * 1.6, 2.2, rad * 1.5)
-			body_mi.mesh = aprism
-			body_mi.position = Vector3(0.0, 1.1, 0.0)
-		else:
-			var ucyl = CylinderMesh.new()
-			ucyl.top_radius = rad * 0.75
-			ucyl.bottom_radius = rad * 0.85
-			ucyl.height = 1.9
-			body_mi.mesh = ucyl
-			body_mi.position = Vector3(0.0, 0.95, 0.0)
-			# Forward visor/weapon barrel
-			var gun = MeshInstance3D.new()
-			var gbox = BoxMesh.new()
-			gbox.size = Vector3(rad * 1.1, 0.3, 0.3)
-			gun.mesh = gbox
-			gun.position = Vector3(rad * 0.7, 1.1, 0.0)
-			gun.material_override = _get_mat("gun_visor", Color.WHITE, Color("#38bdf8") * 0.4)
-			root.add_child(gun)
-
-		body_mi.material_override = _get_mat("unit_" + u["unit_type"], base_col, accent_col * 0.2, 0.45, 0.45)
-		root.add_child(body_mi)
-
-	# Translucent Plasma Shield Bubble for Aliens
-	if u["max_shields"] > 0.0:
-		var sh_mi = MeshInstance3D.new()
-		sh_mi.name = "ShieldBubble"
-		var ssph = SphereMesh.new()
-		ssph.radius = rad * 1.25
-		ssph.height = rad * 2.5
-		sh_mi.mesh = ssph
-		sh_mi.position = Vector3(0.0, rad * 1.1, 0.0)
-		var smat = StandardMaterial3D.new()
-		smat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		smat.albedo_color = Color(0.22, 0.74, 0.97, 0.22)
-		smat.emission_enabled = true
-		smat.emission = Color("#38bdf8")
-		smat.emission_energy_multiplier = 0.8
-		sh_mi.material_override = smat
-		root.add_child(sh_mi)
-
-	return root
+func _weapon_color(owner_id: int, is_splash: bool) -> Color:
+	if is_splash:
+		return Color("#ffa534") if owner_id != 2 else Color("#b7f23a")
+	match owner_id:
+		1: return Color("#bfe0ff")
+		2: return Color("#a3e635")
+		_: return Color("#ffe27a")
 
 func _on_projectile_fired(from_pos: Vector2, to_pos: Vector2, _weapon_name: String, is_splash: bool, owner_id: int) -> void:
-	var p1 = Vector3(from_pos.x, SimEngine.get_elevation_at(from_pos) + 1.2, from_pos.y)
-	var p2 = Vector3(to_pos.x, SimEngine.get_elevation_at(to_pos) + 0.9, to_pos.y)
-	var dist = p1.distance_to(p2)
-	if dist < 0.1:
+	if _skip_transient_fx():
 		return
-	var beam = MeshInstance3D.new()
-	var box = BoxMesh.new()
-	box.size = Vector3(0.18 if not is_splash else 0.38, 0.18 if not is_splash else 0.38, dist)
+	var p1 := Vector3(from_pos.x, SimEngine.get_elevation_at(from_pos) + 1.3, from_pos.y)
+	var p2 := Vector3(to_pos.x, SimEngine.get_elevation_at(to_pos) + 1.0, to_pos.y)
+	var dist := p1.distance_to(p2)
+	if dist < 0.2:
+		return
+	var col := _weapon_color(owner_id, is_splash)
+	var beam := MeshInstance3D.new()
+	var box := BoxMesh.new()
+	var w := 0.22 if is_splash else 0.12
+	box.size = Vector3(w, w, dist)
 	beam.mesh = box
-	var col = Color("#38bdf8") if owner_id == 1 else (Color("#a3e635") if owner_id == 2 else Color("#facc15"))
-	if is_splash:
-		col = Color("#f97316")
-	beam.material_override = _get_mat("beam_" + str(owner_id) + str(is_splash), col, col, 0.0, 0.2)
+	var m := _fx_mat(col)
+	beam.material_override = m
 	fx_root.add_child(beam)
 	beam.look_at_from_position((p1 + p2) * 0.5, p2, Vector3.UP)
-	active_fx.append({"node": beam, "ttl": 0.18})
+	active_fx.append({"node": beam, "mat": m, "ttl": 0.16, "max": 0.16, "kind": "beam", "col": col, "grow": 0.0})
+	_spawn_burst(p1, Color(col.r, col.g, col.b, 0.9), 0.35, 0.1, 1.6)
+	_spawn_burst(p2, Color(col.r, col.g, col.b, 0.8), 1.4 if is_splash else 0.45, 0.22, 2.4 if is_splash else 1.8)
 
-func _on_unit_blinked(from_pos: Vector2, to_pos: Vector2, _tag: int) -> void:
+func _on_unit_phased(from_pos: Vector2, to_pos: Vector2, _tag: int) -> void:
+	if _skip_transient_fx():
+		return
 	for p in [from_pos, to_pos]:
-		var ring = MeshInstance3D.new()
-		var torus = TorusMesh.new()
-		torus.inner_radius = 0.9
-		torus.outer_radius = 1.4
-		ring.mesh = torus
-		ring.position = Vector3(p.x, SimEngine.get_elevation_at(p) + 0.5, p.y)
-		ring.material_override = _get_mat("blink_fx", Color("#38bdf8"), Color("#38bdf8"), 0.1, 0.1)
-		fx_root.add_child(ring)
-		active_fx.append({"node": ring, "ttl": 0.35})
+		_spawn_burst(Vector3(p.x, SimEngine.get_elevation_at(p) + 1.3, p.y), Color(0.4, 0.85, 1.0, 0.9), 0.9, 0.4, 2.6)
 
+func _on_unit_destroyed(dead: Dictionary) -> void:
+	var p: Vector2 = dead["pos"]
+	var base := Vector3(p.x, SimEngine.get_elevation_at(p), p.y)
+	var rad := float(dead["radius"])
+	var col := Color(1.0, 0.7, 0.3, 0.9)
+	match str(dead.get("faction", "humans")):
+		"monsters": col = Color(0.65, 0.92, 0.2, 0.9)
+		"aliens": col = Color(0.5, 0.9, 1.0, 0.9)
+	if not _skip_transient_fx():
+		_spawn_burst(base + Vector3(0, rad * 0.8, 0), col, rad * (1.2 if dead["is_structure"] else 0.9), 0.55, 2.8)
+		if dead["is_structure"]:
+			_spawn_burst(base + Vector3(rad * 0.3, rad * 1.2, 0), Color(1.0, 0.85, 0.5, 0.8), rad * 0.8, 0.8, 2.2)
+	_spawn_scorch(base, rad * (1.1 if dead["is_structure"] else 0.8))
+
+# ---------------------------------------------------------------------------
+# Projection helpers
+# ---------------------------------------------------------------------------
 func world_to_screen(wpos: Vector2, y_offset: float = 0.0) -> Vector2:
-	var elev = SimEngine.get_elevation_at(wpos) + y_offset
+	var elev := SimEngine.get_elevation_at(wpos) + y_offset
 	return camera_3d.unproject_position(Vector3(wpos.x, elev, wpos.y))
 
 func screen_to_world(spos: Vector2) -> Vector2:
-	var orig = camera_3d.project_ray_origin(spos)
-	var dir = camera_3d.project_ray_normal(spos)
-	if abs(dir.y) < 0.0001:
+	var orig := camera_3d.project_ray_origin(spos)
+	var dir := camera_3d.project_ray_normal(spos)
+	if absf(dir.y) < 0.0001:
 		return Vector2(orig.x, orig.z)
-	var t = -orig.y / dir.y
-	var hit = orig + dir * t
-	return Vector2(hit.x, hit.z)
+	var guess := Vector2.ZERO
+	var elev := 0.0
+	for _i in range(3):
+		var t := (elev - orig.y) / dir.y
+		var hit := orig + dir * t
+		guess = Vector2(hit.x, hit.z)
+		elev = SimEngine.get_elevation_at(guess)
+	return guess
