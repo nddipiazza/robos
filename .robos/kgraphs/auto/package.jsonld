@@ -132,7 +132,7 @@
       "robos:appFamily": {
         "@id": "urn:robos:auto:family"
       },
-      "robos:description": "Separate owner and maintenance-center modes with invoice OCR, maintenance plans and private shop Git history. Center reports track custody, payments, actual expenses, earned sales and daily/weekly/monthly operating profit with direct margins per repair job. Immutable credits preserve corrections. Bulk recalls link remedies, affected components and exact source rows.",
+      "robos:description": "Separate owner and maintenance-center modes with invoice OCR, maintenance plans and private shop Git history. Center reports track custody, payments, actual expenses, earned sales and daily/weekly/monthly operating profit with direct margins per repair job. Immutable credits preserve corrections. Bulk recalls link remedies, affected components and exact source rows. The service-desk interface separates shop floor, profit and costs, payments and performance, with keyboard-accessible tabs and responsive owner and shop workspaces.",
       "robos:desktopFramework": "Electron",
       "robos:package": "auto",
       "robos:repository": "https://github.com/nddipiazza/robos",

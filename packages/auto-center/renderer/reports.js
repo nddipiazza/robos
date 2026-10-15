@@ -17,7 +17,7 @@ async function refreshReports() {
   const r = await window.auto.reports({ asOf: $('report-date').value || undefined, currency: $('report-currency').value }); reportState = r;
   renderProfit(r);
   $('report-date').value = r.asOf; $('report-date').max = r.today;
-  $('report-context').textContent = `${r.timeZone} · Monday-start weeks · Week begins ${r.periods.week}; month begins ${r.periods.month}. Live operations are current; financial periods end ${r.asOf}.`;
+  $('report-context').textContent = `${r.timeZone} · Through ${r.asOf} · Weeks start Monday · Shop floor and balances show live status`;
   $('revenue-cards').replaceChildren(...[['day', 'Payments received this day'], ['week', 'Payments received this week'], ['month', 'Payments received this month']].map(([period, label]) => {
     const m = r.revenue[period]; return metric(label, money(m.netMinor, r.currency), `${money(m.receivedMinor, r.currency)} received · ${money(m.refundedMinor, r.currency)} refunded`);
   }));
@@ -31,18 +31,27 @@ async function refreshReports() {
     metric('Average payment this month', r.revenue.month.averageReceiptMinor === null ? '—' : money(r.revenue.month.averageReceiptMinor, r.currency), `${r.revenue.month.receipts} received payments; excludes refunds`),
     metric('Maintenance overdue by date', r.overdueMaintenance, `${r.maintenanceDueSoon} due within seven days`),
   ];
+  $('floor-count').textContent = `${r.heldCount} on site / ${r.openJobs} open jobs`;
   $('operation-cards').replaceChildren(...operationMetrics.slice(0,4));$('extra-operation-cards').replaceChildren(...operationMetrics.slice(4));
   $('held-cars').replaceChildren(...r.held.map(h => {
     const v = h.vehicle, s = h.stay, c = text('article', '', 'held-car'); c.dataset.vehicle = v['@id'];
-    const icon = document.createElement('img'); icon.src = '../icon.svg'; icon.alt = ''; c.append(icon, text('h3', v['dcterms:title']), text('p', [v['schema:modelDate'], v['schema:brand'], v['schema:model']].filter(Boolean).join(' ')));
-    c.append(text('p', `Plate: ${v['robos:licensePlate'] || 'Not recorded'} ${v['robos:registrationJurisdiction'] || ''}`), text('p', v['robos:ownerNotes'] || 'No customer notes'),
-      text('p', `Checked in ${new Date(s['schema:startDate']).toLocaleString()} · ${h.daysHeld} calendar days`), text('p', `Location: ${s['robos:parkingLocation'] || 'Not recorded'}`));
-    if (s['robos:expectedReadyOn']) c.append(text('p', `Expected ready: ${s['robos:expectedReadyOn']}${h.pastExpectedDate ? ' · Past expected date' : ''}`, h.pastExpectedDate ? 'failed' : 'muted'));
-    c.append(text('p', h.readyForPickup ? 'Ready for pickup' : h.jobs.length ? `${h.jobs.length} open repair jobs` : 'No open repair jobs', 'status'));
-    h.jobs.forEach(j => c.append(text('p', `${j['dcterms:title']} · ${j['robos:jobStatus']} · ${j['robos:technician'] || 'Unassigned'}`, 'muted')));
-    if (h.jobs.length) c.append(button('Open repairs', () => { navigate('shop'); [...$('job-list').children].find(el => el.dataset.vehicle === v['@id'])?.scrollIntoView({ block: 'center' }); }));
-    const label = text('label', 'Collected at (local; blank means now)'), collected = document.createElement('input'); collected.type = 'datetime-local'; collected.setAttribute('aria-label', 'Collection time'); label.append(collected); c.append(label);
-    c.append(button('Record vehicle collected', async () => { const checkedOutAt = collected.value ? new Date(collected.value).toISOString() : undefined; await window.auto.checkOut({ id: s['@id'], checkedOutAt }); await refresh(); message('Vehicle checked out and committed to private shop history.'); })); return c;
+    const top = text('div', '', 'vehicle-card-top');
+    top.append(text('span', s['robos:parkingLocation'] || 'LOCATION UNASSIGNED', 'bay-label'), text('span', h.readyForPickup ? 'Ready for pickup' : h.jobs.length ? 'In service' : 'Checked in', h.readyForPickup ? 'vehicle-state ready' : 'vehicle-state'));
+    c.append(top, text('h3', v['dcterms:title']), text('p', [v['schema:modelDate'], v['schema:brand'], v['schema:model']].filter(Boolean).join(' '), 'vehicle-model'));
+    c.append(text('p', `${v['robos:licensePlate'] || 'No plate recorded'} ${v['robos:registrationJurisdiction'] || ''}`, 'plate-label'));
+    const detail = text('dl', '', 'vehicle-facts');
+    for (const [key, value] of [['Time on site', `${h.daysHeld} days`], ['Expected ready', s['robos:expectedReadyOn'] || 'Not set']]) { detail.append(text('dt', key), text('dd', value)); }
+    c.append(detail, text('p', `Checked in ${new Date(s['schema:startDate']).toLocaleString()}`, 'checked-in-time'));
+    if (v['robos:ownerNotes']) c.append(text('p', v['robos:ownerNotes'], 'customer-note'));
+    const work = text('div', '', 'vehicle-work');
+    h.jobs.forEach(j => { const row = text('div', '', 'work-line'); row.append(text('strong', j['dcterms:title']), text('small', `${j['robos:technician'] || 'Unassigned'} · ${j['robos:jobStatus'].replaceAll('-', ' ')}`)); work.append(row); });
+    if (!h.jobs.length) work.append(text('p', 'No open repair jobs', 'muted'));
+    c.append(work);
+    if (h.pastExpectedDate) c.append(text('p', 'Past expected ready date', 'failed'));
+    if (h.jobs.length) c.append(button('Open repair →', () => { navigate('shop'); [...$('job-list').children].find(el => el.dataset.vehicle === v['@id'])?.scrollIntoView({ block: 'center' }); }));
+    const collection = text('details', '', 'collection-controls'); collection.append(text('summary', 'Record collection'));
+    const label = text('label', 'Collected at (local; blank means now)'), collected = document.createElement('input'); collected.type = 'datetime-local'; collected.setAttribute('aria-label', 'Collection time'); label.append(collected); collection.append(label);
+    collection.append(button('Record vehicle collected', async () => { const checkedOutAt = collected.value ? new Date(collected.value).toISOString() : undefined; await window.auto.checkOut({ id: s['@id'], checkedOutAt }); await refresh(); message('Vehicle checked out and committed to private shop history.'); })); c.append(collection); return c;
   }));
   if (!r.held.length) $('held-cars').append(text('p', 'No vehicles are currently checked in. Register a customer vehicle, then use check-in below or check it in during job intake.', 'empty-state'));
   const totalJobs = Object.values(r.statuses).reduce((a, b) => a + b, 0);

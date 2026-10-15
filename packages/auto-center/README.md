@@ -81,7 +81,7 @@ Manufacturer repair manuals, maintenance schedules, torque values, labor times a
 
 ```bash
 node --test packages/auto-center/tests/*.test.js
-node --test --test-concurrency=1 packages/auto-center/tests/electron.e2e.js packages/auto-center/tests/modes.e2e.js
+node --test --test-concurrency=1 packages/auto-center/tests/electron.e2e.js packages/auto-center/tests/modes.e2e.js packages/auto-center/tests/reports.e2e.js
 ```
 
 The Electron test requires collected/imported public data, the existing `robos-test` Playwright dependency, Electron and a display. It uses an isolated private graph and clearly labeled test service entries; screenshots show the actual Auto Center screens. It checks catalog search, record details, persistent garage/service entry, source inspection and schema/software views.
@@ -116,7 +116,7 @@ Search the catalog by campaign number, make/model/year applicability, component 
 
 ## Center reports
 
-**Auto maintenance center mode → Center reports** is the shop landing page. It reports your private shop data without assuming that a registered vehicle is physically present or that a scanned invoice is income.
+**Maintenance center → Center reports** is the shop landing page. The service-desk layout separates **Shop floor**, **Profit & costs**, **Payments**, and **Performance** into keyboard-accessible tabs. Use arrow keys, Home or End to switch tabs; date and currency filters apply across reports. Vehicle collection controls and accounting instructions expand when needed. Owner maintenance plans sit beside their entry form, and repair editors keep a practical width. The layout adapts to smaller windows. It reports your private shop data without assuming that a registered vehicle is physically present or that a scanned invoice is income.
 
 - **Cars currently held:** cards show explicitly checked-in vehicles, customer notes, plate, location/bay, check-in time, calendar days on site, expected ready date, active repair jobs and technicians. Use the check-in form or explicitly select the physical check-in checkbox during repair intake. Collection closes the vehicle stay; closing a repair job does not release the vehicle. Repeated check-ins cannot create overlapping stays.
 - **Payments this day/week/month:** recorded receipts less recorded refunds, in the selected currency. Weeks start Monday; months start on the first. The business-date selector changes profit, cash and completion periods. Vehicle cards, backlog and balances remain live. The display names the machine's local shop time zone. Calendar boundaries and job timestamps use that zone; payment dates are the business dates you enter.
