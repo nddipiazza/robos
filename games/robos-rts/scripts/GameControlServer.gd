@@ -201,6 +201,42 @@ func _process_http_request(client: StreamPeerTCP, raw_req: String) -> void:
 			bdd_proof_text = str(body_dict.get("proof", bdd_proof_text))
 			_send_json(client, 200, {"ok": true})
 
+		"/select":
+			var tags_in: Array = body_dict.get("tags", [])
+			var main_node = get_tree().current_scene
+			if main_node and "selected_tags" in main_node:
+				main_node.selected_tags.clear()
+				if tags_in.is_empty() and body_dict.has("unit_type"):
+					var ut = str(body_dict.get("unit_type")).to_lower()
+					var own = int(body_dict.get("owner", 1))
+					for u in SimEngine.units.values():
+						if u["unit_type"] == ut and u["owner"] == own:
+							main_node.selected_tags.append(int(u["tag"]))
+				else:
+					for t in tags_in:
+						main_node.selected_tags.append(int(t))
+				_send_json(client, 200, {"ok": true, "selected": main_node.selected_tags.size()})
+			else:
+				_send_json(client, 200, {"ok": false, "error": "Main scene not ready"})
+
+		"/camera":
+			var cx = float(body_dict.get("x", 64.0))
+			var cz = float(body_dict.get("z", 92.0))
+			var cy = float(body_dict.get("y", 68.0))
+			var main_node = get_tree().current_scene
+			if main_node and "world_3d" in main_node and main_node.world_3d and main_node.world_3d.camera_3d:
+				main_node.world_3d.camera_3d.position = Vector3(cx, cy, cz)
+			_send_json(client, 200, {"ok": true, "camera": [cx, cy, cz]})
+
+		"/screenshot":
+			var out_path = str(body_dict.get("path", "/tmp/robos_rts_shot.png"))
+			var img = get_viewport().get_texture().get_image()
+			if img:
+				var err = img.save_png(out_path)
+				_send_json(client, 200, {"ok": err == OK, "path": out_path, "width": img.get_width(), "height": img.get_height()})
+			else:
+				_send_json(client, 500, {"ok": false, "error": "No viewport image available"})
+
 		_:
 			_send_json(client, 404, {"ok": false, "error": "Unknown endpoint: " + path})
 

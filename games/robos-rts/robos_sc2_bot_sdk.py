@@ -78,6 +78,20 @@ class RobOSSC2Client:
     def set_overlay(self, step_text: str, proof_text: str = "") -> Dict[str, Any]:
         return self._request("POST", "/overlay", {"step": step_text, "proof": proof_text})
 
+    def select(self, tags: Optional[List[int]] = None, unit_type: Optional[str] = None, owner: int = 1) -> Dict[str, Any]:
+        payload: Dict[str, Any] = {"owner": owner}
+        if tags is not None:
+            payload["tags"] = tags
+        if unit_type is not None:
+            payload["unit_type"] = unit_type
+        return self._request("POST", "/select", payload)
+
+    def set_camera(self, x: float = 64.0, y: float = 68.0, z: float = 92.0) -> Dict[str, Any]:
+        return self._request("POST", "/camera", {"x": x, "y": y, "z": z})
+
+    def screenshot(self, path: str) -> Dict[str, Any]:
+        return self._request("POST", "/screenshot", {"path": path})
+
 
 class SC2BotBase:
     """
