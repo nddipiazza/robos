@@ -2,7 +2,7 @@
 layout: game
 title: "Tabletop RPG"
 permalink: /games/tabletop-rpg/
-description: "A HeroQuest-inspired tabletop dungeon crawler: five quests, fog of war, a talking story, a Game Master mode and the editors to build your own. Built in Godot 4 by RobOS agents."
+description: "A HeroQuest-inspired tabletop dungeon crawler: Quest 1: Custom Dungeon, autonomous AI verification, fog of war, a talking story, Game Master mode, and the editors to build your own. Built in Godot 4 by RobOS agents."
 bg_video: /assets/games/tabletop-bg.mp4
 bg_poster: /assets/games/tabletop-bg-poster.jpg
 accent: "#e0b252"
@@ -10,7 +10,7 @@ accent: "#e0b252"
 <section class="g-hero wrap">
   <p class="kicker">RobOS Tabletop RPG</p>
   <h1 class="g-title">Descend. Open the door.<br>Face what waits.</h1>
-  <p class="lead">A HeroQuest-inspired dungeon crawler. Lead four heroes through five quests, or sit behind the screen as the Game Master. Then build quests of your own.</p>
+  <p class="lead">A HeroQuest-inspired dungeon crawler. Lead four heroes through the fully verified custom quest, or sit behind the screen as the Game Master. Then build quests of your own.</p>
   <div class="cta"><a class="btn" href="#play">Play it</a><a class="btn btn-ghost" href="#build">Build a quest</a><a class="btn btn-ghost" href="#proof-of-viability">Proof of Viability</a><a class="btn btn-ghost" href="{{ '/games/tabletop-rpg/docs/' | relative_url }}">Read the docs</a></div>
   <span class="scroll">Scroll ↓</span>
 </section>
@@ -43,25 +43,30 @@ accent: "#e0b252"
 
 <section class="g-sec">
   <div class="wrap">
-    <p class="eyebrow">Cartridges</p>
-    <h2 class="h2">Five quests, ready to play</h2>
+    <p class="eyebrow">Playable Cartridge</p>
+    <h2 class="h2">Quest 1: Custom Dungeon</h2>
     <div class="panel-g" style="margin-top:24px">
       <table class="t">
-        <tr><th>#</th><th>Quest</th><th>Board</th><th>Reward</th></tr>
-        <tr><td>1</td><td>The Trial</td><td>Fan Dungeon, 28×21</td><td>100 gold</td></tr>
-        <tr><td>2</td><td>The Rescue of Sir Ragnar</td><td>Classic board</td><td>200 gold</td></tr>
-        <tr><td>3</td><td>Lair of the Orc Warlord</td><td>First Light caverns</td><td>250 gold</td></tr>
-        <tr><td>4</td><td>The Fortress of the Fire King</td><td>First Light dungeon, 26×19</td><td>400 gold</td></tr>
-        <tr><td>5</td><td>The Crypt Guardian</td><td>First Light dungeon, 26×19</td><td>100 gold</td></tr>
+        <tr><th>Quest</th><th>Cartridge</th><th>Board</th><th>Monsters</th><th>Primary Objectives</th><th>Reward</th><th>Status</th></tr>
+        <tr>
+          <td><strong>Quest 1: Custom Dungeon</strong></td>
+          <td><code>custom-quest.cartridge.json</code></td>
+          <td>Classic board, 28×19</td>
+          <td>23 monsters &bull; Boss Doomguard</td>
+          <td>Slay Boss Doomguard, search ancient chambers for relics, escape through border stairs <code>[-1, 4]</code></td>
+          <td>250 gold</td>
+          <td><span style="color:#4caf50;font-weight:700">● 100% Verified Playable</span></td>
+        </tr>
       </table>
-      <p class="sec-p" style="margin-top:16px">Quest 5 is the newest and the best place to see dialogue bubbles, the message dialog and the objectives briefing at work: break the dark seal and defeat the Crypt Guardian in his chamber.</p>
+      <p class="sec-p" style="margin-top:16px">Mentor speaks: <em>&ldquo;Venture forth into the dungeon catacombs, vanquish the Dungeon Boss guarding the inner stronghold, explore the chambers for ancient relics, and make it to the exit stairs to escape.&rdquo;</em></p>
+      <p class="sec-p" style="margin-top:8px">This is the canonical, verified quest cartridge bundled with RobOS Tabletop RPG. Every encounter, secret passage, potion triage trigger, and border stair extraction has been autonomously tested and proven mathematically winnable across 296 turns, 21 combat rounds, and 315 audit transactions with zero casualties.</p>
     </div>
     <div class="shots">
-      <figure class="wide"><img loading="lazy" src="{{ '/assets/games/tabletop-still-intro.jpg' | relative_url }}" alt="Cinematic still from the quest introduction"><figcaption>In-game cinematic: the quest introduction.</figcaption></figure>
-      <figure><img loading="lazy" src="{{ '/assets/games/tabletop-still-heist.jpg' | relative_url }}" alt="Cinematic still of a dungeon corridor scene"><figcaption>Cinematic: the corridor, from The Fortress of the Fire King.</figcaption></figure>
-      <figure><img loading="lazy" src="{{ '/v1/assets/images/tabletop-rpg/heroquest_board.jpg' | relative_url }}" alt="The HeroQuest board, a dungeon of rooms and corridors seen from above"><figcaption>The classic board</figcaption></figure>
-      <figure><img loading="lazy" src="{{ '/v1/assets/images/tabletop-rpg/first_light_caverns.jpg' | relative_url }}" alt="The First Light caverns board, a cave network seen from above"><figcaption>First Light caverns (Quest 3)</figcaption></figure>
-      <figure><img loading="lazy" src="{{ '/assets/games/tabletop-still-witch.jpg' | relative_url }}" alt="Cinematic still of a witch's hand raising the undead"><figcaption>Cinematic: the undead rise.</figcaption></figure>
+      <figure class="wide"><img loading="lazy" src="{{ '/assets/games/proof-of-viability/m19_reach_exit_complete.jpg' | relative_url }}" alt="Barbarian reaches border exit stairs [-1, 4] for quest victory"><figcaption>Step 296: Barbarian reaches the exit stairs [-1, 4] for quest victory.</figcaption></figure>
+      <figure><img loading="lazy" src="{{ '/assets/games/proof-of-viability/m08_boss_slain.jpg' | relative_url }}" alt="Dwarf slays Boss Doomguard in inner stronghold"><figcaption>Step 111: Dwarf slays Boss Doomguard in the inner stronghold.</figcaption></figure>
+      <figure><img loading="lazy" src="{{ '/v1/assets/images/tabletop-rpg/heroquest_board.jpg' | relative_url }}" alt="The HeroQuest classic board seen from above"><figcaption>The classic board</figcaption></figure>
+      <figure><img loading="lazy" src="{{ '/assets/games/proof-of-viability/m09_secret_door6_found.jpg' | relative_url }}" alt="Elf discovers Secret Door-6 escape route in room SE-21"><figcaption>Step 115: Elf discovers Secret Door-6 in room SE-21.</figcaption></figure>
+      <figure><img loading="lazy" src="{{ '/assets/games/proof-of-viability/m17_secret_door9_found.jpg' | relative_url }}" alt="Elf discovers Secret Door-9 leading to exit stairs"><figcaption>Step 290: Elf uncovers Secret Door-9 to the exit corridor.</figcaption></figure>
     </div>
   </div>
 </section>
@@ -74,20 +79,20 @@ accent: "#e0b252"
       <p class="sec-p">The game runs as a native Godot 4 app, and there is no hosted browser version, so you run it locally. You need <a style="text-decoration:underline" href="https://godotengine.org/download" target="_blank" rel="noopener">Godot 4.3</a> and Git. If <code>godot</code> is already on your path, or lives in <code>~/.local/bin</code> or <code>~/apps</code>, the launcher finds it. Otherwise point <code>GODOT_BIN</code> at it.</p>
       <pre class="code"><button data-copy>Copy</button><code>git clone https://github.com/nddipiazza/robos.git
 cd robos/games/tabletop-rpg
-GODOT_BIN=/path/to/godot4 ./play.sh          # pick a quest from the menu
-./play.sh --demo                              # watch the AI play a demo</code></pre>
-      <p class="sec-p" style="margin-top:22px">Skip the menu by naming a quest, and mix in the options below.</p>
-      <pre class="code"><button data-copy>Copy</button><code>./play.sh 4                  # The Fortress of the Fire King
-./play.sh 5                  # The Crypt Guardian (dialogue and objectives)
-./play.sh 2 --dm             # Rescue of Sir Ragnar, as the Game Master
-./play.sh 3 --hard --reset   # Orc Warlord on hard mode, fresh save</code></pre>
+GODOT_BIN=/path/to/godot4 ./play.sh          # launch Quest 1: Custom Dungeon
+./play.sh --demo                              # watch Mentor AI solve the quest</code></pre>
+      <p class="sec-p" style="margin-top:22px">Launch options and player modes:</p>
+      <pre class="code"><button data-copy>Copy</button><code>./play.sh                            # launch Quest 1: Custom Dungeon (default)
+./play.sh --demo                     # watch Mentor AI play autonomously
+./play.sh --dm                       # play Zargon, the Game Master
+./play.sh --hard --reset             # hard mode, fresh campaign save</code></pre>
       <table class="t" style="margin-top:22px">
         <tr><th>Option</th><th>What it does</th></tr>
-        <tr><td><code>1</code> to <code>5</code></td><td>Start that quest, skipping the menu.</td></tr>
-        <tr><td><code>--dm</code></td><td>Play Zargon, the Game Master, and command the monsters.</td></tr>
-        <tr><td><code>--hard</code></td><td>Hard mode.</td></tr>
-        <tr><td><code>--reset</code></td><td>Start a new game instead of resuming your save.</td></tr>
-        <tr><td><code>--demo</code></td><td>Autonomous demo: the AI plays the turns for you.</td></tr>
+        <tr><td><code>./play.sh</code></td><td>Launch the verified playable quest (Quest 1: Custom Dungeon).</td></tr>
+        <tr><td><code>--demo</code></td><td>Autonomous demo: watch the Mentor AI solve and complete the quest turn-by-turn.</td></tr>
+        <tr><td><code>--dm</code></td><td>Play Zargon, the Game Master, and command the monsters behind the screen.</td></tr>
+        <tr><td><code>--hard</code></td><td>Hard mode: tougher monster encounters and tighter margins.</td></tr>
+        <tr><td><code>--reset</code></td><td>Start a fresh game session instead of resuming save state.</td></tr>
       </table>
       <div class="cta" style="justify-content:flex-start;margin-top:18px"><a class="btn" href="{{ '/v1/projects/tabletop-rpg/' | relative_url }}">Engine guide</a><a class="btn btn-ghost" href="https://github.com/nddipiazza/robos/tree/main/games/tabletop-rpg" target="_blank" rel="noopener">Source on GitHub</a></div>
     </div>

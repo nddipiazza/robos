@@ -29,24 +29,22 @@ A turn-based dungeon crawler in Godot 4.3, modelled on the HeroQuest board game,
 You need Godot 4.3, the version `project.godot` targets (GL Compatibility renderer). The game does not bundle it. `play.sh` looks for the binary in `$GODOT_BIN`, then `~/.local/bin/godot`, `~/apps/godot4`, and `godot4` or `godot` on your `PATH`. It exits with an error if none exists.
 
 ```bash
-./games/tabletop-rpg/play.sh                   # prompts for a quest; defaults to quest 4 after 4 seconds
-./games/tabletop-rpg/play.sh --quest 1         # quest 1, from the heroquest-the-trial cartridge
-./games/tabletop-rpg/play.sh --cartridge heroquest-fortress-fire-king
+./games/tabletop-rpg/play.sh                   # launches the verified Quest 1: Custom Dungeon
+./games/tabletop-rpg/play.sh --demo            # watch Mentor AI solve the quest autonomously
 ./games/tabletop-rpg/play.sh --dm              # play the Game Master (Zargon) instead of the heroes
-./games/tabletop-rpg/play.sh --auto-play       # scripted demo turn sequence
-./games/tabletop-rpg/play.sh --headless --auto-play --quit-after 160
+./games/tabletop-rpg/play.sh --hard --reset    # hard mode, fresh campaign save
+./games/tabletop-rpg/play.sh --headless --demo
 ```
 
-Other flags in `play.sh`: `--reset` starts a new game instead of resuming, `--player` selects the hero side, and `--hard` sets hard mode. Without a terminal and without a cartridge argument, it loads `heroquest-the-trial`.
+Other flags in `play.sh`: `--reset` starts a new game instead of resuming, `--player` selects the hero side, and `--hard` sets hard mode. By default, it loads the verified playable cartridge `custom-quest.cartridge.json`.
 
 ## What is in the game
 
-The game loads a cartridge, a single `.cartridge.json` file that holds heroes, monsters, quests and maps. Two ship in `games/tabletop-rpg/cartridges`.
+The game loads a cartridge, a single `.cartridge.json` file that holds heroes, monsters, quests and maps. The canonical verified cartridge ships in `games/tabletop-rpg/cartridges/custom-quest.cartridge.json`.
 
-| Cartridge | Quests | Maps |
-|:---|:---|:---|
-| `heroquest-the-trial` | Quest 1: The Trial. Quest 2: The Rescue of Sir Ragnar. Quest 3: Lair of the Orc Warlord. | Quest 1 uses the 28x21 Fan Dungeon, quest 2 the 26x19 classic board, quest 3 the 26x19 First Light caverns. |
-| `heroquest-fortress-fire-king` | Quest 4: The Fortress of the Fire King. | One 26x19 map. Its heroes carry their own gear and spells, and the file defines 28 monsters. |
+| Cartridge | Quests | Maps | Verification |
+|:---|:---|:---|:---|
+| `custom-quest` | Quest 1: Custom Dungeon. Vanquish the Dungeon Boss, explore ancient chambers, and escape to border stairs `[-1, 4]`. | Classic board, 28x19 grid. | **100% Verified Playable**: 296 turns, 21 combat rounds, 315 audit transactions, 0 casualties. |
 
 The rules in code:
 
