@@ -248,31 +248,31 @@ class TestDemoCustomQuestE2E(unittest.TestCase):
             num_shots = len(all_shots)
             print(f"    Found {num_shots} total turn screenshots.")
 
-            # Select 20 evenly distributed milestones across the entire game
-            milestone_indices = [
-                0,                                   # Start
-                min(2, num_shots - 1),               # First room door
-                min(4, num_shots - 1),               # First combat
-                min(5, num_shots - 1),               # Room 9 breach
-                min(12, num_shots - 1),              # Spells cast
-                min(16, num_shots - 1),              # Ball of flame
-                min(20, num_shots - 1),              # Round 2 combat
-                min(25, num_shots - 1),              # Skeletons engage
-                min(33, num_shots - 1),              # Fire of wrath
-                min(39, num_shots - 1),              # Room 21 door breach
-                min(43, num_shots - 1),              # Enter Room 21
-                min(50, num_shots - 1),              # Boss engages
-                min(52, num_shots - 1),              # Boss spells
-                min(59, num_shots - 1),              # Boss battle / defeat
-                min(63, num_shots - 1),              # Elf healing
-                min(75, num_shots - 1),              # Withdrawal begins
-                min(79, num_shots - 1),              # Heroes reach stairs
-                min(86, num_shots - 1),              # Chaos warrior battle
-                min(90, num_shots - 1),              # Party assembled
-                num_shots - 1                        # Victory modal!
-            ]
+            # Select 20 evenly distributed, strictly progressive milestones across the entire game
+            total_slides = 20
+            if num_shots <= total_slides:
+                milestone_indices = list(range(num_shots))
+            else:
+                milestone_indices = [
+                    int(round(i * (num_shots - 1) / (total_slides - 1)))
+                    for i in range(total_slides)
+                ]
 
             milestone_labels = [
+                f"tabletop_demo_{i+1:02d}_turn_{milestone_indices[i]+1:03d}.png"
+                for i in range(len(milestone_indices))
+            ]
+
+            # Copy 20 key milestone slides
+            for idx, label in zip(milestone_indices, milestone_labels):
+                if idx < num_shots:
+                    src = all_shots[idx]
+                    dst = os.path.join(BRAIN_DIR, label)
+                    shutil.copy2(src, dst)
+                    copied.append(label)
+
+            # Overwrite legacy numbered milestone filenames with strictly progressive shots
+            legacy_20_labels = [
                 "tabletop_demo_01_heroes_at_stairs.png",
                 "tabletop_demo_02_corridor_advance.png",
                 "tabletop_demo_03_room8_door_breach.png",
@@ -294,14 +294,13 @@ class TestDemoCustomQuestE2E(unittest.TestCase):
                 "tabletop_demo_19_party_reunited_at_stairs.png",
                 "tabletop_demo_20_quest_victory_complete.png"
             ]
-
-            # Copy 20 key milestone slides
-            for idx, label in zip(milestone_indices, milestone_labels):
+            for idx, leg_label in zip(milestone_indices, legacy_20_labels):
                 if idx < num_shots:
                     src = all_shots[idx]
-                    dst = os.path.join(BRAIN_DIR, label)
+                    dst = os.path.join(BRAIN_DIR, leg_label)
                     shutil.copy2(src, dst)
-                    copied.append(label)
+                    if leg_label not in copied:
+                        copied.append(leg_label)
 
             # Also maintain legacy names for backwards compatibility
             legacy_map = {
@@ -309,7 +308,7 @@ class TestDemoCustomQuestE2E(unittest.TestCase):
                 "tabletop_demo_turn_02_advance.png": all_shots[min(1, num_shots - 1)] if num_shots > 0 else None,
                 "tabletop_demo_turn_03_door_breach.png": all_shots[min(2, num_shots - 1)] if num_shots > 0 else None,
                 "tabletop_demo_turn_05_combat.png": all_shots[min(4, num_shots - 1)] if num_shots > 0 else None,
-                "tabletop_demo_turn_return_stair.png": all_shots[min(85, num_shots - 1)] if num_shots > 0 else None,
+                "tabletop_demo_turn_return_stair.png": all_shots[milestone_indices[-2]] if num_shots > 1 else None,
                 "tabletop_demo_turn_final_victory.png": all_shots[-1] if num_shots > 0 else None,
             }
             for leg_name, leg_src in legacy_map.items():
