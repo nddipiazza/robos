@@ -635,6 +635,13 @@
         <h2 class="section-title"><span class="icon">⚙️</span> Proof of Viability: Core Architectural Capabilities</h2>
       </div>
 
+      <div style="margin-bottom: 26px; border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; background: #0d131f;">
+        <img src="assets/tabletop_viability_pipeline.jpg" alt="Autonomous Quest Testing Pipeline Architecture" style="width: 100%; height: auto; display: block; cursor: pointer;" onclick="openLightboxImg('assets/tabletop_viability_pipeline.jpg')">
+        <div style="padding: 10px 16px; font-size: 0.82rem; color: var(--text-muted); font-family: var(--font-mono); background: #080d16; border-top: 1px solid var(--border-color);">
+          Figure 1: Full-lifecycle quest testing architecture — Map Authoring (Blockmap Creator, Quest Editor, Cartridge Bundler) ➔ Mentor AI Engine (Headless Godot 4, Control API, Decision Tree) ➔ Verification Artifacts (315-TX Audit Ledger, Visual Evidence, Viability Report).
+        </div>
+      </div>
+
       <div class="pillars-grid">
         <div class="pillar-card">
           <div class="pillar-icon">🧪</div>
@@ -788,6 +795,13 @@
       const lb = document.getElementById('lightbox');
       const img = document.getElementById('lightboxImg');
       img.src = 'assets/' + milestones[currentSlide].img;
+      lb.classList.add('active');
+    }
+
+    function openLightboxImg(src) {
+      const lb = document.getElementById('lightbox');
+      const img = document.getElementById('lightboxImg');
+      img.src = src;
       lb.classList.add('active');
     }
 

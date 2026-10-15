@@ -104,3 +104,47 @@ python3 games/tabletop-rpg/tests/test_tabletop_cartridge.py
 ```
 
 `tests/record_tabletop_gameplay.py` plays a scripted session in a virtual display (Xvfb at 1920x1080), records it with FFmpeg and writes an MP4 and a WebVTT caption file to `~/.robos/development/walkthroughs/tabletop-gameplay/`.
+
+## Proof of Viability (Autonomous Quest Verification)
+
+How do you prove a newly authored cartridge is actually winnable before shipping? RobOS uses autonomous agent governance to verify that the heroes can solve the dungeon, uncover secret passageways, survive combat balance, and reach extraction stairs.
+
+### Pipeline Architecture
+
+```mermaid
+flowchart LR
+    subgraph S1["Stage 1: Quest Map Authoring"]
+        BC["Tabletop Blockmap Creator"] --> QE["Tabletop Quest Map Editor"]
+        QE --> CB["Cartridge Bundler"]
+        CB --> QC[("Quest Cartridge JSON")]
+    end
+
+    subgraph S2["Stage 2: Mentor AI Engine"]
+        QC --> GR["Godot 4 Headless Runner"]
+        GR --> API["Control API (:18092)"]
+        API --> DT{"Decision Tree"}
+        DT -->|cur_bp <= 4| PT["Emergency Potion Triage"]
+        DT -->|Adjacent enemy| CT["Combat & Spellcasting"]
+        DT -->|Undiscovered exits| SD["Secret Door Search"]
+        DT -->|Clear path| EX["Border Exit Navigation [-1, 4]"]
+    end
+
+    subgraph S3["Stage 3: Verification Artifacts"]
+        EX --> AL["315-TX Audit Ledger"]
+        EX --> SS["Turn-by-Turn Screenshots"]
+        EX --> PR["Interactive Viability Report"]
+    end
+```
+
+![Autonomous Quest Testing Pipeline]({{ '/assets/images/tabletop-rpg/tabletop_viability_pipeline.jpg' | relative_url }})
+
+The end-to-end autonomous proof is implemented in [`games/tabletop-rpg/tests/test_demo_custom_quest_e2e.py`](file:///home/ndipiazza/source/robos/games/tabletop-rpg/tests/test_demo_custom_quest_e2e.py). It runs the four heroes autonomously on `custom-quest.cartridge.json`, verifying:
+
+1. **Starting Healing Potions & Emergency Consumption**: All 4 heroes are provisioned with 2 healing potions each; Mentor AI monitors health and drinks a potion whenever `cur_bp <= 4` (+4 BP, `USE_ITEM` transaction).
+2. **Dynamic Room & Corridor Secret Passageway Sweeping**: The engine tracks `searched_secret_rooms` and `searched_secret_corridor_tiles`. Heroes uncover hidden `door-6` in Room SE-21 (TX #121) and hidden `door-9` in Room NW-4 (TX #307).
+3. **Dead-End Room Pruning**: Pathfinding prunes optional 1-door dead-end rooms (e.g. `room-nw-10`), preserving party health during extraction.
+4. **Border Exit Stair Navigation (`[-1, 4]`)**: The engine treats exit stairs as an explicit exemption to border unwalkability in `is_border_tile()`, `find_path()`, and `move_hero()`, allowing heroes to step directly onto `[-1, 4]`.
+
+The test produces an immutable 315-transaction audit ledger, 0 hero casualties (100% survival rate), and turn-by-turn visual evidence.
+
+See the complete [Proof of Viability Interactive Report]({{ '/games/tabletop-rpg/proof-of-viability.html' | relative_url }}) and the [Game Showcase Page]({{ '/games/tabletop-rpg/#proof-of-viability' | relative_url }}).
