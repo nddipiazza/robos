@@ -864,13 +864,13 @@
         }
       ],
       "exitStair": [
-        -1,
-        4
+        15,
+        13
       ],
       "exitStairType": "stairs_down_1x1",
       "exitTile": [
-        -1,
-        4
+        15,
+        13
       ],
       "furniture": [
         {
@@ -883,6 +883,17 @@
           "width": 2,
           "x": 7,
           "y": 14
+        },
+        {
+          "height": 1,
+          "id": "furn-stairs_down_1x1-exit",
+          "name": "Dungeon Exit Staircase",
+          "roomId": "room-se-21",
+          "treasure": "",
+          "type": "stairs_down_1x1",
+          "width": 1,
+          "x": 15,
+          "y": 13
         }
       ],
       "height": 19,
@@ -3105,7 +3116,7 @@
   "quests": [
     {
       "bossTarget": "boss",
-      "briefing": "Mentor speaks: Venture forth into the dungeon catacombs, vanquish the Dungeon Boss guarding the inner stronghold, explore the chambers for ancient relics, and ensure all living heroes return safely to the spiral stairway.",
+      "briefing": "Mentor speaks: Venture forth into the dungeon catacombs, vanquish the Dungeon Boss guarding the inner stronghold, explore the chambers for ancient relics, and make it to the exit stairs to escape.",
       "completed": true,
       "goldReward": 250,
       "id": "quest-custom-1",
@@ -3113,7 +3124,7 @@
       "primaryGoals": [
         "Vanquish the Dungeon Boss guarding the inner stronghold",
         "Explore the ancient chambers and search for hidden treasures",
-        "Ensure all living heroes return safely to the spiral stairway"
+        "Make it to the exit stairs"
       ],
       "slug": "custom-quest",
       "startingPosition": [

@@ -3159,20 +3159,24 @@ func is_starting_stair_tile(tile: Vector2i) -> bool:
 	return tile.x >= r.position.x and tile.x < r.position.x + r.size.x and tile.y >= r.position.y and tile.y < r.position.y + r.size.y
 
 func is_exit_stair_tile(tile: Vector2i) -> bool:
-	if exit_stair == Vector2i(-1, -1):
+	if exit_stair == Vector2i(-1, -1) or exit_stair.x < 0 or exit_stair.y < 0:
 		return false
 	var r = get_exit_stair_rect_tiles()
 	return tile.x >= r.position.x and tile.x < r.position.x + r.size.x and tile.y >= r.position.y and tile.y < r.position.y + r.size.y
 
 func _is_hero_assembled_at_stairs(pos: Vector2i) -> bool:
+	if exit_stair != Vector2i(-1, -1) and exit_stair.x >= 0 and exit_stair.y >= 0:
+		if is_exit_stair_tile(pos):
+			return true
+		var er = get_exit_stair_rect_tiles()
+		if pos.x >= er.position.x - 1 and pos.x <= er.position.x + er.size.x and pos.y >= er.position.y - 1 and pos.y <= er.position.y + er.size.y:
+			return true
+		return false
 	if is_starting_stair_tile(pos):
 		return true
 	var r = get_starting_stair_rect_tiles()
 	if pos.x >= r.position.x - 1 and pos.x <= r.position.x + r.size.x and pos.y >= r.position.y - 1 and pos.y <= r.position.y + r.size.y:
 		return true
-	if exit_stair != Vector2i(-1, -1) and exit_stair.x >= 0 and exit_stair.y >= 0:
-		if is_exit_stair_tile(pos):
-			return true
 	return false
 
 func get_furniture_at(tile: Vector2i) -> Dictionary:
@@ -6274,7 +6278,8 @@ func get_quest_objectives() -> Array[Dictionary]:
 		"required": true
 	})
 
-	var obj3_text = "Ensure all living heroes return safely to the spiral stairway"
+	var has_exit = (exit_stair != Vector2i(-1, -1) and exit_stair.x >= 0 and exit_stair.y >= 0)
+	var obj3_text = "Make it to the dungeon exit stairs" if has_exit else "Ensure all living heroes return safely to the spiral stairway"
 	if active_q.has("primaryGoals") and active_q["primaryGoals"] is Array and active_q["primaryGoals"].size() >= 3:
 		obj3_text = str(active_q["primaryGoals"][2])
 
@@ -6284,13 +6289,21 @@ func get_quest_objectives() -> Array[Dictionary]:
 	if _quest_completed or get_game_state() == "quest_victory":
 		party_surviving = has_living_heroes
 	elif is_boss_dead and has_living_heroes:
-		var all_heroes_departed = living_heroes.all(func(h): return bool(h.get("has_departed_start", false)))
-		var all_heroes_returned = living_heroes.all(func(h):
-			var pos = _to_grid_pos(h.get("grid_pos"))
-			return _is_hero_assembled_at_stairs(pos)
-		)
-		if (all_heroes_departed and all_heroes_returned) or not any_monster_alive:
-			party_surviving = true
+		if has_exit:
+			var hero_at_exit = living_heroes.any(func(h):
+				var pos = _to_grid_pos(h.get("grid_pos"))
+				return is_exit_stair_tile(pos) or _is_hero_assembled_at_stairs(pos)
+			)
+			if hero_at_exit:
+				party_surviving = true
+		else:
+			var all_heroes_departed = living_heroes.all(func(h): return bool(h.get("has_departed_start", false)))
+			var all_heroes_returned = living_heroes.all(func(h):
+				var pos = _to_grid_pos(h.get("grid_pos"))
+				return _is_hero_assembled_at_stairs(pos)
+			)
+			if (all_heroes_departed and all_heroes_returned) or not any_monster_alive:
+				party_surviving = true
 
 	objs.append({
 		"id": "party_survival",
@@ -7437,7 +7450,8 @@ func _execute_mentor_ai_party_step() -> void:
 		return
 
 	var live_monsters = monsters.filter(func(m): return bool(m.get("is_alive", false)) and int(m.get("current_bp", 1)) > 0)
-	if live_monsters.is_empty() and not _quest_completed:
+	var has_exit = (exit_stair != Vector2i(-1, -1) and exit_stair.x >= 0 and exit_stair.y >= 0)
+	if live_monsters.is_empty() and not _quest_completed and not has_exit:
 		var q_title = str(get_active_quest_objective().get("title", "the dungeon"))
 		_log("🏆 [QUEST VICTORY] All minions of Zargon have been defeated! The heroes triumph and complete %s!" % q_title)
 		complete_active_quest(false)
@@ -7458,7 +7472,8 @@ func _execute_mentor_ai_party_step() -> void:
 
 	# 4b. Extraction Point Hold: If returning to stairs is allowed and hero is assembled, stand guard
 	if _is_returning_to_stairs_allowed() and _is_hero_assembled_at_stairs(h_pos):
-		_log("[MENTOR AI] 🛡️ %s stands guard at the spiral stairway extraction point." % hero_name)
+		var stair_label = "exit stairs" if has_exit else "spiral stairway extraction point"
+		_log("[MENTOR AI] 🛡️ %s stands guard at the %s." % [hero_name, stair_label])
 		end_turn()
 		return
 
@@ -7547,6 +7562,10 @@ func _execute_mentor_ai_party_step() -> void:
 					return
 				else:
 					movement_remaining = 0
+			else:
+				movement_remaining = 0
+		else:
+			movement_remaining = 0
 
 	# 11. Actions After Movement (if hero moved without acting yet)
 	if not has_acted_this_turn:
@@ -7611,35 +7630,7 @@ func _find_best_hero_movement_target(hero: Dictionary, h_pos: Vector2i) -> Dicti
 	var hero_id = str(hero.get("id", "barbarian"))
 	var h_idx = active_hero_idx
 
-	# 0. Target: Return to starting stairway if returning to stairs is allowed!
-	if _is_returning_to_stairs_allowed():
-		if _is_hero_assembled_at_stairs(h_pos):
-			return { "path": [], "reason": "assembled at spiral stairway" }
-		var r = get_starting_stair_rect_tiles()
-		var best_stair_path: Array[Vector2i] = []
-		for sy in range(r.position.y, r.position.y + r.size.y):
-			for sx in range(r.position.x, r.position.x + r.size.x):
-				var st_tile = Vector2i(sx, sy)
-				if not is_tile_occupied_by_hero(st_tile, h_idx):
-					var p = find_path(h_pos, st_tile, h_idx)
-					if p.size() > 1:
-						if best_stair_path.is_empty() or p.size() < best_stair_path.size():
-							best_stair_path = p
-		if not best_stair_path.is_empty():
-			return { "path": best_stair_path, "reason": "return to spiral stairway" }
-		for sy in range(r.position.y - 1, r.position.y + r.size.y + 1):
-			for sx in range(r.position.x - 1, r.position.x + r.size.x + 1):
-				var adj_tile = Vector2i(sx, sy)
-				if not is_tile_occupied_by_hero(adj_tile, h_idx) and not is_border_tile(adj_tile) and not is_tile_wall_blocked(adj_tile) and not is_tile_occupied_by_furniture(adj_tile):
-					var p = find_path(h_pos, adj_tile, h_idx)
-					if p.size() > 1:
-						if best_stair_path.is_empty() or p.size() < best_stair_path.size():
-							best_stair_path = p
-		if not best_stair_path.is_empty():
-			return { "path": best_stair_path, "reason": "assemble at spiral stairway" }
-		return { "path": [], "reason": "assembled at spiral stairway" }
-
-	# 1. Target: Visible living monsters
+	# 1. Target: Visible living monsters ALWAYS take priority!
 	var vis_monsters = _get_visible_living_monsters()
 	var best_m_path: Array[Vector2i] = []
 	var best_m_name = ""
@@ -7662,6 +7653,37 @@ func _find_best_hero_movement_target(hero: Dictionary, h_pos: Vector2i) -> Dicti
 
 	if not best_m_path.is_empty():
 		return { "path": best_m_path, "reason": "engage " + best_m_name }
+
+	# 2. Target: Advance to exit stairs (or return to starting stairs) if returning is allowed!
+	if _is_returning_to_stairs_allowed():
+		var has_exit = (exit_stair != Vector2i(-1, -1) and exit_stair.x >= 0 and exit_stair.y >= 0)
+		var r = get_exit_stair_rect_tiles() if has_exit else get_starting_stair_rect_tiles()
+		var stair_label = "exit stairs" if has_exit else "spiral stairway"
+		var is_at_dest = is_exit_stair_tile(h_pos) if has_exit else is_starting_stair_tile(h_pos)
+		if is_at_dest:
+			return { "path": [], "reason": "assembled at %s" % stair_label }
+		var best_stair_path: Array[Vector2i] = []
+		for sy in range(r.position.y, r.position.y + r.size.y):
+			for sx in range(r.position.x, r.position.x + r.size.x):
+				var st_tile = Vector2i(sx, sy)
+				if not is_tile_occupied_by_hero(st_tile, h_idx):
+					var p = find_path(h_pos, st_tile, h_idx)
+					if p.size() > 1:
+						if best_stair_path.is_empty() or p.size() < best_stair_path.size():
+							best_stair_path = p
+		if not best_stair_path.is_empty():
+			return { "path": best_stair_path, "reason": "reach %s" % stair_label }
+		for sy in range(r.position.y - 1, r.position.y + r.size.y + 1):
+			for sx in range(r.position.x - 1, r.position.x + r.size.x + 1):
+				var adj_tile = Vector2i(sx, sy)
+				if not is_tile_occupied_by_hero(adj_tile, h_idx) and not is_border_tile(adj_tile) and not is_tile_wall_blocked(adj_tile) and not is_tile_occupied_by_furniture(adj_tile):
+					var p = find_path(h_pos, adj_tile, h_idx)
+					if p.size() > 1:
+						if best_stair_path.is_empty() or p.size() < best_stair_path.size():
+							best_stair_path = p
+		if not best_stair_path.is_empty():
+			return { "path": best_stair_path, "reason": "assemble at %s" % stair_label }
+		# If no path to stairs currently exists (e.g. door is closed), fall through to unopened doors!
 
 	# 2. Target: Unopened / closed doors
 	var best_door_path: Array[Vector2i] = []
@@ -8503,7 +8525,16 @@ func move_hero(target_pos: Vector2i, is_interactive: bool = false) -> bool:
 		"cost": actual_cost,
 		"remaining": movement_remaining
 	})
-	if are_all_quest_objectives_completed() and not _quest_completed:
+	var has_exit = (exit_stair != Vector2i(-1, -1) and exit_stair.x >= 0 and exit_stair.y >= 0)
+	if has_exit and is_exit_stair_tile(final_pos) and _is_returning_to_stairs_allowed():
+		_log("🏁 [EXIT STAIRS] %s makes it to the dungeon exit stairs! Quest complete!" % hero.get("name"))
+		record_transaction("REACH_EXIT", str(hero.get("id", "")), str(hero.get("name", "Hero")), "%s made it to the dungeon exit stairs at (%d, %d)!" % [
+			hero.get("name"), final_pos.x, final_pos.y
+		], {
+			"tile": [final_pos.x, final_pos.y]
+		})
+		complete_active_quest(false)
+	elif are_all_quest_objectives_completed() and not _quest_completed:
 		complete_active_quest(false)
 	_update_ui()
 	queue_redraw_all()
