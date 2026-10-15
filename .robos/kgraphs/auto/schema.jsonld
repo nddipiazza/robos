@@ -256,6 +256,100 @@
       ]
     },
     {
+      "@id": "https://robos.dev/ns/sdlc#VehicleStay",
+      "@type": "rdfs:Class",
+      "rdfs:label": "VehicleStay",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Event"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/Event"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#VehicleStayShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#VehicleStay"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#vehicle"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://schema.org/startDate"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#ShopPayment",
+      "@type": "rdfs:Class",
+      "rdfs:label": "ShopPayment",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/PayAction"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/PayAction"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#ShopPaymentShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#ShopPayment"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#job"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#amountMinor"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#currency"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#paidOn"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#paymentDirection"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
       "@id": "https://robos.dev/ns/sdlc#RepairOrder",
       "@type": "rdfs:Class",
       "rdfs:label": "RepairOrder",

@@ -323,4 +323,4 @@ Join developers, architects, and AI researchers building the future of agent-gov
 
 ### RobOS Auto
 
-[Auto Center](docs/_apps/auto-center.md) starts the RobOS Auto app family: owner and maintenance center modes, invoice OCR, future maintenance plans, private Git shop history, and source-backed bulk recalls, remedies and affected components. Raw source files live under `~/.robos/auto-scrape`. See the [source and coverage guide](packages/auto-center/README.md) for collection, import, and current limitations.
+[Auto Center](docs/_apps/auto-center.md) starts the RobOS Auto app family: owner and maintenance center modes, invoice OCR, future maintenance plans, private Git shop history, vehicle custody and payment reports, and source-backed bulk recalls, remedies and affected components. Raw source files live under `~/.robos/auto-scrape`. See the [source and coverage guide](packages/auto-center/README.md) for collection, import, and current limitations.

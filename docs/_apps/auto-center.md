@@ -15,6 +15,12 @@ Choose **Auto maintenance center mode** for customer vehicles and a repair queue
 
 ![Maintenance center with a test repair job and actual local Git history](/assets/images/screenshots/auto-maintenance-center.png)
 
+**Center reports** opens in maintenance center mode. Vehicle cards track cars physically checked into the shop, with parking location, time held, repair status and collection controls. Revenue cards show recorded payments minus refunds for the selected day, Monday-start week and month. Additional reports cover balances, job statuses, technician workload, vehicle flow, turnaround and maintenance due dates. Payments and stays are backed by the private shop KGraph and Git history.
+
+![Center reports showing revenue and workload from labeled test entries](/assets/images/screenshots/auto-center-reports.png)
+
+![Cars checked into the center, using labeled test vehicles](/assets/images/screenshots/auto-cars-at-center.png)
+
 The public catalog includes vehicle configurations, diagnostic codes, and parsed NHTSA post-2010 recalls. Recall views link campaigns, published repair remedies, reported affected components and the original applicability rows. Inspect the exact source line, fields and SHA-256, reveal the cached archive, or follow the official source links. These are source reports, not VIN-specific recall status or verified replacement-part fitment.
 
 ![A published recall remedy and its source-backed components in Auto Center](/assets/images/screenshots/auto-bulk-recall-remedy.png)

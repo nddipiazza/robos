@@ -132,7 +132,7 @@
       "robos:appFamily": {
         "@id": "urn:robos:auto:family"
       },
-      "robos:description": "Owner mode: garage, service history, maintenance plans and reviewed invoice OCR. Maintenance center mode: separate customer vehicles, repair jobs and private Git history. Public bulk recalls link applicability, reported affected components, remedies and exact source rows.",
+      "robos:description": "Separate owner and maintenance-center modes with invoice OCR, maintenance plans and private shop Git history. Center reports use explicit vehicle stays, job closing timestamps, charge totals and an immutable payment/refund ledger. Bulk recalls link remedies, affected components and exact source rows.",
       "robos:desktopFramework": "Electron",
       "robos:package": "auto",
       "robos:repository": "https://github.com/nddipiazza/robos",
@@ -356,6 +356,15 @@
       "schema:url": "https://schema.org/Service"
     },
     {
+      "@id": "urn:robos:auto:AutoVocabularyTerm:ShopPayment",
+      "@type": "robos:AutoVocabularyTerm",
+      "dcterms:title": "ShopPayment",
+      "robos:package": "auto",
+      "robos:refersFrom": "https://schema.org/PayAction",
+      "schema:description": "Required properties: robos:job, robos:amountMinor, robos:currency, robos:paidOn, robos:paymentDirection",
+      "schema:url": "https://schema.org/PayAction"
+    },
+    {
       "@id": "urn:robos:auto:AutoVocabularyTerm:VehicleConfiguration",
       "@type": "robos:AutoVocabularyTerm",
       "dcterms:title": "VehicleConfiguration",
@@ -381,6 +390,15 @@
       "robos:refersFrom": "https://schema.org/ProductModel",
       "schema:description": "Required properties: schema:name, robos:make",
       "schema:url": "https://schema.org/ProductModel"
+    },
+    {
+      "@id": "urn:robos:auto:AutoVocabularyTerm:VehicleStay",
+      "@type": "robos:AutoVocabularyTerm",
+      "dcterms:title": "VehicleStay",
+      "robos:package": "auto",
+      "robos:refersFrom": "https://schema.org/Event",
+      "schema:description": "Required properties: robos:vehicle, schema:startDate",
+      "schema:url": "https://schema.org/Event"
     },
     {
       "@id": "urn:robos:auto:family",

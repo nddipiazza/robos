@@ -8,6 +8,8 @@ const AUTO_TYPES = [
  ['AutoShop','AutoRepair',['schema:name']],
  ['ServiceRecord','Service',['robos:vehicle','schema:startDate','schema:description']],
  ['MaintenanceSchedule','Schedule',['robos:vehicle']],
+ ['VehicleStay','Event',['robos:vehicle','schema:startDate']],
+ ['ShopPayment','PayAction',['robos:job','robos:amountMinor','robos:currency','robos:paidOn','robos:paymentDirection']],
  ['RepairOrder','Order',['robos:vehicle']],
  ['Estimate','Offer',['robos:vehicle']],
  ['Invoice','Invoice',['robos:vehicle']],

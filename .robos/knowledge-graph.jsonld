@@ -10625,7 +10625,7 @@
       "robos:appFamily": {
         "@id": "urn:robos:auto:family"
       },
-      "robos:description": "Owner mode: garage, service history, maintenance plans and reviewed invoice OCR. Maintenance center mode: separate customer vehicles, repair jobs and private Git history. Public bulk recalls link applicability, reported affected components, remedies and exact source rows.",
+      "robos:description": "Separate owner and maintenance-center modes with invoice OCR, maintenance plans and private shop Git history. Center reports use explicit vehicle stays, job closing timestamps, charge totals and an immutable payment/refund ledger. Bulk recalls link remedies, affected components and exact source rows.",
       "robos:desktopFramework": "Electron",
       "robos:package": "auto",
       "robos:repository": "https://github.com/nddipiazza/robos",
@@ -10676,6 +10676,15 @@
       "schema:url": "https://schema.org/DefinedTerm",
       "robos:refersFrom": "https://schema.org/DefinedTerm",
       "schema:description": "Required properties: schema:url"
+    },
+    {
+      "@id": "urn:robos:auto:AutoVocabularyTerm:BulkRecallCampaign",
+      "@type": "robos:AutoVocabularyTerm",
+      "dcterms:title": "BulkRecallCampaign",
+      "robos:package": "auto",
+      "schema:url": "https://schema.org/CreativeWork",
+      "robos:refersFrom": "https://schema.org/CreativeWork",
+      "schema:description": "Required properties: schema:identifier"
     },
     {
       "@id": "urn:robos:auto:AutoVocabularyTerm:DiagnosticCode",
@@ -10768,6 +10777,24 @@
       "schema:description": "Required properties: robos:part, robos:configuration"
     },
     {
+      "@id": "urn:robos:auto:AutoVocabularyTerm:RecallAffectedPart",
+      "@type": "robos:AutoVocabularyTerm",
+      "dcterms:title": "RecallAffectedPart",
+      "robos:package": "auto",
+      "schema:url": "https://schema.org/Product",
+      "robos:refersFrom": "https://schema.org/Product",
+      "schema:description": "Required properties: robos:campaign, schema:name"
+    },
+    {
+      "@id": "urn:robos:auto:AutoVocabularyTerm:RecallApplicability",
+      "@type": "robos:AutoVocabularyTerm",
+      "dcterms:title": "RecallApplicability",
+      "robos:package": "auto",
+      "schema:url": "https://schema.org/Vehicle",
+      "robos:refersFrom": "https://schema.org/Vehicle",
+      "schema:description": "Required properties: robos:campaign, robos:affectedPart, robos:sourceRecordId"
+    },
+    {
       "@id": "urn:robos:auto:AutoVocabularyTerm:RecallCampaign",
       "@type": "robos:AutoVocabularyTerm",
       "dcterms:title": "RecallCampaign",
@@ -10775,6 +10802,15 @@
       "schema:url": "https://schema.org/CreativeWork",
       "robos:refersFrom": "https://schema.org/CreativeWork",
       "schema:description": "Required properties: schema:identifier"
+    },
+    {
+      "@id": "urn:robos:auto:AutoVocabularyTerm:RecallRemedy",
+      "@type": "robos:AutoVocabularyTerm",
+      "dcterms:title": "RecallRemedy",
+      "robos:package": "auto",
+      "schema:url": "https://schema.org/CreativeWork",
+      "robos:refersFrom": "https://schema.org/CreativeWork",
+      "schema:description": "Required properties: robos:campaign, schema:description"
     },
     {
       "@id": "urn:robos:auto:AutoVocabularyTerm:Registration",
@@ -10850,40 +10886,22 @@
       "schema:name": "RobOS Auto"
     },
     {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:BulkRecallCampaign",
+      "@id": "urn:robos:auto:AutoVocabularyTerm:VehicleStay",
       "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "BulkRecallCampaign",
+      "dcterms:title": "VehicleStay",
       "robos:package": "auto",
-      "schema:url": "https://schema.org/CreativeWork",
-      "robos:refersFrom": "https://schema.org/CreativeWork",
-      "schema:description": "Required properties: schema:identifier"
+      "schema:url": "https://schema.org/Event",
+      "robos:refersFrom": "https://schema.org/Event",
+      "schema:description": "Required properties: robos:vehicle, schema:startDate"
     },
     {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:RecallRemedy",
+      "@id": "urn:robos:auto:AutoVocabularyTerm:ShopPayment",
       "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "RecallRemedy",
+      "dcterms:title": "ShopPayment",
       "robos:package": "auto",
-      "schema:url": "https://schema.org/CreativeWork",
-      "robos:refersFrom": "https://schema.org/CreativeWork",
-      "schema:description": "Required properties: robos:campaign, schema:description"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:RecallAffectedPart",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "RecallAffectedPart",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/Product",
-      "robos:refersFrom": "https://schema.org/Product",
-      "schema:description": "Required properties: robos:campaign, schema:name"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:RecallApplicability",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "RecallApplicability",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/Vehicle",
-      "robos:refersFrom": "https://schema.org/Vehicle",
-      "schema:description": "Required properties: robos:campaign, robos:affectedPart, robos:sourceRecordId"
+      "schema:url": "https://schema.org/PayAction",
+      "robos:refersFrom": "https://schema.org/PayAction",
+      "schema:description": "Required properties: robos:job, robos:amountMinor, robos:currency, robos:paidOn, robos:paymentDirection"
     }
   ],
   "@graph": [

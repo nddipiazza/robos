@@ -84,7 +84,7 @@ All apps are Electron + vanilla JavaScript (no React/Vue/Angular framework overh
 
 | App | Purpose |
 |-----|---------|
-| **Auto Center** | Owner garage, invoice OCR and maintenance plans; private Git shop repairs; source-backed recall remedies and components |
+| **Auto Center** | Owner garage, invoice OCR and maintenance plans; private Git shop repairs, custody and payment reports; source-backed recall remedies and components |
 
 ### Supporting Apps
 | App | Purpose |
