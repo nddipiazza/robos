@@ -12,7 +12,7 @@ signal unit_destroyed(unit: Dictionary)
 signal projectile_fired(from_pos: Vector2, to_pos: Vector2, weapon_name: String, is_splash: bool, owner_id: int)
 signal unit_phased(from_pos: Vector2, to_pos: Vector2, unit_tag: int)
 signal scenario_loaded(scenario_name: String)
-signal bulk_stepped
+signal paused_step
 signal notice(owner_id: int, text: String, kind: String)
 signal unit_damaged(owner_id: int, pos: Vector2)
 
@@ -347,8 +347,8 @@ func get_elevation_at(pos: Vector2) -> float:
 
 func step_ticks(count: int = 1) -> void:
 	last_step_count = count
-	if count > 6:
-		emit_signal("bulk_stepped")
+	if paused:
+		emit_signal("paused_step")
 	for _i in range(count):
 		_step_single_tick()
 
@@ -443,8 +443,10 @@ func compute_smooth_path(start_pos: Vector2, end_pos: Vector2, unit_radius: floa
 	var anchor: Vector2 = start_pos
 	var idx: int = 0
 	while idx < waypoints.size() - 1:
-		var furthest = idx
-		for mote in range(waypoints.size() - 1, idx, -1):
+		# Always advance at least one waypoint; without this a unit hugging a cliff corner (no clear
+		# line to any later waypoint) would loop here forever.
+		var furthest = idx + 1
+		for mote in range(waypoints.size() - 1, idx + 1, -1):
 			if _has_clear_line_of_walk(anchor, waypoints[mote], unit_radius):
 				furthest = mote
 				break

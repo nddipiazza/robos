@@ -157,6 +157,13 @@ func _draw_banner() -> void:
 	var name := SimEngine.scenario_name
 	var w := _text_w(name, 34)
 	var pos := Vector2(960.0 - w * 0.5, 110.0)
+	var band := Rect2(960.0 - w * 0.5 - 60.0, 70.0, w + 120.0, 70.0)
+	var mid := Rect2(band.position.x + 40.0, band.position.y, band.size.x - 80.0, band.size.y)
+	var fill := Color(0.03, 0.04, 0.06, 0.62 * a)
+	var clear := Color(0.03, 0.04, 0.06, 0.0)
+	draw_rect(mid, fill)
+	draw_polygon(PackedVector2Array([band.position, mid.position, Vector2(mid.position.x, mid.end.y), Vector2(band.position.x, band.end.y)]), PackedColorArray([clear, fill, fill, clear]))
+	draw_polygon(PackedVector2Array([Vector2(mid.end.x, mid.position.y), Vector2(band.end.x, band.position.y), band.end, mid.end]), PackedColorArray([fill, clear, clear, fill]))
 	draw_string(font, pos + Vector2(2, 2), name, HORIZONTAL_ALIGNMENT_LEFT, -1, 34, Color(0, 0, 0, 0.6 * a))
 	draw_string(font, pos, name, HORIZONTAL_ALIGNMENT_LEFT, -1, 34, Color(C_TEXT.r, C_TEXT.g, C_TEXT.b, a))
 	draw_line(Vector2(960.0 - w * 0.5, 124.0), Vector2(960.0 + w * 0.5, 124.0), Color(C_GOLD.r, C_GOLD.g, C_GOLD.b, a * 0.9), 2.0)

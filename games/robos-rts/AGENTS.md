@@ -26,3 +26,11 @@ An open-source deterministic 64Hz Real-Time Strategy (RTS) game and engine built
 # Run headless deterministic 3-faction Cucumber E2E test suite (~4.9s for all 5 scenarios)
 ./run_cucumber_tests.py --backend
 ```
+
+## View layer and tooling
+
+- `scripts/RTSMain.gd` input, selection, commands, in-world overlays; `scripts/RTSHud.gd` screen-space HUD; `scripts/RTSWorld3D.gd` terrain, entities and effects; `scripts/RTSModels.gd` procedural models (also used by `scripts/RTSIcons.gd` to render HUD portraits). Headless runs skip all of it.
+- HUD rule: show only live, useful RTS information (resources, selection, queues, costs). No decorative stat boxes or summary counters.
+- Control server extras: `/ui`, `/input`, `/pause`, `/camera` focus mode, `/scenario` slug `default`. Scenarios may set `paused` and `decor`.
+- `./capture_screenshots.py` regenerates `docs/assets/images/robos-rts` from the running game.
+- Naming: keep all names original; do not reintroduce names or terms from commercial RTS games.

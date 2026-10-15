@@ -114,3 +114,10 @@ def step_assert_supply_cap(context, player: int, min_cap: int) -> None:
     p = obs["players"].get(str(player), obs["players"].get(player, {}))
     cap = int(p.get("supply_cap", 0))
     assert cap >= min_cap, f"Expected supply_cap >= {min_cap}, got {cap}"
+
+
+@then("the simulation has reached tick {tick:d}")
+def step_assert_tick_reached(context, tick: int) -> None:
+    obs = context.client.get_observation()
+    assert obs["tick"] >= tick, f"Expected the simulation to reach tick {tick}, got {obs['tick']}"
+
