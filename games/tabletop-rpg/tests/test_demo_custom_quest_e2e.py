@@ -146,10 +146,11 @@ class TestDemoCustomQuestE2E(unittest.TestCase):
     def test_02_autonomous_demo_playthrough_with_screenshots(self):
         bdd_scenario_header(2, "Autonomous Demo Playthrough & Turn-by-Turn Evidence Capture")
 
-        bdd_step("WHEN", "Executing autonomous turns until quest completion (max 120 moves)")
-        max_steps = 120
+        bdd_step("WHEN", "Executing autonomous turns until quest completion (max 450 moves)")
+        max_steps = 450
         turn_shot_count = 0
         quest_won = False
+        last_printed_tx = 0
 
         for step in range(1, max_steps + 1):
             res = self.player.step_demo()
@@ -171,10 +172,14 @@ class TestDemoCustomQuestE2E(unittest.TestCase):
             is_won = bool(st.get("isQuestCompleted", False)) or bool(st.get("questObjectivesCompleted", False))
 
             tx_log = st.get("transactionLog", [])
-            last_tx = tx_log[-1] if tx_log else {}
-            last_desc = last_tx.get("description", "None")
-
-            print(f"    Step {step:03d} [Round {current_round}, {current_phase}]: {last_desc[:70]}")
+            if len(tx_log) > last_printed_tx:
+                for tx in tx_log[last_printed_tx:]:
+                    print(f"    Step {step:03d} [Round {current_round}, {current_phase}] [TX #{tx.get('id')}] {tx.get('actor_name')}: {tx.get('description')}", flush=True)
+                last_printed_tx = len(tx_log)
+            else:
+                last_tx = tx_log[-1] if tx_log else {}
+                last_desc = last_tx.get("description", "None")
+                print(f"    Step {step:03d} [Round {current_round}, {current_phase}, {active_hero}]: {last_desc[:70]}", flush=True)
 
             if is_won:
                 if not st.get("isQuestCompleted", False):
@@ -212,7 +217,10 @@ class TestDemoCustomQuestE2E(unittest.TestCase):
             f"Has DOOR_OPEN: {'DOOR_OPEN' in action_types}",
             f"Has ATTACK: {'ATTACK' in action_types}",
             f"Has QUEST_COMPLETE: {'QUEST_COMPLETE' in action_types}",
-            f"Has END_TURN: {'END_TURN' in action_types}"
+            f"Has END_TURN: {'END_TURN' in action_types}",
+            f"Has SEARCH_SECRETS: {'SEARCH_SECRETS' in action_types}",
+            f"Has REACH_EXIT: {'REACH_EXIT' in action_types}",
+            f"Has USE_ITEM: {'USE_ITEM' in action_types}"
         ])
 
         self.assertIn("ROLL_MOVEMENT", action_types)
