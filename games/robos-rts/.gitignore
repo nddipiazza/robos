@@ -1,0 +1,4 @@
+.godot/
+tests/e2e/reports/
+*.import
+__pycache__/
