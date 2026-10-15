@@ -111,6 +111,8 @@ var voice_audio_player: AudioStreamPlayer = null
 var flashing_item: Dictionary = {}
 var pending_flash_item: Dictionary = {}
 var searched_rooms: Dictionary = {}
+var searched_secret_rooms: Dictionary = {}
+var searched_secret_corridor_tiles: Dictionary = {}
 var room_special_treasure_collected: Dictionary = {}
 var treasure_deck: Array[Dictionary] = []
 var treasure_discard: Array[Dictionary] = []
@@ -2585,6 +2587,8 @@ func serialize_game_state() -> Dictionary:
 		"revealed_rooms": revealed_rooms.duplicate(true),
 		"discovered_monster_ids": discovered_monster_ids.duplicate(true),
 		"searched_rooms": searched_rooms.duplicate(true),
+		"searched_secret_rooms": searched_secret_rooms.duplicate(true),
+		"searched_secret_corridor_tiles": searched_secret_corridor_tiles.duplicate(true),
 		"room_special_treasure_collected": room_special_treasure_collected.duplicate(true),
 		"treasure_deck": treasure_deck.duplicate(true),
 		"treasure_discard": treasure_discard.duplicate(true),
@@ -2750,6 +2754,10 @@ func restore_saved_game(save_dict: Dictionary = {}) -> bool:
 	# Restore Searched Rooms & Treasure Deck
 	if data.has("searched_rooms"):
 		searched_rooms = data.get("searched_rooms", {}).duplicate(true)
+	if data.has("searched_secret_rooms"):
+		searched_secret_rooms = data.get("searched_secret_rooms", {}).duplicate(true)
+	if data.has("searched_secret_corridor_tiles"):
+		searched_secret_corridor_tiles = data.get("searched_secret_corridor_tiles", {}).duplicate(true)
 	if data.has("room_special_treasure_collected"):
 		room_special_treasure_collected = data.get("room_special_treasure_collected", {}).duplicate(true)
 	if data.has("treasure_deck"):
@@ -2982,6 +2990,8 @@ func _load_active_cartridge(force_fresh: bool = false) -> void:
 	flashing_item.clear()
 	pending_flash_item.clear()
 	searched_rooms.clear()
+	searched_secret_rooms.clear()
+	searched_secret_corridor_tiles.clear()
 	room_special_treasure_collected.clear()
 	last_treasure_card = {}
 	_initialize_treasure_deck()
@@ -3159,13 +3169,13 @@ func is_starting_stair_tile(tile: Vector2i) -> bool:
 	return tile.x >= r.position.x and tile.x < r.position.x + r.size.x and tile.y >= r.position.y and tile.y < r.position.y + r.size.y
 
 func is_exit_stair_tile(tile: Vector2i) -> bool:
-	if exit_stair == Vector2i(-1, -1) or exit_stair.x < 0 or exit_stair.y < 0:
+	if exit_stair == Vector2i(-1, -1):
 		return false
 	var r = get_exit_stair_rect_tiles()
 	return tile.x >= r.position.x and tile.x < r.position.x + r.size.x and tile.y >= r.position.y and tile.y < r.position.y + r.size.y
 
 func _is_hero_assembled_at_stairs(pos: Vector2i) -> bool:
-	if exit_stair != Vector2i(-1, -1) and exit_stair.x >= 0 and exit_stair.y >= 0:
+	if exit_stair != Vector2i(-1, -1):
 		if is_exit_stair_tile(pos):
 			return true
 		var er = get_exit_stair_rect_tiles()
@@ -3244,7 +3254,9 @@ func is_tile_wall_blocked(tile: Vector2i) -> bool:
 	return _blocked_wall_tiles.has(tile)
 
 func is_border_tile(tile: Vector2i) -> bool:
-	if is_exit_stair_tile(tile) or is_starting_stair_tile(tile):
+	if is_exit_stair_tile(tile):
+		return false
+	if is_starting_stair_tile(tile):
 		if tile.x < 0 or tile.x >= grid_cols or tile.y < 0 or tile.y >= grid_rows:
 			return true
 	if grid_cols == 26 and grid_rows == 19:
@@ -3449,9 +3461,16 @@ func is_hero_adjacent_to_monster(h: Dictionary, m: Dictionary) -> bool:
 		var mp = _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
 		var dx = absi(hp.x - mp.x)
 		var dy = absi(hp.y - mp.y)
-		if dx <= 1 and dy <= 1 and (dx + dy > 0):
-			return not has_wall_between(hp, mp) and not is_tile_wall_blocked(hp) and not is_tile_wall_blocked(mp)
-		return false
+		var cur_w_id = str(h.get("equipped_weapon", "broadsword"))
+		var w_def = HeroQuestEquipment.get_weapon(cur_w_id)
+		if bool(w_def.get("diagonal", false)):
+			if dx <= 1 and dy <= 1 and (dx + dy > 0):
+				return not has_wall_between(hp, mp) and not is_tile_wall_blocked(hp) and not is_tile_wall_blocked(mp)
+			return false
+		else:
+			if dx + dy == 1:
+				return not has_wall_between(hp, mp) and not is_tile_wall_blocked(hp) and not is_tile_wall_blocked(mp)
+			return false
 
 func is_monster_adjacent_to_hero_at(m: Dictionary, origin: Vector2i, h: Dictionary) -> bool:
 	if m.is_empty() or h.is_empty():
@@ -3507,10 +3526,10 @@ func _get_door_between(a: Vector2i, b: Vector2i) -> Dictionary:
 	return _doors_by_edge.get(Vector4i(a.x, a.y, b.x, b.y), {})
 
 func has_wall_between(a: Vector2i, b: Vector2i) -> bool:
-	# 1. Out of bounds check
-	if a.x < 0 or a.x >= grid_cols or a.y < 0 or a.y >= grid_rows:
+	# 1. Out of bounds check (except exit stair)
+	if not is_exit_stair_tile(a) and (a.x < 0 or a.x >= grid_cols or a.y < 0 or a.y >= grid_rows):
 		return true
-	if b.x < 0 or b.x >= grid_cols or b.y < 0 or b.y >= grid_rows:
+	if not is_exit_stair_tile(b) and (b.x < 0 or b.x >= grid_cols or b.y < 0 or b.y >= grid_rows):
 		return true
 
 	# 2. Check doors
@@ -3534,7 +3553,7 @@ func has_wall_between(a: Vector2i, b: Vector2i) -> bool:
 	return false
 
 func is_tile_solid(tile: Vector2i) -> bool:
-	if tile.x < 0 or tile.x >= grid_cols or tile.y < 0 or tile.y >= grid_rows:
+	if not is_exit_stair_tile(tile) and (tile.x < 0 or tile.x >= grid_cols or tile.y < 0 or tile.y >= grid_rows):
 		return true
 	if _blocked_wall_tiles.has(tile):
 		return true
@@ -4125,6 +4144,10 @@ func _check_start_elf_spell_selection() -> void:
 	if current_role != "player":
 		return
 	if is_headless_mode() or CartridgeManager.auto_play_enabled:
+		select_elf_element("water")
+		confirm_elf_spell_selection()
+		if elf_spell_modal:
+			elf_spell_modal.visible = false
 		return
 	var cart = CartridgeManager.active_cartridge
 	var alloc = cart.get("spellAllocation", {})
@@ -6282,7 +6305,7 @@ func get_quest_objectives() -> Array[Dictionary]:
 		"required": true
 	})
 
-	var has_exit = (exit_stair != Vector2i(-1, -1) and exit_stair.x >= 0 and exit_stair.y >= 0)
+	var has_exit = (exit_stair != Vector2i(-1, -1))
 	var obj3_text = "Make it to the dungeon exit stairs" if has_exit else "Ensure all living heroes return safely to the spiral stairway"
 	if active_q.has("primaryGoals") and active_q["primaryGoals"] is Array and active_q["primaryGoals"].size() >= 3:
 		obj3_text = str(active_q["primaryGoals"][2])
@@ -6369,7 +6392,8 @@ func complete_active_quest(quit_on_complete: bool = false) -> Dictionary:
 
 	_update_ui()
 
-	if quit_on_complete or not is_headless_mode():
+	var is_test_server = OS.get_environment("TABLETOP_SERVER_PORT") != ""
+	if (quit_on_complete or not is_headless_mode()) and not is_test_server:
 		_log("🚪 Returning to RobOS Tabletop Studio...")
 		get_tree().create_timer(1.0).timeout.connect(func():
 			get_tree().quit(0)
@@ -6891,6 +6915,46 @@ func can_search_for_traps() -> bool:
 				if has_line_of_sight(h_pos, mp):
 					return false
 		return true
+
+func get_visible_corridor_tiles(from_pos: Vector2i) -> Array[Vector2i]:
+	var res: Array[Vector2i] = []
+	var max_dist = 12
+	for dy in range(-max_dist, max_dist + 1):
+		for dx in range(-max_dist, max_dist + 1):
+			if abs(dx) + abs(dy) > max_dist:
+				continue
+			var t = from_pos + Vector2i(dx, dy)
+			if t.x < 0 or t.x >= grid_cols or t.y < 0 or t.y >= grid_rows:
+				continue
+			if not _get_room_at(t).is_empty():
+				continue
+			if is_tile_wall_blocked(t) or is_border_tile(t):
+				continue
+			if has_line_of_sight(from_pos, t):
+				res.append(t)
+	return res
+
+func get_visible_unsearched_corridor_tiles(from_pos: Vector2i) -> Array[Vector2i]:
+	var visible = get_visible_corridor_tiles(from_pos)
+	var unsearched: Array[Vector2i] = []
+	for t in visible:
+		if not searched_secret_corridor_tiles.has(t):
+			unsearched.append(t)
+	return unsearched
+
+func can_search_for_secret_doors() -> bool:
+	if not can_search_for_traps():
+		return false
+	var hero = get_active_hero()
+	if hero.is_empty():
+		return false
+	var h_pos: Vector2i = _to_grid_pos(hero.get("grid_pos", Vector2i(-1, -1)))
+	var h_room = _get_room_at(h_pos)
+	var r_id = str(h_room.get("id", ""))
+	if r_id != "":
+		return not searched_secret_rooms.has(r_id)
+	else:
+		return get_visible_unsearched_corridor_tiles(h_pos).size() > 0
 
 func can_hero_disarm(hero: Dictionary) -> Dictionary:
 	if hero.is_empty():
@@ -7454,7 +7518,7 @@ func _execute_mentor_ai_party_step() -> void:
 		return
 
 	var live_monsters = monsters.filter(func(m): return bool(m.get("is_alive", false)) and int(m.get("current_bp", 1)) > 0)
-	var has_exit = (exit_stair != Vector2i(-1, -1) and exit_stair.x >= 0 and exit_stair.y >= 0)
+	var has_exit = (exit_stair != Vector2i(-1, -1))
 	if live_monsters.is_empty() and not _quest_completed and not has_exit:
 		var q_title = str(get_active_quest_objective().get("title", "the dungeon"))
 		_log("🏆 [QUEST VICTORY] All minions of Zargon have been defeated! The heroes triumph and complete %s!" % q_title)
@@ -7487,7 +7551,19 @@ func _execute_mentor_ai_party_step() -> void:
 		roll_movement_dice()
 		return
 
-	# 6. Action: Emergency Healing (Priority 1 for Elf / Wizard)
+	# 6. Action: Emergency Healing (Priority 1 for Elf / Wizard, or Potion Consumption for any hero)
+	var cur_bp = int(hero.get("current_bp", 0))
+	var max_bp = int(hero.get("bodyPoints", 8))
+	if cur_bp > 0 and cur_bp <= 4 and cur_bp < max_bp:
+		var inv = hero.get("inventory", [])
+		for it in inv:
+			var it_key = str(it.get("id", it.get("name", ""))) if it is Dictionary else str(it)
+			var it_str = it_key.to_lower().strip_edges().replace("-", "_")
+			if it_str in ["healing_potion", "potion_of_healing", "cure_potion", "holy_water"]:
+				_log("[MENTOR AI] 🧪 %s drinks %s (+4 BP)!" % [hero_name, it_key])
+				use_item(hero_id, it_key)
+				return
+
 	if not has_acted_this_turn:
 		if hero_id == "elf" and _can_hero_cast_spell(hero, "water_of_healing"):
 			var injured = _find_most_injured_ally(4)
@@ -7509,8 +7585,9 @@ func _execute_mentor_ai_party_step() -> void:
 			adj_monsters.sort_custom(func(a, b): return int(a.get("current_bp", 1)) < int(b.get("current_bp", 1)))
 			var target_m = adj_monsters[0]
 			_log("[MENTOR AI] ⚔️ %s attacks adjacent %s!" % [hero_name, target_m.get("name", "Monster")])
-			attack_adjacent_monster(str(target_m.get("id", "")))
-			return
+			var atk_res = attack_adjacent_monster(str(target_m.get("id", "")))
+			if atk_res.get("success", false):
+				return
 
 	# 8. Action: Ranged Offensive Spells (Priority 3 for Wizard / Elf)
 	if not has_acted_this_turn and (hero_id == "wizard" or hero_id == "elf"):
@@ -7544,6 +7621,16 @@ func _execute_mentor_ai_party_step() -> void:
 		var d_to = Vector2i(d.get("to", [0, 0])[0], d.get("to", [0, 0])[1])
 		_log("[MENTOR AI] 🚪 %s kicks open the door! Revealing the chamber..." % hero_name)
 		open_door(d_from, d_to)
+		return
+
+	# 9b. Action: Secret Passageway & Trap Search (Before Movement if in unsearched room or corridor with new tiles in view)
+	if not has_acted_this_turn and can_search_for_secret_doors():
+		var r_id = str(_get_room_at(h_pos).get("id", ""))
+		if r_id != "":
+			_log("[MENTOR AI] 🔍 %s searches room %s for secret doors and traps!" % [hero_name, r_id])
+		else:
+			_log("[MENTOR AI] 🔍 %s searches corridor for secret passageways and traps!" % hero_name)
+		search_traps()
 		return
 
 	# 10. Tactical Movement (Priority 5)
@@ -7605,8 +7692,9 @@ func _execute_mentor_ai_party_step() -> void:
 			adj_m.sort_custom(func(a, b): return int(a.get("current_bp", 1)) < int(b.get("current_bp", 1)))
 			var target_m = adj_m[0]
 			_log("[MENTOR AI] ⚔️ %s attacks adjacent %s!" % [hero_name, target_m.get("name", "Monster")])
-			attack_adjacent_monster(str(target_m.get("id", "")))
-			return
+			var atk_res = attack_adjacent_monster(str(target_m.get("id", "")))
+			if atk_res.get("success", false):
+				return
 
 		# 11b. Ranged Offensive Spells After Movement (Wizard / Elf)
 		if (hero_id == "wizard" or hero_id == "elf"):
@@ -7642,7 +7730,17 @@ func _execute_mentor_ai_party_step() -> void:
 			open_door(d_from, d_to)
 			return
 
-		if can_search_room():
+		# 11c. Action: Search for Secret Doors & Traps (Room or Corridor)
+		if can_search_for_secret_doors():
+			var r_id = str(_get_room_at(h_pos).get("id", ""))
+			if r_id != "":
+				_log("[MENTOR AI] 🔍 %s searches room %s for secret doors and traps!" % [hero_name, r_id])
+			else:
+				_log("[MENTOR AI] 🔍 %s searches corridor for secret passageways and traps!" % hero_name)
+			search_traps()
+			return
+
+		if can_search_room() and not _is_returning_to_stairs_allowed():
 			_log("[MENTOR AI] 💎 %s searches room for treasure and traps!" % hero_name)
 			search_room()
 			return
@@ -7712,7 +7810,7 @@ func _find_best_hero_movement_target(hero: Dictionary, h_pos: Vector2i) -> Dicti
 
 	# 2. Target: Advance to exit stairs (or return to starting stairs) if returning is allowed!
 	if _is_returning_to_stairs_allowed():
-		var has_exit = (exit_stair != Vector2i(-1, -1) and exit_stair.x >= 0 and exit_stair.y >= 0)
+		var has_exit = (exit_stair != Vector2i(-1, -1))
 		var r = get_exit_stair_rect_tiles() if has_exit else get_starting_stair_rect_tiles()
 		var stair_label = "exit stairs" if has_exit else "spiral stairway"
 		var is_at_dest = is_exit_stair_tile(h_pos) if has_exit else is_starting_stair_tile(h_pos)
@@ -7744,12 +7842,32 @@ func _find_best_hero_movement_target(hero: Dictionary, h_pos: Vector2i) -> Dicti
 	# 2. Target: Unopened / closed doors
 	var best_door_path: Array[Vector2i] = []
 	var best_door_desc = ""
+	var best_door_score = 999999
+	var dest_stair = exit_stair if (exit_stair != Vector2i(-1, -1)) else starting_stair
 	for d in doors:
 		if not bool(d.get("is_open", false)):
 			if bool(d.get("is_secret", false)) and not bool(d.get("is_revealed", false)):
 				continue
 			var f_pt = Vector2i(d.get("from", [0, 0])[0], d.get("from", [0, 0])[1])
 			var t_pt = Vector2i(d.get("to", [0, 0])[0], d.get("to", [0, 0])[1])
+
+			# If returning to stairs, avoid opening dead-end rooms that have no other doors and no exit stair
+			if _is_returning_to_stairs_allowed():
+				var r1_id = str(_get_room_at(f_pt).get("id", ""))
+				var r2_id = str(_get_room_at(t_pt).get("id", ""))
+				var target_room_id = r1_id if r1_id != "" else r2_id
+				if target_room_id != "":
+					var d_count = 0
+					for other_d in doors:
+						var of = Vector2i(other_d.get("from", [0, 0])[0], other_d.get("from", [0, 0])[1])
+						var ot = Vector2i(other_d.get("to", [0, 0])[0], other_d.get("to", [0, 0])[1])
+						if str(_get_room_at(of).get("id", "")) == target_room_id or str(_get_room_at(ot).get("id", "")) == target_room_id or str(other_d.get("room", "")) == target_room_id:
+							d_count += 1
+					if d_count <= 1:
+						var has_dest_stair = is_exit_stair_tile(dest_stair) and str(_get_room_at(dest_stair).get("id", "")) == target_room_id
+						if not has_dest_stair:
+							continue
+
 			for pt in [f_pt, t_pt]:
 				if pt == h_pos:
 					continue
@@ -7763,18 +7881,81 @@ func _find_best_hero_movement_target(hero: Dictionary, h_pos: Vector2i) -> Dicti
 						continue
 					var p = find_path(h_pos, cand, h_idx)
 					if p.size() > 1:
-						if best_door_path.is_empty() or p.size() < best_door_path.size():
+						var score = p.size()
+						if _is_returning_to_stairs_allowed():
+							var dist_to_exit = absi(pt.x - dest_stair.x) + absi(pt.y - dest_stair.y)
+							score = dist_to_exit * 8 + p.size()
+						if best_door_path.is_empty() or score < best_door_score:
 							best_door_path = p
+							best_door_score = score
 							best_door_desc = "closed door near (%d, %d)" % [pt.x, pt.y]
 
 	if not best_door_path.is_empty():
 		return { "path": best_door_path, "reason": best_door_desc }
 
-	# 3. Target: Unsearched rooms (especially Dwarf)
-	if hero_id == "dwarf":
+	# 3. Target: Revealed rooms not yet searched for secret passageways / doors
+	var best_secret_room_path: Array[Vector2i] = []
+	var best_secret_room_desc = ""
+	for r in rooms:
+		var r_id = str(r.get("id", ""))
+		if r_id != "" and revealed_rooms.has(r_id) and not searched_secret_rooms.has(r_id):
+			var r_tiles = r.get("tiles", [])
+			var cand_tiles: Array[Vector2i] = []
+			if r_tiles.size() > 0:
+				for t_arr in r_tiles:
+					cand_tiles.append(Vector2i(int(t_arr[0]), int(t_arr[1])))
+			else:
+				var rx = int(r.get("x", 0))
+				var ry = int(r.get("y", 0))
+				var rw = int(r.get("w", 1))
+				var rh = int(r.get("h", 1))
+				cand_tiles.append(Vector2i(rx + rw / 2, ry + rh / 2))
+
+			cand_tiles.sort_custom(func(a, b): return (absi(a.x - h_pos.x) + absi(a.y - h_pos.y)) < (absi(b.x - h_pos.x) + absi(b.y - h_pos.y)))
+			for cand in cand_tiles:
+				if cand == h_pos:
+					continue
+				if is_tile_occupied_by_hero(cand, h_idx) or is_tile_occupied_by_furniture(cand) or is_tile_wall_blocked(cand):
+					continue
+				var p = find_path(h_pos, cand, h_idx)
+				if p.size() > 1:
+					if best_secret_room_path.is_empty() or p.size() < best_secret_room_path.size():
+						best_secret_room_path = p
+						best_secret_room_desc = "search room %s for secret doors" % r_id
+					break
+
+	if not best_secret_room_path.is_empty():
+		return { "path": best_secret_room_path, "reason": best_secret_room_desc }
+
+	# 4. Target: Unsearched corridor tiles for secret doors / passageways
+	var best_corridor_path: Array[Vector2i] = []
+	var best_corridor_desc = ""
+	var unsearched_corridors: Array[Vector2i] = []
+	for cy in range(grid_rows):
+		for cx in range(grid_cols):
+			var c_tile = Vector2i(cx, cy)
+			if _tile_to_room_id.get(c_tile, "") == "" and not is_border_tile(c_tile) and not is_tile_wall_blocked(c_tile):
+				if not searched_secret_corridor_tiles.has(c_tile) and not is_tile_occupied_by_hero(c_tile, h_idx):
+					unsearched_corridors.append(c_tile)
+	if _is_returning_to_stairs_allowed():
+		unsearched_corridors.sort_custom(func(a, b): return (absi(a.x - dest_stair.x) + absi(a.y - dest_stair.y)) < (absi(b.x - dest_stair.x) + absi(b.y - dest_stair.y)))
+	else:
+		unsearched_corridors.sort_custom(func(a, b): return (absi(a.x - h_pos.x) + absi(a.y - h_pos.y)) < (absi(b.x - h_pos.x) + absi(b.y - h_pos.y)))
+	for c_tile in unsearched_corridors.slice(0, 20):
+		var p = find_path(h_pos, c_tile, h_idx)
+		if p.size() > 1:
+			if best_corridor_path.is_empty() or p.size() < best_corridor_path.size():
+				best_corridor_path = p
+				best_corridor_desc = "explore unsearched corridor near (%d, %d)" % [c_tile.x, c_tile.y]
+
+	if not best_corridor_path.is_empty():
+		return { "path": best_corridor_path, "reason": best_corridor_desc }
+
+	# 5. Target: Unsearched rooms for treasure (especially Dwarf, only if not returning to stairs)
+	if hero_id == "dwarf" and not _is_returning_to_stairs_allowed():
 		for r in rooms:
 			var r_id = str(r.get("id", ""))
-			if r_id != "" and revealed_rooms.has(r_id):
+			if r_id != "" and revealed_rooms.has(r_id) and not searched_rooms.has(r_id):
 				var rx = int(r.get("x", 0))
 				var ry = int(r.get("y", 0))
 				var rw = int(r.get("w", 1))
@@ -7783,9 +7964,9 @@ func _find_best_hero_movement_target(hero: Dictionary, h_pos: Vector2i) -> Dicti
 				if center != h_pos and not is_tile_occupied_by_hero(center, h_idx):
 					var p = find_path(h_pos, center, h_idx)
 					if p.size() > 1:
-						return { "path": p, "reason": "search room " + r_id }
+						return { "path": p, "reason": "search room " + r_id + " for treasure" }
 
-	# 4. Target: Marching Order / Follow Vanguard
+	# 6. Target: Marching Order / Follow Vanguard
 	if hero_id != "barbarian" and heroes.size() > 0:
 		var lead_hero = heroes[0] # Barbarian
 		var lead_pos = _to_grid_pos(lead_hero.get("grid_pos", Vector2i(-1, -1)))
@@ -7798,6 +7979,17 @@ func _find_best_hero_movement_target(hero: Dictionary, h_pos: Vector2i) -> Dicti
 				var p = find_path(h_pos, l_tile, h_idx)
 				if p.size() > 1:
 					return { "path": p, "reason": "march formation with Barbarian" }
+
+	# 7. Target for Barbarian if vanguard is lagging behind party: regroup with party
+	if hero_id == "barbarian":
+		for other_h in heroes:
+			if other_h != hero:
+				var other_pos = _to_grid_pos(other_h.get("grid_pos", Vector2i(-1, -1)))
+				var dist = absi(other_pos.x - h_pos.x) + absi(other_pos.y - h_pos.y)
+				if dist > 3:
+					var p = find_path(h_pos, other_pos + Vector2i(1, 0), h_idx)
+					if p.size() > 1:
+						return { "path": p, "reason": "regroup with party" }
 
 	return {}
 
@@ -8131,7 +8323,7 @@ func _handle_tile_click(tile: Vector2i) -> void:
 		return
 
 	# If clicked on edge tile, provide immediate feedback: edge tiles are not walkable
-	if is_border_tile(tile):
+	if is_border_tile(tile) and not is_exit_stair_tile(tile):
 		_log("[MOVE] Square (%d, %d) is on the board edge! Edge tiles are not walkable." % [tile.x, tile.y])
 		spawn_floating_text(tile, "EDGE TILE NOT WALKABLE!", Color(0.95, 0.4, 0.3), 1.2)
 		show_unavailable_notice("Edge tiles not walkable", tile)
@@ -8331,8 +8523,8 @@ func move_hero(target_pos: Vector2i, is_interactive: bool = false) -> bool:
 		show_unavailable_notice("Cannot return to start tile", target_pos)
 		return false
 
-	# Rule: Edge / border tiles are strictly non-walkable
-	if is_border_tile(target_pos):
+	# Rule: Edge / border tiles are strictly non-walkable (unless exit stair)
+	if is_border_tile(target_pos) and not is_exit_stair_tile(target_pos):
 		_log("[WARNING] Square (%d, %d) is on the board edge! Edge tiles are not walkable." % [target_pos.x, target_pos.y])
 		show_unavailable_notice("Edge tiles not walkable", target_pos)
 		return false
@@ -8581,7 +8773,7 @@ func move_hero(target_pos: Vector2i, is_interactive: bool = false) -> bool:
 		"cost": actual_cost,
 		"remaining": movement_remaining
 	})
-	var has_exit = (exit_stair != Vector2i(-1, -1) and exit_stair.x >= 0 and exit_stair.y >= 0)
+	var has_exit = (exit_stair != Vector2i(-1, -1))
 	if has_exit and is_exit_stair_tile(final_pos) and _is_returning_to_stairs_allowed():
 		_log("🏁 [EXIT STAIRS] %s makes it to the dungeon exit stairs! Quest complete!" % hero.get("name"))
 		record_transaction("REACH_EXIT", str(hero.get("id", "")), str(hero.get("name", "Hero")), "%s made it to the dungeon exit stairs at (%d, %d)!" % [
@@ -8861,8 +9053,10 @@ func use_item(hero_id: String = "", item_id: String = "", target_id: String = ""
 	var found_idx = -1
 	var norm_item_key = item_key.replace("-", "_")
 	for i in range(inv.size()):
-		var cur_inv_key = str(inv[i]).to_lower().strip_edges().replace("-", "_")
-		if cur_inv_key == norm_item_key or str(inv[i]).to_lower().strip_edges() == item_key:
+		var cur_item = inv[i]
+		var cur_raw = str(cur_item.get("id", cur_item.get("name", ""))) if cur_item is Dictionary else str(cur_item)
+		var cur_inv_key = cur_raw.to_lower().strip_edges().replace("-", "_")
+		if cur_inv_key == norm_item_key or cur_raw.to_lower().strip_edges() == item_key:
 			found_idx = i
 			break
 		if (norm_item_key in ["potion_defense", "potion_of_defense", "defense_potion"]) and (cur_inv_key in ["potion_defense", "potion_of_defense", "defense_potion"]):
@@ -8918,6 +9112,9 @@ func use_item(hero_id: String = "", item_id: String = "", target_id: String = ""
 		_log("[ITEM] %s drinks %s! Restores %d Body Points (%d/%d BP)." % [
 			target_h.get("name"), "Potion of Healing", healed, new_bp, max_bp
 		])
+		record_transaction("USE_ITEM", str(hero.get("id", "")), str(hero.get("name", "Hero")), "%s drinks Potion of Healing (+%d BP, now %d/%d BP)!" % [
+			hero.get("name"), healed, new_bp, max_bp
+		], { "item": item_id, "healed": healed, "current_bp": new_bp, "target": str(target_h.get("id", "")) })
 
 		_update_ui()
 		if item_use_modal and item_use_modal.visible:
@@ -12836,6 +13033,7 @@ func search_traps() -> Dictionary:
 
 	if not h_room.is_empty():
 		var r_id = str(h_room.get("id", ""))
+		searched_secret_rooms[r_id] = true
 		for tr in traps:
 			var is_known = bool(tr.get("detected", false) or tr.get("is_revealed", false) or tr.get("sprung", false) or tr.get("is_sprung", false) or tr.get("disarmed", false) or tr.get("spent", false) or tr.get("blocked", false))
 			if is_known:
@@ -12863,6 +13061,11 @@ func search_traps() -> Dictionary:
 					var reveal_pos = f_pos if r1_id == r_id else t_pos
 					spawn_floating_text(reveal_pos, "🚪 SECRET DOOR DISCOVERED", Color(0.9, 0.7, 1.0), 1.8)
 	else:
+		var vis_corridor_tiles = get_visible_corridor_tiles(h_pos)
+		for tile in vis_corridor_tiles:
+			searched_secret_corridor_tiles[tile] = true
+		searched_secret_corridor_tiles[h_pos] = true
+
 		for tr in traps:
 			var is_known = bool(tr.get("detected", false) or tr.get("is_revealed", false) or tr.get("sprung", false) or tr.get("is_sprung", false) or tr.get("disarmed", false) or tr.get("spent", false) or tr.get("blocked", false))
 			if is_known:
@@ -12870,7 +13073,7 @@ func search_traps() -> Dictionary:
 			var tx = int(tr.get("x", tr.get("position", [0, 0])[0]))
 			var ty = int(tr.get("y", tr.get("position", [0, 0])[1]))
 			var t_pos = Vector2i(tx, ty)
-			if abs(t_pos.x - h_pos.x) + abs(t_pos.y - h_pos.y) <= 4:
+			if (abs(t_pos.x - h_pos.x) + abs(t_pos.y - h_pos.y) <= 8 or searched_secret_corridor_tiles.has(t_pos)) and has_line_of_sight(h_pos, t_pos):
 				tr["detected"] = true
 				found_traps.append(str(tr.get("id", "trap")))
 				spawn_floating_text(t_pos, "⚠️ TRAP DISCOVERED", Color(1.0, 0.8, 0.2), 1.6)
@@ -12885,12 +13088,12 @@ func search_traps() -> Dictionary:
 				var min_dist = 999
 				if _get_room_at(f_pos).is_empty():
 					var df = abs(f_pos.x - h_pos.x) + abs(f_pos.y - h_pos.y)
-					if df <= 4 and has_line_of_sight(h_pos, f_pos):
+					if (df <= 8 or searched_secret_corridor_tiles.has(f_pos)) and has_line_of_sight(h_pos, f_pos):
 						corridor_pos = f_pos
 						min_dist = df
 				if _get_room_at(t_pos).is_empty():
 					var dt = abs(t_pos.x - h_pos.x) + abs(t_pos.y - h_pos.y)
-					if dt <= 4 and has_line_of_sight(h_pos, t_pos) and dt < min_dist:
+					if (dt <= 8 or searched_secret_corridor_tiles.has(t_pos)) and has_line_of_sight(h_pos, t_pos) and dt < min_dist:
 						corridor_pos = t_pos
 						min_dist = dt
 				if corridor_pos != Vector2i(-1, -1):
@@ -12903,6 +13106,28 @@ func search_traps() -> Dictionary:
 	_check_event_triggers("on_room_searched_traps", { "room": r_id, "tile": h_pos }, hero)
 
 	_conclude_action_turn_state()
+
+	if found_secret_doors.size() > 0:
+		record_transaction("SEARCH_SECRETS", str(hero.get("id", "")), str(hero.get("name", "Hero")), "%s searched carefully and discovered %d secret passageway(s) (%s)!" % [
+			hero.get("name"), found_secret_doors.size(), ", ".join(found_secret_doors)
+		], {
+			"room": r_id,
+			"tile": [h_pos.x, h_pos.y],
+			"secret_doors": found_secret_doors
+		})
+	elif found_traps.size() > 0:
+		record_transaction("SEARCH_TRAPS", str(hero.get("id", "")), str(hero.get("name", "Hero")), "%s searched carefully and detected %d trap(s) (%s)!" % [
+			hero.get("name"), found_traps.size(), ", ".join(found_traps)
+		], {
+			"room": r_id,
+			"tile": [h_pos.x, h_pos.y],
+			"traps": found_traps
+		})
+	else:
+		record_transaction("SEARCH_TRAPS", str(hero.get("id", "")), str(hero.get("name", "Hero")), "%s searched carefully for traps and secret passageways (none found)." % hero.get("name"), {
+			"room": r_id,
+			"tile": [h_pos.x, h_pos.y]
+		})
 
 	if found_traps.size() > 0 or found_secret_doors.size() > 0:
 		_log("[SEARCH] %s searches carefully for traps and secret doors: Found %d hidden trap(s) and %d secret door(s)!" % [
@@ -18267,6 +18492,8 @@ func get_telemetry_state() -> Dictionary:
 			"heroId": pending_flash_item.get("hero_id", "")
 		} if not pending_flash_item.is_empty() else {},
 		"searchedRooms": searched_rooms,
+		"searchedSecretRooms": searched_secret_rooms,
+		"searchedSecretCorridorTiles": searched_secret_corridor_tiles.keys().map(func(v): return [v.x, v.y] if v is Vector2i else v),
 		"roomSpecialTreasureCollected": room_special_treasure_collected,
 		"lastTreasureCard": last_treasure_card,
 		"treasureDeckCount": treasure_deck.size(),

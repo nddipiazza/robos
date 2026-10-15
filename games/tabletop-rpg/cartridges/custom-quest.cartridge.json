@@ -4,7 +4,7 @@
   "header": {
     "author": "RobOS Tabletop Studio",
     "coverColor": "#0a0e17",
-    "createdDate": "2026-10-14T21:14:47.529Z",
+    "createdDate": "2026-10-15T13:55:34.134Z",
     "description": "Mentor speaks: \"The Emperor calls upon the kingdom's greatest champions...\"",
     "gameType": "tabletop",
     "genre": "Tabletop Dungeon Crawler",
@@ -31,6 +31,22 @@
       "gold": 100,
       "heroClass": "Barbarian",
       "id": "barbarian",
+      "inventory": [
+        {
+          "effect": "Restores up to 4 Body Points",
+          "id": "potion_of_healing",
+          "name": "Potion of Healing",
+          "type": "potion",
+          "value": 100
+        },
+        {
+          "effect": "Restores up to 4 Body Points",
+          "id": "potion_of_healing",
+          "name": "Potion of Healing",
+          "type": "potion",
+          "value": 100
+        }
+      ],
       "mindPoints": 2,
       "name": "Barbarian",
       "position": [
@@ -46,6 +62,22 @@
       "gold": 100,
       "heroClass": "Dwarf",
       "id": "dwarf",
+      "inventory": [
+        {
+          "effect": "Restores up to 4 Body Points",
+          "id": "potion_of_healing",
+          "name": "Potion of Healing",
+          "type": "potion",
+          "value": 100
+        },
+        {
+          "effect": "Restores up to 4 Body Points",
+          "id": "potion_of_healing",
+          "name": "Potion of Healing",
+          "type": "potion",
+          "value": 100
+        }
+      ],
       "mindPoints": 3,
       "name": "Dwarf",
       "position": [
@@ -61,6 +93,22 @@
       "gold": 100,
       "heroClass": "Elf",
       "id": "elf",
+      "inventory": [
+        {
+          "effect": "Restores up to 4 Body Points",
+          "id": "potion_of_healing",
+          "name": "Potion of Healing",
+          "type": "potion",
+          "value": 100
+        },
+        {
+          "effect": "Restores up to 4 Body Points",
+          "id": "potion_of_healing",
+          "name": "Potion of Healing",
+          "type": "potion",
+          "value": 100
+        }
+      ],
       "mindPoints": 4,
       "name": "Elf",
       "position": [
@@ -76,6 +124,22 @@
       "gold": 100,
       "heroClass": "Wizard",
       "id": "wizard",
+      "inventory": [
+        {
+          "effect": "Restores up to 4 Body Points",
+          "id": "potion_of_healing",
+          "name": "Potion of Healing",
+          "type": "potion",
+          "value": 100
+        },
+        {
+          "effect": "Restores up to 4 Body Points",
+          "id": "potion_of_healing",
+          "name": "Potion of Healing",
+          "type": "potion",
+          "value": 100
+        }
+      ],
       "mindPoints": 6,
       "name": "Wizard",
       "position": [
@@ -864,13 +928,13 @@
         }
       ],
       "exitStair": [
-        15,
-        13
+        -1,
+        4
       ],
       "exitStairType": "stairs_down_1x1",
       "exitTile": [
-        15,
-        13
+        -1,
+        4
       ],
       "furniture": [
         {
@@ -883,17 +947,6 @@
           "width": 2,
           "x": 7,
           "y": 14
-        },
-        {
-          "height": 1,
-          "id": "furn-stairs_down_1x1-exit",
-          "name": "Dungeon Exit Staircase",
-          "roomId": "room-se-21",
-          "treasure": "",
-          "type": "stairs_down_1x1",
-          "width": 1,
-          "x": 15,
-          "y": 13
         }
       ],
       "height": 19,
@@ -2562,11 +2615,61 @@
         14
       ],
       "startingStairType": "stairs_down_2x2",
-      "storyTriggers": [],
+      "storyTriggers": [
+        {
+          "actions": [
+            {
+              "canSkip": true,
+              "moviePath": "res://assets/movies/quest1-intro.mp4",
+              "title": "Note A Cinematic",
+              "type": "play_movie"
+            }
+          ],
+          "banner": "QUEST NOTE [Note A]",
+          "event": "on_room_entered",
+          "id": "trigger-note-a-l5sv",
+          "marker": "Note A",
+          "movie": "res://assets/movies/quest1-intro.mp4",
+          "narrative": "Mentor speaks: \"As you step forward, ancient magic stirs...\"",
+          "onceOnly": true,
+          "room": "room-nw-1",
+          "tile": [
+            0,
+            0
+          ],
+          "title": "Note A Trigger"
+        }
+      ],
       "tileSize": 39,
       "title": "Quest 1: Custom Dungeon",
       "traps": [],
-      "triggers": [],
+      "triggers": [
+        {
+          "actions": [
+            {
+              "canSkip": true,
+              "moviePath": "res://assets/movies/quest1-intro.mp4",
+              "title": "Note A Cinematic",
+              "type": "play_movie"
+            }
+          ],
+          "doorId": "",
+          "event": "on_room_entered",
+          "id": "trigger-note-a-l5sv",
+          "marker": "Note A",
+          "monsterId": "",
+          "name": "Note A Trigger",
+          "narrative": "Mentor speaks: \"As you step forward, ancient magic stirs...\"",
+          "onceOnly": true,
+          "room": "room-nw-1",
+          "target": "room-nw-1",
+          "tile": [
+            0,
+            0
+          ],
+          "title": "Note A Trigger"
+        }
+      ],
       "wallBlocks": [
         {
           "height": 1,
@@ -2591,14 +2694,6 @@
           "width": 2,
           "x": 15,
           "y": 6
-        },
-        {
-          "height": 1,
-          "id": "block-5",
-          "type": "double-h",
-          "width": 2,
-          "x": 8,
-          "y": 9
         },
         {
           "height": 1,
@@ -2647,17 +2742,17 @@
   },
   "monsters": {
     "mon-boss-3": {
-      "attackDice": 3,
-      "bodyPoints": 2,
-      "defendDice": 2,
+      "attackDice": 4,
+      "bodyPoints": 4,
+      "defendDice": 4,
       "id": "mon-boss-3",
       "isBoss": true,
       "isSpellcaster": true,
       "isUndead": false,
-      "mindPoints": 5,
+      "mindPoints": 0,
       "monsterType": "boss",
       "movementSquares": 8,
-      "name": "Dungeon Boss",
+      "name": "Doomguard",
       "position": [
         15,
         15
@@ -2729,44 +2824,24 @@
       "slug": "chaos_warrior-mon-chaos_warrior-7",
       "spells": []
     },
-    "mon-goblin-2": {
+    "mon-goblin-22": {
       "attackDice": 2,
       "bodyPoints": 1,
       "defendDice": 1,
-      "id": "mon-goblin-2",
+      "id": "mon-goblin-22",
       "isBoss": false,
       "isSpellcaster": false,
       "isUndead": false,
       "mindPoints": 1,
       "monsterType": "goblin",
       "movementSquares": 10,
-      "name": "Goblin Sentry",
+      "name": "Goblin",
       "position": [
-        11,
+        14,
         18
       ],
       "roomId": "",
-      "slug": "goblin-mon-goblin-2",
-      "spells": []
-    },
-    "mon-orc-1": {
-      "attackDice": 3,
-      "bodyPoints": 1,
-      "defendDice": 2,
-      "id": "mon-orc-1",
-      "isBoss": false,
-      "isSpellcaster": false,
-      "isUndead": false,
-      "mindPoints": 2,
-      "monsterType": "orc",
-      "movementSquares": 6,
-      "name": "Orc Sentry",
-      "position": [
-        13,
-        18
-      ],
-      "roomId": "",
-      "slug": "orc-mon-orc-1",
+      "slug": "goblin-mon-goblin-22",
       "spells": []
     },
     "mon-orc-22": {
@@ -2787,6 +2862,26 @@
       ],
       "roomId": "room-nw-4",
       "slug": "orc-mon-orc-22",
+      "spells": []
+    },
+    "mon-orc-23": {
+      "attackDice": 3,
+      "bodyPoints": 1,
+      "defendDice": 2,
+      "id": "mon-orc-23",
+      "isBoss": false,
+      "isSpellcaster": false,
+      "isUndead": false,
+      "mindPoints": 2,
+      "monsterType": "orc",
+      "movementSquares": 6,
+      "name": "Orc",
+      "position": [
+        18,
+        18
+      ],
+      "roomId": "",
+      "slug": "orc-mon-orc-23",
       "spells": []
     },
     "mon-orc-24": {
@@ -2860,7 +2955,7 @@
       "mindPoints": 5,
       "monsterType": "orc",
       "movementSquares": 8,
-      "name": "Orc Champion",
+      "name": "Witch Commander",
       "position": [
         11,
         9
