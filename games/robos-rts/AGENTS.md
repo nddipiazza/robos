@@ -1,28 +1,28 @@
 # AGENTS.md: `robos-rts` (Starfall Command)
 
-An open-source, *StarCraft II* & *Stormgate* (**SnowPlay**)-inspired deterministic 64Hz Real-Time Strategy (RTS) game and engine built on **Godot 4.3**, powered by the RobOS Dual-State Knowledge Graph and an **`s2client-proto` / `python-sc2` compatible Bot Step API (`:18095`)**.
+An open-source, *StarCraft II* & *Stormgate* (**SnowPlay**)-inspired deterministic 64Hz Real-Time Strategy (RTS) game and engine built on **Godot 4.3**, featuring a **2.5D Angled 3D Perspective Camera**, **3 Asymmetric Factions (Humans, Monsters, Aliens)**, and an **`s2client-proto` / `python-sc2` compatible Bot Step API (`:18095`)** used identically for Cucumber E2E testing and custom AI bots.
 
 ## Core Architecture
 
-1. **Decoupled 64Hz SnowPlay-Style Simulation Core ([`scripts/engine/SimEngine.gd`](./scripts/engine/SimEngine.gd))**:
-   - Runs at a deterministic 64Hz fixed step (`TICK_DT = 1.0 / 64.0`), completely decoupled from the rendering framerate.
-   - Can advance thousands of ticks per second in headless step mode (`RTS_MODE=backend`) or run in real-time 64Hz (`RTS_MODE=human`).
-2. **StarCraft II Navigation & Crowd Fluidity**:
-   - **Dynamic Footprint Grid + Funnel String-Pulling A\***: Structures (`5x5` Command Center, `3x3` Barracks/Factory, `2x2` Supply Depot) dynamically block navigation cells, while lowered Supply Depots (`is_walkable_structure = true`) open choke points for unit traversal.
-   - **RVO2 Velocity Steering + Boids Separation**: Units query an $O(1)$ spatial hash grid (`SPATIAL_CELL_SIZE = 4.0`) to smoothly curve around neighbors without gridlock.
-   - **SC2 Allied `PushPriority` & Return**: Moving friendly units with higher or equal `push_priority` displace idle allied units out of their path; displaced idle allies remember their `home_pos` and automatically walk back once clear.
-3. **StarCraft II Combat Micro State Machine ([`scripts/engine/RTSData.gd`](./scripts/engine/RTSData.gd))**:
-   - Every weapon defines exact `damage_point` (wind-up time before the shot fires), `backswing` (cancelable recovery animation), `period` (cooldown), `range`, `bonus` (e.g. `+10 vs Armored`), and `splash_radius`.
-   - Issuing a `move` command during `backswing` immediately cancels the recovery animation while `weapon_cooldown` ticks down on the move—enabling authentic **Marine stutter-step kiting**.
-4. **`s2client-proto` / `python-sc2` Bot API ([`scripts/GameControlServer.gd`](./scripts/GameControlServer.gd) & [`robos_sc2_bot_sdk.py`](./robos_sc2_bot_sdk.py))**:
-   - Exposes `/health`, `/observation`, `/action`, `/step`, `/directive`, and `/scenario` on HTTP port `18095`.
+1. **2.5D Angled 3D Perspective Renderer ([`scripts/RTSWorld3D.gd`](./scripts/RTSWorld3D.gd) & [`scripts/RTSMain.gd`](./scripts/RTSMain.gd))**:
+   - Uses a `Camera3D` pitched at `-56°` (`fov = 42°`) projecting 3D elevated high-ground plateaus (`+2.2` elevation), sloped ramps, canyon cliff walls, 3D mineral crystals, vespene geysers, 3D unit/structure meshes, translucent Alien Plasma Shield bubbles, and ground selection tori.
+   - Overlays crisp 2D screen-space HP & Shield bars, box selection, a `3x5` SC2 Command Card, and a tactical minimap.
+2. **3 Asymmetric Factions ([`scripts/engine/RTSData.gd`](./scripts/engine/RTSData.gd))**:
+   - **Humans (`humans` / Terran Vanguard)**: `SCV` (construction & harvesting), `Marine` (Stimpack + stutter-step kiting), `Marauder` (Concussive Slow + Armored bonus), `Siege Tank` (Tank Mode <-> Siege Mode 31-range splash), `Command Center`, `Supply Depot` (Raise/Lower choke gate), `Refinery`, `Barracks`, `Factory`.
+   - **Monsters (`monsters` / Xenomorph Swarm)**: `Drone`, `Swarmling` (ultra-fast melee swarm), `Roach` (armored acid ranged), `Ravager` (corrosive plasma splash), `Hatchery`.
+   - **Aliens (`aliens` / Celestial Armada)**: Regenerating **Plasma Shields** across all units & structures, `Probe` (autonomous warp construction), `Zealot` (Psi Blades + `Charge` speed burst), `Stalker` (`Blink` teleport micro!), `Colossus` (Thermal Lance splash + **Cliff-Walk** over canyon walls), `Nexus`, `Pylon`, `Gateway`.
+3. **Decoupled 64Hz SnowPlay-Style Simulation Core ([`scripts/engine/SimEngine.gd`](./scripts/engine/SimEngine.gd))**:
+   - Runs at a deterministic 64Hz fixed step (`TICK_DT = 1.0 / 64.0`), completely decoupled from rendering FPS.
+   - Implements SC2 Constrained Funnel A\*, RVO2 velocity steering, Allied `PushPriority` displacement & return-to-post, and `DamagePoint`/`Backswing` stutter-step combat micro.
+4. **Unified Bot & Testing API ([`scripts/GameControlServer.gd`](./scripts/GameControlServer.gd) & [`robos_sc2_bot_sdk.py`](./robos_sc2_bot_sdk.py))**:
+   - The exact same `/observation`, `/action`, `/step`, `/directive`, and `/scenario` HTTP/JSON endpoints (`:18095`) and `RobOSSC2Client` / `SC2BotBase` Python SDK power both Cucumber E2E tests and custom external bots.
 
 ## Running the Game & E2E Tests
 
 ```bash
-# Launch interactive RTS game
+# Launch interactive 2.5D Angled 3D RTS game
 ./play.sh
 
-# Run headless deterministic Cucumber E2E test suite (~3.3 seconds for all 4 scenarios)
+# Run headless deterministic 3-faction Cucumber E2E test suite (~4.9s for all 5 scenarios)
 ./run_cucumber_tests.py --backend
 ```

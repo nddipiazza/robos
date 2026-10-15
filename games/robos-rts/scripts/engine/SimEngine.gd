@@ -1,30 +1,16 @@
 extends Node
 
 # SimEngine.gd — SnowPlay & StarCraft II Inspired Deterministic 64Hz RTS Simulation Engine
-#
-# Key Engine Features Implemented:
-# 1. Fixed 64Hz simulation step (`TICK_DT = 1.0 / 64.0`) decoupled from rendering FPS.
-# 2. Dynamic Grid + Visibility-Graph / Funnel A* Pathfinding around terrain cliffs & building footprints.
-# 3. SC2 Fluid Crowd Steering:
-#    - Spatial hash grid for O(1) neighbor queries
-#    - RVO2-style reciprocal velocity avoidance + Boids separation
-#    - SC2 PushPriority: moving units push idle friendly units out of the way, and pushed idle allies
-#      remember their `home_pos` and return once clear!
-#    - Dynamic Group Magic-Box / Swarm Arrival so large squads stop cohesively without endless jostling.
-# 4. SC2 Combat Micro State Machine:
-#    - Exact `damage_point` (wind-up) and `backswing` (cancelable recovery animation)
-#    - Issuing a `move` command after `damage_point` during `backswing` cancels the animation while
-#      `weapon_cooldown` ticks down on the move (authentic Marine stutter-step kiting!).
-#    - Concussive shells slow, Stimpack buff, Siege Mode splash damage, Armor & Attribute bonus damage.
-# 5. SC2 Economy & Production:
-#    - Mineral patch & Vespene Refinery worker harvesting loops
-#    - Supply Depot Lower/Raise (`is_walkable_structure`) choke-point mechanics
-#    - Structure construction & unit production queues with rally points.
+# Supports 3 Factions:
+# - HUMANS ("humans" / Terran Vanguard): Stimpack, Lower/Raise Supply Depots, Siege Tanks, SCV Construction
+# - MONSTERS ("monsters" / Xenomorph Swarm): High-speed Swarmling packs, Roaches, Ravagers
+# - ALIENS ("aliens" / Celestial Armada): Regenerating Plasma Shields, Stalker Blink teleport, Zealot Charge, Thermal Lance Colossus
 
 signal simulation_ticked(tick: int)
 signal unit_spawned(unit: Dictionary)
 signal unit_destroyed(unit: Dictionary)
 signal projectile_fired(from_pos: Vector2, to_pos: Vector2, weapon_name: String, is_splash: bool, owner_id: int)
+signal unit_blinked(from_pos: Vector2, to_pos: Vector2, unit_tag: int)
 signal scenario_loaded(scenario_name: String)
 
 const TICK_RATE: int = 64
@@ -37,63 +23,27 @@ var sim_time: float = 0.0
 var rng_seed: int = 42
 var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var paused: bool = false
-var rts_mode: String = "human" # "backend" (headless step mode) or "human" (realtime 64Hz)
+var rts_mode: String = "human"
 var sim_speed: float = 1.0
 
 var map_width: float = 128.0
 var map_height: float = 96.0
-var scenario_name: String = "Starfall Choke Skirmish"
+var scenario_name: String = "Starfall Canyon — Humans vs Monsters vs Aliens"
 
-# Terrain obstacles: Rect2 blocks (cliffs/walls) and walkable ramps
 var terrain_obstacles: Array[Rect2] = []
 var high_ground_zones: Array[Rect2] = []
 var ramps: Array[Rect2] = []
 
-# Players state (1 = Player 1 / Terran Vanguard, 2 = Player 2 / Xenomorph Swarm)
-var players: Dictionary = {
-	1: {
-		"id": 1,
-		"name": "Terran Vanguard",
-		"faction": "terran_vanguard",
-		"minerals": 400,
-		"vespene": 100,
-		"supply_used": 0,
-		"supply_cap": 15,
-		"minerals_collected": 0,
-		"vespene_collected": 0,
-		"units_killed": 0,
-		"units_lost": 0,
-		"structures_built": 0,
-		"stutter_step_cancels": 0
-	},
-	2: {
-		"id": 2,
-		"name": "Xenomorph Swarm",
-		"faction": "xenomorph_swarm",
-		"minerals": 400,
-		"vespene": 100,
-		"supply_used": 0,
-		"supply_cap": 15,
-		"minerals_collected": 0,
-		"vespene_collected": 0,
-		"units_killed": 0,
-		"units_lost": 0,
-		"structures_built": 0,
-		"stutter_step_cancels": 0
-	}
-}
-
+var players: Dictionary = {}
 var next_tag: int = 1001
-var units: Dictionary = {}        # tag (int) -> unit dict
-var resources: Dictionary = {}    # tag (int) -> resource node dict ("mineral_field" or "vespene_geyser")
-var spatial_grid: Dictionary = {} # Vector2i -> Array[int] (unit tags)
+var units: Dictionary = {}
+var resources: Dictionary = {}
+var spatial_grid: Dictionary = {}
 var astar_grid: AStarGrid2D = AStarGrid2D.new()
 var nav_dirty: bool = true
 
-# Ring buffer for recent combat visuals & telemetry
 var recent_events: Array[Dictionary] = []
 var command_history: Array[Dictionary] = []
-
 var _accum_time: float = 0.0
 
 func _ready() -> void:
@@ -116,10 +66,6 @@ func _process(delta: float) -> void:
 		step_ticks(1)
 		steps += 1
 
-# =============================================================================
-# SCENARIO & STATE INITIALIZATION
-# =============================================================================
-
 func reset_state(new_seed: int = 42, width: float = 128.0, height: float = 96.0) -> void:
 	tick = 0
 	sim_time = 0.0
@@ -137,13 +83,19 @@ func reset_state(new_seed: int = 42, width: float = 128.0, height: float = 96.0)
 	recent_events.clear()
 	command_history.clear()
 
-	for pid in [1, 2]:
+	var default_factions = {
+		1: {"name": "Humans (Terran Vanguard)", "faction": "humans"},
+		2: {"name": "Monsters (Xenomorph Swarm)", "faction": "monsters"},
+		3: {"name": "Aliens (Celestial Armada)", "faction": "aliens"}
+	}
+	players.clear()
+	for pid in [1, 2, 3]:
 		players[pid] = {
 			"id": pid,
-			"name": "Terran Vanguard" if pid == 1 else "Xenomorph Swarm",
-			"faction": "terran_vanguard" if pid == 1 else "xenomorph_swarm",
+			"name": default_factions[pid]["name"],
+			"faction": default_factions[pid]["faction"],
 			"minerals": 400,
-			"vespene": 100,
+			"vespene": 150,
 			"supply_used": 0,
 			"supply_cap": 0,
 			"minerals_collected": 0,
@@ -151,63 +103,71 @@ func reset_state(new_seed: int = 42, width: float = 128.0, height: float = 96.0)
 			"units_killed": 0,
 			"units_lost": 0,
 			"structures_built": 0,
-			"stutter_step_cancels": 0
+			"stutter_step_cancels": 0,
+			"blinks_executed": 0
 		}
 	_rebuild_astar_grid()
 
 func load_default_scenario() -> void:
 	reset_state(42, 128.0, 96.0)
-	scenario_name = "Starfall Canyon — Terran Vanguard vs Xenomorph Swarm"
+	scenario_name = "Starfall Canyon — Humans vs Monsters vs Aliens"
 
-	# Add a central canyon choke wall with a central pass (classic SC2 natural choke)
-	terrain_obstacles.append(Rect2(60.0, 0.0, 6.0, 36.0))
-	terrain_obstacles.append(Rect2(60.0, 60.0, 6.0, 36.0))
+	terrain_obstacles.append(Rect2(60.0, 0.0, 6.0, 34.0))
+	terrain_obstacles.append(Rect2(60.0, 62.0, 6.0, 34.0))
 	high_ground_zones.append(Rect2(0.0, 0.0, 60.0, 96.0))
-	ramps.append(Rect2(56.0, 36.0, 12.0, 24.0))
+	ramps.append(Rect2(56.0, 34.0, 14.0, 28.0))
 
-	# Player 1 (Terran Vanguard) Base at West
+	# Player 1: HUMANS (Terran Vanguard) at West High Ground
 	spawn_unit("command_center", 1, Vector2(20.0, 48.0))
 	spawn_unit("supply_depot", 1, Vector2(34.0, 34.0))
 	spawn_unit("supply_depot", 1, Vector2(34.0, 62.0))
 	spawn_unit("barracks", 1, Vector2(36.0, 48.0))
 	spawn_unit("factory", 1, Vector2(28.0, 66.0))
 
-	# Mineral Line & Vespene Geyser for Player 1
 	for i in range(6):
 		spawn_resource("mineral_field", Vector2(10.0, 33.0 + i * 5.5), 1500)
 	spawn_resource("vespene_geyser", Vector2(14.0, 68.0), 2250)
 	spawn_unit("refinery", 1, Vector2(14.0, 68.0))
 
-	# Spawn SCVs and auto-assign to harvest
-	for i in range(8):
-		var scv = spawn_unit("scv", 1, Vector2(15.0, 35.0 + i * 3.5))
+	for i in range(6):
+		var scv = spawn_unit("scv", 1, Vector2(15.0, 35.0 + i * 3.8))
 		issue_SmartHarvest(scv["tag"])
 
-	# Terran Initial Combat Squad
+	for i in range(6):
+		var row = i / 3
+		var col = i % 3
+		spawn_unit("marine", 1, Vector2(44.0 + col * 2.2, 43.0 + row * 2.5))
+	spawn_unit("marauder", 1, Vector2(48.0, 50.0))
+	spawn_unit("siege_tank", 1, Vector2(41.0, 48.0))
+
+	# Player 2: MONSTERS (Xenomorph Swarm) at South-East Low Ground
+	spawn_unit("hatchery", 2, Vector2(106.0, 68.0))
+	for i in range(4):
+		spawn_resource("mineral_field", Vector2(118.0, 58.0 + i * 5.5), 1500)
+	for i in range(4):
+		var drone = spawn_unit("drone", 2, Vector2(112.0, 60.0 + i * 4.0))
+		issue_SmartHarvest(drone["tag"])
 	for i in range(8):
 		var row = i / 4
 		var col = i % 4
-		spawn_unit("marine", 1, Vector2(44.0 + col * 2.2, 43.0 + row * 2.5))
-	spawn_unit("marauder", 1, Vector2(48.0, 50.0))
-	spawn_unit("marauder", 1, Vector2(48.0, 40.0))
-	spawn_unit("siege_tank", 1, Vector2(41.0, 48.0))
+		spawn_unit("swarmling", 2, Vector2(84.0 + col * 2.2, 56.0 + row * 2.5))
+	spawn_unit("roach", 2, Vector2(92.0, 60.0))
+	spawn_unit("ravager", 2, Vector2(94.0, 65.0))
 
-	# Player 2 (Xenomorph Swarm) Base at East
-	spawn_unit("hatchery", 2, Vector2(106.0, 48.0))
-	for i in range(6):
-		spawn_resource("mineral_field", Vector2(118.0, 33.0 + i * 5.5), 1500)
-	spawn_resource("vespene_geyser", Vector2(114.0, 68.0), 2250)
-
-	for i in range(6):
-		var drone = spawn_unit("drone", 2, Vector2(112.0, 36.0 + i * 4.0))
-		issue_SmartHarvest(drone["tag"])
-
-	for i in range(12):
-		var row = i / 4
-		var col = i % 4
-		spawn_unit("swarmling", 2, Vector2(84.0 + col * 2.2, 41.0 + row * 2.5))
+	# Player 3: ALIENS (Celestial Armada) at North-East Outpost
+	spawn_unit("nexus", 3, Vector2(104.0, 22.0))
+	spawn_unit("pylon", 3, Vector2(92.0, 20.0))
+	spawn_unit("gateway", 3, Vector2(90.0, 28.0))
 	for i in range(3):
-		spawn_unit("roach", 2, Vector2(92.0, 43.0 + i * 4.5))
+		spawn_resource("mineral_field", Vector2(116.0, 14.0 + i * 5.5), 1500)
+	for i in range(3):
+		var probe = spawn_unit("probe", 3, Vector2(110.0, 16.0 + i * 4.0))
+		issue_SmartHarvest(probe["tag"])
+	spawn_unit("zealot", 3, Vector2(80.0, 26.0))
+	spawn_unit("zealot", 3, Vector2(80.0, 30.0))
+	spawn_unit("stalker", 3, Vector2(84.0, 24.0))
+	spawn_unit("stalker", 3, Vector2(84.0, 28.0))
+	spawn_unit("colossus", 3, Vector2(88.0, 26.0))
 
 	_rebuild_astar_grid()
 	_recompute_supplies()
@@ -242,7 +202,9 @@ func load_scenario_dict(data: Dictionary) -> Dictionary:
 		if players.has(pid):
 			var pd = p_cfg[pid_key]
 			players[pid]["minerals"] = int(pd.get("minerals", 400))
-			players[pid]["vespene"] = int(pd.get("vespene", 100))
+			players[pid]["vespene"] = int(pd.get("vespene", 150))
+			if pd.has("faction"):
+				players[pid]["faction"] = str(pd["faction"])
 
 	for res in data.get("resources", []):
 		spawn_resource(
@@ -267,6 +229,8 @@ func load_scenario_dict(data: Dictionary) -> Dictionary:
 			var spawned = spawn_unit(utype, owner_id, pos, str(u.get("id", "")) if count == 1 else "")
 			if u.has("hp"):
 				spawned["hp"] = float(u.get("hp"))
+			if u.has("shields"):
+				spawned["shields"] = float(u.get("shields"))
 			if bool(u.get("auto_harvest", false)):
 				issue_SmartHarvest(spawned["tag"])
 
@@ -276,17 +240,13 @@ func load_scenario_dict(data: Dictionary) -> Dictionary:
 	emit_signal("scenario_loaded", scenario_name)
 	return {"ok": true, "scenario": scenario_name, "unit_count": units.size()}
 
-# =============================================================================
-# ENTITY SPAWNING
-# =============================================================================
-
 func spawn_resource(res_type: String, pos: Vector2, amount: int = 1500, custom_id: String = "") -> Dictionary:
 	var tag = next_tag
 	next_tag += 1
 	var r = {
 		"tag": tag,
 		"id": custom_id if custom_id != "" else "%s_%d" % [res_type, tag],
-		"resource_type": res_type, # "mineral_field" or "vespene_geyser"
+		"resource_type": res_type,
 		"pos": pos,
 		"amount": amount,
 		"radius": 1.8 if res_type == "mineral_field" else 2.6,
@@ -305,12 +265,16 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 	var tag = next_tag
 	next_tag += 1
 	var max_hp = float(def.get("max_hp", 45.0))
+	var max_shields = float(def.get("max_shields", 0.0))
 	var start_hp = max_hp if build_progress >= 1.0 else max(10.0, max_hp * build_progress)
+	var start_shields = max_shields if build_progress >= 1.0 else max_shields * build_progress
+
 	var u = {
 		"tag": tag,
 		"id": custom_id if custom_id != "" else "%s_%d" % [unit_type, tag],
 		"unit_type": unit_type.to_lower(),
 		"name": str(def.get("name", unit_type)),
+		"faction": str(def.get("faction", "humans")),
 		"owner": owner_id,
 		"pos": pos,
 		"prev_pos": pos,
@@ -318,6 +282,9 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 		"facing": 0.0 if owner_id == 1 else PI,
 		"hp": start_hp,
 		"max_hp": max_hp,
+		"shields": start_shields,
+		"max_shields": max_shields,
+		"out_of_combat_timer": 10.0,
 		"armor": float(def.get("armor", 0.0)),
 		"radius": float(def.get("radius", 0.85)),
 		"speed": float(def.get("speed", 7.0)),
@@ -333,23 +300,21 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 		"home_pos": pos,
 		"has_home_pos": true,
 		"pushed_timer": 0.0,
-		# Combat state machine (SC2 DamagePoint + Backswing + Cooldown)
-		"attack_state": "idle", # "idle", "windup", "backswing"
+		"attack_state": "idle",
 		"attack_state_timer": 0.0,
 		"attack_target_tag": 0,
 		"weapon_cooldown": 0.0,
-		# Buffs
 		"stim_timer": 0.0,
+		"charge_timer": 0.0,
+		"blink_cooldown": 0.0,
 		"slow_timer": 0.0,
-		# Worker state
 		"cargo_type": "",
 		"cargo_amount": 0,
 		"harvest_timer": 0.0,
 		"harvest_target_tag": 0,
-		# Structure construction & production state
 		"build_progress": build_progress,
 		"build_total_time": float(def.get("build_time", 20.0)),
-		"production_queue": [], # Array of {"unit_type": String, "progress": float, "total_time": float}
+		"production_queue": [],
 		"rally_pos": pos + (Vector2(8.0, 0.0) if owner_id == 1 else Vector2(-8.0, 0.0)),
 		"kills": 0,
 		"damage_dealt": 0.0
@@ -361,9 +326,15 @@ func spawn_unit(unit_type: String, owner_id: int, pos: Vector2, custom_id: Strin
 	emit_signal("unit_spawned", u)
 	return u
 
-# =============================================================================
-# DETERMINISTIC TICK LOOP
-# =============================================================================
+func get_elevation_at(pos: Vector2) -> float:
+	for rmp in ramps:
+		if rmp.has_point(pos):
+			var t = clampf((pos.x - rmp.position.x) / max(1.0, rmp.size.x), 0.0, 1.0)
+			return lerp(2.2, 0.0, t)
+	for hg in high_ground_zones:
+		if hg.has_point(pos):
+			return 2.2
+	return 0.0
 
 func step_ticks(count: int = 1) -> void:
 	for _i in range(count):
@@ -379,34 +350,25 @@ func _step_single_tick() -> void:
 
 	_rebuild_spatial_grid()
 
-	# Let AI Commander process macro/micro directives every 8 ticks (8Hz AI brain tick)
 	if tick % 8 == 0:
 		RTSCommanderAI.step_ai(TICK_DT * 8.0)
 
-	# 1. Update Structures (Construction progress & Unit Production queues)
 	_update_structures(TICK_DT)
 
-	# 2. Update Units (Buffs, Combat Timers, Orders, Pathfinding, Steering, Combat)
 	var all_tags = units.keys()
-	all_tags.sort() # Deterministic iteration order by integer tag!
+	all_tags.sort()
 	for tag in all_tags:
 		if not units.has(tag):
 			continue
 		var u = units[tag]
 		u["prev_pos"] = u["pos"]
+		_update_unit_timers(u, TICK_DT)
 		if u["is_structure"]:
 			continue
-		_update_unit_timers(u, TICK_DT)
 		_update_unit_orders(u, TICK_DT)
 
-	# 3. Apply SC2 Crowd Steering, RVO2 Local Avoidance & Allied PushPriority
 	_apply_steering_and_push_resolution(all_tags, TICK_DT)
-
 	emit_signal("simulation_ticked", tick)
-
-# =============================================================================
-# NAVIGATION MESH / DYNAMIC FOOTPRINT GRID & FUNNEL STRING-PULLING
-# =============================================================================
 
 func _rebuild_astar_grid() -> void:
 	var cols = int(ceil(map_width / PATH_CELL_SIZE))
@@ -418,11 +380,9 @@ func _rebuild_astar_grid() -> void:
 	astar_grid.default_estimate_heuristic = AStarGrid2D.HEURISTIC_OCTILE
 	astar_grid.update()
 
-	# Mark terrain obstacles
 	for obs in terrain_obstacles:
 		_set_rect_solid(obs, true)
 
-	# Mark non-walkable structures (note: lowered Supply Depots are walkable!)
 	for u in units.values():
 		if u["is_structure"] and not u["is_walkable_structure"]:
 			var r = u["radius"]
@@ -439,7 +399,6 @@ func _set_rect_solid(rect: Rect2, solid: bool) -> void:
 			astar_grid.set_point_solid(Vector2i(x, y), solid)
 
 func compute_smooth_path(start_pos: Vector2, end_pos: Vector2, unit_radius: float = 0.85) -> Array[Vector2]:
-	# Fast line-of-sight check first (Funnel / String-Pulling optimization)
 	if _has_clear_line_of_walk(start_pos, end_pos, unit_radius):
 		return [end_pos]
 
@@ -465,7 +424,6 @@ func compute_smooth_path(start_pos: Vector2, end_pos: Vector2, unit_radius: floa
 		waypoints.append(Vector2(pt.x + PATH_CELL_SIZE * 0.5, pt.y + PATH_CELL_SIZE * 0.5))
 	waypoints[waypoints.size() - 1] = end_pos
 
-	# String-pulling / Funnel pass: collapse collinear or line-of-sight unobstructed waypoints
 	if waypoints.size() <= 2:
 		return [end_pos]
 
@@ -524,10 +482,6 @@ func _is_point_blocked_by_static(p: Vector2, radius: float) -> bool:
 				return true
 	return false
 
-# =============================================================================
-# SPATIAL HASH GRID & NEIGHBOR QUERIES
-# =============================================================================
-
 func _rebuild_spatial_grid() -> void:
 	spatial_grid.clear()
 	for tag in units.keys():
@@ -553,10 +507,6 @@ func query_units_in_radius(center: Vector2, radius: float) -> Array[Dictionary]:
 							result.append(u)
 	return result
 
-# =============================================================================
-# STRUCTURES: CONSTRUCTION & PRODUCTION QUEUES
-# =============================================================================
-
 func _update_structures(dt: float) -> void:
 	for u in units.values():
 		if not u["is_structure"]:
@@ -578,15 +528,20 @@ func _update_structures(dt: float) -> void:
 				if not new_unit.is_empty() and u["rally_pos"].distance_to(u["pos"]) > u["radius"] + 1.5:
 					issue_command([new_unit["tag"]], "move", u["rally_pos"])
 
-# =============================================================================
-# UNIT TIMERS, ORDERS & STUTTER-STEP COMBAT STATE MACHINE
-# =============================================================================
-
 func _update_unit_timers(u: Dictionary, dt: float) -> void:
 	if u["stim_timer"] > 0.0:
 		u["stim_timer"] = max(0.0, u["stim_timer"] - dt)
+	if u["charge_timer"] > 0.0:
+		u["charge_timer"] = max(0.0, u["charge_timer"] - dt)
+	if u["blink_cooldown"] > 0.0:
+		u["blink_cooldown"] = max(0.0, u["blink_cooldown"] - dt)
 	if u["slow_timer"] > 0.0:
 		u["slow_timer"] = max(0.0, u["slow_timer"] - dt)
+
+	# SC2 Alien / Protoss Plasma Shield Regeneration (2.0 shields/sec after 3.5s out of combat)
+	u["out_of_combat_timer"] += dt
+	if u["max_shields"] > 0.0 and u["shields"] < u["max_shields"] and u["out_of_combat_timer"] >= 3.5:
+		u["shields"] = min(u["max_shields"], u["shields"] + 6.0 * dt)
 
 	var atk_speed_mult = 1.5 if u["stim_timer"] > 0.0 else 1.0
 	if u["weapon_cooldown"] > 0.0:
@@ -598,7 +553,6 @@ func _update_unit_timers(u: Dictionary, dt: float) -> void:
 func _update_unit_orders(u: Dictionary, dt: float) -> void:
 	u["vel"] = Vector2.ZERO
 
-	# Handle active attack windup / backswing
 	if u["attack_state"] == "windup":
 		var target = units.get(u["attack_target_tag"], {})
 		if target.is_empty() or target["hp"] <= 0.0:
@@ -619,13 +573,10 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 		u["attack_state_timer"] -= dt
 		if u["attack_state_timer"] <= 0.0:
 			u["attack_state"] = "idle"
-		# Notice: if the unit has a non-attack MOVE order queued right now, it already canceled backswing in issue_command!
 		if u["orders"].size() > 0 and u["orders"][0]["type"] != "move":
 			return
 
 	if u["orders"].is_empty():
-		# Idle behavior:
-		# 1. Auto-acquire nearby enemies in weapon range (or sight range if not holding position)
 		var enemy = _find_best_attack_target(u, false)
 		if not enemy.is_empty():
 			var wpn_range = _get_weapon_range(u)
@@ -634,11 +585,9 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 				_begin_attack_on(u, enemy)
 				return
 			elif not u["is_immobile"] and not u["is_worker"]:
-				# Leash toward nearby threat
 				_move_toward_point(u, enemy["pos"], dt)
 				return
 
-		# 2. SC2 Allied Push Return: if pushed away from `home_pos`, smoothly walk back home!
 		if u["has_home_pos"] and u["pushed_timer"] <= 0.0 and not u["is_immobile"]:
 			var d_home = u["pos"].distance_to(u["home_pos"])
 			if d_home > 0.35 and d_home < 6.0:
@@ -658,7 +607,6 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 				u["home_pos"] = u["pos"]
 				u["has_home_pos"] = true
 			else:
-				# Check dynamic crowd arrival: if neighbors in our same group have already stopped at target_pos, stop too!
 				if _should_settle_in_group_arrival(u, target_pos, arrival_rad):
 					u["orders"].pop_front()
 					u["path"].clear()
@@ -707,14 +655,9 @@ func _update_unit_orders(u: Dictionary, dt: float) -> void:
 		"build":
 			_process_worker_build_order(u, order, dt)
 
-# =============================================================================
-# WORKER HARVESTING & CONSTRUCTION LOOPS
-# =============================================================================
-
 func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) -> void:
 	var res_tag = int(order.get("target_tag", u["harvest_target_tag"]))
 	if u["cargo_amount"] > 0:
-		# Returning cargo to nearest friendly Town Hall (Command Center / Hatchery)
 		var th = _find_nearest_town_hall(u["owner"], u["pos"])
 		if th.is_empty():
 			return
@@ -731,7 +674,6 @@ func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) 
 			_move_toward_point(u, th["pos"], dt)
 		return
 
-	# Check if harvesting a Refinery (structure) or a Resource Node
 	var target_entity: Dictionary = {}
 	var is_gas: bool = false
 	if resources.has(res_tag):
@@ -741,7 +683,6 @@ func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) 
 		target_entity = units[res_tag]
 		is_gas = true
 	else:
-		# Find nearest mineral field
 		var nearest_res = _find_nearest_mineral(u["pos"])
 		if nearest_res.is_empty():
 			u["orders"].pop_front()
@@ -785,6 +726,10 @@ func _process_worker_build_order(u: Dictionary, order: Dictionary, dt: float) ->
 				p["vespene"] -= v_cost
 				var s_unit = spawn_unit(struct_type, u["owner"], build_pos, "", 0.1)
 				order["structure_tag"] = s_unit["tag"]
+				# Alien Probes warp in structures automatically and are immediately free!
+				if u["unit_type"] == "probe":
+					s_unit["auto_warp"] = true
+					u["orders"].pop_front()
 			else:
 				u["orders"].pop_front()
 		else:
@@ -803,7 +748,7 @@ func _process_worker_build_order(u: Dictionary, order: Dictionary, dt: float) ->
 		if dist <= 1.8:
 			u["vel"] = Vector2.ZERO
 			u["facing"] = (s_unit["pos"] - u["pos"]).angle()
-			var rate = dt / max(1.0, float(s_unit["build_total_time"]) * 0.25) # Fast RTS pacing
+			var rate = dt / max(1.0, float(s_unit["build_total_time"]) * 0.25)
 			s_unit["build_progress"] = min(1.0, s_unit["build_progress"] + rate)
 			s_unit["hp"] = min(s_unit["max_hp"], s_unit["hp"] + s_unit["max_hp"] * rate)
 			if s_unit["build_progress"] >= 1.0:
@@ -813,11 +758,12 @@ func _process_worker_build_order(u: Dictionary, order: Dictionary, dt: float) ->
 		else:
 			_move_toward_point(u, s_unit["pos"], dt)
 
-# =============================================================================
-# PATH FOLLOWING & SC2 CROWD STEERING / RVO2 / PUSH PRIORITY
-# =============================================================================
-
 func _follow_order_path(u: Dictionary, target_pos: Vector2, dt: float) -> void:
+	# Colossus has Cliff-Walk ("Massive" attribute walks directly over cliffs!)
+	if u["unit_type"] == "colossus":
+		_move_toward_point(u, target_pos, dt)
+		return
+
 	var path: Array = u["path"]
 	if path.is_empty():
 		u["path"] = compute_smooth_path(u["pos"], target_pos, u["radius"])
@@ -844,6 +790,8 @@ func _move_toward_point(u: Dictionary, wp: Vector2, _dt: float) -> void:
 	var spd = float(u["speed"])
 	if u["stim_timer"] > 0.0:
 		spd *= 1.5
+	if u["charge_timer"] > 0.0:
+		spd *= 1.8
 	if u["slow_timer"] > 0.0:
 		spd *= 0.5
 	u["vel"] = dir * spd
@@ -863,7 +811,6 @@ func _should_settle_in_group_arrival(u: Dictionary, target_pos: Vector2, base_ar
 	return false
 
 func _apply_steering_and_push_resolution(all_tags: Array, dt: float) -> void:
-	# Step 1: RVO-inspired velocity steering + SC2 Allied PushPriority displacement
 	for tag in all_tags:
 		if not units.has(tag):
 			continue
@@ -880,13 +827,12 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float) -> void:
 			if n["tag"] == u["tag"]:
 				continue
 			if n["is_structure"] and n["is_walkable_structure"]:
-				continue # Lowered supply depots are completely walkable!
+				continue
 
 			var delta_p: Vector2 = u["pos"] - n["pos"]
 			var dist: float = delta_p.length()
 			var min_sep: float = u["radius"] + n["radius"]
 			if dist < 0.001:
-				# Deterministic tie-break using tags
 				var angle = float((u["tag"] * 73) % 360) * PI / 180.0
 				delta_p = Vector2(cos(angle), sin(angle))
 				dist = 0.01
@@ -894,14 +840,10 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float) -> void:
 			var normal = delta_p / dist
 
 			if is_moving and not n["is_structure"]:
-				# RVO2 / Boid tangential flow steering so moving units curve smoothly around each other
 				if dist < min_sep * 1.55:
 					var overlap_ratio = (min_sep * 1.55 - dist) / (min_sep * 1.55)
 					steer_force += normal * overlap_ratio * u["speed"] * 0.85
 
-				# SC2 PushPriority Mechanic:
-				# If `u` is actively moving and `n` is an IDLE friendly unit with push_priority <= u.push_priority,
-				# `u` pushes `n` aside perpendicular to `u`'s velocity, and `n` remembers its `home_pos` to return!
 				if n["owner"] == u["owner"] and n["orders"].is_empty() and n["attack_state"] == "idle" and not n["is_immobile"]:
 					if u["push_priority"] >= n["push_priority"] and dist < min_sep * 1.25:
 						var move_dir = desired_vel.normalized()
@@ -909,19 +851,18 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float) -> void:
 						if perp.dot(n["pos"] - u["pos"]) < 0.0:
 							perp = -perp
 						var push_vec = (perp * 0.75 + (-normal) * 0.25).normalized()
-						n["pos"] = _clamp_to_walkable(n["pos"] + push_vec * u["speed"] * dt * 0.9, n["radius"])
+						n["pos"] = _clamp_to_walkable(n["pos"] + push_vec * u["speed"] * dt * 0.9, n["radius"], n["unit_type"] == "colossus")
 						n["pushed_timer"] = 0.35
 
 		var final_vel = desired_vel + steer_force
-		var max_spd = u["speed"] * (1.5 if u["stim_timer"] > 0.0 else 1.0) * (0.5 if u["slow_timer"] > 0.0 else 1.0)
+		var max_spd = u["speed"] * (1.5 if u["stim_timer"] > 0.0 else 1.0) * (1.8 if u["charge_timer"] > 0.0 else 1.0) * (0.5 if u["slow_timer"] > 0.0 else 1.0)
 		if final_vel.length() > max_spd and max_spd > 0.0:
 			final_vel = final_vel.normalized() * max_spd
 
 		if final_vel.length_squared() > 0.001:
-			u["pos"] = _clamp_to_walkable(u["pos"] + final_vel * dt, u["radius"])
+			u["pos"] = _clamp_to_walkable(u["pos"] + final_vel * dt, u["radius"], u["unit_type"] == "colossus")
 			u["vel"] = final_vel
 
-	# Step 2: Hard circle-circle overlap projection (prevents any stacking while preserving smooth sliding)
 	for tag in all_tags:
 		if not units.has(tag):
 			continue
@@ -941,22 +882,23 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float) -> void:
 				var nrm = diff / dist if dist > 0.001 else Vector2.RIGHT
 				var pen = min_dist - dist
 				if n["is_structure"] or n["is_immobile"]:
-					u["pos"] = _clamp_to_walkable(u["pos"] + nrm * pen, u["radius"])
+					u["pos"] = _clamp_to_walkable(u["pos"] + nrm * pen, u["radius"], u["unit_type"] == "colossus")
 				elif u["is_immobile"]:
-					n["pos"] = _clamp_to_walkable(n["pos"] - nrm * pen, n["radius"])
+					n["pos"] = _clamp_to_walkable(n["pos"] - nrm * pen, n["radius"], n["unit_type"] == "colossus")
 				else:
-					u["pos"] = _clamp_to_walkable(u["pos"] + nrm * (pen * 0.5), u["radius"])
-					n["pos"] = _clamp_to_walkable(n["pos"] - nrm * (pen * 0.5), n["radius"])
+					u["pos"] = _clamp_to_walkable(u["pos"] + nrm * (pen * 0.5), u["radius"], u["unit_type"] == "colossus")
+					n["pos"] = _clamp_to_walkable(n["pos"] - nrm * (pen * 0.5), n["radius"], n["unit_type"] == "colossus")
 
-func _clamp_to_walkable(p: Vector2, radius: float) -> Vector2:
+func _clamp_to_walkable(p: Vector2, radius: float, ignore_cliffs: bool = false) -> Vector2:
 	var res = Vector2(
 		clampf(p.x, radius + 1.0, map_width - radius - 1.0),
 		clampf(p.y, radius + 1.0, map_height - radius - 1.0)
 	)
+	if ignore_cliffs:
+		return res
 	for obs in terrain_obstacles:
 		var exp_rect = obs.grow(radius * 0.7)
 		if exp_rect.has_point(res):
-			# Push out to nearest edge of obstacle
 			var dl = abs(res.x - exp_rect.position.x)
 			var dr = abs(exp_rect.end.x - res.x)
 			var dt_top = abs(res.y - exp_rect.position.y)
@@ -971,10 +913,6 @@ func _clamp_to_walkable(p: Vector2, radius: float) -> Vector2:
 			else:
 				res.y = exp_rect.end.y + 0.05
 	return res
-
-# =============================================================================
-# SC2 COMBAT RESOLUTION (DAMAGE POINT, BACKSWING, BONUS DAMAGE & SPLASH)
-# =============================================================================
 
 func _get_weapon_range(u: Dictionary) -> float:
 	var def = RTSData.get_unit_def(u["unit_type"])
@@ -1006,8 +944,6 @@ func _find_best_attack_target(u: Dictionary, range_only: bool) -> Dictionary:
 		if range_only and d_edge > wpn_range:
 			continue
 
-		# SC2 Target Acquisition Priority:
-		# Combat units (score +200) > Workers (+100) > Structures (+20), minus distance and missing HP tie-break
 		var prio = 200.0
 		if c["is_structure"]:
 			prio = 20.0
@@ -1083,9 +1019,25 @@ func _apply_damage_to_target(attacker: Dictionary, target: Dictionary, base_dmg:
 	for attr in bonus_dict.keys():
 		if attrs.has(attr):
 			dmg += float(bonus_dict[attr])
-	dmg = max(0.5, (dmg * mult) - float(target.get("armor", 0.0)))
-	target["hp"] = max(0.0, target["hp"] - dmg)
-	attacker["damage_dealt"] += dmg
+	dmg = max(0.5, dmg * mult)
+
+	target["out_of_combat_timer"] = 0.0
+
+	# SC2 Plasma Shields absorb damage before HP!
+	if target["shields"] > 0.0:
+		if target["shields"] >= dmg:
+			target["shields"] -= dmg
+			attacker["damage_dealt"] += dmg
+			return
+		else:
+			var overflow = dmg - target["shields"]
+			attacker["damage_dealt"] += target["shields"]
+			target["shields"] = 0.0
+			dmg = overflow
+
+	var hp_dmg = max(0.5, dmg - float(target.get("armor", 0.0)))
+	target["hp"] = max(0.0, target["hp"] - hp_dmg)
+	attacker["damage_dealt"] += hp_dmg
 
 	if target["hp"] <= 0.0:
 		attacker["kills"] += 1
@@ -1100,10 +1052,6 @@ func _apply_damage_to_target(attacker: Dictionary, target: Dictionary, base_dmg:
 		_recompute_supplies()
 		emit_signal("unit_destroyed", dead)
 
-# =============================================================================
-# COMMAND DISPATCH API (Player UI + s2client-proto Bot API)
-# =============================================================================
-
 func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vector2.ZERO, target_tag: int = 0, extra: String = "", queue: bool = false) -> Dictionary:
 	var accepted: int = 0
 	var valid_units: Array[Dictionary] = []
@@ -1115,28 +1063,50 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 	if valid_units.is_empty():
 		return {"ok": false, "accepted": 0, "error": "No valid unit tags"}
 
-	# Calculate group centroid & dynamic arrival radius for multi-unit move commands
 	var group_size = valid_units.size()
 	var dynamic_arrival = clampf(0.85 + sqrt(float(group_size)) * 0.65, 0.85, 5.5)
 
 	for u in valid_units:
 		var ctype = cmd_type.to_lower()
 
-		# Stutter-step backswing cancel tracking!
-		if u["attack_state"] == "backswing" and ctype in ["move", "attack_move"]:
+		if u["attack_state"] == "backswing" and ctype in ["move", "attack_move", "blink"]:
 			u["attack_state"] = "idle"
 			u["attack_state_timer"] = 0.0
 			if players.has(u["owner"]):
 				players[u["owner"]]["stutter_step_cancels"] += 1
-		elif u["attack_state"] == "windup" and ctype in ["move", "stop"]:
+		elif u["attack_state"] == "windup" and ctype in ["move", "stop", "blink"]:
 			u["attack_state"] = "idle"
 			u["attack_state_timer"] = 0.0
 
-		# Instant abilities & structure morphs / training
 		if ctype == "stimpack":
 			if u["unit_type"] in ["marine", "marauder"] and u["hp"] > 10.0:
 				u["hp"] -= 10.0
 				u["stim_timer"] = 11.0
+				accepted += 1
+			continue
+
+		elif ctype == "charge":
+			if u["unit_type"] == "zealot":
+				u["charge_timer"] = 3.5
+				accepted += 1
+			continue
+
+		elif ctype == "blink":
+			if u["unit_type"] == "stalker" and u["blink_cooldown"] <= 0.0:
+				var old_pos: Vector2 = u["pos"]
+				var delta_b: Vector2 = target_pos - old_pos
+				if delta_b.length() > 18.0:
+					delta_b = delta_b.normalized() * 18.0
+				var dest = _clamp_to_walkable(old_pos + delta_b, u["radius"], true)
+				u["pos"] = dest
+				u["prev_pos"] = dest
+				u["home_pos"] = dest
+				u["blink_cooldown"] = 7.0
+				u["orders"].clear()
+				u["path"].clear()
+				if players.has(u["owner"]):
+					players[u["owner"]]["blinks_executed"] += 1
+				emit_signal("unit_blinked", old_pos, dest, u["tag"])
 				accepted += 1
 			continue
 
@@ -1192,7 +1162,6 @@ func issue_command(unit_tags: Array, cmd_type: String, target_pos: Vector2 = Vec
 			accepted += 1
 			continue
 
-		# Queued or immediate movement / harvest / build / attack orders
 		if not queue:
 			u["orders"].clear()
 			u["path"].clear()
@@ -1310,7 +1279,7 @@ func _enqueue_unit_production(structure: Dictionary, unit_type: String) -> bool:
 	structure["production_queue"].append({
 		"unit_type": unit_type,
 		"progress": 0.0,
-		"total_time": max(2.5, float(u_def.get("build_time", 12.0)) * 0.25) # Snappy RTS pacing
+		"total_time": max(2.5, float(u_def.get("build_time", 12.0)) * 0.25)
 	})
 	_recompute_supplies()
 	return true
@@ -1358,10 +1327,6 @@ func _find_nearest_mineral(pos: Vector2) -> Dictionary:
 				best = r
 	return best
 
-# =============================================================================
-# s2client-proto COMPATIBLE OBSERVATION SNAPSHOT
-# =============================================================================
-
 func get_observation(perspective_player: int = 0) -> Dictionary:
 	var unit_list: Array = []
 	var all_tags = units.keys()
@@ -1372,17 +1337,21 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 			"tag": u["tag"],
 			"id": u["id"],
 			"unit_type": u["unit_type"],
+			"faction": u["faction"],
 			"name": u["name"],
 			"owner": u["owner"],
-			"pos": {"x": snappedf(u["pos"].x, 0.01), "y": snappedf(u["pos"].y, 0.01)},
+			"pos": {"x": snappedf(u["pos"].x, 0.01), "y": snappedf(u["pos"].y, 0.01), "z": snappedf(get_elevation_at(u["pos"]), 0.01)},
 			"hp": snappedf(u["hp"], 0.1),
 			"max_hp": u["max_hp"],
+			"shields": snappedf(u["shields"], 0.1),
+			"max_shields": u["max_shields"],
 			"radius": u["radius"],
 			"is_structure": u["is_structure"],
 			"is_walkable_structure": u["is_walkable_structure"],
 			"is_worker": u["is_worker"],
 			"build_progress": snappedf(u["build_progress"], 0.01),
 			"weapon_cooldown": snappedf(u["weapon_cooldown"], 0.01),
+			"blink_cooldown": snappedf(u["blink_cooldown"], 0.01),
 			"attack_state": u["attack_state"],
 			"stim_timer": snappedf(u["stim_timer"], 0.01),
 			"cargo_type": u["cargo_type"],
@@ -1398,7 +1367,7 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 			"tag": r["tag"],
 			"id": r["id"],
 			"resource_type": r["resource_type"],
-			"pos": {"x": r["pos"].x, "y": r["pos"].y},
+			"pos": {"x": r["pos"].x, "y": r["pos"].y, "z": snappedf(get_elevation_at(r["pos"]), 0.01)},
 			"amount": r["amount"]
 		})
 

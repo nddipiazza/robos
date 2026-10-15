@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 """
-robos_sc2_bot_sdk.py — Python SC2 Bot SDK for RobOS RTS (modeled on BurnySc2/python-sc2 & DeepMind pysc2)
-Communicates with the GameControlServer HTTP/JSON s2client-proto endpoint (:18095).
+robos_sc2_bot_sdk.py — Python SC2 Bot SDK & Arena Runner for RobOS RTS
+Modeled on BurnySc2/python-sc2 & DeepMind pysc2.
+The exact same components used for E2E Cucumber testing can be used to write custom Python bots,
+run multi-faction AI Arena matches, or hook up external LLM/RL agents via the HTTP/JSON API (:18095).
 """
 
 from __future__ import annotations
 
 import json
-import urllib.request
 from typing import Any, Dict, List, Optional
+import urllib.request
 
 
 class RobOSSC2Client:
@@ -75,3 +77,26 @@ class RobOSSC2Client:
 
     def set_overlay(self, step_text: str, proof_text: str = "") -> Dict[str, Any]:
         return self._request("POST", "/overlay", {"step": step_text, "proof": proof_text})
+
+
+class SC2BotBase:
+    """
+    python-sc2 style base class for custom bots in RobOS RTS.
+    Subclass this and implement `on_step(obs, step_idx)`!
+    """
+
+    def __init__(self, player_id: int, client: RobOSSC2Client) -> None:
+        self.player_id = player_id
+        self.client = client
+
+    def my_units(self, obs: Dict[str, Any], unit_type: Optional[str] = None) -> List[Dict[str, Any]]:
+        return [
+            u for u in obs.get("units", [])
+            if u["owner"] == self.player_id and (unit_type is None or u["unit_type"] == unit_type)
+        ]
+
+    def enemy_units(self, obs: Dict[str, Any]) -> List[Dict[str, Any]]:
+        return [u for u in obs.get("units", []) if u["owner"] != self.player_id and u["hp"] > 0]
+
+    def on_step(self, obs: Dict[str, Any], iteration: int) -> None:
+        pass

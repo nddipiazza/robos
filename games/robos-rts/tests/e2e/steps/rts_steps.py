@@ -92,6 +92,14 @@ def step_assert_stutter_step_cancels(context, player: int, min_cancels: int) -> 
     assert cancels >= min_cancels, f"Expected >= {min_cancels} stutter-step cancels for player {player}, got {cancels}"
 
 
+@then("player {player:d} has executed at least {min_blinks:d} Stalker Blinks")
+def step_assert_blinks_executed(context, player: int, min_blinks: int) -> None:
+    obs = context.client.get_observation()
+    p = obs["players"].get(str(player), obs["players"].get(player, {}))
+    blinks = int(p.get("blinks_executed", 0))
+    assert blinks >= min_blinks, f"Expected >= {min_blinks} Blinks for player {player}, got {blinks}"
+
+
 @then("player {player:d} has collected at least {min_minerals:d} minerals")
 def step_assert_minerals_collected(context, player: int, min_minerals: int) -> None:
     obs = context.client.get_observation()
