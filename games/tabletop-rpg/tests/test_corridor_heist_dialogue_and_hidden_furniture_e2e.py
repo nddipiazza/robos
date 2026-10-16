@@ -198,14 +198,28 @@ class TestCorridorHeistDialogueAndHiddenFurnitureE2E(unittest.TestCase):
         state3 = self.ai.get_state()
         self.assertFalse(state3.get("activeDialogue", {}).get("active", False))
 
-        bdd_step("WHEN", "Calling move_furniture directly via API",
-                 action_info="move_furniture furn-chest-3 to [14, 18]")
-        mf_res = self.ai.execute_action("move_furniture", furnitureId="furn-chest-3", tile=[14, 18])
+        bdd_step("WHEN", "Calling move_furniture with custom message",
+                 action_info="move_furniture furn-chest-3 with custom message")
+        custom_txt = "Chest was thrown through the wall and the wall absorbed the chest like it was made of smoke!!"
+        mf_res = self.ai.move_furniture("furn-chest-3", [14, 18], message=custom_txt)
         self.assertTrue(mf_res.get("success", False))
+        self.assertEqual(mf_res.get("message"), custom_txt)
         state4 = self.ai.get_state()
         chest = next((f for f in state4.get("furniture", []) if f.get("id") == "furn-chest-3"), None)
         self.assertEqual(chest.get("x"), 14)
         self.assertEqual(chest.get("y"), 18)
+
+        bdd_step("WHEN", "Calling move_furniture with template placeholders {name}, {x}, {y}",
+                 action_info="move_furniture with templated message")
+        tmpl_res = self.ai.move_furniture("furn-chest-3", [12, 18], message="{name} was hurled to ({x}, {y})!")
+        self.assertTrue(tmpl_res.get("success", False))
+        self.assertEqual(tmpl_res.get("message"), "Heist Treasure Chest was hurled to (12, 18)!")
+
+        bdd_step("WHEN", "Calling move_furniture without message (default)",
+                 action_info="move_furniture default message fallback")
+        def_res = self.ai.move_furniture("furn-chest-3", [11, 18])
+        self.assertTrue(def_res.get("success", False))
+        self.assertIn("HEIST TREASURE CHEST MOVED", def_res.get("message", ""))
 
 
 if __name__ == "__main__":
