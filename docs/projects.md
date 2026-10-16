@@ -15,7 +15,7 @@ redirect_from:
 # Projects
 {: .no_toc }
 
-The sample projects in the RobOS repository: one web app and two games, each with its own pages, and four starter projects produced by the App Wizard's one-click presets.
+The sample projects in the RobOS repository: one web app and three games, each with its own pages, and four starter projects produced by the App Wizard's one-click presets.
 {: .fs-6 }
 
 ## Applications and games
@@ -25,6 +25,7 @@ The sample projects in the RobOS repository: one web app and two games, each wit
 | [Get 'Em Gigs]({{ '/projects/getemgigs/' | relative_url }}) | Web app, Next.js | `packages/getemgigs` | A booking app for local bands. Bands trade attendance, lock deposits in an internal ledger and confirm attendance by scanning a QR code. |
 | [Tabletop RPG]({{ '/projects/tabletop-rpg/' | relative_url }}) | Game, Godot 4.3 | `games/tabletop-rpg` | A turn-based dungeon crawler modelled on HeroQuest, with data-driven cartridges and an HTTP API that the tests use to play the game. |
 | [Tactical cRPG Realm]({{ '/projects/crpg-realm/' | relative_url }}) | Game, Godot 4.3 | `games/crpg-realm` | A party-based, Infinity Engine-style RPG using D&D 5e SRD rules, tested end to end with Cucumber. |
+| [RobOS RTS]({{ '/projects/robos-rts/' | relative_url }}) | Game, Godot 4.3 | `games/robos-rts` | A real-time strategy game with three asymmetric factions, an angled 3D camera, a deterministic 64 Hz simulation and an HTTP bot API. |
 
 For how to build your own, see [Building apps]({{ site.baseurl }}{% link app-development-flow.md %}) and [Game development]({{ '/game-development.html' | relative_url }}).
 

@@ -115,7 +115,7 @@ class TestSpellQuestExhaustionE2E(unittest.TestCase):
                     "defendDice": 2
                 }
             ],
-            revealedRooms=["northwest_crypt"],
+            revealedRooms=["room-nw-crypt", "northwest_crypt"],
             discoveredMonsterIds=["test_skel"],
             explored_tiles=[[3, 3], [3, 4]]
         )

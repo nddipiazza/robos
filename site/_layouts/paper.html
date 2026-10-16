@@ -9,9 +9,9 @@ layout: default
     <p class="paper-status">{{ page.status }}</p>
     <div class="cta cta-left">
       {%- if page.pdf %}
-      <a class="btn btn-accent" href="{{ page.pdf | relative_url }}">Download the PDF</a>
+      <a class="btn btn-accent" href="{{ page.pdf | relative_url }}">⬇ Download the PDF</a>
       {%- endif %}
-      <a class="btn btn-ghost" href="{{ '/future/' | relative_url }}">Plain-English summary</a>
+      <a class="btn btn-ghost" href="{{ '/future/' | relative_url }}">← Plain-English summary</a>
     </div>
   </header>
   <div class="prose wrap-narrow">

@@ -1,0 +1,12 @@
+[Desktop Entry]
+X-RobOS-App=true
+Version=1.0
+Type=Application
+Name=RobOS Auto Center
+Comment=Vehicle reference catalog, VIN decoding, garage and service history
+Exec=/usr/bin/electron /usr/local/share/robos/auto-center/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/auto-center/icon.svg
+Terminal=false
+Categories=Utility;
+X-RobOS-Category=Auto
+StartupWMClass=robos-auto-center

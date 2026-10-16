@@ -92,22 +92,32 @@ while [[ $# -gt 0 ]]; do
       engine_args+=("$1")
       shift
       ;;
+    1|custom|custom-quest|dungeon)
+      cartridge_arg="custom-quest"
+      quest_arg="1"
+      shift
+      ;;
     4|fortress|fortress-fire-king|heroquest-fortress-fire-king|fire-king)
       cartridge_arg="heroquest-fortress-fire-king"
       quest_arg="4"
       shift
       ;;
-    1|the-trial|heroquest-the-trial|trial)
+    5|dialogue|simple-dialogue|simple-dialogue-quest)
+      cartridge_arg="simple-dialogue-quest"
+      quest_arg="5"
+      shift
+      ;;
+    the-trial|heroquest-the-trial|trial)
       cartridge_arg="heroquest-the-trial"
       quest_arg="1"
       shift
       ;;
-    2|sir-ragnar|rescue-sir-ragnar)
+    sir-ragnar|rescue-sir-ragnar)
       cartridge_arg="heroquest-the-trial"
       quest_arg="2"
       shift
       ;;
-    3|ulag|lair-orc-warlord)
+    ulag|lair-orc-warlord)
       cartridge_arg="heroquest-the-trial"
       quest_arg="3"
       shift
@@ -121,58 +131,35 @@ done
 
 if [[ -n "$quest_arg" ]]; then
   export TABLETOP_QUEST="$quest_arg"
-  if [[ "$quest_arg" == "4" || "$quest_arg" == "quest-4" || "$quest_arg" == *"fortress"* ]]; then
+  if [[ "$quest_arg" == "1" || "$quest_arg" == "custom"* ]]; then
+    cartridge_arg="custom-quest"
+  elif [[ "$quest_arg" == "4" || "$quest_arg" == "quest-4" || "$quest_arg" == *"fortress"* ]]; then
     cartridge_arg="heroquest-fortress-fire-king"
+  elif [[ "$quest_arg" == "5" || "$quest_arg" == "simple"* || "$quest_arg" == *"dialogue"* ]]; then
+    cartridge_arg="simple-dialogue-quest"
   fi
 fi
 
 if [[ -n "$cartridge_arg" ]]; then
-  if [[ "$cartridge_arg" == "4" || "$cartridge_arg" == "quest-4" || "$cartridge_arg" == *"fortress"* ]]; then
+  if [[ "$cartridge_arg" == "1" || "$cartridge_arg" == "custom" || "$cartridge_arg" == "custom-quest" ]]; then
+    cartridge_arg="custom-quest"
+    export TABLETOP_QUEST="1"
+  elif [[ "$cartridge_arg" == "4" || "$cartridge_arg" == "quest-4" || "$cartridge_arg" == *"fortress"* ]]; then
     cartridge_arg="heroquest-fortress-fire-king"
     export TABLETOP_QUEST="4"
-  elif [[ "$cartridge_arg" == "1" || "$cartridge_arg" == "quest-1" || "$cartridge_arg" == *"trial"* ]]; then
+  elif [[ "$cartridge_arg" == "5" || "$cartridge_arg" == "simple-dialogue-quest" || "$cartridge_arg" == "dialogue" ]]; then
+    cartridge_arg="simple-dialogue-quest"
+    export TABLETOP_QUEST="5"
+  elif [[ "$cartridge_arg" == *"trial"* ]]; then
     cartridge_arg="heroquest-the-trial"
     export TABLETOP_QUEST="1"
   fi
   export TABLETOP_CARTRIDGE="$cartridge_arg"
 fi
 
-# Interactive quest selector if launched without cartridge arguments in an interactive terminal
-if [[ -z "$TABLETOP_CARTRIDGE" && $is_headless -eq 0 && $is_auto -eq 0 && -t 0 ]]; then
-  echo ""
-  echo "Select Quest to Launch:"
-  echo "  1) Quest 1: The Trial (Classic 28x21 Board)"
-  echo "  2) Quest 2: The Rescue of Sir Ragnar (Classic 28x21 Board)"
-  echo "  3) Quest 3: Lair of the Orc Warlord (First Light Caverns)"
-  echo "  4) Quest 4: The Fortress of the Fire King (First Light Side A - 26x19 Board) [DEFAULT]"
-  echo ""
-  read -t 4 -p "Enter choice [1-4] (default: 4): " choice || true
-  echo ""
-  case "$choice" in
-    1)
-      export TABLETOP_CARTRIDGE="heroquest-the-trial"
-      export TABLETOP_QUEST="1"
-      ;;
-    2)
-      export TABLETOP_CARTRIDGE="heroquest-the-trial"
-      export TABLETOP_QUEST="2"
-      ;;
-    3)
-      export TABLETOP_CARTRIDGE="heroquest-the-trial"
-      export TABLETOP_QUEST="3"
-      ;;
-    4|"")
-      export TABLETOP_CARTRIDGE="heroquest-fortress-fire-king"
-      export TABLETOP_QUEST="4"
-      ;;
-    *)
-      export TABLETOP_CARTRIDGE="$choice"
-      ;;
-  esac
-fi
-
 if [[ -z "$TABLETOP_CARTRIDGE" ]]; then
-  export TABLETOP_CARTRIDGE="heroquest-the-trial"
+  export TABLETOP_CARTRIDGE="custom-quest"
+  export TABLETOP_QUEST="1"
 fi
 
 echo "  Cartridge: $TABLETOP_CARTRIDGE (Quest: ${TABLETOP_QUEST:-1})"

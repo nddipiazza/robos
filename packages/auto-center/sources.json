@@ -1,0 +1,32 @@
+[
+  {
+    "name": "LubeLogger",
+    "url": "https://github.com/hargata/lubelog",
+    "license": "MIT",
+    "description": "Self-hosted vehicle service, fuel, expenses and reminders. Owner/fleet tracker; not a complete shop ERP."
+  },
+  {
+    "name": "ERPNext",
+    "url": "https://github.com/frappe/erpnext",
+    "license": "GPL-3.0",
+    "description": "Open-source ERP for customers, inventory, purchasing, sales and accounting. Auto-shop workflows need configuration or development."
+  },
+  {
+    "name": "Odoo Community",
+    "url": "https://github.com/odoo/odoo",
+    "license": "LGPL-3.0 (core; check each module)",
+    "description": "Community fleet, repair and inventory foundations. Verify module editions and workshop fit; Enterprise add-ons have separate terms."
+  },
+  {
+    "name": "python-OBD",
+    "url": "https://github.com/brendan-w/python-OBD",
+    "license": "GPL-2.0-or-later",
+    "description": "OBD-II adapter library and diagnostic code definitions; hardware support varies. Codes describe symptoms, not a confirmed diagnosis or repair."
+  },
+  {
+    "name": "OpenAuto",
+    "url": "https://openauto.tech/",
+    "license": "Unverified: inspect repository/license before adopting",
+    "description": "Advertises open-source shop management, estimates and scheduling. Website claim only; repository and maintenance status require verification."
+  }
+]

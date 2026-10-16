@@ -153,6 +153,52 @@ class TestFortressFireKingCampaign(unittest.TestCase):
         self.assertEqual(st["secondSearch"]["gold"], 400)
         self.assertEqual(st["secondSearch"]["item"], "Ring of Fortitude")
 
+        # Room 8: Southwest Starting Chamber & South Door to Corridor
+        self.assertEqual(f_map.get("startingRoom"), "room-sw-4")
+        self.assertEqual(f_map.get("startingRoomId"), 8)
+        self.assertEqual(f_map.get("startingStair"), [5, 14])
+        self.assertEqual(f_map.get("startingStairType"), "stairs_up_1x1")
+
+        doors_by_id = {d.get("id"): d for d in f_map.get("doors", [])}
+        self.assertIn("door-sw-4-s", doors_by_id)
+        d_room8 = doors_by_id["door-sw-4-s"]
+        self.assertEqual(d_room8.get("side"), "south")
+        self.assertEqual(d_room8.get("from"), [7, 18])  # corridor
+        self.assertEqual(d_room8.get("to"), [7, 17])    # room-sw-4
+
+        # Furniture: Starting Staircase in Room 8
+        furn_by_id = {f.get("id"): f for f in f_map.get("furniture", [])}
+        self.assertIn("furn-starting-stair", furn_by_id)
+        f_stair = furn_by_id["furn-starting-stair"]
+        self.assertEqual(f_stair.get("type"), "stairs_up_1x1")
+        self.assertEqual(f_stair.get("x"), 5)
+        self.assertEqual(f_stair.get("y"), 14)
+        self.assertEqual(f_stair.get("roomId"), "room-sw-4")
+
+        # Validation Rule: Characters and enemies cannot stand on furniture in HeroQuest
+        furn_occupied_tiles = set()
+        for f in f_map.get("furniture", []):
+            fx, fy, fw, fh = f["x"], f["y"], f.get("width", 1), f.get("height", 1)
+            for x in range(fx, fx + fw):
+                for y in range(fy, fy + fh):
+                    furn_occupied_tiles.add((x, y))
+
+        heroes = self.cart.get("heroes", {})
+        for h_id, h in heroes.items():
+            self.assertNotIn(tuple(h["position"]), furn_occupied_tiles, f"Hero {h.get('name')} must not stand on furniture")
+
+        monsters = self.cart.get("monsters", {})
+        for m_id, m in monsters.items():
+            self.assertNotIn(tuple(m["position"]), furn_occupied_tiles, f"Monster {m.get('name')} must not stand on furniture")
+
+        # Unlettered Encounters & Corridor Goblins
+        self.assertIn("mon-crypt-skel-1", monsters)
+        self.assertEqual(monsters["mon-crypt-skel-1"]["roomId"], "room-sw-2")
+        self.assertIn("mon-garrison-gob-1", monsters)
+        self.assertEqual(monsters["mon-garrison-gob-1"]["roomId"], "room-sw-3")
+        self.assertIn("mon-patrol-gob-1", monsters)
+        self.assertEqual(monsters["mon-patrol-gob-1"]["roomId"], "corridor")
+
     def test_05_headless_cartridge_load_execution(self):
         """Scenario 5: Headless Godot loads heroquest-fortress-fire-king cartridge and initializes party."""
         from rpc_ai.tabletop_qa_player import TabletopQAPlayer

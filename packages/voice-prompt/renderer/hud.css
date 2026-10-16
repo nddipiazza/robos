@@ -558,3 +558,75 @@ html, body {
   #copy-all-label { display: none; }
   #btn-copy-all { padding: 5px; }
 }
+
+/* ── AI Stream Likely Skills & Ambient Styles ────────────────────────────────── */
+.ai-skills-stream {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.ai-skill-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: rgba(0, 188, 212, 0.08);
+  border: 1px solid rgba(0, 188, 212, 0.3);
+  border-radius: 6px;
+  font-size: 11px;
+  animation: fade-in 0.2s ease;
+}
+
+.ai-skill-sparkle {
+  color: var(--cyan-primary);
+  font-size: 12px;
+}
+
+.ai-skill-category {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(0, 188, 212, 0.2);
+  color: #80deea;
+}
+
+.ai-skill-title {
+  color: var(--text-normal);
+  font-weight: 500;
+  flex: 1;
+}
+
+.ai-skill-confidence {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.ai-ambient-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  background: rgba(139, 148, 158, 0.08);
+  border: 1px dashed rgba(139, 148, 158, 0.35);
+  border-radius: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.ai-ambient-icon {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.dictation-bubble.ambient-bubble {
+  opacity: 0.65;
+  border-style: dashed;
+}
+

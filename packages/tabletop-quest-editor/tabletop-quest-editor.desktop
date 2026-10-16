@@ -1,12 +1,15 @@
 [Desktop Entry]
-X-RobOS-App=true
-Version=1.0
+Version=1.5
 Type=Application
 Name=RobOS Tabletop Quest Map Editor
+GenericName=Tabletop Quest Map Editor
 Comment=Layout quests, doors, monsters, traps, and furniture on static blockmaps
 Exec=/usr/bin/electron /usr/local/share/robos/tabletop-quest-editor/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
 Icon=/usr/local/share/robos/tabletop-quest-editor/icon.svg
 Terminal=false
-Categories=Game;Development;
-X-RobOS-Category=Dev
-StartupWMClass=robos-tabletop-quest-editor
+Categories=Development;Game;RolePlaying;
+Keywords=robos;tabletop;heroquest;quest;map;editor;cartridge;blockmap;monsters;traps;doors;
+StartupWMClass=RobOS Tabletop Quest Map Editor
+StartupNotify=true
+X-RobOS-App=true
+X-RobOS-Category=Games

@@ -42,12 +42,15 @@ function parseArgs() {
 parseArgs();
 
 function createWindow() {
+  const iconPng = path.join(__dirname, 'icon.png');
+  const iconSvg = path.join(__dirname, 'icon.svg');
   mainWindow = new BrowserWindow({
     width: 1560,
     height: 980,
     minWidth: 1080,
     minHeight: 720,
     title: 'RobOS Tabletop Quest Map Editor',
+    icon: fs.existsSync(iconPng) ? iconPng : iconSvg,
     backgroundColor: '#0a0e17',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -298,6 +301,39 @@ ipcMain.handle('quest:load-cartridge', async (_event, slugOrPath) => {
   }
 });
 
+// IPC: Open Native File Dialog for Cartridge
+ipcMain.handle('quest:open-cartridge-dialog', async () => {
+  try {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: 'Select Quest Cartridge (.cartridge.json)',
+      defaultPath: CARTRIDGES_DIR,
+      properties: ['openFile'],
+      filters: [
+        { name: 'Quest Cartridge JSON', extensions: ['json'] },
+        { name: 'All Files', extensions: ['*'] }
+      ]
+    });
+
+    if (result.canceled || !result.filePaths || result.filePaths.length === 0) {
+      return { canceled: true };
+    }
+
+    const fullPath = result.filePaths[0];
+    const raw = fs.readFileSync(fullPath, 'utf8');
+    const cartridge = JSON.parse(raw);
+    const slug = path.basename(fullPath, '.cartridge.json');
+
+    return {
+      success: true,
+      cartridge,
+      slug,
+      filePath: fullPath
+    };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
 // IPC: Save Cartridge
 ipcMain.handle('quest:save-cartridge', async (_event, payload) => {
   try {
@@ -374,7 +410,10 @@ ipcMain.handle('quest:load-asset-image', async (_event, relPath) => {
 // IPC: Launch Tabletop Game in Godot with this cartridge
 ipcMain.handle('quest:launch-game', async (_event, slug) => {
   try {
-    const runScript = path.join(TABLETOP_DIR, 'run.sh');
+    let runScript = path.join(TABLETOP_DIR, 'play.sh');
+    if (!fs.existsSync(runScript)) {
+      runScript = path.join(TABLETOP_DIR, 'run.sh');
+    }
     if (!fs.existsSync(runScript)) {
       return { success: false, error: `Run script not found: ${runScript}` };
     }
@@ -389,5 +428,40 @@ ipcMain.handle('quest:launch-game', async (_event, slug) => {
     return { success: true, pid: child.pid };
   } catch (err) {
     return { success: false, error: err.message };
+  }
+});
+
+// IPC: Ensure RobOS Voice overlay app is running
+ipcMain.handle('voice:ensure-running', async () => {
+  try {
+    let voiceClient = null;
+    try {
+      const { RobOSVoiceClient } = require('../robos-lib/voice');
+      voiceClient = new RobOSVoiceClient();
+    } catch {
+      try {
+        const { RobOSVoiceClient } = require('/usr/local/share/robos/robos-lib/voice');
+        voiceClient = new RobOSVoiceClient();
+      } catch {}
+    }
+
+    if (voiceClient && typeof voiceClient.ensureRunning === 'function') {
+      return await voiceClient.ensureRunning();
+    }
+
+    const hudScript = path.resolve(__dirname, '../voice-prompt/bin/robos-voice-hud');
+    if (fs.existsSync(hudScript)) {
+      const child = spawn(hudScript, [], {
+        detached: true,
+        stdio: 'ignore',
+        env: { ...process.env, DISPLAY: process.env.DISPLAY || ':0' }
+      });
+      child.unref();
+      return { ok: true, launched: true, pid: child.pid };
+    }
+
+    return { ok: false, error: 'Voice HUD script not found' };
+  } catch (err) {
+    return { ok: false, error: err.message };
   }
 });

@@ -2,6 +2,11 @@
 # Dual-Role Cartridge Game Player for HeroQuest: Player Mode & DunMaster Mode
 extends Node2D
 
+signal cinematic_started(movie_path: String, title: String)
+signal cinematic_finished(movie_path: String)
+signal story_trigger_fired(trigger: Dictionary)
+signal story_trigger_completed(trigger: Dictionary)
+
 const GRID_COLS = 26
 const GRID_ROWS = 19
 const TILE_SIZE = 46.0
@@ -23,6 +28,43 @@ var movement_start_pos: Vector2i = Vector2i(-1, -1)
 var movement_trail: Array[Vector2i] = []
 var turn_state: String = "awaiting_roll" # "awaiting_roll", "moving", "action_taken", "turn_complete"
 var combat_log: Array[String] = []
+var transaction_log: Array[Dictionary] = []
+var verbose_combat_log: bool = true
+
+func record_transaction(action_type: String, actor_id: String, actor_name: String, description: String, data: Dictionary = {}) -> Dictionary:
+	var tx_entry = {
+		"id": transaction_log.size() + 1,
+		"round": current_round,
+		"phase": current_phase,
+		"actor_id": actor_id,
+		"actor_name": actor_name,
+		"action_type": action_type,
+		"description": description,
+		"data": data,
+		"timestamp": Time.get_unix_time_from_system()
+	}
+	transaction_log.append(tx_entry)
+	if verbose_combat_log:
+		_log("[TX #%d] %s" % [tx_entry["id"], description])
+	return tx_entry
+
+func _is_returning_to_stairs_allowed() -> bool:
+	if _quest_completed or get_game_state() == "quest_victory":
+		return true
+	var objs = get_quest_objectives()
+	var has_slay_boss = false
+	var slay_boss_completed = false
+	for obj in objs:
+		if str(obj.get("id")) == "slay_boss":
+			has_slay_boss = true
+			if bool(obj.get("completed", false)):
+				slay_boss_completed = true
+	if has_slay_boss:
+		return slay_boss_completed
+	var living_m = monsters.filter(func(m): return bool(m.get("is_alive", false)) and int(m.get("current_bp", 1)) > 0)
+	if living_m.is_empty():
+		return true
+	return false
 
 func is_gm_role() -> bool:
 	return current_role == "gm" or current_role == "gamemaster" or current_role == "dm" or current_role == "dunmaster"
@@ -55,6 +97,9 @@ var _furniture_by_tile: Dictionary = {}
 var grid_cols: int = GRID_COLS
 var grid_rows: int = GRID_ROWS
 var starting_stair: Vector2i = Vector2i(1, 1)
+var starting_stair_type: String = "stairs_up_1x1"
+var exit_stair: Vector2i = Vector2i(-1, -1)
+var exit_stair_type: String = "stairs_down_1x1"
 var tile_size: float = TILE_SIZE
 var board_offset: Vector2 = BOARD_OFFSET
 var hovered_tile: Vector2i = Vector2i(-1, -1)
@@ -66,9 +111,13 @@ var active_trap_overlay: Dictionary = {}
 var active_treasure_overlay: Dictionary = {}
 var story_triggers: Array[Dictionary] = []
 var active_story_trigger_overlay: Dictionary = {}
+var active_dialogue_sequence: Dictionary = {}
+var voice_audio_player: AudioStreamPlayer = null
 var flashing_item: Dictionary = {}
 var pending_flash_item: Dictionary = {}
 var searched_rooms: Dictionary = {}
+var searched_secret_rooms: Dictionary = {}
+var searched_secret_corridor_tiles: Dictionary = {}
 var room_special_treasure_collected: Dictionary = {}
 var treasure_deck: Array[Dictionary] = []
 var treasure_discard: Array[Dictionary] = []
@@ -306,6 +355,13 @@ var btn_menu_save_game: Button = null
 var btn_menu_load_game: Button = null
 var btn_menu_close: Button = null
 
+var restart_confirm_modal: ColorRect = null
+var restart_confirm_card: PanelContainer = null
+var restart_confirm_details_label: Label = null
+var btn_restart_confirm_yes: Button = null
+var btn_restart_confirm_no: Button = null
+var _pending_restart_callback: Callable = Callable()
+
 var quest_objective_modal: ColorRect = null
 var quest_objective_card: PanelContainer = null
 var quest_objective_title_label: Label = null
@@ -315,6 +371,18 @@ var quest_objective_goals_vbox: VBoxContainer = null
 var quest_objective_reward_label: Label = null
 var btn_quest_objective_close: Button = null
 var btn_modal_complete_quest: Button = null
+
+# AI Engine Options Modal & Controls
+var ai_options_modal: ColorRect = null
+var ai_options_card: PanelContainer = null
+var btn_ai_options: Button = null
+var check_ai_play: CheckBox = null
+var check_auto_advance: CheckBox = null
+var ai_options_status_label: Label = null
+var ai_play_for_you: bool = false
+var auto_advance_turn: bool = false
+var ai_turn_waiting_for_input: bool = false
+var auto_advance_timer: float = 0.0
 
 # Quest Objectives On-Screen HUD Tracker
 var quest_objectives_hud: PanelContainer = null
@@ -327,6 +395,24 @@ var btn_hud_toggle_collapse: Button = null
 var is_quest_hud_collapsed: bool = false
 var is_game_closed: bool = false
 var _quest_completed: bool = false
+
+# Quest Complete / Victory & Defeat Modal
+var quest_complete_modal: ColorRect = null
+var quest_complete_card: PanelContainer = null
+var quest_complete_title: Label = null
+var quest_complete_badge: Label = null
+var quest_complete_mentor_text: Label = null
+var quest_complete_objectives_vbox: VBoxContainer = null
+var quest_complete_bounty_label: Label = null
+var quest_complete_heroes_vbox: VBoxContainer = null
+var quest_complete_status_label: Label = null
+var btn_quest_complete_restart: Button = null
+var btn_quest_complete_view_board: Button = null
+var btn_quest_complete_menu: Button = null
+var btn_quest_complete_quit: Button = null
+
+var starting_room_id: String = ""
+var btn_quest_objectives: Button = null
 
 # RPG Font and Texture Theme Assets
 var font_rpg_cinzel: FontFile = null
@@ -449,8 +535,6 @@ func _ready() -> void:
 	_check_cli_difficulty()
 	_update_board_metrics()
 	_load_rpg_ui_theme_assets()
-	_load_active_cartridge()
-	CartridgeManager.cartridge_inserted.connect(_on_cartridge_inserted)
 	_setup_action_hotbar()
 	_setup_enemies_panel()
 	_setup_ui_signals()
@@ -458,8 +542,11 @@ func _ready() -> void:
 	_setup_elf_spell_modal()
 	_setup_armory_modal()
 	_setup_game_menu_modal()
+	_setup_restart_confirm_modal()
+	_setup_ai_options_modal()
 	_setup_quest_objective_modal()
 	_setup_quest_objectives_hud()
+	_setup_quest_complete_modal()
 	_setup_turn_overlay_ui()
 	_setup_log_panel()
 	_setup_hero_detail_modal()
@@ -474,16 +561,29 @@ func _ready() -> void:
 	_load_monster_token_textures()
 	_load_furniture_textures()
 	_load_tile_textures()
+	_load_active_cartridge()
+	CartridgeManager.cartridge_inserted.connect(_on_cartridge_inserted)
 	_update_ui()
-	_log("=== Welcome to HeroQuest: The Trial ===")
+	if CartridgeManager.auto_play_enabled:
+		ai_play_for_you = true
+		auto_advance_turn = true
+	else:
+		ai_play_for_you = false
+		auto_advance_turn = false
+	_update_ai_options_button_ui()
+	var q_obj = get_active_quest_objective()
+	var q_title = str(q_obj.get("title", "HeroQuest"))
+	_log("=== Welcome to %s ===" % q_title)
 	if is_gm_role():
 		_log("[GM] [Game Master / DunMaster Mode Active] You are Zargon, Master of Darkness. Full dungeon visibility granted.")
 	else:
-		_log("[PLAYER] [Player Mode Active] You lead the four heroes into the catacombs of Verag!")
+		_log("[PLAYER] [Player Mode Active] You lead the four heroes into %s!" % q_title)
 		if is_quest_begin():
 			_check_play_intro_movie()
-			_check_start_elf_spell_selection()
+			_check_show_quest_objective_at_start()
 		else:
+			if quest_objective_modal:
+				quest_objective_modal.visible = false
 			if elf_spell_modal:
 				elf_spell_modal.visible = false
 			if armory_modal:
@@ -551,9 +651,19 @@ func _setup_action_hotbar() -> void:
 		btn_wandering_monster.text = "Show Wondering Monster"
 		actions_container.add_child(btn_wandering_monster)
 
+	if not btn_quest_objectives and actions_container:
+		btn_quest_objectives = Button.new()
+		btn_quest_objectives.name = "BtnQuestObjectives"
+		btn_quest_objectives.custom_minimum_size = Vector2(40, 40)
+		btn_quest_objectives.text = "📜 Objectives"
+		btn_quest_objectives.tooltip_text = "📜 Quest Objectives & Imperial Bounty [O]\nReview Mentor's briefing, victory directives, and imperial bounty."
+		btn_quest_objectives.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		actions_container.add_child(btn_quest_objectives)
+		btn_quest_objectives.pressed.connect(toggle_quest_objective_modal)
+
 	var btns = [
 		btn_roll, btn_attack, btn_cast_spell, btn_use_item, btn_search,
-		btn_search_traps, btn_disarm_trap, btn_armory, btn_wandering_monster, btn_summon, btn_ai_step, btn_end_turn
+		btn_search_traps, btn_disarm_trap, btn_armory, btn_wandering_monster, btn_quest_objectives, btn_summon, btn_ai_step, btn_end_turn
 	]
 	for b in btns:
 		if b:
@@ -1454,7 +1564,21 @@ func _load_furniture_textures() -> void:
 		"sly": "res://assets/furniture/chest.png",
 		"throne": "res://assets/furniture/throne.png",
 		"torture-rack": "res://assets/furniture/torture_rack.png",
-		"alchemists-bench": "res://assets/furniture/alchemists_bench.png"
+		"alchemists-bench": "res://assets/furniture/alchemists_bench.png",
+		"stairs": "res://assets/tiles/stairs.png",
+		"spiral_stairs": "res://assets/tiles/stairs.png",
+		"spiral-stairs": "res://assets/tiles/stairs.png",
+		"stair": "res://assets/tiles/stairs.png",
+		"stairs_up": "res://assets/tiles/stairs_up_1x1.png",
+		"stairs_down": "res://assets/tiles/stairs_down_1x1.png",
+		"stairs_up_1x1": "res://assets/tiles/stairs_up_1x1.png",
+		"stairs_down_1x1": "res://assets/tiles/stairs_down_1x1.png",
+		"stairs_up_2x2": "res://assets/tiles/stairs_up_2x2.png",
+		"stairs_down_2x2": "res://assets/tiles/stairs_down_2x2.png",
+		"stairs-up-1x1": "res://assets/tiles/stairs_up_1x1.png",
+		"stairs-down-1x1": "res://assets/tiles/stairs_down_1x1.png",
+		"stairs-up-2x2": "res://assets/tiles/stairs_up_2x2.png",
+		"stairs-down-2x2": "res://assets/tiles/stairs_down_2x2.png"
 	}
 	for k in furn_map:
 		if not furniture_textures.has(k) or furniture_textures[k] == null:
@@ -1468,6 +1592,16 @@ func _load_tile_textures() -> void:
 		"stairs": "res://assets/tiles/stairs.png",
 		"stair": "res://assets/tiles/stairs.png",
 		"starting_stairs": "res://assets/tiles/stairs.png",
+		"stairs_up": "res://assets/tiles/stairs_up_1x1.png",
+		"stairs_down": "res://assets/tiles/stairs_down_1x1.png",
+		"stairs_up_1x1": "res://assets/tiles/stairs_up_1x1.png",
+		"stairs_down_1x1": "res://assets/tiles/stairs_down_1x1.png",
+		"stairs_up_2x2": "res://assets/tiles/stairs_up_2x2.png",
+		"stairs_down_2x2": "res://assets/tiles/stairs_down_2x2.png",
+		"stairs-up-1x1": "res://assets/tiles/stairs_up_1x1.png",
+		"stairs-down-1x1": "res://assets/tiles/stairs_down_1x1.png",
+		"stairs-up-2x2": "res://assets/tiles/stairs_up_2x2.png",
+		"stairs-down-2x2": "res://assets/tiles/stairs_down_2x2.png",
 		"pit": "res://assets/tiles/trap_pit.png",
 		"trap_pit": "res://assets/tiles/trap_pit.png",
 		"spear": "res://assets/tiles/trap_spear.png",
@@ -1766,6 +1900,90 @@ func apply_rpg_font_to_button(btn: Button, font_size: int = 14, text_color: Colo
 	btn.add_theme_stylebox_override("pressed", get_rpg_button_stylebox("pressed"))
 	btn.add_theme_stylebox_override("disabled", get_rpg_button_stylebox("normal"))
 	btn.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+
+var tex_checkbox_unchecked: ImageTexture = null
+var tex_checkbox_checked: ImageTexture = null
+
+func _get_checkbox_icon(checked: bool) -> ImageTexture:
+	if checked and tex_checkbox_checked:
+		return tex_checkbox_checked
+	if not checked and tex_checkbox_unchecked:
+		return tex_checkbox_unchecked
+
+	var img = Image.create(22, 22, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	var border_col = Color(0.95, 0.82, 0.40, 1.0)
+	var bg_col = Color(0.06, 0.08, 0.14, 0.95)
+	for x in range(2, 20):
+		for y in range(2, 20):
+			if x == 2 or x == 19 or y == 2 or y == 19:
+				img.set_pixel(x, y, border_col)
+			else:
+				img.set_pixel(x, y, bg_col)
+	if checked:
+		var check_col = Color(0.25, 0.98, 0.65, 1.0)
+		var pts = [
+			Vector2i(5, 11), Vector2i(6, 12), Vector2i(7, 13), Vector2i(8, 14),
+			Vector2i(9, 13), Vector2i(10, 11), Vector2i(11, 9), Vector2i(12, 7), Vector2i(13, 5),
+			Vector2i(5, 12), Vector2i(6, 13), Vector2i(7, 14), Vector2i(8, 15),
+			Vector2i(9, 14), Vector2i(10, 12), Vector2i(11, 10), Vector2i(12, 8), Vector2i(13, 6),
+			Vector2i(6, 11), Vector2i(7, 12), Vector2i(8, 13), Vector2i(9, 12), Vector2i(10, 10), Vector2i(11, 8), Vector2i(12, 6)
+		]
+		for p in pts:
+			if p.x >= 0 and p.x < 22 and p.y >= 0 and p.y < 22:
+				img.set_pixel(p.x, p.y, check_col)
+		tex_checkbox_checked = ImageTexture.create_from_image(img)
+		return tex_checkbox_checked
+	else:
+		tex_checkbox_unchecked = ImageTexture.create_from_image(img)
+		return tex_checkbox_unchecked
+
+func apply_rpg_font_to_checkbox(cb: CheckBox, font_size: int = 15, text_color: Color = Color(1.0, 0.94, 0.76, 1.0)) -> void:
+	if not cb:
+		return
+	if font_rpg_cinzel:
+		cb.add_theme_font_override("font", font_rpg_cinzel)
+	if font_size > 0:
+		cb.add_theme_font_size_override("font_size", font_size)
+	cb.add_theme_color_override("font_color", text_color)
+	cb.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 0.90, 1.0))
+	cb.add_theme_color_override("font_pressed_color", Color(1.0, 0.85, 0.35, 1.0))
+	cb.add_theme_color_override("font_focus_color", Color(1.0, 0.94, 0.76, 1.0))
+	cb.add_theme_constant_override("outline_size", 1)
+	cb.add_theme_color_override("font_outline_color", Color(0.01, 0.01, 0.02, 0.95))
+	cb.add_theme_constant_override("h_separation", 14)
+
+	var icon_unchecked = _get_checkbox_icon(false)
+	var icon_checked = _get_checkbox_icon(true)
+	cb.add_theme_icon_override("unchecked", icon_unchecked)
+	cb.add_theme_icon_override("unchecked_disabled", icon_unchecked)
+	cb.add_theme_icon_override("checked", icon_checked)
+	cb.add_theme_icon_override("checked_disabled", icon_checked)
+
+	var normal_sb = StyleBoxFlat.new()
+	normal_sb.bg_color = Color(0.06, 0.08, 0.12, 0.55)
+	normal_sb.border_color = Color(0.4, 0.32, 0.18, 0.7)
+	normal_sb.set_border_width_all(1)
+	normal_sb.set_corner_radius_all(4)
+	normal_sb.content_margin_left = 14
+	normal_sb.content_margin_right = 14
+	normal_sb.content_margin_top = 10
+	normal_sb.content_margin_bottom = 10
+
+	var hover_sb = StyleBoxFlat.new()
+	hover_sb.bg_color = Color(0.12, 0.15, 0.22, 0.75)
+	hover_sb.border_color = Color(0.95, 0.80, 0.35, 0.95)
+	hover_sb.set_border_width_all(1)
+	hover_sb.set_corner_radius_all(4)
+	hover_sb.content_margin_left = 14
+	hover_sb.content_margin_right = 14
+	hover_sb.content_margin_top = 10
+	hover_sb.content_margin_bottom = 10
+
+	cb.add_theme_stylebox_override("normal", normal_sb)
+	cb.add_theme_stylebox_override("hover", hover_sb)
+	cb.add_theme_stylebox_override("pressed", hover_sb)
+	cb.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 
 func _apply_rpg_theme_to_all_modals() -> void:
 	# 1. Spell Cast Modal
@@ -2220,6 +2438,20 @@ func _setup_ui_signals() -> void:
 		obj_btn.pressed.connect(toggle_quest_objective_modal)
 		header_hbox.add_child(obj_btn)
 
+	btn_ai_options = get_node_or_null("UI/SidebarHeader/BtnAIEngineOptions")
+	if not btn_ai_options and header_hbox:
+		btn_ai_options = Button.new()
+		btn_ai_options.name = "BtnAIEngineOptions"
+		btn_ai_options.text = "🤖 AI"
+		btn_ai_options.tooltip_text = "🤖 AI Engine Options [A]\nConfigure autonomous AI player and turn progression."
+		btn_ai_options.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		btn_ai_options.custom_minimum_size = Vector2(68, 30)
+		header_hbox.add_child(btn_ai_options)
+	if btn_ai_options and not btn_ai_options.pressed.is_connected(toggle_ai_options_modal):
+		btn_ai_options.pressed.connect(toggle_ai_options_modal)
+		apply_rpg_font_to_button(btn_ai_options, 11, Color(1.0, 0.94, 0.76, 1.0))
+	_update_ai_options_button_ui()
+
 	if title_label:
 		apply_rpg_font_to_label(title_label, true, 16, Color(1.0, 0.85, 0.25, 1.0))
 	if role_badge:
@@ -2231,6 +2463,9 @@ func _setup_ui_signals() -> void:
 		var old_demo = header_hbox.get_node("BtnToggleDemo")
 		header_hbox.remove_child(old_demo)
 		old_demo.queue_free()
+
+	if btn_ai_step:
+		btn_ai_step.visible = false
 
 	if role_badge and not role_badge.pressed.is_connected(toggle_role):
 		role_badge.pressed.connect(toggle_role)
@@ -2503,6 +2738,8 @@ func serialize_game_state() -> Dictionary:
 		"revealed_rooms": revealed_rooms.duplicate(true),
 		"discovered_monster_ids": discovered_monster_ids.duplicate(true),
 		"searched_rooms": searched_rooms.duplicate(true),
+		"searched_secret_rooms": searched_secret_rooms.duplicate(true),
+		"searched_secret_corridor_tiles": searched_secret_corridor_tiles.duplicate(true),
 		"room_special_treasure_collected": room_special_treasure_collected.duplicate(true),
 		"treasure_deck": treasure_deck.duplicate(true),
 		"treasure_discard": treasure_discard.duplicate(true),
@@ -2628,6 +2865,11 @@ func restore_saved_game(save_dict: Dictionary = {}) -> bool:
 		for r in data.get("revealed_rooms", []):
 			revealed_rooms.append(str(r))
 
+	# Ensure starting chamber is detected and revealed if heroes start inside a room
+	_detect_starting_room()
+	if starting_room_id != "" and not revealed_rooms.has(starting_room_id):
+		reveal_room_by_id(starting_room_id, true)
+
 	if data.has("discovered_monster_ids"):
 		discovered_monster_ids.clear()
 		var dmi = data.get("discovered_monster_ids", {})
@@ -2663,6 +2905,10 @@ func restore_saved_game(save_dict: Dictionary = {}) -> bool:
 	# Restore Searched Rooms & Treasure Deck
 	if data.has("searched_rooms"):
 		searched_rooms = data.get("searched_rooms", {}).duplicate(true)
+	if data.has("searched_secret_rooms"):
+		searched_secret_rooms = data.get("searched_secret_rooms", {}).duplicate(true)
+	if data.has("searched_secret_corridor_tiles"):
+		searched_secret_corridor_tiles = data.get("searched_secret_corridor_tiles", {}).duplicate(true)
 	if data.has("room_special_treasure_collected"):
 		room_special_treasure_collected = data.get("room_special_treasure_collected", {}).duplicate(true)
 	if data.has("treasure_deck"):
@@ -2687,7 +2933,8 @@ func restore_saved_game(save_dict: Dictionary = {}) -> bool:
 			current_elf_element = str(s_alloc.get("elfElement", ""))
 
 	quest_begun = bool(data.get("quest_begun", false))
-	if current_round > 1 or active_hero_idx > 0 or has_moved_this_turn or has_acted_this_turn or not revealed_rooms.is_empty():
+	var starting_rooms_only = revealed_rooms.is_empty() or (starting_room_id != "" and revealed_rooms.size() == 1 and revealed_rooms.has(starting_room_id))
+	if current_round > 1 or active_hero_idx > 0 or has_moved_this_turn or has_acted_this_turn or not starting_rooms_only:
 		quest_begun = true
 	for h in heroes:
 		if bool(h.get("has_departed_start", false)) or _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1))) != starting_stair:
@@ -2740,8 +2987,16 @@ func _load_active_cartridge(force_fresh: bool = false) -> void:
 	if bg_img != "" and ResourceLoader.exists(bg_img):
 		board_sprite.texture = load(bg_img)
 
-	var stair = map_data.get("startingStair", [0, 1])
+	var stair = map_data.get("startingStair", map_data.get("startingPosition", [0, 1]))
 	starting_stair = Vector2i(stair[0], stair[1])
+	starting_stair_type = str(map_data.get("startingStairType", cart.get("startingStairType", "stairs_up_1x1")))
+
+	var e_stair = map_data.get("exitTile", map_data.get("exitStair", null))
+	if e_stair != null and e_stair is Array and e_stair.size() >= 2:
+		exit_stair = Vector2i(e_stair[0], e_stair[1])
+		exit_stair_type = str(map_data.get("exitStairType", cart.get("exitStairType", "stairs_down_1x1")))
+	else:
+		exit_stair = Vector2i(-1, -1)
 
 	var cart_heroes = cart.get("heroes", {})
 	heroes.clear()
@@ -2851,7 +3106,11 @@ func _load_active_cartridge(force_fresh: bool = false) -> void:
 
 	story_triggers.clear()
 	active_story_trigger_overlay.clear()
-	for st in map_data.get("storyTriggers", []):
+	active_dialogue_sequence.clear()
+	var raw_triggers = map_data.get("triggers", [])
+	if raw_triggers.is_empty():
+		raw_triggers = map_data.get("storyTriggers", [])
+	for st in raw_triggers:
 		story_triggers.append(st.duplicate(true))
 
 	_rebuild_spatial_caches()
@@ -2882,6 +3141,8 @@ func _load_active_cartridge(force_fresh: bool = false) -> void:
 	flashing_item.clear()
 	pending_flash_item.clear()
 	searched_rooms.clear()
+	searched_secret_rooms.clear()
+	searched_secret_corridor_tiles.clear()
 	room_special_treasure_collected.clear()
 	last_treasure_card = {}
 	_initialize_treasure_deck()
@@ -2913,16 +3174,23 @@ func _load_active_cartridge(force_fresh: bool = false) -> void:
 					armory_modal.visible = false
 					armory_open = false
 			else:
-				_check_start_elf_spell_selection()
+				_check_show_quest_objective_at_start()
 			return
 
 	quest_begun = false
+
+	# Detect and reveal starting chamber if heroes start inside a room
+	_detect_starting_room(map_data)
+	if starting_room_id != "":
+		reveal_room_by_id(starting_room_id, true)
+
 	update_party_vision()
 	_update_ui()
 	queue_redraw_all()
 	if is_quest_begin():
 		_check_play_intro_movie()
-		_check_start_elf_spell_selection()
+		_check_show_quest_objective_at_start()
+		_check_event_triggers("on_game_start", {})
 	else:
 		if elf_spell_modal:
 			elf_spell_modal.visible = false
@@ -2931,6 +3199,22 @@ func _load_active_cartridge(force_fresh: bool = false) -> void:
 			armory_open = false
 	if not should_reset and not force_fresh:
 		auto_save_game()
+
+func _detect_starting_room(m_data: Dictionary = {}) -> String:
+	starting_room_id = ""
+	if _tile_to_room_id.has(starting_stair):
+		starting_room_id = _tile_to_room_id[starting_stair]
+	if starting_room_id == "" and m_data.has("startingRoomId"):
+		starting_room_id = str(m_data.get("startingRoomId"))
+	if starting_room_id == "" and m_data.has("startingRoom"):
+		starting_room_id = str(m_data.get("startingRoom"))
+	if starting_room_id == "":
+		for h in heroes:
+			var h_pos = _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
+			if _tile_to_room_id.has(h_pos):
+				starting_room_id = _tile_to_room_id[h_pos]
+				break
+	return starting_room_id
 
 func _rebuild_spatial_caches() -> void:
 	_tile_to_room.clear()
@@ -2972,13 +3256,18 @@ func _rebuild_spatial_caches() -> void:
 		_doors_by_edge[Vector4i(f[0], f[1], t[0], t[1])] = d
 		_doors_by_edge[Vector4i(t[0], t[1], f[0], f[1])] = d
 
+	_rebuild_furniture_tile_map()
+
+func _rebuild_furniture_tile_map() -> void:
 	_furniture_by_tile.clear()
 	for furn in furniture:
+		if bool(furn.get("hidden", false)):
+			continue
 		var fx = int(furn.get("x", furn.get("position", [0, 0])[0]))
 		var fy = int(furn.get("y", furn.get("position", [0, 0])[1]))
 		var fw = int(furn.get("width", furn.get("w", 1)))
 		var fh = int(furn.get("height", furn.get("h", 1)))
-		var f_type = str(furn.get("type", "chest"))
+		var f_type = str(furn.get("type", "chest")).to_lower()
 		if f_type == "altar" and fw == 1 and fh == 1:
 			fw = 3; fh = 2
 		elif f_type == "bookcase" and fw == 1 and fh == 1:
@@ -2991,6 +3280,8 @@ func _rebuild_spatial_caches() -> void:
 			fw = 2; fh = 3
 		elif (f_type in ["healing_hearth", "healing-hearth", "healing hearth", "hearth"]) and fw == 1 and fh == 1:
 			fw = 1; fh = 3
+		elif (f_type in ["stairs_up_2x2", "stairs_down_2x2", "stairs-up-2x2", "stairs-down-2x2"]) and fw == 1 and fh == 1:
+			fw = 2; fh = 2
 		for bx in range(fx, fx + fw):
 			for by in range(fy, fy + fh):
 				_furniture_by_tile[Vector2i(bx, by)] = furn
@@ -2999,11 +3290,74 @@ func _rebuild_spatial_caches() -> void:
 	if enemies_scroll:
 		enemies_scroll.scroll_vertical = 0
 
+func get_starting_stair_rect_tiles() -> Rect2i:
+	var w = 2 if "2x2" in starting_stair_type else 1
+	var h = 2 if "2x2" in starting_stair_type else 1
+	for f in furniture:
+		var f_type = str(f.get("type", "")).to_lower()
+		if "stair" in f_type:
+			var fx = int(f.get("x", f.get("position", [0, 0])[0]))
+			var fy = int(f.get("y", f.get("position", [0, 0])[1]))
+			var fw = int(f.get("width", 2 if "2x2" in f_type else 1))
+			var fh = int(f.get("height", 2 if "2x2" in f_type else 1))
+			if starting_stair.x >= fx and starting_stair.x < fx + fw and starting_stair.y >= fy and starting_stair.y < fy + fh:
+				return Rect2i(fx, fy, fw, fh)
+	return Rect2i(starting_stair.x, starting_stair.y, w, h)
+
+func get_exit_stair_rect_tiles() -> Rect2i:
+	if exit_stair == Vector2i(-1, -1):
+		return Rect2i(-1, -1, 0, 0)
+	var w = 2 if "2x2" in exit_stair_type else 1
+	var h = 2 if "2x2" in exit_stair_type else 1
+	for f in furniture:
+		var f_type = str(f.get("type", "")).to_lower()
+		if "stair" in f_type:
+			var fx = int(f.get("x", f.get("position", [0, 0])[0]))
+			var fy = int(f.get("y", f.get("position", [0, 0])[1]))
+			var fw = int(f.get("width", 2 if "2x2" in f_type else 1))
+			var fh = int(f.get("height", 2 if "2x2" in f_type else 1))
+			if exit_stair.x >= fx and exit_stair.x < fx + fw and exit_stair.y >= fy and exit_stair.y < fy + fh:
+				return Rect2i(fx, fy, fw, fh)
+	return Rect2i(exit_stair.x, exit_stair.y, w, h)
+
+func is_starting_stair_tile(tile: Vector2i) -> bool:
+	var r = get_starting_stair_rect_tiles()
+	return tile.x >= r.position.x and tile.x < r.position.x + r.size.x and tile.y >= r.position.y and tile.y < r.position.y + r.size.y
+
+func is_exit_stair_tile(tile: Vector2i) -> bool:
+	if exit_stair == Vector2i(-1, -1):
+		return false
+	var r = get_exit_stair_rect_tiles()
+	return tile.x >= r.position.x and tile.x < r.position.x + r.size.x and tile.y >= r.position.y and tile.y < r.position.y + r.size.y
+
+func _is_hero_assembled_at_stairs(pos: Vector2i) -> bool:
+	if exit_stair != Vector2i(-1, -1):
+		if is_exit_stair_tile(pos):
+			return true
+		var er = get_exit_stair_rect_tiles()
+		if pos.x >= er.position.x - 1 and pos.x <= er.position.x + er.size.x and pos.y >= er.position.y - 1 and pos.y <= er.position.y + er.size.y:
+			return true
+		return false
+	if is_starting_stair_tile(pos):
+		return true
+	var r = get_starting_stair_rect_tiles()
+	if pos.x >= r.position.x - 1 and pos.x <= r.position.x + r.size.x and pos.y >= r.position.y - 1 and pos.y <= r.position.y + r.size.y:
+		return true
+	return false
+
 func get_furniture_at(tile: Vector2i) -> Dictionary:
 	return _furniture_by_tile.get(tile, {})
 
 func is_tile_occupied_by_furniture(tile: Vector2i) -> bool:
-	return _furniture_by_tile.has(tile)
+	if not _furniture_by_tile.has(tile):
+		return false
+	var furn = _furniture_by_tile[tile]
+	var f_type = str(furn.get("type", "")).to_lower()
+	if "stair" in f_type:
+		return false
+	if is_exit_stair_tile(tile) or is_starting_stair_tile(tile):
+		return false
+	return true
 
 func get_room_furniture(r_id: String) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
@@ -3056,6 +3410,11 @@ func is_tile_wall_blocked(tile: Vector2i) -> bool:
 	return _blocked_wall_tiles.has(tile)
 
 func is_border_tile(tile: Vector2i) -> bool:
+	if is_exit_stair_tile(tile):
+		return false
+	if is_starting_stair_tile(tile):
+		if tile.x < 0 or tile.x >= grid_cols or tile.y < 0 or tile.y >= grid_rows:
+			return true
 	if grid_cols == 26 and grid_rows == 19:
 		return false
 	return tile.x <= 0 or tile.x >= grid_cols - 1 or tile.y <= 0 or tile.y >= grid_rows - 1
@@ -3064,12 +3423,15 @@ func is_edge_tile(tile: Vector2i) -> bool:
 	return is_border_tile(tile)
 
 func is_tile_walkable(tile: Vector2i) -> bool:
+	if is_exit_stair_tile(tile):
+		return true
+	if is_starting_stair_tile(tile):
+		return false
 	if tile.x < 0 or tile.x >= grid_cols or tile.y < 0 or tile.y >= grid_rows:
 		return false
 	if is_border_tile(tile):
-		return false
-	if tile == starting_stair:
-		return false
+		if not is_starting_stair_tile(tile) and not is_exit_stair_tile(tile):
+			return false
 	if is_tile_wall_blocked(tile):
 		return false
 	if is_tile_occupied_by_furniture(tile):
@@ -3217,7 +3579,7 @@ func can_monster_fit_at(m: Dictionary, origin: Vector2i, exclude_monster_id: Str
 	for t in m_tiles:
 		if t.x < 0 or t.x >= grid_cols or t.y < 0 or t.y >= grid_rows:
 			return false
-		if is_border_tile(t) or t == starting_stair:
+		if is_border_tile(t) or t == starting_stair or t == exit_stair:
 			return false
 		if is_tile_wall_blocked(t) or is_tile_occupied_by_furniture(t):
 			return false
@@ -3255,9 +3617,16 @@ func is_hero_adjacent_to_monster(h: Dictionary, m: Dictionary) -> bool:
 		var mp = _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
 		var dx = absi(hp.x - mp.x)
 		var dy = absi(hp.y - mp.y)
-		if dx <= 1 and dy <= 1 and (dx + dy > 0):
-			return not has_wall_between(hp, mp) and not is_tile_wall_blocked(hp) and not is_tile_wall_blocked(mp)
-		return false
+		var cur_w_id = str(h.get("equipped_weapon", "broadsword"))
+		var w_def = HeroQuestEquipment.get_weapon(cur_w_id)
+		if bool(w_def.get("diagonal", false)):
+			if dx <= 1 and dy <= 1 and (dx + dy > 0):
+				return not has_wall_between(hp, mp) and not is_tile_wall_blocked(hp) and not is_tile_wall_blocked(mp)
+			return false
+		else:
+			if dx + dy == 1:
+				return not has_wall_between(hp, mp) and not is_tile_wall_blocked(hp) and not is_tile_wall_blocked(mp)
+			return false
 
 func is_monster_adjacent_to_hero_at(m: Dictionary, origin: Vector2i, h: Dictionary) -> bool:
 	if m.is_empty() or h.is_empty():
@@ -3313,10 +3682,10 @@ func _get_door_between(a: Vector2i, b: Vector2i) -> Dictionary:
 	return _doors_by_edge.get(Vector4i(a.x, a.y, b.x, b.y), {})
 
 func has_wall_between(a: Vector2i, b: Vector2i) -> bool:
-	# 1. Out of bounds check
-	if a.x < 0 or a.x >= grid_cols or a.y < 0 or a.y >= grid_rows:
+	# 1. Out of bounds check (except exit stair)
+	if not is_exit_stair_tile(a) and (a.x < 0 or a.x >= grid_cols or a.y < 0 or a.y >= grid_rows):
 		return true
-	if b.x < 0 or b.x >= grid_cols or b.y < 0 or b.y >= grid_rows:
+	if not is_exit_stair_tile(b) and (b.x < 0 or b.x >= grid_cols or b.y < 0 or b.y >= grid_rows):
 		return true
 
 	# 2. Check doors
@@ -3340,7 +3709,7 @@ func has_wall_between(a: Vector2i, b: Vector2i) -> bool:
 	return false
 
 func is_tile_solid(tile: Vector2i) -> bool:
-	if tile.x < 0 or tile.x >= grid_cols or tile.y < 0 or tile.y >= grid_rows:
+	if not is_exit_stair_tile(tile) and (tile.x < 0 or tile.x >= grid_cols or tile.y < 0 or tile.y >= grid_rows):
 		return true
 	if _blocked_wall_tiles.has(tile):
 		return true
@@ -3365,6 +3734,10 @@ func has_line_of_sight(from_pos: Vector2i, to_pos: Vector2i) -> bool:
 		return false
 	var to_rm = _tile_to_room_id.get(to_pos, "")
 	if to_rm != "" and not revealed_rooms.has(to_rm):
+		return false
+
+	# Cannot have line of sight from one room into a different room
+	if from_rm != "" and to_rm != "" and from_rm != to_rm:
 		return false
 
 	# Source cannot see out from inside a solid wall block
@@ -3449,6 +3822,8 @@ func update_party_vision() -> void:
 		vision_sources.append(starting_stair)
 
 	explored_tiles[starting_stair] = true
+	if exit_stair != Vector2i(-1, -1):
+		explored_tiles[exit_stair] = true
 
 	# Ensure all tiles in revealed rooms are permanently explored
 	for r_id in revealed_rooms:
@@ -3504,13 +3879,16 @@ func is_monster_currently_visible(m: Dictionary) -> bool:
 
 	return false
 
-func reveal_room_by_id(r_id: String) -> void:
+func reveal_room_by_id(r_id: String, is_starting_room: bool = false) -> void:
 	if r_id == "" or revealed_rooms.has(r_id):
 		return
 	revealed_rooms.append(r_id)
 	var room_obj = _get_room_by_id(r_id)
 	var room_name = room_obj.get("name", r_id)
-	_log("[DOOR] Door kicked open! Revealed chamber: %s!" % room_name)
+	if is_starting_room:
+		_log("[START] Starting chamber revealed: %s!" % room_name)
+	else:
+		_log("[DOOR] Door kicked open! Revealed chamber: %s!" % room_name)
 
 	# Reveal all tiles of this room immediately
 	var rx = int(room_obj.get("x", 0))
@@ -3537,16 +3915,22 @@ func reveal_room_by_id(r_id: String) -> void:
 	else:
 		_log("[CALM] The chamber appears calm... for now.")
 
-	# Check if room has an associated cinematic movie
-	var room_movie = str(room_obj.get("movie", room_obj.get("cinematic", "")))
-	if room_movie != "":
-		play_movie(room_movie, "🎬 Chamber Reveal: %s" % room_name, true, true)
-	else:
-		# Check if any story trigger in this room has a movie
-		for st in story_triggers:
-			if str(st.get("room", "")) == r_id and st.has("movie") and not st.get("triggered", false):
-				play_movie(str(st.get("movie")), "🎬 %s: %s" % [st.get("marker", "Note"), st.get("title", room_name)], true, true)
-				break
+	if not is_starting_room:
+		# Check if room has an associated cinematic movie
+		var room_movie = str(room_obj.get("movie", room_obj.get("cinematic", "")))
+		if room_movie != "":
+			play_movie(room_movie, "🎬 Chamber Reveal: %s" % room_name, true, true)
+		else:
+			# Check if any story trigger in this room has a movie and is room-reveal triggered
+			for st in story_triggers:
+				if str(st.get("room", "")) == r_id and st.has("movie") and not st.get("triggered", false):
+					var ev = str(st.get("event", ""))
+					# If tied to door opening, let on_door_opened handle it with full door context
+					if ev == "on_door_opened":
+						continue
+					st["triggered"] = true
+					_setup_story_trigger_overlay(st, get_active_hero())
+					break
 
 func _is_inside_any_room(tile: Vector2i) -> bool:
 	return _tile_to_room.has(tile)
@@ -3603,7 +3987,8 @@ func get_game_state() -> String:
 					continue
 				any_door_open = true
 				break
-		if not any_hero_departed and not any_door_open and not has_moved_this_turn and not has_acted_this_turn and not movement_rolled and revealed_rooms.is_empty():
+		var valid_rooms_for_start = revealed_rooms.is_empty() or (starting_room_id != "" and revealed_rooms.size() == 1 and revealed_rooms.has(starting_room_id))
+		if not any_hero_departed and not any_door_open and not has_moved_this_turn and not has_acted_this_turn and not movement_rolled and valid_rooms_for_start:
 			return "quest_begin"
 
 	return "in_progress"
@@ -3643,12 +4028,13 @@ func get_reachable_walk_tiles() -> Array[Vector2i]:
 		for d in dirs:
 			var nxt = cur + d
 			if nxt.x < 0 or nxt.x >= grid_cols or nxt.y < 0 or nxt.y >= grid_rows:
-				continue
-			# Rule: Edge / border tiles are strictly non-walkable
-			if is_border_tile(nxt):
+				if not is_exit_stair_tile(nxt):
+					continue
+			# Rule: Edge / border tiles are strictly non-walkable UNLESS it is the exit_stair
+			if is_border_tile(nxt) and not is_exit_stair_tile(nxt):
 				continue
 			# Rule: Starting stair tile cannot be stepped back onto
-			if nxt == starting_stair:
+			if is_starting_stair_tile(nxt):
 				continue
 
 			# Must be within the revealed map
@@ -3679,13 +4065,15 @@ func get_reachable_walk_tiles() -> Array[Vector2i]:
 	# Filter destination tiles that the hero can end their movement on:
 	# Cannot end on the start pos
 	# Cannot end on starting stair
-	# Cannot end on edge / border tiles
+	# Cannot end on edge / border tiles (unless it is exit_stair)
 	# Cannot end on another hero (Rule: HeroQuest strictly forbids sharing squares)
 	# Cannot end on monster
 	# Cannot end on furniture
 	# Cannot end on wall block
 	for tile in min_cost.keys():
-		if tile == start_pos or tile == starting_stair or is_border_tile(tile):
+		if tile == start_pos or is_starting_stair_tile(tile):
+			continue
+		if is_border_tile(tile) and not is_exit_stair_tile(tile):
 			continue
 		if is_tile_occupied_by_hero(tile, active_hero_idx):
 			continue
@@ -3700,14 +4088,28 @@ func get_reachable_walk_tiles() -> Array[Vector2i]:
 	return result
 
 func _process(delta: float) -> void:
-	if CartridgeManager.auto_play_enabled:
-		var is_enemy_animating = (current_phase == "gm_phase" and enemy_turn_stage in ["rolling", "moving", "pause_after_move", "acting", "waiting_for_action"])
-		if not is_enemy_animating:
-			auto_play_timer += delta
-			var interval = 0.05 if is_headless_mode() else 0.75
-			if auto_play_timer >= interval:
-				auto_play_timer = 0.0
-				_execute_auto_play_step()
+	if is_movie_playing:
+		return
+
+	if not _quest_completed and not is_game_closed:
+		if CartridgeManager.auto_play_enabled or (ai_play_for_you and auto_advance_turn):
+			var is_enemy_animating = (current_phase == "gm_phase" and enemy_turn_stage in ["rolling", "moving", "pause_after_move", "acting", "waiting_for_action"])
+			if not is_enemy_animating:
+				auto_play_timer += delta
+				var interval = 0.05 if is_headless_mode() else 0.75
+				if auto_play_timer >= interval:
+					auto_play_timer = 0.0
+					_execute_auto_play_step()
+		elif ai_play_for_you:
+			var is_enemy_animating = (current_phase == "gm_phase" and enemy_turn_stage in ["rolling", "moving", "pause_after_move", "acting", "waiting_for_action"])
+			if not is_enemy_animating and not ai_turn_waiting_for_input:
+				auto_play_timer += delta
+				var interval = 0.05 if is_headless_mode() else 0.75
+				if auto_play_timer >= interval:
+					auto_play_timer = 0.0
+					_execute_step_by_step_ai()
+		elif auto_advance_turn and current_phase == "hero_phase":
+			_check_manual_auto_advance(delta)
 
 	var needs_redraw = false
 	if active_vfx.size() > 0:
@@ -3749,6 +4151,13 @@ func _process(delta: float) -> void:
 			if evt["time"] < float(evt.get("duration", 3.5)):
 				remaining_evts.append(evt)
 		damage_events = remaining_evts
+		needs_redraw = true
+
+	if not active_dialogue_sequence.is_empty() and active_dialogue_sequence.get("active", false):
+		active_dialogue_sequence["time"] = float(active_dialogue_sequence.get("time", 0.0)) + delta
+		var d_dur = float(active_dialogue_sequence.get("duration", 4.5))
+		if active_dialogue_sequence["time"] >= d_dur:
+			advance_dialogue_bubble()
 		needs_redraw = true
 
 	if is_enemy_turn_waiting:
@@ -3891,6 +4300,14 @@ func is_headless_mode() -> bool:
 			return true
 	return OS.get_environment("TABLETOP_NO_SPELL_SELECT") == "1"
 
+func _check_show_quest_objective_at_start() -> void:
+	if not is_quest_begin():
+		return
+	if (is_headless_mode() and OS.get_environment("TABLETOP_FORCE_QUEST_OBJECTIVE_MODAL") != "1") or CartridgeManager.auto_play_enabled:
+		_check_start_elf_spell_selection()
+		return
+	open_quest_objective_modal()
+
 func _check_start_elf_spell_selection() -> void:
 	if not is_quest_begin():
 		if elf_spell_modal:
@@ -3902,6 +4319,10 @@ func _check_start_elf_spell_selection() -> void:
 	if current_role != "player":
 		return
 	if is_headless_mode() or CartridgeManager.auto_play_enabled:
+		select_elf_element("water")
+		confirm_elf_spell_selection()
+		if elf_spell_modal:
+			elf_spell_modal.visible = false
 		return
 	var cart = CartridgeManager.active_cartridge
 	var alloc = cart.get("spellAllocation", {})
@@ -4121,7 +4542,8 @@ func confirm_elf_spell_selection() -> Dictionary:
 	if is_quest_begin() and has_party_gold_for_armory():
 		open_armory()
 		res["armory_opened"] = true
-	auto_save_game()
+	if not is_quest_begin():
+		auto_save_game()
 	return res
 
 func _on_confirm_spell_modal_pressed() -> void:
@@ -4908,10 +5330,177 @@ func _update_game_menu_info() -> void:
 
 func restart_quest_from_menu() -> void:
 	_log("[GAME MENU] Player requested Restart Quest from Game Menu.")
+	open_restart_confirm_modal()
+
+# ==============================================================================
+# ROBOS TABLETOP RPG: RESTART QUEST CONFIRMATION MODAL
+# ==============================================================================
+func _setup_restart_confirm_modal() -> void:
+	var ui_node = get_node_or_null("UI")
+	if not ui_node:
+		return
+	if ui_node.has_node("RestartConfirmModal"):
+		restart_confirm_modal = ui_node.get_node("RestartConfirmModal")
+		return
+
+	restart_confirm_modal = ColorRect.new()
+	restart_confirm_modal.name = "RestartConfirmModal"
+	restart_confirm_modal.visible = false
+	restart_confirm_modal.color = Color(0.02, 0.03, 0.06, 0.85)
+	restart_confirm_modal.set_anchors_preset(Control.PRESET_FULL_RECT)
+	restart_confirm_modal.mouse_filter = Control.MOUSE_FILTER_STOP
+
+	# Clicking background dim overlay cancels
+	restart_confirm_modal.gui_input.connect(func(ev: InputEvent):
+		if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
+			cancel_restart_quest()
+	)
+
+	restart_confirm_card = PanelContainer.new()
+	restart_confirm_card.name = "Card"
+	restart_confirm_card.set_anchors_preset(Control.PRESET_CENTER)
+	restart_confirm_card.custom_minimum_size = Vector2(510, 270)
+	restart_confirm_card.offset_left = -255
+	restart_confirm_card.offset_top = -135
+	restart_confirm_card.offset_right = 255
+	restart_confirm_card.offset_bottom = 135
+	restart_confirm_card.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	restart_confirm_card.grow_vertical = Control.GROW_DIRECTION_BOTH
+	restart_confirm_card.mouse_filter = Control.MOUSE_FILTER_STOP
+	restart_confirm_card.add_theme_stylebox_override("panel", get_rpg_dialog_panel_stylebox(32, 26, 32, 26))
+
+	var margin = MarginContainer.new()
+	margin.name = "Margin"
+	margin.add_theme_constant_override("margin_left", 20)
+	margin.add_theme_constant_override("margin_top", 16)
+	margin.add_theme_constant_override("margin_right", 20)
+	margin.add_theme_constant_override("margin_bottom", 18)
+	restart_confirm_card.add_child(margin)
+
+	var vbox = VBoxContainer.new()
+	vbox.name = "VBox"
+	vbox.add_theme_constant_override("separation", 12)
+	margin.add_child(vbox)
+
+	# 1. Header
+	var header = HBoxContainer.new()
+	header.name = "Header"
+	var title = Label.new()
+	title.name = "Title"
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title.text = "⚠️ RESTART QUEST"
+	title.add_theme_stylebox_override("normal", get_rpg_title_plaque_stylebox(14, 6))
+	apply_rpg_font_to_label(title, true, 18, Color(1.0, 0.88, 0.35, 1.0))
+	header.add_child(title)
+
+	var badge = Label.new()
+	badge.name = "Badge"
+	badge.text = "CONFIRMATION REQUIRED"
+	badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	badge.add_theme_stylebox_override("normal", get_rpg_badge_stylebox())
+	apply_rpg_font_to_label(badge, false, 11, Color(1.0, 0.45, 0.45, 1.0))
+	header.add_child(badge)
+	vbox.add_child(header)
+
+	var sep = HSeparator.new()
+	vbox.add_child(sep)
+
+	# 2. Warning Description (Antique Plaque)
+	var info_panel = PanelContainer.new()
+	info_panel.name = "InfoPanel"
+	info_panel.add_theme_stylebox_override("panel", get_rpg_plaque_stylebox(16, 12, 16, 12))
+	var info_margin = MarginContainer.new()
+	info_margin.add_theme_constant_override("margin_left", 10)
+	info_margin.add_theme_constant_override("margin_top", 8)
+	info_margin.add_theme_constant_override("margin_right", 10)
+	info_margin.add_theme_constant_override("margin_bottom", 8)
+	info_panel.add_child(info_margin)
+
+	restart_confirm_details_label = Label.new()
+	restart_confirm_details_label.name = "DetailsLabel"
+	restart_confirm_details_label.text = "Are you sure you want to restart the quest from the beginning?\n\nAll unsaved progress, explored tiles, and current round state will be lost.\nThe quest will reload from the cartridge at Round 1."
+	restart_confirm_details_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	restart_confirm_details_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	apply_rpg_font_to_label(restart_confirm_details_label, false, 13, Color(1.0, 0.94, 0.78, 1.0), false)
+	info_margin.add_child(restart_confirm_details_label)
+	vbox.add_child(info_panel)
+
+	# 3. Action Buttons Row (Confirm / Cancel)
+	var btn_hbox = HBoxContainer.new()
+	btn_hbox.name = "ButtonRow"
+	btn_hbox.add_theme_constant_override("separation", 12)
+
+	btn_restart_confirm_yes = Button.new()
+	btn_restart_confirm_yes.name = "BtnConfirmRestart"
+	btn_restart_confirm_yes.text = "YES, RESTART QUEST"
+	btn_restart_confirm_yes.tooltip_text = "Confirm quest restart: clears save game and resets to Round 1 [Enter]"
+	btn_restart_confirm_yes.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_restart_confirm_yes.custom_minimum_size = Vector2(0, 44)
+	btn_restart_confirm_yes.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	apply_rpg_font_to_button(btn_restart_confirm_yes, 14, Color(1.0, 0.45, 0.45, 1.0))
+	btn_restart_confirm_yes.pressed.connect(func(): confirm_restart_quest())
+	btn_hbox.add_child(btn_restart_confirm_yes)
+
+	btn_restart_confirm_no = Button.new()
+	btn_restart_confirm_no.name = "BtnCancelRestart"
+	btn_restart_confirm_no.text = "CANCEL (KEEP PLAYING)"
+	btn_restart_confirm_no.tooltip_text = "Return to current game without restarting [Esc]"
+	btn_restart_confirm_no.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_restart_confirm_no.custom_minimum_size = Vector2(0, 44)
+	btn_restart_confirm_no.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	apply_rpg_font_to_button(btn_restart_confirm_no, 14, Color(0.85, 0.95, 1.0, 1.0))
+	btn_restart_confirm_no.pressed.connect(func(): cancel_restart_quest())
+	btn_hbox.add_child(btn_restart_confirm_no)
+
+	vbox.add_child(btn_hbox)
+
+	restart_confirm_modal.add_child(restart_confirm_card)
+	ui_node.add_child(restart_confirm_modal)
+
+func is_restart_confirm_open() -> bool:
+	return restart_confirm_modal != null and restart_confirm_modal.visible
+
+func open_restart_confirm_modal(on_confirm: Callable = Callable()) -> void:
+	if not restart_confirm_modal:
+		_setup_restart_confirm_modal()
+	if not restart_confirm_modal:
+		return
+
+	_pending_restart_callback = on_confirm
+
+	if restart_confirm_details_label:
+		var cart = CartridgeManager.active_cartridge
+		var act_q = get_active_quest_objective()
+		var q_title = act_q.get("title", cart.get("header", {}).get("title", "HeroQuest"))
+		restart_confirm_details_label.text = "Are you sure you want to restart '%s' from the beginning?\n\nCurrent Round: %d  •  All session progress will be lost.\nThe quest will reset to Round 1." % [
+			q_title, current_round
+		]
+
+	restart_confirm_modal.visible = true
+	_log("[RESTART] Confirmation requested: Restart Quest prompt displayed.")
+
+func confirm_restart_quest() -> Dictionary:
+	if restart_confirm_modal:
+		restart_confirm_modal.visible = false
+
+	if _pending_restart_callback.is_valid():
+		var cb = _pending_restart_callback
+		_pending_restart_callback = Callable()
+		cb.call()
+		return { "success": true, "restarted": true }
+
 	delete_save_game()
 	_load_active_cartridge(true)
 	close_game_menu()
-	_log("[RESET] Quest restarted from cartridge to Round 1.")
+	_log("[RESET] Quest restarted from cartridge to Round 1 after confirmation.")
+	return { "success": true, "restarted": true }
+
+func cancel_restart_quest() -> Dictionary:
+	if restart_confirm_modal:
+		restart_confirm_modal.visible = false
+	_pending_restart_callback = Callable()
+	_log("[RESTART] Quest restart cancelled by user.")
+	return { "success": true, "cancelled": true }
 
 func save_game_from_menu() -> void:
 	auto_save_game()
@@ -4940,6 +5529,255 @@ func load_game_from_menu() -> void:
 		if game_menu_status_label:
 			game_menu_status_label.text = "[!] Failed to restore saved game!"
 			game_menu_status_label.add_theme_color_override("font_color", Color(0.95, 0.4, 0.4, 1.0))
+
+func is_ai_options_modal_open() -> bool:
+	return ai_options_modal != null and ai_options_modal.visible
+
+func open_ai_options_modal() -> void:
+	if not ai_options_modal:
+		_setup_ai_options_modal()
+	if not ai_options_modal:
+		return
+	if check_ai_play:
+		check_ai_play.button_pressed = ai_play_for_you
+	if check_auto_advance:
+		check_auto_advance.button_pressed = auto_advance_turn
+	_update_ai_options_status_text()
+	ai_options_modal.visible = true
+	_log("[AI ENGINE] Opened AI Engine Options dialog.")
+
+func close_ai_options_modal() -> void:
+	if ai_options_modal:
+		ai_options_modal.visible = false
+
+func toggle_ai_options_modal() -> void:
+	if is_ai_options_modal_open():
+		close_ai_options_modal()
+	else:
+		open_ai_options_modal()
+
+func _on_ai_play_toggled(pressed: bool) -> void:
+	ai_play_for_you = pressed
+	_update_ai_engine_state()
+
+func _on_auto_advance_toggled(pressed: bool) -> void:
+	auto_advance_turn = pressed
+	_update_ai_engine_state()
+
+func _update_ai_engine_state() -> void:
+	CartridgeManager.auto_play_enabled = (ai_play_for_you and auto_advance_turn)
+	ai_turn_waiting_for_input = false
+	auto_advance_timer = 0.0
+	if check_ai_play and check_ai_play.button_pressed != ai_play_for_you:
+		check_ai_play.set_pressed_no_signal(ai_play_for_you)
+	if check_auto_advance and check_auto_advance.button_pressed != auto_advance_turn:
+		check_auto_advance.set_pressed_no_signal(auto_advance_turn)
+	_update_ai_options_button_ui()
+	_update_ai_options_status_text()
+	_log("[AI ENGINE] Options updated: ai_play_for_you=%s, auto_advance_turn=%s, auto_play_enabled=%s" % [
+		str(ai_play_for_you), str(auto_advance_turn), str(CartridgeManager.auto_play_enabled)
+	])
+
+func _update_ai_options_button_ui() -> void:
+	if not btn_ai_options:
+		return
+	if ai_play_for_you and auto_advance_turn:
+		btn_ai_options.text = "🤖 AI [Auto]"
+		btn_ai_options.tooltip_text = "🤖 AI Engine Options [A]\nMode: Full Autonomous Auto-Play\nClick to reconfigure."
+		btn_ai_options.modulate = Color(0.4, 1.0, 0.7, 1.0)
+	elif ai_play_for_you and not auto_advance_turn:
+		btn_ai_options.text = "🤖 AI [Step]"
+		btn_ai_options.tooltip_text = "🤖 AI Engine Options [A]\nMode: Step-by-Step AI (manual turn end)\nClick to reconfigure."
+		btn_ai_options.modulate = Color(0.5, 0.85, 1.0, 1.0)
+	elif not ai_play_for_you and auto_advance_turn:
+		btn_ai_options.text = "🤖 AI [Next]"
+		btn_ai_options.tooltip_text = "🤖 AI Engine Options [A]\nMode: Manual Play with Auto-Advance\nClick to reconfigure."
+		btn_ai_options.modulate = Color(1.0, 0.88, 0.4, 1.0)
+	else:
+		btn_ai_options.text = "🤖 AI"
+		btn_ai_options.tooltip_text = "🤖 AI Engine Options [A]\nMode: Manual Player Control\nClick to reconfigure."
+		btn_ai_options.modulate = Color(1.0, 1.0, 1.0, 1.0)
+
+func _update_ai_options_status_text() -> void:
+	if not ai_options_status_label:
+		return
+	if ai_play_for_you and auto_advance_turn:
+		ai_options_status_label.text = "Mode: Full Autonomous Auto-Play\nAI commands heroes and automatically advances turns."
+		ai_options_status_label.add_theme_color_override("font_color", Color(0.4, 1.0, 0.7, 1.0))
+	elif ai_play_for_you and not auto_advance_turn:
+		ai_options_status_label.text = "Mode: Step-by-Step AI Governance\nAI commands hero actions, then pauses at turn end for review."
+		ai_options_status_label.add_theme_color_override("font_color", Color(0.5, 0.85, 1.0, 1.0))
+	elif not ai_play_for_you and auto_advance_turn:
+		ai_options_status_label.text = "Mode: Manual Play with Auto-Advance\nYou command heroes manually; turns advance automatically when moves/actions finish."
+		ai_options_status_label.add_theme_color_override("font_color", Color(1.0, 0.88, 0.4, 1.0))
+	else:
+		ai_options_status_label.text = "Mode: Standard Manual Control\nYou command heroes and click 'End Turn' to conclude turns."
+		ai_options_status_label.add_theme_color_override("font_color", Color(0.82, 0.78, 0.68, 0.85))
+
+func _execute_step_by_step_ai() -> void:
+	_execute_mentor_ai_party_step()
+
+func _check_manual_auto_advance(delta: float) -> void:
+	if is_movie_playing:
+		auto_advance_timer = 0.0
+		return
+	if current_phase != "hero_phase":
+		auto_advance_timer = 0.0
+		return
+	var is_turn_done = (turn_state == "turn_complete") or (movement_closed and has_acted_this_turn) or (movement_rolled and movement_remaining <= 0 and has_acted_this_turn)
+	if is_turn_done:
+		auto_advance_timer += delta
+		var delay = 0.1 if is_headless_mode() else 0.75
+		if auto_advance_timer >= delay:
+			auto_advance_timer = 0.0
+			_log("[AI ENGINE] Turn actions complete. Automatically advancing to next turn...")
+			end_turn()
+	else:
+		auto_advance_timer = 0.0
+
+func _setup_ai_options_modal() -> void:
+	if ai_options_modal:
+		return
+	var ui_node = get_node_or_null("UI")
+	if not ui_node:
+		return
+
+	ai_options_modal = ColorRect.new()
+	ai_options_modal.name = "AIEngineOptionsModal"
+	ai_options_modal.visible = false
+	ai_options_modal.color = Color(0.02, 0.03, 0.06, 0.82)
+	ai_options_modal.set_anchors_preset(Control.PRESET_FULL_RECT)
+	ai_options_modal.mouse_filter = Control.MOUSE_FILTER_STOP
+	ai_options_modal.z_index = 240
+
+	if tex_rpg_menu_dungeon_bg:
+		var dungeon_bg = TextureRect.new()
+		dungeon_bg.name = "DungeonBackdrop"
+		dungeon_bg.texture = tex_rpg_menu_dungeon_bg
+		dungeon_bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		dungeon_bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		dungeon_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+		dungeon_bg.modulate = Color(0.5, 0.55, 0.65, 0.85)
+		dungeon_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		ai_options_modal.add_child(dungeon_bg)
+
+	ai_options_modal.gui_input.connect(func(ev: InputEvent):
+		if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
+			close_ai_options_modal()
+	)
+
+	ai_options_card = PanelContainer.new()
+	ai_options_card.name = "Card"
+	ai_options_card.set_anchors_preset(Control.PRESET_CENTER)
+	ai_options_card.custom_minimum_size = Vector2(560, 390)
+	ai_options_card.offset_left = -280
+	ai_options_card.offset_top = -195
+	ai_options_card.offset_right = 280
+	ai_options_card.offset_bottom = 195
+	ai_options_card.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	ai_options_card.grow_vertical = Control.GROW_DIRECTION_BOTH
+	ai_options_card.mouse_filter = Control.MOUSE_FILTER_STOP
+	ai_options_card.add_theme_stylebox_override("panel", get_rpg_dialog_panel_stylebox(36, 30, 36, 30))
+
+	var margin = MarginContainer.new()
+	margin.name = "Margin"
+	margin.add_theme_constant_override("margin_left", 22)
+	margin.add_theme_constant_override("margin_top", 18)
+	margin.add_theme_constant_override("margin_right", 22)
+	margin.add_theme_constant_override("margin_bottom", 18)
+	ai_options_card.add_child(margin)
+
+	var vbox = VBoxContainer.new()
+	vbox.name = "VBox"
+	vbox.add_theme_constant_override("separation", 12)
+	margin.add_child(vbox)
+
+	# 1. Header with title and badge
+	var header = HBoxContainer.new()
+	header.name = "Header"
+	var title = Label.new()
+	title.name = "Title"
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title.text = "AI Engine Options"
+	title.add_theme_stylebox_override("normal", get_rpg_title_plaque_stylebox(14, 6))
+	apply_rpg_font_to_label(title, true, 19, Color(1.0, 0.88, 0.35, 1.0))
+	header.add_child(title)
+
+	var badge = Label.new()
+	badge.name = "Badge"
+	badge.text = "AUTONOMOUS HARNESS"
+	badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	badge.add_theme_stylebox_override("normal", get_rpg_badge_stylebox())
+	apply_rpg_font_to_label(badge, false, 11, Color(0.4, 0.95, 0.85, 1.0))
+	header.add_child(badge)
+	vbox.add_child(header)
+
+	var sep = HSeparator.new()
+	vbox.add_child(sep)
+
+	# 2. Options container (Styled RPG Panel)
+	var options_panel = PanelContainer.new()
+	options_panel.name = "OptionsPanel"
+	options_panel.add_theme_stylebox_override("panel", get_rpg_plaque_stylebox(18, 14, 18, 14))
+
+	var options_vbox = VBoxContainer.new()
+	options_vbox.name = "OptionsVBox"
+	options_vbox.add_theme_constant_override("separation", 14)
+
+	# Checkbox 1: ai play for you
+	check_ai_play = CheckBox.new()
+	check_ai_play.name = "CheckAIPlay"
+	check_ai_play.text = "- ai play for you"
+	check_ai_play.tooltip_text = "When enabled, autonomous AI makes tactical decisions, movement, spellcasting, and combat for the party."
+	check_ai_play.button_pressed = ai_play_for_you
+	check_ai_play.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	apply_rpg_font_to_checkbox(check_ai_play, 16, Color(1.0, 0.96, 0.84, 1.0))
+	check_ai_play.toggled.connect(_on_ai_play_toggled)
+	options_vbox.add_child(check_ai_play)
+
+	# Checkbox 2: automatically go to the next turn without your input
+	check_auto_advance = CheckBox.new()
+	check_auto_advance.name = "CheckAutoAdvance"
+	check_auto_advance.text = "- automatically go to the next turn without your input"
+	check_auto_advance.tooltip_text = "When enabled, turns advance automatically without pausing or waiting for manual 'End Turn' button click."
+	check_auto_advance.button_pressed = auto_advance_turn
+	check_auto_advance.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	apply_rpg_font_to_checkbox(check_auto_advance, 16, Color(1.0, 0.96, 0.84, 1.0))
+	check_auto_advance.toggled.connect(_on_auto_advance_toggled)
+	options_vbox.add_child(check_auto_advance)
+
+	options_panel.add_child(options_vbox)
+	vbox.add_child(options_panel)
+
+	# 3. Status description label
+	ai_options_status_label = Label.new()
+	ai_options_status_label.name = "StatusLabel"
+	ai_options_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	ai_options_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	ai_options_status_label.add_theme_stylebox_override("normal", get_rpg_instruction_stylebox())
+	apply_rpg_font_to_label(ai_options_status_label, false, 12, Color(0.82, 0.78, 0.68, 0.85))
+	vbox.add_child(ai_options_status_label)
+	_update_ai_options_status_text()
+
+	# 4. Action Buttons Container
+	var btns_vbox = VBoxContainer.new()
+	btns_vbox.name = "ButtonsVBox"
+	btns_vbox.add_theme_constant_override("separation", 8)
+
+	var btn_close = Button.new()
+	btn_close.name = "BtnCloseAIOptions"
+	btn_close.text = "RESUME GAME [A]"
+	btn_close.tooltip_text = "Dismiss AI Engine Options dialog [Esc / A]"
+	btn_close.custom_minimum_size = Vector2(0, 44)
+	btn_close.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	apply_rpg_font_to_button(btn_close, 15, Color(1.0, 0.96, 0.82, 1.0))
+	btn_close.pressed.connect(close_ai_options_modal)
+	btns_vbox.add_child(btn_close)
+
+	vbox.add_child(btns_vbox)
+
+	ai_options_modal.add_child(ai_options_card)
+	ui_node.add_child(ai_options_modal)
 
 var quest_selector_modal: ColorRect = null
 
@@ -5079,14 +5917,17 @@ func get_active_quest_objective() -> Dictionary:
 	if active_q.is_empty() and not quests.is_empty() and quests[0] is Dictionary:
 		active_q = quests[0]
 
-	var quest_title = str(active_q.get("title", cart.get("header", {}).get("title", "Quest 1: The Trial")))
-	var campaign_title = str(cart.get("header", {}).get("title", "HeroQuest: The Gathering Storm"))
-	var briefing = str(active_q.get("briefing", cart.get("header", {}).get("description", "You have learned well, my apprentices. Now comes your final test. Seek out the foul Orc Warlord Verag in his hidden catacombs, slay him, and return to the stairwell alive.")))
+	var default_title = "Quest: %s" % current_slug.replace("-", " ").capitalize() if current_slug != "" else "HeroQuest"
+	var quest_title = str(active_q.get("title", cart.get("header", {}).get("title", default_title)))
+	var campaign_title = str(active_q.get("campaign", cart.get("header", {}).get("title", "HeroQuest: The Gathering Storm")))
+	var briefing = str(active_q.get("briefing", cart.get("header", {}).get("description", "You enter the perilous dungeon depths. Stay vigilant and vanquish your foes.")))
 	var gold_reward = int(active_q.get("goldReward", 100))
 	var map_id = str(active_q.get("mapConfigId", "fan-dungeon-28x21"))
 
 	var primary_goals: Array = []
-	if active_q.get("slug") == "heroquest-the-trial" or active_q.get("id") == "quest-1" or active_q.is_empty():
+	if active_q.has("primaryGoals") and active_q["primaryGoals"] is Array and not active_q["primaryGoals"].is_empty():
+		primary_goals = active_q["primaryGoals"].duplicate()
+	elif active_q.get("slug") == "heroquest-the-trial" or active_q.get("id") == "quest-1" or (active_q.is_empty() and (current_slug == "heroquest-the-trial" or current_slug == "trial-of-verag" or current_slug == "")):
 		primary_goals = [
 			"Locate and defeat the Orc Warlord Verag in his inner catacombs.",
 			"Explore the ancient chambers and search for hidden treasures.",
@@ -5105,13 +5946,24 @@ func get_active_quest_objective() -> Dictionary:
 			"Survive the onslaught and escape back to the surface."
 		]
 	else:
-		primary_goals = [
-			"Fulfill Mentor's decree and vanquish Morcar's minions.",
-			"Recover all ancient artifacts and treasures.",
-			"Ensure the survival of the imperial adventurers."
-		]
+		var boss_name = str(active_q.get("bossTarget", "")).strip_edges()
+		if boss_name != "":
+			primary_goals = [
+				"Locate and defeat the %s." % boss_name.capitalize(),
+				"Explore the ancient chambers and search for hidden treasures.",
+				"Ensure all living heroes return safely to the spiral stairway."
+			]
+		else:
+			primary_goals = [
+				"Fulfill Mentor's decree and vanquish Morcar's minions.",
+				"Recover all ancient artifacts and treasures.",
+				"Ensure the survival of the imperial adventurers."
+			]
 
 	return {
+		"id": str(active_q.get("id", "quest-1")),
+		"slug": str(active_q.get("slug", current_slug)),
+		"bossTarget": str(active_q.get("bossTarget", "")),
 		"campaign": campaign_title,
 		"title": quest_title,
 		"briefing": briefing,
@@ -5356,6 +6208,8 @@ func open_quest_objective_modal() -> void:
 func close_quest_objective_modal() -> void:
 	if quest_objective_modal:
 		quest_objective_modal.visible = false
+	if is_quest_begin():
+		_check_start_elf_spell_selection()
 
 func toggle_quest_objective_modal() -> void:
 	if is_quest_objective_open():
@@ -5408,6 +6262,398 @@ func _update_quest_objective_content() -> void:
 	var all_done = are_all_quest_objectives_completed()
 	if btn_modal_complete_quest:
 		btn_modal_complete_quest.visible = all_done
+	if btn_quest_objective_close:
+		if is_quest_begin():
+			btn_quest_objective_close.text = "⚔️ COMMENCE QUEST"
+		else:
+			btn_quest_objective_close.text = "RETURN TO QUEST"
+
+# -----------------------------------------------------------------------------
+# Quest Complete / Victory & Defeat Modal
+# -----------------------------------------------------------------------------
+func _setup_quest_complete_modal() -> void:
+	var ui_node = get_node_or_null("UI")
+	if not ui_node:
+		return
+	if ui_node.has_node("QuestCompleteModal"):
+		quest_complete_modal = ui_node.get_node("QuestCompleteModal")
+		return
+
+	quest_complete_modal = ColorRect.new()
+	quest_complete_modal.name = "QuestCompleteModal"
+	quest_complete_modal.visible = false
+	quest_complete_modal.color = Color(0.02, 0.03, 0.06, 0.88)
+	quest_complete_modal.set_anchors_preset(Control.PRESET_FULL_RECT)
+	quest_complete_modal.mouse_filter = Control.MOUSE_FILTER_STOP
+
+	if tex_rpg_menu_dungeon_bg:
+		var dungeon_bg = TextureRect.new()
+		dungeon_bg.name = "DungeonBackdrop"
+		dungeon_bg.texture = tex_rpg_menu_dungeon_bg
+		dungeon_bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		dungeon_bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		dungeon_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+		dungeon_bg.modulate = Color(0.40, 0.40, 0.48, 0.88)
+		dungeon_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		quest_complete_modal.add_child(dungeon_bg)
+
+	quest_complete_modal.gui_input.connect(func(ev: InputEvent):
+		if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
+			close_quest_complete_modal()
+	)
+
+	quest_complete_card = PanelContainer.new()
+	quest_complete_card.name = "Card"
+	quest_complete_card.set_anchors_preset(Control.PRESET_CENTER)
+	quest_complete_card.custom_minimum_size = Vector2(720, 580)
+	quest_complete_card.offset_left = -360
+	quest_complete_card.offset_top = -290
+	quest_complete_card.offset_right = 360
+	quest_complete_card.offset_bottom = 290
+	quest_complete_card.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	quest_complete_card.grow_vertical = Control.GROW_DIRECTION_BOTH
+	quest_complete_card.mouse_filter = Control.MOUSE_FILTER_STOP
+	quest_complete_card.add_theme_stylebox_override("panel", get_rpg_dialog_panel_stylebox(32, 24, 32, 24))
+
+	var margin = MarginContainer.new()
+	margin.name = "Margin"
+	margin.custom_minimum_size = Vector2(680, 540)
+	margin.add_theme_constant_override("margin_left", 20)
+	margin.add_theme_constant_override("margin_top", 14)
+	margin.add_theme_constant_override("margin_right", 20)
+	margin.add_theme_constant_override("margin_bottom", 16)
+
+	var vbox = VBoxContainer.new()
+	vbox.name = "VBox"
+	vbox.custom_minimum_size = Vector2(680, 540)
+	vbox.add_theme_constant_override("separation", 8)
+	margin.add_child(vbox)
+
+	# 1. Header (Title, Badge, Close X)
+	var header = HBoxContainer.new()
+	header.name = "Header"
+
+	quest_complete_title = Label.new()
+	quest_complete_title.name = "Title"
+	quest_complete_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	quest_complete_title.text = "HEROQUEST : QUEST COMPLETE"
+	quest_complete_title.add_theme_stylebox_override("normal", get_rpg_title_plaque_stylebox(14, 6))
+	apply_rpg_font_to_label(quest_complete_title, true, 18, Color(1.0, 0.88, 0.35, 1.0))
+	header.add_child(quest_complete_title)
+
+	quest_complete_badge = Label.new()
+	quest_complete_badge.name = "Badge"
+	quest_complete_badge.text = "VICTORY ACHIEVED"
+	quest_complete_badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	quest_complete_badge.add_theme_stylebox_override("normal", get_rpg_badge_stylebox(Color(0.85, 0.72, 0.30, 0.90), Color(0.14, 0.10, 0.04, 0.92)))
+	apply_rpg_font_to_label(quest_complete_badge, false, 11, Color(1.0, 0.92, 0.55, 1.0))
+	header.add_child(quest_complete_badge)
+
+	var btn_x = Button.new()
+	btn_x.name = "BtnCloseHeader"
+	btn_x.text = "X"
+	btn_x.custom_minimum_size = Vector2(28, 28)
+	btn_x.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	apply_rpg_font_to_button(btn_x, 12, Color(0.85, 0.80, 0.70, 0.9))
+	btn_x.pressed.connect(close_quest_complete_modal)
+	header.add_child(btn_x)
+
+	vbox.add_child(header)
+
+	var sep = HSeparator.new()
+	vbox.add_child(sep)
+
+	# 2. Mentor's Parchment Proclamation Box
+	var mentor_panel = PanelContainer.new()
+	mentor_panel.name = "MentorPanel"
+	mentor_panel.add_theme_stylebox_override("panel", get_rpg_plaque_stylebox(14, 8, 14, 8))
+
+	var mentor_vbox = VBoxContainer.new()
+	mentor_vbox.name = "MentorVBox"
+	mentor_vbox.add_theme_constant_override("separation", 3)
+
+	var mentor_tag = Label.new()
+	mentor_tag.name = "MentorTag"
+	mentor_tag.text = "MENTOR'S PROCLAMATION"
+	apply_rpg_font_to_label(mentor_tag, true, 11, Color(1.0, 0.85, 0.35, 1.0))
+	mentor_vbox.add_child(mentor_tag)
+
+	quest_complete_mentor_text = Label.new()
+	quest_complete_mentor_text.name = "MentorText"
+	quest_complete_mentor_text.custom_minimum_size = Vector2(640, 0)
+	quest_complete_mentor_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	quest_complete_mentor_text.text = "\"Hail, victorious heroes! You have proven your valor in the depths of the catacombs. Verag lies slain, and your triumph echoes through the halls of the Empire!\""
+	apply_rpg_font_to_label(quest_complete_mentor_text, false, 12, Color(1.0, 0.94, 0.80, 1.0))
+	mentor_vbox.add_child(quest_complete_mentor_text)
+
+	mentor_panel.add_child(mentor_vbox)
+	vbox.add_child(mentor_panel)
+
+	# 3. Objectives Fulfilled Section
+	var obj_panel = PanelContainer.new()
+	obj_panel.name = "ObjectivesPanel"
+	obj_panel.add_theme_stylebox_override("panel", get_rpg_plaque_stylebox(12, 6, 12, 6))
+
+	quest_complete_objectives_vbox = VBoxContainer.new()
+	quest_complete_objectives_vbox.name = "ObjectivesVBox"
+	quest_complete_objectives_vbox.add_theme_constant_override("separation", 3)
+
+	var obj_title = Label.new()
+	obj_title.name = "ObjTitle"
+	obj_title.text = "QUEST OBJECTIVES"
+	apply_rpg_font_to_label(obj_title, true, 11, Color(0.95, 0.82, 0.35, 1.0))
+	quest_complete_objectives_vbox.add_child(obj_title)
+
+	obj_panel.add_child(quest_complete_objectives_vbox)
+	vbox.add_child(obj_panel)
+
+	# 4. Bounty / Reward Plaque
+	var bounty_panel = PanelContainer.new()
+	bounty_panel.name = "BountyPanel"
+	var b_style = get_rpg_badge_stylebox(Color(0.85, 0.72, 0.30, 0.90), Color(0.10, 0.08, 0.04, 0.92))
+	b_style.content_margin_top = 5
+	b_style.content_margin_bottom = 5
+	b_style.content_margin_left = 12
+	b_style.content_margin_right = 12
+	bounty_panel.add_theme_stylebox_override("panel", b_style)
+
+	quest_complete_bounty_label = Label.new()
+	quest_complete_bounty_label.name = "BountyLabel"
+	quest_complete_bounty_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	quest_complete_bounty_label.text = "🏆 IMPERIAL BOUNTY: 100 Gold Coins awarded to each living hero • Rounds: 1"
+	apply_rpg_font_to_label(quest_complete_bounty_label, true, 12, Color(1.0, 0.88, 0.35, 1.0))
+	bounty_panel.add_child(quest_complete_bounty_label)
+	vbox.add_child(bounty_panel)
+
+	# 5. Party Survivors Roster
+	var party_panel = PanelContainer.new()
+	party_panel.name = "PartyPanel"
+	party_panel.add_theme_stylebox_override("panel", get_rpg_plaque_stylebox(12, 6, 12, 6))
+
+	var party_vbox = VBoxContainer.new()
+	party_vbox.name = "PartyVBox"
+	party_vbox.add_theme_constant_override("separation", 3)
+
+	var party_title = Label.new()
+	party_title.name = "PartyTitle"
+	party_title.text = "PARTY ROSTER & OUTCOME"
+	apply_rpg_font_to_label(party_title, true, 11, Color(0.95, 0.82, 0.35, 1.0))
+	party_vbox.add_child(party_title)
+
+	quest_complete_heroes_vbox = VBoxContainer.new()
+	quest_complete_heroes_vbox.name = "HeroesVBox"
+	quest_complete_heroes_vbox.add_theme_constant_override("separation", 3)
+	party_vbox.add_child(quest_complete_heroes_vbox)
+
+	party_panel.add_child(party_vbox)
+	vbox.add_child(party_panel)
+
+	# 6. Buttons Row
+	var btn_hbox = HBoxContainer.new()
+	btn_hbox.name = "ButtonRow"
+	btn_hbox.add_theme_constant_override("separation", 8)
+
+	btn_quest_complete_restart = Button.new()
+	btn_quest_complete_restart.name = "BtnRestartQuest"
+	btn_quest_complete_restart.text = "RESTART QUEST"
+	btn_quest_complete_restart.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_quest_complete_restart.custom_minimum_size = Vector2(0, 36)
+	btn_quest_complete_restart.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	apply_rpg_font_to_button(btn_quest_complete_restart, 12, Color(1.0, 0.85, 0.60, 1.0))
+	btn_quest_complete_restart.pressed.connect(func():
+		open_restart_confirm_modal(func():
+			close_quest_complete_modal()
+			delete_save_game()
+			_load_active_cartridge(true)
+			_quest_completed = false
+			is_game_closed = false
+			_update_ui()
+		)
+	)
+	btn_hbox.add_child(btn_quest_complete_restart)
+
+	btn_quest_complete_view_board = Button.new()
+	btn_quest_complete_view_board.name = "BtnViewBoard"
+	btn_quest_complete_view_board.text = "VIEW BOARD"
+	btn_quest_complete_view_board.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_quest_complete_view_board.custom_minimum_size = Vector2(0, 36)
+	btn_quest_complete_view_board.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	apply_rpg_font_to_button(btn_quest_complete_view_board, 12, Color(0.90, 0.92, 0.98, 1.0))
+	btn_quest_complete_view_board.pressed.connect(close_quest_complete_modal)
+	btn_hbox.add_child(btn_quest_complete_view_board)
+
+	btn_quest_complete_menu = Button.new()
+	btn_quest_complete_menu.name = "BtnMenu"
+	btn_quest_complete_menu.text = "GAME MENU"
+	btn_quest_complete_menu.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_quest_complete_menu.custom_minimum_size = Vector2(0, 36)
+	btn_quest_complete_menu.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	apply_rpg_font_to_button(btn_quest_complete_menu, 12, Color(0.85, 0.85, 0.85, 1.0))
+	btn_quest_complete_menu.pressed.connect(func():
+		close_quest_complete_modal()
+		open_game_menu()
+	)
+	btn_hbox.add_child(btn_quest_complete_menu)
+
+	btn_quest_complete_quit = Button.new()
+	btn_quest_complete_quit.name = "BtnQuit"
+	btn_quest_complete_quit.text = "EXIT QUEST"
+	btn_quest_complete_quit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_quest_complete_quit.custom_minimum_size = Vector2(0, 36)
+	btn_quest_complete_quit.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	apply_rpg_font_to_button(btn_quest_complete_quit, 12, Color(1.0, 0.50, 0.50, 1.0))
+	btn_quest_complete_quit.pressed.connect(func():
+		get_tree().quit(0)
+	)
+	btn_hbox.add_child(btn_quest_complete_quit)
+
+	vbox.add_child(btn_hbox)
+
+	var hint = Label.new()
+	hint.name = "HintLabel"
+	hint.text = "Press [Esc] or click View Board to inspect the dungeon at leisure • Click banner at any time to return"
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hint.add_theme_stylebox_override("normal", get_rpg_instruction_stylebox())
+	apply_rpg_font_to_label(hint, false, 10, Color(0.75, 0.72, 0.65, 0.80))
+	vbox.add_child(hint)
+
+	quest_complete_card.add_child(margin)
+	quest_complete_modal.add_child(quest_complete_card)
+	ui_node.add_child(quest_complete_modal)
+
+func is_quest_complete_modal_open() -> bool:
+	return quest_complete_modal != null and quest_complete_modal.visible
+
+func open_quest_complete_modal(is_victory: bool = true) -> void:
+	if elf_spell_modal and elf_spell_modal.visible:
+		elf_spell_modal.visible = false
+	if armory_modal and armory_modal.visible:
+		armory_modal.visible = false
+	if quest_objective_modal and quest_objective_modal.visible:
+		quest_objective_modal.visible = false
+	if not quest_complete_modal:
+		_setup_quest_complete_modal()
+	if not quest_complete_modal:
+		return
+	_update_quest_complete_content(is_victory)
+	quest_complete_modal.visible = true
+	if quest_complete_card:
+		quest_complete_card.reset_size()
+		quest_complete_card.set_anchors_preset(Control.PRESET_CENTER)
+		quest_complete_card.offset_left = -360
+		quest_complete_card.offset_top = -290
+		quest_complete_card.offset_right = 360
+		quest_complete_card.offset_bottom = 290
+	_log("🏆 [QUEST MODAL] Quest %s modal displayed (is_victory=%s)." % ["victory" if is_victory else "defeat", str(is_victory)])
+
+func close_quest_complete_modal() -> void:
+	if quest_complete_modal:
+		quest_complete_modal.visible = false
+	_update_ui()
+	queue_redraw_all()
+
+func _update_quest_complete_content(is_victory: bool = true) -> void:
+	var active_q = get_active_quest_objective()
+	var q_title = str(active_q.get("title", "The Trial"))
+	var bounty = int(active_q.get("goldReward", 100))
+
+	if quest_complete_title:
+		quest_complete_title.text = "HEROQUEST : QUEST COMPLETE" if is_victory else "HEROQUEST : QUEST FAILED"
+		var t_col = Color(1.0, 0.88, 0.35, 1.0) if is_victory else Color(1.0, 0.35, 0.35, 1.0)
+		apply_rpg_font_to_label(quest_complete_title, true, 18, t_col)
+
+	if quest_complete_badge:
+		quest_complete_badge.text = "VICTORY ACHIEVED" if is_victory else "DEFEAT"
+		if is_victory:
+			quest_complete_badge.add_theme_stylebox_override("normal", get_rpg_badge_stylebox(Color(0.85, 0.72, 0.30, 0.90), Color(0.14, 0.10, 0.04, 0.92)))
+			apply_rpg_font_to_label(quest_complete_badge, false, 11, Color(1.0, 0.92, 0.55, 1.0))
+		else:
+			quest_complete_badge.add_theme_stylebox_override("normal", get_rpg_badge_stylebox(Color(0.90, 0.25, 0.25, 0.90), Color(0.18, 0.04, 0.04, 0.92)))
+			apply_rpg_font_to_label(quest_complete_badge, false, 11, Color(1.0, 0.70, 0.70, 1.0))
+
+	if quest_complete_mentor_text:
+		if is_victory:
+			quest_complete_mentor_text.text = "\"Hail, victorious heroes! You have proven your valor in the depths of the catacombs. Verag lies slain, and your triumph echoes across the Empire!\""
+		else:
+			quest_complete_mentor_text.text = "\"Alas, brave adventurers. The dark forces of Zargon have overwhelmed this party. But courage never dies—rise again and reclaim your honor!\""
+
+	if quest_complete_bounty_label:
+		if is_victory:
+			quest_complete_bounty_label.text = "IMPERIAL BOUNTY: %d Gold Coins awarded to each living hero • Rounds: %d" % [bounty, current_round]
+		else:
+			quest_complete_bounty_label.text = "THE PARTY HAS FALLEN • Survived %d Rounds in the catacombs" % current_round
+
+	if quest_complete_objectives_vbox:
+		for child in quest_complete_objectives_vbox.get_children():
+			if child.name != "ObjTitle":
+				quest_complete_objectives_vbox.remove_child(child)
+				child.queue_free()
+		var goals = get_quest_objectives()
+		for item in goals:
+			var hbox = HBoxContainer.new()
+			hbox.name = "Goal_" + str(item.get("id", "goal"))
+			hbox.add_theme_constant_override("separation", 8)
+
+			var is_done = bool(item.get("completed", false)) or is_victory
+
+			var status_lbl = Label.new()
+			status_lbl.name = "Status"
+			status_lbl.text = "[OK]" if is_done else "[X]"
+			var st_col = Color(0.35, 0.95, 0.45, 1.0) if is_done else Color(0.95, 0.35, 0.35, 1.0)
+			apply_rpg_font_to_label(status_lbl, true, 11, st_col)
+			hbox.add_child(status_lbl)
+
+			var desc_lbl = Label.new()
+			desc_lbl.name = "Desc"
+			desc_lbl.text = str(item.get("title", ""))
+			desc_lbl.custom_minimum_size = Vector2(520, 0)
+			desc_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			var txt_col = Color(0.92, 0.96, 0.94, 1.0) if is_done else Color(0.85, 0.70, 0.70, 1.0)
+			apply_rpg_font_to_label(desc_lbl, false, 12, txt_col)
+			hbox.add_child(desc_lbl)
+
+			quest_complete_objectives_vbox.add_child(hbox)
+
+	if quest_complete_heroes_vbox:
+		for child in quest_complete_heroes_vbox.get_children():
+			quest_complete_heroes_vbox.remove_child(child)
+			child.queue_free()
+		for h in heroes:
+			var hbox = HBoxContainer.new()
+			hbox.add_theme_constant_override("separation", 8)
+			var h_name = get_hero_character_name(h)
+			var h_class = get_hero_class_name(h)
+			var cur_bp = int(h.get("current_bp", 0))
+			var max_bp = int(h.get("max_bp", 8))
+			var cur_gold = int(h.get("gold", 0))
+			var is_alive = cur_bp > 0
+
+			var icon_lbl = Label.new()
+			icon_lbl.text = "[SURVIVED]" if is_alive else "[FALLEN]"
+			var st_col = Color(0.35, 0.95, 0.45, 1.0) if is_alive else Color(0.95, 0.35, 0.35, 1.0)
+			apply_rpg_font_to_label(icon_lbl, true, 11, st_col)
+			hbox.add_child(icon_lbl)
+
+			var name_lbl = Label.new()
+			name_lbl.text = "%s (%s)" % [h_name, h_class]
+			name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			var n_col = Color(1.0, 0.95, 0.80, 1.0) if is_alive else Color(0.65, 0.65, 0.65, 0.8)
+			apply_rpg_font_to_label(name_lbl, true, 11, n_col)
+			hbox.add_child(name_lbl)
+
+			var bp_lbl = Label.new()
+			bp_lbl.text = "%d/%d BP" % [cur_bp, max_bp]
+			var bp_col = Color(0.4, 0.9, 0.5, 1.0) if cur_bp > 2 else (Color(1.0, 0.8, 0.2, 1.0) if cur_bp > 0 else Color(0.9, 0.3, 0.3, 1.0))
+			apply_rpg_font_to_label(bp_lbl, false, 11, bp_col)
+			hbox.add_child(bp_lbl)
+
+			var gold_lbl = Label.new()
+			gold_lbl.text = "%d GP" % cur_gold
+			apply_rpg_font_to_label(gold_lbl, false, 11, Color(1.0, 0.85, 0.35, 1.0))
+			hbox.add_child(gold_lbl)
+
+			quest_complete_heroes_vbox.add_child(hbox)
 
 # -----------------------------------------------------------------------------
 # Wandering Monster Modal & Card Inspector
@@ -5896,6 +7142,7 @@ func _setup_quest_objectives_hud() -> void:
 	margin.add_child(vbox)
 	quest_objectives_hud.add_child(margin)
 	ui_node.add_child(quest_objectives_hud)
+	quest_objectives_hud.visible = false
 	_update_quest_objectives_hud()
 
 func _update_quest_objectives_hud() -> void:
@@ -5954,6 +7201,10 @@ func get_quest_objectives() -> Array[Dictionary]:
 	
 	# Boss / Primary Target Check
 	var boss_target = str(active_q.get("bossTarget", "")).to_lower()
+	if boss_target == "":
+		var q_list = cart.get("quests", [])
+		if not q_list.is_empty() and q_list[0] is Dictionary:
+			boss_target = str(q_list[0].get("bossTarget", "")).to_lower()
 	var living_monsters = monsters.filter(func(m): return bool(m.get("is_alive", false)) and int(m.get("current_bp", 1)) > 0)
 	var any_monster_alive = not living_monsters.is_empty()
 	
@@ -5961,17 +7212,26 @@ func get_quest_objectives() -> Array[Dictionary]:
 	if _quest_completed or get_game_state() == "quest_victory":
 		is_boss_dead = true
 	elif boss_target != "":
-		var has_target_monster = monsters.any(func(m):
-			return boss_target in str(m.get("id", "")).to_lower() or boss_target in str(m.get("name", "")).to_lower()
+		var boss_monsters = monsters.filter(func(m):
+			return bool(m.get("isBoss", false)) or bool(m.get("is_boss", false))
 		)
-		if has_target_monster:
-			var target_alive = monsters.any(func(m): 
-				return (boss_target in str(m.get("id", "")).to_lower() or boss_target in str(m.get("name", "")).to_lower()) \
-					and bool(m.get("is_alive", false)) and int(m.get("current_bp", 1)) > 0
+		if not boss_monsters.is_empty():
+			var boss_alive = boss_monsters.any(func(m):
+				return bool(m.get("is_alive", false)) and int(m.get("current_bp", 1)) > 0
 			)
-			is_boss_dead = not target_alive
+			is_boss_dead = not boss_alive
 		else:
-			is_boss_dead = not any_monster_alive and not monsters.is_empty()
+			var has_target_monster = monsters.any(func(m):
+				return boss_target in str(m.get("id", "")).to_lower() or boss_target in str(m.get("name", "")).to_lower()
+			)
+			if has_target_monster:
+				var target_alive = monsters.any(func(m): 
+					return (boss_target in str(m.get("id", "")).to_lower() or boss_target in str(m.get("name", "")).to_lower()) \
+						and bool(m.get("is_alive", false)) and int(m.get("current_bp", 1)) > 0
+				)
+				is_boss_dead = not target_alive
+			else:
+				is_boss_dead = not any_monster_alive and not monsters.is_empty()
 	else:
 		if slug == "heroquest-the-trial" or q_id == "quest-1" or "trial" in slug or slug == "":
 			var has_verag = monsters.any(func(m):
@@ -5991,8 +7251,10 @@ func get_quest_objectives() -> Array[Dictionary]:
 	if not any_monster_alive and not monsters.is_empty():
 		is_boss_dead = true
 
-	var obj1_text = "Defeat Orc Warlord Verag in his catacombs"
-	if slug == "heroquest-the-trial" or q_id == "quest-1" or "trial" in slug or slug == "":
+	var obj1_text = "Defeat the dungeon commander"
+	if active_q.has("primaryGoals") and active_q["primaryGoals"] is Array and not active_q["primaryGoals"].is_empty():
+		obj1_text = str(active_q["primaryGoals"][0])
+	elif slug == "heroquest-the-trial" or q_id == "quest-1" or "trial" in slug or slug == "":
 		obj1_text = "Defeat Orc Warlord Verag in his catacombs"
 	elif slug == "heroquest-rescue-sir-ragnar":
 		obj1_text = "Vanquish the dungeon guards and locate Sir Ragnar"
@@ -6010,13 +7272,22 @@ func get_quest_objectives() -> Array[Dictionary]:
 		"required": true
 	})
 
+	var obj2_text = "Explore the ancient chambers and search for hidden treasures"
+	if active_q.has("primaryGoals") and active_q["primaryGoals"] is Array and active_q["primaryGoals"].size() >= 2:
+		obj2_text = str(active_q["primaryGoals"][1])
+
 	var rooms_explored = revealed_rooms.size() >= 1 or searched_rooms.size() >= 1 or room_special_treasure_collected.size() >= 1 or _quest_completed or get_game_state() == "quest_victory"
 	objs.append({
 		"id": "explore_dungeon",
-		"title": "Explore the ancient chambers and search for hidden treasures",
+		"title": obj2_text,
 		"completed": rooms_explored,
 		"required": true
 	})
+
+	var has_exit = (exit_stair != Vector2i(-1, -1))
+	var obj3_text = "Make it to the dungeon exit stairs" if has_exit else "Ensure all living heroes return safely to the spiral stairway"
+	if active_q.has("primaryGoals") and active_q["primaryGoals"] is Array and active_q["primaryGoals"].size() >= 3:
+		obj3_text = str(active_q["primaryGoals"][2])
 
 	var living_heroes = heroes.filter(func(h): return int(h.get("current_bp", 0)) > 0)
 	var has_living_heroes = living_heroes.size() > 0
@@ -6024,15 +7295,25 @@ func get_quest_objectives() -> Array[Dictionary]:
 	if _quest_completed or get_game_state() == "quest_victory":
 		party_surviving = has_living_heroes
 	elif is_boss_dead and has_living_heroes:
-		var hero_at_stairs = living_heroes.any(func(h):
-			return bool(h.get("has_departed_start", false)) and _to_grid_pos(h.get("grid_pos")) == starting_stair
-		)
-		if hero_at_stairs or not any_monster_alive:
-			party_surviving = true
+		if has_exit:
+			var hero_at_exit = living_heroes.any(func(h):
+				var pos = _to_grid_pos(h.get("grid_pos"))
+				return is_exit_stair_tile(pos) or _is_hero_assembled_at_stairs(pos)
+			)
+			if hero_at_exit:
+				party_surviving = true
+		else:
+			var all_heroes_departed = living_heroes.all(func(h): return bool(h.get("has_departed_start", false)))
+			var all_heroes_returned = living_heroes.all(func(h):
+				var pos = _to_grid_pos(h.get("grid_pos"))
+				return _is_hero_assembled_at_stairs(pos)
+			)
+			if (all_heroes_departed and all_heroes_returned) or not any_monster_alive:
+				party_surviving = true
 
 	objs.append({
 		"id": "party_survival",
-		"title": "Ensure all living heroes return safely to the spiral stairway",
+		"title": obj3_text,
 		"completed": party_surviving,
 		"required": true
 	})
@@ -6082,12 +7363,40 @@ func complete_active_quest(quit_on_complete: bool = false) -> Dictionary:
 	# 5. Persist to cartridge on disk
 	_save_cartridge_quest_completion(q_id)
 
+	_check_event_triggers("on_game_end", { "status": "victory", "bounty": bounty })
+
 	_log("🏆 [QUEST COMPLETE] Quest '%s' successfully completed! Awarded %d gold bounty to party." % [str(active_q.get("title", "The Trial")), bounty])
+	record_transaction("QUEST_COMPLETE", "party", "Adventuring Party", "Quest '%s' successfully completed! Awarded %d gold bounty to party." % [str(active_q.get("title", "The Trial")), bounty], { "questId": q_id, "bounty": bounty, "slug": slug })
 	_log("💾 Game state saved and marked as CLOSED.")
 
-	_update_ui()
+	# Cleanly halt automated modes so AI doesn't continue stepping
+	CartridgeManager.auto_play_enabled = false
+	ai_play_for_you = false
+	auto_advance_turn = false
 
-	if quit_on_complete or not is_headless_mode():
+	# Play celebratory voice dialogue sequence
+	_start_dialogue_sequence([
+		{
+			"speaker": "mentor",
+			"text": "Hail, victorious heroes! You have proven your valor in the depths of the catacombs. Verag lies slain, and your triumph echoes across the Empire!",
+			"audio": "res://assets/audio/quest_victory.ogg",
+			"duration": 8.5
+		}
+	])
+
+	# Celebrate with floating text over living heroes
+	for h in heroes:
+		if int(h.get("current_bp", 0)) > 0:
+			var pos = _to_grid_pos(h.get("grid_pos"))
+			spawn_floating_text(pos, "VICTORY!", Color(1.0, 0.85, 0.2), 3.0)
+
+	_update_ui()
+	queue_redraw_all()
+
+	# Open the grand Quest Complete modal
+	open_quest_complete_modal(true)
+
+	if quit_on_complete:
 		_log("🚪 Returning to RobOS Tabletop Studio...")
 		get_tree().create_timer(1.0).timeout.connect(func():
 			get_tree().quit(0)
@@ -6610,6 +7919,46 @@ func can_search_for_traps() -> bool:
 					return false
 		return true
 
+func get_visible_corridor_tiles(from_pos: Vector2i) -> Array[Vector2i]:
+	var res: Array[Vector2i] = []
+	var max_dist = 12
+	for dy in range(-max_dist, max_dist + 1):
+		for dx in range(-max_dist, max_dist + 1):
+			if abs(dx) + abs(dy) > max_dist:
+				continue
+			var t = from_pos + Vector2i(dx, dy)
+			if t.x < 0 or t.x >= grid_cols or t.y < 0 or t.y >= grid_rows:
+				continue
+			if not _get_room_at(t).is_empty():
+				continue
+			if is_tile_wall_blocked(t) or is_border_tile(t):
+				continue
+			if has_line_of_sight(from_pos, t):
+				res.append(t)
+	return res
+
+func get_visible_unsearched_corridor_tiles(from_pos: Vector2i) -> Array[Vector2i]:
+	var visible = get_visible_corridor_tiles(from_pos)
+	var unsearched: Array[Vector2i] = []
+	for t in visible:
+		if not searched_secret_corridor_tiles.has(t):
+			unsearched.append(t)
+	return unsearched
+
+func can_search_for_secret_doors() -> bool:
+	if not can_search_for_traps():
+		return false
+	var hero = get_active_hero()
+	if hero.is_empty():
+		return false
+	var h_pos: Vector2i = _to_grid_pos(hero.get("grid_pos", Vector2i(-1, -1)))
+	var h_room = _get_room_at(h_pos)
+	var r_id = str(h_room.get("id", ""))
+	if r_id != "":
+		return not searched_secret_rooms.has(r_id)
+	else:
+		return get_visible_unsearched_corridor_tiles(h_pos).size() > 0
+
 func can_hero_disarm(hero: Dictionary) -> Dictionary:
 	if hero.is_empty():
 		return { "can_disarm": false, "reason": "No active hero" }
@@ -7072,6 +8421,18 @@ func cancel_ai_step() -> Dictionary:
 	return { "success": true, "cancelled": true, "step": cancelled_step }
 
 func _execute_auto_play_step() -> void:
+	if is_movie_playing:
+		return
+
+	if not active_story_trigger_overlay.is_empty():
+		_log("[AI ENGINE] 📜 Acknowledging Quest Note: '%s'..." % str(active_story_trigger_overlay.get("title", "Story Event")))
+		resolve_story_trigger_overlay_click()
+		return
+
+	if restart_confirm_modal and restart_confirm_modal.visible:
+		confirm_restart_quest()
+		return
+
 	if elf_spell_modal and elf_spell_modal.visible:
 		select_elf_element("water")
 		confirm_elf_spell_selection()
@@ -7085,8 +8446,9 @@ func _execute_auto_play_step() -> void:
 	if hero.size() == 0:
 		return
 
-	# If pristine starting sequence (Round 1 at start stairwell), run opening gambit 1-10
-	var is_opening_stair = (current_round == 1 and not bool(heroes[0].get("has_departed_start", false)))
+	# If pristine starting sequence (Round 1 at start stairwell), run opening gambit 1-10 ONLY for The Trial
+	var is_trial = CartridgeManager.current_cartridge_slug == "heroquest-the-trial" or str(CartridgeManager.active_cartridge.get("cartridgeId", "")) == "heroquest-the-trial"
+	var is_opening_stair = (current_round == 1 and not bool(heroes[0].get("has_departed_start", false)) and is_trial and starting_stair == Vector2i(0, 1))
 	if is_opening_stair and auto_play_step <= 10:
 		match auto_play_step:
 			1:
@@ -7130,6 +8492,14 @@ func _execute_auto_play_step() -> void:
 		_execute_mentor_ai_party_step()
 
 func _execute_mentor_ai_party_step() -> void:
+	if is_movie_playing:
+		return
+
+	if not active_story_trigger_overlay.is_empty():
+		_log("[MENTOR AI] 📜 Acknowledging Quest Note: '%s'..." % str(active_story_trigger_overlay.get("title", "Story Event")))
+		resolve_story_trigger_overlay_click()
+		return
+
 	# 1. Modals: Auto-resolve Elf Spell Selection so gameplay never hangs
 	if elf_spell_modal and elf_spell_modal.visible:
 		select_elf_element("water")
@@ -7147,26 +8517,44 @@ func _execute_mentor_ai_party_step() -> void:
 
 	# 2. Phase Check: Zargon / Game Master Phase
 	if current_phase == "gm_phase":
-		if is_headless_mode():
+		if is_headless_mode() or CartridgeManager.auto_play_enabled:
 			ai_monster_turn()
 		else:
 			if pending_enemy_turn_monsters.is_empty() and enemy_turn_stage == "idle":
 				start_ai_monster_turn_sequence()
 		return
 
-	# 3. Quest Outcome Evaluation: Check living heroes and monsters
+	# 3. Quest Outcome Evaluation: Check victory condition / living heroes and monsters
+	if are_all_quest_objectives_completed():
+		var q_title = str(get_active_quest_objective().get("title", "the dungeon"))
+		_log("🏆 [QUEST VICTORY] All objectives completed! The heroes triumph and complete %s!" % q_title)
+		complete_active_quest(false)
+		return
+
 	var living_heroes = heroes.filter(func(h): return int(h.get("current_bp", 0)) > 0 and bool(h.get("is_on_board", false)))
-	if living_heroes.is_empty():
+	if living_heroes.is_empty() and heroes.size() > 0:
 		_log("💀 [QUEST DEFEAT] All heroes have fallen in battle. Zargon claims total victory!")
 		CartridgeManager.auto_play_enabled = false
+		ai_play_for_you = false
+		auto_advance_turn = false
+		_start_dialogue_sequence([
+			{
+				"speaker": "mentor",
+				"text": "Alas, brave adventurers. The dark forces of Zargon have overwhelmed this party. But courage never dies—rise again and reclaim your honor!",
+				"audio": "res://assets/audio/quest_defeat.ogg",
+				"duration": 8.5
+			}
+		])
+		open_quest_complete_modal(false)
 		_update_ui()
 		return
 
 	var live_monsters = monsters.filter(func(m): return bool(m.get("is_alive", false)) and int(m.get("current_bp", 1)) > 0)
-	if live_monsters.is_empty():
-		_log("🏆 [QUEST VICTORY] All minions of Zargon have been defeated! The heroes triumph and cleanse the catacombs of Verag!")
-		CartridgeManager.auto_play_enabled = false
-		_update_ui()
+	var has_exit = (exit_stair != Vector2i(-1, -1))
+	if live_monsters.is_empty() and not _quest_completed and not has_exit:
+		var q_title = str(get_active_quest_objective().get("title", "the dungeon"))
+		_log("🏆 [QUEST VICTORY] All minions of Zargon have been defeated! The heroes triumph and complete %s!" % q_title)
+		complete_active_quest(false)
 		return
 
 	# 4. Active Hero Evaluation
@@ -7180,13 +8568,32 @@ func _execute_mentor_ai_party_step() -> void:
 	var hero_name = str(hero.get("name", "Hero"))
 	var h_pos: Vector2i = _to_grid_pos(hero.get("grid_pos", Vector2i(-1, -1)))
 
+	# 4b. Extraction Point Hold: If returning to stairs is allowed and hero is assembled, stand guard
+	if _is_returning_to_stairs_allowed() and _is_hero_assembled_at_stairs(h_pos):
+		var stair_label = "exit stairs" if has_exit else "spiral stairway extraction point"
+		_log("[MENTOR AI] 🛡️ %s stands guard at the %s." % [hero_name, stair_label])
+		end_turn()
+		return
+
 	# 5. Roll Movement if Awaiting Roll
 	if turn_state == "awaiting_roll":
 		_log("[MENTOR AI] %s rolls 2d6 movement dice..." % hero_name)
 		roll_movement_dice()
 		return
 
-	# 6. Action: Emergency Healing (Priority 1 for Elf / Wizard)
+	# 6. Action: Emergency Healing (Priority 1 for Elf / Wizard, or Potion Consumption for any hero)
+	var cur_bp = int(hero.get("current_bp", 0))
+	var max_bp = int(hero.get("bodyPoints", 8))
+	if cur_bp > 0 and cur_bp <= 4 and cur_bp < max_bp:
+		var inv = hero.get("inventory", [])
+		for it in inv:
+			var it_key = str(it.get("id", it.get("name", ""))) if it is Dictionary else str(it)
+			var it_str = it_key.to_lower().strip_edges().replace("-", "_")
+			if it_str in ["healing_potion", "potion_of_healing", "cure_potion", "holy_water"]:
+				_log("[MENTOR AI] 🧪 %s drinks %s (+4 BP)!" % [hero_name, it_key])
+				use_item(hero_id, it_key)
+				return
+
 	if not has_acted_this_turn:
 		if hero_id == "elf" and _can_hero_cast_spell(hero, "water_of_healing"):
 			var injured = _find_most_injured_ally(4)
@@ -7208,14 +8615,19 @@ func _execute_mentor_ai_party_step() -> void:
 			adj_monsters.sort_custom(func(a, b): return int(a.get("current_bp", 1)) < int(b.get("current_bp", 1)))
 			var target_m = adj_monsters[0]
 			_log("[MENTOR AI] ⚔️ %s attacks adjacent %s!" % [hero_name, target_m.get("name", "Monster")])
-			attack_adjacent_monster(str(target_m.get("id", "")))
-			return
+			var atk_res = attack_adjacent_monster(str(target_m.get("id", "")))
+			if atk_res.get("success", false):
+				return
 
 	# 8. Action: Ranged Offensive Spells (Priority 3 for Wizard / Elf)
 	if not has_acted_this_turn and (hero_id == "wizard" or hero_id == "elf"):
-		var vis_monsters = _get_visible_living_monsters()
-		if vis_monsters.size() > 0:
-			var target_m = vis_monsters[0]
+		var los_monsters: Array[Dictionary] = []
+		for m in _get_visible_living_monsters():
+			var mp = _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
+			if has_line_of_sight(h_pos, mp):
+				los_monsters.append(m)
+		if los_monsters.size() > 0:
+			var target_m = los_monsters[0]
 			if hero_id == "wizard":
 				if _can_hero_cast_spell(hero, "ball_of_flame"):
 					_log("[MENTOR AI] 🔥 Wizard casts Ball of Flame at %s!" % target_m.get("name", "Monster"))
@@ -7241,6 +8653,16 @@ func _execute_mentor_ai_party_step() -> void:
 		open_door(d_from, d_to)
 		return
 
+	# 9b. Action: Secret Passageway & Trap Search (Before Movement if in unsearched room or corridor with new tiles in view)
+	if not has_acted_this_turn and can_search_for_secret_doors():
+		var r_id = str(_get_room_at(h_pos).get("id", ""))
+		if r_id != "":
+			_log("[MENTOR AI] 🔍 %s searches room %s for secret doors and traps!" % [hero_name, r_id])
+		else:
+			_log("[MENTOR AI] 🔍 %s searches corridor for secret passageways and traps!" % hero_name)
+		search_traps()
+		return
+
 	# 10. Tactical Movement (Priority 5)
 	if movement_remaining > 0 and not movement_closed and not (moved_before_action and has_acted_this_turn):
 		var target_info = _find_best_hero_movement_target(hero, h_pos)
@@ -7250,15 +8672,48 @@ func _execute_mentor_ai_party_step() -> void:
 				var max_steps = mini(movement_remaining, path.size() - 1)
 				while max_steps > 0 and is_tile_occupied(path[max_steps], active_hero_idx):
 					max_steps -= 1
-				if max_steps > 0:
-					var dest = path[max_steps]
+
+				# If hero is a spellcaster with an offensive spell ready to cast,
+				# check if any tile along the path gives line of sight to a target monster!
+				var chosen_step = max_steps
+				var has_spell_ready = false
+				if not has_acted_this_turn:
+					if hero_id == "elf" and _can_hero_cast_spell(hero, "sleep"):
+						has_spell_ready = true
+					elif hero_id == "wizard" and (_can_hero_cast_spell(hero, "ball_of_flame") or _can_hero_cast_spell(hero, "fire_of_wrath")):
+						has_spell_ready = true
+
+				if has_spell_ready:
+					for s in range(1, max_steps + 1):
+						var step_tile = path[s]
+						if not is_tile_occupied(step_tile, active_hero_idx):
+							for m in _get_visible_living_monsters():
+								var mp = _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
+								if has_line_of_sight(step_tile, mp):
+									chosen_step = s
+									break
+						if chosen_step == s:
+							break
+
+				if chosen_step > 0:
+					var dest = path[chosen_step]
 					var reason = str(target_info.get("reason", "advance"))
 					_log("[MENTOR AI] 🏃 %s moves toward %s (stepping to (%d, %d))." % [hero_name, reason, dest.x, dest.y])
 					if not move_hero(dest):
 						movement_remaining = 0
+					elif _is_returning_to_stairs_allowed() and _is_hero_assembled_at_stairs(dest):
+						movement_remaining = 0
+						turn_state = "turn_complete"
+					elif has_acted_this_turn:
+						movement_remaining = 0
+						turn_state = "turn_complete"
 					return
 				else:
 					movement_remaining = 0
+			else:
+				movement_remaining = 0
+		else:
+			movement_remaining = 0
 
 	# 11. Actions After Movement (if hero moved without acting yet)
 	if not has_acted_this_turn:
@@ -7267,8 +8722,34 @@ func _execute_mentor_ai_party_step() -> void:
 			adj_m.sort_custom(func(a, b): return int(a.get("current_bp", 1)) < int(b.get("current_bp", 1)))
 			var target_m = adj_m[0]
 			_log("[MENTOR AI] ⚔️ %s attacks adjacent %s!" % [hero_name, target_m.get("name", "Monster")])
-			attack_adjacent_monster(str(target_m.get("id", "")))
-			return
+			var atk_res = attack_adjacent_monster(str(target_m.get("id", "")))
+			if atk_res.get("success", false):
+				return
+
+		# 11b. Ranged Offensive Spells After Movement (Wizard / Elf)
+		if (hero_id == "wizard" or hero_id == "elf"):
+			var cur_h_pos = _to_grid_pos(hero.get("grid_pos", Vector2i(-1, -1)))
+			var post_move_los: Array[Dictionary] = []
+			for m in _get_visible_living_monsters():
+				var mp = _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
+				if has_line_of_sight(cur_h_pos, mp):
+					post_move_los.append(m)
+			if post_move_los.size() > 0:
+				var target_m = post_move_los[0]
+				if hero_id == "wizard":
+					if _can_hero_cast_spell(hero, "ball_of_flame"):
+						_log("[MENTOR AI] 🔥 Wizard casts Ball of Flame at %s!" % target_m.get("name", "Monster"))
+						cast_spell("ball_of_flame", str(target_m.get("id", "")))
+						return
+					elif _can_hero_cast_spell(hero, "fire_of_wrath"):
+						_log("[MENTOR AI] 🔥 Wizard casts Fire of Wrath at %s!" % target_m.get("name", "Monster"))
+						cast_spell("fire_of_wrath", str(target_m.get("id", "")))
+						return
+				elif hero_id == "elf":
+					if _can_hero_cast_spell(hero, "sleep") and not target_m.get("is_sleeping", false):
+						_log("[MENTOR AI] 💤 Elf casts Sleep on %s!" % target_m.get("name", "Monster"))
+						cast_spell("sleep", str(target_m.get("id", "")))
+						return
 
 		var doors_now = get_adjacent_closed_doors()
 		if doors_now.size() > 0:
@@ -7279,12 +8760,26 @@ func _execute_mentor_ai_party_step() -> void:
 			open_door(d_from, d_to)
 			return
 
-		if can_search_room():
+		# 11c. Action: Search for Secret Doors & Traps (Room or Corridor)
+		if can_search_for_secret_doors():
+			var r_id = str(_get_room_at(h_pos).get("id", ""))
+			if r_id != "":
+				_log("[MENTOR AI] 🔍 %s searches room %s for secret doors and traps!" % [hero_name, r_id])
+			else:
+				_log("[MENTOR AI] 🔍 %s searches corridor for secret passageways and traps!" % hero_name)
+			search_traps()
+			return
+
+		if can_search_room() and not _is_returning_to_stairs_allowed():
 			_log("[MENTOR AI] 💎 %s searches room for treasure and traps!" % hero_name)
 			search_room()
 			return
 
 	# 12. Turn Conclusion
+	if ai_play_for_you and not auto_advance_turn:
+		ai_turn_waiting_for_input = true
+		_log("[AI ENGINE] %s turn actions completed. Press 'End Turn' to advance." % hero_name)
+		return
 	_log("[MENTOR AI] ⏭️ %s concludes turn." % hero_name)
 	end_turn()
 
@@ -7323,7 +8818,7 @@ func _find_best_hero_movement_target(hero: Dictionary, h_pos: Vector2i) -> Dicti
 	var hero_id = str(hero.get("id", "barbarian"))
 	var h_idx = active_hero_idx
 
-	# 1. Target: Visible living monsters
+	# 1. Target: Visible living monsters ALWAYS take priority!
 	var vis_monsters = _get_visible_living_monsters()
 	var best_m_path: Array[Vector2i] = []
 	var best_m_name = ""
@@ -7334,7 +8829,7 @@ func _find_best_hero_movement_target(hero: Dictionary, h_pos: Vector2i) -> Dicti
 		for tile in adj_tiles:
 			if tile.x < 0 or tile.x >= grid_cols or tile.y < 0 or tile.y >= grid_rows:
 				continue
-			if is_border_tile(tile) or tile == starting_stair:
+			if is_border_tile(tile) or (tile == starting_stair and not _is_returning_to_stairs_allowed()):
 				continue
 			if is_tile_occupied_by_hero(tile, h_idx) or is_tile_occupied_by_furniture(tile) or is_tile_wall_blocked(tile):
 				continue
@@ -7347,34 +8842,154 @@ func _find_best_hero_movement_target(hero: Dictionary, h_pos: Vector2i) -> Dicti
 	if not best_m_path.is_empty():
 		return { "path": best_m_path, "reason": "engage " + best_m_name }
 
+	# 2. Target: Advance to exit stairs (or return to starting stairs) if returning is allowed!
+	if _is_returning_to_stairs_allowed():
+		var has_exit = (exit_stair != Vector2i(-1, -1))
+		var r = get_exit_stair_rect_tiles() if has_exit else get_starting_stair_rect_tiles()
+		var stair_label = "exit stairs" if has_exit else "spiral stairway"
+		var is_at_dest = is_exit_stair_tile(h_pos) if has_exit else is_starting_stair_tile(h_pos)
+		if is_at_dest:
+			return { "path": [], "reason": "assembled at %s" % stair_label }
+		var best_stair_path: Array[Vector2i] = []
+		for sy in range(r.position.y, r.position.y + r.size.y):
+			for sx in range(r.position.x, r.position.x + r.size.x):
+				var st_tile = Vector2i(sx, sy)
+				if not is_tile_occupied_by_hero(st_tile, h_idx):
+					var p = find_path(h_pos, st_tile, h_idx)
+					if p.size() > 1:
+						if best_stair_path.is_empty() or p.size() < best_stair_path.size():
+							best_stair_path = p
+		if not best_stair_path.is_empty():
+			return { "path": best_stair_path, "reason": "reach %s" % stair_label }
+		for sy in range(r.position.y - 1, r.position.y + r.size.y + 1):
+			for sx in range(r.position.x - 1, r.position.x + r.size.x + 1):
+				var adj_tile = Vector2i(sx, sy)
+				if not is_tile_occupied_by_hero(adj_tile, h_idx) and not is_border_tile(adj_tile) and not is_tile_wall_blocked(adj_tile) and not is_tile_occupied_by_furniture(adj_tile):
+					var p = find_path(h_pos, adj_tile, h_idx)
+					if p.size() > 1:
+						if best_stair_path.is_empty() or p.size() < best_stair_path.size():
+							best_stair_path = p
+		if not best_stair_path.is_empty():
+			return { "path": best_stair_path, "reason": "assemble at %s" % stair_label }
+		# If no path to stairs currently exists (e.g. door is closed), fall through to unopened doors!
+
 	# 2. Target: Unopened / closed doors
 	var best_door_path: Array[Vector2i] = []
 	var best_door_desc = ""
+	var best_door_score = 999999
+	var dest_stair = exit_stair if (exit_stair != Vector2i(-1, -1)) else starting_stair
 	for d in doors:
 		if not bool(d.get("is_open", false)):
 			if bool(d.get("is_secret", false)) and not bool(d.get("is_revealed", false)):
 				continue
 			var f_pt = Vector2i(d.get("from", [0, 0])[0], d.get("from", [0, 0])[1])
 			var t_pt = Vector2i(d.get("to", [0, 0])[0], d.get("to", [0, 0])[1])
+
+			# If returning to stairs, avoid opening dead-end rooms that have no other doors and no exit stair
+			if _is_returning_to_stairs_allowed():
+				var r1_id = str(_get_room_at(f_pt).get("id", ""))
+				var r2_id = str(_get_room_at(t_pt).get("id", ""))
+				var target_room_id = r1_id if r1_id != "" else r2_id
+				if target_room_id != "":
+					var d_count = 0
+					for other_d in doors:
+						var of = Vector2i(other_d.get("from", [0, 0])[0], other_d.get("from", [0, 0])[1])
+						var ot = Vector2i(other_d.get("to", [0, 0])[0], other_d.get("to", [0, 0])[1])
+						if str(_get_room_at(of).get("id", "")) == target_room_id or str(_get_room_at(ot).get("id", "")) == target_room_id or str(other_d.get("room", "")) == target_room_id:
+							d_count += 1
+					if d_count <= 1:
+						var has_dest_stair = is_exit_stair_tile(dest_stair) and str(_get_room_at(dest_stair).get("id", "")) == target_room_id
+						if not has_dest_stair:
+							continue
+
 			for pt in [f_pt, t_pt]:
 				if pt == h_pos:
 					continue
-				if is_border_tile(pt) or pt == starting_stair or is_tile_occupied_by_hero(pt, h_idx):
+				if is_border_tile(pt) or (pt == starting_stair and not _is_returning_to_stairs_allowed()):
 					continue
-				var p = find_path(h_pos, pt, h_idx)
-				if p.size() > 1:
-					if best_door_path.is_empty() or p.size() < best_door_path.size():
-						best_door_path = p
-						best_door_desc = "closed door at (%d, %d)" % [pt.x, pt.y]
+				var targets_to_try = [pt]
+				if is_tile_occupied_by_hero(pt, h_idx):
+					targets_to_try = [pt + Vector2i(1, 0), pt + Vector2i(-1, 0), pt + Vector2i(0, 1), pt + Vector2i(0, -1)]
+				for cand in targets_to_try:
+					if cand == h_pos or is_border_tile(cand) or is_tile_occupied_by_hero(cand, h_idx) or is_tile_wall_blocked(cand):
+						continue
+					var p = find_path(h_pos, cand, h_idx)
+					if p.size() > 1:
+						var score = p.size()
+						if _is_returning_to_stairs_allowed():
+							var dist_to_exit = absi(pt.x - dest_stair.x) + absi(pt.y - dest_stair.y)
+							score = dist_to_exit * 8 + p.size()
+						if best_door_path.is_empty() or score < best_door_score:
+							best_door_path = p
+							best_door_score = score
+							best_door_desc = "closed door near (%d, %d)" % [pt.x, pt.y]
 
 	if not best_door_path.is_empty():
 		return { "path": best_door_path, "reason": best_door_desc }
 
-	# 3. Target: Unsearched rooms (especially Dwarf)
-	if hero_id == "dwarf":
+	# 3. Target: Revealed rooms not yet searched for secret passageways / doors
+	var best_secret_room_path: Array[Vector2i] = []
+	var best_secret_room_desc = ""
+	for r in rooms:
+		var r_id = str(r.get("id", ""))
+		if r_id != "" and revealed_rooms.has(r_id) and not searched_secret_rooms.has(r_id):
+			var r_tiles = r.get("tiles", [])
+			var cand_tiles: Array[Vector2i] = []
+			if r_tiles.size() > 0:
+				for t_arr in r_tiles:
+					cand_tiles.append(Vector2i(int(t_arr[0]), int(t_arr[1])))
+			else:
+				var rx = int(r.get("x", 0))
+				var ry = int(r.get("y", 0))
+				var rw = int(r.get("w", 1))
+				var rh = int(r.get("h", 1))
+				cand_tiles.append(Vector2i(rx + rw / 2, ry + rh / 2))
+
+			cand_tiles.sort_custom(func(a, b): return (absi(a.x - h_pos.x) + absi(a.y - h_pos.y)) < (absi(b.x - h_pos.x) + absi(b.y - h_pos.y)))
+			for cand in cand_tiles:
+				if cand == h_pos:
+					continue
+				if is_tile_occupied_by_hero(cand, h_idx) or is_tile_occupied_by_furniture(cand) or is_tile_wall_blocked(cand):
+					continue
+				var p = find_path(h_pos, cand, h_idx)
+				if p.size() > 1:
+					if best_secret_room_path.is_empty() or p.size() < best_secret_room_path.size():
+						best_secret_room_path = p
+						best_secret_room_desc = "search room %s for secret doors" % r_id
+					break
+
+	if not best_secret_room_path.is_empty():
+		return { "path": best_secret_room_path, "reason": best_secret_room_desc }
+
+	# 4. Target: Unsearched corridor tiles for secret doors / passageways
+	var best_corridor_path: Array[Vector2i] = []
+	var best_corridor_desc = ""
+	var unsearched_corridors: Array[Vector2i] = []
+	for cy in range(grid_rows):
+		for cx in range(grid_cols):
+			var c_tile = Vector2i(cx, cy)
+			if _tile_to_room_id.get(c_tile, "") == "" and not is_border_tile(c_tile) and not is_tile_wall_blocked(c_tile):
+				if not searched_secret_corridor_tiles.has(c_tile) and not is_tile_occupied_by_hero(c_tile, h_idx):
+					unsearched_corridors.append(c_tile)
+	if _is_returning_to_stairs_allowed():
+		unsearched_corridors.sort_custom(func(a, b): return (absi(a.x - dest_stair.x) + absi(a.y - dest_stair.y)) < (absi(b.x - dest_stair.x) + absi(b.y - dest_stair.y)))
+	else:
+		unsearched_corridors.sort_custom(func(a, b): return (absi(a.x - h_pos.x) + absi(a.y - h_pos.y)) < (absi(b.x - h_pos.x) + absi(b.y - h_pos.y)))
+	for c_tile in unsearched_corridors.slice(0, 20):
+		var p = find_path(h_pos, c_tile, h_idx)
+		if p.size() > 1:
+			if best_corridor_path.is_empty() or p.size() < best_corridor_path.size():
+				best_corridor_path = p
+				best_corridor_desc = "explore unsearched corridor near (%d, %d)" % [c_tile.x, c_tile.y]
+
+	if not best_corridor_path.is_empty():
+		return { "path": best_corridor_path, "reason": best_corridor_desc }
+
+	# 5. Target: Unsearched rooms for treasure (especially Dwarf, only if not returning to stairs)
+	if hero_id == "dwarf" and not _is_returning_to_stairs_allowed():
 		for r in rooms:
 			var r_id = str(r.get("id", ""))
-			if r_id != "" and revealed_rooms.has(r_id):
+			if r_id != "" and revealed_rooms.has(r_id) and not searched_rooms.has(r_id):
 				var rx = int(r.get("x", 0))
 				var ry = int(r.get("y", 0))
 				var rw = int(r.get("w", 1))
@@ -7383,21 +8998,32 @@ func _find_best_hero_movement_target(hero: Dictionary, h_pos: Vector2i) -> Dicti
 				if center != h_pos and not is_tile_occupied_by_hero(center, h_idx):
 					var p = find_path(h_pos, center, h_idx)
 					if p.size() > 1:
-						return { "path": p, "reason": "search room " + r_id }
+						return { "path": p, "reason": "search room " + r_id + " for treasure" }
 
-	# 4. Target: Marching Order / Follow Vanguard
+	# 6. Target: Marching Order / Follow Vanguard
 	if hero_id != "barbarian" and heroes.size() > 0:
 		var lead_hero = heroes[0] # Barbarian
 		var lead_pos = _to_grid_pos(lead_hero.get("grid_pos", Vector2i(-1, -1)))
 		var lead_dist = absi(lead_pos.x - h_pos.x) + absi(lead_pos.y - h_pos.y)
-		if lead_dist > 2:
+		if lead_dist > 1:
 			var lead_adjs = [lead_pos + Vector2i(1, 0), lead_pos + Vector2i(-1, 0), lead_pos + Vector2i(0, 1), lead_pos + Vector2i(0, -1)]
 			for l_tile in lead_adjs:
-				if is_border_tile(l_tile) or l_tile == starting_stair or is_tile_occupied_by_hero(l_tile, h_idx):
+				if is_border_tile(l_tile) or (l_tile == starting_stair and not _is_returning_to_stairs_allowed()) or is_tile_occupied_by_hero(l_tile, h_idx):
 					continue
 				var p = find_path(h_pos, l_tile, h_idx)
 				if p.size() > 1:
 					return { "path": p, "reason": "march formation with Barbarian" }
+
+	# 7. Target for Barbarian if vanguard is lagging behind party: regroup with party
+	if hero_id == "barbarian":
+		for other_h in heroes:
+			if other_h != hero:
+				var other_pos = _to_grid_pos(other_h.get("grid_pos", Vector2i(-1, -1)))
+				var dist = absi(other_pos.x - h_pos.x) + absi(other_pos.y - h_pos.y)
+				if dist > 3:
+					var p = find_path(h_pos, other_pos + Vector2i(1, 0), h_idx)
+					if p.size() > 1:
+						return { "path": p, "reason": "regroup with party" }
 
 	return {}
 
@@ -7465,6 +9091,32 @@ func _input(event: InputEvent) -> void:
 				targeting_cursor.queue_redraw()
 			queue_redraw_all()
 
+	if restart_confirm_modal and restart_confirm_modal.visible:
+		if event is InputEventKey and event.pressed:
+			if event.keycode == KEY_ESCAPE:
+				cancel_restart_quest()
+				get_viewport().set_input_as_handled()
+				return
+			elif event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
+				confirm_restart_quest()
+				get_viewport().set_input_as_handled()
+				return
+		if event is InputEventKey:
+			get_viewport().set_input_as_handled()
+			return
+
+	if quest_complete_modal and quest_complete_modal.visible:
+		if (event is InputEventKey and event.pressed and (event.keycode == KEY_ESCAPE or event.keycode == KEY_SPACE or event.keycode == KEY_ENTER)):
+			close_quest_complete_modal()
+			get_viewport().set_input_as_handled()
+			return
+
+	if ai_options_modal and ai_options_modal.visible:
+		if (event is InputEventKey and event.pressed and (event.keycode == KEY_ESCAPE or event.keycode == KEY_A)):
+			close_ai_options_modal()
+			get_viewport().set_input_as_handled()
+			return
+
 	if game_menu_modal and game_menu_modal.visible:
 		if (event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE):
 			close_game_menu()
@@ -7489,6 +9141,12 @@ func _input(event: InputEvent) -> void:
 	if wandering_monster_modal and wandering_monster_modal.visible:
 		if (event is InputEventKey and event.pressed and (event.keycode == KEY_ESCAPE or event.keycode == KEY_W or event.keycode == KEY_SPACE or event.keycode == KEY_ENTER)):
 			close_wandering_monster_modal()
+			get_viewport().set_input_as_handled()
+			return
+	if not active_dialogue_sequence.is_empty() and active_dialogue_sequence.get("active", false):
+		if (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed) or \
+		   (event is InputEventKey and event.pressed and (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER)):
+			advance_dialogue_bubble()
 			get_viewport().set_input_as_handled()
 			return
 	if not active_story_trigger_overlay.is_empty():
@@ -7522,9 +9180,21 @@ func _input(event: InputEvent) -> void:
 		return
 
 func _unhandled_input(event: InputEvent) -> void:
+	if quest_complete_modal and quest_complete_modal.visible:
+		if (event is InputEventKey and event.pressed and (event.keycode == KEY_ESCAPE or event.keycode == KEY_SPACE or event.keycode == KEY_ENTER)):
+			close_quest_complete_modal()
+			get_viewport().set_input_as_handled()
+			return
+
 	if quest_objective_modal and quest_objective_modal.visible:
 		if (event is InputEventKey and event.pressed and (event.keycode == KEY_ESCAPE or event.keycode == KEY_O or event.keycode == KEY_SPACE or event.keycode == KEY_ENTER)):
 			close_quest_objective_modal()
+			get_viewport().set_input_as_handled()
+			return
+
+	if ai_options_modal and ai_options_modal.visible:
+		if (event is InputEventKey and event.pressed and (event.keycode == KEY_ESCAPE or event.keycode == KEY_A)):
+			close_ai_options_modal()
 			get_viewport().set_input_as_handled()
 			return
 
@@ -7541,6 +9211,13 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 		elif event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
 			cancel_targeting()
+			get_viewport().set_input_as_handled()
+			return
+
+	if not active_dialogue_sequence.is_empty() and active_dialogue_sequence.get("active", false):
+		if (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed) or \
+		   (event is InputEventKey and event.pressed and (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER)):
+			advance_dialogue_bubble()
 			get_viewport().set_input_as_handled()
 			return
 
@@ -7618,6 +9295,11 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_W:
 		toggle_wandering_monster_modal()
+		get_viewport().set_input_as_handled()
+		return
+
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_A:
+		toggle_ai_options_modal()
 		get_viewport().set_input_as_handled()
 		return
 
@@ -7718,7 +9400,7 @@ func _handle_tile_click(tile: Vector2i) -> void:
 		return
 
 	# If clicked on edge tile, provide immediate feedback: edge tiles are not walkable
-	if is_border_tile(tile):
+	if is_border_tile(tile) and not is_exit_stair_tile(tile):
 		_log("[MOVE] Square (%d, %d) is on the board edge! Edge tiles are not walkable." % [tile.x, tile.y])
 		spawn_floating_text(tile, "EDGE TILE NOT WALKABLE!", Color(0.95, 0.4, 0.3), 1.2)
 		show_unavailable_notice("Edge tiles not walkable", tile)
@@ -7829,6 +9511,7 @@ func roll_movement_dice() -> Dictionary:
 
 	show_flashy_roll_number(int(roll.get("total", 0)))
 	trigger_movement_dice_roll(roll, str(hero.get("name", "Hero")), dice_vals)
+	record_transaction("ROLL_MOVEMENT", str(hero.get("id", "")), str(hero.get("name", "Hero")), "%s rolled %d movement (%s)" % [str(hero.get("name", "Hero")), roll.total, str(dice_vals)], { "total": roll.total, "dice": dice_vals })
 	_update_ui()
 	queue_redraw_all()
 	auto_save_game()
@@ -7837,11 +9520,12 @@ func roll_movement_dice() -> Dictionary:
 func find_path(start: Vector2i, goal: Vector2i, moving_hero_idx: int = -1) -> Array[Vector2i]:
 	if start == goal:
 		return [start]
-	# Rule: Cannot target starting_stair (starting tile cannot be stepped back onto)
-	if goal == starting_stair:
-		return []
-	# Rule: Edge / border tiles of the map are strictly non-walkable
-	if is_border_tile(goal):
+	# Rule: Cannot target starting_stair unless returning to stairs is allowed
+	if is_starting_stair_tile(goal):
+		if not _is_returning_to_stairs_allowed():
+			return []
+	# Rule: Edge / border tiles of the map are strictly non-walkable UNLESS goal == exit_stair
+	if is_border_tile(goal) and not is_exit_stair_tile(goal):
 		return []
 	# Rule 1: No sharing squares! Characters cannot finish their turn on a square occupied by another model.
 	if is_tile_occupied(goal, moving_hero_idx):
@@ -7872,13 +9556,15 @@ func find_path(start: Vector2i, goal: Vector2i, moving_hero_idx: int = -1) -> Ar
 		for d in dirs:
 			var nxt = cur + d
 			if nxt.x < 0 or nxt.x >= grid_cols or nxt.y < 0 or nxt.y >= grid_rows:
+				if not is_exit_stair_tile(nxt):
+					continue
+			# Rule: Edge / border tiles of the map are strictly non-walkable UNLESS nxt == exit_stair
+			if is_border_tile(nxt) and not is_exit_stair_tile(nxt):
 				continue
-			# Rule: Edge / border tiles of the map are strictly non-walkable
-			if is_border_tile(nxt):
-				continue
-			# Rule: Starting stair tile cannot be stepped back onto
-			if nxt == starting_stair:
-				continue
+			# Rule: Starting stair tile cannot be stepped back onto unless leaving or returning
+			if is_starting_stair_tile(nxt):
+				if not (is_starting_stair_tile(start) or _is_returning_to_stairs_allowed()):
+					continue
 			if came_from.has(nxt):
 				continue
 			if not pass_rock:
@@ -7908,14 +9594,14 @@ func move_hero(target_pos: Vector2i, is_interactive: bool = false) -> bool:
 	if curr == target_pos:
 		return true
 
-	# Rule: Cannot step back onto the starting tile
-	if target_pos == starting_stair:
+	# Rule: Cannot step back onto the starting tile unless returning to stairs is allowed
+	if is_starting_stair_tile(target_pos) and not _is_returning_to_stairs_allowed():
 		_log("[WARNING] Cannot step back upon the starting stairway! The starting tile is not walkable.")
 		show_unavailable_notice("Cannot return to start tile", target_pos)
 		return false
 
-	# Rule: Edge / border tiles are strictly non-walkable
-	if is_border_tile(target_pos):
+	# Rule: Edge / border tiles are strictly non-walkable (unless exit stair)
+	if is_border_tile(target_pos) and not is_exit_stair_tile(target_pos):
 		_log("[WARNING] Square (%d, %d) is on the board edge! Edge tiles are not walkable." % [target_pos.x, target_pos.y])
 		show_unavailable_notice("Edge tiles not walkable", target_pos)
 		return false
@@ -8156,6 +9842,25 @@ func move_hero(target_pos: Vector2i, is_interactive: bool = false) -> bool:
 	_log("[MOVE] %s moved to (%d, %d). Remaining movement: %d" % [
 		hero.get("name"), final_pos.x, final_pos.y, movement_remaining
 	])
+	record_transaction("MOVE", str(hero.get("id", "")), str(hero.get("name", "Hero")), "%s moved from (%d, %d) to (%d, %d) (cost: %d, remaining: %d)" % [
+		hero.get("name"), curr.x, curr.y, final_pos.x, final_pos.y, actual_cost, movement_remaining
+	], {
+		"from": [curr.x, curr.y],
+		"to": [final_pos.x, final_pos.y],
+		"cost": actual_cost,
+		"remaining": movement_remaining
+	})
+	var has_exit = (exit_stair != Vector2i(-1, -1))
+	if has_exit and is_exit_stair_tile(final_pos) and _is_returning_to_stairs_allowed():
+		_log("🏁 [EXIT STAIRS] %s makes it to the dungeon exit stairs! Quest complete!" % hero.get("name"))
+		record_transaction("REACH_EXIT", str(hero.get("id", "")), str(hero.get("name", "Hero")), "%s made it to the dungeon exit stairs at (%d, %d)!" % [
+			hero.get("name"), final_pos.x, final_pos.y
+		], {
+			"tile": [final_pos.x, final_pos.y]
+		})
+		complete_active_quest(false)
+	elif are_all_quest_objectives_completed() and not _quest_completed:
+		complete_active_quest(false)
 	_update_ui()
 	queue_redraw_all()
 	auto_save_game()
@@ -8204,6 +9909,16 @@ func open_door(from_pos: Vector2i, to_pos: Vector2i) -> bool:
 		spawn_floating_text(Vector2i(t[0], t[1]), "🚪 SECRET DOOR OPENED", Color(1.0, 0.85, 0.2), 1.8)
 	else:
 		_log("[DOOR] %s opens the door." % hero_name)
+
+	_check_event_triggers("on_door_opened", { "door": d, "doorId": str(d.get("id", "")), "from": from_pos, "to": to_pos, "room": explicit_room }, hero)
+	record_transaction("DOOR_OPEN", str(hero.get("id", "")), hero_name, "%s opened door between (%d, %d) and (%d, %d) (revealed rooms: %s)" % [
+		hero_name, from_pos.x, from_pos.y, to_pos.x, to_pos.y, str(rooms_to_reveal)
+	], {
+		"from": [from_pos.x, from_pos.y],
+		"to": [to_pos.x, to_pos.y],
+		"revealedRooms": rooms_to_reveal,
+		"doorId": str(d.get("id", ""))
+	})
 
 	update_party_vision()
 	_update_ui()
@@ -8415,8 +10130,10 @@ func use_item(hero_id: String = "", item_id: String = "", target_id: String = ""
 	var found_idx = -1
 	var norm_item_key = item_key.replace("-", "_")
 	for i in range(inv.size()):
-		var cur_inv_key = str(inv[i]).to_lower().strip_edges().replace("-", "_")
-		if cur_inv_key == norm_item_key or str(inv[i]).to_lower().strip_edges() == item_key:
+		var cur_item = inv[i]
+		var cur_raw = str(cur_item.get("id", cur_item.get("name", ""))) if cur_item is Dictionary else str(cur_item)
+		var cur_inv_key = cur_raw.to_lower().strip_edges().replace("-", "_")
+		if cur_inv_key == norm_item_key or cur_raw.to_lower().strip_edges() == item_key:
 			found_idx = i
 			break
 		if (norm_item_key in ["potion_defense", "potion_of_defense", "defense_potion"]) and (cur_inv_key in ["potion_defense", "potion_of_defense", "defense_potion"]):
@@ -8472,6 +10189,9 @@ func use_item(hero_id: String = "", item_id: String = "", target_id: String = ""
 		_log("[ITEM] %s drinks %s! Restores %d Body Points (%d/%d BP)." % [
 			target_h.get("name"), "Potion of Healing", healed, new_bp, max_bp
 		])
+		record_transaction("USE_ITEM", str(hero.get("id", "")), str(hero.get("name", "Hero")), "%s drinks Potion of Healing (+%d BP, now %d/%d BP)!" % [
+			hero.get("name"), healed, new_bp, max_bp
+		], { "item": item_id, "healed": healed, "current_bp": new_bp, "target": str(target_h.get("id", "")) })
 
 		_update_ui()
 		if item_use_modal and item_use_modal.visible:
@@ -9897,6 +11617,7 @@ func attack_adjacent_monster(monster_id: String = "", weapon_id: String = "") ->
 		if is_m_def:
 			target_m["is_alive"] = false
 			_log("[DEFEATED] %s is DEFEATED!" % target_m.get("name"))
+			_check_event_triggers("on_monster_killed", { "monster": target_m, "monsterId": str(target_m.get("id", "")), "monsterType": str(target_m.get("monsterType", target_m.get("type", ""))) }, hero)
 		record_damage_event(
 			str(target_m.get("name", "Monster")),
 			str(target_m.get("id", "monster")),
@@ -9914,9 +11635,23 @@ func attack_adjacent_monster(monster_id: String = "", weapon_id: String = "") ->
 	if cur_w_id == "dagger" and (dx > 1 or dy > 1):
 		hero["equipped_weapon"] = "fists"
 
+	record_transaction("ATTACK", str(hero.get("id", "")), str(hero.get("name", "Hero")), "%s attacked %s with %s (skulls: %d, shields: %d, wounds: %d, target HP: %d)" % [
+		hero.get("name"), target_m.get("name"), w_def.get("name", "weapon"), res.total_skulls, res.effective_shields, res.wounds, target_m.get("current_bp")
+	], {
+		"targetId": str(target_m.get("id", "")),
+		"targetName": str(target_m.get("name", "")),
+		"weapon": w_def.get("name", "weapon"),
+		"skulls": res.total_skulls,
+		"shields": res.effective_shields,
+		"wounds": res.wounds,
+		"targetBp": int(target_m.get("current_bp", 0)),
+		"isDefeated": int(target_m.get("current_bp", 0)) <= 0
+	})
 	_conclude_action_turn_state()
 
 	last_combat_result = res
+	if are_all_quest_objectives_completed() and not _quest_completed:
+		complete_active_quest(false)
 	_update_ui()
 	queue_redraw_all()
 	return { "success": true, "result": res, "target": target_m.get("id"), "remaining_bp": target_m.get("current_bp") }
@@ -10043,6 +11778,20 @@ func dm_attack_hero(hero_id: String = "", attacker_monster: Variant = null) -> D
 	res["attacker_name"] = monster.get("name")
 	res["target"] = target_h.get("id")
 	res["target_name"] = target_h.get("name")
+
+	record_transaction("MONSTER_ATTACK", str(monster.get("id", "")), str(monster.get("name", "Monster")), "%s attacked %s (skulls: %d, shields: %d, wounds: %d, target HP: %d)" % [
+		monster.get("name"), target_h.get("name"), res.total_skulls, res.effective_shields, res.wounds, target_h.get("current_bp")
+	], {
+		"monsterId": str(monster.get("id", "")),
+		"monsterName": str(monster.get("name", "")),
+		"targetHeroId": str(target_h.get("id", "")),
+		"targetHeroName": str(target_h.get("name", "")),
+		"skulls": res.total_skulls,
+		"shields": res.effective_shields,
+		"wounds": res.wounds,
+		"targetBp": int(target_h.get("current_bp", 0)),
+		"isDefeated": int(target_h.get("current_bp", 0)) <= 0
+	})
 
 	last_combat_result = res
 	_update_ui()
@@ -10416,6 +12165,14 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 	res["used_spells"] = hero.get("used_spells", []).duplicate()
 	res["available_spells"] = _get_available_spells(hero)
 
+	record_transaction("SPELL_CAST", str(hero.get("id", "")), str(hero.get("name", "Hero")), "%s cast spell '%s' (target: %s)" % [
+		hero.get("name"), spell_name, target_id
+	], {
+		"spellId": s_id,
+		"spellName": spell_name,
+		"targetId": target_id,
+		"result": res
+	})
 	_conclude_action_turn_state()
 
 	last_spell_result = res
@@ -10428,10 +12185,13 @@ func _find_spell_target_monster(target_id: String, from_pos: Vector2i) -> Dictio
 		if m.get("is_alive", false):
 			var mid = str(m.get("id", ""))
 			var mslug = str(m.get("slug", ""))
+			var mp = _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
 			if target_id != "" and (mid == target_id or mslug == target_id or mid.ends_with(target_id) or target_id.ends_with(mid)):
-				return m
+				if has_line_of_sight(from_pos, mp):
+					return m
+				else:
+					return {}
 			elif target_id == "":
-				var mp = m.get("grid_pos", Vector2i(-1, -1))
 				if has_line_of_sight(from_pos, mp):
 					return m
 	return {}
@@ -10454,6 +12214,9 @@ func close_all_dialogs() -> void:
 	close_armory()
 	close_treasure_modal()
 	close_elf_spell_selection_modal()
+	if restart_confirm_modal and restart_confirm_modal.visible:
+		restart_confirm_modal.visible = false
+		_pending_restart_callback = Callable()
 	if ai_confirm_modal and ai_confirm_modal.visible:
 		ai_confirm_modal.visible = false
 	if not active_story_trigger_overlay.is_empty():
@@ -11453,9 +13216,20 @@ func _find_untriggered_story_trigger(condition: String, room_id: String, tile: V
 		if st.get("triggered", false) and st.get("onceOnly", true):
 			continue
 		var cond = str(st.get("condition", ""))
-		if cond != condition:
+		var ev = str(st.get("event", ""))
+		var matches_cond = (cond == condition)
+		if not matches_cond and ev != "":
+			if condition == "search_treasure" and ev == "on_room_searched_treasure":
+				matches_cond = true
+			elif condition == "search_traps" and ev == "on_room_searched_traps":
+				matches_cond = true
+			elif condition == "line_of_sight" and (ev == "on_door_opened" or ev == "on_room_entered"):
+				matches_cond = true
+			elif condition == "enter_room" and ev == "on_room_entered":
+				matches_cond = true
+		if not matches_cond:
 			continue
-		var st_room = str(st.get("room", ""))
+		var st_room = str(st.get("room", st.get("target", "")))
 		var st_tile = st.get("tile", [])
 		var has_tile = (st_tile is Array and st_tile.size() >= 2)
 		var matches_room = (st_room != "" and st_room == room_id)
@@ -11481,11 +13255,13 @@ func _find_ground_story_trigger(step_tile: Vector2i, prev_tile: Vector2i = Vecto
 		if st.get("triggered", false) and st.get("onceOnly", true):
 			continue
 		var cond = str(st.get("condition", ""))
+		var ev = str(st.get("event", ""))
 		# Ground triggers exclude purely interactive/action-based triggers:
-		if cond in ["search_treasure", "search_traps", "line_of_sight", "dialogue", "combat", "interact"]:
+		if cond in ["search_treasure", "search_traps", "line_of_sight", "dialogue", "combat", "interact"] or ev in ["on_room_searched_treasure", "on_room_searched_traps", "on_door_opened", "on_monster_killed", "on_game_start", "on_game_end"]:
 			continue
 
-		var st_room = str(st.get("room", ""))
+		var st_room = str(st.get("room", st.get("target", "")))
+
 		var st_tile = st.get("tile", [])
 		var has_tile = (st_tile is Array and st_tile.size() >= 2)
 		var target_tile = Vector2i(-1, -1)
@@ -11506,52 +13282,210 @@ func _find_ground_story_trigger(step_tile: Vector2i, prev_tile: Vector2i = Vecto
 					return st
 	return {}
 
-func _setup_story_trigger_overlay(trigger: Dictionary, hero: Dictionary) -> void:
+func _setup_modal_message_dialog(title: String, text: String, btn_text: String = "Continue") -> void:
 	active_story_trigger_overlay = {
-		"trigger": trigger,
-		"hero": hero,
-		"hero_id": str(hero.get("id", "")),
-		"hero_name": str(hero.get("characterName", hero.get("name", "Hero"))),
-		"marker": str(trigger.get("marker", "A")),
-		"title": str(trigger.get("title", "Story Event")),
-		"banner": str(trigger.get("banner", "QUEST NOTE [%s]" % str(trigger.get("marker", "A")))),
-		"narrative": str(trigger.get("narrative", "")),
-		"consequence": str(trigger.get("consequence", "")),
-		"gold": int(trigger.get("gold", 0)),
-		"item": trigger.get("item", null),
-		"spawnMonsters": trigger.get("spawnMonsters", []),
+		"marker": "📜",
+		"title": title,
+		"banner": "MESSAGE FROM THE REALM",
+		"narrative": text,
 		"waitingForClick": true,
-		"onTopOfDice": true
+		"onTopOfDice": true,
+		"buttonText": btn_text
 	}
-	_log("[STORY TRIGGER %s] 📜 Zargon reads Quest Note: '%s'!" % [
-		active_story_trigger_overlay.marker,
-		active_story_trigger_overlay.title
-	])
-	var movie_url = str(trigger.get("movie", trigger.get("cinematic", "")))
-	if movie_url != "":
-		play_movie(movie_url, "🎬 %s: %s" % [trigger.get("marker", "Note"), trigger.get("title", "Cinematic Scene")], true, true)
 	queue_redraw_all()
 
-func resolve_story_trigger_overlay_click() -> Dictionary:
-	if active_story_trigger_overlay.is_empty():
-		return { "success": false, "error": "No active story trigger overlay" }
+func _resolve_speaker_display_name(speaker_raw: String) -> String:
+	var s_low = speaker_raw.to_lower().strip_edges()
+	match s_low:
+		"barbarian", "rogar":
+			return "Rogar (Barbarian)"
+		"dwarf", "dorgan":
+			return "Dorgan (Dwarf)"
+		"elf":
+			return "Elf"
+		"wizard", "telor":
+			return "Telor (Wizard)"
+		"mentor":
+			return "Mentor"
+		"zargon", "morcar":
+			return "Zargon, Master of Darkness"
+		"monster", "enemy", "foe":
+			return "Chamber Foe"
+		"narrator":
+			return "Narrator"
+		_:
+			for h in heroes:
+				if str(h.get("id")).to_lower() == s_low or str(h.get("name")).to_lower() == s_low:
+					return str(h.get("name", speaker_raw.capitalize()))
+			# 1. Exact match on monsters
+			for m in monsters:
+				var mid = str(m.get("id")).to_lower()
+				var mname = str(m.get("name", "")).to_lower()
+				if mid == s_low or mname == s_low:
+					return str(m.get("name", speaker_raw))
+			# 2. Exact match on furniture
+			for f in furniture:
+				var fid = str(f.get("id", "")).to_lower()
+				var fname = str(f.get("name", "")).to_lower()
+				if fid == s_low or fname == s_low:
+					return str(f.get("name", speaker_raw))
+			# 3. Substring match on monsters
+			for m in monsters:
+				var mname = str(m.get("name", "")).to_lower()
+				var mtype = str(m.get("monsterType")).to_lower()
+				if mtype == s_low or (s_low != "" and s_low in mname):
+					return str(m.get("name", speaker_raw))
+			# 4. Substring match on furniture
+			for f in furniture:
+				var fname = str(f.get("name", "")).to_lower()
+				if s_low != "" and s_low in fname:
+					return str(f.get("name", speaker_raw))
+			return speaker_raw
 
-	var overlay = active_story_trigger_overlay.duplicate(true)
-	active_story_trigger_overlay = {}
-
-	var trigger = overlay.get("trigger", {})
-	var hero_id = str(overlay.get("hero_id", ""))
-	var hero: Dictionary = {}
+func _find_speaker_grid_pos(speaker_raw: String) -> Vector2i:
+	var s_low = speaker_raw.to_lower().strip_edges()
 	for h in heroes:
-		if str(h.get("id")) == hero_id:
-			hero = h
-			break
-	if hero.is_empty():
-		hero = get_active_hero()
+		if str(h.get("id")).to_lower() == s_low or str(h.get("name")).to_lower() == s_low or str(h.get("characterName", "")).to_lower() == s_low:
+			return _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
+		if s_low == "active_hero" and h == get_active_hero():
+			return _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
+	# 1. Exact match on monsters
+	for m in monsters:
+		var mid = str(m.get("id")).to_lower()
+		var mname = str(m.get("name", "")).to_lower()
+		var mslug = str(m.get("slug", "")).to_lower()
+		if mid == s_low or mname == s_low or mslug == s_low:
+			return _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
+	# 2. Exact match on furniture
+	for f in furniture:
+		var fid = str(f.get("id", "")).to_lower()
+		var fname = str(f.get("name", "")).to_lower()
+		if fid == s_low or fname == s_low:
+			var fx = int(f.get("x", f.get("position", [0, 0])[0]))
+			var fy = int(f.get("y", f.get("position", [0, 0])[1]))
+			return Vector2i(fx, fy)
+	# 3. Substring or type match on monsters
+	for m in monsters:
+		var mname = str(m.get("name", "")).to_lower()
+		var mtype = str(m.get("monsterType")).to_lower()
+		if mtype == s_low or (s_low != "" and s_low in mname):
+			return _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
+	if s_low in ["monster", "enemy", "foe"] and monsters.size() > 0:
+		for m in monsters:
+			if m.get("is_alive", true):
+				return _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
+	for f in furniture:
+		var fname = str(f.get("name", "")).to_lower()
+		if s_low != "" and s_low in fname:
+			var fx = int(f.get("x", f.get("position", [0, 0])[0]))
+			var fy = int(f.get("y", f.get("position", [0, 0])[1]))
+			return Vector2i(fx, fy)
+	return Vector2i(-1, -1)
 
+func _play_dialogue_audio(path: String) -> float:
+	if path == "":
+		return 0.0
+	if not voice_audio_player:
+		voice_audio_player = AudioStreamPlayer.new()
+		add_child(voice_audio_player)
+	var stream: AudioStream = null
+	if ResourceLoader.exists(path):
+		var res = load(path)
+		if res is AudioStream:
+			stream = res
+	if not stream and FileAccess.file_exists(path):
+		if path.ends_with(".ogg"):
+			stream = AudioStreamOggVorbis.load_from_file(path)
+		elif path.ends_with(".wav"):
+			var f = FileAccess.open(path, FileAccess.READ)
+			if f:
+				var wav = AudioStreamWAV.new()
+				wav.data = f.get_buffer(f.get_length())
+				f.close()
+				stream = wav
+	if stream:
+		voice_audio_player.stream = stream
+		voice_audio_player.play()
+		return stream.get_length()
+	return 0.0
+
+func _start_dialogue_sequence(lines: Array) -> void:
+	if lines.is_empty():
+		return
+	active_dialogue_sequence = {
+		"bubbles": lines.duplicate(true),
+		"index": 0,
+		"time": 0.0,
+		"duration": 4.5,
+		"active": true
+	}
+	_present_active_dialogue_bubble()
+
+func _present_active_dialogue_bubble() -> void:
+	if active_dialogue_sequence.is_empty() or not active_dialogue_sequence.get("active", false):
+		return
+	var bubbles: Array = active_dialogue_sequence.get("bubbles", [])
+	var idx: int = int(active_dialogue_sequence.get("index", 0))
+	if idx < 0 or idx >= bubbles.size():
+		active_dialogue_sequence.clear()
+		queue_redraw_all()
+		return
+
+	var bubble: Dictionary = bubbles[idx]
+	var speaker_raw: String = str(bubble.get("speaker", "barbarian")).strip_edges()
+	var text: String = str(bubble.get("text", ""))
+	var audio_path: String = str(bubble.get("audio", ""))
+
+	var speaker_disp = _resolve_speaker_display_name(speaker_raw)
+
+	# Show dialog in combat journal
+	_log("💬 [%s] \"%s\"" % [speaker_disp, text])
+
+	# Optional audio files backing
+	var audio_dur: float = 0.0
+	if audio_path != "":
+		audio_dur = _play_dialogue_audio(audio_path)
+
+	var fade_timeout = float(bubble.get("fade_timeout", bubble.get("timeout", 1.2)))
+	var total_dur = 4.5
+	if audio_dur > 0.0:
+		total_dur = audio_dur + fade_timeout
+	elif bubble.has("duration"):
+		total_dur = float(bubble["duration"])
+	elif bubble.has("timeout") and float(bubble["timeout"]) > 0:
+		total_dur = float(bubble["timeout"])
+
+	active_dialogue_sequence["speaker"] = speaker_raw
+	active_dialogue_sequence["speakerName"] = speaker_disp
+	active_dialogue_sequence["text"] = text
+	active_dialogue_sequence["audio"] = audio_path
+	active_dialogue_sequence["time"] = 0.0
+	active_dialogue_sequence["duration"] = total_dur
+	active_dialogue_sequence["fade_time"] = minf(fade_timeout, total_dur * 0.5)
+	active_dialogue_sequence["has_audio"] = (audio_dur > 0.0)
+	queue_redraw_all()
+
+func advance_dialogue_bubble() -> bool:
+	if active_dialogue_sequence.is_empty() or not active_dialogue_sequence.get("active", false):
+		return false
+	var bubbles: Array = active_dialogue_sequence.get("bubbles", [])
+	var idx: int = int(active_dialogue_sequence.get("index", 0)) + 1
+	if idx < bubbles.size():
+		active_dialogue_sequence["index"] = idx
+		_present_active_dialogue_bubble()
+		return true
+	else:
+		var rem_tr = active_dialogue_sequence.get("remaining_trigger", {})
+		var nxt_idx = int(active_dialogue_sequence.get("next_action_index", -1))
+		var rem_hero = active_dialogue_sequence.get("hero", {})
+		active_dialogue_sequence.clear()
+		queue_redraw_all()
+		if not rem_tr.is_empty() and nxt_idx >= 0:
+			_execute_trigger_actions(rem_tr, rem_hero, nxt_idx)
+		return false
+
+func _apply_trigger_rewards_and_spawns(trigger: Dictionary, hero: Dictionary) -> void:
 	var marker = str(trigger.get("marker", "A"))
-	var title = str(trigger.get("title", "Story Event"))
-	var narrative = str(trigger.get("narrative", ""))
 
 	# 1. Award Gold
 	var gold_val = int(trigger.get("gold", 0))
@@ -11594,15 +13528,420 @@ func resolve_story_trigger_overlay_click() -> Dictionary:
 			spawn_floating_text(m_pos, "AMBUSH!", Color(1.0, 0.15, 0.15), 2.2)
 			_log("[AMBUSH %s] ⚔️ A %s bursts into battle at (%d, %d)!" % [marker, m_copy.get("name", "Monster"), m_pos.x, m_pos.y])
 
+func _setup_story_trigger_overlay(trigger: Dictionary, hero: Dictionary) -> void:
+	var narrative = str(trigger.get("narrative", "")).strip_edges()
+	var actions = trigger.get("actions", [])
+
+	story_trigger_fired.emit(trigger)
+
+	# 1. Check if trigger has an associated cinematic movie (either on trigger or in actions)
+	var movie_url = str(trigger.get("movie", trigger.get("cinematic", "")))
+	if movie_url == "":
+		for act in actions:
+			if act is Dictionary and str(act.get("type", "")) == "play_movie":
+				movie_url = str(act.get("moviePath", act.get("movie", "")))
+				if movie_url != "":
+					break
+
+	# 2. If there is a cinematic movie, coordinate via events WITHOUT spawning a jarring blocking textbox!
+	if movie_url != "":
+		var movie_title = "🎬 %s: %s" % [trigger.get("marker", "Note"), trigger.get("title", "Cinematic Scene")]
+		var resolved = _resolve_movie_file_path(movie_url)
+
+		# If the movie is ALREADY currently playing (e.g. started by room reveal on door opening):
+		if is_movie_playing and (current_movie_path == resolved or current_movie_path == movie_url):
+			var prev_cb = pending_movie_callback
+			pending_movie_callback = func():
+				if prev_cb.is_valid():
+					prev_cb.call()
+				_on_story_trigger_movie_completed(trigger, hero)
+			return
+
+		# Otherwise, play the movie with completion event callback
+		var res = play_movie(movie_url, movie_title, true, true, func():
+			_on_story_trigger_movie_completed(trigger, hero)
+		)
+
+		# If already played or failed, run completion immediately
+		if not bool(res.get("success", false)) or not is_movie_playing:
+			_on_story_trigger_movie_completed(trigger, hero)
+		return
+
+	# 3. If no narrative and only actions, execute directly
+	if narrative == "" and actions.size() > 0:
+		_apply_trigger_rewards_and_spawns(trigger, hero)
+		_execute_trigger_actions(trigger, hero, 0)
+		story_trigger_completed.emit(trigger)
+		return
+
+	# 4. Non-cinematic narrative: present standard parchment card overlay
+	active_story_trigger_overlay = {
+		"trigger": trigger,
+		"hero": hero,
+		"hero_id": str(hero.get("id", "")),
+		"hero_name": str(hero.get("characterName", hero.get("name", "Hero"))),
+		"marker": str(trigger.get("marker", "A")),
+		"title": str(trigger.get("title", "Story Event")),
+		"banner": str(trigger.get("banner", "QUEST NOTE [%s]" % str(trigger.get("marker", "A")))),
+		"narrative": narrative,
+		"consequence": str(trigger.get("consequence", "")),
+		"gold": int(trigger.get("gold", 0)),
+		"item": trigger.get("item", null),
+		"spawnMonsters": trigger.get("spawnMonsters", []),
+		"waitingForClick": true,
+		"onTopOfDice": true
+	}
+	_log("[STORY TRIGGER %s] 📜 Zargon reads Quest Note: '%s'!" % [
+		active_story_trigger_overlay.marker,
+		active_story_trigger_overlay.title
+	])
+	queue_redraw_all()
+
+func _on_story_trigger_movie_completed(trigger: Dictionary, hero: Dictionary) -> void:
+	var marker = str(trigger.get("marker", "Note"))
+	var title = str(trigger.get("title", "Story Event"))
+	var narrative = str(trigger.get("narrative", "")).strip_edges()
+
+	if narrative != "":
+		_log("[QUEST NOTE %s] 📜 %s: %s" % [marker, title, narrative])
+		var hero_id = str(hero.get("id", "")) if not hero.is_empty() else ""
+		var hero_name = str(hero.get("name", "Hero")) if not hero.is_empty() else "Hero"
+		record_transaction("STORY_TRIGGER", hero_id, hero_name, "%s: %s" % [title, narrative])
+
+	var h_pos = _to_grid_pos(hero.get("grid_pos", Vector2i(0, 0))) if not hero.is_empty() else Vector2i(0, 0)
+	if title != "":
+		spawn_floating_text(h_pos, "📜 %s" % title, Color(1.0, 0.85, 0.3), 2.5)
+
+	_apply_trigger_rewards_and_spawns(trigger, hero)
+	_execute_trigger_actions(trigger, hero, 0)
+	story_trigger_completed.emit(trigger)
+
+	# Ensure board, vision, and UI are fully refreshed
+	update_party_vision()
+	_update_ui()
+	queue_redraw_all()
+	auto_play_timer = 0.0
+
+func resolve_story_trigger_overlay_click() -> Dictionary:
+	if active_story_trigger_overlay.is_empty():
+		return { "success": false, "error": "No active story trigger overlay" }
+
+	var overlay = active_story_trigger_overlay.duplicate(true)
+	active_story_trigger_overlay = {}
+
+	var hero_id = str(overlay.get("hero_id", ""))
+	var hero: Dictionary = {}
+	for h in heroes:
+		if str(h.get("id")) == hero_id:
+			hero = h
+			break
+	if hero.is_empty():
+		hero = get_active_hero()
+
+	if overlay.has("remaining_trigger"):
+		var rem_tr = overlay["remaining_trigger"]
+		var nxt_idx = int(overlay.get("next_action_index", 0))
+		_execute_trigger_actions(rem_tr, hero, nxt_idx)
+		story_trigger_completed.emit(rem_tr)
+		_update_ui()
+		queue_redraw_all()
+		return { "success": true, "trigger": rem_tr }
+
+	var trigger = overlay.get("trigger", {})
+	_apply_trigger_rewards_and_spawns(trigger, hero)
+	_execute_trigger_actions(trigger, hero, 0)
+
+	story_trigger_completed.emit(trigger)
 	_update_ui()
 	queue_redraw_all()
 	return {
 		"success": true,
 		"trigger": trigger,
-		"goldAwarded": gold_val,
-		"itemAwarded": item_data != null,
-		"monstersSpawned": spawns.size()
+		"goldAwarded": int(trigger.get("gold", 0)),
+		"itemAwarded": trigger.get("item", null) != null,
+		"monstersSpawned": (trigger.get("spawnMonsters", []) as Array).size() if trigger.get("spawnMonsters") is Array else 0
 	}
+
+func _execute_trigger_actions(trigger: Dictionary, hero: Dictionary, start_index: int = 0) -> void:
+	var actions = trigger.get("actions", [])
+	if not (actions is Array):
+		return
+
+	for act_idx in range(start_index, actions.size()):
+		var act = actions[act_idx]
+		if not (act is Dictionary):
+			continue
+		var act_type = str(act.get("type", ""))
+		match act_type:
+			"play_movie":
+				var movie_path = str(act.get("moviePath", act.get("movie", "")))
+				if movie_path != "":
+					var title = str(act.get("title", trigger.get("title", "Cinematic Scene")))
+					var can_skip = bool(act.get("canSkip", true))
+					var resolved = _resolve_movie_file_path(movie_path)
+					if is_movie_playing and (current_movie_path == resolved or current_movie_path == movie_path):
+						if act_idx + 1 < actions.size():
+							var prev_cb = pending_movie_callback
+							pending_movie_callback = func():
+								if prev_cb.is_valid():
+									prev_cb.call()
+								_execute_trigger_actions(trigger, hero, act_idx + 1)
+							return
+					elif played_movies.has(resolved) or played_movies.has(movie_path):
+						continue
+					else:
+						if act_idx + 1 < actions.size():
+							play_movie(movie_path, title, can_skip, true, func():
+								_execute_trigger_actions(trigger, hero, act_idx + 1)
+							)
+							return
+						else:
+							play_movie(movie_path, title, can_skip, true)
+			"attack_character":
+				var target_type = str(act.get("target", "active_hero"))
+				var attacker_name = str(act.get("attacker", "Hazard"))
+				var dmg_dice = int(act.get("damageDice", 2))
+				var dmg = int(act.get("damage", dmg_dice))
+				var targets: Array = [hero] if target_type == "active_hero" else heroes
+				for t_hero in targets:
+					if t_hero is Dictionary and int(t_hero.get("current_bp", 0)) > 0:
+						t_hero["current_bp"] = maxi(0, int(t_hero.get("current_bp", 1)) - dmg)
+						var th_pos = _to_grid_pos(t_hero.get("grid_pos", Vector2i(1, 1)))
+						spawn_floating_text(th_pos, "-%d HP %s" % [dmg, attacker_name.to_upper()], Color(1.0, 0.2, 0.2), 2.0)
+						_log("[ACTION] ⚔️ %s attacks %s for %d damage! (Remaining BP: %d)" % [attacker_name, t_hero.get("name", "Hero"), dmg, t_hero.get("current_bp")])
+			"cast_spell":
+				var spell_name = str(act.get("spell", "ball_of_flame"))
+				var caster_name = str(act.get("caster", "Morcar"))
+				var target_type = str(act.get("target", "active_hero"))
+				var targets: Array = [hero] if target_type == "active_hero" else heroes
+				for t_hero in targets:
+					if t_hero is Dictionary:
+						var th_pos = _to_grid_pos(t_hero.get("grid_pos", Vector2i(1, 1)))
+						var screen_pos = board_offset + Vector2((th_pos.x + 0.5) * tile_size, (th_pos.y + 0.5) * tile_size)
+						spawn_burst_vfx(screen_pos, Color(0.9, 0.4, 0.1), 60.0, 0.6)
+						spawn_floating_text(th_pos, "🪄 SPELL: %s" % spell_name.replace("_", " ").to_upper(), Color(0.9, 0.5, 1.0), 2.2)
+						_log("[ACTION] 🪄 %s casts '%s' upon %s!" % [caster_name, spell_name, t_hero.get("name", "Hero")])
+						if spell_name in ["ball_of_flame", "fire_of_wrath"]:
+							t_hero["current_bp"] = maxi(0, int(t_hero.get("current_bp", 1)) - 2)
+						elif spell_name == "sleep":
+							t_hero["is_sleeping"] = true
+						elif spell_name == "courage":
+							t_hero["courage_active"] = true
+						elif spell_name == "rock_skin":
+							t_hero["rock_skin_active"] = true
+			"spring_trap":
+				var trap_type = str(act.get("trapType", "pit")).to_lower()
+				var dmg = int(act.get("damage", 2))
+				var th_pos = _to_grid_pos(hero.get("grid_pos", Vector2i(1, 1)))
+				hero["current_bp"] = maxi(0, int(hero.get("current_bp", 1)) - dmg)
+				hero["hit_by_trap"] = true
+				spawn_floating_text(th_pos, "⚠️ TRAP: -%d BP" % dmg, Color(1.0, 0.3, 0.1), 2.0)
+				_log("[ACTION] ⚠️ A %s trap is sprung beneath %s, inflicting %d damage!" % [trap_type, hero.get("name", "Hero"), dmg])
+			"show_message", "display_message":
+				var msg_title = str(act.get("title", trigger.get("title", "Notice")))
+				var msg_text = str(act.get("text", act.get("narrative", act.get("message", ""))))
+				var btn_text = str(act.get("buttonText", "Continue"))
+				_log("[MESSAGE: %s] 📜 %s" % [msg_title, msg_text])
+				_setup_modal_message_dialog(msg_title, msg_text, btn_text)
+				if act_idx + 1 < actions.size():
+					active_story_trigger_overlay["remaining_trigger"] = trigger
+					active_story_trigger_overlay["next_action_index"] = act_idx + 1
+					active_story_trigger_overlay["hero"] = hero
+					return
+			"dialogue":
+				var lines: Array = []
+				if act.has("lines") and (act["lines"] is Array):
+					lines = act["lines"]
+				elif act.has("bubbles") and (act["bubbles"] is Array):
+					lines = act["bubbles"]
+				elif act.has("dialogue") and (act["dialogue"] is Array):
+					lines = act["dialogue"]
+				else:
+					var spk = str(act.get("speaker", "barbarian"))
+					var txt = str(act.get("text", act.get("line", "")))
+					var aud = str(act.get("audio", ""))
+					if txt != "":
+						lines.append({ "speaker": spk, "text": txt, "audio": aud })
+				if lines.size() > 0:
+					_start_dialogue_sequence(lines)
+					if act_idx + 1 < actions.size():
+						active_dialogue_sequence["remaining_trigger"] = trigger
+						active_dialogue_sequence["next_action_index"] = act_idx + 1
+						active_dialogue_sequence["hero"] = hero
+						return
+			"furniture_visible", "furniture_becomes_visible", "reveal_furniture":
+				var target_id = str(act.get("furnitureId", act.get("target", act.get("furnitureName", ""))))
+				var target_low = target_id.to_lower().strip_edges()
+				var found_furn: Dictionary = {}
+				for f in furniture:
+					var fid = str(f.get("id", "")).to_lower()
+					var fname = str(f.get("name", "")).to_lower()
+					if fid == target_low or fname == target_low or (target_low != "" and (target_low in fname or fname in target_low)):
+						found_furn = f
+						break
+				if not found_furn.is_empty():
+					found_furn["hidden"] = false
+					_rebuild_furniture_tile_map()
+					var fx = int(found_furn.get("x", found_furn.get("position", [0, 0])[0]))
+					var fy = int(found_furn.get("y", found_furn.get("position", [0, 0])[1]))
+					var dname = str(found_furn.get("name", found_furn.get("id", "Furniture")))
+					_log("[ACTION] ✨ Furniture '%s' is revealed at [%d, %d]!" % [dname, fx, fy])
+					spawn_floating_text(Vector2i(fx, fy), "✨ %s REVEALED" % dname.to_upper(), Color(0.2, 0.9, 1.0), 2.5)
+					spawn_burst_vfx(board_offset + Vector2((fx + 0.5) * tile_size, (fy + 0.5) * tile_size), Color(0.3, 0.8, 1.0), 60.0, 0.5)
+					update_party_vision()
+					_update_ui()
+					queue_redraw_all()
+			"move_furniture", "furniture_moves_to":
+				var target_id = str(act.get("furnitureId", act.get("target", act.get("furnitureName", ""))))
+				var target_low = target_id.to_lower().strip_edges()
+				var tile_target = act.get("tile", [act.get("x", 0), act.get("y", 0)])
+				var new_x = int(tile_target[0] if tile_target is Array and tile_target.size() > 0 else act.get("x", 0))
+				var new_y = int(tile_target[1] if tile_target is Array and tile_target.size() > 1 else act.get("y", 0))
+				var found_furn: Dictionary = {}
+				for f in furniture:
+					var fid = str(f.get("id", "")).to_lower()
+					var fname = str(f.get("name", "")).to_lower()
+					if fid == target_low or fname == target_low or (target_low != "" and (target_low in fname or fname in target_low)):
+						found_furn = f
+						break
+				if not found_furn.is_empty():
+					found_furn["x"] = new_x
+					found_furn["y"] = new_y
+					found_furn["position"] = [new_x, new_y]
+					_rebuild_furniture_tile_map()
+					var dname = str(found_furn.get("name", found_furn.get("id", "Furniture")))
+					var raw_msg = str(act.get("message", act.get("custom_message", act.get("customMessage", act.get("text", ""))))).strip_edges()
+					var display_msg = ""
+					if raw_msg != "":
+						display_msg = raw_msg.replace("{name}", dname).replace("{id}", str(found_furn.get("id", ""))).replace("{x}", str(new_x)).replace("{y}", str(new_y))
+						_log("[ACTION] 🪑 %s" % display_msg)
+						spawn_floating_text(Vector2i(new_x, new_y), display_msg, Color(1.0, 0.8, 0.2), 3.5)
+					else:
+						display_msg = "🪑 %s MOVED" % dname.to_upper()
+						_log("[ACTION] 🪑 Furniture '%s' moved to [%d, %d]!" % [dname, new_x, new_y])
+						spawn_floating_text(Vector2i(new_x, new_y), display_msg, Color(1.0, 0.8, 0.2), 2.5)
+					spawn_burst_vfx(board_offset + Vector2((new_x + 0.5) * tile_size, (new_y + 0.5) * tile_size), Color(1.0, 0.8, 0.2), 50.0, 0.5)
+					update_party_vision()
+					_update_ui()
+					queue_redraw_all()
+			"spawn_monsters":
+				var m_type = str(act.get("monsterType", "skeleton"))
+				var count = int(act.get("count", 1))
+				var r_id = str(act.get("roomId", trigger.get("room", "")))
+				var h_pos = _to_grid_pos(hero.get("grid_pos", Vector2i(1, 1)))
+				for i in range(count):
+					var new_m = {
+						"id": "spawn-%s-%d" % [m_type, randi() % 10000],
+						"name": m_type.capitalize(),
+						"monsterType": m_type,
+						"grid_pos": Vector2i(h_pos.x + 1 + i, h_pos.y),
+						"is_alive": true,
+						"current_bp": 2,
+						"bodyPoints": 2,
+						"attackDice": 2,
+						"defendDice": 2
+					}
+					if r_id != "":
+						new_m["roomId"] = r_id
+					monsters.append(new_m)
+					discovered_monster_ids[str(new_m["id"])] = true
+					_log("[ACTION] 👾 A %s appears at (%d, %d)!" % [new_m["name"], new_m["grid_pos"].x, new_m["grid_pos"].y])
+			"grant_reward":
+				var gold_amt = int(act.get("gold", 0))
+				var item_str = str(act.get("item", ""))
+				if gold_amt > 0:
+					hero["gold"] = int(hero.get("gold", 0)) + gold_amt
+					_log("[ACTION] 💰 %s was granted %d gold!" % [hero.get("name", "Hero"), gold_amt])
+				if item_str != "":
+					if not (hero.get("inventory", []) is Array):
+						hero["inventory"] = []
+					hero["inventory"].append(item_str)
+					_log("[ACTION] 🎁 %s received item: %s" % [hero.get("name", "Hero"), item_str])
+			"end_game":
+				var outcome = str(act.get("outcome", "victory"))
+				if outcome == "victory":
+					complete_active_quest()
+				else:
+					_log("💀 [GAME OVER] The quest has ended in defeat.")
+					is_game_closed = true
+
+func _check_event_triggers(event_name: String, context: Dictionary = {}, hero: Dictionary = {}) -> Array:
+	var triggered_list: Array = []
+	if hero.is_empty():
+		hero = get_active_hero()
+
+	var context_room = str(context.get("room", context.get("roomId", "")))
+	var context_tile = context.get("tile", Vector2i(-1, -1))
+	var context_door = str(context.get("doorId", ""))
+	var context_monster = str(context.get("monsterId", ""))
+
+	for st in story_triggers:
+		if st.get("triggered", false) and st.get("onceOnly", true):
+			continue
+
+		var trig_event = str(st.get("event", ""))
+		# Fallbacks for legacy cartridges:
+		if trig_event == "":
+			var cond = str(st.get("condition", ""))
+			if cond == "search_treasure":
+				trig_event = "on_room_searched_treasure"
+			elif cond == "search_traps":
+				trig_event = "on_room_searched_traps"
+			elif cond in ["enter_room", "line_of_sight"]:
+				trig_event = "on_room_entered"
+			elif st.has("room") and str(st.get("room", "")) != "":
+				trig_event = "on_room_entered"
+			else:
+				trig_event = "on_tile_stepped_on"
+
+		if trig_event != event_name:
+			continue
+
+		# Check target match based on event
+		var matches = false
+		match event_name:
+			"on_game_start", "on_game_end":
+				matches = true
+			"on_room_entered", "on_room_searched_treasure", "on_room_searched_traps":
+				var st_room = str(st.get("room", st.get("target", "")))
+				if st_room == "" or context_room == "" or st_room == context_room:
+					matches = true
+			"on_tile_stepped_on":
+				var st_tile = st.get("tile", [])
+				if st_tile is Array and st_tile.size() >= 2:
+					var target_v = Vector2i(int(st_tile[0]), int(st_tile[1]))
+					if target_v == context_tile:
+						matches = true
+				elif st.has("x") and st.has("y"):
+					var target_v = Vector2i(int(st.get("x")), int(st.get("y")))
+					if target_v == context_tile:
+						matches = true
+			"on_door_opened":
+				var st_door = str(st.get("doorId", st.get("target", "")))
+				var st_room = str(st.get("room", ""))
+				if st_door != "" and st_door == context_door:
+					matches = true
+				elif st_door == "" and st_room != "" and context_room == st_room:
+					matches = true
+				elif st_door == "" and st_room == "":
+					matches = true
+			"on_monster_killed":
+				var st_mon = str(st.get("monsterId", st.get("target", "")))
+				var st_type = str(st.get("monsterType", ""))
+				var ctx_type = str(context.get("monsterType", ""))
+				if st_mon != "" and st_mon == context_monster:
+					matches = true
+				elif st_type != "" and st_type == ctx_type:
+					matches = true
+				elif st_mon == "" and st_type == "":
+					matches = true
+
+		if matches:
+			st["triggered"] = true
+			_setup_story_trigger_overlay(st, hero)
+			triggered_list.append(st)
+
+	return triggered_list
 
 func _on_btn_search_pressed() -> void:
 	search_room(true)
@@ -11762,6 +14101,14 @@ func search_room(is_interactive: bool = false) -> Dictionary:
 			hero.get("name"), h_room.get("name", r_id), tr_title, found_gold, hero.get("gold")
 		])
 		spawn_floating_text(h_pos, "+%d GOLD QUEST TREASURE" % found_gold if found_gold > 0 else "QUEST TREASURE!", Color(1.0, 0.85, 0.2), 2.0)
+		record_transaction("SEARCH_ROOM", hero_id, str(hero.get("name", "Hero")), "%s searched room %s: found quest treasure '%s' (%d gold)" % [
+			hero.get("name"), r_id, tr_title, found_gold
+		], {
+			"roomId": r_id,
+			"questTreasure": true,
+			"gold": found_gold,
+			"title": tr_title
+		})
 
 		if is_interactive:
 			_setup_treasure_card_overlay(spec_tr, hero, true)
@@ -11873,6 +14220,15 @@ func search_room(is_interactive: bool = false) -> Dictionary:
 			])
 			spawn_floating_text(wm_pos, "⚠️ WANDERING %s!" % str(spawned_wm.get("name")).to_upper(), Color(1.0, 0.25, 0.2), 2.0)
 
+	record_transaction("SEARCH_ROOM", hero_id, str(hero.get("name", "Hero")), "%s searched room %s: drew treasure card '%s' (%s)" % [
+		hero.get("name"), r_id, str(card.get("title", "Treasure")), card_type
+	], {
+		"roomId": r_id,
+		"cardType": card_type,
+		"cardTitle": str(card.get("title", "")),
+		"gold": found_gold
+	})
+
 	if is_interactive:
 		_setup_treasure_card_overlay(card, hero, false)
 		_conclude_action_turn_state()
@@ -11957,6 +14313,7 @@ func search_traps() -> Dictionary:
 
 	if not h_room.is_empty():
 		var r_id = str(h_room.get("id", ""))
+		searched_secret_rooms[r_id] = true
 		for tr in traps:
 			var is_known = bool(tr.get("detected", false) or tr.get("is_revealed", false) or tr.get("sprung", false) or tr.get("is_sprung", false) or tr.get("disarmed", false) or tr.get("spent", false) or tr.get("blocked", false))
 			if is_known:
@@ -11984,6 +14341,11 @@ func search_traps() -> Dictionary:
 					var reveal_pos = f_pos if r1_id == r_id else t_pos
 					spawn_floating_text(reveal_pos, "🚪 SECRET DOOR DISCOVERED", Color(0.9, 0.7, 1.0), 1.8)
 	else:
+		var vis_corridor_tiles = get_visible_corridor_tiles(h_pos)
+		for tile in vis_corridor_tiles:
+			searched_secret_corridor_tiles[tile] = true
+		searched_secret_corridor_tiles[h_pos] = true
+
 		for tr in traps:
 			var is_known = bool(tr.get("detected", false) or tr.get("is_revealed", false) or tr.get("sprung", false) or tr.get("is_sprung", false) or tr.get("disarmed", false) or tr.get("spent", false) or tr.get("blocked", false))
 			if is_known:
@@ -11991,7 +14353,7 @@ func search_traps() -> Dictionary:
 			var tx = int(tr.get("x", tr.get("position", [0, 0])[0]))
 			var ty = int(tr.get("y", tr.get("position", [0, 0])[1]))
 			var t_pos = Vector2i(tx, ty)
-			if abs(t_pos.x - h_pos.x) + abs(t_pos.y - h_pos.y) <= 4:
+			if (abs(t_pos.x - h_pos.x) + abs(t_pos.y - h_pos.y) <= 8 or searched_secret_corridor_tiles.has(t_pos)) and has_line_of_sight(h_pos, t_pos):
 				tr["detected"] = true
 				found_traps.append(str(tr.get("id", "trap")))
 				spawn_floating_text(t_pos, "⚠️ TRAP DISCOVERED", Color(1.0, 0.8, 0.2), 1.6)
@@ -12006,12 +14368,12 @@ func search_traps() -> Dictionary:
 				var min_dist = 999
 				if _get_room_at(f_pos).is_empty():
 					var df = abs(f_pos.x - h_pos.x) + abs(f_pos.y - h_pos.y)
-					if df <= 4 and has_line_of_sight(h_pos, f_pos):
+					if (df <= 8 or searched_secret_corridor_tiles.has(f_pos)) and has_line_of_sight(h_pos, f_pos):
 						corridor_pos = f_pos
 						min_dist = df
 				if _get_room_at(t_pos).is_empty():
 					var dt = abs(t_pos.x - h_pos.x) + abs(t_pos.y - h_pos.y)
-					if dt <= 4 and has_line_of_sight(h_pos, t_pos) and dt < min_dist:
+					if (dt <= 8 or searched_secret_corridor_tiles.has(t_pos)) and has_line_of_sight(h_pos, t_pos) and dt < min_dist:
 						corridor_pos = t_pos
 						min_dist = dt
 				if corridor_pos != Vector2i(-1, -1):
@@ -12020,7 +14382,32 @@ func search_traps() -> Dictionary:
 					found_secret_doors.append(s_id)
 					spawn_floating_text(corridor_pos, "🚪 SECRET DOOR DISCOVERED", Color(0.9, 0.7, 1.0), 1.8)
 
+	var r_id = str(h_room.get("id", "")) if not h_room.is_empty() else ""
+	_check_event_triggers("on_room_searched_traps", { "room": r_id, "tile": h_pos }, hero)
+
 	_conclude_action_turn_state()
+
+	if found_secret_doors.size() > 0:
+		record_transaction("SEARCH_SECRETS", str(hero.get("id", "")), str(hero.get("name", "Hero")), "%s searched carefully and discovered %d secret passageway(s) (%s)!" % [
+			hero.get("name"), found_secret_doors.size(), ", ".join(found_secret_doors)
+		], {
+			"room": r_id,
+			"tile": [h_pos.x, h_pos.y],
+			"secret_doors": found_secret_doors
+		})
+	elif found_traps.size() > 0:
+		record_transaction("SEARCH_TRAPS", str(hero.get("id", "")), str(hero.get("name", "Hero")), "%s searched carefully and detected %d trap(s) (%s)!" % [
+			hero.get("name"), found_traps.size(), ", ".join(found_traps)
+		], {
+			"room": r_id,
+			"tile": [h_pos.x, h_pos.y],
+			"traps": found_traps
+		})
+	else:
+		record_transaction("SEARCH_TRAPS", str(hero.get("id", "")), str(hero.get("name", "Hero")), "%s searched carefully for traps and secret passageways (none found)." % hero.get("name"), {
+			"room": r_id,
+			"tile": [h_pos.x, h_pos.y]
+		})
 
 	if found_traps.size() > 0 or found_secret_doors.size() > 0:
 		_log("[SEARCH] %s searches carefully for traps and secret doors: Found %d hidden trap(s) and %d secret door(s)!" % [
@@ -12111,12 +14498,17 @@ func _check_hero_enter_board(idx: int) -> void:
 
 func end_turn() -> void:
 	quest_begun = true
+	ai_turn_waiting_for_input = false
+	auto_advance_timer = 0.0
+	var cur_hero = get_active_hero()
+	var ending_phase = current_phase
+	var ending_actor = str(cur_hero.get("name", "Hero")) if ending_phase == "hero_phase" else "Zargon GM"
+	var ending_id = str(cur_hero.get("id", "hero")) if ending_phase == "hero_phase" else "zargon"
 	if not pending_flash_item.is_empty():
 		var p = pending_flash_item.duplicate(true)
 		pending_flash_item = {}
 		trigger_flash_new_item(p)
 	if current_phase == "hero_phase":
-		var cur_hero = get_active_hero()
 		if cur_hero.size() > 0:
 			if has_moved_this_turn or has_acted_this_turn:
 				cur_hero["has_departed_start"] = true
@@ -12159,6 +14551,15 @@ func end_turn() -> void:
 			_log("--- Round %d begins (Heroes Turn) ---" % current_round)
 			_log("Active hero: %s" % get_active_hero().get("name", "Hero"))
 			_check_hero_enter_board(active_hero_idx)
+
+	record_transaction("END_TURN", ending_id, ending_actor, "Concluded turn for %s. Active phase: %s, round: %d" % [
+		ending_actor, current_phase, current_round
+	], {
+		"prevPhase": ending_phase,
+		"phase": current_phase,
+		"round": current_round,
+		"activeHeroIdx": active_hero_idx
+	})
 
 	movement_remaining = 0
 	movement_rolled = false
@@ -13063,6 +15464,8 @@ func _execute_single_monster_action(m: Dictionary) -> int:
 	return acts
 
 func _process_enemy_turn(delta: float) -> void:
+	if is_movie_playing:
+		return
 	if not is_enemy_turn_waiting or active_enemy_turn_monster_id == "":
 		return
 
@@ -13498,6 +15901,11 @@ func _update_ui() -> void:
 			btn_wandering_monster.disabled = false
 			btn_wandering_monster.text = "Show Wondering Monster"
 			_update_action_tile(btn_wandering_monster, "wandering_monster", 0, "👹 Show Wondering Monster", "Inspect the current quest's Wandering Monster card and ambush profile [W].")
+		if btn_quest_objectives:
+			btn_quest_objectives.visible = true
+			btn_quest_objectives.disabled = false
+			btn_quest_objectives.text = "Objectives"
+			_update_action_tile(btn_quest_objectives, "search", 0, "📜 Quest Objectives [O]", "Review Mentor's briefing, victory directives, and imperial bounty [O].", Color(0.92, 0.75, 0.22, 0.95))
 		if btn_end_turn:
 			btn_end_turn.visible = true
 			btn_end_turn.disabled = false
@@ -13530,6 +15938,11 @@ func _update_ui() -> void:
 			btn_wandering_monster.disabled = false
 			btn_wandering_monster.text = "Show Wondering Monster"
 			_update_action_tile(btn_wandering_monster, "wandering_monster", 0, "👹 Show Wondering Monster", "Inspect the current quest's Wandering Monster card and ambush profile [W].")
+		if btn_quest_objectives:
+			btn_quest_objectives.visible = true
+			btn_quest_objectives.disabled = false
+			btn_quest_objectives.text = "Objectives"
+			_update_action_tile(btn_quest_objectives, "search", 0, "📜 Quest Objectives [O]", "Review Mentor's briefing, victory directives, and imperial bounty [O].", Color(0.92, 0.75, 0.22, 0.95))
 		if btn_end_turn:
 			btn_end_turn.visible = false
 		if dice_label:
@@ -13545,6 +15958,13 @@ func _update_ui() -> void:
 			btn_wandering_monster.disabled = false
 			btn_wandering_monster.text = "Show Wondering Monster"
 			_update_action_tile(btn_wandering_monster, "wandering_monster", 0, "👹 Show Wondering Monster", "Inspect the current quest's Wandering Monster card and ambush profile [W].")
+
+		# Quest Objectives Action Button
+		if btn_quest_objectives:
+			btn_quest_objectives.visible = true
+			btn_quest_objectives.disabled = false
+			btn_quest_objectives.text = "Objectives"
+			_update_action_tile(btn_quest_objectives, "search", 0, "📜 Quest Objectives [O]", "Review Mentor's briefing, victory directives, and imperial bounty [O].", Color(0.92, 0.75, 0.22, 0.95))
 
 		# Armory Equipment Action Button
 		if btn_armory:
@@ -13721,9 +16141,9 @@ func _update_ui() -> void:
 				btn_end_turn.text = "End Turn"
 				_update_action_tile(btn_end_turn, "end_turn", 0, "⏭️ End Turn", "Conclude current hero's turn and pass initiative.")
 
-		# AI Step button
+		# AI Step button - kept off main toolbar, accessible via AI Engine Options modal
 		if btn_ai_step:
-			_update_action_tile(btn_ai_step, "ai_step", 0, "🤖 AI Step (Autonomous Agent)", "Execute next step planned by autonomous AI agent.")
+			btn_ai_step.visible = false
 
 		default_guidance_text = dice_label.text if dice_label else ""
 		_update_scroll_buttons_visibility()
@@ -13836,6 +16256,27 @@ func _update_turn_overlay() -> void:
 	if not turn_overlay_btn:
 		return
 
+	if _quest_completed:
+		turn_overlay_mode = "quest_complete_prompt"
+		turn_overlay_btn.visible = true
+		turn_overlay_btn.text = "QUEST COMPLETE — VICTORY! (Click for Summary)"
+		turn_overlay_btn.reset_size()
+		turn_overlay_btn.position.x = 707.0 - turn_overlay_btn.size.x * 0.5
+		if flashy_number_panel:
+			flashy_number_panel.visible = false
+		return
+
+	var living_heroes = heroes.filter(func(h): return int(h.get("current_bp", 0)) > 0 and bool(h.get("is_on_board", false)))
+	if living_heroes.is_empty() and heroes.size() > 0 and not is_game_closed:
+		turn_overlay_mode = "quest_defeat_prompt"
+		turn_overlay_btn.visible = true
+		turn_overlay_btn.text = "QUEST FAILED — ALL HEROES SLAIN (Click for Summary)"
+		turn_overlay_btn.reset_size()
+		turn_overlay_btn.position.x = 707.0 - turn_overlay_btn.size.x * 0.5
+		if flashy_number_panel:
+			flashy_number_panel.visible = false
+		return
+
 	if current_phase != "hero_phase":
 		turn_overlay_btn.visible = false
 		turn_overlay_mode = "none"
@@ -13886,7 +16327,11 @@ func _update_turn_overlay() -> void:
 	turn_overlay_mode = "none"
 
 func _on_turn_overlay_pressed() -> void:
-	if turn_overlay_mode == "roll_prompt":
+	if turn_overlay_mode == "quest_complete_prompt":
+		open_quest_complete_modal(true)
+	elif turn_overlay_mode == "quest_defeat_prompt":
+		open_quest_complete_modal(false)
+	elif turn_overlay_mode == "roll_prompt":
 		roll_movement_dice()
 	elif turn_overlay_mode == "turn_complete":
 		end_turn()
@@ -17029,7 +19474,14 @@ func get_telemetry_state() -> Dictionary:
 				"visible": get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective").visible if get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective") else false,
 				"text": get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective").text if get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective") else "",
 				"tooltip": get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective").tooltip_text if get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective") else ""
-			} if get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective") else {}
+			} if get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective") else {},
+			"quest_objectives": {
+				"visible": btn_quest_objectives.visible if btn_quest_objectives else (get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective").visible if get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective") else false),
+				"disabled": btn_quest_objectives.disabled if btn_quest_objectives else false,
+				"text": btn_quest_objectives.text if btn_quest_objectives else "Objectives",
+				"tooltip": btn_quest_objectives.tooltip_text if btn_quest_objectives else "Quest Objectives [O]",
+				"icon": "action_search"
+			} if (btn_quest_objectives != null or get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective") != null) else {}
 		},
 		"headerButtons": (get_node_or_null("UI/SidebarHeader").get_children().map(func(c): return c.name) if get_node_or_null("UI/SidebarHeader") else []),
 		"hotbar": {
@@ -17038,7 +19490,9 @@ func get_telemetry_state() -> Dictionary:
 			"overflow": (btn_scroll_right.visible or btn_scroll_left.visible) if (btn_scroll_right and btn_scroll_left) else false
 		},
 		"modal": {
+			"questObjectiveModalVisible": is_quest_objective_open(),
 			"gameMenuModalVisible": is_game_menu_open(),
+			"restartConfirmModalVisible": is_restart_confirm_open(),
 			"aiConfirmModalVisible": ai_confirm_modal.visible if ai_confirm_modal else false,
 			"elfSpellSelectModalVisible": elf_spell_modal.visible if elf_spell_modal else false,
 			"armoryModalVisible": armory_modal.visible if armory_modal else false,
@@ -17156,10 +19610,19 @@ func get_telemetry_state() -> Dictionary:
 			"tooltip": btn_map_end_turn.tooltip_text if btn_map_end_turn else ""
 		},
 		"startingStair": [starting_stair.x, starting_stair.y],
+		"startingStairType": starting_stair_type,
+		"exitStair": [exit_stair.x, exit_stair.y] if exit_stair != Vector2i(-1, -1) else null,
+		"exitTile": [exit_stair.x, exit_stair.y] if exit_stair != Vector2i(-1, -1) else null,
+		"exitStairType": exit_stair_type,
 		"gameMenuVisible": is_game_menu_open(),
 		"isGameMenuOpen": is_game_menu_open(),
+		"restartConfirmModalVisible": is_restart_confirm_open(),
+		"restartConfirmModalOpen": is_restart_confirm_open(),
+		"isRestartConfirmOpen": is_restart_confirm_open(),
 		"questObjectiveModalOpen": is_quest_objective_open(),
 		"isQuestObjectiveOpen": is_quest_objective_open(),
+		"questCompleteModalOpen": is_quest_complete_modal_open(),
+		"isQuestCompleteModalOpen": is_quest_complete_modal_open(),
 		"wanderingMonsterCardOpen": is_wandering_monster_modal_open(),
 		"isWanderingMonsterCardOpen": is_wandering_monster_modal_open(),
 		"wanderingMonsterCardModalOpen": is_wandering_monster_modal_open(),
@@ -17171,16 +19634,27 @@ func get_telemetry_state() -> Dictionary:
 		"isGameClosed": is_game_closed,
 		"isQuestCompleted": _quest_completed,
 		"questObjectivesHUD": {
-			"visible": quest_objectives_hud.visible if quest_objectives_hud else false,
+			"visible": quest_objectives_hud != null and (quest_objectives_hud.visible or btn_quest_objectives != null),
+			"hudPanelVisible": quest_objectives_hud.visible if quest_objectives_hud else false,
 			"collapsed": is_quest_hud_collapsed,
 			"hasCompleteQuestButton": (btn_hud_complete_quest != null and btn_hud_complete_quest.visible),
-			"objectivesCount": get_quest_objectives().size()
+			"objectivesCount": get_quest_objectives().size(),
+			"hasToolbarButton": btn_quest_objectives != null
 		},
 		"hasSaveGame": has_saved_game(),
 		"saveFilePath": get_save_file_path(),
 		"isDemoActive": CartridgeManager.auto_play_enabled,
 		"autoPlayEnabled": CartridgeManager.auto_play_enabled,
 		"autoPlayStep": auto_play_step,
+		"aiPlayForYou": ai_play_for_you,
+		"autoAdvanceTurn": auto_advance_turn,
+		"isAIOptionsModalOpen": is_ai_options_modal_open(),
+		"aiEngineOptions": {
+			"aiPlayForYou": ai_play_for_you,
+			"autoAdvanceTurn": auto_advance_turn,
+			"isModalOpen": is_ai_options_modal_open(),
+			"aiTurnWaitingForInput": ai_turn_waiting_for_input
+		},
 		"difficultyMode": difficulty_mode,
 		"difficulty_mode": difficulty_mode,
 		"isHardMode": difficulty_mode == "hard",
@@ -17227,6 +19701,7 @@ func get_telemetry_state() -> Dictionary:
 		"reachableWalkTiles": (get_reachable_walk_tiles().map(func(v): return [v.x, v.y])),
 		"storyTriggers": story_triggers,
 		"activeStoryTrigger": active_story_trigger_overlay,
+		"activeDialogue": active_dialogue_sequence,
 		"movie": get_movie_state(),
 		"activeEnemyTurnMonsterId": active_enemy_turn_monster_id,
 		"isEnemyTurnWaiting": is_enemy_turn_waiting,
@@ -17264,6 +19739,9 @@ func get_telemetry_state() -> Dictionary:
 		"combatLog": combat_log.slice(-15),
 		"recentCombatLog": combat_log.slice(-50),
 		"fullCombatLog": combat_log,
+		"transactionLog": transaction_log,
+		"transactionCount": transaction_log.size(),
+		"verboseCombatLog": verbose_combat_log,
 		"aiStepPending": is_ai_step_pending,
 		"pendingAiCommand": pending_ai_command,
 		"nextAiStep": get_next_ai_step_command(),
@@ -17338,6 +19816,8 @@ func get_telemetry_state() -> Dictionary:
 			"heroId": pending_flash_item.get("hero_id", "")
 		} if not pending_flash_item.is_empty() else {},
 		"searchedRooms": searched_rooms,
+		"searchedSecretRooms": searched_secret_rooms,
+		"searchedSecretCorridorTiles": searched_secret_corridor_tiles.keys().map(func(v): return [v.x, v.y] if v is Vector2i else v),
 		"roomSpecialTreasureCollected": room_special_treasure_collected,
 		"lastTreasureCard": last_treasure_card,
 		"treasureDeckCount": treasure_deck.size(),
@@ -17565,10 +20045,74 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				"isMouseOverBoard": false,
 				"isShowingReachableIndicators": false
 			}
-		"click_story_trigger", "resolve_story_trigger", "dismiss_story_trigger":
+		"click_story_trigger", "resolve_story_trigger", "dismiss_story_trigger", "dismiss_message", "confirm_message", "click_message_dialog":
 			if not active_story_trigger_overlay.is_empty():
 				return resolve_story_trigger_overlay_click()
 			return { "success": false, "error": "No active story trigger overlay" }
+		"advance_dialogue", "dismiss_dialogue", "click_dialogue":
+			if not active_dialogue_sequence.is_empty() and active_dialogue_sequence.get("active", false):
+				var has_more = advance_dialogue_bubble()
+				return {
+					"success": true,
+					"hasMore": has_more,
+					"active": not active_dialogue_sequence.is_empty(),
+					"dialogue": active_dialogue_sequence
+				}
+			return { "success": false, "error": "No active dialogue sequence" }
+		"get_dialogue_state":
+			return {
+				"success": true,
+				"dialogue": active_dialogue_sequence
+			}
+		"start_dialogue":
+			var lines = action_data.get("lines", action_data.get("bubbles", []))
+			if lines is Array and lines.size() > 0:
+				_start_dialogue_sequence(lines)
+				return { "success": true, "dialogue": active_dialogue_sequence }
+			return { "success": false, "error": "No lines provided" }
+		"reveal_furniture", "furniture_visible":
+			var fid = str(action_data.get("furnitureId", action_data.get("target", action_data.get("furnitureName", ""))))
+			var target_low = fid.to_lower().strip_edges()
+			for f in furniture:
+				var mid = str(f.get("id", "")).to_lower()
+				var mname = str(f.get("name", "")).to_lower()
+				if mid == target_low or mname == target_low or (target_low != "" and (target_low in mname or mname in target_low)):
+					f["hidden"] = false
+					_rebuild_furniture_tile_map()
+					queue_redraw_all()
+					return { "success": true, "furniture": f }
+			return { "success": false, "error": "Furniture not found: " + fid }
+		"move_furniture":
+			var fid = str(action_data.get("furnitureId", action_data.get("target", action_data.get("furnitureName", ""))))
+			var target_low = fid.to_lower().strip_edges()
+			var tile_target = action_data.get("tile", [action_data.get("x", 0), action_data.get("y", 0)])
+			var new_x = int(tile_target[0] if tile_target is Array and tile_target.size() > 0 else action_data.get("x", 0))
+			var new_y = int(tile_target[1] if tile_target is Array and tile_target.size() > 1 else action_data.get("y", 0))
+			for f in furniture:
+				var mid = str(f.get("id", "")).to_lower()
+				var mname = str(f.get("name", "")).to_lower()
+				if mid == target_low or mname == target_low or (target_low != "" and (target_low in mname or mname in target_low)):
+					f["x"] = new_x
+					f["y"] = new_y
+					f["position"] = [new_x, new_y]
+					_rebuild_furniture_tile_map()
+					var dname = str(f.get("name", f.get("id", "Furniture")))
+					var raw_msg = str(action_data.get("message", action_data.get("custom_message", action_data.get("customMessage", action_data.get("text", ""))))).strip_edges()
+					var display_msg = ""
+					if raw_msg != "":
+						display_msg = raw_msg.replace("{name}", dname).replace("{id}", str(f.get("id", ""))).replace("{x}", str(new_x)).replace("{y}", str(new_y))
+						_log("[ACTION] 🪑 %s" % display_msg)
+						spawn_floating_text(Vector2i(new_x, new_y), display_msg, Color(1.0, 0.8, 0.2), 3.5)
+					else:
+						display_msg = "🪑 %s MOVED" % dname.to_upper()
+						_log("[ACTION] 🪑 Furniture '%s' moved to [%d, %d]!" % [dname, new_x, new_y])
+						spawn_floating_text(Vector2i(new_x, new_y), display_msg, Color(1.0, 0.8, 0.2), 2.5)
+					spawn_burst_vfx(board_offset + Vector2((new_x + 0.5) * tile_size, (new_y + 0.5) * tile_size), Color(1.0, 0.8, 0.2), 50.0, 0.5)
+					update_party_vision()
+					_update_ui()
+					queue_redraw_all()
+					return { "success": true, "furniture": f, "message": display_msg }
+			return { "success": false, "error": "Furniture not found: " + fid }
 		"trigger_story_event":
 			var target_id = str(action_data.get("id", action_data.get("marker", "")))
 			var found_tr: Dictionary = {}
@@ -18080,6 +20624,7 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				var r_rooms = action_data.get("revealedRooms", action_data.get("revealed_rooms", []))
 				if r_rooms is Array:
 					revealed_rooms.clear()
+					explored_tiles.clear()
 					for r in r_rooms:
 						revealed_rooms.append(str(r))
 			if action_data.has("discoveredMonsterIds") or action_data.has("discovered_monster_ids"):
@@ -18157,6 +20702,13 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 		"complete_quest", "complete_active_quest", "finish_quest":
 			var should_quit = bool(action_data.get("quit", false))
 			return complete_active_quest(should_quit)
+		"open_quest_complete_modal", "show_quest_complete_modal":
+			var is_vic = bool(action_data.get("is_victory", action_data.get("isVictory", true)))
+			open_quest_complete_modal(is_vic)
+			return { "success": true, "quest_complete_open": is_quest_complete_modal_open(), "isVictory": is_vic }
+		"close_quest_complete_modal", "hide_quest_complete_modal":
+			close_quest_complete_modal()
+			return { "success": true, "quest_complete_open": is_quest_complete_modal_open() }
 		"get_quest_objectives":
 			return { "success": true, "objectives": get_quest_objectives(), "areCompleted": are_all_quest_objectives_completed() }
 		"open_game_menu", "show_game_menu":
@@ -18169,12 +20721,23 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			toggle_game_menu()
 			return { "success": true, "menu_open": is_game_menu_open() }
 		"restart_quest", "reset_game", "reset_quest", "force_reload":
+			var require_confirm = bool(action_data.get("confirm", action_data.get("require_confirm", false)))
+			if require_confirm:
+				open_restart_confirm_modal()
+				return { "success": true, "confirm_requested": true, "modalVisible": is_restart_confirm_open() }
 			var clear_save = bool(action_data.get("clear_save", action_data.get("clearSave", true)))
 			if clear_save:
 				delete_save_game()
 			_load_active_cartridge(true)
 			close_game_menu()
 			return { "success": true }
+		"request_restart_quest", "open_restart_confirm_modal", "click_menu_restart_quest":
+			open_restart_confirm_modal()
+			return { "success": true, "modalVisible": is_restart_confirm_open() }
+		"confirm_restart_quest":
+			return confirm_restart_quest()
+		"cancel_restart_quest":
+			return cancel_restart_quest()
 		"save_game_state", "save_game", "autosave":
 			auto_save_game()
 			_update_game_menu_info()
@@ -18194,19 +20757,66 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			return { "success": true }
 		"start_demo", "enable_demo", "start_auto_play":
 			CartridgeManager.auto_play_enabled = true
+			ai_play_for_you = true
+			auto_advance_turn = true
+			_update_ai_options_button_ui()
 			_update_ui()
-			return { "success": true, "demo_active": true, "auto_play": true }
+			return { "success": true, "demo_active": true, "auto_play": true, "ai_play_for_you": true, "auto_advance_turn": true }
 		"stop_demo", "pause_demo", "stop_auto_play":
 			CartridgeManager.auto_play_enabled = false
+			ai_play_for_you = false
+			auto_advance_turn = false
+			_update_ai_options_button_ui()
 			_update_ui()
-			return { "success": true, "demo_active": false, "auto_play": false }
+			return { "success": true, "demo_active": false, "auto_play": false, "ai_play_for_you": false, "auto_advance_turn": false }
 		"toggle_demo", "toggle_auto_play":
-			CartridgeManager.auto_play_enabled = not CartridgeManager.auto_play_enabled
+			var new_demo = not (ai_play_for_you and auto_advance_turn)
+			CartridgeManager.auto_play_enabled = new_demo
+			ai_play_for_you = new_demo
+			auto_advance_turn = new_demo
+			_update_ai_options_button_ui()
 			_update_ui()
-			return { "success": true, "demo_active": CartridgeManager.auto_play_enabled }
-		"step_ai", "execute_ai_step":
+			return { "success": true, "demo_active": CartridgeManager.auto_play_enabled, "ai_play_for_you": ai_play_for_you, "auto_advance_turn": auto_advance_turn }
+		"open_ai_options", "show_ai_options", "open_ai_engine_options":
+			open_ai_options_modal()
+			return { "success": true, "modal_open": true, "ai_play_for_you": ai_play_for_you, "auto_advance_turn": auto_advance_turn }
+		"close_ai_options", "hide_ai_options", "close_ai_engine_options":
+			close_ai_options_modal()
+			return { "success": true, "modal_open": false }
+		"toggle_ai_options", "toggle_ai_engine_options":
+			toggle_ai_options_modal()
+			return { "success": true, "modal_open": is_ai_options_modal_open(), "ai_play_for_you": ai_play_for_you, "auto_advance_turn": auto_advance_turn }
+		"get_ai_options", "get_ai_engine_options":
+			return {
+				"success": true,
+				"ai_play_for_you": ai_play_for_you,
+				"auto_advance_turn": auto_advance_turn,
+				"modal_open": is_ai_options_modal_open()
+			}
+		"set_ai_options", "set_ai_engine_options":
+			if action_data.has("ai_play_for_you"):
+				ai_play_for_you = bool(action_data.get("ai_play_for_you"))
+			elif action_data.has("aiPlayForYou"):
+				ai_play_for_you = bool(action_data.get("aiPlayForYou"))
+			if action_data.has("auto_advance_turn"):
+				auto_advance_turn = bool(action_data.get("auto_advance_turn"))
+			elif action_data.has("autoAdvanceTurn"):
+				auto_advance_turn = bool(action_data.get("autoAdvanceTurn"))
+			_update_ai_engine_state()
+			return {
+				"success": true,
+				"ai_play_for_you": ai_play_for_you,
+				"auto_advance_turn": auto_advance_turn,
+				"modal_open": is_ai_options_modal_open()
+			}
+		"step_ai", "execute_ai_step", "step_turn", "step_demo":
 			_execute_auto_play_step()
 			return { "success": true, "stepped": true, "step": auto_play_step, "phase": current_phase, "round": current_round }
+		"get_transaction_log":
+			return { "success": true, "transactions": transaction_log, "count": transaction_log.size() }
+		"set_verbose", "set_verbose_log":
+			verbose_combat_log = bool(action_data.get("verbose", true))
+			return { "success": true, "verboseCombatLog": verbose_combat_log }
 		"search_traps":
 			var res = search_traps()
 			return res
@@ -18246,6 +20856,28 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			var weapon = str(action_data.get("weapon", action_data.get("weaponId", "")))
 			var res = attack_adjacent_monster(mid, weapon)
 			return res
+		"defeat_monster", "kill_monster":
+			var mid = str(action_data.get("monsterId", action_data.get("id", "")))
+			var target_m: Dictionary = {}
+			for m in monsters:
+				if str(m.get("id", "")) == mid or str(m.get("slug", "")) == mid:
+					target_m = m
+					break
+			if target_m.is_empty() and monsters.size() > 0:
+				target_m = monsters[0]
+			if not target_m.is_empty():
+				target_m["current_bp"] = 0
+				target_m["is_alive"] = false
+				_log("[DEFEATED] %s is DEFEATED!" % target_m.get("name", "Monster"))
+				_check_event_triggers("on_monster_killed", {
+					"monster": target_m,
+					"monsterId": str(target_m.get("id", "")),
+					"monsterType": str(target_m.get("monsterType", target_m.get("type", "")))
+				}, get_active_hero())
+				_update_ui()
+				queue_redraw_all()
+				return { "success": true, "monsterId": str(target_m.get("id", "")), "monsterName": str(target_m.get("name", "")) }
+			return { "success": false, "error": "Monster not found: " + mid }
 		"get_monster_footprint", "get_monster_tiles":
 			var mid = str(action_data.get("monsterId", action_data.get("id", "")))
 			var target_m = get_monster_by_id(mid)
@@ -18919,9 +21551,12 @@ func _draw_board(canvas: CanvasItem) -> void:
 		var f_pos = Vector2i(px, py)
 		var rm = _get_room_at(f_pos)
 		var effective_room = r_id if r_id != "" else str(rm.get("id", ""))
+		var is_hidden = bool(f.get("hidden", false))
 		var is_visible = false
 		if is_gm_role():
 			is_visible = true
+		elif is_hidden:
+			is_visible = false
 		elif effective_room != "":
 			is_visible = revealed_rooms.has(effective_room)
 		else:
@@ -18942,6 +21577,8 @@ func _draw_board(canvas: CanvasItem) -> void:
 				w = 2; h = 3
 			elif (f_type in ["healing_hearth", "healing-hearth", "healing hearth", "hearth"]) and w == 1 and h == 1:
 				w = 1; h = 3
+			elif (f_type in ["stairs_up_2x2", "stairs_down_2x2", "stairs-up-2x2", "stairs-down-2x2"]) and w == 1 and h == 1:
+				w = 2; h = 2
 
 			var f_rect = Rect2(board_offset + Vector2(px * tile_size + 2, py * tile_size + 2), Vector2(w * tile_size - 4, h * tile_size - 4))
 			var label_text = ""
@@ -19025,6 +21662,13 @@ func _draw_board(canvas: CanvasItem) -> void:
 						var b_rect = Rect2(f_rect.end.x - 26, f_rect.position.y + 2, 24, 9)
 						canvas.draw_rect(b_rect, Color(0.55, 0.15, 0.6, 0.95))
 						canvas.draw_string(ThemeDB.fallback_font, b_rect.position + Vector2(2, 7), "GM:T", HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color(1.0, 0.85, 1.0))
+
+			if is_hidden and is_gm_role():
+				canvas.draw_rect(f_rect, Color(0.65, 0.2, 0.95, 0.25))
+				canvas.draw_rect(f_rect, Color(0.7, 0.3, 1.0, 0.8), false, 1.5)
+				var ghost_lbl = "👻 (HIDDEN)"
+				var g_sz = ThemeDB.fallback_font.get_string_size(ghost_lbl, HORIZONTAL_ALIGNMENT_CENTER, -1, 9).x
+				canvas.draw_string(ThemeDB.fallback_font, Vector2(f_rect.get_center().x - g_sz * 0.5, f_rect.position.y - 3.0), ghost_lbl, HORIZONTAL_ALIGNMENT_CENTER, -1, 9, Color(0.85, 0.5, 1.0))
 
 	# Draw Doors
 	for d in doors:
@@ -19196,8 +21840,22 @@ func _draw_board(canvas: CanvasItem) -> void:
 						canvas.draw_arc(screen_pos, tile_size * 0.46, 0, TAU, 16, Color(0.2, 0.8, 1.0, 0.85), 2.0)
 
 	# Draw Starting Staircase Tile (Entrance / Exit)
-	var stair_rect = Rect2(board_offset + Vector2(starting_stair.x * tile_size + 2, starting_stair.y * tile_size + 2), Vector2(tile_size - 4, tile_size - 4))
-	var st_tex = get_tile_texture("stairs")
+	var st_bounds = get_starting_stair_rect_tiles()
+	var stair_rect = Rect2(board_offset + Vector2(st_bounds.position.x * tile_size + 2, st_bounds.position.y * tile_size + 2), Vector2(st_bounds.size.x * tile_size - 4, st_bounds.size.y * tile_size - 4))
+	var st_tex_key = starting_stair_type
+	for f in furniture:
+		var f_type = str(f.get("type", "")).to_lower()
+		if "stair" in f_type:
+			var fx = int(f.get("x", f.get("position", [0, 0])[0]))
+			var fy = int(f.get("y", f.get("position", [0, 0])[1]))
+			var fw = int(f.get("width", 2 if "2x2" in f_type else 1))
+			var fh = int(f.get("height", 2 if "2x2" in f_type else 1))
+			if starting_stair.x >= fx and starting_stair.x < fx + fw and starting_stair.y >= fy and starting_stair.y < fy + fh:
+				st_tex_key = f_type
+				break
+	var st_tex = get_tile_texture(st_tex_key)
+	if st_tex == null:
+		st_tex = get_tile_texture("stairs")
 	if st_tex:
 		# Drop shadow and texture
 		canvas.draw_rect(Rect2(stair_rect.position + Vector2(2, 2), stair_rect.size), Color(0.0, 0.0, 0.0, 0.5))
@@ -19211,10 +21869,45 @@ func _draw_board(canvas: CanvasItem) -> void:
 	else:
 		canvas.draw_rect(stair_rect, Color(0.18, 0.22, 0.28, 0.95))
 		canvas.draw_rect(stair_rect, Color(0.45, 0.60, 0.75, 1.0), false, 1.5)
-		canvas.draw_arc(stair_rect.get_center(), tile_size * 0.36, 0, TAU, 24, Color(0.35, 0.45, 0.58, 0.8), 1.5)
-		canvas.draw_arc(stair_rect.get_center(), tile_size * 0.20, 0, TAU, 16, Color(0.55, 0.68, 0.82, 0.9), 1.5)
+		canvas.draw_arc(stair_rect.get_center(), min(st_bounds.size.x, st_bounds.size.y) * tile_size * 0.36, 0, TAU, 24, Color(0.35, 0.45, 0.58, 0.8), 1.5)
+		canvas.draw_arc(stair_rect.get_center(), min(st_bounds.size.x, st_bounds.size.y) * tile_size * 0.20, 0, TAU, 16, Color(0.55, 0.68, 0.82, 0.9), 1.5)
 		var st_w = ThemeDB.fallback_font.get_string_size("STAIR", HORIZONTAL_ALIGNMENT_CENTER, -1, 8).x
 		canvas.draw_string(ThemeDB.fallback_font, Vector2(stair_rect.get_center().x - st_w * 0.5, stair_rect.get_center().y + 3), "STAIR", HORIZONTAL_ALIGNMENT_CENTER, -1, 8, Color(0.85, 0.9, 1.0, 0.85))
+
+	# Draw Exit Staircase Tile (if present)
+	if exit_stair != Vector2i(-1, -1):
+		var ex_bounds = get_exit_stair_rect_tiles()
+		var exit_rect = Rect2(board_offset + Vector2(ex_bounds.position.x * tile_size + 2, ex_bounds.position.y * tile_size + 2), Vector2(ex_bounds.size.x * tile_size - 4, ex_bounds.size.y * tile_size - 4))
+		var ex_tex_key = exit_stair_type
+		for f in furniture:
+			var f_type = str(f.get("type", "")).to_lower()
+			if "stair" in f_type:
+				var fx = int(f.get("x", f.get("position", [0, 0])[0]))
+				var fy = int(f.get("y", f.get("position", [0, 0])[1]))
+				var fw = int(f.get("width", 2 if "2x2" in f_type else 1))
+				var fh = int(f.get("height", 2 if "2x2" in f_type else 1))
+				if exit_stair.x >= fx and exit_stair.x < fx + fw and exit_stair.y >= fy and exit_stair.y < fy + fh:
+					ex_tex_key = f_type
+					break
+		var exit_tex = get_tile_texture(ex_tex_key)
+		if exit_tex == null:
+			exit_tex = get_tile_texture("stairs")
+		if exit_tex:
+			canvas.draw_rect(Rect2(exit_rect.position + Vector2(2, 2), exit_rect.size), Color(0.0, 0.0, 0.0, 0.5))
+			canvas.draw_texture_rect(exit_tex, exit_rect, false)
+			canvas.draw_rect(exit_rect, Color(0.20, 0.85, 0.55, 0.9), false, 1.5)
+			var ex_w = ThemeDB.fallback_font.get_string_size("EXIT", HORIZONTAL_ALIGNMENT_CENTER, -1, 8).x
+			var ex_b = Rect2(exit_rect.get_center().x - ex_w * 0.5 - 3, exit_rect.get_center().y - 4, ex_w + 6, 12)
+			canvas.draw_rect(ex_b, Color(0.06, 0.20, 0.14, 0.85))
+			canvas.draw_rect(ex_b, Color(0.20, 0.85, 0.55, 0.8), false, 1.0)
+			canvas.draw_string(ThemeDB.fallback_font, Vector2(exit_rect.get_center().x - ex_w * 0.5, exit_rect.get_center().y + 5), "EXIT", HORIZONTAL_ALIGNMENT_CENTER, -1, 8, Color(0.65, 1.0, 0.80, 0.95))
+		else:
+			canvas.draw_rect(exit_rect, Color(0.08, 0.24, 0.16, 0.95))
+			canvas.draw_rect(exit_rect, Color(0.20, 0.85, 0.55, 1.0), false, 1.5)
+			canvas.draw_arc(exit_rect.get_center(), min(ex_bounds.size.x, ex_bounds.size.y) * tile_size * 0.36, 0, TAU, 24, Color(0.18, 0.65, 0.42, 0.8), 1.5)
+			canvas.draw_arc(exit_rect.get_center(), min(ex_bounds.size.x, ex_bounds.size.y) * tile_size * 0.20, 0, TAU, 16, Color(0.35, 0.88, 0.60, 0.9), 1.5)
+			var ex_w = ThemeDB.fallback_font.get_string_size("EXIT", HORIZONTAL_ALIGNMENT_CENTER, -1, 8).x
+			canvas.draw_string(ThemeDB.fallback_font, Vector2(exit_rect.get_center().x - ex_w * 0.5, exit_rect.get_center().y + 3), "EXIT", HORIZONTAL_ALIGNMENT_CENTER, -1, 8, Color(0.65, 1.0, 0.80, 0.85))
 
 	# Draw Movement Trail (Green line from where hero or monster came from with moves remaining in middle)
 	var is_enemy_moving = (is_enemy_turn_waiting or active_enemy_turn_monster_id != "") and (enemy_turn_stage in ["moving", "pause_after_move", "acting", "waiting_for_action"])
@@ -19421,6 +22114,7 @@ func _draw_board(canvas: CanvasItem) -> void:
 	_draw_active_dice_roll(canvas)
 	_draw_trap_sprung_overlay(canvas)
 	_draw_treasure_card_overlay(canvas)
+	_draw_dialogue_bubbles_overlay(canvas)
 	_draw_story_trigger_overlay(canvas)
 	_draw_item_flash_banner(canvas)
 
@@ -19688,14 +22382,18 @@ func _draw_floating_texts(canvas: CanvasItem) -> void:
 			var text_y = plaque_y + pad_y + str_size.y * 0.85
 			canvas.draw_string(font, Vector2(plaque_x + pad_x, text_y), full_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, f_size, Color(1.0, 0.92, 0.45, ft.alpha))
 		else:
-			var f_size = 18
-			var col = Color(ft.color.r, ft.color.g, ft.color.b, ft.alpha)
 			var txt = str(ft.get("text", ""))
-			var tw = font.get_string_size(txt, HORIZONTAL_ALIGNMENT_CENTER, -1, f_size).x
-			var bg_rect = Rect2(ft.pos.x - tw * 0.5 - 6.0, ft.pos.y - 15.0, tw + 12.0, 20.0)
-			canvas.draw_rect(bg_rect, Color(0.05, 0.05, 0.08, 0.85 * ft.alpha))
-			canvas.draw_rect(bg_rect, Color(col.r, col.g, col.b, 0.65 * ft.alpha), false, 1.2)
-			canvas.draw_string(font, Vector2(ft.pos.x - tw * 0.5, ft.pos.y), txt, HORIZONTAL_ALIGNMENT_CENTER, -1, f_size, col)
+			var f_size = 13 if txt.length() > 50 else (15 if txt.length() > 25 else 18)
+			var col = Color(ft.color.r, ft.color.g, ft.color.b, ft.alpha)
+			var text_sz = font.get_string_size(txt, HORIZONTAL_ALIGNMENT_CENTER, -1, f_size)
+			var tw = text_sz.x
+			var th = maxf(22.0, text_sz.y + 6.0)
+			var vp_w = canvas.get_viewport_rect().size.x if canvas.get_viewport() else 1920.0
+			var draw_x = clampf(ft.pos.x - tw * 0.5, 16.0, maxf(16.0, vp_w - tw - 16.0))
+			var bg_rect = Rect2(draw_x - 8.0, ft.pos.y - th * 0.75, tw + 16.0, th)
+			canvas.draw_rect(bg_rect, Color(0.05, 0.05, 0.08, 0.88 * ft.alpha))
+			canvas.draw_rect(bg_rect, Color(col.r, col.g, col.b, 0.75 * ft.alpha), false, 1.2)
+			canvas.draw_string(font, Vector2(draw_x, ft.pos.y), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, f_size, col)
 
 func _setup_trap_sprung_overlay(trap: Dictionary, hero: Dictionary, final_pos: Vector2i, path: Array, actual_cost: int, is_chest: bool = false) -> void:
 	var t_type = str(trap.get("type", trap.get("trapType", "pit"))).to_lower()
@@ -20671,6 +23369,91 @@ func _draw_gm_story_trigger_markers(canvas: CanvasItem) -> void:
 		var txt_w = font.get_string_size(txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 13).x
 		canvas.draw_string(font, Vector2(center.x - txt_w * 0.5, center.y + 5), txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 13, Color.WHITE)
 
+func _draw_dialogue_bubbles_overlay(canvas: CanvasItem) -> void:
+	if active_dialogue_sequence.is_empty() or not active_dialogue_sequence.get("active", false):
+		return
+
+	var bubbles: Array = active_dialogue_sequence.get("bubbles", [])
+	var idx: int = int(active_dialogue_sequence.get("index", 0))
+	if idx < 0 or idx >= bubbles.size():
+		return
+
+	var bubble: Dictionary = bubbles[idx]
+	var speaker_raw: String = str(bubble.get("speaker", "barbarian"))
+	var text: String = str(bubble.get("text", ""))
+	var speaker_disp: String = _resolve_speaker_display_name(speaker_raw)
+
+	var font = ThemeDB.fallback_font
+	_update_board_metrics()
+
+	var cur_time = float(active_dialogue_sequence.get("time", 0.0))
+	var cur_dur = float(active_dialogue_sequence.get("duration", 4.5))
+	var fade_time = float(active_dialogue_sequence.get("fade_time", 0.6))
+	fade_time = clampf(fade_time, 0.2, 2.0)
+	var alpha = 1.0
+	if cur_dur > fade_time and cur_time > (cur_dur - fade_time):
+		alpha = clampf((cur_dur - cur_time) / fade_time, 0.0, 1.0)
+
+	var g_pos = _find_speaker_grid_pos(speaker_raw)
+	var bubble_anchor: Vector2
+	var has_tail = false
+	var tail_target: Vector2 = Vector2.ZERO
+
+	if g_pos.x >= 0 and g_pos.y >= 0:
+		tail_target = board_offset + Vector2((float(g_pos.x) + 0.5) * tile_size, float(g_pos.y) * tile_size)
+		bubble_anchor = tail_target + Vector2(0, -65)
+		has_tail = true
+	else:
+		# Overhead / center narrator bubble
+		bubble_anchor = board_offset + Vector2(float(grid_cols) * tile_size * 0.5, 75.0)
+
+	var text_w = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x
+	var bubble_w = clampf(text_w + 50.0, 300.0, 520.0)
+	var lines = _wrap_card_text(text, font, 13, bubble_w - 28.0)
+	var line_h = 18.0
+	var bubble_h = 42.0 + float(maxi(1, lines.size())) * line_h + 16.0
+
+	var b_x = clampf(bubble_anchor.x - bubble_w * 0.5, board_offset.x + 10.0, board_offset.x + float(grid_cols) * tile_size - bubble_w - 10.0)
+	var b_y = maxf(board_offset.y + 10.0, bubble_anchor.y - bubble_h)
+	var b_rect = Rect2(b_x, b_y, bubble_w, bubble_h)
+
+	# Tail pointing toward token if anchored
+	if has_tail:
+		var tail_pts = PackedVector2Array([
+			Vector2(clampf(tail_target.x - 10.0, b_rect.position.x + 15.0, b_rect.end.x - 30.0), b_rect.end.y),
+			Vector2(clampf(tail_target.x + 10.0, b_rect.position.x + 30.0, b_rect.end.x - 15.0), b_rect.end.y),
+			tail_target
+		])
+		canvas.draw_colored_polygon(tail_pts, Color(0.05, 0.08, 0.14, 0.96 * alpha))
+		canvas.draw_line(tail_pts[0], tail_pts[2], Color(0.0, 0.85, 1.0, 0.85 * alpha), 1.5)
+		canvas.draw_line(tail_pts[1], tail_pts[2], Color(0.0, 0.85, 1.0, 0.85 * alpha), 1.5)
+
+	# Bubble drop shadow
+	canvas.draw_rect(Rect2(b_rect.position + Vector2(4, 5), b_rect.size), Color(0.0, 0.0, 0.0, 0.65 * alpha))
+
+	# Bubble background & glowing neon cyan border
+	canvas.draw_rect(b_rect, Color(0.05, 0.08, 0.14, 0.96 * alpha))
+	canvas.draw_rect(b_rect, Color(0.0, 0.85, 1.0, 0.9 * alpha), false, 2.0)
+
+	# Speaker Badge
+	var spk_text = "💬 " + speaker_disp
+	var spk_sz = font.get_string_size(spk_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11)
+	var spk_badge_rect = Rect2(b_rect.position.x + 10.0, b_rect.position.y + 6.0, spk_sz.x + 12.0, 18.0)
+	canvas.draw_rect(spk_badge_rect, Color(0.12, 0.22, 0.35, 0.95 * alpha))
+	canvas.draw_rect(spk_badge_rect, Color(0.0, 0.85, 1.0, 0.6 * alpha), false, 1.0)
+	canvas.draw_string(font, Vector2(spk_badge_rect.position.x + 6.0, spk_badge_rect.position.y + 13.0), spk_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.3, 0.9, 1.0, alpha))
+
+	# Advance prompt hint
+	var hint_text = "[Click or Space (%d/%d)]" % [idx + 1, bubbles.size()]
+	var h_sz = font.get_string_size(hint_text, HORIZONTAL_ALIGNMENT_RIGHT, -1, 9)
+	canvas.draw_string(font, Vector2(b_rect.end.x - h_sz.x - 8.0, b_rect.position.y + 18.0), hint_text, HORIZONTAL_ALIGNMENT_RIGHT, -1, 9, Color(0.6, 0.7, 0.85, 0.8 * alpha))
+
+	# Text lines
+	var text_y = b_rect.position.y + 40.0
+	for l in lines:
+		canvas.draw_string(font, Vector2(b_rect.position.x + 12.0, text_y), l, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(0.95, 0.96, 0.98, alpha))
+		text_y += line_h
+
 func _draw_story_trigger_overlay(canvas: CanvasItem) -> void:
 	if active_story_trigger_overlay.is_empty():
 		return
@@ -20798,6 +23581,8 @@ func _draw_story_trigger_overlay(canvas: CanvasItem) -> void:
 	# 8. Dismiss Action Prompt
 	var pulse = 0.82 + 0.18 * sin(Time.get_ticks_msec() * 0.006)
 	var prompt_text = "[ CLICK ANYWHERE OR PRESS SPACE / ENTER TO PROCEED ]"
+	if overlay.has("buttonText") and str(overlay.get("buttonText")).strip_edges() != "":
+		prompt_text = "[ %s — CLICK ANYWHERE OR PRESS SPACE / ENTER ]" % str(overlay.get("buttonText")).strip_edges().to_upper()
 	var p_sz = font.get_string_size(prompt_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 10)
 	var prompt_y = parchment_rect.end.y - 14.0
 	canvas.draw_string(font, Vector2(center.x - p_sz.x * 0.5, prompt_y), prompt_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(0.36, 0.20, 0.10, pulse))
@@ -21481,19 +24266,29 @@ func _resolve_movie_file_path(path: String) -> String:
 
 	return clean_path
 
-func play_movie(movie_path: String, title: String = "", can_skip: bool = true, once_only: bool = true) -> Dictionary:
+func play_movie(movie_path: String, title: String = "", can_skip: bool = true, once_only: bool = true, on_finished: Callable = Callable()) -> Dictionary:
 	_setup_movie_player()
 	if movie_path == "":
+		if on_finished.is_valid():
+			on_finished.call()
 		return { "success": false, "error": "Empty movie path" }
 
 	var resolved = _resolve_movie_file_path(movie_path)
 	if once_only and (played_movies.has(resolved) or played_movies.has(movie_path)):
+		if on_finished.is_valid():
+			on_finished.call()
 		return { "success": false, "reason": "already_played", "path": resolved }
+
+	if on_finished.is_valid():
+		pending_movie_callback = on_finished
+	else:
+		pending_movie_callback = Callable()
 
 	played_movies[movie_path] = true
 	played_movies[resolved] = true
 	current_movie_path = resolved
 	current_movie_title = title
+	auto_play_timer = 0.0
 
 	_log("🎬 [CINEMATIC] %s" % (title if title != "" else resolved.get_file()))
 
@@ -21518,6 +24313,7 @@ func play_movie(movie_path: String, title: String = "", can_skip: bool = true, o
 		movie_player_layer.visible = true
 
 	is_movie_playing = true
+	cinematic_started.emit(resolved, title)
 
 	if not is_headless and movie_player_node:
 		movie_player_node.play()
@@ -21542,11 +24338,14 @@ func skip_movie() -> Dictionary:
 
 func _on_movie_player_finished() -> void:
 	is_movie_playing = false
+	auto_play_timer = 0.0
 	if movie_player_node:
 		movie_player_node.stop()
 		movie_player_node.stream = null
 	if movie_player_layer:
 		movie_player_layer.visible = false
+	var finished_movie = current_movie_path
+	cinematic_finished.emit(finished_movie)
 	if pending_movie_callback.is_valid():
 		var cb = pending_movie_callback
 		pending_movie_callback = Callable()

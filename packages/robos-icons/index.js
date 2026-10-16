@@ -18,6 +18,7 @@
  */
 
 const BUILTIN_APPS = [
+  {"appId": "auto-center", "label": "Auto Center", "category": "Auto", "iconSvg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"48\" height=\"48\" viewBox=\"0 0 48 48\" fill=\"none\" stroke=\"#00bcd4\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m10 23 4-11h20l4 11M7 23h34v14H7zM7 30h34M12 37v5m24-5v5\"/><circle cx=\"14\" cy=\"27\" r=\"2\"/><circle cx=\"34\" cy=\"27\" r=\"2\"/><path d=\"M17 35h14\"/></svg>"},
   {
     appId: 'app-launcher',
     label: 'App Launcher',
@@ -59,6 +60,12 @@ const BUILTIN_APPS = [
     label: 'App Wizard',
     category: 'Development',
     iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m19 11-8-8-8.5 8.5a2.12 2.12 0 0 0 3 3L12 8l6.5 6.5a2.12 2.12 0 0 0 3-3L19 11Z"/><path d="m5 2 5 5"/><path d="M2 5l5 5"/><path d="M22 19l-3-3"/><path d="m19 22 3-3"/><circle cx="19" cy="5" r="2"/></svg>'
+  },
+  {
+    appId: 'audio-player',
+    label: 'Audio Player',
+    category: 'Tools',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/><polygon points="10 10 15 12 10 14 10 10" fill="#00bcd4"/></svg>'
   },
   {
     appId: 'automation-studio',
@@ -185,6 +192,12 @@ const BUILTIN_APPS = [
     label: 'Git Projects',
     category: 'Development',
     iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v12"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="6" r="3"/><path d="M18 9v6a3 3 0 0 1-3 3H9"/></svg>'
+  },
+  {
+    appId: 'home-speaker',
+    label: 'Home Speaker',
+    category: 'Tools',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="8" width="12" height="13" rx="3"/><ellipse cx="12" cy="8" rx="6" ry="2"/><circle cx="12" cy="8" r="0.8" fill="#00bcd4"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="8" y1="16" x2="16" y2="16"/><path d="M19 5a5 5 0 0 1 0 6"/><path d="M21 2a9 9 0 0 1 0 12"/><path d="M5 5a5 5 0 0 0 0 6"/><path d="M3 2a9 9 0 0 0 0 12"/></svg>'
   },
   {
     appId: 'mcp-manager',

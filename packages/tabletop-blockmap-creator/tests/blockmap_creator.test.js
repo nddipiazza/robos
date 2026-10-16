@@ -349,4 +349,24 @@ test('Standalone Blockmap Persistence: saves to clean <boardId>.blockmap.json wi
   assert.equal(staticPayload.rooms[0].name, 'Northwest Entry Armory');
 });
 
+test('Additional Border Tile: persists option in static board payload and calibration', () => {
+  const payload = {
+    id: 'first-light-dungeon',
+    title: 'HeroQuest: First Light Side A',
+    gridDimensions: [26, 19],
+    additionalBorderTile: true,
+    calibration: {
+      tileSize: 39.0,
+      offsetX: 0,
+      offsetY: 0,
+      additionalBorderTile: true,
+      hasBorder: true
+    }
+  };
+
+  assert.equal(payload.additionalBorderTile, true);
+  assert.equal(payload.calibration.additionalBorderTile, true);
+  assert.equal(payload.calibration.hasBorder, true);
+});
+
 

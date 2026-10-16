@@ -1,0 +1,112 @@
+'use strict';
+let reportState, paymentRequestId = window.crypto.randomUUID(), financeRequestId = window.crypto.randomUUID();
+function decimalAmount(minor) { const amount = BigInt(minor); return `${amount / 100n}.${String(amount % 100n).padStart(2, '0')}`; }
+function money(minor, currency) {
+  const value = BigInt(minor), amount = value < 0n ? -value : value;
+  const symbol = new Intl.NumberFormat('en-US', { style: 'currency', currency }).formatToParts(0).find(p => p.type === 'currency').value;
+  return `${value < 0n ? '−' : ''}${symbol}${(amount / 100n).toLocaleString('en-US')}.${String(amount % 100n).padStart(2, '0')}`;
+}
+function metric(label, value, note = '') { const c = text('article', '', 'metric'); c.append(text('span', label), text('strong', value), text('small', note)); return c; }
+function tableRow(values) { const row = text('tr', ''); values.forEach(v => row.append(text('td', String(v)))); return row; }
+function refill(select, nodes, label, value = n => n['@id']) {
+  const previous = select.value; select.replaceChildren(...nodes.map(n => { const option = text('option', label(n)); option.value = value(n); return option; }));
+  if (nodes.some(n => value(n) === previous)) select.value = previous;
+}
+async function refreshReports() {
+  if (state.mode !== 'shop') { reportState = null; return; }
+  const r = await window.auto.reports({ asOf: $('report-date').value || undefined, currency: $('report-currency').value }); reportState = r;
+  renderProfit(r);
+  $('report-date').value = r.asOf; $('report-date').max = r.today;
+  $('report-context').textContent = `${r.timeZone} · Through ${r.asOf} · Weeks start Monday · Shop floor and balances show live status`;
+  $('revenue-cards').replaceChildren(...[['day', 'Payments received this day'], ['week', 'Payments received this week'], ['month', 'Payments received this month']].map(([period, label]) => {
+    const m = r.revenue[period]; return metric(label, money(m.netMinor, r.currency), `${money(m.receivedMinor, r.currency)} received · ${money(m.refundedMinor, r.currency)} refunded`);
+  }));
+  const operationMetrics = [
+    metric('Vehicles at the center', r.heldCount, `${r.readyForPickup} ready for pickup · ${r.pastExpected} past expected date`),
+    metric('Open repair jobs', r.openJobs, `${r.statuses['awaiting-approval']} awaiting approval · ${r.statuses['in-progress']} in progress`),
+    metric('Outstanding billed balance', money(r.balance.outstandingMinor, r.currency), `${r.unbilledJobs} jobs have no charge total recorded`),
+    metric('Customer credit', money(r.balance.creditMinor, r.currency), 'Received beyond recorded charge totals'),
+    metric('Jobs closed this month', r.completions.month, 'Currently closed jobs with recorded closing times'),
+    metric('Average closing turnaround', r.cycleHours === null ? '—' : `${r.cycleHours} h`, `${r.cycleSamples} jobs closed in this month`),
+    metric('Average payment this month', r.revenue.month.averageReceiptMinor === null ? '—' : money(r.revenue.month.averageReceiptMinor, r.currency), `${r.revenue.month.receipts} received payments; excludes refunds`),
+    metric('Maintenance overdue by date', r.overdueMaintenance, `${r.maintenanceDueSoon} due within seven days`),
+  ];
+  $('floor-count').textContent = `${r.heldCount} on site / ${r.openJobs} open jobs`;
+  $('operation-cards').replaceChildren(...operationMetrics.slice(0,4));$('extra-operation-cards').replaceChildren(...operationMetrics.slice(4));
+  $('held-cars').replaceChildren(...r.held.map(h => {
+    const v = h.vehicle, s = h.stay, c = text('article', '', 'held-car'); c.dataset.vehicle = v['@id'];
+    const top = text('div', '', 'vehicle-card-top');
+    top.append(text('span', s['robos:parkingLocation'] || 'LOCATION UNASSIGNED', 'bay-label'), text('span', h.readyForPickup ? 'Ready for pickup' : h.jobs.length ? 'In service' : 'Checked in', h.readyForPickup ? 'vehicle-state ready' : 'vehicle-state'));
+    c.append(top, text('h3', v['dcterms:title']), text('p', [v['schema:modelDate'], v['schema:brand'], v['schema:model']].filter(Boolean).join(' '), 'vehicle-model'));
+    c.append(text('p', `${v['robos:licensePlate'] || 'No plate recorded'} ${v['robos:registrationJurisdiction'] || ''}`, 'plate-label'));
+    const detail = text('dl', '', 'vehicle-facts');
+    for (const [key, value] of [['Time on site', `${h.daysHeld} days`], ['Expected ready', s['robos:expectedReadyOn'] || 'Not set']]) { detail.append(text('dt', key), text('dd', value)); }
+    c.append(detail, text('p', `Checked in ${new Date(s['schema:startDate']).toLocaleString()}`, 'checked-in-time'));
+    if (v['robos:ownerNotes']) c.append(text('p', v['robos:ownerNotes'], 'customer-note'));
+    const work = text('div', '', 'vehicle-work');
+    h.jobs.forEach(j => { const row = text('div', '', 'work-line'); row.append(text('strong', j['dcterms:title']), text('small', `${j['robos:technician'] || 'Unassigned'} · ${j['robos:jobStatus'].replaceAll('-', ' ')}`)); work.append(row); });
+    if (!h.jobs.length) work.append(text('p', 'No open repair jobs', 'muted'));
+    c.append(work);
+    if (h.pastExpectedDate) c.append(text('p', 'Past expected ready date', 'failed'));
+    if (h.jobs.length) c.append(button('Open repair →', () => { navigate('shop'); [...$('job-list').children].find(el => el.dataset.vehicle === v['@id'])?.scrollIntoView({ block: 'center' }); }));
+    const collection = text('details', '', 'collection-controls'); collection.append(text('summary', 'Record collection'));
+    const label = text('label', 'Collected at (local; blank means now)'), collected = document.createElement('input'); collected.type = 'datetime-local'; collected.setAttribute('aria-label', 'Collection time'); label.append(collected); collection.append(label);
+    collection.append(button('Record vehicle collected', async () => { const checkedOutAt = collected.value ? new Date(collected.value).toISOString() : undefined; await window.auto.checkOut({ id: s['@id'], checkedOutAt }); await refresh(); message('Vehicle checked out and committed to private shop history.'); })); c.append(collection); return c;
+  }));
+  if (!r.held.length) $('held-cars').append(text('p', 'No vehicles are currently checked in. Register a customer vehicle, then use check-in below or check it in during job intake.', 'empty-state'));
+  const totalJobs = Object.values(r.statuses).reduce((a, b) => a + b, 0);
+  $('status-report').replaceChildren(...Object.entries(r.statuses).map(([name, count]) => { const row = text('div', '', 'status-bar'); row.append(text('span', name), text('b', count)); const progress = document.createElement('progress'); progress.max = Math.max(1, totalJobs); progress.value = count; progress.setAttribute('aria-label', `${name}: ${count} jobs`); row.append(progress); return row; }));
+  $('technician-report').replaceChildren(...r.technicians.map(t => text('p', `${t.name} · ${t.count} open jobs`)));
+  if (!r.technicians.length) $('technician-report').append(text('p', 'No open jobs.'));
+  $('flow-report').replaceChildren(...Object.entries(r.custody).map(([key, value]) => tableRow([key, value.arrivals, value.departures, r.completions[key]])));
+  $('maintenance-report').replaceChildren(text('p', `${r.overdueMaintenance} overdue plans by date · ${r.maintenanceDueSoon} due within seven days. ${r.mileageOnlyPlans} mileage-only plans need an odometer check.`));
+  const issues=[];if(r.invalid.closedJobsWithoutTimestamp)issues.push(`${r.invalid.closedJobsWithoutTimestamp} closed jobs lack a closing time and are excluded from period/turnaround counts.`);if(r.invalid.payments||r.invalid.stays)issues.push(`${r.invalid.payments} invalid payment records and ${r.invalid.stays} invalid stays excluded; review the shop records.`);$('report-quality').textContent=issues.join(' ');$('report-quality').hidden=!issues.length;
+  $('daily-revenue').replaceChildren(...r.daily.map(d => tableRow([d.date, money(d.receivedMinor, r.currency), money(d.refundedMinor, r.currency), money(d.netMinor, r.currency)])));
+  const jobs = state.records.filter(n => n['@type'] === 'robos:RepairOrder'), vehicles = new Map(state.records.filter(n => n['@type'] === 'robos:OwnedVehicle').map(n => [n['@id'], n]));
+  const jobLabel = j => `${j['dcterms:title']} · ${vehicles.get(j['robos:vehicle']?.['@id'])?.['dcterms:title'] || 'Vehicle not found'}`;
+  refill($('payment-job'), jobs, jobLabel);
+  const receipts = state.records.filter(n => n['@type'] === 'robos:ShopPayment' && n['robos:paymentDirection'] === 'received');
+  refill($('refund-original'), receipts, p => `${p['robos:paidOn']} · ${money(p['robos:amountMinor'], p['robos:currency'])} · ${jobs.find(j => j['@id'] === p['robos:job']?.['@id'])?.['dcterms:title'] || ''}`);
+  selectPaymentJob();
+  if (!$('payment-date').value) $('payment-date').value = r.today; $('payment-date').max = r.today;
+  $('recent-payments').replaceChildren(...r.recentPayments.map(p => tableRow([p['robos:paidOn'], jobs.find(j => j['@id'] === p['robos:job']?.['@id'])?.['dcterms:title'] || '', p['robos:paymentDirection'], `${p['robos:currency']} ${money(p['robos:amountMinor'], p['robos:currency'])}`, p['robos:paymentMethod']])));
+}
+$('report-filters').onsubmit = e => { e.preventDefault(); safely(refreshReports); };
+$('check-in-form').onsubmit = e => { e.preventDefault(); safely(async () => { const data = Object.fromEntries(new FormData(e.target)); if (data.checkedInAt) data.checkedInAt = new Date(data.checkedInAt).toISOString(); await window.auto.checkIn(data); e.target.reset(); await refresh(); message('Vehicle checked in and committed to private shop history.'); }); };
+function selectRefund() {
+  const refund = $('payment-direction').value === 'refund'; $('refund-picker').hidden = !refund;
+  if (refund) { const original = state.records.find(n => n['@id'] === $('refund-original').value); if (original) { $('payment-job').value = original['robos:job']['@id']; $('payment-form').elements.currency.value = original['robos:currency']; } }
+}
+function selectPaymentJob(){if($('payment-direction').value!=='received')return;const job=state.records.find(n=>n['@id']===$('payment-job').value);const previous=state.records.find(p=>p['@type']==='robos:ShopPayment'&&p['robos:job']?.['@id']===job?.['@id']);$('payment-form').elements.currency.value=job?.['robos:billingCurrency']||previous?.['robos:currency']||$('report-currency').value;}
+$('payment-job').onchange=selectPaymentJob;
+$('payment-direction').onchange = selectRefund; $('refund-original').onchange = selectRefund;
+$('payment-form').onsubmit = e => {
+  e.preventDefault(); const submit = e.target.querySelector('button'); if (submit.disabled) return; submit.disabled = true;
+  safely(async () => { try { await window.auto.recordPayment({ ...Object.fromEntries(new FormData(e.target)), requestId: paymentRequestId }); paymentRequestId = window.crypto.randomUUID(); e.target.reset(); $('refund-picker').hidden = true; await refresh(); message('Transaction recorded and committed to private shop history.'); } finally { submit.disabled = false; } });
+};
+
+function renderProfit(r) {
+  $('profit-cards').replaceChildren(...Object.entries(r.profit.periods).map(([period, p]) => { const card = metric(`Profit this ${period}`, money(p.profitMinor, r.currency), `${money(p.salesMinor, r.currency)} earned − ${money(p.costsMinor, r.currency)} costs (includes ${money(p.overheadMinor, r.currency)} overhead)`); card.dataset.loss = String(BigInt(p.profitMinor) < 0n); return card; }));
+  $('profit-quality').textContent = `Entered costs only: ${r.profit.unrecognizedJobs} closed jobs have no earned sales recorded; ${r.profit.jobsWithoutCosts} jobs have no costs recorded. ${r.profit.invalidEntries} invalid financial entries excluded. Review coverage before treating these totals as complete.`;
+  $('job-profit').replaceChildren(...r.profit.jobs.map(p => tableRow([p.job['dcterms:title'], p.job['robos:jobStatus'], money(p.salesMinor, r.currency), money(p.costsMinor, r.currency), money(p.profitMinor, r.currency), p.marginPercent === null ? '—' : `${p.marginPercent}%`, [!p.salesEntries ? 'No earned sales' : '', !p.expenseEntries ? 'No costs recorded' : ''].filter(Boolean).join(' · ') || 'Review cost completeness'])));
+  $('cost-categories').replaceChildren(...Object.entries(r.profit.categories).map(([category, amount]) => tableRow([category, money(amount, r.currency)])));
+  const jobs = state.records.filter(n => n['@type'] === 'robos:RepairOrder');
+  refill($('finance-job'), [{'@id': '', 'dcterms:title': 'Shared shop overhead (no job)'}, ...jobs], n => n['dcterms:title']);
+  const originals = state.records.filter(n => n['@type'] === 'robos:ShopFinanceEntry' && n['robos:entryDirection'] === 'charge');
+  refill($('finance-original'), originals, n => `${n['robos:effectiveOn']} · ${n['robos:entryKind']} · ${n['robos:currency']} ${money(n['robos:amountMinor'], n['robos:currency'])} · ${n['schema:description']}`);
+  if (!$('finance-date').value) $('finance-date').value = r.today; $('finance-date').max = r.today;
+  $('finance-entries').replaceChildren(...r.profit.recentEntries.map(n => tableRow([n['robos:effectiveOn'], jobs.find(j => j['@id'] === n['robos:job']?.['@id'])?.['dcterms:title'] || 'Shared overhead', n['robos:entryKind'] + ' ' + n['robos:entryDirection'], n['robos:costCategory'], money(n['robos:amountMinor'], r.currency), n['schema:description'], n['robos:documentReference'] || '—'])));
+}
+function selectFinanceCredit() {
+  const credit = $('finance-direction').value === 'credit'; $('finance-credit-picker').hidden = !credit;
+  if (credit) {
+    const original = state.records.find(n => n['@id'] === $('finance-original').value);
+    if (original) { $('finance-kind').value = original['robos:entryKind']; $('finance-job').value = original['robos:job']?.['@id'] || ''; $('finance-currency').value = original['robos:currency']; $('finance-category').value = original['robos:costCategory'] === 'sales' ? 'other' : original['robos:costCategory']; }
+  }
+}
+$('finance-direction').onchange = selectFinanceCredit; $('finance-original').onchange = selectFinanceCredit;
+$('finance-job').onchange = () => { const job = state.records.find(n => n['@id'] === $('finance-job').value); const entry = state.records.find(n => n['@type'] === 'robos:ShopFinanceEntry' && n['robos:job']?.['@id'] === job?.['@id']); $('finance-currency').value = job?.['robos:billingCurrency'] || entry?.['robos:currency'] || $('report-currency').value; };
+$('finance-form').onsubmit = e => {
+  e.preventDefault(); const submit = e.target.querySelector('button'); if (submit.disabled) return; submit.disabled = true;
+  safely(async () => { try { await window.auto.recordFinance({ ...Object.fromEntries(new FormData(e.target)), requestId: financeRequestId }); financeRequestId = window.crypto.randomUUID(); e.target.reset(); $('finance-credit-picker').hidden = true; await refresh(); message('Financial entry recorded and committed to private shop history.'); } finally { submit.disabled = false; } });
+};

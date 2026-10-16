@@ -91,6 +91,13 @@ custom_minimum_size = Vector2(130, 30)
 layout_mode = 2
 text = "Role: Player"
 
+[node name="BtnAIEngineOptions" type="Button" parent="UI/SidebarHeader"]
+custom_minimum_size = Vector2(68, 30)
+layout_mode = 2
+tooltip_text = "🤖 AI Engine Options [A]
+Configure autonomous AI player and turn progression."
+text = "🤖 AI"
+
 [node name="DicePanel" type="Panel" parent="UI"]
 offset_left = 1416.0
 offset_top = 52.0
@@ -186,6 +193,7 @@ layout_mode = 2
 text = "Summon"
 
 [node name="BtnAIStep" type="Button" parent="UI/ActionsBar/HotbarHBox/ActionsScroll/Actions"]
+visible = false
 custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
 text = "AI Step"

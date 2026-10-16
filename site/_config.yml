@@ -1,5 +1,5 @@
 title: RobOS
-description: "RobOS is a desktop suite of developer apps, a knowledge graph of your system, and review tools that show what a coding agent changed and prove it works."
+description: "RobOS is a context-engineering toolset and app suite for AI development: a standard knowledge graph (KGraph) for everything, context-efficient routing to any LLM provider, and a complete SDLC from planning to merge."
 url: "https://rowbose.com"
 baseurl: ""
 

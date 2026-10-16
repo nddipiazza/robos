@@ -95,3 +95,9 @@ packages:
 
 
 
+
+  - id: "auto"
+    namespace: "robos.auto"
+    title: "RobOS Auto"
+    description: "Vehicle identity, maintenance, parts, shop operations and source provenance."
+    path: "kgraphs/auto/package.jsonld"

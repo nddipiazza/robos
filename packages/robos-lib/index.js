@@ -3,6 +3,7 @@ const path = require('path');
 
 // ── Canonical RobOS App Categories ──
 const CATEGORIES = {
+  'Auto':     { order: 9, label: 'RobOS Auto', icon: '🚘' },
   'Dev':      { order: 1, label: 'Development',   icon: '🔧' },
   'AI':       { order: 2, label: 'AI & Agents',   icon: '🤖' },
   'Security': { order: 3, label: 'Security',      icon: '🔒' },

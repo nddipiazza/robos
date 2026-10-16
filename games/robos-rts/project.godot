@@ -1,0 +1,33 @@
+; Engine configuration file.
+; RobOS RTS — Deterministic 64Hz real-time strategy engine
+
+config_version=5
+
+[application]
+
+config/name="RobOS RTS: Starfall Command"
+config/description="Deterministic 64Hz RTS with three asymmetric factions, an angled 3D camera and an HTTP/JSON bot API"
+run/main_scene="res://scenes/RTSMain.tscn"
+config/features=PackedStringArray("4.3", "GL Compatibility")
+config/icon="res://icon.svg"
+
+[autoload]
+
+RTSData="*res://scripts/engine/RTSData.gd"
+SimEngine="*res://scripts/engine/SimEngine.gd"
+RTSCommanderAI="*res://scripts/engine/RTSCommanderAI.gd"
+GameControlServer="*res://scripts/GameControlServer.gd"
+
+[display]
+
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+window/size/window_width_override=1920
+window/size/window_height_override=1080
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"

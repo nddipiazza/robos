@@ -58,6 +58,25 @@
           📋 Copy JSON
         </button>
 
+        <div class="header-divider"></div>
+
+        <button
+          id="btn-voice-add-items"
+          class="btn btn-voice-record"
+          title="Voice Dictation: Click to record map setup instructions"
+          aria-label="Voice Dictation"
+          aria-pressed="false">
+          <span class="voice-record-icon-wrap">
+            <svg class="voice-mic-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+              <line x1="12" x2="12" y1="19" y2="22"/>
+              <line x1="8" y1="16" x2="16" y2="22"/>
+            </svg>
+            <span class="voice-listening-indicator" aria-hidden="true"></span>
+          </span>
+        </button>
+
         <button id="btn-test-play" class="btn btn-primary" title="Launch Godot Tabletop RPG to test play this quest">
           ⚔️ Test Play
         </button>
@@ -70,14 +89,16 @@
         <span class="info-tag" title="Active Blockmap">🗺️ <strong id="info-blockmap-name">HeroQuest: First Light Side A</strong></span>
         <span class="info-tag" title="Grid Dimensions">📐 <strong id="info-grid-size">26 × 19</strong></span>
         <span class="info-tag" title="Active Quest Title">📜 <strong id="info-quest-title">Quest 1: Custom Dungeon</strong></span>
+        <span id="info-validation-badge" class="info-tag badge-valid" title="Click to view error validation details" style="cursor:pointer;">✅ <strong>0 Errors</strong></span>
       </div>
       <div class="info-center">
         <span id="info-active-tool" class="info-tag tool-highlight">🛠️ Tool: Door</span>
         <span id="info-cursor-coords" class="info-tag">📍 Cursor: --, --</span>
         <span id="info-tile-coords" class="info-tag">🎯 Tile: [-, -]</span>
-        <span id="info-room-name" class="info-tag">🏠 Room: None</span>
+        <span id="info-room-name" class="info-tag" title="Click to toggle Room Names on board" style="cursor:pointer;">🏠 Room: None</span>
       </div>
       <div class="info-right">
+        <button id="btn-toggle-room-names" class="btn-sm btn-secondary active-toggle" title="Toggle Room Names on Board (Shortcut: Shift+N)">🏷️ Names</button>
         <button id="btn-zoom-out" class="btn-icon" title="Zoom Out">-</button>
         <span id="info-zoom-level" class="zoom-text">100%</span>
         <button id="btn-zoom-in" class="btn-icon" title="Zoom In">+</button>
@@ -122,14 +143,19 @@
           <span class="label">Block</span>
         </button>
 
-        <button class="tool-btn" data-tool="stairs" title="Place heroes' starting spiral staircase">
+        <button class="tool-btn" data-tool="start" title="Place heroes' starting entrance / staircase (can be on border or corridor)">
           <span class="icon">🪜</span>
-          <span class="label">Stairs</span>
+          <span class="label">Start</span>
+        </button>
+
+        <button class="tool-btn" data-tool="exit" title="Place quest exit staircase / escape tile (can be on border or corridor)">
+          <span class="icon">🏁</span>
+          <span class="label">Exit</span>
         </button>
 
         <button class="tool-btn" data-tool="note" title="Place story trigger / room encounter notes">
-          <span class="icon">📜</span>
-          <span class="label">Note</span>
+          <span class="icon">⚡</span>
+          <span class="label">Trigger</span>
         </button>
 
         <button class="tool-btn btn-erase" data-tool="erase" title="Erase placed quest entities">
@@ -159,13 +185,13 @@
           <div id="subopts-door" class="subopts-group active">
             <div class="subopt-row">
               <label class="radio-label">
-                <input type="radio" name="door-type" value="wood-closed" checked> Wood Door (Closed)
+                <input type="radio" name="door-type" value="wood-closed" checked> Wood Door <span class="door-status-pill door-badge-closed">CLOSED</span>
               </label>
               <label class="radio-label">
-                <input type="radio" name="door-type" value="wood-open"> Wood Door (Open)
+                <input type="radio" name="door-type" value="wood-open"> Wood Door <span class="door-status-pill door-badge-open">OPEN</span>
               </label>
               <label class="radio-label">
-                <input type="radio" name="door-type" value="secret"> Secret Door (Hidden)
+                <input type="radio" name="door-type" value="secret"> Secret Door <span class="door-status-pill door-badge-secret">SECRET</span>
               </label>
             </div>
           </div>
@@ -179,7 +205,7 @@
               <option value="zombie">Zombie (Move: 4, Atk: 3, Def: 3, BP: 1, Undead)</option>
               <option value="mummy">Mummy (Move: 4, Atk: 3, Def: 4, BP: 2, Undead)</option>
               <option value="chaos_warrior">Chaos / Dread Warrior (Move: 7, Atk: 3, Def: 4, BP: 2)</option>
-              <option value="fimir">Fimir (Move: 6, Atk: 3, Def: 3, BP: 2)</option>
+              <option value="fimir">Fimir / Abomination (Move: 6, Atk: 3, Def: 3, BP: 2)</option>
               <option value="gargoyle">Gargoyle (Move: 6, Atk: 4, Def: 5, BP: 3)</option>
               <option value="boss">Custom Boss / Warlord...</option>
             </select>
@@ -188,6 +214,10 @@
           <!-- Furniture suboptions -->
           <div id="subopts-furniture" class="subopts-group" style="display:none;">
             <select id="select-furniture-type" class="dropdown dropdown-sm">
+              <option value="stairs_up_1x1">🪜 Up Staircase (1×1)</option>
+              <option value="stairs_down_1x1">🪜 Down Staircase (1×1)</option>
+              <option value="stairs_up_2x2">🪜 Up Staircase (2×2)</option>
+              <option value="stairs_down_2x2">🪜 Down Staircase (2×2)</option>
               <option value="chest" selected>📦 Treasure Chest (1×1)</option>
               <option value="table">🪵 Table (2×2)</option>
               <option value="bookcase">📚 Bookcase (3×1)</option>
@@ -232,8 +262,74 @@
               <input type="text" id="input-note-marker" class="text-input" value="Note A" style="width:70px;">
             </div>
           </div>
+
+          <!-- Start tile suboptions -->
+          <div id="subopts-start" class="subopts-group" style="display:none;">
+            <p style="font-size:11px; color:#94a3b8; line-height:1.4;">
+              Click any tile to place the heroes' starting entrance / staircase.
+            </p>
+            <div class="info-tag" style="margin-top:4px;">
+              📍 Position: <strong id="subopts-start-pos">[0, 1]</strong>
+            </div>
+            <div id="subopts-start-border-badge" class="badge" style="margin-top:4px; display:inline-block; font-size:10px;">
+              Border Tile (Outside Entrance)
+            </div>
+            <p style="font-size:10px; color:#64748b; margin-top:6px; font-style:italic;">
+              Note: Border tiles are normally non-walkable, but the start position can exist there.
+            </p>
+            <div class="form-row" style="margin-top:8px;">
+              <label for="select-start-stair-type"><strong style="font-size:11px;">Staircase Style:</strong></label>
+              <select id="select-start-stair-type" class="dropdown dropdown-sm">
+                <option value="stairs_up_1x1" selected>🪜 Up Staircase (1×1)</option>
+                <option value="stairs_down_1x1">🪜 Down Staircase (1×1)</option>
+                <option value="stairs_up_2x2">🪜 Up Staircase (2×2)</option>
+                <option value="stairs_down_2x2">🪜 Down Staircase (2×2)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Exit tile suboptions -->
+          <div id="subopts-exit" class="subopts-group" style="display:none;">
+            <p style="font-size:11px; color:#94a3b8; line-height:1.4;">
+              Click any tile to place the quest exit / escape staircase.
+            </p>
+            <div class="info-tag" style="margin-top:4px;">
+              📍 Position: <strong id="subopts-exit-pos">None</strong>
+            </div>
+            <div id="subopts-exit-border-badge" class="badge" style="margin-top:4px; display:none; font-size:10px; color:#34d399; border-color:#059669;">
+              Border Tile (Outside Exit)
+            </div>
+            <div class="form-row" style="margin-top:8px;">
+              <label for="select-exit-stair-type"><strong style="font-size:11px;">Staircase Style:</strong></label>
+              <select id="select-exit-stair-type" class="dropdown dropdown-sm">
+                <option value="stairs_down_1x1" selected>🪜 Down Staircase (1×1)</option>
+                <option value="stairs_up_1x1">🪜 Up Staircase (1×1)</option>
+                <option value="stairs_down_2x2">🪜 Down Staircase (2×2)</option>
+                <option value="stairs_up_2x2">🪜 Up Staircase (2×2)</option>
+              </select>
+            </div>
+            <p style="font-size:10px; color:#64748b; margin-top:6px; font-style:italic;">
+              Note: Border tiles are normally non-walkable, but the exit position can exist there.
+            </p>
+            <button id="btn-clear-exit" class="btn btn-sm btn-secondary" style="margin-top:8px;">
+              Clear Exit Tile
+            </button>
+          </div>
         </div>
       </nav>
+
+      <!-- Left Vertical Resizer -->
+      <div
+        class="split-divider col-resize"
+        id="resizer-left"
+        data-target="prev"
+        data-min="110"
+        data-max="380"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize Left Tool Palette"
+        title="Drag to resize Tool Palette · Double-click to reset">
+      </div>
 
       <!-- Center Canvas Viewport -->
       <div id="canvas-viewport" class="canvas-viewport">
@@ -243,13 +339,28 @@
         </div>
       </div>
 
+      <!-- Right Vertical Resizer -->
+      <div
+        class="split-divider col-resize"
+        id="resizer-right"
+        data-target="next"
+        data-min="240"
+        data-max="680"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize Right Inspector Sidebar"
+        title="Drag to resize Inspector Sidebar · Double-click to reset">
+      </div>
+
       <!-- Right Sidebar (Inspector & Quest Settings) -->
       <aside class="sidebar-right">
         <div class="sidebar-tabs">
           <button class="side-tab active" data-tab="tab-quest-meta">🎯 Quest</button>
           <button class="side-tab" data-tab="tab-entity-inspector">🔍 Inspector</button>
+          <button class="side-tab" data-tab="tab-triggers">⚡ Triggers (<span id="badge-trigger-count">0</span>)</button>
           <button class="side-tab" data-tab="tab-entity-summary">📋 Entities (<span id="badge-entity-count">0</span>)</button>
           <button class="side-tab" data-tab="tab-layers">👁️ Layers</button>
+          <button id="tab-btn-validation" class="side-tab" data-tab="tab-validation">⚠️ Validation (<span id="badge-val-count">0</span>)</button>
         </div>
 
         <!-- Tab 1: Quest Metadata -->
@@ -277,7 +388,7 @@
                 <option value="zombie">Zombie (3 Atk, 3 Def, 1 BP)</option>
                 <option value="mummy">Mummy (3 Atk, 4 Def, 2 BP)</option>
                 <option value="chaos_warrior">Chaos Warrior (4 Atk, 4 Def, 3 BP)</option>
-                <option value="fimir">Fimir (3 Atk, 3 Def, 2 BP)</option>
+                <option value="fimir">Fimir / Abomination (3 Atk, 3 Def, 2 BP)</option>
                 <option value="gargoyle">Gargoyle (4 Atk, 5 Def, 3 BP)</option>
               </select>
             </div>
@@ -319,6 +430,13 @@
                 <input type="text" id="inspect-name" class="text-input" style="flex:1;">
               </div>
 
+              <div class="form-row" style="margin-top:8px;">
+                <label class="custom-checkbox">👻 Hidden Object (Initially invisible on board)
+                  <input type="checkbox" id="inspect-hidden">
+                  <span class="checkmark"></span>
+                </label>
+              </div>
+
               <!-- Monster specific fields -->
               <div id="inspect-group-monster" class="inspect-group" style="display:none; margin-top:10px;">
                 <div class="stat-pills-row">
@@ -354,12 +472,12 @@
                 <div class="form-row">
                   <label><strong>Initial State:</strong></label>
                   <select id="inspect-door-state" class="dropdown">
-                    <option value="closed">Closed</option>
-                    <option value="open">Open</option>
+                    <option value="closed">🔒 Closed (Solid Timber Slab)</option>
+                    <option value="open">🔓 Open (Passage &amp; Swung Leaf)</option>
                   </select>
                 </div>
                 <div class="form-row" style="margin-top:8px;">
-                  <label class="custom-checkbox">Secret Door (Hidden until searched)
+                  <label class="custom-checkbox">🔮 Secret Door (Hidden masonry until searched)
                     <input type="checkbox" id="inspect-door-secret">
                     <span class="checkmark"></span>
                   </label>
@@ -377,6 +495,15 @@
                   <label for="inspect-furn-treasure"><strong>Chest / Shelf Treasure:</strong></label>
                   <input type="text" id="inspect-furn-treasure" class="text-input" placeholder="e.g. 100 gold, Potion of Healing">
                 </div>
+                <div id="inspect-furn-stair-role" style="margin-top:10px; padding:8px 10px; border:1px solid #1e293b; border-radius:6px; background:rgba(15,23,42,0.65);">
+                  <div style="font-size:11px; font-weight:600; color:#94a3b8; margin-bottom:4px;">🪜 Map Item Role (Start / Exit)</div>
+                  <div id="inspect-furn-stair-status" style="font-size:11px; margin-bottom:6px; color:#cbd5e1;">Standard map piece</div>
+                  <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                    <button id="btn-furn-make-start" class="btn btn-xs btn-primary">🪜 Set as Start</button>
+                    <button id="btn-furn-make-exit" class="btn btn-xs btn-secondary">🏁 Set as Exit</button>
+                    <button id="btn-furn-clear-role" class="btn btn-xs btn-secondary" style="display:none;">Clear Role</button>
+                  </div>
+                </div>
               </div>
 
               <!-- Trap specific fields -->
@@ -387,25 +514,119 @@
                 </div>
               </div>
 
-              <!-- Note specific fields -->
+              <!-- Trigger / Note specific fields & Action Pipeline -->
               <div id="inspect-group-note" class="inspect-group" style="display:none; margin-top:10px;">
                 <div class="form-row">
-                  <label for="inspect-note-marker"><strong>Marker:</strong></label>
-                  <input type="text" id="inspect-note-marker" class="text-input" style="width:90px;">
+                  <label for="inspect-note-marker"><strong>Marker / ID:</strong></label>
+                  <input type="text" id="inspect-note-marker" class="text-input" style="width:90px;" placeholder="e.g. Note A">
                 </div>
                 <div class="form-row" style="margin-top:8px;">
                   <label for="inspect-note-title"><strong>Title:</strong></label>
-                  <input type="text" id="inspect-note-title" class="text-input" style="flex:1;">
+                  <input type="text" id="inspect-note-title" class="text-input" style="flex:1;" placeholder="e.g. Verag Awakens">
                 </div>
+
                 <div class="form-row" style="margin-top:8px;">
-                  <label for="inspect-note-narrative"><strong>Narrative / Special Event:</strong></label>
-                  <textarea id="inspect-note-narrative" class="text-input" rows="4" style="width:100%;"></textarea>
+                  <label for="inspect-trigger-event"><strong>Trigger Event:</strong></label>
+                  <select id="inspect-trigger-event" class="dropdown" style="flex:1;">
+                    <option value="on_room_entered">🏰 On Room Entered</option>
+                    <option value="on_tile_stepped_on">👣 On Tile Stepped On</option>
+                    <option value="on_door_opened">🚪 On Door Opened</option>
+                    <option value="on_monster_killed">💀 On Monster Killed</option>
+                    <option value="on_room_searched_treasure">💰 On Searched for Treasure</option>
+                    <option value="on_room_searched_traps">🔍 On Searched for Traps</option>
+                    <option value="on_game_start">🎮 On Game Start</option>
+                    <option value="on_game_end">🏆 On Game End</option>
+                  </select>
+                </div>
+
+                <div id="inspect-trigger-target-group" class="form-row" style="margin-top:8px;">
+                  <label id="inspect-trigger-target-lbl"><strong>Target:</strong></label>
+                  <div style="flex:1; display:flex; gap:6px; flex-wrap:wrap;">
+                    <select id="inspect-trigger-target-room" class="dropdown" style="flex:1; min-width:120px;">
+                      <!-- Populated dynamically -->
+                    </select>
+                    <select id="inspect-trigger-target-door" class="dropdown" style="flex:1; min-width:120px; display:none;">
+                      <!-- Populated dynamically -->
+                    </select>
+                    <select id="inspect-trigger-target-monster" class="dropdown" style="flex:1; min-width:120px; display:none;">
+                      <!-- Populated dynamically -->
+                    </select>
+                    <div id="inspect-trigger-target-tile" style="display:none; align-items:center; gap:4px;">
+                      <span style="font-size:11px;">X:</span><input type="number" id="inspect-trigger-tile-x" class="num-input-xs" style="width:45px;">
+                      <span style="font-size:11px;">Y:</span><input type="number" id="inspect-trigger-tile-y" class="num-input-xs" style="width:45px;">
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-row" style="margin-top:8px;">
+                  <label class="custom-checkbox">Once Only (Single Trigger)
+                    <input type="checkbox" id="inspect-trigger-once-only" checked>
+                    <span class="checkmark"></span>
+                  </label>
+                </div>
+
+                <div class="form-row" style="margin-top:8px;">
+                  <label for="inspect-note-narrative"><strong>Parchment Narrative:</strong></label>
+                  <textarea id="inspect-note-narrative" class="text-input" rows="3" style="width:100%;" placeholder="Mentor speaks: 'The stones tremble beneath your feet...'"></textarea>
+                </div>
+
+                <!-- Action Pipeline Builder -->
+                <div class="action-pipeline-section" style="margin-top:14px; border-top:1px solid var(--border-color); padding-top:10px;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <strong style="color:var(--accent); font-size:12px;">⚡ Launched Actions</strong>
+                    <div style="display:flex; gap:6px;">
+                      <select id="select-new-action-type" class="dropdown" style="font-size:11px; padding:3px 6px;">
+                        <option value="dialogue">💬 Character Dialogue</option>
+                        <option value="furniture_visible">✨ Furniture Becomes Visible</option>
+                        <option value="move_furniture">🪑 Furniture Moves To [X, Y]</option>
+                        <option value="display_message">📜 Display Message (Modal)</option>
+                        <option value="play_movie">🎬 Play Movie</option>
+                        <option value="attack_character">⚔️ Attack Character</option>
+                        <option value="cast_spell">🪄 Spell is Cast</option>
+                        <option value="spring_trap">⚠️ Trap is Sprung</option>
+                        <option value="show_message">📜 Show Message</option>
+                        <option value="spawn_monsters">👾 Spawn Monsters</option>
+                        <option value="grant_reward">💰 Grant Reward</option>
+                        <option value="end_game">🏁 End Game</option>
+                      </select>
+                      <button id="btn-add-action" type="button" class="btn btn-sm btn-secondary" style="font-size:11px; padding:3px 8px;">+ Add</button>
+                    </div>
+                  </div>
+                  <div id="inspect-trigger-actions-list" class="action-pipeline-list">
+                    <!-- Action cards dynamically inserted here -->
+                  </div>
                 </div>
               </div>
 
               <div class="form-actions" style="margin-top:14px; display:flex; justify-content:space-between;">
                 <button id="btn-delete-entity" class="btn btn-sm btn-danger">🗑️ Delete Entity</button>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: Triggers & Action Sequences -->
+        <div id="tab-triggers" class="sidebar-content">
+          <div class="section-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+              <h3>⚡ Quest Triggers</h3>
+              <button id="btn-add-trigger" class="btn btn-sm btn-primary">+ Add Trigger</button>
+            </div>
+            <div class="form-row" style="margin-bottom:10px;">
+              <select id="filter-trigger-event" class="dropdown" style="width:100%; font-size:11px;">
+                <option value="all">Filter: All Events</option>
+                <option value="on_game_start">🎮 On Game Start</option>
+                <option value="on_game_end">🏆 On Game End</option>
+                <option value="on_tile_stepped_on">👣 On Tile Stepped On</option>
+                <option value="on_door_opened">🚪 On Door Opened</option>
+                <option value="on_room_entered">🏰 On Room Entered</option>
+                <option value="on_monster_killed">💀 On Monster Killed</option>
+                <option value="on_room_searched_treasure">💰 On Searched for Treasure</option>
+                <option value="on_room_searched_traps">🔍 On Searched for Traps</option>
+              </select>
+            </div>
+            <div id="trigger-list" class="trigger-card-list">
+              <!-- Dynamically populated trigger cards -->
             </div>
           </div>
         </div>
@@ -433,11 +654,15 @@
                 <input type="checkbox" id="chk-show-grid" checked>
                 <span class="checkmark"></span>
               </label>
-              <label class="custom-checkbox">Show Blockmap Rooms
+              <label class="custom-checkbox">Show Blockmap Rooms <span class="layer-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f59e0b;box-shadow:0 0 4px rgba(245,158,11,0.6);margin-left:4px;vertical-align:middle;" title="Amber underlay tint"></span>
                 <input type="checkbox" id="chk-show-rooms" checked>
                 <span class="checkmark"></span>
               </label>
-              <label class="custom-checkbox">Show Blockmap Corridors
+              <label class="custom-checkbox" style="padding-left: 32px;">Show Room Names <span class="layer-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#fde047;box-shadow:0 0 4px rgba(253,224,71,0.6);margin-left:4px;vertical-align:middle;" title="Room label text on board"></span>
+                <input type="checkbox" id="chk-show-room-names" checked>
+                <span class="checkmark"></span>
+              </label>
+              <label class="custom-checkbox">Show Blockmap Corridors <span class="layer-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#38bdf8;box-shadow:0 0 4px rgba(56,189,248,0.6);margin-left:4px;vertical-align:middle;" title="Sky Blue underlay tint"></span>
                 <input type="checkbox" id="chk-show-corridors" checked>
                 <span class="checkmark"></span>
               </label>
@@ -465,6 +690,14 @@
                 <input type="checkbox" id="chk-show-notes" checked>
                 <span class="checkmark"></span>
               </label>
+              <label class="custom-checkbox">Show Validation Warnings <span class="layer-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ef4444;box-shadow:0 0 4px rgba(239,68,68,0.6);margin-left:4px;vertical-align:middle;" title="Red error highlights on board"></span>
+                <input type="checkbox" id="chk-show-validation" checked>
+                <span class="checkmark"></span>
+              </label>
+              <label class="custom-checkbox">Additional Border Tile
+                <input type="checkbox" id="chk-additional-border">
+                <span class="checkmark"></span>
+              </label>
             </div>
 
             <div class="form-row" style="margin-top:12px;">
@@ -475,6 +708,33 @@
             <div class="form-row" style="margin-top:8px;">
               <label>Grid Opacity:</label>
               <input type="range" id="slider-grid-opacity" class="range-slider" min="0" max="1" step="0.05" value="0.75">
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 5: Error Validation -->
+        <div id="tab-validation" class="sidebar-content">
+          <div class="section-card">
+            <h3>⚠️ Quest Error Validation</h3>
+            <p class="section-desc">Real-time HeroQuest layout validation rules: furniture bounds, door perimeters, and object collisions.</p>
+
+            <div id="val-summary-banner" class="val-summary-banner banner-valid">
+              <span id="val-summary-icon" class="val-summary-icon">✅</span>
+              <div class="val-summary-text">
+                <strong id="val-summary-title">No Validation Errors</strong>
+                <span id="val-summary-desc">All furniture, doors, and objects pass HeroQuest board placement rules.</span>
+              </div>
+            </div>
+
+            <div class="val-filters">
+              <button class="filter-pill active" data-filter="all">All (<span id="val-filter-all-count">0</span>)</button>
+              <button class="filter-pill" data-filter="furniture_bounds">🪑 Bounds (<span id="val-filter-bounds-count">0</span>)</button>
+              <button class="filter-pill" data-filter="door_wall">🚪 Walls (<span id="val-filter-door-count">0</span>)</button>
+              <button class="filter-pill" data-filter="overlap">💥 Overlaps (<span id="val-filter-overlap-count">0</span>)</button>
+            </div>
+
+            <div id="validation-errors-list" class="validation-errors-list">
+              <!-- Rendered error cards -->
             </div>
           </div>
         </div>
