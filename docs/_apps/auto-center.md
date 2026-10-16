@@ -9,22 +9,22 @@ description: "Separate owner and maintenance center workspaces backed by KGraph.
 
 Choose **Vehicle owner** to track your vehicles, service history, future maintenance by date or odometer, and repair-shop invoices. Import an image or PDF, review the locally extracted text, and save the original with its hash.
 
-![Owner maintenance planning in Auto Center, using labeled test records](/assets/images/screenshots/auto-owner-maintenance.png)
+![Owner maintenance planning in Auto Center, using labeled test records]({{ '/assets/images/screenshots/auto-owner-maintenance.png' | relative_url }})
 
 Choose **Maintenance center** for customer vehicles and a repair queue from intake to completion. Changes and accepted invoices have private local Git history. Connecting and pushing to an existing GitHub remote requires the app to verify that repository is private. The two modes keep separate records and remember the selected workspace.
 
-![Maintenance center with a test repair job and actual local Git history](/assets/images/screenshots/auto-maintenance-center.png)
+![Maintenance center with a test repair job and actual local Git history]({{ '/assets/images/screenshots/auto-maintenance-center.png' | relative_url }})
 
 **Center reports** opens on **Shop floor** in maintenance center mode. Switch to **Profit & costs**, **Payments** or **Performance** for the other reports. Tabs support keyboard navigation, and the layout adapts to smaller windows. Vehicle cards track cars physically checked into the shop, with parking location, time held, repair status and collection controls. Profit cards show earned repair sales minus actual expenses for the selected day, Monday-start week and month. Record parts, actual labor cost, supplies and shared overhead with vendor/invoice references. Per-job reports show earned sales, direct costs, direct profit and margin; shared overhead reduces period profit. Costs and sales use earned/incurred dates, including unpaid items. Linked credits preserve corrections; missing-cost/sales warnings expose incomplete records. Separate payment cards show collections minus refunds. Additional reports cover balances, job statuses, technician workload, vehicle flow, turnaround and maintenance due dates. Expenses, earned sales, payments and stays are backed by the private shop KGraph and Git history.
 
-![Shop floor with live workload and checked-in test vehicles](/assets/images/screenshots/auto-center-reports.png)
+![Shop floor with live workload and checked-in test vehicles]({{ '/assets/images/screenshots/auto-center-reports.png' | relative_url }})
 
-![Profit and costs with per-job margins from labeled test entries](/assets/images/screenshots/auto-job-profit.png)
+![Profit and costs with per-job margins from labeled test entries]({{ '/assets/images/screenshots/auto-job-profit.png' | relative_url }})
 
-![Cars checked into the center, using labeled test vehicles](/assets/images/screenshots/auto-cars-at-center.png)
+![Cars checked into the center, using labeled test vehicles]({{ '/assets/images/screenshots/auto-cars-at-center.png' | relative_url }})
 
 The public catalog includes vehicle configurations, diagnostic codes, and parsed NHTSA post-2010 recalls. Recall views link campaigns, published repair remedies, reported affected components and the original applicability rows. Inspect the exact source line, fields and SHA-256, reveal the cached archive, or follow the official source links. These are source reports, not VIN-specific recall status or verified replacement-part fitment.
 
-![A published recall remedy and its source-backed components in Auto Center](/assets/images/screenshots/auto-bulk-recall-remedy.png)
+![A published recall remedy and its source-backed components in Auto Center]({{ '/assets/images/screenshots/auto-bulk-recall-remedy.png' | relative_url }})
 
 Use **Sources & imports** to collect public data and prepare validated imports. Owner and shop documents stay in private local stores. See the [source, setup and coverage guide](https://github.com/nddipiazza/robos/blob/codex/robos-auto-center/packages/auto-center/README.md) for OCR dependencies, private Git setup and remaining scope.
