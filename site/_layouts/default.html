@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% if page.url == '/' %}RobOS — Trust every line your agents write{% else %}{{ page.title }} · RobOS{% endif %}</title>
-  <meta name="description" content="{{ page.description | default: 'RobOS is the AI-first SDLC platform: a desktop suite, a knowledge graph of your system, and proof-of-work for every agent change.' }}">
+  <title>{% if page.url == '/' %}RobOS — The knowledge graph is the product{% else %}{{ page.title }} · RobOS{% endif %}</title>
+  <meta name="description" content="{{ page.description | default: 'RobOS is a context-engineering toolset for AI development: a standard knowledge graph for everything, context-efficient routing to any LLM, and a complete SDLC.' }}">
   <meta property="og:title" content="{{ page.title }} · RobOS">
   <meta property="og:image" content="{{ page.og_image | default: '/v1/assets/images/kgraph-autogen-architecture.jpg' | absolute_url }}">
   <meta name="twitter:card" content="summary_large_image">
@@ -44,7 +44,7 @@
   <div class="wrap foot-in">
     <div>
       <a class="brand" href="{{ '/' | relative_url }}"><img src="{{ '/assets/logo-mark.png' | relative_url }}" alt="" height="30"><span>RobOS</span></a>
-      <p class="muted">AI agents write the code.<br>RobOS makes sure you can trust it.</p>
+      <p class="muted">Capture how everything works.<br>Let agents build it, cheaply.</p>
     </div>
     <div><h4>Product</h4><a href="{{ '/download/' | relative_url }}">Download</a><a href="{{ '/apps/' | relative_url }}">App directory</a><a href="{{ '/v1/roadmap.html' | relative_url }}">Roadmap</a><a href="{{ '/future/' | relative_url }}">The future</a></div>
     <div><h4>Resources</h4><a href="{{ '/docs/' | relative_url }}">Documentation</a><a href="{{ '/v1/getting-started.html' | relative_url }}">Installation guide</a><a href="{{ '/v1/' | relative_url }}">Classic docs (v1)</a></div>
