@@ -83,9 +83,9 @@ class TestAIEngineOptionsModalE2E(unittest.TestCase):
         self.player = TabletopQAPlayer(port=self.port, human_delay=0.05)
         self.assertTrue(self.player.wait_for_ready(timeout=14.0), "Godot Tabletop server failed to start")
 
-    def test_01_ai_button_in_header_and_not_in_main_toolbar(self):
+    def test_01_ai_button_in_bottom_left_and_not_in_main_toolbar(self):
         print("\n==========================================================================================")
-        print("🤖 SCENARIO 01: AI button in SidebarHeader and removed/hidden from main action toolbar")
+        print("🤖 SCENARIO 01: AI button on bottom left and removed/hidden from main action toolbar & header")
         print("==========================================================================================")
 
         self._start_game()
@@ -96,17 +96,21 @@ class TestAIEngineOptionsModalE2E(unittest.TestCase):
         print("  GIVEN   Game UI is loaded")
         st = self.player.get_state()
 
-        print("  WHEN    Inspecting UI header controls and action toolbar")
+        print("  WHEN    Inspecting UI header controls, action toolbar, and bottom-left controls")
         scene_ui = st.get("scene", {}).get("ui", {})
         header_btns = scene_ui.get("headerButtons", [])
         action_btns = scene_ui.get("actionButtons", [])
+        bottom_left_btns = scene_ui.get("bottomLeftButtons", [])
 
         print(f"    ✔  Header buttons: {header_btns}")
         print(f"    ✔  Action toolbar buttons: {action_btns}")
+        print(f"    ✔  Bottom-left buttons: {bottom_left_btns}")
 
-        # Assert BtnAIEngineOptions is in the header
-        self.assertIn("BtnAIEngineOptions", header_btns, "BtnAIEngineOptions not found in header!")
-        print("    ✔  [ASSERTION] BtnAIEngineOptions is in SidebarHeader outside main toolbar")
+        # Assert BtnAIEngineOptions is NOT in the header (preventing header button overflow)
+        self.assertNotIn("BtnAIEngineOptions", header_btns, "BtnAIEngineOptions should not be in header!")
+        # Assert BtnAIEngineOptions is in bottom-left buttons
+        self.assertIn("BtnAIEngineOptions", bottom_left_btns, "BtnAIEngineOptions not found in bottom left buttons!")
+        print("    ✔  [ASSERTION] BtnAIEngineOptions is at bottom-left outside header and toolbar")
 
         # Assert BtnAIStep is NOT in the active action toolbar
         self.assertNotIn("BtnAIStep", action_btns, "BtnAIStep is still visible in main action toolbar!")
