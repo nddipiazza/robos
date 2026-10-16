@@ -2,6 +2,11 @@
 # Dual-Role Cartridge Game Player for HeroQuest: Player Mode & DunMaster Mode
 extends Node2D
 
+signal cinematic_started(movie_path: String, title: String)
+signal cinematic_finished(movie_path: String)
+signal story_trigger_fired(trigger: Dictionary)
+signal story_trigger_completed(trigger: Dictionary)
+
 const GRID_COLS = 26
 const GRID_ROWS = 19
 const TILE_SIZE = 46.0
@@ -3903,10 +3908,15 @@ func reveal_room_by_id(r_id: String, is_starting_room: bool = false) -> void:
 		if room_movie != "":
 			play_movie(room_movie, "🎬 Chamber Reveal: %s" % room_name, true, true)
 		else:
-			# Check if any story trigger in this room has a movie
+			# Check if any story trigger in this room has a movie and is room-reveal triggered
 			for st in story_triggers:
 				if str(st.get("room", "")) == r_id and st.has("movie") and not st.get("triggered", false):
-					play_movie(str(st.get("movie")), "🎬 %s: %s" % [st.get("marker", "Note"), st.get("title", room_name)], true, true)
+					var ev = str(st.get("event", ""))
+					# If tied to door opening, let on_door_opened handle it with full door context
+					if ev == "on_door_opened":
+						continue
+					st["triggered"] = true
+					_setup_story_trigger_overlay(st, get_active_hero())
 					break
 
 func _is_inside_any_room(tile: Vector2i) -> bool:
@@ -4065,6 +4075,9 @@ func get_reachable_walk_tiles() -> Array[Vector2i]:
 	return result
 
 func _process(delta: float) -> void:
+	if is_movie_playing:
+		return
+
 	if not _quest_completed and not is_game_closed:
 		if CartridgeManager.auto_play_enabled or (ai_play_for_you and auto_advance_turn):
 			var is_enemy_animating = (current_phase == "gm_phase" and enemy_turn_stage in ["rolling", "moving", "pause_after_move", "acting", "waiting_for_action"])
@@ -5424,6 +5437,9 @@ func _execute_step_by_step_ai() -> void:
 	_execute_mentor_ai_party_step()
 
 func _check_manual_auto_advance(delta: float) -> void:
+	if is_movie_playing:
+		auto_advance_timer = 0.0
+		return
 	if current_phase != "hero_phase":
 		auto_advance_timer = 0.0
 		return
@@ -8222,6 +8238,14 @@ func cancel_ai_step() -> Dictionary:
 	return { "success": true, "cancelled": true, "step": cancelled_step }
 
 func _execute_auto_play_step() -> void:
+	if is_movie_playing:
+		return
+
+	if not active_story_trigger_overlay.is_empty():
+		_log("[AI ENGINE] 📜 Acknowledging Quest Note: '%s'..." % str(active_story_trigger_overlay.get("title", "Story Event")))
+		resolve_story_trigger_overlay_click()
+		return
+
 	if elf_spell_modal and elf_spell_modal.visible:
 		select_elf_element("water")
 		confirm_elf_spell_selection()
@@ -8281,6 +8305,14 @@ func _execute_auto_play_step() -> void:
 		_execute_mentor_ai_party_step()
 
 func _execute_mentor_ai_party_step() -> void:
+	if is_movie_playing:
+		return
+
+	if not active_story_trigger_overlay.is_empty():
+		_log("[MENTOR AI] 📜 Acknowledging Quest Note: '%s'..." % str(active_story_trigger_overlay.get("title", "Story Event")))
+		resolve_story_trigger_overlay_click()
+		return
+
 	# 1. Modals: Auto-resolve Elf Spell Selection so gameplay never hangs
 	if elf_spell_modal and elf_spell_modal.visible:
 		select_elf_element("water")
@@ -13237,11 +13269,50 @@ func _apply_trigger_rewards_and_spawns(trigger: Dictionary, hero: Dictionary) ->
 func _setup_story_trigger_overlay(trigger: Dictionary, hero: Dictionary) -> void:
 	var narrative = str(trigger.get("narrative", "")).strip_edges()
 	var actions = trigger.get("actions", [])
+
+	story_trigger_fired.emit(trigger)
+
+	# 1. Check if trigger has an associated cinematic movie (either on trigger or in actions)
+	var movie_url = str(trigger.get("movie", trigger.get("cinematic", "")))
+	if movie_url == "":
+		for act in actions:
+			if act is Dictionary and str(act.get("type", "")) == "play_movie":
+				movie_url = str(act.get("moviePath", act.get("movie", "")))
+				if movie_url != "":
+					break
+
+	# 2. If there is a cinematic movie, coordinate via events WITHOUT spawning a jarring blocking textbox!
+	if movie_url != "":
+		var movie_title = "🎬 %s: %s" % [trigger.get("marker", "Note"), trigger.get("title", "Cinematic Scene")]
+		var resolved = _resolve_movie_file_path(movie_url)
+
+		# If the movie is ALREADY currently playing (e.g. started by room reveal on door opening):
+		if is_movie_playing and (current_movie_path == resolved or current_movie_path == movie_url):
+			var prev_cb = pending_movie_callback
+			pending_movie_callback = func():
+				if prev_cb.is_valid():
+					prev_cb.call()
+				_on_story_trigger_movie_completed(trigger, hero)
+			return
+
+		# Otherwise, play the movie with completion event callback
+		var res = play_movie(movie_url, movie_title, true, true, func():
+			_on_story_trigger_movie_completed(trigger, hero)
+		)
+
+		# If already played or failed, run completion immediately
+		if not bool(res.get("success", false)) or not is_movie_playing:
+			_on_story_trigger_movie_completed(trigger, hero)
+		return
+
+	# 3. If no narrative and only actions, execute directly
 	if narrative == "" and actions.size() > 0:
 		_apply_trigger_rewards_and_spawns(trigger, hero)
 		_execute_trigger_actions(trigger, hero, 0)
+		story_trigger_completed.emit(trigger)
 		return
 
+	# 4. Non-cinematic narrative: present standard parchment card overlay
 	active_story_trigger_overlay = {
 		"trigger": trigger,
 		"hero": hero,
@@ -13250,7 +13321,7 @@ func _setup_story_trigger_overlay(trigger: Dictionary, hero: Dictionary) -> void
 		"marker": str(trigger.get("marker", "A")),
 		"title": str(trigger.get("title", "Story Event")),
 		"banner": str(trigger.get("banner", "QUEST NOTE [%s]" % str(trigger.get("marker", "A")))),
-		"narrative": str(trigger.get("narrative", "")),
+		"narrative": narrative,
 		"consequence": str(trigger.get("consequence", "")),
 		"gold": int(trigger.get("gold", 0)),
 		"item": trigger.get("item", null),
@@ -13262,16 +13333,32 @@ func _setup_story_trigger_overlay(trigger: Dictionary, hero: Dictionary) -> void
 		active_story_trigger_overlay.marker,
 		active_story_trigger_overlay.title
 	])
-	var movie_url = str(trigger.get("movie", trigger.get("cinematic", "")))
-	if movie_url == "":
-		for act in trigger.get("actions", []):
-			if act is Dictionary and str(act.get("type", "")) == "play_movie":
-				movie_url = str(act.get("moviePath", act.get("movie", "")))
-				if movie_url != "":
-					break
-	if movie_url != "":
-		play_movie(movie_url, "🎬 %s: %s" % [trigger.get("marker", "Note"), trigger.get("title", "Cinematic Scene")], true, true)
 	queue_redraw_all()
+
+func _on_story_trigger_movie_completed(trigger: Dictionary, hero: Dictionary) -> void:
+	var marker = str(trigger.get("marker", "Note"))
+	var title = str(trigger.get("title", "Story Event"))
+	var narrative = str(trigger.get("narrative", "")).strip_edges()
+
+	if narrative != "":
+		_log("[QUEST NOTE %s] 📜 %s: %s" % [marker, title, narrative])
+		var hero_id = str(hero.get("id", "")) if not hero.is_empty() else ""
+		var hero_name = str(hero.get("name", "Hero")) if not hero.is_empty() else "Hero"
+		record_transaction("STORY_TRIGGER", hero_id, hero_name, "%s: %s" % [title, narrative])
+
+	var h_pos = _to_grid_pos(hero.get("grid_pos", Vector2i(0, 0))) if not hero.is_empty() else Vector2i(0, 0)
+	if title != "":
+		spawn_floating_text(h_pos, "📜 %s" % title, Color(1.0, 0.85, 0.3), 2.5)
+
+	_apply_trigger_rewards_and_spawns(trigger, hero)
+	_execute_trigger_actions(trigger, hero, 0)
+	story_trigger_completed.emit(trigger)
+
+	# Ensure board, vision, and UI are fully refreshed
+	update_party_vision()
+	_update_ui()
+	queue_redraw_all()
+	auto_play_timer = 0.0
 
 func resolve_story_trigger_overlay_click() -> Dictionary:
 	if active_story_trigger_overlay.is_empty():
@@ -13293,6 +13380,7 @@ func resolve_story_trigger_overlay_click() -> Dictionary:
 		var rem_tr = overlay["remaining_trigger"]
 		var nxt_idx = int(overlay.get("next_action_index", 0))
 		_execute_trigger_actions(rem_tr, hero, nxt_idx)
+		story_trigger_completed.emit(rem_tr)
 		_update_ui()
 		queue_redraw_all()
 		return { "success": true, "trigger": rem_tr }
@@ -13301,6 +13389,7 @@ func resolve_story_trigger_overlay_click() -> Dictionary:
 	_apply_trigger_rewards_and_spawns(trigger, hero)
 	_execute_trigger_actions(trigger, hero, 0)
 
+	story_trigger_completed.emit(trigger)
 	_update_ui()
 	queue_redraw_all()
 	return {
@@ -15040,6 +15129,8 @@ func _execute_single_monster_action(m: Dictionary) -> int:
 	return acts
 
 func _process_enemy_turn(delta: float) -> void:
+	if is_movie_playing:
+		return
 	if not is_enemy_turn_waiting or active_enemy_turn_monster_id == "":
 		return
 
@@ -23754,19 +23845,29 @@ func _resolve_movie_file_path(path: String) -> String:
 
 	return clean_path
 
-func play_movie(movie_path: String, title: String = "", can_skip: bool = true, once_only: bool = true) -> Dictionary:
+func play_movie(movie_path: String, title: String = "", can_skip: bool = true, once_only: bool = true, on_finished: Callable = Callable()) -> Dictionary:
 	_setup_movie_player()
 	if movie_path == "":
+		if on_finished.is_valid():
+			on_finished.call()
 		return { "success": false, "error": "Empty movie path" }
 
 	var resolved = _resolve_movie_file_path(movie_path)
 	if once_only and (played_movies.has(resolved) or played_movies.has(movie_path)):
+		if on_finished.is_valid():
+			on_finished.call()
 		return { "success": false, "reason": "already_played", "path": resolved }
+
+	if on_finished.is_valid():
+		pending_movie_callback = on_finished
+	else:
+		pending_movie_callback = Callable()
 
 	played_movies[movie_path] = true
 	played_movies[resolved] = true
 	current_movie_path = resolved
 	current_movie_title = title
+	auto_play_timer = 0.0
 
 	_log("🎬 [CINEMATIC] %s" % (title if title != "" else resolved.get_file()))
 
@@ -23791,6 +23892,7 @@ func play_movie(movie_path: String, title: String = "", can_skip: bool = true, o
 		movie_player_layer.visible = true
 
 	is_movie_playing = true
+	cinematic_started.emit(resolved, title)
 
 	if not is_headless and movie_player_node:
 		movie_player_node.play()
@@ -23815,11 +23917,14 @@ func skip_movie() -> Dictionary:
 
 func _on_movie_player_finished() -> void:
 	is_movie_playing = false
+	auto_play_timer = 0.0
 	if movie_player_node:
 		movie_player_node.stop()
 		movie_player_node.stream = null
 	if movie_player_layer:
 		movie_player_layer.visible = false
+	var finished_movie = current_movie_path
+	cinematic_finished.emit(finished_movie)
 	if pending_movie_callback.is_valid():
 		var cb = pending_movie_callback
 		pending_movie_callback = Callable()
