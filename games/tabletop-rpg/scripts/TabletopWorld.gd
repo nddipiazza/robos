@@ -383,6 +383,22 @@ var btn_hud_toggle_collapse: Button = null
 var is_quest_hud_collapsed: bool = false
 var is_game_closed: bool = false
 var _quest_completed: bool = false
+
+# Quest Complete / Victory & Defeat Modal
+var quest_complete_modal: ColorRect = null
+var quest_complete_card: PanelContainer = null
+var quest_complete_title: Label = null
+var quest_complete_badge: Label = null
+var quest_complete_mentor_text: Label = null
+var quest_complete_objectives_vbox: VBoxContainer = null
+var quest_complete_bounty_label: Label = null
+var quest_complete_heroes_vbox: VBoxContainer = null
+var quest_complete_status_label: Label = null
+var btn_quest_complete_restart: Button = null
+var btn_quest_complete_view_board: Button = null
+var btn_quest_complete_menu: Button = null
+var btn_quest_complete_quit: Button = null
+
 var starting_room_id: String = ""
 var btn_quest_objectives: Button = null
 
@@ -517,6 +533,7 @@ func _ready() -> void:
 	_setup_ai_options_modal()
 	_setup_quest_objective_modal()
 	_setup_quest_objectives_hud()
+	_setup_quest_complete_modal()
 	_setup_turn_overlay_ui()
 	_setup_log_panel()
 	_setup_hero_detail_modal()
@@ -4048,24 +4065,25 @@ func get_reachable_walk_tiles() -> Array[Vector2i]:
 	return result
 
 func _process(delta: float) -> void:
-	if CartridgeManager.auto_play_enabled or (ai_play_for_you and auto_advance_turn):
-		var is_enemy_animating = (current_phase == "gm_phase" and enemy_turn_stage in ["rolling", "moving", "pause_after_move", "acting", "waiting_for_action"])
-		if not is_enemy_animating:
-			auto_play_timer += delta
-			var interval = 0.05 if is_headless_mode() else 0.75
-			if auto_play_timer >= interval:
-				auto_play_timer = 0.0
-				_execute_auto_play_step()
-	elif ai_play_for_you:
-		var is_enemy_animating = (current_phase == "gm_phase" and enemy_turn_stage in ["rolling", "moving", "pause_after_move", "acting", "waiting_for_action"])
-		if not is_enemy_animating and not ai_turn_waiting_for_input:
-			auto_play_timer += delta
-			var interval = 0.05 if is_headless_mode() else 0.75
-			if auto_play_timer >= interval:
-				auto_play_timer = 0.0
-				_execute_step_by_step_ai()
-	elif auto_advance_turn and current_phase == "hero_phase":
-		_check_manual_auto_advance(delta)
+	if not _quest_completed and not is_game_closed:
+		if CartridgeManager.auto_play_enabled or (ai_play_for_you and auto_advance_turn):
+			var is_enemy_animating = (current_phase == "gm_phase" and enemy_turn_stage in ["rolling", "moving", "pause_after_move", "acting", "waiting_for_action"])
+			if not is_enemy_animating:
+				auto_play_timer += delta
+				var interval = 0.05 if is_headless_mode() else 0.75
+				if auto_play_timer >= interval:
+					auto_play_timer = 0.0
+					_execute_auto_play_step()
+		elif ai_play_for_you:
+			var is_enemy_animating = (current_phase == "gm_phase" and enemy_turn_stage in ["rolling", "moving", "pause_after_move", "acting", "waiting_for_action"])
+			if not is_enemy_animating and not ai_turn_waiting_for_input:
+				auto_play_timer += delta
+				var interval = 0.05 if is_headless_mode() else 0.75
+				if auto_play_timer >= interval:
+					auto_play_timer = 0.0
+					_execute_step_by_step_ai()
+		elif auto_advance_turn and current_phase == "hero_phase":
+			_check_manual_auto_advance(delta)
 
 	var needs_redraw = false
 	if active_vfx.size() > 0:
@@ -6054,6 +6072,391 @@ func _update_quest_objective_content() -> void:
 			btn_quest_objective_close.text = "RETURN TO QUEST"
 
 # -----------------------------------------------------------------------------
+# Quest Complete / Victory & Defeat Modal
+# -----------------------------------------------------------------------------
+func _setup_quest_complete_modal() -> void:
+	var ui_node = get_node_or_null("UI")
+	if not ui_node:
+		return
+	if ui_node.has_node("QuestCompleteModal"):
+		quest_complete_modal = ui_node.get_node("QuestCompleteModal")
+		return
+
+	quest_complete_modal = ColorRect.new()
+	quest_complete_modal.name = "QuestCompleteModal"
+	quest_complete_modal.visible = false
+	quest_complete_modal.color = Color(0.02, 0.03, 0.06, 0.88)
+	quest_complete_modal.set_anchors_preset(Control.PRESET_FULL_RECT)
+	quest_complete_modal.mouse_filter = Control.MOUSE_FILTER_STOP
+
+	if tex_rpg_menu_dungeon_bg:
+		var dungeon_bg = TextureRect.new()
+		dungeon_bg.name = "DungeonBackdrop"
+		dungeon_bg.texture = tex_rpg_menu_dungeon_bg
+		dungeon_bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		dungeon_bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		dungeon_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+		dungeon_bg.modulate = Color(0.40, 0.40, 0.48, 0.88)
+		dungeon_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		quest_complete_modal.add_child(dungeon_bg)
+
+	quest_complete_modal.gui_input.connect(func(ev: InputEvent):
+		if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
+			close_quest_complete_modal()
+	)
+
+	quest_complete_card = PanelContainer.new()
+	quest_complete_card.name = "Card"
+	quest_complete_card.set_anchors_preset(Control.PRESET_CENTER)
+	quest_complete_card.custom_minimum_size = Vector2(720, 580)
+	quest_complete_card.offset_left = -360
+	quest_complete_card.offset_top = -290
+	quest_complete_card.offset_right = 360
+	quest_complete_card.offset_bottom = 290
+	quest_complete_card.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	quest_complete_card.grow_vertical = Control.GROW_DIRECTION_BOTH
+	quest_complete_card.mouse_filter = Control.MOUSE_FILTER_STOP
+	quest_complete_card.add_theme_stylebox_override("panel", get_rpg_dialog_panel_stylebox(32, 24, 32, 24))
+
+	var margin = MarginContainer.new()
+	margin.name = "Margin"
+	margin.custom_minimum_size = Vector2(680, 540)
+	margin.add_theme_constant_override("margin_left", 20)
+	margin.add_theme_constant_override("margin_top", 14)
+	margin.add_theme_constant_override("margin_right", 20)
+	margin.add_theme_constant_override("margin_bottom", 16)
+
+	var vbox = VBoxContainer.new()
+	vbox.name = "VBox"
+	vbox.custom_minimum_size = Vector2(680, 540)
+	vbox.add_theme_constant_override("separation", 8)
+	margin.add_child(vbox)
+
+	# 1. Header (Title, Badge, Close X)
+	var header = HBoxContainer.new()
+	header.name = "Header"
+
+	quest_complete_title = Label.new()
+	quest_complete_title.name = "Title"
+	quest_complete_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	quest_complete_title.text = "HEROQUEST : QUEST COMPLETE"
+	quest_complete_title.add_theme_stylebox_override("normal", get_rpg_title_plaque_stylebox(14, 6))
+	apply_rpg_font_to_label(quest_complete_title, true, 18, Color(1.0, 0.88, 0.35, 1.0))
+	header.add_child(quest_complete_title)
+
+	quest_complete_badge = Label.new()
+	quest_complete_badge.name = "Badge"
+	quest_complete_badge.text = "VICTORY ACHIEVED"
+	quest_complete_badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	quest_complete_badge.add_theme_stylebox_override("normal", get_rpg_badge_stylebox(Color(0.85, 0.72, 0.30, 0.90), Color(0.14, 0.10, 0.04, 0.92)))
+	apply_rpg_font_to_label(quest_complete_badge, false, 11, Color(1.0, 0.92, 0.55, 1.0))
+	header.add_child(quest_complete_badge)
+
+	var btn_x = Button.new()
+	btn_x.name = "BtnCloseHeader"
+	btn_x.text = "X"
+	btn_x.custom_minimum_size = Vector2(28, 28)
+	btn_x.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	apply_rpg_font_to_button(btn_x, 12, Color(0.85, 0.80, 0.70, 0.9))
+	btn_x.pressed.connect(close_quest_complete_modal)
+	header.add_child(btn_x)
+
+	vbox.add_child(header)
+
+	var sep = HSeparator.new()
+	vbox.add_child(sep)
+
+	# 2. Mentor's Parchment Proclamation Box
+	var mentor_panel = PanelContainer.new()
+	mentor_panel.name = "MentorPanel"
+	mentor_panel.add_theme_stylebox_override("panel", get_rpg_plaque_stylebox(14, 8, 14, 8))
+
+	var mentor_vbox = VBoxContainer.new()
+	mentor_vbox.name = "MentorVBox"
+	mentor_vbox.add_theme_constant_override("separation", 3)
+
+	var mentor_tag = Label.new()
+	mentor_tag.name = "MentorTag"
+	mentor_tag.text = "MENTOR'S PROCLAMATION"
+	apply_rpg_font_to_label(mentor_tag, true, 11, Color(1.0, 0.85, 0.35, 1.0))
+	mentor_vbox.add_child(mentor_tag)
+
+	quest_complete_mentor_text = Label.new()
+	quest_complete_mentor_text.name = "MentorText"
+	quest_complete_mentor_text.custom_minimum_size = Vector2(640, 0)
+	quest_complete_mentor_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	quest_complete_mentor_text.text = "\"Hail, victorious heroes! You have proven your valor in the depths of the catacombs. Verag lies slain, and your triumph echoes through the halls of the Empire!\""
+	apply_rpg_font_to_label(quest_complete_mentor_text, false, 12, Color(1.0, 0.94, 0.80, 1.0))
+	mentor_vbox.add_child(quest_complete_mentor_text)
+
+	mentor_panel.add_child(mentor_vbox)
+	vbox.add_child(mentor_panel)
+
+	# 3. Objectives Fulfilled Section
+	var obj_panel = PanelContainer.new()
+	obj_panel.name = "ObjectivesPanel"
+	obj_panel.add_theme_stylebox_override("panel", get_rpg_plaque_stylebox(12, 6, 12, 6))
+
+	quest_complete_objectives_vbox = VBoxContainer.new()
+	quest_complete_objectives_vbox.name = "ObjectivesVBox"
+	quest_complete_objectives_vbox.add_theme_constant_override("separation", 3)
+
+	var obj_title = Label.new()
+	obj_title.name = "ObjTitle"
+	obj_title.text = "QUEST OBJECTIVES"
+	apply_rpg_font_to_label(obj_title, true, 11, Color(0.95, 0.82, 0.35, 1.0))
+	quest_complete_objectives_vbox.add_child(obj_title)
+
+	obj_panel.add_child(quest_complete_objectives_vbox)
+	vbox.add_child(obj_panel)
+
+	# 4. Bounty / Reward Plaque
+	var bounty_panel = PanelContainer.new()
+	bounty_panel.name = "BountyPanel"
+	var b_style = get_rpg_badge_stylebox(Color(0.85, 0.72, 0.30, 0.90), Color(0.10, 0.08, 0.04, 0.92))
+	b_style.content_margin_top = 5
+	b_style.content_margin_bottom = 5
+	b_style.content_margin_left = 12
+	b_style.content_margin_right = 12
+	bounty_panel.add_theme_stylebox_override("panel", b_style)
+
+	quest_complete_bounty_label = Label.new()
+	quest_complete_bounty_label.name = "BountyLabel"
+	quest_complete_bounty_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	quest_complete_bounty_label.text = "🏆 IMPERIAL BOUNTY: 100 Gold Coins awarded to each living hero • Rounds: 1"
+	apply_rpg_font_to_label(quest_complete_bounty_label, true, 12, Color(1.0, 0.88, 0.35, 1.0))
+	bounty_panel.add_child(quest_complete_bounty_label)
+	vbox.add_child(bounty_panel)
+
+	# 5. Party Survivors Roster
+	var party_panel = PanelContainer.new()
+	party_panel.name = "PartyPanel"
+	party_panel.add_theme_stylebox_override("panel", get_rpg_plaque_stylebox(12, 6, 12, 6))
+
+	var party_vbox = VBoxContainer.new()
+	party_vbox.name = "PartyVBox"
+	party_vbox.add_theme_constant_override("separation", 3)
+
+	var party_title = Label.new()
+	party_title.name = "PartyTitle"
+	party_title.text = "PARTY ROSTER & OUTCOME"
+	apply_rpg_font_to_label(party_title, true, 11, Color(0.95, 0.82, 0.35, 1.0))
+	party_vbox.add_child(party_title)
+
+	quest_complete_heroes_vbox = VBoxContainer.new()
+	quest_complete_heroes_vbox.name = "HeroesVBox"
+	quest_complete_heroes_vbox.add_theme_constant_override("separation", 3)
+	party_vbox.add_child(quest_complete_heroes_vbox)
+
+	party_panel.add_child(party_vbox)
+	vbox.add_child(party_panel)
+
+	# 6. Buttons Row
+	var btn_hbox = HBoxContainer.new()
+	btn_hbox.name = "ButtonRow"
+	btn_hbox.add_theme_constant_override("separation", 8)
+
+	btn_quest_complete_restart = Button.new()
+	btn_quest_complete_restart.name = "BtnRestartQuest"
+	btn_quest_complete_restart.text = "RESTART QUEST"
+	btn_quest_complete_restart.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_quest_complete_restart.custom_minimum_size = Vector2(0, 36)
+	btn_quest_complete_restart.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	apply_rpg_font_to_button(btn_quest_complete_restart, 12, Color(1.0, 0.85, 0.60, 1.0))
+	btn_quest_complete_restart.pressed.connect(func():
+		close_quest_complete_modal()
+		delete_save_game()
+		_load_active_cartridge(true)
+		_quest_completed = false
+		is_game_closed = false
+		_update_ui()
+	)
+	btn_hbox.add_child(btn_quest_complete_restart)
+
+	btn_quest_complete_view_board = Button.new()
+	btn_quest_complete_view_board.name = "BtnViewBoard"
+	btn_quest_complete_view_board.text = "VIEW BOARD"
+	btn_quest_complete_view_board.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_quest_complete_view_board.custom_minimum_size = Vector2(0, 36)
+	btn_quest_complete_view_board.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	apply_rpg_font_to_button(btn_quest_complete_view_board, 12, Color(0.90, 0.92, 0.98, 1.0))
+	btn_quest_complete_view_board.pressed.connect(close_quest_complete_modal)
+	btn_hbox.add_child(btn_quest_complete_view_board)
+
+	btn_quest_complete_menu = Button.new()
+	btn_quest_complete_menu.name = "BtnMenu"
+	btn_quest_complete_menu.text = "GAME MENU"
+	btn_quest_complete_menu.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_quest_complete_menu.custom_minimum_size = Vector2(0, 36)
+	btn_quest_complete_menu.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	apply_rpg_font_to_button(btn_quest_complete_menu, 12, Color(0.85, 0.85, 0.85, 1.0))
+	btn_quest_complete_menu.pressed.connect(func():
+		close_quest_complete_modal()
+		open_game_menu()
+	)
+	btn_hbox.add_child(btn_quest_complete_menu)
+
+	btn_quest_complete_quit = Button.new()
+	btn_quest_complete_quit.name = "BtnQuit"
+	btn_quest_complete_quit.text = "EXIT QUEST"
+	btn_quest_complete_quit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_quest_complete_quit.custom_minimum_size = Vector2(0, 36)
+	btn_quest_complete_quit.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	apply_rpg_font_to_button(btn_quest_complete_quit, 12, Color(1.0, 0.50, 0.50, 1.0))
+	btn_quest_complete_quit.pressed.connect(func():
+		get_tree().quit(0)
+	)
+	btn_hbox.add_child(btn_quest_complete_quit)
+
+	vbox.add_child(btn_hbox)
+
+	var hint = Label.new()
+	hint.name = "HintLabel"
+	hint.text = "Press [Esc] or click View Board to inspect the dungeon at leisure • Click banner at any time to return"
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hint.add_theme_stylebox_override("normal", get_rpg_instruction_stylebox())
+	apply_rpg_font_to_label(hint, false, 10, Color(0.75, 0.72, 0.65, 0.80))
+	vbox.add_child(hint)
+
+	quest_complete_card.add_child(margin)
+	quest_complete_modal.add_child(quest_complete_card)
+	ui_node.add_child(quest_complete_modal)
+
+func is_quest_complete_modal_open() -> bool:
+	return quest_complete_modal != null and quest_complete_modal.visible
+
+func open_quest_complete_modal(is_victory: bool = true) -> void:
+	if elf_spell_modal and elf_spell_modal.visible:
+		elf_spell_modal.visible = false
+	if armory_modal and armory_modal.visible:
+		armory_modal.visible = false
+	if quest_objective_modal and quest_objective_modal.visible:
+		quest_objective_modal.visible = false
+	if not quest_complete_modal:
+		_setup_quest_complete_modal()
+	if not quest_complete_modal:
+		return
+	_update_quest_complete_content(is_victory)
+	quest_complete_modal.visible = true
+	if quest_complete_card:
+		quest_complete_card.reset_size()
+		quest_complete_card.set_anchors_preset(Control.PRESET_CENTER)
+		quest_complete_card.offset_left = -360
+		quest_complete_card.offset_top = -290
+		quest_complete_card.offset_right = 360
+		quest_complete_card.offset_bottom = 290
+	_log("🏆 [QUEST MODAL] Quest %s modal displayed (is_victory=%s)." % ["victory" if is_victory else "defeat", str(is_victory)])
+
+func close_quest_complete_modal() -> void:
+	if quest_complete_modal:
+		quest_complete_modal.visible = false
+	_update_ui()
+	queue_redraw_all()
+
+func _update_quest_complete_content(is_victory: bool = true) -> void:
+	var active_q = get_active_quest_objective()
+	var q_title = str(active_q.get("title", "The Trial"))
+	var bounty = int(active_q.get("goldReward", 100))
+
+	if quest_complete_title:
+		quest_complete_title.text = "HEROQUEST : QUEST COMPLETE" if is_victory else "HEROQUEST : QUEST FAILED"
+		var t_col = Color(1.0, 0.88, 0.35, 1.0) if is_victory else Color(1.0, 0.35, 0.35, 1.0)
+		apply_rpg_font_to_label(quest_complete_title, true, 18, t_col)
+
+	if quest_complete_badge:
+		quest_complete_badge.text = "VICTORY ACHIEVED" if is_victory else "DEFEAT"
+		if is_victory:
+			quest_complete_badge.add_theme_stylebox_override("normal", get_rpg_badge_stylebox(Color(0.85, 0.72, 0.30, 0.90), Color(0.14, 0.10, 0.04, 0.92)))
+			apply_rpg_font_to_label(quest_complete_badge, false, 11, Color(1.0, 0.92, 0.55, 1.0))
+		else:
+			quest_complete_badge.add_theme_stylebox_override("normal", get_rpg_badge_stylebox(Color(0.90, 0.25, 0.25, 0.90), Color(0.18, 0.04, 0.04, 0.92)))
+			apply_rpg_font_to_label(quest_complete_badge, false, 11, Color(1.0, 0.70, 0.70, 1.0))
+
+	if quest_complete_mentor_text:
+		if is_victory:
+			quest_complete_mentor_text.text = "\"Hail, victorious heroes! You have proven your valor in the depths of the catacombs. Verag lies slain, and your triumph echoes across the Empire!\""
+		else:
+			quest_complete_mentor_text.text = "\"Alas, brave adventurers. The dark forces of Zargon have overwhelmed this party. But courage never dies—rise again and reclaim your honor!\""
+
+	if quest_complete_bounty_label:
+		if is_victory:
+			quest_complete_bounty_label.text = "IMPERIAL BOUNTY: %d Gold Coins awarded to each living hero • Rounds: %d" % [bounty, current_round]
+		else:
+			quest_complete_bounty_label.text = "THE PARTY HAS FALLEN • Survived %d Rounds in the catacombs" % current_round
+
+	if quest_complete_objectives_vbox:
+		for child in quest_complete_objectives_vbox.get_children():
+			if child.name != "ObjTitle":
+				quest_complete_objectives_vbox.remove_child(child)
+				child.queue_free()
+		var goals = get_quest_objectives()
+		for item in goals:
+			var hbox = HBoxContainer.new()
+			hbox.name = "Goal_" + str(item.get("id", "goal"))
+			hbox.add_theme_constant_override("separation", 8)
+
+			var is_done = bool(item.get("completed", false)) or is_victory
+
+			var status_lbl = Label.new()
+			status_lbl.name = "Status"
+			status_lbl.text = "[OK]" if is_done else "[X]"
+			var st_col = Color(0.35, 0.95, 0.45, 1.0) if is_done else Color(0.95, 0.35, 0.35, 1.0)
+			apply_rpg_font_to_label(status_lbl, true, 11, st_col)
+			hbox.add_child(status_lbl)
+
+			var desc_lbl = Label.new()
+			desc_lbl.name = "Desc"
+			desc_lbl.text = str(item.get("title", ""))
+			desc_lbl.custom_minimum_size = Vector2(520, 0)
+			desc_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			var txt_col = Color(0.92, 0.96, 0.94, 1.0) if is_done else Color(0.85, 0.70, 0.70, 1.0)
+			apply_rpg_font_to_label(desc_lbl, false, 12, txt_col)
+			hbox.add_child(desc_lbl)
+
+			quest_complete_objectives_vbox.add_child(hbox)
+
+	if quest_complete_heroes_vbox:
+		for child in quest_complete_heroes_vbox.get_children():
+			quest_complete_heroes_vbox.remove_child(child)
+			child.queue_free()
+		for h in heroes:
+			var hbox = HBoxContainer.new()
+			hbox.add_theme_constant_override("separation", 8)
+			var h_name = get_hero_character_name(h)
+			var h_class = get_hero_class_name(h)
+			var cur_bp = int(h.get("current_bp", 0))
+			var max_bp = int(h.get("max_bp", 8))
+			var cur_gold = int(h.get("gold", 0))
+			var is_alive = cur_bp > 0
+
+			var icon_lbl = Label.new()
+			icon_lbl.text = "[SURVIVED]" if is_alive else "[FALLEN]"
+			var st_col = Color(0.35, 0.95, 0.45, 1.0) if is_alive else Color(0.95, 0.35, 0.35, 1.0)
+			apply_rpg_font_to_label(icon_lbl, true, 11, st_col)
+			hbox.add_child(icon_lbl)
+
+			var name_lbl = Label.new()
+			name_lbl.text = "%s (%s)" % [h_name, h_class]
+			name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			var n_col = Color(1.0, 0.95, 0.80, 1.0) if is_alive else Color(0.65, 0.65, 0.65, 0.8)
+			apply_rpg_font_to_label(name_lbl, true, 11, n_col)
+			hbox.add_child(name_lbl)
+
+			var bp_lbl = Label.new()
+			bp_lbl.text = "%d/%d BP" % [cur_bp, max_bp]
+			var bp_col = Color(0.4, 0.9, 0.5, 1.0) if cur_bp > 2 else (Color(1.0, 0.8, 0.2, 1.0) if cur_bp > 0 else Color(0.9, 0.3, 0.3, 1.0))
+			apply_rpg_font_to_label(bp_lbl, false, 11, bp_col)
+			hbox.add_child(bp_lbl)
+
+			var gold_lbl = Label.new()
+			gold_lbl.text = "%d GP" % cur_gold
+			apply_rpg_font_to_label(gold_lbl, false, 11, Color(1.0, 0.85, 0.35, 1.0))
+			hbox.add_child(gold_lbl)
+
+			quest_complete_heroes_vbox.add_child(hbox)
+
+# -----------------------------------------------------------------------------
 # Wandering Monster Modal & Card Inspector
 # -----------------------------------------------------------------------------
 func get_wandering_monster_card_data() -> Dictionary:
@@ -6767,10 +7170,34 @@ func complete_active_quest(quit_on_complete: bool = false) -> Dictionary:
 	record_transaction("QUEST_COMPLETE", "party", "Adventuring Party", "Quest '%s' successfully completed! Awarded %d gold bounty to party." % [str(active_q.get("title", "The Trial")), bounty], { "questId": q_id, "bounty": bounty, "slug": slug })
 	_log("💾 Game state saved and marked as CLOSED.")
 
-	_update_ui()
+	# Cleanly halt automated modes so AI doesn't continue stepping
+	CartridgeManager.auto_play_enabled = false
+	ai_play_for_you = false
+	auto_advance_turn = false
 
-	var is_test_server = OS.get_environment("TABLETOP_SERVER_PORT") != ""
-	if (quit_on_complete or not is_headless_mode()) and not is_test_server:
+	# Play celebratory voice dialogue sequence
+	_start_dialogue_sequence([
+		{
+			"speaker": "mentor",
+			"text": "Hail, victorious heroes! You have proven your valor in the depths of the catacombs. Verag lies slain, and your triumph echoes across the Empire!",
+			"audio": "res://assets/audio/quest_victory.ogg",
+			"duration": 8.5
+		}
+	])
+
+	# Celebrate with floating text over living heroes
+	for h in heroes:
+		if int(h.get("current_bp", 0)) > 0:
+			var pos = _to_grid_pos(h.get("grid_pos"))
+			spawn_floating_text(pos, "VICTORY!", Color(1.0, 0.85, 0.2), 3.0)
+
+	_update_ui()
+	queue_redraw_all()
+
+	# Open the grand Quest Complete modal
+	open_quest_complete_modal(true)
+
+	if quit_on_complete:
 		_log("🚪 Returning to RobOS Tabletop Studio...")
 		get_tree().create_timer(1.0).timeout.connect(func():
 			get_tree().quit(0)
@@ -7883,14 +8310,23 @@ func _execute_mentor_ai_party_step() -> void:
 		var q_title = str(get_active_quest_objective().get("title", "the dungeon"))
 		_log("🏆 [QUEST VICTORY] All objectives completed! The heroes triumph and complete %s!" % q_title)
 		complete_active_quest(false)
-		CartridgeManager.auto_play_enabled = false
-		_update_ui()
 		return
 
 	var living_heroes = heroes.filter(func(h): return int(h.get("current_bp", 0)) > 0 and bool(h.get("is_on_board", false)))
-	if living_heroes.is_empty():
+	if living_heroes.is_empty() and heroes.size() > 0:
 		_log("💀 [QUEST DEFEAT] All heroes have fallen in battle. Zargon claims total victory!")
 		CartridgeManager.auto_play_enabled = false
+		ai_play_for_you = false
+		auto_advance_turn = false
+		_start_dialogue_sequence([
+			{
+				"speaker": "mentor",
+				"text": "Alas, brave adventurers. The dark forces of Zargon have overwhelmed this party. But courage never dies—rise again and reclaim your honor!",
+				"audio": "res://assets/audio/quest_defeat.ogg",
+				"duration": 8.5
+			}
+		])
+		open_quest_complete_modal(false)
 		_update_ui()
 		return
 
@@ -7900,8 +8336,6 @@ func _execute_mentor_ai_party_step() -> void:
 		var q_title = str(get_active_quest_objective().get("title", "the dungeon"))
 		_log("🏆 [QUEST VICTORY] All minions of Zargon have been defeated! The heroes triumph and complete %s!" % q_title)
 		complete_active_quest(false)
-		CartridgeManager.auto_play_enabled = false
-		_update_ui()
 		return
 
 	# 4. Active Hero Evaluation
@@ -8438,6 +8872,12 @@ func _input(event: InputEvent) -> void:
 				targeting_cursor.queue_redraw()
 			queue_redraw_all()
 
+	if quest_complete_modal and quest_complete_modal.visible:
+		if (event is InputEventKey and event.pressed and (event.keycode == KEY_ESCAPE or event.keycode == KEY_SPACE or event.keycode == KEY_ENTER)):
+			close_quest_complete_modal()
+			get_viewport().set_input_as_handled()
+			return
+
 	if ai_options_modal and ai_options_modal.visible:
 		if (event is InputEventKey and event.pressed and (event.keycode == KEY_ESCAPE or event.keycode == KEY_A)):
 			close_ai_options_modal()
@@ -8507,6 +8947,12 @@ func _input(event: InputEvent) -> void:
 		return
 
 func _unhandled_input(event: InputEvent) -> void:
+	if quest_complete_modal and quest_complete_modal.visible:
+		if (event is InputEventKey and event.pressed and (event.keycode == KEY_ESCAPE or event.keycode == KEY_SPACE or event.keycode == KEY_ENTER)):
+			close_quest_complete_modal()
+			get_viewport().set_input_as_handled()
+			return
+
 	if quest_objective_modal and quest_objective_modal.visible:
 		if (event is InputEventKey and event.pressed and (event.keycode == KEY_ESCAPE or event.keycode == KEY_O or event.keycode == KEY_SPACE or event.keycode == KEY_ENTER)):
 			close_quest_objective_modal()
@@ -12659,13 +13105,25 @@ func _find_speaker_grid_pos(speaker_raw: String) -> Vector2i:
 func _play_dialogue_audio(path: String) -> void:
 	if path == "":
 		return
-	if not FileAccess.file_exists(path) and not ResourceLoader.exists(path):
-		return
 	if not voice_audio_player:
 		voice_audio_player = AudioStreamPlayer.new()
 		add_child(voice_audio_player)
-	var stream = load(path)
-	if stream is AudioStream:
+	var stream: AudioStream = null
+	if ResourceLoader.exists(path):
+		var res = load(path)
+		if res is AudioStream:
+			stream = res
+	if not stream and FileAccess.file_exists(path):
+		if path.ends_with(".ogg"):
+			stream = AudioStreamOggVorbis.load_from_file(path)
+		elif path.ends_with(".wav"):
+			var f = FileAccess.open(path, FileAccess.READ)
+			if f:
+				var wav = AudioStreamWAV.new()
+				wav.data = f.get_buffer(f.get_length())
+				f.close()
+				stream = wav
+	if stream:
 		voice_audio_player.stream = stream
 		voice_audio_player.play()
 
@@ -15372,6 +15830,27 @@ func _update_turn_overlay() -> void:
 	if not turn_overlay_btn:
 		return
 
+	if _quest_completed:
+		turn_overlay_mode = "quest_complete_prompt"
+		turn_overlay_btn.visible = true
+		turn_overlay_btn.text = "QUEST COMPLETE — VICTORY! (Click for Summary)"
+		turn_overlay_btn.reset_size()
+		turn_overlay_btn.position.x = 707.0 - turn_overlay_btn.size.x * 0.5
+		if flashy_number_panel:
+			flashy_number_panel.visible = false
+		return
+
+	var living_heroes = heroes.filter(func(h): return int(h.get("current_bp", 0)) > 0 and bool(h.get("is_on_board", false)))
+	if living_heroes.is_empty() and heroes.size() > 0 and not is_game_closed:
+		turn_overlay_mode = "quest_defeat_prompt"
+		turn_overlay_btn.visible = true
+		turn_overlay_btn.text = "QUEST FAILED — ALL HEROES SLAIN (Click for Summary)"
+		turn_overlay_btn.reset_size()
+		turn_overlay_btn.position.x = 707.0 - turn_overlay_btn.size.x * 0.5
+		if flashy_number_panel:
+			flashy_number_panel.visible = false
+		return
+
 	if current_phase != "hero_phase":
 		turn_overlay_btn.visible = false
 		turn_overlay_mode = "none"
@@ -15422,7 +15901,11 @@ func _update_turn_overlay() -> void:
 	turn_overlay_mode = "none"
 
 func _on_turn_overlay_pressed() -> void:
-	if turn_overlay_mode == "roll_prompt":
+	if turn_overlay_mode == "quest_complete_prompt":
+		open_quest_complete_modal(true)
+	elif turn_overlay_mode == "quest_defeat_prompt":
+		open_quest_complete_modal(false)
+	elif turn_overlay_mode == "roll_prompt":
 		roll_movement_dice()
 	elif turn_overlay_mode == "turn_complete":
 		end_turn()
@@ -18708,6 +19191,8 @@ func get_telemetry_state() -> Dictionary:
 		"isGameMenuOpen": is_game_menu_open(),
 		"questObjectiveModalOpen": is_quest_objective_open(),
 		"isQuestObjectiveOpen": is_quest_objective_open(),
+		"questCompleteModalOpen": is_quest_complete_modal_open(),
+		"isQuestCompleteModalOpen": is_quest_complete_modal_open(),
 		"wanderingMonsterCardOpen": is_wandering_monster_modal_open(),
 		"isWanderingMonsterCardOpen": is_wandering_monster_modal_open(),
 		"wanderingMonsterCardModalOpen": is_wandering_monster_modal_open(),
@@ -19738,6 +20223,13 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 		"complete_quest", "complete_active_quest", "finish_quest":
 			var should_quit = bool(action_data.get("quit", false))
 			return complete_active_quest(should_quit)
+		"open_quest_complete_modal", "show_quest_complete_modal":
+			var is_vic = bool(action_data.get("is_victory", action_data.get("isVictory", true)))
+			open_quest_complete_modal(is_vic)
+			return { "success": true, "quest_complete_open": is_quest_complete_modal_open(), "isVictory": is_vic }
+		"close_quest_complete_modal", "hide_quest_complete_modal":
+			close_quest_complete_modal()
+			return { "success": true, "quest_complete_open": is_quest_complete_modal_open() }
 		"get_quest_objectives":
 			return { "success": true, "objectives": get_quest_objectives(), "areCompleted": are_all_quest_objectives_completed() }
 		"open_game_menu", "show_game_menu":
