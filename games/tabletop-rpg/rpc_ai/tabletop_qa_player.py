@@ -752,6 +752,18 @@ class TabletopQAPlayer:
         st = self.get_state()
         return bool(st.get("isGameClosed", False) or st.get("gameState") == "closed")
 
+    def is_quest_complete_open(self) -> bool:
+        st = self.get_state()
+        return bool(st.get("isQuestCompleteModalOpen", st.get("questCompleteModalOpen", False)))
+
+    def open_quest_complete_modal(self, is_victory: bool = True) -> dict:
+        self.log(f"Opening Quest Complete Modal (is_victory={is_victory})...")
+        return self.execute_action("open_quest_complete_modal", is_victory=is_victory)
+
+    def close_quest_complete_modal(self) -> dict:
+        self.log("Closing Quest Complete Modal...")
+        return self.execute_action("close_quest_complete_modal")
+
     # --- Autonomous AI Demo Helpers ---
     def start_demo(self) -> dict:
         self.log("Starting Autonomous Tabletop AI Demo (Mentor vs Zargon)...")
