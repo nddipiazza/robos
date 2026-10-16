@@ -73,6 +73,17 @@ tooltip_text = "Conclude active turn and pass initiative (Map Shortcut)"
 theme_override_font_sizes/font_size = 13
 text = "⏭️ End Turn"
 
+[node name="BtnAIEngineOptions" type="Button" parent="UI"]
+offset_left = 20.0
+offset_top = 1024.0
+offset_right = 180.0
+offset_bottom = 1064.0
+custom_minimum_size = Vector2(160, 40)
+tooltip_text = "🤖 AI Engine Options [A]
+Configure autonomous AI player and turn progression."
+theme_override_font_sizes/font_size = 13
+text = "🤖 AI Options"
+
 [node name="SidebarHeader" type="HBoxContainer" parent="UI"]
 offset_left = 1416.0
 offset_top = 14.0
@@ -87,16 +98,9 @@ theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
 text = "HEROQUEST"
 
 [node name="BtnToggleRole" type="Button" parent="UI/SidebarHeader"]
-custom_minimum_size = Vector2(130, 30)
+custom_minimum_size = Vector2(110, 30)
 layout_mode = 2
 text = "Role: Player"
-
-[node name="BtnAIEngineOptions" type="Button" parent="UI/SidebarHeader"]
-custom_minimum_size = Vector2(68, 30)
-layout_mode = 2
-tooltip_text = "🤖 AI Engine Options [A]
-Configure autonomous AI player and turn progression."
-text = "🤖 AI"
 
 [node name="DicePanel" type="Panel" parent="UI"]
 offset_left = 1416.0
