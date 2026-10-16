@@ -1,7 +1,6 @@
 Feature: Take the car in
-  Taking a car in opens a repair ticket (a DevOps work item such as RO-0001) and checks the vehicle onto
-  the shop floor. From here every stage change is recorded on the ticket and committed to the shop's
-  private Git history.
+  Taking a car in opens a numbered repair ticket (such as RO-0001) and checks the vehicle onto the shop
+  floor. From here every step is recorded on the ticket and backed up to storage such as GitHub.
 
   Background:
     Given the customer "Sam Rivera" is on file
@@ -22,7 +21,7 @@ Feature: Take the car in
     When I take in "Sam's Camry" with the concern "Also needs an oil change"
     Then I am told "This vehicle already has an open repair"
 
-  Scenario: The ticket is saved to the shop's Git history
-    Opening the ticket is committed with its key, so the shop has an audit trail from the first minute.
+  Scenario: The ticket is backed up
+    Opening the ticket backs it up with its number, so your records are safe from the first minute.
     When I take in "Sam's Camry" with the concern "Grinding noise when braking"
-    Then the shop Git history contains "RO-0001: vehicle received"
+    Then the backup history contains "RO-0001: vehicle received"

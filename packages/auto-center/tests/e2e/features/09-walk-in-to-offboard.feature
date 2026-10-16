@@ -25,4 +25,4 @@ Feature: From first call to a paid, returned car
     And I return the vehicle to "Sam Rivera"
     Then the ticket is at "Paid and offboarded"
     And the ticket history includes "Vehicle collected by Sam Rivera"
-    And the shop Git history contains "RO-0001: vehicle returned, repair closed"
+    And the backup history contains "RO-0001: vehicle returned, repair closed"
