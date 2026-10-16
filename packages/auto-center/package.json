@@ -10,9 +10,13 @@
     "import": "node --max-old-space-size=8192 cli.js",
     "test": "node --test tests/*.test.js",
     "test:e2e": "node --test --test-concurrency=1 tests/electron.e2e.js tests/modes.e2e.js tests/reports.e2e.js",
-    "recalls": "node --max-old-space-size=8192 recalls-cli.js"
+    "recalls": "node --max-old-space-size=8192 recalls-cli.js",
+    "e2e:lifecycle": "cucumber-js --config tests/e2e/cucumber.cjs"
   },
   "dependencies": {
     "electron": "^33.2.1"
+  },
+  "devDependencies": {
+    "@cucumber/cucumber": "^12.9.0"
   }
 }

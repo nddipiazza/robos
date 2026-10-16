@@ -34,6 +34,7 @@ class AutoCenter {
  checkOut(input){return shopOperations.checkOut(this,input);}
  recordFinance(input){return require('./finance').recordFinance(this,input);}
  recordPayment(input){return shopOperations.recordPayment(this,input);}
+ workshop(action,input={}){const w=require('./workshop');const allowed=['board','addTeammate','addCustomer','addCustomerVehicle','openRepair','diagnose','createEstimate','decideEstimate','usePart','logHours','issueInvoice','offboard'];if(!allowed.includes(action))throw new Error('Unknown workshop action');return w[action](this,input);}
  updateJob({id,status,notes,billedTotal,currency}){
   if(this.mode!=='shop'||!JOB_STATES.includes(status))throw new Error('Invalid shop job status');
   const records=this.workspace.read()['robos:nodes'];const n=records.find(n=>n['@id']===id&&n['@type']==='robos:RepairOrder');if(!n)throw new Error('Unknown repair job');

@@ -546,6 +546,220 @@
       ]
     },
     {
+      "@id": "https://robos.dev/ns/sdlc#Teammate",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Teammate",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Person"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/Person"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#TeammateShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#Teammate"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://schema.org/name"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#role"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#Customer",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Customer",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Person"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/Person"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#CustomerShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#Customer"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://schema.org/name"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#LaborEntry",
+      "@type": "rdfs:Class",
+      "rdfs:label": "LaborEntry",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Action"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/Action"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#LaborEntryShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#LaborEntry"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#job"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#teammate"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#hoursMinutes"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://schema.org/startDate"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#PartUsage",
+      "@type": "rdfs:Class",
+      "rdfs:label": "PartUsage",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Product"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/Product"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#PartUsageShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#PartUsage"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#job"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://schema.org/name"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#quantity"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#currency"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#RepairTicket",
+      "@type": "rdfs:Class",
+      "rdfs:label": "RepairTicket",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Action"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/Action"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#RepairTicketShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#RepairTicket"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#job"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#workItemKey"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#workItemStatus"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
       "@id": "https://robos.dev/ns/sdlc#PartFitment",
       "@type": "rdfs:Class",
       "rdfs:label": "PartFitment",
