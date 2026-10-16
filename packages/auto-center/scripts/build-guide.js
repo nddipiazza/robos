@@ -11,7 +11,7 @@ const out = path.join(site, 'assets/auto-center');
 const manifest = JSON.parse(fs.readFileSync(path.join(evidence, 'manifest.json'), 'utf8'));
 const bySlug = Object.fromEntries(manifest.map(m => [m.slug, m]));
 const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
-const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const md = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
 const para = s => (s || '').trim().split(/\n\s*\n/).map(p => md(p.replace(/\s*\n\s*/g, ' '))).join('</p><p>');
 fs.rmSync(out, { recursive: true, force: true }); fs.mkdirSync(path.join(out, 'screens'), { recursive: true });
